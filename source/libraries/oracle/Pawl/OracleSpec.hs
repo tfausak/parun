@@ -14,8 +14,10 @@ import qualified Pawl.Oracle.Face as Oracle.Face
 import qualified Pawl.Oracle.Normalise as Normalise
 import qualified Pawl.Spec as Spec
 import qualified Pawl.Types.ActivatedAbility as ActivatedAbility
+import qualified Pawl.Types.ActivationRestriction as ActivationRestriction
 import qualified Pawl.Types.Activator as Activator
 import qualified Pawl.Types.Affected as Affected
+import qualified Pawl.Types.AffectedUnless as AffectedUnless
 import qualified Pawl.Types.AgainstSlot as AgainstSlot
 import qualified Pawl.Types.Aggregation as Aggregation
 import qualified Pawl.Types.Arithmetic as Arithmetic
@@ -29,14 +31,18 @@ import qualified Pawl.Types.ChosenPermanents as ChosenPermanents
 import qualified Pawl.Types.Clause as Clause
 import qualified Pawl.Types.ClauseIndex as ClauseIndex
 import qualified Pawl.Types.Color as Color
+import qualified Pawl.Types.CombatRestriction as CombatRestriction
 import qualified Pawl.Types.CombatStep as CombatStep
 import qualified Pawl.Types.Compares as Compares
 import qualified Pawl.Types.Comparison as Comparison
 import qualified Pawl.Types.Condition as Condition
 import qualified Pawl.Types.Cost as Cost
 import qualified Pawl.Types.CostAmount as CostAmount
+import qualified Pawl.Types.CostChange as CostChange
 import qualified Pawl.Types.CostChoice as CostChoice
 import qualified Pawl.Types.CostComponent as CostComponent
+import qualified Pawl.Types.CostModifier as CostModifier
+import qualified Pawl.Types.CostSubject as CostSubject
 import qualified Pawl.Types.Count as Count
 import qualified Pawl.Types.CountedDiscard as CountedDiscard
 import qualified Pawl.Types.Counter as Counter
@@ -52,6 +58,7 @@ import qualified Pawl.Types.Discard as Discard
 import qualified Pawl.Types.DiscardCards as DiscardCards
 import qualified Pawl.Types.Draw as Draw
 import qualified Pawl.Types.Duration as Duration
+import qualified Pawl.Types.DuringPhase as DuringPhase
 import qualified Pawl.Types.Effect as Effect
 import qualified Pawl.Types.EndingStep as EndingStep
 import qualified Pawl.Types.EntryR as EntryR
@@ -78,6 +85,7 @@ import qualified Pawl.Types.ManaRetention as ManaRetention
 import qualified Pawl.Types.ManaSymbol as ManaSymbol
 import qualified Pawl.Types.ManaType as ManaType
 import qualified Pawl.Types.Measure as Measure
+import qualified Pawl.Types.Mill as Mill
 import qualified Pawl.Types.Modal as Modal
 import qualified Pawl.Types.Mode as Mode
 import qualified Pawl.Types.ModeSelection as ModeSelection
@@ -93,10 +101,13 @@ import qualified Pawl.Types.PayBranch as PayBranch
 import qualified Pawl.Types.PayGate as PayGate
 import qualified Pawl.Types.PayObligation as PayObligation
 import qualified Pawl.Types.Phase as Phase
+import qualified Pawl.Types.PhaseSelector as PhaseSelector
+import qualified Pawl.Types.PlayerEffect as PlayerEffect
 import qualified Pawl.Types.PlayerQuantity as PlayerQuantity
 import qualified Pawl.Types.PlayerRef as PlayerRef
 import qualified Pawl.Types.PlayerRelation as PlayerRelation
 import qualified Pawl.Types.PlayerScope as PlayerScope
+import qualified Pawl.Types.PlayerStaticAbility as PlayerStaticAbility
 import qualified Pawl.Types.Pool as Pool
 import qualified Pawl.Types.Power as Power
 import qualified Pawl.Types.PreventNextDamage as PreventNextDamage
@@ -113,6 +124,8 @@ import qualified Pawl.Types.Sacrifice as Sacrifice
 import qualified Pawl.Types.SacrificeEffect as SacrificeEffect
 import qualified Pawl.Types.Sacrificer as Sacrificer
 import qualified Pawl.Types.Scope as Scope
+import qualified Pawl.Types.Search as Search
+import qualified Pawl.Types.SearchDestination as SearchDestination
 import qualified Pawl.Types.SlotCount as SlotCount
 import qualified Pawl.Types.SlotName as SlotName
 import qualified Pawl.Types.SpellCast as SpellCast
@@ -785,6 +798,56 @@ spec s = Spec.describe s "Pawl.Oracle" $ do
     Spec.assertEq s [[Text.pack "{T}: Add {W} or {U}. Spark deals 1 damage to you.", Text.pack "{T}: Add {W} or {U}. Then Spark deals 1 damage to you."]] (Oracle.abilities (withFace (\f -> f {Face.activatedAbilities = [pain]})))
     let uneven = pain {ActivatedAbility.modal = Modal.MkModal (Seq.fromList [mode' Color.White, Mode.MkMode (Seq.singleton (clause [added Color.Blue, damage [(you, 2)]])) Map.empty]) (ModeSelection.ChooseExactly 1)}
     Spec.assertEq s False (any (any (Text.isInfixOf (Text.pack "{W} or {U}"))) (Oracle.abilities (withFace (\f -> f {Face.activatedAbilities = [uneven]}))))
+
+  -- CR 602.5: the clauses restricting an activation, joined by "and only".
+  Spec.it s "render prints the restrictions on activating an ability" $ do
+    let restricted rs = withFace (\f -> f {Face.activatedAbilities = [(activated (mana [green]) (gainLife 1)) {ActivatedAbility.restrictions = rs}]})
+        upkeep = ActivationRestriction.DuringPhase (DuringPhase.MkDuringPhase (PhaseSelector.Step (Phase.Beginning BeginningStep.Upkeep)) TurnScope.ControllersTurn)
+    Spec.assertEq s (Just (Text.pack "{G}: You gain 1 life. Activate only once each turn.")) (Oracle.render (restricted [ActivationRestriction.OnlyOnceEachTurn]))
+    Spec.assertEq s (Just (Text.pack "{G}: You gain 1 life. Activate only as a sorcery.")) (Oracle.render (restricted [ActivationRestriction.SorcerySpeed]))
+    Spec.assertEq s (Just (Text.pack "{G}: You gain 1 life. Activate only during your turn.")) (Oracle.render (restricted [ActivationRestriction.DuringTurn TurnScope.ControllersTurn]))
+    Spec.assertEq s (Just (Text.pack "{G}: You gain 1 life. Activate only during your upkeep and only once each turn.")) (Oracle.render (restricted [upkeep, ActivationRestriction.OnlyOnceEachTurn]))
+    Spec.assertEq s Nothing (Oracle.render (restricted [ActivationRestriction.DuringDieRoll]))
+
+  -- CR 508.1c / 509.1b: rules permanents follow, its own or a description's;
+  -- "can't attack" and "can't block" of one permanent are one ability.
+  Spec.it s "render prints restrictions on attacking and blocking" $ do
+    let unless' a = AffectedUnless.MkAffectedUnless a Nothing Nothing
+        itself = Affected.Matching Filter.IsSource
+        combat rs = withFace (\f -> f {Face.combatRestrictions = rs})
+    Spec.assertEq s (Just (Text.pack "Spark can't block.")) (Oracle.render (combat [CombatRestriction.CantBlock (unless' itself)]))
+    Spec.assertEq s (Just (Text.pack "Spark can't attack or block.")) (Oracle.render (combat [CombatRestriction.CantAttack (unless' itself), CombatRestriction.CantBlock (unless' itself)]))
+    Spec.assertEq s (Just (Text.pack "Creatures can't block.")) (Oracle.render (combat [CombatRestriction.CantBlock (unless' (Affected.Matching (Filter.HasCardType CardType.Creature)))]))
+
+  -- CR 701.23a: a search of your library for one card, and where it goes.
+  Spec.it s "render prints a search of your library" $ do
+    let search f destination = Effect.Search (Search.MkSearch (PlayerRef.Relative PlayerRelation.You) (PlayerRef.Relative PlayerRelation.You) (Set.singleton Zone.Library) False (Just (Quantity.Literal 1)) f False destination Nothing Nothing Set.empty False False)
+        searching f destination = Oracle.abilities (spell [clause [search f destination]] [])
+    Spec.assertEq s [[Text.pack "Search your library for a card, put that card into your hand, then shuffle."]] (searching (Filter.And []) SearchDestination.Hand)
+    Spec.assertEq s [[Text.pack "Search your library for an artifact or enchantment card, reveal it, then shuffle and put that card on top.", Text.pack "Search your library for an artifact or enchantment card, reveal it, then shuffle and put the card on top."]] (searching (Filter.Or [Filter.HasCardType CardType.Artifact, Filter.HasCardType CardType.Enchantment]) SearchDestination.RevealThenTop)
+    Spec.assertEq s [[Text.pack "Search your library for a basic land card, put that card onto the battlefield tapped, then shuffle.", Text.pack "Search your library for a basic land card, put it onto the battlefield tapped, then shuffle."]] (searching (Filter.And [Filter.HasSupertype Supertype.Basic, Filter.HasCardType CardType.Land]) SearchDestination.BattlefieldTapped)
+    Spec.assertEq s [[Text.pack "Search your library for a blue instant card, reveal it, put it into your hand, then shuffle.", Text.pack "Search your library for a blue instant card, reveal that card, put it into your hand, then shuffle."]] (searching (Filter.And [Filter.HasColor Color.Blue, Filter.HasCardType CardType.Instant]) SearchDestination.RevealThenHand)
+    Spec.assertEq s [[]] (searching (Filter.And []) SearchDestination.Stay)
+
+  -- CR 701.17a: "Target player mills two cards."
+  Spec.it s "render prints milling" $ do
+    let mill = Effect.Mill (Mill.MkMill (PlayerRef.InSlot target) (Quantity.Literal 2) Nothing Nothing)
+    Spec.assertEq s (Just (Text.pack "Target player mills two cards.")) (Oracle.render (spell [clause [mill]] [(target, TargetSlot.required Pool.Players Nothing)]))
+
+  -- CR 303.4b / 301.5a: an Aura's or an Equipment's instructions name what
+  -- it is attached to.
+  Spec.it s "render names the host of an Aura or an Equipment" $ do
+    let firebreathing subtype enchants = withFace (\f -> (typed [CardType.Enchantment] [subtype] f) {Face.enchant = enchants, Face.activatedAbilities = [activated (mana [green]) (modify (ObjectRef.EachMatching Filter.IsHostOfSource) Duration.UntilEndOfTurn (pt 1 0))]})
+    Spec.assertEq s (Just (Text.pack "Enchant creature\n{G}: Enchanted creature gets +1/+0 until end of turn.")) (Oracle.render (firebreathing Subtype.Aura [TargetSlot.required Pool.Creatures Nothing]))
+    Spec.assertEq s (Just (Text.pack "{G}: Equipped creature gets +1/+0 until end of turn.")) (Oracle.render (firebreathing Subtype.Equipment []))
+    Spec.assertEq s Nothing (Oracle.render (withFace (\f -> f {Face.activatedAbilities = [activated (mana [green]) (modify (ObjectRef.EachMatching Filter.IsHostOfSource) Duration.UntilEndOfTurn (pt 1 0))]})))
+
+  -- CR 601.2f: spells of a description cost more to cast.
+  Spec.it s "render prints a rule making spells cost more to cast" $ do
+    let tax relation f = withFace (\g -> g {Face.playerAbilities = [PlayerStaticAbility.MkPlayerStaticAbility (PlayerScope.Related relation) Nothing Nothing (PlayerEffect.ModifyCost (CostModifier.MkCostModifier CostSubject.Spells f Nothing Nothing Nothing Nothing (CostChange.Increase 2)))]})
+    Spec.assertEq s (Just (Text.pack "Red spells cost {2} more to cast.")) (Oracle.render (tax PlayerRelation.AnyPlayer (Filter.HasColor Color.Red)))
+    Spec.assertEq s (Just (Text.pack "Noncreature spells your opponents cast cost {2} more to cast.")) (Oracle.render (tax PlayerRelation.Opponent (Filter.Not (Filter.HasCardType CardType.Creature))))
+    Spec.assertEq s Nothing (Oracle.render (tax PlayerRelation.AnyPlayer (Filter.Or [Filter.HasCardType CardType.Artifact, Filter.HasCardType CardType.Enchantment])))
 
 -- A cost paid on resolution, offered to the payer, of which the instructions
 -- are this branch.

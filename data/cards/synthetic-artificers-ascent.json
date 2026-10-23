@@ -31,7 +31,10 @@
                   }
                 },
                 {
-                  "type": "HasNonManaActivatedAbility"
+                  "type": "HasActivatedAbility",
+                  "value": {
+                    "type": "NonManaAbility"
+                  }
                 }
               ]
             }

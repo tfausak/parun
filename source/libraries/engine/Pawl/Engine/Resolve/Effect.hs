@@ -1953,12 +1953,12 @@ preventionRider chosen controller source riderEffects =
 -- written on the card and asking nobody to choose (Scarecrow's "by creatures
 -- with flying"). It reaches the same DamagePattern field as the pair's filter
 -- above, so a caller writing both gets their conjunction; `And []` on either
--- side drops out rather than nesting. No card in data/cards/ writes both, and
--- only Effect.PreventAllDamage passes a non-trivial one at all: no printing
--- pairs CR 609.7b's properties with CR 615.7's countdown, CR 615.8's single
--- instance or CR 614.9's redirection -- Scryfall `o:"prevent the next"
--- o:"sources"`, 2026-08-27, no hit -- so those three opcodes carry no such
--- field.
+-- side drops out rather than nesting. No card in data/cards/ writes both.
+-- Effect.PreventAllDamage and Effect.RedirectDamage (Kjeldoran Royal Guard's
+-- "by unblocked creatures") pass a non-trivial one; no printing pairs CR
+-- 609.7b's properties with CR 615.7's countdown or CR 615.8's single instance
+-- -- Scryfall `o:"prevent the next" o:"sources"`, 2026-08-27, no hit -- so
+-- those two opcodes carry no such field.
 --
 -- `resolving` is the object resolving, which picks the acquisition the duration
 -- reads its source's choices under (Expiry.arm, Game.readingAcquisition).
@@ -4345,10 +4345,11 @@ applyOneEffect runSubgame resolving source controller legal chosen effect = case
   --
   -- The parenthetical -- "these may be the same player" -- falls out of the order
   -- Mana.moveMana writes in: the pools empty first, so a card naming one player
-  -- on both sides nets the mana once.
+  -- on both sides nets the mana once. No gainer is CR 106.4's plain loss (Mana
+  -- Short).
   Effect.MoveMana (MoveMana.MkMoveMana fromRef toRef) -> do
     gs <- State.get
-    Mana.moveMana (apnapPlayersOf fromRef legal resolving source controller gs) (apnapPlayersOf toRef legal resolving source controller gs)
+    Mana.moveMana (apnapPlayersOf fromRef legal resolving source controller gs) (foldMap (\ref -> apnapPlayersOf ref legal resolving source controller gs) toRef)
   Effect.Search (Search.MkSearch searcherRef ownerRef zones outside quantity filter_ upTo destination subject foundSlot differentIn exactly andOr) ->
     -- CR 701.23a: match each candidate through its own CR 613 projection --
     -- rule 613.1 names no zone, so a card in any of the searched zones is folded
@@ -8297,7 +8298,7 @@ applyOneEffect runSubgame resolving source controller legal chosen effect = case
         -- watching every source would be.
         Nothing -> pure ()
         Just _ -> State.modify' $ \g0 -> List.foldl' (installDamageRow resolving legal (Filter.slotObjects context) controller source duration Nothing DamageRewrite.PreventAll Uses.Once rider (Filter.Type.And []) (Nothing, Nothing)) g0 (fmap (\recipient -> (Just recipient, sourceChoice)) recipients)
-  Effect.RedirectDamage (RedirectDamage.MkRedirectDamage duration kind amount srcRef whatRecipient whoRecipient destRef sourceFilter) -> do
+  Effect.RedirectDamage (RedirectDamage.MkRedirectDamage duration kind amount srcRef whatRecipient whoRecipient destRef sourceFilter uses whatSource) -> do
     -- CR 614.9: install a floating redirection effect. BOTH sides are baked here,
     -- both being known only at resolution: the source side into
     -- DamagePattern.whichRecipient, the destination into the rewrite. Both
@@ -8355,7 +8356,7 @@ applyOneEffect runSubgame resolving source controller legal chosen effect = case
             -- than printed rather than weaker, which a row watching every source
             -- would be.
             (Just _, Nothing) -> pure ()
-            _ -> State.modify' $ \g0 -> List.foldl' (installDamageRow resolving legal (Filter.slotObjects context) controller source duration kind rewrite Uses.Unlimited Nothing (Filter.Type.And []) describedRecipient) g0 (fmap (\recipient -> (recipient, sourceChoice)) rows)
+            _ -> State.modify' $ \g0 -> List.foldl' (installDamageRow resolving legal (Filter.slotObjects context) controller source duration kind rewrite uses Nothing whatSource describedRecipient) g0 (fmap (\recipient -> (recipient, sourceChoice)) rows)
       _ -> pure ()
   Effect.SkipPhase (SkipPhase.MkSkipPhase ref selector uses duration) -> do
     -- CR 614.1b: "skip" is a replacement effect, installed floating because a

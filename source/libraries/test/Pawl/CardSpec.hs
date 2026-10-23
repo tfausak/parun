@@ -678,7 +678,7 @@ objectRefPositions =
         ("copy-spell-for-each", Effect.CopyStackObject (CopyStackObject.MkCopyStackObject (plantedRef "cs-ref") (CopyTargets.ForEach (plantedRef "cs-each" NonEmpty.:| [])) CopyStackObject.defaultQuantity CopyStackObject.defaultCopier []), [plantedRef "cs-ref", plantedRef "cs-each"]),
         ("prevent-next-damage", Effect.PreventNextDamage (PreventNextDamage.MkPreventNextDamage Duration.UntilEndOfTurn Nothing (Just (plantedRef "pn")) Nothing Nothing Nothing (Quantity.Type.Literal 1) Seq.empty), [plantedRef "pn"]),
         ("prevent-all-damage", Effect.PreventAllDamage (PreventAllDamage.MkPreventAllDamage Duration.UntilEndOfTurn Nothing (Just (plantedRef "pa")) Nothing Nothing DamageDirection.DealtTo Nothing (Filter.Type.And []) Seq.empty), [plantedRef "pa"]),
-        ("redirect-damage", Effect.RedirectDamage (RedirectDamage.MkRedirectDamage Duration.UntilEndOfTurn Nothing Nothing (Just (plantedRef "rd-from")) Nothing Nothing (plantedRef "rd-to") Nothing), [plantedRef "rd-from", plantedRef "rd-to"]),
+        ("redirect-damage", Effect.RedirectDamage (RedirectDamage.MkRedirectDamage Duration.UntilEndOfTurn Nothing Nothing (Just (plantedRef "rd-from")) Nothing Nothing (plantedRef "rd-to") Nothing Uses.Unlimited (Filter.Type.And [])), [plantedRef "rd-from", plantedRef "rd-to"]),
         ("counter", Effect.Counter (Counter.MkCounter (plantedRef "co") Nothing Nothing Nothing), [plantedRef "co"]),
         ("put-counters", Effect.PutCounters (PutCounters.MkPutCounters CounterKind.PlusOnePlusOne (Quantity.Type.Literal 1) (plantedRef "pc")), [plantedRef "pc"]),
         ("distribute-counters", Effect.DistributeCounters (PutCounters.MkPutCounters CounterKind.Stun (Quantity.Type.Literal 3) (plantedRef "dc")), [plantedRef "dc"]),
@@ -1372,7 +1372,7 @@ ownCounts effect = case effect of
   Effect.PreventNextDamage (PreventNextDamage.MkPreventNextDamage duration _ _ _ _ _ quantity rider) -> durationCounts duration <> quantityCounts quantity <> concatMap effectCounts rider
   Effect.PreventAllDamage (PreventAllDamage.MkPreventAllDamage duration _ _ _ _ _ _ _ rider) -> durationCounts duration <> concatMap effectCounts rider
   Effect.PreventNextDamageInstance (PreventNextDamageInstance.MkPreventNextDamageInstance duration _ _ rider) -> durationCounts duration <> concatMap effectCounts rider
-  Effect.RedirectDamage (RedirectDamage.MkRedirectDamage duration _ amount _ _ _ _ _) -> durationCounts duration <> foldMap quantityCounts amount
+  Effect.RedirectDamage (RedirectDamage.MkRedirectDamage duration _ amount _ _ _ _ _ _ _) -> durationCounts duration <> foldMap quantityCounts amount
   -- CR 708.2's listed characteristics are card data, so the listed power and
   -- toughness are walked for the reason Create's minted face is. The listed type
   -- line holds no Quantity.
@@ -6079,8 +6079,8 @@ effectFilters effect = case effect of
   -- BOTH refs, or a Filter inside a redirect's destination escapes this lint.
   -- CR 609.7a's chosen source and the recipient description are UNFRAMED, for
   -- the reason the two prevention arms above give.
-  Effect.RedirectDamage (RedirectDamage.MkRedirectDamage duration _ amount srcRef whatRecipient _ destRef chosenSource) ->
-    frame Unframed (durationFilters duration) <> frame Unframed (foldMap quantityFilters amount) <> unframed (Maybe.maybeToList chosenSource <> Maybe.maybeToList whatRecipient) <> frame SourceHostFramed (foldMap objectRefFilters srcRef <> objectRefFilters destRef)
+  Effect.RedirectDamage (RedirectDamage.MkRedirectDamage duration _ amount srcRef whatRecipient _ destRef chosenSource _ whatSource) ->
+    frame Unframed (durationFilters duration) <> frame Unframed (foldMap quantityFilters amount) <> unframed (Maybe.maybeToList chosenSource <> Maybe.maybeToList whatRecipient <> [whatSource]) <> frame SourceHostFramed (foldMap objectRefFilters srcRef <> objectRefFilters destRef)
   -- CR 708.2's listed characteristics hold no Filter, but the ref does -- Ixidron's
   -- "all other nontoken creatures" is an ObjectRef Filter like Destroy's, so the
   -- lint reaches it.

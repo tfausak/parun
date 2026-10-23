@@ -7,6 +7,7 @@ import qualified Pawl.Types.Keyword as Keyword
 import qualified Pawl.Types.ObjectRef as ObjectRef
 import qualified Pawl.Types.PlayerRelation as PlayerRelation
 import qualified Pawl.Types.Quantity as Quantity
+import qualified Pawl.Types.Uses as Uses
 
 -- | CR 614.9's redirection: for a duration, damage of some kind headed for one
 -- recipient is dealt to another instead.
@@ -22,7 +23,7 @@ data RedirectDamage = MkRedirectDamage
     kind :: Maybe DamageKind.DamageKind,
     -- | Harm's Way's "the next 2 damage": the amount the redirection moves before
     -- it is spent, CR 615.7's counted shape on a rule-614 rewrite. Nothing is
-    -- Turn the Tables' "all", which only the duration ends.
+    -- Turn the Tables' "all", which only the duration and `uses` end.
     amount :: Maybe Quantity.Quantity,
     -- | The recipients the redirection covers, NAMED -- Carom's "target creature".
     -- Nothing where the card describes them instead, through the two fields
@@ -49,6 +50,15 @@ data RedirectDamage = MkRedirectDamage
     -- the damage event rather than at the choice. Oracle's Attendants says only
     -- "a source", so its Filter is the trivial `And []` -- present, not absent,
     -- because "any source of your choice" is still a choice.
-    chosenSource :: Maybe (Filter.Filter Keyword.Keyword)
+    chosenSource :: Maybe (Filter.Filter Keyword.Keyword),
+    -- | CR 614.3's use count: Jade Monolith's "the next time" is Once, a
+    -- redirection spent by the first damage event it moves, whatever its size;
+    -- Unlimited for every other.
+    uses :: Uses.Uses,
+    -- | CR 609.7b's property-named source, Pawl.Types.PreventAllDamage's field of
+    -- the same name: Kjeldoran Royal Guard's "by unblocked creatures", rechecked
+    -- at each damage event and asking nobody to choose. `And []` for a
+    -- redirection that describes no source.
+    whatSource :: Filter.Filter Keyword.Keyword
   }
   deriving (Eq, Ord, Show)

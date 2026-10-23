@@ -358,8 +358,7 @@ filterAtomsOf leaf predicate = case predicate of
   Filter.Type.RepresentedByCard f -> filterAtomsOf leaf f
   Filter.Type.IsExiledFaceDown -> leaf predicate
   Filter.Type.Transformed -> leaf predicate
-  Filter.Type.HasNonManaActivatedAbility -> leaf predicate
-  Filter.Type.HasActivatedAbility -> leaf predicate
+  Filter.Type.HasActivatedAbility _ -> leaf predicate
   Filter.Type.IsInZone _ -> leaf predicate
   Filter.Type.WasCastFrom _ -> leaf predicate
   Filter.Type.TagWasSpent _ -> leaf predicate
@@ -2098,11 +2097,18 @@ filterPositionLintSpec s registry = Spec.describe s "Lint" $ do
       "Infinite Reflection's copy entry is framed too"
       (hostOfSourceCounts (S.combinedFace reflection))
       (1, 0)
+    -- And Firebreathing's activated +1/+0 to the creature it enchants.
+    firebreathing <- S.printingOf s registry "Firebreathing"
+    Spec.assertEqWith
+      s
+      "Firebreathing's pump is framed too"
+      (hostOfSourceCounts (S.combinedFace firebreathing))
+      (1, 0)
     Spec.assertEqWith
       s
       "and they are the pool's only ones"
       (sum (fmap (uncurry (+) . hostOfSourceCounts . S.combinedFace) ps))
-      14
+      15
     -- The rejected side, which the sweep above cannot show while the pool has no
     -- offender: the same atom planted in a SPELL's target slot -- the position a
     -- card author would most plausibly reach for -- IS counted as elsewhere.
@@ -2378,7 +2384,7 @@ filterPositionLintSpec s registry = Spec.describe s "Lint" $ do
           ]
         -- CR 208.2b's option, distinct P/T so nothing here is a numeric
         -- coincidence, and the keyword is the only thing carrying a Filter.
-        optionWith = EntryOption.MkEntryOption 2 5
+        optionWith keywords = EntryOption.MkEntryOption 2 5 keywords Set.empty
     -- Ordered FIRST, and CR 115.10a's half of the claim: the atom whose offence
     -- is the mirror of the others' is rejected at all three sites a keyword's
     -- Filter is reached from. A site that lost the tag reddens under its own

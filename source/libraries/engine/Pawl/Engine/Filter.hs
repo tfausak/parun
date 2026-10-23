@@ -15,6 +15,7 @@ import qualified Pawl.Engine.NameWords as NameWords
 import qualified Pawl.Engine.Sector as Sector
 import qualified Pawl.Engine.TextWord as TextWord
 import qualified Pawl.Engine.Turn as Turn
+import qualified Pawl.Types.AbilityKind as AbilityKind
 import qualified Pawl.Types.AbilityName as AbilityName
 import qualified Pawl.Types.Behold as Behold
 import qualified Pawl.Types.BlockStatus as BlockStatus
@@ -785,10 +786,10 @@ data View = MkView
     -- reader is Pawl.Engine.Quantity's ManaSpent arm, answering rule 702.191a's
     -- "the amount of mana spent to cast that spell".
     manaSpentAmount :: Natural.Natural,
-    -- CR 602.1 / 605.1a: does the candidate have an activated ability that isn't
-    -- a mana ability? A Bool and not the ability list, because that is the whole
-    -- of what Filter.HasNonManaActivatedAbility asks and this module holds no
-    -- board to measure an ability against.
+    -- CR 602.1 / 605.1a: which kinds of activated ability does the candidate
+    -- have? The kinds and not the ability list, because that is the whole of what
+    -- Filter.HasActivatedAbility asks and this module holds no board to measure an
+    -- ability against.
     --
     -- Filled by the builders that hold an ability list -- Pawl.Engine.Projection's
     -- two and Pawl.Engine.Count.viewOfSnapshot -- which is what keeps CR 605.1a's
@@ -807,21 +808,16 @@ data View = MkView
     -- asked through the reader Pawl.Engine.Projection.View.viewOfCharacteristics was
     -- handed, so a filter forcing this from inside the fold reads the board at
     -- that caller's own layer rather than restarting the projection (CR 613.1).
-    nonManaActivatedAbility :: Bool,
-    -- CR 602.1: does this candidate have one or more activated abilities at all?
-    -- The field beside it without CR 605.1a's exclusion, filled by the same
-    -- builders and LAZY and bounded for the same two reasons. Named apart from
-    -- `activatedAbility` above, which asks whether the candidate IS one.
     --
-    -- WIDER than the abilities that field measures, and by exactly CR 305.6's
-    -- intrinsic "{T}: Add [mana symbol]", which no ability list holds: every
-    -- builder answers it through Pawl.Engine.Subtype's intrinsicManaAbility --
-    -- intrinsicManaAbilityOf where there is a projection to read CR 613.1f's
-    -- layer-6 removal off -- and
+    -- WIDER than the ability list, by exactly CR 305.6's intrinsic "{T}: Add
+    -- [mana symbol]", which no ability list holds and which adds
+    -- AbilityKind.ManaAbility: every builder answers it through
+    -- Pawl.Engine.Subtype's intrinsicManaAbility -- intrinsicManaAbilityOf where
+    -- there is a projection to read CR 613.1f's layer-6 removal off -- and
     -- Pawl.ProjectionSpec's "CR 305.6 / 602.1 a Mountain has an activated ability
-    -- in every view builder" is what holds the three to one answer. The field
-    -- above needs no such disjunct, CR 605.1a excluding a mana ability from it.
-    hasActivatedAbility :: Bool,
+    -- in every view builder" is what holds the three to one answer. Named apart
+    -- from `activatedAbility` above, which asks whether the candidate IS one.
+    activatedAbilityKinds :: Set.Set AbilityKind.AbilityKind,
     -- CR 702.184c: does this candidate's controller's station abilities read a
     -- tapped creature's toughness instead of its power? The projected mirror
     -- of ProjectedCharacteristics.grantsStationToughness -- read off the
@@ -1028,9 +1024,7 @@ playerView pid =
       -- CR 602.1: an activated ability is an ability OF AN OBJECT, and CR 109.1's
       -- list of what an object is has no player in it -- `keywords` above, one
       -- rule over.
-      nonManaActivatedAbility = False,
-      -- CR 602.1 again, one exclusion out: a player has no abilities either.
-      hasActivatedAbility = False,
+      activatedAbilityKinds = Set.empty,
       -- CR 702.184c reaches a permanent's controller, and a player view built
       -- from a bare PlayerId has no permanent behind it to grant this at all.
       grantsStationToughness = False
@@ -2313,13 +2307,11 @@ matches context view predicate = case predicate of
   -- CR 701.27g, both exclusions inside the field: see the atom's own comment in
   -- Pawl.Types.Filter, and the field below.
   Filter.Transformed -> transformed view
-  -- CR 602.1 with CR 605.1a's exclusion, both applied by the builder that holds
+  -- CR 602.1 with CR 605.1a's classification, applied by the builder that holds
   -- the abilities. A live read: the projection is re-asked on every match, so a
   -- land Humility has stripped stops matching at once, and CR 702.29b's and CR
   -- 702.77b's abilities are in the list the builder measured.
-  Filter.HasNonManaActivatedAbility -> nonManaActivatedAbility view
-  -- CR 602.1 off the same builders, without CR 605.1a's exclusion.
-  Filter.HasActivatedAbility -> hasActivatedAbility view
+  Filter.HasActivatedAbility kind -> maybe (not (Set.null (activatedAbilityKinds view))) (`Set.member` activatedAbilityKinds view) kind
   -- CR 400.1 off Object.zone, a live read like `token` and `tapped` above: the
   -- object moves and the atom answers about where it is NOW. That is what makes
   -- it answer CR 601.2's "from where it is" at a cast gate, which runs before CR
@@ -2577,8 +2569,7 @@ rewrite pairs predicate = case predicate of
   -- Untouched: CR 612.1 swaps a subtype, a colour or a card type word, and this
   -- atom names none -- "an activated ability that isn't a mana ability" has no
   -- word inside it for Artificial Evolution to reach.
-  Filter.HasNonManaActivatedAbility -> predicate
-  Filter.HasActivatedAbility -> predicate
+  Filter.HasActivatedAbility _ -> predicate
   Filter.IsInZone _ -> predicate
   -- Untouched for IsInZone's reason: CR 612.1 swaps a subtype, a colour or a card
   -- type word, and a zone name is none of the three.
@@ -3337,8 +3328,7 @@ bakeBound players objects controllers predicate = case predicate of
   Filter.HasCountersOfAnyKind -> predicate
   Filter.HasSticker _ -> predicate
   Filter.Stickered -> predicate
-  Filter.HasNonManaActivatedAbility -> predicate
-  Filter.HasActivatedAbility -> predicate
+  Filter.HasActivatedAbility _ -> predicate
   Filter.IsInZone _ -> predicate
   Filter.WasCastFrom _ -> predicate
   Filter.TagWasSpent _ -> predicate
@@ -3507,8 +3497,7 @@ manaValueThresholds predicate = case predicate of
   Filter.HasCountersOfAnyKind -> []
   Filter.HasSticker _ -> []
   Filter.Stickered -> []
-  Filter.HasNonManaActivatedAbility -> []
-  Filter.HasActivatedAbility -> []
+  Filter.HasActivatedAbility _ -> []
   Filter.IsInZone _ -> []
   Filter.WasCastFrom _ -> []
   Filter.TagWasSpent _ -> []
@@ -3683,8 +3672,7 @@ statesAQuality predicate = case predicate of
   Filter.HasCountersOfAnyKind -> True
   Filter.HasSticker _ -> True
   Filter.Stickered -> True
-  Filter.HasNonManaActivatedAbility -> True
-  Filter.HasActivatedAbility -> True
+  Filter.HasActivatedAbility _ -> True
   -- CR 400.1 states a quality like any other atom here: a search whose predicate
   -- names a zone is looking for cards with a stated quality, so CR 701.23b's
   -- shortfall applies rather than CR 701.23d's "must find".
@@ -3827,8 +3815,7 @@ readsSourceValues predicate = case predicate of
   Filter.HasCountersOfAnyKind -> False
   Filter.HasSticker _ -> False
   Filter.Stickered -> False
-  Filter.HasNonManaActivatedAbility -> False
-  Filter.HasActivatedAbility -> False
+  Filter.HasActivatedAbility _ -> False
   Filter.IsInZone _ -> False
   Filter.WasCastFrom _ -> False
   Filter.TagWasSpent _ -> False
@@ -4006,8 +3993,7 @@ overBoundSlotsWith f predicate = case predicate of
   Filter.HasCountersOfAnyKind -> pure predicate
   Filter.HasSticker _ -> pure predicate
   Filter.Stickered -> pure predicate
-  Filter.HasNonManaActivatedAbility -> pure predicate
-  Filter.HasActivatedAbility -> pure predicate
+  Filter.HasActivatedAbility _ -> pure predicate
   Filter.IsInZone _ -> pure predicate
   Filter.WasCastFrom _ -> pure predicate
   Filter.TagWasSpent _ -> pure predicate

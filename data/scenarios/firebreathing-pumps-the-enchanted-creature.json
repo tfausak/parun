@@ -1,0 +1,13 @@
+{
+  "description": "CR 303.4b / 613.4c whole card: Firebreathing's {R} gives the creature it enchants +1/+0 until end of turn",
+  "note": "Activated twice, it makes the enchanted Grizzly Bears 4/2; the Hill Giant beside it stays 3/3.",
+  "board": {"active": "alice", "step": "PrecombatMain", "seats": [{"name": "alice", "battlefield": [{"card": "Grizzly Bears", "label": "bears"}, {"card": "Hill Giant", "label": "giant"}, {"card": "Firebreathing", "label": "aura", "attached": "bears"}, {"card": "Mountain", "label": "m1"}, {"card": "Mountain", "label": "m2"}], "library": [{"card": "Island"}, {"card": "Island"}, {"card": "Island"}]}, {"name": "bob", "library": [{"card": "Island"}, {"card": "Island"}, {"card": "Island"}]}]},
+  "timeline": [
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "do": {"Activate": {"object": "$aura", "mana": ["$m1", null]}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "do": "Pass"},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "do": {"Activate": {"object": "$aura", "mana": ["$m2"]}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "do": "Pass"},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "check": {"PowerToughness": {"object": "$bears", "power": 4, "toughness": 2}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "check": {"PowerToughness": {"object": "$giant", "power": 3, "toughness": 3}}}
+  ]
+}

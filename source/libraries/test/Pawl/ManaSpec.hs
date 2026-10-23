@@ -3534,7 +3534,7 @@ sicken oid gs =
 
 -- CR 106.13's card. Drain Power is the only printing that moves mana from one
 -- player's pool to another, and rule 106.13 says so in as many words, so this
--- group is the whole of what exercises Effect.MoveMana and
+-- group is the whole of what exercises Effect.MoveMana with a recipient and
 -- Effect.ActivateManaAbilities.
 --
 -- THREE SEATS, so "that player" and "you" cannot collapse and a third pool is

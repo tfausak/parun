@@ -12,40 +12,31 @@ Each names the mtgish node the translator stops at, or what its rendering gets
 wrong. No Sixth Edition card's whole text is keywords, so `script/ingest` adds
 none of them.
 
-- Abduction: `Permanent:HostPermanent`
-- Animate Wall: `Rule:PermanentRuleEffect`
+- Abduction: `StaticLayerEffect:SetController`
+- Animate Wall: `Permanent:HostPermanent`
 - Balduvian Horde: `Action:MayCost`
 - Browse: `Action:LookAtTheTopNumberCardsOfLibrary`
 - Call of the Wild: `Action:RevealTopCardOfLibrary`
-- Chill: `Rule:EachPlayerEffect`
-- Disrupting Scepter: `Rule:ActivatedWithModifiers`
 - Dragon Mask: `Action:CreateFutureTrigger`
 - Dream Cache: `Action:ChooseAnAction`
-- Elven Riders: `Rule:PermanentRuleEffect`
-- Enlightened Tutor: `Action:SearchLibrary`
-- Evil Eye of Orms-by-Gore: `Rule:EachPermanentRuleEffect`
-- Firebreathing: `Permanent:HostPermanent`
+- Elven Riders: `PermanentRule:CantBeBlockedExceptByDefenders`
+- Evil Eye of Orms-by-Gore: `PermanentRule:CantBeBlockedExceptByDefenders`
 - Gaseous Form: `Rule:PreventDamage`
-- Goblin Recruiter: `Action:SearchLibrary`
+- Goblin Recruiter: `SearchLibraryAction:FindAnyNumberOfCardsOfType`
 - Gravebane Zombie: `Rule:ReplaceWouldPutIntoGraveyard`
 - Hecatomb: `Action:MayCost`
-- Light of Day: `Rule:EachPermanentRuleEffect`
-- Millstone: `Action:MillNumberCards`
 - Mind Warp: `Action:LookAtPlayersHandAndChooseNumCardsToDiscard`
 - Phantasmal Terrain: `ReplacementActionWouldEnter:ChooseABasicLandType`
 - Polymorph: `Action:RevealCardsFromTheTopOfLibraryUntilACardOfTypeIsRevealed`
-- Rag Man: `Rule:ActivatedWithModifiers`
+- Rag Man: `Action:RevealHandAndDiscardACardOfTypeAtRandom`
 - Recall: `Action:ReturnNumberCardsFromPlayersGraveyardToHand`
-- Regeneration: `Permanent:HostPermanent`
 - Sage Owl: `Action:LookAtTheTopNumberCardsOfLibrary`
 - Soldevi Sage: `Cost:SacrificeNumberPermanents`
 - Spirit Link: `Trigger:WhenAPermanentDealsDamage`
-- Spitting Drake: `Rule:ActivatedWithModifiers`
-- Storm Cauldron: `Rule:EachPlayerEffect`
+- Storm Cauldron: `PlayerEffect:MayPlayAnAdditionalLand`
 - Teferi's Puzzle Box: `Action:PlayerActions`
 - Thicket Basilisk: `Action:CreateFutureTrigger`
 - Wand of Denial: `Action:LookAtTheTopCardOfPlayersLibrary`
-- Worldly Tutor: `Action:SearchLibrary`
 - Zombie Master: `Rule:Activated`
 
 ## Needs a capability
@@ -53,8 +44,6 @@ none of them.
 Each group is tracked by its issue; its cards are added when it lands. Hardest
 first.
 
-- #5310: Tariff. A payment priced at the mana cost of the creature a player
-  just picked.
 - #5405: Library of Lat-Nam. An opponent chooses the mode.
 - #5495: Jade Monolith and Kjeldoran Royal Guard. Two missing parameters on the
   damage redirection: the next hit only, and sources described rather than
@@ -69,6 +58,8 @@ first.
 - #5500: Primal Clay. A creature type among an enters-as choice's values.
 - #5501: Crimson Hellkite. An activation paid only with mana of a printed
   colour.
+- #5520: Regeneration. A regeneration shield on the creature an Aura
+  enchants as the ability resolves.
 - #5524: Derelor. A cost increase of coloured mana.
 
 ## Decks

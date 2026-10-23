@@ -1,6 +1,7 @@
 module Pawl.Types.Filter where
 
 import qualified Numeric.Natural as Natural
+import qualified Pawl.Types.AbilityKind as AbilityKind
 import qualified Pawl.Types.BlockStatus as BlockStatus
 import qualified Pawl.Types.CardName as CardName
 import qualified Pawl.Types.CardType as CardType
@@ -566,19 +567,15 @@ data Filter keyword
     HasSticker StickerKind.StickerKind
   | -- | CR 123.4: is the CANDIDATE stickered, any kind, now?
     Stickered
-  | -- | CR 602.1 / 605.1a: does the CANDIDATE have one or more activated
-    -- abilities that aren't mana abilities? Tsabo's Web's "each land with an
-    -- activated ability that isn't a mana ability". The abilities it reads are
-    -- the ones the object HAS, which CR 702.29b and CR 702.77b keep in existence
-    -- outside the zone they can be activated from. Characteristic, unlike the
-    -- atoms above it: CR 613.1f writes abilities, so Humility stops it matching.
-    HasNonManaActivatedAbility
-  | -- | CR 602.1: does the CANDIDATE have one or more activated abilities, mana
-    -- abilities among them? Zirda, the Dawnwaker's companion condition -- "each
-    -- permanent card in your starting deck has an activated ability" -- is the
-    -- card asking, and the atom above is the same question with CR 605.1a's
-    -- exclusion, which Zirda does not write.
-    HasActivatedAbility
+  | -- | CR 602.1: does the CANDIDATE have one or more activated abilities of
+    -- this CR 605.1a kind, of any kind for Nothing? Zirda, the Dawnwaker's "has an
+    -- activated ability", Tsabo's Web's "an activated ability that isn't a mana
+    -- ability", Power Sink's "lands with mana abilities". The abilities it reads
+    -- are the ones the object HAS, which CR 702.29b and CR 702.77b keep in
+    -- existence outside the zone they can be activated from. Characteristic,
+    -- unlike the atoms above it: CR 613.1f writes abilities, so Humility stops it
+    -- matching.
+    HasActivatedAbility (Maybe AbilityKind.AbilityKind)
   | -- | CR 400.1: the candidate OBJECT is in this zone; "from anywhere other than
     -- their hands" is @Not (IsInZone Hand)@ (#163). A cast gate reads it before
     -- CR 601.2a moves the card to the stack, which is what CR 601.2's "take it

@@ -10670,3 +10670,6 @@ producedSpecified gs bearer specified produced = case specified of
   ManaSpecification.AnyMana -> True
   ManaSpecification.ChosenColor ->
     any (\color -> Set.member (ManaType.Colored color) produced) (Maybe.fromMaybe Set.empty (Game.currentChoice Chosen.Colors bearer gs))
+  -- A regression fence: no card in data/cards/ writes a printed colour in a
+  -- trigger, only in Crimson Hellkite's activation restriction.
+  ManaSpecification.OfColor color -> Set.member (ManaType.Colored color) produced

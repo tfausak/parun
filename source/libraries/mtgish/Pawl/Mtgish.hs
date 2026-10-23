@@ -31,8 +31,10 @@ import qualified Pawl.Oracle.Keyword as Oracle.Keyword
 import qualified Pawl.Oracle.Target as Oracle.Target
 import qualified Pawl.Oracle.Trigger as Oracle.Trigger
 import qualified Pawl.Types.ActivatedAbility as ActivatedAbility
+import qualified Pawl.Types.ActivationRestriction as ActivationRestriction
 import qualified Pawl.Types.Activator as Activator
 import qualified Pawl.Types.Affected as Affected
+import qualified Pawl.Types.AffectedUnless as AffectedUnless
 import qualified Pawl.Types.AgainstSlot as AgainstSlot
 import qualified Pawl.Types.Aggregation as Aggregation
 import qualified Pawl.Types.Arithmetic as Arithmetic
@@ -43,14 +45,18 @@ import qualified Pawl.Types.CardType as CardType
 import qualified Pawl.Types.CharacteristicPT as CharacteristicPT
 import qualified Pawl.Types.Clause as Clause
 import qualified Pawl.Types.Color as Color
+import qualified Pawl.Types.CombatRestriction as CombatRestriction
 import qualified Pawl.Types.CombatStep as CombatStep
 import qualified Pawl.Types.Compares as Compares
 import qualified Pawl.Types.Comparison as Comparison
 import qualified Pawl.Types.Condition as Condition
 import qualified Pawl.Types.Cost as Cost
 import qualified Pawl.Types.CostAmount as CostAmount
+import qualified Pawl.Types.CostChange as CostChange
 import qualified Pawl.Types.CostChoice as CostChoice
 import qualified Pawl.Types.CostComponent as CostComponent
+import qualified Pawl.Types.CostModifier as CostModifier
+import qualified Pawl.Types.CostSubject as CostSubject
 import qualified Pawl.Types.Count as Count
 import qualified Pawl.Types.CountedDiscard as CountedDiscard
 import qualified Pawl.Types.Counter as Counter
@@ -64,6 +70,7 @@ import qualified Pawl.Types.DestructionRewrite as DestructionRewrite
 import qualified Pawl.Types.Discard as Discard
 import qualified Pawl.Types.Draw as Draw
 import qualified Pawl.Types.Duration as Duration
+import qualified Pawl.Types.DuringPhase as DuringPhase
 import qualified Pawl.Types.Effect as Effect
 import qualified Pawl.Types.EndingStep as EndingStep
 import qualified Pawl.Types.EntryR as EntryR
@@ -85,7 +92,9 @@ import qualified Pawl.Types.ManaAddition as ManaAddition
 import qualified Pawl.Types.ManaCost as ManaCost
 import qualified Pawl.Types.ManaProduction as ManaProduction
 import qualified Pawl.Types.ManaRetention as ManaRetention
+import qualified Pawl.Types.ManaSymbol as ManaSymbol
 import qualified Pawl.Types.Measure as Measure
+import qualified Pawl.Types.Mill as Mill
 import qualified Pawl.Types.Modal as Modal
 import qualified Pawl.Types.Mode as Mode
 import qualified Pawl.Types.ModeSelection as ModeSelection
@@ -99,10 +108,13 @@ import qualified Pawl.Types.PayBranch as PayBranch
 import qualified Pawl.Types.PayGate as PayGate
 import qualified Pawl.Types.PayObligation as PayObligation
 import qualified Pawl.Types.Phase as Phase
+import qualified Pawl.Types.PhaseSelector as PhaseSelector
+import qualified Pawl.Types.PlayerEffect as PlayerEffect
 import qualified Pawl.Types.PlayerQuantity as PlayerQuantity
 import qualified Pawl.Types.PlayerRef as PlayerRef
 import qualified Pawl.Types.PlayerRelation as PlayerRelation
 import qualified Pawl.Types.PlayerScope as PlayerScope
+import qualified Pawl.Types.PlayerStaticAbility as PlayerStaticAbility
 import qualified Pawl.Types.Pool as Pool
 import qualified Pawl.Types.Power as Power
 import qualified Pawl.Types.PrintedReplacement as PrintedReplacement
@@ -118,6 +130,8 @@ import qualified Pawl.Types.Sacrifice as Sacrifice
 import qualified Pawl.Types.SacrificeEffect as SacrificeEffect
 import qualified Pawl.Types.Sacrificer as Sacrificer
 import qualified Pawl.Types.Scope as Scope
+import qualified Pawl.Types.Search as Search
+import qualified Pawl.Types.SearchDestination as SearchDestination
 import qualified Pawl.Types.SlotCount as SlotCount
 import qualified Pawl.Types.SlotName as SlotName
 import qualified Pawl.Types.SpellCast as SpellCast
@@ -240,7 +254,8 @@ natural n k = maybe (Node.untranslated n) Right (Integer.toNatural k)
 
 -- | The face with one more rule (CR 113): a keyword, a spell's instructions,
 -- an activated, triggered or static ability, its entering tapped, an enchant
--- ability, or a characteristic-defining power or toughness.
+-- ability, a characteristic-defining power or toughness, or a rule its
+-- permanents or the players follow.
 rule :: Face -> Node.Node -> Translated Face
 rule face n = case Node.tag n of
   "SpellActions" -> do
@@ -252,6 +267,16 @@ rule face n = case Node.tag n of
     c <- costOf costValue
     m <- modal outermost actionsValue
     pure face {Face.activatedAbilities = Face.activatedAbilities face <> [activatedAbility c m]}
+  -- "Activate only ..." (CR 602.5).
+  "ActivatedWithModifiers" -> do
+    as <- Node.arguments n
+    case as of
+      [costValue, actionsValue, modifierValue] -> do
+        c <- costOf costValue
+        m <- modal outermost actionsValue
+        rs <- Node.node modifierValue >>= activationRestrictions
+        pure face {Face.activatedAbilities = Face.activatedAbilities face <> [(activatedAbility c m) {ActivatedAbility.restrictions = rs}]}
+      _ -> Node.untranslated n
   "TriggerA" -> do
     (eventValue, actionsValue) <- pair n
     (condition, context) <- Node.node eventValue >>= trigger
@@ -279,6 +304,19 @@ rule face n = case Node.tag n of
     f <- permanents outermost who
     modifications <- Common.asArray changes >>= traverse (Node.node Monad.>=> staticModification)
     static face (Affected.Matching f) (concat modifications)
+  "PermanentRuleEffect" -> do
+    (who, rules) <- pair n
+    affected <- Node.node who >>= affectedOf face
+    Common.asArray rules >>= Monad.foldM (\f r -> Node.node r >>= permanentRule f affected) face
+  "EachPermanentRuleEffect" -> do
+    (who, rules) <- pair n
+    f <- permanents outermost who
+    Common.asArray rules >>= Monad.foldM (\g r -> Node.node r >>= permanentRule g (Affected.Matching f)) face
+  "EachPlayerEffect" -> do
+    (who, effects') <- pair n
+    relation <- players who
+    rows <- Common.asArray effects' >>= traverse (Node.node Monad.>=> playerRule)
+    pure face {Face.playerAbilities = Face.playerAbilities face <> [PlayerStaticAbility.MkPlayerStaticAbility (PlayerScope.Related relation) Nothing Nothing e | e <- rows]}
   -- "This land enters tapped" (CR 614.1d).
   "AsPermanentEnters" -> do
     (who, replacements) <- pair n
@@ -353,6 +391,28 @@ triggeredAbility condition m =
       TriggeredAbility.functionsFrom = Set.empty
     }
 
+-- | The clauses of an activated ability's "Activate only ..." rider (CR
+-- 602.5): its timing (CR 307.5, CR 602.5e), how often (CR 602.5b), or your
+-- turn or upkeep (CR 102.1, CR 503).
+activationRestrictions :: Node.Node -> Translated [ActivationRestriction.ActivationRestriction]
+activationRestrictions n = case Node.tag n of
+  "And" -> fmap concat (Node.arguments n >>= traverse (Node.node Monad.>=> activationRestrictions))
+  "ActivateOnlyAsASorcery" -> Right [ActivationRestriction.SorcerySpeed]
+  "ActivateOnlyAsAnInstant" -> Right [ActivationRestriction.InstantSpeed]
+  "ActivateOnlyOnceEachTurn" -> Right [ActivationRestriction.OnlyOnceEachTurn]
+  "ActivateOnlyOnce" -> Right [ActivationRestriction.OnlyOnce]
+  "ActivateOnlyIf" -> do
+    c <- Node.child n
+    (who, test) <- if Node.tag c == "PlayerPassesFilter" then pair c else Node.untranslated c
+    p <- Node.node who
+    Monad.unless (Node.tag p == "You") (Node.untranslated p)
+    t <- Node.node test
+    case Node.tag t of
+      "IsTheirTurn" -> Right [ActivationRestriction.DuringTurn TurnScope.ControllersTurn]
+      "IsTheirUpkeep" -> Right [ActivationRestriction.DuringPhase (DuringPhase.MkDuringPhase (PhaseSelector.Step (Phase.Beginning BeginningStep.Upkeep)) TurnScope.ControllersTurn)]
+      _ -> Node.untranslated t
+  _ -> Node.untranslated n
+
 staticAbility :: Affected.Affected -> NonEmpty.NonEmpty (Modification.Modification Ability) -> StaticAbility.StaticAbility Ability
 staticAbility affected modifications =
   StaticAbility.MkStaticAbility
@@ -373,6 +433,33 @@ entersTapped =
       PrintedReplacement.functionsFrom = Set.empty,
       PrintedReplacement.name = Nothing
     }
+
+-- | The face with one more rule its permanents follow: that they can't
+-- attack (CR 508.1c) or block (CR 509.1b).
+permanentRule :: Face -> Affected.Affected -> Node.Node -> Translated Face
+permanentRule face affected n
+  | Maybe.isJust (Node.args n) = Node.untranslated n
+  | otherwise = case Node.tag n of
+      "CantAttack" -> combat (CombatRestriction.CantAttack unless)
+      "CantBlock" -> combat (CombatRestriction.CantBlock unless)
+      _ -> Node.untranslated n
+  where
+    unless = AffectedUnless.MkAffectedUnless {AffectedUnless.affected = affected, AffectedUnless.unless = Nothing, AffectedUnless.name = Nothing}
+    combat r = Right face {Face.combatRestrictions = Face.combatRestrictions face <> [r]}
+
+-- | A rule players follow: spells of a description cost more generic mana
+-- to cast (CR 601.2f).
+playerRule :: Node.Node -> Translated PlayerEffect.PlayerEffect
+playerRule n = case Node.tag n of
+  "IncreaseSpellCost" -> do
+    (what, price) <- pair n
+    f <- spells what
+    c <- costOf price
+    k <- case (Cost.mana c, Cost.components c) of
+      (Just (ManaCost.MkManaCost [ManaSymbol.Generic k]), []) -> Right k
+      _ -> Node.untranslated n
+    Right (PlayerEffect.ModifyCost CostModifier.MkCostModifier {CostModifier.subject = CostSubject.Spells, CostModifier.matching = Maybe.fromMaybe (Filter.And []) f, CostModifier.whichTargets = Nothing, CostModifier.perTarget = Nothing, CostModifier.perEach = Nothing, CostModifier.onlyFirst = Nothing, CostModifier.change = CostChange.Increase k})
+  _ -> Node.untranslated n
 
 -- | The objects a static ability of a permanent affects: the one it is
 -- attached to (CR 303.4m), or itself.
@@ -976,6 +1063,12 @@ playerEffects context who n = case Node.tag n of
     q <- forEach
     pure [Effect.LoseLife LifeLoss.MkLifeLoss {LifeLoss.player = who, LifeLoss.quantity = q, LifeLoss.cause = LifeLossCause.ByEffect, LifeLoss.tally = Nothing}]
   "DiscardNumberCards" -> discard =<< (Node.argument n >>= quantity context)
+  "MillNumberCards" -> do
+    q <- Node.argument n >>= quantity context
+    pure [Effect.Mill Mill.MkMill {Mill.player = who, Mill.quantity = q, Mill.tally = Nothing, Mill.slot = Nothing}]
+  "SearchLibrary" -> do
+    steps <- Node.arguments n >>= traverse Node.node
+    fmap pure (searchLibrary who steps)
   "CreateTokens" -> do
     (tokensValue, riders) <- pair n
     Common.asArray riders >>= \rs -> Monad.unless (null rs) (Node.untranslated n)
@@ -1007,6 +1100,48 @@ moveTo zone ref =
       MoveToZone.placement = LibraryPlacement.defaultValue,
       MoveToZone.duration = Nothing
     }
+
+-- | A player's search of their library for one card (CR 701.23a), and where
+-- the card goes, after which the library is shuffled (CR 701.24b): the
+-- destination's shuffle, Pawl.Types.SearchDestination's.
+searchLibrary :: PlayerRef.PlayerRef -> [Node.Node] -> Translated Effect
+searchLibrary who steps = case steps of
+  find : rest -> do
+    f <- case Node.tag find of
+      "FindAGenericCard" -> Right (Filter.And [])
+      "FindACardOfType" -> Node.child find >>= spellFilter
+      _ -> Node.untranslated find
+    destination <- case fmap Node.tag rest of
+      ["PutFoundCardsIntoHand", "Shuffle"] -> Right SearchDestination.Hand
+      ["RevealFoundCards", "PutFoundCardsIntoHand", "Shuffle"] -> Right SearchDestination.RevealThenHand
+      ["PutFoundCardsOntoBattlefield", "Shuffle"] | (onto : _) <- rest -> do
+        flags <- Node.argument onto >>= Common.asArray >>= traverse Node.node
+        case fmap Node.tag flags of
+          ["EntersNormally"] -> Right SearchDestination.Battlefield
+          ["EntersTapped"] -> Right SearchDestination.BattlefieldTapped
+          _ -> Node.untranslated onto
+      ["SetAsideFoundCards", "Shuffle", "PutSetAsideCardsOnTopOfLibrary"] -> Right SearchDestination.Top
+      ["RevealFoundCards", "SetAsideFoundCards", "Shuffle", "PutSetAsideCardsOnTopOfLibrary"] -> Right SearchDestination.RevealThenTop
+      _ -> maybe (Node.untranslated find) Node.untranslated (Maybe.listToMaybe rest)
+    Right
+      ( Effect.Search
+          Search.MkSearch
+            { Search.searcher = who,
+              Search.owner = who,
+              Search.zones = Set.singleton Zone.Library,
+              Search.outsideTheGame = False,
+              Search.quantity = Just (Quantity.Literal 1),
+              Search.filter = f,
+              Search.upTo = False,
+              Search.destination = destination,
+              Search.subject = Nothing,
+              Search.slot = Nothing,
+              Search.differentIn = Set.empty,
+              Search.exactly = False,
+              Search.andOr = False
+            }
+      )
+  [] -> Left (Text.pack "_Action:SearchLibrary")
 
 addition :: ManaProduction.ManaProduction -> ManaAddition.ManaAddition
 addition p =
@@ -1119,6 +1254,8 @@ permanent context value = do
   n <- Node.node value
   case Node.tag n of
     "ThisPermanent" -> Right (ObjectRef.InSlot Oracle.Target.selfSlot)
+    -- What the source is attached to (CR 303.4b, CR 301.5a).
+    "HostPermanent" -> Right (ObjectRef.EachMatching Filter.IsHostOfSource)
     t
       | Just s <- Map.lookup t (references context) -> Right (ObjectRef.InSlot s)
       | Just s <- Map.lookup t (bindings context) -> Right (ObjectRef.InSlot s)
@@ -1387,15 +1524,24 @@ spells value = do
     "AnySpell" -> Right Nothing
     _ -> fmap Just (spellFilter n)
 
+-- | A description of spells or cards by their characteristics: card types,
+-- colours, supertypes and subtypes (CR 205).
 spellFilter :: Node.Node -> Translated Filter
 spellFilter n = case Node.tag n of
   "IsCardtype" -> fmap Filter.HasCardType (Node.argument n >>= Common.asText >>= Ingest.enumWord "type")
   "IsNonCardtype" -> fmap (Filter.Not . Filter.HasCardType) (Node.argument n >>= Common.asText >>= Ingest.enumWord "type")
   "IsColor" -> fmap Filter.HasColor (Node.child n >>= colour)
   "IsNonColor" -> fmap (Filter.Not . Filter.HasColor) (Node.child n >>= colour)
+  "IsSupertype" -> fmap Filter.HasSupertype (Node.argument n >>= Common.asText >>= Ingest.enumWord "supertype")
+  "IsCreatureType" -> subtype
+  "IsLandType" -> subtype
+  "IsArtifactType" -> subtype
+  "IsEnchantmentType" -> subtype
   "And" -> fmap Filter.And (Node.arguments n >>= traverse (Node.node Monad.>=> spellFilter))
   "Or" -> fmap Filter.Or (Node.arguments n >>= traverse (Node.node Monad.>=> spellFilter))
   _ -> Node.untranslated n
+  where
+    subtype = fmap Filter.HasSubtype (Node.argument n >>= Common.asText >>= Ingest.enumWord "subtype")
 
 -- | A description of cards in graveyards: whose graveyards (CR 404.1), and
 -- what else the cards are.
