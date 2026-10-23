@@ -1,5 +1,5 @@
 {
-  "description": "CR 109.4 whole card: each player creates a Cat for each untapped Forest they control",
+  "description": "CR 111.2 whole card: each player creates a Cat for each untapped Forest they control",
   "note": "Alice taps three of her four Forests to cast it, so she gets one Cat; bob, with two untapped Forests and one tapped, gets two.",
   "board": {"active": "alice", "step": "PrecombatMain", "seats": [{"name": "alice", "battlefield": [{"card": "Forest", "label": "f1"}, {"card": "Forest", "label": "f2"}, {"card": "Forest", "label": "f3"}, {"card": "Forest", "label": "f4"}], "hand": [{"card": "Waiting in the Weeds", "label": "weeds"}], "library": [{"card": "Island"}, {"card": "Island"}, {"card": "Island"}]}, {"name": "bob", "battlefield": [{"card": "Forest"}, {"card": "Forest"}, {"card": "Forest", "tapped": true}], "library": [{"card": "Island"}, {"card": "Island"}, {"card": "Island"}]}]},
   "timeline": [

@@ -1,5 +1,5 @@
 {
-  "description": "CR 705 whole card: Bottle of Suleiman deals 5 damage to its controller when the flip is lost",
+  "description": "CR 705.2 whole card: Bottle of Suleiman deals 5 damage to its controller when the flip is lost",
   "note": "Alice loses the flip: she is at 15 and has no Djinn.",
   "board": {"active": "alice", "step": "PrecombatMain", "seats": [{"name": "alice", "manaPool": "C", "battlefield": [{"card": "Bottle of Suleiman", "label": "bottle"}], "library": [{"card": "Island"}, {"card": "Island"}, {"card": "Island"}]}, {"name": "bob", "library": [{"card": "Island"}, {"card": "Island"}, {"card": "Island"}]}]},
   "timeline": [

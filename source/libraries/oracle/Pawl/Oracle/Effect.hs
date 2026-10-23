@@ -566,10 +566,7 @@ effect context e = case e of
           -- equal to the number of" (Dream Salvage).
           Target.ForEach n each' -> fmap (<> Text.pack " for each " <> each') (Target.cards (Quantity.Literal n))
           Target.EqualTo equal -> [Text.pack "cards equal to " <> equal]
-        -- Free: a draw of "you" standing alone keeps its subject, "you draw a
-        -- card" (Insight), as often as it drops it.
-        let drawn = imperative context (Draw.player d) (Text.pack "draw " <> count) (Text.pack "draws " <> count)
-        naming (Target.names a) (drawn <> [p {implied = False} | p <- drawn, implied p])
+        naming (Target.names a) (imperative context (Draw.player d) (Text.pack "draw " <> count) (Text.pack "draws " <> count))
   Effect.GainLife g -> do
     a <- Target.amounts context (PlayerQuantity.quantity g)
     n <- life a
@@ -902,9 +899,10 @@ dealDamage context d
               groups
                 | shared = List.groupBy (\a b -> DamagePart.quantity a == DamagePart.quantity b) parts
                 | otherwise = fmap pure parts
-          -- Free when the card deals damage to itself: "itself" (Reckless
-          -- Embermage) or its own name.
-          recipients <- if Maybe.isNothing (DealDamage.dealer d) then [context, context {Target.self = Text.pack "itself"}] else [context]
+          -- Free when the card deals damage to itself: its own name or "itself"
+          -- (Reckless Embermage).
+          let itself = Maybe.isNothing (DealDamage.dealer d) && any ((== ObjectRef.InSlot Target.selfSlot) . DamagePart.ref) parts
+          recipients <- context : [context {Target.self = Text.pack "itself"} | itself]
           rendered <- traverse (damagePart recipients measured) groups
           [MkPredicate (Just source) (Text.pack "deals " <> Text.intercalate (Text.pack " and ") (fmap fst rendered)) [] (concatMap snd rendered) Nothing False]
 

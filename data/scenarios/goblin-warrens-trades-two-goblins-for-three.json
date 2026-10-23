@@ -1,5 +1,5 @@
 {
-  "description": "CR 118.3 / 701.21 whole card: Goblin Warrens sacrifices two Goblins to create three",
+  "description": "CR 701.21a / 111.4 whole card: Goblin Warrens sacrifices two Goblins to create three",
   "note": "Alice sacrifices her two Goblin Pikers and gets three Goblin tokens.",
   "board": {"active": "alice", "step": "PrecombatMain", "seats": [{"name": "alice", "manaPool": "RRR", "battlefield": [{"card": "Goblin Warrens", "label": "warrens"}, {"card": "Goblin Piker", "label": "g1"}, {"card": "Goblin Piker", "label": "g2"}], "library": [{"card": "Island"}, {"card": "Island"}, {"card": "Island"}]}, {"name": "bob", "library": [{"card": "Island"}, {"card": "Island"}, {"card": "Island"}]}]},
   "timeline": [

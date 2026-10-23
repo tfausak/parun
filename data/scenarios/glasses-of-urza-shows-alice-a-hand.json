@@ -1,5 +1,5 @@
 {
-  "description": "CR 701.20 whole card: Glasses of Urza lets alice look at the hand of the player it targets",
+  "description": "CR 701.20e whole card: Glasses of Urza lets alice look at the hand of the player it targets",
   "note": "Bob's hand is shown to alice and not to carol.",
   "board": {"active": "alice", "step": "PrecombatMain", "seats": [{"name": "alice", "battlefield": [{"card": "Glasses of Urza", "label": "glasses"}], "library": [{"card": "Island"}, {"card": "Island"}, {"card": "Island"}]}, {"name": "bob", "hand": [{"card": "Hill Giant"}], "library": [{"card": "Island"}, {"card": "Island"}, {"card": "Island"}]}, {"name": "carol", "library": [{"card": "Island"}, {"card": "Island"}, {"card": "Island"}]}]},
   "timeline": [

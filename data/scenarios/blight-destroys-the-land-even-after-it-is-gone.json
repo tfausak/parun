@@ -1,5 +1,5 @@
 {
-  "description": "CR 701.26a / 603.7c whole card: Blight destroys the land it enchants when that land becomes tapped, even once Blight itself is gone",
+  "description": "CR 701.26a / 113.7a whole card: Blight destroys the land it enchants when that land becomes tapped, even once Blight itself is gone",
   "note": "Bob taps his enchanted Forest for mana and, with Blight's trigger on the stack, Disenchants Blight using that mana; the trigger still destroys the Forest. His Plains is untouched.",
   "board": {"active": "bob", "step": "PrecombatMain", "seats": [{"name": "bob", "battlefield": [{"card": "Forest", "label": "forest"}, {"card": "Plains", "label": "plains"}], "hand": [{"card": "Disenchant", "label": "disenchant"}], "library": [{"card": "Island"}, {"card": "Island"}, {"card": "Island"}]}, {"name": "alice", "battlefield": [{"card": "Blight", "label": "blight", "attached": "forest"}], "library": [{"card": "Island"}, {"card": "Island"}, {"card": "Island"}]}]},
   "timeline": [
