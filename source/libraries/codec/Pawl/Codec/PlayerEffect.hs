@@ -17,6 +17,7 @@ import qualified Pawl.Codec.ModifiedRoll as ModifiedRoll
 import qualified Pawl.Codec.PlayerCounterKind as PlayerCounterKind
 import qualified Pawl.Codec.PlayerScope as PlayerScope
 import qualified Pawl.Codec.PlotFromZone as PlotFromZone
+import qualified Pawl.Codec.RevealObligation as RevealObligation
 import qualified Pawl.Codec.Shows as Shows
 import qualified Pawl.Codec.SpendManaAsThough as SpendManaAsThough
 import qualified Pawl.Codec.StatedFlip as StatedFlip
@@ -78,7 +79,8 @@ codec =
           Arm.nullary "CantGainLife" PlayerEffect.CantGainLife,
           Arm.nullary "CantLoseLife" PlayerEffect.CantLoseLife,
           Arm.payload "Precluded" GameOutcome.codec PlayerEffect.Precluded (\x -> case x of PlayerEffect.Precluded y -> Just y; _ -> Nothing),
-          Arm.payload "Shows" Shows.codec PlayerEffect.Shows (\x -> case x of PlayerEffect.Shows y -> Just y; _ -> Nothing)
+          Arm.payload "Shows" Shows.codec PlayerEffect.Shows (\x -> case x of PlayerEffect.Shows y -> Just y; _ -> Nothing),
+          Arm.payload "RevealsFirstDraw" RevealObligation.codec PlayerEffect.RevealsFirstDraw (\x -> case x of PlayerEffect.RevealsFirstDraw y -> Just y; _ -> Nothing)
         ]
 
 tagOf :: PlayerEffect.PlayerEffect -> String
@@ -129,3 +131,4 @@ tagOf x = case x of
   PlayerEffect.CantLoseLife {} -> "CantLoseLife"
   PlayerEffect.Precluded {} -> "Precluded"
   PlayerEffect.Shows {} -> "Shows"
+  PlayerEffect.RevealsFirstDraw {} -> "RevealsFirstDraw"

@@ -1,0 +1,93 @@
+{
+  "description": "CR 701.23d whole card: Doomsday stacks the five it found and exiles the rest",
+  "note": "alice searches seven library cards and three graveyard cards and finds five, two of them from the graveyard. Nothing shuffles: an unscheduled Shuffle prompt would fail the run. The other five go to exile, the five go on top in the order alice states, which is not the order she found them in, and she loses half her 15 life rounded up. bob is shown none of the five (CR 701.23e).",
+  "board": {
+    "seats": [
+      {
+        "name": "alice",
+        "life": 15,
+        "battlefield": [
+          { "card": "Swamp", "label": "swamp", "ready": true },
+          { "card": "Swamp", "label": "swamp-2", "ready": true },
+          { "card": "Swamp", "label": "swamp-3", "ready": true }
+        ],
+        "hand": [{ "card": "Doomsday", "label": "doomsday" }],
+        "library": [
+          { "card": "Plains", "label": "plains" },
+          { "card": "Island", "label": "island" },
+          { "card": "Mountain", "label": "mountain" },
+          { "card": "Forest", "label": "forest" },
+          { "card": "Grizzly Bears", "label": "bears" },
+          { "card": "Hill Giant", "label": "giant" },
+          { "card": "Goblin Piker", "label": "piker" }
+        ],
+        "graveyard": [
+          { "card": "Lightning Bolt", "label": "bolt" },
+          { "card": "Bird Maiden", "label": "maiden" },
+          { "card": "Llanowar Elves", "label": "elves" }
+        ]
+      },
+      {
+        "name": "bob",
+        "library": [{ "card": "Wind Drake" }]
+      }
+    ],
+    "active": "alice",
+    "step": "PrecombatMain"
+  },
+  "timeline": [
+    {
+      "turn": 1,
+      "step": "PrecombatMain",
+      "player": "alice",
+      "do": { "Cast": { "object": "$doomsday", "mana": ["$swamp", "$swamp-2", "$swamp-3"] } }
+    },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "do": "Pass" },
+    {
+      "turn": 1,
+      "step": "PrecombatMain",
+      "player": "alice",
+      "do": { "Answer": { "prompt": "Search", "with": ["$giant", "$maiden", "$island", "$bolt", "$piker"] } }
+    },
+    {
+      "turn": 1,
+      "step": "PrecombatMain",
+      "player": "alice",
+      "do": { "Answer": { "prompt": "ArrangeLibraryArrivals", "with": [4, 2, 0, 3, 1] } }
+    },
+    {
+      "turn": 1,
+      "step": "PrecombatMain",
+      "player": "alice",
+      "check": {
+        "View": {
+          "of": "Zone",
+          "player": "alice",
+          "zone": "Library",
+          "is": ["Goblin Piker", "Island", "Hill Giant", "Lightning Bolt", "Bird Maiden"]
+        }
+      }
+    },
+    {
+      "turn": 1,
+      "step": "PrecombatMain",
+      "player": "alice",
+      "check": { "View": { "of": "Zone", "player": "alice", "zone": "Graveyard", "is": ["Doomsday"] } }
+    },
+    {
+      "turn": 1,
+      "step": "PrecombatMain",
+      "player": "alice",
+      "check": {
+        "View": {
+          "of": "Zone",
+          "player": "alice",
+          "zone": "Exile",
+          "is": ["Llanowar Elves", "Plains", "Mountain", "Forest", "Grizzly Bears"]
+        }
+      }
+    },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "check": { "Life": { "player": "alice", "life": 7 } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "check": { "View": { "of": "Witnessed", "player": "bob", "is": [] } } }
+  ]
+}

@@ -18,6 +18,7 @@ import qualified Pawl.Types.ModifiedRoll as ModifiedRoll
 import qualified Pawl.Types.PlayerCounterKind as PlayerCounterKind
 import qualified Pawl.Types.PlayerScope as PlayerScope
 import qualified Pawl.Types.PlotFromZone as PlotFromZone
+import qualified Pawl.Types.RevealObligation as RevealObligation
 import qualified Pawl.Types.Shows as Shows
 import qualified Pawl.Types.SpendManaAsThough as SpendManaAsThough
 import qualified Pawl.Types.StatedFlip as StatedFlip
@@ -231,4 +232,7 @@ data PlayerEffect
     Precluded GameOutcome.GameOutcome
   | -- | CR 401.5 / 400.2: cards of this player's that are shown, and to whom.
     Shows Shows.Shows
+  | -- | CR 603.11 / 121.9 / Rowen, God-Eternal Kefnet: this player reveals, or
+    -- may reveal, the first card they draw each turn as they draw it.
+    RevealsFirstDraw RevealObligation.RevealObligation
   deriving (Eq, Ord, Show)

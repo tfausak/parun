@@ -63,6 +63,7 @@ import Pawl.Types.PlayerId (PlayerId)
 import qualified Pawl.Types.PlayerRelation as PlayerRelation
 import qualified Pawl.Types.ProjectedCharacteristics as PC
 import qualified Pawl.Types.Recipient as Recipient
+import qualified Pawl.Types.Revealed as Revealed
 import qualified Pawl.Types.SlotName as SlotName
 import qualified Pawl.Types.SpellWasCast as SpellWasCast
 import qualified Pawl.Types.SpellWasCopied as SpellWasCopied
@@ -502,6 +503,10 @@ eventBindingsOver board gs bearerBecame becameInGraveyard bearer you cond event 
   -- in for.
   (TriggerCondition.PlayerDiscards _, GameEvent.Discarded (Discarded.MkDiscarded discarder _ _ _)) ->
     Binding.setTriggerPlayer discarder Map.empty
+  -- CR 607.2h's "that card": the card the linked static revealed (God-Eternal
+  -- Kefnet's "copy that card").
+  (TriggerCondition.RevealedThisWay _, GameEvent.Revealed revealed) ->
+    Map.singleton Binding.revealedCard (Binding.toObject (Revealed.card revealed))
   -- CR 603.2c's "that much" (Magmakin Artillerist): one card per Discarded
   -- event, summed across the group by batchBindings.
   (TriggerCondition.PlayerDiscardsCards _, GameEvent.Discarded _) ->
@@ -1489,6 +1494,9 @@ eventBindingSlots cond = case cond of
   -- source, and the revealing player is its owner -- the same seat CR 113.8 makes
   -- the ability's controller, whom Binding.setYou already names.
   TriggerCondition.SelfRevealedForMiracle -> Set.empty
+  -- CR 607.2h's "that card": the card the linked static revealed, which is not
+  -- the bearer (God-Eternal Kefnet).
+  TriggerCondition.RevealedThisWay _ -> Set.singleton Binding.revealedCard
   -- CR 701.9a's discarded card is the bearer itself, already bound as CR 113.7's
   -- source, and the discarding player is its owner -- the same seat CR 113.8 makes
   -- the ability's controller, whom Binding.setYou already names.

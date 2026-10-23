@@ -1343,7 +1343,8 @@ spec s = Spec.describe s "Pawl.Codec.Effect" $ do
                     CastOffer.Type.restriction = Nothing,
                     CastOffer.Type.offeredBy = Nothing,
                     CastOffer.Type.faceDown = Nothing,
-                    CastOffer.Type.payableFromSpent = False
+                    CastOffer.Type.payableFromSpent = False,
+                    CastOffer.Type.reduction = 0
                   },
               OfferCast.repetition = CastRepetition.Once,
               OfferCast.copied = False,

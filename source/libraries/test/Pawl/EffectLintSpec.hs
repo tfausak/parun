@@ -1179,6 +1179,7 @@ unpreventableScopeOffends scope playerEffect = case playerEffect of
   PlayerEffect.AdditionalSurveilCards _ -> False
   PlayerEffect.CantGainLife -> False
   PlayerEffect.CantLoseLife -> False
+  PlayerEffect.RevealsFirstDraw _ -> False
   PlayerEffect.Precluded _ -> False
   PlayerEffect.Shows _ -> False
 
@@ -1251,6 +1252,7 @@ unpreventablePatternOffends playerEffect = case playerEffect of
   PlayerEffect.AdditionalSurveilCards _ -> False
   PlayerEffect.CantGainLife -> False
   PlayerEffect.CantLoseLife -> False
+  PlayerEffect.RevealsFirstDraw _ -> False
   PlayerEffect.Precluded _ -> False
   PlayerEffect.Shows _ -> False
 

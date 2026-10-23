@@ -126,6 +126,9 @@ data TriggerCondition
   | -- | CR 702.94a: "when you reveal this card this way" -- miracle's triggered
     -- half, linked (CR 603.11) to the static half. Self-scoped.
     SelfRevealedForMiracle
+  | -- | CR 603.11 / 607.2h: "whenever you reveal a [quality] card this way" --
+    -- the triggered half linked to the bearer's draw-time reveal (Rowen).
+    RevealedThisWay (Filter.Filter Keyword.Keyword)
   | -- | CR 701.9a: "when you discard this card" (Bartered Cow). Self-scoped.
     SelfDiscarded
   | -- | CR 702.35a: "when this card is exiled this way" -- madness's triggered

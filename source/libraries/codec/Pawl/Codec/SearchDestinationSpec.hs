@@ -49,6 +49,12 @@ spec s = Spec.describe s "Pawl.Codec.SearchDestination" $ do
       SearchDestination.codec
       SearchDestination.Reveal
       " {\"type\":\"Reveal\"} "
+  Spec.it s "Stay" $
+    Common.assertCodec
+      s
+      SearchDestination.codec
+      SearchDestination.Stay
+      " {\"type\":\"Stay\"} "
   Spec.it s "RevealThenTop" $
     Common.assertCodec
       s
