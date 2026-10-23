@@ -150,6 +150,7 @@ codec cardCodec abilityCodec =
           Arm.nullary "Reroll" Effect.Reroll,
           Arm.payload "RerollStoredResults" SlotName.codec Effect.RerollStoredResults (\x -> case x of Effect.RerollStoredResults y -> Just y; _ -> Nothing),
           Arm.payload "ChooseCardName" ChooseCardName.codec Effect.ChooseCardName (\x -> case x of Effect.ChooseCardName y -> Just y; _ -> Nothing),
+          Arm.nullary "ChooseBasicLandType" Effect.ChooseBasicLandType,
           Arm.payload "FromOutsideTheGame" FromOutsideTheGame.codec Effect.FromOutsideTheGame (\x -> case x of Effect.FromOutsideTheGame y -> Just y; _ -> Nothing),
           Arm.nullary "ExileThisSpell" Effect.ExileThisSpell,
           Arm.payload "Bolster" Quantity.codec Effect.Bolster (\x -> case x of Effect.Bolster y -> Just y; _ -> Nothing),
@@ -328,6 +329,7 @@ tagOf x = case x of
   Effect.Reroll {} -> "Reroll"
   Effect.RerollStoredResults {} -> "RerollStoredResults"
   Effect.ChooseCardName {} -> "ChooseCardName"
+  Effect.ChooseBasicLandType {} -> "ChooseBasicLandType"
   Effect.FromOutsideTheGame {} -> "FromOutsideTheGame"
   Effect.ExileThisSpell {} -> "ExileThisSpell"
   Effect.Bolster {} -> "Bolster"

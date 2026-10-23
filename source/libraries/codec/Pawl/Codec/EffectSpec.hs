@@ -2359,6 +2359,13 @@ spec s = Spec.describe s "Pawl.Codec.Effect" $ do
       fromJson
       (Effect.ChooseCardName (ChooseCardName.MkChooseCardName (PlayerRef.Relative PlayerRelation.You) (Filter.Not (Filter.HasCardType CardType.Land))))
       " {\"type\":\"ChooseCardName\",\"value\":{\"player\":{\"type\":\"Relative\",\"value\":{\"type\":\"You\"}},\"restriction\":{\"type\":\"Not\",\"value\":{\"type\":\"HasCardType\",\"value\":{\"type\":\"Land\"}}}}} "
+  Spec.it s "ChooseBasicLandType" $
+    Common.assertJsonCodec
+      s
+      toJson
+      fromJson
+      Effect.ChooseBasicLandType
+      " {\"type\":\"ChooseBasicLandType\"} "
   -- CR 400.11c: the filter and CR 701.20a's reveal, Burning Wish's "reveal a
   -- sorcery card". Everything else about the sentence is the rule's -- the pool is
   -- the resolving controller's own (CR 108.3b) and the destination their hand.

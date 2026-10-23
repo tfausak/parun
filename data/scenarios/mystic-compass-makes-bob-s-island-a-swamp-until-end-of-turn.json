@@ -1,0 +1,20 @@
+{
+  "description": "CR 608.2d / 305.7 / 608.2h whole card: Mystic Compass turns bob's Island into the Swamp alice chooses until end of turn, so her Bog Wraith is unblockable, and the type outlives the Compass",
+  "note": "The Compass is Disenchanted after its ability resolves: a type read live off the Compass would lapse with it and let the Bears block. Bob's Island is an Island again on his turn.",
+  "board": {"active": "alice", "step": "PrecombatMain", "seats": [{"name": "alice", "library": [{"card": "Plains"}, {"card": "Plains"}, {"card": "Plains"}], "battlefield": [{"card": "Mystic Compass", "label": "compass"}, {"card": "Bog Wraith", "label": "wraith", "ready": true}, {"card": "Plains", "label": "p1"}, {"card": "Plains", "label": "p2"}, {"card": "Plains", "label": "p3"}], "hand": [{"card": "Disenchant", "label": "disenchant"}]}, {"name": "bob", "library": [{"card": "Island"}, {"card": "Island"}, {"card": "Island"}], "battlefield": [{"card": "Island", "label": "isl"}, {"card": "Grizzly Bears", "label": "bears", "ready": true}]}]},
+  "timeline": [
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "do": {"Activate": {"object": "$compass", "targets": ["$isl"], "mana": ["$p1", null]}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "do": "Pass"},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "do": {"Answer": {"prompt": "ChooseBasicLandType", "with": {"type": "Swamp"}}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "check": {"Subtypes": {"object": "$isl", "subtypes": ["Swamp"]}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "do": {"Cast": {"object": "$disenchant", "targets": ["$compass"], "mana": ["$p2", "$p3"]}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "do": "Pass"},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "check": {"Subtypes": {"object": "$isl", "subtypes": ["Swamp"]}}},
+    {"turn": 1, "step": "DeclareAttackers", "player": "alice", "do": {"Attack": ["$wraith"]}},
+    {"turn": 1, "step": "DeclareBlockers", "player": "bob", "refuse": {"Block": {"$bears": ["$wraith"]}}},
+    {"turn": 1, "step": "DeclareBlockers", "player": "bob", "do": {"Block": {}}},
+    {"turn": 1, "step": "EndOfCombat", "player": "alice", "check": {"Life": {"player": "bob", "life": 17}}},
+    {"turn": 1, "step": "EndOfCombat", "player": "alice", "check": {"Count": {"player": "alice", "zone": "Graveyard", "card": "Mystic Compass", "count": 1}}},
+    {"turn": 2, "step": "Upkeep", "player": "bob", "check": {"Subtypes": {"object": "$isl", "subtypes": ["Island"]}}}
+  ]
+}
