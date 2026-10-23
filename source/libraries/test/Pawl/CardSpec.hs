@@ -1049,6 +1049,7 @@ triggerConditionCounts triggerCondition = case triggerCondition of
   -- CR 700.4's is nullary as well, for the same reason.
   TriggerCondition.AttachedCreatureDies -> []
   TriggerCondition.AttachedCreatureBecomesTapped -> []
+  TriggerCondition.AttachedCreatureDealsDamage -> []
   TriggerCondition.PermanentsBecomeTapped _ -> []
   TriggerCondition.SelfBecomesUntapped -> []
   TriggerCondition.AttachedPermanentTappedForMana -> []
@@ -4487,6 +4488,7 @@ triggerConditionFilters triggerCondition = case triggerCondition of
   -- them too, so this condition carries no Filter either.
   TriggerCondition.AttachedCreatureDies -> []
   TriggerCondition.AttachedCreatureBecomesTapped -> []
+  TriggerCondition.AttachedCreatureDealsDamage -> []
   -- Deeproot Pilgrimage's "nontoken Merfolk you control" is card text, swept
   -- like PermanentsDie's.
   TriggerCondition.PermanentsBecomeTapped f -> unframed [f]
@@ -4811,6 +4813,7 @@ triggerConditionSlots triggerCondition = case triggerCondition of
   TriggerCondition.SelfLeavesGraveyard -> []
   TriggerCondition.AttachedCreatureDies -> []
   TriggerCondition.AttachedCreatureBecomesTapped -> []
+  TriggerCondition.AttachedCreatureDealsDamage -> []
   TriggerCondition.PermanentsBecomeTapped _ -> []
   TriggerCondition.SelfBecomesUntapped -> []
   TriggerCondition.AttachedPermanentTappedForMana -> []

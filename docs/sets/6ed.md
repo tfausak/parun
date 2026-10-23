@@ -12,16 +12,11 @@ Each names the mtgish node the translator stops at, or what its rendering gets
 wrong. No Sixth Edition card's whole text is keywords, so `script/ingest` adds
 none of them.
 
-- Abduction: `StaticLayerEffect:SetController`
-- Animate Wall: `Permanent:HostPermanent`
 - Ankh of Mishra: `Permanent:Trigger_ThatPermanent`
 - Ashen Powder: `Action:PutGraveyardCardOntoBattlefield`
-- Balduvian Horde: `Action:MayCost`
 - Blight: `Trigger:WhenAPermanentBecomesTapped`
 - Bog Rats: `PermanentRule:CantBeBlockedByDefenders`
 - Bottle of Suleiman: `Action:FlipACoin_OnWinAndLose`
-- Browse: `Action:LookAtTheTopNumberCardsOfLibrary`
-- Call of the Wild: `Action:RevealTopCardOfLibrary`
 - Circle of Protection: Black: `Action:ChooseADamageSource`
 - Circle of Protection: Blue: `Action:ChooseADamageSource`
 - Circle of Protection: Green: `Action:ChooseADamageSource`
@@ -32,25 +27,18 @@ none of them.
 - Cursed Totem: `Rule:ActivatedAbilityEffect`
 - Derelor: `Rule:PlayerEffect`
 - Dingus Egg: `Trigger:WhenAPermanentIsPutIntoAPlayersGraveyard`
-- Dragon Mask: `Action:CreateFutureTrigger`
-- Dream Cache: `Action:ChooseAnAction`
 - Early Harvest: `Action:UntapEachPermanent`
 - Elder Druid: `Action:TapOrUntapPermanent`
-- Elven Riders: `PermanentRule:CantBeBlockedExceptByDefenders`
 - Ethereal Champion: `Action:CreateFuturePreventDamage`
 - Evil Eye of Orms-by-Gore: `PermanentRule:CantBeBlockedExceptByDefenders`
 - Exile: renders as one sentence, "attacking nonwhite"
 - Fog Elemental: `Action:CreateFutureTrigger`
 - Forget: `Action:PlayerActions`
-- Gaseous Form: `Rule:PreventDamage`
 - Glasses of Urza: `Action:LookAtPlayersHand`
 - Goblin Elite Infantry: renders "blocks or becomes blocked" as two triggers
-- Goblin Recruiter: `SearchLibraryAction:FindAnyNumberOfCardsOfType`
 - Goblin Warrens: `Cost:SacrificeNumberPermanents`
-- Gravebane Zombie: `Rule:ReplaceWouldPutIntoGraveyard`
 - Hammer of Bogardan: `Rule:FromGraveyard`
 - Healing Salve: `Action:CreateFuturePreventDamage`
-- Hecatomb: `Action:MayCost`
 - Howl from Beyond: `LayerEffect:AdjustPTX`
 - Howling Mine: `Condition:PermanentPassesFilter`
 - Insight: renders "you draw a card" as "draw a card"
@@ -58,37 +46,24 @@ none of them.
 - Lead Golem: `Action:PermanentDoesntUntapDuringControllersNextUntap`
 - Living Lands: `StaticLayerEffect:SetPT`
 - Manabarbs: `Trigger:WhenAPlayerTapsAPermanentForMana`
-- Mind Warp: `Action:LookAtPlayersHandAndChooseNumCardsToDiscard`
 - Necrosavant: `Rule:FromGraveyard`
 - Orcish Artillery: `Action:PermanentDealsMultipleDamage`
 - Painful Memories: `Action:LookAtPlayersHand`
 - Pentagram of the Ages: `Action:ChooseADamageSource`
-- Phantasmal Terrain: `ReplacementActionWouldEnter:ChooseABasicLandType`
-- Polymorph: `Action:RevealCardsFromTheTopOfLibraryUntilACardOfTypeIsRevealed`
 - Psychic Venom: `Trigger:WhenAPermanentBecomesTapped`
 - Radjan Spirit: `LayerEffect:LosesAbility`
-- Rag Man: `Action:RevealHandAndDiscardACardOfTypeAtRandom`
-- Recall: `Action:ReturnNumberCardsFromPlayersGraveyardToHand`
 - Reckless Embermage: `Action:PermanentDealsMultipleDamage`
 - Resistance Fighter: `Action:CreatePreventDamageUntil`
-- Sage Owl: `Action:LookAtTheTopNumberCardsOfLibrary`
 - Sea Monster: `PermanentRule:CantAttackUnlessDefendingPlayer`
 - Sengir Autocrat: `Trigger:WhenAPermanentLeavesTheBattlefield`
 - Sibilant Spirit: `Action:PlayerMayAction`
 - Snake Basket: `Cost:PayManaX`
-- Soldevi Sage: `Cost:SacrificeNumberPermanents`
 - Spell Blast: `Spells:AnySpell`
-- Spirit Link: `Trigger:WhenAPermanentDealsDamage`
-- Storm Cauldron: `PlayerEffect:MayPlayAnAdditionalLand`
 - Strands of Night: `Action:PutGraveyardCardOntoBattlefield`
 - Stupor: `Action:PlayerActions`
-- Teferi's Puzzle Box: `Action:PlayerActions`
 - The Hive: `CreatableToken:NamedTokenWithPT`
-- Thicket Basilisk: `Action:CreateFutureTrigger`
 - Vertigo: `LayerEffect:LosesAbility`
 - Waiting in the Weeds: `Action:EachPlayerCreatesTokens`
-- Wand of Denial: `Action:LookAtTheTopCardOfPlayersLibrary`
-- Zombie Master: `Rule:Activated`
 
 ## Needs a capability
 

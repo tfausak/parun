@@ -1,0 +1,15 @@
+{
+  "description": "CR 608.2d / 401.4 whole card: Dream Cache draws three, then alice chooses the bottom for both of the two cards she puts back from her hand",
+  "note": "Alice draws Hill Giant, Grizzly Bears and Swamp, chooses the bottom, and puts back her Shock and the Giant beneath the Plains and Forest still in her library.",
+  "board": {"active": "alice", "step": "PrecombatMain", "seats": [{"name": "alice", "manaPool": "UUU", "hand": [{"card": "Dream Cache", "label": "cache"}, {"card": "Shock", "label": "shock"}], "library": [{"card": "Hill Giant"}, {"card": "Grizzly Bears"}, {"card": "Swamp"}, {"card": "Plains"}, {"card": "Forest"}]}, {"name": "bob", "library": [{"card": "Wall of Stone"}, {"card": "Wall of Stone"}, {"card": "Wall of Stone"}]}]},
+  "timeline": [
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "do": {"Cast": {"object": "$cache"}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "do": "Pass"},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "do": {"Answer": {"prompt": "ChooseClause", "with": 2}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "do": {"Answer": {"prompt": "ChooseCardInHand", "with": "$shock"}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "do": {"Answer": {"prompt": "ChooseCardInHand", "with": "Hill Giant"}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "do": {"Answer": {"prompt": "ArrangeLibraryArrivals", "with": [1, 0]}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "check": {"View": {"of": "Zone", "player": "alice", "zone": "Hand", "is": ["Grizzly Bears", "Swamp"]}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "check": {"View": {"of": "Zone", "player": "alice", "zone": "Library", "is": ["Plains", "Forest", "Shock", "Hill Giant"]}}}
+  ]
+}

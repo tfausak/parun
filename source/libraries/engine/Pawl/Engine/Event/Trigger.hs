@@ -607,6 +607,8 @@ looksBack condition = case condition of
   -- battlefield, so the ordinary CR 603.10 reading -- the board as it is now --
   -- is the right one.
   TriggerCondition.AttachedCreatureBecomesTapped -> False
+  -- Nor is dealing damage: the host deals it from the battlefield.
+  TriggerCondition.AttachedCreatureDealsDamage -> False
   TriggerCondition.PermanentsBecomeTapped _ -> False
   -- Nor is becoming untapped: CR 701.26b leaves the permanent standing on
   -- the battlefield too, so the same live read is the right one.
@@ -887,6 +889,9 @@ batchScoped condition = case condition of
   -- CR 603.2e names the MOMENT the one enchanted permanent becomes tapped, so a
   -- batch holds at most one occurrence of it.
   TriggerCondition.AttachedCreatureBecomesTapped -> False
+  -- SelfDealsDamage's True, off the one host the attachment link names: a
+  -- batch holds that host's damage alone, so nothing needs partitioning.
+  TriggerCondition.AttachedCreatureDealsDamage -> True
   -- A True beside PermanentsDie: "one or more nontoken Merfolk
   -- you control become tapped" (Deeproot Pilgrimage) is one trigger event per
   -- tapping, however many it tapped -- a cost's taps, CR 508.1f's attackers, or
@@ -2619,6 +2624,7 @@ enchantedObjectLeaves condition = case condition of
   -- attachment link, but for an event that leaves the enchanted permanent right
   -- where it was, so CR 113.6m's Aura clause has nothing to exempt.
   TriggerCondition.AttachedCreatureBecomesTapped -> False
+  TriggerCondition.AttachedCreatureDealsDamage -> False
   -- Not an attachment condition at all -- it reads the bearer -- so the
   -- Aura clause is not in question.
   TriggerCondition.SelfBecomesUntapped -> False
@@ -2887,6 +2893,7 @@ zonesTriggeredFrom cond =
         -- permanent is itself a permanent on the battlefield, and CR 113.6k's exception
         -- is for a condition that cannot trigger from there at all.
         TriggerCondition.AttachedCreatureBecomesTapped -> battlefield
+        TriggerCondition.AttachedCreatureDealsDamage -> battlefield
         TriggerCondition.PermanentsBecomeTapped _ -> battlefield
         -- CR 110.5 makes tapped a permanent's status, so only a permanent can
         -- become untapped and only the battlefield can hold one.
@@ -3425,6 +3432,7 @@ stateTriggersOn gs
             -- False: CR 603.2e says a "becomes" condition does not retrigger
             -- while the state persists, and a state trigger would do nothing but.
             TriggerCondition.AttachedCreatureBecomesTapped -> False
+            TriggerCondition.AttachedCreatureDealsDamage -> False
             TriggerCondition.PermanentsBecomeTapped _ -> False
             -- CR 701.26b's untap is an EVENT for the identical reason,
             -- read off the bearer instead of its host.

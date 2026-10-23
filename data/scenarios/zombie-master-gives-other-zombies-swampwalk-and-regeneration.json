@@ -1,0 +1,21 @@
+{
+  "description": "CR 702.14c / 701.19a whole card: Zombie Master gives another Zombie swampwalk and \"{B}: Regenerate this permanent,\" and itself neither",
+  "note": "Bob controls a Swamp, so his Grizzly Bears is refused as the blocker of alice's Gravebane Zombie; after combat the Zombie regenerates from Lightning Bolt and stays on the battlefield rather than going to its library. Zombie Master has no swampwalk and no ability to activate.",
+  "board": {"active": "alice", "step": "BeginningOfCombat", "seats": [{"name": "alice", "battlefield": [{"card": "Zombie Master", "label": "master"}, {"card": "Gravebane Zombie", "label": "zombie", "ready": true}, {"card": "Swamp", "label": "swamp"}, {"card": "Mountain", "label": "mountain"}], "hand": [{"card": "Lightning Bolt", "label": "bolt"}], "library": [{"card": "Island"}, {"card": "Island"}, {"card": "Island"}]}, {"name": "bob", "battlefield": [{"card": "Swamp"}, {"card": "Grizzly Bears", "label": "bears"}], "library": [{"card": "Island"}, {"card": "Island"}, {"card": "Island"}]}]},
+  "timeline": [
+    {"turn": 1, "step": "BeginningOfCombat", "player": "alice", "check": {"Keywords": {"object": "$zombie", "keyword": {"type": "Landwalk", "value": {"type": "HasSubtype", "value": {"type": "Swamp"}}}, "count": 1}}},
+    {"turn": 1, "step": "BeginningOfCombat", "player": "alice", "check": {"Keywords": {"object": "$master", "keyword": {"type": "Landwalk", "value": {"type": "HasSubtype", "value": {"type": "Swamp"}}}, "count": 0}}},
+    {"turn": 1, "step": "DeclareAttackers", "player": "alice", "do": {"Attack": ["$zombie"]}},
+    {"turn": 1, "step": "DeclareBlockers", "player": "bob", "refuse": {"Block": {"$bears": ["$zombie"]}}},
+    {"turn": 1, "step": "DeclareBlockers", "player": "bob", "do": {"Block": {}}},
+    {"turn": 1, "step": "PostcombatMain", "player": "alice", "check": {"Life": {"player": "bob", "life": 17}}},
+    {"turn": 1, "step": "PostcombatMain", "player": "alice", "refuse": {"Activate": {"object": "$master", "ability": 0, "mana": ["$swamp", null]}}},
+    {"turn": 1, "step": "PostcombatMain", "player": "alice", "do": {"Activate": {"object": "$zombie", "ability": 0, "mana": ["$swamp", null]}}},
+    {"turn": 1, "step": "PostcombatMain", "player": "alice", "do": "Pass"},
+    {"turn": 1, "step": "PostcombatMain", "player": "alice", "do": {"Cast": {"object": "$bolt", "targets": ["$zombie"], "mana": ["$mountain"]}}},
+    {"turn": 1, "step": "PostcombatMain", "player": "alice", "do": "Pass"},
+    {"turn": 1, "step": "PostcombatMain", "player": "alice", "check": {"Count": {"player": "alice", "zone": "Battlefield", "card": "Gravebane Zombie", "count": 1}}},
+    {"turn": 1, "step": "PostcombatMain", "player": "alice", "check": {"Count": {"player": "alice", "zone": "Library", "card": "Gravebane Zombie", "count": 0}}},
+    {"turn": 1, "step": "PostcombatMain", "player": "alice", "check": {"Damage": {"object": "$zombie", "damage": 0}}}
+  ]
+}

@@ -2230,6 +2230,8 @@ representativeEvents cond =
         -- eventBindings claims nothing either way, and the floor is what this
         -- pins.
         TriggerCondition.AttachedCreatureBecomesTapped -> one (GameEvent.BecameTapped departed)
+        -- CR 120.1's event, the only one this condition admits.
+        TriggerCondition.AttachedCreatureDealsDamage -> one (GameEvent.DamageDealt (DamageEvent.MkDamageEvent departed (Recipient.ToPlayer S.bob) 2 False False False 0 Nothing Nothing mempty False DamageKind.Noncombat))
         TriggerCondition.PermanentsBecomeTapped _ -> one (GameEvent.BecameTapped departed)
         -- CR 701.26b's own event, and the only one this condition admits, on
         -- `departed`, which is not the bearer: the pair does not match, which
@@ -2544,6 +2546,7 @@ everyTriggerCondition =
     TriggerCondition.AttachedCreatureMentors,
     TriggerCondition.AttachedCreatureDies,
     TriggerCondition.AttachedCreatureBecomesTapped,
+    TriggerCondition.AttachedCreatureDealsDamage,
     TriggerCondition.PermanentsBecomeTapped (Filter.Type.And []),
     TriggerCondition.SelfBecomesUntapped,
     TriggerCondition.AttachedPermanentTappedForMana,

@@ -2886,6 +2886,7 @@ triggerConditionNames asking x = case x of
   TriggerCondition.SelfLeavesGraveyard -> mempty
   TriggerCondition.AttachedCreatureDies -> mempty
   TriggerCondition.AttachedCreatureBecomesTapped -> mempty
+  TriggerCondition.AttachedCreatureDealsDamage -> mempty
   TriggerCondition.PermanentsBecomeTapped filter_ -> filterNames asking filter_
   TriggerCondition.SelfBecomesUntapped -> mempty
   TriggerCondition.AttachedPermanentTappedForMana -> mempty

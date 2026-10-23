@@ -1,0 +1,11 @@
+{
+  "description": "CR 509.1b whole card: Elven Riders can be blocked by a Wall and a creature with flying together, but not by a creature that is neither",
+  "note": "Bob's Grizzly Bears is refused as a blocker; his Wall of Stone and Bog Imp then block it together.",
+  "board": {"active": "alice", "step": "BeginningOfCombat", "seats": [{"name": "alice", "battlefield": [{"card": "Elven Riders", "label": "riders", "ready": true}], "library": [{"card": "Island"}, {"card": "Island"}, {"card": "Island"}]}, {"name": "bob", "battlefield": [{"card": "Grizzly Bears", "label": "bears"}, {"card": "Wall of Stone", "label": "wall"}, {"card": "Bog Imp", "label": "imp"}], "library": [{"card": "Island"}, {"card": "Island"}, {"card": "Island"}]}]},
+  "timeline": [
+    {"turn": 1, "step": "DeclareAttackers", "player": "alice", "do": {"Attack": ["$riders"]}},
+    {"turn": 1, "step": "DeclareBlockers", "player": "bob", "refuse": {"Block": {"$bears": ["$riders"]}}},
+    {"turn": 1, "step": "DeclareBlockers", "player": "bob", "do": {"Block": {"$wall": ["$riders"], "$imp": ["$riders"]}}},
+    {"turn": 1, "step": "DeclareBlockers", "player": "alice", "check": {"Blockers": {"attacker": "$riders", "blockers": ["$wall", "$imp"]}}}
+  ]
+}
