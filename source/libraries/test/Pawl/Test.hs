@@ -807,6 +807,7 @@ import qualified Pawl.MeldSpec
 import qualified Pawl.ModalDoubleFacedSpec
 import qualified Pawl.ModalSpec
 import qualified Pawl.MoveCounterSpec
+import qualified Pawl.MtgishSpec
 import qualified Pawl.MulliganSpec
 import qualified Pawl.MutateSpec
 import qualified Pawl.OmenSpec
@@ -1721,6 +1722,7 @@ spec s registry = do
   Pawl.MulliganSpec.spec s registry
   Pawl.MutateSpec.spec s registry
   Pawl.OmenSpec.spec s registry
+  Pawl.MtgishSpec.spec s
   Pawl.OracleSpec.spec s
   Pawl.OutsideTheGameSpec.spec s registry
   Pawl.PhasingSpec.spec s registry
