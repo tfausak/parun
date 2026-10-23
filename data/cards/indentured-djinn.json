@@ -1,0 +1,116 @@
+{
+  "faces": [
+    {
+      "keywords": [
+        {
+          "type": "Flying"
+        }
+      ],
+      "manaCost": [
+        {
+          "type": "Generic",
+          "value": 1
+        },
+        {
+          "type": "OfType",
+          "value": {
+            "type": "Colored",
+            "value": {
+              "type": "Blue"
+            }
+          }
+        },
+        {
+          "type": "OfType",
+          "value": {
+            "type": "Colored",
+            "value": {
+              "type": "Blue"
+            }
+          }
+        }
+      ],
+      "name": "Indentured Djinn",
+      "oracleText": "Flying\nWhen this creature enters, each other player may draw up to three cards.",
+      "power": {
+        "type": "Literal",
+        "value": 4
+      },
+      "toughness": {
+        "type": "Literal",
+        "value": 4
+      },
+      "triggeredAbilities": [
+        {
+          "condition": {
+            "type": "SelfEnters"
+          },
+          "modal": {
+            "modes": [
+              {
+                "clauses": [
+                  {
+                    "effects": [
+                      {
+                        "type": "ForEach",
+                        "value": {
+                          "body": [
+                            {
+                              "type": "ChooseNumber",
+                              "value": {
+                                "chooser": {
+                                  "type": "InSlot",
+                                  "value": "player"
+                                },
+                                "slot": "number",
+                                "upTo": 3
+                              }
+                            },
+                            {
+                              "type": "Draw",
+                              "value": {
+                                "player": {
+                                  "type": "InSlot",
+                                  "value": "player"
+                                },
+                                "quantity": {
+                                  "type": "InSlot",
+                                  "value": "number"
+                                }
+                              }
+                            }
+                          ],
+                          "individually": true,
+                          "ref": {
+                            "type": "Players",
+                            "value": {
+                              "type": "EachPlayerExcept",
+                              "value": "you"
+                            }
+                          },
+                          "slot": "player"
+                        }
+                      }
+                    ]
+                  }
+                ]
+              }
+            ]
+          }
+        }
+      ],
+      "typeLine": {
+        "subtypes": [
+          {
+            "type": "Djinn"
+          }
+        ],
+        "types": [
+          {
+            "type": "Creature"
+          }
+        ]
+      }
+    }
+  ]
+}

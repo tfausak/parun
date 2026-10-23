@@ -1,0 +1,41 @@
+{
+  "description": "CR 102.3 each other player reaches the teammate",
+  "note": "alice and bob against carol and dave. Syphon Soul's \"each other player\" deals 2 to bob as well as to carol and dave, where \"each opponent\" would skip him, so alice gains 6 rather than 4.",
+  "board": {
+    "seats": [
+      {
+        "name": "alice",
+        "team": 1,
+        "battlefield": [
+          { "card": "Swamp", "label": "s1" },
+          { "card": "Swamp", "label": "s2" },
+          { "card": "Swamp", "label": "s3" }
+        ],
+        "hand": [{ "card": "Syphon Soul", "label": "syphon" }],
+        "library": [{ "card": "Plains" }]
+      },
+      {
+        "name": "bob",
+        "team": 1
+      },
+      {
+        "name": "carol",
+        "team": 2
+      },
+      {
+        "name": "dave",
+        "team": 2
+      }
+    ],
+    "active": "alice",
+    "step": "PrecombatMain"
+  },
+  "timeline": [
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "do": { "Cast": { "object": "$syphon", "mana": ["$s1", "$s2", "$s3"] } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "do": "Pass" },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "check": { "Life": { "player": "bob", "life": 18 } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "check": { "Life": { "player": "alice", "life": 26 } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "check": { "Life": { "player": "carol", "life": 18 } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "check": { "Life": { "player": "dave", "life": 18 } } }
+  ]
+}

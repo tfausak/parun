@@ -890,7 +890,7 @@ added production count = case (production, count) of
 -- you control deals damage", Soul's Fire).
 dealDamage :: Target.Context -> DealDamage.DealDamage -> [Predicate]
 dealDamage context d
-  | Maybe.isJust (DealDamage.excess d) = []
+  | Maybe.isJust (DealDamage.excess d) || Maybe.isJust (DealDamage.tally d) = []
   | otherwise = do
       source <- Target.object context Target.All (ObjectRef.InSlot (Maybe.fromMaybe Target.selfSlot (DealDamage.dealer d)))
       -- The source is the sentence's subject, so the amount calls it "it":
