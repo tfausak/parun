@@ -42,6 +42,7 @@ import Pawl.Types.Game (Game)
 import qualified Pawl.Types.Layout as Layout
 import Pawl.Types.PlayerId (PlayerId)
 import qualified Pawl.Types.PlayerInstruction as PlayerInstruction
+import qualified Pawl.Types.PlayerRelation as PlayerRelation
 import qualified Pawl.Types.Power as Power
 import qualified Pawl.Types.Prompt as Prompt
 import qualified Pawl.Types.ProposedEvent as ProposedEvent
@@ -104,6 +105,7 @@ soldierToken =
               Face.additionalCosts = [],
               Face.additionalCostChoices = [],
               Face.modeCosts = Map.empty,
+              Face.modeChooser = PlayerRelation.You,
               Face.maximumX = [],
               Face.minimumX = 0,
               Face.alternativeCosts = [],

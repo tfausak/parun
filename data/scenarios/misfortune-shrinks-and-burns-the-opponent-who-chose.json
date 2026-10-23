@@ -1,0 +1,45 @@
+{
+  "description": "CR 700.2e Misfortune shrinks and burns the opponent who chose",
+  "note": "Three seats: alice names carol, not bob, who heads the offer, and carol chooses the second mode, which the fallback (the first) would not. \"That player\" is carol: her Elves die to the -1/-1 counter and she takes 4, while bob's Elves and life are untouched and alice gains nothing.",
+  "board": {
+    "active": "alice",
+    "step": "PrecombatMain",
+    "seats": [
+      {
+        "name": "alice",
+        "battlefield": [
+          { "card": "Swamp", "label": "s1" },
+          { "card": "Swamp", "label": "s2" },
+          { "card": "Mountain", "label": "m1" },
+          { "card": "Forest", "label": "f1" },
+          { "card": "Hill Giant", "label": "giant" }
+        ],
+        "hand": [{ "card": "Misfortune", "label": "misfortune" }]
+      },
+      {
+        "name": "bob",
+        "battlefield": [{ "card": "Llanowar Elves", "label": "bobElves" }]
+      },
+      {
+        "name": "carol",
+        "battlefield": [
+          { "card": "Grizzly Bears", "label": "bears" },
+          { "card": "Llanowar Elves", "label": "carolElves" }
+        ]
+      }
+    ]
+  },
+  "timeline": [
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "do": { "Cast": { "object": "$misfortune", "mana": ["$s1", "$s2", "$m1", "$f1"] } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "do": { "Answer": { "prompt": "ChooseOpponent", "with": "carol" } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "carol", "do": { "Answer": { "prompt": "ChooseModes", "with": [1] } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "do": "Pass" },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "check": { "Life": { "player": "carol", "life": 16 } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "check": { "Count": { "player": "carol", "zone": "Graveyard", "card": "Llanowar Elves", "count": 1 } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "check": { "PowerToughness": { "object": "$bears", "power": 1, "toughness": 1 } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "check": { "Count": { "player": "bob", "zone": "Battlefield", "card": "Llanowar Elves", "count": 1 } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "check": { "Life": { "player": "bob", "life": 20 } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "check": { "Life": { "player": "alice", "life": 20 } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "check": { "PowerToughness": { "object": "$giant", "power": 3, "toughness": 3 } } }
+  ]
+}

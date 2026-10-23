@@ -11,6 +11,7 @@
 -- anywhere under @Pawl.Codec@ is open-half machinery, not the rules core.
 module Pawl.Codec.Face where
 
+import qualified Control.Monad as Monad
 import qualified Data.Map.Strict as Map
 import qualified Data.Sequence as Seq
 import qualified Data.Set as Set
@@ -50,6 +51,7 @@ import qualified Pawl.Codec.Loyalty as Loyalty
 import qualified Pawl.Codec.ManaCost as ManaCost
 import qualified Pawl.Codec.Modal as Modal
 import qualified Pawl.Codec.ModeIndex as ModeIndex
+import qualified Pawl.Codec.PlayerRelation as PlayerRelation
 import qualified Pawl.Codec.PlayerStaticAbility as PlayerStaticAbility
 import qualified Pawl.Codec.Power as Power
 import qualified Pawl.Codec.PrintedReplacement as PrintedReplacement
@@ -71,6 +73,7 @@ import qualified Pawl.Types.Counterability as Counterability.Type
 import qualified Pawl.Types.Face as Face
 import qualified Pawl.Types.Modal as Modal.Type
 import qualified Pawl.Types.ModeIndex as ModeIndex.Type
+import qualified Pawl.Types.PlayerRelation as PlayerRelation.Type
 import qualified Pawl.Types.TypeLine as TypeLine
 
 -- | CR 700.2h's cost belongs to a mode the face HAS: a key past the end of
@@ -83,13 +86,21 @@ modeCostsInRange f =
         then Right f
         else Left (Text.pack "modeCosts names a mode the spell does not have")
 
+-- | CR 700.2e names a chooser of MODES, so a face naming a chooser other than
+-- its controller has two or more of them (CR 700.2).
+chooserHasModes :: Face.Face card -> Either Text.Text (Face.Face card)
+chooserHasModes f =
+  if Face.modeChooser f == PlayerRelation.Type.You || Seq.length (Modal.Type.modes (Face.spell f)) > 1
+    then Right f
+    else Left (Text.pack "modeChooser names a chooser for a spell with one mode")
+
 -- | @Eq card@ because several fields below carry card-shaped payloads and
 -- 'Fields.defaulted' omits a key by comparing its value to the default.
 --
 -- The wire format is unchanged by the conversion to a bundle; what it adds is
 -- the schema.
 codec :: (Typeable.Typeable card, Eq card) => Codec.Codec card -> Codec.Codec (Face.Face card)
-codec cardCodec = Fields.objectWith modeCostsInRange $ do
+codec cardCodec = Fields.objectWith (modeCostsInRange Monad.>=> chooserHasModes) $ do
   name <- Fields.required "name" CardName.codec Face.name
   oracleText <- Fields.defaulted "oracleText" Nothing (Common.maybe Common.text) Face.oracleText
   -- CR 205.1 puts a type line on every card and CR 114.3 gives an emblem no
@@ -154,6 +165,9 @@ codec cardCodec = Fields.objectWith modeCostsInRange $ do
   -- index into `spell` -- an object rather than an array so a card lists only
   -- the modes that print one (Pawl.Types.Face).
   modeCosts <- Fields.defaulted "modeCosts" Map.empty (Common.naturalMap ModeIndex.codec (Cost.codec Keyword.codec)) Face.modeCosts
+  -- CR 700.2e: who chooses the spell's modes, emitted only for a face whose
+  -- chooser is not its controller (Pawl.Types.Face).
+  modeChooser <- Fields.defaulted "modeChooser" PlayerRelation.Type.You PlayerRelation.codec Face.modeChooser
   -- CR 101.1: the ceilings this face's own words put on CR 601.2b's announced X
   -- (Pawl.Types.Face).
   maximumX <- Fields.defaulted "maximumX" [] (Common.list Quantity.codec) Face.maximumX
@@ -224,6 +238,7 @@ codec cardCodec = Fields.objectWith modeCostsInRange $ do
         Face.additionalCosts = additionalCosts,
         Face.additionalCostChoices = additionalCostChoices,
         Face.modeCosts = modeCosts,
+        Face.modeChooser = modeChooser,
         Face.maximumX = maximumX,
         Face.minimumX = minimumX,
         Face.alternativeCosts = alternativeCosts,

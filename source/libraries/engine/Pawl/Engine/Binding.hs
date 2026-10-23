@@ -42,6 +42,13 @@ variableX = SlotName.MkSlotName (Text.pack "X")
 chosenModes :: SlotName
 chosenModes = SlotName.MkSlotName (Text.pack "modes")
 
+-- CR 700.2e: the reserved slot under which the player who chose a spell's
+-- modes is bound, Fatal Lore's "that player". Stamped only for a face whose
+-- Face.modeChooser is not @You@. No card's targetSlots may name it: the chooser
+-- is not a target.
+modeChooser :: SlotName
+modeChooser = SlotName.MkSlotName (Text.pack "modeChooser")
+
 -- CR 707.5: the reserved slot under which an object's copy snapshot is stored.
 -- No card's targetSlots may name it: a copy source is not a target.
 copySource :: SlotName
@@ -1348,6 +1355,10 @@ setTriggerSource oid = Map.insert triggerSource (toObject oid)
 -- Bind a player under the reserved you slot.
 setYou :: PlayerId -> Map SlotName Binding -> Map SlotName Binding
 setYou pid = Map.insert you (toPlayer pid)
+
+-- Bind a player under the reserved modeChooser slot (CR 700.2e).
+setModeChooser :: PlayerId -> Map SlotName Binding -> Map SlotName Binding
+setModeChooser pid = Map.insert modeChooser (toPlayer pid)
 
 -- Bind a player under the reserved triggerPlayer slot.
 setTriggerPlayer :: PlayerId -> Map SlotName Binding -> Map SlotName Binding
