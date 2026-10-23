@@ -1,0 +1,18 @@
+{
+  "description": "CR 601.2i / 118.12 whole card: Iron Star triggers on any player's red spell and gains 1 life when its controller pays {1}",
+  "note": "Bob casts Llanowar Elves first, which is not red: a trigger would raise a prompt the timeline does not answer. Then his Raging Goblin triggers it and alice pays with her one Island, going to 21.",
+  "board": {"active": "bob", "step": "PrecombatMain", "seats": [{"name": "alice", "library": [{"card": "Island"}, {"card": "Island"}, {"card": "Island"}], "battlefield": [{"card": "Iron Star", "label": "source"}, {"card": "Island", "label": "i1"}]}, {"name": "bob", "library": [{"card": "Island"}, {"card": "Island"}, {"card": "Island"}], "battlefield": [{"card": "Mountain", "label": "l1"}, {"card": "Forest", "label": "l2"}], "hand": [{"card": "Llanowar Elves", "label": "other"}, {"card": "Raging Goblin", "label": "spell"}]}]},
+  "timeline": [
+    {"turn": 1, "step": "PrecombatMain", "player": "bob", "do": {"Cast": {"object": "$other", "mana": ["$l2", null]}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "bob", "do": "Pass"},
+    {"turn": 1, "step": "PrecombatMain", "player": "bob", "do": {"Cast": {"object": "$spell", "mana": ["$l1"]}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "bob", "do": "Pass"},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "do": {"ChooseToPay": {"decision": {"type": "Pays"}, "mana": ["$i1"]}}, "source": "$source"},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "check": {"Life": {"player": "alice", "life": 21}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "check": {"Tapped": {"object": "$i1", "tapped": true}}}
+  ],
+  "final": [
+    {"Life": {"player": "alice", "life": 21}},
+    {"Count": {"player": "bob", "zone": "Battlefield", "card": "Raging Goblin", "count": 1}}
+  ]
+}

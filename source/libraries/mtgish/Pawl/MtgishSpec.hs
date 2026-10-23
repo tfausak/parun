@@ -15,15 +15,27 @@ import qualified Pawl.Mtgish as Mtgish
 import qualified Pawl.Mtgish.Node as Node
 import qualified Pawl.Oracle.Keyword as Oracle.Keyword
 import qualified Pawl.Spec as Spec
+import qualified Pawl.Types.ActivatedAbility as ActivatedAbility
 import qualified Pawl.Types.Affected as Affected
 import qualified Pawl.Types.Card as Card
 import qualified Pawl.Types.CardType as CardType
 import qualified Pawl.Types.CharacteristicPT as CharacteristicPT
 import qualified Pawl.Types.Clause as Clause
 import qualified Pawl.Types.Color as Color
+import qualified Pawl.Types.Cost as Cost
+import qualified Pawl.Types.CostAmount as CostAmount
+import qualified Pawl.Types.CostComponent as CostComponent
+import qualified Pawl.Types.DestructionR as DestructionR
+import qualified Pawl.Types.DestructionRewrite as DestructionRewrite
+import qualified Pawl.Types.Duration as Duration
+import qualified Pawl.Types.Effect as Effect
+import qualified Pawl.Types.EntryR as EntryR
+import qualified Pawl.Types.EntryRewrite as EntryRewrite
 import qualified Pawl.Types.Face as Face
 import qualified Pawl.Types.Filter as Filter
+import qualified Pawl.Types.GrantedAbility as GrantedAbility
 import qualified Pawl.Types.Hybrid as Hybrid
+import qualified Pawl.Types.Keyword as Keyword
 import qualified Pawl.Types.ManaCost as ManaCost
 import qualified Pawl.Types.ManaSymbol as ManaSymbol
 import qualified Pawl.Types.ManaType as ManaType
@@ -33,13 +45,20 @@ import qualified Pawl.Types.PayBranch as PayBranch
 import qualified Pawl.Types.PayGate as PayGate
 import qualified Pawl.Types.PlayerRelation as PlayerRelation
 import qualified Pawl.Types.Pool as Pool
+import qualified Pawl.Types.PrintedReplacement as PrintedReplacement
 import qualified Pawl.Types.Quantity as Quantity
+import qualified Pawl.Types.Replace as Replace
+import qualified Pawl.Types.ReplacementEffect as ReplacementEffect
+import qualified Pawl.Types.Sacrifice as Sacrifice
 import qualified Pawl.Types.SlotCount as SlotCount
 import qualified Pawl.Types.SlotName as SlotName
+import qualified Pawl.Types.SpellCast as SpellCast
 import qualified Pawl.Types.StaticAbility as StaticAbility
 import qualified Pawl.Types.TargetCount as TargetCount
 import qualified Pawl.Types.TargetSlot as TargetSlot
+import qualified Pawl.Types.TriggerCondition as TriggerCondition
 import qualified Pawl.Types.TriggeredAbility as TriggeredAbility
+import qualified Pawl.Types.Uses as Uses
 
 spec :: (Monad m, Monad n) => Spec.Spec m n -> n ()
 spec s = Spec.describe s "Pawl.Mtgish" $ do
@@ -55,9 +74,39 @@ spec s = Spec.describe s "Pawl.Mtgish" $ do
     Spec.assertEq s (Left (Text.pack "renders as: Shock deals 2 damage to any target.")) (accepts (fst shock, "Shock deals 3 damage to any target."))
 
   -- A node not translated rejects the whole card, never only its ability:
-  -- Drudge Skeletons is nothing but the regeneration ability it stops at.
+  -- Millstone is nothing but the milling ability it stops at.
   Spec.it s "rejects a card at the first node it does not translate" $ do
-    Spec.assertEq s (Left (Text.pack "_Action:RegeneratePermanent")) (accepts drudgeSkeletons)
+    Spec.assertEq s (Left (Text.pack "_Action:MillNumberCards")) (accepts millstone)
+
+  -- CR 701.19a: "Regenerate this creature" is a shield on the source, for
+  -- the rest of the turn and used up once.
+  Spec.it s "reads regeneration as a shield on the source" $ do
+    Spec.assertEq s (Right ()) (accepts drudgeSkeletons)
+    Spec.assertEq s [Nothing] [matching | Effect.Replace r <- activatedEffects (translated drudgeSkeletons), Replace.duration r == Duration.UntilEndOfTurn, Replace.uses r == Uses.Once, ReplacementEffect.DestructionR (DestructionR.MkDestructionR matching DestructionRewrite.Regenerate) <- [Replace.effect r]]
+
+  -- CR 614.1d: "This artifact enters tapped."
+  Spec.it s "reads entering tapped as a replacement effect of the source" $ do
+    Spec.assertEq s (Right ()) (accepts charcoalDiamond)
+    Spec.assertEq s [ReplacementEffect.EntryR (EntryR.MkEntryR Filter.IsSource EntryRewrite.Tapped)] (fmap PrintedReplacement.effect (Face.replacementEffects (translated charcoalDiamond)))
+
+  -- CR 601.2i / 110.2: the caster of a spell is its controller, which a
+  -- cast trigger's filter names; "a player" names none.
+  Spec.it s "reads a cast trigger's caster as the spell's controller" $ do
+    Spec.assertEq s (Right ()) (accepts verduranEnchantress)
+    Spec.assertEq s (Right ()) (accepts crystalRod)
+    Spec.assertEq s [Filter.And [Filter.HasCardType CardType.Enchantment, Filter.ControlledBy PlayerRelation.You]] (castFilters verduranEnchantress)
+    Spec.assertEq s [Filter.HasColor Color.Blue] (castFilters crystalRod)
+
+  -- CR 602.1a / 701.21a: "Sacrifice a creature" as a cost.
+  Spec.it s "reads sacrificing a permanent of a description as a cost" $ do
+    Spec.assertEq s (Right ()) (accepts fallenAngel)
+    Spec.assertEq s [[CostComponent.Sacrifice (Sacrifice.MkSacrifice (CostAmount.Fixed 1) (Filter.HasCardType CardType.Creature))]] (fmap (Cost.components . ActivatedAbility.cost) (Face.activatedAbilities (translated fallenAngel)))
+
+  -- CR 106.1: "Add {W} or {U}" is one mode for each kind of mana, the rest
+  -- of the instructions in each.
+  Spec.it s "reads an or of mana as one mode per kind" $ do
+    Spec.assertEq s (Right ()) (accepts adarkarWastes)
+    Spec.assertEq s [1, 2] (fmap (length . Modal.modes . ActivatedAbility.modal) (Face.activatedAbilities (translated adarkarWastes)))
 
   -- CR 109.2: "target creature" is a creature target, not a permanent one
   -- of a description, as the pool writes it.
@@ -138,6 +187,15 @@ spellSlotMap face = foldMap Mode.targetSlots (Modal.modes (Face.spell face))
 
 spellSlots :: Face.Face Card.Card -> [TargetSlot.TargetSlot]
 spellSlots = Map.elems . spellSlotMap
+
+-- | Every instruction of the face's activated abilities.
+activatedEffects :: Face.Face Card.Card -> [Effect.Effect Card.Card (GrantedAbility.GrantedAbility Card.Card)]
+activatedEffects face = [e | a <- Face.activatedAbilities face, m <- Foldable.toList (Modal.modes (ActivatedAbility.modal a)), c <- Foldable.toList (Mode.clauses m), e <- Foldable.toList (Clause.effects c)]
+
+-- | The filters of the cast triggers of the AST's face, which the test has
+-- already accepted.
+castFilters :: (String, String) -> [Filter.Filter Keyword.Keyword]
+castFilters card = [SpellCast.filter c | t <- Face.triggeredAbilities (translated card), TriggerCondition.SpellCast c <- [TriggeredAbility.condition t]]
 
 -- | A vanilla creature's AST with one keyword rule, named as mtgish names
 -- it: the printed name's words run together ("FirstStrike", "JumpStart").
@@ -221,4 +279,46 @@ dakmorSorceress :: (String, String)
 dakmorSorceress =
   ( "{\"_OracleCard\":\"Card\",\"Name\":\"Dakmor Sorceress\",\"Typeline\":{\"Supertypes\":[],\"Cardtypes\":[\"Creature\"],\"Subtypes\":[\"Human\",\"Wizard\",\"Sorcerer\"]},\"ManaCost\":[{\"_ManaSymbol\":\"ManaCostGeneric\",\"args\":5},{\"_ManaSymbol\":\"ManaCostB\"}],\"Rules\":[{\"_Rule\":\"CDA_Power\",\"args\":{\"_GameNumber\":\"TheNumberOfPermanentsOnTheBattlefield\",\"args\":{\"_Permanents\":\"And\",\"args\":[{\"_Permanents\":\"IsLandType\",\"args\":\"Swamp\"},{\"_Permanents\":\"ControlledByAPlayer\",\"args\":{\"_Players\":\"SinglePlayer\",\"args\":{\"_Player\":\"You\"}}}]}}}],\"CardPT\":{\"Power\":0,\"Toughness\":4}}",
     "Dakmor Sorceress's power is equal to the number of Swamps you control."
+  )
+
+-- | Millstone's AST, and its Oracle text.
+millstone :: (String, String)
+millstone =
+  ( "{\"_OracleCard\":\"Card\",\"Name\":\"Millstone\",\"Typeline\":{\"Supertypes\":[],\"Cardtypes\":[\"Artifact\"],\"Subtypes\":[]},\"ManaCost\":[{\"_ManaSymbol\":\"ManaCostGeneric\",\"args\":2}],\"Rules\":[{\"_Rule\":\"Activated\",\"args\":[{\"_Cost\":\"And\",\"args\":[{\"_Cost\":\"PayMana\",\"args\":[{\"_ManaSymbol\":\"ManaCostGeneric\",\"args\":2}]},{\"_Cost\":\"TapPermanent\",\"args\":{\"_Permanent\":\"ThisPermanent\"}}]},{\"_Actions\":\"Targeted\",\"args\":[[{\"_Target\":\"TargetPlayer\",\"args\":{\"_Players\":\"AnyPlayer\"}}],{\"_Actions\":\"ActionList\",\"args\":[{\"_Action\":\"PlayerAction\",\"args\":[{\"_Player\":\"Ref_TargetPlayer\"},{\"_Action\":\"MillNumberCards\",\"args\":{\"_GameNumber\":\"Integer\",\"args\":2}}]}]}]}]}]}",
+    "{2}, {T}: Target player mills two cards."
+  )
+
+-- | Verduran Enchantress's AST, and its Oracle text.
+verduranEnchantress :: (String, String)
+verduranEnchantress =
+  ( "{\"_OracleCard\":\"Card\",\"Name\":\"Verduran Enchantress\",\"Typeline\":{\"Supertypes\":[],\"Cardtypes\":[\"Creature\"],\"Subtypes\":[\"Human\",\"Druid\"]},\"ManaCost\":[{\"_ManaSymbol\":\"ManaCostGeneric\",\"args\":1},{\"_ManaSymbol\":\"ManaCostG\"},{\"_ManaSymbol\":\"ManaCostG\"}],\"Rules\":[{\"_Rule\":\"TriggerA\",\"args\":[{\"_Trigger\":\"WhenAPlayerCastsASpell\",\"args\":[{\"_Players\":\"SinglePlayer\",\"args\":{\"_Player\":\"You\"}},{\"_Spells\":\"IsCardtype\",\"args\":\"Enchantment\"}]},{\"_Actions\":\"ActionList\",\"args\":[{\"_Action\":\"MayAction\",\"args\":{\"_Action\":\"DrawACard\"}}]}]}],\"CardPT\":{\"Power\":0,\"Toughness\":2}}",
+    "Whenever you cast an enchantment spell, you may draw a card."
+  )
+
+-- | Crystal Rod's AST, and its Oracle text.
+crystalRod :: (String, String)
+crystalRod =
+  ( "{\"_OracleCard\":\"Card\",\"Name\":\"Crystal Rod\",\"Typeline\":{\"Supertypes\":[],\"Cardtypes\":[\"Artifact\"],\"Subtypes\":[]},\"ManaCost\":[{\"_ManaSymbol\":\"ManaCostGeneric\",\"args\":1}],\"Rules\":[{\"_Rule\":\"TriggerA\",\"args\":[{\"_Trigger\":\"WhenAPlayerCastsASpell\",\"args\":[{\"_Players\":\"AnyPlayer\"},{\"_Spells\":\"IsColor\",\"args\":{\"_Color\":\"Blue\"}}]},{\"_Actions\":\"ActionList\",\"args\":[{\"_Action\":\"MayCost\",\"args\":{\"_Cost\":\"PayMana\",\"args\":[{\"_ManaSymbol\":\"ManaCostGeneric\",\"args\":1}]}},{\"_Action\":\"If\",\"args\":[{\"_Condition\":\"CostWasPaid\"},[{\"_Action\":\"GainLife\",\"args\":{\"_GameNumber\":\"Integer\",\"args\":1}}]]}]}]}]}",
+    "Whenever a player casts a blue spell, you may pay {1}. If you do, you gain 1 life."
+  )
+
+-- | Fallen Angel's AST, and its Oracle text.
+fallenAngel :: (String, String)
+fallenAngel =
+  ( "{\"_OracleCard\":\"Card\",\"Name\":\"Fallen Angel\",\"Typeline\":{\"Supertypes\":[],\"Cardtypes\":[\"Creature\"],\"Subtypes\":[\"Angel\"]},\"ManaCost\":[{\"_ManaSymbol\":\"ManaCostGeneric\",\"args\":3},{\"_ManaSymbol\":\"ManaCostB\"},{\"_ManaSymbol\":\"ManaCostB\"}],\"Rules\":[{\"_Rule\":\"Flying\"},{\"_Rule\":\"Activated\",\"args\":[{\"_Cost\":\"SacrificeAPermanent\",\"args\":{\"_Permanents\":\"IsCardtype\",\"args\":\"Creature\"}},{\"_Actions\":\"ActionList\",\"args\":[{\"_Action\":\"CreatePermanentLayerEffectUntil\",\"args\":[{\"_Permanent\":\"ThisPermanent\"},[{\"_LayerEffect\":\"AdjustPT\",\"args\":[2,1]}],{\"_Expiration\":\"UntilEndOfTurn\"}]}]}]}],\"CardPT\":{\"Power\":3,\"Toughness\":3}}",
+    "Flying\nSacrifice a creature: This creature gets +2/+1 until end of turn."
+  )
+
+-- | Adarkar Wastes's AST, and its Oracle text.
+adarkarWastes :: (String, String)
+adarkarWastes =
+  ( "{\"_OracleCard\":\"Card\",\"Name\":\"Adarkar Wastes\",\"Typeline\":{\"Supertypes\":[],\"Cardtypes\":[\"Land\"],\"Subtypes\":[]},\"Rules\":[{\"_Rule\":\"Activated\",\"args\":[{\"_Cost\":\"TapPermanent\",\"args\":{\"_Permanent\":\"ThisPermanent\"}},{\"_Actions\":\"ActionList\",\"args\":[{\"_Action\":\"AddMana\",\"args\":{\"_ManaProduce\":\"ManaProduceC\"}}]}]},{\"_Rule\":\"Activated\",\"args\":[{\"_Cost\":\"TapPermanent\",\"args\":{\"_Permanent\":\"ThisPermanent\"}},{\"_Actions\":\"ActionList\",\"args\":[{\"_Action\":\"AddMana\",\"args\":{\"_ManaProduce\":\"Or\",\"args\":[{\"_ManaProduce\":\"ManaProduceW\"},{\"_ManaProduce\":\"ManaProduceU\"}]}},{\"_Action\":\"PermanentDealsDamage\",\"args\":[{\"_Permanent\":\"ThisPermanent\"},{\"_GameNumber\":\"Integer\",\"args\":1},{\"_DamageRecipient\":\"Player\",\"args\":{\"_Player\":\"You\"}}]}]}]}]}",
+    "{T}: Add {C}.\n{T}: Add {W} or {U}. This land deals 1 damage to you."
+  )
+
+-- | Charcoal Diamond's AST, and its Oracle text.
+charcoalDiamond :: (String, String)
+charcoalDiamond =
+  ( "{\"_OracleCard\":\"Card\",\"Name\":\"Charcoal Diamond\",\"Typeline\":{\"Supertypes\":[],\"Cardtypes\":[\"Artifact\"],\"Subtypes\":[]},\"ManaCost\":[{\"_ManaSymbol\":\"ManaCostGeneric\",\"args\":2}],\"Rules\":[{\"_Rule\":\"AsPermanentEnters\",\"args\":[{\"_Permanent\":\"ThisPermanent\"},[{\"_ReplacementActionWouldEnter\":\"EntersTapped\"}]]},{\"_Rule\":\"Activated\",\"args\":[{\"_Cost\":\"TapPermanent\",\"args\":{\"_Permanent\":\"ThisPermanent\"}},{\"_Actions\":\"ActionList\",\"args\":[{\"_Action\":\"AddMana\",\"args\":{\"_ManaProduce\":\"ManaProduceB\"}}]}]}]}",
+    "This artifact enters tapped.\n{T}: Add {B}."
   )

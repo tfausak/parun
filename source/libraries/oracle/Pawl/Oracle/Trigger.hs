@@ -3,6 +3,7 @@
 module Pawl.Oracle.Trigger where
 
 import qualified Control.Monad as Monad
+import qualified Data.List as List
 import qualified Data.Map.Strict as Map
 import qualified Data.Text as Text
 import qualified Pawl.Oracle.Filter as Filter
@@ -27,6 +28,7 @@ import qualified Pawl.Types.PlayerRelation as PlayerRelation
 import qualified Pawl.Types.Quantity as Quantity
 import qualified Pawl.Types.Scope as Scope
 import qualified Pawl.Types.SlotName as SlotName
+import qualified Pawl.Types.SpellCast as SpellCast
 import qualified Pawl.Types.StepBegins as StepBegins
 import qualified Pawl.Types.TriggerCondition as TriggerCondition
 import qualified Pawl.Types.TriggerFrequency as TriggerFrequency
@@ -90,6 +92,32 @@ event context creature c = case c of
   TriggerCondition.StepBegins s -> do
     when <- step s
     [other ("At the beginning of " <> when) [(thatPlayer, "that player")]]
+  -- CR 601.2i: who casts the spell is its controller (CR 110.2), which the
+  -- filter names among the spell's other qualities.
+  TriggerCondition.SpellCast (SpellCast.MkSpellCast f TurnScope.EachTurn Nothing Nothing Nothing False) -> do
+    let caster g = case g of
+          Filter.Type.ControlledBy _ -> True
+          _ -> False
+        (casters, rest) = List.partition caster (case f of Filter.Type.And fs -> fs; _ -> [f])
+    who <- case casters of
+      [] -> ["a player casts"]
+      [Filter.Type.ControlledBy PlayerRelation.You] -> ["you cast"]
+      [Filter.Type.ControlledBy PlayerRelation.Opponent] -> ["an opponent casts"]
+      _ -> []
+    let spell = Filter.noun (Text.pack "spell") (Just (Text.pack "spells"))
+    -- A disjunction of kinds of spell shares the noun, "an instant or
+    -- sorcery spell" (Young Pyromancer), unless one kind is described
+    -- further: "a Doctor spell or creature spell with doctor's companion"
+    -- (Rose Noble).
+    p <- case rest of
+      [Filter.Type.Or gs] -> do
+        ps <- traverse (\g -> Filter.phrase g (Target.keyword context)) gs
+        let described' q = not (null (Filter.adjectives q) && null (Filter.qualifiers q))
+        if not (any (null . Filter.nouns) ps) && any described' ps then Filter.disjunction (fmap (`Filter.merge` spell) ps) else fmap (`Filter.merge` spell) (Filter.phrase (Filter.Type.Or gs) (Target.keyword context))
+      _ -> fmap (`Filter.merge` spell) (Filter.phrase (Filter.Type.And rest) (Target.keyword context))
+    one <- Filter.describe Filter.Singular Target.permanent p
+    opening' <- recurring
+    [other (opening' <> " " <> who <> " " <> Text.unpack (Prose.article one) <> " " <> Text.unpack one) [(thatPlayer, "that player"), (castSpell, "it")]]
   _ -> []
   where
     self = Text.unpack (Target.self context)
@@ -213,7 +241,7 @@ step s = case (StepBegins.phase s, StepBegins.ordinal s, StepBegins.scope s) of
 
 -- | The slots Pawl.Engine.Binding binds a trigger event's objects and players
 -- to, which this library cannot import.
-becameSlot, thatPlayer, thatAttacker, thatBlocker, departedPermanent, combatDamager, attackingPlayer, attackingCreature :: SlotName.SlotName
+becameSlot, thatPlayer, thatAttacker, thatBlocker, departedPermanent, combatDamager, attackingPlayer, attackingCreature, castSpell :: SlotName.SlotName
 becameSlot = Target.becameSlot
 thatPlayer = SlotName.MkSlotName (Text.pack "thatPlayer")
 thatAttacker = SlotName.MkSlotName (Text.pack "thatAttacker")
@@ -222,6 +250,7 @@ departedPermanent = SlotName.MkSlotName (Text.pack "thatDepartedPermanent")
 combatDamager = SlotName.MkSlotName (Text.pack "thatDamager")
 attackingPlayer = SlotName.MkSlotName (Text.pack "thatAttackingPlayer")
 attackingCreature = SlotName.MkSlotName (Text.pack "thatAttackingCreature")
+castSpell = SlotName.MkSlotName (Text.pack "thatSpell")
 
 -- | An intervening "if" clause's condition (CR 603.4): a count of cards in
 -- a hand ("you have no cards in hand"), of permanents ("you control no
@@ -250,9 +279,10 @@ condition context c = case c of
 
 -- | The ability word (CR 207.2c) Oracle text may print before an ability
 -- whose condition this is. Free for hellbent: printed (Slaughterhouse
--- Bouncer) or not (Academy at Tolaria West).
-hellbent :: Text.Text -> [Text.Text]
-hellbent words' = [Text.empty] <> [Text.pack "Hellbent \8212 " | words' == Text.pack "you have no cards in hand"]
+-- Bouncer) or not (Academy at Tolaria West). Free for raid: printed (Mardu
+-- Skullhunter) or not (Trynn, Champion of Freedom).
+abilityWord :: Text.Text -> [Text.Text]
+abilityWord words' = [Text.empty] <> [Text.pack "Hellbent \8212 " | words' == Text.pack "you have no cards in hand"] <> [Text.pack "Raid \8212 " | words' == Text.pack "you attacked this turn"]
 
 -- | A player as the subject of a condition, with the verb "have" agreeing:
 -- ("you", "have"), ("that player", "has").

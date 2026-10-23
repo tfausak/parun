@@ -1,0 +1,14 @@
+{
+  "description": "CR 614.1d / 106.4 whole card: Charcoal Diamond enters tapped, and taps for {B}",
+  "note": "The Diamond alice casts is tapped as it arrives; the one already in play is her only black source, so her Typhoid Rats are cast only if it made {B}.",
+  "board": {"active": "alice", "step": "PrecombatMain", "seats": [{"name": "alice", "library": [{"card": "Island"}, {"card": "Island"}, {"card": "Island"}], "battlefield": [{"card": "Charcoal Diamond", "label": "placed"}, {"card": "Mountain", "label": "m1"}, {"card": "Mountain", "label": "m2"}], "hand": [{"card": "Charcoal Diamond", "label": "played"}, {"card": "Typhoid Rats", "label": "rats"}]}, {"name": "bob", "library": [{"card": "Island"}, {"card": "Island"}, {"card": "Island"}]}]},
+  "timeline": [
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "do": {"Cast": {"object": "$played", "mana": ["$m1", "$m2", null]}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "do": "Pass"},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "check": {"Tapped": {"object": "Charcoal Diamond#2", "tapped": true}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "do": {"Cast": {"object": "$rats", "mana": ["$placed"]}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "do": "Pass"},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "check": {"Count": {"player": "alice", "zone": "Battlefield", "card": "Typhoid Rats", "count": 1}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "check": {"Tapped": {"object": "$placed", "tapped": true}}}
+  ]
+}

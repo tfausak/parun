@@ -59,11 +59,15 @@ import qualified Pawl.Types.Create as Create
 import qualified Pawl.Types.DamagePart as DamagePart
 import qualified Pawl.Types.DealDamage as DealDamage
 import qualified Pawl.Types.Destroy as Destroy
+import qualified Pawl.Types.DestructionR as DestructionR
+import qualified Pawl.Types.DestructionRewrite as DestructionRewrite
 import qualified Pawl.Types.Discard as Discard
 import qualified Pawl.Types.Draw as Draw
 import qualified Pawl.Types.Duration as Duration
 import qualified Pawl.Types.Effect as Effect
 import qualified Pawl.Types.EndingStep as EndingStep
+import qualified Pawl.Types.EntryR as EntryR
+import qualified Pawl.Types.EntryRewrite as EntryRewrite
 import qualified Pawl.Types.EntryRiders as EntryRiders
 import qualified Pawl.Types.Equip as Equip
 import qualified Pawl.Types.EquipTarget as EquipTarget
@@ -101,16 +105,22 @@ import qualified Pawl.Types.PlayerRelation as PlayerRelation
 import qualified Pawl.Types.PlayerScope as PlayerScope
 import qualified Pawl.Types.Pool as Pool
 import qualified Pawl.Types.Power as Power
+import qualified Pawl.Types.PrintedReplacement as PrintedReplacement
 import qualified Pawl.Types.Protection as Protection
 import qualified Pawl.Types.PutCounters as PutCounters
 import qualified Pawl.Types.Quantity as Quantity
 import qualified Pawl.Types.RandomCardInHand as RandomCardInHand
 import qualified Pawl.Types.Regenerability as Regenerability
+import qualified Pawl.Types.Replace as Replace
+import qualified Pawl.Types.ReplacementEffect as ReplacementEffect
+import qualified Pawl.Types.ReplacementOrigin as ReplacementOrigin
+import qualified Pawl.Types.Sacrifice as Sacrifice
 import qualified Pawl.Types.SacrificeEffect as SacrificeEffect
 import qualified Pawl.Types.Sacrificer as Sacrificer
 import qualified Pawl.Types.Scope as Scope
 import qualified Pawl.Types.SlotCount as SlotCount
 import qualified Pawl.Types.SlotName as SlotName
+import qualified Pawl.Types.SpellCast as SpellCast
 import qualified Pawl.Types.StaticAbility as StaticAbility
 import qualified Pawl.Types.StepBegins as StepBegins
 import qualified Pawl.Types.Subtype as Subtype
@@ -125,6 +135,7 @@ import qualified Pawl.Types.TriggerLimit as TriggerLimit
 import qualified Pawl.Types.TriggeredAbility as TriggeredAbility
 import qualified Pawl.Types.TurnScope as TurnScope
 import qualified Pawl.Types.TypeLine as TypeLine
+import qualified Pawl.Types.Uses as Uses
 import qualified Pawl.Types.Zone as Zone
 import qualified Pawl.Types.ZoneScope as ZoneScope
 
@@ -268,6 +279,16 @@ rule face n = case Node.tag n of
     f <- permanents outermost who
     modifications <- Common.asArray changes >>= traverse (Node.node Monad.>=> staticModification)
     static face (Affected.Matching f) (concat modifications)
+  -- "This land enters tapped" (CR 614.1d).
+  "AsPermanentEnters" -> do
+    (who, replacements) <- pair n
+    p <- Node.node who
+    Monad.unless (Node.tag p == "ThisPermanent") (Node.untranslated p)
+    rewrites <- Common.asArray replacements >>= traverse Node.node
+    case rewrites of
+      [r] | Node.tag r == "EntersTapped", Maybe.isNothing (Node.args r) -> pure face {Face.replacementEffects = Face.replacementEffects face <> [entersTapped]}
+      r : _ -> Node.untranslated r
+      [] -> Node.untranslated n
   "CDA_Power" -> defining n (\q pt -> pt {CharacteristicPT.power = q})
   "CDA_Toughness" -> defining n (\q pt -> pt {CharacteristicPT.toughness = q})
   "Equip" -> do
@@ -341,6 +362,16 @@ staticAbility affected modifications =
       StaticAbility.lingers = Nothing,
       StaticAbility.name = Nothing,
       StaticAbility.modifications = modifications
+    }
+
+-- | The source's entering tapped (CR 614.1d).
+entersTapped :: PrintedReplacement.PrintedReplacement Card.Card Ability Effect
+entersTapped =
+  PrintedReplacement.MkPrintedReplacement
+    { PrintedReplacement.condition = Nothing,
+      PrintedReplacement.effect = ReplacementEffect.EntryR EntryR.MkEntryR {EntryR.matching = Filter.IsSource, EntryR.rewrite = EntryRewrite.Tapped},
+      PrintedReplacement.functionsFrom = Set.empty,
+      PrintedReplacement.name = Nothing
     }
 
 -- | The objects a static ability of a permanent affects: the one it is
@@ -489,6 +520,9 @@ costPart n = case Node.tag n of
   "TapPermanent" -> itself CostComponent.TapThis
   "UntapPermanent" -> itself CostComponent.UntapThis
   "SacrificePermanent" -> itself CostComponent.SacrificeThis
+  "SacrificeAPermanent" -> do
+    f <- Node.argument n >>= permanents outermost
+    Right (Right (CostComponent.Sacrifice Sacrifice.MkSacrifice {Sacrifice.count = CostAmount.Fixed 1, Sacrifice.whichPermanents = f}))
   "PayLife" -> do
     k <- Node.child n >>= integer
     m <- natural n k
@@ -544,6 +578,15 @@ trigger n = case Node.tag n of
   "AtTheBeginningOfAPlayersDrawStep" -> step (Phase.Beginning BeginningStep.DrawStep)
   "AtTheBeginningOfAPlayersEndStep" -> step (Phase.Ending EndingStep.EndStep)
   "AtTheBeginningOfCombatDuringAPlayersTurn" -> step (Phase.Combat CombatStep.BeginningOfCombat)
+  -- CR 601.2i: the caster is the spell's controller (CR 110.2), which the
+  -- spell's filter names.
+  "WhenAPlayerCastsASpell" -> do
+    (who, what) <- pair n
+    relation <- players who
+    f <- spells what
+    let caster = [Filter.ControlledBy relation | relation /= PlayerRelation.AnyPlayer]
+        spellCast = SpellCast.MkSpellCast {SpellCast.filter = conjoined (foldMap conjuncts f <> caster), SpellCast.scope = TurnScope.EachTurn, SpellCast.zone = Nothing, SpellCast.ordinal = Nothing, SpellCast.phase = Nothing, SpellCast.copies = False}
+    Right (TriggerCondition.SpellCast spellCast, bound [("Trigger_ThatPlayer", Oracle.Trigger.thatPlayer), ("Trigger_ThatSpell", Oracle.Trigger.castSpell)])
   "AtTheBeginningOfTheEndStep" -> Right (TriggerCondition.StepBegins (StepBegins.MkStepBegins (Phase.Ending EndingStep.EndStep) Nothing TurnScope.EachTurn), outermost)
   _ -> Node.untranslated n
   where
@@ -648,22 +691,40 @@ data Context = MkContext
     -- time, which mtgish calls "ActionPlayer".
     actor :: Maybe PlayerRef.PlayerRef,
     -- | The slot an amount is divided among (CR 601.2d).
-    dividing :: Maybe SlotName.SlotName
+    dividing :: Maybe SlotName.SlotName,
+    -- | Which kind of mana of an "or" the mode adds: "Add {W} or {U}" is
+    -- one mode per kind.
+    manaChoice :: Maybe Int
   }
   deriving (Eq, Show)
 
 -- | An ability's context before its trigger event or targets name anything.
 outermost :: Context
-outermost = MkContext Map.empty Map.empty Nothing Nothing
+outermost = MkContext Map.empty Map.empty Nothing Nothing Nothing
 
--- | Instructions as a modal payload: one mode, or each of a "Choose one"'s.
+-- | Instructions as a modal payload: one mode, each of a "Choose one"'s, or
+-- one for each kind of mana an "or" of mana chooses among.
 modal :: Context -> Value.Value -> Translated Modal
 modal context value = do
   n <- Node.node value
-  modes <- case Node.tag n of
-    "Modal_ChooseOne" -> Node.arguments n >>= traverse (mode context)
-    _ -> fmap pure (mode context value)
+  modes <- case (Node.tag n, manaOptions value) of
+    ("Modal_ChooseOne", _) -> Node.arguments n >>= traverse (mode context)
+    (_, []) -> fmap pure (mode context value)
+    (_, [k]) | k > 1 -> traverse (\i -> mode context {manaChoice = Just i} value) [0 .. k - 1]
+    _ -> Node.untranslated n
   pure Modal.MkModal {Modal.modes = Seq.fromList modes, Modal.selection = ModeSelection.ChooseExactly 1}
+
+-- | How many kinds of mana each "or" of mana in the value chooses among.
+manaOptions :: Value.Value -> [Int]
+manaOptions value = case (Common.asObject value, Common.asArray value) of
+  (Right pairs, _)
+    | Right n <- Node.node value,
+      Node.family n == "ManaProduce",
+      Node.tag n == "Or" ->
+        [either (const 0) length (Node.arguments n)]
+    | otherwise -> concatMap (manaOptions . Pair.value) pairs
+  (_, Right values) -> concatMap manaOptions values
+  _ -> []
 
 -- | One mode: its instructions, after the targets they choose (CR 601.2c).
 mode :: Context -> Value.Value -> Translated Mode
@@ -837,7 +898,7 @@ effects context n = case Node.tag n of
     ref <- Node.argument n >>= spellRef context
     pure [Effect.Counter Counter.MkCounter {Counter.ref = ref, Counter.slot = Nothing, Counter.sources = Nothing, Counter.instead = Nothing}]
   "AddMana" -> do
-    produced <- Node.child n >>= productions
+    produced <- Node.child n >>= productions context
     pure [Effect.AddMana (addition p) | p <- produced]
   "PutPermanentIntoItsOwnersHand" -> move Zone.Hand =<< (Node.argument n >>= permanent context)
   "PutGraveyardCardIntoHand" -> move Zone.Hand =<< (Node.argument n >>= graveyardCard context)
@@ -864,6 +925,16 @@ effects context n = case Node.tag n of
     ref <- Node.argument n >>= permanent context
     Monad.unless (ref == ObjectRef.InSlot Oracle.Target.selfSlot) (Node.untranslated n)
     pure [Effect.Sacrifice (SacrificeEffect.MkSacrificeEffect ref Sacrificer.EffectController Nothing)]
+  -- A shield used up by the next destruction it replaces this turn (CR
+  -- 701.19a), of the source or of the object a slot holds.
+  "RegeneratePermanent" -> do
+    ref <- Node.argument n >>= permanent context
+    matching <- case ref of
+      ObjectRef.InSlot s
+        | s == Oracle.Target.selfSlot -> Right Nothing
+        | otherwise -> Right (Just (Filter.IsBound s))
+      _ -> Node.untranslated n
+    pure [Effect.Replace Replace.MkReplace {Replace.duration = Duration.UntilEndOfTurn, Replace.uses = Uses.Once, Replace.origin = ReplacementOrigin.Other, Replace.condition = Nothing, Replace.effect = ReplacementEffect.DestructionR DestructionR.MkDestructionR {DestructionR.matching = matching, DestructionR.rewrite = DestructionRewrite.Regenerate}}]
   "PutCounters" -> do
     actions <- Node.arguments n >>= traverse Node.node
     fmap concat (traverse (counters context) actions)
@@ -949,10 +1020,16 @@ addition p =
       ManaAddition.whenSpent = Nothing
     }
 
--- | Mana an instruction adds (CR 106.1), one addition per mana symbol.
-productions :: Node.Node -> Translated [ManaProduction.ManaProduction]
-productions n = case Node.tag n of
-  "And" -> fmap concat (Node.arguments n >>= traverse (Node.node Monad.>=> productions))
+-- | Mana an instruction adds (CR 106.1), one addition per mana symbol, and
+-- of an "or" the kind the mode chooses.
+productions :: Context -> Node.Node -> Translated [ManaProduction.ManaProduction]
+productions context n = case Node.tag n of
+  "And" -> fmap concat (Node.arguments n >>= traverse (Node.node Monad.>=> productions context))
+  "Or" -> do
+    options <- Node.arguments n
+    case manaChoice context of
+      Just i | (option : _) <- drop i options -> Node.node option >>= productions context
+      _ -> Node.untranslated n
   "AnyManaColor" -> Right [ManaProduction.AnyColor]
   'M' : 'a' : 'n' : 'a' : 'P' : 'r' : 'o' : 'd' : 'u' : 'c' : 'e' : [c] | Just t <- Ingest.manaType c -> Right [ManaProduction.OfType t]
   _ -> Node.untranslated n

@@ -96,8 +96,9 @@ without whole part = case (whole, part) of
 
 -- | A face's abilities, each with its wordings: its keywords, its enchant
 -- abilities (CR 702.5a), its characteristic-defining power and toughness
--- (CR 604.3), its static abilities (CR 604), its spell (CR 112), its
--- activated abilities (CR 602) and its triggered abilities (CR 603). A face
+-- (CR 604.3), its static abilities (CR 604) and the replacement effects of
+-- its static abilities (CR 614.1), its spell (CR 112), its activated
+-- abilities (CR 602) and its triggered abilities (CR 603). A face
 -- with no rules text has no abilities, which is what a vanilla creature and a
 -- basic land print (CR 305.6, CR 207.2a). Whatever else the face holds is one
 -- more ability, never rendered: the face with the fields rendered here
@@ -107,7 +108,7 @@ faceAbilities :: Face.Face Card.Card -> [[Text.Text]]
 faceAbilities face =
   let self = CardName.unwrap (Face.name face)
       context = Target.MkContext self Map.empty (Keyword.keywordWord self) [Text.pack " "] Map.empty [] []
-      rest = face {Face.keywords = Map.empty, Face.spell = Face.defaultSpell, Face.activatedAbilities = [], Face.triggeredAbilities = [], Face.staticAbilities = [], Face.enchant = [], Face.characteristicPT = Nothing}
+      rest = face {Face.keywords = Map.empty, Face.spell = Face.defaultSpell, Face.activatedAbilities = [], Face.triggeredAbilities = [], Face.staticAbilities = [], Face.replacementEffects = [], Face.enchant = [], Face.characteristicPT = Nothing}
       subtypes = TypeLine.subtypes (Face.typeLine face)
       unread = rest /= Face.Oracle.bare (Face.name face) (Face.oracleText face) (Face.manaCost face) (Face.colorIndicator face) (Face.typeLine face) (Face.power face) (Face.toughness face) Map.empty
       spell = [Effect.modal context {Target.breaks = [Text.pack " ", Text.pack "\n"]} (Face.spell face) | Face.spell face /= Face.defaultSpell]
@@ -116,6 +117,7 @@ faceAbilities face =
         <> fmap (Continuous.enchant context) (Face.enchant face)
         <> fmap (Continuous.defining context (Face.power face) (Face.toughness face)) (Maybe.maybeToList (Face.characteristicPT face))
         <> fmap (Continuous.static context (Continuous.attachedWord subtypes bestowed) (Face.enchant face)) (Face.staticAbilities face)
+        <> fmap (Continuous.replacement context) (Face.replacementEffects face)
         <> spell
         <> fmap (activated context) (Face.activatedAbilities face)
         <> fmap (triggered context (Set.member CardType.Creature (TypeLine.types (Face.typeLine face)))) (Face.triggeredAbilities face)
@@ -139,7 +141,7 @@ triggered context creature t
         Nothing -> [(Text.empty, Text.empty)]
         Just c -> do
           condition <- Trigger.condition after c
-          word <- Trigger.hellbent condition
+          word <- Trigger.abilityWord condition
           [(word, Text.pack ", if " <> condition)]
       effect <- Effect.modal after (TriggeredAbility.modal t)
       let named' = Text.isPrefixOf (Target.self after) effect && Target.self after /= Text.pack "it"

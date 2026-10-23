@@ -1,0 +1,18 @@
+{
+  "description": "CR 601.2i whole card: Warmth gains its controller 2 life when an opponent casts a red spell",
+  "note": "Bob's green Llanowar Elves, and alice's own red Shock on her turn, both leave it be; bob's Goblin Piker triggers it. Alice ends at 22 and bob at 18 from the Shock; a trigger on either other spell would leave alice at 24.",
+  "board": {"active": "bob", "step": "PrecombatMain", "seats": [{"name": "alice", "library": [{"card": "Island"}, {"card": "Island"}, {"card": "Island"}], "battlefield": [{"card": "Warmth", "label": "warmth"}, {"card": "Mountain", "label": "am"}], "hand": [{"card": "Shock", "label": "shock"}]}, {"name": "bob", "library": [{"card": "Island"}, {"card": "Island"}, {"card": "Island"}], "battlefield": [{"card": "Forest", "label": "bf"}, {"card": "Mountain", "label": "bm"}, {"card": "Mountain", "label": "bm2"}], "hand": [{"card": "Llanowar Elves", "label": "elves"}, {"card": "Goblin Piker", "label": "goblin"}]}]},
+  "timeline": [
+    {"turn": 1, "step": "PrecombatMain", "player": "bob", "do": {"Cast": {"object": "$elves", "mana": ["$bf", null]}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "bob", "do": "Pass"},
+    {"turn": 1, "step": "PrecombatMain", "player": "bob", "do": {"Cast": {"object": "$goblin", "mana": ["$bm", "$bm2"]}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "bob", "do": "Pass"},
+    {"turn": 2, "step": "PrecombatMain", "player": "alice", "do": {"Cast": {"object": "$shock", "targets": ["$bob"], "mana": ["$am"]}}},
+    {"turn": 2, "step": "PrecombatMain", "player": "alice", "do": "Pass"}
+  ],
+  "final": [
+    {"Life": {"player": "alice", "life": 22}},
+    {"Life": {"player": "bob", "life": 18}},
+    {"Count": {"player": "bob", "zone": "Battlefield", "card": "Goblin Piker", "count": 1}}
+  ]
+}
