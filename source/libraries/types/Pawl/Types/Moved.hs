@@ -2,6 +2,7 @@ module Pawl.Types.Moved where
 
 import qualified Data.Sequence as Seq
 import qualified Pawl.Types.ObjectId as ObjectId
+import qualified Pawl.Types.PlayerId as PlayerId
 import qualified Pawl.Types.ProjectedCharacteristics as ProjectedCharacteristics
 import qualified Pawl.Types.ZoneChange as ZoneChange
 
@@ -64,14 +65,20 @@ data Moved = MkMoved
     -- | CR 400.2: all players could see the object as it arrived -- face up in
     -- a public zone, or shown to everyone. False for a card put onto the
     -- battlefield or into exile face down (CR 406.3, 708.2).
-    seenArriving :: Bool
+    seenArriving :: Bool,
+    -- | CR 609.1: the controller of the spell or ability whose effect made this
+    -- move, read off GameState.causing as the move happens. Nothing for a move
+    -- no effect made: a cost (CR 118.12, 601.2h), a state-based action, a
+    -- turn-based action, a cast. See docs/decisions.md, "What a spell or
+    -- ability causes".
+    causedBy :: Maybe PlayerId.PlayerId
   }
   deriving (Eq, Ord, Show)
 
 -- | The ordinary move: one departure, one arrival, no CR 712.21 split. Every
 -- construction site but Pawl.Engine.Event's zone-change funnel uses this.
 moved :: ZoneChange.ZoneChange -> ProjectedCharacteristics.ProjectedCharacteristics -> Moved
-moved zc pc = MkMoved {change = zc, characteristics = pc, otherArrivals = Seq.empty, otherDepartures = Seq.empty, duringResolution = False, revealed = False, seenArriving = False}
+moved zc pc = MkMoved {change = zc, characteristics = pc, otherArrivals = Seq.empty, otherDepartures = Seq.empty, duringResolution = False, revealed = False, seenArriving = False, causedBy = Nothing}
 
 -- | CR 400.7e's "the new object it became", in the plural CR 712.21c asks for:
 -- every incarnation this move minted, first arrival first. A singleton for every

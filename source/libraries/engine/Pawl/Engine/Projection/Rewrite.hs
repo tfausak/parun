@@ -60,6 +60,7 @@ import qualified Pawl.Types.CardsPutIntoZone as CardsPutIntoZone
 import qualified Pawl.Types.CastFromZone as CastFromZone
 import qualified Pawl.Types.CastOffer as CastOffer
 import qualified Pawl.Types.CastRepetition as CastRepetition
+import qualified Pawl.Types.CausedBy as CausedBy
 import qualified Pawl.Types.ChangeText as ChangeText
 import qualified Pawl.Types.CharacteristicPT as CharacteristicPT
 import qualified Pawl.Types.ChooseCardName as ChooseCardName
@@ -2102,6 +2103,7 @@ rewriteTriggerCondition pairs condition = case condition of
   TriggerCondition.SelfHalfUnlocked _ -> condition
   TriggerCondition.RoomFullyUnlocked _ -> condition
   TriggerCondition.AnyOf conditions -> TriggerCondition.AnyOf (fmap (rewriteTriggerCondition pairs) conditions)
+  TriggerCondition.CausedBy narrowed -> TriggerCondition.CausedBy narrowed {CausedBy.condition = rewriteTriggerCondition pairs (CausedBy.condition narrowed)}
   TriggerCondition.SelfTurnedFaceUp -> condition
   -- CR 612.1's text change swaps SUBTYPES here (Pawl.Types.ChangeText's pairs);
   -- CR 701.27e's payload is a face's NAME, which is not one, so nothing in this
