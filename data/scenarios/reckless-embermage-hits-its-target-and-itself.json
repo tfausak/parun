@@ -1,0 +1,11 @@
+{
+  "description": "CR 120.3 whole card: Reckless Embermage deals 1 damage to any target and 1 damage to itself",
+  "note": "Bob goes to 19 and the Embermage carries 1 damage.",
+  "board": {"active": "alice", "step": "PrecombatMain", "seats": [{"name": "alice", "manaPool": "RR", "battlefield": [{"card": "Reckless Embermage", "label": "embermage"}], "library": [{"card": "Island"}, {"card": "Island"}, {"card": "Island"}]}, {"name": "bob", "library": [{"card": "Island"}, {"card": "Island"}, {"card": "Island"}]}]},
+  "timeline": [
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "do": {"Activate": {"object": "$embermage", "ability": 0, "targets": ["$bob"]}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "do": "Pass"},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "check": {"Life": {"player": "bob", "life": 19}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "check": {"Damage": {"object": "$embermage", "damage": 1}}}
+  ]
+}

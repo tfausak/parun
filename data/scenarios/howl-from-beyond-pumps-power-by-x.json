@@ -1,0 +1,10 @@
+{
+  "description": "CR 107.3 / 613.4c whole card: Howl from Beyond gives its target +X/+0 until end of turn, at instant speed",
+  "note": "Cast with X=3 during bob's turn: the Gray Ogre (2/2) becomes 5/2, toughness untouched.",
+  "board": {"active": "bob", "step": "PrecombatMain", "seats": [{"name": "bob", "library": [{"card": "Island"}, {"card": "Island"}, {"card": "Island"}]}, {"name": "alice", "manaPool": "BBBB", "battlefield": [{"card": "Gray Ogre", "label": "ogre"}], "hand": [{"card": "Howl from Beyond", "label": "howl"}], "library": [{"card": "Island"}, {"card": "Island"}, {"card": "Island"}]}]},
+  "timeline": [
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "do": {"Cast": {"object": "$howl", "targets": ["$ogre"], "x": 3}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "do": "Pass"},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "check": {"PowerToughness": {"object": "$ogre", "power": 5, "toughness": 2}}}
+  ]
+}

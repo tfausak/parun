@@ -1,0 +1,8 @@
+{
+  "description": "CR 602.5 / 605.1a whole card: Cursed Totem forbids activating creatures' activated abilities, mana abilities included",
+  "note": "Alice's Llanowar Elves cannot tap for mana, though her Forest still can; Prodigal Sorcerer's ping is not offered either.",
+  "board": {"active": "alice", "step": "PrecombatMain", "seats": [{"name": "alice", "battlefield": [{"card": "Cursed Totem"}, {"card": "Llanowar Elves", "label": "elves", "ready": true}, {"card": "Prodigal Sorcerer", "label": "sorcerer", "ready": true}, {"card": "Forest", "label": "forest"}], "library": [{"card": "Island"}, {"card": "Island"}, {"card": "Island"}]}, {"name": "bob", "library": [{"card": "Island"}, {"card": "Island"}, {"card": "Island"}]}]},
+  "timeline": [
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "check": {"View": {"of": "Offered", "player": "alice", "is": ["Pass", "ActivateManaAbility $forest"]}}}
+  ]
+}

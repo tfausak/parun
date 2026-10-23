@@ -1902,9 +1902,9 @@ filterPositionLintSpec s registry = Spec.describe s "Lint" $ do
     -- abilities, whose X CR 602.2b announces.
     --
     -- Exactly, against the mana value: Chthonian Nightmare, Tamiyo, Compleated
-    -- Sage and Synthetic Counted Verdict in a slot, and Fear of Change and Ornate
-    -- Imitations in a reference pick, at the top level and inside a ForEachNumber
-    -- body.
+    -- Sage, Synthetic Counted Verdict and Spell Blast in a slot, and Fear of
+    -- Change and Ornate Imitations in a reference pick, at the top level and
+    -- inside a ForEachNumber body.
     --
     -- At most and less than, against the mana value on a SPELL whose X shares the
     -- cost with a count announced beside it: March of Otherworldly Light and March
@@ -1923,6 +1923,7 @@ filterPositionLintSpec s registry = Spec.describe s "Lint" $ do
             "Chthonian Nightmare",
             "Tamiyo, Compleated Sage",
             "Synthetic Counted Verdict",
+            "Spell Blast",
             "Fear of Change",
             "Ornate Imitations",
             "Spawnbroker",

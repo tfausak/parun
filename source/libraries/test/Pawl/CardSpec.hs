@@ -3217,6 +3217,9 @@ namedTokens =
       -- Preston Garvey, Minuteman's "create a green Aura enchantment token named
       -- Settlement attached to up to one target land you control".
       CardName.MkCardName (Text.pack "Settlement"),
+      -- The Hive's "a 1/1 colorless Insect artifact creature token with flying
+      -- named Wasp".
+      CardName.MkCardName (Text.pack "Wasp"),
       -- CR 111.10q's Wicked Role (Witch's Mark, Twisted Fealty).
       CardName.MkCardName (Text.pack "Wicked")
     ]

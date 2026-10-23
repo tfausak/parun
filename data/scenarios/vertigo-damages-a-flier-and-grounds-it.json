@@ -1,0 +1,11 @@
+{
+  "description": "CR 120.3 / 613.1f whole card: Vertigo deals 2 damage to a creature with flying, which loses flying until end of turn",
+  "note": "Bob's Serra Angel survives with 2 damage and no flying.",
+  "board": {"active": "bob", "step": "PrecombatMain", "seats": [{"name": "bob", "battlefield": [{"card": "Serra Angel", "label": "angel"}], "library": [{"card": "Island"}, {"card": "Island"}, {"card": "Island"}]}, {"name": "alice", "manaPool": "R", "hand": [{"card": "Vertigo", "label": "vertigo"}], "library": [{"card": "Island"}, {"card": "Island"}, {"card": "Island"}]}]},
+  "timeline": [
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "do": {"Cast": {"object": "$vertigo", "targets": ["$angel"]}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "do": "Pass"},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "check": {"Damage": {"object": "$angel", "damage": 2}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "check": {"Keywords": {"object": "$angel", "keyword": {"type": "Flying"}, "count": 0}}}
+  ]
+}

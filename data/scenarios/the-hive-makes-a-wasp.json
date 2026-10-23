@@ -1,0 +1,11 @@
+{
+  "description": "CR 111.4 whole card: The Hive creates a 1/1 flying Insect artifact creature token named Wasp",
+  "note": "The Wasp is an artifact creature with flying.",
+  "board": {"active": "alice", "step": "PrecombatMain", "seats": [{"name": "alice", "manaPool": "CCCCC", "battlefield": [{"card": "The Hive", "label": "hive"}], "library": [{"card": "Island"}, {"card": "Island"}, {"card": "Island"}]}, {"name": "bob", "library": [{"card": "Island"}, {"card": "Island"}, {"card": "Island"}]}]},
+  "timeline": [
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "do": {"Activate": {"object": "$hive", "ability": 0}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "do": "Pass"},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "check": {"Types": {"object": "Wasp", "types": ["Artifact", "Creature"]}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "check": {"Keywords": {"object": "Wasp", "keyword": {"type": "Flying"}, "count": 1}}}
+  ]
+}

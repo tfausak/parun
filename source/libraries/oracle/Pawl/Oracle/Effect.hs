@@ -907,7 +907,11 @@ dealDamage context d
               groups
                 | shared = List.groupBy (\a b -> DamagePart.quantity a == DamagePart.quantity b) parts
                 | otherwise = fmap pure parts
-          rendered <- traverse (damagePart context measured) groups
+          -- Free when the card deals damage to itself: its own name or "itself"
+          -- (Reckless Embermage).
+          let itself = Maybe.isNothing (DealDamage.dealer d) && any ((== ObjectRef.InSlot Target.selfSlot) . DamagePart.ref) parts
+          recipients <- context : [context {Target.self = Text.pack "itself"} | itself]
+          rendered <- traverse (damagePart recipients measured) groups
           [MkPredicate (Just source) (Text.pack "deals " <> Text.intercalate (Text.pack " and ") (fmap fst rendered)) [] (concatMap snd rendered) Nothing False]
 
 -- | Whether the reference names a group rather than one object or player:

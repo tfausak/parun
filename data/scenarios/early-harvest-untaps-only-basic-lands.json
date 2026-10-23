@@ -1,0 +1,12 @@
+{
+  "description": "CR 205.4c whole card: Early Harvest untaps the basic lands its target controls and no others",
+  "note": "Bob's tapped Forest untaps; his tapped Tundra (not basic) and alice's tapped Plains stay tapped.",
+  "board": {"active": "alice", "step": "PrecombatMain", "seats": [{"name": "alice", "manaPool": "GGG", "hand": [{"card": "Early Harvest", "label": "harvest"}], "battlefield": [{"card": "Plains", "label": "plains", "tapped": true}], "library": [{"card": "Island"}, {"card": "Island"}, {"card": "Island"}]}, {"name": "bob", "battlefield": [{"card": "Forest", "label": "forest", "tapped": true}, {"card": "Tundra", "label": "tundra", "tapped": true}], "library": [{"card": "Island"}, {"card": "Island"}, {"card": "Island"}]}]},
+  "timeline": [
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "do": {"Cast": {"object": "$harvest", "targets": ["$bob"]}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "do": "Pass"},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "check": {"Tapped": {"object": "$forest", "tapped": false}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "check": {"Tapped": {"object": "$tundra", "tapped": true}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "check": {"Tapped": {"object": "$plains", "tapped": true}}}
+  ]
+}

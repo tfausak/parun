@@ -131,13 +131,17 @@ agreeing number q = case number of
 
 -- | Adjectives as Oracle text strings them: "other" first ("other white
 -- creatures"), and "non-" ones separated by commas ("nonartifact, nonblack"),
--- with the type ones first, as Terror prints them.
+-- with the type ones first, as Terror prints them. Free: the "non-" ones
+-- after the others ("attacking nonwhite") or before them ("nonwhite
+-- attacking", Exile).
 adjectiveText :: Number -> [Qualifier] -> [[Text.Text]]
 adjectiveText number qs = do
   as <- traverse (agreeing number) qs
   let (negated, plain) = List.partition (Text.isPrefixOf (Text.pack "non")) as
       ordered = List.sortOn (\a -> elem (Text.drop 3 a) (fmap color [minBound .. maxBound])) negated
-  [List.sortOn (/= Text.pack "other") plain <> [Text.intercalate (Text.pack ", ") ordered | not (null ordered)]]
+      plain' = List.sortOn (/= Text.pack "other") plain
+      negated' = [Text.intercalate (Text.pack ", ") ordered | not (null ordered)]
+  [plain' <> negated'] <> [negated' <> plain' | not (null plain'), not (null negated'), notElem (Text.pack "other") plain']
 
 empty :: Phrase
 empty = MkPhrase [] [] []

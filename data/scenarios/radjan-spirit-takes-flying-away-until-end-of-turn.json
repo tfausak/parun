@@ -1,0 +1,11 @@
+{
+  "description": "CR 613.1f / 514.2 whole card: Radjan Spirit's target loses flying until end of turn",
+  "note": "Bob's Wind Drake has no flying after the ability resolves, and has it again on bob's turn.",
+  "board": {"active": "alice", "step": "PrecombatMain", "seats": [{"name": "alice", "battlefield": [{"card": "Radjan Spirit", "label": "spirit", "ready": true}], "library": [{"card": "Island"}, {"card": "Island"}, {"card": "Island"}]}, {"name": "bob", "battlefield": [{"card": "Wind Drake", "label": "drake"}], "library": [{"card": "Island"}, {"card": "Island"}, {"card": "Island"}]}]},
+  "timeline": [
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "do": {"Activate": {"object": "$spirit", "ability": 0, "targets": ["$drake"]}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "do": "Pass"},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "check": {"Keywords": {"object": "$drake", "keyword": {"type": "Flying"}, "count": 0}}},
+    {"turn": 2, "step": "Upkeep", "player": "bob", "check": {"Keywords": {"object": "$drake", "keyword": {"type": "Flying"}, "count": 1}}}
+  ]
+}
