@@ -13,20 +13,21 @@ import qualified Pawl.Types.CounterRestriction as CounterRestriction
 import qualified Pawl.Types.CrewRestriction as CrewRestriction
 import qualified Pawl.Types.EntryRestriction as EntryRestriction
 import qualified Pawl.Types.SacrificeRestriction as SacrificeRestriction
+import qualified Pawl.Types.TargetRestriction as TargetRestriction
 import qualified Pawl.Types.UntapRestriction as UntapRestriction
 
 -- | CR 613.11: the ability families whose continuous effects "affect game rules
--- rather than objects" -- the fourteen lists Pawl.Types.Face carries beside its
+-- rather than objects" -- the fifteen lists Pawl.Types.Face carries beside its
 -- keywords and its static abilities, and which no layer of CR 613 touches.
 --
--- ONE bundle rather than fourteen fields on Pawl.Types.ProjectedCharacteristics,
--- because the fourteen share a single posture down to the line: each is seeded
+-- ONE bundle rather than fifteen fields on Pawl.Types.ProjectedCharacteristics,
+-- because the fifteen share a single posture down to the line: each is seeded
 -- from the printed face, rewritten by no layer, and read by exactly one engine
 -- module outside the layer fold. Grouping them makes CR 702.140e's union one
--- `<>` and CR 707.2a's copy one field, so a fifteenth family cannot be added
+-- `<>` and CR 707.2a's copy one field, so a sixteenth family cannot be added
 -- to the record and left out of either; see #3373.
 --
--- Face keeps the fourteen apart because a card's JSON names each one; nothing
+-- Face keeps the fifteen apart because a card's JSON names each one; nothing
 -- here needs that, since every reader asks for one field by name.
 data RuleAbilities = MkRuleAbilities
   { -- | CR 602.2: "its activated abilities can't be activated" (Arrest).
@@ -61,6 +62,9 @@ data RuleAbilities = MkRuleAbilities
     -- | CR 701.21a: "creatures you control but don't own ... can't be sacrificed"
     -- (Garland, Royal Kidnapper).
     sacrificeRestrictions :: [SacrificeRestriction.SacrificeRestriction],
+    -- | CR 115 / 101.2: "creatures can't be the targets of spells" (Dense
+    -- Foliage).
+    targetRestrictions :: [TargetRestriction.TargetRestriction],
     -- | CR 502.3: "each land with an activated ability that isn't a mana ability
     -- doesn't untap during its controller's untap step" (Tsabo's Web), and "you
     -- may choose not to untap this artifact during your untap step" (Amber
@@ -70,8 +74,8 @@ data RuleAbilities = MkRuleAbilities
   deriving (Eq, Ord, Show)
 
 -- | CR 702.140e: a merged permanent has all abilities of each card representing
--- it, which for these fourteen families is concatenation. Field by field rather
--- than a derived instance, so a fifteenth field cannot be added without
+-- it, which for these fifteen families is concatenation. Field by field rather
+-- than a derived instance, so a sixteenth field cannot be added without
 -- -Werror naming this site.
 instance Semigroup RuleAbilities where
   left <> right =
@@ -89,6 +93,7 @@ instance Semigroup RuleAbilities where
         crewRestrictions = crewRestrictions left <> crewRestrictions right,
         entryRestrictions = entryRestrictions left <> entryRestrictions right,
         sacrificeRestrictions = sacrificeRestrictions left <> sacrificeRestrictions right,
+        targetRestrictions = targetRestrictions left <> targetRestrictions right,
         untapRestrictions = untapRestrictions left <> untapRestrictions right
       }
 
@@ -111,5 +116,6 @@ instance Monoid RuleAbilities where
         crewRestrictions = [],
         entryRestrictions = [],
         sacrificeRestrictions = [],
+        targetRestrictions = [],
         untapRestrictions = []
       }

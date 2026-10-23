@@ -93,6 +93,7 @@ import qualified Pawl.Types.Prompt as Prompt
 import qualified Pawl.Types.Recipient as Recipient
 import qualified Pawl.Types.Revealed as Revealed
 import qualified Pawl.Types.SeatView as SeatView
+import qualified Pawl.Types.StackObjectKind as StackObjectKind
 import qualified Pawl.Types.StepBegan as StepBegan
 import qualified Pawl.Types.TapState as TapState
 import qualified Pawl.Types.TargetSlot as TargetSlot
@@ -138,7 +139,7 @@ spec s registry = Spec.describe s "Face-down exile" $ do
           Spec.assertEqWith
             s
             "while all three remain legal targets, which is what the drawn card needs at CR 608.2b"
-            (Target.legalRecipients (Just S.alice) S.noSource theSlot board)
+            (Target.legalRecipients StackObjectKind.Spell (Just S.alice) S.noSource theSlot board)
             (Set.fromList (fmap Recipient.ToObject (Set.toList (GameState.exile board))))
         Nothing -> Spec.assertFailure s "Synthetic Blind Reclamation should print one target slot"
     -- CR 406.4's second half at gameplay level, and the only board in the tree
@@ -360,7 +361,7 @@ spec s registry = Spec.describe s "Face-down exile" $ do
           Spec.assertEqWith
             s
             "CR 406.3's face-up default leaves every exiled card choosable"
-            (Target.legalRecipients (Just S.alice) S.noSource theSlot board)
+            (Target.legalRecipients StackObjectKind.Spell (Just S.alice) S.noSource theSlot board)
             (Set.fromList (fmap Recipient.ToObject [upA, upB, upC]))
         Nothing -> Spec.assertFailure s "Riftsweeper should print one triggered ability with one target slot"
     -- CR 400.7 through the delayed ability: "return THOSE CARDS to your hand, then
@@ -1346,7 +1347,7 @@ drawing oid p = case p of
 --
 -- The slot's most is its fixed count, which every slot this spec offers has.
 offerTo :: PlayerId.PlayerId -> TargetSlot.TargetSlot -> GameState.GameState -> Set.Set Recipient.Recipient
-offerTo pid slot gs = Target.piledOffer (Target.fixedCount slot) (Just pid) gs (Target.legalRecipients (Just pid) S.noSource slot gs)
+offerTo pid slot gs = Target.piledOffer (Target.fixedCount slot) (Just pid) gs (Target.legalRecipients StackObjectKind.Spell (Just pid) S.noSource slot gs)
 
 -- What each seat's view showed of exile at every prompt after CR 406.4's draw,
 -- newest first, beside whether the prompt was CR 601.2g's mana window.

@@ -85,6 +85,7 @@ import qualified Pawl.Types.Reveal as Reveal
 import qualified Pawl.Types.Sickness as Sickness
 import qualified Pawl.Types.SlotArity as SlotArity
 import qualified Pawl.Types.SlotName as SlotName
+import qualified Pawl.Types.StackObjectKind as StackObjectKind
 import qualified Pawl.Types.Status as Status
 import qualified Pawl.Types.StepBegan as StepBegan
 import qualified Pawl.Types.TapState as TapState
@@ -2591,7 +2592,7 @@ plummetSpec s registry = Spec.describe s "Plummet" $ do
       Just theSlot -> do
         let (flierId, gs1) = S.addPermanent birdMaiden S.bob (Setup.emptyGame S.bothPlayers)
             (groundId, gs) = S.addPermanent piker S.bob gs1
-            legal = Target.legalRecipients Nothing S.noSource theSlot gs
+            legal = Target.legalRecipients StackObjectKind.Spell Nothing S.noSource theSlot gs
         Spec.assertBool s (Set.member (Recipient.ToCreature flierId) legal) "the flier is a legal target"
         Spec.assertBool s (not (Set.member (Recipient.ToCreature groundId) legal)) "the creature without flying is not"
   -- The other direction, and the one that proves the read is not of the printed
@@ -2606,9 +2607,9 @@ plummetSpec s registry = Spec.describe s "Plummet" $ do
       Just theSlot -> do
         let (flierId, before) = S.addPermanent birdMaiden S.bob (Setup.emptyGame S.bothPlayers)
             after = S.withHumility humility before
-        Spec.assertBool s (Set.member (Recipient.ToCreature flierId) (Target.legalRecipients Nothing S.noSource theSlot before)) "legal while it flies"
+        Spec.assertBool s (Set.member (Recipient.ToCreature flierId) (Target.legalRecipients StackObjectKind.Spell Nothing S.noSource theSlot before)) "legal while it flies"
         Spec.assertBool s (not (Projection.hasKeyword Keyword.Flying flierId after)) "Humility took the flying"
-        Spec.assertBool s (not (Set.member (Recipient.ToCreature flierId) (Target.legalRecipients Nothing S.noSource theSlot after))) "so it is no longer a legal target"
+        Spec.assertBool s (not (Set.member (Recipient.ToCreature flierId) (Target.legalRecipients StackObjectKind.Spell Nothing S.noSource theSlot after))) "so it is no longer a legal target"
 
 -- Announces X=2 and takes the identity fallback everywhere else -- which answers
 -- CR 601.2b's Phyrexian question with the FIRST offer, the mana route, so the

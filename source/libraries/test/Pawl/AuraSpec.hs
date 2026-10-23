@@ -102,6 +102,7 @@ import qualified Pawl.Types.Regenerability as Regenerability
 import qualified Pawl.Types.Response as Response
 import qualified Pawl.Types.Sickness as Sickness
 import qualified Pawl.Types.SlotName as SlotName
+import qualified Pawl.Types.StackObjectKind as StackObjectKind
 import qualified Pawl.Types.StepBegan as StepBegan
 import qualified Pawl.Types.Subtype as Subtype
 import qualified Pawl.Types.Supertype as Supertype
@@ -918,7 +919,7 @@ enchantPlayerSpec s registry = Spec.describe s "EnchantPlayer" $ do
         Spec.assertEqWith
           s
           "only the Aura on a creature is offered"
-          (Target.legalRecipients (Just S.alice) crownId theSlot gs)
+          (Target.legalRecipients StackObjectKind.Spell (Just S.alice) crownId theSlot gs)
           (Set.singleton (Recipient.ToObject onCreature))
 
 -- Replenish {3}{W} Sorcery -- "Return all enchantment cards from your graveyard to
@@ -1382,7 +1383,7 @@ reattachSpec s registry = Spec.describe s "Reattach" $ do
         (crownObj, g4) = S.addPermanent crown S.alice g3
         onCreature = S.attach aura creature g4
         onLand = S.attach aura land g4
-        offered gs = fmap (\theSlot -> Target.legalRecipients (Just S.alice) crownObj theSlot gs) (activatedTargetSlot crown)
+        offered gs = fmap (\theSlot -> Target.legalRecipients StackObjectKind.Spell (Just S.alice) crownObj theSlot gs) (activatedTargetSlot crown)
         admits oid gs = fmap (Set.member (Recipient.ToObject oid)) (offered gs)
     Spec.assertEqWith s "on the Piker the Aura is a legal target" (admits aura onCreature) (Just True)
     Spec.assertEqWith s "on the Mountain it is not" (admits aura onLand) (Just False)
@@ -1737,8 +1738,8 @@ auraGraftSpec s registry = Spec.describe s "AuraGraft" $ do
         attached =
           S.attachTo onPlayer (Recipient.ToPlayer S.bob) $
             S.attach onLand land (S.attach onCreature creature gs)
-        graftOffers oid = fmap (Set.member (Recipient.ToObject oid) . (\theSlot -> Target.legalRecipients (Just S.alice) graft theSlot attached)) (S.spellTargetSlot auraGraft)
-        crownOffers oid = fmap (Set.member (Recipient.ToObject oid) . (\theSlot -> Target.legalRecipients (Just S.alice) crownId theSlot attached)) (activatedTargetSlot crown)
+        graftOffers oid = fmap (Set.member (Recipient.ToObject oid) . (\theSlot -> Target.legalRecipients StackObjectKind.Spell (Just S.alice) graft theSlot attached)) (S.spellTargetSlot auraGraft)
+        crownOffers oid = fmap (Set.member (Recipient.ToObject oid) . (\theSlot -> Target.legalRecipients StackObjectKind.Spell (Just S.alice) crownId theSlot attached)) (activatedTargetSlot crown)
     Spec.assertEqWith s "an Aura on a creature is a legal target" (graftOffers onCreature) (Just True)
     Spec.assertEqWith s "and so is one on a land" (graftOffers onLand) (Just True)
     -- The pair that makes the trivial nest do work the Crown's creature nest
@@ -1767,7 +1768,7 @@ auraGraftSpec s registry = Spec.describe s "AuraGraft" $ do
         (aura, g2) = S.addPermanent unholyStrength S.alice g1
         (gs, graft) = S.handOne auraGraft (S.attach aura creature g2)
         bounced = S.runPure S.identityAnswer gs (Event.changeZone creature Zone.Hand)
-        offers g = fmap (Set.member (Recipient.ToObject aura) . (\theSlot -> Target.legalRecipients (Just S.alice) graft theSlot g)) (S.spellTargetSlot auraGraft)
+        offers g = fmap (Set.member (Recipient.ToObject aura) . (\theSlot -> Target.legalRecipients StackObjectKind.Spell (Just S.alice) graft theSlot g)) (S.spellTargetSlot auraGraft)
     Spec.assertEqWith s "while the Piker is there the Aura is a legal target" (offers gs) (Just True)
     -- CR 400.7 minted a new object in the hand, so the recipient the Aura
     -- still holds names an id nothing on the battlefield answers to.
@@ -1842,7 +1843,7 @@ miracleWorkerSpec s registry = Spec.describe s "MiracleWorker" $ do
             S.attach onTheirs theirs (S.attach onMine mine g9)
         offers source slotOf oid =
           fmap
-            (Set.member (Recipient.ToObject oid) . (\theSlot -> Target.legalRecipients (Just S.alice) source theSlot board))
+            (Set.member (Recipient.ToObject oid) . (\theSlot -> Target.legalRecipients StackObjectKind.Spell (Just S.alice) source theSlot board))
             slotOf
         workerOffers = offers workerId (activatedTargetSlot worker)
         crownOffers = offers crownId (activatedTargetSlot crown)

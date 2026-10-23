@@ -89,6 +89,7 @@ import qualified Pawl.Types.Printing as Printing
 import qualified Pawl.Types.Prompt as Prompt
 import qualified Pawl.Types.Recipient as Recipient
 import qualified Pawl.Types.Source as Source
+import qualified Pawl.Types.StackObjectKind as StackObjectKind
 import qualified Pawl.Types.Status as Status
 import qualified Pawl.Types.StepBegan as StepBegan
 import qualified Pawl.Types.TapState as TapState
@@ -162,7 +163,7 @@ spec s registry = Spec.describe s "Teams" $ do
     case S.spellTargetSlot bolt of
       Nothing -> Spec.assertFailure s "Lightning Bolt should declare a target slot"
       Just theSlot -> do
-        let legalFor who = Target.legalRecipients (Just who) S.noSource theSlot warded
+        let legalFor who = Target.legalRecipients StackObjectKind.Spell (Just who) S.noSource theSlot warded
         Spec.assertBool s (Set.member (Recipient.ToPlayer S.bob) (legalFor S.alice)) "CR 102.3 alice, bob's teammate, may still bolt him"
         Spec.assertBool s (not (Set.member (Recipient.ToPlayer S.bob) (legalFor S.carol))) "CR 702.11c carol, his opponent, may not"
         Spec.assertBool s (Set.member (Recipient.ToPlayer S.bob) (legalFor S.bob)) "and bob may bolt himself"

@@ -62,6 +62,7 @@ import qualified Pawl.Types.Printing as Printing
 import qualified Pawl.Types.ProjectedCharacteristics as PC
 import qualified Pawl.Types.Prompt as Prompt
 import qualified Pawl.Types.Recipient as Recipient
+import qualified Pawl.Types.StackObjectKind as StackObjectKind
 import qualified Pawl.Types.Subtype as Subtype
 import qualified Pawl.Types.TargetSlot as TargetSlot
 
@@ -314,7 +315,7 @@ spec s registry = Spec.describe s "Pawl.Engine.Color" $ do
     let gs0 = Setup.emptyGame S.bothPlayers
         (ratsId, withRats) = S.addPermanent typhoidRats S.alice gs0
         (pikerId, gs) = S.addPermanent piker S.alice withRats
-        legal = Target.legalRecipients Nothing S.noSource nonblackCreature gs
+        legal = Target.legalRecipients StackObjectKind.Spell Nothing S.noSource nonblackCreature gs
     Spec.assertBool s (Set.member (Recipient.ToCreature pikerId) legal) "the red Piker is legal"
     Spec.assertBool s (not (Set.member (Recipient.ToCreature ratsId) legal)) "the black Rats are not"
 
@@ -323,7 +324,7 @@ spec s registry = Spec.describe s "Pawl.Engine.Color" $ do
     slaughterDrone <- S.printingOf s registry "Slaughter Drone"
     let gs0 = Setup.emptyGame S.bothPlayers
         (droneId, gs) = S.addPermanent slaughterDrone S.alice gs0
-        legal = Target.legalRecipients Nothing S.noSource nonblackCreature gs
+        legal = Target.legalRecipients StackObjectKind.Spell Nothing S.noSource nonblackCreature gs
     Spec.assertBool s (Set.member (Recipient.ToCreature droneId) legal) "colourless is nonblack"
 
   Spec.it s "CR 105.3 2008-05-01 a colour change overwrites ALL previous colours, even a multicoloured one" $ do
@@ -404,11 +405,11 @@ spec s registry = Spec.describe s "Pawl.Engine.Color" $ do
       Just destroySlot -> do
         Spec.assertBool
           s
-          (not (Set.member (Recipient.ToObject droneId) (Target.legalRecipients Nothing S.noSource destroySlot gs)))
+          (not (Set.member (Recipient.ToObject droneId) (Target.legalRecipients StackObjectKind.Spell Nothing S.noSource destroySlot gs)))
           "the colourless drone is not a legal 'target blue permanent'"
         Spec.assertBool
           s
-          (Set.member (Recipient.ToObject droneId) (Target.legalRecipients Nothing S.noSource destroySlot blued))
+          (Set.member (Recipient.ToObject droneId) (Target.legalRecipients StackObjectKind.Spell Nothing S.noSource destroySlot blued))
           "the blue drone is"
     Spec.assertBool s (not (Set.member droneId (GameState.battlefield after))) "and Red Elemental Blast destroys it"
     Spec.assertBool s (Set.member faerieId (GameState.battlefield after)) "the blast hit the drone, not the equally blue Faerie"
@@ -699,11 +700,11 @@ spec s registry = Spec.describe s "Pawl.Engine.Color" $ do
             -- the pool offering nothing at all -- fails here instead.
             Spec.assertBool
               s
-              (Set.member (Recipient.ToObject abilityId) (Target.legalRecipients Nothing S.noSource unfiltered pinged))
+              (Set.member (Recipient.ToObject abilityId) (Target.legalRecipients StackObjectKind.Spell Nothing S.noSource unfiltered pinged))
               "Stifle's unfiltered slot does offer the ability"
             Spec.assertBool
               s
-              (not (Set.member (Recipient.ToObject abilityId) (Target.legalRecipients Nothing S.noSource filtered pinged)))
+              (not (Set.member (Recipient.ToObject abilityId) (Target.legalRecipients StackObjectKind.Spell Nothing S.noSource filtered pinged)))
               "and the ability on the stack is no legal 'target red activated or triggered ability'"
             Spec.assertEqWith s "because CR 113.1c leaves it colourless" (Projection.colorsOf abilityId pinged) Set.empty
           _ -> Spec.assertFailure s "expected exactly one ability on the stack and one target slot per card"

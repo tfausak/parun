@@ -77,7 +77,7 @@ import qualified Pawl.Engine.Quantity as Quantity
 import qualified Pawl.Engine.Recruit as Recruit
 import qualified Pawl.Engine.Replacement as Replacement
 import qualified Pawl.Engine.Replay as Replay
-import Pawl.Engine.Resolve.Slots (battlefieldMatching, boundSlots, conditionSlots, effectContext, effectContextNaming, effectObjectRefs, effectPlayerRefs, effectViewOf, graveyardCardsOf, handCardsOf, legalMany, legalOne, libraryCardsOf, matchingFromAmong, objectRefObjects, overRelations, playerRefPlayers, playerRefSlots, replacementRowSlots, resolutionReads, resolvingAbilityName, slotBindings, slotGroup)
+import Pawl.Engine.Resolve.Slots (battlefieldMatching, boundSlots, conditionSlots, effectContext, effectContextNaming, effectObjectRefs, effectPlayerRefs, effectViewOf, graveyardCardsOf, handCardsOf, legalMany, legalOne, libraryCardsOf, matchingFromAmong, objectRefObjects, overRelations, playerRefPlayers, playerRefSlots, replacementRowSlots, resolutionReads, resolvingAbilityName, resolvingKind, slotBindings, slotGroup)
 import qualified Pawl.Engine.Restamp as Restamp
 import qualified Pawl.Engine.Ring as Ring
 import qualified Pawl.Engine.Room as Room
@@ -2977,14 +2977,14 @@ copyRetargets perspective original live candidates = Maybe.fromMaybe [] $ do
   let slots = stackTargetSlots obj original gs
       current = targetsOnStack original gs
       seed = Map.withoutKeys (Object.bindings obj) (Map.keysSet slots)
-      fresh = Target.legalSets (resolvingAbilityName original gs) (Just perspective) False seed original slots gs
+      fresh = Target.legalSets (resolvingKind original gs) (resolvingAbilityName original gs) (Just perspective) False seed original slots gs
       takes candidate slot = Set.filter (Recipient.sameReferent candidate) (Map.findWithDefault Set.empty slot fresh)
       pick candidate =
         let chosen = Map.mapWithKey (\slot _ -> takes candidate slot) current
          in if not (Map.null current)
               && and (Map.elems (Map.map ((== 1) . Set.size) current))
               && and (Map.elems (Map.map ((== 1) . Set.size) chosen))
-              && Target.jointlyCoherent (resolvingAbilityName original gs) (Just perspective) seed original slots chosen gs
+              && Target.jointlyCoherent (resolvingKind original gs) (resolvingAbilityName original gs) (Just perspective) seed original slots chosen gs
               then Just (candidate, chosen)
               else Nothing
   pure (Maybe.mapMaybe pick candidates)
@@ -3204,7 +3204,7 @@ chooseNewTargetsFor unannounced source chooser controller copyId = do
         -- source. Pawl.TargetSpec's "a Lithoform Engine copy of the Paladin's
         -- ability" is the proof.
         aimer = Maybe.fromMaybe copyId (Game.abilitySourceOf copyId gs)
-        fresh = Target.legalSets (resolvingAbilityName copyId gs) (Just controller) False seed aimer slots gs
+        fresh = Target.legalSets (resolvingKind copyId gs) (resolvingAbilityName copyId gs) (Just controller) False seed aimer slots gs
         -- CR 406.4: what this player may not name specifically is offered as
         -- the pile it sits in, exactly as at CR 601.2c. The targets already
         -- CHOSEN are offered unchanged whatever they are, rule 707.10c letting
@@ -3245,9 +3245,9 @@ chooseNewTargetsFor unannounced source chooser controller copyId = do
         -- target already illegal stands, one legal before must stay legal.
         -- Pawl.TargetSpec's Bioshift cases prove both halves.
         let stands slot picked = Set.isSubsetOf picked (Set.union (Map.findWithDefault Set.empty slot current) (Map.findWithDefault Set.empty slot fresh))
-            already = Target.jointlyIllegal (resolvingAbilityName copyId gs) (Just controller) seed aimer slots current gs
+            already = Target.jointlyIllegal (resolvingKind copyId gs) (resolvingAbilityName copyId gs) (Just controller) seed aimer slots current gs
             caused slot refused = not (Set.isSubsetOf refused (Map.findWithDefault Set.empty slot already))
-            coherent = not (or (Map.mapWithKey caused (Target.jointlyIllegal (resolvingAbilityName copyId gs) (Just controller) seed aimer slots drawn gs)))
+            coherent = not (or (Map.mapWithKey caused (Target.jointlyIllegal (resolvingKind copyId gs) (resolvingAbilityName copyId gs) (Just controller) seed aimer slots drawn gs)))
         Monad.when (and (Map.elems (Map.mapWithKey stands drawn)) && coherent) $ do
           rebound <- reaimDivisions chooser copyId (Object.bindings copy) (Map.filter (not . Set.null) drawn)
           Monad.forM_ rebound $ \bindings -> do
@@ -3308,7 +3308,7 @@ changeTargetsFor source chooser controller oid = do
         current = Map.filter (not . Set.null) (targetsOnStack oid gs)
         seed = Map.withoutKeys (Object.bindings obj) (Map.keysSet slots)
         aimer = Maybe.fromMaybe oid (Game.abilitySourceOf oid gs)
-        fresh = Target.legalSets (resolvingAbilityName oid gs) (Just controller) False seed aimer slots gs
+        fresh = Target.legalSets (resolvingKind oid gs) (resolvingAbilityName oid gs) (Just controller) False seed aimer slots gs
         another old = Set.filter (\r -> not (any (Recipient.sameReferent r) old))
         -- CR 406.4's draws capped at the slot's count, chooseNewTargetsFor's
         -- cap. A REGRESSION FENCE: no test drives a pile through this road.
@@ -3331,7 +3331,7 @@ changeTargetsFor source chooser controller oid = do
         let stands slot picked =
               Set.isSubsetOf picked (Map.findWithDefault Set.empty slot fresh)
                 && another (Map.findWithDefault Set.empty slot current) picked == picked
-            coherent = all Set.null (Target.jointlyIllegal (resolvingAbilityName oid gs) (Just controller) seed aimer slots drawn gs)
+            coherent = all Set.null (Target.jointlyIllegal (resolvingKind oid gs) (resolvingAbilityName oid gs) (Just controller) seed aimer slots drawn gs)
         Monad.when (and (Map.elems (Map.mapWithKey stands drawn)) && coherent) $ do
           rebound <- reaimDivisions chooser oid (Object.bindings obj) drawn
           Monad.forM_ rebound $ \bindings -> do

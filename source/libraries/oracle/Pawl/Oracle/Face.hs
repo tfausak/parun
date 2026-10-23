@@ -134,6 +134,7 @@ bare n t c i l p x k =
       Face.sacrificeRestrictions = [],
       Face.untapRestrictions = [],
       Face.crewRestrictions = [],
+      Face.targetRestrictions = [],
       Face.attackPermissions = [],
       Face.attachRestrictions = [],
       Face.entryRestrictions = [],

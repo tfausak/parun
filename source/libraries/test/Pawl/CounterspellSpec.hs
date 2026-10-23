@@ -73,6 +73,7 @@ import qualified Pawl.Types.Recipient as Recipient
 import qualified Pawl.Types.Regenerability as Regenerability
 import qualified Pawl.Types.Response as Response
 import qualified Pawl.Types.SlotName as SlotName
+import qualified Pawl.Types.StackObjectKind as StackObjectKind
 import qualified Pawl.Types.StepBegan as StepBegan
 import qualified Pawl.Types.Subtype as Subtype
 import qualified Pawl.Types.TapState as TapState
@@ -1724,7 +1725,7 @@ tarfireReaches s registry oid gs = do
     Nothing -> Nothing
     Just theSlot ->
       let (spellId, onStack) = S.spellOnStack tarfire S.bob gs
-       in Just (Set.member (Recipient.ToCreature oid) (Target.legalRecipients (Just S.bob) spellId theSlot onStack))
+       in Just (Set.member (Recipient.ToCreature oid) (Target.legalRecipients StackObjectKind.Spell (Just S.bob) spellId theSlot onStack))
 
 -- Filters every offered target set down to `oid`, whatever recipient tag the
 -- pool offered it under -- never a hand-built recipient, which CR 608.2b's

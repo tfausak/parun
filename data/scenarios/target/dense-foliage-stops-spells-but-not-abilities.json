@@ -1,0 +1,42 @@
+{
+  "description": "CR 115.1 / 101.2 Dense Foliage stops a spell targeting a creature, but not an activated ability",
+  "note": "alice's Shock may not aim at bob's bear while Dense Foliage is out, and is then cast at bob with the same Mountain, so the refusal is the target's and not the mana's. Prodigal Sorcerer's ability may still aim at the bear, and Abyssal Hunter's, which can target nothing but a creature, is still offered and taps bob's giant.",
+  "board": {
+    "seats": [
+      {
+        "name": "alice",
+        "battlefield": [
+          { "card": "Dense Foliage" },
+          { "card": "Mountain", "label": "m1", "ready": true },
+          { "card": "Swamp", "label": "s1", "ready": true },
+          { "card": "Prodigal Sorcerer", "label": "sorcerer", "ready": true },
+          { "card": "Abyssal Hunter", "label": "hunter", "ready": true }
+        ],
+        "hand": [{ "card": "Shock", "label": "shock" }],
+        "library": [{ "card": "Swamp" }]
+      },
+      {
+        "name": "bob",
+        "battlefield": [
+          { "card": "Grizzly Bears", "label": "bear" },
+          { "card": "Hill Giant", "label": "giant" }
+        ],
+        "library": [{ "card": "Swamp" }]
+      }
+    ],
+    "active": "alice",
+    "step": "PrecombatMain"
+  },
+  "timeline": [
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "refuse": { "Cast": { "object": "$shock", "targets": ["$bear"], "mana": ["$m1", null] } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "do": { "Cast": { "object": "$shock", "targets": ["$bob"], "mana": ["$m1", null] } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "do": { "Activate": { "object": "$hunter", "targets": ["$giant"], "mana": ["$s1"] } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "do": { "Activate": { "object": "$sorcerer", "targets": ["$bear"] } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "do": "Pass" },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "check": { "Damage": { "object": "$bear", "damage": 1 } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "do": "Pass" },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "check": { "Tapped": { "object": "$giant", "tapped": true } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "do": "Pass" },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "check": { "Life": { "player": "bob", "life": 18 } } }
+  ]
+}

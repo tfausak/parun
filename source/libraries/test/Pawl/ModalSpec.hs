@@ -57,6 +57,7 @@ import qualified Pawl.Types.Quantity as Quantity
 import qualified Pawl.Types.Recipient as Recipient
 import qualified Pawl.Types.SlotName as SlotName
 import qualified Pawl.Types.Source as Source
+import qualified Pawl.Types.StackObjectKind as StackObjectKind
 import qualified Pawl.Types.TapState as TapState
 import qualified Pawl.Types.TargetSlot as TargetSlot
 import qualified Pawl.Types.TriggeredAbility as TriggeredAbility
@@ -108,7 +109,7 @@ falsifierSpec s registry = Spec.describe s "Falsifier" $ do
     Spec.assertEqWith
       s
       "the Wall mode (0) is absent from the fillable set"
-      (Target.fillableModes Nothing Nothing Map.empty oid (Card.enchantSlotMap (S.combinedFace chaosCharm)) (Face.spell (S.combinedFace chaosCharm)) gs1)
+      (Target.fillableModes StackObjectKind.Spell Nothing Nothing Map.empty oid (Card.enchantSlotMap (S.combinedFace chaosCharm)) (Face.spell (S.combinedFace chaosCharm)) gs1)
       (Set.fromList [ModeIndex.MkModeIndex 1, ModeIndex.MkModeIndex 2])
 
 -- CR 601.2c/700.2c: only the CHOSEN mode's slots are ever prompted or stamped
@@ -164,7 +165,7 @@ nonlandPermanentTargetSpec s registry = Spec.describe s "M4h NonlandPermanentTar
     mindslaver <- S.printingOf s registry "Mindslaver"
     mountain <- S.printingOf s registry "Mountain"
     let gs = S.boardWithCreatureArtifactLand piker mindslaver mountain
-        got = Target.legalRecipients Nothing S.noSource (TargetSlot.required Pool.Permanents (Just (Filter.Type.Not (Filter.Type.HasCardType CardType.Land)))) gs
+        got = Target.legalRecipients StackObjectKind.Spell Nothing S.noSource (TargetSlot.required Pool.Permanents (Just (Filter.Type.Not (Filter.Type.HasCardType CardType.Land)))) gs
     Spec.assertEqWith
       s
       "two nonland permanents, no land"
@@ -178,7 +179,7 @@ nonlandPermanentTargetSpec s registry = Spec.describe s "M4h NonlandPermanentTar
     let gs = S.boardWithCreatureArtifactLand piker mindslaver mountain
         nonlandOther = Filter.Type.And [Filter.Type.Not (Filter.Type.HasCardType CardType.Land), Filter.Type.Not Filter.Type.IsSource]
         slots = Map.singleton (SlotName.MkSlotName (Text.pack "x")) (TargetSlot.required Pool.Permanents (Just nonlandOther))
-        got = Target.legalSets Nothing Nothing False Map.empty (S.creatureId gs) slots gs
+        got = Target.legalSets StackObjectKind.Spell Nothing Nothing False Map.empty (S.creatureId gs) slots gs
     Spec.assertEqWith
       s
       "source excluded from its own set"
@@ -344,7 +345,7 @@ triggerModalSpec s registry = Spec.describe s "M4h trigger modal (CR 700.2b/603.
         Spec.assertEqWith
           s
           "with Aether Channeler the only nonland permanent, only modes 0 and 2 are fillable"
-          (Target.fillableModes Nothing Nothing Map.empty acId Map.empty modal gs)
+          (Target.fillableModes StackObjectKind.Spell Nothing Nothing Map.empty acId Map.empty modal gs)
           (Set.fromList [ModeIndex.MkModeIndex 0, ModeIndex.MkModeIndex 2])
 
   -- CR 603.3c/700.2b: "If no mode is chosen, the ability is removed from
@@ -439,7 +440,7 @@ chooseTwoSpec s registry = Spec.describe s "ChooseTwo (CR 700.2)" $ do
     Spec.assertEqWith
       s
       "with a spell on the stack and permanents in play, all four modes are fillable"
-      (Target.fillableModes Nothing (Just S.alice) Map.empty spellId (Card.enchantSlotMap (S.combinedFace crypticCommand)) modal gs)
+      (Target.fillableModes StackObjectKind.Spell Nothing (Just S.alice) Map.empty spellId (Card.enchantSlotMap (S.combinedFace crypticCommand)) modal gs)
       crypticModes
     -- The forced case's own boundary, and why casting does not reach it: modes 2
     -- and 3 take no targets, so they are fillable even on an empty board --
@@ -449,7 +450,7 @@ chooseTwoSpec s registry = Spec.describe s "ChooseTwo (CR 700.2)" $ do
     Spec.assertEqWith
       s
       "on an empty board only the two targetless modes are fillable"
-      (Target.fillableModes Nothing (Just S.alice) Map.empty S.noSource Map.empty modal (Setup.emptyGame S.bothPlayers))
+      (Target.fillableModes StackObjectKind.Spell Nothing (Just S.alice) Map.empty S.noSource Map.empty modal (Setup.emptyGame S.bothPlayers))
       (Set.fromList (fmap ModeIndex.MkModeIndex [2, 3]))
 
   -- The prompt itself, asserted rather than assumed: the answer below refuses to
@@ -547,7 +548,7 @@ forcedTwoSpec s registry = Spec.describe s "ForcedTwo (CR 700.2a)" $ do
     Spec.assertEqWith
       s
       "the reanimation mode stays unfillable"
-      (Target.fillableModes Nothing (Just S.alice) Map.empty spellId Map.empty (Face.spell (S.combinedFace ojutaisCommand)) gs)
+      (Target.fillableModes StackObjectKind.Spell Nothing (Just S.alice) Map.empty spellId Map.empty (Face.spell (S.combinedFace ojutaisCommand)) gs)
       (Set.fromList (fmap ModeIndex.MkModeIndex [1, 3]))
 
   Spec.it s "CR 202.3 a mana value 2 creature card in the graveyard makes a third mode choosable" $ do
@@ -560,7 +561,7 @@ forcedTwoSpec s registry = Spec.describe s "ForcedTwo (CR 700.2a)" $ do
     Spec.assertEqWith
       s
       "the reanimation mode joins the two targetless ones"
-      (Target.fillableModes Nothing (Just S.alice) Map.empty spellId Map.empty (Face.spell (S.combinedFace ojutaisCommand)) gs)
+      (Target.fillableModes StackObjectKind.Spell Nothing (Just S.alice) Map.empty spellId Map.empty (Face.spell (S.combinedFace ojutaisCommand)) gs)
       (Set.fromList (fmap ModeIndex.MkModeIndex [0, 1, 3]))
 
   -- Mode 2's own filter: "target CREATURE spell", so a noncreature spell on the
@@ -579,12 +580,12 @@ forcedTwoSpec s registry = Spec.describe s "ForcedTwo (CR 700.2a)" $ do
     Spec.assertEqWith
       s
       "an instant on the stack leaves only the targetless modes"
-      (Target.fillableModes Nothing (Just S.alice) Map.empty spellId Map.empty modal withBolt)
+      (Target.fillableModes StackObjectKind.Spell Nothing (Just S.alice) Map.empty spellId Map.empty modal withBolt)
       (Set.fromList (fmap ModeIndex.MkModeIndex [1, 3]))
     Spec.assertEqWith
       s
       "a creature spell on the stack makes the counter mode choosable"
-      (Target.fillableModes Nothing (Just S.alice) Map.empty spellId Map.empty modal gs)
+      (Target.fillableModes StackObjectKind.Spell Nothing (Just S.alice) Map.empty spellId Map.empty modal gs)
       (Set.fromList (fmap ModeIndex.MkModeIndex [1, 2, 3]))
 
   -- All four at once, so the prompt has the widest choice this card can offer.
