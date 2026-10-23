@@ -1076,6 +1076,7 @@ stocked gs rewrite pid = case rewrite of
   DrawRewrite.FromOutsideTheGame _ -> True
   DrawRewrite.YouDraw -> True
   DrawRewrite.OthersMayPayLife _ -> True
+  DrawRewrite.FromGraveyardOrLose -> True
 
 breaches :: GameState -> Maybe PlayerId -> LifeLossRewrite.LifeLossRewrite -> PlayerId -> Natural -> Bool
 breaches gs you rewrite pid n = case rewrite of
@@ -2287,6 +2288,9 @@ readsApplier re = case re of
   -- the drawer, both read off the EVENT, and the life is the effect's own field.
   -- GainLife's answer, and for its reason.
   ReplacementEffect.DrawR (DrawR.MkDrawR _ (DrawRewrite.OthersMayPayLife _)) -> False
+  -- The graveyard searched and the player who loses are both the drawer the
+  -- EVENT named. GainLife's answer, and for its reason.
+  ReplacementEffect.DrawR (DrawR.MkDrawR _ DrawRewrite.FromGraveyardOrLose) -> False
   -- CR 121.2a: "you and that player each draw a card" -- the "you" is the row's
   -- own controller, so two rows alike in `effect` and unlike in `you` hand the
   -- extra card to different seats. LifeLossRewrite.ExileFromTopOfYourLibrary's
@@ -2386,6 +2390,9 @@ readsSource effect = case effect of
   -- The source only names the offer (Prompt.ChooseToPay); what is paid and where
   -- the card goes do not depend on it.
   ReplacementEffect.DrawR (DrawR.MkDrawR _ (DrawRewrite.OthersMayPayLife _)) -> False
+  -- The source only names the prompt and the queued loss; which cards are offered
+  -- and who loses do not depend on it.
+  ReplacementEffect.DrawR (DrawR.MkDrawR _ DrawRewrite.FromGraveyardOrLose) -> False
   -- CR 616.1: Event.eligible scans the pool under Projection.sourceContext
   -- framed by this candidate's source, so a filter naming any of the source's
   -- characteristics or choices (Filter.readsSourceValues) can offer different
