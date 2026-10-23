@@ -63,6 +63,7 @@ import qualified Pawl.Types.AttachRewrite as AttachRewrite
 import qualified Pawl.Types.AttachTarget as AttachTarget
 import qualified Pawl.Types.AttackTargetRef as AttackTargetRef
 import qualified Pawl.Types.BecomeCopy as BecomeCopy
+import qualified Pawl.Types.Bid as Bid
 import qualified Pawl.Types.Blight as Blight
 import qualified Pawl.Types.Card as Card.Type
 import qualified Pawl.Types.CardName as CardName
@@ -305,6 +306,7 @@ ownQuantities effect = case effect of
   Effect.NoteManaSpent -> []
   Effect.PlayerSacrifices (PlayerSacrifices.MkPlayerSacrifices _ _ quantity) -> [quantity]
   Effect.Vote {} -> []
+  Effect.Bid bid -> [Bid.opening bid]
   Effect.RestartGame _ -> []
   Effect.ControlPlayerNextTurn _ -> []
   Effect.ControlPlayerThisResolution _ -> []
@@ -1468,6 +1470,7 @@ effectObjectRefs effect =
         Effect.NoteManaSpent -> []
         Effect.PlayerSacrifices {} -> []
         Effect.Vote {} -> []
+        Effect.Bid {} -> []
         -- CR 727.5's exemption, optional: a card saying nothing about it exempts
         -- nothing.
         Effect.RestartGame mRef -> read_ (Maybe.maybeToList mRef)

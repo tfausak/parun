@@ -246,6 +246,8 @@ library codec
     Pawl.Codec.BeginningStepSpec
     Pawl.Codec.Behold
     Pawl.Codec.BeholdSpec
+    Pawl.Codec.Bid
+    Pawl.Codec.BidSpec
     Pawl.Codec.Binding
     Pawl.Codec.BindingSpec
     Pawl.Codec.Blight
@@ -2287,6 +2289,7 @@ library types
     Pawl.Types.BecomeCopy
     Pawl.Types.BeginningStep
     Pawl.Types.Behold
+    Pawl.Types.Bid
     Pawl.Types.Binding
     Pawl.Types.Blight
     Pawl.Types.BlockCost

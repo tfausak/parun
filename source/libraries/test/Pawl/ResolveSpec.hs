@@ -2893,7 +2893,7 @@ truceSpec s registry =
       choices = Map.fromList [(S.alice, 0), (S.bob, 1), (S.carol, 2)]
       answer :: Prompt.Prompt r -> r
       answer p = case p of
-        Prompt.ChooseNumber _ pid _ _ -> Map.findWithDefault 0 pid choices
+        Prompt.ChooseNumber _ pid _ _ _ -> Map.findWithDefault 0 pid choices
         Prompt.ChooseDredge {} -> OptionalDecision.Exercises
         _ -> S.identityAnswer p
       resolved (truceId, gs) =

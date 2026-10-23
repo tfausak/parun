@@ -1,0 +1,34 @@
+{
+  "description": "CR 608.2d Illicit Auction with no bid leaves the caster the high bidder at 0",
+  "note": "bob and carol each let alice's opening bid of 0 stand, so the bidding ends without returning to her: alice gains control of carol's Hill Giant and loses no life.",
+  "board": {
+    "seats": [
+      {
+        "name": "alice",
+        "battlefield": [
+          { "card": "Mountain", "label": "m1" },
+          { "card": "Mountain", "label": "m2" },
+          { "card": "Mountain", "label": "m3" },
+          { "card": "Mountain", "label": "m4" },
+          { "card": "Mountain", "label": "m5" }
+        ],
+        "hand": [{ "card": "Illicit Auction", "label": "auction" }]
+      },
+      { "name": "bob" },
+      {
+        "name": "carol",
+        "battlefield": [{ "card": "Hill Giant", "label": "giant" }]
+      }
+    ],
+    "active": "alice",
+    "step": "PrecombatMain"
+  },
+  "timeline": [
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "do": { "Cast": { "object": "$auction", "targets": ["$giant"], "mana": ["$m1", "$m2", "$m3", "$m4", "$m5"] } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "do": "Pass" },
+    { "turn": 1, "step": "PrecombatMain", "player": "bob", "do": { "Answer": { "prompt": "ChooseNumber", "with": 0 } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "carol", "do": { "Answer": { "prompt": "ChooseNumber", "with": 0 } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "check": { "View": { "of": "Controller", "object": "$giant", "is": "alice" } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "check": { "Life": { "player": "alice", "life": 20 } } }
+  ]
+}

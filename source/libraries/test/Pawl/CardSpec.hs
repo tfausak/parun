@@ -93,6 +93,7 @@ import qualified Pawl.Types.AttackTargetRef as AttackTargetRef
 import qualified Pawl.Types.Backup as Backup
 import qualified Pawl.Types.BecomeCopy as BecomeCopy
 import qualified Pawl.Types.Behold as Behold
+import qualified Pawl.Types.Bid as Bid
 import qualified Pawl.Types.Blight as Blight
 import qualified Pawl.Types.BlockCost as BlockCost
 import qualified Pawl.Types.BlockPermission as BlockPermission
@@ -1304,6 +1305,7 @@ ownCounts effect = case effect of
   Effect.NoteManaSpent -> []
   Effect.PlayerSacrifices (PlayerSacrifices.MkPlayerSacrifices _ _ quantity) -> quantityCounts quantity
   Effect.Vote {} -> []
+  Effect.Bid bid -> quantityCounts (Bid.opening bid)
   Effect.RestartGame _ -> []
   Effect.ControlPlayerNextTurn _ -> []
   Effect.ControlPlayerThisResolution _ -> []
@@ -1841,6 +1843,7 @@ effectNestedEffects effect = case effect of
   Effect.NoteManaSpent -> []
   Effect.PlayerSacrifices {} -> []
   Effect.Vote {} -> []
+  Effect.Bid {} -> []
   Effect.RestartGame {} -> []
   Effect.ControlPlayerNextTurn {} -> []
   Effect.ControlPlayerThisResolution {} -> []
@@ -2380,6 +2383,7 @@ effectReplacements effect = case effect of
   Effect.NoteManaSpent -> []
   Effect.PlayerSacrifices {} -> []
   Effect.Vote {} -> []
+  Effect.Bid {} -> []
   Effect.RestartGame _ -> []
   Effect.ControlPlayerNextTurn _ -> []
   Effect.ControlPlayerThisResolution _ -> []
@@ -2933,6 +2937,7 @@ effectMintedFaces effect = case effect of
   Effect.NoteManaSpent -> []
   Effect.PlayerSacrifices {} -> []
   Effect.Vote {} -> []
+  Effect.Bid {} -> []
   Effect.RestartGame _ -> []
   Effect.ControlPlayerNextTurn _ -> []
   Effect.ControlPlayerThisResolution _ -> []
@@ -5950,6 +5955,7 @@ effectFilters effect = case effect of
   -- Unframed, PlayerSacrifices' answer and for its reason: rule 701.38b's
   -- listed choices are judged against each candidate on the battlefield, which
   -- is neither an attach destination nor a target slot.
+  Effect.Bid bid -> frame Unframed (quantityFilters (Bid.opening bid))
   Effect.Vote (Vote.MkVote _ choices _) -> case choices of
     VoteChoices.Objects objects -> unframed [VoteObjects.filter objects]
     -- Rule 701.38b's words carry no filter to frame.
