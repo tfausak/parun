@@ -4,9 +4,11 @@ import qualified Control.Exception as Exception
 import qualified Control.Monad as Monad
 import qualified Data.ByteString as ByteString
 import qualified Data.ByteString.Builder as Builder
+import qualified Data.List as List
 import qualified Data.List.NonEmpty as NonEmpty
 import qualified Data.Map.Strict as Map
 import qualified Data.Maybe as Maybe
+import qualified Data.Set as Set
 import qualified Data.Text as Text
 import qualified Data.Text.Encoding as Encoding
 import qualified Data.Text.IO as TextIO
@@ -20,6 +22,7 @@ import qualified Pawl.Json.Value as Value
 import qualified Pawl.JsonCodec.Codec as Codec
 import qualified Pawl.JsonCodec.Common as Common
 import qualified Pawl.JsonSchema.Define as Define
+import qualified Pawl.Mtgish as Mtgish
 import qualified Pawl.Oracle as Oracle
 import qualified Pawl.Play.Command
 import qualified Pawl.Registry as Registry
@@ -53,13 +56,14 @@ main = do
     ["deck", path] -> deck path
     ["ingest", path] -> ingest path
     ["oracle"] -> oracle
+    "translate" : mtgish : candidates : rest@(_ : _) -> translate mtgish candidates rest
     "scenario" : paths@(_ : _) -> scenario paths
     "play" : rest -> Pawl.Play.Command.main rest
     "bench" : rest -> Environment.withArgs rest Pawl.Benchmark.main
     "test" : rest -> Environment.withArgs rest Pawl.Test.main
     _ -> do
       name <- Environment.getProgName
-      IO.hPutStrLn IO.stderr $ "usage: " <> name <> " (schema [scenario] | deck FILE | ingest FILE | oracle | scenario FILE... | play [OPTION...] DECK DECK | bench | test)"
+      IO.hPutStrLn IO.stderr $ "usage: " <> name <> " (schema [scenario] | deck FILE | ingest FILE | oracle | translate MTGISH CANDIDATES [--out DIR] [--set CODE] [NAME | @FILE...] | scenario FILE... | play [OPTION...] DECK DECK | bench | test)"
       Exit.exitFailure
 
 -- | Reads a deck list and writes back the deck it means, which is what makes a
@@ -142,6 +146,98 @@ oracle = do
       whole = concatMap Oracle.abilities rendered
   putStrLn $ "rendered: " <> show (length rendered) <> " of " <> show (length cards)
   putStrLn $ "abilities rendered: " <> show (length (filter (not . null) abilities)) <> " of " <> show (length abilities) <> ", " <> show (length whole) <> " of them on cards rendered in full"
+
+-- | Translates the named cards, or a set's, from mtgish's AST file (one card
+-- per line) and writes a card file for each that renders back to its Oracle
+-- text, which CANDIDATES (script/ingest/candidates.jq's output) supplies, as
+-- `pawl ingest` stamps it (#5478). A card the pool already holds is never
+-- overwritten; it is named on stderr if its translation differs. With --out
+-- every accepted card is written to DIR instead, the pool's included. A name
+-- written @FILE stands for the names FILE lists, one a line. Each
+-- card rejected is named on stderr with why: the node kind not translated, or
+-- what it renders as.
+translate :: FilePath -> FilePath -> [String] -> IO ()
+translate mtgishPath candidatesPath options = do
+  let go (o, c, names) rest = case rest of
+        "--out" : dir : more -> go (Just dir, c, names) more
+        "--set" : code : more -> go (o, Just (Text.pack code), names) more
+        name : more -> go (o, c, names <> [Text.pack name]) more
+        [] -> (o, c, names)
+      (out, set, requested) = go (Nothing, Nothing, []) options
+  bytes <- ByteString.readFile candidatesPath
+  let parsed = do
+        contents <- either (Left . Text.pack . show) Right (Encoding.decodeUtf8' bytes)
+        fields <- Common.parse contents >>= Common.asObject
+        known <- Common.field "texts" fields >>= Ingest.texts
+        printed <- case set of
+          Nothing -> Right []
+          Just code -> Common.field "cards" fields >>= Common.asArray >>= fmap concat . traverse (inSet code)
+        pure (known, printed)
+  case parsed of
+    Left problem -> do
+      TextIO.hPutStrLn IO.stderr (Text.pack (candidatesPath <> ": ") <> problem)
+      Exit.exitFailure
+    Right (known, printed) -> do
+      listed <- traverse (\name -> maybe (pure [name]) (fmap (filter (not . Text.null) . Text.lines) . readUtf8 . Text.unpack) (Text.stripPrefix (Text.pack "@") name)) requested
+      let wanted = Set.fromList (concat listed <> printed)
+      contents <- readUtf8 mtgishPath
+      let asts = Map.fromListWith (<>) [(name, [line]) | line <- Text.lines contents, Just name <- [lineName line], Set.member name wanted]
+      root <- Registry.defaultRoot
+      outcomes <- mapM (translateOne root out known asts) (Set.toList wanted)
+      -- A node kind is its own reason; anything else, the words before its colon.
+      let grouped reason = if Text.isPrefixOf (Text.pack "_") reason then reason else Text.takeWhile (/= ':') reason
+          reasons = Map.fromListWith (+) [(grouped reason, 1 :: Int) | Left reason <- outcomes]
+      putStrLn $ "translated: " <> show (length [() | Right _ <- outcomes])
+      mapM_ (\(kind, n) -> putStrLn ("  " <> kind <> ": " <> show n)) (Map.toList (Map.fromListWith (+) [(kind, 1 :: Int) | Right kind <- outcomes]))
+      putStrLn $ "rejected: " <> show (sum reasons)
+      mapM_ (\(kind, n) -> TextIO.putStrLn (Text.pack "  " <> kind <> Text.pack (": " <> show n))) (List.sortOn (negate . snd) (Map.toList reasons))
+  where
+    inSet code value = do
+      fields <- Common.asObject value
+      name <- Common.field "name" fields >>= Common.asText
+      sets <- maybe (Right []) (Common.asArray Monad.>=> traverse Common.asText) (Common.optionalField "printings" fields)
+      pure [name | elem code sets]
+
+-- A file's text, or an exit naming it when it is not UTF-8.
+readUtf8 :: FilePath -> IO Text.Text
+readUtf8 path = do
+  bytes <- ByteString.readFile path
+  case Encoding.decodeUtf8' bytes of
+    Right text -> pure text
+    Left err -> do
+      IO.hPutStrLn IO.stderr $ path <> ": not valid UTF-8: " <> show err
+      Exit.exitFailure
+
+-- The card name an mtgish AST line is for, read without parsing the line.
+lineName :: Text.Text -> Maybe Text.Text
+lineName line = do
+  rest <- Text.stripPrefix (Text.pack "{\"_OracleCard\":\"Card\",\"Name\":") line
+  let (quoted, _) = Text.breakOn (Text.pack ",\"Typeline\"") rest
+  either (const Nothing) Just (Common.parse quoted >>= Common.asText)
+
+-- What became of one card: Right with what was done, or Left with why not.
+translateOne :: FilePath -> Maybe FilePath -> (Map.Map (Text.Text, Text.Text) Text.Text, Map.Map Text.Text Text.Text) -> Map.Map Text.Text [Text.Text] -> Text.Text -> IO (Either Text.Text String)
+translateOne root out known asts name = do
+  let result = case Map.findWithDefault [] name asts of
+        [line] -> Common.parse line >>= Mtgish.card >>= Mtgish.accepted . Ingest.stamp known
+        [] -> Left (Text.pack "not in mtgish")
+        _ -> Left (Text.pack "several mtgish cards")
+  case result of
+    Left reason -> do
+      TextIO.hPutStrLn IO.stderr (name <> Text.pack ": " <> reason)
+      pure (Left reason)
+    Right card -> case out of
+      Just dir -> Right "written" <$ writeCard (Registry.cardPath dir (Registry.filedAs card)) card
+      Nothing -> do
+        let file = Registry.cardPath root (Registry.filedAs card)
+        exists <- Directory.doesFileExist file
+        if exists
+          then do
+            existing <- fmap Registry.parseCard (ByteString.readFile file)
+            if existing == Right card
+              then pure (Right "already in the pool, agreeing")
+              else Right "already in the pool, differing" <$ IO.hPutStrLn IO.stderr (file <> ": differs from its translation; the pool's file is kept")
+          else Right "written" <$ writeCard file card
 
 -- Right True for a card written, Right False for one the pool already holds.
 ingestOne :: FilePath -> Value.Value -> IO (Either Text.Text Bool)
