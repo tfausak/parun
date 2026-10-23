@@ -1,0 +1,12 @@
+{
+  "description": "CR 701.8a whole card: Western Paladin pays {B}{B} and taps to destroy target white creature",
+  "note": "Bob's Grizzly Bears is refused as a target; his white Savannah Lions is destroyed.",
+  "board": {"active": "alice", "step": "PrecombatMain", "seats": [{"name": "alice", "manaPool": "BB", "battlefield": [{"card": "Western Paladin", "label": "paladin", "ready": true}], "library": [{"card": "Island"}, {"card": "Island"}, {"card": "Island"}]}, {"name": "bob", "battlefield": [{"card": "Savannah Lions", "label": "lions"}, {"card": "Grizzly Bears", "label": "bears"}], "library": [{"card": "Island"}, {"card": "Island"}, {"card": "Island"}]}]},
+  "timeline": [
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "refuse": {"Activate": {"object": "$paladin", "targets": ["$bears"]}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "do": {"Activate": {"object": "$paladin", "targets": ["$lions"]}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "do": "Pass"},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "check": {"Count": {"player": "bob", "zone": "Graveyard", "card": "Savannah Lions", "count": 1}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "check": {"Count": {"player": "bob", "zone": "Battlefield", "card": "Grizzly Bears", "count": 1}}}
+  ]
+}

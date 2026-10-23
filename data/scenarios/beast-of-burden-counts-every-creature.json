@@ -1,0 +1,8 @@
+{
+  "description": "CR 604.3 / 208.2a whole card: Beast of Burden's power and toughness are each the number of creatures on the battlefield",
+  "note": "Itself, alice's bears and bob's two creatures make four; the Plains is not counted.",
+  "board": {"active": "alice", "step": "PrecombatMain", "seats": [{"name": "alice", "battlefield": [{"card": "Beast of Burden", "label": "beast"}, {"card": "Grizzly Bears"}, {"card": "Plains"}], "library": [{"card": "Island"}, {"card": "Island"}, {"card": "Island"}]}, {"name": "bob", "battlefield": [{"card": "Hill Giant"}, {"card": "Gray Ogre"}], "library": [{"card": "Island"}, {"card": "Island"}, {"card": "Island"}]}]},
+  "timeline": [
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "check": {"PowerToughness": {"object": "$beast", "power": 4, "toughness": 4}}}
+  ]
+}

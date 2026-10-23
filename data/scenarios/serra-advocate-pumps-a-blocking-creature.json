@@ -1,0 +1,15 @@
+{
+  "description": "CR 602.2 whole card: Serra Advocate taps to give target attacking or blocking creature +2/+2 until end of turn",
+  "note": "Alice's bears block bob's Hill Giant and become 4/4: the Giant dies and the bears survive. Alice's Gray Ogre, not in combat, is refused as a target.",
+  "board": {"active": "bob", "step": "BeginningOfCombat", "seats": [{"name": "alice", "battlefield": [{"card": "Serra Advocate", "label": "advocate", "ready": true}, {"card": "Grizzly Bears", "label": "bears", "ready": true}, {"card": "Gray Ogre", "label": "ogre", "ready": true}], "library": [{"card": "Island"}, {"card": "Island"}, {"card": "Island"}]}, {"name": "bob", "battlefield": [{"card": "Hill Giant", "label": "giant", "ready": true}], "library": [{"card": "Island"}, {"card": "Island"}, {"card": "Island"}]}]},
+  "timeline": [
+    {"turn": 1, "step": "DeclareAttackers", "player": "bob", "do": {"Attack": ["$giant"]}},
+    {"turn": 1, "step": "DeclareBlockers", "player": "alice", "do": {"Block": {"$bears": ["$giant"]}}},
+    {"turn": 1, "step": "DeclareBlockers", "player": "alice", "refuse": {"Activate": {"object": "$advocate", "targets": ["$ogre"]}}},
+    {"turn": 1, "step": "DeclareBlockers", "player": "alice", "do": {"Activate": {"object": "$advocate", "targets": ["$bears"]}}},
+    {"turn": 1, "step": "DeclareBlockers", "player": "alice", "do": "Pass"},
+    {"turn": 1, "step": "DeclareBlockers", "player": "alice", "check": {"PowerToughness": {"object": "$bears", "power": 4, "toughness": 4}}},
+    {"turn": 1, "step": "EndOfCombat", "player": "alice", "check": {"Count": {"player": "bob", "zone": "Graveyard", "card": "Hill Giant", "count": 1}}},
+    {"turn": 1, "step": "EndOfCombat", "player": "alice", "check": {"Count": {"player": "alice", "zone": "Battlefield", "card": "Grizzly Bears", "count": 1}}}
+  ]
+}

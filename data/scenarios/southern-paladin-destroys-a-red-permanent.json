@@ -1,0 +1,12 @@
+{
+  "description": "CR 701.8a whole card: Southern Paladin pays {W}{W} and taps to destroy target red permanent",
+  "note": "Bob's Crusade is refused as a target; his red Fervor is destroyed.",
+  "board": {"active": "alice", "step": "PrecombatMain", "seats": [{"name": "alice", "manaPool": "WW", "battlefield": [{"card": "Southern Paladin", "label": "paladin", "ready": true}], "library": [{"card": "Island"}, {"card": "Island"}, {"card": "Island"}]}, {"name": "bob", "battlefield": [{"card": "Fervor", "label": "fervor"}, {"card": "Crusade", "label": "crusade"}], "library": [{"card": "Island"}, {"card": "Island"}, {"card": "Island"}]}]},
+  "timeline": [
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "refuse": {"Activate": {"object": "$paladin", "targets": ["$crusade"]}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "do": {"Activate": {"object": "$paladin", "targets": ["$fervor"]}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "do": "Pass"},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "check": {"Count": {"player": "bob", "zone": "Graveyard", "card": "Fervor", "count": 1}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "check": {"Count": {"player": "bob", "zone": "Battlefield", "card": "Crusade", "count": 1}}}
+  ]
+}

@@ -1,0 +1,13 @@
+{
+  "description": "CR 602.2 whole card: Angelic Page taps to give target attacking or blocking creature +1/+1 until end of turn",
+  "note": "Alice attacks with her bears and keeps her Hill Giant home: the Giant is refused as a target, and the 3/3 bears deal bob 3.",
+  "board": {"active": "alice", "step": "BeginningOfCombat", "seats": [{"name": "alice", "battlefield": [{"card": "Angelic Page", "label": "page", "ready": true}, {"card": "Grizzly Bears", "label": "bears", "ready": true}, {"card": "Hill Giant", "label": "giant", "ready": true}], "library": [{"card": "Island"}, {"card": "Island"}, {"card": "Island"}]}, {"name": "bob", "library": [{"card": "Island"}, {"card": "Island"}, {"card": "Island"}]}]},
+  "timeline": [
+    {"turn": 1, "step": "DeclareAttackers", "player": "alice", "do": {"Attack": ["$bears"]}},
+    {"turn": 1, "step": "DeclareAttackers", "player": "alice", "refuse": {"Activate": {"object": "$page", "targets": ["$giant"]}}},
+    {"turn": 1, "step": "DeclareAttackers", "player": "alice", "do": {"Activate": {"object": "$page", "targets": ["$bears"]}}},
+    {"turn": 1, "step": "DeclareAttackers", "player": "alice", "do": "Pass"},
+    {"turn": 1, "step": "DeclareAttackers", "player": "alice", "check": {"PowerToughness": {"object": "$bears", "power": 3, "toughness": 3}}},
+    {"turn": 1, "step": "EndOfCombat", "player": "alice", "check": {"Life": {"player": "bob", "life": 17}}}
+  ]
+}

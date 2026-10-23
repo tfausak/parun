@@ -1,0 +1,13 @@
+{
+  "description": "CR 603.2 / 701.9b whole card: whenever a player casts a spell, that player discards a card",
+  "note": "Bob casts his bears and discards the Hill Giant, keeping the Ogre; alice, who cast nothing, keeps her card.",
+  "board": {"active": "bob", "step": "PrecombatMain", "seats": [{"name": "alice", "battlefield": [{"card": "Oppression", "label": "oppression"}], "hand": [{"card": "Island"}], "library": [{"card": "Island"}, {"card": "Island"}, {"card": "Island"}]}, {"name": "bob", "manaPool": "GG", "hand": [{"card": "Grizzly Bears", "label": "bears"}, {"card": "Hill Giant", "label": "giant"}, {"card": "Gray Ogre", "label": "ogre"}], "library": [{"card": "Island"}, {"card": "Island"}, {"card": "Island"}]}]},
+  "timeline": [
+    {"turn": 1, "step": "PrecombatMain", "player": "bob", "do": {"Cast": {"object": "$bears"}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "bob", "do": "Pass"},
+    {"turn": 1, "step": "PrecombatMain", "player": "bob", "do": {"Answer": {"prompt": "ChooseDiscard", "with": ["$giant"]}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "bob", "check": {"Count": {"player": "bob", "zone": "Graveyard", "card": "Hill Giant", "count": 1}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "bob", "check": {"Count": {"player": "bob", "zone": "Hand", "card": "Gray Ogre", "count": 1}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "bob", "check": {"Count": {"player": "alice", "zone": "Hand", "card": "Island", "count": 1}}}
+  ]
+}

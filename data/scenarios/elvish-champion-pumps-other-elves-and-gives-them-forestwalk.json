@@ -1,0 +1,13 @@
+{
+  "description": "CR 613.4c / 702.14c whole card: other Elf creatures get +1/+1 and have forestwalk",
+  "note": "Alice's Llanowar Elves and bob's Elvish Lyrist become 2/2 with forestwalk; the Champion itself stays 2/2 without it, and the bears are no Elf.",
+  "board": {"active": "alice", "step": "PrecombatMain", "seats": [{"name": "alice", "battlefield": [{"card": "Elvish Champion", "label": "champion"}, {"card": "Llanowar Elves", "label": "elves"}, {"card": "Grizzly Bears", "label": "bears"}], "library": [{"card": "Island"}, {"card": "Island"}, {"card": "Island"}]}, {"name": "bob", "battlefield": [{"card": "Elvish Lyrist", "label": "lyrist"}], "library": [{"card": "Island"}, {"card": "Island"}, {"card": "Island"}]}]},
+  "timeline": [
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "check": {"PowerToughness": {"object": "$elves", "power": 2, "toughness": 2}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "check": {"PowerToughness": {"object": "$lyrist", "power": 2, "toughness": 2}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "check": {"PowerToughness": {"object": "$champion", "power": 2, "toughness": 2}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "check": {"PowerToughness": {"object": "$bears", "power": 2, "toughness": 2}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "check": {"Keywords": {"object": "$elves", "keyword": {"type": "Landwalk", "value": {"type": "HasSubtype", "value": {"type": "Forest"}}}, "count": 1}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "check": {"Keywords": {"object": "$champion", "keyword": {"type": "Landwalk", "value": {"type": "HasSubtype", "value": {"type": "Forest"}}}, "count": 0}}}
+  ]
+}

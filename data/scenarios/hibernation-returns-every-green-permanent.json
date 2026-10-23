@@ -1,0 +1,13 @@
+{
+  "description": "CR 105.2 whole card: Hibernation returns all green permanents to their owners' hands",
+  "note": "Alice's Llanowar Elves and bob's bears go to their owners' hands; bob's red Hill Giant and colourless Forest stay.",
+  "board": {"active": "alice", "step": "PrecombatMain", "seats": [{"name": "alice", "manaPool": "UUU", "battlefield": [{"card": "Llanowar Elves"}], "hand": [{"card": "Hibernation", "label": "hibernation"}], "library": [{"card": "Island"}, {"card": "Island"}, {"card": "Island"}]}, {"name": "bob", "battlefield": [{"card": "Grizzly Bears"}, {"card": "Hill Giant"}, {"card": "Forest"}], "library": [{"card": "Island"}, {"card": "Island"}, {"card": "Island"}]}]},
+  "timeline": [
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "do": {"Cast": {"object": "$hibernation"}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "do": "Pass"},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "check": {"Count": {"player": "alice", "zone": "Hand", "card": "Llanowar Elves", "count": 1}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "check": {"Count": {"player": "bob", "zone": "Hand", "card": "Grizzly Bears", "count": 1}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "check": {"Count": {"player": "bob", "zone": "Battlefield", "card": "Hill Giant", "count": 1}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "check": {"Count": {"player": "bob", "zone": "Battlefield", "card": "Forest", "count": 1}}}
+  ]
+}

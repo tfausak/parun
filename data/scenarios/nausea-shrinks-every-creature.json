@@ -1,0 +1,12 @@
+{
+  "description": "CR 611.2c whole card: all creatures get -1/-1 until end of turn",
+  "note": "Alice's bears become 1/1 and bob's Hill Giant 2/2; bob's 1/1 Llanowar Elves dies.",
+  "board": {"active": "alice", "step": "PrecombatMain", "seats": [{"name": "alice", "manaPool": "BB", "battlefield": [{"card": "Grizzly Bears", "label": "bears"}], "hand": [{"card": "Nausea", "label": "nausea"}], "library": [{"card": "Island"}, {"card": "Island"}, {"card": "Island"}]}, {"name": "bob", "battlefield": [{"card": "Hill Giant", "label": "giant"}, {"card": "Llanowar Elves"}], "library": [{"card": "Island"}, {"card": "Island"}, {"card": "Island"}]}]},
+  "timeline": [
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "do": {"Cast": {"object": "$nausea"}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "do": "Pass"},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "check": {"PowerToughness": {"object": "$bears", "power": 1, "toughness": 1}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "check": {"PowerToughness": {"object": "$giant", "power": 2, "toughness": 2}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "check": {"Count": {"player": "bob", "zone": "Graveyard", "card": "Llanowar Elves", "count": 1}}}
+  ]
+}

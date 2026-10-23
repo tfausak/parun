@@ -1,0 +1,13 @@
+{
+  "description": "CR 603.2 / 118.12 whole card: whenever its controller casts a creature spell, Equilibrium may be paid {1} to return target creature to its owner's hand",
+  "note": "Alice casts her bears, targets bob's Hill Giant with the trigger and pays from her Island: the Giant goes to bob's hand.",
+  "board": {"active": "alice", "step": "PrecombatMain", "seats": [{"name": "alice", "battlefield": [{"card": "Equilibrium", "label": "equilibrium"}, {"card": "Forest", "label": "f1"}, {"card": "Forest", "label": "f2"}, {"card": "Island", "label": "i1"}], "hand": [{"card": "Grizzly Bears", "label": "bears"}], "library": [{"card": "Island"}, {"card": "Island"}, {"card": "Island"}]}, {"name": "bob", "battlefield": [{"card": "Hill Giant", "label": "giant"}], "library": [{"card": "Island"}, {"card": "Island"}, {"card": "Island"}]}]},
+  "timeline": [
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "do": {"Cast": {"object": "$bears", "mana": ["$f1", "$f2", null]}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "do": {"ChooseTargets": {"target": ["$giant"]}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "do": "Pass"},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "do": {"ChooseToPay": {"decision": {"type": "Pays"}, "mana": ["$i1"]}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "check": {"Count": {"player": "bob", "zone": "Hand", "card": "Hill Giant", "count": 1}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "check": {"Tapped": {"object": "$i1", "tapped": true}}}
+  ]
+}

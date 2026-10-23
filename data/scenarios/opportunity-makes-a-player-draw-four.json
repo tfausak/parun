@@ -1,0 +1,12 @@
+{
+  "description": "CR 121.1 whole card: target player draws four cards",
+  "note": "Alice aims Opportunity at bob, whose library holds four Gray Ogres over two Islands: he draws the four Ogres, and alice draws nothing.",
+  "board": {"active": "alice", "step": "PrecombatMain", "seats": [{"name": "alice", "manaPool": "UUUUUU", "hand": [{"card": "Opportunity", "label": "opportunity"}], "library": [{"card": "Island"}, {"card": "Island"}, {"card": "Island"}]}, {"name": "bob", "library": [{"card": "Gray Ogre"}, {"card": "Gray Ogre"}, {"card": "Gray Ogre"}, {"card": "Gray Ogre"}, {"card": "Island"}, {"card": "Island"}]}]},
+  "timeline": [
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "do": {"Cast": {"object": "$opportunity", "targets": ["$bob"]}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "do": "Pass"},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "check": {"Count": {"player": "bob", "zone": "Hand", "card": "Gray Ogre", "count": 4}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "check": {"Count": {"player": "bob", "zone": "Hand", "card": "Island", "count": 0}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "check": {"Count": {"player": "alice", "zone": "Hand", "card": "Island", "count": 0}}}
+  ]
+}

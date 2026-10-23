@@ -1,0 +1,122 @@
+{
+  "faces": [
+    {
+      "characteristicPT": {
+        "power": {
+          "type": "Count",
+          "value": {
+            "aggregation": {
+              "type": "Members"
+            },
+            "filter": {
+              "type": "And",
+              "value": [
+                {
+                  "type": "HasSubtype",
+                  "value": {
+                    "type": "Forest"
+                  }
+                },
+                {
+                  "type": "ControlledBy",
+                  "value": {
+                    "type": "You"
+                  }
+                }
+              ]
+            },
+            "scope": {
+              "type": "InZone",
+              "value": {
+                "player": {
+                  "type": "Relative",
+                  "value": {
+                    "type": "AnyPlayer"
+                  }
+                },
+                "zone": {
+                  "type": "Battlefield"
+                }
+              }
+            }
+          }
+        },
+        "toughness": {
+          "type": "Count",
+          "value": {
+            "aggregation": {
+              "type": "Members"
+            },
+            "filter": {
+              "type": "And",
+              "value": [
+                {
+                  "type": "HasSubtype",
+                  "value": {
+                    "type": "Forest"
+                  }
+                },
+                {
+                  "type": "ControlledBy",
+                  "value": {
+                    "type": "You"
+                  }
+                }
+              ]
+            },
+            "scope": {
+              "type": "InZone",
+              "value": {
+                "player": {
+                  "type": "Relative",
+                  "value": {
+                    "type": "AnyPlayer"
+                  }
+                },
+                "zone": {
+                  "type": "Battlefield"
+                }
+              }
+            }
+          }
+        }
+      },
+      "manaCost": [
+        {
+          "type": "Generic",
+          "value": 2
+        },
+        {
+          "type": "OfType",
+          "value": {
+            "type": "Colored",
+            "value": {
+              "type": "Green"
+            }
+          }
+        }
+      ],
+      "name": "Treefolk Seedlings",
+      "oracleText": "Treefolk Seedlings's toughness is equal to the number of Forests you control.",
+      "power": {
+        "type": "Literal",
+        "value": 2
+      },
+      "toughness": {
+        "type": "Star"
+      },
+      "typeLine": {
+        "subtypes": [
+          {
+            "type": "Treefolk"
+          }
+        ],
+        "types": [
+          {
+            "type": "Creature"
+          }
+        ]
+      }
+    }
+  ]
+}

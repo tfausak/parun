@@ -1,0 +1,17 @@
+{
+  "description": "CR 603.2 whole card: whenever an opponent casts a white spell, that player loses 1 life and Yawgmoth's Edict's controller gains 1 life",
+  "note": "Bob casts green bears first, which does not trigger it; his Savannah Lions does: bob goes to 19 and alice to 21.",
+  "board": {"active": "bob", "step": "PrecombatMain", "seats": [{"name": "alice", "battlefield": [{"card": "Yawgmoth's Edict"}], "library": [{"card": "Island"}, {"card": "Island"}, {"card": "Island"}]}, {"name": "bob", "battlefield": [{"card": "Forest", "label": "f1"}, {"card": "Forest", "label": "f2"}, {"card": "Plains", "label": "p1"}], "hand": [{"card": "Grizzly Bears", "label": "bears"}, {"card": "Savannah Lions", "label": "lions"}], "library": [{"card": "Island"}, {"card": "Island"}, {"card": "Island"}]}]},
+  "timeline": [
+    {"turn": 1, "step": "PrecombatMain", "player": "bob", "do": {"Cast": {"object": "$bears", "mana": ["$f1", "$f2", null]}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "bob", "do": "Pass"},
+    {"turn": 1, "step": "PrecombatMain", "player": "bob", "do": {"Cast": {"object": "$lions", "mana": ["$p1"]}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "bob", "do": "Pass"},
+    {"turn": 1, "step": "PrecombatMain", "player": "bob", "check": {"Life": {"player": "bob", "life": 19}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "bob", "check": {"Life": {"player": "alice", "life": 21}}}
+  ],
+  "final": [
+    {"Life": {"player": "bob", "life": 19}},
+    {"Life": {"player": "alice", "life": 21}}
+  ]
+}

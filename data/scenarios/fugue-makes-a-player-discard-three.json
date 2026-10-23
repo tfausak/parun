@@ -1,0 +1,13 @@
+{
+  "description": "CR 701.9b whole card: target player discards three cards",
+  "note": "Bob holds four cards and keeps the Gray Ogre; alice's own hand is untouched.",
+  "board": {"active": "alice", "step": "PrecombatMain", "seats": [{"name": "alice", "manaPool": "BBBBB", "hand": [{"card": "Fugue", "label": "fugue"}, {"card": "Island"}], "library": [{"card": "Island"}, {"card": "Island"}, {"card": "Island"}]}, {"name": "bob", "hand": [{"card": "Grizzly Bears", "label": "bears"}, {"card": "Hill Giant", "label": "giant"}, {"card": "Savannah Lions", "label": "lions"}, {"card": "Gray Ogre", "label": "ogre"}], "library": [{"card": "Island"}, {"card": "Island"}, {"card": "Island"}]}]},
+  "timeline": [
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "do": {"Cast": {"object": "$fugue", "targets": ["$bob"]}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "do": "Pass"},
+    {"turn": 1, "step": "PrecombatMain", "player": "bob", "do": {"Answer": {"prompt": "ChooseDiscard", "with": ["$bears", "$giant", "$lions"]}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "check": {"Count": {"player": "bob", "zone": "Hand", "card": "Gray Ogre", "count": 1}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "check": {"Count": {"player": "bob", "zone": "Graveyard", "card": "Hill Giant", "count": 1}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "check": {"Count": {"player": "alice", "zone": "Hand", "card": "Island", "count": 1}}}
+  ]
+}

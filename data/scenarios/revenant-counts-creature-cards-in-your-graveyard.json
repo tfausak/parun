@@ -1,0 +1,8 @@
+{
+  "description": "CR 604.3 / 208.2a whole card: Revenant's power and toughness are each the number of creature cards in its controller's graveyard",
+  "note": "Alice's graveyard holds two creature cards and an Island; bob's creature card in his own graveyard is not counted.",
+  "board": {"active": "alice", "step": "PrecombatMain", "seats": [{"name": "alice", "battlefield": [{"card": "Revenant", "label": "revenant"}], "graveyard": [{"card": "Grizzly Bears"}, {"card": "Hill Giant"}, {"card": "Island"}], "library": [{"card": "Island"}, {"card": "Island"}, {"card": "Island"}]}, {"name": "bob", "graveyard": [{"card": "Gray Ogre"}], "library": [{"card": "Island"}, {"card": "Island"}, {"card": "Island"}]}]},
+  "timeline": [
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "check": {"PowerToughness": {"object": "$revenant", "power": 2, "toughness": 2}}}
+  ]
+}

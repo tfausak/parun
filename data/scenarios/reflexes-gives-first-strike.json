@@ -1,0 +1,11 @@
+{
+  "description": "CR 702.7a whole card: Reflexes gives the creature it enchants first strike",
+  "note": "Alice enchants her bears; her Hill Giant gains nothing.",
+  "board": {"active": "alice", "step": "PrecombatMain", "seats": [{"name": "alice", "battlefield": [{"card": "Grizzly Bears", "label": "bears"}, {"card": "Hill Giant", "label": "giant"}, {"card": "Mountain", "label": "m1"}], "hand": [{"card": "Reflexes", "label": "aura"}], "library": [{"card": "Island"}, {"card": "Island"}, {"card": "Island"}]}, {"name": "bob", "library": [{"card": "Island"}, {"card": "Island"}, {"card": "Island"}]}]},
+  "timeline": [
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "do": {"Cast": {"object": "$aura", "targets": ["$bears"], "mana": ["$m1"]}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "do": "Pass"},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "check": {"Keywords": {"object": "$bears", "keyword": {"type": "FirstStrike"}, "count": 1}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "check": {"Keywords": {"object": "$giant", "keyword": {"type": "FirstStrike"}, "count": 0}}}
+  ]
+}

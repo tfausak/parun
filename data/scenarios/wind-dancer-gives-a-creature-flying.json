@@ -1,0 +1,11 @@
+{
+  "description": "CR 602.2 / 702.9a whole card: Wind Dancer taps to give target creature flying until end of turn",
+  "note": "Alice's bears gain flying; her Hill Giant does not.",
+  "board": {"active": "alice", "step": "PrecombatMain", "seats": [{"name": "alice", "battlefield": [{"card": "Wind Dancer", "label": "dancer", "ready": true}, {"card": "Grizzly Bears", "label": "bears"}, {"card": "Hill Giant", "label": "giant"}], "library": [{"card": "Island"}, {"card": "Island"}, {"card": "Island"}]}, {"name": "bob", "library": [{"card": "Island"}, {"card": "Island"}, {"card": "Island"}]}]},
+  "timeline": [
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "do": {"Activate": {"object": "$dancer", "targets": ["$bears"]}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "do": "Pass"},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "check": {"Keywords": {"object": "$bears", "keyword": {"type": "Flying"}, "count": 1}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "check": {"Keywords": {"object": "$giant", "keyword": {"type": "Flying"}, "count": 0}}}
+  ]
+}
