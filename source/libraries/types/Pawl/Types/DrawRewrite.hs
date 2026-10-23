@@ -4,9 +4,10 @@ import qualified Numeric.Natural as Natural
 import qualified Pawl.Types.FromOutsideTheGame as FromOutsideTheGame
 
 -- | CR 614.1a / 614.11: how a replacement rewrites a would-draw-a-card event.
--- Under every arm the affected player's draw does not happen (CR 614.6), so no
--- card leaves their library and CR 121.4's draw-from-an-empty-library is never
--- attempted. YouDraw alone leaves a draw standing, by another seat.
+-- Once an arm replaces the draw it does not happen (CR 614.6), so CR 121.4's
+-- draw-from-an-empty-library is never attempted. YouDraw leaves a draw
+-- standing, by another seat, and OthersMayPayLife leaves it standing when
+-- nobody pays.
 --
 -- A type rather than a payload-free Pawl.Types.ReplacementEffect arm, for
 -- Pawl.Types.UntapRewrite's reason: a replacement effect is classified by the
@@ -52,4 +53,8 @@ data DrawRewrite
   | -- | CR 614.10 / 614.6: Plagiarize's "that player skips that draw and you draw
     -- a card" -- the draw stands, made by the row's controller instead.
     YouDraw
+  | -- | CR 614.6 / 101.4: Zur's Weirding's "they reveal it instead. Then any
+    -- other player may pay N life. If a player does, put that card into its
+    -- owner's graveyard. Otherwise, that player draws a card."
+    OthersMayPayLife Natural.Natural
   deriving (Eq, Ord, Show)

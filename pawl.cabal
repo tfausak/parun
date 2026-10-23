@@ -1444,6 +1444,8 @@ library codec
     Pawl.Codec.TypeLineSpec
     Pawl.Codec.TypesAre
     Pawl.Codec.TypesAreSpec
+    Pawl.Codec.UntapHold
+    Pawl.Codec.UntapHoldSpec
     Pawl.Codec.UntapR
     Pawl.Codec.UntapRestriction
     Pawl.Codec.UntapRestrictionSpec
@@ -3007,6 +3009,7 @@ library types
     Pawl.Types.TurnWindow
     Pawl.Types.TypeLine
     Pawl.Types.TypesAre
+    Pawl.Types.UntapHold
     Pawl.Types.UntapR
     Pawl.Types.UntapRestriction
     Pawl.Types.UntapRewrite

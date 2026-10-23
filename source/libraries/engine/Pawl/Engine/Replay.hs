@@ -439,6 +439,7 @@ decode p response = case p of
     (AnyNumberOf.ToDiscard, Response.ChoseAnyNumberToDiscard ids) -> Just ids
     (AnyNumberOf.ToCrank, Response.ChoseCranks ids) -> Just ids
     (AnyNumberOf.IntoPile, Response.ChosePileSplit ids) -> Just ids
+    (AnyNumberOf.ToUntap, Response.ChoseUntaps ids) -> Just ids
     _ -> Nothing
   Prompt.ChooseDungeon {} -> case response of
     Response.ChoseDungeon printingId -> Just printingId
@@ -1447,3 +1448,4 @@ anyNumberResponse purpose = case purpose of
   AnyNumberOf.ToDiscard -> Response.ChoseAnyNumberToDiscard
   AnyNumberOf.ToCrank -> Response.ChoseCranks
   AnyNumberOf.IntoPile -> Response.ChosePileSplit
+  AnyNumberOf.ToUntap -> Response.ChoseUntaps

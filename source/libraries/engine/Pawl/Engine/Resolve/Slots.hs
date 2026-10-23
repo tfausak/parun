@@ -1853,6 +1853,7 @@ drawRewriteReads rewrite = case rewrite of
   -- keyword's own rather than a Quantity a slot could name.
   DrawRewrite.Dredge _ -> ([], [])
   DrawRewrite.YouDraw -> ([], [])
+  DrawRewrite.OthersMayPayLife _ -> ([], [])
 
 -- replacementRowReads as a slot map. Arity One for every FILTER read, a
 -- Filter.IsBound being a membership test rather than a target slot; the QUANTITY

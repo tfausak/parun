@@ -685,6 +685,7 @@ import qualified Pawl.Codec.TurnedFaceUpSpec
 import qualified Pawl.Codec.TurnedUpOffDeckSpec
 import qualified Pawl.Codec.TypeLineSpec
 import qualified Pawl.Codec.TypesAreSpec
+import qualified Pawl.Codec.UntapHoldSpec
 import qualified Pawl.Codec.UntapRSpec
 import qualified Pawl.Codec.UntapRestrictionSpec
 import qualified Pawl.Codec.UntapRewriteSpec
@@ -1585,6 +1586,7 @@ spec s registry = do
   Pawl.Codec.TurnWindowSpec.spec s
   Pawl.Codec.TypeLineSpec.spec s
   Pawl.Codec.TypesAreSpec.spec s
+  Pawl.Codec.UntapHoldSpec.spec s
   Pawl.Codec.UntapRestrictionSpec.spec s
   Pawl.Codec.UntapRewriteSpec.spec s
   Pawl.Codec.UntapRSpec.spec s

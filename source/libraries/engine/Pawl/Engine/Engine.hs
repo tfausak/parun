@@ -75,6 +75,7 @@ import qualified Pawl.Extra.Natural as Natural
 import qualified Pawl.Types.AbilityTriggered as AbilityTriggered
 import qualified Pawl.Types.Acquisition as Acquisition
 import qualified Pawl.Types.Action as Action.Type
+import qualified Pawl.Types.AnyNumberOf as AnyNumberOf
 import qualified Pawl.Types.Asked as Asked
 import qualified Pawl.Types.BeginningStep as BeginningStep
 import qualified Pawl.Types.Card as Card
@@ -129,6 +130,7 @@ import qualified Pawl.Types.StackObjectKind as StackObjectKind
 import qualified Pawl.Types.StepBegan as StepBegan
 import qualified Pawl.Types.Subtype as Subtype
 import qualified Pawl.Types.Supertype as Supertype
+import qualified Pawl.Types.TapState as TapState
 import qualified Pawl.Types.Timestamp as Timestamp
 import qualified Pawl.Types.TriggerCondition as TriggerCondition
 import qualified Pawl.Types.TriggerEntry as TriggerEntry
@@ -136,6 +138,7 @@ import qualified Pawl.Types.TriggerLimit as TriggerLimit
 import qualified Pawl.Types.TriggerSource as TriggerSource
 import qualified Pawl.Types.TriggeredAbility as TriggeredAbility
 import qualified Pawl.Types.TriggeredAbilitySource as TriggeredAbilitySource
+import qualified Pawl.Types.UntapHold as UntapHold
 import qualified Pawl.Types.Zone as Zone
 
 -- The interpreter seam: every decision the engine suspends on is answered here.
@@ -234,7 +237,7 @@ passPriorityFrom gs pid =
 --
 -- FOUR carriers, subtracted together. The printed static one is re-derived live,
 -- and a resolution's stored rows (GameState.objectProhibitions) are read beside it,
--- both through UntapRestriction.doesNotUntap; the other two are stored on the
+-- both through UntapRestriction.restricted; the other two are stored on the
 -- victim, and this is where each both applies and
 -- ENDS, CR 701.43b putting the expiry in the untap step it bites in. They are two
 -- fields because they name different seats: Object.doesNotUntapFor says "its
@@ -243,6 +246,13 @@ passPriorityFrom gs pid =
 -- while Object.exertedBy says "YOUR next untap step" (CR 701.43a), so `pid` is
 -- dropped from EVERY permanent -- one that changed hands is neither held back at
 -- its new controller's step nor left carrying a rider past the step that ends it.
+--
+-- What survives those is CR 502.3's own determination, the active player's to
+-- make: a printed "you may choose not to untap" (UntapHold.Elective) offers its
+-- tapped permanents, and the ones `pid` does not pick stay tapped. Only a
+-- tapped permanent nothing else holds back is offered, since for any other the
+-- untap's outcome is already settled; a stunned one is, its stun counter
+-- (CR 122.1d) taking the untap only once `pid` has chosen it.
 untapAll :: PlayerId -> Game ()
 untapAll pid = do
   gs <- State.get
@@ -250,12 +260,21 @@ untapAll pid = do
       countDown obj = obj {Object.doesNotUntapFor = Object.doesNotUntapFor obj - 1}
       unexert obj = obj {Object.exertedBy = Set.delete pid (Object.exertedBy obj)}
       ids = Projection.controls pid gs
-      prohibited = UntapRestriction.doesNotUntap ids gs
+      prohibited = UntapRestriction.restricted UntapHold.Forbidden ids gs
+      elective = UntapRestriction.restricted UntapHold.Elective ids gs
       asks f oid = maybe False f (Game.lookupObject oid gs)
       oneShot = asks ((> 0) . Object.doesNotUntapFor)
       exerted = asks (Set.member pid . Object.exertedBy)
-      untapping = filter (\oid -> not (Set.member oid prohibited) && not (oneShot oid) && not (exerted oid)) ids
+      tapped = asks ((== TapState.Tapped) . Object.tapped)
+      allowed = filter (\oid -> not (Set.member oid prohibited) && not (oneShot oid) && not (exerted oid)) ids
       held = filter oneShot ids
+  -- The prompt's object is the first permanent offered: a turn-based action has
+  -- no source of its own to name (Contraption.crank's reading).
+  untapping <- case filter (\oid -> Set.member oid elective && tapped oid) allowed of
+    [] -> pure allowed
+    offered@(first : _) -> do
+      chosen <- Game.choose (Prompt.ChooseAnyNumber (Decide.deciderFor pid gs) pid first AnyNumberOf.ToUntap offered Nothing)
+      pure (filter (\oid -> List.notElem oid offered || Set.member oid chosen) allowed)
   -- CR 502.3's two sentences, in its own order: DETERMINE which permanents will
   -- untap, then untap them all SIMULTANEOUSLY. Event.proposeUntap is the
   -- determining half -- rule 701.26b's guard plus the CR 614 loop, which is where

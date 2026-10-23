@@ -1,0 +1,31 @@
+{
+  "description": "CR 614.6 carol pays 2 life, so the card Zur's Weirding revealed for alice's draw goes to her graveyard",
+  "note": "alice is active and draws, so the offer runs to bob and then carol in turn order and never to alice. bob declines and carol pays: a later payer's payment is enough. Hill Giant is revealed to every player and lands in alice's graveyard rather than her hand. Her held Island is seen by every seat, Zur's Weirding's first sentence.",
+  "board": {
+    "active": "alice",
+    "turn": 2,
+    "step": "Upkeep",
+    "seats": [
+      {
+        "name": "alice",
+        "battlefield": [{ "card": "Zur's Weirding" }],
+        "hand": [{ "card": "Island", "label": "held" }],
+        "library": [{ "card": "Hill Giant" }, { "card": "Mountain" }]
+      },
+      { "name": "bob", "life": 16, "library": [{ "card": "Mountain" }] },
+      { "name": "carol", "life": 19, "library": [{ "card": "Mountain" }] }
+    ]
+  },
+  "timeline": [
+    { "turn": 2, "step": "Upkeep", "player": "alice", "check": { "View": { "of": "Seers", "object": "$held", "is": ["alice", "bob", "carol"] } } },
+    { "turn": 2, "step": "DrawStep", "player": "bob", "do": { "ChooseToPay": { "decision": { "type": "Declines" } } }, "source": "Zur's Weirding" },
+    { "turn": 2, "step": "DrawStep", "player": "carol", "do": { "ChooseToPay": { "decision": { "type": "Pays" } } }, "source": "Zur's Weirding" },
+    { "turn": 2, "step": "DrawStep", "player": "alice", "check": { "Count": { "player": "alice", "zone": "Graveyard", "card": "Hill Giant", "count": 1 } } },
+    { "turn": 2, "step": "DrawStep", "player": "alice", "check": { "Count": { "player": "alice", "zone": "Hand", "card": "Hill Giant", "count": 0 } } },
+    { "turn": 2, "step": "DrawStep", "player": "alice", "check": { "Life": { "player": "carol", "life": 17 } } },
+    { "turn": 2, "step": "DrawStep", "player": "alice", "check": { "Life": { "player": "bob", "life": 16 } } },
+    { "turn": 2, "step": "DrawStep", "player": "alice", "check": { "Life": { "player": "alice", "life": 20 } } },
+    { "turn": 2, "step": "DrawStep", "player": "alice", "check": { "View": { "of": "Witnessed", "player": "bob", "is": ["Hill Giant"] } } },
+    { "turn": 2, "step": "DrawStep", "player": "alice", "check": { "Count": { "player": "alice", "zone": "Library", "card": "Mountain", "count": 1 } } }
+  ]
+}
