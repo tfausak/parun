@@ -1,4 +1,5 @@
--- CR 502.3 / 101.2 / 613.11: the continuous effects that FORBID CR 502.3's untap.
+-- CR 502.3 / 101.2 / 613.11: the continuous effects that FORBID CR 502.3's untap,
+-- or leave it to the active player.
 -- One of the modules on the axis CR 613.11 reaches past the layer system
 -- (alongside Pawl.Engine.PlayerEffect, Pawl.Engine.BlockRequirement,
 -- Pawl.Engine.AttackRequirement, Pawl.Engine.CombatRestriction,
