@@ -3943,7 +3943,7 @@ kindsCanCross gs from to kinds =
 -- gone before a later effect of the same list runs.
 applyOneEffect :: Game Result -> ObjectId -> ObjectId -> PlayerId -> Map.Map SlotName (Set Recipient) -> Map.Map SlotName (Set Recipient) -> Effect Card.Type.Card (GrantedAbility.GrantedAbility Card.Type.Card) -> Game ()
 applyOneEffect runSubgame resolving source controller legal chosen effect = case effect of
-  Effect.DealDamage (DealDamage.MkDealDamage parts dealer excess) -> do
+  Effect.DealDamage (DealDamage.MkDealDamage parts dealer excess mTally) -> do
     gs <- State.get
     let viewOf = effectViewOf source legal gs
         context = effectContext gs resolving controller source legal (slotBindings resolving gs)
@@ -3959,9 +3959,9 @@ applyOneEffect runSubgame resolving source controller legal chosen effect = case
         dealerId = case dealer of
           Nothing -> Just source
           Just slot -> Maybe.listToMaybe (objectRefObjects legal resolving controller source gs (ObjectRef.InSlot slot))
-    case dealerId of
+    dealtTotal <- case dealerId of
       -- No source, no damage: CR 608.2b's illegal dealer, above.
-      Nothing -> pure ()
+      Nothing -> pure 0
       Just dealt -> do
         -- HOW MUCH, read ONCE PER RECIPIENT off the clause that named it: Acidic
         -- Soil's "damage to each player equal to the number of lands they
@@ -4005,16 +4005,23 @@ applyOneEffect runSubgame resolving source controller legal chosen effect = case
             -- CR 120.4a, and BEFORE applyDamage's CR 120.4b, against the same
             -- pre-effect state every amount was read against.
             rewritten = Damage.redirectExcess gs excess events
-        Monad.unless (null rewritten) $ do
-          -- ONE batch, not one call per recipient: CR 608.2f's "each such action
-          -- is processed simultaneously".
-          Damage.applyDamage rewritten
-          -- CR 614.1a: what a run-effects rewrite put in a replaced event's place
-          -- runs inside this resolution too, and before the riders below.
-          runReplacementEffects runSubgame
-          -- CR 615.5's "immediately afterward": a shield this damage spent runs
-          -- its additional effect inside this resolution.
-          runPreventionRiders runSubgame
+        if null rewritten
+          then pure 0
+          else do
+            -- ONE batch, not one call per recipient: CR 608.2f's "each such
+            -- action is processed simultaneously".
+            total <- Damage.applyDamage rewritten
+            -- CR 614.1a: what a run-effects rewrite put in a replaced event's
+            -- place runs inside this resolution too, and before the riders below.
+            runReplacementEffects runSubgame
+            -- CR 615.5's "immediately afterward": a shield this damage spent runs
+            -- its additional effect inside this resolution.
+            runPreventionRiders runSubgame
+            pure total
+    -- Syphon Soul's "the damage dealt this way": the SETTLED total, after CR
+    -- 615's prevention had its say, so a shielded player contributes only what
+    -- got through. Bound even at 0, LoseLife's tally's posture.
+    Monad.forM_ mTally $ \slot -> State.modify' (bindAmountSlot resolving source slot dealtTotal)
   -- CR 701.14. Every clause of the rule is one line here, and none of them is a
   -- read of what the effect IS: the amounts come off the projection, the kind is
   -- data, and the pair guard is arithmetic on two Maybes.
@@ -4068,7 +4075,7 @@ applyOneEffect runSubgame resolving source controller legal chosen effect = case
         -- action, so the two blows land simultaneously and a creature that dies
         -- to the first still dealt the second.
         Monad.unless (null events) $ do
-          Damage.applyDamage events
+          Monad.void (Damage.applyDamage events)
           -- The DealDamage arm's two drains, and for its reasons: a fight is an
           -- ordinary damage event, so a rewrite or a shield that applied to it
           -- runs inside this resolution rather than waiting for the next one.

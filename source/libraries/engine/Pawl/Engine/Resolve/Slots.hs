@@ -707,7 +707,7 @@ copyTargetsRefs targets = case targets of
 -- objectRefPositions, which is the only observer of a position no card writes.
 effectObjectRefs :: Effect card ability -> [ObjectRef]
 effectObjectRefs effect = case effect of
-  Effect.DealDamage (DealDamage.MkDealDamage parts _ _) -> Foldable.toList (fmap DamagePart.ref parts)
+  Effect.DealDamage (DealDamage.MkDealDamage parts _ _ _) -> Foldable.toList (fmap DamagePart.ref parts)
   Effect.Fight {} -> []
   Effect.ModifyTarget (ModifyTarget.MkModifyTarget _ _ ref _) -> [ref]
   Effect.ChangeText {} -> []
@@ -1210,7 +1210,7 @@ sequenceSlots defined = joinSlots . snd . List.mapAccumL (\seen effect -> (seen 
 slotsOf :: Effect Card.Type.Card (GrantedAbility.GrantedAbility Card.Type.Card) -> Map.Map SlotName SlotArity
 slotsOf effect = joinTwo (joinTwo (joinSlots (fmap objectRefSlots (effectObjectRefs effect))) (joinSlots (fmap playerRefSlots (effectPlayerRefs effect)))) $ case effect of
   -- The dealer is a read like any other (CR 120.2b), and one object (CR 120.1).
-  Effect.DealDamage (DealDamage.MkDealDamage parts dealer _) ->
+  Effect.DealDamage (DealDamage.MkDealDamage parts dealer _ _) ->
     joinTwo
       (joinSlots (fmap (quantitySlots . DamagePart.quantity) (Foldable.toList parts)))
       (maybe Map.empty oneSlot dealer)
@@ -2083,7 +2083,7 @@ slotsAreExhaustive effect = all (all Quantity.slotsAreExhaustive . objectRefQuan
 -- arms answer a constant, so a new FIELD on one is not forced.
 ownSlotsAreExhaustive :: Effect Card.Type.Card (GrantedAbility.GrantedAbility Card.Type.Card) -> Bool
 ownSlotsAreExhaustive effect = case effect of
-  Effect.DealDamage (DealDamage.MkDealDamage parts _ _) -> all (Quantity.slotsAreExhaustive . DamagePart.quantity) parts
+  Effect.DealDamage (DealDamage.MkDealDamage parts _ _ _) -> all (Quantity.slotsAreExhaustive . DamagePart.quantity) parts
   Effect.Fight {} -> True
   Effect.ModifyTarget (ModifyTarget.MkModifyTarget duration modification _ _) ->
     durationSlotsAreExhaustive duration
@@ -2375,7 +2375,7 @@ readsX =
       -- effectReadsX's half that is not an ObjectRef's: this opcode's own fields,
       -- and its nested effects through the recursion back into readsX.
       effectOwnReadsX effect = case effect of
-        Effect.DealDamage (DealDamage.MkDealDamage parts _ _) -> any (Quantity.readsX . DamagePart.quantity) parts
+        Effect.DealDamage (DealDamage.MkDealDamage parts _ _ _) -> any (Quantity.readsX . DamagePart.quantity) parts
         Effect.Fight {} -> False
         -- Untamed Might's "+X/+X" sits inside the Modification, not on the effect.
         Effect.ModifyTarget (ModifyTarget.MkModifyTarget _ modification _ _) -> any Quantity.readsX (Projection.quantitiesOf modification)
@@ -2644,7 +2644,9 @@ boundSlots effect = case effect of
   Effect.Assemble {} -> Set.empty
   Effect.ArrangeInLibrary {} -> Set.empty
   Effect.Connive {} -> Set.empty
-  Effect.DealDamage {} -> Set.empty
+  -- CR 120.4b's damage actually dealt, summed over every recipient, for Syphon
+  -- Soul's "the damage dealt this way" (Pawl.Types.DealDamage.tally).
+  Effect.DealDamage (DealDamage.MkDealDamage _ _ _ mTally) -> foldMap Set.singleton mTally
   Effect.Fight {} -> Set.empty
   Effect.ModifyTarget {} -> Set.empty
   Effect.ChangeText {} -> Set.empty

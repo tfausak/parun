@@ -1008,19 +1008,26 @@ splitExcess gs event =
 -- each other creature, which
 -- data/scenarios/card-trigger/cr-608-2f-horned-cheetah-dealing-damage-to-each-other-creature-triggers-once.json
 -- proves.
-applyDamage :: [DamageEvent.DamageEvent] -> Game ()
-applyDamage events = Event.simultaneously (processDamage events) >>= recordLifelinkGains
+--
+-- Answers the damage the batch actually DEALT (CR 120.4b), summed over every
+-- surviving event, for an instruction that records it (Pawl.Types.DealDamage's
+-- `tally`).
+applyDamage :: [DamageEvent.DamageEvent] -> Game Natural
+applyDamage events = do
+  (dealt, gains) <- Event.simultaneously (processDamage events)
+  recordLifelinkGains gains
+  pure dealt
 
--- applyDamage minus lifelink's gain RECORDS, returning the SETTLED gains so the
--- caller can record those where its own bracket does not reach. The gain itself
--- -- the life total -- is written here, since CR 120.4c processes it with the
--- damage's other results (see the note on `lost`).
+-- applyDamage minus lifelink's gain RECORDS, returning the damage dealt and the
+-- SETTLED gains so the caller can record those where its own bracket does not
+-- reach. The gain itself -- the life total -- is written here, since CR 120.4c
+-- processes it with the damage's other results (see the note on `lost`).
 --
 -- Settled and not the raw damage: each gain goes through Event.resolveLifeGain,
 -- CR 614.1's funnel for the class, so a LifeGainR row resizes it -- and the
 -- record has to name what the player actually gained, or a "whenever you gain
 -- life" trigger would read the amount before the replacement.
-processDamage :: [DamageEvent.DamageEvent] -> Game [(PlayerId, Natural)]
+processDamage :: [DamageEvent.DamageEvent] -> Game (Natural, [(PlayerId, Natural)])
 processDamage events = do
   (survivors, prevented) <- Event.resolveDamageBatch events
   -- The state the whole batch is read against: recipients are classified off it
@@ -1459,7 +1466,7 @@ processDamage events = do
   -- Faith puts on no counter), which is the rule as well.
   State.modify' $ \gs ->
     gs {GameState.pendingPreventionRiders = GameState.pendingPreventionRiders gs <> Seq.fromList (filter (Maybe.isJust . Prevention.rider) prevented)}
-  pure gains
+  pure (sum (fmap DamageEvent.amount survivors), gains)
 
 -- CR 120.3f's gain, RECORDED -- processDamage performs it and hands back what
 -- it settled -- so that "whenever you gain life" sees lifelink (CR 702.15b) and
@@ -1588,5 +1595,5 @@ dealCombatDamage = do
 dealWave :: (ObjectId -> Bool) -> Game ()
 dealWave assigns = do
   assignment <- gatherCombatDamage assigns
-  gains <- Event.simultaneously (processDamage assignment)
+  (_, gains) <- Event.simultaneously (processDamage assignment)
   recordLifelinkGains gains

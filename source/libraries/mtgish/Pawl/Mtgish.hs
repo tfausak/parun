@@ -951,7 +951,7 @@ effects context n = case Node.tag n of
     s <- Node.child n
     Monad.unless (Node.tag s == "ThisSpell") (Node.untranslated s)
     case dividing context of
-      Just name -> pure [Effect.DealDamage DealDamage.MkDealDamage {DealDamage.parts = Seq.singleton (DamagePart.MkDamagePart (ObjectRef.InSlot name) (Quantity.Share name)), DealDamage.dealer = Nothing, DealDamage.excess = Nothing}]
+      Just name -> pure [Effect.DealDamage DealDamage.MkDealDamage {DealDamage.parts = Seq.singleton (DamagePart.MkDamagePart (ObjectRef.InSlot name) (Quantity.Share name)), DealDamage.dealer = Nothing, DealDamage.excess = Nothing, DealDamage.tally = Nothing}]
       Nothing -> Node.untranslated n
   "SpellDealsDamage" -> do
     (source, amount, recipient) <- triple n
@@ -1033,7 +1033,7 @@ effects context n = case Node.tag n of
       refs <- case Node.tag r of
         "MultipleRecipients" -> Node.arguments r >>= traverse (damageRecipient context)
         _ -> fmap pure (damageRecipient context recipient)
-      pure [Effect.DealDamage DealDamage.MkDealDamage {DealDamage.parts = Seq.fromList (fmap (\ref -> DamagePart.MkDamagePart ref q) refs), DealDamage.dealer = dealer, DealDamage.excess = Nothing}]
+      pure [Effect.DealDamage DealDamage.MkDealDamage {DealDamage.parts = Seq.fromList (fmap (\ref -> DamagePart.MkDamagePart ref q) refs), DealDamage.dealer = dealer, DealDamage.excess = Nothing, DealDamage.tally = Nothing}]
     destroy regenerability ref = pure [Effect.Destroy Destroy.MkDestroy {Destroy.ref = ref, Destroy.regenerability = regenerability, Destroy.slot = Nothing, Destroy.buried = Nothing, Destroy.permanents = Nothing}]
     move zone ref = pure [Effect.MoveToZone (moveTo zone ref)]
     modify ref changes until' = do

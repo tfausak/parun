@@ -1242,6 +1242,7 @@ communeWithLavaSpec s registry =
                       (Seq.singleton (DamagePart.MkDamagePart (ObjectRef.TopOfLibrary (TopOfLibrary.MkTopOfLibrary (PlayerRef.Relative PlayerRelation.You) q)) (Quantity.Literal 1)))
                       Nothing
                       Nothing
+                      Nothing
                   )
           Spec.assertEqWith
             s
