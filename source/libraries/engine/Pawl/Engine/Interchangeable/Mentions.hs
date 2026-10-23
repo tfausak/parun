@@ -1244,6 +1244,7 @@ drawRewriteNames asking x = case x of
   DrawRewrite.Dredge _natural -> mempty
   DrawRewrite.YouDraw -> mempty
   DrawRewrite.OthersMayPayLife _natural -> mempty
+  DrawRewrite.FromGraveyardOrLose -> mempty
 
 dungeonRoomNames :: (Monoid r) => Asking r -> (card -> r) -> DungeonRoom.DungeonRoom card -> r
 dungeonRoomNames asking onCard x = case x of

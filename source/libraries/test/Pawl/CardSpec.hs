@@ -5277,6 +5277,7 @@ replacementEffectFilters replacementEffect = case replacementEffect of
   ReplacementEffect.DrawR (DrawR.MkDrawR _ (DrawRewrite.Dredge _)) -> []
   ReplacementEffect.DrawR (DrawR.MkDrawR _ DrawRewrite.YouDraw) -> []
   ReplacementEffect.DrawR (DrawR.MkDrawR _ (DrawRewrite.OthersMayPayLife _)) -> []
+  ReplacementEffect.DrawR (DrawR.MkDrawR _ DrawRewrite.FromGraveyardOrLose) -> []
   ReplacementEffect.DrawCountR {} -> []
   ReplacementEffect.InstructionR {} -> []
   ReplacementEffect.DieRollR {} -> []

@@ -1,0 +1,33 @@
+{
+  "description": "CR 108.2b Leyline of the Void exiles cards only, so bob's token Grizzly Bears dies and Soul Net triggers",
+  "note": "A token is not a card, so it reaches bob's graveyard before it ceases to exist, and alice's Soul Net sees a creature die. She pays and gains 1 life; exiled instead, nothing would have died.",
+  "board": {
+    "active": "alice",
+    "step": "PrecombatMain",
+    "seats": [
+      {
+        "name": "alice",
+        "library": [{ "card": "Island" }],
+        "battlefield": [
+          { "card": "Leyline of the Void" },
+          { "card": "Soul Net", "label": "net" },
+          { "card": "Mountain", "label": "m1" },
+          { "card": "Mountain", "label": "m2" }
+        ],
+        "hand": [{ "card": "Shock", "label": "shock" }]
+      },
+      {
+        "name": "bob",
+        "library": [{ "card": "Island" }],
+        "battlefield": [{ "card": "Grizzly Bears", "label": "bears", "token": true }]
+      }
+    ]
+  },
+  "timeline": [
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "do": { "Cast": { "object": "$shock", "targets": ["$bears"], "mana": ["$m1", null] } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "do": "Pass" },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "do": "Pass" },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "do": { "ChooseToPay": { "decision": { "type": "Pays" }, "mana": ["$m2"] } }, "source": "$net" },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "check": { "Life": { "player": "alice", "life": 21 } } }
+  ]
+}

@@ -4282,6 +4282,39 @@ apply batch candidate event =
             Monad.forM_ revealed $ \oid ->
               Monad.when (oid `elem` Game.zoneMembers Zone.Library pid after) (changeZone oid Zone.Graveyard)
             pure Nothing
+      -- CR 614.6 / 104.3e: Forbidden Crypt's "return a card from your graveyard
+      -- to your hand instead. If you can't, you lose the game." The draw never
+      -- happens, so an empty library loses nothing by CR 704.5b (CR 614.11).
+      --
+      -- The drawer picks among the cards (not tokens) in their own graveyard;
+      -- with one there is nothing to ask. The card's ruling makes "can't" cover
+      -- a return that does not reach the hand as well as an empty graveyard; that
+      -- half is a regression fence, since no test replaces the return.
+      --
+      -- The loss is QUEUED, GameLossR's reason: this module is below the one
+      -- that takes a player out of the game. It runs before the next
+      -- instruction or state-based action check.
+      --
+      -- Not implemented: a later draw of the same sequence is replaced before
+      -- that loss, so a loss replacement (Lich's Mirror) cannot act between the
+      -- two as CR 614.11a asks (#5511).
+      DrawRewrite.FromGraveyardOrLose -> do
+        Replacement.consume (ReplacementCandidate.identity candidate)
+        gs <- State.get
+        let cards = filter (`Game.isCardObject` gs) (Game.zoneMembers Zone.Graveyard pid gs)
+        picked <- Game.chooseAmong (\decider who pool -> Prompt.ChooseCardInGraveyard decider who (ReplacementCandidate.source candidate) pool Seq.empty) pid cards
+        arrived <- maybe (pure Seq.empty) (`changeZoneReturning` Zone.Hand) picked
+        after <- State.get
+        let loss =
+              PendingReplacementEffect.MkPendingReplacementEffect
+                { PendingReplacementEffect.effects = Seq.singleton (Effect.Type.LoseGame (PlayerRef.Relative PlayerRelation.You)),
+                  PendingReplacementEffect.targets = Map.empty,
+                  PendingReplacementEffect.controller = pid,
+                  PendingReplacementEffect.source = ReplacementCandidate.source candidate
+                }
+            queue g = g {GameState.pendingReplacementEffects = GameState.pendingReplacementEffects g Seq.|> loss}
+        Monad.unless (any (`elem` Game.zoneMembers Zone.Hand pid after) arrived) (State.modify' queue)
+        pure Nothing
     -- Unreachable: `applies` admits DrawR only against WouldDraw.
     (ReplacementEffect.DrawR {}, _) -> pure (Just event)
     -- CR 121.2a with CR 614.6: Alms Collector's "if an opponent would draw two or
