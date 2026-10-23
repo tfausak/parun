@@ -1,0 +1,12 @@
+{
+  "description": "CR 701.26a whole card: Psychic Venom deals 2 damage to the enchanted land's controller when it becomes tapped",
+  "note": "Bob taps his enchanted Island and takes 2, and alice, Venom's controller, none; tapping his other Island does nothing.",
+  "board": {"active": "bob", "step": "PrecombatMain", "seats": [{"name": "bob", "battlefield": [{"card": "Island", "label": "island"}, {"card": "Island", "label": "other"}], "library": [{"card": "Island"}, {"card": "Island"}, {"card": "Island"}]}, {"name": "alice", "battlefield": [{"card": "Psychic Venom", "label": "venom", "attached": "island"}], "library": [{"card": "Island"}, {"card": "Island"}, {"card": "Island"}]}]},
+  "timeline": [
+    {"turn": 1, "step": "PrecombatMain", "player": "bob", "do": {"Take": {"action": "ActivateManaAbility $island"}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "bob", "do": {"Take": {"action": "ActivateManaAbility $other"}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "bob", "do": "Pass"},
+    {"turn": 1, "step": "PrecombatMain", "player": "bob", "check": {"Life": {"player": "bob", "life": 18}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "bob", "check": {"Life": {"player": "alice", "life": 20}}}
+  ]
+}

@@ -48,6 +48,7 @@ import qualified Pawl.Types.EachCardInGraveyard as EachCardInGraveyard
 import qualified Pawl.Types.Effect as Effect
 import qualified Pawl.Types.EntryRiders as EntryRiders
 import qualified Pawl.Types.Filter as Filter.Type
+import qualified Pawl.Types.ForEach as ForEach
 import qualified Pawl.Types.IfTaken as IfTaken
 import qualified Pawl.Types.Keyword as Keyword
 import qualified Pawl.Types.KeywordDesignator as KeywordDesignator
@@ -56,6 +57,7 @@ import qualified Pawl.Types.LibraryPlacement as LibraryPlacement
 import qualified Pawl.Types.LibraryPosition as LibraryPosition
 import qualified Pawl.Types.LifeLoss as LifeLoss
 import qualified Pawl.Types.LifeLossCause as LifeLossCause
+import qualified Pawl.Types.LoopMembers as LoopMembers
 import qualified Pawl.Types.ManaAddition as ManaAddition
 import qualified Pawl.Types.ManaProduction as ManaProduction
 import qualified Pawl.Types.ManaRetention as ManaRetention
@@ -642,6 +644,12 @@ effect context e = case e of
       Just (Filter.Type.IsBound s) -> [ObjectRef.InSlot s]
       _ -> []
     acted context (Text.pack "regenerate ") r
+  -- "Regenerate enchanted creature": the same shield on the permanent a loop
+  -- binds as the instruction resolves.
+  Effect.ForEach (ForEach.MkForEach r LoopMembers.Every slot body False Nothing)
+    | [Effect.Replace (Replace.MkReplace Duration.UntilEndOfTurn Uses.Once ReplacementOrigin.Other Nothing (ReplacementEffect.DestructionR (DestructionR.MkDestructionR (Just (Filter.Type.IsBound bound)) DestructionRewrite.Regenerate)))] <- Foldable.toList body,
+      bound == slot ->
+        acted context (Text.pack "regenerate ") r
   Effect.Discard d -> discarded context d
   Effect.Search s -> searched context s
   -- "Target player mills two cards" (CR 701.17a).
@@ -899,7 +907,11 @@ dealDamage context d
               groups
                 | shared = List.groupBy (\a b -> DamagePart.quantity a == DamagePart.quantity b) parts
                 | otherwise = fmap pure parts
-          rendered <- traverse (damagePart context measured) groups
+          -- Free when the card deals damage to itself: its own name or "itself"
+          -- (Reckless Embermage).
+          let itself = Maybe.isNothing (DealDamage.dealer d) && any ((== ObjectRef.InSlot Target.selfSlot) . DamagePart.ref) parts
+          recipients <- context : [context {Target.self = Text.pack "itself"} | itself]
+          rendered <- traverse (damagePart recipients measured) groups
           [MkPredicate (Just source) (Text.pack "deals " <> Text.intercalate (Text.pack " and ") (fmap fst rendered)) [] (concatMap snd rendered) Nothing False]
 
 -- | Whether the reference names a group rather than one object or player:

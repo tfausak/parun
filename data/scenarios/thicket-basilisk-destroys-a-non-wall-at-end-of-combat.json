@@ -1,5 +1,5 @@
 {
-  "description": "CR 509.3c / 509.3d / 603.7 whole card: Thicket Basilisk destroys at end of combat a non-Wall creature it blocks or that blocks it, and not a Wall",
+  "description": "CR 509.3b / 509.3d / 603.7 whole card: Thicket Basilisk destroys at end of combat a non-Wall creature it blocks or that blocks it, and not a Wall",
   "note": "Turn 1 it blocks bob's first Hill Giant; turn 2 his second Hill Giant blocks it; turn 4 his Wall of Stone blocks it and lives. Each Giant survives the 2 damage the Basilisk deals and is destroyed as end of combat begins.",
   "board": {"active": "bob", "step": "BeginningOfCombat", "seats": [{"name": "bob", "battlefield": [{"card": "Wall of Stone", "label": "wall"}, {"card": "Hill Giant", "label": "g1", "ready": true}, {"card": "Hill Giant", "label": "g2"}], "library": [{"card": "Island"}, {"card": "Island"}, {"card": "Island"}, {"card": "Island"}]}, {"name": "alice", "battlefield": [{"card": "Thicket Basilisk", "label": "basilisk", "ready": true}], "library": [{"card": "Island"}, {"card": "Island"}, {"card": "Island"}, {"card": "Island"}]}]},
   "timeline": [

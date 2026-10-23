@@ -6,8 +6,9 @@ import qualified Pawl.Types.CostAddition as CostAddition
 
 -- | CR 601.2f: what a Pawl.Types.CostModifier does to the total cost.
 data CostChange
-  = -- | CR 601.2f's "cost increases", this much GENERIC mana: no printing taxes
-    -- by a coloured symbol (Thalia, Oppressive Rays).
+  = -- | CR 601.2f's "cost increases", this much GENERIC mana (Thalia, Oppressive
+    -- Rays). Not implemented: an increase by a coloured symbol, Derelor's {B}
+    -- (#5524).
     Increase Natural.Natural
   | -- | CR 601.2f / 118.7's "cost reductions" (Sapphire Medallion, Heartstone).
     Reduce AppliedReduction.AppliedReduction

@@ -1902,9 +1902,9 @@ filterPositionLintSpec s registry = Spec.describe s "Lint" $ do
     -- abilities, whose X CR 602.2b announces.
     --
     -- Exactly, against the mana value: Chthonian Nightmare, Tamiyo, Compleated
-    -- Sage and Synthetic Counted Verdict in a slot, and Fear of Change and Ornate
-    -- Imitations in a reference pick, at the top level and inside a ForEachNumber
-    -- body.
+    -- Sage, Synthetic Counted Verdict and Spell Blast in a slot, and Fear of
+    -- Change and Ornate Imitations in a reference pick, at the top level and
+    -- inside a ForEachNumber body.
     --
     -- At most and less than, against the mana value on a SPELL whose X shares the
     -- cost with a count announced beside it: March of Otherworldly Light and March
@@ -1923,6 +1923,7 @@ filterPositionLintSpec s registry = Spec.describe s "Lint" $ do
             "Chthonian Nightmare",
             "Tamiyo, Compleated Sage",
             "Synthetic Counted Verdict",
+            "Spell Blast",
             "Fear of Change",
             "Ornate Imitations",
             "Spawnbroker",
@@ -2103,11 +2104,19 @@ filterPositionLintSpec s registry = Spec.describe s "Lint" $ do
       "Firebreathing's pump is framed too"
       (hostOfSourceCounts (S.combinedFace firebreathing))
       (1, 0)
+    -- And Regeneration's loop over the creature it enchants, whose member its
+    -- shield names.
+    regeneration <- S.printingOf s registry "Regeneration"
+    Spec.assertEqWith
+      s
+      "Regeneration's regenerated creature is framed too"
+      (hostOfSourceCounts (S.combinedFace regeneration))
+      (1, 0)
     Spec.assertEqWith
       s
       "and they are the pool's only ones"
       (sum (fmap (uncurry (+) . hostOfSourceCounts . S.combinedFace) ps))
-      15
+      16
     -- The rejected side, which the sweep above cannot show while the pool has no
     -- offender: the same atom planted in a SPELL's target slot -- the position a
     -- card author would most plausibly reach for -- IS counted as elsewhere.

@@ -1,0 +1,11 @@
+{
+  "description": "CR 613.1d / 613.4b whole card: Living Lands makes every Forest a 1/1 creature that is still a land, and no other land",
+  "note": "Both players' Forests animate; alice's Mountain does not.",
+  "board": {"active": "alice", "step": "PrecombatMain", "seats": [{"name": "alice", "battlefield": [{"card": "Living Lands"}, {"card": "Forest", "label": "mine"}, {"card": "Mountain", "label": "mountain"}], "library": [{"card": "Island"}, {"card": "Island"}, {"card": "Island"}]}, {"name": "bob", "battlefield": [{"card": "Forest", "label": "theirs"}], "library": [{"card": "Island"}, {"card": "Island"}, {"card": "Island"}]}]},
+  "timeline": [
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "check": {"Types": {"object": "$mine", "types": ["Creature", "Land"]}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "check": {"PowerToughness": {"object": "$mine", "power": 1, "toughness": 1}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "check": {"Types": {"object": "$theirs", "types": ["Creature", "Land"]}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "check": {"Types": {"object": "$mountain", "types": ["Land"]}}}
+  ]
+}

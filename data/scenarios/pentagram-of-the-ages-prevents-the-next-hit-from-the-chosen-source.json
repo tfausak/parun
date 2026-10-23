@@ -1,0 +1,12 @@
+{
+  "description": "CR 615.7 / 609.7a whole card: Pentagram of the Ages prevents the next damage the source alice chooses would deal her",
+  "note": "Bob's Grizzly Bears (alpha) and Gray Ogre (omega) attack; alice chooses omega, so only alpha's 2 lands.",
+  "board": {"active": "bob", "step": "BeginningOfCombat", "seats": [{"name": "bob", "battlefield": [{"card": "Grizzly Bears", "label": "alpha", "ready": true}, {"card": "Gray Ogre", "label": "omega", "ready": true}], "library": [{"card": "Island"}, {"card": "Island"}, {"card": "Island"}]}, {"name": "alice", "battlefield": [{"card": "Pentagram of the Ages", "label": "pentagram"}, {"card": "Plains", "label": "p1"}, {"card": "Plains", "label": "p2"}, {"card": "Plains", "label": "p3"}, {"card": "Plains", "label": "p4"}], "library": [{"card": "Island"}, {"card": "Island"}, {"card": "Island"}]}]},
+  "timeline": [
+    {"turn": 1, "step": "DeclareAttackers", "player": "bob", "do": {"Attack": ["$alpha", "$omega"]}},
+    {"turn": 1, "step": "DeclareAttackers", "player": "alice", "do": {"Activate": {"object": "$pentagram", "ability": 0, "mana": ["$p1", "$p2", "$p3", "$p4"]}}},
+    {"turn": 1, "step": "DeclareAttackers", "player": "alice", "do": "Pass"},
+    {"turn": 1, "step": "DeclareAttackers", "player": "alice", "do": {"Answer": {"prompt": "ChooseDamageSource", "with": "$omega"}}},
+    {"turn": 1, "step": "PostcombatMain", "player": "bob", "check": {"Life": {"player": "alice", "life": 18}}}
+  ]
+}

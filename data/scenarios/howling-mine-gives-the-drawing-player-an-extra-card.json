@@ -1,0 +1,8 @@
+{
+  "description": "CR 603.4 whole card: Howling Mine makes each player draw an additional card in their draw step, only while it is untapped",
+  "note": "Alice's Mine is untapped, bob draws two; the board differs from its twin in that alone.",
+  "board": {"active": "bob", "step": "Upkeep", "seats": [{"name": "bob", "library": [{"card": "Swamp"}, {"card": "Swamp"}, {"card": "Swamp"}, {"card": "Swamp"}, {"card": "Swamp"}]}, {"name": "alice", "battlefield": [{"card": "Howling Mine", "label": "mine", "tapped": false}], "library": [{"card": "Plains"}, {"card": "Plains"}, {"card": "Plains"}, {"card": "Plains"}, {"card": "Plains"}]}], "turn": 2},
+  "timeline": [
+    {"turn": 2, "step": "PrecombatMain", "player": "bob", "check": {"Count": {"player": "bob", "zone": "Hand", "card": "Swamp", "count": 2}}}
+  ]
+}

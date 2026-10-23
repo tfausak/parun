@@ -1,0 +1,13 @@
+{
+  "description": "CR 615.7 / 609.7a whole card: Circle of Protection: Red prevents the next damage from the red source alice chooses, and offers no other colour",
+  "note": "Bob's Goblin Piker (red, 2), Hill Giant (red, 3) and Grizzly Bears (green, 2) attack. The Bears are refused as a choice; alice names the Giant, so she takes 2 and 2: 16. Naming the Piker gives 15, no shield 13.",
+  "board": {"active": "bob", "step": "BeginningOfCombat", "seats": [{"name": "bob", "battlefield": [{"card": "Goblin Piker", "label": "piker", "ready": true}, {"card": "Hill Giant", "label": "giant", "ready": true}, {"card": "Grizzly Bears", "label": "bears", "ready": true}], "library": [{"card": "Island"}, {"card": "Island"}, {"card": "Island"}]}, {"name": "alice", "battlefield": [{"card": "Circle of Protection: Red", "label": "circle"}, {"card": "Plains", "label": "plains"}], "library": [{"card": "Island"}, {"card": "Island"}, {"card": "Island"}]}]},
+  "timeline": [
+    {"turn": 1, "step": "DeclareAttackers", "player": "bob", "do": {"Attack": ["$piker", "$giant", "$bears"]}},
+    {"turn": 1, "step": "DeclareAttackers", "player": "alice", "do": {"Activate": {"object": "$circle", "ability": 0, "mana": ["$plains"]}}},
+    {"turn": 1, "step": "DeclareAttackers", "player": "alice", "do": "Pass"},
+    {"turn": 1, "step": "DeclareAttackers", "player": "alice", "refuse": {"Answer": {"prompt": "ChooseDamageSource", "with": "$bears"}}},
+    {"turn": 1, "step": "DeclareAttackers", "player": "alice", "do": {"Answer": {"prompt": "ChooseDamageSource", "with": "$giant"}}},
+    {"turn": 1, "step": "PostcombatMain", "player": "bob", "check": {"Life": {"player": "alice", "life": 16}}}
+  ]
+}

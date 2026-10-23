@@ -876,6 +876,7 @@ effectObjectRefs effect = case effect of
   Effect.Reroll -> []
   Effect.RerollStoredResults _ -> []
   Effect.ChooseCardName {} -> []
+  Effect.ChooseBasicLandType -> []
   Effect.Bolster {} -> []
   Effect.Amass {} -> []
   Effect.Blight {} -> []
@@ -1103,6 +1104,7 @@ effectPlayerRefs effect = case effect of
   Effect.Reroll -> []
   Effect.RerollStoredResults _ -> []
   Effect.ChooseCardName (ChooseCardName.MkChooseCardName ref _) -> [ref]
+  Effect.ChooseBasicLandType -> []
   Effect.Bolster {} -> []
   Effect.Amass {} -> []
   Effect.Blight (Blight.Type.MkBlight ref _ _) -> [ref]
@@ -1253,6 +1255,7 @@ slotsOf effect = joinTwo (joinTwo (joinSlots (fmap objectRefSlots (effectObjectR
   -- CHOOSER's slot is effectPlayerRefs' half, joined at the head above (Petra
   -- Sphinx's "target player").
   Effect.ChooseCardName _ -> Map.empty
+  Effect.ChooseBasicLandType -> Map.empty
   -- No slot: the card comes from outside the game, where CR 400.11c lets nothing
   -- target and so nothing was announced (CR 601.2c).
   Effect.FromOutsideTheGame _ -> Map.empty
@@ -2103,6 +2106,7 @@ ownSlotsAreExhaustive effect = case effect of
   Effect.Reroll -> True
   Effect.RerollStoredResults _ -> True
   Effect.ChooseCardName _ -> True
+  Effect.ChooseBasicLandType -> True
   Effect.FromOutsideTheGame _ -> True
   Effect.ExileThisSpell -> True
   Effect.Bolster quantity -> Quantity.slotsAreExhaustive quantity
@@ -2391,6 +2395,7 @@ readsX =
         Effect.RerollStoredResults _ -> False
         -- No Quantity: rule 201.4 chooses one name and states no count.
         Effect.ChooseCardName _ -> False
+        Effect.ChooseBasicLandType -> False
         Effect.FromOutsideTheGame _ -> False
         Effect.ExileThisSpell -> False
         Effect.Bolster quantity -> Quantity.readsX quantity
@@ -2661,6 +2666,7 @@ boundSlots effect = case effect of
   -- Binds nothing: the name goes on the SOURCE (Object.chosenNames) and is read
   -- back off it by Filter.HasChosenName, so no slot carries it.
   Effect.ChooseCardName _ -> Set.empty
+  Effect.ChooseBasicLandType -> Set.empty
   Effect.FromOutsideTheGame _ -> Set.empty
   Effect.ExileThisSpell -> Set.empty
   Effect.Bolster _ -> Set.empty

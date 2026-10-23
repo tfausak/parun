@@ -1,0 +1,10 @@
+{
+  "description": "CR 603.5 whole card: Sibilant Spirit's attack lets the defending player draw a card if they choose",
+  "note": "Bob accepts and draws the top Swamp.",
+  "board": {"active": "alice", "step": "BeginningOfCombat", "seats": [{"name": "alice", "battlefield": [{"card": "Sibilant Spirit", "label": "spirit", "ready": true}], "library": [{"card": "Island"}, {"card": "Island"}, {"card": "Island"}]}, {"name": "bob", "library": [{"card": "Swamp"}, {"card": "Swamp"}, {"card": "Swamp"}]}]},
+  "timeline": [
+    {"turn": 1, "step": "DeclareAttackers", "player": "alice", "do": {"Attack": ["$spirit"]}},
+    {"turn": 1, "step": "DeclareAttackers", "player": "bob", "do": {"ChooseOptional": {"type": "Exercises"}}},
+    {"turn": 1, "step": "DeclareBlockers", "player": "alice", "check": {"Count": {"player": "bob", "zone": "Hand", "card": "Swamp", "count": 1}}}
+  ]
+}

@@ -1,0 +1,11 @@
+{
+  "description": "CR 615.7 / 700.2 whole card: Healing Salve's second mode prevents the next 3 damage to its target",
+  "note": "Alice shields her Hill Giant (3/3) in her upkeep; bob's Lightning Bolt in her main phase then deals it no damage, and it lives.",
+  "board": {"active": "alice", "step": "Upkeep", "seats": [{"name": "alice", "manaPool": "W", "battlefield": [{"card": "Hill Giant", "label": "giant"}], "hand": [{"card": "Healing Salve", "label": "salve"}], "library": [{"card": "Island"}, {"card": "Island"}, {"card": "Island"}]}, {"name": "bob", "battlefield": [{"card": "Mountain", "label": "mountain"}], "hand": [{"card": "Lightning Bolt", "label": "bolt"}], "library": [{"card": "Island"}, {"card": "Island"}, {"card": "Island"}]}]},
+  "timeline": [
+    {"turn": 1, "step": "Upkeep", "player": "alice", "do": {"Cast": {"object": "$salve", "targets": ["$giant"], "modes": [1]}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "bob", "do": {"Cast": {"object": "$bolt", "targets": ["$giant"], "mana": ["$mountain"]}}},
+    {"turn": 1, "step": "BeginningOfCombat", "player": "alice", "check": {"Count": {"player": "bob", "zone": "Graveyard", "card": "Lightning Bolt", "count": 1}}},
+    {"turn": 1, "step": "BeginningOfCombat", "player": "alice", "check": {"Damage": {"object": "$giant", "damage": 0}}}
+  ]
+}

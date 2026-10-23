@@ -1,0 +1,18 @@
+{
+  "description": "CR 701.19a / 608.2h whole card: Regeneration's shield is for the creature it enchanted as the ability resolved, so it still saves the Bears after the Aura moves to another creature",
+  "note": "Alice regenerates her enchanted Grizzly Bears, moves the Aura to her Goblin Piker with Enchantment Alteration, then Shocks the Bears. A shield that read the Aura's host live would follow the Aura to the Piker and the Bears would die.",
+  "board": {"active": "alice", "step": "PrecombatMain", "seats": [{"name": "alice", "library": [{"card": "Island"}, {"card": "Island"}, {"card": "Island"}], "battlefield": [{"card": "Grizzly Bears", "label": "bear"}, {"card": "Goblin Piker", "label": "piker"}, {"card": "Regeneration", "label": "regen", "attached": "bear"}, {"card": "Forest", "label": "f1"}, {"card": "Island", "label": "i1"}, {"card": "Mountain", "label": "m1"}], "hand": [{"card": "Enchantment Alteration", "label": "alteration"}, {"card": "Shock", "label": "burn"}]}, {"name": "bob", "library": [{"card": "Island"}, {"card": "Island"}, {"card": "Island"}], "battlefield": [{"card": "Hill Giant", "label": "giant"}]}]},
+  "timeline": [
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "do": {"Activate": {"object": "$regen", "mana": ["$f1", null]}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "do": "Pass"},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "do": {"Cast": {"object": "$alteration", "targets": ["$regen"], "mana": ["$i1", null]}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "do": "Pass"},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "do": {"Answer": {"prompt": "ChooseAttachment", "with": "$piker"}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "do": {"Cast": {"object": "$burn", "targets": ["$bear"], "mana": ["$m1"]}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "do": "Pass"},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "check": {"Count": {"player": "alice", "zone": "Battlefield", "card": "Grizzly Bears", "count": 1}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "check": {"Tapped": {"object": "$bear", "tapped": true}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "check": {"Damage": {"object": "$bear", "damage": 0}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "check": {"View": {"of": "AttachedTo", "object": "$regen", "is": "$piker"}}}
+  ]
+}

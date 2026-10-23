@@ -1,0 +1,11 @@
+{
+  "description": "CR 107.3 / 602.5d whole card: Snake Basket creates X Snakes, activated only as a sorcery",
+  "note": "With X=3 alice gets three 1/1 Snakes.",
+  "board": {"active": "alice", "step": "PrecombatMain", "seats": [{"name": "alice", "manaPool": "GGG", "battlefield": [{"card": "Snake Basket", "label": "basket"}], "library": [{"card": "Island"}, {"card": "Island"}, {"card": "Island"}]}, {"name": "bob", "library": [{"card": "Island"}, {"card": "Island"}, {"card": "Island"}]}]},
+  "timeline": [
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "do": {"Activate": {"object": "$basket", "ability": 0, "x": 3}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "do": "Pass"},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "do": {"OrderTimestamps": ["Snake Token", "Snake Token#2", "Snake Token#3"]}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "check": {"Count": {"player": "alice", "zone": "Battlefield", "card": "Snake Token", "count": 3}}}
+  ]
+}

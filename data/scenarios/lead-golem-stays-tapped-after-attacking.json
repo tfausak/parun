@@ -1,0 +1,10 @@
+{
+  "description": "CR 502.3 whole card: Lead Golem's attack keeps it tapped through alice's next untap step",
+  "note": "The Golem attacks on turn 1 and is still tapped in alice's turn-3 upkeep; her Grizzly Bears, which also attacked, untapped.",
+  "board": {"active": "alice", "step": "BeginningOfCombat", "seats": [{"name": "alice", "battlefield": [{"card": "Lead Golem", "label": "golem", "ready": true}, {"card": "Grizzly Bears", "label": "bears", "ready": true}], "library": [{"card": "Island"}, {"card": "Island"}, {"card": "Island"}, {"card": "Island"}]}, {"name": "bob", "library": [{"card": "Island"}, {"card": "Island"}, {"card": "Island"}, {"card": "Island"}]}]},
+  "timeline": [
+    {"turn": 1, "step": "DeclareAttackers", "player": "alice", "do": {"Attack": ["$golem", "$bears"]}},
+    {"turn": 3, "step": "Upkeep", "player": "alice", "check": {"Tapped": {"object": "$golem", "tapped": true}}},
+    {"turn": 3, "step": "Upkeep", "player": "alice", "check": {"Tapped": {"object": "$bears", "tapped": false}}}
+  ]
+}
