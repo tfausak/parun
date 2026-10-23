@@ -26,17 +26,24 @@ import qualified Pawl.Oracle.Prose as Prose
 import qualified Pawl.Oracle.Target as Target
 import qualified Pawl.Oracle.Trigger as Trigger
 import qualified Pawl.Types.ActivatedAbility as ActivatedAbility
+import qualified Pawl.Types.ActivationRestriction as ActivationRestriction
 import qualified Pawl.Types.Activator as Activator
 import qualified Pawl.Types.Card as Card
 import qualified Pawl.Types.CardName as CardName
 import qualified Pawl.Types.CardType as CardType
 import qualified Pawl.Types.Cost as Cost.Type
 import qualified Pawl.Types.CostComponent as CostComponent
+import qualified Pawl.Types.DuringPhase as DuringPhase
 import qualified Pawl.Types.Face as Face
 import qualified Pawl.Types.Keyword as Keyword.Type
 import qualified Pawl.Types.Layout as Layout
+import qualified Pawl.Types.PhaseSelector as PhaseSelector
+import qualified Pawl.Types.Pool as Pool
+import qualified Pawl.Types.StepBegins as StepBegins
+import qualified Pawl.Types.TargetSlot as TargetSlot
 import qualified Pawl.Types.TriggerLimit as TriggerLimit
 import qualified Pawl.Types.TriggeredAbility as TriggeredAbility
+import qualified Pawl.Types.TurnScope as TurnScope
 import qualified Pawl.Types.TypeLine as TypeLine
 
 -- | The card's rules text in its current Oracle wording, or 'Nothing' for a
@@ -107,17 +114,25 @@ without whole part = case (whole, part) of
 faceAbilities :: Face.Face Card.Card -> [[Text.Text]]
 faceAbilities face =
   let self = CardName.unwrap (Face.name face)
-      context = Target.MkContext self Map.empty (Keyword.keywordWord self) [Text.pack " "] Map.empty [] []
-      rest = face {Face.keywords = Map.empty, Face.spell = Face.defaultSpell, Face.activatedAbilities = [], Face.triggeredAbilities = [], Face.staticAbilities = [], Face.replacementEffects = [], Face.enchant = [], Face.characteristicPT = Nothing}
+      host = do
+        word <- Maybe.maybeToList attached
+        slot' <- Face.enchant face <> [TargetSlot.required Pool.Creatures Nothing | null (Face.enchant face)]
+        (one, _) <- Target.described context slot'
+        [word <> Text.pack " " <> one]
+      context = Target.MkContext self Map.empty (Keyword.keywordWord self) [Text.pack " "] Map.empty [] [] host
+      rest = face {Face.keywords = Map.empty, Face.spell = Face.defaultSpell, Face.activatedAbilities = [], Face.triggeredAbilities = [], Face.staticAbilities = [], Face.replacementEffects = [], Face.combatRestrictions = [], Face.playerAbilities = [], Face.enchant = [], Face.characteristicPT = Nothing}
       subtypes = TypeLine.subtypes (Face.typeLine face)
       unread = rest /= Face.Oracle.bare (Face.name face) (Face.oracleText face) (Face.manaCost face) (Face.colorIndicator face) (Face.typeLine face) (Face.power face) (Face.toughness face) Map.empty
       spell = [Effect.modal context {Target.breaks = [Text.pack " ", Text.pack "\n"]} (Face.spell face) | Face.spell face /= Face.defaultSpell]
       bestowed = any (\k -> case k of Keyword.Type.Bestow _ -> True; _ -> False) (Map.keys (Face.keywords face))
+      attached = Continuous.attachedWord subtypes bestowed
    in Keyword.abilities self (Face.keywords face)
         <> fmap (Continuous.enchant context) (Face.enchant face)
         <> fmap (Continuous.defining context (Face.power face) (Face.toughness face)) (Maybe.maybeToList (Face.characteristicPT face))
-        <> fmap (Continuous.static context (Continuous.attachedWord subtypes bestowed) (Face.enchant face)) (Face.staticAbilities face)
+        <> fmap (Continuous.static context attached (Face.enchant face)) (Face.staticAbilities face)
         <> fmap (Continuous.replacement context) (Face.replacementEffects face)
+        <> Continuous.combatRestrictions context attached (Face.enchant face) (Face.combatRestrictions face)
+        <> fmap (Continuous.playerRule context) (Face.playerAbilities face)
         <> spell
         <> fmap (activated context) (Face.activatedAbilities face)
         <> fmap (triggered context (Set.member CardType.Creature (TypeLine.types (Face.typeLine face)))) (Face.triggeredAbilities face)
@@ -148,17 +163,16 @@ triggered context creature t
       [word <> Trigger.opening e <> gate <> Text.pack ", " <> (if named' then effect else Prose.decapitalise effect)]
   | otherwise = []
 
--- | An activated ability: "[Cost]: [Effect.]" (CR 602.1a). An ability whose
--- cost sacrifices its source calls it "it" after that (Mogg Mob). Only an
--- ability its controller activates at any time renders yet: a restriction, a
--- condition, a named or keyword ability, or a bound on X is not spelled out
--- here.
+-- | An activated ability: "[Cost]: [Effect.]" (CR 602.1a), and after it the
+-- restrictions on activating it (CR 602.5), "Activate only as a sorcery." An
+-- ability whose cost sacrifices its source calls it "it" after that (Mogg
+-- Mob). Only an ability its controller activates renders yet: a condition, a
+-- named or keyword ability, or a bound on X is not spelled out here.
 activated :: (Eq ability) => Target.Context -> ActivatedAbility.ActivatedAbility Card.Card ability -> [Text.Text]
 activated context a
   | null (ActivatedAbility.maximumX a),
     ActivatedAbility.minimumX a == 0,
     Maybe.isNothing (ActivatedAbility.definedX a),
-    null (ActivatedAbility.restrictions a),
     ActivatedAbility.activator a == Activator.Controller,
     Maybe.isNothing (ActivatedAbility.condition a),
     Maybe.isNothing (ActivatedAbility.name a),
@@ -167,5 +181,25 @@ activated context a
       let sacrificed = elem CostComponent.SacrificeThis (Cost.Type.components (ActivatedAbility.cost a))
           after = if sacrificed then context {Target.self = Text.pack "it"} else context
       effect <- Effect.modal after (ActivatedAbility.modal a)
-      [cost <> Text.pack ": " <> effect]
+      rider <- case ActivatedAbility.restrictions a of
+        [] -> [Text.empty]
+        rs -> do
+          clauses <- traverse restriction rs
+          [Text.pack " Activate only " <> Text.intercalate (Text.pack " and only ") clauses <> Text.pack "."]
+      [cost <> Text.pack ": " <> effect <> rider]
   | otherwise = []
+
+-- | One clause of "Activate only ..." (CR 602.5): "as a sorcery" (CR 307.5),
+-- "as an instant" (CR 602.5e), "once each turn" (CR 602.5b), "during your
+-- turn" (CR 102.1), "during your upkeep". Any other is not spelled out here.
+restriction :: ActivationRestriction.ActivationRestriction -> [Text.Text]
+restriction r = case r of
+  ActivationRestriction.SorcerySpeed -> [Text.pack "as a sorcery"]
+  ActivationRestriction.InstantSpeed -> [Text.pack "as an instant"]
+  ActivationRestriction.OnlyOnceEachTurn -> [Text.pack "once each turn"]
+  ActivationRestriction.OnlyOnce -> [Text.pack "once"]
+  ActivationRestriction.DuringTurn TurnScope.ControllersTurn -> [Text.pack "during your turn"]
+  ActivationRestriction.DuringTurn TurnScope.OpponentsTurn -> [Text.pack "during an opponent's turn"]
+  ActivationRestriction.DuringPhase (DuringPhase.MkDuringPhase (PhaseSelector.Step phase) scope) ->
+    fmap (Text.pack . ("during " <>)) (Trigger.step (StepBegins.MkStepBegins phase Nothing scope))
+  _ -> []

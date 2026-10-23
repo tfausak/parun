@@ -1,0 +1,15 @@
+{
+  "description": "CR 601.2f whole card: Chill makes red spells cost {2} more to cast, and no other spell",
+  "note": "Bob casts his green Llanowar Elves for its {G} alone, then his red Shock, which Chill makes cost {2}{R}: all three Mountains pay it, and none of their mana is left over.",
+  "board": {"active": "bob", "step": "PrecombatMain", "seats": [{"name": "alice", "battlefield": [{"card": "Chill", "label": "chill"}], "library": [{"card": "Island"}, {"card": "Island"}, {"card": "Island"}]}, {"name": "bob", "battlefield": [{"card": "Forest", "label": "bf"}, {"card": "Mountain", "label": "m1"}, {"card": "Mountain", "label": "m2"}, {"card": "Mountain", "label": "m3"}], "hand": [{"card": "Llanowar Elves", "label": "elves"}, {"card": "Shock", "label": "shock"}], "library": [{"card": "Island"}, {"card": "Island"}, {"card": "Island"}]}]},
+  "timeline": [
+    {"turn": 1, "step": "PrecombatMain", "player": "bob", "do": {"Cast": {"object": "$elves", "mana": ["$bf", null]}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "bob", "do": "Pass"},
+    {"turn": 1, "step": "PrecombatMain", "player": "bob", "do": {"Cast": {"object": "$shock", "targets": ["$alice"], "mana": ["$m1", "$m2", "$m3"]}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "bob", "check": {"View": {"of": "ManaPool", "player": "bob", "is": []}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "bob", "do": "Pass"},
+    {"turn": 1, "step": "PrecombatMain", "player": "bob", "check": {"Tapped": {"object": "$m3", "tapped": true}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "bob", "check": {"Life": {"player": "alice", "life": 18}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "bob", "check": {"Count": {"player": "bob", "zone": "Battlefield", "card": "Llanowar Elves", "count": 1}}}
+  ]
+}

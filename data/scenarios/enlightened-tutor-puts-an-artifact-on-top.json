@@ -1,0 +1,14 @@
+{
+  "description": "CR 701.23a / 701.24b whole card: Enlightened Tutor finds an artifact or enchantment card, reveals it, and puts it on top after the shuffle",
+  "note": "The search is not offered the Grizzly Bears, a creature; it finds the Ornithopter, which bob sees, and the shuffle is offered only the other two cards, whose answer swaps them.",
+  "board": {"active": "alice", "step": "PrecombatMain", "seats": [{"name": "alice", "battlefield": [{"card": "Plains", "label": "plains"}], "hand": [{"card": "Enlightened Tutor", "label": "tutor"}], "library": [{"card": "Grizzly Bears", "label": "bears"}, {"card": "Ornithopter", "label": "thopter"}, {"card": "Island", "label": "island"}]}, {"name": "bob", "library": [{"card": "Forest"}]}]},
+  "timeline": [
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "do": {"Cast": {"object": "$tutor", "mana": ["$plains"]}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "do": "Pass"},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "refuse": {"Answer": {"prompt": "Search", "with": ["$bears"]}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "do": {"Answer": {"prompt": "Search", "with": ["$thopter"]}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "do": {"Answer": {"prompt": "Shuffle", "with": ["$island", "$bears"]}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "check": {"View": {"of": "Witnessed", "player": "bob", "is": ["Ornithopter"]}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "check": {"View": {"of": "Zone", "player": "alice", "zone": "Library", "is": ["Ornithopter", "Island", "Grizzly Bears"]}}}
+  ]
+}

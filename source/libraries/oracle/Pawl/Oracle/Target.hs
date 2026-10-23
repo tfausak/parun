@@ -59,7 +59,11 @@ data Context = MkContext
     -- | The objects an earlier instruction of the mode has named, which a
     -- later one calls "it": "Put a +1/+1 counter on Silvar. It gains
     -- indestructible until end of turn."
-    earlier :: [ObjectRef.ObjectRef]
+    earlier :: [ObjectRef.ObjectRef],
+    -- | What the instructions call the object the source is attached to (CR
+    -- 303.4b, CR 301.5a): "enchanted creature", "equipped creature", or
+    -- nothing for a source that attaches to nothing.
+    host :: [Text.Text]
   }
 
 -- | Words that name something, with the target slots they announce (each slot
@@ -280,6 +284,7 @@ object context determiner ref = case ref of
         case (determiner, number named) of
           (Each, Filter.Plural) -> [named {wording = Text.pack "each of " <> wording named}]
           _ -> [named]
+  ObjectRef.EachMatching Filter.Type.IsHostOfSource -> fmap (\h -> MkReference h [] Filter.Singular) (host context)
   ObjectRef.EachMatching f -> do
     p <- Filter.phrase f (keyword context)
     case determiner of
