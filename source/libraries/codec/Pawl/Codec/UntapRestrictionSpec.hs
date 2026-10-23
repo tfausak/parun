@@ -6,6 +6,7 @@ import qualified Pawl.Spec as Spec
 import qualified Pawl.Types.Affected as Affected
 import qualified Pawl.Types.CardType as CardType
 import qualified Pawl.Types.Filter as Filter
+import qualified Pawl.Types.UntapHold as UntapHold
 import qualified Pawl.Types.UntapRestriction as UntapRestriction
 
 spec :: (Monad m, Monad n) => Spec.Spec m n -> n ()
@@ -25,6 +26,15 @@ spec s = Spec.describe s "Pawl.Codec.UntapRestriction" $ do
                   ]
               )
           )
+          UntapHold.Forbidden
       )
       " {\"affected\":{\"type\":\"Matching\",\"value\":{\"type\":\"And\",\"value\":[{\"type\":\"HasCardType\",\"value\":{\"type\":\"Land\"}},{\"type\":\"HasNonManaActivatedAbility\"}]}}} "
+  -- Amber Prison's "You may choose not to untap this artifact during your untap
+  -- step" (CR 502.3): the hold is written only when it is not the default.
+  Spec.it s "Elective" $
+    Common.assertCodec
+      s
+      UntapRestriction.codec
+      (UntapRestriction.MkUntapRestriction (Affected.Matching Filter.IsSource) UntapHold.Elective)
+      " {\"affected\":{\"type\":\"Matching\",\"value\":{\"type\":\"IsSource\"}},\"hold\":{\"type\":\"Elective\"}} "
   Spec.it s "has a schema" $ Common.assertHasSchema s UntapRestriction.codec

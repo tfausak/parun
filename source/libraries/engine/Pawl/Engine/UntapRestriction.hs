@@ -35,20 +35,23 @@ import qualified Pawl.Types.GameState as GameState
 import Pawl.Types.ObjectId (ObjectId)
 import qualified Pawl.Types.Prohibition as Prohibition
 import qualified Pawl.Types.RuleAbilities as RuleAbilities
+import qualified Pawl.Types.UntapHold as UntapHold
 import qualified Pawl.Types.UntapRestriction as UntapRestriction
 
--- CR 502.3 with CR 101.2: which of `candidates` an effect in force right now says
--- DOESN'T UNTAP during its controller's untap step. Tsabo's Web's second sentence
--- is one printing and Meekstone's whole text another; `untapRestrictions` in
--- data/cards is the carrier, and this answers for every card that fills it.
+-- CR 502.3 with CR 101.2: which of `candidates` an effect in force right now
+-- holds back from untapping during its controller's untap step, by `hold`:
+-- UntapHold.Forbidden is what DOESN'T UNTAP (Tsabo's Web's second sentence,
+-- Meekstone's whole text), UntapHold.Elective what its controller MAY leave
+-- tapped (Amber Prison's first sentence). `untapRestrictions` in data/cards is
+-- the carrier, and this answers for every card that fills it.
 --
 -- Pawl.Engine.SacrificeRestriction.cantBeSacrificed's body, gate for gate, and
 -- every step of its argument holds here unchanged: the same CR 305.7 and CR
 -- 613.1f ability losses are asked of the SOURCE, the same CR 612.1 word swap is
 -- applied to its affected set, and CR 613.11 is why the set is read against the
 -- FULL projection rather than a layer-bounded one.
-doesNotUntap :: [ObjectId] -> GameState -> Set ObjectId
-doesNotUntap candidates gs =
+restricted :: UntapHold.UntapHold -> [ObjectId] -> GameState -> Set ObjectId
+restricted hold candidates gs =
   let setEffs = Projection.setLandSubtypeEffects gs
       removed = Projection.abilityRemoval gs
       -- One whole-board projection and one grant walk for the whole walk, both
@@ -67,8 +70,9 @@ doesNotUntap candidates gs =
       -- Projection.grantedRuleAbilities has asked already, with no CR 612.1
       -- word swap (CR 612.3) -- CombatRestriction.gathered's reading.
       grantedRules = Projection.grantedRuleAbilities gs
-      fromGrant source = concatMap (fromRestriction source []) (RuleAbilities.untapRestrictions (grantedRules source))
-      fromPermanent source = case RuleAbilities.untapRestrictions (Projection.ruleAbilitiesOf source gs) of
+      held = filter ((== hold) . UntapRestriction.hold) . RuleAbilities.untapRestrictions
+      fromGrant source = concatMap (fromRestriction source []) (held (grantedRules source))
+      fromPermanent source = case held (Projection.ruleAbilitiesOf source gs) of
         -- Every permanent in almost every game.
         [] -> []
         restrictions ->
@@ -80,6 +84,8 @@ doesNotUntap candidates gs =
         let affected = UntapRestriction.affected restriction
          in filter (named source (if null changes then affected else Projection.rewriteAffected changes affected)) candidates
       -- CR 611.2b: a stored row is in force from the moment its window opens
-      -- (Expiry.begun) until Expiry's sweep drops it.
-      stored = RestrictedCreatures.prohibited Prohibition.Untap candidates gs
+      -- (Expiry.begun) until Expiry's sweep drops it. Every one is a "can't".
+      stored = case hold of
+        UntapHold.Forbidden -> RestrictedCreatures.prohibited Prohibition.Untap candidates gs
+        UntapHold.Elective -> Set.empty
    in stored <> Set.fromList (concatMap (\source -> fromPermanent source <> fromGrant source) (Set.toList (GameState.battlefield gs)))

@@ -676,6 +676,10 @@ data Response
   | -- | CR 700.3: the permanents a player put into one of two piles. A separate
     -- constructor from ChoseAnyNumberOfPermanents above, for ChoseTaps' reason.
     ChosePileSplit (Set.Set ObjectId.ObjectId)
+  | -- | CR 502.3: the permanents a player chose to untap of the ones they may
+    -- leave tapped. A separate constructor from ChoseAnyNumberOfPermanents
+    -- above, for ChoseTaps' reason.
+    ChoseUntaps (Set.Set ObjectId.ObjectId)
   | -- | CR 700.3: the pile a player chose, named by its members.
     ChosePile (Set.Set ObjectId.ObjectId)
   | -- | CR 701.20a: the cards a player chose to reveal from their hand as a
