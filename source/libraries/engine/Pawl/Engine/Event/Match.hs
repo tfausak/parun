@@ -5346,10 +5346,11 @@ matchesTriggerGiven bindings board gs bearer you cond event = case cond of
     GameEvent.ActivatedAbilityResolved _ -> False
     GameEvent.TriggeredAbilityResolved _ -> False
     GameEvent.CardArrived _ -> False
+  -- The arm below's match; only `batchScoped` tells the two apart.
+  TriggerCondition.PermanentBecomesTapped f -> matchesTriggerGiven bindings board gs bearer you (TriggerCondition.PermanentsBecomeTapped f) event
   -- CR 701.26a by a bystander: a permanent the filter admits became tapped,
   -- judged off CR 603.10's board just after the event. Firing once for a
   -- batch is `batchScoped` plus eventTriggers' dedup, never this arm.
-  TriggerCondition.PermanentBecomesTapped f -> matchesTriggerGiven bindings board gs bearer you (TriggerCondition.PermanentsBecomeTapped f) event
   TriggerCondition.PermanentsBecomeTapped f -> case event of
     GameEvent.BecameTapped tapped -> case Map.lookup tapped board of
       Nothing -> False
