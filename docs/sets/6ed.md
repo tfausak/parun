@@ -200,10 +200,6 @@ rather than written by hand; no Sixth Edition card's whole text is keywords, so
 Each group is tracked by its issue; its cards are added when it lands. Hardest
 first.
 
-- #5491: Zur's Weirding. A draw replacement whose outcome the other players
-  decide by paying life.
-- #5492: Amber Prison. A choice inside the untap step, which asks nobody today,
-  and a duration that ends when its source untaps.
 - #5493: Forbidden Crypt. A draw replacement that returns a graveyard card, and
   loses the game when it can't.
 - #5494: Doomsday. A search over two zones with no shuffle, then an exile of

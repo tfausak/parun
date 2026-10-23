@@ -1,10 +1,14 @@
 module Pawl.Types.UntapRestriction where
 
 import qualified Pawl.Types.Affected as Affected
+import qualified Pawl.Types.UntapHold as UntapHold
 
 -- | CR 502.3 / CR 101.2: one printed UNTAP PROHIBITION -- an effect saying a
 -- permanent "doesn't untap during its controller's untap step". Tsabo's Web's
 -- second sentence is one printing; `untapRestrictions` in data/cards is the rest.
+-- Amber Prison's "You may choose not to untap this artifact during your untap
+-- step" is the same restriction with the active player's choice holding it
+-- (UntapHold.Elective).
 --
 -- Pawl.Types.SacrificeRestriction's shape and its filing, one turn-based action
 -- over: CR 613.11 puts a continuous effect that "affects game rules rather than
@@ -19,10 +23,11 @@ import qualified Pawl.Types.Affected as Affected
 -- untap step does not perform (Effect.Untap, CR 701.26b) is a different action,
 -- which this sentence does not name and so does not touch.
 --
--- ONE field rather than a sum, for SacrificeRestriction's reason: CR 502.3 is one
--- action and a prohibition names a subject and nothing else. No "unless" gate
--- beside it either -- the pool's printing states none, and CR 502.3 writes no
--- clause into the rule the way CR 508.1c does.
+-- A record rather than a sum, for SacrificeRestriction's reason: CR 502.3 is one
+-- action, and a restriction names a subject and what holds it back -- an
+-- effect's "can't", or its controller's own choice (Pawl.Types.UntapHold). No
+-- "unless" gate beside them -- the pool's printings state none, and CR 502.3
+-- writes no clause into the rule the way CR 508.1c does.
 --
 -- Gathered LIVE from the battlefield at the untap step and never captured, the
 -- posture every sibling carrier takes: a Tsabo's Web that left lifts its
@@ -42,11 +47,13 @@ import qualified Pawl.Types.Affected as Affected
 -- Open-half card data, classified rather than identified:
 -- Pawl.Engine.UntapRestriction is the only module that may read it, and it
 -- answers a set of ids.
-newtype UntapRestriction = MkUntapRestriction
+data UntapRestriction = MkUntapRestriction
   { -- | Which permanents don't untap. An Affected, not a bare ObjectId, so the set
     -- is re-derived every untap step -- CR 613.11 lets a rule-modifying continuous
     -- effect reach objects that were not affected when it began, which is what
     -- Tsabo's Web's set does as lands enter and leave.
-    affected :: Affected.Affected
+    affected :: Affected.Affected,
+    -- | Whether an effect forbids the untap or leaves it to the active player.
+    hold :: UntapHold.UntapHold
   }
   deriving (Eq, Ord, Show)

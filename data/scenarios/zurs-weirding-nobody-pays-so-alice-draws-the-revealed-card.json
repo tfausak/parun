@@ -1,0 +1,26 @@
+{
+  "description": "CR 614.5 nobody pays, so alice draws the card Zur's Weirding revealed and is not offered again",
+  "note": "bob declines and carol, at 1 life, cannot pay 2 (CR 118.3) and is not asked. The draw then happens after all: Hill Giant goes to alice's hand, the Mountain beneath it stays in her library, and CR 614.5 keeps the replacement from asking about the same draw again, which would be an unscheduled prompt.",
+  "board": {
+    "active": "alice",
+    "turn": 2,
+    "step": "Upkeep",
+    "seats": [
+      {
+        "name": "alice",
+        "battlefield": [{ "card": "Zur's Weirding" }],
+        "library": [{ "card": "Hill Giant" }, { "card": "Mountain" }]
+      },
+      { "name": "bob", "life": 17, "library": [{ "card": "Mountain" }] },
+      { "name": "carol", "life": 1, "library": [{ "card": "Mountain" }] }
+    ]
+  },
+  "timeline": [
+    { "turn": 2, "step": "DrawStep", "player": "bob", "do": { "ChooseToPay": { "decision": { "type": "Declines" } } }, "source": "Zur's Weirding" },
+    { "turn": 2, "step": "DrawStep", "player": "alice", "check": { "Count": { "player": "alice", "zone": "Hand", "card": "Hill Giant", "count": 1 } } },
+    { "turn": 2, "step": "DrawStep", "player": "alice", "check": { "Count": { "player": "alice", "zone": "Graveyard", "card": "Hill Giant", "count": 0 } } },
+    { "turn": 2, "step": "DrawStep", "player": "alice", "check": { "Count": { "player": "alice", "zone": "Library", "card": "Mountain", "count": 1 } } },
+    { "turn": 2, "step": "DrawStep", "player": "alice", "check": { "Life": { "player": "bob", "life": 17 } } },
+    { "turn": 2, "step": "DrawStep", "player": "alice", "check": { "Life": { "player": "carol", "life": 1 } } }
+  ]
+}

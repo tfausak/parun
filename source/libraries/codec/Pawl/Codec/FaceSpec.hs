@@ -88,6 +88,7 @@ import qualified Pawl.Types.TriggerCondition as TriggerCondition
 import qualified Pawl.Types.TriggerLimit as TriggerLimit
 import qualified Pawl.Types.TriggeredAbility as TriggeredAbility
 import qualified Pawl.Types.TypeLine as TypeLine
+import qualified Pawl.Types.UntapHold as UntapHold
 import qualified Pawl.Types.UntapRestriction as UntapRestriction
 import qualified Pawl.Types.Vanguard as Vanguard
 import qualified Pawl.Types.Zone as Zone
@@ -291,7 +292,7 @@ populatedFace =
       Face.attackRequirements = [AttackRequirement.MkAttackRequirement Affected.Attached Nothing Nothing RequirementArity.EachSubject],
       Face.combatRestrictions = [CombatRestriction.CantAttack (AffectedUnless.MkAffectedUnless Affected.Attached Nothing Nothing)],
       Face.sacrificeRestrictions = [SacrificeRestriction.MkSacrificeRestriction Affected.Attached],
-      Face.untapRestrictions = [UntapRestriction.MkUntapRestriction Affected.Attached],
+      Face.untapRestrictions = [UntapRestriction.MkUntapRestriction Affected.Attached UntapHold.Forbidden],
       Face.attachRestrictions = [AttachRestriction.MkAttachRestriction Affected.Attached (Filter.HasSubtype Subtype.Aura)],
       Face.counterRestrictions = [CounterRestriction.MkCounterRestriction Affected.Attached (Just CounterKind.MinusOneMinusOne)],
       Face.activationProhibitions = [ActivationProhibition.MkActivationProhibition Affected.Attached (Just AbilityKind.NonManaAbility) Nothing],
@@ -560,7 +561,7 @@ spec s = Spec.describe s "Pawl.Codec.Face" $ do
         s
         encodeFace
         decodeFace
-        baseFace {Face.untapRestrictions = [UntapRestriction.MkUntapRestriction Affected.Attached]}
+        baseFace {Face.untapRestrictions = [UntapRestriction.MkUntapRestriction Affected.Attached UntapHold.Forbidden]}
         (init baseFaceJson <> ",\"untapRestrictions\":[{\"affected\":{\"type\":\"Attached\"}}]}")
     Spec.it s "crewRestrictions" $
       Common.assertJsonCodec

@@ -512,7 +512,8 @@ data Face card = MkFace
     sacrificeRestrictions :: [SacrificeRestriction.SacrificeRestriction],
     -- | CR 604.1/604.2 / 502.3 / 101.2: this face's printed UNTAP PROHIBITIONS --
     -- "each land with an activated ability that isn't a mana ability doesn't untap
-    -- during its controller's untap step" (Tsabo's Web); read by
+    -- during its controller's untap step" (Tsabo's Web), and the untaps its
+    -- controller may decline (Amber Prison); read by
     -- Pawl.Engine.UntapRestriction, rewritten by no layer, for
     -- blockRequirements' CR 613.11 reason.
     --

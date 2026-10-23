@@ -1243,6 +1243,7 @@ drawRewriteNames asking x = case x of
   DrawRewrite.FromOutsideTheGame fromOutsideTheGame -> fromOutsideTheGameNames asking fromOutsideTheGame
   DrawRewrite.Dredge _natural -> mempty
   DrawRewrite.YouDraw -> mempty
+  DrawRewrite.OthersMayPayLife _natural -> mempty
 
 dungeonRoomNames :: (Monoid r) => Asking r -> (card -> r) -> DungeonRoom.DungeonRoom card -> r
 dungeonRoomNames asking onCard x = case x of
@@ -3001,7 +3002,7 @@ untapRNames asking x = case x of
 
 untapRestrictionNames :: (Monoid r) => Asking r -> UntapRestriction.UntapRestriction -> r
 untapRestrictionNames asking x = case x of
-  UntapRestriction.MkUntapRestriction affected -> affectedNames asking affected
+  UntapRestriction.MkUntapRestriction affected _hold -> affectedNames asking affected
 
 untapRewriteNames :: (Monoid r) => Asking r -> UntapRewrite.UntapRewrite -> r
 untapRewriteNames asking x = case x of
