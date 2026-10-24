@@ -850,7 +850,7 @@ communeWithTheGodsSpec s registry =
 -- III --" shorthand is written as the two abilities that rule says it means, and
 -- "to the battlefield" with no controller named goes to the player the effect
 -- instructed (CR 110.2a) -- here each player over their own graveyard, which is
--- the card's owner (CR 400.3) and what the underOwner rider states.
+-- the card's owner (CR 400.3) and what the `under` rider's Owner states.
 --
 -- THREE SEATS, each with THREE land cards and a creature card buried: the count
 -- is two, so every seat has a real choice (an offer equal to the count would

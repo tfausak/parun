@@ -1,0 +1,157 @@
+{
+  "faces": [
+    {
+      "manaCost": [
+        {
+          "type": "Generic",
+          "value": 4
+        },
+        {
+          "type": "OfType",
+          "value": {
+            "type": "Colored",
+            "value": {
+              "type": "Red"
+            }
+          }
+        },
+        {
+          "type": "OfType",
+          "value": {
+            "type": "Colored",
+            "value": {
+              "type": "Red"
+            }
+          }
+        },
+        {
+          "type": "OfType",
+          "value": {
+            "type": "Colored",
+            "value": {
+              "type": "Red"
+            }
+          }
+        }
+      ],
+      "name": "Thieves' Auction",
+      "oracleText": "Exile all nontoken permanents. Starting with you, each player chooses one of the exiled cards and puts it onto the battlefield tapped under their control. Repeat this process until all cards exiled this way have been chosen.",
+      "spell": {
+        "modes": [
+          {
+            "clauses": [
+              {
+                "effects": [
+                  {
+                    "type": "MoveToZone",
+                    "value": {
+                      "ref": {
+                        "type": "EachMatching",
+                        "value": {
+                          "type": "Not",
+                          "value": {
+                            "type": "IsToken"
+                          }
+                        }
+                      },
+                      "slot": "exiled",
+                      "zone": {
+                        "type": "Exile"
+                      }
+                    }
+                  },
+                  {
+                    "type": "RepeatIf",
+                    "value": {
+                      "condition": {
+                        "type": "Compares",
+                        "value": {
+                          "comparison": {
+                            "type": "AtLeast"
+                          },
+                          "measured": {
+                            "type": "BoundCount",
+                            "value": "chosen"
+                          },
+                          "threshold": {
+                            "type": "Literal",
+                            "value": 1
+                          }
+                        }
+                      },
+                      "ifHolds": [],
+                      "process": [
+                        {
+                          "type": "ForEach",
+                          "value": {
+                            "body": [
+                              {
+                                "type": "MoveToZone",
+                                "value": {
+                                  "ref": {
+                                    "type": "ChosenCardFromAmong",
+                                    "value": {
+                                      "chooser": {
+                                        "type": "InSlot",
+                                        "value": "chooser"
+                                      },
+                                      "filter": {
+                                        "type": "IsInZone",
+                                        "value": {
+                                          "type": "Exile"
+                                        }
+                                      },
+                                      "slot": "exiled"
+                                    }
+                                  },
+                                  "riders": {
+                                    "tapped": {
+                                      "type": "Tapped"
+                                    },
+                                    "under": {
+                                      "type": "Instructed",
+                                      "value": {
+                                        "type": "InSlot",
+                                        "value": "chooser"
+                                      }
+                                    }
+                                  },
+                                  "slot": "chosen",
+                                  "zone": {
+                                    "type": "Battlefield"
+                                  }
+                                }
+                              }
+                            ],
+                            "individually": true,
+                            "ref": {
+                              "type": "EachPlayer"
+                            },
+                            "slot": "chooser",
+                            "startingWith": {
+                              "type": "Relative",
+                              "value": {
+                                "type": "You"
+                              }
+                            }
+                          }
+                        }
+                      ]
+                    }
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      },
+      "typeLine": {
+        "types": [
+          {
+            "type": "Sorcery"
+          }
+        ]
+      }
+    }
+  ]
+}

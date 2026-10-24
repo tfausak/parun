@@ -224,6 +224,7 @@ import qualified Pawl.Types.EndTurnSignal as EndTurnSignal
 import qualified Pawl.Types.EndingStep as EndingStep
 import qualified Pawl.Types.EntryAttack as EntryAttack
 import qualified Pawl.Types.EntryBlock as EntryBlock
+import qualified Pawl.Types.EntryController as EntryController
 import qualified Pawl.Types.EntryRiders as EntryRiders
 import qualified Pawl.Types.ExchangeBlocks as ExchangeBlocks
 import qualified Pawl.Types.ExchangeCardZones as ExchangeCardZones
@@ -1366,10 +1367,14 @@ objectRefRecipients legal resolving controller source gs ref = case ref of
 --
 -- A recipient the board no longer holds has no controller and sorts last, which
 -- is reachable rather than defensive (CR 400.7); two such share that bucket.
-forEachOrder :: ObjectId -> (Maybe PlayerId -> Maybe PlayerId) -> [Recipient] -> Game [Recipient]
-forEachOrder resolving chooserFor recipients = do
+--
+-- The seats' order is CR 101.4's APNAP order unless `start` names the seat a
+-- card says to start with (Thieves' Auction's "starting with you"), and then it
+-- is turn order from that seat.
+forEachOrder :: ObjectId -> Maybe PlayerId -> (Maybe PlayerId -> Maybe PlayerId) -> [Recipient] -> Game [Recipient]
+forEachOrder resolving start chooserFor recipients = do
   gs <- State.get
-  let order = Game.apnapOrder gs
+  let order = maybe (Game.apnapOrder gs) (`Game.turnOrderFrom` gs) start
       last_ = length order
       seatOf = recipientSeat gs
       rank recipient = maybe last_ (\pid -> Maybe.fromMaybe last_ (List.elemIndex pid order)) (seatOf recipient)
@@ -5557,8 +5562,8 @@ applyOneEffect runSubgame resolving source controller legal chosen effect = case
         -- member of a batch entering the battlefield. A card whose ZoneChangeR
         -- watched the battlefield and could match a member of such a batch would
         -- separate them.
-        moveOne mAttack mBlocked frozen before (sofar, acc) (target, (position, above)) = do
-          mNew <- Event.changeZoneEnteringIn (Just before) sofar source target zone position frozen (Just controller)
+        moveOne mover mAttack mBlocked frozen before (sofar, acc) (target, (position, above)) = do
+          mNew <- Event.changeZoneEnteringIn (Just before) sofar source target zone position frozen (Just mover)
           -- CR 614.6: the move was cancelled, or the id was already gone (CR
           -- 603.7c). Nothing entered, so there is nothing to bind.
           Monad.forM_ mNew $ \newId -> do
@@ -5720,6 +5725,16 @@ applyOneEffect runSubgame resolving source controller legal chosen effect = case
             -- CR 508.4's rider, read ONCE off the same pre-move board for
             -- mBlocked's reason.
             let mAttack = entryAttack legal resolving entry before
+                -- CR 110.2a: the player the effect instructs to put the objects
+                -- there, and so who they enter under -- the resolving controller
+                -- unless the rider names another (Endless Whispers' "that
+                -- player", Thieves' Auction's loop member). Read once, off the
+                -- pre-move board. A reference naming no one player instructs
+                -- nobody, so nothing moves (CR 101.3). EntryController.Owner hands
+                -- every member to its owner in the funnel instead.
+                instructed = case EntryRiders.under entry of
+                  EntryController.Instructed who -> oneSeat legal resolving source controller before who
+                  EntryController.Owner -> Just controller
             -- ONE event, which is what Event.simultaneously stamps on everything the
             -- fold records: CR 608.2f processes an action taken on multiple objects
             -- simultaneously, and one opcode is one such action however many objects
@@ -5756,20 +5771,21 @@ applyOneEffect runSubgame resolving source controller legal chosen effect = case
             -- LIBRARY, which CR 108.3 makes the owner's, so a manifest out of
             -- another player's library or out of exile (Ghastly Conscription) stays
             -- one event.
-            arrived <-
-              if oneAtATime
-                then fmap concat . Monad.forM arrivals $ \arrival -> do
-                  now <- State.get
-                  let riders = freezeRiders (effectViewOf source legal now) (chooseContext now) now resolving source entry
-                  fmap (reverse . snd) (Event.simultaneously (moveOne mAttack mBlocked riders now (Set.empty, []) arrival))
-                else do
-                  batch <- fmap (reverse . snd) (Event.simultaneously (Event.amongPending (if EntryRiders.underOwner frozen then Nothing else Just controller) (fmap fst arrivals) (Monad.foldM (moveOne mAttack mBlocked frozen before) (Set.empty, []) arrivals)))
-                  -- CR 613.7m: the members that entered the battlefield together
-                  -- take their stamps in APNAP order, each seat choosing its own.
-                  -- Not on the one-at-a-time road above, whose cards enter at
-                  -- separate moments.
-                  Restamp.settle (GameState.nextTimestamp before) (concatMap Foldable.toList batch)
-                  pure batch
+            arrived <- case instructed of
+              Nothing -> pure []
+              Just mover
+                | oneAtATime -> fmap concat . Monad.forM arrivals $ \arrival -> do
+                    now <- State.get
+                    let riders = freezeRiders (effectViewOf source legal now) (chooseContext now) now resolving source entry
+                    fmap (reverse . snd) (Event.simultaneously (moveOne mover mAttack mBlocked riders now (Set.empty, []) arrival))
+                | otherwise -> do
+                    batch <- fmap (reverse . snd) (Event.simultaneously (Event.amongPending (if EntryRiders.under frozen == EntryController.Owner then Nothing else Just mover) (fmap fst arrivals) (Monad.foldM (moveOne mover mAttack mBlocked frozen before) (Set.empty, []) arrivals)))
+                    -- CR 613.7m: the members that entered the battlefield together
+                    -- take their stamps in APNAP order, each seat choosing its own.
+                    -- Not on the one-at-a-time road above, whose cards enter at
+                    -- separate moments.
+                    Restamp.settle (GameState.nextTimestamp before) (concatMap Foldable.toList batch)
+                    pure batch
             -- CR 400.7j: what arrived, for a later effect of this resolution or a
             -- delayed ability it arms (CR 603.7c).
             bindObjects resolving mSlot (concatMap Foldable.toList arrived)
@@ -6159,7 +6175,7 @@ applyOneEffect runSubgame resolving source controller legal chosen effect = case
             { GameState.objects =
                 foldr (Map.adjust heal) (GameState.objects gs) (objectRefObjects legal resolving controller source gs ref)
             }
-  Effect.ForEach (ForEach.MkForEach ref membership slot body individually gate) -> do
+  Effect.ForEach (ForEach.MkForEach ref membership slot body individually gate startingWith) -> do
     gs0 <- State.get
     -- CR 608.2f: WHICH members, swept ONCE from the pre-loop board and then fixed,
     -- so the body can neither shorten the batch nor add to it. Recipients rather
@@ -6179,7 +6195,7 @@ applyOneEffect runSubgame resolving source controller legal chosen effect = case
         | otherwise -> do
             answer <- Game.choose (Prompt.ChooseLoopMembers (Decide.deciderFor controller gs0) controller resolving swept)
             pure (filter (`Set.member` answer) swept)
-    ordered <- forEachOrder resolving (const (Just controller)) picked
+    ordered <- forEachOrder resolving (startingWith >>= oneSeat legal resolving source controller gs0) (const (Just controller)) picked
     -- CR 118.12a per member: every offer is made before the first body runs.
     members <- maybe (pure ordered) (loopOffers runSubgame resolving source controller slot legal ordered) gate
     let -- The slots the BODY defines, computed off the instruction rather than the
@@ -6347,14 +6363,20 @@ applyOneEffect runSubgame resolving source controller legal chosen effect = case
   --
   -- Pawl.PlaneswalkerSpec's GristLoyalty group proves the run count.
   Effect.RepeatIf (RepeatIf.MkRepeatIf process condition ifHolds) -> do
-    rescope <- State.gets (rescopeRun resolving (foldMap boundSlots (process <> ifHolds)))
-    let apply = applyLoopBody runSubgame resolving source controller legal chosen (foldMap boundSlots (process <> ifHolds))
+    let bound = foldMap boundSlots (process <> ifHolds)
+    rescope <- State.gets (rescopeRun resolving bound)
+    let apply = applyLoopBody runSubgame resolving source controller legal chosen bound
         run = do
           State.modify' rescope
           apply process
           gs <- State.get
-          let context = effectContext gs resolving controller source legal (slotBindings resolving gs)
-          Monad.when (Condition.holds (effectViewOf source legal gs) context gs source condition) $ do
+          -- The ONE object a run's instruction bound sits in its binding's
+          -- `targets`, which effectContext reads only through the map it is
+          -- handed, so the run's own names join it here, as Effect.ForEach's
+          -- `defined` does for its body: Thieves' Auction's "chosen".
+          let seen = Map.union legal (Map.restrictKeys (Binding.targetsOf (slotBindings resolving gs)) bound)
+              context = effectContext gs resolving controller source seen (slotBindings resolving gs)
+          Monad.when (Condition.holds (effectViewOf source seen gs) context gs source condition) $ do
             apply ifHolds
             run
     run
@@ -6690,7 +6712,7 @@ applyOneEffect runSubgame resolving source controller legal chosen effect = case
     -- names one rule up. The seat comes from recipientSeat, which reads
     -- Projection.controllerWithLastKnown, so it agrees with exploreOne about a
     -- permanent that has left (CR 701.44c).
-    ordered <- forEachOrder resolving id (objectRefRecipients legal resolving controller source gs ref)
+    ordered <- forEachOrder resolving Nothing id (objectRefRecipients legal resolving controller source gs ref)
     Monad.mapM_ (exploreOne resolving) (Maybe.mapMaybe Recipient.objectOf ordered)
   Effect.Connive (Connive.Type.MkConnive quantity ref) -> do
     gs <- State.get
@@ -6698,7 +6720,7 @@ applyOneEffect runSubgame resolving source controller legal chosen effect = case
         context = effectContext gs resolving controller source legal (slotBindings resolving gs)
     -- Explore's sweep and order, CR 701.50c stating CR 701.44d's rule over again,
     -- its seats read through last known information by CR 701.50b.
-    ordered <- forEachOrder resolving id (objectRefRecipients legal resolving controller source gs ref)
+    ordered <- forEachOrder resolving Nothing id (objectRefRecipients legal resolving controller source gs ref)
     -- CR 701.50d's N, read ONCE as this instruction is reached (CR 608.2c):
     -- Raffine, Scheming Seer's "the number of attacking creatures" cannot move
     -- because an earlier conniver in the same instruction drew and discarded.

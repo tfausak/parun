@@ -124,7 +124,7 @@ returnName = AbilityName.MkAbilityName (Text.pack "earthbend")
 -- condition matched is the battlefield permanent, which no longer exists, while
 -- `became` is the card in the graveyard or in exile that the return has to move.
 --
--- EntryRiders.underOwner is False, which is CR 110.2a read literally: rule
+-- EntryRiders.under is its default, the instructed player, which is CR 110.2a read literally: rule
 -- 701.66a states otherwise -- "under your control" -- and "you" is the delayed
 -- ability's controller (CR 603.7d), the player who earthbent.
 returnAbility :: TriggeredAbility Card (GrantedAbility.GrantedAbility Card)

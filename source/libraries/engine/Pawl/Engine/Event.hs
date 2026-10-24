@@ -143,6 +143,7 @@ import qualified Pawl.Types.Duration as Duration
 import qualified Pawl.Types.Effect as Effect.Type
 import qualified Pawl.Types.EnteringTogether as EnteringTogether
 import qualified Pawl.Types.EntersWith as EntersWith
+import qualified Pawl.Types.EntryController as EntryController
 import qualified Pawl.Types.EntryFlip as EntryFlip
 import qualified Pawl.Types.EntryPrice as EntryPrice
 import qualified Pawl.Types.EntryR as EntryR
@@ -6187,7 +6188,7 @@ changeZoneEnteringIn asOf batch source oid requestedDest position riders under =
       -- being the answer and CR 110.2's default -- the owner, which is what
       -- `Nothing` means to the funnel -- takes over. Undying and persist are what
       -- print it (CR 702.93a, CR 702.79a).
-      under2 = if EntryRiders.underOwner riders then Nothing else under
+      under2 = if EntryRiders.under riders == EntryController.Owner then Nothing else under
       -- CR 708.3: "objects that are put onto the battlefield face down are
       -- turned face down BEFORE they enter the battlefield". Handed to the
       -- funnel rather than written after it for the tap state's reason, and the
@@ -8838,7 +8839,7 @@ sacrificeIn asOf victims = simultaneously $ do
 -- battlefield with -- CR 701.53a's incubate -- and it is passed beside `tapped`
 -- rather than as a whole EntryRiders for the reason changeZoneAttaching keeps them
 -- apart too: the record's other riders are answered elsewhere or are inert here
--- (CR 111.2 for `underOwner`, CR 508.4 for `attacking`, CR 712.14a's card-only
+-- (CR 111.2 for `under`, CR 508.4 for `attacking`, CR 712.14a's card-only
 -- scope for `transformed`), and handing this funnel the record would read as
 -- though it applied them.
 --

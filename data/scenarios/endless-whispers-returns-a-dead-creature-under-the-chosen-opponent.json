@@ -1,0 +1,19 @@
+{
+  "description": "CR 110.2a / 603.7 whole card: under Endless Whispers, alice's Grizzly Bears dies, she targets carol, and at the beginning of the next end step carol puts the card onto the battlefield under her own control",
+  "note": "Three seats, so the target is a real choice between two opponents and carol is not the first offered. The returned Bears is alice's card under carol's control.",
+  "board": {"active": "alice", "step": "PrecombatMain", "seats": [
+    {"name": "alice", "battlefield": [{"card": "Endless Whispers", "label": "whispers"}, {"card": "Grizzly Bears", "label": "bears"}, {"card": "Mountain", "label": "mountain"}], "hand": [{"card": "Lightning Bolt", "label": "bolt"}], "library": [{"card": "Mountain"}, {"card": "Mountain"}, {"card": "Mountain"}]},
+    {"name": "bob", "library": [{"card": "Forest"}, {"card": "Forest"}, {"card": "Forest"}]},
+    {"name": "carol", "library": [{"card": "Island"}, {"card": "Island"}, {"card": "Island"}]}
+  ]},
+  "timeline": [
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "do": {"Cast": {"object": "$bolt", "targets": ["$bears"], "mana": ["$mountain"]}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "do": "Pass"},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "do": {"ChooseTargets": {"target": ["$carol"]}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "do": "Pass"},
+    {"turn": 1, "step": "PostcombatMain", "player": "alice", "check": {"Count": {"player": "alice", "zone": "Graveyard", "card": "Grizzly Bears", "count": 1}}},
+    {"turn": 2, "step": "Upkeep", "player": "bob", "check": {"Count": {"player": "carol", "zone": "Battlefield", "card": "Grizzly Bears", "count": 1}}},
+    {"turn": 2, "step": "Upkeep", "player": "bob", "check": {"Count": {"player": "alice", "zone": "Battlefield", "card": "Grizzly Bears", "count": 0}}},
+    {"turn": 2, "step": "Upkeep", "player": "bob", "check": {"Count": {"player": "alice", "zone": "Graveyard", "card": "Grizzly Bears", "count": 0}}}
+  ]
+}

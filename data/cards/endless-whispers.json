@@ -1,0 +1,151 @@
+{
+  "faces": [
+    {
+      "manaCost": [
+        {
+          "type": "Generic",
+          "value": 2
+        },
+        {
+          "type": "OfType",
+          "value": {
+            "type": "Colored",
+            "value": {
+              "type": "Black"
+            }
+          }
+        },
+        {
+          "type": "OfType",
+          "value": {
+            "type": "Colored",
+            "value": {
+              "type": "Black"
+            }
+          }
+        }
+      ],
+      "name": "Endless Whispers",
+      "oracleText": "Each creature has \"When this creature dies, choose target opponent. That player puts this card from its owner's graveyard onto the battlefield under their control at the beginning of the next end step.\"",
+      "staticAbilities": [
+        {
+          "affected": {
+            "type": "Matching",
+            "value": {
+              "type": "HasCardType",
+              "value": {
+                "type": "Creature"
+              }
+            }
+          },
+          "modifications": [
+            {
+              "type": "GainAbility",
+              "value": {
+                "type": "Triggered",
+                "value": {
+                  "condition": {
+                    "type": "SelfDies"
+                  },
+                  "modal": {
+                    "modes": [
+                      {
+                        "clauses": [
+                          {
+                            "effects": [
+                              {
+                                "type": "ArmDelayedTrigger",
+                                "value": {
+                                  "ability": {
+                                    "type": "Triggered",
+                                    "value": {
+                                      "condition": {
+                                        "type": "StepBegins",
+                                        "value": {
+                                          "phase": {
+                                            "type": "Ending",
+                                            "value": {
+                                              "type": "EndStep"
+                                            }
+                                          },
+                                          "scope": {
+                                            "type": "EachTurn"
+                                          }
+                                        }
+                                      },
+                                      "modal": {
+                                        "modes": [
+                                          {
+                                            "clauses": [
+                                              {
+                                                "effects": [
+                                                  {
+                                                    "type": "MoveToZone",
+                                                    "value": {
+                                                      "origin": {
+                                                        "type": "Graveyard"
+                                                      },
+                                                      "ref": {
+                                                        "type": "InSlot",
+                                                        "value": "became"
+                                                      },
+                                                      "riders": {
+                                                        "under": {
+                                                          "type": "Instructed",
+                                                          "value": {
+                                                            "type": "InSlot",
+                                                            "value": "target"
+                                                          }
+                                                        }
+                                                      },
+                                                      "zone": {
+                                                        "type": "Battlefield"
+                                                      }
+                                                    }
+                                                  }
+                                                ]
+                                              }
+                                            ]
+                                          }
+                                        ]
+                                      }
+                                    }
+                                  },
+                                  "name": "return this card"
+                                }
+                              }
+                            ]
+                          }
+                        ],
+                        "targetSlots": {
+                          "target": {
+                            "filter": {
+                              "type": "IsPlayer",
+                              "value": {
+                                "type": "Opponent"
+                              }
+                            },
+                            "pool": {
+                              "type": "Players"
+                            }
+                          }
+                        }
+                      }
+                    ]
+                  }
+                }
+              }
+            }
+          ]
+        }
+      ],
+      "typeLine": {
+        "types": [
+          {
+            "type": "Enchantment"
+          }
+        ]
+      }
+    }
+  ]
+}
