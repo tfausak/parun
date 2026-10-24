@@ -1,12 +1,12 @@
 module Pawl.Codec.Filter where
 
 import qualified Data.Typeable as Typeable
-import qualified Numeric.Natural as Natural
 import qualified Pawl.Codec.AbilityKind as AbilityKind
 import qualified Pawl.Codec.BlockStatus as BlockStatus
 import qualified Pawl.Codec.CardName as CardName
 import qualified Pawl.Codec.CardType as CardType
 import qualified Pawl.Codec.Color as Color
+import qualified Pawl.Codec.ControlMargin as ControlMargin
 import qualified Pawl.Codec.CounterKind as CounterKind
 import qualified Pawl.Codec.DealtDamageTo as DealtDamageTo
 import qualified Pawl.Codec.Designation as Designation
@@ -31,6 +31,7 @@ import qualified Pawl.JsonCodec.Arm as Arm
 import qualified Pawl.JsonCodec.Codec as Codec
 import qualified Pawl.JsonCodec.Common as Common
 import qualified Pawl.JsonCodec.Fields as Fields
+import qualified Pawl.Types.ControlMargin as ControlMargin
 import qualified Pawl.Types.Filter as Filter
 
 -- | Recursive, mirroring Quantity's toJson/fromJson: And/Or carry their
@@ -76,7 +77,7 @@ codec keywordCodec =
       Arm.nullary "OwnedByRecipient" Filter.OwnedByRecipient,
       Arm.payload "IsPlayer" PlayerRelation.codec Filter.IsPlayer (\x -> case x of Filter.IsPlayer y -> Just y; _ -> Nothing),
       Arm.payload "IsControllerOfBound" SlotName.codec Filter.IsControllerOfBound (\x -> case x of Filter.IsControllerOfBound y -> Just y; _ -> Nothing),
-      Arm.payload "ControlsMoreThanYou" (controlsMoreThanYou keywordCodec) (uncurry Filter.ControlsMoreThanYou) (\x -> case x of Filter.ControlsMoreThanYou n y -> Just (n, y); _ -> Nothing),
+      Arm.payload "Controls" (controls keywordCodec) (uncurry Filter.Controls) (\x -> case x of Filter.Controls n y -> Just (n, y); _ -> Nothing),
       -- Natural rather than Common.integer above, so a negative literal is
       -- rejected at decode instead of decoding into a vacuously true filter: a
       -- zone holds no negative number of cards.
@@ -85,7 +86,7 @@ codec keywordCodec =
       Arm.payload "IsObject" ObjectId.codec Filter.IsObject (\x -> case x of Filter.IsObject y -> Just y; _ -> Nothing),
       Arm.nullary "TargetsSource" Filter.TargetsSource,
       Arm.nullary "HasSingleTarget" Filter.HasSingleTarget,
-      -- Recursive for ControlsMoreThanYou's reason: the payload describes the one
+      -- Recursive for Controls' reason: the payload describes the one
       -- TARGET, and a card author writes it exactly as they write any other filter.
       Arm.payload "TargetsOnlyOne" (codec keywordCodec) Filter.TargetsOnlyOne (\x -> case x of Filter.TargetsOnlyOne y -> Just y; _ -> Nothing),
       Arm.payload "TargetsMatching" (codec keywordCodec) Filter.TargetsMatching (\x -> case x of Filter.TargetsMatching y -> Just y; _ -> Nothing),
@@ -123,7 +124,7 @@ codec keywordCodec =
       Arm.payload "DealtDamageToThisTurn" DealtDamageTo.codec Filter.DealtDamageToThisTurn (\x -> case x of Filter.DealtDamageToThisTurn y -> Just y; _ -> Nothing),
       Arm.nullary "EnteredThisTurn" Filter.EnteredThisTurn,
       Arm.nullary "ControlledSinceTurnBegan" Filter.ControlledSinceTurnBegan,
-      -- Recursive for ControlsMoreThanYou's reason: the payload describes the
+      -- Recursive for Controls' reason: the payload describes the
       -- HOST, and a card author writes it exactly as they write any other filter.
       Arm.payload "AttachedTo" (codec keywordCodec) Filter.AttachedTo (\x -> case x of Filter.AttachedTo y -> Just y; _ -> Nothing),
       -- Recursive for the arm above's reason, the payload describing the ATTACHER
@@ -176,11 +177,11 @@ codec keywordCodec =
 -- | CR 110.2's comparison keyed by name: the margin, and the filter
 -- describing the permanents being counted -- recursive like Not, and for the
 -- atom's own reason rather than the combinator's.
-controlsMoreThanYou :: (Typeable.Typeable keyword, Eq keyword) => Codec.Codec keyword -> Codec.Codec (Natural.Natural, Filter.Filter keyword)
-controlsMoreThanYou keywordCodec =
+controls :: (Typeable.Typeable keyword, Eq keyword) => Codec.Codec keyword -> Codec.Codec (ControlMargin.ControlMargin, Filter.Filter keyword)
+controls keywordCodec =
   Fields.object $
     (,)
-      <$> Fields.required "margin" Common.natural fst
+      <$> Fields.required "margin" ControlMargin.codec fst
       <*> Fields.required "filter" (codec keywordCodec) snd
 
 tagOf :: Filter.Filter keyword -> String
@@ -206,7 +207,7 @@ tagOf x = case x of
   Filter.OwnedByRecipient {} -> "OwnedByRecipient"
   Filter.IsPlayer {} -> "IsPlayer"
   Filter.IsControllerOfBound {} -> "IsControllerOfBound"
-  Filter.ControlsMoreThanYou {} -> "ControlsMoreThanYou"
+  Filter.Controls {} -> "Controls"
   Filter.CardsInGraveyardAtLeast {} -> "CardsInGraveyardAtLeast"
   Filter.IsSource {} -> "IsSource"
   Filter.IsObject {} -> "IsObject"

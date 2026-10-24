@@ -344,6 +344,8 @@ library codec
     Pawl.Codec.ChosenCardInHand
     Pawl.Codec.ChosenCardInHandSpec
     Pawl.Codec.ChosenPermanents
+    Pawl.Codec.ChosenQuality
+    Pawl.Codec.ChosenQualitySpec
     Pawl.Codec.ClassLevel
     Pawl.Codec.ClassLevelChange
     Pawl.Codec.ClassLevelChangeSpec
@@ -400,6 +402,8 @@ library codec
     Pawl.Codec.ControllerBecomesTargetSpec
     Pawl.Codec.ControllerRelation
     Pawl.Codec.ControllerRelationSpec
+    Pawl.Codec.ControlMargin
+    Pawl.Codec.ControlMarginSpec
     Pawl.Codec.ControlPlayer
     Pawl.Codec.ControlPlayerSpec
     Pawl.Codec.ControlSides
@@ -1113,6 +1117,8 @@ library codec
     Pawl.Codec.PlayerSpec
     Pawl.Codec.PlayerStaticAbility
     Pawl.Codec.PlayerStaticAbilitySpec
+    Pawl.Codec.PlayersWho
+    Pawl.Codec.PlayersWhoSpec
     Pawl.Codec.PlayerView
     Pawl.Codec.PlayerViewSpec
     Pawl.Codec.PlayPermissionOrigin
@@ -2379,6 +2385,7 @@ library types
     Pawl.Types.ChosenCardInGraveyard
     Pawl.Types.ChosenCardInHand
     Pawl.Types.ChosenPermanents
+    Pawl.Types.ChosenQuality
     Pawl.Types.Claim
     Pawl.Types.ClaimAxis
     Pawl.Types.ClassLevel
@@ -2413,6 +2420,7 @@ library types
     Pawl.Types.ControlDuration
     Pawl.Types.ControllerBecomesTarget
     Pawl.Types.ControllerRelation
+    Pawl.Types.ControlMargin
     Pawl.Types.ControlPlayer
     Pawl.Types.ControlSides
     Pawl.Types.ControlSlots
@@ -2820,6 +2828,7 @@ library types
     Pawl.Types.PlayerScope
     Pawl.Types.PlayersDealtDamage
     Pawl.Types.PlayerStaticAbility
+    Pawl.Types.PlayersWho
     Pawl.Types.PlayerView
     Pawl.Types.PlayOptions
     Pawl.Types.PlayPermissionOrigin

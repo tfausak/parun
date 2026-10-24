@@ -53,6 +53,7 @@ import qualified Pawl.Types.CantBlockCreatures as CantBlockCreatures
 import qualified Pawl.Types.Card as Card.Type
 import qualified Pawl.Types.CardType as CardType
 import qualified Pawl.Types.ChooseCardName as ChooseCardName
+import qualified Pawl.Types.ChosenQuality as ChosenQuality
 import qualified Pawl.Types.Clause as Clause
 import qualified Pawl.Types.CombatRestriction as CombatRestriction
 import qualified Pawl.Types.Compares as Compares
@@ -215,7 +216,7 @@ filterAtomsOf leaf predicate = case predicate of
   -- A Filter position like the combinators above, and the only ATOM that is one:
   -- CR 110.2's comparison carries the description of what is being counted, which
   -- a card author writes exactly as they write any other filter.
-  Filter.Type.ControlsMoreThanYou _ f -> filterAtomsOf leaf f
+  Filter.Type.Controls _ f -> filterAtomsOf leaf f
   -- CR 702.29e's "[type]cycling" carries a Filter of its own, and any Cost a
   -- keyword names can carry one through a Sacrifice component. Never EVALUATED
   -- against a candidate -- HasKeyword asks whether the key is present in the
@@ -855,11 +856,17 @@ hasChosenSubtypeTag = Text.pack "HasChosenSubtype"
 -- A SPELL's own positions are moved to the second number although they are
 -- admitted: the context reads the answer off the source, and a spell is never
 -- the object CR 614.1c's "as this enters" choice was made for, nor attached to
--- anything, so the atom there would be a silent False.
-chosenValueCounts :: (Framing -> Bool) -> Text.Text -> Face.Face Card.Type.Card -> (Int, Int)
-chosenValueCounts admitted tag card =
+-- anything, so the atom there would be a silent False. The exception is a
+-- spell whose own resolution makes the `quality` choice (Effect.ChooseQuality,
+-- Persecute): its resolution's filters read it, though its target slots,
+-- chosen before it resolves (CR 601.2c), still cannot.
+chosenValueCounts :: (Framing -> Bool) -> Maybe ChosenQuality.ChosenQuality -> Text.Text -> Face.Face Card.Type.Card -> (Int, Int)
+chosenValueCounts admitted quality tag card =
   let total keep pairs = sum (fmap (\(_, f) -> filterAtoms tag f) (filter (keep . fst) pairs))
-      inSpell = total admitted (modalFilters (Face.spell card))
+      spellPairs = modalFilters (Face.spell card)
+      chooses = any (\q -> any (elem (Effect.ChooseQuality q) . Mode.allEffects) (Modal.modes (Face.spell card))) quality
+      answered framing = chooses && admitted framing && framing /= InTargetSlot
+      inSpell = total admitted spellPairs - total answered spellPairs
    in (total admitted (cardFilters card) - inSpell, total (not . admitted) (cardFilters card) + inSpell)
 
 -- CR 105.2's chosen colour is answerable only where Filter.Context.sourceChosenColors
@@ -869,7 +876,7 @@ chosenValueCounts admitted tag card =
 -- (Throne of Eldraine). Everywhere else it is a silent False.
 hasChosenColorCounts :: Face.Face Card.Type.Card -> (Int, Int)
 hasChosenColorCounts card =
-  let (framed, elsewhere) = chosenValueCounts (\framing -> framing == ManaRestrictionFramed || sourceFramed framing) hasChosenColorTag card
+  let (framed, elsewhere) = chosenValueCounts (\framing -> framing == ManaRestrictionFramed || sourceFramed framing) (Just ChosenQuality.Color) hasChosenColorTag card
       granted = grantedChosenColors card
    in (framed + granted, elsewhere - granted)
 
@@ -891,7 +898,7 @@ grantedChosenColors card =
 -- which Pawl.Engine.Mana.admitsUnder answers off the mana unit (Pillar of
 -- Origins). The colour has no such reading, so the two lists differ.
 hasChosenSubtypeCounts :: Face.Face Card.Type.Card -> (Int, Int)
-hasChosenSubtypeCounts = chosenValueCounts (\framing -> framing == ManaRestrictionFramed || sourceFramed framing) hasChosenSubtypeTag
+hasChosenSubtypeCounts = chosenValueCounts (\framing -> framing == ManaRestrictionFramed || sourceFramed framing) (Just ChosenQuality.BasicLandType) hasChosenSubtypeTag
 
 -- CR 607.2a's last-exiled atom, spelled once: IsLastExiledWithSource's tag.
 isLastExiledWithSourceTag :: Text.Text
@@ -901,7 +908,7 @@ isLastExiledWithSourceTag = Text.pack "IsLastExiledWithSource"
 -- Pawl.Engine.Mana.admitsUnder fills Filter.Context.sourceLastExiled off the
 -- mana unit (Ice Cauldron); everywhere else it is a silent False.
 isLastExiledWithSourceCounts :: Face.Face Card.Type.Card -> (Int, Int)
-isLastExiledWithSourceCounts = chosenValueCounts (== ManaRestrictionFramed) isLastExiledWithSourceTag
+isLastExiledWithSourceCounts = chosenValueCounts (== ManaRestrictionFramed) Nothing isLastExiledWithSourceTag
 
 -- Two offences under one name, hasChosenNameOffends' two: an atom outside the
 -- admitted positions, or the traversal and the codec disagreeing about how many
@@ -1129,7 +1136,7 @@ hostOfSourceTag = Text.pack "IsHostOfSource"
 -- own positions count as elsewhere, chosenValueCounts' rule: a spell is attached
 -- to nothing.
 hostOfSourceCounts :: Face.Face Card.Type.Card -> (Int, Int)
-hostOfSourceCounts = chosenValueCounts hostFramed hostOfSourceTag
+hostOfSourceCounts = chosenValueCounts hostFramed Nothing hostOfSourceTag
 
 -- The source-framed positions the host atom is admitted in: narrower than
 -- `sourceFramed`, and the four a card in the pool writes it in. Not
@@ -3466,7 +3473,8 @@ filterPositionLintSpec s registry = Spec.describe s "Lint" $ do
         ("Pillar of Origins", hasChosenSubtypeCounts, "a mana restriction", (1, 0)),
         ("Throne of Eldraine", hasChosenColorCounts, "a mana restriction", (1, 0)),
         ("Kindred Discovery", hasChosenSubtypeCounts, "two trigger conditions", (2, 0)),
-        ("Brass Herald", hasChosenSubtypeCounts, "an affected set and a resolution's own filter", (2, 0))
+        ("Brass Herald", hasChosenSubtypeCounts, "an affected set and a resolution's own filter", (2, 0)),
+        ("Persecute", hasChosenColorCounts, "a spell's own hand sweep after its own choice", (1, 0))
       ]
       $ \(name, counts, position, expected) -> do
         printing <- S.printingOf s registry name
@@ -3499,8 +3507,9 @@ filterPositionLintSpec s registry = Spec.describe s "Lint" $ do
           [ ("a spell's target slot", base {Face.spell = spellOf [] (aimed f)}),
             ("a spell's own filter", base {Face.spell = spellOf [Effect.Destroy (Destroy.MkDestroy (ObjectRef.EachMatching f) Regenerability.Regenerable Nothing Nothing Nothing)] Map.empty})
           ]
-        accepted f =
+        accepted quality f =
           [ ("a static ability's affected set", affecting f),
+            ("a spell's own filter after its own choice", base {Face.spell = spellOf [Effect.ChooseQuality quality, Effect.Destroy (Destroy.MkDestroy (ObjectRef.EachMatching f) Regenerability.Regenerable Nothing Nothing Nothing)] Map.empty}),
             ("an activated ability's target slot", withAbility (\a -> a {ActivatedAbility.modal = spellOf [] (aimed f)})),
             ("an activated ability's sacrifice cost", withAbility (\a -> a {ActivatedAbility.cost = (ActivatedAbility.cost a) {Cost.Type.components = [CostComponent.Sacrifice (Sacrifice.MkSacrifice (CostAmount.Fixed 1) f)]}})),
             ("CR 603.6a's trigger condition", base {Face.triggeredAbilities = [oneEffectTrigger (TriggerCondition.PermanentEnters f) draw]}),
@@ -3511,10 +3520,10 @@ filterPositionLintSpec s registry = Spec.describe s "Lint" $ do
           ]
         draw = Effect.Draw (Draw.MkDraw (PlayerRef.InSlot Binding.you) (Quantity.Type.Literal 1) Nothing)
     Monad.forM_
-      [ (Filter.Type.HasChosenColor, hasChosenColorCounts, hasChosenColorTag),
-        (Filter.Type.HasChosenSubtype, hasChosenSubtypeCounts, hasChosenSubtypeTag)
+      [ (Filter.Type.HasChosenColor, ChosenQuality.Color, hasChosenColorCounts, hasChosenColorTag),
+        (Filter.Type.HasChosenSubtype, ChosenQuality.BasicLandType, hasChosenSubtypeCounts, hasChosenSubtypeTag)
       ]
-      $ \(atom, counts, tag) -> do
+      $ \(atom, quality, counts, tag) -> do
         let buried = Filter.Type.And [Filter.Type.Or [Filter.Type.HasCardType CardType.Creature, Filter.Type.Not atom]]
             report (label, card) = (label, chosenValueOffends counts tag card, counts card)
         Spec.assertEqWith
@@ -3525,13 +3534,13 @@ filterPositionLintSpec s registry = Spec.describe s "Lint" $ do
         Spec.assertEqWith
           s
           "and every position that can is accepted"
-          (fmap report (accepted buried))
-          (fmap (\(label, _) -> (label, False, (1, 0))) (accepted buried))
+          (fmap report (accepted quality buried))
+          (fmap (\(label, _) -> (label, False, (1, 0))) (accepted quality buried))
         Spec.assertEqWith
           s
           "and the codec counts exactly the atoms the traversal does"
-          (fmap (\(_, card) -> jsonAtoms tag (Codec.encode (Face.Codec.codec Card.codec) card)) (rejected buried <> accepted buried))
-          (fmap (const 1) (rejected buried <> accepted buried))
+          (fmap (\(_, card) -> jsonAtoms tag (Codec.encode (Face.Codec.codec Card.codec) card)) (rejected buried <> accepted quality buried))
+          (fmap (const 1) (rejected buried <> accepted quality buried))
 
   -- CR 607.2a's last exiled card: answerable in a mana restriction alone. Ice
   -- Cauldron is accepted rather than skipped, and the same atom moved into an

@@ -38,8 +38,10 @@
                               "ref": {
                                 "type": "Players",
                                 "value": {
-                                  "type": "ControllerOfBound",
-                                  "value": "thatDepartedPermanent"
+                                  "players": {
+                                    "type": "ControllerOfBound",
+                                    "value": "thatDepartedPermanent"
+                                  }
                                 }
                               }
                             }

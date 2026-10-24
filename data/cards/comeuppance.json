@@ -72,8 +72,10 @@
                                       "ref": {
                                         "type": "Players",
                                         "value": {
-                                          "type": "ControllerOfBound",
-                                          "value": "noncreatureSource"
+                                          "players": {
+                                            "type": "ControllerOfBound",
+                                            "value": "noncreatureSource"
+                                          }
                                         }
                                       }
                                     }

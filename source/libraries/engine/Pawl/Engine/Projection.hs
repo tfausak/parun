@@ -1583,7 +1583,7 @@ freezeQuantities viewOf gs announcedOn source context m =
         Modification.LoseKeywordFamily _ -> Just m
         Modification.SetLandSubtype _ -> Just m
         -- CR 608.2h: the type the source holds as this resolves is locked in, so
-        -- the source's next choice (Effect.ChooseBasicLandType) reaches no
+        -- the source's next choice (Effect.ChooseQuality) reaches no
         -- effect already stored. Nothing for a source that chose none. Proved
         -- by data/scenarios/'s Mystic Compass scenario, which Disenchants the
         -- Compass after it resolves.
@@ -3749,7 +3749,7 @@ filterReads f = case f of
   Filter.Type.IsControllerOfBound _ -> Set.empty
   -- Over-declared deliberately, as CanHostSubject is: the atom reads every
   -- permanent's controller plus whatever its nest reads of each.
-  Filter.Type.ControlsMoreThanYou _ g -> Set.insert Controller (filterReads g)
+  Filter.Type.Controls _ g -> Set.insert Controller (filterReads g)
   -- Reads a ZONE's size, which is no object's characteristic (CR 109.3) and no
   -- Modification writes; every zone change happens between projections.
   Filter.Type.CardsInGraveyardAtLeast _ -> Set.empty
@@ -3993,7 +3993,7 @@ filterReadsPeers f = case f of
   -- False outright, Pawl.Engine.Count.bakePerspective having settled it between
   -- projections, so the nest is not read here at all. Descending only costs the
   -- re-ask.
-  Filter.Type.ControlsMoreThanYou _ g -> filterReadsPeers g
+  Filter.Type.Controls _ g -> filterReadsPeers g
   -- DESCENT for the atom above's reason, and where filterReads deliberately does
   -- not descend: CR 708.12's nest is matched against viewOfCard, which takes no
   -- `peers` and no board at all.

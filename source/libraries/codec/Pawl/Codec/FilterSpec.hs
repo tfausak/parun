@@ -13,6 +13,7 @@ import qualified Pawl.Types.CardName as CardName
 import qualified Pawl.Types.CardType as CardType
 import qualified Pawl.Types.Color as Color
 import qualified Pawl.Types.Comparison as Comparison
+import qualified Pawl.Types.ControlMargin as ControlMargin
 import qualified Pawl.Types.CounterKind as CounterKind
 import qualified Pawl.Types.DamagedParty as DamagedParty
 import qualified Pawl.Types.DealtDamageTo as DealtDamageTo
@@ -190,12 +191,12 @@ spec s = Spec.describe s "Pawl.Codec.Filter" $ do
       " {\"type\":\"IsControllerOfBound\",\"value\":\"permanent\"} "
   -- Nested, unlike every atom above: the payload carries a whole Filter beside
   -- the margin, so this pins the recursion and both keys as well as the tag.
-  Spec.it s "ControlsMoreThanYou" $
+  Spec.it s "Controls" $
     Common.assertCodec
       s
       codec
-      (Filter.ControlsMoreThanYou 2 (Filter.HasCardType CardType.Land))
-      " {\"type\":\"ControlsMoreThanYou\",\"value\":{\"filter\":{\"type\":\"HasCardType\",\"value\":{\"type\":\"Land\"}},\"margin\":2}} "
+      (Filter.Controls (ControlMargin.MoreThanYou 2) (Filter.HasCardType CardType.Land))
+      " {\"type\":\"Controls\",\"value\":{\"filter\":{\"type\":\"HasCardType\",\"value\":{\"type\":\"Land\"}},\"margin\":{\"type\":\"MoreThanYou\",\"value\":2}}} "
   Spec.it s "CardsInGraveyardAtLeast" $
     Common.assertCodec
       s
@@ -782,7 +783,7 @@ spec s = Spec.describe s "Pawl.Codec.Filter" $ do
               Filter.AttachedTo (Filter.And [Filter.HasCardType CardType.Creature, Filter.ControlledBy PlayerRelation.You])
             ]
         auraGraftDestination = Filter.CanHostSubject
-        oreskosExplorer = Filter.ControlsMoreThanYou 1 (Filter.HasCardType CardType.Land)
+        oreskosExplorer = Filter.Controls (ControlMargin.MoreThanYou 1) (Filter.HasCardType CardType.Land)
         roundTrip f v = Spec.assertEqWith s "preserved" (Codec.decode codec (Codec.encode codec f)) (Right v)
      in mapM_
           (\f -> roundTrip f f)

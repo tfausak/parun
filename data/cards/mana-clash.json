@@ -1,0 +1,154 @@
+{
+  "faces": [
+    {
+      "manaCost": [
+        {
+          "type": "OfType",
+          "value": {
+            "type": "Colored",
+            "value": {
+              "type": "Red"
+            }
+          }
+        }
+      ],
+      "name": "Mana Clash",
+      "oracleText": "You and target opponent each flip a coin. Mana Clash deals 1 damage to each player whose coin comes up tails. Repeat this process until both players' coins come up heads on the same flip.",
+      "spell": {
+        "modes": [
+          {
+            "clauses": [
+              {
+                "effects": [
+                  {
+                    "type": "RepeatIf",
+                    "value": {
+                      "condition": {
+                        "type": "Any",
+                        "value": [
+                          {
+                            "type": "Compares",
+                            "value": {
+                              "comparison": {
+                                "type": "AtLeast"
+                              },
+                              "measured": {
+                                "type": "InSlot",
+                                "value": "yourTails"
+                              },
+                              "threshold": {
+                                "type": "Literal",
+                                "value": 1
+                              }
+                            }
+                          },
+                          {
+                            "type": "Compares",
+                            "value": {
+                              "comparison": {
+                                "type": "AtLeast"
+                              },
+                              "measured": {
+                                "type": "InSlot",
+                                "value": "theirTails"
+                              },
+                              "threshold": {
+                                "type": "Literal",
+                                "value": 1
+                              }
+                            }
+                          }
+                        ]
+                      },
+                      "ifHolds": [],
+                      "process": [
+                        {
+                          "type": "FlipCoin",
+                          "value": {
+                            "misses": "yourTails",
+                            "reading": {
+                              "type": "Heads"
+                            },
+                            "slot": "yourHeads"
+                          }
+                        },
+                        {
+                          "type": "FlipCoin",
+                          "value": {
+                            "flipper": {
+                              "type": "InSlot",
+                              "value": "target"
+                            },
+                            "misses": "theirTails",
+                            "reading": {
+                              "type": "Heads"
+                            },
+                            "slot": "theirHeads"
+                          }
+                        },
+                        {
+                          "type": "DealDamage",
+                          "value": {
+                            "parts": [
+                              {
+                                "quantity": {
+                                  "type": "InSlot",
+                                  "value": "yourTails"
+                                },
+                                "ref": {
+                                  "type": "Players",
+                                  "value": {
+                                    "players": {
+                                      "type": "Relative",
+                                      "value": {
+                                        "type": "You"
+                                      }
+                                    }
+                                  }
+                                }
+                              },
+                              {
+                                "quantity": {
+                                  "type": "InSlot",
+                                  "value": "theirTails"
+                                },
+                                "ref": {
+                                  "type": "InSlot",
+                                  "value": "target"
+                                }
+                              }
+                            ]
+                          }
+                        }
+                      ]
+                    }
+                  }
+                ]
+              }
+            ],
+            "targetSlots": {
+              "target": {
+                "filter": {
+                  "type": "IsPlayer",
+                  "value": {
+                    "type": "Opponent"
+                  }
+                },
+                "pool": {
+                  "type": "Players"
+                }
+              }
+            }
+          }
+        ]
+      },
+      "typeLine": {
+        "types": [
+          {
+            "type": "Sorcery"
+          }
+        ]
+      }
+    }
+  ]
+}

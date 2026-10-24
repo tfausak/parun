@@ -13,6 +13,7 @@ import qualified Pawl.Codec.Filter as Filter
 import qualified Pawl.Codec.FromAnywhere as FromAnywhere
 import qualified Pawl.Codec.Keyword as Keyword
 import qualified Pawl.Codec.PlayerRef as PlayerRef
+import qualified Pawl.Codec.PlayersWho as PlayersWho
 import qualified Pawl.Codec.RandomCardInGraveyard as RandomCardInGraveyard
 import qualified Pawl.Codec.RandomCardInHand as RandomCardInHand
 import qualified Pawl.Codec.RandomCardInLibrary as RandomCardInLibrary
@@ -37,7 +38,7 @@ import qualified Pawl.Types.ObjectRef as ObjectRef
 --
 -- 'EachCardInGraveyard', 'EachCardInHand', 'EachCardInExiledPile', 'TopOfLibrary', 'TopOfLibraryUntil', 'ChosenCardInGraveyard',
 -- 'ChosenCardInHand', 'ChosenCardFromAmong', 'EachCardFromAmong', 'RandomCardInHand', 'RandomCardInGraveyard', 'RandomCardInLibrary',
--- 'FromAnywhere' and 'ChosenPermanents' each carry a payload record of their own (#1464), so no arm here writes a
+-- 'FromAnywhere', 'ChosenPermanents' and 'Players' each carry a payload record of their own (#1464), so no arm here writes a
 -- positional array.
 --
 -- 'EachCardInYourLibrary' takes an OPTIONAL payload: the bare tag is the whole
@@ -66,13 +67,10 @@ codec =
           Arm.nullary "EachPlayer" ObjectRef.EachPlayer,
           Arm.nullary "EachOpponent" ObjectRef.EachOpponent,
           Arm.nullary "ChosenPlayer" ObjectRef.ChosenPlayer,
-          -- The second arm carrying a bare 'Pawl.Codec.PlayerRef', beside
-          -- 'TopOfGraveyard' below: an indirection to a seat is the whole of what a
-          -- card writes here, so there is no payload record to make.
-          Arm.payload "Players" PlayerRef.codec ObjectRef.Players (\x -> case x of ObjectRef.Players y -> Just y; _ -> Nothing),
+          Arm.payload "Players" PlayersWho.codec ObjectRef.Players (\x -> case x of ObjectRef.Players y -> Just y; _ -> Nothing),
           Arm.payload "TopOfLibrary" TopOfLibrary.codec ObjectRef.TopOfLibrary (\x -> case x of ObjectRef.TopOfLibrary y -> Just y; _ -> Nothing),
           Arm.payload "TopOfLibraryUntil" TopOfLibraryUntil.codec ObjectRef.TopOfLibraryUntil (\x -> case x of ObjectRef.TopOfLibraryUntil y -> Just y; _ -> Nothing),
-          -- CR 404.1's own end of the pile, and the one position arm carrying a bare
+          -- CR 404.1's own end of the pile, and the one arm carrying a bare
           -- 'Pawl.Codec.PlayerRef' rather than a payload record: with no depth and no
           -- filter to state, the seat is the whole of what a card writes.
           Arm.payload "TopOfGraveyard" PlayerRef.codec ObjectRef.TopOfGraveyard (\x -> case x of ObjectRef.TopOfGraveyard y -> Just y; _ -> Nothing),

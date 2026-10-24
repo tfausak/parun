@@ -37,6 +37,7 @@ import qualified Pawl.Engine.Combat as Combat
 import qualified Pawl.Engine.Condition as Condition
 import qualified Pawl.Engine.Contraption as Contraption
 import qualified Pawl.Engine.Cost as Cost
+import qualified Pawl.Engine.Count as Count
 import qualified Pawl.Engine.CounterRestriction as CounterRestriction
 import qualified Pawl.Engine.Damage as Damage
 import qualified Pawl.Engine.Daytime as Daytime
@@ -155,6 +156,7 @@ import qualified Pawl.Types.ChosenCardFromAmong as ChosenCardFromAmong
 import qualified Pawl.Types.ChosenCardInGraveyard as ChosenCardInGraveyard
 import qualified Pawl.Types.ChosenCardInHand as ChosenCardInHand
 import qualified Pawl.Types.ChosenPermanents as ChosenPermanents
+import qualified Pawl.Types.ChosenQuality as ChosenQuality
 import qualified Pawl.Types.ClassLevel as ClassLevel
 import qualified Pawl.Types.ClassLevelChange as ClassLevelChange
 import qualified Pawl.Types.Clause as Clause
@@ -162,6 +164,7 @@ import Pawl.Types.ClauseIndex (ClauseIndex)
 import qualified Pawl.Types.ClauseIndex as ClauseIndex
 import qualified Pawl.Types.CoinFace as CoinFace
 import qualified Pawl.Types.CoinReading as CoinReading
+import qualified Pawl.Types.Color as Color
 import qualified Pawl.Types.Comparison as Comparison
 import qualified Pawl.Types.Conjure as Conjure
 import qualified Pawl.Types.ConjureCards as ConjureCards
@@ -346,6 +349,7 @@ import Pawl.Types.PlayerRef (PlayerRef)
 import qualified Pawl.Types.PlayerRef as PlayerRef
 import qualified Pawl.Types.PlayerRelation as PlayerRelation
 import qualified Pawl.Types.PlayerSacrifices as PlayerSacrifices
+import qualified Pawl.Types.PlayersWho as PlayersWho
 import qualified Pawl.Types.Power as Power
 import qualified Pawl.Types.PreventAllDamage as PreventAllDamage
 import qualified Pawl.Types.PreventNextDamage as PreventNextDamage
@@ -1310,8 +1314,15 @@ objectRefRecipients legal resolving controller source gs ref = case ref of
   ObjectRef.ChosenPlayer -> fmap Recipient.ToPlayer (apnapPlayersOf (PlayerRef.ChosenPlayerOfBound Binding.triggerSource PlayerChoice.AsEnters) legal resolving source controller gs)
   -- CR 120.3a, at whatever width the reference has: the seats a PlayerRef names,
   -- which for Deflecting Palm's ControllerOfBound is CR 108.4's controller of the
-  -- object a slot holds, read through CR 608.2h's last known information.
-  ObjectRef.Players playerRef -> fmap Recipient.ToPlayer (apnapPlayersOf playerRef legal resolving source controller gs)
+  -- object a slot holds, read through CR 608.2h's last known information. The
+  -- player Filter narrows them as the sweep beside it is read, as the effect
+  -- executes (CR 608.2c): Disorder's "each player who controls a white
+  -- creature", proved by the scenario
+  -- cr-608-2c-disorder-deals-damage-to-each-player-who-controls-a-white-creature.
+  ObjectRef.Players (PlayersWho.MkPlayersWho playerRef who) ->
+    let context = effectContext gs resolving controller source legal (slotBindings resolving gs)
+        kept pid = all (\f -> Count.playerMatches (effectViewOf source legal gs) context gs f pid) who
+     in fmap Recipient.ToPlayer (filter kept (apnapPlayersOf playerRef legal resolving source controller gs))
   -- No recipients: the answer needs the chooser asked, which askingObjects does.
   ObjectRef.ChosenCardInGraveyard {} -> []
   ObjectRef.ChosenCardInHand {} -> []
@@ -3728,7 +3739,7 @@ effectIsImpossible resolving source controller legal gs effect = case effect of
   Effect.Reroll -> False
   Effect.RerollStoredResults _ -> False
   Effect.ChooseCardName {} -> False
-  Effect.ChooseBasicLandType -> False
+  Effect.ChooseQuality _ -> False
   Effect.Bolster {} -> False
   Effect.Amass {} -> False
   Effect.Blight {} -> False
@@ -5147,15 +5158,15 @@ applyOneEffect runSubgame resolving source controller legal chosen effect = case
   -- Pawl.Types.CoinFace has exactly two constructors, so every answer is in
   -- range.
   --
-  -- The flipper is `controller`, CR 109.5's "you" on a resolving object, and CR
-  -- 705.2's last sentence keeps everyone else out of it -- so the PlayerId on
-  -- the call is the same seat and no opponent is ever asked.
+  -- The flippers are the seats `flipper` names in APNAP order (CR 101.4) --
+  -- `controller`, CR 109.5's "you", for every printing but Mana Clash's target
+  -- opponent -- and CR 705.2's last sentence keeps everyone else out of each
+  -- flip, so each flipper calls their own coin. The tallies sum over them.
   --
   -- CR 705.1's flip is also the event TriggerCondition's PlayerWinsCoinFlip and
   -- PlayerLosesCoinFlip watch (Tavern Scoundrel, Karplusan Minotaur), recorded
-  -- under `controller`: the instruction is aimed at a player, Pawl.Types.FlipCoin
-  -- names none of its own, and CR 705.2's last sentence keeps every other seat
-  -- out of it. EVERY coin is recorded, won or lost -- Pawl.Types.CoinFlipped
+  -- under the flipper: the instruction is aimed at that player, and CR 705.2's
+  -- last sentence keeps every other seat out of it. EVERY coin is recorded, won or lost -- Pawl.Types.CoinFlipped
   -- says why the outcome is a field rather than the presence of an entry -- and
   -- one entry per coin, since the event is the log of flips rather than of
   -- instructions.
@@ -5188,11 +5199,15 @@ applyOneEffect runSubgame resolving source controller legal chosen effect = case
         -- instruction named. CR 107.2's posture for a quantity that cannot be
         -- evaluated: no coins at all.
         coins = Integer.toNaturalSaturating (Maybe.fromMaybe 0 (Quantity.evaluateFor viewOf context gs resolving source (FlipCoin.count flipCoin)))
-    -- CR 705.3's statements, read once for the whole instruction rather than per
-    -- coin -- Pawl.Engine.Coin.statementsFor says why Edgar's "the first time you
-    -- flip one or more coins each turn" makes that the difference.
-    statements <- Coin.statementsFor (Just controller)
-    let flipOnce acc _ = do
+        flippers = apnapPlayersOf (FlipCoin.flipper flipCoin) legal resolving source controller gs
+    -- CR 705.3's statements, read once per flipper for the whole instruction
+    -- rather than per coin -- Pawl.Engine.Coin.statementsFor says why Edgar's
+    -- "the first time you flip one or more coins each turn" makes that the
+    -- difference.
+    let flipsOf flipper = do
+          statements <- Coin.statementsFor (Just flipper)
+          Foldable.foldlM (flipOnce flipper statements) (0 :: Natural) [1 .. coins]
+        flipOnce flipper statements acc _ = do
           hit <- case FlipCoin.reading flipCoin of
             -- CR 705.2's win/lose flip, whole: the call, the flip, the
             -- comparison and the CR 705.1 event all belong to
@@ -5200,7 +5215,7 @@ applyOneEffect runSubgame resolving source controller legal chosen effect = case
             -- That module's haddock argues the order of the two questions, and
             -- Pawl.CoinSpec's "only the flipping player calls" proves it by what
             -- the engine ASKED rather than by anything the board shows.
-            CoinReading.Wins -> Event.flipWinLoseCoin (Just (throwForCoin runSubgame)) controller statements
+            CoinReading.Wins -> Event.flipWinLoseCoin (Just (throwForCoin runSubgame)) flipper statements
             -- CR 705.2's first sentence: the effect cares only about the face, so
             -- no Prompt.CallCoin is asked -- "no player wins or loses a coin flip
             -- for this kind of effect", so there is no call to make and nothing
@@ -5218,12 +5233,12 @@ applyOneEffect runSubgame resolving source controller legal chosen effect = case
             -- flipped a coin for that d20, the coin is called
             -- (Event.settleCoins).
             CoinReading.Heads -> do
-              (face, _) <- Event.flipOneCoin (Just (throwForCoin runSubgame)) (Just controller) Nothing statements
+              (face, _) <- Event.flipOneCoin (Just (throwForCoin runSubgame)) (Just flipper) Nothing statements
               pure (face == Just CoinFace.Heads)
           pure (if hit then acc + 1 else acc)
     -- Bound AFTER every coin, since CR 705.2 asks how many of the flips matched
     -- and one instruction's flips are all of them.
-    tally <- Foldable.foldlM flipOnce (0 :: Natural) [1 .. coins]
+    tally <- sum <$> traverse flipsOf flippers
     State.modify' (bindAmountSlot resolving source (FlipCoin.slot flipCoin) tally)
     -- The flips that did NOT match, off the same coins. WHICH sentence of CR
     -- 705.2 that is depends on the reading: for a win/lose flip it is
@@ -5234,7 +5249,7 @@ applyOneEffect runSubgame resolving source controller legal chosen effect = case
     -- count. Pawl.CoinSpec's Mutalith Vortex Beast group proves a lost flip
     -- reaches the loser and a won one does not.
     Foldable.for_ (FlipCoin.misses flipCoin) $ \misses ->
-      State.modify' (bindAmountSlot resolving source misses (coins - tally))
+      State.modify' (bindAmountSlot resolving source misses (coins * List.genericLength flippers - tally))
   Effect.ControlPlayerNextTurn slot ->
     State.modify' $ \gs ->
       case legalOne slot legal of
@@ -9344,10 +9359,25 @@ applyOneEffect runSubgame resolving source controller legal chosen effect = case
   -- next instruction's freeze (Projection.freezeQuantities' arm for
   -- Modification.SetLandSubtypeToChosen), so a later activation's choice
   -- rewrites the field without reaching an effect already stored.
-  Effect.ChooseBasicLandType -> do
+  -- CR 608.2d: the choice is the resolving controller's, written to the source
+  -- under the acquisition its reader asks for (CR 607.5). On a spell the source
+  -- is the resolving object itself, so a later instruction of the same
+  -- resolution reads it through Pawl.Engine.SourceContext -- Persecute's
+  -- "cards of that color", proved by the scenario
+  -- cr-608-2d-persecute-discards-the-cards-of-the-color-chosen-as-it-resolves.
+  -- Every one of CR 105.1's colours and CR 305.6's types is always legal and
+  -- distinguishable, so there is no one-option case to elide.
+  Effect.ChooseQuality quality -> do
     gs <- State.get
-    picked <- Game.choose (Prompt.ChooseBasicLandType (Decide.deciderFor controller gs) controller source)
-    State.modify' (Game.recordChoice Chosen.Subtype (Game.readingAcquisition resolving source gs source) (const (Just picked)) source)
+    let acquisition = Game.readingAcquisition resolving source gs source
+    case quality of
+      ChosenQuality.BasicLandType -> do
+        picked <- Game.choose (Prompt.ChooseBasicLandType (Decide.deciderFor controller gs) controller source)
+        State.modify' (Game.recordChoice Chosen.Subtype acquisition (const (Just picked)) source)
+      ChosenQuality.Color -> do
+        picked <- Game.chooseAmong (\decider who -> Prompt.ChooseColor decider who source) controller [minBound .. maxBound :: Color.Color]
+        Foldable.for_ picked $ \color ->
+          State.modify' (Game.recordChoice Chosen.Colors acquisition (const (Just (Set.singleton color))) source)
   -- CR 400.11c: the resolving controller reveals a card they own from outside the
   -- game matching the filter and puts it into their hand -- Burning Wish.
   --

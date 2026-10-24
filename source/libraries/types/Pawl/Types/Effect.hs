@@ -21,6 +21,7 @@ import qualified Pawl.Types.ChooseNumber as ChooseNumber
 import qualified Pawl.Types.ChoosePermanents as ChoosePermanents
 import qualified Pawl.Types.ChoosePlayer as ChoosePlayer
 import qualified Pawl.Types.ChoosePlayerAtRandom as ChoosePlayerAtRandom
+import qualified Pawl.Types.ChosenQuality as ChosenQuality
 import qualified Pawl.Types.Conjure as Conjure
 import qualified Pawl.Types.Connive as Connive
 import qualified Pawl.Types.ControlPlayer as ControlPlayer
@@ -687,9 +688,10 @@ data Effect card ability
     -- Pawl.Interpreter.policingCardNames is what judges the answer, the engine
     -- being unable to resolve a name at all.
     ChooseCardName ChooseCardName.ChooseCardName
-  | -- | CR 608.2d / 305.6: the resolving controller chooses a basic land type,
-    -- written to the source's Object.chosenSubtype (Mystic Compass).
-    ChooseBasicLandType
+  | -- | CR 608.2d: the resolving controller chooses a colour or a basic land
+    -- type, written to the source's Object.chosenColors or Object.chosenSubtype
+    -- (Persecute, Mystic Compass).
+    ChooseQuality ChosenQuality.ChosenQuality
   | -- | CR 701.39a: "bolster N" -- choose a creature the resolving controller
     -- controls with the least toughness, or tied for least, then put that many
     -- +1\/+1 counters on it. Choose, not target.

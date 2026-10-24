@@ -1,0 +1,41 @@
+{
+  "description": "CR 612.2 a Disorder whose \"white\" Sleight of Mind made \"green\" burns each player who controls a green creature",
+  "note": "bob answers alice's Disorder with Sleight of Mind, swapping white for green in both of its colour words. The spell then deals 2 to alice's Grizzly Bears and to alice, who controls them, and none to bob or his white Savannah Lions.",
+  "board": {
+    "active": "alice",
+    "step": "PrecombatMain",
+    "seats": [
+      {
+        "name": "alice",
+        "battlefield": [
+          { "card": "Mountain", "label": "m0", "ready": true },
+          { "card": "Mountain", "label": "m1", "ready": true },
+          { "card": "Grizzly Bears", "label": "bears", "ready": true }
+        ],
+        "hand": [{ "card": "Disorder", "label": "disorder" }]
+      },
+      {
+        "name": "bob",
+        "battlefield": [
+          { "card": "Island", "label": "island", "ready": true },
+          { "card": "Savannah Lions", "label": "lions", "ready": true }
+        ],
+        "hand": [{ "card": "Sleight of Mind", "label": "sleight" }]
+      }
+    ]
+  },
+  "timeline": [
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "do": { "Cast": { "object": "$disorder", "mana": ["$m0", "$m1"] } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "do": "Pass" },
+    { "turn": 1, "step": "PrecombatMain", "player": "bob", "do": { "Cast": { "object": "$sleight", "targets": ["Disorder"], "mana": ["$island"] } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "bob", "do": "Pass" },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "do": "Pass" },
+    { "turn": 1, "step": "PrecombatMain", "player": "bob", "source": "Sleight of Mind", "do": { "ChooseWordSwap": { "from": { "type": "White" }, "to": { "type": "Green" } } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "do": "Pass" },
+    { "turn": 1, "step": "PrecombatMain", "player": "bob", "do": "Pass" },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "check": { "Life": { "player": "alice", "life": 18 } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "check": { "Life": { "player": "bob", "life": 20 } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "check": { "Count": { "player": "alice", "zone": "Graveyard", "card": "Grizzly Bears", "count": 1 } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "check": { "Count": { "player": "bob", "zone": "Battlefield", "card": "Savannah Lions", "count": 1 } } }
+  ]
+}

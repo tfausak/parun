@@ -1,0 +1,33 @@
+{
+  "description": "CR 502.3 / 101.2 Static Orb lets alice untap only the two permanents she picks",
+  "note": "Alice's two Islands and her Hill Giant start tapped and the Orb untapped, so her turn 2 untap step offers all three and she picks the second Island and the Giant. The first Island stays tapped. The answer is not the default, which takes the first two offered. On turn 4 the first Island is the only tapped permanent, which the cap allows, so nothing is asked (an unscheduled prompt would fail the scenario) and it untaps. The scenario with the Orb tapped is the negative.",
+  "board": {
+    "seats": [
+      {
+        "name": "alice",
+        "battlefield": [
+          { "card": "Static Orb", "label": "orb" },
+          { "card": "Island", "label": "island-1", "tapped": true },
+          { "card": "Island", "label": "island-2", "tapped": true },
+          { "card": "Hill Giant", "label": "giant", "tapped": true, "ready": true }
+        ],
+        "library": [{ "card": "Island" }, { "card": "Island" }]
+      },
+      {
+        "name": "bob",
+        "library": [{ "card": "Mountain" }, { "card": "Mountain" }]
+      }
+    ],
+    "active": "bob",
+    "step": "EndStep"
+  },
+  "timeline": [
+    { "turn": 2, "step": "Untap", "player": "alice", "do": { "Answer": { "prompt": "ChooseAnyNumberToUntap", "with": ["$island-2", "$giant"] } } },
+    { "turn": 2, "step": "Upkeep", "player": "alice", "check": { "Tapped": { "object": "$island-1", "tapped": true } } },
+    { "turn": 2, "step": "Upkeep", "player": "alice", "check": { "Tapped": { "object": "$island-2", "tapped": false } } },
+    { "turn": 2, "step": "Upkeep", "player": "alice", "check": { "Tapped": { "object": "$giant", "tapped": false } } },
+    { "turn": 2, "step": "Upkeep", "player": "alice", "check": { "Tapped": { "object": "$orb", "tapped": false } } },
+    { "turn": 2, "step": "DeclareAttackers", "player": "alice", "do": { "Attack": [] } },
+    { "turn": 4, "step": "Upkeep", "player": "alice", "check": { "Tapped": { "object": "$island-1", "tapped": false } } }
+  ]
+}

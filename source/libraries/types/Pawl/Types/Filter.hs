@@ -6,6 +6,7 @@ import qualified Pawl.Types.BlockStatus as BlockStatus
 import qualified Pawl.Types.CardName as CardName
 import qualified Pawl.Types.CardType as CardType
 import qualified Pawl.Types.Color as Color
+import qualified Pawl.Types.ControlMargin as ControlMargin
 import qualified Pawl.Types.CounterKind as CounterKind
 import qualified Pawl.Types.DealtDamageTo as DealtDamageTo
 import qualified Pawl.Types.Designation as Designation
@@ -242,14 +243,14 @@ data Filter keyword
     -- Pawl.Engine.Count.bakePerspective, and vacuously False outside a
     -- Scope.OverPlayers count's filter.
     IsControllerOfBound SlotName.SlotName
-  | -- | CR 110.2: the candidate PLAYER controls at least this many more
-    -- permanents matching the filter than the perspective player does (CR 109.5)
-    -- -- Oreskos Explorer's "more lands than you" at 1, Surveyor's Scope's "at
-    -- least two more lands than you" at 2. Answered by rewriting at
-    -- Pawl.Engine.Count.bakePerspective, and vacuously False outside a
-    -- Scope.OverPlayers count's filter. A margin of at least 1 is what lets a
-    -- card ask it of every player.
-    ControlsMoreThanYou Natural.Natural (Filter keyword)
+  | -- | CR 110.2: the candidate PLAYER controls at least the margin's number of
+    -- permanents matching the filter, outright (Disorder's "each player who
+    -- controls a white creature") or beyond the perspective player's count (CR
+    -- 109.5; Oreskos Explorer's "more lands than you", Surveyor's Scope's "at
+    -- least two more"). Answered by rewriting at
+    -- Pawl.Engine.Count.bakePerspective, and vacuously False where no player
+    -- filter is baked.
+    Controls ControlMargin.ControlMargin (Filter keyword)
   | -- | CR 400.1: the candidate PLAYER's own graveyard holds at least this many
     -- cards -- The Master of Lake-town's "each graveyard with seven or more cards
     -- in it". A player atom like the two above, answered by
@@ -395,7 +396,7 @@ data Filter keyword
     -- all (CR 303.4b), and narrowed to attachers on the battlefield.
     --
     -- CR 303.4b's other enchantable is a PLAYER candidate: vacuously False where
-    -- this reaches a match unbaked, ControlsMoreThanYou's posture, since a bare
+    -- this reaches a match unbaked, Controls' posture, since a bare
     -- player View holds no board to find the attachers on. Answered by rewriting
     -- at Pawl.Engine.Count.bakePerspective.
     HasAttached (Filter keyword)

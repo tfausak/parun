@@ -36,8 +36,10 @@
                           "ref": {
                             "type": "Players",
                             "value": {
-                              "type": "EachPlayerExcept",
-                              "value": "you"
+                              "players": {
+                                "type": "EachPlayerExcept",
+                                "value": "you"
+                              }
                             }
                           }
                         }

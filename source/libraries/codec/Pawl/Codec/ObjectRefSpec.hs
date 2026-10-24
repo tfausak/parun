@@ -28,6 +28,7 @@ import qualified Pawl.Types.ObjectRef as ObjectRef
 import qualified Pawl.Types.PlayerRef as PlayerRef
 import qualified Pawl.Types.PlayerRelation as PlayerRelation
 import qualified Pawl.Types.PlayerScope as PlayerScope
+import qualified Pawl.Types.PlayersWho as PlayersWho
 import qualified Pawl.Types.Quantity as Quantity
 import qualified Pawl.Types.RandomCardInGraveyard as RandomCardInGraveyard
 import qualified Pawl.Types.RandomCardInHand as RandomCardInHand
@@ -129,8 +130,8 @@ spec s = Spec.describe s "Pawl.Codec.ObjectRef" $ do
     Common.assertCodec
       s
       ObjectRef.codec
-      (ObjectRef.Players (PlayerRef.ControllerOfBound (SlotName.MkSlotName (Text.pack "thatDamageSource"))))
-      " {\"type\":\"Players\",\"value\":{\"type\":\"ControllerOfBound\",\"value\":\"thatDamageSource\"}} "
+      (ObjectRef.Players PlayersWho.MkPlayersWho {PlayersWho.players = PlayerRef.ControllerOfBound (SlotName.MkSlotName (Text.pack "thatDamageSource")), PlayersWho.who = Nothing})
+      " {\"type\":\"Players\",\"value\":{\"players\":{\"type\":\"ControllerOfBound\",\"value\":\"thatDamageSource\"}}} "
   -- Nullary like EachPlayer above, and for a rule rather than an economy: CR
   -- 400.2 makes a hand hidden, so this arm names only the resolving
   -- controller's own and carries neither a player nor a filter.
@@ -470,7 +471,7 @@ spec s = Spec.describe s "Pawl.Codec.ObjectRef" $ do
                 Codec.encode ObjectRef.codec ObjectRef.EachPlayer,
                 Codec.encode ObjectRef.codec ObjectRef.EachOpponent,
                 Codec.encode ObjectRef.codec ObjectRef.ChosenPlayer,
-                Codec.encode ObjectRef.codec (ObjectRef.Players (PlayerRef.Relative PlayerRelation.You)),
+                Codec.encode ObjectRef.codec (ObjectRef.Players PlayersWho.MkPlayersWho {PlayersWho.players = PlayerRef.Relative PlayerRelation.You, PlayersWho.who = Nothing}),
                 Codec.encode ObjectRef.codec (ObjectRef.TopOfLibrary (TopOfLibrary.MkTopOfLibrary (PlayerRef.Relative PlayerRelation.You) (Quantity.Literal 3))),
                 Codec.encode ObjectRef.codec (ObjectRef.TopOfLibraryUntil (TopOfLibraryUntil.MkTopOfLibraryUntil (PlayerRef.Relative PlayerRelation.You) (Filter.Not (Filter.HasCardType CardType.Land)) (Quantity.Literal 1))),
                 Codec.encode ObjectRef.codec (ObjectRef.TopOfGraveyard (PlayerRef.Relative PlayerRelation.You)),

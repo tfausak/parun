@@ -196,6 +196,7 @@ import qualified Pawl.Types.PlayerEffect as PlayerEffect
 import qualified Pawl.Types.PlayerQuantity as PlayerQuantity
 import qualified Pawl.Types.PlayerSacrifices as PlayerSacrifices
 import qualified Pawl.Types.PlayerStaticAbility as PlayerStaticAbility
+import qualified Pawl.Types.PlayersWho as PlayersWho
 import qualified Pawl.Types.PlaysLand as PlaysLand
 import qualified Pawl.Types.PlotFromZone as PlotFromZone
 import qualified Pawl.Types.Plus as Plus
@@ -630,7 +631,7 @@ rewriteEffect pairs effect = case effect of
   -- CR 612.1: rule 201.4a's restriction is printed card text, so a text-changer
   -- rewrites it exactly as it rewrites a search's filter above.
   Effect.ChooseCardName (ChooseCardName.MkChooseCardName ref restriction) -> Effect.ChooseCardName (ChooseCardName.MkChooseCardName ref (Filter.rewrite pairs restriction))
-  Effect.ChooseBasicLandType -> effect
+  Effect.ChooseQuality _ -> effect
   -- CR 612.1 again: "a sorcery card you own from outside the game" is printed
   -- card text like the search's filter above, so a text-changer reaches it the
   -- same way. A REGRESSION FENCE rather than a proven behaviour -- no card in
@@ -1216,7 +1217,9 @@ rewriteObjectRef pairs ref = case ref of
   ObjectRef.EachPlayer -> ref
   ObjectRef.EachOpponent -> ref
   ObjectRef.ChosenPlayer -> ref
-  ObjectRef.Players _ -> ref
+  -- Proved by the scenario
+  -- cr-612-2-a-sleighted-disorder-burns-each-player-who-controls-a-green-creature.
+  ObjectRef.Players p -> ObjectRef.Players p {PlayersWho.who = fmap (Filter.rewrite pairs) (PlayersWho.who p)}
   ObjectRef.TopOfLibrary (TopOfLibrary.MkTopOfLibrary p c) -> ObjectRef.TopOfLibrary (TopOfLibrary.MkTopOfLibrary p (rewriteQuantity pairs c))
   ObjectRef.TopOfLibraryUntil (TopOfLibraryUntil.MkTopOfLibraryUntil p f c) -> ObjectRef.TopOfLibraryUntil (TopOfLibraryUntil.MkTopOfLibraryUntil p (Filter.rewrite pairs f) (rewriteQuantity pairs c))
   -- Names a POSITION and a seat, and neither is a subtype word, so CR 612.1 has
@@ -1362,7 +1365,7 @@ rewriteRuleAbilities pairs abilities =
           RuleAbilities.entryRestrictions = fmap (\x -> x {EntryRestriction.affected = affected (EntryRestriction.affected x)}) (RuleAbilities.entryRestrictions abilities),
           RuleAbilities.sacrificeRestrictions = fmap (\x -> x {SacrificeRestriction.affected = affected (SacrificeRestriction.affected x)}) (RuleAbilities.sacrificeRestrictions abilities),
           RuleAbilities.targetRestrictions = fmap (\x -> x {TargetRestriction.affected = affected (TargetRestriction.affected x)}) (RuleAbilities.targetRestrictions abilities),
-          RuleAbilities.untapRestrictions = fmap (\x -> x {UntapRestriction.affected = affected (UntapRestriction.affected x)}) (RuleAbilities.untapRestrictions abilities)
+          RuleAbilities.untapRestrictions = fmap (\x -> x {UntapRestriction.affected = affected (UntapRestriction.affected x), UntapRestriction.while = condition (UntapRestriction.while x)}) (RuleAbilities.untapRestrictions abilities)
         }
 
 -- One CR 508.1c / 509.1b restriction under CR 612.1: its subject, its gate and

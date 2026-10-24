@@ -55,8 +55,10 @@
                               "ref": {
                                 "type": "Players",
                                 "value": {
-                                  "type": "ControllerOfBound",
-                                  "value": "thatManaSource"
+                                  "players": {
+                                    "type": "ControllerOfBound",
+                                    "value": "thatManaSource"
+                                  }
                                 }
                               }
                             }

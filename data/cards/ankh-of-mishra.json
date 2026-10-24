@@ -38,8 +38,10 @@
                               "ref": {
                                 "type": "Players",
                                 "value": {
-                                  "type": "ControllerOfBound",
-                                  "value": "became"
+                                  "players": {
+                                    "type": "ControllerOfBound",
+                                    "value": "became"
+                                  }
                                 }
                               }
                             }

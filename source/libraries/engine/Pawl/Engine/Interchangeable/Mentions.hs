@@ -309,6 +309,7 @@ import qualified Pawl.Types.PlayerRef as PlayerRef
 import qualified Pawl.Types.PlayerSacrifices as PlayerSacrifices
 import qualified Pawl.Types.PlayerStaticAbility as PlayerStaticAbility
 import qualified Pawl.Types.PlayersDealtDamage as PlayersDealtDamage
+import qualified Pawl.Types.PlayersWho as PlayersWho
 import qualified Pawl.Types.PlaysLand as PlaysLand
 import qualified Pawl.Types.PlotFromZone as PlotFromZone
 import qualified Pawl.Types.Plus as Plus
@@ -509,7 +510,7 @@ filterNames asking criterion = case criterion of
   Filter.OfRelatedPlayer _ -> mempty
   Filter.IsPlayer _relation -> mempty
   Filter.IsControllerOfBound slot -> slotNames asking slot
-  Filter.ControlsMoreThanYou _margin nested -> filterNames asking nested
+  Filter.Controls _margin nested -> filterNames asking nested
   Filter.CardsInGraveyardAtLeast _n -> mempty
   Filter.IsAttacking -> mempty
   Filter.IsAttackingPlayer _relation -> mempty
@@ -1439,7 +1440,7 @@ effectNames asking onCard onAbility x = case x of
   Effect.NoteManaSpent -> mempty
   Effect.Proliferate -> mempty
   Effect.ChooseCardName chooseCardName -> chooseCardNameNames asking chooseCardName
-  Effect.ChooseBasicLandType -> mempty
+  Effect.ChooseQuality _ -> mempty
   Effect.Bolster quantity -> quantityNames asking quantity
   Effect.Amass amass -> amassNames asking amass
   Effect.Blight blight -> blightNames asking blight
@@ -1653,7 +1654,7 @@ fightNames asking x = case x of
 
 flipCoinNames :: (Monoid r) => Asking r -> FlipCoin.FlipCoin -> r
 flipCoinNames asking x = case x of
-  FlipCoin.MkFlipCoin count _reading slot misses -> quantityNames asking count <> slotNames asking slot <> foldMap (slotNames asking) misses
+  FlipCoin.MkFlipCoin count _reading slot misses flipper -> quantityNames asking count <> slotNames asking slot <> foldMap (slotNames asking) misses <> playerRefNames asking flipper
 
 floatingCandidateNames :: Asking r -> FloatingCandidate.FloatingCandidate -> r
 floatingCandidateNames asking x = case x of
@@ -2165,7 +2166,7 @@ objectRefNames asking x = case x of
   ObjectRef.EachPlayer -> mempty
   ObjectRef.EachOpponent -> mempty
   ObjectRef.ChosenPlayer -> mempty
-  ObjectRef.Players playerRef -> playerRefNames asking playerRef
+  ObjectRef.Players (PlayersWho.MkPlayersWho playerRef who) -> playerRefNames asking playerRef <> foldMap (filterNames asking) who
   ObjectRef.TopOfLibrary topOfLibrary -> topOfLibraryNames asking topOfLibrary
   ObjectRef.TopOfLibraryUntil topOfLibraryUntil -> topOfLibraryUntilNames asking topOfLibraryUntil
   ObjectRef.TopOfGraveyard playerRef -> playerRefNames asking playerRef
@@ -3018,7 +3019,7 @@ untapRNames asking x = case x of
 
 untapRestrictionNames :: (Monoid r) => Asking r -> UntapRestriction.UntapRestriction -> r
 untapRestrictionNames asking x = case x of
-  UntapRestriction.MkUntapRestriction affected _hold -> affectedNames asking affected
+  UntapRestriction.MkUntapRestriction affected _hold while -> affectedNames asking affected <> foldMap (conditionNames asking) while
 
 untapRewriteNames :: (Monoid r) => Asking r -> UntapRewrite.UntapRewrite -> r
 untapRewriteNames asking x = case x of

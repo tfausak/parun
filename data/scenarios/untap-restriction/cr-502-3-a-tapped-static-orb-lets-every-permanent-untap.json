@@ -1,0 +1,30 @@
+{
+  "description": "CR 502.3 / 611.3a a tapped Static Orb lets every permanent untap",
+  "note": "The board of the scenario where alice picks two, with the Orb tapped as her untap step begins. Its cap is not in force, so nothing is asked (an unscheduled prompt would fail the scenario) and all four of her permanents untap, the Orb with them.",
+  "board": {
+    "seats": [
+      {
+        "name": "alice",
+        "battlefield": [
+          { "card": "Static Orb", "label": "orb", "tapped": true },
+          { "card": "Island", "label": "island-1", "tapped": true },
+          { "card": "Island", "label": "island-2", "tapped": true },
+          { "card": "Hill Giant", "label": "giant", "tapped": true, "ready": true }
+        ],
+        "library": [{ "card": "Island" }, { "card": "Island" }]
+      },
+      {
+        "name": "bob",
+        "library": [{ "card": "Mountain" }, { "card": "Mountain" }]
+      }
+    ],
+    "active": "bob",
+    "step": "EndStep"
+  },
+  "timeline": [
+    { "turn": 2, "step": "Upkeep", "player": "alice", "check": { "Tapped": { "object": "$island-1", "tapped": false } } },
+    { "turn": 2, "step": "Upkeep", "player": "alice", "check": { "Tapped": { "object": "$island-2", "tapped": false } } },
+    { "turn": 2, "step": "Upkeep", "player": "alice", "check": { "Tapped": { "object": "$giant", "tapped": false } } },
+    { "turn": 2, "step": "Upkeep", "player": "alice", "check": { "Tapped": { "object": "$orb", "tapped": false } } }
+  ]
+}
