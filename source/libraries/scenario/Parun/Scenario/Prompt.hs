@@ -145,6 +145,7 @@ kindOf prompt = Text.pack $ case prompt of
   Prompt.ChooseColor {} -> "ChooseColor"
   Prompt.ChooseDesignation {} -> "ChooseDesignation"
   Prompt.ChooseManaType {} -> "ChooseManaType"
+  Prompt.ChooseCardType {} -> "ChooseCardType"
   Prompt.ChooseCardName {} -> "ChooseCardName"
   Prompt.ChooseOpponent {} -> "ChooseOpponent"
   Prompt.ChooseProtector {} -> "ChooseProtector"

@@ -1,11 +1,13 @@
 module Parun.Types.UntapHold where
 
+import qualified Data.List.NonEmpty as NonEmpty
 import qualified Numeric.Natural as Natural
+import qualified Parun.Types.CardType as CardType
 
 -- | CR 502.3: how an untap rule bears on the untap step's untap of the
 -- permanents it names -- an effect's "can't" (CR 101.2), the active player's
--- own determination of "which permanents they control will untap", or an untap
--- in a step that is not their controller's.
+-- own determination of "which permanents they control will untap", a card type
+-- they choose, or an untap in a step that is not their controller's.
 --
 -- Not Parun.Types.Optionality: that names WHO a printed "may" asks, and CR
 -- 502.3 has already fixed who determines the untap, so a seat here could only
@@ -25,4 +27,9 @@ data UntapHold
     -- permanents you control during each other player's untap step" (Seedborn
     -- Muse; CR 502.3, 613.11).
     DuringOthersSteps
+  | -- | Only those of the card type the active player chooses from these untap:
+    -- "each player chooses artifact, creature, or land during their untap step.
+    -- That player can untap only permanents of the chosen type this step"
+    -- (Storage Matrix; CR 101.2, 205.2a, 502.3).
+    OfChosenType (NonEmpty.NonEmpty CardType.CardType)
   deriving (Eq, Ord, Show)
