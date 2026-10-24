@@ -545,7 +545,7 @@ printedBoxQuantity quantity = case quantity of
   Quantity.Type.EnteredThisTurn -> False
   Quantity.Type.EnteredFrom {} -> False
   Quantity.Type.WasCastFrom {} -> False
-  Quantity.Type.BlockersBeyondFirst -> False
+  Quantity.Type.BlockersBeyond _ -> False
   -- ENGINE-ONLY (Pawl.Types.Quantity's own header): no printed box may
   -- contain it, which this lint is what enforces.
   Quantity.Type.StationMeasure -> False

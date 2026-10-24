@@ -1,6 +1,7 @@
 module Pawl.Types.Quantity where
 
 import qualified Data.Text as Text
+import qualified Numeric.Natural as Natural
 import qualified Pawl.Types.AgainstExiledPile as AgainstExiledPile
 import qualified Pawl.Types.AgainstLastCardExiledWith as AgainstLastCardExiledWith
 import qualified Pawl.Types.AgainstSlot as AgainstSlot
@@ -332,9 +333,10 @@ data Quantity
     -- the battlefield as a spell the payload's caster cast out of the payload's
     -- zone? The two references are independent; see Pawl.Types.CastFrom.
     WasCastFrom CastFrom.CastFrom
-  | -- | CR 509.1h / 702.23a: how many creatures block the object this quantity
-    -- is evaluated against, beyond the first; unblocked reads 0.
-    BlockersBeyondFirst
+  | -- | CR 509.1h: how many creatures block the object this quantity is
+    -- evaluated against, beyond the first N (CR 702.23a's rampage skips one, Gang
+    -- of Elk none); unblocked reads 0.
+    BlockersBeyond Natural.Natural
   | -- | Read the inner quantity against the object that slot names rather than
     -- the effect's source (CR 113.7); Nothing when the slot names no object.
     AgainstSlot (AgainstSlot.AgainstSlot Quantity)

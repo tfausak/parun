@@ -19,7 +19,7 @@ spec s = Spec.describe s "Pawl.Codec.LimitUnless" $ do
     Common.assertCodec
       s
       LimitUnless.codec
-      (LimitUnless.MkLimitUnless {LimitUnless.limit = 1, LimitUnless.attackers = Nothing, LimitUnless.unless = Nothing})
+      (LimitUnless.MkLimitUnless {LimitUnless.limit = 1, LimitUnless.comparison = Comparison.AtMost, LimitUnless.attackers = Nothing, LimitUnless.unless = Nothing})
       " {\"limit\":1} "
   Spec.it s "MkLimitUnless, unless written" $
     Common.assertCodec
@@ -27,6 +27,7 @@ spec s = Spec.describe s "Pawl.Codec.LimitUnless" $ do
       LimitUnless.codec
       ( LimitUnless.MkLimitUnless
           { LimitUnless.limit = 2,
+            LimitUnless.comparison = Comparison.AtMost,
             LimitUnless.attackers = Nothing,
             LimitUnless.unless =
               Just $
@@ -39,6 +40,13 @@ spec s = Spec.describe s "Pawl.Codec.LimitUnless" $ do
     Common.assertCodec
       s
       LimitUnless.codec
-      (LimitUnless.MkLimitUnless {LimitUnless.limit = 1, LimitUnless.attackers = Just (Affected.Matching Filter.IsSource), LimitUnless.unless = Nothing})
+      (LimitUnless.MkLimitUnless {LimitUnless.limit = 1, LimitUnless.comparison = Comparison.AtMost, LimitUnless.attackers = Just (Affected.Matching Filter.IsSource), LimitUnless.unless = Nothing})
       " {\"limit\":1,\"attackers\":{\"type\":\"Matching\",\"value\":{\"type\":\"IsSource\"}}} "
+  -- Phyrexian Colossus: the comparison is written once it is not AtMost.
+  Spec.it s "MkLimitUnless, comparison written" $
+    Common.assertCodec
+      s
+      LimitUnless.codec
+      (LimitUnless.MkLimitUnless {LimitUnless.limit = 3, LimitUnless.comparison = Comparison.AtLeast, LimitUnless.attackers = Just (Affected.Matching Filter.IsSource), LimitUnless.unless = Nothing})
+      " {\"limit\":3,\"comparison\":{\"type\":\"AtLeast\"},\"attackers\":{\"type\":\"Matching\",\"value\":{\"type\":\"IsSource\"}}} "
   Spec.it s "has a schema" $ Common.assertHasSchema s LimitUnless.codec

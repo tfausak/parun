@@ -6675,14 +6675,14 @@ melee =
 -- blocker. Rule 702.23a's bonus already counts the blockers itself, so a
 -- per-blocker trigger would count them twice.
 --
--- The BONUS is Arithmetic.Times of N and Quantity.BlockersBeyondFirst (CR 107.1);
+-- The BONUS is Arithmetic.Times of N and Quantity.BlockersBeyond 1 (CR 107.1);
 -- a factor of 0 is legal, so rampage 0 reads 0 rather than failing.
 --
 -- CR 702.23b's "calculated only once per combat" is CR 611.2d's freeze and needs
 -- nothing of its own.
 rampage :: Natural -> TriggeredAbility Card (GrantedAbility.GrantedAbility Card)
 rampage n =
-  let bonus = Quantity.Arithmetic (Arithmetic.Times (Times.MkTimes n Quantity.BlockersBeyondFirst))
+  let bonus = Quantity.Arithmetic (Arithmetic.Times (Times.MkTimes n (Quantity.BlockersBeyond 1)))
       effect =
         Effect.ModifyTarget
           ( ModifyTarget.MkModifyTarget

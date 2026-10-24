@@ -215,12 +215,12 @@ overSlots f quantity =
         -- and CR 601.2a's cast zone alike -- the latter carrying two of them.
         Quantity.EnteredFrom _ -> pure quantity
         Quantity.WasCastFrom _ -> pure quantity
-        -- And a nullary arm, which names nothing at all: CR 509.1h's declaration is
-        -- read against the object the evaluation is aimed at, as ObjectCounters is.
-        Quantity.BlockersBeyondFirst -> pure quantity
-        -- And a nullary arm too: CR 702.184c's substitution reads no slot of its
-        -- own, the object being the one the evaluation is aimed at, as
-        -- BlockersBeyondFirst is.
+        -- And an arm naming no slot at all: CR 509.1h's declaration is read
+        -- against the object the evaluation is aimed at, as ObjectCounters is.
+        Quantity.BlockersBeyond _ -> pure quantity
+        -- And a nullary arm: CR 702.184c's substitution reads no slot of its own,
+        -- the object being the one the evaluation is aimed at, as BlockersBeyond
+        -- does.
         Quantity.StationMeasure -> pure quantity
         -- And another PlayerRef in ManaCount's position, CR 702.30a's echo window
         -- having nothing beside it: the OBJECT it asks about is the one the
@@ -386,7 +386,7 @@ nestedRefs quantity = case quantity of
   -- BOTH references, CR 601.2a's caster beside CR 400.1's zone: a walk that
   -- reported one would leave the other's slot unnamed.
   Quantity.WasCastFrom castFrom -> Set.fromList [Left (CastFrom.caster castFrom), Left (InZone.player (CastFrom.from castFrom))]
-  Quantity.BlockersBeyondFirst -> Set.empty
+  Quantity.BlockersBeyond _ -> Set.empty
   -- Reads a live grant off the resolving object rather than a bound reference
   -- or slot: nothing here for a target-slot walk to find.
   Quantity.StationMeasure -> Set.empty
@@ -512,7 +512,7 @@ nestedCounts quantity = case quantity of
   -- scope, so these two are covered once rather than twice (see #161).
   Quantity.EnteredFrom _ -> []
   Quantity.WasCastFrom _ -> []
-  Quantity.BlockersBeyondFirst -> []
+  Quantity.BlockersBeyond _ -> []
   Quantity.StationMeasure -> []
   -- Not a leaf: aiming the evaluation at another object does not stop the payload
   -- from being a Count.
@@ -709,7 +709,7 @@ mapPlayerRefs f intoCount quantity =
         Quantity.WasBlockedThisTurn -> quantity
         Quantity.DamageDealtToThisTurn -> quantity
         Quantity.EnteredThisTurn -> quantity
-        Quantity.BlockersBeyondFirst -> quantity
+        Quantity.BlockersBeyond _ -> quantity
         Quantity.StationMeasure -> quantity
 
 -- A scope's reference, rewritten. Every scope that names players takes one; CR

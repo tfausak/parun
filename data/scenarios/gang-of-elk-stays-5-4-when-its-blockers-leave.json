@@ -1,0 +1,33 @@
+{
+  "description": "CR 509.1h whole card: Gang of Elk whose blockers both leave before its trigger resolves stays 5/4",
+  "note": "Bob sacrifices both blockers to his Fallen Angel in response. The Elk stays blocked by nobody, so the count is 0; one more than a beyond-the-first count would make it 7/6.",
+  "board": {
+    "active": "alice",
+    "step": "BeginningOfCombat",
+    "seats": [
+      {
+        "name": "alice",
+        "battlefield": [{ "card": "Gang of Elk", "label": "elk", "ready": true }]
+      },
+      {
+        "name": "bob",
+        "battlefield": [
+          { "card": "Fallen Angel", "label": "angel" },
+          { "card": "Grizzly Bears", "label": "first", "ready": true },
+          { "card": "Grizzly Bears", "label": "second", "ready": true }
+        ]
+      }
+    ]
+  },
+  "timeline": [
+    { "turn": 1, "step": "DeclareAttackers", "player": "alice", "do": { "Attack": ["$elk"] } },
+    { "turn": 1, "step": "DeclareBlockers", "player": "bob", "do": { "Block": { "$first": ["$elk"], "$second": ["$elk"] } } },
+    { "turn": 1, "step": "DeclareBlockers", "player": "bob", "do": { "Activate": { "object": "$angel" } } },
+    { "turn": 1, "step": "DeclareBlockers", "player": "bob", "do": { "Answer": { "prompt": "ChooseSacrifices", "with": ["$first"] } } },
+    { "turn": 1, "step": "DeclareBlockers", "player": "bob", "do": { "Activate": { "object": "$angel" } } },
+    { "turn": 1, "step": "DeclareBlockers", "player": "bob", "do": { "Answer": { "prompt": "ChooseSacrifices", "with": ["$second"] } } },
+    { "turn": 1, "step": "EndOfCombat", "player": "alice", "check": { "Count": { "player": "bob", "zone": "Graveyard", "card": "Grizzly Bears", "count": 2 } } },
+    { "turn": 1, "step": "EndOfCombat", "player": "alice", "check": { "PowerToughness": { "object": "$elk", "power": 5, "toughness": 4 } } },
+    { "turn": 1, "step": "EndOfCombat", "player": "alice", "check": { "Life": { "player": "bob", "life": 20 } } }
+  ]
+}

@@ -1,0 +1,113 @@
+{
+  "faces": [
+    {
+      "combatRestrictions": [
+        {
+          "type": "CantBlockMoreThan",
+          "value": {
+            "attackers": {
+              "type": "Matching",
+              "value": {
+                "type": "And",
+                "value": [
+                  {
+                    "type": "HasCardType",
+                    "value": {
+                      "type": "Creature"
+                    }
+                  },
+                  {
+                    "type": "ControlledBy",
+                    "value": {
+                      "type": "You"
+                    }
+                  },
+                  {
+                    "type": "HasKeyword",
+                    "value": {
+                      "type": "Menace"
+                    }
+                  }
+                ]
+              }
+            },
+            "comparison": {
+              "type": "AtLeast"
+            },
+            "limit": 3
+          }
+        }
+      ],
+      "keywords": [
+        {
+          "type": "Menace"
+        }
+      ],
+      "manaCost": [
+        {
+          "type": "Generic",
+          "value": 1
+        },
+        {
+          "type": "Hybrid",
+          "value": {
+            "left": {
+              "type": "Colored",
+              "value": {
+                "type": "Black"
+              }
+            },
+            "right": {
+              "type": "Colored",
+              "value": {
+                "type": "Red"
+              }
+            }
+          }
+        },
+        {
+          "type": "Hybrid",
+          "value": {
+            "left": {
+              "type": "Colored",
+              "value": {
+                "type": "Black"
+              }
+            },
+            "right": {
+              "type": "Colored",
+              "value": {
+                "type": "Red"
+              }
+            }
+          }
+        }
+      ],
+      "name": "Sonorous Howlbonder",
+      "oracleText": "Menace\nEach creature you control with menace can't be blocked except by three or more creatures.",
+      "power": {
+        "type": "Literal",
+        "value": 2
+      },
+      "toughness": {
+        "type": "Literal",
+        "value": 2
+      },
+      "typeLine": {
+        "subtypes": [
+          {
+            "type": "Human"
+          },
+          {
+            "type": "Warrior"
+          }
+        ],
+        "types": [
+          {
+            "type": "Creature"
+          }
+        ]
+      }
+    }
+  ]
+}

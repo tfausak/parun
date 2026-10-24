@@ -1743,7 +1743,7 @@ combatRestrictionCounts restriction = case restriction of
   CombatRestriction.CantAttackAlone (AloneUnless.MkAloneUnless _ _ condition _) -> foldMap conditionCounts condition
   CombatRestriction.CantBlockAlone (AloneUnless.MkAloneUnless _ _ condition _) -> foldMap conditionCounts condition
   CombatRestriction.CantAttackMoreThan (AttackLimitUnless.MkAttackLimitUnless _ _ condition) -> foldMap conditionCounts condition
-  CombatRestriction.CantBlockMoreThan (LimitUnless.MkLimitUnless _ _ condition) -> foldMap conditionCounts condition
+  CombatRestriction.CantBlockMoreThan (LimitUnless.MkLimitUnless _ _ _ condition) -> foldMap conditionCounts condition
 
 -- Every Count reachable from a blocking permission: CR 604.2's "as long as" gate,
 -- and the counted arity beside it (Kemba's Legion). The subject is an Affected,
@@ -4296,7 +4296,7 @@ quantityKindFilters quantity = case quantity of
   Quantity.Type.EnteredThisTurn -> []
   Quantity.Type.EnteredFrom _ -> []
   Quantity.Type.WasCastFrom _ -> []
-  Quantity.Type.BlockersBeyondFirst -> []
+  Quantity.Type.BlockersBeyond _ -> []
   -- Carries no CounterKind at all, Power's shape.
   Quantity.Type.StationMeasure -> []
   -- quantityCounts' descent: aiming the evaluation at another object does not
@@ -5407,7 +5407,7 @@ combatRestrictionFilters restriction = case restriction of
   CombatRestriction.CantBlockAlone (AloneUnless.MkAloneUnless affected alongside condition _) -> affectedSet affected <> unframed (Maybe.maybeToList alongside) <> foldMap conditionFilters condition
   CombatRestriction.CantAttackMoreThan (AttackLimitUnless.MkAttackLimitUnless _ _ condition) -> foldMap conditionFilters condition
   -- The attackers a per-attacker bound counts against are an Affected.
-  CombatRestriction.CantBlockMoreThan (LimitUnless.MkLimitUnless _ attackers condition) -> foldMap affectedSet attackers <> foldMap conditionFilters condition
+  CombatRestriction.CantBlockMoreThan (LimitUnless.MkLimitUnless _ _ attackers condition) -> foldMap affectedSet attackers <> foldMap conditionFilters condition
   where
     -- AffectedSetFramed for staticAbilityFilters' reason: Pawl.Engine.CombatRestriction
     -- matches it through Projection.affectsOn, whose context is

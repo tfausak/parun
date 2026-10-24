@@ -94,7 +94,7 @@ substituteStar star quantity = case quantity of
   Quantity.EnteredThisTurn -> quantity
   Quantity.EnteredFrom _ -> quantity
   Quantity.WasCastFrom _ -> quantity
-  Quantity.BlockersBeyondFirst -> quantity
+  Quantity.BlockersBeyond _ -> quantity
   -- No card prints CR 702.184a's ability at all -- Keyword.Station mints it --
   -- so a printed P/T box can never contain this arm.
   Quantity.StationMeasure -> quantity

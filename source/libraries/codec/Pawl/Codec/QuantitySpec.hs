@@ -768,14 +768,14 @@ spec s = Spec.describe s "Pawl.Codec.Quantity" $ do
       Quantity.codec
       (Quantity.WasCastFrom (CastFrom.MkCastFrom (PlayerRef.Relative PlayerRelation.You) (InZone.MkInZone Zone.Graveyard (PlayerRef.Relative PlayerRelation.You))))
       " {\"type\":\"WasCastFrom\",\"value\":{\"from\":{\"player\":{\"type\":\"Relative\",\"value\":{\"type\":\"You\"}},\"zone\":{\"type\":\"Graveyard\"}}}} "
-  -- CR 509.1h with NOTHING on the wire: the object is the one the quantity is
-  -- evaluated against, so this is a bare tag like Power and ManaValue.
-  Spec.it s "BlockersBeyondFirst is nullary" $
+  -- CR 509.1h with only the skip on the wire: the object is the one the
+  -- quantity is evaluated against.
+  Spec.it s "BlockersBeyond carries how many blockers it skips" $
     Common.assertCodec
       s
       Quantity.codec
-      Quantity.BlockersBeyondFirst
-      " {\"type\":\"BlockersBeyondFirst\"} "
+      (Quantity.BlockersBeyond 1)
+      " {\"type\":\"BlockersBeyond\",\"value\":1} "
   -- CR 702.184c, Power's wire shape: nothing beside the tag, the object being
   -- the one the quantity is evaluated against.
   Spec.it s "StationMeasure is nullary" $
