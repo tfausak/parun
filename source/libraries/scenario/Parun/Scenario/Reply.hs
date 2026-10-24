@@ -17,6 +17,7 @@ import qualified Data.Set as Set
 import qualified Data.Text as Text
 import Numeric.Natural (Natural)
 import qualified Parun.Codec.CardName as Codec.CardName
+import qualified Parun.Codec.CardType as Codec.CardType
 import qualified Parun.Codec.CastFromZone as Codec.CastFromZone
 import qualified Parun.Codec.CoinFace as Codec.CoinFace
 import qualified Parun.Codec.Color as Codec.Color
@@ -422,6 +423,7 @@ shapeOf prompt = case prompt of
   Prompt.ChooseColor {} -> viaCodec Codec.Color.codec
   Prompt.ChooseDesignation {} -> viaCodec Codec.Designation.codec
   Prompt.ChooseManaType {} -> viaCodec Codec.ManaType.codec
+  Prompt.ChooseCardType {} -> viaCodec Codec.CardType.codec
   Prompt.ChooseCardName {} -> viaCodec Codec.CardName.codec
   Prompt.ChooseOpponent {} -> player
   Prompt.ChooseProtector {} -> player

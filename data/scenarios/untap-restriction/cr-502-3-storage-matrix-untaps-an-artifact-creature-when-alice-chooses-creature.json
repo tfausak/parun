@@ -1,0 +1,103 @@
+{
+  "description": "CR 502.3 / 205.2a Storage Matrix untaps an artifact creature when alice chooses creature",
+  "note": "The board of the land scenario, with alice choosing creature: Grizzly Bears and the Ornithopter untap and the Forest stays tapped.",
+  "board": {
+    "seats": [
+      {
+        "name": "alice",
+        "battlefield": [
+          {
+            "card": "Storage Matrix",
+            "label": "matrix"
+          },
+          {
+            "card": "Forest",
+            "label": "forest",
+            "tapped": true
+          },
+          {
+            "card": "Grizzly Bears",
+            "label": "bears",
+            "tapped": true,
+            "ready": true
+          },
+          {
+            "card": "Ornithopter",
+            "label": "thopter",
+            "tapped": true,
+            "ready": true
+          }
+        ],
+        "library": [
+          {
+            "card": "Forest"
+          },
+          {
+            "card": "Forest"
+          }
+        ]
+      },
+      {
+        "name": "bob",
+        "library": [
+          {
+            "card": "Mountain"
+          },
+          {
+            "card": "Mountain"
+          }
+        ]
+      }
+    ],
+    "active": "bob",
+    "step": "EndStep"
+  },
+  "timeline": [
+    {
+      "turn": 2,
+      "step": "Untap",
+      "player": "alice",
+      "do": {
+        "Answer": {
+          "prompt": "ChooseCardType",
+          "with": {
+            "type": "Creature"
+          }
+        }
+      }
+    },
+    {
+      "turn": 2,
+      "step": "Upkeep",
+      "player": "alice",
+      "check": {
+        "Tapped": {
+          "object": "$bears",
+          "tapped": false
+        }
+      }
+    },
+    {
+      "turn": 2,
+      "step": "Upkeep",
+      "player": "alice",
+      "check": {
+        "Tapped": {
+          "object": "$thopter",
+          "tapped": false
+        }
+      }
+    },
+    {
+      "turn": 2,
+      "step": "Upkeep",
+      "player": "alice",
+      "check": {
+        "Tapped": {
+          "object": "$forest",
+          "tapped": true
+        }
+      }
+    }
+  ]
+}

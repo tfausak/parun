@@ -1,0 +1,103 @@
+{
+  "description": "CR 502.3 / 205.2a Storage Matrix untaps an artifact creature when alice chooses artifact",
+  "note": "The board of the land scenario, with alice choosing artifact: the Ornithopter untaps, an artifact creature having the chosen type, while Grizzly Bears and the Forest stay tapped. Artifact is the default answer, so the creature scenario is what shows the choice is read.",
+  "board": {
+    "seats": [
+      {
+        "name": "alice",
+        "battlefield": [
+          {
+            "card": "Storage Matrix",
+            "label": "matrix"
+          },
+          {
+            "card": "Forest",
+            "label": "forest",
+            "tapped": true
+          },
+          {
+            "card": "Grizzly Bears",
+            "label": "bears",
+            "tapped": true,
+            "ready": true
+          },
+          {
+            "card": "Ornithopter",
+            "label": "thopter",
+            "tapped": true,
+            "ready": true
+          }
+        ],
+        "library": [
+          {
+            "card": "Forest"
+          },
+          {
+            "card": "Forest"
+          }
+        ]
+      },
+      {
+        "name": "bob",
+        "library": [
+          {
+            "card": "Mountain"
+          },
+          {
+            "card": "Mountain"
+          }
+        ]
+      }
+    ],
+    "active": "bob",
+    "step": "EndStep"
+  },
+  "timeline": [
+    {
+      "turn": 2,
+      "step": "Untap",
+      "player": "alice",
+      "do": {
+        "Answer": {
+          "prompt": "ChooseCardType",
+          "with": {
+            "type": "Artifact"
+          }
+        }
+      }
+    },
+    {
+      "turn": 2,
+      "step": "Upkeep",
+      "player": "alice",
+      "check": {
+        "Tapped": {
+          "object": "$thopter",
+          "tapped": false
+        }
+      }
+    },
+    {
+      "turn": 2,
+      "step": "Upkeep",
+      "player": "alice",
+      "check": {
+        "Tapped": {
+          "object": "$bears",
+          "tapped": true
+        }
+      }
+    },
+    {
+      "turn": 2,
+      "step": "Upkeep",
+      "player": "alice",
+      "check": {
+        "Tapped": {
+          "object": "$forest",
+          "tapped": true
+        }
+      }
+    }
+  ]
+}

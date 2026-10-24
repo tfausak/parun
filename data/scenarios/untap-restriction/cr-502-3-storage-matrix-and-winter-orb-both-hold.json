@@ -1,0 +1,119 @@
+{
+  "description": "CR 502.3 / 101.2 Storage Matrix and Winter Orb both hold: alice chooses land, and only one land untaps",
+  "note": "Alice's two Forests and Grizzly Bears start tapped beside an untapped Matrix and Winter Orb. She chooses land, so the Bears stay tapped, and Winter Orb's cap then lets only one Forest untap: she picks the second, not the default first (the Matrix's ruling of 2005-08-01).",
+  "board": {
+    "seats": [
+      {
+        "name": "alice",
+        "battlefield": [
+          {
+            "card": "Storage Matrix",
+            "label": "matrix"
+          },
+          {
+            "card": "Winter Orb",
+            "label": "orb"
+          },
+          {
+            "card": "Forest",
+            "label": "forest-1",
+            "tapped": true
+          },
+          {
+            "card": "Forest",
+            "label": "forest-2",
+            "tapped": true
+          },
+          {
+            "card": "Grizzly Bears",
+            "label": "bears",
+            "tapped": true,
+            "ready": true
+          }
+        ],
+        "library": [
+          {
+            "card": "Forest"
+          },
+          {
+            "card": "Forest"
+          }
+        ]
+      },
+      {
+        "name": "bob",
+        "library": [
+          {
+            "card": "Mountain"
+          },
+          {
+            "card": "Mountain"
+          }
+        ]
+      }
+    ],
+    "active": "bob",
+    "step": "EndStep"
+  },
+  "timeline": [
+    {
+      "turn": 2,
+      "step": "Untap",
+      "player": "alice",
+      "do": {
+        "Answer": {
+          "prompt": "ChooseCardType",
+          "with": {
+            "type": "Land"
+          }
+        }
+      }
+    },
+    {
+      "turn": 2,
+      "step": "Untap",
+      "player": "alice",
+      "do": {
+        "Answer": {
+          "prompt": "ChooseAnyNumberToUntap",
+          "with": [
+            "$forest-2"
+          ]
+        }
+      }
+    },
+    {
+      "turn": 2,
+      "step": "Upkeep",
+      "player": "alice",
+      "check": {
+        "Tapped": {
+          "object": "$forest-1",
+          "tapped": true
+        }
+      }
+    },
+    {
+      "turn": 2,
+      "step": "Upkeep",
+      "player": "alice",
+      "check": {
+        "Tapped": {
+          "object": "$forest-2",
+          "tapped": false
+        }
+      }
+    },
+    {
+      "turn": 2,
+      "step": "Upkeep",
+      "player": "alice",
+      "check": {
+        "Tapped": {
+          "object": "$bears",
+          "tapped": true
+        }
+      }
+    }
+  ]
+}

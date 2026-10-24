@@ -248,8 +248,10 @@ passPriorityFrom gs pid =
 -- its new controller's step nor left carrying a rider past the step that ends it.
 --
 -- What survives those is CR 502.3's own determination, the active player's to
--- make: a printed "you may choose not to untap" (UntapHold.Elective) offers its
--- tapped permanents, and the ones they do not pick stay tapped; a cap
+-- make: first a card type to confine the untap to (UntapHold.OfChosenType,
+-- Storage Matrix); then a printed "you may choose not to untap"
+-- (UntapHold.Elective) offers its tapped permanents, and the ones they do not
+-- pick stay tapped; a cap
 -- (UntapHold.AtMost, Static Orb) offers the tapped permanents it counts, and
 -- UntapRestriction.settle keeps every cap. Only a tapped permanent nothing else
 -- holds back is offered, since for any other the untap's outcome is already
@@ -322,8 +324,26 @@ determineUntap pid = do
       oneShot = asks ((> 0) . Object.doesNotUntapFor)
       exerted = asks (Set.member pid . Object.exertedBy)
       tapped = asks ((== TapState.Tapped) . Object.tapped)
-      allowed = filter (\oid -> not (Set.member oid prohibited) && not (oneShot oid) && not (exerted oid)) ids
+      unheld = filter (\oid -> not (Set.member oid prohibited) && not (oneShot oid) && not (exerted oid)) ids
       held = filter oneShot ids
+  -- CR 101.2 / 205.2a: each card-type choice (UntapHold.OfChosenType, Storage
+  -- Matrix) is made first and holds back what it names that lacks the chosen
+  -- type, before any cap counts, a cap combining with it (its ruling of
+  -- 2005-08-01). A permanent of two listed types has the chosen one if either
+  -- is chosen. Asked only where the answer matters: when every type would
+  -- untap the same tapped permanents, nothing can tell the options apart.
+  pcs <- State.gets Projection.projectAll
+  let hasType t oid = Set.member t (Projection.cardTypesGiven pcs oid gs)
+      typeChoice kept (types, governed) = do
+        let reached = filter (\oid -> tapped oid && Set.member oid governed) kept
+            untappedBy t = filter (hasType t) reached
+        chosen <- case (reached, NonEmpty.nonEmpty (ListUtils.nubOrd (fmap untappedBy (NonEmpty.toList types)))) of
+          (first : _, Just (_ NonEmpty.:| _ : _)) -> do
+            answer <- Game.choose (Prompt.ChooseCardType (Decide.deciderFor pid gs) pid first types)
+            pure (if elem answer types then answer else NonEmpty.head types)
+          _ -> pure (NonEmpty.head types)
+        pure (filter (\oid -> not (Set.member oid governed) || hasType chosen oid) kept)
+  allowed <- Monad.foldM typeChoice unheld [(types, governed) | (UntapHold.OfChosenType types, governed) <- restrictions]
   -- The prompt's object is the first permanent offered: a turn-based action has
   -- no source of its own to name (Contraption.crank's reading).
   let capped oid = any (Set.member oid . snd) caps

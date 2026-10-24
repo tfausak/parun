@@ -11,6 +11,7 @@ import qualified Parun.Types.BuybackDecision as BuybackDecision
 import qualified Parun.Types.CandidateCost as CandidateCost
 import qualified Parun.Types.Card as Card
 import qualified Parun.Types.CardName as CardName
+import qualified Parun.Types.CardType as CardType
 import qualified Parun.Types.CastFromZone as CastFromZone
 import qualified Parun.Types.ClauseIndex as ClauseIndex
 import qualified Parun.Types.CoinFace as CoinFace
@@ -542,6 +543,8 @@ data Response
     -- than a Color because the answer is the type of the unit that reaches the
     -- pool.
     ChoseManaType ManaType.ManaType
+  | -- | CR 205.2a: the card type a player chose.
+    ChoseCardType CardType.CardType
   | -- | CR 201.4 / 614.1c: the card name a player chose as an object entered.
     ChoseCardName CardName.CardName
   | -- | The opponent a player chose for an as-enters choice the card assigns to

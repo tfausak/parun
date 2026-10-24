@@ -13,7 +13,9 @@ import qualified Parun.Types.UntapHold as UntapHold
 -- permanents" the same restriction with a cap on how many (UntapHold.AtMost).
 -- Seedborn Muse's "untap all permanents you control during each other player's
 -- untap step" is the same record run the other way, naming what untaps in a
--- step that is not its controller's (UntapHold.DuringOthersSteps).
+-- step that is not its controller's (UntapHold.DuringOthersSteps), and Storage
+-- Matrix's "can untap only permanents of the chosen type" the same restriction
+-- with the card type the active player chooses (UntapHold.OfChosenType).
 --
 -- Parun.Types.SacrificeRestriction's shape and its filing, one turn-based action
 -- over: CR 613.11 puts a continuous effect that "affects game rules rather than
@@ -30,8 +32,8 @@ import qualified Parun.Types.UntapHold as UntapHold
 --
 -- A record rather than a sum, for SacrificeRestriction's reason: CR 502.3 is one
 -- action, and a restriction names a subject and what holds it back -- an
--- effect's "can't", a cap on how many, its controller's own choice, or an
--- untap in another player's step (Parun.Types.UntapHold) -- and the "as long as" it applies under (CR 611.3a,
+-- effect's "can't", a cap on how many, its controller's own choice, a chosen
+-- card type, or an untap in another player's step (Parun.Types.UntapHold) -- and the "as long as" it applies under (CR 611.3a,
 -- Static Orb's "as long as this artifact is untapped").
 --
 -- Gathered LIVE from the battlefield at the untap step and never captured, the
