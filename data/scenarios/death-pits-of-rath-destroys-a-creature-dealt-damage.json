@@ -1,0 +1,32 @@
+{
+  "description": "CR 120.3 / 603.2 whole card: Death Pits of Rath destroys a creature that is dealt damage",
+  "note": "Alice Shocks bob's 3/3 Hill Giant, which survives 2 damage on its own, and Death Pits destroys it. Bob's Gray Ogre, dealt no damage, stays: the trigger destroys the damaged creature, not every creature.",
+  "board": {
+    "active": "alice",
+    "step": "PrecombatMain",
+    "seats": [
+      {
+        "name": "alice",
+        "battlefield": [
+          { "card": "Death Pits of Rath", "label": "pits" },
+          { "card": "Mountain", "label": "m1" }
+        ],
+        "hand": [{ "card": "Shock", "label": "shock" }],
+        "library": [{ "card": "Island" }, { "card": "Island" }, { "card": "Island" }]
+      },
+      {
+        "name": "bob",
+        "battlefield": [
+          { "card": "Hill Giant", "label": "giant", "ready": true },
+          { "card": "Gray Ogre", "label": "ogre", "ready": true }
+        ],
+        "library": [{ "card": "Island" }, { "card": "Island" }, { "card": "Island" }]
+      }
+    ]
+  },
+  "timeline": [
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "do": { "Cast": { "object": "$shock", "targets": ["$giant"], "mana": ["$m1"] } } },
+    { "turn": 1, "step": "BeginningOfCombat", "player": "alice", "check": { "Count": { "player": "bob", "zone": "Graveyard", "card": "Hill Giant", "count": 1 } } },
+    { "turn": 1, "step": "BeginningOfCombat", "player": "alice", "check": { "Count": { "player": "bob", "zone": "Battlefield", "card": "Gray Ogre", "count": 1 } } }
+  ]
+}

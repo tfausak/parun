@@ -168,6 +168,7 @@ import qualified Pawl.Types.DamagePattern as DamagePattern
 import qualified Pawl.Types.DamageR as DamageR
 import qualified Pawl.Types.DamageRewrite as DamageRewrite
 import qualified Pawl.Types.DealDamage as DealDamage
+import qualified Pawl.Types.DealsDamageToPlayer as DealsDamageToPlayer
 import qualified Pawl.Types.Defense as Defense
 import qualified Pawl.Types.Designate as Designate
 import qualified Pawl.Types.Destroy as Destroy
@@ -1057,7 +1058,6 @@ triggerConditionCounts triggerCondition = case triggerCondition of
   -- CR 700.4's is nullary as well, for the same reason.
   TriggerCondition.AttachedCreatureDies -> []
   TriggerCondition.AttachedCreatureBecomesTapped -> []
-  TriggerCondition.AttachedCreatureDealsDamage -> []
   TriggerCondition.PermanentsBecomeTapped _ -> []
   TriggerCondition.PermanentBecomesTapped _ -> []
   TriggerCondition.SelfBecomesUntapped -> []
@@ -1099,11 +1099,11 @@ triggerConditionCounts triggerCondition = case triggerCondition of
   TriggerCondition.StateIs condition -> conditionCounts condition
   TriggerCondition.SelfDealsCombatDamageToPlayer _ -> []
   TriggerCondition.SelfDealsCombatDamageToPlayerOrBattle -> []
-  TriggerCondition.SelfDealsCombatDamage -> []
-  TriggerCondition.SelfDealsDamageToPlayer _ -> []
+  TriggerCondition.DealsCombatDamage _ -> []
+  TriggerCondition.DealsDamageToPlayer _ -> []
   TriggerCondition.SelfDealsDamageToCreature -> []
-  TriggerCondition.SelfDealsDamage -> []
-  TriggerCondition.SelfIsDealtDamage -> []
+  TriggerCondition.DealsDamage _ -> []
+  TriggerCondition.IsDealtDamage _ -> []
   TriggerCondition.PlayerIsDealtDamage _ -> []
   -- Its watcher-scoped sibling carries a Filter, and a Filter holds no Count.
   TriggerCondition.PermanentDealsCombatDamageToPlayer _ -> []
@@ -4502,9 +4502,7 @@ triggerConditionFilters triggerCondition = case triggerCondition of
   -- A bystander's PermanentActs DOES carry one, a predicate over the actor --
   -- Wildgrowth Walker's "a creature you control" -- which the card lint must
   -- sweep. The self-scoped reading carries nothing.
-  TriggerCondition.PermanentActs acts -> case PermanentActed.permanent acts of
-    ActingPermanent.Self -> []
-    ActingPermanent.Matching f -> unframed [f]
+  TriggerCondition.PermanentActs acts -> actingFilters (PermanentActed.permanent acts)
   -- CR 702.134c's carries none either: "equipped creature" is CR 301.5f's one
   -- permanent rather than a class of them, and "a creature" narrows by nothing.
   TriggerCondition.AttachedCreatureMentors -> []
@@ -4512,7 +4510,6 @@ triggerConditionFilters triggerCondition = case triggerCondition of
   -- them too, so this condition carries no Filter either.
   TriggerCondition.AttachedCreatureDies -> []
   TriggerCondition.AttachedCreatureBecomesTapped -> []
-  TriggerCondition.AttachedCreatureDealsDamage -> []
   -- Deeproot Pilgrimage's "nontoken Merfolk you control" is card text, swept
   -- like PermanentsDie's.
   TriggerCondition.PermanentsBecomeTapped f -> unframed [f]
@@ -4571,15 +4568,17 @@ triggerConditionFilters triggerCondition = case triggerCondition of
   TriggerCondition.StepBegins {} -> []
   TriggerCondition.SelfDealsCombatDamageToPlayer _ -> []
   TriggerCondition.SelfDealsCombatDamageToPlayerOrBattle -> []
-  TriggerCondition.SelfDealsCombatDamage -> []
-  TriggerCondition.SelfDealsDamageToPlayer _ -> []
+  -- A bystander's damage conditions carry one over the watched permanent, swept
+  -- for PermanentActs' reason: Noble Purpose's "a creature you control", Death
+  -- Pits of Rath's "a creature", Spirit Link's and Curiosity's "enchanted
+  -- creature". The self-scoped readings carry nothing.
+  TriggerCondition.DealsCombatDamage watched -> actingFilters watched
+  TriggerCondition.DealsDamageToPlayer p -> actingFilters (DealsDamageToPlayer.actor p)
   -- Nullary as well: the printed form qualifies the damaged creature in no way,
   -- so a text change has nothing here to rewrite.
   TriggerCondition.SelfDealsDamageToCreature -> []
-  TriggerCondition.SelfDealsDamage -> []
-  -- Enrage's condition is nullary: rule 120.3 qualifies the damage in no way, so
-  -- there is nothing for a text change to rewrite.
-  TriggerCondition.SelfIsDealtDamage -> []
+  TriggerCondition.DealsDamage watched -> actingFilters watched
+  TriggerCondition.IsDealtDamage watched -> actingFilters watched
   TriggerCondition.PlayerIsDealtDamage _ -> []
   -- Its watcher-scoped sibling carries one -- Tovolar's "a Wolf or Werewolf you
   -- control", which the card lint must sweep.
@@ -4748,6 +4747,10 @@ triggerConditionFilters triggerCondition = case triggerCondition of
   -- other: Professor Hojo's "creatures you control".
   TriggerCondition.PermanentsBecomeTargeted payload -> unframed [PermanentsBecomeTargeted.filter payload]
   TriggerCondition.PermanentBecomesTargeted payload -> unframed [PermanentsBecomeTargeted.filter payload]
+  where
+    actingFilters watched = case watched of
+      ActingPermanent.Self -> []
+      ActingPermanent.Matching f -> unframed [f]
 
 -- Every SlotName a TriggerCondition names OUTRIGHT. Exhaustive with no
 -- fallthrough, triggerConditionCounts' shape and for its reason: a condition
@@ -4774,11 +4777,11 @@ triggerConditionSlots triggerCondition = case triggerCondition of
   TriggerCondition.StateIs _ -> []
   TriggerCondition.SelfDealsCombatDamageToPlayer _ -> []
   TriggerCondition.SelfDealsCombatDamageToPlayerOrBattle -> []
-  TriggerCondition.SelfDealsCombatDamage -> []
-  TriggerCondition.SelfDealsDamageToPlayer _ -> []
+  TriggerCondition.DealsCombatDamage _ -> []
+  TriggerCondition.DealsDamageToPlayer _ -> []
   TriggerCondition.SelfDealsDamageToCreature -> []
-  TriggerCondition.SelfDealsDamage -> []
-  TriggerCondition.SelfIsDealtDamage -> []
+  TriggerCondition.DealsDamage _ -> []
+  TriggerCondition.IsDealtDamage _ -> []
   TriggerCondition.PlayerIsDealtDamage _ -> []
   TriggerCondition.PermanentDealsCombatDamageToPlayer _ -> []
   TriggerCondition.PermanentsDealCombatDamageToPlayer _ -> []
@@ -4838,7 +4841,6 @@ triggerConditionSlots triggerCondition = case triggerCondition of
   TriggerCondition.SelfLeavesGraveyard -> []
   TriggerCondition.AttachedCreatureDies -> []
   TriggerCondition.AttachedCreatureBecomesTapped -> []
-  TriggerCondition.AttachedCreatureDealsDamage -> []
   TriggerCondition.PermanentsBecomeTapped _ -> []
   TriggerCondition.PermanentBecomesTapped _ -> []
   TriggerCondition.SelfBecomesUntapped -> []

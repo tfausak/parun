@@ -10364,7 +10364,6 @@ controllerTurnScoped cond = case cond of
   -- and Betrayal's whole point is that the Aura's controller is not the tapping
   -- creature's.
   TriggerCondition.AttachedCreatureBecomesTapped -> False
-  TriggerCondition.AttachedCreatureDealsDamage -> False
   TriggerCondition.PermanentsBecomeTapped _ -> False
   TriggerCondition.PermanentBecomesTapped _ -> False
   -- Nor CR 701.26b: CR 502.3's untap step is the active player's, but an
@@ -10396,11 +10395,11 @@ controllerTurnScoped cond = case cond of
   TriggerCondition.StateIs _ -> False
   TriggerCondition.SelfDealsCombatDamageToPlayer _ -> False
   TriggerCondition.SelfDealsCombatDamageToPlayerOrBattle -> False
-  TriggerCondition.SelfDealsCombatDamage -> False
-  TriggerCondition.SelfDealsDamageToPlayer _ -> False
+  TriggerCondition.DealsCombatDamage _ -> False
+  TriggerCondition.DealsDamageToPlayer _ -> False
   TriggerCondition.SelfDealsDamageToCreature -> False
-  TriggerCondition.SelfDealsDamage -> False
-  TriggerCondition.SelfIsDealtDamage -> False
+  TriggerCondition.DealsDamage _ -> False
+  TriggerCondition.IsDealtDamage _ -> False
   TriggerCondition.PlayerIsDealtDamage _ -> False
   TriggerCondition.PermanentDealsCombatDamageToPlayer _ -> False
   TriggerCondition.PermanentsDealCombatDamageToPlayer _ -> False

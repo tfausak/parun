@@ -1206,7 +1206,7 @@ becameSlotSpec s registry =
         -- slot the lint says is available must be bound for every event that
         -- could have placed the trigger. A few conditions have a list longer
         -- than one -- SelfLeavesTheBattlefield, where the two destinations
-        -- disagree about `became`; SelfIsDealtDamage, where CR 120.3's two
+        -- disagree about `became`; IsDealtDamage, where CR 120.3's two
         -- damage kinds agree on `thatMuch` and so make the floor a real one;
         -- CreatureBecomesBlockedByAtLeast, where rule 509.3e's two producers
         -- agree on `attackingCreature` off two different event constructors; and

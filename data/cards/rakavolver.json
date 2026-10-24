@@ -114,7 +114,10 @@
                       "type": "Triggered",
                       "value": {
                         "condition": {
-                          "type": "SelfDealsDamage"
+                          "type": "DealsDamage",
+                          "value": {
+                            "type": "Self"
+                          }
                         },
                         "modal": {
                           "modes": [

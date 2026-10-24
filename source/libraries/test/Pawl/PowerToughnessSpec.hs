@@ -1431,7 +1431,7 @@ picksSecondCard p = case p of
 --
 -- Its third ability, "whenever this creature deals combat damage, you may
 -- sacrifice it. If you do, you may cast the exiled card without paying its mana
--- cost", is TriggerCondition.SelfDealsCombatDamage over a CR 118.12 pay gate.
+-- cost", is TriggerCondition.DealsCombatDamage over a CR 118.12 pay gate.
 livingLoreSpec :: (Monad m) => Spec.Spec m n -> Registry.Registry m -> n ()
 livingLoreSpec s registry = Spec.describe s "Living Lore" $ do
   -- CR 510.1c: a blocked Living Lore deals its combat damage to its blocker
