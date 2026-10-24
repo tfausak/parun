@@ -1,6 +1,6 @@
 {
   "description": "CR 609.7a / 607.2d whole card: Story Circle's controller chooses a color as it enters, and each activation prevents the next damage to them from a source of that color they choose",
-  "note": "Alice names red. Bob's green Grizzly Bears are refused as the source; she picks his Hill Giant, so of the Giant's 3 and the Goblin Piker's 2 she takes only 2.",
+  "note": "Alice names red. Bob's green Grizzly Bears are refused as the source; she picks his Hill Giant, and bob's Disenchant on the Circle before damage leaves the shield standing (CR 113.7a), so of the Giant's 3 and the Goblin Piker's 2 she takes only 2.",
   "board": {
     "active": "alice",
     "step": "PrecombatMain",
@@ -48,6 +48,12 @@
       },
       {
         "name": "bob",
+        "hand": [
+          {
+            "card": "Disenchant",
+            "label": "disenchant"
+          }
+        ],
         "battlefield": [
           {
             "card": "Hill Giant",
@@ -63,6 +69,14 @@
             "card": "Grizzly Bears",
             "label": "bears",
             "ready": true
+          },
+          {
+            "card": "Plains",
+            "label": "bp1"
+          },
+          {
+            "card": "Plains",
+            "label": "bp2"
           }
         ],
         "library": [
@@ -167,6 +181,42 @@
         "Answer": {
           "prompt": "ChooseDamageSource",
           "with": "$giant"
+        }
+      }
+    },
+    {
+      "turn": 2,
+      "step": "DeclareAttackers",
+      "player": "bob",
+      "do": {
+        "Cast": {
+          "object": "$disenchant",
+          "targets": [
+            "Story Circle"
+          ],
+          "mana": [
+            "$bp1",
+            "$bp2"
+          ]
+        }
+      }
+    },
+    {
+      "turn": 2,
+      "step": "DeclareAttackers",
+      "player": "bob",
+      "do": "Pass"
+    },
+    {
+      "turn": 2,
+      "step": "DeclareBlockers",
+      "player": "bob",
+      "check": {
+        "Count": {
+          "player": "alice",
+          "zone": "Graveyard",
+          "card": "Story Circle",
+          "count": 1
         }
       }
     },

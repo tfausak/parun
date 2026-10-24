@@ -5543,6 +5543,13 @@ blockPermissionFilters permission =
 --     Pawl.Engine.Resolve.Effect.storedClass and then matched through a bare
 --     Filter.contextFor. Unframed's answer for every atom but CR 110.2's
 --     Filter.SameControllerAsBound, which the bake writes in (Mark for Death).
+--   * ChosenSourceFramed -- CR 609.7a's chosen source on a prevention or
+--     redirection effect, matched against each candidate by
+--     Pawl.Engine.Resolve.Effect.damageSourceCandidates through
+--     Resolve.Slots.effectContext and rechecked at the damage event (CR 615.9)
+--     by Pawl.Engine.Replacement.matchesDamageSource in the row's
+--     candidateContext; both fill the source's CR 607.2d choices (Story
+--     Circle).
 --   * Unframed -- everything else.
 --
 -- CR 303.4a's enchant slot (Face.enchant) is Unframed rather than InTargetSlot,
@@ -5716,6 +5723,8 @@ data Framing
   | -- | A resolution's stored CR 611.2c combat restriction class. See the
     -- overview above.
     StoredClassFramed
+  | -- | CR 609.7a's chosen source. See the overview above.
+    ChosenSourceFramed
   -- Bounded and Enum so the framing coverage case below enumerates
   -- [minBound .. maxBound] rather than a hand-kept list: a constructor added
   -- here joins that case with no edit, which is the tripwire a hand-kept list
@@ -5798,6 +5807,9 @@ sweptForSingularSlots framing = case framing of
   TriggerConditionFramed -> True
   -- SWEPT, as it was while Unframed: the split is about CR 110.2's bake.
   StoredClassFramed -> True
+  -- SWEPT, as it was while Unframed: the split is about CR 607.2d's chosen
+  -- values, not about slots.
+  ChosenSourceFramed -> True
 
 -- filterSlotsReadSingly against a TAGGED position, and the one funnel every
 -- reader of that walk goes through, so two routes to the same keyword filter
@@ -6103,25 +6115,23 @@ effectFilters effect = case effect of
   -- landwalk's payload once, so a nested effect list is exactly what it must not
   -- stop at.
   --
-  -- CR 609.7a's chosen source is UNFRAMED: Pawl.Engine.Resolve evaluates it
-  -- against each candidate's own view (Projection.viewOfObject), the way
-  -- Replacement.matchesDamageSource evaluates the shield's rechecked half.
+  -- CR 609.7a's chosen source is ChosenSourceFramed (see the overview); the
+  -- recipient description is UNFRAMED: Pawl.Engine.Replacement evaluates it
+  -- against the damage's own recipient, not against this card's frame.
   Effect.PreventNextDamage (PreventNextDamage.MkPreventNextDamage duration _ ref whatRecipient _ chosenSource quantity rider) ->
-    frame Unframed (durationFilters duration) <> frame Unframed (quantityFilters quantity) <> unframed (Maybe.maybeToList chosenSource <> Maybe.maybeToList whatRecipient) <> frame SourceHostFramed (foldMap objectRefFilters ref) <> concatMap effectFilters rider
-  -- CR 609.7b's property-named source is UNFRAMED for the chosen source's
-  -- reason: Pawl.Engine.Replacement.matchesDamageSource evaluates it against the
-  -- damage's own source, not against this card's frame.
+    frame Unframed (durationFilters duration) <> frame Unframed (quantityFilters quantity) <> fmap ((,) ChosenSourceFramed) (Maybe.maybeToList chosenSource) <> unframed (Maybe.maybeToList whatRecipient) <> frame SourceHostFramed (foldMap objectRefFilters ref) <> concatMap effectFilters rider
+  -- CR 609.7b's property-named source is UNFRAMED: Pawl.Engine.Replacement.matchesDamageSource
+  -- evaluates it against the damage's own source, not against this card's frame.
   Effect.PreventAllDamage (PreventAllDamage.MkPreventAllDamage duration _ ref whatRecipient _ _ chosenSource whatSource rider) ->
-    frame Unframed (durationFilters duration) <> unframed (Maybe.maybeToList chosenSource <> Maybe.maybeToList whatRecipient <> [whatSource]) <> frame SourceHostFramed (foldMap objectRefFilters ref) <> concatMap effectFilters rider
-  -- The two arms above's reads over the fields CR 615.8's shield carries, and
-  -- CR 609.7a's chosen source is UNFRAMED there for their reason.
+    frame Unframed (durationFilters duration) <> fmap ((,) ChosenSourceFramed) (Maybe.maybeToList chosenSource) <> unframed (Maybe.maybeToList whatRecipient <> [whatSource]) <> frame SourceHostFramed (foldMap objectRefFilters ref) <> concatMap effectFilters rider
+  -- The two arms above's reads over the fields CR 615.8's shield carries.
   Effect.PreventNextDamageInstance (PreventNextDamageInstance.MkPreventNextDamageInstance duration ref chosenSource rider) ->
-    frame Unframed (durationFilters duration) <> unframed [chosenSource] <> frame SourceHostFramed (objectRefFilters ref) <> concatMap effectFilters rider
+    frame Unframed (durationFilters duration) <> [(ChosenSourceFramed, chosenSource)] <> frame SourceHostFramed (objectRefFilters ref) <> concatMap effectFilters rider
   -- BOTH refs, or a Filter inside a redirect's destination escapes this lint.
-  -- CR 609.7a's chosen source and the recipient description are UNFRAMED, for
-  -- the reason the two prevention arms above give.
+  -- The chosen source, the recipient description and the property-named source
+  -- are framed as the two prevention arms above frame them.
   Effect.RedirectDamage (RedirectDamage.MkRedirectDamage duration _ amount srcRef whatRecipient _ destRef chosenSource _ whatSource) ->
-    frame Unframed (durationFilters duration) <> frame Unframed (foldMap quantityFilters amount) <> unframed (Maybe.maybeToList chosenSource <> Maybe.maybeToList whatRecipient <> [whatSource]) <> frame SourceHostFramed (foldMap objectRefFilters srcRef <> objectRefFilters destRef)
+    frame Unframed (durationFilters duration) <> frame Unframed (foldMap quantityFilters amount) <> fmap ((,) ChosenSourceFramed) (Maybe.maybeToList chosenSource) <> unframed (Maybe.maybeToList whatRecipient <> [whatSource]) <> frame SourceHostFramed (foldMap objectRefFilters srcRef <> objectRefFilters destRef)
   -- CR 708.2's listed characteristics hold no Filter, but the ref does -- Ixidron's
   -- "all other nontoken creatures" is an ObjectRef Filter like Destroy's, so the
   -- lint reaches it.
