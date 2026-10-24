@@ -15,6 +15,7 @@ import qualified Parun.Types.BuybackDecision as BuybackDecision
 import qualified Parun.Types.CandidateCost as CandidateCost
 import qualified Parun.Types.Card as Card
 import qualified Parun.Types.CardName as CardName
+import qualified Parun.Types.CardType as CardType
 import qualified Parun.Types.CastFromZone as CastFromZone
 import qualified Parun.Types.ClauseIndex as ClauseIndex
 import qualified Parun.Types.CoinFace as CoinFace
@@ -638,6 +639,9 @@ data Prompt r where
   -- | CR 105.4 / 106.3: which mana a resolving object adds when the type it
   -- names is not settled, from Parun.Engine.Mana.produced.
   ChooseManaType :: Decider.Decider -> PlayerId.PlayerId -> ObjectId.ObjectId -> NonEmpty.NonEmpty ManaType.ManaType -> Prompt ManaType.ManaType
+  -- | CR 205.2a: which of the offered card types a player chooses (Storage
+  -- Matrix's untap step choice, CR 502.3).
+  ChooseCardType :: Decider.Decider -> PlayerId.PlayerId -> ObjectId.ObjectId -> NonEmpty.NonEmpty CardType.CardType -> Prompt CardType.CardType
   -- | CR 201.4: the card name a player chooses, as an object enters (CR 614.1c)
   -- or as a resolution instructs (CR 608.2c); the Filter is CR 201.4a's
   -- restriction, and the PlayerId is the chooser, asked in APNAP order. The Seq

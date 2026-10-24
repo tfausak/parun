@@ -1,0 +1,67 @@
+{
+  "description": "CR 502.3 Storage Matrix asks nothing when every choice untaps the same permanents",
+  "note": "Alice's only tapped permanent is a Glorious Anthem, which none of artifact, creature or land untaps, so the three choices cannot be told apart: nothing is asked (an unscheduled prompt would fail the scenario) and the Anthem stays tapped.",
+  "board": {
+    "seats": [
+      {
+        "name": "alice",
+        "battlefield": [
+          {
+            "card": "Storage Matrix",
+            "label": "matrix"
+          },
+          {
+            "card": "Glorious Anthem",
+            "label": "anthem",
+            "tapped": true
+          }
+        ],
+        "library": [
+          {
+            "card": "Forest"
+          },
+          {
+            "card": "Forest"
+          }
+        ]
+      },
+      {
+        "name": "bob",
+        "library": [
+          {
+            "card": "Mountain"
+          },
+          {
+            "card": "Mountain"
+          }
+        ]
+      }
+    ],
+    "active": "bob",
+    "step": "EndStep"
+  },
+  "timeline": [
+    {
+      "turn": 2,
+      "step": "Upkeep",
+      "player": "alice",
+      "check": {
+        "Tapped": {
+          "object": "$anthem",
+          "tapped": true
+        }
+      }
+    },
+    {
+      "turn": 2,
+      "step": "Upkeep",
+      "player": "alice",
+      "check": {
+        "Tapped": {
+          "object": "$matrix",
+          "tapped": false
+        }
+      }
+    }
+  ]
+}

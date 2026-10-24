@@ -1,6 +1,7 @@
 -- CR 502.3 / 101.2 / 613.11: the continuous effects that FORBID CR 502.3's
--- untap, cap how many permanents it untaps, leave it to the active player, or
--- untap a permanent in another player's untap step.
+-- untap, cap how many permanents it untaps, leave it to the active player,
+-- confine it to a card type they choose, or untap a permanent in another
+-- player's untap step.
 -- One of the modules on the axis CR 613.11 reaches past the layer system
 -- (alongside Parun.Engine.PlayerEffect, Parun.Engine.BlockRequirement,
 -- Parun.Engine.AttackRequirement, Parun.Engine.CombatRestriction,
@@ -52,7 +53,9 @@ import qualified Parun.Types.UntapRestriction as UntapRestriction
 -- untap (Static Orb), UntapHold.Elective what its controller MAY leave tapped
 -- (Amber Prison's first sentence), UntapHold.DuringOthersSteps what untaps
 -- in a step that is not its source's controller's (Seedborn Muse), and only
--- in such a step. `untapRestrictions` in data/cards is the
+-- in such a step, and UntapHold.OfChosenType what untaps only if it has the
+-- card type the active player chooses (Storage Matrix). `untapRestrictions` in
+-- data/cards is the
 -- carrier, and this answers for every card that fills it. One entry per
 -- restriction rather than a union, because a cap counts its own set (CR 101.2:
 -- Static Orb and Winter Orb each hold, neither adding to the other).

@@ -1520,6 +1520,12 @@ combatReplaySpec s =
             "the head"
             (Replay.defaultAnswer (Prompt.ChooseManaType decider S.alice oid (ManaType.Colored Color.White NonEmpty.:| [ManaType.Colored Color.Blue])))
             (ManaType.Colored Color.White)
+        -- CR 205.2a: Storage Matrix's chosen card type is a decision, so it has
+        -- to survive a transcript like any other.
+        Spec.it s "ChooseCardType round-trips through the transcript" $ do
+          let p = Prompt.ChooseCardType decider S.alice oid (CardType.Artifact NonEmpty.:| [CardType.Creature, CardType.Land])
+          Spec.assertEqWith s "choosing land round trips" (Replay.decode p (Replay.encode p CardType.Land)) (Just CardType.Land)
+          Spec.assertEqWith s "choosing artifact round trips" (Replay.decode p (Replay.encode p CardType.Artifact)) (Just CardType.Artifact)
         -- CR 701.47a: which Army an amassing player put the counters on is a
         -- decision, so it has to survive a transcript like any other.
         Spec.it s "ChooseAmass round-trips through the transcript" $ do
