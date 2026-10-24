@@ -1,6 +1,8 @@
 module Pawl.Types.FlipCoin where
 
 import qualified Pawl.Types.CoinReading as CoinReading
+import qualified Pawl.Types.PlayerRef as PlayerRef
+import qualified Pawl.Types.PlayerRelation as PlayerRelation
 import qualified Pawl.Types.Quantity as Quantity
 import qualified Pawl.Types.SlotName as SlotName
 
@@ -41,13 +43,21 @@ import qualified Pawl.Types.SlotName as SlotName
 -- Prompt.FlipCoin as a permanent enters and consumes the face on the spot, where
 -- this opcode binds a tally for a later effect to read.
 --
+-- `flipper` is CR 705.1's player the instruction is aimed at: You for every
+-- printing but Mana Clash's "target opponent", whose own flip is its second
+-- instruction. A PlayerRef rather than Pawl.Types.RollDie's PlayerScope,
+-- because the seat can be a target. Each flipper flips in APNAP order (CR
+-- 101.4), calls their own coin (CR 705.2's last sentence) and is the player
+-- Krark's Thumb's "you" watches (CR 614.1a); the tallies sum over them.
+--
 -- Construct with BRACE syntax everywhere: positional construction absorbs a new
 -- field in argument order with nothing red (#2009, #2021).
 data FlipCoin = MkFlipCoin
   { count :: Quantity.Quantity,
     reading :: CoinReading.CoinReading,
     slot :: SlotName.SlotName,
-    misses :: Maybe SlotName.SlotName
+    misses :: Maybe SlotName.SlotName,
+    flipper :: PlayerRef.PlayerRef
   }
   deriving (Eq, Ord, Show)
 
@@ -59,3 +69,8 @@ defaultCount = Quantity.Literal 1
 -- | What CR 705.2's win\/lose flip writes, and the value the codec elides.
 defaultReading :: CoinReading.CoinReading
 defaultReading = CoinReading.Wins
+
+-- | What an instruction flipped by its controller writes (CR 109.5), and the
+-- value the codec elides.
+defaultFlipper :: PlayerRef.PlayerRef
+defaultFlipper = PlayerRef.Relative PlayerRelation.You

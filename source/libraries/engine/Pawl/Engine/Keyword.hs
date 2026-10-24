@@ -177,6 +177,7 @@ import qualified Pawl.Types.PlayerRef as PlayerRef
 import qualified Pawl.Types.PlayerRelation as PlayerRelation
 import qualified Pawl.Types.PlayerSacrifices as PlayerSacrifices
 import qualified Pawl.Types.PlayerScope as PlayerScope
+import qualified Pawl.Types.PlayersWho as PlayersWho
 import qualified Pawl.Types.Plus as Plus
 import qualified Pawl.Types.Pool as Pool
 import qualified Pawl.Types.Power as Power
@@ -6173,7 +6174,7 @@ myriad =
       loop =
         Effect.ForEach
           ForEach.MkForEach
-            { ForEach.ref = ObjectRef.Players (PlayerRef.EachOpponentExcept Binding.triggerPlayer),
+            { ForEach.ref = ObjectRef.Players PlayersWho.MkPlayersWho {PlayersWho.players = PlayerRef.EachOpponentExcept Binding.triggerPlayer, PlayersWho.who = Nothing},
               ForEach.members = LoopMembers.AnyNumber,
               ForEach.slot = myriadOpponentSlot,
               ForEach.body = Seq.singleton copy,

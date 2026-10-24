@@ -66,8 +66,10 @@
                               "ref": {
                                 "type": "Players",
                                 "value": {
-                                  "type": "ControllerOfBound",
-                                  "value": "thatDamager"
+                                  "players": {
+                                    "type": "ControllerOfBound",
+                                    "value": "thatDamager"
+                                  }
                                 }
                               }
                             }

@@ -13,6 +13,7 @@ import qualified Pawl.Types.CardName as CardName
 import qualified Pawl.Types.CardType as CardType
 import qualified Pawl.Types.Color as Color
 import qualified Pawl.Types.Comparison as Comparison
+import qualified Pawl.Types.ControlMargin as ControlMargin
 import qualified Pawl.Types.Cost as Cost
 import qualified Pawl.Types.CounterKind as CounterKind
 import qualified Pawl.Types.Cycling as Cycling
@@ -668,12 +669,12 @@ spec s = Spec.describe s "Pawl.Engine.Filter" $ do
   -- False wherever it reaches a match unbaked. ControlledByBound's posture, pinned
   -- here for the same reason it is pinned there -- Pawl.CountSpec's Oreskos
   -- Explorer group is what proves the BAKED answer.
-  Spec.it s "ControlsMoreThanYou is False unbaked, for a player and for an object alike" $ do
-    let lands = Filter.Type.ControlsMoreThanYou 1 (Filter.Type.HasCardType CardType.Land)
+  Spec.it s "Controls is False unbaked, for a player and for an object alike" $ do
+    let lands = Filter.Type.Controls (ControlMargin.MoreThanYou 1) (Filter.Type.HasCardType CardType.Land)
     Spec.assertBool s (not (Filter.matches self aPlayer lands)) "player"
     Spec.assertBool s (not (Filter.matches self blackCreature lands)) "object"
 
-  -- CR 400.1's per-player graveyard, ControlsMoreThanYou's posture one atom over
+  -- CR 400.1's per-player graveyard, Controls' posture one atom over
   -- and for its reason plus one: an OBJECT has no graveyard to size at all (CR
   -- 109.3 counts no zone among its characteristics), so False is the answer for
   -- both candidates rather than only for the unbaked position. Pawl.TriggerSpec's
@@ -1943,7 +1944,7 @@ spec s = Spec.describe s "Pawl.Engine.Filter" $ do
       Spec.assertBool s (not (Filter.matches self (blackCreature {Filter.subtypes = Set.singleton Subtype.Aura}) byAnAura)) "subtype does not imply carrying one"
 
     -- CR 303.4b does let an Aura enchant a PLAYER, so unlike AttachedTo's player
-    -- case this False is ControlsMoreThanYou's posture rather than the rule:
+    -- case this False is Controls' posture rather than the rule:
     -- answered by rewriting at Pawl.Engine.Count.bakePerspective, and vacuously
     -- False wherever it reaches a match unbaked. Pawl.CountSpec's Census of the
     -- Cursed group proves the baked answer.

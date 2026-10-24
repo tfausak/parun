@@ -69,8 +69,10 @@
                       "ref": {
                         "type": "Players",
                         "value": {
-                          "type": "ControllerOfBound",
-                          "value": "creature"
+                          "players": {
+                            "type": "ControllerOfBound",
+                            "value": "creature"
+                          }
                         }
                       },
                       "slot": "player"

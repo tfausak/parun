@@ -235,7 +235,7 @@ data Modification ability
   | SetLandSubtype Subtype.Subtype -- layer 4, CR 305.7 set (Blood Moon -> Mountain)
   | -- | layer 4, CR 613.1d / 305.7: set this object's land subtype to the basic
     -- land type chosen for THIS effect's SOURCE (Object.chosenSubtype), as it
-    -- entered or by Effect.ChooseBasicLandType. Convincing Mirage's "enchanted
+    -- entered or by Effect.ChooseQuality. Convincing Mirage's "enchanted
     -- land is the chosen type"; Mystic Compass's, which a resolution bakes.
     --
     -- Payload-free because the subtype is DERIVED at projection time from the

@@ -836,7 +836,7 @@ data View = MkView
 -- a player is not an object (CR 109.1) and has none of those. The player's own
 -- identity is the only thing THIS VIEW can answer, which is exactly what
 -- IsPlayer asks. The other player-shaped atoms are answered elsewhere on
--- purpose: ControlsMoreThanYou, IsControllerOfBound and CardsInGraveyardAtLeast
+-- purpose: Controls, IsControllerOfBound and CardsInGraveyardAtLeast
 -- each ask about the board or a zone, which a function taking nothing but a
 -- PlayerId cannot see, so Pawl.Engine.Count.bakePerspective bakes them against
 -- the game state before the match instead.
@@ -945,7 +945,7 @@ playerView pid =
       -- this view is built from a PlayerId alone and holds no board to sweep for
       -- the attachers. False is therefore the DEFAULT and not the answer, but
       -- unlike `dealtDamageThisTurn` above it stays the default here: CR 109.3
-      -- keeps attachment off the characteristics, so this is ControlsMoreThanYou's
+      -- keeps attachment off the characteristics, so this is Controls'
       -- posture rather than that field's -- Pawl.Engine.Count.bakePerspective
       -- rewrites the HasAttached atom against the board instead of filling this
       -- field, and only the Scope.OverPlayers road travels through it.
@@ -2060,7 +2060,7 @@ matches context view predicate = case predicate of
     (Just candidate, Just you) -> PlayerRelation.holds (teams context) relation you candidate
     _ -> False
   -- The controller of the object a slot names, and False WHEREVER IT IS REACHED,
-  -- for ControlsMoreThanYou's reason below: Pawl.Engine.Count.bakePerspective
+  -- for Controls' reason below: Pawl.Engine.Count.bakePerspective
   -- answers it against the board, and this module holds none. An atom that
   -- survives to here is one in a position nothing bakes -- any filter but a
   -- Scope.OverPlayers count's.
@@ -2071,7 +2071,7 @@ matches context view predicate = case predicate of
   -- is matched, because answering it means counting permanents and this module
   -- holds no game state. An atom that survives to here is one in a position
   -- nothing bakes -- any filter but a Scope.OverPlayers count's.
-  Filter.ControlsMoreThanYou _ _ -> False
+  Filter.Controls _ _ -> False
   -- CR 400.1's per-player graveyard, and False WHEREVER IT IS REACHED, for the
   -- two atoms above's reason plus one of its own: this module holds no game
   -- state to size a zone with, and CR 109.3 counts no zone among an OBJECT's
@@ -2450,7 +2450,7 @@ rewrite pairs predicate = case predicate of
   -- DESCENT, like And/Or/Not above: the nested filter describes the permanents
   -- being counted ("more LANDS than you"), so a word swap reaches it exactly as it
   -- reaches the same description written at the top level.
-  Filter.ControlsMoreThanYou n f -> Filter.ControlsMoreThanYou n (rewrite pairs f)
+  Filter.Controls n f -> Filter.Controls n (rewrite pairs f)
   -- Untouched, where the atom above is rewritten, and the contrast is CR 612's
   -- rather than an omission: rule 612.1's swap acts on a WORD in the text, and a
   -- family names no word. Magical Hack turning "Swamp" into "Island" turns a
@@ -2529,7 +2529,7 @@ rewrite pairs predicate = case predicate of
   Filter.SaddledSourceThisTurn -> predicate
   -- Untouched for AttackedThisTurn's reason: the atom names no subtype.
   Filter.ControlledSinceTurnBegan -> predicate
-  -- DESCENT, for ControlsMoreThanYou's reason above: the nested filter describes
+  -- DESCENT, for Controls' reason above: the nested filter describes
   -- the HOST ("attached to a Swamp"), so CR 612.1's word swap reaches it exactly
   -- as it reaches the same description written at the top level.
   Filter.AttachedTo f -> Filter.AttachedTo (rewrite pairs f)
@@ -3199,7 +3199,7 @@ bakeBound players objects controllers predicate = case predicate of
   -- Descended into for the reason `rewrite` descends: the nested filter is a
   -- filter like any other, and a slot named inside it must be baked before the
   -- match or it can never be answered.
-  Filter.ControlsMoreThanYou n f -> Filter.ControlsMoreThanYou n (bakeBound players objects controllers f)
+  Filter.Controls n f -> Filter.Controls n (bakeBound players objects controllers f)
   Filter.ControlledByPlayer _ -> predicate
   -- Untouched: CR 603.2's slot is not the recipient an effect has reached, and no
   -- binding could answer this atom -- Pawl.Engine.Filter.Context carries it.
@@ -3285,7 +3285,7 @@ bakeBound players objects controllers predicate = case predicate of
   Filter.SaddledSourceThisTurn -> predicate
   -- Untouched: the atom names no slot for CR 603.2's map to substitute into.
   Filter.ControlledSinceTurnBegan -> predicate
-  -- DESCENT, for ControlsMoreThanYou's reason above: a ControlledByBound written
+  -- DESCENT, for Controls' reason above: a ControlledByBound written
   -- into the HOST's description is baked exactly as the same atom written at the
   -- top level would be. Pawl.Engine.Filter.boundSlots descends to match, which is
   -- the pairing that function's comment insists on.
@@ -3390,7 +3390,7 @@ manaValueThresholds predicate = case predicate of
   -- only widens CR 601.3a's sample, and the alternative -- an empty list -- would
   -- have to argue that no nested atom can ever matter, which is a claim about the
   -- inner filter rather than about this atom.
-  Filter.ControlsMoreThanYou _ f -> manaValueThresholds f
+  Filter.Controls _ f -> manaValueThresholds f
   -- Reads the mana value and compares it against NO literal, so it bounds
   -- nothing: parity is what the sample's two-past-the-greatest tail is for.
   Filter.ManaValueIsEven -> []
@@ -3458,7 +3458,7 @@ manaValueThresholds predicate = case predicate of
   Filter.ConvokedSourceThisTurn -> []
   Filter.SaddledSourceThisTurn -> []
   Filter.ControlledSinceTurnBegan -> []
-  -- Descended into, which OVER-reports for ControlsMoreThanYou's reason: the
+  -- Descended into, which OVER-reports for Controls' reason: the
   -- literals inside bound the HOST's mana value and never the candidate's. Only
   -- widening CR 601.3a's sample is the safe direction.
   Filter.AttachedTo f -> manaValueThresholds f
@@ -3543,7 +3543,7 @@ statesAQuality predicate = case predicate of
   -- A quality like any other atom's, whatever the nested filter says: a search
   -- whose predicate is this one is looking for cards with a stated quality, so CR
   -- 701.23b applies and no descent could change that.
-  Filter.ControlsMoreThanYou _ _ -> True
+  Filter.Controls _ _ -> True
   -- A quality whatever the operand: "with mana value X or less" describes the
   -- card as much when X is computed, or is another object's, as when it is
   -- printed.
@@ -3629,7 +3629,7 @@ statesAQuality predicate = case predicate of
   Filter.ConvokedSourceThisTurn -> True
   Filter.SaddledSourceThisTurn -> True
   Filter.ControlledSinceTurnBegan -> True
-  -- True whatever the nest says, for ControlsMoreThanYou's reason: "attached to
+  -- True whatever the nest says, for Controls' reason: "attached to
   -- something" is itself a stated quality under CR 701.23b, so even the trivial
   -- nest `And []` leaves this atom stating one and no descent could change it.
   Filter.AttachedTo _ -> True
@@ -3706,7 +3706,7 @@ readsSourceValues predicate = case predicate of
   Filter.Or fs -> any readsSourceValues fs
   Filter.Not f -> readsSourceValues f
   Filter.Unwritten f -> readsSourceValues f
-  Filter.ControlsMoreThanYou _ f -> readsSourceValues f
+  Filter.Controls _ f -> readsSourceValues f
   Filter.Measures m -> case Measures.operand m of
     Operand.OfSource _ -> True
     Operand.Literal _ -> False
@@ -3931,7 +3931,7 @@ overBoundSlotsWith f predicate = case predicate of
   Filter.IsControllerOfBound slot -> fmap Filter.IsControllerOfBound (f SlotArity.One slot)
   -- DESCENT: the nest is card text like any other, and an atom written into it
   -- is read exactly as one written at the top level.
-  Filter.ControlsMoreThanYou n g -> fmap (Filter.ControlsMoreThanYou n) (overBoundSlotsWith f g)
+  Filter.Controls n g -> fmap (Filter.Controls n) (overBoundSlotsWith f g)
   Filter.CardsInGraveyardAtLeast _ -> pure predicate
   Filter.IsAttacking -> pure predicate
   Filter.IsAttackingPlayer _ -> pure predicate
@@ -3957,7 +3957,7 @@ overBoundSlotsWith f predicate = case predicate of
   Filter.ConvokedSourceThisTurn -> pure predicate
   Filter.SaddledSourceThisTurn -> pure predicate
   Filter.ControlledSinceTurnBegan -> pure predicate
-  -- DESCENT, for ControlsMoreThanYou's reason.
+  -- DESCENT, for Controls' reason.
   Filter.AttachedTo g -> fmap Filter.AttachedTo (overBoundSlotsWith f g)
   -- DESCENT, for the atom above's reason.
   Filter.HasAttached g -> fmap Filter.HasAttached (overBoundSlotsWith f g)

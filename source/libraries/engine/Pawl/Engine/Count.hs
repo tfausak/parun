@@ -34,6 +34,7 @@ import qualified Pawl.Types.Card as Card
 import qualified Pawl.Types.CardArrivedIn as CardArrivedIn
 import qualified Pawl.Types.Combat as Combat
 import qualified Pawl.Types.Condition as Condition
+import qualified Pawl.Types.ControlMargin as ControlMargin
 import qualified Pawl.Types.Convoking as Convoking
 import qualified Pawl.Types.Count as Count.Type
 import qualified Pawl.Types.CounterKind as CounterKind
@@ -272,6 +273,13 @@ playerView gs pid =
         Set.member (AttackTarget.OfPlayer pid) (Combat.declaredAttacked (GameState.combat gs))
     }
 
+-- CR 109.1: does a player Filter match this player? The Scope.OverPlayers
+-- fold's match, one candidate at a time, for a reference that narrows players
+-- rather than counting them (ObjectRef.Players, Disorder).
+playerMatches :: ViewOf -> Filter.Context -> GameState -> Filter.Type.Filter Keyword.Type.Keyword -> PlayerId -> Bool
+playerMatches viewOf context gs predicate pid =
+  Filter.matches context (playerView gs pid) (bakePerspective viewOf context gs pid predicate)
+
 -- CR 110.2 / 109.5: answer every perspective-reframing atom in a predicate
 -- against ONE candidate player, rewriting each to a trivially true or trivially
 -- false predicate so the match itself stays the pure fold Pawl.Engine.Filter
@@ -291,14 +299,17 @@ bakePerspective :: ViewOf -> Filter.Context -> GameState -> PlayerId -> Filter.T
 bakePerspective viewOf context gs candidate predicate =
   let recur = bakePerspective viewOf context gs candidate
    in case predicate of
-        -- At least `margin` more, and False when no perspective frames the match
-        -- (CR 109.5) -- the vacuous posture every player-referencing atom takes.
-        Filter.Type.ControlsMoreThanYou margin inner ->
+        -- At least the margin outright, or at least that many more than "you",
+        -- which is False when no perspective frames the match (CR 109.5) -- the
+        -- vacuous posture every player-referencing atom takes.
+        Filter.Type.Controls margin inner ->
           let theirs = controlledMatching viewOf context gs inner candidate
               yours = fmap (controlledMatching viewOf context gs inner) (Filter.perspective context)
-           in truth (maybe False (\n -> theirs >= n + toInteger margin) yours)
+           in truth $ case margin of
+                ControlMargin.AtLeast n -> theirs >= toInteger n
+                ControlMargin.MoreThanYou n -> maybe False (\mine -> theirs >= mine + toInteger n) yours
         -- CR 108.4 / 608.2h: is this candidate the player who controls the object the
-        -- slot names? Baked here for ControlsMoreThanYou's reason -- projecting a
+        -- slot names? Baked here for Controls' reason -- projecting a
         -- controller is a question about the board -- and off the same view the fold
         -- reads everything else through, which is what carries CR 608.2h in: the caller
         -- that has already moved the object supplies a last-known-aware view, and

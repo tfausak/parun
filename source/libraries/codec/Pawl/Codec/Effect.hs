@@ -33,6 +33,7 @@ import qualified Pawl.Codec.ChooseNumber as ChooseNumber
 import qualified Pawl.Codec.ChoosePermanents as ChoosePermanents
 import qualified Pawl.Codec.ChoosePlayer as ChoosePlayer
 import qualified Pawl.Codec.ChoosePlayerAtRandom as ChoosePlayerAtRandom
+import qualified Pawl.Codec.ChosenQuality as ChosenQuality
 import qualified Pawl.Codec.Conjure as Conjure
 import qualified Pawl.Codec.Connive as Connive
 import qualified Pawl.Codec.ControlPlayer as ControlPlayer
@@ -150,7 +151,7 @@ codec cardCodec abilityCodec =
           Arm.nullary "Reroll" Effect.Reroll,
           Arm.payload "RerollStoredResults" SlotName.codec Effect.RerollStoredResults (\x -> case x of Effect.RerollStoredResults y -> Just y; _ -> Nothing),
           Arm.payload "ChooseCardName" ChooseCardName.codec Effect.ChooseCardName (\x -> case x of Effect.ChooseCardName y -> Just y; _ -> Nothing),
-          Arm.nullary "ChooseBasicLandType" Effect.ChooseBasicLandType,
+          Arm.payload "ChooseQuality" ChosenQuality.codec Effect.ChooseQuality (\x -> case x of Effect.ChooseQuality y -> Just y; _ -> Nothing),
           Arm.payload "FromOutsideTheGame" FromOutsideTheGame.codec Effect.FromOutsideTheGame (\x -> case x of Effect.FromOutsideTheGame y -> Just y; _ -> Nothing),
           Arm.nullary "ExileThisSpell" Effect.ExileThisSpell,
           Arm.payload "Bolster" Quantity.codec Effect.Bolster (\x -> case x of Effect.Bolster y -> Just y; _ -> Nothing),
@@ -329,7 +330,7 @@ tagOf x = case x of
   Effect.Reroll {} -> "Reroll"
   Effect.RerollStoredResults {} -> "RerollStoredResults"
   Effect.ChooseCardName {} -> "ChooseCardName"
-  Effect.ChooseBasicLandType {} -> "ChooseBasicLandType"
+  Effect.ChooseQuality {} -> "ChooseQuality"
   Effect.FromOutsideTheGame {} -> "FromOutsideTheGame"
   Effect.ExileThisSpell {} -> "ExileThisSpell"
   Effect.Bolster {} -> "Bolster"

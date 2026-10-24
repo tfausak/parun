@@ -122,6 +122,7 @@ import qualified Pawl.Types.ChosenCardInHand as ChosenCardInHand
 import qualified Pawl.Types.ChosenPermanents as ChosenPermanents
 import qualified Pawl.Types.Clause as Clause
 import qualified Pawl.Types.ClauseIndex as ClauseIndex
+import qualified Pawl.Types.CoinReading as CoinReading
 import qualified Pawl.Types.Color as Color
 import qualified Pawl.Types.CombatRestriction as CombatRestriction
 import qualified Pawl.Types.Condition as Condition.Type
@@ -301,6 +302,7 @@ import qualified Pawl.Types.PlayerRelation as PlayerRelation
 import qualified Pawl.Types.PlayerSacrifices as PlayerSacrifices
 import qualified Pawl.Types.PlayerScope as PlayerScope
 import qualified Pawl.Types.PlayerStaticAbility as PlayerStaticAbility
+import qualified Pawl.Types.PlayersWho as PlayersWho
 import qualified Pawl.Types.PlaysLand as PlaysLand
 import qualified Pawl.Types.PlotFromZone as PlotFromZone
 import qualified Pawl.Types.Pool as Pool
@@ -782,6 +784,7 @@ playerRefPositions =
         ("discard-counted", Effect.Discard (Discard.Counted (CountedDiscard.MkCountedDiscard (plantedPlayer "dc") one Nothing)), [plantedPlayer "dc"]),
         ("discard-any-number", Effect.Discard (Discard.AnyNumber (AnyNumberDiscard.MkAnyNumberDiscard (plantedPlayer "da") (AnyNumberMatching.MkAnyNumberMatching (Filter.Type.And []) Nothing) Nothing)), [plantedPlayer "da"]),
         ("player-sacrifices", Effect.PlayerSacrifices (PlayerSacrifices.MkPlayerSacrifices (plantedPlayer "ps") (Filter.Type.And []) one), [plantedPlayer "ps"]),
+        ("flip-coin", Effect.FlipCoin FlipCoin.MkFlipCoin {FlipCoin.count = one, FlipCoin.reading = CoinReading.Heads, FlipCoin.slot = SlotName.MkSlotName (Text.pack "fc"), FlipCoin.misses = Nothing, FlipCoin.flipper = plantedPlayer "fc"}, [plantedPlayer "fc"]),
         ("choose-card-name", Effect.ChooseCardName (ChooseCardName.MkChooseCardName (plantedPlayer "cn") (Filter.Type.And [])), [plantedPlayer "cn"]),
         ("repeat", Effect.Repeat (Repeat.MkRepeat (plantedPlayer "rp-chooser") Seq.empty Nothing), [plantedPlayer "rp-chooser"]),
         ("choose-number", Effect.ChooseNumber (ChooseNumber.MkChooseNumber (SlotName.MkSlotName (Text.pack "number")) Nothing (plantedPlayer "cn-chooser")), [plantedPlayer "cn-chooser"]),
@@ -1278,7 +1281,7 @@ ownCounts effect = case effect of
   Effect.Reroll -> []
   Effect.RerollStoredResults _ -> []
   Effect.ChooseCardName _ -> []
-  Effect.ChooseBasicLandType -> []
+  Effect.ChooseQuality _ -> []
   Effect.FromOutsideTheGame _ -> []
   Effect.ExileThisSpell -> []
   -- Bolster's N is a Quantity like the Search's above, so its Counts are
@@ -1824,7 +1827,7 @@ effectNestedEffects effect = case effect of
   Effect.Reroll -> []
   Effect.RerollStoredResults _ -> []
   Effect.ChooseCardName _ -> []
-  Effect.ChooseBasicLandType -> []
+  Effect.ChooseQuality _ -> []
   Effect.FromOutsideTheGame _ -> []
   Effect.ExileThisSpell -> []
   Effect.Bolster {} -> []
@@ -2365,7 +2368,7 @@ effectReplacements effect = case effect of
   Effect.Reroll -> []
   Effect.RerollStoredResults _ -> []
   Effect.ChooseCardName _ -> []
-  Effect.ChooseBasicLandType -> []
+  Effect.ChooseQuality _ -> []
   Effect.FromOutsideTheGame _ -> []
   Effect.ExileThisSpell -> []
   Effect.Bolster _ -> []
@@ -2919,7 +2922,7 @@ effectMintedFaces effect = case effect of
   Effect.Reroll -> []
   Effect.RerollStoredResults _ -> []
   Effect.ChooseCardName _ -> []
-  Effect.ChooseBasicLandType -> []
+  Effect.ChooseQuality _ -> []
   Effect.FromOutsideTheGame _ -> []
   Effect.ExileThisSpell -> []
   Effect.Bolster _ -> []
@@ -4104,9 +4107,10 @@ objectRefFilters ref = case ref of
   -- Stuffy Doll's "the chosen player" holds none either: the seat was named by a
   -- choice made on entry, never by characteristics.
   ObjectRef.ChosenPlayer -> []
-  -- Nor does an indirection to a seat: a PlayerRef names players by relation, by
-  -- slot or through CR 108.4's controller, never by characteristics.
-  ObjectRef.Players _ -> []
+  -- The PlayerRef names players by relation, by slot or through CR 108.4's
+  -- controller, never by characteristics; Disorder's "who controls a white
+  -- creature" is the narrowing Filter, matched against each player.
+  ObjectRef.Players (PlayersWho.MkPlayersWho _ who) -> unframed (Foldable.toList who)
   -- Count on Luck's "the top card of your library" names a POSITION, so it states
   -- no Filter of its own, and its PlayerRef names players. Its DEPTH is a
   -- Quantity, which reaches one through a Count -- "the top X cards" where X is
@@ -5934,7 +5938,7 @@ effectFilters effect = case effect of
   -- No candidate here is an object in the game either, the named card being one
   -- the reference has rather than one on the board.
   Effect.ChooseCardName (ChooseCardName.MkChooseCardName _ restriction) -> outsideTheGameFramed [restriction]
-  Effect.ChooseBasicLandType -> []
+  Effect.ChooseQuality _ -> []
   -- THE one wish-framed position. CR 400.11c's filter is matched against a
   -- PRINTED FACE (Pawl.Engine.Projection.View.viewOfCard) rather than against an
   -- object any of the other framings' evaluators project, which is what makes

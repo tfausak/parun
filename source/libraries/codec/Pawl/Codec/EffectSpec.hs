@@ -43,6 +43,7 @@ import qualified Pawl.Types.ChoosePermanents as ChoosePermanents
 import qualified Pawl.Types.ChoosePlayer as ChoosePlayer
 import qualified Pawl.Types.ChoosePlayerAtRandom as ChoosePlayerAtRandom
 import qualified Pawl.Types.ChosenPermanents as ChosenPermanents
+import qualified Pawl.Types.ChosenQuality as ChosenQuality
 import qualified Pawl.Types.ClassLevel as ClassLevel
 import qualified Pawl.Types.CoinReading as CoinReading
 import qualified Pawl.Types.Color as Color
@@ -2313,7 +2314,7 @@ spec s = Spec.describe s "Pawl.Codec.Effect" $ do
       s
       toJson
       fromJson
-      (Effect.FlipCoin FlipCoin.MkFlipCoin {FlipCoin.count = Quantity.Literal 1, FlipCoin.reading = CoinReading.Wins, FlipCoin.slot = SlotName.MkSlotName (Text.pack "flip"), FlipCoin.misses = Nothing})
+      (Effect.FlipCoin FlipCoin.MkFlipCoin {FlipCoin.count = Quantity.Literal 1, FlipCoin.reading = CoinReading.Wins, FlipCoin.slot = SlotName.MkSlotName (Text.pack "flip"), FlipCoin.misses = Nothing, FlipCoin.flipper = FlipCoin.defaultFlipper})
       " {\"type\":\"FlipCoin\",\"value\":{\"slot\":\"flip\"}} "
   Spec.it s "ExileHandThenDraw" $
     Common.assertJsonCodec
@@ -2359,13 +2360,13 @@ spec s = Spec.describe s "Pawl.Codec.Effect" $ do
       fromJson
       (Effect.ChooseCardName (ChooseCardName.MkChooseCardName (PlayerRef.Relative PlayerRelation.You) (Filter.Not (Filter.HasCardType CardType.Land))))
       " {\"type\":\"ChooseCardName\",\"value\":{\"player\":{\"type\":\"Relative\",\"value\":{\"type\":\"You\"}},\"restriction\":{\"type\":\"Not\",\"value\":{\"type\":\"HasCardType\",\"value\":{\"type\":\"Land\"}}}}} "
-  Spec.it s "ChooseBasicLandType" $
+  Spec.it s "ChooseQuality" $
     Common.assertJsonCodec
       s
       toJson
       fromJson
-      Effect.ChooseBasicLandType
-      " {\"type\":\"ChooseBasicLandType\"} "
+      (Effect.ChooseQuality ChosenQuality.Color)
+      " {\"type\":\"ChooseQuality\",\"value\":{\"type\":\"Color\"}} "
   -- CR 400.11c: the filter and CR 701.20a's reveal, Burning Wish's "reveal a
   -- sorcery card". Everything else about the sentence is the rule's -- the pool is
   -- the resolving controller's own (CR 108.3b) and the destination their hand.

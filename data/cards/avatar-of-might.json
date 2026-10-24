@@ -22,7 +22,7 @@
                     "type": "Members"
                   },
                   "filter": {
-                    "type": "ControlsMoreThanYou",
+                    "type": "Controls",
                     "value": {
                       "filter": {
                         "type": "HasCardType",
@@ -30,7 +30,10 @@
                           "type": "Creature"
                         }
                       },
-                      "margin": 4
+                      "margin": {
+                        "type": "MoreThanYou",
+                        "value": 4
+                      }
                     }
                   },
                   "scope": {
