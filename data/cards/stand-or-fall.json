@@ -78,9 +78,11 @@
                           "ref": {
                             "type": "Players",
                             "value": {
-                              "type": "InRole",
-                              "value": {
-                                "type": "Defending"
+                              "players": {
+                                "type": "InRole",
+                                "value": {
+                                  "type": "Defending"
+                                }
                               }
                             }
                           },

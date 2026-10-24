@@ -23,7 +23,10 @@
                   {
                     "effects": [
                       {
-                        "type": "ChooseBasicLandType"
+                        "type": "ChooseQuality",
+                        "value": {
+                          "type": "BasicLandType"
+                        }
                       },
                       {
                         "type": "ModifyTarget",

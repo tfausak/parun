@@ -54,8 +54,10 @@
                               "ref": {
                                 "type": "Players",
                                 "value": {
-                                  "type": "ControllerOfBound",
-                                  "value": "became"
+                                  "players": {
+                                    "type": "ControllerOfBound",
+                                    "value": "became"
+                                  }
                                 }
                               }
                             },
@@ -67,9 +69,11 @@
                               "ref": {
                                 "type": "Players",
                                 "value": {
-                                  "type": "Relative",
-                                  "value": {
-                                    "type": "You"
+                                  "players": {
+                                    "type": "Relative",
+                                    "value": {
+                                      "type": "You"
+                                    }
                                   }
                                 }
                               }

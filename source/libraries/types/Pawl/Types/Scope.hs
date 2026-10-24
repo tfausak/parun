@@ -38,7 +38,7 @@ data Scope
     -- in two. Filter.IsPlayer is answered off the VIEW, relating the candidate to
     -- the perspective, as is Filter.DealtDamageThisTurn, which Count.playerView
     -- fills from the board (CR 120.1).
-    -- Filter.ControlsMoreThanYou (Oreskos Explorer's "players who control more
+    -- Filter.Controls (Oreskos Explorer's "players who control more
     -- lands than you"), Filter.IsControllerOfBound (Spikeshell Harrier's "each
     -- other player") and Filter.CardsInGraveyardAtLeast (The Master of
     -- Lake-town's "each graveyard with seven or more cards in it") are instead

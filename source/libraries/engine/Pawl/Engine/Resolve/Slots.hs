@@ -194,6 +194,7 @@ import qualified Pawl.Types.PlayerQuantity as PlayerQuantity
 import Pawl.Types.PlayerRef (PlayerRef)
 import qualified Pawl.Types.PlayerRef as PlayerRef
 import qualified Pawl.Types.PlayerSacrifices as PlayerSacrifices
+import qualified Pawl.Types.PlayersWho as PlayersWho
 import qualified Pawl.Types.Pool as Pool
 import qualified Pawl.Types.Power as Power
 import qualified Pawl.Types.PreventAllDamage as PreventAllDamage
@@ -509,10 +510,9 @@ objectRefSlots ref = joinTwo (joinSlots (fmap playerRefSlots (objectRefPlayerRef
   ObjectRef.EachOpponent -> Map.empty
   -- The seat comes from the source's own entry choice (CR 614.12a), not a slot.
   ObjectRef.ChosenPlayer -> Map.empty
-  -- The slots the reference itself names, which is objectRefPlayerRefs' half
-  -- everywhere else in this module: the seat is a PlayerRef and may be read out
-  -- of a slot (Deflecting Palm's ControllerOfBound).
-  ObjectRef.Players player -> playerRefSlots player
+  -- The seat is objectRefPlayerRefs' half, joined at the head (Deflecting
+  -- Palm's ControllerOfBound); the narrowing Filter is a read like a sweep's.
+  ObjectRef.Players (PlayersWho.MkPlayersWho _ who) -> foldMap filterSlotsOf who
   ObjectRef.TopOfLibrary (TopOfLibrary.MkTopOfLibrary _ count) -> quantitySlots count
   -- The arm above's count, and no more: the SEAT is objectRefPlayerRefs' half.
   -- What a MATCH is is a Filter, and no arm here reports the slots a Filter
@@ -651,7 +651,7 @@ objectRefPlayerRefs ref = case ref of
   ObjectRef.EachOpponent -> []
   ObjectRef.ChosenPlayer -> []
   -- The reference IS a seat, so it is its own whole answer here.
-  ObjectRef.Players player -> [player]
+  ObjectRef.Players (PlayersWho.MkPlayersWho player _) -> [player]
   ObjectRef.TopOfLibrary (TopOfLibrary.MkTopOfLibrary player _) -> [player]
   ObjectRef.TopOfLibraryUntil (TopOfLibraryUntil.MkTopOfLibraryUntil player _ _) -> [player]
   -- Whose graveyard, the two library walks' own read over CR 400.1's other
@@ -877,7 +877,7 @@ effectObjectRefs effect = case effect of
   Effect.Reroll -> []
   Effect.RerollStoredResults _ -> []
   Effect.ChooseCardName {} -> []
-  Effect.ChooseBasicLandType -> []
+  Effect.ChooseQuality _ -> []
   Effect.Bolster {} -> []
   Effect.Amass {} -> []
   Effect.Blight {} -> []
@@ -1098,14 +1098,15 @@ effectPlayerRefs effect = case effect of
   Effect.ChoosePermanents choice -> ChosenPermanents.chooser (ChoosePermanents.permanents choice) : Foldable.toList (ChoosePermanents.pileChooser choice)
   Effect.ChooseSector {} -> []
   Effect.RollDie {} -> []
-  Effect.FlipCoin {} -> []
+  -- The seat that flips -- Mana Clash's target opponent (CR 705.1).
+  Effect.FlipCoin flipCoin -> [FlipCoin.flipper flipCoin]
   Effect.ExileHandThenDraw -> []
   Effect.NoteManaSpent -> []
   Effect.Proliferate -> []
   Effect.Reroll -> []
   Effect.RerollStoredResults _ -> []
   Effect.ChooseCardName (ChooseCardName.MkChooseCardName ref _) -> [ref]
-  Effect.ChooseBasicLandType -> []
+  Effect.ChooseQuality _ -> []
   Effect.Bolster {} -> []
   Effect.Amass {} -> []
   Effect.Blight (Blight.Type.MkBlight ref _ _) -> [ref]
@@ -1256,7 +1257,7 @@ slotsOf effect = joinTwo (joinTwo (joinSlots (fmap objectRefSlots (effectObjectR
   -- CHOOSER's slot is effectPlayerRefs' half, joined at the head above (Petra
   -- Sphinx's "target player").
   Effect.ChooseCardName _ -> Map.empty
-  Effect.ChooseBasicLandType -> Map.empty
+  Effect.ChooseQuality _ -> Map.empty
   -- No slot: the card comes from outside the game, where CR 400.11c lets nothing
   -- target and so nothing was announced (CR 601.2c).
   Effect.FromOutsideTheGame _ -> Map.empty
@@ -2107,7 +2108,7 @@ ownSlotsAreExhaustive effect = case effect of
   Effect.Reroll -> True
   Effect.RerollStoredResults _ -> True
   Effect.ChooseCardName _ -> True
-  Effect.ChooseBasicLandType -> True
+  Effect.ChooseQuality _ -> True
   Effect.FromOutsideTheGame _ -> True
   Effect.ExileThisSpell -> True
   Effect.Bolster quantity -> Quantity.slotsAreExhaustive quantity
@@ -2396,7 +2397,7 @@ readsX =
         Effect.RerollStoredResults _ -> False
         -- No Quantity: rule 201.4 chooses one name and states no count.
         Effect.ChooseCardName _ -> False
-        Effect.ChooseBasicLandType -> False
+        Effect.ChooseQuality _ -> False
         Effect.FromOutsideTheGame _ -> False
         Effect.ExileThisSpell -> False
         Effect.Bolster quantity -> Quantity.readsX quantity
@@ -2669,7 +2670,7 @@ boundSlots effect = case effect of
   -- Binds nothing: the name goes on the SOURCE (Object.chosenNames) and is read
   -- back off it by Filter.HasChosenName, so no slot carries it.
   Effect.ChooseCardName _ -> Set.empty
-  Effect.ChooseBasicLandType -> Set.empty
+  Effect.ChooseQuality _ -> Set.empty
   Effect.FromOutsideTheGame _ -> Set.empty
   Effect.ExileThisSpell -> Set.empty
   Effect.Bolster _ -> Set.empty

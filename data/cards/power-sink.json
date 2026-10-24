@@ -96,8 +96,10 @@
                       "ref": {
                         "type": "Players",
                         "value": {
-                          "type": "ControllerOfBound",
-                          "value": "spell"
+                          "players": {
+                            "type": "ControllerOfBound",
+                            "value": "spell"
+                          }
                         }
                       },
                       "slot": "player"

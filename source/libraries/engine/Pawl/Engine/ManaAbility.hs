@@ -328,7 +328,7 @@ manaProduced effect = case effect of
   Effect.Reroll -> Nothing
   Effect.RerollStoredResults _ -> Nothing
   Effect.ChooseCardName _ -> Nothing
-  Effect.ChooseBasicLandType -> Nothing
+  Effect.ChooseQuality _ -> Nothing
   Effect.FromOutsideTheGame _ -> Nothing
   Effect.ExileThisSpell -> Nothing
   Effect.Bolster _ -> Nothing
@@ -528,7 +528,7 @@ playerChoice effect = case effect of
   Effect.Reroll -> Nothing
   Effect.RerollStoredResults _ -> Nothing
   Effect.ChooseCardName _ -> Nothing
-  Effect.ChooseBasicLandType -> Nothing
+  Effect.ChooseQuality _ -> Nothing
   Effect.FromOutsideTheGame _ -> Nothing
   Effect.ExileThisSpell -> Nothing
   Effect.Bolster _ -> Nothing
@@ -775,7 +775,7 @@ movesLibraryCard effect = case effect of
   Effect.Reroll -> False
   Effect.RerollStoredResults _ -> False
   Effect.ChooseCardName _ -> False
-  Effect.ChooseBasicLandType -> False
+  Effect.ChooseQuality _ -> False
   -- CR 400.11: the card comes from OUTSIDE THE GAME, which is not a zone at all
   -- and so is not a library. CR 605.1a's fourth clause asks about libraries, and
   -- this effect moves no card to or from one.

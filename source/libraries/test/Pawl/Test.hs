@@ -150,6 +150,7 @@ import qualified Pawl.Codec.ChooserSpec
 import qualified Pawl.Codec.ChosenCardFromAmongSpec
 import qualified Pawl.Codec.ChosenCardInGraveyardSpec
 import qualified Pawl.Codec.ChosenCardInHandSpec
+import qualified Pawl.Codec.ChosenQualitySpec
 import qualified Pawl.Codec.ClassLevelChangeSpec
 import qualified Pawl.Codec.ClassLevelSpec
 import qualified Pawl.Codec.ClauseIndexSpec
@@ -175,6 +176,7 @@ import qualified Pawl.Codec.ContinuousEffectSpec
 import qualified Pawl.Codec.ControlChangedSpec
 import qualified Pawl.Codec.ControlClockSpec
 import qualified Pawl.Codec.ControlDurationSpec
+import qualified Pawl.Codec.ControlMarginSpec
 import qualified Pawl.Codec.ControlPlayerSpec
 import qualified Pawl.Codec.ControlSidesSpec
 import qualified Pawl.Codec.ControlSlotsSpec
@@ -527,6 +529,7 @@ import qualified Pawl.Codec.PlayerSpec
 import qualified Pawl.Codec.PlayerStaticAbilitySpec
 import qualified Pawl.Codec.PlayerViewSpec
 import qualified Pawl.Codec.PlayersDealtDamageSpec
+import qualified Pawl.Codec.PlayersWhoSpec
 import qualified Pawl.Codec.PlaysLandSpec
 import qualified Pawl.Codec.PlotFromZoneSpec
 import qualified Pawl.Codec.PlusSpec
@@ -1048,6 +1051,7 @@ spec s registry = do
   Pawl.Codec.ChosenCardFromAmongSpec.spec s
   Pawl.Codec.ChosenCardInGraveyardSpec.spec s
   Pawl.Codec.ChosenCardInHandSpec.spec s
+  Pawl.Codec.ChosenQualitySpec.spec s
   Pawl.Codec.ClassLevelChangeSpec.spec s
   Pawl.Codec.ClassLevelSpec.spec s
   Pawl.Codec.ClauseIndexSpec.spec s
@@ -1072,6 +1076,7 @@ spec s registry = do
   Pawl.Codec.ControlChangedSpec.spec s
   Pawl.Codec.ControlClockSpec.spec s
   Pawl.Codec.ControlDurationSpec.spec s
+  Pawl.Codec.ControlMarginSpec.spec s
   Pawl.Codec.ControllerBecomesTargetSpec.spec s
   Pawl.Codec.ControllerRelationSpec.spec s
   Pawl.Codec.ControlPlayerSpec.spec s
@@ -1415,6 +1420,7 @@ spec s registry = do
   Pawl.Codec.PlayerCountersSpec.spec s
   Pawl.Codec.PlayerCounterTallySpec.spec s
   Pawl.Codec.PlayersDealtDamageSpec.spec s
+  Pawl.Codec.PlayersWhoSpec.spec s
   Pawl.Codec.SuperlativeSpec.spec s
   Pawl.Codec.PlayerDesignationSpec.spec s
   Pawl.Codec.PlayerDesignationTallySpec.spec s

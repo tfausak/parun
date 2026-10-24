@@ -36,7 +36,7 @@
                           "type": "Members"
                         },
                         "filter": {
-                          "type": "ControlsMoreThanYou",
+                          "type": "Controls",
                           "value": {
                             "filter": {
                               "type": "HasCardType",
@@ -44,7 +44,10 @@
                                 "type": "Land"
                               }
                             },
-                            "margin": 1
+                            "margin": {
+                              "type": "MoreThanYou",
+                              "value": 1
+                            }
                           }
                         },
                         "scope": {

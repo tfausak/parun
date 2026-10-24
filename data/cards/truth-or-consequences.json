@@ -106,8 +106,10 @@
                           "ref": {
                             "type": "Players",
                             "value": {
-                              "type": "InSlot",
-                              "value": "opponent"
+                              "players": {
+                                "type": "InSlot",
+                                "value": "opponent"
+                              }
                             }
                           }
                         }

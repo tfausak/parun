@@ -28,8 +28,10 @@
                               "ref": {
                                 "type": "Players",
                                 "value": {
-                                  "type": "ControllerOfBound",
-                                  "value": "thatDamageSource"
+                                  "players": {
+                                    "type": "ControllerOfBound",
+                                    "value": "thatDamageSource"
+                                  }
                                 }
                               }
                             }

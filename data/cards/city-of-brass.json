@@ -61,9 +61,11 @@
                               "ref": {
                                 "type": "Players",
                                 "value": {
-                                  "type": "Relative",
-                                  "value": {
-                                    "type": "You"
+                                  "players": {
+                                    "type": "Relative",
+                                    "value": {
+                                      "type": "You"
+                                    }
                                   }
                                 }
                               }
