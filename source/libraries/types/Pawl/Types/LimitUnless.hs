@@ -2,6 +2,7 @@ module Pawl.Types.LimitUnless where
 
 import qualified Numeric.Natural as Natural
 import qualified Pawl.Types.Affected as Affected
+import qualified Pawl.Types.Comparison as Comparison
 import qualified Pawl.Types.Condition as Condition
 
 -- | A SIZE BOUND on how many creatures may be declared as blockers, the
@@ -13,6 +14,11 @@ import qualified Pawl.Types.Condition as Condition
 -- `defenders`, which is the field this record's own note said would split them.
 data LimitUnless = MkLimitUnless
   { limit :: Natural.Natural,
+    -- | How a nonzero count of blockers must compare to the limit: AtMost is
+    -- Charging Rhino's "can't be blocked by more than one creature", AtLeast
+    -- Phyrexian Colossus' "can't be blocked except by three or more creatures".
+    -- Blocking with none is never refused (CR 509.1b). Elided at AtMost.
+    comparison :: Comparison.Comparison,
     -- | Nothing is the bound on the WHOLE declaration (Silent Arbiter), Just the
     -- bound on the creatures blocking EACH attacker it names, counted per
     -- attacker (Charging Rhino's "can't be blocked by more than one

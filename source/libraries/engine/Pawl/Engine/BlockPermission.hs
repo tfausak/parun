@@ -28,7 +28,7 @@ import qualified Pawl.Types.RuleAbilities as RuleAbilities
 -- CR 509.1a: how many creatures BEYOND the first each of `candidates` may block
 -- right now. Absent from the map is the ordinary creature, which blocks one.
 --
--- SUMMED and not minimised, which is what separates this from
+-- SUMMED and not intersected, which is what separates this from
 -- Pawl.Engine.CombatRestriction.bounded: two permissions are two additional
 -- creatures, since each says "an additional" about the same blocker. That is the
 -- whole reason Pawl.Types.BlockPermission is not an arm of

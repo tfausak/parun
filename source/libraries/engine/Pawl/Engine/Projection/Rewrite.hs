@@ -2384,7 +2384,7 @@ rewriteQuantity pairs quantity = case quantity of
   Quantity.Type.EnteredThisTurn -> quantity
   Quantity.Type.EnteredFrom _ -> quantity
   Quantity.Type.WasCastFrom _ -> quantity
-  Quantity.Type.BlockersBeyondFirst -> quantity
+  Quantity.Type.BlockersBeyond _ -> quantity
   -- A leaf like Power above: no subtype word to hide, whichever way it reads.
   Quantity.Type.StationMeasure -> quantity
   -- Not a leaf: the payload is a whole Quantity and may hide a Count.

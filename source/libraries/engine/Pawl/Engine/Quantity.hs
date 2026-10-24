@@ -975,7 +975,7 @@ evaluateAgainst viewOf context gs announcedOn mOid mView quantity =
         -- CR 400.7 / 608.2i read as a 0/1: did the object this evaluation is aimed at
         -- enter the battlefield this turn?
         --
-        -- BlockersBeyondFirst's arm in shape -- read LIVE off game state rather than
+        -- BlockersBeyond's arm in shape -- read LIVE off game state rather than
         -- through the injected view, an entry being an event and not a characteristic --
         -- and CardsDiscardedThisTurn's in extent: Engine.beginTurnOf clears the log at
         -- the turn handoff, so "this turn" is the log's own reach and nothing here names
@@ -1106,9 +1106,11 @@ evaluateAgainst viewOf context gs announcedOn mOid mView quantity =
                   && elem (SpellWasCast.player cast) casters
               wasCast = any (maybe False castFromZone . Game.castOf . LoggedEvent.event) (GameState.events gs)
           pure (if elem owner pids && wasCast then 1 else 0)
-        -- CR 509.1h's declaration, counted beyond the first: how many creatures are
-        -- blocking the object this evaluation is aimed at, less one, floored at 0 for
-        -- rule 702.23a's "beyond the first".
+        -- CR 509.1h's declaration: how many creatures are blocking the object this
+        -- evaluation is aimed at, less the skipped count, floored at 0 -- one for rule
+        -- 702.23a's "beyond the first", none for Gang of Elk's "each creature
+        -- blocking it". A blocked creature whose blockers have all left reads 0
+        -- either way, which is why the skip is a parameter and not a + 1.
         --
         -- Read LIVE off Combat.blockers rather than through the injected view, combat
         -- being game state rather than a characteristic -- so an object CR 608.2h would
@@ -1119,9 +1121,16 @@ evaluateAgainst viewOf context gs announcedOn mOid mView quantity =
         -- Nothing only for an evaluation aimed at no object -- a member of an
         -- Aggregation.Greatest over Scope.InHistory. An object nobody blocked is in no
         -- entry of the map and answers 0, which is a number and not a failure.
-        Quantity.BlockersBeyondFirst ->
+        --
+        -- Only blockers still on the battlefield count: CR 506.4 removes one that
+        -- leaves from combat, and Pawl.Engine.Departure leaves its id in the set.
+        -- The scenario gang-of-elk-stays-5-4-when-its-blockers-leave is the proof.
+        Quantity.BlockersBeyond skipped ->
           fmap
-            (\oid -> toInteger (max 0 (Set.size (Map.findWithDefault Set.empty oid (Combat.blockers (GameState.combat gs))) - 1)))
+            ( \oid ->
+                let blocking = Set.filter (`Set.member` GameState.battlefield gs) (Map.findWithDefault Set.empty oid (Combat.blockers (GameState.combat gs)))
+                 in max 0 (toInteger (Set.size blocking) - toInteger skipped)
+            )
             mOid
         -- CR 702.184c: Power's arm, with the substitution asked first. `perspective`
         -- is CR 109.5's "you" of the ability being resolved -- its controller (CR
@@ -1355,7 +1364,7 @@ objectSlots quantity = case quantity of
   Quantity.EnteredThisTurn -> Set.empty
   Quantity.EnteredFrom _ -> Set.empty
   Quantity.WasCastFrom _ -> Set.empty
-  Quantity.BlockersBeyondFirst -> Set.empty
+  Quantity.BlockersBeyond _ -> Set.empty
   -- Power's answer: it names no object at all and takes the one the evaluation
   -- is aimed at, so there is no slot here for AgainstSlot to have named.
   Quantity.StationMeasure -> Set.empty
@@ -1634,7 +1643,7 @@ readsX quantity = case quantity of
   Quantity.EnteredThisTurn -> False
   Quantity.EnteredFrom _ -> False
   Quantity.WasCastFrom _ -> False
-  Quantity.BlockersBeyondFirst -> False
+  Quantity.BlockersBeyond _ -> False
   -- A leaf, Power's answer: it holds no Quantity of its own to hide X inside.
   Quantity.StationMeasure -> False
   -- Not a leaf: its payload is a whole Quantity and may read X, the same recursion

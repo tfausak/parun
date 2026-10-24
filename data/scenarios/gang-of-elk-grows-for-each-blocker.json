@@ -1,0 +1,29 @@
+{
+  "description": "CR 509.3c whole card: Gang of Elk blocked by two creatures becomes 9/8",
+  "note": "Every blocker counts, the first included: a beyond-the-first count would leave it 7/6.",
+  "board": {
+    "active": "alice",
+    "step": "BeginningOfCombat",
+    "seats": [
+      {
+        "name": "alice",
+        "battlefield": [{ "card": "Gang of Elk", "label": "elk", "ready": true }]
+      },
+      {
+        "name": "bob",
+        "battlefield": [
+          { "card": "Grizzly Bears", "label": "first", "ready": true },
+          { "card": "Grizzly Bears", "label": "second", "ready": true }
+        ]
+      }
+    ]
+  },
+  "timeline": [
+    { "turn": 1, "step": "DeclareAttackers", "player": "alice", "do": { "Attack": ["$elk"] } },
+    { "turn": 1, "step": "DeclareBlockers", "player": "bob", "do": { "Block": { "$first": ["$elk"], "$second": ["$elk"] } } },
+    { "turn": 1, "step": "CombatDamage", "player": "alice", "check": { "PowerToughness": { "object": "$elk", "power": 9, "toughness": 8 } } },
+    { "turn": 1, "step": "CombatDamage", "player": "alice", "source": "$elk", "do": { "AssignDamage": { "$first": 2, "$second": 7 } } },
+    { "turn": 1, "step": "EndOfCombat", "player": "alice", "check": { "Count": { "player": "alice", "zone": "Battlefield", "card": "Gang of Elk", "count": 1 } } },
+    { "turn": 1, "step": "EndOfCombat", "player": "alice", "check": { "Count": { "player": "bob", "zone": "Battlefield", "card": "Grizzly Bears", "count": 0 } } }
+  ]
+}

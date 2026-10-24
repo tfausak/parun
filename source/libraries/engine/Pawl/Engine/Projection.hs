@@ -4445,7 +4445,7 @@ quantityReads q = case q of
   Quantity.Type.EnteredThisTurn -> Set.empty
   Quantity.Type.EnteredFrom _ -> Set.empty
   Quantity.Type.WasCastFrom _ -> Set.empty
-  Quantity.Type.BlockersBeyondFirst -> Set.empty
+  Quantity.Type.BlockersBeyond _ -> Set.empty
 
 -- What an Aggregation reads off each member the Filter kept. Distinct card types
 -- is CR 208.2a's fold over card types (layer 4); Greatest reads its Quantity's.

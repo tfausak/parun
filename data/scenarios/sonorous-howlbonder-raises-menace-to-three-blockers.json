@@ -1,0 +1,31 @@
+{
+  "description": "CR 509.1b / 702.111b whole card: Sonorous Howlbonder's menace creatures need three blockers, not two",
+  "note": "Both bounds apply to a menace creature Alice controls; the stricter one binds. Bob's two-Bears block satisfies menace alone and is refused.",
+  "board": {
+    "active": "alice",
+    "step": "BeginningOfCombat",
+    "seats": [
+      {
+        "name": "alice",
+        "battlefield": [
+          { "card": "Sonorous Howlbonder", "label": "howlbonder" },
+          { "card": "Boggart Brute", "label": "brute", "ready": true }
+        ]
+      },
+      {
+        "name": "bob",
+        "battlefield": [
+          { "card": "Grizzly Bears", "label": "first", "ready": true },
+          { "card": "Grizzly Bears", "label": "second", "ready": true },
+          { "card": "Grizzly Bears", "label": "third", "ready": true }
+        ]
+      }
+    ]
+  },
+  "timeline": [
+    { "turn": 1, "step": "DeclareAttackers", "player": "alice", "do": { "Attack": ["$brute"] } },
+    { "turn": 1, "step": "DeclareBlockers", "player": "bob", "refuse": { "Block": { "$first": ["$brute"], "$second": ["$brute"] } } },
+    { "turn": 1, "step": "DeclareBlockers", "player": "bob", "do": { "Block": { "$first": ["$brute"], "$second": ["$brute"], "$third": ["$brute"] } } },
+    { "turn": 1, "step": "DeclareBlockers", "player": "alice", "check": { "Blockers": { "attacker": "$brute", "blockers": ["$first", "$second", "$third"] } } }
+  ]
+}

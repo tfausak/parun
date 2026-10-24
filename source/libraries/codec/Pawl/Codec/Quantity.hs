@@ -218,9 +218,8 @@ codec =
       -- clause is agentless.
       Arm.payload "WasCastFrom" CastFrom.codec Quantity.WasCastFrom (\x -> case x of Quantity.WasCastFrom y -> Just y; _ -> Nothing),
       -- CR 509.1h's declaration read against the object the quantity is aimed at,
-      -- so there is nothing on the wire at all -- Intensity's shape rather than
-      -- ObjectCounters'.
-      Arm.nullary "BlockersBeyondFirst" Quantity.BlockersBeyondFirst,
+      -- so only the number of blockers skipped is on the wire.
+      Arm.payload "BlockersBeyond" Common.natural Quantity.BlockersBeyond (\x -> case x of Quantity.BlockersBeyond y -> Just y; _ -> Nothing),
       -- A slot and a whole Quantity, in that order: which object to aim at, then
       -- what to read off it.
       Arm.payload "AgainstSlot" (AgainstSlot.codec codec) Quantity.AgainstSlot (\x -> case x of Quantity.AgainstSlot y -> Just y; _ -> Nothing),
@@ -311,7 +310,7 @@ tagOf x = case x of
   Quantity.EnteredThisTurn {} -> "EnteredThisTurn"
   Quantity.EnteredFrom {} -> "EnteredFrom"
   Quantity.WasCastFrom {} -> "WasCastFrom"
-  Quantity.BlockersBeyondFirst {} -> "BlockersBeyondFirst"
+  Quantity.BlockersBeyond {} -> "BlockersBeyond"
   Quantity.AgainstSlot {} -> "AgainstSlot"
   Quantity.AgainstExiledPile {} -> "AgainstExiledPile"
   Quantity.AgainstLastCardExiledWith {} -> "AgainstLastCardExiledWith"

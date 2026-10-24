@@ -61,6 +61,7 @@ import qualified Pawl.Types.CantBeBlockedBy as CantBeBlockedBy
 import qualified Pawl.Types.CantBlockCreatures as CantBlockCreatures
 import qualified Pawl.Types.Chosen as Chosen
 import qualified Pawl.Types.CombatRestriction as CombatRestriction
+import qualified Pawl.Types.Comparison as Comparison
 import qualified Pawl.Types.Condition as Condition.Type
 import qualified Pawl.Types.CounterKind as CounterKind
 import qualified Pawl.Types.Designation as Designation
@@ -362,30 +363,67 @@ attackLimit gs =
 
 -- CR 509.1b, the blocking counterpart. Silent Arbiter's second sentence: the
 -- bounds naming no attacker, judged against the whole declaration.
-blockLimit :: Maybe PlayerId -> GameState -> Maybe Natural
+blockLimit :: Maybe PlayerId -> GameState -> Bounds
 blockLimit =
   bounded
-    ( \restriction -> case blockingMoreThan restriction of
-        Just (n, Nothing) -> Just n
+    ( \restriction -> case blockingBound restriction of
+        Just (bounds, Nothing) -> Just bounds
         _ -> Nothing
     )
 
--- CR 509.1b: the tightest bound in force on how many creatures may block each
--- of `attackers`, keyed by attacker; one absent from the map is unbounded.
--- Charging Rhino's "can't be blocked by more than one creature". Read through
--- the rows `blockLimit` reads, so its gate, CR 801.10 cut and CR 509.1b
--- minimum hold here unchanged; the attackers named are resolved as
+-- CR 509.1b: how many creatures may block, as the interval every bound in force
+-- leaves. Blocking with NONE is always admitted, whatever the interval: "can't
+-- be blocked except by three or more creatures" (Phyrexian Colossus) forbids
+-- one or two blockers and leaves declining to block it legal, and every "no
+-- more than" already admits none.
+data Bounds = MkBounds
+  { -- | The fewest blockers a nonzero count may be. Phyrexian Colossus.
+    fewest :: Natural,
+    -- | The most there may be, or Nothing when unbounded. Charging Rhino.
+    most :: Maybe Natural
+  }
+  deriving (Eq, Show)
+
+-- Cumulative, CR 509.1b: a declaration must disobey none, so two bounds leave
+-- only the counts both admit.
+instance Semigroup Bounds where
+  MkBounds a b <> MkBounds c d = MkBounds (max a c) (maybe d (\x -> Just (maybe x (min x) d)) b)
+
+instance Monoid Bounds where
+  mempty = MkBounds 0 Nothing
+
+-- A bound's printed comparison against its printed number, as an interval.
+-- "Fewer than none" admits only none, which `admits` grants anyway.
+boundsOf :: Comparison.Comparison -> Natural -> Bounds
+boundsOf comparison n = case comparison of
+  Comparison.Exactly -> MkBounds n (Just n)
+  Comparison.AtLeast -> MkBounds n Nothing
+  Comparison.AtMost -> MkBounds 0 (Just n)
+  Comparison.LessThan -> MkBounds 0 (Just (if n == 0 then 0 else n - 1))
+  Comparison.GreaterThan -> MkBounds (n + 1) Nothing
+
+-- Whether `count` blockers obey the bounds: none always do (CR 509.1b).
+admits :: Bounds -> Int -> Bool
+admits (MkBounds low high) count =
+  count == 0 || (toInteger count >= toInteger low && maybe True (\n -> toInteger count <= toInteger n) high)
+
+-- CR 509.1b: the bounds in force on how many creatures may block each of
+-- `attackers`, keyed by attacker; one absent from the map is unbounded.
+-- Charging Rhino's "can't be blocked by more than one creature", Phyrexian
+-- Colossus' "except by three or more". Read through the rows `blockLimit`
+-- reads, so its gate, CR 801.10 cut and CR 509.1b intersection hold here
+-- unchanged; the attackers named are resolved as
 -- `restrictedIn` resolves a subject, CR 612.1's rewrite included.
-blockedLimits :: Maybe PlayerId -> [ObjectId] -> GameState -> Map.Map ObjectId Natural
+blockedLimits :: Maybe PlayerId -> [ObjectId] -> GameState -> Map.Map ObjectId Bounds
 blockedLimits defending attackers gs =
   let pcs = Projection.projectAll gs
       grants = Projection.controlGrants gs
-      fromRestriction (source, changes, restriction) = case blockingMoreThan restriction of
-        Just (n, Just affected) ->
+      fromRestriction (source, changes, restriction) = case blockingBound restriction of
+        Just (bounds, Just affected) ->
           let named = if null changes then affected else Projection.rewriteAffected changes affected
-           in fmap (\attacker -> (attacker, n)) (filter (\attacker -> Projection.affectsOn pcs grants source attacker named gs) attackers)
+           in fmap (\attacker -> (attacker, bounds)) (filter (\attacker -> Projection.affectsOn pcs grants source attacker named gs) attackers)
         _ -> []
-   in Map.fromListWith min (concatMap fromRestriction (filter (reachesDeclarer defending gs) (inForce defending gs)))
+   in Map.fromListWith (<>) (concatMap fromRestriction (filter (reachesDeclarer defending gs) (inForce defending gs)))
 
 -- The selectors, written out rather than a wildcard: an exhaustive case is what
 -- makes a new arm a compile error at every site that would have to decide about
@@ -492,8 +530,9 @@ attackingPlayer cr = case cr of
   CombatRestriction.CantBlockMoreThan {} -> Nothing
 
 -- The bound selectors. A separate pair from the ones above rather than two more
--- of them, because what they answer is a NUMBER and no Affected can
--- stand in for one -- which is the whole reason the arms exist.
+-- of them, because what they answer is a NUMBER (on the blocking side an
+-- interval of them) and no Affected can stand in for one -- which is the whole
+-- reason the arms exist.
 --
 -- Each answers the scope beside the number: the attacking one CR 802.3a's
 -- seats, the blocking one the attackers a per-attacker bound counts against.
@@ -509,8 +548,8 @@ attackingMoreThan cr = case cr of
   CombatRestriction.CantAttackMoreThan (AttackLimitUnless.MkAttackLimitUnless n scope _) -> Just (n, scope)
   CombatRestriction.CantBlockMoreThan {} -> Nothing
 
-blockingMoreThan :: CombatRestriction.CombatRestriction -> Maybe (Natural, Maybe Affected.Affected)
-blockingMoreThan cr = case cr of
+blockingBound :: CombatRestriction.CombatRestriction -> Maybe (Bounds, Maybe Affected.Affected)
+blockingBound cr = case cr of
   CombatRestriction.CantAttack {} -> Nothing
   CombatRestriction.CantBlock {} -> Nothing
   CombatRestriction.CantBeBlockedBy {} -> Nothing
@@ -519,7 +558,7 @@ blockingMoreThan cr = case cr of
   CombatRestriction.CantAttackAlone {} -> Nothing
   CombatRestriction.CantBlockAlone {} -> Nothing
   CombatRestriction.CantAttackMoreThan {} -> Nothing
-  CombatRestriction.CantBlockMoreThan (LimitUnless.MkLimitUnless n attackers _) -> Just (n, attackers)
+  CombatRestriction.CantBlockMoreThan (LimitUnless.MkLimitUnless n comparison attackers _) -> Just (boundsOf comparison n, attackers)
 
 -- CR 508.1c / CR 509.1b's second clause: the condition the creature can't
 -- attack (or block) UNLESS. Read off any arm, because the clause is the same
@@ -538,7 +577,7 @@ gate cr = case cr of
   CombatRestriction.CantAttackAlone (AloneUnless.MkAloneUnless _ _ c _) -> c
   CombatRestriction.CantBlockAlone (AloneUnless.MkAloneUnless _ _ c _) -> c
   CombatRestriction.CantAttackMoreThan (AttackLimitUnless.MkAttackLimitUnless _ _ c) -> c
-  CombatRestriction.CantBlockMoreThan (LimitUnless.MkLimitUnless _ _ c) -> c
+  CombatRestriction.CantBlockMoreThan (LimitUnless.MkLimitUnless _ _ _ c) -> c
 
 -- Every combat restriction some permanent on the battlefield -- or some object in
 -- the command zone, whose abilities CR 114.4 makes function there -- states right
@@ -1196,22 +1235,22 @@ cantAttackPlayer candidates players gs =
    in Set.fromList (concatMap forSeat players <> concatMap stored (liveAttackProhibitions gs))
 
 -- The walk behind `blockLimit`, over the restrictions `select` keeps: the
--- tightest of them, or Nothing where none is in force. `attackLimit` spells its
--- own out instead, CR 802.3a having given it two answers to a gather.
+-- intersection of them, or mempty where none is in force. `attackLimit` spells
+-- its own out instead, CR 802.3a having given it two answers to a gather.
 --
--- A MINIMUM, because CR 509.1b's restrictions are cumulative -- a declaration
--- must disobey none of them, so two bounds leave only the declarations both
--- allow. Nothing of the source survives into the answer, which is the point:
--- Pawl.Engine.Combat learns a number and never learns which card produced it.
+-- An INTERSECTION, because CR 509.1b's restrictions are cumulative -- a
+-- declaration must disobey none of them, so two bounds leave only the
+-- declarations both allow. Nothing of the source survives into the answer,
+-- which is the point: Pawl.Engine.Combat learns numbers and never learns which
+-- card produced them.
 --
 -- No text change is applied, and none is owed: CR 612.1 swaps one word for
--- another, and the only words a bound prints beyond its gate are a number, which
--- no text-changing effect in the pool reaches. The gate itself was already
+-- another, and the only words a bound prints beyond its gate are a number and a
+-- comparison, which no text-changing effect in the pool reaches. The gate itself was already
 -- rewritten and asked in `inForce`.
-bounded :: (CombatRestriction.CombatRestriction -> Maybe Natural) -> Maybe PlayerId -> GameState -> Maybe Natural
+bounded :: (CombatRestriction.CombatRestriction -> Maybe Bounds) -> Maybe PlayerId -> GameState -> Bounds
 bounded select defending gs =
-  let tighter acc n = Just (maybe n (min n) acc)
-   in List.foldl' tighter Nothing (Maybe.mapMaybe (\(_, _, restriction) -> select restriction) (filter (reachesDeclarer defending gs) (inForce defending gs)))
+  mconcat (Maybe.mapMaybe (\(_, _, restriction) -> select restriction) (filter (reachesDeclarer defending gs) (inForce defending gs)))
 
 -- CR 801.10: a bound constrains the declaring player's own creatures, so it is
 -- in force only when that player is within the range of influence of the

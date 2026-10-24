@@ -1991,7 +1991,7 @@ lifeLossRNames asking x = case x of
 
 limitUnlessNames :: (Monoid r) => Asking r -> LimitUnless.LimitUnless -> r
 limitUnlessNames asking x = case x of
-  LimitUnless.MkLimitUnless _limit attackers unless -> foldMap (affectedNames asking) attackers <> foldMap (conditionNames asking) unless
+  LimitUnless.MkLimitUnless _limit _comparison attackers unless -> foldMap (affectedNames asking) attackers <> foldMap (conditionNames asking) unless
 
 lookAtNames :: (Monoid r) => Asking r -> LookAt.LookAt -> r
 lookAtNames asking x = case x of
@@ -2535,7 +2535,7 @@ quantityNames asking x = case x of
   Quantity.EnteredThisTurn -> history asking HistoryRead.Entries
   Quantity.EnteredFrom inZone -> history asking HistoryRead.Entries <> inZoneNames asking inZone
   Quantity.WasCastFrom castFrom -> history asking HistoryRead.Entries <> history asking HistoryRead.Casts <> castFromNames asking castFrom
-  Quantity.BlockersBeyondFirst -> mempty
+  Quantity.BlockersBeyond _ -> mempty
   Quantity.AgainstSlot againstSlot -> againstSlotNames asking (quantityNames asking) againstSlot
   Quantity.AgainstExiledPile (AgainstExiledPile.MkAgainstExiledPile _pile quantity) -> quantityNames asking quantity
   Quantity.AgainstLastCardExiledWith againstLastCardExiledWith -> againstLastCardExiledWithNames asking (quantityNames asking) againstLastCardExiledWith

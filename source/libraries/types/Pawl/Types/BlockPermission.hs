@@ -52,8 +52,8 @@ data BlockPermission = MkBlockPermission
     -- 109.5 fixes `while`'s "you" by.
     --
     -- NOTHING is "any number of creatures" (Palace Guard) -- no bound at all,
-    -- which is Pawl.Engine.CombatRestriction.blockLimit's spelling of the same
-    -- word and combines the same way: unbounded absorbs, since a creature that
+    -- the word Pawl.Engine.CombatRestriction.Bounds spells as a Nothing `most`.
+    -- Here unbounded absorbs, since a creature that
     -- may block any number still may after a second permission adds one.
     -- Deliberately not a huge literal, which would be a number the card does not
     -- print and would still refuse the board that exceeded it.
