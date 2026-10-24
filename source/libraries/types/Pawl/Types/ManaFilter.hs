@@ -3,7 +3,8 @@ module Pawl.Types.ManaFilter where
 import qualified Pawl.Types.ManaType as ManaType
 
 -- | Which of the mana in a pool a card's text is about -- Upwelling's "unspent
--- mana" against Omnath, Locus of Mana's "unspent green mana".
+-- mana" against Omnath, Locus of Mana's "unspent green mana". Also which
+-- types CR 106.7's "could produce" admits (Pawl.Types.CouldProduce).
 --
 -- A SEPARATE, tiny type rather than a use of Pawl.Types.Filter. Every Filter atom
 -- is a characteristic of an object (CR 109.3) or an identity of a player, and a
