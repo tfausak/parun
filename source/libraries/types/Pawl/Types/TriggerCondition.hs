@@ -14,6 +14,7 @@ import qualified Pawl.Types.ControllerBecomesTarget as ControllerBecomesTarget
 import qualified Pawl.Types.CounterPlacement as CounterPlacement
 import qualified Pawl.Types.CreatureBecomesBlockedByAtLeast as CreatureBecomesBlockedByAtLeast
 import qualified Pawl.Types.CreatureExploits as CreatureExploits
+import qualified Pawl.Types.DealsDamageToPlayer as DealsDamageToPlayer
 import qualified Pawl.Types.DieResult as DieResult
 import qualified Pawl.Types.Filter as Filter
 import qualified Pawl.Types.Keyword as Keyword
@@ -76,15 +77,12 @@ data TriggerCondition
   | -- | CR 510.1b / 310.5: the bearer dealt combat damage to a player or a
     -- battle (Archpriest of Shadows). Self-scoped, one trigger per recipient.
     SelfDealsCombatDamageToPlayerOrBattle
-  | -- | CR 510.2 / 603.2c: the bearer dealt combat damage to any recipient,
-    -- once per combat damage step (Leyline Phantom). Self-scoped.
-    SelfDealsCombatDamage
-  | -- | CR 603.2 / 120.1: the bearer dealt damage of ANY kind to a player the
-    -- PlayerRelation admits -- the arm above without CR 510.1's combat narrowing.
-    -- Akki Lavarunner's "whenever this creature deals damage to an opponent" is
-    -- the printed form, and Soul's Fire aiming it at a player is the noncombat
-    -- half no combat-only arm reaches.
-    SelfDealsDamageToPlayer PlayerRelation.PlayerRelation
+  | -- | CR 510.2 / 603.2c: a permanent dealt combat damage to any recipient,
+    -- once per combat damage step and damager (Leyline Phantom, Noble Purpose).
+    DealsCombatDamage ActingPermanent.ActingPermanent
+  | -- | CR 603.2 / 120.1: a permanent dealt damage of any kind to a player the
+    -- relation admits (Akki Lavarunner, Curiosity).
+    DealsDamageToPlayer DealsDamageToPlayer.DealsDamageToPlayer
   | -- | CR 603.2 / 120.3: the bearer dealt damage of any kind to a CREATURE --
     -- the arm above with rule 120.3's other recipient (Strax, Sontaran Nurse's
     -- "Glory of Battle").
@@ -93,12 +91,12 @@ data TriggerCondition
     -- recipient no further than "a creature", and a Filter would owe CR 608.2h
     -- last known information for a recipient the damage has already killed.
     SelfDealsDamageToCreature
-  | -- | CR 603.2 / 120.1: the bearer dealt damage of any kind to any recipient,
-    -- once per damage event (Horned Cheetah). Self-scoped.
-    SelfDealsDamage
-  | -- | CR 120.3: the bearer was dealt damage -- the enrage trigger's event
-    -- (Ripjaw Raptor).
-    SelfIsDealtDamage
+  | -- | CR 603.2 / 120.1: a permanent dealt damage of any kind to any
+    -- recipient, once per damage event and damager (Horned Cheetah, Spirit Link).
+    DealsDamage ActingPermanent.ActingPermanent
+  | -- | CR 120.3: a permanent was dealt damage (Ripjaw Raptor, Death Pits of
+    -- Rath).
+    IsDealtDamage ActingPermanent.ActingPermanent
   | -- | CR 120.3 / 603.2c: a player the relation admits was dealt damage, once
     -- per simultaneous batch and damaged player (Lich).
     PlayerIsDealtDamage PlayerRelation.PlayerRelation
@@ -350,9 +348,6 @@ data TriggerCondition
   | -- | CR 701.26a's "became tapped" read off the permanent the bearer is
     -- attached to (Betrayal), live rather than through last known information.
     AttachedCreatureBecomesTapped
-  | -- | CR 120.1 / 603.2: "deals damage" read off the permanent the bearer is
-    -- attached to (Spirit Link), once per damage event as SelfDealsDamage is.
-    AttachedCreatureDealsDamage
   | -- | CR 701.26a's batch reading, by a bystander: "whenever one or more
     -- nontoken Merfolk you control become tapped" (Deeproot Pilgrimage), once
     -- per tapping event (CR 603.2c).

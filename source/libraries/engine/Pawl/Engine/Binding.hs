@@ -1194,7 +1194,7 @@ damagersController = SlotName.MkSlotName (Text.pack "thatDamagersController")
 -- GameEvent.DamageDealt the condition matched, so the payload is an ordinary slot
 -- read rather than a "the creature that hit them" opcode.
 --
--- The name is combat's but the slot is not: SelfIsDealtDamage stamps it for CR
+-- The name is combat's but the slot is not: IsDealtDamage stamps it for CR
 -- 120.3's noncombat damage too, which is Belltower Sphinx's "that source's
 -- controller". The wire spelling is `thatDamager` and cards already write it, so
 -- the name stays.

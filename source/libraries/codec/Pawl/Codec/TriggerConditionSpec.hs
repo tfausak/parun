@@ -24,6 +24,7 @@ import qualified Pawl.Types.CounterKind as CounterKind
 import qualified Pawl.Types.CounterPlacement as CounterPlacement
 import qualified Pawl.Types.CreatureBecomesBlockedByAtLeast as CreatureBecomesBlockedByAtLeast
 import qualified Pawl.Types.CreatureExploits as CreatureExploits
+import qualified Pawl.Types.DealsDamageToPlayer as DealsDamageToPlayer
 import qualified Pawl.Types.Designation as Designation
 import qualified Pawl.Types.DieResult as DieResult
 import qualified Pawl.Types.EndingStep as EndingStep
@@ -129,26 +130,27 @@ spec s = Spec.describe s "Pawl.Codec.TriggerCondition" $ do
       TriggerCondition.codec
       TriggerCondition.SelfDealsCombatDamageToPlayerOrBattle
       " {\"type\":\"SelfDealsCombatDamageToPlayerOrBattle\"} "
-  Spec.it s "SelfDealsCombatDamage" $
+  Spec.it s "DealsCombatDamage round-trips both actors" $ do
     Common.assertCodec
       s
       TriggerCondition.codec
-      TriggerCondition.SelfDealsCombatDamage
-      " {\"type\":\"SelfDealsCombatDamage\"} "
-  -- CR 603.2 / 120.1: the same pair without the combat narrowing -- Akki
-  -- Lavarunner's own condition. A separate TAG and not a flag on the arm above,
-  -- so a card written for one can never decode as the other.
-  Spec.it s "SelfDealsDamageToPlayer round-trips both relations" $ do
+      (TriggerCondition.DealsCombatDamage ActingPermanent.Self)
+      " {\"type\":\"DealsCombatDamage\",\"value\":{\"type\":\"Self\"}} "
     Common.assertCodec
       s
       TriggerCondition.codec
-      (TriggerCondition.SelfDealsDamageToPlayer PlayerRelation.AnyPlayer)
-      " {\"type\":\"SelfDealsDamageToPlayer\",\"value\":{\"type\":\"AnyPlayer\"}} "
+      (TriggerCondition.DealsCombatDamage (ActingPermanent.Matching (Filter.ControlledBy PlayerRelation.You)))
+      " {\"type\":\"DealsCombatDamage\",\"value\":{\"type\":\"Matching\",\"value\":{\"type\":\"ControlledBy\",\"value\":{\"type\":\"You\"}}}} "
+  -- CR 603.2 / 120.1: the player-recipient pair without the combat narrowing --
+  -- Akki Lavarunner's own condition. A separate TAG and not a flag on
+  -- SelfDealsCombatDamageToPlayer, so a card written for one can never decode as
+  -- the other.
+  Spec.it s "DealsDamageToPlayer round-trips its actor and relation" $
     Common.assertCodec
       s
       TriggerCondition.codec
-      (TriggerCondition.SelfDealsDamageToPlayer PlayerRelation.Opponent)
-      " {\"type\":\"SelfDealsDamageToPlayer\",\"value\":{\"type\":\"Opponent\"}} "
+      (TriggerCondition.DealsDamageToPlayer (DealsDamageToPlayer.MkDealsDamageToPlayer ActingPermanent.Self PlayerRelation.Opponent))
+      " {\"type\":\"DealsDamageToPlayer\",\"value\":{\"actor\":{\"type\":\"Self\"},\"recipient\":{\"type\":\"Opponent\"}}} "
   -- CR 120.3's other recipient, nullary for the reason the constructor's haddock
   -- gives: nothing qualifies the creature it was dealt to.
   Spec.it s "SelfDealsDamageToCreature" $
@@ -157,20 +159,30 @@ spec s = Spec.describe s "Pawl.Codec.TriggerCondition" $ do
       TriggerCondition.codec
       TriggerCondition.SelfDealsDamageToCreature
       " {\"type\":\"SelfDealsDamageToCreature\"} "
-  Spec.it s "SelfDealsDamage" $
+  Spec.it s "DealsDamage round-trips both actors" $ do
     Common.assertCodec
       s
       TriggerCondition.codec
-      TriggerCondition.SelfDealsDamage
-      " {\"type\":\"SelfDealsDamage\"} "
-  -- CR 120.3: the same history read the other way round -- the bearer was DEALT
-  -- damage. Nullary, since enrage qualifies the damage in no way.
-  Spec.it s "SelfIsDealtDamage" $
+      (TriggerCondition.DealsDamage ActingPermanent.Self)
+      " {\"type\":\"DealsDamage\",\"value\":{\"type\":\"Self\"}} "
     Common.assertCodec
       s
       TriggerCondition.codec
-      TriggerCondition.SelfIsDealtDamage
-      " {\"type\":\"SelfIsDealtDamage\"} "
+      (TriggerCondition.DealsDamage (ActingPermanent.Matching (Filter.HasAttached Filter.IsSource)))
+      " {\"type\":\"DealsDamage\",\"value\":{\"type\":\"Matching\",\"value\":{\"type\":\"HasAttached\",\"value\":{\"type\":\"IsSource\"}}}} "
+  -- CR 120.3: the same history read the other way round -- the permanent was
+  -- DEALT damage.
+  Spec.it s "IsDealtDamage round-trips both actors" $ do
+    Common.assertCodec
+      s
+      TriggerCondition.codec
+      (TriggerCondition.IsDealtDamage ActingPermanent.Self)
+      " {\"type\":\"IsDealtDamage\",\"value\":{\"type\":\"Self\"}} "
+    Common.assertCodec
+      s
+      TriggerCondition.codec
+      (TriggerCondition.IsDealtDamage (ActingPermanent.Matching (Filter.HasCardType CardType.Creature)))
+      " {\"type\":\"IsDealtDamage\",\"value\":{\"type\":\"Matching\",\"value\":{\"type\":\"HasCardType\",\"value\":{\"type\":\"Creature\"}}}} "
   Spec.it s "PlayerIsDealtDamage" $
     Common.assertCodec
       s
@@ -669,13 +681,6 @@ spec s = Spec.describe s "Pawl.Codec.TriggerCondition" $ do
       TriggerCondition.codec
       TriggerCondition.AttachedCreatureBecomesTapped
       " {\"type\":\"AttachedCreatureBecomesTapped\"} "
-  -- CR 120.1's damage read off the enchanted permanent, the same link again.
-  Spec.it s "AttachedCreatureDealsDamage" $
-    Common.assertCodec
-      s
-      TriggerCondition.codec
-      TriggerCondition.AttachedCreatureDealsDamage
-      " {\"type\":\"AttachedCreatureDealsDamage\"} "
   -- CR 701.26a's tap by a bystander, batch-read (CR 603.2c).
   Spec.it s "PermanentsBecomeTapped round-trips with its Filter" $
     Common.assertCodec

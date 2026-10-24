@@ -166,7 +166,7 @@ eventBindingsOver board gs bearerBecame becameInGraveyard bearer you cond event 
   -- The same two slots for the arm without CR 510.1's combat narrowing, and for
   -- the same reasons: the recipient is "that player" and the amount is "that
   -- much", both unconditional given a match.
-  (TriggerCondition.SelfDealsDamageToPlayer _, GameEvent.DamageDealt ev) ->
+  (TriggerCondition.DealsDamageToPlayer _, GameEvent.DamageDealt ev) ->
     case DamageEvent.target ev of
       Recipient.ToPlayer pid -> Binding.setTriggerPlayer pid (Binding.setEventAmount (DamageEvent.amount ev) Map.empty)
       Recipient.ToCreature _ -> Map.empty
@@ -181,20 +181,19 @@ eventBindingsOver board gs bearerBecame becameInGraveyard bearer you cond event 
   -- only an object recipient.
   (TriggerCondition.SelfDealsDamageToCreature, GameEvent.DamageDealt ev) ->
     maybe id Binding.setBecame (Recipient.objectOf (DamageEvent.target ev)) (Binding.setEventAmount (DamageEvent.amount ev) Map.empty)
-  -- Horned Cheetah's "that much" for the any-recipient arm, which batchBindings
-  -- sums across one damage event. Unconditional given a match.
-  (TriggerCondition.SelfDealsDamage, GameEvent.DamageDealt ev) ->
-    Binding.setEventAmount (DamageEvent.amount ev) Map.empty
-  -- Spirit Link's "that much", the arm above read off the bearer's host.
-  (TriggerCondition.AttachedCreatureDealsDamage, GameEvent.DamageDealt ev) ->
-    Binding.setEventAmount (DamageEvent.amount ev) Map.empty
+  -- Horned Cheetah's and Spirit Link's "that much" for the any-recipient arm,
+  -- which batchBindings sums across one damage event, and the damager, which
+  -- `batchPartition` splits that event by. Unconditional given a match.
+  (TriggerCondition.DealsDamage _, GameEvent.DamageDealt ev) ->
+    Binding.setCombatDamager (DamageEvent.source ev) (Binding.setEventAmount (DamageEvent.amount ev) Map.empty)
   -- Doomskar Warrior's "that many" for the player-or-battle arm, and Aisha of
-  -- Sparks and Smoke's "that damage" for the any-recipient one, whose batch
-  -- batchBindings sums across the CR 510.2 step. Unconditional given a match.
+  -- Sparks and Smoke's and Noble Purpose's "that much" for the any-recipient
+  -- one, whose batch batchBindings sums across the CR 510.2 step; that one's
+  -- damager beside it, for the arm above's reason. Unconditional given a match.
   (TriggerCondition.SelfDealsCombatDamageToPlayerOrBattle, GameEvent.DamageDealt ev) ->
     Binding.setEventAmount (DamageEvent.amount ev) Map.empty
-  (TriggerCondition.SelfDealsCombatDamage, GameEvent.DamageDealt ev) ->
-    Binding.setEventAmount (DamageEvent.amount ev) Map.empty
+  (TriggerCondition.DealsCombatDamage _, GameEvent.DamageDealt ev) ->
+    Binding.setCombatDamager (DamageEvent.source ev) (Binding.setEventAmount (DamageEvent.amount ev) Map.empty)
   -- CR 603.2's "that much": how many counters actually came off, read off the
   -- event's own before/after pair. Chandra, Fire Artisan's "she deals that much
   -- damage" counts THAT and not the damage that caused it -- CR 306.8's removal
@@ -1098,10 +1097,11 @@ eventBindingsOver board gs bearerBecame becameInGraveyard bearer you cond event 
   -- Prodigal Sorcerer's ping as readily as a blocker's. Pinned by
   -- Pawl.TriggerSpec's noncombat board.
   --
-  -- The RECIPIENT needs no slot -- matchesTrigger has just proved it is the
-  -- bearer, whom CR 113.7a's source slot already names.
-  (TriggerCondition.SelfIsDealtDamage, GameEvent.DamageDealt ev) ->
-    Binding.setCombatDamager (DamageEvent.source ev) (Binding.setEventAmount (DamageEvent.amount ev) Map.empty)
+  -- The RECIPIENT under `became`, the object the event names: Death Pits of
+  -- Rath's "destroy it". For a Self reading it is the bearer again. Also
+  -- unconditional given a match, which admits only an object recipient.
+  (TriggerCondition.IsDealtDamage _, GameEvent.DamageDealt ev) ->
+    maybe id Binding.setBecame (Recipient.objectOf (DamageEvent.target ev)) (Binding.setCombatDamager (DamageEvent.source ev) (Binding.setEventAmount (DamageEvent.amount ev) Map.empty))
   -- CR 120.3's "that many" for a damaged player (Lich), summed across the
   -- batch by batchBindings, and the damaged player under `triggerPlayer`, which
   -- batchPartition splits the batch by. Unconditional given a match, which
@@ -1166,8 +1166,8 @@ eventBindingsOver board gs bearerBecame becameInGraveyard bearer you cond event 
   -- 603.7c's captured environment instead.
   _ -> Map.empty
 
--- CR 603.2c's second sentence inside one batch: the seats that split a
--- batch-scoped condition's group into several occurrences, read off the
+-- CR 603.2c's second sentence inside one batch: the seats and objects that
+-- split a batch-scoped condition's group into several occurrences, read off the
 -- bindings eventBindings stamped for one member. Empty for every other
 -- batch-scoped condition, whose group is one occurrence whole.
 --
@@ -1188,8 +1188,14 @@ eventBindingsOver board gs bearerBecame becameInGraveyard bearer you cond event 
 -- Not implemented: a batch naming no controller, one occurrence whoever's
 -- creatures connected -- Starscream, Power Hungry's "one or more creatures deal
 -- combat damage to you" (#4473).
-batchPartition :: TriggerCondition -> Map.Map SlotName.SlotName Binding -> Seq.Seq PlayerId
+batchPartition :: TriggerCondition -> Map.Map SlotName.SlotName Binding -> Seq.Seq (Either PlayerId ObjectId)
 batchPartition cond bindings = case cond of
+  -- One occurrence per damager: Noble Purpose's "a creature you control deals
+  -- combat damage" fires for each creature that connected in the CR 510.2 step,
+  -- and Spirit Link's "deals damage" for its host's one damage event. A Self
+  -- reading has one damager, the bearer, so the split leaves it whole.
+  TriggerCondition.DealsCombatDamage _ -> object Binding.combatDamager
+  TriggerCondition.DealsDamage _ -> object Binding.combatDamager
   TriggerCondition.PermanentsDealCombatDamageToPlayer _ -> seat Binding.damagersController <> seat Binding.triggerPlayer
   -- CR 726.2's "one or more creatures A PLAYER controls": one occurrence per
   -- damagers' controller. The damaged player is the holder, one seat already.
@@ -1204,7 +1210,8 @@ batchPartition cond bindings = case cond of
   -- where an arm above says by what.
   _ -> Seq.empty
   where
-    seat slot = maybe Seq.empty Seq.singleton (Map.lookup slot (Binding.playerSlots bindings))
+    seat slot = maybe Seq.empty (Seq.singleton . Left) (Map.lookup slot (Binding.playerSlots bindings))
+    object slot = maybe Seq.empty (Seq.singleton . Right) (Map.lookup slot (Binding.objectSlots bindings))
 
 -- CR 603.2c's FIRST sentence, read back: a batch-scoped condition's trigger event
 -- is the whole Pawl.Types.EventGroup (one `batchPartition` key's share of it),
@@ -1464,25 +1471,26 @@ eventBindingSlots cond = case cond of
   -- Just the amount for the two wider arms: a battle or a creature recipient
   -- names no player, so "that player" is not guaranteed given a match.
   TriggerCondition.SelfDealsCombatDamageToPlayerOrBattle -> Set.singleton Binding.eventAmount
-  TriggerCondition.SelfDealsCombatDamage -> Set.singleton Binding.eventAmount
+  -- The damager beside the any-recipient arm's amount, for `batchPartition`.
+  TriggerCondition.DealsCombatDamage _ -> Set.fromList [Binding.combatDamager, Binding.eventAmount]
   -- The same pair for the arm without the combat narrowing, and equally guaranteed
   -- -- every DamageDealt event carries an amount, whichever CR 120.3 kind it was.
-  TriggerCondition.SelfDealsDamageToPlayer _ -> Set.fromList [Binding.eventAmount, Binding.triggerPlayer]
+  TriggerCondition.DealsDamageToPlayer _ -> Set.fromList [Binding.eventAmount, Binding.triggerPlayer]
   -- The amount and the damaged creature for the arm one recipient over, both
   -- guaranteed given a match.
   TriggerCondition.SelfDealsDamageToCreature -> Set.fromList [Binding.eventAmount, Binding.became]
-  TriggerCondition.SelfDealsDamage -> Set.singleton Binding.eventAmount
-  TriggerCondition.AttachedCreatureDealsDamage -> Set.singleton Binding.eventAmount
+  TriggerCondition.DealsDamage _ -> Set.fromList [Binding.combatDamager, Binding.eventAmount]
   -- CR 120.3's amount for enrage, which Coalhauler Swine's "it deals that much
   -- damage to each player" reads: the same slot CR 615.13's prevention and CR
   -- 119.9's life gain stamp, and guaranteed given a match -- every DamageDealt
   -- event carries an amount, whichever of CR 120.3's two damage kinds this
-  -- unfiltered condition admitted.
+  -- condition admitted.
   --
   -- Plus CR 120.1's source, which Belltower Sphinx's "that source's controller"
-  -- reads, and equally guaranteed -- every DamageDealt event carries one. No slot
-  -- for the recipient, who is the bearer. See the eventBindings arm above.
-  TriggerCondition.SelfIsDealtDamage -> Set.fromList [Binding.combatDamager, Binding.eventAmount]
+  -- reads, and equally guaranteed -- every DamageDealt event carries one.
+  -- And the recipient under `became`, which Death Pits of Rath's "destroy it"
+  -- reads. See the eventBindings arm above.
+  TriggerCondition.IsDealtDamage _ -> Set.fromList [Binding.became, Binding.combatDamager, Binding.eventAmount]
   TriggerCondition.PlayerIsDealtDamage _ -> Set.fromList [Binding.eventAmount, Binding.triggerPlayer]
   -- CR 510.2's damager, which the bystander's form needs and the self-scoped one
   -- above does not: there the damager IS the bearer, already bound as CR 113.7a's

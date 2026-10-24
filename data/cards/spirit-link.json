@@ -24,7 +24,16 @@
       "triggeredAbilities": [
         {
           "condition": {
-            "type": "AttachedCreatureDealsDamage"
+            "type": "DealsDamage",
+            "value": {
+              "type": "Matching",
+              "value": {
+                "type": "HasAttached",
+                "value": {
+                  "type": "IsSource"
+                }
+              }
+            }
           },
           "modal": {
             "modes": [

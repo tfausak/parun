@@ -9,6 +9,7 @@ import qualified Data.Text as Text
 import qualified Pawl.Oracle.Filter as Filter
 import qualified Pawl.Oracle.Prose as Prose
 import qualified Pawl.Oracle.Target as Target
+import qualified Pawl.Types.ActingPermanent as ActingPermanent
 import qualified Pawl.Types.Aggregation as Aggregation
 import qualified Pawl.Types.BeginningStep as BeginningStep
 import qualified Pawl.Types.CombatStep as CombatStep
@@ -16,6 +17,7 @@ import qualified Pawl.Types.Compares as Compares
 import qualified Pawl.Types.Comparison as Comparison
 import qualified Pawl.Types.Condition as Condition
 import qualified Pawl.Types.Count as Count
+import qualified Pawl.Types.DealsDamageToPlayer as DealsDamageToPlayer
 import qualified Pawl.Types.EndingStep as EndingStep
 import qualified Pawl.Types.Filter as Filter.Type
 import qualified Pawl.Types.InZone as InZone
@@ -82,6 +84,13 @@ event context creature c = case c of
     (one, that) <- described context (PermanentDealsCombatDamageToPlayer.filter p)
     (whom, player') <- player (PermanentDealsCombatDamageToPlayer.recipient p)
     [other ("Whenever " <> one <> " deals combat damage to " <> whom) [(thatPlayer, player'), (combatDamager, that)]]
+  TriggerCondition.IsDealtDamage (ActingPermanent.Matching f) -> do
+    (one, that) <- described context f
+    word <- ["it", that]
+    [other ("Whenever " <> one <> " is dealt damage") [(becameSlot, word)]]
+  TriggerCondition.DealsCombatDamage (ActingPermanent.Matching f) -> do
+    (one, that) <- described context f
+    [other ("Whenever " <> one <> " deals combat damage") [(combatDamager, that)]]
   TriggerCondition.PlayerAttacks relation -> do
     who <- case relation of
       PlayerRelation.You -> ["you attack"]
@@ -165,13 +174,13 @@ selfEvent context creature c = case c of
     [(recurring, "becomes blocked by " <> one, [(thatBlocker, that)])]
   -- Free: the ability word enrage (CR 207.2c) printed (Ripjaw Raptor) or
   -- not (Stuffy Doll).
-  TriggerCondition.SelfIsDealtDamage -> [(recurring <> ["Enrage \8212 Whenever"], "is dealt damage", [])]
-  TriggerCondition.SelfDealsDamage -> [(recurring, "deals damage", [])]
-  TriggerCondition.SelfDealsCombatDamage -> [(recurring, "deals combat damage", [])]
+  TriggerCondition.IsDealtDamage ActingPermanent.Self -> [(recurring <> ["Enrage \8212 Whenever"], "is dealt damage", [])]
+  TriggerCondition.DealsDamage ActingPermanent.Self -> [(recurring, "deals damage", [])]
+  TriggerCondition.DealsCombatDamage ActingPermanent.Self -> [(recurring, "deals combat damage", [])]
   TriggerCondition.SelfDealsCombatDamageToPlayer relation -> do
     (whom, that) <- player relation
     [(recurring, "deals combat damage to " <> whom, [(thatPlayer, that)])]
-  TriggerCondition.SelfDealsDamageToPlayer relation -> do
+  TriggerCondition.DealsDamageToPlayer (DealsDamageToPlayer.MkDealsDamageToPlayer ActingPermanent.Self relation) -> do
     (whom, that) <- player relation
     [(recurring, "deals damage to " <> whom, [(thatPlayer, that)])]
   _ -> []

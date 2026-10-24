@@ -30,6 +30,7 @@ import qualified Pawl.Oracle.Face as Oracle.Face
 import qualified Pawl.Oracle.Keyword as Oracle.Keyword
 import qualified Pawl.Oracle.Target as Oracle.Target
 import qualified Pawl.Oracle.Trigger as Oracle.Trigger
+import qualified Pawl.Types.ActingPermanent as ActingPermanent
 import qualified Pawl.Types.ActivatedAbility as ActivatedAbility
 import qualified Pawl.Types.ActivationRestriction as ActivationRestriction
 import qualified Pawl.Types.Activator as Activator
@@ -64,6 +65,7 @@ import qualified Pawl.Types.CounterKind as CounterKind
 import qualified Pawl.Types.Create as Create
 import qualified Pawl.Types.DamagePart as DamagePart
 import qualified Pawl.Types.DealDamage as DealDamage
+import qualified Pawl.Types.DealsDamageToPlayer as DealsDamageToPlayer
 import qualified Pawl.Types.Destroy as Destroy
 import qualified Pawl.Types.DestructionR as DestructionR
 import qualified Pawl.Types.DestructionRewrite as DestructionRewrite
@@ -669,7 +671,7 @@ trigger n = case Node.tag n of
   "WhenACreatureBlocksACreature" -> other TriggerCondition.SelfBlocksCreature Oracle.Trigger.thatAttacker
   "WhenACreatureBecomesBlockedByACreature" -> other TriggerCondition.SelfBecomesBlockedBy Oracle.Trigger.thatBlocker
   "WhenACreatureDealsCombatDamageToAPlayer" -> damaged TriggerCondition.SelfDealsCombatDamageToPlayer
-  "WhenAPermanentDealsDamageToAPlayer" -> damaged TriggerCondition.SelfDealsDamageToPlayer
+  "WhenAPermanentDealsDamageToAPlayer" -> damaged (TriggerCondition.DealsDamageToPlayer . DealsDamageToPlayer.MkDealsDamageToPlayer ActingPermanent.Self)
   "AtTheBeginningOfAPlayersUpkeep" -> step (Phase.Beginning BeginningStep.Upkeep)
   "AtTheBeginningOfAPlayersDrawStep" -> step (Phase.Beginning BeginningStep.DrawStep)
   "AtTheBeginningOfAPlayersEndStep" -> step (Phase.Ending EndingStep.EndStep)

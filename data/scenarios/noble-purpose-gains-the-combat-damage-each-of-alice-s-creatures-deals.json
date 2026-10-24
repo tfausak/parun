@@ -1,0 +1,33 @@
+{
+  "description": "CR 510.2 / 603.2c whole card: Noble Purpose gains alice the combat damage each creature she controls deals, once per creature",
+  "note": "Alice attacks with Argothian Swine and Grizzly Bears; bob's Gray Ogre blocks the Swine, which tramples 1 over it. The Swine's 2 to the Ogre and 1 to bob are one trigger, and the Bears' 2 to bob another: two in all, one per damager, so alice orders exactly two. The Ogre's 2 to the Swine is bob's creature's and gains her nothing. Alice ends at 25, not 27, and bob at 17.",
+  "board": {
+    "active": "alice",
+    "step": "BeginningOfCombat",
+    "seats": [
+      {
+        "name": "alice",
+        "battlefield": [
+          { "card": "Noble Purpose", "label": "purpose" },
+          { "card": "Argothian Swine", "label": "swine", "ready": true },
+          { "card": "Grizzly Bears", "label": "bears", "ready": true }
+        ],
+        "library": [{ "card": "Island" }, { "card": "Island" }, { "card": "Island" }]
+      },
+      {
+        "name": "bob",
+        "battlefield": [{ "card": "Gray Ogre", "label": "ogre", "ready": true }],
+        "library": [{ "card": "Island" }, { "card": "Island" }, { "card": "Island" }]
+      }
+    ]
+  },
+  "timeline": [
+    { "turn": 1, "step": "DeclareAttackers", "player": "alice", "do": { "Attack": ["$swine", "$bears"] } },
+    { "turn": 1, "step": "DeclareBlockers", "player": "bob", "do": { "Block": { "$ogre": ["$swine"] } } },
+    { "turn": 1, "step": "CombatDamage", "player": "alice", "source": "$swine", "do": { "AssignDamage": { "$ogre": 2, "$bob": 1 } } },
+    { "turn": 1, "step": "CombatDamage", "player": "alice", "do": { "OrderTriggers": ["$purpose", "$purpose"] } },
+    { "turn": 1, "step": "PostcombatMain", "player": "alice", "check": { "Life": { "player": "alice", "life": 25 } } },
+    { "turn": 1, "step": "PostcombatMain", "player": "alice", "check": { "Life": { "player": "bob", "life": 17 } } },
+    { "turn": 1, "step": "PostcombatMain", "player": "alice", "check": { "Count": { "player": "bob", "zone": "Graveyard", "card": "Gray Ogre", "count": 1 } } }
+  ]
+}

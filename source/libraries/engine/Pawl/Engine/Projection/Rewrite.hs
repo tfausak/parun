@@ -105,6 +105,7 @@ import qualified Pawl.Types.DamagePattern as DamagePattern
 import qualified Pawl.Types.DamageR as DamageR
 import qualified Pawl.Types.DamageRewrite as DamageRewrite
 import qualified Pawl.Types.DealDamage as DealDamage
+import qualified Pawl.Types.DealsDamageToPlayer as DealsDamageToPlayer
 import qualified Pawl.Types.Designate as Designate
 import qualified Pawl.Types.Destroy as Destroy
 import qualified Pawl.Types.DestructionR as DestructionR
@@ -2028,11 +2029,11 @@ rewriteTriggerCondition pairs condition = case condition of
   TriggerCondition.StepBegins {} -> condition
   TriggerCondition.SelfDealsCombatDamageToPlayer _ -> condition
   TriggerCondition.SelfDealsCombatDamageToPlayerOrBattle -> condition
-  TriggerCondition.SelfDealsCombatDamage -> condition
-  TriggerCondition.SelfDealsDamageToPlayer _ -> condition
+  TriggerCondition.DealsCombatDamage watched -> TriggerCondition.DealsCombatDamage (acting watched)
+  TriggerCondition.DealsDamageToPlayer p -> TriggerCondition.DealsDamageToPlayer p {DealsDamageToPlayer.actor = acting (DealsDamageToPlayer.actor p)}
   TriggerCondition.SelfDealsDamageToCreature -> condition
-  TriggerCondition.SelfDealsDamage -> condition
-  TriggerCondition.SelfIsDealtDamage -> condition
+  TriggerCondition.DealsDamage watched -> TriggerCondition.DealsDamage (acting watched)
+  TriggerCondition.IsDealtDamage watched -> TriggerCondition.IsDealtDamage (acting watched)
   TriggerCondition.PlayerIsDealtDamage _ -> condition
   TriggerCondition.PermanentDealsCombatDamageToPlayer p -> TriggerCondition.PermanentDealsCombatDamageToPlayer p {PermanentDealsCombatDamageToPlayer.filter = Filter.rewrite pairs (PermanentDealsCombatDamageToPlayer.filter p)}
   TriggerCondition.PermanentsDealCombatDamageToPlayer p -> TriggerCondition.PermanentsDealCombatDamageToPlayer p {PermanentsDealCombatDamageToPlayer.filter = Filter.rewrite pairs (PermanentsDealCombatDamageToPlayer.filter p)}
@@ -2121,15 +2122,10 @@ rewriteTriggerCondition pairs condition = case condition of
   TriggerCondition.PermanentBecomesDesignated (PermanentBecomesDesignated.MkPermanentBecomesDesignated d f) -> TriggerCondition.PermanentBecomesDesignated (PermanentBecomesDesignated.MkPermanentBecomesDesignated d (Filter.rewrite pairs f))
   TriggerCondition.PermanentActs acts ->
     TriggerCondition.PermanentActs
-      acts
-        { PermanentActed.permanent = case PermanentActed.permanent acts of
-            ActingPermanent.Self -> ActingPermanent.Self
-            ActingPermanent.Matching f -> ActingPermanent.Matching (Filter.rewrite pairs f)
-        }
+      acts {PermanentActed.permanent = acting (PermanentActed.permanent acts)}
   TriggerCondition.AttachedCreatureMentors -> condition
   TriggerCondition.AttachedCreatureDies -> condition
   TriggerCondition.AttachedCreatureBecomesTapped -> condition
-  TriggerCondition.AttachedCreatureDealsDamage -> condition
   TriggerCondition.PermanentsBecomeTapped f -> TriggerCondition.PermanentsBecomeTapped (Filter.rewrite pairs f)
   TriggerCondition.PermanentBecomesTapped f -> TriggerCondition.PermanentBecomesTapped (Filter.rewrite pairs f)
   TriggerCondition.SelfBecomesUntapped -> condition
@@ -2172,6 +2168,10 @@ rewriteTriggerCondition pairs condition = case condition of
   TriggerCondition.SelfBecomesUnattachedFrom f -> TriggerCondition.SelfBecomesUnattachedFrom (Filter.rewrite pairs f)
   -- CR 603.12's reflexive carries nothing at all, so there is no subtype to swap.
   TriggerCondition.Reflexive -> condition
+  where
+    acting watched = case watched of
+      ActingPermanent.Self -> ActingPermanent.Self
+      ActingPermanent.Matching f -> ActingPermanent.Matching (Filter.rewrite pairs f)
 
 -- CR 612.1 through Condition's predicate vocabulary. A Condition reached through
 -- a CR 611.2b duration comes here by way of rewriteDuration below.
