@@ -64,6 +64,7 @@ import qualified Parun.Types.AlternativeActivationCost as AlternativeActivationC
 import qualified Parun.Types.AppliedReduction as AppliedReduction
 import qualified Parun.Types.CantSearchLibraries as CantSearchLibraries
 import qualified Parun.Types.CastFromZone as CastFromZone
+import qualified Parun.Types.Chosen as Chosen
 import qualified Parun.Types.CostAddition as CostAddition
 import Parun.Types.CostAdjustments (CostAdjustments)
 import qualified Parun.Types.CostAdjustments as CostAdjustments
@@ -72,6 +73,7 @@ import qualified Parun.Types.CostComponent as CostComponent
 import qualified Parun.Types.CostModifier as CostModifier
 import qualified Parun.Types.CostSubject as CostSubject
 import qualified Parun.Types.DamagePattern as DamagePattern
+import qualified Parun.Types.DrawReveal as DrawReveal
 import qualified Parun.Types.ExtraVotes as ExtraVotes
 import qualified Parun.Types.Face as Face
 import Parun.Types.Filter (Filter)
@@ -98,6 +100,7 @@ import qualified Parun.Types.PaymentSubject as PaymentSubject
 import qualified Parun.Types.PermissionLimit as PermissionLimit
 import qualified Parun.Types.PermissionPool as PermissionPool
 import qualified Parun.Types.PermissionVerb as PermissionVerb
+import qualified Parun.Types.PlayerChoice as PlayerChoice
 import qualified Parun.Types.PlayerCounterKind as PlayerCounterKind
 import Parun.Types.PlayerEffect (PlayerEffect)
 import qualified Parun.Types.PlayerEffect as PlayerEffect
@@ -111,7 +114,6 @@ import qualified Parun.Types.PlotFromZone as PlotFromZone
 import qualified Parun.Types.ProjectedCharacteristics as PC
 import qualified Parun.Types.Quantity as Quantity.Type
 import qualified Parun.Types.Recipient as Recipient
-import qualified Parun.Types.RevealObligation as RevealObligation
 import Parun.Types.RowSource (RowSource)
 import qualified Parun.Types.RowSource as RowSource
 import qualified Parun.Types.Shows as Shows
@@ -142,19 +144,21 @@ import qualified Parun.Types.Zone as Zone
 -- and PlayerScope.Related Opponent reads CR 808.1's teams. Each is computed inside the
 -- arm that asks, so a scope that names neither pays nothing.
 inScope :: PlayerId -> PlayerId -> GameState -> PlayerScope -> Bool
-inScope pid controller = inScopeWithin (Just controller) pid controller
+inScope pid controller = inScopeWithin Nothing (Just controller) pid controller
 
 -- inScope with the range a Superlative ranks over named: @reach@ is
 -- Plane.rangePerspective's, the anchor's own but for a planar source (CR
--- 801.18), whose printed rows rank the whole table.
-inScopeWithin :: Maybe PlayerId -> PlayerId -> PlayerId -> GameState -> PlayerScope -> Bool
-inScopeWithin reach pid controller gs scope = case scope of
+-- 801.18), whose printed rows rank the whole table. And with the @source@ a
+-- ChosenPlayer reads, which only a printed row has.
+inScopeWithin :: Maybe ObjectId -> Maybe PlayerId -> PlayerId -> PlayerId -> GameState -> PlayerScope -> Bool
+inScopeWithin source reach pid controller gs scope = case scope of
   -- PlayerRelation.holds, the judge every player-naming position shares: CR
   -- 102.3's opponents are every player not on the controller's team, and
   -- AnyPlayer includes the controller (Thalia's ruling: "including your own").
   PlayerScope.Related relation -> PlayerRelation.holds (Game.teams gs) relation controller pid
   PlayerScope.Superlative leading -> List.elem pid (leaders reach gs leading)
   PlayerScope.InRole role -> List.elem pid (Turn.roleHolders role gs)
+  PlayerScope.ChosenPlayer -> (source >>= \oid -> Game.currentChoice Chosen.Players oid gs >>= Map.lookup PlayerChoice.AsEnters) == Just pid
 
 -- The same question over a CARRIER's affected set rather than over a bare scope:
 -- is `pid` one of the players this row applies to? inScope for the Scoped arm,
@@ -206,6 +210,9 @@ playersInScope reach perspective gs scope = case scope of
   PlayerScope.Related relation -> Players.relatedAmong (Players.table reach gs) perspective gs relation
   PlayerScope.Superlative leading -> Just (leaders reach gs leading)
   PlayerScope.InRole role -> Just (filter (`List.elem` Turn.roleHolders role gs) (Players.table reach gs))
+  -- No source to have chosen anybody: undeterminable, PlayerRef.Candidate's
+  -- posture.
+  PlayerScope.ChosenPlayer -> Nothing
 
 -- CR 707.2a: the player abilities this permanent's copiable rules text gives it
 -- -- its copy snapshot's when it has one, its printed face's otherwise. The
@@ -305,7 +312,7 @@ printedRows gs =
             -- range" the exemption.
             reaches ability pid =
               (Plane.exemptFromRange oid gs || Game.inRangeOf controller pid gs)
-                && inScopeWithin (Plane.rangePerspective oid controller gs) pid controller gs (PlayerStaticAbility.scope ability)
+                && inScopeWithin (Just oid) (Plane.rangePerspective oid controller gs) pid controller gs (PlayerStaticAbility.scope ability)
                 && lives ability pid
          in fmap (\(stamp, ability) -> (stamp, Just oid, PlayerStaticAbility.name ability, reaches ability, readAs (PlayerStaticAbility.effect ability))) stamped
       fromPermanent oid = case playerAbilitiesOf oid gs of
@@ -693,7 +700,7 @@ prohibitsCasting pid oid variable gs =
         PlayerEffect.AdditionalSurveilCards _ -> False
         PlayerEffect.CantGainLife -> False
         PlayerEffect.CantLoseLife -> False
-        PlayerEffect.RevealsFirstDraw _ -> False
+        PlayerEffect.RevealsDraw _ -> False
         PlayerEffect.Precluded _ -> False
         PlayerEffect.Shows _ -> False
    in any prohibits (applying pid gs)
@@ -824,7 +831,7 @@ prohibitsPlayingLand pid oid gs =
         PlayerEffect.AdditionalSurveilCards _ -> False
         PlayerEffect.CantGainLife -> False
         PlayerEffect.CantLoseLife -> False
-        PlayerEffect.RevealsFirstDraw _ -> False
+        PlayerEffect.RevealsDraw _ -> False
         PlayerEffect.Precluded _ -> False
         PlayerEffect.Shows _ -> False
    in any prohibits (applying pid gs)
@@ -904,7 +911,7 @@ prohibitsSearching pid owner causeController gs =
         PlayerEffect.AdditionalSurveilCards _ -> False
         PlayerEffect.CantGainLife -> False
         PlayerEffect.CantLoseLife -> False
-        PlayerEffect.RevealsFirstDraw _ -> False
+        PlayerEffect.RevealsDraw _ -> False
         PlayerEffect.Precluded _ -> False
         PlayerEffect.Shows _ -> False
    in any (prohibits . snd) (applying pid gs)
@@ -991,7 +998,7 @@ prohibitsCounters pid kind gs =
         PlayerEffect.AdditionalSurveilCards _ -> False
         PlayerEffect.CantGainLife -> False
         PlayerEffect.CantLoseLife -> False
-        PlayerEffect.RevealsFirstDraw _ -> False
+        PlayerEffect.RevealsDraw _ -> False
         PlayerEffect.Precluded _ -> False
         PlayerEffect.Shows _ -> False
    in -- CR 810.10c: a teammate who can't get poison counters stops the team,
@@ -1068,7 +1075,7 @@ prohibitsBecomingMonarch pid gs =
         PlayerEffect.AdditionalSurveilCards _ -> False
         PlayerEffect.CantGainLife -> False
         PlayerEffect.CantLoseLife -> False
-        PlayerEffect.RevealsFirstDraw _ -> False
+        PlayerEffect.RevealsDraw _ -> False
         PlayerEffect.Precluded _ -> False
         PlayerEffect.Shows _ -> False
    in any (prohibits . snd) (applying pid gs)
@@ -1124,7 +1131,7 @@ schemesCantBeSetInMotion gs =
         PlayerEffect.AdditionalSurveilCards _ -> False
         PlayerEffect.CantGainLife -> False
         PlayerEffect.CantLoseLife -> False
-        PlayerEffect.RevealsFirstDraw _ -> False
+        PlayerEffect.RevealsDraw _ -> False
         PlayerEffect.Precluded _ -> False
         PlayerEffect.Shows _ -> False
    in any (\pid -> any (prohibits . snd) (applying pid gs)) (Game.stillPlaying gs)
@@ -1180,7 +1187,7 @@ prohibitsAttackingWithCreatures pid gs =
         PlayerEffect.AdditionalSurveilCards _ -> False
         PlayerEffect.CantGainLife -> False
         PlayerEffect.CantLoseLife -> False
-        PlayerEffect.RevealsFirstDraw _ -> False
+        PlayerEffect.RevealsDraw _ -> False
         PlayerEffect.Precluded _ -> False
         PlayerEffect.Shows _ -> False
    in any (prohibits . snd) (applying pid gs)
@@ -1809,7 +1816,7 @@ landPlayFlashGrant effect = case effect of
   PlayerEffect.AdditionalSurveilCards _ -> Nothing
   PlayerEffect.CantGainLife -> Nothing
   PlayerEffect.CantLoseLife -> Nothing
-  PlayerEffect.RevealsFirstDraw _ -> Nothing
+  PlayerEffect.RevealsDraw _ -> Nothing
   PlayerEffect.Precluded _ -> Nothing
   PlayerEffect.Shows _ -> Nothing
 
@@ -2065,7 +2072,7 @@ castPermissionsFrom pid zone oid gs =
         PlayerEffect.AdditionalSurveilCards _ -> False
         PlayerEffect.CantGainLife -> False
         PlayerEffect.CantLoseLife -> False
-        PlayerEffect.RevealsFirstDraw _ -> False
+        PlayerEffect.RevealsDraw _ -> False
         PlayerEffect.Precluded _ -> False
         PlayerEffect.Shows _ -> False
       grantOf (source, effect) = case effect of
@@ -2294,7 +2301,7 @@ mayCastFromHandWithoutPayingManaCost pid oid gs =
         PlayerEffect.AdditionalSurveilCards _ -> False
         PlayerEffect.CantGainLife -> False
         PlayerEffect.CantLoseLife -> False
-        PlayerEffect.RevealsFirstDraw _ -> False
+        PlayerEffect.RevealsDraw _ -> False
         PlayerEffect.Precluded _ -> False
         PlayerEffect.Shows _ -> False
         -- The CR 601.3 permissions, which say WHERE a spell may be cast from and
@@ -2427,7 +2434,7 @@ playLandPiles pid gs =
         PlayerEffect.AdditionalSurveilCards _ -> []
         PlayerEffect.CantGainLife -> []
         PlayerEffect.CantLoseLife -> []
-        PlayerEffect.RevealsFirstDraw _ -> []
+        PlayerEffect.RevealsDraw _ -> []
         PlayerEffect.Precluded _ -> []
         PlayerEffect.Shows _ -> []
    in concatMap (piles . snd) (applying pid gs)
@@ -2475,6 +2482,8 @@ protectedFromTargeting rows caster pid gs =
             PlayerScope.Superlative _ -> False
             -- A role is a question about the caster too, and nobody holds it.
             PlayerScope.InRole _ -> False
+            -- Nobody chose a sourceless caster.
+            PlayerScope.ChosenPlayer -> False
         PlayerEffect.CantCastSpells -> False
         PlayerEffect.CantActivateAbilities _ -> False
         PlayerEffect.CantCastMoreThan _ -> False
@@ -2521,7 +2530,7 @@ protectedFromTargeting rows caster pid gs =
         PlayerEffect.AdditionalSurveilCards _ -> False
         PlayerEffect.CantGainLife -> False
         PlayerEffect.CantLoseLife -> False
-        PlayerEffect.RevealsFirstDraw _ -> False
+        PlayerEffect.RevealsDraw _ -> False
         PlayerEffect.Precluded _ -> False
         PlayerEffect.Shows _ -> False
    in any (stops . snd) rows
@@ -2623,7 +2632,7 @@ protectedFromGiven rows aimer oid gs =
         PlayerEffect.AdditionalSurveilCards _ -> False
         PlayerEffect.CantGainLife -> False
         PlayerEffect.CantLoseLife -> False
-        PlayerEffect.RevealsFirstDraw _ -> False
+        PlayerEffect.RevealsDraw _ -> False
         PlayerEffect.Precluded _ -> False
         PlayerEffect.Shows _ -> False
    in any stops rows
@@ -2711,7 +2720,7 @@ protectionCarriers gs =
         PlayerEffect.AdditionalSurveilCards _ -> Nothing
         PlayerEffect.CantGainLife -> Nothing
         PlayerEffect.CantLoseLife -> Nothing
-        PlayerEffect.RevealsFirstDraw _ -> Nothing
+        PlayerEffect.RevealsDraw _ -> Nothing
         PlayerEffect.Precluded _ -> Nothing
         PlayerEffect.Shows _ -> Nothing
    in concatMap (\pid -> Maybe.mapMaybe (carrier pid) (applying pid gs)) (Game.stillPlaying gs)
@@ -2792,7 +2801,7 @@ landPlaysAllowed pid gs =
         PlayerEffect.AdditionalSurveilCards _ -> Nothing
         PlayerEffect.CantGainLife -> Nothing
         PlayerEffect.CantLoseLife -> Nothing
-        PlayerEffect.RevealsFirstDraw _ -> Nothing
+        PlayerEffect.RevealsDraw _ -> Nothing
         PlayerEffect.Precluded _ -> Nothing
         PlayerEffect.Shows _ -> Nothing
       add total allowance = case allowance of
@@ -2866,7 +2875,7 @@ votesAllowed pid gs =
         PlayerEffect.AdditionalSurveilCards _ -> Nothing
         PlayerEffect.CantGainLife -> Nothing
         PlayerEffect.CantLoseLife -> Nothing
-        PlayerEffect.RevealsFirstDraw _ -> Nothing
+        PlayerEffect.RevealsDraw _ -> Nothing
         PlayerEffect.Precluded _ -> Nothing
         PlayerEffect.Shows _ -> Nothing
    in defaultVotes + sum (Maybe.mapMaybe (grantOf . snd) (applying pid gs))
@@ -2925,7 +2934,7 @@ offeredExtras pid gs =
         PlayerEffect.AdditionalSurveilCards _ -> True
         PlayerEffect.CantGainLife -> False
         PlayerEffect.CantLoseLife -> False
-        PlayerEffect.RevealsFirstDraw _ -> False
+        PlayerEffect.RevealsDraw _ -> False
         PlayerEffect.Precluded _ -> False
         PlayerEffect.Shows _ -> False
       rowOf (source, effect) = case RowSource.object source of
@@ -2984,19 +2993,20 @@ cascadeActions pid gs =
         PlayerEffect.AdditionalSurveilCards _ -> Nothing
         PlayerEffect.CantGainLife -> Nothing
         PlayerEffect.CantLoseLife -> Nothing
-        PlayerEffect.RevealsFirstDraw _ -> Nothing
+        PlayerEffect.RevealsDraw _ -> Nothing
         PlayerEffect.Precluded _ -> Nothing
         PlayerEffect.Shows _ -> Nothing
    in Maybe.mapMaybe (\(source, effect) -> fmap ((,) (RowSource.object source)) (grantOf effect)) (applying pid gs)
 
--- CR 603.11 / 121.9: the draw-time reveals that apply to `pid`'s first draw of a
--- turn, each with the object whose static ability states it -- the object
--- RevealCause.AsDrawnUnder names, so only that object's linked trigger fires (CR
--- 607.2h). One per row, in timestamp order: God-Eternal Kefnet's ruling
--- (2019-05-03) reveals the card once for each of two Kefnets. Every row's source
--- is an object (`offeredExtras`), so the Maybe dropped here drops nothing.
-firstDrawReveals :: PlayerId -> GameState -> [(ObjectId, RevealObligation.RevealObligation)]
-firstDrawReveals pid gs =
+-- CR 603.11 / 121.9: the draw-time reveals that apply to `pid`'s @nth@ draw of
+-- a turn -- Rowen's first, Booby Trap's every one -- each with the object whose
+-- static ability states it -- the object RevealCause.AsDrawnUnder names, so only
+-- that object's trigger fires (CR 607.2h). One per row, in timestamp order:
+-- God-Eternal Kefnet's ruling (2019-05-03) reveals the card once for each of two
+-- Kefnets. Every row's source is an object (`offeredExtras`), so the Maybe
+-- dropped here drops nothing.
+drawReveals :: PlayerId -> Natural -> GameState -> [(ObjectId, DrawReveal.DrawReveal)]
+drawReveals pid nth gs =
   let revealOf effect = case effect of
         PlayerEffect.CantCastSpells -> Nothing
         PlayerEffect.CantActivateAbilities _ -> Nothing
@@ -3042,10 +3052,13 @@ firstDrawReveals pid gs =
         PlayerEffect.AdditionalSurveilCards _ -> Nothing
         PlayerEffect.CantGainLife -> Nothing
         PlayerEffect.CantLoseLife -> Nothing
-        PlayerEffect.RevealsFirstDraw obligation -> Just obligation
+        PlayerEffect.RevealsDraw reveal -> Just reveal
         PlayerEffect.Precluded _ -> Nothing
         PlayerEffect.Shows _ -> Nothing
-      rowOf (source, effect) = (,) <$> RowSource.object source <*> revealOf effect
+      revealing reveal = case DrawReveal.nth reveal of
+        Nothing -> True
+        Just ordinal -> ordinal == nth
+      rowOf (source, effect) = (,) <$> RowSource.object source <*> (revealOf effect >>= \reveal -> if revealing reveal then Just reveal else Nothing)
    in Maybe.mapMaybe rowOf (applying pid gs)
 
 -- CR 401.5 / 400.2: the grants showing this player's hand or top card, each
@@ -3097,7 +3110,7 @@ shownGrants pid gs =
         PlayerEffect.AdditionalSurveilCards _ -> Nothing
         PlayerEffect.CantGainLife -> Nothing
         PlayerEffect.CantLoseLife -> Nothing
-        PlayerEffect.RevealsFirstDraw _ -> Nothing
+        PlayerEffect.RevealsDraw _ -> Nothing
         PlayerEffect.Precluded _ -> Nothing
         PlayerEffect.Shows grant -> Just grant
    in Maybe.mapMaybe (grantOf . snd) (applying pid gs)
@@ -3190,7 +3203,7 @@ maximumHandSize pid gs =
         PlayerEffect.AdditionalSurveilCards _ -> current
         PlayerEffect.CantGainLife -> current
         PlayerEffect.CantLoseLife -> current
-        PlayerEffect.RevealsFirstDraw _ -> current
+        PlayerEffect.RevealsDraw _ -> current
         PlayerEffect.Precluded _ -> current
         PlayerEffect.Shows _ -> current
    in List.foldl' (\current row -> apply current (snd row)) (Just (Vanguard.handSize defaultMaximumHandSize pid gs)) (applying pid gs)
@@ -3268,7 +3281,7 @@ keepsUnspentMana pid gs =
         PlayerEffect.AdditionalSurveilCards _ -> Nothing
         PlayerEffect.CantGainLife -> Nothing
         PlayerEffect.CantLoseLife -> Nothing
-        PlayerEffect.RevealsFirstDraw _ -> Nothing
+        PlayerEffect.RevealsDraw _ -> Nothing
         PlayerEffect.Precluded _ -> Nothing
         PlayerEffect.Shows _ -> Nothing
       filters = Maybe.mapMaybe (keeps . snd) (applying pid gs)
@@ -3338,7 +3351,7 @@ losesLifeForUnspentMana pid gs =
         PlayerEffect.AdditionalSurveilCards _ -> False
         PlayerEffect.CantGainLife -> False
         PlayerEffect.CantLoseLife -> False
-        PlayerEffect.RevealsFirstDraw _ -> False
+        PlayerEffect.RevealsDraw _ -> False
         PlayerEffect.Precluded _ -> False
         PlayerEffect.Shows _ -> False
    in any (charges . snd) (applying pid gs)
@@ -3411,7 +3424,7 @@ prohibitsGainingLife pid gs =
         PlayerEffect.AdditionalVotes _ -> False
         PlayerEffect.AdditionalSurveilCards _ -> False
         PlayerEffect.CantLoseLife -> False
-        PlayerEffect.RevealsFirstDraw _ -> False
+        PlayerEffect.RevealsDraw _ -> False
         PlayerEffect.Precluded _ -> False
         PlayerEffect.Shows _ -> False
    in any (\member -> any (prohibits . snd) (applying member gs)) (Game.lifeSharers pid gs)
@@ -3432,7 +3445,7 @@ prohibitsLosingLife :: PlayerId -> GameState -> Bool
 prohibitsLosingLife pid gs =
   let prohibits effect = case effect of
         PlayerEffect.CantLoseLife -> True
-        PlayerEffect.RevealsFirstDraw _ -> False
+        PlayerEffect.RevealsDraw _ -> False
         -- Every other arm is about casting, playing, targeting, countering,
         -- searching, paying, keeping mana, rule 702 protection, how a coin flip
         -- came out, gaining life, winning or losing the game or showing or revealing cards. CR 119.8's restriction is none
@@ -3506,7 +3519,7 @@ precludes outcome pid gs =
         -- none of those -- CantLoseLife included, which leaves a player's life
         -- total where it is but says nothing of CR 104.3b's loss.
         PlayerEffect.CantLoseLife -> False
-        PlayerEffect.RevealsFirstDraw _ -> False
+        PlayerEffect.RevealsDraw _ -> False
         PlayerEffect.CantCastSpells -> False
         PlayerEffect.CantActivateAbilities _ -> False
         PlayerEffect.CantCastMoreThan _ -> False
@@ -3618,7 +3631,7 @@ spendManaAsThough pid gs =
         PlayerEffect.AdditionalSurveilCards _ -> Nothing
         PlayerEffect.CantGainLife -> Nothing
         PlayerEffect.CantLoseLife -> Nothing
-        PlayerEffect.RevealsFirstDraw _ -> Nothing
+        PlayerEffect.RevealsDraw _ -> Nothing
         PlayerEffect.Precluded _ -> Nothing
         PlayerEffect.Shows _ -> Nothing
    in Maybe.mapMaybe (spends . snd) (applying pid gs)
@@ -3721,7 +3734,7 @@ cantBeCountered pid oid gs =
         PlayerEffect.AdditionalSurveilCards _ -> False
         PlayerEffect.CantGainLife -> False
         PlayerEffect.CantLoseLife -> False
-        PlayerEffect.RevealsFirstDraw _ -> False
+        PlayerEffect.RevealsDraw _ -> False
         PlayerEffect.Precluded _ -> False
         PlayerEffect.Shows _ -> False
    in any stops (applying pid gs)
@@ -3795,7 +3808,7 @@ unpreventable gs =
         PlayerEffect.AdditionalSurveilCards _ -> Nothing
         PlayerEffect.CantGainLife -> Nothing
         PlayerEffect.CantLoseLife -> Nothing
-        PlayerEffect.RevealsFirstDraw _ -> Nothing
+        PlayerEffect.RevealsDraw _ -> Nothing
         PlayerEffect.Precluded _ -> Nothing
         PlayerEffect.Shows _ -> Nothing
         PlayerEffect.CantBeCountered _ -> Nothing
@@ -3871,7 +3884,7 @@ unredirectable gs =
         PlayerEffect.AdditionalSurveilCards _ -> Nothing
         PlayerEffect.CantGainLife -> Nothing
         PlayerEffect.CantLoseLife -> Nothing
-        PlayerEffect.RevealsFirstDraw _ -> Nothing
+        PlayerEffect.RevealsDraw _ -> Nothing
         PlayerEffect.Precluded _ -> Nothing
         PlayerEffect.Shows _ -> Nothing
         PlayerEffect.CantBeCountered _ -> Nothing
@@ -3920,7 +3933,7 @@ statedFlips pid gs =
         PlayerEffect.AdditionalSurveilCards _ -> Nothing
         PlayerEffect.CantGainLife -> Nothing
         PlayerEffect.CantLoseLife -> Nothing
-        PlayerEffect.RevealsFirstDraw _ -> Nothing
+        PlayerEffect.RevealsDraw _ -> Nothing
         PlayerEffect.Precluded _ -> Nothing
         PlayerEffect.Shows _ -> Nothing
         -- Every other arm is about casting, playing, targeting, countering,
@@ -3998,7 +4011,7 @@ rollModifiers pid gs =
         PlayerEffect.AdditionalSurveilCards _ -> Nothing
         PlayerEffect.CantGainLife -> Nothing
         PlayerEffect.CantLoseLife -> Nothing
-        PlayerEffect.RevealsFirstDraw _ -> Nothing
+        PlayerEffect.RevealsDraw _ -> Nothing
         PlayerEffect.Precluded _ -> Nothing
         PlayerEffect.Shows _ -> Nothing
         PlayerEffect.CantCastSpells -> Nothing
@@ -4155,7 +4168,7 @@ overPlayerRefs f effect = case effect of
   PlayerEffect.AdditionalSurveilCards _ -> pure effect
   PlayerEffect.CantGainLife -> pure effect
   PlayerEffect.CantLoseLife -> pure effect
-  PlayerEffect.RevealsFirstDraw _ -> pure effect
+  PlayerEffect.RevealsDraw _ -> pure effect
   PlayerEffect.Precluded _ -> pure effect
   PlayerEffect.Shows _ -> pure effect
 
@@ -4226,7 +4239,7 @@ overDamagePatterns f effect = case effect of
   PlayerEffect.AdditionalSurveilCards _ -> pure effect
   PlayerEffect.CantGainLife -> pure effect
   PlayerEffect.CantLoseLife -> pure effect
-  PlayerEffect.RevealsFirstDraw _ -> pure effect
+  PlayerEffect.RevealsDraw _ -> pure effect
   PlayerEffect.Precluded _ -> pure effect
   PlayerEffect.Shows _ -> pure effect
 

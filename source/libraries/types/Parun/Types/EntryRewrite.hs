@@ -10,6 +10,7 @@ import qualified Parun.Types.EntryPrice as EntryPrice
 import qualified Parun.Types.ExileFromGraveyard as ExileFromGraveyard
 import qualified Parun.Types.Filter as Filter
 import qualified Parun.Types.Keyword as Keyword
+import qualified Parun.Types.PlayerRelation as PlayerRelation
 import qualified Parun.Types.SacrificeAnyNumber as SacrificeAnyNumber
 import qualified Parun.Types.SacrificeToEnter as SacrificeToEnter
 import qualified Parun.Types.WithCounters as WithCounters
@@ -61,10 +62,9 @@ data EntryRewrite ability effect
     -- 205.3m's creature types are the offer, and the prompt enumerates none of
     -- them.
     ChooseCreatureType
-  | -- | CR 614.1c / Stuffy Doll: choose a player as this enters, written to
-    -- Object.chosenPlayers. Nullary -- CR 102.1's seats are the offer, and the
-    -- prompt carries the ones still in the game.
-    ChoosePlayer
+  | -- | CR 614.1c / Stuffy Doll, Booby Trap: choose a player in this relation to
+    -- the controller as this enters, written to Object.chosenPlayers.
+    ChoosePlayer PlayerRelation.PlayerRelation
   | -- | CR 614.1c with CR 201.4a / Null Chamber: this object's controller and one
     -- opponent each choose a card name matching the Filter, both written to
     -- Object.chosenNames.

@@ -1165,7 +1165,7 @@ admitsEntry gs oid rewrite = case rewrite of
   EntryRewrite.ChooseColors {} -> True
   EntryRewrite.ChooseBasicLandType -> True
   EntryRewrite.ChooseCreatureType -> True
-  EntryRewrite.ChoosePlayer -> True
+  EntryRewrite.ChoosePlayer _ -> True
   EntryRewrite.ChooseCardNames _ -> True
   EntryRewrite.ChooseCardName _ -> True
   EntryRewrite.WithCounters {} -> True
@@ -1341,7 +1341,7 @@ entryCostOf rewrite = case rewrite of
   EntryRewrite.ChooseColors {} -> Nothing
   EntryRewrite.ChooseBasicLandType -> Nothing
   EntryRewrite.ChooseCreatureType -> Nothing
-  EntryRewrite.ChoosePlayer -> Nothing
+  EntryRewrite.ChoosePlayer _ -> Nothing
   EntryRewrite.ChooseCardNames _ -> Nothing
   EntryRewrite.ChooseCardName _ -> Nothing
   EntryRewrite.WithCounters _ -> Nothing
@@ -1913,7 +1913,7 @@ bucketOfEffect re = case re of
   ReplacementEffect.EntryR (EntryR.MkEntryR _ EntryRewrite.ChooseColors {}) -> ReplacementBucket.Other
   ReplacementEffect.EntryR (EntryR.MkEntryR _ EntryRewrite.ChooseBasicLandType) -> ReplacementBucket.Other
   ReplacementEffect.EntryR (EntryR.MkEntryR _ EntryRewrite.ChooseCreatureType) -> ReplacementBucket.Other
-  ReplacementEffect.EntryR (EntryR.MkEntryR _ EntryRewrite.ChoosePlayer) -> ReplacementBucket.Other
+  ReplacementEffect.EntryR (EntryR.MkEntryR _ (EntryRewrite.ChoosePlayer _)) -> ReplacementBucket.Other
   ReplacementEffect.EntryR (EntryR.MkEntryR _ (EntryRewrite.ChooseCardNames _)) -> ReplacementBucket.Other
   ReplacementEffect.EntryR (EntryR.MkEntryR _ (EntryRewrite.ChooseCardName _)) -> ReplacementBucket.Other
   ReplacementEffect.EntryR (EntryR.MkEntryR _ (EntryRewrite.WithCounters {})) -> ReplacementBucket.Other
@@ -2073,9 +2073,10 @@ readsApplier re = case re of
   ReplacementEffect.EntryR (EntryR.MkEntryR _ EntryRewrite.ChooseBasicLandType) -> False
   ReplacementEffect.EntryR (EntryR.MkEntryR _ EntryRewrite.ChooseCreatureType) -> False
   -- Same chooser again, and the CANDIDATES are the board's rather than the
-  -- applier's: CR 102.1's players in the game are the whole offer whoever's row
-  -- is applying (Stuffy Doll).
-  ReplacementEffect.EntryR (EntryR.MkEntryR _ EntryRewrite.ChoosePlayer) -> False
+  -- applier's: the players in the game standing in the relation to the
+  -- entering object's controller are the whole offer whoever's row is applying
+  -- (Stuffy Doll, Booby Trap).
+  ReplacementEffect.EntryR (EntryR.MkEntryR _ (EntryRewrite.ChoosePlayer _)) -> False
   -- Two choosers rather than one, and neither is the candidate's: the entering
   -- object's controller is read live off the board for ChooseColors' reason, and
   -- CR 102.2's opponent is derived from that same player. The restriction rides
@@ -2491,7 +2492,7 @@ choose gs event candidates =
    in case candidates of
         [] -> pure Nothing
         first : rest ->
-          if all (\c -> distinguishing c == distinguishing first) rest
+          if all (\c -> distinguishing c == distinguishing first) rest || oneSentenceOfChoices candidates
             then pure (Just first)
             else case chooserOf gs event of
               -- No chooser: the affected object is gone. Apply the canonical first
@@ -2505,6 +2506,76 @@ choose gs event candidates =
                 -- out-of-range index leaves the canonical first standing rather than
                 -- dropping the event or crashing.
                 pure (Just (at candidates answer first))
+
+-- CR 614.1c: Booby Trap's "as this artifact enters, choose an opponent and a
+-- card name" is ONE replacement effect, written as one row per choice. Rows
+-- that each record a choice of the entering object's controller alone, from one
+-- source, commute -- every order leaves the same answers open -- so CR 616.1 has
+-- no order to ask. The rows of two separate "as this enters, choose" sentences
+-- would be elided too; MTGJSON AtomicCards, regex for two such sentences on one
+-- face, 2026-10-24, no hit.
+oneSentenceOfChoices :: [ReplacementCandidate] -> Bool
+oneSentenceOfChoices candidates = case candidates of
+  [] -> False
+  first : rest ->
+    all (recordsAChoice . ReplacementCandidate.effect) candidates
+      && all ((== ReplacementCandidate.source first) . ReplacementCandidate.source) rest
+
+-- Whether a row's whole work is a choice its entering object's controller alone
+-- makes and the object records (Object.chosenColors, chosenSubtype,
+-- chosenPlayers, chosenNames) -- `oneSentenceOfChoices`' question.
+recordsAChoice :: ReplacementEffect Card (GrantedAbility.GrantedAbility Card) (Effect.Effect Card (GrantedAbility.GrantedAbility Card)) -> Bool
+recordsAChoice effect = case effect of
+  ReplacementEffect.EntryR (EntryR.MkEntryR _ rewrite) -> case rewrite of
+    EntryRewrite.ChooseColors {} -> True
+    EntryRewrite.ChooseBasicLandType -> True
+    EntryRewrite.ChooseCreatureType -> True
+    EntryRewrite.ChoosePlayer _ -> True
+    EntryRewrite.ChooseCardName _ -> True
+    -- An opponent chooses too (Null Chamber).
+    EntryRewrite.ChooseCardNames _ -> False
+    -- Writes the copiable values rather than a record (CR 707.2).
+    EntryRewrite.AsCopy _ -> False
+    EntryRewrite.ChoiceOf _ -> False
+    EntryRewrite.ChoiceByCoinFlip _ -> False
+    EntryRewrite.WithCounters {} -> False
+    EntryRewrite.EntersWith _ -> False
+    EntryRewrite.UnderSourceControl -> False
+    EntryRewrite.SacrificeAnyNumber {} -> False
+    EntryRewrite.SacrificeToEnter {} -> False
+    EntryRewrite.ExileFromGraveyard _ -> False
+    EntryRewrite.EntersAttachedTo _ -> False
+    EntryRewrite.Riot -> False
+    EntryRewrite.ReadAhead -> False
+    EntryRewrite.Unleash -> False
+    EntryRewrite.Sunburst -> False
+    EntryRewrite.ModularSunburst -> False
+    EntryRewrite.Bloodthirst _ -> False
+    EntryRewrite.Amplify _ -> False
+    EntryRewrite.Tribute _ -> False
+    EntryRewrite.Compleated _ -> False
+    EntryRewrite.Tapped -> False
+    EntryRewrite.OrTapped _ -> False
+    EntryRewrite.EntersTransformed -> False
+    EntryRewrite.RunEffects _ -> False
+  ReplacementEffect.ZoneChangeR {} -> False
+  ReplacementEffect.DamageR {} -> False
+  ReplacementEffect.DestructionR {} -> False
+  ReplacementEffect.CounterR {} -> False
+  ReplacementEffect.TokenR {} -> False
+  ReplacementEffect.TurnUpR {} -> False
+  ReplacementEffect.AttachR {} -> False
+  ReplacementEffect.UntapR {} -> False
+  ReplacementEffect.LifeLossR {} -> False
+  ReplacementEffect.LifeGainR {} -> False
+  ReplacementEffect.DrawR {} -> False
+  ReplacementEffect.DrawCountR {} -> False
+  ReplacementEffect.InstructionR {} -> False
+  ReplacementEffect.DieRollR {} -> False
+  ReplacementEffect.AssembleR {} -> False
+  ReplacementEffect.GameLossR {} -> False
+  ReplacementEffect.PlaneswalkR {} -> False
+  ReplacementEffect.PhaseR {} -> False
 
 -- What a candidate looks like to the player being asked (#74): its source and
 -- the effect that distinguishes it from another of the same source. A

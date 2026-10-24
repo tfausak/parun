@@ -5,6 +5,7 @@ import qualified Parun.Codec.CantSearchLibraries as CantSearchLibraries
 import qualified Parun.Codec.CastFromZone as CastFromZone
 import qualified Parun.Codec.CostModifier as CostModifier
 import qualified Parun.Codec.DamagePattern as DamagePattern
+import qualified Parun.Codec.DrawReveal as DrawReveal
 import qualified Parun.Codec.ExtraVotes as ExtraVotes
 import qualified Parun.Codec.Filter as Filter
 import qualified Parun.Codec.GameOutcome as GameOutcome
@@ -17,7 +18,6 @@ import qualified Parun.Codec.ModifiedRoll as ModifiedRoll
 import qualified Parun.Codec.PlayerCounterKind as PlayerCounterKind
 import qualified Parun.Codec.PlayerScope as PlayerScope
 import qualified Parun.Codec.PlotFromZone as PlotFromZone
-import qualified Parun.Codec.RevealObligation as RevealObligation
 import qualified Parun.Codec.Shows as Shows
 import qualified Parun.Codec.SpendManaAsThough as SpendManaAsThough
 import qualified Parun.Codec.StatedFlip as StatedFlip
@@ -80,7 +80,7 @@ codec =
           Arm.nullary "CantLoseLife" PlayerEffect.CantLoseLife,
           Arm.payload "Precluded" GameOutcome.codec PlayerEffect.Precluded (\x -> case x of PlayerEffect.Precluded y -> Just y; _ -> Nothing),
           Arm.payload "Shows" Shows.codec PlayerEffect.Shows (\x -> case x of PlayerEffect.Shows y -> Just y; _ -> Nothing),
-          Arm.payload "RevealsFirstDraw" RevealObligation.codec PlayerEffect.RevealsFirstDraw (\x -> case x of PlayerEffect.RevealsFirstDraw y -> Just y; _ -> Nothing)
+          Arm.payload "RevealsDraw" DrawReveal.codec PlayerEffect.RevealsDraw (\x -> case x of PlayerEffect.RevealsDraw y -> Just y; _ -> Nothing)
         ]
 
 tagOf :: PlayerEffect.PlayerEffect -> String
@@ -131,4 +131,4 @@ tagOf x = case x of
   PlayerEffect.CantLoseLife {} -> "CantLoseLife"
   PlayerEffect.Precluded {} -> "Precluded"
   PlayerEffect.Shows {} -> "Shows"
-  PlayerEffect.RevealsFirstDraw {} -> "RevealsFirstDraw"
+  PlayerEffect.RevealsDraw {} -> "RevealsDraw"

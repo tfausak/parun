@@ -1181,7 +1181,7 @@ unpreventableScopeOffends scope playerEffect = case playerEffect of
   PlayerEffect.AdditionalSurveilCards _ -> False
   PlayerEffect.CantGainLife -> False
   PlayerEffect.CantLoseLife -> False
-  PlayerEffect.RevealsFirstDraw _ -> False
+  PlayerEffect.RevealsDraw _ -> False
   PlayerEffect.Precluded _ -> False
   PlayerEffect.Shows _ -> False
 
@@ -1254,7 +1254,7 @@ unpreventablePatternOffends playerEffect = case playerEffect of
   PlayerEffect.AdditionalSurveilCards _ -> False
   PlayerEffect.CantGainLife -> False
   PlayerEffect.CantLoseLife -> False
-  PlayerEffect.RevealsFirstDraw _ -> False
+  PlayerEffect.RevealsDraw _ -> False
   PlayerEffect.Precluded _ -> False
   PlayerEffect.Shows _ -> False
 
@@ -2111,6 +2111,7 @@ effectLintSpec s registry = Spec.describe s "Lint" $ do
           -- A shared team turn has several active players (CR 805.4a), and a
           -- combat several defending ones (CR 802.2a).
           ZoneScope.Scoped (PlayerScope.InRole _) -> False
+          ZoneScope.Scoped PlayerScope.ChosenPlayer -> True
           ZoneScope.InSlot _ -> True
           ZoneScope.ControllerOfBound _ -> True
           ZoneScope.BoundPlayer _ -> True

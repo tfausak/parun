@@ -1774,7 +1774,7 @@ entryRewriteReads rewrite = case rewrite of
   EntryRewrite.ChooseColors {} -> ([], [])
   EntryRewrite.ChooseBasicLandType -> ([], [])
   EntryRewrite.ChooseCreatureType -> ([], [])
-  EntryRewrite.ChoosePlayer -> ([], [])
+  EntryRewrite.ChoosePlayer _ -> ([], [])
   EntryRewrite.ChooseCardNames restriction -> ([restriction], [])
   EntryRewrite.ChooseCardName restriction -> ([restriction], [])
   -- CR 614.1c's count per kind, evaluated as the row applies and against the ROW's
@@ -1997,7 +1997,7 @@ entryRewriteEffects rewrite = case rewrite of
   EntryRewrite.ChooseColors {} -> []
   EntryRewrite.ChooseBasicLandType -> []
   EntryRewrite.ChooseCreatureType -> []
-  EntryRewrite.ChoosePlayer -> []
+  EntryRewrite.ChoosePlayer _ -> []
   EntryRewrite.ChooseCardNames _ -> []
   EntryRewrite.ChooseCardName _ -> []
   EntryRewrite.WithCounters _ -> []

@@ -9,6 +9,7 @@ import qualified Parun.Codec.EntryPrice as EntryPrice
 import qualified Parun.Codec.ExileFromGraveyard as ExileFromGraveyard
 import qualified Parun.Codec.Filter as Filter
 import qualified Parun.Codec.Keyword as Keyword
+import qualified Parun.Codec.PlayerRelation as PlayerRelation
 import qualified Parun.Codec.SacrificeAnyNumber as SacrificeAnyNumber
 import qualified Parun.Codec.SacrificeToEnter as SacrificeToEnter
 import qualified Parun.Codec.WithCounters as WithCounters
@@ -39,7 +40,7 @@ codec abilityCodec effectCodec =
       Arm.payload "ChooseColors" Common.natural EntryRewrite.ChooseColors (\x -> case x of EntryRewrite.ChooseColors y -> Just y; _ -> Nothing),
       Arm.nullary "ChooseBasicLandType" EntryRewrite.ChooseBasicLandType,
       Arm.nullary "ChooseCreatureType" EntryRewrite.ChooseCreatureType,
-      Arm.nullary "ChoosePlayer" EntryRewrite.ChoosePlayer,
+      Arm.payload "ChoosePlayer" PlayerRelation.codec EntryRewrite.ChoosePlayer (\x -> case x of EntryRewrite.ChoosePlayer y -> Just y; _ -> Nothing),
       Arm.payload "ChooseCardNames" (Filter.codec Keyword.codec) EntryRewrite.ChooseCardNames (\x -> case x of EntryRewrite.ChooseCardNames y -> Just y; _ -> Nothing),
       Arm.payload "ChooseCardName" (Filter.codec Keyword.codec) EntryRewrite.ChooseCardName (\x -> case x of EntryRewrite.ChooseCardName y -> Just y; _ -> Nothing),
       Arm.payload "EntersWith" (EntersWith.codec abilityCodec) EntryRewrite.EntersWith (\x -> case x of EntryRewrite.EntersWith y -> Just y; _ -> Nothing),

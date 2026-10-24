@@ -345,6 +345,7 @@ import qualified Parun.Types.RequirementArity as RequirementArity
 import qualified Parun.Types.RestrictedCreatures as RestrictedCreatures
 import qualified Parun.Types.ReturnPermanents as ReturnPermanents
 import qualified Parun.Types.Reveal as Reveal
+import qualified Parun.Types.RevealedThisWay as RevealedThisWay
 import qualified Parun.Types.RollDie as RollDie
 import qualified Parun.Types.RuleAbilities as RuleAbilities
 import qualified Parun.Types.Sacrifice as Sacrifice
@@ -4657,7 +4658,7 @@ triggerConditionFilters triggerCondition = case triggerCondition of
   TriggerCondition.SelfAttacksUnblocked -> []
   TriggerCondition.SelfCycled -> []
   TriggerCondition.SelfRevealedForMiracle -> []
-  TriggerCondition.RevealedThisWay f -> unframed [f]
+  TriggerCondition.RevealedThisWay r -> unframed [RevealedThisWay.card r]
   TriggerCondition.SelfDiscarded -> []
   TriggerCondition.SelfExiledForMadness -> []
   TriggerCondition.PlayerDiscards _ -> []
@@ -5091,7 +5092,7 @@ playerEffectFilters playerEffect = case playerEffect of
   PlayerEffect.AdditionalSurveilCards _ -> []
   PlayerEffect.CantGainLife -> []
   PlayerEffect.CantLoseLife -> []
-  PlayerEffect.RevealsFirstDraw _ -> []
+  PlayerEffect.RevealsDraw _ -> []
   PlayerEffect.Precluded _ -> []
   PlayerEffect.Shows _ -> []
 
@@ -5177,7 +5178,7 @@ entryRewriteFilters entryRewrite = case entryRewrite of
   EntryRewrite.ChooseColors {} -> []
   EntryRewrite.ChooseBasicLandType -> []
   EntryRewrite.ChooseCreatureType -> []
-  EntryRewrite.ChoosePlayer -> []
+  EntryRewrite.ChoosePlayer _ -> []
   EntryRewrite.ReadAhead -> []
   -- CR 614.1c's amount is a Quantity (Undergrowth Scavenger's "equal to the number
   -- of creature cards in all graveyards"), so a Count inside it holds card text on

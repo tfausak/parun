@@ -4,9 +4,11 @@ import qualified Parun.Codec.RevealCause as RevealCause
 import qualified Parun.JsonCodec.Common as Common
 import qualified Parun.Spec as Spec
 import qualified Parun.Types.Cost as Cost
+import qualified Parun.Types.DrawnUnder as DrawnUnder
 import qualified Parun.Types.ManaCost as ManaCost
 import qualified Parun.Types.ObjectId as ObjectId
 import qualified Parun.Types.RevealCause as RevealCause
+import qualified Parun.Types.RevealTiming as RevealTiming
 
 spec :: (Monad m, Monad n) => Spec.Spec m n -> n ()
 spec s = Spec.describe s "Parun.Codec.RevealCause" $ do
@@ -26,8 +28,8 @@ spec s = Spec.describe s "Parun.Codec.RevealCause" $ do
     Common.assertCodec
       s
       RevealCause.codec
-      (RevealCause.AsDrawnUnder (ObjectId.MkObjectId 7))
-      " {\"type\":\"AsDrawnUnder\",\"value\":7} "
+      (RevealCause.AsDrawnUnder (DrawnUnder.MkDrawnUnder (ObjectId.MkObjectId 7) RevealTiming.AsDrawn))
+      " {\"type\":\"AsDrawnUnder\",\"value\":{\"under\":7,\"timing\":{\"type\":\"AsDrawn\"}}} "
   Spec.it s "LeavingFaceDown" $
     Common.assertCodec
       s

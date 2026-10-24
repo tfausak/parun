@@ -35,9 +35,12 @@
       "playerAbilities": [
         {
           "effect": {
-            "type": "RevealsFirstDraw",
+            "type": "RevealsDraw",
             "value": {
-              "type": "Optional"
+              "nth": 1,
+              "obligation": {
+                "type": "Optional"
+              }
             }
           },
           "scope": {
@@ -58,21 +61,23 @@
           "condition": {
             "type": "RevealedThisWay",
             "value": {
-              "type": "Or",
-              "value": [
-                {
-                  "type": "HasCardType",
-                  "value": {
-                    "type": "Instant"
+              "card": {
+                "type": "Or",
+                "value": [
+                  {
+                    "type": "HasCardType",
+                    "value": {
+                      "type": "Instant"
+                    }
+                  },
+                  {
+                    "type": "HasCardType",
+                    "value": {
+                      "type": "Sorcery"
+                    }
                   }
-                },
-                {
-                  "type": "HasCardType",
-                  "value": {
-                    "type": "Sorcery"
-                  }
-                }
-              ]
+                ]
+              }
             }
           },
           "modal": {
