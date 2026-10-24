@@ -1,0 +1,11 @@
+{
+  "description": "CR 106.7 whole card: Exotic Orchard pays {G} because the opponent's Orchard could produce it off alice's Forest",
+  "note": "The rule's own example. Bob's only land is an Exotic Orchard, which could produce {G} since alice controls a Forest (tapped, which CR 106.7 ignores), so alice's Orchard could too. The control board without the Forest refuses the same cast.",
+  "board": {"active": "alice", "step": "PrecombatMain", "seats": [{"name": "alice", "library": [{"card": "Island"}, {"card": "Island"}, {"card": "Island"}], "battlefield": [{"card": "Exotic Orchard", "label": "orchard"}, {"card": "Forest", "tapped": true}], "hand": [{"card": "Llanowar Elves", "label": "elves"}]}, {"name": "bob", "library": [{"card": "Island"}, {"card": "Island"}, {"card": "Island"}], "battlefield": [{"card": "Exotic Orchard"}]}]},
+  "timeline": [
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "do": {"Cast": {"object": "$elves", "mana": ["$orchard"]}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "do": "Pass"},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "check": {"Count": {"player": "alice", "zone": "Battlefield", "card": "Llanowar Elves", "count": 1}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "check": {"Tapped": {"object": "$orchard", "tapped": true}}}
+  ]
+}

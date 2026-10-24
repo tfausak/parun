@@ -88,6 +88,7 @@ import qualified Pawl.Types.CostChoice as CostChoice
 import qualified Pawl.Types.CostModifier as CostModifier
 import qualified Pawl.Types.CostReduction as CostReduction
 import qualified Pawl.Types.CostScale as CostScale
+import qualified Pawl.Types.CouldProduce as CouldProduce
 import qualified Pawl.Types.Count as Count.Type
 import qualified Pawl.Types.CountedDiscard as CountedDiscard
 import qualified Pawl.Types.Counter as Counter
@@ -161,6 +162,7 @@ import qualified Pawl.Types.MakeForetold as MakeForetold
 import qualified Pawl.Types.ManaAddition as ManaAddition
 import qualified Pawl.Types.ManaCount as ManaCount
 import qualified Pawl.Types.ManaFilter as ManaFilter
+import qualified Pawl.Types.ManaProduction as ManaProduction
 import qualified Pawl.Types.ManaRestriction as ManaRestriction
 import qualified Pawl.Types.ManaRider as ManaRider
 import qualified Pawl.Types.ManaSpecification as ManaSpecification
@@ -577,11 +579,23 @@ rewritePlayerEffect pairs effect = case effect of
 rewriteManaAddition :: [(TextWord.TextWord, TextWord.TextWord)] -> ManaAddition.ManaAddition -> ManaAddition.ManaAddition
 rewriteManaAddition pairs addition =
   addition
-    { ManaAddition.count = rewriteQuantity pairs (ManaAddition.count addition),
+    { ManaAddition.production = rewriteManaProduction pairs (ManaAddition.production addition),
+      ManaAddition.count = rewriteQuantity pairs (ManaAddition.count addition),
       ManaAddition.restriction = fmap (rewriteManaRestriction pairs) (ManaAddition.restriction addition),
       ManaAddition.rider = fmap (rewriteManaRider pairs) (ManaAddition.rider addition),
       ManaAddition.whenSpent = fmap (\w -> w {WhenSpent.casts = Filter.rewrite pairs (WhenSpent.casts w)}) (ManaAddition.whenSpent addition)
     }
+
+-- CR 612.1: the one production holding a Filter, CR 106.7's group, has it
+-- rewritten.
+rewriteManaProduction :: [(TextWord.TextWord, TextWord.TextWord)] -> ManaProduction.ManaProduction -> ManaProduction.ManaProduction
+rewriteManaProduction pairs production = case production of
+  ManaProduction.OfType _ -> production
+  ManaProduction.AnyColor -> production
+  ManaProduction.Chosen -> production
+  ManaProduction.SnowSymbol -> production
+  ManaProduction.Noted -> production
+  ManaProduction.CouldProduce could -> ManaProduction.CouldProduce could {CouldProduce.among = Filter.rewrite pairs (CouldProduce.among could)}
 
 -- CR 612's word swap over an effect's AST. Cases on an effect's
 -- STRUCTURE -- does this arm carry a word a swap could reach -- never on which

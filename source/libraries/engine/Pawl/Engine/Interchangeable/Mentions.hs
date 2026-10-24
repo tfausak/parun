@@ -136,6 +136,7 @@ import qualified Pawl.Types.CostComponent as CostComponent
 import qualified Pawl.Types.CostModifier as CostModifier
 import qualified Pawl.Types.CostReduction as CostReduction
 import qualified Pawl.Types.CostSubject as CostSubject
+import qualified Pawl.Types.CouldProduce as CouldProduce
 import qualified Pawl.Types.Count as Count
 import qualified Pawl.Types.CountedDiscard as CountedDiscard
 import qualified Pawl.Types.Counter as Counter
@@ -257,6 +258,7 @@ import qualified Pawl.Types.MadnessCost as MadnessCost
 import qualified Pawl.Types.MakeForetold as MakeForetold
 import qualified Pawl.Types.ManaAddition as ManaAddition
 import qualified Pawl.Types.ManaCount as ManaCount
+import qualified Pawl.Types.ManaProduction as ManaProduction
 import qualified Pawl.Types.ManaRestriction as ManaRestriction
 import qualified Pawl.Types.ManaRider as ManaRider
 import qualified Pawl.Types.Measures as Measures
@@ -2017,7 +2019,16 @@ makeForetoldNames asking x = case x of
 
 manaAdditionNames :: (Monoid r) => Asking r -> ManaAddition.ManaAddition -> r
 manaAdditionNames asking x = case x of
-  ManaAddition.MkManaAddition player _production count _retention restriction rider whenSpent -> playerRefNames asking player <> quantityNames asking count <> foldMap (manaRestrictionNames asking) restriction <> foldMap (manaRiderNames asking) rider <> foldMap (whenSpentNames asking) whenSpent
+  ManaAddition.MkManaAddition player production count _retention restriction rider whenSpent -> playerRefNames asking player <> manaProductionNames asking production <> quantityNames asking count <> foldMap (manaRestrictionNames asking) restriction <> foldMap (manaRiderNames asking) rider <> foldMap (whenSpentNames asking) whenSpent
+
+manaProductionNames :: (Monoid r) => Asking r -> ManaProduction.ManaProduction -> r
+manaProductionNames asking x = case x of
+  ManaProduction.OfType _manaType -> mempty
+  ManaProduction.AnyColor -> mempty
+  ManaProduction.Chosen -> mempty
+  ManaProduction.SnowSymbol -> mempty
+  ManaProduction.Noted -> mempty
+  ManaProduction.CouldProduce (CouldProduce.MkCouldProduce among _types) -> filterNames asking among
 
 manaCountNames :: (Monoid r) => Asking r -> ManaCount.ManaCount -> r
 manaCountNames asking x = case x of

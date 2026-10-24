@@ -1,5 +1,6 @@
 module Pawl.Codec.ManaProduction where
 
+import qualified Pawl.Codec.CouldProduce as CouldProduce
 import qualified Pawl.Codec.ManaType as ManaType
 import qualified Pawl.JsonCodec.Arm as Arm
 import qualified Pawl.JsonCodec.Codec as Codec
@@ -13,7 +14,8 @@ codec =
       Arm.nullary "AnyColor" ManaProduction.AnyColor,
       Arm.nullary "Chosen" ManaProduction.Chosen,
       Arm.nullary "SnowSymbol" ManaProduction.SnowSymbol,
-      Arm.nullary "Noted" ManaProduction.Noted
+      Arm.nullary "Noted" ManaProduction.Noted,
+      Arm.payload "CouldProduce" CouldProduce.codec ManaProduction.CouldProduce (\x -> case x of ManaProduction.CouldProduce y -> Just y; _ -> Nothing)
     ]
 
 tagOf :: ManaProduction.ManaProduction -> String
@@ -23,3 +25,4 @@ tagOf x = case x of
   ManaProduction.Chosen {} -> "Chosen"
   ManaProduction.SnowSymbol {} -> "SnowSymbol"
   ManaProduction.Noted {} -> "Noted"
+  ManaProduction.CouldProduce {} -> "CouldProduce"

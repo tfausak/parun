@@ -1,0 +1,13 @@
+{
+  "description": "CR 106.7 whole card: Star Compass pays {U} that a tapped Island could produce, and no {R} that only a nonbasic land could",
+  "note": "Every land is tapped, so the Compass is alice's only source: the Island could still produce {U} (CR 106.7 ignores costs), and Shivan Oasis's {R} does not count, the Oasis being no basic land. The Goblin's cast is refused; the Merfolk resolves.",
+  "board": {"active": "alice", "step": "PrecombatMain", "seats": [{"name": "alice", "library": [{"card": "Island"}, {"card": "Island"}, {"card": "Island"}], "battlefield": [{"card": "Star Compass", "label": "compass"}, {"card": "Forest", "tapped": true}, {"card": "Island", "tapped": true}, {"card": "Shivan Oasis", "tapped": true}], "hand": [{"card": "Raging Goblin", "label": "goblin"}, {"card": "Merfolk of the Pearl Trident", "label": "merfolk"}]}, {"name": "bob", "library": [{"card": "Island"}, {"card": "Island"}, {"card": "Island"}], "battlefield": [{"card": "Mountain"}]}]},
+  "timeline": [
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "refuse": {"Cast": {"object": "$goblin", "mana": ["$compass"], "yields": [[{"manaType": {"type": "Colored", "value": {"type": "Red"}}, "tags": [{"type": "Artifact"}], "retention": {"type": "Ordinary"}, "restriction": null, "rider": null, "sourceChoices": null}]]}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "do": {"Cast": {"object": "$merfolk", "mana": ["$compass"], "yields": [[{"manaType": {"type": "Colored", "value": {"type": "Blue"}}, "tags": [{"type": "Artifact"}], "retention": {"type": "Ordinary"}, "restriction": null, "rider": null, "sourceChoices": null}]]}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "do": "Pass"},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "check": {"Count": {"player": "alice", "zone": "Battlefield", "card": "Merfolk of the Pearl Trident", "count": 1}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "check": {"Count": {"player": "alice", "zone": "Hand", "card": "Raging Goblin", "count": 1}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "check": {"Tapped": {"object": "$compass", "tapped": true}}}
+  ]
+}

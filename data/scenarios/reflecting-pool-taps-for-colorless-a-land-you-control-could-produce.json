@@ -1,0 +1,10 @@
+{
+  "description": "CR 106.7 whole card: Reflecting Pool taps for {C}, a type but no colour, that a tapped Reliquary Tower could produce",
+  "note": "Any TYPE includes colorless (CR 106.1b), where Star Compass's any colour does not (CR 105.4). The Tower is tapped, which CR 106.7 ignores; alice's pool holds the one {C}.",
+  "board": {"active": "alice", "step": "PrecombatMain", "seats": [{"name": "alice", "library": [{"card": "Island"}, {"card": "Island"}, {"card": "Island"}], "battlefield": [{"card": "Reflecting Pool", "label": "pool"}, {"card": "Reliquary Tower", "tapped": true}]}, {"name": "bob", "library": [{"card": "Island"}, {"card": "Island"}, {"card": "Island"}]}]},
+  "timeline": [
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "do": {"Take": {"action": "ActivateManaAbility $pool"}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "check": {"View": {"of": "ManaPool", "player": "alice", "is": [{"manaType": {"type": "Colorless"}, "tags": [], "retention": {"type": "Ordinary"}, "restriction": null, "rider": null, "sourceChoices": null}]}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "check": {"Tapped": {"object": "$pool", "tapped": true}}}
+  ]
+}
