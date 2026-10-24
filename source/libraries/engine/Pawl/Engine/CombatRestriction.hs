@@ -1246,8 +1246,8 @@ cantAttackPlayer candidates players gs =
 --
 -- No text change is applied, and none is owed: CR 612.1 swaps one word for
 -- another, and the only words a bound prints beyond its gate are a number and a
--- comparison, which no text-changing effect in the pool reaches. The gate itself was already
--- rewritten and asked in `inForce`.
+-- comparison, which no text-changing effect in the pool reaches. The gate itself
+-- was already rewritten and asked in `inForce`.
 bounded :: (CombatRestriction.CombatRestriction -> Maybe Bounds) -> Maybe PlayerId -> GameState -> Bounds
 bounded select defending gs =
   mconcat (Maybe.mapMaybe (\(_, _, restriction) -> select restriction) (filter (reachesDeclarer defending gs) (inForce defending gs)))

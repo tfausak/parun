@@ -215,12 +215,12 @@ overSlots f quantity =
         -- and CR 601.2a's cast zone alike -- the latter carrying two of them.
         Quantity.EnteredFrom _ -> pure quantity
         Quantity.WasCastFrom _ -> pure quantity
-        -- And a nullary arm, which names nothing at all: CR 509.1h's declaration is
-        -- read against the object the evaluation is aimed at, as ObjectCounters is.
+        -- And an arm naming no slot at all: CR 509.1h's declaration is read
+        -- against the object the evaluation is aimed at, as ObjectCounters is.
         Quantity.BlockersBeyond _ -> pure quantity
-        -- And a nullary arm too: CR 702.184c's substitution reads no slot of its
-        -- own, the object being the one the evaluation is aimed at, as
-        -- BlockersBeyond is.
+        -- And a nullary arm: CR 702.184c's substitution reads no slot of its own,
+        -- the object being the one the evaluation is aimed at, as BlockersBeyond
+        -- does.
         Quantity.StationMeasure -> pure quantity
         -- And another PlayerRef in ManaCount's position, CR 702.30a's echo window
         -- having nothing beside it: the OBJECT it asks about is the one the

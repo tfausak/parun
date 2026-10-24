@@ -1473,7 +1473,9 @@ bestBlockDeclaration requirements limit most alone arity pcs able candidates att
       -- Every attacker it is able to block, once some creature can't block
       -- without company (CR 506.5), or the whole block wants company (a
       -- declaration-wide "two or more"): the drop argument above fails there,
-      -- since the block dropped may be the company a required block needs.
+      -- since the block dropped may be the company a required block needs. The
+      -- declaration-wide half is a regression fence: no file in data/cards/
+      -- writes a floor without `attackers`.
       relevant blocker
         | not (Map.null alone) || CombatRestriction.fewest limit > 1 = filter (able blocker) attackers
         | otherwise =
