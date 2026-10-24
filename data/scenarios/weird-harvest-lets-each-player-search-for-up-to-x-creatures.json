@@ -1,0 +1,22 @@
+{
+  "description": "CR 608.2e / 701.23a whole card: Weird Harvest lets each player search their own library for up to X creature cards",
+  "note": "X is 2. Alice finds two creatures, bob accepts but takes only one of his two, carol declines and keeps hers in her library.",
+  "board": {"active": "alice", "step": "PrecombatMain", "seats": [{"name": "alice", "manaPool": "GGGG", "hand": [{"card": "Weird Harvest", "label": "harvest"}], "library": [{"card": "Grizzly Bears", "label": "a1"}, {"card": "Hill Giant", "label": "a2"}, {"card": "Craw Wurm", "label": "a3"}, {"card": "Island", "label": "a4"}]}, {"name": "bob", "library": [{"card": "Gray Ogre", "label": "b1"}, {"card": "Serra Angel", "label": "b2"}, {"card": "Island", "label": "b3"}]}, {"name": "carol", "library": [{"card": "Giant Spider", "label": "c1"}, {"card": "Island", "label": "c2"}, {"card": "Island", "label": "c3"}]}]},
+  "timeline": [
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "do": {"Cast": {"object": "$harvest", "x": 2}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "do": "Pass"},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "do": {"ChooseOptional": {"type": "Exercises"}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "bob", "do": {"ChooseOptional": {"type": "Exercises"}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "carol", "do": {"ChooseOptional": {"type": "Declines"}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "do": {"Answer": {"prompt": "Search", "with": ["$a1", "$a3"]}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "do": {"Answer": {"prompt": "Shuffle", "with": ["$a2", "$a4"]}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "do": {"Answer": {"prompt": "Shuffle", "with": ["$b1", "$b3"]}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "bob", "do": {"Answer": {"prompt": "Search", "with": ["$b2"]}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "check": {"Count": {"player": "alice", "zone": "Hand", "card": "Grizzly Bears", "count": 1}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "check": {"Count": {"player": "alice", "zone": "Hand", "card": "Craw Wurm", "count": 1}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "check": {"Count": {"player": "alice", "zone": "Library", "card": "Hill Giant", "count": 1}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "check": {"Count": {"player": "bob", "zone": "Hand", "card": "Serra Angel", "count": 1}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "check": {"Count": {"player": "bob", "zone": "Library", "card": "Gray Ogre", "count": 1}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "check": {"Count": {"player": "carol", "zone": "Library", "card": "Giant Spider", "count": 1}}}
+  ]
+}

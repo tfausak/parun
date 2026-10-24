@@ -1,0 +1,12 @@
+{
+  "description": "CR 401.4 whole card: Sage Aven looks at the top four cards of its controller's library and puts them back in any order",
+  "note": "Alice reverses the top four; the fifth card stays where it was.",
+  "board": {"active": "alice", "step": "PrecombatMain", "seats": [{"name": "alice", "manaPool": "UUUU", "hand": [{"card": "Sage Aven", "label": "aven"}], "library": [{"card": "Plains"}, {"card": "Hill Giant"}, {"card": "Swamp"}, {"card": "Mountain"}, {"card": "Forest"}]}, {"name": "bob", "library": [{"card": "Island"}, {"card": "Island"}, {"card": "Island"}, {"card": "Island"}]}]},
+  "timeline": [
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "do": {"Cast": {"object": "$aven"}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "do": "Pass"},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "do": "Pass"},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "do": {"Answer": {"prompt": "ArrangeLibraryCards", "with": [3, 2, 1, 0]}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "check": {"View": {"of": "Zone", "player": "alice", "zone": "Library", "is": ["Mountain", "Swamp", "Hill Giant", "Plains", "Forest"]}}}
+  ]
+}

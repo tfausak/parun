@@ -1316,7 +1316,7 @@ exertSpec s registry = Spec.describe s "Exert" $ do
         -- path to the prohibition, and alice is both the exerting player and the
         -- permanent's controller, so it is her untap step under either reading of
         -- CR 701.43a. The case below is the one that tells the two apart.
-        untap g = S.runPure S.identityAnswer g (Engine.untapAll S.alice)
+        untap g = S.runPure S.identityAnswer g (Engine.untapAll [S.alice])
         exerted = S.runPure (exertAnswer OptionalDecision.Exercises) gs (Combat.declareAttackers S.manaPerformer S.alice)
         declined = S.runPure (exertAnswer OptionalDecision.Declines) gs (Combat.declareAttackers S.manaPerformer S.alice)
     case mine of

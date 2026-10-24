@@ -1,0 +1,21 @@
+{
+  "description": "CR 118.12a whole card: at the beginning of its controller's upkeep, Yawgmoth Demon taps and deals 2 damage to them unless they sacrifice an artifact",
+  "note": "Alice declines on turn 1 with two Ornithopters on the battlefield: the Demon taps and she goes to 18. On turn 3 she sacrifices one Ornithopter, keeping the other: the Demon stays untapped and her life stays.",
+  "board": {"active": "alice", "step": "Untap", "seats": [{"name": "alice", "battlefield": [{"card": "Yawgmoth Demon", "label": "demon", "ready": true}, {"card": "Ornithopter", "label": "thopter"}, {"card": "Ornithopter", "label": "spare"}], "library": [{"card": "Island"}, {"card": "Island"}, {"card": "Island"}, {"card": "Island"}, {"card": "Island"}, {"card": "Island"}]}, {"name": "bob", "library": [{"card": "Island"}, {"card": "Island"}, {"card": "Island"}, {"card": "Island"}, {"card": "Island"}, {"card": "Island"}]}]},
+  "timeline": [
+    {"turn": 1, "step": "Upkeep", "player": "alice", "do": "Pass"},
+    {"turn": 1, "step": "Upkeep", "player": "alice", "do": {"ChooseToPay": {"decision": {"type": "Declines"}}}, "source": "Yawgmoth Demon"},
+    {"turn": 1, "step": "Upkeep", "player": "alice", "check": {"Tapped": {"object": "$demon", "tapped": true}}},
+    {"turn": 1, "step": "Upkeep", "player": "alice", "check": {"Life": {"player": "alice", "life": 18}}},
+    {"turn": 1, "step": "Upkeep", "player": "alice", "check": {"Count": {"player": "alice", "zone": "Battlefield", "card": "Ornithopter", "count": 2}}},
+    {"turn": 1, "step": "DeclareAttackers", "player": "alice", "do": {"Attack": []}},
+    {"turn": 3, "step": "Upkeep", "player": "alice", "do": "Pass"},
+    {"turn": 3, "step": "Upkeep", "player": "alice", "do": {"ChooseToPay": {"decision": {"type": "Pays"}}}, "source": "Yawgmoth Demon"},
+    {"turn": 3, "step": "Upkeep", "player": "alice", "do": {"Answer": {"prompt": "ChooseSacrifices", "with": ["$thopter"]}}},
+    {"turn": 3, "step": "Upkeep", "player": "alice", "check": {"Tapped": {"object": "$demon", "tapped": false}}},
+    {"turn": 3, "step": "Upkeep", "player": "alice", "check": {"Life": {"player": "alice", "life": 18}}},
+    {"turn": 3, "step": "Upkeep", "player": "alice", "check": {"Count": {"player": "alice", "zone": "Graveyard", "card": "Ornithopter", "count": 1}}},
+    {"turn": 3, "step": "Upkeep", "player": "alice", "check": {"Count": {"player": "alice", "zone": "Battlefield", "card": "Ornithopter", "count": 1}}},
+    {"turn": 3, "step": "DeclareAttackers", "player": "alice", "do": {"Attack": []}}
+  ]
+}

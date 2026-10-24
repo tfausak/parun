@@ -1,0 +1,32 @@
+{
+  "description": "CR 502.3 Static Orb's cap and Amber Prison's choice do not reach Seedborn Muse's untap in another player's untap step",
+  "note": "Both are worded against the untapping player's own untap step, and bob's turn 2 untap step is not alice's. So the Muse untaps all three of her Forests past Static Orb's two, and untaps Amber Prison with nothing asked: an unscheduled prompt would fail the scenario. Bob has nothing tapped, so his own untap asks nothing either.",
+  "board": {
+    "seats": [
+      {
+        "name": "alice",
+        "battlefield": [
+          { "card": "Seedborn Muse", "label": "muse" },
+          { "card": "Amber Prison", "label": "prison", "tapped": true },
+          { "card": "Forest", "label": "forest-1", "tapped": true },
+          { "card": "Forest", "label": "forest-2", "tapped": true },
+          { "card": "Forest", "label": "forest-3", "tapped": true }
+        ],
+        "library": [{ "card": "Forest" }, { "card": "Forest" }, { "card": "Forest" }]
+      },
+      {
+        "name": "bob",
+        "battlefield": [{ "card": "Static Orb", "label": "orb" }],
+        "library": [{ "card": "Mountain" }, { "card": "Mountain" }, { "card": "Mountain" }]
+      }
+    ],
+    "active": "alice",
+    "step": "PrecombatMain"
+  },
+  "timeline": [
+    { "turn": 2, "step": "Upkeep", "player": "bob", "check": { "Tapped": { "object": "$forest-1", "tapped": false } } },
+    { "turn": 2, "step": "Upkeep", "player": "bob", "check": { "Tapped": { "object": "$forest-2", "tapped": false } } },
+    { "turn": 2, "step": "Upkeep", "player": "bob", "check": { "Tapped": { "object": "$forest-3", "tapped": false } } },
+    { "turn": 2, "step": "Upkeep", "player": "bob", "check": { "Tapped": { "object": "$prison", "tapped": false } } }
+  ]
+}

@@ -242,29 +242,77 @@ passPriorityFrom gs pid =
 -- ENDS, CR 701.43b putting the expiry in the untap step it bites in. They are two
 -- fields because they name different seats: Object.doesNotUntapFor says "its
 -- controller's next untap step[s]", so it is applied and counted down against
--- `ids`, one step apiece,
--- while Object.exertedBy says "YOUR next untap step" (CR 701.43a), so `pid` is
--- dropped from EVERY permanent -- one that changed hands is neither held back at
+-- the active player's own permanents, one step apiece,
+-- while Object.exertedBy says "YOUR next untap step" (CR 701.43a), so each active
+-- player is dropped from EVERY permanent -- one that changed hands is neither held back at
 -- its new controller's step nor left carrying a rider past the step that ends it.
 --
 -- What survives those is CR 502.3's own determination, the active player's to
 -- make: a printed "you may choose not to untap" (UntapHold.Elective) offers its
--- tapped permanents, and the ones `pid` does not pick stay tapped; a cap
+-- tapped permanents, and the ones they do not pick stay tapped; a cap
 -- (UntapHold.AtMost, Static Orb) offers the tapped permanents it counts, and
 -- UntapRestriction.settle keeps every cap. Only a tapped permanent nothing else
 -- holds back is offered, since for any other the untap's outcome is already
 -- settled; a stunned one is, its stun counter (CR 122.1d) taking the untap only
--- once `pid` has chosen it, so it counts against a cap -- docs/decisions.md,
+-- once they have chosen it, so it counts against a cap -- docs/decisions.md,
 -- "An untap cap leaves tapped only what it must". Asked only where the answer
 -- matters: a cap the offered permanents already fit, with nothing elective
 -- among them, leaves every one to untap.
-untapAll :: PlayerId -> Game ()
-untapAll pid = do
+--
+-- Over every active player at once (CR 805.4), each making their own
+-- determination before any untaps, CR 805.6's "once all choices have been
+-- made, the actions happen simultaneously". Beside theirs, what a
+-- UntapHold.DuringOthersSteps rule untaps of a non-active player's permanents
+-- (Seedborn Muse) joins the same simultaneous untap, with no choice in it (its
+-- ruling of 2007-07-15). None of the carriers above holds it back or is spent
+-- by it: each is worded against its controller's own untap step, which this
+-- one is not (its ruling of 2004-10-04). A stun counter (CR 122.1d) still takes
+-- it, any untap being its event.
+untapAll :: [PlayerId] -> Game ()
+untapAll actives = do
+  determined <- Monad.mapM determineUntap actives
   gs <- State.get
-  let -- Only ever applied to `held`, whose count is above 0.
+  let others = [oid | pid <- GameState.turnOrder gs, not (Turn.isActive gs pid), oid <- Projection.controls pid gs]
+      extended = Set.unions [named | (UntapHold.DuringOthersSteps, named) <- UntapRestriction.gathered others gs]
+      untapping = concatMap fst determined <> filter (`Set.member` extended) others
+      held = concatMap snd determined
       countDown obj = obj {Object.doesNotUntapFor = Object.doesNotUntapFor obj - 1}
-      unexert obj = obj {Object.exertedBy = Set.delete pid (Object.exertedBy obj)}
-      ids = Projection.controls pid gs
+      unexert obj = obj {Object.exertedBy = foldr Set.delete (Object.exertedBy obj) actives}
+  -- CR 502.3's two sentences, in its own order: DETERMINE which permanents will
+  -- untap, then untap them all SIMULTANEOUSLY. Event.proposeUntap is the
+  -- determining half -- rule 701.26b's guard plus the CR 614 loop, which is where
+  -- CR 122.1d's stun counters take the event and are spent -- and the write below
+  -- is the untapping, one State.modify' over the survivors so no permanent is
+  -- upright while another is still being decided.
+  --
+  -- Event.untap is not called per permanent for exactly that reason: it writes as
+  -- it goes, which is right for CR 701.26b's one-at-a-time roads (an Effect.Untap,
+  -- an untap symbol) and wrong for this one.
+  --
+  -- The GameEvent.BecameUntapped records ride inside CR 502.3's own
+  -- simultaneity: one Event.simultaneously bracket, so a card watching an untap
+  -- sees the whole step as ONE event (CR 608.2f) rather than as one event per
+  -- permanent. Only the SURVIVORS are recorded, so rule 701.26b's guard gates the
+  -- event as well as the write -- which is what CR 603.2e's "don't ... retrigger
+  -- if it persists" asks of a permanent that was already upright.
+  survivors <- Monad.filterM Event.proposeUntap untapping
+  Event.simultaneously $ do
+    State.modify' $ \live ->
+      let untapped = foldr (Map.adjust countDown) (foldr Event.writeUntappedIn (GameState.objects live) survivors) held
+       in live
+            { GameState.objects =
+                if any (\obj -> any (`Set.member` Object.exertedBy obj) actives) untapped
+                  then Map.map unexert untapped
+                  else untapped
+            }
+    Monad.forM_ survivors (State.modify' . Event.recordEvent . GameEvent.BecameUntapped)
+
+-- One active player's half of `untapAll`: the permanents `pid` determines will
+-- untap, and the ones whose Object.doesNotUntapFor this step spends.
+determineUntap :: PlayerId -> Game ([ObjectId.ObjectId], [ObjectId.ObjectId])
+determineUntap pid = do
+  gs <- State.get
+  let ids = Projection.controls pid gs
       restrictions = UntapRestriction.gathered ids gs
       holding hold = Set.unions [named | (h, named) <- restrictions, h == hold]
       prohibited = holding UntapHold.Forbidden
@@ -292,34 +340,7 @@ untapAll pid = do
           let settled = UntapRestriction.settle caps elective offered chosen
           pure (filter (\oid -> List.notElem oid offered || Set.member oid settled) allowed)
     _ -> pure allowed
-  -- CR 502.3's two sentences, in its own order: DETERMINE which permanents will
-  -- untap, then untap them all SIMULTANEOUSLY. Event.proposeUntap is the
-  -- determining half -- rule 701.26b's guard plus the CR 614 loop, which is where
-  -- CR 122.1d's stun counters take the event and are spent -- and the write below
-  -- is the untapping, one State.modify' over the survivors so no permanent is
-  -- upright while another is still being decided.
-  --
-  -- Event.untap is not called per permanent for exactly that reason: it writes as
-  -- it goes, which is right for CR 701.26b's one-at-a-time roads (an Effect.Untap,
-  -- an untap symbol) and wrong for this one.
-  --
-  -- The GameEvent.BecameUntapped records ride inside CR 502.3's own
-  -- simultaneity: one Event.simultaneously bracket, so a card watching an untap
-  -- sees the whole step as ONE event (CR 608.2f) rather than as one event per
-  -- permanent. Only the SURVIVORS are recorded, so rule 701.26b's guard gates the
-  -- event as well as the write -- which is what CR 603.2e's "don't ... retrigger
-  -- if it persists" asks of a permanent that was already upright.
-  survivors <- Monad.filterM Event.proposeUntap untapping
-  Event.simultaneously $ do
-    State.modify' $ \live ->
-      let untapped = foldr (Map.adjust countDown) (foldr Event.writeUntappedIn (GameState.objects live) survivors) held
-       in live
-            { GameState.objects =
-                if any (Set.member pid . Object.exertedBy) untapped
-                  then Map.map unexert untapped
-                  else untapped
-            }
-    Monad.forM_ survivors (State.modify' . Event.recordEvent . GameEvent.BecameUntapped)
+  pure (untapping, held)
 
 -- CR 302.6: permanents the active player has controlled since their turn began
 -- are no longer summoning sick, and the untap step is where that becomes true.
@@ -545,8 +566,8 @@ runTurnBasedActions phase = do
       -- untap itself (CR 502.3 / 703.4c). Outside the CR 800.4j guard, rule 703.4b
       -- making it the GAME's action.
       _ <- Daytime.untapCheck Event.recordTransformed
+      untapAll live
       Monad.forM_ live $ \pid -> do
-        untapAll pid
         settleAll pid
         State.modify' $ \gs ->
           -- CR 305.2: the allowance is per TURN. DELETED rather than set to 0, so

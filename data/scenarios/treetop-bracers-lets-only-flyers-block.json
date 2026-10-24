@@ -1,0 +1,12 @@
+{
+  "description": "CR 509.1b whole card: the creature Treetop Bracers enchants gets +1/+1 and can't be blocked except by creatures with flying",
+  "note": "Bob's Giant Spider has reach but not flying, and is refused; his Serra Angel blocks.",
+  "board": {"active": "alice", "step": "BeginningOfCombat", "seats": [{"name": "alice", "battlefield": [{"card": "Grizzly Bears", "label": "bears", "ready": true}, {"card": "Treetop Bracers", "label": "bracers", "attached": "bears"}], "library": [{"card": "Island"}, {"card": "Island"}, {"card": "Island"}, {"card": "Island"}]}, {"name": "bob", "battlefield": [{"card": "Giant Spider", "label": "spider", "ready": true}, {"card": "Serra Angel", "label": "angel", "ready": true}], "library": [{"card": "Island"}, {"card": "Island"}, {"card": "Island"}, {"card": "Island"}]}]},
+  "timeline": [
+    {"turn": 1, "step": "BeginningOfCombat", "player": "alice", "check": {"PowerToughness": {"object": "$bears", "power": 3, "toughness": 3}}},
+    {"turn": 1, "step": "DeclareAttackers", "player": "alice", "do": {"Attack": ["$bears"]}},
+    {"turn": 1, "step": "DeclareBlockers", "player": "bob", "refuse": {"Block": {"$spider": ["$bears"]}}},
+    {"turn": 1, "step": "DeclareBlockers", "player": "bob", "do": {"Block": {"$angel": ["$bears"]}}},
+    {"turn": 1, "step": "DeclareBlockers", "player": "alice", "check": {"Blockers": {"attacker": "$bears", "blockers": ["$angel"]}}}
+  ]
+}

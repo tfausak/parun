@@ -1,5 +1,6 @@
 -- CR 502.3 / 101.2 / 613.11: the continuous effects that FORBID CR 502.3's
--- untap, cap how many permanents it untaps, or leave it to the active player.
+-- untap, cap how many permanents it untaps, leave it to the active player, or
+-- untap a permanent in another player's untap step.
 -- One of the modules on the axis CR 613.11 reaches past the layer system
 -- (alongside Parun.Engine.PlayerEffect, Parun.Engine.BlockRequirement,
 -- Parun.Engine.AttackRequirement, Parun.Engine.CombatRestriction,
@@ -34,6 +35,7 @@ import qualified Parun.Engine.Projection as Projection
 import qualified Parun.Engine.Projection.Rewrite as Projection
 import qualified Parun.Engine.Projection.View as Projection
 import qualified Parun.Engine.RestrictedCreatures as RestrictedCreatures
+import qualified Parun.Engine.Turn as Turn
 import qualified Parun.Extra.Natural as Natural
 import Parun.Types.GameState (GameState)
 import qualified Parun.Types.GameState as GameState
@@ -48,7 +50,9 @@ import qualified Parun.Types.UntapRestriction as UntapRestriction
 -- UntapHold.Forbidden is what DOESN'T UNTAP (Tsabo's Web's second sentence,
 -- Meekstone's whole text), UntapHold.AtMost what no more than so many of may
 -- untap (Static Orb), UntapHold.Elective what its controller MAY leave tapped
--- (Amber Prison's first sentence). `untapRestrictions` in data/cards is the
+-- (Amber Prison's first sentence), UntapHold.DuringOthersSteps what untaps
+-- in a step that is not its source's controller's (Seedborn Muse), and only
+-- in such a step. `untapRestrictions` in data/cards is the
 -- carrier, and this answers for every card that fills it. One entry per
 -- restriction rather than a union, because a cap counts its own set (CR 101.2:
 -- Static Orb and Winter Orb each hold, neither adding to the other).
@@ -98,8 +102,16 @@ gathered candidates gs =
             gs
             source
             (if null changes then condition else Projection.rewriteCondition changes condition)
+      -- CR 502.3: "during each other player's untap step" is not the untap step
+      -- of a player whose turn it is, CR 805.4 making every member of a team
+      -- sharing its turn one. A regression fence, not a proof: every printing
+      -- names only its controller's own permanents, which Engine.untapAll's
+      -- candidates already leave out when that controller is active.
+      othersStep source restriction = case UntapRestriction.hold restriction of
+        UntapHold.DuringOthersSteps -> maybe True (not . Turn.isActive gs) (Projection.controllerOf source gs)
+        _ -> True
       fromRestriction source changes restriction
-        | inForce source changes restriction =
+        | othersStep source restriction && inForce source changes restriction =
             let affected = UntapRestriction.affected restriction
              in [(UntapRestriction.hold restriction, Set.fromList (filter (named source (if null changes then affected else Projection.rewriteAffected changes affected)) candidates))]
         | otherwise = []

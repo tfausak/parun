@@ -25,5 +25,11 @@ spec s = Spec.describe s "Parun.Codec.UntapHold" $ do
       UntapHold.codec
       (UntapHold.AtMost 2)
       " {\"type\":\"AtMost\",\"value\":2} "
+  Spec.it s "DuringOthersSteps" $
+    Common.assertCodec
+      s
+      UntapHold.codec
+      UntapHold.DuringOthersSteps
+      " {\"type\":\"DuringOthersSteps\"} "
   Spec.it s "has a schema" $
     Common.assertHasSchema s UntapHold.codec
