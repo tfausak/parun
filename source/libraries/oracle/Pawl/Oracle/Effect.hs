@@ -429,10 +429,17 @@ destroyed context ds = do
   refs <- traverse (Target.object context Target.All . Destroy.ref) ds
   first <- take 1 ds
   let many = length refs > 1 || any ((== Filter.Plural) . Target.number) refs
-      regenerate = case Destroy.regenerability first of
-        Regenerability.Regenerable -> []
-        Regenerability.CantBeRegenerated -> [Text.pack (if many then "They can't be regenerated." else "It can't be regenerated.")]
-      both = case fmap Target.wording refs of
+      -- Free for one object named again: "It" (Terror) or "That creature"
+      -- (Nekrataal).
+      again = case Target.object context {Target.earlier = fmap Destroy.ref ds} Target.All (Destroy.ref first) of
+        [] -> [Text.pack "it"]
+        anaphors -> fmap Target.wording anaphors
+  regenerate <- case Destroy.regenerability first of
+    Regenerability.Regenerable -> [[]]
+    Regenerability.CantBeRegenerated
+      | many -> [[Text.pack "They can't be regenerated."]]
+      | otherwise -> fmap (\it -> [Prose.sentence (it <> Text.pack " can't be regenerated")]) again
+  let both = case fmap Target.wording refs of
         [a, b]
           | all ((== Filter.Singular) . Target.number) refs,
             Just noun <- Text.stripPrefix (Text.pack "that ") a,

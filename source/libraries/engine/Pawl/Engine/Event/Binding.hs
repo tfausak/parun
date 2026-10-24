@@ -41,6 +41,7 @@ import qualified Pawl.Types.DamageEvent as DamageEvent
 import qualified Pawl.Types.DamageKind as DamageKind
 import qualified Pawl.Types.DamagePrevented as DamagePrevented
 import qualified Pawl.Types.Discarded as Discarded
+import qualified Pawl.Types.Drew as Drew
 import qualified Pawl.Types.Exploited as Exploited
 import qualified Pawl.Types.Filter as Filter.Type
 import Pawl.Types.GameEvent (GameEvent)
@@ -507,6 +508,10 @@ eventBindingsOver board gs bearerBecame becameInGraveyard bearer you cond event 
   -- in for.
   (TriggerCondition.PlayerDiscards _, GameEvent.Discarded (Discarded.MkDiscarded discarder _ _ _ _)) ->
     Binding.setTriggerPlayer discarder Map.empty
+  -- The drawing player, PlayerDiscards' slot for CR 121.1's draw (Underworld
+  -- Dreams' "that player").
+  (TriggerCondition.PlayerDrawsNthCard _, GameEvent.Drew (Drew.MkDrew drawer _)) ->
+    Binding.setTriggerPlayer drawer Map.empty
   -- CR 607.2h's "that card": the card the linked static revealed (God-Eternal
   -- Kefnet's "copy that card").
   (TriggerCondition.RevealedThisWay _, GameEvent.Revealed revealed) ->
@@ -1544,13 +1549,9 @@ eventBindingSlots cond = case cond of
   -- condition that said "that player" is what would earn the slot. eventBindings
   -- has no arm for this condition, and the two must agree.
   TriggerCondition.PlayerCycles _ -> Set.empty
-  -- NOTHING. The event names the drawing player, and CR 701.9a's `triggerPlayer`
-  -- is the slot they would take, but no card in the pool reads them under this
-  -- condition: Erudite Wizard's payload points only at its own bearer, and Faerie
-  -- Mastermind's says "you". Ian Malcolm, Chaotician's "that player exiles" is the
-  -- card that would add the slot, and it needs a PlayerRelation for "a player"
-  -- that does not exist either.
-  TriggerCondition.PlayerDrawsNthCard {} -> Set.empty
+  -- CR 121.1's drawing player, PlayerDiscards' slot: Underworld Dreams' "that
+  -- player" is the opponent who drew.
+  TriggerCondition.PlayerDrawsNthCard {} -> Set.singleton Binding.triggerPlayer
   -- CR 508.5's defending player, which the declaration event carries -- rule
   -- 702.86a's annihilator is the reader. The DECLARED attacker itself is the
   -- bearer, already bound as CR 113.7a's source, so it needs no slot of its own.
