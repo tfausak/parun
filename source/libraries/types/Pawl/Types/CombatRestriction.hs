@@ -260,8 +260,9 @@ data CombatRestriction
     CantBlockAlone AloneUnless.AloneUnless
   | -- | CR 509.1b, the same bound on the other declaration. Silent Arbiter's
     -- second sentence; scoped to attackers, the bound on the creatures blocking
-    -- each of them (Charging Rhino), from below as well (Phyrexian Colossus). The arm above's reasoning holds unchanged: CR 506.1
-    -- gives a combat phase one declare blockers step, CR 703.4j makes
+    -- each of them (Charging Rhino), from below as well (Phyrexian Colossus).
+    -- The arm above's reasoning holds unchanged: CR 506.1 gives a combat phase
+    -- one declare blockers step, CR 703.4j makes
     -- Pawl.Engine.Combat.declareBlockers its turn-based action, and CR 509.1a
     -- names a single defending player to make it.
     CantBlockMoreThan LimitUnless.LimitUnless
