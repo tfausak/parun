@@ -424,7 +424,7 @@ rewriteModification pairs m =
               -- the setter. A chosen colour is no word on the card.
               Modification.SetColor cs -> Modification.SetColor (colors cs)
               Modification.AddColor cs -> Modification.AddColor (colors cs)
-              Modification.AddChosenColor -> acc
+              Modification.ChosenColor _ -> acc
    in List.foldl' apply1 m pairs
 
 -- rewriteModification's sibling for the other half of a static ability. Under CR

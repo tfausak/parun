@@ -452,7 +452,7 @@ affectedBy pid oid name gs =
 -- The SOURCE rides out alongside the effect, and only because CR 601.3a's
 -- quality-bearing prohibitions read it: Null Chamber's "the chosen names" are
 -- Object.chosenNames on the permanent that printed the ability, the same
--- direction Modification.AddChosenColor reads a colour. A stored CR 611.2c effect
+-- direction Modification.ChosenColor reads a colour. A stored CR 611.2c effect
 -- carries one too -- ActivePlayerEffect.source is the object that resolved -- and
 -- it is what makes Filter.IsSource answerable for Lava Burst's self-naming
 -- clause, which was vacuously False while this walk hardcoded Nothing. A stored

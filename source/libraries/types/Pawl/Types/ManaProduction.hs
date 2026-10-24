@@ -24,7 +24,7 @@ data ManaProduction
     -- artifact enters, choose a color".
     --
     -- Read off Object.chosenColors, which is where CR 614.1c's entry rewrite
-    -- writes -- the same field Modification.AddChosenColor reads for Painter's
+    -- writes -- the same field Modification.ChosenColor reads for Painter's
     -- Servant, and the same link CR 607.2d describes. NOT A CHOICE: the colour is
     -- already settled, so Mana.produced offers one option and nothing prompts,
     -- which is what separates this from AnyColor.

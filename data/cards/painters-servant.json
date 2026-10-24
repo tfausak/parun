@@ -50,7 +50,10 @@
           },
           "modifications": [
             {
-              "type": "AddChosenColor"
+              "type": "ChosenColor",
+              "value": {
+                "type": "InAddition"
+              }
             }
           ]
         }

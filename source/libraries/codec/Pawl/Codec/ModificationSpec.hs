@@ -18,6 +18,7 @@ import qualified Pawl.Types.CardType as CardType
 import qualified Pawl.Types.CastingPermission as CastingPermission
 import qualified Pawl.Types.ChangeWord as ChangeWord
 import qualified Pawl.Types.Color as Color
+import qualified Pawl.Types.ColorMode as ColorMode
 import qualified Pawl.Types.CombatDamageOption as CombatDamageOption
 import qualified Pawl.Types.Cost as Cost
 import qualified Pawl.Types.CostComponent as CostComponent
@@ -286,14 +287,14 @@ spec s = Spec.describe s "Pawl.Codec.Modification" $ do
       codec
       (Modification.AddColor (Set.singleton Color.Blue))
       " {\"type\":\"AddColor\",\"value\":[{\"type\":\"Blue\"}]} "
-  -- layer 5, CR 613.1e / 105.3: an "in addition" colour too, but payload-free
-  -- -- the colour is read at projection time off the effect's source.
-  Spec.it s "AddChosenColor" $
+  -- layer 5, CR 613.1e / 105.3: the colour is read at projection time off the
+  -- effect's source, so the arm carries only whether it replaces or adds.
+  Spec.it s "ChosenColor" $
     Common.assertCodec
       s
       codec
-      Modification.AddChosenColor
-      " {\"type\":\"AddChosenColor\"} "
+      (Modification.ChosenColor ColorMode.Replace)
+      " {\"type\":\"ChosenColor\",\"value\":{\"type\":\"Replace\"}} "
   -- layer 6, CR 702.165a: the abilities come off the effect's SOURCE, so the arm
   -- carries only the keywords printed above the backup line.
   Spec.it s "GainAbilitiesOfSource" $

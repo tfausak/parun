@@ -1,0 +1,70 @@
+{
+  "faces": [
+    {
+      "manaCost": [
+        {
+          "type": "Generic",
+          "value": 2
+        },
+        {
+          "type": "OfType",
+          "value": {
+            "type": "Colored",
+            "value": {
+              "type": "Blue"
+            }
+          }
+        }
+      ],
+      "name": "Shifting Sky",
+      "oracleText": "As this enchantment enters, choose a color.\nAll nonland permanents are the chosen color.",
+      "replacementEffects": [
+        {
+          "effect": {
+            "type": "EntryR",
+            "value": {
+              "matching": {
+                "type": "IsSource"
+              },
+              "rewrite": {
+                "type": "ChooseColors",
+                "value": 1
+              }
+            }
+          }
+        }
+      ],
+      "staticAbilities": [
+        {
+          "affected": {
+            "type": "Matching",
+            "value": {
+              "type": "Not",
+              "value": {
+                "type": "HasCardType",
+                "value": {
+                  "type": "Land"
+                }
+              }
+            }
+          },
+          "modifications": [
+            {
+              "type": "ChosenColor",
+              "value": {
+                "type": "Replace"
+              }
+            }
+          ]
+        }
+      ],
+      "typeLine": {
+        "types": [
+          {
+            "type": "Enchantment"
+          }
+        ]
+      }
+    }
+  ]
+}
