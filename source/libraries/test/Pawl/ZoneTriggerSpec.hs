@@ -79,6 +79,7 @@ import qualified Pawl.Types.Crewing as Crewing
 import qualified Pawl.Types.DamageEvent as DamageEvent
 import qualified Pawl.Types.DamageKind as DamageKind
 import qualified Pawl.Types.DamagePrevented as DamagePrevented
+import qualified Pawl.Types.DealsDamageToPlayer as DealsDamageToPlayer
 import qualified Pawl.Types.Decider as Decider
 import qualified Pawl.Types.Designation as Designation
 import qualified Pawl.Types.DieResult as DieResult
@@ -1731,7 +1732,7 @@ leavesBattlefieldSpec s registry =
 -- keyset. The exceptions are SelfLeavesTheBattlefield, whose two destinations
 -- differ because CR 400.7e binds `became` for the public one and withholds it
 -- for the hidden one (CR 400.2); PermanentSacrificed, whose two rows differ over
--- the ARRIVAL TABLE rather than over the event (see below); SelfIsDealtDamage,
+-- the ARRIVAL TABLE rather than over the event (see below); IsDealtDamage,
 -- which admits both of CR 120.3's damage kinds; and SelfBecomesBlockedByOneOrMore
 -- and CreatureBecomesBlockedByAtLeast, which each admit rule 509.3e's two
 -- producers under two different event constructors.
@@ -1819,13 +1820,13 @@ representativeEvents cond =
           noTable combatDamage
             NonEmpty.:| [noTable (GameEvent.DamageDealt (DamageEvent.MkDamageEvent departed (Recipient.ToBattle arrived) 3 False False False 0 Nothing Nothing mempty False DamageKind.Combat))]
         -- TWO again, a player and a creature: this arm admits any recipient.
-        TriggerCondition.SelfDealsCombatDamage ->
+        TriggerCondition.DealsCombatDamage _ ->
           noTable combatDamage
             NonEmpty.:| [noTable (GameEvent.DamageDealt (DamageEvent.MkDamageEvent departed (Recipient.ToCreature arrived) 3 False False False 0 Nothing Nothing mempty False DamageKind.Combat))]
-        -- TWO of them, for SelfIsDealtDamage's reason below: this arm admits
+        -- TWO of them, for IsDealtDamage's reason below: this arm admits
         -- both of CR 120.3's damage kinds, so a floor claimed for combat alone
         -- would come apart on the noncombat one.
-        TriggerCondition.SelfDealsDamageToPlayer _ ->
+        TriggerCondition.DealsDamageToPlayer _ ->
           noTable combatDamage
             NonEmpty.:| [noTable (GameEvent.DamageDealt (DamageEvent.MkDamageEvent departed (Recipient.ToPlayer S.bob) 3 False False False 0 Nothing Nothing mempty False DamageKind.Noncombat))]
         -- CR 120.3's other recipient, the bearer still the SOURCE. TWO of them for
@@ -1835,14 +1836,14 @@ representativeEvents cond =
             NonEmpty.:| [noTable (GameEvent.DamageDealt (DamageEvent.MkDamageEvent departed (Recipient.ToCreature arrived) 5 False False False 0 Nothing Nothing mempty False DamageKind.Combat))]
         -- TWO again, a creature and a player, one of each kind: this arm admits
         -- any recipient and either kind.
-        TriggerCondition.SelfDealsDamage ->
+        TriggerCondition.DealsDamage _ ->
           noTable (GameEvent.DamageDealt (DamageEvent.MkDamageEvent departed (Recipient.ToCreature arrived) 4 False False False 0 Nothing Nothing mempty False DamageKind.Noncombat))
             NonEmpty.:| [noTable (GameEvent.DamageDealt (DamageEvent.MkDamageEvent departed (Recipient.ToPlayer S.bob) 5 False False False 0 Nothing Nothing mempty False DamageKind.Combat))]
         -- CR 120.3's event pointed the other way, at the BEARER -- so the pair
         -- really matches. TWO of them, combat and noncombat, because this
         -- condition admits both, as the arm above does: a floor claimed for one
         -- kind and not the other would come apart here.
-        TriggerCondition.SelfIsDealtDamage ->
+        TriggerCondition.IsDealtDamage _ ->
           noTable (GameEvent.DamageDealt (DamageEvent.MkDamageEvent arrived (Recipient.ToCreature departed) 2 False False False 0 Nothing Nothing mempty False DamageKind.Noncombat))
             NonEmpty.:| [noTable (GameEvent.DamageDealt (DamageEvent.MkDamageEvent arrived (Recipient.ToCreature departed) 3 False False False 0 Nothing Nothing mempty False DamageKind.Combat))]
         -- CR 120.3's event pointed at a player, alice being the "you", in both
@@ -2235,8 +2236,6 @@ representativeEvents cond =
         -- eventBindings claims nothing either way, and the floor is what this
         -- pins.
         TriggerCondition.AttachedCreatureBecomesTapped -> one (GameEvent.BecameTapped departed)
-        -- CR 120.1's event, the only one this condition admits.
-        TriggerCondition.AttachedCreatureDealsDamage -> one (GameEvent.DamageDealt (DamageEvent.MkDamageEvent departed (Recipient.ToPlayer S.bob) 2 False False False 0 Nothing Nothing mempty False DamageKind.Noncombat))
         TriggerCondition.PermanentsBecomeTapped _ -> one (GameEvent.BecameTapped departed)
         TriggerCondition.PermanentBecomesTapped _ -> one (GameEvent.BecameTapped departed)
         -- CR 701.26b's own event, and the only one this condition admits, on
@@ -2401,12 +2400,15 @@ everyTriggerCondition =
     TriggerCondition.StateIs (Condition.Type.Compares (Compares.MkCompares (Quantity.Type.Literal 0) Comparison.Exactly (Quantity.Type.Literal 0))),
     TriggerCondition.SelfDealsCombatDamageToPlayer PlayerRelation.AnyPlayer,
     TriggerCondition.SelfDealsCombatDamageToPlayerOrBattle,
-    TriggerCondition.SelfDealsCombatDamage,
-    TriggerCondition.SelfDealsDamageToPlayer PlayerRelation.AnyPlayer,
-    TriggerCondition.SelfDealsDamageToPlayer PlayerRelation.Opponent,
+    TriggerCondition.DealsCombatDamage ActingPermanent.Self,
+    TriggerCondition.DealsCombatDamage (ActingPermanent.Matching (Filter.Type.And [])),
+    TriggerCondition.DealsDamageToPlayer (DealsDamageToPlayer.MkDealsDamageToPlayer ActingPermanent.Self PlayerRelation.AnyPlayer),
+    TriggerCondition.DealsDamageToPlayer (DealsDamageToPlayer.MkDealsDamageToPlayer (ActingPermanent.Matching (Filter.Type.And [])) PlayerRelation.Opponent),
     TriggerCondition.SelfDealsDamageToCreature,
-    TriggerCondition.SelfDealsDamage,
-    TriggerCondition.SelfIsDealtDamage,
+    TriggerCondition.DealsDamage ActingPermanent.Self,
+    TriggerCondition.DealsDamage (ActingPermanent.Matching (Filter.Type.HasAttached Filter.Type.IsSource)),
+    TriggerCondition.IsDealtDamage ActingPermanent.Self,
+    TriggerCondition.IsDealtDamage (ActingPermanent.Matching (Filter.Type.And [])),
     TriggerCondition.PlayerIsDealtDamage PlayerRelation.You,
     TriggerCondition.PermanentDealsCombatDamageToPlayer (PermanentDealsCombatDamageToPlayer.MkPermanentDealsCombatDamageToPlayer (Filter.Type.And []) PlayerRelation.AnyPlayer),
     TriggerCondition.PermanentsDealCombatDamageToPlayer (PermanentsDealCombatDamageToPlayer.MkPermanentsDealCombatDamageToPlayer (Filter.Type.And []) PlayerRelation.AnyPlayer False),
@@ -2554,7 +2556,6 @@ everyTriggerCondition =
     TriggerCondition.AttachedCreatureMentors,
     TriggerCondition.AttachedCreatureDies,
     TriggerCondition.AttachedCreatureBecomesTapped,
-    TriggerCondition.AttachedCreatureDealsDamage,
     TriggerCondition.PermanentsBecomeTapped (Filter.Type.And []),
     TriggerCondition.PermanentBecomesTapped (Filter.Type.And []),
     TriggerCondition.SelfBecomesUntapped,

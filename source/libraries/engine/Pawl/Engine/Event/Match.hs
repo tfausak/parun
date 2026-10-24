@@ -64,6 +64,7 @@ import qualified Pawl.Types.Crewing as Crewing
 import qualified Pawl.Types.DamageEvent as DamageEvent
 import qualified Pawl.Types.DamageKind as DamageKind
 import qualified Pawl.Types.DamagePrevented as DamagePrevented
+import qualified Pawl.Types.DealsDamageToPlayer as DealsDamageToPlayer
 import qualified Pawl.Types.Designation as Designation
 import qualified Pawl.Types.DieResult as DieResult
 import qualified Pawl.Types.DiscardCause as DiscardCause
@@ -699,12 +700,13 @@ matchesTriggerGiven bindings board gs bearer you cond event = case cond of
     GameEvent.ActivatedAbilityResolved _ -> False
     GameEvent.TriggeredAbilityResolved _ -> False
     GameEvent.CardArrived _ -> False
-  -- CR 510.1: the bearer dealt combat damage to anything it may be assigned
-  -- to. Every such event matches; firing once for the CR 510.2 step is
-  -- `batchScoped` plus eventTriggers' dedup, never this arm.
-  TriggerCondition.SelfDealsCombatDamage -> case event of
+  -- CR 510.1: the watched permanent dealt combat damage to anything it may be
+  -- assigned to. Every such event matches; firing once for the CR 510.2 step
+  -- and damager is `batchScoped`, `batchPartition` and eventTriggers' dedup,
+  -- never this arm.
+  TriggerCondition.DealsCombatDamage watched -> case event of
     GameEvent.DamageDealt ev ->
-      DamageEvent.source ev == bearer
+      damageBy watched (DamageEvent.source ev)
         && DamageEvent.kind ev == DamageKind.Combat
     GameEvent.Moved {} -> False
     GameEvent.StepBegan {} -> False
@@ -774,21 +776,26 @@ matchesTriggerGiven bindings board gs bearer you cond event = case cond of
     GameEvent.ActivatedAbilityResolved _ -> False
     GameEvent.TriggeredAbilityResolved _ -> False
     GameEvent.CardArrived _ -> False
-  -- CR 603.2 / 120.1: the bearer dealt damage of ANY kind to a PLAYER the
-  -- relation admits -- the arm above with CR 510.1's combat test dropped, so a
-  -- Soul's Fire pointed at a player fires it exactly as an unblocked attack does.
+  -- CR 603.2 / 120.1: the watched permanent dealt damage of ANY kind to a
+  -- PLAYER the relation admits -- SelfDealsCombatDamageToPlayer's arm with CR
+  -- 510.1's combat test dropped, so a Soul's Fire pointed at a player fires it
+  -- exactly as an unblocked attack does.
   --
-  -- The relation is read off the RECIPIENT against CR 109.5's `you`, the arm
-  -- above's reading, and CR 614.9's redirection is what makes it observable:
+  -- The relation is read off the RECIPIENT against CR 109.5's `you`, that
+  -- arm's reading, and CR 614.9's redirection is what makes it observable:
   -- Pawl.FlipSpec's "CR 603.2 Harm's Way sends Akki's combat damage to alice, and
   -- Akki does not flip" and "CR 603.2 the same noncombat damage aimed at alice
   -- does not flip Akki" prove the relation, from each damage kind; "CR 603.2 Akki
   -- flips on the NONCOMBAT damage Soul's Fire makes it deal to bob" proves that
   -- the kind is not narrowed.
-  TriggerCondition.SelfDealsDamageToPlayer relation -> case event of
+  --
+  -- The relation is the bearer's controller's even when the damager is another
+  -- permanent: Curiosity's "an opponent" is its own controller's (its ruling),
+  -- whoever controls the enchanted creature.
+  TriggerCondition.DealsDamageToPlayer watched -> case event of
     GameEvent.DamageDealt ev ->
-      DamageEvent.source ev == bearer
-        && maybe False (PlayerRelation.holds (Game.teams gs) relation you) (Recipient.playerOf (DamageEvent.target ev))
+      damageBy (DealsDamageToPlayer.actor watched) (DamageEvent.source ev)
+        && maybe False (PlayerRelation.holds (Game.teams gs) (DealsDamageToPlayer.recipient watched) you) (Recipient.playerOf (DamageEvent.target ev))
     GameEvent.Moved {} -> False
     GameEvent.StepBegan {} -> False
     GameEvent.SpellCast {} -> False
@@ -941,11 +948,11 @@ matchesTriggerGiven bindings board gs bearer you cond event = case cond of
     GameEvent.ActivatedAbilityResolved _ -> False
     GameEvent.TriggeredAbilityResolved _ -> False
     GameEvent.CardArrived _ -> False
-  -- CR 120.1: the bearer dealt damage to anything, of either kind. Every such
-  -- event matches; firing once per damage event is `batchScoped` plus
-  -- eventTriggers' dedup, SelfDealsCombatDamage's reading.
-  TriggerCondition.SelfDealsDamage -> case event of
-    GameEvent.DamageDealt ev -> DamageEvent.source ev == bearer
+  -- CR 120.1: the watched permanent dealt damage to anything, of either kind.
+  -- Every such event matches; firing once per damage event and damager is
+  -- DealsCombatDamage's reading.
+  TriggerCondition.DealsDamage watched -> case event of
+    GameEvent.DamageDealt ev -> damageBy watched (DamageEvent.source ev)
     GameEvent.Moved {} -> False
     GameEvent.StepBegan {} -> False
     GameEvent.SpellCast {} -> False
@@ -1014,95 +1021,20 @@ matchesTriggerGiven bindings board gs bearer you cond event = case cond of
     GameEvent.ActivatedAbilityResolved _ -> False
     GameEvent.TriggeredAbilityResolved _ -> False
     GameEvent.CardArrived _ -> False
-  -- The arm above read off the bearer's HOST (Spirit Link's "whenever enchanted
-  -- creature deals damage"). The damager is read through `board`, CR 603.10's
-  -- battlefield immediately after the damage, as PermanentDealsCombatDamageToPlayer
-  -- reads it: damage that kills the host also buries the Aura (CR 704.5m) before
-  -- the log is scanned, and the link has to be read as it stood.
-  TriggerCondition.AttachedCreatureDealsDamage -> case event of
-    GameEvent.DamageDealt ev -> maybe False (\view -> Filter.matches bearerContext view (Filter.Type.HasAttached Filter.Type.IsSource)) (postEventView board gs (DamageEvent.source ev))
-    GameEvent.Moved {} -> False
-    GameEvent.StepBegan {} -> False
-    GameEvent.SpellCast {} -> False
-    GameEvent.SpellCopied _ -> False
-    GameEvent.DamagePrevented {} -> False
-    GameEvent.BecameMonarch _ -> False
-    GameEvent.TookInitiative _ -> False
-    GameEvent.Discarded {} -> False
-    GameEvent.Drew {} -> False
-    GameEvent.Revealed {} -> False
-    GameEvent.Looked {} -> False
-    GameEvent.Voted {} -> False
-    GameEvent.VotesRevealed {} -> False
-    GameEvent.AttackerDeclared {} -> False
-    GameEvent.BecameBlocking {} -> False
-    GameEvent.BlocksDeclared {} -> False
-    GameEvent.AttackerBlocked {} -> False
-    GameEvent.AttackerUnblocked _ -> False
-    GameEvent.SpellCountered _ -> False
-    GameEvent.AbilityCountered _ -> False
-    GameEvent.HalfUnlocked {} -> False
-    GameEvent.TurnedFaceUp _ -> False
-    GameEvent.PermanentActed _ -> False
-    GameEvent.Transformed {} -> False
-    GameEvent.BecameDesignated {} -> False
-    GameEvent.Mentored {} -> False
-    GameEvent.Exploited {} -> False
-    GameEvent.BecameCrewed _ -> False
-    GameEvent.Convoked _ -> False
-    GameEvent.Saddled _ -> False
-    GameEvent.Crewed _ -> False
-    GameEvent.PermanentSacrificed {} -> False
-    GameEvent.AbilityTriggered {} -> False
-    GameEvent.LoyaltyAbilityActivated _ -> False
-    GameEvent.LifeLost {} -> False
-    GameEvent.LifeGained {} -> False
-    GameEvent.CountersPut {} -> False
-    GameEvent.CountersRemoved {} -> False
-    GameEvent.ControlChanged {} -> False
-    GameEvent.VentureMarkerEntered {} -> False
-    GameEvent.BecameTarget {} -> False
-    GameEvent.BecameAttached {} -> False
-    GameEvent.BecameUnattached {} -> False
-    GameEvent.LeftTheGame _ -> False
-    GameEvent.Milled {} -> False
-    GameEvent.PlayerActed _ -> False
-    GameEvent.LandPlayed {} -> False
-    GameEvent.LostTheGame _ -> False
-    GameEvent.ManifestedDread {} -> False
-    GameEvent.DieResultSettled _ -> False
-    GameEvent.RolledToVisit _ -> False
-    GameEvent.PlanarDieRolled _ -> False
-    GameEvent.TurnedUpOffDeck _ -> False
-    GameEvent.ChaosEnsued -> False
-    GameEvent.ClassLevelSet _ -> False
-    GameEvent.Plotted _ -> False
-    GameEvent.BecameAttacked _ -> False
-    GameEvent.AttackersDeclared _ -> False
-    GameEvent.BecameTapped _ -> False
-    GameEvent.BecameUntapped _ -> False
-    GameEvent.TappedForMana _ -> False
-    GameEvent.ManaAdded _ -> False
-    GameEvent.ManaAbilityResolved _ -> False
-    GameEvent.CoinFlipped {} -> False
-    GameEvent.StickerPut _ -> False
-    GameEvent.ActivatedAbilityResolved _ -> False
-    GameEvent.TriggeredAbilityResolved _ -> False
-    GameEvent.CardArrived _ -> False
-  -- CR 120.3: the bearer was DEALT damage -- enrage's event. The arm above with the
-  -- identity check moved from the event's SOURCE to its RECIPIENT.
+  -- CR 120.3: the watched permanent was DEALT damage -- enrage's event, and
+  -- Death Pits of Rath's. DealsDamage's arm with the check moved from the
+  -- event's SOURCE to its RECIPIENT.
   --
-  -- Neither of that arm's other two tests, and deliberately: rule 120.3 is about
-  -- damage being dealt however it was dealt, and Ripjaw Raptor's printed phrase
-  -- qualifies it in no way, so a Prodigal Sorcerer's ping fires this exactly as
-  -- combat damage does. This is the damage arm that breaks the local pattern.
+  -- No combat test, and deliberately: rule 120.3 is about damage being dealt
+  -- however it was dealt, and Ripjaw Raptor's printed phrase qualifies it in no
+  -- way, so a Prodigal Sorcerer's ping fires this exactly as combat damage does.
   --
   -- Recipient.objectOf, not a ToCreature test: CR 120.3's recipient may be any
-  -- permanent (a planeswalker, a battle), and the bearer's own id is what decides
-  -- the match either way. Nothing is dealt damage while the id is a player's, which
+  -- permanent (a planeswalker, a battle), and the ActingPermanent decides the
+  -- match either way. Nothing is dealt damage while the id is a player's, which
   -- is what the Nothing arm falls through on.
-  TriggerCondition.SelfIsDealtDamage -> case event of
-    GameEvent.DamageDealt ev -> Recipient.objectOf (DamageEvent.target ev) == Just bearer
+  TriggerCondition.IsDealtDamage watched -> case event of
+    GameEvent.DamageDealt ev -> maybe False (damageBy watched) (Recipient.objectOf (DamageEvent.target ev))
     GameEvent.Moved {} -> False
     GameEvent.StepBegan {} -> False
     GameEvent.SpellCast {} -> False
@@ -10732,6 +10664,15 @@ matchesTriggerGiven bindings board gs bearer you cond event = case cond of
     -- 603.10a's look back. Pawl.ZoneTriggerSpec's "CR 113.6m a Kami of
     -- Mourning grant returns the card when a greater creature dies" proves it.
     bearerContext = Projection.framedByBindings gs bindings (Projection.sourceContext gs (Just you) bearer)
+    -- A damage condition's watched permanent, the damage's source or recipient:
+    -- the bearer by id, or a permanent the Filter admits. The Filter reads it
+    -- through `board`, CR 603.10's battlefield immediately after the damage, as
+    -- PermanentDealsCombatDamageToPlayer does: damage that kills Spirit Link's
+    -- host also buries the Aura (CR 704.5m) before the log is scanned, and the
+    -- link has to be read as it stood.
+    damageBy watched oid = case watched of
+      ActingPermanent.Self -> oid == bearer
+      ActingPermanent.Matching f -> maybe False (\view -> Filter.matches bearerContext view f) (postEventView board gs oid)
 
 -- CR 106.12a's second half: did an activation that produced @produced@ produce
 -- the mana this condition specified? The narrowing half of the

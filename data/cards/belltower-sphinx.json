@@ -34,7 +34,10 @@
       "triggeredAbilities": [
         {
           "condition": {
-            "type": "SelfIsDealtDamage"
+            "type": "IsDealtDamage",
+            "value": {
+              "type": "Self"
+            }
           },
           "modal": {
             "modes": [
