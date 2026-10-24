@@ -14,9 +14,6 @@ Every expressible Eighth Edition card has been added to `data/cards/`.
 Each group is tracked by its issue; its cards are added when it lands. Hardest
 first.
 
-- #4844: Thieves' Auction. A card can enter only under its owner's or the
-  effect controller's control, and each player here takes a card someone else
-  may own, inside a repeated round of choices.
 - #5549: Death Pits of Rath, Noble Purpose, Curiosity. Damage triggers watch
   only their own bearer, and the enchanted-creature one can't say whom it
   damaged; the fix is a parameter across several trigger arms that read
