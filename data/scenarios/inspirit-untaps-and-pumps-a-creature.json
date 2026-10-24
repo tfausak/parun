@@ -1,0 +1,11 @@
+{
+  "description": "CR 701.26b / 613.4c whole card: Inspirit untaps target creature and gives it +2/+4 until end of turn",
+  "note": "Alice's tapped Hill Giant is untapped and 5/7.",
+  "board": {"active": "alice", "step": "PrecombatMain", "seats": [{"name": "alice", "manaPool": "WWW", "hand": [{"card": "Inspirit", "label": "inspirit"}], "battlefield": [{"card": "Hill Giant", "label": "giant", "tapped": true}], "library": [{"card": "Island"}, {"card": "Island"}, {"card": "Island"}]}, {"name": "bob", "library": [{"card": "Island"}, {"card": "Island"}, {"card": "Island"}]}]},
+  "timeline": [
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "do": {"Cast": {"object": "$inspirit", "targets": ["$giant"]}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "do": "Pass"},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "check": {"Tapped": {"object": "$giant", "tapped": false}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "check": {"PowerToughness": {"object": "$giant", "power": 5, "toughness": 7}}}
+  ]
+}

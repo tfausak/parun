@@ -12,29 +12,6 @@ Each names the mtgish node the translator stops at, or what its rendering gets
 wrong. No missing Ninth Edition card's whole text is keywords, so
 `script/ingest` adds none of them.
 
-- Annex: `StaticLayerEffect:SetController`
-- Aven Windreader: `Action:RevealTopCardOfLibrary`
-- Ballista Squad: `Cost:PayManaX`
-- Battle of Wits: `Players:NumCardsInLibraryIs`
-- Blackmail: `Action:RevealNumberCardsFromHand`
-- Consume Spirit: `Rule:CastEffect`
-- Contaminated Bond: `Trigger:Or`
-- Crafty Pathmage: `Permanents:PowerIs`
-- Dream Prowler: `Rule:If`
-- Elvish Bard: `PermanentRule:AllCreaturesMustBlockIt`
-- Final Punishment: `GameNumber:DamageDealtToPlayerThisTurn`
-- Flame Wave: `Permanents:ControlledByPlayer`
-- Flowstone Slide: `LayerEffect:AdjustPTX`
-- Force of Nature: `Action:MayCost`
-- Form of the Dragon: `Action:SetLifeTotal`
-- Goblin Brigand: `PermanentRule:MustAttack`
-- Greater Good: `GameNumber:PowerOfTheSacrificedCreature`
-- Hell's Caretaker: `Action:PutGraveyardCardOntoBattlefield`
-- Hypnotic Specter: `Action:DiscardACardAtRandom`
-- Imaginary Pet: renders as nothing
-- Inspirit: renders "it gets an additional +2/+4" where Oracle says "It gets +2/+4"
-- Jester's Cap: `Action:SearchPlayersLibrary`
-- Magnivore: `CardsInGraveyards:IsCardtype`
 - Marble Titan: `Permanents:PowerIs`
 - Mindslicer: `Action:DiscardHand`
 - Mortivore: `CardsInGraveyards:IsCardtype`
@@ -72,5 +49,8 @@ first.
   to stop holding in someone else's.
 - #5562: Storage Matrix. Untap restrictions can't let the player pick a card
   type first; it needs a new hold, plus a prompt in the untap step.
+- #5565: Consume Spirit. A spell can't limit which mana pays for its X;
+  "Spend only black mana on X" exists only for an activation, over its whole
+  cost.
 - #5563: Slate of Ancestry. A discard cost discards a fixed number of cards, not
   the whole hand; the fix is a parameter on the count.

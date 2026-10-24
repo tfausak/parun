@@ -1,0 +1,14 @@
+{
+  "description": "CR 120.3 whole card: Flame Wave deals 4 damage to target player and each creature that player controls",
+  "note": "Pairs with flame-wave-burns-the-target-planeswalker-and-its-controllers-creatures; alice's and carol's Walls of Stone are untouched.",
+  "board": {"active": "alice", "step": "PrecombatMain", "seats": [{"name": "alice", "manaPool": "RRRRRRR", "hand": [{"card": "Flame Wave", "label": "wave"}], "battlefield": [{"card": "Wall of Stone", "label": "alice-wall"}], "library": [{"card": "Island"}, {"card": "Island"}, {"card": "Island"}]}, {"name": "bob", "battlefield": [{"card": "Wall of Stone", "label": "bob-wall"}, {"card": "Hill Giant", "label": "giant"}], "library": [{"card": "Island"}, {"card": "Island"}, {"card": "Island"}]}, {"name": "carol", "battlefield": [{"card": "Wall of Stone", "label": "carol-wall"}], "library": [{"card": "Island"}, {"card": "Island"}, {"card": "Island"}]}]},
+  "timeline": [
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "do": {"Cast": {"object": "$wave", "targets": ["$bob"]}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "do": "Pass"},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "check": {"Life": {"player": "bob", "life": 16}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "check": {"Damage": {"object": "$bob-wall", "damage": 4}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "check": {"Damage": {"object": "$alice-wall", "damage": 0}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "check": {"Damage": {"object": "$carol-wall", "damage": 0}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "check": {"Count": {"player": "bob", "zone": "Graveyard", "card": "Hill Giant", "count": 1}}}
+  ]
+}

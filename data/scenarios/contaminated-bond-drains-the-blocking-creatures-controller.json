@@ -1,0 +1,11 @@
+{
+  "description": "CR 603.2 whole card: Contaminated Bond makes the enchanted creature's controller lose 3 life when it blocks",
+  "note": "Alice's Bond is on bob's Grizzly Bears; it blocks her Hill Giant and bob loses 3, not alice.",
+  "board": {"active": "alice", "step": "BeginningOfCombat", "seats": [{"name": "alice", "battlefield": [{"card": "Contaminated Bond", "label": "bond", "attached": "bears"}, {"card": "Hill Giant", "label": "giant", "ready": true}], "library": [{"card": "Island"}, {"card": "Island"}, {"card": "Island"}]}, {"name": "bob", "battlefield": [{"card": "Grizzly Bears", "label": "bears", "ready": true}], "library": [{"card": "Island"}, {"card": "Island"}, {"card": "Island"}]}]},
+  "timeline": [
+    {"turn": 1, "step": "DeclareAttackers", "player": "alice", "do": {"Attack": ["$giant"]}},
+    {"turn": 1, "step": "DeclareBlockers", "player": "bob", "do": {"Block": {"$bears": ["$giant"]}}},
+    {"turn": 1, "step": "EndOfCombat", "player": "alice", "check": {"Life": {"player": "bob", "life": 17}}},
+    {"turn": 1, "step": "EndOfCombat", "player": "alice", "check": {"Life": {"player": "alice", "life": 20}}}
+  ]
+}

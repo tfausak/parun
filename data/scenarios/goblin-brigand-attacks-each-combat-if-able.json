@@ -1,0 +1,10 @@
+{
+  "description": "CR 508.1d whole card: Goblin Brigand attacks each combat if able",
+  "note": "Declaring no attackers is refused while the Brigand can attack.",
+  "board": {"active": "alice", "step": "BeginningOfCombat", "seats": [{"name": "alice", "battlefield": [{"card": "Goblin Brigand", "label": "brigand", "ready": true}], "library": [{"card": "Island"}, {"card": "Island"}, {"card": "Island"}]}, {"name": "bob", "library": [{"card": "Island"}, {"card": "Island"}, {"card": "Island"}]}]},
+  "timeline": [
+    {"turn": 1, "step": "DeclareAttackers", "player": "alice", "refuse": {"Attack": []}},
+    {"turn": 1, "step": "DeclareAttackers", "player": "alice", "do": {"Attack": ["$brigand"]}},
+    {"turn": 1, "step": "DeclareAttackers", "player": "alice", "check": {"Attackers": {"attackers": {"$brigand": "$bob"}}}}
+  ]
+}
