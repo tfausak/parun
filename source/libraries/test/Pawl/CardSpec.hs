@@ -111,6 +111,7 @@ import qualified Pawl.Types.CastFromZone as CastFromZone
 import qualified Pawl.Types.CastObligation as CastObligation
 import qualified Pawl.Types.CastOffer as CastOffer
 import qualified Pawl.Types.CastRepetition as CastRepetition
+import qualified Pawl.Types.CausedBy as CausedBy
 import qualified Pawl.Types.ChangeText as ChangeText
 import qualified Pawl.Types.CharacteristicPT as CharacteristicPT
 import qualified Pawl.Types.ChooseCardName as ChooseCardName
@@ -1034,6 +1035,7 @@ triggerConditionCounts triggerCondition = case triggerCondition of
   -- Recursive: a branch of an AnyOf may be any condition, StateIs included, so
   -- the traversal has to go through rather than stop here.
   TriggerCondition.AnyOf conditions -> concatMap triggerConditionCounts conditions
+  TriggerCondition.CausedBy narrowed -> triggerConditionCounts (CausedBy.condition narrowed)
   -- CR 708.7's condition is nullary, so there is nothing in it to be a Quantity.
   TriggerCondition.SelfTurnedFaceUp -> []
   -- CR 701.27e's names a face, which is a CardName and not a Quantity.
@@ -1056,6 +1058,7 @@ triggerConditionCounts triggerCondition = case triggerCondition of
   TriggerCondition.AttachedCreatureBecomesTapped -> []
   TriggerCondition.AttachedCreatureDealsDamage -> []
   TriggerCondition.PermanentsBecomeTapped _ -> []
+  TriggerCondition.PermanentBecomesTapped _ -> []
   TriggerCondition.SelfBecomesUntapped -> []
   TriggerCondition.AttachedPermanentTappedForMana -> []
   -- CR 106.12a's bystander reading carries a PlayerRelation and a Filter,
@@ -4475,6 +4478,7 @@ triggerConditionFilters triggerCondition = case triggerCondition of
   -- Recursive, for triggerConditionCounts' reason: Balemurk Leech's AnyOf holds a
   -- PermanentEnters, whose Filter would otherwise never be swept.
   TriggerCondition.AnyOf conditions -> concatMap triggerConditionFilters conditions
+  TriggerCondition.CausedBy narrowed -> triggerConditionFilters (CausedBy.condition narrowed)
   -- CR 708.7's condition is nullary, so there is nothing in it to be a Filter.
   TriggerCondition.SelfTurnedFaceUp -> []
   -- CR 701.27e's names a face by name; nothing about it is a Filter.
@@ -4505,6 +4509,7 @@ triggerConditionFilters triggerCondition = case triggerCondition of
   -- Deeproot Pilgrimage's "nontoken Merfolk you control" is card text, swept
   -- like PermanentsDie's.
   TriggerCondition.PermanentsBecomeTapped f -> unframed [f]
+  TriggerCondition.PermanentBecomesTapped f -> unframed [f]
   TriggerCondition.SelfBecomesUntapped -> []
   TriggerCondition.AttachedPermanentTappedForMana -> []
   TriggerCondition.SelfExploits -> []
@@ -4828,6 +4833,7 @@ triggerConditionSlots triggerCondition = case triggerCondition of
   TriggerCondition.AttachedCreatureBecomesTapped -> []
   TriggerCondition.AttachedCreatureDealsDamage -> []
   TriggerCondition.PermanentsBecomeTapped _ -> []
+  TriggerCondition.PermanentBecomesTapped _ -> []
   TriggerCondition.SelfBecomesUntapped -> []
   TriggerCondition.AttachedPermanentTappedForMana -> []
   TriggerCondition.PermanentTappedForMana {} -> []
@@ -4861,6 +4867,7 @@ triggerConditionSlots triggerCondition = case triggerCondition of
   -- Recursive, for triggerConditionCounts' reason: a branch of an AnyOf may be
   -- any condition, the slot-named one included.
   TriggerCondition.AnyOf conditions -> concatMap triggerConditionSlots conditions
+  TriggerCondition.CausedBy narrowed -> triggerConditionSlots (CausedBy.condition narrowed)
   TriggerCondition.SelfTurnedFaceUp -> []
   TriggerCondition.SelfTransformedInto _ -> []
   TriggerCondition.PermanentTransforms _ -> []

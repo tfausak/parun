@@ -1,0 +1,15 @@
+{
+  "description": "CR 603.6a / 701.21a whole card: Tainted Aether makes the controller of each creature that enters sacrifice a creature or land of their choice",
+  "note": "Alice controls Tainted Aether; bob casts Grizzly Bears. Bob, not alice, sacrifices: his Caltrops, an artifact, is refused, and he gives up his Hill Giant over his Forest and the Bears.",
+  "board": {"active": "bob", "step": "PrecombatMain", "seats": [{"name": "alice", "battlefield": [{"card": "Tainted Aether"}, {"card": "Gray Ogre", "label": "ogre"}], "library": [{"card": "Island"}, {"card": "Island"}, {"card": "Island"}]}, {"name": "bob", "manaPool": "GG", "battlefield": [{"card": "Hill Giant", "label": "giant"}, {"card": "Forest", "label": "forest"}, {"card": "Caltrops", "label": "caltrops"}], "hand": [{"card": "Grizzly Bears", "label": "bears"}], "library": [{"card": "Island"}, {"card": "Island"}, {"card": "Island"}]}]},
+  "timeline": [
+    {"turn": 1, "step": "PrecombatMain", "player": "bob", "do": {"Cast": {"object": "$bears", "mana": [null]}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "bob", "do": "Pass"},
+    {"turn": 1, "step": "PrecombatMain", "player": "bob", "do": "Pass"},
+    {"turn": 1, "step": "PrecombatMain", "player": "bob", "refuse": {"Answer": {"prompt": "ChooseSacrifices", "with": ["$caltrops"]}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "bob", "do": {"Answer": {"prompt": "ChooseSacrifices", "with": ["$giant"]}}},
+    {"turn": 1, "step": "BeginningOfCombat", "player": "bob", "check": {"Count": {"player": "bob", "zone": "Graveyard", "card": "Hill Giant", "count": 1}}},
+    {"turn": 1, "step": "BeginningOfCombat", "player": "bob", "check": {"Count": {"player": "bob", "zone": "Battlefield", "card": "Grizzly Bears", "count": 1}}},
+    {"turn": 1, "step": "BeginningOfCombat", "player": "bob", "check": {"Count": {"player": "alice", "zone": "Battlefield", "card": "Gray Ogre", "count": 1}}}
+  ]
+}

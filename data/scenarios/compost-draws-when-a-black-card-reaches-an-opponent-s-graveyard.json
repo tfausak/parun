@@ -1,0 +1,14 @@
+{
+  "description": "CR 603.2 whole card: Compost lets its controller draw a card whenever a black card is put into an opponent's graveyard",
+  "note": "Alice's first Lightning Bolt kills bob's green Grizzly Bears, which raises no prompt; the second kills his black Scathe Zombies, and alice takes the draw.",
+  "board": {"active": "alice", "step": "PrecombatMain", "seats": [{"name": "alice", "manaPool": "RR", "battlefield": [{"card": "Compost"}], "hand": [{"card": "Lightning Bolt", "label": "bolt1"}, {"card": "Lightning Bolt", "label": "bolt2"}], "library": [{"card": "Hill Giant"}, {"card": "Island"}, {"card": "Island"}]}, {"name": "bob", "battlefield": [{"card": "Grizzly Bears", "label": "bears"}, {"card": "Scathe Zombies", "label": "zombies"}], "library": [{"card": "Island"}, {"card": "Island"}, {"card": "Island"}]}]},
+  "timeline": [
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "do": {"Cast": {"object": "$bolt1", "targets": ["$bears"]}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "do": "Pass"},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "check": {"Count": {"player": "bob", "zone": "Graveyard", "card": "Grizzly Bears", "count": 1}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "do": {"Cast": {"object": "$bolt2", "targets": ["$zombies"]}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "do": "Pass"},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "do": {"ChooseOptional": {"type": "Exercises"}}},
+    {"turn": 1, "step": "BeginningOfCombat", "player": "alice", "check": {"Count": {"player": "alice", "zone": "Hand", "card": "Hill Giant", "count": 1}}}
+  ]
+}

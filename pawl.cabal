@@ -311,6 +311,7 @@ library codec
     Pawl.Codec.CastOfferSpec
     Pawl.Codec.CastRepetition
     Pawl.Codec.CastRepetitionSpec
+    Pawl.Codec.CausedBy
     Pawl.Codec.ChangeText
     Pawl.Codec.ChangeTextSpec
     Pawl.Codec.ChangeWord
@@ -2363,6 +2364,7 @@ library types
     Pawl.Types.CastObligation
     Pawl.Types.CastOffer
     Pawl.Types.CastRepetition
+    Pawl.Types.CausedBy
     Pawl.Types.ChangeText
     Pawl.Types.ChangeWord
     Pawl.Types.CharacteristicPT

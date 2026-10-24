@@ -1,0 +1,12 @@
+{
+  "description": "CR 701.20e / 603.6a whole card: Telepathic Spies looks at target opponent's hand as it enters",
+  "note": "Alice is shown bob's Hill Giant and Lightning Bolt; carol, who is not the target, is shown nothing.",
+  "board": {"active": "alice", "step": "PrecombatMain", "seats": [{"name": "alice", "manaPool": "UUU", "hand": [{"card": "Telepathic Spies", "label": "spies"}], "library": [{"card": "Island"}, {"card": "Island"}, {"card": "Island"}]}, {"name": "bob", "hand": [{"card": "Hill Giant"}, {"card": "Lightning Bolt"}], "library": [{"card": "Island"}, {"card": "Island"}, {"card": "Island"}]}, {"name": "carol", "hand": [{"card": "Craw Wurm"}], "library": [{"card": "Island"}, {"card": "Island"}, {"card": "Island"}]}]},
+  "timeline": [
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "do": {"Cast": {"object": "$spies"}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "do": "Pass"},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "do": {"ChooseTargets": {"target": ["$bob"]}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "do": "Pass"},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "check": {"View": {"of": "Witnessed", "player": "alice", "is": ["Hill Giant", "Lightning Bolt"]}}}
+  ]
+}

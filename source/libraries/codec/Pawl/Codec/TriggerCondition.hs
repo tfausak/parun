@@ -6,6 +6,7 @@ import qualified Pawl.Codec.CardLeavesZone as CardLeavesZone
 import qualified Pawl.Codec.CardName as CardName
 import qualified Pawl.Codec.CardPutIntoGraveyard as CardPutIntoGraveyard
 import qualified Pawl.Codec.CardsPutIntoZone as CardsPutIntoZone
+import qualified Pawl.Codec.CausedBy as CausedBy
 import qualified Pawl.Codec.ClassLevel as ClassLevel
 import qualified Pawl.Codec.Condition as Condition
 import qualified Pawl.Codec.ControllerBecomesTarget as ControllerBecomesTarget
@@ -127,6 +128,7 @@ codec =
           Arm.nullary "AttachedCreatureBecomesTapped" TriggerCondition.AttachedCreatureBecomesTapped,
           Arm.nullary "AttachedCreatureDealsDamage" TriggerCondition.AttachedCreatureDealsDamage,
           Arm.payload "PermanentsBecomeTapped" filterCodec TriggerCondition.PermanentsBecomeTapped (\x -> case x of TriggerCondition.PermanentsBecomeTapped y -> Just y; _ -> Nothing),
+          Arm.payload "PermanentBecomesTapped" filterCodec TriggerCondition.PermanentBecomesTapped (\x -> case x of TriggerCondition.PermanentBecomesTapped y -> Just y; _ -> Nothing),
           Arm.nullary "SelfBecomesUntapped" TriggerCondition.SelfBecomesUntapped,
           Arm.nullary "AttachedPermanentTappedForMana" TriggerCondition.AttachedPermanentTappedForMana,
           Arm.payload "PermanentTappedForMana" PermanentTappedForMana.codec TriggerCondition.PermanentTappedForMana (\x -> case x of TriggerCondition.PermanentTappedForMana y -> Just y; _ -> Nothing),
@@ -156,6 +158,7 @@ codec =
           Arm.payload "SelfHalfUnlocked" CardName.codec TriggerCondition.SelfHalfUnlocked (\x -> case x of TriggerCondition.SelfHalfUnlocked y -> Just y; _ -> Nothing),
           Arm.payload "RoomFullyUnlocked" PlayerRelation.codec TriggerCondition.RoomFullyUnlocked (\x -> case x of TriggerCondition.RoomFullyUnlocked y -> Just y; _ -> Nothing),
           Arm.payload "AnyOf" (Common.list codec) TriggerCondition.AnyOf (\x -> case x of TriggerCondition.AnyOf y -> Just y; _ -> Nothing),
+          Arm.payload "CausedBy" (CausedBy.codec codec) TriggerCondition.CausedBy (\x -> case x of TriggerCondition.CausedBy y -> Just y; _ -> Nothing),
           Arm.nullary "SelfTurnedFaceUp" TriggerCondition.SelfTurnedFaceUp,
           Arm.payload "SelfTransformedInto" CardName.codec TriggerCondition.SelfTransformedInto (\x -> case x of TriggerCondition.SelfTransformedInto y -> Just y; _ -> Nothing),
           Arm.payload "PermanentTransforms" filterCodec TriggerCondition.PermanentTransforms (\x -> case x of TriggerCondition.PermanentTransforms y -> Just y; _ -> Nothing),
@@ -274,6 +277,7 @@ tagOf x = case x of
   TriggerCondition.AttachedCreatureBecomesTapped {} -> "AttachedCreatureBecomesTapped"
   TriggerCondition.AttachedCreatureDealsDamage {} -> "AttachedCreatureDealsDamage"
   TriggerCondition.PermanentsBecomeTapped {} -> "PermanentsBecomeTapped"
+  TriggerCondition.PermanentBecomesTapped {} -> "PermanentBecomesTapped"
   TriggerCondition.SelfBecomesUntapped {} -> "SelfBecomesUntapped"
   TriggerCondition.AttachedPermanentTappedForMana {} -> "AttachedPermanentTappedForMana"
   TriggerCondition.PermanentTappedForMana {} -> "PermanentTappedForMana"
@@ -303,6 +307,7 @@ tagOf x = case x of
   TriggerCondition.SelfHalfUnlocked {} -> "SelfHalfUnlocked"
   TriggerCondition.RoomFullyUnlocked {} -> "RoomFullyUnlocked"
   TriggerCondition.AnyOf {} -> "AnyOf"
+  TriggerCondition.CausedBy {} -> "CausedBy"
   TriggerCondition.SelfTurnedFaceUp {} -> "SelfTurnedFaceUp"
   TriggerCondition.SelfTransformedInto {} -> "SelfTransformedInto"
   TriggerCondition.PermanentTransforms {} -> "PermanentTransforms"

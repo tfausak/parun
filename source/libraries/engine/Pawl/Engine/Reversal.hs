@@ -81,6 +81,7 @@ withoutAnnouncement before entry closed = do
   enteringTogether <- one GameState.enteringTogether
   arrivals <- one GameState.arrivals
   payingOnResolution <- one GameState.payingOnResolution
+  causing <- one GameState.causing
   lastKnown <- mapOf GameState.lastKnown
   stackArchive <- mapOf GameState.stackArchive
   scannedThrough <- one GameState.scannedThrough
@@ -204,6 +205,7 @@ withoutAnnouncement before entry closed = do
         GameState.enteringTogether = enteringTogether,
         GameState.arrivals = arrivals,
         GameState.payingOnResolution = payingOnResolution,
+        GameState.causing = causing,
         GameState.lastKnown = lastKnown,
         GameState.stackArchive = stackArchive,
         GameState.scannedThrough = scannedThrough,

@@ -135,6 +135,10 @@ data GameState = MkGameState
     -- clause's "If [a player] does" reads, so a cost paid on resolution rather
     -- than an effect (Event.payingOnResolution). False outside one.
     payingOnResolution :: Bool,
+    -- | CR 609.1: the controller of the spell or ability whose effect is being
+    -- performed (Event.causedBy), which Moved and Discarded record as their
+    -- cause. Nothing outside one, and inside a cost's payment.
+    causing :: Maybe PlayerId.PlayerId,
     -- | CR 608.2h / 113.7a: last known information, keyed by the id an object
     -- had before it left a zone (CR 400.7). Grows for the whole game.
     lastKnown :: Map.Map ObjectId.ObjectId LastKnown.LastKnown,

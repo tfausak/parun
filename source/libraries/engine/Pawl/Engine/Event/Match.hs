@@ -47,6 +47,7 @@ import qualified Pawl.Types.CardLeavesZone as CardLeavesZone
 import qualified Pawl.Types.CardPutIntoGraveyard as CardPutIntoGraveyard
 import qualified Pawl.Types.CardType as CardType
 import qualified Pawl.Types.CardsPutIntoZone as CardsPutIntoZone
+import qualified Pawl.Types.CausedBy as CausedBy
 import qualified Pawl.Types.Chosen as Chosen
 import qualified Pawl.Types.ClassLevelChange as ClassLevelChange
 import qualified Pawl.Types.CoinFlipped as CoinFlipped
@@ -352,7 +353,7 @@ countersRemovedFrom bearer wanted event = case event of
 -- be answered off a snapshot of a permanent that is gone.
 boundDeparts :: Map.Map SlotName.SlotName Binding -> Set.Set Zone -> SlotName.SlotName -> GameEvent -> Bool
 boundDeparts bindings destinations slot event = case event of
-  GameEvent.Moved (Moved.MkMoved zc _ _ _ _ _ _)
+  GameEvent.Moved (Moved.MkMoved zc _ _ _ _ _ _ _)
     | ZoneChange.from zc == Zone.Battlefield && Set.member (ZoneChange.to zc) destinations ->
         Map.lookup slot (Binding.objectSlots bindings) == Just (ZoneChange.departed zc)
   GameEvent.Moved {} -> False
@@ -857,7 +858,7 @@ matchesTriggerGiven bindings board gs bearer you cond event = case cond of
     GameEvent.TriggeredAbilityResolved _ -> False
     GameEvent.CardArrived _ -> False
   -- CR 603.2 / 120.3: the same arm with rule 120.3's other recipient -- a CREATURE
-  -- rather than a player. Strax, Sontaran Nurse's "Glory of Battle" is the reader,
+  -- rather than a player. Strax, Sontaran Nurse's "Glory of Battle" is a reader,
   -- and its own "Grenades!" fight is a noncombat source, so no CR 510.1 narrowing
   -- here either.
   --
@@ -1639,9 +1640,9 @@ matchesTriggerGiven bindings board gs bearer you cond event = case cond of
   -- ordinary discard of a card that HAS cycling reaches the same graveyard through
   -- the same funnel and must fire nothing.
   TriggerCondition.SelfCycled -> case event of
-    GameEvent.Discarded (Discarded.MkDiscarded _ oid DiscardCause.ToPayCyclingCost _) -> oid == bearer
-    GameEvent.Discarded (Discarded.MkDiscarded _ _ DiscardCause.Ordinary _) -> False
-    GameEvent.Discarded (Discarded.MkDiscarded _ _ DiscardCause.ByEffect _) -> False
+    GameEvent.Discarded (Discarded.MkDiscarded _ oid DiscardCause.ToPayCyclingCost _ _) -> oid == bearer
+    GameEvent.Discarded (Discarded.MkDiscarded _ _ DiscardCause.Ordinary _ _) -> False
+    GameEvent.Discarded (Discarded.MkDiscarded _ _ DiscardCause.ByEffect _ _) -> False
     GameEvent.Drew {} -> False
     GameEvent.Moved {} -> False
     GameEvent.DamageDealt _ -> False
@@ -1899,7 +1900,7 @@ matchesTriggerGiven bindings board gs bearer you cond event = case cond of
   -- an ability of a card in a graveyard, so the two seats coincide by
   -- construction and there is no PlayerRelation to read.
   TriggerCondition.SelfDiscarded -> case event of
-    GameEvent.Discarded (Discarded.MkDiscarded _ oid _ _) -> oid == bearer
+    GameEvent.Discarded (Discarded.MkDiscarded _ oid _ _ _) -> oid == bearer
     GameEvent.Drew {} -> False
     GameEvent.Moved {} -> False
     GameEvent.DamageDealt _ -> False
@@ -1978,7 +1979,7 @@ matchesTriggerGiven bindings board gs bearer you cond event = case cond of
   -- The bearer is the EXILE incarnation, which is the id the CR 400.7 funnel
   -- minted and the id the event carries -- see the arm above.
   TriggerCondition.SelfExiledForMadness -> case event of
-    GameEvent.Discarded (Discarded.MkDiscarded _ oid _ madness) -> Maybe.isJust madness && oid == bearer
+    GameEvent.Discarded (Discarded.MkDiscarded _ oid _ madness _) -> Maybe.isJust madness && oid == bearer
     GameEvent.Drew {} -> False
     GameEvent.Moved {} -> False
     GameEvent.DamageDealt _ -> False
@@ -2066,7 +2067,7 @@ matchesTriggerGiven bindings board gs bearer you cond event = case cond of
   -- TriggerSpec's "CR 702.29d cycling a card fires the discard trigger exactly
   -- once" is the test that proves it.
   TriggerCondition.PlayerDiscards relation -> case event of
-    GameEvent.Discarded (Discarded.MkDiscarded discarder _ _ _) -> PlayerRelation.holds (Game.teams gs) relation you discarder
+    GameEvent.Discarded (Discarded.MkDiscarded discarder _ _ _ _) -> PlayerRelation.holds (Game.teams gs) relation you discarder
     GameEvent.Drew {} -> False
     GameEvent.Moved {} -> False
     GameEvent.DamageDealt _ -> False
@@ -2153,9 +2154,9 @@ matchesTriggerGiven bindings board gs bearer you cond event = case cond of
   -- CR 702.29d needs no clause: one cycle is one Discarded event, so this fires
   -- once by construction, exactly as the discard arm above does.
   TriggerCondition.PlayerCycles relation -> case event of
-    GameEvent.Discarded (Discarded.MkDiscarded discarder _ DiscardCause.ToPayCyclingCost _) -> PlayerRelation.holds (Game.teams gs) relation you discarder
-    GameEvent.Discarded (Discarded.MkDiscarded _ _ DiscardCause.Ordinary _) -> False
-    GameEvent.Discarded (Discarded.MkDiscarded _ _ DiscardCause.ByEffect _) -> False
+    GameEvent.Discarded (Discarded.MkDiscarded discarder _ DiscardCause.ToPayCyclingCost _ _) -> PlayerRelation.holds (Game.teams gs) relation you discarder
+    GameEvent.Discarded (Discarded.MkDiscarded _ _ DiscardCause.Ordinary _ _) -> False
+    GameEvent.Discarded (Discarded.MkDiscarded _ _ DiscardCause.ByEffect _ _) -> False
     GameEvent.Drew {} -> False
     GameEvent.Moved {} -> False
     GameEvent.DamageDealt _ -> False
@@ -4762,7 +4763,7 @@ matchesTriggerGiven bindings board gs bearer you cond event = case cond of
   -- `from` is the half that does the work: the same card discarded out of a hand
   -- or dying off the battlefield reaches the same graveyard and must not trigger.
   TriggerCondition.SelfPutIntoGraveyardFromLibrary -> case event of
-    GameEvent.Moved (Moved.MkMoved zc _ _ _ _ _ _) ->
+    GameEvent.Moved (Moved.MkMoved zc _ _ _ _ _ _ _) ->
       ZoneChange.object zc == bearer
         && ZoneChange.from zc == Zone.Library
         && ZoneChange.to zc == Zone.Graveyard
@@ -4849,7 +4850,7 @@ matchesTriggerGiven bindings board gs bearer you cond event = case cond of
   -- what makes the graveyard the one zone the scan has to find the bearer in,
   -- however far away the card started.
   TriggerCondition.SelfPutIntoGraveyardFromAnywhere -> case event of
-    GameEvent.Moved (Moved.MkMoved zc _ _ _ _ _ _) ->
+    GameEvent.Moved (Moved.MkMoved zc _ _ _ _ _ _ _) ->
       ZoneChange.object zc == bearer
         && ZoneChange.to zc == Zone.Graveyard
     GameEvent.DamageDealt _ -> False
@@ -4942,7 +4943,7 @@ matchesTriggerGiven bindings board gs bearer you cond event = case cond of
   -- CR 603.6c's last sentence keeps this out of the leaves-the-battlefield
   -- family.
   TriggerCondition.SelfPutIntoGraveyardDuringResolution -> case event of
-    GameEvent.Moved (Moved.MkMoved zc _ _ _ duringResolution _ _) ->
+    GameEvent.Moved (Moved.MkMoved zc _ _ _ duringResolution _ _ _) ->
       ZoneChange.object zc == bearer
         && ZoneChange.to zc == Zone.Graveyard
         && duringResolution
@@ -5066,7 +5067,7 @@ matchesTriggerGiven bindings board gs bearer you cond event = case cond of
                      Nothing -> False
                      Just view -> Filter.matches bearerContext view f
      in case event of
-          GameEvent.Moved (Moved.MkMoved zc _ _ _ _ _ _) -> admits zc
+          GameEvent.Moved (Moved.MkMoved zc _ _ _ _ _ _ _) -> admits zc
           GameEvent.CardArrived zc -> admits zc
           GameEvent.DamageDealt _ -> False
           GameEvent.StepBegan {} -> False
@@ -5346,6 +5347,8 @@ matchesTriggerGiven bindings board gs bearer you cond event = case cond of
     GameEvent.ActivatedAbilityResolved _ -> False
     GameEvent.TriggeredAbilityResolved _ -> False
     GameEvent.CardArrived _ -> False
+  -- The arm below's match; only `batchScoped` tells the two apart.
+  TriggerCondition.PermanentBecomesTapped f -> matchesTriggerGiven bindings board gs bearer you (TriggerCondition.PermanentsBecomeTapped f) event
   -- CR 701.26a by a bystander: a permanent the filter admits became tapped,
   -- judged off CR 603.10's board just after the event. Firing once for a
   -- batch is `batchScoped` plus eventTriggers' dedup, never this arm.
@@ -5857,7 +5860,7 @@ matchesTriggerGiven bindings board gs bearer you cond event = case cond of
   -- SelfDies deliberately does NOT take the same arm: CR 700.4 makes "dies" a
   -- move to a graveyard, and leaving the game reaches no zone at all.
   TriggerCondition.SelfLeavesTheBattlefield -> case event of
-    GameEvent.Moved (Moved.MkMoved zc _ _ _ _ _ _) ->
+    GameEvent.Moved (Moved.MkMoved zc _ _ _ _ _ _ _) ->
       ZoneChange.departed zc == bearer
         && ZoneChange.from zc == Zone.Battlefield
         && ZoneChange.to zc /= Zone.Battlefield
@@ -5936,7 +5939,7 @@ matchesTriggerGiven bindings board gs bearer you cond event = case cond of
   -- `/= Battlefield` guard is the arm above's, against recordMintedEntry's
   -- pseudo-move.
   TriggerCondition.SelfPutFromBattlefieldInto destination -> case event of
-    GameEvent.Moved (Moved.MkMoved zc _ _ _ _ _ _) ->
+    GameEvent.Moved (Moved.MkMoved zc _ _ _ _ _ _ _) ->
       ZoneChange.departed zc == bearer
         && ZoneChange.from zc == Zone.Battlefield
         && ZoneChange.to zc /= Zone.Battlefield
@@ -6025,7 +6028,7 @@ matchesTriggerGiven bindings board gs bearer you cond event = case cond of
           Nothing -> False
           Just view -> Filter.matches bearerContext view f
      in case event of
-          GameEvent.Moved (Moved.MkMoved zc _ _ _ _ _ _)
+          GameEvent.Moved (Moved.MkMoved zc _ _ _ _ _ _ _)
             | ZoneChange.from zc == Zone.Battlefield && ZoneChange.to zc /= Zone.Battlefield ->
                 admits (ZoneChange.departed zc)
           GameEvent.Moved {} -> False
@@ -6122,7 +6125,7 @@ matchesTriggerGiven bindings board gs bearer you cond event = case cond of
           Nothing -> False
           Just view -> Filter.matches bearerContext view f
      in case event of
-          GameEvent.Moved (Moved.MkMoved zc _ _ _ _ _ _)
+          GameEvent.Moved (Moved.MkMoved zc _ _ _ _ _ _ _)
             | ZoneChange.from zc == Zone.Battlefield && ZoneChange.to zc == Zone.Hand ->
                 admits (ZoneChange.departed zc)
           GameEvent.Moved {} -> False
@@ -9103,6 +9106,14 @@ matchesTriggerGiven bindings board gs bearer you cond event = case cond of
   -- CR 603.2 matches an event against "a triggered ability's trigger event", and
   -- the ability is one ability.
   TriggerCondition.AnyOf conditions -> any (\c -> matchesTriggerGiven bindings board gs bearer you c event) conditions
+  -- CR 609.1: the narrowed condition, on an event a spell or ability's effect
+  -- caused, that spell or ability's controller related to CR 109.5's "you" the
+  -- way PlayerDiscards relates the discarder. The controller is the one the
+  -- event recorded as it happened (Moved.causedBy), so a later change of
+  -- control cannot reach back.
+  TriggerCondition.CausedBy narrowed ->
+    maybe False (PlayerRelation.holds (Game.teams gs) (CausedBy.controller narrowed) you) (causeOf event)
+      && matchesTriggerGiven bindings board gs bearer you (CausedBy.condition narrowed) event
   -- CR 603.3b's second class, the one condition in this type whose event is
   -- another ability triggering: "whenever the final chapter ability of a Saga you
   -- control triggers".
@@ -10748,3 +10759,13 @@ producedSpecified gs bearer specified produced = case specified of
   -- A regression fence: no card in data/cards/ writes a printed colour in a
   -- trigger, only in Crimson Hellkite's activation restriction.
   ManaSpecification.OfColor color -> Set.member (ManaType.Colored color) produced
+
+-- CR 609.1: the controller of the spell or ability whose effect made this
+-- event, on the two events that record one. Every other event records no
+-- cause, so a CausedBy condition never matches it: a card whose condition
+-- reads a cause off another event would add its field here.
+causeOf :: GameEvent -> Maybe PlayerId
+causeOf event = case event of
+  GameEvent.Moved moved -> Moved.causedBy moved
+  GameEvent.Discarded discarded -> Discarded.causedBy discarded
+  _ -> Nothing

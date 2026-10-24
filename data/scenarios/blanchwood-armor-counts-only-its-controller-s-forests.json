@@ -1,0 +1,10 @@
+{
+  "description": "CR 613.4c whole card: Blanchwood Armor gives the enchanted creature +1/+1 for each Forest its controller controls",
+  "note": "Alice controls three Forests and bob two, so alice's Grizzly Bears become 5/5, not 7/7.",
+  "board": {"active": "alice", "step": "PrecombatMain", "seats": [{"name": "alice", "manaPool": "GGG", "battlefield": [{"card": "Grizzly Bears", "label": "bears"}, {"card": "Forest"}, {"card": "Forest"}, {"card": "Forest"}], "hand": [{"card": "Blanchwood Armor", "label": "armor"}], "library": [{"card": "Island"}, {"card": "Island"}, {"card": "Island"}]}, {"name": "bob", "battlefield": [{"card": "Forest"}, {"card": "Forest"}], "library": [{"card": "Island"}, {"card": "Island"}, {"card": "Island"}]}]},
+  "timeline": [
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "do": {"Cast": {"object": "$armor", "targets": ["$bears"], "mana": [null]}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "do": "Pass"},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "check": {"PowerToughness": {"object": "$bears", "power": 5, "toughness": 5}}}
+  ]
+}

@@ -94,6 +94,7 @@ import qualified Pawl.Types.CastFromZone as CastFromZone
 import qualified Pawl.Types.CastOffer as CastOffer
 import qualified Pawl.Types.CastRepetition as CastRepetition
 import qualified Pawl.Types.CastingRestriction as CastingRestriction
+import qualified Pawl.Types.CausedBy as CausedBy
 import qualified Pawl.Types.ChangeText as ChangeText
 import qualified Pawl.Types.CharacteristicPT as CharacteristicPT
 import qualified Pawl.Types.ChooseCardName as ChooseCardName
@@ -2895,6 +2896,7 @@ triggerConditionNames asking x = case x of
   TriggerCondition.AttachedCreatureBecomesTapped -> mempty
   TriggerCondition.AttachedCreatureDealsDamage -> mempty
   TriggerCondition.PermanentsBecomeTapped filter_ -> filterNames asking filter_
+  TriggerCondition.PermanentBecomesTapped filter_ -> filterNames asking filter_
   TriggerCondition.SelfBecomesUntapped -> mempty
   TriggerCondition.AttachedPermanentTappedForMana -> mempty
   TriggerCondition.PermanentTappedForMana permanentTappedForMana -> permanentTappedForManaNames asking permanentTappedForMana
@@ -2924,6 +2926,7 @@ triggerConditionNames asking x = case x of
   TriggerCondition.SelfHalfUnlocked _cardName -> mempty
   TriggerCondition.RoomFullyUnlocked _playerRelation -> mempty
   TriggerCondition.AnyOf items -> foldMap (triggerConditionNames asking) items
+  TriggerCondition.CausedBy narrowed -> triggerConditionNames asking (CausedBy.condition narrowed)
   TriggerCondition.SelfTurnedFaceUp -> mempty
   TriggerCondition.SelfTransformedInto _cardName -> mempty
   TriggerCondition.PermanentTransforms filter_ -> filterNames asking filter_
