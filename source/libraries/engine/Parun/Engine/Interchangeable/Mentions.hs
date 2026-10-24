@@ -352,6 +352,7 @@ import qualified Parun.Types.RequireBlock as RequireBlock
 import qualified Parun.Types.RestrictedCreatures as RestrictedCreatures
 import qualified Parun.Types.ReturnPermanents as ReturnPermanents
 import qualified Parun.Types.Reveal as Reveal
+import qualified Parun.Types.RevealedThisWay as RevealedThisWay
 import qualified Parun.Types.RollDie as RollDie
 import qualified Parun.Types.RuleAbilities as RuleAbilities
 import qualified Parun.Types.Sacrifice as Sacrifice
@@ -1541,7 +1542,7 @@ entryRewriteNames asking onAbility onEffect x = case x of
   EntryRewrite.ChooseColors _natural -> mempty
   EntryRewrite.ChooseBasicLandType -> mempty
   EntryRewrite.ChooseCreatureType -> mempty
-  EntryRewrite.ChoosePlayer -> mempty
+  EntryRewrite.ChoosePlayer _relation -> mempty
   EntryRewrite.ChooseCardNames filter_ -> filterNames asking filter_
   EntryRewrite.ChooseCardName filter_ -> filterNames asking filter_
   EntryRewrite.WithCounters withCounters -> withCountersNames asking withCounters
@@ -2366,7 +2367,7 @@ playerEffectNames asking x = case x of
   PlayerEffect.PutTappedAsYouCascade filter_ -> filterNames asking filter_
   PlayerEffect.CantGainLife -> mempty
   PlayerEffect.CantLoseLife -> mempty
-  PlayerEffect.RevealsFirstDraw _obligation -> mempty
+  PlayerEffect.RevealsDraw _reveal -> mempty
   PlayerEffect.Precluded _outcome -> mempty
   PlayerEffect.Shows _shows -> mempty
 
@@ -2876,7 +2877,7 @@ triggerConditionNames asking x = case x of
   TriggerCondition.OpponentLostLifeDuringYourTurn -> mempty
   TriggerCondition.SelfCycled -> mempty
   TriggerCondition.SelfRevealedForMiracle -> mempty
-  TriggerCondition.RevealedThisWay filter_ -> filterNames asking filter_
+  TriggerCondition.RevealedThisWay (RevealedThisWay.MkRevealedThisWay filter_ _timing) -> filterNames asking filter_
   TriggerCondition.SelfDiscarded -> mempty
   TriggerCondition.SelfExiledForMadness -> mempty
   TriggerCondition.PlayerDiscards _playerRelation -> mempty

@@ -53,6 +53,7 @@ import qualified Parun.Types.PlayerDrawsNthCard as PlayerDrawsNthCard
 import qualified Parun.Types.PlayerRelation as PlayerRelation
 import qualified Parun.Types.PlaysLand as PlaysLand
 import qualified Parun.Types.Quantity as Quantity
+import qualified Parun.Types.RevealedThisWay as RevealedThisWay
 import qualified Parun.Types.RoomIndex as RoomIndex
 import qualified Parun.Types.SelfCountersReached as SelfCountersReached
 import qualified Parun.Types.SelfCountersRemoved as SelfCountersRemoved
@@ -253,8 +254,8 @@ spec s = Spec.describe s "Parun.Codec.TriggerCondition" $ do
     Common.assertCodec
       s
       TriggerCondition.codec
-      (TriggerCondition.RevealedThisWay (Filter.HasCardType CardType.Land))
-      " {\"type\":\"RevealedThisWay\",\"value\":{\"type\":\"HasCardType\",\"value\":{\"type\":\"Land\"}}} "
+      (TriggerCondition.RevealedThisWay (RevealedThisWay.MkRevealedThisWay (Filter.HasCardType CardType.Land) Nothing))
+      " {\"type\":\"RevealedThisWay\",\"value\":{\"card\":{\"type\":\"HasCardType\",\"value\":{\"type\":\"Land\"}}}} "
   -- CR 701.9a's discard, self-scoped: Bartered Cow's "when you discard this
   -- card". Nullary, SelfCycled's shape -- the ability is printed on the card that
   -- is discarded, so there is nothing left to say.

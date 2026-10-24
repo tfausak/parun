@@ -275,8 +275,10 @@ import qualified Parun.Codec.DoesNotUntapNextSpec
 import qualified Parun.Codec.DrawCountRSpec
 import qualified Parun.Codec.DrawCountRewriteSpec
 import qualified Parun.Codec.DrawRSpec
+import qualified Parun.Codec.DrawRevealSpec
 import qualified Parun.Codec.DrawRewriteSpec
 import qualified Parun.Codec.DrawSpec
+import qualified Parun.Codec.DrawnUnderSpec
 import qualified Parun.Codec.DrewSpec
 import qualified Parun.Codec.DungeonRoomSpec
 import qualified Parun.Codec.DurationEventSpec
@@ -588,8 +590,10 @@ import qualified Parun.Codec.ReturnWatchSpec
 import qualified Parun.Codec.RevealCauseSpec
 import qualified Parun.Codec.RevealObligationSpec
 import qualified Parun.Codec.RevealSpec
+import qualified Parun.Codec.RevealTimingSpec
 import qualified Parun.Codec.RevealWindowSpec
 import qualified Parun.Codec.RevealedSpec
+import qualified Parun.Codec.RevealedThisWaySpec
 import qualified Parun.Codec.RollDieSpec
 import qualified Parun.Codec.RollModifierSpec
 import qualified Parun.Codec.RoomHalfSpec
@@ -1495,7 +1499,11 @@ spec s registry = do
   Parun.Codec.ReturnEndingSpec.spec s
   Parun.Codec.ReturnPermanentsSpec.spec s
   Parun.Codec.ReturnWatchSpec.spec s
+  Parun.Codec.DrawRevealSpec.spec s
+  Parun.Codec.DrawnUnderSpec.spec s
   Parun.Codec.RevealCauseSpec.spec s
+  Parun.Codec.RevealTimingSpec.spec s
+  Parun.Codec.RevealedThisWaySpec.spec s
   Parun.Codec.RevealObligationSpec.spec s
   Parun.Codec.RevealedSpec.spec s
   Parun.Codec.RevealSpec.spec s

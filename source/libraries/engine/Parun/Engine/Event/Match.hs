@@ -69,6 +69,7 @@ import qualified Parun.Types.Designation as Designation
 import qualified Parun.Types.DieResult as DieResult
 import qualified Parun.Types.DiscardCause as DiscardCause
 import qualified Parun.Types.Discarded as Discarded
+import qualified Parun.Types.DrawnUnder as DrawnUnder
 import qualified Parun.Types.Drew as Drew
 import qualified Parun.Types.EventShape as EventShape
 import qualified Parun.Types.Exploited as Exploited
@@ -118,6 +119,7 @@ import qualified Parun.Types.ProjectedCharacteristics as PC
 import qualified Parun.Types.Recipient as Recipient
 import qualified Parun.Types.RevealCause as RevealCause
 import qualified Parun.Types.Revealed as Revealed
+import qualified Parun.Types.RevealedThisWay as RevealedThisWay
 import qualified Parun.Types.SelfCountersReached as SelfCountersReached
 import qualified Parun.Types.SelfCountersRemoved as SelfCountersRemoved
 import qualified Parun.Types.SlotName as SlotName
@@ -1743,11 +1745,14 @@ matchesTriggerGiven bindings board gs bearer you cond event = case cond of
     GameEvent.CardArrived _ -> False
   -- CR 607.2h: the reveal was the BEARER's own draw-time reveal, so another
   -- object's (a second Rowen's) and an ordinary reveal of the same card fire
-  -- nothing; and the card matches the printed quality, read off the hand it
-  -- was revealed in (CR 701.20b moves nothing).
-  TriggerCondition.RevealedThisWay f -> case event of
-    GameEvent.Revealed (Revealed.MkRevealed _ card (RevealCause.AsDrawnUnder under) _) ->
-      under == bearer && maybe False (\view -> Filter.matches bearerContext view f) (Projection.viewWithLastKnown card gs card)
+  -- nothing; at the timing the condition states, if any (CR 121.8); and the
+  -- card matches the printed quality, read off the hand it was revealed in (CR
+  -- 701.20b moves nothing).
+  TriggerCondition.RevealedThisWay (RevealedThisWay.MkRevealedThisWay f wanted) -> case event of
+    GameEvent.Revealed (Revealed.MkRevealed _ card (RevealCause.AsDrawnUnder (DrawnUnder.MkDrawnUnder under timing)) _) ->
+      under == bearer
+        && maybe True (== timing) wanted
+        && maybe False (\view -> Filter.matches bearerContext view f) (Projection.viewWithLastKnown card gs card)
     GameEvent.Revealed (Revealed.MkRevealed _ _ (RevealCause.ForMiracle _) _) -> False
     GameEvent.Revealed (Revealed.MkRevealed _ _ RevealCause.Ordinary _) -> False
     GameEvent.Revealed (Revealed.MkRevealed _ _ RevealCause.LeavingFaceDown _) -> False

@@ -1,8 +1,8 @@
 module Parun.Types.RevealCause where
 
 import qualified Parun.Types.Cost as Cost
+import qualified Parun.Types.DrawnUnder as DrawnUnder
 import qualified Parun.Types.Keyword as Keyword
-import qualified Parun.Types.ObjectId as ObjectId
 
 -- | CR 701.20a: why a reveal happened. Carried by Parun.Types.GameEvent's Revealed
 -- for Parun.Types.DiscardCause's reason -- one logged reveal answers both of the
@@ -24,10 +24,11 @@ data RevealCause
     -- under the miracle ability with this cost, whose linked trigger alone it
     -- fires (CR 607.2h).
     ForMiracle (Cost.Cost Keyword.Keyword)
-  | -- | CR 603.11 / 607.2h: revealed from a hand as it was drawn, under the
-    -- draw-time reveal (PlayerEffect.RevealsFirstDraw) of this object, whose
-    -- linked triggers alone it fires (Rowen).
-    AsDrawnUnder ObjectId.ObjectId
+  | -- | CR 603.11 / 607.2h / 121.8: revealed from a hand as it was drawn, or once
+    -- CR 121.8's cast was done, under the draw-time reveal
+    -- (PlayerEffect.RevealsDraw) of the payload's object, whose triggers alone
+    -- it fires (Rowen).
+    AsDrawnUnder DrawnUnder.DrawnUnder
   | -- | CR 708.9: a face-down permanent, revealed by its owner as it leaves the
     -- battlefield.
     LeavingFaceDown

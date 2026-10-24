@@ -595,7 +595,11 @@ library codec
     Parun.Codec.DrawCountRewrite
     Parun.Codec.DrawCountRewriteSpec
     Parun.Codec.DrawCountRSpec
+    Parun.Codec.DrawnUnder
+    Parun.Codec.DrawnUnderSpec
     Parun.Codec.DrawR
+    Parun.Codec.DrawReveal
+    Parun.Codec.DrawRevealSpec
     Parun.Codec.DrawRewrite
     Parun.Codec.DrawRewriteSpec
     Parun.Codec.DrawRSpec
@@ -1245,9 +1249,13 @@ library codec
     Parun.Codec.RevealCauseSpec
     Parun.Codec.Revealed
     Parun.Codec.RevealedSpec
+    Parun.Codec.RevealedThisWay
+    Parun.Codec.RevealedThisWaySpec
     Parun.Codec.RevealObligation
     Parun.Codec.RevealObligationSpec
     Parun.Codec.RevealSpec
+    Parun.Codec.RevealTiming
+    Parun.Codec.RevealTimingSpec
     Parun.Codec.RevealWindow
     Parun.Codec.RevealWindowSpec
     Parun.Codec.RollDie
@@ -2537,7 +2545,9 @@ library types
     Parun.Types.Draw
     Parun.Types.DrawCountR
     Parun.Types.DrawCountRewrite
+    Parun.Types.DrawnUnder
     Parun.Types.DrawR
+    Parun.Types.DrawReveal
     Parun.Types.DrawRewrite
     Parun.Types.Drew
     Parun.Types.DungeonRoom
@@ -2915,7 +2925,9 @@ library types
     Parun.Types.Reveal
     Parun.Types.RevealCause
     Parun.Types.Revealed
+    Parun.Types.RevealedThisWay
     Parun.Types.RevealObligation
+    Parun.Types.RevealTiming
     Parun.Types.RevealWindow
     Parun.Types.RollAdjustment
     Parun.Types.RollDie

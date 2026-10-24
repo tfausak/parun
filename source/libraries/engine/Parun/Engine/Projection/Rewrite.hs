@@ -229,6 +229,7 @@ import qualified Parun.Types.RequireAttack as RequireAttack
 import qualified Parun.Types.RequireBlock as RequireBlock
 import qualified Parun.Types.RestrictedCreatures as RestrictedCreatures
 import qualified Parun.Types.Reveal as Reveal
+import qualified Parun.Types.RevealedThisWay as RevealedThisWay
 import qualified Parun.Types.RollDie as RollDie
 import qualified Parun.Types.RuleAbilities as RuleAbilities
 import qualified Parun.Types.SacrificeAnyNumber as SacrificeAnyNumber
@@ -571,7 +572,7 @@ rewritePlayerEffect pairs effect = case effect of
   PlayerEffect.AdditionalSurveilCards _ -> effect
   PlayerEffect.CantGainLife -> effect
   PlayerEffect.CantLoseLife -> effect
-  PlayerEffect.RevealsFirstDraw _ -> effect
+  PlayerEffect.RevealsDraw _ -> effect
   PlayerEffect.Precluded _ -> effect
   PlayerEffect.Shows _ -> effect
 
@@ -1827,7 +1828,7 @@ rewriteEntryRewrite pairs rewrite = case rewrite of
   EntryRewrite.ChooseColors {} -> rewrite
   EntryRewrite.ChooseBasicLandType -> rewrite
   EntryRewrite.ChooseCreatureType -> rewrite
-  EntryRewrite.ChoosePlayer -> rewrite
+  EntryRewrite.ChoosePlayer _ -> rewrite
   -- CR 702.155b's offer is a range of NUMBERS, read off the entering Saga's own
   -- chapter symbols (CR 714.2d), so the rewrite prints no word either.
   EntryRewrite.ReadAhead -> rewrite
@@ -2057,7 +2058,7 @@ rewriteTriggerCondition pairs condition = case condition of
   TriggerCondition.OpponentLostLifeDuringYourTurn -> condition
   TriggerCondition.SelfCycled -> condition
   TriggerCondition.SelfRevealedForMiracle -> condition
-  TriggerCondition.RevealedThisWay f -> TriggerCondition.RevealedThisWay (Filter.rewrite pairs f)
+  TriggerCondition.RevealedThisWay r -> TriggerCondition.RevealedThisWay r {RevealedThisWay.card = Filter.rewrite pairs (RevealedThisWay.card r)}
   TriggerCondition.SelfDiscarded -> condition
   TriggerCondition.SelfExiledForMadness -> condition
   TriggerCondition.SelfCast -> condition

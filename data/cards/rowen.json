@@ -30,9 +30,12 @@
       "playerAbilities": [
         {
           "effect": {
-            "type": "RevealsFirstDraw",
+            "type": "RevealsDraw",
             "value": {
-              "type": "Mandatory"
+              "nth": 1,
+              "obligation": {
+                "type": "Mandatory"
+              }
             }
           },
           "scope": {
@@ -45,21 +48,23 @@
           "condition": {
             "type": "RevealedThisWay",
             "value": {
-              "type": "And",
-              "value": [
-                {
-                  "type": "HasSupertype",
-                  "value": {
-                    "type": "Basic"
+              "card": {
+                "type": "And",
+                "value": [
+                  {
+                    "type": "HasSupertype",
+                    "value": {
+                      "type": "Basic"
+                    }
+                  },
+                  {
+                    "type": "HasCardType",
+                    "value": {
+                      "type": "Land"
+                    }
                   }
-                },
-                {
-                  "type": "HasCardType",
-                  "value": {
-                    "type": "Land"
-                  }
-                }
-              ]
+                ]
+              }
             }
           },
           "modal": {

@@ -30,9 +30,12 @@
       "playerAbilities": [
         {
           "effect": {
-            "type": "RevealsFirstDraw",
+            "type": "RevealsDraw",
             "value": {
-              "type": "Mandatory"
+              "nth": 1,
+              "obligation": {
+                "type": "Mandatory"
+              }
             }
           },
           "scope": {
@@ -45,9 +48,11 @@
           "condition": {
             "type": "RevealedThisWay",
             "value": {
-              "type": "HasCardType",
-              "value": {
-                "type": "Creature"
+              "card": {
+                "type": "HasCardType",
+                "value": {
+                  "type": "Creature"
+                }
               }
             }
           },

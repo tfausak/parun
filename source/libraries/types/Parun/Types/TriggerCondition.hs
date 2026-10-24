@@ -33,6 +33,7 @@ import qualified Parun.Types.PlayerAttacksWith as PlayerAttacksWith
 import qualified Parun.Types.PlayerDrawsNthCard as PlayerDrawsNthCard
 import qualified Parun.Types.PlayerRelation as PlayerRelation
 import qualified Parun.Types.PlaysLand as PlaysLand
+import qualified Parun.Types.RevealedThisWay as RevealedThisWay
 import qualified Parun.Types.RoomIndex as RoomIndex
 import qualified Parun.Types.SelfCountersReached as SelfCountersReached
 import qualified Parun.Types.SelfCountersRemoved as SelfCountersRemoved
@@ -127,7 +128,7 @@ data TriggerCondition
     SelfRevealedForMiracle
   | -- | CR 603.11 / 607.2h: "whenever you reveal a [quality] card this way" --
     -- the triggered half linked to the bearer's draw-time reveal (Rowen).
-    RevealedThisWay (Filter.Filter Keyword.Keyword)
+    RevealedThisWay RevealedThisWay.RevealedThisWay
   | -- | CR 701.9a: "when you discard this card" (Bartered Cow). Self-scoped.
     SelfDiscarded
   | -- | CR 702.35a: "when this card is exiled this way" -- madness's triggered
