@@ -1458,7 +1458,7 @@ cleopatraSpec s registry =
 --   * CONTROL, not ownership. The Ogre Sentry is BOB's card under alice's
 --     control when it dies, so CR 110.2a's "unless the effect states otherwise"
 --     is observable: "under your control" hands it to alice, while
---     EntryRiders.underOwner would hand it to bob. The Goblin Piker, which alice
+--     EntryRiders.under as Owner would hand it to bob. The Goblin Piker, which alice
 --     owns, cannot tell those apart on its own.
 --
 --   * "YOU control no creatures", not "no creatures". Bob's Hill Giant is on the

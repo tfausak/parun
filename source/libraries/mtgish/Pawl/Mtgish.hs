@@ -1036,7 +1036,7 @@ effects context n = case Node.tag n of
       ObjectRef.InSlot s
         | s == Oracle.Target.selfSlot -> [shield Nothing]
         | otherwise -> [shield (Just (Filter.IsBound s))]
-      _ -> [Effect.ForEach ForEach.MkForEach {ForEach.ref = ref, ForEach.members = LoopMembers.Every, ForEach.slot = regenerated, ForEach.body = Seq.singleton (shield (Just (Filter.IsBound regenerated))), ForEach.individually = False, ForEach.payGate = Nothing}]
+      _ -> [Effect.ForEach ForEach.MkForEach {ForEach.ref = ref, ForEach.members = LoopMembers.Every, ForEach.slot = regenerated, ForEach.body = Seq.singleton (shield (Just (Filter.IsBound regenerated))), ForEach.individually = False, ForEach.payGate = Nothing, ForEach.startingWith = Nothing}]
   "PutCounters" -> do
     actions <- Node.arguments n >>= traverse Node.node
     fmap concat (traverse (counters context) actions)

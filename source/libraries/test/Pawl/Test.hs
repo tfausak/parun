@@ -294,6 +294,7 @@ import qualified Pawl.Codec.EntersWithSpec
 import qualified Pawl.Codec.EntrantSpec
 import qualified Pawl.Codec.EntryAttackSpec
 import qualified Pawl.Codec.EntryBlockSpec
+import qualified Pawl.Codec.EntryControllerSpec
 import qualified Pawl.Codec.EntryFlipSpec
 import qualified Pawl.Codec.EntryOptionSpec
 import qualified Pawl.Codec.EntryPriceSpec
@@ -1200,6 +1201,7 @@ spec s registry = do
   Pawl.Codec.EntrantSpec.spec s
   Pawl.Codec.EntryAttackSpec.spec s
   Pawl.Codec.EntryBlockSpec.spec s
+  Pawl.Codec.EntryControllerSpec.spec s
   Pawl.Codec.EntryFlipSpec.spec s
   Pawl.Codec.EntryOptionSpec.spec s
   Pawl.Codec.EntryPriceSpec.spec s

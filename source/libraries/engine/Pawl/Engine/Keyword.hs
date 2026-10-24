@@ -98,6 +98,7 @@ import qualified Pawl.Types.Effect as Effect
 import qualified Pawl.Types.Emerge as Emerge
 import qualified Pawl.Types.EndingStep as EndingStep
 import qualified Pawl.Types.EntryAttack as EntryAttack
+import qualified Pawl.Types.EntryController as EntryController
 import qualified Pawl.Types.EntryR as EntryR
 import qualified Pawl.Types.EntryRewrite as EntryRewrite
 import qualified Pawl.Types.EntryRiders as EntryRiders
@@ -1008,7 +1009,7 @@ transmute cost = searchForSameManaValue (cost {Cost.components = Cost.components
 -- could not otherwise refer to -- and the materials component binds nothing.
 --
 -- THE RETURN names Zone.Exile as its origin (CR 113.6m) and rides
--- EntryRiders.transformed and EntryRiders.underOwner, which are rule 702.167a's
+-- EntryRiders.transformed and EntryRiders.under's Owner, which are rule 702.167a's
 -- "transformed under its owner's control".
 craft :: Craft.Craft Keyword -> ActivatedAbility Card (GrantedAbility.GrantedAbility Card)
 craft spec =
@@ -1019,7 +1020,7 @@ craft spec =
             { MoveToZone.ref = ObjectRef.InSlot Binding.exiledCard,
               MoveToZone.zone = Zone.Battlefield,
               MoveToZone.riders =
-                EntryRiders.defaultValue {EntryRiders.transformed = True, EntryRiders.underOwner = True},
+                EntryRiders.defaultValue {EntryRiders.transformed = True, EntryRiders.under = EntryController.Owner},
               MoveToZone.slot = Nothing,
               MoveToZone.origin = Just Zone.Exile,
               MoveToZone.placement = LibraryPlacement.defaultValue,
@@ -1761,7 +1762,8 @@ encore cost =
               -- CR 608.2f's first sentence: one action over the opponents, so the
               -- copies enter together (CR 603.6a).
               ForEach.individually = False,
-              ForEach.payGate = Nothing
+              ForEach.payGate = Nothing,
+              ForEach.startingWith = Nothing
             }
       hasted =
         Effect.ModifyTarget
@@ -6182,7 +6184,8 @@ myriad =
               -- CR 608.2f's first sentence: one action over the opponents, so rule
               -- 702.116a's tokens all enter at the same time (CR 603.6a).
               ForEach.individually = False,
-              ForEach.payGate = Nothing
+              ForEach.payGate = Nothing,
+              ForEach.startingWith = Nothing
             }
       arm =
         Effect.ArmDelayedTrigger
@@ -7201,7 +7204,7 @@ undying = returns CounterKind.PlusOnePlusOne
 -- effect, so the permanent is never on the battlefield without it -- for persist,
 -- the difference between a 2/2 coming back as a 1/1 and one that briefly was not.
 --
--- `underOwner` is rule 702.79a's "under its owner's control", which CR 110.2a
+-- `under`'s Owner is rule 702.79a's "under its owner's control", which CR 110.2a
 -- otherwise answers with the ability's controller: a permanent stolen at layer 2
 -- dies under the thief's control and still comes back to its owner.
 returns :: CounterKind.CounterKind Keyword.Keyword -> TriggeredAbility Card (GrantedAbility.GrantedAbility Card)
@@ -7211,7 +7214,7 @@ returns kind =
           ( MoveToZone.MkMoveToZone
               (ObjectRef.InSlot Binding.became)
               Zone.Battlefield
-              EntryRiders.defaultValue {EntryRiders.counters = Map.singleton kind (Quantity.Literal 1), EntryRiders.underOwner = True}
+              EntryRiders.defaultValue {EntryRiders.counters = Map.singleton kind (Quantity.Literal 1), EntryRiders.under = EntryController.Owner}
               Nothing
               Nothing
               LibraryPlacement.defaultValue
@@ -7363,7 +7366,7 @@ paidTokenCopies keyword quantity exceptions ordinal =
 -- Nothing is bound: unlike undying and persist this never touches the permanent
 -- that died, so the ability is indifferent to the CR 400.7 incarnation split. CR
 -- 111.2 gives the tokens to the ability's controller, which is why
--- EntryRiders.underOwner is inert under a Create.
+-- EntryRiders.under is inert under a Create.
 --
 -- THE TOKEN IS MINTED HERE, not carried in card data: its characteristics are
 -- printed in the comprehensive rules, and CR 111.3 makes rule 702.135a's own
@@ -9439,7 +9442,7 @@ championLeaves =
           ( MoveToZone.MkMoveToZone
               (ObjectRef.EachCardInExiledPile (EachCardInExiledPile.MkEachCardInExiledPile ExiledPile.OwnAbilities Nothing))
               Zone.Battlefield
-              championRiders {EntryRiders.underOwner = True}
+              championRiders {EntryRiders.under = EntryController.Owner}
               Nothing
               Nothing
               LibraryPlacement.defaultValue
@@ -9448,7 +9451,7 @@ championLeaves =
    in Mint.trigger TriggerCondition.SelfLeavesTheBattlefield (Seq.singleton effect)
 
 -- The riders both halves of rule 702.72a write: nothing stated. The return
--- overrides `underOwner`, CR 702.72a's "under its owner's control".
+-- overrides `under` with Owner, CR 702.72a's "under its owner's control".
 championRiders :: EntryRiders.EntryRiders Quantity.Quantity ability
 championRiders =
   EntryRiders.defaultValue

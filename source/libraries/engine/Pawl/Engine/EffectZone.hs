@@ -363,7 +363,7 @@ zonesFunctionedAgainst itself delayed effect = case effect of
   -- states, and CR 113.6m reads it. The loop's own reference names the members
   -- and is never "the object it's on", so only the body can answer at all. No
   -- card in the pool writes such a body.
-  Effect.ForEach (ForEach.MkForEach _ _ _ body _ _) -> foldMap (zonesFunctionedAgainst itself delayed) body
+  Effect.ForEach (ForEach.MkForEach _ _ _ body _ _ _) -> foldMap (zonesFunctionedAgainst itself delayed) body
   Effect.ForEachNumber (ForEachNumber.MkForEachNumber _ _ body) -> foldMap (zonesFunctionedAgainst itself delayed) body
   Effect.Repeat (Repeat.MkRepeat _ body _) -> foldMap (zonesFunctionedAgainst itself delayed) body
   Effect.RepeatIf (RepeatIf.MkRepeatIf process _ ifHolds) -> foldMap (zonesFunctionedAgainst itself delayed) (process <> ifHolds)

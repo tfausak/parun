@@ -542,6 +542,10 @@ armingTargetSlots card =
           ( fmap ActivatedAbility.modal (Face.activatedAbilities card)
               <> fmap TriggeredAbility.modal (Face.triggeredAbilities card)
           )
+          -- A GRANTED arming ability's, whose quoted text is this card's too:
+          -- Endless Whispers' "choose target opponent".
+          <> fmap (Map.keysSet . Modal.allTargetSlots . ActivatedAbility.modal) (grantedActivatedAbilities card)
+          <> fmap (Map.keysSet . Modal.allTargetSlots . TriggeredAbility.modal) (grantedTriggeredAbilities card)
     )
 
 -- The other half of CR 603.7c's captured environment: the CR 603.2 event slots a
@@ -564,6 +568,11 @@ armingEventSlots card =
     ( fmap
         (\ability -> Set.union (Event.eventBindingSlots (TriggeredAbility.condition ability)) (Event.eventBindingSlotsSometimes (TriggeredAbility.condition ability)))
         (Face.triggeredAbilities card)
+        -- And a granted trigger's: Endless Whispers' quoted dies trigger names
+        -- `became` for its delayed return.
+        <> fmap
+          (\ability -> Set.union (Event.eventBindingSlots (TriggeredAbility.condition ability)) (Event.eventBindingSlotsSometimes (TriggeredAbility.condition ability)))
+          (grantedTriggeredAbilities card)
     )
 
 -- The third half: the reserved slot an ACTIVATED arming ability's own cost

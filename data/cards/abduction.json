@@ -111,7 +111,9 @@
                             "value": "became"
                           },
                           "riders": {
-                            "underOwner": true
+                            "under": {
+                              "type": "Owner"
+                            }
                           },
                           "zone": {
                             "type": "Battlefield"

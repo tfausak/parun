@@ -636,6 +636,8 @@ library codec
     Pawl.Codec.EntryAttackSpec
     Pawl.Codec.EntryBlock
     Pawl.Codec.EntryBlockSpec
+    Pawl.Codec.EntryController
+    Pawl.Codec.EntryControllerSpec
     Pawl.Codec.EntryFlip
     Pawl.Codec.EntryFlipSpec
     Pawl.Codec.EntryOption
@@ -2552,6 +2554,7 @@ library types
     Pawl.Types.Entry
     Pawl.Types.EntryAttack
     Pawl.Types.EntryBlock
+    Pawl.Types.EntryController
     Pawl.Types.EntryFlip
     Pawl.Types.EntryOption
     Pawl.Types.EntryPrice

@@ -6,6 +6,7 @@ import qualified Data.Typeable as Typeable
 import qualified Pawl.Codec.CounterKind as CounterKind
 import qualified Pawl.Codec.EntryAttack as EntryAttack
 import qualified Pawl.Codec.EntryBlock as EntryBlock
+import qualified Pawl.Codec.EntryController as EntryController
 import qualified Pawl.Codec.FaceDownState as FaceDownState
 import qualified Pawl.Codec.Keyword as Keyword
 import qualified Pawl.Codec.Modification as Modification
@@ -42,7 +43,7 @@ codec abilityCodec = Fields.object $ do
   blocking <- Fields.defaulted "blocking" (EntryRiders.blocking EntryRiders.defaultValue) (Common.maybe EntryBlock.codec) EntryRiders.blocking
   transformed <- Fields.defaulted "transformed" (EntryRiders.transformed EntryRiders.defaultValue) Common.boolean EntryRiders.transformed
   counters <- Fields.defaulted "counters" (EntryRiders.counters EntryRiders.defaultValue) (Common.keyedList counter) EntryRiders.counters
-  underOwner <- Fields.defaulted "underOwner" (EntryRiders.underOwner EntryRiders.defaultValue) Common.boolean EntryRiders.underOwner
+  under <- Fields.defaulted "under" (EntryRiders.under EntryRiders.defaultValue) EntryController.codec EntryRiders.under
   exiledFaceDown <- Fields.defaulted "exiledFaceDown" (EntryRiders.exiledFaceDown EntryRiders.defaultValue) Common.boolean EntryRiders.exiledFaceDown
   attachedTo <- Fields.defaulted "attachedTo" (EntryRiders.attachedTo EntryRiders.defaultValue) (Common.maybe SlotName.codec) EntryRiders.attachedTo
   faceDown <- Fields.defaulted "faceDown" (EntryRiders.faceDown EntryRiders.defaultValue) (Common.maybe (FaceDownState.codec abilityCodec)) EntryRiders.faceDown
@@ -55,7 +56,7 @@ codec abilityCodec = Fields.object $ do
         EntryRiders.blocking = blocking,
         EntryRiders.transformed = transformed,
         EntryRiders.counters = counters,
-        EntryRiders.underOwner = underOwner,
+        EntryRiders.under = under,
         EntryRiders.exiledFaceDown = exiledFaceDown,
         EntryRiders.attachedTo = attachedTo,
         EntryRiders.faceDown = faceDown,

@@ -1,0 +1,30 @@
+{
+  "description": "CR 110.2a / 608.2c whole card: Thieves' Auction exiles every nontoken permanent, then starting with alice each player puts one of the exiled cards onto the battlefield tapped under their own control, round after round until none is left",
+  "note": "Three seats so each chooser is a different player from the owner of what they take: alice takes bob's Hill Giant, bob takes alice's Grizzly Bears, carol takes bob's Forest, and the second round's lone Island goes to alice. Carol's Goblin Piker token is never exiled.",
+  "board": {"active": "alice", "step": "PrecombatMain", "seats": [
+    {"name": "alice", "manaPool": "RRRRRRR", "battlefield": [{"card": "Grizzly Bears", "label": "bears"}], "hand": [{"card": "Thieves' Auction", "label": "auction"}], "library": [{"card": "Swamp"}, {"card": "Swamp"}, {"card": "Swamp"}]},
+    {"name": "bob", "battlefield": [{"card": "Hill Giant", "label": "giant"}, {"card": "Forest", "label": "forest"}], "library": [{"card": "Swamp"}, {"card": "Swamp"}, {"card": "Swamp"}]},
+    {"name": "carol", "battlefield": [{"card": "Island", "label": "island"}, {"card": "Goblin Piker", "label": "piker", "token": true}], "library": [{"card": "Swamp"}, {"card": "Swamp"}, {"card": "Swamp"}]}
+  ]},
+  "timeline": [
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "do": {"Cast": {"object": "$auction"}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "do": "Pass"},
+    {"turn": 1, "step": "PrecombatMain", "player": "bob", "do": "Pass"},
+    {"turn": 1, "step": "PrecombatMain", "player": "carol", "do": "Pass"},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "do": {"Answer": {"prompt": "ChooseCardFromAmong", "with": "Hill Giant"}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "bob", "do": {"Answer": {"prompt": "ChooseCardFromAmong", "with": "Grizzly Bears"}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "carol", "do": {"Answer": {"prompt": "ChooseCardFromAmong", "with": "Forest"}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "check": {"Count": {"player": "alice", "zone": "Battlefield", "card": "Hill Giant", "count": 1}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "check": {"Count": {"player": "bob", "zone": "Battlefield", "card": "Grizzly Bears", "count": 1}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "check": {"Count": {"player": "carol", "zone": "Battlefield", "card": "Forest", "count": 1}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "check": {"Count": {"player": "alice", "zone": "Battlefield", "card": "Island", "count": 1}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "check": {"Count": {"player": "bob", "zone": "Battlefield", "card": "Hill Giant", "count": 0}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "check": {"Count": {"player": "alice", "zone": "Battlefield", "card": "Grizzly Bears", "count": 0}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "check": {"Tapped": {"object": "Hill Giant", "tapped": true}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "check": {"Tapped": {"object": "Grizzly Bears", "tapped": true}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "check": {"Tapped": {"object": "Forest", "tapped": true}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "check": {"Tapped": {"object": "Island", "tapped": true}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "check": {"Count": {"player": "carol", "zone": "Battlefield", "card": "Goblin Piker", "count": 1}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "check": {"View": {"of": "Zone", "player": "bob", "zone": "Exile", "is": []}}}
+  ]
+}

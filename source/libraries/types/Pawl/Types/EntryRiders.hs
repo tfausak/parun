@@ -5,9 +5,12 @@ import qualified Data.Sequence as Seq
 import qualified Pawl.Types.CounterKind as CounterKind
 import qualified Pawl.Types.EntryAttack as EntryAttack
 import qualified Pawl.Types.EntryBlock as EntryBlock
+import qualified Pawl.Types.EntryController as EntryController
 import qualified Pawl.Types.FaceDownState as FaceDownState
 import qualified Pawl.Types.Keyword as Keyword
 import qualified Pawl.Types.Modification as Modification
+import qualified Pawl.Types.PlayerRef as PlayerRef
+import qualified Pawl.Types.PlayerRelation as PlayerRelation
 import qualified Pawl.Types.SlotName as SlotName
 import qualified Pawl.Types.TapState as TapState
 
@@ -24,7 +27,7 @@ import qualified Pawl.Types.TapState as TapState
 --
 -- Each rider is meaningful only in the zone its own rule scopes it to, and every
 -- other destination carries the default: `tapped`, `attacking`, `counters`,
--- `transformed` and `underOwner` are battlefield-only (CR 110.5d, CR 508.4, CR
+-- `transformed` and `under` are battlefield-only (CR 110.5d, CR 508.4, CR
 -- 122.6, CR 712.14a, CR 110.2a), `exiledFaceDown` is exile-only (CR 406.3),
 -- and `faceDown` is battlefield-only (CR 708.3).
 -- A card stating one on the wrong zone states something nothing reads, which
@@ -127,15 +130,16 @@ import qualified Pawl.Types.TapState as TapState
 -- carried. No effect in the pool names one, and the rule's own default -- the
 -- object's controller -- is what putCounters already uses.
 --
--- `underOwner` is CR 110.2a's "unless the effect states otherwise". Undying and
--- persist return the permanent "under its OWNER's control", where CR 110.2a
--- otherwise hands it to the player the effect instructed -- the ability's
--- controller, which for a dies trigger is whoever controlled the permanent as it
--- left (CR 603.3a) and need not be the owner. A Bool and not a PlayerId, because
--- the two readings are "the effect's controller" and "the owner", both of which
--- the funnel already knows; a card cannot write a PlayerId anyway. Inert under a
--- Create, and correctly so: CR 111.2 makes a token's owner the player who created
--- it, which is who CR 110.2a hands it to regardless.
+-- `under` is CR 110.2a: the player the effect INSTRUCTS to put the object
+-- onto the battlefield, which by default is the resolving controller and for a
+-- dies trigger whoever controlled the permanent as it left (CR 603.3a) --
+-- Endless Whispers' "that player puts", Thieves' Auction's "each player ...
+-- puts" -- or, where the effect states otherwise, each object's owner (undying's
+-- and persist's "under its OWNER's control"). The Instructed reference is
+-- read by Pawl.Engine.Resolve's MoveToZone arm; the funnel sees only Owner.
+-- Inert under a Create, and correctly so: CR 111.2 makes a token's owner the
+-- player who created it, which is who CR 110.2a hands it to regardless, and
+-- Create names that player in a field of its own. Pawl.EffectLintSpec fences it.
 -- `exiledFaceDown` is CR 406.3's "cards 'exiled face down'", said by the EFFECT
 -- that does the exiling -- Ignorant Bliss' "exile all cards from your hand face
 -- down" -- against that rule's face-up default. A rider and not a second write
@@ -222,7 +226,7 @@ data EntryRiders count ability = MkEntryRiders
     blocking :: Maybe EntryBlock.EntryBlock,
     transformed :: Bool,
     counters :: Map.Map (CounterKind.CounterKind Keyword.Keyword) count,
-    underOwner :: Bool,
+    under :: EntryController.EntryController,
     exiledFaceDown :: Bool,
     attachedTo :: Maybe SlotName.SlotName,
     faceDown :: Maybe (FaceDownState.FaceDownState ability),
@@ -254,7 +258,7 @@ defaultValue =
       blocking = Nothing,
       transformed = False,
       counters = Map.empty,
-      underOwner = False,
+      under = EntryController.Instructed (PlayerRef.Relative PlayerRelation.You),
       exiledFaceDown = False,
       attachedTo = Nothing,
       faceDown = Nothing,

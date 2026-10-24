@@ -188,6 +188,7 @@ import qualified Pawl.Types.Emerge as Emerge
 import qualified Pawl.Types.EntersWith as EntersWith
 import qualified Pawl.Types.EntryAttack as EntryAttack
 import qualified Pawl.Types.EntryBlock as EntryBlock
+import qualified Pawl.Types.EntryController as EntryController
 import qualified Pawl.Types.EntryFlip as EntryFlip
 import qualified Pawl.Types.EntryOption as EntryOption
 import qualified Pawl.Types.EntryPrice as EntryPrice
@@ -1564,7 +1565,12 @@ entryRewriteNames asking onAbility onEffect x = case x of
 
 entryRidersNames :: (Monoid r) => Asking r -> (count -> r) -> (ability -> r) -> EntryRiders.EntryRiders count ability -> r
 entryRidersNames asking onCount onAbility x = case x of
-  EntryRiders.MkEntryRiders _tapped attacking blocking _transformed counters _underOwner _exiledFaceDown attachedTo faceDown _noted characteristics -> foldMap (entryAttackNames asking) attacking <> foldMap (entryBlockNames asking) blocking <> foldMap (counterKindNames asking (keywordNames asking)) (Map.keys counters) <> foldMap onCount counters <> foldMap (slotNames asking) attachedTo <> foldMap (faceDownStateNames asking onAbility) faceDown <> foldMap (modificationNames asking onAbility) characteristics
+  EntryRiders.MkEntryRiders _tapped attacking blocking _transformed counters under _exiledFaceDown attachedTo faceDown _noted characteristics -> entryControllerNames asking under <> foldMap (entryAttackNames asking) attacking <> foldMap (entryBlockNames asking) blocking <> foldMap (counterKindNames asking (keywordNames asking)) (Map.keys counters) <> foldMap onCount counters <> foldMap (slotNames asking) attachedTo <> foldMap (faceDownStateNames asking onAbility) faceDown <> foldMap (modificationNames asking onAbility) characteristics
+
+entryControllerNames :: (Monoid r) => Asking r -> EntryController.EntryController -> r
+entryControllerNames asking x = case x of
+  EntryController.Instructed player -> playerRefNames asking player
+  EntryController.Owner -> mempty
 
 equipNames :: (Monoid r) => Asking r -> (keyword -> r) -> Equip.Equip keyword -> r
 equipNames asking onKeyword x = case x of
@@ -1666,7 +1672,7 @@ floatingCandidateNames asking x = case x of
 
 forEachNames :: (Monoid r) => Asking r -> (effect -> r) -> ForEach.ForEach effect -> r
 forEachNames asking onEffect x = case x of
-  ForEach.MkForEach ref _members slot body _individually payGate -> objectRefNames asking ref <> slotNames asking slot <> foldMap onEffect body <> foldMap (payGateNames asking) payGate
+  ForEach.MkForEach ref _members slot body _individually payGate startingWith -> objectRefNames asking ref <> slotNames asking slot <> foldMap onEffect body <> foldMap (payGateNames asking) payGate <> foldMap (playerRefNames asking) startingWith
 
 forEachNumberNames :: (Monoid r) => Asking r -> (effect -> r) -> ForEachNumber.ForEachNumber effect -> r
 forEachNumberNames asking onEffect x = case x of
