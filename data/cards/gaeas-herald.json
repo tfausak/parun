@@ -1,0 +1,59 @@
+{
+  "faces": [
+    {
+      "manaCost": [
+        {
+          "type": "Generic",
+          "value": 1
+        },
+        {
+          "type": "OfType",
+          "value": {
+            "type": "Colored",
+            "value": {
+              "type": "Green"
+            }
+          }
+        }
+      ],
+      "name": "Gaea's Herald",
+      "oracleText": "Creature spells can't be countered.",
+      "playerAbilities": [
+        {
+          "effect": {
+            "type": "CantBeCountered",
+            "value": {
+              "type": "HasCardType",
+              "value": {
+                "type": "Creature"
+              }
+            }
+          },
+          "scope": {
+            "type": "AnyPlayer"
+          }
+        }
+      ],
+      "power": {
+        "type": "Literal",
+        "value": 1
+      },
+      "toughness": {
+        "type": "Literal",
+        "value": 1
+      },
+      "typeLine": {
+        "subtypes": [
+          {
+            "type": "Elf"
+          }
+        ],
+        "types": [
+          {
+            "type": "Creature"
+          }
+        ]
+      }
+    }
+  ]
+}

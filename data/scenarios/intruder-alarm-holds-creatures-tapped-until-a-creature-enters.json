@@ -1,0 +1,148 @@
+{
+  "description": "CR 502.3 / 603.2 whole card: under Intruder Alarm creatures don't untap in their controllers' untap steps, and a creature entering untaps them all",
+  "note": "Bob's tapped Hill Giant stays tapped through his turn 2 untap step while his Mountain untaps; alice's Grizzly Bears entering on turn 3 untaps it.",
+  "board": {
+    "active": "alice",
+    "step": "PrecombatMain",
+    "seats": [
+      {
+        "name": "alice",
+        "battlefield": [
+          {
+            "card": "Intruder Alarm",
+            "label": "alarm"
+          },
+          {
+            "card": "Forest",
+            "label": "f1"
+          },
+          {
+            "card": "Forest",
+            "label": "f2"
+          }
+        ],
+        "hand": [
+          {
+            "card": "Grizzly Bears",
+            "label": "bears"
+          }
+        ],
+        "library": [
+          {
+            "card": "Island"
+          },
+          {
+            "card": "Island"
+          },
+          {
+            "card": "Island"
+          },
+          {
+            "card": "Island"
+          }
+        ]
+      },
+      {
+        "name": "bob",
+        "battlefield": [
+          {
+            "card": "Hill Giant",
+            "label": "giant",
+            "tapped": true
+          },
+          {
+            "card": "Mountain",
+            "label": "mountain",
+            "tapped": true
+          }
+        ],
+        "library": [
+          {
+            "card": "Island"
+          },
+          {
+            "card": "Island"
+          },
+          {
+            "card": "Island"
+          },
+          {
+            "card": "Island"
+          }
+        ]
+      }
+    ]
+  },
+  "timeline": [
+    {
+      "turn": 2,
+      "step": "Upkeep",
+      "player": "bob",
+      "check": {
+        "Tapped": {
+          "object": "$giant",
+          "tapped": true
+        }
+      }
+    },
+    {
+      "turn": 2,
+      "step": "Upkeep",
+      "player": "bob",
+      "check": {
+        "Tapped": {
+          "object": "$mountain",
+          "tapped": false
+        }
+      }
+    },
+    {
+      "turn": 3,
+      "step": "PrecombatMain",
+      "player": "alice",
+      "do": {
+        "Cast": {
+          "object": "$bears",
+          "mana": [
+            "$f1",
+            "$f2"
+          ]
+        }
+      }
+    },
+    {
+      "turn": 3,
+      "step": "PrecombatMain",
+      "player": "alice",
+      "do": "Pass"
+    },
+    {
+      "turn": 3,
+      "step": "PrecombatMain",
+      "player": "alice",
+      "check": {
+        "Tapped": {
+          "object": "$giant",
+          "tapped": true
+        }
+      }
+    },
+    {
+      "turn": 3,
+      "step": "PrecombatMain",
+      "player": "alice",
+      "do": "Pass"
+    },
+    {
+      "turn": 3,
+      "step": "PrecombatMain",
+      "player": "alice",
+      "check": {
+        "Tapped": {
+          "object": "$giant",
+          "tapped": false
+        }
+      }
+    }
+  ]
+}

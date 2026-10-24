@@ -12,34 +12,6 @@ Each names the mtgish node the translator stops at, or what its rendering gets
 wrong. No missing Eighth Edition card's whole text is keywords, so
 `script/ingest` adds none of them.
 
-- Avatar of Hope: `Rule:CastEffect`
-- Blinding Angel: `Action:SkipNextCombatPhase`
-- Bribery: `Action:SearchPlayersLibrary`
-- Choke: `PermanentRule:DoesntUntapDuringControllersUntap`
-- Cinder Wall: `Action:CreateFutureTrigger`
-- Coastal Piracy: `Trigger:WhenACreatureDealsCombatDamageToAPlayer`
-- Cowardice: `Trigger:WhenAPermanentBecomesTheTargetOfASpellOrAbility`
-- Death Pit Offering: `Action:SacrificeEachPermanent`
-- Deathgazer: `Action:CreateFutureTrigger`
-- Defense Grid: `Players:Other`
-- Dehydration: `PermanentRule:DoesntUntapDuringControllersUntap`
-- Elvish Pioneer: `Action:PutACardFromHandOnBattlefield`
-- Emperor Crocodile: `Trigger:WhenAPlayerControlsNoPermanents`
-- Enrage: `LayerEffect:AdjustPTX`
-- Fecundity: `Action:PlayerMayAction`
-- Fertile Ground: `Trigger:WhenAPermanentIsTappedForMana`
-- Fungusaur: `Trigger:WhenAPermanentIsDealtDamage`
-- Gaea's Herald: `Rule:StackSpellsEffect`
-- Grave Pact: `Players:Other`
-- Guerrilla Tactics: `Rule:FromAnyZone`
-- Holy Day: `Action:CreatePreventDamageUntil`
-- Hunted Wumpus: `Action:EachPlayerMayAction`
-- Index: `Action:LookAtTheTopNumberCardsOfLibrary`
-- Intruder Alarm: `PermanentRule:DoesntUntapDuringControllersUntap`
-- Invisibility: `PermanentRule:CantBeBlockedExceptByDefenders`
-- Karma: `Player:Trigger_ThatPlayer`
-- Lesser Gargadon: `Action:SacrificeAPermanent`
-- Lhurgoyf: `CardsInGraveyards:IsCardtype`
 - Living Terrain: `StaticLayerEffect:SetPT`
 - Llanowar Behemoth: `Cost:TapAPermanent`
 - Mind Slash: `Action:RevealHandAndPlayerChoosesACardToDiscard`

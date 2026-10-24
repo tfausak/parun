@@ -1,0 +1,116 @@
+{
+  "description": "CR 500.11 / 510.2 whole card: the player Blinding Angel hits skips their next combat phase",
+  "note": "Bob's ready Hill Giant would be asked to attack on turn 2, an unscheduled prompt that fails the scenario, so turn 2 passing proves the combat phase was skipped. On turn 4 bob is asked again.",
+  "board": {
+    "active": "alice",
+    "step": "BeginningOfCombat",
+    "seats": [
+      {
+        "name": "alice",
+        "battlefield": [
+          {
+            "card": "Blinding Angel",
+            "label": "angel",
+            "ready": true
+          }
+        ],
+        "library": [
+          {
+            "card": "Island"
+          },
+          {
+            "card": "Island"
+          },
+          {
+            "card": "Island"
+          },
+          {
+            "card": "Island"
+          }
+        ]
+      },
+      {
+        "name": "bob",
+        "battlefield": [
+          {
+            "card": "Hill Giant",
+            "label": "giant",
+            "ready": true
+          }
+        ],
+        "library": [
+          {
+            "card": "Island"
+          },
+          {
+            "card": "Island"
+          },
+          {
+            "card": "Island"
+          },
+          {
+            "card": "Island"
+          }
+        ]
+      }
+    ]
+  },
+  "timeline": [
+    {
+      "turn": 1,
+      "step": "DeclareAttackers",
+      "player": "alice",
+      "do": {
+        "Attack": [
+          "$angel"
+        ]
+      }
+    },
+    {
+      "turn": 1,
+      "step": "DeclareBlockers",
+      "player": "bob",
+      "do": {
+        "Block": {}
+      }
+    },
+    {
+      "turn": 1,
+      "step": "PostcombatMain",
+      "player": "alice",
+      "check": {
+        "Life": {
+          "player": "bob",
+          "life": 18
+        }
+      }
+    },
+    {
+      "turn": 2,
+      "step": "PostcombatMain",
+      "player": "bob",
+      "check": {
+        "Life": {
+          "player": "alice",
+          "life": 20
+        }
+      }
+    },
+    {
+      "turn": 3,
+      "step": "DeclareAttackers",
+      "player": "alice",
+      "do": {
+        "Attack": []
+      }
+    },
+    {
+      "turn": 4,
+      "step": "DeclareAttackers",
+      "player": "bob",
+      "do": {
+        "Attack": []
+      }
+    }
+  ]
+}

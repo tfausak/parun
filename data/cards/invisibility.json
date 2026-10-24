@@ -1,0 +1,72 @@
+{
+  "faces": [
+    {
+      "combatRestrictions": [
+        {
+          "type": "CantBeBlockedBy",
+          "value": {
+            "affected": {
+              "type": "Matching",
+              "value": {
+                "type": "HasAttached",
+                "value": {
+                  "type": "IsSource"
+                }
+              }
+            },
+            "blockers": {
+              "type": "Not",
+              "value": {
+                "type": "HasSubtype",
+                "value": {
+                  "type": "Wall"
+                }
+              }
+            }
+          }
+        }
+      ],
+      "enchant": [
+        {
+          "pool": {
+            "type": "Creatures"
+          }
+        }
+      ],
+      "manaCost": [
+        {
+          "type": "OfType",
+          "value": {
+            "type": "Colored",
+            "value": {
+              "type": "Blue"
+            }
+          }
+        },
+        {
+          "type": "OfType",
+          "value": {
+            "type": "Colored",
+            "value": {
+              "type": "Blue"
+            }
+          }
+        }
+      ],
+      "name": "Invisibility",
+      "oracleText": "Enchant creature\nEnchanted creature can't be blocked except by Walls.",
+      "typeLine": {
+        "subtypes": [
+          {
+            "type": "Aura"
+          }
+        ],
+        "types": [
+          {
+            "type": "Enchantment"
+          }
+        ]
+      }
+    }
+  ]
+}

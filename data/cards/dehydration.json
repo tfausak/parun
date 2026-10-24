@@ -1,0 +1,55 @@
+{
+  "faces": [
+    {
+      "enchant": [
+        {
+          "pool": {
+            "type": "Creatures"
+          }
+        }
+      ],
+      "manaCost": [
+        {
+          "type": "Generic",
+          "value": 3
+        },
+        {
+          "type": "OfType",
+          "value": {
+            "type": "Colored",
+            "value": {
+              "type": "Blue"
+            }
+          }
+        }
+      ],
+      "name": "Dehydration",
+      "oracleText": "Enchant creature (Target a creature as you cast this. This card enters attached to that creature.)\nEnchanted creature doesn't untap during its controller's untap step.",
+      "typeLine": {
+        "subtypes": [
+          {
+            "type": "Aura"
+          }
+        ],
+        "types": [
+          {
+            "type": "Enchantment"
+          }
+        ]
+      },
+      "untapRestrictions": [
+        {
+          "affected": {
+            "type": "Matching",
+            "value": {
+              "type": "HasAttached",
+              "value": {
+                "type": "IsSource"
+              }
+            }
+          }
+        }
+      ]
+    }
+  ]
+}

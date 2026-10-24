@@ -1,0 +1,43 @@
+{
+  "faces": [
+    {
+      "manaCost": [
+        {
+          "type": "Generic",
+          "value": 2
+        },
+        {
+          "type": "OfType",
+          "value": {
+            "type": "Colored",
+            "value": {
+              "type": "Green"
+            }
+          }
+        }
+      ],
+      "name": "Choke",
+      "oracleText": "Islands don't untap during their controllers' untap steps.",
+      "typeLine": {
+        "types": [
+          {
+            "type": "Enchantment"
+          }
+        ]
+      },
+      "untapRestrictions": [
+        {
+          "affected": {
+            "type": "Matching",
+            "value": {
+              "type": "HasSubtype",
+              "value": {
+                "type": "Island"
+              }
+            }
+          }
+        }
+      ]
+    }
+  ]
+}

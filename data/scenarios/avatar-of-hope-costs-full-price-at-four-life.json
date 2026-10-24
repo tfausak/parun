@@ -1,0 +1,77 @@
+{
+  "description": "CR 601.2f whole card: at 4 life Avatar of Hope's reduction does not apply",
+  "note": "The twin of the 3-life scenario, differing only in alice's life: WW no longer pays for it.",
+  "board": {
+    "active": "alice",
+    "step": "PrecombatMain",
+    "seats": [
+      {
+        "name": "alice",
+        "life": 4,
+        "manaPool": "WW",
+        "hand": [
+          {
+            "card": "Avatar of Hope",
+            "label": "avatar"
+          }
+        ],
+        "library": [
+          {
+            "card": "Island"
+          },
+          {
+            "card": "Island"
+          },
+          {
+            "card": "Island"
+          },
+          {
+            "card": "Island"
+          }
+        ]
+      },
+      {
+        "name": "bob",
+        "library": [
+          {
+            "card": "Island"
+          },
+          {
+            "card": "Island"
+          },
+          {
+            "card": "Island"
+          },
+          {
+            "card": "Island"
+          }
+        ]
+      }
+    ]
+  },
+  "timeline": [
+    {
+      "turn": 1,
+      "step": "PrecombatMain",
+      "player": "alice",
+      "refuse": {
+        "Cast": {
+          "object": "$avatar"
+        }
+      }
+    },
+    {
+      "turn": 1,
+      "step": "PrecombatMain",
+      "player": "alice",
+      "check": {
+        "Count": {
+          "player": "alice",
+          "zone": "Hand",
+          "card": "Avatar of Hope",
+          "count": 1
+        }
+      }
+    }
+  ]
+}

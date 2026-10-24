@@ -1,0 +1,117 @@
+{
+  "faces": [
+    {
+      "characteristicPT": {
+        "power": {
+          "type": "Count",
+          "value": {
+            "aggregation": {
+              "type": "Members"
+            },
+            "filter": {
+              "type": "HasCardType",
+              "value": {
+                "type": "Creature"
+              }
+            },
+            "scope": {
+              "type": "InZone",
+              "value": {
+                "player": {
+                  "type": "Relative",
+                  "value": {
+                    "type": "AnyPlayer"
+                  }
+                },
+                "zone": {
+                  "type": "Graveyard"
+                }
+              }
+            }
+          }
+        },
+        "toughness": {
+          "type": "Count",
+          "value": {
+            "aggregation": {
+              "type": "Members"
+            },
+            "filter": {
+              "type": "HasCardType",
+              "value": {
+                "type": "Creature"
+              }
+            },
+            "scope": {
+              "type": "InZone",
+              "value": {
+                "player": {
+                  "type": "Relative",
+                  "value": {
+                    "type": "AnyPlayer"
+                  }
+                },
+                "zone": {
+                  "type": "Graveyard"
+                }
+              }
+            }
+          }
+        }
+      },
+      "manaCost": [
+        {
+          "type": "Generic",
+          "value": 2
+        },
+        {
+          "type": "OfType",
+          "value": {
+            "type": "Colored",
+            "value": {
+              "type": "Green"
+            }
+          }
+        },
+        {
+          "type": "OfType",
+          "value": {
+            "type": "Colored",
+            "value": {
+              "type": "Green"
+            }
+          }
+        }
+      ],
+      "name": "Lhurgoyf",
+      "oracleText": "Lhurgoyf's power is equal to the number of creature cards in all graveyards and its toughness is equal to that number plus 1.",
+      "power": {
+        "type": "Star"
+      },
+      "toughness": {
+        "type": "Plus",
+        "value": {
+          "left": {
+            "type": "Literal",
+            "value": 1
+          },
+          "right": {
+            "type": "Star"
+          }
+        }
+      },
+      "typeLine": {
+        "subtypes": [
+          {
+            "type": "Lhurgoyf"
+          }
+        ],
+        "types": [
+          {
+            "type": "Creature"
+          }
+        ]
+      }
+    }
+  ]
+}

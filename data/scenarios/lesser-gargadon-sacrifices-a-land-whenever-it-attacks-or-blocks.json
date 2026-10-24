@@ -1,0 +1,206 @@
+{
+  "description": "CR 701.21a whole card: whenever Lesser Gargadon attacks or blocks, its controller sacrifices a land",
+  "note": "Alice blocks on turn 1 and attacks on turn 2, sacrificing a land of her choice each time.",
+  "board": {
+    "active": "bob",
+    "step": "BeginningOfCombat",
+    "seats": [
+      {
+        "name": "bob",
+        "battlefield": [
+          {
+            "card": "Gray Ogre",
+            "label": "ogre",
+            "ready": true
+          }
+        ],
+        "library": [
+          {
+            "card": "Island"
+          },
+          {
+            "card": "Island"
+          },
+          {
+            "card": "Island"
+          },
+          {
+            "card": "Island"
+          }
+        ]
+      },
+      {
+        "name": "alice",
+        "battlefield": [
+          {
+            "card": "Lesser Gargadon",
+            "label": "gargadon",
+            "ready": true
+          },
+          {
+            "card": "Mountain",
+            "label": "m1"
+          },
+          {
+            "card": "Mountain",
+            "label": "m2"
+          },
+          {
+            "card": "Forest",
+            "label": "forest"
+          }
+        ],
+        "library": [
+          {
+            "card": "Island"
+          },
+          {
+            "card": "Island"
+          },
+          {
+            "card": "Island"
+          },
+          {
+            "card": "Island"
+          }
+        ]
+      }
+    ]
+  },
+  "timeline": [
+    {
+      "turn": 1,
+      "step": "DeclareAttackers",
+      "player": "bob",
+      "do": {
+        "Attack": [
+          "$ogre"
+        ]
+      }
+    },
+    {
+      "turn": 1,
+      "step": "DeclareBlockers",
+      "player": "alice",
+      "do": {
+        "Block": {
+          "$gargadon": [
+            "$ogre"
+          ]
+        }
+      }
+    },
+    {
+      "turn": 1,
+      "step": "DeclareBlockers",
+      "player": "alice",
+      "do": {
+        "Answer": {
+          "prompt": "ChooseSacrifices",
+          "with": [
+            "$forest"
+          ]
+        }
+      }
+    },
+    {
+      "turn": 1,
+      "step": "PostcombatMain",
+      "player": "bob",
+      "check": {
+        "Count": {
+          "player": "bob",
+          "zone": "Graveyard",
+          "card": "Gray Ogre",
+          "count": 1
+        }
+      }
+    },
+    {
+      "turn": 1,
+      "step": "PostcombatMain",
+      "player": "bob",
+      "check": {
+        "Count": {
+          "player": "alice",
+          "zone": "Graveyard",
+          "card": "Forest",
+          "count": 1
+        }
+      }
+    },
+    {
+      "turn": 1,
+      "step": "PostcombatMain",
+      "player": "bob",
+      "check": {
+        "Count": {
+          "player": "alice",
+          "zone": "Battlefield",
+          "card": "Mountain",
+          "count": 2
+        }
+      }
+    },
+    {
+      "turn": 2,
+      "step": "DeclareAttackers",
+      "player": "alice",
+      "do": {
+        "Attack": [
+          "$gargadon"
+        ]
+      }
+    },
+    {
+      "turn": 2,
+      "step": "DeclareAttackers",
+      "player": "alice",
+      "do": {
+        "Answer": {
+          "prompt": "ChooseSacrifices",
+          "with": [
+            "$m1"
+          ]
+        }
+      }
+    },
+    {
+      "turn": 2,
+      "step": "PostcombatMain",
+      "player": "alice",
+      "check": {
+        "Count": {
+          "player": "alice",
+          "zone": "Graveyard",
+          "card": "Mountain",
+          "count": 1
+        }
+      }
+    },
+    {
+      "turn": 2,
+      "step": "PostcombatMain",
+      "player": "alice",
+      "check": {
+        "Count": {
+          "player": "alice",
+          "zone": "Battlefield",
+          "card": "Mountain",
+          "count": 1
+        }
+      }
+    },
+    {
+      "turn": 2,
+      "step": "PostcombatMain",
+      "player": "alice",
+      "check": {
+        "Life": {
+          "player": "bob",
+          "life": 14
+        }
+      }
+    }
+  ]
+}
