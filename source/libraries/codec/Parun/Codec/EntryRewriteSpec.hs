@@ -116,14 +116,14 @@ spec s = Spec.describe s "Parun.Codec.EntryRewrite" $ do
       (EntryRewrite.codec (GrantedAbility.codec Card.codec) (Effect.codec Card.codec (GrantedAbility.codec Card.codec)))
       EntryRewrite.ReadAhead
       " {\"type\":\"ReadAhead\"} "
-  -- CR 614.1c / 102.1: an as-enters player choice, payload-free because every
-  -- player in the game is the offer and no card narrows it.
-  Spec.it s "ChoosePlayer (Stuffy Doll)" $
+  -- CR 614.1c / 102.3: an as-enters player choice, narrowed by its relation --
+  -- Booby Trap's "choose an opponent".
+  Spec.it s "ChoosePlayer (Booby Trap)" $
     Common.assertCodec
       s
       (EntryRewrite.codec (GrantedAbility.codec Card.codec) (Effect.codec Card.codec (GrantedAbility.codec Card.codec)))
-      EntryRewrite.ChoosePlayer
-      " {\"type\":\"ChoosePlayer\"} "
+      (EntryRewrite.ChoosePlayer PlayerRelation.Opponent)
+      " {\"type\":\"ChoosePlayer\",\"value\":{\"type\":\"Opponent\"}} "
   -- CR 614.1c / 201.4a: an as-enters name choice, carrying the restriction on
   -- which cards' names may be chosen -- Null Chamber's "other than a basic land
   -- card name", which is a supertype and a card type together.

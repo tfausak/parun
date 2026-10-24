@@ -71,7 +71,10 @@
                 "type": "IsSource"
               },
               "rewrite": {
-                "type": "ChoosePlayer"
+                "type": "ChoosePlayer",
+                "value": {
+                  "type": "AnyPlayer"
+                }
               }
             }
           }

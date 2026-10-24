@@ -86,6 +86,7 @@ import qualified Parun.Types.DieResult as DieResult
 import qualified Parun.Types.DiscardCards as DiscardCards
 import qualified Parun.Types.DiscardCause as DiscardCause
 import qualified Parun.Types.Discarded as Discarded
+import qualified Parun.Types.DrawnUnder as DrawnUnder
 import qualified Parun.Types.Drew as Drew
 import qualified Parun.Types.EndingStep as EndingStep
 import qualified Parun.Types.Exploited as Exploited
@@ -145,7 +146,9 @@ import qualified Parun.Types.Quantity as Quantity.Type
 import qualified Parun.Types.Recipient as Recipient
 import qualified Parun.Types.Regenerability as Regenerability
 import qualified Parun.Types.RevealCause as RevealCause
+import qualified Parun.Types.RevealTiming as RevealTiming
 import qualified Parun.Types.Revealed as Revealed
+import qualified Parun.Types.RevealedThisWay as RevealedThisWay
 import qualified Parun.Types.RoomIndex as RoomIndex
 import qualified Parun.Types.SelfCountersReached as SelfCountersReached
 import qualified Parun.Types.SelfCountersRemoved as SelfCountersRemoved
@@ -1871,7 +1874,7 @@ representativeEvents cond =
         -- CR 702.94a's cause, so the event is one this condition genuinely
         -- admits; an Ordinary reveal would pin nothing.
         TriggerCondition.SelfRevealedForMiracle -> one (GameEvent.Revealed (Revealed.MkRevealed S.alice departed (RevealCause.ForMiracle (Cost.Type.MkCost {Cost.Type.mana = Nothing, Cost.Type.components = []})) S.emptyCharacteristics))
-        TriggerCondition.RevealedThisWay _ -> one (GameEvent.Revealed (Revealed.MkRevealed S.alice departed (RevealCause.AsDrawnUnder departed) S.emptyCharacteristics))
+        TriggerCondition.RevealedThisWay _ -> one (GameEvent.Revealed (Revealed.MkRevealed S.alice departed (RevealCause.AsDrawnUnder (DrawnUnder.MkDrawnUnder departed RevealTiming.AsDrawn)) S.emptyCharacteristics))
         -- BOTH causes, which is this condition's whole difference from
         -- SelfCycled above: CR 702.29a makes cycling a discard, so an ordinary
         -- discard and a cycle are each an event it genuinely admits, and an arm
@@ -2418,7 +2421,7 @@ everyTriggerCondition =
     TriggerCondition.OpponentLostLifeDuringYourTurn,
     TriggerCondition.SelfCycled,
     TriggerCondition.SelfRevealedForMiracle,
-    TriggerCondition.RevealedThisWay (Filter.Type.And []),
+    TriggerCondition.RevealedThisWay (RevealedThisWay.MkRevealedThisWay (Filter.Type.And []) Nothing),
     TriggerCondition.SelfDiscarded,
     TriggerCondition.SelfExiledForMadness,
     TriggerCondition.PlayerDiscards PlayerRelation.Opponent,

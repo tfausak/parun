@@ -16,6 +16,7 @@ import qualified Parun.Types.CostChange as CostChange
 import qualified Parun.Types.CostModifier as CostModifier
 import qualified Parun.Types.CostSubject as CostSubject
 import qualified Parun.Types.DamagePattern as DamagePattern
+import qualified Parun.Types.DrawReveal as DrawReveal
 import qualified Parun.Types.ExtraVotes as ExtraVotes
 import qualified Parun.Types.Filter as Filter
 import qualified Parun.Types.GameOutcome as GameOutcome
@@ -542,10 +543,10 @@ spec s = Spec.describe s "Parun.Codec.PlayerEffect" $ do
       PlayerEffect.codec
       (PlayerEffect.Shows (Shows.MkShows ShownCards.Hand Audience.Everyone))
       " {\"type\":\"Shows\",\"value\":{\"cards\":{\"type\":\"Hand\"},\"to\":{\"type\":\"Everyone\"}}} "
-  Spec.it s "RevealsFirstDraw, Rowen's reveal" $
+  Spec.it s "RevealsDraw, Rowen's reveal" $
     Common.assertCodec
       s
       PlayerEffect.codec
-      (PlayerEffect.RevealsFirstDraw RevealObligation.Mandatory)
-      " {\"type\":\"RevealsFirstDraw\",\"value\":{\"type\":\"Mandatory\"}} "
+      (PlayerEffect.RevealsDraw (DrawReveal.MkDrawReveal RevealObligation.Mandatory (Just 1)))
+      " {\"type\":\"RevealsDraw\",\"value\":{\"obligation\":{\"type\":\"Mandatory\"},\"nth\":1}} "
   Spec.it s "has a schema" $ Common.assertHasSchema s PlayerEffect.codec
