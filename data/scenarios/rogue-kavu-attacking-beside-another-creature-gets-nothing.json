@@ -1,0 +1,10 @@
+{
+  "description": "CR 506.5 whole card: Rogue Kavu attacking beside another creature does not trigger",
+  "note": "The same board as attacking alone, with the Grizzly Bears attacking too: no trigger, and bob takes 1 + 2.",
+  "board": {"active": "alice", "step": "BeginningOfCombat", "seats": [{"name": "alice", "battlefield": [{"card": "Rogue Kavu", "label": "kavu", "ready": true}, {"card": "Grizzly Bears", "label": "bears", "ready": true}], "library": [{"card": "Island"}, {"card": "Island"}, {"card": "Island"}, {"card": "Island"}]}, {"name": "bob", "library": [{"card": "Island"}, {"card": "Island"}, {"card": "Island"}, {"card": "Island"}]}]},
+  "timeline": [
+    {"turn": 1, "step": "DeclareAttackers", "player": "alice", "do": {"Attack": ["$kavu", "$bears"]}},
+    {"turn": 1, "step": "DeclareAttackers", "player": "alice", "check": {"PowerToughness": {"object": "$kavu", "power": 1, "toughness": 1}}},
+    {"turn": 1, "step": "EndOfCombat", "player": "alice", "check": {"Life": {"player": "bob", "life": 17}}}
+  ]
+}

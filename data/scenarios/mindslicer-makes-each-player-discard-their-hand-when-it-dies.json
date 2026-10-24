@@ -1,0 +1,14 @@
+{
+  "description": "CR 603.6c / 701.9a whole card: when Mindslicer dies, each player discards their hand",
+  "note": "Alice bolts her own Mindslicer; her two cards and bob's two go to their owners' graveyards.",
+  "board": {"active": "alice", "step": "PrecombatMain", "seats": [{"name": "alice", "manaPool": "R", "battlefield": [{"card": "Mindslicer", "label": "slicer"}], "hand": [{"card": "Lightning Bolt", "label": "bolt"}, {"card": "Grizzly Bears"}, {"card": "Island"}], "library": [{"card": "Island"}, {"card": "Island"}, {"card": "Island"}, {"card": "Island"}]}, {"name": "bob", "hand": [{"card": "Hill Giant"}, {"card": "Gray Ogre"}], "library": [{"card": "Island"}, {"card": "Island"}, {"card": "Island"}, {"card": "Island"}]}]},
+  "timeline": [
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "do": {"Cast": {"object": "$bolt", "targets": ["$slicer"]}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "do": "Pass"},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "do": "Pass"},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "check": {"View": {"of": "Zone", "player": "bob", "zone": "Hand", "is": []}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "check": {"View": {"of": "Zone", "player": "alice", "zone": "Hand", "is": []}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "check": {"Count": {"player": "bob", "zone": "Graveyard", "card": "Gray Ogre", "count": 1}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "check": {"Count": {"player": "alice", "zone": "Graveyard", "card": "Grizzly Bears", "count": 1}}}
+  ]
+}

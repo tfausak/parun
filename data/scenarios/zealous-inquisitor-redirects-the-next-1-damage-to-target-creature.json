@@ -1,0 +1,15 @@
+{
+  "description": "CR 614.9 whole card: Zealous Inquisitor's next 1 damage this turn is dealt to target creature instead",
+  "note": "Bob shocks the Inquisitor; in response alice points it at bob's Grizzly Bears, which takes 1 of the 2.",
+  "board": {"active": "bob", "step": "PrecombatMain", "seats": [{"name": "alice", "battlefield": [{"card": "Zealous Inquisitor", "label": "inquisitor"}, {"card": "Plains", "label": "p1"}, {"card": "Plains", "label": "p2"}], "library": [{"card": "Island"}, {"card": "Island"}, {"card": "Island"}, {"card": "Island"}]}, {"name": "bob", "manaPool": "R", "hand": [{"card": "Shock", "label": "shock"}], "battlefield": [{"card": "Grizzly Bears", "label": "bears"}], "library": [{"card": "Island"}, {"card": "Island"}, {"card": "Island"}, {"card": "Island"}]}]},
+  "timeline": [
+    {"turn": 1, "step": "PrecombatMain", "player": "bob", "do": {"Cast": {"object": "$shock", "targets": ["$inquisitor"]}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "do": {"Activate": {"object": "$inquisitor", "targets": ["$bears"], "mana": ["$p1", "$p2"]}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "do": "Pass"},
+    {"turn": 1, "step": "PrecombatMain", "player": "bob", "do": "Pass"},
+    {"turn": 1, "step": "PrecombatMain", "player": "bob", "do": "Pass"},
+    {"turn": 1, "step": "PrecombatMain", "player": "bob", "do": "Pass"},
+    {"turn": 1, "step": "PrecombatMain", "player": "bob", "check": {"Damage": {"object": "$inquisitor", "damage": 1}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "bob", "check": {"Damage": {"object": "$bears", "damage": 1}}}
+  ]
+}

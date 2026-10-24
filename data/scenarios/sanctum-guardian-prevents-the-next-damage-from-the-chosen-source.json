@@ -1,0 +1,15 @@
+{
+  "description": "CR 615.8 / 609.7a whole card: Sanctum Guardian is sacrificed to prevent the next damage a chosen source would deal to its target",
+  "note": "Bob's Hill Giant is blocked by alice's Grizzly Bears; the Guardian names the Bears and alice chooses the Giant, so the Bears take nothing and still deal 2.",
+  "board": {"active": "bob", "step": "BeginningOfCombat", "seats": [{"name": "alice", "battlefield": [{"card": "Sanctum Guardian", "label": "guardian"}, {"card": "Grizzly Bears", "label": "bears", "ready": true}], "library": [{"card": "Island"}, {"card": "Island"}, {"card": "Island"}, {"card": "Island"}]}, {"name": "bob", "battlefield": [{"card": "Hill Giant", "label": "giant", "ready": true}], "library": [{"card": "Island"}, {"card": "Island"}, {"card": "Island"}, {"card": "Island"}]}]},
+  "timeline": [
+    {"turn": 1, "step": "DeclareAttackers", "player": "bob", "do": {"Attack": ["$giant"]}},
+    {"turn": 1, "step": "DeclareBlockers", "player": "alice", "do": {"Block": {"$bears": ["$giant"]}}},
+    {"turn": 1, "step": "DeclareBlockers", "player": "alice", "do": {"Activate": {"object": "$guardian", "targets": ["$bears"]}}},
+    {"turn": 1, "step": "DeclareBlockers", "player": "alice", "do": "Pass"},
+    {"turn": 1, "step": "DeclareBlockers", "player": "alice", "do": {"Answer": {"prompt": "ChooseDamageSource", "with": "$giant"}}},
+    {"turn": 1, "step": "EndOfCombat", "player": "bob", "check": {"Damage": {"object": "$bears", "damage": 0}}},
+    {"turn": 1, "step": "EndOfCombat", "player": "bob", "check": {"Damage": {"object": "$giant", "damage": 2}}},
+    {"turn": 1, "step": "EndOfCombat", "player": "bob", "check": {"Count": {"player": "alice", "zone": "Graveyard", "card": "Sanctum Guardian", "count": 1}}}
+  ]
+}

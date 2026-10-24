@@ -1,0 +1,15 @@
+{
+  "description": "CR 603.2 / 603.10a whole card: Sengir Vampire gets a +1/+1 counter when a creature it dealt damage to this turn dies",
+  "note": "Bob's Gray Ogre, bolted before combat, dies undamaged by the Vampire and gives it nothing; his Giant Spider, which blocks it, gives it one.",
+  "board": {"active": "alice", "step": "PrecombatMain", "seats": [{"name": "alice", "manaPool": "R", "hand": [{"card": "Lightning Bolt", "label": "bolt"}], "battlefield": [{"card": "Sengir Vampire", "label": "sengir", "ready": true}], "library": [{"card": "Island"}, {"card": "Island"}, {"card": "Island"}, {"card": "Island"}]}, {"name": "bob", "battlefield": [{"card": "Gray Ogre", "label": "ogre", "ready": true}, {"card": "Giant Spider", "label": "spider", "ready": true}], "library": [{"card": "Island"}, {"card": "Island"}, {"card": "Island"}, {"card": "Island"}]}]},
+  "timeline": [
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "do": {"Cast": {"object": "$bolt", "targets": ["$ogre"]}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "do": "Pass"},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "check": {"Count": {"player": "bob", "zone": "Graveyard", "card": "Gray Ogre", "count": 1}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "check": {"Counters": {"object": "$sengir", "kind": {"type": "PlusOnePlusOne"}, "count": 0}}},
+    {"turn": 1, "step": "DeclareAttackers", "player": "alice", "do": {"Attack": ["$sengir"]}},
+    {"turn": 1, "step": "DeclareBlockers", "player": "bob", "do": {"Block": {"$spider": ["$sengir"]}}},
+    {"turn": 1, "step": "EndOfCombat", "player": "alice", "check": {"Count": {"player": "bob", "zone": "Graveyard", "card": "Giant Spider", "count": 1}}},
+    {"turn": 1, "step": "EndOfCombat", "player": "alice", "check": {"Counters": {"object": "$sengir", "kind": {"type": "PlusOnePlusOne"}, "count": 1}}}
+  ]
+}

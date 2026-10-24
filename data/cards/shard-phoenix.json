@@ -1,0 +1,187 @@
+{
+  "faces": [
+    {
+      "activatedAbilities": [
+        {
+          "cost": {
+            "components": [
+              {
+                "type": "SacrificeThis"
+              }
+            ],
+            "mana": []
+          },
+          "modal": {
+            "modes": [
+              {
+                "clauses": [
+                  {
+                    "effects": [
+                      {
+                        "type": "DealDamage",
+                        "value": {
+                          "parts": [
+                            {
+                              "quantity": {
+                                "type": "Literal",
+                                "value": 2
+                              },
+                              "ref": {
+                                "type": "EachMatching",
+                                "value": {
+                                  "type": "And",
+                                  "value": [
+                                    {
+                                      "type": "HasCardType",
+                                      "value": {
+                                        "type": "Creature"
+                                      }
+                                    },
+                                    {
+                                      "type": "Not",
+                                      "value": {
+                                        "type": "HasKeyword",
+                                        "value": {
+                                          "type": "Flying"
+                                        }
+                                      }
+                                    }
+                                  ]
+                                }
+                              }
+                            }
+                          ]
+                        }
+                      }
+                    ]
+                  }
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "cost": {
+            "mana": [
+              {
+                "type": "OfType",
+                "value": {
+                  "type": "Colored",
+                  "value": {
+                    "type": "Red"
+                  }
+                }
+              },
+              {
+                "type": "OfType",
+                "value": {
+                  "type": "Colored",
+                  "value": {
+                    "type": "Red"
+                  }
+                }
+              },
+              {
+                "type": "OfType",
+                "value": {
+                  "type": "Colored",
+                  "value": {
+                    "type": "Red"
+                  }
+                }
+              }
+            ]
+          },
+          "modal": {
+            "modes": [
+              {
+                "clauses": [
+                  {
+                    "effects": [
+                      {
+                        "type": "MoveToZone",
+                        "value": {
+                          "origin": {
+                            "type": "Graveyard"
+                          },
+                          "ref": {
+                            "type": "InSlot",
+                            "value": "self"
+                          },
+                          "zone": {
+                            "type": "Hand"
+                          }
+                        }
+                      }
+                    ]
+                  }
+                ]
+              }
+            ]
+          },
+          "restrictions": [
+            {
+              "type": "DuringPhase",
+              "value": {
+                "scope": {
+                  "type": "ControllersTurn"
+                },
+                "window": {
+                  "type": "Step",
+                  "value": {
+                    "type": "Beginning",
+                    "value": {
+                      "type": "Upkeep"
+                    }
+                  }
+                }
+              }
+            }
+          ]
+        }
+      ],
+      "keywords": [
+        {
+          "type": "Flying"
+        }
+      ],
+      "manaCost": [
+        {
+          "type": "Generic",
+          "value": 4
+        },
+        {
+          "type": "OfType",
+          "value": {
+            "type": "Colored",
+            "value": {
+              "type": "Red"
+            }
+          }
+        }
+      ],
+      "name": "Shard Phoenix",
+      "oracleText": "Flying (This creature can't be blocked except by creatures with flying or reach.)\nSacrifice this creature: It deals 2 damage to each creature without flying.\n{R}{R}{R}: Return this card from your graveyard to your hand. Activate only during your upkeep.",
+      "power": {
+        "type": "Literal",
+        "value": 2
+      },
+      "toughness": {
+        "type": "Literal",
+        "value": 2
+      },
+      "typeLine": {
+        "subtypes": [
+          {
+            "type": "Phoenix"
+          }
+        ],
+        "types": [
+          {
+            "type": "Creature"
+          }
+        ]
+      }
+    }
+  ]
+}
