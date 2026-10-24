@@ -14,9 +14,6 @@ Every expressible Ninth Edition card has been added to `data/cards/`.
 Each card is tracked by its issue and is added when that issue lands. Hardest
 first.
 
-- #5560: Booby Trap. The reveal covers only a player's first draw each turn and
-  can't be put on a chosen player, and a draw trigger can't read which card was
-  drawn.
 - #5561: Seedborn Muse. The untap step untaps only the active player's
   permanents, and every untap restriction's "its controller's untap step" has
   to stop holding in someone else's.
