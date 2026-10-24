@@ -137,7 +137,9 @@ import qualified Parun.Types.Discarded as Discarded
 import qualified Parun.Types.DrawCountR as DrawCountR
 import qualified Parun.Types.DrawCountRewrite as DrawCountRewrite
 import qualified Parun.Types.DrawR as DrawR
+import qualified Parun.Types.DrawReveal as DrawReveal
 import qualified Parun.Types.DrawRewrite as DrawRewrite
+import qualified Parun.Types.DrawnUnder as DrawnUnder
 import qualified Parun.Types.Drew as Drew
 import qualified Parun.Types.Duration as Duration
 import qualified Parun.Types.Effect as Effect.Type
@@ -247,6 +249,7 @@ import qualified Parun.Types.ReplacementCandidate as ReplacementCandidate
 import qualified Parun.Types.ReplacementEffect as ReplacementEffect
 import qualified Parun.Types.RevealCause as RevealCause
 import qualified Parun.Types.RevealObligation as RevealObligation
+import qualified Parun.Types.RevealTiming as RevealTiming
 import qualified Parun.Types.RevealWindow as RevealWindow
 import qualified Parun.Types.Revealed as Revealed
 import qualified Parun.Types.RoomHalf as RoomHalf
@@ -2653,15 +2656,16 @@ apply batch candidate event =
         Replacement.consume (ReplacementCandidate.identity candidate)
         State.modify' $ \g -> Game.recordChoice Chosen.Subtype (Game.acquisitionOf oid g) (const (Just picked)) oid g
         pure (Just event)
-      -- CR 614.1c: Stuffy Doll's as-enters player choice. The three arms above ask
-      -- unconditionally because rules 105.1, 305.6 and 205.3m fix their offers; this one
-      -- asks the BOARD who is available, so it can be elided in the one case those
-      -- three never reach -- a single player still in the game, where CR 102.1's
-      -- offer has one member and nothing is left to decide.
+      -- CR 614.1c: Stuffy Doll's and Booby Trap's as-enters player choice. The
+      -- three arms above ask unconditionally because rules 105.1, 305.6 and 205.3m
+      -- fix their offers; this one asks the BOARD who in the relation is
+      -- available, so it can be elided in the one case those three never reach --
+      -- an offer of one member, where nothing is left to decide (CR 102.2's lone
+      -- opponent).
       --
       -- Written to Object.chosenPlayers, NOT to the copiable snapshot -- see
       -- EntryRewrite.ChoosePlayer.
-      EntryRewrite.ChoosePlayer -> do
+      EntryRewrite.ChoosePlayer relation -> do
         gs <- State.get
         picked <- case Projection.controllerOf oid gs of
           -- Unreachable, and defensive for ChoiceOf's reason: the object is
@@ -2675,7 +2679,7 @@ apply batch candidate event =
           -- choose from is a board CR 104.2a has already ended the game on, and
           -- chooses nobody, the posture designateProtector takes for a battle
           -- with no legal protector.
-          Just controller -> Players.chooseOne controller oid Nothing (Players.offer controller gs PlayerRelation.AnyPlayer)
+          Just controller -> Players.chooseOne controller oid Nothing (Players.offer controller gs relation)
         Replacement.consume (ReplacementCandidate.identity candidate)
         let asEnters held = case Map.alter (const picked) PlayerChoice.AsEnters (Maybe.fromMaybe Map.empty held) of
               chosen | Map.null chosen -> Nothing
@@ -9832,7 +9836,7 @@ performDraw pid = do
             -- and Rowen's "the first card you draw each turn", asked off the
             -- ordinal this draw was just stamped with rather than off a second
             -- reading of the tally.
-            Nothing -> Monad.when (nth == 1) (offerDrawReveals pid drawn)
+            Nothing -> offerDrawReveals pid drawn nth RevealTiming.AsDrawn
           pure (Just drawn)
 
 -- CR 121.8's window: run `body` as the casting of a spell or the activation of
@@ -9867,17 +9871,17 @@ turnUpKeptDraws = do
   Monad.forM_ (foldMap Map.toAscList kept) $ \(drawn, nth) -> do
     gs <- State.get
     case Game.lookupObject drawn gs of
-      Just obj | nth == 1 && Object.zone obj == Zone.Hand -> offerDrawReveals (Object.owner obj) drawn
+      Just obj | Object.zone obj == Zone.Hand -> offerDrawReveals (Object.owner obj) drawn nth RevealTiming.OnceCast
       _ -> pure ()
 
--- CR 121.9: the reveals a player's first draw of a turn is offered "as it's
--- drawn" -- the drawn card's own miracle (CR 702.94a) and each draw-time reveal a
--- static ability states (CR 603.11, PlayerEffect.firstDrawReveals). The
--- first-draw gate is the caller's.
-offerDrawReveals :: PlayerId -> ObjectId -> Game ()
-offerDrawReveals pid drawn = do
-  offerMiracleReveal pid drawn
-  revealUnderStatics pid drawn
+-- CR 121.9: the reveals a player's @nth@ draw of a turn is offered "as it's
+-- drawn" -- the drawn card's own miracle on the first (CR 702.94a) and each
+-- draw-time reveal a static ability states for that draw (CR 603.11,
+-- PlayerEffect.drawReveals) -- at the timing CR 121.8 gives it.
+offerDrawReveals :: PlayerId -> ObjectId -> Natural -> RevealTiming.RevealTiming -> Game ()
+offerDrawReveals pid drawn nth timing = do
+  Monad.when (nth == 1) (offerMiracleReveal pid drawn)
+  revealUnderStatics pid drawn nth timing
 
 -- CR 603.11's static half: Rowen's "reveal the first card you draw each turn"
 -- and God-Eternal Kefnet's "you may reveal ... as you draw it", one reveal per
@@ -9888,18 +9892,18 @@ offerDrawReveals pid drawn = do
 --
 -- CR 701.20a's window is miracle's: until a player would next receive priority,
 -- then until a trigger the reveal caused leaves the stack (Engine.placeBorne).
-revealUnderStatics :: PlayerId -> ObjectId -> Game ()
-revealUnderStatics pid drawn = do
+revealUnderStatics :: PlayerId -> ObjectId -> Natural -> RevealTiming.RevealTiming -> Game ()
+revealUnderStatics pid drawn nth timing = do
   gs <- State.get
-  let rows = PlayerEffect.firstDrawReveals pid gs
+  let rows = PlayerEffect.drawReveals pid nth gs
       decider = Decide.deciderFor pid gs
-  Monad.when (elem RevealObligation.Optional (fmap snd rows)) (look pid drawn)
-  Monad.forM_ rows $ \(source, obligation) -> do
-    revealing <- case obligation of
+  Monad.when (elem RevealObligation.Optional (fmap (DrawReveal.obligation . snd) rows)) (look pid drawn)
+  Monad.forM_ rows $ \(source, drawReveal) -> do
+    revealing <- case DrawReveal.obligation drawReveal of
       RevealObligation.Mandatory -> pure True
-      RevealObligation.Optional -> (== OptionalDecision.Exercises) <$> Game.choose (Prompt.OfferedExtra decider pid source (PlayerEffect.Type.RevealsFirstDraw obligation))
+      RevealObligation.Optional -> (== OptionalDecision.Exercises) <$> Game.choose (Prompt.OfferedExtra decider pid source (PlayerEffect.Type.RevealsDraw drawReveal))
     Monad.when revealing $ do
-      reveal (RevealCause.AsDrawnUnder source) pid drawn
+      reveal (RevealCause.AsDrawnUnder (DrawnUnder.MkDrawnUnder source timing)) pid drawn
       stampReveal RevealWindow.UntilPriority drawn
 
 -- CR 702.94a's static half, and CR 121.9's window: "you may reveal this card from

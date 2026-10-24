@@ -50,5 +50,12 @@ spec s = Spec.describe s "Parun.Codec.PlayerScope" $ do
       PlayerScope.codec
       (PlayerScope.InRole TurnRole.Active)
       " {\"type\":\"InRole\",\"value\":{\"type\":\"Active\"}} "
+  -- Booby Trap's "the chosen player" (CR 607.2d).
+  Spec.it s "ChosenPlayer" $
+    Common.assertCodec
+      s
+      PlayerScope.codec
+      PlayerScope.ChosenPlayer
+      " {\"type\":\"ChosenPlayer\"} "
   Spec.it s "has a schema" $
     Common.assertHasSchema s PlayerScope.codec

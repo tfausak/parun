@@ -802,11 +802,13 @@ hasChosenNameTag = Text.pack "HasChosenName"
 -- ADMITTED positions -- a CR 701.23 search's filter, a CR 701.17 mill's tally,
 -- an EFFECT's ObjectRef, a mode's target slot, a player effect's own Filter,
 -- printed or stored, a static ability's affected set (Projection.affectedContext),
--- or a mode clause's own "if", which Parun.Engine.Resolve.gateHolds reads through
--- Resolve.Slots.effectContext -- and how many anywhere else. The second number
--- is the offence; the first is what Ancient Vendetta, Predict, Petra Sphinx,
--- Conundrum Sphinx, Vexing Arcanix, Null Chamber, Conjurer's Ban, Runed Halo,
--- Declaration of Naught and Immediate Action legitimately have.
+-- a mode clause's own "if", which Parun.Engine.Resolve.gateHolds reads through
+-- Resolve.Slots.effectContext, or a trigger condition's own Filter, which
+-- Parun.Engine.Event.Match reads through Projection.sourceContext -- and how many
+-- anywhere else. The second number is the offence; the first is what Ancient
+-- Vendetta, Predict, Petra Sphinx, Conundrum Sphinx, Vexing Arcanix, Null
+-- Chamber, Conjurer's Ban, Runed Halo, Declaration of Naught, Immediate Action
+-- and Booby Trap legitimately have.
 --
 -- SourceHostFramed and not `hostFramed`: since #3320 that tag means an effect's
 -- ObjectRef and nothing else, which is what makes it admissible here. The
@@ -822,7 +824,7 @@ hasChosenNameTag = Text.pack "HasChosenName"
 -- fact answer. Widen it when a card wants one of them.
 hasChosenNameCounts :: Face.Face Card.Type.Card -> (Int, Int)
 hasChosenNameCounts card =
-  let total wanted = sum (fmap (\(_, f) -> filterAtoms hasChosenNameTag f) (filter (\(framing, _) -> elem framing [SearchFramed, MillTallyFramed, SourceHostFramed, InTargetSlot, PlayerEffectFramed, StoredPlayerEffectFramed, AffectedSetFramed, ClauseGateFramed] == wanted) (cardFilters card)))
+  let total wanted = sum (fmap (\(_, f) -> filterAtoms hasChosenNameTag f) (filter (\(framing, _) -> elem framing [SearchFramed, MillTallyFramed, SourceHostFramed, InTargetSlot, PlayerEffectFramed, StoredPlayerEffectFramed, AffectedSetFramed, ClauseGateFramed, TriggerConditionFramed] == wanted) (cardFilters card)))
    in (total True, total False)
 
 -- CR 201.4's chosen name is answerable only where Filter.Context.sourceChosenNames
@@ -1591,11 +1593,17 @@ filterPositionLintSpec s registry = Spec.describe s "Lint" $ do
       "Vexing Arcanix's three atoms are framed by its two moves' ObjectRefs and its damage clause's gate"
       (hasChosenNameCounts (S.combinedFace arcanix))
       (3, 0)
+    trap <- S.printingOf s registry "Booby Trap"
     Spec.assertEqWith
       s
-      "and the twelve cards' atoms are the pool's only ones"
+      "Booby Trap's one atom is framed by its trigger condition"
+      (hasChosenNameCounts (S.combinedFace trap))
+      (1, 0)
+    Spec.assertEqWith
+      s
+      "and the thirteen cards' atoms are the pool's only ones"
       (sum (fmap (uncurry (+) . hasChosenNameCounts . S.combinedFace) ps))
-      16
+      17
   -- CR 702.16k's chosen player in the same frame one atom over: answerable only
   -- where a protection quality is read, and every one of those four positions
   -- takes its filter off a keyword. See ofChosenPlayerOffends for the two
@@ -3408,15 +3416,6 @@ filterPositionLintSpec s registry = Spec.describe s "Lint" $ do
                     ]
                 }
             ),
-            ( "CR 603.6a's trigger condition",
-              base
-                { Face.triggeredAbilities =
-                    [ oneEffectTrigger
-                        (TriggerCondition.PermanentEnters buried)
-                        (Effect.Draw (Draw.MkDraw (PlayerRef.InSlot Binding.you) (Quantity.Type.Literal 1) Nothing))
-                    ]
-                }
-            ),
             ( "CR 601.2f's sacrifice cost component",
               (S.combinedFace sorcerer)
                 { Face.activatedAbilities =
@@ -3453,6 +3452,22 @@ filterPositionLintSpec s registry = Spec.describe s "Lint" $ do
       s
       "a buried atom in a search's filter is accepted"
       (hasChosenNameOffends searched, hasChosenNameCounts searched)
+      (False, (1, 0))
+    -- A trigger condition's own Filter, grafted the same way: Parun.Engine.Event.Match
+    -- reads it through Projection.sourceContext, which carries the bearer's
+    -- chosen names -- Booby Trap's "a card with the chosen name".
+    let triggered =
+          base
+            { Face.triggeredAbilities =
+                [ oneEffectTrigger
+                    (TriggerCondition.PermanentEnters buried)
+                    (Effect.Draw (Draw.MkDraw (PlayerRef.InSlot Binding.you) (Quantity.Type.Literal 1) Nothing))
+                ]
+            }
+    Spec.assertEqWith
+      s
+      "a buried atom in a trigger condition is accepted"
+      (hasChosenNameOffends triggered, hasChosenNameCounts triggered)
       (False, (1, 0))
     -- The second accepting position, grafted the same way: the mill arm's
     -- tally reads the resolution's own context, so its filter answers exactly as

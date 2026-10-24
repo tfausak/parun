@@ -6,6 +6,7 @@ import qualified Parun.Types.CantSearchLibraries as CantSearchLibraries
 import qualified Parun.Types.CastFromZone as CastFromZone
 import qualified Parun.Types.CostModifier as CostModifier
 import qualified Parun.Types.DamagePattern as DamagePattern
+import qualified Parun.Types.DrawReveal as DrawReveal
 import qualified Parun.Types.ExtraVotes as ExtraVotes
 import qualified Parun.Types.Filter as Filter
 import qualified Parun.Types.GameOutcome as GameOutcome
@@ -18,7 +19,6 @@ import qualified Parun.Types.ModifiedRoll as ModifiedRoll
 import qualified Parun.Types.PlayerCounterKind as PlayerCounterKind
 import qualified Parun.Types.PlayerScope as PlayerScope
 import qualified Parun.Types.PlotFromZone as PlotFromZone
-import qualified Parun.Types.RevealObligation as RevealObligation
 import qualified Parun.Types.Shows as Shows
 import qualified Parun.Types.SpendManaAsThough as SpendManaAsThough
 import qualified Parun.Types.StatedFlip as StatedFlip
@@ -232,7 +232,8 @@ data PlayerEffect
     Precluded GameOutcome.GameOutcome
   | -- | CR 401.5 / 400.2: cards of this player's that are shown, and to whom.
     Shows Shows.Shows
-  | -- | CR 603.11 / 121.9 / Rowen, God-Eternal Kefnet: this player reveals, or
-    -- may reveal, the first card they draw each turn as they draw it.
-    RevealsFirstDraw RevealObligation.RevealObligation
+  | -- | CR 603.11 / 121.9 / Rowen, God-Eternal Kefnet, Booby Trap: this player
+    -- reveals, or may reveal, the first card or each card they draw as they
+    -- draw it.
+    RevealsDraw DrawReveal.DrawReveal
   deriving (Eq, Ord, Show)
