@@ -123,6 +123,7 @@ import qualified Parun.Codec.CantBeBlockedBySpec
 import qualified Parun.Codec.CantBlockCreaturesSpec
 import qualified Parun.Codec.CantSearchLibrariesSpec
 import qualified Parun.Codec.CardArrivedInSpec
+import qualified Parun.Codec.CardCountSpec
 import qualified Parun.Codec.CardIdentitySpec
 import qualified Parun.Codec.CardLeavesZoneSpec
 import qualified Parun.Codec.CardNameSpec
@@ -1034,6 +1035,7 @@ spec s registry = do
   Parun.Codec.CantBlockCreaturesSpec.spec s
   Parun.Codec.CantSearchLibrariesSpec.spec s
   Parun.Codec.CardArrivedInSpec.spec s
+  Parun.Codec.CardCountSpec.spec s
   Parun.Codec.CardIdentitySpec.spec s
   Parun.Codec.CardLeavesZoneSpec.spec s
   Parun.Codec.CardNameSpec.spec s

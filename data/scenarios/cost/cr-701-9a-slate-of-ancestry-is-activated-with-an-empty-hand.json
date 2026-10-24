@@ -1,0 +1,29 @@
+{
+  "description": "CR 601.2h / 701.9a Slate of Ancestry's discard-your-hand cost is paid with an empty hand",
+  "note": "Alice holds no cards: discarding her hand discards nothing and is still paid, so the activation resolves and she draws one card for each of her two creatures.",
+  "board": {
+    "active": "alice",
+    "step": "PrecombatMain",
+    "seats": [
+      {
+        "name": "alice",
+        "battlefield": [
+          { "card": "Slate of Ancestry", "label": "slate", "ready": true },
+          { "card": "Grizzly Bears" },
+          { "card": "Grizzly Bears" },
+          { "card": "Island", "label": "i1" },
+          { "card": "Island", "label": "i2" },
+          { "card": "Island", "label": "i3" },
+          { "card": "Island", "label": "i4" }
+        ],
+        "library": [{ "card": "Forest" }, { "card": "Plains" }, { "card": "Mountain" }]
+      },
+      { "name": "bob", "library": [{ "card": "Island" }] }
+    ]
+  },
+  "timeline": [
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "do": { "Activate": { "object": "$slate", "mana": ["$i1", "$i2", "$i3", "$i4"], "costOrder": [0, 1] } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "do": "Pass" },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "check": { "View": { "of": "Zone", "player": "alice", "zone": "Hand", "is": ["Forest", "Plains"] } } }
+  ]
+}

@@ -46,6 +46,7 @@ import qualified Parun.Types.CastFromZone as CastFromZone
 import qualified Parun.Types.CastingPermission as CastingPermission
 import qualified Parun.Types.CastingRestriction as CastingRestriction
 import qualified Parun.Types.Clause as Clause
+import qualified Parun.Types.Color as Color
 import qualified Parun.Types.Compares as Compares
 import qualified Parun.Types.Condition as Condition.Type
 import qualified Parun.Types.ContinuousEffect as ContinuousEffect
@@ -614,10 +615,17 @@ payableCountedAtGiven modes pcs sources x extra spending pid oid gs cost =
       withX o = o {Object.bindings = Map.union (Binding.fromChoices Map.empty (Just x) Seq.empty) (Object.bindings o)}
       priced = if readsAnnouncedX pid oid cost gs then gs {GameState.objects = Map.adjust withX oid (GameState.objects gs)} else gs
       adjustmentsFor aiming = Cost.plusReductions extra (Cost.spellAdjustments (Set.unions (Map.elems aiming)) pid oid priced)
+      -- The X CR 601.2h's "Spend only black mana on X" confines: `x` while the
+      -- cost still carries its {X}, and the X announced on the spell once
+      -- castSpell has substituted it (its `announcedBoard`).
+      confinedX
+        | Cost.hasVariable cost = x
+        | otherwise = Maybe.fromMaybe 0 (Game.lookupObject oid gs >>= Binding.amountOf Binding.variableX . Object.bindings)
       askWith adjustments aiming =
         let totalled = Cost.plusComponents adjustments substituted
             slots = Binding.withAnnouncedTargets aiming
-         in Cost.canPaySomeCompletionGiven slots (PaymentSubject.Casting oid) spending sources pcs pid oid (fmap assisted . Cost.totalManas adjustments) (Cost.manaSubstitutions (Cost.Type.components totalled) slots pid oid gs) totalled gs
+            totals m = fmap (assisted . Cost.confineX (xConfinement oid gs) confinedX adjustments m) (Cost.totalManas adjustments m)
+         in Cost.canPaySomeCompletionGiven slots (PaymentSubject.Casting oid) spending sources pcs pid oid totals (Cost.manaSubstitutions (Cost.Type.components totalled) slots pid oid gs) totalled gs
       -- The adjustments with nothing aimed at, which are the adjustments under
       -- EVERY aiming unless they read the targets (readsTargets below), so the
       -- components they add are inspected for a criterion naming a slot exactly as
@@ -1729,6 +1737,14 @@ printedRestrictionsOk pid oid name gs = case proposedFace oid name gs of
   Nothing -> False
   Just face -> not (Card.isLand face) && all (restrictionMet pid gs) (Face.castingRestrictions face)
 
+-- The colour a printed "Spend only [colour] mana on X" confines the spell's X
+-- to (CastingRestriction.SpendOnlyOnX), read off the card as
+-- `printedRestrictionsOk` reads the rest.
+xConfinement :: ObjectId -> GameState -> Maybe Color.Color
+xConfinement oid gs = do
+  face <- Game.faceOf oid gs
+  Maybe.listToMaybe [color | CastingRestriction.SpendOnlyOnX color <- Face.castingRestrictions face]
+
 -- Does the game state satisfy this one printed clause?
 restrictionMet :: PlayerId -> GameState -> CastingRestriction.CastingRestriction -> Bool
 restrictionMet pid gs restriction = case restriction of
@@ -1765,6 +1781,8 @@ restrictionMet pid gs restriction = case restriction of
   CastingRestriction.BeforeStep target -> Turn.beforeStep target gs
   -- CR 102.1 alone: DuringPhase's second conjunct with no window.
   CastingRestriction.DuringTurn scope -> Turn.turnScopeAdmits gs scope (GameState.activePlayer gs) pid
+  -- A payment rule, not a gate: `xConfinement` hands it to Cost.confineX.
+  CastingRestriction.SpendOnlyOnX _ -> True
 
 -- CR 709.3a / 715.3a: the half being cast, RECORDED ON THE OBJECT, so that every
 -- characteristic read of it resolves through Game.resolveFace to that half alone
@@ -3583,7 +3601,13 @@ castProposed perform spending pid oid sid printedFace castFrom preparedFor keywo
                       aimedGathers
                         | Cost.readsTargets pid sid announcedBoard && not (null aimed) = aimed
                         | otherwise = [gathered]
-                      routeTotals mana = concatMap (`Cost.totalManas` mana) aimedGathers
+                      -- CR 601.2h's confined X (Cost.confineX), so the routes
+                      -- offered are the ones the gate measured. A FENCE:
+                      -- Scryfall `o:"mana on X" is:hybrid` and `is:phyrexian`,
+                      -- 2026-10-24, no hit, so no announcement here has a
+                      -- choice the confinement could change.
+                      confinement = xConfinement sid announcedBoard
+                      routeTotals mana = concatMap (\g -> fmap (Cost.confineX confinement (Maybe.fromMaybe 0 mAmount) g mana) (Cost.totalManas g mana)) aimedGathers
                   let totalledCost = Cost.plusComponents gathered announcedAtX
                       assistedTotal = Cost.assistable (PaymentSubject.Casting sid) pid sid announcedBoard
                   (announcedCost, phyrexianLifePaid) <- Cost.announce (PaymentSubject.Casting sid) spending pid sid (Cost.substitutedManas (Cost.manaSubstitutions (Cost.Type.components totalledCost) Map.empty pid sid announcedBoard) (fmap assistedTotal . routeTotals)) totalledCost
@@ -3740,7 +3764,11 @@ castProposed perform spending pid oid sid printedFace castFrom preparedFor keywo
                           -- locked in here, before any of it is paid, per its
                           -- ruling. A fence: the payment reads the same slots,
                           -- and no board changes a target's mana value mid-payment.
-                          paidCost = Cost.fixComputedIn chosen pricedGs (Cost.totalWith adjustments announcedCost {Cost.Type.components = Cost.Type.components lateCost <> announcedSuffix})
+                          totalledPaid = Cost.totalWith adjustments announcedCost {Cost.Type.components = Cost.Type.components lateCost <> announcedSuffix}
+                          -- CR 601.2h's "Spend only black mana on X", on the
+                          -- total just locked in (Cost.confineX).
+                          confinedPaid = totalledPaid {Cost.Type.mana = Cost.confineX confinement (Maybe.fromMaybe 0 mAmount) adjustments <$> Cost.Type.mana announcedCost <*> Cost.Type.mana totalledPaid}
+                          paidCost = Cost.fixComputedIn chosen pricedGs confinedPaid
                       -- CR 702.51b / 702.66b / 702.126b: convoke, delve and
                       -- improvise apply once the total cost is determined, so the
                       -- offer is handed to the payment rather than made here --

@@ -1,0 +1,33 @@
+{
+  "description": "CR 601.2h / 701.9a Slate of Ancestry discards alice's whole hand and draws a card for each creature she controls",
+  "note": "Three cards in hand, one more than the two creatures, so a cost that discarded a fixed number or asked which is told apart. Every card in hand reaches the graveyard and a Forest and a Plains come off the library.",
+  "board": {
+    "active": "alice",
+    "step": "PrecombatMain",
+    "seats": [
+      {
+        "name": "alice",
+        "battlefield": [
+          { "card": "Slate of Ancestry", "label": "slate", "ready": true },
+          { "card": "Grizzly Bears" },
+          { "card": "Grizzly Bears" },
+          { "card": "Island", "label": "i1" },
+          { "card": "Island", "label": "i2" },
+          { "card": "Island", "label": "i3" },
+          { "card": "Island", "label": "i4" }
+        ],
+        "hand": [{ "card": "Lava Axe" }, { "card": "Mind Rot" }, { "card": "Blaze" }],
+        "library": [{ "card": "Forest" }, { "card": "Plains" }, { "card": "Mountain" }]
+      },
+      { "name": "bob", "library": [{ "card": "Island" }] }
+    ]
+  },
+  "timeline": [
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "do": { "Activate": { "object": "$slate", "mana": ["$i1", "$i2", "$i3", "$i4"], "costOrder": [0, 1] } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "check": { "Count": { "player": "alice", "zone": "Graveyard", "card": "Lava Axe", "count": 1 } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "check": { "Count": { "player": "alice", "zone": "Graveyard", "card": "Mind Rot", "count": 1 } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "check": { "Count": { "player": "alice", "zone": "Graveyard", "card": "Blaze", "count": 1 } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "do": "Pass" },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "check": { "View": { "of": "Zone", "player": "alice", "zone": "Hand", "is": ["Forest", "Plains"] } } }
+  ]
+}

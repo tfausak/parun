@@ -286,6 +286,8 @@ library codec
     Parun.Codec.Card
     Parun.Codec.CardArrivedIn
     Parun.Codec.CardArrivedInSpec
+    Parun.Codec.CardCount
+    Parun.Codec.CardCountSpec
     Parun.Codec.CardIdentity
     Parun.Codec.CardIdentitySpec
     Parun.Codec.CardLeavesZone
@@ -2371,6 +2373,7 @@ library types
     Parun.Types.CantSearchLibraries
     Parun.Types.Card
     Parun.Types.CardArrivedIn
+    Parun.Types.CardCount
     Parun.Types.CardIdentity
     Parun.Types.CardLeavesZone
     Parun.Types.CardName

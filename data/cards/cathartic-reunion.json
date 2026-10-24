@@ -5,7 +5,10 @@
         {
           "type": "DiscardCards",
           "value": {
-            "count": 2,
+            "count": {
+              "type": "Exactly",
+              "value": 2
+            },
             "whichCards": {
               "type": "And",
               "value": []

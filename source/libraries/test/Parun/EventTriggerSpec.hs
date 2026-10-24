@@ -31,6 +31,7 @@ import qualified Parun.Spec as Spec
 import qualified Parun.Support as S
 import qualified Parun.Types.AbilityTriggered as AbilityTriggered
 import qualified Parun.Types.BeginningStep as BeginningStep
+import qualified Parun.Types.CardCount as CardCount
 import qualified Parun.Types.CardName as CardName
 import qualified Parun.Types.CostComponent as CostComponent
 import qualified Parun.Types.CounterKind as CounterKind
@@ -150,7 +151,7 @@ cyclesTriggerSpec s registry =
       let (marmosetId, _, gs) = marmosetBoard marmoset mauler forest piker S.alice
           -- The Mauler is the only card in alice's hand, so CR 701.9b has
           -- nothing to ask and the same card leaves by the other door.
-          discarded = S.runPure S.identityAnswer gs (Cost.payComponent S.manaPerformer PaymentMoment.OutsideResolution Nothing Map.empty S.alice S.noSource (CostComponent.DiscardCards (DiscardCards.MkDiscardCards 1 (Filter.Type.And []))))
+          discarded = S.runPure S.identityAnswer gs (Cost.payComponent S.manaPerformer PaymentMoment.OutsideResolution Nothing Map.empty S.alice S.noSource (CostComponent.DiscardCards (DiscardCards.MkDiscardCards (CardCount.Exactly 1) (Filter.Type.And []))))
           placed = S.runPure S.identityAnswer discarded Engine.settleForPriority
       Spec.assertEqWith s "the Mauler really did reach alice's graveyard" (length (Game.zoneMembers Zone.Graveyard S.alice discarded)) 1
       Spec.assertEqWith s "nothing was put on the stack" (GameState.stack placed) []
@@ -164,7 +165,7 @@ foodTokenName = CardName.MkCardName (Text.pack "Food Token")
 -- CR 601.2f's discard-as-a-cost, the door every non-cycling discard in the pool
 -- goes through, asked for one card with no criterion.
 discardOne :: (forall r. Prompt.Prompt r -> r) -> GameState.GameState -> GameState.GameState
-discardOne answer gs = S.runPure answer gs (Cost.payComponent S.manaPerformer PaymentMoment.OutsideResolution Nothing Map.empty S.alice S.noSource (CostComponent.DiscardCards (DiscardCards.MkDiscardCards 1 (Filter.Type.And []))))
+discardOne answer gs = S.runPure answer gs (Cost.payComponent S.manaPerformer PaymentMoment.OutsideResolution Nothing Map.empty S.alice S.noSource (CostComponent.DiscardCards (DiscardCards.MkDiscardCards (CardCount.Exactly 1) (Filter.Type.And []))))
 
 -- Which of alice's cards CR 701.9b's choice discards, PINNED -- and filtered out
 -- of the set the prompt offered rather than built, so a mutation cannot be

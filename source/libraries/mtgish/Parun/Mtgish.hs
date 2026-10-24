@@ -41,6 +41,7 @@ import qualified Parun.Types.Aggregation as Aggregation
 import qualified Parun.Types.Arithmetic as Arithmetic
 import qualified Parun.Types.BeginningStep as BeginningStep
 import qualified Parun.Types.Card as Card
+import qualified Parun.Types.CardCount as CardCount
 import qualified Parun.Types.CardName as CardName
 import qualified Parun.Types.CardType as CardType
 import qualified Parun.Types.CharacteristicPT as CharacteristicPT
@@ -70,6 +71,7 @@ import qualified Parun.Types.Destroy as Destroy
 import qualified Parun.Types.DestructionR as DestructionR
 import qualified Parun.Types.DestructionRewrite as DestructionRewrite
 import qualified Parun.Types.Discard as Discard
+import qualified Parun.Types.DiscardCards as DiscardCards
 import qualified Parun.Types.Draw as Draw
 import qualified Parun.Types.Duration as Duration
 import qualified Parun.Types.DuringPhase as DuringPhase
@@ -625,6 +627,7 @@ costPart n = case Node.tag n of
     k <- Node.child n >>= integer
     m <- natural n k
     Right (Right (CostComponent.PayLife (CostAmount.Fixed m)))
+  "DiscardHand" -> Right (Right (CostComponent.DiscardCards DiscardCards.MkDiscardCards {DiscardCards.count = CardCount.Every, DiscardCards.whichCards = Filter.And []}))
   _ -> Node.untranslated n
   where
     itself c = do

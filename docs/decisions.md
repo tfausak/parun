@@ -299,6 +299,23 @@ Entries are ordered by the first rule each cites.
   halves are regression fences: no board drives either.
 - **Issue**: #5437.
 
+## Cost reductions on a confined X
+
+- **Question**: A spell says "Spend only black mana on X" (Consume Spirit) and
+  a generic cost reduction applies (Jet Medallion). How much of the reduced
+  generic mana must still be black?
+- **Rules**: CR 601.2f, 601.2h, 107.3a; CR of 2026-08-07. Drain Life's ruling
+  says cost reducers can reduce the X part.
+- **Decision**: The reduction comes off the X first. What stays confined is X
+  less the generic mana reduced; a cost increase is unconfined mana.
+- **Rejected**: Off the unconfined generic first: stricter, and it refuses
+  payments the ruling allows. Asking the payer: every payment the other
+  splits allow, this one allows too, so the answers are indistinguishable.
+- **Site**: `Parun.Engine.Cost.confineX`, proved by data/scenarios/cost's
+  "CR 601.2f Jet Medallion's reduction comes off Consume Spirit's X, so less of
+  it must be black".
+- **Issue**: #5565.
+
 ## Whether a cast redirected off the stack is still a cast
 
 - **Question**: A CR 614 replacement sends a card being cast somewhere other

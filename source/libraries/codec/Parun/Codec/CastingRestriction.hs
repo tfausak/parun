@@ -1,5 +1,6 @@
 module Parun.Codec.CastingRestriction where
 
+import qualified Parun.Codec.Color as Color
 import qualified Parun.Codec.DuringPhase as DuringPhase
 import qualified Parun.Codec.Phase as Phase
 import qualified Parun.Codec.TurnScope as TurnScope
@@ -15,7 +16,8 @@ codec =
       Arm.nullary "AttackedThisStep" CastingRestriction.AttackedThisStep,
       Arm.nullary "AfterBlockersDeclared" CastingRestriction.AfterBlockersDeclared,
       Arm.payload "BeforeStep" Phase.codec CastingRestriction.BeforeStep (\x -> case x of CastingRestriction.BeforeStep y -> Just y; _ -> Nothing),
-      Arm.payload "DuringTurn" TurnScope.codec CastingRestriction.DuringTurn (\x -> case x of CastingRestriction.DuringTurn y -> Just y; _ -> Nothing)
+      Arm.payload "DuringTurn" TurnScope.codec CastingRestriction.DuringTurn (\x -> case x of CastingRestriction.DuringTurn y -> Just y; _ -> Nothing),
+      Arm.payload "SpendOnlyOnX" Color.codec CastingRestriction.SpendOnlyOnX (\x -> case x of CastingRestriction.SpendOnlyOnX y -> Just y; _ -> Nothing)
     ]
 
 tagOf :: CastingRestriction.CastingRestriction -> String
@@ -25,3 +27,4 @@ tagOf x = case x of
   CastingRestriction.AfterBlockersDeclared {} -> "AfterBlockersDeclared"
   CastingRestriction.BeforeStep {} -> "BeforeStep"
   CastingRestriction.DuringTurn {} -> "DuringTurn"
+  CastingRestriction.SpendOnlyOnX {} -> "SpendOnlyOnX"

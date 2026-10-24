@@ -69,8 +69,9 @@ data CostComponent keyword
   | -- | CR 118.1 / 406.2 as a cost / Food Chain: exile exactly this many
     -- permanents matching the Filter, chosen by the payer.
     ExilePermanents (ExilePermanents.ExilePermanents keyword)
-  | -- | CR 601.2f / 701.9b / Cathartic Reunion, Magmatic Insight: discard this many
-    -- cards matching the Filter from hand, which the discarding player chooses.
+  | -- | CR 601.2f / 701.9b / Cathartic Reunion, Slate of Ancestry: discard this many
+    -- cards matching the Filter from hand, which the discarding player chooses, or
+    -- every one.
     DiscardCards (DiscardCards.DiscardCards keyword)
   | -- | CR 702.29a / 702.77a / Faerie Macabre: discard the card the cost is on,
     -- carrying the DiscardCause the payment logs, since CR 702.29c's cycling
