@@ -1,0 +1,16 @@
+{
+  "description": "CR 119.5 / 508.1c whole card: Form of the Dragon deals 5 damage at its controller's upkeep, sets their life to 5 at each end step, and keeps creatures without flying from attacking them",
+  "note": "Alice burns bob in her upkeep and is at 5 after her end step; bob's Grizzly Bears can't attack her and his Wind Drake can; bob's own end step puts her back at 5, and her next upkeep burns him again.",
+  "board": {"active": "alice", "step": "Untap", "seats": [{"name": "alice", "battlefield": [{"card": "Form of the Dragon", "label": "form"}], "library": [{"card": "Island"}, {"card": "Island"}, {"card": "Island"}, {"card": "Island"}]}, {"name": "bob", "battlefield": [{"card": "Grizzly Bears", "label": "bears", "ready": true}, {"card": "Wind Drake", "label": "drake", "ready": true}], "library": [{"card": "Island"}, {"card": "Island"}, {"card": "Island"}, {"card": "Island"}]}]},
+  "timeline": [
+    {"turn": 1, "step": "Upkeep", "player": "alice", "do": {"ChooseTargets": {"target": ["$bob"]}}},
+    {"turn": 1, "step": "DrawStep", "player": "alice", "check": {"Life": {"player": "bob", "life": 15}}},
+    {"turn": 2, "step": "Upkeep", "player": "bob", "check": {"Life": {"player": "alice", "life": 5}}},
+    {"turn": 2, "step": "DeclareAttackers", "player": "bob", "refuse": {"Attack": ["$bears"]}},
+    {"turn": 2, "step": "DeclareAttackers", "player": "bob", "do": {"Attack": ["$drake"]}},
+    {"turn": 2, "step": "EndOfCombat", "player": "bob", "check": {"Life": {"player": "alice", "life": 3}}},
+    {"turn": 3, "step": "Upkeep", "player": "alice", "do": {"ChooseTargets": {"target": ["$bob"]}}},
+    {"turn": 3, "step": "DrawStep", "player": "alice", "check": {"Life": {"player": "alice", "life": 5}}},
+    {"turn": 3, "step": "DrawStep", "player": "alice", "check": {"Life": {"player": "bob", "life": 10}}}
+  ]
+}

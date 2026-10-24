@@ -1,0 +1,13 @@
+{
+  "description": "CR 118.12 whole card: Force of Nature deals 8 damage to its controller at their upkeep unless they pay {G}{G}{G}{G}",
+  "note": "Alice pays with four Forests in her first upkeep and takes nothing; she declines in her next and takes 8. Bob's upkeep between asks nothing.",
+  "board": {"active": "alice", "step": "Untap", "seats": [{"name": "alice", "battlefield": [{"card": "Force of Nature", "label": "force"}, {"card": "Forest", "label": "f1"}, {"card": "Forest", "label": "f2"}, {"card": "Forest", "label": "f3"}, {"card": "Forest", "label": "f4"}], "library": [{"card": "Island"}, {"card": "Island"}, {"card": "Island"}, {"card": "Island"}]}, {"name": "bob", "library": [{"card": "Island"}, {"card": "Island"}, {"card": "Island"}, {"card": "Island"}]}]},
+  "timeline": [
+    {"turn": 1, "step": "Upkeep", "player": "alice", "source": "$force", "do": {"ChooseToPay": {"decision": {"type": "Pays"}, "mana": ["$f1", "$f2", "$f3", "$f4"]}}},
+    {"turn": 1, "step": "DrawStep", "player": "alice", "check": {"Life": {"player": "alice", "life": 20}}},
+    {"turn": 1, "step": "DeclareAttackers", "player": "alice", "do": {"Attack": []}},
+    {"turn": 3, "step": "Upkeep", "player": "alice", "source": "$force", "do": {"ChooseToPay": {"decision": {"type": "Declines"}}}},
+    {"turn": 3, "step": "DrawStep", "player": "alice", "check": {"Life": {"player": "alice", "life": 12}}},
+    {"turn": 3, "step": "DrawStep", "player": "alice", "check": {"Life": {"player": "bob", "life": 20}}}
+  ]
+}

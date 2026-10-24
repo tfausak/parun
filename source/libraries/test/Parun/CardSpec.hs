@@ -5461,7 +5461,8 @@ blockPermissionFilters permission =
 --     Parun.Engine.Target.admittedGiven, one of the two sites that fill
 --     Filter.Context.slotControllers and one of the callers that fill
 --     Filter.Context.slotNames. CR 110.2's Filter.SameControllerAsBound belongs
---     here and in AttachDestination, the other; CR 709.4a's Filter.SameNameAsBound belongs here and
+--     here, in AttachDestination, the other, and in SourceHostFramed (Flame
+--     Wave); CR 709.4a's Filter.SameNameAsBound belongs here and
 --     in SearchFramed, HandSweepFramed and LifeLossAmountFramed below, the
 --     other positions slotNames is filled at and a card writes it in. Their
 --     vacuous directions differ: an unfilled slotNames answers False, an

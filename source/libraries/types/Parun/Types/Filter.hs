@@ -184,8 +184,9 @@ data Filter keyword
     -- 601.2c's offer is made before either target is chosen, so
     -- Parun.Engine.Target.legalSetsGiven widens and selectionLegal's joint check
     -- narrows, exactly as CR 608.2b will at resolution. Parun.FilterPositionLintSpec's
-    -- "CR 110.2 no card asks SameControllerAsBound outside a mode's target slot or
-    -- an attach destination" keeps the atom to the positions that fill it.
+    -- "CR 110.2 no card asks SameControllerAsBound outside a mode's target slot,
+    -- an attach destination, a stored class or an effect's object" keeps the
+    -- atom to the positions that fill it.
     SameControllerAsBound SlotName.SlotName
   | -- | CR 110.2 with CR 303.4b: the candidate has the same controller as the
     -- permanent the object this slot holds is ATTACHED TO -- Simic Guildmage's

@@ -1,0 +1,13 @@
+{
+  "description": "CR 602.5 whole card: Hell's Caretaker taps and sacrifices a creature to return a creature card from its controller's graveyard, during their upkeep only",
+  "note": "Refused in bob's upkeep; in alice's she sacrifices her Grizzly Bears and her Hill Giant returns.",
+  "board": {"active": "bob", "step": "Untap", "seats": [{"name": "alice", "battlefield": [{"card": "Hell's Caretaker", "label": "caretaker", "ready": true}, {"card": "Grizzly Bears", "label": "bears"}], "graveyard": [{"card": "Hill Giant", "label": "giant"}], "library": [{"card": "Island"}, {"card": "Island"}, {"card": "Island"}, {"card": "Island"}]}, {"name": "bob", "library": [{"card": "Island"}, {"card": "Island"}, {"card": "Island"}, {"card": "Island"}]}]},
+  "timeline": [
+    {"turn": 1, "step": "Upkeep", "player": "alice", "refuse": {"Activate": {"object": "$caretaker", "targets": ["$giant"], "costOrder": [0, 1]}}},
+    {"turn": 2, "step": "Upkeep", "player": "alice", "do": {"Activate": {"object": "$caretaker", "targets": ["$giant"], "costOrder": [0, 1]}}},
+    {"turn": 2, "step": "Upkeep", "player": "alice", "do": {"Answer": {"prompt": "ChooseSacrifices", "with": ["$bears"]}}},
+    {"turn": 2, "step": "Upkeep", "player": "alice", "do": "Pass"},
+    {"turn": 2, "step": "Upkeep", "player": "alice", "check": {"Count": {"player": "alice", "zone": "Battlefield", "card": "Hill Giant", "count": 1}}},
+    {"turn": 2, "step": "Upkeep", "player": "alice", "check": {"Count": {"player": "alice", "zone": "Graveyard", "card": "Grizzly Bears", "count": 1}}}
+  ]
+}

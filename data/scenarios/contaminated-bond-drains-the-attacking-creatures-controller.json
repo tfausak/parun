@@ -1,0 +1,10 @@
+{
+  "description": "CR 603.2 whole card: Contaminated Bond makes the enchanted creature's controller lose 3 life when it attacks",
+  "note": "Alice's Bond is on bob's Grizzly Bears; bob attacks with it and loses 3, while alice loses only the Bears' 2 combat damage.",
+  "board": {"active": "bob", "step": "BeginningOfCombat", "seats": [{"name": "alice", "battlefield": [{"card": "Contaminated Bond", "label": "bond", "attached": "bears"}], "library": [{"card": "Island"}, {"card": "Island"}, {"card": "Island"}]}, {"name": "bob", "battlefield": [{"card": "Grizzly Bears", "label": "bears", "ready": true}], "library": [{"card": "Island"}, {"card": "Island"}, {"card": "Island"}]}]},
+  "timeline": [
+    {"turn": 1, "step": "DeclareAttackers", "player": "bob", "do": {"Attack": ["$bears"]}},
+    {"turn": 1, "step": "EndOfCombat", "player": "alice", "check": {"Life": {"player": "bob", "life": 17}}},
+    {"turn": 1, "step": "EndOfCombat", "player": "alice", "check": {"Life": {"player": "alice", "life": 18}}}
+  ]
+}

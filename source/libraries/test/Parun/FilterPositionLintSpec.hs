@@ -1113,20 +1113,21 @@ sameControllerAsBoundTag :: Text.Text
 sameControllerAsBoundTag = Text.pack "SameControllerAsBound"
 
 -- How many CR 110.2 shared-controller atoms this card carries inside a MODE's
--- target slot filter, an attach effect's destination or a stored combat
--- restriction class, and how many anywhere else. The second number is the offence; the first is what Bioshift and Glamer
--- Spinners legitimately have one of.
+-- target slot filter, an attach effect's destination, a stored combat
+-- restriction class or an effect's ObjectRef, and how many anywhere else. The
+-- second number is the offence; the first is what Bioshift and Glamer Spinners
+-- legitimately have one of.
 sameControllerAsBoundCounts :: Face.Face Card.Type.Card -> (Int, Int)
 sameControllerAsBoundCounts card =
-  let total wanted = sum (fmap (\(_, f) -> filterAtoms sameControllerAsBoundTag f) (filter (\(framing, _) -> elem framing [InTargetSlot, AttachDestination, StoredClassFramed] == wanted) (cardFilters card)))
+  let total wanted = sum (fmap (\(_, f) -> filterAtoms sameControllerAsBoundTag f) (filter (\(framing, _) -> elem framing [InTargetSlot, AttachDestination, StoredClassFramed, SourceHostFramed] == wanted) (cardFilters card)))
    in (total True, total False)
 
 -- CR 110.2's shared-controller comparison is answerable only where
 -- Filter.Context.slotControllers is filled: Parun.Engine.Target.slotContext, the
 -- one site that matches a MODE's target slot Filter, and
 -- Parun.Engine.Resolve.Slots.effectContext, which an attach effect's destination
--- is matched against and which Parun.Engine.Resolve.Effect.storedClass bakes a
--- stored class's atom from. EntryAttachDestination's bare Context is not one. This is sameNameAsBoundOffends' sweep one characteristic over, and
+-- and an effect's ObjectRef are matched against and which
+-- Parun.Engine.Resolve.Effect.storedClass bakes a stored class's atom from. EntryAttachDestination's bare Context is not one. This is sameNameAsBoundOffends' sweep one characteristic over, and
 -- the one place the two differ is what makes it load-bearing rather than tidy:
 -- that atom is a silent False outside its position and this one is a silent TRUE,
 -- so an atom in a Count filter, an affected set or a search filter would ADMIT
@@ -1819,7 +1820,7 @@ filterPositionLintSpec s registry = Spec.describe s "Lint" $ do
   -- where Filter.Context.slotControllers has no key for its slot, so an atom
   -- outside the positions filling it admits every candidate the card meant to
   -- exclude rather than none. See sameControllerAsBoundOffends.
-  Spec.it s "CR 110.2 no card asks SameControllerAsBound outside a mode's target slot, an attach destination or a stored class" $ do
+  Spec.it s "CR 110.2 no card asks SameControllerAsBound outside a mode's target slot, an attach destination, a stored class or an effect's object" $ do
     ps <- S.allPrintings s
     let offenders = filter (anyFace sameControllerAsBoundOffends . Printing.card) ps
     Spec.assertEqWith s "the atom sits only in a target slot's filter" (fmap (S.nameOf . Printing.card) offenders) []
@@ -1863,11 +1864,19 @@ filterPositionLintSpec s registry = Spec.describe s "Lint" $ do
       "Mark for Death's is in its stored class"
       (sameControllerAsBoundCounts (S.combinedFace mark))
       (1, 0)
+    -- The effect ObjectRef's accepting read: Flame Wave's "each creature
+    -- that player or that planeswalker's controller controls".
+    wave <- S.printingOf s registry "Flame Wave"
     Spec.assertEqWith
       s
-      "and those five are the pool's whole authorship of it"
+      "Flame Wave's is in its damage's object"
+      (sameControllerAsBoundCounts (S.combinedFace wave))
+      (1, 0)
+    Spec.assertEqWith
+      s
+      "and those six are the pool's whole authorship of it"
       (sum (fmap (uncurry (+) . sameControllerAsBoundCounts . S.combinedFace) ps))
-      5
+      6
     -- The REJECTING direction, hand-built for the reason every sibling lint's is:
     -- a card that offends must not be loadable, so no file can carry one. Buried
     -- under all three combinators, so an implementation reading only the top of a
