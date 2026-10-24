@@ -2,6 +2,7 @@ module Pawl.Codec.Filter where
 
 import qualified Data.Typeable as Typeable
 import qualified Pawl.Codec.AbilityKind as AbilityKind
+import qualified Pawl.Codec.Anchor as Anchor
 import qualified Pawl.Codec.BlockStatus as BlockStatus
 import qualified Pawl.Codec.CardName as CardName
 import qualified Pawl.Codec.CardType as CardType
@@ -96,7 +97,7 @@ codec keywordCodec =
       Arm.payload "SameNameAsBound" SlotName.codec Filter.SameNameAsBound (\x -> case x of Filter.SameNameAsBound y -> Just y; _ -> Nothing),
       Arm.payload "SameControllerAsBound" SlotName.codec Filter.SameControllerAsBound (\x -> case x of Filter.SameControllerAsBound y -> Just y; _ -> Nothing),
       Arm.payload "SameControllerAsHostOfBound" SlotName.codec Filter.SameControllerAsHostOfBound (\x -> case x of Filter.SameControllerAsHostOfBound y -> Just y; _ -> Nothing),
-      Arm.payload "SharesCreatureTypeWithBound" SlotName.codec Filter.SharesCreatureTypeWithBound (\x -> case x of Filter.SharesCreatureTypeWithBound y -> Just y; _ -> Nothing),
+      Arm.payload "SharesCreatureTypeWith" Anchor.codec Filter.SharesCreatureTypeWith (\x -> case x of Filter.SharesCreatureTypeWith y -> Just y; _ -> Nothing),
       Arm.payload "HasChosenName" NameChooser.codec Filter.HasChosenName (\x -> case x of Filter.HasChosenName y -> Just y; _ -> Nothing),
       Arm.nullary "HasChosenColor" Filter.HasChosenColor,
       Arm.nullary "HasChosenSubtype" Filter.HasChosenSubtype,
@@ -132,6 +133,7 @@ codec keywordCodec =
       Arm.payload "HasAttached" (codec keywordCodec) Filter.HasAttached (\x -> case x of Filter.HasAttached y -> Just y; _ -> Nothing),
       Arm.nullary "IsAttachedToSource" Filter.IsAttachedToSource,
       Arm.nullary "IsAttachedToEvaluated" Filter.IsAttachedToEvaluated,
+      Arm.nullary "IsEvaluated" Filter.IsEvaluated,
       Arm.nullary "IsHostOfSource" Filter.IsHostOfSource,
       Arm.nullary "EnteredWithSource" Filter.EnteredWithSource,
       Arm.nullary "AttachedNoLaterThanSource" Filter.AttachedNoLaterThanSource,
@@ -221,7 +223,7 @@ tagOf x = case x of
   Filter.SameNameAsBound {} -> "SameNameAsBound"
   Filter.SameControllerAsBound {} -> "SameControllerAsBound"
   Filter.SameControllerAsHostOfBound {} -> "SameControllerAsHostOfBound"
-  Filter.SharesCreatureTypeWithBound {} -> "SharesCreatureTypeWithBound"
+  Filter.SharesCreatureTypeWith {} -> "SharesCreatureTypeWith"
   Filter.HasChosenName {} -> "HasChosenName"
   Filter.HasChosenColor {} -> "HasChosenColor"
   Filter.HasChosenSubtype {} -> "HasChosenSubtype"
@@ -253,6 +255,7 @@ tagOf x = case x of
   Filter.HasAttached {} -> "HasAttached"
   Filter.IsAttachedToSource {} -> "IsAttachedToSource"
   Filter.IsAttachedToEvaluated {} -> "IsAttachedToEvaluated"
+  Filter.IsEvaluated {} -> "IsEvaluated"
   Filter.IsHostOfSource {} -> "IsHostOfSource"
   Filter.EnteredWithSource {} -> "EnteredWithSource"
   Filter.AttachedNoLaterThanSource {} -> "AttachedNoLaterThanSource"

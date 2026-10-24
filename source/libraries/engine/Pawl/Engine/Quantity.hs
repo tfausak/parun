@@ -16,6 +16,7 @@ import qualified Pawl.Engine.Keyword as Keyword
 import qualified Pawl.Engine.ManaCount as ManaCount
 import qualified Pawl.Engine.NameWords as NameWords
 import qualified Pawl.Engine.QuantitySlot as QuantitySlot
+import qualified Pawl.Engine.Subtype as Subtype.Engine
 import qualified Pawl.Engine.Turn as Turn
 import qualified Pawl.Types.AgainstExiledPile as AgainstExiledPile
 import qualified Pawl.Types.AgainstLastCardExiledWith as AgainstLastCardExiledWith
@@ -385,9 +386,12 @@ evaluateAgainst viewOf context gs announcedOn mOid mView quantity =
         -- despite the mutual recursion -- a Greatest's payload is a strictly smaller
         -- subterm.
         --
-        -- The fold's filter is aimed at `mOid` too, for Filter.IsAttachedToEvaluated:
-        -- under CR 613.4c that is the affected object, Bruenor Battlehammer's "it".
-        Quantity.Count c -> Count.evaluate viewOf (\mOid2 view -> evaluateAgainst viewOf context gs announcedOn mOid2 (Just view)) context {Filter.evaluated = mOid} gs c
+        -- The fold's filter is aimed at `mOid` too, for Filter.IsAttachedToEvaluated
+        -- and Filter.IsEvaluated: under CR 613.4c that is the affected object,
+        -- Bruenor Battlehammer's "it". Its creature types come off `mView`, the
+        -- view this evaluation was handed, for SharesCreatureTypeWith's Evaluated
+        -- anchor (Coat of Arms).
+        Quantity.Count c -> Count.evaluate viewOf (\mOid2 view -> evaluateAgainst viewOf context gs announcedOn mOid2 (Just view)) context {Filter.evaluated = mOid, Filter.evaluatedCreatureTypes = fmap (Set.filter Subtype.Engine.isCreatureType . Filter.subtypes) mView} gs c
         -- CR 106.4: the mana-pool fold (Pawl.Engine.ManaCount). Takes the ViewOf but
         -- not the second injection the Count arm above does: a mana unit has no
         -- characteristics for a projection to describe, so the view is there only to

@@ -128,8 +128,11 @@
                             "type": "ChosenCardFromAmong",
                             "value": {
                               "filter": {
-                                "type": "SharesCreatureTypeWithBound",
-                                "value": "thatAttackingCreature"
+                                "type": "SharesCreatureTypeWith",
+                                "value": {
+                                  "type": "Bound",
+                                  "value": "thatAttackingCreature"
+                                }
                               },
                               "slot": "looked"
                             }

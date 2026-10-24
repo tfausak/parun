@@ -7,6 +7,7 @@ import qualified Pawl.JsonCodec.Codec as Codec
 import qualified Pawl.JsonCodec.Common as Common
 import qualified Pawl.Spec as Spec
 import qualified Pawl.Types.AbilityKind as AbilityKind
+import qualified Pawl.Types.Anchor as Anchor
 import qualified Pawl.Types.BlockStatus as BlockStatus
 import qualified Pawl.Types.BoundMeasure as BoundMeasure
 import qualified Pawl.Types.CardName as CardName
@@ -270,12 +271,12 @@ spec s = Spec.describe s "Pawl.Codec.Filter" $ do
       (Filter.SameControllerAsHostOfBound (SlotName.MkSlotName (Text.pack "target")))
       " {\"type\":\"SameControllerAsHostOfBound\",\"value\":\"target\"} "
     Spec.assertNeWith s "CR 303.4b's host is not the bound object itself" (Codec.encode codec (Filter.SameControllerAsHostOfBound (SlotName.MkSlotName (Text.pack "target")))) (Codec.encode codec (Filter.SameControllerAsBound (SlotName.MkSlotName (Text.pack "target"))))
-  Spec.it s "SharesCreatureTypeWithBound" $
+  Spec.it s "SharesCreatureTypeWith" $
     Common.assertCodec
       s
       codec
-      (Filter.SharesCreatureTypeWithBound (SlotName.MkSlotName (Text.pack "thatDepartedPermanent")))
-      " {\"type\":\"SharesCreatureTypeWithBound\",\"value\":\"thatDepartedPermanent\"} "
+      (Filter.SharesCreatureTypeWith (Anchor.Bound (SlotName.MkSlotName (Text.pack "thatDepartedPermanent"))))
+      " {\"type\":\"SharesCreatureTypeWith\",\"value\":{\"type\":\"Bound\",\"value\":\"thatDepartedPermanent\"}} "
   Spec.it s "Measures" $
     Common.assertCodec
       s
@@ -486,6 +487,18 @@ spec s = Spec.describe s "Pawl.Codec.Filter" $ do
       codec
       Filter.IsAttachedToEvaluated
       " {\"type\":\"IsAttachedToEvaluated\"} "
+  Spec.it s "IsEvaluated" $
+    Common.assertCodec
+      s
+      codec
+      Filter.IsEvaluated
+      " {\"type\":\"IsEvaluated\"} "
+  Spec.it s "SharesCreatureTypeWith Evaluated" $
+    Common.assertCodec
+      s
+      codec
+      (Filter.SharesCreatureTypeWith Anchor.Evaluated)
+      " {\"type\":\"SharesCreatureTypeWith\",\"value\":{\"type\":\"Evaluated\"}} "
   Spec.it s "EnteredWithSource" $
     Common.assertCodec
       s

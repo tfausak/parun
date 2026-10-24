@@ -489,7 +489,7 @@ fromTheRubbleSpec s registry =
 
 -- CR 601.2c / 205.3m: Unbury's "return two target creature cards that share a
 -- creature type from your graveyard to your hand". Each slot names the other
--- with SharesCreatureTypeWithBound, since the condition binds both targets alike
+-- with SharesCreatureTypeWith, since the condition binds both targets alike
 -- (CR 608.2b re-checks each), and `second` adds Not (IsBound "first"). alice's graveyard
 -- holds two Hill Giants, a Goblin Piker and a Woodland Changeling; every board
 -- is the same, and the cases differ only in which pair is named.

@@ -3,6 +3,7 @@ module Pawl.Types.AffectedUnless where
 import qualified Pawl.Types.AbilityName as AbilityName
 import qualified Pawl.Types.Affected as Affected
 import qualified Pawl.Types.Condition as Condition
+import qualified Pawl.Types.Quantity as Quantity
 
 -- | Which creatures a combat restriction names, and CR 508.1c's "unless" gate.
 
@@ -28,6 +29,12 @@ data AffectedUnless = MkAffectedUnless
     -- declares BOTH halves of "can't attack or block" under one name, which is
     -- what makes one payment cover both. A CR 613.1f
     -- Modification.LoseNamedAbility reads it too (Synthetic Grounded Sentry).
-    name :: Maybe AbilityName.AbilityName
+    name :: Maybe AbilityName.AbilityName,
+    -- | CR 508.1c with CR 109.5: the number the affected set's EnclosingAmount
+    -- operand compares against, read for the SOURCE -- Ensnaring Bridge's
+    -- "power greater than the number of cards in your hand".
+    -- Pawl.Types.TargetSlot's `amount` on a restriction. Nothing for every
+    -- restriction that compares against no computed number.
+    amount :: Maybe Quantity.Quantity
   }
   deriving (Eq, Ord, Show)

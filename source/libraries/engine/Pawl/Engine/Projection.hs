@@ -1047,7 +1047,11 @@ affects source oid a partial gs = affectsGiven (fullView gs) source oid a partia
 -- board and grants are the caller's thunks, so a loop that never reaches a
 -- candidate pays for neither.
 affectsOn :: Map ObjectId ProjectedCharacteristics -> [ControlGrant] -> ObjectId -> ObjectId -> Affected.Affected -> GameState -> Bool
-affectsOn pcs grants source oid a gs = affectsWith grants (fullViewGiven pcs grants gs) source oid a (projectGiven pcs oid gs) gs
+affectsOn = affectsOnFramed id
+
+-- affectsOn through affectsFramed's `frame`.
+affectsOnFramed :: (Filter.Context -> Filter.Context) -> Map ObjectId ProjectedCharacteristics -> [ControlGrant] -> ObjectId -> ObjectId -> Affected.Affected -> GameState -> Bool
+affectsOnFramed frame pcs grants source oid a gs = affectsFramed frame grants (fullViewGiven pcs grants gs) source oid a (projectGiven pcs oid gs) gs
 
 -- affects for a caller asking about ONE object under many sources: the
 -- object's projection is the caller's, taken once, and the grant walk is shared
@@ -1068,7 +1072,13 @@ affectsGiven peers source oid a partial gs = affectsWith (controlGrants gs) peer
 -- so a caller asking this per (effect, object) pair -- the layer fold -- would
 -- otherwise take two controlGrants walks per pair.
 affectsWith :: [ControlGrant] -> Count.ViewOf -> ObjectId -> ObjectId -> Affected.Affected -> ProjectedCharacteristics -> GameState -> Bool
-affectsWith grants peers source oid a partial gs = case a of
+affectsWith = affectsFramed id
+
+-- affectsWith with the matching Context passed through `frame` first, for a
+-- carrier holding a number its affected set compares against
+-- (Pawl.Types.AffectedUnless's `amount`, read by the EnclosingAmount operand).
+affectsFramed :: (Filter.Context -> Filter.Context) -> [ControlGrant] -> Count.ViewOf -> ObjectId -> ObjectId -> Affected.Affected -> ProjectedCharacteristics -> GameState -> Bool
+affectsFramed frame grants peers source oid a partial gs = case a of
   -- CR 801.10 is asked of this stored set as the resolution fixes it (CR
   -- 611.2c), by Pawl.Engine.Resolve.Slots.battlefieldMatching.
   Affected.TheseObjects s -> Set.member oid s
@@ -1082,18 +1092,18 @@ affectsWith grants peers source oid a partial gs = case a of
         perspective = controllerOfGiven grants source gs
      in Set.member oid (GameState.battlefield gs)
           && inReach
-          && Filter.matches (affectedContext source perspective gs) (viewOfCharacteristics peers oid partial (controllerOfGiven grants oid gs) (countersOf oid gs) gs) f
+          && Filter.matches (frame (affectedContext source perspective gs)) (viewOfCharacteristics peers oid partial (controllerOfGiven grants oid gs) (countersOf oid gs) gs) f
   -- Matching's body without the battlefield conjunct.
   Affected.MatchingAnywhere f ->
     let perspective = controllerOfGiven grants source gs
      in inReach
-          && Filter.matches (affectedContext source perspective gs) (viewOfCharacteristics peers oid partial (controllerOfGiven grants oid gs) (countersOf oid gs) gs) f
+          && Filter.matches (frame (affectedContext source perspective gs)) (viewOfCharacteristics peers oid partial (controllerOfGiven grants oid gs) (countersOf oid gs) gs) f
   -- Matching's body with that conjunct NEGATED rather than dropped.
   Affected.MatchingOffBattlefield f ->
     let perspective = controllerOfGiven grants source gs
      in not (Set.member oid (GameState.battlefield gs))
           && inReach
-          && Filter.matches (affectedContext source perspective gs) (viewOfCharacteristics peers oid partial (controllerOfGiven grants oid gs) (countersOf oid gs) gs) f
+          && Filter.matches (frame (affectedContext source perspective gs)) (viewOfCharacteristics peers oid partial (controllerOfGiven grants oid gs) (countersOf oid gs) gs) f
   -- CR 303.4b / 303.4m: the source's attachment again, read for the PLAYER it
   -- names. The Filter's perspective stays the source's controller (CR 109.5), not
   -- the enchanted player's. The candidate's controller is bound once and used
@@ -1112,7 +1122,7 @@ affectsWith grants peers source oid a partial gs = case a of
        in Set.member oid (GameState.battlefield gs)
             && controller == Just pid
             && inReach
-            && Filter.matches (affectedContext source (controllerOfGiven grants source gs) gs) (viewOfCharacteristics peers oid partial controller (countersOf oid gs) gs) f
+            && Filter.matches (frame (affectedContext source (controllerOfGiven grants source gs) gs)) (viewOfCharacteristics peers oid partial controller (countersOf oid gs) gs) f
     Nothing -> False
   -- CR 611.3d: a rider, applied by storing it (Event.permissionRiders) and never
   -- derived, so a projection's own read of the template names nothing.
@@ -1230,7 +1240,7 @@ viewWithLastKnownAnywhere gs = Count.orLastKnown (fullView gs) gs
 -- A key for every slot the map names, so a slot holding only a player, one
 -- answered with no target (CR 601.2c's "up to"), or one CR 608.2b emptied
 -- answers an EMPTY set and SameControllerAsBound and
--- SharesCreatureTypeWithBound refuse there; only a slot nobody has answered yet
+-- SharesCreatureTypeWith refuse there; only a slot nobody has answered yet
 -- is absent, where they widen. slotObjects keeps only the slots naming an
 -- object, its own doctrine. Measures only for a slot naming exactly ONE
 -- object: no printed comparison asks a group for one. All thunks: a filter
@@ -3726,7 +3736,7 @@ filterReads f = case f of
   -- bound object's HOST's controller arrives on the Context, already projected.
   Filter.Type.SameControllerAsHostOfBound _ -> Set.singleton Controller
   -- Reads the CANDIDATE's subtypes; the bound object's arrive on the Context.
-  Filter.Type.SharesCreatureTypeWithBound _ -> Set.singleton Subtypes
+  Filter.Type.SharesCreatureTypeWith _ -> Set.singleton Subtypes
   -- Reads NAMES at both ends too, HasName's answer one indirection along: the
   -- chosen half is not a projection at all, and the other has no Aspect.
   Filter.Type.HasChosenName {} -> Set.empty
@@ -3830,6 +3840,7 @@ filterReads f = case f of
   Filter.Type.HasAttached g -> filterReads g
   Filter.Type.IsAttachedToSource -> Set.empty
   Filter.Type.IsAttachedToEvaluated -> Set.empty
+  Filter.Type.IsEvaluated -> Set.empty
   Filter.Type.IsHostOfSource -> Set.empty
   Filter.Type.EnteredWithSource -> Set.empty
   Filter.Type.AttachedNoLaterThanSource -> Set.empty
@@ -4054,7 +4065,7 @@ filterReadsPeers f = case f of
   -- Pawl.Engine.Resolve.Slots.effectContext -- the host is reached there rather
   -- than through the candidate's `peers` view.
   Filter.Type.SameControllerAsHostOfBound _ -> False
-  Filter.Type.SharesCreatureTypeWithBound _ -> False
+  Filter.Type.SharesCreatureTypeWith _ -> False
   Filter.Type.HasChosenName {} -> False
   -- The source's chosen colour arrives on the Context, read off Object.chosenColors
   -- rather than off a projection; the candidate's own colours come from its
@@ -4095,6 +4106,7 @@ filterReadsPeers f = case f of
   Filter.Type.ControlledSinceTurnBegan -> False
   Filter.Type.IsAttachedToSource -> False
   Filter.Type.IsAttachedToEvaluated -> False
+  Filter.Type.IsEvaluated -> False
   Filter.Type.IsHostOfSource -> False
   Filter.Type.EnteredWithSource -> False
   Filter.Type.AttachedNoLaterThanSource -> False

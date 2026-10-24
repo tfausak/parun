@@ -1368,15 +1368,15 @@ rewriteRuleAbilities pairs abilities =
           RuleAbilities.untapRestrictions = fmap (\x -> x {UntapRestriction.affected = affected (UntapRestriction.affected x), UntapRestriction.while = condition (UntapRestriction.while x)}) (RuleAbilities.untapRestrictions abilities)
         }
 
--- One CR 508.1c / 509.1b restriction under CR 612.1: its subject, its gate and
--- the other side of the pair it describes, as Pawl.Engine.CombatRestriction
+-- One CR 508.1c / 509.1b restriction under CR 612.1: its subject, its gate, its
+-- amount and the other side of the pair it describes, as Pawl.Engine.CombatRestriction
 -- rewrites them.
 -- Exhaustive, so a new arm has to say where its words are.
 rewriteCombatRestriction :: [(TextWord.TextWord, TextWord.TextWord)] -> CombatRestriction.CombatRestriction -> CombatRestriction.CombatRestriction
 rewriteCombatRestriction pairs restriction =
   let unlessOf :: Maybe Condition.Type.Condition -> Maybe Condition.Type.Condition
       unlessOf = fmap (rewriteCondition pairs)
-      affectedUnless x = x {AffectedUnless.affected = rewriteAffected pairs (AffectedUnless.affected x), AffectedUnless.unless = unlessOf (AffectedUnless.unless x)}
+      affectedUnless x = x {AffectedUnless.affected = rewriteAffected pairs (AffectedUnless.affected x), AffectedUnless.unless = unlessOf (AffectedUnless.unless x), AffectedUnless.amount = fmap (rewriteQuantity pairs) (AffectedUnless.amount x)}
       aloneUnless x = x {AloneUnless.affected = rewriteAffected pairs (AloneUnless.affected x), AloneUnless.alongside = fmap (Filter.rewrite pairs) (AloneUnless.alongside x), AloneUnless.unless = unlessOf (AloneUnless.unless x)}
    in case restriction of
         CombatRestriction.CantAttack x -> CombatRestriction.CantAttack (affectedUnless x)

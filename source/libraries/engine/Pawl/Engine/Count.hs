@@ -374,7 +374,7 @@ bakePerspective viewOf context gs candidate predicate =
         Filter.Type.SameNameAsBound _ -> predicate
         Filter.Type.SameControllerAsBound _ -> predicate
         Filter.Type.SameControllerAsHostOfBound _ -> predicate
-        Filter.Type.SharesCreatureTypeWithBound _ -> predicate
+        Filter.Type.SharesCreatureTypeWith _ -> predicate
         Filter.Type.HasChosenName {} -> predicate
         Filter.Type.HasChosenColor -> predicate
         Filter.Type.HasChosenSubtype -> predicate
@@ -426,6 +426,7 @@ bakePerspective viewOf context gs candidate predicate =
           truth (any (\view -> Filter.matches context view f) (Maybe.mapMaybe viewOf (attachersOfPlayer gs candidate)))
         Filter.Type.IsAttachedToSource -> predicate
         Filter.Type.IsAttachedToEvaluated -> predicate
+        Filter.Type.IsEvaluated -> predicate
         Filter.Type.IsHostOfSource -> predicate
         Filter.Type.EnteredWithSource -> predicate
         Filter.Type.AttachedNoLaterThanSource -> predicate

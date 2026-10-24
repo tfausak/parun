@@ -51,6 +51,7 @@ import qualified Pawl.Types.AloneUnless as AloneUnless
 import qualified Pawl.Types.AlternativeActivationCost as AlternativeActivationCost
 import qualified Pawl.Types.AlternativeCost as AlternativeCost
 import qualified Pawl.Types.Amass as Amass
+import qualified Pawl.Types.Anchor as Anchor
 import qualified Pawl.Types.Ante as Ante
 import qualified Pawl.Types.AnyNumberDiscard as AnyNumberDiscard
 import qualified Pawl.Types.AnyNumberMatching as AnyNumberMatching
@@ -500,7 +501,8 @@ filterNames asking criterion = case criterion of
   Filter.SameNameAsBound slot -> slotNames asking slot
   Filter.SameControllerAsBound slot -> slotNames asking slot
   Filter.SameControllerAsHostOfBound slot -> slotNames asking slot
-  Filter.SharesCreatureTypeWithBound slot -> slotNames asking slot
+  Filter.SharesCreatureTypeWith (Anchor.Bound slot) -> slotNames asking slot
+  Filter.SharesCreatureTypeWith Anchor.Evaluated -> mempty
   Filter.HasChosenName {} -> mempty
   Filter.HasChosenColor -> mempty
   Filter.HasChosenSubtype -> mempty
@@ -536,6 +538,7 @@ filterNames asking criterion = case criterion of
   Filter.HasAttached nested -> filterNames asking nested
   Filter.IsAttachedToSource -> mempty
   Filter.IsAttachedToEvaluated -> mempty
+  Filter.IsEvaluated -> mempty
   Filter.IsHostOfSource -> mempty
   Filter.EnteredWithSource -> keyed asking
   Filter.AttachedNoLaterThanSource -> contextNames asking
@@ -630,7 +633,7 @@ affectedPlayersNames _asking onPlayer x = case x of
 
 affectedUnlessNames :: (Monoid r) => Asking r -> AffectedUnless.AffectedUnless -> r
 affectedUnlessNames asking x = case x of
-  AffectedUnless.MkAffectedUnless affected unless _name -> affectedNames asking affected <> foldMap (conditionNames asking) unless
+  AffectedUnless.MkAffectedUnless affected unless _name amount -> affectedNames asking affected <> foldMap (conditionNames asking) unless <> foldMap (quantityNames asking) amount
 
 againstLastCardExiledWithNames :: (Monoid r) => Asking r -> (quantity -> r) -> AgainstLastCardExiledWith.AgainstLastCardExiledWith quantity -> r
 againstLastCardExiledWithNames asking onQuantity x = case x of
