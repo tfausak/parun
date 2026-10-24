@@ -1,0 +1,35 @@
+{
+  "description": "CR 509.1b Okk blocks only beside a creature with greater power",
+  "note": "Okk blocking alone or beside bob's 2/2 Grizzly Bears is refused; beside the 5/4 Spined Wurm, blocking another attacker, it blocks. Company need not block the same attacker.",
+  "board": {
+    "active": "alice",
+    "step": "PrecombatMain",
+    "seats": [
+      {
+        "name": "alice",
+        "battlefield": [
+          { "card": "Hill Giant", "label": "giant", "ready": true },
+          { "card": "Goblin Piker", "label": "piker", "ready": true }
+        ],
+        "library": [{ "card": "Island" }, { "card": "Island" }]
+      },
+      {
+        "name": "bob",
+        "battlefield": [
+          { "card": "Okk", "label": "okk", "ready": true },
+          { "card": "Grizzly Bears", "label": "bears", "ready": true },
+          { "card": "Spined Wurm", "label": "wurm", "ready": true }
+        ],
+        "library": [{ "card": "Island" }, { "card": "Island" }]
+      }
+    ]
+  },
+  "timeline": [
+    { "turn": 1, "step": "DeclareAttackers", "player": "alice", "do": { "Attack": ["$giant", "$piker"] } },
+    { "turn": 1, "step": "DeclareBlockers", "player": "bob", "refuse": { "Block": { "$okk": ["$giant"] } } },
+    { "turn": 1, "step": "DeclareBlockers", "player": "bob", "refuse": { "Block": { "$okk": ["$giant"], "$bears": ["$piker"] } } },
+    { "turn": 1, "step": "DeclareBlockers", "player": "bob", "do": { "Block": { "$okk": ["$giant"], "$wurm": ["$piker"] } } },
+    { "turn": 1, "step": "DeclareBlockers", "player": "alice", "check": { "Blockers": { "attacker": "$giant", "blockers": ["$okk"] } } },
+    { "turn": 1, "step": "DeclareBlockers", "player": "alice", "check": { "Blockers": { "attacker": "$piker", "blockers": ["$wurm"] } } }
+  ]
+}

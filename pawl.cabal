@@ -157,6 +157,8 @@ library codec
     Pawl.Codec.AimedAtSpec
     Pawl.Codec.AimedPlayers
     Pawl.Codec.AimedPlayersSpec
+    Pawl.Codec.AloneUnless
+    Pawl.Codec.AloneUnlessSpec
     Pawl.Codec.AlternativeActivationCost
     Pawl.Codec.AlternativeActivationCostSpec
     Pawl.Codec.AlternativeCost
@@ -2267,6 +2269,7 @@ library types
     Pawl.Types.Aggregation
     Pawl.Types.AimedAt
     Pawl.Types.AimedPlayers
+    Pawl.Types.AloneUnless
     Pawl.Types.AlternativeActivationCost
     Pawl.Types.AlternativeCost
     Pawl.Types.Amass

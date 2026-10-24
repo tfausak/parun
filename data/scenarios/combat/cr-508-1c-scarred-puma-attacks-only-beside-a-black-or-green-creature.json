@@ -1,0 +1,26 @@
+{
+  "description": "CR 508.1c Scarred Puma attacks only beside a black or green creature",
+  "note": "The Puma attacking alone or beside the red Goblin Piker is refused; beside the green Grizzly Bears it attacks.",
+  "board": {
+    "active": "alice",
+    "step": "PrecombatMain",
+    "seats": [
+      {
+        "name": "alice",
+        "battlefield": [
+          { "card": "Scarred Puma", "label": "puma", "ready": true },
+          { "card": "Goblin Piker", "label": "piker", "ready": true },
+          { "card": "Grizzly Bears", "label": "bears", "ready": true }
+        ],
+        "library": [{ "card": "Island" }, { "card": "Island" }]
+      },
+      { "name": "bob", "library": [{ "card": "Island" }, { "card": "Island" }] }
+    ]
+  },
+  "timeline": [
+    { "turn": 1, "step": "DeclareAttackers", "player": "alice", "refuse": { "Attack": ["$puma"] } },
+    { "turn": 1, "step": "DeclareAttackers", "player": "alice", "refuse": { "Attack": ["$puma", "$piker"] } },
+    { "turn": 1, "step": "DeclareAttackers", "player": "alice", "do": { "Attack": ["$puma", "$bears"] } },
+    { "turn": 1, "step": "EndOfCombat", "player": "alice", "check": { "Attackers": { "attackers": { "$puma": "$bob", "$bears": "$bob" } } } }
+  ]
+}

@@ -6,6 +6,7 @@ module Pawl.Engine.RuleAbilities where
 import qualified Pawl.Types.AbilityName as AbilityName
 import qualified Pawl.Types.ActivationProhibition as ActivationProhibition
 import qualified Pawl.Types.AffectedUnless as AffectedUnless
+import qualified Pawl.Types.AloneUnless as AloneUnless
 import qualified Pawl.Types.CantAttackPlayer as CantAttackPlayer
 import qualified Pawl.Types.CantBeBlockedBy as CantBeBlockedBy
 import qualified Pawl.Types.CantBlockCreatures as CantBlockCreatures
@@ -33,7 +34,8 @@ nameOf cr = case cr of
   CombatRestriction.CantBeBlockedBy (CantBeBlockedBy.MkCantBeBlockedBy _ _ _ n) -> n
   CombatRestriction.CantBlockCreatures (CantBlockCreatures.MkCantBlockCreatures _ _ _ n) -> n
   CombatRestriction.CantAttackPlayer (CantAttackPlayer.MkCantAttackPlayer _ _ _ _ n) -> n
-  CombatRestriction.CantAttackAlone (AffectedUnless.MkAffectedUnless _ _ n) -> n
+  CombatRestriction.CantAttackAlone (AloneUnless.MkAloneUnless _ _ _ n) -> n
+  CombatRestriction.CantBlockAlone (AloneUnless.MkAloneUnless _ _ _ n) -> n
   CombatRestriction.CantAttackMoreThan {} -> Nothing
   CombatRestriction.CantBlockMoreThan {} -> Nothing
 

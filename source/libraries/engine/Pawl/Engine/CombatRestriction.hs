@@ -53,6 +53,7 @@ import qualified Pawl.Types.Affected as Affected
 import qualified Pawl.Types.AffectedUnless as AffectedUnless
 import qualified Pawl.Types.AimedAt as AimedAt
 import qualified Pawl.Types.AimedPlayers as AimedPlayers
+import qualified Pawl.Types.AloneUnless as AloneUnless
 import qualified Pawl.Types.AttackLimitUnless as AttackLimitUnless
 import qualified Pawl.Types.AttackTargetKind as AttackTargetKind
 import qualified Pawl.Types.CantAttackPlayer as CantAttackPlayer
@@ -257,11 +258,13 @@ blockProhibited = RestrictedCreatures.prohibited Prohibition.Block
 detained :: [ObjectId] -> GameState -> Set ObjectId
 detained candidates gs = Set.fromList (filter (`Detain.detained` gs) candidates)
 
--- CR 508.1c together with CR 506.5: which (creature, defending player) pairs an
--- effect in force right now says can't be the ONLY creature declared as an
--- attacker, announced at that seat. Bonded Construct.
+-- CR 508.1c together with CR 506.5: for each (creature, defending player) pair
+-- an effect in force right now says can't attack without company when announced
+-- at that seat, the company it wants -- one set per such effect, each needing
+-- some OTHER creature of it declared beside. Bonded Construct's "alone" wants any
+-- other candidate; Okk's wants one with greater power than itself.
 --
--- The two above are answered ABOUT A CANDIDATE and this one is not: this set is
+-- The two above are answered ABOUT A CANDIDATE and this one is not: this map is
 -- the input to a whole declaration's check
 -- (Pawl.Engine.Combat.attackDeclarationAllowed) rather than a filter on the
 -- candidate list. See `restricted` below.
@@ -270,14 +273,18 @@ detained candidates gs = Set.fromList (filter (`Detain.detained` gs) candidates)
 -- creature, so a gate naming the defending player is read at the seat THAT
 -- creature is announced against, `cantAttackDefender`'s shape and its one
 -- gather. Pawl.CombatSpec's PerDefenderWholeRestriction group is the proof.
-cantAttackAlone :: [ObjectId] -> [PlayerId] -> GameState -> Set (ObjectId, PlayerId)
+cantAttackAlone :: [ObjectId] -> [PlayerId] -> GameState -> Map.Map (ObjectId, PlayerId) [Set ObjectId]
 cantAttackAlone candidates players gs =
   let rows = gathered gs
-      forSeat player =
-        Set.map
-          (\oid -> (oid, player))
-          (restrictedIn (filter (not . lifted (Just player) gs) rows) attackingAlone candidates gs)
-   in Set.unions (fmap forSeat players)
+      forSeat player = Map.mapKeys (\oid -> (oid, player)) (companionsIn (filter (not . lifted (Just player) gs) rows) attackingAlone candidates candidates gs)
+   in Map.unions (fmap forSeat players)
+
+-- CR 509.1b together with CR 506.5: `cantAttackAlone` on the other declaration,
+-- over the `subjects` the declaring player could block with and the `pool` the
+-- whole block is drawn from (CR 805.10d's team). Mogg Flunkies; Okk. Read at
+-- the declaring seat, `cantBlock`'s reason.
+cantBlockAlone :: Maybe PlayerId -> [ObjectId] -> [ObjectId] -> GameState -> Map.Map ObjectId [Set ObjectId]
+cantBlockAlone defending subjects pool gs = companionsIn (inForce defending gs) blockingAlone subjects pool gs
 
 -- CR 508.1c through CR 802.3a: the bounds in force right now on how many
 -- creatures may be declared as attackers. That rule splits them in two and this
@@ -391,6 +398,7 @@ attacking cr = case cr of
   CombatRestriction.CantBlockCreatures {} -> Nothing
   CombatRestriction.CantAttackPlayer {} -> Nothing
   CombatRestriction.CantAttackAlone {} -> Nothing
+  CombatRestriction.CantBlockAlone {} -> Nothing
   CombatRestriction.CantAttackMoreThan {} -> Nothing
   CombatRestriction.CantBlockMoreThan {} -> Nothing
 
@@ -405,17 +413,33 @@ blocking cr = case cr of
   CombatRestriction.CantBlockCreatures {} -> Nothing
   CombatRestriction.CantAttackPlayer {} -> Nothing
   CombatRestriction.CantAttackAlone {} -> Nothing
+  CombatRestriction.CantBlockAlone {} -> Nothing
   CombatRestriction.CantAttackMoreThan {} -> Nothing
   CombatRestriction.CantBlockMoreThan {} -> Nothing
 
-attackingAlone :: CombatRestriction.CombatRestriction -> Maybe Affected.Affected
+-- The two "alone" selectors answer the whole record, since the company it wants
+-- is half of what the sentence says.
+attackingAlone :: CombatRestriction.CombatRestriction -> Maybe AloneUnless.AloneUnless
 attackingAlone cr = case cr of
   CombatRestriction.CantAttack {} -> Nothing
   CombatRestriction.CantBlock {} -> Nothing
   CombatRestriction.CantBeBlockedBy {} -> Nothing
   CombatRestriction.CantBlockCreatures {} -> Nothing
   CombatRestriction.CantAttackPlayer {} -> Nothing
-  CombatRestriction.CantAttackAlone (AffectedUnless.MkAffectedUnless a _ _) -> Just a
+  CombatRestriction.CantAttackAlone a -> Just a
+  CombatRestriction.CantBlockAlone {} -> Nothing
+  CombatRestriction.CantAttackMoreThan {} -> Nothing
+  CombatRestriction.CantBlockMoreThan {} -> Nothing
+
+blockingAlone :: CombatRestriction.CombatRestriction -> Maybe AloneUnless.AloneUnless
+blockingAlone cr = case cr of
+  CombatRestriction.CantAttack {} -> Nothing
+  CombatRestriction.CantBlock {} -> Nothing
+  CombatRestriction.CantBeBlockedBy {} -> Nothing
+  CombatRestriction.CantBlockCreatures {} -> Nothing
+  CombatRestriction.CantAttackPlayer {} -> Nothing
+  CombatRestriction.CantAttackAlone {} -> Nothing
+  CombatRestriction.CantBlockAlone a -> Just a
   CombatRestriction.CantAttackMoreThan {} -> Nothing
   CombatRestriction.CantBlockMoreThan {} -> Nothing
 
@@ -431,6 +455,7 @@ blockedBy cr = case cr of
   CombatRestriction.CantBlockCreatures {} -> Nothing
   CombatRestriction.CantAttackPlayer {} -> Nothing
   CombatRestriction.CantAttackAlone {} -> Nothing
+  CombatRestriction.CantBlockAlone {} -> Nothing
   CombatRestriction.CantAttackMoreThan {} -> Nothing
   CombatRestriction.CantBlockMoreThan {} -> Nothing
 
@@ -444,6 +469,7 @@ blocksNot cr = case cr of
   CombatRestriction.CantBlockCreatures (CantBlockCreatures.MkCantBlockCreatures a f _ _) -> Just (a, f)
   CombatRestriction.CantAttackPlayer {} -> Nothing
   CombatRestriction.CantAttackAlone {} -> Nothing
+  CombatRestriction.CantBlockAlone {} -> Nothing
   CombatRestriction.CantAttackMoreThan {} -> Nothing
   CombatRestriction.CantBlockMoreThan {} -> Nothing
 
@@ -461,6 +487,7 @@ attackingPlayer cr = case cr of
   CombatRestriction.CantBlockCreatures {} -> Nothing
   CombatRestriction.CantAttackPlayer (CantAttackPlayer.MkCantAttackPlayer a scope kinds _ _) -> Just (a, scope, kinds)
   CombatRestriction.CantAttackAlone {} -> Nothing
+  CombatRestriction.CantBlockAlone {} -> Nothing
   CombatRestriction.CantAttackMoreThan {} -> Nothing
   CombatRestriction.CantBlockMoreThan {} -> Nothing
 
@@ -478,6 +505,7 @@ attackingMoreThan cr = case cr of
   CombatRestriction.CantBlockCreatures {} -> Nothing
   CombatRestriction.CantAttackPlayer {} -> Nothing
   CombatRestriction.CantAttackAlone {} -> Nothing
+  CombatRestriction.CantBlockAlone {} -> Nothing
   CombatRestriction.CantAttackMoreThan (AttackLimitUnless.MkAttackLimitUnless n scope _) -> Just (n, scope)
   CombatRestriction.CantBlockMoreThan {} -> Nothing
 
@@ -489,6 +517,7 @@ blockingMoreThan cr = case cr of
   CombatRestriction.CantBlockCreatures {} -> Nothing
   CombatRestriction.CantAttackPlayer {} -> Nothing
   CombatRestriction.CantAttackAlone {} -> Nothing
+  CombatRestriction.CantBlockAlone {} -> Nothing
   CombatRestriction.CantAttackMoreThan {} -> Nothing
   CombatRestriction.CantBlockMoreThan (LimitUnless.MkLimitUnless n attackers _) -> Just (n, attackers)
 
@@ -506,7 +535,8 @@ gate cr = case cr of
   CombatRestriction.CantBeBlockedBy (CantBeBlockedBy.MkCantBeBlockedBy _ _ c _) -> c
   CombatRestriction.CantBlockCreatures (CantBlockCreatures.MkCantBlockCreatures _ _ c _) -> c
   CombatRestriction.CantAttackPlayer (CantAttackPlayer.MkCantAttackPlayer _ _ _ c _) -> c
-  CombatRestriction.CantAttackAlone (AffectedUnless.MkAffectedUnless _ c _) -> c
+  CombatRestriction.CantAttackAlone (AloneUnless.MkAloneUnless _ _ c _) -> c
+  CombatRestriction.CantBlockAlone (AloneUnless.MkAloneUnless _ _ c _) -> c
   CombatRestriction.CantAttackMoreThan (AttackLimitUnless.MkAttackLimitUnless _ _ c) -> c
   CombatRestriction.CantBlockMoreThan (LimitUnless.MkLimitUnless _ _ c) -> c
 
@@ -847,6 +877,32 @@ restrictedIn rows select candidates gs =
             candidates
    in Set.fromList (concatMap fromRestriction rows)
 
+-- The "alone" readers' walk: each of `subjects` a row `select` keeps restricts,
+-- mapped to the company that row wants -- the members of `pool` other than the
+-- creature itself that the row's `alongside` matches, every one of them when it
+-- has none (CR 506.5's "alone"). `restrictedIn` decides who is restricted, so
+-- CR 612.1's swap and CR 116.2d's ignore reach these rows as they reach every
+-- other.
+--
+-- THE FILTER'S CONTEXT IS THE RESTRICTED CREATURE'S, `cantBlockCreatures`'s
+-- pairing: Okk's "a creature with greater power" compares against Okk, which
+-- is the restricted creature and not necessarily the source. Rewritten by the
+-- same `changes` as the subject, both being words on the source's card.
+companionsIn :: [(ObjectId, [(TextWord.TextWord, TextWord.TextWord)], CombatRestriction.CombatRestriction)] -> (CombatRestriction.CombatRestriction -> Maybe AloneUnless.AloneUnless) -> [ObjectId] -> [ObjectId] -> GameState -> Map.Map ObjectId [Set ObjectId]
+companionsIn rows select subjects pool gs =
+  let fromRow row@(_, changes, restriction) = case select restriction of
+        Nothing -> []
+        Just aloneUnless ->
+          let wanted = fmap (if null changes then id else Filter.rewrite changes) (AloneUnless.alongside aloneUnless)
+              company creature =
+                Set.fromList
+                  ( filter
+                      (\other -> other /= creature && Maybe.maybe True (Filter.matches (Projection.pairwiseContext gs creature) (Projection.viewOfObject other gs)) wanted)
+                      pool
+                  )
+           in fmap (\creature -> (creature, [company creature])) (Set.toList (restrictedIn [row] (fmap AloneUnless.affected . select) subjects gs))
+   in Map.fromListWith (flip (<>)) (concatMap fromRow rows)
+
 -- CR 116.2d's WHO on the object axis: the permanents that `source`'s ability
 -- named `name` restricts right now. Pawl.Engine.Ignore turns that into the offer,
 -- by asking who CONTROLS them -- "that creature's controller" (Volrath's Curse,
@@ -885,7 +941,7 @@ namedSubjects source name gs =
       live row = any (\seat -> not (lifted seat gs row)) seats
    in concatMap fromRestriction (filter live (gathered gs))
 
--- The union of the six subject-naming selectors above -- what CR 116.2d's offer
+-- The union of the subject-naming selectors above -- what CR 116.2d's offer
 -- reads, where each declaration's reader takes one of them. The two BOUNDING
 -- arms carry no name (Pawl.Engine.RuleAbilities.nameOf), so no offer could
 -- reach a creature through them.
@@ -896,7 +952,8 @@ subjectOf cr = case cr of
   CombatRestriction.CantBeBlockedBy (CantBeBlockedBy.MkCantBeBlockedBy a _ _ _) -> Just a
   CombatRestriction.CantBlockCreatures (CantBlockCreatures.MkCantBlockCreatures a _ _ _) -> Just a
   CombatRestriction.CantAttackPlayer (CantAttackPlayer.MkCantAttackPlayer a _ _ _ _) -> Just a
-  CombatRestriction.CantAttackAlone (AffectedUnless.MkAffectedUnless a _ _) -> Just a
+  CombatRestriction.CantAttackAlone (AloneUnless.MkAloneUnless a _ _ _) -> Just a
+  CombatRestriction.CantBlockAlone (AloneUnless.MkAloneUnless a _ _ _) -> Just a
   CombatRestriction.CantAttackMoreThan {} -> Nothing
   CombatRestriction.CantBlockMoreThan {} -> Nothing
 

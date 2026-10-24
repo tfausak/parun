@@ -1,0 +1,37 @@
+{
+  "description": "CR 509.1b Mogg Flunkies can't attack or block alone",
+  "note": "Bob's Hill Giant and Grizzly Bears attack; alice's Flunkies blocking alone is refused, and blocking the Bears beside her Goblin Piker blocking the Giant stands. On her turn, the Flunkies attacking alone is refused and attacking beside a second Goblin Piker stands.",
+  "board": {
+    "active": "bob",
+    "step": "PrecombatMain",
+    "seats": [
+      {
+        "name": "bob",
+        "battlefield": [
+          { "card": "Hill Giant", "label": "giant", "ready": true },
+          { "card": "Grizzly Bears", "label": "bears", "ready": true }
+        ],
+        "library": [{ "card": "Island" }, { "card": "Island" }]
+      },
+      {
+        "name": "alice",
+        "battlefield": [
+          { "card": "Mogg Flunkies", "label": "flunkies", "ready": true },
+          { "card": "Goblin Piker", "label": "piker", "ready": true },
+          { "card": "Goblin Piker", "label": "spare", "ready": true }
+        ],
+        "library": [{ "card": "Island" }, { "card": "Island" }]
+      }
+    ]
+  },
+  "timeline": [
+    { "turn": 1, "step": "DeclareAttackers", "player": "bob", "do": { "Attack": ["$giant", "$bears"] } },
+    { "turn": 1, "step": "DeclareBlockers", "player": "alice", "refuse": { "Block": { "$flunkies": ["$bears"] } } },
+    { "turn": 1, "step": "DeclareBlockers", "player": "alice", "do": { "Block": { "$flunkies": ["$bears"], "$piker": ["$giant"] } } },
+    { "turn": 1, "step": "DeclareBlockers", "player": "bob", "check": { "Blockers": { "attacker": "$bears", "blockers": ["$flunkies"] } } },
+    { "turn": 1, "step": "DeclareBlockers", "player": "bob", "check": { "Blockers": { "attacker": "$giant", "blockers": ["$piker"] } } },
+    { "turn": 2, "step": "DeclareAttackers", "player": "alice", "refuse": { "Attack": ["$flunkies"] } },
+    { "turn": 2, "step": "DeclareAttackers", "player": "alice", "do": { "Attack": ["$flunkies", "$spare"] } },
+    { "turn": 2, "step": "EndOfCombat", "player": "alice", "check": { "Attackers": { "attackers": { "$flunkies": "$bob", "$spare": "$bob" } } } }
+  ]
+}
