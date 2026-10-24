@@ -1,0 +1,13 @@
+{
+  "description": "CR 107.3 / 120.3 whole card: Ballista Squad deals X damage to target attacking or blocking creature",
+  "note": "Bob's Grizzly Bears stayed home and is no target; his attacking Hill Giant takes X = 2 from three Plains.",
+  "board": {"active": "bob", "step": "BeginningOfCombat", "seats": [{"name": "alice", "battlefield": [{"card": "Ballista Squad", "label": "squad", "ready": true}, {"card": "Plains", "label": "p1"}, {"card": "Plains", "label": "p2"}, {"card": "Plains", "label": "p3"}], "library": [{"card": "Island"}, {"card": "Island"}, {"card": "Island"}]}, {"name": "bob", "battlefield": [{"card": "Hill Giant", "label": "giant", "ready": true}, {"card": "Grizzly Bears", "label": "bears", "ready": true}], "library": [{"card": "Island"}, {"card": "Island"}, {"card": "Island"}]}]},
+  "timeline": [
+    {"turn": 1, "step": "DeclareAttackers", "player": "bob", "do": {"Attack": ["$giant"]}},
+    {"turn": 1, "step": "DeclareAttackers", "player": "alice", "refuse": {"Activate": {"object": "$squad", "x": 2, "targets": ["$bears"], "mana": ["$p1", "$p2", "$p3"]}}},
+    {"turn": 1, "step": "DeclareAttackers", "player": "alice", "do": {"Activate": {"object": "$squad", "x": 2, "targets": ["$giant"], "mana": ["$p1", "$p2", "$p3"]}}},
+    {"turn": 1, "step": "DeclareAttackers", "player": "alice", "do": "Pass"},
+    {"turn": 1, "step": "DeclareAttackers", "player": "alice", "check": {"Damage": {"object": "$giant", "damage": 2}}},
+    {"turn": 1, "step": "DeclareAttackers", "player": "alice", "check": {"Damage": {"object": "$bears", "damage": 0}}}
+  ]
+}

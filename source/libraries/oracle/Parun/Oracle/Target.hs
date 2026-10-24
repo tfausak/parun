@@ -60,6 +60,9 @@ data Context = MkContext
     -- later one calls "it": "Put a +1/+1 counter on Silvar. It gains
     -- indestructible until end of turn."
     earlier :: [ObjectRef.ObjectRef],
+    -- | The objects an earlier instruction of the mode changed the power and
+    -- toughness of, whose next change is "an additional" one (Wild Might).
+    pumped :: [ObjectRef.ObjectRef],
     -- | What the instructions call the object the source is attached to (CR
     -- 303.4b, CR 301.5a): "enchanted creature", "equipped creature", or
     -- nothing for a source that attaches to nothing.

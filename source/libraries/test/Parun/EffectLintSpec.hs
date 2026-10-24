@@ -1488,7 +1488,9 @@ effectObjectRefs effect =
         Effect.MoveToZone (MoveToZone.MkMoveToZone ref _ _ _ _ _ _) -> [(movedQuestions, ref)]
         Effect.Draw {} -> []
         Effect.Mill {} -> []
-        Effect.Reveal (Reveal.MkReveal ref _) -> [(AnyCardsFromAmong : shownQuestions, ref)]
+        -- Blackmail's "target player reveals three cards from their hand" asks
+        -- the hand's owner.
+        Effect.Reveal (Reveal.MkReveal ref _) -> [(AnyCardsFromAmong : CardInHand : shownQuestions, ref)]
         Effect.LookAt (LookAt.MkLookAt ref _ _) -> read_ [ref]
         Effect.Scry {} -> []
         Effect.Surveil {} -> []
@@ -2675,9 +2677,9 @@ effectLintSpec s registry = Spec.describe s "Lint" $ do
       [False, False, False, False]
     Spec.assertEqWith
       s
-      "CR 701.20a's reveal allows from-among and at-random, and neither zone-keyed chosen arm"
+      "CR 701.20a's reveal allows from-among, at-random and a hand's chosen cards (Blackmail), and not a graveyard's"
       (inert (fmap reveals [inGraveyard, inHand, fromAmong, atRandom]))
-      [True, True, False, False]
+      [True, False, False, False]
     -- CR 701.9b's two exceptions over Discard.These: Duress's from-among and
     -- Hymn to Tourach's at-random.
     Spec.assertEqWith

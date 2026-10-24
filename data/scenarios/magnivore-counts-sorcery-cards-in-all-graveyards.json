@@ -1,0 +1,10 @@
+{
+  "description": "CR 604.3 / 702.10b whole card: Magnivore's power and toughness are the number of sorcery cards in all graveyards, and it has haste",
+  "note": "Two sorceries in alice's graveyard and one in bob's count; her Lightning Bolt does not. Fresh under her control, it attacks.",
+  "board": {"active": "alice", "step": "PrecombatMain", "seats": [{"name": "alice", "battlefield": [{"card": "Magnivore", "label": "magnivore"}], "graveyard": [{"card": "Lava Axe"}, {"card": "Divination"}, {"card": "Lightning Bolt"}], "library": [{"card": "Island"}, {"card": "Island"}, {"card": "Island"}]}, {"name": "bob", "graveyard": [{"card": "Lava Axe"}], "library": [{"card": "Island"}, {"card": "Island"}, {"card": "Island"}]}]},
+  "timeline": [
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "check": {"PowerToughness": {"object": "$magnivore", "power": 3, "toughness": 3}}},
+    {"turn": 1, "step": "DeclareAttackers", "player": "alice", "do": {"Attack": ["$magnivore"]}},
+    {"turn": 1, "step": "DeclareAttackers", "player": "alice", "check": {"Attackers": {"attackers": {"$magnivore": "$bob"}}}}
+  ]
+}

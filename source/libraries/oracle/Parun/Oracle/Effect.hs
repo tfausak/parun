@@ -392,7 +392,14 @@ instructions context es = case es of
 
 -- | The context once these instructions have named their objects.
 noting :: Target.Context -> [Effect.Effect card ability] -> Target.Context
-noting context es = context {Target.earlier = Target.earlier context <> concatMap objectsOf es}
+noting context es = context {Target.earlier = Target.earlier context <> concatMap objectsOf es, Target.pumped = Target.pumped context <> concatMap pumpedOf es}
+
+-- | The objects an instruction changes the power and toughness of: "Untap
+-- target creature. It gets +2/+4" (Inspirit) names it again without one.
+pumpedOf :: Effect.Effect card ability -> [ObjectRef.ObjectRef]
+pumpedOf e = case e of
+  Effect.ModifyTarget m | Modification.ModifyPowerToughness _ <- ModifyTarget.modification m -> [ModifyTarget.ref m]
+  _ -> []
 
 -- | The objects an instruction names, which a later one calls "it".
 objectsOf :: Effect.Effect card ability -> [ObjectRef.ObjectRef]
@@ -473,7 +480,7 @@ modified context m more = do
   -- Objects a change to power and toughness reaches again get "an
   -- additional" one: "That creature gets an additional +4/+4" (Wild Might).
   let again = case ModifyTarget.modification m of
-        Modification.ModifyPowerToughness _ -> elem (ModifyTarget.ref m) (Target.earlier context)
+        Modification.ModifyPowerToughness _ -> elem (ModifyTarget.ref m) (Target.pumped context)
         _ -> False
       change = if again then (\(v, rest) -> v <> Text.pack " an additional" <> rest) (Text.breakOn (Text.pack " ") change') else change'
   lasting <- Continuous.duration (ModifyTarget.duration m)

@@ -1,0 +1,14 @@
+{
+  "description": "CR 120.3 / 110.2 Flame Wave aimed at a planeswalker burns it and each creature its controller controls",
+  "note": "Pairs with flame-wave-burns-the-target-player-and-their-creatures; bob's Liliana Vess drops from 7 to 3 loyalty and bob's life is untouched, as are alice's and carol's Walls of Stone.",
+  "board": {"active": "alice", "step": "PrecombatMain", "seats": [{"name": "alice", "manaPool": "RRRRRRR", "hand": [{"card": "Flame Wave", "label": "wave"}], "battlefield": [{"card": "Wall of Stone", "label": "alice-wall"}], "library": [{"card": "Island"}, {"card": "Island"}, {"card": "Island"}]}, {"name": "bob", "battlefield": [{"card": "Wall of Stone", "label": "bob-wall"}, {"card": "Liliana Vess", "label": "liliana", "counters": [{"key": {"type": "Loyalty"}, "value": 7}]}], "library": [{"card": "Island"}, {"card": "Island"}, {"card": "Island"}]}, {"name": "carol", "battlefield": [{"card": "Wall of Stone", "label": "carol-wall"}], "library": [{"card": "Island"}, {"card": "Island"}, {"card": "Island"}]}]},
+  "timeline": [
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "do": {"Cast": {"object": "$wave", "targets": ["$liliana"]}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "do": "Pass"},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "check": {"Counters": {"object": "$liliana", "kind": {"type": "Loyalty"}, "count": 3}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "check": {"Life": {"player": "bob", "life": 20}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "check": {"Damage": {"object": "$bob-wall", "damage": 4}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "check": {"Damage": {"object": "$alice-wall", "damage": 0}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "check": {"Damage": {"object": "$carol-wall", "damage": 0}}}
+  ]
+}
