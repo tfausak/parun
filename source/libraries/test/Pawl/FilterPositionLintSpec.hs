@@ -41,6 +41,7 @@ import qualified Pawl.Types.Affected as Affected
 import qualified Pawl.Types.AffectedPlayers as AffectedPlayers
 import qualified Pawl.Types.AffectedUnless as AffectedUnless
 import qualified Pawl.Types.Aggregation as Aggregation
+import qualified Pawl.Types.AloneUnless as AloneUnless
 import qualified Pawl.Types.AlternativeCost as AlternativeCost
 import qualified Pawl.Types.Anchor as Anchor
 import qualified Pawl.Types.AttachTarget as AttachTarget
@@ -614,7 +615,7 @@ amountedSlotAtoms value = case value of
         keyed k = fmap Pair.value (filter (\pair -> String.unwrap (Pair.name pair) == Text.pack k) pairs)
         tagged names = any (\v -> case v of Value.String t -> String.unwrap t `elem` fmap Text.pack names; _ -> False) (keyed "type")
         referenceAtoms = sum (fmap (amountedAtoms "filter") (if tagged ["Reference"] then keyed "value" else []))
-        restrictionAtoms = sum (fmap (amountedAtoms "affected") (if tagged ["CantAttack", "CantBlock", "CantAttackAlone"] then keyed "value" else []))
+        restrictionAtoms = sum (fmap (amountedAtoms "affected") (if tagged ["CantAttack", "CantBlock"] then keyed "value" else []))
         here =
           if null (keyed "pool") || null (keyed "amount")
             then referenceAtoms + restrictionAtoms
@@ -2731,7 +2732,7 @@ filterPositionLintSpec s registry = Spec.describe s "Lint" $ do
   -- 509.1b's pairwise walks, and they are empty inside the CR 613 layer fold and
   -- in a bare Filter.contextFor -- so the atom in a card's affected set or static
   -- condition would be a silent False. Outside a face's own pairwise position
-  -- (Spitfire Handler's, Ironclaw Curse's), a wish's filter (Synthetic Wishful
+  -- (Spitfire Handler's, Ironclaw Curse's, Okk's company), a wish's filter (Synthetic Wishful
   -- Djinn's) and a triggered ability's own condition (Kami of Mourning's), only
   -- Pawl.Engine.Keyword's keywords and Pawl.Engine.Ring's emblem write them, and
   -- this is what keeps that true.
@@ -2744,6 +2745,8 @@ filterPositionLintSpec s registry = Spec.describe s "Lint" $ do
         pairwiseFilters r = case r of
           CombatRestriction.CantBeBlockedBy x -> [CantBeBlockedBy.blockers x]
           CombatRestriction.CantBlockCreatures x -> [CantBlockCreatures.attackers x]
+          CombatRestriction.CantAttackAlone x -> Maybe.maybeToList (AloneUnless.alongside x)
+          CombatRestriction.CantBlockAlone x -> Maybe.maybeToList (AloneUnless.alongside x)
           _ -> []
         admitted needle c = (pairwise needle c, wishFilterAtoms needle (encoded c), triggerConditionAtoms needle (encoded c))
         outside needle c = let (p, w, t) = admitted needle c in occurrences needle (encoded c) - p - w - t

@@ -47,6 +47,7 @@ import qualified Pawl.Types.AgainstSlot as AgainstSlot
 import qualified Pawl.Types.Aggregation as Aggregation
 import qualified Pawl.Types.AimedAt as AimedAt
 import qualified Pawl.Types.AimedPlayers as AimedPlayers
+import qualified Pawl.Types.AloneUnless as AloneUnless
 import qualified Pawl.Types.AlternativeActivationCost as AlternativeActivationCost
 import qualified Pawl.Types.AlternativeCost as AlternativeCost
 import qualified Pawl.Types.Amass as Amass
@@ -652,6 +653,10 @@ aggregationNames _asking onQuantity x = case x of
   Aggregation.Greatest quantity -> onQuantity quantity
   Aggregation.Total quantity -> onQuantity quantity
 
+aloneUnlessNames :: (Monoid r) => Asking r -> AloneUnless.AloneUnless -> r
+aloneUnlessNames asking x = case x of
+  AloneUnless.MkAloneUnless affected alongside unless _name -> affectedNames asking affected <> foldMap (filterNames asking) alongside <> foldMap (conditionNames asking) unless
+
 aimedAtNames :: (Monoid r) => Asking r -> AimedAt.AimedAt -> r
 aimedAtNames asking x = case x of
   AimedAt.MkAimedAt defenders _kinds -> aimedPlayersNames asking defenders
@@ -905,7 +910,8 @@ combatRestrictionNames asking x = case x of
   CombatRestriction.CantBeBlockedBy cantBeBlockedBy -> cantBeBlockedByNames asking cantBeBlockedBy
   CombatRestriction.CantBlockCreatures cantBlockCreatures -> cantBlockCreaturesNames asking cantBlockCreatures
   CombatRestriction.CantAttackPlayer cantAttackPlayer -> cantAttackPlayerNames asking cantAttackPlayer
-  CombatRestriction.CantAttackAlone affectedUnless -> affectedUnlessNames asking affectedUnless
+  CombatRestriction.CantAttackAlone aloneUnless -> aloneUnlessNames asking aloneUnless
+  CombatRestriction.CantBlockAlone aloneUnless -> aloneUnlessNames asking aloneUnless
   CombatRestriction.CantAttackMoreThan attackLimitUnless -> attackLimitUnlessNames asking attackLimitUnless
   CombatRestriction.CantBlockMoreThan limitUnless -> limitUnlessNames asking limitUnless
 

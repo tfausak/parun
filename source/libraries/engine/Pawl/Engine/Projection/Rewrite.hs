@@ -25,6 +25,7 @@ import qualified Pawl.Types.AgainstExiledPile as AgainstExiledPile
 import qualified Pawl.Types.AgainstLastCardExiledWith as AgainstLastCardExiledWith
 import qualified Pawl.Types.AgainstSlot as AgainstSlot
 import qualified Pawl.Types.Aggregation as Aggregation
+import qualified Pawl.Types.AloneUnless as AloneUnless
 import qualified Pawl.Types.AlternativeCost as AlternativeCost
 import qualified Pawl.Types.Amass as Amass
 import qualified Pawl.Types.Ante as Ante
@@ -1376,10 +1377,12 @@ rewriteCombatRestriction pairs restriction =
   let unlessOf :: Maybe Condition.Type.Condition -> Maybe Condition.Type.Condition
       unlessOf = fmap (rewriteCondition pairs)
       affectedUnless x = x {AffectedUnless.affected = rewriteAffected pairs (AffectedUnless.affected x), AffectedUnless.unless = unlessOf (AffectedUnless.unless x), AffectedUnless.amount = fmap (rewriteQuantity pairs) (AffectedUnless.amount x)}
+      aloneUnless x = x {AloneUnless.affected = rewriteAffected pairs (AloneUnless.affected x), AloneUnless.alongside = fmap (Filter.rewrite pairs) (AloneUnless.alongside x), AloneUnless.unless = unlessOf (AloneUnless.unless x)}
    in case restriction of
         CombatRestriction.CantAttack x -> CombatRestriction.CantAttack (affectedUnless x)
         CombatRestriction.CantBlock x -> CombatRestriction.CantBlock (affectedUnless x)
-        CombatRestriction.CantAttackAlone x -> CombatRestriction.CantAttackAlone (affectedUnless x)
+        CombatRestriction.CantAttackAlone x -> CombatRestriction.CantAttackAlone (aloneUnless x)
+        CombatRestriction.CantBlockAlone x -> CombatRestriction.CantBlockAlone (aloneUnless x)
         CombatRestriction.CantBeBlockedBy x ->
           CombatRestriction.CantBeBlockedBy
             x

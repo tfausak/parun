@@ -1,0 +1,34 @@
+{
+  "description": "CR 509.1c Okk required to block takes a creature with greater power along",
+  "note": "Bob's own Courtly Provocateur makes Okk block if able. Okk is able only beside the 5/4 Spined Wurm, which nothing requires to block, so declining, Okk alone and Okk beside the 2/2 Grizzly Bears are all refused, and Okk with the Wurm stands.",
+  "board": {
+    "active": "alice",
+    "step": "Upkeep",
+    "seats": [
+      {
+        "name": "alice",
+        "battlefield": [{ "card": "Hill Giant", "label": "giant", "ready": true }],
+        "library": [{ "card": "Island" }, { "card": "Island" }]
+      },
+      {
+        "name": "bob",
+        "battlefield": [
+          { "card": "Courtly Provocateur", "label": "provocateur", "ready": true },
+          { "card": "Okk", "label": "okk", "ready": true },
+          { "card": "Grizzly Bears", "label": "bears", "ready": true },
+          { "card": "Spined Wurm", "label": "wurm", "ready": true }
+        ],
+        "library": [{ "card": "Island" }, { "card": "Island" }]
+      }
+    ]
+  },
+  "timeline": [
+    { "turn": 1, "step": "Upkeep", "player": "bob", "do": { "Activate": { "object": "$provocateur", "ability": 1, "targets": ["$okk"] } } },
+    { "turn": 1, "step": "DeclareAttackers", "player": "alice", "do": { "Attack": ["$giant"] } },
+    { "turn": 1, "step": "DeclareBlockers", "player": "bob", "refuse": { "Block": {} } },
+    { "turn": 1, "step": "DeclareBlockers", "player": "bob", "refuse": { "Block": { "$okk": ["$giant"] } } },
+    { "turn": 1, "step": "DeclareBlockers", "player": "bob", "refuse": { "Block": { "$okk": ["$giant"], "$bears": ["$giant"] } } },
+    { "turn": 1, "step": "DeclareBlockers", "player": "bob", "do": { "Block": { "$okk": ["$giant"], "$wurm": ["$giant"] } } },
+    { "turn": 1, "step": "DeclareBlockers", "player": "alice", "check": { "Blockers": { "attacker": "$giant", "blockers": ["$okk", "$wurm"] } } }
+  ]
+}

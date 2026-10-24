@@ -1,0 +1,29 @@
+{
+  "description": "CR 508.1d Okk required to attack stays home without a creature with greater power",
+  "note": "Bob's Courtly Provocateur makes Okk attack if able, but alice's only other creature is a 3/3 Hill Giant, so no declaration obeys the requirement and declining to attack stands.",
+  "board": {
+    "active": "alice",
+    "step": "Upkeep",
+    "seats": [
+      {
+        "name": "alice",
+        "battlefield": [
+          { "card": "Okk", "label": "okk", "ready": true },
+          { "card": "Hill Giant", "label": "giant", "ready": true }
+        ],
+        "library": [{ "card": "Island" }, { "card": "Island" }]
+      },
+      {
+        "name": "bob",
+        "battlefield": [{ "card": "Courtly Provocateur", "label": "provocateur", "ready": true }],
+        "library": [{ "card": "Island" }, { "card": "Island" }]
+      }
+    ]
+  },
+  "timeline": [
+    { "turn": 1, "step": "Upkeep", "player": "bob", "do": { "Activate": { "object": "$provocateur", "ability": 0, "targets": ["$okk"] } } },
+    { "turn": 1, "step": "DeclareAttackers", "player": "alice", "refuse": { "Attack": ["$okk", "$giant"] } },
+    { "turn": 1, "step": "DeclareAttackers", "player": "alice", "do": { "Attack": [] } },
+    { "turn": 1, "step": "EndOfCombat", "player": "alice", "check": { "Attackers": { "attackers": {} } } }
+  ]
+}

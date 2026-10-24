@@ -1,0 +1,28 @@
+{
+  "description": "CR 508.1c Okk attacks only beside a creature with greater power",
+  "note": "Okk attacking alone, beside a 3/3 Hill Giant, or beside a second Okk of equal power is refused; beside the 5/4 Spined Wurm it attacks. The second Okk is the strictness of 'greater'.",
+  "board": {
+    "active": "alice",
+    "step": "PrecombatMain",
+    "seats": [
+      {
+        "name": "alice",
+        "battlefield": [
+          { "card": "Okk", "label": "okk", "ready": true },
+          { "card": "Okk", "label": "other-okk", "ready": true },
+          { "card": "Hill Giant", "label": "giant", "ready": true },
+          { "card": "Spined Wurm", "label": "wurm", "ready": true }
+        ],
+        "library": [{ "card": "Island" }, { "card": "Island" }]
+      },
+      { "name": "bob", "library": [{ "card": "Island" }, { "card": "Island" }] }
+    ]
+  },
+  "timeline": [
+    { "turn": 1, "step": "DeclareAttackers", "player": "alice", "refuse": { "Attack": ["$okk"] } },
+    { "turn": 1, "step": "DeclareAttackers", "player": "alice", "refuse": { "Attack": ["$okk", "$giant"] } },
+    { "turn": 1, "step": "DeclareAttackers", "player": "alice", "refuse": { "Attack": ["$okk", "$other-okk"] } },
+    { "turn": 1, "step": "DeclareAttackers", "player": "alice", "do": { "Attack": ["$okk", "$wurm"] } },
+    { "turn": 1, "step": "EndOfCombat", "player": "alice", "check": { "Attackers": { "attackers": { "$okk": "$bob", "$wurm": "$bob" } } } }
+  ]
+}
