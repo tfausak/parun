@@ -21,7 +21,7 @@ That prediction turns out to be half wrong, and usefully so. Serum Powder does
 **not** want the count observable — its action is not a mulligan and never reads
 the count. What it wants is a *window*: a place in the CR 103.5 round loop where
 a card in a player's hand may do something. That window is CR 103.5b, and
-nothing in pawl has one today, so no card can affect the mulligan process at
+nothing in parun has one today, so no card can affect the mulligan process at
 all.
 
 ## 1. The rules (verbatim ground truth)
@@ -87,7 +87,7 @@ Powder itself.
   different time: 103.6 runs *after* the whole mulligan process completes.
   Already tracked as #149 and expected to be the next piece of work.
 - **CR 103.5a / 103.5d** — Vanguard hand-size modifiers and the shared-team-turns
-  declaration order. Both need a format/variant concept pawl does not have
+  declaration order. Both need a format/variant concept parun does not have
   (#175), the posture CR 800.6's siblings already take.
 - **The starting hand size constant.** `Mulligan.openingHand` stays seven; the
   redraw count is untouched by this work.
@@ -127,7 +127,7 @@ positional caveat, filed as an issue rather than built now (§9).
 on decode via `listFromDefault (getOpt …)`. None of the 86 existing card files
 change.
 
-**`Pawl.Card.allEffects`** stays the spell's effects only; it exists for the D4
+**`Parun.Card.allEffects`** stays the spell's effects only; it exists for the D4
 lint and the CR 612 text-change scan, both of which range over a *spell's* text.
 A mulligan action is not part of the spell, has no slots, and cannot be
 text-changed from the hand. The lint family's coverage of the new field is §9's
@@ -157,7 +157,7 @@ Two consequences worth stating rather than special-casing:
 - **The Powder exiles itself.** It is a card in the hand; CR 103.5b's action is
   not a cost and nothing sets it aside. The ruling's "the cards in your hand are
   exiled for the rest of the game" is exactly the plain zone move.
-- **Exile is face up.** pawl models no face-down exile, which is what the ruling
+- **Exile is face up.** parun models no face-down exile, which is what the ruling
   says the default is ("always face up unless the effect that exiled them says
   they aren't"). Nothing to implement.
 
@@ -167,7 +167,7 @@ working through this path with no extra machinery.
 
 ### 3.3 The cycle, and the performer parameter
 
-`Pawl.Mulligan` **cannot** import `Pawl.Resolve`:
+`Parun.Mulligan` **cannot** import `Parun.Resolve`:
 
 ```
 Resolve  --(Effect.RestartGame)-->  Setup.restartGame
@@ -184,11 +184,11 @@ So the effect performer is **passed in**, the existing
 `resolveSpellWith runSubgame` precedent for exactly this situation:
 
 ```haskell
--- Pawl.Type.MulliganPerformer (new; the Pawl.Type.Game synonym precedent)
+-- Parun.Type.MulliganPerformer (new; the Parun.Type.Game synonym precedent)
 --
 -- CR 103.5b: how the closed half performs a mulligan-window action's effects --
 -- the source object, the acting player, and the effects. A PARAMETER rather
--- than an import because Pawl.Resolve sits ABOVE Pawl.Mulligan
+-- than an import because Parun.Resolve sits ABOVE Parun.Mulligan
 -- (Effect.RestartGame -> Setup.restartGame -> startGameFromCards ->
 -- openingHands), so importing it here would close a cycle.
 type MulliganPerformer = ObjectId -> PlayerId -> [Effect Card] -> Game ()
@@ -210,7 +210,7 @@ subgame runner" is a real state of the world; "no mulligan performer" is not —
 would silently disable every 103.5b card at whichever call site forgot. A
 required parameter makes the compiler ask.
 
-`Pawl.Mulligan` mentions `Effect` and never cases on it: the candidate list is
+`Parun.Mulligan` mentions `Effect` and never cases on it: the candidate list is
 built from a *classification* (does this card declare a non-empty
 `mulliganAction`?), and the payload is handed to the performer opaquely. That is
 the closed/open split holding, not bending.
@@ -287,7 +287,7 @@ comment already records: `decode`'s job is to return `Nothing` for a response
 that does not match the prompt being asked, and two prompts sharing a constructor
 cannot do that.
 
-`Pawl.Replay` gains the three mechanical arms: `encode`
+`Parun.Replay` gains the three mechanical arms: `encode`
 (`MulliganAction {} -> Response.TookMulliganAction answer`), `decode` (the
 matching branch), and `defaultAnswer` (`Nothing` — declining is always legal and
 the least-eventful fallback when a transcript runs short, mirroring
@@ -318,7 +318,7 @@ card and this project's cards are whole printings, not the fragment a milestone
 needs. It also costs nothing: colorless mana already exists (`ManaType.Colorless`)
 and Reliquary Tower already produces it.
 
-## 6. Testing (`Pawl.MulliganSpec`, extended)
+## 6. Testing (`Parun.MulliganSpec`, extended)
 
 The window is exercised with a real deck containing real Serum Powders, per
 tests-prefer-real-cards. Two interpreters: one that takes the action once then
@@ -349,23 +349,23 @@ keeps, one that always declines.
 9. **Short-deck loss survives the action** (CR 727.3 / 729.3). Exiling into a
    library too short to redraw still sets `drewFromEmpty`.
 
-`Pawl.CardsSpec` / `Pawl.CardSpec` cover `serum-powder.json` by their existing
+`Parun.CardsSpec` / `Parun.CardSpec` cover `serum-powder.json` by their existing
 whole-directory sweeps (each file re-parses to its compiled card; each file name
-is a slug). `Pawl.CodecSpec` gains the `ExileHandThenDraw` and `mulliganAction`
+is a slug). `Parun.CodecSpec` gains the `ExileHandThenDraw` and `mulliganAction`
 round-trips its per-constructor coverage expects.
 
 ## 7. Blast radius
 
-- **New:** `Pawl.Type.MulliganPerformer`, `data/cards/serum-powder.json`.
-- **Modified types:** `Pawl.Type.Effect` (+1 constructor), `Pawl.Type.Card`
-  (+1 field), `Pawl.Type.Prompt` (+1 constructor), `Pawl.Type.Response`
+- **New:** `Parun.Type.MulliganPerformer`, `data/cards/serum-powder.json`.
+- **Modified types:** `Parun.Type.Effect` (+1 constructor), `Parun.Type.Card`
+  (+1 field), `Parun.Type.Prompt` (+1 constructor), `Parun.Type.Response`
   (+1 constructor).
-- **Modified logic:** `Pawl.Codec` (effect + card arms), `Pawl.Replay`
-  (encode/decode/defaultAnswer), `Pawl.Resolve` (the new opcode arm,
+- **Modified logic:** `Parun.Codec` (effect + card arms), `Parun.Replay`
+  (encode/decode/defaultAnswer), `Parun.Resolve` (the new opcode arm,
   `performMulliganAction`, and the `RestartGame` arm passing it),
-  `Pawl.Mulligan` (`actionsFor`, the window loop, the performer parameter),
-  `Pawl.Setup` (parameter on `newGame`, `startGameFromCards`, `restartGame`),
-  `Pawl.Engine` (two call sites), `Pawl.hs` (the `Setup.newGame` re-export's
+  `Parun.Mulligan` (`actionsFor`, the window loop, the performer parameter),
+  `Parun.Setup` (parameter on `newGame`, `startGameFromCards`, `restartGame`),
+  `Parun.Engine` (two call sites), `Parun.hs` (the `Setup.newGame` re-export's
   signature).
 - **Modified tests/benchmark:** ~25 call sites of the four re-signatured setup
   functions across `SetupSpec`, `GameSpec`, `CastSpec`, `MulliganSpec`, plus the
@@ -382,7 +382,7 @@ no shim.
    `+pedantic` (after a `cabal clean`, since incremental builds hide warnings
    from unchanged modules).
 2. `hooky fix` applied, `hooky run` passes; HLint clean.
-3. `Pawl.MulliganSpec`'s new cases pass; the existing mulligan, setup, restart
+3. `Parun.MulliganSpec`'s new cases pass; the existing mulligan, setup, restart
    and subgame suites still pass.
 4. Every rules claim cites CR 103.5b (or the specific sub-rule) and was checked
    against `docs/rules.txt`.
@@ -396,9 +396,9 @@ no shim.
   is one action's effects, and `Prompt.MulliganAction` identifies an action by its
   source object alone. No printing declares two. Labels:
   `gap, expires:card-driven`. Cited at the `Card.mulliganAction` field.
-- **The `Pawl.CardSpec` lint family does not range over `mulliganAction`.**
+- **The `Parun.CardSpec` lint family does not range over `mulliganAction`.**
   `cardOffends` walks the spell's modes; a slot named in a mulligan action would
   go unlinted. Nothing can name one today (the opcode is targetless and
   slotless), so this is a shape the lint should grow *with* the first slotted
   mulligan action, not before. Labels: `gap, expires:card-driven`. Cited at
-  `Pawl.Card.allEffects`.
+  `Parun.Card.allEffects`.

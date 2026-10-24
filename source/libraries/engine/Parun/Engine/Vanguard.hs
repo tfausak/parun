@@ -1,0 +1,169 @@
+-- | CR 902, the Vanguard variant, and CR 313, the card type it is played with:
+-- CR 902.3's card face up in the command zone, CR 902.4's starting life total,
+-- CR 902.5's starting hand size, CR 902.5b's maximum hand size, and CR 313.2's
+-- refusal to let the card leave that zone.
+--
+-- A FORMAT and not a card, which is Parun.Engine.Commander's argument one variant
+-- over: no card's printed text says "your starting hand size is three", and rule
+-- 902.5 says it of whichever card the player brought. So none of this is a
+-- Parun.Types.PlayerEffect or a printed static ability.
+--
+-- CR 902.7's abilities functioning from the command zone is functionsFromCommandZone
+-- below, the ONE reading of CR 113.6p in the engine: every walk that gathers a
+-- printed ability off a command-zone object asks it, rather than growing its own
+-- reading of rule 313. Those walks are Parun.Engine.Event's triggered gather,
+-- Parun.Engine.Projection's static and replacement gathers, and
+-- Parun.Engine.CombatRestriction.inForce, and, through homeZoneOf,
+-- Parun.Engine.Activatable.zoneAbilitiesOf and
+-- Parun.Engine.Projection.View.abilitiesFromCharacteristics for the activated
+-- ones.
+--
+-- There is no GameSettings field for "this is a Vanguard game", and CR 902 asks
+-- for none: every rule in it is stated of a player's vanguard CARD, so having one
+-- is the whole of being in the variant. That reading is exact today rather than
+-- an approximation, and it rests on a capability parun lacks rather than on a
+-- claim about Magic -- Deck.vanguard is set by nothing but a Vanguard deck, and
+-- no rule parun implements asks whether a game is a Vanguard game without also
+-- naming the card.
+--
+-- All three of rule 902.7's limbs are done; the activated one is
+-- Parun.Engine.Activate's command-zone arm, proved on Barrin in
+-- Parun.VanguardSpec.
+--
+-- WHAT IS NOT IMPLEMENTED:
+--
+--   * CR 902.2's deck construction, as with every other format: parun validates no
+--     deck (#4458), so a game where one player brought a vanguard and another did
+--     not is playable here and is not a legal Vanguard game.
+module Parun.Engine.Vanguard where
+
+import qualified Data.List as List
+import qualified Data.Set as Set
+import Numeric.Natural (Natural)
+import qualified Parun.Engine.Conspiracy as Conspiracy
+import qualified Parun.Engine.Game as Game
+import qualified Parun.Engine.Plane as Plane
+import qualified Parun.Engine.Scheme as Scheme
+import qualified Parun.Extra.Integer as Integer
+import qualified Parun.Types.Card as Card
+import qualified Parun.Types.CardType as CardType
+import qualified Parun.Types.Face as Face
+import Parun.Types.GameState (GameState)
+import qualified Parun.Types.GameState as GameState
+import qualified Parun.Types.Object as Object
+import Parun.Types.ObjectId (ObjectId)
+import Parun.Types.PlayerId (PlayerId)
+import qualified Parun.Types.Source as Source
+import qualified Parun.Types.TypeLine as TypeLine
+import qualified Parun.Types.Vanguard as Vanguard
+import qualified Parun.Types.Zone as Zone
+
+-- | CR 313.1: does this face print the vanguard card type? A CLASSIFICATION over
+-- the printed type line, the same closed-half question
+-- Parun.Engine.Card.isPermanentType asks, and never a case on which card it is.
+isVanguardFace :: Face.Face Card.Card -> Bool
+isVanguardFace face = Set.member CardType.Vanguard (TypeLine.types (Face.typeLine face))
+
+-- | CR 902.6: is this object a vanguard card? Read off the PRINTED face rather
+-- than through the projection, for Parun.Types.Face.vanguard's reason: rule 313.2
+-- keeps the card in the command zone, where nothing in the pool can copy it or
+-- change its type.
+--
+-- No designation on the player, which is where this parts from
+-- Parun.Engine.Commander.isCommander: a commander is an ordinary card that must be
+-- singled out by rule 903.3, where a vanguard announces itself by its card type,
+-- and rule 313.2 means the object never changes zones and so never trades its id
+-- under CR 400.7.
+isVanguard :: ObjectId -> GameState -> Bool
+isVanguard oid gs = maybe False isVanguardFace (Game.faceOf oid gs)
+
+-- | CR 113.6p: does an ability that STATES NO ZONE function here because of what
+-- this command-zone object is? An emblem's does (CR 114.4), a face-up vanguard
+-- card's does (CR 902.7 \/ 313.4) and a face-up conspiracy card's does (CR
+-- 315.5); everything else falls back on CR 113.6's own default, which leaves a card's abilities functioning on the battlefield -- so a
+-- commander's unstated row does nothing here, and Parun.CommanderSpec's "CR 113.6
+-- a commander's static ability does not function from the command zone" is what
+-- proves it.
+--
+-- ONLY the unstated ones. CR 113.6b is a limb of rule 113.6's list beside 113.6p
+-- rather than under it, so a row that names the command zone functions there
+-- whatever the object is -- Grist, the Hunger Tide as a commander.
+-- Parun.Engine.Projection's static and replacement walks ask this after the
+-- ability's own stated set, never before it. Parun.Engine.Event.Trigger's
+-- stated-zone scan uses it as an exclusion instead, leaving these objects to
+-- `inCommand`, whose `commandCandidate` ignores a stated set: that differs only
+-- for a command-zone object stating some other zone, which no card does.
+-- Parun.Engine.CombatRestriction.inForce reads a construct carrying no stated
+-- set to ask (Parun.Types.CombatRestriction has no functionsFrom field).
+--
+-- A CLASSIFICATION and never an identity: the emblem arm reads
+-- Parun.Types.Source's own tag and the card arm reads the printed card type.
+--
+-- Rule 902.7's "face-up" is not asked, and cannot come apart from the card
+-- type: CR 902.3 places the card face up and CR 313.2 keeps it in this zone, so
+-- no rule parun implements can turn one over. CR 315.5's is asked, since CR
+-- 702.106a puts a conspiracy here face down. A regression fence: CR 315.5b
+-- already leaves a face-down one no ability to function (Card.faceDownFace).
+-- Parun.ConspiracySpec's Sentinel Dispatch case proves the conspiracy arm.
+--
+-- A plane, phenomenon or scheme card's do only while it is face up (CR 901.7,
+-- CR 904.8), which is membership in GameState.command rather than in a planar
+-- or scheme deck.
+functionsFromCommandZone :: ObjectId -> GameState -> Bool
+functionsFromCommandZone oid gs = case fmap Object.source (Game.lookupObject oid gs) of
+  Just (Source.OfEmblem _) -> True
+  Just (Source.OfCard _) -> isVanguard oid gs || (Conspiracy.isConspiracy oid gs && not (Conspiracy.isFaceDownConspiracy oid gs)) || ((Plane.isPlanarCard oid gs || Scheme.isScheme oid gs) && Set.member oid (GameState.command gs))
+  _ -> False
+
+-- | CR 113.6 \/ 113.6p: the zone where this object's abilities that state no zone
+-- function -- the command zone for an object functionsFromCommandZone names, the
+-- battlefield otherwise.
+homeZoneOf :: ObjectId -> GameState -> Zone.Zone
+homeZoneOf oid gs = if functionsFromCommandZone oid gs then Zone.Command else Zone.Battlefield
+
+-- | CR 902.3 \/ 902.6: this player's vanguard card, which is theirs to own and
+-- sits in the command zone all game.
+--
+-- The FIRST by id where a player somehow has two, which no legal Vanguard game
+-- has (CR 902.1's "one face-up vanguard card"); parun validates no deck (#4458), so
+-- the tie is broken rather than reported.
+vanguardOf :: PlayerId -> GameState -> Maybe ObjectId
+vanguardOf pid gs = List.find (\oid -> isVanguard oid gs) (Game.zoneMembers Zone.Command pid gs)
+
+-- | CR 313.6 \/ 313.7: the modifiers this player's vanguard prints, if they have
+-- one. THE one reader of Face.vanguard in the engine, so that the three rules
+-- that consult the two numbers cannot disagree about which card they came from.
+modifiersOf :: PlayerId -> GameState -> Maybe Vanguard.Vanguard
+modifiersOf pid gs = do
+  oid <- vanguardOf pid gs
+  face <- Game.faceOf oid gs
+  Face.vanguard face
+
+-- | CR 902.5 \/ 902.5b: apply CR 313.6's hand modifier to a base of seven -- both
+-- the starting hand size and the maximum hand size, which the two rules state in
+-- the same words over the same modifier.
+--
+-- CR 107.1b is the floor, which is what the saturating conversion performs, and
+-- none of the exceptions that rule carves out is a hand size --
+-- Parun.Engine.PlayerEffect.maximumHandSize's reduction arm reads it the same way.
+-- No vanguard in the pool can reach it: the largest negative modifier ever
+-- printed is Gerrard's -4, so the floor is a regression fence rather than a
+-- proved behaviour.
+--
+-- A player with no vanguard gets the base back unchanged, which is every game
+-- outside the variant.
+handSize :: Natural -> PlayerId -> GameState -> Natural
+handSize base pid gs =
+  Integer.toNaturalSaturating (toInteger base + maybe 0 Vanguard.handModifier (modifiersOf pid gs))
+
+-- | CR 902.4: CR 313.7's life modifier, applied to a starting life total by
+-- Parun.Engine.Setup.startingLife. Zero for a player with no vanguard.
+--
+-- An Integer and not a floor, unlike the hand size above: CR 902.4 says "20 plus
+-- or minus the life modifier" and states no minimum, and CR 104.3b speaks of a
+-- life total of "0 or less", so parun's is an Integer. A vanguard whose modifier
+-- took a player below zero would have them lose to that rule at once, which is
+-- what it says happens; none has ever been printed, the largest negative in the
+-- set being Ashnod's -8.
+lifeModifierOf :: PlayerId -> GameState -> Integer
+lifeModifierOf pid gs = maybe 0 Vanguard.lifeModifier (modifiersOf pid gs)

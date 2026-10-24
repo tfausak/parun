@@ -7,7 +7,7 @@ key-order-insensitive `Value`-level one
 
 ## Motivation
 
-`Pawl.CardsSpec.checkFile` currently makes two assertions per card file:
+`Parun.CardsSpec.checkFile` currently makes two assertions per card file:
 
 ```haskell
 HU.assertEqual path (Right p) (Json.parse contents >>= Codec.jsonToPrinting)
@@ -18,7 +18,7 @@ The second demands **byte stability**: the committed file must equal the codec's
 render exactly. That is stricter than the property anyone actually wants, and it
 constrains the corpus in two ways that have no rules or engine justification:
 
-1. **JSON objects are unordered.** `Pawl.Json.field` and `optField` are `lookup`
+1. **JSON objects are unordered.** `Parun.Json.field` and `optField` are `lookup`
    on an assoc list, so *parsing* is already fully order-insensitive. Only the
    byte assertion cares about key order. Reordering a field by hand — a
    semantically null edit — fails the suite.
@@ -28,7 +28,7 @@ constrains the corpus in two ways that have no rules or engine justification:
 
 Since M3.5 moved the source of truth into the files, the *first* assertion has
 also gone nearly vacuous: `p` was loaded from that same file by
-`Pawl.Cards.loadPrinting`, so it only checks that `slugify (name p)` agrees with
+`Parun.Cards.loadPrinting`, so it only checks that `slugify (name p)` agrees with
 the filename it came from.
 
 So one `assertEqual` is conflating three claims:
@@ -62,11 +62,11 @@ This design keeps (b), which subsumes (a), and deletes (c).
   the design is removing.
 - **No strict-unknown-key decoding.** Rejecting unrecognized keys in
   `jsonToPrinting` is the other way to secure claim (b), but it makes forwards
-  compatibility hard: a third-party file carrying keys pawl does not yet know
+  compatibility hard: a third-party file carrying keys parun does not yet know
   would stop loading. The `Value`-level assertion lands the strictness at the
-  *corpus* level instead — pawl's own committed files must be fully read, while
+  *corpus* level instead — parun's own committed files must be fully read, while
   any file with extra keys still loads.
-- No engine changes. No changes to `Pawl.Codec`.
+- No engine changes. No changes to `Parun.Codec`.
 
 ## Design
 
@@ -81,7 +81,7 @@ line 43 it would catch a file holding a *different* card under the wrong slug.
 It preserves (b) in full. A file with a stray or misspelled key keeps that key in
 `v` but not in `toJson p`, so the comparison still fails.
 
-### `Pawl.Json.sortKeys`
+### `Parun.Json.sortKeys`
 
 ```haskell
 sortKeys :: Value -> Value
@@ -176,7 +176,7 @@ behind.
 
 ## Documentation touched
 
-- `Pawl.Type.Json`'s header comment claims `Object` is an assoc list because
+- `Parun.Type.Json`'s header comment claims `Object` is an assoc list because
   "the codec controls key order, so a canonical render falls out of emitting
   fields in a fixed order." That rationale is now an implementation detail.
 - **Not** `Codec.hs:1276` ("the render is deterministic and the file

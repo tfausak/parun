@@ -1,0 +1,9457 @@
+module Parun.Engine.Keyword where
+
+import qualified Data.List as List
+import qualified Data.List.NonEmpty as NonEmpty
+import Data.Map.Strict (Map)
+import qualified Data.Map.Strict as Map
+import qualified Data.Maybe as Maybe
+import qualified Data.Sequence as Seq
+import Data.Set (Set)
+import qualified Data.Set as Set
+import qualified Data.Text as Text
+import Numeric.Natural (Natural)
+import qualified Parun.Engine.Binding as Binding
+import qualified Parun.Engine.Deploy as Deploy
+import qualified Parun.Engine.Earthbend as Earthbend
+import qualified Parun.Engine.Mint as Mint
+import qualified Parun.Extra.Natural as Natural
+import Parun.Types.AbilityName (AbilityName)
+import qualified Parun.Types.AbilityName as AbilityName
+import Parun.Types.ActivatedAbility (ActivatedAbility)
+import qualified Parun.Types.ActivatedAbility as ActivatedAbility
+import qualified Parun.Types.ActivationRestriction as ActivationRestriction
+import qualified Parun.Types.Activator as Activator
+import qualified Parun.Types.Affected as Affected
+import qualified Parun.Types.AffectedUnless as AffectedUnless
+import qualified Parun.Types.AgainstExiledPile as AgainstExiledPile
+import qualified Parun.Types.AgainstSlot as AgainstSlot
+import qualified Parun.Types.Aggregation as Aggregation
+import qualified Parun.Types.Arithmetic as Arithmetic
+import qualified Parun.Types.ArmDelayedTrigger as ArmDelayedTrigger
+import qualified Parun.Types.AttachRestriction as AttachRestriction
+import qualified Parun.Types.AttackTargetRef as AttackTargetRef
+import qualified Parun.Types.Backup as Backup
+import qualified Parun.Types.BeginningStep as BeginningStep
+import qualified Parun.Types.BlockStatus as BlockStatus
+import qualified Parun.Types.CantBeBlockedBy as CantBeBlockedBy
+import Parun.Types.Card (Card)
+import qualified Parun.Types.Card as Card
+import qualified Parun.Types.CardName as CardName
+import qualified Parun.Types.CardType as CardType
+import qualified Parun.Types.CastObligation as CastObligation
+import qualified Parun.Types.CastOffer as CastOffer
+import qualified Parun.Types.CastRepetition as CastRepetition
+import Parun.Types.CastingPermission (CastingPermission)
+import qualified Parun.Types.CastingPermission as CastingPermission
+import qualified Parun.Types.ChoosePlayer as ChoosePlayer
+import qualified Parun.Types.ChosenCardFromAmong as ChosenCardFromAmong
+import qualified Parun.Types.ChosenCardInHand as ChosenCardInHand
+import qualified Parun.Types.ChosenPermanents as ChosenPermanents
+import qualified Parun.Types.ClassLevel as ClassLevel
+import qualified Parun.Types.Clause as Clause
+import qualified Parun.Types.ClauseIndex as ClauseIndex
+import qualified Parun.Types.Color as Color
+import qualified Parun.Types.CombatRestriction as CombatRestriction
+import qualified Parun.Types.CombatStep as CombatStep
+import qualified Parun.Types.Compares as Compares
+import qualified Parun.Types.Comparison as Comparison
+import qualified Parun.Types.Condition as Condition
+import qualified Parun.Types.ControllerRelation as ControllerRelation
+import qualified Parun.Types.CopyException as CopyException
+import qualified Parun.Types.CopyStackObject as CopyStackObject
+import qualified Parun.Types.CopyTargets as CopyTargets
+import Parun.Types.Cost (Cost)
+import qualified Parun.Types.Cost as Cost
+import qualified Parun.Types.CostAmount as CostAmount
+import qualified Parun.Types.CostChoice as CostChoice
+import qualified Parun.Types.CostComponent as CostComponent
+import qualified Parun.Types.CostDirection as CostDirection
+import qualified Parun.Types.CostKeyword as CostKeyword
+import qualified Parun.Types.CostReduction as CostReduction
+import qualified Parun.Types.Count as Count
+import qualified Parun.Types.Counter as Counter
+import qualified Parun.Types.CounterKind as CounterKind
+import qualified Parun.Types.CounterName as CounterName
+import qualified Parun.Types.Counterability as Counterability
+import qualified Parun.Types.Craft as Craft
+import qualified Parun.Types.Create as Create
+import qualified Parun.Types.CreateCopy as CreateCopy
+import qualified Parun.Types.Cycling as Cycling
+import qualified Parun.Types.DamagePattern as DamagePattern
+import qualified Parun.Types.DamageR as DamageR
+import qualified Parun.Types.DamageRewrite as DamageRewrite
+import qualified Parun.Types.Designate as Designate
+import qualified Parun.Types.Designation as Designation
+import qualified Parun.Types.DestructionR as DestructionR
+import qualified Parun.Types.DestructionRewrite as DestructionRewrite
+import qualified Parun.Types.Devour as Devour
+import qualified Parun.Types.DevourCount as DevourCount
+import qualified Parun.Types.DiscardCause as DiscardCause
+import qualified Parun.Types.Draw as Draw
+import qualified Parun.Types.DrawR as DrawR
+import qualified Parun.Types.DrawRewrite as DrawRewrite
+import qualified Parun.Types.Duration as Duration
+import qualified Parun.Types.DuringPhase as DuringPhase
+import qualified Parun.Types.EachCardFromAmong as EachCardFromAmong
+import qualified Parun.Types.EachCardInExiledPile as EachCardInExiledPile
+import qualified Parun.Types.Effect as Effect
+import qualified Parun.Types.Emerge as Emerge
+import qualified Parun.Types.EndingStep as EndingStep
+import qualified Parun.Types.EntryAttack as EntryAttack
+import qualified Parun.Types.EntryController as EntryController
+import qualified Parun.Types.EntryR as EntryR
+import qualified Parun.Types.EntryRewrite as EntryRewrite
+import qualified Parun.Types.EntryRiders as EntryRiders
+import qualified Parun.Types.Equip as Equip
+import qualified Parun.Types.EquipTarget as EquipTarget
+import qualified Parun.Types.ExchangeCardZones as ExchangeCardZones
+import qualified Parun.Types.ExileHaunting as ExileHaunting
+import qualified Parun.Types.ExiledPile as ExiledPile
+import qualified Parun.Types.Face as Face
+import Parun.Types.Filter (Filter)
+import qualified Parun.Types.Filter as Filter
+import qualified Parun.Types.ForEach as ForEach
+import Parun.Types.ForetellCost (ForetellCost)
+import qualified Parun.Types.Gift as Gift
+import qualified Parun.Types.GrantLookAtExiled as GrantLookAtExiled
+import qualified Parun.Types.GrantedAbility as GrantedAbility
+import qualified Parun.Types.HowMany as HowMany
+import qualified Parun.Types.Hybrid as Hybrid
+import qualified Parun.Types.IfTaken as IfTaken
+import qualified Parun.Types.Impending as Impending
+import qualified Parun.Types.InZone as InZone
+import Parun.Types.Keyword (Keyword)
+import qualified Parun.Types.Keyword as Keyword
+import qualified Parun.Types.KeywordCount as KeywordCount
+import qualified Parun.Types.KeywordDesignator as KeywordDesignator
+import qualified Parun.Types.KeywordFamily as KeywordFamily
+import qualified Parun.Types.KeywordInstance as KeywordInstance
+import qualified Parun.Types.KeywordTally as KeywordTally
+import qualified Parun.Types.Layout as Layout
+import qualified Parun.Types.LibraryPlacement as LibraryPlacement
+import qualified Parun.Types.LibraryPosition as LibraryPosition
+import qualified Parun.Types.LifeLoss as LifeLoss
+import qualified Parun.Types.LifeLossCause as LifeLossCause
+import qualified Parun.Types.LookAt as LookAt
+import qualified Parun.Types.LoopMembers as LoopMembers
+import qualified Parun.Types.MadnessCost as MadnessCost
+import qualified Parun.Types.ManaAddition as ManaAddition
+import qualified Parun.Types.ManaCost as ManaCost
+import qualified Parun.Types.ManaProduction as ManaProduction
+import qualified Parun.Types.ManaRetention as ManaRetention
+import qualified Parun.Types.ManaSpending as ManaSpending
+import qualified Parun.Types.ManaSymbol as ManaSymbol
+import qualified Parun.Types.ManaType as ManaType
+import qualified Parun.Types.Measure as Measure
+import qualified Parun.Types.Measures as Measures
+import qualified Parun.Types.Modal as Modal
+import qualified Parun.Types.Modification as Modification
+import qualified Parun.Types.ModifyPowerToughness as ModifyPowerToughness
+import qualified Parun.Types.ModifyTarget as ModifyTarget
+import qualified Parun.Types.Morph as Morph
+import qualified Parun.Types.MorphVariant as MorphVariant
+import qualified Parun.Types.MoveCounters as MoveCounters
+import qualified Parun.Types.MoveToZone as MoveToZone
+import qualified Parun.Types.MovedKinds as MovedKinds
+import qualified Parun.Types.Ninjutsu as Ninjutsu
+import qualified Parun.Types.NinjutsuVariant as NinjutsuVariant
+import Parun.Types.ObjectId (ObjectId)
+import qualified Parun.Types.ObjectRef as ObjectRef
+import qualified Parun.Types.OfferCast as OfferCast
+import qualified Parun.Types.Onset as Onset
+import qualified Parun.Types.Operand as Operand
+import qualified Parun.Types.Optionality as Optionality
+import qualified Parun.Types.PayBranch as PayBranch
+import qualified Parun.Types.PayGate as PayGate
+import qualified Parun.Types.PayObligation as PayObligation
+import qualified Parun.Types.PermanentActed as PermanentActed
+import qualified Parun.Types.PermanentAction as PermanentAction
+import qualified Parun.Types.PermissionVerb as PermissionVerb
+import qualified Parun.Types.Phase as Phase
+import qualified Parun.Types.PhaseSelector as PhaseSelector
+import qualified Parun.Types.PlayerChoice as PlayerChoice
+import qualified Parun.Types.PlayerCounterKind as PlayerCounterKind
+import qualified Parun.Types.PlayerCounters as PlayerCounters
+import Parun.Types.PlayerId (PlayerId)
+import qualified Parun.Types.PlayerQuantity as PlayerQuantity
+import qualified Parun.Types.PlayerRef as PlayerRef
+import qualified Parun.Types.PlayerRelation as PlayerRelation
+import qualified Parun.Types.PlayerSacrifices as PlayerSacrifices
+import qualified Parun.Types.PlayerScope as PlayerScope
+import qualified Parun.Types.PlayersWho as PlayersWho
+import qualified Parun.Types.Plus as Plus
+import qualified Parun.Types.Pool as Pool
+import qualified Parun.Types.Power as Power
+import qualified Parun.Types.ProjectedCharacteristics as PC
+import qualified Parun.Types.Protection as Protection
+import qualified Parun.Types.Prototype as Prototype
+import qualified Parun.Types.PutCounters as PutCounters
+import qualified Parun.Types.Quantity as Quantity
+import qualified Parun.Types.Reinforce as Reinforce
+import qualified Parun.Types.RemoveCounters as RemoveCounters
+import qualified Parun.Types.Replace as Replace
+import Parun.Types.ReplacementEffect (ReplacementEffect)
+import qualified Parun.Types.ReplacementEffect as ReplacementEffect
+import qualified Parun.Types.ReplacementOrigin as ReplacementOrigin
+import qualified Parun.Types.RequireAttack as RequireAttack
+import qualified Parun.Types.RequireBlock as RequireBlock
+import qualified Parun.Types.RequirementArity as RequirementArity
+import qualified Parun.Types.RestrictedCreatures as RestrictedCreatures
+import qualified Parun.Types.ReturnPermanents as ReturnPermanents
+import qualified Parun.Types.Reveal as Reveal
+import qualified Parun.Types.Sacrifice as Sacrifice
+import qualified Parun.Types.SacrificeAnyNumber as SacrificeAnyNumber
+import qualified Parun.Types.SacrificeEffect as SacrificeEffect
+import qualified Parun.Types.Sacrificer as Sacrificer
+import qualified Parun.Types.Scope as Scope
+import qualified Parun.Types.Search as Search
+import qualified Parun.Types.SearchDestination as SearchDestination
+import qualified Parun.Types.SelfCountersRemoved as SelfCountersRemoved
+import qualified Parun.Types.SetPowerToughness as SetPowerToughness
+import qualified Parun.Types.SlotName as SlotName
+import qualified Parun.Types.Splice as Splice
+import qualified Parun.Types.StaticAbility as StaticAbility
+import qualified Parun.Types.StepBegins as StepBegins
+import qualified Parun.Types.Subtype as Subtype
+import qualified Parun.Types.Suspend as Suspend
+import qualified Parun.Types.TapForTotalPower as TapForTotalPower
+import qualified Parun.Types.TapPermanents as TapPermanents
+import qualified Parun.Types.TapState as TapState
+import qualified Parun.Types.TargetSlot as TargetSlot
+import qualified Parun.Types.Times as Times
+import qualified Parun.Types.TopOfLibrary as TopOfLibrary
+import qualified Parun.Types.TopOfLibraryUntil as TopOfLibraryUntil
+import qualified Parun.Types.Toughness as Toughness
+import qualified Parun.Types.Trait as Trait
+import qualified Parun.Types.TriggerCondition as TriggerCondition
+import qualified Parun.Types.TriggerFrequency as TriggerFrequency
+import Parun.Types.TriggeredAbility (TriggeredAbility)
+import qualified Parun.Types.TriggeredAbility as TriggeredAbility
+import qualified Parun.Types.TurnRole as TurnRole
+import qualified Parun.Types.TurnScope as TurnScope
+import qualified Parun.Types.TurnUpProcedure as TurnUpProcedure
+import qualified Parun.Types.TurnUpR as TurnUpR
+import qualified Parun.Types.TurnUpRewrite as TurnUpRewrite
+import qualified Parun.Types.TypeLine as TypeLine
+import qualified Parun.Types.Uses as Uses
+import qualified Parun.Types.Ward as Ward
+import qualified Parun.Types.WithCounters as WithCounters
+import qualified Parun.Types.Zone as Zone
+import qualified Parun.Types.ZoneChangePattern as ZoneChangePattern
+import qualified Parun.Types.ZoneChangeR as ZoneChangeR
+import qualified Parun.Types.ZoneScope as ZoneScope
+
+-- Rule 702 in its OTHER voice. Most keywords are read where they matter, the rule
+-- stating them as static abilities some rules-core reader already asks about. The
+-- ones rule 702 spells out as TRIGGERED or ACTIVATED abilities have to be MINTED
+-- here and handed to the ordinary CR 603 and CR 602 machinery instead.
+--
+-- Casing on Keyword here is legitimate for the reason Parun.Types.Keyword's own
+-- comment gives: a keyword is a numbered rule, not an effect's identity. What this
+-- module must never do is grow an arm for a CARD. Rule 702 has no state-triggered
+-- (CR 603.8) keyword ability, so the first keyword that needs one must widen
+-- Event's two scans.
+--
+-- Rule 702.34a's flashback shows how wide this voice is: ONE keyword becomes a
+-- cost, a casting permission and a replacement effect, none of whose readers learn
+-- that flashback produced them. All three function in the graveyard or on the
+-- stack (CR 113.6), and the graveyard reads go through the projection
+-- (Cost.costsFor, Cast.projectedKeywords).
+--
+-- Not implemented: beyond the cast scan's triggered abilities and the keywords
+-- the cast itself reads (Cost.spellKeywords), which go through the projection,
+-- what is read while the object is on the STACK stays printed (#4707).
+
+-- CR 702.70b: multiple instances of poisonous each trigger separately, so this
+-- returns one ability PER INSTANCE -- `Poisonous 1` twice is two abilities and two
+-- poison counters, not one ability for 2. (Contrast CR 702.164b, where toxic's N
+-- values are SUMMED -- Projection.totalToxic.) Most of the arms below say the same
+-- under their own rule; a keyword whose rule states no such clause gets it from CR
+-- 603.2's general reason instead.
+--
+-- Order is the Map's, which is Keyword's Ord -- rule-number order, and stable. The
+-- CR 603.3b ordering prompt indexes into the scan's canonical order, so this being
+-- deterministic is what keeps that prompt reproducible.
+triggeredAbilitiesOf :: Map Keyword Natural -> [TriggeredAbility Card (GrantedAbility.GrantedAbility Card)]
+triggeredAbilitiesOf counts = concatMap (uncurry abilitiesFor) (Map.toAscList counts)
+
+-- The abilities one keyword, held `count` times, contributes. The ROSTER of the
+-- keywords rule 702 states as triggered abilities, exhaustive under -Werror so it
+-- cannot fall behind rule 702 the way a count in prose can.
+abilitiesFor :: Keyword -> Natural -> [TriggeredAbility Card (GrantedAbility.GrantedAbility Card)]
+abilitiesFor keyword count = case keyword of
+  Keyword.Poisonous n -> List.genericReplicate count (poisonous n)
+  -- CR 702.72a states TWO triggered abilities, hence the `concat`; each
+  -- instance is its own pair, and CR 607.2k links the pair an instance mints
+  -- through the exile pile rather than through a slot.
+  Keyword.Champion quality -> concat (List.genericReplicate count (champion quality))
+  -- TWO abilities per instance -- hence the `concat`: rule 702.45a's ability
+  -- watches two events, and a TriggeredAbility carries one condition.
+  Keyword.Bushido n -> concat (List.genericReplicate count (bushido n))
+  -- CR 702.46b: each instance triggers separately.
+  Keyword.Soulshift n -> List.genericReplicate count (soulshift n)
+  -- CR 702.52a states one STATIC ability and no trigger; graveyardReplacementsOf
+  -- below mints it.
+  Keyword.Dredge _ -> []
+  Keyword.Bloodthirst _ -> []
+  Keyword.Haunt -> List.genericReplicate count haunt
+  -- Rule 702.62a's two triggered abilities function in the EXILE zone, so
+  -- exileTriggeredAbilitiesOf mints them and this roster stays empty.
+  Keyword.Suspend _ -> []
+  Keyword.SplitSecond -> []
+  -- Rule 702.63a states three abilities, the first of them a replacement effect
+  -- rather than a trigger, so two land here.
+  Keyword.Vanishing _ -> concat (List.genericReplicate count vanishing)
+  -- CR 702.32a's SECOND ability: the rule states two, the first a replacement
+  -- effect, so unlike vanishing only one trigger lands here.
+  Keyword.Fading _ -> List.genericReplicate count fading
+  -- CR 702.68b: each instance triggers separately.
+  Keyword.Frenzy n -> List.genericReplicate count (frenzy n)
+  -- CR 702.58a's SECOND ability, modular's shape below: the rule states two, the
+  -- first a replacement effect, so one trigger lands here. CR 702.58b: each
+  -- instance works separately.
+  Keyword.Graft _ -> List.genericReplicate count graft
+  -- CR 702.64a mints no ability: absorb is a static ability and its whole content
+  -- is the damage replacement `mintedReplacementsFor` writes, sunburst's shape
+  -- below.
+  Keyword.Absorb _ -> []
+  -- CR 702.43a's SECOND ability, one per instance (CR 702.43b).
+  Keyword.Modular _ -> List.genericReplicate count modular
+  -- CR 702.44a mints no ability: sunburst is a static ability that functions as
+  -- the object enters, so its whole content is the CR 614.1c replacement
+  -- `mintedReplacementsFor` writes.
+  Keyword.Sunburst -> []
+  -- Rule 702.85a's ability functions only while the spell is on the STACK, so
+  -- stackTriggeredAbilitiesOf mints it and this roster stays empty -- suspend's
+  -- shape one zone over.
+  Keyword.Cascade -> []
+  -- CR 702.40a's, likewise.
+  Keyword.Storm -> []
+  -- CR 702.69a's and CR 702.78a's, likewise -- both rules state the stack
+  -- themselves, as rule 702.40a does.
+  Keyword.Gravestorm -> []
+  Keyword.Conspire -> []
+  -- CR 702.144a states no zone of its own, and CR 113.6k supplies one: a
+  -- trigger condition that cannot trigger from the battlefield functions in
+  -- every zone it can trigger from, which for a cast trigger is the stack. So
+  -- stackTriggeredAbilitiesOf mints it and this roster stays empty.
+  Keyword.Demonstrate -> []
+  -- CR 702.60a's trigger functions on the STACK too, so
+  -- stackTriggeredAbilitiesOf mints it and this roster stays empty.
+  Keyword.Ripple _ -> []
+  -- CR 702.56a's and CR 702.153a's triggers function on the STACK too, so
+  -- stackTriggeredAbilitiesOf mints them and this roster stays empty.
+  Keyword.Replicate _ -> []
+  -- Rule 702.59a's ability functions only while the card is in a GRAVEYARD, so
+  -- graveyardTriggeredAbilitiesOf mints it and this roster stays empty --
+  -- suspend's shape one zone over.
+  Keyword.Recover _ -> []
+  Keyword.Casualty _ -> []
+  -- CR 702.166a and CR 702.194a state one static ability each and no triggered
+  -- ability at all: their optional additional cost is optionalCost's, and what a
+  -- payment buys is a clause of the card (CR 702.166c, CR 702.194b).
+  Keyword.Bargain -> []
+  Keyword.Teamwork _ -> []
+  -- CR 702.167a states an ACTIVATED ability and no triggered one, so
+  -- battlefieldAbilitiesFor is its roster.
+  Keyword.Craft _ -> []
+  -- CR 702.188a and CR 702.190a state one static ability each, and it is an
+  -- alternative cost (Parun.Engine.Cost.candidateCostsGiven) rather than an
+  -- ability this roster mints -- evoke's shape.
+  Keyword.WebSlinging _ -> []
+  Keyword.Sneak _ -> []
+  Keyword.Annihilator n -> List.genericReplicate count (annihilator n)
+  Keyword.Mobilize n -> List.genericReplicate count (mobilize n)
+  Keyword.Firebending n -> List.genericReplicate count (firebending n)
+  Keyword.Transmute _ -> []
+  Keyword.Transfigure _ -> []
+  Keyword.Afflict n -> List.genericReplicate count (afflict n)
+  Keyword.BattleCry -> List.genericReplicate count battleCry
+  -- CR 603.2: none of the three rules states an "each instance" clause, so the
+  -- general reason gives one ability per instance -- a second copy of the
+  -- keyword mints a second token, and CR 301.5c leaves the Equipment on the
+  -- one its controller ends up attached to.
+  Keyword.LivingWeapon -> List.genericReplicate count (attachToOwnToken germToken)
+  Keyword.ForMirrodin -> List.genericReplicate count (attachToOwnToken rebelToken)
+  Keyword.JobSelect -> List.genericReplicate count (attachToOwnToken heroToken)
+  Keyword.Evolve -> List.genericReplicate count evolve
+  -- Rule 702.110 prints no "each instance" clause, so CR 603.2's general reason
+  -- gives one ability per instance: two copies of exploit offer two sacrifices.
+  Keyword.Exploit -> List.genericReplicate count exploit
+  -- CR 702.172a and 702.183a mint nothing: both are static abilities of a
+  -- spell on the stack, read at CR 601.2b by Parun.Engine.Cast.
+  Keyword.Spree -> []
+  Keyword.Tiered -> []
+  Keyword.Tribute _ -> []
+  -- CR 702.105b: each instance triggers separately.
+  Keyword.Dethrone -> List.genericReplicate count dethrone
+  Keyword.HiddenAgenda -> []
+  Keyword.Fuse -> []
+  Keyword.LevelUp _ -> []
+  Keyword.Outlast _ -> []
+  Keyword.Prowess -> List.genericReplicate count prowess
+  -- CR 702.101b and CR 702.191b: each instance triggers separately.
+  Keyword.Extort -> List.genericReplicate count extort
+  Keyword.Increment -> List.genericReplicate count increment
+  Keyword.Flanking -> List.genericReplicate count flanking
+  Keyword.Exalted -> List.genericReplicate count exalted
+  Keyword.Unearth _ -> []
+  Keyword.Embalm _ -> []
+  Keyword.Eternalize _ -> []
+  Keyword.Melee -> List.genericReplicate count melee
+  Keyword.Mentor -> List.genericReplicate count mentor
+  Keyword.Afterlife n -> List.genericReplicate count (afterlife n)
+  -- CR 702.123b: each instance triggers separately.
+  Keyword.Fabricate n -> List.genericReplicate count (fabricate n)
+  Keyword.Provoke -> List.genericReplicate count provoke
+  Keyword.Rampage n -> List.genericReplicate count (rampage n)
+  -- CR 702.24b: each instance triggers separately, and each counts the one
+  -- pile of age counters.
+  Keyword.CumulativeUpkeep cost -> List.genericReplicate count (cumulativeUpkeep cost)
+  -- Rule 702.30 prints no multiplicity clause the way rule 702.24b does; two
+  -- instances are two abilities all the same, each asking its own cost.
+  Keyword.Echo cost -> List.genericReplicate count (echo cost)
+  Keyword.Compleated -> []
+  Keyword.Reconfigure _ -> []
+  Keyword.ReadAhead -> []
+  Keyword.Training -> List.genericReplicate count training
+  Keyword.Renown n -> List.genericReplicate count (renown n)
+  Keyword.Persist -> List.genericReplicate count persist
+  Keyword.Undying -> List.genericReplicate count undying
+  Keyword.Soulbond -> concat (List.genericReplicate count soulbond)
+  -- CR 702.115b: each instance triggers separately.
+  Keyword.Ingest -> List.genericReplicate count ingest
+  Keyword.Myriad -> List.genericReplicate count myriad
+  Keyword.Crew _ -> []
+  Keyword.Saddle _ -> []
+  Keyword.Deathtouch -> []
+  Keyword.Defender -> []
+  Keyword.DoubleStrike -> []
+  Keyword.Equip _ -> []
+  Keyword.Fortify _ -> []
+  Keyword.AuraSwap _ -> []
+  Keyword.Ninjutsu _ -> []
+  Keyword.Splice _ -> []
+  Keyword.FirstStrike -> []
+  Keyword.Flash -> []
+  Keyword.Flying -> []
+  Keyword.Haste -> []
+  Keyword.Hexproof _ -> []
+  Keyword.Indestructible -> []
+  Keyword.Landwalk _ -> []
+  Keyword.Lifelink -> []
+  Keyword.LivingMetal -> []
+  Keyword.MoreThanMeetsTheEye _ -> []
+  Keyword.Protection _ -> []
+  Keyword.Reach -> []
+  Keyword.Shroud -> []
+  Keyword.Trample -> []
+  Keyword.TrampleOverPlaneswalkers -> []
+  Keyword.Vigilance -> []
+  -- CR 702.21a's ability, one per instance for CR 603.2's general reason, so a
+  -- spell targeting a doubly warded permanent is offered both costs.
+  Keyword.Ward w -> List.genericReplicate count (ward w)
+  Keyword.Banding -> []
+  Keyword.Phasing -> []
+  Keyword.Shadow -> []
+  Keyword.Horsemanship -> []
+  Keyword.Aftermath -> []
+  Keyword.JumpStart -> []
+  Keyword.Fear -> []
+  Keyword.Intimidate -> []
+  Keyword.Morph {} -> []
+  Keyword.Menace -> []
+  Keyword.Cycling {} -> []
+  Keyword.Kicker _ -> []
+  Keyword.Multikicker _ -> []
+  Keyword.StickerKicker _ -> []
+  Keyword.Flashback _ -> []
+  Keyword.Bestow _ -> []
+  Keyword.Mutate _ -> []
+  Keyword.Entwine _ -> []
+  -- CR 702.27a states two STATIC abilities, so neither is minted here.
+  Keyword.Buyback _ -> []
+  Keyword.Infect -> []
+  Keyword.Wither -> []
+  Keyword.Devour _ -> []
+  Keyword.Amplify _ -> []
+  Keyword.Changeling -> []
+  -- CR 603.2: rule 702.75a states no "each instance" clause, so the general
+  -- reason gives one ability per instance.
+  Keyword.Hideaway n -> List.genericReplicate count (hideaway n)
+  Keyword.Reinforce {} -> []
+  Keyword.Devoid -> []
+  Keyword.Skulk -> []
+  Keyword.SpaceSculptor -> []
+  Keyword.Offering _ -> []
+  Keyword.Emerge _ -> []
+  -- CR 702.124a: deck-construction abilities, which function before the game
+  -- begins and mint nothing in it. Parun.Engine.Commander.designations reads them.
+  Keyword.Partner -> []
+  Keyword.PartnerText _ -> []
+  Keyword.ChooseABackground -> []
+  Keyword.DoctorsCompanion -> []
+  -- CR 702.124j is the odd one of the five: it "represents two abilities",
+  -- and the second functions in the game rather than before it. CR 603.2 gives
+  -- one ability per instance, rule 702.124j stating no clause of its own.
+  Keyword.PartnerWith name -> List.genericReplicate count (partnerWith name)
+  Keyword.Escalate _ -> []
+  Keyword.Riot -> []
+  Keyword.Escape _ -> []
+  -- CR 702.74a's triggered half; its static half is a candidate cost
+  -- (Parun.Engine.Cost.candidateCostsFor).
+  Keyword.Evoke _ -> List.genericReplicate count evoke
+  -- CR 702.109a and CR 702.152a print no triggered ability: the delayed one
+  -- is created by the spell as it resolves (Parun.Engine.Stack), and blitz's
+  -- draw is granted by mintedStaticAbilitiesOf.
+  Keyword.Dash _ -> []
+  Keyword.Blitz _ -> []
+  -- CR 702.185a prints none either, and for the first of those reasons: its
+  -- delayed ability is created by the spell as it resolves.
+  Keyword.Warp _ -> []
+  -- CR 702.146a and CR 702.180a print none either: disturb states one static
+  -- ability and harmonize three, and all four are casting permissions, costs or
+  -- a leaves-the-stack replacement rather than triggers.
+  Keyword.Disturb _ -> []
+  Keyword.Harmonize _ -> []
+  -- CR 702.148a's two static abilities print no triggered ability either: one is
+  -- an alternative cost (Parun.Engine.Cost.candidateCostsGiven) and the other a CR
+  -- 612.1 text change, which Parun.Types.Keyword's Cleave says the card states for
+  -- itself.
+  Keyword.Cleave _ -> []
+  -- CR 702.96a's two static abilities are cleave's shape above: an alternative
+  -- cost and a CR 612.1 text change, neither of them a triggered ability.
+  Keyword.Overload _ -> []
+  -- CR 702.113a states a static ability and a SPELL ability, neither of them a
+  -- triggered one: the first is plainAlternativeCosts' alternative cost and the
+  -- second is part of the spell, which Parun.Types.Keyword's Awaken says the card
+  -- states for itself.
+  Keyword.Awaken _ -> []
+  -- CR 702.76a's, CR 702.117a's, CR 702.137a's and CR 702.173a's static
+  -- abilities state an alternative cost and nothing else, so they mint no
+  -- ability of their own either:
+  -- Parun.Engine.Cost.candidateCostsGiven is the whole of what they do.
+  Keyword.Surge _ -> []
+  Keyword.Spectacle _ -> []
+  Keyword.Prowl _ -> []
+  Keyword.Freerunning _ -> []
+  -- CR 702.176a's FOURTH ability; the second is castForReplacementsOf's and the
+  -- third mintedStaticAbilitiesOf's.
+  Keyword.Impending _ -> List.genericReplicate count impendingEndStep
+  Keyword.Unleash -> []
+  Keyword.Daybound -> []
+  Keyword.Nightbound -> []
+  Keyword.Decayed -> List.genericReplicate count decayed
+  Keyword.Prototype _ -> []
+  Keyword.Toxic _ -> []
+  -- CR 702.165a states ONE triggered ability, so an instance held N times is N of
+  -- them; Conclave Sledge-Captain prints "backup 1, backup 1, backup 1".
+  Keyword.Backup n -> List.genericReplicate count (backup n)
+  Keyword.Disguise _ -> []
+  Keyword.Plot _ -> []
+  -- CR 702.156a's triggered half. Rule 702.156a states no redundancy clause,
+  -- so each instance is its own ability; no printing carries two, which makes
+  -- the count a regression fence rather than proved behaviour.
+  Keyword.Ravenous -> List.genericReplicate count ravenous
+  -- CR 702.157a's and CR 702.175a's enters triggers, one per instance paid
+  -- (perPayment). Parun.KeywordTriggerSpec's Offspring group proves offspring's;
+  -- squad's per-instance count is replicate's reading (its Replicate group) and a
+  -- regression fence: MTGJSON 2026-08-23 `ha(ve|s) squad` finds Robby, Another
+  -- Dwarf alone, and no Dwarf, legendary or Equipment card it reaches prints
+  -- squad, so no board gives a spell two.
+  Keyword.Squad cost -> perPayment count (squad cost)
+  Keyword.Offspring cost -> perPayment count (offspring cost)
+  -- CR 702.174b's enters trigger, one per instance paid (perPayment), each
+  -- naming its own instance's promised opponent.
+  --
+  -- Rule 702.174b's INSTANT AND SORCERY half is a spell ability rather than a
+  -- triggered one, so nothing is minted for it here; it is performed by
+  -- Parun.Engine.Resolve.giftOnSpellResolution as the spell resolves. Minting the
+  -- enters trigger for one anyway is harmless -- an instant never enters.
+  Keyword.Gift something -> perPayment count (gift something)
+  Keyword.Foretell _ -> []
+  Keyword.Companion _ -> []
+  -- CR 702.94a's linked triggered half, one per instance for CR 603.2's general
+  -- reason. Minted HERE rather than in a hand-only roster because WHERE it
+  -- functions is CR 113.6k's question, answered in Event.zonesTriggeredFrom.
+  Keyword.Miracle cost -> List.genericReplicate count (miracle cost)
+  Keyword.StartYourEngines -> []
+  Keyword.Ascend -> []
+  Keyword.Storied -> []
+  Keyword.Assist -> []
+  Keyword.Exhaust -> []
+  Keyword.Boast -> []
+  Keyword.Forecast -> []
+  Keyword.PowerUp -> []
+  Keyword.ClassLevel _ -> []
+  -- CR 701.43d's static ability mints NO triggered ability: the rule lets a card
+  -- print a linked "when you do" beside it without saying what that ability does,
+  -- so each printing authors its own on TriggerCondition.PermanentActs.
+  Keyword.Exert -> []
+  -- CR 702.154b's triggered ability is minted, but not here: it is linked to the
+  -- CR 508.1g cost, so it exists only where that cost was paid. Parun.Engine.Combat
+  -- arms `enlistReflexive` as CR 603.12's reflexive entry at the moment of the
+  -- tap, which is also what keeps rule 702.154d's instances independent.
+  Keyword.Enlist -> []
+  -- CR 702.184a is an ACTIVATED ability; battlefieldAbilitiesFor mints it.
+  Keyword.Station -> []
+  -- CR 702.89a states a REPLACEMENT and nothing else; see mintedReplacementsFor.
+  Keyword.UmbraArmor -> []
+  Keyword.Epic -> []
+  Keyword.Paradigm -> []
+  Keyword.Cipher -> []
+  Keyword.Convoke -> []
+  Keyword.Improvise -> []
+  Keyword.Delve -> []
+  Keyword.Affinity _ -> []
+  Keyword.Undaunted -> []
+  Keyword.Retrace -> []
+  Keyword.Mayhem _ -> []
+  -- CR 702.35a's two abilities are minted elsewhere, suspend's shape: the
+  -- static half by `handReplacementsOf` and the triggered half by
+  -- `madnessCast`, so this roster stays empty.
+  Keyword.Madness _ -> []
+  Keyword.Rebound -> []
+  Keyword.Scavenge _ -> []
+  Keyword.Encore _ -> []
+
+-- CR 702: record WHICH KEYWORD's rules this minted ability is under, which is
+-- Parun.Types.ActivatedAbility.keyword and what `designates` below compares.
+--
+-- The MINTERS' half of that field. CR 702.177a's exhaust is printed rather than
+-- minted, so its stamp is the card's and never passes through here; see
+-- `addsRulesToPrintedAbility` below for the other half.
+--
+-- Applied by the two rosters rather than inside each minter, so the next keyword
+-- that states an activated ability is stamped whether or not whoever adds it
+-- remembers -- and so the stamp cannot disagree with the keyword it was minted
+-- from, which reconstructing the payload inside the minter could.
+mintedBy :: Keyword -> ActivatedAbility Card (GrantedAbility.GrantedAbility Card) -> ActivatedAbility Card (GrantedAbility.GrantedAbility Card)
+mintedBy keyword ability = ability {ActivatedAbility.keyword = Just keyword}
+
+-- CR 602.1: the ACTIVATED abilities rule 702 gives a card while it sits in its
+-- owner's hand. Named for the ZONE rather than for cycling, because that is the
+-- classification its reader wants: Activatable.abilitiesFor asks "what can be
+-- activated from here" rather than which rule produced any of them, which each
+-- ability carries for itself once `mintedBy` has stamped it.
+--
+-- CR 113.6b confines an ability to the zones it states, and rules 702.29a and
+-- 702.77a state the hand. The keyword set is the caller's:
+-- Activatable.abilitiesForGiven hands it the projection's.
+handAbilitiesOf :: Set Keyword -> [ActivatedAbility Card (GrantedAbility.GrantedAbility Card)]
+handAbilitiesOf = concatMap handAbilitiesFor . Set.toAscList
+
+-- Exhaustive for the reason permissionsFor is: the next keyword that functions
+-- from a hand must break this build rather than silently produce nothing.
+handAbilitiesFor :: Keyword -> [ActivatedAbility Card (GrantedAbility.GrantedAbility Card)]
+handAbilitiesFor keyword = fmap (mintedBy keyword) $ case keyword of
+  Keyword.Cycling (Cycling.MkCycling cost searchFor) -> [cycling cost searchFor]
+  Keyword.Reinforce (Reinforce.MkReinforce n cost) -> [reinforce n cost]
+  Keyword.Ninjutsu payload -> [ninjutsu payload]
+  -- CR 702.47a is a STATIC ability read by Parun.Engine.Cast's CR 601.2b
+  -- announcement, so it mints nothing here.
+  Keyword.Splice _ -> []
+  Keyword.Afflict _ -> []
+  Keyword.Crew _ -> []
+  Keyword.Saddle _ -> []
+  Keyword.Fabricate _ -> []
+  Keyword.Hideaway _ -> []
+  Keyword.Deathtouch -> []
+  Keyword.Defender -> []
+  Keyword.DoubleStrike -> []
+  Keyword.Equip _ -> []
+  Keyword.Fortify _ -> []
+  Keyword.AuraSwap _ -> []
+  Keyword.FirstStrike -> []
+  Keyword.Flash -> []
+  Keyword.Flying -> []
+  Keyword.Haste -> []
+  Keyword.Hexproof _ -> []
+  Keyword.Indestructible -> []
+  Keyword.Landwalk _ -> []
+  Keyword.Lifelink -> []
+  Keyword.LivingMetal -> []
+  Keyword.MoreThanMeetsTheEye _ -> []
+  Keyword.Protection _ -> []
+  Keyword.Reach -> []
+  Keyword.Shroud -> []
+  Keyword.Trample -> []
+  Keyword.TrampleOverPlaneswalkers -> []
+  Keyword.Vigilance -> []
+  Keyword.Ward _ -> []
+  Keyword.Banding -> []
+  Keyword.Flanking -> []
+  Keyword.Phasing -> []
+  Keyword.Shadow -> []
+  Keyword.Horsemanship -> []
+  Keyword.Aftermath -> []
+  Keyword.JumpStart -> []
+  Keyword.Fear -> []
+  Keyword.Intimidate -> []
+  Keyword.Morph {} -> []
+  Keyword.Menace -> []
+  Keyword.Renown _ -> []
+  Keyword.Kicker _ -> []
+  Keyword.Multikicker _ -> []
+  Keyword.StickerKicker _ -> []
+  Keyword.Flashback _ -> []
+  Keyword.Bestow _ -> []
+  Keyword.Mutate _ -> []
+  Keyword.Entwine _ -> []
+  -- CR 702.27a states no activated ability, in the hand or anywhere else.
+  Keyword.Buyback _ -> []
+  Keyword.Bushido _ -> []
+  Keyword.Soulshift _ -> []
+  Keyword.Dredge _ -> []
+  Keyword.Bloodthirst _ -> []
+  Keyword.Haunt -> []
+  -- CR 702.62a states no activated ability, in the hand or anywhere else.
+  Keyword.Suspend _ -> []
+  Keyword.SplitSecond -> []
+  Keyword.Poisonous _ -> []
+  Keyword.Champion _ -> []
+  Keyword.Offering _ -> []
+  Keyword.Cascade -> []
+  Keyword.Storm -> []
+  Keyword.Gravestorm -> []
+  Keyword.Conspire -> []
+  Keyword.Demonstrate -> []
+  Keyword.Ripple _ -> []
+  Keyword.Replicate _ -> []
+  Keyword.Recover _ -> []
+  Keyword.Casualty _ -> []
+  Keyword.Bargain -> []
+  Keyword.Craft _ -> []
+  Keyword.Teamwork _ -> []
+  Keyword.WebSlinging _ -> []
+  Keyword.Sneak _ -> []
+  Keyword.Annihilator _ -> []
+  Keyword.Mobilize _ -> []
+  Keyword.Firebending _ -> []
+  -- CR 702.53a's ability "functions only while the card with transmute is in a
+  -- player's hand", so this roster is the only one that offers it.
+  Keyword.Transmute cost -> [transmute cost]
+  -- CR 702.71a sacrifices THIS PERMANENT, so battlefieldAbilitiesFor mints it.
+  Keyword.Transfigure _ -> []
+  Keyword.BattleCry -> []
+  Keyword.Evolve -> []
+  Keyword.Exploit -> []
+  Keyword.Tribute _ -> []
+  Keyword.Dethrone -> []
+  Keyword.HiddenAgenda -> []
+  Keyword.Fuse -> []
+  Keyword.LevelUp _ -> []
+  Keyword.Outlast _ -> []
+  Keyword.Prowess -> []
+  Keyword.Extort -> []
+  Keyword.Increment -> []
+  Keyword.Infect -> []
+  Keyword.Wither -> []
+  Keyword.Devour _ -> []
+  Keyword.Amplify _ -> []
+  Keyword.Exalted -> []
+  Keyword.LivingWeapon -> []
+  Keyword.ForMirrodin -> []
+  Keyword.JobSelect -> []
+  Keyword.Spree -> []
+  Keyword.Tiered -> []
+  -- CR 702.84a, 702.97a, 702.128a, 702.129a and 702.141a function in a
+  -- GRAVEYARD, so graveyardAbilitiesFor below is the roster that mints them and
+  -- this hand one grants nothing.
+  Keyword.Unearth _ -> []
+  Keyword.Embalm _ -> []
+  Keyword.Eternalize _ -> []
+  Keyword.Mentor -> []
+  Keyword.Afterlife _ -> []
+  Keyword.Provoke -> []
+  Keyword.Changeling -> []
+  Keyword.Devoid -> []
+  Keyword.Ingest -> []
+  Keyword.Myriad -> []
+  Keyword.Skulk -> []
+  Keyword.SpaceSculptor -> []
+  Keyword.Emerge _ -> []
+  -- CR 702.124a: deck-construction abilities, which function before the game
+  -- begins and mint nothing in it. Parun.Engine.Commander.designations reads them.
+  Keyword.Partner -> []
+  Keyword.PartnerText _ -> []
+  Keyword.ChooseABackground -> []
+  Keyword.DoctorsCompanion -> []
+  -- CR 702.124j's second ability is a TRIGGERED ability, which `abilitiesFor`
+  -- mints; no part of it belongs to this roster.
+  Keyword.PartnerWith _ -> []
+  Keyword.Escalate _ -> []
+  Keyword.Melee -> []
+  Keyword.Rampage _ -> []
+  Keyword.CumulativeUpkeep _ -> []
+  Keyword.Echo _ -> []
+  Keyword.Riot -> []
+  Keyword.Escape _ -> []
+  Keyword.Evoke _ -> []
+  Keyword.Dash _ -> []
+  Keyword.Blitz _ -> []
+  Keyword.Warp _ -> []
+  Keyword.Disturb _ -> []
+  Keyword.Harmonize _ -> []
+  Keyword.Cleave _ -> []
+  Keyword.Overload _ -> []
+  Keyword.Awaken _ -> []
+  Keyword.Surge _ -> []
+  Keyword.Spectacle _ -> []
+  Keyword.Prowl _ -> []
+  Keyword.Freerunning _ -> []
+  Keyword.Impending _ -> []
+  Keyword.Unleash -> []
+  Keyword.Modular _ -> []
+  Keyword.Sunburst -> []
+  Keyword.Vanishing _ -> []
+  Keyword.Fading _ -> []
+  Keyword.Frenzy _ -> []
+  Keyword.Graft _ -> []
+  Keyword.Absorb _ -> []
+  Keyword.Daybound -> []
+  Keyword.Nightbound -> []
+  Keyword.Decayed -> []
+  Keyword.Compleated -> []
+  Keyword.Reconfigure _ -> []
+  Keyword.ReadAhead -> []
+  Keyword.Training -> []
+  Keyword.Prototype _ -> []
+  Keyword.Toxic _ -> []
+  Keyword.Backup _ -> []
+  Keyword.Disguise _ -> []
+  Keyword.Plot _ -> []
+  Keyword.Ravenous -> []
+  Keyword.Squad _ -> []
+  Keyword.Offspring _ -> []
+  Keyword.Gift _ -> []
+  Keyword.Foretell _ -> []
+  Keyword.Companion _ -> []
+  -- CR 702.94a's hand ability is TRIGGERED rather than activated, so it is
+  -- minted by `abilitiesFor` above and reached from a hand by CR 113.6k.
+  Keyword.Miracle _ -> []
+  Keyword.StartYourEngines -> []
+  Keyword.Ascend -> []
+  Keyword.Storied -> []
+  Keyword.Assist -> []
+  Keyword.Exhaust -> []
+  Keyword.Boast -> []
+  Keyword.Forecast -> []
+  Keyword.PowerUp -> []
+  Keyword.ClassLevel _ -> []
+  Keyword.Exert -> []
+  Keyword.Enlist -> []
+  Keyword.Persist -> []
+  Keyword.Undying -> []
+  Keyword.Soulbond -> []
+  -- CR 702.184a's ability puts its counters on "this permanent", so it belongs to
+  -- battlefieldAbilitiesFor and not to this hand roster.
+  Keyword.Station -> []
+  Keyword.UmbraArmor -> []
+  Keyword.Epic -> []
+  Keyword.Paradigm -> []
+  Keyword.Cipher -> []
+  Keyword.Convoke -> []
+  Keyword.Improvise -> []
+  Keyword.Delve -> []
+  Keyword.Affinity _ -> []
+  Keyword.Undaunted -> []
+  Keyword.Retrace -> []
+  Keyword.Mayhem _ -> []
+  Keyword.Madness _ -> []
+  Keyword.Rebound -> []
+  Keyword.Scavenge _ -> []
+  Keyword.Encore _ -> []
+
+-- CR 702.29a's whole ability, minted from the one cost the keyword carries.
+--
+-- The discard is a COMPONENT of the activation cost and not an effect, rule
+-- 702.29a putting it before the colon. Three things follow: an activation the
+-- player backs out of discards nothing, the card is already in the graveyard while
+-- the draw is still on the stack, and CR 702.29c's "when you cycle this card" has
+-- a cost payment to trigger off rather than a resolution. ToPayCyclingCost is what
+-- that rule means by "an activation cost of a cycling ability", and it covers rule
+-- 702.29e's typecycling too, rule 702.29f making those cycling abilities and this
+-- one function minting both.
+cycling :: Cost Keyword -> Maybe (Filter Keyword) -> ActivatedAbility Card (GrantedAbility.GrantedAbility Card)
+cycling cost searchFor =
+  -- The only difference between rule 702.29a and rule 702.29e: what the ability
+  -- does once its cost is paid. Everything above is shared, which is CR 702.29f
+  -- holding by construction.
+  --
+  -- You either way: CR 113.8 makes the ability's controller the player who
+  -- activated it, and rule 702.29e prints "your library". The reveal is part of
+  -- the destination because it is part of that same sentence (CR 701.23e).
+  let effect = case searchFor of
+        Nothing -> Effect.Draw (Draw.MkDraw (PlayerRef.Relative PlayerRelation.You) (Quantity.Literal 1) Nothing)
+        -- CR 702.29e's "search your library for a [quality] card", so one card is
+        -- the whole instruction's count.
+        Just filter_ ->
+          Effect.Search
+            Search.MkSearch
+              { Search.searcher = PlayerRef.Relative PlayerRelation.You,
+                Search.owner = PlayerRef.Relative PlayerRelation.You,
+                -- CR 702.29e prints "your library" and no other zone.
+                Search.zones = Set.singleton Zone.Library,
+                Search.outsideTheGame = False,
+                Search.quantity = Just (Quantity.Literal 1),
+                Search.filter = filter_,
+                -- CR 702.29e prints no "up to", and its quality-stating filter puts
+                -- the search under CR 701.23b anyway, so this value is unobservable.
+                Search.upTo = False,
+                Search.destination = SearchDestination.RevealThenHand,
+                -- CR 702.29e's destination attaches nothing and its filter asks no
+                -- CR 701.3a question, so no object is fixed for one to be about.
+                Search.subject = Nothing,
+                Search.slot = Nothing,
+                Search.differentIn = Set.empty,
+                Search.exactly = False,
+                Search.andOr = False
+              }
+   in ActivatedAbility.MkActivatedAbility
+        { ActivatedAbility.cost = cost {Cost.components = Cost.components cost <> [CostComponent.DiscardThis DiscardCause.ToPayCyclingCost]},
+          ActivatedAbility.modal =
+            Mint.oneMode (Seq.singleton effect),
+          ActivatedAbility.maximumX = [],
+          ActivatedAbility.minimumX = 0,
+          ActivatedAbility.definedX = Nothing,
+          ActivatedAbility.restrictions = [],
+          ActivatedAbility.activator = Activator.Controller,
+          -- CR 702.29a gives the card this ability outright, with no "as long as".
+          ActivatedAbility.condition = Nothing,
+          -- Nothing on every keyword-minted ability: no clause of a card refers to
+          -- one, CR 702's own text being what mints it.
+          ActivatedAbility.name = Nothing,
+          -- Nothing here and written by `mintedBy` at the roster, the one place that
+          -- knows the keyword by identity rather than by reconstructing it.
+          ActivatedAbility.keyword = Nothing
+        }
+
+-- CR 702.77a's whole ability. Cycling's one clause over, and the first hand
+-- ability with a TARGET: the target is chosen at CR 601.2c, before CR 601.2h
+-- pays and so before the discard, and the ability outlives the card it discards
+-- (CR 113.7a).
+--
+-- The discard is a COMPONENT of the activation cost for cycling's reasons. Its
+-- cause is Ordinary and not ToPayCyclingCost: rule 702.77 never says reinforce is
+-- a cycling ability, so CR 702.29c's "when you cycle this card" must not see it.
+--
+-- Quantity.Literal and not a counter reading: N is written on the card, where
+-- modular's count is measured off the dying permanent.
+reinforce :: Natural -> Cost Keyword -> ActivatedAbility Card (GrantedAbility.GrantedAbility Card)
+reinforce n cost =
+  let slot = TargetSlot.required Pool.Creatures Nothing
+      effect =
+        Effect.PutCounters
+          ( PutCounters.MkPutCounters
+              CounterKind.PlusOnePlusOne
+              (Quantity.Literal (toInteger n))
+              (ObjectRef.InSlot reinforceTarget)
+          )
+   in ActivatedAbility.MkActivatedAbility
+        { ActivatedAbility.cost = cost {Cost.components = Cost.components cost <> [CostComponent.DiscardThis DiscardCause.Ordinary]},
+          ActivatedAbility.modal =
+            Mint.oneModeTargeting (Map.singleton reinforceTarget slot) (Seq.singleton effect),
+          -- CR 702.77a states no timing restriction, which leaves CR 117.1b's
+          -- default, and gives the ability outright with no "as long as".
+          ActivatedAbility.maximumX = [],
+          ActivatedAbility.minimumX = 0,
+          ActivatedAbility.definedX = Nothing,
+          ActivatedAbility.restrictions = [],
+          ActivatedAbility.activator = Activator.Controller,
+          ActivatedAbility.condition = Nothing,
+          -- Nothing on every keyword-minted ability: no clause of a card refers to
+          -- one, CR 702's own text being what mints it.
+          ActivatedAbility.name = Nothing,
+          -- Nothing here and written by `mintedBy` at the roster, the one place that
+          -- knows the keyword by identity rather than by reconstructing it.
+          ActivatedAbility.keyword = Nothing
+        }
+
+-- The slot rule 702.77a's one target is chosen into, mentorTarget's position.
+reinforceTarget :: SlotName.SlotName
+reinforceTarget = SlotName.MkSlotName (Text.pack "reinforced")
+
+-- CR 702.53a's whole ability, cycling's shape with a library search in place of
+-- the draw and a self-comparison in place of a printed quality.
+--
+-- THE DISCARD is a COMPONENT of the activation cost for cycling's reasons (rule
+-- 702.53a puts it before the colon). Its cause is Ordinary and not
+-- ToPayCyclingCost: rule 702.53 never says transmute is a cycling ability, so CR
+-- 702.29c's "when you cycle this card" must not see it.
+--
+-- THE FILTER is the one thing neither cycling nor reinforce needed -- "a card
+-- with the same mana value as the discarded card". The mana value compared
+-- Exactly against the OfSource operand reads Parun.Engine.Filter.Context's
+-- sourceMeasures, which
+-- Parun.Engine.Resolve.Slots.effectContext fills through CR 608.2h's last-known
+-- reader: the cost has already put the card in a graveyard as a new object (CR
+-- 400.7), so the live board answers nothing and the discarded card's own mana
+-- value is what rule 702.53a asks about. No card type conjunct -- rule 702.53a
+-- says "a card", where rule 702.71a says "a creature card".
+--
+-- THE DESTINATION is cycling's RevealThenHand: rule 702.53a states the reveal
+-- itself, which CR 701.23e is what makes load-bearing -- a search that does not
+-- say it does not do it. CR 113.8 makes the ability's controller the player who
+-- activated it, which is rule 702.53a's "your library" and "your hand" alike.
+transmute :: Cost Keyword -> ActivatedAbility Card (GrantedAbility.GrantedAbility Card)
+transmute cost = searchForSameManaValue (cost {Cost.components = Cost.components cost <> [CostComponent.DiscardThis DiscardCause.Ordinary]}) (Filter.Measures (Measures.MkMeasures Measure.ManaValue Comparison.Exactly (Operand.OfSource Measure.ManaValue))) SearchDestination.RevealThenHand
+
+-- CR 702.167a's whole ability: "[Cost], Exile this permanent, Exile [materials]
+-- from among permanents you control and\/or cards in your graveyard: Return this
+-- card to the battlefield transformed under its owner's control. Activate only
+-- as a sorcery."
+--
+-- TWO COMPONENTS appended in rule 702.167a's own order: ExileThis first, so that
+-- by the time the materials are chosen the crafted permanent has left the
+-- battlefield. Its own exile is what binds Binding.exiledCard, which is the name
+-- rule 702.167a's "this card" has -- CR 400.7 makes it a new object the ability
+-- could not otherwise refer to -- and the materials component binds nothing.
+--
+-- THE RETURN names Zone.Exile as its origin (CR 113.6m) and rides
+-- EntryRiders.transformed and EntryRiders.under's Owner, which are rule 702.167a's
+-- "transformed under its owner's control".
+craft :: Craft.Craft Keyword -> ActivatedAbility Card (GrantedAbility.GrantedAbility Card)
+craft spec =
+  let printed = Craft.cost spec
+      returned =
+        Effect.MoveToZone
+          MoveToZone.MkMoveToZone
+            { MoveToZone.ref = ObjectRef.InSlot Binding.exiledCard,
+              MoveToZone.zone = Zone.Battlefield,
+              MoveToZone.riders =
+                EntryRiders.defaultValue {EntryRiders.transformed = True, EntryRiders.under = EntryController.Owner},
+              MoveToZone.slot = Nothing,
+              MoveToZone.origin = Just Zone.Exile,
+              MoveToZone.placement = LibraryPlacement.defaultValue,
+              MoveToZone.duration = Nothing
+            }
+   in ActivatedAbility.MkActivatedAbility
+        { ActivatedAbility.cost = printed {Cost.components = Cost.components printed <> [CostComponent.ExileThis, CostComponent.ExileMaterials (Craft.materials spec)]},
+          ActivatedAbility.modal =
+            Mint.oneMode (Seq.singleton returned),
+          ActivatedAbility.maximumX = [],
+          ActivatedAbility.minimumX = 0,
+          ActivatedAbility.definedX = Nothing,
+          -- CR 602.5d, rule 702.167a's "Activate only as a sorcery" -- scavenge's
+          -- restriction.
+          ActivatedAbility.restrictions = [ActivationRestriction.SorcerySpeed],
+          ActivatedAbility.activator = Activator.Controller,
+          ActivatedAbility.condition = Nothing,
+          -- Nothing on every keyword-minted ability, unearth's reason.
+          ActivatedAbility.name = Nothing,
+          -- Written by `mintedBy` at the roster, unearth's reason.
+          ActivatedAbility.keyword = Nothing
+        }
+
+-- CR 702.71a's whole ability, transmute's above one zone over: the cost
+-- sacrifices this permanent instead of discarding this card, the search is
+-- narrowed to a creature card, and the card found goes onto the battlefield
+-- rather than into a hand.
+--
+-- THE SACRIFICE is a cost component for the discard's reason, and reads back the
+-- same way: CR 701.21a has already put the permanent in a graveyard as a new
+-- object (CR 400.7), so "the same mana value as this permanent" is a CR 608.2h
+-- reading of the sacrificed permanent, which effectContext's sourceMeasures is.
+--
+-- NO REVEAL in the destination, unlike transmute's: rule 702.71a states none,
+-- and CR 701.23e's reveal is only what a rule's own sentence asks for.
+transfigure :: Cost Keyword -> ActivatedAbility Card (GrantedAbility.GrantedAbility Card)
+transfigure cost = searchForSameManaValue (cost {Cost.components = Cost.components cost <> [CostComponent.SacrificeThis]}) (Filter.And [Filter.HasCardType CardType.Creature, Filter.Measures (Measures.MkMeasures Measure.ManaValue Comparison.Exactly (Operand.OfSource Measure.ManaValue))]) SearchDestination.Battlefield
+
+-- What CR 702.53a and CR 702.71a share once the cost, the quality and the
+-- destination are named: search your library for one card matching, then shuffle,
+-- at sorcery speed. Rule 702.53a's "Activate only as a sorcery" and rule 702.71a's
+-- are the same clause, so the two abilities differ in nothing else.
+searchForSameManaValue :: Cost Keyword -> Filter Keyword -> SearchDestination.SearchDestination -> ActivatedAbility Card (GrantedAbility.GrantedAbility Card)
+searchForSameManaValue cost filter_ destination =
+  let effect =
+        Effect.Search
+          Search.MkSearch
+            { Search.searcher = PlayerRef.Relative PlayerRelation.You,
+              Search.owner = PlayerRef.Relative PlayerRelation.You,
+              -- Both rules print "your library" and no other zone.
+              Search.zones = Set.singleton Zone.Library,
+              Search.outsideTheGame = False,
+              -- "Search your library for a card", so one card is the whole
+              -- instruction's count.
+              Search.quantity = Just (Quantity.Literal 1),
+              Search.filter = filter_,
+              -- Neither rule prints "up to", and both filters state a quality, so
+              -- the search is under CR 701.23b and this value is unobservable --
+              -- cycling's reading.
+              Search.upTo = False,
+              Search.destination = destination,
+              -- Neither destination attaches anything and neither filter asks a
+              -- CR 701.3a question, so no object is fixed for one to be about.
+              Search.subject = Nothing,
+              Search.slot = Nothing,
+              Search.differentIn = Set.empty,
+              Search.exactly = False,
+              Search.andOr = False
+            }
+   in ActivatedAbility.MkActivatedAbility
+        { ActivatedAbility.cost = cost,
+          ActivatedAbility.modal =
+            Mint.oneMode (Seq.singleton effect),
+          ActivatedAbility.maximumX = [],
+          ActivatedAbility.minimumX = 0,
+          ActivatedAbility.definedX = Nothing,
+          ActivatedAbility.restrictions = [ActivationRestriction.SorcerySpeed],
+          ActivatedAbility.activator = Activator.Controller,
+          -- Both rules give the ability outright, with no "as long as".
+          ActivatedAbility.condition = Nothing,
+          -- Nothing on every keyword-minted ability: no clause of a card refers to
+          -- one, CR 702's own text being what mints it.
+          ActivatedAbility.name = Nothing,
+          -- Nothing here and written by `mintedBy` at the roster, the one place that
+          -- knows the keyword by identity rather than by reconstructing it.
+          ActivatedAbility.keyword = Nothing
+        }
+
+-- CR 702.49a's whole ability: "[Cost], Reveal this card from your hand, Return an
+-- unblocked attacking creature you control to its owner's hand: Put this card
+-- onto the battlefield from your hand tapped and attacking."
+--
+-- THE REVEAL IS NOT A COST COMPONENT, and rule 602.2a is why: an ability
+-- activated from a hidden zone reveals the card that has it, which
+-- Parun.Engine.Activate.revealIfHidden does on this road already. CR 701.20a gives
+-- the two reveals -- the cost's and rule 602.2a's -- one duration, "from the time
+-- the spell or ability is announced until the time it leaves the stack", so the
+-- component would only reveal a card that is already revealed.
+-- CostComponent.RevealCardFromHand is a different shape -- revealing ANOTHER card
+-- the payer chooses, as Living Destiny's additional cost does -- and ninjutsu is
+-- not one of its producers.
+--
+-- THE RETURN is Parun.Types.CostComponent's ReturnPermanents, appended to the
+-- printed cost the way cycling appends its discard: rule 702.49a puts it before
+-- the colon, so an activation the player backs out of returns nothing, and the
+-- attacker is in its owner's hand while the ability is still on the stack. CR
+-- 400.3 is what makes the destination its OWNER's hand rather than the
+-- activator's.
+--
+-- "AN UNBLOCKED ATTACKING CREATURE YOU CONTROL" is four conjuncts and not three.
+-- CR 509.1h is why unblocked has to be asked beside attacking: a creature blocked
+-- at the declaration "remains blocked even if all the creatures blocking it are
+-- removed from combat", so it is attacking and not returnable at the same time.
+-- And UNBLOCKED rather than not blocked: rule 509.1h confers either status only
+-- as blockers are declared, so in the declare attackers step there is nothing
+-- to return. Parun.ActivateSpec's "CR 509.1h ninjutsu waits for blockers" proves
+-- it.
+-- The creature conjunct is rule 702.49a's own word: CR 506.4 removes an attacking
+-- permanent from combat when it stops being a creature, so it is not redundant
+-- with IsAttacking so much as the same fact asked from the other side.
+--
+-- THE EFFECT is Reassembling Skeleton's shape one zone over -- a MoveToZone of
+-- the ability's own source, whose `origin` is each rule's own text: rule
+-- 702.49a's "from your hand", and none for CR 702.49d's commander ninjutsu,
+-- which moves the card from either zone it functions in. Nothing reads it:
+-- statedZones names those zones (CR 113.6b) and answers ahead of CR 113.6m's
+-- origin reading, which is what withholds either ability on the battlefield.
+-- handAbilitiesFor offers both from a hand, and commandZoneAbilitiesOf below
+-- commander ninjutsu from the command zone.
+--
+-- CR 702.49c is the `attacking` rider: the ninja attacks whatever the creature
+-- the cost returned was attacking, which the payment binds under
+-- Binding.returnedPermanent and CR 608.2h's last known information answers.
+ninjutsu :: Ninjutsu.Ninjutsu Keyword -> ActivatedAbility Card (GrantedAbility.GrantedAbility Card)
+ninjutsu (Ninjutsu.MkNinjutsu cost variant) =
+  let returned =
+        ReturnPermanents.MkReturnPermanents
+          { ReturnPermanents.count = 1,
+            ReturnPermanents.whichPermanents =
+              Filter.And
+                [ Filter.HasCardType CardType.Creature,
+                  Filter.ControlledBy PlayerRelation.You,
+                  Filter.IsAttacking,
+                  Filter.HasBlockStatus BlockStatus.Unblocked
+                ]
+          }
+      effect =
+        Effect.MoveToZone
+          MoveToZone.MkMoveToZone
+            { MoveToZone.ref = ObjectRef.InSlot Binding.triggerSource,
+              MoveToZone.zone = Zone.Battlefield,
+              MoveToZone.riders =
+                EntryRiders.defaultValue {EntryRiders.tapped = TapState.Tapped, EntryRiders.attacking = Just (EntryAttack.SameAs Binding.returnedPermanent)},
+              -- Nothing looks back at the move, so it binds no slot.
+              MoveToZone.slot = Nothing,
+              MoveToZone.origin = case variant of
+                NinjutsuVariant.Plain -> Just Zone.Hand
+                NinjutsuVariant.Commander -> Nothing,
+              MoveToZone.placement = LibraryPlacement.defaultValue,
+              -- CR 610.1's plain move; rule 702.49a states no "until".
+              MoveToZone.duration = Nothing
+            }
+   in ActivatedAbility.MkActivatedAbility
+        { ActivatedAbility.cost = cost {Cost.components = Cost.components cost <> [CostComponent.ReturnPermanents returned]},
+          ActivatedAbility.modal =
+            Mint.oneMode (Seq.singleton effect),
+          ActivatedAbility.maximumX = [],
+          ActivatedAbility.minimumX = 0,
+          ActivatedAbility.definedX = Nothing,
+          -- Rule 702.49a states no timing restriction, which leaves CR 117.1b's
+          -- default: a ninja may arrive after blockers are declared.
+          ActivatedAbility.restrictions = [],
+          ActivatedAbility.activator = Activator.Controller,
+          -- CR 702.49a gives the card this ability outright, with no "as long as".
+          ActivatedAbility.condition = Nothing,
+          -- Nothing on every keyword-minted ability: no clause of a card refers to
+          -- one, CR 702's own text being what mints it.
+          ActivatedAbility.name = Nothing,
+          -- Nothing here and written by `mintedBy` at the roster, the one place that
+          -- knows the keyword by identity rather than by reconstructing it.
+          ActivatedAbility.keyword = Nothing
+        }
+
+-- CR 113.6b: the minted hand abilities whose keyword states the command zone
+-- too (statedZones) -- CR 702.49d's commander ninjutsu. The same abilities
+-- handAbilitiesOf mints rather than a second copy of them, so an object HAS
+-- each once (activatedAbilitiesOf below); this only says where else they are
+-- offered. The keyword set is the caller's: Activatable.abilitiesForGiven's
+-- command-zone arm hands it the projection's.
+commandZoneAbilitiesOf :: Set Keyword -> [ActivatedAbility Card (GrantedAbility.GrantedAbility Card)]
+commandZoneAbilitiesOf = handAbilitiesOf . Set.filter (Set.member Zone.Command . statedZones)
+
+-- CR 602.1: the ACTIVATED abilities rule 702 gives a card in a GRAVEYARD,
+-- handAbilitiesOf's sibling one zone over: CR 702.84a's unearth, CR 702.97a's
+-- scavenge, CR 702.128a's embalm, CR 702.129a's eternalize and CR 702.141a's
+-- encore.
+--
+-- The keyword set is the caller's, as handAbilitiesOf's is:
+-- Activatable.abilitiesForGiven's graveyard arm hands it the projection's.
+--
+-- MEMBERSHIP and not a count: each of these abilities moves the one card, so a
+-- second instance has nothing left to do once the first has resolved.
+graveyardAbilitiesOf :: Set Keyword -> [ActivatedAbility Card (GrantedAbility.GrantedAbility Card)]
+graveyardAbilitiesOf = concatMap graveyardAbilitiesFor . Set.toAscList
+
+-- Exhaustive for the reason handAbilitiesFor is: the next keyword that functions
+-- from a graveyard must break this build rather than silently produce nothing.
+graveyardAbilitiesFor :: Keyword -> [ActivatedAbility Card (GrantedAbility.GrantedAbility Card)]
+graveyardAbilitiesFor keyword = fmap (mintedBy keyword) $ case keyword of
+  Keyword.Cycling _ -> []
+  Keyword.Reinforce _ -> []
+  Keyword.Ninjutsu _ -> []
+  Keyword.Splice _ -> []
+  Keyword.Afflict _ -> []
+  Keyword.Crew _ -> []
+  Keyword.Saddle _ -> []
+  Keyword.Fabricate _ -> []
+  Keyword.Hideaway _ -> []
+  Keyword.Deathtouch -> []
+  Keyword.Defender -> []
+  Keyword.DoubleStrike -> []
+  Keyword.Equip _ -> []
+  Keyword.Fortify _ -> []
+  Keyword.AuraSwap _ -> []
+  Keyword.FirstStrike -> []
+  Keyword.Flash -> []
+  Keyword.Flying -> []
+  Keyword.Haste -> []
+  Keyword.Hexproof _ -> []
+  Keyword.Indestructible -> []
+  Keyword.Landwalk _ -> []
+  Keyword.Lifelink -> []
+  Keyword.LivingMetal -> []
+  Keyword.MoreThanMeetsTheEye _ -> []
+  Keyword.Protection _ -> []
+  Keyword.Reach -> []
+  Keyword.Shroud -> []
+  Keyword.Trample -> []
+  Keyword.TrampleOverPlaneswalkers -> []
+  Keyword.Vigilance -> []
+  Keyword.Ward _ -> []
+  Keyword.Banding -> []
+  Keyword.Flanking -> []
+  Keyword.Phasing -> []
+  Keyword.Shadow -> []
+  Keyword.Horsemanship -> []
+  Keyword.Aftermath -> []
+  Keyword.JumpStart -> []
+  Keyword.Fear -> []
+  Keyword.Intimidate -> []
+  Keyword.Morph {} -> []
+  Keyword.Menace -> []
+  Keyword.Renown _ -> []
+  Keyword.Kicker _ -> []
+  Keyword.Multikicker _ -> []
+  Keyword.StickerKicker _ -> []
+  Keyword.Flashback _ -> []
+  Keyword.Bestow _ -> []
+  Keyword.Mutate _ -> []
+  Keyword.Entwine _ -> []
+  Keyword.Buyback _ -> []
+  Keyword.Bushido _ -> []
+  Keyword.Soulshift _ -> []
+  -- CR 702.52a states a STATIC ability, not an activated one: dredge replaces a
+  -- draw rather than offering anything to activate. `graveyardReplacementsOf`
+  -- above is where the rule's one ability is minted.
+  Keyword.Dredge _ -> []
+  Keyword.Bloodthirst _ -> []
+  Keyword.Haunt -> []
+  Keyword.Suspend _ -> []
+  Keyword.SplitSecond -> []
+  Keyword.Poisonous _ -> []
+  Keyword.Champion _ -> []
+  Keyword.Offering _ -> []
+  Keyword.Cascade -> []
+  Keyword.Storm -> []
+  Keyword.Gravestorm -> []
+  Keyword.Conspire -> []
+  Keyword.Demonstrate -> []
+  Keyword.Ripple _ -> []
+  Keyword.Replicate _ -> []
+  -- CR 702.59a states a TRIGGERED ability, not an activated one, so this roster
+  -- is not where it lands.
+  Keyword.Recover _ -> []
+  Keyword.Casualty _ -> []
+  Keyword.Bargain -> []
+  Keyword.Craft _ -> []
+  Keyword.Teamwork _ -> []
+  Keyword.WebSlinging _ -> []
+  Keyword.Sneak _ -> []
+  Keyword.Annihilator _ -> []
+  Keyword.Mobilize _ -> []
+  Keyword.Firebending _ -> []
+  Keyword.Transmute _ -> []
+  Keyword.Transfigure _ -> []
+  Keyword.BattleCry -> []
+  Keyword.Evolve -> []
+  Keyword.Exploit -> []
+  Keyword.Tribute _ -> []
+  Keyword.Dethrone -> []
+  Keyword.HiddenAgenda -> []
+  Keyword.Fuse -> []
+  Keyword.LevelUp _ -> []
+  Keyword.Outlast _ -> []
+  Keyword.Prowess -> []
+  Keyword.Extort -> []
+  Keyword.Increment -> []
+  Keyword.Infect -> []
+  Keyword.Wither -> []
+  Keyword.Devour _ -> []
+  Keyword.Amplify _ -> []
+  Keyword.Exalted -> []
+  Keyword.LivingWeapon -> []
+  Keyword.ForMirrodin -> []
+  Keyword.JobSelect -> []
+  Keyword.Spree -> []
+  Keyword.Tiered -> []
+  Keyword.Unearth cost -> [unearth cost]
+  Keyword.Embalm cost -> [embalm cost]
+  Keyword.Eternalize cost -> [eternalize cost]
+  Keyword.Mentor -> []
+  Keyword.Afterlife _ -> []
+  Keyword.Provoke -> []
+  Keyword.Changeling -> []
+  Keyword.Devoid -> []
+  Keyword.Ingest -> []
+  Keyword.Myriad -> []
+  Keyword.Skulk -> []
+  Keyword.SpaceSculptor -> []
+  Keyword.Emerge _ -> []
+  Keyword.Partner -> []
+  Keyword.PartnerText _ -> []
+  Keyword.ChooseABackground -> []
+  Keyword.DoctorsCompanion -> []
+  -- CR 702.124j's second ability is a TRIGGERED ability, which `abilitiesFor`
+  -- mints; no part of it belongs to this roster.
+  Keyword.PartnerWith _ -> []
+  Keyword.Escalate _ -> []
+  Keyword.Melee -> []
+  Keyword.Rampage _ -> []
+  Keyword.CumulativeUpkeep _ -> []
+  Keyword.Echo _ -> []
+  Keyword.Riot -> []
+  Keyword.Escape _ -> []
+  Keyword.Evoke _ -> []
+  Keyword.Dash _ -> []
+  Keyword.Blitz _ -> []
+  Keyword.Warp _ -> []
+  Keyword.Disturb _ -> []
+  Keyword.Harmonize _ -> []
+  Keyword.Cleave _ -> []
+  Keyword.Overload _ -> []
+  Keyword.Awaken _ -> []
+  Keyword.Surge _ -> []
+  Keyword.Spectacle _ -> []
+  Keyword.Prowl _ -> []
+  Keyword.Freerunning _ -> []
+  Keyword.Impending _ -> []
+  Keyword.Unleash -> []
+  Keyword.Modular _ -> []
+  Keyword.Sunburst -> []
+  Keyword.Vanishing _ -> []
+  Keyword.Fading _ -> []
+  Keyword.Frenzy _ -> []
+  Keyword.Graft _ -> []
+  Keyword.Absorb _ -> []
+  Keyword.Daybound -> []
+  Keyword.Nightbound -> []
+  Keyword.Decayed -> []
+  Keyword.Compleated -> []
+  Keyword.Reconfigure _ -> []
+  Keyword.ReadAhead -> []
+  Keyword.Training -> []
+  Keyword.Prototype _ -> []
+  Keyword.Toxic _ -> []
+  Keyword.Backup _ -> []
+  Keyword.Disguise _ -> []
+  Keyword.Plot _ -> []
+  Keyword.Ravenous -> []
+  Keyword.Squad _ -> []
+  Keyword.Offspring _ -> []
+  Keyword.Gift _ -> []
+  Keyword.Foretell _ -> []
+  Keyword.Companion _ -> []
+  Keyword.Miracle _ -> []
+  Keyword.StartYourEngines -> []
+  Keyword.Ascend -> []
+  Keyword.Storied -> []
+  Keyword.Assist -> []
+  Keyword.Exhaust -> []
+  Keyword.Boast -> []
+  Keyword.Forecast -> []
+  Keyword.PowerUp -> []
+  Keyword.ClassLevel _ -> []
+  Keyword.Exert -> []
+  Keyword.Enlist -> []
+  Keyword.Persist -> []
+  Keyword.Undying -> []
+  Keyword.Soulbond -> []
+  Keyword.Station -> []
+  Keyword.UmbraArmor -> []
+  Keyword.Epic -> []
+  Keyword.Paradigm -> []
+  Keyword.Cipher -> []
+  Keyword.Convoke -> []
+  Keyword.Improvise -> []
+  Keyword.Delve -> []
+  Keyword.Affinity _ -> []
+  Keyword.Undaunted -> []
+  -- CR 702.81a and CR 702.187b function in a graveyard, but neither mints an
+  -- ACTIVATED ability there: each is a permission to cast the card, which
+  -- permissionsFor grants and Parun.Engine.Cost prices.
+  Keyword.Retrace -> []
+  Keyword.Mayhem _ -> []
+  Keyword.Madness _ -> []
+  Keyword.Rebound -> []
+  Keyword.Scavenge cost -> [scavenge cost]
+  Keyword.Encore cost -> [encore cost]
+
+-- CR 702.84a's whole ability, minted from the one cost the keyword carries, as
+-- four effects in one clause -- the return, the haste, the delayed exile and the
+-- leaves-the-battlefield redirect.
+--
+-- THE RETURN names Zone.Graveyard as its `origin`, which is what confines the
+-- whole ability to a graveyard: CR 113.6m reads that field (Reassembling
+-- Skeleton's reading, Parun.Engine.Activatable.zoneAbilitiesOf), so the ability a
+-- creature with unearth carries on the battlefield cannot be activated there.
+--
+-- THE SLOT is what the three later effects read. Rule 702.84a's "it" is the
+-- PERMANENT the return created, a new object by CR 400.7, so Binding.triggerSource
+-- -- the card in the graveyard -- is the wrong name for it; MoveToZone.slot binds
+-- the arrival, which is Dire Fleet Daredevil's shape in data/cards/.
+--
+-- THE HASTE is Duration.Indefinite: rule 702.84a states no "until", and the
+-- permanent is exiled before any end of turn could end the effect anyway.
+--
+-- THE EXILE is a CR 603.7 delayed triggered ability, created as this ability
+-- resolves, so the effect is the arming opcode and `unearthExile` is what it arms.
+-- Onset.Immediately with no stated duration is CR 603.7a's floor and CR 603.7b's
+-- default: "the next end step", once.
+--
+-- THE REDIRECT is a CR 614 floating replacement with no `whenDestination`, rule
+-- 702.84a's "instead of putting it anywhere else" -- castFromGraveyardExile's
+-- pattern, scoped to the bound arrival rather than to the source. Uses.Unlimited,
+-- since rule 702.84a does not spend it: a permanent returned by the redirect's own
+-- output is in exile, so nothing re-fires.
+unearth :: Cost Keyword -> ActivatedAbility Card (GrantedAbility.GrantedAbility Card)
+unearth cost =
+  let returned =
+        Effect.MoveToZone
+          MoveToZone.MkMoveToZone
+            { MoveToZone.ref = ObjectRef.InSlot Binding.triggerSource,
+              MoveToZone.zone = Zone.Battlefield,
+              MoveToZone.riders =
+                EntryRiders.defaultValue,
+              MoveToZone.slot = Just unearthSlot,
+              MoveToZone.origin = Just Zone.Graveyard,
+              MoveToZone.placement = LibraryPlacement.defaultValue,
+              MoveToZone.duration = Nothing
+            }
+      hasted =
+        Effect.ModifyTarget
+          ModifyTarget.MkModifyTarget
+            { ModifyTarget.duration = Duration.Indefinite,
+              ModifyTarget.modification = Modification.GainKeyword Keyword.Haste,
+              ModifyTarget.ref = ObjectRef.InSlot unearthSlot,
+              ModifyTarget.each = Nothing
+            }
+      armed =
+        Effect.ArmDelayedTrigger
+          ArmDelayedTrigger.MkArmDelayedTrigger
+            { ArmDelayedTrigger.name = unearthExileName,
+              ArmDelayedTrigger.onset = Onset.Immediately,
+              ArmDelayedTrigger.duration = Nothing,
+              ArmDelayedTrigger.ability = Nothing
+            }
+      redirected =
+        Effect.Replace
+          Replace.MkReplace
+            { Replace.duration = Duration.Indefinite,
+              Replace.uses = Uses.Unlimited,
+              Replace.origin = ReplacementOrigin.Other,
+              Replace.condition = Nothing,
+              Replace.effect =
+                ReplacementEffect.ZoneChangeR
+                  ( ZoneChangeR.MkZoneChangeR
+                      ZoneChangePattern.MkZoneChangePattern
+                        { ZoneChangePattern.whenDestination = Nothing,
+                          ZoneChangePattern.whoseObject = ControllerRelation.Related PlayerRelation.AnyPlayer,
+                          ZoneChangePattern.whatObject = Filter.IsBound unearthSlot,
+                          ZoneChangePattern.whenDiscarded = Nothing,
+                          ZoneChangePattern.duringResolution = False
+                        }
+                      Zone.Exile
+                      False
+                      False
+                      LibraryPosition.defaultValue
+                      False
+                  )
+            }
+   in ActivatedAbility.MkActivatedAbility
+        { ActivatedAbility.cost = cost,
+          ActivatedAbility.modal =
+            Mint.oneMode (Seq.fromList [returned, hasted, armed, redirected]),
+          ActivatedAbility.maximumX = [],
+          ActivatedAbility.minimumX = 0,
+          ActivatedAbility.definedX = Nothing,
+          -- CR 602.5d, rule 702.84a's "Activate only as a sorcery" -- levelUp's
+          -- restriction.
+          ActivatedAbility.restrictions = [ActivationRestriction.SorcerySpeed],
+          ActivatedAbility.activator = Activator.Controller,
+          ActivatedAbility.condition = Nothing,
+          -- Nothing on every keyword-minted ability: no clause of a card refers to
+          -- one, CR 702's own text being what mints it.
+          ActivatedAbility.name = Nothing,
+          -- Nothing here and written by `mintedBy` at the roster, the one place that
+          -- knows the keyword by identity rather than by reconstructing it.
+          ActivatedAbility.keyword = Nothing
+        }
+
+-- The slot rule 702.84a's "it" is bound into as the card arrives on the
+-- battlefield, so the haste, the delayed exile and the redirect all name the
+-- PERMANENT rather than the graveyard card the ability was activated from.
+unearthSlot :: SlotName.SlotName
+unearthSlot = SlotName.MkSlotName (Text.pack "unearthed")
+
+-- The name rule 702.84a's delayed ability is filed under, decayedSacrificeName's
+-- position. A card may not declare one under this name (Parun.CardSpec).
+unearthExileName :: AbilityName
+unearthExileName = AbilityName.MkAbilityName (Text.pack "unearth")
+
+-- CR 702.84a's "Exile it at the beginning of the next end step", as CR 513.2
+-- states the timing. TurnScope.EachTurn, rule 702.84a naming no player's turn --
+-- a creature unearthed on an opponent's turn is exiled at the end of THAT turn.
+--
+-- `origin` is Nothing and not the battlefield: rule 702.84a's companion redirect
+-- may already have exiled the permanent, and then this ability has nothing to
+-- move rather than a zone to disagree about.
+unearthExile :: TriggeredAbility Card (GrantedAbility.GrantedAbility Card)
+unearthExile =
+  let effect =
+        Effect.MoveToZone
+          MoveToZone.MkMoveToZone
+            { MoveToZone.ref = ObjectRef.InSlot unearthSlot,
+              MoveToZone.zone = Zone.Exile,
+              MoveToZone.riders =
+                EntryRiders.defaultValue,
+              MoveToZone.slot = Nothing,
+              MoveToZone.origin = Nothing,
+              MoveToZone.placement = LibraryPlacement.defaultValue,
+              MoveToZone.duration = Nothing
+            }
+   in Mint.trigger (TriggerCondition.StepBegins (StepBegins.MkStepBegins (Phase.Ending EndingStep.EndStep) Nothing TurnScope.EachTurn)) (Seq.singleton effect)
+
+-- CR 702.128a: embalm's token copy is white, has no mana cost, and is a Zombie
+-- in addition to its other types.
+embalm :: Cost Keyword -> ActivatedAbility Card (GrantedAbility.GrantedAbility Card)
+embalm =
+  graveyardTokenCopy
+    [ CopyException.SetColors (Set.singleton Color.White),
+      CopyException.NoManaCost,
+      CopyException.AddSubtypes (Set.singleton Subtype.Zombie)
+    ]
+
+-- CR 702.128b: a token created by a resolving embalm ability is embalmed. The
+-- marks a token has from the keyword whose ability created it; no other rule of
+-- CR 702 names one (eternalize's CR 702.129 states no "eternalized").
+createdMarks :: Keyword -> Set Designation.Designation
+createdMarks keyword = case keyword of
+  Keyword.Embalm _ -> Set.singleton Designation.Embalmed
+  _ -> Set.empty
+
+-- CR 702.129a: eternalize's is black and 4/4 as well, in the rule's order.
+eternalize :: Cost Keyword -> ActivatedAbility Card (GrantedAbility.GrantedAbility Card)
+eternalize =
+  graveyardTokenCopy
+    [ CopyException.SetColors (Set.singleton Color.Black),
+      CopyException.SetPowerToughness (SetPowerToughness.MkSetPowerToughness 4 4),
+      CopyException.NoManaCost,
+      CopyException.AddSubtypes (Set.singleton Subtype.Zombie)
+    ]
+
+-- The ability CR 702.128a and CR 702.129a share: "[Cost], Exile this card from
+-- your graveyard: Create a token that's a copy of this card, except ...
+-- Activate only as a sorcery."
+--
+-- THE EXILE is a cost component appended to the keyword's own cost, so it is
+-- paid on activation (CR 602.2b / 601.2h), and it is what confines the ability
+-- to a graveyard: CR 113.6m, a cost that moves the object out of a zone,
+-- enforced by Parun.Engine.Cost.canPayComponent.
+--
+-- THE COPY names Binding.triggerSource, the graveyard card. That card is gone by
+-- resolution (CR 400.7), so CreateCopy reads its copiable values (CR 707.2)
+-- through CR 608.2h's last known information.
+--
+-- THE EXCEPTIONS ride the CreateCopy, so CR 707.9b writes them into the
+-- token's copiable values and a copy of the token inherits them, which
+-- Parun.CopySpec's graveyardTokenCopySpec proves with a Clone.
+graveyardTokenCopy :: [CopyException.CopyException (GrantedAbility.GrantedAbility Card)] -> Cost Keyword -> ActivatedAbility Card (GrantedAbility.GrantedAbility Card)
+graveyardTokenCopy exceptions cost =
+  let copied =
+        Effect.CreateCopy
+          CreateCopy.MkCreateCopy
+            { CreateCopy.quantity = CreateCopy.defaultQuantity,
+              CreateCopy.ref = ObjectRef.InSlot Binding.triggerSource,
+              CreateCopy.riders =
+                EntryRiders.defaultValue,
+              -- Nothing looks back at the token, so it binds no slot.
+              CreateCopy.slot = Nothing,
+              CreateCopy.exceptions = exceptions
+            }
+   in ActivatedAbility.MkActivatedAbility
+        { ActivatedAbility.cost = cost {Cost.components = Cost.components cost <> [CostComponent.ExileThisFromGraveyard]},
+          ActivatedAbility.modal =
+            Mint.oneMode (Seq.singleton copied),
+          ActivatedAbility.maximumX = [],
+          ActivatedAbility.minimumX = 0,
+          ActivatedAbility.definedX = Nothing,
+          -- CR 602.5d, the rules' "Activate only as a sorcery".
+          ActivatedAbility.restrictions = [ActivationRestriction.SorcerySpeed],
+          ActivatedAbility.activator = Activator.Controller,
+          ActivatedAbility.condition = Nothing,
+          -- Nothing on every keyword-minted ability, unearth's reason.
+          ActivatedAbility.name = Nothing,
+          -- Written by `mintedBy` at the roster, unearth's reason.
+          ActivatedAbility.keyword = Nothing
+        }
+
+-- CR 702.97a's whole ability: "[Cost], Exile this card from your graveyard: Put
+-- a number of +1/+1 counters equal to the power of the card you exiled on target
+-- creature. Activate only as a sorcery."
+--
+-- THE EXILE is a cost component appended to the keyword's own cost,
+-- graveyardTokenCopy's reason in full: CR 602.2b / 601.2h pay it on activation,
+-- and CR 113.6m is what then confines the ability to a graveyard.
+--
+-- THE TARGET is reinforce's shape: chosen at CR 601.2c, before CR 601.2h pays,
+-- so the ability outlives the card its own cost exiled (CR 113.7a).
+--
+-- THE COUNT reads power off Binding.triggerSource, the card the cost
+-- exiled. Rule 702.97a says "the card you exiled" where the printed reminder
+-- says "this card's power"; they name one object, and an AgainstSlot read goes
+-- through the injected view, which is what lets CR 608.2h answer for a card the
+-- cost has already moved.
+scavenge :: Cost Keyword -> ActivatedAbility Card (GrantedAbility.GrantedAbility Card)
+scavenge cost =
+  let slot = TargetSlot.required Pool.Creatures Nothing
+      effect =
+        Effect.PutCounters
+          ( PutCounters.MkPutCounters
+              CounterKind.PlusOnePlusOne
+              (Quantity.AgainstSlot (AgainstSlot.MkAgainstSlot Binding.triggerSource (Quantity.Measure Measure.Power)))
+              (ObjectRef.InSlot scavengeTarget)
+          )
+   in ActivatedAbility.MkActivatedAbility
+        { ActivatedAbility.cost = cost {Cost.components = Cost.components cost <> [CostComponent.ExileThisFromGraveyard]},
+          ActivatedAbility.modal =
+            Mint.oneModeTargeting (Map.singleton scavengeTarget slot) (Seq.singleton effect),
+          ActivatedAbility.maximumX = [],
+          ActivatedAbility.minimumX = 0,
+          ActivatedAbility.definedX = Nothing,
+          -- CR 602.5d, rule 702.97a's "Activate only as a sorcery".
+          ActivatedAbility.restrictions = [ActivationRestriction.SorcerySpeed],
+          ActivatedAbility.activator = Activator.Controller,
+          ActivatedAbility.condition = Nothing,
+          -- Nothing on every keyword-minted ability, unearth's reason.
+          ActivatedAbility.name = Nothing,
+          -- Written by `mintedBy` at the roster, unearth's reason.
+          ActivatedAbility.keyword = Nothing
+        }
+
+-- The slot rule 702.97a's one target is chosen into, reinforceTarget's position.
+scavengeTarget :: SlotName.SlotName
+scavengeTarget = SlotName.MkSlotName (Text.pack "scavenged onto")
+
+-- CR 702.141a's whole ability: "[Cost], Exile this card from your graveyard: For
+-- each opponent, create a token that's a copy of this card that attacks that
+-- opponent this turn if able. The tokens gain haste. Sacrifice them at the
+-- beginning of the next end step. Activate only as a sorcery."
+--
+-- THE EXILE and the sorcery-speed restriction are scavenge's, one rule over.
+--
+-- THE LOOP is myriad's, over ObjectRef.EachOpponent rather than rule 702.116a's
+-- PlayerRef.EachOpponentExcept: rule 702.141a names every opponent outright,
+-- where myriad's excludes the defending player its trigger bound -- so this is
+-- the printed NOUN where myriad needs the indirection.
+--
+-- THE COPY names Binding.triggerSource, graveyardTokenCopy's reason: the card the
+-- cost exiled is gone by resolution (CR 400.7), so CreateCopy reads CR 707.2's
+-- copiable values through CR 608.2h's last known information. No exception rides
+-- it -- rule 702.141a states none, where embalm and eternalize each state theirs.
+--
+-- THE REQUIREMENT is rule 702.141a's "attacks that opponent this turn if able",
+-- CR 508.1d's object axis (Alluring Siren's shape). It sits INSIDE the loop
+-- body, which is what pairs each token with its own opponent: a body-defined
+-- name is rescoped per member and only accumulates into the union once the loop
+-- is over (Parun.Engine.Resolve.Effect's ForEach arm), so the ref reads this
+-- iteration's token alone.
+--
+-- THE HASTE and THE SACRIFICE sit AFTER the loop and read that union, myriadExile's
+-- reason: one grant and one delayed ability over the whole batch rather than one
+-- per opponent. Duration.Indefinite for the haste is unearth's reason -- rule
+-- 702.141a states no "until", and the tokens are sacrificed before any end of
+-- turn could end the effect anyway.
+--
+-- Rule 702.141a states no "if one or more tokens are created this way", so no
+-- clause condition guards the arming the way myriad's does: a solitaire game has
+-- no opponent, the loop mints nothing, and the delayed ability then sacrifices an
+-- empty batch.
+encore :: Cost Keyword -> ActivatedAbility Card (GrantedAbility.GrantedAbility Card)
+encore cost =
+  let copied =
+        Effect.CreateCopy
+          CreateCopy.MkCreateCopy
+            { CreateCopy.quantity = CreateCopy.defaultQuantity,
+              CreateCopy.ref = ObjectRef.InSlot Binding.triggerSource,
+              -- Not attacking: rule 702.141a's token is created during a main
+              -- phase (CR 602.5d) and REQUIRED to attack later, where myriad's
+              -- arrives already attacking mid-combat.
+              CreateCopy.riders =
+                EntryRiders.defaultValue,
+              CreateCopy.slot = Just encoreTokenSlot,
+              CreateCopy.exceptions = []
+            }
+      required =
+        Effect.RequireAttack
+          RequireAttack.MkRequireAttack
+            { RequireAttack.duration = Duration.UntilEndOfTurn,
+              RequireAttack.attacker = RestrictedCreatures.Named (ObjectRef.InSlot encoreTokenSlot),
+              RequireAttack.defender = Just (AttackTargetRef.Players (PlayerRef.InSlot encoreOpponentSlot))
+            }
+      loop =
+        Effect.ForEach
+          ForEach.MkForEach
+            { ForEach.ref = ObjectRef.EachOpponent,
+              ForEach.members = LoopMembers.Every,
+              ForEach.slot = encoreOpponentSlot,
+              ForEach.body = Seq.fromList [copied, required],
+              -- CR 608.2f's first sentence: one action over the opponents, so the
+              -- copies enter together (CR 603.6a).
+              ForEach.individually = False,
+              ForEach.payGate = Nothing,
+              ForEach.startingWith = Nothing
+            }
+      hasted =
+        Effect.ModifyTarget
+          ModifyTarget.MkModifyTarget
+            { ModifyTarget.duration = Duration.Indefinite,
+              ModifyTarget.modification = Modification.GainKeyword Keyword.Haste,
+              ModifyTarget.ref = ObjectRef.InSlot encoreTokenSlot,
+              ModifyTarget.each = Nothing
+            }
+      armed =
+        Effect.ArmDelayedTrigger
+          ArmDelayedTrigger.MkArmDelayedTrigger
+            { ArmDelayedTrigger.name = encoreSacrificeName,
+              ArmDelayedTrigger.onset = Onset.Immediately,
+              ArmDelayedTrigger.duration = Nothing,
+              ArmDelayedTrigger.ability = Nothing
+            }
+   in ActivatedAbility.MkActivatedAbility
+        { ActivatedAbility.cost = cost {Cost.components = Cost.components cost <> [CostComponent.ExileThisFromGraveyard]},
+          ActivatedAbility.modal =
+            Mint.oneMode (Seq.fromList [loop, hasted, armed]),
+          ActivatedAbility.maximumX = [],
+          ActivatedAbility.minimumX = 0,
+          ActivatedAbility.definedX = Nothing,
+          -- CR 602.5d, rule 702.141a's "Activate only as a sorcery".
+          ActivatedAbility.restrictions = [ActivationRestriction.SorcerySpeed],
+          ActivatedAbility.activator = Activator.Controller,
+          ActivatedAbility.condition = Nothing,
+          -- Nothing on every keyword-minted ability, unearth's reason.
+          ActivatedAbility.name = Nothing,
+          -- Written by `mintedBy` at the roster, unearth's reason.
+          ActivatedAbility.keyword = Nothing
+        }
+
+-- The slots rule 702.141a's loop needs, myriadOpponentSlot's and
+-- myriadTokenSlot's position: the opponent this iteration is aimed at, and the
+-- tokens the loop minted. Both DEFINITIONS and never targets (CR 115.10a).
+encoreOpponentSlot, encoreTokenSlot :: SlotName.SlotName
+encoreOpponentSlot = SlotName.MkSlotName (Text.pack "encore opponent")
+encoreTokenSlot = SlotName.MkSlotName (Text.pack "encore token")
+
+-- The name rule 702.141a's delayed ability is filed under, decayedSacrificeName's
+-- position. A card may not declare one under this name (Parun.AbilitySlotLintSpec).
+encoreSacrificeName :: AbilityName
+encoreSacrificeName = AbilityName.MkAbilityName (Text.pack "encore")
+
+-- CR 702.141a's "sacrifice them at the beginning of the next end step",
+-- blitzSacrifice's shape over the whole batch: CR 513.2's timing, once (CR
+-- 603.7b), on any player's turn. CR 701.21a keeps it a sacrifice, so an
+-- indestructible token still goes.
+encoreSacrifice :: TriggeredAbility Card (GrantedAbility.GrantedAbility Card)
+encoreSacrifice = atNextEndStep (Effect.Sacrifice SacrificeEffect.MkSacrificeEffect {SacrificeEffect.ref = ObjectRef.InSlot encoreTokenSlot, SacrificeEffect.sacrificer = Sacrificer.EffectController, SacrificeEffect.sacrificed = Nothing})
+
+-- CR 602.1: the ACTIVATED abilities rule 702 gives a PERMANENT, handAbilitiesOf's
+-- sibling one zone over.
+--
+-- POST-LAYER keywords, so Humility takes crew away at CR 613.1f layer 6 for
+-- free.
+--
+-- One ability PER INSTANCE, rule 702.70b's reading rather than rule 702.164b's: CR
+-- 702.122a states a whole self-contained ability, so a permanent with crew twice
+-- has two of them to activate and two thresholds. Order is the Map's, for
+-- triggeredAbilitiesOf's reason.
+battlefieldAbilitiesOf :: Map Keyword Natural -> [ActivatedAbility Card (GrantedAbility.GrantedAbility Card)]
+battlefieldAbilitiesOf counts = concatMap (uncurry battlefieldAbilitiesFor) (Map.toAscList counts)
+
+-- CR 602.1: every activated ability an object HAS, the one roster every view
+-- builder reads. `abilities` is its own list beside rule 702's battlefield mint,
+-- which no CR 612 text change reaches (docs/decisions.md, "What a text change
+-- reaches inside a keyword"); then the hand and graveyard mints, and CR 804.2's
+-- ability where `deploys`.
+--
+-- HAS, not can activate here: CR 113.6 says where an ability FUNCTIONS, so crew
+-- is an ability of a Vehicle card in a library (CR 702.122a) as cycling is of a
+-- permanent. Parun.CompanionSpec's Consulate Dreadnought case is the board.
+activatedAbilitiesOf :: Bool -> Set Keyword -> [ActivatedAbility Card (GrantedAbility.GrantedAbility Card)] -> [ActivatedAbility Card (GrantedAbility.GrantedAbility Card)]
+activatedAbilitiesOf deploys keywords abilities =
+  abilities
+    <> handAbilitiesOf keywords
+    <> graveyardAbilitiesOf keywords
+    <> [Deploy.ability | deploys]
+
+-- Exhaustive, exactly as handAbilitiesFor is, and for the same reason.
+battlefieldAbilitiesFor :: Keyword -> Natural -> [ActivatedAbility Card (GrantedAbility.GrantedAbility Card)]
+battlefieldAbilitiesFor keyword count = fmap (mintedBy keyword) $ case keyword of
+  Keyword.Crew n -> List.genericReplicate count (crew n)
+  -- CR 702.171a states a whole self-contained ability, so one per instance and
+  -- one threshold each, crew's reading above.
+  Keyword.Saddle n -> List.genericReplicate count (saddle n)
+  Keyword.Fabricate _ -> []
+  Keyword.Cycling {} -> []
+  Keyword.Deathtouch -> []
+  Keyword.Defender -> []
+  Keyword.DoubleStrike -> []
+  -- CR 702.6d: "if a permanent has multiple equip abilities, any of its equip
+  -- abilities may be activated" -- so one ability per instance, crew's reading
+  -- above.
+  Keyword.Equip payload -> List.genericReplicate count (equip payload)
+  -- CR 702.67c, in CR 702.6d's words: any of a Fortification's fortify
+  -- abilities may be used, so one ability per instance as equip is.
+  Keyword.Fortify cost -> List.genericReplicate count (fortify cost)
+  -- CR 702.65a, one ability per instance as fortify is.
+  Keyword.AuraSwap cost -> List.genericReplicate count (auraSwap cost)
+  -- CR 702.49a's ability functions from a HAND, so it is minted by
+  -- handAbilitiesFor above and never from the battlefield.
+  Keyword.Ninjutsu _ -> []
+  Keyword.Splice _ -> []
+  Keyword.FirstStrike -> []
+  Keyword.Flash -> []
+  Keyword.Flying -> []
+  Keyword.Haste -> []
+  Keyword.Hexproof _ -> []
+  Keyword.Indestructible -> []
+  Keyword.Landwalk _ -> []
+  Keyword.Lifelink -> []
+  Keyword.LivingMetal -> []
+  Keyword.MoreThanMeetsTheEye _ -> []
+  Keyword.Protection _ -> []
+  Keyword.Reach -> []
+  Keyword.Shroud -> []
+  Keyword.Trample -> []
+  Keyword.TrampleOverPlaneswalkers -> []
+  Keyword.Vigilance -> []
+  Keyword.Ward _ -> []
+  Keyword.Banding -> []
+  Keyword.Flanking -> []
+  Keyword.Phasing -> []
+  Keyword.Shadow -> []
+  Keyword.Horsemanship -> []
+  Keyword.Aftermath -> []
+  Keyword.JumpStart -> []
+  Keyword.Afflict _ -> []
+  Keyword.Fear -> []
+  Keyword.Intimidate -> []
+  -- CR 702.37e: turning a face-down permanent face up is a SPECIAL ACTION and
+  -- doesn't use the stack (CR 116), so morph gives no activated ability;
+  -- morphCosts below serves that action instead.
+  Keyword.Morph {} -> []
+  Keyword.Menace -> []
+  Keyword.Renown _ -> []
+  Keyword.Kicker _ -> []
+  Keyword.Multikicker _ -> []
+  Keyword.StickerKicker _ -> []
+  Keyword.Flashback _ -> []
+  Keyword.Bestow _ -> []
+  Keyword.Mutate _ -> []
+  Keyword.Entwine _ -> []
+  -- CR 702.27a functions while the spell is on the stack, and states no
+  -- activated ability there or on the battlefield.
+  Keyword.Buyback _ -> []
+  Keyword.Bushido _ -> []
+  Keyword.Soulshift _ -> []
+  Keyword.Dredge _ -> []
+  Keyword.Bloodthirst _ -> []
+  Keyword.Haunt -> []
+  -- CR 702.62a states no activated ability on the battlefield either.
+  Keyword.Suspend _ -> []
+  Keyword.SplitSecond -> []
+  Keyword.Poisonous _ -> []
+  Keyword.Champion _ -> []
+  Keyword.Offering _ -> []
+  Keyword.Cascade -> []
+  Keyword.Storm -> []
+  Keyword.Gravestorm -> []
+  Keyword.Conspire -> []
+  Keyword.Demonstrate -> []
+  Keyword.Ripple _ -> []
+  Keyword.Replicate _ -> []
+  Keyword.Recover _ -> []
+  Keyword.Casualty _ -> []
+  Keyword.Bargain -> []
+  -- CR 702.167a states a whole self-contained ability, so one per instance,
+  -- transfigure's reading below.
+  Keyword.Craft spec -> List.genericReplicate count (craft spec)
+  Keyword.Teamwork _ -> []
+  Keyword.WebSlinging _ -> []
+  Keyword.Sneak _ -> []
+  Keyword.Annihilator _ -> []
+  Keyword.Mobilize _ -> []
+  Keyword.Firebending _ -> []
+  -- CR 702.53a's ability functions in a HAND; handAbilitiesFor is its roster.
+  Keyword.Transmute {} -> []
+  -- CR 702.71a states a whole self-contained ability, so one per instance,
+  -- crew's reading above.
+  Keyword.Transfigure cost -> List.genericReplicate count (transfigure cost)
+  Keyword.BattleCry -> []
+  Keyword.Evolve -> []
+  Keyword.Exploit -> []
+  Keyword.Tribute _ -> []
+  Keyword.Dethrone -> []
+  Keyword.HiddenAgenda -> []
+  Keyword.Fuse -> []
+  Keyword.LevelUp cost -> List.genericReplicate count (levelUp cost)
+  Keyword.Outlast cost -> List.genericReplicate count (outlast cost)
+  Keyword.Prowess -> []
+  Keyword.Extort -> []
+  Keyword.Increment -> []
+  Keyword.Infect -> []
+  Keyword.Wither -> []
+  Keyword.Devour _ -> []
+  Keyword.Amplify _ -> []
+  Keyword.Exalted -> []
+  Keyword.LivingWeapon -> []
+  Keyword.ForMirrodin -> []
+  Keyword.JobSelect -> []
+  Keyword.Spree -> []
+  Keyword.Tiered -> []
+  Keyword.Unearth _ -> []
+  Keyword.Embalm _ -> []
+  Keyword.Eternalize _ -> []
+  Keyword.Mentor -> []
+  Keyword.Afterlife _ -> []
+  Keyword.Provoke -> []
+  Keyword.Changeling -> []
+  Keyword.Hideaway _ -> []
+  Keyword.Reinforce {} -> []
+  Keyword.Devoid -> []
+  Keyword.Ingest -> []
+  Keyword.Myriad -> []
+  Keyword.Skulk -> []
+  Keyword.SpaceSculptor -> []
+  Keyword.Emerge _ -> []
+  -- CR 702.124a: deck-construction abilities, which function before the game
+  -- begins and mint nothing in it. Parun.Engine.Commander.designations reads them.
+  Keyword.Partner -> []
+  Keyword.PartnerText _ -> []
+  Keyword.ChooseABackground -> []
+  Keyword.DoctorsCompanion -> []
+  -- CR 702.124j's second ability is a TRIGGERED ability, which `abilitiesFor`
+  -- mints; no part of it belongs to this roster.
+  Keyword.PartnerWith _ -> []
+  Keyword.Escalate _ -> []
+  Keyword.Melee -> []
+  Keyword.Rampage _ -> []
+  Keyword.CumulativeUpkeep _ -> []
+  Keyword.Echo _ -> []
+  Keyword.Riot -> []
+  Keyword.Escape _ -> []
+  Keyword.Evoke _ -> []
+  Keyword.Dash _ -> []
+  Keyword.Blitz _ -> []
+  Keyword.Warp _ -> []
+  Keyword.Disturb _ -> []
+  Keyword.Harmonize _ -> []
+  Keyword.Cleave _ -> []
+  Keyword.Overload _ -> []
+  Keyword.Awaken _ -> []
+  Keyword.Surge _ -> []
+  Keyword.Spectacle _ -> []
+  Keyword.Prowl _ -> []
+  Keyword.Freerunning _ -> []
+  Keyword.Impending _ -> []
+  Keyword.Unleash -> []
+  Keyword.Modular _ -> []
+  Keyword.Sunburst -> []
+  Keyword.Vanishing _ -> []
+  Keyword.Fading _ -> []
+  Keyword.Frenzy _ -> []
+  Keyword.Graft _ -> []
+  Keyword.Absorb _ -> []
+  Keyword.Daybound -> []
+  Keyword.Nightbound -> []
+  Keyword.Decayed -> []
+  Keyword.Compleated -> []
+  -- CR 702.151a states TWO abilities, both minted per instance, equip's reading
+  -- above.
+  Keyword.Reconfigure cost -> concat (List.genericReplicate count [reconfigure cost, reconfigureOff cost])
+  Keyword.ReadAhead -> []
+  Keyword.Training -> []
+  Keyword.Prototype _ -> []
+  Keyword.Toxic _ -> []
+  Keyword.Backup _ -> []
+  Keyword.Disguise _ -> []
+  Keyword.Plot _ -> []
+  Keyword.Ravenous -> []
+  Keyword.Squad _ -> []
+  Keyword.Offspring _ -> []
+  Keyword.Gift _ -> []
+  Keyword.Foretell _ -> []
+  Keyword.Companion _ -> []
+  Keyword.Miracle _ -> []
+  Keyword.StartYourEngines -> []
+  Keyword.Ascend -> []
+  Keyword.Storied -> []
+  Keyword.Assist -> []
+  Keyword.Exhaust -> []
+  Keyword.Boast -> []
+  Keyword.Forecast -> []
+  Keyword.PowerUp -> []
+  Keyword.ClassLevel _ -> []
+  -- Exerting is a cost paid at CR 508.1g, which Combat.declareAttackers offers
+  -- rather than the stack.
+  Keyword.Exert -> []
+  Keyword.Enlist -> []
+  Keyword.Persist -> []
+  Keyword.Undying -> []
+  Keyword.Soulbond -> []
+  -- CR 702.184a states a whole self-contained ability, so one per instance,
+  -- crew's reading above.
+  Keyword.Station -> List.genericReplicate count station
+  Keyword.UmbraArmor -> []
+  Keyword.Epic -> []
+  Keyword.Paradigm -> []
+  Keyword.Cipher -> []
+  Keyword.Convoke -> []
+  Keyword.Improvise -> []
+  Keyword.Delve -> []
+  Keyword.Affinity _ -> []
+  Keyword.Undaunted -> []
+  Keyword.Retrace -> []
+  Keyword.Mayhem _ -> []
+  Keyword.Madness _ -> []
+  Keyword.Rebound -> []
+  Keyword.Scavenge _ -> []
+  Keyword.Encore _ -> []
+
+-- CR 702.122a's whole ability, minted from the one number the keyword carries.
+--
+-- THE COST. Only the AGGREGATE is the component's own, total power being a
+-- property of the chosen set rather than of any candidate. `Not IsSource` is
+-- load-bearing: a Vehicle that has already become a creature could otherwise crew
+-- itself. CR 302.6 does NOT reach this cost, in either direction.
+--
+-- The Vehicle needs no haste, the tap symbol not being in the cost; and a creature
+-- that arrived this turn may still be tapped to crew, rule 302.6 gating only a
+-- creature's OWN activated ability with the tap symbol in it.
+--
+-- THE EFFECT. "Becomes an artifact creature" ADDS two card types and sets nothing,
+-- which is CR 205.1b naming this exact phrase -- so the Vehicle stays a Vehicle,
+-- and AddCardType is right where SetCardType's CR 205.1a replacement would take
+-- the artifact type and the Vehicle subtype away. TWO of them (CR 300.1) in one
+-- mode, since CR 613.7b stamps both at once. Layer 4 either way (CR 613.1d), and
+-- CR 208.3 needs no clause: the Vehicle's printed power and toughness are already
+-- gated on its being a creature at Projection's read points.
+--
+-- Binding.triggerSource, so the Vehicle is named and never TARGETED (CR 115.10a):
+-- a targeted crew would fizzle to shroud and fire "becomes the target" triggers
+-- the printed ability does not.
+--
+-- `Not CantCrewVehicles` is CR 702.122d, and this is its ONLY minter: rule
+-- 702.122d forbids paying a crew cost and says nothing about any other cost that
+-- taps, so writing the atom into rule 702.122a's own criterion is what tells a
+-- crew cost from the same component printed outside one
+-- (data/cards/synthetic-crewed-battery.json). Parun.Engine.Cost.tapCandidates is
+-- what supplies the set it reads, and Parun.CrewSpec's "CR 702.122d a creature
+-- Revoke Privileges enchants is not offered to pay" is the proving test.
+crew :: Natural -> ActivatedAbility Card (GrantedAbility.GrantedAbility Card)
+crew n =
+  let criterion =
+        Filter.And
+          [ Filter.HasCardType CardType.Creature,
+            Filter.Not Filter.IsTapped,
+            Filter.ControlledBy PlayerRelation.You,
+            Filter.Not Filter.IsSource,
+            Filter.Not Filter.CantCrewVehicles
+          ]
+      becomes cardType =
+        Effect.ModifyTarget
+          ( ModifyTarget.MkModifyTarget
+              Duration.UntilEndOfTurn
+              (Modification.AddCardType cardType)
+              (ObjectRef.InSlot Binding.triggerSource)
+              Nothing
+          )
+   in ActivatedAbility.MkActivatedAbility
+        { ActivatedAbility.cost =
+            Cost.MkCost
+              { -- CR 118.5: rule 702.122a's cost has no mana part, which is
+                -- `Just` an empty one and not the Nothing that means unpayable.
+                Cost.mana = Just (ManaCost.MkManaCost []),
+                Cost.components = [CostComponent.TapForTotalPower (TapForTotalPower.MkTapForTotalPower n criterion)]
+              },
+          ActivatedAbility.modal =
+            Mint.oneMode (Seq.fromList [becomes CardType.Artifact, becomes CardType.Creature]),
+          ActivatedAbility.maximumX = [],
+          ActivatedAbility.minimumX = 0,
+          ActivatedAbility.definedX = Nothing,
+          ActivatedAbility.restrictions = [],
+          ActivatedAbility.activator = Activator.Controller,
+          -- CR 702.122a gives the permanent this ability outright, with no "as long
+          -- as", cycling's answer.
+          ActivatedAbility.condition = Nothing,
+          -- Nothing on every keyword-minted ability: no clause of a card refers to
+          -- one, CR 702's own text being what mints it.
+          ActivatedAbility.name = Nothing,
+          -- Nothing here and written by `mintedBy` at the roster, the one place that
+          -- knows the keyword by identity rather than by reconstructing it.
+          ActivatedAbility.keyword = Nothing
+        }
+
+-- CR 702.171a's whole ability, crew's shape one rule over.
+--
+-- THE COST is crew's TapForTotalPower on the same words -- "any number of other
+-- untapped creatures you control with total power N or greater" -- so `Not
+-- IsSource` is rule 702.171a's own "other" and CR 302.6 reaches it no more than
+-- it reaches crew's. WITHOUT crew's `Not CantCrewVehicles`: rule 702.122d
+-- forbids paying a CREW cost and nothing else, teamworkCost's reading below.
+--
+-- THE RESTRICTION is rule 702.171a's own "Activate only as a sorcery", which
+-- crew does not print.
+--
+-- THE EFFECT is Effect.Designate, where crew's arm adds card types: CR 702.171b
+-- makes saddled a designation, "neither an ability nor part of the permanent's
+-- copiable values", which is exactly what Object.designations holds. Aimed at
+-- Binding.triggerSource, so the permanent is named and never TARGETED (CR
+-- 115.10a), crew's posture and renown's. No value rides with the mark -- CR
+-- 701.37c's X is monstrosity's alone.
+--
+-- The mark's END is not stated here: CR 400.7's new object drops it on a zone
+-- change, and rule 702.171b's "until the end of the turn" is
+-- Parun.Engine.Expiry.dropAtCleanup's clearedSaddles.
+saddle :: Natural -> ActivatedAbility Card (GrantedAbility.GrantedAbility Card)
+saddle n =
+  let criterion =
+        Filter.And
+          [ Filter.HasCardType CardType.Creature,
+            Filter.Not Filter.IsTapped,
+            Filter.ControlledBy PlayerRelation.You,
+            Filter.Not Filter.IsSource
+          ]
+   in ActivatedAbility.MkActivatedAbility
+        { ActivatedAbility.cost =
+            Cost.MkCost
+              { -- CR 118.5, crew's note above.
+                Cost.mana = Just (ManaCost.MkManaCost []),
+                Cost.components = [CostComponent.TapForTotalPower (TapForTotalPower.MkTapForTotalPower n criterion)]
+              },
+          ActivatedAbility.modal =
+            Mint.oneMode (Seq.singleton (Effect.Designate (Designate.MkDesignate Designation.Saddled Binding.triggerSource Nothing))),
+          ActivatedAbility.maximumX = [],
+          ActivatedAbility.minimumX = 0,
+          ActivatedAbility.definedX = Nothing,
+          ActivatedAbility.restrictions = [ActivationRestriction.SorcerySpeed],
+          ActivatedAbility.activator = Activator.Controller,
+          ActivatedAbility.condition = Nothing,
+          ActivatedAbility.name = Nothing,
+          ActivatedAbility.keyword = Nothing
+        }
+
+-- CR 702.184a's whole ability, crew's neighbour above and levelUp's below.
+--
+-- THE COST taps exactly ONE creature, so CostComponent.TapPermanents rather than
+-- crew's TapForTotalPower: rule 702.184a fixes the count and reads the tapped
+-- creature's power afterwards, where crew's number is a threshold on an aggregate
+-- and fixes no count. That is also what makes the power readable at all --
+-- TapPermanents binds Binding.tappedPermanent, where TapForTotalPower's set
+-- reaches CR 702.122b's relation under a slot of its own
+-- (Binding.tappedForTotalPower) and never that one. `Not IsSource` is rule
+-- 702.184a's own "another", and load-bearing for
+-- crew's reason one rule over: a Spacecraft past CR 721.2b's threshold is a
+-- creature and could otherwise station itself.
+--
+-- The tap symbol is not in the cost, so CR 302.6 does not reach this ability: a
+-- Spacecraft that arrived this turn may be stationed, and a creature that arrived
+-- this turn may be tapped to do it.
+--
+-- THE EFFECT reads through Quantity.AgainstSlot on that reserved slot,
+-- Unerring Sling's read, over Quantity.StationMeasure -- CR 702.184a's power
+-- unless CR 702.184c's substitution applies (Tapestry Warden), which that
+-- arm asks live off the ability's OWN source rather than off the tapped
+-- creature. CR 608.2h's CURRENT information, the permanent being tapped
+-- rather than moved. The counters land on the source, named through
+-- Binding.triggerSource and never TARGETED (CR 115.10a), crew's posture.
+--
+-- CounterKind.Named, because CR 122.1 letters charge counters nowhere: no rule
+-- reads the tally, only CR 721.2's own striations do, through
+-- Quantity.ObjectCounters. The spelling has to agree with what a station card
+-- writes, which is why chargeCounter below is shared rather than inlined.
+--
+-- CR 602.5d is the timing clause and the ONLY restriction. The condition is
+-- Nothing because CR 721.4 says so outright: the ability is present at all times
+-- and may be activated at any number of charge counters.
+--
+station :: ActivatedAbility Card (GrantedAbility.GrantedAbility Card)
+station =
+  let criterion =
+        Filter.And
+          [ Filter.HasCardType CardType.Creature,
+            Filter.Not Filter.IsTapped,
+            Filter.ControlledBy PlayerRelation.You,
+            Filter.Not Filter.IsSource
+          ]
+      load =
+        Effect.PutCounters
+          ( PutCounters.MkPutCounters
+              (CounterKind.Named chargeCounter)
+              (Quantity.AgainstSlot (AgainstSlot.MkAgainstSlot Binding.tappedPermanent Quantity.StationMeasure))
+              (ObjectRef.InSlot Binding.triggerSource)
+          )
+   in ActivatedAbility.MkActivatedAbility
+        { ActivatedAbility.cost =
+            Cost.MkCost
+              { -- CR 118.5, crew's note above: no mana part is `Just` an empty one
+                -- and not the Nothing that means unpayable.
+                Cost.mana = Just (ManaCost.MkManaCost []),
+                Cost.components = [CostComponent.TapPermanents (TapPermanents.MkTapPermanents (CostAmount.Fixed 1) criterion False)]
+              },
+          ActivatedAbility.modal =
+            Mint.oneMode (Seq.singleton load),
+          ActivatedAbility.maximumX = [],
+          ActivatedAbility.minimumX = 0,
+          ActivatedAbility.definedX = Nothing,
+          ActivatedAbility.restrictions = [ActivationRestriction.SorcerySpeed],
+          ActivatedAbility.activator = Activator.Controller,
+          ActivatedAbility.condition = Nothing,
+          -- Nothing on every keyword-minted ability: no clause of a card refers to
+          -- one, CR 702's own text being what mints it.
+          ActivatedAbility.name = Nothing,
+          -- Nothing here and written by `mintedBy` at the roster, the one place that
+          -- knows the keyword by identity rather than by reconstructing it.
+          ActivatedAbility.keyword = Nothing
+        }
+
+-- CR 122.1's charge counter, spelled as a station card spells it. Not reserved by
+-- Parun.Codec.CounterName, and deliberately so: CR 122.1 makes counters of the same
+-- name interchangeable, so `station`'s minted counters and the ones a striation
+-- counts through Quantity.ObjectCounters have to land on one Object.counters key.
+--
+-- TWO RULES MINT IT: CR 702.184a's station and CR 702.44a's sunburst, whose
+-- noncreature half Parun.Engine.Event places through this same name.
+-- data/cards/lumen-class-frigate.json writes this same string.
+chargeCounter :: CounterName.CounterName
+chargeCounter = CounterName.UnsafeMkCounterName (Text.pack "charge")
+
+-- CR 702.87a's whole ability, outlast's twin below.
+--
+-- THE COST is the printed one UNCHANGED -- rule 702.87a appends no ", {T}", so
+-- unlike outlast there is no CostComponent.TapThis and CR 302.6 does not reach
+-- this ability: a leveler that arrived this turn can level up.
+--
+-- THE COUNTER grants nothing by itself: CR 711.2a's level symbols are ordinary
+-- conditional static abilities on the card, reading this tally through
+-- Quantity.ObjectCounters.
+--
+-- CR 602.5d is the timing clause and the ONLY restriction. The condition is
+-- Nothing because CR 711.4 says so outright, so the ability is still offered past
+-- the last level symbol's range.
+levelUp :: Cost Keyword -> ActivatedAbility Card (GrantedAbility.GrantedAbility Card)
+levelUp cost =
+  let gain = Effect.PutCounters (PutCounters.MkPutCounters CounterKind.Level (Quantity.Literal 1) (ObjectRef.InSlot Binding.triggerSource))
+   in ActivatedAbility.MkActivatedAbility
+        { ActivatedAbility.cost = cost,
+          ActivatedAbility.modal =
+            Mint.oneMode (Seq.singleton gain),
+          ActivatedAbility.maximumX = [],
+          ActivatedAbility.minimumX = 0,
+          ActivatedAbility.definedX = Nothing,
+          ActivatedAbility.restrictions = [ActivationRestriction.SorcerySpeed],
+          ActivatedAbility.activator = Activator.Controller,
+          ActivatedAbility.condition = Nothing,
+          -- Nothing on every keyword-minted ability: no clause of a card refers to
+          -- one, CR 702's own text being what mints it.
+          ActivatedAbility.name = Nothing,
+          -- Nothing here and written by `mintedBy` at the roster, the one place that
+          -- knows the keyword by identity rather than by reconstructing it.
+          ActivatedAbility.keyword = Nothing
+        }
+
+-- CR 702.107a's whole ability, levelUp's twin; the card names only the cost.
+--
+-- THE COST is the printed one with CostComponent.TapThis APPENDED, rule 702.107a's
+-- ", {T}". Unlike crew's cost the tap symbol is the permanent's own, so CR 302.6
+-- does reach this ability and a creature that arrived this turn cannot outlast.
+--
+-- THE EFFECT names the permanent through Binding.triggerSource, so rule 702.107a's
+-- "this creature" is named and never TARGETED (CR 115.10a). CR 602.5d is the
+-- timing clause and the ONLY restriction.
+outlast :: Cost Keyword -> ActivatedAbility Card (GrantedAbility.GrantedAbility Card)
+outlast cost =
+  let grow = Effect.PutCounters (PutCounters.MkPutCounters CounterKind.PlusOnePlusOne (Quantity.Literal 1) (ObjectRef.InSlot Binding.triggerSource))
+   in ActivatedAbility.MkActivatedAbility
+        { ActivatedAbility.cost = cost {Cost.components = Cost.components cost <> [CostComponent.TapThis]},
+          ActivatedAbility.modal =
+            Mint.oneMode (Seq.singleton grow),
+          ActivatedAbility.maximumX = [],
+          ActivatedAbility.minimumX = 0,
+          ActivatedAbility.definedX = Nothing,
+          ActivatedAbility.restrictions = [ActivationRestriction.SorcerySpeed],
+          ActivatedAbility.activator = Activator.Controller,
+          ActivatedAbility.condition = Nothing,
+          -- Nothing on every keyword-minted ability: no clause of a card refers to
+          -- one, CR 702's own text being what mints it.
+          ActivatedAbility.name = Nothing,
+          -- Nothing here and written by `mintedBy` at the roster, the one place that
+          -- knows the keyword by identity rather than by reconstructing it.
+          ActivatedAbility.keyword = Nothing
+        }
+
+-- CR 702.6a's whole ability: "[Cost]: Attach this permanent to target creature
+-- you control. Activate only as a sorcery." levelUp's and outlast's neighbour on
+-- the battlefield, and the only one of the three that TARGETS -- so the slot map
+-- is reinforce's above rather than their empty one.
+--
+-- THE COST is the printed one UNCHANGED: rule 702.6a appends neither a tap symbol
+-- nor anything else, so CR 302.6 never reaches this ability and an Equipment that
+-- arrived this turn can equip.
+--
+-- "TARGET CREATURE YOU CONTROL" comes from the RULE and not from the card, which
+-- CR 115.1e says outright: "some keyword abilities, such as equip and modular,
+-- represent targeted activated or triggered abilities ... the phrase 'target
+-- [something]' appears in the rule for that keyword ability rather than in the
+-- ability itself." A Filter beside the pool, so the control question is part of
+-- target legality and is re-asked at resolution (CR 608.2b): an Equipment whose
+-- host changed hands in between fizzles. CR 301.5b's separate restriction -- that
+-- an Equipment may only be attached to a creature at all -- is
+-- Parun.Engine.Attach's and is not restated here.
+--
+-- CR 702.6c's "equip [quality] creature" is Equip.quality, and it is a CONJUNCT
+-- ON THE TARGET FILTER and nothing else: that rule says outright that
+-- "additional restrictions for an equip ability don't restrict what the
+-- Equipment may be attached to", so Parun.Engine.Attach.attachmentFor never sees
+-- it and a quality-equipped creature that stops having the quality keeps the
+-- Equipment. The rule's own "controlled by the player activating the ability"
+-- is the ControlledBy conjunct rule 702.6a already carries; the quality is
+-- appended to it rather than replacing it. Parun.AuraSpec's "CR 702.6c" case is
+-- what proves the narrowing bites.
+--
+-- CR 702.6e's planeswalker variant is the same ability with a planeswalker where
+-- rule 702.6a has a creature: Pool.Permanents narrowed by Filter.HasCardType
+-- Planeswalker, fortify's shape, since there is no planeswalker pool, and
+-- Effect.AttachAsThoughCreature for "as though that planeswalker were a
+-- creature", which lets CR 301.5's legality test admit it at the move. Staying
+-- attached past CR 704.5n is the card's business (Luxior, Giada's Gift makes it
+-- a creature). The scenario "CR 702.6e equip planeswalker suits up Jace, and CR
+-- 704.5n leaves Luxior on him" proves both.
+equip :: Equip.Equip Keyword -> ActivatedAbility Card (GrantedAbility.GrantedAbility Card)
+equip payload =
+  let narrowed kinds = Just (Filter.And (kinds <> (Filter.ControlledBy PlayerRelation.You : Maybe.maybeToList (Equip.quality payload))))
+      (slot, effect) = case Equip.target payload of
+        EquipTarget.Creature -> (TargetSlot.required Pool.Creatures (narrowed []), Effect.Attach equipTarget)
+        EquipTarget.Planeswalker -> (TargetSlot.required Pool.Permanents (narrowed [Filter.HasCardType CardType.Planeswalker]), Effect.AttachAsThoughCreature equipTarget)
+   in ActivatedAbility.MkActivatedAbility
+        { ActivatedAbility.cost = Equip.cost payload,
+          ActivatedAbility.modal =
+            Mint.oneModeTargeting (Map.singleton equipTarget slot) (Seq.singleton effect),
+          -- CR 702.6a's "Activate only as a sorcery", which CR 307.5 spells out.
+          ActivatedAbility.maximumX = [],
+          ActivatedAbility.minimumX = 0,
+          ActivatedAbility.definedX = Nothing,
+          ActivatedAbility.restrictions = [ActivationRestriction.SorcerySpeed],
+          ActivatedAbility.activator = Activator.Controller,
+          ActivatedAbility.condition = Nothing,
+          -- Nothing on every keyword-minted ability: no clause of a card refers to
+          -- one, CR 702's own text being what mints it.
+          ActivatedAbility.name = Nothing,
+          -- Nothing here and written by `mintedBy` at the roster, the one place that
+          -- knows the keyword by identity rather than by reconstructing it.
+          ActivatedAbility.keyword = Nothing
+        }
+
+-- The slot rule 702.6a's one target is chosen into, reinforceTarget's position.
+equipTarget :: SlotName.SlotName
+equipTarget = SlotName.MkSlotName (Text.pack "equipped")
+
+-- CR 702.67a's whole ability: "[Cost]: Attach this Fortification to target land
+-- you control. Activate only as a sorcery." `equip` above with CR 301.6's land
+-- where CR 301.5 has a creature, and everything that function's haddock says
+-- about the cost, about CR 115.1e putting "target land you control" in the RULE
+-- rather than on the card, and about CR 608.2b re-asking control at resolution
+-- holds here word for word. Not its QUALITY paragraph: rule 702.67 states no
+-- counterpart to CR 702.6c, so this payload stays a bare Cost.
+--
+-- Pool.Permanents narrowed by Filter.HasCardType Land, where equip takes
+-- Pool.Creatures whole: CR 115.1a gives the creature pool a constructor and
+-- there is no land pool. The recipient that reaches Object.attachedTo is
+-- therefore Recipient.ToObject rather than ToCreature -- which is what
+-- Parun.Engine.Attach.attachmentFor's Fortification branch answers with, since
+-- rule 301.6 names a land and not a creature.
+--
+-- CR 301.6's separate restriction -- that a Fortification may only be attached
+-- to a land at all, and that a Fortification that is also a creature and not a
+-- land can't fortify -- is Parun.Engine.Attach's, and is not restated here.
+fortify :: Cost Keyword -> ActivatedAbility Card (GrantedAbility.GrantedAbility Card)
+fortify cost =
+  let slot =
+        TargetSlot.required
+          Pool.Permanents
+          (Just (Filter.And [Filter.HasCardType CardType.Land, Filter.ControlledBy PlayerRelation.You]))
+      effect = Effect.Attach fortifyTarget
+   in ActivatedAbility.MkActivatedAbility
+        { ActivatedAbility.cost = cost,
+          ActivatedAbility.modal =
+            Mint.oneModeTargeting (Map.singleton fortifyTarget slot) (Seq.singleton effect),
+          -- CR 702.67a's "Activate only as a sorcery", which CR 307.5 spells out.
+          ActivatedAbility.maximumX = [],
+          ActivatedAbility.minimumX = 0,
+          ActivatedAbility.definedX = Nothing,
+          ActivatedAbility.restrictions = [ActivationRestriction.SorcerySpeed],
+          ActivatedAbility.activator = Activator.Controller,
+          ActivatedAbility.condition = Nothing,
+          ActivatedAbility.name = Nothing,
+          -- Nothing here and written by `mintedBy` at the roster, the one place that
+          -- knows the keyword by identity rather than by reconstructing it.
+          ActivatedAbility.keyword = Nothing
+        }
+
+-- The slot rule 702.67a's one target is chosen into, equipTarget's position.
+fortifyTarget :: SlotName.SlotName
+fortifyTarget = SlotName.MkSlotName (Text.pack "fortified")
+
+-- CR 702.151a's FIRST ability: "[Cost]: Attach this permanent to another target
+-- creature you control. Activate only as a sorcery." `equip` above with rule
+-- 702.151a's "another" added, and everything that function's haddock says about
+-- the unchanged cost, about CR 115.1e putting "target creature you control" in
+-- the RULE rather than on the card, and about CR 608.2b re-asking control at
+-- resolution holds here word for word.
+--
+-- "ANOTHER" is @Filter.Not Filter.IsSource@, the spelling that relation takes
+-- everywhere. It bites on this keyword and on no other attach ability: a
+-- reconfigure Equipment is itself a creature, so its own pool admits it, where an
+-- Equipment with plain equip is not a creature and CR 301.5b keeps it out
+-- already. Parun.Engine.Attach.attachmentFor's first guard refuses the same move,
+-- so this is the TARGETING half of one restriction whose attach half is already
+-- written.
+--
+-- CR 702.151b's "stops being a creature" is not here: it is a static ability,
+-- minted by mintedStaticAbilitiesOf below.
+reconfigure :: Cost Keyword -> ActivatedAbility Card (GrantedAbility.GrantedAbility Card)
+reconfigure cost =
+  let slot =
+        TargetSlot.required
+          Pool.Creatures
+          (Just (Filter.And [Filter.ControlledBy PlayerRelation.You, Filter.Not Filter.IsSource]))
+      effect = Effect.Attach reconfigureTarget
+   in ActivatedAbility.MkActivatedAbility
+        { ActivatedAbility.cost = cost,
+          ActivatedAbility.modal =
+            Mint.oneModeTargeting (Map.singleton reconfigureTarget slot) (Seq.singleton effect),
+          -- CR 702.151a's "Activate only as a sorcery", which CR 307.5 spells out.
+          ActivatedAbility.maximumX = [],
+          ActivatedAbility.minimumX = 0,
+          ActivatedAbility.definedX = Nothing,
+          ActivatedAbility.restrictions = [ActivationRestriction.SorcerySpeed],
+          ActivatedAbility.activator = Activator.Controller,
+          ActivatedAbility.condition = Nothing,
+          ActivatedAbility.name = Nothing,
+          -- Nothing here and written by `mintedBy` at the roster, the one place that
+          -- knows the keyword by identity rather than by reconstructing it.
+          ActivatedAbility.keyword = Nothing
+        }
+
+-- The slot rule 702.151a's one target is chosen into, equipTarget's position.
+reconfigureTarget :: SlotName.SlotName
+reconfigureTarget = SlotName.MkSlotName (Text.pack "reconfigured")
+
+-- CR 702.151a's SECOND ability: "[Cost]: Unattach this permanent. Activate only
+-- if this permanent is attached to a creature and only as a sorcery." No target.
+-- Once it is unattached, CR 702.151b's suppression ends with it, `reconfigured`'s
+-- affected set re-asking Object.attachedTo, so the permanent is a creature again.
+--
+-- "Attached to a creature" is a count of the source among the battlefield's
+-- permanents attached to one, boast's spelling of a self-test below, so the
+-- host's creature-ness is read off the projection as it is activated (CR 602.5).
+reconfigureOff :: Cost Keyword -> ActivatedAbility Card (GrantedAbility.GrantedAbility Card)
+reconfigureOff cost =
+  ActivatedAbility.MkActivatedAbility
+    { ActivatedAbility.cost = cost,
+      ActivatedAbility.modal =
+        Mint.oneMode (Seq.singleton (Effect.Unattach (ObjectRef.EachMatching Filter.IsSource))),
+      ActivatedAbility.maximumX = [],
+      ActivatedAbility.minimumX = 0,
+      ActivatedAbility.definedX = Nothing,
+      ActivatedAbility.restrictions =
+        [ ActivationRestriction.OnlyIf
+            ( Condition.Compares
+                ( Compares.MkCompares
+                    ( Quantity.Count
+                        ( Count.MkCount
+                            (Scope.InZone (InZone.MkInZone Zone.Battlefield (PlayerRef.Relative PlayerRelation.AnyPlayer)))
+                            (Filter.And [Filter.IsSource, Filter.AttachedTo (Filter.HasCardType CardType.Creature)])
+                            Aggregation.Members
+                        )
+                    )
+                    Comparison.AtLeast
+                    (Quantity.Literal 1)
+                )
+            ),
+          ActivationRestriction.SorcerySpeed
+        ],
+      ActivatedAbility.activator = Activator.Controller,
+      ActivatedAbility.condition = Nothing,
+      ActivatedAbility.name = Nothing,
+      -- Written by `mintedBy` at the roster, reconfigure's reason.
+      ActivatedAbility.keyword = Nothing
+    }
+
+-- CR 702.65a: "[Cost]: You may exchange this permanent with an Aura card in
+-- your hand." No timing restriction, the rule stating none, and no target: the
+-- card and the "may" are both announced as the ability resolves (CR 608.2d),
+-- by its controller (CR 109.5). "This permanent" is Binding.triggerSource,
+-- named and never TARGETED (CR 115.10a).
+auraSwap :: Cost Keyword -> ActivatedAbility Card (GrantedAbility.GrantedAbility Card)
+auraSwap cost =
+  let chosen = ChosenCardInHand.MkChosenCardInHand (PlayerRef.Relative PlayerRelation.You) (Filter.HasSubtype Subtype.Aura) (Quantity.Literal 1)
+      effect = Effect.ExchangeCardZones (ExchangeCardZones.MkExchangeCardZones (ObjectRef.InSlot Binding.triggerSource) (ObjectRef.ChosenCardInHand chosen))
+   in ActivatedAbility.MkActivatedAbility
+        { ActivatedAbility.cost = cost,
+          ActivatedAbility.modal =
+            Mint.oneModeOf Map.empty (Seq.singleton (Mint.youMay (Seq.singleton effect))),
+          ActivatedAbility.maximumX = [],
+          ActivatedAbility.minimumX = 0,
+          ActivatedAbility.definedX = Nothing,
+          ActivatedAbility.restrictions = [],
+          ActivatedAbility.activator = Activator.Controller,
+          ActivatedAbility.condition = Nothing,
+          ActivatedAbility.name = Nothing,
+          -- Nothing here and written by `mintedBy` at the roster, the one place that
+          -- knows the keyword by identity rather than by reconstructing it.
+          ActivatedAbility.keyword = Nothing
+        }
+
+-- CR 601.3: the casting permissions rule 702 gives a card for holding a keyword.
+-- A card's own printed permissions are a separate, additive list.
+--
+-- The keyword set is the caller's: Parun.Engine.Cost.permissionsOf reads it
+-- through the projection, so a granted flashback grants its permission too.
+--
+-- The card types come along because rule 702.34a's permission is CONDITIONAL on
+-- them, and they are the types of the one FACE being proposed.
+castingPermissionsOf :: Set CardType.CardType -> Set Keyword -> [CastingPermission]
+castingPermissionsOf cardTypes = concatMap (permissionsFor cardTypes) . Set.toAscList
+
+-- Exhaustive, exactly as abilitiesFor is: the next keyword that grants a zone
+-- permission must break this build rather than silently grant nothing.
+permissionsFor :: Set CardType.CardType -> Keyword -> [CastingPermission]
+permissionsFor cardTypes keyword = case keyword of
+  -- CR 702.34a: "You may cast this card from your graveyard IF THE RESULTING
+  -- SPELL IS AN INSTANT OR SORCERY SPELL by paying [cost] rather than paying its
+  -- mana cost." The clause gates the permission itself, so a card that fails it
+  -- gets no permission at all (Parun.CastSpec's "FlashbackCardType" group).
+  --
+  -- Gated HERE rather than in Cast.permitsCastFromGraveyard: the condition belongs
+  -- to rule 702.34a, and a card that PRINTS the same permission must not inherit
+  -- flashback's clause.
+  Keyword.Flashback _
+    | Set.member CardType.Instant cardTypes || Set.member CardType.Sorcery cardTypes ->
+        [CastingPermission.CastFromGraveyard Nothing]
+    | otherwise -> []
+  -- CR 702.103a grants no permission either, and it is flashback's near miss:
+  -- both offer an alternative cost through CR 601.2b and 601.2f-h, but rule
+  -- 702.103a's ability "functions in any zone from which you could play the card
+  -- it's on" -- it widens no zone, it prices a cast the rules already allowed.
+  -- Parun.Engine.Cost.candidateCostsFor is where that offer lives.
+  Keyword.Bestow _ -> []
+  Keyword.Mutate _ -> []
+  -- CR 702.29a is an ACTIVATED ability, not a casting permission: cycling discards
+  -- the card, it never casts it. Rule 702.122a is one too, one zone over.
+  Keyword.Cycling {} -> []
+  Keyword.Crew _ -> []
+  Keyword.Saddle _ -> []
+  Keyword.Fabricate _ -> []
+  Keyword.Deathtouch -> []
+  Keyword.Defender -> []
+  Keyword.DoubleStrike -> []
+  Keyword.Equip _ -> []
+  Keyword.Fortify _ -> []
+  Keyword.AuraSwap _ -> []
+  Keyword.Ninjutsu _ -> []
+  Keyword.Splice _ -> []
+  Keyword.FirstStrike -> []
+  -- CR 702.8a grants no permission, and it is the near miss worth stating: its
+  -- SECOND sentence widens the TIME a cast may be proposed at (Cast.instantSpeed)
+  -- and names no zone, while its first names the zones the ABILITY functions in
+  -- rather than the zones the card may be cast from.
+  Keyword.Flash -> []
+  Keyword.Flying -> []
+  Keyword.Haste -> []
+  Keyword.Hexproof _ -> []
+  Keyword.Indestructible -> []
+  Keyword.Landwalk _ -> []
+  Keyword.Lifelink -> []
+  Keyword.LivingMetal -> []
+  Keyword.MoreThanMeetsTheEye _ -> []
+  Keyword.Protection _ -> []
+  Keyword.Reach -> []
+  Keyword.Shroud -> []
+  Keyword.Trample -> []
+  Keyword.TrampleOverPlaneswalkers -> []
+  Keyword.Vigilance -> []
+  Keyword.Ward _ -> []
+  Keyword.Banding -> []
+  Keyword.Flanking -> []
+  Keyword.Phasing -> []
+  Keyword.Shadow -> []
+  Keyword.Horsemanship -> []
+  -- CR 702.127a's FIRST static ability. Ungated, unlike flashback's arm above,
+  -- rule 702.127a's own first sentence already confining aftermath to split cards.
+  -- Its SECOND ability, "can't be cast from any zone other than a graveyard", is a
+  -- PROHIBITION and so Parun.Engine.Cast's, at its Zone.Hand arm.
+  Keyword.Aftermath -> [CastingPermission.CastFromGraveyard Nothing]
+  -- CR 702.133a's FIRST static ability, gated exactly as flashback's arm above.
+  -- What the two rules do NOT share is the cost -- flashback replaces the mana
+  -- cost and this one adds a discard to it -- and that half is Cost.costsFor's.
+  Keyword.JumpStart
+    | Set.member CardType.Instant cardTypes || Set.member CardType.Sorcery cardTypes ->
+        [CastingPermission.CastFromGraveyard Nothing]
+    | otherwise -> []
+  Keyword.Afflict _ -> []
+  Keyword.Fear -> []
+  Keyword.Intimidate -> []
+  Keyword.Morph {} -> []
+  Keyword.Menace -> []
+  Keyword.Renown _ -> []
+  -- CR 702.33a's "as you cast this spell" is not a zone or a timing permission --
+  -- it is when the additional cost is announced (CR 601.2b), and CR 702.33c's
+  -- multikicker says it again with a count. CR 702.42a's entwine is the same
+  -- shape one clause below.
+  Keyword.Kicker _ -> []
+  Keyword.Multikicker _ -> []
+  Keyword.StickerKicker _ -> []
+  Keyword.Entwine _ -> []
+  -- CR 702.27a's "as you cast this spell" is kicker's shape above: an additional
+  -- cost announced at CR 601.2b, never a permission to cast.
+  Keyword.Buyback _ -> []
+  Keyword.Bushido _ -> []
+  Keyword.Soulshift _ -> []
+  Keyword.Dredge _ -> []
+  Keyword.Bloodthirst _ -> []
+  Keyword.Haunt -> []
+  -- CR 702.62a's free play is the third ability's OfferCast rather than a
+  -- standing permission, so nothing is granted from a zone here.
+  Keyword.Suspend _ -> []
+  Keyword.SplitSecond -> []
+  Keyword.Poisonous _ -> []
+  Keyword.Champion _ -> []
+  Keyword.Offering _ -> []
+  Keyword.Cascade -> []
+  Keyword.Storm -> []
+  Keyword.Gravestorm -> []
+  Keyword.Conspire -> []
+  Keyword.Demonstrate -> []
+  Keyword.Ripple _ -> []
+  Keyword.Replicate _ -> []
+  Keyword.Recover _ -> []
+  Keyword.Casualty _ -> []
+  Keyword.Bargain -> []
+  Keyword.Craft _ -> []
+  Keyword.Teamwork _ -> []
+  Keyword.WebSlinging _ -> []
+  Keyword.Sneak _ -> []
+  Keyword.Annihilator _ -> []
+  Keyword.Mobilize _ -> []
+  Keyword.Firebending _ -> []
+  Keyword.Transmute _ -> []
+  Keyword.Transfigure _ -> []
+  Keyword.BattleCry -> []
+  Keyword.Evolve -> []
+  Keyword.Exploit -> []
+  Keyword.Tribute _ -> []
+  Keyword.Dethrone -> []
+  Keyword.HiddenAgenda -> []
+  Keyword.Fuse -> []
+  Keyword.LevelUp _ -> []
+  Keyword.Outlast _ -> []
+  Keyword.Prowess -> []
+  Keyword.Extort -> []
+  Keyword.Increment -> []
+  Keyword.Infect -> []
+  Keyword.Wither -> []
+  Keyword.Devour _ -> []
+  Keyword.Amplify _ -> []
+  Keyword.Exalted -> []
+  Keyword.LivingWeapon -> []
+  Keyword.ForMirrodin -> []
+  Keyword.JobSelect -> []
+  Keyword.Spree -> []
+  Keyword.Tiered -> []
+  -- CR 702.84a is an ACTIVATED ability and not a casting permission: unearth
+  -- RETURNS the card to the battlefield, it never casts it. Cycling's reading
+  -- above, one zone over.
+  Keyword.Unearth _ -> []
+  -- CR 702.128a and 702.129a likewise: the card is exiled and a token created.
+  Keyword.Embalm _ -> []
+  Keyword.Eternalize _ -> []
+  Keyword.Mentor -> []
+  Keyword.Afterlife _ -> []
+  Keyword.Provoke -> []
+  Keyword.Changeling -> []
+  Keyword.Hideaway _ -> []
+  Keyword.Reinforce {} -> []
+  Keyword.Devoid -> []
+  Keyword.Ingest -> []
+  Keyword.Myriad -> []
+  Keyword.Skulk -> []
+  Keyword.SpaceSculptor -> []
+  Keyword.Emerge _ -> []
+  -- CR 702.124a: deck-construction abilities, which function before the game
+  -- begins and mint nothing in it. Parun.Engine.Commander.designations reads them.
+  Keyword.Partner -> []
+  Keyword.PartnerText _ -> []
+  Keyword.ChooseABackground -> []
+  Keyword.DoctorsCompanion -> []
+  -- CR 702.124j's second ability is a TRIGGERED ability, which `abilitiesFor`
+  -- mints; no part of it belongs to this roster.
+  Keyword.PartnerWith _ -> []
+  Keyword.Escalate _ -> []
+  Keyword.Melee -> []
+  Keyword.Rampage _ -> []
+  Keyword.CumulativeUpkeep _ -> []
+  Keyword.Echo _ -> []
+  Keyword.Riot -> []
+  -- CR 702.138a: "You may cast this card from your graveyard by paying [cost]
+  -- rather than paying its mana cost." UNGATED, unlike flashback's arm above:
+  -- rule 702.138a names no card type, so Loathsome Chimera's creature cast is
+  -- permitted (Parun.CastSpec's "Escape" group). The cost half is
+  -- Parun.Engine.Cost.candidateCostsFor's, and rule 702.138a grants no exile
+  -- replacement, so castFromGraveyardReplacementsOf stays flashback's.
+  Keyword.Escape _ -> [CastingPermission.CastFromGraveyard Nothing]
+  -- CR 702.74a, 702.76a, 702.96a, 702.109a, 702.117a, 702.137a, 702.148a,
+  -- 702.152a and 702.173a state an alternative cost and no permission: the card
+  -- is cast from wherever something else lets it be.
+  Keyword.Evoke _ -> []
+  Keyword.Dash _ -> []
+  Keyword.Blitz _ -> []
+  -- CR 702.185a states a permission of its own -- "its owner may cast this card
+  -- after the current turn has ended for as long as it remains exiled" -- and it
+  -- is not one of these: this type's arms are permissions a CARD grants about
+  -- itself in a zone, where rule 702.185a's is about one INCARNATION, names one
+  -- player and fixes a turn. It rides Object.warped instead, written by rule
+  -- 702.185a's own delayed ability and read by Cast.permitsCastWarped. The cost
+  -- half is Parun.Engine.Cost.candidateCostsGiven's hand arm.
+  Keyword.Warp _ -> []
+  -- CR 702.146a permits a cast from a graveyard and still gets no permission
+  -- here, where escape's arm above gets one: the permission is to cast the card
+  -- TRANSFORMED, so it belongs to the back face, and this function is asked
+  -- about the keywords the proposed half has (Parun.Engine.Cast.projectedKeywords)
+  -- -- which for the back face are the back face's and never include this one.
+  -- Granting it here would make the FRONT face castable from a graveyard for its
+  -- printed cost, which rule 702.146a does not say.
+  -- Parun.Engine.Cast.permitsCastFromGraveyard reads it off the front face
+  -- instead, CR 712.11d's own scope, and Parun.Engine.Cost.candidateCostsGiven
+  -- prices it there.
+  Keyword.Disturb _ -> []
+  -- CR 702.180a's FIRST static ability, escape's arm above word for word --
+  -- "you may cast this card from your graveyard by paying [cost] ... rather than
+  -- paying this spell's mana cost" -- and ungated for its reason: rule 702.180a
+  -- names no card type. The cost half, tapped creature and reduction included,
+  -- is Parun.Engine.Cost.candidateCostsGiven's; the third ability's exile is
+  -- castFromGraveyardReplacementsOf's.
+  Keyword.Harmonize _ -> [CastingPermission.CastFromGraveyard Nothing]
+  Keyword.Cleave _ -> []
+  Keyword.Overload _ -> []
+  Keyword.Awaken _ -> []
+  Keyword.Surge _ -> []
+  Keyword.Spectacle _ -> []
+  Keyword.Prowl _ -> []
+  Keyword.Freerunning _ -> []
+  Keyword.Impending _ -> []
+  Keyword.Unleash -> []
+  Keyword.Modular _ -> []
+  Keyword.Sunburst -> []
+  Keyword.Vanishing _ -> []
+  Keyword.Fading _ -> []
+  Keyword.Frenzy _ -> []
+  Keyword.Graft _ -> []
+  Keyword.Absorb _ -> []
+  Keyword.Daybound -> []
+  Keyword.Nightbound -> []
+  Keyword.Decayed -> []
+  Keyword.Compleated -> []
+  Keyword.Reconfigure _ -> []
+  Keyword.ReadAhead -> []
+  Keyword.Training -> []
+  Keyword.Prototype _ -> []
+  Keyword.Toxic _ -> []
+  Keyword.Backup _ -> []
+  -- CR 702.168a grants NO permission, and it is the near miss worth stating: the
+  -- ability "functions in any zone FROM WHICH YOU COULD PLAY THE CARD it's on",
+  -- so it widens no zone -- CR 702.168b's "you can use a disguise ability to cast
+  -- a card from any zone from which you could NORMALLY cast it" is the same fact
+  -- said the other way. What it does grant is an ALTERNATIVE COST, which is
+  -- Cost.faceDownCost's, and morph's arm below takes the same reading.
+  Keyword.Disguise _ -> []
+  -- CR 702.170a is a static ability functioning in a HAND, and what it grants is
+  -- CR 116.2k's special action rather than a cast. CR 702.170d's permission to cast
+  -- from EXILE belongs to the PLOTTED card and not to the keyword, so it is object
+  -- state (Object.plotted) that Cast.permitsCastFromExile reads.
+  Keyword.Plot _ -> []
+  Keyword.Ravenous -> []
+  Keyword.Squad _ -> []
+  Keyword.Offspring _ -> []
+  Keyword.Gift _ -> []
+  -- CR 702.143a, the arm above's argument unchanged: CR 116.2h's special action in
+  -- a hand, and CR 702.143d's permission belonging to the FORETOLD card
+  -- (Object.foretold) rather than the keyword.
+  Keyword.Foretell _ -> []
+  Keyword.Companion _ -> []
+  -- CR 702.94a's cast is one CR 608.2g offers during the linked ability's
+  -- resolution, so it is not a standing CR 601.3 permission the way flashback's
+  -- graveyard cast is: nothing may be cast from a hand by miracle at a player's
+  -- own timing.
+  Keyword.Miracle _ -> []
+  Keyword.StartYourEngines -> []
+  Keyword.Ascend -> []
+  Keyword.Storied -> []
+  Keyword.Assist -> []
+  Keyword.Exhaust -> []
+  Keyword.Boast -> []
+  Keyword.Forecast -> []
+  Keyword.PowerUp -> []
+  Keyword.ClassLevel _ -> []
+  Keyword.Exert -> []
+  Keyword.Enlist -> []
+  Keyword.Persist -> []
+  Keyword.Undying -> []
+  Keyword.Soulbond -> []
+  -- CR 702.184a permits no casting; the station card is cast for its own cost.
+  Keyword.Station -> []
+  Keyword.UmbraArmor -> []
+  -- CR 702.51b, CR 702.66b and CR 702.126b grant no permission and mint no
+  -- ability: each is a substitute for part of a total cost already determined,
+  -- which is CR 601.2h and not CR 601.3. Parun.Engine.Cost.manaSubstitutions is
+  -- where the offer lives, Bestow's arm above and for its reason.
+  Keyword.Epic -> []
+  Keyword.Paradigm -> []
+  Keyword.Cipher -> []
+  Keyword.Convoke -> []
+  Keyword.Improvise -> []
+  Keyword.Delve -> []
+  Keyword.Affinity _ -> []
+  Keyword.Undaunted -> []
+  -- CR 702.81a's permission, ungated: rule 702.81a states no clause of rule
+  -- 702.34a's kind, so a card of any type with retrace may be cast from its
+  -- owner's graveyard. What the rule ADDS is the land discard, and that half is
+  -- Parun.Engine.Cost.candidateCostsGiven's.
+  Keyword.Retrace -> [CastingPermission.CastFromGraveyard Nothing]
+  -- CR 702.187b's permission. Its "as long as you discarded this card this turn"
+  -- is not asked here: the clause reads the turn's event log, which this function
+  -- is not given, so it gates the COST offer instead
+  -- (Parun.Engine.Cost.candidateCostsGiven), where the state is in hand. The two
+  -- readings cannot be told apart -- rule 702.187b's permission and its cost are
+  -- one sentence, so a card whose mayhem cost is withheld has nothing to be cast
+  -- for, and a permission from somewhere else brings its own cost. CR
+  -- 702.187c's costless mayhem is the same permission, priced at the card's
+  -- ordinary costs where the same discard gates them (candidateCostsGiven's
+  -- graveyard arm); its land half is a play, not a cast
+  -- (Parun.Engine.PlayerEffect.mayPlayByMayhem).
+  Keyword.Mayhem _ -> [CastingPermission.CastFromGraveyard Nothing]
+  -- CR 702.35a states no standing permission: the cast is offered by rule
+  -- 702.35a's own triggered ability, which carries its cost as CR 608.2g's
+  -- offer (Parun.Engine.Resolve.Effect.offerCast) rather than as a zone this
+  -- card may be cast from.
+  Keyword.Madness _ -> []
+  -- CR 702.88a grants no standing permission: the free cast from exile is the
+  -- delayed ability's own Effect.OfferCast (reboundUpkeep), offered once.
+  Keyword.Rebound -> []
+  Keyword.Scavenge _ -> []
+  Keyword.Encore _ -> []
+
+-- | CR 702.127a's SECOND static ability: "this half of this split card can't be
+-- cast from any zone other than a graveyard". A PROHIBITION, so it is a question
+-- Parun.Engine.Cast asks of the zone it is about to offer. Membership rather than a
+-- count, rule 702.127a taking no parameter.
+hasAftermath :: Set Keyword -> Bool
+hasAftermath = Set.member Keyword.Aftermath
+
+-- CR 702.8a: does this card's keyword set let it be played any time its
+-- controller could cast an instant? Its one reader is
+-- Parun.Engine.Cast.instantSpeed, which turns it into the CR 302.1 / 307.1 window
+-- being lifted for that one card.
+--
+-- MEMBERSHIP, not a count: CR 702.8b makes multiple instances redundant.
+--
+-- Rule 702.8a's first sentence and CR 113.6e put the ability in any zone the card
+-- could be played from, and on the stack, which is why the caller asks a card
+-- rather than a permanent. WHICH keyword set is the caller's to choose, as it is
+-- for castingPermissionsOf: Cast.instantSpeed asks this of the proposed face's
+-- printed keywords AND of the object's post-layer ones, so Teferi, Mage of
+-- Zhalfir's grant to a card in a hand reaches it (Parun.CastSpec's Teferi pair).
+hasFlash :: Set Keyword -> Bool
+hasFlash = Set.member Keyword.Flash
+
+-- | CR 702.133a's ADDITIONAL cost, "discarding a card": whether this card's
+-- keywords add one to a cast from a graveyard. Read by Cost.costsFor only while
+-- the object is in a graveyard, the zone half of the same sentence.
+--
+-- A Bool rather than morphCosts' list: rule 702.133a states the cost
+-- itself, so there is nothing to read off the card. Membership rather than a
+-- count, the rule taking no parameter.
+hasJumpStart :: Set Keyword -> Bool
+hasJumpStart = Set.member Keyword.JumpStart
+
+-- | CR 702.81a's ADDITIONAL cost, "discarding a land card": whether this card's
+-- keywords add one to a cast from a graveyard. hasJumpStart's shape above and for
+-- its reasons -- a Bool because rule 702.81a states the cost itself, membership
+-- because the rule takes no parameter -- differing only in the QUALITY the
+-- discard names, which Cost.candidateCostsGiven writes as the criterion.
+hasRetrace :: Set Keyword -> Bool
+hasRetrace = Set.member Keyword.Retrace
+
+-- CR 702.187b: every cost this card may be cast from the graveyard for under its
+-- mayhem ability, in ascending Set order. Read by
+-- Parun.Engine.Cost.candidateCostsGiven, which offers them only while the object
+-- is in a graveyard AND its caster discarded it this turn -- the zone half and
+-- the "as long as" half of the same sentence.
+--
+-- A LIST for flashbackCosts' reason: rule 702.187b states no limit on how many
+-- mayhem abilities an object has, and CR 601.2b makes two of them a CHOICE.
+--
+-- A wildcard rather than an exhaustive case, flashbackCosts' reason. A costless
+-- mayhem (CR 702.187c) states no cost and contributes none; hasCostlessMayhem
+-- below is its reader.
+mayhemCosts :: Set Keyword -> [Cost Keyword]
+mayhemCosts keywords =
+  let costOf keyword = case keyword of
+        Keyword.Mayhem cost -> cost
+        _ -> Nothing
+   in Maybe.mapMaybe costOf (Set.toAscList keywords)
+
+-- | CR 702.187c: does this card have mayhem WITHOUT a cost, "you may play this
+-- card from your graveyard if you discarded it this turn"? Membership rather
+-- than a count, the rule taking no parameter. Read by
+-- Parun.Engine.PlayerEffect.mayPlayByMayhem, which asks the zone and the discard.
+hasCostlessMayhem :: Set Keyword -> Bool
+hasCostlessMayhem = Set.member (Keyword.Mayhem Nothing)
+
+-- CR 702.185a: every cost this card may be cast from its owner's HAND for under
+-- its warp ability, in ascending Set order. mayhemCosts' shape above, read by
+-- Parun.Engine.Cost.candidateCostsGiven at its HAND arm alone -- rule 702.185a's
+-- first static ability says "you may cast this card FROM YOUR HAND", where
+-- evoke's, dash's and blitz's name no zone. That clause is load-bearing rather
+-- than decorative: rule 702.185a's second ability then lets the owner cast the
+-- card from exile, and an offer made there would price that cast at the warp
+-- cost and warp it again, where the rule states only a permission and leaves the
+-- printed cost standing.
+--
+-- A LIST for flashbackCosts' reason: rule 702.185a states no limit on how many
+-- warp abilities an object has -- Sliver Weftwinder grants one to every Sliver
+-- card in its controller's hand, its own printed warp included -- and CR 601.2b
+-- makes two of them a CHOICE.
+--
+-- A wildcard rather than an exhaustive case, flashbackCosts' reason.
+warpCosts :: Set Keyword -> [Cost Keyword]
+warpCosts keywords =
+  let costOf keyword = case keyword of
+        Keyword.Warp cost -> Just cost
+        _ -> Nothing
+   in Maybe.mapMaybe costOf (Set.toAscList keywords)
+
+-- CR 702.35a: every cost this card may be cast for under its madness ability, in
+-- ascending Set order. mayhemCosts' shape above, read by
+-- `handReplacementsOf`, which mints rule 702.35a's discard replacement while
+-- the card is in a hand, and by Parun.Engine.Event.discardReturning, which
+-- records the one applied for the triggered half (`madnessCast`).
+--
+-- A LIST for flashbackCosts' reason: rule 702.35 states no limit on how many
+-- madness abilities an object has.
+--
+-- A wildcard rather than an exhaustive case, flashbackCosts' reason.
+madnessCosts :: Set Keyword -> [MadnessCost.MadnessCost Keyword]
+madnessCosts keywords =
+  let costOf keyword = case keyword of
+        Keyword.Madness cost -> Just cost
+        _ -> Nothing
+   in Maybe.mapMaybe costOf (Set.toAscList keywords)
+
+-- CR 702.35a: a madness payload settled against the exiled card's mana cost --
+-- the stated cost as printed, or that mana cost itself (Falkenrath Gorger).
+-- A card with no mana cost leaves the cost unpayable (CR 202.1b, 118.6), which
+-- Cost.mana's Nothing already means.
+madnessCostFor :: Maybe ManaCost.ManaCost -> MadnessCost.MadnessCost Keyword -> Cost Keyword
+madnessCostFor manaCost payload = case payload of
+  MadnessCost.Stated cost -> cost
+  MadnessCost.OwnManaCost -> Cost.MkCost {Cost.mana = manaCost, Cost.components = []}
+
+-- CR 702.34a / 702.97a / 702.128a / 702.141a / 702.168a / 702.152a: the keyword a
+-- Modification.GainKeywordAtManaCost names, carrying the [cost] it was priced
+-- at. Parun.Engine.Projection supplies the receiving object's mana cost.
+withCost :: CostKeyword.CostKeyword -> Cost Keyword -> Keyword
+withCost keyword cost = case keyword of
+  CostKeyword.Flashback -> Keyword.Flashback cost
+  CostKeyword.Scavenge -> Keyword.Scavenge cost
+  CostKeyword.Embalm -> Keyword.Embalm cost
+  CostKeyword.Encore -> Keyword.Encore cost
+  CostKeyword.Disguise -> Keyword.Disguise cost
+  CostKeyword.Blitz -> Keyword.Blitz cost
+
+-- CR 702.102a: does this card's keyword set let both halves be cast as one fused
+-- split spell? Its one reader is Parun.Engine.Cast.fusedFaceOf, which asks it of
+-- the projected keywords before Parun.Engine.Card.fusedFace builds the spell rule
+-- 702.102b describes; that function's callers apply the rule's OWN zone gate,
+-- "while the card with fuse is in a player's hand".
+--
+-- MEMBERSHIP, not a count: the permission is to cast both halves, and rule
+-- 702.102a states nothing a second instance could add.
+--
+-- Asked of the COMBINED view's keywords (CR 709.4c: a split card has "each
+-- ability in the text box of each half"), so a card printing fuse on either half
+-- has it -- which is also why this takes a keyword set rather than a card.
+hasFuse :: Set Keyword -> Bool
+hasFuse = Set.member Keyword.Fuse
+
+-- CR 702.34a: every cost this card may be cast from the graveyard for, in
+-- ascending Set order, and empty when it has no flashback. Read by
+-- Parun.Engine.Cost.costsFor, which offers them ONLY while the object is in a
+-- graveyard -- the zone half of the same sentence.
+--
+-- A LIST where every other keyword-cost reader in this module answers a Maybe,
+-- and rule 702.34a is why: it states no limit on how many flashback abilities an
+-- object has, and CR 601.2b's "a player can't apply two alternative methods of
+-- casting or two alternative costs to a single spell" makes two of them a CHOICE
+-- between the two rather than a sum. The Fugitive Doctor grants one on top of a
+-- printed one, so a card holding two is a board rather than a hypothesis; the
+-- test that proves it is Parun.CastSpec's FugitiveDoctor group.
+--
+-- A wildcard rather than an exhaustive case: this asks about ONE named
+-- constructor rather than classifying every keyword.
+flashbackCosts :: Set Keyword -> [Cost Keyword]
+flashbackCosts keywords =
+  let costOf keyword = case keyword of
+        Keyword.Flashback cost -> Just cost
+        _ -> Nothing
+   in Maybe.mapMaybe costOf (Set.toAscList keywords)
+
+-- CR 702.138a: every cost this card may be cast from the graveyard for by escaping,
+-- in ascending Set order, and empty when it has no escape. Read by
+-- Parun.Engine.Cost.candidateCostsFor at its graveyard arm, the zone half of the
+-- same sentence.
+--
+-- A LIST for flashbackCosts' reason: rule 702.138a states no limit on how many
+-- escape abilities an object has, and CR 601.2b makes two of them a CHOICE rather
+-- than a sum.
+--
+-- A wildcard rather than an exhaustive case, flashbackCosts' reason.
+escapeCosts :: Set Keyword -> [Cost Keyword]
+escapeCosts keywords =
+  let costOf keyword = case keyword of
+        Keyword.Escape cost -> Just cost
+        _ -> Nothing
+   in Maybe.mapMaybe costOf (Set.toAscList keywords)
+
+-- CR 702.146a: every cost this card may be cast TRANSFORMED from the graveyard
+-- for, in ascending Set order, and empty when it has no disturb. escapeCosts'
+-- shape above and a list for flashbackCosts' reason -- rule 702.146a states no
+-- limit on how many disturb abilities a card has, and CR 601.2b makes two of
+-- them a choice.
+--
+-- Handed the FRONT face's keywords by both its callers rather than the half
+-- being cast, which is CR 712.11d's own scope: the ability is "an ability of a
+-- double-faced card's front face" and the spell it permits is the back face.
+-- Both read that face where the card lies, through
+-- Parun.Engine.Cost.frontFaceKeywords, so a granted disturb is priced and offered.
+disturbCosts :: Set Keyword -> [Cost Keyword]
+disturbCosts keywords =
+  let costOf keyword = case keyword of
+        Keyword.Disturb cost -> Just cost
+        _ -> Nothing
+   in Maybe.mapMaybe costOf (Set.toAscList keywords)
+
+-- CR 702.180a: every cost this card may be cast from the graveyard for by
+-- harmonizing, in ascending Set order, and empty when it has no harmonize.
+-- escapeCosts' shape above and a list for flashbackCosts' reason.
+--
+-- The BARE payload, where rule 702.180a's alternative cost is that payload "and
+-- tapping up to one untapped creature you control": the tap rides in the
+-- candidate's own components and its power in the candidate's reductions, since
+-- CR 702.180b settles which creature at CR 601.2b and CR 601.2f needs the amount
+-- before the tap happens. Parun.Engine.Cost.candidateCostsGiven is where that is
+-- assembled, emerge's shape one characteristic over.
+harmonizeCosts :: Set Keyword -> [Cost Keyword]
+harmonizeCosts keywords =
+  let costOf keyword = case keyword of
+        Keyword.Harmonize cost -> Just cost
+        _ -> Nothing
+   in Maybe.mapMaybe costOf (Set.toAscList keywords)
+
+-- CR 707.10: what a COPY of a spell keeps of Object.castUsing. The copy copies
+-- the alternative cost decision, so CR 702.74a's "if its evoke cost was paid"
+-- and CR 702.109a's and CR 702.152a's "[dash or blitz] cost was paid" hold of
+-- it; CR 702.138b's "escaped" asks whether the spell was CAST from a graveyard
+-- with escape, and a copy of a spell isn't cast. Parun.CastSpec's "CR 702.138b a
+-- Double Major copy of the escaping Chimera did not escape" and "CR 707.10 a
+-- Double Major copy of a dashed Scout attacks and is returned" prove both halves.
+--
+-- CR 702.62a's suspend is dropped for escape's reason, one word further on: its
+-- last sentence asks whether "you CAST a creature spell this way", and a copy of
+-- a spell isn't cast, so the copy is not the thing that gains the haste. A
+-- REGRESSION FENCE rather than a proved line: the suite's two spell-copying
+-- boards (Parun.CastSpec's and Parun.MutateSpec's Double Major) copy no suspended
+-- spell, so nothing observes this arm.
+copiedCastUsing :: Maybe Keyword -> Maybe Keyword
+copiedCastUsing castUsing = case castUsing of
+  Just (Keyword.Escape _) -> Nothing
+  Just (Keyword.Suspend _) -> Nothing
+  _ -> castUsing
+
+-- CR 702.96b: was this the overload candidate? Rule 702.96b's "that spell won't
+-- require any targets" is what the answer buys -- the whole of rule 702.96a's
+-- text change that parun reads, since the card states its "each" reading as a
+-- clause of its own (Parun.Types.Keyword's Overload).
+--
+-- The BARE tag, Parun.Engine.Cast's castBestowed shape: the two sites that drop
+-- the slots are CR 601.2c's announcement (Parun.Engine.Cast.targetable and
+-- castProposed) and CR 608.2b's re-read
+-- (Parun.Engine.Resolve.Effect.targetSlotsOf), so a cast that announced no target
+-- and a resolution that expects none cannot disagree. CR 707.10 carries the tag
+-- onto a copy (copiedCastUsing above), so a copy of an overloaded spell is
+-- targetless too.
+castOverloaded :: Maybe Keyword -> Bool
+castOverloaded castUsing = case castUsing of
+  Just (Keyword.Overload _) -> True
+  _ -> False
+
+-- CR 702.74a, 702.96a, 702.109a, 702.113a, 702.148a, 702.152a, 702.176a,
+-- 702.188a and 702.190a: every evoke, overload, dash, blitz, cleave, awaken,
+-- impending, web-slinging and sneak cost this card may be cast for, each beside
+-- the keyword that offers it -- the tag CR 601.2b records as Object.castUsing --
+-- in ascending Set order.
+-- Read by Parun.Engine.Cost.candidateCostsFor wherever the printed cost is
+-- offered, bestowCosts' reading: evoke's static ability functions "in any zone
+-- from which the card with evoke can be cast", dash and blitz name no zone, and
+-- cleave's, overload's, web-slinging's and sneak's function "while a spell with
+-- [the keyword] is on the stack", which CR 113.6e reaches from wherever the cast
+-- begins, and awaken's is rule 702.113a's own "while the spell with awaken is on
+-- the stack".
+--
+-- THE TAG IS THE BARE KEYWORD and the cost is not always the bare payload: rule
+-- 702.188a and rule 702.190a each spell an alternative cost of "[cost] AND
+-- returning a creature you control to its owner's hand", so the return rides in
+-- the SECOND component while the first stays the keyword as printed -- which is
+-- what Quantity.CastUsing compares against (Spiders-Man, Heroic Horde) and what
+-- Parun.Engine.Cast.windowedCandidates reads rule 702.190a's window off.
+--
+-- UNGATED, where surgeCosts' and spectacleCosts' callers gate: rules 702.113a,
+-- 702.148a, 702.176a and 702.188a state no clause of their own. Rule 702.190a's
+-- clause is a WINDOW rather than a condition on the board, so it
+-- gates in Parun.Engine.Cast beside the card's own timing and not here -- an offer
+-- withheld here would still leave the printed cost castable in that window, which
+-- is the opposite of what that rule says. A list and a wildcard for
+-- flashbackCosts' reasons.
+plainAlternativeCosts :: Set Keyword -> [(Keyword, Cost Keyword)]
+plainAlternativeCosts keywords =
+  let withReturn criterion cost =
+        cost {Cost.components = Cost.components cost <> [CostComponent.ReturnPermanents (ReturnPermanents.MkReturnPermanents 1 criterion)]}
+      costOf keyword = case keyword of
+        Keyword.Evoke cost -> Just (keyword, cost)
+        Keyword.Dash cost -> Just (keyword, cost)
+        Keyword.Blitz cost -> Just (keyword, cost)
+        Keyword.Cleave cost -> Just (keyword, cost)
+        Keyword.Overload cost -> Just (keyword, cost)
+        Keyword.Awaken cost -> Just (keyword, cost)
+        Keyword.Impending impending -> Just (keyword, Impending.cost impending)
+        -- CR 702.188a's "a tapped creature you control", three conjuncts and CR
+        -- 400.3 for the destination -- ninjutsu's component one rule over, whose
+        -- haddock has the argument for asking the creature conjunct at all.
+        Keyword.WebSlinging cost ->
+          Just
+            ( keyword,
+              withReturn
+                ( Filter.And
+                    [ Filter.HasCardType CardType.Creature,
+                      Filter.ControlledBy PlayerRelation.You,
+                      Filter.IsTapped
+                    ]
+                )
+                cost
+            )
+        -- CR 702.190a's "an unblocked creature you control", which is ninjutsu's
+        -- four conjuncts exactly: the CR's glossary entry for "unblocked creature"
+        -- makes it an ATTACKING creature no blocker was declared for, so
+        -- IsAttacking is not an extra reading but the definition, and CR 509.1h is
+        -- why the Unblocked status has to be asked beside it.
+        Keyword.Sneak cost ->
+          Just
+            ( keyword,
+              withReturn
+                ( Filter.And
+                    [ Filter.HasCardType CardType.Creature,
+                      Filter.ControlledBy PlayerRelation.You,
+                      Filter.IsAttacking,
+                      Filter.HasBlockStatus BlockStatus.Unblocked
+                    ]
+                )
+                cost
+            )
+        _ -> Nothing
+   in Maybe.mapMaybe costOf (Set.toAscList keywords)
+
+-- CR 702.190a: does this CR 601.2b tag name the one alternative cost that brings
+-- a casting window of its own -- "any time you could cast an instant during your
+-- declare blockers step"? Parun.Engine.Cast.windowedCandidates asks it of each
+-- candidate, in place of the card's own window rather than beside it; hasSneak
+-- below asks it of a keyword set.
+--
+-- A question about the keyword's IDENTITY rather than a classification, which is
+-- what rule 702.190a is: the window is the rulebook's, stated nowhere but on this
+-- keyword.
+sneakWindowed :: Maybe Keyword -> Bool
+sneakWindowed castUsing = case castUsing of
+  Just (Keyword.Sneak _) -> True
+  _ -> False
+
+-- CR 702.190a: does this card hold a sneak at all? hasFlash's membership question
+-- for the one other keyword that widens WHEN a card may be cast rather than from
+-- where, and read the same way -- Parun.Engine.Cast.cardTimingOk asks it of the
+-- proposed face's printed keywords and of the object's post-layer ones, so a
+-- granted sneak widens the window its grantee's cast is offered in.
+--
+-- MEMBERSHIP, not a cost, because the widening is the same whatever the cost is;
+-- which cost may then be paid in that window is sneakWindowed's question, asked
+-- per candidate.
+hasSneak :: Set Keyword -> Bool
+hasSneak = any (sneakWindowed . Just) . Set.toList
+
+-- CR 702.117a: every cost this card may be cast for by surging, in ascending Set
+-- order, and empty when it has no surge. Read by
+-- Parun.Engine.Cost.candidateCostsFor wherever the printed cost is offered, rule
+-- 702.117a's static ability functioning "while the spell with surge is on the
+-- stack", which CR 113.6e reaches from wherever the cast begins. That function
+-- gates the offer on rule 702.117a's own "if you or one of your teammates has
+-- cast another spell this turn" (Parun.Engine.Game.yourTeamCastASpellThisTurn),
+-- which is why the gate is not here: this answers what the keyword says, not
+-- whether it may be paid.
+--
+-- A list and a wildcard for flashbackCosts' reasons.
+surgeCosts :: Set Keyword -> [Cost Keyword]
+surgeCosts keywords =
+  let costOf keyword = case keyword of
+        Keyword.Surge cost -> Just cost
+        _ -> Nothing
+   in Maybe.mapMaybe costOf (Set.toAscList keywords)
+
+-- CR 702.119a and CR 702.119b: surgeCosts' twin over emerge -- the MANA half of
+-- rule 702.119a's alternative cost and rule 702.119b's [quality], which is all
+-- the card states. The sacrifice and the generic reduction the rule states
+-- beside it are the RULE's, so Parun.Engine.Cost.candidateCostsGiven attaches
+-- them at the offer, where the board that fixes the reduction's amount is in
+-- hand.
+--
+-- The whole payload rather than its cost, because that caller needs both halves
+-- at once: rule 702.119b's quality is the pool it draws the victim from and the
+-- cost is what the candidate charges.
+--
+-- A list and a wildcard for flashbackCosts' reasons.
+emergeCosts :: Set Keyword -> [Emerge.Emerge Keyword]
+emergeCosts keywords =
+  let costOf keyword = case keyword of
+        Keyword.Emerge emerge -> Just emerge
+        _ -> Nothing
+   in Maybe.mapMaybe costOf (Set.toAscList keywords)
+
+-- CR 702.48a: the quality of each offering this card has, in ascending Set
+-- order. Parun.Engine.Cost.candidateCostsGiven draws the sacrifice from it and
+-- Parun.Engine.Cast.cardTimingOk asks whether it is empty.
+offeringQualities :: Set Keyword -> [Filter Keyword]
+offeringQualities keywords =
+  let qualityOf keyword = case keyword of
+        Keyword.Offering quality -> Just quality
+        _ -> Nothing
+   in Maybe.mapMaybe qualityOf (Set.toAscList keywords)
+
+-- CR 702.137a: surgeCosts' twin over spectacle, whose static ability "functions
+-- on the stack" and whose gate is rule 702.137a's "if an opponent lost life this
+-- turn" (Parun.Engine.Game.opponentLostLifeThisTurn), asked at the same caller
+-- and for the same reason.
+--
+-- A list and a wildcard for flashbackCosts' reasons.
+spectacleCosts :: Set Keyword -> [Cost Keyword]
+spectacleCosts keywords =
+  let costOf keyword = case keyword of
+        Keyword.Spectacle cost -> Just cost
+        _ -> Nothing
+   in Maybe.mapMaybe costOf (Set.toAscList keywords)
+
+-- CR 702.76a: surgeCosts' twin over prowl, whose static ability "functions on
+-- the stack" and whose gate is rule 702.76a's combat-damage clause
+-- (Parun.Engine.Game.prowlDamageThisTurn), asked at the same caller and for the
+-- same reason.
+--
+-- A list and a wildcard for flashbackCosts' reasons.
+prowlCosts :: Set Keyword -> [Cost Keyword]
+prowlCosts keywords =
+  let costOf keyword = case keyword of
+        Keyword.Prowl cost -> Just cost
+        _ -> Nothing
+   in Maybe.mapMaybe costOf (Set.toAscList keywords)
+
+-- CR 702.173a: prowlCosts' twin over freerunning, whose gate is rule 702.173a's
+-- own combat-damage clause (Parun.Engine.Game.freerunningDamageThisTurn).
+--
+-- A list and a wildcard for flashbackCosts' reasons.
+freerunningCosts :: Set Keyword -> [Cost Keyword]
+freerunningCosts keywords =
+  let costOf keyword = case keyword of
+        Keyword.Freerunning cost -> Just cost
+        _ -> Nothing
+   in Maybe.mapMaybe costOf (Set.toAscList keywords)
+
+-- CR 702.103a: the BESTOW costs -- "you pay [cost] rather than its mana cost" --
+-- offered by Parun.Engine.Cost.candidateCostsFor beside the printed cost. A LIST
+-- for flashbackCosts' reason: rule 702.103a states no limit on how many bestow
+-- abilities an object has, and CR 601.2b makes two of them a choice rather than a
+-- sum. Unlike flashback's, this one is offered from EVERY zone the card can be
+-- cast from, which is the whole of rule 702.103a's first sentence.
+--
+-- A wildcard rather than an exhaustive case, flashbackCosts' reason.
+bestowCosts :: Set Keyword -> [Cost Keyword]
+bestowCosts keywords =
+  let costOf keyword = case keyword of
+        Keyword.Bestow cost -> Just cost
+        _ -> Nothing
+   in Maybe.mapMaybe costOf (Set.toAscList keywords)
+
+-- CR 601.2f: the reductions a spell's own KEYWORDS apply to its own cost, in
+-- ascending keyword order -- the keyword-borne half of what Parun.Types.CostReduction
+-- carries for a card that prints the sentence out (Thrasta, Tempest's Roar).
+-- Parun.Engine.Cost.selfReductions folds these in beside Face.costReductions and
+-- evaluates each Quantity there, at CR 601.2f, which is what locks the count in.
+--
+-- Both arms are rule-702 sentences reduced to one shape -- {1} off once per thing
+-- counted -- so neither reaches a card's text for anything but affinity's
+-- [text]. Nothing here confines the reduction to coloured mana or floors it above
+-- {0}: CR 118.7a already keeps a generic reduction off the coloured component,
+-- and CR 601.2f's own {0} is the floor.
+--
+-- CR 702.41b and CR 702.125c make every instance apply, so each keyword's
+-- reductions repeat once per instance the projection counts (PC.keywords): a
+-- Frogmite cast beside Mycosynth Golem has two affinities for artifacts, which
+-- Parun.CostSpec's "CR 702.41b a printed and a granted affinity both apply"
+-- proves.
+--
+-- A wildcard rather than an exhaustive case, flashbackCosts' reason.
+selfCostReductionsOf :: Map Keyword Natural -> [CostReduction.CostReduction]
+selfCostReductionsOf = concatMap (\(keyword, n) -> concat (replicate (Natural.toIntSaturating n) (selfCostReductionsFor keyword))) . Map.toAscList
+
+-- CR 702.41a and CR 702.125a written out, each as the {1} and the count that
+-- rule states.
+selfCostReductionsFor :: Keyword -> [CostReduction.CostReduction]
+selfCostReductionsFor keyword = case keyword of
+  -- CR 702.41a's "for each [text] YOU CONTROL": the card carries the [text] and
+  -- the rule carries the control clause and the battlefield, so the Filter the
+  -- count runs is the conjunction. Relative AnyPlayer's battlefield and not yours,
+  -- because CR 403.1 makes the battlefield one shared zone -- Filter.ControlledBy
+  -- is the control question, and the scope's reference is not.
+  Keyword.Affinity quality ->
+    [ oneLessPerEach
+        ( Count.MkCount
+            (Scope.InZone (InZone.MkInZone Zone.Battlefield (PlayerRef.Relative PlayerRelation.AnyPlayer)))
+            (Filter.And [quality, Filter.ControlledBy PlayerRelation.You])
+            Aggregation.Members
+        )
+    ]
+  -- CR 702.125a's "for each opponent you have", over the PLAYERS rather than
+  -- their objects. CR 702.125b's departed seat needs nothing here:
+  -- Parun.Engine.Count.playersFor folds through Game.stillPlaying already.
+  Keyword.Undaunted ->
+    [ oneLessPerEach
+        ( Count.MkCount
+            (Scope.OverPlayers (PlayerRef.Relative PlayerRelation.Opponent))
+            (Filter.And [])
+            Aggregation.Members
+        )
+    ]
+  _ -> []
+
+-- "This spell costs {1} less to cast for each ..." -- the sentence rule 702.41a
+-- and rule 702.125a share, with the count filled in.
+oneLessPerEach :: Count.Count Quantity.Quantity -> CostReduction.CostReduction
+oneLessPerEach count =
+  CostReduction.MkCostReduction
+    { CostReduction.amount = ManaCost.MkManaCost [ManaSymbol.Generic 1],
+      CostReduction.perEach = Quantity.Count count,
+      CostReduction.condition = Nothing,
+      CostReduction.whichTargets = Nothing,
+      CostReduction.direction = CostDirection.Less
+    }
+
+-- CR 702.160a / CR 718.1: the PROTOTYPE inset frames -- the second mana cost,
+-- power and toughness a prototype card prints -- offered as an alternative cost
+-- by Parun.Engine.Cost.candidateCostsFor and read back as characteristics by
+-- Parun.Engine.Projection.View.baseCharacteristics once CR 601.2b has settled on
+-- one.
+--
+-- A LIST because a keyword set could hold two of these, not because a card does:
+-- CR 718.1 gives a prototype card "a second set of power, toughness, and mana
+-- cost characteristics", singular, and
+-- Parun.Engine.Projection.View.withPrototype reads the first for that reason.
+-- Offered from EVERY zone the card can be cast from, which is CR 113.6e's
+-- classification of an ability that modifies how its own object can be cast --
+-- bestowCosts' posture, reached by a rule rather than by rule 702.160a's own
+-- words.
+--
+-- A wildcard rather than an exhaustive case, flashbackCosts' reason.
+prototypes :: Set Keyword -> [Prototype.Prototype]
+prototypes keywords =
+  let inset keyword = case keyword of
+        Keyword.Prototype prototype -> Just prototype
+        _ -> Nothing
+   in Maybe.mapMaybe inset (Set.toAscList keywords)
+
+-- CR 702.162a: the MORE THAN MEETS THE EYE costs -- "you may cast this card
+-- converted by paying [cost] rather than its mana cost" -- offered by
+-- Parun.Engine.Cost.candidateCostsFor for the back face
+-- Parun.Engine.Card.castableFaces put on the table (CR 712.11d).
+--
+-- A LIST for flashbackCosts' reason: rule 702.162a states no limit, and CR 601.2b
+-- makes two of them a choice rather than a sum. Read from EVERY zone the card can
+-- be cast from, which is bestowCosts' posture and rule 702.162a's own first
+-- sentence -- "a static ability that functions in any zone from which the spell
+-- may be cast".
+--
+-- A wildcard rather than an exhaustive case, flashbackCosts' reason.
+moreThanMeetsTheEyeCosts :: Set Keyword -> [Cost Keyword]
+moreThanMeetsTheEyeCosts keywords =
+  let costOf keyword = case keyword of
+        Keyword.MoreThanMeetsTheEye cost -> Just cost
+        _ -> Nothing
+   in Maybe.mapMaybe costOf (Set.toAscList keywords)
+
+-- CR 702.103b: the enchant ability a spell cast bestowed gains -- always exactly
+-- "enchant creature", so the RULE states it and no card has to. Minted here for
+-- the reason CR 702.29a's cycling ability is minted rather than printed.
+--
+-- Pool.Creatures with NO Filter, which is what rule 702.103b's bare "enchant
+-- creature" says and also the shape Parun.Engine.Sba.stillLegalEnchant's fast arm
+-- matches: Parun.Engine.Card.foldEnchant leaves a lone unfiltered instance exactly
+-- as it found it, so a bestowed permanent takes that arm rather than the slow one.
+--
+-- CR 702.5a prints no "up to", so the slot is required (TargetSlot.required).
+bestowEnchant :: TargetSlot.TargetSlot
+bestowEnchant = TargetSlot.required Pool.Creatures Nothing
+
+-- CR 702.103b's three modifications, in the order the rule states them: the spell
+-- "becomes an Aura enchantment and gains enchant creature". A card-type SET (CR
+-- 205.1a drops the correlated creature subtypes with the Creature card type),
+-- a subtype ADD, and the enchant grant -- one layer-4 pair and one layer-6 grant,
+-- which Parun.Engine.Projection.bestowGathered hands the fold at one timestamp.
+--
+-- Here rather than in the projection so that the vocabulary rule 702.103b needs
+-- is stated beside the keyword it comes from; the projection cases on the
+-- Modification values, which is the one module licensed to.
+bestowModifications :: [Modification.Modification ability]
+bestowModifications =
+  [ Modification.SetCardType CardType.Enchantment,
+    Modification.AddSubtype Subtype.Aura,
+    Modification.GainEnchant bestowEnchant
+  ]
+
+-- CR 702.140a: the MUTATE costs -- "you may pay [cost] rather than pay this
+-- spell's mana cost" -- offered as alternative costs by
+-- Parun.Engine.Cost.candidateCostsFor. bestowCosts' shape above in every
+-- respect, including the list: a keyword set could hold two, and CR 601.2b's
+-- announcement picks one of the offered costs whatever their number.
+--
+-- Offered from EVERY zone the card can be cast from, bestowCosts' posture: rule
+-- 702.140a's static ability "functions while the spell with mutate is on the
+-- stack", which CR 113.6e reaches from wherever the cast begins.
+--
+-- A wildcard rather than an exhaustive case, flashbackCosts' reason.
+mutateCosts :: Set Keyword -> [Cost Keyword]
+mutateCosts keywords =
+  let costOf keyword = case keyword of
+        Keyword.Mutate cost -> Just cost
+        _ -> Nothing
+   in Maybe.mapMaybe costOf (Set.toAscList keywords)
+
+-- CR 702.140a: what a mutating creature spell targets -- "a non-Human creature
+-- with the same owner as this spell". Always exactly that, so the RULE states
+-- it and no card has to; minted here for bestowEnchant's reason above.
+--
+-- Pool.Creatures narrowed by the two conjuncts the rule names. CR 702.140a
+-- prints no "up to", so the slot is required (TargetSlot.required), which is
+-- what makes CR 702.140b's "if its target is illegal" a question with an answer.
+--
+-- The owner conjunct is Filter.SharesWithSource Trait.Owner and NOT
+-- Filter.OwnedBy You: rule 702.140a names the SPELL's owner, where CR 109.5's
+-- "you" is the spell's controller at CR 601.2c and CR 608.2b. The two part for a
+-- spell cast off a card its caster does not own (Hostage Taker's permission). See Parun.MutateSpec's "CR
+-- 702.140a a stolen mutate spell may target the owner's creature and not the
+-- caster's".
+--
+-- Cubwarden's REMINDER text says "target non-Human creature you own", which CR
+-- 207.2a makes a summary with no game function; rule 702.140a is what is
+-- implemented.
+mutateTarget :: TargetSlot.TargetSlot
+mutateTarget =
+  TargetSlot.required
+    Pool.Creatures
+    (Just (Filter.And [Filter.Not (Filter.HasSubtype Subtype.Human), Filter.SharesWithSource Trait.Owner]))
+
+-- CR 702.37a / 702.37e: the MORPH costs -- what a face-down permanent's controller
+-- pays to turn it face up as CR 116.2b's special action -- empty when the
+-- card has no morph ability. NOT the cost of the morph CAST, which rule 702.37a
+-- writes into the rule itself, so that one comes from Cost.faceDownCost.
+--
+-- Asked of the card's PRINTED keywords: a face-down permanent projects only what
+-- its allower listed (CR 708.2), so a projected read would find no morph ability
+-- to charge for.
+--
+-- CR 702.37b: MEGAMORPH REACHES HERE TOO, which is why Parun.Types.Keyword's Morph
+-- carries a variant rather than having a sibling constructor -- the case below is
+-- a WILDCARD, so a `Megamorph` constructor beside `Morph` would fall through to the
+-- empty list and silently make every megamorph card uncastable face down and
+-- unturnable face up, with nothing for -Werror to report.
+--
+-- A LIST for flashbackCosts' reason: rule 702.37 states no limit on how many
+-- morph abilities a card has, and CR 702.37b's "a megamorph cost is a morph
+-- cost" puts both variants in it (Synthetic Twice-Veiled Adept). Distinct costs
+-- only: two abilities at one cost are one price to pay.
+morphCosts :: Set Keyword -> [Cost Keyword]
+morphCosts keywords =
+  let costOf keyword = case keyword of
+        Keyword.Morph (Morph.MkMorph cost _) -> Just cost
+        _ -> Nothing
+   in Set.toAscList (Set.fromList (Maybe.mapMaybe costOf (Set.toAscList keywords)))
+
+-- CR 702.168a / 702.168d: the DISGUISE costs -- what a face-down permanent's
+-- controller may pay to turn it face up as CR 116.2b's special action -- empty
+-- when the card has no disguise ability. NOT the cost of the disguise CAST,
+-- which rule 702.168a fixes at {3} for every printing, so that one comes from
+-- Cost.faceDownCost as morph's does.
+--
+-- Asked of the card's PRINTED keywords, morphCosts' reason exactly: CR 702.168b
+-- leaves the face-down permanent with no keyword but the ward it lists, so a
+-- projected read would find no disguise ability to charge for.
+--
+-- A SEPARATE function from morphCosts and not a widening of it, which is what
+-- keeps CR 702.168d's price apart from CR 702.37e's: a permanent with both
+-- abilities is turnable by either procedure at either cost, and one function
+-- answering for both would charge whichever the Set happened to hold first.
+--
+-- A LIST for morphCosts' reason: rule 702.168 states no limit on how many
+-- disguise abilities a card has (Synthetic Twice-Masked Envoy). Distinct costs
+-- only.
+disguiseCosts :: Set Keyword -> [Cost Keyword]
+disguiseCosts keywords =
+  let costOf keyword = case keyword of
+        Keyword.Disguise cost -> Just cost
+        _ -> Nothing
+   in Set.toAscList (Set.fromList (Maybe.mapMaybe costOf (Set.toAscList keywords)))
+
+-- CR 601.2b: the OPTIONAL additional cost this keyword ability lets its spell's
+-- controller pay as they cast it, paired with how many times its rule lets ONE
+-- instance be paid (paymentLimit counts the instances) -- Just 1 for kicker (CR
+-- 702.33a), offspring (CR 702.175a), casualty (CR 702.153a), bargain (CR
+-- 702.166a) and teamwork (CR 702.194a), Nothing for
+-- multikicker (CR 702.33c), squad (CR 702.157a) and replicate (CR 702.56a),
+-- which their rules make payable "any number of times" -- and Nothing for every
+-- other keyword. Rule 702.194a's "any number" counts CREATURES within one
+-- payment, not payments, so teamwork is a Just 1 like the rest.
+--
+-- One function for all of them because their rules say one thing: each is an
+-- optional ADDITIONAL cost (CR 118.8b) announced at CR 601.2b and paid at CR
+-- 601.2f-h, so one announcement asks about them and Object.paidCosts records
+-- them. What each PAYS OFF differs, and is read back off that record by keyword.
+--
+-- A wildcard rather than an exhaustive case, entwineCosts' reason: this asks
+-- about named constructors rather than classifying every keyword.
+optionalCost :: Keyword -> Maybe (Cost Keyword, Maybe Natural)
+optionalCost keyword = case keyword of
+  Keyword.Kicker cost -> Just (cost, Just 1)
+  Keyword.Multikicker cost -> Just (cost, Nothing)
+  -- CR 702.33h: "means Kicker [cost]", so payable once.
+  Keyword.StickerKicker cost -> Just (cost, Just 1)
+  Keyword.Squad cost -> Just (cost, Nothing)
+  Keyword.Offspring cost -> Just (cost, Just 1)
+  -- Minted rather than printed, bargain's and conspire's reason: rule 702.174a
+  -- writes this cost's every word in the rulebook and the card prints only the
+  -- [something].
+  Keyword.Gift something -> Just (giftCost something, Just 1)
+  Keyword.Replicate cost -> Just (cost, Nothing)
+  -- The one arm whose cost is MINTED rather than printed: rule 702.153a writes
+  -- the sacrifice out in the rulebook and the card prints only the N.
+  Keyword.Casualty n -> Just (casualtyCost n, Just 1)
+  -- Minted rather than printed too: rules 702.166a and 702.194a write out what
+  -- is sacrificed and what is tapped, and the card prints bargain bare and
+  -- teamwork with its N alone.
+  Keyword.Bargain -> Just (bargainCost, Just 1)
+  Keyword.Teamwork n -> Just (teamworkCost n, Just 1)
+  -- Minted rather than printed, the two arms above's reason: rule 702.78a writes
+  -- out what is tapped and the card prints conspire bare.
+  Keyword.Conspire -> Just (conspireCost, Just 1)
+  _ -> Nothing
+
+-- CR 601.2b / 118.8a: how many times a spell holding `count` instances of this
+-- keyword may declare its cost, Nothing for no limit. Each instance is its own
+-- ability offering its own cost (CR 702.56b, 702.78b, 702.153b, 702.157b,
+-- 702.175b; gift states no such rule, but CR 702.174a makes each instance its
+-- own two abilities), so optionalCost's limit is per instance.
+--
+-- A cost each instance pays at most once is asked ONCE, as a count of instances
+-- paid, and Parun.Engine.Cast records the first that many as paid. Under those
+-- rules each instance triggers on its own payment, so which of identical
+-- instances were paid changes nothing. A cost is asked per instance where
+-- paidPerInstance says which instance pays is a real choice, and once
+-- otherwise.
+--
+-- Kicker's and bargain's payoffs, though, link to the PRINTED instance (CR
+-- 702.33e, 702.166c), so a printed kicker beside an identical granted one would
+-- care which was paid, and this count cannot say. MTGJSON 2026-08-23 text search
+-- `(gains?|ha(ve|s)) (kicker|bargain)`, no hit; a card granting a spell kicker
+-- [cost] or bargain would refute it.
+paymentLimit :: Natural -> Keyword -> Maybe Natural
+paymentLimit count keyword = fmap (* count) (snd =<< optionalCost keyword)
+
+-- CR 702.56b / 702.157b / 702.174a: is each instance of this optional cost
+-- asked about, and its payment recorded, as the instance
+-- Projection.keywordInstances names? Replicate's and squad's triggers each read
+-- their own instance's count, so how the payments split is a choice to ask. A
+-- gift's promise belongs to its own instance, so a granted one that stops
+-- applying (CR 611.3a) takes its own promise and payment with it, and which of
+-- two is paid is a choice too (Synthetic Generous Host beside a printed gift).
+-- Multikicker states no such rule and its payoffs read the total (CR
+-- 702.33c-e), so its instances are asked together. A wildcard, optionalCost's
+-- reason.
+paidPerInstance :: Keyword -> Bool
+paidPerInstance keyword = case keyword of
+  Keyword.Replicate _ -> True
+  Keyword.Squad _ -> True
+  Keyword.Gift _ -> True
+  _ -> False
+
+-- One triggered ability per instance of a keyword, `mint` taking its ordinal,
+-- which names that instance's own payments (KeywordDesignator.OfInstance): CR
+-- 702.56b, 702.78b, 702.153b, 702.157b and 702.175b each have an instance
+-- trigger on its own payment alone.
+perPayment :: Natural -> (Natural -> a) -> [a]
+perPayment count mint = fmap mint [1 .. count]
+
+-- CR 702.153a's additional cost: "you may sacrifice a creature with power N or
+-- greater". One permanent, and CR 701.21a leaves WHICH creature to the payer --
+-- Parun.Engine.Cost pays it exactly as it pays Phyrexian Tower's printed
+-- sacrifice, control of the sacrificed permanent being rule 701.21a's rather
+-- than the Filter's.
+--
+-- An EMPTY mana part rather than Nothing: rule 702.153a levies no mana, and
+-- Parun.Engine.Cost.plus reads a Nothing as CR 118.6a's unpayable cost, which
+-- would make every casualty offer unpayable rather than free.
+casualtyCost :: Natural -> Cost Keyword
+casualtyCost n =
+  Cost.MkCost
+    { Cost.mana = Just (ManaCost.MkManaCost []),
+      Cost.components = [CostComponent.Sacrifice (Sacrifice.MkSacrifice (CostAmount.Fixed 1) (Filter.And [Filter.HasCardType CardType.Creature, Filter.Measures (Measures.MkMeasures Measure.Power Comparison.AtLeast (Operand.Literal (toInteger n)))]))]
+    }
+
+-- CR 702.166a's additional cost: "you may sacrifice an artifact, enchantment, or
+-- token". ONE permanent, and CR 701.21a leaves WHICH to the payer and requires
+-- they control it, casualtyCost's arrangement exactly -- the Filter states the
+-- three kinds and nothing about control.
+--
+-- Filter.IsToken beside the two card types rather than under them: CR 111.3
+-- gives a token only the card types its creating effect defined, so a Food token
+-- is already an artifact and a Saproling token is neither of the two -- the
+-- third disjunct is what rule 702.166a's own list adds.
+--
+-- An EMPTY mana part, casualtyCost's reason.
+bargainCost :: Cost Keyword
+bargainCost =
+  Cost.MkCost
+    { Cost.mana = Just (ManaCost.MkManaCost []),
+      Cost.components = [CostComponent.Sacrifice (Sacrifice.MkSacrifice (CostAmount.Fixed 1) (Filter.Or [Filter.HasCardType CardType.Artifact, Filter.HasCardType CardType.Enchantment, Filter.IsToken]))]
+    }
+
+-- CR 702.174a's additional cost: "you may choose an opponent". No mana and one
+-- component, bargainCost's shape -- the card prints gift with its [something]
+-- alone, and rule 702.174a states the cost.
+--
+-- An EMPTY mana part, casualtyCost's reason.
+giftCost :: Gift.Gift -> Cost Keyword
+giftCost something =
+  Cost.MkCost
+    { Cost.mana = Just (ManaCost.MkManaCost []),
+      Cost.components = [CostComponent.ChooseOpponent something]
+    }
+
+-- CR 702.194a's additional cost: "you may tap any number of creatures you
+-- control with total power N or more". The aggregate threshold is what makes it
+-- CostComponent.TapForTotalPower and not TapPermanents, `crew` above's reading of
+-- the same words one rule over.
+--
+-- WITHOUT crew's `Not CantCrewVehicles`: rule 702.122d forbids paying a CREW
+-- cost and says nothing about any other cost that taps, and that atom in this
+-- criterion is what would make a Vehicle-barred creature unable to pay teamwork
+-- too. Without crew's `Not IsSource` either -- the source is a spell on the
+-- stack, so no battlefield creature is it.
+--
+-- CR 302.6 does not reach it: the cost carries no tap symbol
+-- (Parun.Engine.Cost.requiresSicknessCheck), so a creature that arrived this turn
+-- may be tapped to pay.
+--
+-- An EMPTY mana part, casualtyCost's reason.
+teamworkCost :: Natural -> Cost Keyword
+teamworkCost n =
+  Cost.MkCost
+    { Cost.mana = Just (ManaCost.MkManaCost []),
+      Cost.components =
+        [ CostComponent.TapForTotalPower
+            ( TapForTotalPower.MkTapForTotalPower
+                n
+                ( Filter.And
+                    [ Filter.HasCardType CardType.Creature,
+                      Filter.Not Filter.IsTapped,
+                      Filter.ControlledBy PlayerRelation.You
+                    ]
+                )
+            )
+        ]
+    }
+
+-- CR 702.78a's additional cost: "you may tap two untapped creatures you control
+-- that each share a color with it". A FIXED COUNT with no aggregate threshold, so
+-- CostComponent.TapPermanents and not teamworkCost's TapForTotalPower -- rule
+-- 702.78a counts creatures where rule 702.194a counts power.
+--
+-- "It" is the SPELL, which is the object the cost is being paid for, so the
+-- colour comparison is Filter.SharesWithSource Trait.Color rather than an atom
+-- naming a slot; Parun.Engine.Cost.tapCandidates is what supplies the source's
+-- colours. The untapped and control clauses are the rule's own, teamworkCost's
+-- reading exactly, and CR 302.6 does not reach the cost for that function's reason.
+--
+-- An EMPTY mana part, casualtyCost's reason.
+conspireCost :: Cost Keyword
+conspireCost =
+  Cost.MkCost
+    { Cost.mana = Just (ManaCost.MkManaCost []),
+      Cost.components =
+        [ CostComponent.TapPermanents
+            ( TapPermanents.MkTapPermanents
+                (CostAmount.Fixed 2)
+                ( Filter.And
+                    [ Filter.HasCardType CardType.Creature,
+                      Filter.Not Filter.IsTapped,
+                      Filter.ControlledBy PlayerRelation.You,
+                      Filter.SharesWithSource Trait.Color
+                    ]
+                )
+                False
+            )
+        ]
+    }
+
+-- Every keyword of this card offering optionalCost's kind of cost, in ascending
+-- Set order. Offered at CR 601.2b and added to whichever candidate cost was
+-- announced (CR 601.2f).
+--
+-- A LIST, entwineCosts' shape and for its reason: CR 702.33b's "kicker [cost 1]
+-- and/or [cost 2]" is two kicker abilities on one object (Sunscape Battlemage),
+-- and CR 118.8a makes two additional costs a SUM rather than a choice. The
+-- summing is Parun.Engine.Cast.castProposed's, entwineCosts' arrangement exactly.
+optionalCosts :: Set Keyword -> [Keyword]
+optionalCosts = filter (Maybe.isJust . optionalCost) . Set.toAscList
+
+-- CR 702.42a: every ADDITIONAL cost this card's controller may pay to choose all
+-- of its modes, in ascending Set order, and empty when it has no entwine. Offered
+-- at CR 601.2b and added to whichever candidate cost was announced (CR 601.2f).
+--
+-- A LIST, flashbackCosts' shape, and for the mirror-image reason: rule 702.42
+-- states no limit on how many entwine abilities an object has (contrast CR
+-- 702.41b for affinity and CR 702.43b for modular), and entwine's cost is
+-- ADDITIONAL rather than alternative, so CR 118.8a's "any number of additional
+-- costs may be applied" makes two of them a SUM rather than a choice. The
+-- summing is Parun.Engine.Cast.entwineOffer's, since CR 601.2f's addition lives
+-- in Parun.Engine.Cost, which reads this module.
+--
+-- A wildcard rather than an exhaustive case, flashbackCosts' reason: this asks
+-- about ONE named constructor rather than classifying every keyword.
+entwineCosts :: Set Keyword -> [Cost Keyword]
+entwineCosts keywords =
+  let costOf keyword = case keyword of
+        Keyword.Entwine cost -> Just cost
+        _ -> Nothing
+   in Maybe.mapMaybe costOf (Set.toAscList keywords)
+
+-- CR 702.120a: every ADDITIONAL cost this card charges for each mode chosen
+-- beyond the first, in ascending Set order, and empty when it has no escalate.
+-- Levied at CR 601.2b, once the modes are chosen, and added to whichever
+-- candidate cost was announced (CR 601.2f-h).
+--
+-- A LIST, entwineCosts' shape and for its reason: rule 702.120 states no limit on
+-- how many escalate abilities an object has, and escalate's cost is ADDITIONAL
+-- rather than alternative, so CR 118.8a's "any number of additional costs may be
+-- applied" makes two of them a SUM rather than a choice. The summing is
+-- Parun.Engine.Cast.escalateTotal's, entwineCosts' arrangement exactly.
+--
+-- A wildcard rather than an exhaustive case, entwineCosts' reason: this asks
+-- about ONE named constructor rather than classifying every keyword.
+escalateCosts :: Set Keyword -> [Cost Keyword]
+escalateCosts keywords =
+  let costOf keyword = case keyword of
+        Keyword.Escalate cost -> Just cost
+        _ -> Nothing
+   in Maybe.mapMaybe costOf (Set.toAscList keywords)
+
+-- CR 702.27a: the ADDITIONAL cost this card's controller may pay as they cast
+-- it to have the spell go to their hand rather than to their graveyard, or
+-- Nothing when the card has no buyback. Offered at CR 601.2b and added to
+-- whichever candidate cost was announced (CR 601.2f).
+--
+-- A Maybe where optionalCosts above is a list: rule 702.27a states one cost and
+-- one payment of it, and Scryfall kw:buyback, 2026-09-07, has no printing with
+-- two -- a card printing "Buyback [cost 1]" and "Buyback [cost 2]" the way
+-- Sunscape Battlemage prints two kickers would refute this and would want
+-- optionalCosts' list. First in ascending Set order, a tie break no
+-- printing reaches.
+buybackCost :: Set Keyword -> Maybe (Cost Keyword)
+buybackCost keywords =
+  let costOf keyword = case keyword of
+        Keyword.Buyback cost -> Just cost
+        _ -> Nothing
+   in Maybe.listToMaybe (Maybe.mapMaybe costOf (Set.toAscList keywords))
+
+-- CR 702.47a: every splice ability a card prints, which Parun.Engine.Cast offers
+-- as the card sits in its owner's hand.
+splices :: Set Keyword -> [Splice.Splice Keyword]
+splices keywords =
+  let spliceOf keyword = case keyword of
+        Keyword.Splice splicing -> Just splicing
+        _ -> Nothing
+   in Maybe.mapMaybe spliceOf (Set.toAscList keywords)
+
+-- CR 702.62a: the suspend ability this card prints -- the N and the cost of CR
+-- 116.2f's special action together -- or Nothing when the card has no suspend.
+--
+-- BOTH FIELDS at once, where plotCosts below answers costs alone: rule 702.62a's
+-- N is what the exile puts on the card, and Parun.Engine.Suspend needs the two in
+-- the same breath.
+--
+-- A wildcard, and ONE ability per card (the ascending-least). No printing has
+-- two. A granted suspend prints neither half, so it is skipped: it has no
+-- special action to offer.
+suspend :: Set Keyword -> Maybe (Suspend.Suspend Keyword)
+suspend keywords =
+  let abilityOf keyword = case keyword of
+        Keyword.Suspend ability -> ability
+        _ -> Nothing
+   in Maybe.listToMaybe (Maybe.mapMaybe abilityOf (Set.toAscList keywords))
+
+-- CR 702.62b's "has suspend": any suspend at all, printed or granted, which is
+-- what the two triggered abilities and "suspended" ask. The keyword itself is
+-- the answer, for the tag the free cast leaves on the spell.
+suspendKeyword :: Set Keyword -> Maybe Keyword
+suspendKeyword keywords =
+  let isSuspend keyword = case keyword of
+        Keyword.Suspend _ -> True
+        _ -> False
+   in List.find isSuspend (Set.toAscList keywords)
+
+-- CR 702.170a: what CR 116.2k's special action may cost, one entry per distinct
+-- plot cost the card has; empty when it has no plot.
+--
+-- The cost of the ACTION and never of the cast: rule 702.170d makes the later cast
+-- free, so nothing consults this from Parun.Engine.Cost.
+--
+-- A wildcard, and a LIST, morphCosts' shape: each plot ability is its own
+-- special action at its own cost (Synthetic Twice-Wanted Outlaw).
+plotCosts :: Set Keyword -> [Cost Keyword]
+plotCosts keywords =
+  let costOf keyword = case keyword of
+        Keyword.Plot cost -> Just cost
+        _ -> Nothing
+   in Set.toAscList (Set.fromList (Maybe.mapMaybe costOf (Set.toAscList keywords)))
+
+-- CR 702.143a: what a card's own foretell keywords say it may be CAST for, empty
+-- when the card has no foretell. The cost of the CAST and never of the special
+-- action, plotCosts' mirror: CR 116.2h fixes the action's cost at {2} for
+-- every printing, so Parun.Engine.Foretell mints that itself.
+--
+-- Not the only cost a foretold card may be cast for: CR 702.143d lets an effect
+-- give one, which Parun.Engine.Cost.grantedForetellCost settles per face off
+-- Object.foretellCostReduction, and that module offers both.
+--
+-- The payload as stated, which may be a reduction off the card's own mana cost
+-- (Dream Devourer's grant): Parun.Engine.Cost.foretellCostFor settles it against
+-- a face.
+--
+-- A wildcard, and a LIST, morphCosts' shape: rule 702.143a's "any foretell cost
+-- it has" (Synthetic Twice-Foretold Omen). Distinct payloads only.
+foretellCosts :: Set Keyword -> [ForetellCost Keyword]
+foretellCosts keywords =
+  let costOf keyword = case keyword of
+        Keyword.Foretell cost -> Just cost
+        _ -> Nothing
+   in Set.toAscList (Set.fromList (Maybe.mapMaybe costOf (Set.toAscList keywords)))
+
+-- | What CR 702.51a, CR 702.66a and CR 702.126a let a caster spend rather than
+-- pay one stated mana of a spell's total cost. A CLASSIFICATION of the payment,
+-- which is all Parun.Engine.Cost.manaSubstitutions needs to name the candidates
+-- and mint the component: the arms differ in the ZONE they spend out of, in what
+-- spending means there, and in whether CR 702.51c records the spending.
+data Substitute
+  = -- | CR 702.126a / 701.67a: tap one untapped permanent the Filter admits.
+    TapUntapped (Filter Keyword)
+  | -- | CR 702.51a / 702.51c: tap one untapped creature the Filter admits, which convokes the spell.
+    TapToConvoke (Filter Keyword)
+  | -- | CR 702.66a: exile one card the Filter admits from your own graveyard.
+    ExileFromGraveyard (Filter Keyword)
+  deriving (Eq, Ord, Show)
+
+-- CR 702.51a / 702.66a / 702.126a: what these keywords let the caster spend
+-- rather than pay ONE stated mana of a spell's total cost -- empty where no
+-- keyword here offers a substitute for that symbol, which is every symbol on a
+-- spell with none of them.
+--
+-- Asked per SYMBOL because rule 702.51a answers differently for the two kinds it
+-- names: a colored mana wants a creature OF THAT COLOR and a generic mana any
+-- creature. Every other symbol answers nothing, and two of them are worth
+-- naming: CR 107.4c's {C} is colorless and so is not colored mana, and CR
+-- 107.4h's {S} is separated from generic mana by its own sentence. CR 601.2b has
+-- settled the hybrid and Phyrexian symbols before any caller asks
+-- (Parun.Engine.Mana.announce), so a cost reaching here holds neither.
+--
+-- Rule 702.66a's criterion is "a card from your graveyard" and states no other
+-- quality, so it is Filter.And [], the trivial predicate: the pool's narrowing to
+-- the payer's OWN graveyard is Parun.Engine.Cost.exileCandidates' (CR 400.3).
+--
+-- The criteria are MINTED here rather than printed, rule 702's own words being
+-- what says what is eligible -- so CR 612.2 has no word of a card's to swap in
+-- them (Parun.Engine.Filter's rewriteKeyword), and Parun.CardSpec's filter
+-- traversals never see them.
+--
+-- One entry per keyword, never Or'd into one criterion: the payer says how many
+-- of a generic symbol each keyword pays, and an artifact creature on a spell
+-- with both convoke and improvise convokes it only where the payer tapped it
+-- through convoke (CR 702.51c). CR 702.51d, CR 702.66c and CR 702.126c make a
+-- second instance of ONE of them redundant, which a Set already is. Parun.CostSpec's
+-- "CR 702.51c an artifact creature tapped for improvise did not convoke the
+-- Loxodon" proves the convoke-and-improvise pair. Scryfall `keyword:convoke
+-- keyword:delve`, 2026-09-12, answers Hogaak, Arisen Necropolis alone, and that
+-- one cannot be transcribed -- its "You can't spend mana to cast this spell" has
+-- no representation -- so that pair is a fence rather than proven behaviour.
+--
+-- The case is a WILDCARD, morphCosts' caveat and for its reason: a new keyword
+-- stating this kind of substitute owes an arm here, and -Werror will not ask for
+-- it.
+manaSubstitutesFor :: ManaSymbol.ManaSymbol -> Set Keyword -> [Substitute]
+manaSubstitutesFor symbol keywords =
+  let untapped cardType narrower =
+        Filter.And
+          ( [ Filter.HasCardType cardType,
+              Filter.Not Filter.IsTapped,
+              Filter.ControlledBy PlayerRelation.You
+            ]
+              <> narrower
+          )
+      substituteOf keyword = case keyword of
+        Keyword.Convoke -> case symbol of
+          ManaSymbol.Generic _ -> Just (TapToConvoke (untapped CardType.Creature []))
+          ManaSymbol.OfType (ManaType.Colored color) -> Just (TapToConvoke (untapped CardType.Creature [Filter.HasColor color]))
+          _ -> Nothing
+        Keyword.Improvise -> case symbol of
+          ManaSymbol.Generic _ -> Just (TapUntapped (untapped CardType.Artifact []))
+          _ -> Nothing
+        Keyword.Delve -> case symbol of
+          ManaSymbol.Generic _ -> Just (ExileFromGraveyard (Filter.And []))
+          _ -> Nothing
+        _ -> Nothing
+   in Maybe.mapMaybe substituteOf (Set.toAscList keywords)
+
+-- The one exile CR 702.34a, CR 702.127a and CR 702.133a all print, in the same
+-- words. Filter.IsSource, because the rule says "this card". `whenDestination =
+-- Nothing` is the rule's "instead of putting it anywhere else" -- every
+-- destination, not the graveyard alone, so Reprieve returning a flashed-back
+-- spell to its owner's hand exiles it instead (Parun.CastSpec's "CR 702.34a a
+-- flashback spell bounced off the stack is exiled, not returned to hand").
+--
+-- GATED on the clause each of the three rules puts in front of it, and the three
+-- clauses are not the same question. `castFor` is the keyword whose candidate cost
+-- the cast was announced for, which rule 702.34a's "if the flashback cost was
+-- paid" and rule 702.133a's jump-start clause each ask about; rule 702.127a asks
+-- only whether the cast came from a graveyard. Parun.Engine.Cast installs what this
+-- returns without ever inspecting it.
+castFromGraveyardReplacementsOf :: Set Keyword -> Maybe Keyword -> [ReplacementEffect Card (GrantedAbility.GrantedAbility Card) (Effect.Effect Card (GrantedAbility.GrantedAbility Card))]
+castFromGraveyardReplacementsOf keywords castFor =
+  let paidFor keyword = castFor == Just keyword
+   in -- The cost the cast PAID FOR, and not merely a flashback the card has:
+      -- paying the printed cost under a CR 601.3 permission leaves rule 702.34a's
+      -- clause unsatisfied. Compared against the cost-bearing keyword itself, and
+      -- against EVERY flashback the card has, which is how one with two flashback
+      -- abilities answers for the cost it was cast for rather than for the least
+      -- of them.
+      (if any (paidFor . Keyword.Flashback) (flashbackCosts keywords) then [castFromGraveyardExile] else [])
+        -- CR 702.127a's THIRD static ability, word for word CR 702.34a's second
+        -- ability, so it is the same effect and not a sibling. The one of the
+        -- three that does NOT read `castFor`: rule 702.127a conditions its exile
+        -- on the zone alone, so an aftermath half cast from a graveyard for any
+        -- cost is exiled.
+        <> (if Set.member Keyword.Aftermath keywords then [castFromGraveyardExile] else [])
+        -- CR 702.133a's SECOND static ability, the third rule to print that
+        -- sentence and so the third to share the one effect. Its "using its
+        -- jump-start ability" reads the same record flashback's clause does: the
+        -- jump-start candidate is the printed cost plus rule 702.133a's discard,
+        -- which a permission offering the printed cost alone is not.
+        <> (if hasJumpStart keywords && paidFor Keyword.JumpStart then [castFromGraveyardExile] else [])
+        -- CR 702.180a's THIRD static ability, the fourth rule to print that
+        -- sentence and so the fourth to share the one effect -- "if the harmonize
+        -- cost was paid, exile this card instead of putting it anywhere else any
+        -- time it would leave the stack". Its clause reads `castFor` exactly as
+        -- rule 702.34a's does, and against every harmonize the card has for that
+        -- arm's reason.
+        <> (if any (paidFor . Keyword.Harmonize) (harmonizeCosts keywords) then [castFromGraveyardExile] else [])
+
+castFromGraveyardExile :: ReplacementEffect Card (GrantedAbility.GrantedAbility Card) (Effect.Effect Card (GrantedAbility.GrantedAbility Card))
+castFromGraveyardExile =
+  ReplacementEffect.ZoneChangeR
+    ( ZoneChangeR.MkZoneChangeR
+        ZoneChangePattern.MkZoneChangePattern
+          { ZoneChangePattern.whenDestination = Nothing,
+            ZoneChangePattern.whoseObject = ControllerRelation.Related PlayerRelation.AnyPlayer,
+            ZoneChangePattern.whatObject = Filter.IsSource,
+            ZoneChangePattern.whenDiscarded = Nothing,
+            ZoneChangePattern.duringResolution = False
+          }
+        Zone.Exile
+        False
+        False
+        LibraryPosition.defaultValue
+        False
+    )
+
+-- | The replacement effects rule 702 mints for a card in a HAND, off the keyword
+-- set it is handed -- `mintedReplacementsOf`'s sibling one zone over, and rule
+-- 702.35a's madness is the only one that reaches it.
+--
+-- Its own mint point rather than an arm of `mintedReplacementsFor`, because the
+-- two are gathered by different walks: that roster is read off the PROJECTION of
+-- a battlefield or command-zone object (Parun.Engine.Projection.replacementsOf),
+-- and CR 122.2 keeps every row it holds off a card in a hand. This one is
+-- handed Parun.Engine.Projection.handMintingKeywordsOf by
+-- Parun.Engine.Projection.replacementsAffecting's hand walk.
+--
+-- ONE ROW however many madness abilities, unlike riot's per-instance rows:
+-- every madness row makes the same redirect, so the CR 616.1 loop has nothing
+-- to tell them apart by. WHICH one applied is asked once the row has, by
+-- Parun.Engine.Event.discardReturning (`madnessChoice`).
+handReplacementsOf :: Set Keyword -> [ReplacementEffect Card (GrantedAbility.GrantedAbility Card) (Effect.Effect Card (GrantedAbility.GrantedAbility Card))]
+handReplacementsOf keywords = [madnessDiscardExile | not (null (madnessCosts keywords))]
+
+-- | The replacement effects rule 702 mints for a card in a GRAVEYARD, off the
+-- keyword set it is handed -- `handReplacementsOf`'s sibling one zone over, and rule
+-- 702.52a's dredge is the only one that reaches it.
+--
+-- Its own mint point for `handReplacementsOf`'s reason: rule 702.52a functions
+-- "only while the card with dredge is in a player's graveyard", which is a zone
+-- `mintedReplacementsFor`'s projection walk does not reach.
+-- Parun.Engine.Projection.replacementsAffecting's graveyard walk hands it the
+-- PROJECTION's keywords, so a dredge an effect grants or removes there is seen.
+--
+-- ONE ROW PER DISTINCT dredge ability, which is what a keyword SET gives and
+-- what rule 702.52 asks for: each ability states its own N, so two unlike ones
+-- are two distinguishable CR 616.1 candidates, and rule 702.52 states no
+-- multiplicity clause for two alike. Scryfall `keyword:dredge`, 2026-09-18,
+-- answers no card printing two dredge abilities; a printing with two would be
+-- what tells the two readings apart.
+--
+-- A wildcard rather than an exhaustive case, `madnessCosts` above's reason.
+--
+-- ControllerRelation.Related You is rule 702.52a's "you": the card is in a graveyard,
+-- where CR 108.4 gives it no controller and CR 108.4a substitutes its owner, and
+-- Parun.Engine.Replacement.applies reads the relation off the candidate's
+-- controller, which for a graveyard card is that owner.
+graveyardReplacementsOf :: Set Keyword -> [ReplacementEffect Card (GrantedAbility.GrantedAbility Card) (Effect.Effect Card (GrantedAbility.GrantedAbility Card))]
+graveyardReplacementsOf keywords =
+  let rowFor keyword = case keyword of
+        Keyword.Dredge n -> Just (ReplacementEffect.DrawR (DrawR.MkDrawR (ControllerRelation.Related PlayerRelation.You) (DrawRewrite.Dredge n)))
+        _ -> Nothing
+   in Maybe.mapMaybe rowFor (Set.toAscList keywords)
+
+-- CR 702.35a's FIRST ability: "if a player would discard this card, that player
+-- discards it, but exiles it instead of putting it into their graveyard".
+--
+-- Filter.IsSource is the rule's "this card", castFromGraveyardExile's read one
+-- rule apart. `whenDestination = Just Graveyard` where that one names none,
+-- because rule 702.35a names one: it redirects the graveyard alone, so a discard
+-- some other effect has already sent elsewhere is not redirected again.
+--
+-- The pattern states no CAUSE: ZoneChangePattern.whenDiscarded names ONE
+-- discard cause, and rule 702.35a's reaches a discard of any, so what this row
+-- actually intercepts is "would be put into a graveyard from a hand" rather than
+-- rule 701.9a's discard. The row is gathered only while
+-- its source is in a hand, which is what supplies the from-zone -- finality's
+-- argument in Parun.Engine.Projection.finalityOf.
+--
+-- The two readings part only on a card put into a graveyard from a hand without
+-- being discarded -- rule 701.9a defines a discard as that move and nothing
+-- else, so an effect that made it some other way is not one -- and no printing
+-- writes such an effect: Scryfall
+-- `oracle:"your hand into your graveyard"` and `oracle:"their hand into their
+-- graveyard"`, 2026-09-15, answer nothing, and every hit for `oracle:"from
+-- your hand into"` and `oracle:"from their hand into"` names a library. A
+-- printing that put a card from a hand into a graveyard in so many words is
+-- what would need the field.
+--
+-- Rule 702.35a's "exiled THIS WAY" does NOT rest on that: the TRIGGER asks which
+-- replacement applied rather than where the card landed, so Rest in Peace's row
+-- chosen over this one under CR 616.1 offers no cast -- see `madnessCast`.
+madnessDiscardExile :: ReplacementEffect Card (GrantedAbility.GrantedAbility Card) (Effect.Effect Card (GrantedAbility.GrantedAbility Card))
+madnessDiscardExile =
+  ReplacementEffect.ZoneChangeR
+    ( ZoneChangeR.MkZoneChangeR
+        ZoneChangePattern.MkZoneChangePattern
+          { ZoneChangePattern.whenDestination = Just Zone.Graveyard,
+            ZoneChangePattern.whoseObject = ControllerRelation.Related PlayerRelation.AnyPlayer,
+            ZoneChangePattern.whatObject = Filter.IsSource,
+            ZoneChangePattern.whenDiscarded = Nothing,
+            ZoneChangePattern.duringResolution = False
+          }
+        Zone.Exile
+        False
+        False
+        LibraryPosition.defaultValue
+        False
+    )
+
+-- The static continuous abilities rule 702 states as a keyword's meaning, for the
+-- object those keywords are on: CR 702.161a's living metal, and the battlefield
+-- halves of CR 702.109a's dash, CR 702.152a's blitz and CR 702.176a's impending.
+--
+-- MEMBERSHIP and not a count, unlike mintedReplacementsOf below: rule 702.161a
+-- adds card types the object already has once the first instance has applied, so
+-- a second instance is redundant -- lifelink's reading, not toxic's.
+--
+-- NOT exhaustive, where mintedReplacementsFor is. The pattern here is
+-- Parun.Engine.Projection.View.definesColorless: one function that decides what one
+-- rule means, named after the rule rather than after the shape. A keyword whose
+-- meaning is a static ability is rare enough that a hundred-arm case would say
+-- nothing a reader could not get from the rule number.
+mintedStaticAbilitiesOf :: Set Keyword -> [StaticAbility.StaticAbility (GrantedAbility.GrantedAbility Card)]
+mintedStaticAbilitiesOf =
+  let staticsOf keyword = case keyword of
+        Keyword.LivingMetal -> [livingMetal]
+        Keyword.Dash _ -> [whilePaid (KeywordDesignator.OfFamily KeywordFamily.Dash) (NonEmpty.singleton (Modification.GainKeyword Keyword.Haste))]
+        Keyword.Blitz _ -> [whilePaid (KeywordDesignator.OfKeyword keyword) (Modification.GainKeyword Keyword.Haste NonEmpty.:| [Modification.GainAbility (GrantedAbility.Triggered blitzDraw)])]
+        Keyword.Reconfigure _ -> [reconfigured]
+        Keyword.Impending _ -> [impendingNotCreature]
+        _ -> []
+   in foldMap staticsOf . Set.toAscList
+
+-- CR 702.109a's and CR 702.152a's "as long as this permanent's [dash or blitz]
+-- cost was paid", a condition re-asked on every projection.
+--
+-- Blitz asks of its OWN instance, CR 702.152b's "each one refers only to
+-- payments made for that blitz ability", so of two blitz abilities only the one
+-- paid grants haste and the draw (Parun.PlanechaseSpec's "CR 400.7b" group,
+-- Sabin under The Caldaia). Dash asks of its family: rule 702.109 states no such
+-- partition, and a second haste is redundant whichever instance grants it.
+--
+-- Quantity.CastUsing reads Object.castUsing, which CR 400.7 clears on any other
+-- zone change and CR 707.2 does not copy, so a flickered permanent and a Clone of
+-- this one both fail it. Parun.CastSpec's "Dash" group proves both.
+whilePaid :: KeywordDesignator.KeywordDesignator Keyword -> NonEmpty.NonEmpty (Modification.Modification (GrantedAbility.GrantedAbility Card)) -> StaticAbility.StaticAbility (GrantedAbility.GrantedAbility Card)
+whilePaid paid modifications =
+  StaticAbility.MkStaticAbility
+    { StaticAbility.affected = Affected.Matching Filter.IsSource,
+      StaticAbility.condition = Just (Condition.Compares (Compares.MkCompares (Quantity.CastUsing paid) Comparison.AtLeast (Quantity.Literal 1))),
+      StaticAbility.functionsFrom = Set.empty,
+      StaticAbility.lingers = Nothing,
+      StaticAbility.name = Nothing,
+      StaticAbility.modifications = modifications
+    }
+
+-- CR 702.152a's granted "When this permanent is put into a graveyard from the
+-- battlefield, draw a card" -- CR 700.4's "dies", a CR 603.10a look-back.
+blitzDraw :: TriggeredAbility Card (GrantedAbility.GrantedAbility Card)
+blitzDraw =
+  let effect = Effect.Draw Draw.MkDraw {Draw.player = PlayerRef.Relative PlayerRelation.You, Draw.quantity = Quantity.Literal 1, Draw.slot = Nothing}
+   in Mint.trigger TriggerCondition.SelfDies (Seq.singleton effect)
+
+-- CR 702.161a: "During your turn, this permanent is an artifact creature in
+-- addition to its other types."
+--
+-- ADDS two card types and sets none, which is CR 205.1b naming this exact phrase
+-- -- crew's reading (see `crew` above), so the Vehicle stays a Vehicle and keeps
+-- its artifact type when the condition is false. TWO parts of ONE ability rather
+-- than two abilities, so CR 613.6 chooses the affected set once and CR 613.7a
+-- stamps both at the permanent's own timestamp. Layer 4 (CR 613.1d), which
+-- Parun.Engine.Projection.layer reads off the modification.
+--
+-- "DURING YOUR TURN" is CR 604.2's "as long as" clause and not a duration: the
+-- effect is re-asked on every projection (CR 613.5), so it switches off at the
+-- turn handoff with no resolution and nothing to expire. CR 102.1's active player
+-- is the whole of it -- rule 702.161a says "your turn", so the comparison is
+-- against the ability's own controller (PlayerRelation.You).
+--
+-- No functionsFrom, leaving CR 113.6's battlefield default standing: rule
+-- 702.161a says "this permanent".
+livingMetal :: StaticAbility.StaticAbility (GrantedAbility.GrantedAbility Card)
+livingMetal =
+  StaticAbility.MkStaticAbility
+    { StaticAbility.affected = Affected.Matching Filter.IsSource,
+      StaticAbility.condition =
+        Just
+          ( Condition.Compares
+              ( Compares.MkCompares
+                  (Quantity.IsActivePlayer (PlayerRef.Relative PlayerRelation.You))
+                  Comparison.Exactly
+                  (Quantity.Literal 1)
+              )
+          ),
+      StaticAbility.functionsFrom = Set.empty,
+      StaticAbility.lingers = Nothing,
+      StaticAbility.name = Nothing,
+      StaticAbility.modifications =
+        Modification.AddCardType CardType.Artifact
+          NonEmpty.:| [Modification.AddCardType CardType.Creature]
+    }
+
+-- CR 702.151b: "attaching an Equipment with reconfigure to another creature
+-- causes the Equipment to stop being a creature until it becomes unattached from
+-- that creature" -- a layer-4 card-type REMOVAL (CR 613.1d), which
+-- Parun.Engine.Projection.layer reads off the modification.
+--
+-- WHILE ATTACHED is written as the affected SET rather than as a condition, which
+-- livingMetal above takes the other way: rule 702.151b's span starts at the
+-- attach and ends at the unattach, and Object.attachedTo is exactly that span, so
+-- @Filter.AttachedTo@ re-asks it on every projection (CR 613.5) with nothing to
+-- expire. Its nested filter is empty rather than "a creature": that atom is False
+-- for a permanent attached to nothing and for one attached to a PLAYER, which is
+-- the whole of the rule's "to another creature" here -- CR 301.5 admits no other
+-- host for an Equipment, and Parun.Engine.Sba.becomesUnattached detaches it the
+-- moment its host stops being one. An empty nest also asks nothing of the HOST's
+-- own characteristics, which a nest naming a card type would, and so cannot
+-- reach a second object's layers from inside this one's.
+--
+-- CR 205.1a's subtype consequence rides on Modification.LoseCardType, so an
+-- attached Rabbit Battery is an Equipment and no longer a Rabbit.
+--
+-- No functionsFrom, leaving CR 113.6's battlefield default standing: rule
+-- 702.151b speaks of an Equipment that is attached, which only the battlefield
+-- has.
+reconfigured :: StaticAbility.StaticAbility (GrantedAbility.GrantedAbility Card)
+reconfigured =
+  StaticAbility.MkStaticAbility
+    { StaticAbility.affected = Affected.Matching (Filter.And [Filter.IsSource, Filter.AttachedTo (Filter.And [])]),
+      StaticAbility.condition = Nothing,
+      StaticAbility.functionsFrom = Set.empty,
+      StaticAbility.lingers = Nothing,
+      StaticAbility.name = Nothing,
+      StaticAbility.modifications = NonEmpty.singleton (Modification.LoseCardType CardType.Creature)
+    }
+
+-- CR 702.176a's THIRD ability: "as long as this permanent's impending cost was
+-- paid and it has a time counter on it, it's not a creature" -- a CR 613.1d
+-- layer 4 removal, reconfigured's modification. The paid half is whilePaid's
+-- Quantity.CastUsing, so a copy of an impending permanent (CR 707.2) is a
+-- creature even with a time counter on it; Parun.CastSpec's "Impending" group
+-- proves both halves.
+impendingNotCreature :: StaticAbility.StaticAbility (GrantedAbility.GrantedAbility Card)
+impendingNotCreature =
+  StaticAbility.MkStaticAbility
+    { StaticAbility.affected = Affected.Matching Filter.IsSource,
+      StaticAbility.condition = Just impendingHolds,
+      StaticAbility.functionsFrom = Set.empty,
+      StaticAbility.lingers = Nothing,
+      StaticAbility.name = Nothing,
+      StaticAbility.modifications = NonEmpty.singleton (Modification.LoseCardType CardType.Creature)
+    }
+
+-- CR 702.176a's "this permanent's impending cost was paid and it has a time
+-- counter on it", shared by the third and fourth abilities.
+impendingHolds :: Condition.Condition
+impendingHolds =
+  Condition.All
+    [ Condition.Compares (Compares.MkCompares (Quantity.CastUsing (KeywordDesignator.OfFamily KeywordFamily.Impending)) Comparison.AtLeast (Quantity.Literal 1)),
+      Condition.Compares (Compares.MkCompares (Quantity.ObjectCounters CounterKind.Time) Comparison.AtLeast (Quantity.Literal 1))
+    ]
+
+-- CR 702.136a: the AS-ENTERS REPLACEMENT rule 702 gives a permanent for holding
+-- riot. Gathered by the PROJECTION off POST-LAYER keyword COUNTS, since rule
+-- 702.136a functions on the battlefield -- so Humility takes it away and a static
+-- ability granting riot adds it, both for free. The pattern is Filter.IsSource: CR
+-- 614.1c's ability is the entering object's own.
+--
+-- ONE ROW PER INSTANCE, because CR 702.136b says each instance works separately.
+-- The two rows are EQUAL VALUES, so what gives the second its own CR 614.5
+-- opportunity is the instance ordinal Replacement.collect assigns;
+-- Parun.ReplacementSpec's "CR 702.136b riot twice" proves it.
+--
+-- "Minted" rather than "entry" because CR 702.37b's megamorph rides the same
+-- function with a CR 614.1e replacement, so this answers with rows of two event
+-- classes; the CR 616.1 loop matches each against the event it is offered.
+mintedReplacementsOf :: Map Keyword Natural -> [ReplacementEffect Card (GrantedAbility.GrantedAbility Card) (Effect.Effect Card (GrantedAbility.GrantedAbility Card))]
+mintedReplacementsOf counts = concatMap (uncurry mintedReplacementsFor) (Map.toAscList counts)
+
+-- CR 702.176a's SECOND ability: "if you chose to pay this permanent's impending
+-- cost, it enters with N time counters on it", a CR 614.1c row minted only when
+-- the entering object's CR 601.2b tag (Object.castUsing) names impending and the
+-- permanent still has the keyword, Projection.intrinsicReplacementsOf's
+-- compleated shape. The tag is not copiable (CR 707.2), so a copy of an
+-- impending permanent enters with none.
+--
+-- The keyword half is CR 614.12's look-ahead, and nothing in the suite
+-- observes it: dropping it leaves every case green, so it is a regression
+-- fence resting on that rule rather than a proved behaviour.
+castForReplacementsOf :: Maybe Keyword -> Map Keyword Natural -> [ReplacementEffect Card (GrantedAbility.GrantedAbility Card) (Effect.Effect Card (GrantedAbility.GrantedAbility Card))]
+castForReplacementsOf castUsing counts = case castUsing of
+  Just keyword@(Keyword.Impending impending)
+    | Map.member keyword counts ->
+        [ReplacementEffect.EntryR (EntryR.MkEntryR Filter.IsSource (EntryRewrite.WithCounters (WithCounters.one CounterKind.Time (Quantity.Literal (toInteger (Impending.counters impending))))))]
+  _ -> []
+
+-- Exhaustive for abilitiesFor's reason: the next keyword that rewrites an entry
+-- must break this build rather than silently produce nothing.
+mintedReplacementsFor :: Keyword -> Natural -> [ReplacementEffect Card (GrantedAbility.GrantedAbility Card) (Effect.Effect Card (GrantedAbility.GrantedAbility Card))]
+mintedReplacementsFor keyword count = case keyword of
+  Keyword.Riot -> List.genericReplicate count (ReplacementEffect.EntryR (EntryR.MkEntryR Filter.IsSource EntryRewrite.Riot))
+  -- CR 702.138a mints nothing: the exile-as-it-leaves-the-stack replacement is
+  -- rule 702.34a's SECOND ability, and rule 702.138a prints no such sentence, so an
+  -- escaped permanent spell becomes a permanent under CR 608.3a like any other, and
+  -- an escaped instant or sorcery goes to its owner's graveyard under CR 608.2n.
+  Keyword.Escape _ -> []
+  Keyword.Evoke _ -> []
+  Keyword.Dash _ -> []
+  Keyword.Blitz _ -> []
+  Keyword.Warp _ -> []
+  -- CR 702.146a states no replacement. CR 702.180a's third static ability IS one
+  -- -- "exile this card instead of putting it anywhere else any time it would
+  -- leave the stack" -- but it is conditioned on the harmonize cost having been
+  -- paid, so castFromGraveyardReplacementsOf mints it on flashback's road rather
+  -- than this one.
+  Keyword.Disturb _ -> []
+  Keyword.Harmonize _ -> []
+  Keyword.Cleave _ -> []
+  Keyword.Overload _ -> []
+  Keyword.Awaken _ -> []
+  Keyword.Surge _ -> []
+  Keyword.Spectacle _ -> []
+  Keyword.Prowl _ -> []
+  Keyword.Freerunning _ -> []
+  -- CR 702.176a's SECOND ability is conditioned on the impending cost having
+  -- been paid, which the keyword alone cannot answer; castForReplacementsOf
+  -- mints it off the entering object's CR 601.2b tag instead.
+  Keyword.Impending _ -> []
+  -- CR 702.98a's FIRST static ability, riot's row with the declining half deleted.
+  -- Filter.IsSource and one row per instance for riot's reasons.
+  Keyword.Unleash -> List.genericReplicate count (ReplacementEffect.EntryR (EntryR.MkEntryR Filter.IsSource EntryRewrite.Unleash))
+  -- CR 702.63a's FIRST ability, a CR 614.1c self-replacement in riot's exact
+  -- position. Riot's rewrite asks a question and this one does not, so the count
+  -- rides the rewrite rather than a prompt. ONE ROW PER INSTANCE, and CR 702.63c
+  -- makes the counters add up, each rewrite placing its own N.
+  --
+  -- NO ROW AT ALL for rule 702.63b's numberless vanishing, whatever the count:
+  -- that form states only the two triggers, and there is no N to enter with. The
+  -- permanent's own text is what puts the time counters on (Tidewalker's "for
+  -- each Island you control").
+  --
+  -- A row of Quantity.Literal 0 is not observable on a BOARD: Parun.Engine.Event's
+  -- WithCounters arm places nothing for a zero, so Tidewalker enters the same
+  -- either way. What holds the empty list is rule 702.63b itself, fenced by
+  -- Parun.KeywordTriggerSpec's "and no entry rewrite, however many instances";
+  -- a row minting any POSITIVE number is what that spec's 3/3 catches.
+  Keyword.Vanishing n -> foldMap (List.genericReplicate count . ReplacementEffect.EntryR . EntryR.MkEntryR Filter.IsSource . EntryRewrite.WithCounters . WithCounters.one CounterKind.Time . Quantity.Literal . toInteger) n
+  -- CR 702.32a's FIRST ability, vanishing's row in the fade counter. One row per
+  -- instance for riot's reason, rule 702.32 stating no multiplicity clause.
+  Keyword.Fading n -> List.genericReplicate count (ReplacementEffect.EntryR (EntryR.MkEntryR Filter.IsSource (EntryRewrite.WithCounters (WithCounters.one CounterKind.Fade (Quantity.Literal (toInteger n))))))
+  Keyword.Frenzy _ -> []
+  -- CR 702.58a's FIRST ability, modular's row below in every respect: "this
+  -- permanent enters with N +1/+1 counters on it". `graft` mints the second.
+  --
+  -- ONE ROW PER INSTANCE, which is CR 702.58b -- "if a permanent has multiple
+  -- instances of graft, each one works separately" -- and the counters therefore
+  -- add up, as rule 702.43b makes modular's do.
+  Keyword.Graft n -> List.genericReplicate count (ReplacementEffect.EntryR (EntryR.MkEntryR Filter.IsSource (EntryRewrite.WithCounters (WithCounters.one CounterKind.PlusOnePlusOne (Quantity.Literal (toInteger n))))))
+  -- CR 702.64a: "if a source would deal damage to this creature, prevent N of
+  -- that damage". Protection's row below with the source half left open and a
+  -- CEILING in place of its blanket prevention -- Filter.And [] is "a source",
+  -- admitting every one, and Filter.IsSource in the recipient position is the
+  -- permanent the keyword is on.
+  --
+  -- DamageRewrite.PreventUpTo rather than PreventNext: rule 702.64b renews the
+  -- ceiling per source and per time rather than spending it down, which that
+  -- type's own comment sets out against CR 615.7.
+  --
+  -- ONE ROW PER INSTANCE, which is CR 702.64c.
+  Keyword.Absorb n ->
+    List.genericReplicate
+      count
+      ( ReplacementEffect.DamageR
+          DamageR.MkDamageR
+            { DamageR.matching =
+                DamagePattern.MkDamagePattern
+                  { DamagePattern.whichKind = Nothing,
+                    DamagePattern.whatSource = Filter.And [],
+                    DamagePattern.whatRecipient = Just Filter.IsSource,
+                    DamagePattern.whoRecipient = Nothing,
+                    DamagePattern.whichRecipient = Nothing,
+                    DamagePattern.whichSource = Nothing,
+                    DamagePattern.boundRecipient = Nothing
+                  },
+              DamageR.rewrite = DamageRewrite.PreventUpTo n,
+              DamageR.riders = Seq.empty
+            }
+      )
+  -- CR 702.43a's FIRST ability, vanishing's row with a different counter kind. One
+  -- row per instance, and CR 702.43b makes them add up.
+  Keyword.Modular (Just n) -> List.genericReplicate count (ReplacementEffect.EntryR (EntryR.MkEntryR Filter.IsSource (EntryRewrite.WithCounters (WithCounters.one CounterKind.PlusOnePlusOne (Quantity.Literal (toInteger n))))))
+  -- CR 702.44c: Modular--Sunburst's N is the colors of mana spent, read off the
+  -- entering object where the row applies, as the sunburst arm below.
+  Keyword.Modular Nothing -> List.genericReplicate count (ReplacementEffect.EntryR (EntryR.MkEntryR Filter.IsSource EntryRewrite.ModularSunburst))
+  -- CR 702.44a's one static ability, the arm above's row with both halves left
+  -- to the board: rule 702.44b's count is the colors of mana spent on the
+  -- entering object (Parun.Engine.Projection.colorsSpentOf) and the kind turns
+  -- on whether it is entering as a creature, neither of them knowable from a
+  -- keyword and a count. Parun.Engine.Event reads both where the row applies.
+  --
+  -- ONE ROW PER INSTANCE (CR 702.44d), riot's reason and riot's ordinal.
+  Keyword.Sunburst -> List.genericReplicate count (ReplacementEffect.EntryR (EntryR.MkEntryR Filter.IsSource EntryRewrite.Sunburst))
+  Keyword.Crew _ -> []
+  Keyword.Saddle _ -> []
+  Keyword.Fabricate _ -> []
+  Keyword.Deathtouch -> []
+  Keyword.Defender -> []
+  Keyword.DoubleStrike -> []
+  Keyword.Equip _ -> []
+  Keyword.Fortify _ -> []
+  Keyword.AuraSwap _ -> []
+  Keyword.Ninjutsu _ -> []
+  Keyword.Splice _ -> []
+  Keyword.FirstStrike -> []
+  Keyword.Flash -> []
+  Keyword.Flying -> []
+  Keyword.Haste -> []
+  Keyword.Hexproof _ -> []
+  Keyword.Indestructible -> []
+  Keyword.Landwalk _ -> []
+  Keyword.Lifelink -> []
+  Keyword.LivingMetal -> []
+  Keyword.MoreThanMeetsTheEye _ -> []
+  -- CR 702.16e's clause: "Any damage that would be dealt by sources that have
+  -- the stated quality to a permanent or player with protection is prevented."
+  -- Glittering Lion's printed shield with the quality written into the SOURCE
+  -- half -- Filter.IsSource in the recipient position is the permanent this
+  -- keyword is on (Stormwild Capridor's spelling), and the quality is matched
+  -- against the damage's source at the event, which is CR 609.7b's recheck.
+  --
+  -- ONE ROW whatever the count, unlike riot's replicate: CR 702.16m makes a
+  -- second instance of protection from the same quality redundant, and a second
+  -- prevent-all row would have nothing left to prevent anyway.
+  --
+  -- The PERMANENT half only. Rule 702.16e's "or player" is unreachable from a
+  -- keyword -- a player has no keywords, the same split
+  -- Parun.Engine.Target.targetable states for CR 702.16b -- so the player half is
+  -- minted from the CR 613.11 axis instead, by Parun.Engine.Replacement.collect's
+  -- third segment.
+  Keyword.Protection protection ->
+    [ ReplacementEffect.DamageR
+        DamageR.MkDamageR
+          { DamageR.matching =
+              DamagePattern.MkDamagePattern
+                { DamagePattern.whichKind = Nothing,
+                  DamagePattern.whatSource = Protection.quality protection,
+                  DamagePattern.whatRecipient = Just Filter.IsSource,
+                  DamagePattern.whoRecipient = Nothing,
+                  DamagePattern.whichRecipient = Nothing,
+                  DamagePattern.whichSource = Nothing,
+                  DamagePattern.boundRecipient = Nothing
+                },
+            DamageR.rewrite = DamageRewrite.PreventAll,
+            DamageR.riders = Seq.empty
+          }
+    ]
+  Keyword.Reach -> []
+  Keyword.Shroud -> []
+  Keyword.Trample -> []
+  Keyword.TrampleOverPlaneswalkers -> []
+  Keyword.Vigilance -> []
+  Keyword.Ward _ -> []
+  Keyword.Banding -> []
+  Keyword.Flanking -> []
+  Keyword.Phasing -> []
+  Keyword.Shadow -> []
+  Keyword.Horsemanship -> []
+  Keyword.Aftermath -> []
+  Keyword.JumpStart -> []
+  Keyword.Afflict _ -> []
+  Keyword.Fear -> []
+  Keyword.Intimidate -> []
+  -- CR 702.37a's plain morph mints nothing: rule 702.37a is one alternative cost
+  -- and one special action, and neither rewrites an event.
+  Keyword.Morph (Morph.MkMorph _ MorphVariant.Plain) -> []
+  -- CR 702.37b's SECOND clause, minted the way riot's is: "As this permanent is
+  -- turned face up, put a +1/+1 counter on it if its megamorph cost was paid to
+  -- turn it face up." Filter.IsSource, because CR 614.1e's ability is the turning
+  -- permanent's own.
+  --
+  -- The rule's "IF ITS MEGAMORPH COST WAS PAID" rides the ROW, as
+  -- TurnUpR.requiring and TurnUpR.paying: CR 702.37e's procedure, at THIS
+  -- megamorph cost. CR 701.40c gives a manifested megamorph card a second road
+  -- face up at its MANA cost, down which Replacement.applies refuses the row
+  -- (Parun.FaceDownSpec's Misthoof Kirin pair), and a card with a plain morph
+  -- cost beside it pays that one down the same procedure (Parun.FaceDownSpec's
+  -- Synthetic Twice-Veiled Adept pair). On the row rather than on the
+  -- WithCounters class, because a CARD's own CR 614.1e counter clause carries no
+  -- such condition; see #987.
+  Keyword.Morph (Morph.MkMorph cost MorphVariant.Mega) ->
+    List.genericReplicate count (ReplacementEffect.TurnUpR (TurnUpR.MkTurnUpR Filter.IsSource (Just TurnUpProcedure.Morph) (Just cost) (TurnUpRewrite.WithCounters (WithCounters.one CounterKind.PlusOnePlusOne (Quantity.Literal 1)))))
+  Keyword.Menace -> []
+  Keyword.Renown _ -> []
+  Keyword.Cycling {} -> []
+  Keyword.Kicker _ -> []
+  Keyword.Multikicker _ -> []
+  Keyword.StickerKicker _ -> []
+  Keyword.Flashback _ -> []
+  Keyword.Bestow _ -> []
+  Keyword.Mutate _ -> []
+  Keyword.Entwine _ -> []
+  -- CR 702.27a's SECOND static ability is a replacement effect (CR 614.1a), and
+  -- it is still not one of these: "as it resolves" scopes it to CR 608.2n's own
+  -- move, which no Parun.Types.ZoneChangeR pattern can say, so a row minted here
+  -- would also catch a countered or fizzled spell. It is minted for that one move
+  -- instead, by Parun.Engine.Resolve.finishSpell through
+  -- Parun.Engine.Replacement.installBuybackReturn, which is what puts it in CR
+  -- 616.1's loop beside a Rest in Peace watching the same move.
+  Keyword.Buyback _ -> []
+  Keyword.Bushido _ -> []
+  Keyword.Soulshift _ -> []
+  -- CR 702.52a's row functions in a GRAVEYARD, where this roster cannot reach:
+  -- Parun.Engine.Projection.replacementsAffecting gathers it off the printed face
+  -- of a graveyard card. `graveyardReplacementsOf` above is where it is minted.
+  Keyword.Dredge _ -> []
+  -- CR 702.54a's ONE static ability, vanishing's row with rule 702.54a's condition
+  -- on it. That condition is Replacement.admitsEntry's rather than this function's
+  -- -- nothing knowable from a keyword and a count can answer it. ONE ROW PER
+  -- INSTANCE (CR 702.54c), both admitted or neither.
+  --
+  -- The payload rides across UNREAD, rule 702.54b's Nothing included: X is the
+  -- board's rather than the card's, so it is read where the row applies
+  -- (Parun.Engine.Event) for the same reason the condition is not read here.
+  Keyword.Bloodthirst n -> List.genericReplicate count (ReplacementEffect.EntryR (EntryR.MkEntryR Filter.IsSource (EntryRewrite.Bloodthirst n)))
+  Keyword.Haunt -> []
+  -- The time counters ride the special action's entry riders
+  -- (Parun.Engine.Suspend.riders), where vanishing's need a replacement effect:
+  -- rule 702.62a exiles the card itself, and nothing is entering the
+  -- battlefield for CR 614 to rewrite.
+  Keyword.Suspend _ -> []
+  Keyword.SplitSecond -> []
+  Keyword.Poisonous _ -> []
+  Keyword.Champion _ -> []
+  Keyword.Offering _ -> []
+  Keyword.Cascade -> []
+  Keyword.Storm -> []
+  Keyword.Gravestorm -> []
+  Keyword.Conspire -> []
+  Keyword.Demonstrate -> []
+  Keyword.Ripple _ -> []
+  Keyword.Replicate _ -> []
+  Keyword.Recover _ -> []
+  Keyword.Casualty _ -> []
+  Keyword.Bargain -> []
+  Keyword.Craft _ -> []
+  Keyword.Teamwork _ -> []
+  Keyword.WebSlinging _ -> []
+  Keyword.Sneak _ -> []
+  Keyword.Annihilator _ -> []
+  Keyword.Mobilize _ -> []
+  Keyword.Firebending _ -> []
+  Keyword.Transmute _ -> []
+  Keyword.Transfigure _ -> []
+  Keyword.BattleCry -> []
+  Keyword.Evolve -> []
+  Keyword.Exploit -> []
+  -- CR 702.104a via CR 614.1c: tribute's static ability is an entry replacement,
+  -- Bloodthirst's shape above -- one row per instance, which CR 616.1 then orders.
+  --
+  -- The count rides across UNREAD: who is asked and what they answer is the
+  -- board's, read where the row applies (Parun.Engine.Event).
+  Keyword.Tribute n -> List.genericReplicate count (ReplacementEffect.EntryR (EntryR.MkEntryR Filter.IsSource (EntryRewrite.Tribute n)))
+  Keyword.Dethrone -> []
+  Keyword.HiddenAgenda -> []
+  Keyword.Fuse -> []
+  Keyword.LevelUp _ -> []
+  Keyword.Outlast _ -> []
+  Keyword.Prowess -> []
+  Keyword.Extort -> []
+  Keyword.Increment -> []
+  Keyword.Infect -> []
+  Keyword.Wither -> []
+  -- CR 702.82a's and CR 702.82c's whole content: the SacrificeAnyNumber row a
+  -- CARD writes (Shimatsu the Bloodcloaked), with the payload's N as the
+  -- per-sacrifice multiplier and the filter rule 702.82a's "creatures" or rule
+  -- 702.82c's quality (Caprichrome's artifacts). Filter.IsSource for riot's
+  -- reason, CR 614.1c's "as this object enters" being the entering object's own
+  -- ability.
+  --
+  -- ONE ROW PER INSTANCE, riot's reading: rule 702.82 states no multiplicity
+  -- clause, so two devours are two independent sacrifices each buying its own
+  -- counters.
+  --
+  -- Rule 702.82b's "it devoured" needs nothing minted here: the row's own
+  -- application records the count at Binding.sacrificedCount, which a card reads
+  -- back as a quantity (Marrow Chomper). That is also where rule 702.82b's
+  -- RESTATED N reads from -- Thromok the Insatiable's "devour X, where X is the
+  -- number of creatures devoured this way" -- the multiplier being evaluated
+  -- against the entering permanent after the choice is made.
+  Keyword.Devour devour ->
+    let each = case Devour.count devour of
+          DevourCount.Fixed n -> Quantity.Literal (toInteger n)
+          DevourCount.Devoured -> Quantity.InSlot Binding.sacrificedCount
+     in List.genericReplicate count (ReplacementEffect.EntryR (EntryR.MkEntryR Filter.IsSource (EntryRewrite.SacrificeAnyNumber (SacrificeAnyNumber.MkSacrificeAnyNumber {SacrificeAnyNumber.filter = Maybe.fromMaybe (Filter.HasCardType CardType.Creature) (Devour.quality devour), SacrificeAnyNumber.kind = Just CounterKind.PlusOnePlusOne, SacrificeAnyNumber.each = each}))))
+  -- CR 702.38a's whole content, the arm above's position one zone over: what it
+  -- offers is cards in a hand rather than permanents on the battlefield, and
+  -- revealing them spends nothing. Filter.IsSource for riot's reason, CR 614.1c's
+  -- "as this object enters" being the entering object's own ability.
+  --
+  -- ONE ROW PER INSTANCE, riot's reading and rule 702.38b's own words: each
+  -- instance works separately, so two amplifies are two separate reveals.
+  --
+  -- Rule 702.38a's "share a creature type with it" is left to the row's
+  -- application (Parun.Engine.Event): the types are the ENTERING object's, which
+  -- nothing knowable from a keyword and a count can answer.
+  Keyword.Amplify n -> List.genericReplicate count (ReplacementEffect.EntryR (EntryR.MkEntryR Filter.IsSource (EntryRewrite.Amplify n)))
+  Keyword.Exalted -> []
+  Keyword.LivingWeapon -> []
+  Keyword.ForMirrodin -> []
+  Keyword.JobSelect -> []
+  Keyword.Spree -> []
+  Keyword.Tiered -> []
+  -- CR 702.84a's two replacement-shaped clauses are created by the ability's
+  -- RESOLUTION rather than standing on the card, so they are effects inside
+  -- `unearth` above and not rows here.
+  Keyword.Unearth _ -> []
+  Keyword.Embalm _ -> []
+  Keyword.Eternalize _ -> []
+  Keyword.Mentor -> []
+  Keyword.Afterlife _ -> []
+  Keyword.Provoke -> []
+  Keyword.Changeling -> []
+  Keyword.Hideaway _ -> []
+  Keyword.Reinforce {} -> []
+  Keyword.Devoid -> []
+  Keyword.Ingest -> []
+  Keyword.Myriad -> []
+  Keyword.Skulk -> []
+  Keyword.SpaceSculptor -> []
+  Keyword.Emerge _ -> []
+  -- CR 702.124a: deck-construction abilities, which function before the game
+  -- begins and mint nothing in it. Parun.Engine.Commander.designations reads them.
+  Keyword.Partner -> []
+  Keyword.PartnerText _ -> []
+  Keyword.ChooseABackground -> []
+  Keyword.DoctorsCompanion -> []
+  -- CR 702.124j's second ability is a TRIGGERED ability, which `abilitiesFor`
+  -- mints; no part of it belongs to this roster.
+  Keyword.PartnerWith _ -> []
+  Keyword.Escalate _ -> []
+  Keyword.Melee -> []
+  Keyword.Rampage _ -> []
+  Keyword.CumulativeUpkeep _ -> []
+  Keyword.Echo _ -> []
+  -- CR 702.145b's FIRST static ability: "if it is night and this permanent is
+  -- represented by a double-faced card, it enters transformed". Filter.IsSource
+  -- for riot's reason, CR 614.1d's "[this permanent] enters" being the entering
+  -- object's own ability. The rule's two conditions are asked by
+  -- Replacement.applies, neither being knowable from a keyword count.
+  --
+  -- ONE ROW PER INSTANCE, and a second row is idempotent: the write names
+  -- Card.backFace outright rather than the successor of whatever face is up now.
+  Keyword.Daybound -> List.genericReplicate count (ReplacementEffect.EntryR (EntryR.MkEntryR Filter.IsSource EntryRewrite.EntersTransformed))
+  -- CR 702.145e gives nightbound only TWO static abilities, and neither rewrites
+  -- an entry: the enters-transformed half is daybound's alone.
+  Keyword.Nightbound -> []
+  Keyword.Decayed -> []
+  -- CR 702.150a is a replacement effect and is NOT minted here: it changes
+  -- how many counters CR 306.5b's intrinsic row places rather than placing
+  -- its own, so Parun.Engine.Projection.intrinsicReplacementsOf reads it off
+  -- the same projection this list is minted from.
+  Keyword.Compleated -> []
+  Keyword.Reconfigure _ -> []
+  -- CR 702.155b's two intrinsic abilities are NOT minted here, and CR 714.3b is
+  -- why: rule 714.3b REPLACES rule 714.3a's "enters with a lore counter"
+  -- ability rather than adding to it, and that one is minted from the finished
+  -- projection by Parun.Engine.Saga.entryReplacementsOf. A row minted here would
+  -- sit beside it and the Saga would enter with one lore counter too many.
+  --
+  -- That is also where CR 702.155c is discharged: `entryReplacementsOf` keys on
+  -- MEMBERSHIP of the keyword set, so the `count` this function takes cannot
+  -- make a second instance mint a second row.
+  Keyword.ReadAhead -> []
+  Keyword.Training -> []
+  Keyword.Prototype _ -> []
+  Keyword.Toxic _ -> []
+  Keyword.Backup _ -> []
+  Keyword.Disguise _ -> []
+  Keyword.Plot _ -> []
+  -- CR 702.156a's replacement half, CR 614.1c: Protean Hydra's printed row,
+  -- minted. The count is Quantity.InSlot Binding.variableX, which
+  -- Parun.Engine.Event.placeEntryCounters substitutes CR 107.3m's announced X
+  -- into as the row applies. `abilitiesFor` above says why the count replicates.
+  Keyword.Ravenous -> List.genericReplicate count (ReplacementEffect.EntryR (EntryR.MkEntryR Filter.IsSource (EntryRewrite.WithCounters (WithCounters.one CounterKind.PlusOnePlusOne (Quantity.InSlot Binding.variableX)))))
+  Keyword.Squad _ -> []
+  Keyword.Offspring _ -> []
+  Keyword.Gift _ -> []
+  Keyword.Foretell _ -> []
+  Keyword.Companion _ -> []
+  -- CR 702.94a's static half is a PERMISSION to reveal, not a replacement: CR
+  -- 121.9's window changes nothing about the draw, so there is no event to
+  -- rewrite. Parun.Engine.Event's draw funnel asks miracleCosts directly.
+  Keyword.Miracle _ -> []
+  Keyword.StartYourEngines -> []
+  Keyword.Ascend -> []
+  Keyword.Storied -> []
+  Keyword.Assist -> []
+  Keyword.Exhaust -> []
+  Keyword.Boast -> []
+  Keyword.Forecast -> []
+  Keyword.PowerUp -> []
+  Keyword.ClassLevel _ -> []
+  -- CR 508.1g's choice is a step of a turn-based action, and the exert itself
+  -- writes Object.exertedBy directly.
+  Keyword.Exert -> []
+  Keyword.Enlist -> []
+  Keyword.Persist -> []
+  Keyword.Undying -> []
+  Keyword.Soulbond -> []
+  -- CR 702.184a replaces nothing: it is an activated ability.
+  Keyword.Station -> []
+  -- CR 702.89a's whole content, minted onto the AURA rather than onto what it
+  -- enchants: the ability is the Aura's, so the Aura is the row's source and CR
+  -- 616.1's choice between two umbra armors is a choice between two candidates.
+  -- Parun.Engine.Replacement.scopes is what turns that source into the rule's
+  -- "enchanted permanent".
+  --
+  -- ONE ROW PER INSTANCE, riot's reading: rule 702.89a states one replacement
+  -- apiece, and the two rows are equal values told apart by the instance ordinal
+  -- Replacement.collect assigns.
+  Keyword.UmbraArmor -> List.genericReplicate count (ReplacementEffect.DestructionR (DestructionR.MkDestructionR Nothing DestructionRewrite.UmbraArmor))
+  Keyword.Epic -> []
+  Keyword.Paradigm -> []
+  Keyword.Cipher -> []
+  Keyword.Convoke -> []
+  Keyword.Improvise -> []
+  Keyword.Delve -> []
+  Keyword.Affinity _ -> []
+  Keyword.Undaunted -> []
+  -- Neither rule 702.81a nor rule 702.187b prints CR 702.34a's second sentence:
+  -- a spell cast with retrace or with mayhem goes wherever it would go, which is
+  -- its owner's graveyard, and may be cast again on a later turn.
+  Keyword.Retrace -> []
+  Keyword.Mayhem _ -> []
+  -- CR 702.35a's replacement functions in a HAND, where this roster cannot
+  -- reach: Parun.Engine.Projection.replacementsAffecting gathers it off the
+  -- projection of a battlefield or command-zone object. `handReplacementsOf`
+  -- above is where rule 702.35a's row is minted.
+  Keyword.Madness _ -> []
+  -- CR 702.88a's exile is minted AT THE MOVE by
+  -- Parun.Engine.Replacement.installReboundExile, buyback's road and for its
+  -- reason: the rule scopes the rewrite to "as it resolves", which a standing
+  -- row keyed on a graveyard destination would over-apply to a countered or a
+  -- fizzled spell.
+  Keyword.Rebound -> []
+  Keyword.Scavenge _ -> []
+  Keyword.Encore _ -> []
+
+-- The SHORT-CIRCUIT's voice: Projection.replacementsAffecting skips the whole
+-- board when nothing it walks -- the permanents' COPIABLE rules text, the stored
+-- continuous effects, the static abilities functioning from the other zones, and
+-- the command zone's emblems' and vanguard cards' own printed rows -- could hold a replacement
+-- effect, and a minted row is not printed in a face's list, so the gate has to
+-- be told which keywords mint one. Membership rather than a count, the gate asking whether
+-- there is any.
+--
+-- Impending is the one keyword whose row castForReplacementsOf mints instead.
+mintsReplacement :: Keyword -> Bool
+mintsReplacement keyword = case keyword of
+  Keyword.Impending _ -> True
+  _ -> not (null (mintedReplacementsFor keyword 1))
+
+-- CR 508.1c / CR 509.1b: every combat restriction rule 702 gives an object for
+-- holding a keyword. CombatRestriction.inForce adds these to the ones a face
+-- PRINTS.
+--
+-- Its own mint point rather than an arm of the three above: a combat restriction
+-- is not an ability object -- nothing puts it on the stack -- and rewrites no
+-- event. It is a fact CR 613.11 has a reader ask about.
+--
+-- MEMBERSHIP and not a per-keyword count: a restriction is read by asking whether
+-- the creature is in the forbidden set, so a second copy forbids nothing further.
+mintedCombatRestrictionsOf :: Map Keyword Natural -> [CombatRestriction.CombatRestriction]
+mintedCombatRestrictionsOf = concatMap mintedCombatRestrictionsFor . Map.keys
+
+-- Exhaustive for `abilitiesFor`'s reason: the next keyword that forbids an attack
+-- or a block must break this build rather than silently forbid nothing.
+mintedCombatRestrictionsFor :: Keyword -> [CombatRestriction.CombatRestriction]
+mintedCombatRestrictionsFor keyword = case keyword of
+  -- CR 702.98a's SECOND static ability: "This permanent can't block as long as it
+  -- has a +1/+1 counter on it."
+  --
+  -- The counter clause rides the AFFECTED SET rather than the `unless` gate beside
+  -- it, the two having opposite polarity: CR 509.1b's gate is the condition a
+  -- creature can't block UNLESS, and this is a condition it can't block WHILE. An
+  -- affected set is re-derived every read, which is also rule 702.98a's "as long
+  -- as".
+  --
+  -- ANY +1/+1 counter, not the one unleash's own entry replacement may have
+  -- placed: rule 702.98a says "a +1/+1 counter".
+  Keyword.Unleash ->
+    [ CombatRestriction.CantBlock
+        AffectedUnless.MkAffectedUnless
+          { AffectedUnless.affected = Affected.Matching (Filter.And [Filter.IsSource, Filter.HasCounters CounterKind.PlusOnePlusOne]),
+            AffectedUnless.unless = Nothing,
+            AffectedUnless.name = Nothing,
+            AffectedUnless.amount = Nothing
+          }
+    ]
+  Keyword.Riot -> []
+  Keyword.Escape _ -> []
+  Keyword.Evoke _ -> []
+  Keyword.Dash _ -> []
+  Keyword.Blitz _ -> []
+  Keyword.Warp _ -> []
+  Keyword.Disturb _ -> []
+  Keyword.Harmonize _ -> []
+  Keyword.Cleave _ -> []
+  Keyword.Overload _ -> []
+  Keyword.Awaken _ -> []
+  Keyword.Surge _ -> []
+  Keyword.Spectacle _ -> []
+  Keyword.Prowl _ -> []
+  Keyword.Freerunning _ -> []
+  Keyword.Impending _ -> []
+  Keyword.Vanishing _ -> []
+  Keyword.Fading _ -> []
+  Keyword.Frenzy _ -> []
+  Keyword.Graft _ -> []
+  Keyword.Absorb _ -> []
+  Keyword.Modular _ -> []
+  Keyword.Sunburst -> []
+  Keyword.Crew _ -> []
+  Keyword.Saddle _ -> []
+  Keyword.Fabricate _ -> []
+  Keyword.Deathtouch -> []
+  Keyword.Defender -> []
+  Keyword.DoubleStrike -> []
+  Keyword.Equip _ -> []
+  Keyword.Fortify _ -> []
+  Keyword.AuraSwap _ -> []
+  Keyword.Ninjutsu _ -> []
+  Keyword.Splice _ -> []
+  Keyword.FirstStrike -> []
+  Keyword.Flash -> []
+  Keyword.Flying -> []
+  Keyword.Haste -> []
+  Keyword.Hexproof _ -> []
+  Keyword.Indestructible -> []
+  Keyword.Landwalk _ -> []
+  Keyword.Lifelink -> []
+  Keyword.LivingMetal -> []
+  Keyword.MoreThanMeetsTheEye _ -> []
+  -- CR 702.16f: "Attacking creatures with protection can't be blocked by
+  -- creatures that have the stated quality." The one clause of rule 702.16 that
+  -- is already a printed shape -- Questing Beast's row with the quality in the
+  -- blocker position and Filter.IsSource naming the attacker.
+  --
+  -- The rule restricts an ATTACKING creature only, which needs no conjunct here:
+  -- Parun.Engine.CombatRestriction.cantBeBlockedBy is asked about attacker/blocker
+  -- pairs, so a creature that is not attacking is in no pair.
+  --
+  -- Ungated (Nothing), rule 702.16f stating no condition, and membership rather
+  -- than a count for the type's own reason.
+  Keyword.Protection protection ->
+    [ CombatRestriction.CantBeBlockedBy
+        CantBeBlockedBy.MkCantBeBlockedBy
+          { CantBeBlockedBy.affected = Affected.Matching Filter.IsSource,
+            CantBeBlockedBy.blockers = Protection.quality protection,
+            CantBeBlockedBy.unless = Nothing,
+            CantBeBlockedBy.name = Nothing
+          }
+    ]
+  Keyword.Reach -> []
+  Keyword.Shroud -> []
+  Keyword.Trample -> []
+  Keyword.TrampleOverPlaneswalkers -> []
+  Keyword.Vigilance -> []
+  Keyword.Ward _ -> []
+  Keyword.Banding -> []
+  Keyword.Flanking -> []
+  Keyword.Phasing -> []
+  Keyword.Shadow -> []
+  Keyword.Horsemanship -> []
+  Keyword.Aftermath -> []
+  Keyword.JumpStart -> []
+  Keyword.Afflict _ -> []
+  Keyword.Fear -> []
+  Keyword.Intimidate -> []
+  Keyword.Morph {} -> []
+  Keyword.Menace -> []
+  Keyword.Renown _ -> []
+  Keyword.Cycling {} -> []
+  Keyword.Kicker _ -> []
+  Keyword.Multikicker _ -> []
+  Keyword.StickerKicker _ -> []
+  Keyword.Flashback _ -> []
+  Keyword.Bestow _ -> []
+  Keyword.Mutate _ -> []
+  Keyword.Entwine _ -> []
+  -- CR 702.27a says nothing about combat.
+  Keyword.Buyback _ -> []
+  Keyword.Bushido _ -> []
+  Keyword.Soulshift _ -> []
+  Keyword.Dredge _ -> []
+  Keyword.Bloodthirst _ -> []
+  Keyword.Haunt -> []
+  -- CR 702.62a says nothing about combat.
+  Keyword.Suspend _ -> []
+  Keyword.SplitSecond -> []
+  Keyword.Poisonous _ -> []
+  Keyword.Champion _ -> []
+  Keyword.Offering _ -> []
+  Keyword.Cascade -> []
+  Keyword.Storm -> []
+  Keyword.Gravestorm -> []
+  Keyword.Conspire -> []
+  Keyword.Demonstrate -> []
+  Keyword.Ripple _ -> []
+  Keyword.Replicate _ -> []
+  Keyword.Recover _ -> []
+  Keyword.Casualty _ -> []
+  Keyword.Bargain -> []
+  Keyword.Craft _ -> []
+  Keyword.Teamwork _ -> []
+  Keyword.WebSlinging _ -> []
+  Keyword.Sneak _ -> []
+  Keyword.Annihilator _ -> []
+  Keyword.Mobilize _ -> []
+  Keyword.Firebending _ -> []
+  Keyword.Transmute _ -> []
+  Keyword.Transfigure _ -> []
+  Keyword.BattleCry -> []
+  Keyword.Evolve -> []
+  Keyword.Exploit -> []
+  Keyword.Tribute _ -> []
+  Keyword.Dethrone -> []
+  Keyword.HiddenAgenda -> []
+  Keyword.Fuse -> []
+  Keyword.LevelUp _ -> []
+  Keyword.Outlast _ -> []
+  Keyword.Prowess -> []
+  Keyword.Extort -> []
+  Keyword.Increment -> []
+  Keyword.Infect -> []
+  Keyword.Wither -> []
+  Keyword.Devour _ -> []
+  Keyword.Amplify _ -> []
+  Keyword.Exalted -> []
+  Keyword.LivingWeapon -> []
+  Keyword.ForMirrodin -> []
+  Keyword.JobSelect -> []
+  Keyword.Spree -> []
+  Keyword.Tiered -> []
+  Keyword.Unearth _ -> []
+  Keyword.Embalm _ -> []
+  Keyword.Eternalize _ -> []
+  Keyword.Mentor -> []
+  Keyword.Afterlife _ -> []
+  Keyword.Provoke -> []
+  Keyword.Devoid -> []
+  Keyword.Ingest -> []
+  Keyword.Myriad -> []
+  Keyword.Skulk -> []
+  Keyword.SpaceSculptor -> []
+  Keyword.Emerge _ -> []
+  -- CR 702.124a: deck-construction abilities, which function before the game
+  -- begins and mint nothing in it. Parun.Engine.Commander.designations reads them.
+  Keyword.Partner -> []
+  Keyword.PartnerText _ -> []
+  Keyword.ChooseABackground -> []
+  Keyword.DoctorsCompanion -> []
+  -- CR 702.124j's second ability is a TRIGGERED ability, which `abilitiesFor`
+  -- mints; no part of it belongs to this roster.
+  Keyword.PartnerWith _ -> []
+  Keyword.Escalate _ -> []
+  Keyword.Melee -> []
+  Keyword.Rampage _ -> []
+  Keyword.CumulativeUpkeep _ -> []
+  Keyword.Echo _ -> []
+  Keyword.Daybound -> []
+  Keyword.Nightbound -> []
+  -- CR 702.147a's static half: "This creature can't block." Unleash's row with the
+  -- counter clause removed, rule 702.147a stating the restriction flat.
+  Keyword.Decayed -> [CombatRestriction.CantBlock (AffectedUnless.MkAffectedUnless (Affected.Matching Filter.IsSource) Nothing Nothing Nothing)]
+  Keyword.Compleated -> []
+  Keyword.Reconfigure _ -> []
+  Keyword.ReadAhead -> []
+  Keyword.Training -> []
+  Keyword.Prototype _ -> []
+  Keyword.Toxic _ -> []
+  Keyword.Backup _ -> []
+  Keyword.Disguise _ -> []
+  Keyword.Plot _ -> []
+  Keyword.Ravenous -> []
+  Keyword.Squad _ -> []
+  Keyword.Offspring _ -> []
+  Keyword.Gift _ -> []
+  Keyword.Foretell _ -> []
+  Keyword.Companion _ -> []
+  Keyword.Miracle _ -> []
+  Keyword.StartYourEngines -> []
+  Keyword.Ascend -> []
+  Keyword.Storied -> []
+  Keyword.Assist -> []
+  Keyword.Exhaust -> []
+  Keyword.Boast -> []
+  Keyword.Forecast -> []
+  Keyword.PowerUp -> []
+  Keyword.ClassLevel _ -> []
+  -- CR 701.43d's optional COST to attack never makes an attack illegal: the active
+  -- player may always decline it (CR 508.1g).
+  Keyword.Exert -> []
+  -- CR 702.154a's optional cost to attack, for rule 508.1g's same reason.
+  Keyword.Enlist -> []
+  Keyword.Persist -> []
+  Keyword.Undying -> []
+  Keyword.Soulbond -> []
+  Keyword.Changeling -> []
+  Keyword.Hideaway _ -> []
+  Keyword.Reinforce {} -> []
+  -- CR 702.184a restricts no attack or block; CR 721.2b's threshold is what
+  -- decides whether the permanent is a creature at all.
+  Keyword.Station -> []
+  Keyword.UmbraArmor -> []
+  Keyword.Epic -> []
+  Keyword.Paradigm -> []
+  Keyword.Cipher -> []
+  Keyword.Convoke -> []
+  Keyword.Improvise -> []
+  Keyword.Delve -> []
+  Keyword.Affinity _ -> []
+  Keyword.Undaunted -> []
+  Keyword.Retrace -> []
+  Keyword.Mayhem _ -> []
+  Keyword.Madness _ -> []
+  Keyword.Rebound -> []
+  Keyword.Scavenge _ -> []
+  Keyword.Encore _ -> []
+
+-- `mintsReplacement`'s twin, and read by the same kind of short-circuit:
+-- Parun.Engine.CombatRestriction.inForce projects a permanent only when something
+-- it walks -- the battlefield, the stored continuous effects, or a static
+-- ability functioning from one of the other zones -- could put a
+-- restriction-minting keyword on one.
+mintsCombatRestriction :: Keyword -> Bool
+mintsCombatRestriction = not . null . mintedCombatRestrictionsFor
+
+-- CR 701.3a with CR 101.2: every prohibition on what may become attached to a
+-- permanent that rule 702 gives it for HOLDING A KEYWORD.
+-- Parun.Engine.AttachRestriction.refuses adds these to the ones a face PRINTS.
+--
+-- Its own mint point rather than an arm of the three ability folds, for
+-- mintedCombatRestrictionsOf's reason: a prohibition is not an ability object and
+-- rewrites no event. It is a fact CR 613.11 has a reader ask about.
+--
+-- MEMBERSHIP and not a per-keyword count, again for that function's reason: a
+-- pairing is refused or it is not, so a second copy of the keyword refuses
+-- nothing further. CR 702.16m says as much for protection in particular.
+mintedAttachRestrictionsOf :: Map Keyword Natural -> [AttachRestriction.AttachRestriction]
+mintedAttachRestrictionsOf = concatMap mintedAttachRestrictionsFor . Map.keys
+
+-- The same rows asked of the STANDING halves instead -- CR 704.5m's bury and CR
+-- 704.5n's detach, which Parun.Engine.AttachRestriction.removesGiven serves,
+-- where the function above serves CR 701.3a's move. The two questions differ on
+-- exactly one sentence in rule 702, so this narrows those rows rather than
+-- restating two hundred keyword arms.
+mintedRemovalRestrictionsOf :: Map Keyword Natural -> [AttachRestriction.AttachRestriction]
+mintedRemovalRestrictionsOf = concatMap mintedRemovalRestrictionsFor . Map.keys
+
+-- CR 702.16n: an Aura that grants protection and says "this effect doesn't
+-- remove" the named Auras means they "aren't put into their owners' graveyards
+-- as a state-based action" -- and says nothing about what may BECOME attached,
+-- which is why this is a second mint rather than a change to the row above. Rule
+-- 702.16p, which does state a becoming-attached sentence, is the contrast.
+--
+-- A Not conjoined into the row's attachers, in the HOST's frame -- the frame
+-- Parun.Engine.AttachRestriction.refuses's haddock states for a minted row.
+-- Rule 702.16n's last sentence needs nothing here: a second protection instance
+-- from the same quality is a distinct key in the keyword map when its exception
+-- differs, so its own unnarrowed row still removes what this one spares.
+--
+-- The WILDCARD is right rather than absorbing: rule 702.16n is the only sentence
+-- in rule 702 that parts removal from refusal, so every other keyword removes
+-- exactly what it refuses.
+mintedRemovalRestrictionsFor :: Keyword -> [AttachRestriction.AttachRestriction]
+mintedRemovalRestrictionsFor keyword =
+  let rows = mintedAttachRestrictionsFor keyword
+      sparing spared row = row {AttachRestriction.attachers = Filter.And [AttachRestriction.attachers row, Filter.Not spared]}
+   in case keyword of
+        Keyword.Protection protection -> case Protection.spares protection of
+          Nothing -> rows
+          Just spared -> fmap (sparing spared) rows
+        _ -> rows
+
+-- CR 702.16n's "this effect doesn't remove this Aura": the keyword as
+-- `granter` grants it. The card writes the spare in the GRANTER's frame, where
+-- Filter.IsSource is the Aura, but mintedRemovalRestrictionsFor reads it in the
+-- host's, so the grant bakes the granter's id in. Two White Wards then grant
+-- distinct keys, each sparing only itself, which is rule 702.16n's last
+-- sentence.
+--
+-- A bare IsSource only, and the wildcard is right: rule 702.16n's spare is
+-- "that specific Aura or all Auras", and the second names no object.
+--
+-- CR 607.2d's "protection from the chosen color" likewise: `chosen` is the
+-- GRANTER's entry choice (Cho-Manno's Blessing), which the host's frame cannot
+-- read, so a bare Filter.HasChosenColor quality bakes it into Filter.HasColor,
+-- an Or of them where several were chosen, and the empty Or -- protection from
+-- nothing -- where none was.
+-- Parun.FilterPositionLintSpec's grantedChosenColors admits the bare atom
+-- alone, so a card burying it is rejected rather than misread.
+--
+-- CR 702.16p's spare (Benevolent Blessing) likewise, conjunct by conjunct: "you"
+-- is the granter's controller `you`, and Filter.AttachedNoLaterThanSource is
+-- `already`, the host's attachments stamped no later than the granter (CR
+-- 613.7e restamps each attach, so that is "already attached when the effect
+-- started to apply").
+grantedBy :: ObjectId -> Set.Set Color.Color -> Maybe PlayerId -> [ObjectId] -> Keyword -> Keyword
+grantedBy granter chosen you already keyword = case keyword of
+  Keyword.Protection protection ->
+    Keyword.Protection
+      protection
+        { Protection.quality = case Protection.quality protection of
+            Filter.HasChosenColor -> case Set.toList chosen of
+              [color] -> Filter.HasColor color
+              colors -> Filter.Or (fmap Filter.HasColor colors)
+            quality -> quality,
+          Protection.spares = fmap spare (Protection.spares protection)
+        }
+  _ -> keyword
+  where
+    spare filter_ = case filter_ of
+      Filter.IsSource -> Filter.IsObject granter
+      Filter.ControlledBy PlayerRelation.You -> maybe (Filter.Or []) Filter.ControlledByPlayer you
+      Filter.AttachedNoLaterThanSource -> Filter.Or (fmap Filter.IsObject already)
+      Filter.And filters -> Filter.And (fmap spare filters)
+      _ -> filter_
+
+-- Exhaustive for `abilitiesFor`'s reason: the next keyword that forbids an
+-- attachment must break this build rather than silently forbid nothing.
+mintedAttachRestrictionsFor :: Keyword -> [AttachRestriction.AttachRestriction]
+mintedAttachRestrictionsFor keyword = case keyword of
+  Keyword.Unleash -> []
+  Keyword.Riot -> []
+  Keyword.Escape _ -> []
+  Keyword.Evoke _ -> []
+  Keyword.Dash _ -> []
+  Keyword.Blitz _ -> []
+  Keyword.Warp _ -> []
+  Keyword.Disturb _ -> []
+  Keyword.Harmonize _ -> []
+  Keyword.Cleave _ -> []
+  Keyword.Overload _ -> []
+  Keyword.Awaken _ -> []
+  Keyword.Surge _ -> []
+  Keyword.Spectacle _ -> []
+  Keyword.Prowl _ -> []
+  Keyword.Freerunning _ -> []
+  Keyword.Impending _ -> []
+  Keyword.Vanishing _ -> []
+  Keyword.Fading _ -> []
+  Keyword.Frenzy _ -> []
+  Keyword.Graft _ -> []
+  Keyword.Absorb _ -> []
+  Keyword.Modular _ -> []
+  Keyword.Sunburst -> []
+  Keyword.Crew _ -> []
+  Keyword.Saddle _ -> []
+  Keyword.Fabricate _ -> []
+  Keyword.Deathtouch -> []
+  Keyword.Defender -> []
+  Keyword.DoubleStrike -> []
+  Keyword.Equip _ -> []
+  Keyword.Fortify _ -> []
+  Keyword.AuraSwap _ -> []
+  Keyword.Ninjutsu _ -> []
+  Keyword.Splice _ -> []
+  Keyword.FirstStrike -> []
+  Keyword.Flash -> []
+  Keyword.Flying -> []
+  Keyword.Haste -> []
+  Keyword.Hexproof _ -> []
+  Keyword.Indestructible -> []
+  Keyword.Landwalk _ -> []
+  Keyword.Lifelink -> []
+  Keyword.LivingMetal -> []
+  Keyword.MoreThanMeetsTheEye _ -> []
+  -- CR 702.16c and CR 702.16d, as ONE row: "a permanent or player with
+  -- protection can't be enchanted by Auras that have the stated quality", and
+  -- "a permanent with protection can't be equipped by Equipment that have the
+  -- stated quality or fortified by Fortifications that have the stated
+  -- quality". The two rules bar the same move (CR 701.3a's attach) and differ
+  -- only in which state-based action clears up an attachment that happened
+  -- anyway -- CR 704.5m's bury for an Aura, CR 704.5n's detach for an Equipment
+  -- -- so the split rides Parun.Engine.Sba's existing classification rather than
+  -- a second restriction here.
+  --
+  -- No Aura-or-Equipment conjunct in the attachers filter, and none is owed: CR
+  -- 701.3b makes a permanent that is none of the three unattachable to anything
+  -- at all, so the quality alone bars exactly what the two rules name.
+  --
+  -- Filter.IsSource in the affected position, mintedCombatRestrictionsFor's
+  -- spelling above: the restricting permanent IS the protected one, where every
+  -- printed row (Consecrate Land) names a third permanent through
+  -- Affected.Attached.
+  --
+  -- The PERMANENT half of rule 702.16c only. That rule reaches "a permanent or
+  -- player with protection", and a player has no keywords for this mint to read,
+  -- so the player half rides the CR 613.11 axis instead --
+  -- Parun.Types.PlayerEffect.HasProtectionFrom, read by
+  -- Parun.Engine.Attach.attachmentFor and Parun.Engine.Sba.fallsOff through
+  -- Parun.Engine.PlayerEffect.protectedFrom. Rule 702.16d has no player half.
+  --
+  -- The QUALITY alone, rule 702.16n's and rule 702.16p's exceptions being about
+  -- removal, and rule 702.16p's "other permanents with the stated quality can't
+  -- become attached" being this row unnarrowed: mintedRemovalRestrictionsFor
+  -- above narrows it for the state-based halves, and Spectra Ward, White Ward
+  -- and Benevolent Blessing are the cards.
+  Keyword.Protection protection ->
+    [ AttachRestriction.MkAttachRestriction
+        { AttachRestriction.affected = Affected.Matching Filter.IsSource,
+          AttachRestriction.attachers = Protection.quality protection
+        }
+    ]
+  Keyword.Reach -> []
+  Keyword.Shroud -> []
+  Keyword.Trample -> []
+  Keyword.TrampleOverPlaneswalkers -> []
+  Keyword.Vigilance -> []
+  Keyword.Ward _ -> []
+  Keyword.Banding -> []
+  Keyword.Flanking -> []
+  Keyword.Phasing -> []
+  Keyword.Shadow -> []
+  Keyword.Horsemanship -> []
+  Keyword.Aftermath -> []
+  Keyword.JumpStart -> []
+  Keyword.Afflict _ -> []
+  Keyword.Fear -> []
+  Keyword.Intimidate -> []
+  Keyword.Morph {} -> []
+  Keyword.Menace -> []
+  Keyword.Renown _ -> []
+  Keyword.Cycling {} -> []
+  Keyword.Kicker _ -> []
+  Keyword.Multikicker _ -> []
+  Keyword.StickerKicker _ -> []
+  Keyword.Flashback _ -> []
+  Keyword.Bestow _ -> []
+  Keyword.Mutate _ -> []
+  Keyword.Entwine _ -> []
+  -- CR 702.27a says nothing about attaching.
+  Keyword.Buyback _ -> []
+  Keyword.Bushido _ -> []
+  Keyword.Soulshift _ -> []
+  Keyword.Dredge _ -> []
+  Keyword.Bloodthirst _ -> []
+  Keyword.Haunt -> []
+  -- CR 702.62a says nothing about attaching.
+  Keyword.Suspend _ -> []
+  Keyword.SplitSecond -> []
+  Keyword.Poisonous _ -> []
+  Keyword.Champion _ -> []
+  Keyword.Offering _ -> []
+  Keyword.Cascade -> []
+  Keyword.Storm -> []
+  Keyword.Gravestorm -> []
+  Keyword.Conspire -> []
+  Keyword.Demonstrate -> []
+  Keyword.Ripple _ -> []
+  Keyword.Replicate _ -> []
+  Keyword.Recover _ -> []
+  Keyword.Casualty _ -> []
+  Keyword.Bargain -> []
+  Keyword.Craft _ -> []
+  Keyword.Teamwork _ -> []
+  Keyword.WebSlinging _ -> []
+  Keyword.Sneak _ -> []
+  Keyword.Annihilator _ -> []
+  Keyword.Mobilize _ -> []
+  Keyword.Firebending _ -> []
+  Keyword.Transmute _ -> []
+  Keyword.Transfigure _ -> []
+  Keyword.BattleCry -> []
+  Keyword.Evolve -> []
+  Keyword.Exploit -> []
+  Keyword.Tribute _ -> []
+  Keyword.Dethrone -> []
+  Keyword.HiddenAgenda -> []
+  Keyword.Fuse -> []
+  Keyword.LevelUp _ -> []
+  Keyword.Outlast _ -> []
+  Keyword.Prowess -> []
+  Keyword.Extort -> []
+  Keyword.Increment -> []
+  Keyword.Infect -> []
+  Keyword.Wither -> []
+  Keyword.Devour _ -> []
+  Keyword.Amplify _ -> []
+  Keyword.Exalted -> []
+  Keyword.LivingWeapon -> []
+  Keyword.ForMirrodin -> []
+  Keyword.JobSelect -> []
+  Keyword.Spree -> []
+  Keyword.Tiered -> []
+  Keyword.Unearth _ -> []
+  Keyword.Embalm _ -> []
+  Keyword.Eternalize _ -> []
+  Keyword.Mentor -> []
+  Keyword.Afterlife _ -> []
+  Keyword.Provoke -> []
+  Keyword.Devoid -> []
+  Keyword.Ingest -> []
+  Keyword.Myriad -> []
+  Keyword.Skulk -> []
+  Keyword.SpaceSculptor -> []
+  Keyword.Emerge _ -> []
+  -- CR 702.124a: deck-construction abilities, which function before the game
+  -- begins and mint nothing in it. Parun.Engine.Commander.designations reads them.
+  Keyword.Partner -> []
+  Keyword.PartnerText _ -> []
+  Keyword.ChooseABackground -> []
+  Keyword.DoctorsCompanion -> []
+  -- CR 702.124j's second ability is a TRIGGERED ability, which `abilitiesFor`
+  -- mints; no part of it belongs to this roster.
+  Keyword.PartnerWith _ -> []
+  Keyword.Escalate _ -> []
+  Keyword.Melee -> []
+  Keyword.Rampage _ -> []
+  Keyword.CumulativeUpkeep _ -> []
+  Keyword.Echo _ -> []
+  Keyword.Daybound -> []
+  Keyword.Nightbound -> []
+  Keyword.Decayed -> []
+  Keyword.Compleated -> []
+  Keyword.Reconfigure _ -> []
+  Keyword.ReadAhead -> []
+  Keyword.Training -> []
+  Keyword.Prototype _ -> []
+  Keyword.Toxic _ -> []
+  Keyword.Backup _ -> []
+  Keyword.Disguise _ -> []
+  Keyword.Plot _ -> []
+  Keyword.Ravenous -> []
+  Keyword.Squad _ -> []
+  Keyword.Offspring _ -> []
+  Keyword.Gift _ -> []
+  Keyword.Foretell _ -> []
+  Keyword.Companion _ -> []
+  Keyword.Miracle _ -> []
+  Keyword.StartYourEngines -> []
+  Keyword.Ascend -> []
+  Keyword.Storied -> []
+  Keyword.Assist -> []
+  Keyword.Exhaust -> []
+  Keyword.Boast -> []
+  Keyword.Forecast -> []
+  Keyword.PowerUp -> []
+  Keyword.ClassLevel _ -> []
+  Keyword.Exert -> []
+  Keyword.Enlist -> []
+  Keyword.Persist -> []
+  Keyword.Undying -> []
+  Keyword.Soulbond -> []
+  Keyword.Changeling -> []
+  Keyword.Hideaway _ -> []
+  Keyword.Reinforce {} -> []
+  -- CR 702.184a attaches nothing.
+  Keyword.Station -> []
+  -- CR 702.89a says nothing about what the Aura may enchant; each printing
+  -- states its own "enchant creature".
+  Keyword.UmbraArmor -> []
+  Keyword.Epic -> []
+  Keyword.Paradigm -> []
+  Keyword.Cipher -> []
+  Keyword.Convoke -> []
+  Keyword.Improvise -> []
+  Keyword.Delve -> []
+  Keyword.Affinity _ -> []
+  Keyword.Undaunted -> []
+  Keyword.Retrace -> []
+  Keyword.Mayhem _ -> []
+  Keyword.Madness _ -> []
+  Keyword.Rebound -> []
+  Keyword.Scavenge _ -> []
+  Keyword.Encore _ -> []
+
+-- CR 702.177a: does rule 702 ADD RULES to the activated ability printed after
+-- this keyword, rather than state an ability of its own? These are the only
+-- keywords a CARD may write on Parun.Types.ActivatedAbility.keyword -- every other
+-- stamp there is a minter's, `mintedBy`'s above -- and Parun.CardSpec's "CR 702 no
+-- card claims a keyword minted an ability it printed" is the lint that says so.
+--
+-- LISTED rather than derived off the rosters: there is no roster to read this
+-- side off, since the ability is the card's. The fallthrough answers False, which
+-- is the closed direction -- a keyword of this shape that is not named here makes
+-- the lint reject the first card that writes it, which is where it would be
+-- noticed.
+addsRulesToPrintedAbility :: Keyword -> Bool
+addsRulesToPrintedAbility keyword = case keyword of
+  Keyword.Exhaust -> True
+  Keyword.Boast -> True
+  Keyword.Forecast -> True
+  Keyword.PowerUp -> True
+  Keyword.ClassLevel _ -> True
+  _ -> False
+
+-- CR 602.5b: the riders rule 702 adds to the printed ability a keyword is
+-- written on. Forecast's are CR 702.57b's "only during the upkeep step of the
+-- card's owner and only once each turn"; ControllersTurn reads the activator, who
+-- for a card in a hand is its owner (CR 602.2, CR 108.4a). Exhaust's and
+-- power-up's is CR 702.177a's and CR 702.193a's "activate only once"; boast's
+-- are CR 702.142a's two. Power-up's cost reduction is no rider, and
+-- reducesByManaCostOnEntry below answers for it. A class level bar's are CR
+-- 716.2a's "only if this Class is level N-1 and only as a sorcery"; its effect,
+-- "this Class's level becomes N", is the card's (Effect.SetClassLevel).
+printedRiders :: Keyword -> [ActivationRestriction.ActivationRestriction]
+printedRiders keyword = case keyword of
+  Keyword.Forecast ->
+    [ ActivationRestriction.DuringPhase (DuringPhase.MkDuringPhase (PhaseSelector.Step (Phase.Beginning BeginningStep.Upkeep)) TurnScope.ControllersTurn),
+      ActivationRestriction.OnlyOnceEachTurn
+    ]
+  Keyword.Exhaust -> [ActivationRestriction.OnlyOnce]
+  Keyword.PowerUp -> [ActivationRestriction.OnlyOnce]
+  Keyword.ClassLevel level ->
+    [ ActivationRestriction.OnlyIf
+        ( Condition.Compares
+            ( Compares.MkCompares
+                Quantity.ClassLevel
+                Comparison.Exactly
+                (Quantity.Literal (toInteger (ClassLevel.unwrap level) - 1))
+            )
+        ),
+      ActivationRestriction.SorcerySpeed
+    ]
+  -- "This creature attacked this turn" is a count of the source among the
+  -- battlefield's permanents that did (Filter.AttackedThisTurn), Relative AnyPlayer's
+  -- battlefield because CR 400.1 makes it one shared zone.
+  Keyword.Boast ->
+    [ ActivationRestriction.OnlyIf
+        ( Condition.Compares
+            ( Compares.MkCompares
+                ( Quantity.Count
+                    ( Count.MkCount
+                        (Scope.InZone (InZone.MkInZone Zone.Battlefield (PlayerRef.Relative PlayerRelation.AnyPlayer)))
+                        (Filter.And [Filter.IsSource, Filter.AttackedThisTurn])
+                        Aggregation.Members
+                    )
+                )
+                Comparison.AtLeast
+                (Quantity.Literal 1)
+            )
+        ),
+      ActivationRestriction.OnlyOnceEachTurn
+    ]
+  _ -> []
+
+-- CR 702.193a: is the printed ability this keyword is written on reduced by its
+-- permanent's mana cost when that permanent entered this turn? CR 702.193b's
+-- arithmetic is CR 118.7c's spill, which Parun.Types.AppliedReduction already
+-- performs for a reduction not confined to coloured mana.
+reducesByManaCostOnEntry :: Keyword -> Bool
+reducesByManaCostOnEntry keyword = case keyword of
+  Keyword.PowerUp -> True
+  _ -> False
+
+-- Every rider the ability is bound by: the ones it prints plus printedRiders.
+restrictionsOf :: ActivatedAbility Card (GrantedAbility.GrantedAbility Card) -> [ActivationRestriction.ActivationRestriction]
+restrictionsOf ability = ActivatedAbility.restrictions ability <> foldMap printedRiders (ActivatedAbility.keyword ability)
+
+-- CR 113.6b: the zones rule 702 says the ability a keyword stamps functions
+-- from, empty where it names none. CR 702.57a puts a printed forecast ability in
+-- a hand; CR 702.49a puts minted ninjutsu there, and CR 702.49d commander
+-- ninjutsu in a hand or the command zone.
+statedZones :: Keyword -> Set Zone.Zone
+statedZones keyword = case keyword of
+  Keyword.Forecast -> Set.singleton Zone.Hand
+  Keyword.Ninjutsu (Ninjutsu.MkNinjutsu _ variant) -> case variant of
+    NinjutsuVariant.Plain -> Set.singleton Zone.Hand
+    NinjutsuVariant.Commander -> Set.fromList [Zone.Hand, Zone.Command]
+  _ -> Set.empty
+
+-- CR 400.7b / 113.6: does any ability this keyword represents function on the
+-- battlefield? The question CR 400.7b asks of an ability a static ability grants
+-- a permanent SPELL, whose answer decides whether the grant goes on applying to
+-- the permanent the spell becomes (Parun.Engine.Stack.carryGrants).
+--
+-- TOTAL and wildcard-free, so a new keyword has to be answered here: each rule
+-- 702 entry states where its abilities function, and this is that statement
+-- read once. Parun.PlanechaseSpec's "CR 400.7b" group proves both answers,
+-- through The Caldaia's blitz, Hunting Velociraptor's prowl and Imoti,
+-- Celebrant of Bounty's cascade.
+functionsOnBattlefield :: Keyword -> Bool
+functionsOnBattlefield keyword = case keyword of
+  -- CR 113.6's default for a permanent's abilities, or a part rule 702 puts on
+  -- the battlefield beside its others: blitz's and dash's haste, evoke's,
+  -- squad's, offspring's and gift's entry triggers, impending's type removal,
+  -- morph's and disguise's turning face up (CR 702.37e, 702.168d), and the
+  -- as-enters replacements CR 113.6h places as the permanent enters. CR
+  -- 113.6a's characteristic-defining changeling and devoid function everywhere.
+  Keyword.Absorb _ -> True
+  Keyword.Afflict _ -> True
+  Keyword.Afterlife _ -> True
+  Keyword.Amplify _ -> True
+  Keyword.Annihilator _ -> True
+  Keyword.Ascend -> True
+  Keyword.AuraSwap _ -> True
+  Keyword.Backup _ -> True
+  Keyword.Banding -> True
+  Keyword.BattleCry -> True
+  Keyword.Blitz _ -> True
+  Keyword.Bloodthirst _ -> True
+  Keyword.Boast -> True
+  Keyword.Bushido _ -> True
+  Keyword.Champion _ -> True
+  Keyword.Changeling -> True
+  Keyword.ClassLevel _ -> True
+  Keyword.Compleated -> True
+  Keyword.Craft _ -> True
+  Keyword.Crew _ -> True
+  Keyword.CumulativeUpkeep _ -> True
+  Keyword.Dash _ -> True
+  Keyword.Daybound -> True
+  Keyword.Deathtouch -> True
+  Keyword.Decayed -> True
+  Keyword.Defender -> True
+  Keyword.Dethrone -> True
+  Keyword.Devoid -> True
+  Keyword.Devour _ -> True
+  Keyword.Disguise _ -> True
+  Keyword.DoubleStrike -> True
+  Keyword.Echo _ -> True
+  Keyword.Enlist -> True
+  Keyword.Equip _ -> True
+  Keyword.Evoke _ -> True
+  Keyword.Evolve -> True
+  Keyword.Exalted -> True
+  Keyword.Exert -> True
+  Keyword.Exhaust -> True
+  Keyword.Exploit -> True
+  Keyword.Extort -> True
+  Keyword.Fabricate _ -> True
+  Keyword.Fading _ -> True
+  Keyword.Fear -> True
+  Keyword.Firebending _ -> True
+  Keyword.FirstStrike -> True
+  Keyword.Flanking -> True
+  Keyword.Flying -> True
+  Keyword.ForMirrodin -> True
+  Keyword.Fortify _ -> True
+  Keyword.Frenzy _ -> True
+  Keyword.Gift _ -> True
+  Keyword.Graft _ -> True
+  Keyword.Haste -> True
+  Keyword.Haunt -> True
+  Keyword.Hexproof _ -> True
+  Keyword.Hideaway _ -> True
+  Keyword.Horsemanship -> True
+  Keyword.Impending _ -> True
+  Keyword.Increment -> True
+  Keyword.Indestructible -> True
+  Keyword.Infect -> True
+  Keyword.Ingest -> True
+  Keyword.Intimidate -> True
+  Keyword.JobSelect -> True
+  Keyword.Landwalk _ -> True
+  Keyword.LevelUp _ -> True
+  Keyword.Lifelink -> True
+  Keyword.LivingMetal -> True
+  Keyword.LivingWeapon -> True
+  Keyword.Melee -> True
+  Keyword.Menace -> True
+  Keyword.Mentor -> True
+  Keyword.Mobilize _ -> True
+  Keyword.Modular _ -> True
+  Keyword.Morph {} -> True
+  Keyword.Myriad -> True
+  Keyword.Nightbound -> True
+  Keyword.Offspring _ -> True
+  Keyword.Outlast _ -> True
+  Keyword.PartnerWith _ -> True
+  Keyword.Persist -> True
+  Keyword.Phasing -> True
+  Keyword.Poisonous _ -> True
+  Keyword.PowerUp -> True
+  Keyword.Protection _ -> True
+  Keyword.Provoke -> True
+  Keyword.Prowess -> True
+  Keyword.Rampage _ -> True
+  Keyword.Ravenous -> True
+  Keyword.Reach -> True
+  Keyword.ReadAhead -> True
+  Keyword.Reconfigure _ -> True
+  Keyword.Renown _ -> True
+  Keyword.Riot -> True
+  Keyword.Saddle _ -> True
+  Keyword.Shadow -> True
+  Keyword.Shroud -> True
+  Keyword.Skulk -> True
+  Keyword.Soulbond -> True
+  Keyword.Soulshift _ -> True
+  Keyword.SpaceSculptor -> True
+  Keyword.Squad _ -> True
+  Keyword.StartYourEngines -> True
+  Keyword.Station -> True
+  Keyword.Storied -> True
+  Keyword.Sunburst -> True
+  Keyword.Toxic _ -> True
+  Keyword.Training -> True
+  Keyword.Trample -> True
+  Keyword.TrampleOverPlaneswalkers -> True
+  Keyword.Transfigure _ -> True
+  Keyword.Tribute _ -> True
+  Keyword.UmbraArmor -> True
+  Keyword.Undying -> True
+  Keyword.Unleash -> True
+  Keyword.Vanishing _ -> True
+  Keyword.Vigilance -> True
+  Keyword.Ward _ -> True
+  Keyword.Wither -> True
+  -- CR 113.6b, 113.6d and 113.6e: a static ability that functions while the
+  -- spell is on the stack or as it is cast -- an alternative or additional
+  -- cost, a reduction or a way to pay it, a cast trigger, a rule for the spell
+  -- itself (split second, CR 702.61a; spree, CR 702.172a; tiered, CR 702.183a;
+  -- assist, CR 702.132a).
+  Keyword.Affinity _ -> False
+  Keyword.Assist -> False
+  Keyword.Awaken _ -> False
+  Keyword.Bargain -> False
+  Keyword.Bestow _ -> False
+  Keyword.Buyback _ -> False
+  Keyword.Cascade -> False
+  Keyword.Casualty _ -> False
+  Keyword.Cipher -> False
+  Keyword.Cleave _ -> False
+  Keyword.Conspire -> False
+  Keyword.Convoke -> False
+  Keyword.Delve -> False
+  Keyword.Demonstrate -> False
+  Keyword.Emerge _ -> False
+  Keyword.Entwine _ -> False
+  Keyword.Epic -> False
+  Keyword.Escalate _ -> False
+  Keyword.Flash -> False
+  Keyword.Freerunning _ -> False
+  Keyword.Fuse -> False
+  Keyword.Gravestorm -> False
+  Keyword.Improvise -> False
+  Keyword.Kicker _ -> False
+  Keyword.MoreThanMeetsTheEye _ -> False
+  Keyword.Multikicker _ -> False
+  Keyword.Mutate _ -> False
+  Keyword.Offering _ -> False
+  Keyword.Overload _ -> False
+  Keyword.Paradigm -> False
+  Keyword.Prototype _ -> False
+  Keyword.Prowl _ -> False
+  Keyword.Rebound -> False
+  Keyword.Replicate _ -> False
+  Keyword.Ripple _ -> False
+  Keyword.Sneak _ -> False
+  Keyword.Spectacle _ -> False
+  Keyword.SplitSecond -> False
+  Keyword.Spree -> False
+  Keyword.StickerKicker _ -> False
+  Keyword.Storm -> False
+  Keyword.Surge _ -> False
+  Keyword.Teamwork _ -> False
+  Keyword.Tiered -> False
+  Keyword.Undaunted -> False
+  Keyword.Warp _ -> False
+  Keyword.WebSlinging _ -> False
+  -- CR 113.6b, 113.6f and 113.6m: abilities that function from a hand, a
+  -- graveyard or exile -- the zone the card is cast or activated from.
+  Keyword.Aftermath -> False
+  Keyword.Cycling {} -> False
+  Keyword.Disturb _ -> False
+  Keyword.Dredge _ -> False
+  Keyword.Embalm _ -> False
+  Keyword.Encore _ -> False
+  Keyword.Escape _ -> False
+  Keyword.Eternalize _ -> False
+  Keyword.Flashback _ -> False
+  Keyword.Forecast -> False
+  Keyword.Foretell _ -> False
+  Keyword.Harmonize _ -> False
+  Keyword.JumpStart -> False
+  Keyword.Madness _ -> False
+  Keyword.Mayhem _ -> False
+  Keyword.Miracle _ -> False
+  Keyword.Ninjutsu _ -> False
+  Keyword.Plot _ -> False
+  Keyword.Recover _ -> False
+  Keyword.Reinforce {} -> False
+  Keyword.Retrace -> False
+  Keyword.Scavenge _ -> False
+  Keyword.Splice _ -> False
+  Keyword.Suspend _ -> False
+  Keyword.Transmute _ -> False
+  Keyword.Unearth _ -> False
+  -- CR 113.6n: deck construction, before the game begins.
+  Keyword.ChooseABackground -> False
+  Keyword.Companion _ -> False
+  Keyword.DoctorsCompanion -> False
+  Keyword.HiddenAgenda -> False
+  Keyword.Partner -> False
+  Keyword.PartnerText _ -> False
+
+-- CR 702: does a card's designator name this keyword? Asked of the stamp
+-- Parun.Types.ActivatedAbility.keyword carries (ActivationCriteria.grantedBy) and
+-- of the keys of Object.paidCosts (timesPaid below).
+--
+-- A family drops the payload, so Fluctuator's "cycling abilities you activate"
+-- reaches cycling {2} and cycling {1}{U} alike. A keyword is compared whole, so
+-- Boom Scholar's "exhaust abilities" names CR 702.177a's keyword and Sunscape
+-- Battlemage's "its {1}{G} kicker" one of its two kicker costs (CR 702.33f).
+--
+-- A CITATION compared to a citation: nothing here reads what the ability does.
+designates :: KeywordDesignator.KeywordDesignator Keyword -> Keyword -> Bool
+designates designator keyword = case designator of
+  KeywordDesignator.OfFamily family -> familyOf keyword == Just family
+  KeywordDesignator.OfKeyword whole -> whole == keyword
+  -- The family, less the sticker kicker the Kicker family holds but CR 702.33e
+  -- does not link (CR 702.33h, Wicker Picker's ruling); Parun.StickerSpec's
+  -- Faerie Squadron case proves it. Which instances are the object's own is
+  -- timesPaid's question, since a keyword cannot say.
+  KeywordDesignator.Printed family -> case keyword of
+    Keyword.StickerKicker _ -> False
+    _ -> familyOf keyword == Just family
+  KeywordDesignator.OfInstance whole _ -> whole == keyword
+
+-- | CR 601.2b: how many times the costs of the keywords a designator names were
+-- declared, summed over a paidCosts record -- Quantity.TimesPaid's count, and
+-- Filter.Paid's when it is above zero. One instance's own entry where the
+-- designator names one (CR 702.56b), and 0 for an instance never asked. A
+-- Printed designator sums only the object's own instances' payments (CR
+-- 607.2i, 607.5): Synthetic Generous Host's granted gift paid on Scrapshooter
+-- is not "the gift" Scrapshooter's trigger asks about, which the scenario
+-- cr-607-2i-scrapshooter-promised-only-the-host-s-gift-destroys-nothing proves.
+timesPaid :: KeywordDesignator.KeywordDesignator Keyword -> Map Keyword (Map KeywordInstance.KeywordInstance Natural) -> Natural
+timesPaid designator paid = case designator of
+  KeywordDesignator.OfInstance keyword ordinal ->
+    Maybe.fromMaybe 0 (Seq.lookup (Natural.toIntSaturating ordinal - 1) . Seq.fromList . Map.elems =<< Map.lookup keyword paid)
+  KeywordDesignator.Printed _ -> sum (fmap (sum . Map.filterWithKey (\which _ -> isOwn which)) (named paid))
+  _ -> sum (fmap sum (named paid))
+  where
+    named = Map.filterWithKey (\keyword _ -> designates designator keyword)
+    isOwn which = case which of
+      KeywordInstance.Own _ -> True
+      KeywordInstance.Granted {} -> False
+
+-- CR 702: WHICH KEYWORD this is, with its payload dropped -- the classification
+-- Filter.HasKeywordFamily matches on, so that Flensing Raptor's "creature you
+-- control with toxic" reaches toxic 1 and toxic 3 alike (CR 702.164a).
+--
+-- Nothing for a NULLARY keyword, and not because the answer is unknown: it has no
+-- payload to drop, so Filter.HasKeyword already asks its family question exactly.
+-- KeywordFamily has no constructor for one, which keeps "a creature with flying"
+-- from having two spellings.
+--
+-- EXHAUSTIVE, with no wildcard: adding a Keyword constructor must fail to compile
+-- until its family is decided, where a wildcard would silently answer Nothing for
+-- the next parameterized keyword.
+familyOf :: Keyword -> Maybe KeywordFamily.KeywordFamily
+familyOf keyword = case keyword of
+  -- CR 702.139a's parameterized keyword: "a card with companion" drops the
+  -- condition.
+  Keyword.Companion _ -> Just KeywordFamily.Companion
+  -- CR 702.6a's parameterized keyword: "equip abilities" drops the cost, which
+  -- is what Bureau Headmaster's reduction names -- Parun.ActivateSpec's "Equip"
+  -- group is what proves it.
+  Keyword.Equip _ -> Just KeywordFamily.Equip
+  Keyword.Fortify _ -> Just KeywordFamily.Fortify
+  Keyword.AuraSwap _ -> Just KeywordFamily.AuraSwap
+  Keyword.Ninjutsu _ -> Just KeywordFamily.Ninjutsu
+  Keyword.Splice _ -> Just KeywordFamily.Splice
+  Keyword.Hexproof _ -> Just KeywordFamily.Hexproof
+  Keyword.Landwalk _ -> Just KeywordFamily.Landwalk
+  Keyword.Cycling {} -> Just KeywordFamily.Cycling
+  Keyword.Kicker _ -> Just KeywordFamily.Kicker
+  -- CR 702.33c's last sentence, "a multikicker cost is a kicker cost", is why
+  -- this answers the SAME family rather than owing one of its own.
+  Keyword.Multikicker _ -> Just KeywordFamily.Kicker
+  -- CR 702.33h: sticker kicker "means Kicker [cost]", so a "spell with
+  -- kicker" or "kicked" reader matches it; CR 702.33e's linked read does not
+  -- (KeywordDesignator.Printed).
+  Keyword.StickerKicker _ -> Just KeywordFamily.Kicker
+  Keyword.Flashback _ -> Just KeywordFamily.Flashback
+  Keyword.Bestow _ -> Just KeywordFamily.Bestow
+  Keyword.Mutate _ -> Just KeywordFamily.Mutate
+  Keyword.Morph {} -> Just KeywordFamily.Morph
+  Keyword.Entwine _ -> Just KeywordFamily.Entwine
+  Keyword.Buyback _ -> Just KeywordFamily.Buyback
+  Keyword.Bushido _ -> Just KeywordFamily.Bushido
+  Keyword.Soulshift _ -> Just KeywordFamily.Soulshift
+  Keyword.Dredge _ -> Just KeywordFamily.Dredge
+  Keyword.Bloodthirst _ -> Just KeywordFamily.Bloodthirst
+  Keyword.Hideaway _ -> Just KeywordFamily.Hideaway
+  Keyword.Reinforce {} -> Just KeywordFamily.Reinforce
+  Keyword.Modular _ -> Just KeywordFamily.Modular
+  Keyword.Sunburst -> Nothing
+  Keyword.Vanishing _ -> Just KeywordFamily.Vanishing
+  Keyword.Fading _ -> Just KeywordFamily.Fading
+  Keyword.Frenzy _ -> Just KeywordFamily.Frenzy
+  Keyword.Graft _ -> Just KeywordFamily.Graft
+  Keyword.Absorb _ -> Just KeywordFamily.Absorb
+  Keyword.Poisonous _ -> Just KeywordFamily.Poisonous
+  Keyword.Champion _ -> Just KeywordFamily.Champion
+  Keyword.Offering _ -> Just KeywordFamily.Offering
+  Keyword.Annihilator _ -> Just KeywordFamily.Annihilator
+  Keyword.Mobilize _ -> Just KeywordFamily.Mobilize
+  Keyword.Firebending _ -> Just KeywordFamily.Firebending
+  Keyword.Transmute {} -> Just KeywordFamily.Transmute
+  Keyword.Transfigure {} -> Just KeywordFamily.Transfigure
+  Keyword.Crew _ -> Just KeywordFamily.Crew
+  Keyword.Saddle _ -> Just KeywordFamily.Saddle
+  Keyword.Fabricate _ -> Just KeywordFamily.Fabricate
+  Keyword.Rampage _ -> Just KeywordFamily.Rampage
+  Keyword.CumulativeUpkeep _ -> Just KeywordFamily.CumulativeUpkeep
+  Keyword.Echo _ -> Just KeywordFamily.Echo
+  Keyword.Afflict _ -> Just KeywordFamily.Afflict
+  -- CR 702.160a's parameterized keyword: "a card with prototype" drops the
+  -- inset frame's cost and box.
+  Keyword.Prototype _ -> Just KeywordFamily.Prototype
+  Keyword.Toxic _ -> Just KeywordFamily.Toxic
+  Keyword.Backup _ -> Just KeywordFamily.Backup
+  Keyword.Disguise _ -> Just KeywordFamily.Disguise
+  Keyword.Plot _ -> Just KeywordFamily.Plot
+  Keyword.Ravenous -> Nothing
+  Keyword.Squad _ -> Just KeywordFamily.Squad
+  Keyword.Offspring _ -> Just KeywordFamily.Offspring
+  Keyword.Gift _ -> Just KeywordFamily.Gift
+  Keyword.Replicate _ -> Just KeywordFamily.Replicate
+  Keyword.Recover _ -> Just KeywordFamily.Recover
+  Keyword.Ripple _ -> Just KeywordFamily.Ripple
+  Keyword.Casualty _ -> Just KeywordFamily.Casualty
+  -- CR 702.166a carries no parameter, so there is no family to name it by.
+  Keyword.Bargain -> Nothing
+  Keyword.Teamwork _ -> Just KeywordFamily.Teamwork
+  Keyword.Craft _ -> Just KeywordFamily.Craft
+  Keyword.WebSlinging _ -> Just KeywordFamily.WebSlinging
+  Keyword.Sneak _ -> Just KeywordFamily.Sneak
+  Keyword.Foretell _ -> Just KeywordFamily.Foretell
+  -- CR 702.94a's parameterized keyword: "a card with miracle" drops the cost.
+  Keyword.Miracle _ -> Just KeywordFamily.Miracle
+  -- CR 702.16a's parameterized keyword: "a creature with protection" drops the
+  -- stated quality.
+  Keyword.Protection _ -> Just KeywordFamily.Protection
+  Keyword.Cascade -> Nothing
+  Keyword.Storm -> Nothing
+  Keyword.Gravestorm -> Nothing
+  Keyword.Conspire -> Nothing
+  Keyword.Demonstrate -> Nothing
+  Keyword.Deathtouch -> Nothing
+  Keyword.Defender -> Nothing
+  Keyword.DoubleStrike -> Nothing
+  Keyword.FirstStrike -> Nothing
+  Keyword.Flash -> Nothing
+  Keyword.Flying -> Nothing
+  Keyword.Haste -> Nothing
+  Keyword.Indestructible -> Nothing
+  Keyword.Lifelink -> Nothing
+  Keyword.LivingMetal -> Nothing
+  Keyword.MoreThanMeetsTheEye _ -> Just KeywordFamily.MoreThanMeetsTheEye
+  Keyword.Reach -> Nothing
+  Keyword.Shroud -> Nothing
+  Keyword.Trample -> Nothing
+  Keyword.TrampleOverPlaneswalkers -> Nothing
+  Keyword.Vigilance -> Nothing
+  Keyword.Ward _ -> Just KeywordFamily.Ward
+  Keyword.Banding -> Nothing
+  Keyword.Flanking -> Nothing
+  Keyword.Haunt -> Nothing
+  Keyword.Phasing -> Nothing
+  Keyword.Shadow -> Nothing
+  Keyword.Horsemanship -> Nothing
+  Keyword.Fear -> Nothing
+  Keyword.Intimidate -> Nothing
+  Keyword.Infect -> Nothing
+  Keyword.Wither -> Nothing
+  Keyword.Devour _ -> Just KeywordFamily.Devour
+  Keyword.Amplify _ -> Just KeywordFamily.Amplify
+  Keyword.Exalted -> Nothing
+  Keyword.LivingWeapon -> Nothing
+  Keyword.ForMirrodin -> Nothing
+  Keyword.JobSelect -> Nothing
+  Keyword.Spree -> Nothing
+  Keyword.Tiered -> Nothing
+  Keyword.Unearth _ -> Just KeywordFamily.Unearth
+  Keyword.Embalm _ -> Just KeywordFamily.Embalm
+  Keyword.Eternalize _ -> Just KeywordFamily.Eternalize
+  Keyword.Mentor -> Nothing
+  Keyword.Afterlife _ -> Just KeywordFamily.Afterlife
+  Keyword.Provoke -> Nothing
+  Keyword.BattleCry -> Nothing
+  Keyword.Evolve -> Nothing
+  Keyword.Exploit -> Nothing
+  Keyword.Tribute _ -> Just KeywordFamily.Tribute
+  Keyword.Dethrone -> Nothing
+  Keyword.HiddenAgenda -> Nothing
+  Keyword.Fuse -> Nothing
+  Keyword.LevelUp _ -> Just KeywordFamily.LevelUp
+  Keyword.Outlast _ -> Just KeywordFamily.Outlast
+  Keyword.Prowess -> Nothing
+  Keyword.Extort -> Nothing
+  Keyword.Increment -> Nothing
+  Keyword.Menace -> Nothing
+  Keyword.Renown _ -> Just KeywordFamily.Renown
+  Keyword.Changeling -> Nothing
+  -- CR 701.56a's time travel asks "has suspend" of the keyword itself
+  -- (Parun.Engine.TimeTravel.suspendedCandidates), so the family stays what a CARD
+  -- would name.
+  Keyword.Suspend _ -> Just KeywordFamily.Suspend
+  Keyword.SplitSecond -> Nothing
+  Keyword.Devoid -> Nothing
+  Keyword.Ingest -> Nothing
+  Keyword.Myriad -> Nothing
+  Keyword.Skulk -> Nothing
+  Keyword.SpaceSculptor -> Nothing
+  Keyword.Emerge _ -> Just KeywordFamily.Emerge
+  -- CR 702.124h carries no parameter, so there is no family to name it by.
+  Keyword.Partner -> Nothing
+  -- CR 702.124k carries none either.
+  Keyword.ChooseABackground -> Nothing
+  -- CR 702.124m carries none either.
+  Keyword.DoctorsCompanion -> Nothing
+  -- CR 702.124i's text is the payload the family drops.
+  Keyword.PartnerText _ -> Just KeywordFamily.PartnerText
+  -- CR 702.124j's name is the payload the family drops.
+  Keyword.PartnerWith _ -> Just KeywordFamily.PartnerWith
+  Keyword.Escalate _ -> Just KeywordFamily.Escalate
+  Keyword.Melee -> Nothing
+  Keyword.Aftermath -> Nothing
+  Keyword.JumpStart -> Nothing
+  Keyword.Riot -> Nothing
+  Keyword.Escape _ -> Just KeywordFamily.Escape
+  Keyword.Evoke _ -> Just KeywordFamily.Evoke
+  Keyword.Dash _ -> Just KeywordFamily.Dash
+  Keyword.Blitz _ -> Just KeywordFamily.Blitz
+  Keyword.Warp _ -> Just KeywordFamily.Warp
+  Keyword.Disturb _ -> Just KeywordFamily.Disturb
+  Keyword.Harmonize _ -> Just KeywordFamily.Harmonize
+  Keyword.Cleave _ -> Just KeywordFamily.Cleave
+  Keyword.Overload _ -> Just KeywordFamily.Overload
+  Keyword.Awaken _ -> Just KeywordFamily.Awaken
+  Keyword.Surge _ -> Just KeywordFamily.Surge
+  Keyword.Spectacle _ -> Just KeywordFamily.Spectacle
+  Keyword.Prowl _ -> Just KeywordFamily.Prowl
+  Keyword.Freerunning _ -> Just KeywordFamily.Freerunning
+  Keyword.Impending _ -> Just KeywordFamily.Impending
+  Keyword.Unleash -> Nothing
+  Keyword.Daybound -> Nothing
+  Keyword.Nightbound -> Nothing
+  Keyword.Decayed -> Nothing
+  Keyword.Compleated -> Nothing
+  Keyword.Reconfigure _ -> Just KeywordFamily.Reconfigure
+  Keyword.ReadAhead -> Nothing
+  Keyword.Training -> Nothing
+  Keyword.StartYourEngines -> Nothing
+  Keyword.Ascend -> Nothing
+  Keyword.Storied -> Nothing
+  Keyword.Assist -> Nothing
+  -- CR 702.177a's exhaust is NULLARY, so it has no family: the keyword itself
+  -- is what Parun.Types.KeywordDesignator.OfKeyword names.
+  Keyword.Exhaust -> Nothing
+  Keyword.Boast -> Nothing
+  Keyword.Forecast -> Nothing
+  Keyword.PowerUp -> Nothing
+  Keyword.ClassLevel _ -> Just KeywordFamily.ClassLevel
+  Keyword.Exert -> Nothing
+  Keyword.Enlist -> Nothing
+  Keyword.Persist -> Nothing
+  Keyword.Undying -> Nothing
+  Keyword.Soulbond -> Nothing
+  Keyword.Station -> Nothing
+  -- CR 702.89a carries no parameter, so there is no family to name it by.
+  Keyword.UmbraArmor -> Nothing
+  Keyword.Epic -> Nothing
+  Keyword.Paradigm -> Nothing
+  Keyword.Cipher -> Nothing
+  Keyword.Convoke -> Nothing
+  Keyword.Improvise -> Nothing
+  Keyword.Delve -> Nothing
+  Keyword.Affinity _ -> Just KeywordFamily.Affinity
+  Keyword.Undaunted -> Nothing
+  -- CR 702.81a carries no parameter, so there is no family to name it by.
+  Keyword.Retrace -> Nothing
+  Keyword.Mayhem _ -> Just KeywordFamily.Mayhem
+  Keyword.Madness _ -> Just KeywordFamily.Madness
+  -- CR 702.88a carries no parameter, so there is no family to name it by.
+  Keyword.Rebound -> Nothing
+  Keyword.Scavenge _ -> Just KeywordFamily.Scavenge
+  Keyword.Encore _ -> Just KeywordFamily.Encore
+
+-- CR 702.70a: a creature with poisonous N gives a player it deals combat damage
+-- to that many poison counters.
+--
+-- "That player" is the player the trigger's own event named, which
+-- Event.eventBindings stamps under the reserved Binding.triggerPlayer slot -- so
+-- the payload is an ordinary slot read and needs no opcode. NOT the ability's
+-- controller: CR 603.3a makes that the creature's controller, and the poison goes
+-- to their victim.
+poisonous :: Natural -> TriggeredAbility Card (GrantedAbility.GrantedAbility Card)
+poisonous n =
+  let effect =
+        Effect.GainPlayerCounters
+          ( PlayerCounters.MkPlayerCounters
+              (PlayerRef.InSlot Binding.triggerPlayer)
+              PlayerCounterKind.Poison
+              (Quantity.Literal (toInteger n))
+          )
+   in Mint.trigger
+        Mint.dealsCombatDamageToAPlayer
+        (Seq.singleton effect)
+
+-- CR 702.115a: poisonous' condition and poisonous' "that player" -- the same
+-- Binding.triggerPlayer slot -- over a different payload.
+--
+-- The payload is a zone move rather than a mint of its own: ObjectRef.TopOfLibrary
+-- carries WHOSE library, so the whole sentence is one MoveToZone. An empty library
+-- exiles nothing, which is what rule 702.115a's silence about a shortfall asks
+-- for.
+--
+-- Face up, CR 406.3's default with no exception stated. The EntryRiders and the
+-- LibraryPlacement are inert for an exile destination, no slot is bound since
+-- nothing later reads what arrived, and the origin zone is Nothing because
+-- TopOfLibrary can only name a card already in that library.
+ingest :: TriggeredAbility Card (GrantedAbility.GrantedAbility Card)
+ingest =
+  let effect =
+        Effect.MoveToZone
+          ( MoveToZone.MkMoveToZone
+              (ObjectRef.TopOfLibrary (TopOfLibrary.MkTopOfLibrary (PlayerRef.InSlot Binding.triggerPlayer) (Quantity.Literal 1)))
+              Zone.Exile
+              EntryRiders.defaultValue
+              Nothing
+              Nothing
+              LibraryPlacement.defaultValue
+              Nothing
+          )
+   in Mint.trigger
+        Mint.dealsCombatDamageToAPlayer
+        (Seq.singleton effect)
+
+-- The slots rule 702.116a's loop needs: the opponent this iteration is aimed at,
+-- and the tokens the loop minted. Both DEFINITIONS and never targets (CR
+-- 115.10a); the token slot holds the whole batch, which is what lets ONE delayed
+-- ability exile them all.
+myriadOpponentSlot, myriadTokenSlot :: SlotName.SlotName
+myriadOpponentSlot = SlotName.MkSlotName (Text.pack "myriad opponent")
+myriadTokenSlot = SlotName.MkSlotName (Text.pack "myriad token")
+
+-- The name rule 702.116a's delayed ability is filed under, decayedSacrificeName's
+-- position. A card may not declare one under this name (Parun.AbilitySlotLintSpec).
+myriadExileName :: AbilityName
+myriadExileName = AbilityName.MkAbilityName (Text.pack "myriad")
+
+-- CR 702.116a's "exile the tokens at end of combat", decayedSacrifice's timing
+-- (CR 511.2) with an exile of the whole batch for a sacrifice of one permanent.
+--
+-- ONE ability over every token, not one per opponent: CR 608.2f's loop leaves a
+-- body-defined name holding the union across its members once it is over, so the
+-- arming opcode after the loop names the whole batch.
+--
+-- Rule 702.116a's "if one or more tokens are created this way" is myriad's own
+-- clause condition rather than anything here: the arming opcode sits in a clause
+-- of its own that counts the minted batch, so a loop that minted nothing arms
+-- nothing and this ability is never filed.
+myriadExile :: TriggeredAbility Card (GrantedAbility.GrantedAbility Card)
+myriadExile =
+  let effect =
+        Effect.MoveToZone
+          MoveToZone.MkMoveToZone
+            { MoveToZone.ref = ObjectRef.InSlot myriadTokenSlot,
+              MoveToZone.zone = Zone.Exile,
+              MoveToZone.riders =
+                EntryRiders.defaultValue,
+              MoveToZone.slot = Nothing,
+              MoveToZone.origin = Nothing,
+              MoveToZone.placement = LibraryPlacement.defaultValue,
+              MoveToZone.duration = Nothing
+            }
+   in Mint.trigger (TriggerCondition.StepBegins (StepBegins.MkStepBegins (Phase.Combat CombatStep.EndOfCombat) Nothing TurnScope.EachTurn)) (Seq.singleton effect)
+
+-- CR 702.116a. Battle cry's SelfAttacks EveryTime condition (CR 508.3a), over CR
+-- 608.2f's loop: one iteration per opponent other than the defending player,
+-- which Binding.triggerPlayer names -- PlayerRef.EachOpponentExcept is exactly
+-- that phrase, and CR 102.2 / 102.3's narrowing is what drops the attacking
+-- player, whom EachPlayerExcept would keep.
+--
+-- The copy is the BEARER (Filter.IsSource, rule 702.116a's "this creature"), read
+-- through Effect.CreateCopy so CR 707.2's copiable values are what the token gets
+-- -- a Clone of a myriad creature mints copies of the Clone's copied text.
+--
+-- EntryAttack.UnderPlayer is rule 702.116a's "attacking that player or a
+-- planeswalker they control": a CR 508.4 choice narrowed to the iteration's
+-- opponent, made by the controller in Parun.Engine.Combat and elided at one
+-- candidate. An opponent who is not a defending player narrows to nothing, and
+-- the token enters not attacking (CR 508.4a) -- which is what a game not using CR
+-- 802's option leaves.
+--
+-- Rule 702.116a's "you may" is PER OPPONENT, so it is the loop's own
+-- LoopMembers.AnyNumber rather than a clause's Optionality: the controller picks
+-- which opponents get a token, once, before any is created (CR 608.2d), since
+-- the tokens are one simultaneous action (CR 608.2f). At two seats the loop has
+-- no member and nothing is asked.
+--
+-- The SECOND clause is rule 702.116a's "if one or more tokens are created this
+-- way": its condition counts the batch the loop bound, so a controller who
+-- picked nobody arms no delayed ability for an exile with nothing to exile.
+-- Resolve.clauseIsInert cannot stand in for it: ArmDelayedTrigger reads more
+-- than its slots, so it never answers inert. Parun.AttackKeywordTriggerSpec's
+-- four-seat "picks nobody" case is what proves it.
+myriad :: TriggeredAbility Card (GrantedAbility.GrantedAbility Card)
+myriad =
+  let copy =
+        Effect.CreateCopy
+          CreateCopy.MkCreateCopy
+            { CreateCopy.quantity = CreateCopy.defaultQuantity,
+              CreateCopy.ref = ObjectRef.EachMatching Filter.IsSource,
+              CreateCopy.riders =
+                EntryRiders.defaultValue {EntryRiders.tapped = TapState.Tapped, EntryRiders.attacking = Just (EntryAttack.UnderPlayer myriadOpponentSlot)},
+              CreateCopy.slot = Just myriadTokenSlot,
+              CreateCopy.exceptions = []
+            }
+      loop =
+        Effect.ForEach
+          ForEach.MkForEach
+            { ForEach.ref = ObjectRef.Players PlayersWho.MkPlayersWho {PlayersWho.players = PlayerRef.EachOpponentExcept Binding.triggerPlayer, PlayersWho.who = Nothing},
+              ForEach.members = LoopMembers.AnyNumber,
+              ForEach.slot = myriadOpponentSlot,
+              ForEach.body = Seq.singleton copy,
+              -- CR 608.2f's first sentence: one action over the opponents, so rule
+              -- 702.116a's tokens all enter at the same time (CR 603.6a).
+              ForEach.individually = False,
+              ForEach.payGate = Nothing,
+              ForEach.startingWith = Nothing
+            }
+      arm =
+        Effect.ArmDelayedTrigger
+          ArmDelayedTrigger.MkArmDelayedTrigger
+            { ArmDelayedTrigger.name = myriadExileName,
+              ArmDelayedTrigger.onset = Onset.Immediately,
+              ArmDelayedTrigger.duration = Nothing,
+              ArmDelayedTrigger.ability = Nothing
+            }
+      anyToken = atLeastOneMatching (Scope.OverBound myriadTokenSlot) (Filter.And [])
+   in Mint.triggerOf
+        (TriggerCondition.SelfAttacks TriggerFrequency.EveryTime)
+        Nothing
+        ( Mint.oneModeOf
+            Map.empty
+            ( Seq.fromList
+                [ Mint.mandatory (Seq.singleton loop),
+                  Mint.mandatoryIf anyToken (Seq.singleton arm)
+                ]
+            )
+        )
+
+-- The slot rule 702.181a's sacrifice needs, myriadTokenSlot's position: a
+-- DEFINITION and never a target (CR 115.10a), holding the whole batch so ONE
+-- delayed ability sacrifices them all.
+mobilizeTokenSlot :: SlotName.SlotName
+mobilizeTokenSlot = SlotName.MkSlotName (Text.pack "mobilize token")
+
+-- The name rule 702.181a's delayed ability is filed under, decayedSacrificeName's
+-- position. A card may not declare one under this name (Parun.AbilitySlotLintSpec).
+mobilizeSacrificeName :: AbilityName
+mobilizeSacrificeName = AbilityName.MkAbilityName (Text.pack "mobilize")
+
+-- CR 702.181a's "sacrifice them at the beginning of the next end step",
+-- encoreSacrifice's shape over the whole batch: CR 513.2's timing, once (CR
+-- 603.7b), on any player's turn. CR 701.21a keeps it a sacrifice, so an
+-- indestructible token still goes.
+mobilizeSacrifice :: TriggeredAbility Card (GrantedAbility.GrantedAbility Card)
+mobilizeSacrifice = atNextEndStep (Effect.Sacrifice SacrificeEffect.MkSacrificeEffect {SacrificeEffect.ref = ObjectRef.InSlot mobilizeTokenSlot, SacrificeEffect.sacrificer = Sacrificer.EffectController, SacrificeEffect.sacrificed = Nothing})
+
+-- CR 702.181a. CR 508.3a is what "attacks" means, so the condition is battle
+-- cry's SelfAttacks EveryTime.
+--
+-- EntryAttack.Chosen and not myriad's UnderPlayer: rule 702.181a narrows the
+-- tokens' subject not at all, so CR 508.4's choice is offered whole, and elided
+-- only where it has one candidate.
+--
+-- The batch is BOUND so the delayed ability can name "them" (CR 603.7c reads the
+-- environment captured as it was armed), and the arm shares a clause with the
+-- create, myriad's arrangement.
+mobilize :: KeywordCount.KeywordCount Keyword -> TriggeredAbility Card (GrantedAbility.GrantedAbility Card)
+mobilize n =
+  let spawn =
+        Effect.Create
+          Create.MkCreate
+            { Create.quantity = keywordCount n,
+              Create.card = warriorToken,
+              Create.riders =
+                EntryRiders.defaultValue {EntryRiders.tapped = TapState.Tapped, EntryRiders.attacking = Just EntryAttack.Chosen},
+              Create.slot = Just mobilizeTokenSlot,
+              -- CR 111.2 under CR 109.5: the keyword ability's own controller.
+              Create.creator = PlayerRef.Relative PlayerRelation.You
+            }
+      arm =
+        Effect.ArmDelayedTrigger
+          ArmDelayedTrigger.MkArmDelayedTrigger
+            { ArmDelayedTrigger.name = mobilizeSacrificeName,
+              ArmDelayedTrigger.onset = Onset.Immediately,
+              ArmDelayedTrigger.duration = Nothing,
+              ArmDelayedTrigger.ability = Nothing
+            }
+   in Mint.trigger (TriggerCondition.SelfAttacks TriggerFrequency.EveryTime) (Seq.fromList [spawn, arm])
+
+-- The quantity mobilize's and firebending's N reads as the ability resolves
+-- (CR 608.2h). Power reads the triggered ability's source, the object carrying
+-- the keyword (CR 113.7); a tally's or a counter count's "you" is the ability's
+-- controller (CR 109.5).
+keywordCount :: KeywordCount.KeywordCount Keyword -> Quantity.Quantity
+keywordCount n = case n of
+  KeywordCount.Fixed k -> Quantity.Literal (toInteger k)
+  KeywordCount.Power -> Quantity.Measure Measure.Power
+  KeywordCount.Tally tally -> Quantity.Count Count.MkCount {Count.scope = KeywordTally.scope tally, Count.filter = KeywordTally.filter tally, Count.aggregation = Aggregation.Members}
+  KeywordCount.PlayerCounters tally -> Quantity.PlayerCounters tally
+
+-- | CR 702.181a's token: 1\/1 red Warrior creature. Rule 702.181a names no name,
+-- so CR 111.4 supplies one -- rebelToken's shape one rule over.
+warriorToken :: Card
+warriorToken = creatureToken (Text.pack "Warrior Token") (Set.singleton Subtype.Warrior) (Set.singleton Color.Red) 1 1
+
+-- CR 702.189a, battle cry's condition again (CR 508.3a).
+--
+-- ONE addition of count N rather than N of them, which is what
+-- Parun.Types.ManaAddition's haddock asks for: rule 702.189a fixes the type, so
+-- there is no CR 105.4 choice for separate instructions to answer differently.
+--
+-- Through Effect.Firebend rather than Effect.AddMana, training's reason: CR
+-- 702.189b's "whenever a player firebends" is this ability resolving, so it has
+-- to be told apart from any other red being added.
+--
+-- ManaRetention.UntilEndOfCombat is rule 702.189a's second sentence in as many
+-- words, and Parun.Engine.Mana.endRetentionAtEndOf is what ends it.
+--
+-- NOT a mana ability: CR 605.1b asks what the trigger fired from as well as what
+-- it watches, and an attack is neither an activated mana ability resolving nor
+-- mana being added (Parun.Engine.ManaAbility.firedFromManaAbility), so this uses
+-- the stack.
+firebending :: KeywordCount.KeywordCount Keyword -> TriggeredAbility Card (GrantedAbility.GrantedAbility Card)
+firebending n =
+  let added =
+        Effect.Firebend
+          ManaAddition.MkManaAddition
+            { -- CR 109.5: rule 702.189a's "you" is the ability's controller.
+              ManaAddition.player = PlayerRef.Relative PlayerRelation.You,
+              ManaAddition.production = ManaProduction.OfType (ManaType.Colored Color.Red),
+              ManaAddition.count = keywordCount n,
+              ManaAddition.retention = ManaRetention.UntilEndOfCombat,
+              ManaAddition.restriction = Nothing,
+              ManaAddition.rider = Nothing,
+              ManaAddition.whenSpent = Nothing
+            }
+   in Mint.trigger (TriggerCondition.SelfAttacks TriggerFrequency.EveryTime) (Seq.singleton added)
+
+-- CR 702.86a. CR 508.3a is what "attacks" means -- being declared as an attacker
+-- -- so the condition is battle cry's SelfAttacks EveryTime.
+--
+-- "DEFENDING PLAYER" is CR 508.5's, stamped onto GameEvent.AttackerDeclared at the
+-- declaration and read back into Binding.triggerPlayer, poisonous' "that player".
+-- NOT the ability's controller (CR 603.3a).
+--
+-- The sacrifice is CR 701.21a's edict, so the SACRIFICING PLAYER chooses which
+-- permanents go. The Filter is the empty conjunction: rule 702.86a says "N
+-- permanents" with no qualification.
+annihilator :: Natural -> TriggeredAbility Card (GrantedAbility.GrantedAbility Card)
+annihilator n =
+  let effect =
+        Effect.PlayerSacrifices
+          ( PlayerSacrifices.MkPlayerSacrifices
+              (PlayerRef.EachInSlot Binding.triggerPlayer)
+              (Filter.And [])
+              (Quantity.Literal (toInteger n))
+          )
+   in Mint.trigger (TriggerCondition.SelfAttacks TriggerFrequency.EveryTime) (Seq.singleton effect)
+
+-- CR 702.91a, on annihilator's SelfAttacks EveryTime condition.
+--
+-- "EACH OTHER ATTACKING CREATURE" is a SET, swept at resolution and then frozen
+-- (CR 611.2c), so an ObjectRef.EachMatching. The three conjuncts are the three
+-- printed words; OTHER is `Not IsSource`, which is why a battle-crying creature
+-- never pumps itself, and CR 611.2c fixing the set as the effect begins is why a
+-- token that arrives afterwards is not pumped.
+battleCry :: TriggeredAbility Card (GrantedAbility.GrantedAbility Card)
+battleCry =
+  let effect =
+        Effect.ModifyTarget
+          ( ModifyTarget.MkModifyTarget
+              Duration.UntilEndOfTurn
+              (Modification.ModifyPowerToughness (ModifyPowerToughness.MkModifyPowerToughness (Quantity.Literal 1) (Quantity.Literal 0)))
+              ( ObjectRef.EachMatching
+                  (Filter.And [Filter.HasCardType CardType.Creature, Filter.IsAttacking, Filter.Not Filter.IsSource])
+              )
+              Nothing
+          )
+   in Mint.trigger (TriggerCondition.SelfAttacks TriggerFrequency.EveryTime) (Seq.singleton effect)
+
+-- CR 702.58a's second half: "Whenever another creature enters, if this permanent
+-- has a +1/+1 counter on it, you may move a +1/+1 counter from this permanent
+-- onto that creature." Llanowar Reborn is the printing.
+--
+-- "ANOTHER" is Filter.Not Filter.IsSource on the condition -- the opposite call
+-- to evolve's below, and for the opposite reason: rule 702.100a excludes the
+-- bearer by arithmetic, where this rule prints the word.
+--
+-- The "if" is CR 603.4's intervening one, so CR 608.2a re-checks it as the
+-- ability resolves and a counter moved off in response leaves nothing to move.
+-- Quantity.ObjectCounters names no object, which is how it reads the Filter.Context's
+-- source -- the bearer.
+--
+-- The DESTINATION is the entrant, neither the bearer nor a target, reached
+-- through ObjectRef.InSlot at Binding.became; the SOURCE side is the bearer as
+-- bound (Binding.triggerSource), so CR 608.2h answers for one that has left.
+--
+-- Optionality.Optional is rule 702.58a's "you may", CR 603.3a's controller's.
+-- MoveCounters.slot is Nothing: rule 702.58a names no later clause reading how
+-- many crossed.
+graft :: TriggeredAbility Card (GrantedAbility.GrantedAbility Card)
+graft =
+  let effect =
+        Effect.MoveCounters
+          MoveCounters.MkMoveCounters
+            { MoveCounters.from = ObjectRef.InSlot Binding.triggerSource,
+              MoveCounters.kinds = MovedKinds.Named CounterKind.PlusOnePlusOne (Quantity.Literal 1),
+              MoveCounters.slot = Nothing,
+              MoveCounters.to = ObjectRef.InSlot Binding.became
+            }
+   in Mint.triggerOf
+        ( TriggerCondition.PermanentEnters
+            (Filter.And [Filter.HasCardType CardType.Creature, Filter.Not Filter.IsSource])
+        )
+        ( Just
+            ( Condition.Compares
+                (Compares.MkCompares (Quantity.ObjectCounters CounterKind.PlusOnePlusOne) Comparison.AtLeast (Quantity.Literal 1))
+            )
+        )
+        (Mint.oneModeOf Map.empty (Seq.singleton (Mint.youMay (Seq.singleton effect))))
+
+-- CR 702.100a. The bearer is NOT excluded from the condition's Filter, which is
+-- the rule rather
+-- than an omission: a creature entering compares itself against itself, which no
+-- comparison below can answer true.
+-- The comparison rides the intervening "if" (CR 603.4) and not the Filter, where
+-- training's lives, because rule 702.100a prints "if": CR 608.2a re-checks it as
+-- the ability resolves, so pumping the bearer in response takes the counter away.
+-- It reaches the entrant -- neither the bearer nor a target -- through
+-- Quantity.AgainstSlot at Binding.became, and through CR 608.2h, so one killed
+-- while the trigger waits is compared at its last known power and toughness.
+--
+-- Condition.Any because rule 702.100a's "and/or" compares two DIFFERENT
+-- characteristics. STRICTLY greater, spelled as "at least one more" since CR
+-- 208.1's power and toughness are whole numbers and Comparison has no strict arm.
+-- CR 702.100c then falls out: a permanent that is not a creature has no power or
+-- toughness (CR 208.3), and Condition.holds reads an unanswerable side as False.
+--
+-- Effect.CounterAndMark rather than Effect.PutCounters, which is rule 702.100b:
+-- one opcode is what ties the "evolves" marker to the placement. Renegade Krasis
+-- reads it.
+
+-- CR 702.95a: soulbond, two triggered abilities. Bushido's shape -- one keyword,
+-- two conditions, and a TriggeredAbility carries one each -- with the pair of
+-- them minted together so that the roster arm reads as one keyword.
+--
+-- The two differ only in WHICH creature is the new one: on this creature's own
+-- entry the partner is chosen (CR 608.2d), and on another creature's entry the
+-- partner is the entrant the trigger already bound. Both pair the SOURCE with it,
+-- which is what makes one opcode enough.
+soulbond :: [TriggeredAbility Card (GrantedAbility.GrantedAbility Card)]
+soulbond = [soulbondSelfEnters, soulbondOtherEnters]
+
+-- CR 702.95a's "another unpaired creature you control": "another" is Not
+-- IsSource, "you control" is ControlledBy You (CR 109.5), and "unpaired" is CR
+-- 702.95b's Not IsPaired. The rule's words rather than any card's.
+unpairedOther :: Filter Keyword
+unpairedOther =
+  Filter.And
+    [ Filter.HasCardType CardType.Creature,
+      Filter.ControlledBy PlayerRelation.You,
+      Filter.Not Filter.IsSource,
+      Filter.Not Filter.IsPaired
+    ]
+
+-- CR 702.95a's "you control this creature and it is unpaired", asked of the
+-- battlefield so that a source already gone answers False.
+soulbondSelfEligible :: Condition.Condition
+soulbondSelfEligible =
+  atLeastOneMatching
+    (Scope.InZone (InZone.MkInZone Zone.Battlefield (PlayerRef.Relative PlayerRelation.AnyPlayer)))
+    (Filter.And [Filter.IsSource, Filter.HasCardType CardType.Creature, Filter.ControlledBy PlayerRelation.You, Filter.Not Filter.IsPaired])
+
+-- "At least one candidate", as CR 603.4 wants it: a Count of the scope's members
+-- the Filter keeps, against 1.
+atLeastOneMatching :: Scope.Scope -> Filter Keyword -> Condition.Condition
+atLeastOneMatching scope quality =
+  Condition.Compares
+    ( Compares.MkCompares
+        (Quantity.Count (Count.MkCount scope quality Aggregation.Members))
+        Comparison.AtLeast
+        (Quantity.Literal 1)
+    )
+
+-- CR 702.95a's FIRST ability: "When this creature enters, if you control both
+-- this creature and another creature and both are unpaired, you may pair this
+-- creature with another unpaired creature you control".
+--
+-- The "may" is Optionality.Optional and not a PayGate, there being nothing to
+-- pay; the partner is ObjectRef.ChosenPermanents, which is CR 608.2d's choice
+-- rather than a target (rule 702.95a says "pair", never "target"), so it is asked
+-- only where two or more candidates make it a choice.
+soulbondSelfEnters :: TriggeredAbility Card (GrantedAbility.GrantedAbility Card)
+soulbondSelfEnters =
+  let clause =
+        Mint.youMay
+          (Seq.singleton (Effect.Pair (ObjectRef.ChosenPermanents (ChosenPermanents.MkChosenPermanents unpairedOther (PlayerRef.Relative PlayerRelation.You) HowMany.one))))
+   in Mint.triggerOf
+        TriggerCondition.SelfEnters
+        ( Just
+            ( Condition.All
+                [ soulbondSelfEligible,
+                  atLeastOneMatching (Scope.InZone (InZone.MkInZone Zone.Battlefield (PlayerRef.Relative PlayerRelation.AnyPlayer))) unpairedOther
+                ]
+            )
+        )
+        (Mint.oneModeOf Map.empty (Seq.singleton clause))
+
+-- CR 702.95a's SECOND ability: "Whenever another creature you control enters, if
+-- you control both that creature and this one and both are unpaired, you may pair
+-- that creature with this creature".
+--
+-- The entrant needs no choosing, so the partner is the slot the trigger bound;
+-- the condition splits into this creature's half, shared with the first ability,
+-- and the entrant's, asked over CR 400.7j's bound slot rather than the
+-- battlefield, since the rule names THAT creature and not any matching one.
+--
+-- BOTH HALVES ASK THE SAME THREE THINGS -- a creature, under this ability's
+-- controller, unpaired -- because CR 603.4 checks the condition again as the
+-- ability resolves, and an entrant an opponent has taken in the meantime makes
+-- it false. Asking the bound slot only whether it is unpaired left the ability
+-- on the stack and put rule 702.95a's "you may" to a player the rule had stopped
+-- asking; Parun.KeywordTriggerSpec's "CR 603.4 an entrant alice no longer
+-- controls is not asked about" is what proves it does not. Creature-ness is the
+-- one of the three CR 702.95c would also have caught, and it is asked here
+-- rather than left to that rule because the two answers are then
+-- indistinguishable -- the pairing does not happen either way -- so there is
+-- nothing to put to anybody.
+soulbondOtherEnters :: TriggeredAbility Card (GrantedAbility.GrantedAbility Card)
+soulbondOtherEnters =
+  let clause =
+        Mint.youMay
+          (Seq.singleton (Effect.Pair (ObjectRef.InSlot Binding.became)))
+   in Mint.triggerOf
+        ( TriggerCondition.PermanentEnters
+            ( Filter.And
+                [ Filter.HasCardType CardType.Creature,
+                  Filter.ControlledBy PlayerRelation.You,
+                  Filter.Not Filter.IsSource
+                ]
+            )
+        )
+        ( Just
+            ( Condition.All
+                [ soulbondSelfEligible,
+                  atLeastOneMatching
+                    (Scope.OverBound Binding.became)
+                    (Filter.And [Filter.HasCardType CardType.Creature, Filter.ControlledBy PlayerRelation.You, Filter.Not Filter.IsPaired])
+                ]
+            )
+        )
+        (Mint.oneModeOf Map.empty (Seq.singleton clause))
+
+evolve :: TriggeredAbility Card (GrantedAbility.GrantedAbility Card)
+evolve =
+  let effect = Effect.CounterAndMark (PermanentActed.MkPermanentActed PermanentAction.Evolve Binding.triggerSource)
+      entrantExceeds quantity =
+        Condition.Compares
+          ( Compares.MkCompares
+              (Quantity.AgainstSlot (AgainstSlot.MkAgainstSlot Binding.became quantity))
+              Comparison.AtLeast
+              (Quantity.Arithmetic (Arithmetic.Plus (Plus.MkPlus quantity (Quantity.Literal 1))))
+          )
+   in Mint.triggerIf
+        ( TriggerCondition.PermanentEnters
+            (Filter.And [Filter.HasCardType CardType.Creature, Filter.ControlledBy PlayerRelation.You])
+        )
+        (Condition.Any (fmap (entrantExceeds . Quantity.Measure) [Measure.Power, Measure.Toughness]))
+        (Seq.singleton effect)
+
+-- CR 702.108a: whenever you cast a noncreature spell, this creature gets +1/+1
+-- until end of turn.
+--
+-- The first minted trigger whose event is NOT its bearer's combat: CR 601.2i is
+-- the event, so the condition is TriggerCondition.SpellCast. "You cast" is
+-- Filter.ControlledBy You against CR 109.5's "you", the ability's controller (CR
+-- 603.3a); "a noncreature spell" is Filter.Not of the card type, the printed word
+-- rather than a disjunction of the other types. TurnScope.EachTurn because rule
+-- 702.108a names no turn.
+--
+-- "THIS CREATURE" is the bearer, so the payload is battle cry's with
+-- Filter.IsSource rather than its negation.
+prowess :: TriggeredAbility Card (GrantedAbility.GrantedAbility Card)
+prowess =
+  let effect =
+        Effect.ModifyTarget
+          ( ModifyTarget.MkModifyTarget
+              Duration.UntilEndOfTurn
+              (Modification.ModifyPowerToughness (ModifyPowerToughness.MkModifyPowerToughness (Quantity.Literal 1) (Quantity.Literal 1)))
+              (ObjectRef.EachMatching Filter.IsSource)
+              Nothing
+          )
+   in Mint.trigger
+        -- CR 702.108a names no zone and no ordinal: every noncreature spell cast
+        -- from anywhere fires it.
+        (Mint.spellCast (Filter.And [Filter.ControlledBy PlayerRelation.You, Filter.Not (Filter.HasCardType CardType.Creature)]))
+        (Seq.singleton effect)
+
+-- CR 702.101a: whenever you cast a spell, you may pay {W/B}; if you do, each
+-- opponent loses 1 life and you gain that much life.
+--
+-- Prowess' SpellCast condition with no type filter -- rule 702.101a says "a
+-- spell", so a creature spell fires it too -- and ward's PayGate the other way
+-- round: PayBranch.IfPaid is rule 702.101a's "if you do", and the "may" IS the
+-- gate's offer (CR 118.12), which is why the clause is Optionality.Mandatory.
+--
+-- ONE CLAUSE for two instructions, which is CR 608.2d's single announcement: the
+-- loss and the gain hang off the one payment. The gain reads the loss's own
+-- tally rather than a count of opponents, because rule 702.101a says "the total
+-- life lost this way" and CR 614.1 may leave a seat losing nothing --
+-- Parun.KeywordTriggerSpec's "CR 702.101a alice gained the total the two of them
+-- lost" is what proves it.
+extort :: TriggeredAbility Card (GrantedAbility.GrantedAbility Card)
+extort =
+  let drained = SlotName.MkSlotName (Text.pack "extorted")
+      gate =
+        PayGate.MkPayGate
+          { PayGate.payer = PlayerRef.Relative PlayerRelation.You,
+            PayGate.cost = CostChoice.MkCostChoice (extortCost NonEmpty.:| []),
+            PayGate.basis = Nothing,
+            PayGate.branch = PayBranch.IfPaid,
+            PayGate.obligation = PayObligation.Optional,
+            PayGate.perEach = Nothing,
+            PayGate.offeredAt = Nothing
+          }
+      loss = Effect.LoseLife (LifeLoss.MkLifeLoss (PlayerRef.Relative PlayerRelation.Opponent) (Quantity.Literal 1) LifeLossCause.ByEffect (Just drained))
+      gain = Effect.GainLife (PlayerQuantity.MkPlayerQuantity (PlayerRef.Relative PlayerRelation.You) (Quantity.InSlot drained))
+      clause = Mint.mandatoryPaying gate (Seq.fromList [loss, gain])
+   in Mint.triggerOf
+        (Mint.spellCast (Filter.ControlledBy PlayerRelation.You))
+        Nothing
+        (Mint.oneModeOf Map.empty (Seq.singleton clause))
+
+-- CR 702.101a's {W/B}, fixed by the rule rather than printed on the card, which
+-- is why extort carries no cost payload where rule 702.21a's ward does.
+extortCost :: Cost Keyword
+extortCost =
+  Cost.MkCost
+    { Cost.mana = Just (ManaCost.MkManaCost [ManaSymbol.Hybrid (Hybrid.MkHybrid (ManaType.Colored Color.White) (ManaType.Colored Color.Black))]),
+      Cost.components = []
+    }
+
+-- CR 702.191a: whenever you cast a spell, if this permanent is a creature and the
+-- amount of mana spent to cast that spell is greater than this creature's power
+-- or its toughness, put a +1/+1 counter on it.
+--
+-- Extort's condition and dethrone's payload, joined by CR 603.4's intervening
+-- "if" -- checked as the trigger would go on the stack AND again as it resolves,
+-- which is what the rule's "is a creature" needs: a permanent that stops being
+-- one in response does nothing.
+--
+-- THE AMOUNT is read off the CAST SPELL through Binding.castSpell, which is why
+-- it is an AgainstSlot: Quantity.ManaSpent aimed at no slot would read the
+-- bearer's own payment. Comparison.AtLeast over (power + 1) is evolve's spelling
+-- of a strict ">" (Parun.Types.Comparison).
+increment :: TriggeredAbility Card (GrantedAbility.GrantedAbility Card)
+increment =
+  let grow = Effect.PutCounters (PutCounters.MkPutCounters CounterKind.PlusOnePlusOne (Quantity.Literal 1) (ObjectRef.InSlot Binding.triggerSource))
+      spentExceeds quantity =
+        Condition.Compares
+          ( Compares.MkCompares
+              (Quantity.AgainstSlot (AgainstSlot.MkAgainstSlot Binding.castSpell Quantity.ManaSpent))
+              Comparison.AtLeast
+              (Quantity.Arithmetic (Arithmetic.Plus (Plus.MkPlus quantity (Quantity.Literal 1))))
+          )
+      -- "If this permanent is a creature", echo's spelling of a question about the
+      -- bearer: a count of one over the battlefield, which answers 0 for a
+      -- permanent that has left or stopped being a creature.
+      isCreature =
+        Condition.Compares
+          ( Compares.MkCompares
+              (Quantity.Count (Count.MkCount (Scope.InZone (InZone.MkInZone Zone.Battlefield (PlayerRef.Relative PlayerRelation.AnyPlayer))) (Filter.And [Filter.IsSource, Filter.HasCardType CardType.Creature]) Aggregation.Members))
+              Comparison.AtLeast
+              (Quantity.Literal 1)
+          )
+   in Mint.triggerIf
+        (Mint.spellCast (Filter.ControlledBy PlayerRelation.You))
+        (Condition.All [isCreature, Condition.Any (fmap (spentExceeds . Quantity.Measure) [Measure.Power, Measure.Toughness])])
+        (Seq.singleton grow)
+
+-- CR 702.121a, on battle cry's SelfAttacks condition with prowess' payload.
+-- Attacking a PLANESWALKER fires it just the same -- CR 508.1a chooses the
+-- attackers and CR 508.1b only then says what each attacks -- so what the
+-- planeswalker changes is the bonus.
+--
+-- The BONUS is the one payload here that is not a literal:
+-- Quantity.OpponentsAttacked reads CR 508.3b's record against CR 109.5's "you".
+-- Zero is an ordinary answer. CR 611.2d freezes it as this resolves, which the
+-- printed duration needs: CR 511.3 clears the record at end of combat, so a live
+-- re-read would shrink the pump to 0 the moment combat ended.
+melee :: TriggeredAbility Card (GrantedAbility.GrantedAbility Card)
+melee =
+  let bonus = Quantity.OpponentsAttacked (PlayerRef.Relative PlayerRelation.You)
+      effect =
+        Effect.ModifyTarget
+          ( ModifyTarget.MkModifyTarget
+              Duration.UntilEndOfTurn
+              (Modification.ModifyPowerToughness (ModifyPowerToughness.MkModifyPowerToughness bonus bonus))
+              (ObjectRef.EachMatching Filter.IsSource)
+              Nothing
+          )
+   in Mint.trigger (TriggerCondition.SelfAttacks TriggerFrequency.EveryTime) (Seq.singleton effect)
+
+-- CR 702.23a. The condition is bushido's blocked half, CR 509.3c, which fires ONCE
+-- however many creatures blocked, where flanking's CR 509.3d fires once per
+-- blocker. Rule 702.23a's bonus already counts the blockers itself, so a
+-- per-blocker trigger would count them twice.
+--
+-- The BONUS is Arithmetic.Times of N and Quantity.BlockersBeyond 1 (CR 107.1);
+-- a factor of 0 is legal, so rampage 0 reads 0 rather than failing.
+--
+-- CR 702.23b's "calculated only once per combat" is CR 611.2d's freeze and needs
+-- nothing of its own.
+rampage :: Natural -> TriggeredAbility Card (GrantedAbility.GrantedAbility Card)
+rampage n =
+  let bonus = Quantity.Arithmetic (Arithmetic.Times (Times.MkTimes n (Quantity.BlockersBeyond 1)))
+      effect =
+        Effect.ModifyTarget
+          ( ModifyTarget.MkModifyTarget
+              Duration.UntilEndOfTurn
+              (Modification.ModifyPowerToughness (ModifyPowerToughness.MkModifyPowerToughness bonus bonus))
+              (ObjectRef.EachMatching Filter.IsSource)
+              Nothing
+          )
+   in Mint.trigger TriggerCondition.SelfBecomesBlocked (Seq.singleton effect)
+
+-- CR 702.25a. CR 509.3d is the event -- "becomes blocked by a creature", once for
+-- each creature that blocks -- and NOT CR 509.3c's "becomes blocked", which fires
+-- once however many blockers there are. Two blockers on one flanker is two
+-- triggers and two -1/-1s; bushido below reads that other, grouped event.
+--
+-- "WITHOUT FLANKING" rides the condition rather than the payload, which is rule
+-- 509.3f: a blocker's characteristics are checked as it becomes a blocking
+-- creature, so a creature that gains flanking afterwards is still pumped down.
+--
+-- "THE BLOCKING CREATURE" is the object the event named, bound under
+-- Binding.blockingCreature -- an ordinary slot read, and NOT a set sweep over
+-- whoever is blocking at resolution.
+flanking :: TriggeredAbility Card (GrantedAbility.GrantedAbility Card)
+flanking =
+  Mint.trigger
+    ( TriggerCondition.SelfBecomesBlockedBy
+        (Filter.And [Filter.HasCardType CardType.Creature, Filter.Not (Filter.HasKeyword Keyword.Flanking)])
+    )
+    (Seq.singleton flankingEffect)
+
+-- The -1/-1 rule 702.25a hands the blocker, read out of the slot CR 509.3d bound.
+flankingEffect :: Effect.Effect Card (GrantedAbility.GrantedAbility Card)
+flankingEffect =
+  Effect.ModifyTarget
+    ( ModifyTarget.MkModifyTarget
+        Duration.UntilEndOfTurn
+        (Modification.ModifyPowerToughness (ModifyPowerToughness.MkModifyPowerToughness (Quantity.Literal (-1)) (Quantity.Literal (-1))))
+        (ObjectRef.InSlot Binding.blockingCreature)
+        Nothing
+    )
+
+-- CR 702.83a, the one minted ability borne by a BYSTANDER on both sides at once:
+-- the condition watches
+-- somebody else's declaration AND the payload pumps somebody else, so the bearer
+-- appears in neither. It supplies only CR 109.5's "you" -- the ability's
+-- controller (CR 603.3a) -- and the Filter context's source.
+--
+-- ALONE is TriggerCondition.CreatureAttacksAlone's own, not a Filter conjunct: CR
+-- 506.5 makes it a fact about the declaration rather than a characteristic.
+--
+-- "THAT CREATURE" is the creature the event named, read out of
+-- Binding.attackingCreature -- NOT Filter.IsSource, which would pump the wrong
+-- permanent whenever a card other than the exalted bearer attacks.
+exalted :: TriggeredAbility Card (GrantedAbility.GrantedAbility Card)
+exalted =
+  let effect =
+        Effect.ModifyTarget
+          ( ModifyTarget.MkModifyTarget
+              Duration.UntilEndOfTurn
+              (Modification.ModifyPowerToughness (ModifyPowerToughness.MkModifyPowerToughness (Quantity.Literal 1) (Quantity.Literal 1)))
+              (ObjectRef.InSlot Binding.attackingCreature)
+              Nothing
+          )
+   in Mint.trigger
+        ( TriggerCondition.CreatureAttacksAlone
+            (Filter.And [Filter.HasCardType CardType.Creature, Filter.ControlledBy PlayerRelation.You])
+        )
+        (Seq.singleton effect)
+
+-- CR 702.45a, the one keyword whose sentence names TWO events: "blocks" is CR
+-- 509.3a and "becomes blocked" is CR 509.3c.
+--
+-- So this returns a LIST of two abilities where its siblings return one. The
+-- alternative -- one TriggeredAbility with a disjunctive condition -- would need a
+-- TriggerCondition combinator nothing else in rule 702 wants, and the split costs
+-- nothing: CR 603.2 triggers once per occurrence, so both spellings put the same
+-- number of objects on the stack.
+--
+-- The payload is prowess' with N in place of its 1, and both abilities carry it,
+-- rule 702.45a stating one.
+bushido :: Natural -> [TriggeredAbility Card (GrantedAbility.GrantedAbility Card)]
+bushido n = [bushidoBlocks n, bushidoBecomesBlocked n]
+
+-- CR 509.3a's half of rule 702.45a.
+bushidoBlocks :: Natural -> TriggeredAbility Card (GrantedAbility.GrantedAbility Card)
+bushidoBlocks = bushidoHalf TriggerCondition.SelfBlocks
+
+-- CR 509.3c's half of rule 702.45a.
+bushidoBecomesBlocked :: Natural -> TriggeredAbility Card (GrantedAbility.GrantedAbility Card)
+bushidoBecomesBlocked = bushidoHalf TriggerCondition.SelfBecomesBlocked
+
+-- The +N/+N the two halves share.
+bushidoHalf :: TriggerCondition.TriggerCondition -> Natural -> TriggeredAbility Card (GrantedAbility.GrantedAbility Card)
+bushidoHalf condition n =
+  let effect =
+        Effect.ModifyTarget
+          ( ModifyTarget.MkModifyTarget
+              Duration.UntilEndOfTurn
+              (Modification.ModifyPowerToughness (ModifyPowerToughness.MkModifyPowerToughness (Quantity.Literal (toInteger n)) (Quantity.Literal (toInteger n))))
+              (ObjectRef.EachMatching Filter.IsSource)
+              Nothing
+          )
+   in Mint.trigger condition (Seq.singleton effect)
+
+-- CR 702.154a's second half, rule 702.154b's linked triggered ability: "when you
+-- do, this creature gets +X\/+0 until end of turn, where X is the tapped
+-- creature's power". Frenzy's pump shape with the bonus read off a slot.
+--
+-- TriggerCondition.Reflexive, because rule 702.154a's "when you do" is CR
+-- 603.12's form: Parun.Engine.Combat.declareAttackers arms one entry per enlist
+-- instance whose cost was actually paid, and the entry's EXISTENCE is that
+-- rule's affirmative answer. Arming per payment is also CR 702.154d -- two
+-- enlist instances each fire for their own tap and no other.
+--
+-- THE BONUS reads Binding.tappedPermanent, station's slot for the same question
+-- ("the tapped creature"), bound at the arming to the creature the cost tapped.
+-- CR 611.2d freezes it as the ability resolves, so a creature that has since
+-- changed power still pumps by what it is worth then rather than at declaration.
+enlistReflexive :: TriggeredAbility Card (GrantedAbility.GrantedAbility Card)
+enlistReflexive =
+  let effect =
+        Effect.ModifyTarget
+          ( ModifyTarget.MkModifyTarget
+              Duration.UntilEndOfTurn
+              (Modification.ModifyPowerToughness (ModifyPowerToughness.MkModifyPowerToughness (Quantity.AgainstSlot (AgainstSlot.MkAgainstSlot Binding.tappedPermanent (Quantity.Measure Measure.Power))) (Quantity.Literal 0)))
+              (ObjectRef.EachMatching Filter.IsSource)
+              Nothing
+          )
+   in Mint.trigger TriggerCondition.Reflexive (Seq.singleton effect)
+
+-- CR 702.68a: bushidoHalf with the toughness bonus zeroed.
+--
+-- The BONUS is a continuous effect from a RESOLVING ability (CR 611.2): it
+-- modifies power without setting it, so CR 613.4c's layer 7c applies it, and CR
+-- 611.2a is the duration.
+--
+-- The condition is TriggerCondition.SelfAttacksUnblocked, which the glossary's
+-- "attacks and isn't blocked" entry sends to CR 509.1h -- so the bonus lands in
+-- the declare blockers step, after the declaration, rather than with CR 508.2's
+-- attack triggers. Rule 509.1h's last sentence keeps a creature whose only blocker
+-- left combat from getting it.
+frenzy :: Natural -> TriggeredAbility Card (GrantedAbility.GrantedAbility Card)
+frenzy n =
+  let effect =
+        Effect.ModifyTarget
+          ( ModifyTarget.MkModifyTarget
+              Duration.UntilEndOfTurn
+              (Modification.ModifyPowerToughness (ModifyPowerToughness.MkModifyPowerToughness (Quantity.Literal (toInteger n)) (Quantity.Literal 0)))
+              (ObjectRef.EachMatching Filter.IsSource)
+              Nothing
+          )
+   in Mint.trigger TriggerCondition.SelfAttacksUnblocked (Seq.singleton effect)
+
+-- CR 702.130a: bushido's CR 509.3c condition and annihilator's CR 508.5 player,
+-- read off GameEvent.AttackerBlocked through Binding.triggerPlayer. NOT the
+-- ability's controller: CR 603.3a makes that the ATTACKING creature's controller,
+-- and the life leaves whom they attacked.
+--
+-- Effect.LoseLife and not damage: rule 702.130a says "loses N life", so this is CR
+-- 119.3's life loss and none of CR 120's damage machinery sees it.
+afflict :: Natural -> TriggeredAbility Card (GrantedAbility.GrantedAbility Card)
+afflict n =
+  let effect =
+        Effect.LoseLife
+          ( LifeLoss.MkLifeLoss
+              (PlayerRef.InSlot Binding.triggerPlayer)
+              (Quantity.Literal (toInteger n))
+              LifeLossCause.ByEffect
+              Nothing
+          )
+   in Mint.trigger TriggerCondition.SelfBecomesBlocked (Seq.singleton effect)
+
+-- CR 702.134a, the first minted ability that TARGETS. A REAL choice, since with
+-- two smaller attackers the rules leave which one open.
+--
+-- The power comparison's operand is the SOURCE's power, which is why it
+-- carries no literal, and it is LessThan, strict, which is what excludes the
+-- BEARER with no `Not IsSource`.
+--
+-- Effect.Mentor and not Effect.PutCounters, for evolve's reason one rule over: CR
+-- 702.134c makes "a creature mentors another creature" a trigger event, so the
+-- placement has to be distinguishable from every other +1/+1 counter. The counter
+-- still goes through Event.putCounters, so CR 122.6's funnel is unaffected.
+mentor :: TriggeredAbility Card (GrantedAbility.GrantedAbility Card)
+mentor =
+  let slot = TargetSlot.required Pool.Creatures (Just (Filter.And [Filter.IsAttacking, Filter.Measures (Measures.MkMeasures Measure.Power Comparison.LessThan (Operand.OfSource Measure.Power))]))
+      effect = Effect.Mentor mentorTarget
+   in Mint.triggerOf
+        (TriggerCondition.SelfAttacks TriggerFrequency.EveryTime)
+        Nothing
+        (Mint.oneModeTargeting (Map.singleton mentorTarget slot) (Seq.singleton effect))
+
+-- The slot rule 702.134a's one target is chosen into. Named here rather than in
+-- Parun.Engine.Binding, which holds the RESERVED names a card may not use: this is
+-- an ordinary target slot, declared by the ability that reads it.
+mentorTarget :: SlotName.SlotName
+mentorTarget = SlotName.MkSlotName (Text.pack "mentored")
+
+-- CR 702.149a: mentor's clause with the comparison reversed and the target
+-- dropped, rule 702.149a pumping the BEARER, so there is nothing to choose.
+--
+-- The comparison therefore rides the CONDITION. CR 702.149a's companion is part of
+-- the trigger event, not an intervening-if clause, so it is checked once as the
+-- attackers are declared and never again on resolution -- a bigger co-attacker
+-- that dies in response still leaves the counter. "Other" is the condition's own,
+-- an identity check the Filter has no atom for.
+--
+-- Through Effect.CounterAndMark, evolve's opcode: rule 702.149c makes "when
+-- this creature trains" mean the placement, so it has to be distinguishable from
+-- any other +1/+1 counter arriving.
+training :: TriggeredAbility Card (GrantedAbility.GrantedAbility Card)
+training =
+  let effect = Effect.CounterAndMark (PermanentActed.MkPermanentActed PermanentAction.Train Binding.triggerSource)
+   in Mint.trigger
+        ( TriggerCondition.SelfAttacksWithAnother
+            (Filter.And [Filter.HasCardType CardType.Creature, Filter.Measures (Measures.MkMeasures Measure.Power Comparison.GreaterThan (Operand.OfSource Measure.Power))])
+        )
+        (Seq.singleton effect)
+
+-- CR 702.21a: ward [cost].
+--
+-- ONE CLAUSE and no branching opcode, fabricate's shape: CR 118.12a rewrites "[do
+-- something] unless [a player does something else]" as an offer followed by the
+-- thing, so the Counter is the clause's "if they don't" branch and the PayGate is
+-- the offer, paid at RESOLUTION (CR 118.12). Optionality.Mandatory, since that
+-- offer IS the only choice rule 702.21a gives.
+--
+-- THE PAYER IS THE TARGETER'S CONTROLLER, not the bearer's, so the same
+-- Binding.targetingObject slot answers both halves of the sentence; Binding.you
+-- would offer the cost to the wrong player. That slot is NOT a target slot: rule
+-- 702.21a targets nothing, so nothing here is re-checked at CR 608.2b and a
+-- shroud-bearing spell is countered as readily as any other.
+--
+-- CR 702.21b's X rides PayGate.perEach, which Parun.Engine.Resolve.Effect.payGatePaidBy
+-- evaluates against the RESOLUTION -- "not locked in as the ability triggers".
+-- The narrow tally the keyword stores is widened into a Quantity here, the one
+-- place the two namespaces meet; Parun.Types.Ward.perEach says why it is stored
+-- narrow.
+ward :: Ward.Ward Keyword -> TriggeredAbility Card (GrantedAbility.GrantedAbility Card)
+ward w =
+  let clause = Mint.mandatoryPaying gate (Seq.singleton effect)
+      -- PayObligation.Optional and no offeredAt: rule 702.21a's "unless that
+      -- player pays" is CR 118.12a's "may", and one clause makes its own offer.
+      gate =
+        PayGate.MkPayGate
+          { PayGate.payer = PlayerRef.ControllerOfBound Binding.targetingObject,
+            PayGate.cost = CostChoice.MkCostChoice (Ward.cost w NonEmpty.:| []),
+            PayGate.basis = Nothing,
+            PayGate.branch = PayBranch.IfNotPaid,
+            PayGate.obligation = PayObligation.Optional,
+            PayGate.perEach = fmap Quantity.PlayerCounters (Ward.perEach w),
+            PayGate.offeredAt = Nothing
+          }
+      effect = Effect.Counter (Counter.MkCounter (ObjectRef.InSlot Binding.targetingObject) Nothing Nothing Nothing)
+   in Mint.triggerOf
+        (TriggerCondition.SelfBecomesTargeted PlayerRelation.Opponent)
+        Nothing
+        (Mint.oneModeOf Map.empty (Seq.singleton clause))
+
+-- CR 702.147a's TRIGGERED half. CR 508.3a is what "attacks" means, so the
+-- condition is mentor's and provoke's SelfAttacks EveryTime.
+--
+-- The payload is not a sacrifice. "At end of combat" makes the sacrifice a CR
+-- 603.7 DELAYED triggered ability, created as this one resolves, so the effect is
+-- the arming opcode and `decayedSacrifice` is what it arms.
+--
+-- Onset.Immediately with no stated duration -- CR 603.7a's floor and CR 603.7b's
+-- default. Rule 702.147a gates neither end of the envelope, so the delayed
+-- ability watches from the moment it is armed and fires once.
+decayed :: TriggeredAbility Card (GrantedAbility.GrantedAbility Card)
+decayed =
+  let effect =
+        Effect.ArmDelayedTrigger
+          ArmDelayedTrigger.MkArmDelayedTrigger
+            { ArmDelayedTrigger.name = decayedSacrificeName,
+              ArmDelayedTrigger.onset = Onset.Immediately,
+              ArmDelayedTrigger.duration = Nothing,
+              ArmDelayedTrigger.ability = Nothing
+            }
+   in Mint.trigger (TriggerCondition.SelfAttacks TriggerFrequency.EveryTime) (Seq.singleton effect)
+
+-- CR 603.7: the delayed triggered abilities the RULEBOOK declares, keyed by the
+-- name its own arming opcode names. Parun.Engine.Resolve falls back to this map
+-- when a name is on no face's Face.delayedAbilities, a keyword or keyword action
+-- having no card text to declare the far end in.
+--
+-- Rule 702's keywords and rule 701's keyword actions alike: decayed's sacrifice
+-- is rule 702.147a's, earthbend's return is rule 701.66a's, and both are engine
+-- text for the same reason.
+--
+-- Read by NAME and never off the board, which is what CR 603.7 asks for: a source
+-- that has since lost the keyword -- or left the battlefield -- still sacrifices.
+-- NOT a nested ability inside the opcode: Parun.Types.Effect is first-order and
+-- non-recursive on purpose.
+--
+-- What no type enforces is a LATER keyword whose arm is written and whose row here
+-- is forgotten -- a dangling name is a silent no-op. Parun.CardSpec closes the
+-- other direction, so no card's declaration can shadow a row here.
+mintedDelayedAbilities :: Map AbilityName (TriggeredAbility Card (GrantedAbility.GrantedAbility Card))
+mintedDelayedAbilities = Map.fromList [(epicCopyName, epicCopy), (paradigmCopyName, paradigmCopy), (decayedSacrificeName, decayedSacrifice), (unearthExileName, unearthExile), (Earthbend.returnName, Earthbend.returnAbility), (dashReturnName, dashReturn), (blitzSacrificeName, blitzSacrifice), (myriadExileName, myriadExile), (encoreSacrificeName, encoreSacrifice), (mobilizeSacrificeName, mobilizeSacrifice), (warpExileName, warpExile)]
+
+-- The lookup Parun.Engine.Resolve does, which learns only that rule 702 declared
+-- an ability under this name and never which keyword did.
+mintedDelayedAbility :: AbilityName -> Maybe (TriggeredAbility Card (GrantedAbility.GrantedAbility Card))
+mintedDelayedAbility name = Map.lookup name mintedDelayedAbilities
+
+-- CR 702.109a's, CR 702.152a's and CR 702.185a's second static ability: the
+-- delayed triggered ability a spell cast for this keyword's cost creates as it
+-- becomes a permanent (CR 603.7a), named for mintedDelayedAbility.
+-- Parun.Engine.Stack arms it on resolution with `becameSlot` bound to that
+-- permanent. Nothing for every other keyword, and for a spell cast for no
+-- keyword's cost.
+resolutionDelayedAbility :: Maybe Keyword -> Maybe AbilityName
+resolutionDelayedAbility castUsing = case castUsing of
+  Just (Keyword.Dash _) -> Just dashReturnName
+  Just (Keyword.Blitz _) -> Just blitzSacrificeName
+  Just (Keyword.Warp _) -> Just warpExileName
+  _ -> Nothing
+
+-- The slot rule 702.109a's, rule 702.152a's and rule 702.185a's "the permanent
+-- this spell becomes" is bound into, unearthSlot's position: CR 603.7c's "it",
+-- which a flickered permanent is not (CR 400.7).
+becameSlot :: SlotName.SlotName
+becameSlot = SlotName.MkSlotName (Text.pack "became permanent")
+
+-- The names rule 702.109a's, rule 702.152a's and rule 702.185a's delayed
+-- abilities are filed under. A card may not declare one under any of these names
+-- (Parun.AbilitySlotLintSpec).
+dashReturnName, blitzSacrificeName, warpExileName :: AbilityName
+dashReturnName = AbilityName.MkAbilityName (Text.pack "dash")
+blitzSacrificeName = AbilityName.MkAbilityName (Text.pack "blitz")
+warpExileName = AbilityName.MkAbilityName (Text.pack "warp")
+
+-- CR 702.109a's "return the permanent this spell becomes to its owner's hand at
+-- the beginning of the next end step", unearthExile's shape with the hand for
+-- exile: CR 513.2's timing, TurnScope.EachTurn, and no `origin`.
+dashReturn :: TriggeredAbility Card (GrantedAbility.GrantedAbility Card)
+dashReturn =
+  let effect =
+        Effect.MoveToZone
+          MoveToZone.MkMoveToZone
+            { MoveToZone.ref = ObjectRef.InSlot becameSlot,
+              MoveToZone.zone = Zone.Hand,
+              MoveToZone.riders =
+                EntryRiders.defaultValue,
+              MoveToZone.slot = Nothing,
+              MoveToZone.origin = Nothing,
+              MoveToZone.placement = LibraryPlacement.defaultValue,
+              MoveToZone.duration = Nothing
+            }
+   in atNextEndStep effect
+
+-- CR 702.152a's "sacrifice the permanent this spell becomes at the beginning of
+-- the next end step", decayedSacrifice's effect on dashReturn's timing.
+-- Sacrificer.EffectController: CR 603.7d makes the delayed ability's controller
+-- the spell's, and CR 701.21a lets that player sacrifice only a permanent they
+-- control.
+blitzSacrifice :: TriggeredAbility Card (GrantedAbility.GrantedAbility Card)
+blitzSacrifice = atNextEndStep (Effect.Sacrifice SacrificeEffect.MkSacrificeEffect {SacrificeEffect.ref = ObjectRef.InSlot becameSlot, SacrificeEffect.sacrificer = Sacrificer.EffectController, SacrificeEffect.sacrificed = Nothing})
+
+-- CR 513.2's "at the beginning of the next end step", once (CR 603.7b), on any
+-- player's turn.
+atNextEndStep :: Effect.Effect Card (GrantedAbility.GrantedAbility Card) -> TriggeredAbility Card (GrantedAbility.GrantedAbility Card)
+atNextEndStep = atNextEndStepAll . Seq.singleton
+
+-- atNextEndStep for a rule stating more than one instruction, as CR 702.185a
+-- does. ONE CLAUSE and not one per effect: CR 608.2c follows the instructions in
+-- the order written, and warpExile's second effect reads the slot its first one
+-- bound, which a second clause would not see.
+atNextEndStepAll :: Seq.Seq (Effect.Effect Card (GrantedAbility.GrantedAbility Card)) -> TriggeredAbility Card (GrantedAbility.GrantedAbility Card)
+atNextEndStepAll =
+  Mint.trigger (TriggerCondition.StepBegins (StepBegins.MkStepBegins (Phase.Ending EndingStep.EndStep) Nothing TurnScope.EachTurn))
+
+-- CR 702.185a's second static ability: "if this spell's warp cost was paid, exile
+-- the permanent this spell becomes at the beginning of the next end step. Its
+-- owner may cast this card after the current turn has ended for as long as it
+-- remains exiled." dashReturn's timing with exile for the hand, plus the stamp
+-- rule 702.185b's designation is.
+--
+-- TWO EFFECTS in ONE clause: the move binds the card it mints in exile under
+-- `warpedSlot` and the stamp reads it there, so the designation lands on CR
+-- 400.7's new incarnation rather than on the permanent that left the battlefield
+-- -- which is also what ends it, since Object.newIncarnation clears the stamp on
+-- the next zone change and that IS rule 702.185a's "for as long as it remains
+-- exiled". A move a replacement sent elsewhere binds that zone's arrival and the
+-- stamp is inert there, Cast.permitsCastWarped being asked only of exile.
+--
+-- FACE UP: rule 702.185a says only "exile", so the default facing stands.
+warpExile :: TriggeredAbility Card (GrantedAbility.GrantedAbility Card)
+warpExile =
+  let exiled =
+        Effect.MoveToZone
+          MoveToZone.MkMoveToZone
+            { MoveToZone.ref = ObjectRef.InSlot becameSlot,
+              MoveToZone.zone = Zone.Exile,
+              MoveToZone.riders =
+                EntryRiders.defaultValue,
+              MoveToZone.slot = Just warpedSlot,
+              MoveToZone.origin = Nothing,
+              MoveToZone.placement = LibraryPlacement.defaultValue,
+              MoveToZone.duration = Nothing
+            }
+   in atNextEndStepAll (Seq.fromList [exiled, Effect.MakeWarped (ObjectRef.InSlot warpedSlot)])
+
+-- The slot rule 702.185a's exile binds the card it mints in exile into, so the
+-- stamp beside it names that incarnation and not `becameSlot`'s permanent.
+warpedSlot :: SlotName.SlotName
+warpedSlot = SlotName.MkSlotName (Text.pack "warped card")
+
+-- The name rule 702.147a's delayed ability is filed under. A card may not declare
+-- one under this name (Parun.CardSpec), which is what makes the fallback order in
+-- Parun.Engine.Resolve immaterial.
+decayedSacrificeName :: AbilityName
+decayedSacrificeName = AbilityName.MkAbilityName (Text.pack "decayed")
+
+-- CR 702.147a's "sacrifice it at end of combat", as CR 511.2 states the timing:
+-- abilities that trigger "at end of combat" trigger as the end of combat step
+-- begins. TurnScope.EachTurn, rule 702.147a naming no player's turn.
+--
+-- Effect.Sacrifice against Binding.triggerSource: rule 702.147a says "it", and CR
+-- 603.7c makes that the environment captured as the ability was armed rather than
+-- a fresh read. CR 701.21a keeps it a sacrifice and not a destruction, so an
+-- indestructible attacker still goes.
+decayedSacrifice :: TriggeredAbility Card (GrantedAbility.GrantedAbility Card)
+decayedSacrifice =
+  let effect = Effect.Sacrifice SacrificeEffect.MkSacrificeEffect {SacrificeEffect.ref = ObjectRef.InSlot Binding.triggerSource, SacrificeEffect.sacrificer = Sacrificer.EffectController, SacrificeEffect.sacrificed = Nothing}
+   in Mint.trigger (TriggerCondition.StepBegins (StepBegins.MkStepBegins (Phase.Combat CombatStep.EndOfCombat) Nothing TurnScope.EachTurn)) (Seq.singleton effect)
+
+-- CR 702.39a's provoke, the first minted payload that creates a CR 509.1c blocking
+-- REQUIREMENT rather than changing a characteristic.
+--
+-- The target slot is narrowed by Filter.ControlledByRole Defending (CR 508.5),
+-- one atom rather than ControlledBy Opponent, which CR 506.2a makes too wide: at
+-- three seats only one opponent is the defending player (CR 508.5a).
+--
+-- ONE clause holding BOTH effects, under one Optionality.Optional -- rule 702.39a
+-- prints one "may", and its "if you do" makes the untap conditional on the same
+-- answer (CR 608.2e). The requirement's ATTACKER is Binding.triggerSource and
+-- never a target (CR 115.10a).
+provoke :: TriggeredAbility Card (GrantedAbility.GrantedAbility Card)
+provoke =
+  let slot = TargetSlot.required Pool.Creatures (Just (Filter.ControlledByRole TurnRole.Defending))
+      requirement =
+        Effect.RequireBlock
+          ( RequireBlock.MkRequireBlock
+              Duration.UntilEndOfCombat
+              (RestrictedCreatures.Named (ObjectRef.InSlot provokeTarget))
+              (Just (RestrictedCreatures.Named (ObjectRef.InSlot Binding.triggerSource)))
+              RequirementArity.EachSubject
+          )
+      untap = Effect.Untap (ObjectRef.InSlot provokeTarget)
+   in Mint.triggerOf
+        (TriggerCondition.SelfAttacks TriggerFrequency.EveryTime)
+        Nothing
+        (Mint.oneModeOf (Map.singleton provokeTarget slot) (Seq.singleton (Mint.youMay (Seq.fromList [requirement, untap]))))
+
+-- The slot rule 702.39a's one target is chosen into, mentorTarget's position.
+provokeTarget :: SlotName.SlotName
+provokeTarget = SlotName.MkSlotName (Text.pack "provoked")
+
+-- CR 702.112a: poisonous' condition with a plain placement onto
+-- Binding.triggerSource. No
+-- marking opcode, unlike training and evolve one rule apiece away: rule 702.112a's
+-- own marker is the DESIGNATION the next clause gives.
+--
+-- THE INTERVENING "IF" is what this row adds. CR 603.4 checks it as the ability
+-- would trigger AND CR 608.2a again as it resolves, which is what CR 702.112c
+-- leans on: with two instances the first to resolve designates the creature, and
+-- the second finds it renowned and is removed from the stack. A printed "may"/"if"
+-- clause (CR 608.2e) would check only on resolution.
+--
+-- ONE clause holding BOTH effects, the rule printing one sentence.
+renown :: Natural -> TriggeredAbility Card (GrantedAbility.GrantedAbility Card)
+renown n =
+  let grow = Effect.PutCounters (PutCounters.MkPutCounters CounterKind.PlusOnePlusOne (Quantity.Literal (toInteger n)) (ObjectRef.InSlot Binding.triggerSource))
+      designate = Effect.Designate (Designate.MkDesignate Designation.Renowned Binding.triggerSource Nothing)
+   in Mint.triggerIf
+        Mint.dealsCombatDamageToAPlayer
+        (Condition.Compares (Compares.MkCompares (Quantity.HasDesignation Designation.Renowned) Comparison.AtMost (Quantity.Literal 0)))
+        (Seq.fromList [grow, designate])
+
+-- CR 702.105a. The whole of the keyword is in the CONDITION,
+-- TriggerCondition.SelfAttacksPlayerWithMostLife, which is why the payload is
+-- renown's first effect with no second. NOT an intervening "if" (CR 603.4), which
+-- is where renown puts its comparison:
+-- rule 702.105a prints no "if", and CR 608.2a would re-check one on resolution --
+-- so an opponent gaining life in response would wrongly remove the ability from
+-- the stack.
+dethrone :: TriggeredAbility Card (GrantedAbility.GrantedAbility Card)
+dethrone =
+  let grow = Effect.PutCounters (PutCounters.MkPutCounters CounterKind.PlusOnePlusOne (Quantity.Literal 1) (ObjectRef.InSlot Binding.triggerSource))
+   in Mint.trigger TriggerCondition.SelfAttacksPlayerWithMostLife (Seq.singleton grow)
+
+-- CR 702.79a: persist. Its event is CR 700.4's dies, which is why the condition
+-- below is SelfDies.
+persist :: TriggeredAbility Card (GrantedAbility.GrantedAbility Card)
+persist = returns CounterKind.MinusOneMinusOne
+
+-- CR 702.93a: undying, persist's mirror in +1/+1 counters.
+undying :: TriggeredAbility Card (GrantedAbility.GrantedAbility Card)
+undying = returns CounterKind.PlusOnePlusOne
+
+-- The sentence both keywords state, in the counter kind that tells them apart: it
+-- decides which counter the permanent comes back with AND which one the "if"
+-- clause looks for.
+--
+-- TWO INCARNATIONS, and the split is why this works: CR 400.7 mints a fresh object
+-- when the permanent dies, so the ability's SOURCE (CR 113.7a) and the CARD IT
+-- MOVES are different ids. CR 603.4's intervening "if" -- not a Clause condition,
+-- the ability having to not trigger at all -- is evaluated against the source
+-- through CR 608.2h last known information, what "it HAD no counters on it" asks
+-- for, while the move names Binding.became. Endless Cockroaches proves the second
+-- half and Promising Duskmage the first.
+--
+-- The counter rides the ENTRY (CR 122.6a) rather than following as a second
+-- effect, so the permanent is never on the battlefield without it -- for persist,
+-- the difference between a 2/2 coming back as a 1/1 and one that briefly was not.
+--
+-- `under`'s Owner is rule 702.79a's "under its owner's control", which CR 110.2a
+-- otherwise answers with the ability's controller: a permanent stolen at layer 2
+-- dies under the thief's control and still comes back to its owner.
+returns :: CounterKind.CounterKind Keyword.Keyword -> TriggeredAbility Card (GrantedAbility.GrantedAbility Card)
+returns kind =
+  let back =
+        Effect.MoveToZone
+          ( MoveToZone.MkMoveToZone
+              (ObjectRef.InSlot Binding.became)
+              Zone.Battlefield
+              EntryRiders.defaultValue {EntryRiders.counters = Map.singleton kind (Quantity.Literal 1), EntryRiders.under = EntryController.Owner}
+              Nothing
+              Nothing
+              LibraryPlacement.defaultValue
+              Nothing
+          )
+   in Mint.triggerIf
+        TriggerCondition.SelfDies
+        (Condition.Compares (Compares.MkCompares (Quantity.ObjectCounters kind) Comparison.AtMost (Quantity.Literal 0)))
+        (Seq.singleton back)
+
+-- CR 702.74a's triggered ability: "When this permanent enters, if its evoke cost
+-- was paid, its controller sacrifices it."
+--
+-- The intervening "if" is CR 603.4's, so a permanent that re-enters -- flickered,
+-- or a copy -- is a new object whose cost nobody paid (CR 400.7), and its own
+-- instance does not trigger; Parun.CastSpec's "CR 603.4 a flickered evoked
+-- Mulldrifter is not sacrificed" proves it. Quantity.CastUsing reads
+-- Object.castUsing, which is not a copiable value. Sacrificer.PermanentController
+-- for the rule's "its controller".
+evoke :: TriggeredAbility Card (GrantedAbility.GrantedAbility Card)
+evoke =
+  let effect = Effect.Sacrifice SacrificeEffect.MkSacrificeEffect {SacrificeEffect.ref = ObjectRef.InSlot Binding.triggerSource, SacrificeEffect.sacrificer = Sacrificer.PermanentController, SacrificeEffect.sacrificed = Nothing}
+   in Mint.triggerIf
+        TriggerCondition.SelfEnters
+        (Condition.Compares (Compares.MkCompares (Quantity.CastUsing (KeywordDesignator.OfFamily KeywordFamily.Evoke)) Comparison.AtLeast (Quantity.Literal 1)))
+        (Seq.singleton effect)
+
+-- CR 702.157a's triggered ability: "When this creature enters, if its squad cost
+-- was paid, create a token that's a copy of it for each time its squad cost was
+-- paid."
+squad :: Cost Keyword -> Natural -> TriggeredAbility Card (GrantedAbility.GrantedAbility Card)
+squad cost ordinal = paidTokenCopies (Keyword.Squad cost) (Quantity.TimesPaid (KeywordDesignator.OfInstance (Keyword.Squad cost) ordinal)) [] ordinal
+
+-- CR 702.175a's triggered ability: "When this permanent enters, if its offspring
+-- cost was paid, create a token that's a copy of it, except it's 1/1." CR 707.9b
+-- makes the 1/1 part of the token's copiable values.
+offspring :: Cost Keyword -> Natural -> TriggeredAbility Card (GrantedAbility.GrantedAbility Card)
+offspring cost = paidTokenCopies (Keyword.Offspring cost) (Quantity.Literal 1) [CopyException.SetPowerToughness (SetPowerToughness.MkSetPowerToughness 1 1)]
+
+-- CR 702.174b's triggered ability on a permanent: "When this permanent enters,
+-- if its gift cost was paid, [effect]", the effect being whatever rule 702.174d-i
+-- writes for the [something].
+--
+-- Effect.GiveGift follows the effect: CR 702.174c's "gives a gift" is this
+-- ability resolving, whatever the effect managed.
+--
+-- The intervening "if" is CR 603.4's, evoke's and paidTokenCopies' reading:
+-- Quantity.TimesPaid reads Object.paidCosts, which CR 707.2 does not copy and CR
+-- 400.7 clears on every move but rule 400.7d's -- so a Clone of the permanent and
+-- one that re-enters promised nobody anything and do not trigger.
+--
+-- "The chosen player" is PlayerRef.ChosenPlayerOfBound over CR 113.7a's source
+-- slot, which reads this instance's promise off the permanent's
+-- Object.chosenPlayers. Rule 702.174a's cost wrote that field on the SPELL and
+-- CR 400.7d carries it to the permanent (Parun.Engine.Event.changeZoneAttaching),
+-- which is why the seat survives a move that clears the spell's bindings.
+--
+-- One per instance, `ordinal` naming it, both in the intervening "if" and in the
+-- chosen player: two gifts promised to two opponents give each their own, and
+-- an unpaid instance does not trigger beside a paid one. The ordinal is a
+-- position among the promised instances the permanent entered with, which is
+-- how Parun.Engine.Stack.settlePromises orders its payments and keys its
+-- promises.
+gift :: Gift.Gift -> Natural -> TriggeredAbility Card (GrantedAbility.GrantedAbility Card)
+gift something ordinal =
+  Mint.triggerIf
+    TriggerCondition.SelfEnters
+    (Condition.Compares (Compares.MkCompares (Quantity.TimesPaid (KeywordDesignator.OfInstance (Keyword.Gift something) ordinal)) Comparison.AtLeast (Quantity.Literal 1)))
+    (Seq.fromList [giftEffect something (KeywordInstance.Own ordinal), Effect.GiveGift])
+
+-- CR 702.174d-i's "[effect]": what the [something] the card printed means, which
+-- rule 702.174b then hangs off whichever of its two abilities the object is --
+-- `gift` above's triggered one on a permanent, and
+-- Parun.Engine.Resolve.giftOnSpellResolution's spell ability on an instant or a
+-- sorcery. One function so the two halves cannot promise different things.
+--
+-- `instance_` is which instance of the gift, and so which promise "the chosen
+-- player" reads (PlayerChoice.Promised).
+giftEffect :: Gift.Gift -> KeywordInstance.KeywordInstance -> Effect.Effect Card (GrantedAbility.GrantedAbility Card)
+giftEffect something instance_ =
+  let chosen = PlayerRef.ChosenPlayerOfBound Binding.triggerSource (PlayerChoice.Promised something instance_)
+   in case something of
+        Gift.Card -> Effect.Draw Draw.MkDraw {Draw.player = chosen, Draw.quantity = Quantity.Literal 1, Draw.slot = Nothing}
+        Gift.TappedFish -> giftToken chosen TapState.Tapped fishToken
+        Gift.Octopus -> giftToken chosen TapState.Untapped octopusToken
+        Gift.Food -> giftToken chosen TapState.Untapped foodToken
+        Gift.Treasure -> giftToken chosen TapState.Untapped treasureToken
+
+-- CR 702.174d's, 702.174f's, 702.174h's and 702.174i's effect: "the chosen
+-- player creates a [token]".
+-- The creator is the SAME PlayerRef rule 702.174e's draw reads, which is what CR
+-- 111.2 asks for: the chosen player creates the token, so they own and control
+-- it, rather than CR 109.5's "you".
+giftToken :: PlayerRef.PlayerRef -> TapState.TapState -> Card -> Effect.Effect Card (GrantedAbility.GrantedAbility Card)
+giftToken chosen tapped token =
+  Effect.Create
+    Create.MkCreate
+      { Create.quantity = Quantity.Literal 1,
+        Create.card = token,
+        Create.riders =
+          EntryRiders.defaultValue {EntryRiders.tapped = tapped},
+        Create.slot = Nothing,
+        Create.creator = chosen
+      }
+
+-- | CR 702.174f's token: 1\/1 blue Fish creature. Rule 702.174f's "tapped" is a
+-- rider on the CREATION and not text on the token, so it rides EntryRiders.
+fishToken :: Card
+fishToken = creatureToken (Text.pack "Fish Token") (Set.singleton Subtype.Fish) (Set.singleton Color.Blue) 1 1
+
+-- | CR 702.174i's token: 8\/8 blue Octopus creature.
+octopusToken :: Card
+octopusToken = creatureToken (Text.pack "Octopus Token") (Set.singleton Subtype.Octopus) (Set.singleton Color.Blue) 8 8
+
+-- The ability CR 702.157a and CR 702.175a share: when this enters, if the
+-- additional cost that keyword offers was paid (CR 601.2b), create `quantity`
+-- token copies of it.
+--
+-- The intervening "if" is CR 603.4's, evoke's reading: Quantity.TimesPaid reads
+-- Object.paidCosts, which is not a copiable value (CR 707.2) and which CR 400.7
+-- clears on every move but the one CR 400.7d admits -- so a Clone of the
+-- permanent, one that re-enters, and the token copies themselves paid nothing
+-- and do not trigger. CR 608.2h's last known information answers both reads for
+-- a permanent that left before the ability resolved (Parun.Types.LastKnown's
+-- `paidCosts`), and CreateCopy copies what it last was, as graveyardTokenCopy's --
+-- Parun.CastSpec's "CR 608.2h a Mage killed in response still leaves its token"
+-- proves that half.
+--
+-- `ordinal` is perPayment's: the instance whose payment this one reads.
+paidTokenCopies :: Keyword -> Quantity.Quantity -> [CopyException.CopyException (GrantedAbility.GrantedAbility Card)] -> Natural -> TriggeredAbility Card (GrantedAbility.GrantedAbility Card)
+paidTokenCopies keyword quantity exceptions ordinal =
+  let copied =
+        Effect.CreateCopy
+          CreateCopy.MkCreateCopy
+            { CreateCopy.quantity = quantity,
+              CreateCopy.ref = ObjectRef.InSlot Binding.triggerSource,
+              CreateCopy.riders =
+                EntryRiders.defaultValue,
+              CreateCopy.slot = Nothing,
+              CreateCopy.exceptions = exceptions
+            }
+   in Mint.triggerIf
+        TriggerCondition.SelfEnters
+        (Condition.Compares (Compares.MkCompares (Quantity.TimesPaid (KeywordDesignator.OfInstance keyword ordinal)) Comparison.AtLeast (Quantity.Literal 1)))
+        (Seq.singleton copied)
+
+-- CR 702.135a: afterlife N, on the same CR 700.4 dies event `returns` watches.
+--
+-- Nothing is bound: unlike undying and persist this never touches the permanent
+-- that died, so the ability is indifferent to the CR 400.7 incarnation split. CR
+-- 111.2 gives the tokens to the ability's controller, which is why
+-- EntryRiders.under is inert under a Create.
+--
+-- THE TOKEN IS MINTED HERE, not carried in card data: its characteristics are
+-- printed in the comprehensive rules, and CR 111.3 makes rule 702.135a's own
+-- adjectives the token's whole text. Both colours ride the colorIndicator, a token
+-- having no mana cost to read a colour off (CR 105.2).
+--
+-- No CR 612 text change reaches the Spirit or its colours: they are the rule's
+-- words, not the card's (docs/decisions.md, "What a text change reaches inside a
+-- keyword").
+afterlife :: Natural -> TriggeredAbility Card (GrantedAbility.GrantedAbility Card)
+afterlife n =
+  let spawn =
+        Effect.Create
+          Create.MkCreate
+            { Create.quantity = Quantity.Literal (toInteger n),
+              Create.card = spiritToken,
+              Create.riders =
+                EntryRiders.defaultValue,
+              Create.slot = Nothing,
+              -- CR 111.2 under CR 109.5: the keyword ability's own controller.
+              Create.creator = PlayerRef.Relative PlayerRelation.You
+            }
+   in Mint.trigger TriggerCondition.SelfDies (Seq.singleton spawn)
+
+-- | CR 702.135a's token: 1/1 white and black Spirit creature with flying. Rule
+-- 702.135a names no name, so CR 111.4 supplies one -- "its subtype(s) plus the
+-- word 'Token'" -- which is the shape Doomed Traveler's hand-written Spirit
+-- token already takes.
+spiritToken :: Card
+spiritToken =
+  Card.MkCard
+    { Card.layout = Layout.Normal,
+      Card.faces =
+        NonEmpty.singleton
+          Face.MkFace
+            { Face.name = CardName.MkCardName (Text.pack "Spirit Token"),
+              Face.oracleText = Nothing,
+              Face.manaCost = Nothing,
+              Face.typeLine =
+                TypeLine.MkTypeLine
+                  Set.empty
+                  (Set.singleton CardType.Creature)
+                  (Set.singleton Subtype.Spirit),
+              Face.power = Just (Power.MkPower (Quantity.Literal 1)),
+              Face.toughness = Just (Toughness.MkToughness (Quantity.Literal 1)),
+              Face.loyalty = Nothing,
+              Face.defense = Nothing,
+              Face.startingIntensity = Nothing,
+              Face.vanguard = Nothing,
+              Face.canBeYourCommander = False,
+              Face.claimsStartingPlayer = False,
+              Face.anteOnly = False,
+              Face.keywords = Map.singleton Keyword.Flying 1,
+              Face.colorIndicator = Set.fromList [Color.White, Color.Black],
+              Face.characteristicPT = Nothing,
+              Face.staticAbilities = [],
+              Face.spell = Face.defaultSpell,
+              Face.activatedAbilities = [],
+              Face.replacementEffects = [],
+              Face.triggeredAbilities = [],
+              Face.delayedAbilities = Map.empty,
+              Face.rooms = Seq.empty,
+              Face.dungeonEntryQuality = Nothing,
+              Face.castingPermissions = [],
+              Face.castingRestrictions = [],
+              Face.enchant = [],
+              Face.counterability = Counterability.Counterable,
+              Face.additionalCosts = [],
+              Face.additionalCostChoices = [],
+              Face.modeCosts = Map.empty,
+              Face.modeChooser = PlayerRelation.You,
+              Face.maximumX = [],
+              Face.minimumX = 0,
+              Face.alternativeCosts = [],
+              Face.costReductions = [],
+              Face.playerAbilities = [],
+              Face.blockRequirements = [],
+              Face.blockPermissions = [],
+              Face.attackRequirements = [],
+              Face.combatRestrictions = [],
+              Face.sacrificeRestrictions = [],
+              Face.untapRestrictions = [],
+              Face.attachRestrictions = [],
+              Face.counterRestrictions = [],
+              Face.crewRestrictions = [],
+              Face.targetRestrictions = [],
+              Face.attackPermissions = [],
+              Face.activationProhibitions = [],
+              Face.entryRestrictions = [],
+              Face.attackCosts = [],
+              Face.blockCosts = [],
+              Face.mulliganActions = [],
+              Face.openingHandActions = [],
+              Face.specialActions = []
+            }
+    }
+
+-- CR 702.156a's second half: "When this permanent enters, if X is 5 or more, draw
+-- a card." Fabricate's mint over CR 603.6a's entry event; Jacked Rabbit is the
+-- printing.
+--
+-- The "if" is CR 603.4's intervening one and not a Filter, so CR 608.2a re-checks
+-- it as the ability resolves. X is CR 107.3m's announced one, read as
+-- Quantity.InSlot Binding.variableX: the permanent carries no such binding (CR
+-- 400.7), so both checks answer it out of Filter.Context's boundAmounts, which
+-- Parun.Engine.Condition.inheritedX fills on a SelfEnters trigger alone --
+-- rule 107.3m's own boundary, the one Parun.Engine.Engine.placeBorne already draws
+-- for a trigger's target count.
+--
+-- Draw.slot is Nothing: rule 702.156a names no later clause that reads the card.
+ravenous :: TriggeredAbility Card (GrantedAbility.GrantedAbility Card)
+ravenous =
+  let effect = Effect.Draw Draw.MkDraw {Draw.player = PlayerRef.Relative PlayerRelation.You, Draw.quantity = Quantity.Literal 1, Draw.slot = Nothing}
+   in Mint.triggerIf
+        TriggerCondition.SelfEnters
+        ( Condition.Compares
+            (Compares.MkCompares (Quantity.InSlot Binding.variableX) Comparison.AtLeast (Quantity.Literal 5))
+        )
+        (Seq.singleton effect)
+
+-- CR 702.123a: fabricate N. "When this permanent enters, you may put N +1/+1
+-- counters on it. If you don't, create N 1/1 colorless Servo artifact creature
+-- tokens." Afterlife's mint over CR 603.6a's entry event, so the condition is
+-- TriggerCondition.SelfEnters; Glint-Sleeve Artisan is the printing.
+--
+-- ONE CLAUSE and no branching opcode: rule 702.123a prints CR 118.12a's rewriting
+-- already performed, so CR 118.12 makes the counters a COST paid as the ability
+-- resolves and the clause's own effects are its "if you don't" branch.
+--
+-- Optionality.Mandatory, because the printed "you may" IS the gate's offer.
+-- Marking the clause optional as well would ask twice and let a player decline
+-- both halves, which rule 702.123a does not allow. THE TOKEN IS MINTED HERE for
+-- afterlife's reason.
+fabricate :: Natural -> TriggeredAbility Card (GrantedAbility.GrantedAbility Card)
+fabricate n =
+  let clause = Mint.mandatoryPaying gate (Seq.singleton spawn)
+      gate =
+        PayGate.MkPayGate
+          { PayGate.payer = PlayerRef.InSlot Binding.you,
+            PayGate.cost =
+              CostChoice.MkCostChoice
+                ( Cost.MkCost
+                    { -- CR 118.5, crew's note above: no mana part is `Just` an empty
+                      -- one, never the Nothing that means unpayable.
+                      Cost.mana = Just (ManaCost.MkManaCost []),
+                      Cost.components = [CostComponent.PutPlusOneCountersOnThis n]
+                    }
+                    NonEmpty.:| []
+                ),
+            PayGate.basis = Nothing,
+            PayGate.branch = PayBranch.IfNotPaid,
+            -- Optional because rule 702.123a prints the "may" itself; no offeredAt,
+            -- one clause making its own offer.
+            PayGate.obligation = PayObligation.Optional,
+            PayGate.perEach = Nothing,
+            PayGate.offeredAt = Nothing
+          }
+      spawn =
+        Effect.Create
+          Create.MkCreate
+            { Create.quantity = Quantity.Literal (toInteger n),
+              Create.card = servoToken,
+              Create.riders =
+                EntryRiders.defaultValue,
+              Create.slot = Nothing,
+              -- CR 111.2 under CR 109.5: the keyword ability's own controller.
+              Create.creator = PlayerRef.Relative PlayerRelation.You
+            }
+   in Mint.triggerOf
+        TriggerCondition.SelfEnters
+        Nothing
+        (Mint.oneModeOf Map.empty (Seq.singleton clause))
+
+-- CR 702.165a: "When this creature enters, put N +1\/+1 counters on target
+-- creature. If that's another creature, it also gains the non-backup abilities
+-- of this creature printed below this one until end of turn." Fabricate's mint
+-- over CR 603.6a's entry event, so the condition is TriggerCondition.SelfEnters.
+--
+-- TWO CLAUSES and one target slot, which is how the sentence is punctuated: the
+-- counters land whatever the target turns out to be, and only the grant carries
+-- the "if". Mandatory throughout -- rule 702.165a prints no "may".
+--
+-- "IF THAT'S ANOTHER CREATURE" rides the second clause's own condition rather
+-- than the trigger's intervening "if" (CR 603.4), because the sentence prints it
+-- mid-instruction: CR 608.2c applies the clauses in the order written, so the
+-- test is made after the counters are on. It is a count of the bound slot,
+-- Filter.Not Filter.IsSource being the "another" and the card type being the
+-- "creature" -- a target that stopped being a creature while the trigger waited
+-- gains nothing, which is rule 702.165a's word read plainly.
+--
+-- THE GRANT is Modification.GainAbilitiesOfSource, whose header carries the rest
+-- of the rule: what it reads off the source, when, and what it cannot reach.
+-- It carries this instance's printedAbove, the keywords rule 702.165a's
+-- "printed below this one" keeps out.
+backup :: Backup.Backup Keyword -> TriggeredAbility Card (GrantedAbility.GrantedAbility Card)
+backup (Backup.MkBackup n above) =
+  let slot = TargetSlot.required Pool.Creatures Nothing
+      counters =
+        Effect.PutCounters
+          ( PutCounters.MkPutCounters
+              CounterKind.PlusOnePlusOne
+              (Quantity.Literal (toInteger n))
+              (ObjectRef.InSlot backupTarget)
+          )
+      grant =
+        Effect.ModifyTarget
+          ModifyTarget.MkModifyTarget
+            { ModifyTarget.duration = Duration.UntilEndOfTurn,
+              ModifyTarget.modification = Modification.GainAbilitiesOfSource above,
+              ModifyTarget.ref = ObjectRef.InSlot backupTarget,
+              ModifyTarget.each = Nothing
+            }
+      another =
+        Condition.Compares
+          Compares.MkCompares
+            { Compares.measured =
+                Quantity.Count
+                  ( Count.MkCount
+                      (Scope.InZone (InZone.MkInZone Zone.Battlefield (PlayerRef.Relative PlayerRelation.AnyPlayer)))
+                      (Filter.And [Filter.IsBound backupTarget, Filter.HasCardType CardType.Creature, Filter.Not Filter.IsSource])
+                      Aggregation.Members
+                  ),
+              Compares.comparison = Comparison.AtLeast,
+              Compares.threshold = Quantity.Literal 1
+            }
+      clauses =
+        Seq.fromList
+          [ Mint.mandatory (Seq.singleton counters),
+            Mint.mandatoryIf another (Seq.singleton grant)
+          ]
+   in Mint.triggerOf
+        TriggerCondition.SelfEnters
+        Nothing
+        (Mint.oneModeOf (Map.singleton backupTarget slot) clauses)
+
+-- The slot rule 702.165a's one target is chosen into, mentorTarget's position.
+backupTarget :: SlotName.SlotName
+backupTarget = SlotName.MkSlotName (Text.pack "backupRecipient")
+
+-- CR 702.110a in one clause: "When this creature enters, you may sacrifice a
+-- creature." The "may" is CR 603.5's printed one, so it rides
+-- Optionality.Optional on the clause rather than a PayGate -- nothing in rule
+-- 702.110 is conditional on the sacrifice, which is what CR 118.12's branches
+-- exist to express. Rule 702.110b's marker is the effect's other half; see
+-- Parun.Engine.Resolve.Effect's Effect.Exploit arm for why the two are one opcode.
+exploit :: TriggeredAbility Card (GrantedAbility.GrantedAbility Card)
+exploit =
+  let clause =
+        Mint.youMay
+          (Seq.singleton Effect.Exploit)
+   in Mint.triggerOf
+        TriggerCondition.SelfEnters
+        Nothing
+        (Mint.oneModeOf Map.empty (Seq.singleton clause))
+
+-- | CR 702.123a's token: 1/1 colorless Servo artifact creature. Colorless is the
+-- ABSENCE of a colorIndicator (CR 105.2, CR 202.2e) rather than a colour, which
+-- is the one way this differs in shape from afterlife's Spirit; CR 111.4 supplies
+-- the name.
+servoToken :: Card
+servoToken =
+  Card.MkCard
+    { Card.layout = Layout.Normal,
+      Card.faces =
+        NonEmpty.singleton
+          Face.MkFace
+            { Face.name = CardName.MkCardName (Text.pack "Servo Token"),
+              Face.oracleText = Nothing,
+              Face.manaCost = Nothing,
+              Face.typeLine =
+                TypeLine.MkTypeLine
+                  Set.empty
+                  (Set.fromList [CardType.Artifact, CardType.Creature])
+                  (Set.singleton Subtype.Servo),
+              Face.power = Just (Power.MkPower (Quantity.Literal 1)),
+              Face.toughness = Just (Toughness.MkToughness (Quantity.Literal 1)),
+              Face.loyalty = Nothing,
+              Face.defense = Nothing,
+              Face.startingIntensity = Nothing,
+              Face.vanguard = Nothing,
+              Face.canBeYourCommander = False,
+              Face.claimsStartingPlayer = False,
+              Face.anteOnly = False,
+              Face.keywords = Map.empty,
+              Face.colorIndicator = Set.empty,
+              Face.characteristicPT = Nothing,
+              Face.staticAbilities = [],
+              Face.spell = Face.defaultSpell,
+              Face.activatedAbilities = [],
+              Face.replacementEffects = [],
+              Face.triggeredAbilities = [],
+              Face.delayedAbilities = Map.empty,
+              Face.rooms = Seq.empty,
+              Face.dungeonEntryQuality = Nothing,
+              Face.castingPermissions = [],
+              Face.castingRestrictions = [],
+              Face.enchant = [],
+              Face.counterability = Counterability.Counterable,
+              Face.additionalCosts = [],
+              Face.additionalCostChoices = [],
+              Face.modeCosts = Map.empty,
+              Face.modeChooser = PlayerRelation.You,
+              Face.maximumX = [],
+              Face.minimumX = 0,
+              Face.alternativeCosts = [],
+              Face.costReductions = [],
+              Face.playerAbilities = [],
+              Face.blockRequirements = [],
+              Face.blockPermissions = [],
+              Face.attackRequirements = [],
+              Face.combatRestrictions = [],
+              Face.sacrificeRestrictions = [],
+              Face.untapRestrictions = [],
+              Face.attachRestrictions = [],
+              Face.counterRestrictions = [],
+              Face.crewRestrictions = [],
+              Face.targetRestrictions = [],
+              Face.attackPermissions = [],
+              Face.activationProhibitions = [],
+              Face.entryRestrictions = [],
+              Face.attackCosts = [],
+              Face.blockCosts = [],
+              Face.mulliganActions = [],
+              Face.openingHandActions = [],
+              Face.specialActions = []
+            }
+    }
+
+-- CR 702.92a / CR 702.163a / CR 702.182a: living weapon, for Mirrodin! and job
+-- select are ONE sentence three times over -- "When this Equipment enters,
+-- create a [token], then attach this Equipment to it" -- differing only in the
+-- token each rule names. So one builder mints all three, and the three arms of
+-- `abilitiesFor` differ only in the Card they hand it. Fabricate's mint over CR
+-- 603.6a's entry event, so the condition is TriggerCondition.SelfEnters.
+--
+-- ONE clause holding TWO effects, not two clauses: rule 702.92a's "then" is a
+-- sequence inside a single sentence, and Resolve's per-effect re-read of the
+-- live bindings (CR 608.2c) is what lets the attach see the slot the create just
+-- bound. Harried Dronesmith is the card that already writes that shape.
+--
+-- Effect.Attach moves the effect's SOURCE, which is the Equipment (CR 113.7), so
+-- the rule's "this Equipment" needs no slot of its own. CR 701.3b is what makes
+-- the Equipment stay put when the token is gone or the Equipment itself has left
+-- the battlefield: Event.attach is the funnel that holds it, and the token is
+-- still created either way (CR 111.1).
+attachToOwnToken :: Card -> TriggeredAbility Card (GrantedAbility.GrantedAbility Card)
+attachToOwnToken token =
+  let spawn =
+        Effect.Create
+          Create.MkCreate
+            { Create.quantity = Quantity.Literal 1,
+              Create.card = token,
+              Create.riders =
+                EntryRiders.defaultValue,
+              -- The slot holds every token minted (Resolve.bindObjects), which
+              -- where CR 614.16 doubled the count is two Germs; CR 301.5c then
+              -- gives the Equipment's controller the choice of which one it
+              -- equips, and the Effect.Attach arm asks it.
+              Create.slot = Just attachedTokenSlot,
+              -- CR 111.2 under CR 109.5: the keyword ability's own controller.
+              Create.creator = PlayerRef.Relative PlayerRelation.You
+            }
+   in Mint.trigger TriggerCondition.SelfEnters (Seq.fromList [spawn, Effect.Attach attachedTokenSlot])
+
+-- The slot the create binds and the attach reads. Not a target: nothing is
+-- declared on the stack, so CR 608.2b never touches it.
+attachedTokenSlot :: SlotName.SlotName
+attachedTokenSlot = SlotName.MkSlotName (Text.pack "the token")
+
+-- | CR 702.92a's token: 0/0 black Phyrexian Germ creature. Phyrexian is a
+-- creature TYPE here rather than a supertype, so both words are subtypes, and CR
+-- 111.4 makes the name the subtypes plus "Token". A 0/0 with nothing attached
+-- dies to CR 704.5f, which is why rule 702.92a attaches the Equipment in the
+-- same resolution.
+germToken :: Card
+germToken = creatureToken (Text.pack "Phyrexian Germ Token") (Set.fromList [Subtype.Phyrexian, Subtype.Germ]) (Set.singleton Color.Black) 0 0
+
+-- | CR 702.163a's token: 2/2 red Rebel creature.
+rebelToken :: Card
+rebelToken = creatureToken (Text.pack "Rebel Token") (Set.singleton Subtype.Rebel) (Set.singleton Color.Red) 2 2
+
+-- | CR 702.182a's token: 1/1 colorless Hero creature. Colorless is the ABSENCE
+-- of a colorIndicator (CR 105.2, CR 202.2e) rather than a colour, servoToken's
+-- note one rule over.
+heroToken :: Card
+heroToken = creatureToken (Text.pack "Hero Token") (Set.singleton Subtype.Hero) Set.empty 1 1
+
+-- A vanilla creature token: CR 111.3's characteristics and nothing else, for the
+-- rules whose token has no ability of its own.
+creatureToken :: Text.Text -> Set.Set Subtype.Subtype -> Set.Set Color.Color -> Integer -> Integer -> Card
+creatureToken name subtypes colors power toughness =
+  tokenCard name (TypeLine.MkTypeLine Set.empty (Set.singleton CardType.Creature) subtypes) colors (Just (power, toughness)) []
+
+-- | CR 111.10b's Food: a colorless Food artifact token with "{2}, {T}, Sacrifice
+-- this token: You gain 3 life."
+foodToken :: Card
+foodToken =
+  predefinedArtifactToken (Text.pack "Food Token") Subtype.Food (Just (ManaCost.MkManaCost [ManaSymbol.Generic 2])) $
+    Effect.GainLife (PlayerQuantity.MkPlayerQuantity (PlayerRef.Relative PlayerRelation.You) (Quantity.Literal 3))
+
+-- | CR 111.10a's Treasure: a colorless Treasure artifact token with "{T},
+-- Sacrifice this token: Add one mana of any color."
+treasureToken :: Card
+treasureToken =
+  predefinedArtifactToken (Text.pack "Treasure Token") Subtype.Treasure (Just (ManaCost.MkManaCost [])) $
+    Effect.AddMana
+      ManaAddition.MkManaAddition
+        { ManaAddition.player = PlayerRef.Relative PlayerRelation.You,
+          ManaAddition.production = ManaProduction.AnyColor,
+          ManaAddition.count = Quantity.Literal 1,
+          ManaAddition.retention = ManaRetention.Ordinary,
+          ManaAddition.restriction = Nothing,
+          ManaAddition.rider = Nothing,
+          ManaAddition.whenSpent = Nothing
+        }
+
+-- CR 111.10's shape for the two predefined tokens rule 702.174 promises: a
+-- colorless artifact of one subtype whose one ability costs `mana`, {T} and
+-- sacrificing itself. Colorless is the absence of a colorIndicator, heroToken's
+-- note.
+predefinedArtifactToken :: Text.Text -> Subtype.Subtype -> Maybe ManaCost.ManaCost -> Effect.Effect Card (GrantedAbility.GrantedAbility Card) -> Card
+predefinedArtifactToken name subtype mana effect =
+  tokenCard
+    name
+    (TypeLine.MkTypeLine Set.empty (Set.singleton CardType.Artifact) (Set.singleton subtype))
+    Set.empty
+    Nothing
+    [ ActivatedAbility.MkActivatedAbility
+        { ActivatedAbility.cost = Cost.MkCost {Cost.mana = mana, Cost.components = [CostComponent.TapThis, CostComponent.SacrificeThis]},
+          ActivatedAbility.modal =
+            Mint.oneMode (Seq.singleton effect),
+          ActivatedAbility.maximumX = [],
+          ActivatedAbility.minimumX = 0,
+          ActivatedAbility.definedX = Nothing,
+          ActivatedAbility.restrictions = [],
+          ActivatedAbility.activator = Activator.Controller,
+          ActivatedAbility.condition = Nothing,
+          ActivatedAbility.name = Nothing,
+          -- Nothing: the token's own printed ability (CR 111.10), not one a
+          -- keyword grants the object it is on.
+          ActivatedAbility.keyword = Nothing
+        }
+    ]
+
+-- A token's card: CR 111.3's characteristics, plus whatever activated
+-- abilities the rule defining it writes out.
+tokenCard ::
+  Text.Text ->
+  TypeLine.TypeLine ->
+  Set.Set Color.Color ->
+  Maybe (Integer, Integer) ->
+  [ActivatedAbility Card (GrantedAbility.GrantedAbility Card)] ->
+  Card
+tokenCard name typeLine colors stats abilities =
+  Card.MkCard
+    { Card.layout = Layout.Normal,
+      Card.faces =
+        NonEmpty.singleton
+          Face.MkFace
+            { Face.name = CardName.MkCardName name,
+              Face.oracleText = Nothing,
+              Face.manaCost = Nothing,
+              Face.typeLine = typeLine,
+              Face.power = fmap (Power.MkPower . Quantity.Literal . fst) stats,
+              Face.toughness = fmap (Toughness.MkToughness . Quantity.Literal . snd) stats,
+              Face.loyalty = Nothing,
+              Face.defense = Nothing,
+              Face.startingIntensity = Nothing,
+              Face.vanguard = Nothing,
+              Face.canBeYourCommander = False,
+              Face.claimsStartingPlayer = False,
+              Face.anteOnly = False,
+              Face.keywords = Map.empty,
+              Face.colorIndicator = colors,
+              Face.characteristicPT = Nothing,
+              Face.staticAbilities = [],
+              Face.spell = Face.defaultSpell,
+              Face.activatedAbilities = abilities,
+              Face.replacementEffects = [],
+              Face.triggeredAbilities = [],
+              Face.delayedAbilities = Map.empty,
+              Face.rooms = Seq.empty,
+              Face.dungeonEntryQuality = Nothing,
+              Face.castingPermissions = [],
+              Face.castingRestrictions = [],
+              Face.enchant = [],
+              Face.counterability = Counterability.Counterable,
+              Face.additionalCosts = [],
+              Face.additionalCostChoices = [],
+              Face.modeCosts = Map.empty,
+              Face.modeChooser = PlayerRelation.You,
+              Face.maximumX = [],
+              Face.minimumX = 0,
+              Face.alternativeCosts = [],
+              Face.costReductions = [],
+              Face.playerAbilities = [],
+              Face.blockRequirements = [],
+              Face.blockPermissions = [],
+              Face.attackRequirements = [],
+              Face.combatRestrictions = [],
+              Face.sacrificeRestrictions = [],
+              Face.untapRestrictions = [],
+              Face.attachRestrictions = [],
+              Face.counterRestrictions = [],
+              Face.crewRestrictions = [],
+              Face.targetRestrictions = [],
+              Face.attackPermissions = [],
+              Face.activationProhibitions = [],
+              Face.entryRestrictions = [],
+              Face.attackCosts = [],
+              Face.blockCosts = [],
+              Face.mulliganActions = [],
+              Face.openingHandActions = [],
+              Face.specialActions = []
+            }
+    }
+
+-- CR 702.75a: hideaway N. "When this permanent enters, look at the top N cards of
+-- your library. Exile one of them face down and put the rest on the bottom of your
+-- library in a random order. The exiled card gains 'The player who controls the
+-- permanent that exiled this card may look at this card in the exile zone.'"
+-- Fabricate's mint over CR 603.6a's entry event, so the condition is
+-- TriggerCondition.SelfEnters; Windbrisk Heights is the printing.
+--
+-- THREE CLAUSES, and "the rest" needs no opcode of its own: the third reads the
+-- same slot the look bound and finds the exiled card gone, CR 400.7 having minted
+-- a new object for it on the way to exile. Parun.Types.EachCardFromAmong's haddock
+-- is where that reading is stated, and Ancestral Memories is the card that already
+-- writes it.
+--
+-- Effect.GrantLookAtExiled writes BOTH looks the clause gives. Rule 702.75a's
+-- granted ability names "the player who controls the permanent that exiled this
+-- card", which is the payload's followsExiler rider and a live read; CR 406.3's
+-- own sentence gives the player instructed to look at the cards and then exile
+-- one face down a look that outlives any change of control, which is the same
+-- opcode's CR 109.5 "you".
+--
+-- CR 702.75b's "enters tapped" is NOT minted here: the errata gives the older
+-- cards that ability as printed text of their own, which Windbrisk Heights states
+-- as an entry replacement.
+hideaway :: Natural -> TriggeredAbility Card (GrantedAbility.GrantedAbility Card)
+hideaway n =
+  let plain =
+        EntryRiders.defaultValue
+      look =
+        Effect.LookAt
+          ( LookAt.MkLookAt
+              (ObjectRef.TopOfLibrary (TopOfLibrary.MkTopOfLibrary (PlayerRef.Relative PlayerRelation.You) (Quantity.Literal (toInteger n))))
+              hideawaySeen
+              (PlayerRef.Relative PlayerRelation.You)
+          )
+      hide =
+        Effect.MoveToZone
+          ( MoveToZone.MkMoveToZone
+              (ObjectRef.ChosenCardFromAmong (ChosenCardFromAmong.MkChosenCardFromAmong hideawaySeen (Filter.And []) HowMany.one (PlayerRef.Relative PlayerRelation.You)))
+              Zone.Exile
+              plain {EntryRiders.exiledFaceDown = True}
+              (Just hideawayExiled)
+              Nothing
+              LibraryPlacement.defaultValue
+              Nothing
+          )
+      allow =
+        Effect.GrantLookAtExiled
+          ( GrantLookAtExiled.MkGrantLookAtExiled
+              (ObjectRef.InSlot hideawayExiled)
+              True
+          )
+      rest =
+        Effect.MoveToZone
+          ( MoveToZone.MkMoveToZone
+              (ObjectRef.InSlot hideawaySeen)
+              Zone.Library
+              plain
+              Nothing
+              Nothing
+              (LibraryPlacement.RandomOrder LibraryPosition.Bottom)
+              Nothing
+          )
+      clause effects = Mint.mandatory (Seq.fromList effects)
+   in Mint.triggerOf
+        TriggerCondition.SelfEnters
+        Nothing
+        (Mint.oneModeOf Map.empty (Seq.fromList [clause [look], clause [hide, allow], clause [rest]]))
+
+-- The slot rule 702.75a's look binds its N cards into.
+hideawaySeen :: SlotName.SlotName
+hideawaySeen = SlotName.MkSlotName (Text.pack "hidden away")
+
+-- The slot the exiled one of them is bound into, so the grant one effect later
+-- names that card and not the whole look.
+hideawayExiled :: SlotName.SlotName
+hideawayExiled = SlotName.MkSlotName (Text.pack "hidden")
+
+-- CR 702.46a: soulshift N. "When this permanent is put into a graveyard from the
+-- battlefield, you may return target Spirit card with mana value N or less from
+-- your graveyard to your hand." Afterlife's condition with provoke's shape --
+-- the CR 700.4 dies event, one optional clause, one target slot.
+--
+-- The bearer never appears in the payload, so the CR 400.7 incarnation split is
+-- inert here, and nothing excludes it from the target either: rule 702.46a does
+-- not say "another".
+--
+-- A CardsInGraveyard pool scoped to You is rule 702.46a's "your graveyard", read
+-- as CR 115.2's clause (a) -- and the reason the pool carries a ZoneScope
+-- rather than a Filter is that CR 108.4 gives a card in a graveyard no controller.
+-- The move states no origin zone for that same reason.
+soulshift :: Natural -> TriggeredAbility Card (GrantedAbility.GrantedAbility Card)
+soulshift n =
+  let slot =
+        TargetSlot.required
+          (Pool.CardsInGraveyard (ZoneScope.Scoped (PlayerScope.Related PlayerRelation.You)))
+          (Just (Filter.And [Filter.HasSubtype Subtype.Spirit, Filter.Measures (Measures.MkMeasures Measure.ManaValue Comparison.AtMost (Operand.Literal (toInteger n)))]))
+      back =
+        Effect.MoveToZone
+          ( MoveToZone.MkMoveToZone
+              (ObjectRef.InSlot soulshiftTarget)
+              Zone.Hand
+              EntryRiders.defaultValue
+              Nothing
+              Nothing
+              LibraryPlacement.defaultValue
+              Nothing
+          )
+   in Mint.triggerOf
+        TriggerCondition.SelfDies
+        Nothing
+        (Mint.oneModeOf (Map.singleton soulshiftTarget slot) (Seq.singleton (Mint.youMay (Seq.singleton back))))
+
+-- The slot rule 702.46a's one target is chosen into, mentorTarget's position.
+soulshiftTarget :: SlotName.SlotName
+soulshiftTarget = SlotName.MkSlotName (Text.pack "soulshifted")
+
+-- CR 702.124j's SECOND ability: "When this permanent enters, target player may
+-- search their library for a card named [name], reveal it, put it into their
+-- hand, then shuffle." The rule's first ability is deck construction and mints
+-- nothing here -- Parun.Engine.Commander.designations reads it off the printed
+-- face instead.
+--
+-- TARGET PLAYER and not the controller, which is what makes the slot a target
+-- slot rather than a PlayerRef.Relative: rule 702.124j says "target player", so
+-- a card whose controller has no copy of the named card can still point the
+-- trigger at somebody who does. The searcher and the library are the SAME slot,
+-- rule 702.124j's "their library" being the targeted player's -- the coupled
+-- reading Parun.Types.Search.owner argues for.
+--
+-- The "may" hangs on the TARGET, not on the controller: Optionality.Optional
+-- names the slot, so the player being searched is the one asked.
+--
+-- SearchDestination.RevealThenHand is rule 702.124j's "reveal it, put it into
+-- their hand", which is one sentence and one arm. The printed reminder text
+-- shortens it to "put it into their hand from their library"; the rule is what
+-- this follows.
+--
+-- Filter.HasName and not a printing identity: CR 201.2a is what "a card named
+-- [name]" asks, so a differently-printed copy of the named card is found and a
+-- renamed one is not.
+partnerWith :: CardName.CardName -> TriggeredAbility Card (GrantedAbility.GrantedAbility Card)
+partnerWith name =
+  let slot = TargetSlot.required Pool.Players Nothing
+      effect =
+        Effect.Search
+          Search.MkSearch
+            { Search.searcher = PlayerRef.InSlot partnerWithTarget,
+              Search.owner = PlayerRef.InSlot partnerWithTarget,
+              Search.zones = Set.singleton Zone.Library,
+              Search.outsideTheGame = False,
+              Search.quantity = Just (Quantity.Literal 1),
+              Search.filter = Filter.HasName name,
+              -- Rule 702.124j prints no "up to", and the filter states a quality,
+              -- so CR 701.23b governs and this value is unobservable --
+              -- searchForSameManaValue's reading.
+              Search.upTo = False,
+              Search.destination = SearchDestination.RevealThenHand,
+              -- Nothing attaches and the filter asks no CR 701.3a question.
+              Search.subject = Nothing,
+              Search.slot = Nothing,
+              Search.differentIn = Set.empty,
+              Search.exactly = False,
+              Search.andOr = False
+            }
+   in Mint.triggerOf
+        TriggerCondition.SelfEnters
+        Nothing
+        (Mint.oneModeOf (Map.singleton partnerWithTarget slot) (Seq.singleton (Mint.clause (Optionality.Optional (PlayerRef.InSlot partnerWithTarget)) (Seq.singleton effect))))
+
+-- The slot rule 702.124j's one target is chosen into, soulshiftTarget's position.
+partnerWithTarget :: SlotName.SlotName
+partnerWithTarget = SlotName.MkSlotName (Text.pack "partnered")
+
+-- CR 702.55a: haunt. Soulshift's shape -- the CR 700.4 dies event and one target
+-- slot -- with the clause mandatory, rule 702.55a stating no "may".
+--
+-- Rule 702.55a's PERMANENT sentence; `hauntSpell` below is its other one.
+--
+-- THE CARD, NOT THE PERMANENT (CR 400.7): rule 702.55a's "exile IT" is the
+-- graveyard incarnation the death minted, Binding.became, which is why this cannot
+-- name Binding.triggerSource.
+--
+-- Effect.ExileHaunting rather than a MoveToZone to Zone.Exile, because the move is
+-- only half of it: CR 702.55b's link from the exiled card to the object targeted
+-- is what the exile-zone half of the card reads, and only that opcode writes it.
+haunt :: TriggeredAbility Card (GrantedAbility.GrantedAbility Card)
+haunt =
+  let slot = TargetSlot.required Pool.Creatures Nothing
+      exile = Effect.ExileHaunting (ExileHaunting.MkExileHaunting Binding.became hauntTarget)
+   in Mint.triggerOf
+        TriggerCondition.SelfDies
+        Nothing
+        (Mint.oneModeTargeting (Map.singleton hauntTarget slot) (Seq.singleton exile))
+
+-- CR 702.55a's SECOND sentence: "when this spell is put into a graveyard during
+-- its resolution, exile it haunting target creature". `haunt` above one sentence
+-- over, and the same mandatory clause and single target slot; what differs is the
+-- condition, which CR 608.2n dates to the spell's own resolution so that a
+-- countered spell (CR 701.6a) and a fizzled one (CR 608.2b) haunt nothing.
+--
+-- THE CARD IN THE GRAVEYARD, read through Binding.triggerSource rather than
+-- Binding.became: this condition matches the ARRIVING incarnation, so the bearer
+-- already IS the card rule 702.55a's "exile it" names and `became` would be a
+-- second name for one object (Parun.Engine.Event.Binding's boundSlots says so).
+-- That is the one line where this differs from `haunt`, whose CR 603.10a
+-- look-back leaves the source slot pointing at the dead permanent.
+hauntSpell :: TriggeredAbility Card (GrantedAbility.GrantedAbility Card)
+hauntSpell =
+  let slot = TargetSlot.required Pool.Creatures Nothing
+      exile = Effect.ExileHaunting (ExileHaunting.MkExileHaunting Binding.triggerSource hauntTarget)
+   in Mint.triggerOf
+        TriggerCondition.SelfPutIntoGraveyardDuringResolution
+        Nothing
+        (Mint.oneModeTargeting (Map.singleton hauntTarget slot) (Seq.singleton exile))
+
+-- The slot rule 702.55a's one target is chosen into, on soulshiftTarget's terms.
+hauntTarget :: SlotName.SlotName
+hauntTarget = SlotName.MkSlotName (Text.pack "haunted")
+
+-- CR 702.94a's linked triggered ability: "When you reveal this card this way, you
+-- may cast it by paying [cost] rather than its mana cost."
+--
+-- One MANDATORY clause: the "you may" governs the CASTING alone, which is
+-- Prompt.OfferedCast's own question (CR 608.2g). Marking the clause optional would
+-- raise a second prompt for one printed "may".
+--
+-- No move ahead of the offer: CR 701.20b says revealing does not move the card, so
+-- what may be cast is Binding.triggerSource (CR 113.7a), not Binding.became.
+--
+-- The cost rides the OFFER (CastOffer.payingInstead) rather than the card, CR
+-- 118.9 making it an alternative cost applied "from another effect": Thunderous
+-- Wrath in a hand nobody drew this turn still costs {4}{R}{R}.
+miracle :: Cost Keyword -> TriggeredAbility Card (GrantedAbility.GrantedAbility Card)
+miracle cost =
+  let offer =
+        Effect.OfferCast
+          OfferCast.MkOfferCast
+            { OfferCast.ref = ObjectRef.InSlot Binding.triggerSource,
+              -- Rule 702.94a's "YOU may cast it": the revealer, who is the
+              -- trigger's controller, and a "may".
+              OfferCast.caster = PlayerRef.Relative PlayerRelation.You,
+              OfferCast.optionality = CastObligation.Optional,
+              OfferCast.offer = CastOffer.MkCastOffer {CastOffer.transformed = False, CastOffer.withoutPayingManaCost = False, CastOffer.payingInstead = Just cost, CastOffer.spending = ManaSpending.AsProduced, CastOffer.restriction = Nothing, CastOffer.offeredBy = Nothing, CastOffer.faceDown = Nothing, CastOffer.payableFromSpent = False, CastOffer.reduction = 0},
+              -- rule 702.94a's "cast it": one card, the one the slot names.
+              OfferCast.repetition = CastRepetition.Once,
+              OfferCast.copied = False,
+              OfferCast.verb = PermissionVerb.Cast,
+              OfferCast.controlWhileResolving = False,
+              OfferCast.slot = Nothing
+            }
+   in Mint.trigger TriggerCondition.SelfRevealedForMiracle (Seq.singleton offer)
+
+-- CR 702.94a's STATIC half: the cost of each distinct miracle ability, one per
+-- reveal the player may choose to make (CR 702.94b's "its miracle ability").
+-- Empty when the card has none, which is also "no window to open".
+--
+-- Asked of the card's PROJECTED keywords (Event.offerMiracleReveal): rule
+-- 702.94a's abilities function in the hand (CR 113.6b), where an effect may
+-- grant one (Molecule Man).
+miracleCosts :: Set Keyword -> [Cost Keyword]
+miracleCosts keywords =
+  let costOf keyword = case keyword of
+        Keyword.Miracle cost -> Just cost
+        _ -> Nothing
+   in Maybe.mapMaybe costOf (Set.toAscList keywords)
+
+-- The keywords a reveal for the miracle ability with this cost leaves live: every
+-- other miracle ability's linked trigger refers only to its own reveal (CR
+-- 607.2h), so the mint drops them.
+revealedForMiracle :: Cost Keyword -> Set Keyword -> Set Keyword
+revealedForMiracle revealed =
+  let keep keyword = case keyword of
+        Keyword.Miracle cost -> cost == revealed
+        _ -> True
+   in Set.filter keep
+
+-- The triggered abilities rule 702 mints for a card in a HAND, off the keywords
+-- its caller hands over. `triggeredAbilitiesOf`'s sibling, and the same roster:
+-- a set rather than counts, `exileTriggeredAbilitiesOf`'s reading, since rule
+-- 702.94a states no per-instance clause.
+--
+-- Rule 702.94a's miracle is the only one any of them reaches today, and CR 113.6k
+-- is what decides that -- Parun.Engine.Event filters this list by
+-- `functionsIn`, so a drawn Doomed Traveler's dies trigger is offered from no
+-- hand.
+handTriggeredAbilitiesOf :: Set Keyword -> [TriggeredAbility Card (GrantedAbility.GrantedAbility Card)]
+handTriggeredAbilitiesOf = triggeredAbilitiesOf . Map.fromSet (const 1)
+
+-- CR 702.62a's SECOND and THIRD abilities, "the second and third are triggered
+-- abilities that function in the exile zone" -- the roster the exile scan in
+-- Parun.Engine.Event.Trigger mints, `handTriggeredAbilitiesOf`'s sibling one
+-- zone over.
+--
+-- UNGATED BY CR 113.6, which is the whole reason it is its own function: rule
+-- 702.62a states the zone itself, so the exile scan takes this list without
+-- asking `functionsIn` -- where the same scan does ask it of the card's PRINTED
+-- abilities, which function in exile only where the ability states it (CR
+-- 113.6b, Benalish Commander's "while it's exiled").
+--
+-- Suspend's pair is ordered as rule 702.62a prints them, which is also the
+-- order they fire in: the upkeep removal takes the last counter off, and the
+-- free play watches that removal. Vanishing's pair one rule over has the same
+-- two shapes.
+--
+-- A SET rather than a count-carrying Map, `handTriggeredAbilitiesOf`'s
+-- reading: rule 702.62 states no per-instance clause, and no card in
+-- data/cards/ prints suspend twice, so the caller hands over the distinct
+-- keywords as a set. Rule 702.85c and its siblings do state one, which
+-- is why `stackTriggeredAbilitiesOf` next door counts.
+--
+-- Not implemented: a pair per instance for a card holding two suspends, which
+-- two unconditional grants give it (#4460).
+exileTriggeredAbilitiesOf :: Set Keyword -> [TriggeredAbility Card (GrantedAbility.GrantedAbility Card)]
+exileTriggeredAbilitiesOf keywords = case suspendKeyword keywords of
+  Nothing -> []
+  Just keyword -> [timeCounterUpkeep, suspendLastCounter keyword]
+
+-- CR 702.59a's ability, "a triggered ability that functions only while the card
+-- with recover is in a player's graveyard" -- the roster the graveyard scan in
+-- Parun.Engine.Event.Trigger mints, `exileTriggeredAbilitiesOf`'s sibling one zone
+-- over and ungated by CR 113.6 for that function's reason: rule 702.59a states
+-- the zone itself. CR 113.6m would pin it to the graveyard anyway, the return
+-- naming Zone.Graveyard as its origin (unearth's reading), so the two rules
+-- agree here and the ungated join is the one that does not depend on that.
+--
+-- CR 702.55a's second sentence joins it, and is why this roster is handed the
+-- card's TYPES: haunt on an instant or sorcery spell is a different ability from
+-- haunt on a permanent, and the keyword alone cannot tell them apart. Ungated
+-- for the same reason as recover -- CR 608.2n has already put the card in the
+-- graveyard by the time the ability is gathered, which is the one zone its
+-- condition can be checked from.
+--
+-- A SET rather than a count-carrying Map, `exileTriggeredAbilitiesOf`'s reading:
+-- rule 702.59 states no per-instance clause, and no card in data/cards/ prints
+-- recover twice. Rule 702.55 states none either, and CR 702.55b's link is to one
+-- creature, so a second printed haunt on one spell would be a second ability
+-- over the same card -- unreachable, no printing carrying two.
+graveyardTriggeredAbilitiesOf :: Set CardType.CardType -> Set Keyword -> [TriggeredAbility Card (GrantedAbility.GrantedAbility Card)]
+graveyardTriggeredAbilitiesOf types keywords =
+  let costOf keyword = case keyword of
+        Keyword.Recover cost -> Just cost
+        _ -> Nothing
+   in fmap recover (Maybe.mapMaybe costOf (Set.toAscList keywords))
+        <> [hauntSpell | Set.member Keyword.Haunt keywords, isSpellCard types]
+
+-- CR 702.55a's own division of its two sentences: the second governs an INSTANT
+-- OR SORCERY spell and the first every other object with haunt. A classification
+-- over card types, which rule 702.55a states itself.
+isSpellCard :: Set CardType.CardType -> Bool
+isSpellCard types = Set.member CardType.Instant types || Set.member CardType.Sorcery types
+
+-- CR 702.59a written out: "When a creature is put into your graveyard from the
+-- battlefield, you may pay [cost]. If you do, return this card from your
+-- graveyard to your hand. Otherwise, exile this card."
+--
+-- THE CONDITION is the bystander reading (TriggerCondition.PermanentDies), not a
+-- self-scoped one: rule 702.59a watches A CREATURE, and the card with recover is
+-- a card in a graveyard rather than the permanent that died. "Your graveyard" is
+-- the Filter.OwnedBy conjunct -- CR 404.1 puts a destroyed object in its OWNER's graveyard,
+-- and CR 108.4 leaves the recover card in a graveyard no controller, so CR
+-- 113.8's second clause makes its owner the "you" the filter is read against.
+-- Not narrowed by Not IsSource, which is rule 702.59a's own wording -- "a
+-- creature", with no exception for the card the ability is on. Garza's Assassin
+-- is the one printed creature with recover and its Oracle reminder text says
+-- "another" instead; that card is not in data/cards/, so nothing here reads the
+-- difference and the rule's wording is what this follows.
+--
+-- TWO CLAUSES over ONE offer (CR 118.12, Parun.Types.PayGate.offeredAt): the
+-- return is the PayBranch.IfPaid branch and the exile the IfNotPaid branch of
+-- the same payment, so the player is asked once. Optionality.Mandatory on both,
+-- extort's reason -- rule 702.59a's "may" IS the gate's offer.
+--
+-- BOTH MOVES name Zone.Graveyard as their origin, unearth's reading: that is
+-- what CR 113.6m reads, and the exile half needs it as much as the return does.
+recover :: Cost Keyword -> TriggeredAbility Card (GrantedAbility.GrantedAbility Card)
+recover cost =
+  let gate branch offeredAt =
+        PayGate.MkPayGate
+          { PayGate.payer = PlayerRef.Relative PlayerRelation.You,
+            PayGate.cost = CostChoice.MkCostChoice (cost NonEmpty.:| []),
+            PayGate.basis = Nothing,
+            PayGate.branch = branch,
+            PayGate.obligation = PayObligation.Optional,
+            PayGate.perEach = Nothing,
+            PayGate.offeredAt = offeredAt
+          }
+      moveTo zone =
+        Effect.MoveToZone
+          MoveToZone.MkMoveToZone
+            { MoveToZone.ref = ObjectRef.InSlot Binding.triggerSource,
+              MoveToZone.zone = zone,
+              MoveToZone.riders =
+                EntryRiders.defaultValue,
+              MoveToZone.slot = Nothing,
+              MoveToZone.origin = Just Zone.Graveyard,
+              MoveToZone.placement = LibraryPlacement.defaultValue,
+              MoveToZone.duration = Nothing
+            }
+      returned = Mint.mandatoryPaying (gate PayBranch.IfPaid Nothing) (Seq.singleton (moveTo Zone.Hand))
+      exiled = Mint.mandatoryPaying (gate PayBranch.IfNotPaid (Just (ClauseIndex.MkClauseIndex 0))) (Seq.singleton (moveTo Zone.Exile))
+   in Mint.triggerOf
+        (TriggerCondition.PermanentDies (Filter.And [Filter.HasCardType CardType.Creature, Filter.OwnedBy PlayerRelation.You]))
+        Nothing
+        (Mint.oneModeOf Map.empty (Seq.fromList [returned, exiled]))
+
+-- CR 702.85a's ability, "a triggered ability that functions only while the spell
+-- with cascade is on the stack", CR 702.60a's ripple, which functions "only while
+-- the card with ripple is on the stack", and CR 702.40a's storm and CR 702.69a's
+-- gravestorm, each of which "functions on the stack" -- the roster the cast scan
+-- in Parun.Engine.Event.Trigger mints, `exileTriggeredAbilitiesOf`'s sibling one
+-- zone over and ungated by CR 113.6 for that function's reason: each rule states
+-- the zone itself, so asking `functionsIn` would only re-derive it from a
+-- condition (a cast) that says nothing about the stack.
+--
+-- COUNTED, where `exileTriggeredAbilitiesOf` next door takes a set: CR 702.85c,
+-- CR 702.60b, CR 702.40b, CR 702.69b, CR 702.78b, CR 702.56b and CR 702.153b each
+-- say the instances trigger separately, so Apex Devastator's four printed
+-- cascades are four abilities (Parun.KeywordTriggerSpec's Cascade group). The PARAMETERIZED
+-- members already got one trigger per distinct PAYLOAD, which is CR 702.56b's
+-- and CR 702.153b's "each is paid separately and triggers based on the payments
+-- made for it"; counting adds the repeats of one payload to that, the copy
+-- triggers reading a payment through perPayment, below.
+stackTriggeredAbilitiesOf :: Map Keyword Natural -> [TriggeredAbility Card (GrantedAbility.GrantedAbility Card)]
+stackTriggeredAbilitiesOf counts =
+  concatMap (uncurry stackAbilitiesFor) (Map.toAscList counts)
+
+-- The stack-functioning abilities one keyword, held `count` times, contributes.
+-- `abilitiesFor`'s shape one zone over, and a wildcard rather than an exhaustive
+-- case for `stackCopyTrigger`'s reason.
+stackAbilitiesFor :: Keyword -> Natural -> [TriggeredAbility Card (GrantedAbility.GrantedAbility Card)]
+stackAbilitiesFor keyword count = case keyword of
+  Keyword.Cascade -> List.genericReplicate count cascade
+  Keyword.Ripple n -> List.genericReplicate count (ripple n)
+  Keyword.Storm -> List.genericReplicate count storm
+  Keyword.Gravestorm -> List.genericReplicate count gravestorm
+  Keyword.Demonstrate -> List.genericReplicate count demonstrate
+  -- One per instance paid, squad's and offspring's reading in abilitiesFor
+  -- (perPayment, CR 702.56b, 702.78b, 702.153b).
+  _ -> foldMap (perPayment count) (stackCopyTrigger keyword)
+
+-- The arm of `stackTriggeredAbilitiesOf` above that reads a keyword's PAYLOAD,
+-- so it cannot be a membership test: rule 702.56a counts the payments made for
+-- this very replicate cost, and rules 702.153a and 702.78a ask whether this very
+-- casualty or conspire cost was paid. Conspire is payload-free and could have
+-- been a membership test in `stackTriggeredAbilitiesOf`; it is here because what
+-- it needs is the KEYWORD, which Quantity.TimesPaid names to find the payment.
+--
+-- A wildcard rather than an exhaustive case, entwineCosts' reason.
+stackCopyTrigger :: Keyword -> Maybe (Natural -> TriggeredAbility Card (GrantedAbility.GrantedAbility Card))
+stackCopyTrigger keyword = case keyword of
+  Keyword.Replicate _ -> Just (\ordinal -> paidSpellCopies keyword (Quantity.TimesPaid (KeywordDesignator.OfInstance keyword ordinal)) ordinal)
+  Keyword.Casualty _ -> Just (paidSpellCopies keyword (Quantity.Literal 1))
+  -- CR 702.78a's second ability, casualty's above in shape: one copy, gated on
+  -- this very conspire cost having been paid.
+  Keyword.Conspire -> Just (paidSpellCopies keyword (Quantity.Literal 1))
+  _ -> Nothing
+
+-- CR 707.10's copy instruction as the one mode the cast triggers of rules
+-- 702.40a, 702.56a, 702.69a, 702.78a and 702.153a all state: copy the spell this
+-- ability's source is (CR 113.7, named by Filter.IsSource) `quantity` times, with
+-- CR 707.10c's offer of new targets, asked per copy and never raised for a spell
+-- with no targets.
+--
+-- Shared rather than written out per keyword because the rules state one
+-- instruction and differ only in the COUNT and in the intervening "if" -- both of
+-- which are the caller's.
+--
+-- A spell that has LEFT the stack before the trigger resolves is still copied, off
+-- its last known information (CR 608.2h) and through CR 113.7a's ability that
+-- exists independently of its source. Proved by Parun.KeywordTriggerSpec's "CR
+-- 608.2h a Grapeshot countered under its own storm trigger is still copied".
+copiesOf :: Quantity.Quantity -> Modal.Modal Card (GrantedAbility.GrantedAbility Card)
+copiesOf quantity =
+  Mint.oneMode
+    ( Seq.singleton
+        ( Effect.CopyStackObject
+            CopyStackObject.MkCopyStackObject
+              { CopyStackObject.ref = ObjectRef.EachOnStack Filter.IsSource,
+                CopyStackObject.targets = CopyTargets.ChosenByController,
+                CopyStackObject.quantity = quantity,
+                CopyStackObject.copier = CopyStackObject.defaultCopier,
+                CopyStackObject.exceptions = []
+              }
+        )
+    )
+
+-- CR 702.56a's and CR 702.153a's SECOND ability: "When you cast this spell, if a
+-- [replicate/casualty] cost was paid for it, copy it [for each time its replicate
+-- cost was paid]. If the spell has any targets, you may choose new targets for
+-- [any of] the cop[ies]."
+--
+-- `storm` and `gravestorm` below are the same trigger with no intervening "if";
+-- what differs across all of them is only which question CR 707.10 is handed,
+-- which is why they share `copiesOf` and only the intervening "if" is written
+-- here.
+--
+-- The intervening "if" is CR 603.4's, evoke's reading: Quantity.TimesPaid reads
+-- Object.paidCosts off the SPELL, which CR 601.2b stamped as it was announced,
+-- so a spell nobody paid the cost for never puts the ability on the stack.
+--
+-- `ordinal` is perPayment's, paidTokenCopies' reading.
+paidSpellCopies :: Keyword -> Quantity.Quantity -> Natural -> TriggeredAbility Card (GrantedAbility.GrantedAbility Card)
+paidSpellCopies keyword quantity ordinal =
+  Mint.triggerOf
+    TriggerCondition.SelfCast
+    (Just (Condition.Compares (Compares.MkCompares (Quantity.TimesPaid (KeywordDesignator.OfInstance keyword ordinal)) Comparison.AtLeast (Quantity.Literal 1))))
+    (copiesOf quantity)
+
+-- CR 702.40a: "When you cast this spell, copy it for each other spell that was
+-- cast before it this turn. If the spell has any targets, you may choose new
+-- targets for any of the copies."
+--
+-- The instruction is `copiesOf`'s, which carries its reasons; what rule 702.40a
+-- states of its own is the count and the absence of an intervening "if".
+storm :: TriggeredAbility Card (GrantedAbility.GrantedAbility Card)
+storm =
+  Mint.triggerOf
+    TriggerCondition.SelfCast
+    Nothing
+    (copiesOf Quantity.SpellsCastBefore)
+
+-- CR 702.69a: "When you cast this spell, copy it for each permanent that was put
+-- into a graveyard from the battlefield this turn. If the spell has any targets,
+-- you may choose new targets for any of the copies."
+--
+-- `storm` above with ONE thing changed, which is the whole of what rule 702.69a
+-- states differently from rule 702.40a: the count. A count of the WHOLE turn
+-- where rule 702.40a counts what came before the spell, so nothing here reads the
+-- spell's own place in the log.
+gravestorm :: TriggeredAbility Card (GrantedAbility.GrantedAbility Card)
+gravestorm =
+  Mint.triggerOf
+    TriggerCondition.SelfCast
+    Nothing
+    (copiesOf Quantity.PermanentsDiedThisTurn)
+
+-- CR 702.144a: "When you cast this spell, you may copy it and you may choose new
+-- targets for the copy. If you copy the spell, choose an opponent. That player
+-- copies the spell and may choose new targets for that copy."
+--
+-- `storm` above's trigger split into TWO CLAUSES: the first sentence is CR
+-- 603.5's "may" over one copy, and the rest hangs off it through CR 608.2c's
+-- "if you do" (Clause.ifTaken naming clause 0), so a declined copy chooses no
+-- opponent and makes no second copy either.
+--
+-- The last two sentences share one clause rather than taking one each, which is
+-- the shape Skullwinder already prints in data\/cards: no rider falls between
+-- them, and the second reads a slot the first fills in the same resolution, so
+-- splitting them would only add a second `ifTaken` naming the first.
+--
+-- NOT `copiesOf`, whose whole payload is one CopyStackObject with the resolving
+-- controller as CR 707.10's copier. Rule 702.144a states TWO copies under two
+-- seats, and the second one's copier is a player chosen during this very
+-- resolution -- PlayerRef.InSlot over the slot Effect.ChoosePlayer fills, the
+-- read Skullwinder's "choose an opponent. That player returns a card ..." already
+-- makes one type over.
+--
+-- The opponent's copy carries CopyTargets.ChosenByController like the
+-- controller's, and that is rule 702.144a's "may choose new targets for THAT
+-- copy" rather than a repeat: CR 707.10c hands the offer to the copy's
+-- controller, which for this copy is the chosen opponent (CR 707.10) -- the half
+-- Parun.CopySpec's Meletis Charlatan case proves of CopyStackObject.copier.
+--
+-- Rule 702.144a states no zone, where rules 702.40a and 702.69a state the stack
+-- themselves; CR 113.6k supplies it, a cast trigger being unable to trigger from
+-- the battlefield.
+demonstrate :: TriggeredAbility Card (GrantedAbility.GrantedAbility Card)
+demonstrate =
+  let copyBy copier =
+        Effect.CopyStackObject
+          CopyStackObject.MkCopyStackObject
+            { CopyStackObject.ref = ObjectRef.EachOnStack Filter.IsSource,
+              CopyStackObject.targets = CopyTargets.ChosenByController,
+              CopyStackObject.quantity = CopyStackObject.defaultQuantity,
+              CopyStackObject.copier = copier,
+              CopyStackObject.exceptions = []
+            }
+      yours =
+        Mint.youMay
+          (Seq.singleton (copyBy CopyStackObject.defaultCopier))
+      theirs =
+        Clause.MkClause
+          (Just (IfTaken.AnyTaken (NonEmpty.singleton (ClauseIndex.MkClauseIndex 0))))
+          Nothing
+          Nothing
+          Optionality.Mandatory
+          Nothing
+          ( Seq.fromList
+              [ Effect.ChoosePlayer (ChoosePlayer.MkChoosePlayer (PlayerScope.Related PlayerRelation.Opponent) demonstrateOpponent),
+                copyBy (PlayerRef.InSlot demonstrateOpponent)
+              ]
+          )
+   in Mint.triggerOf
+        TriggerCondition.SelfCast
+        Nothing
+        (Mint.oneModeOf Map.empty (Seq.fromList [yours, theirs]))
+
+-- The slot rule 702.144a's "choose an opponent" fills and its "that player"
+-- reads; `cascadeExiled` is the same minted-slot move over objects rather than
+-- players.
+demonstrateOpponent :: SlotName.SlotName
+demonstrateOpponent = SlotName.MkSlotName (Text.pack "demonstrated")
+
+-- CR 702.85a: "When you cast this spell, exile cards from the top of your library
+-- until you exile a nonland card whose mana value is less than this spell's mana
+-- value. You may cast that card without paying its mana cost if the resulting
+-- spell's mana value is less than this spell's mana value. Then put all cards
+-- exiled this way that weren't cast on the bottom of your library in a random
+-- order."
+--
+-- THE WALK, THE OFFER AND THE REST, hideaway's shape one zone and one opcode
+-- over: the walk that ends AT its match is ObjectRef.TopOfLibraryUntil
+-- (Treasure Hunt's), the offer is CR 608.2g's, and "the rest" needs no opcode
+-- of its own -- the last clause reads the same slot and finds the cast card
+-- gone, casting having deleted the exiled incarnation the way CR 400.7 deletes
+-- a moved one.
+--
+-- ONE FILTER, written twice for two questions the rule asks separately: it ENDS
+-- the walk (so the match is the last card exiled, CR 702.85a's first sentence)
+-- and then picks that one card back out of the batch for the offer. No prompt
+-- comes of the second read -- the walk stops at the first match, so exactly one
+-- exiled card can satisfy it, and EachCardFromAmong asks nobody anything.
+--
+-- An OfSource operand and not a literal, because CR 613.2a moves the
+-- spell's mana cost under layer 1: a cascade spell that is a copy of something
+-- else measures the copied cost, which no minter could have baked. So does an
+-- {X} spell granted cascade, whose mana value counts its announced X (CR
+-- 202.3e).
+--
+-- CR 702.85b's "as you cascade" window is a fourth clause BETWEEN the walk and
+-- the offer, so an action another permanent grants (Averna, the Chaos Bloom)
+-- comes after the last card is exiled and before the cast decision -- or,
+-- where the walk found no match, before the bottoming.
+--
+-- The offer carries the SAME atom as CR 702.85a's second condition, and that is
+-- the whole of its work: the card's mana value is already less by the walk, so
+-- what is left to ask is the RESULTING spell's -- an adventurer card's other
+-- half, whose mana value may exceed the card's. Flaxen Intruder // Welcome Home
+-- is the printing that shows it; Parun.KeywordTriggerSpec's "CR 702.85a cascading
+-- into an adventurer card withholds the half the bound refuses" is the proof.
+cascade :: TriggeredAbility Card (GrantedAbility.GrantedAbility Card)
+cascade =
+  let plain =
+        EntryRiders.defaultValue
+      match = Filter.And [Filter.Not (Filter.HasCardType CardType.Land), Filter.Measures (Measures.MkMeasures Measure.ManaValue Comparison.LessThan (Operand.OfSource Measure.ManaValue))]
+      exile =
+        Effect.MoveToZone
+          ( MoveToZone.MkMoveToZone
+              (ObjectRef.TopOfLibraryUntil (TopOfLibraryUntil.MkTopOfLibraryUntil (PlayerRef.Relative PlayerRelation.You) match (Quantity.Literal 1)))
+              Zone.Exile
+              plain
+              (Just cascadeExiled)
+              Nothing
+              LibraryPlacement.defaultValue
+              Nothing
+          )
+      offer =
+        Effect.OfferCast
+          OfferCast.MkOfferCast
+            { OfferCast.ref = ObjectRef.EachCardFromAmong (EachCardFromAmong.MkEachCardFromAmong cascadeExiled match),
+              -- Rule 702.85a's "YOU may cast it": the caster, who is the
+              -- trigger's controller.
+              OfferCast.caster = PlayerRef.Relative PlayerRelation.You,
+              OfferCast.optionality = CastObligation.Optional,
+              OfferCast.offer =
+                CastOffer.MkCastOffer
+                  { CastOffer.transformed = False,
+                    CastOffer.withoutPayingManaCost = True,
+                    CastOffer.payingInstead = Nothing,
+                    CastOffer.spending = ManaSpending.AsProduced,
+                    CastOffer.restriction = Just (Filter.Measures (Measures.MkMeasures Measure.ManaValue Comparison.LessThan (Operand.OfSource Measure.ManaValue))),
+                    CastOffer.offeredBy = Nothing,
+                    CastOffer.faceDown = Nothing,
+                    CastOffer.payableFromSpent = False,
+                    CastOffer.reduction = 0
+                  },
+              -- Rule 702.85a's "cast IT": one card, the one the walk stopped at.
+              OfferCast.repetition = CastRepetition.Once,
+              OfferCast.copied = False,
+              OfferCast.verb = PermissionVerb.Cast,
+              OfferCast.controlWhileResolving = False,
+              OfferCast.slot = Nothing
+            }
+      rest =
+        Effect.MoveToZone
+          ( MoveToZone.MkMoveToZone
+              (ObjectRef.InSlot cascadeExiled)
+              Zone.Library
+              plain
+              Nothing
+              Nothing
+              (LibraryPlacement.RandomOrder LibraryPosition.Bottom)
+              Nothing
+          )
+      clause effect = Mint.mandatory (Seq.singleton effect)
+   in Mint.triggerOf
+        TriggerCondition.SelfCast
+        Nothing
+        (Mint.oneModeOf Map.empty (Seq.fromList [clause exile, clause (Effect.AsYouCascade cascadeExiled), clause offer, clause rest]))
+
+-- The slot rule 702.85a's walk binds every card it exiled into, the match
+-- included -- hideawaySeen's position, read by CR 702.85b's window, by the
+-- offer and by what goes to the bottom.
+cascadeExiled :: SlotName.SlotName
+cascadeExiled = SlotName.MkSlotName (Text.pack "cascaded")
+
+-- CR 702.60a: "When you cast this spell, you may reveal the top N cards of your
+-- library, or, if there are fewer than N cards in your library, you may reveal
+-- all the cards in your library. If you reveal cards from your library this way,
+-- you may cast any of those cards with the same name as this spell without
+-- paying their mana costs, then put all revealed cards not cast this way on the
+-- bottom of your library in any order."
+--
+-- THREE CLAUSES, `cascade` above's walk, offer and rest, each one step
+-- milder: the walk is a COUNT rather than a match (ObjectRef.TopOfLibrary, which
+-- CR 609.3 clamps to a shorter library -- the rule's own second sentence, so it
+-- needs no arm), the offer casts ANY NUMBER rather than one
+-- (CastRepetition.AnyNumber, CR 608.2g's "which may include casting other spells
+-- this way"), and the remainder goes to the bottom in a STATED order rather than
+-- a random one.
+--
+-- CR 401.4 is what makes that last difference: rule 702.60a says "in any order"
+-- and states no randomness, so the arrangement is the owner's and
+-- Parun.Engine.Resolve.Effect asks them for it. Rule 702.85a's printed "in a
+-- random order" is what takes that back, which is why cascade writes
+-- LibraryPlacement.RandomOrder where this writes Stated.
+--
+-- THE "MAY" IS THE REVEAL's alone (CR 603.5), and the two clauses after it hang
+-- off the slot it binds rather than off a Clause.ifTaken ordinal: a declined
+-- reveal binds nothing, so the offer names no card and the remainder moves none.
+-- That is rule 702.60a's "if you reveal cards from your library this way" read
+-- through CR 608.2c, and it is the posture cascade's last clause already takes
+-- towards its offer.
+--
+-- NO CastOffer.restriction, where cascade carries one: rule 702.85a states a
+-- second condition about the RESULTING spell and rule 702.60a states none -- the
+-- whole of what it asks is a property of the card, which the offer's own
+-- EachCardFromAmong filter already asks.
+--
+-- Filter.SharesWithSource Trait.Name and not a slot comparison, because
+-- TriggerCondition.SelfCast binds nothing: "this spell" is CR 113.7's source.
+-- Written ONCE where cascade writes its filter twice, since the reveal above is a
+-- COUNT: nothing here asks the filter to end a walk, so its only job is picking
+-- the offer's cards back out of the revealed batch.
+ripple :: Natural -> TriggeredAbility Card (GrantedAbility.GrantedAbility Card)
+ripple n =
+  let plain =
+        EntryRiders.defaultValue
+      show_ =
+        Effect.Reveal
+          ( Reveal.MkReveal
+              (ObjectRef.TopOfLibrary (TopOfLibrary.MkTopOfLibrary (PlayerRef.Relative PlayerRelation.You) (Quantity.Literal (toInteger n))))
+              (Just rippleRevealed)
+          )
+      offer =
+        Effect.OfferCast
+          OfferCast.MkOfferCast
+            { OfferCast.ref = ObjectRef.EachCardFromAmong (EachCardFromAmong.MkEachCardFromAmong rippleRevealed (Filter.SharesWithSource Trait.Name)),
+              -- Rule 702.60a's "YOU may cast": the caster, who is the trigger's
+              -- controller.
+              OfferCast.caster = PlayerRef.Relative PlayerRelation.You,
+              OfferCast.optionality = CastObligation.Optional,
+              OfferCast.offer =
+                CastOffer.MkCastOffer
+                  { CastOffer.transformed = False,
+                    CastOffer.withoutPayingManaCost = True,
+                    CastOffer.payingInstead = Nothing,
+                    CastOffer.spending = ManaSpending.AsProduced,
+                    CastOffer.restriction = Nothing,
+                    CastOffer.offeredBy = Nothing,
+                    CastOffer.faceDown = Nothing,
+                    CastOffer.payableFromSpent = False,
+                    CastOffer.reduction = 0
+                  },
+              -- Rule 702.60a's "cast ANY OF those cards".
+              OfferCast.repetition = CastRepetition.AnyNumber,
+              OfferCast.copied = False,
+              OfferCast.verb = PermissionVerb.Cast,
+              OfferCast.controlWhileResolving = False,
+              OfferCast.slot = Nothing
+            }
+      rest =
+        Effect.MoveToZone
+          ( MoveToZone.MkMoveToZone
+              (ObjectRef.InSlot rippleRevealed)
+              Zone.Library
+              plain
+              Nothing
+              Nothing
+              (LibraryPlacement.Stated LibraryPosition.Bottom)
+              Nothing
+          )
+      clause optionality effect = Mint.clause optionality (Seq.singleton effect)
+   in Mint.triggerOf
+        TriggerCondition.SelfCast
+        Nothing
+        ( Mint.oneModeOf
+            Map.empty
+            ( Seq.fromList
+                [ clause (Optionality.Optional (PlayerRef.Relative PlayerRelation.You)) show_,
+                  clause Optionality.Mandatory offer,
+                  clause Optionality.Mandatory rest
+                ]
+            )
+        )
+
+-- The slot rule 702.60a's reveal binds its N cards into -- cascadeExiled's
+-- position one zone over, read twice: once for the offer and once for what goes
+-- to the bottom.
+rippleRevealed :: SlotName.SlotName
+rippleRevealed = SlotName.MkSlotName (Text.pack "rippled")
+
+-- CR 702.62b's "a card is suspended", named because rule 702.62a's intervening
+-- "if" is that definition and nothing else. Two of its three conjuncts are true
+-- by construction where this is read -- the exile scan found the card in exile,
+-- carrying the keyword -- so the counter is the whole of what a board can move.
+--
+-- A REGRESSION FENCE rather than a proved line, timeCounterUpkeep's CR 608.2a
+-- note: an upkeep that resolves with the counters already gone removes
+-- nothing and raises no event for the last-counter ability to watch, so dropping
+-- this leaves Parun.SpecialActionSpec's Rift Bolt group green. It is written
+-- because CR 603.4 states it.
+suspendedNow :: Condition.Condition
+suspendedNow = Condition.Compares (Compares.MkCompares (Quantity.ObjectCounters CounterKind.Time) Comparison.AtLeast (Quantity.Literal 1))
+
+-- "When the last time counter is removed from this card, if it's exiled, you may
+-- play it without paying its mana cost if able."
+--
+-- Watches the REMOVAL and not the count, vanishingLastCounter's reading: a card
+-- exiled with no time counters at all has nothing to trigger, which is CR
+-- 702.62b read from the other side.
+--
+-- The ability states exile, rule 702.62a's zone. Unread in practice: the
+-- exile scan takes `exileTriggeredAbilitiesOf` without asking `functionsIn`.
+--
+-- ONE MANDATORY clause: the "you may" governs the PLAY alone, which is
+-- Prompt.OfferedCast's own question (CR 608.2g), miracle's argument. Marking the
+-- clause optional would raise a second prompt for one printed "may".
+--
+-- CastOffer.withoutPayingManaCost is CR 118.9's alternative cost, which CR
+-- 702.62d routes through rules 601.2b and 601.2f-h -- the same field the plotted
+-- card's cast is priced with in Parun.Engine.Cost.
+--
+-- PLAY, rule 702.62a's own verb: a land face is played as CR 305.2a's land play
+-- during a resolution. A granted suspend reaches a modal double-faced card
+-- whose back is a land (CR 712.12) -- Parun.SpecialActionSpec's "Delay on Sea
+-- Gate Restoration" case proves it.
+--
+-- THE INTERVENING "IF" is rule 702.62a's "if it's exiled", which immediately
+-- follows the trigger condition and so is CR 603.4's, gated at the gather and
+-- re-checked at resolution (CR 608.2a) like any other. It is NOT true by
+-- construction: the counter's removal is what triggers the ability, and any
+-- player may move the card out of exile in the window that opens before it
+-- resolves.
+--
+-- CastOffer.offeredBy is rule 702.62a's LAST sentence, half of it: the offer
+-- states which keyword ability is behind the free cost, so the spell carries
+-- Object.castUsing = suspend and Parun.Engine.Stack.armBecame can grant the
+-- haste to the permanent it becomes. The tag is the whole keyword, payload and
+-- all, `plainAlternativeCosts`' spelling; nothing reads the payload.
+suspendLastCounter :: Keyword -> TriggeredAbility Card (GrantedAbility.GrantedAbility Card)
+suspendLastCounter keyword =
+  let effect =
+        Effect.OfferCast
+          OfferCast.MkOfferCast
+            { OfferCast.ref = ObjectRef.InSlot Binding.triggerSource,
+              -- Rule 702.62a's "YOU may play it": the card's owner, who is this
+              -- trigger's controller, and a "may".
+              OfferCast.caster = PlayerRef.Relative PlayerRelation.You,
+              OfferCast.optionality = CastObligation.Optional,
+              OfferCast.offer = CastOffer.MkCastOffer {CastOffer.transformed = False, CastOffer.withoutPayingManaCost = True, CastOffer.payingInstead = Nothing, CastOffer.spending = ManaSpending.AsProduced, CastOffer.restriction = Nothing, CastOffer.offeredBy = Just keyword, CastOffer.faceDown = Nothing, CastOffer.payableFromSpent = False, CastOffer.reduction = 0},
+              -- rule 702.62a's "cast it": one card, the one the slot names.
+              OfferCast.repetition = CastRepetition.Once,
+              OfferCast.copied = False,
+              OfferCast.verb = PermissionVerb.Play,
+              OfferCast.controlWhileResolving = False,
+              OfferCast.slot = Nothing
+            }
+   in ( Mint.triggerIf
+          (TriggerCondition.SelfLastCounterRemoved (SelfCountersRemoved.MkSelfCountersRemoved {SelfCountersRemoved.kind = CounterKind.Time}))
+          stillExiled
+          (Seq.singleton effect)
+      )
+        { TriggeredAbility.functionsFrom = Set.singleton Zone.Exile
+        }
+
+-- CR 702.62a's "if it's exiled", cumulativeUpkeep's onBattlefield one zone over:
+-- a count of the exile zone kept by Filter.IsSource, which is at least one
+-- exactly while the card the ability is on is still there.
+--
+-- PlayerRef.Relative AnyPlayer because exile is shared and has no per-player copy to
+-- name (Parun.Types.InZone).
+--
+-- THE TWO READINGS AGREE on every board in this pool, and by accident rather
+-- than by the rule: CR 400.7 mints a fresh id as the card leaves exile and
+-- deletes the one the trigger bound, so Parun.Engine.Resolve.Effect.offerCast
+-- finds no object for the stale reference and makes no offer either way. What
+-- the clause decides is therefore the ABILITY'S FATE and not the board --
+-- removed on resolution rather than resolved -- which is what
+-- Parun.SpecialActionSpec's Pull from Eternity pair asserts, through
+-- Parun.Engine.Stack.interveningStillHolds.
+stillExiled :: Condition.Condition
+stillExiled =
+  Condition.Compares
+    ( Compares.MkCompares
+        (Quantity.Count (Count.MkCount (Scope.InZone (InZone.MkInZone Zone.Exile (PlayerRef.Relative PlayerRelation.AnyPlayer))) Filter.IsSource Aggregation.Members))
+        Comparison.AtLeast
+        (Quantity.Literal 1)
+    )
+
+-- CR 702.88a: "at the beginning of your next upkeep, you may cast this card from
+-- exile without paying its mana cost" -- the DELAYED triggered ability (CR
+-- 603.7a) rule 702.88a's static ability creates as the spell is exiled.
+-- Parun.Engine.Resolve.finishSpell arms it with `reboundSlot` bound to the exiled
+-- card.
+--
+-- ARMED rather than gathered off the exiled card the way suspend's two abilities
+-- are: rule 702.88a says "your NEXT upkeep", once, where an exile-zone ability
+-- reading the same condition would fire at every upkeep the card sat through.
+-- Its once-ness is the delayed store's (CR 603.7b).
+--
+-- Onset.Immediately: rule 702.88a names no turn, and the upkeep the arming
+-- resolution is itself in has already begun, so the first upkeep this can see is
+-- the next one. TurnScope.ControllersTurn is rule 702.88a's "YOUR", which CR
+-- 603.7d makes the spell's controller.
+--
+-- ONE MANDATORY clause, suspendLastCounter's reading of the "may": the option
+-- governs the CAST alone, which is Prompt.OfferedCast's own question (CR 608.2g).
+--
+-- NO intervening "if": rule 702.88a states none. A card that has left exile by
+-- the time this resolves is not offered all the same, CR 400.7 having deleted the
+-- id the arming captured -- stillExiled's note above argues that from the other
+-- side.
+--
+-- CastOffer.offeredBy tags the candidate so the spell records
+-- Object.castUsing = rebound (CR 601.2b), suspendLastCounter's field. No clause
+-- of rule 702.88 reads it back; rule 702.88b routes the payment through rules
+-- 601.2b and 601.2f-h, which is what CastOffer.withoutPayingManaCost means.
+reboundUpkeep :: TriggeredAbility Card (GrantedAbility.GrantedAbility Card)
+reboundUpkeep =
+  let effect =
+        Effect.OfferCast
+          OfferCast.MkOfferCast
+            { OfferCast.ref = ObjectRef.InSlot reboundSlot,
+              -- Rule 702.88a's "YOU may cast": the delayed ability's controller,
+              -- and a "may".
+              OfferCast.caster = PlayerRef.Relative PlayerRelation.You,
+              OfferCast.optionality = CastObligation.Optional,
+              OfferCast.offer = CastOffer.MkCastOffer {CastOffer.transformed = False, CastOffer.withoutPayingManaCost = True, CastOffer.payingInstead = Nothing, CastOffer.spending = ManaSpending.AsProduced, CastOffer.restriction = Nothing, CastOffer.offeredBy = Just Keyword.Rebound, CastOffer.faceDown = Nothing, CastOffer.payableFromSpent = False, CastOffer.reduction = 0},
+              -- rule 702.88a's "cast it": one card, the one the slot names.
+              OfferCast.repetition = CastRepetition.Once,
+              OfferCast.copied = False,
+              OfferCast.verb = PermissionVerb.Cast,
+              OfferCast.controlWhileResolving = False,
+              OfferCast.slot = Nothing
+            }
+   in Mint.trigger Mint.yourUpkeep (Seq.singleton effect)
+
+-- The slot rule 702.88a's "this card" is bound into as the spell is exiled,
+-- becameSlot's position: CR 603.7c's environment, captured at the arming rather
+-- than re-read.
+reboundSlot :: SlotName.SlotName
+reboundSlot = SlotName.MkSlotName (Text.pack "rebounded")
+
+-- CR 702.88a / 702.88c: does this object have rebound? Membership, rule 702.88c
+-- making multiple instances redundant. Read by
+-- Parun.Engine.Resolve.finishSpell off Projection.keywordsOf, never off the
+-- printed face.
+hasRebound :: Set Keyword -> Bool
+hasRebound = Set.member Keyword.Rebound
+
+-- CR 702.50a: does this object have epic? Membership, as rule 702.88c's
+-- redundancy makes hasRebound's. Read by Parun.Engine.Resolve.finishSpell off
+-- Projection.keywordsOf and never off the printed face, so a spell GRANTED epic
+-- by a text-changing effect gets both abilities and one whose text was blanked
+-- gets neither (CR 613.1f).
+hasEpic :: Set Keyword -> Bool
+hasEpic = Set.member Keyword.Epic
+
+-- CR 702.99a's granted trigger: "Whenever this creature deals combat damage to a
+-- player, you may copy the encoded card and you may cast the copy without paying
+-- its mana cost." Parun.Engine.Projection.encodedGathered grants it, baking in
+-- the one card it names so two cards encoded on one creature are two triggers
+-- (CR 603.2) each offering its own.
+--
+-- ONE MANDATORY clause and one prompt for the two printed "may"s: a copy that is
+-- not cast ceases to exist (CR 704.5e) with nothing having seen it, so copying
+-- without casting is indistinguishable from declining. Prompt.OfferedCast asks.
+--
+-- "You" is the trigger's controller, which is the creature's (CR 603.3a).
+cipherTrigger :: ObjectId -> TriggeredAbility Card (GrantedAbility.GrantedAbility Card)
+cipherTrigger card =
+  let effect =
+        Effect.OfferCast
+          OfferCast.MkOfferCast
+            { OfferCast.ref = ObjectRef.EachCardEncodedOnSource (Just (Filter.IsObject card)),
+              OfferCast.caster = PlayerRef.Relative PlayerRelation.You,
+              OfferCast.optionality = CastObligation.Optional,
+              OfferCast.offer = CastOffer.MkCastOffer {CastOffer.transformed = False, CastOffer.withoutPayingManaCost = True, CastOffer.payingInstead = Nothing, CastOffer.spending = ManaSpending.AsProduced, CastOffer.restriction = Nothing, CastOffer.offeredBy = Nothing, CastOffer.faceDown = Nothing, CastOffer.payableFromSpent = False, CastOffer.reduction = 0},
+              OfferCast.repetition = CastRepetition.Once,
+              OfferCast.copied = True,
+              OfferCast.verb = PermissionVerb.Cast,
+              OfferCast.controlWhileResolving = False,
+              OfferCast.slot = Nothing
+            }
+   in Mint.trigger Mint.dealsCombatDamageToAPlayer (Seq.singleton effect)
+
+-- CR 702.50a's "except for its epic ability", written into the copiable snapshot
+-- that Parun.Engine.Resolve.finishSpell archives: the copy rule 702.50a's delayed
+-- ability makes is a spell without epic, so it neither prohibits casting nor arms
+-- a second copier. Proved by Parun.CastSpec's "the second upkeep copies once".
+--
+-- Written HERE rather than as an exception on Effect.CopyStackObject, because the
+-- exception is epic's own sentence and not CR 707.10's: a card that copies an
+-- epic spell (Fork) copies epic with it.
+withoutEpic :: PC.ProjectedCharacteristics -> PC.ProjectedCharacteristics
+withoutEpic pc = pc {PC.keywords = Map.delete Keyword.Epic (PC.keywords pc)}
+
+-- The slot rule 702.50a's "this spell" is bound into as the spell finishes
+-- resolving, reboundSlot's position: CR 603.7c's environment, captured at the
+-- arming.
+--
+-- The id it names has ceased before this ability ever triggers (CR 400.7), which
+-- is why Parun.Engine.Resolve.applyEpic files the object in GameState.stackArchive
+-- for Effect.CopyStackObject to find. CR 603.7c bars a delayed ability from
+-- AFFECTING an object that has left the zone it was expected in; rule 702.50a
+-- COPIES the spell instead, and CR 707.10 copies it as CR 608.2h last knew it --
+-- without which no upkeep would copy anything at all, the spell having reached
+-- the graveyard before the first of them.
+epicSlot :: SlotName.SlotName
+epicSlot = SlotName.MkSlotName (Text.pack "epic spell")
+
+-- The name rule 702.50a's delayed ability is filed under. A card may not declare
+-- one under it (Parun.AbilitySlotLintSpec).
+epicCopyName :: AbilityName
+epicCopyName = AbilityName.MkAbilityName (Text.pack "epic")
+
+-- CR 702.50a's delayed triggered ability: "at the beginning of each of your
+-- upkeeps for the rest of the game, copy this spell except for its epic ability.
+-- If the spell has any targets, you may choose new targets for the copy."
+--
+-- reboundUpkeep's condition exactly -- TurnScope.ControllersTurn is rule 702.50a's
+-- "YOUR", which CR 603.7d makes the spell's controller -- and TriggerLimit.Unlimited
+-- with it. What makes this one REPEAT where rebound's fires once is the expiry
+-- Parun.Engine.Resolve.finishSpell arms it with: a delayed entry carrying one is
+-- never spent (Parun.Engine.Event.Trigger), and Expiry.Never is "for the rest of
+-- the game".
+--
+-- CopyTargets.ChosenByController is rule 702.50a's last sentence, which is CR
+-- 707.10c: the offer is raised whether or not the spell had targets, and a spell
+-- with none has nothing to re-choose.
+epicCopy :: TriggeredAbility Card (GrantedAbility.GrantedAbility Card)
+epicCopy =
+  let effect =
+        Effect.CopyStackObject
+          CopyStackObject.MkCopyStackObject
+            { CopyStackObject.ref = ObjectRef.InSlot epicSlot,
+              CopyStackObject.targets = CopyTargets.ChosenByController,
+              CopyStackObject.quantity = CopyStackObject.defaultQuantity,
+              CopyStackObject.copier = CopyStackObject.defaultCopier,
+              -- Rule 702.50a's "except for its epic ability" is written into the
+              -- archived snapshot instead (Keyword.withoutEpic), the exception
+              -- being epic's own sentence rather than CR 707.10's.
+              CopyStackObject.exceptions = []
+            }
+   in Mint.trigger Mint.yourUpkeep (Seq.singleton effect)
+
+-- CR 702.192a: does this object have paradigm? hasEpic's membership, read off
+-- Projection.keywordsOf by Parun.Engine.Resolve.applyParadigm for the same reason.
+hasParadigm :: Set Keyword -> Bool
+hasParadigm = Set.member Keyword.Paradigm
+
+-- The slot rule 702.192a's "this object" is bound into as the spell resolves,
+-- epicSlot's reading: the id has ceased before the ability first triggers (CR
+-- 400.7), and Parun.Engine.Resolve.Effect's castableCopy finds it in
+-- GameState.stackArchive, where the zone-change funnel filed it as it left the
+-- stack. So the copy is still made once the card has left exile (rulings,
+-- 2026-03-20).
+paradigmSlot :: SlotName.SlotName
+paradigmSlot = SlotName.MkSlotName (Text.pack "paradigm spell")
+
+-- The name rule 702.192a's delayed ability is filed under. A card may not declare
+-- one under it (Parun.AbilitySlotLintSpec).
+paradigmCopyName :: AbilityName
+paradigmCopyName = AbilityName.MkAbilityName (Text.pack "paradigm")
+
+-- CR 702.192a's delayed triggered ability: "at the beginning of each of your
+-- precombat main phases for the rest of the game, create a copy of this object in
+-- exile. You may cast the copy without paying its mana cost."
+--
+-- Parun.Engine.Rad's condition for CR 505.1a's precombat main phase, and epicCopy's
+-- Expiry.Never at the arming for "for the rest of the game". The copy is CR
+-- 707.12's (OfferCast.copied), and ONE optional offer covers the creation and
+-- the "may", cipherTrigger's reading: a copy nobody casts ceases to exist (CR
+-- 704.5e) with nothing having seen it.
+paradigmCopy :: TriggeredAbility Card (GrantedAbility.GrantedAbility Card)
+paradigmCopy =
+  let effect =
+        Effect.OfferCast
+          OfferCast.MkOfferCast
+            { OfferCast.ref = ObjectRef.InSlot paradigmSlot,
+              OfferCast.caster = PlayerRef.Relative PlayerRelation.You,
+              OfferCast.optionality = CastObligation.Optional,
+              OfferCast.offer = CastOffer.MkCastOffer {CastOffer.transformed = False, CastOffer.withoutPayingManaCost = True, CastOffer.payingInstead = Nothing, CastOffer.spending = ManaSpending.AsProduced, CastOffer.restriction = Nothing, CastOffer.offeredBy = Nothing, CastOffer.faceDown = Nothing, CastOffer.payableFromSpent = False, CastOffer.reduction = 0},
+              OfferCast.repetition = CastRepetition.Once,
+              OfferCast.copied = True,
+              OfferCast.verb = PermissionVerb.Cast,
+              OfferCast.controlWhileResolving = False,
+              OfferCast.slot = Nothing
+            }
+   in Mint.trigger (TriggerCondition.StepBegins (StepBegins.MkStepBegins Phase.PrecombatMain Nothing TurnScope.ControllersTurn)) (Seq.singleton effect)
+
+-- CR 702.35a's SECOND ability: "when this card is exiled this way, its owner may
+-- cast it by paying [cost] rather than paying its mana cost. If that player
+-- doesn't, they put this card into their graveyard."
+--
+-- ONE MANDATORY clause holding TWO effects, suspendLastCounter's reading of the
+-- "may": the option governs the CAST alone, which is Prompt.OfferedCast's own
+-- question (CR 608.2g), and the graveyard sentence is not optional at all.
+--
+-- The COST rides the offer (CastOffer.payingInstead), miracle's field and for
+-- rule 118.9's reason -- rule 702.35b sends the payment through rules 601.2b and
+-- 601.2f-h, which is what that field means. CastOffer.offeredBy tags the
+-- candidate so the spell records Object.castUsing, suspendLastCounter's reason.
+--
+-- THE FALLTHROUGH is unconditional and needs no "if that player doesn't" to
+-- read: a cast moves the card to the stack through CR 400.7's funnel, which
+-- deletes the id this trigger bound, so the MoveToZone below resolves its
+-- reference to no object and moves nothing. The same mechanism `stillExiled`
+-- documents one ability over. It is therefore the DECLINE, and only the decline,
+-- that reaches the graveyard.
+--
+-- The CONDITION is rule 702.35a's "when this card is exiled THIS WAY", matched
+-- against the id the CR 400.7 funnel minted -- which is the exile incarnation,
+-- since rule 702.35a's replacement has already run. No intervening "if": rule
+-- 702.35a states none.
+--
+-- NOT TriggerCondition.SelfDiscarded, which is Bartered Cow's cause-blind read
+-- and fires on a discard however it was redirected: an opponent's Rest in Peace
+-- row chosen over madness's under CR 616.1 exiles the card WITHOUT madness
+-- applying, and rule 702.35a's trigger must not fire then. Parun.CastSpec's "CR
+-- 702.35a Rest in Peace's row chosen over madness's offers no cast" is what
+-- proves it.
+madnessCast :: Maybe ManaCost.ManaCost -> MadnessCost.MadnessCost Keyword -> TriggeredAbility Card (GrantedAbility.GrantedAbility Card)
+madnessCast manaCost payload =
+  let cost = madnessCostFor manaCost payload
+      offer =
+        Effect.OfferCast
+          OfferCast.MkOfferCast
+            { OfferCast.ref = ObjectRef.InSlot Binding.triggerSource,
+              -- Rule 702.35a's "ITS OWNER may cast it": a card in exile has no
+              -- controller (CR 108.4), so CR 108.4a makes the owner this
+              -- trigger's controller and the two seats coincide.
+              OfferCast.caster = PlayerRef.Relative PlayerRelation.You,
+              OfferCast.optionality = CastObligation.Optional,
+              OfferCast.offer = CastOffer.MkCastOffer {CastOffer.transformed = False, CastOffer.withoutPayingManaCost = False, CastOffer.payingInstead = Just cost, CastOffer.spending = ManaSpending.AsProduced, CastOffer.restriction = Nothing, CastOffer.offeredBy = Just (Keyword.Madness payload), CastOffer.faceDown = Nothing, CastOffer.payableFromSpent = False, CastOffer.reduction = 0},
+              -- rule 702.35a's "cast it": one card, the one the slot names.
+              OfferCast.repetition = CastRepetition.Once,
+              OfferCast.copied = False,
+              OfferCast.verb = PermissionVerb.Cast,
+              OfferCast.controlWhileResolving = False,
+              OfferCast.slot = Nothing
+            }
+      -- Rule 702.35a's last sentence. No riders and no slot: the destination is
+      -- a graveyard, which CR 400.3 makes the owner's, and nothing reads the
+      -- arrival. `origin` is Nothing because that field is
+      -- Parun.Engine.Activatable.zoneAbilitiesOf's question about where an ability
+      -- may be ACTIVATED from, and this is a trigger.
+      toGraveyard =
+        Effect.MoveToZone
+          MoveToZone.MkMoveToZone
+            { MoveToZone.ref = ObjectRef.InSlot Binding.triggerSource,
+              MoveToZone.zone = Zone.Graveyard,
+              MoveToZone.riders =
+                EntryRiders.defaultValue,
+              MoveToZone.slot = Nothing,
+              MoveToZone.origin = Nothing,
+              MoveToZone.placement = LibraryPlacement.defaultValue,
+              MoveToZone.duration = Nothing
+            }
+   in Mint.trigger TriggerCondition.SelfExiledForMadness (Seq.fromList [offer, toGraveyard])
+
+-- CR 702.62a's last sentence: "If you cast a creature spell this way, it gains
+-- haste until you lose control of the spell or the permanent it becomes." The
+-- DURATION, for a spell whose Object.castUsing says suspend offered its cost;
+-- Nothing for every other cast, which gains nothing.
+--
+-- CR 611.2b's shape and not a static ability's re-asked clause (see
+-- Parun.Types.StaticAbility's `condition`): "until you lose control" ends once and
+-- for good, so a controller who loses the permanent and takes it back does not
+-- get the haste again. `whilePaid` above -- dash's and blitz's road -- is the
+-- other shape, and rule 702.62a states this one.
+--
+-- WHAT the duration counts is the effect's own source, which
+-- Parun.Engine.Stack.armBecame makes the permanent the spell became: rule
+-- 702.62a's "the permanent it becomes", read through Filter.IsSource the way CR
+-- 611.2b's Master Thief clause is. Parun.Engine.Stack.armBecame answers the
+-- "the spell" half.
+castUsingHaste :: Maybe Keyword -> Maybe Duration.Duration
+castUsingHaste castUsing = case castUsing of
+  Just (Keyword.Suspend _) -> Just (Duration.ForAsLongAs youControlSource)
+  _ -> Nothing
+
+-- CR 702.190b: "A permanent spell whose sneak cost was paid enters the
+-- battlefield tapped and attacking (see rule 506.3a). It will be attacking the
+-- same player, planeswalker, or battle as the creature that was returned to its
+-- owner's hand to pay the sneak cost of the spell that became that permanent."
+-- The riders that sentence states, for a spell whose Object.castUsing says
+-- sneak offered its cost; Nothing for every other cast, which enters ordinarily.
+--
+-- THE SAME RIDERS ninjutsu mints, rule 702.49c's sentence being rule 702.190b's:
+-- the returned creature is bound under Binding.returnedPermanent by the cost
+-- component both keywords append (Parun.Engine.Cost's ReturnPermanents arm), and
+-- CR 608.2h's last known information is what answers what it was attacking once
+-- CR 400.7 has minted its new incarnation in the hand. Read by
+-- Parun.Engine.Stack's permanent entry, where the ninja's are read by an
+-- Effect.MoveToZone instead.
+--
+-- EntryRiders rather than a Bool pair, so the two roads apply one value through
+-- one reader (Parun.Engine.Resolve.Effect.entryAttack), and Natural rather than
+-- Quantity because nothing here is counted: the riders reaching a funnel are
+-- already settled (see Parun.Types.EntryRiders).
+castUsingEntry :: Maybe Keyword -> Maybe (EntryRiders.EntryRiders Natural ability)
+castUsingEntry castUsing =
+  if sneakWindowed castUsing
+    then
+      Just
+        EntryRiders.defaultValue {EntryRiders.tapped = TapState.Tapped, EntryRiders.attacking = Just (EntryAttack.SameAs Binding.returnedPermanent)}
+    else Nothing
+
+-- CR 611.2b's Master Thief clause, "for as long as you control this creature",
+-- over the effect's own source.
+youControlSource :: Condition.Condition
+youControlSource =
+  Condition.Compares
+    ( Compares.MkCompares
+        ( Quantity.Count
+            ( Count.MkCount
+                (Scope.InZone (InZone.MkInZone Zone.Battlefield (PlayerRef.Relative PlayerRelation.AnyPlayer)))
+                (Filter.And [Filter.IsSource, Filter.ControlledBy PlayerRelation.You])
+                Aggregation.Members
+            )
+        )
+        Comparison.AtLeast
+        (Quantity.Literal 1)
+    )
+
+-- CR 702.63a's SECOND and THIRD abilities, the first being mintedReplacementsFor's
+-- -- so vanishing's rule text spans both mints. Ordered as rule 702.63a prints
+-- them, which is also the order they fire in: the upkeep removal takes the last
+-- counter off, and the sacrifice watches that removal.
+vanishing :: [TriggeredAbility Card (GrantedAbility.GrantedAbility Card)]
+vanishing = [timeCounterUpkeep, vanishingLastCounter]
+
+-- "At the beginning of your upkeep, if this permanent has a time counter on it,
+-- remove a time counter from it" -- rule 702.63a's vanishing upkeep -- and, word
+-- for word on a card in exile, rule 702.62a's suspend upkeep ("if this card is
+-- suspended"). One ability for both.
+--
+-- TurnScope.ControllersTurn is "YOUR upkeep" (CR 603.3a). For a suspended card
+-- in exile that is its OWNER's: CR 108.4 gives such a card no controller and CR
+-- 108.4a substitutes the owner, which is what Parun.Engine.Event.Trigger's exile
+-- scan hands over.
+--
+-- THE INTERVENING "IF" is renown's, one quantity over, and for suspend it is CR
+-- 702.62b's definition of suspended read down to the one conjunct a board can
+-- move (suspendedNow): CR 603.4 keeps the ability off the stack on an upkeep
+-- where the counters are already gone. CR 608.2a's re-check is unobservable
+-- here, an instance that resolved with the condition false removing nothing and
+-- raising no event.
+--
+-- ONE counter per instance, not per counter present: both rules remove a single
+-- one, and CR 702.63c is what makes a second instance of vanishing remove a
+-- second.
+timeCounterUpkeep :: TriggeredAbility Card (GrantedAbility.GrantedAbility Card)
+timeCounterUpkeep =
+  let effect = Effect.RemoveCounters (RemoveCounters.MkRemoveCounters CounterKind.Time (Quantity.Literal 1) Binding.triggerSource Nothing)
+   in Mint.triggerIf
+        Mint.yourUpkeep
+        suspendedNow
+        (Seq.singleton effect)
+
+-- "When the last time counter is removed from this permanent, sacrifice it."
+--
+-- Watches the REMOVAL and not the count, so a permanent whose time counters were
+-- all removed before it entered has nothing to trigger, and an upkeep that removes
+-- nothing raises no GameEvent.CountersRemoved to match either.
+--
+-- Effect.Sacrifice, never Destroy: CR 701.21a says a sacrifice is not a
+-- destruction, so an indestructible permanent with vanishing still goes.
+vanishingLastCounter :: TriggeredAbility Card (GrantedAbility.GrantedAbility Card)
+vanishingLastCounter =
+  let effect = Effect.Sacrifice SacrificeEffect.MkSacrificeEffect {SacrificeEffect.ref = ObjectRef.InSlot Binding.triggerSource, SacrificeEffect.sacrificer = Sacrificer.EffectController, SacrificeEffect.sacrificed = Nothing}
+   in Mint.trigger (TriggerCondition.SelfLastCounterRemoved (SelfCountersRemoved.MkSelfCountersRemoved {SelfCountersRemoved.kind = CounterKind.Time})) (Seq.singleton effect)
+
+-- CR 702.176a's FOURTH ability: "at the beginning of your end step, if this
+-- permanent's impending cost was paid and it has a time counter on it, remove a
+-- time counter from it". timeCounterUpkeep's shape on the end step, with the
+-- intervening "if" (CR 603.4) widened to impendingHolds.
+impendingEndStep :: TriggeredAbility Card (GrantedAbility.GrantedAbility Card)
+impendingEndStep =
+  let effect = Effect.RemoveCounters (RemoveCounters.MkRemoveCounters CounterKind.Time (Quantity.Literal 1) Binding.triggerSource Nothing)
+   in Mint.triggerIf
+        (TriggerCondition.StepBegins (StepBegins.MkStepBegins (Phase.Ending EndingStep.EndStep) Nothing TurnScope.ControllersTurn))
+        impendingHolds
+        (Seq.singleton effect)
+
+-- CR 702.32a's SECOND ability, on timeCounterUpkeep's trigger condition exactly.
+-- Rule 702.32a states NO intervening "if", so this fires on every one of its
+-- controller's upkeeps including the one where the pile is already empty; that
+-- firing is the whole of the rule's sacrifice.
+--
+-- ONE ability with TWO clauses, not two abilities: two triggers under
+-- complementary intervening "if"s would not be equivalent, since CR 603.4
+-- re-checks each at resolution.
+--
+-- THE CLAUSES ARE INVERTED against the printed order, and the printed order is
+-- unwritable: a gate is read as its clause is REACHED (CR 608.2c), so a sacrifice
+-- clause standing after the removal would read a pile the removal had already
+-- emptied. Observably equivalent, since nothing runs between two clauses of one
+-- resolution (CR 117.3b, CR 704.3).
+fading :: TriggeredAbility Card (GrantedAbility.GrantedAbility Card)
+fading =
+  let counted = Quantity.ObjectCounters CounterKind.Fade
+      sacrificeClause =
+        Mint.mandatoryIf
+          (Condition.Compares (Compares.MkCompares counted Comparison.AtMost (Quantity.Literal 0)))
+          (Seq.singleton (Effect.Sacrifice SacrificeEffect.MkSacrificeEffect {SacrificeEffect.ref = ObjectRef.InSlot Binding.triggerSource, SacrificeEffect.sacrificer = Sacrificer.EffectController, SacrificeEffect.sacrificed = Nothing}))
+      removeClause =
+        Mint.mandatoryIf
+          (Condition.Compares (Compares.MkCompares counted Comparison.AtLeast (Quantity.Literal 1)))
+          (Seq.singleton (Effect.RemoveCounters (RemoveCounters.MkRemoveCounters CounterKind.Fade (Quantity.Literal 1) Binding.triggerSource Nothing)))
+   in Mint.triggerOf
+        Mint.yourUpkeep
+        Nothing
+        (Mint.oneModeOf Map.empty (Seq.fromList [sacrificeClause, removeClause]))
+
+-- CR 702.24a's whole ability: "At the beginning of your upkeep, if this
+-- permanent is on the battlefield, put an age counter on this permanent. Then
+-- you may pay [cost] for each age counter on it. If you don't, sacrifice it."
+--
+-- TurnScope.ControllersTurn is rule 702.24a's "YOUR upkeep" (CR 603.3a),
+-- timeCounterUpkeep's scope.
+--
+-- THE INTERVENING "IF" is rule 702.24a's own, and timeCounterUpkeep's shape one
+-- question over: the rule prints "if", so CR 603.4 keeps the ability off the
+-- stack when the permanent has already gone and re-checks at resolution, which
+-- is what stops a permanent removed in response from being offered the cost.
+-- Written as a count of the battlefield keeping Filter.IsSource, there being no
+-- Parun.Types.Condition atom that asks a zone of the source directly.
+--
+-- TWO CLAUSES in printed order, and the order is load-bearing the way fading's
+-- inversion is: a clause's riders are read as the clause is REACHED (CR 608.2c),
+-- so the payment below already counts the counter this resolution just added.
+--
+-- CR 118.12a's rewriting puts the sacrifice on the IfNotPaid branch of an
+-- Optional offer -- ward's shape -- with rule 702.24a's "for each age counter on
+-- it" riding PayGate.perEach, which multiplies the offered cost by the pile.
+-- Rule 702.24a's "either the entire set of costs is paid, or none of them is
+-- paid" is that one multiplied cost rather than a run of offers.
+--
+-- Effect.Sacrifice, never Destroy: CR 701.21a says a sacrifice is not a
+-- destruction, so an indestructible permanent still goes.
+cumulativeUpkeep :: Cost Keyword -> TriggeredAbility Card (GrantedAbility.GrantedAbility Card)
+cumulativeUpkeep cost =
+  let onBattlefield =
+        Condition.Compares
+          ( Compares.MkCompares
+              (Quantity.Count (Count.MkCount (Scope.InZone (InZone.MkInZone Zone.Battlefield (PlayerRef.Relative PlayerRelation.AnyPlayer))) Filter.IsSource Aggregation.Members))
+              Comparison.AtLeast
+              (Quantity.Literal 1)
+          )
+      ageClause =
+        Mint.mandatory
+          (Seq.singleton (Effect.PutCounters (PutCounters.MkPutCounters CounterKind.Age (Quantity.Literal 1) (ObjectRef.InSlot Binding.triggerSource))))
+      upkeepClause =
+        Mint.mandatoryPaying
+          gate
+          (Seq.singleton (Effect.Sacrifice SacrificeEffect.MkSacrificeEffect {SacrificeEffect.ref = ObjectRef.InSlot Binding.triggerSource, SacrificeEffect.sacrificer = Sacrificer.EffectController, SacrificeEffect.sacrificed = Nothing}))
+      gate =
+        PayGate.MkPayGate
+          { PayGate.payer = PlayerRef.Relative PlayerRelation.You,
+            PayGate.cost = CostChoice.MkCostChoice (cost NonEmpty.:| []),
+            PayGate.basis = Nothing,
+            PayGate.branch = PayBranch.IfNotPaid,
+            PayGate.obligation = PayObligation.Optional,
+            PayGate.perEach = Just (Quantity.ObjectCounters CounterKind.Age),
+            PayGate.offeredAt = Nothing
+          }
+   in Mint.triggerOf
+        Mint.yourUpkeep
+        (Just onBattlefield)
+        (Mint.oneModeOf Map.empty (Seq.fromList [ageClause, upkeepClause]))
+
+-- CR 702.30a's whole ability: "At the beginning of your upkeep, if this
+-- permanent came under your control since the beginning of your last upkeep,
+-- sacrifice it unless you pay [cost]."
+--
+-- `cumulativeUpkeep` above's shape, one clause and one clock over: the same
+-- upkeep trigger under TurnScope.ControllersTurn for rule 702.30a's "your" (CR
+-- 603.3a), the same CR 118.12a rewriting of "unless" into the IfNotPaid branch
+-- of an Optional offer, and Effect.Sacrifice rather than Destroy because CR
+-- 701.21a says a sacrifice is not a destruction. No PayGate.perEach: rule
+-- 702.30a's cost is paid once, where rule 702.24a's is paid per age counter.
+--
+-- THE INTERVENING "IF" is rule 702.30a's own, so CR 603.4 keeps the ability off
+-- the stack when the clock has run out and CR 608.2a re-reads it at resolution.
+-- NOT `cumulativeUpkeep`'s shape: that one counts the battlefield because rule
+-- 702.24a prints "if this permanent is on the battlefield", and rule 702.30a
+-- prints no such clause. So this asks about the ABILITY'S OWN state instead --
+-- Quantity.ControlGainedSinceLastUpkeep, read of CR 113.7a's source and of CR
+-- 603.3a's controller, neither of which a battlefield fold can name.
+--
+-- Both halves of that matter, and Parun.KeywordTriggerSpec's Echo group proves
+-- each: a permanent killed in response still resolves its echo and still owes
+-- its controller the choice (CR 608.2h's record carries the clock CR 400.7
+-- deleted with the permanent), and control moving in response leaves rule
+-- 702.30a's "you" the player who controlled the source when it triggered, whose
+-- own window the clock still holds.
+echo :: Cost Keyword -> TriggeredAbility Card (GrantedAbility.GrantedAbility Card)
+echo cost =
+  let cameUnderYourControl =
+        Condition.Compares
+          ( Compares.MkCompares
+              (Quantity.ControlGainedSinceLastUpkeep (PlayerRef.Relative PlayerRelation.You))
+              Comparison.AtLeast
+              (Quantity.Literal 1)
+          )
+      gate =
+        PayGate.MkPayGate
+          { PayGate.payer = PlayerRef.Relative PlayerRelation.You,
+            PayGate.cost = CostChoice.MkCostChoice (cost NonEmpty.:| []),
+            PayGate.basis = Nothing,
+            PayGate.branch = PayBranch.IfNotPaid,
+            PayGate.obligation = PayObligation.Optional,
+            PayGate.perEach = Nothing,
+            PayGate.offeredAt = Nothing
+          }
+      sacrifice =
+        Mint.mandatoryPaying
+          gate
+          (Seq.singleton (Effect.Sacrifice SacrificeEffect.MkSacrificeEffect {SacrificeEffect.ref = ObjectRef.InSlot Binding.triggerSource, SacrificeEffect.sacrificer = Sacrificer.EffectController, SacrificeEffect.sacrificed = Nothing}))
+   in Mint.triggerOf
+        Mint.yourUpkeep
+        (Just cameUnderYourControl)
+        (Mint.oneModeOf Map.empty (Seq.singleton sacrifice))
+
+-- CR 702.43a's SECOND ability: "when this permanent is put into a graveyard from
+-- the battlefield, you may put a +1/+1 counter on target artifact creature for
+-- each +1/+1 counter on this permanent." Mentor's shape -- one target slot, one
+-- counter-placing effect -- with a "may" and a counted quantity, and a plain
+-- Effect.PutCounters where mentor has CR 702.134c's marker to record.
+--
+-- THE COUNT is Quantity.ObjectCounters, read off CR 113.7a's source through
+-- Projection.viewWithLastKnown. That is CR 608.2h doing the work: the permanent is
+-- in a graveyard by the time this resolves and CR 122.2 made its counters cease
+-- with it, so the last known record is the only place the number still is
+-- (Parun.TriggerSpec's modularSpec). ZERO counters is an ordinary answer.
+--
+-- Optionality.Optional is rule 702.43a's "you may". A REAL choice: declining with
+-- a legal target on the board leaves the counters nowhere.
+modular :: TriggeredAbility Card (GrantedAbility.GrantedAbility Card)
+modular =
+  let slot = TargetSlot.required Pool.Creatures (Just (Filter.HasCardType CardType.Artifact))
+      effect =
+        Effect.PutCounters
+          ( PutCounters.MkPutCounters
+              CounterKind.PlusOnePlusOne
+              (Quantity.ObjectCounters CounterKind.PlusOnePlusOne)
+              (ObjectRef.InSlot modularTarget)
+          )
+   in Mint.triggerOf
+        TriggerCondition.SelfDies
+        Nothing
+        (Mint.oneModeOf (Map.singleton modularTarget slot) (Seq.singleton (Mint.youMay (Seq.singleton effect))))
+
+-- The slot rule 702.43a's one target is chosen into, mentorTarget's position.
+modularTarget :: SlotName.SlotName
+modularTarget = SlotName.MkSlotName (Text.pack "modularRecipient")
+
+-- CR 702.72a's pair, minted together because rule 702.72b links them (CR 607.2k):
+-- "When this permanent enters, sacrifice it unless you exile another [object] you
+-- control" and "When this permanent leaves the battlefield, return the exiled card
+-- to the battlefield under its owner's control."
+champion :: Filter Keyword -> [TriggeredAbility Card (GrantedAbility.GrantedAbility Card)]
+champion quality = [championEnters quality, championLeaves]
+
+-- CR 702.72a's FIRST ability, written as CR 118.12a rewrites an "unless": an
+-- optional exile, then a sacrifice for the case where it did not happen. Not a
+-- PayGate, which is the tree's usual carrier for that rule, because no
+-- Parun.Types.CostComponent arm exiles a permanent and a cost binds nothing the
+-- linked second ability could name.
+--
+-- The sacrifice's CR 608.2c condition therefore reads the exile PILE rather than
+-- CR 118.12's answer to the "may", which differs only where something replaces
+-- the exile a willing controller announced -- stricter than printed there, the
+-- sacrifice happening when rule 118.12 would not have it. A quality nothing on
+-- the battlefield matches leaves that pile empty however the "may" is answered,
+-- so the sacrifice follows, which is what "unless" demands -- proved by
+-- Parun.KeywordTriggerSpec's "CR 702.72a with no other Merfolk to exile the
+-- Prophet is sacrificed".
+--
+-- The Filter is the printed [object]; "another" is Not IsSource and "you
+-- control" is ControlledBy You (CR 109.5), both the rule's rather than the
+-- card's.
+championEnters :: Filter Keyword -> TriggeredAbility Card (GrantedAbility.GrantedAbility Card)
+championEnters quality =
+  let another =
+        Filter.And
+          [ quality,
+            Filter.ControlledBy PlayerRelation.You,
+            Filter.Not Filter.IsSource
+          ]
+      exile =
+        Mint.youMay
+          ( Seq.singleton
+              ( Effect.MoveToZone
+                  ( MoveToZone.MkMoveToZone
+                      (ObjectRef.ChosenPermanents (ChosenPermanents.MkChosenPermanents another (PlayerRef.Relative PlayerRelation.You) HowMany.one))
+                      Zone.Exile
+                      championRiders
+                      Nothing
+                      Nothing
+                      LibraryPlacement.defaultValue
+                      Nothing
+                  )
+              )
+          )
+      -- CR 607.2k's pile, counted: one per card this source exiled (CR 607.3), so
+      -- zero is "you did not exile". Read as this clause is APPLIED rather than
+      -- when the trigger resolved, which is what lets the clause before it flip
+      -- the answer.
+      nothingExiled =
+        Condition.Compares
+          ( Compares.MkCompares
+              (Quantity.AgainstExiledPile (AgainstExiledPile.MkAgainstExiledPile ExiledPile.OwnAbilities (Quantity.Literal 1)))
+              Comparison.AtMost
+              (Quantity.Literal 0)
+          )
+      sacrifice =
+        Mint.mandatoryIf
+          nothingExiled
+          (Seq.singleton (Effect.Sacrifice SacrificeEffect.MkSacrificeEffect {SacrificeEffect.ref = ObjectRef.InSlot Binding.triggerSource, SacrificeEffect.sacrificer = Sacrificer.EffectController, SacrificeEffect.sacrificed = Nothing}))
+   in Mint.triggerOf
+        TriggerCondition.SelfEnters
+        Nothing
+        (Mint.oneModeOf Map.empty (Seq.fromList [exile, sacrifice]))
+
+-- CR 702.72a's SECOND ability, Wormfang Crab's sentence written once for the
+-- keyword: the return names ObjectRef.EachCardInExiledPile, which is CR
+-- 607.2k's link, and CR 702.72a's "under its owner's control" is the rider.
+championLeaves :: TriggeredAbility Card (GrantedAbility.GrantedAbility Card)
+championLeaves =
+  let effect =
+        Effect.MoveToZone
+          ( MoveToZone.MkMoveToZone
+              (ObjectRef.EachCardInExiledPile (EachCardInExiledPile.MkEachCardInExiledPile ExiledPile.OwnAbilities Nothing))
+              Zone.Battlefield
+              championRiders {EntryRiders.under = EntryController.Owner}
+              Nothing
+              Nothing
+              LibraryPlacement.defaultValue
+              Nothing
+          )
+   in Mint.trigger TriggerCondition.SelfLeavesTheBattlefield (Seq.singleton effect)
+
+-- The riders both halves of rule 702.72a write: nothing stated. The return
+-- overrides `under` with Owner, CR 702.72a's "under its owner's control".
+championRiders :: EntryRiders.EntryRiders Quantity.Quantity ability
+championRiders =
+  EntryRiders.defaultValue

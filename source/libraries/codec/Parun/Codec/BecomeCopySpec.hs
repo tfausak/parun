@@ -1,0 +1,66 @@
+module Parun.Codec.BecomeCopySpec where
+
+import qualified Data.Text as Text
+import qualified Parun.Codec.BecomeCopy as BecomeCopy
+import qualified Parun.JsonCodec.Common as Common
+import qualified Parun.Spec as Spec
+import qualified Parun.Types.BecomeCopy as BecomeCopy
+import qualified Parun.Types.CopyException as CopyException
+import qualified Parun.Types.CopyOriginal as CopyOriginal
+import qualified Parun.Types.Duration as Duration
+import qualified Parun.Types.Filter as Filter
+import qualified Parun.Types.ObjectRef as ObjectRef
+import qualified Parun.Types.SlotName as SlotName
+
+spec :: (Monad m, Monad n) => Spec.Spec m n -> n ()
+spec s = Spec.describe s "Parun.Codec.BecomeCopy" $ do
+  -- CR 707.4. BOTH sides are an ObjectRef and they are not interchangeable, so
+  -- the fixture gives them DIFFERENT shapes -- Unstable Shapeshifter's own pair
+  -- -- since only an asymmetric case catches a codec that swapped them and made
+  -- the entrant the copy.
+  Spec.it s "MkBecomeCopy, both keys" $
+    Common.assertCodec
+      s
+      (BecomeCopy.codec Common.text)
+      ( BecomeCopy.MkBecomeCopy
+          { BecomeCopy.original = CopyOriginal.OfObject (ObjectRef.InSlot (SlotName.MkSlotName (Text.pack "became"))),
+            BecomeCopy.subject = ObjectRef.EachMatching Filter.IsSource,
+            BecomeCopy.duration = Nothing,
+            BecomeCopy.exceptions = [],
+            BecomeCopy.newTargets = False
+          }
+      )
+      " {\"original\":{\"type\":\"OfObject\",\"value\":{\"type\":\"InSlot\",\"value\":\"became\"}},\"subject\":{\"type\":\"EachMatching\",\"value\":{\"type\":\"IsSource\"}}} "
+  -- The Shapeshifter's own third key. Written out because it is DEFAULTED: an
+  -- absent `exceptions` decodes to the empty list above, so only a case that
+  -- states one proves the key is read at all (CR 707.9a).
+  Spec.it s "MkBecomeCopy, with an exception" $
+    Common.assertCodec
+      s
+      (BecomeCopy.codec Common.text)
+      ( BecomeCopy.MkBecomeCopy
+          { BecomeCopy.original = CopyOriginal.OfObject (ObjectRef.InSlot (SlotName.MkSlotName (Text.pack "became"))),
+            BecomeCopy.subject = ObjectRef.EachMatching Filter.IsSource,
+            BecomeCopy.duration = Nothing,
+            BecomeCopy.exceptions = [CopyException.GainThisAbility],
+            BecomeCopy.newTargets = False
+          }
+      )
+      " {\"exceptions\":[{\"type\":\"GainThisAbility\"}],\"original\":{\"type\":\"OfObject\",\"value\":{\"type\":\"InSlot\",\"value\":\"became\"}},\"subject\":{\"type\":\"EachMatching\",\"value\":{\"type\":\"IsSource\"}}} "
+  -- Mirrorweave's fourth key, written out for the exceptions case's reason: an
+  -- absent `duration` decodes to Nothing above, which is the STAMPED road (CR
+  -- 707.3), so only a case that states one proves the key is read.
+  Spec.it s "MkBecomeCopy, with a duration" $
+    Common.assertCodec
+      s
+      (BecomeCopy.codec Common.text)
+      ( BecomeCopy.MkBecomeCopy
+          { BecomeCopy.original = CopyOriginal.OfObject (ObjectRef.InSlot (SlotName.MkSlotName (Text.pack "copied"))),
+            BecomeCopy.subject = ObjectRef.EachMatching Filter.IsSource,
+            BecomeCopy.duration = Just Duration.UntilEndOfTurn,
+            BecomeCopy.exceptions = [],
+            BecomeCopy.newTargets = False
+          }
+      )
+      " {\"duration\":{\"type\":\"UntilEndOfTurn\"},\"original\":{\"type\":\"OfObject\",\"value\":{\"type\":\"InSlot\",\"value\":\"copied\"}},\"subject\":{\"type\":\"EachMatching\",\"value\":{\"type\":\"IsSource\"}}} "
+  Spec.it s "has a schema" $ Common.assertHasSchema s (BecomeCopy.codec Common.text)

@@ -10,7 +10,7 @@ against `docs/rules.txt` and cited by number.*
 
 `projectWith` orders same-layer effects by timestamp (CR 613.7) and stops there.
 The CR has a second, overriding rule — an effect that changes what another
-applies to goes first, regardless of timestamps — and pawl has never had it. The
+applies to goes first, regardless of timestamps — and parun has never had it. The
 elision was safe because no card pair in the pool was same-layer *and*
 applies-to-coupled. One arrived in #235, and nobody noticed (§5).
 
@@ -190,7 +190,7 @@ own Forest with a March of the Machines already out.
   March is then asked and says yes — so the Forest is an artifact creature with
   base P/T equal to its mana value. A land has no mana cost, so that is 0/0, and
   CR 704.5f puts it into the graveyard.
-- **Timestamp order** (what pawl does today): March is older, so it is asked
+- **Timestamp order** (what parun does today): March is older, so it is asked
   first, against a Forest that is not an artifact yet. It does not apply. The
   Forest ends the turn as a perfectly healthy artifact land.
 

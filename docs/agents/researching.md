@@ -23,7 +23,7 @@ ref you derived against so a stale derivation is visible.
 ## Tools that behave unexpectedly here
 
 - `gh issue view` returns empty output for some agents. Use `gh api
-  repos/tfausak/pawl/issues/N` and `.../issues/N/comments`.
+  repos/tfausak/parun/issues/N` and `.../issues/N/comments`.
 - Oracle text and `_scratch/`: `CLAUDE.md`. Prior art is a lead, never a
   citation --- verify against `docs/rules.txt` and Scryfall first.
 
@@ -69,7 +69,7 @@ o:/morph/`, not the two cards the thread argued about.
 recording a negative, name the axis you swept and ask what the neighbouring
 one would return.
 
-**"This needs a subsystem pawl doesn't have" is the least reliable rejection.**
+**"This needs a subsystem parun doesn't have" is the least reliable rejection.**
 Verify at the *carrier*: the type or function that would hold the behaviour.
 Read it, and name it. "Needs X" with no carrier named is not a derivation.
 
@@ -88,7 +88,7 @@ because a comment says nothing in the pool can do X, check the comment.
 Bodies are written once and left; blockers land under other names; a capability
 an issue calls missing gets built by a PR that never cites it. Take the oldest
 untouched issues first (`gh api
-'repos/tfausak/pawl/issues?state=open&sort=updated&direction=asc'`) and
+'repos/tfausak/parun/issues?state=open&sort=updated&direction=asc'`) and
 re-derive each against `origin/main`: is the gap still a gap, is the blocker
 still missing, does a test already prove it, has a sibling absorbed it.
 
@@ -254,9 +254,9 @@ For each opcode the producer needs:
   `Quantity.AgainstSlot` answers unanswered. Neither is distinguishable from a
   rule that does not apply. `SameControllerAsBound` answers TRUE instead, so its
   vacuous read WIDENS the offer rather than emptying it, and only
-  `Pawl.CardSpec`'s position lint keeps a card out of the positions that leave
+  `Parun.CardSpec`'s position lint keeps a card out of the positions that leave
   `slotControllers` empty.
-- Read the guardrail and say which applies. `Pawl.CardSpec` fences some fields
+- Read the guardrail and say which applies. `Parun.CardSpec` fences some fields
   with a position lint; `recipient` carries none, and `slotObjects` carries one
   only for the wish filter, whose candidates are not objects at all.
 - Where two opcodes must see each other, say whether one builder supplies both.

@@ -38,7 +38,7 @@ Four facts about the engine as it stands:
 2. **`ReplacementEffect` and `Prevention` have one constructor each, and both
    are card-shaped.** `RedirectZoneChange Graveyard Exile` *is* Rest in Peace;
    `PreventAllCombatDamage` *is* Fog. The census (§3.1) counts ~40 replaceable
-   base event classes behind mtgish's ~130 `Would…` families. pawl has wired two.
+   base event classes behind mtgish's ~130 `Would…` families. parun has wired two.
 3. **CR 616.1 is not an ordering prompt — it is a loop.** Read it literally:
    choose *one* applicable effect from the highest non-empty of five ordered
    buckets, apply it, then *"this process is repeated (taking into account only
@@ -100,7 +100,7 @@ produce that board state.
 ## 1. Scope
 
 **In scope.** One `ProposedEvent` vocabulary; one reshaped, event-class-general
-`ReplacementEffect`; one monadic `Pawl.Replacement` module implementing CR
+`ReplacementEffect`; one monadic `Parun.Replacement` module implementing CR
 616.1's loop with a `ChooseReplacement` prompt; unification of prevention,
 regeneration and the as-enters copy seam onto that path; six wired event classes;
 the CR 614.13a same-batch exclusion; five new/reshaped card data files.
@@ -117,7 +117,7 @@ classification bucket, none has a producer.
 ### 2.1 One vocabulary of proposed events
 
 ```haskell
--- Pawl.Type.ProposedEvent
+-- Parun.Type.ProposedEvent
 data ProposedEvent
   = WouldChangeZone ZoneChange
   | WouldEnter ObjectId
@@ -150,7 +150,7 @@ Containment is expressed as call nesting, not as a field.
 ### 2.2 One event-class-general replacement effect
 
 ```haskell
--- Pawl.Type.ReplacementEffect
+-- Parun.Type.ReplacementEffect
 data ReplacementEffect
   = ZoneChangeR ZoneChangePattern Zone       -- Rest in Peace
   | EntryR EntryRewrite                      -- Clone, Primal Plasma
@@ -201,13 +201,13 @@ sibling; they are not merged here because P9 will merge both.
 replaced by:
 
 ```haskell
--- Pawl.Type.ActiveReplacement (replaces ActivePrevention)
+-- Parun.Type.ActiveReplacement (replaces ActivePrevention)
 data ActiveReplacement = MkActiveReplacement
   { effect :: ReplacementEffect
   , source :: ObjectId
   , timestamp :: Timestamp
   , duration :: Duration
-  , uses :: Uses          -- Pawl.Type.Uses = Unlimited | Once
+  , uses :: Uses          -- Parun.Type.Uses = Unlimited | Once
   }
 ```
 
@@ -231,14 +231,14 @@ Replace Duration Uses ReplacementEffect
 
 Fog becomes `Replace UntilEndOfTurn Unlimited (DamageR (MkDamagePattern (Just Combat)) PreventAll)`.
 Drudge Skeletons becomes `Replace UntilEndOfTurn Once (DestructionR Regenerate)`.
-`Pawl.Type.Prevention` and `Pawl.Type.ActivePrevention` are deleted.
+`Parun.Type.Prevention` and `Parun.Type.ActivePrevention` are deleted.
 
 ### 2.4 The loop, written from CR 616.1
 
-New module **`Pawl.Replacement`** — the sole home of casing on
+New module **`Parun.Replacement`** — the sole home of casing on
 `ReplacementEffect` and `ProposedEvent`, a fourth sole-casing home beside
-`Pawl.Resolve` (`Effect`), `Pawl.Event` (`TriggerCondition`) and
-`Pawl.Projection` (`Modification`). §3 restates why that matters.
+`Parun.Resolve` (`Effect`), `Parun.Event` (`TriggerCondition`) and
+`Parun.Projection` (`Modification`). §3 restates why that matters.
 
 ```haskell
 applyReplacements :: ProposedEvent -> Game ProposedEvent
@@ -422,7 +422,7 @@ names *(event class, rewrite shape)* pairs, and the patterns are data. The
 scenario the invariant forbids —
 `case effect of RedirectZoneChange Graveyard Exile -> restInPeace` — is not
 expressible after §2.2, because Rest in Peace is no longer a constructor.
-`Pawl.Replacement` is the single new sole-casing home; nothing outside it cases
+`Parun.Replacement` is the single new sole-casing home; nothing outside it cases
 on either type.
 
 **The engine makes no choices.** This phase exists mostly to *stop* the engine
@@ -474,15 +474,15 @@ state. New data files: `hardened-scales.json`, `corpsejack-menace.json`,
 
 ## 6. Module & type changes (summary)
 
-**New modules.** `Pawl.Replacement`. `Pawl.Type.ProposedEvent`,
-`Pawl.Type.ActiveReplacement`, `Pawl.Type.Uses`, `Pawl.Type.Scaling`,
-`Pawl.Type.EntryRewrite`, `Pawl.Type.EntryOption`, `Pawl.Type.DamageRewrite`,
-`Pawl.Type.DestructionRewrite`, `Pawl.Type.ZoneChangePattern`,
-`Pawl.Type.CounterPattern`, `Pawl.Type.TokenPattern`,
-`Pawl.Type.DamagePattern`, `Pawl.Type.ControllerRelation`,
-`Pawl.Type.PermanentCriterion`.
+**New modules.** `Parun.Replacement`. `Parun.Type.ProposedEvent`,
+`Parun.Type.ActiveReplacement`, `Parun.Type.Uses`, `Parun.Type.Scaling`,
+`Parun.Type.EntryRewrite`, `Parun.Type.EntryOption`, `Parun.Type.DamageRewrite`,
+`Parun.Type.DestructionRewrite`, `Parun.Type.ZoneChangePattern`,
+`Parun.Type.CounterPattern`, `Parun.Type.TokenPattern`,
+`Parun.Type.DamagePattern`, `Parun.Type.ControllerRelation`,
+`Parun.Type.PermanentCriterion`.
 
-**Deleted.** `Pawl.Type.Prevention`, `Pawl.Type.ActivePrevention`.
+**Deleted.** `Parun.Type.Prevention`, `Parun.Type.ActivePrevention`.
 `Event.applyReplacements`, `applyPreventions`, `cancels`, `markCopyOnEnter`,
 `dropEndOfTurnPreventions`, `clearRegenerationShields`.
 `Engine.drainAsEntersChoices`, `drainOneCopy`, `applyCopyChoice`.
@@ -509,7 +509,7 @@ appears. Every task is one commit that leaves the suite green.
    `Sba.performStateBasedActions` becomes `Game Bool`; all call sites in `Resolve`,
    `Engine`, `Cast`, `Stack`, `Activate`, `Damage` follow. **Zero behavior change**;
    the whole existing suite must stay green.
-3. **`Pawl.Replacement` + the loop.** `applyReplacements`, the 616.1 buckets, the
+3. **`Parun.Replacement` + the loop.** `applyReplacements`, the 616.1 buckets, the
    applied-set, `ChooseReplacement`, `Response`, decision-log replay. Wire
    `WouldChangeZone` through it. Test 17 stays green; a two-redirect race becomes
    expressible.
@@ -585,7 +585,7 @@ umbrella's P5 row to name the two additional gate cards.
 
 All twenty-two scenarios in §5 pass as gameplay-level tests, including the
 centerpiece (#13) reproducing the Gatherer ruling's own board state; exactly one
-replacement path exists in the engine and it is monadic; `Pawl.Type.Prevention`,
+replacement path exists in the engine and it is monadic; `Parun.Type.Prevention`,
 `GameState.regenerationShields`, `Card.copyOnEnter` and
 `Engine.drainAsEntersChoices` are gone; `cabal build` is warning-clean and
 `hooky run` passes. At that point a new replaceable event is one `ProposedEvent`

@@ -43,11 +43,11 @@ continuous effect.
 - CR is ground truth: `docs/rules.txt`, grepped by number. 729.1a, 729.1b, 729.4,
   729.4a, 729.5, 400.11, 400.11b, 400.11c, 603.10a, 608.2h.
 - The rules core must never case on an effect's IDENTITY. Nothing in this plan
-  adds such a case; the wish reaches `Pawl.Engine.OutsideTheGame` through the
+  adds such a case; the wish reaches `Parun.Engine.OutsideTheGame` through the
   existing `Effect.RevealFromOutsideTheGame` arm, which passes a `Filter` through.
-- One type per module under `Pawl.Types.<TypeName>`; `Mk` prefix for a
+- One type per module under `Parun.Types.<TypeName>`; `Mk` prefix for a
   single-constructor record; bare constructors for a sum.
-- Adding a module means staging `pawl.cabal` and running `cabal-gild pawl.cabal`
+- Adding a module means staging `parun.cabal` and running `cabal-gild parun.cabal`
   directly --- `hooky fix` has skipped that case.
 - STAGE, then `hooky fix`, then `git add` again.
 - After each task: `cabal test`. Before the PR: mutate each new assertion away and
@@ -57,29 +57,29 @@ continuous effect.
 
 | File | Responsibility |
 |---|---|
-| `source/libraries/types/Pawl/Types/OutsideObject.hs` | new: one main-game card as the subgame sees it |
-| `source/libraries/types/Pawl/Types/OutsideCard.hs` | new: which card a wish reaches --- pool entry or outer object |
-| `source/libraries/types/Pawl/Types/GameState.hs` | two new fields: `outsideObjects`, `broughtIn` |
-| `source/libraries/types/Pawl/Types/Prompt.hs` | `ChooseFromOutsideTheGame` now offers `OutsideCard` |
-| `source/libraries/types/Pawl/Types/Response.hs` | `ChoseFromOutsideTheGame` carries `OutsideCard` |
-| `source/libraries/codec/Pawl/Codec/OutsideObject.hs` | new codec |
-| `source/libraries/codec/Pawl/Codec/OutsideCard.hs` | new codec |
-| `source/libraries/codec/Pawl/Codec/GameState.hs` | the two new fields on the wire |
-| `source/libraries/engine/Pawl/Engine/Setup.hs` | fill the snapshot; funnel the subgame's pools back |
-| `source/libraries/engine/Pawl/Engine/OutsideTheGame.hs` | eligibility over both sources; the crossing |
-| `source/libraries/engine/Pawl/Engine/Engine.hs` | `playSubgame` applies the departures |
-| `source/libraries/engine/Pawl/Engine/Replay.hs` | the prompt's transcript arms |
+| `source/libraries/types/Parun/Types/OutsideObject.hs` | new: one main-game card as the subgame sees it |
+| `source/libraries/types/Parun/Types/OutsideCard.hs` | new: which card a wish reaches --- pool entry or outer object |
+| `source/libraries/types/Parun/Types/GameState.hs` | two new fields: `outsideObjects`, `broughtIn` |
+| `source/libraries/types/Parun/Types/Prompt.hs` | `ChooseFromOutsideTheGame` now offers `OutsideCard` |
+| `source/libraries/types/Parun/Types/Response.hs` | `ChoseFromOutsideTheGame` carries `OutsideCard` |
+| `source/libraries/codec/Parun/Codec/OutsideObject.hs` | new codec |
+| `source/libraries/codec/Parun/Codec/OutsideCard.hs` | new codec |
+| `source/libraries/codec/Parun/Codec/GameState.hs` | the two new fields on the wire |
+| `source/libraries/engine/Parun/Engine/Setup.hs` | fill the snapshot; funnel the subgame's pools back |
+| `source/libraries/engine/Parun/Engine/OutsideTheGame.hs` | eligibility over both sources; the crossing |
+| `source/libraries/engine/Parun/Engine/Engine.hs` | `playSubgame` applies the departures |
+| `source/libraries/engine/Parun/Engine/Replay.hs` | the prompt's transcript arms |
 | `data/cards/living-wish.json` | new card |
-| `source/libraries/test/Pawl/OutsideTheGameSpec.hs` | the unit cases and the gameplay case |
+| `source/libraries/test/Parun/OutsideTheGameSpec.hs` | the unit cases and the gameplay case |
 
 ---
 
 ### Task 1: the snapshot's type and the two state fields
 
 **Files:**
-- Create: `source/libraries/types/Pawl/Types/OutsideObject.hs`
-- Create: `source/libraries/codec/Pawl/Codec/OutsideObject.hs`, `.../OutsideObjectSpec.hs`
-- Modify: `source/libraries/types/Pawl/Types/GameState.hs`, `source/libraries/codec/Pawl/Codec/GameState.hs`, `source/libraries/engine/Pawl/Engine/Setup.hs`, `pawl.cabal`
+- Create: `source/libraries/types/Parun/Types/OutsideObject.hs`
+- Create: `source/libraries/codec/Parun/Codec/OutsideObject.hs`, `.../OutsideObjectSpec.hs`
+- Modify: `source/libraries/types/Parun/Types/GameState.hs`, `source/libraries/codec/Parun/Codec/GameState.hs`, `source/libraries/engine/Parun/Engine/Setup.hs`, `parun.cabal`
 
 **Produces:** `OutsideObject.MkOutsideObject {owner :: PlayerId, printing :: PrintingId}`;
 `GameState.outsideObjects :: Map ObjectId OutsideObject`;
@@ -88,10 +88,10 @@ continuous effect.
 - [ ] **Step 1: write the type**
 
 ```haskell
-module Pawl.Types.OutsideObject where
+module Parun.Types.OutsideObject where
 
-import qualified Pawl.Types.PlayerId as PlayerId
-import qualified Pawl.Types.PrintingId as PrintingId
+import qualified Parun.Types.PlayerId as PlayerId
+import qualified Parun.Types.PrintingId as PrintingId
 
 -- | CR 729.4: one card in a game that is on hold, as the game being played sees
 -- it -- "all objects in the main game ... are considered outside the subgame".
@@ -101,7 +101,7 @@ import qualified Pawl.Types.PrintingId as PrintingId
 --
 -- Two fields and no characteristics: CR 729.1b gives a main-game effect no
 -- meaning here, so the card is read from its PRINTED FACE
--- (Pawl.Engine.Projection.viewOfCard), exactly as CR 103.2a's sideboard pool is.
+-- (Parun.Engine.Projection.viewOfCard), exactly as CR 103.2a's sideboard pool is.
 -- The owner is carried because CR 108.3b scopes every reach outside the game to
 -- the acting player's OWN cards.
 data OutsideObject = MkOutsideObject
@@ -118,12 +118,12 @@ Next to `players` in the record, with this comment on the first:
 ```haskell
     -- | CR 729.4: the cards outside THIS game that sit in a game on hold --
     -- empty for a game nobody is nested inside. Filled by
-    -- Pawl.Engine.Setup.subgameStateFrom from its parent's card objects (and
+    -- Parun.Engine.Setup.subgameStateFrom from its parent's card objects (and
     -- from the parent's own copy of this field, which is CR 729.6's nesting),
-    -- and spent by Pawl.Engine.OutsideTheGame.
+    -- and spent by Parun.Engine.OutsideTheGame.
     outsideObjects :: Map.Map ObjectId.ObjectId OutsideObject.OutsideObject,
     -- | CR 729.4a: the outer ids this game has brought in, in the order they
-    -- crossed. Read once, by Pawl.Engine.Engine.playSubgame, which applies each
+    -- crossed. Read once, by Parun.Engine.Engine.playSubgame, which applies each
     -- departure to the game it holds; an id that is not one of that game's own
     -- objects came from further out and is passed outward one level (CR 729.6).
     broughtIn :: Seq.Seq ObjectId.ObjectId,
@@ -149,9 +149,9 @@ KEEPS both --- CR 727.1 restarts the game, and a card outside it is still outsid
 it; write that reason at the site. `subgameStateFrom` gets `broughtIn = Seq.empty`
 and the real snapshot in Task 2.
 
-- [ ] **Step 5: `cabal-gild pawl.cabal`, then `cabal test`**
+- [ ] **Step 5: `cabal-gild parun.cabal`, then `cabal test`**
 
-Expected: green, and `Pawl.Codec.GameStateSpec`'s round trip covers the new fields.
+Expected: green, and `Parun.Codec.GameStateSpec`'s round trip covers the new fields.
 
 - [ ] **Step 6: commit** stage the files you touched BY PATH (another session may share this checkout, so never `git add -A`), then `hooky fix`, `git add` again, and commit.
 
@@ -159,8 +159,8 @@ Expected: green, and `Pawl.Codec.GameStateSpec`'s round trip covers the new fiel
 
 ### Task 2: fill the snapshot from the parent
 
-**Files:** Modify `source/libraries/engine/Pawl/Engine/Setup.hs`,
-`source/libraries/test/Pawl/GameSpec.hs`
+**Files:** Modify `source/libraries/engine/Parun/Engine/Setup.hs`,
+`source/libraries/test/Parun/GameSpec.hs`
 
 **Consumes:** Task 1's fields. **Produces:** a populated `outsideObjects` in a subgame state.
 
@@ -180,7 +180,7 @@ Expected: green, and `Pawl.Codec.GameStateSpec`'s round trip covers the new fiel
 ```
 
 `S.addCreature :: Printing -> PlayerId -> GameState -> (ObjectId, GameState)` is
-the helper (`Pawl.Support:357`); `S.countOnBattlefieldByName` and
+the helper (`Parun.Support:357`); `S.countOnBattlefieldByName` and
 `S.creaturesInPlay` are the readers the later cases want.
 
 - [ ] **Step 2: run it and watch it fail** --- `cabal test` reports the map empty.
@@ -220,11 +220,11 @@ and write `GameState.outsideObjects = outside` into the record update.
 
 ### Task 3: one choice type for both sources
 
-**Files:** Create `source/libraries/types/Pawl/Types/OutsideCard.hs`,
-`source/libraries/codec/Pawl/Codec/OutsideCard.hs` + spec; modify
-`Pawl/Types/Prompt.hs`, `Pawl/Types/Response.hs`,
-`Pawl/Engine/Replay.hs`, `Pawl/Engine/OutsideTheGame.hs`,
-`source/libraries/test/Pawl/OutsideTheGameSpec.hs`, `pawl.cabal`
+**Files:** Create `source/libraries/types/Parun/Types/OutsideCard.hs`,
+`source/libraries/codec/Parun/Codec/OutsideCard.hs` + spec; modify
+`Parun/Types/Prompt.hs`, `Parun/Types/Response.hs`,
+`Parun/Engine/Replay.hs`, `Parun/Engine/OutsideTheGame.hs`,
+`source/libraries/test/Parun/OutsideTheGameSpec.hs`, `parun.cabal`
 
 **Produces:** `data OutsideCard = InPool PrintingId | InAnotherGame ObjectId`;
 `ChooseFromOutsideTheGame :: Decider -> PlayerId -> NonEmpty OutsideCard -> Prompt OutsideCard`.
@@ -255,8 +255,8 @@ make it for them.
 
 ### Task 4: eligibility over both sources, and the crossing
 
-**Files:** Modify `source/libraries/engine/Pawl/Engine/OutsideTheGame.hs`,
-`source/libraries/test/Pawl/OutsideTheGameSpec.hs`
+**Files:** Modify `source/libraries/engine/Parun/Engine/OutsideTheGame.hs`,
+`source/libraries/test/Parun/OutsideTheGameSpec.hs`
 
 **Produces:** `eligible :: Filter Keyword -> ObjectId -> PlayerId -> GameState -> [OutsideCard]`;
 `mint :: PlayerId -> PrintingId -> GameState -> (ObjectId, GameState)` (the half
@@ -310,9 +310,9 @@ bringInFrom :: PlayerId -> ObjectId -> GameState -> (Maybe ObjectId, GameState)
 
 ### Task 5: apply the departures to the parent
 
-**Files:** Modify `source/libraries/engine/Pawl/Engine/Engine.hs` (`playSubgame`),
-`source/libraries/engine/Pawl/Engine/Setup.hs` (`funnelBack`),
-`source/libraries/test/Pawl/GameSpec.hs`
+**Files:** Modify `source/libraries/engine/Parun/Engine/Engine.hs` (`playSubgame`),
+`source/libraries/engine/Parun/Engine/Setup.hs` (`funnelBack`),
+`source/libraries/test/Parun/GameSpec.hs`
 
 **Consumes:** `GameState.broughtIn` from Task 4.
 
@@ -371,7 +371,7 @@ Call it from `playSubgame` BEFORE `Setup.funnelBack`, so `funnelBack`'s
 
 ### Task 6: Living Wish
 
-**Files:** Create `data/cards/living-wish.json`; modify `source/libraries/test/Pawl/CardSpec.hs` if its
+**Files:** Create `data/cards/living-wish.json`; modify `source/libraries/test/Parun/CardSpec.hs` if its
 traversals need it.
 
 Oracle, verified on Scryfall 2026-08-27 (A25 179): `{1}{G}` Sorcery --- "You may
@@ -386,7 +386,7 @@ hand. Exile Living Wish."
 ```
 
 - [ ] **Step 2: `cabal test`** --- the card lints and round-trips through
-      `Pawl.CardSpec` with no engine change.
+      `Parun.CardSpec` with no engine change.
 
 - [ ] **Step 3: commit.**
 
@@ -394,7 +394,7 @@ hand. Exile Living Wish."
 
 ### Task 7: the gameplay case --- Shahrazad, Living Wish, Super Shredder
 
-**Files:** Modify `source/libraries/test/Pawl/OutsideTheGameSpec.hs`
+**Files:** Modify `source/libraries/test/Parun/OutsideTheGameSpec.hs`
 
 This is the case that proves #152. All three cards are printed and in the pool
 after Task 6.
@@ -461,14 +461,14 @@ only after. Read both out of `GameState.events`.
       this PR.
 
 - [ ] **Step 5: check what #152 unblocks** ---
-      `gh api repos/tfausak/pawl/issues/152/dependencies/blocking` --- and say so
+      `gh api repos/tfausak/parun/issues/152/dependencies/blocking` --- and say so
       in the PR body.
 
 - [ ] **Step 6: self-review the branch.** Re-check every CR citation against
       `docs/rules.txt`; re-read every comment the change touched; grep every
       construction site of `GameState` for the two new fields (CLAUDE.md's
-      new-field trap, PRs #2009 and #2021); check `Pawl.Engine.Event`'s
-      `eventBindings` fallthrough and `Pawl.Engine.Filter`'s `boundSlots` for arms
+      new-field trap, PRs #2009 and #2021); check `Parun.Engine.Event`'s
+      `eventBindings` fallthrough and `Parun.Engine.Filter`'s `boundSlots` for arms
       the new prompt type should have.
 
 - [ ] **Step 7: stage, `hooky fix`, `git add` again, push, open the draft PR**

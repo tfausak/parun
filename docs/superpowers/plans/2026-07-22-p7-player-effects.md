@@ -2,11 +2,11 @@
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
-**Goal:** Give pawl the third clause of CR 611.1 — a continuous effect that "affects players or the rules of the game" — as a `PlayerEffect` axis with one sole casing home, two carriers, and five real gate cards: **Rule of Law**, **Thalia, Guardian of Thraben**, **Sapphire Medallion**, **Reliquary Tower** and **Silence**.
+**Goal:** Give parun the third clause of CR 611.1 — a continuous effect that "affects players or the rules of the game" — as a `PlayerEffect` axis with one sole casing home, two carriers, and five real gate cards: **Rule of Law**, **Thalia, Guardian of Thraben**, **Sapphire Medallion**, **Reliquary Tower** and **Silence**.
 
-**Architecture:** A new leaf family `Pawl.Type.PlayerEffect`, scoped by `Pawl.Type.PlayerScope` and filtered by `Pawl.Type.SpellCriterion`, riding two carriers: `Card.playerAbilities :: [PlayerStaticAbility]` (printed, re-derived live from the battlefield per CR 604.2) and `GameState.playerEffects :: [ActivePlayerEffect]` (stored by the new `Effect.AffectPlayers` opcode, expiring through P6's existing `Pawl.Expiry` sweeps). A new `Pawl.PlayerEffect` module is the **sole home of `case … PlayerEffect`/`PlayerScope`/`SpellCriterion`** and answers three typed questions — `prohibitsCasting`, `costAdjustments`, `maximumHandSize`. A second new module `Pawl.Cost` owns CR 601.2f's total-cost computation. Six read sites consume them. **`Pawl.Projection`, `Layer`, `Modification` and `Affected` are not touched**: CR 613.10/613.11 put this axis *after* the layer fold, not in it.
+**Architecture:** A new leaf family `Parun.Type.PlayerEffect`, scoped by `Parun.Type.PlayerScope` and filtered by `Parun.Type.SpellCriterion`, riding two carriers: `Card.playerAbilities :: [PlayerStaticAbility]` (printed, re-derived live from the battlefield per CR 604.2) and `GameState.playerEffects :: [ActivePlayerEffect]` (stored by the new `Effect.AffectPlayers` opcode, expiring through P6's existing `Parun.Expiry` sweeps). A new `Parun.PlayerEffect` module is the **sole home of `case … PlayerEffect`/`PlayerScope`/`SpellCriterion`** and answers three typed questions — `prohibitsCasting`, `costAdjustments`, `maximumHandSize`. A second new module `Parun.Cost` owns CR 601.2f's total-cost computation. Six read sites consume them. **`Parun.Projection`, `Layer`, `Modification` and `Affected` are not touched**: CR 613.10/613.11 put this axis *after* the layer fold, not in it.
 
-**Tech Stack:** Haskell 2010 (GHC 9.14.1 from the Nix flake), `tasty` + `tasty-hunit`, the hand-rolled `Pawl.Json`/`Pawl.Codec` card codec.
+**Tech Stack:** Haskell 2010 (GHC 9.14.1 from the Nix flake), `tasty` + `tasty-hunit`, the hand-rolled `Parun.Json`/`Parun.Codec` card codec.
 
 **Spec:** `docs/superpowers/specs/2026-07-22-p7-player-effects-design.md`. Read §0 (the falsifiers) before anything; §2.1–§2.4 before Task 1, §2.7 before Task 2, §2.5 and §2.8 before Task 3, §2.6 before Tasks 4–5, §2.9–§2.10 before Tasks 7–8, §8–§10 before Task 9.
 
@@ -15,9 +15,9 @@
 Every task's requirements implicitly include all of these. They come from `CLAUDE.md` and are not negotiable.
 
 - **Haskell 2010, no language extensions** unless there is no alternative. `NamedFieldPuns` is permitted; `GADTs`/`RankNTypes` only in the suspension core and in test modules that already carry the pragma. A module that already carries a `{-# LANGUAGE … #-}` pragma keeps it.
-- **No explicit export lists.** `module Pawl.Foo where`.
-- **One type per module** under `Pawl.Type.<TypeName>` (type + instances only). A module never imports its parents; `A.B.C` must not import `A.B` or `A`. A sibling `Pawl.Type.*` import is fine.
-- **Qualified imports aliased to the last component** (`Data.Set` → `Set`, `Pawl.Type.PlayerScope` → `PlayerScope`). One import group, alphabetical. A logic module may import its same-named type module under that alias (`Pawl.Mana` imports `Pawl.Type.Mana` as `Mana`; `Pawl.Expiry` imports `Pawl.Type.Expiry` as `Expiry`) — `Pawl.PlayerEffect` importing `Pawl.Type.PlayerEffect` as `PlayerEffect` is that same established shape. In the **test suite**, where both must be imported at once, the type module takes the `X.Type` alias (`Pawl.Type.Expiry as Expiry.Type` is the standing precedent); `Pawl.Support` is aliased `S`.
+- **No explicit export lists.** `module Parun.Foo where`.
+- **One type per module** under `Parun.Type.<TypeName>` (type + instances only). A module never imports its parents; `A.B.C` must not import `A.B` or `A`. A sibling `Parun.Type.*` import is fine.
+- **Qualified imports aliased to the last component** (`Data.Set` → `Set`, `Parun.Type.PlayerScope` → `PlayerScope`). One import group, alphabetical. A logic module may import its same-named type module under that alias (`Parun.Mana` imports `Parun.Type.Mana` as `Mana`; `Parun.Expiry` imports `Parun.Type.Expiry` as `Expiry`) — `Parun.PlayerEffect` importing `Parun.Type.PlayerEffect` as `PlayerEffect` is that same established shape. In the **test suite**, where both must be imported at once, the type module takes the `X.Type` alias (`Parun.Type.Expiry as Expiry.Type` is the standing precedent); `Parun.Support` is aliased `S`.
 - **No partial functions**, written or used. No `head`, `error`, `undefined`, or non-exhaustive matches. **`Natural` subtraction is partial** — it throws on underflow. Every subtraction of a `Natural` in this plan is guarded; never remove a guard.
 - **`newtype` liberally, non-punning constructors** (`MkFoo`). Build records with `do`/`pure` + record syntax, not `<$>`/`<*>`.
 - **Prefer explicit:** `case` over point-free; one equation with a `case` over multiple clauses; `let` over `where`; `$` over parens, `.` over chained `$`. No list comprehensions. No backtick-infixed functions. Named local predicates over lambdas in `filter`.
@@ -27,7 +27,7 @@ Every task's requirements implicitly include all of these. They come from `CLAUD
 - **No API stability obligations.** Rename, reshape, and delete freely; never add a compat shim or keep an old name.
 - **Every rules claim is checked against `docs/rules.txt`** and the rule number is cited in the code comment. Never trust recalled Magic rules — **including the citations written in this plan**. If `rules.txt` disagrees with a citation below, `rules.txt` wins: fix the citation and say so in the completion note.
 - **Build must be warning-clean.** `cabal build all --enable-tests --enable-benchmarks` with `flags: +pedantic` (which is `-Werror`). Incremental builds hide warnings from unchanged modules; `cabal clean` first when a definitive check is needed.
-- **Import lists are not spelled out** in every snippet below. When a step's code names `Monad.when`, `Set.*`, `Map.*`, `List.*`, `Maybe.*`, `Foldable.*` or a `Pawl.*` module, add the qualified import (aliased per the rule above, one alphabetical group). GHC names every missing one. Equally, when a step *deletes* the last use of an import, delete the import — `-Wunused-imports` is an error here.
+- **Import lists are not spelled out** in every snippet below. When a step's code names `Monad.when`, `Set.*`, `Map.*`, `List.*`, `Maybe.*`, `Foldable.*` or a `Parun.*` module, add the qualified import (aliased per the rule above, one alphabetical group). GHC names every missing one. Equally, when a step *deletes* the last use of an import, delete the import — `-Wunused-imports` is an error here.
 - **New library modules** go under `source/library/` and are picked up by the `-- cabal-gild: discover` directive — add the file and run `hooky fix`; never hand-edit `exposed-modules`. **New test modules** are discovered the same way into the test-suite `other-modules`, and must additionally be wired into `source/test-suite/Main.hs`'s `testTree`.
 - **Before every commit:** `git add <the paths this task names>`, then `hooky fix`, then `git add -u`, then `hooky run`. `hooky` acts on **staged** files only; if you skip the `git add`, it reports "hooks skipped" and checks nothing.
 - **TDD is not optional.** Write the failing test and actually run it to watch it fail before implementing. For a task whose first test names a module or constructor that does not exist yet, "fails" means the **build** fails with a specific `Not in scope` / `Could not find module` error — record that as the observed failure, then implement.
@@ -72,16 +72,16 @@ Gatherer rulings, verbatim. **They are the specification of the tests** — do n
 **Reliquary Tower**
 > - *"If multiple effects modify your hand size, apply them in timestamp order. For example, if you put Null Profusion (an enchantment that says your maximum hand size is two) onto the battlefield and then put Reliquary Tower onto the battlefield, you'll have no maximum hand size. However, if those permanents enter in the opposite order, your maximum hand size would be two."*
 
-**None of the five is added to any deck in `Pawl.Cards`.** They are deterministic fixtures, like Master Thief and Hag of Inner Weakness — adding them to a deck would perturb `PropertySpec`'s card-backed conservation counts for no gain. They *are* added to the `Cards` record, `loadCards` and `allPrintings`, which the `CardSpec` directory lint requires.
+**None of the five is added to any deck in `Parun.Cards`.** They are deterministic fixtures, like Master Thief and Hag of Inner Weakness — adding them to a deck would perturb `PropertySpec`'s card-backed conservation counts for no gain. They *are* added to the `Cards` record, `loadCards` and `allPrintings`, which the `CardSpec` directory lint requires.
 
 ## Four deliberate departures from the spec
 
 State these in the completion note (Task 9). They are refinements, not drift.
 
-1. **`Pawl.Cost` is factored into a stateful `total` and a pure `applyAdjustments`.** The spec's §2.6 gives one entry point, `total :: PlayerId -> ObjectId -> ManaCost -> GameState -> ManaCost`. That signature is kept, but the CR 601.2f/118.7a arithmetic lives in `applyAdjustments :: ([Natural], [Natural]) -> ManaCost -> ManaCost`, which needs no board at all. This is what lets the ordering rule and the generic-only floor be unit-tested directly, rather than only through a two-permanent board.
+1. **`Parun.Cost` is factored into a stateful `total` and a pure `applyAdjustments`.** The spec's §2.6 gives one entry point, `total :: PlayerId -> ObjectId -> ManaCost -> GameState -> ManaCost`. That signature is kept, but the CR 601.2f/118.7a arithmetic lives in `applyAdjustments :: ([Natural], [Natural]) -> ManaCost -> ManaCost`, which needs no board at all. This is what lets the ordering rule and the generic-only floor be unit-tested directly, rather than only through a two-permanent board.
 2. **The total cost is canonicalized: one leading `Generic` symbol, then the printed typed symbols in order, with a zero generic component dropped entirely.** The spec's §2.6 says "append every increase as a `Generic n` symbol", which would make `{2}{U}` taxed by Thalia render as `{2}{U}{1}` — payable but not comparable, and the spec's own order test demands the answer be *exactly* `{U}`. `Mana.spend` sums every generic symbol and matches typed symbols first, so this is presentation only.
-3. **`Pawl.PlayerEffect`'s printed gather honours CR 305.7.** The spec does not mention it, but Reliquary Tower is a *nonbasic land* and Blood Moon is in the pool: an ability read straight off the card would survive having its land's subtype set to a basic type, which CR 305.7 forbids. The gather reuses `Projection.liveGiven` with a hoisted `setLandSubtypeEffects`, exactly as `Projection.gather` does. One extra test in Task 6 covers it.
-4. **`Pawl.PlayerEffect.applying` grows its second carrier in Task 7 rather than arriving with both.** Introducing `GameState.playerEffects` in Task 3, where no opcode can produce one, would add a field nothing writes. Tasks 3–6 read the printed carrier only; Task 7 adds the stored half to the same function.
+3. **`Parun.PlayerEffect`'s printed gather honours CR 305.7.** The spec does not mention it, but Reliquary Tower is a *nonbasic land* and Blood Moon is in the pool: an ability read straight off the card would survive having its land's subtype set to a basic type, which CR 305.7 forbids. The gather reuses `Projection.liveGiven` with a hoisted `setLandSubtypeEffects`, exactly as `Projection.gather` does. One extra test in Task 6 covers it.
+4. **`Parun.PlayerEffect.applying` grows its second carrier in Task 7 rather than arriving with both.** Introducing `GameState.playerEffects` in Task 3, where no opcode can produce one, would add a field nothing writes. Tasks 3–6 read the printed carrier only; Task 7 adds the stored half to the same function.
 
 ## File structure
 
@@ -89,21 +89,21 @@ State these in the completion note (Task 9). They are refinements, not drift.
 
 | Module | Task | Responsibility |
 |---|---|---|
-| `source/library/Pawl/Type/PlayerEffect.hs` | 1 | the leaf family: `CantCastSpells \| CantCastMoreThan \| IncreaseSpellCost \| ReduceSpellCost \| NoMaximumHandSize` |
-| `source/library/Pawl/Type/PlayerScope.hs` | 1 | `You \| Opponents \| EachPlayer` |
-| `source/library/Pawl/Type/SpellCriterion.hs` | 1 | `NoncreatureSpell \| SpellOfColor Color` |
-| `source/library/Pawl/Type/PlayerStaticAbility.hs` | 1 | the printed carrier: `{scope, effect}` |
-| `source/library/Pawl/Type/ActivePlayerEffect.hs` | 7 | the stored carrier: `{source, controller, timestamp, expiry, scope, effect}` |
-| `source/library/Pawl/PlayerEffect.hs` | 3 | **sole casing home**: `applying`, `inScope`, `prohibitsCasting`, `costAdjustments` (4), `matchesSpell` (4), `maximumHandSize` (6) |
-| `source/library/Pawl/Cost.hs` | 4 | CR 601.2f: `total`, `applyAdjustments` |
+| `source/library/Parun/Type/PlayerEffect.hs` | 1 | the leaf family: `CantCastSpells \| CantCastMoreThan \| IncreaseSpellCost \| ReduceSpellCost \| NoMaximumHandSize` |
+| `source/library/Parun/Type/PlayerScope.hs` | 1 | `You \| Opponents \| EachPlayer` |
+| `source/library/Parun/Type/SpellCriterion.hs` | 1 | `NoncreatureSpell \| SpellOfColor Color` |
+| `source/library/Parun/Type/PlayerStaticAbility.hs` | 1 | the printed carrier: `{scope, effect}` |
+| `source/library/Parun/Type/ActivePlayerEffect.hs` | 7 | the stored carrier: `{source, controller, timestamp, expiry, scope, effect}` |
+| `source/library/Parun/PlayerEffect.hs` | 3 | **sole casing home**: `applying`, `inScope`, `prohibitsCasting`, `costAdjustments` (4), `matchesSpell` (4), `maximumHandSize` (6) |
+| `source/library/Parun/Cost.hs` | 4 | CR 601.2f: `total`, `applyAdjustments` |
 
-**New test module.** `source/test-suite/Pawl/PlayerEffectSpec.hs` (Task 3) — near-mirrors `Pawl.PlayerEffect` and `Pawl.Cost`; holds every gate card's gameplay-level tests and the sweep/unit tests.
+**New test module.** `source/test-suite/Parun/PlayerEffectSpec.hs` (Task 3) — near-mirrors `Parun.PlayerEffect` and `Parun.Cost`; holds every gate card's gameplay-level tests and the sweep/unit tests.
 
 **New card data.** `data/cards/rule-of-law.json` (3), `data/cards/thalia-guardian-of-thraben.json` (4), `data/cards/sapphire-medallion.json` (5), `data/cards/reliquary-tower.json` (6), `data/cards/silence.json` (8).
 
-**Changed library modules.** `Pawl/Type/Card.hs`, `Pawl/Type/GameEvent.hs`, `Pawl/Type/GameState.hs`, `Pawl/Type/Effect.hs`, `Pawl/Type/Subtype.hs`, `Pawl/Codec.hs`, `Pawl/Event.hs`, `Pawl/Quantity.hs`, `Pawl/Cast.hs`, `Pawl/Engine.hs`, `Pawl/Expiry.hs`, `Pawl/Resolve.hs`, `Pawl/Mana.hs`, `Pawl/Setup.hs`.
+**Changed library modules.** `Parun/Type/Card.hs`, `Parun/Type/GameEvent.hs`, `Parun/Type/GameState.hs`, `Parun/Type/Effect.hs`, `Parun/Type/Subtype.hs`, `Parun/Codec.hs`, `Parun/Event.hs`, `Parun/Quantity.hs`, `Parun/Cast.hs`, `Parun/Engine.hs`, `Parun/Expiry.hs`, `Parun/Resolve.hs`, `Parun/Mana.hs`, `Parun/Setup.hs`.
 
-**Untouched, deliberately.** `Pawl/Projection.hs` (read from, never edited), `Pawl/Type/Layer.hs`, `Pawl/Type/Modification.hs`, `Pawl/Type/Affected.hs`, `Pawl/Type/ContinuousEffect.hs`, `Pawl/Type/StaticAbility.hs`, `Pawl/Type/Player.hs`, `Pawl/Type/AdditionalCost.hs`, `Pawl/Type/AbilityCost.hs`, `Pawl/Replacement.hs`.
+**Untouched, deliberately.** `Parun/Projection.hs` (read from, never edited), `Parun/Type/Layer.hs`, `Parun/Type/Modification.hs`, `Parun/Type/Affected.hs`, `Parun/Type/ContinuousEffect.hs`, `Parun/Type/StaticAbility.hs`, `Parun/Type/Player.hs`, `Parun/Type/AdditionalCost.hs`, `Parun/Type/AbilityCost.hs`, `Parun/Replacement.hs`.
 
 ---
 
@@ -112,10 +112,10 @@ State these in the completion note (Task 9). They are refinements, not drift.
 Card data can *say* a player effect. Nothing reads one yet. Behaviour-neutral: every existing test and every committed card file must be unchanged, byte for byte.
 
 **Files:**
-- Create: `source/library/Pawl/Type/PlayerEffect.hs`, `source/library/Pawl/Type/PlayerScope.hs`, `source/library/Pawl/Type/SpellCriterion.hs`, `source/library/Pawl/Type/PlayerStaticAbility.hs`
-- Modify: `source/library/Pawl/Type/Card.hs` (new `playerAbilities` field)
-- Modify: `source/library/Pawl/Codec.hs` (four codec pairs, `listFromDefault`, the two `Card` arms)
-- Test: `source/test-suite/Pawl/CodecSpec.hs`
+- Create: `source/library/Parun/Type/PlayerEffect.hs`, `source/library/Parun/Type/PlayerScope.hs`, `source/library/Parun/Type/SpellCriterion.hs`, `source/library/Parun/Type/PlayerStaticAbility.hs`
+- Modify: `source/library/Parun/Type/Card.hs` (new `playerAbilities` field)
+- Modify: `source/library/Parun/Codec.hs` (four codec pairs, `listFromDefault`, the two `Card` arms)
+- Test: `source/test-suite/Parun/CodecSpec.hs`
 
 **Interfaces:**
 - Consumes: nothing from earlier tasks.
@@ -123,7 +123,7 @@ Card data can *say* a player effect. Nothing reads one yet. Behaviour-neutral: e
 
 - [x] **Step 1: Write the failing tests**
 
-In `source/test-suite/Pawl/CodecSpec.hs`, add a new group to `tests`'s list (after the `"effect"` group), and register the needed imports (`Pawl.Type.PlayerEffect as PlayerEffect`, `Pawl.Type.PlayerScope as PlayerScope`, `Pawl.Type.PlayerStaticAbility as PlayerStaticAbility`, `Pawl.Type.SpellCriterion as SpellCriterion`, `Pawl.Type.Printing as Printing` — already there):
+In `source/test-suite/Parun/CodecSpec.hs`, add a new group to `tests`'s list (after the `"effect"` group), and register the needed imports (`Parun.Type.PlayerEffect as PlayerEffect`, `Parun.Type.PlayerScope as PlayerScope`, `Parun.Type.PlayerStaticAbility as PlayerStaticAbility`, `Parun.Type.SpellCriterion as SpellCriterion`, `Parun.Type.Printing as Printing` — already there):
 
 ```haskell
       Tasty.testGroup
@@ -171,25 +171,25 @@ In `source/test-suite/Pawl/CodecSpec.hs`, add a new group to `tests`'s list (aft
 - [x] **Step 2: Run the tests to verify they fail**
 
 Run: `cabal build all --enable-tests --enable-benchmarks`
-Expected: FAIL — `Could not find module 'Pawl.Type.PlayerEffect'` (and the three siblings).
+Expected: FAIL — `Could not find module 'Parun.Type.PlayerEffect'` (and the three siblings).
 
 - [x] **Step 3: Create the four types**
 
-`source/library/Pawl/Type/SpellCriterion.hs`:
+`source/library/Parun/Type/SpellCriterion.hs`:
 
 ```haskell
-module Pawl.Type.SpellCriterion where
+module Parun.Type.SpellCriterion where
 
-import Pawl.Type.Color (Color)
+import Parun.Type.Color (Color)
 
 -- Which spells a cost-modifying continuous effect applies to (CR 613.11). The
--- third sibling of Pawl.Type.CardCriterion and Pawl.Type.PermanentCriterion,
+-- third sibling of Parun.Type.CardCriterion and Parun.Type.PermanentCriterion,
 -- deliberately NOT merged with either: P9 merges all of them into one filter
 -- language, and merging two of them here would be building half of P9 with one
 -- customer (#38/#39/#40 are the same deferral for the other three).
 --
 -- Both inhabitants are evaluated against the PROJECTION by
--- Pawl.PlayerEffect.matchesSpell, never against a printed characteristic: a card
+-- Parun.PlayerEffect.matchesSpell, never against a printed characteristic: a card
 -- type is CR 613 layer 4 and a colour is layer 5, so Blood Moon and a colour
 -- changer both change the answer.
 data SpellCriterion
@@ -200,22 +200,22 @@ data SpellCriterion
   deriving (Eq, Ord, Show)
 ```
 
-`source/library/Pawl/Type/PlayerEffect.hs`:
+`source/library/Parun/Type/PlayerEffect.hs`:
 
 ```haskell
-module Pawl.Type.PlayerEffect where
+module Parun.Type.PlayerEffect where
 
 import Numeric.Natural (Natural)
-import Pawl.Type.SpellCriterion (SpellCriterion)
+import Parun.Type.SpellCriterion (SpellCriterion)
 
 -- CR 611.1's third clause: a continuous effect that "affects players or the
 -- rules of the game" rather than the characteristics of an object. The player
--- analogue of Pawl.Type.Modification, and NOT a member of it: CR 613.1 makes the
+-- analogue of Parun.Type.Modification, and NOT a member of it: CR 613.1 makes the
 -- seven layers a machine for computing an OBJECT's characteristics, while CR
 -- 613.10 and 613.11 apply these AFTER that machine has run. There is no Layer
--- constructor here and Pawl.Projection never sees this type.
+-- constructor here and Parun.Projection never sees this type.
 --
--- Open-half card data. Pawl.PlayerEffect is the ONLY module that may case on it.
+-- Open-half card data. Parun.PlayerEffect is the ONLY module that may case on it.
 data PlayerEffect
   = -- CR 601.3 / Silence: this player can't cast spells at all.
     CantCastSpells
@@ -242,14 +242,14 @@ data PlayerEffect
   deriving (Eq, Ord, Show)
 ```
 
-`source/library/Pawl/Type/PlayerScope.hs`:
+`source/library/Parun/Type/PlayerScope.hs`:
 
 ```haskell
-module Pawl.Type.PlayerScope where
+module Parun.Type.PlayerScope where
 
--- Which players a Pawl.Type.PlayerEffect applies to: the player-side analogue of
--- Pawl.Type.Affected, and much smaller because CR 109.5 fixes what "you" means.
--- Resolved against the effect's CONTROLLER by Pawl.PlayerEffect.inScope.
+-- Which players a Parun.Type.PlayerEffect applies to: the player-side analogue of
+-- Parun.Type.Affected, and much smaller because CR 109.5 fixes what "you" means.
+-- Resolved against the effect's CONTROLLER by Parun.PlayerEffect.inScope.
 --
 -- The scope is always resolved DYNAMICALLY, on both carriers. CR 611.2c's first
 -- sentence freezes a stored effect's object set -- which is what every stored
@@ -272,20 +272,20 @@ data PlayerScope
   deriving (Eq, Ord, Show)
 ```
 
-`source/library/Pawl/Type/PlayerStaticAbility.hs`:
+`source/library/Parun/Type/PlayerStaticAbility.hs`:
 
 ```haskell
-module Pawl.Type.PlayerStaticAbility where
+module Parun.Type.PlayerStaticAbility where
 
-import Pawl.Type.PlayerEffect (PlayerEffect)
-import Pawl.Type.PlayerScope (PlayerScope)
+import Parun.Type.PlayerEffect (PlayerEffect)
+import Parun.Type.PlayerScope (PlayerScope)
 
 -- A card's printed player/rules-modifying static ability (CR 604.1/604.2: a
 -- static ability creates a continuous effect active while its permanent is on
--- the battlefield). The player-axis sibling of Pawl.Type.StaticAbility, whose
+-- the battlefield). The player-axis sibling of Parun.Type.StaticAbility, whose
 -- Affected/Modification pair this mirrors with a PlayerScope/PlayerEffect pair.
 --
--- Gathered LIVE from every battlefield permanent by Pawl.PlayerEffect.applying on
+-- Gathered LIVE from every battlefield permanent by Parun.PlayerEffect.applying on
 -- every read, never captured -- so Rule of Law leaving the battlefield lifts its
 -- restriction with nothing to unwind. Rule of Law, Thalia, Sapphire Medallion and
 -- Reliquary Tower each declare exactly one.
@@ -298,14 +298,14 @@ data PlayerStaticAbility = MkPlayerStaticAbility
 
 - [x] **Step 4: Add the `Card` field**
 
-In `source/library/Pawl/Type/Card.hs`, add the import of `Pawl.Type.PlayerStaticAbility (PlayerStaticAbility)` and append this field to the record, after `castingPermissions`:
+In `source/library/Parun/Type/Card.hs`, add the import of `Parun.Type.PlayerStaticAbility (PlayerStaticAbility)` and append this field to the record, after `castingPermissions`:
 
 ```haskell
     -- CR 604.1/604.2 / 611.1: this card's printed PLAYER and RULES-modifying
     -- static abilities (Rule of Law, Thalia, Sapphire Medallion, Reliquary
     -- Tower). The sibling of staticAbilities on the axis CR 613.10/613.11 put
-    -- OUTSIDE the layer system, so these are read by Pawl.PlayerEffect and never
-    -- by Pawl.Projection. Empty for every other printing.
+    -- OUTSIDE the layer system, so these are read by Parun.PlayerEffect and never
+    -- by Parun.Projection. Empty for every other printing.
     playerAbilities :: [PlayerStaticAbility]
 ```
 
@@ -313,7 +313,7 @@ Remember the comma after `castingPermissions :: [CastingPermission]`.
 
 - [x] **Step 5: Add the codecs**
 
-In `source/library/Pawl/Codec.hs`, add the four pairs. Put `playerScopeToJson`/`jsonToPlayerScope` and `spellCriterionToJson`/`jsonToSpellCriterion` next to `permanentCriterionToJson` (the leaf-enum neighbourhood, around line 447), `playerEffectToJson`/`jsonToPlayerEffect` after them, and `playerStaticAbilityToJson`/`jsonToPlayerStaticAbility` beside `staticAbilityToJson` (around line 1096).
+In `source/library/Parun/Codec.hs`, add the four pairs. Put `playerScopeToJson`/`jsonToPlayerScope` and `spellCriterionToJson`/`jsonToSpellCriterion` next to `permanentCriterionToJson` (the leaf-enum neighbourhood, around line 447), `playerEffectToJson`/`jsonToPlayerEffect` after them, and `playerStaticAbilityToJson`/`jsonToPlayerStaticAbility` beside `staticAbilityToJson` (around line 1096).
 
 ```haskell
 playerScopeToJson :: PlayerScope.PlayerScope -> Value
@@ -419,7 +419,7 @@ Expected: PASS — the new `player effects (P7)` group green, and **every pre-ex
 - [x] **Step 8: Commit**
 
 ```bash
-git add source/library/Pawl source/test-suite pawl.cabal
+git add source/library/Parun source/test-suite parun.cabal
 hooky fix
 git add -u
 hooky run
@@ -440,12 +440,12 @@ Co-Authored-By: Claude Opus 4.8 (1M context) <noreply@anthropic.com>"
 The event kind Rule of Law counts. The umbrella predicted this edge ("each later phase adds the event kind it reads — `SpellCast` at **P7**").
 
 **Files:**
-- Modify: `source/library/Pawl/Type/GameEvent.hs` (new constructor)
-- Modify: `source/library/Pawl/Event.hs` (new `castOf`; `movedOf`, `damageOf` and both inner cases of `matchesTrigger` gain an arm)
-- Modify: `source/library/Pawl/Quantity.hs:88` (`died` gains an arm)
-- Modify: `source/library/Pawl/Codec.hs:975-988` (`gameEventToJson`/`jsonToGameEvent`)
-- Modify: `source/library/Pawl/Cast.hs` (`castSpell` emits it)
-- Test: `source/test-suite/Pawl/CastSpec.hs`, `source/test-suite/Pawl/CodecSpec.hs`
+- Modify: `source/library/Parun/Type/GameEvent.hs` (new constructor)
+- Modify: `source/library/Parun/Event.hs` (new `castOf`; `movedOf`, `damageOf` and both inner cases of `matchesTrigger` gain an arm)
+- Modify: `source/library/Parun/Quantity.hs:88` (`died` gains an arm)
+- Modify: `source/library/Parun/Codec.hs:975-988` (`gameEventToJson`/`jsonToGameEvent`)
+- Modify: `source/library/Parun/Cast.hs` (`castSpell` emits it)
+- Test: `source/test-suite/Parun/CastSpec.hs`, `source/test-suite/Parun/CodecSpec.hs`
 
 **Interfaces:**
 - Consumes: nothing from Task 1.
@@ -453,7 +453,7 @@ The event kind Rule of Law counts. The umbrella predicted this edge ("each later
 
 - [x] **Step 1: Write the failing tests**
 
-In `source/test-suite/Pawl/CastSpec.hs`, add these cases to the module's top-level `tests` group (add imports for `Pawl.Event as Event`, `Pawl.Type.GameEvent as GameEvent`, `Data.Foldable as Foldable`, `Data.Maybe as Maybe` as needed):
+In `source/test-suite/Parun/CastSpec.hs`, add these cases to the module's top-level `tests` group (add imports for `Parun.Event as Event`, `Parun.Type.GameEvent as GameEvent`, `Data.Foldable as Foldable`, `Data.Maybe as Maybe` as needed):
 
 ```haskell
       HU.testCase "CR 601.2i casting a spell records a SpellCast event for the caster" $
@@ -471,7 +471,7 @@ In `source/test-suite/Pawl/CastSpec.hs`, add these cases to the module's top-lev
          in HU.assertEqual "no cast recorded" [] (Maybe.mapMaybe Event.castOf (Foldable.toList (GameState.events after))),
 ```
 
-In `source/test-suite/Pawl/CodecSpec.hs`, add to the group that already round-trips `GameEvent` values (search for `gameEventToJson`; if there is none, add this case to the `"records"` group):
+In `source/test-suite/Parun/CodecSpec.hs`, add to the group that already round-trips `GameEvent` values (search for `gameEventToJson`; if there is none, add this case to the `"records"` group):
 
 ```haskell
           HU.testCase "GameEvent.SpellCast round-trips" $
@@ -485,7 +485,7 @@ Expected: FAIL — `Data constructor not in scope: GameEvent.SpellCast`, `Variab
 
 - [x] **Step 3: Add the constructor**
 
-In `source/library/Pawl/Type/GameEvent.hs`, append:
+In `source/library/Parun/Type/GameEvent.hs`, append:
 
 ```haskell
   | -- CR 601.2i: a player cast a spell. The event Rule of Law counts, and the
@@ -499,9 +499,9 @@ In `source/library/Pawl/Type/GameEvent.hs`, append:
     SpellCast PlayerId
 ```
 
-- [x] **Step 4: Add `castOf` and the four new arms in `Pawl.Event`**
+- [x] **Step 4: Add `castOf` and the four new arms in `Parun.Event`**
 
-In `source/library/Pawl/Event.hs`, add beside `damageOf`:
+In `source/library/Parun/Event.hs`, add beside `damageOf`:
 
 ```haskell
 -- The caster an event describes, if it is a cast (CR 601.2i).
@@ -515,11 +515,11 @@ castOf event = case event of
 
 Add `GameEvent.SpellCast _ -> Nothing` to `movedOf` (line 65) and to `damageOf` (line 72). Add `GameEvent.SpellCast _ -> False` to both inner cases of `matchesTrigger` — the `SelfEnters` arm (line 338) and the `StepBegins` arm (line 346).
 
-In `source/library/Pawl/Quantity.hs`, add `GameEvent.SpellCast _ -> False` to `died` (line 89).
+In `source/library/Parun/Quantity.hs`, add `GameEvent.SpellCast _ -> False` to `died` (line 89).
 
 - [x] **Step 5: Add the codec arms**
 
-In `source/library/Pawl/Codec.hs`, add to `gameEventToJson`:
+In `source/library/Parun/Codec.hs`, add to `gameEventToJson`:
 
 ```haskell
   GameEvent.SpellCast pid -> Json.tagged (Text.pack "SpellCast") (Just (playerIdToJson pid))
@@ -533,7 +533,7 @@ and to `jsonToGameEvent`'s case:
 
 - [x] **Step 6: Emit it from `Cast.castSpell`**
 
-In `source/library/Pawl/Cast.hs`, inside the `Just paid -> do` branch (line 201), insert the emission between `Event.changeZone` and `moved <- State.get`:
+In `source/library/Parun/Cast.hs`, inside the `Just paid -> do` branch (line 201), insert the emission between `Event.changeZone` and `moved <- State.get`:
 
 ```haskell
               Just paid -> do
@@ -556,7 +556,7 @@ Expected: PASS — both `CastSpec` cases and the codec round-trip green, everyth
 - [x] **Step 8: Commit**
 
 ```bash
-git add source/library/Pawl source/test-suite
+git add source/library/Parun source/test-suite
 hooky fix
 git add -u
 hooky run
@@ -571,50 +571,50 @@ Co-Authored-By: Claude Opus 4.8 (1M context) <noreply@anthropic.com>"
 
 ---
 
-### Task 3: `Pawl.PlayerEffect`, the casting gate, and Rule of Law
+### Task 3: `Parun.PlayerEffect`, the casting gate, and Rule of Law
 
 The sole casing home arrives with its first question, its first two read sites, and its first gate card.
 
 **Files:**
-- Create: `source/library/Pawl/PlayerEffect.hs`
-- Create: `source/test-suite/Pawl/PlayerEffectSpec.hs`
+- Create: `source/library/Parun/PlayerEffect.hs`
+- Create: `source/test-suite/Parun/PlayerEffectSpec.hs`
 - Create: `data/cards/rule-of-law.json`
-- Modify: `source/library/Pawl/Cast.hs:84-94` (`castable`), `:111-118` (`castableWhileSearching`)
-- Modify: `source/test-suite/Pawl/Cards.hs` (record field, `loadCards`, `allPrintings`), `source/test-suite/Main.hs` (wire the spec)
-- Test: `source/test-suite/Pawl/PlayerEffectSpec.hs`, `source/test-suite/Pawl/CardSpec.hs`
+- Modify: `source/library/Parun/Cast.hs:84-94` (`castable`), `:111-118` (`castableWhileSearching`)
+- Modify: `source/test-suite/Parun/Cards.hs` (record field, `loadCards`, `allPrintings`), `source/test-suite/Main.hs` (wire the spec)
+- Test: `source/test-suite/Parun/PlayerEffectSpec.hs`, `source/test-suite/Parun/CardSpec.hs`
 
 **Interfaces:**
 - Consumes: `PlayerEffect.PlayerEffect`, `PlayerScope.PlayerScope`, `PlayerStaticAbility.{scope,effect}`, `Card.playerAbilities` (Task 1); `Event.castOf`, `GameEvent.SpellCast` (Task 2).
-- Produces: `Pawl.PlayerEffect.applying :: PlayerId -> GameState -> [PlayerEffect]`; `Pawl.PlayerEffect.inScope :: PlayerId -> PlayerId -> PlayerScope -> Bool`; `Pawl.PlayerEffect.prohibitsCasting :: PlayerId -> GameState -> Bool`; `Cards.ruleOfLawPrinting :: Cards -> Printing`.
+- Produces: `Parun.PlayerEffect.applying :: PlayerId -> GameState -> [PlayerEffect]`; `Parun.PlayerEffect.inScope :: PlayerId -> PlayerId -> PlayerScope -> Bool`; `Parun.PlayerEffect.prohibitsCasting :: PlayerId -> GameState -> Bool`; `Cards.ruleOfLawPrinting :: Cards -> Printing`.
 
 - [x] **Step 1: Write the failing tests**
 
-Create `source/test-suite/Pawl/PlayerEffectSpec.hs`. Note the dual alias: the logic module is `PlayerEffect`, the type module is `PlayerEffect.Type` (the `Expiry.Type` precedent).
+Create `source/test-suite/Parun/PlayerEffectSpec.hs`. Note the dual alias: the logic module is `PlayerEffect`, the type module is `PlayerEffect.Type` (the `Expiry.Type` precedent).
 
 ```haskell
--- Covers Pawl.PlayerEffect and Pawl.Cost, plus the four types they case on
--- (Pawl.Type.PlayerEffect, PlayerScope, SpellCriterion, PlayerStaticAbility) and
--- the stored carrier Pawl.Type.ActivePlayerEffect. CR 613.10/613.11: the
+-- Covers Parun.PlayerEffect and Parun.Cost, plus the four types they case on
+-- (Parun.Type.PlayerEffect, PlayerScope, SpellCriterion, PlayerStaticAbility) and
+-- the stored carrier Parun.Type.ActivePlayerEffect. CR 613.10/613.11: the
 -- continuous effects that affect PLAYERS and the RULES OF THE GAME, which sit
 -- outside the CR 613 layer system entirely.
 --
 -- The five gate cards: Rule of Law, Thalia Guardian of Thraben, Sapphire
 -- Medallion, Reliquary Tower and Silence.
-module Pawl.PlayerEffectSpec where
+module Parun.PlayerEffectSpec where
 
-import qualified Pawl.Action as Action
-import qualified Pawl.Cards as Cards
-import qualified Pawl.Cast as Cast
-import qualified Pawl.Engine as Engine
-import qualified Pawl.Event as Event
-import qualified Pawl.PlayerEffect as PlayerEffect
-import qualified Pawl.Setup as Setup
-import qualified Pawl.Support as S
-import qualified Pawl.Type.Action as Action.Type
-import qualified Pawl.Type.GameEvent as GameEvent
-import qualified Pawl.Type.GameState as GameState
-import qualified Pawl.Type.ObjectId as ObjectId
-import qualified Pawl.Type.Phase as Phase
+import qualified Parun.Action as Action
+import qualified Parun.Cards as Cards
+import qualified Parun.Cast as Cast
+import qualified Parun.Engine as Engine
+import qualified Parun.Event as Event
+import qualified Parun.PlayerEffect as PlayerEffect
+import qualified Parun.Setup as Setup
+import qualified Parun.Support as S
+import qualified Parun.Type.Action as Action.Type
+import qualified Parun.Type.GameEvent as GameEvent
+import qualified Parun.Type.GameState as GameState
+import qualified Parun.Type.ObjectId as ObjectId
+import qualified Parun.Type.Phase as Phase
 import qualified Test.Tasty as Tasty
 import qualified Test.Tasty.HUnit as HU
 
@@ -715,14 +715,14 @@ isCast action = case action of
   Action.Type.Pass -> False
 
 tests :: Cards.Cards -> Tasty.TestTree
-tests cards = Tasty.testGroup "Pawl.PlayerEffectSpec" [ruleOfLawTests cards]
+tests cards = Tasty.testGroup "Parun.PlayerEffectSpec" [ruleOfLawTests cards]
 ```
 
 No new `Support` helper is needed: `S.landsInPlay`, `S.addHandCard`, `S.addCreature`, `S.withEvent` and `S.runPure` all already exist, and the one hand-built event is `GameEvent.SpellCast S.alice` written directly.
 
-Wire the spec into `source/test-suite/Main.hs`: add `import qualified Pawl.PlayerEffectSpec as PlayerEffectSpec` in alphabetical position (after `PowerToughnessSpec`), and `PlayerEffectSpec.tests cards,` into `testTree` (after `PowerToughnessSpec.tests cards,`).
+Wire the spec into `source/test-suite/Main.hs`: add `import qualified Parun.PlayerEffectSpec as PlayerEffectSpec` in alphabetical position (after `PowerToughnessSpec`), and `PlayerEffectSpec.tests cards,` into `testTree` (after `PowerToughnessSpec.tests cards,`).
 
-In `source/test-suite/Pawl/CardSpec.hs`, add a new group `m45p7CardTests` (registered in `tests`) with:
+In `source/test-suite/Parun/CardSpec.hs`, add a new group `m45p7CardTests` (registered in `tests`) with:
 
 ```haskell
 m45p7CardTests :: Cards.Cards -> Tasty.TestTree
@@ -747,11 +747,11 @@ m45p7CardTests cards =
 - [x] **Step 2: Run the tests to verify they fail**
 
 Run: `cabal build all --enable-tests --enable-benchmarks`
-Expected: FAIL — `Could not find module 'Pawl.PlayerEffect'`, `Variable not in scope: Cards.ruleOfLawPrinting`.
+Expected: FAIL — `Could not find module 'Parun.PlayerEffect'`, `Variable not in scope: Cards.ruleOfLawPrinting`.
 
-- [x] **Step 3: Create `Pawl.PlayerEffect`**
+- [x] **Step 3: Create `Parun.PlayerEffect`**
 
-`source/library/Pawl/PlayerEffect.hs`:
+`source/library/Parun/PlayerEffect.hs`:
 
 ```haskell
 -- CR 613.10 / 613.11: the continuous effects that affect PLAYERS and the RULES
@@ -760,30 +760,30 @@ Expected: FAIL — `Could not find module 'Pawl.PlayerEffect'`, `Variable not in
 -- object's characteristics are determined by starting with the actual object",
 -- so the seven layers are a machine for computing object characteristics and
 -- nothing else, and 613.10/613.11 both apply AFTER that machine has run.
--- Pawl.Projection is untouched by this module and never sees these types.
+-- Parun.Projection is untouched by this module and never sees these types.
 --
--- This module is the ONLY module that may case on Pawl.Type.PlayerEffect,
--- Pawl.Type.PlayerScope or Pawl.Type.SpellCriterion -- the standing Pawl.Resolve
--- has over Effect, Pawl.Projection over Modification, Pawl.Event over
--- TriggerCondition and Pawl.Expiry over Expiry. Every consumer asks a TYPED
+-- This module is the ONLY module that may case on Parun.Type.PlayerEffect,
+-- Parun.Type.PlayerScope or Parun.Type.SpellCriterion -- the standing Parun.Resolve
+-- has over Effect, Parun.Projection over Modification, Parun.Event over
+-- TriggerCondition and Parun.Expiry over Expiry. Every consumer asks a TYPED
 -- QUESTION and never sees a constructor.
-module Pawl.PlayerEffect where
+module Parun.PlayerEffect where
 
 import qualified Data.Foldable as Foldable
 import qualified Data.Maybe as Maybe
 import qualified Data.Set as Set
-import qualified Pawl.Event as Event
-import qualified Pawl.Game as Game
-import qualified Pawl.Projection as Projection
-import qualified Pawl.Type.Card as Card
-import Pawl.Type.GameState (GameState)
-import qualified Pawl.Type.GameState as GameState
-import Pawl.Type.PlayerEffect (PlayerEffect)
-import qualified Pawl.Type.PlayerEffect as PlayerEffect
-import Pawl.Type.PlayerId (PlayerId)
-import Pawl.Type.PlayerScope (PlayerScope)
-import qualified Pawl.Type.PlayerScope as PlayerScope
-import qualified Pawl.Type.PlayerStaticAbility as PlayerStaticAbility
+import qualified Parun.Event as Event
+import qualified Parun.Game as Game
+import qualified Parun.Projection as Projection
+import qualified Parun.Type.Card as Card
+import Parun.Type.GameState (GameState)
+import qualified Parun.Type.GameState as GameState
+import Parun.Type.PlayerEffect (PlayerEffect)
+import qualified Parun.Type.PlayerEffect as PlayerEffect
+import Parun.Type.PlayerId (PlayerId)
+import Parun.Type.PlayerScope (PlayerScope)
+import qualified Parun.Type.PlayerScope as PlayerScope
+import qualified Parun.Type.PlayerStaticAbility as PlayerStaticAbility
 
 -- CR 109.5: "the words 'you' and 'your' on an object refer to the object's
 -- controller ... for a static ability, this is the current controller of the
@@ -803,7 +803,7 @@ inScope pid controller scope = case scope of
 -- Projection.gather takes for staticAbilities -- which is why Rule of Law
 -- leaving the battlefield lifts its restriction with nothing to unwind.
 --
--- The scope is resolved DYNAMICALLY (see Pawl.Type.PlayerScope): CR 611.2c
+-- The scope is resolved DYNAMICALLY (see Parun.Type.PlayerScope): CR 611.2c
 -- classifies a rules-modifying effect as one that "can affect objects that
 -- weren't affected when that continuous effect began", so no set is ever frozen
 -- on this axis.
@@ -875,7 +875,7 @@ prohibitsCasting pid gs =
 
 - [x] **Step 4: Gate both casting sites**
 
-In `source/library/Pawl/Cast.hs`, `castable` becomes:
+In `source/library/Parun/Cast.hs`, `castable` becomes:
 
 ```haskell
 -- Affordable and correctly timed, actually in this player's hand, fillable, and
@@ -922,7 +922,7 @@ castableWhileSearching pid gs =
         else filter allowed (Game.zoneMembers Zone.Library pid gs)
 ```
 
-Add `import qualified Pawl.PlayerEffect as PlayerEffect` to `Pawl.Cast`.
+Add `import qualified Parun.PlayerEffect as PlayerEffect` to `Parun.Cast`.
 
 - [x] **Step 5: Write the card file**
 
@@ -935,9 +935,9 @@ Create `data/cards/rule-of-law.json` with exactly this content, on one line, wit
 `CardsSpec.checkFile` asserts **byte-stability** — the committed file must equal `Json.render (Codec.printingToJson p) <> "\n"` exactly. If it reports a mismatch, the render is authoritative: canonicalize the file through the codec rather than weakening the assertion.
 
 ```bash
-cabal repl lib:pawl <<'HS'
-import qualified Pawl.Codec as Codec
-import qualified Pawl.Json as Json
+cabal repl lib:parun <<'HS'
+import qualified Parun.Codec as Codec
+import qualified Parun.Json as Json
 import qualified Data.Text as T
 import qualified Data.Text.IO as TIO
 :{
@@ -955,7 +955,7 @@ Expected: no output (the file parsed and was re-rendered in place).
 
 - [x] **Step 6: Register the printing**
 
-In `source/test-suite/Pawl/Cards.hs`, add `ruleOfLawPrinting :: Printing.Printing` to the `Cards` record (at the end, after `hagOfInnerWeaknessPrinting`), `ruleOfLawPrinting_ <- loadPrinting "rule-of-law"` to `loadCards`, the field to the returned `MkCards`, and `ruleOfLawPrinting cards,` to `allPrintings`. Do **not** add it to any deck.
+In `source/test-suite/Parun/Cards.hs`, add `ruleOfLawPrinting :: Printing.Printing` to the `Cards` record (at the end, after `hagOfInnerWeaknessPrinting`), `ruleOfLawPrinting_ <- loadPrinting "rule-of-law"` to `loadCards`, the field to the returned `MkCards`, and `ruleOfLawPrinting cards,` to `allPrintings`. Do **not** add it to any deck.
 
 - [x] **Step 7: Run the tests to verify they pass**
 
@@ -967,11 +967,11 @@ If the "casting Rule of Law itself uses up the turn's one spell" case fails, the
 - [x] **Step 8: Commit**
 
 ```bash
-git add source/library/Pawl data/cards/rule-of-law.json source/test-suite pawl.cabal
+git add source/library/Parun data/cards/rule-of-law.json source/test-suite parun.cabal
 hooky fix
 git add -u
 hooky run
-git commit -m "feat(m4.5-p7): Pawl.PlayerEffect and the CR 601.3 casting gate
+git commit -m "feat(m4.5-p7): Parun.PlayerEffect and the CR 601.3 casting gate
 
 Rule of Law lands. Its ruling is its test: the spell that uses up the
 turn's allowance is Rule of Law itself, cast before the effect existed,
@@ -985,26 +985,26 @@ Co-Authored-By: Claude Opus 4.8 (1M context) <noreply@anthropic.com>"
 
 ---
 
-### Task 4: `Pawl.Cost`, CR 601.2f, and Thalia
+### Task 4: `Parun.Cost`, CR 601.2f, and Thalia
 
 The total-cost computation and the cost-increase arm, taxing both castability and payment. Taxing only one is the falsifier: tax castability but not payment and the player underpays; tax payment but not castability and the engine offers a cast that cannot be afforded — and there is no mid-announcement rewind (#56), so that is a wedged game.
 
 **Files:**
-- Create: `source/library/Pawl/Cost.hs`
+- Create: `source/library/Parun/Cost.hs`
 - Create: `data/cards/thalia-guardian-of-thraben.json`
-- Modify: `source/library/Pawl/PlayerEffect.hs` (`costAdjustments`, `matchesSpell`)
-- Modify: `source/library/Pawl/Type/Subtype.hs` (add `Soldier`), `source/library/Pawl/Mana.hs` (`subtypeMana`'s new arm), `source/library/Pawl/Codec.hs` (`subtypeToJson`/`jsonToSubtype`)
-- Modify: `source/library/Pawl/Cast.hs` (`castable`, `castableWhileSearching`, `castSpell` — the three cost sites)
-- Modify: `source/test-suite/Pawl/Cards.hs`
-- Test: `source/test-suite/Pawl/PlayerEffectSpec.hs`, `source/test-suite/Pawl/CardSpec.hs`
+- Modify: `source/library/Parun/PlayerEffect.hs` (`costAdjustments`, `matchesSpell`)
+- Modify: `source/library/Parun/Type/Subtype.hs` (add `Soldier`), `source/library/Parun/Mana.hs` (`subtypeMana`'s new arm), `source/library/Parun/Codec.hs` (`subtypeToJson`/`jsonToSubtype`)
+- Modify: `source/library/Parun/Cast.hs` (`castable`, `castableWhileSearching`, `castSpell` — the three cost sites)
+- Modify: `source/test-suite/Parun/Cards.hs`
+- Test: `source/test-suite/Parun/PlayerEffectSpec.hs`, `source/test-suite/Parun/CardSpec.hs`
 
 **Interfaces:**
 - Consumes: `PlayerEffect.applying` (Task 3).
-- Produces: `Pawl.Cost.total :: PlayerId -> ObjectId -> ManaCost -> GameState -> ManaCost`; `Pawl.Cost.applyAdjustments :: ([Natural], [Natural]) -> ManaCost -> ManaCost`; `Pawl.PlayerEffect.costAdjustments :: PlayerId -> ObjectId -> GameState -> ([Natural], [Natural])`; `Pawl.PlayerEffect.matchesSpell :: SpellCriterion -> ObjectId -> GameState -> Bool`; `Subtype.Soldier`; `Cards.thaliaPrinting :: Cards -> Printing`.
+- Produces: `Parun.Cost.total :: PlayerId -> ObjectId -> ManaCost -> GameState -> ManaCost`; `Parun.Cost.applyAdjustments :: ([Natural], [Natural]) -> ManaCost -> ManaCost`; `Parun.PlayerEffect.costAdjustments :: PlayerId -> ObjectId -> GameState -> ([Natural], [Natural])`; `Parun.PlayerEffect.matchesSpell :: SpellCriterion -> ObjectId -> GameState -> Bool`; `Subtype.Soldier`; `Cards.thaliaPrinting :: Cards -> Printing`.
 
 - [x] **Step 1: Write the failing tests**
 
-In `source/test-suite/Pawl/PlayerEffectSpec.hs`, add two groups and register both in `tests`:
+In `source/test-suite/Parun/PlayerEffectSpec.hs`, add two groups and register both in `tests`:
 
 ```haskell
 -- The CR 601.2f arithmetic, with no board at all. The unit half of the cost
@@ -1131,7 +1131,7 @@ thaliaTests cards =
 
 `red` and `blue` are the two `ManaSymbol` shorthands defined in `adjustmentTests` above; keep them as top-level bindings so both groups share them.
 
-In `source/test-suite/Pawl/CardSpec.hs`, add to `m45p7CardTests`:
+In `source/test-suite/Parun/CardSpec.hs`, add to `m45p7CardTests`:
 
 ```haskell
       HU.testCase "Thalia is a {1}{W} 2/1 Legendary Human Soldier with first strike and one IncreaseSpellCost ability" $
@@ -1154,17 +1154,17 @@ In `source/test-suite/Pawl/CardSpec.hs`, add to `m45p7CardTests`:
 - [x] **Step 2: Run the tests to verify they fail**
 
 Run: `cabal build all --enable-tests --enable-benchmarks`
-Expected: FAIL — `Could not find module 'Pawl.Cost'`, `Data constructor not in scope: Subtype.Soldier`, `Variable not in scope: Cards.thaliaPrinting`.
+Expected: FAIL — `Could not find module 'Parun.Cost'`, `Data constructor not in scope: Subtype.Soldier`, `Variable not in scope: Cards.thaliaPrinting`.
 
 - [x] **Step 3: Add the subtype**
 
-In `source/library/Pawl/Type/Subtype.hs`, append at the **end** of the constructor list (declaration order is the JSON's `Set.toAscList` order, so `Human` must keep preceding `Soldier`):
+In `source/library/Parun/Type/Subtype.hs`, append at the **end** of the constructor list (declaration order is the JSON's `Set.toAscList` order, so `Human` must keep preceding `Soldier`):
 
 ```haskell
   | Soldier -- CR 205.3m (a creature type; Thalia, Guardian of Thraben's)
 ```
 
-Add the matching arms to `subtypeToJson` and `jsonToSubtype` in `source/library/Pawl/Codec.hs`, in the same position. Add the arm `Subtype.Soldier -> Nothing` to `Mana.subtypeMana`, with the comment the existing creature-type arms carry:
+Add the matching arms to `subtypeToJson` and `jsonToSubtype` in `source/library/Parun/Codec.hs`, in the same position. Add the arm `Subtype.Soldier -> Nothing` to `Mana.subtypeMana`, with the comment the existing creature-type arms carry:
 
 ```haskell
   -- CR 205.3m: Soldier is a creature type, not a basic land type, so CR 305.6's
@@ -1174,7 +1174,7 @@ Add the matching arms to `subtypeToJson` and `jsonToSubtype` in `source/library/
 
 - [x] **Step 4: Add `costAdjustments` and `matchesSpell`**
 
-In `source/library/Pawl/PlayerEffect.hs`:
+In `source/library/Parun/PlayerEffect.hs`:
 
 ```haskell
 -- CR 613.11: does this spell match the criterion? Both inhabitants read the
@@ -1190,7 +1190,7 @@ matchesSpell criterion oid gs = case criterion of
 --
 -- Kept APART, never summed into one signed delta: CR 601.2f applies every
 -- increase before any reduction, and CR 118.7a gives a reduction a restriction
--- an increase does not have. Pawl.Cost.applyAdjustments is what consumes the
+-- an increase does not have. Parun.Cost.applyAdjustments is what consumes the
 -- pair; this function only decides membership.
 --
 -- matchesSpell is called only from inside an arm that already matched a
@@ -1215,24 +1215,24 @@ costAdjustments pid oid gs =
    in (Maybe.mapMaybe increaseOf effects, Maybe.mapMaybe reductionOf effects)
 ```
 
-- [x] **Step 5: Create `Pawl.Cost`**
+- [x] **Step 5: Create `Parun.Cost`**
 
-`source/library/Pawl/Cost.hs`:
+`source/library/Parun/Cost.hs`:
 
 ```haskell
--- CR 601.2f: what a spell's total cost IS. Pawl.Mana keeps pools, production and
+-- CR 601.2f: what a spell's total cost IS. Parun.Mana keeps pools, production and
 -- payment; this module keeps the cost itself, and is where P8's additional and
 -- alternative costs land.
-module Pawl.Cost where
+module Parun.Cost where
 
 import Numeric.Natural (Natural)
-import qualified Pawl.PlayerEffect as PlayerEffect
-import Pawl.Type.GameState (GameState)
-import Pawl.Type.ManaCost (ManaCost)
-import qualified Pawl.Type.ManaCost as ManaCost
-import qualified Pawl.Type.ManaSymbol as ManaSymbol
-import Pawl.Type.ObjectId (ObjectId)
-import Pawl.Type.PlayerId (PlayerId)
+import qualified Parun.PlayerEffect as PlayerEffect
+import Parun.Type.GameState (GameState)
+import Parun.Type.ManaCost (ManaCost)
+import qualified Parun.Type.ManaCost as ManaCost
+import qualified Parun.Type.ManaSymbol as ManaSymbol
+import Parun.Type.ObjectId (ObjectId)
+import Parun.Type.PlayerId (PlayerId)
 
 -- CR 601.2f: "The total cost is the mana cost or alternative cost (as determined
 -- in rule 601.2b), plus all additional costs and cost increases, and minus all
@@ -1295,9 +1295,9 @@ applyAdjustments adjustments cost =
    in ManaCost.MkManaCost (leading ++ filter isTyped symbols)
 ```
 
-- [x] **Step 6: Route the three cost sites through `Pawl.Cost`**
+- [x] **Step 6: Route the three cost sites through `Parun.Cost`**
 
-In `source/library/Pawl/Cast.hs`, add `import qualified Pawl.Cost as Cost` and change the three sites.
+In `source/library/Parun/Cast.hs`, add `import qualified Parun.Cost as Cost` and change the three sites.
 
 `castable`'s affordability line becomes:
 
@@ -1336,7 +1336,7 @@ Create `data/cards/thalia-guardian-of-thraben.json` with exactly this content, o
 {"name":"Thalia, Guardian of Thraben","manaCost":[{"type":"Generic","value":1},{"type":"OfType","value":{"type":"Colored","value":{"type":"White"}}}],"typeLine":{"supertypes":[{"type":"Legendary"}],"types":[{"type":"Creature"}],"subtypes":[{"type":"Human"},{"type":"Soldier"}]},"power":{"type":"Literal","value":2},"toughness":{"type":"Literal","value":1},"keywords":[{"type":"FirstStrike"}],"staticAbilities":[],"spell":{"modes":[{"effects":[],"targetSpecs":[]}],"selection":{"type":"ChooseExactly","value":1}},"activatedAbilities":[],"replacementEffects":[],"triggeredAbilities":[],"castingPermissions":[],"playerAbilities":[{"scope":{"type":"EachPlayer"},"effect":{"type":"IncreaseSpellCost","value":[{"type":"NoncreatureSpell"},1]}}]}
 ```
 
-Run the `regen` recipe from Task 3 Step 5 against `data/cards/thalia-guardian-of-thraben.json` and confirm it produces no output. Register `thaliaPrinting` in `source/test-suite/Pawl/Cards.hs` (record field, `loadCards` with slug `"thalia-guardian-of-thraben"`, `MkCards`, `allPrintings`). Do **not** add it to any deck.
+Run the `regen` recipe from Task 3 Step 5 against `data/cards/thalia-guardian-of-thraben.json` and confirm it produces no output. Register `thaliaPrinting` in `source/test-suite/Parun/Cards.hs` (record field, `loadCards` with slug `"thalia-guardian-of-thraben"`, `MkCards`, `allPrintings`). Do **not** add it to any deck.
 
 - [x] **Step 8: Run the tests to verify they pass**
 
@@ -1346,14 +1346,14 @@ Expected: PASS — `Adjustments` and `Thalia` green, the `CardSpec` shape assert
 - [x] **Step 9: Commit**
 
 ```bash
-git add source/library/Pawl data/cards/thalia-guardian-of-thraben.json source/test-suite pawl.cabal
+git add source/library/Parun data/cards/thalia-guardian-of-thraben.json source/test-suite parun.cabal
 hooky fix
 git add -u
 hooky run
-git commit -m "feat(m4.5-p7): Pawl.Cost and CR 601.2f, with Thalia as the gate
+git commit -m "feat(m4.5-p7): Parun.Cost and CR 601.2f, with Thalia as the gate
 
 Total cost taxes BOTH castability and payment: taxing one lets the
-player underpay or wedges the game on an unaffordable offer, and pawl
+player underpay or wedges the game on an unaffordable offer, and parun
 has no mid-announcement rewind. Increases and reductions stay two
 lists, because 601.2f orders them and 118.7a restricts only one.
 
@@ -1368,8 +1368,8 @@ The reduction producer, the `You` scope, and the one test that can tell CR 601.2
 
 **Files:**
 - Create: `data/cards/sapphire-medallion.json`
-- Modify: `source/test-suite/Pawl/Cards.hs`
-- Test: `source/test-suite/Pawl/PlayerEffectSpec.hs`, `source/test-suite/Pawl/CardSpec.hs`
+- Modify: `source/test-suite/Parun/Cards.hs`
+- Test: `source/test-suite/Parun/PlayerEffectSpec.hs`, `source/test-suite/Parun/CardSpec.hs`
 
 **Interfaces:**
 - Consumes: `Cost.total`, `Cost.applyAdjustments`, `PlayerEffect.costAdjustments` (Task 4); `Cards.thaliaPrinting` (Task 4).
@@ -1377,7 +1377,7 @@ The reduction producer, the `You` scope, and the one test that can tell CR 601.2
 
 - [x] **Step 1: Write the failing tests**
 
-In `source/test-suite/Pawl/PlayerEffectSpec.hs`, add a group and register it in `tests`:
+In `source/test-suite/Parun/PlayerEffectSpec.hs`, add a group and register it in `tests`:
 
 ```haskell
 -- Sapphire Medallion {2} Artifact: "Blue spells you cast cost {1} less to cast."
@@ -1482,7 +1482,7 @@ medallionTests cards =
         ]
 ```
 
-In `source/test-suite/Pawl/CardSpec.hs`, add to `m45p7CardTests`:
+In `source/test-suite/Parun/CardSpec.hs`, add to `m45p7CardTests`:
 
 ```haskell
       HU.testCase "Sapphire Medallion is a {2} artifact with one You ReduceSpellCost Blue ability" $
@@ -1514,7 +1514,7 @@ Run the `regen` recipe from Task 3 Step 5 against it; expect no output.
 
 - [x] **Step 4: Register the printing**
 
-In `source/test-suite/Pawl/Cards.hs`, add `sapphireMedallionPrinting` (record field, `loadCards` with slug `"sapphire-medallion"`, `MkCards`, `allPrintings`). Do **not** add it to any deck.
+In `source/test-suite/Parun/Cards.hs`, add `sapphireMedallionPrinting` (record field, `loadCards` with slug `"sapphire-medallion"`, `MkCards`, `allPrintings`). Do **not** add it to any deck.
 
 - [x] **Step 5: Run the tests to verify they pass**
 
@@ -1548,10 +1548,10 @@ The value-override arm, read off the casting path entirely — and the separatio
 
 **Files:**
 - Create: `data/cards/reliquary-tower.json`
-- Modify: `source/library/Pawl/PlayerEffect.hs` (`defaultMaximumHandSize`, `maximumHandSize`)
-- Modify: `source/library/Pawl/Engine.hs:128-138` (`discardToHandSize`)
-- Modify: `source/test-suite/Pawl/Cards.hs`
-- Test: `source/test-suite/Pawl/PlayerEffectSpec.hs`, `source/test-suite/Pawl/CardSpec.hs`
+- Modify: `source/library/Parun/PlayerEffect.hs` (`defaultMaximumHandSize`, `maximumHandSize`)
+- Modify: `source/library/Parun/Engine.hs:128-138` (`discardToHandSize`)
+- Modify: `source/test-suite/Parun/Cards.hs`
+- Test: `source/test-suite/Parun/PlayerEffectSpec.hs`, `source/test-suite/Parun/CardSpec.hs`
 
 **Interfaces:**
 - Consumes: `PlayerEffect.applying` (Task 3).
@@ -1559,7 +1559,7 @@ The value-override arm, read off the casting path entirely — and the separatio
 
 - [x] **Step 1: Write the failing tests**
 
-In `source/test-suite/Pawl/PlayerEffectSpec.hs`, add a group and register it in `tests`:
+In `source/test-suite/Parun/PlayerEffectSpec.hs`, add a group and register it in `tests`:
 
 ```haskell
 -- Reliquary Tower, a Land: "You have no maximum hand size. / {T}: Add {C}."
@@ -1609,7 +1609,7 @@ reliquaryTowerTests cards =
         ]
 ```
 
-In `source/test-suite/Pawl/CardSpec.hs`, add to `m45p7CardTests`:
+In `source/test-suite/Parun/CardSpec.hs`, add to `m45p7CardTests`:
 
 ```haskell
       HU.testCase "Reliquary Tower is a land with a You NoMaximumHandSize ability and a {T} colorless mana ability" $
@@ -1631,7 +1631,7 @@ In `source/test-suite/Pawl/CardSpec.hs`, add to `m45p7CardTests`:
                 _ -> HU.assertFailure "expected exactly one activated ability",
 ```
 
-`Modal.allEffects` here is `Pawl.Modal`'s; if `CardSpec` imports only `Pawl.Type.Modal`, use `Foldable.toList (Mode.effects m)` over the single mode instead, exactly as the P6 Master Thief assertion does.
+`Modal.allEffects` here is `Parun.Modal`'s; if `CardSpec` imports only `Parun.Type.Modal`, use `Foldable.toList (Mode.effects m)` over the single mode instead, exactly as the P6 Master Thief assertion does.
 
 - [x] **Step 2: Run the tests to verify they fail**
 
@@ -1640,7 +1640,7 @@ Expected: FAIL — `Variable not in scope: PlayerEffect.maximumHandSize`, `Cards
 
 - [x] **Step 3: Add `maximumHandSize`**
 
-In `source/library/Pawl/PlayerEffect.hs`:
+In `source/library/Parun/PlayerEffect.hs`:
 
 ```haskell
 -- CR 402.2: "each player has a maximum hand size, which is normally seven
@@ -1668,7 +1668,7 @@ maximumHandSize pid gs =
 
 - [x] **Step 4: Read it at the cleanup step**
 
-In `source/library/Pawl/Engine.hs`, `discardToHandSize` becomes:
+In `source/library/Parun/Engine.hs`, `discardToHandSize` becomes:
 
 ```haskell
 discardToHandSize :: PlayerId -> Game ()
@@ -1690,7 +1690,7 @@ discardToHandSize pid = do
         Monad.mapM_ (\oid -> Event.changeZone oid Zone.Graveyard) toDiscard
 ```
 
-Add `import qualified Pawl.PlayerEffect as PlayerEffect`. Drop the `Pawl.Setup` import **only** if nothing else in `Engine` uses it.
+Add `import qualified Parun.PlayerEffect as PlayerEffect`. Drop the `Parun.Setup` import **only** if nothing else in `Engine` uses it.
 
 - [x] **Step 5: Write the card file and register the printing**
 
@@ -1700,7 +1700,7 @@ Create `data/cards/reliquary-tower.json` with exactly this content, on one line,
 {"name":"Reliquary Tower","manaCost":null,"typeLine":{"supertypes":[],"types":[{"type":"Land"}],"subtypes":[]},"power":null,"toughness":null,"keywords":[],"staticAbilities":[],"spell":{"modes":[{"effects":[],"targetSpecs":[]}],"selection":{"type":"ChooseExactly","value":1}},"activatedAbilities":[{"cost":{"mana":null,"additional":[{"type":"TapSelf"}]},"modal":{"modes":[{"effects":[{"type":"AddMana","value":{"type":"Colorless"}}],"targetSpecs":[]}],"selection":{"type":"ChooseExactly","value":1}}}],"replacementEffects":[],"triggeredAbilities":[],"castingPermissions":[],"playerAbilities":[{"scope":{"type":"You"},"effect":{"type":"NoMaximumHandSize"}}]}
 ```
 
-Run the `regen` recipe from Task 3 Step 5 against it; expect no output. Register `reliquaryTowerPrinting` in `source/test-suite/Pawl/Cards.hs` (slug `"reliquary-tower"`). Do **not** add it to any deck.
+Run the `regen` recipe from Task 3 Step 5 against it; expect no output. Register `reliquaryTowerPrinting` in `source/test-suite/Parun/Cards.hs` (slug `"reliquary-tower"`). Do **not** add it to any deck.
 
 - [x] **Step 6: Run the tests to verify they pass**
 
@@ -1710,7 +1710,7 @@ Expected: PASS — `ReliquaryTower` green (all six cases), the `CardSpec` shape 
 - [x] **Step 7: Commit**
 
 ```bash
-git add source/library/Pawl data/cards/reliquary-tower.json source/test-suite
+git add source/library/Parun data/cards/reliquary-tower.json source/test-suite
 hooky fix
 git add -u
 hooky run
@@ -1727,18 +1727,18 @@ Co-Authored-By: Claude Opus 4.8 (1M context) <noreply@anthropic.com>"
 
 ---
 
-### Task 7: The stored carrier, and `Pawl.Expiry`'s third list
+### Task 7: The stored carrier, and `Parun.Expiry`'s third list
 
 `ActivePlayerEffect` on `GameState`, gathered by the same `applying`, expiring through P6's three sweeps. No opcode produces one yet; the tests hand-build them, exactly as `ExpirySpec` does for the other two carriers.
 
 **Files:**
-- Create: `source/library/Pawl/Type/ActivePlayerEffect.hs`
-- Modify: `source/library/Pawl/Type/GameState.hs` (new `playerEffects` field)
-- Modify: `source/library/Pawl/Setup.hs:57` and `source/test-suite/Pawl/Support.hs:840` (the two `MkGameState` sites)
-- Modify: `source/library/Pawl/PlayerEffect.hs` (`applying` grows its second carrier)
-- Modify: `source/library/Pawl/Expiry.hs` (all three sweeps grow a third list)
-- Modify: `source/test-suite/Pawl/Support.hs` (an `addPlayerEffect` fixture)
-- Test: `source/test-suite/Pawl/PlayerEffectSpec.hs`
+- Create: `source/library/Parun/Type/ActivePlayerEffect.hs`
+- Modify: `source/library/Parun/Type/GameState.hs` (new `playerEffects` field)
+- Modify: `source/library/Parun/Setup.hs:57` and `source/test-suite/Parun/Support.hs:840` (the two `MkGameState` sites)
+- Modify: `source/library/Parun/PlayerEffect.hs` (`applying` grows its second carrier)
+- Modify: `source/library/Parun/Expiry.hs` (all three sweeps grow a third list)
+- Modify: `source/test-suite/Parun/Support.hs` (an `addPlayerEffect` fixture)
+- Test: `source/test-suite/Parun/PlayerEffectSpec.hs`
 
 **Interfaces:**
 - Consumes: `PlayerEffect.applying`, `PlayerEffect.prohibitsCasting` (Task 3); `Expiry.Expiry`, `Expiry.dropAtCleanup`, `Expiry.dropAtHandoff`, `Expiry.sweepConditional` (P6).
@@ -1746,7 +1746,7 @@ Co-Authored-By: Claude Opus 4.8 (1M context) <noreply@anthropic.com>"
 
 - [x] **Step 1: Write the failing tests**
 
-In `source/test-suite/Pawl/Support.hs`, add the fixture:
+In `source/test-suite/Parun/Support.hs`, add the fixture:
 
 ```haskell
 -- Seed a stored player effect directly into GameState (bypasses resolving the
@@ -1774,7 +1774,7 @@ addPlayerEffect expiry scope effect controller gs =
    in gs1 {GameState.playerEffects = active : GameState.playerEffects gs1}
 ```
 
-In `source/test-suite/Pawl/PlayerEffectSpec.hs`, add a group and register it in `tests`:
+In `source/test-suite/Parun/PlayerEffectSpec.hs`, add a group and register it in `tests`:
 
 ```haskell
 -- The STORED carrier: a player effect that outlives the object that made it.
@@ -1836,24 +1836,24 @@ storedTests =
 - [x] **Step 2: Run the tests to verify they fail**
 
 Run: `cabal build all --enable-tests --enable-benchmarks`
-Expected: FAIL — `Could not find module 'Pawl.Type.ActivePlayerEffect'`, `GameState.playerEffects` not in scope.
+Expected: FAIL — `Could not find module 'Parun.Type.ActivePlayerEffect'`, `GameState.playerEffects` not in scope.
 
-- [x] **Step 3: Create `Pawl.Type.ActivePlayerEffect`**
+- [x] **Step 3: Create `Parun.Type.ActivePlayerEffect`**
 
 ```haskell
-module Pawl.Type.ActivePlayerEffect where
+module Parun.Type.ActivePlayerEffect where
 
-import Pawl.Type.Expiry (Expiry)
-import Pawl.Type.ObjectId (ObjectId)
-import Pawl.Type.PlayerEffect (PlayerEffect)
-import Pawl.Type.PlayerId (PlayerId)
-import Pawl.Type.PlayerScope (PlayerScope)
-import Pawl.Type.Timestamp (Timestamp)
+import Parun.Type.Expiry (Expiry)
+import Parun.Type.ObjectId (ObjectId)
+import Parun.Type.PlayerEffect (PlayerEffect)
+import Parun.Type.PlayerId (PlayerId)
+import Parun.Type.PlayerScope (PlayerScope)
+import Parun.Type.Timestamp (Timestamp)
 
 -- CR 611.1 / 613.11: a stored, resolution-generated player or rules-modifying
 -- continuous effect, held in GameState.playerEffects. The player-axis analogue of
 -- ActiveReplacement and ContinuousEffect: the printed carrier
--- (Pawl.Type.PlayerStaticAbility) is re-derived live from the battlefield, while
+-- (Parun.Type.PlayerStaticAbility) is re-derived live from the battlefield, while
 -- these are stored because the object that made them may be long gone.
 --
 -- `controller` is STORED, where ContinuousEffect stores none. It has to be. A
@@ -1869,7 +1869,7 @@ import Pawl.Type.Timestamp (Timestamp)
 -- affected when that continuous effect began". There is no stored-set analogue of
 -- Affected.TheseObjects here, and PlayerScope is the same type on both carriers.
 --
--- `expiry` decides when a Pawl.Expiry sweep drops it (CR 514.2, 611.2a, 611.2b).
+-- `expiry` decides when a Parun.Expiry sweep drops it (CR 514.2, 611.2a, 611.2b).
 --
 -- `timestamp` is stored even though nothing observes it yet: CR 613.10 and 613.11
 -- both order by timestamp (CR 613.7), and no two of P7's constructors conflict,
@@ -1892,13 +1892,13 @@ data ActivePlayerEffect = MkActivePlayerEffect
 
 - [x] **Step 4: Add the `GameState` field and both construction sites**
 
-In `source/library/Pawl/Type/GameState.hs`, add the import and this field beside `replacements`:
+In `source/library/Parun/Type/GameState.hs`, add the import and this field beside `replacements`:
 
 ```haskell
     -- CR 611.1 / 613.11: stored PLAYER and RULES-modifying continuous effects
-    -- from resolutions (Silence), each with an expiry the Pawl.Expiry sweeps
+    -- from resolutions (Silence), each with an expiry the Parun.Expiry sweeps
     -- consult. The third carrier sharing that vocabulary. A permanent's printed
-    -- player abilities are NOT here -- Pawl.PlayerEffect re-derives those live.
+    -- player abilities are NOT here -- Parun.PlayerEffect re-derives those live.
     playerEffects :: [ActivePlayerEffect],
 ```
 
@@ -1906,11 +1906,11 @@ Add `GameState.playerEffects = [],` to `Setup.emptyGame`'s record (beside `GameS
 
 - [x] **Step 5: Grow `applying`'s second carrier**
 
-In `source/library/Pawl/PlayerEffect.hs`, `applying` gains the stored half. The `printed` binding is unchanged; add:
+In `source/library/Parun/PlayerEffect.hs`, `applying` gains the stored half. The `printed` binding is unchanged; add:
 
 ```haskell
       -- CR 611.2c: the stored carrier. Its controller is read off the record and
-      -- never re-derived -- see Pawl.Type.ActivePlayerEffect -- while its scope is
+      -- never re-derived -- see Parun.Type.ActivePlayerEffect -- while its scope is
       -- resolved live, exactly as the printed carrier's is.
       storedOne active =
         ( ActivePlayerEffect.controller active,
@@ -1921,9 +1921,9 @@ In `source/library/Pawl/PlayerEffect.hs`, `applying` gains the stored half. The 
    in map effectOf (filter keep (printed ++ stored))
 ```
 
-- [x] **Step 6: Grow `Pawl.Expiry`'s three sweeps**
+- [x] **Step 6: Grow `Parun.Expiry`'s three sweeps**
 
-In `source/library/Pawl/Expiry.hs`, each of `dropAtCleanup`, `dropAtHandoff` and `sweepConditional` gains a `keepPlayerEffect` and a third field update. The module's own comment already records why the sweeps are shared — "the two lists lived in two modules, not because they differed" — so extend it to say **three** carriers.
+In `source/library/Parun/Expiry.hs`, each of `dropAtCleanup`, `dropAtHandoff` and `sweepConditional` gains a `keepPlayerEffect` and a third field update. The module's own comment already records why the sweeps are shared — "the two lists lived in two modules, not because they differed" — so extend it to say **three** carriers.
 
 `dropAtCleanup`:
 
@@ -1966,7 +1966,7 @@ Expected: PASS — `Stored` green (all six cases), everything else unchanged. No
 - [x] **Step 8: Commit**
 
 ```bash
-git add source/library/Pawl source/test-suite pawl.cabal
+git add source/library/Parun source/test-suite parun.cabal
 hooky fix
 git add -u
 hooky run
@@ -1988,11 +1988,11 @@ The opcode that fills the stored carrier, and the last gate card — the one tha
 
 **Files:**
 - Create: `data/cards/silence.json`
-- Modify: `source/library/Pawl/Type/Effect.hs` (new constructor)
-- Modify: `source/library/Pawl/Resolve.hs` (five exhaustive matches plus the executor arm)
-- Modify: `source/library/Pawl/Codec.hs:992-1063` (`effectToJson`/`jsonToEffect`)
-- Modify: `source/test-suite/Pawl/Cards.hs`
-- Test: `source/test-suite/Pawl/PlayerEffectSpec.hs`, `source/test-suite/Pawl/CodecSpec.hs`, `source/test-suite/Pawl/CardSpec.hs`
+- Modify: `source/library/Parun/Type/Effect.hs` (new constructor)
+- Modify: `source/library/Parun/Resolve.hs` (five exhaustive matches plus the executor arm)
+- Modify: `source/library/Parun/Codec.hs:992-1063` (`effectToJson`/`jsonToEffect`)
+- Modify: `source/test-suite/Parun/Cards.hs`
+- Test: `source/test-suite/Parun/PlayerEffectSpec.hs`, `source/test-suite/Parun/CodecSpec.hs`, `source/test-suite/Parun/CardSpec.hs`
 
 **Interfaces:**
 - Consumes: `ActivePlayerEffect`, `GameState.playerEffects` (Task 7); `Expiry.arm` (P6).
@@ -2000,7 +2000,7 @@ The opcode that fills the stored carrier, and the last gate card — the one tha
 
 - [x] **Step 1: Write the failing tests**
 
-In `source/test-suite/Pawl/CodecSpec.hs`, add to the `"effect"` group:
+In `source/test-suite/Parun/CodecSpec.hs`, add to the `"effect"` group:
 
 ```haskell
           HU.testCase "AffectPlayers round-trips" $
@@ -2011,7 +2011,7 @@ In `source/test-suite/Pawl/CodecSpec.hs`, add to the `"effect"` group:
               (Effect.AffectPlayers Duration.UntilEndOfTurn PlayerScope.Opponents PlayerEffect.CantCastSpells),
 ```
 
-In `source/test-suite/Pawl/PlayerEffectSpec.hs`, add a group and register it in `tests`:
+In `source/test-suite/Parun/PlayerEffectSpec.hs`, add a group and register it in `tests`:
 
 ```haskell
 -- Silence {W} Instant: "Your opponents can't cast spells this turn."
@@ -2091,7 +2091,7 @@ silenceTests cards =
         ]
 ```
 
-In `source/test-suite/Pawl/CardSpec.hs`, add to `m45p7CardTests`:
+In `source/test-suite/Parun/CardSpec.hs`, add to `m45p7CardTests`:
 
 ```haskell
       HU.testCase "Silence is a {W} instant whose one effect is AffectPlayers UntilEndOfTurn Opponents CantCastSpells" $
@@ -2116,7 +2116,7 @@ Expected: FAIL — `Data constructor not in scope: Effect.AffectPlayers`, `Varia
 
 - [x] **Step 3: Add the opcode**
 
-In `source/library/Pawl/Type/Effect.hs`, add the two imports (`Pawl.Type.PlayerEffect (PlayerEffect)`, `Pawl.Type.PlayerScope (PlayerScope)`) and append:
+In `source/library/Parun/Type/Effect.hs`, add the two imports (`Parun.Type.PlayerEffect (PlayerEffect)`, `Parun.Type.PlayerScope (PlayerScope)`) and append:
 
 ```haskell
   | -- CR 611.1 / 613.11: install a stored PLAYER or RULES-modifying continuous
@@ -2131,9 +2131,9 @@ In `source/library/Pawl/Type/Effect.hs`, add the two imports (`Pawl.Type.PlayerE
     AffectPlayers Duration PlayerScope PlayerEffect
 ```
 
-- [x] **Step 4: Add the six `Pawl.Resolve` arms**
+- [x] **Step 4: Add the six `Parun.Resolve` arms**
 
-In `source/library/Pawl/Resolve.hs`, add to each existing exhaustive match:
+In `source/library/Parun/Resolve.hs`, add to each existing exhaustive match:
 
 - `slotsOf`: `Effect.AffectPlayers {} -> Set.empty`
 - `readsX`: `Effect.AffectPlayers {} -> False`
@@ -2170,7 +2170,7 @@ and the executor arm in `applyEffect`, beside `Effect.Replace`:
 
 - [x] **Step 5: Add the codec arms**
 
-In `source/library/Pawl/Codec.hs`, add to `effectToJson`:
+In `source/library/Parun/Codec.hs`, add to `effectToJson`:
 
 ```haskell
   Effect.AffectPlayers d s pe -> Json.tagged (Text.pack "AffectPlayers") (Just (Array [durationToJson d, playerScopeToJson s, playerEffectToJson pe]))
@@ -2192,7 +2192,7 @@ Create `data/cards/silence.json` with exactly this content, on one line, with a 
 {"name":"Silence","manaCost":[{"type":"OfType","value":{"type":"Colored","value":{"type":"White"}}}],"typeLine":{"supertypes":[],"types":[{"type":"Instant"}],"subtypes":[]},"power":null,"toughness":null,"keywords":[],"staticAbilities":[],"spell":{"modes":[{"effects":[{"type":"AffectPlayers","value":[{"type":"UntilEndOfTurn"},{"type":"Opponents"},{"type":"CantCastSpells"}]}],"targetSpecs":[]}],"selection":{"type":"ChooseExactly","value":1}},"activatedAbilities":[],"replacementEffects":[],"triggeredAbilities":[],"castingPermissions":[]}
 ```
 
-Run the `regen` recipe from Task 3 Step 5 against it; expect no output. Register `silencePrinting` in `source/test-suite/Pawl/Cards.hs` (slug `"silence"`). Do **not** add it to any deck.
+Run the `regen` recipe from Task 3 Step 5 against it; expect no output. Register `silencePrinting` in `source/test-suite/Parun/Cards.hs` (slug `"silence"`). Do **not** add it to any deck.
 
 - [x] **Step 7: Run the tests to verify they pass**
 
@@ -2204,7 +2204,7 @@ If the "reaches a spell that did not exist when it began" case fails with bob st
 - [x] **Step 8: Commit**
 
 ```bash
-git add source/library/Pawl data/cards/silence.json source/test-suite
+git add source/library/Parun data/cards/silence.json source/test-suite
 hooky fix
 git add -u
 hooky run
@@ -2226,7 +2226,7 @@ Every `(#N)` placeholder the earlier tasks left in the code is replaced here wit
 
 **Files:**
 - Modify: every source file carrying a `(#N)` placeholder
-- Modify: `source/library/Pawl/Type/SpellCriterion.hs` (confirm the P9 citation), `source/library/Pawl/Cast.hs`, `source/library/Pawl/Cost.hs`, `source/library/Pawl/PlayerEffect.hs`, `source/library/Pawl/Type/ActivePlayerEffect.hs`
+- Modify: `source/library/Parun/Type/SpellCriterion.hs` (confirm the P9 citation), `source/library/Parun/Cast.hs`, `source/library/Parun/Cost.hs`, `source/library/Parun/PlayerEffect.hs`, `source/library/Parun/Type/ActivePlayerEffect.hs`
 - Modify: `docs/progress.md`, `CLAUDE.md`, `docs/superpowers/specs/2026-07-20-m4.5-closed-half-gaps-design.md`
 
 - [x] **Step 1: File the eleven new issues**
@@ -2235,16 +2235,16 @@ Run each `gh issue create` and record the number it prints. Labels come from CLA
 
 | # | Title | Labels | Body must carry |
 |---|---|---|---|
-| A | Activated-ability cost modification has no producer | `gap`, `expires:card-driven` | `AbilityCost` is untouched by P7; `Pawl.Cost.total` is asked only about spells. The census's `ReduceManaCostOfActivatedAbilities` class has no producer. Expires on a card that taxes or discounts an activation (Rings of Brighthearth-adjacent). |
-| B | CR 118.7e's "apply multiple cost reductions in any order" is elided | `elision`, `expires:card-driven` | Every reduction P7 can express is an amount of generic mana routed to one component by CR 118.7a, so summing them is equivalent to every order and the prompt is unobservable. `Pawl.Cost.applyAdjustments` sums. Expires on a coloured or hybrid reduction, which CR 118.7e explicitly prompts. |
+| A | Activated-ability cost modification has no producer | `gap`, `expires:card-driven` | `AbilityCost` is untouched by P7; `Parun.Cost.total` is asked only about spells. The census's `ReduceManaCostOfActivatedAbilities` class has no producer. Expires on a card that taxes or discounts an activation (Rings of Brighthearth-adjacent). |
+| B | CR 118.7e's "apply multiple cost reductions in any order" is elided | `elision`, `expires:card-driven` | Every reduction P7 can express is an amount of generic mana routed to one component by CR 118.7a, so summing them is equivalent to every order and the prompt is unobservable. `Parun.Cost.applyAdjustments` sums. Expires on a coloured or hybrid reduction, which CR 118.7e explicitly prompts. |
 | C | CR 118.7b–g non-generic cost reductions have no producer | `gap`, `expires:card-driven` | Colored, colorless, hybrid, Phyrexian and snow reductions are unrepresentable: `ReduceSpellCost` carries a bare `Natural` of generic mana. Expires on a card whose reduction names a mana type. |
 | D | CR 613.10's player-affecting tier has no producer | `gap`, `expires:card-driven` | P7 implements CR 613.11's rules tier only. 613.10 ("an effect might give a player protection from red") is a genuinely distinct tier applied in timestamp order after object characteristics are determined, and nothing produces one. Expires on a card granting a player protection or shroud. |
-| E | CR 613.10/613.11 timestamp ordering is not implemented | `rules-correctness`, `expires:card-driven` | Both rules order by timestamp (CR 613.7). `ActivePlayerEffect` stores one and the printed carrier could take its permanent's, but `Pawl.PlayerEffect.applying` returns effects unsorted. None of P7's five constructors conflicts with another, so the order is unobservable; the fix is a sort, not a migration. Expires on **Null Profusion** + Reliquary Tower, the pair Reliquary Tower's own ruling names. |
-| F | CR 601.2f's "locked in" total cost is recomputed rather than stored | `rules-correctness`, `expires:card-driven` | CR 601.2f locks the total cost in once it is determined; pawl recomputes it on demand at castability and again at payment. Nothing in the pool can change a cost between announcement and payment, so the two always agree. Expires on an effect that changes a cost mid-announcement. |
+| E | CR 613.10/613.11 timestamp ordering is not implemented | `rules-correctness`, `expires:card-driven` | Both rules order by timestamp (CR 613.7). `ActivePlayerEffect` stores one and the printed carrier could take its permanent's, but `Parun.PlayerEffect.applying` returns effects unsorted. None of P7's five constructors conflicts with another, so the order is unobservable; the fix is a sort, not a migration. Expires on **Null Profusion** + Reliquary Tower, the pair Reliquary Tower's own ruling names. |
+| F | CR 601.2f's "locked in" total cost is recomputed rather than stored | `rules-correctness`, `expires:card-driven` | CR 601.2f locks the total cost in once it is determined; parun recomputes it on demand at castability and again at payment. Nothing in the pool can change a cost between announcement and payment, so the two always agree. Expires on an effect that changes a cost mid-announcement. |
 | G | CR 601.3a's quality-changing prohibitions are unrepresentable | `gap`, `expires:card-driven` | `PlayerEffect.prohibitsCasting` takes no `ObjectId`, because both of P7's prohibitions are quality-free. CR 601.3a's worked example is **Void Winnower**; the fix widens the signature rather than adding a constructor. Expires on Void Winnower. |
 | H | Player-scoped casting and land-play permissions have no producer | `gap`, `expires:card-driven` | `Card.castingPermissions` is object-scoped (Panglacial Wurm). The player-scoped sibling — extra land drops, cast-from-graveyard — has no carrier and no producer. Expires on Exploration or Yawgmoth's Will. |
-| I | No card produces a conditional or turn-relative stored player effect | `gap`, `expires:card-driven` | `Pawl.Expiry`'s three sweeps handle `While` and `AtTurnOf` on `GameState.playerEffects` by construction, but every card in the pool arms `AtCleanup`, so those paths are covered only by hand-built fixtures. The sibling of #84 on the third carrier. Expires on a conditional-duration player effect. |
-| J | `Cast.castSpell` computes the total cost against an object still in hand | `rules-correctness`, `expires:card-driven` | CR 601.2f runs after 601.2a has moved the spell to the stack; pawl pays first, so `SpellCriterion` is evaluated against the object's *hand* projection. Newly load-bearing, since the total cost now depends on the spell's projected characteristics. Unreached today — nothing in the pool projects differently in hand than on the stack. Adjacent to #56. Expires on a card whose type or colour differs between the two zones. |
+| I | No card produces a conditional or turn-relative stored player effect | `gap`, `expires:card-driven` | `Parun.Expiry`'s three sweeps handle `While` and `AtTurnOf` on `GameState.playerEffects` by construction, but every card in the pool arms `AtCleanup`, so those paths are covered only by hand-built fixtures. The sibling of #84 on the third carrier. Expires on a conditional-duration player effect. |
+| J | `Cast.castSpell` computes the total cost against an object still in hand | `rules-correctness`, `expires:card-driven` | CR 601.2f runs after 601.2a has moved the spell to the stack; parun pays first, so `SpellCriterion` is evaluated against the object's *hand* projection. Newly load-bearing, since the total cost now depends on the spell's projected characteristics. Unreached today — nothing in the pool projects differently in hand than on the stack. Adjacent to #56. Expires on a card whose type or colour differs between the two zones. |
 | K | Turn-structure skips are replacement effects and have no producer | `gap`, `expires:card-driven` | The gap census (`docs/mtgish-gap-census.md` §3.2) lists `SkipsUntapStep`/`SkipsDrawStep`/`SkipsMainPhase` under `PlayerEffect`; **CR 614.1b is explicit that "effects that use the word 'skip' are replacement effects"**, so they belong on P5's `ReplacementEffect`, not this axis. Filed so the census's misplacement is not followed by a later phase. `Engine.skipsDraw`'s CR 103.7a first-turn skip is a turn-based rule, not an effect, and stays where it is. Expires on a skip card, built on P5. |
 
 - [x] **Step 2: Sweep the `(#N)` placeholders and confirm the cited ones**
@@ -2255,18 +2255,18 @@ Replace each hit with the matching issue number, keeping the comment to what is 
 
 | File | Placeholder | Issue |
 |---|---|---|
-| `Pawl/PlayerEffect.hs`, `prohibitsCasting`'s comment | the missing `ObjectId` parameter | G |
-| `Pawl/Cost.hs`, `applyAdjustments`'s comment | the summed reductions | B |
-| `Pawl/Cast.hs`, `castSpell`'s `paidCost` comment | the hand-zone projection | J |
-| `Pawl/Type/ActivePlayerEffect.hs`, the `timestamp` comment | the unimplemented order | E |
+| `Parun/PlayerEffect.hs`, `prohibitsCasting`'s comment | the missing `ObjectId` parameter | G |
+| `Parun/Cost.hs`, `applyAdjustments`'s comment | the summed reductions | B |
+| `Parun/Cast.hs`, `castSpell`'s `paidCost` comment | the hand-zone projection | J |
+| `Parun/Type/ActivePlayerEffect.hs`, the `timestamp` comment | the unimplemented order | E |
 
 Add citations at three more sites that this plan does not pre-place — write them now:
 
-- `Pawl/Type/PlayerEffect.hs`, on `ReduceSpellCost`: reductions are an amount of generic mana only (C).
-- `Pawl/Type/ActivePlayerEffect.hs`, on `expiry`: no card arms anything but `AtCleanup` on this carrier (I).
-- `Pawl/Cost.hs`, on `total`: additional and alternative costs are not part of the total (A is the ability half; the spell half is **#4**, P8 — cite `#4`, do not file a duplicate).
+- `Parun/Type/PlayerEffect.hs`, on `ReduceSpellCost`: reductions are an amount of generic mana only (C).
+- `Parun/Type/ActivePlayerEffect.hs`, on `expiry`: no card arms anything but `AtCleanup` on this carrier (I).
+- `Parun/Cost.hs`, on `total`: additional and alternative costs are not part of the total (A is the ability half; the spell half is **#4**, P8 — cite `#4`, do not file a duplicate).
 
-Confirm (do not re-file): `#38`/`#39`/`#40` are the P9 filter-language deferral and `Pawl.Type.SpellCriterion`'s module comment already names them as its siblings; **`SpellCriterion` joins that list as a fourth member** — say so in `SpellCriterion`'s comment and note it in the completion entry, but do **not** close any of them.
+Confirm (do not re-file): `#38`/`#39`/`#40` are the P9 filter-language deferral and `Parun.Type.SpellCriterion`'s module comment already names them as its siblings; **`SpellCriterion` joins that list as a fourth member** — say so in `SpellCriterion`'s comment and note it in the completion entry, but do **not** close any of them.
 
 Run: `grep -rn '(#N)' source/`
 Expected: no output.
@@ -2276,25 +2276,25 @@ Expected: no output.
 Run each and confirm the expected result:
 
 ```bash
-# The FIRST INVARIANT's audit: Pawl.PlayerEffect is the sole rules home of casing
-# on this axis. Pawl.Type.* modules only declare, Pawl.Codec only encodes, and
-# Pawl.Resolve names AffectPlayers as an opcode without inspecting its payload.
+# The FIRST INVARIANT's audit: Parun.PlayerEffect is the sole rules home of casing
+# on this axis. Parun.Type.* modules only declare, Parun.Codec only encodes, and
+# Parun.Resolve names AffectPlayers as an opcode without inspecting its payload.
 grep -rln 'PlayerEffect\.\(CantCastSpells\|CantCastMoreThan\|IncreaseSpellCost\|ReduceSpellCost\|NoMaximumHandSize\)\|PlayerScope\.\(You\|Opponents\|EachPlayer\)\|SpellCriterion\.\(NoncreatureSpell\|SpellOfColor\)' source/library/ \
-  | grep -v 'Pawl/PlayerEffect.hs\|Pawl/Codec.hs\|Pawl/Type/'          # no output
+  | grep -v 'Parun/PlayerEffect.hs\|Parun/Codec.hs\|Parun/Type/'          # no output
 
 # The layer system is untouched: this axis is a sibling tier, not a layer.
 # HEAD~8 is the commit before Task 1 (eight task commits are in at this point).
-git diff --stat HEAD~8 -- source/library/Pawl/Projection.hs source/library/Pawl/Type/Layer.hs \
-  source/library/Pawl/Type/Modification.hs source/library/Pawl/Type/Affected.hs \
-  source/library/Pawl/Type/ContinuousEffect.hs source/library/Pawl/Type/StaticAbility.hs \
-  source/library/Pawl/Type/Player.hs                                    # no output
+git diff --stat HEAD~8 -- source/library/Parun/Projection.hs source/library/Parun/Type/Layer.hs \
+  source/library/Parun/Type/Modification.hs source/library/Parun/Type/Affected.hs \
+  source/library/Parun/Type/ContinuousEffect.hs source/library/Parun/Type/StaticAbility.hs \
+  source/library/Parun/Type/Player.hs                                    # no output
 
 # The stored/printed split's audit from the other side: no card data may name a
 # stored player effect.
 grep -rn 'ActivePlayerEffect' data/                                     # no output
 
 # P8's surface is untouched.
-git diff --stat HEAD~8 -- source/library/Pawl/Type/AdditionalCost.hs source/library/Pawl/Type/AbilityCost.hs   # no output
+git diff --stat HEAD~8 -- source/library/Parun/Type/AdditionalCost.hs source/library/Parun/Type/AbilityCost.hs   # no output
 
 grep -c -- '- \[ \] \*\*Step' docs/superpowers/plans/2026-07-22-p7-player-effects.md   # counts down to 0
 cabal clean && cabal build all --enable-tests --enable-benchmarks       # warning-free
@@ -2312,9 +2312,9 @@ cabal bench                                                             # three 
 One entry, in the file's established voice, recording what P7 *established* — not what is left. It must state:
 
 - **the five gate cards and what each falsified** — Rule of Law: the count is a fold over P4's whole turn log, because the spell that used up the allowance is Rule of Law itself, cast before the effect existed, and the counted event is the *cast* (a countered spell still counts); Thalia: the tax lands on both castability and payment, since taxing one underpays and taxing the other wedges a game with no rewind (#56); Sapphire Medallion: CR 118.7a, a reduction takes only the generic component — `{1}` off `{U}` leaves `{U}` — and, crossed with Thalia on a cost with *no* generic component, the one shape that can tell CR 601.2f's order from its reverse; Reliquary Tower: `Nothing` is "no maximum hand size", and CR 402.2 is now its own rule and its own seven, separate from CR 103.5's; Silence: CR 611.2c's third sentence — a stored rules-modifying effect's scope is never frozen, or the card does literally nothing;
-- **the structural fact the phase rests on** — CR 613.10/613.11 put this axis *outside* the layer system. There is no new `Layer`, no new `Modification`, and `Pawl.Projection` was not edited. Name the mechanical audit in Step 3 that proves it;
+- **the structural fact the phase rests on** — CR 613.10/613.11 put this axis *outside* the layer system. There is no new `Layer`, no new `Modification`, and `Parun.Projection` was not edited. Name the mechanical audit in Step 3 that proves it;
 - **the census correction** — `SkipsUntapStep`/`SkipsDrawStep`/`SkipsMainPhase` are **not** on this axis: CR 614.1b makes a skip a replacement effect, so they belong on P5's carrier. Filed as issue K so a later phase does not follow §3.2's placement;
-- **what was added** — `Pawl.Type.PlayerEffect`, `PlayerScope`, `SpellCriterion`, `PlayerStaticAbility`, `ActivePlayerEffect`; `Pawl.PlayerEffect` (`applying`, `inScope`, `prohibitsCasting`, `castsThisTurn`, `costAdjustments`, `matchesSpell`, `maximumHandSize`, `defaultMaximumHandSize`) and `Pawl.Cost` (`total`, `applyAdjustments`); `Card.playerAbilities`, `GameState.playerEffects`, `Effect.AffectPlayers`, `GameEvent.SpellCast`, `Event.castOf`, `Subtype.Soldier`; six read sites; five card files;
+- **what was added** — `Parun.Type.PlayerEffect`, `PlayerScope`, `SpellCriterion`, `PlayerStaticAbility`, `ActivePlayerEffect`; `Parun.PlayerEffect` (`applying`, `inScope`, `prohibitsCasting`, `castsThisTurn`, `costAdjustments`, `matchesSpell`, `maximumHandSize`, `defaultMaximumHandSize`) and `Parun.Cost` (`total`, `applyAdjustments`); `Card.playerAbilities`, `GameState.playerEffects`, `Effect.AffectPlayers`, `GameEvent.SpellCast`, `Event.castOf`, `Subtype.Soldier`; six read sites; five card files;
 - **the four departures from the spec** listed at the top of this plan, with their reasons;
 - **no prompt was added, and one was asked less often** — `Prompt.ChooseDiscard` is skipped entirely for a player with no maximum hand size, which is the absence of a choice rather than the making of one. The one elision is CR 118.7e's reduction order (issue B), unobservable while every reduction is generic;
 - **tracking** — closes **#3** (M4.5 P7) and with it git-bug `c5a985d` (GAP-P), and the *modification* half of GAP-Co; **#4** (P8, the payment half) stays open; #38/#39/#40 are cited and **not** retired, with `SpellCriterion` joining that list as a fourth member; eleven new issues filed (A–K above) with their real numbers;
@@ -2336,7 +2336,7 @@ One entry, in the file's established voice, recording what P7 *established* — 
 - [x] **Step 7: Commit**
 
 ```bash
-git add docs/progress.md CLAUDE.md docs/superpowers/specs/2026-07-20-m4.5-closed-half-gaps-design.md source/library/Pawl
+git add docs/progress.md CLAUDE.md docs/superpowers/specs/2026-07-20-m4.5-closed-half-gaps-design.md source/library/Parun
 hooky fix
 git add -u
 hooky run
@@ -2376,14 +2376,14 @@ Expected: `0`.
 | §2.3 `SpellCriterion`, the third criterion sibling reading the projection | Task 1 (the type), Task 4 (`matchesSpell`) |
 | §2.4 the printed carrier | Task 1 |
 | §2.4 the stored carrier, its baked controller and its stamped timestamp | Task 7 |
-| §2.5 `Pawl.PlayerEffect` as the sole casing home; `prohibitsCasting` | Task 3 |
+| §2.5 `Parun.PlayerEffect` as the sole casing home; `prohibitsCasting` | Task 3 |
 | §2.5 `costAdjustments` | Task 4 |
 | §2.5 `maximumHandSize` | Task 6 |
-| §2.6 `Pawl.Cost` and CR 601.2f's three steps | Task 4 (steps 1–3, plus the CR 118.7a floor), Task 5 (the order, end to end) |
+| §2.6 `Parun.Cost` and CR 601.2f's three steps | Task 4 (steps 1–3, plus the CR 118.7a floor), Task 5 (the order, end to end) |
 | §2.7 `GameEvent.SpellCast`, and why the count is free | Task 2 (the event), Task 3 (`castsThisTurn` and the turn-handoff test) |
-| §2.8 the six read sites | `Cast.castable` and `castableWhileSearching`: Tasks 3 and 4; `Cast.castSpell`: Tasks 2 and 4; `Engine.discardToHandSize`: Task 6; `Pawl.Expiry`: Task 7; `Pawl.Resolve`: Task 8 |
+| §2.8 the six read sites | `Cast.castable` and `castableWhileSearching`: Tasks 3 and 4; `Cast.castSpell`: Tasks 2 and 4; `Engine.discardToHandSize`: Task 6; `Parun.Expiry`: Task 7; `Parun.Resolve`: Task 8 |
 | §2.9 the `AffectPlayers` opcode | Task 8 |
-| §2.10 `Pawl.Expiry`'s third carrier | Task 7 |
+| §2.10 `Parun.Expiry`'s third carrier | Task 7 |
 | §2.11 serialization: codecs for the card data, none for the stored record | Tasks 1 and 8 (codecs), Task 7 (`ActivePlayerEffect` deliberately gets none), Task 9 Step 3 (the `grep -rn 'ActivePlayerEffect' data/` audit) |
 | §3 the two invariants | Task 9 Step 3's first two greps (the casing surface, the untouched layer system); the no-choice half is recorded in Task 9 Step 4 |
 | §4 what the phase does not touch | Task 9 Step 3's second and fourth greps |

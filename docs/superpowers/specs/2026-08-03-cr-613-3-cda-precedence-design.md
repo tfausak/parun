@@ -99,8 +99,8 @@ applied. Those are CR
 604.3a(2)'s list of what makes a static ability characteristic-defining: "it is
 printed on the card it affects, it was granted to the token it affects by the effect
 that created the token, or it was acquired by the object it affects as the result of
-a copy effect or text-changing effect" — minus the token clause, which pawl covers at
-the seed, and minus the text-change clause, for which pawl has no keyword writer today
+a copy effect or text-changing effect" — minus the token clause, which parun covers at
+the seed, and minus the text-change clause, for which parun has no keyword writer today
 (`Layer.Text`'s one modification is `ChangeSubtypeWord`, which touches subtypes alone).
 Reading the partial gets the rule right by construction rather than by a test.
 
@@ -208,7 +208,7 @@ move across unchanged in shape.
 
 ## 4. Tests
 
-In `Pawl.ColorSpec`, gameplay-level, plus one projection assertion.
+In `Parun.ColorSpec`, gameplay-level, plus one projection assertion.
 
 | | Setup | Asserted | What a wrong ordering gives |
 |---|---|---|---|

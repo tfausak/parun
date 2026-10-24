@@ -2,7 +2,7 @@
 
 ## The problem
 
-Pawl has no stickers, no sticker sheets and no ticket counters. CR 123 makes a
+Parun has no stickers, no sticker sheets and no ticket counters. CR 123 makes a
 sticker a marker on an object that is not a counter, a token or an object, that
 survives a move into a public zone (an exception to CR 400.7) and that is not
 copiable. Four kinds do four different things: art (a bare marker), name (a
@@ -30,10 +30,10 @@ tracked. Four units, landed in order, this spec committed with the first:
 
 Out, each filed with an issue in the unit named:
 
-- CR 123.2a's "at least ten unique sheets" is deck validation, which pawl does
+- CR 123.2a's "at least ten unique sheets" is deck validation, which parun does
   not do (related to #4458). Unit 1.
 - Whether a Shahrazad subgame (CR 729.2) uses sticker sheets: CR 103.2d is
-  silent. Pawl reruns the draw; filed as a rules question. Unit 1.
+  silent. Parun reruns the draw; filed as a rules question. Unit 1.
 - An ownership change (ante unit 2's Darkpact, Tempest Efreet) moves a
   stickered card to another owner, and its stickers read as available to the
   original owner again. No rule addresses it. Unit 1.
@@ -41,7 +41,7 @@ Out, each filed with an issue in the unit named:
   `o:sticker o:move`, `o:sticker o:remove`, both empty 2026-10-09). Unit 1,
   `expires:card-driven`.
 - CR 123.6a's blank in a name, and a name sticker on an object with several
-  names: both readings below are pawl's, filed as rules questions. Unit 2.
+  names: both readings below are parun's, filed as rules questions. Unit 2.
 - Ring-4 cards (`docs/design.md` section 6): Animate Object, Art
   Appreciation, Focused Funambulist, Cover the Spot, Scavenger Hunt, Trivia
   Contest, Mobile Clone, Haberthrasher, Juggletron. Astroquarium and Tchotchke
@@ -87,7 +87,7 @@ library like cards. A sheet holds its number, its three name-sticker words
 (hand-split: "Ancestral Hot Dog Minotaur"'s middle sticker is "Hot Dog"), an
 art count, two ability stickers (ticket cost and abilities in the card DSL) and
 two P/T stickers (ticket cost, power, toughness). A lint ties each sheet's
-ability and P/T lines to MTGJSON's text, as `pawl ingest` does for cards.
+ability and P/T lines to MTGJSON's text, as `parun ingest` does for cards.
 
 **Sticker identity (CR 123.3a).** `StickerRef` is (owner, slot among that
 player's chosen sheets, index on the sheet), never the sheet's name: limited

@@ -68,7 +68,7 @@ marker (`PlusOnePlusOne | MinusOneMinusOne`), the same kind of closed-half tag a
 Instill Infection's identity. Battlegrowth is a printing whose effect list is
 `[PutCounters PlusOnePlusOne (Literal 1) "creature"]`; Instill Infection's is
 `[PutCounters MinusOneMinusOne (Literal 1) "creature", Draw (Literal 1)]`.
-`Pawl.Resolve` remains the sole module that cases on `Effect`; `Pawl.Projection`
+`Parun.Resolve` remains the sole module that cases on `Effect`; `Parun.Projection`
 remains the sole module that cases on `Modification`.
 
 ## Goal and scope
@@ -118,10 +118,10 @@ N counters" SBA (CR 122.4 / 704.5r); and `Quantity.X`-many counters (rides M4a's
 
 ## 1. The counter classification — `CounterKind`
 
-New module `Pawl.Type.CounterKind`:
+New module `Parun.Type.CounterKind`:
 
 ```
-module Pawl.Type.CounterKind where
+module Parun.Type.CounterKind where
 
 -- CR 122: a counter is a marker that modifies characteristics or interacts with a
 -- rule (CR 122.1). Its KIND is a closed-half classification -- the same posture as
@@ -141,7 +141,7 @@ diffable against CR 122.1a; new kinds are additive.
 
 ## 2. Storage — `Object.counters`
 
-`Pawl.Type.Object` gains one field:
+`Parun.Type.Object` gains one field:
 
 ```
 -- CR 122.1: counters placed on this permanent, counted per kind. Persistent
@@ -168,7 +168,7 @@ object in another zone ever carries one. `Projection.gather` already sweeps only
 
 ## 3. The opcode — `Effect.PutCounters CounterKind Quantity SlotName`
 
-`Pawl.Type.Effect` gains one constructor:
+`Parun.Type.Effect` gains one constructor:
 
 ```
 | -- CR 122.6: put this many counters of this kind on the slot's target permanent.
@@ -181,7 +181,7 @@ object in another zone ever carries one. `Projection.gather` already sweeps only
   PutCounters CounterKind Quantity SlotName
 ```
 
-The five Effect-classifying functions in `Pawl.Resolve` each gain a `PutCounters`
+The five Effect-classifying functions in `Parun.Resolve` each gain a `PutCounters`
 arm (all case exhaustively, so the compiler forces each):
 
 - `slotsOf (PutCounters _ _ slot) = Set.singleton slot`
@@ -271,7 +271,7 @@ P/T, matching CR 122.1a (which speaks only of creatures).
 
 ## 5. The state-based action — CR 704.5q / 122.3 annihilation
 
-`Pawl.Sba.performStateBasedActions` gains an annihilation arm. For each battlefield
+`Parun.Sba.performStateBasedActions` gains an annihilation arm. For each battlefield
 permanent with both counter kinds present, remove N of each (N = the smaller
 count), editing `Object.counters`, and report that a state-based action was
 performed so the CR 704.4 loop repeats.
@@ -352,7 +352,7 @@ names carry their CR numbers.
 
 ## 8. Module and dependency notes
 
-- `Pawl.Type.CounterKind` is a leaf type module (imports nothing project-local);
+- `Parun.Type.CounterKind` is a leaf type module (imports nothing project-local);
   `Object`, `Effect`, `Projection`, `Sba`, and `Codec` import it.
 - `Object` gains a `Map CounterKind Natural` field — `Object` already imports
   `Data.Map.Strict` and `Numeric.Natural`; add the `CounterKind` import.
@@ -399,9 +399,9 @@ Each is due with the first real card that needs it:
 ## 10. Invariant check
 
 - **Closed/open separation.** The rules core reads counts *by kind* — a
-  classification (`CounterKind`), the same posture as `Keyword`. `Pawl.Resolve` is
-  the only module that cases on `PutCounters`; `Pawl.Projection` the only one that
-  cases on the `Modification` it synthesizes; `Pawl.Sba`'s annihilation reads
+  classification (`CounterKind`), the same posture as `Keyword`. `Parun.Resolve` is
+  the only module that cases on `PutCounters`; `Parun.Projection` the only one that
+  cases on the `Modification` it synthesizes; `Parun.Sba`'s annihilation reads
   counts, never a card. There is no `case card of Battlegrowth → …` anywhere.
 - **First-order, non-recursive DSL.** `PutCounters CounterKind Quantity SlotName`
   carries a tag, a number, and a name — no function, no nested effect, no control

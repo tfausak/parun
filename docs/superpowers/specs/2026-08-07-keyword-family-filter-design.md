@@ -37,7 +37,7 @@ Quagmire is what forbids collapsing the two into one atom.
 
 ## Design
 
-### `Pawl.Types.KeywordFamily`
+### `Parun.Types.KeywordFamily`
 
 A new type in the `types` sublibrary, one nullary constructor per PAYLOAD-CARRYING
 `Keyword` constructor, each citing its CR 702 subrule:
@@ -53,7 +53,7 @@ A new type in the `types` sublibrary, one nullary constructor per PAYLOAD-CARRYI
       | Crew       -- CR 702.122
       | Toxic      -- CR 702.164
 
-It imports NOTHING. That is load-bearing: `Pawl.Types.Filter` can name it concretely
+It imports NOTHING. That is load-bearing: `Parun.Types.Filter` can name it concretely
 while keeping its `keyword` parameter for the exact atom, so the existing knot
 (`Filter Keyword` / `Cost Keyword`, 123 mentions across 40 files) is untouched.
 
@@ -61,7 +61,7 @@ Nullary keywords deliberately get NO constructor. The two atoms then partition r
 than overlap: "with flying" has exactly one spelling (`HasKeyword Flying`) and "with
 toxic" has exactly one (`HasKeywordFamily Toxic`).
 
-### `Pawl.Types.Filter`
+### `Parun.Types.Filter`
 
     | HasKeywordFamily KeywordFamily.KeywordFamily
 
@@ -69,16 +69,16 @@ Sibling of `HasKeyword`, and payload-free by construction -- which is the proper
 rejected designs lacked. There is no `HasKeywordFamily` value that is observably equal
 to another and structurally different.
 
-### `Pawl.Engine.Keyword.familyOf`
+### `Parun.Engine.Keyword.familyOf`
 
     familyOf :: Keyword.Keyword -> Maybe KeywordFamily.KeywordFamily
 
 Exhaustive, NO wildcard. A sibling of the classifiers already there
 (`castingPermissionsOf`, `morphCost`, `mintsEntryReplacement`). It cannot live in
-`Pawl.Types.KeywordFamily` -- that module naming `Keyword` reopens the cycle -- and
-`Pawl.Types.*` holds no cross-type logic.
+`Parun.Types.KeywordFamily` -- that module naming `Keyword` reopens the cycle -- and
+`Parun.Types.*` holds no cross-type logic.
 
-### `Pawl.Engine.Filter.matches`
+### `Parun.Engine.Filter.matches`
 
     Filter.HasKeywordFamily f ->
       any ((Just f ==) . Keyword.familyOf) (keywords view)
@@ -100,15 +100,15 @@ rules claim rather than a formality:
 - `CardSpec.canHostSubjects` (CR 701.3a) -- contributes zero, because a family is
   payload-free and hides no `Filter` position.
 
-`Engine.Filter` also picks up `Pawl.Engine.Keyword` for `familyOf`, so its
-`Pawl.Types.Keyword` import takes the `Keyword.Type` alias that `Engine.Projection`
+`Engine.Filter` also picks up `Parun.Engine.Keyword` for `familyOf`, so its
+`Parun.Types.Keyword` import takes the `Keyword.Type` alias that `Engine.Projection`
 already uses for the same collision.
 
 ### Codec
 
-New `Pawl.Codec.KeywordFamily` and its spec; a `HasKeywordFamily` arm in
-`Pawl.Codec.Filter` and `Pawl.Codec.FilterSpec`. `pawl.cabal` regenerated with
-`cabal-gild pawl.cabal` directly -- two new modules, which `hooky fix` will not pick up.
+New `Parun.Codec.KeywordFamily` and its spec; a `HasKeywordFamily` arm in
+`Parun.Codec.Filter` and `Parun.Codec.FilterSpec`. `parun.cabal` regenerated with
+`cabal-gild parun.cabal` directly -- two new modules, which `hooky fix` will not pick up.
 
 ### The card
 
@@ -148,13 +148,13 @@ and restating it in the filter would be the pool's question asked twice.
 Rule 702 runs to 702.194, so past its own general 702.1 it states 193 keywords;
 around a third describe a parameter -- a `[cost]`, an `N`, or a bracketed
 placeholder -- in their first subrule alone, which is a lower bound since some state
-it later. `Pawl.Types.Keyword` models 34 of them, 9 of those payload-carrying. So
+it later. `Parun.Types.Keyword` models 34 of them, 9 of those payload-carrying. So
 `KeywordFamily` will track roughly a third of `Keyword`'s growth
 -- ward N, annihilator N, bushido N, casualty N, and the alternative-cost crowd all
-land in it eventually. Nine is a snapshot of pawl's coverage, not a fact about Magic.
+land in it eventually. Nine is a snapshot of parun's coverage, not a fact about Magic.
 
 This IS the "second keyword enumeration to keep in step with CR 702" that
-`Pawl.Types.CounterKind`'s haddock refuses. What makes it payable here and not there:
+`Parun.Types.CounterKind`'s haddock refuses. What makes it payable here and not there:
 `familyOf` is exhaustive with no wildcard, so adding a `Keyword` constructor is an
 incomplete-patterns error under `-Werror` until the author decides `Just` or `Nothing`.
 `CounterKind`'s enum would have been a hand-maintained subset of CR 122.1b's fifteen
@@ -170,7 +170,7 @@ can write `Nothing` and move on.
 
 ## Verification
 
-- Gameplay test, in `Pawl.TargetSpec`: a second Flensing Raptor enters beside a first
+- Gameplay test, in `Parun.TargetSpec`: a second Flensing Raptor enters beside a first
   one (toxic 1) and a Branchblight Stalker (toxic 2), and both are legal targets of
   its trigger, while a Goblin Piker, the entering Raptor itself and bob's Stalker are
   not. TWO Ns is the point -- one toxic creature would not discriminate, since a
@@ -181,7 +181,7 @@ can write `Nothing` and move on.
   the three-way sweep the issue asks for belongs in the unit case below, where the
   keyword set is built directly.
 
-- `Pawl.FilterSpec` group pinning family against exact: `HasKeyword (Toxic 2)` rejects
+- `Parun.FilterSpec` group pinning family against exact: `HasKeyword (Toxic 2)` rejects
   toxic 1 and toxic 3 while `HasKeywordFamily Toxic` accepts all three; poisonous 2 is
   not toxic; and CR 702.14a's swampwalk/islandwalk pair splits the two atoms the way
   Quagmire needs. It sits alongside the existing `PowerAtLeast`/`PowerAtMost` pinning.

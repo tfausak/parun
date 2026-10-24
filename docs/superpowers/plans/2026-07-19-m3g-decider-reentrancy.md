@@ -13,15 +13,15 @@
 Copied from the spec and `CLAUDE.md`; every task implicitly includes these:
 
 - **Haskell 2010, no language extensions** beyond `GADTs`, `RankNTypes`, `NamedFieldPuns`. No `LambdaCase`, no `OverloadedStrings`, **no list comprehensions**.
-- **No explicit export lists** (`module Pawl.Foo where`).
-- **One type per module** under `Pawl.Type.<TypeName>` (type + instances only); logic in other `Pawl.*` modules. A module never imports its parents. Add a new `Pawl.Type.*` file and run `cabal-gild` (via `hooky fix`) — the `exposed-modules` field is `discover`-generated. A new `Pawl.*Spec` goes in the test-suite `other-modules` list.
+- **No explicit export lists** (`module Parun.Foo where`).
+- **One type per module** under `Parun.Type.<TypeName>` (type + instances only); logic in other `Parun.*` modules. A module never imports its parents. Add a new `Parun.Type.*` file and run `cabal-gild` (via `hooky fix`) — the `exposed-modules` field is `discover`-generated. A new `Parun.*Spec` goes in the test-suite `other-modules` list.
 - **Qualified imports, aliased to the last component** (`Data.List` → `List`); operators unqualified; one import group. `A.B.C` must not import `A.B` or `A`.
 - **No partial functions** — `Maybe`/`Either`, never `head`/`error`/non-exhaustive matches. In tests, an empty-list case uses `HU.assertFailure`, never `head`/`error`.
 - **`newtype`/record + `Mk`-prefixed, non-punning constructors**; build records with `do`/record syntax. Sum-type data constructors (like `PlayerTarget`, `ControlPlayerNextTurn`, `CastFromLibraryWhileSearching`, `Artifact`) take no `Mk` prefix.
 - **Prefer explicit:** `case` over point-free; `let` over `where`; `$` over parens, `.` over chained `$`; `Text` not `String`; arbitrary-precision numbers.
 - **No boolean blindness** (`CastingPermission` is a sum type, never a `Bool` field on `Card`); **derive at least `Eq` and `Show`** (and `Ord` on anything a `Card`/`Action`/`Source` transitively contains — those derive `Ord`).
 - **Warning-clean** under `-Weverything` minus the allow-list; the `pedantic` flag makes any warning a build failure (including `-Wincomplete-patterns` on a match missing a new constructor — notably `Card.isPermanentType` on the new `CardType.Artifact`, and every answerer/`Replay` function on the new `Prompt.CastWhileSearching` — and `-Wmissing-fields` on a record missing a new field — every `MkCard` for `castingPermissions`, every `MkAbilityCost` for `mana`, every full `MkGameState` for `pendingControl`/`activeControl`). Build `all`: `cabal build all --enable-tests --enable-benchmarks`. When in doubt, `cabal clean` first — incremental builds hide warnings.
-- **The two invariants:** the rules core never `case`s on an effect's or a card's *identity*. `Pawl.Resolve` is the **sole** `case`-on-`Effect` home (`slotsOf`, `manaProduced`, `rewriteEffect`, `matchesCriterion`, `searchesLibrary`, `applyEffect` — all grow a `ControlPlayerNextTurn` and/or `searchesLibrary` arm this milestone); `Pawl.Event` the sole `case`-on-`ReplacementEffect`/`TriggerCondition` home; **`Pawl.Cast` the sole reader of `CastingPermission`** (a membership test, `permitsCastWhileSearching`). `Stack.resolveTop` dispatches on the `Source` classification and asks `Resolve.searchesLibrary`, never a card's identity. `Decide.deciderFor` reads a control store keyed by player, never a card. The engine makes no player choice except where the rules leave one, eliding only indistinguishable options (with a documented expiry).
+- **The two invariants:** the rules core never `case`s on an effect's or a card's *identity*. `Parun.Resolve` is the **sole** `case`-on-`Effect` home (`slotsOf`, `manaProduced`, `rewriteEffect`, `matchesCriterion`, `searchesLibrary`, `applyEffect` — all grow a `ControlPlayerNextTurn` and/or `searchesLibrary` arm this milestone); `Parun.Event` the sole `case`-on-`ReplacementEffect`/`TriggerCondition` home; **`Parun.Cast` the sole reader of `CastingPermission`** (a membership test, `permitsCastWhileSearching`). `Stack.resolveTop` dispatches on the `Source` classification and asks `Resolve.searchesLibrary`, never a card's identity. `Decide.deciderFor` reads a control store keyed by player, never a card. The engine makes no player choice except where the rules leave one, eliding only indistinguishable options (with a documented expiry).
 - **Every rules claim cited** against `docs/rules.txt` in a code comment. Never trust recalled Magic rules. (Numbers verified for this plan: control applies to the next turn actually taken and lasts the whole turn, ending at the next turn's start CR 723.1; multiple controls overwrite, last wins CR 723.1a; skipped turns wait CR 723.1b; only control of the player changes, objects keep their controllers CR 723.3; the controller uses only the controlled player's resources CR 723.5a; a mana ability may be activated mid-resolution CR 605.3a; a player casts a spell only if a rule/effect allows it CR 601.3; new object on zone change CR 400.7; an ability ceases CR 608.2n; the effect source is the source permanent CR 608.2g; target player is CR 115; the legend rule CR 704.5j is ELIDED — Mindslaver is singleton and sacrificed as a cost — and must land suppressible, Mirror Gallery; CR 723.4 information visibility is a PlayerView concern, deferred.)
 - **After each task:** `cabal build all --enable-tests --enable-benchmarks` warning-free, `cabal test`, `git add -A` (stage explicit paths under a shared worktree) then `hooky fix` && `git add -A` && `hooky run`, HLint clean. Commit directly to `main`, one small complete commit per task.
 
@@ -35,7 +35,7 @@ Co-Authored-By: Claude Opus 4.8 (1M context) <noreply@anthropic.com>
 - **Mindslaver** — `{6}` Legendary Artifact — "{4}, {T}, Sacrifice Mindslaver: You control target player during that player's next turn. (You see all cards that player could see and make all decisions for them.)" The parenthetical's "see all cards" is CR 723.4 (deferred — no PlayerView yet); "make all decisions" is the `deciderFor` routing.
 - **Panglacial Wurm** — `{5}{G}{G}` Creature — Wurm, 9/5 — "Trample / While you're searching your library, you may cast this card from your library." Trample is M2c; the 9/5 body needs no opcode; only the casting permission is new.
 
-**Module-graph fact (why Phase 2 orchestrates in `Stack`, not `Resolve`):** `Pawl.Cast` imports `Pawl.Resolve`, and `Pawl.Mana` imports `Pawl.Resolve` (for `manaProduced`). So `Resolve` sits *below* both `Cast` and `Mana` and cannot call them — the re-entrant cast (which needs `Cast.castSpell` and mana payment) cannot live inside `Resolve.applyEffect`. `Pawl.Stack` imports `Resolve` and can also import `Cast` (nothing imports `Stack` except `Engine`), so it is the lowest layer that can offer the cast. `Stack.resolveTop` keeps the resolving object on the stack until the end (only `resolveSpell`/`cease` remove it), so a Panglacial cast during that window lands *on top* of the still-resolving ability — exactly the ruling's sequence.
+**Module-graph fact (why Phase 2 orchestrates in `Stack`, not `Resolve`):** `Parun.Cast` imports `Parun.Resolve`, and `Parun.Mana` imports `Parun.Resolve` (for `manaProduced`). So `Resolve` sits *below* both `Cast` and `Mana` and cannot call them — the re-entrant cast (which needs `Cast.castSpell` and mana payment) cannot live inside `Resolve.applyEffect`. `Parun.Stack` imports `Resolve` and can also import `Cast` (nothing imports `Stack` except `Engine`), so it is the lowest layer that can offer the cast. `Stack.resolveTop` keeps the resolving object on the stack until the end (only `resolveSpell`/`cease` remove it), so a Panglacial cast during that window lands *on top* of the still-resolving ability — exactly the ruling's sequence.
 
 ---
 
@@ -44,18 +44,18 @@ Co-Authored-By: Claude Opus 4.8 (1M context) <noreply@anthropic.com>
 ### Task 1: `CardType.Artifact` + `TargetSpec.PlayerTarget` + the player-target arm
 
 **Files:**
-- Modify: `source/library/Pawl/Type/CardType.hs` (add `Artifact`)
-- Modify: `source/library/Pawl/Card.hs` (`isPermanentType` gains the `Artifact` arm)
-- Modify: `source/library/Pawl/Type/TargetSpec.hs` (add `PlayerTarget`)
-- Modify: `source/library/Pawl/Target.hs` (`legalRecipients` gains the `PlayerTarget` arm)
-- Test: `source/test-suite/Pawl/TargetSpec.hs`
+- Modify: `source/library/Parun/Type/CardType.hs` (add `Artifact`)
+- Modify: `source/library/Parun/Card.hs` (`isPermanentType` gains the `Artifact` arm)
+- Modify: `source/library/Parun/Type/TargetSpec.hs` (add `PlayerTarget`)
+- Modify: `source/library/Parun/Target.hs` (`legalRecipients` gains the `PlayerTarget` arm)
+- Test: `source/test-suite/Parun/TargetSpec.hs`
 
 **Interfaces:**
 - Produces: `CardType.Artifact`; `TargetSpec.PlayerTarget`; `Target.legalRecipients TargetSpec.PlayerTarget gs = Set.fromList (map Recipient.ToPlayer (Sba.stillPlaying gs))`.
 
 - [x] **Step 1: Write the failing test**
 
-Add to `source/test-suite/Pawl/TargetSpec.hs` (in its test group; add imports `qualified Pawl.Type.TargetSpec as TargetSpec`, `qualified Pawl.Type.Recipient as Recipient`, `qualified Pawl.Setup as Setup`, `qualified Pawl.Support as S`, `qualified Pawl.Target as Target`, `qualified Data.Set as Set` if absent — mirror the file's existing style):
+Add to `source/test-suite/Parun/TargetSpec.hs` (in its test group; add imports `qualified Parun.Type.TargetSpec as TargetSpec`, `qualified Parun.Type.Recipient as Recipient`, `qualified Parun.Setup as Setup`, `qualified Parun.Support as S`, `qualified Parun.Target as Target`, `qualified Data.Set as Set` if absent — mirror the file's existing style):
 
 ```haskell
       HU.testCase "CR 115: PlayerTarget is exactly the players still in the game" $
@@ -71,14 +71,14 @@ Expected: FAIL to compile — `TargetSpec.PlayerTarget` not in scope.
 
 - [x] **Step 3: Add `Artifact` to `CardType` and its permanent arm**
 
-In `source/library/Pawl/Type/CardType.hs`, add the constructor (after `Enchantment`):
+In `source/library/Parun/Type/CardType.hs`, add the constructor (after `Enchantment`):
 
 ```haskell
   | -- CR 301: an artifact, a permanent type. Mindslaver is the first (M3g).
     Artifact
 ```
 
-In `source/library/Pawl/Card.hs`, `isPermanentType` gains the arm (CR 301.1 — an artifact is a permanent):
+In `source/library/Parun/Card.hs`, `isPermanentType` gains the arm (CR 301.1 — an artifact is a permanent):
 
 ```haskell
   CardType.Artifact -> True
@@ -86,7 +86,7 @@ In `source/library/Pawl/Card.hs`, `isPermanentType` gains the arm (CR 301.1 — 
 
 - [x] **Step 4: Add `PlayerTarget` to `TargetSpec`**
 
-In `source/library/Pawl/Type/TargetSpec.hs`, add the constructor (after `LandTarget`):
+In `source/library/Parun/Type/TargetSpec.hs`, add the constructor (after `LandTarget`):
 
 ```haskell
   | -- CR 115: "target player" -- a player still in the game. The players-only
@@ -96,7 +96,7 @@ In `source/library/Pawl/Type/TargetSpec.hs`, add the constructor (after `LandTar
 
 - [x] **Step 5: Add the `PlayerTarget` arm to `legalRecipients`**
 
-In `source/library/Pawl/Target.hs`, the `case spec of` gains (the `players` binding is already in scope, computed for `AnyTarget`):
+In `source/library/Parun/Target.hs`, the `case spec of` gains (the `players` binding is already in scope, computed for `AnyTarget`):
 
 ```haskell
         TargetSpec.PlayerTarget -> Set.fromList players
@@ -119,19 +119,19 @@ git commit -m "Add CardType.Artifact + TargetSpec.PlayerTarget (CR 115/301)"
 ### Task 2: Activation-cost mana — `AbilityCost.mana` (`{4}` for Mindslaver)
 
 **Files:**
-- Modify: `source/library/Pawl/Type/AbilityCost.hs` (`newtype` → `data`, add `mana`)
-- Modify: `source/library/Pawl/Card.hs` (seed `mana = Nothing` at Llanowar Elves, Evolving Wilds, Prodigal Sorcerer)
-- Modify: `source/library/Pawl/Activate.hs` (`activatable` checks mana; `activateAbility` pays it)
+- Modify: `source/library/Parun/Type/AbilityCost.hs` (`newtype` → `data`, add `mana`)
+- Modify: `source/library/Parun/Card.hs` (seed `mana = Nothing` at Llanowar Elves, Evolving Wilds, Prodigal Sorcerer)
+- Modify: `source/library/Parun/Activate.hs` (`activatable` checks mana; `activateAbility` pays it)
 - Modify: any test hand-building an `AbilityCost.MkAbilityCost` (build lists them via `-Wmissing-fields`)
-- Test: `source/test-suite/Pawl/ActivateSpec.hs`
+- Test: `source/test-suite/Parun/ActivateSpec.hs`
 
 **Interfaces:**
-- Consumes: `Mana.canPay`, `Mana.payCost` (M3e, in `Pawl.Mana`).
+- Consumes: `Mana.canPay`, `Mana.payCost` (M3e, in `Parun.Mana`).
 - Produces: `AbilityCost.MkAbilityCost { mana :: Maybe ManaCost, additional :: [AdditionalCost] }`; `Activate.activatable` now also requires the mana payable; `Activate.activateAbility` pays the mana (CR 602.1b) before the additional costs.
 
 - [x] **Step 1: Write the failing test**
 
-Add to `source/test-suite/Pawl/ActivateSpec.hs` (add imports as the compiler flags — `qualified Pawl.Type.AbilityCost as AbilityCost`, `qualified Pawl.Type.ManaCost as ManaCost`, `qualified Pawl.Type.ManaSymbol as ManaSymbol`, `qualified Pawl.Activate as Activate`, `qualified Pawl.Support as S`, `qualified Data.Map.Strict as Map`). This asserts an ability with a `{2}` mana cost is not activatable with only one Mountain:
+Add to `source/test-suite/Parun/ActivateSpec.hs` (add imports as the compiler flags — `qualified Parun.Type.AbilityCost as AbilityCost`, `qualified Parun.Type.ManaCost as ManaCost`, `qualified Parun.Type.ManaSymbol as ManaSymbol`, `qualified Parun.Activate as Activate`, `qualified Parun.Support as S`, `qualified Data.Map.Strict as Map`). This asserts an ability with a `{2}` mana cost is not activatable with only one Mountain:
 
 ```haskell
       HU.testCase "CR 602.1b: an activation with a mana cost needs the mana" $
@@ -150,7 +150,7 @@ Add to `source/test-suite/Pawl/ActivateSpec.hs` (add imports as the compiler fla
          in HU.assertBool "one Mountain cannot pay {2}" (not (Activate.activatable S.alice srcId costlyAbility gs1)),
 ```
 
-(Add imports `qualified Pawl.Type.ActivatedAbility as ActivatedAbility`, `qualified Pawl.Card as Card` if absent. `S.mountainsInPlay 1` gives alice one untapped Mountain; `S.addCreature` adds the Piker as a settled source.)
+(Add imports `qualified Parun.Type.ActivatedAbility as ActivatedAbility`, `qualified Parun.Card as Card` if absent. `S.mountainsInPlay 1` gives alice one untapped Mountain; `S.addCreature` adds the Piker as a settled source.)
 
 - [x] **Step 2: Run test to verify it fails**
 
@@ -159,13 +159,13 @@ Expected: FAIL to compile — `AbilityCost.mana` not a field (still a `newtype` 
 
 - [x] **Step 3: Promote `AbilityCost` to `data` with a `mana` field**
 
-Replace `source/library/Pawl/Type/AbilityCost.hs`:
+Replace `source/library/Parun/Type/AbilityCost.hs`:
 
 ```haskell
-module Pawl.Type.AbilityCost where
+module Parun.Type.AbilityCost where
 
-import Pawl.Type.AdditionalCost (AdditionalCost)
-import Pawl.Type.ManaCost (ManaCost)
+import Parun.Type.AdditionalCost (AdditionalCost)
+import Parun.Type.ManaCost (ManaCost)
 
 -- The cost of an activated ability (CR 602.1). A mana part (CR 602.1b) plus the
 -- non-mana additional costs. Nothing = no mana symbol in the cost (every M3e
@@ -179,11 +179,11 @@ data AbilityCost = MkAbilityCost
 
 - [x] **Step 4: Seed `mana = Nothing` at every existing `MkAbilityCost`**
 
-`-Wmissing-fields` lists them. In `source/library/Pawl/Card.hs`, at Llanowar Elves (`llanowarElvesPrinting`), Evolving Wilds (`evolvingWildsPrinting`), and Prodigal Sorcerer (`prodigalSorcererPrinting`), change each `AbilityCost.MkAbilityCost {AbilityCost.additional = [...]}` to `AbilityCost.MkAbilityCost {AbilityCost.mana = Nothing, AbilityCost.additional = [...]}`. Fix any test that hand-builds an `MkAbilityCost` the same way (the build names them).
+`-Wmissing-fields` lists them. In `source/library/Parun/Card.hs`, at Llanowar Elves (`llanowarElvesPrinting`), Evolving Wilds (`evolvingWildsPrinting`), and Prodigal Sorcerer (`prodigalSorcererPrinting`), change each `AbilityCost.MkAbilityCost {AbilityCost.additional = [...]}` to `AbilityCost.MkAbilityCost {AbilityCost.mana = Nothing, AbilityCost.additional = [...]}`. Fix any test that hand-builds an `MkAbilityCost` the same way (the build names them).
 
 - [x] **Step 5: Check + pay the mana in `Activate`**
 
-In `source/library/Pawl/Activate.hs`, extend `activatable` (add the mana conjunct after the `tapSicknessOk` line):
+In `source/library/Parun/Activate.hs`, extend `activatable` (add the mana conjunct after the `tapSicknessOk` line):
 
 ```haskell
     && maybe True (\c -> Mana.canPay pid c gs) (AbilityCost.mana (ActivatedAbility.cost ability))
@@ -227,35 +227,35 @@ git commit -m "Add the mana half of activation costs: AbilityCost.mana (CR 602.1
 ### Task 3: The control store — `pendingControl` / `activeControl`, `deciderFor`, and turn-start promotion
 
 **Files:**
-- Modify: `source/library/Pawl/Type/GameState.hs` (add `pendingControl`, `activeControl`)
-- Modify: `source/library/Pawl/Setup.hs` (`emptyGame` seeds both) and `source/test-suite/Pawl/Support.hs` (`oneMountainState` seeds both)
-- Modify: `source/library/Pawl/Decide.hs` (`deciderFor` reads `activeControl`)
-- Modify: `source/library/Pawl/Engine.hs` (`handoffTurn` promotes)
-- Test: `source/test-suite/Pawl/DecideSpec.hs` (new — wire into `Main.hs` and the test-suite `other-modules`)
+- Modify: `source/library/Parun/Type/GameState.hs` (add `pendingControl`, `activeControl`)
+- Modify: `source/library/Parun/Setup.hs` (`emptyGame` seeds both) and `source/test-suite/Parun/Support.hs` (`oneMountainState` seeds both)
+- Modify: `source/library/Parun/Decide.hs` (`deciderFor` reads `activeControl`)
+- Modify: `source/library/Parun/Engine.hs` (`handoffTurn` promotes)
+- Test: `source/test-suite/Parun/DecideSpec.hs` (new — wire into `Main.hs` and the test-suite `other-modules`)
 
 **Interfaces:**
 - Produces: `GameState.pendingControl :: Map PlayerId Decider`; `GameState.activeControl :: Maybe Decider`; `Decide.deciderFor pid gs` returns the active-control decider when `pid` is the active player and `activeControl` is set, else `MkDecider pid`; `Engine.handoffTurn` sets `activeControl = Map.lookup newActive pendingControl` and deletes that pending entry.
 
 - [x] **Step 1: Write the failing test**
 
-Create `source/test-suite/Pawl/DecideSpec.hs`:
+Create `source/test-suite/Parun/DecideSpec.hs`:
 
 ```haskell
-module Pawl.DecideSpec where
+module Parun.DecideSpec where
 
 import qualified Data.Map.Strict as Map
-import qualified Pawl.Decide as Decide
-import qualified Pawl.Setup as Setup
-import qualified Pawl.Support as S
-import qualified Pawl.Type.Decider as Decider
-import qualified Pawl.Type.GameState as GameState
+import qualified Parun.Decide as Decide
+import qualified Parun.Setup as Setup
+import qualified Parun.Support as S
+import qualified Parun.Type.Decider as Decider
+import qualified Parun.Type.GameState as GameState
 import qualified Test.Tasty as Tasty
 import qualified Test.Tasty.HUnit as HU
 
 tests :: Tasty.TestTree
 tests =
   Tasty.testGroup
-    "Pawl.Decide"
+    "Parun.Decide"
     [ HU.testCase "CR 722: with no control, a player decides for themselves" $
         let gs = Setup.emptyGame S.bothPlayers
          in HU.assertEqual "alice decides for alice" (Decider.MkDecider S.alice) (Decide.deciderFor S.alice gs),
@@ -270,7 +270,7 @@ tests =
     ]
 ```
 
-Wire `Pawl.DecideSpec.tests` into `source/test-suite/Main.hs`'s `testTree` and add `Pawl.DecideSpec` to the test-suite `other-modules` list in `pawl.cabal`.
+Wire `Parun.DecideSpec.tests` into `source/test-suite/Main.hs`'s `testTree` and add `Parun.DecideSpec` to the test-suite `other-modules` list in `parun.cabal`.
 
 - [x] **Step 2: Run test to verify it fails**
 
@@ -279,7 +279,7 @@ Expected: FAIL to compile — `GameState.activeControl`, `GameState.pendingContr
 
 - [x] **Step 3: Add the two fields to `GameState`**
 
-In `source/library/Pawl/Type/GameState.hs`, add `import Pawl.Type.Decider (Decider)` and the fields (after `landPlayed`):
+In `source/library/Parun/Type/GameState.hs`, add `import Parun.Type.Decider (Decider)` and the fields (after `landPlayed`):
 
 ```haskell
     -- CR 723.1: pending player-controlling effects, keyed by the player to be
@@ -297,7 +297,7 @@ In `source/library/Pawl/Type/GameState.hs`, add `import Pawl.Type.Decider (Decid
 
 - [x] **Step 4: Seed both fields at every full `MkGameState`**
 
-`-Wmissing-fields` lists them. In `source/library/Pawl/Setup.hs` (`emptyGame`) and `source/test-suite/Pawl/Support.hs` (`oneMountainState`), add next to `landPlayed`:
+`-Wmissing-fields` lists them. In `source/library/Parun/Setup.hs` (`emptyGame`) and `source/test-suite/Parun/Support.hs` (`oneMountainState`), add next to `landPlayed`:
 
 ```haskell
           GameState.pendingControl = Map.empty,
@@ -306,16 +306,16 @@ In `source/library/Pawl/Type/GameState.hs`, add `import Pawl.Type.Decider (Decid
 
 - [x] **Step 5: Make `deciderFor` read `activeControl`**
 
-Replace `source/library/Pawl/Decide.hs`:
+Replace `source/library/Parun/Decide.hs`:
 
 ```haskell
-module Pawl.Decide where
+module Parun.Decide where
 
-import Pawl.Type.Decider (Decider)
-import qualified Pawl.Type.Decider as Decider
-import Pawl.Type.GameState (GameState)
-import qualified Pawl.Type.GameState as GameState
-import Pawl.Type.PlayerId (PlayerId)
+import Parun.Type.Decider (Decider)
+import qualified Parun.Type.Decider as Decider
+import Parun.Type.GameState (GameState)
+import qualified Parun.Type.GameState as GameState
+import Parun.Type.PlayerId (PlayerId)
 
 -- Who actually decides for a player (CR 722/723). A player controlled during
 -- their turn (CR 723.1) has their decisions made by the controller; everyone
@@ -330,7 +330,7 @@ deciderFor pid gs = case GameState.activeControl gs of
 
 - [x] **Step 6: Promote pending control at turn start in `handoffTurn`**
 
-In `source/library/Pawl/Engine.hs`, replace `handoffTurn`:
+In `source/library/Parun/Engine.hs`, replace `handoffTurn`:
 
 ```haskell
 handoffTurn :: Game ()
@@ -368,10 +368,10 @@ git commit -m "Add the turn-scheduled control store: pendingControl/activeContro
 ### Task 4: `ControlPlayerNextTurn` opcode + Mindslaver; resolve through the stack; promote
 
 **Files:**
-- Modify: `source/library/Pawl/Type/Effect.hs` (add `ControlPlayerNextTurn`)
-- Modify: `source/library/Pawl/Resolve.hs` (`slotsOf`/`manaProduced`/`rewriteEffect`/`applyEffect` arms)
-- Modify: `source/library/Pawl/Card.hs` (add `mindslaverPrinting`; register in `allPrintings`)
-- Test: `source/test-suite/Pawl/ResolveSpec.hs`
+- Modify: `source/library/Parun/Type/Effect.hs` (add `ControlPlayerNextTurn`)
+- Modify: `source/library/Parun/Resolve.hs` (`slotsOf`/`manaProduced`/`rewriteEffect`/`applyEffect` arms)
+- Modify: `source/library/Parun/Card.hs` (add `mindslaverPrinting`; register in `allPrintings`)
+- Test: `source/test-suite/Parun/ResolveSpec.hs`
 
 **Interfaces:**
 - Consumes: `resolveEffects`/`resolveAbility`/`OfAbility` (M3e/M3f), `PlayerTarget` (Task 1), `AbilityCost.mana` (Task 2), `pendingControl` (Task 3).
@@ -379,7 +379,7 @@ git commit -m "Add the turn-scheduled control store: pendingControl/activeContro
 
 - [x] **Step 1: Write the failing test**
 
-Add to the `Resolve` group in `source/test-suite/Pawl/ResolveSpec.hs`. Hand-build Mindslaver's ability on the stack (targeting bob), resolve it, assert `pendingControl`, then `handoffTurn` and assert `activeControl` + `deciderFor` + expiry (add imports as the compiler flags — `qualified Pawl.Type.Effect as Effect`, `qualified Pawl.Type.ActivatedAbility as ActivatedAbility`, `qualified Pawl.Type.AbilityCost as AbilityCost`, `qualified Pawl.Type.AdditionalCost as AdditionalCost`, `qualified Pawl.Type.ManaCost as ManaCost`, `qualified Pawl.Type.ManaSymbol as ManaSymbol`, `qualified Pawl.Type.SlotName as SlotName`, `qualified Pawl.Type.Recipient as Recipient`, `qualified Pawl.Type.Source as Source`, `qualified Pawl.Type.Decider as Decider`, `qualified Pawl.Type.Object as Object`, `qualified Pawl.Type.TapState as TapState`, `qualified Pawl.Type.Sickness as Sickness`, `qualified Pawl.Type.Zone as Zone`, `qualified Pawl.Type.TargetSpec as TargetSpec`, `qualified Pawl.Stack as Stack`, `qualified Pawl.Engine as Engine`, `qualified Pawl.Decide as Decide`, `qualified Data.Text as Text`):
+Add to the `Resolve` group in `source/test-suite/Parun/ResolveSpec.hs`. Hand-build Mindslaver's ability on the stack (targeting bob), resolve it, assert `pendingControl`, then `handoffTurn` and assert `activeControl` + `deciderFor` + expiry (add imports as the compiler flags — `qualified Parun.Type.Effect as Effect`, `qualified Parun.Type.ActivatedAbility as ActivatedAbility`, `qualified Parun.Type.AbilityCost as AbilityCost`, `qualified Parun.Type.AdditionalCost as AdditionalCost`, `qualified Parun.Type.ManaCost as ManaCost`, `qualified Parun.Type.ManaSymbol as ManaSymbol`, `qualified Parun.Type.SlotName as SlotName`, `qualified Parun.Type.Recipient as Recipient`, `qualified Parun.Type.Source as Source`, `qualified Parun.Type.Decider as Decider`, `qualified Parun.Type.Object as Object`, `qualified Parun.Type.TapState as TapState`, `qualified Parun.Type.Sickness as Sickness`, `qualified Parun.Type.Zone as Zone`, `qualified Parun.Type.TargetSpec as TargetSpec`, `qualified Parun.Stack as Stack`, `qualified Parun.Engine as Engine`, `qualified Parun.Decide as Decide`, `qualified Data.Text as Text`):
 
 ```haskell
       HU.testCase "CR 723.1: Mindslaver's ability installs pending control, promoted next turn" $
@@ -431,7 +431,7 @@ Expected: FAIL to compile — `Effect.ControlPlayerNextTurn`, `Card.mindslaverPr
 
 - [x] **Step 3: Add the opcode**
 
-In `source/library/Pawl/Type/Effect.hs`, add the constructor:
+In `source/library/Parun/Type/Effect.hs`, add the constructor:
 
 ```haskell
   | -- CR 723.1: "you control target player during that player's next turn."
@@ -442,7 +442,7 @@ In `source/library/Pawl/Type/Effect.hs`, add the constructor:
 
 - [x] **Step 4: Add the four `Resolve` arms**
 
-In `source/library/Pawl/Resolve.hs`, add `import qualified Pawl.Type.Decider as Decider`. Add arms:
+In `source/library/Parun/Resolve.hs`, add `import qualified Parun.Type.Decider as Decider`. Add arms:
 
 `slotsOf`: `Effect.ControlPlayerNextTurn slot -> Set.singleton slot`
 `manaProduced`: `Effect.ControlPlayerNextTurn _ -> Nothing`
@@ -465,7 +465,7 @@ In `source/library/Pawl/Resolve.hs`, add `import qualified Pawl.Type.Decider as 
 
 - [x] **Step 5: Add Mindslaver and register it**
 
-In `source/library/Pawl/Card.hs`, add (match the file's existing import aliases; `CardType.Artifact`, `Supertype.Legendary`, `TargetSpec.PlayerTarget` are all in scope after Task 1):
+In `source/library/Parun/Card.hs`, add (match the file's existing import aliases; `CardType.Artifact`, `Supertype.Legendary`, `TargetSpec.PlayerTarget` are all in scope after Task 1):
 
 ```haskell
 -- Mindslaver: {6}, Legendary Artifact, "{4}, {T}, Sacrifice Mindslaver: You
@@ -528,7 +528,7 @@ git commit -m "ControlPlayerNextTurn opcode + Mindslaver: control installs + pro
 ### Task 5: The routing falsifier — the controller decides, the controlled player's resources move
 
 **Files:**
-- Test: `source/test-suite/Pawl/EngineSpec.hs` (the priority-loop integration gate)
+- Test: `source/test-suite/Parun/EngineSpec.hs` (the priority-loop integration gate)
 
 **Interfaces:**
 - Consumes: everything from Tasks 1–4, plus `Engine.priorityLoop`, `Cast`/`Lightning Bolt` (M3a).
@@ -536,7 +536,7 @@ git commit -m "ControlPlayerNextTurn opcode + Mindslaver: control installs + pro
 
 - [x] **Step 1: Write the failing test**
 
-Add to `source/test-suite/Pawl/EngineSpec.hs`. It builds bob's main phase under alice's control, with a decider-and-player-branching interpreter that makes bob Lightning Bolt himself only because alice decides for him (add imports as the compiler flags — `qualified Pawl.Type.Decider as Decider`, `qualified Pawl.Type.Recipient as Recipient`, `qualified Pawl.Type.Prompt as Prompt`, `qualified Pawl.Type.Action as A`, `qualified Pawl.Type.Phase as Phase`, `qualified Pawl.Type.Zone as Zone`, `qualified Pawl.Type.GameState as GameState`, `qualified Pawl.Game as Game`, `qualified Pawl.Type.Source as Source`, `qualified Pawl.Type.Printing as Printing`, `qualified Pawl.Type.Card as Card.Type`, `qualified Data.Set as Set`, `qualified Data.Map.Strict as Map`, `qualified Data.Text as Text`):
+Add to `source/test-suite/Parun/EngineSpec.hs`. It builds bob's main phase under alice's control, with a decider-and-player-branching interpreter that makes bob Lightning Bolt himself only because alice decides for him (add imports as the compiler flags — `qualified Parun.Type.Decider as Decider`, `qualified Parun.Type.Recipient as Recipient`, `qualified Parun.Type.Prompt as Prompt`, `qualified Parun.Type.Action as A`, `qualified Parun.Type.Phase as Phase`, `qualified Parun.Type.Zone as Zone`, `qualified Parun.Type.GameState as GameState`, `qualified Parun.Game as Game`, `qualified Parun.Type.Source as Source`, `qualified Parun.Type.Printing as Printing`, `qualified Parun.Type.Card as Card.Type`, `qualified Data.Set as Set`, `qualified Data.Map.Strict as Map`, `qualified Data.Text as Text`):
 
 ```haskell
       HU.testCase "CR 723.3/723.5: alice decides for bob, but bob's resources move" $
@@ -627,7 +627,7 @@ isCast a = case a of
   _ -> False
 ```
 
-(Add imports `qualified Pawl.Type.Object as Object`, `qualified Pawl.Type.ObjectId as ObjectId`, `qualified Pawl.Type.TapState as TapState`, `qualified Pawl.Type.Sickness as Sickness`, `qualified Pawl.Type.Subtype as Subtype`, `qualified Data.Sequence as Seq` if absent. `slaveAnswer` covers exactly the prompts that exist at Task 5; Task 7 adds the `CastWhileSearching` arm to it when that prompt is introduced.)
+(Add imports `qualified Parun.Type.Object as Object`, `qualified Parun.Type.ObjectId as ObjectId`, `qualified Parun.Type.TapState as TapState`, `qualified Parun.Type.Sickness as Sickness`, `qualified Parun.Type.Subtype as Subtype`, `qualified Data.Sequence as Seq` if absent. `slaveAnswer` covers exactly the prompts that exist at Task 5; Task 7 adds the `CastWhileSearching` arm to it when that prompt is introduced.)
 
 - [x] **Step 2: Run test to verify it fails, then passes**
 
@@ -650,20 +650,20 @@ git commit -m "Gate: Mindslaver routes bob's decisions to alice while bob's reso
 ### Task 6: `CastingPermission` + `Card.castingPermissions` + the enumerator + `searchesLibrary` + Panglacial
 
 **Files:**
-- Create: `source/library/Pawl/Type/CastingPermission.hs`
-- Modify: `source/library/Pawl/Type/Card.hs` (add `castingPermissions`)
-- Modify: `source/library/Pawl/Card.hs` (seed `castingPermissions = []` at every printing; add `panglacialWurmPrinting`; register)
-- Modify: `source/library/Pawl/Cast.hs` (`permitsCastWhileSearching`, `castableWhileSearching`)
-- Modify: `source/library/Pawl/Resolve.hs` (`searchesLibrary`)
+- Create: `source/library/Parun/Type/CastingPermission.hs`
+- Modify: `source/library/Parun/Type/Card.hs` (add `castingPermissions`)
+- Modify: `source/library/Parun/Card.hs` (seed `castingPermissions = []` at every printing; add `panglacialWurmPrinting`; register)
+- Modify: `source/library/Parun/Cast.hs` (`permitsCastWhileSearching`, `castableWhileSearching`)
+- Modify: `source/library/Parun/Resolve.hs` (`searchesLibrary`)
 - Modify: any hand-built `Card.Type.MkCard` in tests (build lists them via `-Wmissing-fields`)
-- Test: `source/test-suite/Pawl/CastSpec.hs`
+- Test: `source/test-suite/Parun/CastSpec.hs`
 
 **Interfaces:**
 - Produces: `CastingPermission.CastFromLibraryWhileSearching`; `Card.castingPermissions :: [CastingPermission]`; `Cast.permitsCastWhileSearching :: Card.Card -> Bool`; `Cast.castableWhileSearching :: PlayerId -> GameState -> [ObjectId]` (library cards with the permission, affordable, and fillable — deliberately NOT timing-gated); `Resolve.searchesLibrary :: Effect -> Bool`; `Card.panglacialWurmPrinting`.
 
 - [x] **Step 1: Write the failing test**
 
-Add to `source/test-suite/Pawl/CastSpec.hs` (add imports `qualified Pawl.Cast as Cast`, `qualified Pawl.Support as S` if absent):
+Add to `source/test-suite/Parun/CastSpec.hs` (add imports `qualified Parun.Cast as Cast`, `qualified Parun.Support as S` if absent):
 
 ```haskell
       HU.testCase "Panglacial Wurm in the library is castable-while-searching with mana" $
@@ -685,24 +685,24 @@ Expected: FAIL to compile — `Cast.castableWhileSearching`, `Card.panglacialWur
 
 - [x] **Step 3: Create `CastingPermission`**
 
-`source/library/Pawl/Type/CastingPermission.hs`:
+`source/library/Parun/Type/CastingPermission.hs`:
 
 ```haskell
-module Pawl.Type.CastingPermission where
+module Parun.Type.CastingPermission where
 
 -- CR 113.6 / 601.3: a static permission to cast a card from a zone or under a
 -- condition it normally could not. Classified by the permission pattern (the M3f
 -- TriggerCondition shape). CastFromLibraryWhileSearching = Panglacial Wurm: "while
 -- you're searching your library, you may cast this from your library." A general
 -- "cast from the top of your library" (Garruk's Horde) is a future permission.
--- Only Pawl.Cast reads it (a membership test, permitsCastWhileSearching).
+-- Only Parun.Cast reads it (a membership test, permitsCastWhileSearching).
 data CastingPermission = CastFromLibraryWhileSearching
   deriving (Eq, Ord, Show)
 ```
 
 - [x] **Step 4: Add the `castingPermissions` field to `Card`**
 
-In `source/library/Pawl/Type/Card.hs`, add `import Pawl.Type.CastingPermission (CastingPermission)` and the field (after `triggeredAbilities`, before `targetSpecs`):
+In `source/library/Parun/Type/Card.hs`, add `import Parun.Type.CastingPermission (CastingPermission)` and the field (after `triggeredAbilities`, before `targetSpecs`):
 
 ```haskell
     -- CR 601.3: this card's casting permissions -- zone/condition exceptions to
@@ -714,7 +714,7 @@ In `source/library/Pawl/Type/Card.hs`, add `import Pawl.Type.CastingPermission (
 
 - [x] **Step 5: Add `searchesLibrary` to `Resolve`**
 
-In `source/library/Pawl/Resolve.hs`, add (casing on `Effect` is Resolve's charter):
+In `source/library/Parun/Resolve.hs`, add (casing on `Effect` is Resolve's charter):
 
 ```haskell
 -- CR 601.3 (Panglacial): does this effect search a library? The classification
@@ -733,7 +733,7 @@ searchesLibrary effect = case effect of
 
 - [x] **Step 6: Add the classifier and enumerator to `Cast`**
 
-In `source/library/Pawl/Cast.hs`, add `import qualified Pawl.Type.CastingPermission as CastingPermission`. Add:
+In `source/library/Parun/Cast.hs`, add `import qualified Parun.Type.CastingPermission as CastingPermission`. Add:
 
 ```haskell
 -- CR 601.3 (Panglacial): may this card be cast from the library while its
@@ -763,7 +763,7 @@ castableWhileSearching pid gs =
 
 - [x] **Step 7: Seed `castingPermissions = []` everywhere, then add Panglacial**
 
-`-Wmissing-fields` lists every printing. Add `Card.castingPermissions = []` (after `triggeredAbilities`) at every printing in `source/library/Pawl/Card.hs` and every hand-built `Card.Type.MkCard` in tests. Then add:
+`-Wmissing-fields` lists every printing. Add `Card.castingPermissions = []` (after `triggeredAbilities`) at every printing in `source/library/Parun/Card.hs` and every hand-built `Card.Type.MkCard` in tests. Then add:
 
 ```haskell
 -- Panglacial Wurm: {5}{G}{G}, Creature - Wurm, 9/5, "Trample / While you're
@@ -798,7 +798,7 @@ panglacialWurmPrinting =
     }
 ```
 
-(Add `import qualified Pawl.Type.CastingPermission as CastingPermission` to `Card.hs`. Match existing aliases: `Power`, `Toughness`, `Quantity`, `Keyword`, `ManaType`, `Color`, `ManaSymbol`, `ManaCost`. Register `panglacialWurmPrinting` in `allPrintings`.)
+(Add `import qualified Parun.Type.CastingPermission as CastingPermission` to `Card.hs`. Match existing aliases: `Power`, `Toughness`, `Quantity`, `Keyword`, `ManaType`, `Color`, `ManaSymbol`, `ManaCost`. Register `panglacialWurmPrinting` in `allPrintings`.)
 
 - [x] **Step 8: Run tests to verify they pass**
 
@@ -817,19 +817,19 @@ git commit -m "CastingPermission + castableWhileSearching + searchesLibrary + Pa
 ### Task 7: The `CastWhileSearching` prompt, its serialization, and the cast loop
 
 **Files:**
-- Modify: `source/library/Pawl/Type/Prompt.hs` (add `CastWhileSearching`)
-- Modify: `source/library/Pawl/Type/Response.hs` (add `CastWhileSearched`)
-- Modify: `source/library/Pawl/Replay.hs` (`encode`/`decode`/`defaultAnswer` arms)
-- Modify: `source/test-suite/Pawl/Support.hs` (the five answerers gain the arm)
-- Modify: `source/library/Pawl/Cast.hs` (`castWhileSearching` loop)
-- Test: `source/test-suite/Pawl/CastSpec.hs`
+- Modify: `source/library/Parun/Type/Prompt.hs` (add `CastWhileSearching`)
+- Modify: `source/library/Parun/Type/Response.hs` (add `CastWhileSearched`)
+- Modify: `source/library/Parun/Replay.hs` (`encode`/`decode`/`defaultAnswer` arms)
+- Modify: `source/test-suite/Parun/Support.hs` (the five answerers gain the arm)
+- Modify: `source/library/Parun/Cast.hs` (`castWhileSearching` loop)
+- Test: `source/test-suite/Parun/CastSpec.hs`
 
 **Interfaces:**
 - Produces: `Prompt.CastWhileSearching :: Decider -> PlayerId -> [ObjectId] -> Prompt (Maybe ObjectId)`; `Response.CastWhileSearched (Maybe ObjectId)`; `Cast.castWhileSearching :: PlayerId -> Game ()` (loops: offer the castable-while-searching options, cast the chosen card via `castSpell`, repeat until declined or none remain).
 
 - [x] **Step 1: Write the failing test**
 
-Add to `source/test-suite/Pawl/CastSpec.hs`. Drive the loop directly with a scripted interpreter that casts the one option (add imports `qualified Pawl.Engine as Engine`, `qualified Pawl.Type.Prompt as Prompt`, `qualified Data.Text as Text` if absent):
+Add to `source/test-suite/Parun/CastSpec.hs`. Drive the loop directly with a scripted interpreter that casts the one option (add imports `qualified Parun.Engine as Engine`, `qualified Parun.Type.Prompt as Prompt`, `qualified Data.Text as Text` if absent):
 
 ```haskell
       HU.testCase "castWhileSearching casts Panglacial from the library onto the stack" $
@@ -875,7 +875,7 @@ nameOnStack wanted gs oid = case Game.lookupObject oid gs of
   Nothing -> False
 ```
 
-(Add imports as the compiler flags — `qualified Pawl.Type.Action as A`, `qualified Pawl.Type.Subtype as Subtype`, `qualified Pawl.Type.GameState as GameState`, `qualified Pawl.Type.Object as Object`, `qualified Pawl.Type.ObjectId as ObjectId`, `qualified Pawl.Type.Source as Source`, `qualified Pawl.Type.Printing as Printing`, `qualified Pawl.Type.Card as Card.Type`, `qualified Pawl.Game as Game`, `qualified Data.Set as Set`, `qualified Data.Map.Strict as Map`.)
+(Add imports as the compiler flags — `qualified Parun.Type.Action as A`, `qualified Parun.Type.Subtype as Subtype`, `qualified Parun.Type.GameState as GameState`, `qualified Parun.Type.Object as Object`, `qualified Parun.Type.ObjectId as ObjectId`, `qualified Parun.Type.Source as Source`, `qualified Parun.Type.Printing as Printing`, `qualified Parun.Type.Card as Card.Type`, `qualified Parun.Game as Game`, `qualified Data.Set as Set`, `qualified Data.Map.Strict as Map`.)
 
 - [x] **Step 2: Run test to verify it fails**
 
@@ -884,7 +884,7 @@ Expected: FAIL to compile — `Prompt.CastWhileSearching`, `Cast.castWhileSearch
 
 - [x] **Step 3: Add the prompt**
 
-In `source/library/Pawl/Type/Prompt.hs`, add the constructor to the `Prompt` GADT:
+In `source/library/Parun/Type/Prompt.hs`, add the constructor to the `Prompt` GADT:
 
 ```haskell
   -- The re-entrant cast opportunity during a library search (Panglacial Wurm).
@@ -897,7 +897,7 @@ In `source/library/Pawl/Type/Prompt.hs`, add the constructor to the `Prompt` GAD
 
 - [x] **Step 4: Add the response and its serialization**
 
-In `source/library/Pawl/Type/Response.hs`, add the constructor:
+In `source/library/Parun/Type/Response.hs`, add the constructor:
 
 ```haskell
   | -- CR 601.3 (Panglacial): the library card cast while searching (Nothing =
@@ -905,7 +905,7 @@ In `source/library/Pawl/Type/Response.hs`, add the constructor:
     CastWhileSearched (Maybe ObjectId)
 ```
 
-In `source/library/Pawl/Replay.hs`, add arms:
+In `source/library/Parun/Replay.hs`, add arms:
 
 `encode`: `Prompt.CastWhileSearching {} -> Response.CastWhileSearched answer`
 `decode`:
@@ -920,11 +920,11 @@ In `source/library/Pawl/Replay.hs`, add arms:
 
 The new constructor forces an arm on **every** `case p of` over `Prompt` that lacks a catch-all `_` wildcard. Under the `pedantic` flag `-Wincomplete-patterns` is an error, so **the build enumerates every site exactly** — build, read the warning list, and add the arm to each. Add `Prompt.CastWhileSearching {} -> Nothing` to non-monadic answerers, and `Prompt.CastWhileSearching {} -> pure Nothing` to monadic ones (those returning `State.State … r`).
 
-Known homes (let the build confirm the full set — do not rely on this list being complete): `source/test-suite/Pawl/Support.hs` (`identityAnswer`, `castAnswer`, `aggressiveAnswer`, `playLandAnswer`, and the monadic `randomAnswer`); the group-local answerers in `EngineSpec.hs` (`slaveAnswer`, Task 5), `GameSpec.hs` (`recordingAnswer` — monadic), `CastSpec.hs` (`liar`, `discardLastAnswer`, `hackAnswer`), `ResolveSpec.hs` (`findFirst`, `findNothing`, `boltAnswer`, `atBob`), and any full answerer in `ActivateSpec.hs`/`CombatSpec.hs`. (`Pawl.Replay`'s `encode`/`decode`/`defaultAnswer` are already handled in Step 4. The Task 7/8 test interpreters `castFirstOption`/`castPanglacial` are written *with* the arm, so they are already complete.)
+Known homes (let the build confirm the full set — do not rely on this list being complete): `source/test-suite/Parun/Support.hs` (`identityAnswer`, `castAnswer`, `aggressiveAnswer`, `playLandAnswer`, and the monadic `randomAnswer`); the group-local answerers in `EngineSpec.hs` (`slaveAnswer`, Task 5), `GameSpec.hs` (`recordingAnswer` — monadic), `CastSpec.hs` (`liar`, `discardLastAnswer`, `hackAnswer`), `ResolveSpec.hs` (`findFirst`, `findNothing`, `boltAnswer`, `atBob`), and any full answerer in `ActivateSpec.hs`/`CombatSpec.hs`. (`Parun.Replay`'s `encode`/`decode`/`defaultAnswer` are already handled in Step 4. The Task 7/8 test interpreters `castFirstOption`/`castPanglacial` are written *with* the arm, so they are already complete.)
 
 - [x] **Step 6: Add the `castWhileSearching` loop to `Cast`**
 
-In `source/library/Pawl/Cast.hs`, add `import qualified Control.Monad.Trans.Class as Trans` and `import qualified Pawl.Type.Program as Program` (if absent) and `import qualified Pawl.Type.Prompt as Prompt` (if absent):
+In `source/library/Parun/Cast.hs`, add `import qualified Control.Monad.Trans.Class as Trans` and `import qualified Parun.Type.Program as Program` (if absent) and `import qualified Parun.Type.Prompt as Prompt` (if absent):
 
 ```haskell
 -- CR 601.3 (Panglacial): while a player searches their own library, offer them
@@ -970,8 +970,8 @@ git commit -m "CastWhileSearching prompt + serialization + the re-entrant cast l
 ### Task 8: Wire the cast loop into resolution — cast Panglacial during Evolving Wilds' search
 
 **Files:**
-- Modify: `source/library/Pawl/Stack.hs` (`resolveTop` offers the cast before an ability that searches)
-- Test: `source/test-suite/Pawl/StackSpec.hs` (the re-entrancy gate + negative control)
+- Modify: `source/library/Parun/Stack.hs` (`resolveTop` offers the cast before an ability that searches)
+- Test: `source/test-suite/Parun/StackSpec.hs` (the re-entrancy gate + negative control)
 
 **Interfaces:**
 - Consumes: `Cast.castWhileSearching` (Task 7), `Resolve.searchesLibrary` (Task 6), `Activate.activateAbility` (M3e).
@@ -979,7 +979,7 @@ git commit -m "CastWhileSearching prompt + serialization + the re-entrant cast l
 
 - [x] **Step 1: Write the failing test**
 
-Add to `source/test-suite/Pawl/StackSpec.hs`. Activate Evolving Wilds and, during its search, cast Panglacial; assert the interleave and the eventual 9/5 (add imports as the compiler flags — `qualified Pawl.Activate as Activate`, `qualified Pawl.Projection as Projection`, `qualified Pawl.Engine as Engine`, `qualified Pawl.Stack as Stack`, `qualified Pawl.Type.Prompt as Prompt`, `qualified Pawl.Type.Phase as Phase`, `qualified Pawl.Type.GameState as GameState`, `qualified Data.List as List`, `qualified Data.Text as Text`, `qualified Data.Map.Strict as Map`, `qualified Data.Set as Set`):
+Add to `source/test-suite/Parun/StackSpec.hs`. Activate Evolving Wilds and, during its search, cast Panglacial; assert the interleave and the eventual 9/5 (add imports as the compiler flags — `qualified Parun.Activate as Activate`, `qualified Parun.Projection as Projection`, `qualified Parun.Engine as Engine`, `qualified Parun.Stack as Stack`, `qualified Parun.Type.Prompt as Prompt`, `qualified Parun.Type.Phase as Phase`, `qualified Parun.Type.GameState as GameState`, `qualified Data.List as List`, `qualified Data.Text as Text`, `qualified Data.Map.Strict as Map`, `qualified Data.Set as Set`):
 
 ```haskell
       HU.testCase "CR 601.3: cast Panglacial during Evolving Wilds' search, then it resolves 9/5" $
@@ -1036,7 +1036,7 @@ castPanglacial p = case p of
   Prompt.ChooseBasicLandTypes {} -> (Subtype.Mountain, Subtype.Mountain)
 ```
 
-(Add imports `qualified Pawl.Type.Action as A`, `qualified Pawl.Type.Subtype as Subtype` if absent.)
+(Add imports `qualified Parun.Type.Action as A`, `qualified Parun.Type.Subtype as Subtype` if absent.)
 
 - [x] **Step 2: Run test to verify it fails**
 
@@ -1045,7 +1045,7 @@ Expected: FAIL — without the `Stack` wiring, `CastWhileSearching` is never pro
 
 - [x] **Step 3: Wire the cast offer into `resolveTop`**
 
-In `source/library/Pawl/Stack.hs`, add `import qualified Control.Monad as Monad`, `import qualified Pawl.Cast as Cast`, and `import qualified Pawl.Type.ActivatedAbility as ActivatedAbility`. Replace the `OfAbility` arm:
+In `source/library/Parun/Stack.hs`, add `import qualified Control.Monad as Monad`, `import qualified Parun.Cast as Cast`, and `import qualified Parun.Type.ActivatedAbility as ActivatedAbility`. Replace the `OfAbility` arm:
 
 ```haskell
         Source.OfAbility srcId ability -> do

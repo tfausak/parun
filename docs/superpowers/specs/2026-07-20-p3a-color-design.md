@@ -21,7 +21,7 @@ Wisps has no untap clause**.*
 
 `Layer.Color` (CR 613.1e, layer 5) sits in the layer enum with **no producer**,
 and the gap is deeper than a missing `Modification` arm: **an object has no colour
-at all today**. `Pawl.Type.Color` exists but only `ManaType` consumes it — a
+at all today**. `Parun.Type.Color` exists but only `ManaType` consumes it — a
 *mana* colour, not an *object* colour. `ProjectedCharacteristics` has no `colors`
 field, nothing derives colour from a mana cost (CR 202.2), and consequently
 nothing in the engine can ask the question that roughly a fifth of Magic's removal
@@ -89,7 +89,7 @@ cardinality ≥ 2 (CR 105.2b). Encoding colourless as a constructor would create
 sixth pseudo-colour that CR 105.4 explicitly denies, and would make
 `Set.member Black` — the only question any reader asks — the wrong shape.
 
-`Pawl.Projection` gains `colorsOf :: ObjectId -> GameState -> Set Color`, the
+`Parun.Projection` gains `colorsOf :: ObjectId -> GameState -> Set Color`, the
 sole read point, alongside `keywordsOf` / `subtypesOf` / `controllerOf`.
 
 ### 2.2 Base colours, and devoid at the seed
@@ -114,7 +114,7 @@ existing card.
 **Devoid is applied at the seed, not as a layer-5 effect — and that is a
 deliberate, argued equivalence, not an oversight.** CR 702.114a makes devoid a
 *characteristic-defining ability*, and CR 613.3 says that within layers 2–6, CDAs
-are applied **first**, then all other effects in timestamp order. pawl's fold
+are applied **first**, then all other effects in timestamp order. parun's fold
 sorts on `(layer, timestamp)` only; honouring 613.3 literally would mean a
 precedence key on `Gathered`. It is not needed, because for every case
 **exercised by the current card pool** the two orderings are observably
@@ -162,7 +162,7 @@ as-enters drain, which snapshots `Projection.copiableCharacteristics`) — a Clo
 of a Tarmogoyf would keep whatever P/T the graveyards held at the moment it
 entered, instead of recomputing, which violates CR 707.2 (a copy acquires the
 *ability*, not its computed value). So **P3b must fold Tarmogoyf's CDA in-place
-at `Layer.CharacteristicPT`** (7a — which already exists in `Pawl.Type.Layer` as
+at `Layer.CharacteristicPT`** (7a — which already exists in `Parun.Type.Layer` as
 the CR's own dedicated sublayer for exactly this), not at the seed; it needs no
 CR 613.3 precedence key at all. `baseCharacteristics` already evaluating a
 printed `*` P/T at the seed via `Quantity.evaluate` is harmless *only* because no
@@ -230,7 +230,7 @@ so this is scoped work being cashed, not scope creep.
 
 **CR 111.3: the effect that creates a token defines its characteristics, and those
 values "are functionally equivalent to the characteristic values that are printed
-on a card."** pawl models a token as a `Card` (M4c, `Source.OfToken Card`) with no
+on a card."** parun models a token as a `Card` (M4c, `Source.OfToken Card`) with no
 mana cost — so **Dragon Fodder's Goblins project as colourless today**, and its
 oracle text says *red*. That is a live correctness bug, not a hypothetical.
 
@@ -250,9 +250,9 @@ covers the new field the moment a card populates it.
 ## 3. The two invariants
 
 1. **Classification, never identity.** `SetColor` is open-half vocabulary cased on
-   solely by `Pawl.Projection` (its standing home for `Modification`);
+   solely by `Parun.Projection` (its standing home for `Modification`);
    `NonblackCreatureTarget` and `CreaturesOfColor` are classifications consulted by
-   `Pawl.Target` and `Pawl.Projection`; `Devoid` and `Fear` are CR 702 citations.
+   `Parun.Target` and `Parun.Projection`; `Devoid` and `Fear` are CR 702 citations.
    No module learns what card it is looking at.
 2. **The engine makes no choices.** P3a introduces **no prompt and elides none**.
    Colour is derived, never chosen. (CR 105.4's "choose a color" — Painter's
@@ -278,10 +278,10 @@ The falsifier needs a creature whose **mana cost is black** and whose **actual
 colour is colourless** — a red-costed devoid creature proves nothing, because
 "nonblack" and "not black" agree on it under both the correct and the naive
 implementation. Every devoid creature with `{B}` in its cost (Scryfall: 26) was
-checked, and **all 26 carry a rider pawl cannot yet express**:
+checked, and **all 26 carry a rider parun cannot yet express**:
 
 - a **self-effect** — `{C}: This creature gains deathtouch` (Slaughter Drone),
-  `{1}{C}: This creature gets +2/+1` (Havoc Sower). pawl has no self *slot*; its
+  `{1}{C}: This creature gets +2/+1` (Havoc Sower). parun has no self *slot*; its
   established pattern for "this creature" is a dedicated `…Self` opcode
   (`Effect.RegenerateSelf`, M4d), so this needs a new `ModifySelf` opcode — open-half
   vocabulary belonging to no part of the colour axis;
@@ -291,7 +291,7 @@ checked, and **all 26 carry a rider pawl cannot yet express**:
 - an **unbuilt keyword** — menace (Kozilek's Shrieker, Bismuth Mindrender).
 
 The one **french-vanilla** devoid creature in the game, **Vestige of Emrakul**
-(`{3}{R}` 3/4, Devoid + Trample), needs nothing pawl lacks — but its cost is red,
+(`{3}{R}` 3/4, Devoid + Trample), needs nothing parun lacks — but its cost is red,
 so the colour conflict it carries is unobservable through this phase's readers.
 
 This is the exact condition design.md §4 sanctions a crutch under: *"a real card
@@ -328,16 +328,16 @@ yield.
 
 | Module | Change |
 |---|---|
-| `Pawl.Type.ProjectedCharacteristics` | `+ colors :: Set Color` |
-| `Pawl.Type.Card` | `+ colorIndicator :: Set Color` |
-| `Pawl.Type.Modification` | `+ SetColor (Set Color)` — layer 5 |
-| `Pawl.Type.Keyword` | `+ Devoid` (702.114), `+ Fear` (702.36) |
-| `Pawl.Type.TargetSpec` | `+ NonblackCreatureTarget` |
-| `Pawl.Type.Affected` | `+ CreaturesOfColor Color` |
-| `Pawl.Projection` | base colours in `baseCharacteristics`; `layer`/`applyModification` for `SetColor`; `affects` for `CreaturesOfColor`; `+ colorsOf` |
-| `Pawl.Combat` | `legalBlockDeclaration` gains the CR 702.36b fear clause via a new `fearAllows` (per-pair, not per-creature — not `canBlock`) |
-| `Pawl.Target` | `legalRecipients` / `isSelfExcluding` for `NonblackCreatureTarget` |
-| `Pawl.Codec` | `colorIndicator` (omitted when empty), `SetColor`, the two keywords, the target spec, the affected set |
+| `Parun.Type.ProjectedCharacteristics` | `+ colors :: Set Color` |
+| `Parun.Type.Card` | `+ colorIndicator :: Set Color` |
+| `Parun.Type.Modification` | `+ SetColor (Set Color)` — layer 5 |
+| `Parun.Type.Keyword` | `+ Devoid` (702.114), `+ Fear` (702.36) |
+| `Parun.Type.TargetSpec` | `+ NonblackCreatureTarget` |
+| `Parun.Type.Affected` | `+ CreaturesOfColor Color` |
+| `Parun.Projection` | base colours in `baseCharacteristics`; `layer`/`applyModification` for `SetColor`; `affects` for `CreaturesOfColor`; `+ colorsOf` |
+| `Parun.Combat` | `legalBlockDeclaration` gains the CR 702.36b fear clause via a new `fearAllows` (per-pair, not per-creature — not `canBlock`) |
+| `Parun.Target` | `legalRecipients` / `isSelfExcluding` for `NonblackCreatureTarget` |
+| `Parun.Codec` | `colorIndicator` (omitted when empty), `SetColor`, the two keywords, the target spec, the affected set |
 | `data/cards/` | 5 new files; `dragon-fodder.json`'s token gains `colorIndicator` |
 
 No new opcode. No new prompt. No change to `Object`, `GameState`, or the event
@@ -378,7 +378,7 @@ Substrate before consumers, and each step's test written and watched to fail fir
 | Colour indicator on real no-mana-cost cards (Ancestral Vision et al.) | the field exists; the cards need **suspend** |
 | Devoid acquired by copy or text-change (CR 604.3a(2)) | the first card that grants a CDA that way |
 | **The synthetic Devoid Drone** | a `ModifySelf` opcode (or a self slot) makes **Slaughter Drone** encodable; a new `TriggerCondition` makes **Culling Drone** or **Silent Skimmer** encodable. Either retires the crutch. |
-| **Vestige of Emrakul** (`{3}{R}`, the one french-vanilla devoid creature) | a reader keyed on **red** — it needs nothing pawl lacks, only an observation |
+| **Vestige of Emrakul** (`{3}{R}`, the one french-vanilla devoid creature) | a reader keyed on **red** — it needs nothing parun lacks, only an observation |
 | "Choose a color" as a prompt (CR 105.4 — Painter's Servant, Iona) | the first colour-choosing card |
 | Protection (CR 702.16), the largest colour reader | unchanged from M2: the Attach/Aura subsystem plus CR 615 breadth |
 | Colour as a copiable value under a *layer-5* CDA other than devoid | the first such card |

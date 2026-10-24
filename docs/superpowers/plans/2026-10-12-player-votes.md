@@ -17,7 +17,7 @@
 
 ## Global Constraints
 
-- **Worktree.** Work only in `/Volumes/nvme/Developer/pawl/.claude/worktrees/3717-player-votes`, on branch `3717-player-votes`, cut from `origin/main` at c4ecea7a4. Never `cd` to the primary checkout or to any other worktree. Before the first build, run `script/warm-worktree.sh seed /Volumes/nvme/Developer/pawl/.claude/worktrees/3717-player-votes`, then confirm with `ls cabal.project.local`.
+- **Worktree.** Work only in `/Volumes/nvme/Developer/parun/.claude/worktrees/3717-player-votes`, on branch `3717-player-votes`, cut from `origin/main` at c4ecea7a4. Never `cd` to the primary checkout or to any other worktree. Before the first build, run `script/warm-worktree.sh seed /Volumes/nvme/Developer/parun/.claude/worktrees/3717-player-votes`, then confirm with `ls cabal.project.local`.
 - **Merging.** Merge `origin/main` ONCE, in Task 3 Step 1. Never mid-plan.
 - **cabal.** Prefix every `cabal` call with `script/with-build-lock.sh`. Redirect output to a scratchpad file and read the file; never pipe into `head`.
 - **Test selection.** `-p` patterns contain NO spaces. Scenario tests are named by bare file name, and this plan's scenarios carry the stem `player-vote`.
@@ -25,11 +25,11 @@
 - **Effect identity.** The rules core never cases on an effect's identity. The `Vote` arm resolving its own `Players` case is that arm's job.
 - **CLAUDE.md item 4** applies to:
   - a new `VoteChoices` arm: codec, `Resolve/Slots` (`slotsOf` and `boundSlots`), `Interchangeable/Mentions`, `Projection/Rewrite` and `CardSpec`;
-  - a new `Prompt` and `Response`: `Replay` encode, decode and `defaultAnswer`; `Scenario.Prompt` `deciderOf` and `kindOf`; `Scenario/Reply`; the `withinOffer` legality check in `Scenario.hs`; and `test/Pawl/VoteSpec.hs`'s answerer. Mirror `ChooseVoteWord` end to end.
+  - a new `Prompt` and `Response`: `Replay` encode, decode and `defaultAnswer`; `Scenario.Prompt` `deciderOf` and `kindOf`; `Scenario/Reply`; the `withinOffer` legality check in `Scenario.hs`; and `test/Parun/VoteSpec.hs`'s answerer. Mirror `ChooseVoteWord` end to end.
   - a new `Binding` field: `Codec.Binding`; `Engine.Binding`'s `mergeBinding` and its sibling functions; and every `MkBinding` construction and `{ Binding.` update. `Object`-held bindings travel with the object, so read how `amount` survives `newIncarnation`.
   - a new `Quantity` arm: codec, `QuantitySlot`, `Star`, `Projection`, `Projection/Rewrite`, `Mentions`, `Engine/Quantity` evaluation, `CardSpec`, `EffectLintSpec` and `QuantitySpec`. Use `UniqueVowelsOnSticker`'s commit, `212cfd24a`, as the site map.
   - a new `BallotChoice` arm: its codec, the `Witnessed` rendering in `Scenario.hs`, and `Event/Trigger.hs` `ballotParticipants` and `rereadBallot`.
-- **Types.** One type per `Pawl.Types.<TypeName>` module. A constructor's haddock is one line plus its CR citation. Every new codec gets a round-trip case.
+- **Types.** One type per `Parun.Types.<TypeName>` module. A constructor's haddock is one line plus its CR citation. Every new codec gets a round-trip case.
 - **Style.** `case` over `maybe`, `let` over `where`, no backticks, no partial `head`, and extensions only from `.hlint.yaml`.
 - **Mutations.** Every proving check gets one: `script/with-build-lock.sh script/mutate.sh FILE @SCRIPT PATTERN`, with the sed script in a scratchpad file, keeping imports and bindings used (`-Werror`). Name the assertion that reddened. Never edit a file while a mutation runs on it.
 - **Oracle text.** Verify it with `curl -s 'https://api.scryfall.com/cards/named?exact=Mob%20Verdict'`. Ruling: "Each player must vote for another player. They can't abstain."
@@ -56,7 +56,7 @@
 ### Task 1: The player vote, its tally and `VotesReceived`
 
 **Files:**
-- Create: `source/libraries/types/Pawl/Types/VotePlayers.hs` and its codec and spec
+- Create: `source/libraries/types/Parun/Types/VotePlayers.hs` and its codec and spec
 - Modify:
   - `Types/VoteChoices.hs` and its codec and spec; rewrite the #3717 elision haddock at ~13-15
   - `Types/BallotChoice.hs` and its codec
@@ -67,7 +67,7 @@
   - `Resolve/Effect.hs` (the `Vote` arm's new `Players` case, ~6805)
   - `Engine/Quantity.hs` (the evaluation)
   - every item-4 site in Global Constraints
-- Test: `source/libraries/test/Pawl/VoteSpec.hs`
+- Test: `source/libraries/test/Parun/VoteSpec.hs`
 
 **Interfaces:**
 - Produces:

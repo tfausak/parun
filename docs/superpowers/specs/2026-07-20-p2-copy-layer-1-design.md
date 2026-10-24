@@ -56,7 +56,7 @@ wrapper, add no opcode" posture).
 **Out of scope (deferred, each with a named expiry — §7):** copy-spell (CR 707.10);
 copy-token effects (CR 707.2 token copies); ongoing "becomes a copy" that re-reads
 the source (Vesuvan Doppelganger); the general as-enters *replacement* shape (CR
-614.12); face-down / morph / manifest (backlog, umbrella §4); copiable values pawl
+614.12); face-down / morph / manifest (backlog, umbrella §4); copiable values parun
 does not yet project (name, mana cost, color, supertypes) and the 7b/CDA P/T-
 setting inclusion of CR 707.2 (rides P3); copy riders ("...with a +1/+1 counter",
 "...and gains flying").
@@ -83,9 +83,9 @@ zone change for free** (CR 122.2/400.7's `changeZone` reset, the same mechanism
 that clears counters and targets). No new base `Object` field; nothing to clean up
 at cleanup or when the object leaves.
 
-### 2.2 Copy is the fold seed (layer 1), in `Pawl.Projection`
+### 2.2 Copy is the fold seed (layer 1), in `Parun.Projection`
 
-Layer 1 is the *first* layer, and pawl's projection already begins its fold from a
+Layer 1 is the *first* layer, and parun's projection already begins its fold from a
 starting value — `baseCharacteristics oid gs` (the printed characteristics). A copy
 effect replaces exactly that starting value with the copied object's **copiable
 values** (CR 707.2 / 613.1a). So copy is the **fold seed**, not a synthesized
@@ -109,7 +109,7 @@ keeps reading `baseCharacteristics`, never the copiable seed, so nothing recurse
 
 No new `Modification` constructor is introduced — copy is not a `case`-on-
 `Modification` operation but a replacement of the fold's starting value, so
-`Pawl.Projection` stays the sole home of the layer machinery with **no `Codec`
+`Parun.Projection` stays the sole home of the layer machinery with **no `Codec`
 surface** (a `Modification.BecomeCopy` would have forced a dead `ProjectedCharacteristics`
 JSON encoding, since it never appears in a card; the seed avoids it entirely).
 
@@ -119,7 +119,7 @@ The snapshot rides a `Binding` field (§2.4), and `Binding` (via `Object`) deriv
 `Ord`, so **`ProjectedCharacteristics` gains `deriving Ord`**. This follows the
 project's "derive `Ord` broadly — it is harmless and occasionally useful" posture;
 the old "No Ord: never sorted, never a key" comment is retired. The characteristics
-carried are exactly CR 707.2's copiable subset pawl currently projects (keywords,
+carried are exactly CR 707.2's copiable subset parun currently projects (keywords,
 P/T, card types, subtypes, the three ability lists, `rulesTextActive`); name/mana
 cost/color/supertypes are not projected and so not copied (§7).
 
@@ -150,13 +150,13 @@ monadic **drain**:
   every battlefield object still carrying the pending marker and resolves its choice:
   prompt `ChooseCopyTarget`; on `Just chosen`, compute
   `Projection.copiableCharacteristics chosen gs`, write the snapshot into the copy
-  binding (`Pawl.Binding.setCopy`), and clear the marker; on `Nothing` (decline),
+  binding (`Parun.Binding.setCopy`), and clear the marker; on `Nothing` (decline),
   just clear the marker.
 - **`Prompt.ChooseCopyTarget` / `Response.ChoseCopyTarget (Maybe ObjectId)`** (new
   pair). Legal set = **battlefield creatures** (projected creature-ness,
   `Projection.isCreatureOf`) **excluding the entering object itself** (a 0/0 with
   nothing useful to copy; excluding it removes any self-cycle question — CR wording
-  **verify**). `Nothing` is the decline. `Pawl.Target` gains the legal-set helper
+  **verify**). `Nothing` is the decline. `Parun.Target` gains the legal-set helper
   (`legalCopyTargets`).
 - **Why this is CR-faithful, not a stopgap.** The choice is attached to the correct
   event (every battlefield entry — a reanimated, blinked, or token Clone all get it,
@@ -187,9 +187,9 @@ applied a second time; copy is its second customer, not a new problem.
 
 ## 3. The two invariants
 
-1. **Classification, not identity.** `Pawl.Projection` stays the sole
+1. **Classification, not identity.** `Parun.Projection` stays the sole
    `case`-on-`Modification` home (`BecomeCopy` applied only there). **No new
-   `Effect`**, so `Pawl.Resolve`'s `case effect of` is untouched and no new opcode
+   `Effect`**, so `Parun.Resolve`'s `case effect of` is untouched and no new opcode
    classifications (`slotsOf`/`readsX`/`manaProduced`/`searchesLibrary`/
    `rewriteEffect`) are needed. `copyOnEnter` is a Bool the entry funnel and drain
    consult, never a card identity.
@@ -230,26 +230,26 @@ exists in the engine — **no synthetic crutch is needed** (the
 
 ## 5. Module & type changes (summary)
 
-- `Pawl.Type.ProjectedCharacteristics` — add `Ord` to the deriving; retire the "No
+- `Parun.Type.ProjectedCharacteristics` — add `Ord` to the deriving; retire the "No
   Ord" comment.
-- `Pawl.Type.Binding` — add `copy :: Maybe ProjectedCharacteristics`.
-- `Pawl.Binding` — add the `copyOf` projection and `setCopy` write; the reserved
+- `Parun.Type.Binding` — add `copy :: Maybe ProjectedCharacteristics`.
+- `Parun.Binding` — add the `copyOf` projection and `setCopy` write; the reserved
   copy-snapshot slot; and the reserved **as-enters-pending** marker slot with
   `pendingCopy` / `markPending` / `clearPending`.
-- `Pawl.Type.Card` — add `copyOnEnter :: Bool`.
-- `Pawl.Projection` — add `copiableCharacteristics`; seed `projectFrom` with it.
+- `Parun.Type.Card` — add `copyOnEnter :: Bool`.
+- `Parun.Projection` — add `copiableCharacteristics`; seed `projectFrom` with it.
   No `Modification`, `layer`, `applyModification`, or `Codec` change.
-- `Pawl.Event` (`placeObject`) — pure **mark**: stamp the pending marker on a
+- `Parun.Event` (`placeObject`) — pure **mark**: stamp the pending marker on a
   `copyOnEnter` object as it enters. No `case effect of` / no prompt.
-- The settle loop (`Pawl.Engine` / `Pawl.Stack` — wherever the CR 117.5 boundary
+- The settle loop (`Parun.Engine` / `Parun.Stack` — wherever the CR 117.5 boundary
   scans triggers and SBAs) — monadic **drain**: before the trigger scan and SBA
   check, resolve each pending object's `ChooseCopyTarget`, compute the snapshot,
   stamp the copy binding (or clear on decline).
-- `Pawl.Type.Prompt` / `Pawl.Type.Response` — add `ChooseCopyTarget` /
+- `Parun.Type.Prompt` / `Parun.Type.Response` — add `ChooseCopyTarget` /
   `ChoseCopyTarget`.
-- `Pawl.Target` — add `legalCopyTargets` (battlefield creatures excluding self).
-- `Pawl.Replay` — deterministic `ChoseCopyTarget` answer.
-- `Pawl.Codec` — `Card.copyOnEnter` field only (emitted **when True**, so the 44
+- `Parun.Target` — add `legalCopyTargets` (battlefield creatures excluding self).
+- `Parun.Replay` — deterministic `ChoseCopyTarget` answer.
+- `Parun.Codec` — `Card.copyOnEnter` field only (emitted **when True**, so the 44
   existing card files stay byte-stable; decoded optionally, default `False`). No
   `Modification` arm (§2.2), and bindings are runtime state, never serialized.
   `clone.json` round-trips.
@@ -258,7 +258,7 @@ exists in the engine — **no synthetic crutch is needed** (the
 ## 6. Ordering within the phase (for the plan)
 
 Substrate before consumer, falsifier-first: (1) `ProjectedCharacteristics` Ord +
-the `Binding.copy` + pending-marker slots + `Pawl.Binding` accessors; (2)
+the `Binding.copy` + pending-marker slots + `Parun.Binding` accessors; (2)
 `copiableCharacteristics` + the `projectFrom` seed, tested by projecting a
 hand-placed copy binding directly (unit-level, before the card exists); (3)
 `Card.copyOnEnter` + `Codec` + `Subtype.Shapeshifter`; (4) `clone.json` +
@@ -270,7 +270,7 @@ failing test, watch it fail, implement).
 
 ## 7. Deferred, with named expiries
 
-- **Copiable values pawl does not project** — name, mana cost, color, supertypes.
+- **Copiable values parun does not project** — name, mana cost, color, supertypes.
   Copy sets only the `ProjectedCharacteristics` subset. → the first card that
   observes a copied name/color/cost (color rides **P3**; a name projection is its
   own first-customer card).

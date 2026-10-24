@@ -1,0 +1,33 @@
+module Parun.Codec.ManaRetentionSpec where
+
+import qualified Parun.Codec.ManaRetention as ManaRetention
+import qualified Parun.JsonCodec.Common as Common
+import qualified Parun.Spec as Spec
+import qualified Parun.Types.ManaRetention as ManaRetention
+
+spec :: (Monad m, Monad n) => Spec.Spec m n -> n ()
+spec s = Spec.describe s "Parun.Codec.ManaRetention" $ do
+  Spec.it s "Ordinary" $
+    Common.assertCodec
+      s
+      ManaRetention.codec
+      ManaRetention.Ordinary
+      " {\"type\":\"Ordinary\"} "
+  Spec.it s "UntilEndOfTurn" $
+    Common.assertCodec
+      s
+      ManaRetention.codec
+      ManaRetention.UntilEndOfTurn
+      " {\"type\":\"UntilEndOfTurn\"} "
+  Spec.it s "UntilEndOfCombat" $
+    Common.assertCodec
+      s
+      ManaRetention.codec
+      ManaRetention.UntilEndOfCombat
+      " {\"type\":\"UntilEndOfCombat\"} "
+  -- Exhaustive where the literals above are representative: Arm.enum derives
+  -- the arm list from the type, so this is what would catch a constructor the
+  -- derivation missed or two that encode alike.
+  Spec.it s "round trips every constructor" $ Common.assertEnumCodec s ManaRetention.codec
+  Spec.it s "has a schema" $
+    Common.assertHasSchema s ManaRetention.codec

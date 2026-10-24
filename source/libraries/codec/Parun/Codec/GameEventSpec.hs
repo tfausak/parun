@@ -1,0 +1,762 @@
+module Parun.Codec.GameEventSpec where
+
+import qualified Data.Map as Map
+import qualified Data.Sequence as Seq
+import qualified Data.Set as Set
+import qualified Data.Text as Text
+import qualified Parun.Codec.ActivatedAbilitySourceSpec as ActivatedAbilitySourceSpec
+import qualified Parun.Codec.GameEvent as GameEvent
+import qualified Parun.Codec.ProjectedCharacteristicsSpec as ProjectedCharacteristicsSpec
+import qualified Parun.Codec.TriggeredAbilitySourceSpec as TriggeredAbilitySourceSpec
+import qualified Parun.JsonCodec.Codec as Codec
+import qualified Parun.JsonCodec.Common as Common
+import qualified Parun.Spec as Spec
+import qualified Parun.Types.AbilityTriggered as AbilityTriggered
+import qualified Parun.Types.Acquisition as Acquisition
+import qualified Parun.Types.ActivatedAbilitySource as ActivatedAbilitySource
+import qualified Parun.Types.AttackTarget as AttackTarget
+import qualified Parun.Types.AttackerBlocked as AttackerBlocked
+import qualified Parun.Types.AttackerDeclared as AttackerDeclared
+import qualified Parun.Types.AttackerUnblocked as AttackerUnblocked
+import qualified Parun.Types.Ballot as Ballot
+import qualified Parun.Types.BallotChoice as BallotChoice
+import qualified Parun.Types.BecameAttached as BecameAttached
+import qualified Parun.Types.BecameAttacked as BecameAttacked
+import qualified Parun.Types.BecameBlocking as BecameBlocking
+import qualified Parun.Types.BecameDesignated as BecameDesignated
+import qualified Parun.Types.BecameTarget as BecameTarget
+import qualified Parun.Types.BecameUnattached as BecameUnattached
+import qualified Parun.Types.BlockProducer as BlockProducer
+import qualified Parun.Types.BlocksDeclared as BlocksDeclared
+import qualified Parun.Types.CandidateId as CandidateId
+import qualified Parun.Types.CardName as CardName
+import qualified Parun.Types.ClassLevel as ClassLevel
+import qualified Parun.Types.ClassLevelChange as ClassLevelChange
+import qualified Parun.Types.CoinFlipped as CoinFlipped
+import qualified Parun.Types.Color as Color
+import qualified Parun.Types.ControlChanged as ControlChanged
+import qualified Parun.Types.Convoking as Convoking
+import qualified Parun.Types.Cost as Cost
+import qualified Parun.Types.CounterChange as CounterChange
+import qualified Parun.Types.CounterKind as CounterKind
+import qualified Parun.Types.Countering as Countering
+import qualified Parun.Types.Crewing as Crewing
+import qualified Parun.Types.DamageEvent as DamageEvent
+import qualified Parun.Types.DamageKind as DamageKind
+import qualified Parun.Types.DamagePrevented as DamagePrevented
+import qualified Parun.Types.Designation as Designation
+import qualified Parun.Types.DieResult as DieResult
+import qualified Parun.Types.DiscardCause as DiscardCause
+import qualified Parun.Types.Discarded as Discarded
+import qualified Parun.Types.Drew as Drew
+import qualified Parun.Types.EndingStep as EndingStep
+import qualified Parun.Types.Exploited as Exploited
+import qualified Parun.Types.FloatingCandidate as FloatingCandidate
+import qualified Parun.Types.GameEvent as GameEvent
+import qualified Parun.Types.HalfUnlocked as HalfUnlocked
+import qualified Parun.Types.LandPlayed as LandPlayed
+import qualified Parun.Types.LeftTheGame as LeftTheGame
+import qualified Parun.Types.LifeChange as LifeChange
+import qualified Parun.Types.Looked as Looked
+import qualified Parun.Types.ManaAbilityResolved as ManaAbilityResolved
+import qualified Parun.Types.ManaAdded as ManaAdded
+import qualified Parun.Types.ManaAddedCause as ManaAddedCause
+import qualified Parun.Types.ManaCost as ManaCost
+import qualified Parun.Types.ManaType as ManaType
+import qualified Parun.Types.ManifestedDread as ManifestedDread
+import qualified Parun.Types.Mentored as Mentored
+import qualified Parun.Types.Milled as Milled
+import qualified Parun.Types.Moved as Moved
+import qualified Parun.Types.ObjectId as ObjectId
+import qualified Parun.Types.PermanentActed as PermanentActed
+import qualified Parun.Types.PermanentAction as PermanentAction
+import qualified Parun.Types.PermanentWasSacrificed as PermanentWasSacrificed
+import qualified Parun.Types.Phase as Phase
+import qualified Parun.Types.PlanarDieFace as PlanarDieFace
+import qualified Parun.Types.PlanarDieRolled as PlanarDieRolled
+import qualified Parun.Types.PlayerActed as PlayerActed
+import qualified Parun.Types.PlayerAction as PlayerAction
+import qualified Parun.Types.PlayerId as PlayerId
+import qualified Parun.Types.Recipient as Recipient
+import qualified Parun.Types.RevealCause as RevealCause
+import qualified Parun.Types.Revealed as Revealed
+import qualified Parun.Types.RoomIndex as RoomIndex
+import qualified Parun.Types.Saddling as Saddling
+import qualified Parun.Types.SideDeck as SideDeck
+import qualified Parun.Types.SlotName as SlotName
+import qualified Parun.Types.SpellWasCast as SpellWasCast
+import qualified Parun.Types.SpellWasCopied as SpellWasCopied
+import qualified Parun.Types.StackObjectKind as StackObjectKind
+import qualified Parun.Types.StepBegan as StepBegan
+import qualified Parun.Types.StickerKind as StickerKind
+import qualified Parun.Types.StickerPut as StickerPut
+import qualified Parun.Types.TappedForMana as TappedForMana
+import qualified Parun.Types.Timestamp as Timestamp
+import qualified Parun.Types.Transformed as Transformed
+import qualified Parun.Types.TriggerSource as TriggerSource
+import qualified Parun.Types.TriggeredAbilitySource as TriggeredAbilitySource
+import qualified Parun.Types.TurnedFaceUp as TurnedFaceUp
+import qualified Parun.Types.TurnedUpOffDeck as TurnedUpOffDeck
+import qualified Parun.Types.VentureMarkerEntered as VentureMarkerEntered
+import qualified Parun.Types.Voted as Voted
+import qualified Parun.Types.Zone as Zone
+import qualified Parun.Types.ZoneChange as ZoneChange
+
+-- | At least one case per GameEvent constructor. HalfUnlocked gets two, since CR
+-- 709.5i's flag is a Bool whose two values are what that rule turns on and a
+-- codec that dropped it would round-trip one of them unchanged. The
+-- Moved/Revealed/SpellCast cases carry a
+-- stand-in snapshot: this sublibrary sits above Parun.Registry and Parun.Engine,
+-- so it cannot build a real one. The registry-backed round-trips over real
+-- snapshots stay in Parun.CodecIntegrationSpec.
+spec :: (Monad m, Monad n) => Spec.Spec m n -> n ()
+spec s = Spec.describe s "Parun.Codec.GameEvent" $ do
+  Spec.it s "Moved" $
+    Common.assertCodec
+      s
+      GameEvent.codec
+      (GameEvent.Moved (Moved.moved (ZoneChange.MkZoneChange (ObjectId.MkObjectId 1) (ObjectId.MkObjectId 2) Zone.Battlefield Zone.Graveyard) ProjectedCharacteristicsSpec.testCharacteristics))
+      ( "{\"type\":\"Moved\",\"value\":{\"change\":{\"departed\":1,\"object\":2,\"from\":{\"type\":\"Battlefield\"},\"to\":{\"type\":\"Graveyard\"}},\"characteristics\":"
+          <> ProjectedCharacteristicsSpec.testCharacteristicsJson
+          <> ",\"otherArrivals\":[]}}"
+      )
+  -- CR 712.21's second card, whose destination differs from the departure's
+  -- origin the same way a Moved event's does -- and which carries no snapshot.
+  Spec.it s "CardArrived" $
+    Common.assertCodec
+      s
+      GameEvent.codec
+      (GameEvent.CardArrived (ZoneChange.MkZoneChange (ObjectId.MkObjectId 1) (ObjectId.MkObjectId 3) Zone.Battlefield Zone.Graveyard))
+      "{\"type\":\"CardArrived\",\"value\":{\"departed\":1,\"object\":3,\"from\":{\"type\":\"Battlefield\"},\"to\":{\"type\":\"Graveyard\"}}}"
+  -- A NONZERO toxic value and a PRESENT lifelink payee, so the CR 702.164b and
+  -- CR 702.15b riders round-trip rather than getting defaulted past.
+  Spec.it s "DamageDealt" $
+    Common.assertCodec
+      s
+      GameEvent.codec
+      (GameEvent.DamageDealt (DamageEvent.MkDamageEvent (ObjectId.MkObjectId 1) (Recipient.ToPlayer (PlayerId.MkPlayerId 1)) 2 True False False 3 (Just (PlayerId.MkPlayerId 2)) Nothing mempty False DamageKind.Combat))
+      ( "{\"type\":\"DamageDealt\",\"value\":{\"source\":1,\"target\":{\"type\":\"ToPlayer\",\"value\":1},\"amount\":2,"
+          <> "\"dealtByDeathtouch\":true,\"dealtByToxic\":3,\"dealtByLifelink\":2,\"kind\":{\"type\":\"Combat\"}}}"
+      )
+  -- CR 615.13's record, carrying the applying instance's CR 614.5 identity
+  -- alongside the damage's source and what it prevented for each recipient.
+  Spec.it s "DamagePrevented" $
+    Common.assertCodec
+      s
+      GameEvent.codec
+      (GameEvent.DamagePrevented (DamagePrevented.MkDamagePrevented (CandidateId.OfFloating (FloatingCandidate.MkFloatingCandidate (ObjectId.MkObjectId 4) (Timestamp.MkTimestamp 6))) (Map.singleton (ObjectId.MkObjectId 9) (Map.singleton (Recipient.ToPlayer (PlayerId.MkPlayerId 1)) 3))))
+      ( "{\"type\":\"DamagePrevented\",\"value\":{\"by\":{\"type\":\"OfFloating\",\"value\":{\"source\":4,\"timestamp\":6}},"
+          <> "\"amounts\":[{\"key\":9,\"value\":[{\"key\":{\"type\":\"ToPlayer\",\"value\":1},\"value\":3}]}]}}"
+      )
+  Spec.it s "StepBegan" $
+    Common.assertCodec
+      s
+      GameEvent.codec
+      (GameEvent.StepBegan (StepBegan.MkStepBegan (Phase.Ending EndingStep.EndStep) (PlayerId.MkPlayerId 0)))
+      " {\"type\":\"StepBegan\",\"value\":{\"phase\":{\"type\":\"Ending\",\"value\":{\"type\":\"EndStep\"}},\"player\":0}} "
+  Spec.it s "SpellCast" $
+    Common.assertCodec
+      s
+      GameEvent.codec
+      (GameEvent.SpellCast (SpellWasCast.MkSpellWasCast (PlayerId.MkPlayerId 0) (ObjectId.MkObjectId 7) ProjectedCharacteristicsSpec.testCharacteristics (Just Zone.Hand) Nothing Set.empty))
+      ( "{\"type\":\"SpellCast\",\"value\":{\"player\":0,\"spell\":7,\"characteristics\":"
+          <> ProjectedCharacteristicsSpec.testCharacteristicsJson
+          <> ",\"zone\":{\"type\":\"Hand\"}}}"
+      )
+  Spec.it s "SpellCopied" $
+    Common.assertCodec
+      s
+      GameEvent.codec
+      (GameEvent.SpellCopied (SpellWasCopied.MkSpellWasCopied (PlayerId.MkPlayerId 1) (ObjectId.MkObjectId 7)))
+      " {\"type\":\"SpellCopied\",\"value\":{\"player\":1,\"copy\":7}} "
+  Spec.it s "BecameMonarch" $
+    Common.assertCodec
+      s
+      GameEvent.codec
+      (GameEvent.BecameMonarch (PlayerId.MkPlayerId 0))
+      " {\"type\":\"BecameMonarch\",\"value\":0} "
+  Spec.it s "TookInitiative" $
+    Common.assertCodec
+      s
+      GameEvent.codec
+      (GameEvent.TookInitiative (PlayerId.MkPlayerId 0))
+      " {\"type\":\"TookInitiative\",\"value\":0} "
+  -- CR 702.29c/d's two-descriptions-one-event shape: ToPayCyclingCost is the
+  -- payload that ALSO satisfies a "cycles or discards" trigger once, not twice.
+  Spec.it s "Discarded" $
+    Common.assertCodec
+      s
+      GameEvent.codec
+      (GameEvent.Discarded (Discarded.MkDiscarded (PlayerId.MkPlayerId 0) (ObjectId.MkObjectId 7) DiscardCause.ToPayCyclingCost Nothing Nothing))
+      " {\"type\":\"Discarded\",\"value\":{\"player\":0,\"card\":7,\"cause\":{\"type\":\"ToPayCyclingCost\"},\"madness\":null}} "
+  -- CR 121.1's draw, with the ordinal CR 702.94a asks about. A player id and an
+  -- ordinal, deliberately different numbers, so a codec that swapped them fails.
+  Spec.it s "Drew" $
+    Common.assertCodec
+      s
+      GameEvent.codec
+      (GameEvent.Drew (Drew.MkDrew (PlayerId.MkPlayerId 3) 2))
+      " {\"type\":\"Drew\",\"value\":{\"player\":3,\"nth\":2}} "
+  Spec.it s "Revealed" $
+    Common.assertCodec
+      s
+      GameEvent.codec
+      (GameEvent.Revealed (Revealed.MkRevealed (PlayerId.MkPlayerId 0) (ObjectId.MkObjectId 7) (RevealCause.ForMiracle (Cost.MkCost {Cost.mana = Just (ManaCost.MkManaCost []), Cost.components = []})) ProjectedCharacteristicsSpec.testCharacteristics))
+      ("{\"type\":\"Revealed\",\"value\":{\"player\":0,\"card\":7,\"cause\":{\"type\":\"ForMiracle\",\"value\":{\"mana\":[]}},\"characteristics\":" <> ProjectedCharacteristicsSpec.testCharacteristicsJson <> "}}")
+  Spec.it s "Looked" $
+    Common.assertCodec
+      s
+      GameEvent.codec
+      (GameEvent.Looked (Looked.MkLooked (ObjectId.MkObjectId 7) ProjectedCharacteristicsSpec.testCharacteristics (Set.fromList [PlayerId.MkPlayerId 0, PlayerId.MkPlayerId 2])))
+      ("{\"type\":\"Looked\",\"value\":{\"card\":7,\"characteristics\":" <> ProjectedCharacteristicsSpec.testCharacteristicsJson <> ",\"audience\":[0,2]}}")
+  Spec.it s "Voted" $
+    Common.assertCodec
+      s
+      GameEvent.codec
+      (GameEvent.Voted (Voted.MkVoted (Ballot.MkBallot (PlayerId.MkPlayerId 1) (BallotChoice.ForWord (SlotName.MkSlotName (Text.pack "truth")))) (Set.fromList [PlayerId.MkPlayerId 1, PlayerId.MkPlayerId 2])))
+      " {\"type\":\"Voted\",\"value\":{\"ballot\":{\"voter\":1,\"choice\":{\"type\":\"ForWord\",\"value\":\"truth\"}},\"audience\":[1,2]}} "
+  -- Two ballots, so a codec that reordered them would fail.
+  Spec.it s "VotesRevealed" $
+    Common.assertCodec
+      s
+      GameEvent.codec
+      (GameEvent.VotesRevealed (Seq.fromList [Ballot.MkBallot (PlayerId.MkPlayerId 1) (BallotChoice.ForWord (SlotName.MkSlotName (Text.pack "truth"))), Ballot.MkBallot (PlayerId.MkPlayerId 0) (BallotChoice.ForWord (SlotName.MkSlotName (Text.pack "consequences")))]))
+      " {\"type\":\"VotesRevealed\",\"value\":[{\"voter\":1,\"choice\":{\"type\":\"ForWord\",\"value\":\"truth\"}},{\"voter\":0,\"choice\":{\"type\":\"ForWord\",\"value\":\"consequences\"}}]} "
+  -- An object, a player, CR 508.1b's announcement and CR 506.5's declaration
+  -- size. Distinct numbers throughout, so a codec that permuted them would fail,
+  -- and the announcement is a PLANESWALKER rather than the defending player: the
+  -- two fields are what rule 508.3a's two sentences read apart, so a codec that
+  -- derived one from the other would not round-trip this.
+  Spec.it s "AttackerDeclared" $
+    Common.assertCodec
+      s
+      GameEvent.codec
+      (GameEvent.AttackerDeclared (AttackerDeclared.MkAttackerDeclared (ObjectId.MkObjectId 3) (PlayerId.MkPlayerId 1) (AttackTarget.OfPlaneswalker (ObjectId.MkObjectId 5)) 4 (PlayerId.MkPlayerId 0)))
+      " {\"type\":\"AttackerDeclared\",\"value\":{\"attacker\":3,\"defender\":1,\"target\":{\"type\":\"OfPlaneswalker\",\"value\":5},\"count\":4,\"attackingPlayer\":0}} "
+  -- AttackerDeclared's grouping sibling: the target and the player who declared,
+  -- with no creature and no count -- CR 508.3b's subject beside CR 508.3e's.
+  Spec.it s "BecameAttacked" $
+    Common.assertCodec
+      s
+      GameEvent.codec
+      (GameEvent.BecameAttacked (BecameAttacked.MkBecameAttacked (PlayerId.MkPlayerId 2) (AttackTarget.OfPlaneswalker (ObjectId.MkObjectId 6))))
+      " {\"type\":\"BecameAttacked\",\"value\":{\"attacker\":2,\"target\":{\"type\":\"OfPlaneswalker\",\"value\":6}}} "
+  -- CR 508.3d's once-per-declaration sibling: one PLAYER, the one who declared,
+  -- where the arm above carries what was attacked and AttackerDeclared carries
+  -- CR 508.5's defending player.
+  Spec.it s "AttackersDeclared" $
+    Common.assertCodec
+      s
+      GameEvent.codec
+      (GameEvent.AttackersDeclared (PlayerId.MkPlayerId 7))
+      " {\"type\":\"AttackersDeclared\",\"value\":7} "
+  -- Two ObjectIds and not an object and a player, unlike the sibling above: CR
+  -- 509.1a's declaration pairs a blocker with the creature it blocks. Distinct
+  -- numbers, so a codec that swapped the pair would fail.
+  Spec.it s "BecameBlocking" $
+    Common.assertCodec
+      s
+      GameEvent.codec
+      (GameEvent.BecameBlocking (BecameBlocking.MkBecameBlocking {BecameBlocking.blocker = ObjectId.MkObjectId 6, BecameBlocking.attacker = ObjectId.MkObjectId 7, BecameBlocking.producer = BlockProducer.Declared, BecameBlocking.attackerWasBlocked = False, BecameBlocking.blockersBefore = Set.empty}))
+      " {\"type\":\"BecameBlocking\",\"value\":{\"blocker\":6,\"attacker\":7}} "
+  -- An object and a COUNT: CR 509.3a's event is per blocking creature, and the
+  -- number beside it is how many attackers it took (CR 509.3e). Distinct
+  -- numbers again, so a codec that swapped them would fail.
+  Spec.it s "BlocksDeclared" $
+    Common.assertCodec
+      s
+      GameEvent.codec
+      (GameEvent.BlocksDeclared (BlocksDeclared.MkBlocksDeclared (ObjectId.MkObjectId 9) 2))
+      " {\"type\":\"BlocksDeclared\",\"value\":{\"blocker\":9,\"count\":2}} "
+  -- An object, a player and a count: CR 509.3c's event is per blocked ATTACKER,
+  -- so the blockers are not named in it, but CR 508.5's defending player is and
+  -- so is how many creatures blocked it (CR 509.3e). Three distinct numbers.
+  Spec.it s "AttackerBlocked" $
+    Common.assertCodec
+      s
+      GameEvent.codec
+      (GameEvent.AttackerBlocked (AttackerBlocked.MkAttackerBlocked (ObjectId.MkObjectId 8) (PlayerId.MkPlayerId 2) 3))
+      " {\"type\":\"AttackerBlocked\",\"value\":{\"attacker\":8,\"defender\":2,\"blockers\":3}} "
+  -- CR 509.1h's other branch: the attacker and CR 508.5's defending player, and
+  -- no count of the blockers there were none of.
+  Spec.it s "AttackerUnblocked" $
+    Common.assertCodec
+      s
+      GameEvent.codec
+      (GameEvent.AttackerUnblocked (AttackerUnblocked.MkAttackerUnblocked (ObjectId.MkObjectId 8) (PlayerId.MkPlayerId 2)))
+      " {\"type\":\"AttackerUnblocked\",\"value\":{\"attacker\":8,\"defender\":2}} "
+  Spec.it s "SpellCountered" $
+    Common.assertCodec
+      s
+      GameEvent.codec
+      (GameEvent.SpellCountered (Countering.MkCountering (ObjectId.MkObjectId 4) (ObjectId.MkObjectId 5) (PlayerId.MkPlayerId 1)))
+      " {\"type\":\"SpellCountered\",\"value\":{\"countered\":4,\"source\":5,\"controller\":1}} "
+  -- CR 701.6a's other subject over the same payload, so the tag is the whole of
+  -- the difference on the wire.
+  Spec.it s "AbilityCountered" $
+    Common.assertCodec
+      s
+      GameEvent.codec
+      (GameEvent.AbilityCountered (Countering.MkCountering (ObjectId.MkObjectId 4) (ObjectId.MkObjectId 5) (PlayerId.MkPlayerId 1)))
+      " {\"type\":\"AbilityCountered\",\"value\":{\"countered\":4,\"source\":5,\"controller\":1}} "
+  Spec.it s "LoyaltyAbilityActivated" $
+    Common.assertCodec
+      s
+      GameEvent.codec
+      (GameEvent.LoyaltyAbilityActivated (ObjectId.MkObjectId 7))
+      " {\"type\":\"LoyaltyAbilityActivated\",\"value\":7} "
+  Spec.it s "LifeLost" $
+    Common.assertCodec
+      s
+      GameEvent.codec
+      (GameEvent.LifeLost (LifeChange.MkLifeChange (PlayerId.MkPlayerId 1) 2))
+      " {\"type\":\"LifeLost\",\"value\":{\"player\":1,\"amount\":2}} "
+  -- CR 119.3's other direction. A DIFFERENT tag from LifeLost above and the same
+  -- payload shape, so the two must never decode to each other.
+  Spec.it s "LifeGained" $
+    Common.assertCodec
+      s
+      GameEvent.codec
+      (GameEvent.LifeGained (LifeChange.MkLifeChange (PlayerId.MkPlayerId 1) 2))
+      " {\"type\":\"LifeGained\",\"value\":{\"player\":1,\"amount\":2}} "
+  -- CR 122.6. The two counts are BEFORE then AFTER, in that order, which CR
+  -- 714.2b's threshold crossing needs to be able to tell apart.
+  Spec.it s "CountersPut" $
+    Common.assertCodec
+      s
+      GameEvent.codec
+      (GameEvent.CountersPut (CounterChange.MkCounterChange (ObjectId.MkObjectId 3) CounterKind.Lore 1 2))
+      " {\"type\":\"CountersPut\",\"value\":{\"object\":3,\"kind\":{\"type\":\"Lore\"},\"before\":1,\"after\":2}} "
+  -- CR 310.12b's record, and the pair runs the other way: before > after.
+  Spec.it s "CountersRemoved" $
+    Common.assertCodec
+      s
+      GameEvent.codec
+      (GameEvent.CountersRemoved (CounterChange.MkCounterChange (ObjectId.MkObjectId 3) CounterKind.Defense 2 0))
+      " {\"type\":\"CountersRemoved\",\"value\":{\"object\":3,\"kind\":{\"type\":\"Defense\"},\"before\":2,\"after\":0}} "
+  -- CR 709.5c's designation, recorded by the permanent and the DOOR: CR 709.5h
+  -- tells two unlock triggers on one Room apart by the half's name, so the pair
+  -- has to survive the round trip together. The third field is CR 709.5i's
+  -- "fully unlocks" flag, and BOTH directions of it are here, since it is exactly
+  -- what the two rules disagree about: False is one door of two opening, True is
+  -- the last one.
+  Spec.it s "HalfUnlocked" $
+    Common.assertCodec
+      s
+      GameEvent.codec
+      (GameEvent.HalfUnlocked (HalfUnlocked.MkHalfUnlocked (ObjectId.MkObjectId 4) (PlayerId.MkPlayerId 1) (CardName.MkCardName (Text.pack "Roaring Furnace")) False))
+      " {\"type\":\"HalfUnlocked\",\"value\":{\"object\":4,\"actor\":1,\"name\":\"Roaring Furnace\",\"fully\":false}} "
+  Spec.it s "HalfUnlocked carrying CR 709.5i's fully-unlocked flag" $
+    Common.assertCodec
+      s
+      GameEvent.codec
+      (GameEvent.HalfUnlocked (HalfUnlocked.MkHalfUnlocked (ObjectId.MkObjectId 4) (PlayerId.MkPlayerId 1) (CardName.MkCardName (Text.pack "Steaming Sauna")) True))
+      " {\"type\":\"HalfUnlocked\",\"value\":{\"object\":4,\"actor\":1,\"name\":\"Steaming Sauna\",\"fully\":true}} "
+  -- CR 708.7, with CR 107.3d's X chosen for the cost. The payload's own round
+  -- trip lives in Parun.Codec.TurnedFaceUpSpec.
+  Spec.it s "TurnedFaceUp" $
+    Common.assertCodec
+      s
+      GameEvent.codec
+      (GameEvent.TurnedFaceUp TurnedFaceUp.MkTurnedFaceUp {TurnedFaceUp.object = ObjectId.MkObjectId 5, TurnedFaceUp.announcedX = Just 2})
+      " {\"type\":\"TurnedFaceUp\",\"value\":{\"object\":5,\"announcedX\":2}} "
+  -- CR 603.2. The action and the acting permanent alone: CR 701.44c and CR
+  -- 701.50b make last known information answer who controlled it, so no seat
+  -- rides along. The ACTION is all that separates a connive from an explore of
+  -- the same object, so a codec that dropped it would turn one into the other.
+  Spec.it s "PermanentActed" $ do
+    Common.assertCodec
+      s
+      GameEvent.codec
+      (GameEvent.PermanentActed (PermanentActed.MkPermanentActed PermanentAction.Explore (ObjectId.MkObjectId 6)))
+      " {\"type\":\"PermanentActed\",\"value\":{\"action\":{\"type\":\"Explore\"},\"permanent\":6}} "
+    Spec.assertBool
+      s
+      (Codec.encode GameEvent.codec (GameEvent.PermanentActed (PermanentActed.MkPermanentActed PermanentAction.Connive (ObjectId.MkObjectId 6))) /= Codec.encode GameEvent.codec (GameEvent.PermanentActed (PermanentActed.MkPermanentActed PermanentAction.Explore (ObjectId.MkObjectId 6))))
+      "a connive and an explore of the same object encode differently"
+  -- CR 701.27a, the different game action CR 701.27b holds it apart from. More
+  -- than one field: CR 701.27e reads what the permanent turned INTO, and CR
+  -- 603.10 adds the two axes CR 109.3 keeps out of that. The two CR 603.10 axes
+  -- are at their defaults here and covered by Parun.Codec.TransformedSpec, which
+  -- is where the payload's own round trip lives.
+  Spec.it s "Transformed" $
+    Common.assertCodec
+      s
+      GameEvent.codec
+      (GameEvent.Transformed Transformed.MkTransformed {Transformed.object = ObjectId.MkObjectId 5, Transformed.characteristics = ProjectedCharacteristicsSpec.testCharacteristics, Transformed.controller = Nothing, Transformed.attachments = Set.empty, Transformed.lapsedGrants = Set.empty})
+      ("{\"type\":\"Transformed\",\"value\":{\"object\":5,\"characteristics\":" <> ProjectedCharacteristicsSpec.testCharacteristicsJson <> "}}")
+  -- CR 702.112b. One id: the designation says only which permanent got it.
+  Spec.it s "BecameDesignated Renowned" $
+    Common.assertCodec
+      s
+      GameEvent.codec
+      (GameEvent.BecameDesignated (BecameDesignated.MkBecameDesignated Designation.Renowned (ObjectId.MkObjectId 5)))
+      " {\"type\":\"BecameDesignated\",\"value\":{\"designation\":{\"type\":\"Renowned\"},\"object\":5}} "
+  Spec.it s "BecameDesignated Monstrous" $
+    Common.assertCodec
+      s
+      GameEvent.codec
+      (GameEvent.BecameDesignated (BecameDesignated.MkBecameDesignated Designation.Monstrous (ObjectId.MkObjectId 5)))
+      " {\"type\":\"BecameDesignated\",\"value\":{\"designation\":{\"type\":\"Monstrous\"},\"object\":5}} "
+  -- CR 702.134c: the mentor first, the creature it mentored second. Distinct ids
+  -- prove the order, which is what "put a shield counter on THAT creature" reads.
+  Spec.it s "Mentored" $
+    Common.assertCodec
+      s
+      GameEvent.codec
+      (GameEvent.Mentored (Mentored.MkMentored (ObjectId.MkObjectId 6) (ObjectId.MkObjectId 7)))
+      " {\"type\":\"Mentored\",\"value\":{\"mentor\":6,\"mentored\":7}} "
+  -- CR 702.110b: the exploiter and the creature it exploited, Mentored's two ids
+  -- for its reason -- the second is chosen as rule 702.110a's ability resolves.
+  Spec.it s "Exploited" $
+    Common.assertCodec
+      s
+      GameEvent.codec
+      (GameEvent.Exploited (Exploited.MkExploited (ObjectId.MkObjectId 8) (ObjectId.MkObjectId 9)))
+      " {\"type\":\"Exploited\",\"value\":{\"exploiter\":8,\"exploited\":9}} "
+  -- CR 702.51c: the spell and the creatures tapped to pay for mana in its total
+  -- cost, two convokers so a codec that dropped all but one goes red.
+  Spec.it s "Convoked" $
+    Common.assertCodec
+      s
+      GameEvent.codec
+      ( GameEvent.Convoked
+          Convoking.MkConvoking
+            { Convoking.spell = ObjectId.MkObjectId 14,
+              Convoking.convokedBy = Set.fromList [ObjectId.MkObjectId 15, ObjectId.MkObjectId 16]
+            }
+      )
+      " {\"type\":\"Convoked\",\"value\":{\"convokedBy\":[15,16],\"spell\":14}} "
+  -- CR 702.122b: the Vehicle and the creatures tapped to pay its crew cost, two
+  -- crewers so a codec that dropped all but one goes red.
+  Spec.it s "Crewed" $
+    Common.assertCodec
+      s
+      GameEvent.codec
+      ( GameEvent.Crewed
+          Crewing.MkCrewing
+            { Crewing.vehicle = ObjectId.MkObjectId 11,
+              Crewing.crewedBy = Set.fromList [ObjectId.MkObjectId 12, ObjectId.MkObjectId 13]
+            }
+      )
+      " {\"type\":\"Crewed\",\"value\":{\"crewedBy\":[12,13],\"vehicle\":11}} "
+  -- CR 702.122e: the Vehicle whose crew ability resolved, and CR 702.122b's
+  -- creatures that crewed it. The Vehicle is not among them -- rule 702.122a's
+  -- "other" creatures -- so the fixture keeps the two sides apart.
+  Spec.it s "BecameCrewed" $
+    Common.assertCodec
+      s
+      GameEvent.codec
+      ( GameEvent.BecameCrewed
+          Crewing.MkCrewing
+            { Crewing.vehicle = ObjectId.MkObjectId 9,
+              Crewing.crewedBy = Set.fromList [ObjectId.MkObjectId 10]
+            }
+      )
+      " {\"type\":\"BecameCrewed\",\"value\":{\"crewedBy\":[10],\"vehicle\":9}} "
+  -- CR 702.171c: the Mount and the creatures tapped to pay its saddle cost, two
+  -- saddlers so a codec that dropped all but one goes red.
+  Spec.it s "Saddled" $
+    Common.assertCodec
+      s
+      GameEvent.codec
+      ( GameEvent.Saddled
+          Saddling.MkSaddling
+            { Saddling.mount = ObjectId.MkObjectId 17,
+              Saddling.saddledBy = Set.fromList [ObjectId.MkObjectId 18, ObjectId.MkObjectId 19]
+            }
+      )
+      " {\"type\":\"Saddled\",\"value\":{\"mount\":17,\"saddledBy\":[18,19]}} "
+  -- CR 701.21a: the sacrificing player and the permanent, in that order, and the
+  -- id is the PRE-MOVE one -- the record is written before the zone change, which
+  -- is CR 603.10a's look-back.
+  Spec.it s "PermanentSacrificed" $
+    Common.assertCodec
+      s
+      GameEvent.codec
+      (GameEvent.PermanentSacrificed (PermanentWasSacrificed.MkPermanentWasSacrificed (PlayerId.MkPlayerId 0) (ObjectId.MkObjectId 6)))
+      " {\"type\":\"PermanentSacrificed\",\"value\":{\"player\":0,\"permanent\":6}} "
+  -- CR 603.3b: the ability's source (CR 113.7), its controller as it triggered
+  -- (CR 603.3a) and the condition that says which ability it was.
+  Spec.it s "AbilityTriggered" $
+    Common.assertCodec
+      s
+      GameEvent.codec
+      ( GameEvent.AbilityTriggered
+          AbilityTriggered.MkAbilityTriggered
+            { AbilityTriggered.source = TriggerSource.OfObject (ObjectId.MkObjectId 7),
+              AbilityTriggered.controller = PlayerId.MkPlayerId 1,
+              AbilityTriggered.ability = TriggeredAbilitySourceSpec.ability
+            }
+      )
+      " {\"type\":\"AbilityTriggered\",\"value\":{\"source\":{\"type\":\"OfObject\",\"value\":7},\"controller\":1,\"ability\":{\"condition\":{\"type\":\"SelfEnters\"},\"modal\":{\"modes\":[{}]}}}} "
+  -- The permanent, then the player control LEFT, then the player it went to. The
+  -- order matters and distinct ids prove it: "when YOU lose control" reads the
+  -- middle field, and a swap would make it read the gainer.
+  Spec.it s "ControlChanged" $
+    Common.assertCodec
+      s
+      GameEvent.codec
+      (GameEvent.ControlChanged (ControlChanged.MkControlChanged (ObjectId.MkObjectId 8) (PlayerId.MkPlayerId 2) (PlayerId.MkPlayerId 3)))
+      " {\"type\":\"ControlChanged\",\"value\":{\"object\":8,\"before\":2,\"after\":3}} "
+  Spec.it s "VentureMarkerEntered" $
+    Common.assertCodec
+      s
+      GameEvent.codec
+      (GameEvent.VentureMarkerEntered (VentureMarkerEntered.MkVentureMarkerEntered (PlayerId.MkPlayerId 1) (ObjectId.MkObjectId 4) (RoomIndex.MkRoomIndex 2)))
+      " {\"type\":\"VentureMarkerEntered\",\"value\":{\"player\":1,\"dungeon\":4,\"room\":2}} "
+  -- The targeted recipient, then the spell or ability that named it, then which
+  -- kind of stack object that was, then its controller. Distinct ids prove the
+  -- order: CR 702.21a counters the SECOND field and offers the cost to the
+  -- fourth, and a swap would counter the warded permanent.
+  Spec.it s "BecameTarget" $
+    Common.assertCodec
+      s
+      GameEvent.codec
+      (GameEvent.BecameTarget (BecameTarget.MkBecameTarget (Recipient.ToObject (ObjectId.MkObjectId 9)) (ObjectId.MkObjectId 10) StackObjectKind.ActivatedAbility (PlayerId.MkPlayerId 2)))
+      " {\"type\":\"BecameTarget\",\"value\":{\"targeted\":{\"type\":\"ToObject\",\"value\":9},\"source\":10,\"kind\":{\"type\":\"ActivatedAbility\"},\"controller\":2}} "
+  -- CR 115.1's other kind of target, and CR 112.1's other kind of stack object:
+  -- Dormant Gomazoa's event, which the object case above cannot stand in for
+  -- since both fields differ.
+  Spec.it s "BecameTarget of a player, by a spell" $
+    Common.assertCodec
+      s
+      GameEvent.codec
+      (GameEvent.BecameTarget (BecameTarget.MkBecameTarget (Recipient.ToPlayer (PlayerId.MkPlayerId 3)) (ObjectId.MkObjectId 11) StackObjectKind.Spell (PlayerId.MkPlayerId 2)))
+      " {\"type\":\"BecameTarget\",\"value\":{\"targeted\":{\"type\":\"ToPlayer\",\"value\":3},\"source\":11,\"kind\":{\"type\":\"Spell\"},\"controller\":2}} "
+  -- CR 800.4a / 729.4a. The id and the zone it left: the object left the game,
+  -- so there is no destination zone to carry and no new incarnation to name.
+  Spec.it s "LeftTheGame" $
+    Common.assertCodec
+      s
+      GameEvent.codec
+      (GameEvent.LeftTheGame (LeftTheGame.MkLeftTheGame (ObjectId.MkObjectId 7) Zone.Battlefield))
+      " {\"type\":\"LeftTheGame\",\"value\":{\"object\":7,\"from\":{\"type\":\"Battlefield\"}}} "
+  -- CR 603.9. One player id: the player who lost.
+  Spec.it s "LostTheGame" $
+    Common.assertCodec
+      s
+      GameEvent.codec
+      (GameEvent.LostTheGame (PlayerId.MkPlayerId 2))
+      " {\"type\":\"LostTheGame\",\"value\":2} "
+  -- CR 701.17a. Two cards in one entry, that rule milling them at once.
+  Spec.it s "Milled" $
+    Common.assertCodec
+      s
+      GameEvent.codec
+      (GameEvent.Milled (Milled.MkMilled (PlayerId.MkPlayerId 1) (Seq.fromList [ObjectId.MkObjectId 3, ObjectId.MkObjectId 4])))
+      " {\"type\":\"Milled\",\"value\":{\"player\":1,\"cards\":[3,4]}} "
+  -- CR 603.2. The action and the acting player, and nothing else: each action's
+  -- own rule names the player and no object.
+  Spec.it s "PlayerActed" $
+    Common.assertCodec
+      s
+      GameEvent.codec
+      (GameEvent.PlayerActed (PlayerActed.MkPlayerActed PlayerAction.CompleteDungeon (PlayerId.MkPlayerId 5)))
+      " {\"type\":\"PlayerActed\",\"value\":{\"action\":{\"type\":\"CompleteDungeon\"},\"player\":5}} "
+  -- CR 305.1. The player, the land as it arrived, and the zone it was played
+  -- from, which is what Urianger Augurelt's condition reads.
+  Spec.it s "LandPlayed" $
+    Common.assertCodec
+      s
+      GameEvent.codec
+      (GameEvent.LandPlayed (LandPlayed.MkLandPlayed (PlayerId.MkPlayerId 1) (ObjectId.MkObjectId 7) Zone.Exile))
+      " {\"type\":\"LandPlayed\",\"value\":{\"player\":1,\"land\":7,\"from\":{\"type\":\"Exile\"}}} "
+  -- CR 701.62b. The cards the process put into the graveyard ride along, the
+  -- "this way" a trigger on it reads back.
+  Spec.it s "ManifestedDread" $
+    Common.assertCodec
+      s
+      GameEvent.codec
+      (GameEvent.ManifestedDread (ManifestedDread.MkManifestedDread (PlayerId.MkPlayerId 1) (Seq.fromList [ObjectId.MkObjectId 5])))
+      " {\"type\":\"ManifestedDread\",\"value\":{\"player\":1,\"cards\":[5]}} "
+  -- CR 706.2. The roller and one die's result, distinct numbers so a codec that
+  -- swapped them would not round-trip.
+  Spec.it s "DieResultSettled" $
+    Common.assertCodec
+      s
+      GameEvent.codec
+      (GameEvent.DieResultSettled DieResult.MkDieResult {DieResult.roller = PlayerId.MkPlayerId 3, DieResult.result = 6})
+      " {\"type\":\"DieResultSettled\",\"value\":{\"roller\":3,\"result\":6}} "
+  -- CR 701.52a.
+  Spec.it s "RolledToVisit" $
+    Common.assertCodec
+      s
+      GameEvent.codec
+      (GameEvent.RolledToVisit DieResult.MkDieResult {DieResult.roller = PlayerId.MkPlayerId 2, DieResult.result = 5})
+      " {\"type\":\"RolledToVisit\",\"value\":{\"roller\":2,\"result\":5}} "
+  -- CR 701.32.
+  Spec.it s "TurnedUpOffDeck" $
+    Common.assertCodec
+      s
+      GameEvent.codec
+      (GameEvent.TurnedUpOffDeck (TurnedUpOffDeck.MkTurnedUpOffDeck SideDeck.Scheme (PlayerId.MkPlayerId 1) (ObjectId.MkObjectId 7) Set.empty))
+      " {\"type\":\"TurnedUpOffDeck\",\"value\":{\"card\":7,\"deck\":{\"type\":\"Scheme\"},\"player\":1}} "
+  -- CR 311.7.
+  Spec.it s "ChaosEnsued" $
+    Common.assertCodec s GameEvent.codec GameEvent.ChaosEnsued " {\"type\":\"ChaosEnsued\"} "
+  -- CR 901.9.
+  Spec.it s "PlanarDieRolled" $
+    Common.assertCodec
+      s
+      GameEvent.codec
+      (GameEvent.PlanarDieRolled (PlanarDieRolled.MkPlanarDieRolled (PlayerId.MkPlayerId 2) PlanarDieFace.Chaos))
+      " {\"type\":\"PlanarDieRolled\",\"value\":{\"roller\":2,\"face\":{\"type\":\"Chaos\"}}} "
+  -- CR 716.2a. The object then the level BEFORE then the level AFTER, and the two
+  -- levels deliberately differ by more than one: a level bar can only step N-1 to
+  -- N, so a fixture crossing one threshold would round-trip a codec that dropped
+  -- `before` entirely.
+  Spec.it s "ClassLevelSet" $
+    Common.assertCodec
+      s
+      GameEvent.codec
+      (GameEvent.ClassLevelSet (ClassLevelChange.MkClassLevelChange (ObjectId.MkObjectId 4) (ClassLevel.MkClassLevel 1) (ClassLevel.MkClassLevel 3)))
+      " {\"type\":\"ClassLevelSet\",\"value\":{\"object\":4,\"before\":1,\"after\":3}} "
+  -- CR 702.170a. The id is the CR 400.7 incarnation in exile, not the one that
+  -- was in the hand.
+  Spec.it s "Plotted" $
+    Common.assertCodec
+      s
+      GameEvent.codec
+      (GameEvent.Plotted (ObjectId.MkObjectId 5))
+      " {\"type\":\"Plotted\",\"value\":5} "
+  -- CR 701.26a. A bare ObjectId, the acting permanent PermanentActed carries, so
+  -- the TAG is the whole difference from an exert of the same object.
+  Spec.it s "BecameTapped" $ do
+    Common.assertCodec
+      s
+      GameEvent.codec
+      (GameEvent.BecameTapped (ObjectId.MkObjectId 8))
+      " {\"type\":\"BecameTapped\",\"value\":8} "
+    Spec.assertBool
+      s
+      (Codec.encode GameEvent.codec (GameEvent.BecameTapped (ObjectId.MkObjectId 8)) /= Codec.encode GameEvent.codec (GameEvent.PermanentActed (PermanentActed.MkPermanentActed PermanentAction.Exert (ObjectId.MkObjectId 8))))
+      "a tap and an exert of the same object encode differently"
+  -- CR 701.26b. BecameTapped's payload exactly, so the TAG is the whole
+  -- difference between the two directions of one status.
+  Spec.it s "BecameUntapped" $ do
+    Common.assertCodec
+      s
+      GameEvent.codec
+      (GameEvent.BecameUntapped (ObjectId.MkObjectId 8))
+      " {\"type\":\"BecameUntapped\",\"value\":8} "
+    Spec.assertBool
+      s
+      (Codec.encode GameEvent.codec (GameEvent.BecameUntapped (ObjectId.MkObjectId 8)) /= Codec.encode GameEvent.codec (GameEvent.BecameTapped (ObjectId.MkObjectId 8)))
+      "an untap and a tap of the same object encode differently"
+  -- CR 106.12a. BecameTapped's permanent plus the mana that activation produced,
+  -- which is what that rule's "of a specified type" narrowing reads -- and the
+  -- two events one mana activation writes about the same permanent stay
+  -- distinguishable.
+  Spec.it s "TappedForMana" $ do
+    Common.assertCodec
+      s
+      GameEvent.codec
+      (GameEvent.TappedForMana (TappedForMana.MkTappedForMana {TappedForMana.permanent = ObjectId.MkObjectId 9, TappedForMana.mana = Set.singleton (ManaType.Colored Color.Green), TappedForMana.player = PlayerId.MkPlayerId 1}))
+      " {\"type\":\"TappedForMana\",\"value\":{\"mana\":[{\"type\":\"Colored\",\"value\":{\"type\":\"Green\"}}],\"permanent\":9,\"player\":1}} "
+    Spec.assertBool
+      s
+      (Codec.encode GameEvent.codec (GameEvent.TappedForMana (TappedForMana.MkTappedForMana {TappedForMana.permanent = ObjectId.MkObjectId 9, TappedForMana.mana = Set.singleton (ManaType.Colored Color.Green), TappedForMana.player = PlayerId.MkPlayerId 1})) /= Codec.encode GameEvent.codec (GameEvent.BecameTapped (ObjectId.MkObjectId 9)))
+      "a tap for mana and a plain tap of the same object encode differently"
+  -- CR 605.1b's other event about one activation, keyed by the recipient as
+  -- well as the source.
+  Spec.it s "ManaAdded" $
+    Common.assertCodec
+      s
+      GameEvent.codec
+      (GameEvent.ManaAdded (ManaAdded.MkManaAdded {ManaAdded.player = PlayerId.MkPlayerId 1, ManaAdded.source = ObjectId.MkObjectId 9, ManaAdded.mana = Set.singleton (ManaType.Colored Color.Green), ManaAdded.cause = ManaAddedCause.ManaAbility}))
+      " {\"type\":\"ManaAdded\",\"value\":{\"player\":1,\"source\":9,\"mana\":[{\"type\":\"Colored\",\"value\":{\"type\":\"Green\"}}],\"cause\":{\"type\":\"ManaAbility\"}}} "
+  -- CR 605.3b's moment, distinguished from the tap event about the same
+  -- permanent: the amount is what this one carries and that one does not.
+  Spec.it s "ManaAbilityResolved" $ do
+    Common.assertCodec
+      s
+      GameEvent.codec
+      (GameEvent.ManaAbilityResolved (ManaAbilityResolved.MkManaAbilityResolved {ManaAbilityResolved.permanent = ObjectId.MkObjectId 9, ManaAbilityResolved.amount = 2}))
+      " {\"type\":\"ManaAbilityResolved\",\"value\":{\"amount\":2,\"permanent\":9}} "
+    Spec.assertBool
+      s
+      (Codec.encode GameEvent.codec (GameEvent.ManaAbilityResolved (ManaAbilityResolved.MkManaAbilityResolved {ManaAbilityResolved.permanent = ObjectId.MkObjectId 9, ManaAbilityResolved.amount = 1})) /= Codec.encode GameEvent.codec (GameEvent.TappedForMana (TappedForMana.MkTappedForMana {TappedForMana.permanent = ObjectId.MkObjectId 9, TappedForMana.mana = Set.singleton (ManaType.Colored Color.Green), TappedForMana.player = PlayerId.MkPlayerId 1})))
+      "a mana ability resolving and a tap for mana by the same object encode differently"
+  -- CR 701.3a's two ends, and the ORDER is what the distinct ids prove: the
+  -- attachment first, then what it went onto. A swap would credit the host with
+  -- becoming attached to the Aura.
+  Spec.it s "BecameAttached" $
+    Common.assertCodec
+      s
+      GameEvent.codec
+      (GameEvent.BecameAttached (BecameAttached.MkBecameAttached (ObjectId.MkObjectId 12) (Recipient.ToCreature (ObjectId.MkObjectId 13))))
+      " {\"type\":\"BecameAttached\",\"value\":{\"attachment\":12,\"host\":{\"type\":\"ToCreature\",\"value\":13}}} "
+  -- CR 702.5a's other destination: an enchant ability may name a player, which is
+  -- why `host` is a Recipient at all. The object case above cannot stand in for
+  -- it, the tag being the whole difference.
+  Spec.it s "BecameAttached to a player" $
+    Common.assertCodec
+      s
+      GameEvent.codec
+      (GameEvent.BecameAttached (BecameAttached.MkBecameAttached (ObjectId.MkObjectId 14) (Recipient.ToPlayer (PlayerId.MkPlayerId 3))))
+      " {\"type\":\"BecameAttached\",\"value\":{\"attachment\":14,\"host\":{\"type\":\"ToPlayer\",\"value\":3}}} "
+  -- CR 701.3d's mirror of the two above. Encoded under its own tag: the payload
+  -- is BecameAttached's shape field for field, so only the tag keeps a coming-off
+  -- from round-tripping as a coming-on.
+  Spec.it s "BecameUnattached" $
+    Common.assertCodec
+      s
+      GameEvent.codec
+      (GameEvent.BecameUnattached (BecameUnattached.MkBecameUnattached (ObjectId.MkObjectId 15) (Recipient.ToCreature (ObjectId.MkObjectId 16))))
+      " {\"type\":\"BecameUnattached\",\"value\":{\"attachment\":15,\"host\":{\"type\":\"ToCreature\",\"value\":16}}} "
+  -- CR 705.2's two outcomes over the same seat. BOTH legs, because the outcome
+  -- is the only thing that separates them: a codec that dropped `won` would
+  -- round-trip the won flip and silently turn the lost one into it. The third
+  -- outcome -- rule 705.2's first sentence, which settles none -- is
+  -- Parun.Codec.CoinFlippedSpec's, where the key's absence is the assertion.
+  Spec.it s "CoinFlipped, a won flip" $
+    Common.assertCodec
+      s
+      GameEvent.codec
+      (GameEvent.CoinFlipped CoinFlipped.MkCoinFlipped {CoinFlipped.flipper = PlayerId.MkPlayerId 5, CoinFlipped.won = Just True})
+      " {\"type\":\"CoinFlipped\",\"value\":{\"flipper\":5,\"won\":true}} "
+  Spec.it s "CoinFlipped, a lost flip" $
+    Common.assertCodec
+      s
+      GameEvent.codec
+      (GameEvent.CoinFlipped CoinFlipped.MkCoinFlipped {CoinFlipped.flipper = PlayerId.MkPlayerId 5, CoinFlipped.won = Just False})
+      " {\"type\":\"CoinFlipped\",\"value\":{\"flipper\":5,\"won\":false}} "
+  Spec.it s "StickerPut" $
+    Common.assertCodec
+      s
+      GameEvent.codec
+      (GameEvent.StickerPut (StickerPut.MkStickerPut (PlayerId.MkPlayerId 9) (ObjectId.MkObjectId 3) StickerKind.Art))
+      " {\"type\":\"StickerPut\",\"value\":{\"placer\":9,\"object\":3,\"kind\":{\"type\":\"Art\"}}} "
+  -- CR 608.2n. The source object and the ability, in that order, which is the
+  -- pair CR 707.10b counts by: a swap would file the resolution under the
+  -- ability's own id.
+  Spec.it s "ActivatedAbilityResolved" $
+    Common.assertCodec
+      s
+      GameEvent.codec
+      ( GameEvent.ActivatedAbilityResolved
+          ActivatedAbilitySource.MkActivatedAbilitySource
+            { ActivatedAbilitySource.source = ObjectId.MkObjectId 6,
+              ActivatedAbilitySource.ability = ActivatedAbilitySourceSpec.ability,
+              ActivatedAbilitySource.delayed = Map.empty,
+              ActivatedAbilitySource.acquisition = Acquisition.Own
+            }
+      )
+      " {\"type\":\"ActivatedAbilityResolved\",\"value\":{\"source\":6,\"ability\":{\"cost\":{\"mana\":[{\"type\":\"Generic\",\"value\":1}]},\"modal\":{\"modes\":[{}]}}}} "
+  -- CR 608.2n, the triggered twin: the record Source's OfTrigger arm carries,
+  -- createdAt included when present.
+  Spec.it s "TriggeredAbilityResolved" $
+    Common.assertCodec
+      s
+      GameEvent.codec
+      ( GameEvent.TriggeredAbilityResolved
+          TriggeredAbilitySource.MkTriggeredAbilitySource
+            { TriggeredAbilitySource.source = ObjectId.MkObjectId 7,
+              TriggeredAbilitySource.ability = TriggeredAbilitySourceSpec.ability,
+              TriggeredAbilitySource.createdAt = Just (Timestamp.MkTimestamp 4),
+              TriggeredAbilitySource.delayed = Map.empty,
+              TriggeredAbilitySource.acquisition = Acquisition.Own
+            }
+      )
+      " {\"type\":\"TriggeredAbilityResolved\",\"value\":{\"source\":7,\"ability\":{\"condition\":{\"type\":\"SelfEnters\"},\"modal\":{\"modes\":[{}]}},\"createdAt\":4}} "

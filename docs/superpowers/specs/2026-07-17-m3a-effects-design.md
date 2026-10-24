@@ -39,7 +39,7 @@ to the serialized form, which this milestone deliberately does not create).
 
 ## 1. The AST: three new types, two new Card fields
 
-**`Pawl.Type.Effect`** — the ISA. First-order, non-recursive, no functions in
+**`Parun.Type.Effect`** — the ISA. First-order, non-recursive, no functions in
 any field, per design.md §1:
 
 ```haskell
@@ -52,7 +52,7 @@ One constructor, on purpose: the milestone proves the seam, M3b–M4 add volume.
 `Quantity` is M1a's numeric shape, exercised beyond P/T for the first time
 (`Literal 3`).
 
-**`Pawl.Type.SlotName`** — `newtype SlotName = MkSlotName Text`, the name of a
+**`Parun.Type.SlotName`** — `newtype SlotName = MkSlotName Text`, the name of a
 binding slot. This is D4's **named binding slots**, both halves: an effect leaf
 never contains a target, it *references a slot by name* that casting filled in
 — and a hygiene test (§8) statically checks every reference resolves, the
@@ -65,7 +65,7 @@ modes, and X introduce names into the same namespace in later milestones.
 The type is deliberately `SlotName`, not `TargetSlot`: targets are the first
 binding slots, not the last.
 
-**`Pawl.Type.TargetSpec`** — what a slot may legally hold. Classification data,
+**`Parun.Type.TargetSpec`** — what a slot may legally hold. Classification data,
 never a predicate function:
 
 ```haskell
@@ -103,7 +103,7 @@ type's meaning. Mechanical rename, all call sites; combat reads fine
 
 ## 2. The executor and the invariant
 
-New logic module **`Pawl.Resolve`** — the *single legitimate home* of
+New logic module **`Parun.Resolve`** — the *single legitimate home* of
 `case effect of`. It is the opcode-semantics quarter of the VM (design.md §1),
 the same standing `Stack.resolveTop`'s invariant comment gives type-line
 dispatch. The rules core (`Stack`, `Engine`, `Sba`, `Cast`) never matches an
@@ -124,7 +124,7 @@ it if that target is now illegal (CR 608.2b's partial
 resolution: illegal targets are unaffected, other parts still happen), and
 apply through the damage funnel (§4).
 
-New logic module **`Pawl.Target`** — targeting legality, shared by casting and
+New logic module **`Parun.Target`** — targeting legality, shared by casting and
 resolution: `legalRecipients :: TargetSpec -> GameState -> Set Recipient`
 (for `AnyTarget`: creatures on the battlefield plus players still playing) and
 `stillLegal :: Recipient -> TargetSpec -> GameState -> Bool` (CR 608.2b: a
@@ -312,7 +312,7 @@ priority window) is the thing to notice.
 
 ## 9. What M3a preserves
 
-- **The two invariants.** `Pawl.Resolve` is the executor, not the rules core;
+- **The two invariants.** `Parun.Resolve` is the executor, not the rules core;
   no other module matches an `Effect` constructor. No prompt is elided that
   isn't forced (target choice is always prompted, even when the legal set is a
   singleton — a forced choice among one is still the player's, and eliding it

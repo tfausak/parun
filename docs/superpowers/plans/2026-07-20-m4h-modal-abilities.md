@@ -13,7 +13,7 @@
 - **Warning-clean build (`+pedantic` = `-Werror`).** `cabal build all --enable-tests --enable-benchmarks` must pass with zero warnings. Incremental builds hide warnings from unchanged modules; when in doubt `cabal clean` first. Remove now-unused imports after each reshape.
 - **Two invariants outrank everything.** The rules core never cases on a card's identity, only classifications; the engine never makes a player's choice — elide a prompt only when forced (one legal mode / non-modal), and CR 603.3c *removes* rather than silently defaulting when no mode is legal.
 - **Every rules claim carries its CR number** in a code comment, checked against `docs/rules.txt` (never recalled).
-- **Code conventions:** no language extensions unless forced; no explicit export lists; one type per module under `Pawl.Type.<Name>`; qualified imports aliased to the last component, operators unqualified; no partial functions; `newtype` + `Mk`-prefixed non-punning constructors; `case` over point-free; `Text` not `String`; `Seq`/`Set` over lists for new collection fields; derive `Eq`+`Show`.
+- **Code conventions:** no language extensions unless forced; no explicit export lists; one type per module under `Parun.Type.<Name>`; qualified imports aliased to the last component, operators unqualified; no partial functions; `newtype` + `Mk`-prefixed non-punning constructors; `case` over point-free; `Text` not `String`; `Seq`/`Set` over lists for new collection fields; derive `Eq`+`Show`.
 - **`hooky fix` then `hooky run` on staged files** before each commit (`git add -A` first, then `hooky fix`, then `git add -A` again, then `hooky run`).
 - **Commit directly to `main`**, one small complete commit per task. End commit messages with the `Co-Authored-By`/`Claude-Session` trailers already configured for this repo.
 - **Stage explicit paths**, not `git add -A` blindly, if foreign files appear in `git status` (concurrent sessions share the worktree).
@@ -23,11 +23,11 @@
 
 ## File Structure
 
-**Library (`source/library/Pawl/`):**
+**Library (`source/library/Parun/`):**
 - `Type/TargetSpec.hs` — add `NonlandPermanentTarget` (Task 1).
 - `Target.hs` — `NonlandPermanentTarget` legality arm, `selfExcludes`, `legalSetsExcluding`, `fillableModes` (Tasks 1–2).
 - `Modal.hs` — **new** logic module: mode-scoped readers over any `Modal card` (Task 2).
-- `Card.hs` — delegate its five mode readers to `Pawl.Modal` (Task 2).
+- `Card.hs` — delegate its five mode readers to `Parun.Modal` (Task 2).
 - `Cast.hs` — route through `Target.fillableModes`/`legalSetsExcluding`; drop local `fillableModes` (Task 2).
 - `Type/ActivatedAbility.hs`, `Type/TriggeredAbility.hs` — reshape to `{…, modal}` (Tasks 3a/3b).
 - `Mana.hs`, `Activate.hs`, `Resolve.hs`, `Stack.hs`, `Engine.hs`, `Codec.hs` — migrate consumers (Tasks 3a/3b), add prompting/removal (Tasks 4–6).
@@ -36,7 +36,7 @@
 - Migrate `prodigal-sorcerer`, `llanowar-elves`, `evolving-wilds`, `mindslaver`, `drudge-skeletons` (Task 3a), `rest-in-peace` (Task 3b).
 - New: `synthetic-modal-activated.json` (Task 4), `aether-channeler.json` (Task 5), `synthetic-modal-trigger.json` (Task 6).
 
-**Tests (`source/test-suite/Pawl/`):**
+**Tests (`source/test-suite/Parun/`):**
 - `ModalSpec.hs` — all M4h gameplay + reader + target-spec unit tests.
 - `Cards.hs` — a `Printing` field + `loadPrinting` line + `allPrintings` entry per new card.
 - `CodecSpec.hs`/`CardsSpec.hs` — round-trip auto-covers new cards via `allPrintings`.
@@ -49,17 +49,17 @@
 ### Task 1: `NonlandPermanentTarget` target spec + self-exclusion
 
 **Files:**
-- Modify: `source/library/Pawl/Type/TargetSpec.hs`
-- Modify: `source/library/Pawl/Target.hs`
-- Modify: `source/library/Pawl/Codec.hs` (the `targetSpecToJson`/`jsonToTargetSpec` arms)
-- Test: `source/test-suite/Pawl/ModalSpec.hs`
+- Modify: `source/library/Parun/Type/TargetSpec.hs`
+- Modify: `source/library/Parun/Target.hs`
+- Modify: `source/library/Parun/Codec.hs` (the `targetSpecToJson`/`jsonToTargetSpec` arms)
+- Test: `source/test-suite/Parun/ModalSpec.hs`
 
 **Interfaces:**
 - Produces: `TargetSpec.NonlandPermanentTarget`; `Target.selfExcludes :: TargetSpec -> Bool`; `Target.legalSetsExcluding :: ObjectId -> Map SlotName TargetSpec -> GameState -> Map SlotName (Set Recipient)`.
 
 - [x] **Step 1: Write the failing test**
 
-Add to `source/test-suite/Pawl/ModalSpec.hs` inside its `tests` tree (a new `Tasty.testGroup "M4h NonlandPermanentTarget"`). Use `Pawl.Support` (`as S`) fixtures the way the existing groups do; build a battlefield with two nonland permanents (a creature and an artifact) plus a land, then assert legality and self-exclusion:
+Add to `source/test-suite/Parun/ModalSpec.hs` inside its `tests` tree (a new `Tasty.testGroup "M4h NonlandPermanentTarget"`). Use `Parun.Support` (`as S`) fixtures the way the existing groups do; build a battlefield with two nonland permanents (a creature and an artifact) plus a land, then assert legality and self-exclusion:
 
 ```haskell
 , HU.testCase "NonlandPermanentTarget excludes lands (CR 305.1)" $ do
@@ -85,7 +85,7 @@ Expected: FAIL to **compile** ("Data constructor not in scope: TargetSpec.Nonlan
 
 - [x] **Step 3a: Add the constructor and legality arm**
 
-In `source/library/Pawl/Type/TargetSpec.hs`, add before the final `deriving`:
+In `source/library/Parun/Type/TargetSpec.hs`, add before the final `deriving`:
 
 ```haskell
   | -- CR 115 / 305.1: "target nonland permanent" -- a permanent on the battlefield
@@ -97,7 +97,7 @@ In `source/library/Pawl/Type/TargetSpec.hs`, add before the final `deriving`:
     NonlandPermanentTarget
 ```
 
-In `source/library/Pawl/Target.hs`, add to the `case spec of` in `legalRecipients`:
+In `source/library/Parun/Target.hs`, add to the `case spec of` in `legalRecipients`:
 
 ```haskell
         TargetSpec.NonlandPermanentTarget ->
@@ -135,15 +135,15 @@ legalSetsExcluding source specs gs =
    in Map.mapWithKey (\slot spec -> drop1 spec (legalRecipients spec gs)) specs
 ```
 
-`Target.hs` already imports `CardType`, `GameState`, `Recipient`, `Set`, `Map`, `SlotName`, `ObjectId`? It imports `CardType`, `GameState`, `Recipient`, `Set`, `Map`, `Projection`. Add `import Pawl.Type.ObjectId (ObjectId)` if absent (it is used by `legalSetsExcluding`).
+`Target.hs` already imports `CardType`, `GameState`, `Recipient`, `Set`, `Map`, `SlotName`, `ObjectId`? It imports `CardType`, `GameState`, `Recipient`, `Set`, `Map`, `Projection`. Add `import Parun.Type.ObjectId (ObjectId)` if absent (it is used by `legalSetsExcluding`).
 
 - [x] **Step 3b: Add the Support helper the test needs**
 
-In `source/test-suite/Pawl/Support.hs`, add a fixture that places one creature, one artifact (use `Cards.darksteelMyrPrinting` — a `{3}` artifact creature; it is both, so instead use a genuinely non-creature artifact: `Cards.mindslaverPrinting`), and one land on the battlefield, plus accessors `creatureId`/`artifactId`. Follow the existing Support pattern for placing objects (`S.place`/`S.withBattlefield` — match whatever the file already exposes). Keep it minimal and named clearly. (If Support already has a general "place these printings on the battlefield" helper, use it and add only the accessors.)
+In `source/test-suite/Parun/Support.hs`, add a fixture that places one creature, one artifact (use `Cards.darksteelMyrPrinting` — a `{3}` artifact creature; it is both, so instead use a genuinely non-creature artifact: `Cards.mindslaverPrinting`), and one land on the battlefield, plus accessors `creatureId`/`artifactId`. Follow the existing Support pattern for placing objects (`S.place`/`S.withBattlefield` — match whatever the file already exposes). Keep it minimal and named clearly. (If Support already has a general "place these printings on the battlefield" helper, use it and add only the accessors.)
 
 - [x] **Step 3c: Add the Codec arm**
 
-In `source/library/Pawl/Codec.hs`, find `targetSpecToJson` and `jsonToTargetSpec` (they handle `WallTarget`); add the nullary tagged arm alongside it:
+In `source/library/Parun/Codec.hs`, find `targetSpecToJson` and `jsonToTargetSpec` (they handle `WallTarget`); add the nullary tagged arm alongside it:
 
 ```haskell
 -- in targetSpecToJson:
@@ -169,15 +169,15 @@ git commit -m "M4h: NonlandPermanentTarget + self-exclusion (CR 'another')"
 
 ---
 
-### Task 2: `Pawl.Modal` reader + `Target.fillableModes` generalization + `Cast` routing
+### Task 2: `Parun.Modal` reader + `Target.fillableModes` generalization + `Cast` routing
 
 **Files:**
-- Create: `source/library/Pawl/Modal.hs`
-- Modify: `source/library/Pawl/Card.hs` (delegate its five readers)
-- Modify: `source/library/Pawl/Target.hs` (add `fillableModes`)
-- Modify: `source/library/Pawl/Cast.hs` (drop local `fillableModes`; route through `Target`)
-- Modify: `pawl.cabal` is auto (cabal-gild discover) — run `hooky fix`.
-- Test: `source/test-suite/Pawl/ModalSpec.hs`
+- Create: `source/library/Parun/Modal.hs`
+- Modify: `source/library/Parun/Card.hs` (delegate its five readers)
+- Modify: `source/library/Parun/Target.hs` (add `fillableModes`)
+- Modify: `source/library/Parun/Cast.hs` (drop local `fillableModes`; route through `Target`)
+- Modify: `parun.cabal` is auto (cabal-gild discover) — run `hooky fix`.
+- Test: `source/test-suite/Parun/ModalSpec.hs`
 
 **Interfaces:**
 - Consumes: `TargetSpec.NonlandPermanentTarget`, `Target.legalSetsExcluding` (Task 1).
@@ -199,22 +199,22 @@ Add to `ModalSpec.hs` a `Tasty.testGroup "M4h Modal reader"`:
     HU.assertEqual "selectionCount is the ChooseExactly count" 1 (Modal.selectionCount m)
 ```
 
-(Adjust the qualified names to whatever `ModalSpec.hs` already imports; add `import qualified Pawl.Modal as Modal`, `Pawl.Type.Modal as Modal.Type`? — keep the *type* as `Modal.Type.MkModal` only if the logic alias collides. Simplest: `import qualified Pawl.Type.Modal as ModalT` for the constructor and `import qualified Pawl.Modal as Modal` for the functions.)
+(Adjust the qualified names to whatever `ModalSpec.hs` already imports; add `import qualified Parun.Modal as Modal`, `Parun.Type.Modal as Modal.Type`? — keep the *type* as `Modal.Type.MkModal` only if the logic alias collides. Simplest: `import qualified Parun.Type.Modal as ModalT` for the constructor and `import qualified Parun.Modal as Modal` for the functions.)
 
 - [x] **Step 2: Run test to verify it fails**
 
 Run: `cabal test --test-options='-p "Modal reader"'`
 Expected: FAIL to compile ("Not in scope: Modal.modesEffects").
 
-- [x] **Step 3a: Create `Pawl.Modal`**
+- [x] **Step 3a: Create `Parun.Modal`**
 
-`source/library/Pawl/Modal.hs`. Lift the folds M4g put on `Pawl.Card` (they are card-agnostic over a `Modal card`):
+`source/library/Parun/Modal.hs`. Lift the folds M4g put on `Parun.Card` (they are card-agnostic over a `Modal card`):
 
 ```haskell
 -- Mode-scoped structural reads over a Modal payload (CR 700.2), shared by the
 -- spell (Card.spell) and both ability types. Card-free/parametric in `card` (M4c):
--- imports only Type modules, so no cycle -- Pawl.Card imports THIS.
-module Pawl.Modal where
+-- imports only Type modules, so no cycle -- Parun.Card imports THIS.
+module Parun.Modal where
 
 import qualified Data.Foldable as Foldable
 import Data.Map.Strict (Map)
@@ -223,13 +223,13 @@ import Data.Set (Set)
 import qualified Data.Set as Set
 import qualified Data.Sequence as Seq
 import Numeric.Natural (Natural)
-import Pawl.Type.Effect (Effect)
-import qualified Pawl.Type.Modal as Modal
-import qualified Pawl.Type.Mode as Mode
-import qualified Pawl.Type.ModeIndex as ModeIndex
-import qualified Pawl.Type.ModeSelection as ModeSelection
-import Pawl.Type.SlotName (SlotName)
-import Pawl.Type.TargetSpec (TargetSpec)
+import Parun.Type.Effect (Effect)
+import qualified Parun.Type.Modal as Modal
+import qualified Parun.Type.Mode as Mode
+import qualified Parun.Type.ModeIndex as ModeIndex
+import qualified Parun.Type.ModeSelection as ModeSelection
+import Parun.Type.SlotName (SlotName)
+import Parun.Type.TargetSpec (TargetSpec)
 
 -- Every effect across all modes, printed (mode, then written) order (CR 608.2c).
 allEffects :: Modal.Modal card -> [Effect card]
@@ -261,9 +261,9 @@ selectionCount m = case Modal.selection m of
   ModeSelection.ChooseExactly n -> n
 ```
 
-- [x] **Step 3b: Delegate `Pawl.Card`'s readers**
+- [x] **Step 3b: Delegate `Parun.Card`'s readers**
 
-In `source/library/Pawl/Card.hs`, replace the bodies of `allEffects`/`allTargetSpecs`/`modesEffects`/`modesTargetSpecs`/`modeTargetSpecs` with delegations to `Pawl.Modal` over `Card.spell` (keep their signatures and comments). Example:
+In `source/library/Parun/Card.hs`, replace the bodies of `allEffects`/`allTargetSpecs`/`modesEffects`/`modesTargetSpecs`/`modeTargetSpecs` with delegations to `Parun.Modal` over `Card.spell` (keep their signatures and comments). Example:
 
 ```haskell
 allEffects :: Card.Card -> [Effect Card.Card]
@@ -273,11 +273,11 @@ modesEffects :: Set.Set ModeIndex.ModeIndex -> Card.Card -> [Effect Card.Card]
 modesEffects chosen card = Modal.modesEffects chosen (Card.spell card)
 ```
 
-Add `import qualified Pawl.Modal as Modal`; remove any now-unused imports (`Foldable`, `Seq`) the deleted bodies used.
+Add `import qualified Parun.Modal as Modal`; remove any now-unused imports (`Foldable`, `Seq`) the deleted bodies used.
 
 - [x] **Step 3c: Add `Target.fillableModes`**
 
-In `source/library/Pawl/Target.hs`, generalize what `Cast.fillableModes` did (now source-aware for self-exclusion):
+In `source/library/Parun/Target.hs`, generalize what `Cast.fillableModes` did (now source-aware for self-exclusion):
 
 ```haskell
 -- CR 700.2a: the mode indices all of whose target slots have a legal recipient
@@ -296,13 +296,13 @@ fillableModes source modal gs =
    in Set.fromList (Maybe.mapMaybe (uncurry fillable) (zip [0 :: Int ..] ms))
 ```
 
-Add imports to `Target.hs`: `qualified Data.Foldable as Foldable`, `qualified Data.Maybe as Maybe`, `Pawl.Type.Card (Card)`, `qualified Pawl.Type.Modal as Modal`, `qualified Pawl.Type.Mode as Mode`, `Pawl.Type.ModeIndex (ModeIndex)`, `qualified Pawl.Type.ModeIndex as ModeIndex`.
+Add imports to `Target.hs`: `qualified Data.Foldable as Foldable`, `qualified Data.Maybe as Maybe`, `Parun.Type.Card (Card)`, `qualified Parun.Type.Modal as Modal`, `qualified Parun.Type.Mode as Mode`, `Parun.Type.ModeIndex (ModeIndex)`, `qualified Parun.Type.ModeIndex as ModeIndex`.
 
 - [x] **Step 3d: Route `Cast` through `Target`**
 
-In `source/library/Pawl/Cast.hs`:
+In `source/library/Parun/Cast.hs`:
 - Delete the local `fillableModes` function.
-- In `targetable`, replace `Set.size (fillableModes oid gs)` with `Set.size (Target.fillableModes oid (Card.Type.spell card) gs)` and `ModeSelection.ChooseExactly count = …` with `count = Modal.selectionCount (Card.Type.spell card)` (via `import qualified Pawl.Modal as Modal`).
+- In `targetable`, replace `Set.size (fillableModes oid gs)` with `Set.size (Target.fillableModes oid (Card.Type.spell card) gs)` and `ModeSelection.ChooseExactly count = …` with `count = Modal.selectionCount (Card.Type.spell card)` (via `import qualified Parun.Modal as Modal`).
 - In `castSpell`, replace `legal = fillableModes oid gs` with `legal = Target.fillableModes oid (Card.Type.spell card) gs`; replace the two `Target.legalSets …` target computations with `Target.legalSetsExcluding oid …` (the spell object id as source — a no-op for every current spell, none self-excluding); replace the `ModeSelection.ChooseExactly count = …` binding with `count = Modal.selectionCount (Card.Type.spell card)`.
 - In `castableWhileSearching`, `targetable oid gs` already calls the updated `Target.fillableModes`; no direct `legalSets` call there to change (verify — if `targetable` is the only path, nothing else changes).
 - Remove now-unused imports (`Modal.Mode`, `ModeIndex`, `ModeSelection`, `Foldable`, `Maybe`) that only the deleted `fillableModes` used; keep what `castSpell` still needs.
@@ -314,11 +314,11 @@ Run: `cabal test` → the **entire existing suite stays green** (this refactor i
 
 - [x] **Step 5: Build warning-clean and commit**
 
-Run: `cabal build all --enable-tests --enable-benchmarks` → zero warnings (run `cabal-gild` via `hooky fix` so `Pawl.Modal` joins `exposed-modules`).
+Run: `cabal build all --enable-tests --enable-benchmarks` → zero warnings (run `cabal-gild` via `hooky fix` so `Parun.Modal` joins `exposed-modules`).
 
 ```bash
 git add -A && hooky fix && git add -A && hooky run
-git commit -m "M4h: Pawl.Modal reader + Target.fillableModes; Cast routes through them"
+git commit -m "M4h: Parun.Modal reader + Target.fillableModes; Cast routes through them"
 ```
 
 ---
@@ -326,24 +326,24 @@ git commit -m "M4h: Pawl.Modal reader + Target.fillableModes; Cast routes throug
 ### Task 3a: Reshape `ActivatedAbility` to a `Modal` payload (behavior-preserving)
 
 **Files:**
-- Modify: `source/library/Pawl/Type/ActivatedAbility.hs`
-- Modify: `source/library/Pawl/Mana.hs`, `source/library/Pawl/Activate.hs`, `source/library/Pawl/Resolve.hs`, `source/library/Pawl/Stack.hs`, `source/library/Pawl/Codec.hs`
+- Modify: `source/library/Parun/Type/ActivatedAbility.hs`
+- Modify: `source/library/Parun/Mana.hs`, `source/library/Parun/Activate.hs`, `source/library/Parun/Resolve.hs`, `source/library/Parun/Stack.hs`, `source/library/Parun/Codec.hs`
 - Modify: `data/cards/{prodigal-sorcerer,llanowar-elves,evolving-wilds,mindslaver,drudge-skeletons}.json`
 - Test: the existing suite (regression net; no new test — this is a behavior-preserving reshape, the M4g `Card`-reshape pattern).
 
 **Interfaces:**
-- Consumes: `Pawl.Modal` readers (Task 2), `Target.fillableModes`/`legalSetsExcluding` (Tasks 1–2).
+- Consumes: `Parun.Modal` readers (Task 2), `Target.fillableModes`/`legalSetsExcluding` (Tasks 1–2).
 - Produces: `ActivatedAbility.MkActivatedAbility { cost :: AbilityCost, modal :: Modal card }`.
 
 - [x] **Step 1: Reshape the type**
 
-`source/library/Pawl/Type/ActivatedAbility.hs`:
+`source/library/Parun/Type/ActivatedAbility.hs`:
 
 ```haskell
-module Pawl.Type.ActivatedAbility where
+module Parun.Type.ActivatedAbility where
 
-import Pawl.Type.AbilityCost (AbilityCost)
-import Pawl.Type.Modal (Modal)
+import Parun.Type.AbilityCost (AbilityCost)
+import Parun.Type.Modal (Modal)
 
 -- CR 602.1 / 700.2 / 602.2b: "[cost]: [effect]", now modal-capable. VALUE-typed:
 -- Action.Activate carries the value and validates by membership
@@ -365,7 +365,7 @@ Expected: FAIL — `ActivatedAbility.effects`/`targetSpecs` gone; errors in `Man
 
 - [x] **Step 3a: `Mana.hs`**
 
-Replace `ActivatedAbility.effects ab` with `Modal.allEffects (ActivatedAbility.modal ab)` and `ActivatedAbility.targetSpecs ab` with `Modal.allTargetSpecs (ActivatedAbility.modal ab)` (add `import qualified Pawl.Modal as Modal`):
+Replace `ActivatedAbility.effects ab` with `Modal.allEffects (ActivatedAbility.modal ab)` and `ActivatedAbility.targetSpecs ab` with `Modal.allTargetSpecs (ActivatedAbility.modal ab)` (add `import qualified Parun.Modal as Modal`):
 
 ```haskell
 -- manaTypesOf's mapMaybe source:
@@ -391,7 +391,7 @@ resolveAbility abilId srcId ability = do
        in resolveEffects abilId srcId (Modal.modesEffects chosen modal) (Modal.modesTargetSpecs chosen modal)
 ```
 
-Add `import qualified Pawl.Modal as Modal`.
+Add `import qualified Parun.Modal as Modal`.
 
 - [x] **Step 3c: `Stack.hs` — `OfAbility` arm's search scan**
 
@@ -405,7 +405,7 @@ Replace `any Resolve.searchesLibrary (ActivatedAbility.effects ability)` with th
           Resolve.resolveAbility oid srcId ability
 ```
 
-Add `import qualified Pawl.Binding as Binding` and `import qualified Pawl.Modal as Modal` to `Stack.hs`.
+Add `import qualified Parun.Binding as Binding` and `import qualified Parun.Modal as Modal` to `Stack.hs`.
 
 - [x] **Step 3d: `Activate.hs` — mode-aware `activatable`, forced-mode stamping**
 
@@ -437,7 +437,7 @@ In `activateAbility`, after putting the object on the stack, stamp the **forced*
       … (unchanged cost payment) …
 ```
 
-`chosenModes` for every existing single-mode ability is `{MkModeIndex 0}`, forced, unprompted — behavior identical. Add `import qualified Pawl.Modal as Modal` to `Activate.hs`; the old `decider`/`sets` bindings are replaced in place.
+`chosenModes` for every existing single-mode ability is `{MkModeIndex 0}`, forced, unprompted — behavior identical. Add `import qualified Parun.Modal as Modal` to `Activate.hs`; the old `decider`/`sets` bindings are replaced in place.
 
 - [x] **Step 3e: `Codec.hs` — reshape the activated arm**
 
@@ -484,24 +484,24 @@ git commit -m "M4h: reshape ActivatedAbility to a Modal payload (behavior-preser
 ### Task 3b: Reshape `TriggeredAbility` to a `Modal` payload (behavior-preserving)
 
 **Files:**
-- Modify: `source/library/Pawl/Type/TriggeredAbility.hs`
-- Modify: `source/library/Pawl/Stack.hs` (`OfTrigger` arm), `source/library/Pawl/Engine.hs` (`placeOne`), `source/library/Pawl/Codec.hs`
+- Modify: `source/library/Parun/Type/TriggeredAbility.hs`
+- Modify: `source/library/Parun/Stack.hs` (`OfTrigger` arm), `source/library/Parun/Engine.hs` (`placeOne`), `source/library/Parun/Codec.hs`
 - Modify: `data/cards/rest-in-peace.json`
 - Test: the existing suite (regression net).
 
 **Interfaces:**
-- Consumes: `Pawl.Modal` readers, `Target.fillableModes`.
+- Consumes: `Parun.Modal` readers, `Target.fillableModes`.
 - Produces: `TriggeredAbility.MkTriggeredAbility { condition :: TriggerCondition, modal :: Modal card }`.
 
 - [x] **Step 1: Reshape the type**
 
-`source/library/Pawl/Type/TriggeredAbility.hs`:
+`source/library/Parun/Type/TriggeredAbility.hs`:
 
 ```haskell
-module Pawl.Type.TriggeredAbility where
+module Parun.Type.TriggeredAbility where
 
-import Pawl.Type.Modal (Modal)
-import Pawl.Type.TriggerCondition (TriggerCondition)
+import Parun.Type.Modal (Modal)
+import Parun.Type.TriggerCondition (TriggerCondition)
 
 -- CR 603.1 / 700.2b / 603.3c: "[condition], [effect]", now modal-capable. Card-free/
 -- parametric (M4c). On the stack it shares Resolve's executor with an activated
@@ -557,7 +557,7 @@ placeOne (srcId, controller, ability) = do
   State.put gs2 {GameState.objects = Map.insert abilId obj (GameState.objects gs2), GameState.stack = abilId : GameState.stack gs2}
 ```
 
-Add to `Engine.hs`: `import qualified Pawl.Binding as Binding`, `import qualified Pawl.Target as Target`, `import qualified Pawl.Type.TriggeredAbility as TriggeredAbility` (verify which are already present). Note: for Rest in Peace, `fillableModes` on its single empty-slot mode returns `{MkModeIndex 0}` (trivially fillable), so `chosenModes = {0}` and its ETB effects resolve exactly as before.
+Add to `Engine.hs`: `import qualified Parun.Binding as Binding`, `import qualified Parun.Target as Target`, `import qualified Parun.Type.TriggeredAbility as TriggeredAbility` (verify which are already present). Note: for Rest in Peace, `fillableModes` on its single empty-slot mode returns `{MkModeIndex 0}` (trivially fillable), so `chosenModes = {0}` and its ETB effects resolve exactly as before.
 
 - [x] **Step 3c: `Codec.hs` — reshape the triggered arm**
 
@@ -602,10 +602,10 @@ git commit -m "M4h: reshape TriggeredAbility to a Modal payload (behavior-preser
 ### Task 4: Activation-path mode prompt (CR 602.2b) + synthetic modal activated fixture
 
 **Files:**
-- Modify: `source/library/Pawl/Activate.hs` (add the `ChooseModes` prompt branch)
+- Modify: `source/library/Parun/Activate.hs` (add the `ChooseModes` prompt branch)
 - Create: `data/cards/synthetic-modal-activated.json`
-- Modify: `source/test-suite/Pawl/Cards.hs` (field + load + `allPrintings`)
-- Test: `source/test-suite/Pawl/ModalSpec.hs`
+- Modify: `source/test-suite/Parun/Cards.hs` (field + load + `allPrintings`)
+- Test: `source/test-suite/Parun/ModalSpec.hs`
 
 **Interfaces:**
 - Consumes: `Target.fillableModes`, `Modal.selectionCount`/`modesTargetSpecs`, `Prompt.ChooseModes`, `Binding.fromChoices`.
@@ -623,7 +623,7 @@ git commit -m "M4h: reshape TriggeredAbility to a Modal payload (behavior-preser
 
 - [x] **Step 2: Register it in the test pool**
 
-In `source/test-suite/Pawl/Cards.hs`: add `syntheticModalActivatedPrinting :: Printing.Printing` to the `Cards` record, a `syntheticModalActivatedPrinting_ <- loadPrinting "synthetic-modal-activated"` line in `loadCards` (and the field in the returned record), and `syntheticModalActivatedPrinting cards` to `allPrintings`.
+In `source/test-suite/Parun/Cards.hs`: add `syntheticModalActivatedPrinting :: Printing.Printing` to the `Cards` record, a `syntheticModalActivatedPrinting_ <- loadPrinting "synthetic-modal-activated"` line in `loadCards` (and the field in the returned record), and `syntheticModalActivatedPrinting cards` to `allPrintings`.
 
 - [x] **Step 3: Write the failing test**
 
@@ -695,10 +695,10 @@ git commit -m "M4h: mode choice in the activation path (CR 602.2b) + fixture"
 ### Task 5: Trigger-placement mode prompt + targeting (CR 700.2b/603.3d) — Aether Channeler gate
 
 **Files:**
-- Modify: `source/library/Pawl/Engine.hs` (`placeOne`: prompt + targeting-at-placement)
+- Modify: `source/library/Parun/Engine.hs` (`placeOne`: prompt + targeting-at-placement)
 - Create: `data/cards/aether-channeler.json` (with the embedded Bird token)
-- Modify: `source/test-suite/Pawl/Cards.hs` (field + load + `allPrintings`)
-- Test: `source/test-suite/Pawl/ModalSpec.hs`, `source/test-suite/Pawl/ReplaySpec.hs`
+- Modify: `source/test-suite/Parun/Cards.hs` (field + load + `allPrintings`)
+- Test: `source/test-suite/Parun/ModalSpec.hs`, `source/test-suite/Parun/ReplaySpec.hs`
 
 **Interfaces:**
 - Consumes: `Target.fillableModes`/`legalSetsExcluding`, `Modal.selectionCount`/`modesTargetSpecs`, `Prompt.ChooseModes`/`ChooseTargets`, `Binding.fromChoices`.
@@ -712,7 +712,7 @@ git commit -m "M4h: mode choice in the activation path (CR 602.2b) + fixture"
 {"name":"Aether Channeler","manaCost":[{"type":"Generic","value":2},{"type":"OfType","value":{"type":"Colored","value":{"type":"Blue"}}}],"typeLine":{"supertypes":[],"types":[{"type":"Creature"}],"subtypes":[{"type":"Human"},{"type":"Wizard"}]},"power":{"type":"Literal","value":3},"toughness":{"type":"Literal","value":3},"keywords":[],"staticAbilities":[],"spell":{"modes":[{"effects":[],"targetSpecs":[]}],"selection":{"type":"ChooseExactly","value":1}},"activatedAbilities":[],"replacementEffects":[],"triggeredAbilities":[{"condition":{"type":"SelfEnters"},"modal":{"modes":[{"effects":[{"type":"Create","value":[{"type":"Literal","value":1},{"name":"Bird","manaCost":null,"typeLine":{"supertypes":[],"types":[{"type":"Creature"}],"subtypes":[{"type":"Bird"}]},"power":{"type":"Literal","value":1},"toughness":{"type":"Literal","value":1},"keywords":[{"type":"Flying"}],"staticAbilities":[],"spell":{"modes":[{"effects":[],"targetSpecs":[]}],"selection":{"type":"ChooseExactly","value":1}},"activatedAbilities":[],"replacementEffects":[],"triggeredAbilities":[],"castingPermissions":[]}]}],"targetSpecs":[]},{"effects":[{"type":"MoveToZone","value":["permanent",{"type":"Hand"}]}],"targetSpecs":[{"slot":"permanent","spec":{"type":"NonlandPermanentTarget"}}]},{"effects":[{"type":"Draw","value":{"type":"Literal","value":1}}],"targetSpecs":[]}],"selection":{"type":"ChooseExactly","value":1}}}],"castingPermissions":[]}
 ```
 
-(Verify `Wizard` exists in `Pawl.Type.Subtype`; if not, either add it — a one-line enum addition with a Codec arm — or use only `Human`. Verify the `MoveToZone`/`Keyword.Flying`/`OfType Blue` JSON tags against `unsummon.json`/an existing flyer/`lightning-bolt.json` before writing.)
+(Verify `Wizard` exists in `Parun.Type.Subtype`; if not, either add it — a one-line enum addition with a Codec arm — or use only `Human`. Verify the `MoveToZone`/`Keyword.Flying`/`OfType Blue` JSON tags against `unsummon.json`/an existing flyer/`lightning-bolt.json` before writing.)
 
 - [x] **Step 2: Register it in the test pool**
 
@@ -768,7 +768,7 @@ placeOne (srcId, controller, ability) = do
   State.modify' (\g -> g {GameState.objects = Map.adjust (\o -> o {Object.bindings = Binding.fromChoices chosen Map.empty Nothing chosenModes}) abilId (GameState.objects g)})
 ```
 
-Add `import qualified Pawl.Decide as Decide`, `import qualified Pawl.Type.Program as Program`, `import qualified Pawl.Type.Prompt as Prompt`, `import qualified Data.Set as Set`, `import qualified Pawl.Modal as Modal` to `Engine.hs` (verify which exist). For Rest in Peace (single empty-target mode) `legal = {0}`, `count = 1` → forced, `sets` empty → no target prompt → unchanged.
+Add `import qualified Parun.Decide as Decide`, `import qualified Parun.Type.Program as Program`, `import qualified Parun.Type.Prompt as Prompt`, `import qualified Data.Set as Set`, `import qualified Parun.Modal as Modal` to `Engine.hs` (verify which exist). For Rest in Peace (single empty-target mode) `legal = {0}`, `count = 1` → forced, `sets` empty → no target prompt → unchanged.
 
 Note on target validation: unlike `castSpell`/`activateAbility`, this reject path removes the ability (CR 603.3d). Keep it simple here (fillability guarantees a legal set exists) and let Task 6 own the removal branch; a malformed answer is out of scope of this task's tests. If a reviewer flags the missing reject-not-repair on an illegal `ChooseTargets` answer, add the same `if not (keysAgree && eachLegal) then <remove> ` guard Task 6 introduces.
 
@@ -790,10 +790,10 @@ git commit -m "M4h: mode choice + targeting at trigger placement (CR 700.2b/603.
 ### Task 6: CR 603.3c removal — no legal mode removes the trigger
 
 **Files:**
-- Modify: `source/library/Pawl/Engine.hs` (`placeOne`: the removal guard)
+- Modify: `source/library/Parun/Engine.hs` (`placeOne`: the removal guard)
 - Create: `data/cards/synthetic-modal-trigger.json`
-- Modify: `source/test-suite/Pawl/Cards.hs`
-- Test: `source/test-suite/Pawl/ModalSpec.hs`
+- Modify: `source/test-suite/Parun/Cards.hs`
+- Test: `source/test-suite/Parun/ModalSpec.hs`
 
 **Interfaces:**
 - Consumes: `Target.fillableModes`, `Modal.selectionCount`.
@@ -877,7 +877,7 @@ git commit -m "M4h: CR 603.3c -- no legal mode removes the modal trigger + fixtu
 
 - [x] **Step 1: Append the `progress.md` entry**
 
-Add one distilled entry after the M4g entry, in the house style: gate card (Aether Channeler), the decision proved (modality is payload-level, adopted by both ability types with no cycle; CR 603.3c removal is the trigger-only novelty), the types/opcodes (zero opcodes; `NonlandPermanentTarget` + self-exclusion; `Pawl.Modal` reader; `ActivatedAbility`/`TriggeredAbility` reshaped, retiring M4g's `[Effect]` divergence), the two synthetic fixtures with their expiries, and the named deferred expiries (spec §13). Cite the spec and this plan.
+Add one distilled entry after the M4g entry, in the house style: gate card (Aether Channeler), the decision proved (modality is payload-level, adopted by both ability types with no cycle; CR 603.3c removal is the trigger-only novelty), the types/opcodes (zero opcodes; `NonlandPermanentTarget` + self-exclusion; `Parun.Modal` reader; `ActivatedAbility`/`TriggeredAbility` reshaped, retiring M4g's `[Effect]` divergence), the two synthetic fixtures with their expiries, and the named deferred expiries (spec §13). Cite the spec and this plan.
 
 - [x] **Step 2: Update `docs/design.md`**
 

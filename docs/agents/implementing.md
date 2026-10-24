@@ -60,8 +60,8 @@ cold and then blows the suite's timeouts). Mutations are the exception, below.
 
 `--test-options` splits on spaces, so a `-p` pattern holding one (`'/CR
 729/'`) arrives mangled and tasty refuses it. Run the built binary instead ---
-`find dist-newstyle -name pawl-test-suite -type f -perm -u+x` --- with
-`pawl_datadir=$PWD/data` in its environment, or it cannot find the corpus and
+`find dist-newstyle -name parun-test-suite -type f -perm -u+x` --- with
+`parun_datadir=$PWD/data` in its environment, or it cannot find the corpus and
 throws `MissingRoot`.
 
 The timeout catches infinite loops; it is not an assertion about speed. The
@@ -90,7 +90,7 @@ row, each later folded into one at real cost. Before adding a constructor, a fie
 or a function, grep for one the new thing is an instance of:
 
 - the same reading against another number, comparison or object:
-  `Filter.Measures`, `Pawl.Types.Arithmetic`;
+  `Filter.Measures`, `Parun.Types.Arithmetic`;
 - the same event for another action or actor: `GameEvent.PlayerActed`,
   `GameEvent.PermanentActed`;
 - the same rule over another subject: `CostModifier`, `Effect.Prohibit`;
@@ -117,7 +117,7 @@ do not propose a script for it. Three sweeps, all yours:
   the card's own PR is the only place that is visible.
 - **When you would write a NEW negative**, don't write the bare form. A
   negative Scryfall result is evidence about the QUERY, and a query built from
-  pawl's identifier rather than the printed template proves nothing.
+  parun's identifier rather than the printed template proves nothing.
 
 Two shapes are admissible for a negative. Prefer the citation: the claim is
 almost always the REASON a slot is unbuilt, which makes it an elision, so `Not
@@ -128,16 +128,16 @@ of the conclusion --- Scryfall `o:"deals damage to" o:"that source"`,
 (from a card in `data/cards/` or the CR's wording, never from a constructor
 name), scope the noun (`the pool` reads as `data/cards/` in some comments and
 as every printing ever released in others), and name the card that WOULD refute
-you. `Pawl.Types.SpendManaAsThough`'s `only` field is the model in the tree.
+you. `Parun.Types.SpendManaAsThough`'s `only` field is the model in the tree.
 
 ## Stale reads
 
-pawl's recurring defect shape is a consumer reading a snapshot where the rule
+parun's recurring defect shape is a consumer reading a snapshot where the rule
 asks about live state --- a condition that went derived while its consumer
 stayed stored, or a gate reading the bindings captured when resolution began,
 so a slot an earlier clause defined is invisible to a later one. When your
 change adds a gate, a prompt or a condition, ask what it reads and WHEN that
-was captured; `Pawl.Engine.Resolve.gateHolds` and its callers are where this
+was captured; `Parun.Engine.Resolve.gateHolds` and its callers are where this
 bites.
 
 Related: one writer, every road. When you record an event, grep for every
@@ -160,7 +160,7 @@ through `script/with-build-lock.sh`.
 It builds at `-O0` in `dist-mutate/`, apart from the suite's `-O1` build. At
 `-O1` a body-only mutation of a core module recompiles everything downstream
 of it, twice over once the file is restored --- about twenty minutes for one
-mutation of `Pawl.Engine.Event`, where `-O0` takes seconds (#4122). The first
+mutation of `Parun.Engine.Event`, where `-O0` takes seconds (#4122). The first
 `-O0` build after a real edit that changes an interface --- a new
 constructor, field or top-level binding --- still recompiles every importer,
 about three minutes; each mutation after it is fast again. Keep the pattern
@@ -181,7 +181,7 @@ perfectly good-looking line of output. Read the label, then decide.
   reported itself, and the real assertion may never have run. Reorder so the
   behavioural assertion precedes every proxy, keep the proxy after it, re-run.
   Do this even when the red looks right: a proxy's message usually names the
-  same objects the behaviour does. `Pawl.ExpirySpec`'s "CR 514.2 / 611.2a
+  same objects the behaviour does. `Parun.ExpirySpec`'s "CR 514.2 / 611.2a
   neither cleanup nor the handoff into bob's turn reaches it" is the worked
   example in the tree.
 - **Ordering the gameplay assertion first is necessary, not sufficient.** It
@@ -207,14 +207,14 @@ perfectly good-looking line of output. Read the label, then decide.
   negative assembled on its own board passes for reasons you did not choose.
 - **Point the pattern at the spec that reads the line.** A pattern reaching
   the wrong subtree reports NOTHING RED, which looks exactly like a line with
-  no observer. `Pawl.Engine.Event.Binding`'s slots, for one, are pinned by
-  `Pawl.LeavesTriggerSpec`'s "eventBindingSlots names exactly", not by
-  `Pawl.ZoneTriggerSpec`, which only supplies its events. Grep for the test
+  no observer. `Parun.Engine.Event.Binding`'s slots, for one, are pinned by
+  `Parun.LeavesTriggerSpec`'s "eventBindingSlots names exactly", not by
+  `Parun.ZoneTriggerSpec`, which only supplies its events. Grep for the test
   before choosing the pattern.
 - **Address a sed mutation whose text recurs.** A bare `s/.../.../` rewrites
   every line it matches, and the first failure it reports can come from the
   other one: `Binding.setEventAmount 1 Map.empty` appears twice in
-  `Pawl.Engine.Event.Binding`. Anchor it (`/a comment above it/{n;s/.../.../}`
+  `Parun.Engine.Event.Binding`. Anchor it (`/a comment above it/{n;s/.../.../}`
   in an `@FILE` script) and read the failure's condition name before believing
   it.
 - **Keep the mutated binding referenced.** Deleting a use trips
@@ -238,7 +238,7 @@ perfectly good-looking line of output. Read the label, then decide.
   green read as coverage.
 
 After any merge from `origin/main`, run the suite first --- a card file in a
-superseded wire spelling fails `Pawl.CardsSpec`'s case for it and makes every
+superseded wire spelling fails `Parun.CardsSpec`'s case for it and makes every
 lookup that reaches it answer `InvalidCorpus`, so unrelated tests fail too; grep
 the corpus for the old spelling rather than eyeballing your diff --- then
 re-run the load-bearing mutations, since a bad conflict resolution can neuter a
@@ -255,8 +255,8 @@ every file that omits the field beside an old key and check each by hand.
 Prefer a scenario for a gameplay test whose state, decisions and checks it can
 state directly: a JSON file under `data/scenarios/` (its README has the
 format), or, for a test that must drive one engine entry point or assert what
-no `Check` names yet, `Pawl.Support`'s `S.board`, `S.turn`/`S.on` and `play`
-over the same runner, `Pawl.Scenario`. The runner checks that a scheduled
+no `Check` names yet, `Parun.Support`'s `S.board`, `S.turn`/`S.on` and `play`
+over the same runner, `Parun.Scenario`. The runner checks that a scheduled
 action was actually offered, keeps its follow-up choices attached to it, and
 fails when a scheduled moment, choice or check was not reached. Extend its
 vocabulary only alongside a gameplay test that needs the new decision or
@@ -267,7 +267,7 @@ structurally identical prompts must receive different answers, or when the
 harness cannot express the state or decision without hiding what the test
 proves. The harness has no vocabulary for `Prompt.OrderTriggers`,
 `ChooseMutateSide` or `ChooseTapsForTotalPower`; a test needing one runs
-`S.runPure` with a test-local answerer (`Pawl.AuraSpec`'s bestow group is the
+`S.runPure` with a test-local answerer (`Parun.AuraSpec`'s bestow group is the
 pattern) and says so at the site. A spec that matches on `Prompt` needs
 `GADTs`, which implies `MonoLocalBinds`, so a local `let` over a polymorphic
 helper there wants its own signature. A hand-built combat board needs
@@ -311,16 +311,16 @@ Each of these has shipped a green-but-meaningless test in this repository:
 - **A pure `Prompt r -> r` answerer cannot tell two structurally identical
   prompts apart**, so it answers both the same way and the test is green
   whatever the engine did. Thread state instead --- an answerer in
-  `State.State` counting or indexing its calls, as `Pawl.CopySpec` and
-  `Pawl.ManaSpec` do with `countingAnswer` --- and assert on the sequence.
+  `State.State` counting or indexing its calls, as `Parun.CopySpec` and
+  `Parun.ManaSpec` do with `countingAnswer` --- and assert on the sequence.
 - **A fixture supplies preconditions your assertion rests on.**
-  `Pawl.Support`'s older builders settle what they place (`S.addPermanent`
+  `Parun.Support`'s older builders settle what they place (`S.addPermanent`
   writes `Sickness.Settled`), while `Board` preserves the sickness, tap state
   and damage its object setup states and does not settle the result. Name the
   precondition the behaviour needs and assert it on the board, or the test
   proves the fixture --- and a hand-built negative lacking it differs in two
   things.
-- **A `Pawl.Support` counter may index by a different question than your
+- **A `Parun.Support` counter may index by a different question than your
   assertion's wording.** `S.countOnBattlefieldByName` takes a `PlayerId`, but
   `Game.zoneMembers` indexes the battlefield by OWNER (CR 108.3), so it cannot
   see who CONTROLS anything. `Projection.controllerOf` is the control question.
@@ -339,7 +339,7 @@ Fetch the Oracle text yourself (`CLAUDE.md` has the `curl`) and diff. For a
 double-faced card read the `card_faces` array, not the top-level text.
 
 If a clause cannot be expressed, say which, and whether the omission leaves
-pawl's card **stricter** or **weaker** than printed. Weaker in the controller's
+parun's card **stricter** or **weaker** than printed. Weaker in the controller's
 favour is the dishonest direction and disqualifies the card --- find another
 producer or stop. Stricter is admissible with an issue and an inline `(#N)`.
 
@@ -371,7 +371,7 @@ IP whatever the engine's license says.
 
 ## Prompts
 
-Do not mint a bespoke resolution-time choice. `Pawl.Types.Prompt`'s
+Do not mint a bespoke resolution-time choice. `Parun.Types.Prompt`'s
 `ChooseRingBearer`, `ChooseBolster`, `ChooseAmass`, `ChooseBlight` and
 `ChooseCopyTarget` share one posture --- choose, not target; filter the
 candidates rather than trusting the answer; raise the prompt only when two or

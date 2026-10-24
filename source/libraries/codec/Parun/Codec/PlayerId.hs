@@ -1,0 +1,14 @@
+module Parun.Codec.PlayerId where
+
+import qualified Parun.JsonCodec.Codec as Codec
+import qualified Parun.JsonCodec.Common as Common
+import qualified Parun.Types.PlayerId as PlayerId
+
+-- | SetController's PlayerId is meant to be runtime-only (baked as a
+-- control-changing effect resolves, not authored on a card), but the codec must
+-- stay total, so this
+-- arm ACCEPTS one from card JSON and a corpus lint keeps the pool honest
+-- (#199). Encoded as a Natural rather than a bare Integer, so a negative wire
+-- value cannot go through a partial fromInteger.
+codec :: Codec.Codec PlayerId.PlayerId
+codec = Common.wrapper Common.natural PlayerId.MkPlayerId PlayerId.unwrap

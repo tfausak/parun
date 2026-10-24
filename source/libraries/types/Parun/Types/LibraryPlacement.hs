@@ -1,0 +1,56 @@
+module Parun.Types.LibraryPlacement where
+
+import qualified Parun.Types.ArrangedArrival as ArrangedArrival
+import qualified Parun.Types.LibraryPosition as LibraryPosition
+import qualified Parun.Types.Quantity as Quantity
+
+-- | How a move settles CR 401.2's end, and who settles CR 401.4's order: the
+-- card states the end, or the object's OWNER picks it. Griptide's "on top of its
+-- owner's library" is 'Stated'; Aetherspouts' "its owner puts it on their choice
+-- of the top or bottom of their library" is 'OwnerChooses'; Endurance's "on the
+-- bottom of their library in a random order" is 'RandomOrder'.
+--
+-- A SIBLING of LibraryPosition rather than a third inhabitant of it, because
+-- Parun.Engine.Game.insertIntoZone turns an end into an index and sits below the
+-- prompt channel: a third inhabitant would make its two-way case answer a
+-- question it cannot ask, forcing either a partial function or a silent
+-- fallback. The choice is made in Parun.Engine.Resolve BEFORE the CR 400.7 funnel
+-- is entered, the posture the tap state and the stated position already take --
+-- settled by the move rather than by a second write afterward.
+--
+-- The OWNER and not the resolving spell's controller, which is CR 401.2 read
+-- through the card ("its owner puts it") and is the same decider CR 401.4 names
+-- for the arrangement where the text names nobody else ('ArrangedBy'). A reader
+-- who knows CR 608.2f's secondary sentence would otherwise hand this to the
+-- controller.
+data LibraryPlacement
+  = Stated LibraryPosition.LibraryPosition
+  | OwnerChooses
+  | -- | The end is stated and the ORDER is the effect's rather than the owner's.
+    -- CR 401.4 lets the owner arrange two or more cards an effect puts in one
+    -- position at once; text that states a random order takes that back, so
+    -- nobody arranges and the batch is randomised instead, to CR 701.24a's
+    -- standard of no player knowing the order.
+    --
+    -- NOT a shuffle (CR 701.24a randomises a whole library or pile): only the
+    -- arriving cards are randomised, the library they join keeps its order, and
+    -- nothing that triggers on a library being shuffled sees this.
+    RandomOrder LibraryPosition.LibraryPosition
+  | -- | CR 608.2c / 608.2d: the end is stated and the ORDER is the payload's
+    -- chooser's rather than the owner's -- Agonizing Memories' "put them on top
+    -- of that player's library in any order", which the caster orders.
+    ArrangedBy ArrangedArrival.ArrangedArrival
+  | -- | CR 401.7: just beneath this many cards from the top, or the bottom of
+    -- a library holding fewer. Oust's "second from the top" is 1, Unexpectedly
+    -- Absent's "just beneath the top X cards" is X.
+    Beneath Quantity.Quantity
+  | -- | CR 401.7 with the end left to the owner: 'Beneath' this many, or the
+    -- bottom. Temporal Cleansing's "second from the top or on the bottom" is 1.
+    BeneathOrBottom Quantity.Quantity
+  deriving (Eq, Ord, Show)
+
+-- | What a move that says nothing about an end uses, which is
+-- 'LibraryPosition.defaultValue' stated -- see that value for the two specs that
+-- observe it.
+defaultValue :: LibraryPlacement
+defaultValue = Stated LibraryPosition.defaultValue

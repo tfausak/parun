@@ -4,20 +4,20 @@
 
 **Goal:** Generalize the characteristic projection into a single-effect layer system (CR 613.7 within-layer timestamp order, no 613.8 dependency) with until-end-of-turn durations, landing Giant Growth (layer 7c), Serpent's Gift (layer-6 deathtouch grant), and Humility solo (layers 6 + 7b), per `docs/superpowers/specs/2026-07-18-m3b-continuous-effects-design.md`.
 
-**Architecture:** A new `Pawl.Projection` module owns `project`, the gather → sort-by-`(layer, timestamp)` → fold engine, and is the single module allowed to `case` on a `Modification` (`Resolve : Effect :: Projection : Modification`). `keywordsOf`/`powerOf`/`toughnessOf`/`hasKeyword` move there from `Pawl.Game` and become wrappers over `project`; combat, SBAs, and targeting reach continuous effects for free through those seams. Continuous effects come from two sources: stored resolution effects (`GameState.continuousEffects`, with a `Duration`, dropped at cleanup) and the static abilities of battlefield permanents (`Card.staticAbilities`, re-derived live). `DamageEvent` grows a deal-time deathtouch bit so CR 702.2e's last-known-information is structural.
+**Architecture:** A new `Parun.Projection` module owns `project`, the gather → sort-by-`(layer, timestamp)` → fold engine, and is the single module allowed to `case` on a `Modification` (`Resolve : Effect :: Projection : Modification`). `keywordsOf`/`powerOf`/`toughnessOf`/`hasKeyword` move there from `Parun.Game` and become wrappers over `project`; combat, SBAs, and targeting reach continuous effects for free through those seams. Continuous effects come from two sources: stored resolution effects (`GameState.continuousEffects`, with a `Duration`, dropped at cleanup) and the static abilities of battlefield permanents (`Card.staticAbilities`, re-derived live). `DamageEvent` grows a deal-time deathtouch bit so CR 702.2e's last-known-information is structural.
 
-**Tech Stack:** GHC 9.14.1 (Nix dev shell), cabal, tasty (split suite under `source/test-suite/Pawl/*Spec.hs`, shared fixtures in `Pawl.Support` aliased `S`), hooky.
+**Tech Stack:** GHC 9.14.1 (Nix dev shell), cabal, tasty (split suite under `source/test-suite/Parun/*Spec.hs`, shared fixtures in `Parun.Support` aliased `S`), hooky.
 
 ## Global Constraints
 
 - **Haskell 2010.** `NamedFieldPuns` is newly permitted (this milestone's amendment) where it improves clarity, but the codebase's established style is *qualified* record construction/update (`obj {Object.damage = 0}`), and this plan follows that style throughout — no module here needs a puns pragma. The permission is recorded in Task 12; do not scatter pragmas. No other new extensions (only the existing `GADTs`/`RankNTypes` where already present).
-- **One type per module** under `Pawl.Type.<Name>` (type + instances only); logic in other `Pawl.*` modules. New `Pawl.*` modules are discovered by cabal-gild's `discover` directive — run `hooky fix`, never hand-edit `exposed-modules` or the test-suite `other-modules`.
-- **Qualified imports aliased to the last component**; `Pawl.Type.Card` takes alias `Card.Type` when it shares a module with `Pawl.Card` (alias `Card`). Import operators unqualified. `A.B.C` must not import `A.B` or `A`.
+- **One type per module** under `Parun.Type.<Name>` (type + instances only); logic in other `Parun.*` modules. New `Parun.*` modules are discovered by cabal-gild's `discover` directive — run `hooky fix`, never hand-edit `exposed-modules` or the test-suite `other-modules`.
+- **Qualified imports aliased to the last component**; `Parun.Type.Card` takes alias `Card.Type` when it shares a module with `Parun.Card` (alias `Card`). Import operators unqualified. `A.B.C` must not import `A.B` or `A`.
 - **No partial functions** (`Set.lookupMin`, `Maybe.maybeToList`, not `head`/`elemAt`). **No list comprehensions** — use `map`/`filter`/`concatMap`. `Mk` constructor prefixes; non-punning constructor names. `Text`, not `String`. Arbitrary-precision numbers.
 - **No boolean blindness**; derive at least `Eq` and `Show` (add `Ord` only where a value is sorted or keys a `Map`/`Set`).
 - **Every rules claim cites its CR number** in a comment, checked against `docs/rules.txt` (never memory).
 - **Warning-clean build:** `cabal build all --enable-tests --enable-benchmarks` (the `pedantic` flag makes warnings fatal). When you move or delete a definition, remove now-unused imports in the same edit. A definitive check needs `cabal clean` first (incremental builds hide warnings in unchanged modules).
-- **The two invariants outrank this plan:** the rules core (`Combat`, `Damage`, `Sba`, `Engine`, `Cast`, `Target`) never cases on a `Modification` or an `Effect` — only `Pawl.Projection` cases on `Modification`, only `Pawl.Resolve` on `Effect`. The engine never makes a player's choice. If a step looks wrong, **stop and say so** — do not weaken a test to make a check pass.
+- **The two invariants outrank this plan:** the rules core (`Combat`, `Damage`, `Sba`, `Engine`, `Cast`, `Target`) never cases on a `Modification` or an `Effect` — only `Parun.Projection` cases on `Modification`, only `Parun.Resolve` on `Effect`. The engine never makes a player's choice. If a step looks wrong, **stop and say so** — do not weaken a test to make a check pass.
 - **TDD:** write each failing test, **run it and watch it fail**, then implement. Narrow with `cabal test --test-options='-p "<pattern>"'` while iterating; the full `cabal test` must pass before every commit.
 - **Test players** are `S.alice`/`S.bob`; tests are named by CR number; cards by real name (Scryfall-verified: Giant Growth `{G}` "Target creature gets +3/+3 until end of turn."; Serpent's Gift `{2}{G}` "Target creature gains deathtouch until end of turn."; Humility `{2}{W}{W}` "All creatures lose all abilities and have base power and toughness 1/1.").
 - **Before each commit:** `git add <explicit paths>` (the checkout is shared with other sessions — never `git add -A`), `hooky fix`, re-`git add` (fix reformats), `hooky run`, then commit. Commit messages are plain sentences (match `git log`), ending with:
@@ -32,17 +32,17 @@
 ### Task 1: Timestamps — the `Timestamp` type, `Object`/`GameState` fields, and stamping
 
 **Files:**
-- Create: `source/library/Pawl/Type/Timestamp.hs`
-- Modify: `source/library/Pawl/Type/Object.hs` (`timestamp` field), `source/library/Pawl/Type/GameState.hs` (`nextTimestamp` field), `source/library/Pawl/Game.hs` (`freshTimestamp`, `changeZone` stamping), `source/library/Pawl/Setup.hs` (`createCard`, `emptyGame`)
-- Modify (every `MkObject`/`MkGameState`): `source/test-suite/Pawl/Support.hs`, `source/test-suite/Pawl/GameSpec.hs`, `source/test-suite/Pawl/DamageSpec.hs`, `source/test-suite/Pawl/ResolveSpec.hs`
-- Test: `source/test-suite/Pawl/GameSpec.hs`
+- Create: `source/library/Parun/Type/Timestamp.hs`
+- Modify: `source/library/Parun/Type/Object.hs` (`timestamp` field), `source/library/Parun/Type/GameState.hs` (`nextTimestamp` field), `source/library/Parun/Game.hs` (`freshTimestamp`, `changeZone` stamping), `source/library/Parun/Setup.hs` (`createCard`, `emptyGame`)
+- Modify (every `MkObject`/`MkGameState`): `source/test-suite/Parun/Support.hs`, `source/test-suite/Parun/GameSpec.hs`, `source/test-suite/Parun/DamageSpec.hs`, `source/test-suite/Parun/ResolveSpec.hs`
+- Test: `source/test-suite/Parun/GameSpec.hs`
 
 **Interfaces:**
 - Produces: `Timestamp.MkTimestamp Natural`; `Object.timestamp :: Timestamp`; `GameState.nextTimestamp :: Timestamp`; `Game.freshTimestamp :: GameState -> (Timestamp, GameState)`. `Game.changeZone` now stamps the new incarnation with a fresh timestamp. Later tasks read `Object.timestamp` (static-ability ordering) and call `freshTimestamp` (stored-effect creation).
 
 - [x] **Step 1: Write the failing test**
 
-In `source/test-suite/Pawl/GameSpec.hs`, add to the `changeZone` group (find the group testing `Game.changeZone`; if none, add these to the module's top-level `tests` list):
+In `source/test-suite/Parun/GameSpec.hs`, add to the `changeZone` group (find the group testing `Game.changeZone`; if none, add these to the module's top-level `tests` list):
 
 ```haskell
       HU.testCase "CR 613.7b changeZone stamps the new incarnation with a fresh timestamp" $
@@ -60,19 +60,19 @@ In `source/test-suite/Pawl/GameSpec.hs`, add to the `changeZone` group (find the
         HU.assertEqual "zero" (Timestamp.MkTimestamp 0) (GameState.nextTimestamp (Setup.emptyGame S.bothPlayers))
 ```
 
-Add imports to `GameSpec.hs` if missing: `import qualified Pawl.Type.Timestamp as Timestamp`, and ensure `Setup`, `Object`, `Zone`, `ObjectId`, `GameState`, `Game` are imported (they are, in the existing spec).
+Add imports to `GameSpec.hs` if missing: `import qualified Parun.Type.Timestamp as Timestamp`, and ensure `Setup`, `Object`, `Zone`, `ObjectId`, `GameState`, `Game` are imported (they are, in the existing spec).
 
 - [x] **Step 2: Run it and watch it fail**
 
 Run: `cabal test 2>&1 | tail -20`
-Expected: compile error — `Pawl.Type.Timestamp`, `GameState.nextTimestamp`, `Object.timestamp` not in scope.
+Expected: compile error — `Parun.Type.Timestamp`, `GameState.nextTimestamp`, `Object.timestamp` not in scope.
 
 - [x] **Step 3: Implement**
 
-`source/library/Pawl/Type/Timestamp.hs`:
+`source/library/Parun/Type/Timestamp.hs`:
 
 ```haskell
-module Pawl.Type.Timestamp where
+module Parun.Type.Timestamp where
 
 import Numeric.Natural (Natural)
 
@@ -90,7 +90,7 @@ newtype Timestamp = MkTimestamp Natural
   deriving (Eq, Ord, Show)
 ```
 
-`Pawl.Type.Object` gains, after `targets` (import `Pawl.Type.Timestamp (Timestamp)`):
+`Parun.Type.Object` gains, after `targets` (import `Parun.Type.Timestamp (Timestamp)`):
 
 ```haskell
     -- CR 613.7b: when this object was created (its "entered" time). A static
@@ -99,7 +99,7 @@ newtype Timestamp = MkTimestamp Natural
     timestamp :: Timestamp
 ```
 
-`Pawl.Type.GameState` gains, after `nextObjectId` (import `Pawl.Type.Timestamp (Timestamp)`):
+`Parun.Type.GameState` gains, after `nextObjectId` (import `Parun.Type.Timestamp (Timestamp)`):
 
 ```haskell
     -- CR 613.7: the monotonic source of timestamps for objects (at creation) and
@@ -107,7 +107,7 @@ newtype Timestamp = MkTimestamp Natural
     nextTimestamp :: Timestamp,
 ```
 
-In `Pawl.Game` (import `qualified Pawl.Type.Timestamp as Timestamp`), next to `freshObjectId`:
+In `Parun.Game` (import `qualified Parun.Type.Timestamp as Timestamp`), next to `freshObjectId`:
 
 ```haskell
 freshTimestamp :: GameState -> (Timestamp.Timestamp, GameState)
@@ -128,7 +128,7 @@ freshTimestamp gs =
      in insertIntoZone dest pid newId gs3
 ```
 
-In `Pawl.Setup`: `emptyGame`'s `MkGameState` gains `GameState.nextTimestamp = Timestamp.MkTimestamp 0` (add `import qualified Pawl.Type.Timestamp as Timestamp`). `createCard` stamps the object it builds — thread a fresh timestamp:
+In `Parun.Setup`: `emptyGame`'s `MkGameState` gains `GameState.nextTimestamp = Timestamp.MkTimestamp 0` (add `import qualified Parun.Type.Timestamp as Timestamp`). `createCard` stamps the object it builds — thread a fresh timestamp:
 
 ```haskell
 createCard pid printing = do
@@ -155,7 +155,7 @@ createCard pid printing = do
   pure oid
 ```
 
-Now every remaining `Object.MkObject` and `GameState.MkGameState` gains its timestamp field, or the build fails with a missing-field error (that failure *is* the checklist). In `Pawl.Support`: `addCreature` and `landsInPlay` build objects while threading `gs1` from `freshObjectId` — draw a fresh timestamp too and set `Object.timestamp = ts`; `handOne` and `pikerInHand` likewise; `oneMountainState` sets `Object.timestamp = Timestamp.MkTimestamp 0` and its `MkGameState` sets `GameState.nextTimestamp = Timestamp.MkTimestamp 1` (add `import qualified Pawl.Type.Timestamp as Timestamp`). Give battlefield-fixture creatures *fresh, increasing* timestamps (via `freshTimestamp`) so multi-creature fixtures reflect entry order — Task 8's layer tests depend on it. For example, `addCreature`:
+Now every remaining `Object.MkObject` and `GameState.MkGameState` gains its timestamp field, or the build fails with a missing-field error (that failure *is* the checklist). In `Parun.Support`: `addCreature` and `landsInPlay` build objects while threading `gs1` from `freshObjectId` — draw a fresh timestamp too and set `Object.timestamp = ts`; `handOne` and `pikerInHand` likewise; `oneMountainState` sets `Object.timestamp = Timestamp.MkTimestamp 0` and its `MkGameState` sets `GameState.nextTimestamp = Timestamp.MkTimestamp 1` (add `import qualified Parun.Type.Timestamp as Timestamp`). Give battlefield-fixture creatures *fresh, increasing* timestamps (via `freshTimestamp`) so multi-creature fixtures reflect entry order — Task 8's layer tests depend on it. For example, `addCreature`:
 
 ```haskell
 addCreature printing pid gs =
@@ -180,7 +180,7 @@ addCreature printing pid gs =
       )
 ```
 
-Then `grep -rn "MkObject\|MkGameState" source/test-suite/Pawl/GameSpec.hs source/test-suite/Pawl/DamageSpec.hs source/test-suite/Pawl/ResolveSpec.hs` and add `Object.timestamp = Timestamp.MkTimestamp 0` (and `GameState.nextTimestamp = Timestamp.MkTimestamp 0` on any full `MkGameState`) to each, importing `Timestamp` where needed.
+Then `grep -rn "MkObject\|MkGameState" source/test-suite/Parun/GameSpec.hs source/test-suite/Parun/DamageSpec.hs source/test-suite/Parun/ResolveSpec.hs` and add `Object.timestamp = Timestamp.MkTimestamp 0` (and `GameState.nextTimestamp = Timestamp.MkTimestamp 0` on any full `MkGameState`) to each, importing `Timestamp` where needed.
 
 - [x] **Step 4: Build and run the full suite**
 
@@ -190,8 +190,8 @@ Run: `cabal test 2>&1 | tail -5` → PASS (all existing + the two new).
 - [x] **Step 5: Commit**
 
 ```bash
-git add source/library/Pawl/Type/Timestamp.hs source/library/Pawl/Type/Object.hs source/library/Pawl/Type/GameState.hs source/library/Pawl/Game.hs source/library/Pawl/Setup.hs source/test-suite/Pawl/Support.hs source/test-suite/Pawl/GameSpec.hs source/test-suite/Pawl/DamageSpec.hs source/test-suite/Pawl/ResolveSpec.hs pawl.cabal
-hooky fix && git add -u && git add pawl.cabal && hooky run
+git add source/library/Parun/Type/Timestamp.hs source/library/Parun/Type/Object.hs source/library/Parun/Type/GameState.hs source/library/Parun/Game.hs source/library/Parun/Setup.hs source/test-suite/Parun/Support.hs source/test-suite/Parun/GameSpec.hs source/test-suite/Parun/DamageSpec.hs source/test-suite/Parun/ResolveSpec.hs parun.cabal
+hooky fix && git add -u && git add parun.cabal && hooky run
 git commit -m "Add object and effect timestamps for CR 613.7 layer ordering
 
 Co-Authored-By: Claude Opus 4.8 (1M context) <noreply@anthropic.com>
@@ -203,9 +203,9 @@ Claude-Session: https://claude.ai/code/session_01Sni8JpsTfduJC15gLtLc3e"
 ### Task 2: The continuous-effect type family and the two container fields
 
 **Files:**
-- Create: `source/library/Pawl/Type/Layer.hs`, `source/library/Pawl/Type/Duration.hs`, `source/library/Pawl/Type/Affected.hs`, `source/library/Pawl/Type/Modification.hs`, `source/library/Pawl/Type/ContinuousEffect.hs`, `source/library/Pawl/Type/StaticAbility.hs`, `source/library/Pawl/Type/ProjectedCharacteristics.hs`
-- Modify: `source/library/Pawl/Type/GameState.hs` (`continuousEffects` field), `source/library/Pawl/Type/Card.hs` (`staticAbilities` field), `source/library/Pawl/Card.hs` (empty `staticAbilities` on all 14 printings), `source/library/Pawl/Setup.hs` (`emptyGame`), `source/test-suite/Pawl/Support.hs` (`oneMountainState`; `pikerCard` and other `MkCard` fixtures), plus the test `MkGameState`/`MkCard` sites found by grep
-- Test: `source/test-suite/Pawl/GameSpec.hs`
+- Create: `source/library/Parun/Type/Layer.hs`, `source/library/Parun/Type/Duration.hs`, `source/library/Parun/Type/Affected.hs`, `source/library/Parun/Type/Modification.hs`, `source/library/Parun/Type/ContinuousEffect.hs`, `source/library/Parun/Type/StaticAbility.hs`, `source/library/Parun/Type/ProjectedCharacteristics.hs`
+- Modify: `source/library/Parun/Type/GameState.hs` (`continuousEffects` field), `source/library/Parun/Type/Card.hs` (`staticAbilities` field), `source/library/Parun/Card.hs` (empty `staticAbilities` on all 14 printings), `source/library/Parun/Setup.hs` (`emptyGame`), `source/test-suite/Parun/Support.hs` (`oneMountainState`; `pikerCard` and other `MkCard` fixtures), plus the test `MkGameState`/`MkCard` sites found by grep
+- Test: `source/test-suite/Parun/GameSpec.hs`
 
 **Interfaces:**
 - Produces: `Layer.{Copy,Control,Text,Type,Color,Ability,CharacteristicPT,SetPT,ModifyPT,SwitchPT}`; `Duration.UntilEndOfTurn`; `Affected.{TheseObjects (Set ObjectId), AllCreatures}`; `Modification.{GainKeyword Keyword, LoseAllAbilities, SetBasePowerToughness Quantity Quantity, ModifyPowerToughness Quantity Quantity}`; `ContinuousEffect.MkContinuousEffect {source, timestamp, duration, modification, affected}`; `StaticAbility.MkStaticAbility {affected, modification}`; `ProjectedCharacteristics.MkProjectedCharacteristics {keywords, power, toughness}`; `GameState.continuousEffects :: [ContinuousEffect]`; `Card.staticAbilities :: [StaticAbility]`.
@@ -221,7 +221,7 @@ In `GameSpec.hs`:
         HU.assertEqual "empty" [] (Card.Type.staticAbilities S.pikerCard)
 ```
 
-(Import `qualified Pawl.Type.Card as Card.Type` if not present; `S.pikerCard` exists.)
+(Import `qualified Parun.Type.Card as Card.Type` if not present; `S.pikerCard` exists.)
 
 - [x] **Step 2: Run and watch it fail**
 
@@ -229,10 +229,10 @@ Run: `cabal test 2>&1 | tail -20` → compile error, `GameState.continuousEffect
 
 - [x] **Step 3: Implement the types**
 
-`source/library/Pawl/Type/Layer.hs`:
+`source/library/Parun/Type/Layer.hs`:
 
 ```haskell
-module Pawl.Type.Layer where
+module Parun.Type.Layer where
 
 -- CR 613.1: the layers a continuous effect can apply in, ordered by rule number
 -- so the DERIVED Ord IS the application order -- the sole thing the projection
@@ -253,10 +253,10 @@ data Layer
   deriving (Eq, Ord, Show)
 ```
 
-`source/library/Pawl/Type/Duration.hs`:
+`source/library/Parun/Type/Duration.hs`:
 
 ```haskell
-module Pawl.Type.Duration where
+module Parun.Type.Duration where
 
 -- How long a stored continuous effect lasts (CR 611.2). Only UntilEndOfTurn
 -- (CR 514.2 drops it during cleanup) exists at M3b; static-ability effects carry
@@ -268,13 +268,13 @@ data Duration
   deriving (Eq, Ord, Show)
 ```
 
-`source/library/Pawl/Type/Affected.hs`:
+`source/library/Parun/Type/Affected.hs`:
 
 ```haskell
-module Pawl.Type.Affected where
+module Parun.Type.Affected where
 
 import Data.Set (Set)
-import Pawl.Type.ObjectId (ObjectId)
+import Parun.Type.ObjectId (ObjectId)
 
 -- What a continuous effect applies to. CR 611.2c: a resolution effect's set is
 -- LOCKED when it begins (TheseObjects -- a bounced-and-returned creature is a new
@@ -287,19 +287,19 @@ data Affected
   deriving (Eq, Ord, Show)
 ```
 
-`source/library/Pawl/Type/Modification.hs`:
+`source/library/Parun/Type/Modification.hs`:
 
 ```haskell
-module Pawl.Type.Modification where
+module Parun.Type.Modification where
 
-import Pawl.Type.Keyword (Keyword)
-import Pawl.Type.Quantity (Quantity)
+import Parun.Type.Keyword (Keyword)
+import Parun.Type.Quantity (Quantity)
 
 -- The open-half continuous-effect vocabulary -- its own leaf family (design.md's
 -- M3g note: "continuous-effect specifications, classified by layer"), distinct
--- from Effect. The ONLY module that may case on a constructor is Pawl.Projection
+-- from Effect. The ONLY module that may case on a constructor is Parun.Projection
 -- (Projection.layer classifies it; Projection.applyModification applies it) --
--- the same standing Pawl.Resolve has over Effect. GainKeyword carries a Keyword,
+-- the same standing Parun.Resolve has over Effect. GainKeyword carries a Keyword,
 -- a closed-half CITATION (casing on it is not an invariant violation -- see the
 -- M2a spec). P/T constructors carry signed Quantity (+3/+3 or a future -1/-1).
 data Modification
@@ -310,16 +310,16 @@ data Modification
   deriving (Eq, Ord, Show)
 ```
 
-`source/library/Pawl/Type/ContinuousEffect.hs`:
+`source/library/Parun/Type/ContinuousEffect.hs`:
 
 ```haskell
-module Pawl.Type.ContinuousEffect where
+module Parun.Type.ContinuousEffect where
 
-import Pawl.Type.Affected (Affected)
-import Pawl.Type.Duration (Duration)
-import Pawl.Type.Modification (Modification)
-import Pawl.Type.ObjectId (ObjectId)
-import Pawl.Type.Timestamp (Timestamp)
+import Parun.Type.Affected (Affected)
+import Parun.Type.Duration (Duration)
+import Parun.Type.Modification (Modification)
+import Parun.Type.ObjectId (ObjectId)
+import Parun.Type.Timestamp (Timestamp)
 
 -- A stored, resolution-generated continuous effect (CR 611.2), held in
 -- GameState.continuousEffects. `timestamp` orders it within its layer (CR 613.7);
@@ -336,13 +336,13 @@ data ContinuousEffect = MkContinuousEffect
   deriving (Eq, Ord, Show)
 ```
 
-`source/library/Pawl/Type/StaticAbility.hs`:
+`source/library/Parun/Type/StaticAbility.hs`:
 
 ```haskell
-module Pawl.Type.StaticAbility where
+module Parun.Type.StaticAbility where
 
-import Pawl.Type.Affected (Affected)
-import Pawl.Type.Modification (Modification)
+import Parun.Type.Affected (Affected)
+import Parun.Type.Modification (Modification)
 
 -- A card's printed static continuous ability (CR 604.3). Gathered live from every
 -- battlefield permanent by the projection, with the permanent's own timestamp
@@ -355,13 +355,13 @@ data StaticAbility = MkStaticAbility
   deriving (Eq, Ord, Show)
 ```
 
-`source/library/Pawl/Type/ProjectedCharacteristics.hs`:
+`source/library/Parun/Type/ProjectedCharacteristics.hs`:
 
 ```haskell
-module Pawl.Type.ProjectedCharacteristics where
+module Parun.Type.ProjectedCharacteristics where
 
 import Data.Set (Set)
-import Pawl.Type.Keyword (Keyword)
+import Parun.Type.Keyword (Keyword)
 
 -- The characteristics of an object after the layer fold (design.md §2.5). Maybe
 -- P/T because a land has none. No Ord: never sorted, never a key.
@@ -373,7 +373,7 @@ data ProjectedCharacteristics = MkProjectedCharacteristics
   deriving (Eq, Show)
 ```
 
-`Pawl.Type.GameState` gains, after `combat`/`damageEvents` (import `Pawl.Type.ContinuousEffect (ContinuousEffect)`):
+`Parun.Type.GameState` gains, after `combat`/`damageEvents` (import `Parun.Type.ContinuousEffect (ContinuousEffect)`):
 
 ```haskell
     -- CR 611.2: stored continuous effects from resolutions (Giant Growth,
@@ -382,7 +382,7 @@ data ProjectedCharacteristics = MkProjectedCharacteristics
     continuousEffects :: [ContinuousEffect],
 ```
 
-`Pawl.Type.Card` gains, after `keywords` (import `Pawl.Type.StaticAbility (StaticAbility)`):
+`Parun.Type.Card` gains, after `keywords` (import `Parun.Type.StaticAbility (StaticAbility)`):
 
 ```haskell
     -- CR 604.3: this card's static continuous abilities (Humility). Empty for
@@ -391,7 +391,7 @@ data ProjectedCharacteristics = MkProjectedCharacteristics
     staticAbilities :: [StaticAbility],
 ```
 
-`Setup.emptyGame`'s `MkGameState` gains `GameState.continuousEffects = []`. Every `Card.MkCard` in `Pawl.Card` (all 14 printings) gains `Card.staticAbilities = []` — `grep -n "MkCard" source/library/Pawl/Card.hs` and visit each. `Support.oneMountainState`'s `MkGameState` gains `GameState.continuousEffects = []`; any `MkCard` fixture in the test suite (`grep -rn "MkCard" source/test-suite/`) gains `Card.Type.staticAbilities = []`.
+`Setup.emptyGame`'s `MkGameState` gains `GameState.continuousEffects = []`. Every `Card.MkCard` in `Parun.Card` (all 14 printings) gains `Card.staticAbilities = []` — `grep -n "MkCard" source/library/Parun/Card.hs` and visit each. `Support.oneMountainState`'s `MkGameState` gains `GameState.continuousEffects = []`; any `MkCard` fixture in the test suite (`grep -rn "MkCard" source/test-suite/`) gains `Card.Type.staticAbilities = []`.
 
 - [x] **Step 4: Build and run the full suite**
 
@@ -401,8 +401,8 @@ Run: `cabal test 2>&1 | tail -5` → PASS.
 - [x] **Step 5: Commit**
 
 ```bash
-git add source/library/Pawl/Type/Layer.hs source/library/Pawl/Type/Duration.hs source/library/Pawl/Type/Affected.hs source/library/Pawl/Type/Modification.hs source/library/Pawl/Type/ContinuousEffect.hs source/library/Pawl/Type/StaticAbility.hs source/library/Pawl/Type/ProjectedCharacteristics.hs source/library/Pawl/Type/GameState.hs source/library/Pawl/Type/Card.hs source/library/Pawl/Card.hs source/library/Pawl/Setup.hs source/test-suite/Pawl/Support.hs source/test-suite/Pawl/GameSpec.hs pawl.cabal
-hooky fix && git add -u && git add pawl.cabal && hooky run
+git add source/library/Parun/Type/Layer.hs source/library/Parun/Type/Duration.hs source/library/Parun/Type/Affected.hs source/library/Parun/Type/Modification.hs source/library/Parun/Type/ContinuousEffect.hs source/library/Parun/Type/StaticAbility.hs source/library/Parun/Type/ProjectedCharacteristics.hs source/library/Parun/Type/GameState.hs source/library/Parun/Type/Card.hs source/library/Parun/Card.hs source/library/Parun/Setup.hs source/test-suite/Parun/Support.hs source/test-suite/Parun/GameSpec.hs parun.cabal
+hooky fix && git add -u && git add parun.cabal && hooky run
 git commit -m "Add the continuous-effect type family and its two container fields
 
 Co-Authored-By: Claude Opus 4.8 (1M context) <noreply@anthropic.com>
@@ -411,35 +411,35 @@ Claude-Session: https://claude.ai/code/session_01Sni8JpsTfduJC15gLtLc3e"
 
 ---
 
-### Task 3: Create `Pawl.Projection`; move the characteristic seams out of `Game`
+### Task 3: Create `Parun.Projection`; move the characteristic seams out of `Game`
 
 **Files:**
-- Create: `source/library/Pawl/Projection.hs`
-- Modify: `source/library/Pawl/Game.hs` (delete the four functions + now-unused imports), `source/library/Pawl/Combat.hs`, `source/library/Pawl/Damage.hs`, `source/library/Pawl/Sba.hs` (migrate call sites)
+- Create: `source/library/Parun/Projection.hs`
+- Modify: `source/library/Parun/Game.hs` (delete the four functions + now-unused imports), `source/library/Parun/Combat.hs`, `source/library/Parun/Damage.hs`, `source/library/Parun/Sba.hs` (migrate call sites)
 
 **Interfaces:**
 - Produces: `Projection.keywordsOf :: ObjectId -> GameState -> Set Keyword`; `Projection.powerOf :: ObjectId -> GameState -> Maybe Integer`; `Projection.toughnessOf :: ObjectId -> GameState -> Maybe Integer`; `Projection.hasKeyword :: Keyword -> ObjectId -> GameState -> Bool`. Same signatures as the old `Game.*`; Task 4 rewrites the bodies. This task is a **behavior-preserving move** — the existing suite is its test.
 
 - [x] **Step 1: Create the module (verbatim bodies)**
 
-`source/library/Pawl/Projection.hs` — the four functions, moved unchanged from `Game.hs` (still reading the base printing; Task 4 makes them layer-aware):
+`source/library/Parun/Projection.hs` — the four functions, moved unchanged from `Game.hs` (still reading the base printing; Task 4 makes them layer-aware):
 
 ```haskell
-module Pawl.Projection where
+module Parun.Projection where
 
 import Data.Set (Set)
 import qualified Data.Set as Set
-import qualified Pawl.Game as Game
-import qualified Pawl.Quantity as Quantity
-import qualified Pawl.Type.Card as Card.Type
-import Pawl.Type.GameState (GameState)
-import Pawl.Type.Keyword (Keyword)
-import Pawl.Type.ObjectId (ObjectId)
-import qualified Pawl.Type.Power as Power
-import qualified Pawl.Type.Toughness as Toughness
+import qualified Parun.Game as Game
+import qualified Parun.Quantity as Quantity
+import qualified Parun.Type.Card as Card.Type
+import Parun.Type.GameState (GameState)
+import Parun.Type.Keyword (Keyword)
+import Parun.Type.ObjectId (ObjectId)
+import qualified Parun.Type.Power as Power
+import qualified Parun.Type.Toughness as Toughness
 
 -- The projected characteristics of an object. Task 4 makes these a layer fold;
--- for now they are the base printing, moved out of Pawl.Game so the projection
+-- for now they are the base printing, moved out of Parun.Game so the projection
 -- has one home (and so Game does not depend on the projection -- Projection
 -- depends on Game, not the reverse).
 powerOf :: ObjectId -> GameState -> Maybe Integer
@@ -459,13 +459,13 @@ hasKeyword :: Keyword -> ObjectId -> GameState -> Bool
 hasKeyword keyword oid gs = Set.member keyword (keywordsOf oid gs)
 ```
 
-(The `Card.Type` alias is `Pawl.Type.Card`; `Game.cardOf` is the raw state read, which stays in `Game`.)
+(The `Card.Type` alias is `Parun.Type.Card`; `Game.cardOf` is the raw state read, which stays in `Game`.)
 
 - [x] **Step 2: Delete the four functions from `Game` and migrate callers**
 
-In `Pawl.Game`, delete `powerOf`, `toughnessOf`, `keywordsOf`, `hasKeyword` and remove imports they alone used (`Power`, `Toughness`, `Quantity`, and `Keyword` if now unused — check with the build). Keep `cardOf`, `controllerOf`, `lookupObject`, `zoneMembers`, `changeZone`, `freshObjectId`, `freshTimestamp`, etc.
+In `Parun.Game`, delete `powerOf`, `toughnessOf`, `keywordsOf`, `hasKeyword` and remove imports they alone used (`Power`, `Toughness`, `Quantity`, and `Keyword` if now unused — check with the build). Keep `cardOf`, `controllerOf`, `lookupObject`, `zoneMembers`, `changeZone`, `freshObjectId`, `freshTimestamp`, etc.
 
-Then migrate every `Game.<fn>` → `Projection.<fn>` for the four moved functions in `Combat.hs`, `Damage.hs`, `Sba.hs` (each adds `import qualified Pawl.Projection as Projection`):
+Then migrate every `Game.<fn>` → `Projection.<fn>` for the four moved functions in `Combat.hs`, `Damage.hs`, `Sba.hs` (each adds `import qualified Parun.Projection as Projection`):
 
 ```bash
 grep -rn "Game\.\(powerOf\|toughnessOf\|keywordsOf\|hasKeyword\)" source/library/
@@ -481,9 +481,9 @@ Run: `cabal test 2>&1 | tail -5` → PASS, **unchanged test count** — a pure m
 - [x] **Step 4: Commit**
 
 ```bash
-git add source/library/Pawl/Projection.hs source/library/Pawl/Game.hs source/library/Pawl/Combat.hs source/library/Pawl/Damage.hs source/library/Pawl/Sba.hs pawl.cabal
-hooky fix && git add -u && git add pawl.cabal && hooky run
-git commit -m "Move the characteristic seams into Pawl.Projection
+git add source/library/Parun/Projection.hs source/library/Parun/Game.hs source/library/Parun/Combat.hs source/library/Parun/Damage.hs source/library/Parun/Sba.hs parun.cabal
+hooky fix && git add -u && git add parun.cabal && hooky run
+git commit -m "Move the characteristic seams into Parun.Projection
 
 Co-Authored-By: Claude Opus 4.8 (1M context) <noreply@anthropic.com>
 Claude-Session: https://claude.ai/code/session_01Sni8JpsTfduJC15gLtLc3e"
@@ -494,8 +494,8 @@ Claude-Session: https://claude.ai/code/session_01Sni8JpsTfduJC15gLtLc3e"
 ### Task 4: `Projection.project` — the gather → sort → fold layer engine
 
 **Files:**
-- Modify: `source/library/Pawl/Projection.hs` (add `layer`, `applyModification`, `affects`, `baseCharacteristics`, `gather`, `project`; rewrite the four wrappers)
-- Create: `source/test-suite/Pawl/ProjectionSpec.hs`
+- Modify: `source/library/Parun/Projection.hs` (add `layer`, `applyModification`, `affects`, `baseCharacteristics`, `gather`, `project`; rewrite the four wrappers)
+- Create: `source/test-suite/Parun/ProjectionSpec.hs`
 - Modify: `source/test-suite/Main.hs` (aggregate `ProjectionSpec.tests`)
 
 **Interfaces:**
@@ -504,32 +504,32 @@ Claude-Session: https://claude.ai/code/session_01Sni8JpsTfduJC15gLtLc3e"
 
 - [x] **Step 1: Write the failing tests**
 
-`source/test-suite/Pawl/ProjectionSpec.hs`:
+`source/test-suite/Parun/ProjectionSpec.hs`:
 
 ```haskell
--- Covers Pawl.Projection: the single-effect layer fold -- CR 613 layer order and
+-- Covers Parun.Projection: the single-effect layer fold -- CR 613 layer order and
 -- CR 613.7 within-layer timestamp order, with no CR 613.8 dependency (M3c). Uses
 -- directly-constructed continuous effects so the engine is proven before any card
 -- wiring; real-card behavior lands in later tasks and DamageSpec.
-module Pawl.ProjectionSpec where
+module Parun.ProjectionSpec where
 
 import qualified Data.Map.Strict as Map
 import qualified Data.Set as Set
-import qualified Pawl.Card as Card
-import qualified Pawl.Game as Game
-import qualified Pawl.Projection as Projection
-import qualified Pawl.Support as S
-import qualified Pawl.Type.Affected as Affected
-import qualified Pawl.Type.ContinuousEffect as ContinuousEffect
-import qualified Pawl.Type.Duration as Duration
-import qualified Pawl.Type.GameState as GameState
-import qualified Pawl.Type.Keyword as Keyword
-import qualified Pawl.Type.Layer as Layer
-import qualified Pawl.Type.Modification as Modification
-import qualified Pawl.Type.ObjectId as ObjectId
-import qualified Pawl.Type.Object as Object
-import qualified Pawl.Type.Quantity as Quantity
-import qualified Pawl.Type.Timestamp as Timestamp
+import qualified Parun.Card as Card
+import qualified Parun.Game as Game
+import qualified Parun.Projection as Projection
+import qualified Parun.Support as S
+import qualified Parun.Type.Affected as Affected
+import qualified Parun.Type.ContinuousEffect as ContinuousEffect
+import qualified Parun.Type.Duration as Duration
+import qualified Parun.Type.GameState as GameState
+import qualified Parun.Type.Keyword as Keyword
+import qualified Parun.Type.Layer as Layer
+import qualified Parun.Type.Modification as Modification
+import qualified Parun.Type.ObjectId as ObjectId
+import qualified Parun.Type.Object as Object
+import qualified Parun.Type.Quantity as Quantity
+import qualified Parun.Type.Timestamp as Timestamp
 import qualified Test.Tasty as Tasty
 import qualified Test.Tasty.HUnit as HU
 
@@ -598,7 +598,7 @@ tests =
          in HU.assertBool "lose-all wins" (not (Projection.hasKeyword Keyword.Deathtouch oid gs)),
       HU.testCase "a P/T modification never gives P/T to a land" $
         let gs0 = S.mountainsInPlay 1
-            landId = case Game.zoneMembers Pawl.Type.Zone.Battlefield S.alice gs0 of
+            landId = case Game.zoneMembers Parun.Type.Zone.Battlefield S.alice gs0 of
               i : _ -> i
               [] -> ObjectId.MkObjectId 999
             gs = withEffect landId (Timestamp.MkTimestamp 100) (Modification.ModifyPowerToughness (Quantity.Literal 3) (Quantity.Literal 3)) gs0
@@ -606,7 +606,7 @@ tests =
     ]
 ```
 
-For the land test, add `import qualified Pawl.Type.Zone as Zone` and use `Zone.Battlefield` (rename `Pawl.Type.Zone.Battlefield` above to `Zone.Battlefield`). Add `ProjectionSpec.tests` to `testTree` in `source/test-suite/Main.hs` (and `import qualified Pawl.ProjectionSpec as ProjectionSpec`).
+For the land test, add `import qualified Parun.Type.Zone as Zone` and use `Zone.Battlefield` (rename `Parun.Type.Zone.Battlefield` above to `Zone.Battlefield`). Add `ProjectionSpec.tests` to `testTree` in `source/test-suite/Main.hs` (and `import qualified Parun.ProjectionSpec as ProjectionSpec`).
 
 - [x] **Step 2: Run and watch them fail**
 
@@ -615,7 +615,7 @@ Expected: compile error — `Projection.layer`/`project` not defined; the +3/+3 
 
 - [x] **Step 3: Implement the fold**
 
-Rewrite `Pawl.Projection` (add imports: `qualified Data.List as List`, `qualified Data.Maybe as Maybe`, `qualified Pawl.Card as Card`, `qualified Pawl.Type.Affected as Affected`, `qualified Pawl.Type.ContinuousEffect as ContinuousEffect`, `qualified Pawl.Type.GameState as GameState`, `qualified Pawl.Type.Layer as Layer`, `Pawl.Type.Layer (Layer)`, `qualified Pawl.Type.Modification as Modification`, `Pawl.Type.Modification (Modification)`, `qualified Pawl.Type.Object as Object`, `qualified Pawl.Type.ProjectedCharacteristics as PC`, `Pawl.Type.ProjectedCharacteristics (ProjectedCharacteristics)`, `qualified Pawl.Type.StaticAbility as StaticAbility`, `Pawl.Type.Timestamp (Timestamp)`, `qualified Data.Set as Set`):
+Rewrite `Parun.Projection` (add imports: `qualified Data.List as List`, `qualified Data.Maybe as Maybe`, `qualified Parun.Card as Card`, `qualified Parun.Type.Affected as Affected`, `qualified Parun.Type.ContinuousEffect as ContinuousEffect`, `qualified Parun.Type.GameState as GameState`, `qualified Parun.Type.Layer as Layer`, `Parun.Type.Layer (Layer)`, `qualified Parun.Type.Modification as Modification`, `Parun.Type.Modification (Modification)`, `qualified Parun.Type.Object as Object`, `qualified Parun.Type.ProjectedCharacteristics as PC`, `Parun.Type.ProjectedCharacteristics (ProjectedCharacteristics)`, `qualified Parun.Type.StaticAbility as StaticAbility`, `Parun.Type.Timestamp (Timestamp)`, `qualified Data.Set as Set`):
 
 ```haskell
 -- CR 613.1: the layer a modification applies in. THE ABI classification the
@@ -743,8 +743,8 @@ Run: `cabal test 2>&1 | tail -5` → PASS (existing suite unchanged: with no con
 - [x] **Step 5: Commit**
 
 ```bash
-git add source/library/Pawl/Projection.hs source/test-suite/Pawl/ProjectionSpec.hs source/test-suite/Main.hs pawl.cabal
-hooky fix && git add -u && git add pawl.cabal && hooky run
+git add source/library/Parun/Projection.hs source/test-suite/Parun/ProjectionSpec.hs source/test-suite/Main.hs parun.cabal
+hooky fix && git add -u && git add parun.cabal && hooky run
 git commit -m "Make the projection a CR 613 single-effect layer fold
 
 Co-Authored-By: Claude Opus 4.8 (1M context) <noreply@anthropic.com>
@@ -756,7 +756,7 @@ Claude-Session: https://claude.ai/code/session_01Sni8JpsTfduJC15gLtLc3e"
 ### Task 5: `TargetSpec.CreatureTarget` and creature-only legality
 
 **Files:**
-- Modify: `source/library/Pawl/Type/TargetSpec.hs` (`CreatureTarget`), `source/library/Pawl/Target.hs` (the new case), `source/test-suite/Pawl/ResolveSpec.hs` (tests in the `Target` group)
+- Modify: `source/library/Parun/Type/TargetSpec.hs` (`CreatureTarget`), `source/library/Parun/Target.hs` (the new case), `source/test-suite/Parun/ResolveSpec.hs` (tests in the `Target` group)
 
 **Interfaces:**
 - Produces: `TargetSpec.CreatureTarget`; `Target.legalRecipients`/`stillLegal` handle it (creatures on the battlefield, no players).
@@ -790,7 +790,7 @@ Run: `cabal test 2>&1 | tail -20` → `TargetSpec.CreatureTarget` not in scope.
 
 - [x] **Step 3: Implement**
 
-`Pawl.Type.TargetSpec` gains a constructor (comment updated):
+`Parun.Type.TargetSpec` gains a constructor (comment updated):
 
 ```haskell
 data TargetSpec
@@ -802,7 +802,7 @@ data TargetSpec
   deriving (Eq, Ord, Show)
 ```
 
-`Pawl.Target.legalRecipients` gains the case (its existing `AnyTarget` case already builds `creatures`; factor the creature list out so both cases share it):
+`Parun.Target.legalRecipients` gains the case (its existing `AnyTarget` case already builds `creatures`; factor the creature list out so both cases share it):
 
 ```haskell
 legalRecipients :: TargetSpec -> GameState -> Set Recipient
@@ -827,7 +827,7 @@ Run: `cabal test 2>&1 | tail -5` → PASS.
 - [x] **Step 5: Commit**
 
 ```bash
-git add source/library/Pawl/Type/TargetSpec.hs source/library/Pawl/Target.hs source/test-suite/Pawl/ResolveSpec.hs
+git add source/library/Parun/Type/TargetSpec.hs source/library/Parun/Target.hs source/test-suite/Parun/ResolveSpec.hs
 hooky fix && git add -u && hooky run
 git commit -m "Add the CreatureTarget spec and its legality (CR 115.4)
 
@@ -840,7 +840,7 @@ Claude-Session: https://claude.ai/code/session_01Sni8JpsTfduJC15gLtLc3e"
 ### Task 6: Giant Growth — `Effect.ModifyTarget`, the `Resolve` create-branch, the card
 
 **Files:**
-- Modify: `source/library/Pawl/Type/Effect.hs` (`ModifyTarget`), `source/library/Pawl/Resolve.hs` (`slotsOf` + `applyEffect` branch), `source/library/Pawl/Card.hs` (`giantGrowthPrinting`, `allPrintings`), `source/test-suite/Pawl/Support.hs` (a `forestsInPlay` helper if convenient), `source/test-suite/Pawl/ProjectionSpec.hs` (cast tests), `source/test-suite/Pawl/CardSpec.hs` (lint count)
+- Modify: `source/library/Parun/Type/Effect.hs` (`ModifyTarget`), `source/library/Parun/Resolve.hs` (`slotsOf` + `applyEffect` branch), `source/library/Parun/Card.hs` (`giantGrowthPrinting`, `allPrintings`), `source/test-suite/Parun/Support.hs` (a `forestsInPlay` helper if convenient), `source/test-suite/Parun/ProjectionSpec.hs` (cast tests), `source/test-suite/Parun/CardSpec.hs` (lint count)
 
 **Interfaces:**
 - Consumes: `Game.freshTimestamp`, `Target.stillLegal`, `Affected.TheseObjects`, `ContinuousEffect.MkContinuousEffect`, `Object.targets`.
@@ -848,7 +848,7 @@ Claude-Session: https://claude.ai/code/session_01Sni8JpsTfduJC15gLtLc3e"
 
 - [x] **Step 1: Write the failing tests**
 
-In `ProjectionSpec.hs` (add imports `qualified Pawl.Cast as Cast`, `qualified Pawl.Engine as Engine`, `qualified Pawl.Stack as Stack`, `qualified Pawl.Type.Phase as Phase`):
+In `ProjectionSpec.hs` (add imports `qualified Parun.Cast as Cast`, `qualified Parun.Engine as Engine`, `qualified Parun.Stack as Stack`, `qualified Parun.Type.Phase as Phase`):
 
 ```haskell
 -- alice has a Forest for mana, a Piker on the battlefield, and Giant Growth in
@@ -882,7 +882,7 @@ Run: `cabal test 2>&1 | tail -30` → `Card.giantGrowthPrinting` / `Effect.Modif
 
 - [x] **Step 3: Implement**
 
-`Pawl.Type.Effect` gains the constructor (import `Pawl.Type.Duration (Duration)`, `Pawl.Type.Modification (Modification)`):
+`Parun.Type.Effect` gains the constructor (import `Parun.Type.Duration (Duration)`, `Parun.Type.Modification (Modification)`):
 
 ```haskell
 data Effect
@@ -903,7 +903,7 @@ slotsOf effect = case effect of
   Effect.ModifyTarget _ _ slot -> Set.singleton slot
 ```
 
-`Resolve.applyEffect` gains the `ModifyTarget` branch (imports: `qualified Pawl.Type.Affected as Affected`, `qualified Pawl.Type.ContinuousEffect as ContinuousEffect`; `Game.freshTimestamp` is available):
+`Resolve.applyEffect` gains the `ModifyTarget` branch (imports: `qualified Parun.Type.Affected as Affected`, `qualified Parun.Type.ContinuousEffect as ContinuousEffect`; `Game.freshTimestamp` is available):
 
 ```haskell
   Effect.ModifyTarget duration modification slot ->
@@ -928,9 +928,9 @@ slotsOf effect = case effect of
       _ -> gs
 ```
 
-(Ensure `Data.Set as Set`, `Recipient`, `GameState` are imported in `Resolve` — `Set` and `GameState` are, from M3a; add `Pawl.Type.Recipient as Recipient` if absent.)
+(Ensure `Data.Set as Set`, `Recipient`, `GameState` are imported in `Resolve` — `Set` and `GameState` are, from M3a; add `Parun.Type.Recipient as Recipient` if absent.)
 
-In `Pawl.Card` (imports `Duration`, `Modification` as needed):
+In `Parun.Card` (imports `Duration`, `Modification` as needed):
 
 ```haskell
 -- Giant Growth: {G}, Instant, "Target creature gets +3/+3 until end of turn."
@@ -959,7 +959,7 @@ giantGrowthPrinting =
     }
 ```
 
-Add `giantGrowthPrinting` to `allPrintings`. Before finalizing the comment, check Giant Growth's Gatherer rulings per design.md §4: `curl -s -H "User-Agent: pawl/1.0" "https://api.scryfall.com/cards/named?exact=Giant+Growth" | python3 -c "import json,sys; print(json.load(sys.stdin)['rulings_uri'])"` and fetch that URI; if any ruling is Q&A-shaped *and* expressible in this pool, STOP and tell the user. In `CardSpec.hs`, bump the `allPrintings` count assertion (14 → 15) if such a test exists.
+Add `giantGrowthPrinting` to `allPrintings`. Before finalizing the comment, check Giant Growth's Gatherer rulings per design.md §4: `curl -s -H "User-Agent: parun/1.0" "https://api.scryfall.com/cards/named?exact=Giant+Growth" | python3 -c "import json,sys; print(json.load(sys.stdin)['rulings_uri'])"` and fetch that URI; if any ruling is Q&A-shaped *and* expressible in this pool, STOP and tell the user. In `CardSpec.hs`, bump the `allPrintings` count assertion (14 → 15) if such a test exists.
 
 - [x] **Step 4: Run the full suite**
 
@@ -968,8 +968,8 @@ Run: `cabal test 2>&1 | tail -5` → PASS. The slot lint (over `allPrintings`) n
 - [x] **Step 5: Commit**
 
 ```bash
-git add source/library/Pawl/Type/Effect.hs source/library/Pawl/Resolve.hs source/library/Pawl/Card.hs source/test-suite/Pawl/ProjectionSpec.hs source/test-suite/Pawl/CardSpec.hs pawl.cabal
-hooky fix && git add -u && git add pawl.cabal && hooky run
+git add source/library/Parun/Type/Effect.hs source/library/Parun/Resolve.hs source/library/Parun/Card.hs source/test-suite/Parun/ProjectionSpec.hs source/test-suite/Parun/CardSpec.hs parun.cabal
+hooky fix && git add -u && git add parun.cabal && hooky run
 git commit -m "Add Giant Growth: the ModifyTarget opcode and stored duration effect
 
 Co-Authored-By: Claude Opus 4.8 (1M context) <noreply@anthropic.com>
@@ -981,14 +981,14 @@ Claude-Session: https://claude.ai/code/session_01Sni8JpsTfduJC15gLtLc3e"
 ### Task 7: Cleanup wear-off — CR 514.2 drops `UntilEndOfTurn` effects
 
 **Files:**
-- Modify: `source/library/Pawl/Projection.hs` (a `dropEndOfTurnEffects` helper, or put it in `Pawl.Game` if it fits better — it touches only `GameState.continuousEffects`), `source/library/Pawl/Engine.hs` (cleanup step), `source/test-suite/Pawl/ProjectionSpec.hs` (test)
+- Modify: `source/library/Parun/Projection.hs` (a `dropEndOfTurnEffects` helper, or put it in `Parun.Game` if it fits better — it touches only `GameState.continuousEffects`), `source/library/Parun/Engine.hs` (cleanup step), `source/test-suite/Parun/ProjectionSpec.hs` (test)
 
 **Interfaces:**
 - Produces: a pure `dropEndOfTurnEffects :: GameState -> GameState` dropping every `UntilEndOfTurn` continuous effect. `Engine`'s cleanup step calls it.
 
 - [x] **Step 1: Write the failing test**
 
-In `ProjectionSpec.hs` (imports `qualified Pawl.Type.BeginningStep as BeginningStep`, `qualified Pawl.Type.EndingStep as EndingStep` as needed):
+In `ProjectionSpec.hs` (imports `qualified Parun.Type.BeginningStep as BeginningStep`, `qualified Parun.Type.EndingStep as EndingStep` as needed):
 
 ```haskell
       HU.testCase "CR 514.2 an until-end-of-turn effect wears off at cleanup" $
@@ -1009,7 +1009,7 @@ Run: `cabal test 2>&1 | tail -20` → the effect is still present after cleanup 
 
 - [x] **Step 3: Implement**
 
-In `Pawl.Projection` (imports `qualified Pawl.Type.ContinuousEffect as ContinuousEffect`, `qualified Pawl.Type.Duration as Duration` — already present):
+In `Parun.Projection` (imports `qualified Parun.Type.ContinuousEffect as ContinuousEffect`, `qualified Parun.Type.Duration as Duration` — already present):
 
 ```haskell
 -- CR 514.2: during cleanup, "all 'until end of turn' and 'this turn' effects
@@ -1021,7 +1021,7 @@ dropEndOfTurnEffects gs =
    in gs {GameState.continuousEffects = filter keep (GameState.continuousEffects gs)}
 ```
 
-In `Pawl.Engine`, the cleanup arm (currently `discardToHandSize active` then `State.modify' Damage.removeAllDamage`) gains a sibling (import `qualified Pawl.Projection as Projection` if absent):
+In `Parun.Engine`, the cleanup arm (currently `discardToHandSize active` then `State.modify' Damage.removeAllDamage`) gains a sibling (import `qualified Parun.Projection as Projection` if absent):
 
 ```haskell
     Phase.Ending EndingStep.Cleanup -> do
@@ -1039,7 +1039,7 @@ Run: `cabal test 2>&1 | tail -5` → PASS.
 - [x] **Step 5: Commit**
 
 ```bash
-git add source/library/Pawl/Projection.hs source/library/Pawl/Engine.hs source/test-suite/Pawl/ProjectionSpec.hs
+git add source/library/Parun/Projection.hs source/library/Parun/Engine.hs source/test-suite/Parun/ProjectionSpec.hs
 hooky fix && git add -u && hooky run
 git commit -m "Drop until-end-of-turn effects at cleanup (CR 514.2)
 
@@ -1052,7 +1052,7 @@ Claude-Session: https://claude.ai/code/session_01Sni8JpsTfduJC15gLtLc3e"
 ### Task 8: Humility — the static-ability card
 
 **Files:**
-- Modify: `source/library/Pawl/Card.hs` (`humilityPrinting`, `allPrintings`), `source/library/Pawl/Type/CardType.hs` (`Enchantment` if absent — check first), `source/test-suite/Pawl/Support.hs` (a `withHumility` fixture helper), `source/test-suite/Pawl/ProjectionSpec.hs` (tests), `source/test-suite/Pawl/CardSpec.hs` (lint count)
+- Modify: `source/library/Parun/Card.hs` (`humilityPrinting`, `allPrintings`), `source/library/Parun/Type/CardType.hs` (`Enchantment` if absent — check first), `source/test-suite/Parun/Support.hs` (a `withHumility` fixture helper), `source/test-suite/Parun/ProjectionSpec.hs` (tests), `source/test-suite/Parun/CardSpec.hs` (lint count)
 
 **Interfaces:**
 - Consumes: `Card.staticAbilities`, `StaticAbility.MkStaticAbility`, `Affected.AllCreatures`, `Modification.{LoseAllAbilities, SetBasePowerToughness}`.
@@ -1100,7 +1100,7 @@ In `ProjectionSpec.hs`:
               HU.assertEqual "toughness" (Just 4) (Projection.toughnessOf pikerId resolved)
 ```
 
-(Add `import qualified Pawl.Sba as Sba` to `ProjectionSpec.hs`.)
+(Add `import qualified Parun.Sba as Sba` to `ProjectionSpec.hs`.)
 
 - [x] **Step 2: Run and watch them fail**
 
@@ -1108,7 +1108,7 @@ Run: `cabal test 2>&1 | tail -30` → `Card.humilityPrinting` not in scope.
 
 - [x] **Step 3: Implement**
 
-Check `Pawl.Type.CardType` for an `Enchantment` constructor; if absent, add it (comment ordered like the others) and give `Card.isPermanentType` the `CardType.Enchantment -> True` case (CR 110.1 lists enchantment among permanent types). Then in `Pawl.Card`:
+Check `Parun.Type.CardType` for an `Enchantment` constructor; if absent, add it (comment ordered like the others) and give `Card.isPermanentType` the `CardType.Enchantment -> True` case (CR 110.1 lists enchantment among permanent types). Then in `Parun.Card`:
 
 ```haskell
 -- Humility: {2}{W}{W}, Enchantment, "All creatures lose all abilities and have
@@ -1149,7 +1149,7 @@ humilityPrinting =
     }
 ```
 
-(Check `ManaType.Generic`/`ManaSymbol.OfType` spelling against how existing multi-symbol costs are written in `Pawl.Card` — the Piker's `{1}{R}` is the template; match it exactly. Import `StaticAbility`, `Affected`, `Modification`.) Add `humilityPrinting` to `allPrintings`; bump the `CardSpec` count (15 → 16). Pull Humility's Gatherer rulings per design.md §4 before finalizing the comment (it has only 3 today; check whether any is Q&A-shaped and expressible — layer interactions mostly are not, but verify).
+(Check `ManaType.Generic`/`ManaSymbol.OfType` spelling against how existing multi-symbol costs are written in `Parun.Card` — the Piker's `{1}{R}` is the template; match it exactly. Import `StaticAbility`, `Affected`, `Modification`.) Add `humilityPrinting` to `allPrintings`; bump the `CardSpec` count (15 → 16). Pull Humility's Gatherer rulings per design.md §4 before finalizing the comment (it has only 3 today; check whether any is Q&A-shaped and expressible — layer interactions mostly are not, but verify).
 
 - [x] **Step 4: Run the full suite**
 
@@ -1158,8 +1158,8 @@ Run: `cabal test 2>&1 | tail -5` → PASS.
 - [x] **Step 5: Commit**
 
 ```bash
-git add source/library/Pawl/Card.hs source/library/Pawl/Type/CardType.hs source/test-suite/Pawl/Support.hs source/test-suite/Pawl/ProjectionSpec.hs source/test-suite/Pawl/CardSpec.hs pawl.cabal
-hooky fix && git add -u && git add pawl.cabal && hooky run
+git add source/library/Parun/Card.hs source/library/Parun/Type/CardType.hs source/test-suite/Parun/Support.hs source/test-suite/Parun/ProjectionSpec.hs source/test-suite/Parun/CardSpec.hs parun.cabal
+hooky fix && git add -u && git add parun.cabal && hooky run
 git commit -m "Add Humility: static abilities in layers 6 and 7b
 
 Co-Authored-By: Claude Opus 4.8 (1M context) <noreply@anthropic.com>
@@ -1171,7 +1171,7 @@ Claude-Session: https://claude.ai/code/session_01Sni8JpsTfduJC15gLtLc3e"
 ### Task 9: Serpent's Gift — the layer-6 grant and the timestamp interaction
 
 **Files:**
-- Modify: `source/library/Pawl/Card.hs` (`serpentsGiftPrinting`, `allPrintings`), `source/test-suite/Pawl/ProjectionSpec.hs` (tests), `source/test-suite/Pawl/CardSpec.hs` (lint count)
+- Modify: `source/library/Parun/Card.hs` (`serpentsGiftPrinting`, `allPrintings`), `source/test-suite/Parun/ProjectionSpec.hs` (tests), `source/test-suite/Parun/CardSpec.hs` (lint count)
 
 **Interfaces:**
 - Consumes: `Effect.ModifyTarget` with `Modification.GainKeyword` (Task 6's opcode, no new engine code).
@@ -1224,7 +1224,7 @@ humilityTimestamp gs =
         [] -> Timestamp.MkTimestamp 0
 ```
 
-(Add imports `qualified Pawl.Type.Source as Source`, `qualified Pawl.Type.Printing as Printing`, `qualified Data.Maybe as Maybe` to `ProjectionSpec.hs`. `withEffect` is Task 4's helper.)
+(Add imports `qualified Parun.Type.Source as Source`, `qualified Parun.Type.Printing as Printing`, `qualified Data.Maybe as Maybe` to `ProjectionSpec.hs`. `withEffect` is Task 4's helper.)
 
 - [x] **Step 2: Run and watch them fail**
 
@@ -1232,7 +1232,7 @@ Run: `cabal test 2>&1 | tail -30` → `Card.serpentsGiftPrinting` not in scope.
 
 - [x] **Step 3: Implement**
 
-In `Pawl.Card` (mirror Giant Growth, but `{2}{G}` and `GainKeyword Deathtouch`):
+In `Parun.Card` (mirror Giant Growth, but `{2}{G}` and `GainKeyword Deathtouch`):
 
 ```haskell
 -- Serpent's Gift: {2}{G}, Instant, "Target creature gains deathtouch until end of
@@ -1268,7 +1268,7 @@ serpentsGiftPrinting =
     }
 ```
 
-(Match the `{2}{G}` template to how the code writes generic + colored symbols; `Keyword` is imported in `Pawl.Card` already.) Add `serpentsGiftPrinting` to `allPrintings`; bump the `CardSpec` count (16 → 17). Pull Serpent's Gift's rulings per design.md §4.
+(Match the `{2}{G}` template to how the code writes generic + colored symbols; `Keyword` is imported in `Parun.Card` already.) Add `serpentsGiftPrinting` to `allPrintings`; bump the `CardSpec` count (16 → 17). Pull Serpent's Gift's rulings per design.md §4.
 
 - [x] **Step 4: Run the full suite**
 
@@ -1277,8 +1277,8 @@ Run: `cabal test 2>&1 | tail -5` → PASS.
 - [x] **Step 5: Commit**
 
 ```bash
-git add source/library/Pawl/Card.hs source/test-suite/Pawl/ProjectionSpec.hs source/test-suite/Pawl/CardSpec.hs pawl.cabal
-hooky fix && git add -u && git add pawl.cabal && hooky run
+git add source/library/Parun/Card.hs source/test-suite/Parun/ProjectionSpec.hs source/test-suite/Parun/CardSpec.hs parun.cabal
+hooky fix && git add -u && git add parun.cabal && hooky run
 git commit -m "Add Serpent's Gift: a layer-6 deathtouch grant, and the CR 613.7 order
 
 Co-Authored-By: Claude Opus 4.8 (1M context) <noreply@anthropic.com>
@@ -1290,7 +1290,7 @@ Claude-Session: https://claude.ai/code/session_01Sni8JpsTfduJC15gLtLc3e"
 ### Task 10: The deal-time deathtouch bit, and the real-card 702.2c interaction
 
 **Files:**
-- Modify: `source/library/Pawl/Type/DamageEvent.hs` (`dealtByDeathtouch` field), `source/library/Pawl/Damage.hs` (set the bit at construction), `source/library/Pawl/Resolve.hs` (set the bit — `False` — in its `MkDamageEvent`), `source/library/Pawl/Sba.hs` (`woundedByDeathtouch` reads the bit), `source/test-suite/Pawl/DamageSpec.hs` (retire the synthetic fixture; add the real-card interaction), plus test `MkDamageEvent` sites found by grep
+- Modify: `source/library/Parun/Type/DamageEvent.hs` (`dealtByDeathtouch` field), `source/library/Parun/Damage.hs` (set the bit at construction), `source/library/Parun/Resolve.hs` (set the bit — `False` — in its `MkDamageEvent`), `source/library/Parun/Sba.hs` (`woundedByDeathtouch` reads the bit), `source/test-suite/Parun/DamageSpec.hs` (retire the synthetic fixture; add the real-card interaction), plus test `MkDamageEvent` sites found by grep
 
 **Interfaces:**
 - Produces: `DamageEvent.dealtByDeathtouch :: Bool`, set from the projected deathtouch of the source at deal time; `Sba.woundedByDeathtouch` reads it.
@@ -1346,7 +1346,7 @@ trampleDeathtouchTests =
     ]
 ```
 
-Delete `syntheticDeathtramplerPrinting` and its now-dead imports. Add to `DamageSpec.hs` the imports the helpers use: `qualified Pawl.Type.ContinuousEffect as ContinuousEffect`, `qualified Pawl.Type.Duration as Duration`, `qualified Pawl.Type.Modification as Modification`, `qualified Pawl.Type.Affected as Affected`, `qualified Pawl.Type.Timestamp as Timestamp` (keep `Keyword`, `Set`, `ObjectId`, `GameState`, `DamageEvent`).
+Delete `syntheticDeathtramplerPrinting` and its now-dead imports. Add to `DamageSpec.hs` the imports the helpers use: `qualified Parun.Type.ContinuousEffect as ContinuousEffect`, `qualified Parun.Type.Duration as Duration`, `qualified Parun.Type.Modification as Modification`, `qualified Parun.Type.Affected as Affected`, `qualified Parun.Type.Timestamp as Timestamp` (keep `Keyword`, `Set`, `ObjectId`, `GameState`, `DamageEvent`).
 
 Add two bit assertions to the `Deathtouch` group. These pin the deal-time bit **directly** on the event, so Humility's P/T side effects cannot confound them (under Humility everything is 1/1, so a survival check would be about 704.5g lethal damage, not the deathtouch bit):
 
@@ -1380,7 +1380,7 @@ Run: `cabal test 2>&1 | tail -30` → `DamageEvent.dealtByDeathtouch` not in sco
 
 - [x] **Step 3: Implement**
 
-`Pawl.Type.DamageEvent` gains the field (comment updated):
+`Parun.Type.DamageEvent` gains the field (comment updated):
 
 ```haskell
 data DamageEvent = MkDamageEvent
@@ -1396,7 +1396,7 @@ data DamageEvent = MkDamageEvent
   deriving (Eq, Ord, Show)
 ```
 
-In `Pawl.Damage`, every `MkDamageEvent` gains `Projection.hasKeyword Keyword.Deathtouch <source> gs` as the bit (the `<source>` is the attacker/blocker whose id is the first field). In `attackerAssignment`, `blockerAssignment`, and the two prompt-arm `toEvent` constructions, add the field. For example, `blockerAssignment`:
+In `Parun.Damage`, every `MkDamageEvent` gains `Projection.hasKeyword Keyword.Deathtouch <source> gs` as the bit (the `<source>` is the attacker/blocker whose id is the first field). In `attackerAssignment`, `blockerAssignment`, and the two prompt-arm `toEvent` constructions, add the field. For example, `blockerAssignment`:
 
 ```haskell
 blockerAssignment gs (attacker, blockers) =
@@ -1411,7 +1411,7 @@ blockerAssignment gs (attacker, blockers) =
 
 and in `attackerAssignment` the unblocked and single-blocker events add `(Projection.hasKeyword Keyword.Deathtouch attacker gs)`, and the prompt-arm `toEvent (recipient, n) = DamageEvent.MkDamageEvent attacker recipient n (Projection.hasKeyword Keyword.Deathtouch attacker gs)`.
 
-In `Pawl.Resolve`, the `DealDamage` `MkDamageEvent` gains the bit for a spell source (import `qualified Pawl.Projection as Projection`, `qualified Pawl.Type.Keyword as Keyword`):
+In `Parun.Resolve`, the `DealDamage` `MkDamageEvent` gains the bit for a spell source (import `qualified Parun.Projection as Projection`, `qualified Parun.Type.Keyword as Keyword`):
 
 ```haskell
             else Damage.applyDamage [DamageEvent.MkDamageEvent source recipient (fromInteger n) (Projection.hasKeyword Keyword.Deathtouch source gs)] gs
@@ -1419,7 +1419,7 @@ In `Pawl.Resolve`, the `DealDamage` `MkDamageEvent` gains the bit for a spell so
 
 (For a Bolt this is `False` — a spell has no deathtouch keyword. Correct, and it keeps M3a's tests green.)
 
-In `Pawl.Sba.woundedByDeathtouch`, read the bit instead of re-querying (drop the `Projection.hasKeyword`/`Keyword` use there; the comment changes to name the deal-time capture):
+In `Parun.Sba.woundedByDeathtouch`, read the bit instead of re-querying (drop the `Projection.hasKeyword`/`Keyword` use there; the comment changes to name the deal-time capture):
 
 ```haskell
 -- CR 704.5h: a creature with toughness > 0 dealt damage by a deathtouch source
@@ -1446,7 +1446,7 @@ Run: `cabal test 2>&1 | tail -5` → PASS. The M2c deathtouch/trample behavior i
 - [x] **Step 5: Commit**
 
 ```bash
-git add source/library/Pawl/Type/DamageEvent.hs source/library/Pawl/Damage.hs source/library/Pawl/Resolve.hs source/library/Pawl/Sba.hs source/test-suite/Pawl/DamageSpec.hs
+git add source/library/Parun/Type/DamageEvent.hs source/library/Parun/Damage.hs source/library/Parun/Resolve.hs source/library/Parun/Sba.hs source/test-suite/Parun/DamageSpec.hs
 hooky fix && git add -u && hooky run
 git commit -m "Capture deathtouch at deal time on the damage event (CR 702.2e)
 
@@ -1459,7 +1459,7 @@ Claude-Session: https://claude.ai/code/session_01Sni8JpsTfduJC15gLtLc3e"
 ### Task 11: The green deck, the properties, and the deck-composition counts
 
 **Files:**
-- Modify: `source/library/Pawl/Setup.hs` (`greenDeck`), `source/test-suite/Pawl/SetupSpec.hs` (composition counts), `source/test-suite/Pawl/PropertySpec.hs` (engagement guards)
+- Modify: `source/library/Parun/Setup.hs` (`greenDeck`), `source/test-suite/Parun/SetupSpec.hs` (composition counts), `source/test-suite/Parun/PropertySpec.hs` (engagement guards)
 
 **Interfaces:**
 - Consumes: everything prior. Produces the M3b random-game coverage.
@@ -1521,7 +1521,7 @@ Run: `cabal test 2>&1 | tail -5` → PASS. The property suite now fuzzes continu
 - [x] **Step 5: Commit**
 
 ```bash
-git add source/library/Pawl/Setup.hs source/test-suite/Pawl/SetupSpec.hs source/test-suite/Pawl/PropertySpec.hs
+git add source/library/Parun/Setup.hs source/test-suite/Parun/SetupSpec.hs source/test-suite/Parun/PropertySpec.hs
 hooky fix && git add -u && hooky run
 git commit -m "Put Giant Growth and Serpent's Gift in the green deck for random coverage
 
@@ -1557,7 +1557,7 @@ In `CONTRIBUTING.md` (the style section) and `CLAUDE.md` (§Code conventions, th
 
 - [x] **Step 3: Record M3b complete**
 
-In `CLAUDE.md`, add an "M3b is complete" bullet after M3a's (pattern-match the existing bullets: what landed — the `Pawl.Projection` layer fold and its `Modification`/`Layer`/`Duration`/`Affected`/`ContinuousEffect`/`StaticAbility`/`ProjectedCharacteristics`/`Timestamp` types; `ModifyTarget` as one opcode for Giant Growth and Serpent's Gift; Humility's static abilities; CR 514.2 wear-off; the deal-time deathtouch bit retiring M2c's synthetic fixture; `CreatureTarget`; the green deck; and the spec/plan paths), and update the "Current work" bullet to **M3c** (CR 613.8 dependency via trial application — the go/no-go — Humility+Opalescence and Blood Moon+Urborg, both orders; the test set must exist *before* the resolver, per the risk register).
+In `CLAUDE.md`, add an "M3b is complete" bullet after M3a's (pattern-match the existing bullets: what landed — the `Parun.Projection` layer fold and its `Modification`/`Layer`/`Duration`/`Affected`/`ContinuousEffect`/`StaticAbility`/`ProjectedCharacteristics`/`Timestamp` types; `ModifyTarget` as one opcode for Giant Growth and Serpent's Gift; Humility's static abilities; CR 514.2 wear-off; the deal-time deathtouch bit retiring M2c's synthetic fixture; `CreatureTarget`; the green deck; and the spec/plan paths), and update the "Current work" bullet to **M3c** (CR 613.8 dependency via trial application — the go/no-go — Humility+Opalescence and Blood Moon+Urborg, both orders; the test set must exist *before* the resolver, per the risk register).
 
 - [x] **Step 4: Commit**
 

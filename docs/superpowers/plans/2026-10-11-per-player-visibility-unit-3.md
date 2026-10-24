@@ -7,7 +7,7 @@
 **Architecture:**
 - One `PlayerEffect` arm, `Shows Shows.Shows`, carries a record: `MkShows { cards :: ShownCards, to :: Audience }`. It is one arm with parameters, not siblings.
 - It is carried the ways every player effect already is: printed as a face's `playerAbilities` row, or stored by `Effect.AffectPlayers` with a duration.
-- `Pawl.Engine.Visibility.base` gains a term that asks `Pawl.Engine.PlayerEffect.applying` for the card's owner. Because `base` is per seat, CR 723.4's lift applies for free.
+- `Parun.Engine.Visibility.base` gains a term that asks `Parun.Engine.PlayerEffect.applying` for the card's owner. Because `base` is per seat, CR 723.4's lift applies for free.
 
 **Tech Stack:** Haskell (GHC via the repo's nix flake), cabal, tasty, JSON scenarios under `data/scenarios/`.
 
@@ -15,7 +15,7 @@
 
 ## Global Constraints
 
-- **Worktree:** work only in `/Volumes/nvme/Developer/pawl/.claude/worktrees/3237-standing-grants`, on branch `3237-standing-grants`, cut from `origin/main` at 0cf9a2941. Never `cd` to the primary checkout. Before the first build, run `script/warm-worktree.sh seed /Volumes/nvme/Developer/pawl/.claude/worktrees/3237-standing-grants` and confirm `ls cabal.project.local`.
+- **Worktree:** work only in `/Volumes/nvme/Developer/parun/.claude/worktrees/3237-standing-grants`, on branch `3237-standing-grants`, cut from `origin/main` at 0cf9a2941. Never `cd` to the primary checkout. Before the first build, run `script/warm-worktree.sh seed /Volumes/nvme/Developer/parun/.claude/worktrees/3237-standing-grants` and confirm `ls cabal.project.local`.
 - **Merging:** merge `origin/main` ONCE, in Task 3 Step 1, never mid-plan.
 - **Running cabal:**
   - Prefix every `cabal` call with `script/with-build-lock.sh`.
@@ -23,22 +23,22 @@
   - `-p` patterns contain NO spaces, because a space does not survive `--test-options`.
   - Scenario tests are named by their bare file name. Every scenario this unit adds carries the stem `standing-grant`, so select them with `-p standing-grant`.
   - Full suite: `script/with-build-lock.sh cabal test --test-options '--timeout 120s --hide-successes' > "$SCRATCH/suite.log" 2>&1`. Record the count before Task 1.
-- **Effect identity:** the rules core never cases on an effect's identity. Reading the new `PlayerEffect.Shows` arm inside `Pawl.Engine.Visibility` is the classification the closed half is allowed: it asks what a player effect lets someone see, the way `Pawl.Engine.PlayerEffect` already reads its own arms. No `Effect` constructor is read.
+- **Effect identity:** the rules core never cases on an effect's identity. Reading the new `PlayerEffect.Shows` arm inside `Parun.Engine.Visibility` is the classification the closed half is allowed: it asks what a player effect lets someone see, the way `Parun.Engine.PlayerEffect` already reads its own arms. No `Effect` constructor is read.
 - **New-arm sites (CLAUDE.md item 4):** a new `PlayerEffect` constructor owes a case at every site below.
-  - Compile-forced cases in `Pawl.Engine.PlayerEffect` (about 30 of them).
-  - `Pawl.Engine.Interchangeable.Mentions.playerEffectNames`.
-  - `Pawl.Engine.Projection.Rewrite` (~522).
-  - `Pawl.CardSpec.playerEffectFilters`. It returns `[]`, since `Shows` carries no Filter.
-  - `Pawl.EffectLintSpec`'s `unpreventableScopeOffends` and `unpreventablePatternOffends`.
-  - The `Pawl.Codec.PlayerEffect` arm. It is `Arm.tagged`: the tag is compile-forced, the arm is not, so add a round-trip case to `PlayerEffectSpec`.
+  - Compile-forced cases in `Parun.Engine.PlayerEffect` (about 30 of them).
+  - `Parun.Engine.Interchangeable.Mentions.playerEffectNames`.
+  - `Parun.Engine.Projection.Rewrite` (~522).
+  - `Parun.CardSpec.playerEffectFilters`. It returns `[]`, since `Shows` carries no Filter.
+  - `Parun.EffectLintSpec`'s `unpreventableScopeOffends` and `unpreventablePatternOffends`.
+  - The `Parun.Codec.PlayerEffect` arm. It is `Arm.tagged`: the tag is compile-forced, the arm is not, so add a round-trip case to `PlayerEffectSpec`.
   - Grep every `_` arm over `PlayerEffect` and record what each one does with `Shows`.
-- **Type modules:** one type per `Pawl.Types.<TypeName>` module, holding the type and its instances only.
+- **Type modules:** one type per `Parun.Types.<TypeName>` module, holding the type and its instances only.
   - Before creating `Audience` or `ShownCards`, grep for an existing type with the same meaning. If one exists, use it; if the name alone is taken, pick another name.
   - Constructors take `Mk` where they wrap a record.
   - A constructor's haddock is one line plus its CR citation.
 - **Style:** `case` over `maybe`, `let` over `where`, no backticks, no partial `head`, extensions only from `.hlint.yaml`.
 - **Mutations:** every proving check gets one. Run `script/with-build-lock.sh script/mutate.sh FILE @SCRIPT PATTERN`, with the sed script in a scratchpad file, keeping imports and bindings used (`-Werror`). Name the assertion that reddened. Never edit a file while a mutation runs on it.
-- **Card text:** verify the Oracle text of every card you touch with `curl -s 'https://api.scryfall.com/cards/named?exact=<Name>'` before writing its JSON. Re-run ingest's oracle check (CLAUDE.md: `jq -f script/ingest/candidates.jq` over `AtomicCards.json`, then `pawl ingest`) if `_scratch/AtomicCards.json` exists. It is a skipped step otherwise.
+- **Card text:** verify the Oracle text of every card you touch with `curl -s 'https://api.scryfall.com/cards/named?exact=<Name>'` before writing its JSON. Re-run ingest's oracle check (CLAUDE.md: `jq -f script/ingest/candidates.jq` over `AtomicCards.json`, then `parun ingest`) if `_scratch/AtomicCards.json` exists. It is a skipped step otherwise.
 - **Git hygiene:** never stash. Stage, run `hooky fix`, then `git add` again.
 - **Commits:** a subject line, at most two sentences of why, and the trailers `Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>` and `Claude-Session: https://claude.ai/code/session_01N6oeJknHeSC1oKJ3H5pihY`. Say "related to #3237". Never put close, fix or resolve next to an issue number in a commit.
 - **CR text:** read it from `docs/rules.txt` by number. Checked 2026-10-11: 400.2, 401.2, 401.5, 401.6, 601.2i, 723.4.
@@ -56,31 +56,31 @@
 2. **Only the top card.** The second card down stays hidden. Test: Task 2, the Garruk's Horde scenario's second-card check.
 3. **A look is not a reveal.** Fblthp's grant shows bob's top card to bob alone, and its zone stays hidden (CR 400.2). Test: Task 2, the Fblthp scenario.
 4. **A stored grant expires.** Sen Triplets' "this turn" reveal ends at the turn's end. Test: Task 2, the Sen Triplets scenario's next-turn check.
-5. **CR 121.8 still wins over a revealed hand.** A card drawn mid-cast is kept face down even while the hand is revealed (the spec's no-veto note). Test: Task 1, a `Pawl.VisibilitySpec` case.
+5. **CR 121.8 still wins over a revealed hand.** A card drawn mid-cast is kept face down even while the hand is revealed (the spec's no-veto note). Test: Task 1, a `Parun.VisibilitySpec` case.
 
 ---
 
 ### Task 1: The `Shows` player effect and the `sees` term
 
 **Files:**
-- Create: `source/libraries/types/Pawl/Types/Shows.hs`, `.../ShownCards.hs`, `.../Audience.hs` (names subject to the collision grep)
-- Create: matching `source/libraries/codec/Pawl/Codec/{Shows,ShownCards,Audience}.hs` plus their `*Spec.hs` (patterns: a record codec such as `Pawl.Codec.CastFromZone`, and an enum codec such as one using `Arm.enum`/`Arm.keyedEnum`)
-- Modify: `source/libraries/types/Pawl/Types/PlayerEffect.hs`, `source/libraries/codec/Pawl/Codec/PlayerEffect.hs`, `source/libraries/codec/Pawl/Codec/PlayerEffectSpec.hs`
+- Create: `source/libraries/types/Parun/Types/Shows.hs`, `.../ShownCards.hs`, `.../Audience.hs` (names subject to the collision grep)
+- Create: matching `source/libraries/codec/Parun/Codec/{Shows,ShownCards,Audience}.hs` plus their `*Spec.hs` (patterns: a record codec such as `Parun.Codec.CastFromZone`, and an enum codec such as one using `Arm.enum`/`Arm.keyedEnum`)
+- Modify: `source/libraries/types/Parun/Types/PlayerEffect.hs`, `source/libraries/codec/Parun/Codec/PlayerEffect.hs`, `source/libraries/codec/Parun/Codec/PlayerEffectSpec.hs`
 - Modify: every site in Global Constraints' "New-arm sites" bullet
-- Modify: `source/libraries/engine/Pawl/Engine/Visibility.hs`
-- Test: `source/libraries/test/Pawl/VisibilitySpec.hs`
+- Modify: `source/libraries/engine/Parun/Engine/Visibility.hs`
+- Test: `source/libraries/test/Parun/VisibilitySpec.hs`
 
 **Interfaces:**
 - Produces:
-  - `Pawl.Types.ShownCards`: `data ShownCards = Hand | TopOfLibrary`
-  - `Pawl.Types.Audience`: `data Audience = Everyone | ThatPlayer`
-  - `Pawl.Types.Shows`: `data Shows = MkShows { cards :: ShownCards, to :: Audience }`
+  - `Parun.Types.ShownCards`: `data ShownCards = Hand | TopOfLibrary`
+  - `Parun.Types.Audience`: `data Audience = Everyone | ThatPlayer`
+  - `Parun.Types.Shows`: `data Shows = MkShows { cards :: ShownCards, to :: Audience }`
   - `PlayerEffect.Shows Shows.Shows`
   - JSON: `{"type": "Shows", "value": {"cards": {"type": "Hand"}, "to": {"type": "Everyone"}}}`. The exact enum shape follows the codec style you pick; record it in the report, because Task 2 writes card JSON with it.
 
 - [ ] **Step 1: Baseline.** Seed the worktree, run the full suite, and record the count.
 
-- [ ] **Step 2: Write the failing spec cases.** In `Pawl.VisibilitySpec`, beside the CR 121.8 case unit 1 added (it builds a board through `Pawl.Support`), add three cases. Each builds a `GameState` with an `ActivePlayerEffect` stored in `GameState.playerEffects`; read `Pawl.Types.ActivePlayerEffect` and copy how an existing spec stores one (grep `playerEffects =` under `source/libraries/test/`). The cases:
+- [ ] **Step 2: Write the failing spec cases.** In `Parun.VisibilitySpec`, beside the CR 121.8 case unit 1 added (it builds a board through `Parun.Support`), add three cases. Each builds a `GameState` with an `ActivePlayerEffect` stored in `GameState.playerEffects`; read `Parun.Types.ActivePlayerEffect` and copy how an existing spec stores one (grep `playerEffects =` under `source/libraries/test/`). The cases:
   - `"a revealed hand is seen by every player"`: a stored `Shows (MkShows Hand Everyone)` row naming alice. `sees bob` on a card in alice's hand is `Visible`; without the row it is `Obscured`.
   - `"a card CR 121.8 keeps face down stays hidden in a revealed hand"`: the same row, with the card marked in `GameState.keptFaceDown`. `sees bob` and `sees alice` are both `Obscured`.
   - `"a look at the top card is the owner's alone"`: a `Shows (MkShows TopOfLibrary ThatPlayer)` row naming alice. `sees alice` on her top library card is `Visible`, and `sees bob` is `Obscured`; `sees alice` on her second card is `Obscured`.
@@ -95,10 +95,10 @@
 ```
 
 Add the codec arm and its round-trip case. Then build, and fix every compile-forced site.
-  - In `Pawl.Engine.PlayerEffect`, give each forced case the neutral answer its neighbours give a non-restricting arm. Read the arms for `AdditionalSurveilCards` and `PlotFrom`, which are neighbours that restrict nothing.
+  - In `Parun.Engine.PlayerEffect`, give each forced case the neutral answer its neighbours give a non-restricting arm. Read the arms for `AdditionalSurveilCards` and `PlotFrom`, which are neighbours that restrict nothing.
   - Handle `Mentions`, `Rewrite`, `CardSpec`, `EffectLintSpec`, and every `_` arm you grep.
 
-- [ ] **Step 4: The term.** In `Pawl.Engine.Visibility`, define the term the way `revealedNow` is defined, then join it in `base` per seat. For the hand case, put it inside the hand branch AFTER the `keptFaceDown` test, so a kept-face-down card returns `Obscured` before the grant is consulted. The `Everyone`/`ThatPlayer` logic:
+- [ ] **Step 4: The term.** In `Parun.Engine.Visibility`, define the term the way `revealedNow` is defined, then join it in `base` per seat. For the hand case, put it inside the hand branch AFTER the `keptFaceDown` test, so a kept-face-down card returns `Obscured` before the grant is consulted. The `Everyone`/`ThatPlayer` logic:
 
 ```haskell
 -- | CR 401.5 / 400.2: a player effect showing the owner's hand or top card.
@@ -124,7 +124,7 @@ shownTo seat oid gs = case Game.lookupObject oid gs of
      in visibleIf (any (\s -> covers s && reaches s) shown)
 ```
 
-Match the real module aliases. `PlayerEffect.applying`'s exact name and result type are in `Pawl.Engine.PlayerEffect` (~444); read it. The `_` arms here are over `PlayerEffect` and over a pair, and are legitimate.
+Match the real module aliases. `PlayerEffect.applying`'s exact name and result type are in `Parun.Engine.PlayerEffect` (~444); read it. The `_` arms here are over `PlayerEffect` and over a pair, and are legitimate.
 
 Wire the term in:
 - **Hand:** `if Game.keptFaceDown oid gs then Obscured else visibleIf (Object.owner obj == pid) <> shownTo pid oid gs`.
@@ -147,7 +147,7 @@ Above the library arm, add this elision paragraph: "Not implemented: CR 401.5's 
 - Create: `data/scenarios/visibility/cr-401-5-standing-grant-garruk-s-horde-shows-its-controller-s-top-card-to-everyone.json`
 - Create: `data/scenarios/visibility/cr-401-5-standing-grant-fblthp-lets-its-controller-alone-look-at-the-top-card.json`
 - Create: `data/scenarios/visibility/cr-400-2-standing-grant-sen-triplets-reveals-the-target-s-hand-this-turn.json`
-- Modify: the omission notes in `source/libraries/test/Pawl/CastRestrictionSpec.hs` (~1956, #3237), `CastPermissionSpec.hs` (~690 Garruk's Horde, ~824 Future Sight, ~941 Johann), `SpecialActionSpec.hs` (~507 Fblthp); `source/libraries/engine/Pawl/Engine/Cast.hs` `pileCandidates`' comment (~1517)
+- Modify: the omission notes in `source/libraries/test/Parun/CastRestrictionSpec.hs` (~1956, #3237), `CastPermissionSpec.hs` (~690 Garruk's Horde, ~824 Future Sight, ~941 Johann), `SpecialActionSpec.hs` (~507 Fblthp); `source/libraries/engine/Parun/Engine/Cast.hs` `pileCandidates`' comment (~1517)
 
 **Interfaces:**
 - Consumes: Task 1's JSON shape for `Shows` (read Task 1's report or the codec), `View.Seers`.
@@ -187,7 +187,7 @@ Above the library arm, add this elision paragraph: "Not implemented: CR 401.5's 
 
 - [ ] **Step 4: Rewrite the omission notes.**
   - The CastRestrictionSpec, CastPermissionSpec and SpecialActionSpec notes that say a clause is omitted now say it is implemented. Prefer a note naming the scenario that proves it, or drop the note.
-  - Update `pileCandidates`' comment: pawl's relation now hides the top card from a player who may not see it, but an answerer is still handed the whole state (#1412).
+  - Update `pileCandidates`' comment: parun's relation now hides the top card from a player who may not see it, but an answerer is still handed the whole state (#1412).
   - Grep `3237`, `3035` and `#1412` under `source/libraries/test/` and read every hit.
 
 - [ ] **Step 5: Mutations, run against the card data.** For each, copy the card file aside, edit it, run the scenario, and move it back. You may also do this with `mutate.sh` on the JSON.
@@ -218,7 +218,7 @@ Above the library arm, add this elision paragraph: "Not implemented: CR 401.5's 
   - Re-read every touched comment.
   - Grep `PlayerEffect.` `_` arms and record each.
   - Confirm every new codec has a round-trip case.
-  - Confirm `pawl ingest`'s oracle check is clean, if it ran.
+  - Confirm `parun ingest`'s oracle check is clean, if it ran.
 
 - [ ] **Step 4: Full suite, `hooky fix`, commit, push, open the PR as a DRAFT.** One line each in the body:
   - **What and why:** unit 3 of the visibility spec, standing grants. `Closes #3237`. `Closes #3035`. Commits this plan.
@@ -234,7 +234,7 @@ Above the library arm, add this elision paragraph: "Not implemented: CR 401.5's 
   - **Deferred:**
     - the CR 401.5 mid-cast elision (the new issue);
     - CR 401.6;
-    - unblocked issues: what `gh api repos/tfausak/pawl/issues/3237/dependencies/blocking` and the same for 3035 list.
+    - unblocked issues: what `gh api repos/tfausak/parun/issues/3237/dependencies/blocking` and the same for 3035 list.
   - End with `🤖 Generated with [Claude Code](https://claude.com/claude-code)`.
 
   Leave it a draft. The controller marks it ready after the final review.

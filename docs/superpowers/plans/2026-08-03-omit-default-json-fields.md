@@ -6,17 +6,17 @@
 
 **Goal:** Make an omitted JSON field mean its default, so the codec stops writing keys that say nothing.
 
-**Architecture:** Three combinators in `Pawl.Codec.Common` replace the hand-rolled `if null then [] else [...]` blocks and the `decode*Default` family. Each record codec declares, per field, whether it is required or carries a default; the encoder omits a defaulted field and the decoder supplies the same value from the same binding. The committed corpus is regenerated from the encoder after each codec change, so the suite is green at every task boundary.
+**Architecture:** Three combinators in `Parun.Codec.Common` replace the hand-rolled `if null then [] else [...]` blocks and the `decode*Default` family. Each record codec declares, per field, whether it is required or carries a default; the encoder omits a defaulted field and the decoder supplies the same value from the same binding. The committed corpus is regenerated from the encoder after each codec change, so the suite is green at every task boundary.
 
-**Tech Stack:** GHC 9.14.1, `tasty`, `Pawl.Spec`, `parsec`, `jq`.
+**Tech Stack:** GHC 9.14.1, `tasty`, `Parun.Spec`, `parsec`, `jq`.
 
 **Spec:** `docs/superpowers/specs/2026-08-03-omit-default-json-fields-design.md`. Rules R1–R7 are cited by number throughout; read that file first.
 
-> **Historical note.** Task 1 below put a corpus formatter in the `pawl`
+> **Historical note.** Task 1 below put a corpus formatter in the `parun`
 > executable, and Tasks 3–9 regenerate the corpus by running it. **That was a
-> mistake and the executable has been restored to `main = pure ()`.** `pawl` is a
+> mistake and the executable has been restored to `main = pure ()`.** `parun` is a
 > product surface with a CLI contract CI depends on — it is invoked as
-> `pawl --schema` and with no arguments, both of which must be side-effect-free —
+> `parun --schema` and with no arguments, both of which must be side-effect-free —
 > so it was the wrong home for a destructive developer tool. It also resolved its
 > target through `Registry.defaultRoot`, which points at the *installed* data
 > directory rather than the repo, so it only ever worked via `cabal run` inside
@@ -31,10 +31,10 @@
 - `cabal build all` must be warning-free — build `all`, not just the library, since the suites break separately.
 - `direnv exec . git add <explicit paths>` then `hooky fix`, then `git add` again, then `hooky run`. Hooky acts on **staged** files only. Never `git add -A`: other sessions share this checkout.
 - Stay on branch `2026-08-03-test-cleanup`. Never commit to `main`.
-- No unchecked numeric conversions: `fromIntegral`, `fromInteger`, `realToFrac`, `toEnum` are banned by `.hlint.yaml`. Convert through `Pawl.Extra.Int`/`Integer`/`Natural`.
+- No unchecked numeric conversions: `fromIntegral`, `fromInteger`, `realToFrac`, `toEnum` are banned by `.hlint.yaml`. Convert through `Parun.Extra.Int`/`Integer`/`Natural`.
 - Constructors take a `Mk` prefix. Imports are qualified, aliased to the module's last component.
 - Every rules claim is checked against `docs/rules.txt` by rule number, never from memory.
-- The rules core must not case on an effect's identity. This plan touches only `Pawl.Codec.*`, `source/executable/Main.hs`, and `data/cards/`; it never touches `Pawl.Engine` or `Pawl.Types`.
+- The rules core must not case on an effect's identity. This plan touches only `Parun.Codec.*`, `source/executable/Main.hs`, and `data/cards/`; it never touches `Parun.Engine` or `Parun.Types`.
 
 ---
 
@@ -46,8 +46,8 @@ The corpus's canonical form stops being "what `jq --sort-keys` prints" and becom
 - Modify: `source/executable/Main.hs` (currently `main = pure ()`)
 
 **Interfaces:**
-- Consumes: `Registry.defaultRoot :: IO FilePath`, `Common.parse :: Text.Text -> Either Text.Text Value.Value`, `Common.render :: Value.Value -> Text.Text`, `Printing.toJson :: Printing.Printing -> Value.Value`, `Printing.fromJson :: Value.Value -> Either Text.Text Printing.Printing` (the last two from `Pawl.Codec.Printing`)
-- Produces: a `pawl` executable that rewrites every file in `data/cards/` through the codec. Tasks 3, 4, 5, 7, 8 and 9 each re-run it.
+- Consumes: `Registry.defaultRoot :: IO FilePath`, `Common.parse :: Text.Text -> Either Text.Text Value.Value`, `Common.render :: Value.Value -> Text.Text`, `Printing.toJson :: Printing.Printing -> Value.Value`, `Printing.fromJson :: Value.Value -> Either Text.Text Printing.Printing` (the last two from `Parun.Codec.Printing`)
+- Produces: a `parun` executable that rewrites every file in `data/cards/` through the codec. Tasks 3, 4, 5, 7, 8 and 9 each re-run it.
 
 - [ ] **Step 1: Write the formatter**
 
@@ -69,9 +69,9 @@ import qualified Data.List as List
 import qualified Data.Text as Text
 import qualified Data.Text.Encoding as Encoding
 import qualified Data.ByteString as ByteString
-import qualified Pawl.Codec.Common as Common
-import qualified Pawl.Codec.Printing as Printing
-import qualified Pawl.Registry as Registry
+import qualified Parun.Codec.Common as Common
+import qualified Parun.Codec.Printing as Printing
+import qualified Parun.Registry as Registry
 import qualified System.Directory as Directory
 
 main :: IO ()
@@ -80,7 +80,7 @@ main = do
   files <- Directory.listDirectory root
   mapM_ (rewrite root) (List.sort (filter (List.isSuffixOf ".json") files))
 
--- | Read as bytes and decoded explicitly, for the reason Pawl.Registry.parseCard
+-- | Read as bytes and decoded explicitly, for the reason Parun.Registry.parseCard
 -- is: Data.Text.IO.readFile decodes using the locale encoding, which is ASCII
 -- under LC_ALL=C, so this would otherwise die on khabal-ghoul.json's "a".
 rewrite :: FilePath -> FilePath -> IO ()
@@ -97,9 +97,9 @@ rewrite root file = do
           $ Common.render (Printing.toJson printing) <> Text.pack "\n"
 ```
 
-The `pawl` executable stanza in `pawl.cabal` inherits the `executable` import; if
+The `parun` executable stanza in `parun.cabal` inherits the `executable` import; if
 `bytestring`, `directory`, `text`, `codec` or `registry` is missing from its
-`build-depends`, add it and run `direnv exec . cabal-gild pawl.cabal` directly —
+`build-depends`, add it and run `direnv exec . cabal-gild parun.cabal` directly —
 `hooky fix` only acts on staged files.
 
 - [ ] **Step 2: Build**
@@ -110,7 +110,7 @@ Expected: warning-free.
 - [ ] **Step 3: Prove it faithful — run it and account for every change**
 
 ```bash
-direnv exec . cabal run pawl
+direnv exec . cabal run parun
 direnv exec . script/format-json.sh fix data/cards/*.json
 git status --short data/cards
 git diff --stat data/cards
@@ -123,7 +123,7 @@ multiples of ten re-rendered in exponent notation: `10` → `1E+1`, `20` → `2E
 
 That is a known, accepted pre-existing behavior, not a defect in this task.
 `Decimal.mkDecimal` normalizes trailing zeros into the exponent so that `Eq` is
-structural (`mkDecimal 10 0` is mantissa 1, exponent 1), and `Pawl.Json.Number.encode`
+structural (`mkDecimal 10 0` is mantissa 1, exponent 1), and `Parun.Json.Number.encode`
 renders any nonzero exponent as e-notation — `NumberSpec` asserts that
 `mkDecimal 345 2` encodes as `"345e2"`. `1E+1` parses back to exactly 10, so
 nothing is lost; the corpus is simply less pretty in two places. **The owner
@@ -140,9 +140,9 @@ Expected: PASS, 2598 tests.
 - [ ] **Step 5: Commit**
 
 ```bash
-direnv exec . git add source/executable/Main.hs pawl.cabal data/cards
+direnv exec . git add source/executable/Main.hs parun.cabal data/cards
 direnv exec . hooky fix
-direnv exec . git add source/executable/Main.hs pawl.cabal data/cards
+direnv exec . git add source/executable/Main.hs parun.cabal data/cards
 direnv exec . hooky run
 direnv exec . git commit -m "Add a corpus formatter that rewrites cards through the codec"
 ```
@@ -152,8 +152,8 @@ direnv exec . git commit -m "Add a corpus formatter that rewrites cards through 
 ### Task 2: The three combinators
 
 **Files:**
-- Modify: `source/libraries/codec/Pawl/Codec/Common.hs`
-- Test: `source/libraries/codec/Pawl/Codec/CommonSpec.hs`
+- Modify: `source/libraries/codec/Parun/Codec/Common.hs`
+- Test: `source/libraries/codec/Parun/Codec/CommonSpec.hs`
 
 **Interfaces:**
 - Produces, used by every later task:
@@ -271,14 +271,14 @@ assertToJson s f x j = do
 
 - [ ] **Step 6: Verify the new message by breaking one literal on purpose**
 
-Edit any one literal in `source/libraries/codec/Pawl/Codec/ColorSpec.hs` to a wrong-but-valid value, run `direnv exec . cabal test`, and confirm the failure prints `encoded {"type":"White"} but the literal says ...`. Then revert the edit.
+Edit any one literal in `source/libraries/codec/Parun/Codec/ColorSpec.hs` to a wrong-but-valid value, run `direnv exec . cabal test`, and confirm the failure prints `encoded {"type":"White"} but the literal says ...`. Then revert the edit.
 
 - [ ] **Step 7: Commit**
 
 ```bash
-direnv exec . git add source/libraries/codec/Pawl/Codec/Common.hs source/libraries/codec/Pawl/Codec/CommonSpec.hs
+direnv exec . git add source/libraries/codec/Parun/Codec/Common.hs source/libraries/codec/Parun/Codec/CommonSpec.hs
 direnv exec . hooky fix
-direnv exec . git add source/libraries/codec/Pawl/Codec/Common.hs source/libraries/codec/Pawl/Codec/CommonSpec.hs
+direnv exec . git add source/libraries/codec/Parun/Codec/Common.hs source/libraries/codec/Parun/Codec/CommonSpec.hs
 direnv exec . hooky run
 direnv exec . git commit -m "Add requiredPair, optionalPair, and defaultedField"
 ```
@@ -290,12 +290,12 @@ direnv exec . git commit -m "Add requiredPair, optionalPair, and defaultedField"
 First real conversion, and the one with a behavior change beyond omission: R6's non-empty `types`.
 
 **Files:**
-- Modify: `source/libraries/codec/Pawl/Codec/TypeLine.hs`
-- Test: `source/libraries/codec/Pawl/Codec/TypeLineSpec.hs`
+- Modify: `source/libraries/codec/Parun/Codec/TypeLine.hs`
+- Test: `source/libraries/codec/Parun/Codec/TypeLineSpec.hs`
 - Modify: `data/cards/*.json` (regenerated)
 
 **Interfaces:**
-- Consumes: `Common.requiredPair`, `Common.optionalPair`, `Common.defaultedField` from Task 2; the `pawl` executable from Task 1.
+- Consumes: `Common.requiredPair`, `Common.optionalPair`, `Common.defaultedField` from Task 2; the `parun` executable from Task 1.
 - Produces: `TypeLine.toJson`/`fromJson` with `supertypes` and `subtypes` omissible and `types` required non-empty.
 
 - [ ] **Step 1: Write the failing tests**
@@ -324,11 +324,11 @@ Add to `TypeLineSpec.hs`:
       """ {"types":[{"type":"Sorcery"}]} """
 ```
 
-Add `import qualified Data.Either as Either`, `import qualified Data.Set as Set`, `import qualified Pawl.Types.CardType as CardType` and `import qualified Data.Text as Text` if absent, and `{-# LANGUAGE MultilineStrings #-}` if absent.
+Add `import qualified Data.Either as Either`, `import qualified Data.Set as Set`, `import qualified Parun.Types.CardType as CardType` and `import qualified Data.Text as Text` if absent, and `{-# LANGUAGE MultilineStrings #-}` if absent.
 
 - [ ] **Step 2: Run to verify it fails**
 
-Run: `direnv exec . cabal test 2>&1 | grep -A 3 'Pawl.Codec.TypeLine'`
+Run: `direnv exec . cabal test 2>&1 | grep -A 3 'Parun.Codec.TypeLine'`
 Expected: the three new cases FAIL.
 
 - [ ] **Step 3: Implement**
@@ -368,7 +368,7 @@ Each failure prints `encoded <json> but the literal says <json>`. Replace each a
 - [ ] **Step 6: Regenerate the corpus**
 
 ```bash
-direnv exec . cabal run pawl
+direnv exec . cabal run parun
 direnv exec . script/format-json.sh fix data/cards/*.json
 direnv exec . cabal test
 ```
@@ -378,9 +378,9 @@ Expected: PASS. `git diff --stat data/cards` should show `supertypes: []` and `s
 - [ ] **Step 7: Commit**
 
 ```bash
-direnv exec . git add source/libraries/codec/Pawl/Codec/TypeLine.hs source/libraries/codec/Pawl/Codec/TypeLineSpec.hs data/cards
+direnv exec . git add source/libraries/codec/Parun/Codec/TypeLine.hs source/libraries/codec/Parun/Codec/TypeLineSpec.hs data/cards
 direnv exec . hooky fix
-direnv exec . git add source/libraries/codec/Pawl/Codec/TypeLine.hs source/libraries/codec/Pawl/Codec/TypeLineSpec.hs data/cards
+direnv exec . git add source/libraries/codec/Parun/Codec/TypeLine.hs source/libraries/codec/Parun/Codec/TypeLineSpec.hs data/cards
 direnv exec . hooky run
 direnv exec . git commit -m "Omit empty supertypes and subtypes, require a card type"
 ```
@@ -390,9 +390,9 @@ direnv exec . git commit -m "Omit empty supertypes and subtypes, require a card 
 ### Task 4: Mode and Modal
 
 **Files:**
-- Modify: `source/libraries/codec/Pawl/Codec/Mode.hs`, `source/libraries/codec/Pawl/Codec/Modal.hs`
-- Modify: `source/libraries/codec/Pawl/Codec/Optionality.hs` (delete `fromJsonDefault`)
-- Test: `source/libraries/codec/Pawl/Codec/ModeSpec.hs`, `source/libraries/codec/Pawl/Codec/ModalSpec.hs`
+- Modify: `source/libraries/codec/Parun/Codec/Mode.hs`, `source/libraries/codec/Parun/Codec/Modal.hs`
+- Modify: `source/libraries/codec/Parun/Codec/Optionality.hs` (delete `fromJsonDefault`)
+- Test: `source/libraries/codec/Parun/Codec/ModeSpec.hs`, `source/libraries/codec/Parun/Codec/ModalSpec.hs`
 - Modify: `data/cards/*.json`
 
 **Interfaces:**
@@ -434,7 +434,7 @@ Expected: FAIL — `Modal.defaultSelection` not in scope.
 - [ ] **Step 3: Implement Modal**
 
 ```haskell
--- | CR 700.2 via Pawl.Types.Modal's header: "A non-modal payload is one Mode
+-- | CR 700.2 via Parun.Types.Modal's header: "A non-modal payload is one Mode
 -- with ChooseExactly 1", so this is what a card that says nothing about modes
 -- means.
 defaultSelection :: ModeSelection.ModeSelection
@@ -458,7 +458,7 @@ fromJson decode value = do
       pure (Modal.MkModal ms sel)
 ```
 
-`ModeSelection.ChooseExactly` takes a `Natural`; check its arity in `Pawl.Types.ModeSelection` and match it.
+`ModeSelection.ChooseExactly` takes a `Natural`; check its arity in `Parun.Types.ModeSelection` and match it.
 
 - [ ] **Step 4: Implement Mode**
 
@@ -485,7 +485,7 @@ Check `TargetSpec.toJsonMap`'s argument type and use that as the `optionalPair` 
 
 - [ ] **Step 5: Delete the superseded per-type helper**
 
-Remove `fromJsonDefault` from `source/libraries/codec/Pawl/Codec/Optionality.hs` and any case in `OptionalitySpec.hs` that covers it. `defaultedField` takes the default as an argument, which is all `fromJsonDefault` ever did.
+Remove `fromJsonDefault` from `source/libraries/codec/Parun/Codec/Optionality.hs` and any case in `OptionalitySpec.hs` that covers it. `defaultedField` takes the default as an argument, which is all `fromJsonDefault` ever did.
 
 Run: `direnv exec . grep -rn 'Optionality.fromJsonDefault' source/`
 Expected: no matches.
@@ -499,7 +499,7 @@ direnv exec . cabal test 2>&1 | tail -60
 Fix each `ModeSpec`/`ModalSpec` literal from the `encoded …` side of its failure, then:
 
 ```bash
-direnv exec . cabal run pawl
+direnv exec . cabal run parun
 direnv exec . script/format-json.sh fix data/cards/*.json
 direnv exec . cabal test
 ```
@@ -509,9 +509,9 @@ Expected: PASS. The corpus loses 325 `selection` stanzas and every `"effects": [
 - [ ] **Step 7: Commit**
 
 ```bash
-direnv exec . git add source/libraries/codec/Pawl/Codec/Mode.hs source/libraries/codec/Pawl/Codec/Modal.hs source/libraries/codec/Pawl/Codec/Optionality.hs source/libraries/codec/Pawl/Codec/ModeSpec.hs source/libraries/codec/Pawl/Codec/ModalSpec.hs source/libraries/codec/Pawl/Codec/OptionalitySpec.hs data/cards
+direnv exec . git add source/libraries/codec/Parun/Codec/Mode.hs source/libraries/codec/Parun/Codec/Modal.hs source/libraries/codec/Parun/Codec/Optionality.hs source/libraries/codec/Parun/Codec/ModeSpec.hs source/libraries/codec/Parun/Codec/ModalSpec.hs source/libraries/codec/Parun/Codec/OptionalitySpec.hs data/cards
 direnv exec . hooky fix
-direnv exec . git add source/libraries/codec/Pawl/Codec/Mode.hs source/libraries/codec/Pawl/Codec/Modal.hs source/libraries/codec/Pawl/Codec/Optionality.hs source/libraries/codec/Pawl/Codec/ModeSpec.hs source/libraries/codec/Pawl/Codec/ModalSpec.hs source/libraries/codec/Pawl/Codec/OptionalitySpec.hs data/cards
+direnv exec . git add source/libraries/codec/Parun/Codec/Mode.hs source/libraries/codec/Parun/Codec/Modal.hs source/libraries/codec/Parun/Codec/Optionality.hs source/libraries/codec/Parun/Codec/ModeSpec.hs source/libraries/codec/Parun/Codec/ModalSpec.hs source/libraries/codec/Parun/Codec/OptionalitySpec.hs data/cards
 direnv exec . hooky run
 direnv exec . git commit -m "Default Mode's fields and Modal's selection"
 ```
@@ -523,9 +523,9 @@ direnv exec . git commit -m "Default Mode's fields and Modal's selection"
 The largest single change: 12 unconditional keys and 16 hand-rolled blocks collapse into one uniform list, and `spell` becomes omissible.
 
 **Files:**
-- Modify: `source/libraries/codec/Pawl/Codec/Card.hs`
-- Modify: `source/libraries/codec/Pawl/Codec/Counterability.hs` (delete `fromJsonDefault`)
-- Test: `source/libraries/codec/Pawl/Codec/CardSpec.hs`
+- Modify: `source/libraries/codec/Parun/Codec/Card.hs`
+- Modify: `source/libraries/codec/Parun/Codec/Counterability.hs` (delete `fromJsonDefault`)
+- Test: `source/libraries/codec/Parun/Codec/CardSpec.hs`
 - Modify: `data/cards/*.json`
 
 **Interfaces:**
@@ -665,7 +665,7 @@ direnv exec . cabal test 2>&1 | tail -80
 `CardSpec`'s `baseCardJson` and `populatedCardJson` are named bindings, not inline literals — edit them from the failure output the same way. The 16 `init baseCardJson <> ",…"` sites depend on `baseCardJson`'s last character being `}`, which still holds.
 
 ```bash
-direnv exec . cabal run pawl
+direnv exec . cabal run parun
 direnv exec . script/format-json.sh fix data/cards/*.json
 direnv exec . cabal test
 ```
@@ -675,9 +675,9 @@ Expected: PASS.
 - [ ] **Step 6: Commit**
 
 ```bash
-direnv exec . git add source/libraries/codec/Pawl/Codec/Card.hs source/libraries/codec/Pawl/Codec/Counterability.hs source/libraries/codec/Pawl/Codec/CardSpec.hs source/libraries/codec/Pawl/Codec/CounterabilitySpec.hs data/cards
+direnv exec . git add source/libraries/codec/Parun/Codec/Card.hs source/libraries/codec/Parun/Codec/Counterability.hs source/libraries/codec/Parun/Codec/CardSpec.hs source/libraries/codec/Parun/Codec/CounterabilitySpec.hs data/cards
 direnv exec . hooky fix
-direnv exec . git add source/libraries/codec/Pawl/Codec/Card.hs source/libraries/codec/Pawl/Codec/Counterability.hs source/libraries/codec/Pawl/Codec/CardSpec.hs source/libraries/codec/Pawl/Codec/CounterabilitySpec.hs data/cards
+direnv exec . git add source/libraries/codec/Parun/Codec/Card.hs source/libraries/codec/Parun/Codec/Counterability.hs source/libraries/codec/Parun/Codec/CardSpec.hs source/libraries/codec/Parun/Codec/CounterabilitySpec.hs data/cards
 direnv exec . hooky run
 direnv exec . git commit -m "Give every Card field but name and typeLine a default"
 ```
@@ -692,7 +692,7 @@ changes the *shape* of the code and nothing on the wire, which makes this the on
 task with an exact success criterion — **the corpus must come out byte-identical.**
 
 **Files:**
-- Modify, under `source/libraries/codec/Pawl/Codec/`: `AttackCost.hs`, `AttackRequirement.hs`, `BlockRequirement.hs`, `Condition.hs`, `Count.hs`, `Countering.hs`, `ManaCount.hs`, `PlayerStaticAbility.hs`, `StaticAbility.hs`, `ZoneChange.hs`
+- Modify, under `source/libraries/codec/Parun/Codec/`: `AttackCost.hs`, `AttackRequirement.hs`, `BlockRequirement.hs`, `Condition.hs`, `Count.hs`, `Countering.hs`, `ManaCount.hs`, `PlayerStaticAbility.hs`, `StaticAbility.hs`, `ZoneChange.hs`
 - Test: their `*Spec.hs` siblings (expected to need no edits — see Step 3)
 
 **Interfaces:**
@@ -759,7 +759,7 @@ ten modules is a mistake, not a migration.
 - [ ] **Step 3: Prove the wire did not move**
 
 ```bash
-direnv exec . cabal run pawl
+direnv exec . cabal run parun
 direnv exec . script/format-json.sh fix data/cards/*.json
 git status --short data/cards
 ```
@@ -770,9 +770,9 @@ corpus cannot change. Any diff is a defect in Step 1.
 - [ ] **Step 4: Commit**
 
 ```bash
-direnv exec . git add source/libraries/codec/Pawl/Codec
+direnv exec . git add source/libraries/codec/Parun/Codec
 direnv exec . hooky fix
-direnv exec . git add source/libraries/codec/Pawl/Codec
+direnv exec . git add source/libraries/codec/Parun/Codec
 direnv exec . hooky run
 direnv exec . git commit -m "Use requiredPair in the codecs with nothing to default"
 ```
@@ -782,7 +782,7 @@ direnv exec . git commit -m "Use requiredPair in the codecs with nothing to defa
 ### Task 7: The seven codecs whose defaults are absence
 
 **Files:**
-- Modify, under `source/libraries/codec/Pawl/Codec/`: `Binding.hs`, `CombatRestriction.hs`, `Cost.hs`, `DelayedTrigger.hs`, `EntryOption.hs`, `PhasePattern.hs`, `TriggeredAbility.hs`
+- Modify, under `source/libraries/codec/Parun/Codec/`: `Binding.hs`, `CombatRestriction.hs`, `Cost.hs`, `DelayedTrigger.hs`, `EntryOption.hs`, `PhasePattern.hs`, `TriggeredAbility.hs`
 - Test: their `*Spec.hs` siblings
 - Modify: `data/cards/*.json`
 
@@ -865,7 +865,7 @@ you fixed from another module's failure output is a module you did not check.
 - [ ] **Step 3: Regenerate the corpus**
 
 ```bash
-direnv exec . cabal run pawl
+direnv exec . cabal run parun
 direnv exec . script/format-json.sh fix data/cards/*.json
 direnv exec . cabal test
 ```
@@ -875,9 +875,9 @@ Expected: PASS.
 - [ ] **Step 4: Commit**
 
 ```bash
-direnv exec . git add source/libraries/codec/Pawl/Codec data/cards
+direnv exec . git add source/libraries/codec/Parun/Codec data/cards
 direnv exec . hooky fix
-direnv exec . git add source/libraries/codec/Pawl/Codec data/cards
+direnv exec . git add source/libraries/codec/Parun/Codec data/cards
 direnv exec . hooky run
 direnv exec . git commit -m "Default the absent-means-nothing fields"
 ```
@@ -892,7 +892,7 @@ R1. Each R2 default gets a named binding in its codec module, referenced by both
 halves; that binding is what stops the two halves drifting.
 
 **Files:**
-- Modify, under `source/libraries/codec/Pawl/Codec/`: `ActivatedAbility.hs`, `CounterPattern.hs`, `DamageEvent.hs`, `DamagePattern.hs`, `EntryRiders.hs`, `TokenPattern.hs`, `ZoneChangePattern.hs`
+- Modify, under `source/libraries/codec/Parun/Codec/`: `ActivatedAbility.hs`, `CounterPattern.hs`, `DamageEvent.hs`, `DamagePattern.hs`, `EntryRiders.hs`, `TokenPattern.hs`, `ZoneChangePattern.hs`
 - Test: their `*Spec.hs` siblings
 - Modify: `data/cards/*.json`
 
@@ -924,7 +924,7 @@ unmarked one. `DamageEvent`'s `source`, `target`, `amount` and `kind` stay
 required (R3, R4).
 
 `dealtByToxic :: Natural` defaulting to `0` is R1, not the R5 exception that
-keeps `EntryOption.power` required. `Pawl.Types.DamageEvent`'s own field comment
+keeps `EntryOption.power` required. `Parun.Types.DamageEvent`'s own field comment
 says "Zero for a source without toxic", and CR 702.164b defines total toxic value
 as the sum of a source's toxic `N`s — so zero is the empty sum, meaning "no
 toxic", rather than a printable value. A 0/0 token, by contrast, is a real
@@ -977,7 +977,7 @@ from the failure output, re-run until green. Do not batch.
 - [ ] **Step 3: Regenerate the corpus**
 
 ```bash
-direnv exec . cabal run pawl
+direnv exec . cabal run parun
 direnv exec . script/format-json.sh fix data/cards/*.json
 direnv exec . cabal test
 ```
@@ -987,9 +987,9 @@ Expected: PASS.
 - [ ] **Step 4: Commit**
 
 ```bash
-direnv exec . git add source/libraries/codec/Pawl/Codec data/cards
+direnv exec . git add source/libraries/codec/Parun/Codec data/cards
 direnv exec . hooky fix
-direnv exec . git add source/libraries/codec/Pawl/Codec data/cards
+direnv exec . git add source/libraries/codec/Parun/Codec data/cards
 direnv exec . hooky run
 direnv exec . git commit -m "Default the unmarked-constructor fields"
 ```
@@ -1004,8 +1004,8 @@ other modules' spec literals (`ProjectedCharacteristicsSpec.testCharacteristicsJ
 is concatenated into `BindingSpec` and `GameEventSpec`).
 
 **Files:**
-- Modify: `source/libraries/codec/Pawl/Codec/ProjectedCharacteristics.hs`
-- Test: `source/libraries/codec/Pawl/Codec/ProjectedCharacteristicsSpec.hs`, and the three specs that concatenate its JSON: `BindingSpec.hs`, `GameEventSpec.hs`, `DelayedTriggerSpec.hs`
+- Modify: `source/libraries/codec/Parun/Codec/ProjectedCharacteristics.hs`
+- Test: `source/libraries/codec/Parun/Codec/ProjectedCharacteristicsSpec.hs`, and the three specs that concatenate its JSON: `BindingSpec.hs`, `GameEventSpec.hs`, `DelayedTriggerSpec.hs`
 - Modify: `data/cards/*.json`
 
 **Interfaces:**
@@ -1047,7 +1047,7 @@ re-run; the remaining failures name what else moved.
 - [ ] **Step 3: Regenerate the corpus**
 
 ```bash
-direnv exec . cabal run pawl
+direnv exec . cabal run parun
 direnv exec . script/format-json.sh fix data/cards/*.json
 direnv exec . cabal test
 ```
@@ -1058,7 +1058,7 @@ the corpus should not move — but run it, because a shared codec it calls might
 - [ ] **Step 4: Verify every record encoder was converted**
 
 ```bash
-for f in $(direnv exec . grep -rl 'Common\.object' source/libraries/codec/Pawl/Codec/*.hs | grep -v Spec | grep -v Common.hs); do
+for f in $(direnv exec . grep -rl 'Common\.object' source/libraries/codec/Parun/Codec/*.hs | grep -v Spec | grep -v Common.hs); do
   grep -q 'requiredPair\|optionalPair' "$f" || echo "UNCONVERTED: $f"
 done
 ```
@@ -1082,9 +1082,9 @@ required, and neither is a record field, so they are outside the rule.
 - [ ] **Step 5: Commit**
 
 ```bash
-direnv exec . git add source/libraries/codec/Pawl/Codec data/cards
+direnv exec . git add source/libraries/codec/Parun/Codec data/cards
 direnv exec . hooky fix
-direnv exec . git add source/libraries/codec/Pawl/Codec data/cards
+direnv exec . git add source/libraries/codec/Parun/Codec data/cards
 direnv exec . hooky run
 direnv exec . git commit -m "Default ProjectedCharacteristics' fields"
 ```
@@ -1093,8 +1093,8 @@ direnv exec . git commit -m "Default ProjectedCharacteristics' fields"
 ### Task 10: Remove the superseded helpers
 
 **Files:**
-- Modify: `source/libraries/codec/Pawl/Codec/Common.hs`
-- Test: `source/libraries/codec/Pawl/Codec/CommonSpec.hs`
+- Modify: `source/libraries/codec/Parun/Codec/Common.hs`
+- Test: `source/libraries/codec/Parun/Codec/CommonSpec.hs`
 
 - [ ] **Step 1: Confirm nothing calls them**
 
@@ -1120,9 +1120,9 @@ Expected: warning-free, PASS.
 - [ ] **Step 5: Commit**
 
 ```bash
-direnv exec . git add source/libraries/codec/Pawl/Codec/Common.hs source/libraries/codec/Pawl/Codec/CommonSpec.hs
+direnv exec . git add source/libraries/codec/Parun/Codec/Common.hs source/libraries/codec/Parun/Codec/CommonSpec.hs
 direnv exec . hooky fix
-direnv exec . git add source/libraries/codec/Pawl/Codec/Common.hs source/libraries/codec/Pawl/Codec/CommonSpec.hs
+direnv exec . git add source/libraries/codec/Parun/Codec/Common.hs source/libraries/codec/Parun/Codec/CommonSpec.hs
 direnv exec . hooky run
 direnv exec . git commit -m "Remove the decode*Default family"
 ```
@@ -1160,9 +1160,9 @@ Expected: PASS.
 - [ ] **Step 3: Commit**
 
 ```bash
-direnv exec . git add source/libraries/codec/Pawl/Codec
+direnv exec . git add source/libraries/codec/Parun/Codec
 direnv exec . hooky fix
-direnv exec . git add source/libraries/codec/Pawl/Codec
+direnv exec . git add source/libraries/codec/Parun/Codec
 direnv exec . hooky run
 direnv exec . git commit -m "Assert every record codec round-trips its all-default value"
 ```
@@ -1174,7 +1174,7 @@ direnv exec . git commit -m "Assert every record codec round-trips its all-defau
 R7 makes the pre-migration shape a supported input, and after Tasks 3–6 nothing exercises it any more.
 
 **Files:**
-- Test: `source/libraries/codec/Pawl/Codec/CardSpec.hs`, `source/libraries/codec/Pawl/Codec/CommonSpec.hs`
+- Test: `source/libraries/codec/Parun/Codec/CardSpec.hs`, `source/libraries/codec/Parun/Codec/CommonSpec.hs`
 
 - [ ] **Step 1: Write the cases**
 
@@ -1243,9 +1243,9 @@ Expected: PASS.
 - [ ] **Step 3: Commit**
 
 ```bash
-direnv exec . git add source/libraries/codec/Pawl/Codec/CardSpec.hs source/libraries/codec/Pawl/Codec/CommonSpec.hs
+direnv exec . git add source/libraries/codec/Parun/Codec/CardSpec.hs source/libraries/codec/Parun/Codec/CommonSpec.hs
 direnv exec . hooky fix
-direnv exec . git add source/libraries/codec/Pawl/Codec/CardSpec.hs source/libraries/codec/Pawl/Codec/CommonSpec.hs
+direnv exec . git add source/libraries/codec/Parun/Codec/CardSpec.hs source/libraries/codec/Parun/Codec/CommonSpec.hs
 direnv exec . hooky run
 direnv exec . git commit -m "Cover the pre-migration JSON shape on input"
 ```
@@ -1263,20 +1263,20 @@ P3 compares each file against the encoder, so after regeneration it passes by co
 
 ```bash
 BASE=$(direnv exec . git merge-base HEAD main)
-rm -rf /tmp/pawl-old-cards && mkdir -p /tmp/pawl-old-cards
-direnv exec . git archive "$BASE" data/cards | tar -x -C /tmp/pawl-old-cards --strip-components=2
-ls /tmp/pawl-old-cards | wc -l
+rm -rf /tmp/parun-old-cards && mkdir -p /tmp/parun-old-cards
+direnv exec . git archive "$BASE" data/cards | tar -x -C /tmp/parun-old-cards --strip-components=2
+ls /tmp/parun-old-cards | wc -l
 ```
 
 Expected: 226.
 
 - [ ] **Step 2: Write the temporary comparison**
 
-Add to `source/test-suite/Pawl/CardsSpec.hs`, wired into its `spec`:
+Add to `source/test-suite/Parun/CardsSpec.hs`, wired into its `spec`:
 
 ```haskell
   Spec.it s "TEMPORARY: every card means what it meant before the migration" $ do
-    old <- Registry.fileRegistry "/tmp/pawl-old-cards"
+    old <- Registry.fileRegistry "/tmp/parun-old-cards"
     ps <- S.allPrintings s
     mapM_
       ( \p -> do
@@ -1306,7 +1306,7 @@ Expected: no matches.
 ```bash
 direnv exec . cabal build all
 direnv exec . cabal test
-direnv exec . git add -- source data docs pawl.cabal
+direnv exec . git add -- source data docs parun.cabal
 direnv exec . hooky run
 direnv exec . git diff --stat main -- data/cards | tail -1
 ```
@@ -1324,7 +1324,7 @@ Open as a draft, then mark ready once the self-review's findings are pushed and 
 Call out one thing reviewers will notice in the corpus diff: `jace-beleren.json`
 and `the-walls-of-ba-sing-se.json` now render multiples of ten as `1E+1`, `2E+1`
 and `3E+1`. That is `Decimal.mkDecimal`'s trailing-zero normalization meeting
-`Pawl.Json.Number.encode`'s e-notation, it predates this branch, it is
+`Parun.Json.Number.encode`'s e-notation, it predates this branch, it is
 value-preserving, and the owner accepted it as canonical rather than fix the
 `json` sublibrary inside this work.
 

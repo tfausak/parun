@@ -4,7 +4,7 @@
 
 **Goal:** Land layer-4 type-changing and CR 613.8 *existence* dependency (via source-liveness) so Blood Moon + Urborg and Humility + Opalescence resolve correctly, both timestamp orders — the M3 go/no-go.
 
-**Architecture:** `Pawl.Projection` generalizes from keywords/P·T (M3b) to the projected **type line** (card types + subtypes), folded layer by layer with affected-sets evaluated against the partial projection. CR 613.8 existence dependency (Blood Moon strips Urborg's rules text, CR 305.7) is resolved by `staticAbilitiesLive`: a permanent's static abilities are gathered only if no live `SetLandSubtype` applies to it — an order-independent fixpoint, not a topological reorder. The projected type line then feeds mana (CR 305.6), `Sba`, `Target`, and `Combat`.
+**Architecture:** `Parun.Projection` generalizes from keywords/P·T (M3b) to the projected **type line** (card types + subtypes), folded layer by layer with affected-sets evaluated against the partial projection. CR 613.8 existence dependency (Blood Moon strips Urborg's rules text, CR 305.7) is resolved by `staticAbilitiesLive`: a permanent's static abilities are gathered only if no live `SetLandSubtype` applies to it — an order-independent fixpoint, not a topological reorder. The projected type line then feeds mana (CR 305.6), `Sba`, `Target`, and `Combat`.
 
 **Tech Stack:** Haskell 2010 (GHC 9.14.1), `tasty` (`tasty-hunit` + `tasty-quickcheck`), Cabal. Boot libraries only.
 
@@ -13,15 +13,15 @@
 Copied from the spec and `CLAUDE.md`; every task implicitly includes these:
 
 - **Haskell 2010, no language extensions** beyond `GADTs`, `RankNTypes`, `NamedFieldPuns`. No `LambdaCase`, no `OverloadedStrings`, **no list comprehensions**.
-- **No explicit export lists** (`module Pawl.Foo where`).
-- **One type per module** under `Pawl.Type.<TypeName>` (type + instances only); logic in other `Pawl.*` modules. A module never imports its parents.
+- **No explicit export lists** (`module Parun.Foo where`).
+- **One type per module** under `Parun.Type.<TypeName>` (type + instances only); logic in other `Parun.*` modules. A module never imports its parents.
 - **Qualified imports, aliased to the last component** (`Data.List` → `List`); operators unqualified; one import group.
 - **No partial functions** — `Maybe`/`Either`, never `head`/`error`/non-exhaustive matches.
 - **`newtype` + `Mk`-prefixed, non-punning constructors**; build records with `do`/record syntax.
 - **Prefer explicit:** `case` over point-free; `let` over `where`; `$` over parens, `.` over chained `$`; `Text` not `String`; arbitrary-precision numbers.
 - **No boolean blindness**; **derive at least `Eq` and `Show`**.
 - **Warning-clean** under `-Weverything` minus the allow-list; the `pedantic` flag makes any warning a build failure. Build `all`: `cabal build all --enable-tests --enable-benchmarks`. When in doubt, `cabal clean` first — incremental builds hide warnings.
-- **The two invariants:** the rules core never `case`s on an effect's *identity*; `Pawl.Projection` is the **sole** `case`-on-`Modification` home (as `Pawl.Resolve` is for `Effect`). The engine makes no player choices.
+- **The two invariants:** the rules core never `case`s on an effect's *identity*; `Parun.Projection` is the **sole** `case`-on-`Modification` home (as `Parun.Resolve` is for `Effect`). The engine makes no player choices.
 - **Every rules claim cited** against `docs/rules.txt` in a code comment. Never trust recalled Magic rules.
 - **After each task:** `cabal build all --enable-tests --enable-benchmarks` warning-free, `cabal test`, `git add -A` (stage explicit paths under a shared worktree) then `hooky fix` && `hooky run`, HLint clean. Commit directly to `main`, one small complete commit per task.
 
@@ -44,16 +44,16 @@ Claude-Session: https://claude.ai/code/session_01NTJULXEgqPcgT5gbizas3U
 ### Task 1: `ProjectedCharacteristics` gains the projected type line
 
 **Files:**
-- Modify: `source/library/Pawl/Type/ProjectedCharacteristics.hs`
-- Modify: `source/library/Pawl/Projection.hs` (`baseCharacteristics`; add `subtypesOf`/`cardTypesOf`/`isCreatureOf`)
-- Test: `source/test-suite/Pawl/ProjectionSpec.hs`
+- Modify: `source/library/Parun/Type/ProjectedCharacteristics.hs`
+- Modify: `source/library/Parun/Projection.hs` (`baseCharacteristics`; add `subtypesOf`/`cardTypesOf`/`isCreatureOf`)
+- Test: `source/test-suite/Parun/ProjectionSpec.hs`
 
 **Interfaces:**
 - Produces: `ProjectedCharacteristics` with new fields `cardTypes :: Set CardType`, `subtypes :: Set Subtype`, `rulesTextActive :: Bool`; `Projection.subtypesOf :: ObjectId -> GameState -> Set Subtype`, `Projection.cardTypesOf :: ObjectId -> GameState -> Set CardType`, `Projection.isCreatureOf :: ObjectId -> GameState -> Bool`.
 
 - [x] **Step 1: Write the failing test**
 
-Add to the `tests` list in `source/test-suite/Pawl/ProjectionSpec.hs` (new imports `qualified Pawl.Type.CardType as CardType` and `qualified Pawl.Type.Subtype as Subtype`):
+Add to the `tests` list in `source/test-suite/Parun/ProjectionSpec.hs` (new imports `qualified Parun.Type.CardType as CardType` and `qualified Parun.Type.Subtype as Subtype`):
 
 ```haskell
       HU.testCase "projected type line: a Piker is a Creature - Goblin Warrior" $
@@ -79,15 +79,15 @@ Expected: FAIL to compile — `cardTypesOf`/`subtypesOf`/`isCreatureOf` not in s
 
 - [x] **Step 3: Extend `ProjectedCharacteristics`**
 
-Replace the record in `source/library/Pawl/Type/ProjectedCharacteristics.hs` (add imports `qualified Pawl.Type.CardType`… actually import the types unqualified via their modules):
+Replace the record in `source/library/Parun/Type/ProjectedCharacteristics.hs` (add imports `qualified Parun.Type.CardType`… actually import the types unqualified via their modules):
 
 ```haskell
-module Pawl.Type.ProjectedCharacteristics where
+module Parun.Type.ProjectedCharacteristics where
 
 import Data.Set (Set)
-import Pawl.Type.CardType (CardType)
-import Pawl.Type.Keyword (Keyword)
-import Pawl.Type.Subtype (Subtype)
+import Parun.Type.CardType (CardType)
+import Parun.Type.Keyword (Keyword)
+import Parun.Type.Subtype (Subtype)
 
 -- The characteristics of an object after the layer fold (design.md §2.5). Maybe
 -- P/T because a land has none. cardTypes/subtypes are the projected type line
@@ -107,7 +107,7 @@ data ProjectedCharacteristics = MkProjectedCharacteristics
 
 - [x] **Step 4: Seed the new fields in `baseCharacteristics` and add the reads**
 
-In `source/library/Pawl/Projection.hs`, add imports `qualified Pawl.Type.CardType as CardType`, `qualified Pawl.Type.Subtype as Subtype`, `qualified Pawl.Type.TypeLine as TypeLine`. Replace `baseCharacteristics`:
+In `source/library/Parun/Projection.hs`, add imports `qualified Parun.Type.CardType as CardType`, `qualified Parun.Type.Subtype as Subtype`, `qualified Parun.Type.TypeLine as TypeLine`. Replace `baseCharacteristics`:
 
 ```haskell
 -- Printed characteristics before any effect (CR 613.2/613.4 starting point).
@@ -171,10 +171,10 @@ git commit -m "Project the type line: cardTypes, subtypes, rulesTextActive (CR 6
 ### Task 2: `Modification` layer-4 constructors + `Supertype.Legendary`
 
 **Files:**
-- Modify: `source/library/Pawl/Type/Supertype.hs`
-- Modify: `source/library/Pawl/Type/Modification.hs`
-- Modify: `source/library/Pawl/Projection.hs` (`layer`, `applyModification`)
-- Test: `source/test-suite/Pawl/ProjectionSpec.hs`
+- Modify: `source/library/Parun/Type/Supertype.hs`
+- Modify: `source/library/Parun/Type/Modification.hs`
+- Modify: `source/library/Parun/Projection.hs` (`layer`, `applyModification`)
+- Test: `source/test-suite/Parun/ProjectionSpec.hs`
 
 **Interfaces:**
 - Consumes: `ProjectedCharacteristics` fields from Task 1.
@@ -182,7 +182,7 @@ git commit -m "Project the type line: cardTypes, subtypes, rulesTextActive (CR 6
 
 - [x] **Step 1: Write the failing test**
 
-Add to `source/test-suite/Pawl/ProjectionSpec.hs`:
+Add to `source/test-suite/Parun/ProjectionSpec.hs`:
 
 ```haskell
       HU.testCase "CR 613.1d layer 4: the three type-changing modifications are Type" $ do
@@ -219,7 +219,7 @@ Expected: FAIL to compile — the new `Modification` constructors are not in sco
 
 - [x] **Step 3: Add `Supertype.Legendary`**
 
-In `source/library/Pawl/Type/Supertype.hs`:
+In `source/library/Parun/Type/Supertype.hs`:
 
 ```haskell
 data Supertype
@@ -230,7 +230,7 @@ data Supertype
 
 - [x] **Step 4: Add the `Modification` constructors**
 
-In `source/library/Pawl/Type/Modification.hs`, add the import `import Pawl.Type.CardType (CardType)` and `import Pawl.Type.Subtype (Subtype)`, and extend the type (keep the existing header comment, extend it):
+In `source/library/Parun/Type/Modification.hs`, add the import `import Parun.Type.CardType (CardType)` and `import Parun.Type.Subtype (Subtype)`, and extend the type (keep the existing header comment, extend it):
 
 ```haskell
 data Modification
@@ -246,7 +246,7 @@ data Modification
 
 - [x] **Step 5: Classify and apply them in `Projection`**
 
-Add `qualified Data.Set as Set` is already present. In `source/library/Pawl/Projection.hs`, extend `layer`:
+Add `qualified Data.Set as Set` is already present. In `source/library/Parun/Projection.hs`, extend `layer`:
 
 ```haskell
 layer :: Modification -> Layer
@@ -296,16 +296,16 @@ git commit -m "Add layer-4 type-changing modifications and Legendary (CR 305.7)"
 ### Task 3: `Quantity.ManaValue`
 
 **Files:**
-- Modify: `source/library/Pawl/Type/Quantity.hs`
-- Modify: `source/library/Pawl/Quantity.hs`
-- Test: `source/test-suite/Pawl/ProjectionSpec.hs` (or `Pawl.CoreSpec`; keep it near the Quantity evaluator — use `ProjectionSpec`)
+- Modify: `source/library/Parun/Type/Quantity.hs`
+- Modify: `source/library/Parun/Quantity.hs`
+- Test: `source/test-suite/Parun/ProjectionSpec.hs` (or `Parun.CoreSpec`; keep it near the Quantity evaluator — use `ProjectionSpec`)
 
 **Interfaces:**
 - Produces: `Quantity.ManaValue :: Quantity`; `Quantity.evaluate gs oid ManaValue` returns the affected object's mana value (CR 202.3) as `Just`, `Just 0` for a card with no mana cost, `Nothing` if the object has no card.
 
 - [x] **Step 1: Write the failing test**
 
-Test `ManaValue` through the projection path (this both exercises `evaluate` and avoids the `Pawl.Quantity` / `Pawl.Type.Quantity` last-component alias collision — `ProjectionSpec` already imports the *type* module as `Quantity`). Add to `source/test-suite/Pawl/ProjectionSpec.hs`:
+Test `ManaValue` through the projection path (this both exercises `evaluate` and avoids the `Parun.Quantity` / `Parun.Type.Quantity` last-component alias collision — `ProjectionSpec` already imports the *type* module as `Quantity`). Add to `source/test-suite/Parun/ProjectionSpec.hs`:
 
 ```haskell
       HU.testCase "CR 202.3 SetBasePowerToughness ManaValue sets a Piker to its mana value ({1}{R} = 2)" $
@@ -323,7 +323,7 @@ Expected: FAIL to compile — `Quantity.ManaValue` not in scope.
 
 - [x] **Step 3: Add the constructor**
 
-In `source/library/Pawl/Type/Quantity.hs`, promote the `newtype` to `data` (its header comment already anticipates this — "it becomes a `data` the moment the second one lands"):
+In `source/library/Parun/Type/Quantity.hs`, promote the `newtype` to `data` (its header comment already anticipates this — "it becomes a `data` the moment the second one lands"):
 
 ```haskell
 data Quantity
@@ -337,7 +337,7 @@ data Quantity
 
 - [x] **Step 4: Evaluate it**
 
-In `source/library/Pawl/Quantity.hs`, add imports `qualified Pawl.Game as Game`, `qualified Pawl.Type.Card as Card`, `qualified Pawl.Type.ManaCost as ManaCost`, `qualified Pawl.Type.ManaSymbol as ManaSymbol`. Replace `evaluate`:
+In `source/library/Parun/Quantity.hs`, add imports `qualified Parun.Game as Game`, `qualified Parun.Type.Card as Card`, `qualified Parun.Type.ManaCost as ManaCost`, `qualified Parun.Type.ManaSymbol as ManaSymbol`. Replace `evaluate`:
 
 ```haskell
 -- Nothing when the value cannot be determined.
@@ -360,7 +360,7 @@ symbolValue symbol = case symbol of
   ManaSymbol.OfType _ -> 1
 ```
 
-**Cycle check:** `Pawl.Quantity` now imports `Pawl.Game`. `Pawl.Game` imports only `Pawl.Type.*` (verified), never `Pawl.Quantity`, so no cycle. If `cabal build` reports a non-exhaustive `case` on `Quantity` in any *other* module, add a `ManaValue` arm there — but `Pawl.Quantity.evaluate` is the expected sole matcher.
+**Cycle check:** `Parun.Quantity` now imports `Parun.Game`. `Parun.Game` imports only `Parun.Type.*` (verified), never `Parun.Quantity`, so no cycle. If `cabal build` reports a non-exhaustive `case` on `Quantity` in any *other* module, add a `ManaValue` arm there — but `Parun.Quantity.evaluate` is the expected sole matcher.
 
 - [x] **Step 5: Run tests to verify they pass**
 
@@ -379,9 +379,9 @@ git commit -m "Add the ManaValue quantity and evaluate it (CR 202.3)"
 ### Task 4: `Affected` dynamic sets + layer-by-layer `project`
 
 **Files:**
-- Modify: `source/library/Pawl/Type/Affected.hs`
-- Modify: `source/library/Pawl/Projection.hs` (`affects`, `gather`, `project`; add `isBasic`)
-- Test: `source/test-suite/Pawl/ProjectionSpec.hs`
+- Modify: `source/library/Parun/Type/Affected.hs`
+- Modify: `source/library/Parun/Projection.hs` (`affects`, `gather`, `project`; add `isBasic`)
+- Test: `source/test-suite/Parun/ProjectionSpec.hs`
 
 **Interfaces:**
 - Consumes: `ProjectedCharacteristics` (Task 1), the layer-4 modifications (Task 2).
@@ -391,7 +391,7 @@ git commit -m "Add the ManaValue quantity and evaluate it (CR 202.3)"
 
 - [x] **Step 1: Write the failing test**
 
-Add to `source/test-suite/Pawl/ProjectionSpec.hs` a helper and a test proving affected-sets read the *partial* (a layer-4 creature-add is visible to a layer-6 `AllCreatures` grant):
+Add to `source/test-suite/Parun/ProjectionSpec.hs` a helper and a test proving affected-sets read the *partial* (a layer-4 creature-add is visible to a layer-6 `AllCreatures` grant):
 
 ```haskell
 -- Append a stored continuous effect over a dynamic set, at timestamp `ts`.
@@ -429,7 +429,7 @@ Expected: FAIL — the M3b `project` gathers with a `GameState`-only `affects`, 
 
 - [x] **Step 3: Add the `Affected` constructors**
 
-In `source/library/Pawl/Type/Affected.hs`:
+In `source/library/Parun/Type/Affected.hs`:
 
 ```haskell
 data Affected
@@ -443,7 +443,7 @@ data Affected
 
 - [x] **Step 4: Restructure `Projection` — `affects`, `gather`, `project`**
 
-In `source/library/Pawl/Projection.hs` add imports `qualified Pawl.Type.Supertype as Supertype`, `qualified Pawl.Type.StaticAbility as StaticAbility` (if not already present), and `qualified Pawl.Type.Object as Object` (present). Define the fold accumulator, the new `affects`, `isBasic`, `gather`, and `project`:
+In `source/library/Parun/Projection.hs` add imports `qualified Parun.Type.Supertype as Supertype`, `qualified Parun.Type.StaticAbility as StaticAbility` (if not already present), and `qualified Parun.Type.Object as Object` (present). Define the fold accumulator, the new `affects`, `isBasic`, `gather`, and `project`:
 
 ```haskell
 -- A continuous effect ready to fold: its source (for OtherNonAuraEnchantments
@@ -548,15 +548,15 @@ git commit -m "Fold the projection layer by layer over the partial type line (CR
 ### Task 5: The three card printings
 
 **Files:**
-- Modify: `source/library/Pawl/Card.hs` (`bloodMoonPrinting`, `urborgPrinting`, `opalescencePrinting`, `allPrintings`)
-- Test: `source/test-suite/Pawl/CardSpec.hs`
+- Modify: `source/library/Parun/Card.hs` (`bloodMoonPrinting`, `urborgPrinting`, `opalescencePrinting`, `allPrintings`)
+- Test: `source/test-suite/Parun/CardSpec.hs`
 
 **Interfaces:**
 - Produces: `Card.bloodMoonPrinting`, `Card.urborgPrinting`, `Card.opalescencePrinting`, each in `Card.allPrintings`.
 
 - [x] **Step 1: Write the failing test**
 
-Add to `source/test-suite/Pawl/CardSpec.hs` (match its existing style; it likely asserts printings are registered and shaped — mirror an existing case):
+Add to `source/test-suite/Parun/CardSpec.hs` (match its existing style; it likely asserts printings are registered and shaped — mirror an existing case):
 
 ```haskell
       HU.testCase "M3c printings are registered in allPrintings" $ do
@@ -570,7 +570,7 @@ Add to `source/test-suite/Pawl/CardSpec.hs` (match its existing style; it likely
               HU.assertBool "not a permanent target" (Map.null (Card.Type.targetSpecs card)),
 ```
 
-(Add imports `qualified Pawl.Type.Card as Card.Type`, `qualified Pawl.Type.Printing as Printing`, `qualified Data.Map.Strict as Map` if not present.)
+(Add imports `qualified Parun.Type.Card as Card.Type`, `qualified Parun.Type.Printing as Printing`, `qualified Data.Map.Strict as Map` if not present.)
 
 - [x] **Step 2: Run test to verify it fails**
 
@@ -579,7 +579,7 @@ Expected: FAIL to compile — the three printings are not in scope.
 
 - [x] **Step 3: Add the printings**
 
-In `source/library/Pawl/Card.hs` (imports `Affected`, `Modification`, `StaticAbility`, `CardType`, `Subtype`, `Supertype`, `TypeLine`, `ManaCost`, `ManaSymbol`, `ManaType`, `Color` are already present). Add before `allPrintings`:
+In `source/library/Parun/Card.hs` (imports `Affected`, `Modification`, `StaticAbility`, `CardType`, `Subtype`, `Supertype`, `TypeLine`, `ManaCost`, `ManaSymbol`, `ManaType`, `Color` are already present). Add before `allPrintings`:
 
 ```haskell
 -- Blood Moon: {2}{R}, Enchantment, "Nonbasic lands are Mountains."
@@ -711,8 +711,8 @@ git commit -m "Add Blood Moon, Urborg, and Opalescence printings (Scryfall-verif
 ### Task 6: Source-liveness — CR 613.8 existence (the go/no-go)
 
 **Files:**
-- Modify: `source/library/Pawl/Projection.hs` (`staticAbilitiesLive`, `setLandSubtypeEffects`, `affectsBase`; `gather` consults liveness)
-- Test: `source/test-suite/Pawl/ProjectionSpec.hs`
+- Modify: `source/library/Parun/Projection.hs` (`staticAbilitiesLive`, `setLandSubtypeEffects`, `affectsBase`; `gather` consults liveness)
+- Test: `source/test-suite/Parun/ProjectionSpec.hs`
 
 **Interfaces:**
 - Consumes: `gather`/`project`/`affects` (Task 4), the cards (Task 5).
@@ -720,7 +720,7 @@ git commit -m "Add Blood Moon, Urborg, and Opalescence printings (Scryfall-verif
 
 - [x] **Step 1: Write the failing tests (the Phase-2 existence test set)**
 
-Add helpers and the dependency tests to `source/test-suite/Pawl/ProjectionSpec.hs` (new imports `qualified Pawl.Mana as Mana` for the mana observable in Task 7; here assert via `subtypesOf`). A fixture placing Blood Moon, Urborg, and a Forest in a controllable order:
+Add helpers and the dependency tests to `source/test-suite/Parun/ProjectionSpec.hs` (new imports `qualified Parun.Mana as Mana` for the mana observable in Task 7; here assert via `subtypesOf`). A fixture placing Blood Moon, Urborg, and a Forest in a controllable order:
 
 ```haskell
 -- Blood Moon, Urborg, and a Forest on the battlefield. `urborgFirst` controls
@@ -763,7 +763,7 @@ Expected: FAIL — without source-liveness, `gather` still includes Urborg's `Ad
 
 - [x] **Step 3: Implement source-liveness**
 
-In `source/library/Pawl/Projection.hs`, add `affectsBase`, `setLandSubtypeEffects`, and `staticAbilitiesLive`, and gate `gather`'s static branch:
+In `source/library/Parun/Projection.hs`, add `affectsBase`, `setLandSubtypeEffects`, and `staticAbilitiesLive`, and gate `gather`'s static branch:
 
 ```haskell
 -- affects evaluated against an object's BASE characteristics (used by
@@ -843,8 +843,8 @@ git commit -m "Resolve CR 613.8 existence via source-liveness (Blood Moon strips
 ### Task 7: Mana reads the projected subtypes (the end-to-end observable)
 
 **Files:**
-- Modify: `source/library/Pawl/Mana.hs` (`manaTypesOf`)
-- Test: `source/test-suite/Pawl/ManaSpec.hs`
+- Modify: `source/library/Parun/Mana.hs` (`manaTypesOf`)
+- Test: `source/test-suite/Parun/ManaSpec.hs`
 
 **Interfaces:**
 - Consumes: `Projection.subtypesOf` (Task 1), source-liveness (Task 6).
@@ -852,7 +852,7 @@ git commit -m "Resolve CR 613.8 existence via source-liveness (Blood Moon strips
 
 - [x] **Step 1: Write the failing test**
 
-Add to `source/test-suite/Pawl/ManaSpec.hs` (mirror its style; import `qualified Pawl.Card as Card`, `qualified Pawl.Mana as Mana`, `qualified Pawl.Setup as Setup`, `qualified Pawl.Support as S`, `qualified Pawl.Type.Color as Color`, `qualified Pawl.Type.ManaType as ManaType` as needed):
+Add to `source/test-suite/Parun/ManaSpec.hs` (mirror its style; import `qualified Parun.Card as Card`, `qualified Parun.Mana as Mana`, `qualified Parun.Setup as Setup`, `qualified Parun.Support as S`, `qualified Parun.Type.Color as Color`, `qualified Parun.Type.ManaType as ManaType` as needed):
 
 ```haskell
       HU.testCase "CR 305.6/305.7 an Urborg'd Mountain taps for black too" $
@@ -879,7 +879,7 @@ Expected: FAIL — `manaTypesOf` reads the *printed* subtypes, so Urborg (printe
 
 - [x] **Step 3: Read projected subtypes in `manaTypesOf`**
 
-In `source/library/Pawl/Mana.hs`, add `import qualified Pawl.Projection as Projection`, and replace `manaTypesOf` (the `Source`/`Printing`/`TypeLine` imports may become unused — remove any that do to stay warning-clean):
+In `source/library/Parun/Mana.hs`, add `import qualified Parun.Projection as Projection`, and replace `manaTypesOf` (the `Source`/`Printing`/`TypeLine` imports may become unused — remove any that do to stay warning-clean):
 
 ```haskell
 -- Every mana type an object could produce, derived from its PROJECTED subtypes
@@ -890,7 +890,7 @@ manaTypesOf :: ObjectId -> GameState -> [ManaType]
 manaTypesOf oid gs = Maybe.mapMaybe subtypeMana (Set.toList (Projection.subtypesOf oid gs))
 ```
 
-**Cycle check:** `Pawl.Mana` now imports `Pawl.Projection`; `Pawl.Projection` does not import `Pawl.Mana` (verified), so no cycle.
+**Cycle check:** `Parun.Mana` now imports `Parun.Projection`; `Parun.Projection` does not import `Parun.Mana` (verified), so no cycle.
 
 - [x] **Step 4: Run tests to verify they pass**
 
@@ -909,10 +909,10 @@ git commit -m "Tap lands off their projected subtypes (CR 305.6/305.7)"
 ### Task 8: `Sba` / `Target` / `Combat` read projected creature-ness
 
 **Files:**
-- Modify: `source/library/Pawl/Sba.hs` (line ~63)
-- Modify: `source/library/Pawl/Target.hs` (line ~25)
-- Modify: `source/library/Pawl/Combat.hs` (`isCreatureObject`, line ~64)
-- Test: `source/test-suite/Pawl/ProjectionSpec.hs` (Opalescence creature-ness end-to-end)
+- Modify: `source/library/Parun/Sba.hs` (line ~63)
+- Modify: `source/library/Parun/Target.hs` (line ~25)
+- Modify: `source/library/Parun/Combat.hs` (`isCreatureObject`, line ~64)
+- Test: `source/test-suite/Parun/ProjectionSpec.hs` (Opalescence creature-ness end-to-end)
 
 **Interfaces:**
 - Consumes: `Projection.isCreatureOf` (Task 1), the cards (Task 5).
@@ -920,7 +920,7 @@ git commit -m "Tap lands off their projected subtypes (CR 305.6/305.7)"
 
 - [x] **Step 1: Write the failing test**
 
-Add to `source/test-suite/Pawl/ProjectionSpec.hs` (import `qualified Pawl.Target as Target`, `qualified Pawl.Type.Recipient as Recipient` if needed). Opalescence + Humility: Humility becomes a creature and is a legal `CreatureTarget`; and, marked lethal, an SBA destroys it:
+Add to `source/test-suite/Parun/ProjectionSpec.hs` (import `qualified Parun.Target as Target`, `qualified Parun.Type.Recipient as Recipient` if needed). Opalescence + Humility: Humility becomes a creature and is a legal `CreatureTarget`; and, marked lethal, an SBA destroys it:
 
 ```haskell
       HU.testCase "CR 305.2 Opalescence makes Humility a creature: legal creature target and SBA-killable" $
@@ -946,19 +946,19 @@ Expected: FAIL — `Sba` reads the *printed* type via `Card.isCreature`, so Humi
 
 - [x] **Step 3: Rewire the three consumers**
 
-`source/library/Pawl/Sba.hs` — replace the printed read (line ~63). It already imports `Projection`:
+`source/library/Parun/Sba.hs` — replace the printed read (line ~63). It already imports `Projection`:
 
 ```haskell
   let isCreature = Projection.isCreatureOf oid gs
 ```
 
-`source/library/Pawl/Target.hs` — add `import qualified Pawl.Projection as Projection`, replace line ~25:
+`source/library/Parun/Target.hs` — add `import qualified Parun.Projection as Projection`, replace line ~25:
 
 ```haskell
   let isCreatureId oid = Projection.isCreatureOf oid gs
 ```
 
-`source/library/Pawl/Combat.hs` — add `import qualified Pawl.Projection as Projection`, replace `isCreatureObject` (line ~64):
+`source/library/Parun/Combat.hs` — add `import qualified Parun.Projection as Projection`, replace `isCreatureObject` (line ~64):
 
 ```haskell
 isCreatureObject :: ObjectId -> GameState -> Bool
@@ -986,14 +986,14 @@ git commit -m "Read creature-ness through the projection in Sba, Target, Combat"
 ### Task 9: Humility + Opalescence, both 7b timestamp orders
 
 **Files:**
-- Test: `source/test-suite/Pawl/ProjectionSpec.hs`
+- Test: `source/test-suite/Parun/ProjectionSpec.hs`
 
 **Interfaces:**
 - Consumes: everything above. No production code — this is the famous cross-layer correctness gate (CR 613.7 within layer 7b), which the layer-by-layer fold already handles.
 
 - [x] **Step 1: Write the test**
 
-Add to `source/test-suite/Pawl/ProjectionSpec.hs`:
+Add to `source/test-suite/Parun/ProjectionSpec.hs`:
 
 ```haskell
       HU.testCase "CR 613 Humility + Opalescence: a real creature is 1/1 with no abilities" $
@@ -1039,8 +1039,8 @@ git commit -m "Gate Humility + Opalescence in both 7b timestamp orders (CR 613.7
 ### Task 10: Track the deferred topological CR 613.8b resolver
 
 **Files:**
-- Modify: `source/library/Pawl/Projection.hs` (an expiry comment at the within-layer sort)
-- Test: `source/test-suite/Pawl/ProjectionSpec.hs` (a documenting test asserting the current timestamp contract)
+- Modify: `source/library/Parun/Projection.hs` (an expiry comment at the within-layer sort)
+- Test: `source/test-suite/Parun/ProjectionSpec.hs` (a documenting test asserting the current timestamp contract)
 - git-bug entry
 
 **Interfaces:**
@@ -1056,7 +1056,7 @@ Capture the printed bug id for the comment and test below.
 
 - [x] **Step 2: Add the expiry comment**
 
-In `source/library/Pawl/Projection.hs`, at the `ordered = List.sortOn gTimestamp here` line inside `project`, add:
+In `source/library/Parun/Projection.hs`, at the `ordered = List.sortOn gTimestamp here` line inside `project`, add:
 
 ```haskell
         -- CR 613.7 timestamp order within a layer. EXPIRES: CR 613.8b dependency
@@ -1068,7 +1068,7 @@ In `source/library/Pawl/Projection.hs`, at the `ordered = List.sortOn gTimestamp
 
 - [x] **Step 3: Add the documenting test**
 
-Add to `source/test-suite/Pawl/ProjectionSpec.hs` a hand-built same-layer applies-to case, asserting the **current timestamp behavior** with a comment naming the expiry (so a future implementer consciously flips it):
+Add to `source/test-suite/Parun/ProjectionSpec.hs` a hand-built same-layer applies-to case, asserting the **current timestamp behavior** with a comment naming the expiry (so a future implementer consciously flips it):
 
 ```haskell
       HU.testCase "CR 613.7 within layer 4, timestamp order (EXPIRES at CR 613.8b, git-bug <ID>)" $

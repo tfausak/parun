@@ -1,0 +1,692 @@
+-- | CR 709.1 / 712.8 / 715.2: one set of printed characteristics. A card has one
+-- or more of these; which of them are live depends on the card's Layout and on
+-- where the object is, which is Parun.Engine.Card's question and not this
+-- module's.
+--
+-- Parametric in `card` so Parun.Types.Card can close the loop at itself: the six
+-- fields below that carry card-shaped payloads (a token a spell defines, an
+-- ability's own modal payload) name a whole CARD, not a face, because CR 707.8a's
+-- double-faced tokens carry two faces of their own and parun represents a token
+-- with the very same Card value. That keeps every `Modal Card` and `Effect Card`
+-- in the codebase unchanged and avoids an hs-boot cycle.
+module Parun.Types.Face where
+
+import qualified Data.Map.Strict as Map
+import qualified Data.Sequence as Seq
+import qualified Data.Set as Set
+import qualified Data.Text as Text
+import qualified Numeric.Natural as Natural
+import qualified Parun.Types.AbilityName as AbilityName
+import qualified Parun.Types.ActivatedAbility as ActivatedAbility
+import qualified Parun.Types.ActivationProhibition as ActivationProhibition
+import qualified Parun.Types.AlternativeCost as AlternativeCost
+import qualified Parun.Types.AttachRestriction as AttachRestriction
+import qualified Parun.Types.AttackCost as AttackCost
+import qualified Parun.Types.AttackPermission as AttackPermission
+import qualified Parun.Types.AttackRequirement as AttackRequirement
+import qualified Parun.Types.BlockCost as BlockCost
+import qualified Parun.Types.BlockPermission as BlockPermission
+import qualified Parun.Types.BlockRequirement as BlockRequirement
+import qualified Parun.Types.CardName as CardName
+import qualified Parun.Types.CastingPermission as CastingPermission
+import qualified Parun.Types.CastingRestriction as CastingRestriction
+import qualified Parun.Types.CharacteristicPT as CharacteristicPT
+import qualified Parun.Types.Color as Color
+import qualified Parun.Types.CombatRestriction as CombatRestriction
+import qualified Parun.Types.Cost as Cost
+import qualified Parun.Types.CostChoice as CostChoice
+import qualified Parun.Types.CostComponent as CostComponent
+import qualified Parun.Types.CostReduction as CostReduction
+import qualified Parun.Types.CounterRestriction as CounterRestriction
+import qualified Parun.Types.Counterability as Counterability
+import qualified Parun.Types.CrewRestriction as CrewRestriction
+import qualified Parun.Types.Defense as Defense
+import qualified Parun.Types.DungeonRoom as DungeonRoom
+import qualified Parun.Types.Effect as Effect
+import qualified Parun.Types.EntryRestriction as EntryRestriction
+import qualified Parun.Types.GrantedAbility as GrantedAbility
+import qualified Parun.Types.HandAction as HandAction
+import qualified Parun.Types.Keyword as Keyword
+import qualified Parun.Types.Loyalty as Loyalty
+import qualified Parun.Types.ManaCost as ManaCost
+import qualified Parun.Types.Modal as Modal
+import qualified Parun.Types.Mode as Mode
+import qualified Parun.Types.ModeIndex as ModeIndex
+import qualified Parun.Types.ModeSelection as ModeSelection
+import qualified Parun.Types.PlayerRelation as PlayerRelation
+import qualified Parun.Types.PlayerStaticAbility as PlayerStaticAbility
+import qualified Parun.Types.Power as Power
+import qualified Parun.Types.PrintedReplacement as PrintedReplacement
+import qualified Parun.Types.Quantity as Quantity
+import qualified Parun.Types.SacrificeRestriction as SacrificeRestriction
+import qualified Parun.Types.SpecialAction as SpecialAction
+import qualified Parun.Types.StaticAbility as StaticAbility
+import qualified Parun.Types.Subtype as Subtype
+import qualified Parun.Types.TargetRestriction as TargetRestriction
+import qualified Parun.Types.TargetSlot as TargetSlot
+import qualified Parun.Types.Toughness as Toughness
+import qualified Parun.Types.TriggeredAbility as TriggeredAbility
+import qualified Parun.Types.TypeLine as TypeLine
+import qualified Parun.Types.UntapRestriction as UntapRestriction
+import qualified Parun.Types.Vanguard as Vanguard
+
+data Face card = MkFace
+  { name :: CardName.CardName,
+    -- | The face's Oracle text as MTGJSON gives it, for reference; nothing in
+    -- the engine reads it.
+    oracleText :: Maybe Text.Text,
+    -- | Nothing, not a zero cost: CR 202.1, a land has no mana cost at all.
+    manaCost :: Maybe ManaCost.ManaCost,
+    typeLine :: TypeLine.TypeLine,
+    -- | Only creatures have these.
+    power :: Maybe Power.Power,
+    toughness :: Maybe Toughness.Toughness,
+    -- | CR 306.5 / 306.5a: Nothing for every card that is not a planeswalker; the
+    -- CardSpec lint family holds that biconditional in both directions.
+    --
+    -- Read like power/toughness through Parun.Engine.Projection, never directly,
+    -- because CR 707.2 lists loyalty among the copiable values a Clone acquires.
+    -- What reads it is CR 306.5b's intrinsic enters-with replacement, which needs
+    -- the loyalty of the permanent as it WOULD exist on the battlefield (CR
+    -- 614.12) rather than the loyalty printed on whatever card is underneath.
+    loyalty :: Maybe Loyalty.Loyalty,
+    -- | CR 210.1 / 310.4a: the number in the card's lower right corner. Nothing
+    -- for every card that is not a battle; the CardSpec lint family holds that
+    -- biconditional in both directions, exactly as it does for loyalty above.
+    --
+    -- Read through Parun.Engine.Projection, never directly, for a REASON WEAKER
+    -- than loyalty's: CR 707.2's list of copiable values names loyalty and stops
+    -- short of defense. See Parun.Types.Defense for why the projection is still
+    -- where this belongs. What reads it is CR 310.4b's intrinsic enters-with
+    -- replacement, which needs the defense of the permanent as it WOULD exist on
+    -- the battlefield (CR 614.12).
+    defense :: Maybe Defense.Defense,
+    -- | Alchemy's printed "Starting intensity N" (Static Discharge), which no CR
+    -- rule names. Read through Parun.Engine.Projection's PC.intensity, never
+    -- directly, since an intensify effect adds to it.
+    startingIntensity :: Maybe Natural.Natural,
+    -- | CR 313.6 \/ 313.7: the two numbers in a vanguard card's lower corners.
+    -- Nothing for every card that is not a vanguard; the CardSpec lint family
+    -- holds that biconditional in both directions, as it does for loyalty and
+    -- defense above.
+    --
+    -- Read straight off the FACE and never through the projection, which is
+    -- where this parts from those two. CR 707.2's copiable values are what a
+    -- copy effect acquires, and no such effect can reach a vanguard card: CR
+    -- 313.2 keeps it in the command zone, where it is not a permanent and not a
+    -- spell, so nothing in the pool copies it. Its readers are pregame or
+    -- per-cleanup and take the printed card (Parun.Engine.Vanguard).
+    vanguard :: Maybe Vanguard.Vanguard,
+    -- | CR 903.3a: whether this card prints "this card can be your commander",
+    -- the deck-construction ability that lets a card CR 903.3 would otherwise
+    -- refuse be designated. False for every card that does not print it.
+    --
+    -- NOT a Parun.Types.Keyword, which is rule 702's vocabulary and nothing
+    -- else: rule 903.3a names no keyword, and the partner abilities beside it
+    -- are keywords only because CR 702.124a says so. A printed FLAG rather than
+    -- a static ability, because CR 113.6n functions it before the game begins,
+    -- where there is no object for a continuous effect to touch --
+    -- Parun.Engine.Commander.designations reads it off the front face for the
+    -- reason that function gives.
+    canBeYourCommander :: Bool,
+    -- | CR 103.1c: whether this card prints "you are the starting player".
+    -- False for every card that does not print it.
+    --
+    -- A printed flag rather than a static ability for canBeYourCommander's
+    -- reason: its one reader, Parun.Engine.Setup.claimStartingPlayer, runs once
+    -- as the game begins, before there is a turn for a continuous effect to
+    -- apply in. Read off the face of a card in its owner's command zone, where
+    -- CR 315.3 keeps a conspiracy.
+    claimsStartingPlayer :: Bool,
+    -- | CR 407.3: whether this card prints "Remove this card from your deck
+    -- before playing if you're not playing for ante". A printed flag for
+    -- claimsStartingPlayer's reason: its reader (Parun.Engine.Ante.barred) runs
+    -- on a card outside the game, where no object exists.
+    anteOnly :: Bool,
+    -- | CR 702, counted. A card can print the same keyword twice -- Apex
+    -- Devastator's "Cascade, cascade, cascade, cascade" -- and CR 702.85c makes
+    -- each instance trigger separately, so the count is printed text rather than
+    -- something the layer fold introduces. The same shape
+    -- Parun.Types.ProjectedCharacteristics.keywords carries, which is what lets CR
+    -- 707.2's copiable values keep all four instances.
+    --
+    -- Zero is not a value this holds: an absent keyword is an absent key, and
+    -- Parun.Codec.Face's wire form -- one array entry per instance -- has no way to
+    -- spell it. Contrast Parun.JsonCodec.Common.multiset, whose counters really do
+    -- reach zero.
+    --
+    -- The closed half must read this through Parun.Engine.Projection.keywordsOf, never
+    -- directly, since layer 6 grants and removes abilities. The exception is a
+    -- reader off the battlefield that still takes the printed card (#4710) --
+    -- the carve-out additionalCosts takes. A GRAVEYARD reader of rule
+    -- 702.34a's flashback goes through the projection, so a granted one reaches
+    -- the cost (Parun.Engine.Cost.costsFor). So do the HAND readers of rule
+    -- 702.8a's flash (Parun.Engine.Cast.instantSpeed: Teferi, Mage of Zhalfir's
+    -- grant, Patriar's Humiliation's perpetual removal) and of rule 702.62a's
+    -- suspend and rule 702.170a's plot (Parun.Engine.Suspend.suspendOf,
+    -- Parun.Engine.Plot.plotCostsOf). Parun.Engine.Cast.castFacings reads rule
+    -- 702.37a's morph and rule 702.168a's disguise printed, less a layer-6
+    -- wipe.
+    keywords :: Map.Map Keyword.Keyword Natural.Natural,
+    -- | CR 204.1/204.2: the colour indicator printed left of the type line. An
+    -- object is each colour it denotes, IN ADDITION to the colours of its mana
+    -- cost (CR 202.2/202.2e). Empty for a card whose colours come from its cost
+    -- alone. Also where a TOKEN's colour lives, since CR 111.3 makes the creating
+    -- effect's stated characteristics stand in for printed ones and a token has no
+    -- mana cost. Read through Parun.Engine.Projection.colorsOf, never directly.
+    colorIndicator :: Set.Set Color.Color,
+    -- | CR 604.3 / 208.2a: this face's characteristic-defining P/T ability -- what
+    -- a printed star (Quantity.Star) in its power/toughness box stands for. A CDA
+    -- is an ABILITY, not a number: the projection seeds it unevaluated so a copy
+    -- acquires the ability (CR 707.2a) and layer 7a recomputes it every time. Read
+    -- through Parun.Engine.Projection, never directly.
+    --
+    -- PER BOX, where a printed card has one ability: CR 208.2a's template defines
+    -- "[power or toughness]" or both at once, and a printed face writes the one
+    -- quantity it declares into both slots (Parun.Codec.Face), where substituting
+    -- into a box that prints no star is the identity. Two slots for CR 709.4c: a
+    -- split card has each ability in either half's text box, so a combined view
+    -- (Parun.Engine.Card.merge2) can hold one half's ability in one slot and the
+    -- other half's in the other.
+    characteristicPT :: Maybe CharacteristicPT.CharacteristicPT,
+    -- | CR 604.1/604.2: this face's static continuous abilities (Humility), which
+    -- the projection gathers live.
+    staticAbilities :: [StaticAbility.StaticAbility (GrantedAbility.GrantedAbility card)],
+    -- | This face's spell payload as data: what casting it does when it
+    -- resolves, as one or more modes (CR 700.2). A non-modal card is a single mode
+    -- with ChooseExactly 1 (forced, unprompted); a land or vanilla creature is a
+    -- single EMPTY mode. Parun.Types.Card ties Modal's `card` knot at `Modal Card`.
+    spell :: Modal.Modal card (GrantedAbility.GrantedAbility card),
+    -- | CR 602: this face's printed activated abilities. The closed half reads
+    -- these through Parun.Engine.Projection.abilitiesOf, never directly: layer 6
+    -- (Humility) removes abilities.
+    activatedAbilities :: [ActivatedAbility.ActivatedAbility card (GrantedAbility.GrantedAbility card)],
+    -- | CR 614: this face's replacement effects, active while it is in the zone CR
+    -- 113.6 leaves each functioning in -- the battlefield unless the row states
+    -- otherwise (PrintedReplacement.functionsFrom). A battlefield row is read
+    -- through Parun.Engine.Projection.replacementsOf (never directly) so layer 6
+    -- LoseAllAbilities strips them uniformly, and so CR 604.2's "as long as"
+    -- clause on each is asked against the board of the moment -- the live one,
+    -- less whatever an entry loop has materialized but not entered
+    -- (Parun.Engine.Projection.boardAsEntering). A row functioning from one of the
+    -- four other zones is read off this list directly, as every off-battlefield
+    -- ability walk in that module reads a printed face.
+    replacementEffects :: [PrintedReplacement.PrintedReplacement card (GrantedAbility.GrantedAbility card) (Effect.Effect card (GrantedAbility.GrantedAbility card))],
+    -- | CR 603: this face's triggered abilities, read through
+    -- Parun.Engine.Projection.triggeredAbilitiesOf.
+    triggeredAbilities :: [TriggeredAbility.TriggeredAbility card (GrantedAbility.GrantedAbility card)],
+    -- | CR 603.7: this face's DELAYED triggered abilities, keyed by name -- the
+    -- payloads an Effect.ArmDelayedTrigger in this face's own text arms by name.
+    -- An arm inside a QUOTED ability carries its payload instead
+    -- (Parun.Types.ArmDelayedTrigger's `ability`, through Effect's ability
+    -- variable, which is how Effect -> TriggeredAbility -> Modal -> Mode ->
+    -- Effect stays out of the module graph), since the object using a
+    -- quotation is not the card that printed it.
+    --
+    -- Read through the projection's copiable values (PC.delayedAbilities), so a
+    -- copy arms the text it copied (CR 707.2) -- but never stripped by layer
+    -- 6: a delayed ability is not ON the source object (CR 603.7d).
+    delayedAbilities :: Map.Map AbilityName.AbilityName (TriggeredAbility.TriggeredAbility card (GrantedAbility.GrantedAbility card)),
+    -- | CR 309.4: this face's rooms, topmost first -- the room graph of a dungeon
+    -- card, and empty for every card that is not a dungeon. The CardSpec lint
+    -- family holds that biconditional in both directions, as it does for loyalty
+    -- and defense above.
+    --
+    -- ORDERED, where every other ability list here is ordered only by printing:
+    -- CR 309.4a starts the venture marker on the topmost room and CR 309.6 ends the
+    -- dungeon on the bottommost, so position is the rule's own handle on a room
+    -- (Parun.Types.RoomIndex).
+    --
+    -- Card DATA and not rulebook text, unlike the emblem Parun.Engine.Ring mints:
+    -- CR 309.1 makes a dungeon a card, and rooms are what is printed on it.
+    rooms :: Seq.Seq (DungeonRoom.DungeonRoom card),
+    -- | CR 309.2a \/ 701.49d: the quality a venture must indicate before this
+    -- dungeon card may be brought into the game -- Undercity's "you can't enter
+    -- this dungeon unless you \"venture into Undercity.\"" Nothing for a dungeon
+    -- printing no such line, which any venture may enter, and for every card that
+    -- is not a dungeon.
+    --
+    -- Read off the PRINTED card by Parun.Engine.Dungeon.enterable, and there is
+    -- nowhere else to read it: CR 309.2 keeps a dungeon card outside the game
+    -- until a venture brings it in, and outside the game is not a zone (CR
+    -- 400.11), so there is no object for a CR 604.2 static to be an ability of.
+    -- That is why this is a field and not a staticAbilities row.
+    --
+    -- The QUALITY and not a flag, because the sentence names one: CR 701.49d
+    -- writes the variant "venture into [quality]", and a dungeon forbidding entry
+    -- except to a venture naming a quality it does not itself carry is a card
+    -- nothing in the rules forbids. A flag could not tell the two apart.
+    dungeonEntryQuality :: Maybe Subtype.Subtype,
+    -- | CR 601.3: this face's PRINTED casting permissions -- zone or condition
+    -- exceptions to normal timing (Panglacial Wurm). The seed of
+    -- Parun.Types.ProjectedCharacteristics.castingPermissions, which a layer-6
+    -- grant adds to; Parun.Engine.Cast reads the projection.
+    --
+    -- Not the whole list: rule 702.34a gives a card with flashback a
+    -- cast-from-your-graveyard permission that is never printed here, minted
+    -- instead by Parun.Engine.Keyword.castingPermissionsOf. Parun.Engine.Cast is the
+    -- one place the two are put together; a reader that wants every permission a
+    -- card has must do the same.
+    castingPermissions :: [CastingPermission.CastingPermission],
+    -- | CR 601.3: this face's PRINTED casting restrictions -- the clauses of a
+    -- "Cast this spell only during ..." that WITHHOLD a cast the rules would
+    -- otherwise allow. Rally the Troops is
+    -- `[DuringPhase (Combat DeclareAttackers), AttackedThisStep]`.
+    --
+    -- The mirror of castingPermissions above, running the other way, which is why
+    -- it is a second field and not more arms on that one: CR 601.3 is one sentence
+    -- with two halves (a rule or effect allows / no rule or effect prohibits), and
+    -- Parun.Engine.Cast has to know which half an entry belongs to. ALL of these
+    -- must hold for a cast to be legal, where one permission suffices.
+    --
+    -- Read directly from the card; CR 113.6e is the rule that puts such an
+    -- ability in the hand, where this reader takes the printed card (#4707).
+    --
+    -- SELF-scoped and printed-only, which is the whole difference between this and
+    -- the other producer CR 601.3's "rule or effect" names. A prohibition aimed at
+    -- a PLAYER -- Rule of Law, Silence -- is a continuous effect on the CR 613.11
+    -- axis (playerAbilities / Effect.AffectPlayers); every entry here is a card
+    -- restricting only itself.
+    castingRestrictions :: [CastingRestriction.CastingRestriction],
+    -- | CR 702.5a: this face's `enchant` abilities, restricting what an Aura spell
+    -- can target and what an Aura can enchant. Empty for every card that is not an
+    -- Aura; the CardSpec lint family holds the biconditional both ways.
+    --
+    -- TargetSlots, not Filters, because CR 702.5d's enchant-player Auras need the
+    -- Pool axis and TargetSlot already is {pool, filter}. A LIST, because CR 702.5c
+    -- makes multiple instances of enchant all apply -- printed order, the order the
+    -- other ability lists on this record keep. Parun.Engine.Card.foldEnchant is the
+    -- conjunction every reader goes through, and the one place that rule is
+    -- applied.
+    --
+    -- PRINTED, and no longer the whole story on the battlefield: an effect can
+    -- GRANT an enchant ability (Modification.GainEnchant), which
+    -- Parun.Engine.Projection seeds this field into and appends to, so
+    -- Parun.Engine.Attach and Parun.Engine.Sba fold the PROJECTED list -- and so do
+    -- the cast and resolve paths, since CR 702.103b's bestow grants a SPELL an
+    -- enchant ability. Parun.Engine.Card.enchantSlotMap is what still reads this
+    -- field alone, for a caller holding a face and no object.
+    enchant :: [TargetSlot.TargetSlot],
+    -- | CR 113.6g: a can't-be-countered ability functions on the stack (Rending
+    -- Volley). Read straight off the card by Event.counter rather than through the
+    -- projection: this reader takes the printed card while the object is on the
+    -- stack (#4707). CR 613 itself does reach the stack, and so does parun's
+    -- projection; this is a fact about ONE reader, not about the rules and not
+    -- about the fold.
+    --
+    -- CR 113.6g's SELF-referential clause only. A permanent's static ability
+    -- about OTHER objects being uncounterable (Spider-Punk) rides
+    -- playerAbilities below instead; Parun.Types.Counterability argues why the two
+    -- carriers cannot be merged.
+    counterability :: Counterability.Counterability,
+    -- | CR 118.8: this face's printed additional costs, paid at the same time as
+    -- the spell's mana cost (Village Rites). Read directly from the card: a cost
+    -- is consulted while the object is in hand, where this reader takes the
+    -- printed card (#4710), or the copy stamp's
+    -- values where it carries one (Game.castingFaceOf). CR 118.8d: this does not
+    -- change the card's mana cost, so 'manaCost' above and every reader of mana
+    -- value is unaffected.
+    --
+    -- CR 118.8c reads these through Parun.Engine.Cost.statesHiddenQuality, which is
+    -- why a cost naming cards of a stated quality in a hidden zone (Magmatic
+    -- Insight's discarded land) excuses a cast an effect instructs "if able".
+    --
+    -- MANDATORY, every one of them: an additional cost whose payment offers the
+    -- caster a choice, or one that pays mana, rides 'additionalCostChoices'
+    -- below.
+    additionalCosts :: [CostComponent.CostComponent Keyword.Keyword],
+    -- | CR 118.8 / 601.2b: this face's printed additional costs whose payment
+    -- offers the caster a CHOICE -- Caustic Exhale's "behold a Dragon or pay
+    -- {1}". Read off the card beside 'additionalCosts' above and for its
+    -- reasons.
+    --
+    -- A SECOND field rather than a shape on the one above, because an option can
+    -- be MANA: CR 601.2f splits a cost into a mana part and the non-mana
+    -- components, a CostComponent is the second half alone, and "or pay {1}" is
+    -- the first. Parun.Types.CostChoice carries the argument, and it is why a
+    -- MANDATORY additional cost paying mana is a choice of one option here --
+    -- Water Whip's "waterbend {5}" (CR 701.67b).
+    --
+    -- Every option applies on top of whichever candidate cost the caster
+    -- announced, exactly as 'additionalCosts' does (CR 118.9d), which is why
+    -- Parun.Engine.Cost.candidateCostsGiven expands the whole candidate list
+    -- rather than the printed cost alone.
+    additionalCostChoices :: [CostChoice.CostChoice],
+    -- | CR 700.2h: the additional cost printed before a mode's effect, keyed by
+    -- that mode's index into 'spell' -- CR 702.172a's spree and CR 702.183a's
+    -- tiered are the two keywords that print them. Absent for a mode that lists
+    -- none, which is every mode of every other card.
+    --
+    -- On the FACE and not on Parun.Types.Mode, because rule 700.2h scopes itself
+    -- to modal SPELLS: the same Mode type carries an activated or triggered
+    -- ability's modes, where no such cost can be printed, and this is cast-time
+    -- cost data of the additionalCosts family above. Paid at CR 601.2f-h with
+    -- them, once the modes are announced -- Parun.Engine.Cast.modeCostTotal, which
+    -- charges a mode chosen twice twice (CR 700.2d).
+    --
+    -- Keys outside 'spell''s mode range are rejected by Parun.Codec.Face rather
+    -- than ignored here: a card whose cost names a mode it does not have is
+    -- mistranscribed, not free.
+    modeCosts :: Map.Map ModeIndex.ModeIndex (Cost.Cost Keyword.Keyword),
+    -- | CR 700.2e: who chooses 'spell''s modes, relative to its controller:
+    -- @You@ but for Fatal Lore's "an opponent chooses one". Bound under
+    -- Parun.Engine.Binding.modeChooser, which its "that player" reads.
+    --
+    -- On the FACE for 'modeCosts''s reason: MTGJSON's AtomicCards, grepped
+    -- 2026-10-23 for "chooses one" after a chooser other than "you", prints it
+    -- on no ability; an ability printing "an opponent chooses one --" would
+    -- refute this.
+    modeChooser :: PlayerRelation.PlayerRelation,
+    -- | CR 101.1: the ceilings this face's own words put on the value of X its
+    -- controller announces at CR 601.2b -- Soul Immolation's "X can't be greater
+    -- than the greatest toughness among creatures you control". Empty for every
+    -- card that states none, which is nearly all of them -- Scryfall
+    -- `o:/X can.t be greater than/`, 2026-08-20, is what finds the ones that do.
+    --
+    -- A LIST because a face can carry more than one such sentence and CR 101.2
+    -- makes every one of them bind: Parun.Engine.Card.merge2 concatenates the two
+    -- halves of a split card here, as it does every other ability list, so CR
+    -- 709.4c's combined view and CR 702.102b's fused split spell answer to both
+    -- halves' ceilings at once. Parun.Engine.Cost.maximumX is where the pair
+    -- becomes one bound.
+    --
+    -- CR 101.1 and not CR 107.3a is the rule with the force here: rule 107.3a
+    -- says only that the controller "chooses and announces the value of X", and
+    -- CR 601.2b says only where in the announcement that happens. Neither bounds
+    -- the choice. What bounds it is the card's own sentence overriding the rules
+    -- that would otherwise leave X free, which is rule 101.1 -- reinforced by CR
+    -- 101.2, the printed sentence being a "can't".
+    --
+    -- ON THE FACE rather than on Parun.Types.CostComponent, and that is what makes
+    -- the field able to answer for both halves of a cost: the ceiling binds ONE
+    -- announced value (CR 107.3a), which may sit in the mana cost (Open the Way's
+    -- {X}{G}{G}), in an additional cost (Soul Immolation's blight X), or in both
+    -- at once. A ceiling carried by the component would be invisible to the mana
+    -- half.
+    --
+    -- Quantities and not Naturals: every printing states a per-board amount, and
+    -- Parun.Engine.Cost.maximumX evaluates it against this face's controller and
+    -- the spell on the stack.
+    --
+    -- Read ONCE, at the announcement, and never again -- CR 601.2b announces the
+    -- value and no later rule re-reads it, so a creature that leaves in response
+    -- does not shrink an X already announced.
+    --
+    -- A SPELL's X alone. The same sentence printed on an ACTIVATED ability bounds
+    -- the X announced through CR 602.2b and lives on
+    -- Parun.Types.ActivatedAbility.maximumX, one card being able to print both.
+    maximumX :: [Quantity.Quantity],
+    -- | CR 101.1: the floor this face's own words put on that X -- Mind Grind's
+    -- "X can't be 0". 0 for a face that states none. A SPELL's X alone, as
+    -- above; an ability's is Parun.Types.ActivatedAbility.minimumX.
+    minimumX :: Natural.Natural,
+    -- | CR 118.9: this face's printed alternative costs, which its controller MAY
+    -- pay rather than the spell's mana cost (Fireblast). CR 118.9c: this does not
+    -- change the card's mana cost.
+    --
+    -- A LIST because a card may print more than one, not because more than one may
+    -- be paid: CR 118.9a applies only one alternative cost to any one spell, which
+    -- is what makes Parun.Engine.Cost.costsFor's list a list of CANDIDATES the
+    -- caster picks from. Each carries its OWN mana part, which is how CR 118.6a's
+    -- second sentence falls out of the shape -- Fireblast's is Just [], a real,
+    -- taxable {0}, not Nothing, and Asmoranomardicadaistinaculdacar pays a {B/R}
+    -- for a printed cost that is Nothing.
+    --
+    -- Printed-only, and deliberately so: an effect that APPLIES an alternative
+    -- cost to a spell carries it elsewhere -- one-shot in Parun.Types.CastOffer,
+    -- standing in Parun.Types.PlayerEffect's CastFromHandWithoutPayingManaCost --
+    -- and one that GRANTS the card one rides the projection
+    -- (ProjectedCharacteristics.grantedAlternativeCosts, Mine Security), and
+    -- Parun.Engine.Cost.candidateCostsFor offers them all side by side. CR
+    -- 118.9 is about SPELLS, so this lives on a face and never on
+    -- ActivatedAbility -- a rules fact, not an elision.
+    --
+    -- An ability (CR 113.6d), so Parun.Engine.Cost.candidateCostsGiven offers
+    -- none once a layer-6 wipe is in force on the card where it lies (CR
+    -- 613.1f).
+    --
+    -- CONDITIONED only where the card states a condition (CR 604.2), which is
+    -- Parun.Types.AlternativeCost's own field. Rule 702.34a's flashback cost is
+    -- still deliberately NOT one of these: its gate is a ZONE rather than a
+    -- condition over game state, so it rides its keyword and
+    -- Parun.Engine.Cost.costsFor offers it by zone.
+    alternativeCosts :: [AlternativeCost.AlternativeCost],
+    -- | CR 601.2f / 113.6d: this face's printed reductions of ITS OWN cost to
+    -- cast -- Thrasta, Tempest's Roar's "This spell costs {3} less to cast for
+    -- each other spell cast this turn". Parun.Types.CostReduction argues why
+    -- playerAbilities below cannot hold one.
+    --
+    -- The third member of the additionalCosts/alternativeCosts family above, and
+    -- read the way they are: straight off the card or its copy stamp
+    -- (Game.castingFaceOf), and dropped when a layer-6 wipe is in force on the
+    -- object (CR 113.6d, 613.1f). A GRANTED one is read off the projection
+    -- instead (ProjectedCharacteristics.grantedCostReductions).
+    -- Parun.Engine.Cost.selfReductions is the one reader, and it folds both in
+    -- alongside the CR 613.11 reductions other permanents generate, so CR
+    -- 601.2f's "minus all cost reductions" is applied once over all of them.
+    --
+    -- A LIST because nothing in CR 601.2f caps how many such lines a face may
+    -- print; every one of them applies (Edgewalker's ruling, one type over).
+    costReductions :: [CostReduction.CostReduction],
+    -- | CR 604.1/604.2 / 611.1: this face's printed PLAYER and RULES-modifying
+    -- static abilities (Rule of Law, Thalia, Sapphire Medallion, Reliquary Tower).
+    -- The sibling of staticAbilities on the axis CR 613.10/613.11 put OUTSIDE the
+    -- layer system, so these are read by Parun.Engine.PlayerEffect and rewritten
+    -- by no layer -- carried on Parun.Types.ProjectedCharacteristics all the same,
+    -- for the reason blockRequirements below gives.
+    playerAbilities :: [PlayerStaticAbility.PlayerStaticAbility],
+    -- | CR 604.1/604.2 / 509.1c: this face's printed BLOCKING REQUIREMENTS -- "all
+    -- creatures able to block enchanted creature do so" (Lure).
+    -- Parun.Types.BlockRequirement argues why neither staticAbilities nor
+    -- playerAbilities can hold one. Read by Parun.Engine.BlockRequirement and
+    -- rewritten by no layer, since CR 613.11 applies these after the layer system
+    -- rather than inside it.
+    --
+    -- CARRIED through the projection all the same, as Parun.Types.RuleAbilities on
+    -- Parun.Types.ProjectedCharacteristics: CR 707.2 names rules text among the
+    -- copiable values, so a copy answers with the copied face's list and a merged
+    -- permanent with every component's (CR 702.140e). The gatherers read it
+    -- through Parun.Engine.Projection.ruleAbilitiesOf rather than off a face.
+    blockRequirements :: [BlockRequirement.BlockRequirement],
+    -- | CR 604.1/604.2 / 509.1a: this face's printed BLOCKING PERMISSIONS --
+    -- "this creature can block an additional creature each combat" (Foriysian
+    -- Brigade); read by Parun.Engine.BlockPermission, rewritten by no layer, for
+    -- blockRequirements' CR 613.11 reason.
+    --
+    -- Its own field rather than an arm of combatRestrictions below, because
+    -- these ADD where a restriction BINDS: Parun.Types.BlockPermission's header
+    -- works that out.
+    blockPermissions :: [BlockPermission.BlockPermission],
+    -- | CR 604.1/604.2 / 508.1d: this face's printed ATTACKING REQUIREMENTS --
+    -- "creatures enchanted player controls attack each combat if able" (Curse of
+    -- the Nightly Hunt). The twin of blockRequirements on the other side of the
+    -- combat phase; read by Parun.Engine.AttackRequirement, rewritten by no
+    -- layer, for that field's CR 613.11 reason.
+    attackRequirements :: [AttackRequirement.AttackRequirement],
+    -- | CR 604.1/604.2 / 508.1c / 509.1b: this face's printed COMBAT RESTRICTIONS
+    -- -- "enchanted creature can't attack or block" (Pacifism); read by
+    -- Parun.Engine.CombatRestriction, rewritten by no layer, for
+    -- blockRequirements' CR 613.11 reason. ONE list for both of Pacifism's halves,
+    -- where the requirements take two fields: Parun.Types.CombatRestriction argues
+    -- why the axis that split those is absent here.
+    combatRestrictions :: [CombatRestriction.CombatRestriction],
+    -- | CR 604.1/604.2 / 701.21a / 101.2: this face's printed SACRIFICE
+    -- PROHIBITIONS -- "creatures you control but don't own ... can't be
+    -- sacrificed" (Garland, Royal Kidnapper); read by
+    -- Parun.Engine.SacrificeRestriction, rewritten by no layer, for
+    -- blockRequirements' CR 613.11 reason.
+    --
+    -- Its own field rather than an arm of combatRestrictions above, because the
+    -- two forbid unrelated game actions: a combat restriction is read only by
+    -- the two declarations CR 508.1 and CR 509.1 describe, and this is read
+    -- wherever CR 701.21a's sacrifice is reached from.
+    sacrificeRestrictions :: [SacrificeRestriction.SacrificeRestriction],
+    -- | CR 604.1/604.2 / 502.3 / 101.2: this face's printed UNTAP PROHIBITIONS --
+    -- "each land with an activated ability that isn't a mana ability doesn't untap
+    -- during its controller's untap step" (Tsabo's Web), and the untaps its
+    -- controller may decline (Amber Prison); read by
+    -- Parun.Engine.UntapRestriction, rewritten by no layer, for
+    -- blockRequirements' CR 613.11 reason.
+    --
+    -- Its own field rather than an arm of sacrificeRestrictions above, for the
+    -- reason that field gives one line up: the two forbid unrelated game actions,
+    -- and this one is read at exactly one site, CR 502.3's turn-based action.
+    --
+    -- The STATIC prohibition only. The one-shots -- "doesn't untap during its
+    -- controller's NEXT untap step" and CR 701.43a's exert -- ride the victim, as
+    -- Object.doesNotUntapFor and Object.exertedBy, and neither reaches this
+    -- field.
+    untapRestrictions :: [UntapRestriction.UntapRestriction],
+    -- | CR 604.1/604.2 / 702.122d / 101.2: this face's printed CREW PROHIBITIONS
+    -- -- "enchanted creature can't attack, block, or crew Vehicles" (Revoke
+    -- Privileges); read by Parun.Engine.CrewRestriction, rewritten by no layer,
+    -- for blockRequirements' CR 613.11 reason.
+    --
+    -- Its own field rather than an arm of combatRestrictions above even though
+    -- Revoke Privileges writes all three of its clauses in one sentence: rule
+    -- 702.122d forbids paying a COST, where CR 508.1c and CR 509.1b forbid a
+    -- combat declaration, so nothing that reads one may read the other.
+    crewRestrictions :: [CrewRestriction.CrewRestriction],
+    -- | CR 604.1/604.2 / 115 / 101.2: this face's printed TARGETING
+    -- PROHIBITIONS that are not keywords -- "creatures can't be the targets of
+    -- spells" (Dense Foliage); read by Parun.Engine.TargetRestriction, rewritten
+    -- by no layer, for blockRequirements' CR 613.11 reason.
+    targetRestrictions :: [TargetRestriction.TargetRestriction],
+    -- | CR 604.1/604.2 / 702.3b: this face's printed ATTACKING PERMISSIONS --
+    -- "can attack as though it didn't have defender"; read by
+    -- Parun.Engine.AttackPermission, rewritten by no layer, for
+    -- blockRequirements' CR 613.11 reason.
+    attackPermissions :: [AttackPermission.AttackPermission],
+    -- | CR 604.1/604.2 / 303.4 / 301.5 / 101.2: this face's printed ATTACHMENT
+    -- PROHIBITIONS -- "enchanted land ... can't be enchanted by other Auras"
+    -- (Consecrate Land), "this creature can't be equipped" (Goblin Brawler);
+    -- read by Parun.Engine.AttachRestriction, rewritten by no layer,
+    -- for blockRequirements' CR 613.11 reason.
+    --
+    -- Its own field rather than an arm of untapRestrictions above, for the reason
+    -- that field gives: the two forbid unrelated game actions, and this one is
+    -- read wherever CR 701.3a's attach is judged.
+    attachRestrictions :: [AttachRestriction.AttachRestriction],
+    -- | CR 604.1/604.2 / 400.4a / 101.2: this face's printed ENTRY PROHIBITIONS
+    -- -- "creature cards in graveyards and libraries can't enter the
+    -- battlefield" (Grafdigger's Cage); read by Parun.Engine.EntryRestriction,
+    -- rewritten by no layer, for blockRequirements' CR 613.11 reason.
+    --
+    -- Its own field rather than an arm of attachRestrictions above, for the
+    -- reason that field gives: the two forbid unrelated game actions, and this
+    -- one is read at the one funnel every battlefield entry reaches.
+    entryRestrictions :: [EntryRestriction.EntryRestriction],
+    -- | CR 604.1\/604.2 \/ 122.6 \/ 101.2: this face's printed COUNTER
+    -- PROHIBITIONS -- "counters can't be put on artifacts, creatures,
+    -- enchantments, or lands" (Solemnity); read by
+    -- Parun.Engine.CounterRestriction, rewritten by no layer, for
+    -- blockRequirements' CR 613.11 reason.
+    --
+    -- Its own field rather than an arm of entryRestrictions above, for the reason
+    -- that field gives about attachRestrictions: the two forbid unrelated game
+    -- actions, and this one is read at the funnel every counter placement
+    -- reaches.
+    --
+    -- The PLAYER half of the same printings is not here. "Players can't get
+    -- counters" is scoped to a player and reaches a disjoint kind domain, so it
+    -- is a playerAbilities row carrying PlayerEffect.CantGetCounters.
+    counterRestrictions :: [CounterRestriction.CounterRestriction],
+    -- | CR 604.1\/604.2 \/ 602.2 \/ 101.2: this face's printed ACTIVATION
+    -- PROHIBITIONS -- "its activated abilities can't be activated" (Arrest);
+    -- read by Parun.Engine.ActivationProhibition, rewritten by no layer, for
+    -- blockRequirements' CR 613.11 reason.
+    --
+    -- Its own field rather than an arm of counterRestrictions above, for the
+    -- reason that field gives: the two forbid unrelated game actions, and this
+    -- one is read at the two windows an activated ability is offered through
+    -- (CR 602.2 and CR 605.3a).
+    --
+    -- The PLAYER half of the same sentence is not here. Sen Triplets' "your
+    -- opponents can't ... activate abilities" is scoped to a player, so it is a
+    -- playerAbilities row carrying PlayerEffect.CantActivateAbilities.
+    activationProhibitions :: [ActivationProhibition.ActivationProhibition],
+    -- | CR 604.1/604.2 / 508.1c / 508.1h: this face's printed COSTS TO ATTACK --
+    -- Ghostly Prison's {2} per attacking creature; read by Parun.Engine.AttackCost,
+    -- rewritten by no layer, for blockRequirements' CR 613.11 reason.
+    --
+    -- Its own field rather than an arm of combatRestrictions above, for the reason
+    -- Parun.Types.AttackCost's header gives: a creature under one of these CAN
+    -- attack, so it must stay on CR 508.1a's candidate list, where a
+    -- CombatRestriction takes its subject off.
+    attackCosts :: [AttackCost.AttackCost],
+    -- | CR 604.1/604.2 / 509.1b / 509.1d: this face's printed COSTS TO BLOCK --
+    -- Oppressive Rays' {3} per blocking creature; read by Parun.Engine.BlockCost,
+    -- rewritten by no layer, for blockRequirements' CR 613.11 reason.
+    --
+    -- attackCosts' twin, its own field for that field's reason with CR 509.1a's
+    -- candidate list substituted for CR 508.1a's, and separate from it because one
+    -- printed sentence can tax one action without the other: Ghostly Prison taxes
+    -- only attacking, and Hipparion, taxing only blocking, fills only this.
+    -- Oppressive Rays fills both, which is what its "can't attack or block" says.
+    blockCosts :: [BlockCost.BlockCost],
+    -- | CR 103.5b: this face's "any time you could mulligan" actions, in printed
+    -- order, each one a Parun.Types.HandAction -- its effects in written order,
+    -- and the clause gating whether it may be taken (Serum Powder writes none).
+    -- Read directly from the card: the ability functions in the HAND (CR 113.6),
+    -- where this reader takes the printed card (#4709).
+    --
+    -- A LIST OF ACTIONS and not one action's effects: nothing in CR 103 caps how
+    -- many such actions a face may grant, and two are two separate offers a
+    -- player picks between, which is why Parun.Types.HandActionIndex exists.
+    -- An empty list means the face grants no such action at all, which is
+    -- how a card that says nothing about this window is never offered one.
+    mulliganActions :: [HandAction.HandAction card],
+    -- | CR 103.6 / 103.6a / 103.6b: this face's opening-hand actions, shaped
+    -- exactly like mulliganActions above and read the same way (CR 113.6,
+    -- #4709) -- Leyline of Sanctity's rule 103.6a battlefield action, and
+    -- Chancellor of the Forge's rule 103.6b reveal.
+    --
+    -- The SIBLING of mulliganActions, not a reuse: the two windows are at different
+    -- times (CR 103.5b sits AT a declaration, CR 103.6 opens once the whole
+    -- mulligan process is complete), and a card that acts at one must not be
+    -- offered at the other.
+    --
+    -- Unlike that window, this one reveals each card at most once -- CR 103.6b,
+    -- and Parun.Types.HandWindowCap for why the cap spares a rule 103.6a action.
+    -- Proved on a card granting one of each by MulliganSpec's "CR 103.6: a card
+    -- revealed first may still begin the game on the battlefield".
+    --
+    -- Gemstone Caverns is the printing that writes a HandAction's gate: "you're
+    -- not the starting player" allows the action to some players and not others,
+    -- which no CR 103.5b card says.
+    openingHandActions :: [HandAction.HandAction card],
+    -- | CR 116.2: the special actions this face's printed text grants -- CR
+    -- 116.2e's "you may discard this card any time you could cast an instant"
+    -- (Circling Vultures). WHERE it is read from is the reader's question and
+    -- differs per row. Both rows are read through
+    -- Parun.Engine.Projection.specialActionsOf: the copiable snapshot, since a
+    -- permanent that is a copy grants what it copied (CR 707.2a), and nothing
+    -- once a layer-6 wipe has removed the object's abilities (CR 613.1f). CR
+    -- 116.2e's functions in the HAND (CR 113.6), where
+    -- Parun.Engine.Action.discardableCards asks it.
+    --
+    -- A LIST rather than a flag, matching every neighbouring permission field:
+    -- nothing in CR 116.2 caps how many such lines a face may print, and
+    -- Parun.Types.SpecialAction says which rows will land here.
+    specialActions :: [SpecialAction.SpecialAction]
+  }
+  deriving (Eq, Ord, Show)
+
+-- | What a face that says nothing about its spell means: one mode with no
+-- effects and no targets, chosen. Every land and vanilla creature has exactly
+-- this, which is why Parun.Codec.Face makes it the default rather than a required
+-- key.
+--
+-- Its selection must agree with Parun.Codec.Modal.defaultSelection, or the
+-- "selection" key would be written out for every vanilla card in the corpus.
+defaultSpell :: Modal.Modal card (GrantedAbility.GrantedAbility card)
+defaultSpell =
+  Modal.MkModal
+    (Seq.singleton (Mode.MkMode Seq.empty Map.empty))
+    (ModeSelection.ChooseExactly 1)
+
+-- | The keywords a face prints, with the multiplicity dropped. What a
+-- membership question wants -- "does this card print flash" -- where the count
+-- matters only to a rule that says each instance acts separately (CR 702.85c).
+keywordSet :: Face card -> Set.Set Keyword.Keyword
+keywordSet = Map.keysSet . keywords

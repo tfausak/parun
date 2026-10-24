@@ -11,7 +11,7 @@ turn if able).
   characteristics, so a copy does not take them. `Printing` gains
   `lights :: Set Natural`, empty for every traditional card. Card files stay
   `Card`s and never carry lights; a deck built in Haskell names the printing.
-  `Pawl.Codec.Printing.reference` writes a name only for a printing with no
+  `Parun.Codec.Printing.reference` writes a name only for a printing with no
   lights.
 - **The Attraction deck** is `GameState.attractionDecks :: Map PlayerId (Seq
   ObjectId)`: ordered like a library, its objects carrying `Zone.Command` (CR

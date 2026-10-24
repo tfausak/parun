@@ -72,7 +72,7 @@ draw a game on entry for events that happened at another level:
 
 ### 2. One choke point for prompting
 
-`Pawl.Engine.Game` is the lowest module every prompt site already imports, so
+`Parun.Engine.Game` is the lowest module every prompt site already imports, so
 the wrapper lives there:
 
 ```haskell
@@ -152,7 +152,7 @@ card of synthetic surface, following the `synthetic-restart` /
 
 ### The tests
 
-Both in `Pawl.GameSpec`, both seeded with `nextTimestamp` already near
+Both in `Parun.GameSpec`, both seeded with `nextTimestamp` already near
 `mandatoryLoopLimit` so they cost tens of iterations rather than a thousand, and
 both driven by an answer function that passes for a fixed number of prompts and
 then concedes — so the *exempt* case terminates instead of hanging, which is

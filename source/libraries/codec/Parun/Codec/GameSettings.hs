@@ -1,0 +1,48 @@
+{-# LANGUAGE ApplicativeDo #-}
+
+module Parun.Codec.GameSettings where
+
+import qualified Parun.Codec.AttackOption as AttackOption
+import qualified Parun.Codec.Emperors as Emperors
+import qualified Parun.Codec.RangeOfInfluence as RangeOfInfluence
+import qualified Parun.Codec.Teams as Teams
+import qualified Parun.JsonCodec.Codec as Codec
+import qualified Parun.JsonCodec.Common as Common
+import qualified Parun.JsonCodec.Fields as Fields
+import qualified Parun.Types.GameSettings as GameSettings
+
+-- | An OBJECT and not a bare boolean: each further option of CR 800.2 is
+-- another field here, and a wire shape that changed kind
+-- when the second one landed would break every document written before it.
+--
+-- 'Fields.required' rather than a default, for Parun.Codec.Player's reason: a
+-- document that does not say which options are in play is one whose reader
+-- would have to guess, and CR 800.2's options are settled before the game
+-- begins.
+codec :: Codec.Codec GameSettings.GameSettings
+codec = Fields.object $ do
+  brawl <- Fields.required "brawl" Common.boolean GameSettings.brawl
+  attackOption <- Fields.required "attackOption" (Common.maybe AttackOption.codec) GameSettings.attackOption
+  teams <- Fields.required "teams" Teams.codec GameSettings.teams
+  sharedTeamTurns <- Fields.required "sharedTeamTurns" Common.boolean GameSettings.sharedTeamTurns
+  sharedTeamLife <- Fields.required "sharedTeamLife" Common.boolean GameSettings.sharedTeamLife
+  rangeOfInfluence <- Fields.required "rangeOfInfluence" RangeOfInfluence.codec GameSettings.rangeOfInfluence
+  deployCreatures <- Fields.required "deployCreatures" Common.boolean GameSettings.deployCreatures
+  emperors <- Fields.required "emperors" Emperors.codec GameSettings.emperors
+  twoHeadedGiant <- Fields.required "twoHeadedGiant" Common.boolean GameSettings.twoHeadedGiant
+  alternatingTeams <- Fields.required "alternatingTeams" Common.boolean GameSettings.alternatingTeams
+  ante <- Fields.required "ante" Common.boolean GameSettings.ante
+  pure
+    GameSettings.MkGameSettings
+      { GameSettings.brawl = brawl,
+        GameSettings.attackOption = attackOption,
+        GameSettings.teams = teams,
+        GameSettings.sharedTeamTurns = sharedTeamTurns,
+        GameSettings.sharedTeamLife = sharedTeamLife,
+        GameSettings.rangeOfInfluence = rangeOfInfluence,
+        GameSettings.deployCreatures = deployCreatures,
+        GameSettings.emperors = emperors,
+        GameSettings.twoHeadedGiant = twoHeadedGiant,
+        GameSettings.alternatingTeams = alternatingTeams,
+        GameSettings.ante = ante
+      }

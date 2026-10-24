@@ -1,0 +1,136 @@
+module Parun.Codec.LastKnownSpec where
+
+import qualified Data.Map.Strict as Map
+import qualified Data.Set as Set
+import qualified Data.Text as Text
+import qualified Parun.Codec.LastKnown as LastKnown
+import qualified Parun.Codec.ProjectedCharacteristicsSpec as ProjectedCharacteristicsSpec
+import qualified Parun.JsonCodec.Common as Common
+import qualified Parun.Spec as Spec
+import qualified Parun.Types.Acquisition as Acquisition
+import qualified Parun.Types.AttackTarget as AttackTarget
+import qualified Parun.Types.CardName as CardName
+import qualified Parun.Types.Color as Color
+import qualified Parun.Types.Compares as Compares
+import qualified Parun.Types.Comparison as Comparison
+import qualified Parun.Types.Condition as Condition
+import qualified Parun.Types.ControlClock as ControlClock
+import qualified Parun.Types.Cost as Cost
+import qualified Parun.Types.CounterKind as CounterKind
+import qualified Parun.Types.Gift as Gift
+import qualified Parun.Types.Keyword as Keyword
+import qualified Parun.Types.KeywordInstance as KeywordInstance
+import qualified Parun.Types.LastKnown as LastKnown
+import qualified Parun.Types.ManaCost as ManaCost
+import qualified Parun.Types.ManaSymbol as ManaSymbol
+import qualified Parun.Types.ObjectId as ObjectId
+import qualified Parun.Types.PlayerChoice as PlayerChoice
+import qualified Parun.Types.PlayerId as PlayerId
+import qualified Parun.Types.PrintingId as PrintingId
+import qualified Parun.Types.Quantity as Quantity
+import qualified Parun.Types.Source as Source
+import qualified Parun.Types.Subtype as Subtype
+import qualified Parun.Types.Timestamp as Timestamp
+import qualified Parun.Types.Zone as Zone
+
+-- | The bare projection an all-default value writes, reused as the `copiable`
+-- half below.
+minimalJson :: String
+minimalJson = "{\"names\":[\"Mountain\"],\"cardTypes\":[{\"type\":\"Land\"}]}"
+
+spec :: (Monad m, Monad n) => Spec.Spec m n -> n ()
+spec s = Spec.describe s "Parun.Codec.LastKnown" $ do
+  -- CR 608.2h, every axis. `characteristics` and `copiable` are the same type
+  -- and hold DIFFERENT values here, because CR 707.2's layer-1-only reading is
+  -- exactly what the whole fold loses -- an encoder writing one where the other
+  -- belongs would round trip against equal values.
+  Spec.it s "what an object was, with an attachment" $
+    Common.assertCodec
+      s
+      LastKnown.codec
+      LastKnown.MkLastKnown
+        { LastKnown.characteristics = ProjectedCharacteristicsSpec.testCharacteristics,
+          LastKnown.controller = PlayerId.MkPlayerId 1,
+          LastKnown.owner = PlayerId.MkPlayerId 6,
+          LastKnown.source = Source.OfCard (PrintingId.MkPrintingId 2),
+          LastKnown.counters = Map.singleton CounterKind.PlusOnePlusOne 3,
+          LastKnown.copiable = ProjectedCharacteristicsSpec.minimalCharacteristics,
+          LastKnown.attached = Set.singleton (ObjectId.MkObjectId 9),
+          LastKnown.host = Just (ObjectId.MkObjectId 11),
+          LastKnown.chosenNames = Map.singleton Acquisition.Own (Map.singleton (PlayerId.MkPlayerId 8) (CardName.MkCardName (Text.pack "Goblin Piker"))),
+          LastKnown.chosenPlayers = Map.singleton (Acquisition.Copied (Timestamp.MkTimestamp 5)) (Map.singleton (PlayerChoice.Promised Gift.Food (KeywordInstance.Own 1)) (PlayerId.MkPlayerId 3)),
+          LastKnown.chosenColors = Map.singleton Acquisition.Own (Set.singleton Color.Green),
+          LastKnown.chosenSubtype = Map.singleton (Acquisition.Copied (Timestamp.MkTimestamp 6)) Subtype.Goblin,
+          LastKnown.attacking = False,
+          LastKnown.attackTarget = Nothing,
+          LastKnown.blocking = True,
+          LastKnown.protector = Just (PlayerId.MkPlayerId 7),
+          LastKnown.paidCosts = Map.singleton (Keyword.Offspring (Cost.MkCost (Just (ManaCost.MkManaCost [ManaSymbol.Generic 2])) [])) (Map.singleton (KeywordInstance.Own 1) 1),
+          LastKnown.prototyped = True,
+          LastKnown.announcedX = Just 4,
+          LastKnown.controlClock = Map.singleton (PlayerId.MkPlayerId 1) ControlClock.SinceLastUpkeep,
+          LastKnown.zone = Zone.Battlefield,
+          LastKnown.home = Zone.Command,
+          LastKnown.pile = Just (PlayerId.MkPlayerId 6),
+          LastKnown.lapsedGrants = Set.singleton (Condition.Compares (Compares.MkCompares (Quantity.Literal 3) Comparison.AtLeast (Quantity.Literal 5)))
+        }
+      ( " {\"characteristics\":"
+          <> ProjectedCharacteristicsSpec.testCharacteristicsJson
+          <> ",\"controller\":1,\"owner\":6,\"source\":{\"type\":\"OfCard\",\"value\":2}"
+          <> ",\"counters\":[{\"key\":{\"type\":\"PlusOnePlusOne\"},\"value\":3}]"
+          <> ",\"copiable\":"
+          <> minimalJson
+          <> ",\"attached\":[9],\"host\":11"
+          <> ",\"chosenNames\":[{\"key\":{\"type\":\"Own\"},\"value\":{\"8\":\"Goblin Piker\"}}],\"chosenPlayers\":[{\"key\":{\"type\":\"Copied\",\"value\":5},\"value\":[{\"key\":{\"type\":\"Promised\",\"value\":[{\"type\":\"Food\"},{\"type\":\"Own\",\"value\":1}]},\"value\":3}]}],\"chosenColors\":[{\"key\":{\"type\":\"Own\"},\"value\":[{\"type\":\"Green\"}]}],\"chosenSubtype\":[{\"key\":{\"type\":\"Copied\",\"value\":6},\"value\":{\"type\":\"Goblin\"}}],\"attacking\":false,\"attackTarget\":null,\"blocking\":true,\"protector\":7"
+          <> ",\"paidCosts\":[{\"key\":{\"type\":\"Offspring\",\"value\":{\"mana\":[{\"type\":\"Generic\",\"value\":2}]}},\"value\":[{\"key\":{\"type\":\"Own\",\"value\":1},\"value\":1}]}]"
+          <> ",\"prototyped\":true"
+          <> ",\"announcedX\":4"
+          <> ",\"controlClock\":[{\"player\":1,\"clock\":{\"type\":\"SinceLastUpkeep\"}}]"
+          <> ",\"zone\":{\"type\":\"Battlefield\"},\"home\":{\"type\":\"Command\"},\"pile\":6"
+          <> ",\"lapsedGrants\":[{\"type\":\"Compares\",\"value\":{\"measured\":{\"type\":\"Literal\",\"value\":3},\"comparison\":{\"type\":\"AtLeast\"},\"threshold\":{\"type\":\"Literal\",\"value\":5}}}]} "
+      )
+  -- CR 109.3: neither an attachment nor a chosen name is a characteristic, and
+  -- most objects have neither, so the absent case is written out rather than left
+  -- to the case above.
+  Spec.it s "an object that was attached to nothing, carried no counters and chose no name" $
+    Common.assertCodec
+      s
+      LastKnown.codec
+      LastKnown.MkLastKnown
+        { LastKnown.characteristics = ProjectedCharacteristicsSpec.minimalCharacteristics,
+          LastKnown.controller = PlayerId.MkPlayerId 4,
+          LastKnown.owner = PlayerId.MkPlayerId 4,
+          LastKnown.source = Source.OfToken (PrintingId.MkPrintingId 5),
+          LastKnown.counters = Map.empty,
+          LastKnown.copiable = ProjectedCharacteristicsSpec.minimalCharacteristics,
+          LastKnown.attached = Set.empty,
+          LastKnown.host = Nothing,
+          LastKnown.chosenNames = Map.empty,
+          LastKnown.chosenPlayers = Map.empty,
+          LastKnown.chosenColors = Map.empty,
+          LastKnown.chosenSubtype = Map.empty,
+          LastKnown.attacking = True,
+          LastKnown.attackTarget = Just (AttackTarget.OfPlaneswalker (ObjectId.MkObjectId 8)),
+          LastKnown.blocking = False,
+          LastKnown.protector = Nothing,
+          LastKnown.paidCosts = Map.empty,
+          LastKnown.prototyped = False,
+          LastKnown.announcedX = Nothing,
+          LastKnown.controlClock = Map.empty,
+          LastKnown.zone = Zone.Stack,
+          LastKnown.home = Zone.Battlefield,
+          LastKnown.pile = Nothing,
+          LastKnown.lapsedGrants = Set.empty
+        }
+      ( " {\"characteristics\":"
+          <> minimalJson
+          <> ",\"controller\":4,\"owner\":4,\"source\":{\"type\":\"OfToken\",\"value\":5}"
+          <> ",\"counters\":[]"
+          <> ",\"copiable\":"
+          <> minimalJson
+          <> ",\"attached\":[]"
+          <> ",\"chosenNames\":[],\"attacking\":true,\"attackTarget\":{\"type\":\"OfPlaneswalker\",\"value\":8},\"blocking\":false,\"protector\":null"
+          <> ",\"zone\":{\"type\":\"Stack\"}} "
+      )
+  Spec.it s "has a schema" $
+    Common.assertHasSchema s LastKnown.codec

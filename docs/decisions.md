@@ -1,6 +1,6 @@
 # Decisions
 
-Every behaviour pawl commits to that nothing official forces: a question the
+Every behaviour parun commits to that nothing official forces: a question the
 CR leaves undefined, ambiguous, or open to more than one reading, and no
 Gatherer ruling or erratum settles. Each entry records the reading chosen so
 nobody re-derives it, possibly differently, and names the rules it rests on so
@@ -20,7 +20,7 @@ Each entry gives:
 
 - **Question**: what the rules leave open.
 - **Rules**: the CR rules read, and the CR date they were read against.
-- **Decision**: the reading pawl takes.
+- **Decision**: the reading parun takes.
 - **Rejected**: the other readings, and why each lost.
 - **Site**: the code that implements it, and the test that proves it.
 - **Issue**: where it was decided.
@@ -38,8 +38,8 @@ Entries are ordered by the first rule each cites.
   battlefield, so CR 608.3f never confers token-ness.
 - **Rejected**: Making it a token, on CR 111.13 and 707.10f's unconditional
   "as it resolves".
-- **Site**: `Pawl.Engine.Game.componentIsToken`'s `OfSpellCopy` arm, proved by
-  `Pawl.MutateSpec`'s "CR 730.2d/608.3f a merged permanent whose topmost
+- **Site**: `Parun.Engine.Game.componentIsToken`'s `OfSpellCopy` arm, proved by
+  `Parun.MutateSpec`'s "CR 730.2d/608.3f a merged permanent whose topmost
   component is a spell copy is no token".
 - **Issue**: none.
 
@@ -56,7 +56,7 @@ Entries are ordered by the first rule each cites.
 - **Rejected**: Pairing by some engine order, which makes the changer's choice
   for them; re-dividing the replaced total freely, which changes the division
   CR 115.7f forbids.
-- **Site**: Pawl.Engine.Resolve.Effect's reaimDivisions;
+- **Site**: Parun.Engine.Resolve.Effect's reaimDivisions;
   data/scenarios/divide's Redirect case.
 - **Issue**: #5235.
 
@@ -71,8 +71,8 @@ Entries are ordered by the first rule each cites.
   still playing.
 - **Rejected**: Keeping the passes: it can resolve a spell a player would
   have answered after the board changed.
-- **Site**: `Pawl.Engine.Engine.priorityLoop`, the `Concession.Concedes` arm,
-  proved by `Pawl.GameSpec`'s "CR 800.4a/117.4 priority after a concede goes
+- **Site**: `Parun.Engine.Engine.priorityLoop`, the `Concession.Concedes` arm,
+  proved by `Parun.GameSpec`'s "CR 800.4a/117.4 priority after a concede goes
   to the next seat, and the pass cycle restarts".
 - **Issue**: #143.
 
@@ -86,8 +86,8 @@ Entries are ordered by the first rule each cites.
   118.7e's mechanism. The 2 life is no half.
 - **Rejected**: Reducing nothing: matches no reading. The engine picking: the
   choice is the payer's. A life half: no rule reduces a cost by life.
-- **Site**: `Pawl.Engine.Cost.reductionHalvesOf`, proved by
-  `Pawl.PlayerEffectSpec`'s "CR 118.7e a hybrid Phyrexian reduction offers its
+- **Site**: `Parun.Engine.Cost.reductionHalvesOf`, proved by
+  `Parun.PlayerEffectSpec`'s "CR 118.7e a hybrid Phyrexian reduction offers its
   two colours" and the `data/scenarios/player-effect/cr-118-7e-*g-u-p*`
   scenarios.
 - **Issue**: #1995.
@@ -100,8 +100,8 @@ Entries are ordered by the first rule each cites.
 - **Decision**: One event per recipient, source and moment; the amounts sum.
 - **Rejected**: Two events, which applies CR 615.10 twice. Merging in
   `applyDamage`: combat and fights have several dealers.
-- **Site**: `Pawl.Engine.Replacement.oneEventPerRecipient`, proved by
-  `Pawl.DamageReplacementSpec`'s "CR 120.4 one sentence naming alice twice
+- **Site**: `Parun.Engine.Replacement.oneEventPerRecipient`, proved by
+  `Parun.DamageReplacementSpec`'s "CR 120.4 one sentence naming alice twice
   deals her ONE event, of 6".
 - **Issue**: #2586.
 
@@ -114,8 +114,8 @@ Entries are ordered by the first rule each cites.
 - **Decision**: The blank stays, counts for nothing, and the word goes before
   it: Wolf in Otter _____ Clothing.
 - **Rejected**: not recorded.
-- **Site**: `Pawl.Engine.NameWords.insertAfter`, proved by
-  `Pawl.StickerSpec`'s "CR 123.6a Wolf in _____ Clothing offers four
+- **Site**: `Parun.Engine.NameWords.insertAfter`, proved by
+  `Parun.StickerSpec`'s "CR 123.6a Wolf in _____ Clothing offers four
   positions, and the word goes before a following blank".
 - **Issue**: #4900.
 
@@ -130,8 +130,8 @@ Entries are ordered by the first rule each cites.
 - **Rejected**: 0 for an empty set: no rule gives a maximum over nothing a
   value, and the CR legislates 0 case by case (CR 714.2d). Dropping
   undeterminable members: that is the maximum of a set the card never named.
-- **Site**: `Pawl.Engine.Count.aggregate`'s `Aggregation.Greatest` arm, proved
-  by `Pawl.CountSpec`'s "CR 208.2a Greatest over an EMPTY matched set is
+- **Site**: `Parun.Engine.Count.aggregate`'s `Aggregation.Greatest` arm, proved
+  by `Parun.CountSpec`'s "CR 208.2a Greatest over an EMPTY matched set is
   Nothing, not 0" and "a member whose quantity cannot be determined makes the
   whole maximum Nothing".
 - **Issue**: none.
@@ -156,9 +156,9 @@ Entries are ordered by the first rule each cites.
   resolves. Revealed until it leaves exile, as CR 406.3's lasting look: a
   reveal is not an instruction letting a player look, and the card would stay
   public after the spell is gone.
-- **Site**: `Pawl.Engine.Cast.castProposed` and
-  `Pawl.Engine.Activate.activateAbilityWith`, revealing what
-  `Pawl.Engine.Target.chooseTargets` drew; proved by `Pawl.ExileSpec`'s "CR
+- **Site**: `Parun.Engine.Cast.castProposed` and
+  `Parun.Engine.Activate.activateAbilityWith`, revealing what
+  `Parun.Engine.Target.chooseTargets` drew; proved by `Parun.ExileSpec`'s "CR
   406.4 the card drawn for a spell's target is hidden while it is paid for,
   and revealed to both seats once cast" and its activation twin.
 - **Issue**: #2568.
@@ -172,7 +172,7 @@ Entries are ordered by the first rule each cites.
 - **Decision**: The team chooses card by card, and its first seat still
   playing speaks for it. Not asked for a team of one.
 - **Rejected**: not recorded.
-- **Site**: `Pawl.Engine.Ante.payOut`, proved by the scenario "CR 407.2 /
+- **Site**: `Parun.Engine.Ante.payOut`, proved by the scenario "CR 407.2 /
   104.2c the winning team's primary player shares out the ante".
 - **Issue**: none.
 
@@ -185,8 +185,8 @@ Entries are ordered by the first rule each cites.
   with none, that turn's cleanup.
 - **Rejected**: The first combat phase anywhere, an opponent's included.
   Carrying it to a later turn of theirs.
-- **Site**: `Pawl.Engine.Expiry`'s `AtEndOfCombatOn` drop arm, proved by
-  `Pawl.ExpirySpec`'s "CR 500.5a / 500.8 only a combat PHASE of a later turn
+- **Site**: `Parun.Engine.Expiry`'s `AtEndOfCombatOn` drop arm, proved by
+  `Parun.ExpirySpec`'s "CR 500.5a / 500.8 only a combat PHASE of a later turn
   of that player ends it" and "CR 611.2a a next turn with no combat phase
   takes it at its cleanup".
 - **Issue**: #525.
@@ -214,8 +214,8 @@ Entries are ordered by the first rule each cites.
   permanent tapped that a larger set would have untapped. Leaving a
   stunned permanent out of the count, which would let the player untap
   more than the cap names by choosing one.
-- **Site**: `Pawl.Engine.UntapRestriction.settle`, called from
-  `Pawl.Engine.Engine.untapAll`. The Static Orb and Winter Orb scenarios
+- **Site**: `Parun.Engine.UntapRestriction.settle`, called from
+  `Parun.Engine.Engine.untapAll`. The Static Orb and Winter Orb scenarios
   under `data/scenarios/untap-restriction/` prove it.
 - **Issue**: #5531.
 
@@ -231,8 +231,8 @@ Entries are ordered by the first rule each cites.
   "before it was removed from combat" by analogy.
 - **Rejected**: Every defending player: under CR 802.4b's separate judging,
   two players could block it at once. Nobody: contradicts CR 506.4c.
-- **Site**: `Pawl.Engine.Combat.attackersOn`, proved by
-  `Pawl.PlaneswalkerCombatSpec`'s "CR 802.4a once the planeswalker is gone,
+- **Site**: `Parun.Engine.Combat.attackersOn`, proved by
+  `Parun.PlaneswalkerCombatSpec`'s "CR 802.4a once the planeswalker is gone,
   only ITS controller may block the creature attacking nothing".
 - **Issue**: #2899.
 
@@ -252,7 +252,7 @@ Entries are ordered by the first rule each cites.
   payability turns on mana abilities CR 508.1i offers only after the
   creatures are chosen. Counting every taxed creature as unable: CR 508.1d
   makes paying optional, not impossible.
-- **Site**: `Pawl.Engine.Combat.couldAttack`, proved by data/scenarios/combat's
+- **Site**: `Parun.Engine.Combat.couldAttack`, proved by data/scenarios/combat's
   "CR 508.1d Season of the Witch destroys creatures that could have attacked
   only by paying a cost".
 - **Issue**: #5441.
@@ -272,7 +272,7 @@ Entries are ordered by the first rule each cites.
 - **Rejected**: Turning every such creature face up when the combat damage
   step begins: the event replaced is the creature's own assignment, which has
   not happened while the attackers assign.
-- **Site**: `Pawl.Engine.Damage.turnUpToAssign`, proved by
+- **Site**: `Parun.Engine.Damage.turnUpToAssign`, proved by
   data/scenarios/face-down's "CR 510.1 a Craw Wurm Illusionary Mask cast face
   down turns face up to assign its 6 as it blocks". The trampler half is a
   regression fence: no board drives it.
@@ -295,7 +295,7 @@ Entries are ordered by the first rule each cites.
   to assign elsewhere, not a reading of what the creature attacks. Leaving
   the Mask's creature face down: a later "yes" would then have it assign as
   the face-down 2/2.
-- **Site**: `Pawl.Engine.Damage.attackerAssignment` and `wouldAssign`. Both
+- **Site**: `Parun.Engine.Damage.attackerAssignment` and `wouldAssign`. Both
   halves are regression fences: no board drives either.
 - **Issue**: #5437.
 
@@ -311,8 +311,8 @@ Entries are ordered by the first rule each cites.
   triggers fire. The card shows CR 709.4's combined view where it lands.
 - **Rejected**: Rewinding: CR 601.2e covers only illegal casts. Stopping
   partway: no rule ends a cast midway.
-- **Site**: `Pawl.Engine.Cast.castSpellWith`, the `Event.changeZoneCasting`
-  step, proved by `Pawl.CastRestrictionSpec`'s "CR 601.2i a cast redirected
+- **Site**: `Parun.Engine.Cast.castSpellWith`, the `Event.changeZoneCasting`
+  step, proved by `Parun.CastRestrictionSpec`'s "CR 601.2i a cast redirected
   off the stack is still a cast" and "CR 709.4 a cast redirected off the stack
   keeps both halves".
 - **Issue**: none; #781 settled the face ordering beside it.
@@ -329,8 +329,8 @@ Entries are ordered by the first rule each cites.
   it never does.
 - **Rejected**: Reading them as synonyms: the gained-late case tells them
   apart.
-- **Site**: `Pawl.Types.TriggerLimit` and `Pawl.Types.TriggerFrequency`;
-  `Pawl.SpeedSpec`'s "CR 702.179d an ability gained after the turn's first
+- **Site**: `Parun.Types.TriggerLimit` and `Parun.Types.TriggerFrequency`;
+  `Parun.SpeedSpec`'s "CR 702.179d an ability gained after the turn's first
   life loss still triggers once" proves the gained-late case.
 - **Issue**: none.
 
@@ -348,9 +348,9 @@ Entries are ordered by the first rule each cites.
   616.1 loop and the CR 603.6a scan.
 - **Rejected**: A zone change, which needs a `from` zone a creation lacks and
   would announce a departure from a zone the card was never in.
-- **Site**: `Pawl.Engine.Event.mintCard`, reached from
-  `Pawl.Engine.Resolve.Effect`'s `Effect.Conjure` arm, proved by
-  `Pawl.ConjureSpec`'s "CR 603.6 a conjure into a graveyard is no zone change,
+- **Site**: `Parun.Engine.Event.mintCard`, reached from
+  `Parun.Engine.Resolve.Effect`'s `Effect.Conjure` arm, proved by
+  `Parun.ConjureSpec`'s "CR 603.6 a conjure into a graveyard is no zone change,
   so a graveyard trigger does not see it".
 - **Issue**: #2809.
 
@@ -369,14 +369,14 @@ Entries are ordered by the first rule each cites.
 - **Rejected**: An allow-list of state that counts, the earlier event-log
   reading, which misses every state-only instruction writing a field it does
   not name.
-- **Site**: `Pawl.Engine.Resolve.Effect.happenedBetween`, with the two ruled
+- **Site**: `Parun.Engine.Resolve.Effect.happenedBetween`, with the two ruled
   shapes in `applyClauseEffects`'s `instructionDone`. The state half is
   proved by the scenario "CR 603.12 a choice that records no event still arms
   its when you do". Copies proved: `exiledWith` by "CR 603.12 an empty mill
   after a token ceased in exile arms no reflexive", `exilePiles` by "CR 603.12
   an empty mill after a face-down card left exile arms no reflexive",
   `nextTimestamp` by "CR 701.28e / 603.12 an ignored convert arms no
-  reflexive", `nextEventGroup` by `Pawl.ResolveSpec`'s "CR 118.12 Victimize
+  reflexive", `nextEventGroup` by `Parun.ResolveSpec`'s "CR 118.12 Victimize
   with no creature to sacrifice returns nothing". The other copies are a
   regression fence.
 - **Issue**: none.
@@ -397,9 +397,9 @@ Entries are ordered by the first rule each cites.
   effect and the card the ability affects. It would apply in layer 7b with
   CR 613.7a's timestamp, so an earlier base-setting effect would lose to it.
   It would also split a grafted P/T ability from a grafted changeling or
-  devoid, which pawl already treats as characteristic-defining.
-- **Site**: `Pawl.Engine.Projection.View.withMergedAbilities`, proved by
-  `Pawl.MutateSpec`'s "CR 702.140e a Cubwarden merged over or under
+  devoid, which parun already treats as characteristic-defining.
+- **Site**: `Parun.Engine.Projection.View.withMergedAbilities`, proved by
+  `Parun.MutateSpec`'s "CR 702.140e a Cubwarden merged over or under
   Tarmogoyf keeps its power and toughness ability" and fenced by "CR
   604.3a/613.4a Harmonious Archon's 3/3 outranks the Tarmogoyf ability
   merged under a Cubwarden".
@@ -415,7 +415,7 @@ Entries are ordered by the first rule each cites.
 - **Rejected**: Nothing moves, since the card was in no zone. It loses
   because a library still gains a card, which is what the clause keeps out
   of mana abilities.
-- **Site**: `Pawl.Engine.ManaAbility.movesLibraryCard`'s `Effect.Conjure` arm,
+- **Site**: `Parun.Engine.ManaAbility.movesLibraryCard`'s `Effect.Conjure` arm,
   proved by the scenario "CR 605.1a conjuring into a library keeps an ability
   that adds mana off the mana path" on Synthetic Seeded Grove: no printing
   conjures inside an ability that could add mana.
@@ -452,7 +452,7 @@ Entries are ordered by the first rule each cites.
 - **Rejected**: The pre-batch board that the batch's other members are judged
   against. CR 616.1g speaks only to the order the two events' effects are
   chosen in, not to which board each collects from.
-- **Site**: `Pawl.Engine.Event.runEntry`, proved by the scenario "CR 614.12
+- **Site**: `Parun.Engine.Event.runEntry`, proved by the scenario "CR 614.12
   a Clone reanimated by a sweep collects its own copy effect from the live
   board".
 - **Issue**: none.
@@ -475,7 +475,7 @@ Entries are ordered by the first rule each cites.
   read on its own. The only ruling on this sentence contradicts it.
 - **Site**: Temporary Truce and Truce in `data/cards/` (a `ForEach` over the
   players whose body is `ChooseNumber` then `Draw`), proved by
-  `Pawl.ResolveSpec`'s "CR 608.2f a seat's draw, dredge included, happens before
+  `Parun.ResolveSpec`'s "CR 608.2f a seat's draw, dredge included, happens before
   the next seat chooses".
 - **Issue**: #5239.
 
@@ -492,7 +492,7 @@ Entries are ordered by the first rule each cites.
 - **Rejected**: Re-reading the power after the turn: no rule re-derives an
   event's amount, and the replacement's text keeps the event rather than
   restating it.
-- **Site**: `Pawl.Engine.Event`'s `DamageRewrite.TurnFaceUp` arm, proved by
+- **Site**: `Parun.Engine.Event`'s `DamageRewrite.TurnFaceUp` arm, proved by
   data/scenarios/face-down's "CR 614.1a a Craw Wurm Illusionary Mask cast face
   down turns face up to deal Rabid Bite's damage, still the 2 its face-down
   power fixed".
@@ -514,9 +514,9 @@ Entries are ordered by the first rule each cites.
   make a stolen land sacrificed to its controller's cost count; and crediting
   a state-based action to the spell whose damage led to it, which CR 704.3
   performs on its own when a player would receive priority.
-- **Site**: `Pawl.Engine.Event.causedBy` and `causeNow`,
-  `Pawl.Engine.Resolve.Effect.applyEffectWith` and
-  `Pawl.Engine.Cost.payComponent`, proved by the `sacred-ground-*` and
+- **Site**: `Parun.Engine.Event.causedBy` and `causeNow`,
+  `Parun.Engine.Resolve.Effect.applyEffectWith` and
+  `Parun.Engine.Cost.payComponent`, proved by the `sacred-ground-*` and
   `spiritual-focus-*` scenarios.
 - **Issue**: #5530.
 
@@ -532,8 +532,8 @@ Entries are ordered by the first rule each cites.
 - **Rejected**: Holding only when nothing was sacrificed, CR 118.12's "started
   to pay" test: "that many" is the instruction, and CR 609.3's "as much as
   possible" is not all of it.
-- **Site**: `Pawl.Engine.Resolve.ifTakenHolds` and `recordTaken`, fed by
-  `Pawl.Engine.Resolve.Effect`'s PlayerSacrifices arm. Proved by the
+- **Site**: `Parun.Engine.Resolve.ifTakenHolds` and `recordTaken`, fed by
+  `Parun.Engine.Resolve.Effect`'s PlayerSacrifices arm. Proved by the
   scenarios "CR 609.3 Lich sacrificing two of three loses alice the game" and
   "CR 609.3 Lich sacrificing three of three keeps alice in".
 - **Issue**: #5442.
@@ -547,7 +547,7 @@ Entries are ordered by the first rule each cites.
   names permitted types rather than saying "can't".
 - **Rejected**: Each "only" as a prohibition, which pulls in CR 101.2 and has
   the two clauses forbid each other's types.
-- **Site**: `Pawl.Engine.Mana.spendableAs`, proved by the scenario "CR 609.4b
+- **Site**: `Parun.Engine.Mana.spendableAs`, proved by the scenario "CR 609.4b
   two only-clauses about one red mana each permit their own type" on
   Celestial Dawn and Synthetic Verdant Prism: Celestial Dawn is the one
   printing with such a clause.
@@ -563,7 +563,7 @@ Entries are ordered by the first rule each cites.
   own, so an `All` with an unevaluable conjunct is false.
 - **Rejected**: Substituting 0: CR 208.2a is scoped to characteristic-defining
   abilities, which a condition is not.
-- **Site**: `Pawl.Engine.Condition.holds`, proved by the scenario "CR
+- **Site**: `Parun.Engine.Condition.holds`, proved by the scenario "CR
   702.100c a Raptor One with the Stars made an enchantment keeps evolve and
   does not evolve", where CR 702.100c agrees with this reading.
 - **Issue**: none.
@@ -614,8 +614,8 @@ Entries are ordered by the first rule each cites.
   ("It only changes what is printed on the card") describe text. Leaving
   written mana types alone as if they were symbols: Oracle writes them as
   words.
-- **Site**: `Pawl.Engine.Filter.rewrite`'s HasColor arm and
-  `Pawl.Engine.Projection.Rewrite`'s rewriteModification, rewriteFace,
+- **Site**: `Parun.Engine.Filter.rewrite`'s HasColor arm and
+  `Parun.Engine.Projection.Rewrite`'s rewriteModification, rewriteFace,
   rewriteManaFilter, rewriteCostScale and Devotion arm; proved by the
   `data/scenarios/text-change/` scenarios.
 - **Issue**: #4819.
@@ -639,8 +639,8 @@ Entries are ordered by the first rule each cites.
   reading: CR 612.1 reaches "words or symbols printed on that object", and
   CR 207.2 gives reminder text no game function, so the rule's own words are
   not the card's.
-- **Site**: `Pawl.Engine.Projection.mintedTriggeredAbilitiesOf` and
-  `Pawl.Engine.Count.abilitiesOf`, which mint without a swap; proved by the
+- **Site**: `Parun.Engine.Projection.mintedTriggeredAbilitiesOf` and
+  `Parun.Engine.Count.abilitiesOf`, which mint without a swap; proved by the
   scenarios "CR 207.2a / 612.2 a Sleight of Mind on Dalkovan Packbeasts
   leaves its mobilized Warriors red" and "CR 207.2a / 612.2 an evolved
   Ministrant of Obligation still leaves Spirits".
@@ -654,9 +654,9 @@ Entries are ordered by the first rule each cites.
 - **Rules**: CR 613.7a, 613.1f, 613.7b, 701.60b, 701.60c; CR of 2026-08-07.
 - **Decision**: The permanent's own timestamp, for both halves.
 - **Rejected**: The moment it became suspected.
-- **Site**: `Pawl.Engine.Projection.designationGathered` and
-  `Pawl.Engine.CombatRestriction.gathered`'s designation rows, proved by
-  `Pawl.FaceDownSpec`'s "CR 613.7f turning face down restamps the permanent
+- **Site**: `Parun.Engine.Projection.designationGathered` and
+  `Parun.Engine.CombatRestriction.gathered`'s designation rows, proved by
+  `Parun.FaceDownSpec`'s "CR 613.7f turning face down restamps the permanent
   after a removal that had wiped its grant" and its face-up twin.
 - **Issue**: PR #1607.
 
@@ -672,7 +672,7 @@ Entries are ordered by the first rule each cites.
 - **Rejected**: Recording the leave: CR 702.26b overrides rules that don't
   name phasing. Leaving it unreachable: the wish belongs to a separate game
   (CR 729.1a).
-- **Site**: `Pawl.Engine.Setup.applyCrossings`, proved by `Pawl.SetupSpec`'s
+- **Site**: `Parun.Engine.Setup.applyCrossings`, proved by `Parun.SetupSpec`'s
   "CR 702.26b a phased-out permanent a subgame takes leaves the main game and
   triggers nothing".
 - **Issue**: #2468.
@@ -688,7 +688,7 @@ Entries are ordered by the first rule each cites.
 - **Rejected**: Finding nothing, since CR 702.99c ends the encoding when the
   creature leaves. CR 608.2h reads a departed source as it last existed, and
   the card was encoded on it then.
-- **Site**: `Pawl.Engine.Resolve.Slots.objectRefObjects`'s
+- **Site**: `Parun.Engine.Resolve.Slots.objectRefObjects`'s
   `ObjectRef.EachCardEncodedOnSource` arm, proved by the scenario "CR 702.99c
   a Piker killed with its cipher trigger on the stack still casts the
   copy".
@@ -707,7 +707,7 @@ Entries are ordered by the first rule each cites.
   status, stops Cubwarden over a nightbound Werewolf turning at day. "Any
   component back face up" leaves a mixed pile with nightbound back face up
   after every transform, so it transforms again on every check.
-- **Site**: `Pawl.Engine.Game.isFrontFaceUp`, proved by `Pawl.MutateSpec`'s
+- **Site**: `Parun.Engine.Game.isFrontFaceUp`, proved by `Parun.MutateSpec`'s
   "CR 730.2i/702.145c a Cubwarden over a nightbound Werewolf turns with the day
   and back with the night".
 - **Issue**: #5037.
@@ -726,7 +726,7 @@ Entries are ordered by the first rule each cites.
   max speed ability at 5. Capping speed at 4: no rule states it, and CR
   702.179d's "less than 4" limits only its own climb, though Gomif's need to
   grant the excess implies a cap otherwise.
-- **Site**: `Pawl.Engine.Speed.maxSpeed`, proved by `Pawl.SpeedSpec`'s "CR
+- **Site**: `Parun.Engine.Speed.maxSpeed`, proved by `Parun.SpeedSpec`'s "CR
   702.178a past 4 the Raceway keeps its max speed ability" and "CR 702.178a
   past max speed the Surveyor's ability is still offered", both through
   Synthetic Speed Boost.
@@ -748,10 +748,10 @@ Entries are ordered by the first rule each cites.
 - **Rejected**: An ordinary activation at priority: by then the roll is over,
   so the reroll reaches no die. A static modifier carrying the printed cost:
   it dodges summoning sickness and prohibitions.
-- **Site**: `Pawl.Types.ActivationRestriction.DuringDieRoll`, gated in
-  `Pawl.Engine.ActivationRestriction`, and
-  `Pawl.Engine.Resolve.Effect.throwDice`'s `windowCandidates`, proved by
-  `Pawl.DiceSpec`'s "CR 706.2b Goblin Bookie rerolls another player's die"
+- **Site**: `Parun.Types.ActivationRestriction.DuringDieRoll`, gated in
+  `Parun.Engine.ActivationRestriction`, and
+  `Parun.Engine.Resolve.Effect.throwDice`'s `windowCandidates`, proved by
+  `Parun.DiceSpec`'s "CR 706.2b Goblin Bookie rerolls another player's die"
   and "CR 117.1b the Bookie cannot be activated at priority".
 - **Issue**: PR #4020.
 
@@ -768,8 +768,8 @@ Entries are ordered by the first rule each cites.
 - **Rejected**: Reading every entry through its printed face. That turns CR
   729.1b's bar on effects into a bar on what the object is, and it lets the
   wish name a card by a face the object does not have.
-- **Site**: `Pawl.Engine.Event.eligible`, proved by
-  `Pawl.OutsideTheGameSpec`'s "CR 708.2/729.4 a manifested main-game sorcery
+- **Site**: `Parun.Engine.Event.eligible`, proved by
+  `Parun.OutsideTheGameSpec`'s "CR 708.2/729.4 a manifested main-game sorcery
   is offered to a subgame's wish as a creature and not as a sorcery".
 - **Issue**: none.
 
@@ -789,8 +789,8 @@ Entries are ordered by the first rule each cites.
   halves share. Ordering the two abilities by CR 613: they tie on timestamp
   (CR 613.7a), neither changes the other, and CR 613.8 falls back to
   timestamp.
-- **Site**: `Pawl.Engine.Card.merge2` and its `definedBox`, reached through
-  `combined`. `Pawl.CardSpec`'s SplitBox group proves the disjoint and
+- **Site**: `Parun.Engine.Card.merge2` and its `definedBox`, reached through
+  `combined`. `Parun.CardSpec`'s SplitBox group proves the disjoint and
   one-half cases, and "CR 709.4 the left half answers for a box both halves
   print or define" the power and toughness boxes on Synthetic Rival Golem //
   Synthetic Rival Giant: no split printing has a creature half. "CR 709.4
@@ -815,8 +815,8 @@ Entries are ordered by the first rule each cites.
   would override the perpetual reading at this one zone change and no other.
   Following only the leading card, as `carryOver` does, because a spell melds
   into nothing. A game-long object id: a second identity model.
-- **Site**: `Pawl.Engine.Event.perpetuate` and its call in `meld`, proved by
-  `Pawl.MeldSpec`'s "CR 712.21c a perpetual grant on a melded permanent
+- **Site**: `Parun.Engine.Event.perpetuate` and its call in `meld`, proved by
+  `Parun.MeldSpec`'s "CR 712.21c a perpetual grant on a melded permanent
   follows both cards it becomes" and "a perpetual grant naming a meld
   component follows onto the permanent the pair melds into".
 - **Issue**: #2657.
@@ -833,8 +833,8 @@ Entries are ordered by the first rule each cites.
 - **Rejected**: The literal reading: an ineligible active player blocks
   sentence 1, fails sentence 2's departure condition, and the crown never
   moves, which makes sentence 3 unreachable.
-- **Site**: `Pawl.Engine.Monarch.reassignOnDeparture`, proved by
-  `Pawl.DepartureSpec`'s "CR 725.4 the crown skips a seat that can't become
+- **Site**: `Parun.Engine.Monarch.reassignOnDeparture`, proved by
+  `Parun.DepartureSpec`'s "CR 725.4 the crown skips a seat that can't become
   the monarch".
 - **Issue**: #178.
 
@@ -847,7 +847,7 @@ Entries are ordered by the first rule each cites.
 - **Decision**: The active team decides; its primary player chooses among the
   eligible active players.
 - **Rejected**: Always the seat the turn began with.
-- **Site**: `Pawl.Engine.Game.heirOnDeparture`, proved by the scenario "CR
+- **Site**: `Parun.Engine.Game.heirOnDeparture`, proved by the scenario "CR
   725.4 the active team's primary player names the new monarch" and its two
   controls.
 - **Issue**: #4142.
@@ -862,8 +862,8 @@ Entries are ordered by the first rule each cites.
   combined back face, expanded into its cards only on departure.
 - **Rejected**: One component per card: "topmost" gets two heads and no
   tie-break. Refusing the merge: the CR states no exclusion.
-- **Site**: `Pawl.Types.MergeComponent.OfMeld` and
-  `Pawl.Engine.Event.mergeComponents`, proved by `Pawl.MutateSpec`'s "CR
+- **Site**: `Parun.Types.MergeComponent.OfMeld` and
+  `Parun.Engine.Event.mergeComponents`, proved by `Parun.MutateSpec`'s "CR
   730.2a/712.8g Cubwarden merges with a melded permanent, over and under".
 - **Issue**: PR #3456.
 
@@ -887,8 +887,8 @@ Entries are ordered by the first rule each cites.
   - Where detection is uncertain, the engine errs towards seeing no loop.
 - **Rejected**: Forbidding only the last occurrence's choice. Letting a
   shorter loop nested inside a longer one hide the longer loop's players.
-- **Site**: `Pawl.Engine.Fragmented.forbidden` and `lapIsRead`, proved by
-  `Pawl.FragmentedSpec`'s "an activation is refused as announced, not as a
+- **Site**: `Parun.Engine.Fragmented.forbidden` and `lapIsRead`, proved by
+  `Parun.FragmentedSpec`'s "an activation is refused as announced, not as a
   whole", "an activation is refused as paid, not as announced", "a choice the
   resolution offers does not make a repeated activation a new one" and their
   siblings.
@@ -908,8 +908,8 @@ Entries are ordered by the first rule each cites.
   "remains in its current zone" cannot be expressed once the entrant is
   materialised, and a surviving row stays a CR 616.1b candidate beside live
   ones.
-- **Site**: `Pawl.Engine.Departure.controlEffectsEnd` and
-  `givesControlOnEntryTo`, proved by `Pawl.ReplacementSpec`'s "CR 616.1b a
+- **Site**: `Parun.Engine.Departure.controlEffectsEnd` and
+  `givesControlOnEntryTo`, proved by `Parun.ReplacementSpec`'s "CR 616.1b a
   departed player's row is not a candidate, so carol is not asked" and the
   scenario "CR 800.4a a departing player's shield is not a control effect, so
   it stays".
@@ -930,7 +930,7 @@ Entries are ordered by the first rule each cites.
 - **Rejected**: One reveal answering every such ability: it gives each trigger
   a reveal its own static ability did not take, which CR 607.1's "not by any
   other ability" excludes.
-- **Site**: `Pawl.Engine.Event.revealUnderStatics` and
+- **Site**: `Parun.Engine.Event.revealUnderStatics` and
   `RevealCause.AsDrawnUnder`, proved by the scenario "CR 607.2h each of two
   Rowens reveals the first draw and draws once for its own reveal".
 - **Issue**: none.

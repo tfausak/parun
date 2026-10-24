@@ -2,17 +2,17 @@
 
 **Status:** approved (brainstorm), pending spec review
 **Date:** 2026-07-24
-**Topic:** replace the hand-maintained `Pawl.Cards` record with a lazily loading,
+**Topic:** replace the hand-maintained `Parun.Cards` record with a lazily loading,
 caching registry keyed on a card's slugified name (#145)
 
 ## Motivation
 
-`Pawl.Cards` is 449 lines of hand-maintained indirection over files that are
+`Parun.Cards` is 449 lines of hand-maintained indirection over files that are
 already the source of truth. Adding a card edits three places — a record field, a
 `loadPrinting` line, and a record-construction line — and every fixture that
 wants one card threads the whole `Cards` record to reach one field (1,622
 references across 30 spec modules). The `data/cards/*.json` files are already
-loaded through `Pawl.Codec`; only the path to them is written by hand.
+loaded through `Parun.Codec`; only the path to them is written by hand.
 
 Two further consumers duplicate the same loading: `source/benchmark/Main.hs` has
 its own private `loadPrinting`, and a future interactive CLI will need the same
@@ -43,15 +43,15 @@ names — so loading everything up front to fill a record is the wrong shape.
   temporary directory.
 - **No eviction, no size bound, no invalidation.** A registry is
   write-once-per-key and lives as long as its owner.
-- **No change to the card file format** and no change to `Pawl.Codec`'s parsing
+- **No change to the card file format** and no change to `Parun.Codec`'s parsing
   beyond the slug rule below.
 
 ## Design
 
 ### 1. The slug rule
 
-`Codec.slugify :: Text -> Text` stays where it is — `Pawl.Codec` is already the
-data-file boundary, and `Pawl.Registry` importing it is a legal sibling import.
+`Codec.slugify :: Text -> Text` stays where it is — `Parun.Codec` is already the
+data-file boundary, and `Parun.Registry` importing it is a legal sibling import.
 Its rule becomes:
 
 1. **Case-fold** with `Text.toCaseFold` (not `toLower`; folding maps `ß` to `ss`,
@@ -104,14 +104,14 @@ In the **library**, since the benchmark and a future CLI want it as much as the
 tests do. Per the one-type-per-module rule:
 
 ```haskell
--- Pawl.Type.Registry
+-- Parun.Type.Registry
 data Registry = MkRegistry
   { root :: FilePath,
     cache :: MVar.MVar (Map.Map Text.Text Card.Card)  -- keyed by slug
   }
   deriving (Eq)
 
--- Pawl.Registry
+-- Parun.Registry
 new      :: FilePath -> IO Registry
 card     :: Registry -> String -> IO Card.Card
 printing :: Registry -> String -> IO Printing.Printing
@@ -144,8 +144,8 @@ Three deliberate choices:
   Enumerating a corpus is a test-suite concern, and the test suite already
   depends on `directory`.
 
-`Pawl.Registry` is the library's **first module that performs IO** — everything
-else, `Pawl.Codec` included, is pure. That is the point: it is the IO shell
+`Parun.Registry` is the library's **first module that performs IO** — everything
+else, `Parun.Codec` included, is pure. That is the point: it is the IO shell
 around a pure codec, and it is the only place in the library that touches a file
 system. It needs no new dependency: `MVar` comes from `base`,
 `Data.Text.IO.readFile` from `text`, and `Map` from `containers`, all of which
@@ -190,7 +190,7 @@ directly; a fixture that needs several takes the `Registry` and becomes `IO`.
 The QuickCheck properties in `PropertySpec` reach the registry through
 `QC.ioProperty`.
 
-`Pawl.Cards` survives only as the four deck definitions, now
+`Parun.Cards` survives only as the four deck definitions, now
 `redDeck :: Registry -> IO Deck.Deck` and siblings. `Cards.allPrintings`,
 `Cards.loadPrinting`, and the `Cards` record itself are deleted, as is the
 benchmark's private `loadPrinting`.
@@ -208,7 +208,7 @@ in the test suite rather than by `allPrintings`:
 
 ## Testing
 
-New `Pawl.RegistrySpec`, covering `Pawl.Registry` and `Pawl.Type.Registry`:
+New `Parun.RegistrySpec`, covering `Parun.Registry` and `Parun.Type.Registry`:
 
 - **Slug table** (unit): the worked examples above, plus leading/trailing
   punctuation, interior `//`, digits, and the empty result.
@@ -231,9 +231,9 @@ Each step is one commit on `main`; the plan will expand them.
 
 1. Rewrite `Codec.slugify` (case-fold, transliterate, drop apostrophes) with its
    unit and property tests; rename the two card files.
-2. Add `Pawl.Type.Registry` and `Pawl.Registry` with `Pawl.RegistrySpec`. No
+2. Add `Parun.Type.Registry` and `Parun.Registry` with `Parun.RegistrySpec`. No
    caller changes yet.
-3. Migrate `Pawl.Support` and `Main` to the registry; reduce `Pawl.Cards` to its
+3. Migrate `Parun.Support` and `Main` to the registry; reduce `Parun.Cards` to its
    decks.
 4. Migrate the spec modules in batches (largest first: `ResolveSpec`,
    `CardSpec`, `GameSpec`, …), reshaping the two corpus-wide tests as they come.
@@ -243,7 +243,7 @@ Each step is one commit on `main`; the plan will expand them.
 ## Risks
 
 - **Size.** ~1,600 mechanical call-site edits across 30 files. Mitigated by
-  phasing: the suite builds and passes at every step, since `Pawl.Cards` and the
+  phasing: the suite builds and passes at every step, since `Parun.Cards` and the
   registry coexist until step 5.
 - **Slug collisions in a future 30k-card pool.** One real pair exists
   (`Glimpse the Unthinkable` vs the MB2 playtest card) and more would arrive with

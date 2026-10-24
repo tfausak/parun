@@ -180,5 +180,5 @@
       }
     }
   ],
-  "note": "Ghitu Fire-Eater's ability, sacrificing it as a cost, goes on the stack aimed at alice, and Synthetic Turn the Blade resolves above it. The departed Fire-Eater cannot be named once it has left, so alice answers with her Cat, which no Human filter offers, and the engine takes its first candidate instead (Pawl.Engine.Resolve.Effect.chooseDamageSource). That the Cat then takes the 2 shows the departed Fire-Eater, a Human only by last known information, was a candidate; with the Sorcerer alone no prompt would come at all and the run would fail. The --control file names the Sorcerer and alice takes the 2."
+  "note": "Ghitu Fire-Eater's ability, sacrificing it as a cost, goes on the stack aimed at alice, and Synthetic Turn the Blade resolves above it. The departed Fire-Eater cannot be named once it has left, so alice answers with her Cat, which no Human filter offers, and the engine takes its first candidate instead (Parun.Engine.Resolve.Effect.chooseDamageSource). That the Cat then takes the 2 shows the departed Fire-Eater, a Human only by last known information, was a candidate; with the Sorcerer alone no prompt would come at all and the run would fail. The --control file names the Sorcerer and alice takes the 2."
 }

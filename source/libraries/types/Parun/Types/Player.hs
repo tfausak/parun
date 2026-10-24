@@ -1,0 +1,296 @@
+module Parun.Types.Player where
+
+import qualified Data.Map.Strict as Map
+import qualified Data.Sequence as Seq
+import qualified Data.Set as Set
+import qualified Numeric.Natural as Natural
+import qualified Parun.Types.CardIdentity as CardIdentity
+import qualified Parun.Types.CardName as CardName
+import qualified Parun.Types.Designation as Designation
+import qualified Parun.Types.GraveyardOrder as GraveyardOrder
+import qualified Parun.Types.OutsideCard as OutsideCard
+import qualified Parun.Types.PlayerCounterKind as PlayerCounterKind
+import qualified Parun.Types.PlayerDesignation as PlayerDesignation
+import qualified Parun.Types.PrintingId as PrintingId
+import qualified Parun.Types.Status as Status
+import qualified Parun.Types.StickerSheet as StickerSheet
+
+data Player = MkPlayer
+  { life :: Integer,
+    -- | CR 103.4 / 119.1: the life total this player began the game with, fixed
+    -- at setup. A shared team total's member holds the team's (CR 119.1a, 810.4,
+    -- CR 810.9a's reading of an individual's total); a restart (CR 727.1) and a
+    -- subgame (CR 729.2) set it afresh under rule 103.
+    startingLife :: Integer,
+    status :: Status.Status,
+    -- | CR 122.1: player counters, counted per kind. Unlike object counters (CR
+    -- 122.2, which cease to exist on a zone change), these persist for the whole
+    -- game -- a player never changes zones. Absent kind means zero
+    -- (Map.findWithDefault 0), the convention Object.counters uses.
+    counters :: Map.Map PlayerCounterKind.PlayerCounterKind Natural.Natural,
+    -- | CR 701.54c: how many times the Ring has tempted this player. Zero until
+    -- it does, and only ever climbs -- nothing in rule 701.54 takes a temptation
+    -- back.
+    --
+    -- Counted rather than derived, because CR 701.54d makes the count larger than
+    -- anything the board remembers: "the Ring tempts a player whenever they
+    -- complete the actions in 701.54a, EVEN IF SOME OR ALL OF THOSE ACTIONS WERE
+    -- IMPOSSIBLE". A player with no creatures is tempted and designates nothing,
+    -- so neither the Ring-bearer nor the emblem's existence can stand in for this.
+    --
+    -- NOT a PlayerCounterKind, though the field beside it would hold a Natural
+    -- per player for free: CR 122.1 makes a counter a MARKER an effect can add or
+    -- remove and a card can count, and rule 701.54 never calls this one. Proliferate
+    -- (CR 701.34a) would find it if it were.
+    --
+    -- Read by Parun.Engine.Ring, which is where CR 701.54c's "as long as the Ring
+    -- has tempted that player N or more times" turns this number into the
+    -- emblem's ability set -- every tier of it.
+    ringTemptations :: Natural.Natural,
+    -- | CR 702.179b: this player's speed, or Nothing for a player who has none.
+    -- "Players do not have speed until a rule or effect sets their speed to a
+    -- specific value", so the absence is a THIRD state and not a zero: CR 704.5aa
+    -- starts a player's engines only when they have NO speed, and would fire
+    -- forever against a player whose speed had been driven to 0 if the two were
+    -- spelled alike.
+    --
+    -- Nothing still READS as zero wherever a card asks (CR 702.179f, "if that
+    -- player has no speed, their speed is 0 for the purpose of an effect that
+    -- refers to speed"), which Parun.Engine.Quantity's Speed arm applies. The
+    -- distinction the Maybe carries is therefore invisible to card text and
+    -- visible only to the two rules that create speed, CR 702.179a and CR
+    -- 702.179c.
+    --
+    -- NOT a PlayerCounterKind, for Player.ringTemptations' reason: CR 122.1
+    -- makes a counter a MARKER an effect can add or remove, and rule 702.179
+    -- never calls speed one -- proliferate (CR 701.34a) would find it if it were.
+    --
+    -- Bounded above at 4 by the only rule that raises it: CR 702.179d increases
+    -- speed only "if your speed is less than 4", and CR 702.179e reads 4 as max
+    -- speed. Nothing in rule 702.179 lowers it.
+    speed :: Maybe Natural.Natural,
+    -- | CR 702.131c \/ 702.195b: the rest-of-game marks this player has, empty
+    -- for a player with none. Written only by Parun.Engine.PlayerDesignation and
+    -- read back by Parun.Engine.Quantity's HasPlayerDesignation arm.
+    --
+    -- A SET per player rather than a seat per mark on GameState, which is where
+    -- the monarch lives: CR 702.131c and CR 702.195b both say "any number of
+    -- players may have [it] at the same time", where CR 725.3 makes the monarch
+    -- unique. An absent member means the player does not have that mark, and
+    -- nothing in either rule takes one back.
+    designations :: Set.Set PlayerDesignation.PlayerDesignation,
+    -- | CR 903.3: the cards this player designated as their commanders, empty
+    -- outside a Commander game. The designation is made before the game begins
+    -- and never changes.
+    --
+    -- A SET, because CR 702.124a's partner abilities designate two cards rather
+    -- than one and CR 702.124g caps every combination of them at two. Which
+    -- pairs are legal is judged before this is written, by
+    -- Parun.Engine.Commander.designations.
+    --
+    -- A CARD IDENTITY and not an ObjectId or a printing: CR 903.3 makes the
+    -- designation "an attribute of the card itself" that it "retains ... even
+    -- when it changes zones", and CR 400.7 mints a fresh id on every one, while
+    -- a printing names every copy of the card (Cid, Timeless Artificer's deck
+    -- holds any number). Object.identity is the card across CR 400.7, and its
+    -- starting owner is the player whose deck designated it, which is the set
+    -- Parun.Engine.Commander.commanderCardOf looks in.
+    commander :: Set.Set CardIdentity.CardIdentity,
+    -- | CR 903.8: how many times this player has cast each of their commanders
+    -- from the command zone this game. The commander tax is {2} for each of
+    -- them. Absent key means zero, the convention `counters` above uses.
+    --
+    -- Counted here rather than on the object for `commander`'s reason -- no object
+    -- survives the round trip. Counts CASTS and not returns, which is the detail
+    -- rule 903.8 turns on: a commander that dies and goes back to the command zone
+    -- without being recast has not made its own next cast any dearer.
+    --
+    -- Keyed PER COMMANDER, which is CR 702.124d: "when casting a commander with
+    -- partner, ignore how many times your other commander has been cast". A
+    -- single counter would charge a partner deck's second commander {2} on its
+    -- first cast. Parun.CommanderSpec's "the other commander is untaxed by the
+    -- first one's casts" is the proof. Keyed by the card's identity, as
+    -- `commander` is, so another deck's copy of the same printing that this
+    -- player has come to own is a different commander (CR 903.8's "it").
+    commanderCasts :: Map.Map CardIdentity.CardIdentity Natural.Natural,
+    -- | CR 903.10a: how much COMBAT damage this player has been dealt by each
+    -- commander, over the course of the game. Absent key means zero, the
+    -- convention `counters` above uses. Only ever climbs -- rule 903.10a counts
+    -- the whole game, so nothing takes damage back out.
+    --
+    -- Keyed by the COMMANDER's card identity, as `commander` above names one,
+    -- and not by an object: CR 400.7 mints a fresh id on every zone change, so
+    -- an id could not survive the commander's first cast. Not by its printing,
+    -- which two decks' copies of one commander share and CR 903.10a's "the same
+    -- commander" does not, nor by its owner, which is CR 702.124d -- "consider
+    -- damage from each of your two commanders separately".
+    commanderDamage :: Map.Map CardIdentity.CardIdentity Natural.Natural,
+    -- | CR 309.2 \/ 309.2a: the dungeon cards this player owns from outside the
+    -- game, empty for a player who brought none. Deck.dungeons is where they come
+    -- from and Parun.Engine.Setup.createDeck copies them here.
+    --
+    -- PRINTINGS and not ObjectIds, for `commander`'s reason turned inside out:
+    -- there is no object at all until CR 701.49a brings a card into the command
+    -- zone, and CR 309.5b removes it from the game and lets the SAME card be
+    -- brought back in as a new object. What persists across both is the printing,
+    -- named by its id (#1592) -- interned by Parun.Engine.Setup.createDeck along
+    -- with the rest of the deck, so it is minted before any of this is read.
+    --
+    -- SEVERAL, which is what makes CR 309.2a's "a dungeon card they own" a choice:
+    -- Parun.Engine.Dungeon.enter raises Prompt.ChooseDungeon over this set. CR
+    -- 309.3's one-at-a-time limit is about the COMMAND ZONE, which
+    -- Parun.Engine.Dungeon.inDungeon holds, and says nothing about how many a player
+    -- may own outside the game.
+    --
+    -- Read only by Parun.Engine.Dungeon. Nothing is taken out of it when a dungeon
+    -- enters the game: CR 309.5b has the player put a dungeon they own back into the
+    -- command zone after finishing one, so this is a supply rather than a stock.
+    dungeons :: Set.Set PrintingId.PrintingId,
+    -- | CR 400.11 \/ 400.11a: the cards this player owns that are outside the game,
+    -- counted per printing. Empty for a player who brought no sideboard.
+    --
+    -- PER PLAYER and not on the GameState, because CR 108.3b leaves no card
+    -- outside the game ownerless -- a sideboard card is owned by "the player who
+    -- started the game with it in their sideboard", and every other one by its
+    -- legal owner. Every rule that reaches in asks for the acting player's OWN
+    -- cards (CR 309.2a, CR 701.23j, CR 701.48a, CR 702.139a), so ownership is the
+    -- key rather than a predicate a reader could forget.
+    --
+    -- PrintingIds and not Printings, and no object minted: Player.dungeons' reason
+    -- exactly. Outside the game is not a zone (CR 400.11), so there is nowhere for
+    -- an object to sit until something brings the card in; CR 400.11c is why
+    -- nothing else can reach these in the meantime.
+    --
+    -- COUNTED and not a set, which is where this parts from `dungeons` above: this
+    -- is a STOCK. Parun.Engine.Event.bringIn spends an entry, because a card
+    -- brought into the game is in the game (CR 400.11b) and the next Burning Wish
+    -- cannot find that same copy again. A dungeon card is never spent (CR 309.5b),
+    -- so its field forgets its counts.
+    --
+    -- NOT merged with `dungeons`, though CR 309.2 puts dungeon cards outside the
+    -- game too: CR 309.2 keeps them out of deck and sideboard both, CR 701.49a
+    -- chooses among them by a rule of its own rather than by a card's filter, and
+    -- CR 309.2d forbids anything else from bringing one in. One map would have
+    -- Parun.Engine.Event.eligible offering dungeon cards to Burning Wish.
+    --
+    -- Where the rest of what is outside the game will land: CR 727.2's restart
+    -- cards (#135). CR 707.13's copy created outside the game did NOT land here:
+    -- CR 109.1 makes it no card, so no wish may reach it, and it is an object for
+    -- the one resolution that offers its cast (GameState.outsideCopies). CR
+    -- 729.4's other half -- the main game's cards, which a subgame sees as
+    -- outside it -- deliberately did NOT land here: those are objects in a game
+    -- that is on hold rather than a count of printings a player set aside, so
+    -- they ride Parun.Types.GameState's outsideObjects and only for as long as
+    -- the subgame runs. Sticker sheets are outside the game too but are not
+    -- cards (CR 123.2); they ride `stickerSheets` below.
+    outsideTheGame :: Map.Map PrintingId.PrintingId Natural.Natural,
+    -- | CR 123.2 / 123.2c: the sticker sheets this player brought, revealed.
+    -- Kept on the player for `dungeons`' reason: CR 727.2 and CR 729.2 rerun
+    -- CR 103.2d's draw with no Deck in hand.
+    stickerSheets :: Seq.Seq StickerSheet.StickerSheet,
+    -- | CR 103.2d: the positions in `stickerSheets` drawn for this game. Only
+    -- their stickers are available (Parun.Engine.Sticker.available).
+    chosenStickerSheets :: Set.Set Natural.Natural,
+    -- | CR 309.7: how many dungeons this player has completed. "A player
+    -- completes a dungeon as that dungeon card is removed from the game", so
+    -- Parun.Engine.Dungeon.remove is the sole writer -- the one function both CR
+    -- 701.49c's venture out of the bottommost room and CR 704.5t's state-based
+    -- action go through. Zero until one is, and only ever climbs: nothing in the
+    -- rules uncompletes a dungeon.
+    --
+    -- Keyed on the dungeon card's OWNER, which is CR 309.6's own word ("the
+    -- dungeon card's owner removes it from the game"). In the venture case the
+    -- owner and the resolving controller coincide; in the state-based action the
+    -- owner is the only player available.
+    --
+    -- A COUNT, beside the names below rather than folded from them: CR 309.5b
+    -- lets the same dungeon be brought back in and completed again, so a player
+    -- who completed Undercity twice has completed two dungeons and one name.
+    -- Gloom Stalker's "as long as you've completed a dungeon" is this compared
+    -- to 1.
+    --
+    -- NOT a PlayerCounterKind, for Player.ringTemptations' reason: CR 122.1 makes
+    -- a counter a MARKER an effect can add or remove, and rule 309 never calls
+    -- this one -- proliferate (CR 701.34a) would find it if it were.
+    --
+    -- Read by Parun.Engine.Quantity's Quantity.DungeonsCompleted arm.
+    completedDungeons :: Natural.Natural,
+    -- | CR 309.7: WHICH dungeons this player has completed, by name -- Acererak
+    -- the Archlich's "if you haven't completed Tomb of Annihilation". Written by
+    -- Parun.Engine.Dungeon.remove beside the tally above, and read by
+    -- Parun.Engine.Quantity's Quantity.CompletedDungeon arm.
+    --
+    -- NAMES and not PrintingIds, because a name is what Acererak's text names and
+    -- CR 201.2a makes sameness of name the question: two printings of one dungeon
+    -- are the same dungeon to it, and a printing id would tell them apart.
+    completedDungeonNames :: Set.Set CardName.CardName,
+    -- | CR 103.2a \/ 702.139b: this player's STARTING DECK, counted per printing --
+    -- their deck once the sideboard has been set aside, and, in a Commander game,
+    -- before the commander is set aside. Empty for a game built without decks.
+    --
+    -- A SNAPSHOT and not a live read of the library, which is the whole reason the
+    -- field exists: CR 702.139b fixes the set at one moment before the game begins,
+    -- and by the time a companion's condition could be asked again the opening hands
+    -- have been drawn and the library no longer holds the deck. Written once per
+    -- game -- by Parun.Engine.Setup.createDeck, and again by
+    -- Parun.Engine.Setup.startGameFromCards for CR 727.1's restart and CR 729.2's
+    -- subgame, each a new game -- and never in between: CR 103.2a names a moment,
+    -- not a state that tracks.
+    --
+    -- The COMMANDER is counted in, which is CR 702.139b's second sentence: "in a
+    -- Commander game, this is also before you've set aside your commander". So this
+    -- is Deck.cards plus Deck.commander, and not what Parun.Engine.Setup.createDeck
+    -- dealt into the library.
+    --
+    -- The SIDEBOARD is not, which is CR 103.2a's first sentence and the reason
+    -- Player.outsideTheGame is a different field: what is set aside is outside the
+    -- game, and what is left is this.
+    --
+    -- The VANGUARD and the DUNGEONS are not either, and for a sharper reason than
+    -- the sideboard's: CR 902.3 and CR 309.2 keep both out of the deck to begin
+    -- with, so neither was ever among the cards a sideboard could be set aside from.
+    --
+    -- PrintingIds and not Printings, and COUNTED, for Player.outsideTheGame's two
+    -- reasons: the ids are interned by Parun.Engine.Setup.createDeck before any of
+    -- this is read, and CR 100.2a lets a deck hold four copies of a card, which a
+    -- set would collapse.
+    --
+    -- Read by Parun.Engine.Companion, which is where CR 702.139a's condition is
+    -- evaluated against it.
+    startingDeck :: Map.Map PrintingId.PrintingId Natural.Natural,
+    -- | CR 103.2b \/ 702.139a: the card this player revealed from outside the game
+    -- as their companion, or Nothing for the players who revealed none -- which is
+    -- every player in a game whose decks brought no companion.
+    --
+    -- An OutsideCard and not an ObjectId of this game: CR 103.2b leaves the
+    -- revealed card OUTSIDE the game, where CR 400.11 gives it no object until
+    -- CR 116.2g brings it in. That is a sideboard printing, or in a subgame a
+    -- main-game object (CR 729.4).
+    --
+    -- ONE, which is CR 103.2b's own cap: "a player may reveal no more than one card
+    -- this way".
+    --
+    -- NOT taken out of Player.outsideTheGame when it is chosen: CR 103.2b's last
+    -- sentence keeps the revealed card out there, and CR 116.2g is what spends it.
+    companion :: Maybe OutsideCard.OutsideCard,
+    -- | CR 116.2g: has this player already taken the companion special action this
+    -- game? "Only if they haven't done so yet this game" is this flag, and
+    -- Parun.Engine.Companion.take is its sole writer.
+    --
+    -- A FLAG and not a count, because rule 116.2g permits the action exactly once
+    -- and nothing in rule 702.139 gives it back; and separate from `companion`
+    -- above rather than clearing it, because CR 702.139c keeps the card in the game
+    -- afterwards and a card that reads "your chosen companion" would still find it.
+    companionTaken :: Bool,
+    -- | CR 404.3: whether this player arranges the cards put into their
+    -- graveyard together, their own standing setting (Parun.Types.GraveyardOrder).
+    graveyardOrder :: GraveyardOrder.GraveyardOrder,
+    -- | The Unstable FAQ: the sprocket this player's CRANK! counter is on,
+    -- which starts the game on the third and moves on at the beginning of each
+    -- of their upkeeps in which they control a Contraption
+    -- (Parun.Engine.Contraption.crank). Not a PlayerCounterKind, for `speed`'s
+    -- reason: a marker no effect adds or removes, which proliferate (CR
+    -- 701.34a) would find if it were one.
+    crankCounter :: Designation.Designation
+  }
+  deriving (Eq, Ord, Show)

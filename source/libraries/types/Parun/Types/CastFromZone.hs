@@ -1,0 +1,47 @@
+module Parun.Types.CastFromZone where
+
+import qualified Numeric.Natural as Natural
+import qualified Parun.Types.CostComponent as CostComponent
+import qualified Parun.Types.Filter as Filter
+import qualified Parun.Types.InZone as InZone
+import qualified Parun.Types.Keyword as Keyword
+import qualified Parun.Types.PermissionLimit as PermissionLimit
+import qualified Parun.Types.PermissionPool as PermissionPool
+import qualified Parun.Types.PermissionVerb as PermissionVerb
+
+-- | The payload of Parun.Types.PlayerEffect's CastFrom arm: whose copy of which
+-- zone the permission opens, which cards in it it covers, and how often it may
+-- be used.
+--
+-- SPUN OUT rather than left as two fields on the arm, Parun.Types.GrantPlayFromExile
+-- being the precedent one type over -- that grant is the other CR 601.3 permission
+-- crossing owners, and it carries its scope beside its criterion the same way.
+--
+-- The zone reference is the whole of what lets a permission name a hand or a
+-- graveyard somebody else owns (Sen Triplets). Parun.Engine.Cast.zoneCandidates
+-- offers every player's copy of a per-player zone, so the OWNER conjunct is this
+-- record's rather than that list's: Yawgmoth's Will writes PlayerRef.Relative You
+-- and reaches no other graveyard for it.
+--
+-- The Filter reads the PRINTED card in the zone, so a continuous effect changing
+-- a card's own characteristics there is invisible to the narrowing (#4712).
+-- The LIMIT is the permission's own, which is what makes the whole record the
+-- key Parun.Types.GameState.castPermissionsUsedThisTurn spends: two Assemble the
+-- Players grant two budgets, and the source object beside this value is what
+-- tells them apart. The VERB rides in the same key, so a Play permission's one
+-- budget is spent by a land play or a cast alike (Serra Paragon).
+data CastFromZone = MkCastFromZone
+  { from :: InZone.InZone,
+    matching :: Filter.Filter Keyword.Keyword,
+    limit :: PermissionLimit.PermissionLimit,
+    verb :: PermissionVerb.PermissionVerb,
+    -- | CR 607.2a: the whole zone, or only the cards exiled with the source.
+    pool :: PermissionPool.PermissionPool,
+    -- | CR 118.8 / 601.2f: what a cast made under this permission costs "in
+    -- addition to paying their other costs" (Dawnhand Dissident).
+    additionalCosts :: [CostComponent.CostComponent Keyword.Keyword],
+    -- | CR 601.2f: the generic mana a spell cast under it costs less --
+    -- Urianger Augurelt's "spells you cast this way cost {2} less to cast".
+    reduction :: Natural.Natural
+  }
+  deriving (Eq, Ord, Show)

@@ -1,0 +1,145 @@
+module Parun.Types.Search where
+
+import qualified Data.Set as Set
+import qualified Parun.Types.DifferentIn as DifferentIn
+import qualified Parun.Types.Filter as Filter
+import qualified Parun.Types.Keyword as Keyword
+import qualified Parun.Types.PlayerRef as PlayerRef
+import qualified Parun.Types.Quantity as Quantity
+import qualified Parun.Types.SearchDestination as SearchDestination
+import qualified Parun.Types.SlotName as SlotName
+import qualified Parun.Types.Zone as Zone
+
+-- | CR 701.23's search: who looks, whose zones are looked through, how many
+-- cards, which cards, and where they go.
+
+-- The two PlayerRefs are the reason the fields are named. CR 701.23a's looking
+-- and CR 400.1's ownership are independent -- Extract's "search target player's
+-- library" says You/InSlot -- and both fields have the same type, so a
+-- positional payload lets a card file swap the searcher and the owner and still
+-- decode. Every other producer says the same ref twice, which is exactly the
+-- shape under which such a swap goes unnoticed.
+--
+-- Independent does not mean unrelated. Two independent refs cross, so a card
+-- whose searcher names the whole table -- Jungle Wayfinder's "each player may
+-- search THEIR library" -- would have every player search every library, which
+-- is a different and strictly larger instruction. The COUPLED reading is spelled
+-- by an `owner` of PlayerRef.Candidate: the library read is whichever searcher
+-- the resolution has reached. CR 701.23a says only how to LOOK, so WHICH library
+-- is the card's own sentence, and "their library" names the searcher's -- one
+-- instruction applied per player rather than a fold of its own.
+data Search = MkSearch
+  { searcher :: PlayerRef.PlayerRef,
+    owner :: PlayerRef.PlayerRef,
+    -- | Which zones this one instruction looks through (CR 701.23a), all of
+    -- them owned by `owner` -- Delivery Moogle's "your library and/or
+    -- graveyard".
+    --
+    -- A Set rather than one Zone, and rather than a list of searches: the card
+    -- prints ONE instruction with one count over the zones it names, so its
+    -- searcher is asked once, over the union -- a list of searches would ask
+    -- twice and cap twice. A Set rather than an
+    -- ordered NonEmpty because CR 701.23a orders nothing within a search --
+    -- "library and/or graveyard" and "graveyard, hand, and library" differ only
+    -- in membership.
+    --
+    -- The zone is what decides whether a find can be declined: CR 701.23b/c/d
+    -- are each scoped to a HIDDEN zone, and CR 400.2 makes only the library and
+    -- the hand hidden, so a search of a graveyard must find whatever it can even
+    -- where the same search of a library need not (CR 701.23b's Splinter
+    -- example).
+    --
+    -- The zones the card NAMES, not the ones looked through: a printed "and/or"
+    -- (`andOr`) makes that a choice the searcher is asked on resolution, and
+    -- this set is what Parun.Types.Prompt.ChooseSearchZones offers them.
+    zones :: Set.Set Zone.Zone,
+    -- | Whether the instruction also looks through the cards `owner` owns
+    -- outside the game (CR 701.23j) -- Invasion of Arcavios's "your library,
+    -- graveyard, and/or outside the game".
+    --
+    -- A Bool beside `zones` rather than a member of it: CR 400.11 says outside
+    -- the game is not a zone. The printed "and/or" still offers it beside them
+    -- (Parun.Types.SearchPlace), and the one count covers the union.
+    outsideTheGame :: Bool,
+    -- | How many cards the search may find, or 'Nothing' where the printed
+    -- instruction states no count at all -- Mana Severance's "any number of land
+    -- cards".
+    --
+    -- A Maybe rather than a Quantity arm: CR 701.23a's find is bounded by what
+    -- the zone holds, and "any number" is the ABSENCE of a count rather than a
+    -- count that evaluates to something. Parun.Engine.Quantity.evaluateFor
+    -- already answers Nothing for a quantity it cannot evaluate, which the
+    -- search turns into a cap of zero, so an unbounded arm there would be
+    -- indistinguishable from an unevaluable one at every other call site.
+    --
+    -- Unbounded does not mean mandatory. CR 701.23b still governs a search
+    -- stating a quality, so Mana Severance may find none of the lands it can see;
+    -- CR 701.23d's "simply for a quantity of cards" cannot reach a search that
+    -- states no quantity, so an unbounded search never completes its answer from
+    -- the cards it passed over.
+    quantity :: Maybe Quantity.Quantity,
+    filter :: Filter.Filter Keyword.Keyword,
+    -- | Whether the printed instruction says "up to", making the quantity a
+    -- ceiling the searcher chooses within rather than one they must fill.
+    --
+    -- Not derivable from `filter`. CR 701.23b already lets a search STATING A
+    -- QUALITY find fewer or none, so Explosive Vegetation's "up to two basic
+    -- land cards" needs no flag; CR 701.23d then forces a search for a bare
+    -- quantity, Extract's "a card". Denying Wind's "up to seven cards" is the
+    -- third case the other two fields cannot express: a bare quantity the card
+    -- nonetheless makes optional, which CR 701.23d does not reach because the
+    -- search is not "simply for a quantity of cards".
+    --
+    -- A Bool beside the Quantity rather than a Quantity arm: "up to" is a
+    -- permission attached to a count, not a different count. An unbounded "any
+    -- number of cards" is the other axis, and is spelled by the absence of the
+    -- count itself -- over which this flag is unobservable, both readings
+    -- landing in CR 701.23b's branch.
+    upTo :: Bool,
+    destination :: SearchDestination.SearchDestination,
+    -- | The object this one instruction fixes for CR 701.3a -- the "it" in
+    -- Auratouched Mage's "an Aura card that could enchant it" and the "that
+    -- creature" in Sovereigns of Lost Alara's -- named as a slot the resolution
+    -- has bound, or 'Nothing' for the ability's own source, which is what every
+    -- card saying "it" of itself means.
+    --
+    -- ONE field for both halves of the sentence, read by
+    -- Filter.CanAttachToSubject in `filter` and by the attaching arms of
+    -- `destination` alike: a card prints one "that creature" and says it twice,
+    -- so a search whose filter asked after one object and whose destination
+    -- attached to another would be a card nobody printed.
+    --
+    -- A Maybe rather than a PlayerRef-shaped ref type: CR 701.3a's host is one
+    -- OBJECT, and the two things a printed search can mean by it are its own
+    -- source (CR 113.7) and a slot its trigger or an earlier clause bound (CR
+    -- 608.2c). A slot naming no object, or more than one, leaves the question
+    -- unanswerable, which Parun.Engine.Filter.slotOneObject reports as Nothing and
+    -- the arm reads as a search that finds nothing.
+    subject :: Maybe SlotName.SlotName,
+    -- | CR 608.2c: the slot the found cards are bound to, as the incarnations
+    -- the destination minted (CR 400.7), so a later clause or a delayed ability
+    -- can say "that card" -- Grinning Totem's "you may play that card".
+    slot :: Maybe SlotName.SlotName,
+    -- | What no two found cards may share -- Gifts Ungiven's "with different
+    -- names" (CR 201.2b), Threats Undetected's "with different powers". A
+    -- constraint on the found SET, which no per-card filter can state.
+    --
+    -- Not implemented: a find outside the game (CR 701.23j) is not held to it
+    -- (#4295).
+    differentIn :: Set.Set DifferentIn.DifferentIn,
+    -- | Whether the printed count says "exactly" -- Burning-Rune Demon's
+    -- "exactly two cards ... that have different names" -- which takes away CR
+    -- 701.23b's permission to find fewer (CR 101.1). A library short of such
+    -- cards still gives as many as it can (CR 609.3). Never set beside `upTo`.
+    --
+    -- Not implemented: cards outside the game (CR 701.23j) do not count toward
+    -- how many it can give (#4295).
+    exactly :: Bool,
+    -- | Whether the printed places are joined by "and/or" -- Delivery Moogle's
+    -- "your library and/or graveyard" -- so the searcher picks which of them to
+    -- look through (Parun.Types.Prompt.ChooseSearchZones), or by "and", Ancient
+    -- Vendetta's "graveyard, hand, and library", which looks through every one
+    -- (CR 701.23a).
+    andOr :: Bool
+  }
+  deriving (Eq, Ord, Show)

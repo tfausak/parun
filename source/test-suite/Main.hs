@@ -1,4 +1,4 @@
-import qualified Pawl.Test
+import qualified Parun.Test
 
 main :: IO ()
-main = Pawl.Test.main
+main = Parun.Test.main

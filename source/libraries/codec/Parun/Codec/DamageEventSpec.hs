@@ -1,0 +1,81 @@
+module Parun.Codec.DamageEventSpec where
+
+import qualified Data.Set as Set
+import qualified Parun.Codec.DamageEvent as DamageEvent
+import qualified Parun.JsonCodec.Common as Common
+import qualified Parun.Spec as Spec
+import qualified Parun.Types.DamageEvent as DamageEvent
+import qualified Parun.Types.DamageKind as DamageKind
+import qualified Parun.Types.ObjectId as ObjectId
+import qualified Parun.Types.PlayerId as PlayerId
+import qualified Parun.Types.Recipient as Recipient
+import qualified Parun.Types.Subtype as Subtype
+
+spec :: (Monad m, Monad n) => Spec.Spec m n -> n ()
+spec s = Spec.describe s "Parun.Codec.DamageEvent" $ do
+  -- A NONZERO toxic value, so the CR 702.164b rider round-trips rather than
+  -- getting defaulted past, and CR 702.80b's wither bit set so it round-trips as
+  -- a present key too. No lifelink, no infect, so dealtByInfect and
+  -- dealtByLifelink are both omitted keys. CR 702.76a's and CR 702.173a's three
+  -- deal-time reads are all set away from their defaults for the same reason.
+  Spec.it s "MkDamageEvent, dealt to a player" $
+    Common.assertCodec
+      s
+      DamageEvent.codec
+      DamageEvent.MkDamageEvent
+        { DamageEvent.source = ObjectId.MkObjectId 1,
+          DamageEvent.target = Recipient.ToPlayer (PlayerId.MkPlayerId 2),
+          DamageEvent.amount = 3,
+          DamageEvent.dealtByDeathtouch = True,
+          DamageEvent.dealtByInfect = False,
+          DamageEvent.dealtByWither = True,
+          DamageEvent.dealtByToxic = 2,
+          DamageEvent.dealtByLifelink = Nothing,
+          DamageEvent.dealtByController = Just (PlayerId.MkPlayerId 4),
+          DamageEvent.dealtByCreatureTypes = Set.singleton Subtype.Rogue,
+          DamageEvent.dealtByCommander = True,
+          DamageEvent.kind = DamageKind.Combat
+        }
+      " {\"source\":1,\"target\":{\"type\":\"ToPlayer\",\"value\":2},\"amount\":3,\"dealtByDeathtouch\":true,\"dealtByWither\":true,\"dealtByToxic\":2,\"dealtByController\":4,\"dealtByCreatureTypes\":[{\"type\":\"Rogue\"}],\"dealtByCommander\":true,\"kind\":{\"type\":\"Combat\"}} "
+  -- CR 120.3c's recipient tag and CR 608's noncombat damage are each the other
+  -- arm of their type. CR 702.15b's lifelink payee is a concrete PlayerId.
+  Spec.it s "MkDamageEvent, dealt to a planeswalker, with lifelink" $
+    Common.assertCodec
+      s
+      DamageEvent.codec
+      DamageEvent.MkDamageEvent
+        { DamageEvent.source = ObjectId.MkObjectId 1,
+          DamageEvent.target = Recipient.ToPlaneswalker (ObjectId.MkObjectId 5),
+          DamageEvent.amount = 4,
+          DamageEvent.dealtByDeathtouch = False,
+          DamageEvent.dealtByInfect = True,
+          DamageEvent.dealtByWither = False,
+          DamageEvent.dealtByToxic = 0,
+          DamageEvent.dealtByLifelink = Just (PlayerId.MkPlayerId 2),
+          DamageEvent.dealtByController = Nothing,
+          DamageEvent.dealtByCreatureTypes = Set.empty,
+          DamageEvent.dealtByCommander = False,
+          DamageEvent.kind = DamageKind.Noncombat
+        }
+      " {\"source\":1,\"target\":{\"type\":\"ToPlaneswalker\",\"value\":5},\"amount\":4,\"dealtByInfect\":true,\"dealtByLifelink\":2,\"kind\":{\"type\":\"Noncombat\"}} "
+  -- Every dealtBy* rider at its default, which is what an event carrying none
+  -- of them means.
+  Spec.it s "an all-default value omits every optional key" $
+    Common.assertCodec
+      s
+      DamageEvent.codec
+      DamageEvent.MkDamageEvent
+        { DamageEvent.source = ObjectId.MkObjectId 1,
+          DamageEvent.target = Recipient.ToPlayer (PlayerId.MkPlayerId 2),
+          DamageEvent.amount = 3,
+          DamageEvent.dealtByDeathtouch = False,
+          DamageEvent.dealtByInfect = False,
+          DamageEvent.dealtByWither = False,
+          DamageEvent.dealtByToxic = 0,
+          DamageEvent.dealtByLifelink = Nothing,
+          DamageEvent.dealtByController = Nothing,
+          DamageEvent.dealtByCreatureTypes = Set.empty,
+          DamageEvent.dealtByCommander = False,
+          DamageEvent.kind = DamageKind.Combat
+        }
+      " {\"source\":1,\"target\":{\"type\":\"ToPlayer\",\"value\":2},\"amount\":3,\"kind\":{\"type\":\"Combat\"}} "

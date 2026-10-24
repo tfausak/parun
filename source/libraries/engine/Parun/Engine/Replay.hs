@@ -1,0 +1,1451 @@
+{-# LANGUAGE GADTs #-}
+{-# LANGUAGE RankNTypes #-}
+
+module Parun.Engine.Replay where
+
+import Control.Applicative ((<|>))
+import qualified Control.Monad.Trans.State.Strict as State
+import qualified Data.List as List
+import qualified Data.List.NonEmpty as NonEmpty
+import qualified Data.Map.Strict as Map
+import qualified Data.Maybe as Maybe
+import qualified Data.Sequence as Seq
+import qualified Data.Set as Set
+import qualified Data.Text as Text
+import Numeric.Natural (Natural)
+import qualified Parun.Engine.Cost as Cost
+import qualified Parun.Engine.Modal as Modal
+import qualified Parun.Engine.Target as Target
+import qualified Parun.Engine.TextWord as TextWord
+import qualified Parun.Extra.Natural as Natural
+import qualified Parun.Types.Action as Action
+import qualified Parun.Types.AnyNumberOf as AnyNumberOf
+import qualified Parun.Types.Asked as Asked
+import qualified Parun.Types.BuybackDecision as BuybackDecision
+import qualified Parun.Types.CardName as CardName
+import qualified Parun.Types.CoinFace as CoinFace
+import qualified Parun.Types.CommandZoneDecision as CommandZoneDecision
+import qualified Parun.Types.Concession as Concession
+import qualified Parun.Types.CounterKindFor as CounterKindFor
+import qualified Parun.Types.DamageEvent as DamageEvent
+import Parun.Types.Desync (Desync)
+import qualified Parun.Types.Desync as Desync
+import qualified Parun.Types.EntwineDecision as EntwineDecision
+import qualified Parun.Types.ForageMode as ForageMode
+import Parun.Types.Game (Game)
+import Parun.Types.GameState (GameState)
+import qualified Parun.Types.GraveyardArrangement as GraveyardArrangement
+import qualified Parun.Types.KickerDecision as KickerDecision
+import qualified Parun.Types.LibraryPosition as LibraryPosition
+import qualified Parun.Types.MoveSpread as MoveSpread
+import qualified Parun.Types.MulliganDecision as MulliganDecision
+import qualified Parun.Types.MutateSide as MutateSide
+import Parun.Types.ObjectId (ObjectId)
+import qualified Parun.Types.OptionalDecision as OptionalDecision
+import qualified Parun.Types.PaymentDecision as PaymentDecision
+import qualified Parun.Types.Program as Program
+import Parun.Types.Prompt (Prompt)
+import qualified Parun.Types.Prompt as Prompt
+import qualified Parun.Types.Recipient as Recipient
+import Parun.Types.Response (Response)
+import qualified Parun.Types.Response as Response
+import qualified Parun.Types.Subtype as Subtype
+import qualified Parun.Types.TargetCount as TargetCount
+import qualified Parun.Types.TextWord as TextWord.Type
+import qualified Parun.Types.WordFamily as WordFamily
+
+-- | Run `game`, also handing back every answer it was given, in the order it
+-- asked. What lets a caller tell an identical repeated answer from a different
+-- one (Parun.Engine.Resolve.Effect.payAgain) without seeing the prompts.
+recording :: Game a -> Game (a, [Response])
+recording game = State.StateT (go . State.runStateT game)
+  where
+    go :: Program.Program Asked.Asked (a, GameState) -> Program.Program Asked.Asked ((a, [Response]), GameState)
+    go program = case program of
+      Program.Return (a, gs) -> Program.Return ((a, []), gs)
+      Program.Then asked k -> Program.Then asked (\answer -> fmap (\((a, rest), gs) -> ((a, encode (Asked.prompt asked) answer : rest), gs)) (go (k answer)))
+
+-- Flatten an answer into the log. The GADT refines 'r' per branch, so each
+-- constructor pairs with the response that carries its payload.
+encode :: Prompt r -> r -> Response
+encode p answer = case p of
+  Prompt.Shuffle _ -> Response.Shuffled answer
+  Prompt.RandomFirstPlayer _ -> Response.DeterminedFirstPlayer answer
+  Prompt.RandomObject _ -> Response.SelectedAtRandom answer
+  Prompt.RandomStickerSheet _ -> Response.SelectedStickerSheetAtRandom answer
+  Prompt.RandomCard _ -> Response.SelectedCardAtRandom answer
+  Prompt.ChooseConjuredCard {} -> Response.ChoseConjuredCard answer
+  Prompt.RandomPlayer _ -> Response.SelectedPlayerAtRandom answer
+  Prompt.RollDie _ -> Response.RolledDie answer
+  Prompt.RandomDepth _ -> Response.PlacedAtRandomDepth answer
+  Prompt.LookUpCard _ -> Response.LookedUpCard answer
+  Prompt.ReferenceCards {} -> Response.ReferenceCardNames answer
+  Prompt.ReferenceNames _ -> Response.ReferenceCardNames answer
+  Prompt.ChooseDieResult {} -> Response.ChoseDieResult answer
+  Prompt.RerollDie {} -> Response.ChoseReroll answer
+  Prompt.AdjustDieRoll {} -> Response.ChoseRollAdjustment answer
+  Prompt.ChooseRollModifier {} -> Response.ChoseRollModifier answer
+  Prompt.FlipCoin -> Response.FlippedCoin answer
+  Prompt.CallCoin {} -> Response.CalledCoin answer
+  Prompt.ChooseCoinResult {} -> Response.ChoseCoinResult answer
+  Prompt.ChooseAction {} -> Response.ChoseAction answer
+  Prompt.Concede _ -> Response.Conceded answer
+  Prompt.ChooseDiscard {} -> Response.ChoseDiscard answer
+  Prompt.ChooseScry {} -> Response.ChoseScry answer
+  Prompt.ChooseSurveil {} -> Response.ChoseSurveil answer
+  Prompt.ChooseFateseal {} -> Response.ChoseFateseal answer
+  Prompt.ChooseExplore {} -> Response.ChoseExplore answer
+  Prompt.ChooseDefender {} -> Response.ChoseDefender answer
+  Prompt.ChooseManaSource {} -> Response.ChoseManaSource answer
+  Prompt.ChooseExtraManaSource {} -> Response.ChoseExtraManaSource answer
+  Prompt.ReverseManaAbilities {} -> Response.ReversedManaAbilities answer
+  Prompt.ChooseManaYield {} -> Response.ChoseManaYield answer
+  Prompt.ChooseManaToSpend {} -> Response.ChoseManaToSpend answer
+  Prompt.ChooseProliferate {} -> Response.ChoseProliferation answer
+  Prompt.ChooseRedistribution {} -> Response.ChoseRedistribution answer
+  Prompt.ChooseRingBearer {} -> Response.ChoseRingBearer answer
+  Prompt.ChooseBolster {} -> Response.ChoseBolster answer
+  Prompt.ChooseAmass {} -> Response.ChoseAmass answer
+  Prompt.ChooseBlight {} -> Response.ChoseBlight answer
+  Prompt.ChooseBehold {} -> Response.ChoseBehold answer
+  Prompt.ChooseCounterRemoval {} -> Response.ChoseCounterRemoval answer
+  Prompt.ChooseCounterRemovalAmong {} -> Response.ChoseCounterRemovalAmong answer
+  Prompt.ChooseCounterRemovalAtLeast {} -> Response.ChoseCounterRemovalAtLeast answer
+  Prompt.ChooseCounterRemovalUpTo {} -> Response.ChoseCounterRemovalUpTo answer
+  Prompt.ChooseCounterDistribution {} -> Response.ChoseCounterDistribution answer
+  Prompt.ChooseDivision {} -> Response.ChoseDivision answer
+  Prompt.ChooseMixedCounterRemoval {} -> Response.ChoseMixedCounterRemoval answer
+  Prompt.ChooseVote {} -> Response.ChoseVote answer
+  Prompt.ChoosePaidEnergy {} -> Response.ChosePaidEnergy answer
+  Prompt.ChooseNumber {} -> Response.ChoseNumber answer
+  Prompt.ChooseReadAheadChapter {} -> Response.ChoseReadAheadChapter answer
+  Prompt.ChooseDamageSource {} -> Response.ChoseDamageSource answer
+  Prompt.ChooseDelayedTriggerEvent {} -> Response.ChoseDelayedTriggerEvent answer
+  Prompt.ChooseCounterKind _ _ for _ -> case for of
+    CounterKindFor.MovedBetween _ _ -> Response.ChoseMovedCounter answer
+    CounterKindFor.EnteringWith _ -> Response.ChoseEntryCounter answer
+  Prompt.ChooseMovedCounters {} -> Response.ChoseMovedCounters answer
+  Prompt.ChooseStoredRerolls {} -> Response.ChoseStoredRerolls answer
+  Prompt.ChooseMovedCountersAtLeastOne {} -> Response.ChoseMovedCountersAtLeastOne answer
+  Prompt.ChooseDistributedMovedCounters _ _ _ spread _ _ -> Response.ChoseDistributedMovedCounters spread answer
+  Prompt.ChooseMovedCounterOrNone {} -> Response.ChoseMovedCounterOrNone answer
+  Prompt.ChooseCardInGraveyard {} -> Response.ChoseCardInGraveyard answer
+  Prompt.ChooseCardInHand {} -> Response.ChoseCardInHand answer
+  Prompt.ChooseCardFromAmong {} -> Response.ChoseCardFromAmong answer
+  Prompt.ChooseAnyNumber _ _ _ purpose _ _ -> anyNumberResponse purpose answer
+  Prompt.ChooseDungeon {} -> Response.ChoseDungeon answer
+  Prompt.ChooseSticker {} -> Response.ChoseSticker answer
+  Prompt.ChooseStickerOrNone {} -> Response.ChoseStickerOrNone answer
+  Prompt.ChooseNamePosition {} -> Response.ChoseNamePosition answer
+  Prompt.ChooseCompanion {} -> Response.ChoseCompanion answer
+  Prompt.ChooseFromOutsideTheGame {} -> Response.ChoseFromOutsideTheGame answer
+  Prompt.ChooseRoom {} -> Response.ChoseRoom answer
+  Prompt.ChooseHalf {} -> Response.ChoseHalf answer
+  Prompt.ChooseLegend {} -> Response.ChoseLegend answer
+  Prompt.DeclareAttackers {} -> Response.DeclaredAttackers answer
+  Prompt.ChooseAttackTarget {} -> Response.ChoseAttackTarget answer
+  Prompt.ChooseExert {} -> Response.ChoseExert answer
+  Prompt.DeclareBlockers {} -> Response.DeclaredBlockers answer
+  Prompt.AssignCombatDamage {} -> Response.AssignedCombatDamage answer
+  Prompt.ChooseTargets {} -> Response.ChoseTargets answer
+  Prompt.AnnounceTargets {} -> Response.AnnouncedTargets answer
+  Prompt.ChooseWordSwap {} -> Response.ChoseWordSwap answer
+  Prompt.ChooseSearchZones {} -> Response.ChoseSearchZones answer
+  Prompt.Search {} -> Response.Searched answer
+  Prompt.CastWhileSearching {} -> Response.CastWhileSearched answer
+  Prompt.ChooseX {} -> Response.ChoseX answer
+  Prompt.ChooseMutateSide {} -> Response.ChoseMutateSide answer
+  Prompt.ChooseForage {} -> Response.ChoseForage answer
+  Prompt.ChooseLearn {} -> Response.ChoseLearn answer
+  Prompt.ChooseClash {} -> Response.ChoseClash answer
+  Prompt.ChooseTimeTravel {} -> Response.ChoseTimeTravel answer
+  Prompt.ChooseEntwine {} -> Response.AnnouncedEntwine answer
+  Prompt.ChooseKicker {} -> Response.AnnouncedKicker answer
+  Prompt.ChooseBuyback {} -> Response.AnnouncedBuyback answer
+  Prompt.ChooseSplice {} -> Response.AnnouncedSplice answer
+  Prompt.ChooseAssistant {} -> Response.ChoseAssistant answer
+  Prompt.ChooseAssistAmount {} -> Response.ChoseAssistAmount answer
+  Prompt.ReturnCommander {} -> Response.ReturnedCommander answer
+  Prompt.ChooseCommandZoneOfferFirst {} -> Response.ChoseCommandZoneOfferFirst answer
+  Prompt.ChooseLibraryEnd {} -> Response.ChoseLibraryEnd answer
+  Prompt.ArrangeLibraryArrivals {} -> Response.ArrangedLibraryArrivals answer
+  Prompt.ArrangeLibraryCards {} -> Response.ArrangedLibraryCards answer
+  Prompt.ArrangeGraveyardArrivals {} -> Response.ArrangedGraveyardArrivals answer
+  Prompt.ChooseModes {} -> Response.ChoseModes answer
+  Prompt.ChooseCopyTarget {} -> Response.ChoseCopyTarget answer
+  Prompt.ChooseEntryOption {} -> Response.ChoseEntryOption answer
+  Prompt.ChooseRiot {} -> Response.ChoseRiot answer
+  Prompt.ChooseUnleash {} -> Response.ChoseUnleash answer
+  Prompt.ChooseTribute {} -> Response.ChoseTribute answer
+  Prompt.ChooseDredge {} -> Response.ChoseDredge answer
+  Prompt.ChooseRedirect {} -> Response.ChoseRedirect answer
+  Prompt.ChooseCombatDamageOption {} -> Response.ChoseCombatDamageOption answer
+  Prompt.ChooseSubstitute {} -> Response.ChoseSubstitute answer
+  Prompt.ChoosePayLifeOnEntry {} -> Response.ChosePayLifeOnEntry answer
+  Prompt.ChooseRevealOnEntry {} -> Response.ChoseRevealOnEntry answer
+  Prompt.ChooseEnlist {} -> Response.ChoseEnlist answer
+  Prompt.ChooseEncode {} -> Response.ChoseEncode answer
+  Prompt.ChooseColor {} -> Response.ChoseColor answer
+  Prompt.ChooseDesignation {} -> Response.ChoseDesignation answer
+  Prompt.ChooseManaType {} -> Response.ChoseManaType answer
+  Prompt.ChooseCardName {} -> Response.ChoseCardName answer
+  Prompt.ChooseOpponent {} -> Response.ChoseOpponent answer
+  Prompt.ChooseProtector {} -> Response.ChoseProtector answer
+  Prompt.ChoosePlayer {} -> Response.ChosePlayer answer
+  Prompt.ChooseActivePlayer {} -> Response.ChoseActivePlayer answer
+  Prompt.ChooseBasicLandType {} -> Response.ChoseBasicLandType answer
+  Prompt.ChooseCreatureType {} -> Response.ChoseCreatureType answer
+  Prompt.OrderTriggers {} -> Response.OrderedTriggers answer
+  Prompt.OrderDamage {} -> Response.OrderedDamage answer
+  Prompt.AllocateDamage {} -> Response.AllocatedDamage answer
+  Prompt.OrderCostComponents {} -> Response.OrderedCostComponents answer
+  Prompt.OrderCombatTolls {} -> Response.OrderedCombatTolls answer
+  Prompt.OrderComponentCards {} -> Response.OrderedComponentCards answer
+  Prompt.ChooseStickerKeeper {} -> Response.ChoseStickerKeeper answer
+  Prompt.OrderForEach {} -> Response.OrderedForEach answer
+  Prompt.ChooseLoopMembers {} -> Response.ChoseLoopMembers answer
+  Prompt.ChoosePile {} -> Response.ChosePile answer
+  Prompt.ChooseRepeat {} -> Response.ChoseRepeat answer
+  Prompt.OrderTimestamps {} -> Response.OrderedTimestamps answer
+  Prompt.OrderManaActivations {} -> Response.OrderedManaActivations answer
+  Prompt.ChooseReplacement {} -> Response.ChoseReplacement answer
+  Prompt.ChooseSacrifices {} -> Response.ChoseSacrifices answer
+  Prompt.ChooseExilesFromGraveyard {} -> Response.ChoseExilesFromGraveyard answer
+  Prompt.ChooseCollectEvidence {} -> Response.ChoseExilesFromGraveyard answer
+  Prompt.ChooseMaterials {} -> Response.ChoseMaterials answer
+  Prompt.ChoosePermanent {} -> Response.ChosePermanent answer
+  Prompt.ChooseTapsForTotalPower {} -> Response.ChoseTaps answer
+  Prompt.ChooseTaps {} -> Response.ChoseTaps answer
+  Prompt.ChooseReturns {} -> Response.ChoseReturns answer
+  Prompt.ChooseExiles {} -> Response.ChoseExiles answer
+  Prompt.ChooseAttachment {} -> Response.ChoseAttachment answer
+  Prompt.ChooseTurnUpAttachment {} -> Response.ChoseTurnUpAttachment answer
+  Prompt.ChooseCost {} -> Response.ChoseCost answer
+  Prompt.ChoosePlayPermission {} -> Response.ChosePlayPermission answer
+  Prompt.DeclareMulligan {} -> Response.DeclaredMulligan answer
+  Prompt.Bottom {} -> Response.PutOnBottom answer
+  Prompt.MulliganAction {} -> Response.TookMulliganAction answer
+  Prompt.OpeningHandAction {} -> Response.TookOpeningHandAction answer
+  Prompt.ChooseOptional {} -> Response.ChoseOptional answer
+  Prompt.ChooseClause {} -> Response.ChoseClause answer
+  Prompt.OfferedCast {} -> Response.ChoseOfferedCast answer
+  Prompt.ChooseOfferedCastSpell {} -> Response.ChoseOfferedCastSpell answer
+  Prompt.OfferedMiracleReveal {} -> Response.ChoseMiracleReveal answer
+  Prompt.OfferedExtra {} -> Response.ChoseExtra answer
+  Prompt.ChooseToPay {} -> Response.ChoseToPay answer
+  Prompt.AnnouncePhyrexianPayment {} -> Response.AnnouncedPhyrexianPayment answer
+  Prompt.AnnounceHybridPayment {} -> Response.AnnouncedHybridPayment answer
+  Prompt.AnnounceHybridHalf {} -> Response.AnnouncedHybridHalf answer
+  Prompt.ChooseReductionHalf {} -> Response.ChoseReductionHalf answer
+  Prompt.ChooseReducedCost {} -> Response.ChoseReducedCost answer
+
+-- The inverse of 'encode'. Nothing when the logged response does not match the
+-- prompt the engine is actually asking (a stale or foreign transcript).
+--
+-- The non-matching branches are a wildcard rather than written out. Writing
+-- every (Prompt, Response) pair explicitly is quadratic in the number of
+-- prompt constructors, and the exhaustiveness that protects us is on Prompt --
+-- the GADT that refines r -- which is still total. A new Response constructor
+-- correctly decodes to Nothing.
+decode :: Prompt r -> Response -> Maybe r
+decode p response = case p of
+  Prompt.Shuffle _ -> case response of
+    Response.Shuffled ids -> Just ids
+    _ -> Nothing
+  Prompt.RandomFirstPlayer _ -> case response of
+    Response.DeterminedFirstPlayer pid -> Just pid
+    _ -> Nothing
+  Prompt.RandomObject _ -> case response of
+    Response.SelectedAtRandom oid -> Just oid
+    _ -> Nothing
+  Prompt.RandomStickerSheet _ -> case response of
+    Response.SelectedStickerSheetAtRandom n -> Just n
+    _ -> Nothing
+  Prompt.RandomCard _ -> case response of
+    Response.SelectedCardAtRandom name -> Just name
+    _ -> Nothing
+  Prompt.ChooseConjuredCard {} -> case response of
+    Response.ChoseConjuredCard name -> Just name
+    _ -> Nothing
+  Prompt.RandomPlayer _ -> case response of
+    Response.SelectedPlayerAtRandom pid -> Just pid
+    _ -> Nothing
+  Prompt.RollDie _ -> case response of
+    Response.RolledDie n -> Just n
+    _ -> Nothing
+  Prompt.RandomDepth _ -> case response of
+    Response.PlacedAtRandomDepth n -> Just n
+    _ -> Nothing
+  Prompt.LookUpCard _ -> case response of
+    Response.LookedUpCard card -> Just card
+    _ -> Nothing
+  Prompt.ReferenceCards {} -> case response of
+    Response.ReferenceCardNames names -> Just names
+    _ -> Nothing
+  Prompt.ReferenceNames _ -> case response of
+    Response.ReferenceCardNames names -> Just names
+    _ -> Nothing
+  Prompt.ChooseDieResult {} -> case response of
+    Response.ChoseDieResult n -> Just n
+    _ -> Nothing
+  Prompt.RerollDie {} -> case response of
+    Response.ChoseReroll d -> Just d
+    _ -> Nothing
+  Prompt.AdjustDieRoll {} -> case response of
+    Response.ChoseRollAdjustment d -> Just d
+    _ -> Nothing
+  Prompt.ChooseRollModifier {} -> case response of
+    Response.ChoseRollModifier n -> Just n
+    _ -> Nothing
+  Prompt.FlipCoin -> case response of
+    Response.FlippedCoin face -> Just face
+    _ -> Nothing
+  Prompt.CallCoin {} -> case response of
+    Response.CalledCoin face -> Just face
+    _ -> Nothing
+  Prompt.ChooseCoinResult {} -> case response of
+    Response.ChoseCoinResult face -> Just face
+    _ -> Nothing
+  Prompt.ChooseAction {} -> case response of
+    Response.ChoseAction action -> Just action
+    _ -> Nothing
+  Prompt.Concede _ -> case response of
+    Response.Conceded concession -> Just concession
+    _ -> Nothing
+  Prompt.ChooseDiscard {} -> case response of
+    Response.ChoseDiscard ids -> Just ids
+    _ -> Nothing
+  Prompt.ChooseScry {} -> case response of
+    Response.ChoseScry split -> Just split
+    _ -> Nothing
+  Prompt.ChooseSurveil {} -> case response of
+    Response.ChoseSurveil split -> Just split
+    _ -> Nothing
+  Prompt.ChooseFateseal {} -> case response of
+    Response.ChoseFateseal split -> Just split
+    _ -> Nothing
+  Prompt.ChooseExplore {} -> case response of
+    Response.ChoseExplore d -> Just d
+    _ -> Nothing
+  Prompt.ChooseDefender {} -> case response of
+    Response.ChoseDefender pid -> Just pid
+    _ -> Nothing
+  Prompt.ChooseManaSource {} -> case response of
+    Response.ChoseManaSource oid -> Just oid
+    _ -> Nothing
+  Prompt.ChooseExtraManaSource {} -> case response of
+    Response.ChoseExtraManaSource oid -> Just oid
+    _ -> Nothing
+  Prompt.ReverseManaAbilities {} -> case response of
+    Response.ReversedManaAbilities d -> Just d
+    _ -> Nothing
+  Prompt.ChooseManaToSpend {} -> case response of
+    Response.ChoseManaToSpend unit -> Just unit
+    _ -> Nothing
+  Prompt.ChooseManaYield {} -> case response of
+    Response.ChoseManaYield mana -> Just mana
+    _ -> Nothing
+  Prompt.ChooseProliferate {} -> case response of
+    Response.ChoseProliferation chosen -> Just chosen
+    _ -> Nothing
+  Prompt.ChooseRedistribution {} -> case response of
+    Response.ChoseRedistribution assignment -> Just assignment
+    _ -> Nothing
+  Prompt.ChooseRingBearer {} -> case response of
+    Response.ChoseRingBearer oid -> Just oid
+    _ -> Nothing
+  Prompt.ChooseBolster {} -> case response of
+    Response.ChoseBolster oid -> Just oid
+    _ -> Nothing
+  Prompt.ChooseAmass {} -> case response of
+    Response.ChoseAmass oid -> Just oid
+    _ -> Nothing
+  Prompt.ChooseBlight {} -> case response of
+    Response.ChoseBlight oid -> Just oid
+    _ -> Nothing
+  Prompt.ChooseBehold {} -> case response of
+    Response.ChoseBehold oid -> Just oid
+    _ -> Nothing
+  Prompt.ChooseCounterRemoval {} -> case response of
+    Response.ChoseCounterRemoval oid -> Just oid
+    _ -> Nothing
+  Prompt.ChooseCounterRemovalAmong {} -> case response of
+    Response.ChoseCounterRemovalAmong division -> Just division
+    _ -> Nothing
+  Prompt.ChooseCounterRemovalAtLeast {} -> case response of
+    Response.ChoseCounterRemovalAtLeast division -> Just division
+    _ -> Nothing
+  Prompt.ChooseCounterRemovalUpTo {} -> case response of
+    Response.ChoseCounterRemovalUpTo division -> Just division
+    _ -> Nothing
+  Prompt.ChooseCounterDistribution {} -> case response of
+    Response.ChoseCounterDistribution division -> Just division
+    _ -> Nothing
+  Prompt.ChooseDivision {} -> case response of
+    Response.ChoseDivision division -> Just division
+    _ -> Nothing
+  Prompt.ChooseMixedCounterRemoval {} -> case response of
+    Response.ChoseMixedCounterRemoval division -> Just division
+    _ -> Nothing
+  Prompt.ChooseVote {} -> case response of
+    Response.ChoseVote choice -> Just choice
+    _ -> Nothing
+  Prompt.ChoosePaidEnergy {} -> case response of
+    Response.ChosePaidEnergy n -> Just n
+    _ -> Nothing
+  Prompt.ChooseReadAheadChapter {} -> case response of
+    Response.ChoseReadAheadChapter n -> Just n
+    _ -> Nothing
+  Prompt.ChooseDamageSource {} -> case response of
+    Response.ChoseDamageSource oid -> Just oid
+    _ -> Nothing
+  Prompt.ChooseDelayedTriggerEvent {} -> case response of
+    Response.ChoseDelayedTriggerEvent n -> Just n
+    _ -> Nothing
+  Prompt.ChooseCounterKind _ _ for _ -> case (for, response) of
+    (CounterKindFor.MovedBetween _ _, Response.ChoseMovedCounter kind) -> Just kind
+    (CounterKindFor.EnteringWith _, Response.ChoseEntryCounter kind) -> Just kind
+    _ -> Nothing
+  Prompt.ChooseMovedCounters {} -> case response of
+    Response.ChoseMovedCounters counters -> Just counters
+    _ -> Nothing
+  Prompt.ChooseStoredRerolls {} -> case response of
+    Response.ChoseStoredRerolls rerolled -> Just rerolled
+    _ -> Nothing
+  Prompt.ChooseMovedCountersAtLeastOne {} -> case response of
+    Response.ChoseMovedCountersAtLeastOne counters -> Just counters
+    _ -> Nothing
+  Prompt.ChooseDistributedMovedCounters _ _ _ spread _ _ -> case response of
+    Response.ChoseDistributedMovedCounters recorded counters | recorded == spread -> Just counters
+    _ -> Nothing
+  Prompt.ChooseMovedCounterOrNone {} -> case response of
+    Response.ChoseMovedCounterOrNone kind -> Just kind
+    _ -> Nothing
+  Prompt.ChooseCardInGraveyard {} -> case response of
+    Response.ChoseCardInGraveyard oid -> Just oid
+    _ -> Nothing
+  Prompt.ChooseCardInHand {} -> case response of
+    Response.ChoseCardInHand oid -> Just oid
+    _ -> Nothing
+  Prompt.ChooseCardFromAmong {} -> case response of
+    Response.ChoseCardFromAmong oid -> Just oid
+    _ -> Nothing
+  Prompt.ChooseAnyNumber _ _ _ purpose _ _ -> case (purpose, response) of
+    (AnyNumberOf.Permanents, Response.ChoseAnyNumberOfPermanents ids) -> Just ids
+    (AnyNumberOf.CardsFromAmong, Response.ChoseCardsFromAmong ids) -> Just ids
+    (AnyNumberOf.ToSacrifice, Response.ChoseSacrifices ids) -> Just ids
+    (AnyNumberOf.ToReveal, Response.ChoseReveals ids) -> Just ids
+    (AnyNumberOf.ToExile, Response.ChoseExilesFromGraveyard ids) -> Just ids
+    (AnyNumberOf.ToDiscard, Response.ChoseAnyNumberToDiscard ids) -> Just ids
+    (AnyNumberOf.ToCrank, Response.ChoseCranks ids) -> Just ids
+    (AnyNumberOf.IntoPile, Response.ChosePileSplit ids) -> Just ids
+    (AnyNumberOf.ToUntap, Response.ChoseUntaps ids) -> Just ids
+    _ -> Nothing
+  Prompt.ChooseDungeon {} -> case response of
+    Response.ChoseDungeon printingId -> Just printingId
+    _ -> Nothing
+  Prompt.ChooseStickerOrNone {} -> case response of
+    Response.ChoseStickerOrNone ref -> Just ref
+    _ -> Nothing
+  Prompt.ChooseSticker {} -> case response of
+    Response.ChoseSticker ref -> Just ref
+    _ -> Nothing
+  Prompt.ChooseNamePosition {} -> case response of
+    Response.ChoseNamePosition n -> Just n
+    _ -> Nothing
+  Prompt.ChooseCompanion {} -> case response of
+    Response.ChoseCompanion printingId -> Just printingId
+    _ -> Nothing
+  Prompt.ChooseFromOutsideTheGame {} -> case response of
+    Response.ChoseFromOutsideTheGame outsideCards -> Just outsideCards
+    _ -> Nothing
+  Prompt.ChooseRoom {} -> case response of
+    Response.ChoseRoom room -> Just room
+    _ -> Nothing
+  Prompt.ChooseHalf {} -> case response of
+    Response.ChoseHalf half -> Just half
+    _ -> Nothing
+  Prompt.ChooseLegend {} -> case response of
+    Response.ChoseLegend oid -> Just oid
+    _ -> Nothing
+  Prompt.DeclareAttackers {} -> case response of
+    Response.DeclaredAttackers ids -> Just ids
+    _ -> Nothing
+  Prompt.ChooseAttackTarget {} -> case response of
+    Response.ChoseAttackTarget target -> Just target
+    _ -> Nothing
+  Prompt.ChooseExert {} -> case response of
+    Response.ChoseExert d -> Just d
+    _ -> Nothing
+  Prompt.DeclareBlockers {} -> case response of
+    Response.DeclaredBlockers assignment -> Just assignment
+    _ -> Nothing
+  Prompt.AssignCombatDamage {} -> case response of
+    Response.AssignedCombatDamage assignment -> Just assignment
+    _ -> Nothing
+  Prompt.ChooseTargets {} -> case response of
+    Response.ChoseTargets chosen -> Just chosen
+    _ -> Nothing
+  Prompt.AnnounceTargets {} -> case response of
+    Response.AnnouncedTargets announced -> Just announced
+    _ -> Nothing
+  Prompt.ChooseWordSwap {} -> case response of
+    Response.ChoseWordSwap pair -> Just pair
+    _ -> Nothing
+  Prompt.ChooseSearchZones {} -> case response of
+    Response.ChoseSearchZones zones -> Just zones
+    _ -> Nothing
+  Prompt.Search {} -> case response of
+    Response.Searched found -> Just found
+    _ -> Nothing
+  Prompt.CastWhileSearching {} -> case response of
+    Response.CastWhileSearched found -> Just found
+    _ -> Nothing
+  Prompt.ChooseX {} -> case response of
+    Response.ChoseX n -> Just n
+    _ -> Nothing
+  Prompt.ChooseModes {} -> case response of
+    Response.ChoseModes modes -> Just modes
+    _ -> Nothing
+  Prompt.ChooseCopyTarget {} -> case response of
+    Response.ChoseCopyTarget m -> Just m
+    _ -> Nothing
+  Prompt.ChooseEntryOption {} -> case response of
+    Response.ChoseEntryOption n -> Just n
+    _ -> Nothing
+  Prompt.ChooseRiot {} -> case response of
+    Response.ChoseRiot d -> Just d
+    _ -> Nothing
+  Prompt.ChooseUnleash {} -> case response of
+    Response.ChoseUnleash d -> Just d
+    _ -> Nothing
+  Prompt.ChooseTribute {} -> case response of
+    Response.ChoseTribute d -> Just d
+    _ -> Nothing
+  Prompt.ChooseDredge {} -> case response of
+    Response.ChoseDredge d -> Just d
+    _ -> Nothing
+  Prompt.ChooseRedirect {} -> case response of
+    Response.ChoseRedirect d -> Just d
+    _ -> Nothing
+  Prompt.ChooseCombatDamageOption {} -> case response of
+    Response.ChoseCombatDamageOption d -> Just d
+    _ -> Nothing
+  Prompt.ChooseSubstitute {} -> case response of
+    Response.ChoseSubstitute d -> Just d
+    _ -> Nothing
+  Prompt.ChoosePayLifeOnEntry {} -> case response of
+    Response.ChosePayLifeOnEntry d -> Just d
+    _ -> Nothing
+  Prompt.ChooseRevealOnEntry {} -> case response of
+    Response.ChoseRevealOnEntry m -> Just m
+    _ -> Nothing
+  Prompt.ChooseEnlist {} -> case response of
+    Response.ChoseEnlist m -> Just m
+    _ -> Nothing
+  Prompt.ChooseEncode {} -> case response of
+    Response.ChoseEncode m -> Just m
+    _ -> Nothing
+  Prompt.ChooseColor {} -> case response of
+    Response.ChoseColor c -> Just c
+    _ -> Nothing
+  Prompt.ChooseDesignation {} -> case response of
+    Response.ChoseDesignation d -> Just d
+    _ -> Nothing
+  Prompt.ChooseManaType {} -> case response of
+    Response.ChoseManaType t -> Just t
+    _ -> Nothing
+  Prompt.ChooseCardName {} -> case response of
+    Response.ChoseCardName n -> Just n
+    _ -> Nothing
+  Prompt.ChooseOpponent {} -> case response of
+    Response.ChoseOpponent pid -> Just pid
+    _ -> Nothing
+  Prompt.ChooseProtector {} -> case response of
+    Response.ChoseProtector pid -> Just pid
+    _ -> Nothing
+  Prompt.ChoosePlayer {} -> case response of
+    Response.ChosePlayer pid -> Just pid
+    _ -> Nothing
+  Prompt.ChooseActivePlayer {} -> case response of
+    Response.ChoseActivePlayer pid -> Just pid
+    _ -> Nothing
+  Prompt.ChooseBasicLandType {} -> case response of
+    Response.ChoseBasicLandType t -> Just t
+    _ -> Nothing
+  Prompt.ChooseCreatureType {} -> case response of
+    Response.ChoseCreatureType t -> Just t
+    _ -> Nothing
+  Prompt.OrderTriggers {} -> case response of
+    Response.OrderedTriggers order -> Just order
+    _ -> Nothing
+  Prompt.OrderDamage {} -> case response of
+    Response.OrderedDamage order -> Just order
+    _ -> Nothing
+  Prompt.AllocateDamage {} -> case response of
+    Response.AllocatedDamage allocation -> Just allocation
+    _ -> Nothing
+  Prompt.OrderCostComponents {} -> case response of
+    Response.OrderedCostComponents order -> Just order
+    _ -> Nothing
+  Prompt.OrderCombatTolls {} -> case response of
+    Response.OrderedCombatTolls order -> Just order
+    _ -> Nothing
+  Prompt.OrderComponentCards {} -> case response of
+    Response.OrderedComponentCards order -> Just order
+    _ -> Nothing
+  Prompt.ChooseStickerKeeper {} -> case response of
+    Response.ChoseStickerKeeper index -> Just index
+    _ -> Nothing
+  Prompt.OrderForEach {} -> case response of
+    Response.OrderedForEach order -> Just order
+    _ -> Nothing
+  Prompt.ChooseLoopMembers {} -> case response of
+    Response.ChoseLoopMembers members -> Just members
+    _ -> Nothing
+  Prompt.ChoosePile {} -> case response of
+    Response.ChosePile pile -> Just pile
+    _ -> Nothing
+  Prompt.ChooseRepeat {} -> case response of
+    Response.ChoseRepeat d -> Just d
+    _ -> Nothing
+  Prompt.ChooseNumber {} -> case response of
+    Response.ChoseNumber n -> Just n
+    _ -> Nothing
+  Prompt.OrderTimestamps {} -> case response of
+    Response.OrderedTimestamps order -> Just order
+    _ -> Nothing
+  Prompt.OrderManaActivations {} -> case response of
+    Response.OrderedManaActivations order -> Just order
+    _ -> Nothing
+  Prompt.ChooseReplacement {} -> case response of
+    Response.ChoseReplacement n -> Just n
+    _ -> Nothing
+  Prompt.ChooseSacrifices {} -> case response of
+    Response.ChoseSacrifices ids -> Just ids
+    _ -> Nothing
+  Prompt.ChooseExilesFromGraveyard {} -> case response of
+    Response.ChoseExilesFromGraveyard ids -> Just ids
+    _ -> Nothing
+  Prompt.ChooseCollectEvidence {} -> case response of
+    Response.ChoseExilesFromGraveyard ids -> Just ids
+    _ -> Nothing
+  Prompt.ChooseMaterials {} -> case response of
+    Response.ChoseMaterials ids -> Just ids
+    _ -> Nothing
+  Prompt.ChoosePermanent {} -> case response of
+    Response.ChosePermanent oid -> Just oid
+    _ -> Nothing
+  Prompt.ChooseTapsForTotalPower {} -> case response of
+    Response.ChoseTaps ids -> Just ids
+    _ -> Nothing
+  Prompt.ChooseTaps {} -> case response of
+    Response.ChoseTaps ids -> Just ids
+    _ -> Nothing
+  Prompt.ChooseReturns {} -> case response of
+    Response.ChoseReturns ids -> Just ids
+    _ -> Nothing
+  Prompt.ChooseExiles {} -> case response of
+    Response.ChoseExiles ids -> Just ids
+    _ -> Nothing
+  Prompt.ChooseAttachment {} -> case response of
+    Response.ChoseAttachment oid -> Just oid
+    _ -> Nothing
+  Prompt.ChooseTurnUpAttachment {} -> case response of
+    Response.ChoseTurnUpAttachment d -> Just d
+    _ -> Nothing
+  Prompt.ChooseCost {} -> case response of
+    Response.ChoseCost cost -> Just cost
+    _ -> Nothing
+  Prompt.ChoosePlayPermission {} -> case response of
+    Response.ChosePlayPermission permission -> Just permission
+    _ -> Nothing
+  Prompt.DeclareMulligan {} -> case response of
+    Response.DeclaredMulligan decision -> Just decision
+    _ -> Nothing
+  Prompt.Bottom {} -> case response of
+    Response.PutOnBottom ids -> Just ids
+    _ -> Nothing
+  Prompt.MulliganAction {} -> case response of
+    Response.TookMulliganAction moid -> Just moid
+    _ -> Nothing
+  Prompt.OpeningHandAction {} -> case response of
+    Response.TookOpeningHandAction moid -> Just moid
+    _ -> Nothing
+  Prompt.ChooseOptional {} -> case response of
+    Response.ChoseOptional decision -> Just decision
+    _ -> Nothing
+  Prompt.ChooseClause {} -> case response of
+    Response.ChoseClause cIdx -> Just cIdx
+    _ -> Nothing
+  Prompt.OfferedCast {} -> case response of
+    Response.ChoseOfferedCast decision -> Just decision
+    _ -> Nothing
+  Prompt.ChooseOfferedCastSpell {} -> case response of
+    Response.ChoseOfferedCastSpell picked -> Just picked
+    _ -> Nothing
+  Prompt.OfferedMiracleReveal {} -> case response of
+    Response.ChoseMiracleReveal decision -> Just decision
+    _ -> Nothing
+  Prompt.OfferedExtra {} -> case response of
+    Response.ChoseExtra decision -> Just decision
+    _ -> Nothing
+  Prompt.ChooseToPay {} -> case response of
+    Response.ChoseToPay decision -> Just decision
+    _ -> Nothing
+  Prompt.AnnouncePhyrexianPayment {} -> case response of
+    Response.AnnouncedPhyrexianPayment way -> Just way
+    _ -> Nothing
+  Prompt.AnnounceHybridPayment {} -> case response of
+    Response.AnnouncedHybridPayment way -> Just way
+    _ -> Nothing
+  Prompt.AnnounceHybridHalf {} -> case response of
+    Response.AnnouncedHybridHalf half -> Just half
+    _ -> Nothing
+  Prompt.ChooseReductionHalf {} -> case response of
+    Response.ChoseReductionHalf half -> Just half
+    _ -> Nothing
+  Prompt.ChooseReducedCost {} -> case response of
+    Response.ChoseReducedCost total_ -> Just total_
+    _ -> Nothing
+  Prompt.ChooseMutateSide {} -> case response of
+    Response.ChoseMutateSide side -> Just side
+    _ -> Nothing
+  Prompt.ChooseForage {} -> case response of
+    Response.ChoseForage mode -> Just mode
+    _ -> Nothing
+  Prompt.ChooseLearn {} -> case response of
+    Response.ChoseLearn mode -> Just mode
+    _ -> Nothing
+  Prompt.ChooseClash {} -> case response of
+    Response.ChoseClash position -> Just position
+    _ -> Nothing
+  Prompt.ChooseTimeTravel {} -> case response of
+    Response.ChoseTimeTravel chosen -> Just chosen
+    _ -> Nothing
+  Prompt.ChooseEntwine {} -> case response of
+    Response.AnnouncedEntwine decision -> Just decision
+    _ -> Nothing
+  Prompt.ChooseKicker {} -> case response of
+    Response.AnnouncedKicker decision -> Just decision
+    _ -> Nothing
+  Prompt.ChooseBuyback {} -> case response of
+    Response.AnnouncedBuyback decision -> Just decision
+    _ -> Nothing
+  Prompt.ChooseSplice {} -> case response of
+    Response.AnnouncedSplice cards -> Just cards
+    _ -> Nothing
+  Prompt.ChooseAssistant {} -> case response of
+    Response.ChoseAssistant helper -> Just helper
+    _ -> Nothing
+  Prompt.ChooseAssistAmount {} -> case response of
+    Response.ChoseAssistAmount amount -> Just amount
+    _ -> Nothing
+  Prompt.ReturnCommander {} -> case response of
+    Response.ReturnedCommander decision -> Just decision
+    _ -> Nothing
+  Prompt.ChooseCommandZoneOfferFirst {} -> case response of
+    Response.ChoseCommandZoneOfferFirst decision -> Just decision
+    _ -> Nothing
+  Prompt.ChooseLibraryEnd {} -> case response of
+    Response.ChoseLibraryEnd position -> Just position
+    _ -> Nothing
+  Prompt.ArrangeLibraryArrivals {} -> case response of
+    Response.ArrangedLibraryArrivals order -> Just order
+    _ -> Nothing
+  Prompt.ArrangeLibraryCards {} -> case response of
+    Response.ArrangedLibraryCards order -> Just order
+    _ -> Nothing
+  Prompt.ArrangeGraveyardArrivals {} -> case response of
+    Response.ArrangedGraveyardArrivals arrangement -> Just arrangement
+    _ -> Nothing
+
+-- The answer used when the transcript is exhausted or does not match. Keeping
+-- this total is what lets 'replay' avoid a partial escape: an over-short log
+-- degrades into a deterministic default rather than crashing.
+--
+-- Every arm below is a legal answer but one, and most are the LEAST EVENTFUL
+-- one -- but "least eventful" is a statement about the choice, never a promise
+-- that the game plays out the same. 'replay' therefore reports the first prompt
+-- that reached this function (Parun.Types.Desync); a caller that ignores the
+-- report is reading a different game's final state. Each arm below notes only
+-- why its answer is legal, and ChooseCardName says why it deliberately is not.
+defaultAnswer :: Prompt r -> r
+defaultAnswer p = case p of
+  Prompt.Shuffle ids -> ids
+  -- CR 729.2: the head of the turn order is always a legal starting player.
+  Prompt.RandomFirstPlayer order -> NonEmpty.head order
+  -- The head of the offer is always one of the offered objects. Legal, and
+  -- FIXED -- so a spec asserting WHICH card randomness named must supply its own
+  -- answerer, or it proves nothing about an engine that reveals the first card
+  -- unasked (Parun.ResolveSpec's "RandomReveal" pair).
+  Prompt.RandomObject candidates -> NonEmpty.head candidates
+  -- The head of the offer is always an undrawn sheet, and FIXED for the reason
+  -- RandomObject gives above.
+  Prompt.RandomStickerSheet slots -> NonEmpty.head slots
+  -- The head of the offer is always one of the offered players, and FIXED for
+  -- the reason RandomObject gives just above.
+  Prompt.RandomPlayer candidates -> NonEmpty.head candidates
+  -- The head of the offer is always one of the offered cards, and FIXED for the
+  -- reason RandomObject gives just above.
+  Prompt.RandomCard candidates -> NonEmpty.head candidates
+  -- Every candidate is a card of the spellbook the conjuring card printed, and
+  -- the prompt is raised only when there are two or more.
+  Prompt.ChooseConjuredCard _ _ candidates -> NonEmpty.head candidates
+  -- CR 706.1a's FLOOR: every die has a 1, whatever its size, so this is the one
+  -- answer that is in range for any N -- including the degenerate N of a
+  -- malformed card. FIXED for the reason RandomObject gives above.
+  Prompt.RollDie _ -> 1
+  -- The top, which is in range for any N. FIXED for the reason RandomObject
+  -- gives above.
+  Prompt.RandomDepth _ -> 1
+  -- A reference holding no such card: the engine then treats the name as it
+  -- did before it could ask, known only through the cards the game holds.
+  Prompt.LookUpCard _ -> Nothing
+  -- A reference holding no such card, LookUpCard's answer: the conjure then
+  -- conjures nothing.
+  Prompt.ReferenceCards {} -> []
+  -- A reference holding no such face: the name grant then reaches only the
+  -- faces the game holds (Parun.Engine.Game.referenceFaces).
+  Prompt.ReferenceNames _ -> []
+  -- CR 706.4: the prompt is only raised where one instruction's results are not
+  -- all the same number, and every position in them is a legal choice.
+  -- Answering 0 takes the first die rolled, ChooseDelayedTriggerEvent's posture
+  -- and for its reason.
+  Prompt.ChooseDieResult {} -> 0
+  -- CR 706.2a's "may": declining leaves the natural result standing, which is
+  -- the answer that throws no further die -- Prompt.ChooseExplore's posture
+  -- below and for its reason.
+  Prompt.RerollDie {} -> OptionalDecision.Declines
+  -- The same "may", and the same answer: declining leaves the result standing.
+  Prompt.AdjustDieRoll {} -> Nothing
+  -- CR 706.2b: every candidate is one the roller may apply; the first.
+  Prompt.ChooseRollModifier {} -> 0
+  -- CR 705.1 designates the two sides, so either is a legal answer and neither
+  -- is "least eventful" -- which branch of a card's flip is quieter is the
+  -- CARD's business, not this function's. FIXED for the reason RandomObject
+  -- gives above, so a spec asserting what a flip did must supply its own
+  -- answerer.
+  Prompt.FlipCoin -> CoinFace.Heads
+  -- CR 705.2's call, answered the same way and so always MATCHING the flip
+  -- above: a transcript that lost its coin answers replays a won flip. That is
+  -- exactly the desync 'replay' reports.
+  Prompt.CallCoin {} -> CoinFace.Heads
+  -- CR 705.1 / 614.1a: the prompt is raised only where the coins did not all
+  -- agree, and every face it offers is one a coin landed on. Keeping the FIRST
+  -- coin flipped is ChooseDieResult's posture, and unlike the two answers above
+  -- it is read off the candidates rather than fixed, so it cannot name a face
+  -- nothing came up.
+  Prompt.ChooseCoinResult _ _ candidates -> NonEmpty.head candidates
+  Prompt.ChooseAction _ _ actions -> case actions of
+    h : _ -> h
+    [] -> Action.Pass
+  -- CR 104.3a: not conceding is always legal. NOT "least eventful", unlike the
+  -- arms around it: this one drops a departure, and CR 104.2a then hands the
+  -- win to the other player, so a transcript whose Concede answer is lost
+  -- replays to the OTHER winner. That is why 'replay' reports the desync.
+  Prompt.Concede _ -> Concession.Continues
+  Prompt.ChooseDiscard _ _ ids n -> List.genericTake n ids
+  -- CR 701.22a: "any number" includes none, so leaving every looked-at card on
+  -- top in the order it was already in is legal -- and it is the one answer that
+  -- leaves the library exactly as it was.
+  Prompt.ChooseScry _ _ looked -> ([], looked)
+  -- CR 701.25a's "any number" reaches none too, so putting nothing into the
+  -- graveyard and keeping the whole look on top in the order it was found leaves
+  -- the board exactly as it was -- the least eventful legal answer, and the one
+  -- that moves no card between zones.
+  Prompt.ChooseSurveil _ _ looked -> ([], looked)
+  -- ChooseScry's answer over the opponent's library, for the same reason.
+  Prompt.ChooseFateseal _ _ _ looked -> ([], looked)
+  -- CR 701.44a: declining, for ChooseRiot's reason -- leaving the revealed card
+  -- on top is the half that moves nothing.
+  Prompt.ChooseExplore {} -> OptionalDecision.Declines
+  -- CR 507.1: the prompt is only asked with candidates, so the head is legal.
+  Prompt.ChooseDefender _ _ candidates -> NonEmpty.head candidates
+  -- The cost is still short, so CR 118.3c's refusal would fail the payment and
+  -- reverse whatever proposed it: taking a source is the only answer that can
+  -- still pay. WHICH source is the head because a Prompt.ChooseManaSource
+  -- carries object ids, a Decider and the cost but no board, so this cannot
+  -- tell a source that makes a colour the cost still wants from one that does
+  -- not. A cost like {G}{U} answered this way taps every source
+  -- sorted ahead of the wanted colour on the way to it: legal, and wasteful in
+  -- exactly the way "least eventful" above does not promise against.
+  -- Parun.ManaSpec's nine-land case pins both halves -- the taps are these
+  -- answers, and an answerer that can see the board taps two.
+  Prompt.ChooseManaSource _ _ _ candidates -> Just (NonEmpty.head candidates)
+  -- The cost is already covered, so floating more is the eventful answer and
+  -- closing the window is the quiet one.
+  Prompt.ChooseExtraManaSource {} -> Nothing
+  -- CR 733.1: reversing them, which is the half that leaves the board as the
+  -- illegal action found it -- a transcript that ran out cannot float mana into
+  -- a game that never made it.
+  Prompt.ReverseManaAbilities {} -> OptionalDecision.Exercises
+  -- Every offered yield is producible: tapForMana only offers what the source
+  -- can make.
+  Prompt.ChooseManaYield _ _ _ candidates -> NonEmpty.head candidates
+  -- Every offered unit pays the symbol and leaves the rest of the cost payable
+  -- (Parun.Engine.Mana.spendable), so the head is a legal payment.
+  Prompt.ChooseManaToSpend _ _ candidates -> NonEmpty.head candidates
+  -- CR 701.34a: any number includes none, so declining is always legal.
+  Prompt.ChooseProliferate {} -> (Set.empty, Set.empty)
+  -- Redistributing among nobody: "any number of players" includes none, and the
+  -- empty permutation is the answer that moves no life total. The identity over
+  -- every candidate would be equally legal and equally quiet, but the empty map
+  -- needs no candidates to build.
+  Prompt.ChooseRedistribution {} -> Map.empty
+  -- CR 701.54a: the prompt is only raised with two or more creatures the player
+  -- controls, and every one of them is a legal Ring-bearer.
+  Prompt.ChooseRingBearer _ _ candidates -> NonEmpty.head candidates
+  -- CR 701.39a: the prompt is only raised with two or more creatures tied for the
+  -- least toughness, and every one of them is a legal choice.
+  Prompt.ChooseBolster _ _ _ candidates -> NonEmpty.head candidates
+  -- CR 701.47a: the prompt is only raised with two or more Army creatures the
+  -- player controls, and every one of them is a legal choice.
+  Prompt.ChooseAmass _ _ _ candidates -> NonEmpty.head candidates
+  -- CR 701.68a: the prompt is only raised with two or more creatures the player
+  -- controls, and every one of them is a legal choice.
+  Prompt.ChooseBlight _ _ _ candidates -> NonEmpty.head candidates
+  -- CR 701.4a: the prompt is only raised with two or more objects across the
+  -- payer's hand and battlefield, and every one of them is a legal choice.
+  Prompt.ChooseBehold _ _ _ candidates -> NonEmpty.head candidates
+  -- CR 118.1 as a cost: the prompt is only raised with two or more permanents
+  -- carrying enough counters, and every one of them is a legal choice.
+  Prompt.ChooseCounterRemoval _ _ _ candidates -> NonEmpty.head candidates
+  -- CR 118.1 as a cost again, where no division is removing nothing: the
+  -- counters come off the candidates in ascending order, each emptied before the
+  -- next, which adds up whenever the prompt is raised.
+  Prompt.ChooseCounterRemovalAmong _ _ _ total offered -> Cost.fillInOrder total offered
+  -- The same, at the floor: the fewest counters the cost allows.
+  Prompt.ChooseCounterRemovalAtLeast _ _ _ least offered -> Cost.fillInOrder least offered
+  -- Under a cap, removing nothing is an answer.
+  Prompt.ChooseCounterRemovalUpTo {} -> Map.empty
+  -- CR 608.2d: the whole total on the first candidate, a legal division.
+  Prompt.ChooseCounterDistribution _ _ _ total candidates -> Map.singleton (NonEmpty.head candidates) total
+  -- CR 601.2d / 115.7f: Target.defaultDivision's, a legal division.
+  Prompt.ChooseDivision _ _ _ dividing candidates -> Target.defaultDivision dividing candidates
+  -- The same by permanent and kind, off the first permanent alone under a
+  -- spread FromOne, whose offer holds only permanents carrying the count.
+  Prompt.ChooseMixedCounterRemoval _ _ _ spread owed offered -> Cost.fillMixedInOrder spread owed offered
+  -- CR 701.38a: the prompt is only raised with two or more listed choices, and
+  -- every one of them is a legal vote.
+  Prompt.ChooseVote _ _ _ candidates -> NonEmpty.head candidates
+  -- CR 609.7a: the prompt is only raised with two or more sources matching the
+  -- shield's printed properties, and every one of them is a legal choice.
+  Prompt.ChooseDamageSource _ _ _ candidates -> NonEmpty.head candidates
+  -- CR 603.7b: the prompt is only raised where one event group holds two or more
+  -- occurrences the entry's condition matched, and every one of them is a legal
+  -- choice. Answering 0 takes the earliest, which is what the engine did before
+  -- the rule's second sentence was implemented -- so an answerer that falls
+  -- through to this cannot tell the two readings apart.
+  Prompt.ChooseDelayedTriggerEvent {} -> 0
+  -- CR 122.5: the prompt is only raised with two or more kinds actually on the
+  -- object the counter leaves, and every one of them is a legal choice.
+  -- CR 122.5 / 614.1c: every kind offered is a legal choice -- for a move, a
+  -- kind actually on the object the counter leaves.
+  Prompt.ChooseCounterKind _ _ _ candidates -> NonEmpty.head candidates
+  -- CR 122.5 again: "any number" includes none, and moving nothing is the answer
+  -- a transcript running short can always give. ChooseProliferate's posture, not
+  -- the maximal one -- a default that emptied the first object would rewrite a
+  -- board rather than leave it alone.
+  Prompt.ChooseMovedCounters {} -> Map.empty
+  -- CR 706.8b's "any number" includes none: reroll nothing.
+  Prompt.ChooseStoredRerolls {} -> Map.empty
+  -- CR 122.5 again, and the one counter-moving default that DOES move something:
+  -- "one or more" excludes none, so the least-eventful legal answer is a single
+  -- counter of the first kind offered rather than the empty map above.
+  Prompt.ChooseMovedCountersAtLeastOne _ _ _ _ offered -> case Map.lookupMin offered of
+    Nothing -> Map.empty
+    Just (kind, _) -> Map.singleton kind 1
+  -- CR 122.5 once more, over a group destination: the least-eventful answer the
+  -- spread allows, ChooseMovedCounters' and ChooseMovedCountersAtLeastOne's
+  -- reasoning above. "Any number" allocates to nobody; "one or more" puts one
+  -- counter of the first kind on the first recipient; a batch the card settled
+  -- goes whole onto the first recipient, which the engine repairs if that one
+  -- refuses a kind; "n of one kind" puts that many of the first kind there; and
+  -- "up to one" allocates to nobody.
+  Prompt.ChooseDistributedMovedCounters _ _ _ spread offered candidates -> case spread of
+    MoveSpread.AnyNumber -> Map.empty
+    MoveSpread.AtLeastOne -> case Map.lookupMin offered of
+      Nothing -> Map.empty
+      Just (kind, _) -> Map.singleton (NonEmpty.head candidates) (Map.singleton kind 1)
+    MoveSpread.Exactly -> Map.singleton (NonEmpty.head candidates) offered
+    MoveSpread.OneKind n -> case Map.lookupMin offered of
+      Nothing -> Map.empty
+      Just (kind, held) -> Map.singleton (NonEmpty.head candidates) (Map.singleton kind (min n held))
+    MoveSpread.UpToOne -> Map.empty
+  -- CR 122.5 once more: "up to one" includes none, and ChooseMovedCounters'
+  -- reason for declining is this prompt's too -- a default that took a counter
+  -- off the first object would rewrite a board rather than leave it alone.
+  Prompt.ChooseMovedCounterOrNone {} -> Nothing
+  -- CR 608.2d: the prompt is only raised with two or more matching cards in the
+  -- named graveyards, and every one of them is a legal choice.
+  Prompt.ChooseCardInGraveyard _ _ _ candidates _ -> NonEmpty.head candidates
+  -- CR 608.2d again: the prompt is only raised with two or more cards in the
+  -- chooser's own hand, and every one of them is a legal choice.
+  Prompt.ChooseCardInHand _ _ _ candidates -> NonEmpty.head candidates
+  -- CR 608.2d again: the prompt is only raised with two or more cards of the
+  -- bound group matching, and every one of them is a legal choice.
+  Prompt.ChooseCardFromAmong _ _ _ candidates -> NonEmpty.head candidates
+  -- None for a discard: CR 107.1c admits zero, and discarding spends cards the
+  -- fallback has no reason to give up. Otherwise the first candidates up to the
+  -- ceiling, the maximal subset: every subset no larger is legal (CR 608.2d,
+  -- 614.1c, 702.38a). A deterministic fallback, not a recommendation.
+  Prompt.ChooseAnyNumber _ _ _ AnyNumberOf.ToDiscard _ _ -> Set.empty
+  Prompt.ChooseAnyNumber _ _ _ _ candidates atMost -> Set.fromList (maybe id (take . Natural.toIntSaturating) atMost candidates)
+  -- CR 309.2a: the prompt is only raised where the player owns two or more
+  -- dungeon cards, and every one of them is a dungeon they may bring in.
+  Prompt.ChooseDungeon _ _ candidates -> NonEmpty.head candidates
+  -- CR 123.3: asked only at two or more, every one available.
+  Prompt.ChooseSticker _ _ _ candidates -> NonEmpty.head candidates
+  Prompt.ChooseStickerOrNone {} -> Nothing
+  -- CR 123.6b: the start of the name is always a position.
+  Prompt.ChooseNamePosition _ _ _ positions -> NonEmpty.head positions
+  -- CR 103.2b's "if any players WISH to reveal": declining is the answer that
+  -- asks for nothing, and this default is not a choice being made for a player
+  -- but the absence of one.
+  Prompt.ChooseCompanion {} -> Nothing
+  -- CR 400.11c: every offered card is one the effect allows them to bring in,
+  -- and the fewest it lets them bring is the least eventful answer; where that
+  -- asks for more copies than the distinct offers name, Event.bringInto tops the
+  -- answer up.
+  Prompt.ChooseFromOutsideTheGame _ _ candidates atLeast _ -> List.genericTake atLeast (NonEmpty.toList candidates)
+  -- CR 309.5a: the prompt is only raised where two or more arrows leave the
+  -- room, and every one of them is a room the marker may move into.
+  Prompt.ChooseRoom _ _ _ candidates -> NonEmpty.head candidates
+  -- CR 704.5j: every candidate is a legal thing to keep.
+  Prompt.ChooseLegend _ _ candidates -> NonEmpty.head candidates
+  -- Declining to ATTACK is not always legal -- a CR 508.1d requirement (Curse
+  -- of the Nightly Hunt) can make the empty declaration the one illegal answer.
+  -- Still total: Combat.declareAttackers repairs an illegal declaration to
+  -- Combat.forcedAttackDeclaration rather than dropping it.
+  Prompt.DeclareAttackers {} -> []
+  -- CR 508.1b: the head is the defending player (Combat.attackTargets orders it
+  -- first), always a legal thing to attack. The same value
+  -- Combat.announceAttackTarget degrades an out-of-list answer to, which the
+  -- two must agree on: neither path can observe the other.
+  Prompt.ChooseAttackTarget _ _ _ options -> NonEmpty.head options
+  -- CR 508.1g: declining, for ChooseRiot's reason -- it is the half that adds
+  -- nothing to the game state, and exerting is the half that costs the attacker
+  -- its next untap step. A transcript that ran out of answers must not spend a
+  -- resource the player never agreed to spend.
+  Prompt.ChooseExert {} -> OptionalDecision.Declines
+  -- Declining to BLOCK is not always legal either -- a CR 509.1c requirement
+  -- (Lure) can make the empty declaration illegal -- and stays total the same
+  -- way, through Combat.forcedBlockDeclaration.
+  Prompt.DeclareBlockers {} -> Map.empty
+  -- Must be a WELL FORMED division (Damage.wellFormedAssignment), or CR 510.1e
+  -- asks again. All power onto the first recipient of the first gate -- a
+  -- blocker, else the attacked planeswalker or battle, else the player --
+  -- totals power and clears CR 702.19b-c's gates by never spilling past one.
+  Prompt.AssignCombatDamage _ _ _ thresholds n ->
+    let gate r = case r of
+          Recipient.ToCreature _ -> 0 :: Int
+          Recipient.ToPlaneswalker _ -> 1
+          Recipient.ToBattle _ -> 1
+          Recipient.ToPlayer _ -> 2
+          Recipient.ToObject _ -> 3
+          Recipient.ToPile _ -> 3
+     in case List.sortOn gate (Map.keys thresholds) of
+          r : _ -> Map.singleton r n
+          [] -> Map.empty
+  -- As many legal recipients per slot as the announced count asks for, chosen
+  -- deterministically (the smallest ones). A slot with too few candidates is
+  -- underfilled -- casting rejects that answer.
+  Prompt.ChooseTargets _ _ _ sets -> fmap (\(n, rs) -> Set.fromList (take (Natural.toIntSaturating n) (Set.toAscList rs))) sets
+  -- CR 601.2c: announce as MANY as the board allows, matching the arm above --
+  -- announcing fewer is equally legal, and a default that declined would leave
+  -- every "up to N" card's effect unexercised by the specs that take this answer.
+  Prompt.AnnounceTargets _ _ _ offers -> fmap (\(count, rs) -> TargetCount.ceilingOn (Natural.length rs) count) offers
+  -- CR 612.2: the swap the engine itself falls back to on an unswappable
+  -- answer (Parun.Engine.Resolve.Effect's ChangeText arm), so the two agree.
+  Prompt.ChooseWordSwap _ _ _ _ families forbidden -> swapDefault families forbidden
+  -- Every zone the card named. Always legal -- "and/or" permits all of them --
+  -- and deliberately the MAXIMAL answer rather than a least-eventful one: it is
+  -- what parun did before the searcher was asked at all, so a board that does not
+  -- care about the choice plays exactly as it did. Least-eventful would be one
+  -- zone, and there is no principled way to say which.
+  Prompt.ChooseSearchZones _ _ offered -> offered
+  -- CR 701.23b: failing to find is always legal, and the empty answer is that
+  -- outcome for a search of any size.
+  Prompt.Search {} -> []
+  -- Declining the re-entrant cast is always legal.
+  Prompt.CastWhileSearching {} -> Nothing
+  -- CR 601.2b: the least X the card permits, which the gate that offered the
+  -- action measured payable (CR 101.1).
+  Prompt.ChooseX _ _ _ _ least _ -> least
+  -- CR 107.14's payment is "any amount", zero included, and paying nothing is
+  -- how a transcript that ran out declines it.
+  Prompt.ChoosePaidEnergy {} -> 0
+  -- CR 107.1c: the floor is always a number the player may choose -- zero for
+  -- "any number", and for a bid the high bid, which lets it stand.
+  Prompt.ChooseNumber _ _ _ least _ -> least
+  -- CR 702.155b's range opens at one, and Parun.Engine.Event never raises this
+  -- prompt for a Saga whose final chapter number is 0, so the floor is always
+  -- legal. The smallest answer, for ChooseX's reason.
+  Prompt.ChooseReadAheadChapter {} -> 1
+  -- The first `count` legal modes, deterministically -- and under CR 700.2d's
+  -- "You may choose the same mode more than once" the LEAST legal mode that many
+  -- times, since there may be fewer legal modes than the count and the answer
+  -- still has to satisfy the instruction. `count` is the FEWEST the instruction
+  -- allows, so a range answers with its floor -- the smallest legal answer reaches
+  -- least of the game a transcript ran out of.
+  Prompt.ChooseModes _ _ _ legal selection ->
+    let count = Modal.leastOf selection
+     in if Modal.allowsRepeatsIn selection
+          then maybe Seq.empty (Seq.replicate (Natural.toIntSaturating count)) (Set.lookupMin legal)
+          else Seq.fromList (List.genericTake count (Set.toAscList legal))
+  -- CR 707.5: declining to copy is always legal.
+  Prompt.ChooseCopyTarget {} -> Nothing
+  -- CR 208.2b: asked only when the list has two or more shapes.
+  Prompt.ChooseEntryOption {} -> 0
+  -- CR 702.136a: riot's "may" is a real fork, so there is no answer that changes
+  -- nothing. Declining is what the rule itself treats as the default branch --
+  -- "if you don't, it gains haste" -- and it is the half that puts no counter on
+  -- the board, which keeps a short transcript from conjuring a bigger creature
+  -- than the game had.
+  Prompt.ChooseRiot {} -> OptionalDecision.Declines
+  -- CR 702.98a: declining, for ChooseRiot's reason -- it is the half that puts no
+  -- counter on the board.
+  Prompt.ChooseUnleash {} -> OptionalDecision.Declines
+  -- CR 702.104a: declining, for ChooseRiot's reason -- it is the half that puts no
+  -- counter on the board.
+  Prompt.ChooseTribute {} -> OptionalDecision.Declines
+  -- CR 702.52a: declining, for ChooseRiot's reason -- it is the half that moves
+  -- nothing, so a transcript that ran out mills nobody's library.
+  Prompt.ChooseDredge {} -> OptionalDecision.Declines
+  -- CR 614.1a: declining, for ChooseRiot's reason -- the move the effect
+  -- proposed stands.
+  Prompt.ChooseRedirect {} -> OptionalDecision.Declines
+  -- CR 510.1b-c: declining, for ChooseRiot's reason -- the creature assigns
+  -- its damage as those rules say.
+  Prompt.ChooseCombatDamageOption {} -> OptionalDecision.Declines
+  -- CR 614.1a: declining, for ChooseRiot's reason -- the flip or roll the
+  -- instruction named stands.
+  Prompt.ChooseSubstitute {} -> OptionalDecision.Declines
+  -- CR 614.1c: declining, for ChooseRiot's reason above and one more. Declining
+  -- is the branch the card itself states as the default -- "if you don't, it
+  -- enters tapped" -- and it is the half that spends nothing, so a transcript
+  -- that ran out cannot drain a life total a real game never spent.
+  Prompt.ChoosePayLifeOnEntry {} -> OptionalDecision.Declines
+  -- CR 614.1c: declining, for ChoosePayLifeOnEntry's reason above -- it is the
+  -- branch the card states as its default, and the half that shows nobody a card.
+  Prompt.ChooseRevealOnEntry {} -> Nothing
+  -- CR 508.1g: declining, which rule 702.154a's "up to one" always permits and
+  -- which taps nobody.
+  Prompt.ChooseEnlist {} -> Nothing
+  -- CR 702.99a: declining, which the printed "may" permits; the card goes to
+  -- its owner's graveyard as usual (CR 608.2n).
+  Prompt.ChooseEncode {} -> Nothing
+  -- CR 105.1: any of the five colours is a legal answer.
+  Prompt.ChooseColor _ _ _ colors -> NonEmpty.head colors
+  Prompt.ChooseDesignation _ _ _ sectors -> NonEmpty.head sectors
+  -- CR 105.4: every candidate is a type Mana.produced offered, so the head
+  -- is legal -- the same filter-not-trust fallback Resolve's arm applies to a
+  -- wrong answer.
+  Prompt.ChooseManaType _ _ _ candidates -> NonEmpty.head candidates
+  -- THE ONE ILLEGAL ANSWER, deliberately. CR 201.4 offers every card in the
+  -- Oracle card reference and no card is called "", so this names nothing -- and
+  -- CR 201.2a is why naming nothing is harmless: an object with no name doesn't
+  -- have the same name as any other object, so the prompt's asker prohibits
+  -- nothing. Every arm reaching here is already a reported desync (the
+  -- transcript ran out or did not match), and conjuring a REAL card's name would
+  -- silently prohibit that card in the replay instead. Which is why this is the
+  -- one answerer Parun.Interpreter.policingCardNames must not wrap: that wrapper
+  -- asks again until rule 201.4 is satisfied, and this answer never satisfies it.
+  Prompt.ChooseCardName {} -> CardName.MkCardName Text.empty
+  -- Every candidate is an opponent the card's own text offered, and the prompt
+  -- is raised only when there are two or more.
+  Prompt.ChooseOpponent _ _ _ _ opponents -> NonEmpty.head opponents
+  -- CR 310.9a: the head of Battle.protectorCandidates, the same filter-not-trust
+  -- fallback Battle.designateProtector applies to a wrong answer.
+  Prompt.ChooseProtector _ _ _ candidates -> NonEmpty.head candidates
+  -- CR 102.1: every candidate is a player in the game, so the head is legal --
+  -- the same filter-not-trust fallback Event's arm applies to a wrong answer.
+  Prompt.ChoosePlayer _ _ _ candidates -> NonEmpty.head candidates
+  -- CR 725.4 / 726.4: every candidate is a live active player who may take it.
+  Prompt.ChooseActivePlayer _ _ candidates -> NonEmpty.head candidates
+  -- CR 305.6: any of the five basic land types is legal.
+  Prompt.ChooseBasicLandType {} -> Subtype.Mountain
+  -- CR 205.3m: any creature type is legal, and Goblin is one -- the arm above's
+  -- posture, conjuring a type the prompt offered no list of.
+  Prompt.ChooseCreatureType {} -> Subtype.Goblin
+  -- CR 603.3b: the canonical order is always a legal answer.
+  Prompt.OrderTriggers _ _ entries -> zipWith const [0 ..] entries
+  -- CR 122.1c: likewise, and it is the order the batch was gathered in.
+  Prompt.OrderDamage _ _ events -> zipWith const [0 ..] events
+  -- CR 615.7: spending the countdown down the batch in its own order is always
+  -- a legal division -- the one parun made before the division became the
+  -- shielded side's to choose.
+  Prompt.AllocateDamage _ _ events countdown ->
+    snd (List.mapAccumL (\left event -> let spend = min left (DamageEvent.amount event) in (left - spend, spend)) countdown events)
+  -- CR 601.2h: likewise, and it is the cost's PRINTED order -- what parun paid in
+  -- before the order became the payer's to choose.
+  Prompt.OrderCostComponents _ _ _ components -> zipWith const [0 ..] components
+  -- CR 508.1j / 509.1f: likewise, and it is the order the charges were gathered
+  -- in -- what parun paid in before the order became the payer's to choose.
+  Prompt.OrderCombatTolls _ _ tags -> zipWith const [0 ..] tags
+  -- CR 712.21a: likewise, and it is the order the cards melded in -- what parun
+  -- put them down in before the arrangement became the owner's to choose. The
+  -- rule says "MAY arrange", so this identity is a real answer rather than a
+  -- stand-in for one.
+  Prompt.OrderComponentCards _ _ _ components -> zipWith const [0 ..] components
+  -- CR 123.5c: the first object, the one the melded or merged permanent's split
+  -- names first.
+  Prompt.ChooseStickerKeeper {} -> 0
+  -- CR 608.2f: likewise, and it is the engine's own APNAP-then-ascending sweep
+  -- order -- what parun walked in before the intra-seat key became the resolving
+  -- controller's to choose.
+  Prompt.OrderForEach _ _ _ members -> zipWith const [0 ..] members
+  -- Every candidate, ChooseAnyNumber's maximal subset: CR 608.2d
+  -- admits every subset here, so no answer can be illegal. A deterministic
+  -- fallback, not a recommendation.
+  Prompt.ChooseLoopMembers _ _ _ candidates -> Set.fromList candidates
+  -- CR 700.3: every offered pile is one the chooser may take.
+  Prompt.ChoosePile _ _ _ piles -> NonEmpty.head piles
+  -- Stopping, so a transcript that ran out cannot loop forever.
+  Prompt.ChooseRepeat {} -> OptionalDecision.Declines
+  -- CR 613.7m: likewise, and it is the engine's own APNAP-then-ascending order --
+  -- what parun stamped in before the intra-seat key became that seat's to choose.
+  Prompt.OrderTimestamps _ _ batch -> zipWith const [0 ..] batch
+  -- CR 605.3a: likewise, and it is the engine's own APNAP-then-ascending sweep
+  -- order -- what parun activated in before the intra-seat key became that
+  -- seat's to choose.
+  Prompt.OrderManaActivations _ _ batch -> zipWith const [0 ..] batch
+  -- CR 616.1: the bucket is non-empty when this is asked, so index 0 is legal.
+  Prompt.ChooseReplacement {} -> 0
+  -- The first `count` candidates, which the engine offers in ascending order.
+  Prompt.ChooseSacrifices _ _ _ candidates count _ -> Set.fromList (List.genericTake count candidates)
+  -- CR 406.2: the first `count` candidates, the arm above's rule over the
+  -- graveyard pool the engine offers in that zone's own order.
+  Prompt.ChooseExilesFromGraveyard _ _ _ candidates count -> Set.fromList (List.genericTake count candidates)
+  -- CR 702.167a: the first `count` candidates, the arm above's rule over the
+  -- battlefield-and-graveyard union `Parun.Engine.Cost.materialCandidates` offers.
+  -- The Bool is ignored because `count` is legal under both readings of it --
+  -- exactly the count, and the smallest answer a minimum admits.
+  Prompt.ChooseMaterials _ _ _ candidates count _ -> Set.fromList (List.genericTake count candidates)
+  -- CR 701.59a: every candidate, ChooseTapsForTotalPower's maximal subset and
+  -- for its reason read over mana values -- no card has a NEGATIVE mana value
+  -- (CR 202.3), so dragging every one in can only raise the total, and the whole
+  -- graveyard is a legal answer whenever the cost is payable at all. A
+  -- deterministic fallback, not a recommendation.
+  Prompt.ChooseCollectEvidence _ _ _ candidates _ -> Set.fromList candidates
+  -- CR 608.2d: the head of the offer, ChooseCardInGraveyard's fallback. Every
+  -- candidate was pre-filtered by the engine, so the head is a legal answer. A
+  -- deterministic fallback, not a recommendation.
+  Prompt.ChoosePermanent _ _ _ candidates -> NonEmpty.head candidates
+  -- CR 702.122a: every candidate, the arm above's maximal subset. Legal whenever
+  -- the cost is payable at all, save for a board where some candidate has
+  -- NEGATIVE power and dragging it in drops the total back under the threshold
+  -- -- in which case the payment goes Unpaid, which `Cost.pay` turns into a
+  -- complete no-op rather than an illegal state. A deterministic fallback, not a
+  -- recommendation.
+  Prompt.ChooseTapsForTotalPower _ _ _ candidates _ -> Set.fromList candidates
+  -- The first `count` candidates, ChooseSacrifices' fallback: the count is exact
+  -- here, so the maximal subset the arm above takes would be rejected outright
+  -- wherever there are more candidates than the cost wants.
+  Prompt.ChooseTaps _ _ _ candidates count -> Set.fromList (List.genericTake count candidates)
+  -- The first `count` candidates, the arm above\'s fallback over a return to
+  -- hand: the count is exact here too.
+  Prompt.ChooseReturns _ _ _ candidates count -> Set.fromList (List.genericTake count candidates)
+  Prompt.ChooseExiles _ _ _ candidates count -> Set.fromList (List.genericTake count candidates)
+  -- CR 701.3a: every candidate is a destination the card's own text offered.
+  Prompt.ChooseAttachment _ _ _ candidates -> NonEmpty.head candidates
+  -- CR 303.4k: declining, the ChooseRiot posture -- the "may" is a real fork, so
+  -- there is no answer that changes nothing, and this is the half that moves no
+  -- permanent. It is also the half a transcript that ran out cannot get wrong in
+  -- the player's favour: CR 704.5m buries the Aura it leaves unattached.
+  Prompt.ChooseTurnUpAttachment {} -> OptionalDecision.Declines
+  -- The first offered candidate is the PRINTED cost for a cast from hand
+  -- (Cost.costsFor puts it first), so it sacrifices nothing. A cast from the
+  -- graveyard offers only CR 702.34a's flashback cost, so the head is the sole
+  -- candidate and this prompt is not raised at all. Cost.firstOffered keeps
+  -- this total for the empty list the engine never produces.
+  Prompt.ChooseCost _ _ _ candidates -> Cost.firstOffered candidates
+  -- The head is the permission that spends no budget where one admits the play
+  -- (Parun.Engine.PlayerEffect.permissionOptions orders them so).
+  Prompt.ChoosePlayPermission _ _ _ options -> NonEmpty.head options
+  -- CR 103.5: keeping is always legal.
+  Prompt.DeclareMulligan {} -> MulliganDecision.Keep
+  -- A legal ordered subset of the redrawn hand: deterministically the first
+  -- `count`.
+  Prompt.Bottom _ _ hand count -> List.genericTake count hand
+  -- CR 103.5b: declining is always legal.
+  Prompt.MulliganAction {} -> Nothing
+  -- CR 103.6: declining is always legal.
+  Prompt.OpeningHandAction {} -> Nothing
+  -- CR 603.5: declining a "may" is always legal and changes nothing.
+  Prompt.ChooseOptional {} -> OptionalDecision.Declines
+  -- CR 603.5 / 118.12: where "neither" is on offer, declining it is always
+  -- legal and changes nothing, ChooseOptional's default. Otherwise an either-or
+  -- has no "decline" -- both branches are instructions -- so the default is the
+  -- FIRST branch, which is the one CR 608.2c prints first. Deliberate rather
+  -- than arbitrary: Parun.Engine.Script.declining routes every unattended game
+  -- and Parun.Support.identityAnswer most of the suite through this.
+  Prompt.ChooseClause _ _ _ _ branches neither _ -> if neither then Nothing else Just (NonEmpty.head branches)
+  -- CR 608.2g: declining an offered cast is always legal, and it leaves the card
+  -- exactly where the resolving effect put it.
+  Prompt.OfferedCast {} -> OptionalDecision.Declines
+  -- CR 601.3 / 709.3a / 712.11c: every offered cast was gated on its own before
+  -- it reached the prompt, so the first is legal. Printed order within a card, so
+  -- it is the earliest surviving half rather than the front face -- a front face
+  -- the gate dropped is not on offer at all. A deterministic fallback, not a
+  -- recommendation.
+  Prompt.ChooseOfferedCastSpell _ _ options -> NonEmpty.head options
+  -- CR 709.5f / 709.5g: every offered half is one the instruction admits, and
+  -- the prompt is raised only where two or more are, so the first in printed
+  -- order is a deterministic fallback rather than a recommendation.
+  Prompt.ChooseHalf _ _ _ halves -> NonEmpty.head halves
+  -- CR 702.94a: declining the reveal is always legal, and it leaves the drawn
+  -- card an ordinary card in hand.
+  Prompt.OfferedMiracleReveal {} -> OptionalDecision.Declines
+  -- CR 701.25b / 701.38d: either answer is legal. Exercises keeps a
+  -- transcript-less run looking at every card and casting every vote the board
+  -- allows.
+  Prompt.OfferedExtra {} -> OptionalDecision.Exercises
+  -- CR 118.12a: the cost rides a "may", so declining is always legal, and it
+  -- spends nothing -- which keeps a short transcript from tapping a payer's board.
+  Prompt.ChooseToPay {} -> PaymentDecision.Declines
+  -- CR 118.13: every offered route is payable, and the prompt is raised only
+  -- where two are.
+  Prompt.AnnouncePhyrexianPayment _ _ _ _ offers -> NonEmpty.head offers
+  -- CR 118.13 again, for CR 107.4e's monocolored hybrid: every offered route
+  -- is payable, and the prompt is raised only where two are.
+  Prompt.AnnounceHybridPayment _ _ _ _ offers -> NonEmpty.head offers
+  -- CR 118.13 once more, for CR 107.4e's colour/colour hybrid: every offered
+  -- half is payable, and the prompt is raised only where two are.
+  Prompt.AnnounceHybridHalf _ _ _ _ offers -> NonEmpty.head offers
+  -- CR 118.7e: both halves are legal answers, so the first offered one is as
+  -- deterministic a default as any -- and unlike the announcements above it can
+  -- never make a cost unpayable, since CR 601.2f floors a reduction at {0}.
+  Prompt.ChooseReductionHalf _ _ _ _ offers -> NonEmpty.head offers
+  -- CR 601.2f: every offered order is legal, and the offer is CHEAPEST FIRST, so
+  -- the head is both deterministic and the one that can never strand a payment a
+  -- costlier order would have made unpayable.
+  Prompt.ChooseReducedCost _ _ _ offers -> NonEmpty.head offers
+  -- CR 702.140c: a two-way choice with no decline, so a short transcript takes
+  -- the side the rule names first.
+  Prompt.ChooseMutateSide {} -> MutateSide.Over
+  -- CR 701.61a: a two-way choice raised only where both halves can be carried
+  -- out, so a short transcript takes the half the rule names first.
+  Prompt.ChooseForage {} -> ForageMode.ExileCards
+  -- CR 701.48a is two "you may"s, so declining both is always legal and is what
+  -- a short transcript takes.
+  Prompt.ChooseLearn {} -> Nothing
+  -- CR 701.30a's second sentence is a "may", so leaving the revealed card on top
+  -- is always legal -- and it is the answer that moves no card.
+  Prompt.ChooseClash {} -> LibraryPosition.Top
+  -- CR 701.56a's "any number" reaches zero, so choosing nothing is always legal
+  -- and is the answer that moves no counter.
+  Prompt.ChooseTimeTravel {} -> Map.empty
+  -- CR 702.42a: entwine is a "may", so declining is always legal. It also costs
+  -- no mana, which keeps a short transcript from diverging into an unpayable
+  -- cast.
+  Prompt.ChooseEntwine {} -> EntwineDecision.Declines
+  -- CR 702.33a: kicker is a "may", so declining is always legal, and declining
+  -- costs no mana -- entwine's reason above, word for word. Zero is the decline,
+  -- and it is CR 702.33c's multikicker answer too.
+  Prompt.ChooseKicker {} -> KickerDecision.MkKickerDecision 0
+  -- CR 702.27a: buyback is a "may" too, so declining is always legal and costs no
+  -- mana -- entwine's reason above.
+  Prompt.ChooseBuyback {} -> BuybackDecision.Declines
+  -- CR 702.47a: splice is a "may" too, so splicing nothing is always legal and
+  -- costs no mana -- entwine's reason above.
+  Prompt.ChooseSplice {} -> []
+  -- CR 702.132a: choosing a player is a "may", so choosing nobody is always
+  -- legal -- entwine's reason above -- and it is the answer that opens no second
+  -- window.
+  Prompt.ChooseAssistant {} -> Nothing
+  -- CR 702.132a's second "may", and zero is its decline: an assisting player who
+  -- pays nothing leaves the whole total cost with the caster.
+  Prompt.ChooseAssistAmount {} -> 0
+  -- CR 903.9a is a "may", so leaving the commander where it is is always legal
+  -- and is the answer that changes nothing.
+  Prompt.ReturnCommander {} -> CommandZoneDecision.Leaves
+  -- CR 616.1e: declining leaves the other effects to apply first, and the owner
+  -- is still asked once they have, wherever the event is still headed for a hand
+  -- or a library.
+  Prompt.ChooseCommandZoneOfferFirst {} -> OptionalDecision.Declines
+  -- CR 401.2: both ends are legal. The BOTTOM, which is
+  -- LibraryPosition.defaultValue and so the end every library arrival in the tree
+  -- took before an effect could name one.
+  Prompt.ChooseLibraryEnd {} -> LibraryPosition.defaultValue
+  -- CR 401.4: the canonical order is always a legal answer, as OrderTriggers'
+  -- arm above says.
+  Prompt.ArrangeLibraryArrivals _ _ _ oids -> zipWith const [0 ..] oids
+  -- CR 401.4 again, for cards that never left the library.
+  Prompt.ArrangeLibraryCards _ _ oids -> zipWith const [0 ..] oids
+  -- CR 404.3: any order is the order the batch moved in, always legal.
+  Prompt.ArrangeGraveyardArrivals {} -> GraveyardArrangement.AnyOrder
+
+-- defaultAnswer's swap: TextWord.firstSwap, or, when the card leaves no legal
+-- swap, an identity the engine refuses and so applies nothing for.
+swapDefault :: Set.Set WordFamily.WordFamily -> Set.Set TextWord.Type.TextWord -> (TextWord.Type.TextWord, TextWord.Type.TextWord)
+swapDefault families = Maybe.fromMaybe (TextWord.Type.SubtypeWord Subtype.Mountain, TextWord.Type.SubtypeWord Subtype.Mountain) . TextWord.firstSwap families
+
+-- Run a game under a base interpreter, keeping every answer in order.
+--
+-- The game each question came from (Asked, #153) is dropped here, and both
+-- halves drop it: a transcript is a positional list of ANSWERS, and a subgame's
+-- questions are answered from the same list in the order they are asked -- which
+-- is exactly what lets one transcript replay a game containing a CR 729 subgame.
+record :: (forall r. Prompt r -> r) -> GameState -> Game a -> ((a, GameState), [Response])
+record answer gs game =
+  let step :: Prompt r -> State.State [Response] r
+      step p = do
+        let value = answer p
+        State.modify' (encode p value :)
+        pure value
+      (outcome, logged) =
+        State.runState (Program.foldProgramM (step . Asked.prompt) (State.runStateT game gs)) []
+   in (outcome, reverse logged)
+
+-- Re-run a game against a recorded transcript. Because the engine is pure and
+-- every decision is a suspension, feeding back the same answers reproduces the
+-- same final state.
+--
+-- Mirrors 'record', but yields the outcome alongside the first point at which
+-- the transcript stopped answering (Nothing when it answered every prompt
+-- exactly). The report is a RETURN VALUE because 'defaultAnswer' is total: a
+-- transcript that has drifted out of step still produces a final state, just
+-- not the recorded game's, and for Prompt.Concede that silently decides who
+-- wins.
+--
+-- The desync is not itself an error and does not stop the run. Positional
+-- replay cannot tell a prompt the engine gained from one it lost, so there is
+-- no resync that is right in both directions; consuming nothing on a mismatch
+-- is the conservative half of that.
+replay :: [Response] -> GameState -> Game a -> ((a, GameState), Maybe Desync)
+replay responses gs game =
+  let step :: Prompt r -> State.State (Natural, [Response], Maybe Desync) r
+      step p = do
+        (asked, remaining, desync) <- State.get
+        let stall d = State.put (succ asked, remaining, desync <|> Just d)
+        case remaining of
+          [] -> do
+            stall (Desync.Exhausted asked)
+            pure (defaultAnswer p)
+          h : t -> case decode p h of
+            Just value -> do
+              State.put (succ asked, t, desync)
+              pure value
+            Nothing -> do
+              stall (Desync.Mismatched asked h)
+              pure (defaultAnswer p)
+      (outcome, (_, _, reported)) =
+        State.runState (Program.foldProgramM (step . Asked.prompt) (State.runStateT game gs)) (0, responses, Nothing)
+   in (outcome, reported)
+
+-- The Response a ChooseAnyNumber answer is recorded as: one constructor per
+-- AnyNumberOf, so replaying a transcript against the wrong kind of choice acts on
+-- nothing rather than sacrificing what should have been revealed.
+anyNumberResponse :: AnyNumberOf.AnyNumberOf -> Set.Set ObjectId -> Response
+anyNumberResponse purpose = case purpose of
+  AnyNumberOf.Permanents -> Response.ChoseAnyNumberOfPermanents
+  AnyNumberOf.CardsFromAmong -> Response.ChoseCardsFromAmong
+  AnyNumberOf.ToSacrifice -> Response.ChoseSacrifices
+  AnyNumberOf.ToReveal -> Response.ChoseReveals
+  AnyNumberOf.ToExile -> Response.ChoseExilesFromGraveyard
+  AnyNumberOf.ToDiscard -> Response.ChoseAnyNumberToDiscard
+  AnyNumberOf.ToCrank -> Response.ChoseCranks
+  AnyNumberOf.IntoPile -> Response.ChosePileSplit
+  AnyNumberOf.ToUntap -> Response.ChoseUntaps

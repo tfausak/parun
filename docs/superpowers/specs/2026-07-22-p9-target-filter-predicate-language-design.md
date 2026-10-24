@@ -32,16 +32,16 @@ during this design pass** (2026-07-22), not read from the vendored MTGJSON dump
 
 ## 0. Why this phase, and what it proves
 
-Pawl has grown a whole **family of parallel classification-as-data types**, each
+Parun has grown a whole **family of parallel classification-as-data types**, each
 a hand-carved enum that gains one variant per card:
 
 | Type | Subject | Inhabitants today |
 |---|---|---|
-| `Pawl.Type.TargetSpec` | a target recipient | 11 variants — `NonblackCreatureTarget`, `WallTarget`, `ArtifactTarget`, `OpponentCreatureTarget`, … |
-| `Pawl.Type.CardCriterion` | a card off the battlefield | `BasicLandCard` |
-| `Pawl.Type.PermanentCriterion` | a battlefield permanent | `AnyPermanent`, `CreaturePermanent`, `PermanentOfSubtype` |
-| `Pawl.Type.SpellCriterion` | a spell on the stack | `NoncreatureSpell`, `SpellOfColor` |
-| `Pawl.Type.Affected` (part) | a continuous effect's set | `AllCreatures`, `AllLands`, `AllNonbasicLands`, `CreaturesOfColor` |
+| `Parun.Type.TargetSpec` | a target recipient | 11 variants — `NonblackCreatureTarget`, `WallTarget`, `ArtifactTarget`, `OpponentCreatureTarget`, … |
+| `Parun.Type.CardCriterion` | a card off the battlefield | `BasicLandCard` |
+| `Parun.Type.PermanentCriterion` | a battlefield permanent | `AnyPermanent`, `CreaturePermanent`, `PermanentOfSubtype` |
+| `Parun.Type.SpellCriterion` | a spell on the stack | `NoncreatureSpell`, `SpellOfColor` |
+| `Parun.Type.Affected` (part) | a continuous effect's set | `AllCreatures`, `AllLands`, `AllNonbasicLands`, `CreaturesOfColor` |
 
 Every one of these is "a first-order, analyzable predicate over an object,
 expressed as data, evaluated through a generic matcher — never by casing on the
@@ -52,7 +52,7 @@ failure mode: it has grown eleven variants, several of them one-off narrowings
 `Target.legalRecipients` arm. This is the mtgish `TargetSpec` explosion the M4.5
 census warns about.
 
-**What P9 establishes.** A single object-predicate language — `Pawl.Type.Filter`
+**What P9 establishes.** A single object-predicate language — `Parun.Type.Filter`
 — as first-order, statically-analyzable **data**, with one generic evaluator, and
 the demonstration that it subsumes the whole family across every subject shape:
 projected battlefield permanents (targeting, `PermanentCriterion`), projected
@@ -70,12 +70,12 @@ the same legitimate act as casing on a `CardType` or a keyword (CLAUDE.md); the
 invariant forbids casing on an *effect's* identity, which `Filter` never does —
 it is evaluated by one generic matcher that never learns which spell produced it.
 
-## 1. The core type: `Pawl.Type.Filter`
+## 1. The core type: `Parun.Type.Filter`
 
 A first-order predicate over one object, as data, recursive-but-finite:
 
 ```haskell
-module Pawl.Type.Filter where
+module Parun.Type.Filter where
 
 data Filter
   = HasCardType CardType          -- CR 205 / 300: the object's card types include this one
@@ -93,7 +93,7 @@ data Filter
 with `PlayerRelation` its own module:
 
 ```haskell
-module Pawl.Type.PlayerRelation where
+module Parun.Type.PlayerRelation where
 
 -- Who an object's controller is, relative to the perspective the evaluation
 -- carries (the source's controller when targeting; the effect's controller for
@@ -104,7 +104,7 @@ data PlayerRelation = You | Opponent
 ```
 
 **Flat, not layered.** Atoms and the `And`/`Or`/`Not` combinators are sibling
-arms of one type. This mirrors `Pawl.Type.Quantity`, the project's standing
+arms of one type. This mirrors `Parun.Type.Quantity`, the project's standing
 precedent for "leaves plus a recursive combinator in one flat type": its
 recursive `Plus Quantity Quantity` sits alongside the leaf `Literal` / `ManaValue`
 / `Count` arms, with no `SimpleQuantity` split. A split into
@@ -147,7 +147,7 @@ different places:
 accessors an atom needs — supplied by whichever source fits the subject's zone:
 
 ```haskell
--- Pawl.Filter (evaluator module; logic, not a type module)
+-- Parun.Filter (evaluator module; logic, not a type module)
 -- The accessors Filter atoms consult. Supplied by the projection on the
 -- battlefield/stack, and by the printed card off the battlefield. `power` and
 -- `controller` are Nothing off the battlefield (a card in a library has neither
@@ -222,7 +222,7 @@ the effect's source, exactly as today.
 `TargetSpec` splits into a *closed* pool classification and an *open* filter:
 
 ```haskell
-module Pawl.Type.TargetSpec where
+module Parun.Type.TargetSpec where
 
 -- What a target slot may hold: a closed pool of candidate recipients, narrowed
 -- by an open Filter (Nothing = the whole pool, e.g. bare "target creature").
@@ -356,7 +356,7 @@ perspective), an **aggregation** (count of objects; count of *distinct* card typ
 for Tarmogoyf), and a **comparison to a threshold** ("you control no Swamps" =
 count of {Swamps you control} = 0). That concept reuses the P9 `Filter` as its
 per-object predicate but is a genuinely separable design — and folding it in would
-drag in `Pawl.Event`'s state-condition casing, the trigger / intervening-"if" /
+drag in `Parun.Event`'s state-condition casing, the trigger / intervening-"if" /
 duration triple, and `Quantity.Count`, sprawling the phase.
 
 **Action:** #38 and #39 are **re-scoped, not closed** — their expiry trigger moves
@@ -373,7 +373,7 @@ filter atoms (added card-driven, each with its own issue).
 
 Doom Blade, Terror, and Reprisal cast and resolve with their legal target sets
 derived by `Filter.matches`; the basic-land search and the `PermanentCriterion`
-consumer match through the same evaluator; `Pawl.Type.TargetSpec` holds a pool +
+consumer match through the same evaluator; `Parun.Type.TargetSpec` holds a pool +
 `Maybe Filter` with no per-card variant; `CardCriterion`, `PermanentCriterion`,
 and `SpellCriterion` are deleted; `Affected`'s dynamic sets are `Matching Filter`;
 #40 is closed and #38/#39 re-scoped. `cabal build all --enable-tests

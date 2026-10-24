@@ -1,0 +1,60 @@
+module Parun.Codec.KeywordDesignatorSpec where
+
+import qualified Parun.Codec.Keyword as Keyword
+import qualified Parun.Codec.KeywordDesignator as KeywordDesignator
+import qualified Parun.JsonCodec.Codec as Codec
+import qualified Parun.JsonCodec.Common as Common
+import qualified Parun.Spec as Spec
+import qualified Parun.Types.Keyword as Keyword
+import qualified Parun.Types.KeywordDesignator as KeywordDesignator
+import qualified Parun.Types.KeywordFamily as KeywordFamily
+
+spec :: (Monad m, Monad n) => Spec.Spec m n -> n ()
+spec s = Spec.describe s "Parun.Codec.KeywordDesignator" $ do
+  let codec = KeywordDesignator.codec Keyword.codec
+  -- CR 702.29a: the family, which is what Fluctuator's "cycling abilities you
+  -- activate" names.
+  Spec.it s "OfFamily" $
+    Common.assertCodec
+      s
+      codec
+      (KeywordDesignator.OfFamily KeywordFamily.Cycling)
+      " {\"type\":\"OfFamily\",\"value\":{\"type\":\"Cycling\"}} "
+
+  -- CR 702.177a: the keyword itself, which is what Boom Scholar's "exhaust
+  -- abilities of other permanents you control" names.
+  Spec.it s "OfKeyword" $
+    Common.assertCodec
+      s
+      codec
+      (KeywordDesignator.OfKeyword Keyword.Exhaust)
+      " {\"type\":\"OfKeyword\",\"value\":{\"type\":\"Exhaust\"}} "
+
+  -- CR 607.2i / 702.33e: Scrapshooter's "if the gift was promised".
+  Spec.it s "Printed" $
+    Common.assertCodec
+      s
+      codec
+      (KeywordDesignator.Printed KeywordFamily.Gift)
+      " {\"type\":\"Printed\",\"value\":{\"type\":\"Gift\"}} "
+
+  -- CR 702.56b: the second of a spell's identical replicate instances, which a
+  -- minted replicate trigger names.
+  Spec.it s "OfInstance" $
+    Common.assertCodec
+      s
+      codec
+      (KeywordDesignator.OfInstance Keyword.Exhaust 2)
+      " {\"type\":\"OfInstance\",\"value\":[{\"type\":\"Exhaust\"},2]} "
+
+  -- The arms must stay distinguishable on the wire: a family and a keyword can
+  -- share a spelling (`{"type":"Cycling"}` under either tag), so the outer tag
+  -- is the whole of the difference.
+  Spec.it s "the arms do not collide" $
+    Spec.assertBool
+      s
+      (Codec.encode codec (KeywordDesignator.OfFamily KeywordFamily.Cycling) /= Codec.encode codec (KeywordDesignator.OfKeyword Keyword.Exhaust))
+      "a family is not a keyword"
+
+  Spec.it s "has a schema" $
+    Common.assertHasSchema s codec

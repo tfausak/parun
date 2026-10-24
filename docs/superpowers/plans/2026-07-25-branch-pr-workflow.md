@@ -767,9 +767,9 @@ Expected: `0`. Use *that* grep, not `grep -c -- '- \[ \]'` — this file quotes 
 This plan changes no Haskell. Confirm rather than assume:
 
 ```bash
-git diff --stat main..HEAD -- source/ pawl.cabal
+git diff --stat main..HEAD -- source/ parun.cabal
 ```
-Expected: no output — no file under `source/` and not `pawl.cabal` was modified.
+Expected: no output — no file under `source/` and not `parun.cabal` was modified.
 
 - [x] **Step 5: Run `/code-review` on the branch**
 
@@ -825,7 +825,7 @@ parallelism returns.
 
 ## Verification
 
-- [x] No Haskell changed — `git diff --stat main..HEAD -- source/ pawl.cabal` is empty
+- [x] No Haskell changed — `git diff --stat main..HEAD -- source/ parun.cabal` is empty
 - [x] `hooky fix` applied, `hooky run` passes on every commit
 - [x] Suite: 1162 -> 1162 (untouched)
 - [x] No tracked doc still instructs a reader to follow the milestone loop

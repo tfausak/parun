@@ -13,15 +13,15 @@
 Copied from the spec and `CLAUDE.md`; every task implicitly includes these:
 
 - **Haskell 2010, no language extensions** beyond `GADTs`, `RankNTypes`, `NamedFieldPuns`. No `LambdaCase`, no `OverloadedStrings`, **no list comprehensions**.
-- **No explicit export lists** (`module Pawl.Foo where`).
-- **One type per module** under `Pawl.Type.<TypeName>` (type + instances only); logic in other `Pawl.*` modules. A module never imports its parents.
+- **No explicit export lists** (`module Parun.Foo where`).
+- **One type per module** under `Parun.Type.<TypeName>` (type + instances only); logic in other `Parun.*` modules. A module never imports its parents.
 - **Qualified imports, aliased to the last component** (`Data.List` → `List`); operators unqualified; one import group.
 - **No partial functions** — `Maybe`/`Either`, never `head`/`error`/non-exhaustive matches.
 - **`newtype` + `Mk`-prefixed, non-punning constructors**; build records with `do`/record syntax. Sum-type data constructors (like `ChangeSubtypeWord`) take no `Mk` prefix.
 - **Prefer explicit:** `case` over point-free; `let` over `where`; `$` over parens, `.` over chained `$`; `Text` not `String`; arbitrary-precision numbers.
 - **No boolean blindness**; **derive at least `Eq` and `Show`**.
 - **Warning-clean** under `-Weverything` minus the allow-list; the `pedantic` flag makes any warning a build failure (including `-Wincomplete-patterns` on a GADT match missing a new constructor). Build `all`: `cabal build all --enable-tests --enable-benchmarks`. When in doubt, `cabal clean` first — incremental builds hide warnings.
-- **The two invariants:** the rules core never `case`s on an effect's *identity*; `Pawl.Projection` is the **sole** `case`-on-`Modification` home, `Pawl.Resolve` the **sole** `case`-on-`Effect` home. Constructing a value is not casing on it. The engine makes no player choices except where the rules leave one, and elides only indistinguishable options (with a documented expiry).
+- **The two invariants:** the rules core never `case`s on an effect's *identity*; `Parun.Projection` is the **sole** `case`-on-`Modification` home, `Parun.Resolve` the **sole** `case`-on-`Effect` home. Constructing a value is not casing on it. The engine makes no player choices except where the rules leave one, and elides only indistinguishable options (with a documented expiry).
 - **Every rules claim cited** against `docs/rules.txt` in a code comment. Never trust recalled Magic rules.
 - **After each task:** `cabal build all --enable-tests --enable-benchmarks` warning-free, `cabal test`, `git add -A` (stage explicit paths under a shared worktree) then `hooky fix` && `git add -A` && `hooky run`, HLint clean. Commit directly to `main`, one small complete commit per task.
 
@@ -44,18 +44,18 @@ Claude-Session: https://claude.ai/code/session_012ghxv3K6WVbS8LApj4YUao
 ### Task 1: `ChangeSubtypeWord` — the layer-3 type-line rewrite (read-point 1)
 
 **Files:**
-- Modify: `source/library/Pawl/Type/Subtype.hs` (add `Island`, `Plains`)
-- Modify: `source/library/Pawl/Mana.hs` (`subtypeMana` gains `Island`/`Plains`)
-- Modify: `source/library/Pawl/Type/Modification.hs` (add `ChangeSubtypeWord`)
-- Modify: `source/library/Pawl/Projection.hs` (`layer`, `applyModification`)
-- Test: `source/test-suite/Pawl/ProjectionSpec.hs`, `source/test-suite/Pawl/ManaSpec.hs`
+- Modify: `source/library/Parun/Type/Subtype.hs` (add `Island`, `Plains`)
+- Modify: `source/library/Parun/Mana.hs` (`subtypeMana` gains `Island`/`Plains`)
+- Modify: `source/library/Parun/Type/Modification.hs` (add `ChangeSubtypeWord`)
+- Modify: `source/library/Parun/Projection.hs` (`layer`, `applyModification`)
+- Test: `source/test-suite/Parun/ProjectionSpec.hs`, `source/test-suite/Parun/ManaSpec.hs`
 
 **Interfaces:**
 - Produces: `Subtype.Island`, `Subtype.Plains`; `Modification.ChangeSubtypeWord :: Subtype -> Subtype -> Modification`, classified `Layer.Text`; `applyModification` rewrites an object's projected `subtypes` (replace `from` with `to` if present). `subtypeMana Island = Just (Colored Blue)`, `subtypeMana Plains = Just (Colored White)`.
 
 - [x] **Step 1: Write the failing tests**
 
-Add to `source/test-suite/Pawl/ProjectionSpec.hs` (the `Timestamp`, `Subtype`, `Modification`, `Layer`, `withEffect` imports/helpers are all present):
+Add to `source/test-suite/Parun/ProjectionSpec.hs` (the `Timestamp`, `Subtype`, `Modification`, `Layer`, `withEffect` imports/helpers are all present):
 
 ```haskell
       HU.testCase "CR 613.1c layer 3: ChangeSubtypeWord is Text" $
@@ -76,7 +76,7 @@ Add to `source/test-suite/Pawl/ProjectionSpec.hs` (the `Timestamp`, `Subtype`, `
          in HU.assertEqual "still Forest" (Set.singleton Subtype.Forest) (Projection.subtypesOf landId gs),
 ```
 
-Add to `source/test-suite/Pawl/ManaSpec.hs` (mirror its style; it already imports `Card`, `Mana`, `Support as S`, `Color`, `ManaType`; add `qualified Pawl.Type.Subtype as Subtype`, `qualified Pawl.Projection as Projection`, `qualified Pawl.Type.Timestamp as Timestamp`, `qualified Pawl.Type.Modification as Modification`, `qualified Pawl.Game as Game`, `qualified Pawl.Type.Zone as Zone`, `qualified Pawl.Type.ObjectId as ObjectId` if not present, and the `withEffect` helper — copy it from `ProjectionSpec` if `ManaSpec` lacks it, or assert `Projection.subtypesOf` is enough and test `subtypeMana` directly):
+Add to `source/test-suite/Parun/ManaSpec.hs` (mirror its style; it already imports `Card`, `Mana`, `Support as S`, `Color`, `ManaType`; add `qualified Parun.Type.Subtype as Subtype`, `qualified Parun.Projection as Projection`, `qualified Parun.Type.Timestamp as Timestamp`, `qualified Parun.Type.Modification as Modification`, `qualified Parun.Game as Game`, `qualified Parun.Type.Zone as Zone`, `qualified Parun.Type.ObjectId as ObjectId` if not present, and the `withEffect` helper — copy it from `ProjectionSpec` if `ManaSpec` lacks it, or assert `Projection.subtypesOf` is enough and test `subtypeMana` directly):
 
 ```haskell
       HU.testCase "CR 305.6 Island taps blue, Plains taps white" $ do
@@ -91,7 +91,7 @@ Expected: FAIL to compile — `Modification.ChangeSubtypeWord`, `Subtype.Island`
 
 - [x] **Step 3: Add the two basic land subtypes**
 
-In `source/library/Pawl/Type/Subtype.hs`, add `Island` and `Plains` (keep the existing comment):
+In `source/library/Parun/Type/Subtype.hs`, add `Island` and `Plains` (keep the existing comment):
 
 ```haskell
 data Subtype
@@ -116,7 +116,7 @@ data Subtype
 
 - [x] **Step 4: Give the two subtypes their mana (CR 305.6)**
 
-In `source/library/Pawl/Mana.hs`, add the two arms to `subtypeMana` (before the creature-type `Nothing` arms):
+In `source/library/Parun/Mana.hs`, add the two arms to `subtypeMana` (before the creature-type `Nothing` arms):
 
 ```haskell
   Subtype.Island -> Just (ManaType.Colored Color.Blue)
@@ -125,7 +125,7 @@ In `source/library/Pawl/Mana.hs`, add the two arms to `subtypeMana` (before the 
 
 - [x] **Step 5: Add the `ChangeSubtypeWord` modification**
 
-In `source/library/Pawl/Type/Modification.hs`, extend the type (the `Subtype` import is already present) and its header comment:
+In `source/library/Parun/Type/Modification.hs`, extend the type (the `Subtype` import is already present) and its header comment:
 
 ```haskell
   | SetLandSubtype Subtype -- layer 4, CR 305.7 set (Blood Moon -> Mountain)
@@ -136,7 +136,7 @@ In `source/library/Pawl/Type/Modification.hs`, extend the type (the `Subtype` im
 
 - [x] **Step 6: Classify and apply it in `Projection`**
 
-In `source/library/Pawl/Projection.hs`, add the `layer` arm:
+In `source/library/Parun/Projection.hs`, add the `layer` arm:
 
 ```haskell
   Modification.ChangeSubtypeWord _ _ -> Layer.Text
@@ -175,18 +175,18 @@ git commit -m "Rewrite the projected type line at layer 3 (CR 612 ChangeSubtypeW
 ### Task 2: Target a spell or permanent — `ToObject`, the two specs
 
 **Files:**
-- Modify: `source/library/Pawl/Type/Recipient.hs` (add `ToObject`)
-- Modify: `source/library/Pawl/Type/TargetSpec.hs` (add `SpellOrPermanentTarget`, `LandTarget`)
-- Modify: `source/library/Pawl/Target.hs` (`legalRecipients`)
-- Modify: `source/test-suite/Pawl/Support.hs` (`isCreatureRecipient` gains a `ToObject` arm)
-- Test: `source/test-suite/Pawl/ResolveSpec.hs` (the `Target` group)
+- Modify: `source/library/Parun/Type/Recipient.hs` (add `ToObject`)
+- Modify: `source/library/Parun/Type/TargetSpec.hs` (add `SpellOrPermanentTarget`, `LandTarget`)
+- Modify: `source/library/Parun/Target.hs` (`legalRecipients`)
+- Modify: `source/test-suite/Parun/Support.hs` (`isCreatureRecipient` gains a `ToObject` arm)
+- Test: `source/test-suite/Parun/ResolveSpec.hs` (the `Target` group)
 
 **Interfaces:**
 - Produces: `Recipient.ToObject :: ObjectId -> Recipient`; `TargetSpec.SpellOrPermanentTarget`, `TargetSpec.LandTarget`; `Target.legalRecipients` maps `SpellOrPermanentTarget` to `ToObject` over `GameState.stack` ++ battlefield, and `LandTarget` to `ToObject` over battlefield lands (projected `Land`).
 
 - [x] **Step 1: Write the failing test**
 
-Add to the `Target` group in `source/test-suite/Pawl/ResolveSpec.hs`:
+Add to the `Target` group in `source/test-suite/Parun/ResolveSpec.hs`:
 
 ```haskell
       HU.testCase "CR 115 SpellOrPermanentTarget offers battlefield permanents and stack spells" $
@@ -204,7 +204,7 @@ Add to the `Target` group in `source/test-suite/Pawl/ResolveSpec.hs`:
               HU.assertBool "no players" (not (Set.member (Recipient.ToPlayer S.alice) (Target.legalRecipients TargetSpec.LandTarget gs))),
 ```
 
-(Add `qualified Pawl.Type.ObjectId as ObjectId` to `ResolveSpec` imports if absent.)
+(Add `qualified Parun.Type.ObjectId as ObjectId` to `ResolveSpec` imports if absent.)
 
 - [x] **Step 2: Run test to verify it fails**
 
@@ -213,7 +213,7 @@ Expected: FAIL to compile — `TargetSpec.SpellOrPermanentTarget` and `Recipient
 
 - [x] **Step 3: Add the `ToObject` recipient**
 
-In `source/library/Pawl/Type/Recipient.hs`, add the constructor and extend the comment:
+In `source/library/Parun/Type/Recipient.hs`, add the constructor and extend the comment:
 
 ```haskell
 data Recipient
@@ -228,7 +228,7 @@ data Recipient
 
 - [x] **Step 4: Add the two target specs**
 
-In `source/library/Pawl/Type/TargetSpec.hs`:
+In `source/library/Parun/Type/TargetSpec.hs`:
 
 ```haskell
   | -- CR 115: "target spell or permanent" -- any object on the stack, or any
@@ -241,7 +241,7 @@ In `source/library/Pawl/Type/TargetSpec.hs`:
 
 - [x] **Step 5: Enumerate them in `Target.legalRecipients`**
 
-In `source/library/Pawl/Target.hs`, add the two arms to the `case spec of` (the `stack`/battlefield reads use `GameState.stack` and `Game.zoneMembers`/the battlefield set; `Projection.cardTypesOf` gives projected land-ness). Add `import qualified Pawl.Type.CardType as CardType` and `import qualified Pawl.Type.GameState as GameState` if absent:
+In `source/library/Parun/Target.hs`, add the two arms to the `case spec of` (the `stack`/battlefield reads use `GameState.stack` and `Game.zoneMembers`/the battlefield set; `Projection.cardTypesOf` gives projected land-ness). Add `import qualified Parun.Type.CardType as CardType` and `import qualified Parun.Type.GameState as GameState` if absent:
 
 ```haskell
         TargetSpec.SpellOrPermanentTarget ->
@@ -258,7 +258,7 @@ In `source/library/Pawl/Target.hs`, add the two arms to the `case spec of` (the 
 
 Adding a `Recipient` constructor makes every exhaustive match incomplete (`-Wincomplete-patterns`, a pedantic error). A `ToObject` never receives combat or spell damage in M3d (damage targets are `AnyTarget` → `ToCreature`/`ToPlayer`), so each arm is a safe no-op / `False`. Three known sites:
 
-`source/library/Pawl/Damage.hs`, `legalAssignment`'s `isDefender` (~line 51) — a `ToObject` is not the defending player:
+`source/library/Parun/Damage.hs`, `legalAssignment`'s `isDefender` (~line 51) — a `ToObject` is not the defending player:
 
 ```haskell
       isDefender r = case r of
@@ -267,13 +267,13 @@ Adding a `Recipient` constructor makes every exhaustive match incomplete (`-Winc
         Recipient.ToObject _ -> False
 ```
 
-`source/library/Pawl/Damage.hs`, `applyDamage`'s `markOne` (~line 156) — a bare object is never a damage recipient in M3d:
+`source/library/Parun/Damage.hs`, `applyDamage`'s `markOne` (~line 156) — a bare object is never a damage recipient in M3d:
 
 ```haskell
         Recipient.ToObject _ -> g
 ```
 
-`source/test-suite/Pawl/Support.hs`, `isCreatureRecipient`:
+`source/test-suite/Parun/Support.hs`, `isCreatureRecipient`:
 
 ```haskell
 isCreatureRecipient :: Recipient.Recipient -> Bool
@@ -302,19 +302,19 @@ git commit -m "Target a spell or permanent: ToObject and the two target specs (C
 ### Task 3: `Object.chosenSubtypes` — the value-binding store
 
 **Files:**
-- Modify: `source/library/Pawl/Type/Object.hs` (add `chosenSubtypes`)
-- Modify: `source/library/Pawl/Game.hs` (`changeZone` resets it)
-- Modify: `source/library/Pawl/Setup.hs` (its `Object.MkObject`)
-- Modify: `source/test-suite/Pawl/Support.hs` (five `Object.MkObject` sites)
-- Modify: `source/test-suite/Pawl/GameSpec.hs`, `source/test-suite/Pawl/ResolveSpec.hs` (their `Object.MkObject`)
-- Test: `source/test-suite/Pawl/GameSpec.hs`
+- Modify: `source/library/Parun/Type/Object.hs` (add `chosenSubtypes`)
+- Modify: `source/library/Parun/Game.hs` (`changeZone` resets it)
+- Modify: `source/library/Parun/Setup.hs` (its `Object.MkObject`)
+- Modify: `source/test-suite/Parun/Support.hs` (five `Object.MkObject` sites)
+- Modify: `source/test-suite/Parun/GameSpec.hs`, `source/test-suite/Parun/ResolveSpec.hs` (their `Object.MkObject`)
+- Test: `source/test-suite/Parun/GameSpec.hs`
 
 **Interfaces:**
 - Produces: `Object.chosenSubtypes :: Map SlotName (Subtype, Subtype)` — the basic-land-type pairs chosen while casting, by slot name; reset by `changeZone` (CR 400.7 per-incarnation state, like `targets`).
 
 - [x] **Step 1: Write the failing test**
 
-Add to `source/test-suite/Pawl/GameSpec.hs` (it already exercises `changeZone` resetting per-incarnation state; add `qualified Data.Map.Strict as Map`, `qualified Pawl.Type.SlotName as SlotName`, `qualified Pawl.Type.Subtype as Subtype`, `qualified Data.Text as Text` if absent):
+Add to `source/test-suite/Parun/GameSpec.hs` (it already exercises `changeZone` resetting per-incarnation state; add `qualified Data.Map.Strict as Map`, `qualified Parun.Type.SlotName as SlotName`, `qualified Parun.Type.Subtype as Subtype`, `qualified Data.Text as Text` if absent):
 
 ```haskell
       HU.testCase "CR 400.7 changeZone resets chosenSubtypes" $
@@ -340,7 +340,7 @@ Expected: FAIL to compile — `Object.chosenSubtypes` not in scope.
 
 - [x] **Step 3: Add the field**
 
-In `source/library/Pawl/Type/Object.hs`, add the import `import Pawl.Type.Subtype (Subtype)` and the field (after `targets`, before `timestamp`):
+In `source/library/Parun/Type/Object.hs`, add the import `import Parun.Type.Subtype (Subtype)` and the field (after `targets`, before `timestamp`):
 
 ```haskell
     -- CR 612 / the D4 binding: the basic-land-type pairs chosen while casting a
@@ -353,7 +353,7 @@ In `source/library/Pawl/Type/Object.hs`, add the import `import Pawl.Type.Subtyp
 
 - [x] **Step 4: Reset it in `changeZone`**
 
-In `source/library/Pawl/Game.hs`, `changeZone`'s `newObj` record update — add `Object.chosenSubtypes = Map.empty`:
+In `source/library/Parun/Game.hs`, `changeZone`'s `newObj` record update — add `Object.chosenSubtypes = Map.empty`:
 
 ```haskell
         newObj = obj {Object.zone = dest, Object.tapped = TapState.Untapped, Object.damage = 0, Object.sickness = Sickness.Sick, Object.targets = Map.empty, Object.chosenSubtypes = Map.empty, Object.timestamp = ts}
@@ -362,10 +362,10 @@ In `source/library/Pawl/Game.hs`, `changeZone`'s `newObj` record update — add 
 - [x] **Step 5: Seed it empty at every other constructor**
 
 Add `Object.chosenSubtypes = Map.empty` to each `Object.MkObject` record. Sites (the build enumerates any missed one via `-Wmissing-fields`, which pedantic makes an error):
-- `source/library/Pawl/Setup.hs` (~line 130)
-- `source/test-suite/Pawl/Support.hs` — `addCreature` (~231), `landsInPlay` (~263), `handOne` (~289), `pikerInHand` (~316), `oneMountainState` (~458)
-- `source/test-suite/Pawl/GameSpec.hs` (~88)
-- `source/test-suite/Pawl/ResolveSpec.hs` — `twoBoltState` (~160)
+- `source/library/Parun/Setup.hs` (~line 130)
+- `source/test-suite/Parun/Support.hs` — `addCreature` (~231), `landsInPlay` (~263), `handOne` (~289), `pikerInHand` (~316), `oneMountainState` (~458)
+- `source/test-suite/Parun/GameSpec.hs` (~88)
+- `source/test-suite/Parun/ResolveSpec.hs` — `twoBoltState` (~160)
 
 Each gets the line, e.g. in `addCreature`:
 
@@ -392,8 +392,8 @@ git commit -m "Store cast-time basic-land-type bindings on the Object (CR 400.7-
 ### Task 4: `ChooseBasicLandTypes` — the value-choice prompt
 
 **Files:**
-- Modify: `source/library/Pawl/Type/Prompt.hs` (add the constructor)
-- Modify: `source/test-suite/Pawl/Support.hs` (five answerers)
+- Modify: `source/library/Parun/Type/Prompt.hs` (add the constructor)
+- Modify: `source/test-suite/Parun/Support.hs` (five answerers)
 - Modify: `source/benchmark/Main.hs` (three answerers)
 - Test: none of its own — it is exercised end-to-end in Task 6. (This task is the plumbing its consumer needs; a bare prompt has no behavior to assert alone.)
 
@@ -402,7 +402,7 @@ git commit -m "Store cast-time basic-land-type bindings on the Object (CR 400.7-
 
 - [x] **Step 1: Add the prompt constructor**
 
-In `source/library/Pawl/Type/Prompt.hs`, add the import `import Pawl.Type.Subtype (Subtype)` and the constructor:
+In `source/library/Parun/Type/Prompt.hs`, add the import `import Parun.Type.Subtype (Subtype)` and the constructor:
 
 ```haskell
   -- CR 612 / the D4 binding: choose the two basic land types for a text-changing
@@ -420,7 +420,7 @@ Expected: FAIL — `-Wincomplete-patterns` (pedantic error) on every `Prompt r -
 
 - [x] **Step 3: Add the arm to the pure answerers in `Support`**
 
-In `source/test-suite/Pawl/Support.hs`, add to each of `identityAnswer`, `castAnswer`, `aggressiveAnswer`, `playLandAnswer` a canonical (identity) pair — a hack that changes nothing, safe for any game that never means to cast a text-changer (add `qualified Pawl.Type.Subtype as Subtype` to the imports):
+In `source/test-suite/Parun/Support.hs`, add to each of `identityAnswer`, `castAnswer`, `aggressiveAnswer`, `playLandAnswer` a canonical (identity) pair — a hack that changes nothing, safe for any game that never means to cast a text-changer (add `qualified Parun.Type.Subtype as Subtype` to the imports):
 
 ```haskell
   Prompt.ChooseBasicLandTypes {} -> (Subtype.Mountain, Subtype.Mountain)
@@ -434,7 +434,7 @@ For `randomAnswer` (it returns `State.State Random.StdGen r`), the arm must be m
 
 - [x] **Step 4: Add the arm to the benchmark answerers**
 
-In `source/benchmark/Main.hs`, add `import qualified Pawl.Type.Subtype as Subtype` and the same pure arm to each `Prompt r -> r` answerer the build flags (`alwaysPass`, `castAnswer`, `fightAnswer`):
+In `source/benchmark/Main.hs`, add `import qualified Parun.Type.Subtype as Subtype` and the same pure arm to each `Prompt r -> r` answerer the build flags (`alwaysPass`, `castAnswer`, `fightAnswer`):
 
 ```haskell
   Prompt.ChooseBasicLandTypes {} -> (Subtype.Mountain, Subtype.Mountain)
@@ -457,10 +457,10 @@ git commit -m "Add the ChooseBasicLandTypes value-choice prompt (CR 612 binding)
 ### Task 5: `ChangeText` — the opcode and its executor
 
 **Files:**
-- Modify: `source/library/Pawl/Type/Duration.hs` (add `Indefinite`)
-- Modify: `source/library/Pawl/Type/Effect.hs` (add `ChangeText`)
-- Modify: `source/library/Pawl/Resolve.hs` (`slotsOf`, `textChangeSlots`, `applyEffect`, `resolveSpell` threads the binding)
-- Test: `source/test-suite/Pawl/ResolveSpec.hs` (the `Resolve` group)
+- Modify: `source/library/Parun/Type/Duration.hs` (add `Indefinite`)
+- Modify: `source/library/Parun/Type/Effect.hs` (add `ChangeText`)
+- Modify: `source/library/Parun/Resolve.hs` (`slotsOf`, `textChangeSlots`, `applyEffect`, `resolveSpell` threads the binding)
+- Test: `source/test-suite/Parun/ResolveSpec.hs` (the `Resolve` group)
 
 **Interfaces:**
 - Consumes: `Recipient.ToObject` (Task 2), `Object.chosenSubtypes` (Task 3).
@@ -468,7 +468,7 @@ git commit -m "Add the ChooseBasicLandTypes value-choice prompt (CR 612 binding)
 
 - [x] **Step 1: Write the failing test**
 
-Test the opcode's classification directly — self-contained, so Task 5 is green on its own (the executor's *observable* effect is driven end-to-end in Task 6, where `magicalHackPrinting` exists). Add to the `Resolve` group in `source/test-suite/Pawl/ResolveSpec.hs` (add `qualified Pawl.Resolve as Resolve`, `qualified Pawl.Type.Effect as Effect`, `qualified Pawl.Type.Card as Card.Type`, `qualified Pawl.Type.Duration as Duration` to imports if absent):
+Test the opcode's classification directly — self-contained, so Task 5 is green on its own (the executor's *observable* effect is driven end-to-end in Task 6, where `magicalHackPrinting` exists). Add to the `Resolve` group in `source/test-suite/Parun/ResolveSpec.hs` (add `qualified Parun.Resolve as Resolve`, `qualified Parun.Type.Effect as Effect`, `qualified Parun.Type.Card as Card.Type`, `qualified Parun.Type.Duration as Duration` to imports if absent):
 
 ```haskell
       HU.testCase "CR 612 slotsOf and textChangeSlots find a ChangeText slot" $
@@ -490,7 +490,7 @@ Test the opcode's classification directly — self-contained, so Task 5 is green
               HU.assertEqual "textChangeSlots" [slot] (Resolve.textChangeSlots card),
 ```
 
-(`Duration.Indefinite` is exercised by the executor in Task 6; here we only need the opcode and its classifications to exist and be found. Add `qualified Pawl.Type.Printing as Printing` if absent.)
+(`Duration.Indefinite` is exercised by the executor in Task 6; here we only need the opcode and its classifications to exist and be found. Add `qualified Parun.Type.Printing as Printing` if absent.)
 
 - [x] **Step 2: Run test to verify it fails**
 
@@ -499,7 +499,7 @@ Expected: FAIL to compile — `Effect.ChangeText`, `Duration.Indefinite`, `Resol
 
 - [x] **Step 3: Add `Indefinite`**
 
-In `source/library/Pawl/Type/Duration.hs`:
+In `source/library/Parun/Type/Duration.hs`:
 
 ```haskell
 data Duration
@@ -510,7 +510,7 @@ data Duration
 
 - [x] **Step 4: Add the `ChangeText` opcode**
 
-In `source/library/Pawl/Type/Effect.hs`, extend the type and the header comment:
+In `source/library/Parun/Type/Effect.hs`, extend the type and the header comment:
 
 ```haskell
 data Effect
@@ -526,7 +526,7 @@ data Effect
 
 - [x] **Step 5: Extend `Resolve` — `slotsOf`, `textChangeSlots`, the `ChangeText` arm, and thread the binding**
 
-In `source/library/Pawl/Resolve.hs`, add imports `import qualified Data.Maybe as Maybe`, `import qualified Pawl.Type.Duration as Duration`, `import qualified Pawl.Type.Modification as Modification`, `import Pawl.Type.Subtype (Subtype)`. Add the `slotsOf` arm:
+In `source/library/Parun/Resolve.hs`, add imports `import qualified Data.Maybe as Maybe`, `import qualified Parun.Type.Duration as Duration`, `import qualified Parun.Type.Modification as Modification`, `import Parun.Type.Subtype (Subtype)`. Add the `slotsOf` arm:
 
 ```haskell
   Effect.ChangeText slot -> Set.singleton slot
@@ -609,9 +609,9 @@ git commit -m "Add the ChangeText opcode: store an Indefinite ChangeSubtypeWord 
 ### Task 6: Magical Hack, cast end-to-end (the stated falsifier)
 
 **Files:**
-- Modify: `source/library/Pawl/Cast.hs` (`castSpell` prompts and stores the binding)
-- Modify: `source/library/Pawl/Card.hs` (`magicalHackPrinting`, `allPrintings`)
-- Test: `source/test-suite/Pawl/CastSpec.hs`
+- Modify: `source/library/Parun/Cast.hs` (`castSpell` prompts and stores the binding)
+- Modify: `source/library/Parun/Card.hs` (`magicalHackPrinting`, `allPrintings`)
+- Test: `source/test-suite/Parun/CastSpec.hs`
 
 **Interfaces:**
 - Consumes: `ChooseBasicLandTypes` (Task 4), `textChangeSlots`/`ChangeText` (Task 5), `SpellOrPermanentTarget` (Task 2).
@@ -619,7 +619,7 @@ git commit -m "Add the ChangeText opcode: store an Indefinite ChangeSubtypeWord 
 
 - [x] **Step 1: Write the failing test**
 
-Add to `source/test-suite/Pawl/CastSpec.hs` a dedicated answerer and an end-to-end test. Magical Hack costs `{U}`, so the caster needs blue mana — give alice an Island in play (Task 1 makes an Island tap blue). Add `qualified Pawl.Projection as Projection`, `qualified Pawl.Stack as Stack`, `qualified Pawl.Type.Subtype as Subtype`, `qualified Pawl.Type.Recipient as Recipient` if absent:
+Add to `source/test-suite/Parun/CastSpec.hs` a dedicated answerer and an end-to-end test. Magical Hack costs `{U}`, so the caster needs blue mana — give alice an Island in play (Task 1 makes an Island tap blue). Add `qualified Parun.Projection as Projection`, `qualified Parun.Stack as Stack`, `qualified Parun.Type.Subtype as Subtype`, `qualified Parun.Type.Recipient as Recipient` if absent:
 
 ```haskell
 -- Casts, targeting a permanent (lookupMin picks the lowest ToObject id) and
@@ -688,7 +688,7 @@ handInPlay printing board =
       )
 ```
 
-(Add `qualified Data.Sequence as Seq`, `qualified Pawl.Mana as Mana`, `qualified Pawl.Type.Color as Color`, `qualified Pawl.Type.ManaType as ManaType`, `qualified Pawl.Type.Timestamp as Timestamp` to `CastSpec` if absent, and wire `magicalHackTests` into `CastSpec.tests`.)
+(Add `qualified Data.Sequence as Seq`, `qualified Parun.Mana as Mana`, `qualified Parun.Type.Color as Color`, `qualified Parun.Type.ManaType as ManaType`, `qualified Parun.Type.Timestamp as Timestamp` to `CastSpec` if absent, and wire `magicalHackTests` into `CastSpec.tests`.)
 
 - [x] **Step 2: Run test to verify it fails**
 
@@ -697,7 +697,7 @@ Expected: FAIL to compile — `Card.magicalHackPrinting`, `Card.islandPrinting` 
 
 - [x] **Step 3: Add the Island printing and Magical Hack**
 
-In `source/library/Pawl/Card.hs`, add an `islandPrinting` (mirroring `mountainPrinting`, subtype `Island`) and `magicalHackPrinting`, then register both in `allPrintings`:
+In `source/library/Parun/Card.hs`, add an `islandPrinting` (mirroring `mountainPrinting`, subtype `Island`) and `magicalHackPrinting`, then register both in `allPrintings`:
 
 ```haskell
 -- The Island's blue mana ability is granted from its subtype by CR 305.6.
@@ -764,7 +764,7 @@ Append both to `allPrintings` (after `opalescencePrinting`):
 
 - [x] **Step 4: Prompt and store the binding in `Cast`**
 
-In `source/library/Pawl/Cast.hs`, add `import qualified Pawl.Resolve as Resolve` and `import qualified Control.Monad as Monad` (if absent). In `castSpell`, after `chosen` is obtained and validated, prompt the land-type bindings and stamp both maps on the new stack object. Replace the tail of `castSpell` (from the `let decider`/`sets` block through the `State.put`) with:
+In `source/library/Parun/Cast.hs`, add `import qualified Parun.Resolve as Resolve` and `import qualified Control.Monad as Monad` (if absent). In `castSpell`, after `chosen` is obtained and validated, prompt the land-type bindings and stamp both maps on the new stack object. Replace the tail of `castSpell` (from the `let decider`/`sets` block through the `State.put`) with:
 
 ```haskell
         let decider = Decide.deciderFor pid gs
@@ -823,8 +823,8 @@ git commit -m "Cast Magical Hack: bind land types and hack a Mountain's color (C
 ### Task 7: `gather` rewrites a source's static-ability words (read-point 2)
 
 **Files:**
-- Modify: `source/library/Pawl/Projection.hs` (`textChangesAffecting`, `rewriteModification`, `gather`)
-- Test: `source/test-suite/Pawl/ProjectionSpec.hs`
+- Modify: `source/library/Parun/Projection.hs` (`textChangesAffecting`, `rewriteModification`, `gather`)
+- Test: `source/test-suite/Parun/ProjectionSpec.hs`
 
 **Interfaces:**
 - Consumes: `ChangeSubtypeWord` (Task 1), Blood Moon (already in the repo), the projection fold.
@@ -832,7 +832,7 @@ git commit -m "Cast Magical Hack: bind land types and hack a Mountain's color (C
 
 - [x] **Step 1: Write the failing tests (the go/no-go)**
 
-Add to `source/test-suite/Pawl/ProjectionSpec.hs`. Blood Moon and a nonbasic land (Urborg is the repo's nonbasic land) on the battlefield, and a `ChangeSubtypeWord Mountain Island` stored effect targeting the real Blood Moon id (via `withEffect`, which locks to `TheseObjects`). "Order" here is the hack's stored-effect timestamp vs. Blood Moon's own object timestamp — the read-point-2 rewrite is applied at `gather` regardless, so both must give Island:
+Add to `source/test-suite/Parun/ProjectionSpec.hs`. Blood Moon and a nonbasic land (Urborg is the repo's nonbasic land) on the battlefield, and a `ChangeSubtypeWord Mountain Island` stored effect targeting the real Blood Moon id (via `withEffect`, which locks to `TheseObjects`). "Order" here is the hack's stored-effect timestamp vs. Blood Moon's own object timestamp — the read-point-2 rewrite is applied at `gather` regardless, so both must give Island:
 
 ```haskell
       HU.testCase "CR 612 hacking Blood Moon Mountain->Island: nonbasic lands become Islands (hack newer)" $
@@ -858,7 +858,7 @@ Expected: FAIL — without the gather rewrite, Blood Moon's printed `SetLandSubt
 
 - [x] **Step 3: Add `textChangesAffecting` and `rewriteModification`**
 
-In `source/library/Pawl/Projection.hs`, add `import qualified Data.Maybe as Maybe` (if absent). Add both functions (both are legitimate `case`-on-`Modification`, Projection's charter):
+In `source/library/Parun/Projection.hs`, add `import qualified Data.Maybe as Maybe` (if absent). Add both functions (both are legitimate `case`-on-`Modification`, Projection's charter):
 
 ```haskell
 -- Every basic-land-type pair a ChangeSubtypeWord continuous effect imposes on
@@ -892,7 +892,7 @@ rewriteModification pairs m =
 
 - [x] **Step 4: Rewrite static-ability words in `gather`**
 
-In `source/library/Pawl/Projection.hs`, in `gather`, change `fromPermanent` so a live permanent's static-ability modifications are rewritten by the text-changes affecting it before being gathered (read-point 2). Replace the `then` branch's `map (fromStatic permId permObj) ...`:
+In `source/library/Parun/Projection.hs`, in `gather`, change `fromPermanent` so a live permanent's static-ability modifications are rewritten by the text-changes affecting it before being gathered (read-point 2). Replace the `then` branch's `map (fromStatic permId permObj) ...`:
 
 ```haskell
       fromPermanent permId = case Game.lookupObject permId gs of
@@ -937,9 +937,9 @@ git commit -m "Rewrite a source's static-ability land words at gather (CR 612, h
 ### Task 8: The resolver reads projected effects (read-point 3) + the fixture
 
 **Files:**
-- Modify: `source/library/Pawl/Resolve.hs` (`rewriteEffect`, `effectsOf`, `resolveSpell` reads `effectsOf`, `ModifyTarget` accepts `ToObject`)
-- Modify: `source/library/Pawl/Card.hs` (the `landformPrinting` fixture, `allPrintings`)
-- Test: `source/test-suite/Pawl/ResolveSpec.hs`
+- Modify: `source/library/Parun/Resolve.hs` (`rewriteEffect`, `effectsOf`, `resolveSpell` reads `effectsOf`, `ModifyTarget` accepts `ToObject`)
+- Modify: `source/library/Parun/Card.hs` (the `landformPrinting` fixture, `allPrintings`)
+- Test: `source/test-suite/Parun/ResolveSpec.hs`
 
 **Interfaces:**
 - Consumes: `textChangesAffecting`/`rewriteModification` (Task 7), `ChangeText`/`ToObject` (Tasks 5, 2).
@@ -947,7 +947,7 @@ git commit -m "Rewrite a source's static-ability land words at gather (CR 612, h
 
 - [x] **Step 1: Write the failing tests**
 
-Add to the `Resolve` group in `source/test-suite/Pawl/ResolveSpec.hs`. The positive case: the fixture "Landform" (target land becomes a Swamp) on the stack, a `ChangeSubtypeWord Swamp Mountain` already stored on it, resolves making the target land a Mountain (read-point 3). The negative CR 400.7 case: hacking Blood Moon *on the stack* is lost when it resolves into a new permanent.
+Add to the `Resolve` group in `source/test-suite/Parun/ResolveSpec.hs`. The positive case: the fixture "Landform" (target land becomes a Swamp) on the stack, a `ChangeSubtypeWord Swamp Mountain` already stored on it, resolves making the target land a Mountain (read-point 3). The negative CR 400.7 case: hacking Blood Moon *on the stack* is lost when it resolves into a new permanent.
 
 ```haskell
       HU.testCase "CR 612 resolve reads projected effects: a hacked 'becomes Swamp' resolves as Mountain" $
@@ -1022,7 +1022,7 @@ Expected: FAIL — `resolveSpell` reads `Card.effects` (the printed `SetLandSubt
 
 - [x] **Step 3: Add the fixture printing**
 
-In `source/library/Pawl/Card.hs`, add the labeled fixture and register it:
+In `source/library/Parun/Card.hs`, add the labeled fixture and register it:
 
 ```haskell
 -- LABELED SYNTHETIC FIXTURE (not a real card; spec §8). "Landform": {U}, Instant,
@@ -1059,7 +1059,7 @@ Append `landformPrinting` to `allPrintings`.
 
 - [x] **Step 4: Make `ModifyTarget` accept a `ToObject` target**
 
-In `source/library/Pawl/Resolve.hs`, the `ModifyTarget` arm matches only `ToCreature`; generalize it to any object-naming recipient via `recipientObject` (Task 5). Replace its `case`:
+In `source/library/Parun/Resolve.hs`, the `ModifyTarget` arm matches only `ToCreature`; generalize it to any object-naming recipient via `recipientObject` (Task 5). Replace its `case`:
 
 ```haskell
   Effect.ModifyTarget duration modification slot ->
@@ -1083,7 +1083,7 @@ In `source/library/Pawl/Resolve.hs`, the `ModifyTarget` arm matches only `ToCrea
 
 - [x] **Step 5: Read projected effects in `resolveSpell`**
 
-In `source/library/Pawl/Resolve.hs`, add `rewriteEffect` and `effectsOf`, and make `resolveSpell` fold over `effectsOf oid gs` instead of `Card.effects card`:
+In `source/library/Parun/Resolve.hs`, add `rewriteEffect` and `effectsOf`, and make `resolveSpell` fold over `effectsOf oid gs` instead of `Card.effects card`:
 
 ```haskell
 -- Rewrite basic-land-type words in an effect's AST (CR 612). Cases on Effect
@@ -1112,7 +1112,7 @@ Change the non-fizzle branch of `resolveSpell` to use `effectsOf oid gs`:
                   else bury (List.foldl' (applyEffect oid (Object.chosenSubtypes obj) legality chosen) gs (effectsOf oid gs))
 ```
 
-(Add `import Pawl.Type.Subtype (Subtype)` if not already added in Task 5.)
+(Add `import Parun.Type.Subtype (Subtype)` if not already added in Task 5.)
 
 - [x] **Step 6: Run tests to verify they pass**
 

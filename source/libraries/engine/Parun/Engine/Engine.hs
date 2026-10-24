@@ -1,0 +1,2283 @@
+{-# LANGUAGE RankNTypes #-}
+
+module Parun.Engine.Engine where
+
+import qualified Control.Monad as Monad
+import qualified Control.Monad.Trans.Class as Trans
+import qualified Control.Monad.Trans.State.Strict as State
+import qualified Data.Containers.ListUtils as ListUtils
+import qualified Data.Foldable as Foldable
+import qualified Data.List as List
+import qualified Data.List.NonEmpty as NonEmpty
+import qualified Data.Map.Strict as Map
+import qualified Data.Maybe as Maybe
+import qualified Data.Sequence as Seq
+import qualified Data.Set as Set
+import Numeric.Natural (Natural)
+import qualified Parun.Engine.Action as Action
+import qualified Parun.Engine.Activate as Activate
+import qualified Parun.Engine.Archenemy as Archenemy
+import qualified Parun.Engine.Attraction as Attraction
+import qualified Parun.Engine.Binding as Binding
+import qualified Parun.Engine.Cast as Cast
+import qualified Parun.Engine.Combat as Combat
+import qualified Parun.Engine.Companion as Companion
+import qualified Parun.Engine.Conspiracy as Conspiracy
+import qualified Parun.Engine.Contraption as Contraption
+import qualified Parun.Engine.Cost as Cost
+import qualified Parun.Engine.Damage as Damage
+import qualified Parun.Engine.Daytime as Daytime
+import qualified Parun.Engine.Decide as Decide
+import qualified Parun.Engine.Departure as Departure
+import qualified Parun.Engine.Dungeon as Dungeon
+import qualified Parun.Engine.EndEffect as EndEffect
+import qualified Parun.Engine.Event as Event
+import qualified Parun.Engine.Event.Trigger as Trigger
+import qualified Parun.Engine.Exile as Exile
+import qualified Parun.Engine.Expiry as Expiry
+import qualified Parun.Engine.FaceDown as FaceDown
+import qualified Parun.Engine.Foretell as Foretell
+import qualified Parun.Engine.Fragmented as Fragmented
+import qualified Parun.Engine.Game as Game
+import qualified Parun.Engine.Ignore as Ignore
+import qualified Parun.Engine.Initiative as Initiative
+import qualified Parun.Engine.Mana as Mana
+import qualified Parun.Engine.ManaAbility as ManaAbility
+import qualified Parun.Engine.Modal as Modal
+import qualified Parun.Engine.Monarch as Monarch
+import qualified Parun.Engine.MoveDuration as MoveDuration
+import qualified Parun.Engine.Phasing as Phasing
+import qualified Parun.Engine.Planechase as Planechase
+import qualified Parun.Engine.PlayerDesignation as PlayerDesignation
+import qualified Parun.Engine.PlayerEffect as PlayerEffect
+import qualified Parun.Engine.Plot as Plot
+import qualified Parun.Engine.Projection as Projection
+import qualified Parun.Engine.Projection.View as Projection
+import qualified Parun.Engine.Rad as Rad
+import qualified Parun.Engine.Replacement as Replacement
+import qualified Parun.Engine.Resolve.Effect as Resolve
+import qualified Parun.Engine.Resolve.Slots as Resolve
+import qualified Parun.Engine.Ring as Ring
+import qualified Parun.Engine.Room as Room
+import qualified Parun.Engine.Saga as Saga
+import qualified Parun.Engine.Sba as Sba
+import qualified Parun.Engine.Setup as Setup
+import qualified Parun.Engine.Soulbond as Soulbond
+import qualified Parun.Engine.SpaceSculptor as SpaceSculptor
+import qualified Parun.Engine.Speed as Speed
+import qualified Parun.Engine.Stack as Stack
+import qualified Parun.Engine.Suspend as Suspend
+import qualified Parun.Engine.Target as Target
+import qualified Parun.Engine.Turn as Turn
+import qualified Parun.Engine.UntapRestriction as UntapRestriction
+import qualified Parun.Extra.Int as Int
+import qualified Parun.Extra.Natural as Natural
+import qualified Parun.Types.AbilityTriggered as AbilityTriggered
+import qualified Parun.Types.Acquisition as Acquisition
+import qualified Parun.Types.Action as Action.Type
+import qualified Parun.Types.AnyNumberOf as AnyNumberOf
+import qualified Parun.Types.Asked as Asked
+import qualified Parun.Types.BeginningStep as BeginningStep
+import qualified Parun.Types.Card as Card
+import qualified Parun.Types.CombatStep as CombatStep
+import qualified Parun.Types.Completion as Completion
+import qualified Parun.Types.Concession as Concession
+import qualified Parun.Types.ControlChanged as ControlChanged
+import qualified Parun.Types.ControlClock as ControlClock
+import qualified Parun.Types.CounterCause as CounterCause
+import qualified Parun.Types.CounterKind as CounterKind
+import qualified Parun.Types.Decider as Decider
+import qualified Parun.Types.Deck as Deck
+import qualified Parun.Types.Departure as Departure.Type
+import qualified Parun.Types.DiscardCause as DiscardCause
+import qualified Parun.Types.EndTurnSignal as EndTurnSignal
+import qualified Parun.Types.EndingStep as EndingStep
+import qualified Parun.Types.EventGroup as EventGroup
+import qualified Parun.Types.ExtraTurn as ExtraTurn
+import Parun.Types.Game (Game)
+import qualified Parun.Types.GameEvent as GameEvent
+import qualified Parun.Types.GameSettings as GameSettings
+import Parun.Types.GameState (GameState)
+import qualified Parun.Types.GameState as GameState
+import qualified Parun.Types.GrantedAbility as GrantedAbility
+import qualified Parun.Types.InherentTriggerSource as InherentTriggerSource
+import qualified Parun.Types.LastKnown as LastKnown
+import qualified Parun.Types.LoggedEvent as LoggedEvent
+import qualified Parun.Types.LoopTrail as LoopTrail
+import qualified Parun.Types.ManaAbilityPerformer as ManaAbilityPerformer
+import qualified Parun.Types.Modal as Modal.Type
+import qualified Parun.Types.Mode as Mode
+import qualified Parun.Types.ModeIndex as ModeIndex
+import qualified Parun.Types.ModeSelection as ModeSelection
+import qualified Parun.Types.Object as Object
+import qualified Parun.Types.ObjectId as ObjectId
+import qualified Parun.Types.PendingTrigger as PendingTrigger
+import qualified Parun.Types.Phase as Phase
+import qualified Parun.Types.PhaseSelector as PhaseSelector
+import qualified Parun.Types.PlayerControl as PlayerControl
+import Parun.Types.PlayerId (PlayerId)
+import qualified Parun.Types.Program as Program
+import qualified Parun.Types.ProjectedCharacteristics as PC
+import Parun.Types.Prompt (Prompt)
+import qualified Parun.Types.Prompt as Prompt
+import qualified Parun.Types.RangeOfInfluence as RangeOfInfluence
+import qualified Parun.Types.RestartSignal as RestartSignal
+import Parun.Types.Result (Result)
+import qualified Parun.Types.RevealWindow as RevealWindow
+import qualified Parun.Types.Sickness as Sickness
+import qualified Parun.Types.Source as Source
+import qualified Parun.Types.StackObjectKind as StackObjectKind
+import qualified Parun.Types.StepBegan as StepBegan
+import qualified Parun.Types.Subtype as Subtype
+import qualified Parun.Types.Supertype as Supertype
+import qualified Parun.Types.TapState as TapState
+import qualified Parun.Types.Timestamp as Timestamp
+import qualified Parun.Types.TriggerCondition as TriggerCondition
+import qualified Parun.Types.TriggerEntry as TriggerEntry
+import qualified Parun.Types.TriggerLimit as TriggerLimit
+import qualified Parun.Types.TriggerSource as TriggerSource
+import qualified Parun.Types.TriggeredAbility as TriggeredAbility
+import qualified Parun.Types.TriggeredAbilitySource as TriggeredAbilitySource
+import qualified Parun.Types.UntapHold as UntapHold
+import qualified Parun.Types.Zone as Zone
+
+-- The interpreter seam: every decision the engine suspends on is answered here.
+-- The PRIMITIVE form, and the only one that sees which game asked -- an Asked
+-- carries the asking game's state and the games it is nested inside (CR 729.1a),
+-- which CR 723.4's visibility split needs.
+runGameAsked :: (Monad m) => (forall r. Asked.Asked r -> m r) -> GameState -> Game a -> m (a, GameState)
+runGameAsked answer gs game = Program.foldProgramM answer (State.runStateT game gs)
+
+runGameAskedPure :: (forall r. Asked.Asked r -> r) -> GameState -> Game a -> (a, GameState)
+runGameAskedPure answer gs game = Program.foldProgram answer (State.runStateT game gs)
+
+-- The seam for an answerer that does not care which game it is in.
+runGame :: (Monad m) => (forall r. Prompt r -> m r) -> GameState -> Game a -> m (a, GameState)
+runGame answer = runGameAsked (answer . Asked.prompt)
+
+runGamePure :: (forall r. Prompt r -> r) -> GameState -> Game a -> (a, GameState)
+runGamePure answer = runGameAskedPure (answer . Asked.prompt)
+
+-- One entry point from matchup to played game: the player list is DERIVED from it,
+-- so a matchup player without a Player record is unrepresentable. CR 800.2: the
+-- options are settled before the game begins, so they are an argument here.
+-- Parun.Engine.Driver.match is the same, for an answerer that runs in a monad.
+runMatchPure :: (forall r. Prompt r -> r) -> GameSettings.GameSettings -> NonEmpty.NonEmpty (PlayerId, Deck.Deck) -> (Result, GameState)
+runMatchPure answer settings matchup =
+  runGamePure answer (Setup.gameWith settings (fmap fst matchup)) (playFrom matchup)
+
+-- The next entry of a cyclic order after 'pid', falling back to 'pid' when the
+-- order is empty or does not mention it.
+nextInOrder :: [PlayerId] -> PlayerId -> PlayerId
+nextInOrder order pid = case dropWhile (/= pid) order of
+  _ : y : _ -> y
+  _ -> case order of
+    h : _ -> h
+    [] -> pid
+
+-- CR 800.4a (last sentence): priority passes to the next player in turn order
+-- who's still in the game. The seat is looked up in the FULL seating order
+-- (GameState.turnOrder is never shortened), so a player who has ALREADY departed
+-- still has a position from which to find their successor -- which is how
+-- priorityLoop's concede arm calls this. Total. Deliberately NOT shared with
+-- Game.heirOnDeparture (CR 725.4 / 726.4), which anchors on the ACTIVE seat,
+-- excludes it, and must return a Maybe.
+nextStillPlaying :: GameState -> PlayerId -> PlayerId
+nextStillPlaying gs pid =
+  let order = GameState.turnOrder gs
+      playing = Game.stillPlaying gs
+      -- Everyone after `pid`, then the whole order again so the wrap is covered.
+      scan = drop 1 (dropWhile (/= pid) order) <> order
+   in case filter (\p -> List.elem p playing) scan of
+        h : _ -> h
+        [] -> pid
+
+-- CR 800.4j: a turn whose player has left continues without an active player, and
+-- where they would receive priority the next player in turn order does instead.
+-- GameState.activePlayer is deliberately NOT widened to a Maybe -- the turn still
+-- BELONGS to that seat, CR 800.4m's durations and CR 101.4's APNAP anchor both
+-- referencing it.
+--
+-- CR 805.5b: under the shared team turns option the active TEAM receives
+-- priority, so a departed active player's still-playing teammate is asked first.
+priorityHolder :: GameState -> PlayerId
+priorityHolder gs =
+  case filter (\pid -> List.elem pid (Game.stillPlaying gs)) (Turn.activePlayers gs) of
+    holder : _ -> holder
+    [] -> nextStillPlaying gs (GameState.activePlayer gs)
+
+-- CR 117.3d / 805.5: who is asked after `pid` passes or leaves, given who has
+-- passed in succession. Under the shared team turns option the team holds
+-- priority, so each still-playing teammate who has not yet passed is asked
+-- before it moves on (CR 805.5b's "no player on that team wishes to do
+-- anything"), and then it goes to the next player in turn order off the team.
+-- Without the option a player's team is themselves, and this is
+-- nextStillPlaying.
+passPriorityFrom :: GameState -> PlayerId -> PlayerId
+passPriorityFrom gs pid =
+  let playing = Game.stillPlaying gs
+      order = GameState.turnOrder gs
+      scan = filter (\p -> List.elem p playing) (drop 1 (dropWhile (/= pid) order) <> order)
+      teammate = Turn.sharesTurn gs pid
+   in case filter (\p -> teammate p && not (Set.member p (GameState.passed gs))) scan of
+        p : _ -> p
+        [] -> case filter (not . teammate) scan of
+          p : _ -> p
+          [] -> nextStillPlaying gs pid
+
+-- CR 502.3's untap, and its own "effects can keep one or more of a player's
+-- permanents from untapping": such an effect takes the permanent out of the set
+-- below and leaves it as it was (Parun.Engine.UntapRestriction), CR 101.2 being
+-- what makes the "can't" beat the turn-based action.
+--
+-- CR 122.1d's stun counters are NOT one of those and are not subtracted here: a
+-- replacement effect does not stop the permanent being determined to untap, it
+-- takes the untap event once it happens (CR 614.6). That is Event.proposeUntap's
+-- job, one paragraph down.
+--
+-- FOUR carriers, subtracted together. The printed static one is re-derived live,
+-- and a resolution's stored rows (GameState.objectProhibitions) are read beside it,
+-- both through UntapRestriction.gathered; the other two are stored on the
+-- victim, and this is where each both applies and
+-- ENDS, CR 701.43b putting the expiry in the untap step it bites in. They are two
+-- fields because they name different seats: Object.doesNotUntapFor says "its
+-- controller's next untap step[s]", so it is applied and counted down against
+-- `ids`, one step apiece,
+-- while Object.exertedBy says "YOUR next untap step" (CR 701.43a), so `pid` is
+-- dropped from EVERY permanent -- one that changed hands is neither held back at
+-- its new controller's step nor left carrying a rider past the step that ends it.
+--
+-- What survives those is CR 502.3's own determination, the active player's to
+-- make: a printed "you may choose not to untap" (UntapHold.Elective) offers its
+-- tapped permanents, and the ones `pid` does not pick stay tapped; a cap
+-- (UntapHold.AtMost, Static Orb) offers the tapped permanents it counts, and
+-- UntapRestriction.settle keeps every cap. Only a tapped permanent nothing else
+-- holds back is offered, since for any other the untap's outcome is already
+-- settled; a stunned one is, its stun counter (CR 122.1d) taking the untap only
+-- once `pid` has chosen it, so it counts against a cap -- docs/decisions.md,
+-- "An untap cap leaves tapped only what it must". Asked only where the answer
+-- matters: a cap the offered permanents already fit, with nothing elective
+-- among them, leaves every one to untap.
+untapAll :: PlayerId -> Game ()
+untapAll pid = do
+  gs <- State.get
+  let -- Only ever applied to `held`, whose count is above 0.
+      countDown obj = obj {Object.doesNotUntapFor = Object.doesNotUntapFor obj - 1}
+      unexert obj = obj {Object.exertedBy = Set.delete pid (Object.exertedBy obj)}
+      ids = Projection.controls pid gs
+      restrictions = UntapRestriction.gathered ids gs
+      holding hold = Set.unions [named | (h, named) <- restrictions, h == hold]
+      prohibited = holding UntapHold.Forbidden
+      elective = holding UntapHold.Elective
+      caps = [(n, counted) | (UntapHold.AtMost n, counted) <- restrictions]
+      asks f oid = maybe False f (Game.lookupObject oid gs)
+      oneShot = asks ((> 0) . Object.doesNotUntapFor)
+      exerted = asks (Set.member pid . Object.exertedBy)
+      tapped = asks ((== TapState.Tapped) . Object.tapped)
+      allowed = filter (\oid -> not (Set.member oid prohibited) && not (oneShot oid) && not (exerted oid)) ids
+      held = filter oneShot ids
+  -- The prompt's object is the first permanent offered: a turn-based action has
+  -- no source of its own to name (Contraption.crank's reading).
+  let capped oid = any (Set.member oid . snd) caps
+      offered = filter (\oid -> tapped oid && (Set.member oid elective || capped oid)) allowed
+      overflows = any (\(n, counted) -> Natural.length (filter (`Set.member` counted) offered) > n) caps
+      -- The tightest cap counting every offered permanent bounds any answer.
+      ceiling_ = case [n | (n, counted) <- caps, all (`Set.member` counted) offered] of
+        [] -> Nothing
+        ns -> Just (minimum ns)
+  untapping <- case offered of
+    first : _
+      | overflows || any (`Set.member` elective) offered -> do
+          chosen <- Game.choose (Prompt.ChooseAnyNumber (Decide.deciderFor pid gs) pid first AnyNumberOf.ToUntap offered ceiling_)
+          let settled = UntapRestriction.settle caps elective offered chosen
+          pure (filter (\oid -> List.notElem oid offered || Set.member oid settled) allowed)
+    _ -> pure allowed
+  -- CR 502.3's two sentences, in its own order: DETERMINE which permanents will
+  -- untap, then untap them all SIMULTANEOUSLY. Event.proposeUntap is the
+  -- determining half -- rule 701.26b's guard plus the CR 614 loop, which is where
+  -- CR 122.1d's stun counters take the event and are spent -- and the write below
+  -- is the untapping, one State.modify' over the survivors so no permanent is
+  -- upright while another is still being decided.
+  --
+  -- Event.untap is not called per permanent for exactly that reason: it writes as
+  -- it goes, which is right for CR 701.26b's one-at-a-time roads (an Effect.Untap,
+  -- an untap symbol) and wrong for this one.
+  --
+  -- The GameEvent.BecameUntapped records ride inside CR 502.3's own
+  -- simultaneity: one Event.simultaneously bracket, so a card watching an untap
+  -- sees the whole step as ONE event (CR 608.2f) rather than as one event per
+  -- permanent. Only the SURVIVORS are recorded, so rule 701.26b's guard gates the
+  -- event as well as the write -- which is what CR 603.2e's "don't ... retrigger
+  -- if it persists" asks of a permanent that was already upright.
+  survivors <- Monad.filterM Event.proposeUntap untapping
+  Event.simultaneously $ do
+    State.modify' $ \live ->
+      let untapped = foldr (Map.adjust countDown) (foldr Event.writeUntappedIn (GameState.objects live) survivors) held
+       in live
+            { GameState.objects =
+                if any (Set.member pid . Object.exertedBy) untapped
+                  then Map.map unexert untapped
+                  else untapped
+            }
+    Monad.forM_ survivors (State.modify' . Event.recordEvent . GameEvent.BecameUntapped)
+
+-- CR 302.6: permanents the active player has controlled since their turn began
+-- are no longer summoning sick, and the untap step is where that becomes true.
+-- The record names `pid`, so it answers CR 302.6 only for `pid`, and it iterates
+-- `Projection.controls`, so it settles for whoever CURRENTLY controls the
+-- permanent: Control Magic grants control indefinitely, so the creature can still
+-- be the thief's at their own untap step.
+settleAll :: PlayerId -> Game ()
+settleAll pid = do
+  gs <- State.get
+  let settle obj = obj {Object.sickness = Sickness.Settled pid}
+      ids = Projection.controls pid gs
+  State.put gs {GameState.objects = foldr (Map.adjust settle) (GameState.objects gs) ids}
+
+-- CR 302.6 asks for control held CONTINUOUSLY, so a settle must not outlive the
+-- control it was made about. This drops any `Settled p` on the battlefield whose
+-- object `p` no longer controls, and samples rather than hooks because control is
+-- DERIVED, no resolution announcing a change for a re-sickening to hang on. It
+-- only ever CLEARS, which is what makes the sampling sound: a discrepancy proves
+-- control changed, while granting from a sample would invent continuity across
+-- the gap between two samples. Derives the check the same way `settleAll` writes
+-- it, so the two cannot disagree about who controls what.
+checkControlContinuity :: Game ()
+checkControlContinuity = do
+  gs <- State.get
+  let grants = Projection.controlGrants gs
+      interrupted oid objs = case Map.lookup oid objs of
+        Nothing -> objs
+        Just obj -> case Object.sickness obj of
+          Sickness.Sick -> objs
+          Sickness.Settled p ->
+            if Projection.controllerOfGiven grants oid gs == Just p
+              then objs
+              else Map.insert oid obj {Object.sickness = Sickness.Sick} objs
+  State.put gs {GameState.objects = foldr interrupted (GameState.objects gs) (Set.toList (GameState.battlefield gs))}
+
+-- CR 702.30a's clock, one seat at a time: `pid`'s upkeep is beginning, so an
+-- open window of theirs moves on one place and one that has already run its
+-- upkeep is dropped. Only `pid`'s, rule 702.30a measuring the window in the
+-- upkeeps of the player whose control it asks about, so a permanent stolen and
+-- given back has an untouched clock for the seat that did not take a turn in
+-- between. Dropping rather than marking spent: `sampleControl` below opens a
+-- window on an ARRIVAL and never on an absence, so there is nothing for a
+-- tombstone to suppress, and Parun.Types.ControlClock says why "no window" then
+-- has one representation.
+advanceControlClock :: PlayerId -> Game ()
+advanceControlClock pid = do
+  gs <- State.get
+  let step clock = case clock of
+        ControlClock.Gained -> Just ControlClock.SinceLastUpkeep
+        ControlClock.SinceLastUpkeep -> Nothing
+      tick obj = obj {Object.controlClock = Map.update step pid (Object.controlClock obj)}
+  State.put gs {GameState.objects = foldr (Map.adjust tick) (GameState.objects gs) (Set.toList (GameState.battlefield gs))}
+
+-- CR 704.5k asks how long each permanent has "had the world supertype", and
+-- world-ness is DERIVED (layer 4, CR 613.1d) while the clock must be STORED -- so
+-- this samples it into Object.worldSince, as checkControlContinuity samples
+-- control. Unlike that one it both WRITES and CLEARS, the sample being taken
+-- BEFORE the rule reads it; a stamp-only version would latch, leaving a permanent
+-- that lost the supertype and regained it claiming the older clock. ONE fresh
+-- timestamp for the whole pass, CR 704.5k's tie clause making permanents that
+-- became world simultaneously compare equal, and no special case for a PRINTED
+-- world supertype -- seeding from Object.timestamp would make one clock an ENTRY
+-- instant and the other a SETTLE.
+sampleWorldSince :: Game ()
+sampleWorldSince = do
+  gs <- State.get
+  let pcs = Projection.projectAll gs
+      isWorld oid = case Map.lookup oid pcs of
+        Nothing -> False
+        Just pc -> Set.member Supertype.World (PC.supertypes pc)
+      isStamped oid = case Map.lookup oid (GameState.objects gs) of
+        Nothing -> False
+        Just obj -> Maybe.isJust (Object.worldSince obj)
+      ids = Set.toList (GameState.battlefield gs)
+      toStamp = filter (\oid -> isWorld oid && not (isStamped oid)) ids
+      toClear = filter (\oid -> isStamped oid && not (isWorld oid)) ids
+      unstamp obj = obj {Object.worldSince = Nothing}
+      cleared = foldr (Map.adjust unstamp) (GameState.objects gs) toClear
+  case toStamp of
+    [] -> State.put gs {GameState.objects = cleared}
+    _ -> do
+      let (ts, gs1) = Game.freshTimestamp gs
+          stamp obj = obj {Object.worldSince = Just ts}
+      State.put gs1 {GameState.objects = foldr (Map.adjust stamp) cleared toStamp}
+
+-- The OBSERVATION POINT for a control change (CR 613.1b puts control in layer 2,
+-- so the projection re-reads it live and nothing announces the answer changing).
+-- Diffs the live controller of every battlefield permanent against
+-- GameState.controlSample, records a GameEvent.ControlChanged for each
+-- difference, stores the new snapshot, and reports whether it recorded anything.
+--
+-- MINTING AN EVENT is what makes this different from the three samplers beside it
+-- (checkControlContinuity, Combat.removeChanged, Ring.endOnControlChange), which
+-- each clear one piece of stored state and tell nobody: a trigger condition cannot
+-- be written against stored state that quietly changes, so CR 603.2 needs an entry
+-- in the log. FIRST SIGHTING IS NOT A CHANGE, so a permanent entering mints no
+-- event, and the snapshot is REBUILT from the battlefield -- CR 400.7 gives what
+-- comes back a new id, so a creature borrowed, killed and reanimated does not
+-- come home. Terminates: it only mints on a difference.
+--
+-- CR 702.30a's clock rides the same pass, because it asks the same question of
+-- the same map and Projection.controlGrants is the expensive part. A window
+-- opens on every ARRIVAL -- each difference the diff above found, plus the first
+-- sighting it declines to mint an event for, CR 110.2's battlefield entry being
+-- one of those. OVERWRITING, and on a RETURN as much as on a first arrival: rule
+-- 702.30a asks whether the permanent came under your control since your last
+-- upkeep, not whether this is the first time you ever controlled it, so a seat
+-- whose window ran out gets a fresh one when control comes back to it
+-- (Parun.KeywordTriggerSpec's "control coming back re-opens the window it
+-- closed"). Two samples straddling a change and a change back see no difference
+-- and open nothing, which is the gap `checkControlContinuity` above documents,
+-- for that function's reason.
+sampleControl :: Game Bool
+sampleControl = do
+  gs <- State.get
+  let grants = Projection.controlGrants gs
+      sampled =
+        Map.fromList $ do
+          oid <- Set.toList (GameState.battlefield gs)
+          Just pid <- [Projection.controllerOfGiven grants oid gs]
+          pure (oid, pid)
+      changes = do
+        (oid, after) <- Map.toList sampled
+        Just before <- [Map.lookup oid (GameState.controlSample gs)]
+        Monad.guard (before /= after)
+        pure (GameEvent.ControlChanged (ControlChanged.MkControlChanged oid before after))
+      arrivals = do
+        (oid, after) <- Map.toList sampled
+        Monad.guard (Map.lookup oid (GameState.controlSample gs) /= Just after)
+        pure (oid, after)
+      gain (oid, who) objs = case Map.lookup oid objs of
+        Just obj -> Map.insert oid obj {Object.controlClock = Map.insert who ControlClock.Gained (Object.controlClock obj)} objs
+        Nothing -> objs
+  State.put gs {GameState.controlSample = sampled, GameState.objects = foldr gain (GameState.objects gs) arrivals}
+  -- CR 603.2's simultaneity: two permanents whose control reverted in the same CR
+  -- 514.2 sweep changed hands at the same moment, so the batch is one event group.
+  Monad.unless (null changes) . Event.simultaneously $
+    State.modify' (\g -> List.foldl' (flip Event.recordEvent) g changes)
+  pure (not (null changes))
+
+-- CR 514.1's cleanup discard -- NOT CR 514.2, the sweep beside it. The choice is
+-- the player's: trimming front-of-hand would be the engine choosing what to
+-- pitch. The answer is filtered to cards actually in hand and capped at the
+-- excess, so a misbehaving interpreter cannot discard someone else's card or
+-- overshoot; one that returns too few simply discards too few.
+discardToHandSize :: PlayerId -> Game ()
+discardToHandSize pid = do
+  gs <- State.get
+  -- CR 402.2, not CR 103.5: the maximum hand size is its own rule and its own
+  -- seven, and an effect may remove it entirely (Reliquary Tower).
+  case PlayerEffect.maximumHandSize pid gs of
+    Nothing -> pure ()
+    Just limit -> do
+      let held = Game.zoneMembers Zone.Hand pid gs
+          excess = length held - Natural.toIntSaturating limit
+      Monad.when (excess > 0) $ do
+        let decider = Decide.deciderFor pid gs
+        chosen <- Game.choose (Prompt.ChooseDiscard decider pid held (Int.toNaturalSaturating excess))
+        -- Filtered, deduplicated and completed from the hand, the CR 701.9b
+        -- discard's posture: a short answer still discards down (CR 514.1).
+        let valid = ListUtils.nubOrd (filter (`List.elem` held) chosen)
+            filler = filter (`List.notElem` valid) held
+            toDiscard = take excess (valid <> filler)
+        -- CR 701.9a, through the shared discard funnel, so it records a discard
+        -- for a rule 701.9a trigger -- then a trigger waiting during the cleanup
+        -- step, CR 514.3a's condition (`cleanupException`).
+        -- One event group: rule 514.1's discard is one action.
+        Event.simultaneously (Monad.mapM_ (Event.discard DiscardCause.Ordinary pid) toDiscard)
+
+-- CR 103.8a: in a two-player game the player who plays first skips the draw step
+-- of their first turn; CR 103.8b / 810.6, in Two-Headed Giant the team who plays
+-- first does, every member of it being an active player on that turn (CR
+-- 805.4a); CR 103.8c and CR 800.7, in other multiplayer games nobody does. CR
+-- 800.1 makes a multiplayer game one that BEGINS with more than two players, and
+-- turnOrder is the permanent roster, so a three-player game down to two
+-- survivors still does not skip.
+skipsDraw :: GameState -> Bool
+skipsDraw gs =
+  GameState.turnNumber gs == 1
+    && (length (GameState.turnOrder gs) <= 2 || GameSettings.twoHeadedGiant (GameState.settings gs))
+    && case GameState.turnOrder gs of
+      starter : _ -> starter == GameState.activePlayer gs
+      [] -> False
+
+runTurnBasedActions :: Phase.Phase -> Game ()
+runTurnBasedActions phase = do
+  active <- State.gets GameState.activePlayer
+  -- CR 800.4j: a turn whose player has left the game continues to its completion
+  -- without an active player, so the turn-based actions the rules assign to THE
+  -- ACTIVE PLAYER -- untap (CR 703.4c), draw (CR 703.4d), choose the defending
+  -- player (CR 703.4h), declare attackers (CR 703.4i), the cleanup discard (CR
+  -- 703.4n) -- have no subject. Declare blockers (CR 703.4j) belongs to the
+  -- defending player and CR 703.4p's sweep is the GAME's action, so neither is
+  -- guarded.
+  --
+  -- CR 800.4h reaches the CHOICES on that list -- a choice a rule requires of a
+  -- departed player is made by the next player in turn order -- and only the
+  -- defending-player one survives it: after CR 800.4a the departed player owns no
+  -- card and controls no permanent, so which permanents untap (CR 703.4c), which
+  -- creatures attack (CR 703.4i) and which cards are discarded (CR 703.4n) are
+  -- each chosen from an empty set whoever is asked, and the draw (CR 703.4d) is
+  -- no choice at all. Combat.designateDefenders is where the one that is left
+  -- gets reassigned, which is why the beginning of combat arm below takes no
+  -- guard.
+  --
+  -- CR 805.4 / 805.9: under the shared team turns option every member of the
+  -- active team is an active player, so each still playing (`live`) takes the
+  -- actions that are the active player's own.
+  --
+  -- Not implemented: CR 805.6's order -- the team does not choose the order its
+  -- members untap, draw (CR 805.6a) and discard in (#4014).
+  primary <- State.gets (`Game.primaryOf` active)
+  live <- State.gets (\gs -> filter (\pid -> List.elem pid (Game.stillPlaying gs)) (Turn.activePlayers gs))
+  case phase of
+    Phase.Beginning BeginningStep.Untap -> do
+      -- CR 502.1 / 703.4a: phasing, immediately after the step begins. Inside the
+      -- CR 800.4j guard, rule 502.1 ranging over what THE ACTIVE PLAYER controls;
+      -- a row keyed to a player who left EARLIER never reaches it, CR 800.4k
+      -- giving that seat no turn, so CR 702.26n's reschedule is at the walk.
+      Monad.forM_ live (State.modify' . Phasing.phasingEvent)
+      -- CR 502.2 / 703.4b: the day/night check, second in the step and BEFORE the
+      -- untap itself (CR 502.3 / 703.4c). Outside the CR 800.4j guard, rule 703.4b
+      -- making it the GAME's action.
+      _ <- Daytime.untapCheck Event.recordTransformed
+      Monad.forM_ live $ \pid -> do
+        untapAll pid
+        settleAll pid
+        State.modify' $ \gs ->
+          -- CR 305.2: the allowance is per TURN. DELETED rather than set to 0, so
+          -- "has played none" has one representation.
+          gs {GameState.landsPlayed = Map.delete pid (GameState.landsPlayed gs)}
+    -- CR 805.4b: each player on the active team draws.
+    -- CR 503.1 gives the upkeep no turn-based action; the Unstable FAQ adds the
+    -- crank (CR 701.45a leaving it out of the rules), the active player's, so
+    -- it takes the CR 800.4j guard.
+    Phase.Beginning BeginningStep.Upkeep -> Monad.mapM_ Contraption.crank live
+    Phase.Beginning BeginningStep.DrawStep -> do
+      skip <- State.gets skipsDraw
+      Monad.unless skip (Monad.mapM_ Event.drawCard live)
+    -- CR 703.4h: choose the defending player. The active player's action (CR
+    -- 507.1), and the one item on the list CR 800.4h hands to another seat rather
+    -- than dropping, so it is NOT guarded here -- designateDefenders asks
+    -- Game.ruleChooser who makes the choice.
+    Phase.Combat CombatStep.BeginningOfCombat -> Combat.designateDefenders
+    -- CR 805.10b: the active team declares one combined attack, which its
+    -- primary player makes (CR 805.2).
+    Phase.Combat CombatStep.DeclareAttackers -> Monad.unless (null live) (Combat.declareAttackers performManaAbility primary)
+    Phase.Combat CombatStep.DeclareBlockers -> Combat.declareBlockers performManaAbility
+    Phase.Combat CombatStep.CombatDamage -> do
+      -- CR 510.4: deal this step's damage; if it was the first-strike step,
+      -- splice a second combat damage step in after it. CR 510.3's between-steps
+      -- priority and its SBA check come free from the step machinery.
+      needSecond <- Damage.dealCombatDamage
+      -- CR 614.1a: what a run-effects rewrite put in a replaced event's place
+      -- runs HERE, before the step's SBA check and before the riders below.
+      Resolve.runReplacementEffects playSubgame
+      -- CR 615.5's "immediately afterward": a shield this wave spent runs its
+      -- additional effect HERE, before the step's SBA check, so Test of Faith's
+      -- +1/+1 counters are on the blocker before CR 704.5g asks about lethality.
+      Resolve.runPreventionRiders playSubgame
+      Monad.when needSecond $
+        State.modify' (\gs -> gs {GameState.remaining = Turn.spliceSecondDamage (GameState.remaining gs)})
+    -- CR 505.4 / 703.4f / 714.3c: a lore counter onto each Saga its controller
+    -- has with chapter abilities. A turn-based action, not a trigger, which is why
+    -- it lives here and not in the gatherer; the active player's, so it takes the
+    -- CR 800.4j guard. Then CR 703.4g / 717.4's roll to visit, by each of those
+    -- players who controls an Attraction.
+    Phase.PrecombatMain -> do
+      -- CR 703.4e / 904.9: first, each archenemy sets a scheme in motion.
+      Monad.forM_ live $ \pid -> do
+        archenemy <- State.gets (Archenemy.isArchenemy pid)
+        Monad.when archenemy (Archenemy.setInMotion pid)
+      Monad.mapM_ advanceSagas live
+      Monad.forM_ live $ \pid -> do
+        visits <- State.gets (Attraction.controlsSubtype Subtype.Attraction pid)
+        Monad.when visits (Resolve.rollToVisit playSubgame pid)
+    -- CR 511.1: the end of combat step has no turn-based actions, so no arm here.
+    -- CR 511.3's removal from combat is an end-of-STEP action; runStep does it.
+    Phase.Ending EndingStep.Cleanup -> do
+      Monad.mapM_ discardToHandSize live
+      -- CR 514.2's second action, the same one CR 500.11's skipped ending phase
+      -- takes the other road to. NOT guarded: CR 703.4p is the game's action, so
+      -- it runs with no active player. Mana.endManaRetention only ENDS the
+      -- retention -- the mana itself is taken by this same step's CR 500.5 sweep
+      -- at its end, which makes retained mana outlive every earlier step. This is
+      -- the one reachable CR 603.3a window that GameState.battlefieldWhenTriggered
+      -- closes: the discard above has fired a rule 701.9a trigger, CR 514.3a does
+      -- not place it until after this line, and an "until end of turn" control
+      -- effect ending here would otherwise credit it to whoever got the permanent
+      -- back.
+      cleanupSecondAction
+    _ -> pure ()
+
+-- CR 505.4 / 703.4f / 714.3c's ACTION half: one lore counter onto each Saga this
+-- player controls that has one or more chapter abilities. Here rather than in
+-- Parun.Engine.Saga, which sits below Parun.Engine.Event in the import graph and so
+-- can classify which Sagas advance but cannot call the CR 122.6 placement funnel.
+-- Through Event.putCounters, so the placement records the event CR 714.2b's
+-- chapter abilities are gathered from.
+--
+-- ByRule, which is CR 614.16's answer: that rule's replacement effects reach a
+-- placement made by a resolving spell or ability, and CR 609.1 makes a turn-based
+-- action neither. So Doubling Season does NOT advance a Saga two chapters a turn,
+-- though it DOES double the lore counter CR 714.3a's replacement gives it as it
+-- enters. The player it carries is rule 714.3c's "that player", which is
+-- load-bearing: a clause naming a PLAYER (Vorinclex) does reach this placement.
+advanceSagas :: PlayerId -> Game ()
+advanceSagas pid = do
+  gs <- State.get
+  let pcs = Projection.projectAll gs
+  Monad.mapM_ (\oid -> Event.putCounters (CounterCause.ByRule pid) oid CounterKind.Lore 1) (Saga.advancing (\oid -> Projection.controllerOf oid gs) pid pcs gs)
+
+-- CR 603.3: put each triggered ability that fired since the last placement on the
+-- stack, in APNAP order (CR 603.3b), with each controller choosing the order
+-- among their own. The sourceless inherent abilities are gathered apart but
+-- placed in ONE batch with everything else, CR 603.3b giving a controller the
+-- choice over every ability they control. Its TWO-PART process runs in the rule's
+-- own order: first every trigger whose condition isn't another ability
+-- triggering, then the rest. Both passes come out of ONE gathered batch, so the
+-- split is by the event each trigger fired off -- `reacts` is the classification.
+--
+-- CR 800.4d, SECOND sentence, needs no separate filter: `orderPending` groups by
+-- `apnapPlayers`, which restricts every group to a still-playing controller. Two
+-- carriers can still reach it with a departed controller -- a DELAYED ability,
+-- proved by Parun.TriggerSpec's "CR 800.4d a departed player's delayed ability
+-- triggers, is consumed, and is not put on the stack", and an OBJECT-BORNE one
+-- reading CR 603.3a's controller from GameState.battlefieldWhenTriggered, proved
+-- by Parun.DepartureSpec's "CR 603.3a/800.4d a borrowed permanent's trigger is
+-- the departing player's, so it is never put on the stack". CR 800.4d's FIRST
+-- sentence and CR 800.4b's SECOND are enforced at the head of
+-- `Event.createTokens`. `boards` are settlePasses'.
+placePendingTriggers :: [GameState] -> Game Bool
+placePendingTriggers boards = do
+  gs <- State.get
+  let -- The unscanned events with their CR 608.2f groups still on them, which
+      -- every gatherer below reads: a group's CR 603.10 sample is the board as
+      -- it stood immediately after the group's events.
+      logged = Event.unscannedGrouped gs
+      -- CR 725.2, 726.2, 702.179d, 728.1 and 901.8: the rulebook's inherent
+      -- triggers hang on no object, and CR 309.4c's room abilities hang on a
+      -- dungeon card whose room abilities CR 309.4c mints rather than prints.
+      -- So Event.gatherTriggers, which asks each object what its face
+      -- triggers, has nowhere to find any of them. Gathered apart through the
+      -- same matcher, from the SAME snapshot and before the watermark bump, then
+      -- merged into the one batch below: placing them after the ordered batch
+      -- would make them resolve first, by the engine's choice rather than the
+      -- player's.
+      sourceless = Monarch.abilities gs <> Initiative.abilities gs <> Speed.abilities gs <> Rad.abilities gs <> Planechase.abilities gs
+      inherent = Trigger.inherentTriggers (fmap (\(pid, ability) -> (TriggerSource.Sourceless, pid, ability)) sourceless <> Dungeon.abilities gs) logged gs
+  -- The CR 603.10a look-back in Event.eventTriggers, over the same grouped
+  -- snapshot inherentTriggers took.
+  -- Not in the `let` because it can ASK -- CR 603.7b's second sentence is a
+  -- question for the controller of a delayed entry that matched two simultaneous
+  -- occurrences -- and it is asked BEFORE the watermark below moves, so the game
+  -- the question carries is the one the batch occurred in.
+  (pending, surviving) <- Event.gatherTriggers logged boards gs
+  -- MODIFY rather than put the snapshot back: the gather above may have asked a
+  -- question, and Game.choose stamps GameState.lastChoice, which CR 104.4b's
+  -- mandatory-loop watchdog reads. Putting `gs` would drop that stamp. Nothing
+  -- else can have moved -- the gather records no events -- so every field below
+  -- reads the same value either way.
+  State.modify' $ \g ->
+    g
+      { GameState.scannedThrough = Natural.length (GameState.events g),
+        -- CR 603.10's per-group samples are spent with the batch they were taken
+        -- for. Cleared rather than left standing, which bounds both the map and
+        -- the game states its unforced thunks retain.
+        GameState.boardAfterEvent = Map.empty,
+        GameState.battlefieldWhenTriggered = Map.empty,
+        GameState.delayedTriggers = surviving
+      }
+  -- CR 605.4a: a triggered mana ability "doesn't go on the stack ... it resolves
+  -- immediately after the mana ability that triggered it". Dropped from the
+  -- batch HERE rather than never gathered, because the same gather is what an
+  -- ordinary trigger watching the same event rides;
+  -- Parun.Engine.Cost.applyManaTriggers has already applied these off the
+  -- events that fired them, reading the same classifier.
+  --
+  -- Only `pending` is filtered. CR 605.1b's conditions are all EVENT conditions
+  -- (ManaAbility.triggersFromMana), so no state trigger, no delayed entry and
+  -- neither inherent gather above can produce one.
+  --
+  -- CR 605.5a: the EVENT that fired it decides too, so a trigger watching mana
+  -- added by an ability that resolved (Caged Sun off Crumbling Vestige) is no
+  -- mana ability and is placed here like any other.
+  gathered <- reactions (filter (\p -> not (ManaAbility.isTriggeredManaAbility (fmap LoggedEvent.event (PendingTrigger.firedBy p)) (PendingTrigger.ability p))) pending <> inherent)
+  -- CR 603.3b's two sentences, run one after the other rather than ordered
+  -- together and placed at the end: the rule's first sentence PUTS its abilities
+  -- on the stack before its second is reached, which is observable both in the
+  -- ordering prompt and in CR 603.3d's target choices.
+  first <- orderPending (filter (not . reacts) gathered)
+  Monad.mapM_ placeOne first
+  second <- orderPending (filter reacts gathered)
+  Monad.mapM_ placeOne second
+  pure (not (null first) || not (null second))
+
+-- CR 603.3b's classification, asked of one pending trigger: is the condition that
+-- fired it another ability triggering? Read off the EVENT that fired it rather
+-- than off the ability's conditions, since an ability with several (CR 603.1b) is
+-- sorted by the one that matched -- proved by Parun.TriggerSpec's "CR 603.3b an
+-- ability with two trigger conditions is placed by the one that fired". A
+-- trigger with no event (a state trigger, a reflexive one, a batch-wide
+-- inherent gather) fired off no ability triggering, so belongs to the first pass.
+reacts :: PendingTrigger.PendingTrigger -> Bool
+reacts = Maybe.isJust . (Event.abilityTriggeredOf . LoggedEvent.event Monad.<=< PendingTrigger.firedBy)
+
+-- CR 603.3b: "if MULTIPLE ABILITIES HAVE TRIGGERED since the last time a player
+-- received priority" -- so an ability that triggers off another ability
+-- triggering is part of the SAME batch, and has to be gathered before any of the
+-- batch goes on the stack. So: record a GameEvent.AbilityTriggered for every
+-- trigger gathered so far, scan those new events for the abilities they in turn
+-- fire, and repeat until a round finds nothing. MINTING AN EVENT rather than
+-- inspecting the pending set directly, because an ability triggering IS a game
+-- event -- rule 603.3b says so by making it a trigger condition -- so the
+-- existing machinery applies unchanged. EVENT triggers and the CR 603.7 delayed
+-- store are scanned; state triggers are not, matching no event. No
+-- bound on the rounds, and none needed: the one condition of this class
+-- (TriggerCondition.SagaFinalChapterTriggers) watches a Saga's final chapter ability,
+-- which triggers off lore counters (CR 714.2b), never off an ability
+-- triggering, so what reacts to it fires nothing further. Every round is
+-- filtered by `Event.withinTriggerLimit` first, the ONE place a "triggers only once"
+-- rider is spent.
+--
+-- The delayed store is re-run over the round's records ALONE, so an entry is
+-- spent (CR 603.7b) only by a record it matched, and one that matched none
+-- survives for a later round -- proved by Parun.TriggerSpec's "CR 603.7b a
+-- non-final chapter triggering leaves the one-shot entry armed". Its CR 603.12
+-- reflexive entries fired at the batch's first gather, which spent them.
+reactions :: [PendingTrigger.PendingTrigger] -> Game [PendingTrigger.PendingTrigger]
+reactions incoming = do
+  before <- State.get
+  case Event.withinTriggerLimit before incoming of
+    [] -> pure []
+    batch -> do
+      -- One CR 704.3 event group EACH, not one `Event.simultaneously` bracket
+      -- around the lot: a batch is "the abilities that have triggered since the
+      -- last time a player received priority" (CR 603.3b), which can have
+      -- triggered off different events at different moments.
+      State.modify' (\g -> List.foldl' (flip Event.recordEvent) g (fmap triggeredEvent batch))
+      -- The per-GAME rider's own record, written beside the log because the log
+      -- is cleared at the turn handoff. Only that rider's bearers are stored, so
+      -- the record stays the size of the rider's use rather than the game's.
+      State.modify' (\g -> g {GameState.triggeredThisGame = GameState.triggeredThisGame g <> Seq.fromList (Maybe.mapMaybe perGameRecord batch)})
+      gs <- State.get
+      let recorded = Event.unscannedGrouped gs
+          fresh = Event.reactionTriggers recorded gs
+      -- A CR 603.7 entry watching an ability trigger. Can ASK (CR 603.7b), so
+      -- the store is written back by modify below rather than by putting `gs`.
+      (fromDelayed, surviving) <- Trigger.delayedPending recorded gs
+      -- The round's own events are consumed here, CR 603.10's samples with them.
+      State.modify'
+        ( \g ->
+            g
+              { GameState.scannedThrough = Natural.length (GameState.events g),
+                GameState.boardAfterEvent = Map.empty,
+                GameState.battlefieldWhenTriggered = Map.empty,
+                GameState.delayedTriggers = surviving
+              }
+        )
+      rest <- reactions (fresh <> fromDelayed)
+      pure (batch <> rest)
+
+-- CR 603.3b's record of one ability triggering: what it hangs on (CR 113.7), its
+-- controller as it triggered (CR 603.3a) and WHICH ABILITY it is. Every pending
+-- trigger gets one, a SOURCELESS inherent ability included -- the record names a
+-- Parun.Types.TriggerSource, so there is no id it lacks.
+triggeredEvent :: PendingTrigger.PendingTrigger -> GameEvent.GameEvent
+triggeredEvent pending =
+  GameEvent.AbilityTriggered
+    AbilityTriggered.MkAbilityTriggered
+      { AbilityTriggered.source = PendingTrigger.source pending,
+        AbilityTriggered.controller = PendingTrigger.controller pending,
+        AbilityTriggered.ability = PendingTrigger.ability pending
+      }
+
+-- `triggeredEvent`'s payload, kept only for an ability whose rider is per-GAME
+-- (Parun.Types.TriggerLimit's OncePerGame). A classification of the ABILITY, never
+-- of its effect.
+perGameRecord :: PendingTrigger.PendingTrigger -> Maybe AbilityTriggered.AbilityTriggered
+perGameRecord pending = case TriggeredAbility.limit (PendingTrigger.ability pending) of
+  TriggerLimit.Unlimited -> Nothing
+  TriggerLimit.OncePerTurn -> Nothing
+  TriggerLimit.OncePerGame ->
+    Just
+      AbilityTriggered.MkAbilityTriggered
+        { AbilityTriggered.source = PendingTrigger.source pending,
+          AbilityTriggered.controller = PendingTrigger.controller pending,
+          AbilityTriggered.ability = PendingTrigger.ability pending
+        }
+
+-- Put one triggered ability from the ordered batch on the stack. What it hangs
+-- on decides how: an ability BORNE by an object goes through placeBorne, where
+-- every step is keyed to that object -- CR 113.7's reserved source binding, and
+-- the fillableModes/legalSets pair. A sourceless ability has no such object.
+placeOne :: PendingTrigger.PendingTrigger -> Game ()
+placeOne pending = do
+  -- CR 801.16: the ability is an object its controller controls, and a
+  -- continuous effect without which it would not have triggered is part of
+  -- the loop too (Trigger.loopShapers). Only a game using limited range reads
+  -- the stamp, so only one looks the effects up.
+  gs <- State.get
+  let shapers = if GameSettings.rangeOfInfluence (GameState.settings gs) == RangeOfInfluence.unlimited then [] else Trigger.loopShapers pending gs
+  State.put (foldr Game.involve gs (PendingTrigger.controller pending : shapers))
+  case PendingTrigger.source pending of
+    TriggerSource.Sourceless -> placeSourceless pending
+    TriggerSource.OfObject srcId -> placeBorne srcId pending
+
+-- Put one sourceless triggered ability on the stack: placeOne's arm for EVERY
+-- TriggerSource.Sourceless entry -- CR 725.2's, 726.2's, 702.179d's, 728.1's and
+-- 901.8's abilities, which the rulebook writes out and no object bears.
+--
+-- Single mode, no targets, so the mode is selected outright with no prompt --
+-- licensed by each such rule fixing its ability's full text, not by anything
+-- general about sourceless triggers. An inherent ability with a real choice in
+-- it would have to prompt here. The chosen modes ride under the reserved
+-- chosenModes slot, which Stack.resolveTop's OfInherentTrigger arm reads.
+placeSourceless :: PendingTrigger.PendingTrigger -> Game ()
+placeSourceless pending = do
+  gs <- State.get
+  let controller = PendingTrigger.controller pending
+      ability = PendingTrigger.ability pending
+      provided = PendingTrigger.bindings pending
+      (abilId, gs1) = Game.freshObjectId gs
+      (ts, gs2) = Game.freshTimestamp gs1
+      modeCount = Seq.length (Modal.Type.modes (TriggeredAbility.modal ability))
+      -- take, not [0 .. modeCount - 1]: a ModeIndex counts in Natural, and
+      -- Natural subtraction underflows when there are no modes at all.
+      allModes = Seq.fromList (fmap ModeIndex.MkModeIndex (take modeCount [0 ..]))
+      bindings = Binding.setYou controller (Map.union provided (Binding.fromChoices Map.empty Nothing allModes))
+      obj =
+        ( Object.newSettled
+            controller
+            ( Source.OfInherentTrigger
+                InherentTriggerSource.MkInherentTriggerSource
+                  { InherentTriggerSource.controller = controller,
+                    InherentTriggerSource.ability = ability
+                  }
+            )
+            Zone.Stack
+            ts
+        )
+          { Object.bindings = bindings
+          }
+  State.put (Game.putOnStack (triggeredSince pending gs2) abilId gs2 {GameState.objects = Map.insert abilId obj (GameState.objects gs2)})
+
+-- CR 610.3b's "after that ability triggered": the first event group after
+-- the trigger event's, so an event between the trigger and CR 603.3's
+-- placement counts, such as a CR 725.4 crowning among the state-based actions.
+-- An ability with no trigger event counts from its placement.
+--
+-- Not implemented: a reflexive (CR 603.12) or state (CR 603.8) trigger counting
+-- from when it triggered rather than from its placement (#5106).
+--
+-- data/scenarios/trigger/cr-610-3b-a-crowning-while-palace-jailers-exile-waits-for-the-stack-keeps-the-creature.json
+-- is the proof.
+triggeredSince :: PendingTrigger.PendingTrigger -> GameState -> EventGroup.EventGroup
+triggeredSince pending gs = maybe (GameState.nextEventGroup gs) (EventGroup.next . LoggedEvent.group) (PendingTrigger.firedBy pending)
+
+-- Put one object-borne triggered ability on the stack as a fresh OfTrigger
+-- object, choosing its mode(s) and their targets as it is placed (CR 603.3d).
+-- Mirrors Cast.castSpell's cast-time flow: CR 700.2b's mode choice, forced and
+-- unprompted exactly when the fillable modes are no more than the selection
+-- demands, then CR 603.3d's targets. ModalSpec's "M4h trigger modal" proves a
+-- real choice is really asked. CR 603.3c/700.2b: if no mode is chosen, the
+-- ability is removed from the stack -- the trigger-only half of the rule, a SPELL
+-- that can't choose a mode never being offered for casting (CR 601.2c). The guard
+-- precedes the mode prompt.
+placeBorne :: ObjectId.ObjectId -> PendingTrigger.PendingTrigger -> Game ()
+placeBorne srcId pending = do
+  gs <- State.get
+  let controller = PendingTrigger.controller pending
+      ability = PendingTrigger.ability pending
+      (abilId, gs1) = Game.freshObjectId gs
+      (ts, gs2) = Game.freshTimestamp gs1
+      decider = Decide.deciderFor controller gs
+      -- CR 603.2/603.3d: the event's own bindings are known before a target is
+      -- chosen, so a slot saying "that player controls" is baked before either
+      -- the mode gate or the target prompt reads it. Baked HERE and not stored:
+      -- the stack object keeps the printed ability, and CR 608.2b's re-check
+      -- bakes again from the same bindings.
+      modal = Target.bakeModal (Binding.playerSlots (PendingTrigger.bindings pending)) (TriggeredAbility.modal ability)
+      -- The rest of the same sentence. A slot that reads a bound OBJECT (Harness
+      -- the Storm's "the same name as that spell") cannot be baked, the answer
+      -- depending on the candidate; nor can a CR 202.3 computed bound that reads
+      -- the event's own amount (Venerable Warsinger's "where X is the amount of
+      -- damage this creature dealt to that player"), which is a number the
+      -- candidate is compared against. So the whole environment is handed to the
+      -- matcher instead, and to the mode gate as well as the target prompt, both
+      -- of which would otherwise see an empty map and admit nothing.
+      bound = PendingTrigger.bindings pending
+      -- CR 601.2c's number of targets, at the value of X this ability reads.
+      -- Zero for almost every trigger: CR 601.2b's announcement is made while
+      -- casting a spell or activating an ability, and a triggered ability is
+      -- neither.
+      --
+      -- CR 107.3m is one exception: an object's
+      -- enters-the-battlefield triggered ability reads the X announced for the
+      -- spell that became that object, "although the value of X for that
+      -- permanent is 0" -- so the same permanent's other abilities keep reading
+      -- zero, which is what makes the case on the CONDITION the rule's own
+      -- boundary rather than a convenience. Object.announcedX carries the
+      -- number across the move (Parun.Engine.Event.changeZoneAttaching), and is
+      -- Nothing for a permanent no cast X stands behind -- a token copy, or a
+      -- permanent put onto the battlefield by an effect.
+      --
+      -- Parun.TargetSpec's "CR 107.3m a trigger's target count reads the X
+      -- announced for the spell that became the permanent" is the proof, and
+      -- Parun.CardSpec's CR 603.3d lint admits an announced-X count on exactly
+      -- this shape of ability.
+      --
+      -- A slot counted by a COMPUTED number needs none of this: its Quantity is
+      -- read off the board against `srcId`, CR 113.7's source of this ability,
+      -- which is what lets Mogis's Marauder's devotion count a trigger's
+      -- targets.
+      --
+      -- CR 702.37f and CR 702.168e are the other: a permanent's turned-face-up
+      -- ability reads the X chosen as the morph or disguise special action was
+      -- taken, which Parun.Engine.Event.Binding.eventBindings binds off the event
+      -- itself. The same binding reaches the ability object below, so its
+      -- effects read the number too. Parun.FaceDownSpec's Aurelia's Vindicator
+      -- case is the proof.
+      inheritedX = case TriggeredAbility.condition ability of
+        TriggerCondition.SelfEnters -> Game.announcedXOf srcId gs
+        TriggerCondition.SelfTurnedFaceUp -> Maybe.fromMaybe 0 (Binding.amountOf Binding.variableX bound)
+        _ -> 0
+      -- CR 107.3m: an enters-the-battlefield triggered ability's effects read
+      -- the X announced for the spell that became its source, as its target
+      -- count does (inheritedX), and 0 where no cast X stands behind the
+      -- permanent. Nothing for every other trigger, so a delayed ability's
+      -- captured X (CR 107.3n) is not overwritten.
+      enteredX = case TriggeredAbility.condition ability of
+        TriggerCondition.SelfEnters -> Just inheritedX
+        _ -> Nothing
+      legal = Target.fillableModes StackObjectKind.TriggeredAbility Nothing (Just controller) bound srcId Map.empty modal gs
+      selection = Modal.Type.selection modal
+      obj =
+        Object.newSettled
+          controller
+          ( Source.OfTrigger
+              TriggeredAbilitySource.MkTriggeredAbilitySource
+                { TriggeredAbilitySource.source = srcId,
+                  TriggeredAbilitySource.ability = ability,
+                  -- CR 603.7a's creation moment, for a delayed entry's firing
+                  -- and Nothing for every other trigger. The one thing on the
+                  -- stack that tells the two apart (CR 701.27f).
+                  TriggeredAbilitySource.createdAt = PendingTrigger.createdAt pending,
+                  -- CR 113.7a's frozen declarations, as the ability triggered.
+                  TriggeredAbilitySource.delayed = PendingTrigger.delayed pending,
+                  -- CR 607.5: the pair the ability belongs to, as it goes on the
+                  -- stack. A delayed one belongs to none of the source's.
+                  TriggeredAbilitySource.acquisition = maybe (Game.acquisitionOf srcId gs) (const Acquisition.Own) (PendingTrigger.createdAt pending)
+                }
+          )
+          Zone.Stack
+          ts
+  State.put (Game.putOnStack (triggeredSince pending gs2) abilId gs2 {GameState.objects = Map.insert abilId obj (GameState.objects gs2)})
+  -- CR 701.20a: a card whose reveal caused this ability to trigger stays revealed
+  -- until the ability leaves the stack. Proven by the scenario
+  -- cr-702-94b-lasting-reveal-the-miracle-card-stays-revealed-while-its-trigger-is-on-the-stack.
+  case fmap LoggedEvent.event (PendingTrigger.firedBy pending) of
+    Just (GameEvent.Revealed revealed) -> Monad.mapM_ (Event.stampReveal (RevealWindow.WhileOnStack abilId)) (Event.revealedObjects revealed gs2)
+    _ -> pure ()
+  if not (Modal.selectionPossible legal selection)
+    then -- CR 603.3c: no selection satisfies the instruction.
+      State.modify' (Game.cease abilId)
+    else do
+      -- CR 700.2b: forced when there is nothing to choose, prompted otherwise.
+      -- Sorted on the way in, for Cast.castProposed's reason (CR 608.2c, 700.2d).
+      chosenModes <- case Modal.forcedSelection legal selection of
+        Just forced -> pure forced
+        Nothing -> fmap Seq.sort (Game.choose (Prompt.ChooseModes decider controller abilId legal selection))
+      -- CR 603.3d: targets for the chosen mode(s) only, chosen as the ability is
+      -- placed. A mode with no target slots asks nothing.
+      let slots = Target.announcedSlots StackObjectKind.TriggeredAbility controller srcId gs (Modal.modesTargetSlots chosenModes modal)
+          sets = Target.legalSets StackObjectKind.TriggeredAbility Nothing (Just controller) False bound srcId slots gs
+          -- CR 603.3d's "identical to the process ... listed in rules 601.2c-d",
+          -- and 601.2c's "all at once": an answer whose slots read each other is
+          -- judged WHOLE, exactly as a cast's is (Target.selectionLegal's third
+          -- conjunct) and a copy's re-target is (Resolve.chooseNewTargetsFor).
+          -- Itzquinth's victim slot excludes whatever its dealer slot names, and
+          -- the offer is the union over the dealer's candidates, so membership in
+          -- `sets` alone would admit one Dinosaur in both slots.
+          --
+          -- RE-ASKED rather than reversed. CR 603.3d imports rules 601.2c-d and
+          -- stops there, so 601.2e's return-to-before-the-proposal is not the
+          -- trigger's remedy, and CR 733.2's redo has no priority holder to hand
+          -- the action back to. The rule's own removal is the `selectionPossible`
+          -- branch above -- "no legal choices CAN be made", which is a question
+          -- about the board and not about the answer.
+          --
+          -- `rejected` bounds the recursion, Combat.attemptAttackDeclaration's
+          -- shape: a pure `Prompt r -> r` decider repeats its answer, so a repeat
+          -- is not re-asked a second time. What it degrades to is removal from
+          -- the stack, which is NOT CR 603.3d's own: that rule removes an ability
+          -- for which "no legal choices can be made", a question about the board
+          -- and the `selectionPossible` branch above. This is a decider that will
+          -- not make one, and announcing on their behalf is the one thing this may
+          -- not do. Such an interpreter costs exactly one extra prompt.
+          --
+          -- Keyed on the answer NARROWED TO THE OFFER, which is what makes the
+          -- recursion terminate: Recipient is unbounded and chooseTargets does not
+          -- validate, so an interpreter naming a fresh object id every call never
+          -- repeats and the raw answer bounds nothing. `sets` is finite, so the
+          -- narrowed key is drawn from a finite set. attemptAttackDeclaration's
+          -- posture again -- it keys on the declaration it filtered to
+          -- `candidates` rather than on the raw answer. TargetSpec's "CR 603.3d an
+          -- announcement outside the offer, made afresh each time, is refused
+          -- rather than asked forever" is the proof.
+          --
+          -- The KEY only. What is judged and what is recorded are still the raw
+          -- answer: CR 601.2c makes an announcement naming something unoffered
+          -- illegal rather than short, so narrowing what is judged would silently
+          -- drop a target instead of asking again, and would drop the card
+          -- Target.drawFromPiles legitimately draws out of a pile and outside the
+          -- slot's own set.
+          --
+          -- Judged against `gs`, the board `sets` was offered from, so the offer
+          -- and this check cannot disagree about one announcement.
+          --
+          -- The WHOLE of Target.selectionLegal, which is what CR 603.3d's import
+          -- of rules 601.2c-d asks for: the announced count against the slot's
+          -- own range, per-slot membership for every slot, and the joint check.
+          -- The cast road (Cast.castProposed) and the activation road
+          -- (Activate.activateAbility) ask the same three.
+          --
+          -- Not implemented: revealing a card CR 406.4's draw picked out of a
+          -- face-down pile here (#5424).
+          attempt rejected = do
+            (chosen, _) <- Target.chooseTargets Nothing controller abilId srcId bound inheritedX slots sets
+            if Target.selectionLegal StackObjectKind.TriggeredAbility Nothing (Just controller) bound srcId inheritedX slots sets chosen gs
+              then pure (Just chosen)
+              else
+                let key = Map.intersectionWith Set.intersection chosen sets
+                 in if Set.member key rejected
+                      then pure Nothing
+                      else attempt (Set.insert key rejected)
+      answered <- attempt Set.empty
+      case answered of
+        -- CR 603.3d: a required choice with no legal answer forthcoming.
+        Nothing -> State.modify' (Game.cease abilId)
+        Just chosen -> do
+          -- CR 603.3d / 601.2d: the division among the targets just fixed.
+          divisions <- Target.announceDivision Nothing controller abilId srcId bound slots chosen
+          -- CR 113.7: the ability's SOURCE is bound under the reserved slot as it
+          -- is placed, so "this creature" resolves as an ordinary slot read even
+          -- after the source has left. CR 603.7c: a delayed ability's CAPTURED
+          -- environment (its "it") rides alongside the choices made now, and the
+          -- two DO collide, the captured environment carrying the arming spell's
+          -- OWN reserved slots. Binding.mergeBinding is left-biased per FIELD, so
+          -- placement-time bindings must be the LEFT argument; backwards, the
+          -- arming spell's mode or X wins. unionWith, not Map.union, which would
+          -- drop the whole captured entry.
+          --
+          -- CR 702.165d: the source's copiable values are stamped too, since what
+          -- a backup ability grants is determined as the ability is put on the
+          -- stack. Off its last known information when the source is already
+          -- gone (CR 113.7a).
+          --
+          -- CR 603.3's object is stamped too, under the thisAbility slot
+          -- Parun.Engine.Activate fills for CR 602.2a's, so "if this is the second
+          -- time this ability has resolved this turn" reads this object's Source.
+          -- Inserted over the captured environment, whose thisAbility names the
+          -- ability that armed a delayed trigger rather than the trigger itself.
+          let placedSource = maybe (Projection.copiableCharacteristics srcId gs) LastKnown.copiable (Game.lastKnownOf srcId gs)
+          State.modify' (\g -> g {GameState.objects = Map.adjust (\o -> o {Object.bindings = Binding.setThisAbility abilId (Binding.setPlacedSourceCopy placedSource (Binding.setYou controller (Binding.setTriggerSource srcId (Map.unionWith Binding.mergeBinding (Target.stampDefendingPlayers srcId chosen g (Binding.setDivisions divisions (Binding.fromChoices chosen enteredX chosenModes))) (PendingTrigger.bindings pending)))))}) abilId (GameState.objects g)})
+          -- CR 601.2c through CR 603.3d: each chosen object became a target, which
+          -- is what CR 702.21a's ward watches. Raised only on an announcement the
+          -- joint check accepted, so a re-asked answer never made anything a
+          -- target.
+          announced <- State.get
+          Event.becameTarget announced abilId StackObjectKind.TriggeredAbility controller chosen
+
+-- CR 101.4 / 603.3b: the players who control a pending trigger, active player
+-- first and then the rest in turn order, grouped by controller because the
+-- within-controller ORDER is itself a choice. A departed seat is not in the APNAP
+-- order at all (CR 101.4 with CR 102.1) and CR 800.4d keeps its triggers off the
+-- stack; turnOrder being the permanent roster, the filter below enforces both.
+apnapPlayers :: GameState -> [PendingTrigger.PendingTrigger] -> [PlayerId]
+apnapPlayers gs pending =
+  let rotated = Game.apnapOrder gs
+      playing = Game.stillPlaying gs
+      controls pid = List.elem pid playing && any (\pt -> PendingTrigger.controller pt == pid) pending
+   in filter controls rotated
+
+-- CR 603.3b: APNAP across controllers, and within one controller's set, that
+-- player's chosen order. Asked only when they control two or more.
+--
+-- CR 805.7: under the shared team turns option a whole team's triggers are one
+-- set, in any order its players choose, interleaved. CR 805.2 makes the team's
+-- primary player the one asked, since a disagreement is theirs to settle.
+orderPending :: [PendingTrigger.PendingTrigger] -> Game [PendingTrigger.PendingTrigger]
+orderPending pending = do
+  gs <- State.get
+  groups <- Monad.mapM (orderFor gs pending) (List.groupBy (Turn.sharesTurn gs) (apnapPlayers gs pending))
+  pure (concat groups)
+
+orderFor :: GameState -> [PendingTrigger.PendingTrigger] -> [PlayerId] -> Game [PendingTrigger.PendingTrigger]
+orderFor gs pending team = do
+  let mine = filter (\pt -> List.elem (PendingTrigger.controller pt) team) pending
+      entries = fmap entryOf mine
+  case team of
+    member : _ | length mine >= 2 && not (interchangeable entries) -> do
+      let orderer = Game.primaryOf gs member
+          decider = Decide.deciderFor orderer gs
+      answer <- Game.choose (Prompt.OrderTriggers decider orderer entries)
+      pure (Game.permute mine answer)
+    _ -> pure mine
+
+-- CR 603.3b: is every permutation of this batch the same game, so that the prompt
+-- is a question with one answer? The entries must be EQUAL -- one ability of one
+-- source, the discriminator Parun.Types.TriggerEntry carries -- but equality alone
+-- is NOT enough, and that is the trap: CR 603.6a fires one trigger per entrant,
+-- so Aether Flash watching two creatures enter contributes two EQUAL entries
+-- whose bindings name different creatures, and CR 117.3b hands priority back
+-- between the two resolutions. So the ability must also be order-inert: nothing
+-- about it may be decided as it is placed, and nothing it does may read what a
+-- sibling has already done.
+interchangeable :: [TriggerEntry.TriggerEntry] -> Bool
+interchangeable entries = case entries of
+  [] -> True
+  entry : rest -> all (== entry) rest && orderInert (TriggerEntry.ability entry)
+
+-- CR 603.3b: may a batch of EQUAL entries of this ability be put on the stack in
+-- the engine's canonical order without asking? Five conditions -- no intervening
+-- "if" (CR 603.4), which is re-checked as the ability resolves; one mode and a
+-- ChooseExactly 1 selection, so CR 603.3c / 700.2b has nothing to announce; no
+-- target slots, CR 603.3d importing CR 601.2c; the mode reads NO slot at all
+-- (Resolve.modeSlots); and that answer is complete (Resolve.slotsAreExhaustive),
+-- which is where an opcode carrying a nested payload has to be caught. Reading no
+-- slot AT ALL rather than "no slot that varies across the batch" is deliberately
+-- conservative -- Binding.you and Binding.triggerSource are constant across a
+-- batch of equal entries -- so do not widen it without a card that needs the
+-- width. Not a case on any effect's IDENTITY.
+orderInert :: TriggeredAbility.TriggeredAbility Card.Card (GrantedAbility.GrantedAbility Card.Card) -> Bool
+orderInert ability =
+  let modal = TriggeredAbility.modal ability
+   in Maybe.isNothing (TriggeredAbility.intervening ability)
+        && Modal.Type.selection modal == ModeSelection.ChooseExactly 1
+        && case Foldable.toList (Modal.Type.modes modal) of
+          [mode] ->
+            Map.null (Mode.targetSlots mode)
+              && Map.null (Resolve.modeSlots mode)
+              && all Resolve.slotsAreExhaustive (Mode.allEffects mode)
+          _ -> False
+
+-- What one pending trigger looks like to the player asked for CR 603.3b's order:
+-- its source and WHICH ABILITY it is. Passing the ability THROUGH is not the
+-- rules core reading it -- nothing here cases on what the ability does.
+entryOf :: PendingTrigger.PendingTrigger -> TriggerEntry.TriggerEntry
+entryOf pending =
+  TriggerEntry.MkTriggerEntry
+    { TriggerEntry.source = PendingTrigger.source pending,
+      TriggerEntry.ability = PendingTrigger.ability pending
+    }
+
+-- CR 612.7 / 108.1: ask the interpreter, once per filter, for the reference
+-- face names each live name grant's filter admits (Projection.referenceQueries),
+-- and remember them in GameState.referenceNames for the projection, which
+-- cannot ask. Asked, not chosen: nobody decides what the reference says, so CR
+-- 104.4b's lastChoice does not move. The reference does not change during a
+-- game, so a filter is never asked about again. A grant is gathered while its
+-- source is on the battlefield, whatever that source is attached to, so the
+-- answer is in hand from the first settle after the source arrives.
+learnReferenceNames :: Game ()
+learnReferenceNames = do
+  gs <- State.get
+  let unasked = Set.filter (`Map.notMember` GameState.referenceNames gs) (Projection.referenceQueries gs)
+  Monad.forM_ unasked $ \predicate -> do
+    names <- Game.ask (Prompt.ReferenceNames predicate)
+    State.modify' (\g -> g {GameState.referenceNames = Map.insert predicate (Set.fromList names) (GameState.referenceNames g)})
+
+-- CR 117.5's settle, discarding the report; `performSettle` below is the same act.
+settleForPriority :: Game ()
+settleForPriority = Monad.void performSettle
+
+-- CR 117.5: each time a player would receive priority, sweep expired "for as
+-- long as" effects, perform state-based actions, then -- on a pass that performed
+-- none -- put triggered abilities on the stack, repeating until none of the three
+-- does anything. Every pass also pays a sample of derived state for each rule
+-- that stores what a projection answers live -- sampleWorldSince for CR 704.5k,
+-- sampleControl for CR 603.2, Exile.accrueLookers for CR 406.3,
+-- checkControlContinuity for CR 302.6, Combat.removeChanged for CR 506.4,
+-- Ring.endOnControlChange for CR 701.54a.
+--
+-- CR 704.3 makes "whenever a player would get priority" the coarsest moment
+-- anything could observe CR 611.2b's condition, so settling here is
+-- indistinguishable from checking continuously. The sweep runs FIRST, before the
+-- SBA check: a "for as long as you control this" effect ending (Master Thief)
+-- returns a permanent to another player's control, and CR 704.5j's legend rule
+-- must see the post-sweep control. It REPORTS whether it acted or placed a
+-- trigger, which is what `cleanupException` (CR 514.3a) asks about.
+--
+-- Ends by closing CR 701.20a's window for a revealed card whose ability was not
+-- put on the stack: a player would receive priority now.
+performSettle :: Game Bool
+performSettle = do
+  acted <- settlePasses 0 []
+  State.modify' (Event.closeReveal RevealWindow.UntilPriority)
+  pure acted
+
+-- performSettle, `passes` passes into a run with nobody asked anything
+-- (Departure.passesSince). `boards` are the states this settle stood in before
+-- each state-based action check that performed something since triggers were
+-- last placed, oldest first: the boards CR 603.8 reads (Trigger.stateTriggers).
+settlePasses :: Natural -> [GameState] -> Game Bool
+settlePasses passes boards = do
+  begun <- State.gets GameState.lastChoice
+  -- CR 612.7: FIRST, so every state-based action and state trigger below reads
+  -- a name grant's whole reference.
+  learnReferenceNames
+  -- CR 614.1c: an as-enters rewrite that ran an effect queued it, Event being
+  -- unable to run one. Drained FIRST, so the effects land before the SBA pass --
+  -- Monstrous War-Leech's mill decides what CR 704.5f then reads.
+  Resolve.runEntryEffects playSubgame
+  swept <- Expiry.sweepConditional
+  -- CR 610.3's second one-shot effect, Palace Jailer's and Banisher Priest's
+  -- alike: a return zone change is not something an Expiry sweep can perform.
+  returned <- MoveDuration.returnDue
+  -- CR 800.4c, checked here for CR 704.3's reason and not because it is a
+  -- state-based action -- that rule says it is not. AFTER the two above, each
+  -- of which can be what ends a control-changing effect: the conditional sweep
+  -- drops a CR 611.2b duration outright, and a return moves a permanent a
+  -- CR 613.1b grant is derived from. Before the SBA pass, so CR 704.5m reads the
+  -- board the exile leaves rather than an Aura still attached to a permanent
+  -- that has gone.
+  orphaned <- Departure.exileOrphanedByEndedControl
+  -- CR 702.145c/d/f/g, checked here for CR 704.3's reason and not because they are
+  -- state-based actions -- both rules say they are not. Before the SBA pass, since
+  -- turning a permanent over changes its power and toughness.
+  dayNight <- Daytime.settle Event.recordTransformed
+  -- CR 702.131b / 702.195a, checked here for CR 704.3's reason and not because
+  -- they are state-based actions -- rule 704.5 lists neither. Before the SBA pass,
+  -- since a mark granted here turns on the "as long as you have" clauses that read
+  -- it and CR 702.131d / 702.195c want continuous effects reapplied before the
+  -- trigger check.
+  designated <- PlayerDesignation.settle
+  -- Also before the SBA pass: a permanent that just became world must be stamped
+  -- before CR 704.5k reads the clock. No reason to loop.
+  sampleWorldSince
+  -- Unlike the other samples here it MAKES WORK: a GameEvent.ControlChanged
+  -- it mints has to be scanned, so it runs before placePendingTriggers and joins
+  -- the recursion guard below.
+  sampledControl <- sampleControl
+  -- CR 406.3's continuing look, sampled off the control sampleControl just read
+  -- and for the same reason it is sampled: nothing announces a control change a
+  -- grant could hang on. Stamp-only, so its position among the passes does not
+  -- matter -- a change any later step here makes is seen on the next pass, and a
+  -- pass on which nothing acted is one on which control did not move.
+  State.modify' Exile.accrueLookers
+  -- CR 702.95e, checked here for CR 704.3's reason and not because it is a
+  -- state-based action -- rule 704.5 lists it nowhere, rule 702.95a giving the
+  -- pairing its own duration. BEFORE the SBA pass, unlike the three samples
+  -- below: a pairing ending turns off the continuous effects that read it, so a
+  -- creature that was only alive at its paired size must die on THIS pass rather
+  -- than survive to the next. Inside the recursion guard for the same reason as
+  -- PlayerDesignation.settle -- an ending makes work.
+  unpaired <- Soulbond.endWhenBroken
+  -- CR 702.158b, checked here for CR 704.3's reason and not because it is a
+  -- state-based action: a sector lasts "until no player controls" a space
+  -- sculptor. Before the SBA pass, so CR 704.5u assigns afresh on THIS pass when
+  -- a sculptor is still on the battlefield, and inside the recursion guard for
+  -- Soulbond's reason.
+  unsectored <- SpaceSculptor.settle
+  -- CR 603.8: the board before this check, which a state trigger armed on it
+  -- has triggered on if the check acts and placement waits.
+  board <- State.get
+  acted <- Sba.performStateBasedActions (Resolve.runDamageRewriteEffect playSubgame) boards
+  -- CR 614.1a: a loss the pass replaced (Lich's Mirror) ran its effects inside
+  -- the pass (its `instead`); anything else queued runs HERE, before the
+  -- triggers are placed.
+  Resolve.runReplacementEffects playSubgame
+  -- CR 704.3: triggers wait for a check that performs no state-based action, so
+  -- a pass that acted repeats the check first. Proved by the scenario "CR 704.3
+  -- triggers from two state-based action passes go on the stack together".
+  placed <- if acted then pure False else placePendingTriggers boards
+  -- Last, and for the same reason the conditional sweep runs first: all three read
+  -- state this settle can still change -- CONTROL for all three, and CARD TYPES
+  -- for the CR 506.4 scan. Outside the recursion guard on purpose: none makes
+  -- further work, and all must run even on a pass where nothing fired, which is
+  -- the only pass the settle stops on. Ring.endOnControlChange clearing a
+  -- designation after the SBA pass is not a missed check either: both readers of
+  -- the mark ask CR 701.54e's "under your control" alongside it, so an unlifted
+  -- mark answers False regardless. Order among the three does not matter -- CR
+  -- 506.4 asks about combat, CR 302.6 about summoning sickness and CR 701.54a
+  -- about the designation, and none reads what another writes.
+  State.modify' Combat.removeChanged
+  checkControlContinuity
+  Ring.endOnControlChange
+  -- CR 104.4b inside the recursion too: a pass that keeps acting with nobody
+  -- asked anything is a loop of its own -- a borrowed Lich's Mirror replacing
+  -- the same loss every pass, which its ruling calls a draw. A game that has
+  -- ended settles no further.
+  passed <- Departure.passesSince begun passes
+  Departure.checkMandatoryLoop passed
+  ended <- State.gets (Maybe.isJust . GameState.result)
+  more <- if not ended && (swept || returned || orphaned || dayNight || designated || sampledControl || unpaired || unsectored || acted || placed) then settlePasses passed (if acted then boards <> [board] else []) else pure False
+  pure (acted || placed || more)
+
+-- Ask the priority holder for an action until every still-playing player has
+-- passed in succession (CR 117.4). A full round of passes resolves the top of the
+-- stack and hands priority back to the active player; only an EMPTY stack ends
+-- the step.
+priorityLoop :: Game ()
+priorityLoop = do
+  -- CR 800.4j: the active player, unless they have left the game.
+  holder <- State.gets priorityHolder
+  State.modify' $ \gs -> gs {GameState.priority = Just holder, GameState.passed = Set.empty}
+  -- settleForPriority (CR 117.5) runs where the board can CHANGE -- once at entry,
+  -- and after each resolution or board-changing action -- never after a bare
+  -- priority pass, which leaves the game state untouched. Observably identical to
+  -- settling on every priority grant.
+  let loop trail = do
+        -- CR 104.4b, checked HERE as well as at playGame's loop head: a
+        -- resolution cycle repeats inside one priority round and never reaches it.
+        Departure.checkMandatoryLoop 0
+        finished <- State.gets (Maybe.isJust . GameState.result)
+        restarted <- State.gets GameState.restartSignal
+        case restarted of
+          -- CR 727.4: a restart resolved under this loop, so the game it was
+          -- running has ended (CR 727.1) and been rebuilt. Stop without granting
+          -- priority and without touching GameState.priority, which the rebuild
+          -- already set to Nothing.
+          RestartSignal.Restarted -> pure ()
+          RestartSignal.Playing ->
+            if finished
+              then State.modify' (\gs -> gs {GameState.priority = Nothing})
+              else do
+                gs <- State.get
+                case GameState.priority gs of
+                  Nothing -> pure ()
+                  Just p ->
+                    if List.elem p (Game.stillPlaying gs)
+                      then do
+                        -- CR 104.3a: asked before anything else, and keyed to `p` --
+                        -- the TRUE player, never `Decide.deciderFor p`.
+                        -- Prompt.Concede carries no Decider precisely so this
+                        -- cannot be got wrong (CR 723.6).
+                        concession <- Game.ask (Prompt.Concede p)
+                        case concession of
+                          Concession.Concedes -> do
+                            -- CR 104.3a: leaves the game IMMEDIATELY. Not a
+                            -- state-based action (CR 104.3b), so it does not wait
+                            -- for a settle and nothing goes on the stack.
+                            Departure.leaveGame Departure.Type.Conceded p
+                            -- CR 800.4a: priority passes to the next still-playing
+                            -- player; nextStillPlaying looks `p` up in the full
+                            -- seating order, so it finds the successor even though
+                            -- leaveGame has already run. The pass count restarts
+                            -- (CR 117.4); the CR does not settle that directly,
+                            -- but not resetting risks resolving a spell a player
+                            -- would have responded to. See docs/decisions.md,
+                            -- "Whether a concession restarts the pass count".
+                            State.modify' $ \g ->
+                              let reset = g {GameState.passed = Set.empty}
+                               in reset {GameState.priority = Just (passPriorityFrom reset p)}
+                            -- CR 117.5: the departure changed the board, so the
+                            -- next player's priority waits on a settle.
+                            settleForPriority
+                            loop trail
+                          Concession.Continues -> do
+                            let decider = Decide.deciderFor p gs
+                                actions = Action.legalActions p gs
+                            -- CR 104.4b: a menu that is only Pass offers no
+                            -- optional action, so it does not break a loop of
+                            -- mandatory actions -- still ASKED, just not RECORDED
+                            -- as a choice. Matched two-deep rather than `length
+                            -- actions > 1`: Action.legalActions is lazy, so taking
+                            -- the length would force the whole spine at every
+                            -- grant -- a 70% slowdown on Parun.ReplaySpec.
+                            let offersAChoice = case actions of
+                                  _ : _ : _ -> True
+                                  _ -> False
+                                -- CR 732.3: a fragmented loop narrows the named
+                                -- player's menu, and refuses the completions
+                                -- an activation on it may not repeat, asked only
+                                -- where the raw menu offered a choice, so a
+                                -- Pass-only grant pays nothing for it. Narrowed
+                                -- to Pass alone, the menu goes the way any
+                                -- Pass-only menu does.
+                                here = Fragmented.digest gs
+                                settled = if offersAChoice then Fragmented.settle here trail else trail
+                                (refused, refusedCompletions) = if offersAChoice then Fragmented.forbidden here gs p settled else (Set.empty, Set.empty)
+                                menu = if Set.null refused then actions else filter (`Set.notMember` refused) actions
+                                narrowedChoice = case menu of
+                                  _ : _ : _ -> True
+                                  _ -> False
+                            answered <-
+                              if offersAChoice && narrowedChoice
+                                then Game.choose (Prompt.ChooseAction decider p menu)
+                                else Game.ask (Prompt.ChooseAction decider p menu)
+                            -- FILTERED, NOT TRUSTED: everything Action.legalActions
+                            -- computed -- CR 302.6's tap-sickness gate, CR 307.5
+                            -- timing, cost payability, CR 305.2's land allowance,
+                            -- CR 117.1a's casting timing and every prohibition --
+                            -- is enforced here, acting on an unoffered answer
+                            -- making all of it advisory. Rejecting to Pass keeps
+                            -- the loop total and cannot wedge the game.
+                            let chosen = if List.elem answered menu then answered else Action.Type.Pass
+                                trail' = if offersAChoice then Fragmented.record here p chosen settled else trail
+                            case chosen of
+                              -- CR 117.4 / 805.5b: every team has passed in
+                              -- succession once every still-playing player has,
+                              -- a team passing only when all its players do.
+                              Action.Type.Pass -> do
+                                let passed = Set.insert p (GameState.passed gs)
+                                    everyone = all (`Set.member` passed) (Game.stillPlaying gs)
+                                -- modify' over `State.put gs {...}`: `gs` predates
+                                -- the prompt, and putting it back would discard
+                                -- GameState.lastChoice (CR 104.4b), making every
+                                -- loop look mandatory.
+                                if everyone
+                                  then case GameState.stack gs of
+                                    [] -> State.modify' (\g -> g {GameState.priority = Nothing, GameState.passed = passed})
+                                    _ -> do
+                                      Stack.resolveTopWith playSubgame
+                                      ended <- State.gets GameState.endTurnSignal
+                                      case ended of
+                                        -- CR 724.1f / CR 724.2f: an effect ended
+                                        -- the turn, or the combat phase, as that
+                                        -- object resolved, so no player gets
+                                        -- priority for the rest of this process.
+                                        -- Returning BEFORE settleForPriority is
+                                        -- the point: both rules put the abilities
+                                        -- that triggered during the process onto
+                                        -- the stack at the step CR 724.1d or CR
+                                        -- 724.2d jumped to, and settling here
+                                        -- would place them now. That rule has
+                                        -- already ended this step, so
+                                        -- runStepThatBegan resumes and sweeps it
+                                        -- exactly as it would a step that ended by
+                                        -- itself.
+                                        EndTurnSignal.Ended -> State.modify' (\g -> g {GameState.priority = Nothing})
+                                        EndTurnSignal.Running -> do
+                                          settleForPriority
+                                          State.modify' (\g -> g {GameState.passed = Set.empty, GameState.priority = Just (priorityHolder g)})
+                                          loop trail'
+                                  else do
+                                    State.modify' (\g -> g {GameState.passed = passed, GameState.priority = Just (passPriorityFrom gs {GameState.passed = passed} p)})
+                                    loop trail'
+                              Action.Type.Play oid mName -> do
+                                -- CR 116.2a: the special action, made under a
+                                -- CR 601.3 permission (Cast.playLand).
+                                Cast.playLand False p oid mName
+                                State.modify' (\g -> g {GameState.passed = Set.empty, GameState.priority = Just p})
+                                settleForPriority
+                                loop trail'
+                              Action.Type.Cast oid name facing -> do
+                                -- CR 611.2a's spend is Cast.castSpellWith's own,
+                                -- so the two other doors into a cast -- a search's
+                                -- CR 601.3 offer and Parun.Engine.Resolve's -- spend
+                                -- the same grant this one does.
+                                Cast.castSpell performManaAbility p oid name facing
+                                State.modify' (\g -> g {GameState.passed = Set.empty, GameState.priority = Just p})
+                                settleForPriority
+                                loop trail'
+                              -- CR 116.2b / 702.37e / 701.40b: a special action, so
+                              -- nothing goes on the stack and no player gets a
+                              -- window to respond. Priority is retained and the
+                              -- pass count restarts, CR 117.4's "passing in
+                              -- succession" meaning without actions in between.
+                              Action.Type.TurnFaceUp oid procedure -> do
+                                FaceDown.turnFaceUp performManaAbility p procedure oid
+                                State.modify' (\g -> g {GameState.passed = Set.empty, GameState.priority = Just p})
+                                settleForPriority
+                                loop trail'
+                              -- CR 116.2m / 709.5e: a special action too, the
+                              -- TurnFaceUp arm's shape. What CR 709.5h's trigger
+                              -- sees is the DESIGNATION, which settleForPriority
+                              -- gathers like any other.
+                              Action.Type.Unlock oid half -> do
+                                Room.unlock performManaAbility p oid half
+                                State.modify' (\g -> g {GameState.passed = Set.empty, GameState.priority = Just p})
+                                settleForPriority
+                                loop trail'
+                              -- CR 116.2e: a special action too, the TurnFaceUp
+                              -- arm's shape. The discard goes through the CR
+                              -- 701.9a funnel rather than a zone move, so an
+                              -- ability that triggers on a discard sees it --
+                              -- Ordinary and not ToPayCyclingCost, CR 702.29c's
+                              -- cause being a cycling ability's cost.
+                              Action.Type.DiscardFromHand oid -> do
+                                Event.discard DiscardCause.Ordinary p oid
+                                State.modify' (\g -> g {GameState.passed = Set.empty, GameState.priority = Just p})
+                                settleForPriority
+                                loop trail'
+                              -- CR 116.2k / 702.170b: a special action too, the
+                              -- TurnFaceUp arm's shape.
+                              Action.Type.Plot oid cost -> do
+                                Plot.plot performManaAbility p oid cost
+                                State.modify' (\g -> g {GameState.passed = Set.empty, GameState.priority = Just p})
+                                settleForPriority
+                                loop trail'
+                              -- CR 116.2h / 702.143b: a special action too.
+                              Action.Type.Foretell oid -> do
+                                Foretell.foretell performManaAbility p oid
+                                State.modify' (\g -> g {GameState.passed = Set.empty, GameState.priority = Just p})
+                                settleForPriority
+                                loop trail'
+                              -- CR 116.2f / 702.62a: a special action too, and
+                              -- the one whose window is the card's own
+                              -- castability rather than a phase.
+                              Action.Type.Suspend oid -> do
+                                Suspend.suspend performManaAbility p oid
+                                State.modify' (\g -> g {GameState.passed = Set.empty, GameState.priority = Just p})
+                                settleForPriority
+                                loop trail'
+                              -- CR 116.2g / 702.139a: a special action too, and
+                              -- the one that takes no object -- Player.companion
+                              -- names the card, outside the game having no
+                              -- object to name it with (CR 400.11).
+                              Action.Type.PutCompanionIntoHand -> do
+                                Companion.take performManaAbility p
+                                State.modify' (\g -> g {GameState.passed = Set.empty, GameState.priority = Just p})
+                                settleForPriority
+                                loop trail'
+                              -- CR 116.2i / 901.9: a special action too, and one
+                              -- that takes no object; CR 901.9a-c give the roller
+                              -- priority afterwards whatever the die shows.
+                              Action.Type.RollPlanarDie -> do
+                                Planechase.roll performManaAbility p
+                                State.modify' (\g -> g {GameState.passed = Set.empty, GameState.priority = Just p})
+                                settleForPriority
+                                loop trail'
+                              -- CR 116.2j / 702.106c: a special action too.
+                              Action.Type.TurnConspiracyFaceUp oid -> do
+                                Conspiracy.turnFaceUp p oid
+                                State.modify' (\g -> g {GameState.passed = Set.empty, GameState.priority = Just p})
+                                settleForPriority
+                                loop trail'
+                              -- CR 116.2c: a special action too, and the one whose
+                              -- permission came from a resolution rather than
+                              -- from printed text. CR 613.1's next projection is
+                              -- what makes the ending visible; nothing is undone.
+                              Action.Type.EndEffect oid -> do
+                                EndEffect.endEffect performManaAbility p oid
+                                State.modify' (\g -> g {GameState.passed = Set.empty, GameState.priority = Just p})
+                                settleForPriority
+                                loop trail'
+                              -- CR 116.2d: a special action too.
+                              Action.Type.Ignore oid name -> do
+                                Ignore.ignore performManaAbility p oid name
+                                State.modify' (\g -> g {GameState.passed = Set.empty, GameState.priority = Just p})
+                                settleForPriority
+                                loop trail'
+                              -- CR 605.3a's first window, and CR 605.3b's
+                              -- immediacy: the ability does not go on the stack,
+                              -- so activating it is over by the time this returns.
+                              -- Cost.tapForMana is the same activation CR 605.3a's
+                              -- other two windows take, so this arm decides only
+                              -- WHEN it may happen; its answer is discarded, a
+                              -- mana ability whose cost went unpaid having changed
+                              -- nothing (CR 601.2h).
+                              --
+                              -- CR 732.3: completed as the state it leaves
+                              -- (Fragmented.paid), and reversed as an illegal
+                              -- action (CR 733.1) where a fragmented loop has
+                              -- already completed it so here. One that touched a
+                              -- library is never refused, since CR 733.1's last
+                              -- sentence forbids reversing it. One that activated
+                              -- another mana ability to pay its cost is never
+                              -- refused either, a deliberate under-detection: the
+                              -- loop is caught a step later. Both exclusions are
+                              -- a REGRESSION FENCE: no test loops such a mana
+                              -- ability. Parun.FragmentedSpec's Freed from the
+                              -- Real cases prove the refusal.
+                              --
+                              -- Compared by the state it leaves, so a tap for
+                              -- another colour is not refused, though CR 605.3b
+                              -- and 608.2d make the colour a resolution choice,
+                              -- which `Fragmented.forbidden` otherwise ignores.
+                              -- Another deliberate under-detection: parun asks for
+                              -- the colour at activation (Prompt.ChooseManaYield).
+                              Action.Type.ActivateManaAbility oid -> do
+                                pre <- State.get
+                                (_, (nested, _), _, _) <- Cost.tapForManaWith performManaAbility id Set.empty Set.empty p oid
+                                post <- State.get
+                                let completion = Completion.MkCompletion {Completion.announcement = Nothing, Completion.paid = Fragmented.paid Nothing post}
+                                    completed = if null nested && not (Cost.touchedLibrary pre post) then Just completion else Nothing
+                                Monad.when (not (Set.null refusedCompletions) && any (\c -> Set.member (chosen, c) refusedCompletions) completed) (Cost.restoreKeepingLibraryActions pre)
+                                State.modify' (\g -> g {GameState.passed = Set.empty, GameState.priority = Just p})
+                                settleForPriority
+                                loop (Fragmented.complete completed trail')
+                              Action.Type.Activate oid ability -> do
+                                completed <- Activate.activateAbilityWith (\completion -> Set.member (chosen, completion) refusedCompletions) playSubgame p oid ability
+                                State.modify' (\g -> g {GameState.passed = Set.empty, GameState.priority = Just p})
+                                settleForPriority
+                                loop (Fragmented.complete completed trail')
+                      else do
+                        -- CR 800.4a (last sentence): `p` was written as the holder
+                        -- and then departed -- e.g. paying a life cost inside
+                        -- settleForPriority (CR 119.4) -- before being asked
+                        -- anything. Departure.depart does not touch
+                        -- GameState.priority, so the stale `Just p` would
+                        -- otherwise survive to the Concede prompt.
+                        State.modify' (\g -> g {GameState.priority = Just (passPriorityFrom g p)})
+                        loop trail
+  settleForPriority
+  loop LoopTrail.empty
+
+-- CR 500.7 / 800.4k / 800.4m: this turn is over, so begin the next one -- a
+-- pending EXTRA turn if there is one, and otherwise the turn of the next SEAT in
+-- the seating order whose player is still in the game (takeNextTurn's question).
+-- CR 800.4k: a turn a departed player would begin does not begin, so such a seat
+-- is walked past. CR 800.4m: durations lasting until that player's next turn last
+-- until that turn WOULD have begun, so Expiry.dropAtTurnOf fires at EVERY seat
+-- the walk passes and at every extra turn popped (for the seat that does begin
+-- one, the same call is CR 611.2a). CR 702.26n hangs off that same moment, so
+-- Phasing.orphanSchedule fires at both places -- but only where the turn does not
+-- begin, a seat that begins one being nobody's orphan.
+handoffTurn :: Game ()
+handoffTurn = State.modify' takeNextTurn
+
+-- CR 500.7 / 103.1: the seat the ordinary turn order resumes from, read through
+-- one function so the two callers cannot drift -- the active player, unless an
+-- extra turn is under way, when it is the seat that turn was inserted after.
+turnAnchorOf :: GameState -> PlayerId
+turnAnchorOf gs = Maybe.fromMaybe (GameState.activePlayer gs) (GameState.turnAnchor gs)
+
+-- CR 500.7: extra turns are added directly after the specified turn, and every
+-- extra-turn effect in `data/cards/` specifies the turn it resolves in -- so
+-- popping the entry here, before the seating order is consulted, is the whole of
+-- "directly after". The rule's last sentence makes the store a stack, so this
+-- takes its HEAD. The anchor does NOT move (see GameState.turnAnchor): CR 500.7
+-- adds a turn and removes none, so the turn that would have followed still
+-- follows it -- observable only when the taker is not the active player, where it
+-- stops the extra turn eating that player's ordinary one. CR 800.4k applies as to
+-- an ordinary turn: it does not begin, the entry is still SPENT, and both "would
+-- have begun" rules still fire.
+--
+-- CR 805.8: under the shared team turns option the taker's team takes the extra
+-- turn, which beginTurnOf's CR 805.4 answer gives it with no arm here. One
+-- effect's entries are already one per team (Parun.Engine.Resolve.Effect's
+-- TakeExtraTurn arm).
+--
+-- Not implemented: CR 807.4i/j's Grand Melee turn markers (#3003).
+takeNextTurn :: GameState -> GameState
+takeNextTurn gs = case GameState.extraTurns gs of
+  [] -> walkToNextTurn (length (GameState.turnOrder gs)) (turnAnchorOf gs) (turnAnchorOf gs) gs
+  entry : rest ->
+    let pid = ExtraTurn.taker entry
+        anchor = turnAnchorOf gs
+        swept = dropAtTurnOfTeam pid gs {GameState.extraTurns = rest}
+        anchored = swept {GameState.turnAnchor = Just anchor}
+     in if List.elem pid (Game.stillPlaying swept)
+          then -- CR 500.11: this turn's OWN skips (Savor the Moment) come into
+          -- being as it begins, and only on this branch -- the CR 800.4k entry
+          -- the `else` spends belongs to a turn that never begins. Nothing of
+          -- this turn has started yet, so CR 614.10 is not yet in the way.
+            Replacement.installTurnSkips entry (beginTurn (Just (ExtraTurn.createdAt entry)) pid anchored)
+          else -- CR 702.26n, as on walkToNextTurn's skip branch below: this
+          -- entry is a turn `pid` would have begun, so a row keyed to them is
+          -- rescheduled here too. No board reaches it, an extra turn for a
+          -- departed player needing a phased-out permanent besides, so it is
+          -- the rule written out at its second site rather than a proved one.
+            takeNextTurn (expireLastTurn pid (Phasing.orphanSchedule pid swept))
+
+-- One seat at a time, bounded by the number of seats, so it terminates even when
+-- every seat has departed. The fallback returns the state without beginning a
+-- turn, keeping the sweeps already applied. Written as an explicit bounded
+-- recursion rather than `cycle`/`head` so it is total; unreachable while the game
+-- is running, a game with no survivors already having a Result (CR 104.2a).
+--
+-- CR 805.4: a seat whose player shares the turn the walk starts from has just
+-- taken it, so it is passed with no sweep -- that player's next turn is still to
+-- come.
+walkToNextTurn :: Int -> PlayerId -> PlayerId -> GameState -> GameState
+walkToNextTurn seatsLeft anchor seat gs =
+  if seatsLeft <= 0
+    then gs
+    else
+      let next = nextInOrder (GameState.turnOrder gs) seat
+          swept = dropAtTurnOfTeam next gs
+          -- CR 702.26n: the phasing analogue of the sweep above, on the same line
+          -- for the same reason -- this is the moment the turn WOULD have begun.
+          -- A row keyed to a seat this walk passes is rescheduled and phases in at
+          -- the untap step of whichever seat the walk lands on. This branch only:
+          -- a seat that does begin a turn is nobody's orphan.
+          orphaned = expireLastTurn next (Phasing.orphanSchedule next swept)
+       in if next /= anchor && Turn.sharesTurn gs anchor next
+            then walkToNextTurn (seatsLeft - 1) anchor next gs
+            else
+              if List.elem next (Game.stillPlaying swept)
+                then -- CR 500.7 / 103.1: this turn IS the ordinary rotation, so
+                -- there is nothing left to remember.
+                  beginTurnOf next swept {GameState.turnAnchor = Nothing}
+                else walkToNextTurn (seatsLeft - 1) anchor next orphaned
+
+-- CR 800.4i: a departed player's last turn answers "during their last turn"
+-- only until their next turn would have begun, which is here.
+expireLastTurn :: PlayerId -> GameState -> GameState
+expireLastTurn pid gs = gs {GameState.attacksInOwnLastTurn = Map.delete pid (GameState.attacksInOwnLastTurn gs)}
+
+-- CR 611.2a / 800.4m's sweep for a turn that begins or would have begun: every
+-- player who takes it, which under CR 805.4 is the whole team.
+dropAtTurnOfTeam :: PlayerId -> GameState -> GameState
+dropAtTurnOfTeam pid gs =
+  List.foldl' (flip Expiry.dropAtTurnOf) gs (filter (Turn.sharesTurn gs pid) (GameState.turnOrder gs))
+
+-- The turn actually begins for `pid`, split out so the CR 800.4k seat walk has
+-- exactly one place to land.
+beginTurnOf :: PlayerId -> GameState -> GameState
+beginTurnOf = beginTurn Nothing
+
+-- beginTurnOf, naming the extra turn beginning by its ExtraTurn.createdAt when
+-- this is one, so Event.settleOnsets can settle a delayed ability armed for
+-- "that turn" (CR 500.7).
+beginTurn :: Maybe Timestamp.Timestamp -> PlayerId -> GameState -> GameState
+beginTurn extra pid gs =
+  let -- CR 601.2i / 608.2i: how many spells each player cast during the turn that
+      -- is ending, taken here because the log it is folded from is cleared by the
+      -- record update below. `gs` still holds the OUTGOING active player.
+      casts = Game.castsPerPlayer gs
+      -- CR 800.4b: a player who would be controlled by a departed player isn't, so
+      -- a pending Decider naming one is not promoted. CR 800.4a's second clause
+      -- clears the entry at the departure itself; this guard answers otherwise.
+      promotedFor taker = case Map.lookup taker (GameState.pendingControl gs) of
+        Nothing -> Nothing
+        Just row -> case PlayerControl.decider row of
+          Decider.MkDecider d ->
+            if List.elem d (Game.stillPlaying gs)
+              then Just row
+              else Nothing
+      -- CR 805.4: every player whose turn this is, `pid` alone without the
+      -- shared team turns option.
+      takers = filter (Turn.sharesTurn gs pid) (GameState.turnOrder gs)
+      outgoing = Turn.activePlayers gs
+   in -- CR 603.7a: the one moment a delayed ability armed for "your next turn"
+      -- can learn which turn that is, and an entry whose turn has passed be
+      -- retired. Applied to the UPDATED state, both answers being read off this
+      -- turn's number and active player.
+      Event.settleOnsets
+        extra
+        gs
+          { GameState.activePlayer = pid,
+            GameState.turnNumber = GameState.turnNumber gs + 1,
+            -- CR 500.7: which extra turn this is, for a duration naming it
+            -- (Expiry.DuringExtraTurn); Nothing on an ordinary turn.
+            GameState.extraTurnUnderWay = extra,
+            -- CR 608.2i is why a log exists at all. It does not say how far back;
+            -- the ONE-turn scope is this engine's choice, and a "this game"
+            -- question about casts reads castsBeforeThisTurn below instead.
+            -- Cleared here and never at cleanup -- cleanup is still part of
+            -- this turn, and CR 514.1's discard is itself an event of it.
+            GameState.events = Seq.empty,
+            -- Its watermarks, which no stack object outlives a turn to read.
+            GameState.stackedIn = Map.empty,
+            -- CR 121.1's per-turn draw tally, cleared for EVERY player: a player
+            -- draws on turns that are not theirs, so "each turn" is the whole map.
+            GameState.drawsThisTurn = Map.empty,
+            -- CR 801.2c: who is in range is fixed as each turn begins, so the
+            -- seats emptied during the outgoing turn close up here.
+            GameState.departedThisTurn = Set.empty,
+            -- CR 508.1: who could have attacked is asked of THIS turn's
+            -- declare attackers steps.
+            GameState.couldAttackThisTurn = Set.empty,
+            -- CR 602.5b's "Activate only once each turn", cleared for every
+            -- object rather than the active player's: the rider is about the
+            -- object, and a permanent whose controller is not the active player
+            -- gets its activation back here just the same.
+            GameState.activatedThisTurn = Map.empty,
+            -- CR 602.2's activation history, which "the first activated ability
+            -- you activate each turn" reads: a turn's, for every player.
+            GameState.activationsThisTurn = Seq.empty,
+            -- CR 601.3's "Once each turn, you may cast ..." (Johann, Apprentice
+            -- Sorcerer), cleared for every object beside the activation-side
+            -- rider above and for its reason: the budget is the permission's
+            -- rather than a player's, so a permanent whose controller is not the
+            -- active player gets its use back here just the same.
+            GameState.castPermissionsUsedThisTurn = Map.empty,
+            -- Night Shift of the Living Dead's "Do this only once each turn", the
+            -- budget on a CR 706.2 modifier, cleared for every object for its reason.
+            GameState.rollModifiersUsedThisTurn = Map.empty,
+            -- CR 502.2 / 731.2: the count the NEXT turn's untap step asks about
+            -- "the previous turn's active player".
+            --
+            -- CR 502.2a / 731.2a: under the shared team turns option the rule asks
+            -- whether NO player on the previous active team cast a spell and
+            -- whether ANY cast two or more, and the most any one of them cast
+            -- answers both.
+            GameState.spellsCastLastTurn = List.foldl' max 0 (fmap (\p -> Map.findWithDefault 0 p casts) outgoing),
+            -- CR 601.2i / 608.2i: the same fold, kept per seat, because a CARD
+            -- asks about every player ("if no spells were cast last turn") and
+            -- about any one of them ("if a player cast two or more spells last
+            -- turn") where rule 731.2 asks only about the outgoing active player.
+            -- The scalar above is read out of THIS map, so the two cannot drift.
+            GameState.castsLastTurn = casts,
+            -- The outgoing log, kept for the per-seat view before it is cleared above.
+            GameState.eventsLastTurn = GameState.events gs,
+            -- CR 601.2i: the outgoing turn's casts join the game-long record
+            -- before the log holding them is cleared above.
+            GameState.castsBeforeThisTurn = GameState.castsBeforeThisTurn gs <> Game.castsInLog gs,
+            -- CR 508.1a: the outgoing turn becomes each of its takers' own last
+            -- turn, REPLACING the row, an attackless turn included (CR 805.4).
+            GameState.attacksInOwnLastTurn = List.foldl' (\rows p -> Map.insert p (Game.attacksInLog gs) rows) (GameState.attacksInOwnLastTurn gs) outgoing,
+            GameState.scannedThrough = 0,
+            -- Cleared with the log it describes: the settle Engine.advance runs
+            -- immediately before this leaves nothing unscanned.
+            GameState.boardAfterEvent = Map.empty,
+            GameState.battlefieldWhenTriggered = Map.empty,
+            GameState.damageScannedThrough = 0,
+            -- GameState.lastKnown is deliberately NOT cleared alongside them: CR
+            -- 608.2h's last known information is the substitute identity of an
+            -- object that no longer exists rather than history, and a delayed
+            -- ability's source (CR 603.7d) outlives the turn it was armed in.
+            -- Setup clears it where a NEW game begins.
+            GameState.phase = Turn.firstPhase,
+            GameState.remaining = Turn.laterPhases,
+            -- CR 723.1/723.1b: the new active player's pending control becomes
+            -- this turn's control, and REPLACING the whole map every turn is
+            -- what ends a prior control at the next turn's start -- unless CR
+            -- 800.4b stops the promotion (`promotedFor`, above). Replacing rather
+            -- than inserting is also what retires a CR 723.2 row a resolution
+            -- somehow left behind; no resolution spans a turn boundary, so that
+            -- is a belt on top of Parun.Engine.Stack's braces. Each taker's own
+            -- row under CR 805.4, which CR 805.8's control of a whole team
+            -- scheduled for every teammate (Resolve.Effect.controlledTeam).
+            GameState.control =
+              Map.fromList
+                [ (taker, pure row)
+                | taker <- takers,
+                  Just row <- [promotedFor taker]
+                ],
+            GameState.pendingControl = List.foldl' (flip Map.delete) (GameState.pendingControl gs) takers
+          }
+
+-- Consume the schedule: the next step becomes current. An empty schedule means
+-- the turn is over, so hand off. The turn is data, and this is the only thing
+-- that reads its order.
+advance :: Game ()
+advance = do
+  gs <- State.get
+  case Seq.viewl (GameState.remaining gs) of
+    p Seq.:< rest -> State.put gs {GameState.phase = p, GameState.remaining = rest}
+    -- CR 117.5: the turn is over. Settle once more so every event the terminal
+    -- step's turn-based actions emitted is scanned BEFORE handoffTurn clears the
+    -- log -- an unscanned event discarded at handoff is a lost trigger -- and so
+    -- CR 704.3 catches a state-based action those same actions raised. Usually
+    -- redundant, the cleanup step's own CR 514.3a check having settled already;
+    -- kept because the schedule can empty at a step that is NOT the cleanup step,
+    -- CR 500.11's skip over an ending phase dropping it with the rest.
+    Seq.EmptyL -> do
+      settleForPriority
+      handoffTurn
+
+-- One step: turn-based actions, then priority (if the step grants it), then
+-- state-based actions, then move on. Bails out as soon as the game has a result.
+runStep :: Game ()
+runStep = do
+  -- CR 727.4: the effect that restarts the game finishes resolving just before the
+  -- first turn's untap step, so if the previous step unwound on a restart, this is
+  -- that untap step. Lower the signal first.
+  State.modify' (\gs -> gs {GameState.restartSignal = RestartSignal.Playing})
+  -- CR 724.1d / CR 724.2d: if the previous step unwound because an effect ended
+  -- the turn or the combat phase, this is the step that rule jumped to -- the
+  -- cleanup step for one, the following phase for the other. Lower that signal
+  -- too, so this step's own settle and priority round happen normally, which is
+  -- where CR 724.1f and CR 724.2f put the abilities that triggered during the
+  -- process.
+  State.modify' (\gs -> gs {GameState.endTurnSignal = EndTurnSignal.Running})
+  phase <- State.gets GameState.phase
+  active <- State.gets GameState.activePlayer
+  -- CR 614.1b makes "skip" a replacement effect, and CR 500.11 makes skipping a
+  -- step proceeding past it as though it didn't exist. So the question is asked
+  -- HERE, of the replacement system, and a `False` answer means the whole of
+  -- `runStepThatBegan` never runs -- CR 500.6's triggers never triggering is what
+  -- distinguishes that from a step that happened and did nothing (Eon Hub). CR
+  -- 614.10 pins the question to this line: `advance` has written the step into
+  -- GameState.phase but records no event and grants no priority, so the step is
+  -- scheduled, not started.
+  --
+  -- TWO questions, in CR 500.1's own order: `Turn.phaseBeginningAt` answers Just
+  -- only at a stepped phase's FIRST step, and a main phase raises only the step
+  -- question (CR 505.2). Both are asked even when the phase says yes -- Stasis
+  -- skipping an untap step must still take it in an unskipped phase.
+  --
+  -- Asked of `active` alone even under the shared team turns option: CR 805.8
+  -- makes a teammate's skip the team's, which Replacement.applies answers.
+  phaseBegins <- case Turn.phaseBeginningAt phase of
+    Nothing -> pure True
+    Just selector -> Event.beginsPhase selector active
+  if not phaseBegins
+    then skipWholePhase phase
+    else do
+      begins <- Event.beginsPhase (PhaseSelector.Step phase) active
+      if not begins
+        then skipStep phase
+        else runStepThatBegan phase
+
+-- CR 500.11: proceed past a SKIPPED PHASE as though it didn't exist -- so the
+-- rest of its steps leave the schedule and `advance` picks up whatever CR 500.1's
+-- fixed order puts after it. Positional, via Turn.dropRestOfPhase, not a filter:
+-- CR 500.8 lets a second combat phase be added later in the same turn, and
+-- skipping this one says nothing about that one. Nothing about the skipped phase
+-- is announced -- CR 614.6 makes a replaced event one that never happens, and CR
+-- 500.6's triggers hang off the CR 603.2b step records this path never reaches.
+--
+-- GameState.combat is left ALONE and does not go stale for it: every writer that
+-- ADDS to that record runs inside a combat step, so a phase whose steps never
+-- begin writes nothing. (Combat.clearAttackedThisStep does run outside one, at
+-- every step's end, but a clearer cannot strand anything.) The phase that BEGAN
+-- and then lost its last step to a skip is `skipStep`'s case, not this one.
+--
+-- The ENDING phase is the one whose skip still owes something, and
+-- `cleanupSecondAction` says what: the phase never happened, but the turn it was
+-- the last of ends all the same.
+skipWholePhase :: Phase.Phase -> Game ()
+skipWholePhase phase = do
+  State.modify' (\gs -> gs {GameState.remaining = Turn.dropRestOfPhase phase (GameState.remaining gs)})
+  Monad.when (Turn.wholePhaseOf phase == Just PhaseSelector.EndingPhase) cleanupSecondAction
+  advance
+
+-- CR 514.2's second turn-based action, whole: marked damage is removed and every
+-- "until end of turn" and "this turn" effect ends, SIMULTANEOUSLY. Three sweeps
+-- -- one over marked damage, one over the stored-effect carriers, one over the
+-- mana pools -- in an order CR 703.4p leaves unobservable, because they are one
+-- action.
+--
+-- Shared by the cleanup step that normally runs it and by CR 500.11's skip of the
+-- whole ending phase, which is the road that removes that step: CR 611.2a states
+-- the duration as the TURN, and the turn is over whether or not its cleanup step
+-- ran. CR 724.1d and CR 724.2d are the CR making that same call -- an ended turn
+-- is routed THROUGH the cleanup step rather than past it, and an ended combat
+-- phase expires its "until end of combat" effects though its last step is
+-- skipped (Resolve's EndCombatPhase arm).
+--
+-- Running only PART of it is what must not happen, whichever way CR 614.10a is
+-- read. A 5/4 with 3 marked damage whose pump ends alone reverts to a 2/1 that
+-- CR 704.5g then destroys -- a board neither "the phase never happened" nor "the
+-- turn ended" produces, and CR 514.2's "simultaneously" is there to forbid it.
+-- Parun.ExpirySpec's "CR 514.2 a pumped creature with damage marked on it neither
+-- dies to its own shrinking nor keeps the pump" is what proves that.
+--
+-- CR 514.1's discard to hand size is NOT here. It is the cleanup step's FIRST
+-- turn-based action, scheduled separately from this one, so CR 614.10a takes it
+-- with the skipped step.
+--
+-- CR 500.5's pool empty is not run either, being that same rule's turn-based
+-- action (CR 703.4q) at the end of a step that did not happen. The mana
+-- Mana.endManaRetention hands back is ordinary, so the next step or phase that
+-- does end takes it; no player receives priority in between, CR 502.4 giving the
+-- untap step none. Parun.ExpirySpec's "CR 514.2 retained mana is not spendable
+-- once the skipped turn is over" is what proves that.
+cleanupSecondAction :: Game ()
+cleanupSecondAction = do
+  State.modify' Damage.removeAllDamage
+  State.modify' Expiry.dropAtCleanup
+  State.modify' Mana.endManaRetention
+
+-- CR 614.1b / CR 500.11: THIS STEP is skipped -- proceed past it as though it
+-- didn't exist. Nothing step-grain happens: no CR 603.2b record, no turn-based
+-- actions, no priority, and none of runStepThatBegan's end-of-STEP sweeps.
+--
+-- A phase whose LAST step is skipped is still a phase the game LEAVES, though,
+-- and CR 500.5 read on the phase grain is owed there. CR 724.2e is the CR making
+-- exactly that split: "even though the combat phase ends, 'at end of combat'
+-- triggered abilities don't trigger because the end of combat step is skipped."
+-- The phase ends; the step does not happen. Without this the phase-grain work
+-- was reachable only from inside the very step a skip removes, so an "until end
+-- of combat" animation never wore off, an UntilEndOfCombat mana retention stood
+-- until CR 514.2's cleanup backstop, and GameState.combat was never emptied.
+--
+-- The pool goes with it, `endPhase` carrying CR 500.5's "Then any unspent mana
+-- ... empties": that clause attaches to a step OR PHASE ending, and a phase is
+-- what ends here. Ending an "until end of combat" retention without taking the
+-- mana would leave it spendable in the phase after, which is the whole of what
+-- the retention was keeping it for.
+--
+-- No CR 704.3 check: that rule keys the sweep to a player receiving priority,
+-- and a skipped step grants none. The next step's own check, which runs ahead of
+-- its priority round, catches whatever the sweeps here raised.
+skipStep :: Phase.Phase -> Game ()
+skipStep phase = do
+  Foldable.traverse_ endPhase (Turn.phaseEndingAt phase)
+  advance
+
+-- CR 500.5 whole, read on the PHASE grain, plus CR 511.3's removal from combat:
+-- exactly what the game owes as it LEAVES a phase, wherever it leaves from.
+-- Shared by runStepThatBegan and by skipStep, because the two roads out of a
+-- phase are required to agree and used not to.
+--
+-- Takes the window that is ENDING and not the step, so the two sweeps below test
+-- equality against the phase Turn.phaseEndingAt named and against nothing else
+-- (CR 500.5a: an "until end of combat" effect does not expire when the end of
+-- combat step ends AS A STEP).
+--
+-- The pool empty is INSIDE this rather than after it, and that is what keeps the
+-- order the CR fixes: CR 500.5's "Then any unspent mana ... empties" is ONE
+-- action for a step-and-phase that end together, so on the ordinary road this
+-- runs it and runStepThatBegan runs it only for a step whose phase does not end.
+-- Emptying twice around Combat.clearCombat would not be idempotent --
+-- Mana.emptyManaPools reads Parun.Engine.PlayerEffect.keepsUnspentMana, whose CR
+-- 604.2 "as long as" gate is a live read of the board.
+--
+-- Phase-generic rather than combat-shaped, deliberately: Turn.phaseEndingAt is
+-- CR 500.5's own grain and answers on every stepped phase -- Turn.lastStepOf
+-- makes the draw step the beginning phase's last, and Fatigue skips exactly that
+-- -- so a beginning-phase-scoped duration would be swept here the day one
+-- exists. Only CR 511.3 is combat-shaped, that rule naming the combat phase.
+endPhase :: PhaseSelector.PhaseSelector -> Game ()
+endPhase ending = do
+  State.modify' (Expiry.dropAtEndOf ending)
+  -- CR 500.5a's UNIT-axis half: a mana unit's "until end of combat" retention
+  -- (ManaRetention.UntilEndOfCombat) is not a stored effect, so the Expiry sweep
+  -- above cannot see it. Beside that sweep and ahead of every caller's pool
+  -- empty, which is CR 500.5's own order -- ending it AFTER emptyManaPools would
+  -- carry the mana one boundary too far.
+  State.modify' (Mana.endRetentionAtEndOf ending)
+  -- CR 703.4q: emptying the pool is a turn-based action that does not use the
+  -- stack, and CR 500.5's "Then" puts it AFTER the expiries above. This line says
+  -- only WHEN; WHICH mana empties is Mana.emptyManaPools', off both retention
+  -- carriers -- per player (Upwelling) and per unit (Shizuko, Caller of Autumn) --
+  -- and CR 119.3's life loss a static may charge for it rides there too (Yurlok
+  -- of Scorch Thrash).
+  -- The ordering against a retention that ENDS at this same boundary is
+  -- observable, and both carriers are read live: one swept afterwards would keep
+  -- the pool across a boundary it no longer covers.
+  Mana.emptyManaPools
+  -- CR 511.3: as soon as the end of combat step ends, creatures, battles and
+  -- planeswalkers are removed from combat -- so this belongs at the END of that
+  -- step and not in runTurnBasedActions, CR 511.1 giving the step no turn-based
+  -- action at all. Start versus end is observable: creatures stay attacking for
+  -- the whole of an end of combat step that runs, including the priority round
+  -- where an instant may still read them (Kill Shot).
+  --
+  -- Keyed to the ending PHASE rather than to Phase.Combat EndOfCombat, which is
+  -- the same set of moments (Turn.lastStepOf makes that step the combat phase's
+  -- last) said in CR 511.3's own terms -- and the terms CR 724.2d uses for a
+  -- combat phase an effect ends part-way through.
+  Monad.when (ending == PhaseSelector.CombatPhase) (State.modify' Combat.clearCombat)
+
+-- The body of a step that was not skipped, split out only so `runStep`'s CR
+-- 614.1b check reads as a guard rather than as a nesting level.
+runStepThatBegan :: Phase.Phase -> Game ()
+runStepThatBegan phase = do
+  -- CR 603.2b: the step began. Recorded BEFORE the step's turn-based actions, so
+  -- the first priority boundary of this step scans it. No player receives priority
+  -- during the untap step (CR 502.4), so an ability that triggers then is held
+  -- until upkeep, where CR 503.1a puts it on the stack first.
+  --
+  -- One beginning, naming the active player, however many share the turn: CR
+  -- 805.4d's once-per-player fan-out is the trigger scan's
+  -- (Parun.Engine.Event.Trigger.stepTriggerPlayers).
+  State.modify' (\gs -> Event.recordEvent (GameEvent.StepBegan (StepBegan.MkStepBegan phase (GameState.activePlayer gs))) gs)
+  -- CR 702.30a's clock, advanced HERE and not in `runTurnBasedActions`: CR 503.1
+  -- gives the upkeep step no turn-based actions, and this is bookkeeping rather
+  -- than one of CR 703.4's list in any case. It must run
+  -- before the first priority boundary of this step, which is what gathers the
+  -- beginning-of-upkeep triggers CR 603.4 then reads the clock for. The sample
+  -- first, because no player receives priority during the untap step (CR 502.4),
+  -- so a permanent that arrived there has no Gained entry yet.
+  Monad.when (phase == Phase.Beginning BeginningStep.Upkeep) $ do
+    _ <- sampleControl
+    State.gets Turn.activePlayers >>= Monad.mapM_ advanceControlClock
+  -- CR 611.2a: "until the beginning of your next upkeep" and "until
+  -- your next end step" end here, before this step's first priority boundary
+  -- puts its triggers on the stack (CR 117.3a), for every active player (CR
+  -- 805.4). After the upkeep's control sample above. A skipped step (CR
+  -- 500.11) never begins, so the duration runs on to the next one that does.
+  State.gets Turn.activePlayers >>= Monad.mapM_ (State.modify' . Expiry.sweep . Expiry.StepOf . StepBegan.MkStepBegan phase)
+  runTurnBasedActions phase
+  -- Asked BEFORE the CR 704.3 check below. For every step but one the order is
+  -- free -- this line is pure there -- and for the cleanup step it is forced: CR
+  -- 704.3's last sentence keys that step's outcome to the step's FIRST check, so
+  -- nothing may act ahead of CR 514.3a's. Running the ordinary check first buries
+  -- the creature CR 514.2 just dropped to zero toughness (CR 704.5f), and CR
+  -- 514.3a then finds a settled board and grants nothing.
+  grants <- grantsPriorityNow phase
+  -- CR 704.3, the step's own check, taken as the settle a player is about to
+  -- get priority after, so CR 603.8 reads the board a turn-based action (combat
+  -- damage) left before the check buries anything (settlePasses' `boards`).
+  -- Nothing is left for a cleanup step that grants, since `grantsPriorityNow`
+  -- has just settled it to a fixpoint. A step that grants none checks nothing:
+  -- CR 704.3 checks only where a player would get priority, and the cleanup
+  -- step's first check is `cleanupException`'s. So a state the untap step
+  -- leaves (CR 502.4) is the upkeep settle's first board, which is how CR
+  -- 603.8 sees it; data/scenarios/trigger's Teferi's Curse scenario proves it.
+  Monad.when grants (Monad.void performSettle)
+  finished <- State.gets (Maybe.isJust . GameState.result)
+  Monad.unless finished $ do
+    Monad.when grants priorityLoop
+    restarted <- State.gets GameState.restartSignal
+    case restarted of
+      -- CR 727.4: a restart replaced the game during this step's priority round.
+      -- Unwind. `advance` in particular MUST NOT run -- it would pop the FRESH
+      -- schedule and skip turn 1's untap step entirely.
+      RestartSignal.Restarted -> pure ()
+      RestartSignal.Playing -> do
+        -- CR 500.5, whole and in its own order: as a step or phase ends, effects
+        -- lasting until the end of it expire, then any unspent mana empties. TWO
+        -- windows end here, not one, and CR 500.5a is why: an "until end of
+        -- combat" effect expires at the end of the combat PHASE, not at the
+        -- beginning of the end of combat step (CR 511.2), so such an animation is
+        -- live for the whole of that step. The step is swept before the phase, CR
+        -- 500.1 nesting the one inside the other; nothing observes the order.
+        State.modify' (Expiry.dropAtEndOf (PhaseSelector.Step phase))
+        -- Everything the ending PHASE owes -- CR 500.5's phase-grain expiries, CR
+        -- 703.4q's pool and CR 511.3's removal from combat -- shared with
+        -- skipStep so that the two roads out of a phase cannot drift apart. It
+        -- carries CR 500.5's pool empty, which is why the DEFAULT is the arm that
+        -- runs it here: a step whose phase ends with it empties the pool once, in
+        -- the rule's own "Then" position.
+        maybe Mana.emptyManaPools endPhase (Turn.phaseEndingAt phase)
+        -- CR 508.6 read on CR 500.1's span: the step-scoped half of the attack
+        -- record ends with the step, so this runs at EVERY step's end and not
+        -- just at combat's. See Parun.Engine.Combat.clearAttackedThisStep for why
+        -- the wider reach is the point rather than laziness.
+        State.modify' Combat.clearAttackedThisStep
+        -- CR 508.8: drop the two combat steps that have nothing to do if nobody
+        -- attacked. Asked as the declare attackers step ENDS, not when its
+        -- turn-based action finishes, because the rule's second clause -- put onto
+        -- the battlefield attacking -- can only happen in the priority round this
+        -- line sits after (Hanweir Garrison). NOT guarded by `live`: a turn
+        -- with no active player declares no attackers, CR 508.8's own condition.
+        Monad.when (phase == Phase.Combat CombatStep.DeclareAttackers) (State.modify' Combat.skipEmptyCombat)
+        -- No CR 704.3 check as the step ends: no player gets priority here, so a
+        -- state this step's end leaves waits for the next step's settle, which
+        -- keeps its board for CR 603.8. The Teferi's Curse scenario proves it as
+        -- the untap step ends.
+        stillFinished <- State.gets (Maybe.isJust . GameState.result)
+        Monad.unless stillFinished advance
+
+-- Whether THIS step grants a priority round. Every step but one answers from the
+-- phase alone (Turn.grantsPriority); the cleanup step's answer is CR 514.3
+-- qualified by CR 514.3a's exception, a question about the board.
+grantsPriorityNow :: Phase.Phase -> Game Bool
+grantsPriorityNow phase = case phase of
+  Phase.Ending EndingStep.Cleanup -> cleanupException
+  _ -> pure (Turn.grantsPriority phase)
+
+-- CR 514.3a: the cleanup step checks whether any state-based actions would be
+-- performed or any triggered abilities are waiting; if so, those are performed
+-- and placed, the active player gets priority, and once the stack is empty and
+-- all players pass another cleanup step begins. Checking and performing are ONE
+-- act here: `performSettle` is precisely CR 117.5's loop and reports whether it
+-- did either, and the two orders are indistinguishable.
+--
+-- WHY THIS TERMINATES, given that a cleanup step can schedule another one: the
+-- chain advances only on new work and the settle is idempotent. NOT bounded in
+-- general, and Magic does not bound it either -- an ability triggering at the
+-- beginning of each cleanup step loops forever, and CR 104.4b's draw, which
+-- `checkMandatoryLoop` applies heuristically, is the rules' answer.
+cleanupException :: Game Bool
+cleanupException = do
+  fired <- performSettle
+  Monad.when fired $
+    -- Scheduled HERE, before the priority round, exactly as CR 510.4's second
+    -- combat damage step is -- indistinguishable either way, CR 500.8's phase
+    -- splice landing behind this step regardless.
+    State.modify' (\gs -> gs {GameState.remaining = Turn.spliceExtraCleanup (GameState.remaining gs)})
+  pure fired
+
+-- Ordinarily terminates because libraries are finite, each turn draws at most one
+-- card, and drawing from an empty library is a loss (CR 704.5b). That argument
+-- rests on the DRAW step being reached, and a CR 614.1b skip of it suspends it,
+-- exactly as a real Stasis lock suspends a real game.
+--
+-- `checkMandatoryLoop` at this loop's head is the backstop for every repetition
+-- the argument does not cover, and it is a HEURISTIC rather than a bound: a game
+-- two players CAN still act in is left alone, so a Stasis lock is not ended by it
+-- either. `Parun.GameSpec`'s "a mandatory loop (CR 104.4b)" group holds both
+-- halves; CR 514.3a's extra CLEANUP steps argue for themselves.
+playGame :: Game Result
+playGame =
+  let loop = do
+        Departure.checkMandatoryLoop 0
+        outcome <- State.gets GameState.result
+        case outcome of
+          Just r -> pure r
+          Nothing -> do
+            runStep
+            loop
+   in loop
+
+-- CR 729: play a subgame as a FUNCTION CALL. Built from the parent's library
+-- cards and commanders (CR 729.2 / 729.2c), then run LIFTED into the parent's
+-- StateT, so its prompts flow through the SAME Program interpreter and Replay
+-- fold and a transcript stays replayable across one. The parent GameState sits
+-- untouched in the outer frame (CR 729.1a); at the end cards funnel back to
+-- their owner's library (CR 729.5) and vanguards and commanders to the command
+-- zone (CR 729.5b, CR 729.5c). Nesting terminates: each level's library comes from the parent's at
+-- cast time, so depth is bounded by |library| / 7.
+--
+-- CR 729.4 runs the other way too: a subgame's wish reaches the main game's
+-- cards, and CR 729.4a takes each one it finds out of the main game.
+-- Setup.subgameStateFrom hands the subgame a SNAPSHOT of those cards rather than
+-- the parent itself, Event.bringInFrom records which of them crossed,
+-- and their departures are applied to the parent below, once the subgame has
+-- ended -- exact rather than late, since CR 729.1a discontinued the main game
+-- throughout. Setup.applyCrossings carries that argument in full.
+--
+-- Of CR 729.2a-c and CR 729.5a-c's command-zone residents, commanders,
+-- vanguards and the supplementary decks are the kinds Setup carries both ways,
+-- dungeons ride Player.dungeons rather than the command zone, and a conspiracy
+-- stays in the main game, which is CR 729.2's "no other cards ... are moved".
+playSubgame :: Game Result
+playSubgame = do
+  parent <- State.get
+  -- CR 729.2: randomly determine which player goes first. The engine asks; the
+  -- interpreter rolls. Only the players still in the main game are in the subgame
+  -- (CR 729.4). Not asked when the answer is forced.
+  starter <- Maybe.fromMaybe (GameState.activePlayer parent) <$> Game.drawAmong Prompt.RandomFirstPlayer (Game.stillPlayingInOrder parent)
+  -- CR 100.6a: the one match-scoped tally, raised BEFORE the subgame is built
+  -- so the subgame it counts is inside its own answer (Shahrazad and Sindbad's
+  -- "if there haven't been any subgames this match" is false inside the subgame
+  -- it started), and raised on the PARENT, which is the state the main game
+  -- resumes from under CR 729.5.
+  State.modify' (\g -> g {GameState.subgamesThisMatch = 1 + GameState.subgamesThisMatch g})
+  counted <- State.get
+  let sub0 = Setup.subgameStateFrom starter counted
+  -- CR 729.1a: every question the subgame raises passes outward through this
+  -- frame, the one place that knows both games, so this is where the parent is
+  -- pushed onto the tag -- once per level a nested question climbs (CR 729.6).
+  -- The CR 729.2 roll above is deliberately NOT wrapped: it is asked before the
+  -- subgame's state exists, in the main game.
+  (result, finalSub) <-
+    Trans.lift
+      ( Program.mapProgram
+          (Asked.under parent)
+          (State.runStateT (Setup.startGameFromCards (Resolve.performHandAction playSubgame) Set.empty >> playGame) sub0)
+      )
+  -- CR 729.4a. This frame is the only one holding both games, which is why the
+  -- departures are applied from here and not from inside either of them
+  -- (CR 729.1a).
+  --
+  -- BEFORE the funnel, so funnelBack's keptParentObjects reads a parent the card
+  -- has already left rather than one it has to be kept out of. The order is
+  -- load-bearing on two counts, not one. First, the deletion itself: swapping
+  -- the two lines still leaves the whole suite green, since funnelBack keeps
+  -- the crossed object rather than reviving it, so applying the crossings
+  -- afterwards deletes exactly the same id from exactly the same zones -- what
+  -- would end THAT coincidence is funnelBack ever MINTING for a parent id, the
+  -- way the recovery path already does for a player who departed inside the
+  -- subgame (`recovered`), which would resurrect a crossed card the moment one
+  -- of those ids could also cross. Second, and observable today: applyCrossings'
+  -- `filed` takes CR 608.2h last known information by projecting the crossed
+  -- object against the running board (Parun.Engine.Setup.applyCrossings), and
+  -- funnelBack rebuilds every library from scratch and merges the subgame's
+  -- returned cards into GameState.objects. Run applyCrossings after funnelBack
+  -- and `filed` would file last known power/toughness for any
+  -- characteristic-defining ability that counts cards in a LIBRARY (CR 604.3)
+  -- against a board whose libraries have already been rebuilt.
+  State.modify' (Setup.applyCrossings finalSub)
+  State.modify' (Setup.funnelBack finalSub)
+  -- CR 729.5: each player who was IN the subgame takes the traditional cards they
+  -- own back to their main-game library and shuffles.
+  seated <- State.gets Game.stillPlayingInOrder
+  Monad.forM_ seated Event.shuffleLibrary
+  -- CR 729.5a: and their supplementary decks.
+  Monad.forM_ seated (\pid -> Monad.forM_ [minBound .. maxBound] (`Game.shuffleSideDeck` pid))
+  pure result
+
+-- CR 405.6c / 605.4a: the mana-ability performer every payment the live loop
+-- drives takes, with playSubgame as its runner.
+performManaAbility :: ManaAbilityPerformer.ManaAbilityPerformer
+performManaAbility = Resolve.performManaAbility playSubgame
+
+playFrom :: NonEmpty.NonEmpty (PlayerId, Deck.Deck) -> Game Result
+playFrom matchup = do
+  Setup.newGame (Resolve.performHandAction playSubgame) matchup
+  playGame

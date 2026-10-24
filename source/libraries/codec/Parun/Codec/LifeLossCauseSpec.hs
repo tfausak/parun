@@ -1,0 +1,22 @@
+module Parun.Codec.LifeLossCauseSpec where
+
+import qualified Parun.Codec.LifeLossCause as LifeLossCause
+import qualified Parun.JsonCodec.Common as Common
+import qualified Parun.Spec as Spec
+import qualified Parun.Types.LifeLossCause as LifeLossCause
+
+spec :: (Monad m, Monad n) => Spec.Spec m n -> n ()
+spec s = Spec.describe s "Parun.Codec.LifeLossCause" $ do
+  -- CR 120.4c.
+  Spec.it s "ByDamage" $
+    Common.assertCodec s LifeLossCause.codec LifeLossCause.ByDamage " {\"type\":\"ByDamage\"} "
+  -- CR 119.3.
+  Spec.it s "ByEffect" $
+    Common.assertCodec s LifeLossCause.codec LifeLossCause.ByEffect " {\"type\":\"ByEffect\"} "
+  -- CR 119.4: a cost paid in life.
+  Spec.it s "ByPayment" $
+    Common.assertCodec s LifeLossCause.codec LifeLossCause.ByPayment " {\"type\":\"ByPayment\"} "
+  -- CR 728.1a: rule 728.1's own ability.
+  Spec.it s "ByRadiation" $
+    Common.assertCodec s LifeLossCause.codec LifeLossCause.ByRadiation " {\"type\":\"ByRadiation\"} "
+  Spec.it s "has a schema" $ Common.assertHasSchema s LifeLossCause.codec

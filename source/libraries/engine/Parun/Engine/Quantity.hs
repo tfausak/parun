@@ -1,0 +1,1819 @@
+module Parun.Engine.Quantity where
+
+import Control.Applicative ((<|>))
+import qualified Control.Monad as Monad
+import qualified Data.Foldable as Foldable
+import qualified Data.Map as Map
+import qualified Data.Maybe as Maybe
+import Data.Set (Set)
+import qualified Data.Set as Set
+import Numeric.Natural (Natural)
+import qualified Parun.Engine.Binding as Binding
+import qualified Parun.Engine.Count as Count
+import qualified Parun.Engine.Filter as Filter
+import qualified Parun.Engine.Game as Game
+import qualified Parun.Engine.Keyword as Keyword
+import qualified Parun.Engine.ManaCount as ManaCount
+import qualified Parun.Engine.NameWords as NameWords
+import qualified Parun.Engine.QuantitySlot as QuantitySlot
+import qualified Parun.Engine.Subtype as Subtype.Engine
+import qualified Parun.Engine.Turn as Turn
+import qualified Parun.Types.AgainstExiledPile as AgainstExiledPile
+import qualified Parun.Types.AgainstLastCardExiledWith as AgainstLastCardExiledWith
+import qualified Parun.Types.AgainstSlot as AgainstSlot
+import qualified Parun.Types.Arithmetic as Arithmetic
+import qualified Parun.Types.AttackTarget as AttackTarget
+import qualified Parun.Types.Card as Card
+import qualified Parun.Types.CardType as CardType
+import qualified Parun.Types.CastFrom as CastFrom
+import qualified Parun.Types.ClassLevel as ClassLevel
+import qualified Parun.Types.Color as Color
+import qualified Parun.Types.Combat as Combat
+import qualified Parun.Types.CompletedDungeon as CompletedDungeon
+import qualified Parun.Types.ControlClock as ControlClock
+import qualified Parun.Types.Count as Count.Type
+import qualified Parun.Types.Devotion as Devotion
+import qualified Parun.Types.ExiledPile as ExiledPile
+import qualified Parun.Types.Face as Face
+import qualified Parun.Types.Filter as Filter.Type
+import qualified Parun.Types.GameEvent as GameEvent
+import Parun.Types.GameState (GameState)
+import qualified Parun.Types.GameState as GameState
+import qualified Parun.Types.Halved as Halved
+import qualified Parun.Types.Hybrid as Hybrid
+import qualified Parun.Types.HybridPhyrexian as HybridPhyrexian
+import qualified Parun.Types.InZone as InZone
+import qualified Parun.Types.Keyword as Keyword.Type
+import qualified Parun.Types.LastKnown as LastKnown
+import qualified Parun.Types.LoggedEvent as LoggedEvent
+import qualified Parun.Types.ManaCost as ManaCost
+import qualified Parun.Types.ManaSymbol as ManaSymbol
+import qualified Parun.Types.ManaType as ManaType
+import qualified Parun.Types.Moved as Moved
+import qualified Parun.Types.Object as Object
+import Parun.Types.ObjectId (ObjectId)
+import qualified Parun.Types.Player as Player
+import qualified Parun.Types.PlayerCounterTally as PlayerCounterTally
+import qualified Parun.Types.PlayerDesignationTally as PlayerDesignationTally
+import qualified Parun.Types.PlayerId as PlayerId
+import qualified Parun.Types.PlayerRef as PlayerRef
+import qualified Parun.Types.PlayersDealtDamage as PlayersDealtDamage
+import qualified Parun.Types.Plus as Plus
+import qualified Parun.Types.PowerToughnessSticker as PowerToughnessSticker
+import Parun.Types.Quantity (Quantity)
+import qualified Parun.Types.Quantity as Quantity
+import qualified Parun.Types.Rounding as Rounding
+import Parun.Types.SlotName (SlotName)
+import qualified Parun.Types.SpellWasCast as SpellWasCast
+import qualified Parun.Types.StickerContent as StickerContent
+import qualified Parun.Types.StoredResult as StoredResult
+import qualified Parun.Types.Subtype as Subtype
+import qualified Parun.Types.Teams as Teams
+import qualified Parun.Types.Times as Times
+import qualified Parun.Types.VotesReceived as VotesReceived
+import qualified Parun.Types.Zone as Zone
+import qualified Parun.Types.ZoneChange as ZoneChange
+
+-- Nothing when the value cannot be determined.
+--
+-- `viewOf` and `context` are INJECTED rather than built here for module-cycle
+-- reasons: Parun.Engine.Projection imports this module, so nothing here can ask
+-- the projection for a candidate's characteristics or the current perspective.
+-- They flow through to Parun.Engine.Count.evaluate for the Count arm; every
+-- other arm ignores them.
+--
+-- CR 109.5 / 604.3a(3): whose "you" a quantity means is the CALLER's choice of
+-- context. Projection.applyModification builds its context from the effect's
+-- SOURCE's controller, Projection.applyCharacteristicPT from the OBJECT's own
+-- controller, and Resolve from the resolving spell or ability's.
+--
+-- The ONE-OBJECT case, where CR 601.2b's announced X was stamped on the very
+-- object every other arm reads -- true of a spell and of every caller outside a
+-- resolution. evaluateFor below is where the two objects part company.
+evaluate :: Count.ViewOf -> Filter.Context -> GameState -> ObjectId -> Quantity -> Maybe Integer
+evaluate viewOf context gs oid = evaluateFor viewOf context gs oid oid
+
+-- The same fold with CR 601.2b's X taken from `announcedOn` instead of from
+-- `oid`, because for an ACTIVATED ability they are different objects:
+--
+--   * `announcedOn` is the object ON THE STACK. That is where the announced
+--     value is stamped -- Cast.castSpell stamps the spell's new incarnation,
+--     Activate.activateAbility stamps the ability object -- so it is the only
+--     place the value can be read back from.
+--   * `oid` is the ability's SOURCE (CR 113.7), which every other arm reads and
+--     which an activation cost may well have destroyed -- Cinder Elemental pays
+--     with the very permanent the ability names, so by resolution CR 400.7 has
+--     left its id naming nothing, and CR 113.7a is what lets the ability
+--     resolve regardless (#544).
+--
+-- Quantity.InSlot asks `oid` FIRST, falls back to `announcedOn`, and then to
+-- GameState.ambientAmounts, because it has three writers:
+-- Resolve.bindAmountSlot writes to the effect's source mid-resolution (Bane of
+-- Progress binds and reads one inside a TRIGGERED ability, where the two ids
+-- differ), Event.eventBindings writes to the stack object as a trigger is
+-- gathered, and Resolve.runPreventionRider writes the ambient channel, which
+-- belongs to no object at all. See the arm itself.
+evaluateFor :: Count.ViewOf -> Filter.Context -> GameState -> ObjectId -> ObjectId -> Quantity -> Maybe Integer
+evaluateFor viewOf context gs announcedOn oid = evaluateAgainst viewOf context gs announcedOn (Just oid) (viewOf oid)
+
+-- The same fold aimed at a candidate that MAY NOT BE AN OBJECT. `mOid` is the
+-- object the evaluation is aimed at and `mView` its characteristics; every
+-- caller but one supplies both, through evaluateFor above.
+--
+-- The exception is a member of an Aggregation.Greatest over Scope.InHistory,
+-- which has a view and no object: CR 608.2h's snapshot describes a past event
+-- rather than anything on the battlefield now. So the view is passed
+-- alongside rather than looked up from `mOid`, and the arms that read
+-- characteristics read it; Quantity.InSlot, which reads BINDINGS rather than
+-- characteristics, has only `announcedOn` to fall back on there, and that is
+-- the object the fold's own resolution owns.
+evaluateAgainst :: Count.ViewOf -> Filter.Context -> GameState -> ObjectId -> Maybe ObjectId -> Maybe Filter.View -> Quantity -> Maybe Integer
+evaluateAgainst viewOf context gs announcedOn mOid mView quantity =
+  let recur = evaluateAgainst viewOf context gs announcedOn mOid mView
+      -- Was this player dealt damage this turn? Game.wasDealtDamageThisTurn is the
+      -- shared fold, so this count and the Filter.DealtDamageThisTurn atom a player
+      -- candidate answers cannot come apart; see Game.damagedPlayer under it for CR
+      -- 120.3a's recipient and for CR 120.8's zero.
+      wasDealtDamage kind = Game.wasDealtDamageThisTurn kind gs
+      -- CR 102.1's reference, resolved by Count.playersFor for every arm but the
+      -- fold's own candidate. That one is answered HERE because this is where the
+      -- candidate is: Count.evaluate's Scope.OverPlayers arm hands each candidate
+      -- to this reader as a Parun.Engine.Count.playerView, whose identity IS the
+      -- player, and no id names it for that function's ViewOf to be asked with.
+      --
+      -- Nothing wherever the evaluation is not aimed at a player -- an object
+      -- candidate's view carries no identity, and an evaluation outside a fold
+      -- carries no candidate at all -- which is Parun.Types.PlayerRef.Candidate's
+      -- own stated answer there.
+      playersOf ref = case ref of
+        PlayerRef.Candidate -> fmap pure (mView >>= Filter.playerIdentity)
+        -- Every other arm is Parun.Engine.Players.named's, through the view
+        -- passed here -- CR 608.2h reaches a controller arm that way: Spikeshell
+        -- Harrier reads the speed of the player who controlled the permanent its
+        -- own earlier clause has already bounced.
+        _ -> Count.playersFor viewOf context gs ref
+
+      -- Every entry onto the battlefield this log records for one id. A list and not
+      -- a Maybe: CR 400.7 makes each arrival a new object, so at most one entry can
+      -- name a given id, and folding over the log is what says so rather than
+      -- assuming it.
+      entriesOf oid = do
+        ev <- Foldable.toList (GameState.events gs)
+        zc <- Maybe.maybeToList (Game.enteredBattlefieldChange (LoggedEvent.event ev))
+        Monad.guard (ZoneChange.object zc == oid)
+        pure zc
+   in case quantity of
+        Quantity.Literal n -> Just n
+        -- CR 202.3 / 208.1 read through the injected view, so this arm never
+        -- learns whether it is looking at a live projection or a CR 608.2h snapshot
+        -- -- the caller decides that by which ViewOf it supplies
+        -- (Projection.fullView vs. Projection.viewWithLastKnown). Mana value too,
+        -- since CR 707.2 makes mana cost copiable: a Clone entering as a copy of
+        -- Darksteel Myr has mana value 3 and not the 4 its own printed {3}{U} would
+        -- give. Which face the printed cost came off (CR 712.8e, CR 708.2a) is
+        -- settled at the projection's seed.
+        --
+        -- Nothing when the view cannot say: no object to ask, no power or toughness
+        -- (not a creature), or gone with no last known information kept. An
+        -- ability on the stack answers CR 202.3a's 0 like any other object
+        -- (Projection.View.baseCharacteristics), and the CR 613 projection
+        -- (Projection.fullView, Projection.viewUpTo) projects an object in any
+        -- zone, so answers CR 202.3 off the battlefield too.
+        Quantity.Measure measure -> Filter.measureOf measure =<< mView
+        -- Alchemy's intensity, read off the same view in every zone: Static
+        -- Discharge reads its own on the stack.
+        Quantity.Intensity -> mView >>= Filter.intensity
+        -- A value bound into the slot, read off the effect's SOURCE, then off the
+        -- object on the stack, then out of the announcement the context carries, and
+        -- last out of the ambient channel. Nothing when none of the four holds an
+        -- amount: the producing effect has not run, or bound nothing.
+        --
+        -- FOUR places because there are four writers, each of which puts its value
+        -- where that value belongs:
+        --
+        --   * Resolve.bindAmountSlot writes to the SOURCE, mid-resolution -- Bane of
+        --     Progress' "for each permanent destroyed this way".
+        --   * Event.eventBindings writes to the object CR 603.3 put ON THE STACK, as
+        --     the trigger was gathered -- Selfless Squire's "that many", the amount CR
+        --     615.13's prevention supplied; Sanguine Bond's and Exquisite Blood's
+        --     "that much", the amount a life gain (CR 119.9) or a life loss (CR 119.3)
+        --     supplied; and Shroofus Sproutsire's "that many", the combat damage CR
+        --     510.2 dealt a player.
+        --   * Target.slotContext writes Filter.Context's boundAmounts, for the span of
+        --     one CR 202.3 computed bound on a target slot -- Venerable Warsinger's
+        --     "mana value X or less ... where X is the amount of damage this creature
+        --     dealt to that player", and Stir the Grave's "mana value X or less" off CR
+        --     601.2b's announced X. THE ANNOUNCEMENT IS OFF-OBJECT ON TWO OF THIS
+        --     CALLER'S THREE ROADS, which is why it needs a channel of its own: CR
+        --     603.3d chooses a trigger's targets before the ability object carries any
+        --     binding at all, and CR 601.2c chooses a spell's before CR 601.2i stamps
+        --     the X onto it, so on neither can the two readings above reach what the
+        --     announcement already holds, and the caller hands it over instead.
+        --
+        --     The third road is CR 707.10c's, and there the announcement IS on the
+        --     object: Resolve.chooseNewTargetsFor re-chooses a copy's targets off a
+        --     copy that CR 707.10 has already stamped with the value of X, and
+        --     slotContext evaluates the bound with the copy's own id -- so the FIRST
+        --     reading answers and this channel, which that caller also seeds, is never
+        --     consulted for the X. It is seeded anyway because the same seed carries
+        --     every other binding the copy kept.
+        --
+        --     Read after both object readings, so neither is disturbed, and it can
+        --     collide with neither -- the map is empty except while a target slot's
+        --     bound is being evaluated.
+        --   * Resolve.runPreventionRider writes GameState.ambientAmounts, for the span
+        --     of one CR 615.5 rider -- Inkshield's "for each 1 damage prevented this
+        --     way". That writer has NO object to bind to: the shielded recipient can be
+        --     a player, and CR 400.7 replaced the installing spell. Read LAST, so no
+        --     reading above is disturbed, and it can collide with none of them: the
+        --     map is empty except while a rider runs, and a rider's own effects are the
+        --     only readers alive then.
+        --
+        -- The source is asked first so the existing reading is untouched, and the two
+        -- cannot collide over one name: a mid-resolution bind names a slot the CARD
+        -- authored, and an event-supplied one names a reserved slot no card may name
+        -- at all -- neither as a target slot (Parun.CardSpec's reservedDeclarations)
+        -- nor as an effect's bound SlotName (its reservedBindings). Both halves of
+        -- that sweep are load-bearing HERE: the bind side is the one that could put a
+        -- card's own write on the source, where this arm looks first (see
+        -- Parun.Engine.Binding.eventAmount).
+        --
+        -- CR 601.2b's X arrives here too, since #14 retired its dedicated arm. That arm
+        -- read `announcedOn` ALONE, where this reads the source first and falls back --
+        -- a difference only when the two ids differ AND the source carries an X binding
+        -- of its own. It cannot: casting writes X to the object it announced on, and CR
+        -- 400.7 mints a new object with no bindings on every zone change, so a
+        -- permanent never carries the X its spell was cast for.
+        --
+        -- A holder that no longer exists is read off GameState.detachedBindings,
+        -- CR 729.5's resumed resolution: a wish inside the subgame took the
+        -- spell's own card, and what the resolution bound since is filed there.
+        -- Parun.OutsideTheGameSpec's Synthetic Subgame Tithe case proves it.
+        Quantity.InSlot slot ->
+          let boundOn holder = Binding.amountOf slot (maybe (Map.findWithDefault Map.empty holder (GameState.detachedBindings gs)) Object.bindings (Game.lookupObject holder gs))
+           in fmap toInteger ((mOid >>= boundOn) <|> boundOn announcedOn <|> Map.lookup slot (Filter.boundAmounts context) <|> Map.lookup slot (GameState.ambientAmounts gs))
+        -- CR 601.2d: the recipient's part of the slot's announced division, which
+        -- the caller applying the effect to that recipient hands over.
+        Quantity.Share slot -> fmap toInteger (Map.lookup slot (Filter.shares context))
+        -- CR 701.4b: was the action taken at all? The BINDING alone answers it,
+        -- read out of the announcement's context rather than off the board, which
+        -- is what the rule's "regardless of whether or not the revealed card or
+        -- chosen permanent still has that quality" asks for -- the object may
+        -- have changed zones, lost the quality, or ceased to exist since the
+        -- payment, and none of that is this phrase's question. The cost's own
+        -- Filter settled the quality when the slot was bound.
+        --
+        -- Never Nothing: an unbound slot is an honest 0 (the payer did not take
+        -- the action) rather than a hole, which is InSlot's answer above turned
+        -- around -- that arm asks for a number a slot HOLDS, this one for whether
+        -- the slot is there.
+        --
+        -- A slot holding an AMOUNT is there too: rule 701.67a's waterbend
+        -- payment may tap nothing, so Binding.waterbendCost records the amount
+        -- paid rather than an object (Spirit Water Revival).
+        Quantity.WasBound slot ->
+          Just (if Set.null (Map.findWithDefault Set.empty slot (Filter.slotObjects context)) && Map.notMember slot (Filter.boundAmounts context) then 0 else 1)
+        -- WasBound's count rather than its yes-or-no, off the binding for the
+        -- same reason: an attacker that has since left the battlefield still
+        -- counts toward Screaming Swarm's "that many" (CR 608.2i).
+        Quantity.BoundCount slot ->
+          Just (toInteger (Set.size (Map.findWithDefault Set.empty slot (Filter.slotObjects context))))
+        -- CR 123.6e's "that sticker", off the binding, WasBound's posture: an
+        -- unplaced sticker is an honest 0.
+        Quantity.UniqueVowelsOnSticker slot -> case Map.lookup slot (Filter.slotStickers context) of
+          Nothing -> Just 0
+          Just ref -> case Game.stickerContent ref gs of
+            Just (StickerContent.Name ws) -> Just (toInteger (NameWords.uniqueVowels ws))
+            _ -> Just 0
+        -- CR 701.38a's tally, off the binding as UniqueVowelsOnSticker reads its
+        -- sticker: a player or slot the tally does not hold is an honest 0.
+        -- Nothing for a reference naming anything but exactly one player,
+        -- LifeTotal's arity.
+        Quantity.VotesReceived received -> case playersOf (VotesReceived.player received) of
+          Just [pid] -> Just (toInteger (Map.findWithDefault 0 pid (Map.findWithDefault Map.empty (VotesReceived.slot received) (Filter.slotVotes context))))
+          _ -> Nothing
+        -- CR 208.2: a bare star has no value of its own. Both readers of a
+        -- characteristic-defining P/T substitute the object's quantity for it first,
+        -- through Projection.seedCharacteristicPT at the projection's seed
+        -- (Projection.baseCharacteristics), in every zone as CR 604.3 asks -- so
+        -- reaching this arm means the star was never resolved, honestly Nothing rather
+        -- than a hole.
+        Quantity.Star -> Nothing
+        -- CR 608.2b: an effect may require information about a TARGET, which is not
+        -- the ability's source (CR 113.7). Re-aim the fold at the object the slot
+        -- names, so a payload can read the thing it points at. The CONTEXT rides
+        -- through unchanged -- CR 109.5's "you" is still the resolving controller's --
+        -- and only the object moves, which is what makes every object-reading arm
+        -- (Power, ManaValue, ObjectCounters, HasDesignation) work under it at once.
+        --
+        -- `announcedOn` is fixed too, for the Count arm's reason: CR 601.2b's X belongs
+        -- to the resolving object however the evaluation is aimed.
+        --
+        -- Nothing when the slot names no object. Filter.slotObjects is empty outside a
+        -- resolution and omits an illegal slot (CR 608.2b) and a player recipient, and
+        -- Filter.slotOneObject declines a slot naming SEVERAL rather than picking one
+        -- of them -- so the four cases collapse onto the one answer, unanswered, which
+        -- every caller already treats as a no-op.
+        --
+        -- Terminating: the payload is a strictly smaller subterm.
+        Quantity.AgainstSlot (AgainstSlot.MkAgainstSlot slot inner) -> case Filter.slotOneObject slot context of
+          Nothing -> Nothing
+          Just oid -> evaluateAgainst viewOf context gs announcedOn (Just oid) (viewOf oid) inner
+        -- CR 607.2a's other half of the AgainstSlot posture: a STATIC ability has no
+        -- resolution and so no slot to aim at, and the objects it wants are the ones
+        -- in the payload's pile of its own source (Game.linkedPile). Re-aim the fold at each
+        -- of them in turn and SUM, which is CR 607.3: "if these answers are used to
+        -- determine the value of a variable, the sum of the answers is used". One
+        -- exiled card, the ordinary case, sums to itself.
+        --
+        -- The membership test is the relation and not a zone sweep, so a card
+        -- exiled by a second copy of the same printing is not counted. Parun.PowerToughnessSpec's "CR
+        -- 607.2a/613.4c the static ability reads the card its own trigger exiled" is
+        -- what proves that half: it leaves an unlinked card sitting in exile, which a
+        -- zone sweep would add in.
+        --
+        -- Game.linkedPile's GameState.exile intersection is a REGRESSION FENCE rather than
+        -- proven behaviour. Dropping it leaves the suite green, because CR 400.7 mints
+        -- a new object as the card leaves exile and the stale key then projects
+        -- nothing -- so both readings answer the same. It is kept because CR 400.7 is
+        -- what the sentence means: the pile is the cards that are in exile now.
+        --
+        -- An empty pile is 0 and not Nothing, which is the sum of no answers; a member
+        -- that cannot answer (an exiled card with no power) makes the whole read
+        -- Nothing, which is Plus' posture.
+        --
+        -- `Filter.source` and not `mOid`, since rule 607.2a links two abilities of one
+        -- OBJECT and the object this quantity is aimed at need not be the ability's
+        -- source. Nothing when the context names no source at all.
+        --
+        -- Under OwnAbilities every exiling ability of the source counts, whatever
+        -- its name: the reference names none, so CR 607.4 links it to each of
+        -- them. Each, that is, but one the source acquired from an exiled card (CR
+        -- 607.5, Binding.isLinkedExile): data/scenarios/living-lore-counts-only-the-card-it-exiled-as-it-entered.json
+        -- is the proof. CraftMaterials is the craft link alone (CR 702.167c), a
+        -- REGRESSION FENCE: no board in the suite gives a crafted permanent that
+        -- reads it an exiling ability too.
+        --
+        -- A reader that is itself an acquired ability reads only its own pair's
+        -- exiles (Filter.reader): data/scenarios/myr-welder-acquired-soul-foundry-reads-no-card.json
+        -- is the proof.
+        --
+        -- Not implemented: CR 607.5's narrowing for a reference a copy effect
+        -- brought, which sees only what its own copied pair exiled -- Mimeoplasm,
+        -- Revered One as a copy of Sutured Ghoul (#4985).
+        --
+        -- Terminating: the payload is a strictly smaller subterm.
+        Quantity.AgainstExiledPile (AgainstExiledPile.MkAgainstExiledPile pile inner) ->
+          case Filter.source context of
+            Nothing -> Nothing
+            Just src -> fmap sum (traverse (\o -> evaluateAgainst viewOf context gs announcedOn (Just o) (viewOf o) inner) (Game.linkedPile (Filter.reader context) pile src gs))
+        -- The arm above narrowed to ONE card, lastCardExiledWith's, so there is
+        -- nothing to sum. Nothing when no linked card matches: "the last creature
+        -- card exiled with it" is then no card at all.
+        --
+        -- Terminating: the payload is a strictly smaller subterm.
+        Quantity.AgainstLastCardExiledWith (AgainstLastCardExiledWith.MkAgainstLastCardExiledWith criterion inner) ->
+          lastCardExiledWith viewOf context gs criterion >>= \o -> evaluateAgainst viewOf context gs announcedOn (Just o) (viewOf o) inner
+        -- CR 107.1: Nothing propagates from any operand -- a calculation over a
+        -- number nobody could determine is not a number either.
+        Quantity.Arithmetic arithmetic -> fmap calculate (traverse recur arithmetic)
+        -- CR 208.2a / 608.2h: delegate to the general Count fold (Parun.Engine.Count),
+        -- which reads the CR 613 projection through the injected ViewOf. The second
+        -- injection is this function itself, aimed at whichever CANDIDATE the fold is
+        -- looking at, which is how Aggregation.Greatest reads a per-member quantity
+        -- without Count importing this module. `announcedOn` stays FIXED across the
+        -- candidates: CR 601.2b's X belongs to the resolving object. Terminating
+        -- despite the mutual recursion -- a Greatest's payload is a strictly smaller
+        -- subterm.
+        --
+        -- The fold's filter is aimed at `mOid` too, for Filter.IsAttachedToEvaluated
+        -- and Filter.IsEvaluated: under CR 613.4c that is the affected object,
+        -- Bruenor Battlehammer's "it". Its creature types come off `mView`, the
+        -- view this evaluation was handed, for SharesCreatureTypeWith's Evaluated
+        -- anchor (Coat of Arms).
+        Quantity.Count c -> Count.evaluate viewOf (\mOid2 view -> evaluateAgainst viewOf context gs announcedOn mOid2 (Just view)) context {Filter.evaluated = mOid, Filter.evaluatedCreatureTypes = fmap (Set.filter Subtype.Engine.isCreatureType . Filter.subtypes) mView} gs c
+        -- CR 106.4: the mana-pool fold (Parun.Engine.ManaCount). Takes the ViewOf but
+        -- not the second injection the Count arm above does: a mana unit has no
+        -- characteristics for a projection to describe, so the view is there only to
+        -- resolve WHOSE pool (CR 613.1b's layer-2 controller), and a ManaCount holds no
+        -- inner Quantity for the reader to evaluate. It still needs the CONTEXT, which
+        -- is what resolves its CR 109.5 "you" -- Omnath, Locus of Mana counts its own
+        -- controller's pool.
+        Quantity.ManaCount c -> ManaCount.evaluate viewOf context gs c
+        -- CR 119.1: a player's life total, read STRAIGHT OFF GameState.players at the
+        -- moment of the call for the reason the mana-pool arm above is -- CR 119.3
+        -- adjusts a life total whenever an effect says so, with no state-based action
+        -- and no priority pass owed in between, so a stored or sampled copy would go
+        -- stale mid-resolution.
+        --
+        -- The PlayerRef is resolved by playersOf below -- Count.playersFor for every
+        -- reference but the fold's own candidate -- which is what keeps one reference
+        -- from meaning different players in different arms. Nothing for anything but
+        -- EXACTLY ONE player: a life total is one player's scalar, so a reference
+        -- naming several answers "whose?" rather than answering with a sum.
+        --
+        -- Maximising over several is a different shape and has its own spelling:
+        -- Aggregation.Greatest over Scope.OverPlayers, with THIS arm reading each
+        -- candidate through PlayerRef.Candidate -- Malignus is one such card, Daybreak
+        -- Ranger // Nightfall Predator another -- and that shape is why nothing here
+        -- folds.
+        Quantity.LifeTotal ref -> case playersOf ref of
+          Just [pid] -> fmap Player.life (Map.lookup pid (GameState.players gs))
+          _ -> Nothing
+        -- CR 103.4 / 119.1: LifeTotal's arm over the figure setup recorded.
+        Quantity.StartingLifeTotal ref -> case playersOf ref of
+          Just [pid] -> fmap Player.startingLife (Map.lookup pid (GameState.players gs))
+          _ -> Nothing
+        -- CR 702.179e / 702.179f: a player's speed. LifeTotal's arm in every respect
+        -- above -- read live, resolved through the same playersOf, and Nothing
+        -- for a reference naming anything but exactly one player.
+        --
+        -- CR 702.179f is applied HERE and only here: "if that player has no speed,
+        -- their speed is 0 for the purpose of an effect that refers to speed", and
+        -- this arm IS such an effect's reading, so Player.speed of Nothing (CR
+        -- 702.179b) answers Just 0. The outer Nothing means "which player?" went
+        -- unanswered, which is a different claim -- a player the map does not hold at
+        -- all is not a player with no speed.
+        Quantity.Speed ref -> case playersOf ref of
+          Just [pid] -> fmap (maybe 0 toInteger . Player.speed) (Map.lookup pid (GameState.players gs))
+          _ -> Nothing
+        -- CR 725.1: is that player the monarch? LifeTotal's and Speed's arm in what it
+        -- reads and how the reference is resolved, but NOT in arity: CR 725.3 makes the
+        -- monarch unique, so a disjunction over the named players and a sum over them
+        -- agree on every board, and Queen Marchesa's "if an opponent is the monarch" is
+        -- answerable at any number of seats. The siblings keep their one-player
+        -- restriction, where the multi-player answer really is an aggregation choice
+        -- (#681). Relative AnyPlayer therefore asks "is there a monarch?", and the empty list a
+        -- departure (CR 800.4) can leave behind answers 0. Nothing stays reserved for a
+        -- reference that could not be resolved at all.
+        --
+        -- CR 725.5 is applied HERE and only here: NO MONARCH answers Just 0, not
+        -- Nothing. GameState.monarch of Nothing means CR 725.1's "there is no monarch
+        -- in a game until an effect instructs a player to become the monarch", and a
+        -- 0 on the measured side of a static ability's "as long as" clause makes that
+        -- ability's continuous effect do nothing -- which is exactly what CR 725.5
+        -- prescribes. Nothing would instead collapse to False through
+        -- Condition.holds' undeterminable path, which reaches the same answer for
+        -- this comparison by accident and would be the wrong claim about the rule.
+        Quantity.IsMonarch ref -> case playersOf ref of
+          Nothing -> Nothing
+          Just pids -> Just (if any (\pid -> GameState.monarch gs == Just pid) pids then 1 else 0)
+        -- CR 702.131c / 702.195b: does that player have that rest-of-game mark?
+        -- IsMonarch's arm in shape and in arity, reaching that arity from the
+        -- opposite premise: rule 725.3 makes the monarch unique, so a disjunction
+        -- over the named seats and a sum over them agree there, while CR 702.131c
+        -- and CR 702.195b let every player hold the mark at once and the two come
+        -- apart. The disjunction is still what a card asks -- "you have the city's
+        -- blessing", "an opponent has an enduring story" -- where a sum would count
+        -- a table rather than answer a question.
+        --
+        -- A player who has never had the mark answers Just 0 and not Nothing,
+        -- IsMonarch's posture: "you don't have the city's blessing" is a state the
+        -- rule names, so a 0 on the measured side of a static ability's "as long
+        -- as" clause is the right reading. Nothing stays reserved for a reference
+        -- that could not be resolved at all.
+        Quantity.HasPlayerDesignation (PlayerDesignationTally.MkPlayerDesignationTally ref mark) -> case playersOf ref of
+          Nothing -> Nothing
+          Just pids -> Just (if any (\pid -> maybe False (Set.member mark . Player.designations) (Map.lookup pid (GameState.players gs))) pids then 1 else 0)
+        -- CR 103.1: is that player the starting player? IsMonarch's arm down to the
+        -- arity argument -- there is exactly one starting player, so a disjunction over
+        -- the named seats and a sum over them agree on every board.
+        --
+        -- The head of GameState.turnOrder, which CR 103.1's last sentence defines as
+        -- the starting player's seat, and which that field is documented to be rotated
+        -- to. It is never shortened by a departure, so a game whose starting player has
+        -- left still answers with them -- the seat is the rule's subject, not who is
+        -- still playing.
+        --
+        -- An EMPTY roster answers 0 rather than Nothing, IsMonarch's posture: there is
+        -- no starting player, which is a number, and Nothing stays reserved for a
+        -- reference that could not be resolved at all.
+        Quantity.IsStartingPlayer ref -> case playersOf ref of
+          Nothing -> Nothing
+          Just pids -> Just (if any (\pid -> Maybe.listToMaybe (GameState.turnOrder gs) == Just pid) pids then 1 else 0)
+        -- CR 102.1: is that player the active player? The two arms above's shape again,
+        -- and the simplest of the three: GameState.activePlayer is a PlayerId rather
+        -- than a Maybe, so there is no "no active player" board for this arm to have a
+        -- posture about.
+        Quantity.IsActivePlayer ref -> case playersOf ref of
+          Nothing -> Nothing
+          Just pids -> Just (if any (Turn.isActive gs) pids then 1 else 0)
+        -- CR 122.1: how many counters of a kind that player has. The third arm on
+        -- LifeTotal's and Speed's terms -- live, one player only, through the same
+        -- playersOf.
+        --
+        -- A kind the player's map does not hold answers 0 rather than Nothing, which
+        -- is Player.counters' own convention and not this arm's invention: an absent
+        -- key means the player has none of that counter, and "none" is a number. The
+        -- outer Nothing is reserved for the reference, exactly as above.
+        --
+        -- "AN opponent has three or more poison counters" is therefore NOT written
+        -- here: it is an existential over the opponents, and it gets LifeTotal's
+        -- spelling -- Aggregation.Greatest over Scope.OverPlayers, with this arm
+        -- reading each candidate through PlayerRef.Candidate, since a maximum of at
+        -- least three and a member of at least three are the same claim. Viral
+        -- Spawning's Corrupted clause is that card, and CastSpec's three-seat
+        -- GrantedFlashback case is what proves the reading (a two-seat board cannot:
+        -- there "an opponent" and "your opponent" name one player).
+        Quantity.PlayerCounters (PlayerCounterTally.MkPlayerCounterTally ref kind) -> case playersOf ref of
+          Just [pid] -> fmap (toInteger . Map.findWithDefault 0 kind . Player.counters) (Map.lookup pid (GameState.players gs))
+          _ -> Nothing
+        -- CR 700.5: that player's devotion. Nothing for a reference naming anything
+        -- but exactly one player, LifeTotal's arity and for its reason -- "your
+        -- devotion" is what every printing asks, and a table's worth of devotions
+        -- is an aggregation choice rather than a sum.
+        --
+        -- CONTROL off the injected view rather than off Game.zoneMembers, which
+        -- slices the shared battlefield by OWNER: rule 110.2 is what the rule asks
+        -- and the two come apart (Count.controlledMatching carries the same note).
+        -- The COST comes off the same view, so CR 707.2's copiable mana cost is
+        -- honoured -- a Clone of a red creature contributes its copied {R} and not
+        -- the {U} its own card prints (Parun.DevotionSpec). A permanent the
+        -- projection cannot describe contributes nothing, as do CR 202.1b's
+        -- costless ones -- a land, a token.
+        --
+        -- CR 700.5a's layer bound is not applied here and does not need to be. The
+        -- rule stops at copy, control and text-changing effects -- layers 1, 2 and
+        -- 3 -- and no layer above those writes a mana cost or a controller, so this
+        -- arm reads the same numbers off whatever bounded or finished view its
+        -- caller injected. Projection.conditionHolds already hands a static
+        -- ability's gate a view bounded at that ability's own layer, which is what
+        -- keeps a devotion-gated continuous effect from reading its own output.
+        Quantity.Devotion (Devotion.MkDevotion ref colors) -> case playersOf ref of
+          Just [pid] -> Just (devotionOf viewOf colors pid gs)
+          _ -> Nothing
+        -- CR 700.8a: the size of that player's party, Devotion's arity and
+        -- control-off-the-view for Devotion's reasons. See partySizeOf.
+        Quantity.PartySize ref -> case playersOf ref of
+          Just [pid] -> Just (partySizeOf viewOf pid gs)
+          _ -> Nothing
+        -- CR 122.1's OBJECT reading, through the injected view exactly as the Power
+        -- arm above is -- so this arm never learns whether it is looking at a live
+        -- projection or a CR 608.2h snapshot, and Projection.viewWithLastKnown is what
+        -- answers Promising Duskmage's "if it had a +1/+1 counter on it" for a creature
+        -- CR 400.7 has already deleted.
+        --
+        -- Filter.counters rather than Object.counters: reading the object directly
+        -- would work while it lived and answer nothing at all once it died, which is
+        -- the whole case this arm exists for.
+        --
+        -- A kind the map does not hold answers 0 rather than Nothing, the convention
+        -- Object.counters and the PlayerCounters arm above both keep. The outer Nothing
+        -- means the VIEW could not describe the object -- it is gone and nothing was
+        -- filed under its id.
+        Quantity.ObjectCounters kind -> fmap (toInteger . Map.findWithDefault 0 kind . Filter.counters) mView
+        -- CR 122.1 without the kind: the SUM over every kind the object carries, off the
+        -- same field and the same view the arm above reads, so CR 608.2h answers this one
+        -- for a gone object too. An object with no counters at all sums to 0, which is the
+        -- answer "it had no counters on it" wants rather than a Nothing.
+        Quantity.ObjectCountersOfAnyKind -> fmap (toInteger . sum . Filter.counters) mView
+        -- CR 123.6d off the view, ObjectCounters' posture.
+        Quantity.LettersOnNameStickers letters -> fmap (\v -> toInteger (sum [NameWords.letterCount letters w | StickerContent.Name w <- Foldable.toList (Filter.stickers v)])) mView
+        Quantity.NameStickers -> fmap (\v -> toInteger (length [w | StickerContent.Name w <- Foldable.toList (Filter.stickers v)])) mView
+        Quantity.PowerOfStickers -> fmap (\v -> sum [PowerToughnessSticker.power pt | StickerContent.PowerToughness pt <- Foldable.toList (Filter.stickers v)]) mView
+        Quantity.ToughnessOfStickers -> fmap (\v -> sum [PowerToughnessSticker.toughness pt | StickerContent.PowerToughness pt <- Foldable.toList (Filter.stickers v)]) mView
+        -- The designation as a 0/1, off the same view ObjectCounters reads -- so CR
+        -- 608.2h's last known information answers for an object that is gone, which is
+        -- what rule 702.112a's intervening "if" needs on resolution, and what CR 701.37a's
+        -- and Repeat Offender's clause conditions need on theirs.
+        --
+        -- Nothing only where the view cannot describe the object at all, exactly as
+        -- Power and ObjectCounters have it: an object nobody designated is not renowned,
+        -- which is an answer.
+        Quantity.HasDesignation d -> fmap (\view -> if Set.member d (Filter.designations view) then 1 else 0) mView
+        -- CR 701.37c: the value X had as the permanent became monstrous, read back by
+        -- another ability of that same permanent -- HasDesignation's arm above with the
+        -- number in place of the 0/1. A mark set with no number reads 0, which is what
+        -- every designation but a "Monstrosity X" is.
+        Quantity.DesignationValue d -> fmap (toInteger . Map.findWithDefault 0 d . Filter.designationValues) mView
+        Quantity.StoredResultsOfSameValue -> fmap (toInteger . greatestOfOneValue . Filter.storedResults) mView
+        -- CR 716.2d is applied HERE and nowhere else: a permanent with no level reads
+        -- as level 1 for every rule and effect that asks, so the default belongs at the
+        -- one read rather than in the field Filter.classLevel reports.
+        Quantity.ClassLevel -> fmap (toInteger . ClassLevel.defaulted . Filter.classLevel) mView
+        -- CR 702.143c's "if this spell was foretold" as a 0/1, off the view: the
+        -- object it reads is the RESOLVING SPELL, which is still on the stack while
+        -- its own clause conditions are gated (Parun.Engine.Resolve.gateHolds).
+        Quantity.WasForetold -> fmap (\view -> if Filter.foretold view then 1 else 0) mView
+        -- CR 702.104b's yes-or-no as a 0/1, WasForetold's arm above in every
+        -- respect. The object it reads is the PERMANENT the tribute creature is,
+        -- which the card's own enters trigger asks about at CR 603.4 and again at
+        -- CR 608.2a.
+        Quantity.TributeWasPaid -> fmap (\view -> if Filter.tributePaid view then 1 else 0) mView
+        -- CR 702.33e's "if it was kicked", CR 702.33f's "kicked with its [A]
+        -- kicker", CR 702.33c's count and CR 702.157a's "for each time", which are
+        -- one read: how many times the designated costs were declared, zero for one
+        -- the spell's controller declined and for one the card does not print.
+        Quantity.TimesPaid designator -> fmap (toInteger . Keyword.timesPaid designator . Filter.paidCosts) mView
+        -- CR 601.2b / 400.7d: was the candidate this object was cast for
+        -- offered by a keyword the designator names -- a family, or one
+        -- instance (CR 702.152b)? Off the view, WasForetold's read.
+        Quantity.CastUsing designator -> fmap (\view -> if any (Keyword.designates designator) (Filter.castUsing view) then 1 else 0) mView
+        -- CR 107.4h's third sentence as a 0/1, WasForetold's arm in every respect --
+        -- including the object it reads, which for Berg Strider is the PERMANENT the
+        -- spell became (CR 400.7d) and for Forsworn Paladin is the CR 602.2a ability
+        -- object an AgainstSlot aimed it at.
+        --
+        -- A CLASSIFICATION of the mana and never an effect's identity: what the view
+        -- reports is Parun.Types.ProductionTag, the closed half of what a unit carries,
+        -- and this arm asks it for one member.
+        Quantity.TagWasSpent tag -> fmap (\view -> if Map.member tag (Filter.manaSpentTagColors view) then 1 else 0) mView
+        -- CR 107.4h conjoined with CR 202.2 over ONE unit: Boreal Outrider's "if
+        -- {S} of any of that spell's colors was spent to cast it". The colours the
+        -- view reports beside the tag are the units that carried it, so a
+        -- non-empty intersection with the object's own colours is the rule read
+        -- straight; snow mana that is colourless (CR 106.1b) meets no colour and
+        -- answers 0, as does snow mana of a colour the object is not.
+        --
+        -- A CLASSIFICATION like the arm above, one axis wider: a production tag
+        -- and a colour, never an effect's identity.
+        Quantity.TagWasSpentOfOwnColor tag -> fmap (\view -> if Set.disjoint (Map.findWithDefault Set.empty tag (Filter.manaSpentTagColors view)) (Filter.colors view) then 0 else 1) mView
+        Quantity.ChosenColorsItIs -> fmap (toInteger . Set.size . Set.intersection (Filter.sourceChosenColors context) . Filter.colors) mView
+        -- CR 202.1a's amount, the arm above's read one field over and a COUNT
+        -- rather than a 0/1: rule 702.191a's "the amount of mana spent to cast that
+        -- spell". Zero for a spell cast for no mana, which is an ordinary answer.
+        Quantity.ManaSpent -> fmap (toInteger . Filter.manaSpentAmount) mView
+        -- CR 111.6's status as a 0/1, WasForetold's arm in every respect. Filter.token
+        -- rather than Game.isToken: reading the object directly answers False for an
+        -- id naming nothing, which is the whole case this arm exists for; see #1102.
+        Quantity.WasToken -> fmap (\view -> if Filter.token view then 1 else 0) mView
+        -- CR 508.1k's combat fact as a 0/1, WasToken's arm in every respect --
+        -- including the reader, since a creature that has died is out of
+        -- GameState.combat as well as out of GameState.objects, and
+        -- Parun.Types.LastKnown.attacking is what makes this arm answer at all.
+        Quantity.WasAttacking -> fmap (\view -> if Filter.attacking view then 1 else 0) mView
+        -- CR 509.1g's other half of the declaration, the arm above in every
+        -- respect, reading Parun.Types.LastKnown.blocking through the same view.
+        Quantity.WasBlocking -> fmap (\view -> if Filter.blocking view then 1 else 0) mView
+        -- CR 509.1h's other side of that same declaration, and a LOOK-BACK rather
+        -- than the arm above's snapshot read: off the log for the object the
+        -- quantity is aimed at (Game.wasBlockedThisTurn), DamageDealtToThisTurn's
+        -- posture. Fyndhorn Druid is the reader.
+        --
+        -- Not Filter.blockStatus and not a Parun.Types.LastKnown field, which is what
+        -- rule 509.1h's last sentence rules out: a creature stays blocked after
+        -- every blocker leaves combat, and a snapshot taken as it dies has lost the
+        -- blockers CR 400.7 already deleted along with it.
+        Quantity.WasBlockedThisTurn -> fmap (\oid -> if Game.wasBlockedThisTurn gs oid then 1 else 0) mOid
+        -- CR 702.30a's window as a 0/1 -- echo's intervening "if", read of the
+        -- ability's own source at both CR 603.4 and CR 608.2a.
+        --
+        -- Off the BOARD rather than off the view, DamageDealtToThisTurn's posture
+        -- and for its reason: the answer relates an OBJECT to a PLAYER, and a view
+        -- of the one carries no name for the other. CR 603.3a is why the player is
+        -- named at all -- rule 702.30a's "you" is the controller the ability had
+        -- when it triggered, not whoever holds the permanent when it resolves.
+        --
+        -- controlClockOf is what makes the question answerable for a permanent that
+        -- left in response: CR 400.7 deletes the incarnation the clock lived on, and
+        -- CR 608.2h's record is where it still is.
+        Quantity.ControlGainedSinceLastUpkeep ref -> case (playersOf ref, mOid) of
+          (Just [pid], Just oid) -> Just (if Map.lookup pid (controlClockOf gs oid) == Just ControlClock.SinceLastUpkeep then 1 else 0)
+          _ -> Nothing
+        -- CR 305.1 / 601.2a as a 0/1. CR 400.7 gives the played card a new id,
+        -- and a slot captured before the play still names the old one, which
+        -- GameState.cardsPlayed keys too. Off the BOARD for
+        -- ControlGainedSinceLastUpkeep's reason: it relates an object to a
+        -- player.
+        Quantity.PlayedBy ref -> case (playersOf ref, mOid) of
+          (Just [pid], Just oid) -> Just (if Map.lookup oid (GameState.cardsPlayed gs) == Just pid then 1 else 0)
+          _ -> Nothing
+        -- CR 120.1's damage as a total, read off the event log for the object the
+        -- quantity is aimed at (Game.damageDealtToThisTurn) rather than off its view:
+        -- CR 608.2i is what makes the question answerable at all for a creature CR
+        -- 400.7 has deleted, and the log survives the death where the object does not.
+        --
+        -- "This turn" and not "as it died", which is the design call this arm settles:
+        -- the printed clause says this turn, and CR 120.6's regeneration and CR 120.3d's
+        -- wither and infect are three boards where the damage that was dealt is no
+        -- longer marked on the creature that took it.
+        Quantity.DamageDealtToThisTurn -> fmap (toInteger . Game.damageDealtToThisTurn gs) mOid
+        -- CR 508.3b: how many of that player's opponents they declared attacked this
+        -- combat phase. LifeTotal's arm in shape -- live, one player only, resolved
+        -- through the same playersOf, and Nothing for a reference naming
+        -- anything but exactly one player, since "whose opponents?" has no sum.
+        --
+        -- Read off Combat.declaredAttackedBy, that player's share of
+        -- Combat.declaredAttacked -- under the shared team turns option a
+        -- teammate's attack is not "you attacked" (CR 805.10c) -- and NOT
+        -- Combat.attacked, which is the reason Combat.declaredAttacked exists: CR
+        -- 508.4 says a creature put onto the battlefield attacking never
+        -- "attacked", for trigger events AND effects, and rule 702.121a's is an
+        -- effect.
+        --
+        -- Nor Combat.declaredAttackedThisStep, its step-scoped twin: melee's words are
+        -- "this combat", which CR 511.3's span matches and CR 500.1's does not. The two
+        -- coincide for every melee trigger printed -- CR 508.1m puts the trigger on the
+        -- stack in the step the declaration happened in -- so the fields are apart
+        -- because the two rules ask different questions, not because a card tells them
+        -- apart today.
+        --
+        -- NO liveness test on the players counted, deliberately: the record is what the
+        -- rule asks about, so an opponent who has since left the game (CR 800.4) still
+        -- counts, as does one whose attacker is no longer in combat. That is why this
+        -- does not go through Count.playersFor's Opponent arm, which folds only
+        -- Game.stillPlaying.
+        --
+        -- An EMPTY record answers 0 rather than Nothing: no attack declared is an
+        -- answered question, and outside a combat phase the cleared record (CR 511.3)
+        -- says the same thing. What is unanswered is only the reference.
+        Quantity.OpponentsAttacked ref -> case playersOf ref of
+          Just [pid] -> Just (toInteger (length (filter (attackedOpponent (Game.teams gs) pid) (Set.toList (Map.findWithDefault Set.empty pid (Combat.declaredAttackedBy (GameState.combat gs)))))))
+          _ -> Nothing
+        -- CR 508.1a / 608.2i: how many creatures that player has declared as attackers
+        -- this turn -- rule 207.2c's raid, compared against 1. OpponentsAttacked's arm
+        -- in arity, and CardsDiscardedThisTurn's in footing: Nothing for a reference
+        -- naming anything but exactly one player, since "whose attack?" has no sum, and
+        -- a fold over GameState.events, whose extent Engine.beginTurnOf's clearing
+        -- makes "this turn".
+        --
+        -- The LOG and not Combat.declaredAttackers, which CR 511.3 clears at the end of
+        -- combat -- so the postcombat main phase, where every raid trigger this answers
+        -- is checked, would read an empty record. Game.attackersDeclaredThisTurn is the
+        -- fold, so a second reader cannot drift from this one.
+        --
+        -- An EMPTY log answers 0 rather than Nothing, as CardsDiscardedThisTurn's does.
+        -- What is unanswered is only the reference.
+        Quantity.AttackersDeclaredThisTurn ref -> case playersOf ref of
+          Just [pid] -> Just (toInteger (Game.attackersDeclaredThisTurn gs pid))
+          _ -> Nothing
+        -- CR 508.1a / 506.4: Combat.declaredAttackers, which keeps an attacker
+        -- that has since left the battlefield and never holds one CR 508.4 put
+        -- onto it attacking. Always a number: no object or player is read.
+        Quantity.AttackersDeclaredThisCombat ->
+          Just (toInteger (Set.size (Combat.declaredAttackers (GameState.combat gs))))
+        -- CR 508.1a as a 0/1, PlayedBy's footing: an object related to a player,
+        -- read off GameState.attacksInOwnLastTurn rather than the turn's log.
+        Quantity.AttackedInLastTurnOf ref -> case (playersOf ref, mOid) of
+          (Just [pid], Just oid) -> Just (if Game.attackedInLastTurnOf gs pid oid then 1 else 0)
+          _ -> Nothing
+        -- CR 508.1b / 800.4i: AttackersDeclaredThisTurn's footing, over every
+        -- player's own last turn rather than this one.
+        Quantity.AttackersInTheirLastTurn ref -> case playersOf ref of
+          Just [pid] -> Just (toInteger (Game.attackersInTheirLastTurn gs pid))
+          _ -> Nothing
+        -- CR 701.9a / 608.2i: how many cards that player has discarded this turn.
+        -- OpponentsAttacked's arm in shape -- live, one player only, resolved through the
+        -- same playersOf, and Nothing for a reference naming anything but exactly
+        -- one player, since "whose discards?" has no sum.
+        --
+        -- A fold over GameState.events, which is cleared at turn handoff
+        -- (Engine.beginTurnOf) -- so the log's extent IS "this turn" and nothing here
+        -- names a window. Game.discardOf and not the Moved event the same discard also
+        -- files; see that function for why the zone change is the wrong record.
+        --
+        -- BOTH DiscardCause values count, CR 702.29a making a cycled card a discarded
+        -- one.
+        --
+        -- An EMPTY log answers 0 rather than Nothing, as OpponentsAttacked's empty
+        -- record does: nobody having discarded is an answered question. What is
+        -- unanswered is only the reference.
+        Quantity.CardsDiscardedThisTurn ref -> case playersOf ref of
+          Just [pid] -> Just (toInteger (length (filter ((== Just pid) . Game.discardOf . LoggedEvent.event) (Foldable.toList (GameState.events gs)))))
+          _ -> Nothing
+        -- CR 121.1 / 608.2i: how many cards that player has drawn this turn.
+        -- CardsDiscardedThisTurn's arm in footing and in arity, read off the
+        -- turn-scoped tally Event keeps per draw rather than a fold.
+        Quantity.CardsDrawnThisTurn ref -> case playersOf ref of
+          Just [pid] -> Just (toInteger (Map.findWithDefault 0 pid (GameState.drawsThisTurn gs)))
+          _ -> Nothing
+        -- CR 603.1b: how many of the four bending verbs that player has done this
+        -- turn. CardsDiscardedThisTurn's arm in footing and in arity; Game.bendingsThisTurn
+        -- is the fold.
+        Quantity.BendingsThisTurn ref -> case playersOf ref of
+          Just [pid] -> Just (toInteger (Game.bendingsThisTurn gs pid))
+          _ -> Nothing
+        -- CR 119.3 / 608.2i: how much life that player has gained this turn.
+        -- CardsDiscardedThisTurn's arm in footing -- a live fold over GameState.events,
+        -- whose extent Engine.beginTurnOf's clearing makes "this turn" -- and in ARITY:
+        -- Nothing for a reference naming anything but exactly one player, since "whose
+        -- life?" has no sum.
+        --
+        -- The AMOUNTS are summed where the discard tally counts events, the printed
+        -- sentence asking how much life rather than how many gains.
+        -- Game.lifeGainedThisTurn is the fold, so a second reader of the same log cannot
+        -- drift from this one.
+        --
+        -- An EMPTY log answers 0 rather than Nothing, as CardsDiscardedThisTurn's does.
+        -- What is unanswered is only the reference.
+        Quantity.LifeGainedThisTurn ref -> case playersOf ref of
+          Just [pid] -> Just (toInteger (Game.lifeGainedThisTurn gs pid))
+          _ -> Nothing
+        -- CR 120.1 / 608.2i: how many of the players this reference names were dealt
+        -- damage this turn. CardsDiscardedThisTurn's arm in footing -- a live fold over
+        -- GameState.events, whose extent Engine.beginTurnOf makes "this turn" -- and
+        -- IsMonarch's in arity: the question is asked of each named player separately, so
+        -- a reference naming several is answered by counting them rather than by asking
+        -- "whose?". Furious Spinesplitter's "for each opponent who" is that count, and
+        -- rule 702.54a's bloodthirst is the same count compared against 1, which
+        -- Parun.Engine.Replacement.admitsEntry's Bloodthirst arm now asks.
+        --
+        -- The PLAYERS are counted and not the events, which is why this filters the
+        -- player list rather than the log: two bolts at one opponent is one opponent.
+        --
+        -- NO liveness test on the players counted, OpponentsAttacked's posture and for
+        -- its reason: the record is what the rule asks about, so an opponent who has
+        -- since left the game (CR 800.4) still answers -- though playersFor's Opponent
+        -- arm will already have dropped them from `pids`, so this only matters for a
+        -- reference that names a player outright.
+        --
+        -- An EMPTY log answers 0 rather than Nothing, as CardsDiscardedThisTurn's does.
+        -- What is unanswered is only the reference.
+        --
+        -- The kind narrows the log to CR 510.2's combat damage where a card says
+        -- so -- Tymna the Weaver's "opponents that were dealt combat damage".
+        Quantity.PlayersDealtDamageThisTurn tally -> case playersOf (PlayersDealtDamage.player tally) of
+          Nothing -> Nothing
+          Just pids -> Just (toInteger (length (filter (wasDealtDamage (PlayersDealtDamage.kind tally)) pids)))
+        -- CR 120.1 / 608.2i: how much damage in total the players this reference names
+        -- were dealt this turn -- rule 702.54b's "the total damage your opponents have
+        -- been dealt this turn", which Parun.Engine.Event's Bloodthirst arm asks with
+        -- PlayerRelation.Opponent.
+        --
+        -- SUMS the seats where the arm above counts them, which is the whole difference
+        -- between rule 702.54a's threshold and rule 702.54b's X: three damage to one
+        -- opponent and two to another is two opponents there and five here.
+        --
+        -- Same log, same CR 120.3a recipient and the same empty-log answer of 0; only
+        -- the reference is ever unanswered.
+        Quantity.DamageDealtToPlayersThisTurn ref -> case playersOf ref of
+          Nothing -> Nothing
+          Just pids -> Just (toInteger (sum (fmap (Game.damageDealtToPlayerThisTurn gs) pids)))
+        -- CR 601.2i / 608.2i: how many spells that player cast during the turn just
+        -- ended. LifeTotal's arm in ARITY -- one player's tally, so a reference naming
+        -- several answers "whose?" rather than a sum -- and read STRAIGHT OFF the
+        -- handoff snapshot for the reason the life total is read straight off
+        -- GameState.players: the log it was folded from is cleared by that same handoff
+        -- (Engine.beginTurnOf), so there is nothing live left to fold.
+        --
+        -- Both printed readings are about every player at once and both reach this arm
+        -- through Aggregation.Greatest over Scope.OverPlayers, whose candidate arrives
+        -- as PlayerRef.Candidate -- "no spells were cast last turn" is that maximum
+        -- compared to 0 and "a player cast two or more spells last turn" is the same
+        -- maximum compared to 2. Summing the seats would answer the second wrongly when
+        -- two players cast one spell each.
+        --
+        -- An ABSENT entry answers 0 rather than Nothing, as CardsDiscardedThisTurn's
+        -- empty log does: nobody having cast is an answered question. What is
+        -- unanswered is only the reference.
+        Quantity.SpellsCastLastTurn ref -> case playersOf ref of
+          Just [pid] -> Just (toInteger (Map.findWithDefault 0 pid (GameState.castsLastTurn gs)))
+          _ -> Nothing
+        -- CR 601.2i / 608.2i: the arm above, for the turn in progress, read off the live
+        -- log through the same fold GameState.castsLastTurn snapshots. Ertai's Scorn's
+        -- "an opponent cast two or more" is the Greatest of it over opponents, not a
+        -- sum, which two opponents casting one each would satisfy.
+        Quantity.SpellsCastThisTurn ref -> case playersOf ref of
+          Just [pid] -> Just (toInteger (Map.findWithDefault 0 pid (Game.castsPerPlayer gs)))
+          _ -> Nothing
+        -- CR 608.2n / 608.2i: how many times the ability this evaluation is aimed at
+        -- has resolved this turn, activated or triggered, folded off the turn-scoped
+        -- log.
+        --
+        -- Keyed on the object's SOURCE and not on its id, which is the whole of CR
+        -- 707.10b's third sentence: a copy of an ability carries the original's
+        -- Source (Resolve.Effect.copyOnStackOf), so the two resolutions land on one
+        -- key. Keying on the id would file them apart, and CR 400.7 would file two
+        -- activations or firings of one permanent's ability apart as well.
+        --
+        -- The LIVE object first, which is the ordinary read: rule 608.2n ceases the
+        -- ability at the END of its resolution, so it is still on the stack while its own
+        -- clauses run. GameState.stackArchive behind it is a REGRESSION FENCE rather than
+        -- a proved line -- Game.cease deletes an ability outright and files nothing, so
+        -- only an archived SPELL can answer there, and a spell's Source is never a key in
+        -- this log.
+        --
+        -- Always a number where the aim has a source, never Nothing: an ability that has
+        -- resolved no times is 0, which is an answered question. Nothing only where the
+        -- evaluation is aimed at no object at all, or at an id naming nothing --
+        -- EnteredThisTurn's posture. An object that is not an ability reads 0, no other
+        -- Source being a key in this log.
+        --
+        -- A COPY of the ability answers off its OWN id, CR 707.10's last sentence making
+        -- it an ability of its own: Resolve.Effect's CopyStackObject arm re-stamps CR
+        -- 602.2a's thisAbility slot, so the read still lands on an object once the
+        -- original has been countered out from under it. Parun.CopySpec's Stifle case over
+        -- Ashling the Pilgrim is what proves that.
+        Quantity.TimesResolvedThisTurn -> do
+          oid <- mOid
+          obj <- Game.lookupObject oid gs <|> Map.lookup oid (GameState.stackArchive gs)
+          let resolved = Maybe.mapMaybe (Game.abilityResolved . LoggedEvent.event) (Foldable.toList (GameState.events gs))
+          pure (toInteger (length (filter (== Object.source obj) resolved)))
+        -- CR 702.40a: how many spells were cast this turn before the object this
+        -- evaluation is aimed at. Keyed on that object's OWN cast in the log, so a
+        -- spell cast after it -- in response to the storm trigger -- is not
+        -- counted, where a this-turn tally would count it. Every caster counts, and
+        -- a countered spell was still cast.
+        --
+        -- Nothing for an evaluation aimed at no object, or at one whose cast is not
+        -- in this turn's log: CR 707.10's copy was never cast.
+        Quantity.SpellsCastBefore -> do
+          oid <- mOid
+          fmap (toInteger . length) (Game.castsBefore oid gs)
+        -- CR 700.4 / 702.69a: how many permanents, of any controller, were put into
+        -- a graveyard from the battlefield this turn. The arm above's log fold with
+        -- no keying on the evaluation's own object: rule 702.69a counts the whole
+        -- turn, where rule 702.40a counts only what came before the spell -- and
+        -- GameState.events is cleared at turn handoff, which is the whole of "this
+        -- turn".
+        --
+        -- A TOKEN counts: CR 111.7 puts it into the graveyard before CR 704.5d
+        -- removes it, so the move is logged like any other.
+        --
+        -- Always a number, never Nothing: the fold answers for an evaluation aimed
+        -- at no object at all, nothing here being read off one.
+        Quantity.PermanentsDiedThisTurn ->
+          Just (toInteger (length (Maybe.mapMaybe (Game.diedChange . LoggedEvent.event) (Foldable.toList (GameState.events gs)))))
+        -- CR 702.185c: how many spells, by any player, were cast this turn for the
+        -- cost that keyword family offers. PermanentsDiedThisTurn's log fold,
+        -- reading the tag the cast event copied off Object.castUsing: by now the
+        -- spell has usually left the stack, and CR 400.7 left nothing to ask.
+        --
+        -- Always a number, never Nothing, for the arm above's reason.
+        Quantity.SpellsCastUsingThisTurn family ->
+          let casts = Maybe.mapMaybe (Game.castOf . LoggedEvent.event) (Foldable.toList (GameState.events gs))
+           in Just (toInteger (length (filter (\c -> (Keyword.familyOf =<< SpellWasCast.castUsing c) == Just family) casts)))
+        -- CR 100.6a / 729.1a: how many subgames have begun this match. Read off the
+        -- stored tally and not the log, PermanentsDiedThisTurn's arm's opposite on
+        -- that point: GameState.events is cleared at turn handoff and a subgame
+        -- outlives it, and CR 729.1b keeps the subgame's own log out of this one
+        -- entirely.
+        --
+        -- Always a number, never Nothing: nothing here is read off an object, so an
+        -- evaluation aimed at none still answers, and a match with no subgame is 0.
+        Quantity.SubgamesThisMatch -> Just (toInteger (GameState.subgamesThisMatch gs))
+        -- CR 309.7: how many dungeons that player has completed. LifeTotal's arm in
+        -- ARITY -- one player's tally, so a reference naming several answers "whose?"
+        -- rather than a sum -- and in SOURCE: read straight off the player, because
+        -- Dungeon.remove writes it there and the log GameEvent.PlayerActed goes
+        -- into is cleared at every turn handoff.
+        --
+        -- LIVE, which is what CR 604.2 needs: Gloom Stalker's "as long as you've
+        -- completed a dungeon" is re-asked by Projection.conditionHolds on every
+        -- projection, so the double strike appears in the same settle that CR 704.5t
+        -- removed the dungeon in.
+        --
+        -- An ABSENT player answers 0 rather than Nothing, as SpellsCastLastTurn's absent
+        -- entry does: having completed none is an answered question. What is unanswered
+        -- is only the reference.
+        Quantity.DungeonsCompleted ref -> case playersOf ref of
+          Just [pid] -> Just (toInteger (maybe 0 Player.completedDungeons (Map.lookup pid (GameState.players gs))))
+          _ -> Nothing
+        -- CR 309.7 asked of ONE dungeon, the arm above's shape in arity, source and
+        -- liveness: 1 if that player's completed names hold this one and 0 if not.
+        --
+        -- A 0\/1 rather than a Bool because Quantity is a number; the threshold that
+        -- turns it into Acererak the Archlich's "if you haven't" is the Comparison's.
+        Quantity.CompletedDungeon (CompletedDungeon.MkCompletedDungeon ref name) -> case playersOf ref of
+          Just [pid] ->
+            let completed = maybe Set.empty Player.completedDungeonNames (Map.lookup pid (GameState.players gs))
+             in Just (if Set.member name completed then 1 else 0)
+          _ -> Nothing
+        -- CR 903.8's tally, DungeonsCompleted's arm in arity, source and
+        -- liveness: every commander's count summed, Commander's Insignia's ruling
+        -- for a partner pair. A cast in progress is not among them: Cast records
+        -- it only after CR 601.2f has priced it.
+        Quantity.CommanderCasts ref -> case playersOf ref of
+          Just [pid] -> Just (toInteger (maybe 0 (sum . Player.commanderCasts) (Map.lookup pid (GameState.players gs))))
+          _ -> Nothing
+        -- CR 400.7 / 608.2i read as a 0/1: did the object this evaluation is aimed at
+        -- enter the battlefield this turn?
+        --
+        -- BlockersBeyond's arm in shape -- read LIVE off game state rather than
+        -- through the injected view, an entry being an event and not a characteristic --
+        -- and CardsDiscardedThisTurn's in extent: Engine.beginTurnOf clears the log at
+        -- the turn handoff, so "this turn" is the log's own reach and nothing here names
+        -- a window. LIVE matters for CR 604.2 -- Projection.conditionHolds re-asks this
+        -- every time the projection is taken, so the hexproof goes away at the handoff
+        -- rather than at whatever moment a snapshot had been captured.
+        --
+        -- Game.enteredBattlefield and not a Scope.InHistory count: that arm matches a
+        -- Filter against the event's characteristic snapshot, where this asks whether one
+        -- particular id is the entrant.
+        --
+        -- An object that entered TWICE this turn (blinked and returned) is still 1 rather
+        -- than a tally: CR 400.7 makes the second arrival a new object with a new id, so
+        -- only the current incarnation's own entry can match.
+        --
+        -- Nothing only for an evaluation aimed at no object -- a member of an
+        -- Aggregation.Greatest over Scope.InHistory. A permanent that did not enter this
+        -- turn is 0, which is a number and not a failure.
+        Quantity.EnteredThisTurn ->
+          fmap
+            (\oid -> if Game.enteredThisTurn oid gs then 1 else 0)
+            mOid
+        -- CR 400.7 / 400.3 read as a 0/1: did the object this evaluation is aimed at
+        -- enter the battlefield out of the named player's copy of the named zone?
+        --
+        -- EnteredThisTurn's arm with the origin zone tested as well, so its whole
+        -- haddock carries over -- the live read off GameState.events, the log's own
+        -- extent standing in for "this turn", and the keying on ZoneChange.object.
+        --
+        -- WHOSE copy is the entrant's OWNER: CR 400.3 sends a card to its owner's copy
+        -- of a per-player zone, so the graveyard it left was its owner's. That is read
+        -- through the INJECTED VIEW rather than off the board: CR 603.4 re-checks an
+        -- intervening "if" on resolution, by which time the entrant may be gone, and
+        -- Event.interveningHolds and Stack's re-check both inject
+        -- Projection.viewWithLastKnownAnywhere so CR 608.2h still answers. A view that
+        -- cannot describe the object at all is Nothing, which Condition.holds collapses
+        -- to False. That view has to answer the OWNER as well as the characteristics,
+        -- which is what LastKnown.owner is for.
+        --
+        -- CR 608.2i is why the log read is the rule and not a convenience: an entry is a
+        -- completed action, and a check needing information about one finds its object
+        -- wherever it now is so long as it takes no action on it -- which this clause,
+        -- whose effect acts elsewhere, does not. So the second check can never answer
+        -- differently from the first, and what a board can observe is that it reads the
+        -- LOG. Breathless Knight proves it in Parun.ConditionSpec: kill the entrant with
+        -- the trigger on the stack and the +1/+1 counter still lands.
+        --
+        -- The clause is a printed FAMILY, not a card or two: Scryfall
+        -- o:/(was|were) cast from|you cast it from/ o:entered, unique=cards,
+        -- 2026-08-31, nine printings, of which eight state it as an intervening "if"
+        -- (Fblthp, the Lost is the ninth, whose "if" opens a second sentence and so is
+        -- ordinary English by CR 603.4's own parenthetical; nothing prints the older
+        -- "entered the battlefield from" wording). The narrower o:"entered from"
+        -- returns eight and misses Twilight Diviner, whose clause reads "entered or
+        -- were cast from a graveyard".
+        --
+        -- Archfiend's Vessel is the one member whose clause and whose effect name the
+        -- SAME object, which is exactly why it cannot observe this: a Vessel that left
+        -- the battlefield fails CR 603.6's find and makes no Demon whichever way the
+        -- re-check answered. Every other member reads the ENTRANT and acts elsewhere --
+        -- Grist, Voracious Larva transforms Grist, Kotis, Sibsig Champion and
+        -- Breathless Knight put counters on themselves, Celes, Rune Knight puts one on
+        -- each creature you control, Extraordinary Journey draws you a card, Twilight
+        -- Diviner copies one of the entrants, Prized Amalgam returns its own card -- so
+        -- killing the entrant between the two checks tells a log read from a live-board
+        -- one.
+        Quantity.EnteredFrom inZone -> do
+          oid <- mOid
+          pids <- playersOf (InZone.player inZone)
+          owner <- Filter.owner =<< viewOf oid
+          let entered = any (\zc -> ZoneChange.from zc == InZone.zone inZone) (entriesOf oid)
+          pure (if elem owner pids && entered then 1 else 0)
+        -- CR 601.2a / 400.3 read as a 0/1: was the object this evaluation is aimed at
+        -- cast, by a player the payload's `caster` names, out of a copy of the zone its
+        -- `from` names?
+        --
+        -- Two hops rather than one, because CR 400.7 puts a whole object between the
+        -- cast and the entry: the spell the card became is ZoneChange.departed of the
+        -- stack-to-battlefield entry, and GameEvent.SpellCast files the zone under that
+        -- id (Parun.Types.SpellWasCast.zone). Nothing else records it -- the permanent
+        -- has no memory of the spell's origin.
+        --
+        -- THREE questions the rules distinguish, answered off TWO references: whose
+        -- copy of the zone, who owns the card, and who cast the spell. The first two
+        -- are one question by CR 400.3, which puts a card only in its OWNER's library,
+        -- hand or graveyard, and CR 400.1's shared zones can only take
+        -- PlayerRef.Relative AnyPlayer (Parun.Codec.InZone.undividedShared) where both conjuncts
+        -- go vacuous; that pair is `from`, read exactly as EnteredFrom reads its own.
+        -- CR 601.2a's caster is `caster`, and it really does come apart from the other
+        -- two: Tinybones, the Pickpocket casts a nonland permanent card out of the
+        -- graveyard of the player it damaged, so Breathless Knight's "you cast it from
+        -- A graveyard" is Relative You over Relative AnyPlayer's graveyards and its two halves
+        -- disagree on that board. Fblthp, the Lost's agentless "was cast from your
+        -- library" constrains them the other way round.
+        --
+        -- All three conjuncts are PROVED there rather than fenced, which is what one
+        -- reference could not do: Parun.ConditionSpec's ForeignGraveyardCast reads one
+        -- such cast with three cards at once, and each conjunct is the only thing
+        -- answering for one of them -- the Knight's counter for the zone, the Vessel's
+        -- absent Demon for the owner, and bob's Prized Amalgam arming nothing for the
+        -- caster.
+        --
+        -- An object that reached the battlefield any OTHER way answers 0 rather than
+        -- Nothing, `spells` coming up empty: a permanent put there by an effect was not
+        -- cast at all, which is an answered question and the disjunct's other half
+        -- (EnteredFrom) is what covers it.
+        Quantity.WasCastFrom castFrom -> do
+          oid <- mOid
+          let inZone = CastFrom.from castFrom
+          pids <- playersOf (InZone.player inZone)
+          casters <- playersOf (CastFrom.caster castFrom)
+          owner <- Filter.owner =<< viewOf oid
+          -- CR 400.7d's "as it resolved": the arrival must be the spell's own
+          -- resolution, so a countered card Desertion put onto the battlefield
+          -- instead reads as not cast.
+          let spells =
+                [ ZoneChange.departed zc
+                | GameEvent.Moved m <- fmap LoggedEvent.event (Foldable.toList (GameState.events gs)),
+                  let zc = Moved.change m,
+                  ZoneChange.object zc == oid,
+                  ZoneChange.from zc == Zone.Stack,
+                  ZoneChange.to zc == Zone.Battlefield,
+                  Moved.duringResolution m
+                ]
+              castFromZone cast =
+                elem (SpellWasCast.spell cast) spells
+                  && SpellWasCast.zone cast == Just (InZone.zone inZone)
+                  && elem (SpellWasCast.player cast) casters
+              wasCast = any (maybe False castFromZone . Game.castOf . LoggedEvent.event) (GameState.events gs)
+          pure (if elem owner pids && wasCast then 1 else 0)
+        -- CR 509.1h's declaration: how many creatures are blocking the object this
+        -- evaluation is aimed at, less the skipped count, floored at 0 -- one for rule
+        -- 702.23a's "beyond the first", none for Gang of Elk's "each creature
+        -- blocking it". A blocked creature whose blockers have all left reads 0
+        -- either way, which is why the skip is a parameter and not a + 1.
+        --
+        -- Read LIVE off Combat.blockers rather than through the injected view, combat
+        -- being game state rather than a characteristic -- so an object CR 608.2h would
+        -- answer for still answers here while the declaration stands. What fixes the
+        -- number in time is the CALLER: Projection.freezeQuantities evaluates this as
+        -- the ability resolves, which is CR 702.23b's "calculated only once per combat".
+        --
+        -- Nothing only for an evaluation aimed at no object -- a member of an
+        -- Aggregation.Greatest over Scope.InHistory. An object nobody blocked is in no
+        -- entry of the map and answers 0, which is a number and not a failure.
+        --
+        -- Only blockers still on the battlefield count: CR 506.4 removes one that
+        -- leaves from combat, and Parun.Engine.Departure leaves its id in the set.
+        -- The scenario gang-of-elk-stays-5-4-when-its-blockers-leave is the proof.
+        Quantity.BlockersBeyond skipped ->
+          fmap
+            ( \oid ->
+                let blocking = Set.filter (`Set.member` GameState.battlefield gs) (Map.findWithDefault Set.empty oid (Combat.blockers (GameState.combat gs)))
+                 in max 0 (toInteger (Set.size blocking) - toInteger skipped)
+            )
+            mOid
+        -- CR 702.184c: Power's arm, with the substitution asked first. `perspective`
+        -- is CR 109.5's "you" of the ability being resolved -- its controller (CR
+        -- 113.8), unmoved by the re-aiming arms (AgainstSlot,
+        -- AgainstExiledPile), which only ever repoint `mOid`/`mView`, and unmoved
+        -- by whoever controls the stationing permanent
+        -- NOW: Tapestry Warden's ruling gates on the station ability's controller
+        -- controlling the Warden as it resolves. grantsStationToughnessFor walks the
+        -- battlefield through the same `viewOf` every other arm reads, so a snapshot
+        -- caller (CR 608.2h) answers False rather than reaching for a live board it was
+        -- never handed.
+        Quantity.StationMeasure ->
+          let substitutes = maybe False (grantsStationToughnessFor viewOf gs) (Filter.perspective context)
+              greater = case (mView >>= Filter.toughness, mView >>= Filter.power) of
+                (Just t, Just p) -> t > p
+                _ -> False
+           in if substitutes && greater then mView >>= Filter.toughness else mView >>= Filter.power
+
+-- CR 702.184c: does `you` control ANY permanent that grants the toughness
+-- substitution -- Modification.GrantsStationToughness's read, folded to the
+-- per-player question Quantity.StationMeasure asks. False for a caller whose
+-- `viewOf` cannot see the battlefield (a snapshot's own rebuild): rule 702.184c
+-- asks about a LIVE grant, and that caller has no live board to walk.
+grantsStationToughnessFor :: Count.ViewOf -> GameState -> PlayerId.PlayerId -> Bool
+grantsStationToughnessFor viewOf gs you =
+  any
+    (maybe False (\v -> Filter.controller v == Just you && Filter.grantsStationToughness v) . viewOf)
+    (Set.toList (GameState.battlefield gs))
+
+-- Is this declared attack an attack on one of that player's OPPONENTS? CR 506.3
+-- gives three things a creature can attack and rule 702.121a counts only the
+-- first: attacking an opponent's planeswalker or a battle they protect is not
+-- attacking that opponent, which melee's own ruling states outright.
+--
+-- CR 102.3's opponents, the reading Parun.Types.PlayerScope.Related Opponent and
+-- Count.playersFor already share: every player not on that player's team, which
+-- at two seats (CR 102.2) and in a free-for-all (CR 806.1) is every other player.
+attackedOpponent :: Teams.Teams -> PlayerId.PlayerId -> AttackTarget.AttackTarget -> Bool
+attackedOpponent teams pid target = case target of
+  AttackTarget.OfPlayer other -> Teams.areOpponents teams pid other
+  AttackTarget.OfPlaneswalker _ -> False
+  AttackTarget.OfBattle _ -> False
+
+-- CR 107.1 / 107.1a: half of a number, as an integer, rounded the way the card
+-- says. `div` floors and `negate . div (negate x)` is its ceiling, so both
+-- directions mean the neighbouring integer rather than "away from zero" -- see
+-- Parun.Types.Rounding, which is where that reading is argued.
+halve :: Rounding.Rounding -> Integer -> Integer
+halve rounding n = case rounding of
+  Rounding.Down -> div n 2
+  Rounding.Up -> negate (div (negate n) 2)
+
+-- CR 107.1: a calculation over its operands' values. Times is integral on both
+-- sides, so nothing rounds; Negate has no floor here, CR 107.1b's "zero is used
+-- instead" being the readers' to apply.
+calculate :: Arithmetic.Arithmetic Integer -> Integer
+calculate arithmetic = case arithmetic of
+  Arithmetic.Plus (Plus.MkPlus a b) -> a + b
+  Arithmetic.Halved (Halved.MkHalved rounding a) -> halve rounding a
+  Arithmetic.Times (Times.MkTimes factor a) -> toInteger factor * a
+  Arithmetic.Negate a -> negate a
+
+-- CR 208.2a, last sentence: an undeterminable number is 0, including inside a
+-- calculation. TOTAL where evaluate is partial -- an Integer, never a Maybe.
+--
+-- The recursion through Plus is what "inside a calculation" buys, and it is not
+-- the same answer as substituting at the top: Tarmogoyf's printed 1+* is 1 when
+-- its count cannot be determined, because it is the COUNT that becomes 0 and
+-- not the sum. Every Parun.Types.Arithmetic calculation descends for that one
+-- reason -- but only Plus's descent changes an answer on its own. Half of CR
+-- 208.2a's substituted 0 is 0 whichever way it rounds, so Malignus, whose whole
+-- CDA is a Halved, reads 0 with no opponents either way; a multiple of that 0 is
+-- 0 as well, and no printed characteristic-defining P/T contains a Negate at
+-- all. Those three descents are consistency rather than a card's behaviour -- a
+-- Times wrapping a Plus would differ, and no printed box holds one.
+--
+-- SCOPED TO THE CHARACTERISTIC-DEFINING ABILITY, as CR 208.2a is: the caller is
+-- Projection.applyCharacteristicPT, which layer 7a runs for an object in any
+-- zone (CR 604.3 makes the ability function in all zones), and every other reader
+-- of a quantity must keep evaluate's honest Nothing, since no rule tells those to
+-- invent a number.
+--
+-- It does NOT descend into a Count, and does not need to: an undeterminable
+-- count IS the number CR 208.2a is talking about, so the 0 goes in whole here
+-- and Parun.Engine.Count.aggregate stays free to answer Nothing for non-CDA
+-- readers.
+determine :: Count.ViewOf -> Filter.Context -> GameState -> ObjectId -> Quantity -> Integer
+determine viewOf context gs oid = determineWith (evaluate viewOf context gs oid)
+
+-- determine with the evaluator INJECTED, which is the whole of what determine
+-- does with its four board arguments. The second caller is
+-- Parun.Engine.Resolve.Effect.bakeTokenCharacteristics, which has to evaluate a created
+-- token's box against the CREATING object (Quantity.evaluateFor's two ids) and so
+-- cannot reach the one-id evaluate above.
+determineWith :: (Quantity -> Maybe Integer) -> Quantity -> Integer
+determineWith eval quantity = case quantity of
+  Quantity.Arithmetic arithmetic -> calculate (fmap (determineWith eval) arithmetic)
+  _ -> Maybe.fromMaybe 0 (eval quantity)
+
+-- CR 107.3m: substitute the value of X that was announced for the SPELL that
+-- became this permanent into a quantity an enters-the-battlefield replacement
+-- effect reads -- "if an object's enters-the-battlefield triggered ability or
+-- replacement effect refers to X, and the spell that became that object as it
+-- resolved had a value of X chosen for any of its costs, the value of X for that
+-- ability is the same as the value of X for that spell". Protean Hydra's "this
+-- creature enters with X +1/+1 counters on it" is the pool's reader.
+--
+-- A SUBSTITUTION at the entry site rather than a fallback inside
+-- evaluateAgainst's InSlot arm, because rule 107.3m states the exception and its
+-- limit in one sentence: "although the value of X for that permanent is 0". A
+-- fallback would answer the announcement everywhere the permanent is asked --
+-- for an activated ability of its own, where that same clause says 0.
+--
+-- Cost.substituteX's twin, one type over. The descent is Star.substituteStar's, for
+-- the same reason: a composed quantity (1 + X) is still a reader of X -- proved
+-- by the scenario banquet-guests-enters-with-twice-the-announced-x. No
+-- descent into Count -- its per-member quantity is read against ANOTHER object,
+-- so an X inside it would be that object's and not this entry's -- nor into
+-- AgainstSlot or AgainstExiledPile, which re-aim the fold the same way.
+substituteAnnouncedX :: Natural -> Quantity -> Quantity
+substituteAnnouncedX n quantity = case quantity of
+  Quantity.InSlot slot | slot == Binding.variableX -> Quantity.Literal (toInteger n)
+  Quantity.Arithmetic arithmetic -> Quantity.Arithmetic (fmap (substituteAnnouncedX n) arithmetic)
+  _ -> quantity
+
+-- QuantitySlot.slots split by WHICH HALF of the binding the read is of: the
+-- subset it reports that names an OBJECT. Exactly the AgainstSlot arms, which aim an inner
+-- number at the object a slot names and reach Filter.slotOneObject to find it --
+-- and that declines a slot naming several rather than picking one of them
+-- (Binding.onlyOne's doctrine), so such a read is damaged by a plural slot.
+--
+-- The difference from QuantitySlot.slots is the InSlot arm, which reads the
+-- slot's AMOUNT (Binding.amountOf, see evaluateAgainst above) and reaches
+-- slotOneObject on no
+-- road at all. Parun.Types.SlotName is one flat namespace, so a card MAY name an
+-- amount slot what a plural target slot is named; classifying that read as a
+-- singular OBJECT read is what would reject such a card for a reason that is not
+-- about it; see #2774. Resolve.quantitySlots is where the two halves are rejoined,
+-- as presence for the D4 dataflow lint and arity for the count lint.
+--
+-- Exhaustive with no fallthrough, slotsAreExhaustive's shape and for its reason:
+-- a new arm naming a slot must answer here rather than inherit that function's
+-- answer.
+objectSlots :: Quantity -> Set SlotName
+objectSlots quantity = case quantity of
+  -- The amount reader, left out for the reason above.
+  Quantity.InSlot _ -> Set.empty
+  -- CR 601.2d's part, left out for WasBound's reason below: it reads the
+  -- slot's division and reaches Filter.slotOneObject on no road.
+  Quantity.Share _ -> Set.empty
+  -- CR 701.4b's reader, left out for the SAME reason from the other side: it
+  -- names an object slot but reaches Filter.slotOneObject on no road, asking
+  -- only whether the slot is bound, so a plural slot does not damage it.
+  Quantity.WasBound _ -> Set.empty
+  Quantity.BoundCount _ -> Set.empty
+  Quantity.UniqueVowelsOnSticker _ -> Set.empty
+  Quantity.VotesReceived _ -> Set.empty
+  Quantity.Literal _ -> Set.empty
+  Quantity.Measure _ -> Set.empty
+  Quantity.Intensity -> Set.empty
+  Quantity.Star -> Set.empty
+  -- DESCENT: a calculation's operands are card text like any other, and
+  -- QuantitySlot.slots descends into them the same way.
+  Quantity.Arithmetic arithmetic -> foldMap objectSlots arithmetic
+  -- DESCENT into a Greatest's or a Total's per-member number, which may aim at a
+  -- slot of its own; the other aggregations carry no number to ask.
+  Quantity.Count c -> QuantitySlot.foldCount objectSlots c
+  -- Every remaining arm names no slot at all, QuantitySlot.slots saying the same
+  -- of each: the references they carry are PlayerRefs, which name a target slot
+  -- neither walk reports. QuantitySlot.nestedRefs is the walk that does, and
+  -- Resolve.Slots.quantitySlots folds it, so the read is not lost.
+  Quantity.ManaCount _ -> Set.empty
+  Quantity.LifeTotal _ -> Set.empty
+  Quantity.StartingLifeTotal _ -> Set.empty
+  Quantity.Speed _ -> Set.empty
+  Quantity.IsMonarch _ -> Set.empty
+  Quantity.HasPlayerDesignation {} -> Set.empty
+  Quantity.IsStartingPlayer _ -> Set.empty
+  Quantity.IsActivePlayer _ -> Set.empty
+  Quantity.PlayerCounters {} -> Set.empty
+  Quantity.Devotion {} -> Set.empty
+  Quantity.PartySize _ -> Set.empty
+  Quantity.ObjectCounters _ -> Set.empty
+  Quantity.ObjectCountersOfAnyKind -> Set.empty
+  Quantity.LettersOnNameStickers _ -> Set.empty
+  Quantity.NameStickers -> Set.empty
+  Quantity.PowerOfStickers -> Set.empty
+  Quantity.ToughnessOfStickers -> Set.empty
+  Quantity.HasDesignation _ -> Set.empty
+  Quantity.DesignationValue _ -> Set.empty
+  Quantity.StoredResultsOfSameValue -> Set.empty
+  Quantity.ClassLevel -> Set.empty
+  Quantity.WasForetold -> Set.empty
+  Quantity.TributeWasPaid -> Set.empty
+  -- CR 601.2b: the keywords it designates are identifiers Keyword.designates
+  -- matches, never instructions this traversal descends into.
+  Quantity.TimesPaid _ -> Set.empty
+  Quantity.CastUsing _ -> Set.empty
+  Quantity.TagWasSpent {} -> Set.empty
+  Quantity.TagWasSpentOfOwnColor {} -> Set.empty
+  Quantity.ChosenColorsItIs -> Set.empty
+  Quantity.ManaSpent -> Set.empty
+  Quantity.WasToken -> Set.empty
+  Quantity.WasAttacking -> Set.empty
+  Quantity.WasBlocking -> Set.empty
+  Quantity.WasBlockedThisTurn -> Set.empty
+  Quantity.ControlGainedSinceLastUpkeep _ -> Set.empty
+  Quantity.PlayedBy _ -> Set.empty
+  Quantity.DamageDealtToThisTurn -> Set.empty
+  Quantity.OpponentsAttacked _ -> Set.empty
+  Quantity.AttackersDeclaredThisTurn _ -> Set.empty
+  Quantity.AttackersDeclaredThisCombat -> Set.empty
+  Quantity.AttackedInLastTurnOf _ -> Set.empty
+  Quantity.AttackersInTheirLastTurn _ -> Set.empty
+  Quantity.CardsDiscardedThisTurn _ -> Set.empty
+  Quantity.CardsDrawnThisTurn _ -> Set.empty
+  Quantity.BendingsThisTurn _ -> Set.empty
+  Quantity.LifeGainedThisTurn _ -> Set.empty
+  Quantity.PlayersDealtDamageThisTurn _ -> Set.empty
+  Quantity.DamageDealtToPlayersThisTurn _ -> Set.empty
+  Quantity.SpellsCastLastTurn _ -> Set.empty
+  Quantity.SpellsCastThisTurn _ -> Set.empty
+  Quantity.TimesResolvedThisTurn -> Set.empty
+  Quantity.SpellsCastBefore -> Set.empty
+  Quantity.PermanentsDiedThisTurn -> Set.empty
+  Quantity.SpellsCastUsingThisTurn _ -> Set.empty
+  Quantity.SubgamesThisMatch -> Set.empty
+  Quantity.DungeonsCompleted _ -> Set.empty
+  Quantity.CommanderCasts _ -> Set.empty
+  Quantity.CompletedDungeon {} -> Set.empty
+  Quantity.EnteredThisTurn -> Set.empty
+  Quantity.EnteredFrom _ -> Set.empty
+  Quantity.WasCastFrom _ -> Set.empty
+  Quantity.BlockersBeyond _ -> Set.empty
+  -- Power's answer: it names no object at all and takes the one the evaluation
+  -- is aimed at, so there is no slot here for AgainstSlot to have named.
+  Quantity.StationMeasure -> Set.empty
+  -- The one arm with an answer, and DESCENT beside it: the payload is evaluated
+  -- against the named object and may aim at a further slot of its own.
+  Quantity.AgainstSlot (AgainstSlot.MkAgainstSlot slot inner) -> Set.insert slot (objectSlots inner)
+  -- DESCENT and no slot of its own: the objects come from GameState.exiledWith
+  -- rather than from a binding, so this arm names none, and the payload it aims
+  -- at them may still name one.
+  Quantity.AgainstExiledPile a -> objectSlots (AgainstExiledPile.quantity a)
+  Quantity.AgainstLastCardExiledWith l -> objectSlots (AgainstLastCardExiledWith.quantity l)
+
+-- CR 603.3b: is QuantitySlot.slots the WHOLE of what evaluating this quantity
+-- reads off the resolving object's bindings? It is not wherever
+-- QuantitySlot.nestedRefs finds a read that names a slot -- a nested PlayerRef that reads one, or a scope that
+-- names one outright. Resolve.slotsAreExhaustive is the sole caller and carries
+-- the whole account.
+slotsAreExhaustive :: Quantity -> Bool
+slotsAreExhaustive = all (either playerRefIsSlotless (const False)) . QuantitySlot.nestedRefs
+
+-- Only InSlot names a slot; the other three are answered from the evaluation
+-- context alone (Resolve.playerRefSlots says the same thing as a set).
+playerRefIsSlotless :: PlayerRef.PlayerRef -> Bool
+playerRefIsSlotless ref = case ref of
+  -- The exclusion names a slot, so this reads one -- InSlot's answer, even though
+  -- the slot decides who is left OUT rather than who is in.
+  PlayerRef.EachPlayerExcept _ -> False
+  -- The arm above's answer, for its reason.
+  PlayerRef.EachOpponentExcept _ -> False
+  PlayerRef.Relative _ -> True
+  PlayerRef.InSlot _ -> False
+  -- InSlot's answer: this reads a slot too, and every one of them.
+  PlayerRef.EachInSlot _ -> False
+  -- The baked half names its player outright, so it reads no slot at all. A card
+  -- cannot write one (Parun.CardSpec's sweep), so this arm is only ever reached
+  -- through a stored Expiry.While.
+  PlayerRef.Specific _ -> True
+  -- The fold's candidate names no slot either: it is read off the view the fold
+  -- hands the evaluation, never off a binding.
+  PlayerRef.Candidate -> True
+  -- InSlot's answer, and for its reason: the slot is a TARGET slot, which
+  -- Resolve.Slots.quantitySlots reports by folding nestedRefs.
+  PlayerRef.ControllerOfBound _ -> False
+  -- The arm above's answer, one field over: the object is named by a slot.
+  PlayerRef.OwnerOfBound _ -> False
+  -- Specific's answer: the baked halves name their object outright.
+  PlayerRef.ControllerOfObject _ -> True
+  PlayerRef.OwnerOfObject _ -> True
+  -- The arm above's answer: the object is named by a slot.
+  PlayerRef.ChosenPlayerOfBound _ _ -> False
+  -- InSlot's answer again: the player attacked is named by a slot.
+  PlayerRef.Attacking _ -> False
+  -- A fact about the board, Relative's answer: no slot is read.
+  PlayerRef.Superlative _ -> True
+  PlayerRef.InRole _ -> True
+
+-- CR 611.2b: replace every PlayerRef.InSlot this quantity names with the baked
+-- PlayerRef.Specific arm, off the players the resolution's bindings name, and
+-- every ControllerOfBound or OwnerOfBound with its baked object arm, off the
+-- objects they name. What
+-- makes a "for as long as" condition that says "that player" answerable AFTER
+-- its resolution: Parun.Engine.Expiry.arm bakes as the duration begins, so the
+-- stored condition names a seat rather than a slot on an object whose bindings
+-- the sweep cannot reach. Parun.Engine.Filter.bakeBound is the same move for a
+-- target slot's atoms, and carries the argument for baking over threading.
+--
+-- The atom is LEFT STANDING when the environment names no player (or object) for the slot,
+-- which is bakeBound's posture there too: Count.playersFor then answers Nothing
+-- for it, Condition.holds collapses that to False, and CR 611.2b's duration
+-- never starts -- rather than starting on a reference nothing can resolve.
+--
+-- Exhaustive, QuantitySlot.slots' posture: a new arm carrying a PlayerRef must
+-- fail to compile here rather than silently keep an unbaked one -- which is what
+-- Parun.Engine.QuantitySlot.mapPlayerRefs is, and this is one instance of it.
+bakeBound :: Map.Map SlotName PlayerId.PlayerId -> Map.Map SlotName ObjectId -> Quantity -> Quantity
+bakeBound players objects =
+  QuantitySlot.mapPlayerRefs
+    (bakePlayerRef players objects)
+    -- Both halves: the Scope says whose zone or which players, and an
+    -- Aggregation.Greatest's per-member quantity may hide a reference of its own.
+    -- Terminating for evaluate's reason -- a Greatest's payload is a strictly
+    -- smaller subterm.
+    (\c -> (QuantitySlot.mapCount (bakeBound players objects) c) {Count.Type.scope = QuantitySlot.mapScope (bakePlayerRef players objects) (Count.Type.scope c)})
+
+-- The player a per-player instruction is CURRENTLY applying to, substituted for
+-- Parun.Types.PlayerRef.Candidate -- Shahrazad's "each player who doesn't win the
+-- subgame loses half THEIR life", where the number is read against each payer's
+-- own life total as the effect resolves rather than computed once and shared.
+--
+-- Candidate is the reference a card writes for "whichever player this reading is
+-- aimed at", and Parun.Engine.Count answers it inside a Scope.OverPlayers fold off
+-- the candidate's view. An effect applying to a set of players is the same
+-- question with no view to hand, so it is answered by substitution instead --
+-- which is exactly bakeBound's move, one reference over.
+--
+-- A nested Count's SCOPE is substituted and its PER-MEMBER QUANTITY is not, which
+-- is the point of the parameter. The two halves ask different questions:
+--
+--   * a scope names whose copy of a per-player zone the fold reads (CR 400.1) --
+--     Nature's Resurgence's "each creature card in THEIR graveyard" is that
+--     reference, and Count.playersFor answers a bare candidate with Nothing;
+--   * a per-member quantity is read against the member the fold has reached, so
+--     substituting this candidate inside would make Malignus' "the highest life
+--     total among your opponents" read the recipient's life in every member.
+--
+-- Control is the question this reference cannot ask: the battlefield is shared
+-- (CR 400.1) and Game.zoneMembers slices it by OWNER (see #161), so "each creature
+-- THEY CONTROL" is Filter.ControlledByRecipient off Filter.Context's recipient
+-- instead. Parun.Engine.Resolve.Effect.evaluateForRecipient supplies both.
+forCandidate :: PlayerId.PlayerId -> Quantity -> Quantity
+forCandidate pid =
+  let substitute ref = case ref of
+        PlayerRef.Candidate -> PlayerRef.Specific pid
+        PlayerRef.EachPlayerExcept _ -> ref
+        PlayerRef.EachOpponentExcept _ -> ref
+        PlayerRef.Relative _ -> ref
+        PlayerRef.InSlot _ -> ref
+        PlayerRef.EachInSlot _ -> ref
+        PlayerRef.Specific _ -> ref
+        PlayerRef.ControllerOfBound _ -> ref
+        PlayerRef.OwnerOfBound _ -> ref
+        PlayerRef.ControllerOfObject _ -> ref
+        PlayerRef.OwnerOfObject _ -> ref
+        PlayerRef.ChosenPlayerOfBound _ _ -> ref
+        PlayerRef.Attacking _ -> ref
+        PlayerRef.Superlative _ -> ref
+        PlayerRef.InRole _ -> ref
+   in QuantitySlot.mapPlayerRefs substitute (\c -> c {Count.Type.scope = QuantitySlot.mapScope substitute (Count.Type.scope c)})
+
+-- One reference, baked. The whole of the substitution: every arm above funnels
+-- through this, so what a slot means is stated once.
+bakePlayerRef :: Map.Map SlotName PlayerId.PlayerId -> Map.Map SlotName ObjectId -> PlayerRef.PlayerRef -> PlayerRef.PlayerRef
+bakePlayerRef players objects ref = case ref of
+  PlayerRef.InSlot slot -> maybe ref PlayerRef.Specific (Map.lookup slot players)
+  -- LEFT STANDING, EachPlayerExcept's posture below and for its reason: this
+  -- names a SET and PlayerRef.Specific names one seat, so there is nothing to
+  -- bake to. Every scalar this function traverses reads exactly one player, so
+  -- the reference answers Nothing baked or not.
+  PlayerRef.EachInSlot _ -> ref
+  -- LEFT STANDING, as there is nothing to bake TO: PlayerRef.Specific names one
+  -- seat and this names the rest of the table. It costs nothing either way,
+  -- since every scalar this function traverses reads exactly one player (see
+  -- the LifeTotal arm above) and so answers Nothing for this reference baked or
+  -- not.
+  PlayerRef.EachPlayerExcept _ -> ref
+  -- LEFT STANDING, the arm above's posture and for its reason.
+  PlayerRef.EachOpponentExcept _ -> ref
+  PlayerRef.Relative _ -> ref
+  PlayerRef.Specific _ -> ref
+  -- Nothing to bake: the candidate is supplied by whichever fold is running when
+  -- the quantity is evaluated, so a stored condition carrying one still resolves
+  -- it the same way. What baking fixes is a reference to the RESOLUTION's
+  -- bindings, which this is not.
+  PlayerRef.Candidate -> ref
+  -- CR 611.2b / 108.4: baked to the OBJECT the slot names rather than to a seat,
+  -- since control can change while the stored condition is checked: the
+  -- reference keeps asking who controls that object now. LEFT STANDING where the
+  -- slot names no one object, InSlot's posture above.
+  PlayerRef.ControllerOfBound slot -> maybe ref PlayerRef.ControllerOfObject (Map.lookup slot objects)
+  -- CR 108.3's owner, the arm above's bake one word over.
+  PlayerRef.OwnerOfBound slot -> maybe ref PlayerRef.OwnerOfObject (Map.lookup slot objects)
+  PlayerRef.ControllerOfObject _ -> ref
+  PlayerRef.OwnerOfObject _ -> ref
+  -- LEFT STANDING: not implemented, a stored condition reading the player an
+  -- object chose, which goes unanswered and ends (#4833).
+  PlayerRef.ChosenPlayerOfBound _ _ -> ref
+  -- LEFT STANDING: the slot this names holds a PLAYER, but what the reference
+  -- reads is the live combat record, which no baking can fix in place.
+  PlayerRef.Attacking _ -> ref
+  -- Nothing to bake: the set is read off the live board, Relative's posture.
+  PlayerRef.Superlative _ -> ref
+  PlayerRef.InRole _ -> ref
+
+-- Does this quantity read CR 601.2b's announced X? Since #14 retired X's
+-- dedicated constructor, that read is a Quantity.InSlot naming
+-- Binding.variableX, and it can sit anywhere inside a quantity rather than only
+-- at its root -- so answering needs the same recursion QuantitySlot.slots has,
+-- and an equality test against a bare X does not answer it at all.
+--
+-- Resolve.readsX is the one caller: it asks "does this card read X?" for the lint
+-- that pairs a read against the cost's {X} (CR 107.3, CR 107.3a, CR 118.4).
+-- Vitalizing Cascade's "X plus 3" is the card that distinguishes the two
+-- answers.
+--
+-- Written out arm by arm rather than as a filter over QuantitySlot.slots, for
+-- that function's own reason: a new Quantity constructor must make its author
+-- answer "does this read X?" explicitly, rather than inherit whatever the other
+-- function decided.
+readsX :: Quantity -> Bool
+readsX quantity = case quantity of
+  Quantity.InSlot slot -> slot == Binding.variableX
+  -- Never X: CR 601.2d's part names a target slot, whose total is the slot's
+  -- own `divided` quantity -- read there, not here.
+  Quantity.Share _ -> False
+  -- Never X: CR 601.2b's announcement binds an AMOUNT, and this arm asks whether
+  -- a slot names an OBJECT, which Binding.variableX never does.
+  Quantity.WasBound _ -> False
+  Quantity.BoundCount _ -> False
+  Quantity.UniqueVowelsOnSticker _ -> False
+  Quantity.VotesReceived _ -> False
+  -- The whole point of the recursion: Vitalizing Cascade's "X plus 3" is
+  -- Plus X (Literal 3), and Toxic Deluge's "-X" is Negate X, each reading X
+  -- without being equal to it.
+  Quantity.Arithmetic arithmetic -> any readsX arithmetic
+  -- Terminating for the reason QuantitySlot.overSlots' Count arm is: a Greatest's
+  -- payload is a strictly smaller subterm.
+  Quantity.Count c -> QuantitySlot.anyCount readsX c
+  -- Every remaining arm is a LEAF holding no Quantity, so none can hide an X.
+  -- The ten references below (ManaCount's, LifeTotal's, StartingLifeTotal's,
+  -- Speed's, IsMonarch's, HasPlayerDesignation's, IsStartingPlayer's,
+  -- IsActivePlayer's, PlayerCounters', Devotion's) are PlayerRefs, whose InSlot names a TARGET slot rather than an
+  -- amount one, and X is only ever an amount.
+  Quantity.Literal _ -> False
+  Quantity.Measure _ -> False
+  Quantity.Intensity -> False
+  Quantity.Star -> False
+  Quantity.ManaCount _ -> False
+  Quantity.LifeTotal _ -> False
+  Quantity.StartingLifeTotal _ -> False
+  Quantity.Speed _ -> False
+  Quantity.IsMonarch _ -> False
+  Quantity.HasPlayerDesignation {} -> False
+  Quantity.IsStartingPlayer _ -> False
+  Quantity.IsActivePlayer _ -> False
+  Quantity.PlayerCounters {} -> False
+  Quantity.Devotion {} -> False
+  Quantity.PartySize _ -> False
+  Quantity.ObjectCounters _ -> False
+  Quantity.ObjectCountersOfAnyKind -> False
+  Quantity.LettersOnNameStickers _ -> False
+  Quantity.NameStickers -> False
+  Quantity.PowerOfStickers -> False
+  Quantity.ToughnessOfStickers -> False
+  Quantity.HasDesignation _ -> False
+  Quantity.DesignationValue _ -> False
+  Quantity.StoredResultsOfSameValue -> False
+  Quantity.ClassLevel -> False
+  Quantity.WasForetold -> False
+  Quantity.TributeWasPaid -> False
+  -- CR 601.2b: the keywords it designates are identifiers Keyword.designates
+  -- matches, never instructions this traversal descends into.
+  Quantity.TimesPaid _ -> False
+  Quantity.CastUsing _ -> False
+  Quantity.TagWasSpent {} -> False
+  Quantity.TagWasSpentOfOwnColor {} -> False
+  Quantity.ChosenColorsItIs -> False
+  Quantity.ManaSpent -> False
+  Quantity.WasToken -> False
+  Quantity.WasAttacking -> False
+  Quantity.WasBlocking -> False
+  Quantity.WasBlockedThisTurn -> False
+  Quantity.ControlGainedSinceLastUpkeep _ -> False
+  Quantity.PlayedBy _ -> False
+  Quantity.DamageDealtToThisTurn -> False
+  Quantity.OpponentsAttacked _ -> False
+  Quantity.AttackersDeclaredThisTurn _ -> False
+  Quantity.AttackersDeclaredThisCombat -> False
+  Quantity.AttackedInLastTurnOf _ -> False
+  Quantity.AttackersInTheirLastTurn _ -> False
+  Quantity.CardsDiscardedThisTurn _ -> False
+  Quantity.CardsDrawnThisTurn _ -> False
+  Quantity.BendingsThisTurn _ -> False
+  Quantity.LifeGainedThisTurn _ -> False
+  Quantity.PlayersDealtDamageThisTurn _ -> False
+  Quantity.DamageDealtToPlayersThisTurn _ -> False
+  Quantity.SpellsCastLastTurn _ -> False
+  Quantity.SpellsCastThisTurn _ -> False
+  Quantity.TimesResolvedThisTurn -> False
+  Quantity.SpellsCastBefore -> False
+  Quantity.PermanentsDiedThisTurn -> False
+  Quantity.SpellsCastUsingThisTurn _ -> False
+  Quantity.SubgamesThisMatch -> False
+  Quantity.DungeonsCompleted _ -> False
+  Quantity.CommanderCasts _ -> False
+  Quantity.CompletedDungeon {} -> False
+  Quantity.EnteredThisTurn -> False
+  Quantity.EnteredFrom _ -> False
+  Quantity.WasCastFrom _ -> False
+  Quantity.BlockersBeyond _ -> False
+  -- A leaf, Power's answer: it holds no Quantity of its own to hide X inside.
+  Quantity.StationMeasure -> False
+  -- Not a leaf: its payload is a whole Quantity and may read X, the same recursion
+  -- Plus above needs. Its own SlotName names a target rather than an amount, and X
+  -- is only ever an amount.
+  Quantity.AgainstSlot (AgainstSlot.MkAgainstSlot _ inner) -> readsX inner
+  -- AgainstSlot's answer: not a leaf, and its payload may read X. It names no
+  -- slot at all, so the target/amount distinction above does not arise.
+  Quantity.AgainstExiledPile a -> readsX (AgainstExiledPile.quantity a)
+  Quantity.AgainstLastCardExiledWith l -> readsX (AgainstLastCardExiledWith.quantity l)
+
+-- CR 202.3: each generic symbol contributes its number, each colored or
+-- colorless symbol one, and each hybrid symbol its largest half (CR 202.3f). A
+-- land has no mana cost (CR 202.1b), so its mana value is 0 (CR 202.3a).
+manaValueOf :: Face.Face Card.Card -> Integer
+manaValueOf face = maybe 0 manaCostValue (Face.manaCost face)
+
+-- manaValueOf's arithmetic on a bare cost, for the one reader that holds a mana
+-- cost no face prints: CR 718.2's inset frame
+-- (Parun.Engine.Projection.View.withPrototype).
+manaCostValue :: ManaCost.ManaCost -> Integer
+manaCostValue (ManaCost.MkManaCost symbols) = sum (fmap symbolValue symbols)
+
+symbolValue :: ManaSymbol.ManaSymbol -> Integer
+symbolValue symbol = case symbol of
+  ManaSymbol.Generic n -> toInteger n
+  ManaSymbol.OfType _ -> 1
+  -- CR 202.3f: the largest component. Both halves of a colour/colour hybrid are
+  -- one mana, so the largest is one.
+  ManaSymbol.Hybrid {} -> 1
+  -- CR 202.3f again, but here the halves differ: {2/B}'s generic half is the
+  -- larger, so the symbol is worth 2 rather than every other typed symbol's 1.
+  ManaSymbol.MonocoloredHybrid _ -> 2
+  -- CR 202.3g, a rule of its own rather than CR 202.3f's largest component: the
+  -- other half is 2 LIFE, not 2 mana, so there is no larger component to take.
+  -- Mutagenic Growth ({G/P}) is 1, not 2.
+  ManaSymbol.Phyrexian _ -> 1
+  -- CR 202.3g again: rule 202.3g says "each Phyrexian mana symbol", and CR
+  -- 107.4f's hybrid Phyrexian symbols are Phyrexian mana symbols. One, the same
+  -- as the arm above and for the same reason -- the symbol is one mana however
+  -- it is paid.
+  ManaSymbol.HybridPhyrexian _ -> 1
+  -- CR 202.3's own sentence, with no subrule: CR 107.4h makes {S} payable with
+  -- one mana from a snow source, so Icehide Golem's mana value is 1.
+  ManaSymbol.Snow -> 1
+  -- CR 202.3e's first half: off the stack a variable's contribution to mana value
+  -- is 0. The second half needs the object's announcement:
+  -- Parun.Engine.Projection.View.withAnnouncedX.
+  ManaSymbol.Variable -> 0
+
+-- CR 107.3: how many {X} a mana cost prints. A count, since each moves the mana
+-- value by the announced X (CR 202.3e).
+variablesOf :: ManaCost.ManaCost -> Integer
+variablesOf = toInteger . length . filter (== ManaSymbol.Variable) . ManaCost.unwrap
+
+-- CR 202.2b: only a coloured mana symbol carries a colour; colourless is not a
+-- colour (CR 105.2c). A list, since a hybrid is all of its colours (CR 107.4e).
+--
+-- symbolValue's sibling, and here beside it rather than in
+-- Parun.Engine.Projection.View where it used to sit, because CR 700.5's devotion
+-- reads it from this module and the projection imports this one.
+symbolColors :: ManaSymbol.ManaSymbol -> [Color.Color]
+symbolColors symbol = case symbol of
+  ManaSymbol.OfType (ManaType.Colored c) -> [c]
+  ManaSymbol.OfType ManaType.Colorless -> []
+  ManaSymbol.Hybrid (Hybrid.MkHybrid a b) -> Maybe.mapMaybe colorOfManaType [a, b]
+  -- CR 107.4b/107.4e: a monocolored hybrid's other half is generic, so the named
+  -- half is the whole contribution.
+  ManaSymbol.MonocoloredHybrid t -> Maybe.maybeToList (colorOfManaType t)
+  -- CR 107.4f / 202.2d: Phyrexian symbols are coloured mana symbols. Total `[c]`
+  -- since Phyrexian carries a Color -- there is no colourless Phyrexian symbol.
+  ManaSymbol.Phyrexian c -> [c]
+  -- CR 107.4f: "a hybrid Phyrexian mana symbol is BOTH of its component
+  -- colors", which CR 202.2d makes the object. Tamiyo, Compleated Sage is green
+  -- and blue whichever of her {G/U/P}'s three ways paid for her.
+  ManaSymbol.HybridPhyrexian (HybridPhyrexian.MkHybridPhyrexian l r) -> [l, r]
+  -- CR 107.4h: snow is neither a colour nor a type of mana.
+  ManaSymbol.Snow -> []
+  ManaSymbol.Generic _ -> []
+  -- CR 107.3 / 202.2b: {X} is a placeholder, not a coloured mana symbol, so it
+  -- contributes nothing to CR 700.5's devotion whatever was announced for it.
+  ManaSymbol.Variable -> []
+
+-- CR 700.5: one player's devotion to a colour or combination of colours.
+--
+-- ONE QUESTION PER SYMBOL, and that is the whole content of CR 700.5's second
+-- sentence: a symbol counts once if it is ANY of the named colours, so a {B/G}
+-- counts once toward devotion to black and green rather than twice. Summing two
+-- single-colour readings would be the other answer, and it is the wrong one.
+--
+-- CR 202.1b names the permanents that have no mana cost at all -- a land, and a
+-- token whose creating effect gave it none -- so each contributes nothing; the
+-- same Nothing covers a permanent the injected view cannot describe.
+devotionOf :: Count.ViewOf -> Set Color.Color -> PlayerId.PlayerId -> GameState -> Integer
+devotionOf viewOf colors pid gs =
+  let symbolsOf oid = case viewOf oid of
+        Nothing -> []
+        Just view ->
+          if Filter.controller view == Just pid
+            then foldMap ManaCost.unwrap (Filter.manaCost view)
+            else []
+      counts symbol = any (`Set.member` colors) (symbolColors symbol)
+   in toInteger (length (concatMap (filter counts . symbolsOf) (Set.toList (GameState.battlefield gs))))
+
+-- CR 700.8a / 700.8b: how many creatures that player controls can fill
+-- distinct slots among CR 700.8's four creature types, each filling one slot at
+-- most. That is a maximum bipartite matching, not a per-type sum: a changeling
+-- fills one slot, not four. Hall's theorem settles it over the sixteen subsets
+-- of the types: a subset can be filled exactly when each of its own subsets has
+-- at least as many creatures with one of those types.
+--
+-- data/scenarios/cost/cr-700-8b-a-changeling-fills-one-party-slot-so-tazri-takes-3-off.json
+-- is what proves the matching.
+partySizeOf :: Count.ViewOf -> PlayerId.PlayerId -> GameState -> Integer
+partySizeOf viewOf pid gs =
+  let partyTypes = Set.fromList [Subtype.Cleric, Subtype.Rogue, Subtype.Warrior, Subtype.Wizard]
+      slotsOf oid = case viewOf oid of
+        Just view
+          | Filter.controller view == Just pid,
+            Set.member CardType.Creature (Filter.cardTypes view) ->
+              Set.intersection partyTypes (Filter.subtypes view)
+        _ -> Set.empty
+      members = filter (not . Set.null) (fmap slotsOf (Set.toList (GameState.battlefield gs)))
+      fillable types =
+        all
+          (\subset -> length (filter (not . Set.disjoint subset) members) >= Set.size subset)
+          (Set.toList (Set.powerSet types))
+   in toInteger (foldr (max . Set.size) 0 (filter fillable (Set.toList (Set.powerSet partyTypes))))
+
+-- CR 105.2c: colourless is not a colour, so a colourless hybrid half adds none.
+colorOfManaType :: ManaType.ManaType -> Maybe Color.Color
+colorOfManaType manaType = case manaType of
+  ManaType.Colored c -> Just c
+  ManaType.Colorless -> Nothing
+
+-- CR 702.30a's clock for one object, live or remembered: Object.controlClock
+-- while the permanent is on the battlefield, and CR 608.2h's
+-- Parun.Types.LastKnown.controlClock once CR 400.7 has deleted the incarnation
+-- that carried it. Empty for an id naming neither, which reads as "no window",
+-- Parun.Types.ControlClock's own spelling of that.
+--
+-- The live read FIRST, Parun.Engine.Target.lastKnownAdmits' ordering turned round:
+-- a permanent still on the battlefield has a clock that is still moving, and its
+-- record would be a stale one from an earlier incarnation of the same id.
+controlClockOf :: GameState -> ObjectId -> Map.Map PlayerId.PlayerId ControlClock.ControlClock
+controlClockOf gs oid = Maybe.fromMaybe Map.empty (Game.liveOrLastKnown Object.controlClock LastKnown.controlClock oid gs)
+
+-- | CR 706.8a: the greatest number of these stored results sharing one value.
+-- Grouped by VALUE alone, since Centaur of Attention's "of the same value" asks
+-- nothing of the kind of die; no stored result is 0.
+greatestOfOneValue :: Map.Map StoredResult.StoredResult Natural -> Natural
+greatestOfOneValue stored =
+  Foldable.foldl' max 0 (Map.fromListWith (+) [(StoredResult.value result, n) | (result, n) <- Map.toList stored])
+
+-- | CR 607.2a / 613.7d: of the cards in exile that an ability of the context's
+-- source exiled, the last one `criterion` matches (Game.lastExiled) --
+-- Duplicant's "the last creature card exiled with it".
+--
+-- The membership test is Quantity.AgainstExiledPile's, Game.linkedPile's
+-- OwnAbilities: data/scenarios/duplicant-ignores-what-an-acquired-ability-exiled.json
+-- proves it skips what an acquired ability exiled. Read as the context's
+-- reader (Filter.reader), a REGRESSION FENCE: no ability in data/cards/ an
+-- object can acquire reads "the last card exiled with it". Nothing when the
+-- context names no source or nothing matches.
+lastCardExiledWith :: Count.ViewOf -> Filter.Context -> GameState -> Filter.Type.Filter Keyword.Type.Keyword -> Maybe ObjectId
+lastCardExiledWith viewOf context gs criterion = do
+  src <- Filter.source context
+  let matching o = maybe False (\view -> Filter.matches context view criterion) (viewOf o)
+  Game.lastExiled (filter matching (Game.linkedPile (Filter.reader context) ExiledPile.OwnAbilities src gs)) gs

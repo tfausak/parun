@@ -4,7 +4,7 @@
 
 **Goal:** Creatures stop being interchangeable — a flier a Piker cannot block, a Sentry that cannot attack, a Centaur that attacks without tapping — completing milestone **M2a** from `docs/superpowers/specs/2026-07-16-m2a-keywords-design.md`.
 
-**Architecture:** Builds on the completed M1b engine. `Pawl.Type.Keyword` is a closed enum citing rule 702; `Card` carries `keywords :: Set Keyword`; the closed half asks `Game.keywordsOf`/`hasKeyword` and **never** reads `Card.keywords` directly (the `controllerOf` pattern). Four of the five keywords are a clause inside a function `Pawl.Combat` already has. Flying and reach land on CR 509.1's structure: evasion is a **restriction checked against the whole declaration** (509.1b), so M1b's per-pair `Map.filterWithKey` is replaced by `legalBlockDeclaration`, and an illegal declaration is rejected wholesale. **Zero opcodes. No prompt changes.**
+**Architecture:** Builds on the completed M1b engine. `Parun.Type.Keyword` is a closed enum citing rule 702; `Card` carries `keywords :: Set Keyword`; the closed half asks `Game.keywordsOf`/`hasKeyword` and **never** reads `Card.keywords` directly (the `controllerOf` pattern). Four of the five keywords are a clause inside a function `Parun.Combat` already has. Flying and reach land on CR 509.1's structure: evasion is a **restriction checked against the whole declaration** (509.1b), so M1b's per-pair `Map.filterWithKey` is replaced by `legalBlockDeclaration`, and an illegal declaration is rejected wholesale. **Zero opcodes. No prompt changes.**
 
 **Tech Stack:** GHC 9.14.1, Cabal. Library depends only on GHC boot libraries (`base`, `containers`, `text`, `transformers`) — no new dependencies. Tests use `tasty`/`tasty-hunit`/`tasty-quickcheck`; benchmark uses `tasty-bench`.
 
@@ -22,18 +22,18 @@ Read the spec before starting. The invariants it turns on:
 
 Every task's requirements implicitly include all of these:
 
-- **Warning-clean:** library, test suite, and benchmark compile under `-Weverything` minus the allow-list in `pawl.cabal`. A warning is a failure. `-Wunused-matches` is active: prefix genuinely unused binders with `_`. `-Wmonomorphism-restriction` is active: a `let` without a signature that needs one is a failure — annotate it. Check with a **clean** build (`rm -rf dist-newstyle/build/aarch64-osx/ghc-9.14.1/pawl-0.2026.7.16/{b,t,build}`) — incremental builds hide warnings.
+- **Warning-clean:** library, test suite, and benchmark compile under `-Weverything` minus the allow-list in `parun.cabal`. A warning is a failure. `-Wunused-matches` is active: prefix genuinely unused binders with `_`. `-Wmonomorphism-restriction` is active: a `let` without a signature that needs one is a failure — annotate it. Check with a **clean** build (`rm -rf dist-newstyle/build/aarch64-osx/ghc-9.14.1/parun-0.2026.7.16/{b,t,build}`) — incremental builds hide warnings.
 - **Boot libraries only** in the library (`base`, `containers`, `text`, `transformers`). No new dependencies.
 - **Haskell 2010.** The only permitted extensions are `GADTs` and `RankNTypes`, per-file.
 - **Non-punning constructors:** `Mk` prefix on newtypes and single-constructor records. Multi-constructor ADTs are written plainly.
-- **One type per module** under `Pawl.Type.<TypeName>` — **type and instances only**. Cross-type logic lives in other `Pawl.*` modules. A module never imports its parents.
+- **One type per module** under `Parun.Type.<TypeName>` — **type and instances only**. Cross-type logic lives in other `Parun.*` modules. A module never imports its parents.
 - **Derive at least `Eq` and `Show`.** `Card` derives `Ord`, so everything inside it must too.
 - **No partial functions.** `Maybe`/`Either`, never `head`/`error`/non-exhaustive matches.
 - **No list comprehensions, no backtick-infixed functions, no point-free where a `case` reads better.** `.hlint.yaml` already ignores the hints that contradict these; if HLint suggests one anyway, restructure rather than suppress.
 - **Imports:** qualified, aliased to the last component; one import group; operators unqualified.
 - **Tests:** all in `source/test-suite/Main.hs`, appended to the `testTree` list.
 - **Commits:** directly to `main`, one small complete commit per task.
-- **Module discovery:** after adding a library module run `cabal-gild --mode format --input pawl.cabal --output pawl.cabal`; never hand-edit `exposed-modules`.
+- **Module discovery:** after adding a library module run `cabal-gild --mode format --input parun.cabal --output parun.cabal`; never hand-edit `exposed-modules`.
 - **Per-task gate:** `cabal build`, then `hooky fix` and `hooky run` must pass before committing. `hooky` acts on **staged** files — `git add -A` first, or it reports "hooks skipped".
 
 **Verification commands:** build `cabal build`; all targets `cabal build all --enable-tests --enable-benchmarks`; test `cabal test`; one group `cabal test --test-options='-p "/Pattern/"'`; bench `cabal bench`; lint `hooky fix` then `hooky run`.
@@ -46,13 +46,13 @@ Every task's requirements implicitly include all of these:
 
 | File | Responsibility |
 |---|---|
-| `source/library/Pawl/Type/Keyword.hs` | the CR 702 citation enum |
+| `source/library/Parun/Type/Keyword.hs` | the CR 702 citation enum |
 
-**Modified (library):** `Pawl/Type/Card.hs`, `Pawl/Type/Subtype.hs`; `Pawl/Card.hs`, `Pawl/Game.hs`, `Pawl/Combat.hs`, `Pawl/Setup.hs`.
+**Modified (library):** `Parun/Type/Card.hs`, `Parun/Type/Subtype.hs`; `Parun/Card.hs`, `Parun/Game.hs`, `Parun/Combat.hs`, `Parun/Setup.hs`.
 
 **Modified (suites):** `source/test-suite/Main.hs`.
 
-**Untouched, deliberately:** `Pawl/Type/Prompt.hs`, `Pawl/Type/Response.hs`, `Pawl/Replay.hs`, and all eight interpreters. M2a is additive across the decision seam, unlike M1b's Task 5. If a task appears to need a prompt change, stop — that is the corner the spec's §3 exists to avoid.
+**Untouched, deliberately:** `Parun/Type/Prompt.hs`, `Parun/Type/Response.hs`, `Parun/Replay.hs`, and all eight interpreters. M2a is additive across the decision seam, unlike M1b's Task 5. If a task appears to need a prompt change, stop — that is the corner the spec's §3 exists to avoid.
 
 ## Task ordering rationale
 
@@ -67,17 +67,17 @@ Every task's requirements implicitly include all of these:
 `Keyword`, `Card.keywords`, `Game.keywordsOf`/`hasKeyword`, four new subtypes, five new printings. Nothing consumes them yet.
 
 **Files:**
-- Create: `source/library/Pawl/Type/Keyword.hs`
-- Modify: `source/library/Pawl/Type/Card.hs`, `source/library/Pawl/Type/Subtype.hs`, `source/library/Pawl/Card.hs`, `source/library/Pawl/Game.hs`, `source/test-suite/Main.hs`
+- Create: `source/library/Parun/Type/Keyword.hs`
+- Modify: `source/library/Parun/Type/Card.hs`, `source/library/Parun/Type/Subtype.hs`, `source/library/Parun/Card.hs`, `source/library/Parun/Game.hs`, `source/test-suite/Main.hs`
 
 **Interfaces:**
-- Consumes: `Pawl.Game.cardOf` (exists), M1b's `addPiker` test fixture.
+- Consumes: `Parun.Game.cardOf` (exists), M1b's `addPiker` test fixture.
 - Produces:
   - `data Keyword = Defender | Flying | Haste | Reach | Vigilance` (Eq, Ord, Show)
   - `Card` gains `keywords :: Set Keyword`
-  - `Pawl.Game.keywordsOf :: ObjectId -> GameState -> Set Keyword`
-  - `Pawl.Game.hasKeyword :: Keyword -> ObjectId -> GameState -> Bool`
-  - `Pawl.Card.birdMaidenPrinting`, `nimbleBirdstickerPrinting`, `ogreSentryPrinting`, `windseekerCentaurPrinting`, `goblinChariotPrinting :: Printing`
+  - `Parun.Game.keywordsOf :: ObjectId -> GameState -> Set Keyword`
+  - `Parun.Game.hasKeyword :: Keyword -> ObjectId -> GameState -> Bool`
+  - `Parun.Card.birdMaidenPrinting`, `nimbleBirdstickerPrinting`, `ogreSentryPrinting`, `windseekerCentaurPrinting`, `goblinChariotPrinting :: Printing`
   - test fixture `addCreature :: Printing -> PlayerId -> GameState -> (ObjectId, GameState)`
 
 All five cards are verified against Scryfall (`api.scryfall.com/cards/named?exact=…`). Do not "correct" them from memory:
@@ -95,7 +95,7 @@ All five cards are verified against Scryfall (`api.scryfall.com/cards/named?exac
 Add the import to `source/test-suite/Main.hs` (keep the block alphabetically sorted — `hooky fix` enforces it):
 
 ```haskell
-import qualified Pawl.Type.Keyword as Keyword
+import qualified Parun.Type.Keyword as Keyword
 ```
 
 Add this fixture next to `addPiker`, and **redefine `addPiker` in terms of it** so the existing call sites keep working unchanged:
@@ -227,14 +227,14 @@ m2aCardTests =
 - [x] **Step 2: Run to verify it fails**
 
 Run: `cabal test 2>&1 > /tmp/t.txt; grep -m3 error /tmp/t.txt`
-Expected: FAIL — `Pawl.Type.Keyword` not found.
+Expected: FAIL — `Parun.Type.Keyword` not found.
 
-- [x] **Step 3: Create `Pawl.Type.Keyword`**
+- [x] **Step 3: Create `Parun.Type.Keyword`**
 
-`source/library/Pawl/Type/Keyword.hs`:
+`source/library/Parun/Type/Keyword.hs`:
 
 ```haskell
-module Pawl.Type.Keyword where
+module Parun.Type.Keyword where
 
 -- CR 702. A keyword is a CITATION, not an effect: rule 702 is part of the
 -- comprehensive rules, the same as rule 506 or rule 302.
@@ -265,18 +265,18 @@ data Keyword
 
 - [x] **Step 4: Add the field to `Card`, and the subtypes**
 
-`source/library/Pawl/Type/Card.hs` — replace the whole file:
+`source/library/Parun/Type/Card.hs` — replace the whole file:
 
 ```haskell
-module Pawl.Type.Card where
+module Parun.Type.Card where
 
 import Data.Set (Set)
 import Data.Text (Text)
-import Pawl.Type.Keyword (Keyword)
-import Pawl.Type.ManaCost (ManaCost)
-import Pawl.Type.Power (Power)
-import Pawl.Type.Toughness (Toughness)
-import Pawl.Type.TypeLine (TypeLine)
+import Parun.Type.Keyword (Keyword)
+import Parun.Type.ManaCost (ManaCost)
+import Parun.Type.Power (Power)
+import Parun.Type.Toughness (Toughness)
+import Parun.Type.TypeLine (TypeLine)
 
 data Card = MkCard
   { name :: Text,
@@ -290,17 +290,17 @@ data Card = MkCard
     -- redundant -- a per-keyword fact, true of everything through M2c, and NOT
     -- true out in the tail (two Wards both trigger; Rampage stacks).
     --
-    -- The closed half must read this through Pawl.Game.keywordsOf, never
+    -- The closed half must read this through Parun.Game.keywordsOf, never
     -- directly: layer 6 grants and removes abilities at M3.
     keywords :: Set Keyword
   }
   deriving (Eq, Ord, Show)
 ```
 
-`source/library/Pawl/Type/Subtype.hs` — replace the whole file:
+`source/library/Parun/Type/Subtype.hs` — replace the whole file:
 
 ```haskell
-module Pawl.Type.Subtype where
+module Parun.Type.Subtype where
 
 -- Grows: other land types, other creature types, …
 data Subtype
@@ -316,14 +316,14 @@ data Subtype
 
 - [x] **Step 5: Add `keywords` to the existing printings**
 
-In `source/library/Pawl/Card.hs`, add `Card.keywords = Set.empty,` to **both** `Card.MkCard` records — `mountainPrinting`'s and `pikerPrinting`'s — after their `Card.toughness` line. These are the only two `Card.MkCard` sites in the repo; `-Werror` will confirm.
+In `source/library/Parun/Card.hs`, add `Card.keywords = Set.empty,` to **both** `Card.MkCard` records — `mountainPrinting`'s and `pikerPrinting`'s — after their `Card.toughness` line. These are the only two `Card.MkCard` sites in the repo; `-Werror` will confirm.
 
 - [x] **Step 6: Add the five printings**
 
-Append to `source/library/Pawl/Card.hs`. Add the import first:
+Append to `source/library/Parun/Card.hs`. Add the import first:
 
 ```haskell
-import qualified Pawl.Type.Keyword as Keyword
+import qualified Parun.Type.Keyword as Keyword
 ```
 
 ```haskell
@@ -478,12 +478,12 @@ goblinChariotPrinting =
     }
 ```
 
-- [x] **Step 7: Add the query to `Pawl.Game`**
+- [x] **Step 7: Add the query to `Parun.Game`**
 
-In `source/library/Pawl/Game.hs`, add the import:
+In `source/library/Parun/Game.hs`, add the import:
 
 ```haskell
-import Pawl.Type.Keyword (Keyword)
+import Parun.Type.Keyword (Keyword)
 ```
 
 Append, next to `controllerOf` — these belong together as "facts about an object":
@@ -493,7 +493,7 @@ Append, next to `controllerOf` — these belong together as "facts about an obje
 --
 -- A function, not a field read, and that is the whole point. Today this is
 -- provably Card.keywords of the object's printing -- nothing in M2a grants or
--- removes an ability -- so reading the field directly from Pawl.Combat would
+-- removes an ability -- so reading the field directly from Parun.Combat would
 -- compile and pass every test. It would also be wrong in a dozen call sites at
 -- once the moment Magical Hack and Humility arrive.
 --
@@ -512,7 +512,7 @@ hasKeyword keyword oid gs = Set.member keyword (keywordsOf oid gs)
 
 - [x] **Step 8: Sync, build, test**
 
-Run: `cabal-gild --mode format --input pawl.cabal --output pawl.cabal`, then `cabal build all --enable-tests --enable-benchmarks`, then `cabal test --test-options='-p "/Keyword/"'` and `cabal test --test-options='-p "/M2aCards/"'`.
+Run: `cabal-gild --mode format --input parun.cabal --output parun.cabal`, then `cabal build all --enable-tests --enable-benchmarks`, then `cabal test --test-options='-p "/Keyword/"'` and `cabal test --test-options='-p "/M2aCards/"'`.
 Expected: PASS (9 cases, then 6 cases).
 
 Then `cabal test`. Expected: all pass — nothing consumes keywords yet, so M1b's 137 are untouched.
@@ -534,7 +534,7 @@ git commit -m "Add the keyword seam and the five M2a printings"
 CR 702.3b, in `canAttack`. The unary shape.
 
 **Files:**
-- Modify: `source/library/Pawl/Combat.hs`, `source/test-suite/Main.hs`
+- Modify: `source/library/Parun/Combat.hs`, `source/test-suite/Main.hs`
 
 **Interfaces:**
 - Consumes: Task 1's `Game.hasKeyword`, `Card.ogreSentryPrinting`, `addCreature`.
@@ -613,10 +613,10 @@ Expected: FAIL — the Ogre Sentry is offered as a legal attacker.
 
 - [x] **Step 3: Implement**
 
-In `source/library/Pawl/Combat.hs`, add the import:
+In `source/library/Parun/Combat.hs`, add the import:
 
 ```haskell
-import qualified Pawl.Type.Keyword as Keyword
+import qualified Parun.Type.Keyword as Keyword
 ```
 
 Add one clause to `canAttack`, immediately after the `isCreatureObject` line:
@@ -661,7 +661,7 @@ git commit -m "Add defender"
 CR 702.20b, in `declareAttackers`. The action-modifier shape.
 
 **Files:**
-- Modify: `source/library/Pawl/Combat.hs`, `source/test-suite/Main.hs`
+- Modify: `source/library/Parun/Combat.hs`, `source/test-suite/Main.hs`
 
 **Interfaces:**
 - Consumes: Task 1's `Game.hasKeyword`, `Card.windseekerCentaurPrinting`; Task 2's `combatBoardOf`.
@@ -716,7 +716,7 @@ Expected: FAIL — the centaur is tapped.
 
 - [x] **Step 3: Implement**
 
-In `source/library/Pawl/Combat.hs`, replace `declareAttackers`' `tapIt` binding:
+In `source/library/Parun/Combat.hs`, replace `declareAttackers`' `tapIt` binding:
 
 ```haskell
             -- CR 508.1f: declaring an attacker taps it -- unless it has vigilance
@@ -752,7 +752,7 @@ git commit -m "Add vigilance"
 CR 702.10b, in `canAttack`. The state-override shape.
 
 **Files:**
-- Modify: `source/library/Pawl/Combat.hs`, `source/test-suite/Main.hs`
+- Modify: `source/library/Parun/Combat.hs`, `source/test-suite/Main.hs`
 
 **Interfaces:**
 - Consumes: Task 1's `Game.hasKeyword`, `Card.goblinChariotPrinting`; Task 2's `combatBoardOf`.
@@ -805,7 +805,7 @@ Expected: FAIL — the Goblin Chariot does not attack.
 
 - [x] **Step 3: Implement**
 
-In `source/library/Pawl/Combat.hs`, replace `canAttack`'s sickness clause:
+In `source/library/Parun/Combat.hs`, replace `canAttack`'s sickness clause:
 
 ```haskell
       -- CR 302.6, relaxed by CR 702.10b: a creature with haste can attack even if
@@ -840,13 +840,13 @@ git commit -m "Add haste"
 **This is the risky task.** Evasion is a restriction on the whole declaration, and per-pair filtering is the natural way to write it — and is what M1b currently does.
 
 **Files:**
-- Modify: `source/library/Pawl/Combat.hs`, `source/test-suite/Main.hs`
+- Modify: `source/library/Parun/Combat.hs`, `source/test-suite/Main.hs`
 
 **Interfaces:**
 - Consumes: Task 1's `Game.hasKeyword`, `Card.birdMaidenPrinting`, `Card.nimbleBirdstickerPrinting`; Task 2's `combatBoardOf`.
 - Produces:
-  - `Pawl.Combat.evasionAllows :: ObjectId -> ObjectId -> GameState -> Bool`
-  - `Pawl.Combat.legalBlockDeclaration :: PlayerId -> Map ObjectId ObjectId -> GameState -> Bool`
+  - `Parun.Combat.evasionAllows :: ObjectId -> ObjectId -> GameState -> Bool`
+  - `Parun.Combat.legalBlockDeclaration :: PlayerId -> Map ObjectId ObjectId -> GameState -> Bool`
 
 `canBlock` and `legalBlockers` are **unchanged** — they are CR 509.1a, which is about the blocker alone. `Prompt.DeclareBlockers` is **unchanged**.
 
@@ -956,7 +956,7 @@ Expected: FAIL — `Combat.legalBlockDeclaration` not in scope.
 
 - [x] **Step 3: Implement the restriction check**
 
-In `source/library/Pawl/Combat.hs`, add the import:
+In `source/library/Parun/Combat.hs`, add the import:
 
 ```haskell
 import Data.Map.Strict (Map)
@@ -1012,7 +1012,7 @@ legalBlockDeclaration pid declaration gs =
 
 - [x] **Step 4: Replace the filter with whole-declaration validation**
 
-In `source/library/Pawl/Combat.hs`, replace the body of `declareBlockers`' inner `Monad.unless`:
+In `source/library/Parun/Combat.hs`, replace the body of `declareBlockers`' inner `Monad.unless`:
 
 ```haskell
       Monad.unless (null candidates) $ do
@@ -1069,7 +1069,7 @@ git commit -m "Add flying and reach on CR 509.1b declaration legality"
 The keyword that is visible across a whole random game.
 
 **Files:**
-- Modify: `source/library/Pawl/Setup.hs`, `source/test-suite/Main.hs`
+- Modify: `source/library/Parun/Setup.hs`, `source/test-suite/Main.hs`
 
 **Interfaces:**
 - Consumes: everything above.
@@ -1097,7 +1097,7 @@ Expected: FAIL — 0 Bird Maidens, 24 Pikers.
 
 - [x] **Step 3: Implement**
 
-In `source/library/Pawl/Setup.hs`, replace `deckList`:
+In `source/library/Parun/Setup.hs`, replace `deckList`:
 
 ```haskell
 -- 36 Mountain / 16 Goblin Piker / 8 Bird Maiden: enough lands to cast reliably,
@@ -1132,7 +1132,7 @@ Then `cabal test` and `cabal bench`. Expected: all pass; the benchmark reports `
 - [x] **Step 6: Full verification**
 
 ```bash
-rm -rf dist-newstyle/build/aarch64-osx/ghc-9.14.1/pawl-0.2026.7.16/{b,t,build}
+rm -rf dist-newstyle/build/aarch64-osx/ghc-9.14.1/parun-0.2026.7.16/{b,t,build}
 cabal build all --enable-tests --enable-benchmarks 2>&1 | grep -c "warning:"
 ```
 

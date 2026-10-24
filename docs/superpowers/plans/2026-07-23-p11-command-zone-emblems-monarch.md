@@ -4,23 +4,23 @@
 
 **Goal:** Add the seventh game zone (Command) with the emblem as its first resident whose static ability functions from outside the battlefield, and the monarch as a `GameState` designation with two sourceless inherent triggered abilities — landing Palace Jailer (monarch) and a labeled synthetic emblem source.
 
-**Architecture:** `Zone.Command` is a shared `Set ObjectId` on `GameState`, mirroring `exile`. An emblem is an `Object` distinguished by `Source.OfEmblem Card` (like a token's `OfToken Card`), minted into the command zone by `Effect.CreateEmblem`; the projection gains a symmetric gather pass over the command zone so an emblem's static ability radiates from there. The monarch is `monarch :: Maybe PlayerId`; its two inherent abilities (CR 725.2) have no bearer, so they live in a new `Pawl.Monarch` module, are gathered from the `monarch` field (not from any card), and are placed on the stack under a new `Source.OfInherentTrigger PlayerId (TriggeredAbility Card)`. Palace Jailer's "exile until an opponent becomes the monarch" is a new opcode `ExileUntilMonarch` that registers the exiled incarnation in a `GameState.exiledUntilMonarch` map, swept back to the battlefield by a new settle-loop pass when an opponent takes the crown.
+**Architecture:** `Zone.Command` is a shared `Set ObjectId` on `GameState`, mirroring `exile`. An emblem is an `Object` distinguished by `Source.OfEmblem Card` (like a token's `OfToken Card`), minted into the command zone by `Effect.CreateEmblem`; the projection gains a symmetric gather pass over the command zone so an emblem's static ability radiates from there. The monarch is `monarch :: Maybe PlayerId`; its two inherent abilities (CR 725.2) have no bearer, so they live in a new `Parun.Monarch` module, are gathered from the `monarch` field (not from any card), and are placed on the stack under a new `Source.OfInherentTrigger PlayerId (TriggeredAbility Card)`. Palace Jailer's "exile until an opponent becomes the monarch" is a new opcode `ExileUntilMonarch` that registers the exiled incarnation in a `GameState.exiledUntilMonarch` map, swept back to the battlefield by a new settle-loop pass when an opponent takes the crown.
 
 **Tech Stack:** Haskell 2010 (GHC 9.14.1), no extensions beyond `GADTs`/`RankNTypes`/`NamedFieldPuns`; `tasty` (`tasty-hunit` + `tasty-quickcheck`); cards as JSON data under `data/cards/`.
 
-**Spec:** `docs/superpowers/specs/2026-07-23-p11-command-zone-emblems-monarch-design.md`. Umbrella issue `tfausak/pawl#7`.
+**Spec:** `docs/superpowers/specs/2026-07-23-p11-command-zone-emblems-monarch-design.md`. Umbrella issue `tfausak/parun#7`.
 
 ## Global Constraints
 
 - **Build must be warning-clean** under `-Weverything` minus the allow-list; the `pedantic` flag adds `-Werror`, so any warning fails the build. Build `all`: `cabal build all --enable-tests --enable-benchmarks`. `cabal clean` first when you need a definitive warning check (incremental builds hide warnings from unchanged modules).
 - **Haskell 2010, no language extensions** unless unavoidable. No `LambdaCase`, no `OverloadedStrings`. `NamedFieldPuns` permitted where it improves record-heavy clarity.
-- **One type per module** under `Pawl.Type.<Name>` (type + instances only); logic elsewhere (`Pawl.Monarch` is a logic module, like `Pawl.Projection`/`Pawl.Event`). A module never imports its parents.
+- **One type per module** under `Parun.Type.<Name>` (type + instances only); logic elsewhere (`Parun.Monarch` is a logic module, like `Parun.Projection`/`Parun.Event`). A module never imports its parents.
 - **Qualified imports aliased to the last component** (`Data.Map.Strict` → `Map`); operators unqualified. `Data.Map.Strict (Map)` / `Data.Set (Set)` imported **unqualified** for a bare type in a field declaration (as `GameState.hs` does).
 - **No partial functions** written or used. No `head`/`error`/`undefined`/non-exhaustive matches, in library **or committed tests**. Bind list heads with `case xs of { x : _ -> …; [] -> HU.assertFailure … }`, never `error`.
 - **Constructors take a `Mk` prefix**, non-punning. **Derive at least `Eq` and `Show`**; a type used as a `Set` element or `Map` key (or embedded in `Source`, which derives `Ord`) also derives `Ord`.
 - **`Text` not `String`; arbitrary-precision numbers** (`Integer`, `Natural`).
 - **No boolean blindness** — `MonarchTarget` is a two-constructor sum, not a `Bool`.
-- **Two invariants outrank everything:** the rules core never cases on an effect's *identity* (only classifications); the engine never makes a player's choice. The only new casing homes are the sanctioned interpreters: `Pawl.Resolve` (effects), `Pawl.Codec` (the JSON boundary), `Pawl.Event`/`Pawl.Monarch` (triggers), `Pawl.Projection` (modifications/layers). Palace Jailer's exile target is a real CR 115 choice; becoming the monarch, the end-step draw, and the steal are automatic/mandatory — no elision is introduced.
+- **Two invariants outrank everything:** the rules core never cases on an effect's *identity* (only classifications); the engine never makes a player's choice. The only new casing homes are the sanctioned interpreters: `Parun.Resolve` (effects), `Parun.Codec` (the JSON boundary), `Parun.Event`/`Parun.Monarch` (triggers), `Parun.Projection` (modifications/layers). Palace Jailer's exile target is a real CR 115 choice; becoming the monarch, the end-step draw, and the steal are automatic/mandatory — no elision is introduced.
 - **Every CR claim re-checked against `docs/rules.txt` and cited in-code.** Card text is from Scryfall (2026-07-23), never recalled. Palace Jailer is `{2}{W}{W}`, Creature — Human Soldier, **2/2** (the recalled "1/1 for {3}{W}" is wrong — re-read the printed text at implementation time).
 - **TDD, non-negotiable:** write each failing test, run it, watch it fail, then implement. One small complete commit per task on `main`. Commit trailer per CLAUDE.md.
 - **`hooky` before done:** `git add -A`; `hooky fix`; `git add -A`; `hooky run` passes. Apply HLint suggestions or justify.
@@ -28,7 +28,7 @@
 ### Verified codebase facts (do not re-derive)
 
 **Serialization surface (mirrors P10's discovery).**
-- **`Source`, `GameState`, and `Object` have NO codec.** `Pawl.Codec` covers the `Card` closure plus `GameEvent`/`DamageEvent` only. So `Source.OfEmblem`/`OfInherentTrigger`, and the `GameState` fields `command`/`monarch`/`exiledUntilMonarch`, need **no codec arms**. The spec's §2.10 over-claims here — dropped (Task 8 files a standalone "GameState/Object/Source serialization" deferral issue).
+- **`Source`, `GameState`, and `Object` have NO codec.** `Parun.Codec` covers the `Card` closure plus `GameEvent`/`DamageEvent` only. So `Source.OfEmblem`/`OfInherentTrigger`, and the `GameState` fields `command`/`monarch`/`exiledUntilMonarch`, need **no codec arms**. The spec's §2.10 over-claims here — dropped (Task 8 files a standalone "GameState/Object/Source serialization" deferral issue).
 - **`Expiry` has no codec** (spec §2.10 correct) — and this phase adds no `Expiry` constructor anyway (see the exile-return deviation below).
 - Codecs that **do** exist and gain arms: `Zone` (`Codec.hs:344`, nullary enum), `Effect` (`:1124`), `TriggerCondition` (`:770`), `GameEvent` (`:1105`). `MonarchTarget` needs a brand-new nullary codec because `Effect.BecomeMonarch` embeds it.
 - Codec idioms: nullary → `nullary (Text.pack "Name")` + `decodeNullary (Text.pack "T") [(Text.pack "Name", Ctor), …]`. Single tagged value → `Json.tagged (Text.pack "Name") (Just v)` + decode via `withValue mv (fmap Ctor . jsonToInner)`. Multi-arg → `Json.tagged … (Just (Array [a,b]))` + match `Just (Array [a,b])`. Reusable leaves: `cardToJson`/`jsonToCard` (`:1519`/`:1586`), `playerIdToJson`/`jsonToPlayerId` (bare `natTo`/`natFrom`, `:831`), `quantityToJson`/`jsonToQuantity`, `slotNameToJson`/`jsonToSlotName`.
@@ -38,33 +38,33 @@
 
 **`Source` (`OfCard Printing | OfToken Card | OfAbility ObjectId (ActivatedAbility Card) | OfTrigger ObjectId (TriggeredAbility Card)`, deriving `(Eq, Ord, Show)`).** Adding `OfEmblem Card` and `OfInherentTrigger PlayerId (TriggeredAbility Card)` (both `Ord`-safe: `Card` and `TriggeredAbility` derive `Ord`) is compiler-forced in these `case Object.source` sites (each needs **both** new arms): `Stack.resolveTop` (`Stack.hs:39-69`), `Cost.costsFor` (`Cost.hs:72-89`), `Action.isLandObject` (`Action.hs:23-29`), `Game.cardOf` (`Game.hs:86-93`), `Game.isSpell` (`Game.hs:100-108`). Non-forced (wildcard): `Sba.isVanishingToken` (`Sba.hs:174-178`) — leave untouched (an emblem is not a token and never vanishes). New arms per site: emblem `cardOf → Just card`, inherent `cardOf → Nothing`; both `costsFor → []`, `isLandObject → False`, `isSpell → False`; `resolveTop` emblem → drop like `OfToken`, inherent → resolve like `OfTrigger` (Task 5).
 
-**`Effect card`** is parameterized. Adding a constructor is compiler-forced in `Resolve.slotsOf`, `Resolve.readsX`/`effectReadsX`, `Resolve.manaProduced`, `Resolve.searchesLibrary`, `Resolve.rewriteEffect`, `Resolve.applyEffect`; it falls through wildcards (no change) in `Resolve.textChangeSlots`, `Resolve.armedAbilities`, `Resolve.definedSlots`, `Resolve.bindsSeveralTokens`. `Effect.Create` (`Resolve.hs:569`) is the token-mint template; `Effect.GainPlayerCounters` (`Resolve.hs:673`) is the targetless direct-`State.modify'` template; `Effect.MoveToZone`/`Effect.Destroy` (`Resolve.hs:498-522`) are the slot-target-then-`Event.changeZone` template. `applyEffect :: ObjectId -> PlayerId -> Map SlotName (Subtype,Subtype) -> Map SlotName Bool -> Map SlotName Recipient -> Effect Card -> Game ()`; arg 1 `source`, arg 2 `controller` (the resolving controller / "you"), arg 5 `chosen` (slot→Recipient, includes the reserved `Binding.triggerSource` = `"self"` slot). `recipientObject :: Recipient -> Maybe ObjectId` (`Resolve.hs:782`). `Resolve` already imports `Pawl.Binding`, `Pawl.Projection`, `Pawl.Event`.
+**`Effect card`** is parameterized. Adding a constructor is compiler-forced in `Resolve.slotsOf`, `Resolve.readsX`/`effectReadsX`, `Resolve.manaProduced`, `Resolve.searchesLibrary`, `Resolve.rewriteEffect`, `Resolve.applyEffect`; it falls through wildcards (no change) in `Resolve.textChangeSlots`, `Resolve.armedAbilities`, `Resolve.definedSlots`, `Resolve.bindsSeveralTokens`. `Effect.Create` (`Resolve.hs:569`) is the token-mint template; `Effect.GainPlayerCounters` (`Resolve.hs:673`) is the targetless direct-`State.modify'` template; `Effect.MoveToZone`/`Effect.Destroy` (`Resolve.hs:498-522`) are the slot-target-then-`Event.changeZone` template. `applyEffect :: ObjectId -> PlayerId -> Map SlotName (Subtype,Subtype) -> Map SlotName Bool -> Map SlotName Recipient -> Effect Card -> Game ()`; arg 1 `source`, arg 2 `controller` (the resolving controller / "you"), arg 5 `chosen` (slot→Recipient, includes the reserved `Binding.triggerSource` = `"self"` slot). `recipientObject :: Recipient -> Maybe ObjectId` (`Resolve.hs:782`). `Resolve` already imports `Parun.Binding`, `Parun.Projection`, `Parun.Event`.
 
 **Effect resolution primitives.** `Event.createTokens`/`Event.placeObject` (`Event.hs:292`/`:102`) mint a fresh object (`Game.freshObjectId`+`Game.freshTimestamp`) and `Game.insertIntoZone dest`. `Event.changeZone :: ObjectId -> Zone -> Game ()` (`Event.hs:115`) is the zone-change funnel — it mints a **new** incarnation id internally (`newId`) and records it in `GameEvent.Moved`, but **returns `()`** (Task 7 refactors it to expose `newId`). `Event.recordEvent :: GameEvent -> GameState -> GameState` (`Event.hs:60`) is the sole event-append, used via `State.modify' (recordEvent …)`. `Game.cardOf`/`Game.lookupObject`/`Game.freshObjectId`/`Game.freshTimestamp` per `Game.hs`.
 
-**Monarch scanning.** The trigger scanner is `Pawl.Event`; `Engine.placePendingTriggers` (`Engine.hs:207`) gathers via `Event.gatherTriggers (Event.unscannedEvents gs) gs`, bumps `scannedThrough`, then `placeOne` (`Engine.hs:234`) mints each stack object. `PendingTrigger.source :: ObjectId` **cannot** carry a sourceless trigger — inherent monarch triggers get a dedicated gather+place path (Task 5), NOT a `PendingTrigger`. `Engine.settleForPriority` (`Engine.hs:372`) is the settle loop: `swept <- Expiry.sweepConditional; acted <- Sba.performStateBasedActions; placed <- placePendingTriggers; Monad.when (swept||acted||placed) settleForPriority`. `Projection.isCreatureOf`/`Projection.controllerOf` per `Projection.hs`. `DamageEvent = MkDamageEvent { source :: ObjectId, target :: Recipient, amount :: Natural, dealtByDeathtouch :: Bool, dealtByInfect :: Bool, kind :: DamageKind }`. `Recipient = ToCreature ObjectId | ToPlayer PlayerId | ToObject ObjectId`.
+**Monarch scanning.** The trigger scanner is `Parun.Event`; `Engine.placePendingTriggers` (`Engine.hs:207`) gathers via `Event.gatherTriggers (Event.unscannedEvents gs) gs`, bumps `scannedThrough`, then `placeOne` (`Engine.hs:234`) mints each stack object. `PendingTrigger.source :: ObjectId` **cannot** carry a sourceless trigger — inherent monarch triggers get a dedicated gather+place path (Task 5), NOT a `PendingTrigger`. `Engine.settleForPriority` (`Engine.hs:372`) is the settle loop: `swept <- Expiry.sweepConditional; acted <- Sba.performStateBasedActions; placed <- placePendingTriggers; Monad.when (swept||acted||placed) settleForPriority`. `Projection.isCreatureOf`/`Projection.controllerOf` per `Projection.hs`. `DamageEvent = MkDamageEvent { source :: ObjectId, target :: Recipient, amount :: Natural, dealtByDeathtouch :: Bool, dealtByInfect :: Bool, kind :: DamageKind }`. `Recipient = ToCreature ObjectId | ToPlayer PlayerId | ToObject ObjectId`.
 
 **Construction primitives.** `Modal card = MkModal { modes :: Seq (Mode card), selection :: ModeSelection }`; `Mode card = MkMode { effects :: Seq (Effect card), targetSpecs :: Map SlotName TargetSpec }`; `ModeSelection` = `ChooseExactly Natural` (newtype); `TriggeredAbility card = MkTriggeredAbility { condition :: TriggerCondition, modal :: Modal card, intervening :: Maybe StateCondition }`. `Phase.Ending EndingStep.EndStep` (there is **no** `End` constructor — the spec's `Ending End` is wrong). `TurnScope = EachTurn | ControllersTurn`. `PlayerRelation = You | Opponent`. `StaticAbility = MkStaticAbility { affected :: Affected, modification :: Modification }`; `Affected.Matching Exclusion Filter`; `Exclusion.IncludesSource`; `Filter.ControlledBy PlayerRelation`; `Filter.And [Filter]`; `Filter.HasCardType CardType`; `Modification.ModifyPowerToughness Quantity Quantity` (layer 7c). `Binding.setYou`, `Binding.setTriggerSource`, `Binding.fromChoices targets subtypes mAmount mModes` (4th arg is a `Set ModeIndex`), `Binding.triggerSource` (`= "self"` slot).
 
 **`Projection.affects`** (`Projection.hs:182`) evaluates a `Matching` affected set with `Filter.MkContext Nothing` and `viewOfCharacteristics oid partial Nothing gs` — both perspectives hard-coded `Nothing`, documented as valid *only while no affected-set filter references a player*. `Filter.matches`' `ControlledBy` returns `False` unless **both** the View's `controller` (the affected object's controller) and the Context `perspective` (the "you" = source's controller) are `Just`. The emblem anthem "creatures you control get +1/+1" is the first affected-set filter to reference a player, so Task 3 supplies both (`controllerOf oid gs` and `controllerOf source gs`). Safe: no existing affected-set filter reads `ControlledBy`, and those are the only two fields the change touches.
 
-**Tests.** No new `Pawl.*Spec` module: Palace Jailer characteristics → `CardSpec.hs` (Master Thief pattern, `CardSpec.hs:488`); emblem + monarch gameplay → `ExpirySpec.hs` (`masterThiefTests` pattern, `ExpirySpec.hs:229`, which drives ETB-target through `Engine.settleForPriority` + `Engine.priorityLoop` after fabricating the entry event with `S.withEvent (GameEvent.Moved (ZoneChange.MkZoneChange oid Zone.Stack Zone.Battlefield) (Projection.project oid gs)) gs`). Support helpers: `S.addCreature`, `S.addToken :: Card -> PlayerId -> GameState -> (ObjectId, GameState)`, `S.addLibraryCard`, `S.runPure answerer gs action`, `S.settleSba`, `S.combatBoardOf`, `S.fightWith`, `S.withEvent`, `S.lifeOf`, `S.identityAnswer` (`ChooseTargets` → `Set.lookupMin`). New card into `Cards.hs` needs three edits: a `<name>Printing :: Printing.Printing` field in `MkCards`, `<name>Printing_ <- loadPrinting "<slug>"` + `<name>Printing = <name>Printing_` in `loadCards`, and `<name>Printing cards` in `allPrintings` (which auto-covers it in the honesty round-trips). Only **two** `MkGameState` literals exist (`Setup.hs`, `Support.hs`) — both need the three new fields.
+**Tests.** No new `Parun.*Spec` module: Palace Jailer characteristics → `CardSpec.hs` (Master Thief pattern, `CardSpec.hs:488`); emblem + monarch gameplay → `ExpirySpec.hs` (`masterThiefTests` pattern, `ExpirySpec.hs:229`, which drives ETB-target through `Engine.settleForPriority` + `Engine.priorityLoop` after fabricating the entry event with `S.withEvent (GameEvent.Moved (ZoneChange.MkZoneChange oid Zone.Stack Zone.Battlefield) (Projection.project oid gs)) gs`). Support helpers: `S.addCreature`, `S.addToken :: Card -> PlayerId -> GameState -> (ObjectId, GameState)`, `S.addLibraryCard`, `S.runPure answerer gs action`, `S.settleSba`, `S.combatBoardOf`, `S.fightWith`, `S.withEvent`, `S.lifeOf`, `S.identityAnswer` (`ChooseTargets` → `Set.lookupMin`). New card into `Cards.hs` needs three edits: a `<name>Printing :: Printing.Printing` field in `MkCards`, `<name>Printing_ <- loadPrinting "<slug>"` + `<name>Printing = <name>Printing_` in `loadCards`, and `<name>Printing cards` in `allPrintings` (which auto-covers it in the honesty round-trips). Only **two** `MkGameState` literals exist (`Setup.hs`, `Support.hs`) — both need the three new fields.
 
 ---
 
 ## File Structure
 
 **New files**
-- `source/library/Pawl/Type/MonarchTarget.hs` — `TheController | ControllerOfSource`.
-- `source/library/Pawl/Monarch.hs` — logic module: the two inherent abilities, their event-matcher, the inherent-trigger gatherer/placer, and the exile-return sweep.
+- `source/library/Parun/Type/MonarchTarget.hs` — `TheController | ControllerOfSource`.
+- `source/library/Parun/Monarch.hs` — logic module: the two inherent abilities, their event-matcher, the inherent-trigger gatherer/placer, and the exile-return sweep.
 - `data/cards/palace-jailer.json` — the monarch gate card.
 
 **Modified — library**
-- `Pawl/Type/Zone.hs` (+`Command`), `Pawl/Type/Source.hs` (+`OfEmblem`,`OfInherentTrigger`), `Pawl/Type/Effect.hs` (+`CreateEmblem`,`BecomeMonarch`,`ExileUntilMonarch`), `Pawl/Type/GameEvent.hs` (+`BecameMonarch`), `Pawl/Type/TriggerCondition.hs` (+`CreatureDealtCombatDamageToMonarch`), `Pawl/Type/GameState.hs` (+`command`,`monarch`,`exiledUntilMonarch`).
-- `Pawl/Setup.hs` (seed the three fields), `Pawl/Game.hs` (Zone/Source arms), `Pawl/Event.hs` (Zone `sacrifice` arm; `changeZoneReturning`), `Pawl/Stack.hs` (Source arms), `Pawl/Cost.hs` (Source arms), `Pawl/Action.hs` (Source arm), `Pawl/Resolve.hs` (Effect classifier arms + `CreateEmblem`/`BecomeMonarch`/`ExileUntilMonarch` executors), `Pawl/Projection.hs` (command-zone gather + `affects` perspective), `Pawl/Engine.hs` (place inherent triggers; wire the return sweep), `Pawl/Codec.hs` (Zone/Effect/TriggerCondition/GameEvent/MonarchTarget arms).
+- `Parun/Type/Zone.hs` (+`Command`), `Parun/Type/Source.hs` (+`OfEmblem`,`OfInherentTrigger`), `Parun/Type/Effect.hs` (+`CreateEmblem`,`BecomeMonarch`,`ExileUntilMonarch`), `Parun/Type/GameEvent.hs` (+`BecameMonarch`), `Parun/Type/TriggerCondition.hs` (+`CreatureDealtCombatDamageToMonarch`), `Parun/Type/GameState.hs` (+`command`,`monarch`,`exiledUntilMonarch`).
+- `Parun/Setup.hs` (seed the three fields), `Parun/Game.hs` (Zone/Source arms), `Parun/Event.hs` (Zone `sacrifice` arm; `changeZoneReturning`), `Parun/Stack.hs` (Source arms), `Parun/Cost.hs` (Source arms), `Parun/Action.hs` (Source arm), `Parun/Resolve.hs` (Effect classifier arms + `CreateEmblem`/`BecomeMonarch`/`ExileUntilMonarch` executors), `Parun/Projection.hs` (command-zone gather + `affects` perspective), `Parun/Engine.hs` (place inherent triggers; wire the return sweep), `Parun/Codec.hs` (Zone/Effect/TriggerCondition/GameEvent/MonarchTarget arms).
 
 **Modified — tests**
-- `Pawl/Support.hs` (`withMonarch`, `command`/`monarch`/`exiledUntilMonarch` in its `MkGameState`), `Pawl/Cards.hs` (Palace Jailer ×3), `Pawl/CodecSpec.hs`, `Pawl/SetupSpec.hs`, `Pawl/ZoneSpec.hs` (or `CodecSpec` for the Zone round-trip), `Pawl/ProjectionSpec.hs` (emblem), `Pawl/CardSpec.hs` (Palace Jailer characteristics), `Pawl/ExpirySpec.hs` (monarch + emblem + Palace Jailer gameplay).
+- `Parun/Support.hs` (`withMonarch`, `command`/`monarch`/`exiledUntilMonarch` in its `MkGameState`), `Parun/Cards.hs` (Palace Jailer ×3), `Parun/CodecSpec.hs`, `Parun/SetupSpec.hs`, `Parun/ZoneSpec.hs` (or `CodecSpec` for the Zone round-trip), `Parun/ProjectionSpec.hs` (emblem), `Parun/CardSpec.hs` (Palace Jailer characteristics), `Parun/ExpirySpec.hs` (monarch + emblem + Palace Jailer gameplay).
 
 Task order follows spec §7: GAP-Z (Tasks 1–3) then the monarch (Tasks 4–7), each a single compiling commit.
 
@@ -73,17 +73,17 @@ Task order follows spec §7: GAP-Z (Tasks 1–3) then the monarch (Tasks 4–7),
 ### Task 1: `Zone.Command`, `GameState.command`, and the zone plumbing
 
 **Files:**
-- Modify: `source/library/Pawl/Type/Zone.hs`, `source/library/Pawl/Type/GameState.hs`
-- Modify: `source/library/Pawl/Game.hs` (`zoneMembers`, `insertIntoZone`, `removeFromZones`), `source/library/Pawl/Event.hs` (`sacrifice`), `source/library/Pawl/Codec.hs` (`zoneToJson`, `jsonToZone`), `source/library/Pawl/Setup.hs`
-- Modify: `source/test-suite/Pawl/Support.hs` (its `MkGameState` literal)
-- Test: `source/test-suite/Pawl/CodecSpec.hs`, `source/test-suite/Pawl/SetupSpec.hs`
+- Modify: `source/library/Parun/Type/Zone.hs`, `source/library/Parun/Type/GameState.hs`
+- Modify: `source/library/Parun/Game.hs` (`zoneMembers`, `insertIntoZone`, `removeFromZones`), `source/library/Parun/Event.hs` (`sacrifice`), `source/library/Parun/Codec.hs` (`zoneToJson`, `jsonToZone`), `source/library/Parun/Setup.hs`
+- Modify: `source/test-suite/Parun/Support.hs` (its `MkGameState` literal)
+- Test: `source/test-suite/Parun/CodecSpec.hs`, `source/test-suite/Parun/SetupSpec.hs`
 
 **Interfaces:**
 - Produces: `Zone.Command`; `GameState.command :: Set ObjectId`; the four `Zone`-case arms.
 
 - [ ] **Step 1: Write the failing Zone codec round-trip test**
 
-In `source/test-suite/Pawl/CodecSpec.hs`, beside the existing `Zone` round-trip cases (search `Codec.zoneToJson`), add:
+In `source/test-suite/Parun/CodecSpec.hs`, beside the existing `Zone` round-trip cases (search `Codec.zoneToJson`), add:
 
 ```haskell
           HU.testCase "Zone.Command" $
@@ -97,7 +97,7 @@ Expected: FAIL — `Not in scope: data constructor 'Zone.Command'`.
 
 - [ ] **Step 3: Add the `Command` constructor**
 
-In `source/library/Pawl/Type/Zone.hs`, add after `Exile`:
+In `source/library/Parun/Type/Zone.hs`, add after `Exile`:
 
 ```haskell
   | Exile
@@ -111,24 +111,24 @@ In `source/library/Pawl/Type/Zone.hs`, add after `Exile`:
 
 - [ ] **Step 4: Add the `command` field to `GameState`**
 
-In `source/library/Pawl/Type/GameState.hs`, add after `exile`:
+In `source/library/Parun/Type/GameState.hs`, add after `exile`:
 
 ```haskell
     exile :: Set ObjectId,
     -- CR 400.1: the command zone -- a shared collection (not per-player), keyed
     -- into `objects` like `battlefield`/`exile`. Emblems live here; their static
-    -- abilities are gathered live by the projection (Pawl.Projection.gather).
+    -- abilities are gathered live by the projection (Parun.Projection.gather).
     command :: Set ObjectId,
 ```
 
 - [ ] **Step 5: Add the four `Zone` case arms and the parity edits**
 
-In `source/library/Pawl/Game.hs`:
+In `source/library/Parun/Game.hs`:
 - `zoneMembers`, after the `Exile` arm: `Zone.Command -> ownedShared (GameState.command gs)`.
 - `insertIntoZone`, after the `Exile` arm: `Zone.Command -> gs {GameState.command = Set.insert oid (GameState.command gs)}`.
 - `removeFromZones`, add to the record update: `GameState.command = Set.delete oid (GameState.command gs),`.
 
-In `source/library/Pawl/Event.hs`, `sacrifice`'s `case Object.zone obj of`, add:
+In `source/library/Parun/Event.hs`, `sacrifice`'s `case Object.zone obj of`, add:
 
 ```haskell
         -- CR 408.1: a command-zone object is not a permanent, so it is never
@@ -136,15 +136,15 @@ In `source/library/Pawl/Event.hs`, `sacrifice`'s `case Object.zone obj of`, add:
         Zone.Command -> pure ()
 ```
 
-In `source/library/Pawl/Codec.hs`: add `Zone.Command -> "Command"` to `zoneToJson`, and `(Text.pack "Command", Zone.Command)` to `jsonToZone`'s `decodeNullary` list.
+In `source/library/Parun/Codec.hs`: add `Zone.Command -> "Command"` to `zoneToJson`, and `(Text.pack "Command", Zone.Command)` to `jsonToZone`'s `decodeNullary` list.
 
 - [ ] **Step 6: Seed `command` at both `MkGameState` sites**
 
-In `source/library/Pawl/Setup.hs` (`emptyGame`), add `GameState.command = mempty,` beside `GameState.exile = mempty,`. In `source/test-suite/Pawl/Support.hs`, find its `MkGameState` literal and add `GameState.command = mempty,`.
+In `source/library/Parun/Setup.hs` (`emptyGame`), add `GameState.command = mempty,` beside `GameState.exile = mempty,`. In `source/test-suite/Parun/Support.hs`, find its `MkGameState` literal and add `GameState.command = mempty,`.
 
 - [ ] **Step 7: Write the failing setup test**
 
-In `source/test-suite/Pawl/SetupSpec.hs`, add:
+In `source/test-suite/Parun/SetupSpec.hs`, add:
 
 ```haskell
       HU.testCase "CR 400.1 a new game's command zone is empty" $
@@ -175,18 +175,18 @@ EOF
 ### Task 2: `Source.OfEmblem`, `Effect.CreateEmblem`, and emblem minting
 
 **Files:**
-- Modify: `source/library/Pawl/Type/Source.hs`, `source/library/Pawl/Type/Effect.hs`
-- Modify: `source/library/Pawl/Game.hs` (`cardOf`, `isSpell`), `source/library/Pawl/Stack.hs` (`resolveTop`), `source/library/Pawl/Cost.hs` (`costsFor`), `source/library/Pawl/Action.hs` (`isLandObject`)
-- Modify: `source/library/Pawl/Resolve.hs` (Effect classifier arms + `CreateEmblem` executor), `source/library/Pawl/Codec.hs` (`effectToJson`, `jsonToEffect`)
-- Test: `source/test-suite/Pawl/CodecSpec.hs`, `source/test-suite/Pawl/ResolveSpec.hs`
+- Modify: `source/library/Parun/Type/Source.hs`, `source/library/Parun/Type/Effect.hs`
+- Modify: `source/library/Parun/Game.hs` (`cardOf`, `isSpell`), `source/library/Parun/Stack.hs` (`resolveTop`), `source/library/Parun/Cost.hs` (`costsFor`), `source/library/Parun/Action.hs` (`isLandObject`)
+- Modify: `source/library/Parun/Resolve.hs` (Effect classifier arms + `CreateEmblem` executor), `source/library/Parun/Codec.hs` (`effectToJson`, `jsonToEffect`)
+- Test: `source/test-suite/Parun/CodecSpec.hs`, `source/test-suite/Parun/ResolveSpec.hs`
 
 **Interfaces:**
 - Consumes: `Zone.Command`, `Game.insertIntoZone` (Task 1).
-- Produces: `Source.OfEmblem Card`; `Effect.CreateEmblem Card`; `Source.OfInherentTrigger` is **added in Task 5** — but its case-arms in the five `case Object.source` sites are added **now** so Task 5 need not re-touch them. (Add both constructors' arms; `OfInherentTrigger` constructor itself lands in Task 5, so guard: add `Source.OfEmblem` now and leave a `-- Task 5: OfInherentTrigger` note, OR add both constructors in this task and only wire the scanner in Task 5. **Chosen: add both `Source` constructors here** so every `case Object.source` becomes exhaustive in one commit; Task 5 only adds `Pawl.Monarch` + engine wiring.)
+- Produces: `Source.OfEmblem Card`; `Effect.CreateEmblem Card`; `Source.OfInherentTrigger` is **added in Task 5** — but its case-arms in the five `case Object.source` sites are added **now** so Task 5 need not re-touch them. (Add both constructors' arms; `OfInherentTrigger` constructor itself lands in Task 5, so guard: add `Source.OfEmblem` now and leave a `-- Task 5: OfInherentTrigger` note, OR add both constructors in this task and only wire the scanner in Task 5. **Chosen: add both `Source` constructors here** so every `case Object.source` becomes exhaustive in one commit; Task 5 only adds `Parun.Monarch` + engine wiring.)
 
 - [ ] **Step 1: Write the failing effect codec round-trip test**
 
-In `source/test-suite/Pawl/CodecSpec.hs`, in the `Effect` round-trip group, add (reusing a loaded card as the embedded emblem characteristics — no hand-built `Card`):
+In `source/test-suite/Parun/CodecSpec.hs`, in the `Effect` round-trip group, add (reusing a loaded card as the embedded emblem characteristics — no hand-built `Card`):
 
 ```haskell
           HU.testCase "CreateEmblem" $
@@ -202,7 +202,7 @@ Expected: FAIL — `Not in scope: data constructor 'Effect.CreateEmblem'`.
 
 - [ ] **Step 3: Add the two `Source` constructors**
 
-In `source/library/Pawl/Type/Source.hs`, add after `OfTrigger`:
+In `source/library/Parun/Type/Source.hs`, add after `OfTrigger`:
 
 ```haskell
   | -- CR 114: an emblem -- an object in the command zone whose only
@@ -218,13 +218,13 @@ In `source/library/Pawl/Type/Source.hs`, add after `OfTrigger`:
   deriving (Eq, Ord, Show)
 ```
 
-Add `import Pawl.Type.PlayerId (PlayerId)` to `Source.hs` (it already imports `Card`, `TriggeredAbility`).
+Add `import Parun.Type.PlayerId (PlayerId)` to `Source.hs` (it already imports `Card`, `TriggeredAbility`).
 
 - [ ] **Step 4: Add the five `case Object.source` arms**
 
 Each site (`Stack.resolveTop`, `Cost.costsFor`, `Action.isLandObject`, `Game.cardOf`, `Game.isSpell`) gains both arms. For this task, resolution of `OfInherentTrigger` on the stack is not yet exercised (no inherent trigger is placed until Task 5), so give it the same shape as `OfTrigger` will use; the simplest exhaustive-and-correct arm now is to resolve like `OfTrigger` (Task 5 tests it). Concretely:
 
-`source/library/Pawl/Game.hs` — `cardOf`:
+`source/library/Parun/Game.hs` — `cardOf`:
 ```haskell
     Source.OfEmblem card -> Just card
     Source.OfInherentTrigger _ _ -> Nothing
@@ -234,17 +234,17 @@ Each site (`Stack.resolveTop`, `Cost.costsFor`, `Action.isLandObject`, `Game.car
       Source.OfEmblem _ -> False
       Source.OfInherentTrigger _ _ -> False
 ```
-`source/library/Pawl/Cost.hs` — `costsFor` (`OfToken/OfAbility/OfTrigger` already return `[]`):
+`source/library/Parun/Cost.hs` — `costsFor` (`OfToken/OfAbility/OfTrigger` already return `[]`):
 ```haskell
         Source.OfEmblem _ -> []
         Source.OfInherentTrigger _ _ -> []
 ```
-`source/library/Pawl/Action.hs` — `isLandObject`:
+`source/library/Parun/Action.hs` — `isLandObject`:
 ```haskell
     Source.OfEmblem _ -> False
     Source.OfInherentTrigger _ _ -> False
 ```
-`source/library/Pawl/Stack.hs` — `resolveTop`:
+`source/library/Parun/Stack.hs` — `resolveTop`:
 ```haskell
         -- CR 114.5: an emblem is never on the stack (created into the command
         -- zone, never cast). Drop it, like a token.
@@ -261,7 +261,7 @@ Each site (`Stack.resolveTop`, `Cost.costsFor`, `Action.isLandObject`, `Game.car
 
 - [ ] **Step 5: Add the `CreateEmblem` opcode**
 
-In `source/library/Pawl/Type/Effect.hs`, add (beside `Create`):
+In `source/library/Parun/Type/Effect.hs`, add (beside `Create`):
 
 ```haskell
   | -- CR 114.2: "[you] get an emblem with [abilities]." Puts an emblem owned and
@@ -303,11 +303,11 @@ In `source/library/Pawl/Type/Effect.hs`, add (beside `Create`):
     pure ()
 ```
 
-Add whatever imports this needs to `Resolve.hs` (`Pawl.Type.Object`, `Pawl.Type.TapState`, `Pawl.Type.Sickness`, `Pawl.Type.Zone`, `Pawl.Type.Source`) — check which are already present; add only the missing ones.
+Add whatever imports this needs to `Resolve.hs` (`Parun.Type.Object`, `Parun.Type.TapState`, `Parun.Type.Sickness`, `Parun.Type.Zone`, `Parun.Type.Source`) — check which are already present; add only the missing ones.
 
 - [ ] **Step 7: Add the effect codec arms**
 
-`source/library/Pawl/Codec.hs`, `effectToJson`:
+`source/library/Parun/Codec.hs`, `effectToJson`:
 ```haskell
   Effect.CreateEmblem c -> Json.tagged (Text.pack "CreateEmblem") (Just (cardToJson c))
 ```
@@ -318,7 +318,7 @@ Add whatever imports this needs to `Resolve.hs` (`Pawl.Type.Object`, `Pawl.Type.
 
 - [ ] **Step 8: Write the failing minting behavior test**
 
-In `source/test-suite/Pawl/ResolveSpec.hs`, drive `applyEffect` directly (mirror the `Draw`/`GainPlayerCounters` direct-call tests; `source` is any object id — use a fresh piker):
+In `source/test-suite/Parun/ResolveSpec.hs`, drive `applyEffect` directly (mirror the `Draw`/`GainPlayerCounters` direct-call tests; `source` is any object id — use a fresh piker):
 
 ```haskell
       HU.testCase "CR 114.2 CreateEmblem puts an emblem in the command zone under the resolver" $
@@ -354,9 +354,9 @@ EOF
 ### Task 3: The projection command-zone gather pass — closes GAP-Z
 
 **Files:**
-- Modify: `source/library/Pawl/Projection.hs` (`gather`, `affects`)
-- Modify: `source/test-suite/Pawl/Support.hs` (an emblem-anthem card fixture, labeled synthetic)
-- Test: `source/test-suite/Pawl/ProjectionSpec.hs`
+- Modify: `source/library/Parun/Projection.hs` (`gather`, `affects`)
+- Modify: `source/test-suite/Parun/Support.hs` (an emblem-anthem card fixture, labeled synthetic)
+- Test: `source/test-suite/Parun/ProjectionSpec.hs`
 
 **Interfaces:**
 - Consumes: `GameState.command`, `Source.OfEmblem`, `Effect.CreateEmblem`.
@@ -364,12 +364,12 @@ EOF
 
 - [ ] **Step 1: Add the synthetic emblem-source fixture to `Support`**
 
-In `source/test-suite/Pawl/Support.hs`, add (a **labeled synthetic crutch** — Task 8 files its expiry issue; built by overriding a loaded vanilla card's abilities so no full `Card` literal is needed):
+In `source/test-suite/Parun/Support.hs`, add (a **labeled synthetic crutch** — Task 8 files its expiry issue; built by overriding a loaded vanilla card's abilities so no full `Card` literal is needed):
 
 ```haskell
 -- LABELED SYNTHETIC (expires when a real emblem source lands, see the P11 plan's
 -- deferral issue): an emblem's characteristics are only its abilities (CR 114.3),
--- but pawl models no planeswalker/Ring to mint one, so tests use this fixture --
+-- but parun models no planeswalker/Ring to mint one, so tests use this fixture --
 -- an Elspeth-style anthem, "creatures you control get +1/+1". Built by overriding
 -- a vanilla card's static abilities; the residual printed fields are inert for a
 -- command-zone object (never projected as a permanent). (#TBD-emblem-source)
@@ -393,7 +393,7 @@ Add the imports `Printing`, `StaticAbility`, `Affected`, `Exclusion`, `Filter`, 
 
 - [ ] **Step 2: Write the failing emblem-anthem projection tests**
 
-In `source/test-suite/Pawl/ProjectionSpec.hs`, add a group. These mint the emblem via `Effect.CreateEmblem`, then read a creature's projected power:
+In `source/test-suite/Parun/ProjectionSpec.hs`, add a group. These mint the emblem via `Effect.CreateEmblem`, then read a creature's projected power:
 
 ```haskell
       HU.testCase "CR 114.4 an emblem's anthem buffs the controller's creatures from the command zone" $
@@ -424,7 +424,7 @@ Expected: FAIL — power is `Just 2` (anthem not gathered from the command zone)
 
 - [ ] **Step 4: Give `affects` the source's-controller perspective**
 
-In `source/library/Pawl/Projection.hs`, `affects`, replace the `Matching` arm's `Filter.matches` call so both the affected object's controller and the source's-controller perspective are supplied (CR 109.5):
+In `source/library/Parun/Projection.hs`, `affects`, replace the `Matching` arm's `Filter.matches` call so both the affected object's controller and the source's-controller perspective are supplied (CR 109.5):
 
 ```haskell
   Affected.Matching exclusion f ->
@@ -445,7 +445,7 @@ Update the `affects` doc comment: the "no affected-set filter references a playe
 
 - [ ] **Step 5: Add the command-zone gather pass**
 
-In `source/library/Pawl/Projection.hs`, `gather`, add a `fromEmblem` pass over `GameState.command` and fold it into the result. Structurally identical to `fromPermanent` minus the `SetLandSubtype` liveness / text-change machinery (an emblem has no basic-land-type text and cannot be stripped):
+In `source/library/Parun/Projection.hs`, `gather`, add a `fromEmblem` pass over `GameState.command` and fold it into the result. Structurally identical to `fromPermanent` minus the `SetLandSubtype` liveness / text-change machinery (an emblem has no basic-land-type text and cannot be stripped):
 
 ```haskell
       fromEmblem emblemId = case Game.lookupObject emblemId gs of
@@ -496,18 +496,18 @@ EOF
 ### Task 4: `GameState.monarch`, `MonarchTarget`, `Effect.BecomeMonarch`, `GameEvent.BecameMonarch`
 
 **Files:**
-- Create: `source/library/Pawl/Type/MonarchTarget.hs`
-- Modify: `source/library/Pawl/Type/GameState.hs` (+`monarch`), `source/library/Pawl/Type/Effect.hs` (+`BecomeMonarch`), `source/library/Pawl/Type/GameEvent.hs` (+`BecameMonarch`)
-- Modify: `source/library/Pawl/Resolve.hs` (classifier arms + `BecomeMonarch` executor), `source/library/Pawl/Event.hs` (`movedOf`/`damageOf`/`castOf` arms), `source/library/Pawl/Setup.hs`, `source/library/Pawl/Codec.hs`
-- Modify: `source/test-suite/Pawl/Support.hs` (`withMonarch`, `monarch` field)
-- Test: `source/test-suite/Pawl/CodecSpec.hs`, `source/test-suite/Pawl/SetupSpec.hs`, `source/test-suite/Pawl/ResolveSpec.hs`
+- Create: `source/library/Parun/Type/MonarchTarget.hs`
+- Modify: `source/library/Parun/Type/GameState.hs` (+`monarch`), `source/library/Parun/Type/Effect.hs` (+`BecomeMonarch`), `source/library/Parun/Type/GameEvent.hs` (+`BecameMonarch`)
+- Modify: `source/library/Parun/Resolve.hs` (classifier arms + `BecomeMonarch` executor), `source/library/Parun/Event.hs` (`movedOf`/`damageOf`/`castOf` arms), `source/library/Parun/Setup.hs`, `source/library/Parun/Codec.hs`
+- Modify: `source/test-suite/Parun/Support.hs` (`withMonarch`, `monarch` field)
+- Test: `source/test-suite/Parun/CodecSpec.hs`, `source/test-suite/Parun/SetupSpec.hs`, `source/test-suite/Parun/ResolveSpec.hs`
 
 **Interfaces:**
 - Produces: `GameState.monarch :: Maybe PlayerId`; `MonarchTarget.MonarchTarget` = `TheController | ControllerOfSource`; `Effect.BecomeMonarch MonarchTarget`; `GameEvent.BecameMonarch PlayerId`; `S.withMonarch :: PlayerId -> GameState -> GameState`.
 
 - [ ] **Step 1: Write the failing codec round-trips**
 
-In `source/test-suite/Pawl/CodecSpec.hs`, add a `MonarchTarget` round-trip (needs a new `Codec.monarchTargetToJson`/`jsonToMonarchTarget`), a `GameEvent.BecameMonarch` round-trip, and a `BecomeMonarch` effect round-trip:
+In `source/test-suite/Parun/CodecSpec.hs`, add a `MonarchTarget` round-trip (needs a new `Codec.monarchTargetToJson`/`jsonToMonarchTarget`), a `GameEvent.BecameMonarch` round-trip, and a `BecomeMonarch` effect round-trip:
 
 ```haskell
           HU.testCase "MonarchTarget" $ do
@@ -526,12 +526,12 @@ Expected: FAIL — `MonarchTarget` / `Effect.BecomeMonarch` / `GameEvent.BecameM
 
 - [ ] **Step 3: Create `MonarchTarget`**
 
-Create `source/library/Pawl/Type/MonarchTarget.hs`:
+Create `source/library/Parun/Type/MonarchTarget.hs`:
 
 ```haskell
-module Pawl.Type.MonarchTarget where
+module Parun.Type.MonarchTarget where
 
--- Which player an Effect.BecomeMonarch names. pawl has no general "which player"
+-- Which player an Effect.BecomeMonarch names. parun has no general "which player"
 -- spec for effects yet (#120 tracks the targeted case); these two cases are the
 -- entire need this phase, so a minimal two-constructor sum is the honest shape.
 data MonarchTarget
@@ -545,7 +545,7 @@ data MonarchTarget
 
 - [ ] **Step 4: Add `GameState.monarch` and seed it**
 
-In `source/library/Pawl/Type/GameState.hs`, add after `activeControl` (import `PlayerId` is already present):
+In `source/library/Parun/Type/GameState.hs`, add after `activeControl` (import `PlayerId` is already present):
 
 ```haskell
     activeControl :: Maybe Decider,
@@ -555,11 +555,11 @@ In `source/library/Pawl/Type/GameState.hs`, add after `activeControl` (import `P
     monarch :: Maybe PlayerId
 ```
 
-In `source/library/Pawl/Setup.hs` add `GameState.monarch = Nothing,`; in `source/test-suite/Pawl/Support.hs`'s `MkGameState` add `GameState.monarch = Nothing,`.
+In `source/library/Parun/Setup.hs` add `GameState.monarch = Nothing,`; in `source/test-suite/Parun/Support.hs`'s `MkGameState` add `GameState.monarch = Nothing,`.
 
 - [ ] **Step 5: Add `Effect.BecomeMonarch` and `GameEvent.BecameMonarch`**
 
-In `source/library/Pawl/Type/Effect.hs` add `import Pawl.Type.MonarchTarget (MonarchTarget)` and:
+In `source/library/Parun/Type/Effect.hs` add `import Parun.Type.MonarchTarget (MonarchTarget)` and:
 
 ```haskell
   | -- CR 725: a player becomes the monarch. Targetless; the beneficiary is named
@@ -568,7 +568,7 @@ In `source/library/Pawl/Type/Effect.hs` add `import Pawl.Type.MonarchTarget (Mon
     BecomeMonarch MonarchTarget
 ```
 
-In `source/library/Pawl/Type/GameEvent.hs`:
+In `source/library/Parun/Type/GameEvent.hs`:
 
 ```haskell
   | -- CR 725.1: a player became the monarch. What Palace Jailer's exile duration
@@ -579,7 +579,7 @@ In `source/library/Pawl/Type/GameEvent.hs`:
 
 - [ ] **Step 6: Add the `GameEvent` arms (Codec + Event readers)**
 
-In `source/library/Pawl/Codec.hs`, `gameEventToJson`: `GameEvent.BecameMonarch pid -> Json.tagged (Text.pack "BecameMonarch") (Just (playerIdToJson pid))`; `jsonToGameEvent`: `("BecameMonarch", Just v) -> GameEvent.BecameMonarch <$> jsonToPlayerId v`. Add the `MonarchTarget` codec beside it:
+In `source/library/Parun/Codec.hs`, `gameEventToJson`: `GameEvent.BecameMonarch pid -> Json.tagged (Text.pack "BecameMonarch") (Just (playerIdToJson pid))`; `jsonToGameEvent`: `("BecameMonarch", Just v) -> GameEvent.BecameMonarch <$> jsonToPlayerId v`. Add the `MonarchTarget` codec beside it:
 
 ```haskell
 monarchTargetToJson :: MonarchTarget.MonarchTarget -> Value
@@ -597,7 +597,7 @@ jsonToMonarchTarget =
 ```
 and `effectToJson`: `Effect.BecomeMonarch t -> Json.tagged (Text.pack "BecomeMonarch") (Just (monarchTargetToJson t))`; `jsonToEffect`: `"BecomeMonarch" -> withValue mv (fmap Effect.BecomeMonarch . jsonToMonarchTarget)`.
 
-In `source/library/Pawl/Event.hs`, add a `False`/`Nothing`-shaped arm for `GameEvent.BecameMonarch` in each exhaustive `case event` reader that lacks a wildcard (`movedOf`, `damageOf`, `castOf` at `Event.hs:64-85`, and any `matchesTrigger` inner cases — the `-Werror` build names them precisely).
+In `source/library/Parun/Event.hs`, add a `False`/`Nothing`-shaped arm for `GameEvent.BecameMonarch` in each exhaustive `case event` reader that lacks a wildcard (`movedOf`, `damageOf`, `castOf` at `Event.hs:64-85`, and any `matchesTrigger` inner cases — the `-Werror` build names them precisely).
 
 - [ ] **Step 7: Add the `BecomeMonarch` classifier arms and executor in `Resolve.hs`**
 
@@ -629,11 +629,11 @@ In `source/library/Pawl/Event.hs`, add a `False`/`Nothing`-shaped arm for `GameE
         State.modify' (Event.recordEvent (GameEvent.BecameMonarch p))
 ```
 
-Add `import qualified Pawl.Type.MonarchTarget as MonarchTarget` and `import qualified Pawl.Type.GameEvent as GameEvent` to `Resolve.hs` if missing.
+Add `import qualified Parun.Type.MonarchTarget as MonarchTarget` and `import qualified Parun.Type.GameEvent as GameEvent` to `Resolve.hs` if missing.
 
 - [ ] **Step 8: Add the `withMonarch` support helper and a setup + behavior test**
 
-In `source/test-suite/Pawl/Support.hs`:
+In `source/test-suite/Parun/Support.hs`:
 
 ```haskell
 -- Set the monarch directly, for tests that need the designation without
@@ -642,12 +642,12 @@ withMonarch :: PlayerId.PlayerId -> GameState.GameState -> GameState.GameState
 withMonarch pid gs = gs {GameState.monarch = Just pid}
 ```
 
-In `source/test-suite/Pawl/SetupSpec.hs`:
+In `source/test-suite/Parun/SetupSpec.hs`:
 ```haskell
       HU.testCase "CR 725.1 a new game has no monarch" $
         HU.assertEqual "no monarch" Nothing (GameState.monarch (Setup.emptyGame S.bothPlayers)),
 ```
-In `source/test-suite/Pawl/ResolveSpec.hs`:
+In `source/test-suite/Parun/ResolveSpec.hs`:
 ```haskell
       HU.testCase "CR 725 BecomeMonarch TheController makes the resolver the monarch" $
         let (src, gs0) = S.addCreature (Cards.pikerPrinting cards) S.alice (Setup.emptyGame S.bothPlayers)
@@ -677,12 +677,12 @@ EOF
 
 ---
 
-### Task 5: `Pawl.Monarch`, the inherent triggers, and the end-step draw
+### Task 5: `Parun.Monarch`, the inherent triggers, and the end-step draw
 
 **Files:**
-- Create: `source/library/Pawl/Monarch.hs`
-- Modify: `source/library/Pawl/Engine.hs` (`placePendingTriggers` gathers/places inherent triggers)
-- Test: `source/test-suite/Pawl/ExpirySpec.hs` (end-step draw)
+- Create: `source/library/Parun/Monarch.hs`
+- Modify: `source/library/Parun/Engine.hs` (`placePendingTriggers` gathers/places inherent triggers)
+- Test: `source/test-suite/Parun/ExpirySpec.hs` (end-step draw)
 
 **Interfaces:**
 - Consumes: `GameState.monarch`, `Source.OfInherentTrigger`, `Effect.Draw`, `TriggerCondition.StepBegins`, `Binding.setYou`/`fromChoices`.
@@ -690,7 +690,7 @@ EOF
 
 - [ ] **Step 1: Write the failing end-step-draw tests**
 
-In `source/test-suite/Pawl/ExpirySpec.hs` (reusing its `settle`/`resolveAll` helpers — `settle gs = S.runPure S.identityAnswer gs Engine.settleForPriority`, `resolveAll gs = S.runPure S.identityAnswer gs Engine.priorityLoop`), add. The falsifier: no permanents on the battlefield at all, so the draw cannot hang on a bearer.
+In `source/test-suite/Parun/ExpirySpec.hs` (reusing its `settle`/`resolveAll` helpers — `settle gs = S.runPure S.identityAnswer gs Engine.settleForPriority`, `resolveAll gs = S.runPure S.identityAnswer gs Engine.priorityLoop`), add. The falsifier: no permanents on the battlefield at all, so the draw cannot hang on a bearer.
 
 ```haskell
       HU.testCase "CR 725.2 the monarch draws at the beginning of their own end step" $
@@ -713,12 +713,12 @@ In `source/test-suite/Pawl/ExpirySpec.hs` (reusing its `settle`/`resolveAll` hel
 Run: `cabal test --test-options='-p "end step"' 2>&1 | tail -20`
 Expected: FAIL — alice's hand is empty (no inherent draw is placed/resolved).
 
-- [ ] **Step 3: Create `Pawl.Monarch` with the draw ability, matcher, gatherer, and placer**
+- [ ] **Step 3: Create `Parun.Monarch` with the draw ability, matcher, gatherer, and placer**
 
-Create `source/library/Pawl/Monarch.hs` (Task 6 adds the steal ability/arm to `monarchAbilities` and `inherentMatch`; write those two entries as single-element / partial now and extend them there):
+Create `source/library/Parun/Monarch.hs` (Task 6 adds the steal ability/arm to `monarchAbilities` and `inherentMatch`; write those two entries as single-element / partial now and extend them there):
 
 ```haskell
-module Pawl.Monarch where
+module Parun.Monarch where
 
 import qualified Control.Monad as Monad
 import qualified Control.Monad.Trans.State.Strict as State
@@ -727,36 +727,36 @@ import qualified Data.Map.Strict as Map
 import qualified Data.Maybe as Maybe
 import qualified Data.Sequence as Seq
 import qualified Data.Set as Set
-import qualified Pawl.Binding as Binding
-import qualified Pawl.Game as Game
-import qualified Pawl.Projection as Projection
-import Pawl.Type.Binding (Binding)
-import Pawl.Type.Card (Card)
-import qualified Pawl.Type.Effect as Effect
-import qualified Pawl.Type.EndingStep as EndingStep
-import Pawl.Type.Game (Game)
-import Pawl.Type.GameEvent (GameEvent)
-import qualified Pawl.Type.GameEvent as GameEvent
-import Pawl.Type.GameState (GameState)
-import qualified Pawl.Type.GameState as GameState
-import qualified Pawl.Type.Modal as Modal
-import qualified Pawl.Type.Mode as Mode
-import qualified Pawl.Type.ModeIndex as ModeIndex
-import qualified Pawl.Type.ModeSelection as ModeSelection
-import qualified Pawl.Type.Object as Object
-import qualified Pawl.Type.Phase as Phase
-import Pawl.Type.PlayerId (PlayerId)
-import qualified Pawl.Type.Quantity as Quantity
-import qualified Pawl.Type.Sickness as Sickness
-import qualified Pawl.Type.SlotName as SlotName
-import qualified Pawl.Type.Source as Source
-import qualified Pawl.Type.TapState as TapState
-import Pawl.Type.TriggerCondition (TriggerCondition)
-import qualified Pawl.Type.TriggerCondition as TriggerCondition
-import Pawl.Type.TriggeredAbility (TriggeredAbility)
-import qualified Pawl.Type.TriggeredAbility as TriggeredAbility
-import qualified Pawl.Type.TurnScope as TurnScope
-import qualified Pawl.Type.Zone as Zone
+import qualified Parun.Binding as Binding
+import qualified Parun.Game as Game
+import qualified Parun.Projection as Projection
+import Parun.Type.Binding (Binding)
+import Parun.Type.Card (Card)
+import qualified Parun.Type.Effect as Effect
+import qualified Parun.Type.EndingStep as EndingStep
+import Parun.Type.Game (Game)
+import Parun.Type.GameEvent (GameEvent)
+import qualified Parun.Type.GameEvent as GameEvent
+import Parun.Type.GameState (GameState)
+import qualified Parun.Type.GameState as GameState
+import qualified Parun.Type.Modal as Modal
+import qualified Parun.Type.Mode as Mode
+import qualified Parun.Type.ModeIndex as ModeIndex
+import qualified Parun.Type.ModeSelection as ModeSelection
+import qualified Parun.Type.Object as Object
+import qualified Parun.Type.Phase as Phase
+import Parun.Type.PlayerId (PlayerId)
+import qualified Parun.Type.Quantity as Quantity
+import qualified Parun.Type.Sickness as Sickness
+import qualified Parun.Type.SlotName as SlotName
+import qualified Parun.Type.Source as Source
+import qualified Parun.Type.TapState as TapState
+import Parun.Type.TriggerCondition (TriggerCondition)
+import qualified Parun.Type.TriggerCondition as TriggerCondition
+import Parun.Type.TriggeredAbility (TriggeredAbility)
+import qualified Parun.Type.TriggeredAbility as TriggeredAbility
+import qualified Parun.Type.TurnScope as TurnScope
+import qualified Parun.Type.Zone as Zone
 
 -- A single-mode, single-effect triggered ability (the shape all monarch inherent
 -- abilities take): one Mode with no targets, forced (ChooseExactly 1).
@@ -839,11 +839,11 @@ placeInherent controller ability provided = do
 
 Notes for the implementer to confirm against the real modules (adjust if wrong, do not guess past them):
 - `ModeIndex.MkModeIndex :: Natural -> ModeIndex` and `Binding.fromChoices`' 4th argument is `Set ModeIndex` (placeOne passes a `Set ModeIndex` there). If that arg is a `Maybe (Set ModeIndex)`, pass `(Just allModes)`.
-- The `Binding` type comes from `Pawl.Type.Binding` (imported unqualified as the bare field type, the `Data.Map (Map)` exception) and the helpers from `Pawl.Binding`. `Modal.modes` is a `Seq (Mode card)`.
+- The `Binding` type comes from `Parun.Type.Binding` (imported unqualified as the bare field type, the `Data.Map (Map)` exception) and the helpers from `Parun.Binding`. `Modal.modes` is a `Seq (Mode card)`.
 
 - [ ] **Step 4: Gather and place inherent triggers in `placePendingTriggers`**
 
-In `source/library/Pawl/Engine.hs`, add `import qualified Pawl.Monarch as Monarch`, and rewrite `placePendingTriggers` so it reads the unscanned events once and also places inherent triggers:
+In `source/library/Parun/Engine.hs`, add `import qualified Parun.Monarch as Monarch`, and rewrite `placePendingTriggers` so it reads the unscanned events once and also places inherent triggers:
 
 ```haskell
 placePendingTriggers :: Game Bool
@@ -886,9 +886,9 @@ EOF
 ### Task 6: The combat-damage steal — `CreatureDealtCombatDamageToMonarch`
 
 **Files:**
-- Modify: `source/library/Pawl/Type/TriggerCondition.hs` (+`CreatureDealtCombatDamageToMonarch`)
-- Modify: `source/library/Pawl/Event.hs` (`matchesTrigger` arm + the `stateTriggers` `live` arm), `source/library/Pawl/Codec.hs` (both TriggerCondition functions), `source/library/Pawl/Monarch.hs` (`crownSteal`, the `inherentMatch` steal arm, add to `monarchAbilities`)
-- Test: `source/test-suite/Pawl/CodecSpec.hs`, `source/test-suite/Pawl/ExpirySpec.hs`
+- Modify: `source/library/Parun/Type/TriggerCondition.hs` (+`CreatureDealtCombatDamageToMonarch`)
+- Modify: `source/library/Parun/Event.hs` (`matchesTrigger` arm + the `stateTriggers` `live` arm), `source/library/Parun/Codec.hs` (both TriggerCondition functions), `source/library/Parun/Monarch.hs` (`crownSteal`, the `inherentMatch` steal arm, add to `monarchAbilities`)
+- Test: `source/test-suite/Parun/CodecSpec.hs`, `source/test-suite/Parun/ExpirySpec.hs`
 
 **Interfaces:**
 - Consumes: `DamageEvent`, `Projection.isCreatureOf`, `Binding.setTriggerSource`, `Effect.BecomeMonarch ControllerOfSource`.
@@ -896,12 +896,12 @@ EOF
 
 - [ ] **Step 1: Write the failing codec round-trip and steal tests**
 
-In `source/test-suite/Pawl/CodecSpec.hs`:
+In `source/test-suite/Parun/CodecSpec.hs`:
 ```haskell
           HU.testCase "CreatureDealtCombatDamageToMonarch" $
             roundTrip "cd" Codec.triggerConditionToJson Codec.jsonToTriggerCondition TriggerCondition.CreatureDealtCombatDamageToMonarch,
 ```
-In `source/test-suite/Pawl/ExpirySpec.hs` (falsifier: B's creature deals combat damage to monarch A ⇒ **B** — the creature's controller, not the ability's controller A — becomes the monarch):
+In `source/test-suite/Parun/ExpirySpec.hs` (falsifier: B's creature deals combat damage to monarch A ⇒ **B** — the creature's controller, not the ability's controller A — becomes the monarch):
 ```haskell
       HU.testCase "CR 725.2 combat damage to the monarch hands the crown to the damager's controller" $
         let (bobCreature, gs0) = S.addCreature (Cards.pikerPrinting cards) S.bob (S.withMonarch S.alice (Setup.emptyGame S.bothPlayers))
@@ -924,19 +924,19 @@ Expected: FAIL — `CreatureDealtCombatDamageToMonarch` not in scope.
 
 - [ ] **Step 3: Add the trigger condition and its Event/Codec arms**
 
-In `source/library/Pawl/Type/TriggerCondition.hs`, add after `SelfDealsCombatDamageToPlayer`:
+In `source/library/Parun/Type/TriggerCondition.hs`, add after `SelfDealsCombatDamageToPlayer`:
 ```haskell
   | -- CR 725.2: a creature dealt combat damage to the monarch. NOT bearer-scoped
-    -- (any creature); matched only via Pawl.Monarch.inherentMatch, never through a
+    -- (any creature); matched only via Parun.Monarch.inherentMatch, never through a
     -- card's bearer. Rides P4's DamageDealt history.
     CreatureDealtCombatDamageToMonarch
 ```
-In `source/library/Pawl/Event.hs`: add the compiler-forced arm to `matchesTrigger`'s top-level `case cond` returning `False` for all events (a card-bearer never carries this condition; it fires only via the inherent path) — a one-line `TriggerCondition.CreatureDealtCombatDamageToMonarch -> False`, with a comment citing that the real match is `Pawl.Monarch.inherentMatch`; add the same to the `live` helper inside `stateTriggers` if it cases exhaustively on `TriggerCondition` (per the P10 note that adding a `TriggerCondition` constructor forces exactly `matchesTrigger`, `stateTriggers`' `live`, and the two `Codec` functions).
-In `source/library/Pawl/Codec.hs`: `triggerConditionToJson` → `TriggerCondition.CreatureDealtCombatDamageToMonarch -> nullary (Text.pack "CreatureDealtCombatDamageToMonarch")`; `jsonToTriggerCondition` → `("CreatureDealtCombatDamageToMonarch", _) -> Right TriggerCondition.CreatureDealtCombatDamageToMonarch`.
+In `source/library/Parun/Event.hs`: add the compiler-forced arm to `matchesTrigger`'s top-level `case cond` returning `False` for all events (a card-bearer never carries this condition; it fires only via the inherent path) — a one-line `TriggerCondition.CreatureDealtCombatDamageToMonarch -> False`, with a comment citing that the real match is `Parun.Monarch.inherentMatch`; add the same to the `live` helper inside `stateTriggers` if it cases exhaustively on `TriggerCondition` (per the P10 note that adding a `TriggerCondition` constructor forces exactly `matchesTrigger`, `stateTriggers`' `live`, and the two `Codec` functions).
+In `source/library/Parun/Codec.hs`: `triggerConditionToJson` → `TriggerCondition.CreatureDealtCombatDamageToMonarch -> nullary (Text.pack "CreatureDealtCombatDamageToMonarch")`; `jsonToTriggerCondition` → `("CreatureDealtCombatDamageToMonarch", _) -> Right TriggerCondition.CreatureDealtCombatDamageToMonarch`.
 
-- [ ] **Step 4: Add the steal ability and its match arm in `Pawl.Monarch`**
+- [ ] **Step 4: Add the steal ability and its match arm in `Parun.Monarch`**
 
-In `source/library/Pawl/Monarch.hs`, add imports `Pawl.Type.DamageEvent`, `Pawl.Type.DamageKind`, `Pawl.Type.Recipient`, `Pawl.Type.MonarchTarget`, and:
+In `source/library/Parun/Monarch.hs`, add imports `Parun.Type.DamageEvent`, `Parun.Type.DamageKind`, `Parun.Type.Recipient`, `Parun.Type.MonarchTarget`, and:
 ```haskell
 -- CR 725.2: "Whenever a creature deals combat damage to the monarch, its
 -- controller becomes the monarch." Controlled by the current monarch; makes a
@@ -979,11 +979,11 @@ EOF
 ### Task 7: Palace Jailer — exile-until-monarch and the gate card — closes GAP-S
 
 **Files:**
-- Modify: `source/library/Pawl/Type/Effect.hs` (+`ExileUntilMonarch`), `source/library/Pawl/Type/GameState.hs` (+`exiledUntilMonarch`)
-- Modify: `source/library/Pawl/Event.hs` (`changeZoneReturning`), `source/library/Pawl/Monarch.hs` (`returnExiledForMonarch`), `source/library/Pawl/Engine.hs` (wire the sweep), `source/library/Pawl/Resolve.hs` (classifier arms + `ExileUntilMonarch` executor), `source/library/Pawl/Codec.hs` (Effect arms), `source/library/Pawl/Setup.hs`, `source/test-suite/Pawl/Support.hs` (`exiledUntilMonarch` field)
+- Modify: `source/library/Parun/Type/Effect.hs` (+`ExileUntilMonarch`), `source/library/Parun/Type/GameState.hs` (+`exiledUntilMonarch`)
+- Modify: `source/library/Parun/Event.hs` (`changeZoneReturning`), `source/library/Parun/Monarch.hs` (`returnExiledForMonarch`), `source/library/Parun/Engine.hs` (wire the sweep), `source/library/Parun/Resolve.hs` (classifier arms + `ExileUntilMonarch` executor), `source/library/Parun/Codec.hs` (Effect arms), `source/library/Parun/Setup.hs`, `source/test-suite/Parun/Support.hs` (`exiledUntilMonarch` field)
 - Create: `data/cards/palace-jailer.json`
-- Modify: `source/test-suite/Pawl/Cards.hs` (Palace Jailer ×3)
-- Test: `source/test-suite/Pawl/CardSpec.hs`, `source/test-suite/Pawl/ExpirySpec.hs`
+- Modify: `source/test-suite/Parun/Cards.hs` (Palace Jailer ×3)
+- Test: `source/test-suite/Parun/CardSpec.hs`, `source/test-suite/Parun/ExpirySpec.hs`
 
 **Interfaces:**
 - Consumes: `Effect.BecomeMonarch TheController` (ETB #1), `GameState.monarch`, `Event.changeZone`.
@@ -991,11 +991,11 @@ EOF
 
 - [ ] **Step 1: Expose the new incarnation id from the zone-change funnel**
 
-In `source/library/Pawl/Event.hs`, refactor `changeZone` so its body becomes `changeZoneReturning :: ObjectId -> Zone -> Game (Maybe ObjectId)` returning `Just newId` on a completed move and `Nothing` when the move is cancelled (the existing `resolved == Nothing` branch), and define `changeZone oid dest = Monad.void (changeZoneReturning oid dest)`. This keeps all ~30 existing `changeZone` callers unchanged (no `-Wunused-do-bind` fallout). Concretely: rename the current function, change its two `pure ()`/end points to `pure Nothing` / `pure (Just newId)`, and add the two-line `changeZone` wrapper.
+In `source/library/Parun/Event.hs`, refactor `changeZone` so its body becomes `changeZoneReturning :: ObjectId -> Zone -> Game (Maybe ObjectId)` returning `Just newId` on a completed move and `Nothing` when the move is cancelled (the existing `resolved == Nothing` branch), and define `changeZone oid dest = Monad.void (changeZoneReturning oid dest)`. This keeps all ~30 existing `changeZone` callers unchanged (no `-Wunused-do-bind` fallout). Concretely: rename the current function, change its two `pure ()`/end points to `pure Nothing` / `pure (Just newId)`, and add the two-line `changeZone` wrapper.
 
 - [ ] **Step 2: Write the failing `ExileUntilMonarch` codec round-trip**
 
-In `source/test-suite/Pawl/CodecSpec.hs`:
+In `source/test-suite/Parun/CodecSpec.hs`:
 ```haskell
           HU.testCase "ExileUntilMonarch" $
             roundTrip "eum" Codec.effectToJson Codec.jsonToEffect (Effect.ExileUntilMonarch (SlotName.MkSlotName (Text.pack "target"))),
@@ -1003,16 +1003,16 @@ In `source/test-suite/Pawl/CodecSpec.hs`:
 
 - [ ] **Step 3: Add the opcode, the GameState carrier, and seeds**
 
-In `source/library/Pawl/Type/Effect.hs`:
+In `source/library/Parun/Type/Effect.hs`:
 ```haskell
   | -- CR 725 (Palace Jailer): exile the slot's target UNTIL an opponent of the
     -- effect's controller becomes the monarch. The exile is the usual targeted
     -- move; the DURATION is the novelty -- the exiled incarnation is registered in
-    -- GameState.exiledUntilMonarch and returned by Pawl.Monarch's settle-loop
+    -- GameState.exiledUntilMonarch and returned by Parun.Monarch's settle-loop
     -- sweep. NOT MoveToZone: that has no duration and schedules no return.
     ExileUntilMonarch SlotName
 ```
-In `source/library/Pawl/Type/GameState.hs`, add after `monarch`:
+In `source/library/Parun/Type/GameState.hs`, add after `monarch`:
 ```haskell
     monarch :: Maybe PlayerId,
     -- CR 725 (Palace Jailer): objects exiled "until an opponent becomes the
@@ -1055,7 +1055,7 @@ Seed `GameState.exiledUntilMonarch = Map.empty` in `Setup.hs` and in `Support.hs
 
 - [ ] **Step 6: Add the return sweep and wire it into the settle loop**
 
-In `source/library/Pawl/Monarch.hs` add (imports `Pawl.Event`, `Pawl.Type.Zone`, `Control.Monad`):
+In `source/library/Parun/Monarch.hs` add (imports `Parun.Event`, `Parun.Type.Zone`, `Control.Monad`):
 ```haskell
 -- CR 725 (Palace Jailer): return every "exiled until an opponent becomes the
 -- monarch" object once an opponent of its controller is the monarch. Two-player
@@ -1076,7 +1076,7 @@ returnExiledForMonarch = do
                 State.modify' (\g -> g {GameState.exiledUntilMonarch = Map.delete oid (GameState.exiledUntilMonarch g)})
               pure True
 ```
-In `source/library/Pawl/Engine.hs`, `settleForPriority`, add the sweep and fold it into the re-loop condition:
+In `source/library/Parun/Engine.hs`, `settleForPriority`, add the sweep and fold it into the re-loop condition:
 ```haskell
 settleForPriority = do
   swept <- Expiry.sweepConditional
@@ -1149,7 +1149,7 @@ Create `data/cards/palace-jailer.json` (re-read the printed text from Scryfall; 
 }
 ```
 
-(Verify `Subtype` has `Human` and `Soldier`; if either is missing, add it to `Pawl.Type.Subtype` and both `Codec` subtype tables, as P10 did for `Phyrexian`/`Elf`. Verify the `targetSpecs` array-vs-object shape against a loaded card such as Master Thief — copy its exact structure.)
+(Verify `Subtype` has `Human` and `Soldier`; if either is missing, add it to `Parun.Type.Subtype` and both `Codec` subtype tables, as P10 did for `Phyrexian`/`Elf`. Verify the `targetSpecs` array-vs-object shape against a loaded card such as Master Thief — copy its exact structure.)
 
 - [ ] **Step 8: Register Palace Jailer in `Cards.hs` (three edits)**
 
@@ -1157,7 +1157,7 @@ Add `palaceJailerPrinting :: Printing.Printing,` to `MkCards`; `palaceJailerPrin
 
 - [ ] **Step 9: Write the failing Palace Jailer characteristics test**
 
-In `source/test-suite/Pawl/CardSpec.hs` (Master Thief pattern):
+In `source/test-suite/Parun/CardSpec.hs` (Master Thief pattern):
 ```haskell
         , HU.testCase "Palace Jailer is a {2}{W}{W} 2/2 Human Soldier with two ETB triggers" $ do
             HU.assertEqual "name" (Text.pack "Palace Jailer") (Card.Type.name (card (Cards.palaceJailerPrinting cards)))
@@ -1168,7 +1168,7 @@ In `source/test-suite/Pawl/CardSpec.hs` (Master Thief pattern):
 
 - [ ] **Step 10: Write the failing Palace Jailer gameplay tests**
 
-In `source/test-suite/Pawl/ExpirySpec.hs`, Master-Thief-style (fabricate the entry event, `settle` then `resolveAll`). The falsifiers: exile persists across a turn boundary while the caster stays monarch, and returns exactly when an opponent takes the crown.
+In `source/test-suite/Parun/ExpirySpec.hs`, Master-Thief-style (fabricate the entry event, `settle` then `resolveAll`). The falsifiers: exile persists across a turn boundary while the caster stays monarch, and returns exactly when an opponent takes the crown.
 
 ```haskell
       HU.testCase "CR 725 Palace Jailer: ETB makes the caster monarch and exiles an opponent's creature until an opponent takes the crown" $
@@ -1221,7 +1221,7 @@ EOF
 
 **Interfaces:** none (bookkeeping).
 
-- [ ] **Step 1: File the deferral issues on `tfausak/pawl`**
+- [ ] **Step 1: File the deferral issues on `tfausak/parun`**
 
 `gh issue create` for each, carrying status, rationale, and expiry label:
 - **Synthetic emblem source** (`S.anthemEmblemCard`) — `expires:card-driven`; retired when planeswalkers or the Ring land and a real card can mint an emblem. Cite `Support.hs`'s fixture site.
@@ -1234,18 +1234,18 @@ EOF
 
 - [ ] **Step 2: Replace the `#TBD-*` markers with the real issue numbers**
 
-Replace `(#TBD-emblem-source)` in `source/test-suite/Pawl/Support.hs` (the `anthemEmblemCard` fixture) with the synthetic-emblem-source issue's `(#N)`, and any other `#TBD-*` markers you left while implementing. State only what is *not* implemented plus `(#N)`; never write the expiry into the comment (CLAUDE.md).
+Replace `(#TBD-emblem-source)` in `source/test-suite/Parun/Support.hs` (the `anthemEmblemCard` fixture) with the synthetic-emblem-source issue's `(#N)`, and any other `#TBD-*` markers you left while implementing. State only what is *not* implemented plus `(#N)`; never write the expiry into the comment (CLAUDE.md).
 
 Run: `grep -rn "#TBD" source/ data/ ; echo "exit: $?"`
 Expected: no matches (grep exit 1).
 
 - [ ] **Step 3: Add the P11 completion entry to `docs/progress.md`**
 
-One distilled entry: gate cards (Palace Jailer; the labeled synthetic emblem source), the decisions proved (a seventh zone whose statics function off the battlefield; the monarch as a game-wide designation with two sourceless inherent triggers; exile-until-designation as a dedicated carrier because the Expiry sweeps are delete-only), and the types/opcodes added (`Zone.Command`; `GameState.command`/`monarch`/`exiledUntilMonarch`; `Source.OfEmblem`/`OfInherentTrigger`; `Effect.CreateEmblem`/`BecomeMonarch`/`ExileUntilMonarch`; `MonarchTarget`; `GameEvent.BecameMonarch`; `TriggerCondition.CreatureDealtCombatDamageToMonarch`; `Pawl.Monarch`; the projection command-zone gather + affected-set perspective). Match the existing entries' format.
+One distilled entry: gate cards (Palace Jailer; the labeled synthetic emblem source), the decisions proved (a seventh zone whose statics function off the battlefield; the monarch as a game-wide designation with two sourceless inherent triggers; exile-until-designation as a dedicated carrier because the Expiry sweeps are delete-only), and the types/opcodes added (`Zone.Command`; `GameState.command`/`monarch`/`exiledUntilMonarch`; `Source.OfEmblem`/`OfInherentTrigger`; `Effect.CreateEmblem`/`BecomeMonarch`/`ExileUntilMonarch`; `MonarchTarget`; `GameEvent.BecameMonarch`; `TriggerCondition.CreatureDealtCombatDamageToMonarch`; `Parun.Monarch`; the projection command-zone gather + affected-set perspective). Match the existing entries' format.
 
 - [ ] **Step 4: Replace (do not append) the status bullet in `CLAUDE.md`**
 
-Update the "Current work and tracking" status bullet so it records P11 as closed (GAP-Z command zone + emblems; the monarch customer of GAP-S) and states **M4.5 is complete** — every closed-half axis the census flagged now has a type-system axis and a real (or sanctioned labeled-synthetic) gate card with a passing gameplay test. Remove "P11 is the one remaining M4.5 phase." Close the umbrella issue: `gh issue close 7 --repo tfausak/pawl --comment "Landed by M4.5 P11; M4.5 complete."`.
+Update the "Current work and tracking" status bullet so it records P11 as closed (GAP-Z command zone + emblems; the monarch customer of GAP-S) and states **M4.5 is complete** — every closed-half axis the census flagged now has a type-system axis and a real (or sanctioned labeled-synthetic) gate card with a passing gameplay test. Remove "P11 is the one remaining M4.5 phase." Close the umbrella issue: `gh issue close 7 --repo tfausak/parun --comment "Landed by M4.5 P11; M4.5 complete."`.
 
 - [ ] **Step 5: Final full verification**
 
@@ -1277,9 +1277,9 @@ EOF
 
 ## Deviations from the spec (verified against the codebase, applied in this plan)
 
-1. **No codecs for `Source`, `GameState`, `Object` (spec §2.10).** None of these are serialized today (`Pawl.Codec` covers the `Card` closure plus `GameEvent`/`DamageEvent`). So `Source.OfEmblem`/`OfInherentTrigger` and the three new `GameState` fields need no codec arms. `MonarchTarget` still gets one (embedded in `Effect.BecomeMonarch`). A standalone "GameState/Object/Source serialization" deferral issue is filed (Task 8), per the user's request to log this recurring gap.
+1. **No codecs for `Source`, `GameState`, `Object` (spec §2.10).** None of these are serialized today (`Parun.Codec` covers the `Card` closure plus `GameEvent`/`DamageEvent`). So `Source.OfEmblem`/`OfInherentTrigger` and the three new `GameState` fields need no codec arms. `MonarchTarget` still gets one (embedded in `Effect.BecomeMonarch`). A standalone "GameState/Object/Source serialization" deferral issue is filed (Task 8), per the user's request to log this recurring gap.
 2. **Palace Jailer's exile-return is a dedicated carrier + settle-loop sweep, not an `Expiry` (spec §1/§2.9/§6).** The `Expiry` sweeps are **delete-and-recompute only** — they drop a stored effect so the next projection reverts it, and none performs a zone change. A physically-exiled permanent cannot be recomputed back onto the battlefield. So the plan adds `GameState.exiledUntilMonarch` + `Effect.ExileUntilMonarch` + `Monarch.returnExiledForMonarch` (wired into `settleForPriority`) and adds **no** `Expiry` constructor and **no** `StateCondition`. Observable behavior matches the spec ("the exile lasts until an opponent becomes the monarch"); the mechanism differs because the spec's stated one is not buildable.
 3. **`changeZone` is refactored to expose the new incarnation id.** It returns `()` today; capturing the exiled incarnation for the return register needs `changeZoneReturning :: … -> Game (Maybe ObjectId)`, with `changeZone` as a `Monad.void` wrapper so existing callers are untouched.
 4. **`Projection.affects` gains a source's-controller perspective.** The emblem anthem "creatures **you** control get +1/+1" is the first affected-set filter to reference a player; `affects` hard-coded the perspective to `Nothing` (documented as valid only until such a filter existed). Supplying `controllerOf source`/`controllerOf oid` is safe (no existing affected-set filter reads `ControlledBy`). This partially retires the shortcut #34/#35 tracks (the affected-set half only; the player-scoped-`Count` half is untouched).
 5. **`Ending EndStep`, not `Ending End` (spec §2.7).** The `Phase`/`EndingStep` constructors are `Phase.Ending EndingStep.EndStep`.
-6. **No new `Pawl.*Spec` module.** Palace Jailer characteristics land in `CardSpec.hs`; all emblem/monarch gameplay lands in `ExpirySpec.hs` and `ProjectionSpec.hs`, matching how P10 avoided a new suite module.
+6. **No new `Parun.*Spec` module.** Palace Jailer characteristics land in `CardSpec.hs`; all emblem/monarch gameplay lands in `ExpirySpec.hs` and `ProjectionSpec.hs`, matching how P10 avoided a new suite module.

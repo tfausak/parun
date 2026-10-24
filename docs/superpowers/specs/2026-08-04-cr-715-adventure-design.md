@@ -7,14 +7,14 @@ Issue: #667. Unblocks the cast-from-exile half of #48.
 Two problems that are one unit, because the second is the reason to pick the
 first.
 
-**Adventurer cards are unrepresentable.** `Pawl.Types.Layout` carries `Normal`
-and `Split`. `Pawl.Engine.Card.combined`'s header already names CR 715.4 as one
+**Adventurer cards are unrepresentable.** `Parun.Types.Layout` carries `Normal`
+and `Split`. `Parun.Engine.Card.combined`'s header already names CR 715.4 as one
 of the three rules that disagree about which face a card shows, and says the
 layouts that make them differ "get their arm when they land". `Subtype.Adventure`
 (CR 205.3k) has been in the enum since M0 with no mechanism behind it.
 
-**Nothing can be played from exile.** `Pawl.Engine.Cast.castZones` is
-`[Zone.Hand, Zone.Graveyard]`. Every casting permission pawl has is read off the
+**Nothing can be played from exile.** `Parun.Engine.Cast.castZones` is
+`[Zone.Hand, Zone.Graveyard]`. Every casting permission parun has is read off the
 CARD — `Face.castingPermissions` (Panglacial Wurm) or what rule 702 gives a
 keyword (flashback) — so a permission that a RULE grants to one exiled OBJECT
 for one PLAYER has no carrier at all.
@@ -31,7 +31,7 @@ Every other printed producer of a play-from-exile permission is a "you may cast
 that card for as long as it remains exiled" grant from a spell's own text
 (Psychic Theft, Elkin Lair, Grinning Totem, Mnemonic Betrayal), each of which
 needs a reveal-and-choose prompt or a mass exile before its text can be authored
-at all. An adventurer card needs neither: both halves are already in pawl's
+at all. An adventurer card needs neither: both halves are already in parun's
 vocabulary.
 
 ## 2. Scope
@@ -152,13 +152,13 @@ the same card in hand offers two.
 
 ### 4.6 Where the card's file lives
 
-`Pawl.Registry.parseCard` files a card under its face names JOINED — a filing
+`Parun.Registry.parseCard` files a card under its face names JOINED — a filing
 convention rather than a name the card has (#649), and one the registry must
 compute without the engine, since `registry` sits above `engine` in the
 sublibrary table. So the file is `embereth-shieldbreaker-battle-display.json`
 even though CR 715.4 makes the card's name "Embereth Shieldbreaker".
 
-`Pawl.CardsSpec.slugOf` read that location off `Card.combined`'s name instead,
+`Parun.CardsSpec.slugOf` read that location off `Card.combined`'s name instead,
 which agreed with the join for every card that had ever existed: one face makes
 the join that face's name, and `merge2` joins a split card's two. Adventure is
 the first layout where the combined view and the join differ, so `slugOf` moves
@@ -173,17 +173,17 @@ onto `CardName.join` — the same side of the distinction the registry is on.
 - #669: CR 715.3d's closing "although other effects ... may allow a player to
   cast it as an Adventure" has neither a second permission to be the other
   effect nor a place to put the exclusion other than the exile arm itself.
-- #670: CR 715.3d's "play" covers a land, and pawl's land drop is a separate
+- #670: CR 715.3d's "play" covers a land, and parun's land drop is a separate
   action that does not consult this field. No adventurer card's normal face is a
   land.
 
 ## 6. Tasks
 
-1. `Layout.Adventure` + codec + `Pawl.Codec.LayoutSpec`.
+1. `Layout.Adventure` + codec + `Parun.Codec.LayoutSpec`.
 2. `Engine.Card`: the `combined` and `castableFaces` arms, and `isAdventure`.
 3. `Object.playableFromExileBy`, and CR 715.3d in `Resolve`.
 4. `Cast`: `Zone.Exile` in `castZones`, and the gate in `castableZones`.
-5. The card file, and `Pawl.AdventureSpec` end to end: cast the Adventure half
+5. The card file, and `Parun.AdventureSpec` end to end: cast the Adventure half
    from hand, the artifact dies and the card lands in exile; the creature half
    is castable from exile and the Adventure half is not; the creature resolves
    onto the battlefield with its normal characteristics.

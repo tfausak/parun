@@ -1,0 +1,462 @@
+-- Rule 701.3's LEGALITY READING, in one place because callers a library apart need
+-- the same answer: Parun.Engine.Event.attach, which every CR 701.3 move goes
+-- through, Parun.Engine.Resolve's two attach-the-target opcodes, its Effect.Search
+-- arm and putFound -- CR 701.3a asked from the CANDIDATE's side, where the host is
+-- fixed and the Aura varies (Filter.CanAttachToSubject) -- and three arms of
+-- Parun.Engine.Event -- the CR 303.4k rewrite for an Aura being turned face up,
+-- changeZoneAttaching's CR 303.4f host choice for an Aura entering the battlefield
+-- by any means other than resolving as an Aura spell, and the
+-- EntryRewrite.EntersAttachedTo row a card prints about its own entry (CR
+-- 614.1c, Grifter's Blade). Event sits BELOW Resolve, so the shared half cannot
+-- live in Resolve where it started.
+--
+-- WHAT MAY BE ATTACHED WHERE, and never the move itself: rule 701.3b's write is
+-- Parun.Engine.Event.attach, beside the other funnels that record an event, since
+-- Event imports this module and the edge cannot run both ways. Everything here is
+-- a question with no answer written back to the board.
+--
+-- THE INVARIANT: nothing here asks which CARD is moving, or which card refuses
+-- it. It reads the PROJECTION's subtypes (CR 205.3), the enchant ability rule
+-- 702.5a gives an Aura, and the destination's own prohibition through
+-- Parun.Engine.AttachRestriction, all of which are classifications the rulebook
+-- itself makes -- the same standing Parun.Engine.Keyword has over rule 702.
+module Parun.Engine.Attach where
+
+import qualified Control.Monad.Trans.State.Strict as State
+import qualified Data.List as List
+import qualified Data.Map.Strict as Map
+import qualified Data.Maybe as Maybe
+import qualified Data.Set as Set
+import qualified Parun.Engine.AttachRestriction as AttachRestriction
+import qualified Parun.Engine.Card as Card
+import qualified Parun.Engine.Filter as Filter
+import qualified Parun.Engine.Game as Game
+import qualified Parun.Engine.Keyword as Keyword
+import qualified Parun.Engine.PlayerEffect as PlayerEffect
+import qualified Parun.Engine.Players as Players
+import qualified Parun.Engine.Projection as Projection
+import qualified Parun.Engine.Projection.View as Projection
+import qualified Parun.Engine.Target as Target
+import qualified Parun.Types.CardType as CardType
+import qualified Parun.Types.Filter as Filter.Type
+import Parun.Types.Game (Game)
+import Parun.Types.GameState (GameState)
+import qualified Parun.Types.GameState as GameState
+import qualified Parun.Types.Keyword as Keyword.Type
+import qualified Parun.Types.KeywordFamily as KeywordFamily
+import qualified Parun.Types.Object as Object
+import Parun.Types.ObjectId (ObjectId)
+import Parun.Types.PlayerId (PlayerId)
+import qualified Parun.Types.Prompt as Prompt
+import Parun.Types.Recipient (Recipient)
+import qualified Parun.Types.Recipient as Recipient
+import qualified Parun.Types.Subtype as Subtype
+import qualified Parun.Types.Zone as Zone
+
+-- CR 701.3a/701.3b: may `src` legally be attached to `destination` right now?
+--
+-- CR 701.3a's last sentence is the MOVING permanent's half -- an Aura, Equipment
+-- or Fortification can't be attached to something it couldn't enchant, equip or
+-- fortify -- so the two guarded branches below dispatch on which `src` is, read
+-- through the PROJECTION, so that an Equipment that lost the subtype (CR 301.5c)
+-- and a permanent animated into a creature both answer correctly. CR 303.4's
+-- last sentence and CR 301.5 are the DESTINATION's half, and the guard above
+-- them is where the two meet.
+--
+-- Equipment is CR 301.5's creature test. Aura is CR 303.4's enchant ability, asked
+-- through Target.admittedRecipients rather than a hand-rolled creature test, which
+-- honours an enchant slot that narrows further for free. Admission and not target
+-- legality: CR 702.5a gives the enchant ability both jobs and this is the second,
+-- so rule 702's targeting restrictions do not reach here. CR 109.5's "you" on that
+-- enchant slot is the AURA's controller, not the moving effect's. An Aura with no
+-- enchant ability answers Nothing here rather than admitting everything: printed
+-- Auras cannot be in that shape (the CardSpec lint holds the biconditional), but a
+-- permanent that gained the Aura subtype without gaining enchant can be
+-- (Modification.AddSubtype without Modification.GainEnchant), and CR 303.4c gives
+-- such a permanent nothing it may legally enchant.
+--
+-- Read off the PROJECTION rather than the printed face, which is what lets an
+-- enchant ability be GRANTED (CR 613.1f, Modification.GainEnchant) --
+-- exactly as the Aura subtype it is gated on already is. CR 708.2a's substitution
+-- still applies, since Projection.baseCharacteristics seeds this field through
+-- Game.faceOf: a permanent that is still face down has no enchant ability and no
+-- Aura subtype, and this answers Nothing for every destination. That is not an
+-- edge case here but the content of CR 303.4k -- see turnUpHosts below.
+--
+-- The Aura branch's first test is CR 303.4d's "an Aura that's also a creature
+-- can't enchant anything", whose state-based half is Sba.cannotBeAttached.
+-- Unreachable in this pool, written because it costs one comparison. The Equipment
+-- branch has the same shape with CR 301.5c's exception on it -- "an Equipment
+-- that's also a creature can't equip a creature unless that Equipment has
+-- reconfigure" -- asked as the FAMILY (CR 702.151a's cost is not part of the
+-- question) and off the projection, so a granted reconfigure counts and Humility
+-- takes it away. The Fortification branch has a third, and rule 301.6 states it
+-- outright rather than by reference: "a Fortification that's also a creature (not
+-- a land) can't fortify a land". No reconfigure exception attaches to that one,
+-- so it is written here in full.
+--
+-- The first guard -- the destination naming `src` itself -- is CR 301.5c and CR
+-- 303.4d at once. Nothing for a source that is none of the three, per CR 701.3b.
+--
+-- Answers with the RECIPIENT to store rather than a Bool, since CR 303.4
+-- attachment is to an object or player and Object.attachedTo records which -- and
+-- the tag must be the one the moving permanent's OWN rules reference the
+-- destination by, not the one the moving effect targeted it with. Taking the
+-- answer from the slot's candidate list is what keeps Sba's CR 303.4c re-check
+-- able to compare against that same list later, so `destination` is matched by
+-- which object or player it names rather than by how the caller tagged it.
+attachmentFor :: ObjectId -> Recipient -> GameState -> Maybe Recipient
+attachmentFor = attachmentWith Projection.isCreatureOf
+
+-- CR 702.6e: attachmentFor, with a planeswalker destination treated "as though
+-- that planeswalker were a creature" by the Equipment branch's CR 301.5 test.
+-- Effect.AttachAsThoughCreature's alone: every other move asks attachmentFor,
+-- and CR 704.5n's re-check (Sba.becomesUnattached) reads the host as it is.
+attachmentAsThoughCreature :: ObjectId -> Recipient -> GameState -> Maybe Recipient
+attachmentAsThoughCreature =
+  attachmentWith (\oid gs -> Projection.isCreatureOf oid gs || Set.member CardType.Planeswalker (Projection.cardTypesOf oid gs))
+
+-- The body of both, parameterised by the Equipment branch's creature test.
+attachmentWith :: (ObjectId -> GameState -> Bool) -> ObjectId -> Recipient -> GameState -> Maybe Recipient
+attachmentWith equippable src destination gs
+  | Recipient.objectOf destination == Just src = Nothing
+  -- CR 303.4's last sentence and CR 301.5 with CR 101.2: the DESTINATION's own
+  -- limit on what may become attached to it, which CR 101.2 makes beat rule
+  -- 701.3a's permission below. Asked before either branch, since Consecrate
+  -- Land's clause and Goblin Brawler's are one prohibition
+  -- (Parun.Types.AttachRestriction), and only of an object destination: CR
+  -- 702.5d's enchanted PLAYER is not a permanent, so no row of that type is
+  -- about them. The guard below is the player axis's own.
+  | Maybe.maybe False (\oid -> AttachRestriction.refuses src oid gs) (Recipient.objectOf destination) = Nothing
+  -- CR 702.16c's player half, which the object-shaped restriction above cannot
+  -- carry: a player has no keywords for Parun.Engine.Keyword to mint a row from,
+  -- so the prohibition rides the CR 613.11 player axis instead
+  -- (Parun.Types.PlayerEffect.HasProtectionFrom). Rule 702.16d states
+  -- no player half, and rule 701.3b makes a permanent that is neither Aura,
+  -- Equipment nor Fortification unattachable anyway, so this needs no
+  -- subtype conjunct for the same reason the minted row needs none.
+  --
+  -- CR 303.4f's offer drives it (entryHostsFor): Parun.AuraSpec's "CR 303.4g /
+  -- 702.16k with bob protected from alice, Archnemesis never leaves his
+  -- graveyard" proves it. CR 608.3c's Aura spell reaches its player without
+  -- coming through here, so Parun.Engine.Sba.fallsOff is that road's gate.
+  | Maybe.maybe False (\pid -> PlayerEffect.protectedFrom src pid gs) (Recipient.playerOf destination) = Nothing
+  -- CR 301.5, "it can't legally be attached to anything that isn't a creature" --
+  -- which is also why a player destination falls to Nothing here rather than
+  -- getting a branch of its own.
+  | Set.member Subtype.Equipment subtypes =
+      if Projection.isCreatureOf src gs && not hasReconfigure
+        then Nothing
+        else case Recipient.objectOf destination of
+          Just oid | equippable oid gs -> Just (Recipient.ToCreature oid)
+          _ -> Nothing
+  -- CR 301.6, the Equipment branch above with a land where that rule has a
+  -- creature: "a Fortification can be attached to a land. It can't legally be
+  -- attached to an object that isn't a land." A player destination falls to
+  -- Nothing here for the same reason it does above. Recipient.ToObject and not
+  -- ToCreature, because rule 301.6's host is named as a land and CR 115's
+  -- creature tag would be a lie about a land that is not one -- and because
+  -- Sba.becomesUnattached's re-read compares by the object, not by the tag.
+  --
+  -- The second conjunct is rule 301.6's own clarification of CR 301.5c: a
+  -- Fortification that is also a creature can't fortify, UNLESS it is a land
+  -- itself. Read through the projection, so an animated Fortification stops
+  -- being able to fortify while it is a creature.
+  --
+  -- Below the Equipment branch, so a permanent carrying both subtypes is
+  -- attached as an Equipment. That is the guard order and not a reading of the
+  -- rules; Sba.becomesUnattached takes CR 101.2's conjunctive one and would
+  -- detach it on the next pass. Nothing in the pool is both.
+  | Set.member Subtype.Fortification subtypes =
+      if Projection.isCreatureOf src gs && not (Set.member CardType.Land (Projection.cardTypesOf src gs))
+        then Nothing
+        else case Recipient.objectOf destination of
+          Just oid | Set.member CardType.Land (Projection.cardTypesOf oid gs) -> Just (Recipient.ToObject oid)
+          _ -> Nothing
+  | Set.member Subtype.Aura subtypes =
+      if Projection.isCreatureOf src gs
+        then Nothing
+        else case Card.foldEnchant (Projection.enchantOf src gs) of
+          Nothing -> Nothing
+          Just slot ->
+            List.find
+              (names destination)
+              (Set.toList (Target.admittedRecipients (Projection.controllerOf src gs) src slot gs))
+  | otherwise = Nothing
+  where
+    subtypes = Projection.subtypesOf src gs
+    hasReconfigure = any ((== Just KeywordFamily.Reconfigure) . Keyword.familyOf) (Map.keys (Projection.keywordsOf src gs))
+    -- Same object, or same player, however either was tagged. Two object tags
+    -- (ToCreature / ToObject) name one object; ToPlayer is the only player tag,
+    -- so those compare whole.
+    names a b = case (Recipient.objectOf a, Recipient.objectOf b) of
+      (Just x, Just y) -> x == y
+      (Nothing, Nothing) -> a == b
+      _ -> False
+
+-- CR 701.3a through CR 608.2h: could `src` be attached to `host` -- as `host` is
+-- now, or, once `host` no longer exists, as it MOST RECENTLY existed? Auratouched
+-- Mage's "an Aura card that could enchant it" asked of a Mage that was killed
+-- while its own trigger was on the stack, which rule 608.2h answers with the last
+-- known information of the object the ability names.
+--
+-- NOT folded into attachmentFor above, and that is the whole shape of this
+-- function. Rule 608.2h is scoped to an EFFECT that requires information about a
+-- specific object; attachmentFor's other callers are not that -- CR 704.5m's
+-- state-based re-check, CR 701.3b's move, CR 303.4k's face-up rewrite and CR
+-- 303.4f's host choice all ask what is legal ON THE BOARD, and a dead host is not
+-- a place a permanent may be attached under any of them. A fallback inside
+-- attachmentFor would make one legal for every one of them.
+--
+-- The Aura branch alone, where attachmentFor has an Equipment branch beside it:
+-- the only reader is CR 701.3a's search-side question, Parun.CardSpec's position
+-- lint keeps Filter.CanAttachToSubject inside a search's filter, and every search
+-- in data/cards that names it looks for an Aura. An Equipment answers False here,
+-- which is the direction that finds LESS than printed rather than more.
+--
+-- No AttachRestriction gate, where attachmentFor asks one first: CR 613.11 makes
+-- a destination's "can't be enchanted" a continuous effect IN FORCE, and a host
+-- that has left the battlefield has no static ability in force and no Aura still
+-- attached to it granting one. There is nothing to consult rather than something
+-- skipped.
+--
+-- The subtype, the CR 303.4d creature test and the enchant ability are all read
+-- off `src`, which is a card in a searched zone and is very much still there; only
+-- the HOST is read through rule 608.2h. So this is attachmentFor's Aura branch
+-- with its last step -- membership of a live slot's candidate set -- replaced by
+-- Target.lastKnownAdmits, which asks the same slot the same question about an
+-- object it can no longer enumerate.
+--
+-- `src` is judged as the permanent it would be under `player`, who would put it
+-- onto the battlefield (enteringUnder).
+attachableWithLastKnown :: PlayerId -> ObjectId -> ObjectId -> GameState -> Bool
+attachableWithLastKnown player src host before = case Game.lastKnownOf host gs of
+  Nothing -> Maybe.isJust (attachmentFor src (Recipient.ToObject host) gs)
+  Just _ ->
+    src /= host
+      && Set.member Subtype.Aura (Projection.subtypesOf src gs)
+      && not (Projection.isCreatureOf src gs)
+      && Maybe.maybe
+        False
+        (\slot -> Target.lastKnownAdmits (Projection.controllerOf src gs) src slot host gs)
+        (Card.foldEnchant (Projection.enchantOf src gs))
+  where
+    gs = enteringUnder player src before
+
+-- The destinations a Filter admits for a permanent being attached: battlefield
+-- permanents matching it, ascending, less the one the subject already holds.
+--
+-- That exclusion is CR 701.3b's second sentence -- attaching a permanent to what
+-- it is already attached to "does nothing" -- and it is also how Crown of the
+-- Ages' "ANOTHER creature" is spelled, so a card omitting the word would behave
+-- identically.
+--
+-- One candidate's VIEW carries the one field a projection cannot fill: whether
+-- the SUBJECT could legally be attached here (CR 701.3a). Answered by
+-- attachmentFor, the same function a move goes through, so an offer and a move
+-- cannot disagree. Lazy, so a filter that never names Filter.CanHostSubject pays
+-- nothing for it.
+--
+-- The Context gets the one field a CALLER cannot fill for the mirror reason:
+-- Filter.subjectHostCardTypes is a reading of the subject's own host (CR 205.2a
+-- with CR 303.4b, Enchantment Alteration's "another permanent of that type"),
+-- the same for every candidate, and the caller's Context is the asking ability's.
+--
+-- ASCENDING, so both the single-candidate elision at chooseHost and a transcript
+-- are deterministic.
+--
+-- The filter Context is the CALLER's, and it is the ASKING ability's -- CR
+-- 109.5's "you" is its perspective and IsSource its source -- rather than the
+-- subject's, because the destination filter is that ability's card text. The two
+-- coincide for CR 303.4k, where the Aura's own rider is asking about the Aura.
+--
+-- Passed in rather than built here because the two kinds of caller need
+-- different ones and this function cannot tell them apart: a RESOLUTION hands
+-- over Parun.Engine.Resolve.Slots.effectContext, so a destination filter naming a
+-- slot an earlier clause bound is answered (CR 608.2c) -- Simic Guildmage's
+-- "with the same controller" over its target Aura's host; CR 303.4f's entry
+-- (entryHostsFor builds its own), CR 614.1c's EntryRewrite.EntersAttachedTo row
+-- and turnUpHosts below use a bare Filter.contextFor, which is honest there
+-- because an Aura's own enchant ability, an entry replacement's own text and a
+-- CR 303.4k rider are card text with no resolution's slots behind them. Threading a resolution's `legal` map
+-- and bindings through here for the two callers that have neither is what the
+-- shared signature would otherwise force.
+hostsFor :: Filter.Context -> ObjectId -> Filter.Type.Filter Keyword.Type.Keyword -> GameState -> [ObjectId]
+hostsFor context subject filter_ gs = hostsAmong (Set.toList (GameState.battlefield gs)) context subject filter_ gs
+
+-- CR 303.4f: what an Aura entering by any means but resolving may enchant, "a
+-- legal object or player". The battlefield hostsFor offers and every graveyard
+-- card besides, since CR 702.5a names no zone -- Animate Dead's "enchant
+-- creature card in a graveyard", put onto the battlefield by Replenish -- then
+-- every player still in the game, CR 702.5d's enchant-player Aura (Curse of
+-- Death's Hold). Filter.CanHostSubject and attachmentFor are the whole test, so
+-- the Aura's own enchant ability decides which of them it may enchant.
+--
+-- CR 801.5a: `chooser` is CR 109.5's "you", and a player or object outside
+-- their range is not offered -- Players.table for the players, and
+-- Projection.objectInRangeGiven, CR 801.2d's controller, for the objects.
+-- Parun.RangeOfInfluenceSpec's "CR 801.5a an Aura put onto the battlefield is
+-- offered only hosts within its chooser's range" proves both.
+--
+-- Judged on enteringUnder's board, so the Aura is `chooser`'s throughout.
+entryHostsFor :: PlayerId -> ObjectId -> GameState -> [Recipient]
+entryHostsFor chooser subject before =
+  let gs = enteringUnder chooser subject before
+      context = Projection.sourceContext gs (Just chooser) subject
+      grants = Projection.controlGrants gs
+      inReach oid = Projection.objectInRangeGiven grants chooser oid gs
+      graveyards = concatMap (\pid -> Game.zoneMembers Zone.Graveyard pid gs) (Game.stillPlaying gs)
+      objects = filter inReach (hostsAmong (Set.toList (GameState.battlefield gs) <> graveyards) context subject Filter.Type.CanHostSubject gs)
+      players = filter (\pid -> Maybe.isJust (attachmentFor subject (Recipient.ToPlayer pid) gs)) (Players.table (Just chooser) gs)
+   in fmap Recipient.ToObject objects <> fmap Recipient.ToPlayer players
+
+-- attachmentFor for a card about to enter under `player`, on enteringUnder's
+-- board: the tag entryHostsFor's offer was made with.
+entryAttachmentFor :: PlayerId -> ObjectId -> Recipient -> GameState -> Maybe Recipient
+entryAttachmentFor player subject destination gs = attachmentFor subject destination (enteringUnder player subject gs)
+
+-- CR 110.2a / 303.4f: `gs` with `subject` controlled by `player`, the player it
+-- is entering under. A card outside the battlefield and the stack has no
+-- controller (CR 109.4) and Projection.controllerOf answers its owner, but the
+-- question asked of it before it enters is about the permanent it will be: CR
+-- 109.5's "you" on its enchant ability, and CR 702.16k's "Auras that player
+-- controls". A hypothetical board for those reads, never written back.
+enteringUnder :: PlayerId -> ObjectId -> GameState -> GameState
+enteringUnder player subject gs =
+  gs {GameState.objects = Map.adjust (\obj -> obj {Object.enteredUnder = Just player}) subject (GameState.objects gs)}
+
+-- CR 303.4f's choice over entryHostsFor's offer, made by `chooser`, the player
+-- the Aura enters under.
+--
+-- Objects go to chooseHost's Prompt.ChooseAttachment, players to
+-- Players.chooseOne, which asks Prompt.ChooseOpponent when the offer leaves the
+-- chooser out (Archnemesis' "enchant opponent").
+--
+-- An offer holding both is answered from the objects. CR 702.5d bars a
+-- player-enchanting Aura from every permanent, and no printed enchant ability
+-- names a graveyard card and a player at once: Scryfall `o:/^enchant
+-- [^\n]*player/ t:aura`, 2026-10-02, 47 hits, every one "Enchant player".
+chooseEntryHost :: PlayerId -> ObjectId -> [Recipient] -> Game (Maybe Recipient)
+chooseEntryHost chooser subject candidates =
+  case (Maybe.mapMaybe Recipient.objectOf candidates, Maybe.mapMaybe Recipient.playerOf candidates) of
+    ([], players) -> fmap (fmap Recipient.ToPlayer) (Players.chooseOne chooser subject Nothing players)
+    (objects, _) -> fmap (fmap Recipient.ToObject) (chooseHost chooser subject objects)
+
+-- hostsFor over the candidates the caller names.
+hostsAmong :: [ObjectId] -> Filter.Context -> ObjectId -> Filter.Type.Filter Keyword.Type.Keyword -> GameState -> [ObjectId]
+hostsAmong candidates context subject filter_ gs =
+  let host = Game.hostOf subject gs
+      viewOf oid =
+        (Projection.viewOfObject oid gs)
+          { Filter.canHostSubject = Maybe.isJust (attachmentFor subject (Recipient.ToObject oid) gs)
+          }
+      -- CR 205.2a with CR 303.4b: the subject's CURRENT host, which only this
+      -- function knows -- the caller's Context is the asking ability's and holds
+      -- no subject. Read here rather than per candidate for the division
+      -- Filter.Context's own note draws, and off the PROJECTION (CR 613), so a
+      -- host animated into a creature answers as one. Empty for a subject
+      -- attached to nothing or to a player, and LAZY like the field it fills.
+      subjectContext = context {Filter.subjectHostCardTypes = maybe Set.empty (`Projection.cardTypesOf` gs) host}
+   in List.sort
+        ( filter
+            (\oid -> Just oid /= host && Filter.matches subjectContext (viewOf oid) filter_)
+            candidates
+        )
+
+-- hostsFor for a GROUP moving to one destination (Effect.AttachAll): the
+-- battlefield permanents the Filter admits, ascending.
+--
+-- Filter.CanHostSubject asks whether the candidate could host EVERY subject, the
+-- 2008-05-01 ruling on Glamer Spinners ("it must be able to be enchanted by all
+-- the Auras"); vacuously True for an empty group.
+--
+-- No current host is excluded, which is where this parts from hostsFor: CR
+-- 701.3b's "does nothing" is per mover, so a destination one mover already sits
+-- on is still one the others can move to (Balan, Wandering Knight), and
+-- Event.attach applies the no-op mover by mover. Filter.subjectHostCardTypes is
+-- left as the caller's: a group has no one host to read it off.
+groupHostsFor :: Filter.Context -> [ObjectId] -> Filter.Type.Filter Keyword.Type.Keyword -> GameState -> [ObjectId]
+groupHostsFor context subjects filter_ gs =
+  let viewOf oid =
+        (Projection.viewOfObject oid gs)
+          { Filter.canHostSubject = all (\subject -> Maybe.isJust (attachmentFor subject (Recipient.ToObject oid) gs)) subjects
+          }
+   in List.sort (filter (\oid -> Filter.matches context (viewOf oid) filter_) (Set.toList (GameState.battlefield gs)))
+
+-- CR 303.4k: the destinations an Aura that is BEING TURNED FACE UP may become
+-- attached to, for a rider whose own text is `filter_` ("a creature").
+--
+-- The whole rule is in the two conjuncts and in when this is called. "The Aura's
+-- controller considers the characteristics of that Aura AS IT WOULD EXIST IF IT
+-- WERE FACE UP to determine what it may be attached to": there is no
+-- counterfactual here because Parun.Engine.Event.performTurnFaceUp writes the
+-- face-up status BEFORE it raises the event this answers, so every read below --
+-- the subtypes, the enchant ability, Filter.CanHostSubject -- already sees the
+-- face-up object. Raise the event first and CR 708.2a answers instead: a 2/2
+-- creature with no text has no enchant ability, so the list would be empty and
+-- the Aura would be buried by CR 704.5m. That is Parun.FaceDownSpec's
+-- discriminator for this rule.
+--
+-- "and they must choose a legal object or player ACCORDING TO THE AURA'S ENCHANT
+-- ABILITY and any other applicable effects" is the Filter.CanHostSubject
+-- conjunct, added HERE rather than written into the card. Gift of Doom says only
+-- "a creature"; rule 303.4k, not the card, supplies the enchant-ability
+-- narrowing -- and, through attachmentFor, the destination's own limits (CR
+-- 303.4, Parun.Engine.AttachRestriction) -- which is the difference from
+-- Effect.AttachTarget -- there a card
+-- that does not say "it can enchant" gets every destination its text admits and
+-- CR 303.4j refuses the illegal move afterwards. Rule 303.4k leaves no such
+-- backstop open, so an offer that had to be refused would be this engine
+-- inventing one.
+--
+-- CR 303.4f -- changeZoneAttaching's Aura entry -- is that same narrowing with NO
+-- card text to intersect, since there the enchant ability IS the whole restriction.
+-- So it asks entryHostsFor rather than through here.
+--
+-- A bare Filter.contextFor, built here rather than taken from the caller: the
+-- rider is the Aura's OWN card text (CR 303.4k), so there is no resolution whose
+-- slots it could name.
+turnUpHosts :: PlayerId -> ObjectId -> Filter.Type.Filter Keyword.Type.Keyword -> GameState -> [ObjectId]
+turnUpHosts controller aura filter_ gs =
+  hostsFor (Projection.sourceContext gs (Just controller) aura) aura (Filter.Type.And [filter_, Filter.Type.CanHostSubject]) gs
+
+-- Which of the offered destinations the player picks, or Nothing when the text
+-- admits none (CR 609.3: the effect does as much as it can, and that is nothing).
+--
+-- `controller` is WHO IS ASKED and is the caller's to decide: the resolving
+-- controller for an effect naming one destination (CR 608.2d), and the subject's
+-- own controller where CR 303.4d or CR 301.5c reassigns it -- see arbitrate.
+--
+-- Asked through Game.chooseAmong. The current host is never among the
+-- candidates (CR 701.3b), so eliding the ask at one candidate withholds nothing.
+chooseHost :: PlayerId -> ObjectId -> [ObjectId] -> Game (Maybe ObjectId)
+chooseHost controller subject =
+  Game.chooseAmong (\decider asked -> Prompt.ChooseAttachment decider asked subject) controller
+
+-- CR 303.4d and CR 301.5c, whose closing sentences are the same rule twice: "an
+-- Aura can't enchant more than one object or player. If a spell or ability would
+-- cause an Aura to become attached to more than one object or player, the Aura's
+-- controller chooses which object or player it becomes attached to", and the
+-- Equipment wording with "equip" for "enchant". An effect that NAMES several
+-- destinations hands them here and gets back the one destination the subject
+-- keeps.
+--
+-- The whole content over chooseHost is WHOSE choice it is. CR 608.2d gives every
+-- other resolution-time choice to the resolving controller, which is what
+-- chooseHost's own callers pass; these two rules take this one away from them and
+-- give it to the controller of the thing being attached. So the SUBJECT's
+-- controller is read here and nowhere else, and the caller keeps passing its own
+-- controller to hostsFor -- CR 109.5's "you" on the destination filter is still
+-- the asking ability's card text.
+--
+-- Subtype-blind on purpose: the two rules agree, so nothing here asks whether the
+-- subject is an Aura or an Equipment. A permanent that is neither cannot be
+-- attached at all (CR 701.3b), and attachmentFor refuses it downstream.
+--
+-- A subject with no controller has nobody to make CR 303.4d's choice, so nothing
+-- moves. Unreachable: the subject is a battlefield permanent, and
+-- Projection.controllerOf answers Nothing only for an object that is not there.
+arbitrate :: ObjectId -> [ObjectId] -> Game (Maybe ObjectId)
+arbitrate subject candidates = do
+  gs <- State.get
+  Maybe.maybe (pure Nothing) (\chooser -> chooseHost chooser subject candidates) (Projection.controllerOf subject gs)

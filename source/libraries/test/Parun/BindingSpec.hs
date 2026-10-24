@@ -1,0 +1,189 @@
+-- Covers: Parun.Types.Binding, Parun.Engine.Binding
+module Parun.BindingSpec where
+
+import qualified Data.Map.Strict as Map
+import qualified Data.Sequence as Seq
+import qualified Data.Set as Set
+import qualified Data.Text as Text
+import qualified Parun.Engine.Binding as Binding
+import qualified Parun.Spec as Spec
+import qualified Parun.Support as S
+import qualified Parun.Types.CardName as CardName
+import qualified Parun.Types.Face as Face
+import qualified Parun.Types.ModeIndex as ModeIndex
+import qualified Parun.Types.ObjectId as ObjectId
+import qualified Parun.Types.ProjectedCharacteristics as PC
+import qualified Parun.Types.Recipient as Recipient
+import qualified Parun.Types.SlotName as SlotName
+
+slotTokens :: SlotName.SlotName
+slotTokens = SlotName.MkSlotName (Text.pack "tokens")
+
+sampleSnapshot :: PC.ProjectedCharacteristics
+sampleSnapshot =
+  PC.MkProjectedCharacteristics
+    { PC.names = Set.singleton . CardName.MkCardName $ Text.pack "Sample",
+      PC.supertypes = Set.empty,
+      PC.keywords = Map.empty,
+      PC.colors = Set.empty,
+      PC.manaCost = Nothing,
+      PC.manaValue = Just 0,
+      PC.power = Just 2,
+      PC.toughness = Just 1,
+      PC.loyalty = Nothing,
+      PC.defense = Nothing,
+      PC.intensity = Nothing,
+      PC.characteristicPT = Nothing,
+      PC.cardTypes = Set.empty,
+      PC.subtypes = Set.empty,
+      PC.staticAbilities = [],
+      PC.playerAbilities = [],
+      PC.grantedPlayerAbilities = [],
+      PC.grantedStaticAbilities = [],
+      PC.grantedRuleAbilities = mempty,
+      PC.specialActions = [],
+      PC.activatedAbilities = [],
+      PC.replacementEffects = [],
+      PC.triggeredAbilities = [],
+      PC.delayedAbilities = Map.empty,
+      PC.enchant = [],
+      PC.castingPermissions = [],
+      PC.ruleAbilities = mempty,
+      PC.lostAllAbilities = False,
+      PC.hasFullText = False,
+      PC.wordChanges = [],
+      PC.textChangedKeywords = Map.empty,
+      PC.assignsCombatDamageWithToughness = False,
+      PC.combatDamageOptions = Set.empty,
+      PC.grantsStationToughness = False,
+      PC.additionalCosts = [],
+      PC.additionalCostChoices = [],
+      PC.alternativeCosts = [],
+      PC.costReductions = [],
+      PC.grantedCostReductions = [],
+      PC.grantedAlternativeCosts = [],
+      PC.grantedSpendManaAsThough = [],
+      PC.halves = Nothing,
+      PC.exceptions = [],
+      PC.mergedDonors = [],
+      PC.prepare = Nothing,
+      PC.alternativeSpell = Nothing,
+      PC.prototyped = False,
+      PC.spell = Face.defaultSpell,
+      PC.flipped = Nothing
+    }
+
+spec :: (Applicative m, Monad n) => Spec.Spec m n -> n ()
+spec s = Spec.describe s "Parun.Engine.Binding" $ do
+  Spec.it s "fromChoices projects a slot's chosen target" $ do
+    let slot = SlotName.MkSlotName (Text.pack "target")
+        r = Recipient.ToPlayer S.alice
+        m = Binding.fromChoices (Map.singleton slot (Set.singleton r)) Nothing Seq.empty
+    Spec.assertEq s (Binding.targetsOf m) $ Map.singleton slot (Set.singleton r)
+
+  -- CR 601.2c: a slot may name several targets, and a reader that can take only
+  -- one must decline rather than pick. Parun.AbilitySlotLintSpec's "no
+  -- multi-target slot is read one at a time" keeps a card from reaching this in
+  -- the first place, so this is the only place the declining itself is asserted.
+  Spec.it s "onlyOne takes a lone recipient" $
+    Spec.assertEq s (Binding.onlyOne (Set.singleton (Recipient.ToPlayer S.alice))) (Just (Recipient.ToPlayer S.alice))
+  Spec.it s "onlyOne declines a slot that names several" $
+    Spec.assertEq s (Binding.onlyOne (Set.fromList [Recipient.ToPlayer S.alice, Recipient.ToPlayer S.bob])) Nothing
+
+  -- The singular readers take a slot's TARGETS alone (Binding.oneBySlot's note),
+  -- so a group never answers one, even a group of one, while the whole-slot
+  -- reader names its member. Paired with the single binding of the same object.
+  Spec.it s "a singular reader declines a group of one that the whole-slot reader names" $
+    let oid = ObjectId.MkObjectId 7
+        group = Map.singleton slotTokens (Binding.toObjects (Seq.singleton oid))
+        single = Map.singleton slotTokens (Binding.toObject oid)
+     in Spec.assertEqWith s "the group of one answers no singular read" (Binding.objectSlots group) Map.empty
+          *> Spec.assertEqWith s "the single binding answers it" (Binding.objectSlots single) (Map.singleton slotTokens oid)
+          *> Spec.assertEqWith s "the whole-slot reader names the member" (Binding.slotObjects group) (Map.singleton slotTokens (Set.singleton oid))
+
+  -- onlyOne's doctrine over the recipients rather than over one kind of them: a
+  -- slot naming a player beside an object names several, so neither half
+  -- answers. Paired with the object alone.
+  Spec.it s "a singular reader declines a slot naming a player beside an object" $
+    let oid = ObjectId.MkObjectId 7
+        mixed = Map.singleton slotTokens (Binding.toRecipients (Set.fromList [Recipient.ToPlayer S.alice, Recipient.ToObject oid]))
+        alone = Map.singleton slotTokens (Binding.toRecipients (Set.singleton (Recipient.ToObject oid)))
+     in Spec.assertEqWith s "the mixed slot answers no object" (Binding.objectSlots mixed) Map.empty
+          *> Spec.assertEqWith s "nor a player" (Binding.playerSlots mixed) Map.empty
+          *> Spec.assertEqWith s "the object alone answers" (Binding.objectSlots alone) (Map.singleton slotTokens oid)
+
+  -- An empty answer is no binding at all, which is what keeps CR 608.2b measuring
+  -- the slots FILLED rather than the slots offered (CR 115.6).
+  Spec.it s "fromChoices drops a slot answered with no targets" $
+    Spec.assertEq
+      s
+      (Binding.targetsOf (Binding.fromChoices (Map.singleton (SlotName.MkSlotName (Text.pack "target")) Set.empty) Nothing Seq.empty))
+      Map.empty
+
+  Spec.it s "fromChoices stores X under the reserved slot" $ do
+    let m = Binding.fromChoices Map.empty (Just 3) Seq.empty
+    Spec.assertEq s (Binding.amountOf Binding.variableX m) $ Just 3
+
+  Spec.it s "amountOf is Nothing for an absent slot" $ do
+    Spec.assertEq s (Binding.amountOf Binding.variableX Map.empty) Nothing
+
+  -- CR 700.2d: the stamped selection is a Seq, so a repeated mode survives the
+  -- round trip -- a Set here would silently collapse the two 2s into one.
+  Spec.it s "modesOf round-trips a stamped sequence of chosen modes, repeats and all" $ do
+    let chosen = Seq.fromList [ModeIndex.MkModeIndex 0, ModeIndex.MkModeIndex 2, ModeIndex.MkModeIndex 2]
+        m = Binding.fromChoices Map.empty Nothing chosen
+    Spec.assertEq s (Binding.modesOf m) chosen
+
+  Spec.it s "modesOf is empty for an absent slot" $ do
+    Spec.assertEq s (Binding.modesOf Map.empty) Seq.empty
+
+  Spec.it s "setCopy then copyOf round-trips the snapshot" $ do
+    Spec.assertEq s (Binding.copyOf (Binding.setCopy sampleSnapshot Map.empty)) $ Just sampleSnapshot
+
+  Spec.it s "no copy binding means copyOf is Nothing" $ do
+    Spec.assertEq s (Binding.copyOf Map.empty) Nothing
+
+  -- The order is the order the tokens were minted, not an ObjectId order, so the
+  -- descending fixture is what proves this is a Seq and not a Set: sorting it
+  -- would be the engine reordering what it sacrifices.
+  Spec.it s "toObjects then objectsOf round-trips the minted set in mint order" $ do
+    let slot = SlotName.MkSlotName (Text.pack "tokens")
+        minted = Seq.fromList [ObjectId.MkObjectId 9, ObjectId.MkObjectId 4]
+    Spec.assertEq s (Binding.objectsOf slot (Map.singleton slot (Binding.toObjects minted))) $ Just minted
+
+  Spec.it s "objectsOf is Nothing for an absent slot" $ do
+    Spec.assertEq s (Binding.objectsOf (SlotName.MkSlotName (Text.pack "tokens")) Map.empty) Nothing
+
+  -- A group binding and a target binding are different fields, so a reader can
+  -- tell "those tokens" from "it" without a tag -- the reason Sacrifice may
+  -- consult one and fall through to the other.
+  Spec.it s "a group binding carries no target" $ do
+    let slot = SlotName.MkSlotName (Text.pack "tokens")
+        set_ = Map.singleton slot (Binding.toObjects (Seq.fromList [ObjectId.MkObjectId 1]))
+    Spec.assertEq s (Binding.targetsOf set_) Map.empty
+
+  -- Engine.placeOne joins a delayed ability's placement-time choices with the
+  -- environment captured when it was armed, and the two can now carry DIFFERENT
+  -- fields of one slot -- a target slot sharing the name a Create bound its
+  -- tokens under. A whole-Binding left-biased union would drop the loser entirely;
+  -- merging per field keeps both, which is what that join relies on.
+  Spec.it s "mergeBinding keeps disjoint fields from both sides" $ do
+    let merged =
+          Binding.mergeBinding
+            (Binding.toObject (ObjectId.MkObjectId 1))
+            (Binding.toObjects (Seq.fromList [ObjectId.MkObjectId 2, ObjectId.MkObjectId 3]))
+    Spec.assertEq s (Binding.objectsOf slotTokens (Map.singleton slotTokens merged)) $
+      Just (Seq.fromList [ObjectId.MkObjectId 2, ObjectId.MkObjectId 3])
+
+  Spec.it s "mergeBinding prefers the left side's target" $ do
+    let merged =
+          Binding.mergeBinding
+            (Binding.toObject (ObjectId.MkObjectId 1))
+            (Binding.toObject (ObjectId.MkObjectId 2))
+    Spec.assertEq s (Binding.targetsOf (Map.singleton slotTokens merged)) $
+      Map.singleton slotTokens (Set.singleton (Recipient.ToObject (ObjectId.MkObjectId 1)))
+
+  Spec.it s "a target binding carries no group" $ do
+    let slot = SlotName.MkSlotName (Text.pack "tokens")
+        one = Map.singleton slot (Binding.toObject (ObjectId.MkObjectId 1))
+    Spec.assertEq s (Binding.objectsOf slot one) Nothing

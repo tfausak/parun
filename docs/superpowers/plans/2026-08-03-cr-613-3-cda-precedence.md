@@ -18,12 +18,12 @@
 - **One build at a time.** `cabal build all`, never just the library — the suites break separately. Never poke inside `dist-newstyle`. Never `cabal clean`.
 - **Run every tool through direnv:** `direnv exec . cabal build all`, `direnv exec . cabal test`, `direnv exec . hooky fix`.
 - **`hooky` acts on staged files.** `git add`, then `hooky fix`, then `git add` again, then `hooky run`.
-- **`cabal-gild pawl.cabal` must be run directly** whenever a module is added or deleted; `hooky fix` only covers staged files.
+- **`cabal-gild parun.cabal` must be run directly** whenever a module is added or deleted; `hooky fix` only covers staged files.
 - **Never trust recalled Magic rules.** Every CR citation this plan writes into a comment was checked against `docs/rules.txt` on 2026-08-03. Any *other* citation you touch must be re-checked before you leave it there.
-- **The rules core must not case on an effect's identity.** `Pawl.Engine.Projection` is the one module allowed to case on `Modification` (see `Types/Modification.hs`'s header). Do not add a `case` on `Modification` anywhere else.
+- **The rules core must not case on an effect's identity.** `Parun.Engine.Projection` is the one module allowed to case on `Modification` (see `Types/Modification.hs`'s header). Do not add a `case` on `Modification` anywhere else.
 - **Never edit this plan, weaken an assertion, or delete a test to make a check pass.** If the plan looks wrong, stop and say so.
 - **`git add` explicit paths, never `git add -A`.** Other sessions may share this checkout.
-- Build must be warning-free under `-Weverything` (`pawl.cabal`'s `common warnings`).
+- Build must be warning-free under `-Weverything` (`parun.cabal`'s `common warnings`).
 
 ## Adding a constructor: how to find every site
 
@@ -39,9 +39,9 @@ enumerates the sites for you. Add the constructor, run
 - **`EntryRewrite`** — `Replacement.hs`'s apply loop plus its `bucket` and its
   copy-ish predicate (lines ~597 and ~651), `Codec.EntryRewrite.toJson`/`fromJson`.
 - **`Prompt`** — `Replay.hs` (three cases: record, match, default),
-  `source/benchmark/Main.hs` (three), and the deciders in `Pawl/Support.hs`
-  (four), `Pawl/GameSpec.hs` (two), `Pawl/CastSpec.hs` (three),
-  `Pawl/ReplacementSpec.hs` (one). Add the new arm to each.
+  `source/benchmark/Main.hs` (three), and the deciders in `Parun/Support.hs`
+  (four), `Parun/GameSpec.hs` (two), `Parun/CastSpec.hs` (three),
+  `Parun/ReplacementSpec.hs` (one). Add the new arm to each.
 - **`Response`** — `Codec.Response.toJson`/`fromJson`, `Replay.hs`.
 
 ---
@@ -59,8 +59,8 @@ synthetic, so the two specs move across unchanged in shape.
 **Files:**
 - Create: `data/cards/slaughter-drone.json`
 - Delete: `data/cards/synthetic-devoid-drone.json`
-- Modify: `source/test-suite/Pawl/ColorSpec.hs` (five `"Synthetic Devoid Drone"` lookups)
-- Modify: `source/test-suite/Pawl/CombatSpec.hs` (its `"Synthetic Devoid Drone"` lookups)
+- Modify: `source/test-suite/Parun/ColorSpec.hs` (five `"Synthetic Devoid Drone"` lookups)
+- Modify: `source/test-suite/Parun/CombatSpec.hs` (its `"Synthetic Devoid Drone"` lookups)
 
 **Interfaces:**
 - Produces: the registry name `"Slaughter Drone"`, resolvable via
@@ -136,24 +136,24 @@ them without building:
    creature", and note the substitution in the commit message.
 2. **`Subtype.Eldrazi` and `Subtype.Drone` exist.** If either is missing, adding a
    Subtype has a known edit-site set — see `CLAUDE.md` and
-   `Pawl.Engine.Subtype`; the easy-to-miss site is `Mana.subtypeMana`. Add both.
+   `Parun.Engine.Subtype`; the easy-to-miss site is `Mana.subtypeMana`. Add both.
 
 - [ ] **Step 2: Verify the card round-trips**
 
-`Pawl.CardsSpec` round-trips every file in `data/cards/`, so a malformed field
+`Parun.CardsSpec` round-trips every file in `data/cards/`, so a malformed field
 fails there rather than at the point of use.
 
 Run: `direnv exec . cabal test 2>&1 | tail -30`
-Expected: `Pawl.CardsSpec` passes. Everything else still passes — nothing
+Expected: `Parun.CardsSpec` passes. Everything else still passes — nothing
 references the new card yet.
 
 - [ ] **Step 3: Move the specs onto the real card**
 
-In `source/test-suite/Pawl/ColorSpec.hs`, replace every
+In `source/test-suite/Parun/ColorSpec.hs`, replace every
 `S.printingOf s registry "Synthetic Devoid Drone"` with
 `S.printingOf s registry "Slaughter Drone"`, and rename the binding
 `devoidDrone` to `slaughterDrone` at each site. Do the same in
-`source/test-suite/Pawl/CombatSpec.hs`.
+`source/test-suite/Parun/CombatSpec.hs`.
 
 Then re-read the comments above each of those tests. Several say "this card's
 cost is `{1}{B}`" or call the card synthetic; the cost claim is still true, the
@@ -175,9 +175,9 @@ Expected: build warning-free, suite green, count unchanged.
 - [ ] **Step 6: Commit**
 
 ```bash
-git add data/cards/slaughter-drone.json source/test-suite/Pawl/ColorSpec.hs source/test-suite/Pawl/CombatSpec.hs
+git add data/cards/slaughter-drone.json source/test-suite/Parun/ColorSpec.hs source/test-suite/Parun/CombatSpec.hs
 direnv exec . hooky fix
-git add data/cards/slaughter-drone.json source/test-suite/Pawl/ColorSpec.hs source/test-suite/Pawl/CombatSpec.hs
+git add data/cards/slaughter-drone.json source/test-suite/Parun/ColorSpec.hs source/test-suite/Parun/CombatSpec.hs
 direnv exec . hooky run
 git commit -m "Retire the synthetic devoid drone for Slaughter Drone"
 ```
@@ -192,13 +192,13 @@ color 'in addition' to its other colors)." `SetColor` is the first half of that
 sentence; this is the parenthetical.
 
 **Files:**
-- Modify: `source/libraries/types/Pawl/Types/Modification.hs`
-- Modify: `source/libraries/codec/Pawl/Codec/Modification.hs`
-- Modify: `source/libraries/codec/Pawl/Codec/ModificationSpec.hs`
-- Modify: `source/libraries/engine/Pawl/Engine/Projection.hs` (`layer`, `applyModification`, `freezeQuantities`, `removesAbilities`, `modificationWrites`)
+- Modify: `source/libraries/types/Parun/Types/Modification.hs`
+- Modify: `source/libraries/codec/Parun/Codec/Modification.hs`
+- Modify: `source/libraries/codec/Parun/Codec/ModificationSpec.hs`
+- Modify: `source/libraries/engine/Parun/Engine/Projection.hs` (`layer`, `applyModification`, `freezeQuantities`, `removesAbilities`, `modificationWrites`)
 - Create: `data/cards/indigo-faerie.json`
 - Create: `data/cards/red-elemental-blast.json`
-- Modify: `source/test-suite/Pawl/ColorSpec.hs`
+- Modify: `source/test-suite/Parun/ColorSpec.hs`
 
 **Interfaces:**
 - Consumes: `"Slaughter Drone"` from Task 1.
@@ -208,7 +208,7 @@ sentence; this is the parenthetical.
 
 - [ ] **Step 1: Write the failing test**
 
-Append to `source/test-suite/Pawl/ColorSpec.hs`, beside the existing
+Append to `source/test-suite/Parun/ColorSpec.hs`, beside the existing
 `"CR 105.3 a new colour REPLACES all previous colours"` test:
 
 ```haskell
@@ -229,7 +229,7 @@ Expected: FAIL — `Data constructor not in scope: Modification.AddColor`.
 
 - [ ] **Step 3: Add the constructor**
 
-In `source/libraries/types/Pawl/Types/Modification.hs`, directly after the
+In `source/libraries/types/Parun/Types/Modification.hs`, directly after the
 `SetColor` arm:
 
 ```haskell
@@ -307,7 +307,7 @@ it will not be a catch-all.)
 
 - [ ] **Step 5: Pin the wire format**
 
-In `source/libraries/codec/Pawl/Codec/ModificationSpec.hs`, beside the `SetColor`
+In `source/libraries/codec/Parun/Codec/ModificationSpec.hs`, beside the `SetColor`
 case, following that file's existing shape exactly:
 
 ```haskell
@@ -443,7 +443,7 @@ Mode 1's effect is `cancel.json`'s `Counter`; mode 2's is `doom-blade.json`'s
 
 - [ ] **Step 9: Write the Indigo Faerie test**
 
-Append to `source/test-suite/Pawl/ColorSpec.hs`. This is spec §4's T3.
+Append to `source/test-suite/Parun/ColorSpec.hs`. This is spec §4's T3.
 
 ```haskell
   Spec.it s "Indigo Faerie's 'in addition' blue makes a devoid drone a legal blue target" $ do
@@ -463,7 +463,7 @@ Append to `source/test-suite/Pawl/ColorSpec.hs`. This is spec §4's T3.
 **Then replace `S.withEffect` with a real activation.** `S.withEffect` installs
 the modification directly and so proves the projection, not the card. Find how an
 existing spec activates an ability through the engine — grep `ColorSpec.hs` and
-`Pawl/ActivateSpec.hs` for `Activate.` — and drive Indigo Faerie's `{U}` ability
+`Parun/ActivateSpec.hs` for `Activate.` — and drive Indigo Faerie's `{U}` ability
 targeting the drone. The `S.withEffect` version above is the stepping stone, not
 the deliverable; the assertion values are the same either way.
 
@@ -472,9 +472,9 @@ the deliverable; the assertion values are the same either way.
 Run: `direnv exec . cabal build all && direnv exec . cabal test 2>&1 | tail -20`
 
 ```bash
-git add source/libraries/types/Pawl/Types/Modification.hs source/libraries/codec/Pawl/Codec/Modification.hs source/libraries/codec/Pawl/Codec/ModificationSpec.hs source/libraries/engine/Pawl/Engine/Projection.hs data/cards/indigo-faerie.json data/cards/red-elemental-blast.json source/test-suite/Pawl/ColorSpec.hs
+git add source/libraries/types/Parun/Types/Modification.hs source/libraries/codec/Parun/Codec/Modification.hs source/libraries/codec/Parun/Codec/ModificationSpec.hs source/libraries/engine/Parun/Engine/Projection.hs data/cards/indigo-faerie.json data/cards/red-elemental-blast.json source/test-suite/Parun/ColorSpec.hs
 direnv exec . hooky fix
-git add source/libraries/types/Pawl/Types/Modification.hs source/libraries/codec/Pawl/Codec/Modification.hs source/libraries/codec/Pawl/Codec/ModificationSpec.hs source/libraries/engine/Pawl/Engine/Projection.hs data/cards/indigo-faerie.json data/cards/red-elemental-blast.json source/test-suite/Pawl/ColorSpec.hs
+git add source/libraries/types/Parun/Types/Modification.hs source/libraries/codec/Parun/Codec/Modification.hs source/libraries/codec/Parun/Codec/ModificationSpec.hs source/libraries/engine/Parun/Engine/Projection.hs data/cards/indigo-faerie.json data/cards/red-elemental-blast.json source/test-suite/Parun/ColorSpec.hs
 direnv exec . hooky run
 git commit -m "Add CR 105.3's 'in addition' colour: Indigo Faerie"
 ```
@@ -487,9 +487,9 @@ The core of #35. Behaviour-preserving for every existing test; the one new
 observable is that layers 2–4 read the printed colours.
 
 **Files:**
-- Modify: `source/libraries/engine/Pawl/Engine/Projection.hs` (`baseColorsOf`, `viewOfCard`, `baseCharacteristics`, `projectWith`)
-- Modify: `source/libraries/types/Pawl/Types/Keyword.hs` (the `Devoid` note at ~line 276)
-- Modify: `source/test-suite/Pawl/ColorSpec.hs`
+- Modify: `source/libraries/engine/Parun/Engine/Projection.hs` (`baseColorsOf`, `viewOfCard`, `baseCharacteristics`, `projectWith`)
+- Modify: `source/libraries/types/Parun/Types/Keyword.hs` (the `Devoid` note at ~line 276)
+- Modify: `source/test-suite/Parun/ColorSpec.hs`
 
 **Interfaces:**
 - Consumes: `"Slaughter Drone"` from Task 1.
@@ -501,7 +501,7 @@ observable is that layers 2–4 read the printed colours.
 
 - [ ] **Step 1: Write the failing test**
 
-Append to `source/test-suite/Pawl/ColorSpec.hs`. This is spec §4's T4, and it is
+Append to `source/test-suite/Parun/ColorSpec.hs`. This is spec §4's T4, and it is
 the assertion that pins #35's second bullet.
 
 ```haskell
@@ -519,8 +519,8 @@ the assertion that pins #35's second bullet.
     Spec.assertEqWith s "colourless once layer 5 has applied" (Projection.colorsOf droneId gs) Set.empty
 ```
 
-Add `import qualified Pawl.Types.Layer as Layer` and
-`import qualified Pawl.Types.ProjectedCharacteristics as PC` to `ColorSpec.hs`'s
+Add `import qualified Parun.Types.Layer as Layer` and
+`import qualified Parun.Types.ProjectedCharacteristics as PC` to `ColorSpec.hs`'s
 import block, in alphabetical position.
 
 - [ ] **Step 2: Run it and watch it fail**
@@ -531,7 +531,7 @@ Expected: FAIL — "black below layer 5" gets `fromList []`, because
 
 - [ ] **Step 3: Split `baseColorsOf`**
 
-In `source/libraries/engine/Pawl/Engine/Projection.hs`, replace `baseColorsOf`
+In `source/libraries/engine/Parun/Engine/Projection.hs`, replace `baseColorsOf`
 (and the ~65-line comment above it, which argues for the seed shortcut this task
 removes) with:
 
@@ -574,7 +574,7 @@ definesColorless = Set.member Keyword.Devoid
 -- "printed on the card it affects ... granted to the token ... or acquired ... as
 -- the result of a copy effect or text-changing effect", and at layer 5 the map
 -- holds exactly those (minus the token clause, covered at the seed); it cannot
--- yet hold a layer-6 grant, because layer 6 has not been applied. Pawl has no
+-- yet hold a layer-6 grant, because layer 6 has not been applied. Parun has no
 -- text-change keyword writer today, so the rule holds by construction rather
 -- than by a test.
 --
@@ -658,7 +658,7 @@ that `Layer.Color` really is in `layers` for an object with no layer-5 candidate
 
 - [ ] **Step 7: Update the Keyword note**
 
-`source/libraries/types/Pawl/Types/Keyword.hs` (~line 276) currently reads
+`source/libraries/types/Parun/Types/Keyword.hs` (~line 276) currently reads
 "Devoid is read only at the projection SEED (Projection.baseColorsOf)". Replace
 with:
 
@@ -673,9 +673,9 @@ with:
 - [ ] **Step 8: Commit**
 
 ```bash
-git add source/libraries/engine/Pawl/Engine/Projection.hs source/libraries/types/Pawl/Types/Keyword.hs source/test-suite/Pawl/ColorSpec.hs
+git add source/libraries/engine/Parun/Engine/Projection.hs source/libraries/types/Parun/Types/Keyword.hs source/test-suite/Parun/ColorSpec.hs
 direnv exec . hooky fix
-git add source/libraries/engine/Pawl/Engine/Projection.hs source/libraries/types/Pawl/Types/Keyword.hs source/test-suite/Pawl/ColorSpec.hs
+git add source/libraries/engine/Parun/Engine/Projection.hs source/libraries/types/Parun/Types/Keyword.hs source/test-suite/Parun/ColorSpec.hs
 direnv exec . hooky run
 git commit -m "Fold devoid at the start of layer 5, per CR 613.3"
 ```
@@ -690,10 +690,10 @@ creatures get +1/+1" reaches creature cards in graveyards. Painter's Servant is
 the first card whose affected set is not battlefield-scoped.
 
 **Files:**
-- Modify: `source/libraries/types/Pawl/Types/Affected.hs`
-- Modify: `source/libraries/codec/Pawl/Codec/Affected.hs`
-- Modify: `source/libraries/codec/Pawl/Codec/AffectedSpec.hs`
-- Modify: `source/libraries/engine/Pawl/Engine/Projection.hs` (`affects`, `staticallyMovable`, `projectWith`'s `movableReads`)
+- Modify: `source/libraries/types/Parun/Types/Affected.hs`
+- Modify: `source/libraries/codec/Parun/Codec/Affected.hs`
+- Modify: `source/libraries/codec/Parun/Codec/AffectedSpec.hs`
+- Modify: `source/libraries/engine/Parun/Engine/Projection.hs` (`affects`, `staticallyMovable`, `projectWith`'s `movableReads`)
 
 **Interfaces:**
 - Produces: `Affected.MatchingAnywhere :: Filter.Filter Keyword.Keyword -> Affected`,
@@ -701,7 +701,7 @@ the first card whose affected set is not battlefield-scoped.
 
 - [ ] **Step 1: Add the constructor**
 
-In `source/libraries/types/Pawl/Types/Affected.hs`, after `Matching`:
+In `source/libraries/types/Parun/Types/Affected.hs`, after `Matching`:
 
 ```haskell
   | -- | Matching, without the battlefield gate. Painter's Servant's "all cards
@@ -761,7 +761,7 @@ whole comment, cite it:
 - [ ] **Step 3: Pin the wire format**
 
 Add a `MatchingAnywhere` case to
-`source/libraries/codec/Pawl/Codec/AffectedSpec.hs`, copying the shape of that
+`source/libraries/codec/Parun/Codec/AffectedSpec.hs`, copying the shape of that
 file's existing `Matching` case exactly.
 
 - [ ] **Step 4: Verify green and commit**
@@ -771,9 +771,9 @@ Expected: warning-free, suite green, count up by one (the codec case). No
 behaviour change — nothing produces the new arm yet.
 
 ```bash
-git add source/libraries/types/Pawl/Types/Affected.hs source/libraries/codec/Pawl/Codec/Affected.hs source/libraries/codec/Pawl/Codec/AffectedSpec.hs source/libraries/engine/Pawl/Engine/Projection.hs
+git add source/libraries/types/Parun/Types/Affected.hs source/libraries/codec/Parun/Codec/Affected.hs source/libraries/codec/Parun/Codec/AffectedSpec.hs source/libraries/engine/Parun/Engine/Projection.hs
 direnv exec . hooky fix
-git add source/libraries/types/Pawl/Types/Affected.hs source/libraries/codec/Pawl/Codec/Affected.hs source/libraries/codec/Pawl/Codec/AffectedSpec.hs source/libraries/engine/Pawl/Engine/Projection.hs
+git add source/libraries/types/Parun/Types/Affected.hs source/libraries/codec/Parun/Codec/Affected.hs source/libraries/codec/Parun/Codec/AffectedSpec.hs source/libraries/engine/Parun/Engine/Projection.hs
 direnv exec . hooky run
 git commit -m "Add an affected set that is not scoped to the battlefield"
 ```
@@ -786,18 +786,18 @@ Painter's Servant's "As this creature enters, choose a color" (CR 614.1c), and
 the modification that reads it. Five types plus a `Replacement.hs` arm.
 
 **Files:**
-- Modify: `source/libraries/types/Pawl/Types/Object.hs`
-- Modify: `source/libraries/codec/Pawl/Codec/Object.hs`, `.../ObjectSpec.hs`
-- Modify: `source/libraries/types/Pawl/Types/EntryRewrite.hs`
-- Modify: `source/libraries/codec/Pawl/Codec/EntryRewrite.hs`, `.../EntryRewriteSpec.hs`
-- Modify: `source/libraries/types/Pawl/Types/Prompt.hs`
-- Modify: `source/libraries/types/Pawl/Types/Response.hs`
-- Modify: `source/libraries/codec/Pawl/Codec/Response.hs`, `.../ResponseSpec.hs`
-- Modify: `source/libraries/engine/Pawl/Engine/Replay.hs`
-- Modify: `source/libraries/engine/Pawl/Engine/Replacement.hs`
-- Modify: `source/libraries/types/Pawl/Types/Modification.hs`, `source/libraries/codec/Pawl/Codec/Modification.hs`, `.../ModificationSpec.hs`
-- Modify: `source/libraries/engine/Pawl/Engine/Projection.hs`
-- Modify: `source/benchmark/Main.hs`, `source/test-suite/Pawl/Support.hs`, `.../GameSpec.hs`, `.../CastSpec.hs`, `.../ReplacementSpec.hs`, `.../ReplaySpec.hs`
+- Modify: `source/libraries/types/Parun/Types/Object.hs`
+- Modify: `source/libraries/codec/Parun/Codec/Object.hs`, `.../ObjectSpec.hs`
+- Modify: `source/libraries/types/Parun/Types/EntryRewrite.hs`
+- Modify: `source/libraries/codec/Parun/Codec/EntryRewrite.hs`, `.../EntryRewriteSpec.hs`
+- Modify: `source/libraries/types/Parun/Types/Prompt.hs`
+- Modify: `source/libraries/types/Parun/Types/Response.hs`
+- Modify: `source/libraries/codec/Parun/Codec/Response.hs`, `.../ResponseSpec.hs`
+- Modify: `source/libraries/engine/Parun/Engine/Replay.hs`
+- Modify: `source/libraries/engine/Parun/Engine/Replacement.hs`
+- Modify: `source/libraries/types/Parun/Types/Modification.hs`, `source/libraries/codec/Parun/Codec/Modification.hs`, `.../ModificationSpec.hs`
+- Modify: `source/libraries/engine/Parun/Engine/Projection.hs`
+- Modify: `source/benchmark/Main.hs`, `source/test-suite/Parun/Support.hs`, `.../GameSpec.hs`, `.../CastSpec.hs`, `.../ReplacementSpec.hs`, `.../ReplaySpec.hs`
 
 **Interfaces:**
 - Produces:
@@ -809,7 +809,7 @@ the modification that reads it. Five types plus a `Replacement.hs` arm.
 
 - [ ] **Step 1: Add the object field**
 
-`source/libraries/types/Pawl/Types/Object.hs`, after `attachedTo`:
+`source/libraries/types/Parun/Types/Object.hs`, after `attachedTo`:
 
 ```haskell
     -- | CR 614.1c: a colour this object's controller chose as it entered
@@ -828,7 +828,7 @@ the modification that reads it. Five types plus a `Replacement.hs` arm.
     chosenColor :: Maybe Color.Color,
 ```
 
-Add `import qualified Pawl.Types.Color as Color` in alphabetical position.
+Add `import qualified Parun.Types.Color as Color` in alphabetical position.
 
 Then find every construction site of `MkObject` and every `changeZone`-style
 reset; `-Weverything` flags missing record fields. **`changeZone` must reset this
@@ -837,9 +837,9 @@ together and add it there.
 
 - [ ] **Step 2: Codec the field**
 
-Add `chosenColor` to `Pawl.Codec.Object`'s encoder and decoder, following how
+Add `chosenColor` to `Parun.Codec.Object`'s encoder and decoder, following how
 `attachedTo` (also a `Maybe`) is handled there, and extend
-`Pawl.Codec.ObjectSpec`'s literal-JSON case.
+`Parun.Codec.ObjectSpec`'s literal-JSON case.
 
 - [ ] **Step 3: Verify green so far**
 
@@ -930,11 +930,11 @@ Codec, beside `AsCopy` and `UnderSourceControl`:
     ("ChooseColor", _) -> Right EntryRewrite.ChooseColor
 ```
 
-Add a `ChooseColor` case to `Pawl.Codec.EntryRewriteSpec`.
+Add a `ChooseColor` case to `Parun.Codec.EntryRewriteSpec`.
 
 - [ ] **Step 7: Apply the rewrite**
 
-In `source/libraries/engine/Pawl/Engine/Replacement.hs`, add an arm beside
+In `source/libraries/engine/Parun/Engine/Replacement.hs`, add an arm beside
 `EntryRewrite.ChoiceOf` (~line 877). It is simpler than `ChoiceOf` because there
 is no options list to be empty and no one-option elision:
 
@@ -1030,7 +1030,7 @@ git commit -m "Add the modification that reads a source's chosen colour"
 
 **Files:**
 - Create: `data/cards/painters-servant.json`
-- Modify: `source/test-suite/Pawl/ColorSpec.hs`
+- Modify: `source/test-suite/Parun/ColorSpec.hs`
 
 **Interfaces:**
 - Consumes: everything from Tasks 1–5.
@@ -1054,7 +1054,7 @@ their other colors."
 
 - [ ] **Step 2: Write the gate test**
 
-Append to `source/test-suite/Pawl/ColorSpec.hs`. This is spec §4's T1 — the test
+Append to `source/test-suite/Parun/ColorSpec.hs`. This is spec §4's T1 — the test
 that discriminates CR 613.3 from CR 613.7.
 
 ```haskell
@@ -1081,7 +1081,7 @@ preference:
 1. Cast Painter's Servant through the stack so the entry loop runs and the
    `ChooseColor` prompt is answered by the spec's decider. `ColorSpec.hs`'s
    Dragon Fodder test already explains why a real cast is needed for a card whose
-   behaviour depends on the entry path, and `Pawl.ReplacementSpec` shows how to
+   behaviour depends on the entry path, and `Parun.ReplacementSpec` shows how to
    answer an entry prompt from a decider (see its `ChooseEntryOption -> which`
    decider at line ~196). Use blue as the answer.
 2. If that proves impractical, set `Object.chosenColor` on the placed permanent
@@ -1143,9 +1143,9 @@ whichever of Step 2's two routes you took applies here unchanged.
 Run: `direnv exec . cabal build all && direnv exec . cabal test 2>&1 | tail -20`
 
 ```bash
-git add data/cards/painters-servant.json source/test-suite/Pawl/ColorSpec.hs
+git add data/cards/painters-servant.json source/test-suite/Parun/ColorSpec.hs
 direnv exec . hooky fix
-git add data/cards/painters-servant.json source/test-suite/Pawl/ColorSpec.hs
+git add data/cards/painters-servant.json source/test-suite/Parun/ColorSpec.hs
 direnv exec . hooky run
 git commit -m "Gate CR 613.3 with Painter's Servant"
 ```
@@ -1175,8 +1175,8 @@ Issue A, labels `gap` and `expires:card-driven`:
 > clause is a mana restriction. Building this would be a capability no card
 > exercises.
 >
-> **Sites:** `Pawl/Engine/Projection.hs` (`applyColorDefining`),
-> `Pawl/Types/Keyword.hs` (the `Devoid` note).
+> **Sites:** `Parun/Engine/Projection.hs` (`applyColorDefining`),
+> `Parun/Types/Keyword.hs` (the `Devoid` note).
 >
 > **Expiry trigger — card-driven.** The first card that grants devoid.
 
@@ -1188,16 +1188,16 @@ Issue B, labels `gap` and `elision`:
 > covers hands, libraries, graveyards and exile, where `viewUpTo` has no
 > projection and falls back to `viewOfCard`'s printed characteristics (#160).
 >
-> **Sites:** `Pawl/Types/Affected.hs` (`MatchingAnywhere`),
-> `Pawl/Engine/Projection.hs` (`viewOfCard`).
+> **Sites:** `Parun/Types/Affected.hs` (`MatchingAnywhere`),
+> `Parun/Engine/Projection.hs` (`viewOfCard`).
 >
 > **Expiry trigger:** the off-battlefield projection sweep, #160.
 
 - [ ] **Step 2: Substitute the issue numbers**
 
 Replace every `#NNN` placeholder with the real numbers:
-`Pawl/Engine/Projection.hs` (`applyColorDefining`'s "Not implemented" note),
-`Pawl/Types/Keyword.hs`, `Pawl/Types/Affected.hs`.
+`Parun/Engine/Projection.hs` (`applyColorDefining`'s "Not implemented" note),
+`Parun/Types/Keyword.hs`, `Parun/Types/Affected.hs`.
 
 ```bash
 grep -rn '#NNN' source/ docs/

@@ -26,7 +26,7 @@
 # - The build is -O0 in its own `dist-mutate/`, never `dist-newstyle/`. At -O1 a
 #   module's interface carries its function bodies, so a body-only mutation
 #   recompiles every module downstream, and restoring the file does it again:
-#   653s plus 657s for one mutation of Pawl.Engine.Event, against 11s at -O0
+#   653s plus 657s for one mutation of Parun.Engine.Event, against 11s at -O0
 #   (#4122). The separate directory keeps the two optimization levels from
 #   invalidating each other's builds. Unoptimized tests are slower, which a
 #   narrow PATTERN keeps invisible.
@@ -72,7 +72,7 @@ Exit status is the outcome, not the test run's:
   3  the mutated source did not build, or the run produced no tasty summary
   4  PATTERN matched no tests at all
 
-Run it from the repository root; it builds the `pawl-test-suite` target at -O0
+Run it from the repository root; it builds the `parun-test-suite` target at -O0
 in `dist-mutate/`, so it needs cabal.project.local in place for +pedantic like
 any other build. The first run in a checkout without a warm `dist-mutate/` is a
 cold build; `script/warm-worktree.sh seed` copies one in.
@@ -136,7 +136,7 @@ log=$work/output
 # naming a test case by its own words arrives as several arguments and tasty
 # rejects the second one.
 run() {
-  cabal test pawl-test-suite \
+  cabal test parun-test-suite \
     --builddir=dist-mutate \
     --ghc-options=-O0 \
     --test-show-details=direct \

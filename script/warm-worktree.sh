@@ -34,12 +34,12 @@ case "${1:-refresh}" in
     cp "$primary/cabal.project.local" "$warm/cabal.project.local"
     (cd "$warm" && "$primary/script/with-build-lock.sh" cabal build -v0 all)
     # The same flags as script/mutate.sh, or the seeded build is invalidated.
-    (cd "$warm" && "$primary/script/with-build-lock.sh" cabal build -v0 pawl-test-suite --builddir=dist-mutate --ghc-options=-O0)
+    (cd "$warm" && "$primary/script/with-build-lock.sh" cabal build -v0 parun-test-suite --builddir=dist-mutate --ghc-options=-O0)
     # A version bump leaves the old version's build behind, and seed copies it.
-    version=$(awk '$1 == "version:" { print $2 }' "$warm/pawl.cabal")
+    version=$(awk '$1 == "version:" { print $2 }' "$warm/parun.cabal")
     for tree in "$warm/dist-newstyle/build" "$warm/dist-mutate/build"; do
       [ -d "$tree" ] || continue
-      find "$tree" -mindepth 3 -maxdepth 3 -type d -name 'pawl-*' ! -name "pawl-$version" -prune -exec rm -rf {} +
+      find "$tree" -mindepth 3 -maxdepth 3 -type d -name 'parun-*' ! -name "parun-$version" -prune -exec rm -rf {} +
     done
     echo "warm at $(git -C "$warm" rev-parse --short HEAD)"
     ;;

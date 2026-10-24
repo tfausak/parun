@@ -1,8 +1,8 @@
-# pawl
+# parun
 
 ## A Magic: The Gathering rules engine in Haskell — design approach and implementation path
 
-> *pawl* (n.) — the catch in a ratchet mechanism that permits motion in one direction only.
+> *parun* (n.) — the catch in a ratchet mechanism that permits motion in one direction only.
 
 ---
 
@@ -109,7 +109,7 @@ A deep-embedded AST, loaded from files at runtime. Non-negotiable, for four reas
 3. Cards become inspectable, serializable, generable
 4. **Layer 3 becomes a tree transformation on a value you already have** — see §5
 
-Cards are still compiled-in Haskell values today (`Pawl.Engine.Card` — pure data, no
+Cards are still compiled-in Haskell values today (`Parun.Engine.Card` — pure data, no
 lambdas, but Haskell modules all the same). **M3.5** is where this section is
 actually cashed: JSON files under `./data/cards/` become the source of truth.
 Until then the promise is declared, not redeemed.
@@ -173,7 +173,7 @@ This is load-bearing, not a party trick. **Designing for Little Girl gets you Ta
 
 Sequenced to retire *architectural* risk first, not to maximize card count. The ABI is the thing you can't cheaply change later; Lightning Bolt will still be there in six months and will take an afternoon.
 
-This section **was** the forward plan, and is now largely the record of the path actually taken. Milestones **M0 through M5.6 are complete**, as is the card-driven Auras unit; for what each established — gate card, the decision it proved, the opcodes and types it added, every elision and its expiry — see the completion log in `progress.md`. Only M6 and M7 remain, and they are no longer milestones: they are ordinary GitHub issues, picked up when they are picked up. M6 is #9; M7's first clients, the random bot and the text client behind `pawl play`, landed under #10, and its harness, search bot and engine-side redaction are #5417, #5419 and #5418. Work is issue-driven now — see `CONTRIBUTING.md`.
+This section **was** the forward plan, and is now largely the record of the path actually taken. Milestones **M0 through M5.6 are complete**, as is the card-driven Auras unit; for what each established — gate card, the decision it proved, the opcodes and types it added, every elision and its expiry — see the completion log in `progress.md`. Only M6 and M7 remain, and they are no longer milestones: they are ordinary GitHub issues, picked up when they are picked up. M6 is #9; M7's first clients, the random bot and the text client behind `parun play`, landed under #10, and its harness, search bot and engine-side redaction are #5417, #5419 and #5418. Work is issue-driven now — see `CONTRIBUTING.md`.
 
 ### M0 — A complete game with zero cards
 
@@ -262,7 +262,7 @@ The strategy is **one keyword per structural axis to prove the architecture, the
 
 **Banding (702.22) is punted for a better reason than difficulty.** 702.22j: "the defending player (rather than the active player) chooses how the attacking creature's damage is assigned." M1b's `Damage.attackerAssignment` hardcodes the chooser as `controllerOf attacker`. Banding falsifies that from one direction and Mindslaver from the other — it is a **`Decider` problem wearing a combat costume**, and cannot land before M3 at any price. This assumption is in no expiry table; M2c's spec should add it.
 
-**CR 506.1 is one requirement, not two** (`#19): "The declare blockers and combat damage steps are skipped if no creatures are declared as attackers (508.8). There are two combat damage steps if any attacking or blocking creature has first strike or double strike." Both are conditional turn structure, and M1b implements neither — `Turn.grantsPriority` returns `True` for those steps unconditionally, so today, on every turn where nobody attacks, pawl grants two priority rounds the rules say to skip. Unobservable while nothing can be cast at instant speed; a real bug the moment flash exists. CR 500.11 gives the semantics: skipping is "proceed past it as though it didn't exist" — no priority, no turn-based action. One predicate consulted by both `Turn.next` and `grantsPriority` serves 508.8 and 510.4 together, which is why the fix belongs to M2b rather than to a lone bugfix with one consumer.
+**CR 506.1 is one requirement, not two** (`#19): "The declare blockers and combat damage steps are skipped if no creatures are declared as attackers (508.8). There are two combat damage steps if any attacking or blocking creature has first strike or double strike." Both are conditional turn structure, and M1b implements neither — `Turn.grantsPriority` returns `True` for those steps unconditionally, so today, on every turn where nobody attacks, parun grants two priority rounds the rules say to skip. Unobservable while nothing can be cast at instant speed; a real bug the moment flash exists. CR 500.11 gives the semantics: skipping is "proceed past it as though it didn't exist" — no priority, no turn-based action. One predicate consulted by both `Turn.next` and `grantsPriority` serves 508.8 and 510.4 together, which is why the fix belongs to M2b rather than to a lone bugfix with one consumer.
 
 ### M3 — The ABI test (go / no-go)
 
@@ -319,7 +319,7 @@ Notes the letters' specs must not lose:
 between M3 and M4 and does **not** renumber M4–M7, which are cited by number
 throughout.)*
 
-Cards today are hand-written `Printing` values compiled into `Pawl.Engine.Card` — pure
+Cards today are hand-written `Printing` values compiled into `Parun.Engine.Card` — pure
 data, no lambdas, but Haskell modules, which §2.7 names as not the end state.
 This milestone makes JSON the card representation and files the source of truth.
 **Zero opcodes, zero rules** — a representation change, and it is sequenced
@@ -333,14 +333,14 @@ Two steps, **A** then **B**:
 
 - **A — the codec and the honesty round-trip.** A hand-rolled JSON
   parser/renderer (the `json` sublibrary for the value and its codec;
-  `Pawl.Json` for the codec-facing helpers) plus a `Card ⇆ Json` codec. The payoff is a structural round-trip
+  `Parun.Json` for the codec-facing helpers) plus a `Card ⇆ Json` codec. The payoff is a structural round-trip
   property over `allPrintings`: `jsonToCard . cardToJson ≡ Right`. This is the
   "keeps us honest" check — it proves the card model is fully first-order data,
   and fails loudly the day a lambda is smuggled in. Self-contained; does not
   touch the engine loop.
 - **B — files become the source of truth.** Render every card to
   `./data/cards/<slug>.json` (slugified name or Gatherer ID — the spec picks
-  one), commit the files, and flip `Pawl.Engine.Card` from hand-written values to a
+  one), commit the files, and flip `Parun.Engine.Card` from hand-written values to a
   loader that parses them. The invariant that makes B safe is A's property, now
   load-bearing: the committed files parse back to byte-identical cards.
   **"Runtime" is the test suite** — the loader serves the tests; there is no
@@ -459,7 +459,7 @@ Do 732 and 733 eventually. Nobody plans for them; everybody needs them.
 
 An interstitial, lettered like M3.5 and M4.5: not a new rules nightmare, but the
 last piece of vocabulary the transpiler cannot do without. M4.5 P9 built a
-per-object predicate (`Pawl.Types.Filter`) and deliberately stopped short of the
+per-object predicate (`Parun.Types.Filter`) and deliberately stopped short of the
 layer above it — a **scope** (which objects, over which zones, from whose
 perspective), an **aggregation** (how many; how many distinct card types), and a
 **comparison to a threshold**. Two hand-carved per-card types stood in for that
@@ -511,7 +511,7 @@ Only now, once the DSL has shape. Two inputs:
 
 Bot (MCTS over suspended continuations — resuming twice with different decisions is free; Forge and XMage deep-copy state to search, you just hold the continuation). WASM for the browser. WebSocket server. Headless simulation harness for deckbuilding.
 
-`pawl play` is the first interpreter: a random bot and a text client, over a stdio line protocol (`--json`) that is the server's first form.
+`parun play` is the first interpreter: a random bot and a text client, over a stdio line protocol (`--json`) that is the server's first form.
 
 ---
 
@@ -669,7 +669,7 @@ Note rule **404.3**: when multiple cards hit a graveyard simultaneously, the own
 | Risk | Mitigation |
 |---|---|
 | **Fusing the halves** | The §1 invariant. Audit for `case effect of` in the rules core. Watch the axis Argentum fused on: the mana subsystem grew 26 + 11 `is AddMana*Effect ->` branches because `Effect` carried no `manaProduced()` classification. **For every question the core must answer about an effect *before* executing it (produces mana? redirects a zone change?), add an explicit ABI classification — or the core will grow the switch.** |
-| **Trial application unproven in all prior art** | This is the M3 go/no-go and the single hardest bet in the design. **No studied engine actually does it.** Argentum *documented* full 613.8 trial application and shipped a hardcoded whitelist (`EffectSorter.dependsOn`, ~2 `Modification` subtypes; else → timestamp) — it couldn't even represent "Blood Moon removes Urborg's ability." Do not trust any doc, blog post, or `CLAUDE.md` claiming otherwise. **Mitigation: build the dependency test set — Blood Moon + Urborg, Humility + Opalescence, Magical Hack (layer 3) — *before* the resolver, and make the incompleteness a failing test, never a doc footnote.** The edge is real: immutable + memoized state makes the re-projection step of trial application cheaper for pawl than for any copy-on-write engine — this is the unclaimed territory the substrate is built for. |
+| **Trial application unproven in all prior art** | This is the M3 go/no-go and the single hardest bet in the design. **No studied engine actually does it.** Argentum *documented* full 613.8 trial application and shipped a hardcoded whitelist (`EffectSorter.dependsOn`, ~2 `Modification` subtypes; else → timestamp) — it couldn't even represent "Blood Moon removes Urborg's ability." Do not trust any doc, blog post, or `CLAUDE.md` claiming otherwise. **Mitigation: build the dependency test set — Blood Moon + Urborg, Humility + Opalescence, Magical Hack (layer 3) — *before* the resolver, and make the incompleteness a failing test, never a doc footnote.** The edge is real: immutable + memoized state makes the re-projection step of trial application cheaper for parun than for any copy-on-write engine — this is the unclaimed territory the substrate is built for. |
 | **DSL churn** | Expected. Version the AST from commit one. |
 | **Effects that reference prior choices and payments** | "If {B} was spent to cast this," "for each," modal back-references, X. mtg-pure hit this wall in a first-order model and punted (its cost-continuation warning, `prior-art-lessons.md` §10.1). Mitigation: named binding slots in the DSL, decided at M3 alongside the first opcodes (D4 in `prior-art-lessons.md` §3); M1a's mana-unit provenance is the closed-half half of the answer. |
 | **Thunk leaks** | Strict fields, `Data.IntMap.Strict` keyed by entity ID. A 100-turn game must not build a thunk chain the size of the match. Exception: the projected state should be a lazy field, shared per state — that's a genuine laziness win. Profile the goldfish loop at M0. |
@@ -687,7 +687,7 @@ Note rule **404.3**: when multiple cards hit a graveyard simultaneously, the own
 - **MTGJSON** — `AtomicCards` for the static shell and the round-trip oracle. Note: `power` is a *string* (`1+*`). Nothing in MTGJSON is executable.
 - **Argentum** (`github.com/wingedsheep/argentum-engine`) — the Kotlin prior art; the project that spurred this one. Base/projected split: **confirmed in code.** Trial-application dependency resolution: **documented, never built** — the real resolver (`EffectSorter.dependsOn`) is a hardcoded whitelist of ~2 `Modification` subtypes; everything else falls to timestamp, while the docs and `CLAUDE.md` still describe the trial application it doesn't do. A *cautionary* datapoint on 613.8, not a positive one. No AI, small pool. MIT — portable with attribution. Full study: `docs/prior-art-lessons.md`.
 - **mtg-pure** (`github.com/thomaseding/mtg-pure`, BSD-3) — the other Haskell engine, and the opposite fork on both central bets: cards as a type-indexed EDSL compiled as modules (~5,200 LOC of type-level object plumbing plus a mandatory codegen step), choices as IO callbacks (no snapshot/resume — Mindslaver is a `-- TODO`). Stalled after six months of real work, at exactly the layers/replacement/subgames boundary M3 probes. Study: `prior-art-lessons.md` §10.1.
-- **MedeaMelana's Magic** (`github.com/MedeaMelana/Magic`, BSD-3) — the design point one step short of pawl: free-monad `Interact` prompts and `Layer1..7e` as data, but card effects are `Contextual (Magic ())` closures. Source of the effect≡event pipeline M3 should adopt. Study: `prior-art-lessons.md` §10.2.
+- **MedeaMelana's Magic** (`github.com/MedeaMelana/Magic`, BSD-3) — the design point one step short of parun: free-monad `Interact` prompts and `Layer1..7e` as data, but card effects are `Contextual (Magic ())` closures. Source of the effect≡event pipeline M3 should adopt. Study: `prior-art-lessons.md` §10.2.
 - **Churchill, Biderman & Herrick**, *Magic: The Gathering is Turing Complete*
 
 ---

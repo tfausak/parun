@@ -1,0 +1,267 @@
+module Parun.Types.EntryRiders where
+
+import qualified Data.Map.Strict as Map
+import qualified Data.Sequence as Seq
+import qualified Parun.Types.CounterKind as CounterKind
+import qualified Parun.Types.EntryAttack as EntryAttack
+import qualified Parun.Types.EntryBlock as EntryBlock
+import qualified Parun.Types.EntryController as EntryController
+import qualified Parun.Types.FaceDownState as FaceDownState
+import qualified Parun.Types.Keyword as Keyword
+import qualified Parun.Types.Modification as Modification
+import qualified Parun.Types.PlayerRef as PlayerRef
+import qualified Parun.Types.PlayerRelation as PlayerRelation
+import qualified Parun.Types.SlotName as SlotName
+import qualified Parun.Types.TapState as TapState
+
+-- | What an effect says about an object AS IT ARRIVES in a zone, beyond the
+-- object's own text -- Hanweir Garrison's "that are tapped and attacking",
+-- Meandering Towershell's "return it to the battlefield tapped and attacking",
+-- Befriending the Moths' "return it to the battlefield transformed", and
+-- Ignorant Bliss' "exile all cards from your hand face down".
+--
+-- Carried by the OPCODE (Create, CreateCopy, MoveToZone) and not by the
+-- entering object, because neither is one of its characteristics (CR 109.3, CR
+-- 111.3). Two tokens with the same text can enter differently, and one printed
+-- card can be returned tapped by one effect and untapped by another.
+--
+-- Each rider is meaningful only in the zone its own rule scopes it to, and every
+-- other destination carries the default: `tapped`, `attacking`, `counters`,
+-- `transformed` and `under` are battlefield-only (CR 110.5d, CR 508.4, CR
+-- 122.6, CR 712.14a, CR 110.2a), `exiledFaceDown` is exile-only (CR 406.3),
+-- and `faceDown` is battlefield-only (CR 708.3).
+-- A card stating one on the wrong zone states something nothing reads, which
+-- Parun.CardSpec lints.
+--
+-- Independent riders, not one flag, because the rules make them independent.
+-- Tapped is CR 110.5's status category, defaulted by CR 110.5b.
+-- Attacking is not a status at all but combat state (CR 506.3, CR 508.4), and a
+-- creature put onto the battlefield attacking is NOT tapped by that fact -- CR
+-- 508.1f taps only creatures declared as attackers, and CR 508.4c exempts these
+-- from declaration. Transformed is neither: CR 712.14a makes it a question of
+-- WHICH FACE the card enters showing, which CR 712.14 otherwise answers with the
+-- front one.
+--
+-- `attacking` is an EntryAttack rather than an AttackTarget because the effect
+-- names no seat or permanent a card could write: CR 508.4 has the controller
+-- choose as it enters, CR 702.49c's specified case reads what another object was
+-- attacking, and CR 702.116a's narrows that choice to the player a slot names.
+-- Parun.Engine.Combat.putOntoBattlefieldAttacking applies each.
+--
+-- `blocking` is CR 509.4's rider, an EntryBlock for `attacking`'s reason: the
+-- rule's main clause has the controller choose as the creature enters
+-- (EntryBlock.Chosen, Synthetic Sudden Interposition), and its
+-- parenthetical is an effect that names the attacker by slot
+-- (EntryBlock.Specified -- Flash Foliage's target, Aetherplasm's trigger
+-- binding, Mirror Match's copied attacker).
+--
+-- Applied by Parun.Engine.Combat.putOntoBattlefieldBlocking, which is where CR
+-- 506.3e and CR 509.4a's two no-op conditions live and where CR 509.4b's
+-- exemption from the declaration's requirements and restrictions is what NOT
+-- asking canBlock amounts to. READ BY ALL THREE opcodes: a Create hands its
+-- tokens to that function from the minting loop (Flash
+-- Foliage), a CreateCopy hands its copies to it from the same place (Mirror
+-- Match's "a token that's a copy of that creature and that's blocking that
+-- creature"), and a MoveToZone hands the card it moved to it from moveOne
+-- (Aetherplasm's "put a creature card from your hand onto the battlefield
+-- blocking that creature"). Nothing in CR 509.4 privileges any door -- the
+-- rule is worded "put onto the battlefield", which a card does as much as a
+-- token. Parun.CardSpec's corpus lint fences the DESTINATION instead: on any zone
+-- but the battlefield the rider says something nothing reads.
+--
+-- `transformed` is a Bool rather than a face name for the reason CR 712.14a
+-- states: "If a spell or ability puts a double-faced card onto the battlefield
+-- 'transformed' or 'converted', it enters the battlefield with its BACK face
+-- up." The effect names no face -- which face that is falls out of the card's
+-- layout (Parun.Engine.Card.backFace), and Parun.Engine.Event.changeZoneEntering
+-- is where the rule is applied. That is also what keeps this rider clear of CR
+-- 712.11b's choice of face when casting a modal double-faced card: a choice is
+-- offered to the player as a list of castable faces, while this is an
+-- instruction the effect carries and the player is never asked about.
+--
+-- Meaningful only for a MoveToZone of a CARD, which is CR 712.14a's own scope --
+-- a token is not a card (CR 111.1), and no rule puts a double-faced token onto
+-- the battlefield transformed (CR 707.8a decides a copy token's face by copy
+-- rules instead). So Parun.Engine.Resolve's Create arm does not read this rider,
+-- and Parun.CardSpec's corpus lint holds that no Create in the pool sets it.
+--
+-- `counters` is CR 122.6's "an object that's given counters as it enters the
+-- battlefield", said by the EFFECT rather than by the permanent -- undying's and
+-- persist's "return it to the battlefield ... with a +1/+1 counter on it" (CR
+-- 702.93a, CR 702.79a).
+-- The same rider one opcode over is incubate's "create an Incubator token that
+-- enters the battlefield with N +1/+1 counters on it" (CR 701.53a).
+-- A rider and not an Effect.PutCounters afterwards, because the permanent must
+-- never exist on the battlefield without them. So Parun.Engine.Event places them
+-- INSIDE whichever door the object arrives by: inside the CR 400.7 funnel for a
+-- move, before its entry loop and before the Moved event, and for a batch of
+-- created tokens after all of them are minted but before any entry loop, so CR
+-- 614.12's reading of that batch sees them. Through Event.addEnteringCounters
+-- either way, so CR 614.16 applies inside the entry's own CR 616.1 loop and
+-- Doubling Season sees them -- the posture EntryRewrite.WithCounters takes for the
+-- counters a permanent's OWN text asks for.
+--
+-- READ BY BOTH opcodes, unlike `transformed` above: a Create hands it to
+-- Event.createTokens and a MoveToZone to Event.changeZoneEntering.
+-- Parun.ReplacementSpec's Eyes of Gitaxias group proves the Create road, where a
+-- token created with three +1/+1 counters on it takes six from Vorinclex.
+--
+-- A Map by kind, Object.counters' shape: nothing in CR 122.6 limits an effect to
+-- a single kind, and empty is the default every other move carries. WithCounters,
+-- the permanent's-own-text side, is keyed the same way and for the same reason,
+-- though there the empty map is unsayable -- Parun.Types.WithCounters says why.
+-- Perennation returns a permanent card "with a hexproof counter and an
+-- indestructible counter on it", which is the shape the Map is for -- and the
+-- board Parun.ReplacementSpec's Perennation group reads CR 614.5's one
+-- opportunity off, since both kinds are pending together before the entry's CR
+-- 616.1 loop begins.
+--
+-- The COUNT is the type parameter, and the two instantiations are the two sides
+-- of CR 608.2h. A card writes EntryRiders Quantity -- Printlifter Ooze's "the
+-- token enters with X +1/+1 counters on it, where X is the number of other
+-- creatures you control", whose X is defined by the ability's own text (CR
+-- 107.3c) -- while the funnel takes EntryRiders Natural, a settled number.
+-- Parun.Engine.Resolve.Effect.freezeRiders is the one bridge: it evaluates each count
+-- once, when the effect is applied, which is the rule the parameter exists to
+-- state. A Quantity reaching the funnel unevaluated is then a type error rather
+-- than a context built where there is none to build.
+--
+-- CR 122.6a's "may specify which player puts those counters on it" is not
+-- carried. No effect in the pool names one, and the rule's own default -- the
+-- object's controller -- is what putCounters already uses.
+--
+-- `under` is CR 110.2a: the player the effect INSTRUCTS to put the object
+-- onto the battlefield, which by default is the resolving controller and for a
+-- dies trigger whoever controlled the permanent as it left (CR 603.3a) --
+-- Endless Whispers' "that player puts", Thieves' Auction's "each player ...
+-- puts" -- or, where the effect states otherwise, each object's owner (undying's
+-- and persist's "under its OWNER's control"). The Instructed reference is
+-- read by Parun.Engine.Resolve's MoveToZone arm; the funnel sees only Owner.
+-- Inert under a Create, and correctly so: CR 111.2 makes a token's owner the
+-- player who created it, which is who CR 110.2a hands it to regardless, and
+-- Create names that player in a field of its own. Parun.EffectLintSpec fences it.
+-- `exiledFaceDown` is CR 406.3's "cards 'exiled face down'", said by the EFFECT
+-- that does the exiling -- Ignorant Bliss' "exile all cards from your hand face
+-- down" -- against that rule's face-up default. A rider and not a second write
+-- afterwards for `tapped`'s reason: the card must never sit face up in exile for
+-- an instant, where the Moved event and any CR 616.1 watcher would read it.
+--
+-- A rider on the MOVE and not a status on the card, because CR 110.5d denies an
+-- exiled card status at all; Object.exiledFaceDown says what it is instead.
+--
+-- `faceDown` is CR 708.3's "objects that are put onto the battlefield face
+-- down", said by the EFFECT that does the putting -- the "manifest the top card of
+-- your library" Soul Summons and Cloudform share (CR 701.40a), and Yedora, Grave
+-- Gardener's "return it to the battlefield face down" -- against CR 110.5b's
+-- face-up default.
+-- A rider and not a write after the move for `exiledFaceDown`'s reason and one
+-- of its own: CR 708.3 says the object is turned face down BEFORE it enters, so
+-- the CR 614.1c entry loop, the CR 603.2g Moved event and every trigger scanning
+-- it must all see a permanent that already has CR 708.2a's characteristics. A
+-- permanent turned face down after arriving would have fired its own
+-- enters-the-battlefield trigger on the way in, which is the one thing the rule
+-- exists to forbid.
+--
+-- A Maybe FaceDownState and not a Bool, which is CR 708.2a's "unless otherwise
+-- specified by the effect that put it onto the battlefield face down" plus CR
+-- 708.6's "what ability or rules caused the permanents to be face down". Yedora,
+-- Grave Gardener's "It's a Forest land" is the listing and its reason is CR
+-- 708.3's own rather than manifest's, which matters because manifest's reason is
+-- the one CR 701.40b's special action reads
+-- (Parun.Engine.FaceDown.canTurnFaceUp): a rider that could only say "face down"
+-- handed Yedora's permanent a turn-face-up its printing never grants.
+--
+-- The SAME type Facing.FaceDown carries, because the two say the same thing: CR
+-- 708.3 turns the object face down before it enters, so what the effect states
+-- and what the arriving permanent's status holds are one value, and
+-- Event.changeZoneEntering hands it straight to Facing.FaceDown without
+-- rebuilding it.
+--
+-- A SECOND rider beside `exiledFaceDown` and not the same one widened, which is
+-- CR 110.5d in as many words: an exiled card's face-downness "has no correlation
+-- to the face-down status of a permanent". This one writes Object.facing, which
+-- CR 708.2a spends on a wholesale substitution of characteristics; that one
+-- writes Object.exiledFaceDown, which is about who may look. Their zones are
+-- disjoint, so no move reads both.
+--
+-- Applied by Parun.Engine.Event.changeZoneEntering, which is also where the
+-- battlefield gate lives -- a card stating it on a move anywhere else says
+-- something no rule reads, which Parun.CardSpec lints.
+--
+-- Read by MoveToZone alone, like `transformed`: a token is created face up and
+-- no rule puts one onto the battlefield face down, so Parun.Engine.Resolve's
+-- Create arm does not read it and the same CardSpec lint holds that no Create in
+-- the pool sets it.
+--
+--
+-- `attachedTo` is CR 303.4i's and CR 301.5e's "an effect attempts to put an Aura
+-- onto the battlefield attached to" -- the object the EFFECT names as the
+-- entering permanent's host, where CR 303.4f would otherwise have the controller
+-- choose one. Preston Garvey, Minuteman's "create a green Aura enchantment token
+-- named Settlement attached to up to one target land you control" is one
+-- producer, and its "up to one" is why the rule's undefined case is reachable at
+-- all: a seat that announces zero targets leaves the slot naming nothing.
+--
+-- A SLOT NAME, EntryBlock.Specified's shape: a targeted slot (Preston Garvey)
+-- CR 608.2b has already judged, so the effect has answered the question and the
+-- engine never asks -- which is the difference from CR 303.4f, whose whole
+-- content is that the effect did NOT name one. A slot naming several is
+-- Dunbarrow Revivalist's "attached to one of them", where the effect names the
+-- group and CR 608.2d has its controller pick one.
+--
+-- Read by the CREATE alone (Parun.Engine.Resolve's Create arm and
+-- Event.createTokens), which Parun.EffectLintSpec fences: no MoveToZone in the
+-- pool names an attachment, and putFound carries CR 303.4a's fixed host down its
+-- own road instead.
+--
+-- NOT the road CR 701.58a's cloak takes, though the pairing it needs -- the 2/2
+-- with ward {2} FaceDownCharacteristics.disguisedValue is, under
+-- FaceDownReason.Cloaked -- is one this rider could carry, and is the one a Bool
+-- could not say at all. The keyword action mints it in the engine instead
+-- (Parun.Engine.Cloak), rule 701.58a fixing the listing so that no printing has
+-- anything to say about it.
+data EntryRiders count ability = MkEntryRiders
+  { tapped :: TapState.TapState,
+    attacking :: Maybe EntryAttack.EntryAttack,
+    blocking :: Maybe EntryBlock.EntryBlock,
+    transformed :: Bool,
+    counters :: Map.Map (CounterKind.CounterKind Keyword.Keyword) count,
+    under :: EntryController.EntryController,
+    exiledFaceDown :: Bool,
+    attachedTo :: Maybe SlotName.SlotName,
+    faceDown :: Maybe (FaceDownState.FaceDownState ability),
+    -- | CR 707.14: note the card being moved, for a later "copy of the card
+    -- with the noted name" (GameState.notedCards).
+    noted :: Bool,
+    -- | CR 611.2e: the continuous effects the instruction says the permanent
+    -- is under as it enters, applied simultaneously with entering (Bronzehide
+    -- Lion's "It's an Aura enchantment"). Battlefield-only, read by MoveToZone
+    -- alone (CR 611.2e's "nontoken permanent"); Parun.EffectLintSpec fences both.
+    characteristics :: Seq.Seq (Modification.Modification ability)
+  }
+  deriving (Eq, Ord, Show)
+
+-- | The value every carrier elides: a card file carries riders only when the
+-- effect really does say otherwise (CR 110.5b for tapped, CR 508.4 for a
+-- creature put onto the battlefield attacking, CR 509.4 for one put onto the
+-- battlefield blocking, CR 303.4i for the object it arrives attached to, CR
+-- 712.14 for the front face a
+-- double-faced card enters showing by default, CR 122.6 for the counters an
+-- object enters with, CR 110.2a for who it enters under, CR 406.3 for an exiled
+-- card being kept face up, CR 110.5b for a permanent entering face up, CR
+-- 611.2e for a permanent entering under no effect of the instruction's).
+defaultValue :: EntryRiders count ability
+defaultValue =
+  MkEntryRiders
+    { tapped = TapState.Untapped,
+      attacking = Nothing,
+      blocking = Nothing,
+      transformed = False,
+      counters = Map.empty,
+      under = EntryController.Instructed (PlayerRef.Relative PlayerRelation.You),
+      exiledFaceDown = False,
+      attachedTo = Nothing,
+      faceDown = Nothing,
+      noted = False,
+      characteristics = Seq.empty
+    }

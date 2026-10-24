@@ -9,7 +9,7 @@
 
 **Architecture:**
 - **Generic placement.** It already works for all four kinds; Ticketomaton is data. Scampire needs `effectIsImpossible`'s `PutSticker` arm to see a `ChosenCardInGraveyard` candidate set.
-- **One placement step.** `Pawl.Engine.Sticker.place` becomes the one per-object placement step, with `namePosition` moved in beside it. Both the resolution arm and the cast hook call it.
+- **One placement step.** `Parun.Engine.Sticker.place` becomes the one per-object placement step, with `namePosition` moved in beside it. Both the resolution arm and the cast hook call it.
 - **Sticker kicker.**
   - `Keyword.StickerKicker (Cost Keyword)` is an optional additional cost (`optionalCost`, limit 1) whose family is `KeywordFamily.Kicker`, per CR 702.33h's "means Kicker".
   - `Quantity.WasKicked` narrows to the printed `Kicker`/`Multikicker` constructors (CR 702.33e's link).
@@ -26,8 +26,8 @@
 ## Global Constraints
 
 - **Worktree.**
-  - Work only in `/Volumes/nvme/Developer/pawl/.claude/worktrees/872-stickers-4`: branch `872-stickers-unit-4`, cut from origin/main 942e9f674. Never `cd` to the primary checkout.
-  - Before the first build, run this as a bare command: `/Volumes/nvme/Developer/pawl/script/warm-worktree.sh seed /Volumes/nvme/Developer/pawl/.claude/worktrees/872-stickers-4`. Then confirm `cabal.project.local` is there.
+  - Work only in `/Volumes/nvme/Developer/parun/.claude/worktrees/872-stickers-4`: branch `872-stickers-unit-4`, cut from origin/main 942e9f674. Never `cd` to the primary checkout.
+  - Before the first build, run this as a bare command: `/Volumes/nvme/Developer/parun/script/warm-worktree.sh seed /Volumes/nvme/Developer/parun/.claude/worktrees/872-stickers-4`. Then confirm `cabal.project.local` is there.
 - **Builds and tests.**
   - `$SCRATCH` is the session scratchpad. Prefix every `cabal` call with `script/with-build-lock.sh`, redirect its output to `$SCRATCH/<name>.log`, and read the file. Never pipe `cabal`.
   - Build: `script/with-build-lock.sh cabal build -v0 all > "$SCRATCH/build.log" 2>&1`.
@@ -39,21 +39,21 @@
   - Re-anchor the sed text if ormolu reflowed the line.
 - **The rules core never cases on an effect's identity.**
   - Allowed: casing on `StickerKind` (CR 123.1), on keyword constructors (rule 702), and on `KeywordFamily`.
-  - `Effect.PutSticker` is cased only in `Pawl.Engine.Resolve*` and the exhaustive classification tables.
-- **Types and haddocks.** One type per `Pawl.Types.<TypeName>` module, holding the type and its instances only. Constructors take `Mk`. A haddock is one line plus its CR citation, except an elision paragraph or a note naming the proving test.
+  - `Effect.PutSticker` is cased only in `Parun.Engine.Resolve*` and the exhaustive classification tables.
+- **Types and haddocks.** One type per `Parun.Types.<TypeName>` module, holding the type and its instances only. Constructors take `Mk`. A haddock is one line plus its CR citation, except an elision paragraph or a note naming the proving test.
 - **Elisions.** Each gets an issue, and a code-site comment saying only what is not implemented, ending `(#N)`. `#N1`–`#N2` are placeholders that Task 7 replaces.
 - **Sources.**
   - Read CR text from `docs/rules.txt` by rule number.
   - Before writing a card, re-verify its Oracle text with `curl -s 'https://api.scryfall.com/cards/named?exact=<Name>'`, URL-encoded, one request at a time. The texts below are Scryfall's of 2026-10-10.
 - **Committing.**
   - Stage, run `hooky fix`, then stage again.
-  - Card JSON: run `script/format-json.sh fix FILE`. A card file is named by `Pawl.Slug.fromText` of its name.
+  - Card JSON: run `script/format-json.sh fix FILE`. A card file is named by `Parun.Slug.fromText` of its name.
   - Never stash; copy a file aside and move it back instead. Never `git checkout <file>` to revert.
   - Use extensions only from `.hlint.yaml`. Prefer `case` over `maybe` and `let` over `where`; no backticks in new code.
   - A commit message is a subject, at most two sentences of why, then `Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>`.
   - No commit message may say close, fix or resolve beside #872. Only the PR body says `Closes #872`.
 - **Tests and answerers.**
-  - Gameplay tests are Haskell specs in `Pawl.StickerSpec`, with test-local answerers (unit 1's Divergence 12) and its existing helpers: `committedSheets`, `withSheets`, `withJuggler`, `placingRef`, `aliceSticker`, `mainPhaseForAlice`, `drain`, and the named sticker constants.
+  - Gameplay tests are Haskell specs in `Parun.StickerSpec`, with test-local answerers (unit 1's Divergence 12) and its existing helpers: `committedSheets`, `withSheets`, `withJuggler`, `placingRef`, `aliceSticker`, `mainPhaseForAlice`, `drain`, and the named sticker constants.
   - The test code below is written against those names. Fix name or type slips; stop and report a rules or design error.
   - A case may place a sticker directly with `Sticker.put` when the placing card is not what it tests (unit 2's Divergence 10).
 
@@ -94,7 +94,7 @@ These are the five input classes most likely to bite. Each has a test in its own
 
 **Files:**
 - Create: `data/cards/ticketomaton.json`
-- Modify: `source/libraries/test/Pawl/StickerSpec.hs`
+- Modify: `source/libraries/test/Parun/StickerSpec.hs`
 
 **Interfaces:** consumes `Effect.PutSticker` with all four kinds, as Tusk and Whiskers' activated ability already is.
 
@@ -129,14 +129,14 @@ These are the five input classes most likely to bite. Each has a test in its own
 
 **Files:**
 - Create: `data/cards/scampire.json`
-- Modify: `source/libraries/engine/Pawl/Engine/Resolve/Effect.hs`, the `effectIsImpossible` `PutSticker` arm (around line 3510) and, if Step 4 shows it, the resolution arm (around line 5700)
-- Modify: `source/libraries/test/Pawl/StickerSpec.hs`
+- Modify: `source/libraries/engine/Parun/Engine/Resolve/Effect.hs`, the `effectIsImpossible` `PutSticker` arm (around line 3510) and, if Step 4 shows it, the resolution arm (around line 5700)
+- Modify: `source/libraries/test/Parun/StickerSpec.hs`
 
 - [ ] **Step 1: Verify Oracle.** Scampire `{2}{B}` Creature — Vampire Employee 1/3:
   - "When Scampire enters, you get {TK}, then you may put a sticker on a creature card in your graveyard."
   - "{3}{B}: Return target creature card with a sticker on it from your graveyard to the battlefield. That creature gains haste. Exile it at the beginning of the next end step. Activate only as a sorcery."
 - [ ] **Step 2: Write the card.**
-  - **Trigger:** Ticketomaton's, with the `ref` changed to `ChosenCardInGraveyard {chooser: the controller, players: your graveyard, filter: HasCardType Creature, count: 1}`. Read `Pawl.Types.ChosenCardInGraveyard` and an existing card that uses it for the exact wire shape.
+  - **Trigger:** Ticketomaton's, with the `ref` changed to `ChosenCardInGraveyard {chooser: the controller, players: your graveyard, filter: HasCardType Creature, count: 1}`. Read `Parun.Types.ChosenCardInGraveyard` and an existing card that uses it for the exact wire shape.
   - **Activated ability:** grep `data/cards` for `Exile it at the beginning of the next end step` beside `graveyard to the battlefield`, read the hits, and copy the shape of one that returns a target card that way (`dregscape-zombie.json` matched the grep but may be unearth). Use target filter `HasCardType Creature ∧ Stickered`, sorcery timing, and cost `{3}{B}`.
 - [ ] **Step 3: Write the failing tests.**
 
@@ -168,20 +168,20 @@ These are the five input classes most likely to bite. Each has a test in its own
 ## Task 3: sticker kicker, Wicker Picker and Hallar
 
 **Files:**
-- Modify: `source/libraries/types/Pawl/Types/Keyword.hs`, which gets `StickerKicker (Cost.Cost Keyword)` after `Multikicker`. Delete the Kicker haddock's "Not implemented: CR 702.33h's sticker kicker (#872)" paragraph.
-- Modify: `source/libraries/codec/Pawl/Codec/Keyword.hs` (arm and tag) and `KeywordSpec.hs` (a round trip).
-- Modify: `source/libraries/engine/Pawl/Engine/Keyword.hs`:
+- Modify: `source/libraries/types/Parun/Types/Keyword.hs`, which gets `StickerKicker (Cost.Cost Keyword)` after `Multikicker`. Delete the Kicker haddock's "Not implemented: CR 702.33h's sticker kicker (#872)" paragraph.
+- Modify: `source/libraries/codec/Parun/Codec/Keyword.hs` (arm and tag) and `KeywordSpec.hs` (a round trip).
+- Modify: `source/libraries/engine/Parun/Engine/Keyword.hs`:
   - `optionalCost`: `Keyword.StickerKicker cost -> Just (cost, Just 1)`;
   - `familyOf`: `-> Just KeywordFamily.Kicker`, with a comment citing CR 702.33h's "means Kicker";
   - every exhaustive `Keyword.Kicker _ -> []` sibling (lines around 442, 672, 1227, 1841, 2619, 4442, 4828, 5178) gets the same arm.
-- Modify: `Pawl.Engine.Filter`'s `rewriteKeyword` (`rewriteCost`), `Interchangeable/Mentions.hs` (`costNames`) and `registry/Pawl/Oracle.hs`.
-- Modify: `source/libraries/types/Pawl/Types/Filter.hs`, which gets `Kicked`. Plumb it through every `Filter.TagWasSpent` sibling site in `Engine/Filter.hs` (eval, and the traversals at around 2480, 3240, 3422, 3627, 3761 and 3941), plus `Codec/Filter.hs`, `FilterSpec.hs`, Mentions and Rewrite.
-- Modify: `source/libraries/engine/Pawl/Engine/Quantity.hs`, where `WasKicked` reads only the printed constructors.
-- Modify: `source/libraries/engine/Pawl/Engine/Sticker.hs`, which gets `place` and the moved `namePosition`. `Resolve/Effect.hs`'s `PutSticker` arm calls `Sticker.place`.
-- Modify: `source/libraries/types/Pawl/Types/Prompt.hs`, which gets `ChooseStickerOrNone`. Also its `Response`, `Replay.hs`, `scenario/Pawl/Scenario/Prompt.hs`, `Scenario.hs` and the prompt codec (grep `ChooseSticker` and mirror every hit).
-- Modify: `source/libraries/engine/Pawl/Engine/Cast.hs`, the hook before `GameEvent.SpellCast`.
+- Modify: `Parun.Engine.Filter`'s `rewriteKeyword` (`rewriteCost`), `Interchangeable/Mentions.hs` (`costNames`) and `registry/Parun/Oracle.hs`.
+- Modify: `source/libraries/types/Parun/Types/Filter.hs`, which gets `Kicked`. Plumb it through every `Filter.TagWasSpent` sibling site in `Engine/Filter.hs` (eval, and the traversals at around 2480, 3240, 3422, 3627, 3761 and 3941), plus `Codec/Filter.hs`, `FilterSpec.hs`, Mentions and Rewrite.
+- Modify: `source/libraries/engine/Parun/Engine/Quantity.hs`, where `WasKicked` reads only the printed constructors.
+- Modify: `source/libraries/engine/Parun/Engine/Sticker.hs`, which gets `place` and the moved `namePosition`. `Resolve/Effect.hs`'s `PutSticker` arm calls `Sticker.place`.
+- Modify: `source/libraries/types/Parun/Types/Prompt.hs`, which gets `ChooseStickerOrNone`. Also its `Response`, `Replay.hs`, `scenario/Parun/Scenario/Prompt.hs`, `Scenario.hs` and the prompt codec (grep `ChooseSticker` and mirror every hit).
+- Modify: `source/libraries/engine/Parun/Engine/Cast.hs`, the hook before `GameEvent.SpellCast`.
 - Create: `data/cards/wicker-picker.json`, `data/cards/hallar-the-firefletcher.json`
-- Modify: `source/libraries/test/Pawl/StickerSpec.hs`
+- Modify: `source/libraries/test/Parun/StickerSpec.hs`
 
 **Interfaces:**
 - Produces:
@@ -239,9 +239,9 @@ These are the five input classes most likely to bite. Each has a test in its own
     Quantity.WasKicked -> fmap (\view -> if any (> 0) (Map.filterWithKey (\keyword _ -> Keyword.isPrintedKicker keyword) (Filter.paidCosts view)) then 1 else 0) mView
     ```
 
-    Add `Keyword.isPrintedKicker` in `Pawl.Engine.Keyword` as a two-arm case (`Kicker`, `Multikicker`) with a wildcard, `optionalCost`'s posture.
+    Add `Keyword.isPrintedKicker` in `Parun.Engine.Keyword` as a two-arm case (`Kicker`, `Multikicker`) with a wildcard, `optionalCost`'s posture.
   - **`Filter.Kicked`:** `Filter.Kicked -> any (\(k, n) -> n > 0 && Keyword.familyOf k == Just KeywordFamily.Kicker) (Map.toList (paidCosts view))`. Its haddock: "CR 702.33d: the spell was kicked, by any kicker cost, a sticker kicker's among them (CR 702.33h)."
-  - **`Sticker.place`:** move the per-object body of `Resolve/Effect.hs`'s `PutSticker` arm (the `place picked` block and the `chooseAmong`) and `namePosition` into `Pawl.Engine.Sticker`. Its imports (`Projection`, `NameWords`, `Prompt`) must not cycle; if one does, say so and keep `namePosition` in Resolve, passing it in as an argument. `bindStickerSlot` stays in Resolve, applied to `place`'s result.
+  - **`Sticker.place`:** move the per-object body of `Resolve/Effect.hs`'s `PutSticker` arm (the `place picked` block and the `chooseAmong`) and `namePosition` into `Parun.Engine.Sticker`. Its imports (`Projection`, `NameWords`, `Prompt`) must not cycle; if one does, say so and keep `namePosition` in Resolve, passing it in as an argument. `bindStickerSlot` stays in Resolve, applied to `place`'s result.
   - **`Cast` hook,** after the `ridersUsed` store and before the `SpellCast` event:
 
     ```haskell
@@ -270,8 +270,8 @@ These are the five input classes most likely to bite. Each has a test in its own
 ## Task 4: stickers on a melded permanent (CR 123.5a)
 
 **Files:**
-- Modify: `source/libraries/engine/Pawl/Engine/Event.hs`, the meld placement (`Object.stickers = Seq.empty` with the `(#872)` comment, around line 8018)
-- Modify: `source/libraries/test/Pawl/StickerSpec.hs`. Reuse `Pawl.MeldSpec`'s Graf Rats board helpers; import them, or copy the minimum.
+- Modify: `source/libraries/engine/Parun/Engine/Event.hs`, the meld placement (`Object.stickers = Seq.empty` with the `(#872)` comment, around line 8018)
+- Modify: `source/libraries/test/Parun/StickerSpec.hs`. Reuse `Parun.MeldSpec`'s Graf Rats board helpers; import them, or copy the minimum.
 
 - [ ] **Step 1: Write the failing test.**
 
@@ -296,8 +296,8 @@ These are the five input classes most likely to bite. Each has a test in its own
 ## Task 5: stickers on a merged permanent (CR 123.5b, 613.7k)
 
 **Files:**
-- Modify: `source/libraries/engine/Pawl/Engine/Event.hs`, in `merge` (the haddock's `(#872)` paragraph, around line 8205)
-- Modify: `source/libraries/test/Pawl/StickerSpec.hs`
+- Modify: `source/libraries/engine/Parun/Engine/Event.hs`, in `merge` (the haddock's `(#872)` paragraph, around line 8205)
+- Modify: `source/libraries/test/Parun/StickerSpec.hs`
 
 - [ ] **Step 1: Write the failing tests.**
 
@@ -325,9 +325,9 @@ These are the five input classes most likely to bite. Each has a test in its own
 ## Task 6: the split — the owner chooses who keeps the stickers (CR 123.5c)
 
 **Files:**
-- Modify: `source/libraries/engine/Pawl/Engine/Event.hs`, in `changeZoneAttaching`'s split (`asComponent` and the `(#872)` comment, around lines 6435–6465)
-- Modify: `source/libraries/types/Pawl/Types/Prompt.hs`, which gets `ChooseStickerKeeper`. Give its candidates the same type `arrangeComponents`' prompt uses, and mirror its plumbing in Response, Replay, Scenario and codec.
-- Modify: `source/libraries/test/Pawl/StickerSpec.hs`
+- Modify: `source/libraries/engine/Parun/Engine/Event.hs`, in `changeZoneAttaching`'s split (`asComponent` and the `(#872)` comment, around lines 6435–6465)
+- Modify: `source/libraries/types/Parun/Types/Prompt.hs`, which gets `ChooseStickerKeeper`. Give its candidates the same type `arrangeComponents`' prompt uses, and mirror its plumbing in Response, Replay, Scenario and codec.
+- Modify: `source/libraries/test/Parun/StickerSpec.hs`
 
 - [ ] **Step 1: Write the failing tests.**
 
@@ -363,17 +363,17 @@ These are the five input classes most likely to bite. Each has a test in its own
   N1, title "Which order do a host's and a merging spell's stickers take after the merge?". Label it `question`, as #4887 is, with no area label:
 
   ```markdown
-  > **Summary (2026-10-10).** When a spell with stickers merges onto a permanent with stickers, every sticker gets a new timestamp. The rules keep each object's own stickers in order but don't say how the two objects' stickers interleave. Pawl keeps their old timestamp order across both. Two P/T stickers, one on Cubwarden cast with Wicker Picker's sticker kicker and one on the creature it mutates onto, would show the difference.
+  > **Summary (2026-10-10).** When a spell with stickers merges onto a permanent with stickers, every sticker gets a new timestamp. The rules keep each object's own stickers in order but don't say how the two objects' stickers interleave. Parun keeps their old timestamp order across both. Two P/T stickers, one on Cubwarden cast with Wicker Picker's sticker kicker and one on the creature it mutates onto, would show the difference.
 
   ### Details
 
-  - CR 123.5b, CR 613.7k. `Pawl.Engine.Event.merge` cites this issue.
+  - CR 123.5b, CR 613.7k. `Parun.Engine.Event.merge` cites this issue.
   ```
 
   N2, title "Solaflora, Intergalactic Icon: its counters, stickers and attachments affect other creatures", labels `gap,expires:card-driven,area:cards`:
 
   ```markdown
-  > **Summary (2026-10-10).** Solaflora's Auras and Equipment, and its counters and stickers, affect other creatures you control as though they were on them. Pawl has no way for an attachment, counter or sticker to apply to an object it is not on. Solaflora is the card.
+  > **Summary (2026-10-10).** Solaflora's Auras and Equipment, and its counters and stickers, affect other creatures you control as though they were on them. Parun has no way for an attachment, counter or sticker to apply to an object it is not on. Solaflora is the card.
 
   ### Details
 
@@ -387,8 +387,8 @@ These are the five input classes most likely to bite. Each has a test in its own
 
 ## Task 8: ingest, sweeps, self-review and the PR
 
-- [ ] **Step 1: `pawl ingest`.**
-  - Run `jq -f script/ingest/candidates.jq /Volumes/nvme/Developer/pawl/_scratch/AtomicCards.json > "$SCRATCH/candidates.json"`, then `script/with-build-lock.sh cabal run -v0 pawl -- ingest "$SCRATCH/candidates.json" > "$SCRATCH/ingest.log" 2>&1`.
+- [ ] **Step 1: `parun ingest`.**
+  - Run `jq -f script/ingest/candidates.jq /Volumes/nvme/Developer/parun/_scratch/AtomicCards.json > "$SCRATCH/candidates.json"`, then `script/with-build-lock.sh cabal run -v0 parun -- ingest "$SCRATCH/candidates.json" > "$SCRATCH/ingest.log" 2>&1`.
   - Fix any disagreement on this unit's four cards.
   - Delete any new keyword-only file it writes, and say how many in the PR. Then run the full suite.
 - [ ] **Step 2: Sweeps.**
@@ -396,7 +396,7 @@ These are the five input classes most likely to bite. Each has a test in its own
   - Run `grep -rn -i 'sticker\|kicker\|kicked' source --include='*.hs'` and read every comment this unit touched. The rule-statements now false include "the one producer", "Kicker is the only…", and `WasKicked`'s "family" wording.
   - Check the record-update sites for `Object.stickers` (`{ Object.stickers =`, `o {Object.stickers`). For each, confirm it is intended. `happenedBetween`: a placement inside the cast hook is not an instruction, so there is no copy-across. Say so.
   - CR citations: read each `CR` the diff cites in `docs/rules.txt`.
-- [ ] **Step 3: Self-review.** Run `git fetch` and `git merge origin/main` (once, now), then the full suite, and re-run m3a, m3b, m3c, m4a, m5a and m6a. Re-read every touched comment against the one-line haddock rule. Read `gh api repos/tfausak/pawl/issues/872/dependencies/blocking` and name in the PR body what this unblocks.
+- [ ] **Step 3: Self-review.** Run `git fetch` and `git merge origin/main` (once, now), then the full suite, and re-run m3a, m3b, m3c, m4a, m5a and m6a. Re-read every touched comment against the one-line haddock rule. Read `gh api repos/tfausak/parun/issues/872/dependencies/blocking` and name in the PR body what this unblocks.
 - [ ] **Step 4: Open the PR.** Run `gh pr create --draft --title "Stickers unit 4: generic producers, sticker kicker, meld and merge" --body-file $SCRATCH/pr.md`:
 
 ```

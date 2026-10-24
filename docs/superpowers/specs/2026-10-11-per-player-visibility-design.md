@@ -2,13 +2,13 @@
 
 ## The problem
 
-Pawl never decides what one player may see. Every answerer is handed the whole
-`GameState` (`Pawl.Types.Asked`), and nothing in the engine asks "may this
-player see this card?" except `Pawl.Engine.Exile.mayLookAt`, for CR 406.3's
+Parun never decides what one player may see. Every answerer is handed the whole
+`GameState` (`Parun.Types.Asked`), and nothing in the engine asks "may this
+player see this card?" except `Parun.Engine.Exile.mayLookAt`, for CR 406.3's
 face-down exile alone. A family of cards waits on that question: lasting
 reveals (#1408, #3045), standing looks and revealed hands (#3237, #3035),
 private looks (#4391), secret choices (#4452, #3497) and targets in hidden
-zones (#559). Nor can a test say what a player sees: `Pawl.ActivateSpec`
+zones (#559). Nor can a test say what a player sees: `Parun.ActivateSpec`
 asserts on the raw log and says so.
 
 ## Two halves
@@ -46,7 +46,7 @@ existing issue, re-pointed to block on unit 1's.
 
 ## Unit 1: the relation
 
-### `Pawl.Types.Visibility`
+### `Parun.Types.Visibility`
 
 ```haskell
 data Visibility = Visible | Obscured
@@ -60,7 +60,7 @@ constructors only: how an obscured object is shown (a CR 708.2 face-down 2/2,
 or a card back) follows from zone and facing, which the state already holds,
 and no reader yet needs the reason a card is visible.
 
-### `Pawl.Engine.Visibility.sees`
+### `Parun.Engine.Visibility.sees`
 
 ```haskell
 sees :: PlayerId -> ObjectId -> GameState -> Visibility
@@ -84,19 +84,19 @@ when writing the arm.
 
 **CR 723.4.** For an object in the game, a player sees what any player they
 control sees: `sees p o = foldMap (\q -> base q o) (p : controlledBy p)`, with
-`controlledBy` read off `GameState.control` through `Pawl.Engine.Decide`'s
+`controlledBy` read off `GameState.control` through `Parun.Engine.Decide`'s
 `effective` row, the same reading `deciderFor` makes. A card outside the game
 (`InAnotherGame`, `Player.outsideTheGame`) takes the base term only.
 
 `Exile.mayLookAt` stays, as the face-down-exile arm's implementation, and
-its callers (`Exile.mayChoose`, `Pawl.Engine.Target`, `Pawl.Engine.Cast`)
+its callers (`Exile.mayChoose`, `Parun.Engine.Target`, `Parun.Engine.Cast`)
 keep their reads: each asks CR 406.4's choosing question over exiled cards,
 where `sees` agrees by construction. Moving them onto `sees` would also hide
 an opponent's hand from target offering, which is unit 6's change.
 
 ### The `Seers` view
 
-A new `Pawl.Types.View` constructor, checked through the existing `View`
+A new `Parun.Types.View` constructor, checked through the existing `View`
 check, with no new `Check` constructor:
 
 ```json
@@ -204,7 +204,7 @@ reveals, in order: `{ "of": "Witnessed", "player": "alice", "is": [...] }`.
 
 Enhanced Surveillance's optional extra look becomes a prompt; the proof is
 that alice's `Witnessed` holds the extra cards iff she accepted. The miracle
-look (CR 121.9) and `Pawl.MassEffectSpec`'s look move onto `Looked`. Other
+look (CR 121.9) and `Parun.MassEffectSpec`'s look move onto `Looked`. Other
 events' payloads (a library-to-hand `Moved` carries the card) stay unredacted
 until unit 7.
 

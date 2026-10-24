@@ -4,7 +4,7 @@
 
 **Goal:** Make `changeZone` a first-class event so Rest in Peace works whole: its replacement redirects every graveyard-bound object to exile (CR 614), and its enters-the-battlefield trigger goes on the stack and exiles all graveyards (CR 603), both riding one zone-change substrate.
 
-**Architecture:** `changeZone` moves out of `Pawl.Game` into a new `Pawl.Event` module (above `Pawl.Projection`, so replacements can be read through the projection without an import cycle). `Pawl.Event` is the sole home of casing on the two new open-half vocabularies — `ReplacementEffect` (a zone-change pattern → rewrite) and `TriggerCondition` (an event pattern). `changeZone` applies replacements to the proposed move, performs it, and emits the resolved `ZoneChange` into `GameState.zoneChanges`. At every CR 117.5 priority boundary the engine runs state-based actions to fixpoint, then puts matched triggered abilities on the stack as a new `Source.OfTrigger` incarnation that resolves through a `resolveEffects` executor shared with M3e's activated abilities, then ceases (CR 608.2n). Replacements and triggered abilities are read through `Projection` accessors (`replacementsOf` / `triggeredAbilitiesOf`) that mirror `abilitiesOf`, so `LoseAllAbilities` strips them uniformly.
+**Architecture:** `changeZone` moves out of `Parun.Game` into a new `Parun.Event` module (above `Parun.Projection`, so replacements can be read through the projection without an import cycle). `Parun.Event` is the sole home of casing on the two new open-half vocabularies — `ReplacementEffect` (a zone-change pattern → rewrite) and `TriggerCondition` (an event pattern). `changeZone` applies replacements to the proposed move, performs it, and emits the resolved `ZoneChange` into `GameState.zoneChanges`. At every CR 117.5 priority boundary the engine runs state-based actions to fixpoint, then puts matched triggered abilities on the stack as a new `Source.OfTrigger` incarnation that resolves through a `resolveEffects` executor shared with M3e's activated abilities, then ceases (CR 608.2n). Replacements and triggered abilities are read through `Projection` accessors (`replacementsOf` / `triggeredAbilitiesOf`) that mirror `abilitiesOf`, so `LoseAllAbilities` strips them uniformly.
 
 **Tech Stack:** Haskell 2010 (GHC 9.14.1), `tasty` (`tasty-hunit` + `tasty-quickcheck`), Cabal. Boot libraries only.
 
@@ -13,15 +13,15 @@
 Copied from the spec and `CLAUDE.md`; every task implicitly includes these:
 
 - **Haskell 2010, no language extensions** beyond `GADTs`, `RankNTypes`, `NamedFieldPuns`. No `LambdaCase`, no `OverloadedStrings`, **no list comprehensions**.
-- **No explicit export lists** (`module Pawl.Foo where`).
-- **One type per module** under `Pawl.Type.<TypeName>` (type + instances only); logic in other `Pawl.*` modules. A module never imports its parents. Add a new `Pawl.Type.*` file and run `cabal-gild` (via `hooky fix`) — the `exposed-modules` field is `discover`-generated. A new `Pawl.*Spec` goes in the test-suite `other-modules` list.
+- **No explicit export lists** (`module Parun.Foo where`).
+- **One type per module** under `Parun.Type.<TypeName>` (type + instances only); logic in other `Parun.*` modules. A module never imports its parents. Add a new `Parun.Type.*` file and run `cabal-gild` (via `hooky fix`) — the `exposed-modules` field is `discover`-generated. A new `Parun.*Spec` goes in the test-suite `other-modules` list.
 - **Qualified imports, aliased to the last component** (`Data.List` → `List`); operators unqualified; one import group. `A.B.C` must not import `A.B` or `A`.
 - **No partial functions** — `Maybe`/`Either`, never `head`/`error`/non-exhaustive matches.
 - **`newtype`/record + `Mk`-prefixed, non-punning constructors**; build records with `do`/record syntax. Sum-type data constructors (like `SelfEnters`, `OfTrigger`, `ExileAllGraveyards`, `RedirectZoneChange`) take no `Mk` prefix.
 - **Prefer explicit:** `case` over point-free; `let` over `where`; `$` over parens, `.` over chained `$`; `Text` not `String`; arbitrary-precision numbers.
 - **No boolean blindness**; **derive at least `Eq` and `Show`** (and `Ord` on anything a `Card`/`Action`/`Source` transitively contains — those derive `Ord`; `ProjectedCharacteristics` has **no** `Ord` and is never a key).
 - **Warning-clean** under `-Weverything` minus the allow-list; the `pedantic` flag makes any warning a build failure (including `-Wincomplete-patterns` on a match missing a new constructor, and `-Wmissing-fields` on a record missing a new field). Build `all`: `cabal build all --enable-tests --enable-benchmarks`. When in doubt, `cabal clean` first — incremental builds hide warnings.
-- **The two invariants:** the rules core never `case`s on an effect's *identity*. `Pawl.Resolve` is the **sole** `case`-on-`Effect` home (`slotsOf`, `manaProduced`, `rewriteEffect`, `matchesCriterion`, `applyEffect`); `Pawl.Projection` the **sole** `case`-on-`Modification` home; **`Pawl.Event` the sole `case`-on-`ReplacementEffect` and `case`-on-`TriggerCondition` home** (new this milestone). Constructing a value is not casing on it. `Stack.resolveTop` dispatches on the `Source` classification (`OfCard`/`OfAbility`/`OfTrigger`), never a card's identity. The engine makes no player choice except where the rules leave one, eliding only indistinguishable options (with a documented expiry).
+- **The two invariants:** the rules core never `case`s on an effect's *identity*. `Parun.Resolve` is the **sole** `case`-on-`Effect` home (`slotsOf`, `manaProduced`, `rewriteEffect`, `matchesCriterion`, `applyEffect`); `Parun.Projection` the **sole** `case`-on-`Modification` home; **`Parun.Event` the sole `case`-on-`ReplacementEffect` and `case`-on-`TriggerCondition` home** (new this milestone). Constructing a value is not casing on it. `Stack.resolveTop` dispatches on the `Source` classification (`OfCard`/`OfAbility`/`OfTrigger`), never a card's identity. The engine makes no player choice except where the rules leave one, eliding only indistinguishable options (with a documented expiry).
 - **Every rules claim cited** against `docs/rules.txt` in a code comment. Never trust recalled Magic rules. (Numbers verified for this plan: replacement effects use "instead" CR 614.1a; a replacement gets one opportunity CR 614.5; a replaced event never happens, the modified event may trigger CR 614.6; a replaced event triggers nothing CR 603.2g; a triggered ability goes on the stack the next time a player would get priority CR 603.3 / 117.5; enters-the-battlefield triggers CR 603.6a; APNAP CR 603.3b; an ability ceases to exist CR 608.2n; SBA burial for lethal damage CR 704.5g / zero toughness 704.5f; new object on zone change CR 400.7; a token in a non-battlefield zone ceases CR 111.7 — deferred.)
 - **After each task:** `cabal build all --enable-tests --enable-benchmarks` warning-free, `cabal test`, `git add -A` (stage explicit paths under a shared worktree) then `hooky fix` && `git add -A` && `hooky run`, HLint clean. Commit directly to `main`, one small complete commit per task.
 
@@ -33,20 +33,20 @@ Co-Authored-By: Claude Opus 4.8 (1M context) <noreply@anthropic.com>
 
 **Cards (Scryfall-verified 2026-07-18):**
 - **Rest in Peace** — `{1}{W}` Enchantment — "When this enchantment enters, exile all graveyards. / If a card or token would be put into a graveyard from anywhere, exile it instead."
-- **Plains** — basic land, no mana cost; its `{W}` mana ability is intrinsic from the `Plains` subtype (CR 305.6), zero opcodes. Added as a white mana source so Rest in Peace is cast, not hand-placed. (`Pawl.Mana` already maps `Subtype.Plains` → white.)
+- **Plains** — basic land, no mana cost; its `{W}` mana ability is intrinsic from the `Plains` subtype (CR 305.6), zero opcodes. Added as a white mana source so Rest in Peace is cast, not hand-placed. (`Parun.Mana` already maps `Subtype.Plains` → white.)
 
-**Module dependency note (why Task 1 exists):** `Pawl.Projection` imports `Pawl.Game`. Replacements are consulted inside `changeZone`, which lives in `Pawl.Game` — below `Projection`. Reading the projection there would be a `Game → Projection → Game` cycle. Task 1 relocates `changeZone` into a new `Pawl.Event` module that sits *above* `Projection`, which every current caller then imports. This is a behavior-preserving refactor done first, in isolation.
+**Module dependency note (why Task 1 exists):** `Parun.Projection` imports `Parun.Game`. Replacements are consulted inside `changeZone`, which lives in `Parun.Game` — below `Projection`. Reading the projection there would be a `Game → Projection → Game` cycle. Task 1 relocates `changeZone` into a new `Parun.Event` module that sits *above* `Projection`, which every current caller then imports. This is a behavior-preserving refactor done first, in isolation.
 
 ---
 
 ## Phase 0 — relocate the funnel (Task 1)
 
-### Task 1: Move `changeZone` from `Pawl.Game` to a new `Pawl.Event` (no behavior change)
+### Task 1: Move `changeZone` from `Parun.Game` to a new `Parun.Event` (no behavior change)
 
 **Files:**
-- Create: `source/library/Pawl/Event.hs`
-- Modify: `source/library/Pawl/Game.hs` (delete `changeZone`)
-- Modify: every caller — `source/library/Pawl/Stack.hs`, `Setup.hs`, `Engine.hs`, `Activate.hs`, `Cast.hs`, `Resolve.hs`, `Sba.hs`; and tests `source/test-suite/Pawl/DamageSpec.hs`, `GameSpec.hs`, `CastSpec.hs`, `ResolveSpec.hs` (change `Game.changeZone` → `Event.changeZone`, add `import qualified Pawl.Event as Event`)
+- Create: `source/library/Parun/Event.hs`
+- Modify: `source/library/Parun/Game.hs` (delete `changeZone`)
+- Modify: every caller — `source/library/Parun/Stack.hs`, `Setup.hs`, `Engine.hs`, `Activate.hs`, `Cast.hs`, `Resolve.hs`, `Sba.hs`; and tests `source/test-suite/Parun/DamageSpec.hs`, `GameSpec.hs`, `CastSpec.hs`, `ResolveSpec.hs` (change `Game.changeZone` → `Event.changeZone`, add `import qualified Parun.Event as Event`)
 - Test: the existing suite is the test — behavior must not change.
 
 **Interfaces:**
@@ -56,27 +56,27 @@ Co-Authored-By: Claude Opus 4.8 (1M context) <noreply@anthropic.com>
 
 Run: `cabal test` and record the passing count. This task must end at the same count — it moves a function, nothing else.
 
-- [x] **Step 2: Create `Pawl.Event` with `changeZone` moved verbatim**
+- [x] **Step 2: Create `Parun.Event` with `changeZone` moved verbatim**
 
-Create `source/library/Pawl/Event.hs`. Copy the exact `changeZone` body from `Game.hs` (lines 73–86 at HEAD), keeping every field reset. It calls `Game.lookupObject`, `Game.freshObjectId`, `Game.freshTimestamp`, `Game.removeFromZones`, `Game.insertIntoZone` (all stay in `Game`):
+Create `source/library/Parun/Event.hs`. Copy the exact `changeZone` body from `Game.hs` (lines 73–86 at HEAD), keeping every field reset. It calls `Game.lookupObject`, `Game.freshObjectId`, `Game.freshTimestamp`, `Game.removeFromZones`, `Game.insertIntoZone` (all stay in `Game`):
 
 ```haskell
 -- The event pipeline (CR 603/614). This module owns the single zone-change
 -- funnel and, later, the sole casing on ReplacementEffect and TriggerCondition.
--- changeZone lives here (not in Pawl.Game) so it can read the projection --
+-- changeZone lives here (not in Parun.Game) so it can read the projection --
 -- Projection imports Game, so a Game.changeZone that read the projection would
 -- be an import cycle. See the plan's module dependency note.
-module Pawl.Event where
+module Parun.Event where
 
 import qualified Data.Map.Strict as Map
-import qualified Pawl.Game as Game
-import Pawl.Type.GameState (GameState)
-import qualified Pawl.Type.GameState as GameState
-import qualified Pawl.Type.Object as Object
-import Pawl.Type.ObjectId (ObjectId)
-import qualified Pawl.Type.Sickness as Sickness
-import qualified Pawl.Type.TapState as TapState
-import Pawl.Type.Zone (Zone)
+import qualified Parun.Game as Game
+import Parun.Type.GameState (GameState)
+import qualified Parun.Type.GameState as GameState
+import qualified Parun.Type.Object as Object
+import Parun.Type.ObjectId (ObjectId)
+import qualified Parun.Type.Sickness as Sickness
+import qualified Parun.Type.TapState as TapState
+import Parun.Type.Zone (Zone)
 
 -- The single zone-change primitive (CR 400.7): the source object ceases; a NEW
 -- object with a fresh id is created in the destination, carrying owner and
@@ -94,24 +94,24 @@ changeZone oid dest gs = case Game.lookupObject oid gs of
      in Game.insertIntoZone dest pid newId gs3
 ```
 
-- [x] **Step 3: Delete `changeZone` from `Pawl.Game`**
+- [x] **Step 3: Delete `changeZone` from `Parun.Game`**
 
-Remove the `changeZone` definition (and its doc comment) from `source/library/Pawl/Game.hs`. Leave `lookupObject`, `freshObjectId`, `freshTimestamp`, `removeFromZones`, `insertIntoZone`, `cardOf`, `controllerOf`, `zoneMembers`, `objectCount` in place. Drop now-unused imports if the build flags them (e.g. `Sickness`, `TapState`, `Zone` may become unused in `Game.hs` — remove any the compiler warns on).
+Remove the `changeZone` definition (and its doc comment) from `source/library/Parun/Game.hs`. Leave `lookupObject`, `freshObjectId`, `freshTimestamp`, `removeFromZones`, `insertIntoZone`, `cardOf`, `controllerOf`, `zoneMembers`, `objectCount` in place. Drop now-unused imports if the build flags them (e.g. `Sickness`, `TapState`, `Zone` may become unused in `Game.hs` — remove any the compiler warns on).
 
 - [x] **Step 4: Retarget every caller**
 
-The build lists each unresolved `Game.changeZone`. At each, add `import qualified Pawl.Event as Event` and change `Game.changeZone` → `Event.changeZone`. Known library sites: `Stack.hs` (permanent resolution), `Setup.hs` (opening draws), `Engine.hs` (`drawFor`, land play, `discardToHandSize`), `Activate.hs` (`payAdditional` sacrifice), `Cast.hs`, `Resolve.hs` (`resolveSpell` bury, `putTapped`), `Sba.hs` (`bury`). Known test sites: `DamageSpec.hs`, `GameSpec.hs`, `CastSpec.hs`, `ResolveSpec.hs`.
+The build lists each unresolved `Game.changeZone`. At each, add `import qualified Parun.Event as Event` and change `Game.changeZone` → `Event.changeZone`. Known library sites: `Stack.hs` (permanent resolution), `Setup.hs` (opening draws), `Engine.hs` (`drawFor`, land play, `discardToHandSize`), `Activate.hs` (`payAdditional` sacrifice), `Cast.hs`, `Resolve.hs` (`resolveSpell` bury, `putTapped`), `Sba.hs` (`bury`). Known test sites: `DamageSpec.hs`, `GameSpec.hs`, `CastSpec.hs`, `ResolveSpec.hs`.
 
 - [x] **Step 5: Run the suite to verify no behavior changed**
 
 Run: `cabal build all --enable-tests --enable-benchmarks && cabal test`
-Expected: PASS — the same count as Step 1. A cycle error means a caller that `Pawl.Event` itself needs; there is none in M3f (Event imports only `Game` here).
+Expected: PASS — the same count as Step 1. A cycle error means a caller that `Parun.Event` itself needs; there is none in M3f (Event imports only `Game` here).
 
 - [x] **Step 6: Commit**
 
 ```bash
 git add -A && hooky fix && git add -A && hooky run
-git commit -m "Relocate changeZone from Pawl.Game to Pawl.Event (no behavior change)"
+git commit -m "Relocate changeZone from Parun.Game to Parun.Event (no behavior change)"
 ```
 
 ---
@@ -121,33 +121,33 @@ git commit -m "Relocate changeZone from Pawl.Game to Pawl.Event (no behavior cha
 ### Task 2: `ZoneChange` + `ReplacementEffect` types + the pure `applyReplacements` classifier
 
 **Files:**
-- Create: `source/library/Pawl/Type/ZoneChange.hs`
-- Create: `source/library/Pawl/Type/ReplacementEffect.hs`
-- Modify: `source/library/Pawl/Event.hs` (`applyReplacements`)
-- Test: `source/test-suite/Pawl/EventSpec.hs` (new — wire into `Main.hs` and the test-suite `other-modules`)
+- Create: `source/library/Parun/Type/ZoneChange.hs`
+- Create: `source/library/Parun/Type/ReplacementEffect.hs`
+- Modify: `source/library/Parun/Event.hs` (`applyReplacements`)
+- Test: `source/test-suite/Parun/EventSpec.hs` (new — wire into `Main.hs` and the test-suite `other-modules`)
 
 **Interfaces:**
 - Produces: `ZoneChange.MkZoneChange { object :: ObjectId, from :: Zone, to :: Zone }`; `ReplacementEffect.RedirectZoneChange { whenDestination :: Zone, toDestination :: Zone }`; `Event.applyReplacements :: [ReplacementEffect] -> ZoneChange -> ZoneChange` (each replacement gets one opportunity, CR 614.5; a redirect that fires produces a destination it no longer matches, so the fold terminates).
 
 - [x] **Step 1: Write the failing test**
 
-Create `source/test-suite/Pawl/EventSpec.hs`:
+Create `source/test-suite/Parun/EventSpec.hs`:
 
 ```haskell
-module Pawl.EventSpec where
+module Parun.EventSpec where
 
-import qualified Pawl.Event as Event
-import qualified Pawl.Type.ReplacementEffect as ReplacementEffect
-import qualified Pawl.Type.ZoneChange as ZoneChange
-import qualified Pawl.Type.Zone as Zone
-import qualified Pawl.Type.ObjectId as ObjectId
+import qualified Parun.Event as Event
+import qualified Parun.Type.ReplacementEffect as ReplacementEffect
+import qualified Parun.Type.ZoneChange as ZoneChange
+import qualified Parun.Type.Zone as Zone
+import qualified Parun.Type.ObjectId as ObjectId
 import qualified Test.Tasty as Tasty
 import qualified Test.Tasty.HUnit as HU
 
 tests :: Tasty.TestTree
 tests =
   Tasty.testGroup
-    "Pawl.Event"
+    "Parun.Event"
     [ HU.testCase "CR 614.1a a graveyard-bound move is redirected to exile" $
         let rip = ReplacementEffect.RedirectZoneChange {ReplacementEffect.whenDestination = Zone.Graveyard, ReplacementEffect.toDestination = Zone.Exile}
             proposed = ZoneChange.MkZoneChange {ZoneChange.object = ObjectId.MkObjectId 5, ZoneChange.from = Zone.Battlefield, ZoneChange.to = Zone.Graveyard}
@@ -163,22 +163,22 @@ tests =
     ]
 ```
 
-Wire `Pawl.EventSpec.tests` into `source/test-suite/Main.hs`'s `testTree` (add the import and list entry) and add `Pawl.EventSpec` to the test-suite `other-modules` list in `pawl.cabal`.
+Wire `Parun.EventSpec.tests` into `source/test-suite/Main.hs`'s `testTree` (add the import and list entry) and add `Parun.EventSpec` to the test-suite `other-modules` list in `parun.cabal`.
 
 - [x] **Step 2: Run test to verify it fails**
 
 Run: `cabal test --test-options='-p "redirected to exile"'`
-Expected: FAIL to compile — `Pawl.Event.applyReplacements`, `ZoneChange`, `ReplacementEffect` not in scope.
+Expected: FAIL to compile — `Parun.Event.applyReplacements`, `ZoneChange`, `ReplacementEffect` not in scope.
 
 - [x] **Step 3: Create the two types**
 
-`source/library/Pawl/Type/ZoneChange.hs`:
+`source/library/Parun/Type/ZoneChange.hs`:
 
 ```haskell
-module Pawl.Type.ZoneChange where
+module Parun.Type.ZoneChange where
 
-import Pawl.Type.ObjectId (ObjectId)
-import Pawl.Type.Zone (Zone)
+import Parun.Type.ObjectId (ObjectId)
+import Parun.Type.Zone (Zone)
 
 -- One zone-change event (CR 400.7): `object` is the RESULTING object's id (the
 -- fresh incarnation in the destination), which is what an enters trigger scans.
@@ -191,18 +191,18 @@ data ZoneChange = MkZoneChange
   deriving (Eq, Ord, Show)
 ```
 
-`source/library/Pawl/Type/ReplacementEffect.hs`:
+`source/library/Parun/Type/ReplacementEffect.hs`:
 
 ```haskell
-module Pawl.Type.ReplacementEffect where
+module Parun.Type.ReplacementEffect where
 
-import Pawl.Type.Zone (Zone)
+import Parun.Type.Zone (Zone)
 
 -- CR 614.1a: a replacement effect. Classified by the event pattern it intercepts:
 -- a zone change whose destination is `whenDestination` heads for `toDestination`
 -- instead. Rest in Peace = RedirectZoneChange Graveyard Exile (any object, from
 -- any source zone). Its own leaf family, distinct from Effect (one-shot) and
--- Modification (continuous). Only Pawl.Event may case on it.
+-- Modification (continuous). Only Parun.Event may case on it.
 data ReplacementEffect = RedirectZoneChange
   { whenDestination :: Zone,
     toDestination :: Zone
@@ -210,9 +210,9 @@ data ReplacementEffect = RedirectZoneChange
   deriving (Eq, Ord, Show)
 ```
 
-- [x] **Step 4: Add `applyReplacements` to `Pawl.Event`**
+- [x] **Step 4: Add `applyReplacements` to `Parun.Event`**
 
-In `source/library/Pawl/Event.hs`, add imports `import qualified Data.List as List`, `import Pawl.Type.ReplacementEffect (ReplacementEffect)`, `import qualified Pawl.Type.ReplacementEffect as ReplacementEffect`, `import Pawl.Type.ZoneChange (ZoneChange)`, `import qualified Pawl.Type.ZoneChange as ZoneChange`. Add:
+In `source/library/Parun/Event.hs`, add imports `import qualified Data.List as List`, `import Parun.Type.ReplacementEffect (ReplacementEffect)`, `import qualified Parun.Type.ReplacementEffect as ReplacementEffect`, `import Parun.Type.ZoneChange (ZoneChange)`, `import qualified Parun.Type.ZoneChange as ZoneChange`. Add:
 
 ```haskell
 -- CR 614: rewrite the proposed zone change by each active replacement. CR 614.5:
@@ -248,14 +248,14 @@ git commit -m "Add ZoneChange + ReplacementEffect + the pure applyReplacements c
 ### Task 3: Grow the fields + project replacements/triggers + Rest in Peace and Plains
 
 **Files:**
-- Modify: `source/library/Pawl/Type/Card.hs` (add `replacementEffects`, `triggeredAbilities`)
-- Modify: `source/library/Pawl/Type/ProjectedCharacteristics.hs` (add `replacementEffects`, `triggeredAbilities`)
-- Modify: `source/library/Pawl/Type/GameState.hs` (add `zoneChanges`)
-- Modify: `source/library/Pawl/Projection.hs` (seed + strip the two PC fields; `replacementsOf`, `replacementsAffecting`, `triggeredAbilitiesOf`)
-- Modify: `source/library/Pawl/Setup.hs` and `source/test-suite/Pawl/Support.hs` (seed `zoneChanges = []` at each full `MkGameState`)
-- Modify: `source/library/Pawl/Card.hs` (seed `replacementEffects = []`, `triggeredAbilities = []` at every printing; add Rest in Peace + Plains; register in `allPrintings`)
+- Modify: `source/library/Parun/Type/Card.hs` (add `replacementEffects`, `triggeredAbilities`)
+- Modify: `source/library/Parun/Type/ProjectedCharacteristics.hs` (add `replacementEffects`, `triggeredAbilities`)
+- Modify: `source/library/Parun/Type/GameState.hs` (add `zoneChanges`)
+- Modify: `source/library/Parun/Projection.hs` (seed + strip the two PC fields; `replacementsOf`, `replacementsAffecting`, `triggeredAbilitiesOf`)
+- Modify: `source/library/Parun/Setup.hs` and `source/test-suite/Parun/Support.hs` (seed `zoneChanges = []` at each full `MkGameState`)
+- Modify: `source/library/Parun/Card.hs` (seed `replacementEffects = []`, `triggeredAbilities = []` at every printing; add Rest in Peace + Plains; register in `allPrintings`)
 - Modify: any other hand-built `Card.MkCard` (build lists them via `-Wmissing-fields`)
-- Test: `source/test-suite/Pawl/ProjectionSpec.hs`
+- Test: `source/test-suite/Parun/ProjectionSpec.hs`
 
 **Interfaces:**
 - Consumes: `ReplacementEffect` (Task 2). This task adds **only** the `replacementEffects` field to `Card`/`PC` — the `triggeredAbilities` field waits for Task 5, where `TriggeredAbility` is created (types live in the task that first uses them, per TDD-locality). The cost is that Task 5 re-touches each `MkCard` to seed the second field; both passes are mechanical, driven by `-Wmissing-fields`.
@@ -263,7 +263,7 @@ git commit -m "Add ZoneChange + ReplacementEffect + the pure applyReplacements c
 
 - [x] **Step 1: Write the failing test**
 
-Add to `source/test-suite/Pawl/ProjectionSpec.hs` (add imports `qualified Pawl.Type.ReplacementEffect as ReplacementEffect`, `qualified Pawl.Type.Zone as Zone`, `qualified Pawl.Support as S` if absent — mirror existing style):
+Add to `source/test-suite/Parun/ProjectionSpec.hs` (add imports `qualified Parun.Type.ReplacementEffect as ReplacementEffect`, `qualified Parun.Type.Zone as Zone`, `qualified Parun.Support as S` if absent — mirror existing style):
 
 ```haskell
       HU.testCase "CR 614: Rest in Peace projects its graveyard->exile replacement" $
@@ -286,11 +286,11 @@ Expected: FAIL to compile — `Projection.replacementsOf`, `Card.restInPeacePrin
 
 - [x] **Step 3: Add the `replacementEffects` field to `Card`**
 
-In `source/library/Pawl/Type/Card.hs`, add `import Pawl.Type.ReplacementEffect (ReplacementEffect)` and the field (after `activatedAbilities`, before `targetSpecs`):
+In `source/library/Parun/Type/Card.hs`, add `import Parun.Type.ReplacementEffect (ReplacementEffect)` and the field (after `activatedAbilities`, before `targetSpecs`):
 
 ```haskell
     -- CR 614: this card's replacement effects, active while it is on the
-    -- battlefield. Read through Pawl.Projection.replacementsOf (never directly)
+    -- battlefield. Read through Parun.Projection.replacementsOf (never directly)
     -- so layer 6 LoseAllAbilities strips them uniformly. Empty for all but Rest
     -- in Peace.
     replacementEffects :: [ReplacementEffect],
@@ -298,7 +298,7 @@ In `source/library/Pawl/Type/Card.hs`, add `import Pawl.Type.ReplacementEffect (
 
 - [x] **Step 4: Add the `replacementEffects` field to `ProjectedCharacteristics`**
 
-In `source/library/Pawl/Type/ProjectedCharacteristics.hs`, add `import Pawl.Type.ReplacementEffect (ReplacementEffect)` and the field (after `activatedAbilities`):
+In `source/library/Parun/Type/ProjectedCharacteristics.hs`, add `import Parun.Type.ReplacementEffect (ReplacementEffect)` and the field (after `activatedAbilities`):
 
 ```haskell
     -- CR 614 layer 6: the object's replacement effects after the layer system,
@@ -308,7 +308,7 @@ In `source/library/Pawl/Type/ProjectedCharacteristics.hs`, add `import Pawl.Type
 
 - [x] **Step 5: Add the `zoneChanges` field to `GameState`**
 
-In `source/library/Pawl/Type/GameState.hs`, add `import Pawl.Type.ZoneChange (ZoneChange)` and the field (after `damageEvents`):
+In `source/library/Parun/Type/GameState.hs`, add `import Parun.Type.ZoneChange (ZoneChange)` and the field (after `damageEvents`):
 
 ```haskell
     -- CR 603 / 117.5: zone-change events emitted since triggers were last placed.
@@ -319,7 +319,7 @@ In `source/library/Pawl/Type/GameState.hs`, add `import Pawl.Type.ZoneChange (Zo
 
 - [x] **Step 6: Seed the PC field (base) and strip it (LoseAllAbilities)**
 
-In `source/library/Pawl/Projection.hs`, add `import Pawl.Type.ReplacementEffect (ReplacementEffect)`. In `baseCharacteristics`, the `Nothing` branch sets `PC.replacementEffects = []` and the `Just card` branch sets `PC.replacementEffects = Card.Type.replacementEffects card` (mirror the two `activatedAbilities` lines). In `applyModification`'s `LoseAllAbilities` arm, add `PC.replacementEffects = []`:
+In `source/library/Parun/Projection.hs`, add `import Parun.Type.ReplacementEffect (ReplacementEffect)`. In `baseCharacteristics`, the `Nothing` branch sets `PC.replacementEffects = []` and the `Just card` branch sets `PC.replacementEffects = Card.Type.replacementEffects card` (mirror the two `activatedAbilities` lines). In `applyModification`'s `LoseAllAbilities` arm, add `PC.replacementEffects = []`:
 
 ```haskell
   Modification.LoseAllAbilities ->
@@ -328,7 +328,7 @@ In `source/library/Pawl/Projection.hs`, add `import Pawl.Type.ReplacementEffect 
 
 - [x] **Step 7: Add the projection accessors**
 
-In `source/library/Pawl/Projection.hs`, add (near `abilitiesOf`):
+In `source/library/Parun/Projection.hs`, add (near `abilitiesOf`):
 
 ```haskell
 -- CR 614 / 613 layer 6: an object's replacement effects after the layer system,
@@ -355,11 +355,11 @@ replacementsAffecting gs =
 
 - [x] **Step 8: Seed `zoneChanges = []` at every full `MkGameState`**
 
-`-Wmissing-fields` lists them. Known sites: `source/library/Pawl/Setup.hs` (`emptyGame`), `source/test-suite/Pawl/Support.hs` (`oneMountainState`). Add `GameState.zoneChanges = []` next to `GameState.damageEvents = []` at each.
+`-Wmissing-fields` lists them. Known sites: `source/library/Parun/Setup.hs` (`emptyGame`), `source/test-suite/Parun/Support.hs` (`oneMountainState`). Add `GameState.zoneChanges = []` next to `GameState.damageEvents = []` at each.
 
 - [x] **Step 9: Seed `replacementEffects = []` at every `MkCard`, then add Rest in Peace and Plains**
 
-`-Wmissing-fields` lists every printing. Add `Card.replacementEffects = []` (next to `activatedAbilities`) at each existing printing in `source/library/Pawl/Card.hs` and any hand-built `Card.Type.MkCard` in tests (e.g. `ResolveSpec.hs`). Then add the two printings (imports for `ReplacementEffect`, `Zone`, and `Subtype.Plains` as needed):
+`-Wmissing-fields` lists every printing. Add `Card.replacementEffects = []` (next to `activatedAbilities`) at each existing printing in `source/library/Parun/Card.hs` and any hand-built `Card.Type.MkCard` in tests (e.g. `ResolveSpec.hs`). Then add the two printings (imports for `ReplacementEffect`, `Zone`, and `Subtype.Plains` as needed):
 
 ```haskell
 -- Rest in Peace: {1}{W}, Enchantment, "When this enchantment enters, exile all
@@ -448,8 +448,8 @@ git commit -m "Project replacement effects; add zoneChanges; add Rest in Peace +
 ### Task 4: Wire replacements + emission into `changeZone` — Rest in Peace redirects to exile
 
 **Files:**
-- Modify: `source/library/Pawl/Event.hs` (`changeZone` applies replacements + emits)
-- Test: `source/test-suite/Pawl/EventSpec.hs`
+- Modify: `source/library/Parun/Event.hs` (`changeZone` applies replacements + emits)
+- Test: `source/test-suite/Parun/EventSpec.hs`
 
 **Interfaces:**
 - Consumes: `applyReplacements` (Task 2), `Projection.replacementsAffecting` (Task 3), `GameState.zoneChanges` (Task 3).
@@ -457,7 +457,7 @@ git commit -m "Project replacement effects; add zoneChanges; add Rest in Peace +
 
 - [x] **Step 1: Write the failing tests**
 
-Add to `source/test-suite/Pawl/EventSpec.hs` (add imports `qualified Pawl.Card as Card`, `qualified Pawl.Setup as Setup`, `qualified Pawl.Support as S`, `qualified Pawl.Game as Game`, `qualified Pawl.Type.GameState as GameState`, `qualified Data.Set as Set`, `qualified Pawl.Type.Object as Object`):
+Add to `source/test-suite/Parun/EventSpec.hs` (add imports `qualified Parun.Card as Card`, `qualified Parun.Setup as Setup`, `qualified Parun.Support as S`, `qualified Parun.Game as Game`, `qualified Parun.Type.GameState as GameState`, `qualified Data.Set as Set`, `qualified Parun.Type.Object as Object`):
 
 ```haskell
       HU.testCase "CR 614: with Rest in Peace out, a creature sent to the graveyard is exiled" $
@@ -489,7 +489,7 @@ Expected: FAIL — the redirect is not wired, so the Piker lands in the graveyar
 
 - [x] **Step 3: Wire replacements + emission into `changeZone`**
 
-In `source/library/Pawl/Event.hs`, add `import qualified Pawl.Projection as Projection` (and `import qualified Pawl.Type.ZoneChange as ZoneChange` / `import Pawl.Type.ZoneChange (ZoneChange)` if Task 2 did not already add them). The `Zone` type is already imported from Task 1; no `Zone` constructor is referenced here. Replace `changeZone`:
+In `source/library/Parun/Event.hs`, add `import qualified Parun.Projection as Projection` (and `import qualified Parun.Type.ZoneChange as ZoneChange` / `import Parun.Type.ZoneChange (ZoneChange)` if Task 2 did not already add them). The `Zone` type is already imported from Task 1; no `Zone` constructor is referenced here. Replace `changeZone`:
 
 ```haskell
 changeZone :: ObjectId -> Zone -> GameState -> GameState
@@ -550,17 +550,17 @@ git commit -m "changeZone applies replacements + emits the resolved event: Rest 
 ### Task 5: Trigger types + `ExileAllGraveyards` + `OfTrigger` + shared `resolveEffects`
 
 **Files:**
-- Create: `source/library/Pawl/Type/TriggerCondition.hs`
-- Create: `source/library/Pawl/Type/TriggeredAbility.hs`
-- Modify: `source/library/Pawl/Type/Effect.hs` (add `ExileAllGraveyards`)
-- Modify: `source/library/Pawl/Type/Source.hs` (add `OfTrigger`)
-- Modify: `source/library/Pawl/Type/Card.hs` (add `triggeredAbilities`) and `source/library/Pawl/Type/ProjectedCharacteristics.hs` (add `triggeredAbilities`)
-- Modify: `source/library/Pawl/Projection.hs` (seed + strip `triggeredAbilities`; `triggeredAbilitiesOf`)
-- Modify: `source/library/Pawl/Resolve.hs` (`slotsOf`/`manaProduced`/`rewriteEffect`/`applyEffect` arms for `ExileAllGraveyards`; refactor `resolveAbility` → `resolveEffects`)
-- Modify: `source/library/Pawl/Stack.hs` (`resolveTop` `OfTrigger` arm)
-- Modify: `source/library/Pawl/Game.hs` (`cardOf` `OfTrigger` arm) and every other exhaustive `case Object.source` (build lists them: `Action.hs`, `Support.hs`)
-- Modify: `source/library/Pawl/Card.hs` (seed `triggeredAbilities = []` at each printing; give Rest in Peace its ETB)
-- Test: `source/test-suite/Pawl/ResolveSpec.hs`
+- Create: `source/library/Parun/Type/TriggerCondition.hs`
+- Create: `source/library/Parun/Type/TriggeredAbility.hs`
+- Modify: `source/library/Parun/Type/Effect.hs` (add `ExileAllGraveyards`)
+- Modify: `source/library/Parun/Type/Source.hs` (add `OfTrigger`)
+- Modify: `source/library/Parun/Type/Card.hs` (add `triggeredAbilities`) and `source/library/Parun/Type/ProjectedCharacteristics.hs` (add `triggeredAbilities`)
+- Modify: `source/library/Parun/Projection.hs` (seed + strip `triggeredAbilities`; `triggeredAbilitiesOf`)
+- Modify: `source/library/Parun/Resolve.hs` (`slotsOf`/`manaProduced`/`rewriteEffect`/`applyEffect` arms for `ExileAllGraveyards`; refactor `resolveAbility` → `resolveEffects`)
+- Modify: `source/library/Parun/Stack.hs` (`resolveTop` `OfTrigger` arm)
+- Modify: `source/library/Parun/Game.hs` (`cardOf` `OfTrigger` arm) and every other exhaustive `case Object.source` (build lists them: `Action.hs`, `Support.hs`)
+- Modify: `source/library/Parun/Card.hs` (seed `triggeredAbilities = []` at each printing; give Rest in Peace its ETB)
+- Test: `source/test-suite/Parun/ResolveSpec.hs`
 
 **Interfaces:**
 - Consumes: `resolveAbility`/`OfAbility` (M3e), `Event.changeZone` (Task 1), `applyEffect` (M3e, monadic).
@@ -568,7 +568,7 @@ git commit -m "changeZone applies replacements + emits the resolved event: Rest 
 
 - [x] **Step 1: Write the failing test**
 
-Add to the `Resolve` group in `source/test-suite/Pawl/ResolveSpec.hs`. Hand-build an `OfTrigger` object (Rest in Peace's ETB) on the stack with a card already in a graveyard, resolve, and assert the graveyard is exiled and the trigger object ceased (add imports as the compiler flags — `Source`, `TriggeredAbility`, `TriggerCondition`, `Effect`, `Stack`, `Engine`, `Object`, `Zone`, `TapState`, `Sickness`, `Timestamp`):
+Add to the `Resolve` group in `source/test-suite/Parun/ResolveSpec.hs`. Hand-build an `OfTrigger` object (Rest in Peace's ETB) on the stack with a card already in a graveyard, resolve, and assert the graveyard is exiled and the trigger object ceased (add imports as the compiler flags — `Source`, `TriggeredAbility`, `TriggerCondition`, `Effect`, `Stack`, `Engine`, `Object`, `Zone`, `TapState`, `Sickness`, `Timestamp`):
 
 ```haskell
       HU.testCase "CR 603/608.2n Rest in Peace's ETB exiles graveyards and ceases" $
@@ -609,29 +609,29 @@ Expected: FAIL to compile — `TriggeredAbility`, `TriggerCondition`, `Effect.Ex
 
 - [x] **Step 3: Create the trigger types**
 
-`source/library/Pawl/Type/TriggerCondition.hs`:
+`source/library/Parun/Type/TriggerCondition.hs`:
 
 ```haskell
-module Pawl.Type.TriggerCondition where
+module Parun.Type.TriggerCondition where
 
 -- CR 603.6a: the event pattern that fires a triggered ability. SelfEnters =
 -- "when this ... enters [the battlefield]" -- fires when the object bearing the
 -- ability enters. A general "whenever a [type] enters" is a future condition.
--- Only Pawl.Event may case on it.
+-- Only Parun.Event may case on it.
 data TriggerCondition = SelfEnters
   deriving (Eq, Ord, Show)
 ```
 
-`source/library/Pawl/Type/TriggeredAbility.hs`:
+`source/library/Parun/Type/TriggeredAbility.hs`:
 
 ```haskell
-module Pawl.Type.TriggeredAbility where
+module Parun.Type.TriggeredAbility where
 
 import Data.Map.Strict (Map)
-import Pawl.Type.Effect (Effect)
-import Pawl.Type.SlotName (SlotName)
-import Pawl.Type.TargetSpec (TargetSpec)
-import Pawl.Type.TriggerCondition (TriggerCondition)
+import Parun.Type.Effect (Effect)
+import Parun.Type.SlotName (SlotName)
+import Parun.Type.TargetSpec (TargetSpec)
+import Parun.Type.TriggerCondition (TriggerCondition)
 
 -- CR 603.1: "[condition], [effect]". Reuses the Effect vocabulary and the
 -- slot/target machinery of a spell. Differs from ActivatedAbility only in
@@ -647,7 +647,7 @@ data TriggeredAbility = MkTriggeredAbility
 
 - [x] **Step 4: Add the `ExileAllGraveyards` opcode**
 
-In `source/library/Pawl/Type/Effect.hs`, add the constructor (extend the header comment):
+In `source/library/Parun/Type/Effect.hs`, add the constructor (extend the header comment):
 
 ```haskell
   | -- CR 701.10 / Rest in Peace: exile every card in every graveyard. Targetless
@@ -657,7 +657,7 @@ In `source/library/Pawl/Type/Effect.hs`, add the constructor (extend the header 
 
 - [x] **Step 5: Add the `OfTrigger` source**
 
-In `source/library/Pawl/Type/Source.hs`, add `import Pawl.Type.TriggeredAbility (TriggeredAbility)` and the constructor:
+In `source/library/Parun/Type/Source.hs`, add `import Parun.Type.TriggeredAbility (TriggeredAbility)` and the constructor:
 
 ```haskell
   | -- CR 603.3: a triggered ability on the stack -- the source permanent's id
@@ -668,19 +668,19 @@ In `source/library/Pawl/Type/Source.hs`, add `import Pawl.Type.TriggeredAbility 
 
 - [x] **Step 6: Handle `OfTrigger` in `cardOf` and other `Source` matches**
 
-In `source/library/Pawl/Game.hs`, `cardOf`'s `case Object.source obj of` gains `Source.OfTrigger _ _ -> Nothing`. The build enumerates every other exhaustive `case Object.source` (all "not a card"): `Action.hs` `playableLands` (`Source.OfTrigger _ _ -> False`), `Support.hs` `creaturesInPlay` and `countByName` (`Source.OfTrigger _ _ -> False`).
+In `source/library/Parun/Game.hs`, `cardOf`'s `case Object.source obj of` gains `Source.OfTrigger _ _ -> Nothing`. The build enumerates every other exhaustive `case Object.source` (all "not a card"): `Action.hs` `playableLands` (`Source.OfTrigger _ _ -> False`), `Support.hs` `creaturesInPlay` and `countByName` (`Source.OfTrigger _ _ -> False`).
 
 - [x] **Step 7: Add the `Card`/`PC` `triggeredAbilities` field, seed + strip, and the accessor**
 
-In `source/library/Pawl/Type/Card.hs`, add `import Pawl.Type.TriggeredAbility (TriggeredAbility)` and the field (after `replacementEffects`):
+In `source/library/Parun/Type/Card.hs`, add `import Parun.Type.TriggeredAbility (TriggeredAbility)` and the field (after `replacementEffects`):
 
 ```haskell
     -- CR 603: this card's triggered abilities, read through
-    -- Pawl.Projection.triggeredAbilitiesOf. Empty for all but Rest in Peace.
+    -- Parun.Projection.triggeredAbilitiesOf. Empty for all but Rest in Peace.
     triggeredAbilities :: [TriggeredAbility],
 ```
 
-In `source/library/Pawl/Type/ProjectedCharacteristics.hs`, add `import Pawl.Type.TriggeredAbility (TriggeredAbility)` and the field. In `Projection.baseCharacteristics`, seed both branches (`Nothing -> []`, `Just card -> Card.Type.triggeredAbilities card`). In the `LoseAllAbilities` arm, add `PC.triggeredAbilities = []`. Add the accessor:
+In `source/library/Parun/Type/ProjectedCharacteristics.hs`, add `import Parun.Type.TriggeredAbility (TriggeredAbility)` and the field. In `Projection.baseCharacteristics`, seed both branches (`Nothing -> []`, `Just card -> Card.Type.triggeredAbilities card`). In the `LoseAllAbilities` arm, add `PC.triggeredAbilities = []`. Add the accessor:
 
 ```haskell
 -- CR 603 / 613 layer 6: an object's triggered abilities after the layer system,
@@ -693,7 +693,7 @@ Seed `Card.triggeredAbilities = []` at every printing and hand-built `MkCard` (b
 
 - [x] **Step 8: Give Rest in Peace its ETB**
 
-In `source/library/Pawl/Card.hs`, change Rest in Peace's `Card.triggeredAbilities = []` to (add imports `TriggeredAbility`, `TriggerCondition`, `Effect` if absent):
+In `source/library/Parun/Card.hs`, change Rest in Peace's `Card.triggeredAbilities = []` to (add imports `TriggeredAbility`, `TriggerCondition`, `Effect` if absent):
 
 ```haskell
             Card.triggeredAbilities =
@@ -707,7 +707,7 @@ In `source/library/Pawl/Card.hs`, change Rest in Peace's `Card.triggeredAbilitie
 
 - [x] **Step 9: Add the `ExileAllGraveyards` executor arm + the four classifier arms**
 
-In `source/library/Pawl/Resolve.hs`, add `import qualified Pawl.Event as Event` and `import qualified Data.List as List` (if absent). Add arms:
+In `source/library/Parun/Resolve.hs`, add `import qualified Parun.Event as Event` and `import qualified Data.List as List` (if absent). Add arms:
 
 `slotsOf`: `Effect.ExileAllGraveyards -> Set.empty`
 `manaProduced`: `Effect.ExileAllGraveyards -> Nothing`
@@ -724,11 +724,11 @@ In `source/library/Pawl/Resolve.hs`, add `import qualified Pawl.Event as Event` 
     State.modify' (\g -> List.foldl' (\g1 c -> Event.changeZone c Zone.Exile g1) g gyCards)
 ```
 
-(Add `import qualified Pawl.Type.GameState as GameState` if not already qualified for `players`; `Map.keys`, `Zone`, `Game.zoneMembers` are already in scope in `Resolve`.)
+(Add `import qualified Parun.Type.GameState as GameState` if not already qualified for `players`; `Map.keys`, `Zone`, `Game.zoneMembers` are already in scope in `Resolve`.)
 
 - [x] **Step 10: Refactor `resolveAbility` into a shared `resolveEffects`; add the `OfTrigger` resolution arm**
 
-In `source/library/Pawl/Resolve.hs`, add `import qualified Pawl.Type.TriggeredAbility as TriggeredAbility` and `import Pawl.Type.SlotName (SlotName)` / `import Pawl.Type.TargetSpec (TargetSpec)` (if absent). Replace `resolveAbility` with a thin wrapper over the new shared executor:
+In `source/library/Parun/Resolve.hs`, add `import qualified Parun.Type.TriggeredAbility as TriggeredAbility` and `import Parun.Type.SlotName (SlotName)` / `import Parun.Type.TargetSpec (TargetSpec)` (if absent). Replace `resolveAbility` with a thin wrapper over the new shared executor:
 
 ```haskell
 -- CR 608.2: the executor shared by an activated ability (M3e) and a triggered
@@ -760,7 +760,7 @@ resolveAbility abilId srcId ability =
 
 (`cease` is unchanged from M3e. If `SlotName`/`TargetSpec` are already imported, do not re-import.)
 
-In `source/library/Pawl/Stack.hs`, add `import qualified Pawl.Type.TriggeredAbility as TriggeredAbility` and the `resolveTop` arm:
+In `source/library/Parun/Stack.hs`, add `import qualified Parun.Type.TriggeredAbility as TriggeredAbility` and the `resolveTop` arm:
 
 ```haskell
         Source.OfTrigger srcId ability ->
@@ -784,8 +784,8 @@ git commit -m "Triggered abilities on the stack: OfTrigger + ExileAllGraveyards 
 ### Task 6: Trigger detection — `Event.matchesTrigger` + `triggersFrom`
 
 **Files:**
-- Modify: `source/library/Pawl/Event.hs` (`matchesTrigger`, `triggersFrom`)
-- Test: `source/test-suite/Pawl/EventSpec.hs`
+- Modify: `source/library/Parun/Event.hs` (`matchesTrigger`, `triggersFrom`)
+- Test: `source/test-suite/Parun/EventSpec.hs`
 
 **Interfaces:**
 - Consumes: `Projection.triggeredAbilitiesOf` (Task 5), `GameState.zoneChanges` (Task 3), `ZoneChange` (Task 2).
@@ -793,7 +793,7 @@ git commit -m "Triggered abilities on the stack: OfTrigger + ExileAllGraveyards 
 
 - [x] **Step 1: Write the failing test**
 
-Add to `source/test-suite/Pawl/EventSpec.hs` (add imports `qualified Pawl.Type.TriggerCondition as TriggerCondition`, `qualified Pawl.Type.PlayerId as PlayerId`):
+Add to `source/test-suite/Parun/EventSpec.hs` (add imports `qualified Parun.Type.TriggerCondition as TriggerCondition`, `qualified Parun.Type.PlayerId as PlayerId`):
 
 ```haskell
       HU.testCase "CR 603.6a: Rest in Peace entering yields its ETB trigger" $
@@ -821,7 +821,7 @@ Expected: FAIL to compile — `Event.triggersFrom`, `Event.matchesTrigger` not i
 
 - [x] **Step 3: Add `matchesTrigger` and `triggersFrom`**
 
-In `source/library/Pawl/Event.hs`, add imports `import Pawl.Type.PlayerId (PlayerId)`, `import Pawl.Type.TriggerCondition (TriggerCondition)`, `import qualified Pawl.Type.TriggerCondition as TriggerCondition`, `import Pawl.Type.TriggeredAbility (TriggeredAbility)`, `import qualified Pawl.Type.TriggeredAbility as TriggeredAbility`. Add:
+In `source/library/Parun/Event.hs`, add imports `import Parun.Type.PlayerId (PlayerId)`, `import Parun.Type.TriggerCondition (TriggerCondition)`, `import qualified Parun.Type.TriggerCondition as TriggerCondition`, `import Parun.Type.TriggeredAbility (TriggeredAbility)`, `import qualified Parun.Type.TriggeredAbility as TriggeredAbility`. Add:
 
 ```haskell
 -- CR 603.6a: does this condition fire on this event? SelfEnters fires when the
@@ -868,8 +868,8 @@ git commit -m "Detect enters triggers: Event.matchesTrigger + triggersFrom (CR 6
 ### Task 7: The CR 117.5 loop + the whole-card Rest in Peace gate
 
 **Files:**
-- Modify: `source/library/Pawl/Engine.hs` (`placePendingTriggers`, `settleForPriority`; `priorityLoop` uses it)
-- Test: `source/test-suite/Pawl/EventSpec.hs` (end-to-end) and `source/test-suite/Pawl/ReplaySpec.hs` (determinism, if a targeted case is warranted)
+- Modify: `source/library/Parun/Engine.hs` (`placePendingTriggers`, `settleForPriority`; `priorityLoop` uses it)
+- Test: `source/test-suite/Parun/EventSpec.hs` (end-to-end) and `source/test-suite/Parun/ReplaySpec.hs` (determinism, if a targeted case is warranted)
 
 **Interfaces:**
 - Consumes: `Event.triggersFrom` (Task 6), `Source.OfTrigger` (Task 5), `Stack.resolveTop` (Task 5), `checkSba` (existing).
@@ -877,7 +877,7 @@ git commit -m "Detect enters triggers: Event.matchesTrigger + triggersFrom (CR 6
 
 - [x] **Step 1: Write the failing end-to-end test**
 
-Add to `source/test-suite/Pawl/EventSpec.hs` (add imports `qualified Pawl.Cast as Cast`, `qualified Pawl.Type.Phase as Phase`, `qualified Pawl.Type.GameState as GameState`, and reuse existing ones). Cast Rest in Peace with white mana, run priority to resolution, and assert the whole card:
+Add to `source/test-suite/Parun/EventSpec.hs` (add imports `qualified Parun.Cast as Cast`, `qualified Parun.Type.Phase as Phase`, `qualified Parun.Type.GameState as GameState`, and reuse existing ones). Cast Rest in Peace with white mana, run priority to resolution, and assert the whole card:
 
 ```haskell
       HU.testCase "CR 603/614 whole card: cast Rest in Peace, ETB exiles graveyards, then deaths are exiled" $
@@ -916,7 +916,7 @@ Expected: FAIL — `Engine.settleForPriority` is not wired, so the ETB is never 
 
 - [x] **Step 3: Add `placePendingTriggers` and `settleForPriority`**
 
-In `source/library/Pawl/Engine.hs`, add `import qualified Pawl.Event as Event`, `import qualified Pawl.Type.Source as Source`, `import qualified Pawl.Type.TriggeredAbility as TriggeredAbility`, and `import Pawl.Type.ObjectId (ObjectId)` (Engine imports `PlayerId` but not `ObjectId` — the pending-trigger tuple needs it). Add:
+In `source/library/Parun/Engine.hs`, add `import qualified Parun.Event as Event`, `import qualified Parun.Type.Source as Source`, `import qualified Parun.Type.TriggeredAbility as TriggeredAbility`, and `import Parun.Type.ObjectId (ObjectId)` (Engine imports `PlayerId` but not `ObjectId` — the pending-trigger tuple needs it). Add:
 
 ```haskell
 -- CR 603.3: put each triggered ability that fired since the last placement on the
@@ -974,13 +974,13 @@ settleForPriority = do
   Monad.when (placed || before /= after) settleForPriority
 ```
 
-(`Object` must be imported qualified in `Engine` for `Object.MkObject`/`Object.owner` — add `import qualified Pawl.Type.Object as Object` if absent. `PlayerId` is already imported.)
+(`Object` must be imported qualified in `Engine` for `Object.MkObject`/`Object.owner` — add `import qualified Parun.Type.Object as Object` if absent. `PlayerId` is already imported.)
 
 **Note on the fixpoint guard:** `before /= after` uses `GameState`'s derived `Eq`. `checkSba` drains `damageEvents`; when there are none it is a genuine no-op (`before == after`). `placePendingTriggers` clears `zoneChanges`; a second iteration finds it empty and places nothing, so the loop terminates.
 
 - [x] **Step 4: Use `settleForPriority` in `priorityLoop`**
 
-In `source/library/Pawl/Engine.hs`, `priorityLoop`'s resolution branch currently runs `Stack.resolveTop` then `checkSba`. Replace that `checkSba` with `settleForPriority`, and add a `settleForPriority` at the top of the inner `loop` so triggers are placed before anyone acts (CR 117.5). Concretely, restructure the inner `loop`:
+In `source/library/Parun/Engine.hs`, `priorityLoop`'s resolution branch currently runs `Stack.resolveTop` then `checkSba`. Replace that `checkSba` with `settleForPriority`, and add a `settleForPriority` at the top of the inner `loop` so triggers are placed before anyone acts (CR 117.5). Concretely, restructure the inner `loop`:
 
 ```haskell
   let loop = do
@@ -1054,7 +1054,7 @@ git commit -m "CR 117.5 loop: place enters triggers on the stack; whole-card Res
 - §1 `ZoneChange`/`ReplacementEffect`/`TriggeredAbility`/`TriggerCondition` types → Tasks 2, 5. `Effect.ExileAllGraveyards`, `Source.OfTrigger`, `Card`/`PC`/`GameState` fields → Tasks 3, 5. ✓
 - §3 triggers + CR 117.5 loop → Tasks 5 (resolution), 6 (detection), 7 (placement loop). ✓
 - §4 shared `resolveEffects` → Task 5 Step 10. ✓
-- §5 invariants: `Pawl.Event` sole home of `case ReplacementEffect`/`TriggerCondition` (Tasks 2, 6); `resolveTop` dispatches on `Source` (Task 5). ✓
+- §5 invariants: `Parun.Event` sole home of `case ReplacementEffect`/`TriggerCondition` (Tasks 2, 6); `resolveTop` dispatches on `Source` (Task 5). ✓
 - §6 setup/testing: Plains + Rest in Peace deterministic fixtures (Task 3); gate assertions (Tasks 4, 5, 7); properties unchanged (RiP out of random decks). ✓
 - §7 expiries are documented in the spec; no task implements them (correct). The one **spec refinement** this plan makes: replacements are projected (Task 3) via a relocated `changeZone` (Task 1) — the module-graph resolution the spec's "through the projection" wording assumed but did not detail. Recorded here and in the Task 1 header.
 

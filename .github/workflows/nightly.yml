@@ -17,5 +17,5 @@ jobs:
       - run: cp benchmark/bench.csv .
       - uses: actions/upload-artifact@v7
         with:
-          name: pawl-${{ github.sha }}-bench
+          name: parun-${{ github.sha }}-bench
           path: bench.csv

@@ -117,7 +117,7 @@ every event kind no gate card reads.
 
 ### 2.1 One turn-scoped log replaces two drain queues
 
-A new `Pawl.Type.GameEvent`, and in `GameState`:
+A new `Parun.Type.GameEvent`, and in `GameState`:
 
 ```haskell
 -- CR 608.2i: what happened this turn, in order. Appended by the change-and-emit
@@ -190,8 +190,8 @@ from one hand-carved bit to the whole record, so the next history card adds no
 field. It also pre-builds the substrate CR 603.10's look-back-in-time list will
 need (git-bug `b998924`).
 
-**What is deliberately *not* the argument.** `Pawl.Projection` imports
-`Pawl.Quantity`, so a `Quantity.Count` cannot consult the projection, and reading
+**What is deliberately *not* the argument.** `Parun.Projection` imports
+`Parun.Quantity`, so a `Quantity.Count` cannot consult the projection, and reading
 a snapshot happens to sidestep that. That is a **convenience, not a
 justification**: the cycle is cuttable — parametrically, exactly as `Effect card`
 already cuts the `Effect`/`Card` cycle by its own module comment, or by moving the
@@ -208,20 +208,20 @@ data TriggerCondition
   | StateIs StateCondition         -- CR 603.8
 ```
 
-`Pawl.Type.TurnScope` = `EachTurn | ControllersTurn`. Khabál Ghoul is "each end
+`Parun.Type.TurnScope` = `EachTurn | ControllersTurn`. Khabál Ghoul is "each end
 step" (`EachTurn`); Sarcomancy is "your upkeep" (`ControllersTurn`, relative to
 the ability's controller per CR 603.3a). Tidal Wave's delayed ability is
 `EachTurn` — "the *next* end step" is any player's, and its once-ness comes from
 the delayed store (CR 603.7b), never from the scope.
 
-`Pawl.Type.StateCondition` is a hand-carved classification with two arms —
+`Parun.Type.StateCondition` is a hand-carved classification with two arms —
 `YouControlNo Subtype` (Barbarian Outcast) and `NoPermanentsOfSubtype Subtype`
 (Sarcomancy) — and a header noting it **EXPIRES at P9**, the posture `CountSpec`
 already documents for card-shaped growth that a criterion language will retire
 wholesale. Both arms read the **projection**: a subtype is layer 4 and control is
 P1's layer 2, so a card that changed either must change the answer. They are
-therefore evaluated in `Pawl.Event`, which already imports `Pawl.Projection`, and
-never in `Pawl.Quantity`.
+therefore evaluated in `Parun.Event`, which already imports `Parun.Projection`, and
+never in `Parun.Quantity`.
 
 **Intervening "if" reuses the same type.** `TriggeredAbility` grows
 `intervening :: Maybe StateCondition`. CR 603.4 checks it when the trigger event
@@ -242,7 +242,7 @@ documented first-order and non-recursive, with `Effect → TriggeredAbility → 
 opcode only **arms** it:
 
 - `Card.delayedAbilities :: [TriggeredAbility Card]`, keyed by a new
-  `Pawl.Type.AbilityName` newtype — `newtype AbilityName = MkAbilityName Text`,
+  `Parun.Type.AbilityName` newtype — `newtype AbilityName = MkAbilityName Text`,
   exactly `SlotName`'s shape — named, never positional.
 - `Effect.ArmDelayedTrigger AbilityName` — first-order, no new import, no new type
   parameter. It captures the resolving object's current binding environment, which
@@ -252,7 +252,7 @@ opcode only **arms** it:
   defined **only for a single-token create**; a `Create` whose `Quantity` exceeds
   one and which also names a slot is a **named deferral**, expiring at the first
   card that must refer back to several tokens at once ("sacrifice *them*" — Salt
-  Road Skirmish). The `cardOffends` lint family in `Pawl.CardSpec` rejects that
+  Road Skirmish). The `cardOffends` lint family in `Parun.CardSpec` rejects that
   combination rather than silently binding one of them.
 
 The store:
@@ -283,7 +283,7 @@ churn across library, tests and codec for one opcode).
 
 ### 2.5 The scan at the CR 117.5 boundary
 
-`Pawl.Event` remains the **sole** home of `case … TriggerCondition`, and becomes
+`Parun.Event` remains the **sole** home of `case … TriggerCondition`, and becomes
 the sole home of `case … StateCondition`. One function gathers pending triggers
 from three sources:
 
@@ -337,7 +337,7 @@ carries the note rather than the machinery.
 ### 2.7 Serialization
 
 `GameEvent`, `TurnScope`, `StateCondition`, `AbilityName` and `DelayedTrigger`
-each need `Pawl.Codec` coverage and a round-trip property, as do the new
+each need `Parun.Codec` coverage and a round-trip property, as do the new
 `TriggerCondition` arms, the new `Effect` arms, `Card.delayedAbilities`, and
 `Prompt.OrderTriggers`/its `Response`. The log and the watermarks are part of
 `GameState` and therefore part of replay.
@@ -345,9 +345,9 @@ each need `Pawl.Codec` coverage and a round-trip property, as do the new
 ## 3. The two invariants
 
 **The rules core reads a classification, never an identity.** `TriggerCondition`,
-`StateCondition` and `GameEvent` are classifications; `Pawl.Event` is their sole
-casing home, the same sole-home pattern `Pawl.Resolve` holds for `Effect` and
-`Pawl.Projection` for `Modification`. No new module cases on a card.
+`StateCondition` and `GameEvent` are classifications; `Parun.Event` is their sole
+casing home, the same sole-home pattern `Parun.Resolve` holds for `Effect` and
+`Parun.Projection` for `Modification`. No new module cases on a card.
 
 **The engine makes no choices.** P4 *removes* an elision rather than adding one:
 CR 603.3b ordering becomes a prompt. The one place the engine still decides
@@ -415,8 +415,8 @@ recorded as a named deferral rather than quietly ignored.
 
 ## 6. Module & type changes (summary)
 
-**New types.** `Pawl.Type.GameEvent`, `Pawl.Type.TurnScope`,
-`Pawl.Type.StateCondition`, `Pawl.Type.AbilityName`, `Pawl.Type.DelayedTrigger`.
+**New types.** `Parun.Type.GameEvent`, `Parun.Type.TurnScope`,
+`Parun.Type.StateCondition`, `Parun.Type.AbilityName`, `Parun.Type.DelayedTrigger`.
 
 **Changed types.** `TriggerCondition` (+`StepBegins`, +`StateIs`);
 `TriggeredAbility` (+`intervening`); `Card` (+`delayedAbilities`); `Effect`
@@ -425,12 +425,12 @@ recorded as a named deferral rather than quietly ignored.
 +`scannedThrough`, +`damageScannedThrough`, +`delayedTriggers`; −`zoneChanges`,
 −`damageEvents`); `Prompt`/`Response` (+`OrderTriggers`).
 
-**Changed modules.** `Pawl.Event` (the scan; sole casing home for the two new
-classifications; funnels append to `events`); `Pawl.Engine` (step-begin emission,
-watermarked scan, the ordering prompt, log clearing at turn handoff); `Pawl.Sba`
-(watermarked damage read); `Pawl.Resolve` (the two new opcodes; the CR 608.2a
-re-check); `Pawl.Quantity` (`CreaturesDiedThisTurn`); `Pawl.Codec`;
-`Pawl.Projection` (unchanged in behaviour, read by `StateCondition`).
+**Changed modules.** `Parun.Event` (the scan; sole casing home for the two new
+classifications; funnels append to `events`); `Parun.Engine` (step-begin emission,
+watermarked scan, the ordering prompt, log clearing at turn handoff); `Parun.Sba`
+(watermarked damage read); `Parun.Resolve` (the two new opcodes; the CR 608.2a
+re-check); `Parun.Quantity` (`CreaturesDiedThisTurn`); `Parun.Codec`;
+`Parun.Projection` (unchanged in behaviour, read by `StateCondition`).
 
 **One opcode decision recorded.** `Sacrifice SlotName` (CR 701.21/701.21a) serves
 both Barbarian Outcast's "this creature" and Tidal Wave's "it", with the trigger's

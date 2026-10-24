@@ -60,8 +60,8 @@ Five moving parts, each on an existing seam:
    is one mode with `ChooseExactly 1` (forced, unprompted), behaviorally identical.
 2. **The shared reader.** M4g's mode-scoped projections (`modesEffects`,
    `modesTargetSpecs`, `allEffects`, `allTargetSpecs`), currently specialized to
-   `Card.spell` on `Pawl.Card`, generalize into a `Pawl.Modal` logic module over
-   any `Modal card`; `Pawl.Card` delegates, and the ability paths call it directly.
+   `Card.spell` on `Parun.Card`, generalize into a `Parun.Modal` logic module over
+   any `Modal card`; `Parun.Card` delegates, and the ability paths call it directly.
 3. **The activation path (CR 602.2b → 601.2b–i).** `Activate.activateAbility` gains
    the M4g mode step: choose the mode(s), then choose only the chosen modes' targets,
    then stamp both onto the ability object's `bindings`. `Activate.activatable`
@@ -77,7 +77,7 @@ Five moving parts, each on an existing seam:
 
 The §1 invariant holds throughout: `Modal`/`Mode` are first-order structural data;
 the mode choice is a genuine player choice, prompted (never elided except where
-forced); `Pawl.Resolve` stays the sole `case effect of` home; nothing cases on a
+forced); `Parun.Resolve` stays the sole `case effect of` home; nothing cases on a
 card's identity. Aether Channeler is a printing whose ETB `TriggeredAbility`'s
 `modal` is a three-mode `Modal`; the rules core learns only that it is modal and how
 many modes are legal, never that it is Aether Channeler.
@@ -132,7 +132,7 @@ opcode set — the activation path is gated by the synthetic fixture until one l
 
 ## 1. The reshape
 
-`Pawl.Type.ActivatedAbility` drops `effects`/`targetSpecs`, gains `modal`:
+`Parun.Type.ActivatedAbility` drops `effects`/`targetSpecs`, gains `modal`:
 
 ```
 data ActivatedAbility card = MkActivatedAbility
@@ -146,7 +146,7 @@ data ActivatedAbility card = MkActivatedAbility
   deriving (Eq, Ord, Show)
 ```
 
-`Pawl.Type.TriggeredAbility` likewise:
+`Parun.Type.TriggeredAbility` likewise:
 
 ```
 data TriggeredAbility card = MkTriggeredAbility
@@ -163,11 +163,11 @@ and `TriggerCondition`. Because the effects now live in `Mode.effects :: Seq (Ef
 card)`, **the reshape is the `Seq` migration** M4g's spec §1 promised — no separate
 step, no list left on either type.
 
-## 2. The shared reader — `Pawl.Modal`
+## 2. The shared reader — `Parun.Modal`
 
-M4g put the mode-scoped projections on `Pawl.Card`, reading `Card.spell`. They are
+M4g put the mode-scoped projections on `Parun.Card`, reading `Card.spell`. They are
 card-agnostic structural folds over a `Modal card`, so they lift verbatim into a new
-logic module `Pawl.Modal` (parametric in `card`, importing only Type modules —
+logic module `Parun.Modal` (parametric in `card`, importing only Type modules —
 `Modal`, `Mode`, `ModeIndex`, `Effect`, `SlotName`, `TargetSpec` — so no cycle):
 
 ```
@@ -183,10 +183,10 @@ modesTargetSpecs :: Set ModeIndex -> Modal card -> Map SlotName TargetSpec
 selectionCount :: Modal card -> Natural
 ```
 
-`Pawl.Card`'s existing `allEffects`/`allTargetSpecs`/`modesEffects`/
-`modesTargetSpecs`/`modeTargetSpecs` become one-line delegations to `Pawl.Modal`
+`Parun.Card`'s existing `allEffects`/`allTargetSpecs`/`modesEffects`/
+`modesTargetSpecs`/`modeTargetSpecs` become one-line delegations to `Parun.Modal`
 over `Card.spell` (unchanged call sites, unchanged behavior). The ability paths
-(`Activate`, `Engine`, `Resolve`, `Mana`) call `Pawl.Modal` directly on the
+(`Activate`, `Engine`, `Resolve`, `Mana`) call `Parun.Modal` directly on the
 ability's `modal`.
 
 ## 3. The mana-ability ABI under modes
@@ -306,7 +306,7 @@ reads the **chosen** modes' effects: `any Resolve.searchesLibrary (Modal.modesEf
 (Binding.modesOf (Object.bindings obj)) (ActivatedAbility.modal ability))`. Evolving
 Wilds is single-mode, so `chosen = {0}` and this is unchanged.
 
-`Pawl.Resolve` stays the sole `case effect of` home. No `Effect` constructor is
+`Parun.Resolve` stays the sole `case effect of` home. No `Effect` constructor is
 added: modes reshape *which* effects run, not *what* an effect is.
 
 ## 7. Incidental machinery — the gate
@@ -338,7 +338,7 @@ Two additions to the closed half, both in M4g's WallTarget budget:
 
 **Self-exclusion, minimally.** `stillLegal` (CR 608.2b re-validation) checks the
 *chosen* target, which is never the source, so re-validation stays source-blind and
-correct — self-exclusion is only a *choice-time* filter. `Pawl.Target` gains:
+correct — self-exclusion is only a *choice-time* filter. `Parun.Target` gains:
 
 ```
 -- CR "another": specs that exclude the targeting source from their legal set.
@@ -453,25 +453,25 @@ carry their CR numbers.
 
 ## 11. Module and dependency notes
 
-- New logic module `Pawl.Modal` (imports only Type modules: `Modal`, `Mode`,
+- New logic module `Parun.Modal` (imports only Type modules: `Modal`, `Mode`,
   `ModeIndex`, `Effect`, `SlotName`, `TargetSpec`). No cycle: it imports no `Card`.
-  `Pawl.Card` imports `Pawl.Modal` and delegates.
-- `Pawl.Type.ActivatedAbility`/`Pawl.Type.TriggeredAbility` import `Modal` (drop
+  `Parun.Card` imports `Parun.Modal` and delegates.
+- `Parun.Type.ActivatedAbility`/`Parun.Type.TriggeredAbility` import `Modal` (drop
   `Effect`/`SlotName`/`TargetSpec`).
-- `Pawl.Target` imports `Pawl.Modal` and `ModeIndex`; gains `selfExcludes`,
+- `Parun.Target` imports `Parun.Modal` and `ModeIndex`; gains `selfExcludes`,
   `legalSetsExcluding`, `fillableModes` (the last moved/generalized from `Cast`).
   Target already imports `Projection`/`Game`/`Sba`; adding the `Modal` logic module
   (Type-only imports) is acyclic.
-- `Pawl.Cast` drops its own `fillableModes` (now `Target.fillableModes`) and routes
+- `Parun.Cast` drops its own `fillableModes` (now `Target.fillableModes`) and routes
   target computation through `Target.legalSetsExcluding`.
-- `Pawl.Activate` computes `Target.fillableModes` and prompts `ChooseModes`;
-  `Pawl.Engine.placeOne` does the same plus the CR 603.3c removal; `Pawl.Resolve
-  .resolveEffects` takes a `Modal Card`; `Pawl.Stack` passes each ability's `modal`.
-- `Pawl.Mana` reads `Modal.allEffects`/`allTargetSpecs`.
-- `Pawl.Codec` reshapes the two ability arms (reusing `modalToJson`/`jsonToModal`)
+- `Parun.Activate` computes `Target.fillableModes` and prompts `ChooseModes`;
+  `Parun.Engine.placeOne` does the same plus the CR 603.3c removal; `Parun.Resolve
+  .resolveEffects` takes a `Modal Card`; `Parun.Stack` passes each ability's `modal`.
+- `Parun.Mana` reads `Modal.allEffects`/`allTargetSpecs`.
+- `Parun.Codec` reshapes the two ability arms (reusing `modalToJson`/`jsonToModal`)
   and adds the `NonlandPermanentTarget` arm.
-- `Pawl.Resolve` stays the sole `case effect of` home; `Pawl.Target` the sole
-  targeting-legality home; `Pawl.Cast`/`Pawl.Activate`/`Pawl.Engine` case on
+- `Parun.Resolve` stays the sole `case effect of` home; `Parun.Target` the sole
+  targeting-legality home; `Parun.Cast`/`Parun.Activate`/`Parun.Engine` case on
   `ModeSelection` (via `Modal.selectionCount`) as an orchestration tag, never a
   card's identity.
 
@@ -480,7 +480,7 @@ carry their CR numbers.
 - **Closed/open separation.** The rules core reads a *classification* of the ability
   payload — how many modes are legal, which effects the chosen modes carry — never a
   card's identity. The mode-selection casing is `Modal.selectionCount` (an
-  orchestration tag); `Pawl.Resolve` stays the only module casing on `Effect`. No
+  orchestration tag); `Parun.Resolve` stays the only module casing on `Effect`. No
   `case card of AetherChanneler → …` anywhere.
 - **First-order, non-recursive DSL.** The reshape adds no function or control flow to
   the payload; `Modal`/`Mode` remain the structural data M4g built. The parametric

@@ -1,0 +1,116 @@
+-- Covers Parun.Play.Record and Parun.Scenario's game start: a played game saved
+-- as a scenario, and that scenario replayed.
+module Parun.RecordSpec where
+
+import qualified Control.Monad.Trans.Class as Trans
+import qualified Control.Monad.Trans.State.Strict as State
+import qualified Data.Bifunctor as Bifunctor
+import qualified Data.Either as Either
+import qualified Data.List.NonEmpty as NonEmpty
+import qualified Data.Map.Strict as Map
+import qualified Data.Sequence as Seq
+import qualified Data.Text as Text
+import qualified Parun.BotSpec as BotSpec
+import qualified Parun.ClientSpec as ClientSpec
+import qualified Parun.Codec.Scenario as Codec.Scenario
+import qualified Parun.JsonCodec.Codec as Codec
+import qualified Parun.Play.Bot as Bot
+import qualified Parun.Play.Game as Game
+import qualified Parun.Play.Record as Record
+import qualified Parun.Registry as Registry
+import qualified Parun.Scenario as Scenario
+import qualified Parun.Spec as Spec
+import qualified Parun.Support as S
+import qualified Parun.Types.Answer as Answer
+import qualified Parun.Types.Answerer as Answerer
+import qualified Parun.Types.Asked as Asked
+import qualified Parun.Types.Deck as Deck
+import qualified Parun.Types.Entry as Entry
+import qualified Parun.Types.GameState as GameState
+import qualified Parun.Types.Hotseat as Hotseat
+import qualified Parun.Types.Label as Label
+import qualified Parun.Types.Move as Move
+import qualified Parun.Types.Observer as Observer
+import qualified Parun.Types.PlayerId as PlayerId
+import qualified Parun.Types.Reply as Reply
+import qualified Parun.Types.Result as Result
+import qualified Parun.Types.Scenario as Scenario.Type
+import qualified Parun.Types.SplitMix as SplitMix
+import qualified Parun.Types.Terminal as Terminal
+import qualified Parun.Types.Timed as Timed
+
+spec :: (Monad m, Monad n) => Spec.Spec m n -> Registry.Registry m -> n ()
+spec s registry = Spec.describe s "Record" $ do
+  Spec.it s "a recorded bot game replays clean to the same result" $ do
+    matchup <- BotSpec.bears s registry
+    let (outcome, timeline) = recorded bots matchup
+    replayed <- Scenario.run registry (saved matchup timeline)
+    case (outcome, replayed) of
+      (Right (result, _), Right final) -> Spec.assertEqWith s "same result" (GameState.result final) (Just result)
+      (_, Left failure) -> Spec.assertFailure s (Text.unpack (Scenario.render failure))
+      (Left reason, _) -> Spec.assertFailure s (Text.unpack reason)
+
+  Spec.it s "a game cut short replays to where it stopped" $ do
+    matchup <- BotSpec.bears s registry
+    let seats = Map.fromList [(S.alice, Game.human (lifted (ClientSpec.screen 40 ClientSpec.plays)) (const (Right Nothing))), (S.bob, Bot.bot)]
+        (outcome, (timeline, cut)) = watched seats matchup
+    replayed <- Scenario.run registry (saved matchup timeline)
+    Spec.assertEqWith s "cut" (fmap fst outcome) (Left (Text.pack "end of input"))
+    case replayed of
+      Right final -> Spec.assertBool s (Just final == cut) "stopped where it was cut"
+      Left failure -> Spec.assertFailure s (Text.unpack (Scenario.render failure))
+
+  Spec.it s "a timeline missing an answer fails to replay" $ do
+    matchup <- BotSpec.bears s registry
+    let (_, timeline) = recorded bots matchup
+        half = Seq.length timeline `div` 2
+    -- An attack from the second half on: a passed priority left out replays
+    -- the same, the runner passing for a seat with nothing scheduled.
+    missing <- maybe (Spec.assertFailure s "no attack to leave out") (pure . (+ half)) (Seq.findIndexL attacks (Seq.drop half timeline))
+    replayed <- Scenario.run registry (saved matchup (Seq.deleteAt missing timeline))
+    Spec.assertBool s (Either.isLeft replayed) "desync"
+
+-- Whether an entry declares attackers, any at all.
+attacks :: Timed.Timed -> Bool
+attacks timed = case Timed.entry timed of
+  Entry.Do (Move.Answer answer) -> Answer.prompt answer == Text.pack "DeclareAttackers" && Answer.with answer /= Reply.Array []
+  _ -> False
+
+-- The entries recorded so far and the state the last prompt was asked in,
+-- over the screen a person reads.
+type Base = State.StateT (Seq.Seq Timed.Timed, Maybe GameState.GameState) (State.State ClientSpec.Screen)
+
+-- A seeded game between these seats, and every entry its answers recorded,
+-- however it ended.
+recorded :: Map.Map PlayerId.PlayerId (Answerer.Answerer (Game.Play Base)) -> NonEmpty.NonEmpty (PlayerId.PlayerId, Deck.Deck) -> (Either Text.Text (Result.Result, GameState.GameState), Seq.Seq Timed.Timed)
+recorded seats matchup = fmap fst (watched seats matchup)
+
+watched :: Map.Map PlayerId.PlayerId (Answerer.Answerer (Game.Play Base)) -> NonEmpty.NonEmpty (PlayerId.PlayerId, Deck.Deck) -> (Either Text.Text (Result.Result, GameState.GameState), (Seq.Seq Timed.Timed, Maybe GameState.GameState))
+watched seats matchup =
+  let played = Game.run [Record.recording labels sink, lastAsked] seats Hotseat.fresh {Hotseat.facing = Just S.alice} (SplitMix.MkSplitMix 1) matchup
+   in State.evalState (State.runStateT played (Seq.empty, Nothing)) ClientSpec.blank
+
+lastAsked :: Observer.Observer (Game.Play Base)
+lastAsked = Observer.MkObserver {Observer.before = Game.underneath . State.modify' . fmap . const . Just . Asked.game, Observer.after = \_ _ -> pure ()}
+
+sink :: Timed.Timed -> Game.Play Base ()
+sink entry = Game.underneath (State.modify' (Bifunctor.first (Seq.|> entry)))
+
+bots :: Map.Map PlayerId.PlayerId (Answerer.Answerer (Game.Play Base))
+bots = Map.fromList [(S.alice, Bot.bot), (S.bob, Bot.bot)]
+
+lifted :: Terminal.Terminal (State.State ClientSpec.Screen) -> Terminal.Terminal Base
+lifted terminal =
+  Terminal.MkTerminal
+    { Terminal.say = Trans.lift . Terminal.say terminal,
+      Terminal.listen = Trans.lift (Terminal.listen terminal),
+      Terminal.clear = Trans.lift (Terminal.clear terminal)
+    }
+
+saved :: NonEmpty.NonEmpty (PlayerId.PlayerId, Deck.Deck) -> Seq.Seq Timed.Timed -> Scenario.Type.Scenario
+saved matchup timeline =
+  let scenario = Record.scenario Text.empty (fmap (Bifunctor.first (Record.labelOf labels)) matchup) timeline
+   in Either.either (error . Text.unpack) id (Codec.decode Codec.Scenario.codec (Codec.encode Codec.Scenario.codec scenario))
+
+labels :: Map.Map PlayerId.PlayerId Label.Label
+labels = Map.fromList [(S.alice, Label.MkLabel (Text.pack "alice")), (S.bob, Label.MkLabel (Text.pack "bob"))]

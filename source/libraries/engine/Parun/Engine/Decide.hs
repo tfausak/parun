@@ -1,0 +1,54 @@
+module Parun.Engine.Decide where
+
+import qualified Data.List as List
+import qualified Data.List.NonEmpty as NonEmpty
+import qualified Data.Map.Strict as Map
+import Data.Set (Set)
+import qualified Data.Set as Set
+import qualified Parun.Types.ControlDuration as ControlDuration
+import Parun.Types.Decider (Decider)
+import qualified Parun.Types.Decider as Decider
+import Parun.Types.GameState (GameState)
+import qualified Parun.Types.GameState as GameState
+import qualified Parun.Types.PlayerControl as PlayerControl
+import Parun.Types.PlayerId (PlayerId)
+
+-- Who actually decides for a player (CR 723.5). A controlled player has their
+-- decisions made by the controller; everyone else decides for themselves.
+--
+-- A LOOKUP and nothing else. There is no active-player guard, because CR 723.3's
+-- "a player who's being controlled during their turn is still the active player"
+-- says only that control leaves the active player alone -- not that the
+-- controlled player is the active one. CR 723.2's control is held on someone
+-- else's turn, see #881, so the row's own lifetime ends it: rule 723.1's at
+-- Parun.Engine.Engine's turn handoff, rule 723.2's at Parun.Engine.Stack's end of
+-- resolution.
+deciderFor :: PlayerId -> GameState -> Decider
+deciderFor pid gs = maybe (Decider.MkDecider pid) PlayerControl.decider (Map.lookup pid (GameState.control gs) >>= effective)
+
+-- | CR 723.4: who sees what a player privately sees -- the player and whoever
+-- makes their decisions.
+privyTo :: PlayerId -> GameState -> Set PlayerId
+privyTo pid gs = Set.fromList [pid, Decider.unwrap (deciderFor pid gs)]
+
+-- CR 723.1a: "the last one to be created is the one that works" -- the latest
+-- PlayerControl.timestamp, not the latest pushed, since an Opposition Agent's
+-- row is pushed when a search begins but was created when the Agent entered.
+-- Rows of one timestamp keep push order. The row that WORKS,
+-- which is also the row whose CR 723.7 restriction applies
+-- (Parun.Engine.Mana.manaSourcesGiven).
+--
+-- Less the DORMANT rows, CR 723.2's control waiting for its spell to resolve
+-- (Parun.Engine.Stack.beginResolutionControl), which does not work yet.
+effective :: NonEmpty.NonEmpty PlayerControl.PlayerControl -> Maybe PlayerControl.PlayerControl
+effective =
+  let awake row = case PlayerControl.duration row of
+        ControlDuration.WhileResolving _ -> False
+        ControlDuration.UntilTurnEnds -> True
+        ControlDuration.UntilResolutionEnds -> True
+        ControlDuration.WhileSearching -> True
+      -- The later of two rows of one stamp is the one pushed later.
+      later best row = case best of
+        Just kept | PlayerControl.timestamp kept > PlayerControl.timestamp row -> best
+        _ -> Just row
+   in List.foldl' later Nothing . NonEmpty.filter awake

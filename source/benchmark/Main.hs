@@ -1,4 +1,4 @@
-import qualified Pawl.Benchmark
+import qualified Parun.Benchmark
 
 main :: IO ()
-main = Pawl.Benchmark.main
+main = Parun.Benchmark.main

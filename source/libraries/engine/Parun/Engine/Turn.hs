@@ -1,0 +1,451 @@
+module Parun.Engine.Turn where
+
+import qualified Data.Foldable as Foldable
+import qualified Data.List as List
+import Data.Sequence (Seq)
+import qualified Data.Sequence as Seq
+import qualified Data.Set as Set
+import qualified Parun.Types.AttackTarget as AttackTarget
+import qualified Parun.Types.BeginningStep as BeginningStep
+import qualified Parun.Types.Combat as Combat
+import qualified Parun.Types.CombatStep as CombatStep
+import qualified Parun.Types.EndingStep as EndingStep
+import Parun.Types.ExtraPhase (ExtraPhase)
+import qualified Parun.Types.ExtraPhase as ExtraPhase
+import qualified Parun.Types.ExtraTurn as ExtraTurn
+import qualified Parun.Types.GameEvent as GameEvent
+import qualified Parun.Types.GameSettings as GameSettings
+import Parun.Types.GameState (GameState)
+import qualified Parun.Types.GameState as GameState
+import qualified Parun.Types.LoggedEvent as LoggedEvent
+import Parun.Types.ObjectId (ObjectId)
+import Parun.Types.Phase (Phase)
+import qualified Parun.Types.Phase as Phase
+import Parun.Types.PhaseSelector (PhaseSelector)
+import qualified Parun.Types.PhaseSelector as PhaseSelector
+import Parun.Types.PlayerId (PlayerId)
+import qualified Parun.Types.StepBegan as StepBegan
+import qualified Parun.Types.Teams as Teams
+import qualified Parun.Types.Timestamp as Timestamp
+import qualified Parun.Types.TurnRole as TurnRole
+import qualified Parun.Types.TurnScope as TurnScope
+
+allPhases :: [Phase]
+allPhases =
+  [ Phase.Beginning BeginningStep.Untap,
+    Phase.Beginning BeginningStep.Upkeep,
+    Phase.Beginning BeginningStep.DrawStep,
+    Phase.PrecombatMain,
+    Phase.Combat CombatStep.BeginningOfCombat,
+    Phase.Combat CombatStep.DeclareAttackers,
+    Phase.Combat CombatStep.DeclareBlockers,
+    Phase.Combat CombatStep.CombatDamage,
+    Phase.Combat CombatStep.EndOfCombat,
+    Phase.PostcombatMain,
+    Phase.Ending EndingStep.EndStep,
+    Phase.Ending EndingStep.Cleanup
+  ]
+
+-- | CR 805.4: do these two players take their turns together -- the same
+-- player, or teammates in a game using the shared team turns option?
+sharesTurn :: GameState -> PlayerId -> PlayerId -> Bool
+sharesTurn gs one other =
+  let settings = GameState.settings gs
+   in one == other
+        || (GameSettings.sharedTeamTurns settings && Teams.sameTeam (GameSettings.teams settings) one other)
+
+-- CR 102.1: does this turn belong to the scope? `active` is "the player whose
+-- turn it is", and `own` is the seat the scope is read against -- the player
+-- Parun.Types.TurnScope deliberately names none of, since each reader supplies
+-- its own: CR 109.5's "you" for a triggered ability (CR 603.3a), the CR 602.2
+-- activator for an activated one.
+--
+-- ControllersTurn is sharesTurn, so under CR 805.4 the active team's turn is
+-- each of its members' turn. OpponentsTurn is CR 102.3's relation rather than an
+-- enumeration of opponents: the active player is one, which in a two-player game
+-- (CR 102.2) and a Free-for-All (CR 806.1) is any other seat, and in a game
+-- between teams is a seat on another team. Teams.areOpponents is the one
+-- predicate.
+turnScopeAdmits :: GameState -> TurnScope.TurnScope -> PlayerId -> PlayerId -> Bool
+turnScopeAdmits gs scope active own = case scope of
+  TurnScope.EachTurn -> True
+  TurnScope.ControllersTurn -> sharesTurn gs active own
+  TurnScope.OpponentsTurn -> Teams.areOpponents (GameSettings.teams (GameState.settings gs)) own active
+
+-- | CR 805.4a / 805.9: is this player an active player -- the active player, or
+-- under the shared team turns option a member of the active team?
+isActive :: GameState -> PlayerId -> Bool
+isActive gs = sharesTurn gs (GameState.activePlayer gs)
+
+-- | CR 500.7: "that turn", the extra turn `source`'s resolution just created
+-- for `controller` -- the most recently created pending entry from that source
+-- that the controller takes -- named by its ExtraTurn.createdAt. Nothing when
+-- there is none, as when the controller named by the extra-turn clause was not
+-- the one taking it. Onset.FromThatExtraTurn and Duration.DuringThatExtraTurn
+-- both name their turn through this.
+thatExtraTurn :: ObjectId -> PlayerId -> GameState -> Maybe Timestamp.Timestamp
+thatExtraTurn source controller gs =
+  let created turn = ExtraTurn.source turn == source && sharesTurn gs controller (ExtraTurn.taker turn)
+   in fmap ExtraTurn.createdAt (List.find created (GameState.extraTurns gs))
+
+-- | Every active player in seating order from the active player, departed
+-- seats included (CR 800.4j); a caller that must not name one filters them.
+--
+-- Not implemented: CR 805.6's "in whatever order they like" -- the active team
+-- does not choose the order its members act in (#4014).
+activePlayers :: GameState -> [PlayerId]
+activePlayers gs =
+  let (before, from) = break (== GameState.activePlayer gs) (GameState.turnOrder gs)
+   in filter (isActive gs) (from <> before)
+
+-- | CR 102.1 / 805.4a / 802.2: the players holding a role the turn hands out --
+-- every defending player, CR 811.4's barred ones included (Parun.Types.Combat's
+-- barred), as Yare's controller chooses among them. Not in APNAP order.
+roleHolders :: TurnRole.TurnRole -> GameState -> [PlayerId]
+roleHolders role gs = case role of
+  TurnRole.Active -> activePlayers gs
+  TurnRole.Defending -> let combat = GameState.combat gs in Combat.defenders combat <> Combat.barred combat
+
+firstPhase :: Phase
+firstPhase = Phase.Beginning BeginningStep.Untap
+
+-- The steps of a fresh turn AFTER its first (the untap step). A new turn's
+-- schedule refills to this; `firstPhase` is its current step.
+laterPhases :: Seq Phase
+laterPhases = Seq.fromList (drop 1 allPhases)
+
+-- Which steps grant a priority round from the PHASE alone.
+--
+-- CR 502.4 is unqualified, so the untap step's False is the whole answer. CR
+-- 514.3's is only the NORMAL case: its CR 514.3a exception is a question about
+-- the board, not the phase, and Engine.grantsPriorityNow answers the cleanup
+-- step entirely by itself rather than correcting this. The arm stays because a
+-- predicate over Phase that reported True for cleanup would be wrong on its own
+-- terms.
+grantsPriority :: Phase -> Bool
+grantsPriority phase = case phase of
+  Phase.Beginning BeginningStep.Untap -> False
+  Phase.Ending EndingStep.Cleanup -> False
+  _ -> True
+
+-- CR 307.5: the "as a sorcery" window. ONE predicate, because three rules need
+-- the same conjuncts and a drifting second copy is what the CR-citation
+-- discipline exists to prevent: CR 307.1 gates casting a sorcery
+-- (Cast.castableSpells), CR 307.5 gates "Activate only as a sorcery"
+-- (ActivationRestriction.restrictionsOk), and CR 305.1 / 116.2a / 505.6b gate
+-- playing a land (Action.legalActions). Every one of them names the same
+-- moment: a main phase of the player's own turn with the stack empty.
+--
+-- The land caller asks it as one DISJUNCT rather than as the whole window: CR
+-- 702.8a's "you may play this card any time you could cast an instant" reaches a
+-- land play through CR 601.1a, and lifts this window for the one card the
+-- keyword is on. That widening stays out of here for the reason
+-- Cast.instantSpeed gives -- it is a permission a card carries about itself, not
+-- a change to the moment.
+--
+-- Priority is NOT among the conjuncts. Every caller is reached only from
+-- Action.legalActions, which the priority loop asks solely of the player who
+-- holds it. Nothing else belongs either: CR 307.5's last sentence means no
+-- prohibition (Rule of Law, Silence) may be consulted here, and CR 305.2's land
+-- allowance is the land caller's business rather than this window's -- a tally
+-- of what has already happened this turn, not a description of the moment.
+sorcerySpeedWindow :: PlayerId -> GameState -> Bool
+sorcerySpeedWindow pid gs =
+  isMainPhase (GameState.phase gs)
+    && isActive gs pid
+    && null (GameState.stack gs)
+
+isMainPhase :: Phase -> Bool
+isMainPhase phase = case phase of
+  Phase.PrecombatMain -> True
+  Phase.PostcombatMain -> True
+  _ -> False
+
+-- CR 702.190a's "any time you could cast an instant during YOUR declare blockers
+-- step": sorcerySpeedWindow's two seats one phase over, and one conjunct short of
+-- it. The step is CR 509's, and "your" is CR 102.1's -- the turn is this player's
+-- -- which is why the active player is asked here as well.
+--
+-- NO EMPTY-STACK conjunct, where rule 307.1's window has one: rule 702.190a's own
+-- words are "any time you could cast an INSTANT", which CR 117.1a gives its
+-- controller at every priority, stack or no stack. The readers are
+-- Parun.Engine.Cast's cardTimingOk, which disjoins it to widen WHEN the cast may
+-- begin, and windowedCandidates, which substitutes it to narrow WHICH cost may
+-- begin it; priority is implicit in both for sorcerySpeedWindow's reason.
+declareBlockersWindow :: PlayerId -> GameState -> Bool
+declareBlockersWindow pid gs =
+  GameState.phase gs == Phase.Combat CombatStep.DeclareBlockers
+    && isActive gs pid
+
+-- CR 500: the final step of the phase this one belongs to -- the step whose end
+-- ends the phase. CR 511.3 names combat's; CR 501.1 and CR 512.1 list the
+-- beginning and ending phases' steps. A main phase has no steps at all (CR
+-- 505.2), so there is no step whose end ends it, which is what Nothing says.
+lastStepOf :: Phase -> Maybe Phase
+lastStepOf phase = case phase of
+  Phase.Beginning _ -> Just (Phase.Beginning BeginningStep.DrawStep)
+  Phase.PrecombatMain -> Nothing
+  Phase.Combat _ -> Just (Phase.Combat CombatStep.EndOfCombat)
+  Phase.PostcombatMain -> Nothing
+  Phase.Ending _ -> Just (Phase.Ending EndingStep.Cleanup)
+
+-- Split what is left of the turn into THIS phase's remaining steps and
+-- everything after it. The one place that answers where a phase ends. The final
+-- step goes in the PREFIX: it belongs to the phase it ends.
+--
+-- The bound is that final step rather than "the leading run of steps of the
+-- same kind", because CR 500.8 permits a combat phase directly after a combat
+-- phase (Aurelia, the Warleader) and the run would swallow both.
+--
+-- An absent final step yields an EMPTY prefix, not the whole schedule: the
+-- phase is then already over as far as `remaining` shows, and "directly after
+-- this phase" (CR 500.8) is the head. Unreachable from every caller, so no game
+-- can observe the choice; dropping nothing is the safer failure than dropping
+-- everything.
+thisPhase :: Phase -> Seq Phase -> (Seq Phase, Seq Phase)
+thisPhase phase remaining = case lastStepOf phase >>= \step -> Seq.elemIndexL step remaining of
+  Nothing -> (Seq.empty, remaining)
+  Just i -> Seq.splitAt (i + 1) remaining
+
+-- CR 500.11 / CR 724.2d: everything left of the turn AFTER this phase. The other
+-- half of `thisPhase`'s split, and the shape both a SKIPPED phase
+-- (Engine.skipWholePhase) and one an effect ENDED (Resolve's
+-- Effect.EndCombatPhase arm) want. Positional for the same CR 500.8 reason:
+-- dropping THIS combat phase says nothing about a second one added later in the
+-- turn.
+dropRestOfPhase :: Phase -> Seq Phase -> Seq Phase
+dropRestOfPhase phase = snd . thisPhase phase
+
+-- CR 500.1: the whole PHASE that is about to begin, if this step is its first.
+-- Nothing for every other step, and for both main phases -- CR 505.2 makes a
+-- main phase its own single schedule entry, so PhaseSelector.Step already names
+-- it.
+--
+-- This is what pins CR 614.10 for a phase rather than a step: Engine.runStep
+-- asks the phase question only where this answers Just, so a skip that arrives
+-- during a phase cannot take the rest of it.
+--
+-- The first steps come from CR 501.1, CR 506.1 and CR 512.1. A CR 500.8
+-- additional combat phase begins at the same step, since expandExtraPhase
+-- builds it from CR 506.1's list.
+phaseBeginningAt :: Phase -> Maybe PhaseSelector
+phaseBeginningAt phase = case phase of
+  Phase.Beginning BeginningStep.Untap -> Just PhaseSelector.BeginningPhase
+  Phase.Beginning _ -> Nothing
+  Phase.PrecombatMain -> Nothing
+  Phase.Combat CombatStep.BeginningOfCombat -> Just PhaseSelector.CombatPhase
+  Phase.Combat _ -> Nothing
+  Phase.PostcombatMain -> Nothing
+  Phase.Ending EndingStep.EndStep -> Just PhaseSelector.EndingPhase
+  Phase.Ending _ -> Nothing
+
+-- CR 500.1: the STEPPED phase this schedule entry belongs to, named as a whole.
+-- Nothing for both main phases, because CR 505.2 gives them no steps -- so
+-- PhaseSelector.Step already names the phase and there is no coarser window.
+wholePhaseOf :: Phase -> Maybe PhaseSelector
+wholePhaseOf phase = case phase of
+  Phase.Beginning _ -> Just PhaseSelector.BeginningPhase
+  Phase.PrecombatMain -> Nothing
+  Phase.Combat _ -> Just PhaseSelector.CombatPhase
+  Phase.PostcombatMain -> Nothing
+  Phase.Ending _ -> Just PhaseSelector.EndingPhase
+
+-- CR 500.1: is the game's current schedule entry INSIDE the window this
+-- selector names? A containment test: a selector naming a step matches only
+-- that step, while one naming a stepped phase matches every step of it -- Jade
+-- Statue is live in all five of CR 506.1's combat steps.
+--
+-- Not the question Parun.Engine.Replacement asks of a skip, which compares two
+-- selectors by EQUALITY (CR 614.1b) so skipping a phase and skipping a step of
+-- it stay distinct events. This compares a selector against the phase the game
+-- is IN, where containment is what "during" means.
+inWindow :: PhaseSelector -> Phase -> Bool
+inWindow selector phase = selector == PhaseSelector.Step phase || wholePhaseOf phase == Just selector
+
+-- CR 500.5: the whole PHASE that is ending, if the step that just ended is its
+-- last. Nothing for every other step, and for both main phases -- CR 505.2
+-- makes a main phase its own single schedule entry, so PhaseSelector.Step has
+-- already named the window that ended.
+--
+-- The mirror of phaseBeginningAt, and CR 500.5a is why the engine needs both
+-- grains: "until end of combat" expires at the end of the combat phase, not at
+-- the start of the end of combat step.
+--
+-- Answers from the step alone, which is why every road out of a phase has to
+-- ask: Parun.Engine.Resolve's CR 724.1 and CR 724.2 arms sweep the phase they end
+-- themselves, having no last step to ask; Engine.skipStep asks this of a step a
+-- CR 614.1b skip removed, since CR 724.2e ends the phase even though its last
+-- step did not happen; and a phase skipped whole never ends at all (CR 500.11,
+-- at Engine.skipWholePhase), so it never asks.
+phaseEndingAt :: Phase -> Maybe PhaseSelector
+phaseEndingAt phase = if lastStepOf phase == Just phase then wholePhaseOf phase else Nothing
+
+-- CR 508.8 / 500.11: drop the declare blockers and combat damage steps of the
+-- combat phase NOW UNDER WAY from what is left of the turn. Positional, not a
+-- filter over the whole schedule: CR 500.8 lets an effect add a second combat
+-- phase, and skipping this one says nothing about that one.
+--
+-- Where this phase ends is `thisPhase`'s question. The end of combat step it
+-- splits on is never one of the two steps dropped here, so which side of the
+-- split it lands on is unobservable. The one caller, Combat.skipEmptyCombat,
+-- runs as the declare attackers step ends, so the phase is always a combat
+-- phase and its end of combat step is always still scheduled.
+dropSkippedCombatSteps :: Phase -> Seq Phase -> Seq Phase
+dropSkippedCombatSteps phase remaining =
+  let kept p =
+        p /= Phase.Combat CombatStep.DeclareBlockers
+          && p /= Phase.Combat CombatStep.CombatDamage
+      (current, rest) = thisPhase phase remaining
+   in Seq.filter kept current <> rest
+
+-- CR 510.4 / 500.9: a second combat damage step, spliced directly after the
+-- current one -- i.e. at the head of the remaining schedule, so it runs next.
+-- CR 500.9's "most recently created step occurs first" is exactly cons-at-head.
+spliceSecondDamage :: Seq Phase -> Seq Phase
+spliceSecondDamage remaining = Phase.Combat CombatStep.CombatDamage Seq.<| remaining
+
+-- CR 514.3a: another cleanup step, spliced directly after the current one -- at
+-- the head of the remaining schedule, so it runs next.
+--
+-- The twin of spliceSecondDamage, deliberately built the same way: a step that
+-- repeats itself is one more entry at the front of the turn, not a special case
+-- inside Engine.advance. Non-empty `remaining` is handled rather than assumed
+-- -- CR 500.8 lets an effect add a phase after the ending phase, and the second
+-- cleanup step belongs to the ending phase, so it goes in front of those steps.
+spliceExtraCleanup :: Seq Phase -> Seq Phase
+spliceExtraCleanup remaining = Phase.Ending EndingStep.Cleanup Seq.<| remaining
+
+-- CR 724.1d: what is left of the turn once an effect ends it -- the cleanup step
+-- and everything scheduled after it, with every phase and step between here and
+-- that cleanup step skipped.
+--
+-- Positional, and NOT a truncation to a lone cleanup step: CR 500.8 lets an
+-- effect add a phase after the ending phase, and those entries sit BEHIND the
+-- cleanup step in `remaining`. Rule 724.1d skips what lies between this step and
+-- the cleanup step and says nothing about what is scheduled after it.
+--
+-- A schedule holding no cleanup step gets one rather than emptying the turn: the
+-- rule says the game skips straight TO the cleanup step, so there is one to skip
+-- to even where Engine.skipWholePhase dropped the ending phase.
+--
+-- The caller handles CR 724.1d's own exception -- ending the turn DURING the
+-- cleanup step, where spliceExtraCleanup's new step is what the rule asks for.
+jumpToCleanup :: Seq Phase -> Seq Phase
+jumpToCleanup remaining = case Seq.elemIndexL (Phase.Ending EndingStep.Cleanup) remaining of
+  Nothing -> spliceExtraCleanup remaining
+  Just i -> Seq.drop i remaining
+
+-- The steps one added phase expands to. CR 506.1 fixes the combat phase's five
+-- and their order; CR 505.2 ("The main phase has no steps") is why a main phase
+-- is one element.
+expandExtraPhase :: ExtraPhase -> Seq Phase
+expandExtraPhase extra = case extra of
+  ExtraPhase.ExtraCombat ->
+    Seq.fromList
+      [ Phase.Combat CombatStep.BeginningOfCombat,
+        Phase.Combat CombatStep.DeclareAttackers,
+        Phase.Combat CombatStep.DeclareBlockers,
+        Phase.Combat CombatStep.CombatDamage,
+        Phase.Combat CombatStep.EndOfCombat
+      ]
+  ExtraPhase.ExtraMain -> Seq.singleton Phase.PostcombatMain
+
+-- CR 500.8: add phases directly after the specified phase, which is always the
+-- one the effect resolves in.
+--
+-- Where that phase ends is `thisPhase`'s question -- which is what makes this
+-- correct for an effect resolving inside a STEPPED phase, where the head of
+-- `remaining` is still this phase's own later steps (Aurelia, the Warleader).
+--
+-- The list is inserted as one block, in written order. CR 500.8's "most
+-- recently created phase occurs first" governs two SEPARATE effects splicing at
+-- the same boundary, which stays true here. Phases within ONE effect's list are
+-- created together, so that clause has nothing to order and they run as
+-- written.
+splicePhases :: Phase -> [ExtraPhase] -> Seq Phase -> Seq Phase
+splicePhases phase extras remaining =
+  let (current, rest) = thisPhase phase remaining
+   in current <> foldMap expandExtraPhase extras <> rest
+
+-- One whole combat phase followed by one whole main phase -- what Aggravated
+-- Assault and Relentless Assault add.
+combatAndMainPhase :: Seq Phase
+combatAndMainPhase = foldMap expandExtraPhase [ExtraPhase.ExtraCombat, ExtraPhase.ExtraMain]
+
+-- "only if you've been attacked this step", asked of the player a printed clause
+-- says "you" about -- read once here, beside the sorcery-speed and phase windows
+-- the same two riders ask about, and conjoined by both
+-- CastingRestriction.AttackedThisStep and ActivationRestriction.AttackedThisStep.
+--
+-- CR 508.6 defines the fact: a player "has attacked" another if they declared
+-- one or more creatures as attackers attacking them. So NOT Combat.attacked, CR
+-- 508.8's wider set -- CR 508.4 says a creature put onto the battlefield
+-- attacking never "attacked" (CR 508.3b for the player side). Membership in a
+-- HISTORICAL set, since CR 506.4's removal does not un-attack anybody.
+--
+-- "THIS STEP" is Combat.declaredAttackedThisStep and not its phase-scoped twin
+-- Combat.declaredAttacked: CR 500.1's step is the span the clause names, and CR
+-- 511.3 scopes the twin to the phase. Parun.CastSpec's "CR 508.6 / 500.1 the
+-- record is empty in the declare blockers step" case is the proof the two are
+-- told apart.
+attackedThisStep :: PlayerId -> GameState -> Bool
+attackedThisStep pid gs =
+  Set.member (AttackTarget.OfPlayer pid) (Combat.declaredAttackedThisStep (GameState.combat gs))
+
+-- CR 506.7b: is the game past the point "only during combat after blockers are
+-- declared" names? Shared by CastingRestriction.AfterBlockersDeclared and
+-- ActivationRestriction.AfterBlockersDeclared, which CR 506.7g makes one rule.
+-- Asked of the game and not of a player, CR 506.7 describing a point in the turn.
+--
+-- No conjunct about the current phase, which is CR 511.3 rather than an omission:
+-- Parun.Engine.Combat.declareBlockers is the only writer and Combat.clearCombat
+-- the only clearer, and every road out of a combat phase runs that clearer --
+-- Engine.endPhase for a phase the game leaves with or without its last step, and
+-- Parun.Engine.Resolve's CR 724.2d arm for one an effect ends part-way through.
+afterBlockersDeclared :: GameState -> Bool
+afterBlockersDeclared = Combat.blockersDeclared . GameState.combat
+
+-- CR 506.7: is the game inside a combat phase and short of the point "only
+-- during combat before combat damage has been dealt" names? Save Point is the
+-- card, and CR 506.7g is what lets an activated ability print the clause.
+--
+-- The PHASE and not the combat record, unlike afterBlockersDeclared above. CR
+-- 510.1 and CR 510.2 assign and deal combat damage as turn-based actions at the
+-- START of the combat damage step and CR 510.3 gives priority only afterwards,
+-- so the three steps below are exactly the priority windows of a combat phase in
+-- which no combat damage has been dealt. CR 510.5's first-strike damage step
+-- needs no fourth conjunct for the same reason: whichever damage step a player
+-- holds priority in, damage was dealt as it began.
+--
+-- CR 506.7c: "during combat" names every combat phase of the turn, which asking
+-- the phase alone gives -- an extra combat phase (CR 500.8) reopens the window,
+-- and no CR 506.7d first-phase-only reading applies, since the card prints the
+-- "during combat" words.
+beforeCombatDamage :: Phase -> Bool
+beforeCombatDamage phase = case phase of
+  Phase.Combat CombatStep.BeginningOfCombat -> True
+  Phase.Combat CombatStep.DeclareAttackers -> True
+  Phase.Combat CombatStep.DeclareBlockers -> True
+  Phase.Combat CombatStep.CombatDamage -> False
+  Phase.Combat CombatStep.EndOfCombat -> False
+  Phase.Beginning _ -> False
+  Phase.PrecombatMain -> False
+  Phase.PostcombatMain -> False
+  Phase.Ending _ -> False
+
+-- CR 506.7a / 506.7g: is the game short of the first time this turn that
+-- `target` begins? Every step begun this turn, the current one among them,
+-- precedes it in CR 500.1's order, which Phase's Ord follows.
+--
+-- The turn's LOG and not the phase alone, for CR 506.7d: a clause printing no
+-- "during combat" names the FIRST combat phase, so a later combat's beginning
+-- step is past the point although it precedes the step named. The same question
+-- answers CR 506.7e: a skipped step or phase records no beginning (CR 500.11),
+-- but the next one to begin does and is past the point. GameState.events is
+-- cleared at the turn handoff, so it holds this turn's beginnings and no other.
+beforeStep :: Phase -> GameState -> Bool
+beforeStep target gs = all (< target) (GameState.phase gs : began)
+  where
+    began = do
+      GameEvent.StepBegan (StepBegan.MkStepBegan phase _) <- fmap LoggedEvent.event (Foldable.toList (GameState.events gs))
+      pure phase

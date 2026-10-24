@@ -107,7 +107,7 @@ cast's target/mana prompts).
 **Non-goals.**
 
 - **No information filtering (CR 723.4).** "You see all cards that player could
-  see" is a `PlayerView` / hidden-information concern. pawl has no hidden-info
+  see" is a `PlayerView` / hidden-information concern. parun has no hidden-info
   projection yet — deterministic tests answer prompts with full information
   regardless of who decides — so 723.4 is a no-op today and named as an expiry
   (§7), due with the PlayerView work (M7).
@@ -147,7 +147,7 @@ cast's target/mana prompts).
 
 ### Phase 1 — Mindslaver / Decider
 
-**`Pawl.Type.TargetSpec`** grows one target restriction:
+**`Parun.Type.TargetSpec`** grows one target restriction:
 
 ```haskell
   | PlayerTarget  -- CR 115: "target player" -- a player still in the game.
@@ -158,7 +158,7 @@ where `players = map Recipient.ToPlayer (Sba.stillPlaying gs)` (already computed
 for `AnyTarget`). `Recipient.ToPlayer` already exists; `PlayerTarget` is the
 players-only restriction `AnyTarget` does not express.
 
-**`Pawl.Type.Effect`** grows one opcode:
+**`Parun.Type.Effect`** grows one opcode:
 
 ```haskell
   | ControlPlayerNextTurn SlotName  -- NEW (Mindslaver)
@@ -171,7 +171,7 @@ source permanent). `slotsOf` returns `Set.singleton slot`; `manaProduced` return
 `Nothing`; `rewriteEffect` is identity (no land-type word). Casing on this arm is
 `Resolve`'s charter.
 
-**`Pawl.Type.AbilityCost`** gains the mana half (the field its own comment names):
+**`Parun.Type.AbilityCost`** gains the mana half (the field its own comment names):
 
 ```haskell
 data AbilityCost = MkAbilityCost
@@ -186,7 +186,7 @@ Promoted from `newtype` to `data`. `Activate.activatable` gains a
 `activateAbility` pays the mana (CR 602.1b, via `Mana.payCost`) alongside the
 additional costs. Every M3e ability has `mana = Nothing` and is unaffected.
 
-**`Pawl.Type.GameState`** grows the control store:
+**`Parun.Type.GameState`** grows the control store:
 
 ```haskell
   -- CR 723.1: a player-controlling effect installs a PENDING control keyed to the
@@ -206,7 +206,7 @@ additional costs. Every M3e ability has `mana = Nothing` and is unaffected.
 
 ### Phase 2 — Panglacial / re-entrancy
 
-**`Pawl.Type.CastingPermission`** (new) — a card's permission to be cast from a
+**`Parun.Type.CastingPermission`** (new) — a card's permission to be cast from a
 zone or under a condition it normally could not (CR 601.3's "a rule or effect
 allows that player to cast it"), classified by the permission pattern, the M3f
 `TriggerCondition` shape:
@@ -220,7 +220,7 @@ data CastingPermission = CastFromLibraryWhileSearching
   deriving (Eq, Ord, Show)
 ```
 
-**`Pawl.Type.Card`** grows one field, empty for all but the gate:
+**`Parun.Type.Card`** grows one field, empty for all but the gate:
 
 ```haskell
   -- CR 601.3: this card's casting permissions -- zone/condition exceptions to
@@ -232,7 +232,7 @@ data CastingPermission = CastFromLibraryWhileSearching
   castingPermissions :: [CastingPermission]
 ```
 
-**`Pawl.Type.Prompt`** grows the re-entrant cast offer:
+**`Parun.Type.Prompt`** grows the re-entrant cast offer:
 
 ```haskell
   -- The re-entrant cast opportunity during a library search (Panglacial Wurm).
@@ -244,10 +244,10 @@ data CastingPermission = CastFromLibraryWhileSearching
   CastWhileSearching :: Decider -> PlayerId -> [ObjectId] -> Prompt (Maybe ObjectId)
 ```
 
-**`Pawl.Type.Response`** grows the replay variant for `CastWhileSearching` (a
+**`Parun.Type.Response`** grows the replay variant for `CastWhileSearching` (a
 `Maybe ObjectId`), mirroring `Searched`.
 
-**`Pawl.Card`** gains **Mindslaver** (`{6}`, Legendary Artifact; one activated
+**`Parun.Card`** gains **Mindslaver** (`{6}`, Legendary Artifact; one activated
 ability, cost `mana = Just {4}` + `[TapSelf, SacrificeSelf]`, effect
 `[ControlPlayerNextTurn slot]`, one `PlayerTarget` slot) and **Panglacial Wurm**
 (`{5}{G}{G}`, Creature — Wurm, 9/5, `Keyword.Trample`, `castingPermissions =
@@ -289,7 +289,7 @@ alongside the existing `activePlayer` / `turnNumber` / `phase` / `remaining`
 updates. Because `activeControl` is overwritten every turn (to the next active
 player's pending entry, or `Nothing`), control **auto-expires at the beginning of
 the next turn** — exactly CR 723.1. Skipped turns fall out for free (a skipped
-player is never `newActive`, so their pending entry waits); pawl has no turn-skips
+player is never `newActive`, so their pending entry waits); parun has no turn-skips
 yet, so this is correct-by-construction and named. The first turn is set up by
 `Setup.newGame`, before any Mindslaver can have resolved, so only `handoffTurn`
 needs the promotion.
@@ -332,7 +332,7 @@ an empty stack). Both are bypassed by a dedicated enumerator, because the
 permission **is** the CR 601.3 timing exception ("follows all normal rules… except
 for timing," per the ruling).
 
-**The enumerator and classifier** (in `Pawl.Cast`):
+**The enumerator and classifier** (in `Parun.Cast`):
 
 ```haskell
 -- CR 601.3: the library cards this player may cast while searching their own
@@ -485,7 +485,7 @@ M3e's activation and shared executor, and M3f's event pipeline and CR 117.5 loop
 
 - **Information filtering (CR 723.4) — the headline deferral.** "You see all cards
   that player could see" needs a `PlayerView` that filters hidden information per
-  observer, which pawl does not have (all state is visible to the deterministic
+  observer, which parun does not have (all state is visible to the deterministic
   interpreter). Due with the PlayerView / hidden-information work (M7); until then
   control routes decisions with full information, which is observationally correct
   for a full-information interpreter.

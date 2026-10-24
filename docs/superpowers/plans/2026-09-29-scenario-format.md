@@ -7,36 +7,36 @@ second and is not started here.
 
 ## Research (against `origin/main` @ 07b8f1a)
 
-- #3050's keyed harness exists, but only as test code: `Pawl.Support` holds
+- #3050's keyed harness exists, but only as test code: `Parun.Support` holds
   `Board`, `PlayerSetup`, `ObjectSetup`, `ObjectRef`, `ActionChoices`, `When`,
   `Entry`, `Timed`, `HarnessFailure`, `buildBoard` and `runScript` (about a
   thousand lines with its renderers). Nothing ships it, nothing encodes it, and
   it has no checks: every assertion is Haskell run on the final state.
 - 27 `S.play`/`S.runScriptOrFail` call sites in 16 specs drive it, plus
-  `Pawl.SupportSpec`'s 21 cases on the harness itself. Of 11435 cases, that is
+  `Parun.SupportSpec`'s 21 cases on the harness itself. Of 11435 cases, that is
   well under one percent, so a lift now is cheap and a lift after migration is
   not.
 - Its seats are `PlayerId`s. A JSON document cannot carry one meaningfully,
   and a codec is context-free, so a name has to be the reference and the
   runner has to assign the ids. Every board in the tree lists alice first but
-  one (`Pawl.CombatSpec`'s Siege Muster blocking twin, where the order is
+  one (`Parun.CombatSpec`'s Siege Muster blocking twin, where the order is
   unobservable).
 - The cast selector (`Maybe (CardName, Facing)`) and the land-play face have
-  no caller outside `Pawl.Support`. They are dropped rather than lifted.
-- `Pawl.JsonCodec.Arm.tagged` writes `{"type": ..., "value": ...}`, which is
+  no caller outside `Parun.Support`. They are dropped rather than lifted.
+- `Parun.JsonCodec.Arm.tagged` writes `{"type": ..., "value": ...}`, which is
   what the card corpus uses and what #2171 wants shortened. Hand-written
   scenarios are the case #2171 names, so the scenario codecs use shorter
   shapes where the default is noisiest (references and steps as strings,
   verbs as keys) and the stock combinators everywhere else.
-- `Pawl.Executable` dispatches `schema | deck | bench | test`. `data/cards` is
-  cabal `data-files` resolved through `Paths_pawl` in `pawl:registry`.
+- `Parun.Executable` dispatches `schema | deck | bench | test`. `data/cards` is
+  cabal `data-files` resolved through `Paths_parun` in `parun:registry`.
 
 ## Design
 
 ### Names and references
 
 A board names every seat, and may name (alias) any object it places. Seats and
-aliases share ONE namespace, a `Pawl.Types.Label`, so a reference to either is
+aliases share ONE namespace, a `Parun.Types.Label`, so a reference to either is
 written the same way:
 
 | JSON              | Meaning                                              |
@@ -45,7 +45,7 @@ written the same way:
 | `"Grizzly Bears"` | the first live object with that card name            |
 | `"Grizzly Bears#2"` | the second, in creation order                      |
 
-`Pawl.Types.Reference` is `Labelled Label | Printed CardName Natural`. A
+`Parun.Types.Reference` is `Labelled Label | Printed CardName Natural`. A
 card-name reference counts live objects in every zone in creation order, as
 the harness already does. Where a reference must be an object (an attacker, a
 mana source), a label naming a seat is a failure; where it may be a player (a
@@ -98,7 +98,7 @@ Seat order is turn order and assigns the ids: the first seat is `PlayerId 0`.
   "with the spell on the stack" and "after it resolved" are both writable. A
   non-priority prompt skips the checks queued at its key, since a check waits
   for priority by definition.
-- A JSON scenario has one entry point, `Pawl.Scenario.play`: whole steps
+- A JSON scenario has one entry point, `Parun.Scenario.play`: whole steps
   (`Engine.runStep`) from the board's step until the timeline is spent, the
   game is over, or the turn passes the last turn the timeline names. A Haskell
   caller keeps passing any `Game a`, as today.
@@ -119,37 +119,37 @@ battlefield), `Damage` and `Tapped`. It grows on demand in piece 2.
 
 ### Where it lives
 
-- `pawl:types`: `Pawl.Types.{Label, Reference, Readiness, Placement, Seat,
+- `parun:types`: `Parun.Types.{Label, Reference, Readiness, Placement, Seat,
   Board, Choices, Casting, Activation, Move, LifeIs, CountIs, DamageIs,
   TappedIs, Check, When, Entry, Timed, Scenario, ScenarioFailure}`.
-- `pawl:codec`: a codec and spec for each but `ScenarioFailure`, which is
-  never encoded, and a flat step codec beside `Pawl.Codec.Phase`'s.
-- `pawl:json-codec`: `Arm.keyed`, and `Fields.contramap` so a `Choices` record
+- `parun:codec`: a codec and spec for each but `ScenarioFailure`, which is
+  never encoded, and a flat step codec beside `Parun.Codec.Phase`'s.
+- `parun:json-codec`: `Arm.keyed`, and `Fields.contramap` so a `Choices` record
   can share its parent's JSON object.
-- New `pawl:scenario`: `Pawl.Scenario` (build, run, check, render) and
-  `Pawl.Scenario.Load` (read `data/scenarios`).
-- `pawl:engine`: `Setup.placeCard`, the direct placement `Pawl.Support` and
+- New `parun:scenario`: `Parun.Scenario` (build, run, check, render) and
+  `Parun.Scenario.Load` (read `data/scenarios`).
+- `parun:engine`: `Setup.placeCard`, the direct placement `Parun.Support` and
   `Setup.createCard` both spell out as a sixty-field literal today.
-- `pawl:test`: `Pawl.Support` keeps its builders (`S.duel`, `S.settled`,
+- `parun:test`: `Parun.Support` keeps its builders (`S.duel`, `S.settled`,
   `S.turn`, `S.on`, `S.play`, ...) over the lifted types and loses the rest.
   Every JSON file under `data/scenarios/` becomes one case.
-- `pawl:executable`: `pawl scenario FILE...` runs files and reports each, and
-  `pawl schema scenario` emits the schema. This is the first way to drive the
+- `parun:executable`: `parun scenario FILE...` runs files and reports each, and
+  `parun schema scenario` emits the schema. This is the first way to drive the
   engine that is not the test suite.
 
 ## Tasks
 
 1. `Arm.keyed` and `Fields.contramap`, with specs.
 2. The types, their codecs and codec specs, the flat step codec.
-3. `Setup.placeCard`; `Setup.createCard` and `Pawl.Support.addObjectIn` over it.
-4. `pawl:scenario`: lift build and run out of `Pawl.Support`, retyped over
+3. `Setup.placeCard`; `Setup.createCard` and `Parun.Support.addObjectIn` over it.
+4. `parun:scenario`: lift build and run out of `Parun.Support`, retyped over
    labels; add `Pass`, checks, `final`, the unrun-check failure, `play` and
    the loader.
-5. Rewrite `Pawl.Support`'s harness as builders over the library; move every
-   call site and `Pawl.SupportSpec` onto it.
+5. Rewrite `Parun.Support`'s harness as builders over the library; move every
+   call site and `Parun.SupportSpec` onto it.
 6. `data/scenarios/`: one scenario per verb and per check, each checked
-   against the schema; the loader wired into `Pawl.Test`.
-7. `pawl scenario` and `pawl schema scenario`.
+   against the schema; the loader wired into `Parun.Test`.
+7. `parun scenario` and `parun schema scenario`.
 8. Docs: `docs/agents/implementing.md`'s harness section, and a README for
    `data/scenarios/`.
 
@@ -164,7 +164,7 @@ battlefield), `Damage` and `Tapped`. It grows on demand in piece 2.
 
 ## Deferred to piece 2
 
-Migrating specs, starting with `Pawl.CombatSpec`; growing `Check` and the
+Migrating specs, starting with `Parun.CombatSpec`; growing `Check` and the
 board (library, graveyard, exile, counters on players, monarch) as the
 migrated tests need them; `Prompt.OrderTriggers` and the other prompts the
 harness cannot answer; the XMage one-way conversion.

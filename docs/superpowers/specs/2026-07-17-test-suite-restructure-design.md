@@ -49,36 +49,36 @@ Two problems, addressed together:
 ## Target module layout
 
 Spec modules are **near-mirrors of the library's own modules**: each is named for
-its primary `Pawl.*` logic module, carries the `Pawl.` prefix so the
-correspondence is explicit (`Pawl.Mana` ↔ `Pawl.ManaSpec`), and opens with a
+its primary `Parun.*` logic module, carries the `Parun.` prefix so the
+correspondence is explicit (`Parun.Mana` ↔ `Parun.ManaSpec`), and opens with a
 header comment listing every library module it covers. A handful of small,
-tightly-coupled modules share one spec. The many `Pawl.Type.*` data modules get
+tightly-coupled modules share one spec. The many `Parun.Type.*` data modules get
 no spec of their own; their thin testable surface (smart constructors) folds into
 the logic spec that exercises them.
 
-Files live under `source/test-suite/Pawl/`, except `Main.hs` at the test-suite
+Files live under `source/test-suite/Parun/`, except `Main.hs` at the test-suite
 root:
 
 ```
 Main.hs                -- imports each spec, builds testTree, runs defaultMain
-Pawl/Support.hs        -- cross-cutting shared fixtures, answerers, assertions
-Pawl/CoreSpec.hs       -- Pawl.Type.Program (interpreter), Pawl.Quantity
-Pawl/CardSpec.hs       -- Pawl.Card: card data, type-line rules, printings, the lint
-Pawl/SetupSpec.hs      -- Pawl.Setup, Pawl.Type.Deck: setup, decks, opening hands
-Pawl/TurnSpec.hs       -- Pawl.Turn: turn structure, phase schedule, CR 508.8 skips
-Pawl/GameSpec.hs       -- Pawl.Game, Pawl.Engine, Pawl.Action: zones, legal actions, engine steps + engine-rule integration
-Pawl/ManaSpec.hs       -- Pawl.Mana: mana payment, castability
-Pawl/CastSpec.hs       -- Pawl.Cast, Pawl.Stack: cast timing, the stack, discard, summoning sickness
-Pawl/CombatSpec.hs     -- Pawl.Combat: attack/block legality, combat damage, keywords
-Pawl/DamageSpec.hs     -- Pawl.Damage, Pawl.Sba: the damage funnel, deathtouch, trample, SBAs
-Pawl/ResolveSpec.hs    -- Pawl.Resolve, Pawl.Target: targeting, resolution, the CR 608.2b fizzle
-Pawl/ReplaySpec.hs     -- Pawl.Replay: record/replay round-trips
-Pawl/PropertySpec.hs   -- cross-cutting: universal QuickCheck invariants only
+Parun/Support.hs        -- cross-cutting shared fixtures, answerers, assertions
+Parun/CoreSpec.hs       -- Parun.Type.Program (interpreter), Parun.Quantity
+Parun/CardSpec.hs       -- Parun.Card: card data, type-line rules, printings, the lint
+Parun/SetupSpec.hs      -- Parun.Setup, Parun.Type.Deck: setup, decks, opening hands
+Parun/TurnSpec.hs       -- Parun.Turn: turn structure, phase schedule, CR 508.8 skips
+Parun/GameSpec.hs       -- Parun.Game, Parun.Engine, Parun.Action: zones, legal actions, engine steps + engine-rule integration
+Parun/ManaSpec.hs       -- Parun.Mana: mana payment, castability
+Parun/CastSpec.hs       -- Parun.Cast, Parun.Stack: cast timing, the stack, discard, summoning sickness
+Parun/CombatSpec.hs     -- Parun.Combat: attack/block legality, combat damage, keywords
+Parun/DamageSpec.hs     -- Parun.Damage, Parun.Sba: the damage funnel, deathtouch, trample, SBAs
+Parun/ResolveSpec.hs    -- Parun.Resolve, Parun.Target: targeting, resolution, the CR 608.2b fizzle
+Parun/ReplaySpec.hs     -- Parun.Replay: record/replay round-trips
+Parun/PropertySpec.hs   -- cross-cutting: universal QuickCheck invariants only
 ```
 
-Note the naming choice `Pawl.Resolve` + `Pawl.Target` → `Pawl.ResolveSpec` (not a
-`Pawl.TargetSpec`) deliberately avoids overloading `TargetSpec`, which is already
-a type (`Pawl.Type.TargetSpec`).
+Note the naming choice `Parun.Resolve` + `Parun.Target` → `Parun.ResolveSpec` (not a
+`Parun.TargetSpec`) deliberately avoids overloading `TargetSpec`, which is already
+a type (`Parun.Type.TargetSpec`).
 
 ### Intended group assignment
 
@@ -88,22 +88,22 @@ file if that reads better, but the file list above is fixed.
 
 | File | Groups |
 | --- | --- |
-| Pawl.CoreSpec | programTests, quantityTests |
-| Pawl.CardSpec | cardTests, lintTests, m2aCardTests, m2bCardTests, m2cCardTests, basicLandTests |
-| Pawl.SetupSpec | setupTests, greenBlackSetupTests, deckTests |
-| Pawl.TurnSpec | turnTests, turnDataTests, skipTests |
-| Pawl.GameSpec | gameTests, actionTests, objectFactTests, engineTests, ruleTests |
-| Pawl.ManaSpec | manaTests, castabilityTests |
-| Pawl.CastSpec | castTests, castEngineTests, stackTests, discardTests, sicknessTests |
-| Pawl.CombatSpec | combatLegalityTests, declareTests, combatDamageTests, keywordTests, firstStrikeTests, m2bExitTests, defenderTests, vigilanceTests, hasteTests, evasionTests |
-| Pawl.DamageSpec | damageTests, damageEventTests, deathtouchTests, assignmentLegalityTests, trampleTests, trampleDeathtouchTests, sbaTests, creatureSbaTests, m2cPropertyTests |
-| Pawl.ResolveSpec | targetTests, resolveTests, fizzleTests |
-| Pawl.ReplaySpec | replayTests, combatReplayTests |
-| Pawl.PropertySpec | propertyTests (universal invariants only) + the new lands-only-decks property |
+| Parun.CoreSpec | programTests, quantityTests |
+| Parun.CardSpec | cardTests, lintTests, m2aCardTests, m2bCardTests, m2cCardTests, basicLandTests |
+| Parun.SetupSpec | setupTests, greenBlackSetupTests, deckTests |
+| Parun.TurnSpec | turnTests, turnDataTests, skipTests |
+| Parun.GameSpec | gameTests, actionTests, objectFactTests, engineTests, ruleTests |
+| Parun.ManaSpec | manaTests, castabilityTests |
+| Parun.CastSpec | castTests, castEngineTests, stackTests, discardTests, sicknessTests |
+| Parun.CombatSpec | combatLegalityTests, declareTests, combatDamageTests, keywordTests, firstStrikeTests, m2bExitTests, defenderTests, vigilanceTests, hasteTests, evasionTests |
+| Parun.DamageSpec | damageTests, damageEventTests, deathtouchTests, assignmentLegalityTests, trampleTests, trampleDeathtouchTests, sbaTests, creatureSbaTests, m2cPropertyTests |
+| Parun.ResolveSpec | targetTests, resolveTests, fizzleTests |
+| Parun.ReplaySpec | replayTests, combatReplayTests |
+| Parun.PropertySpec | propertyTests (universal invariants only) + the new lands-only-decks property |
 
 `ruleTests` is engine-rules integration (priority rounds, the CR 103.7a draw
 skip, CR 514.2 discard, CR 704.5b deck-out), not card data, so it lands in
-`Pawl.GameSpec` alongside `Pawl.Engine`'s coverage — not in `Pawl.CardSpec`.
+`Parun.GameSpec` alongside `Parun.Engine`'s coverage — not in `Parun.CardSpec`.
 
 Note: `m2cPropertyTests` is misnamed — it holds deterministic HUnit fixture
 tests (a deathtouch coverage case and a documentation-only assertion), not
@@ -111,7 +111,7 @@ QuickCheck properties, so it moves to `DamageSpec`, not `PropertySpec`.
 
 ## Support module
 
-`Pawl.Support` is the test suite's prelude: it holds *only* items used by two or
+`Parun.Support` is the test suite's prelude: it holds *only* items used by two or
 more spec files. Group-local helpers stay in the one spec that uses them.
 
 Shared (into `Support`):
@@ -129,10 +129,10 @@ Shared (into `Support`):
 
 Group-local (stay with their spec):
 
-- `tramplingAnswer` (`Pawl.DamageSpec`), `discardLastAnswer` (`Pawl.CastSpec`),
-  `recordingAnswer`/`askedPlayers` (`Pawl.GameSpec` or `Pawl.CastSpec`, per its
-  group), `boltAnswer`/`twoBoltState` (`Pawl.ResolveSpec`),
-  `boltAtBobsPiker`/`pikerOf` (`Pawl.ResolveSpec`), `fightWith`/`resolvedCreature`
+- `tramplingAnswer` (`Parun.DamageSpec`), `discardLastAnswer` (`Parun.CastSpec`),
+  `recordingAnswer`/`askedPlayers` (`Parun.GameSpec` or `Parun.CastSpec`, per its
+  group), `boltAnswer`/`twoBoltState` (`Parun.ResolveSpec`),
+  `boltAtBobsPiker`/`pikerOf` (`Parun.ResolveSpec`), `fightWith`/`resolvedCreature`
   (their sole user's spec), and any other helper the migration finds is
   referenced from exactly one spec.
 
@@ -173,13 +173,13 @@ feature, not another existence property.
 
 ## Conventions
 
-- Each `Pawl.*Spec` exposes a single `tests :: TestTree` — a `testGroup` named for
+- Each `Parun.*Spec` exposes a single `tests :: TestTree` — a `testGroup` named for
   the subsystem, holding that file's subgroups — and opens with a header comment
   listing the library modules it covers. `Main` imports each spec qualified (alias
-  to last component, e.g. `import qualified Pawl.CombatSpec`) and references
+  to last component, e.g. `import qualified Parun.CombatSpec`) and references
   `CombatSpec.tests` in `testTree`.
-- `Pawl.Support` is imported qualified under the short alias `S`
-  (`import qualified Pawl.Support as S`), so call sites read `S.alice`,
+- `Parun.Support` is imported qualified under the short alias `S`
+  (`import qualified Parun.Support as S`), so call sites read `S.alice`,
   `S.lifeOf`, `S.combatBoardOf`. This is a deliberate, documented exception to the
   alias-to-last-component rule, chosen because these names appear on nearly every
   test line; the short alias keeps the qualified-import discipline without the
@@ -187,7 +187,7 @@ feature, not another existence property.
 - Test modules follow the same Haskell 2010 / no-explicit-export-list /
   qualified-import / no-partial-function style as the library.
 - The test-suite cabal stanza gains `other-modules:` with a
-  `-- cabal-gild: discover source/test-suite` directive so new `Pawl.*Spec` files
+  `-- cabal-gild: discover source/test-suite` directive so new `Parun.*Spec` files
   are auto-registered; `Main.hs` stays `main-is`. The plan's first task verifies
   cabal-gild's discover excludes the `main-is` module; if it does not, the stanza
   hand-lists `other-modules` instead (a fixed ~13-entry list).
@@ -197,23 +197,23 @@ feature, not another existence property.
 Incremental, with the full suite green after every commit — never a big-bang
 move. Roughly:
 
-1. Add `Pawl/Support.hs` with the cross-cutting fixtures/answerers/assertions;
+1. Add `Parun/Support.hs` with the cross-cutting fixtures/answerers/assertions;
    make `Main.hs` import it (`as S`) and drop the now-duplicated definitions.
    Suite green.
-2. For each subsystem file, in turn: create `Pawl/<Area>Spec.hs`, move its groups
+2. For each subsystem file, in turn: create `Parun/<Area>Spec.hs`, move its groups
    and group-local helpers out of `Main.hs`, expose `tests`, wire
    `<Area>Spec.tests` into `Main`'s `testTree`. Suite green after each file. (~12
    small commits.)
 3. Convert the three existence properties to deterministic tests in their new
-   homes; add the lands-only-decks universal property to `Pawl.PropertySpec`.
+   homes; add the lands-only-decks universal property to `Parun.PropertySpec`.
    Suite green.
 4. `Main.hs` ends as imports + `testTree` + `defaultMain` only.
 5. Update CLAUDE.md: replace the "single file / don't split" guidance with the
    new layout and the rule "spec modules near-mirror library modules
-   (`Pawl.Foo` ↔ `Pawl.FooSpec`, `Pawl.` prefixed, each exposing `tests` and
-   heading a comment listing covered modules); shared fixtures → `Pawl.Support`
+   (`Parun.Foo` ↔ `Parun.FooSpec`, `Parun.` prefixed, each exposing `tests` and
+   heading a comment listing covered modules); shared fixtures → `Parun.Support`
    (aliased `S`); group-local helpers stay with their group; a new subsystem gets
-   a new `Pawl.<Area>Spec`."
+   a new `Parun.<Area>Spec`."
 
 ## Verification
 

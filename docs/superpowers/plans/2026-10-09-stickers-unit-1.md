@@ -4,25 +4,25 @@
 
 **Goal:** Land unit 1 of the stickers spec: ticket counters (CR 107.17), sticker sheet data and CR 103.2d's sheet draw, `Object.stickers` with CR 123.5 retention and CR 613.7k stamps, placement of art stickers (CR 123.3, 123.9), the stickered filters (CR 123.4) and the placement event. Proved by Blorbian Buddy, Ticket Turbotubes, Proficient Pyrodancer, Wee Champion and Croakid Amphibonaut. It does not close #872.
 
-**Architecture:** A player brings sheets in `Deck.stickerSheets`; `Setup.createDeck` copies them to `Player.stickerSheets`, and a new `Setup.drawStickerSheets` step writes `Player.chosenStickerSheets` (three drawn through `Prompt.RandomStickerSheet` when more than three were brought). A sticker is a `StickerRef` (owner, sheet position, kind, index within kind). `Object.stickers :: Seq StickerPlacement` is cleared by `Object.newIncarnation` and written back by `Event.changeZoneWithCause`'s `mkObj` when the destination is public, then restamped (CR 613.7k). Availability is computed in a new `Pawl.Engine.Sticker`. One open-half opcode, `Effect.PutSticker`, places through `Prompt.ChooseSticker`; `GameEvent.StickerPut` and `TriggerCondition.PlacesSticker` carry the event. `Filter.HasSticker` and `Filter.Stickered` read a new `Filter.View` field. Sheets are JSON under `data/sticker-sheets/`, loaded by a new registry module `Pawl.StickerSheets`.
+**Architecture:** A player brings sheets in `Deck.stickerSheets`; `Setup.createDeck` copies them to `Player.stickerSheets`, and a new `Setup.drawStickerSheets` step writes `Player.chosenStickerSheets` (three drawn through `Prompt.RandomStickerSheet` when more than three were brought). A sticker is a `StickerRef` (owner, sheet position, kind, index within kind). `Object.stickers :: Seq StickerPlacement` is cleared by `Object.newIncarnation` and written back by `Event.changeZoneWithCause`'s `mkObj` when the destination is public, then restamped (CR 613.7k). Availability is computed in a new `Parun.Engine.Sticker`. One open-half opcode, `Effect.PutSticker`, places through `Prompt.ChooseSticker`; `GameEvent.StickerPut` and `TriggerCondition.PlacesSticker` carry the event. `Filter.HasSticker` and `Filter.Stickered` read a new `Filter.View` field. Sheets are JSON under `data/sticker-sheets/`, loaded by a new registry module `Parun.StickerSheets`.
 
 **Tech Stack:** Haskell (GHC via the repo's nix flake), cabal, tasty.
 **Spec:** docs/superpowers/specs/2026-10-09-stickers-design.md
 
 ## Global Constraints
 
-- Work only in `/Volumes/nvme/Developer/pawl/.claude/worktrees/872-stickers` (branch `872-stickers-unit-1`). Never `cd` to the primary checkout.
-- Before the first build, as a bare command: `/Volumes/nvme/Developer/pawl/script/warm-worktree.sh seed /Volumes/nvme/Developer/pawl/.claude/worktrees/872-stickers`. It copies `cabal.project.local` too; confirm the file is there.
+- Work only in `/Volumes/nvme/Developer/parun/.claude/worktrees/872-stickers` (branch `872-stickers-unit-1`). Never `cd` to the primary checkout.
+- Before the first build, as a bare command: `/Volumes/nvme/Developer/parun/script/warm-worktree.sh seed /Volumes/nvme/Developer/parun/.claude/worktrees/872-stickers`. It copies `cabal.project.local` too; confirm the file is there.
 - `$SCRATCH` is the session scratchpad. Prefix every `cabal` call with `script/with-build-lock.sh`, redirect to `$SCRATCH/<name>.log`, read the file. Never pipe `cabal`.
 - Build: `script/with-build-lock.sh cabal build -v0 all > "$SCRATCH/build.log" 2>&1`.
-- Subtree: `script/with-build-lock.sh cabal test --test-options '--timeout 120s --hide-successes -p Sticker' > "$SCRATCH/sticker.log" 2>&1`. A `-p` pattern holding a space is mangled by `--test-options`; every pattern below is one word. For one that must hold a space, run the built binary (`find dist-newstyle -name pawl-test-suite -type f -perm -u+x`) with `pawl_datadir=$PWD/data`.
+- Subtree: `script/with-build-lock.sh cabal test --test-options '--timeout 120s --hide-successes -p Sticker' > "$SCRATCH/sticker.log" 2>&1`. A `-p` pattern holding a space is mangled by `--test-options`; every pattern below is one word. For one that must hold a space, run the built binary (`find dist-newstyle -name parun-test-suite -type f -perm -u+x`) with `parun_datadir=$PWD/data`.
 - Full suite before each commit: `script/with-build-lock.sh cabal test --test-options '--timeout 120s --hide-successes' > "$SCRATCH/suite.log" 2>&1`. Record the count before Task 1.
 - Mutations: write the sed script to `$SCRATCH/mN.sed`, run `script/with-build-lock.sh script/mutate.sh FILE @$SCRATCH/mN.sed PATTERN`, one at a time, alone in the checkout. Mutate toward less permissive unless a step says why not. Name the assertion that reddened and confirm it is the gameplay one.
-- The rules core never cases on an effect's identity. `Effect.PutSticker` is cased only in `Pawl.Engine.Resolve*` and the exhaustive classification tables. The core cases on `StickerKind` (CR 123.1's classification), never on a sheet or a sticker's text.
-- One type per `Pawl.Types.<TypeName>` module, type and instances only. Constructors take `Mk`. A haddock is one line plus its CR citation, except an elision paragraph or a note naming the proving test.
+- The rules core never cases on an effect's identity. `Effect.PutSticker` is cased only in `Parun.Engine.Resolve*` and the exhaustive classification tables. The core cases on `StickerKind` (CR 123.1's classification), never on a sheet or a sticker's text.
+- One type per `Parun.Types.<TypeName>` module, type and instances only. Constructors take `Mk`. A haddock is one line plus its CR citation, except an elision paragraph or a note naming the proving test.
 - An elision gets an issue and a code-site comment saying only what is not implemented, ending `(#N)`. Unit-4 work (meld, merge, sticker kicker) cites `(#872)`, which stays open.
 - Read CR text from `docs/rules.txt` by rule number. Re-verify Oracle with `curl -s 'https://api.scryfall.com/cards/named?exact=<Name>'` before writing a card.
-- Stage, `hooky fix`, stage again. A new module: stage `pawl.cabal`, run `cabal-gild pawl.cabal`. Card and sheet JSON: `script/format-json.sh fix FILE`.
+- Stage, `hooky fix`, stage again. A new module: stage `parun.cabal`, run `cabal-gild parun.cabal`. Card and sheet JSON: `script/format-json.sh fix FILE`.
 - Never stash; copy aside and move back. Never `git checkout <file>` to revert.
 - Extensions only from `.hlint.yaml`. `case` over `maybe`, `let` over `where`, no backticks in new code.
 - Commit: a subject, at most two sentences of why, then `Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>`. Never put close, fix or resolve beside #872; write "related to #872".
@@ -57,45 +57,45 @@ These are the five input classes most likely to bite. Each has a test in its own
 ## Task 1: ticket counters, Blorbian Buddy and Ticket Turbotubes
 
 **Files:**
-- Modify: `source/libraries/types/Pawl/Types/PlayerCounterKind.hs`, `source/libraries/codec/Pawl/Codec/PlayerCounterKindSpec.hs`
+- Modify: `source/libraries/types/Parun/Types/PlayerCounterKind.hs`, `source/libraries/codec/Parun/Codec/PlayerCounterKindSpec.hs`
 - Modify: `data/cards/aetheric-amplifier.json`
 - Create: `data/cards/blorbian-buddy.json`, `data/cards/ticket-turbotubes.json`
-- Create: `source/libraries/test/Pawl/StickerSpec.hs`; Modify: `source/libraries/test/Pawl/Test.hs`, `pawl.cabal`
+- Create: `source/libraries/test/Parun/StickerSpec.hs`; Modify: `source/libraries/test/Parun/Test.hs`, `parun.cabal`
 
 **Interfaces:**
-- Produces: `PlayerCounterKind.Ticket :: PlayerCounterKind`; `Pawl.StickerSpec.spec :: (Monad n) => Spec.Spec IO n -> Registry.Registry IO -> n ()`; spec helper `mainPhaseForAlice :: GameState.GameState -> GameState.GameState`.
+- Produces: `PlayerCounterKind.Ticket :: PlayerCounterKind`; `Parun.StickerSpec.spec :: (Monad n) => Spec.Spec IO n -> Registry.Registry IO -> n ()`; spec helper `mainPhaseForAlice :: GameState.GameState -> GameState.GameState`.
 - Consumes: `Activatable.abilitiesFor`, `Activate.activateAbility`, `Stack.resolveTop`, `S.playerCounterOf`, `S.addPlayerCounter`.
 
 - [ ] **Step 1: Verify Oracle.** Expected (Scryfall, 2026-10-09):
   - Blorbian Buddy `{G}` Creature — Alien Guest 1/1: "Trample\n{G}, {T}: You get {TK} (a ticket counter)."
   - Ticket Turbotubes `{3}` Artifact: "{T}: Add one mana of any color.\n{3}, {T}: You get {TK} (a ticket counter)."
 
-- [ ] **Step 2: Write the failing tests.** Create `source/libraries/test/Pawl/StickerSpec.hs`:
+- [ ] **Step 2: Write the failing tests.** Create `source/libraries/test/Parun/StickerSpec.hs`:
 
 ```haskell
 {-# LANGUAGE GADTs #-}
 
 -- Covers CR 107.17's ticket counters, CR 103.2d's sheet draw
--- (Pawl.Engine.Setup), and CR 123's stickers: Pawl.Engine.Sticker,
--- Effect.PutSticker (Pawl.Engine.Resolve.Effect), the CR 123.5 write-back in
--- Pawl.Engine.Event, Filter.HasSticker and Filter.Stickered, and
+-- (Parun.Engine.Setup), and CR 123's stickers: Parun.Engine.Sticker,
+-- Effect.PutSticker (Parun.Engine.Resolve.Effect), the CR 123.5 write-back in
+-- Parun.Engine.Event, Filter.HasSticker and Filter.Stickered, and
 -- TriggerCondition.PlacesSticker.
-module Pawl.StickerSpec where
+module Parun.StickerSpec where
 
 import qualified Data.Sequence as Seq
-import qualified Pawl.Engine.Activatable as Activatable
-import qualified Pawl.Engine.Activate as Activate
-import qualified Pawl.Engine.Setup as Setup
-import qualified Pawl.Engine.Stack as Stack
-import qualified Pawl.Registry as Registry
-import qualified Pawl.Spec as Spec
-import qualified Pawl.Support as S
-import qualified Pawl.Types.GameSettings as GameSettings
-import qualified Pawl.Types.GameState as GameState
-import qualified Pawl.Types.ModeIndex as ModeIndex
-import qualified Pawl.Types.Phase as Phase
-import qualified Pawl.Types.PlayerCounterKind as PlayerCounterKind
-import qualified Pawl.Types.Prompt as Prompt
+import qualified Parun.Engine.Activatable as Activatable
+import qualified Parun.Engine.Activate as Activate
+import qualified Parun.Engine.Setup as Setup
+import qualified Parun.Engine.Stack as Stack
+import qualified Parun.Registry as Registry
+import qualified Parun.Spec as Spec
+import qualified Parun.Support as S
+import qualified Parun.Types.GameSettings as GameSettings
+import qualified Parun.Types.GameState as GameState
+import qualified Parun.Types.ModeIndex as ModeIndex
+import qualified Parun.Types.Phase as Phase
+import qualified Parun.Types.PlayerCounterKind as PlayerCounterKind
+import qualified Parun.Types.Prompt as Prompt
 
 -- Alice active with priority in her precombat main phase.
 mainPhaseForAlice :: GameState.GameState -> GameState.GameState
@@ -136,7 +136,7 @@ spec s registry = Spec.describe s "Sticker" $ do
     Spec.assertEqWith s "CR 701.10e alice has six ticket counters" (S.playerCounterOf PlayerCounterKind.Ticket S.alice after) 6
 ```
 
-Read `Activatable.abilitiesFor`'s haddock to confirm it lists a mana ability among the printed ones in printed order; if not, Turbotubes' and Amplifier's patterns become `[tickets]`/`[doubling]`. Wire it into `Pawl.Test` (`import qualified Pawl.StickerSpec`, `Pawl.StickerSpec.spec s registry` beside `Pawl.AnteSpec`), stage `pawl.cabal`, run `cabal-gild pawl.cabal`.
+Read `Activatable.abilitiesFor`'s haddock to confirm it lists a mana ability among the printed ones in printed order; if not, Turbotubes' and Amplifier's patterns become `[tickets]`/`[doubling]`. Wire it into `Parun.Test` (`import qualified Parun.StickerSpec`, `Parun.StickerSpec.spec s registry` beside `Parun.AnteSpec`), stage `parun.cabal`, run `cabal-gild parun.cabal`.
 
 In `PlayerCounterKindSpec`, after "Energy":
 
@@ -159,7 +159,7 @@ In `PlayerCounterKindSpec`, after "Energy":
   | Poison -- CR 122.1f
 ```
 
-`Pawl.Codec.PlayerCounterKind` is `Arm.enum`, so the tag is derived. No exhaustive `case` over the type exists (`grep -rn 'PlayerCounterKind.Rad\b' source --include='*.hs'` hits only `Pawl.Engine.Rad`'s lookups); record that in the PR.
+`Parun.Codec.PlayerCounterKind` is `Arm.enum`, so the tag is derived. No exhaustive `case` over the type exists (`grep -rn 'PlayerCounterKind.Rad\b' source --include='*.hs'` hits only `Parun.Engine.Rad`'s lookups); record that in the PR.
 
 `data/cards/aetheric-amplifier.json`: per the type's haddock, add after the Energy `GainPlayerCounters` in the second mode:
 
@@ -277,9 +277,9 @@ Run `script/format-json.sh fix` on all three cards.
 ## Task 2: sticker vocabulary types and codecs
 
 **Files:**
-- Create types: `source/libraries/types/Pawl/Types/{StickerKind,StickerRef,StickerPlacement,AbilitySticker,PowerToughnessSticker,StickerSheet}.hs`
-- Create codecs: `source/libraries/codec/Pawl/Codec/{StickerKind,StickerRef,StickerPlacement,AbilitySticker,PowerToughnessSticker,StickerSheet}.hs`
-- Create specs: `source/libraries/codec/Pawl/Codec/StickerKindSpec.hs`, `source/libraries/codec/Pawl/Codec/StickerSheetSpec.hs`; Modify `Pawl.Test`, `pawl.cabal`
+- Create types: `source/libraries/types/Parun/Types/{StickerKind,StickerRef,StickerPlacement,AbilitySticker,PowerToughnessSticker,StickerSheet}.hs`
+- Create codecs: `source/libraries/codec/Parun/Codec/{StickerKind,StickerRef,StickerPlacement,AbilitySticker,PowerToughnessSticker,StickerSheet}.hs`
+- Create specs: `source/libraries/codec/Parun/Codec/StickerKindSpec.hs`, `source/libraries/codec/Parun/Codec/StickerSheetSpec.hs`; Modify `Parun.Test`, `parun.cabal`
 
 **Interfaces:**
 - Produces: `StickerKind = Name | Ability | PowerToughness | Art`; `StickerRef.MkStickerRef {owner :: PlayerId, sheet :: Natural, kind :: StickerKind, index :: Natural}`; `StickerPlacement.MkStickerPlacement {sticker :: StickerRef, timestamp :: Timestamp}`; `AbilitySticker.MkAbilitySticker {tickets :: Natural, keywords :: Map Keyword Natural, abilities :: [GrantedAbility Card]}`; `PowerToughnessSticker.MkPowerToughnessSticker {tickets :: Natural, power :: Integer, toughness :: Integer}`; `StickerSheet.MkStickerSheet {number, name, names, art, abilities, powerToughness, oracleText}`; one `codec` per module.
@@ -287,15 +287,15 @@ Run `script/format-json.sh fix` on all three cards.
 - [ ] **Step 1: Write the failing codec tests.** `StickerKindSpec.hs`:
 
 ```haskell
-module Pawl.Codec.StickerKindSpec where
+module Parun.Codec.StickerKindSpec where
 
-import qualified Pawl.Codec.StickerKind as StickerKind
-import qualified Pawl.JsonCodec.Common as Common
-import qualified Pawl.Spec as Spec
-import qualified Pawl.Types.StickerKind as StickerKind
+import qualified Parun.Codec.StickerKind as StickerKind
+import qualified Parun.JsonCodec.Common as Common
+import qualified Parun.Spec as Spec
+import qualified Parun.Types.StickerKind as StickerKind
 
 spec :: (Monad m, Monad n) => Spec.Spec m n -> n ()
-spec s = Spec.describe s "Pawl.Codec.StickerKind" $ do
+spec s = Spec.describe s "Parun.Codec.StickerKind" $ do
   Spec.it s "Art" $ Common.assertCodec s StickerKind.codec StickerKind.Art " {\"type\":\"Art\"} "
   Spec.it s "round trips every constructor" $ Common.assertEnumCodec s StickerKind.codec
   Spec.it s "has a schema" $ Common.assertHasSchema s StickerKind.codec
@@ -304,19 +304,19 @@ spec s = Spec.describe s "Pawl.Codec.StickerKind" $ do
 `StickerSheetSpec.hs` (decode, then round trip, so the test does not pin key order):
 
 ```haskell
-module Pawl.Codec.StickerSheetSpec where
+module Parun.Codec.StickerSheetSpec where
 
 import qualified Data.Map.Strict as Map
 import qualified Data.Sequence as Seq
 import qualified Data.Text as Text
-import qualified Pawl.Codec.StickerSheet as StickerSheet
-import qualified Pawl.JsonCodec.Codec as Codec
-import qualified Pawl.JsonCodec.Common as Common
-import qualified Pawl.Spec as Spec
-import qualified Pawl.Types.AbilitySticker as AbilitySticker
-import qualified Pawl.Types.Keyword as Keyword
-import qualified Pawl.Types.PowerToughnessSticker as PowerToughnessSticker
-import qualified Pawl.Types.StickerSheet as StickerSheet
+import qualified Parun.Codec.StickerSheet as StickerSheet
+import qualified Parun.JsonCodec.Codec as Codec
+import qualified Parun.JsonCodec.Common as Common
+import qualified Parun.Spec as Spec
+import qualified Parun.Types.AbilitySticker as AbilitySticker
+import qualified Parun.Types.Keyword as Keyword
+import qualified Parun.Types.PowerToughnessSticker as PowerToughnessSticker
+import qualified Parun.Types.StickerSheet as StickerSheet
 
 -- CR 123.2: Ancestral Hot Dog Minotaur, whose middle name sticker is two words.
 minotaur :: StickerSheet.StickerSheet
@@ -340,7 +340,7 @@ minotaur =
     }
 
 spec :: (Monad m, Monad n) => Spec.Spec m n -> n ()
-spec s = Spec.describe s "Pawl.Codec.StickerSheet" $ do
+spec s = Spec.describe s "Parun.Codec.StickerSheet" $ do
   Spec.it s "decodes a sheet" $ do
     v <- Common.assertJson s " {\"number\":23,\"name\":\"Ancestral Hot Dog Minotaur\",\"names\":[\"Ancestral\",\"Hot Dog\",\"Minotaur\"],\"art\":3,\"abilities\":[{\"tickets\":2,\"keywords\":[{\"type\":\"Afflict\",\"value\":2}]},{\"tickets\":3,\"keywords\":[{\"type\":\"Flying\"}]}],\"powerToughness\":[{\"tickets\":2,\"power\":1,\"toughness\":4},{\"tickets\":5,\"power\":8,\"toughness\":6}]} "
     Spec.assertEq s (Codec.decode StickerSheet.codec v) (Right minotaur)
@@ -349,16 +349,16 @@ spec s = Spec.describe s "Pawl.Codec.StickerSheet" $ do
   Spec.it s "has a schema" $ Common.assertHasSchema s StickerSheet.codec
 ```
 
-Check `Codec.decode`'s argument order against `Pawl.Registry.parseCard` (`Codec.decode Card.codec`) and that `Common.assertJson` returns the parsed value (FaceSpec's "an ante card decodes its flag"). Wire both specs into `Pawl.Test`.
+Check `Codec.decode`'s argument order against `Parun.Registry.parseCard` (`Codec.decode Card.codec`) and that `Common.assertJson` returns the parsed value (FaceSpec's "an ante card decodes its flag"). Wire both specs into `Parun.Test`.
 
-- [ ] **Step 2: Run; expected failure** "Could not find module 'Pawl.Codec.StickerKind'".
+- [ ] **Step 2: Run; expected failure** "Could not find module 'Parun.Codec.StickerKind'".
 
 - [ ] **Step 3: Write the types.**
 
-`Pawl/Types/StickerKind.hs`:
+`Parun/Types/StickerKind.hs`:
 
 ```haskell
-module Pawl.Types.StickerKind where
+module Parun.Types.StickerKind where
 
 -- | CR 123.1: the four kinds of sticker. A classification the closed half
 -- cases on, CounterKind's standing; Ord is load-bearing (Set keys).
@@ -374,14 +374,14 @@ data StickerKind
   deriving (Bounded, Enum, Eq, Ord, Show)
 ```
 
-`Pawl/Types/StickerRef.hs`:
+`Parun/Types/StickerRef.hs`:
 
 ```haskell
-module Pawl.Types.StickerRef where
+module Parun.Types.StickerRef where
 
 import qualified Numeric.Natural as Natural
-import qualified Pawl.Types.PlayerId as PlayerId
-import qualified Pawl.Types.StickerKind as StickerKind
+import qualified Parun.Types.PlayerId as PlayerId
+import qualified Parun.Types.StickerKind as StickerKind
 
 -- | CR 123.3a: one sticker, by where it is printed, never by its text.
 data StickerRef = MkStickerRef
@@ -396,13 +396,13 @@ data StickerRef = MkStickerRef
   deriving (Eq, Ord, Show)
 ```
 
-`Pawl/Types/StickerPlacement.hs`:
+`Parun/Types/StickerPlacement.hs`:
 
 ```haskell
-module Pawl.Types.StickerPlacement where
+module Parun.Types.StickerPlacement where
 
-import qualified Pawl.Types.StickerRef as StickerRef
-import qualified Pawl.Types.Timestamp as Timestamp
+import qualified Parun.Types.StickerRef as StickerRef
+import qualified Parun.Types.Timestamp as Timestamp
 
 -- | CR 123.1: a sticker on an object.
 data StickerPlacement = MkStickerPlacement
@@ -413,16 +413,16 @@ data StickerPlacement = MkStickerPlacement
   deriving (Eq, Ord, Show)
 ```
 
-`Pawl/Types/AbilitySticker.hs`:
+`Parun/Types/AbilitySticker.hs`:
 
 ```haskell
-module Pawl.Types.AbilitySticker where
+module Parun.Types.AbilitySticker where
 
 import qualified Data.Map.Strict as Map
 import qualified Numeric.Natural as Natural
-import qualified Pawl.Types.Card as Card
-import qualified Pawl.Types.GrantedAbility as GrantedAbility
-import qualified Pawl.Types.Keyword as Keyword
+import qualified Parun.Types.Card as Card
+import qualified Parun.Types.GrantedAbility as GrantedAbility
+import qualified Parun.Types.Keyword as Keyword
 
 -- | CR 123.7: an ability sticker, its abilities in the card DSL.
 data AbilitySticker = MkAbilitySticker
@@ -436,10 +436,10 @@ data AbilitySticker = MkAbilitySticker
   deriving (Eq, Ord, Show)
 ```
 
-`Pawl/Types/PowerToughnessSticker.hs`:
+`Parun/Types/PowerToughnessSticker.hs`:
 
 ```haskell
-module Pawl.Types.PowerToughnessSticker where
+module Parun.Types.PowerToughnessSticker where
 
 import qualified Numeric.Natural as Natural
 
@@ -453,16 +453,16 @@ data PowerToughnessSticker = MkPowerToughnessSticker
   deriving (Eq, Ord, Show)
 ```
 
-`Pawl/Types/StickerSheet.hs`:
+`Parun/Types/StickerSheet.hs`:
 
 ```haskell
-module Pawl.Types.StickerSheet where
+module Parun.Types.StickerSheet where
 
 import qualified Data.Sequence as Seq
 import qualified Data.Text as Text
 import qualified Numeric.Natural as Natural
-import qualified Pawl.Types.AbilitySticker as AbilitySticker
-import qualified Pawl.Types.PowerToughnessSticker as PowerToughnessSticker
+import qualified Parun.Types.AbilitySticker as AbilitySticker
+import qualified Parun.Types.PowerToughnessSticker as PowerToughnessSticker
 
 -- | CR 123.2: one sticker sheet. Not a card; no characteristics.
 data StickerSheet = MkStickerSheet
@@ -475,7 +475,7 @@ data StickerSheet = MkStickerSheet
     art :: Natural.Natural,
     abilities :: Seq.Seq AbilitySticker.AbilitySticker,
     powerToughness :: Seq.Seq PowerToughnessSticker.PowerToughnessSticker,
-    -- | MTGJSON's text, which Pawl.StickerSpec's lint ties the fields above to.
+    -- | MTGJSON's text, which Parun.StickerSpec's lint ties the fields above to.
     oracleText :: Maybe Text.Text
   }
   deriving (Eq, Ord, Show)
@@ -484,7 +484,7 @@ data StickerSheet = MkStickerSheet
 - [ ] **Step 4: Write the codecs.** `StickerKind`: `codec = Arm.enum` (PlayerCounterKind's module, renamed). The rest are `Fields.object` with `{-# LANGUAGE ApplicativeDo #-}`, fields in declaration order:
 
 ```haskell
--- Pawl/Codec/StickerRef.hs
+-- Parun/Codec/StickerRef.hs
 codec :: Codec.Codec StickerRef.StickerRef
 codec = Fields.object $ do
   owner <- Fields.required "owner" PlayerId.codec StickerRef.owner
@@ -493,14 +493,14 @@ codec = Fields.object $ do
   index <- Fields.required "index" Common.natural StickerRef.index
   pure StickerRef.MkStickerRef {StickerRef.owner = owner, StickerRef.sheet = sheet, StickerRef.kind = kind, StickerRef.index = index}
 
--- Pawl/Codec/StickerPlacement.hs
+-- Parun/Codec/StickerPlacement.hs
 codec :: Codec.Codec StickerPlacement.StickerPlacement
 codec = Fields.object $ do
   sticker <- Fields.required "sticker" StickerRef.codec StickerPlacement.sticker
   timestamp <- Fields.required "timestamp" Timestamp.codec StickerPlacement.timestamp
   pure StickerPlacement.MkStickerPlacement {StickerPlacement.sticker = sticker, StickerPlacement.timestamp = timestamp}
 
--- Pawl/Codec/AbilitySticker.hs
+-- Parun/Codec/AbilitySticker.hs
 codec :: Codec.Codec AbilitySticker.AbilitySticker
 codec = Fields.object $ do
   tickets <- Fields.required "tickets" Common.natural AbilitySticker.tickets
@@ -508,7 +508,7 @@ codec = Fields.object $ do
   abilities <- Fields.defaulted "abilities" [] (Common.list (GrantedAbility.codec Card.codec)) AbilitySticker.abilities
   pure AbilitySticker.MkAbilitySticker {AbilitySticker.tickets = tickets, AbilitySticker.keywords = keywords, AbilitySticker.abilities = abilities}
 
--- Pawl/Codec/PowerToughnessSticker.hs
+-- Parun/Codec/PowerToughnessSticker.hs
 codec :: Codec.Codec PowerToughnessSticker.PowerToughnessSticker
 codec = Fields.object $ do
   tickets <- Fields.required "tickets" Common.natural PowerToughnessSticker.tickets
@@ -516,7 +516,7 @@ codec = Fields.object $ do
   toughness <- Fields.required "toughness" Common.integer PowerToughnessSticker.toughness
   pure PowerToughnessSticker.MkPowerToughnessSticker {PowerToughnessSticker.tickets = tickets, PowerToughnessSticker.power = power, PowerToughnessSticker.toughness = toughness}
 
--- Pawl/Codec/StickerSheet.hs
+-- Parun/Codec/StickerSheet.hs
 codec :: Codec.Codec StickerSheet.StickerSheet
 codec = Fields.object $ do
   number <- Fields.required "number" Common.natural StickerSheet.number
@@ -529,7 +529,7 @@ codec = Fields.object $ do
   pure StickerSheet.MkStickerSheet {StickerSheet.number = number, StickerSheet.name = name, StickerSheet.names = names, StickerSheet.art = art, StickerSheet.abilities = abilities, StickerSheet.powerToughness = powerToughness, StickerSheet.oracleText = oracleText}
 ```
 
-Import aliases: `Pawl.Codec.PlayerId as PlayerId`, `Pawl.Codec.Timestamp as Timestamp`, `Pawl.Codec.Keyword as Keyword`, `Pawl.Codec.GrantedAbility as GrantedAbility`, `Pawl.Codec.Card as Card` (DelayedTrigger's pair), `Pawl.JsonCodec.{Codec,Common,Fields,Arm}`. A codec module's haddock: one line, Pawl.Codec.CounterPlacement's "A bare object keyed by the record's field names".
+Import aliases: `Parun.Codec.PlayerId as PlayerId`, `Parun.Codec.Timestamp as Timestamp`, `Parun.Codec.Keyword as Keyword`, `Parun.Codec.GrantedAbility as GrantedAbility`, `Parun.Codec.Card as Card` (DelayedTrigger's pair), `Parun.JsonCodec.{Codec,Common,Fields,Arm}`. A codec module's haddock: one line, Parun.Codec.CounterPlacement's "A bare object keyed by the record's field names".
 
 - [ ] **Step 5: Run** `-p StickerKind`, `-p StickerSheet`, then the full suite. Expected: green.
 - [ ] **Step 6: Mutate.** Not applicable: codec round trips are their own observers. Say so in the PR.
@@ -541,14 +541,14 @@ Import aliases: `Pawl.Codec.PlayerId as PlayerId`, `Pawl.Codec.Timestamp as Time
 
 **Files:**
 - Create: `data/sticker-sheets/{night-brushwagg-ringmaster,slimy-burrito-illusion,contortionist-otter-storm,ancestral-hot-dog-minotaur}.json`
-- Create: `source/libraries/registry/Pawl/StickerSheets.hs`
-- Modify: `pawl.cabal` (`data-files: sticker-sheets/*.json`), `.hooky.kdl` (the `json` hook's `files` gains `"data/sticker-sheets/*.json"`)
-- Modify: `source/libraries/executable/Pawl/Executable.hs` (`ingest` stamps sheets)
-- Modify: `source/libraries/test/Pawl/StickerSpec.hs` (the lint and `committedSheets`)
+- Create: `source/libraries/registry/Parun/StickerSheets.hs`
+- Modify: `parun.cabal` (`data-files: sticker-sheets/*.json`), `.hooky.kdl` (the `json` hook's `files` gains `"data/sticker-sheets/*.json"`)
+- Modify: `source/libraries/executable/Parun/Executable.hs` (`ingest` stamps sheets)
+- Modify: `source/libraries/test/Parun/StickerSpec.hs` (the lint and `committedSheets`)
 
 **Interfaces:**
 - Produces: `StickerSheets.defaultRoot :: IO FilePath`; `StickerSheets.parse :: ByteString -> Either Text StickerSheet`; `StickerSheets.loadRoot :: FilePath -> IO [(FilePath, Either Text StickerSheet)]`; spec helper `committedSheets :: IO [StickerSheet.StickerSheet]`.
-- Consumes: `Pawl.Codec.StickerSheet.codec`, `Pawl.Oracle.normalise`, `Pawl.Oracle.printed`, `Pawl.Slug.fromText`.
+- Consumes: `Parun.Codec.StickerSheet.codec`, `Parun.Oracle.normalise`, `Parun.Oracle.printed`, `Parun.Slug.fromText`.
 
 Sheets chosen: the fewest that give a test more than three (four), each ability sticker already expressed by a card in `data/cards/`:
 
@@ -561,9 +561,9 @@ Sheets chosen: the fewest that give a test more than three (four), each ability 
 
 Sheet 15 puts a `GrantedAbility.Activated` through the codec; sheet 23 exercises the hand-split two-word name sticker.
 
-- [ ] **Step 1: Verify the sheets.** `curl -s -H 'User-Agent: pawl' 'https://api.scryfall.com/cards/search?q=set%3Asunf+cn%3A3'` (and 9, 15, 23); diff `oracle_text` against the files below. They are Scryfall's text as of 2026-10-09.
+- [ ] **Step 1: Verify the sheets.** `curl -s -H 'User-Agent: parun' 'https://api.scryfall.com/cards/search?q=set%3Asunf+cn%3A3'` (and 9, 15, 23); diff `oracle_text` against the files below. They are Scryfall's text as of 2026-10-09.
 
-- [ ] **Step 2: Write the failing lint.** In `StickerSpec`, add imports (`Data.Foldable as Foldable`, `Data.List as List`, `Data.Map.Strict as Map`, `Data.Maybe as Maybe`, `Data.Text as Text`, `Pawl.Oracle as Oracle`, `Pawl.Slug as Slug`, `Pawl.StickerSheets as StickerSheets`, `Pawl.Types.AbilitySticker as AbilitySticker`, `Pawl.Types.PowerToughnessSticker as PowerToughnessSticker`, `Pawl.Types.StickerSheet as StickerSheet`), then:
+- [ ] **Step 2: Write the failing lint.** In `StickerSpec`, add imports (`Data.Foldable as Foldable`, `Data.List as List`, `Data.Map.Strict as Map`, `Data.Maybe as Maybe`, `Data.Text as Text`, `Parun.Oracle as Oracle`, `Parun.Slug as Slug`, `Parun.StickerSheets as StickerSheets`, `Parun.Types.AbilitySticker as AbilitySticker`, `Parun.Types.PowerToughnessSticker as PowerToughnessSticker`, `Parun.Types.StickerSheet as StickerSheet`), then:
 
 ```haskell
 -- The four committed sheets, in this order; fewer if one is missing, which
@@ -619,39 +619,39 @@ and in `spec`:
     Spec.assertEqWith s "every sheet agrees with its text" (Maybe.mapMaybe offends loaded) []
 ```
 
-`Text.pack " \8212 "` is " — " (U+2014), the separator Scryfall and MTGJSON print. Confirm `Slug.unwrap` and `Slug.fromText` against `Pawl.Registry.slugFor`.
+`Text.pack " \8212 "` is " — " (U+2014), the separator Scryfall and MTGJSON print. Confirm `Slug.unwrap` and `Slug.fromText` against `Parun.Registry.slugFor`.
 
-- [ ] **Step 3: Run; expected failure** "Could not find module 'Pawl.StickerSheets'".
+- [ ] **Step 3: Run; expected failure** "Could not find module 'Parun.StickerSheets'".
 
-- [ ] **Step 4: Write the loader.** `source/libraries/registry/Pawl/StickerSheets.hs`, `Pawl.Registry`'s `parseCard`/`loadRoot`/`defaultRoot` over the sheet codec:
+- [ ] **Step 4: Write the loader.** `source/libraries/registry/Parun/StickerSheets.hs`, `Parun.Registry`'s `parseCard`/`loadRoot`/`defaultRoot` over the sheet codec:
 
 ```haskell
--- CR 123.2: the sticker sheets pawl ships, one per file under
--- data/sticker-sheets, read the way Pawl.Registry reads cards. Sheets are not
+-- CR 123.2: the sticker sheets parun ships, one per file under
+-- data/sticker-sheets, read the way Parun.Registry reads cards. Sheets are not
 -- cards, so they are not in the card registry.
-module Pawl.StickerSheets where
+module Parun.StickerSheets where
 
 import qualified Data.ByteString as ByteString
 import qualified Data.List as List
 import qualified Data.Text as Text
 import qualified Data.Text.Encoding as Encoding
-import qualified Paths_pawl as Paths
-import qualified Pawl.Codec.StickerSheet as StickerSheet
-import qualified Pawl.JsonCodec.Codec as Codec
-import qualified Pawl.JsonCodec.Common as Common
-import qualified Pawl.Types.StickerSheet as StickerSheet.Type
+import qualified Paths_parun as Paths
+import qualified Parun.Codec.StickerSheet as StickerSheet
+import qualified Parun.JsonCodec.Codec as Codec
+import qualified Parun.JsonCodec.Common as Common
+import qualified Parun.Types.StickerSheet as StickerSheet.Type
 
--- The sheet corpus's default root, Pawl.Registry.defaultRoot's posture.
+-- The sheet corpus's default root, Parun.Registry.defaultRoot's posture.
 defaultRoot :: IO FilePath
 defaultRoot = Paths.getDataFileName "sticker-sheets"
 
--- What a sheet file's bytes mean, Pawl.Registry.parseCard's posture.
+-- What a sheet file's bytes mean, Parun.Registry.parseCard's posture.
 parse :: ByteString.ByteString -> Either Text.Text StickerSheet.Type.StickerSheet
 parse bytes = do
   contents <- either (\err -> Left (Text.pack ("not valid UTF-8: " <> show err))) Right (Encoding.decodeUtf8' bytes)
   Common.parse contents >>= Codec.decode StickerSheet.codec
 
--- Every sheet file in a root, ascending by path, Pawl.Registry.loadRoot's posture.
+-- Every sheet file in a root, ascending by path, Parun.Registry.loadRoot's posture.
 loadRoot :: FilePath -> IO [(FilePath, Either Text.Text StickerSheet.Type.StickerSheet)]
 loadRoot root = do
   entries <- fmap List.sort (Directory.listDirectory root)
@@ -659,7 +659,7 @@ loadRoot root = do
   mapM (\path -> fmap (\bytes -> (path, parse bytes)) (ByteString.readFile path)) paths
 ```
 
-Add `import qualified System.Directory as Directory`. In `pawl.cabal`, add `sticker-sheets/*.json` to `data-files`. Stage `pawl.cabal`, run `cabal-gild pawl.cabal`.
+Add `import qualified System.Directory as Directory`. In `parun.cabal`, add `sticker-sheets/*.json` to `data-files`. Stage `parun.cabal`, run `cabal-gild parun.cabal`.
 
 - [ ] **Step 5: Write the sheets.** `data/sticker-sheets/night-brushwagg-ringmaster.json`:
 
@@ -774,7 +774,7 @@ Add `import qualified System.Directory as Directory`. In `pawl.cabal`, add `stic
 
 Add `"data/sticker-sheets/*.json"` to `.hooky.kdl`'s `json` hook `files`; run `script/format-json.sh fix data/sticker-sheets/*.json`.
 
-- [ ] **Step 6: Stamp sheets in `pawl ingest`.** In `Pawl.Executable.ingest`, after the `stamped` line:
+- [ ] **Step 6: Stamp sheets in `parun ingest`.** In `Parun.Executable.ingest`, after the `stamped` line:
 
 ```haskell
       sheetRoot <- StickerSheets.defaultRoot
@@ -796,7 +796,7 @@ stampSheet (exact, _) (file, sheet) =
         else True <$ ByteString.writeFile file (Encoding.encodeUtf8 (Common.render (Codec.encode StickerSheet.codec stamped)))
 ```
 
-Imports: `Pawl.StickerSheets as StickerSheets`, `Pawl.Codec.StickerSheet as StickerSheet`, `Pawl.Types.StickerSheet as StickerSheet.Type`; check the module's existing aliases for `Maybe`, `Map`, `Encoding`. If `_scratch/AtomicCards.json` is present, run the ingest (CLAUDE.md's `jq -f script/ingest/candidates.jq` then `pawl ingest`) and `script/format-json.sh fix` any sheet it rewrites; MTGJSON's `texts` reduction covers every card, the funny ones included. If the dump is absent, say so in the PR.
+Imports: `Parun.StickerSheets as StickerSheets`, `Parun.Codec.StickerSheet as StickerSheet`, `Parun.Types.StickerSheet as StickerSheet.Type`; check the module's existing aliases for `Maybe`, `Map`, `Encoding`. If `_scratch/AtomicCards.json` is present, run the ingest (CLAUDE.md's `jq -f script/ingest/candidates.jq` then `parun ingest`) and `script/format-json.sh fix` any sheet it rewrites; MTGJSON's `texts` reduction covers every card, the funny ones included. If the dump is absent, say so in the PR.
 
 - [ ] **Step 7: Run** `-p Sticker`, then the full suite. Expected: green.
 - [ ] **Step 8: Mutate.** `m3.sed` on `data/sticker-sheets/ancestral-hot-dog-minotaur.json`: `s/"power": 8, "tickets": 5/"power": 8, "tickets": 4/` (one line once formatted; anchor on the `"power": 8` line if jq splits it). Pattern `Sticker`. Expected red: "every sheet agrees with its text", naming "P/T ticket costs".
@@ -807,11 +807,11 @@ Imports: `Pawl.StickerSheets as StickerSheets`, `Pawl.Codec.StickerSheet as Stic
 ## Task 4: bringing sheets and CR 103.2d's draw
 
 **Files:**
-- Modify: `source/libraries/types/Pawl/Types/Deck.hs`, every `Deck.MkDeck` site (Step 3)
-- Modify: `source/libraries/types/Pawl/Types/Player.hs`, `source/libraries/codec/Pawl/Codec/Player.hs`, `source/libraries/codec/Pawl/Codec/PlayerSpec.hs`, `source/libraries/test/Pawl/DamageSpec.hs` (line 1434)
-- Modify: `source/libraries/types/Pawl/Types/Prompt.hs`, `source/libraries/types/Pawl/Types/Response.hs`, `source/libraries/engine/Pawl/Engine/Replay.hs`, `source/libraries/engine/Pawl/Engine/Game.hs` (the random-prompt comment), `source/libraries/scenario/Pawl/Scenario/Prompt.hs`, `source/libraries/scenario/Pawl/Scenario.hs`, `source/libraries/scenario/Pawl/Scenario/Reply.hs`, `source/libraries/test/Pawl/ReplaySpec.hs`
-- Modify: `source/libraries/engine/Pawl/Engine/Setup.hs` (`gameWith`, `createDeck`, `newGame`, `startGameFromCards`, `resetPlayers`, new `drawStickerSheets`)
-- Modify: `source/libraries/test/Pawl/StickerSpec.hs`
+- Modify: `source/libraries/types/Parun/Types/Deck.hs`, every `Deck.MkDeck` site (Step 3)
+- Modify: `source/libraries/types/Parun/Types/Player.hs`, `source/libraries/codec/Parun/Codec/Player.hs`, `source/libraries/codec/Parun/Codec/PlayerSpec.hs`, `source/libraries/test/Parun/DamageSpec.hs` (line 1434)
+- Modify: `source/libraries/types/Parun/Types/Prompt.hs`, `source/libraries/types/Parun/Types/Response.hs`, `source/libraries/engine/Parun/Engine/Replay.hs`, `source/libraries/engine/Parun/Engine/Game.hs` (the random-prompt comment), `source/libraries/scenario/Parun/Scenario/Prompt.hs`, `source/libraries/scenario/Parun/Scenario.hs`, `source/libraries/scenario/Parun/Scenario/Reply.hs`, `source/libraries/test/Parun/ReplaySpec.hs`
+- Modify: `source/libraries/engine/Parun/Engine/Setup.hs` (`gameWith`, `createDeck`, `newGame`, `startGameFromCards`, `resetPlayers`, new `drawStickerSheets`)
+- Modify: `source/libraries/test/Parun/StickerSpec.hs`
 
 **Interfaces:**
 - Produces: `Deck.stickerSheets :: Seq StickerSheet`; `Player.stickerSheets :: Seq StickerSheet`; `Player.chosenStickerSheets :: Set Natural`; `Prompt.RandomStickerSheet :: NonEmpty Natural -> Prompt Natural`; `Response.SelectedStickerSheetAtRandom Natural`; `Setup.drawStickerSheets :: [PlayerId] -> Game ()`; spec helpers `sheetDraws`, `startedWith`, `chosenOf`.
@@ -861,7 +861,7 @@ withSheetsDeck sheets deck = deck {Deck.stickerSheets = Seq.fromList sheets}
     Spec.assertEqWith s "and nothing was drawn at random" asked []
 ```
 
-Imports to add: `Control.Monad.Trans.State.Strict as State`, `Data.List.NonEmpty as NonEmpty`, `Data.Set as Set`, `Numeric.Natural (Natural)`, `Pawl.Engine.Engine as Engine`, `Pawl.Types.Deck as Deck`, `Pawl.Types.MulliganDecision as MulliganDecision`, `Pawl.Types.Player as Player`, `Pawl.Types.PlayerId as PlayerId`.
+Imports to add: `Control.Monad.Trans.State.Strict as State`, `Data.List.NonEmpty as NonEmpty`, `Data.Set as Set`, `Numeric.Natural (Natural)`, `Parun.Engine.Engine as Engine`, `Parun.Types.Deck as Deck`, `Parun.Types.MulliganDecision as MulliganDecision`, `Parun.Types.Player as Player`, `Parun.Types.PlayerId as PlayerId`.
 
 In `ReplaySpec`, beside "ChooseDungeon round-trips through the transcript":
 
@@ -895,7 +895,7 @@ In `ReplaySpec`, beside "ChooseDungeon round-trips through the transcript":
     -- CR 103.2d's draw with no Deck in hand.
     stickerSheets :: Seq.Seq StickerSheet.StickerSheet,
     -- | CR 103.2d: the positions in `stickerSheets` drawn for this game. Only
-    -- their stickers are available (Pawl.Engine.Sticker.available).
+    -- their stickers are available (Parun.Engine.Sticker.available).
     chosenStickerSheets :: Set.Set Natural.Natural,
 ```
 
@@ -988,12 +988,12 @@ Call it in `newGame` and `startGameFromCards`, after `Monad.forM_ seated Compani
 ## Task 5: `Object.stickers`, CR 123.5 retention and the CR 613.7k restamp
 
 **Files:**
-- Modify: `source/libraries/types/Pawl/Types/Object.hs` (field, `newIncarnation`)
-- Modify: `source/libraries/codec/Pawl/Codec/Object.hs`, `source/libraries/codec/Pawl/Codec/ObjectSpec.hs`
+- Modify: `source/libraries/types/Parun/Types/Object.hs` (field, `newIncarnation`)
+- Modify: `source/libraries/codec/Parun/Codec/Object.hs`, `source/libraries/codec/Parun/Codec/ObjectSpec.hs`
 - Modify: every `Object.MkObject` site (Step 3)
-- Modify: `source/libraries/engine/Pawl/Engine/Reversal.hs`, `source/libraries/engine/Pawl/Engine/Game.hs` (`restampStickers`), `source/libraries/engine/Pawl/Engine/Event.hs` (`mkObj`, `asComponent`, the restamp call, `meld`), `source/libraries/engine/Pawl/Engine/Restamp.hs` (elision comment)
-- Create: `source/libraries/engine/Pawl/Engine/Sticker.hs`; Modify `pawl.cabal`
-- Modify: `source/libraries/test/Pawl/StickerSpec.hs`
+- Modify: `source/libraries/engine/Parun/Engine/Reversal.hs`, `source/libraries/engine/Parun/Engine/Game.hs` (`restampStickers`), `source/libraries/engine/Parun/Engine/Event.hs` (`mkObj`, `asComponent`, the restamp call, `meld`), `source/libraries/engine/Parun/Engine/Restamp.hs` (elision comment)
+- Create: `source/libraries/engine/Parun/Engine/Sticker.hs`; Modify `parun.cabal`
+- Modify: `source/libraries/test/Parun/StickerSpec.hs`
 
 **Interfaces:**
 - Produces: `Object.stickers :: Seq StickerPlacement`; `Game.restampStickers :: ObjectId -> GameState -> GameState`; `Sticker.refsOn :: PlayerId -> Natural -> StickerSheet -> [StickerRef]`; `Sticker.available :: PlayerId -> Set StickerKind -> GameState -> [StickerRef]`; `Sticker.put :: PlayerId -> ObjectId -> StickerRef -> GameState -> GameState`; spec helpers `withSheets`, `stickerOn`, `namingTarget`.
@@ -1064,17 +1064,17 @@ stickersIn zone gs = [(Object.stickers obj, Object.timestamp obj) | oid <- Game.
     Spec.assertEqWith s "CR 103.2d the restart drew three sheets again" (reverse asked) [[0, 1, 2, 3], [0, 1, 2], [0, 1]]
 ```
 
-Imports to add: `Pawl.Engine.Game as Game`, `Pawl.Engine.Sticker as Sticker`, `Pawl.Types.Object as Object`, `Pawl.Types.ObjectId as ObjectId`, `Pawl.Types.Recipient as Recipient`, `Pawl.Types.StickerKind as StickerKind`, `Pawl.Types.StickerPlacement as StickerPlacement`, `Pawl.Types.Timestamp as Timestamp`, `Pawl.Types.Zone as Zone`.
+Imports to add: `Parun.Engine.Game as Game`, `Parun.Engine.Sticker as Sticker`, `Parun.Types.Object as Object`, `Parun.Types.ObjectId as ObjectId`, `Parun.Types.Recipient as Recipient`, `Parun.Types.StickerKind as StickerKind`, `Parun.Types.StickerPlacement as StickerPlacement`, `Parun.Types.Timestamp as Timestamp`, `Parun.Types.Zone as Zone`.
 
 In `ObjectSpec`, give one of the two `MkObject` cases a non-empty `Object.stickers` (`Seq.singleton (StickerPlacement.MkStickerPlacement (StickerRef.MkStickerRef (PlayerId.MkPlayerId 1) 0 StickerKind.Art 2) (Timestamp.MkTimestamp 5))`) and its JSON its `"stickers":[...]` entry, in the codec's field order.
 
-- [ ] **Step 2: Run; expected failure** "Could not find module 'Pawl.Engine.Sticker'".
+- [ ] **Step 2: Run; expected failure** "Could not find module 'Parun.Engine.Sticker'".
 
 - [ ] **Step 3: The field.** In `Object.hs`, LAST, after `duplicate` (comma moves), so the positional sites only append:
 
 ```haskell
     -- | CR 123.1: the stickers on this object, oldest first. Per-incarnation,
-    -- save for CR 123.5's exception: Pawl.Engine.Event.changeZoneWithCause's
+    -- save for CR 123.5's exception: Parun.Engine.Event.changeZoneWithCause's
     -- mkObj carries them across a move into a public zone. Not copiable (CR
     -- 123.1): no ProjectedCharacteristics holds them.
     stickers :: Seq.Seq StickerPlacement.StickerPlacement
@@ -1084,7 +1084,7 @@ In `ObjectSpec`, give one of the two `MkObject` cases a non-empty `Object.sticke
 
 ```haskell
       -- CR 123.5's exception is written back by
-      -- Pawl.Engine.Event.changeZoneWithCause's mkObj, for a public destination.
+      -- Parun.Engine.Event.changeZoneWithCause's mkObj, for a public destination.
       stickers = Seq.empty
 ```
 
@@ -1131,13 +1131,13 @@ with the comment `-- Not implemented: CR 123.5c's owner choosing which split obj
 
 `Restamp.hs:150`'s remap: add above it `-- Not implemented: CR 613.7k's sticker restamp under this reorder, and under a new timestamp without a zone change (CR 613.7e-g); unobservable while stickers are art (#872).`
 
-- [ ] **Step 5: `Pawl.Engine.Sticker`.**
+- [ ] **Step 5: `Parun.Engine.Sticker`.**
 
 ```haskell
 -- | CR 123.3: the stickers a player has access to, and putting one on an
 -- object. Availability is computed, never stored: a move to a hidden zone frees
 -- a sticker with no bookkeeping (CR 123.5).
-module Pawl.Engine.Sticker where
+module Parun.Engine.Sticker where
 
 import qualified Data.Foldable as Foldable
 import qualified Data.List as List
@@ -1145,18 +1145,18 @@ import qualified Data.Map.Strict as Map
 import qualified Data.Sequence as Seq
 import qualified Data.Set as Set
 import Numeric.Natural (Natural)
-import qualified Pawl.Engine.Game as Game
-import qualified Pawl.Extra.Natural as Natural
-import Pawl.Types.GameState (GameState)
-import qualified Pawl.Types.GameState as GameState
-import qualified Pawl.Types.Object as Object
-import Pawl.Types.ObjectId (ObjectId)
-import qualified Pawl.Types.Player as Player
-import Pawl.Types.PlayerId (PlayerId)
-import qualified Pawl.Types.StickerKind as StickerKind
-import qualified Pawl.Types.StickerPlacement as StickerPlacement
-import qualified Pawl.Types.StickerRef as StickerRef
-import qualified Pawl.Types.StickerSheet as StickerSheet
+import qualified Parun.Engine.Game as Game
+import qualified Parun.Extra.Natural as Natural
+import Parun.Types.GameState (GameState)
+import qualified Parun.Types.GameState as GameState
+import qualified Parun.Types.Object as Object
+import Parun.Types.ObjectId (ObjectId)
+import qualified Parun.Types.Player as Player
+import Parun.Types.PlayerId (PlayerId)
+import qualified Parun.Types.StickerKind as StickerKind
+import qualified Parun.Types.StickerPlacement as StickerPlacement
+import qualified Parun.Types.StickerRef as StickerRef
+import qualified Parun.Types.StickerSheet as StickerSheet
 
 -- CR 123.3a: every sticker on one sheet, by position.
 refsOn :: PlayerId -> Natural -> StickerSheet.StickerSheet -> [StickerRef.StickerRef]
@@ -1194,7 +1194,7 @@ put _placer oid ref gs =
    in stamped {GameState.objects = Map.adjust (\o -> o {Object.stickers = Object.stickers o Seq.|> placement}) oid (GameState.objects stamped)}
 ```
 
-`put` takes the placer for Task 8's event; `_placer` until then. Confirm `Pawl.Extra.Natural.length`'s spelling (`Pawl/Extra/Natural.hs:14`). Stage `pawl.cabal`, run `cabal-gild pawl.cabal`.
+`put` takes the placer for Task 8's event; `_placer` until then. Confirm `Parun.Extra.Natural.length`'s spelling (`Parun/Extra/Natural.hs:14`). Stage `parun.cabal`, run `cabal-gild parun.cabal`.
 
 - [ ] **Step 6: Silent sites, read and recorded in the PR.** `Resolve.Effect.happenedBetween`: compares `objects` (a placement is state) and copies `nextTimestamp` across, so no edit. `Interchangeable.objects`: compares the whole Object less `timestamp` and `identity`, so two objects with stickers differ, which is right (conservative). `Resolve/Effect.hs:1384`'s copy goes through `newIncarnation`, so a spell copy carries none (CR 123.1). `castFromOutside` (`Event.hs:5755`): outside to the stack, nothing to keep. `Setup.splitComponents`, `toLibraryCard`, `toCommandCard`, `strandedAnte`: `newIncarnation`, so CR 727.2 and 729.2 rebuilds clear stickers (Review Focus 2 proves it). `Planechase.hs:189`: a plane card, never stickered. Phasing and a type change are no zone change, so CR 702.26d and 205.1a hold by construction.
 
@@ -1211,10 +1211,10 @@ put _placer oid ref gs =
 ## Task 6: the stickered filters and Croakid Amphibonaut
 
 **Files:**
-- Modify: `source/libraries/types/Pawl/Types/Filter.hs`, `source/libraries/codec/Pawl/Codec/Filter.hs`, `source/libraries/codec/Pawl/Codec/FilterSpec.hs`
-- Modify: `source/libraries/engine/Pawl/Engine/Filter.hs` (`View`, the player view at line 796, `matches`, `rewrite`, `bakeBound`, `manaValueThresholds`, `statesAQuality`, `readsSourcePower`)
-- Modify: `source/libraries/engine/Pawl/Engine/Projection/View.hs` (`viewOfCard`, `viewOfCharacteristics`), `source/libraries/engine/Pawl/Engine/Count.hs` (`viewOfSnapshot`, `bakePerspective`), `source/libraries/engine/Pawl/Engine/Projection.hs` (`filterReads`, `filterReadsPeers`), `source/libraries/engine/Pawl/Engine/Interchangeable/Mentions.hs` (`filterNames`)
-- Modify: `source/libraries/test/Pawl/FilterSpec.hs` (38, 131), `source/libraries/test/Pawl/Support.hs` (2429), `source/libraries/test/Pawl/CardSpec.hs` (`filterSlotsReadSingly`), `source/libraries/test/Pawl/FilterPositionLintSpec.hs` (`canHostSubjects`)
+- Modify: `source/libraries/types/Parun/Types/Filter.hs`, `source/libraries/codec/Parun/Codec/Filter.hs`, `source/libraries/codec/Parun/Codec/FilterSpec.hs`
+- Modify: `source/libraries/engine/Parun/Engine/Filter.hs` (`View`, the player view at line 796, `matches`, `rewrite`, `bakeBound`, `manaValueThresholds`, `statesAQuality`, `readsSourcePower`)
+- Modify: `source/libraries/engine/Parun/Engine/Projection/View.hs` (`viewOfCard`, `viewOfCharacteristics`), `source/libraries/engine/Parun/Engine/Count.hs` (`viewOfSnapshot`, `bakePerspective`), `source/libraries/engine/Parun/Engine/Projection.hs` (`filterReads`, `filterReadsPeers`), `source/libraries/engine/Parun/Engine/Interchangeable/Mentions.hs` (`filterNames`)
+- Modify: `source/libraries/test/Parun/FilterSpec.hs` (38, 131), `source/libraries/test/Parun/Support.hs` (2429), `source/libraries/test/Parun/CardSpec.hs` (`filterSlotsReadSingly`), `source/libraries/test/Parun/FilterPositionLintSpec.hs` (`canHostSubjects`)
 - Create: `data/cards/croakid-amphibonaut.json`
 
 **Interfaces:**
@@ -1269,7 +1269,7 @@ copying oid p = case p of
     Spec.assertEqWith s "the Clone is on the battlefield beside Croakid" (length (filter (\oid -> Set.notMember oid (GameState.battlefield base)) (Game.zoneMembers Zone.Battlefield S.alice bounced))) 2
 ```
 
-Imports: `Pawl.Engine.Projection as Projection`, `Pawl.Types.Keyword as Keyword`. The proxy assertion counts Croakid and the Clone, which `base` did not hold; confirm `GameState.battlefield` is a `Set ObjectId`.
+Imports: `Parun.Engine.Projection as Projection`, `Parun.Types.Keyword as Keyword`. The proxy assertion counts Croakid and the Clone, which `base` did not hold; confirm `GameState.battlefield` is a `Set ObjectId`.
 
 In `Codec/FilterSpec.hs`, after "HasCountersOfAnyKind":
 
@@ -1301,7 +1301,7 @@ Every `Filter` site (`grep -rn 'HasCountersOfAnyKind' source --include='*.hs'` i
 - `CardSpec.filterSlotsReadSingly`: `-> []`. `FilterPositionLintSpec.canHostSubjects`: the `HasCountersOfAnyKind` answer.
 - Wildcard sites read and right as they stand: `Engine/Filter.overBoundSlots`' `_ -> pure predicate` (so `boundSlots` and `renameBound`): neither atom holds a slot. CardSpec's keyword traversals: neither atom holds a keyword.
 
-- [ ] **Step 5: The View field.** `Engine/Filter.hs`'s `View`, after `counters` (add `import qualified Data.Sequence as Seq` and `Pawl.Types.StickerKind as StickerKind`):
+- [ ] **Step 5: The View field.** `Engine/Filter.hs`'s `View`, after `counters` (add `import qualified Data.Sequence as Seq` and `Parun.Types.StickerKind as StickerKind`):
 
 ```haskell
     -- | CR 123.1 / 123.4: the kinds of the stickers on the candidate, one per
@@ -1367,11 +1367,11 @@ Every builder (record syntax, so `-Werror`'s missing-fields names each; fill eve
 ## Task 7: placing a sticker, and Proficient Pyrodancer
 
 **Files:**
-- Create: `source/libraries/types/Pawl/Types/PutSticker.hs`, `source/libraries/codec/Pawl/Codec/PutSticker.hs`
-- Modify: `source/libraries/types/Pawl/Types/Effect.hs`, `source/libraries/codec/Pawl/Codec/Effect.hs`, `source/libraries/codec/Pawl/Codec/EffectSpec.hs`, every exhaustive `Effect` site (Step 4)
+- Create: `source/libraries/types/Parun/Types/PutSticker.hs`, `source/libraries/codec/Parun/Codec/PutSticker.hs`
+- Modify: `source/libraries/types/Parun/Types/Effect.hs`, `source/libraries/codec/Parun/Codec/Effect.hs`, `source/libraries/codec/Parun/Codec/EffectSpec.hs`, every exhaustive `Effect` site (Step 4)
 - Modify: `Prompt.hs`, `Response.hs`, `Replay.hs`, `Scenario/Prompt.hs`, `Scenario.hs`, `Scenario/Reply.hs`, `ReplaySpec.hs` (`ChooseSticker`)
-- Modify: `source/libraries/engine/Pawl/Engine/Resolve/Effect.hs` (`applyOneEffect`, `effectIsImpossible`)
-- Create: `data/cards/proficient-pyrodancer.json`; Modify `pawl.cabal`, `StickerSpec`
+- Modify: `source/libraries/engine/Parun/Engine/Resolve/Effect.hs` (`applyOneEffect`, `effectIsImpossible`)
+- Create: `data/cards/proficient-pyrodancer.json`; Modify `parun.cabal`, `StickerSpec`
 
 **Interfaces:**
 - Produces: `PutSticker.MkPutSticker {player :: PlayerRef, ref :: ObjectRef, kinds :: Set StickerKind}`; `Effect.PutSticker PutSticker`; `Prompt.ChooseSticker :: Decider -> PlayerId -> ObjectId -> NonEmpty StickerRef -> Prompt StickerRef`; `Response.ChoseSticker StickerRef`; spec helpers `Offers`, `placing`, `drain`, `pyrodancerEnters`.
@@ -1493,7 +1493,7 @@ pyrodancerEnters pyrodancer onto gs0 =
     Spec.assertEqWith s "the other Piker is untouched" (Projection.powerOf plainPiker after) (Just 2)
 ```
 
-The Pyrodancer's ability has no `{T}`, so summoning sickness does not gate it. `recording` carries its own signature because `GADTs` implies `MonoLocalBinds`. Imports: `Control.Monad as Monad`, `Data.Maybe as Maybe`, `Pawl.Types.Game as Game.Type`, `Pawl.Types.OptionalDecision as OptionalDecision`, `Pawl.Types.Printing as Printing`, `Pawl.Types.StickerRef as StickerRef`.
+The Pyrodancer's ability has no `{T}`, so summoning sickness does not gate it. `recording` carries its own signature because `GADTs` implies `MonoLocalBinds`. Imports: `Control.Monad as Monad`, `Data.Maybe as Maybe`, `Parun.Types.Game as Game.Type`, `Parun.Types.OptionalDecision as OptionalDecision`, `Parun.Types.Printing as Printing`, `Parun.Types.StickerRef as StickerRef`.
 
 `EffectSpec`, beside "Ante":
 
@@ -1523,15 +1523,15 @@ The Pyrodancer's ability has no `{T}`, so summoning sickness does not gate it. `
 
 - [ ] **Step 3: Run; expected failure** "Not in scope: data constructor 'Effect.PutSticker'".
 
-- [ ] **Step 4: The opcode.** `Pawl/Types/PutSticker.hs`:
+- [ ] **Step 4: The opcode.** `Parun/Types/PutSticker.hs`:
 
 ```haskell
-module Pawl.Types.PutSticker where
+module Parun.Types.PutSticker where
 
 import qualified Data.Set as Set
-import qualified Pawl.Types.ObjectRef as ObjectRef
-import qualified Pawl.Types.PlayerRef as PlayerRef
-import qualified Pawl.Types.StickerKind as StickerKind
+import qualified Parun.Types.ObjectRef as ObjectRef
+import qualified Parun.Types.PlayerRef as PlayerRef
+import qualified Parun.Types.StickerKind as StickerKind
 
 -- | CR 123.3: the players `player` names each put an available sticker of
 -- one of `kinds` on each named object they own.
@@ -1545,7 +1545,7 @@ data PutSticker = MkPutSticker
   deriving (Eq, Ord, Show)
 ```
 
-`Pawl/Codec/PutSticker.hs`: `Fields.object`, `player` (`PlayerRef.codec`), `ref` (`ObjectRef.codec`), `kinds` (`Common.set StickerKind.codec`), all required, Pawl.Codec.Ante's layout. `Effect.hs`, beside `Ante`: `| -- | CR 123.3: put a sticker on each named object.` `PutSticker PutSticker.PutSticker`.
+`Parun/Codec/PutSticker.hs`: `Fields.object`, `player` (`PlayerRef.codec`), `ref` (`ObjectRef.codec`), `kinds` (`Common.set StickerKind.codec`), all required, Parun.Codec.Ante's layout. `Effect.hs`, beside `Ante`: `| -- | CR 123.3: put a sticker on each named object.` `PutSticker PutSticker.PutSticker`.
 
 Sites (`grep -rn 'Effect\.Ante\b' source --include='*.hs'` is the enumeration; answer as `Ante` does unless stated):
 - `Codec/Effect.hs`: `Arm.payload "PutSticker" PutSticker.codec Effect.PutSticker (\x -> case x of Effect.PutSticker y -> Just y; _ -> Nothing),`; tagOf `Effect.PutSticker {} -> "PutSticker"`.
@@ -1572,7 +1572,7 @@ Sites (`grep -rn 'Effect\.Ante\b' source --include='*.hs'` is the enumeration; a
   ChooseSticker :: Decider.Decider -> PlayerId.PlayerId -> ObjectId.ObjectId -> NonEmpty.NonEmpty StickerRef.StickerRef -> Prompt StickerRef.StickerRef
 ```
 
-`Response.hs`: `| -- | CR 123.3: the sticker a player put on an object.` `ChoseSticker StickerRef.StickerRef`. Sites, as Task 4 Step 5: `Replay.encode` `Prompt.ChooseSticker {} -> Response.ChoseSticker answer`; `decode` its `case`; `defaultAnswer` `-- CR 123.3: asked only at two or more, every one available.` `Prompt.ChooseSticker _ _ _ candidates -> NonEmpty.head candidates`; `deciderOf` `Prompt.ChooseSticker decider _ _ _ -> Just (Decider.unwrap decider)`; `kindOf` `"ChooseSticker"`; `withinOffer` `Prompt.Type.ChooseSticker _ _ _ offered -> chosen \`elem\` offered`; `shapeOf` `Prompt.ChooseSticker {} -> viaCodec Codec.StickerRef.codec` (import `Pawl.Codec.StickerRef as Codec.StickerRef`).
+`Response.hs`: `| -- | CR 123.3: the sticker a player put on an object.` `ChoseSticker StickerRef.StickerRef`. Sites, as Task 4 Step 5: `Replay.encode` `Prompt.ChooseSticker {} -> Response.ChoseSticker answer`; `decode` its `case`; `defaultAnswer` `-- CR 123.3: asked only at two or more, every one available.` `Prompt.ChooseSticker _ _ _ candidates -> NonEmpty.head candidates`; `deciderOf` `Prompt.ChooseSticker decider _ _ _ -> Just (Decider.unwrap decider)`; `kindOf` `"ChooseSticker"`; `withinOffer` `Prompt.Type.ChooseSticker _ _ _ offered -> chosen \`elem\` offered`; `shapeOf` `Prompt.ChooseSticker {} -> viaCodec Codec.StickerRef.codec` (import `Parun.Codec.StickerRef as Codec.StickerRef`).
 
 - [ ] **Step 6: The resolution arm.** `applyOneEffect`, beside `Effect.Ante`:
 
@@ -1615,7 +1615,7 @@ Sites (`grep -rn 'Effect\.Ante\b' source --include='*.hs'` is the enumeration; a
      in not (null placers) && not (any placeable placers)
 ```
 
-Import `Pawl.Engine.Sticker as Sticker`, `Pawl.Types.PutSticker as PutSticker`, `Pawl.Types.ChosenPermanent as ChosenPermanent` if absent. `Pawl.Engine.Sticker` imports only `Game`, so no cycle.
+Import `Parun.Engine.Sticker as Sticker`, `Parun.Types.PutSticker as PutSticker`, `Parun.Types.ChosenPermanent as ChosenPermanent` if absent. `Parun.Engine.Sticker` imports only `Game`, so no cycle.
 
 - [ ] **Step 7: The card.** `data/cards/proficient-pyrodancer.json` (Llanowar Augur's pump-and-keyword, Flensing Raptor's "another target creature" filter, Wormfang Crab's `ChosenPermanent`, Aetherplasm's optional clause):
 
@@ -1727,7 +1727,7 @@ Import `Pawl.Engine.Sticker as Sticker`, `Pawl.Types.PutSticker as PutSticker`, 
 ## Task 8: the placement event, its trigger, and Wee Champion
 
 **Files:**
-- Create: `source/libraries/types/Pawl/Types/StickerPut.hs`, `source/libraries/types/Pawl/Types/PlacesSticker.hs`, their codecs
+- Create: `source/libraries/types/Parun/Types/StickerPut.hs`, `source/libraries/types/Parun/Types/PlacesSticker.hs`, their codecs
 - Modify: `GameEvent.hs` + `Codec/GameEvent.hs` + `GameEventSpec.hs`; `TriggerCondition.hs` + `Codec/TriggerCondition.hs` + `TriggerConditionSpec.hs`
 - Modify: every exhaustive `GameEvent` and `TriggerCondition` site (Step 4); `ZoneTriggerSpec.hs` (`representativeEvents`, `everyTriggerCondition`); `Engine/Sticker.hs` (`put` records the event)
 - Create: `data/cards/wee-champion.json`
@@ -1752,7 +1752,7 @@ Import `Pawl.Engine.Sticker as Sticker`, `Pawl.Types.PutSticker as PutSticker`, 
     Spec.assertEqWith s "one art sticker went on alice's two permanents" (sum (fmap (\oid -> maybe 0 (Seq.length . Object.stickers) (Game.lookupObject oid after)) [weeId, pyro])) 1
 ```
 
-Which of the two takes the sticker is `ChoosePermanent`'s head; either proves the trigger. Import `Pawl.Types.CounterKind as CounterKind`.
+Which of the two takes the sticker is `ChoosePermanent`'s head; either proves the trigger. Import `Parun.Types.CounterKind as CounterKind`.
 
 `GameEventSpec`, after "Firebent":
 
@@ -1781,11 +1781,11 @@ Which of the two takes the sticker is `ChoosePermanent`'s head; either proves th
 - [ ] **Step 4: The event and the condition.** Types:
 
 ```haskell
-module Pawl.Types.StickerPut where
+module Parun.Types.StickerPut where
 
-import qualified Pawl.Types.ObjectId as ObjectId
-import qualified Pawl.Types.PlayerId as PlayerId
-import qualified Pawl.Types.StickerKind as StickerKind
+import qualified Parun.Types.ObjectId as ObjectId
+import qualified Parun.Types.PlayerId as PlayerId
+import qualified Parun.Types.StickerKind as StickerKind
 
 -- | CR 123.3: a player put a sticker of this kind on this object.
 data StickerPut = MkStickerPut
@@ -1797,11 +1797,11 @@ data StickerPut = MkStickerPut
 ```
 
 ```haskell
-module Pawl.Types.PlacesSticker where
+module Parun.Types.PlacesSticker where
 
 import qualified Data.Set as Set
-import qualified Pawl.Types.PlayerRelation as PlayerRelation
-import qualified Pawl.Types.StickerKind as StickerKind
+import qualified Parun.Types.PlayerRelation as PlayerRelation
+import qualified Parun.Types.StickerKind as StickerKind
 
 -- | CR 123.3: "whenever [a player] places a sticker", narrowed to these
 -- kinds, PermanentGetsCounters' posture for a counter kind.
@@ -1820,7 +1820,7 @@ Codecs: `Fields.object`, fields as declared (`PlayerId.codec`, `ObjectId.codec`,
    in Event.recordEvent (GameEvent.StickerPut StickerPut.MkStickerPut {StickerPut.placer = placer, StickerPut.object = oid, StickerPut.kind = StickerRef.kind ref}) placed
 ```
 
-where `placed` is Task 5's result. `Pawl.Engine.Sticker` now imports `Pawl.Engine.Event`; `Event` imports only `Game` for the restamp, so there is no cycle. Confirm with `grep -n 'import.*Pawl.Engine.Sticker' source/libraries/engine/Pawl/Engine/Event.hs` (expected none).
+where `placed` is Task 5's result. `Parun.Engine.Sticker` now imports `Parun.Engine.Event`; `Event` imports only `Game` for the restamp, so there is no cycle. Confirm with `grep -n 'import.*Parun.Engine.Sticker' source/libraries/engine/Parun/Engine/Event.hs` (expected none).
 
 GameEvent sites (`grep -rn 'GameEvent\.Firebent\b' source --include='*.hs'` is the enumeration). In `Event/Match.hs` every `GameEvent.Firebent _ -> False` and `GameEvent.Firebent _ -> Nothing` gains a same-indented `GameEvent.StickerPut _ -> False` / `-> Nothing` after it: write `$SCRATCH/add_sticker_put.py`
 
@@ -1837,7 +1837,7 @@ for line in src:
 open(path, "w").write("\n".join(out))
 ```
 
-run it as its own command, `python3 -I "$SCRATCH/add_sticker_put.py" source/libraries/engine/Pawl/Engine/Event/Match.hs`, then read `git diff --stat` and spot-check: the count of inserted lines equals `grep -c 'GameEvent.Firebent _ -> \(False\|Nothing\)'`. The `PlayerFirebends` arm's `GameEvent.Firebent bender -> ...` gets `GameEvent.StickerPut _ -> False` by hand. Then the new matcher, a copy of the `PlayerFirebends` arm whose Firebent row is `False` and whose StickerPut row is:
+run it as its own command, `python3 -I "$SCRATCH/add_sticker_put.py" source/libraries/engine/Parun/Engine/Event/Match.hs`, then read `git diff --stat` and spot-check: the count of inserted lines equals `grep -c 'GameEvent.Firebent _ -> \(False\|Nothing\)'`. The `PlayerFirebends` arm's `GameEvent.Firebent bender -> ...` gets `GameEvent.StickerPut _ -> False` by hand. Then the new matcher, a copy of the `PlayerFirebends` arm whose Firebent row is `False` and whose StickerPut row is:
 
 ```haskell
   -- CR 123.3: a player the relation names put a sticker of one of these kinds.
@@ -1848,7 +1848,7 @@ run it as its own command, `python3 -I "$SCRATCH/add_sticker_put.py" source/libr
 
 Other GameEvent sites, by function: `Count.snapshotView` `Nothing`; `Game.castOf`, `abilityResolved`, `discardOf`, `movedChange`, `damageDealt`, `lifeGainOf` `Nothing`; `Event.damageOf`, `revealOf`, `abilityTriggeredOf` `Nothing`; `Match.countersRemovedFrom` `Nothing`, `boundDeparts` `False`; `Trigger.movedOf` `Nothing`; `Trigger.participants` `GameEvent.StickerPut put -> ([StickerPut.object put], [StickerPut.placer put])`; the four `eventTriggers` sub-arms `Map.empty`; `Trigger.resnapshot` `Just event`. Wildcard sites read and right: `Fragmented.bent` and its siblings (a sticker is not their event); `Fragmented.historyReaders` needs no entry (the trigger reads the current action's events, which that function's haddock exempts).
 
-TriggerCondition sites (`grep -rn 'TriggerCondition.PlayerFirebends' source --include='*.hs'`): `Trigger.looksBack` `False`; `batchScoped` `False`; `zonesTriggeredFrom` `battlefield`; `stateTriggers` `False`; `Event.controllerTurnScoped` `False`; `Rewrite` `-> condition`; `Mentions` `TriggerCondition.PlacesSticker _placesSticker -> False`; `Binding.eventBindingSlots` `Set.empty` (pinned by `Pawl.LeavesTriggerSpec`'s "eventBindingSlots names exactly"); `CardSpec.triggerConditionCounts`, `triggerConditionFilters`, `triggerConditionSlots` `[]`. SILENT: `Binding.eventBindings`' fallthrough answers `Map.empty` for the new pair, which is right (the condition binds nothing). Hand-kept lists in `ZoneTriggerSpec`: `representativeEvents` gains `TriggerCondition.PlacesSticker _ -> one (GameEvent.StickerPut StickerPut.MkStickerPut {StickerPut.placer = S.bob, StickerPut.object = departed, StickerPut.kind = StickerKind.Art})` (use the object id the `PermanentGetsCounters` row uses), and `everyTriggerCondition` gains `TriggerCondition.PlacesSticker (PlacesSticker.MkPlacesSticker PlayerRelation.You (Set.singleton StickerKind.Art))`.
+TriggerCondition sites (`grep -rn 'TriggerCondition.PlayerFirebends' source --include='*.hs'`): `Trigger.looksBack` `False`; `batchScoped` `False`; `zonesTriggeredFrom` `battlefield`; `stateTriggers` `False`; `Event.controllerTurnScoped` `False`; `Rewrite` `-> condition`; `Mentions` `TriggerCondition.PlacesSticker _placesSticker -> False`; `Binding.eventBindingSlots` `Set.empty` (pinned by `Parun.LeavesTriggerSpec`'s "eventBindingSlots names exactly"); `CardSpec.triggerConditionCounts`, `triggerConditionFilters`, `triggerConditionSlots` `[]`. SILENT: `Binding.eventBindings`' fallthrough answers `Map.empty` for the new pair, which is right (the condition binds nothing). Hand-kept lists in `ZoneTriggerSpec`: `representativeEvents` gains `TriggerCondition.PlacesSticker _ -> one (GameEvent.StickerPut StickerPut.MkStickerPut {StickerPut.placer = S.bob, StickerPut.object = departed, StickerPut.kind = StickerKind.Art})` (use the object id the `PermanentGetsCounters` row uses), and `everyTriggerCondition` gains `TriggerCondition.PlacesSticker (PlacesSticker.MkPlacesSticker PlayerRelation.You (Set.singleton StickerKind.Art))`.
 
 - [ ] **Step 5: The card.** `data/cards/wee-champion.json`:
 
@@ -1911,7 +1911,7 @@ TriggerCondition sites (`grep -rn 'TriggerCondition.PlayerFirebends' source --in
 }
 ```
 
-Subtypes are in `Subtype`'s declaration order (Child, Guest, Minotaur); `format-json.sh` sorts keys only, so the order is the codec's, which `Pawl.CardsSpec` checks.
+Subtypes are in `Subtype`'s declaration order (Child, Guest, Minotaur); `format-json.sh` sorts keys only, so the order is the codec's, which `Parun.CardsSpec` checks.
 
 - [ ] **Step 6: Run** `-p Sticker`, `-p Trigger`, `-p GameEvent`, the full suite.
 - [ ] **Step 7: Mutate.**
@@ -1930,45 +1930,45 @@ Subtypes are in `Subtype`'s declaration order (Child, Guest, Minotaur); `format-
 N1, title "Sticker decks are not checked for ten unique sheets", labels `gap,expires:subsystem,area:cards`:
 
 ```markdown
-> **Summary (2026-10-09).** In constructed play, a player who plays with stickers must bring at least ten sticker sheets, all different. Pawl accepts any number, duplicates included, and draws three. Checking it is deck validation, which pawl does not do yet; it lands with that check. Proficient Pyrodancer in a constructed deck that brings two sheets is the case that should be refused.
+> **Summary (2026-10-09).** In constructed play, a player who plays with stickers must bring at least ten sticker sheets, all different. Parun accepts any number, duplicates included, and draws three. Checking it is deck validation, which parun does not do yet; it lands with that check. Proficient Pyrodancer in a constructed deck that brings two sheets is the case that should be refused.
 
 ### Details
 
-- CR 123.2a. `Pawl.Engine.Setup.drawStickerSheets` takes `Player.stickerSheets` as given; the elision is cited there.
+- CR 123.2a. `Parun.Engine.Setup.drawStickerSheets` takes `Player.stickerSheets` as given; the elision is cited there.
 - Related to #4458, which is the deck-legality check this would join.
 ```
 
-Then record the dependency: `gh api -X POST repos/tfausak/pawl/issues/<N1>/dependencies/blocked_by -F issue_id="$(gh api repos/tfausak/pawl/issues/4458 --jq .id)"`.
+Then record the dependency: `gh api -X POST repos/tfausak/parun/issues/<N1>/dependencies/blocked_by -F issue_id="$(gh api repos/tfausak/parun/issues/4458 --jq .id)"`.
 
 N2, title "Unclear whether a Shahrazad subgame uses sticker sheets", labels `question,area:variants`:
 
 ```markdown
-> **Summary (2026-10-09).** When a Shahrazad subgame starts, the rules say each new game follows the start-of-game steps, but the sticker-sheet step does not say whether a subgame draws its own sheets. Pawl draws three again. The rules also leave open whether stickers on main-game cards count as used inside the subgame, and whether a stickered commander keeps its stickers as it moves into the subgame; pawl says no to both. Shahrazad with Proficient Pyrodancer is the card pair that shows all three.
+> **Summary (2026-10-09).** When a Shahrazad subgame starts, the rules say each new game follows the start-of-game steps, but the sticker-sheet step does not say whether a subgame draws its own sheets. Parun draws three again. The rules also leave open whether stickers on main-game cards count as used inside the subgame, and whether a stickered commander keeps its stickers as it moves into the subgame; parun says no to both. Shahrazad with Proficient Pyrodancer is the card pair that shows all three.
 
 ### Details
 
-- CR 103.2d, CR 729.2, CR 729.2c, CR 123.3. `Pawl.Engine.Setup.drawStickerSheets` reruns in `startGameFromCards`; `Pawl.Engine.Sticker.available` reads the subgame's own objects; `toCommandCard` rebuilds through `Object.newIncarnation`.
+- CR 103.2d, CR 729.2, CR 729.2c, CR 123.3. `Parun.Engine.Setup.drawStickerSheets` reruns in `startGameFromCards`; `Parun.Engine.Sticker.available` reads the subgame's own objects; `toCommandCard` rebuilds through `Object.newIncarnation`.
 ```
 
 N3, title "A card that changes owners frees its stickers for its first owner", labels `question,area:cards`:
 
 ```markdown
-> **Summary (2026-10-09).** Stickers come from a player's own sheets, and a player cannot reuse a sticker that is on a card they own. If a stickered card changes owners (Darkpact, Tempest Efreet), its stickers are on a card its first owner no longer owns, so pawl lets them use those stickers again. No rule addresses it. Darkpact taking a card that Proficient Pyrodancer stickered is the case.
+> **Summary (2026-10-09).** Stickers come from a player's own sheets, and a player cannot reuse a sticker that is on a card they own. If a stickered card changes owners (Darkpact, Tempest Efreet), its stickers are on a card its first owner no longer owns, so parun lets them use those stickers again. No rule addresses it. Darkpact taking a card that Proficient Pyrodancer stickered is the case.
 
 ### Details
 
-- CR 123.3, CR 108.3. `Pawl.Engine.Sticker.available` subtracts the stickers on objects the player owns; the elision is cited there.
+- CR 123.3, CR 108.3. `Parun.Engine.Sticker.available` subtracts the stickers on objects the player owns; the elision is cited there.
 ```
 
 N4, title "Nothing can move a sticker to another object", labels `gap,expires:card-driven,area:effects`:
 
 ```markdown
-> **Summary (2026-10-09).** The rules say a sticker moved from one object to another does not pay its ticket cost again. No printed card moves or removes a sticker, so pawl has no instruction for it. A card that does would be added here.
+> **Summary (2026-10-09).** The rules say a sticker moved from one object to another does not pay its ticket cost again. No printed card moves or removes a sticker, so parun has no instruction for it. A card that does would be added here.
 
 ### Details
 
 - CR 123.3d. Scryfall `o:sticker o:move` and `o:sticker o:remove`, both empty 2026-10-09; a card that would refute this prints "move a sticker".
-- `Pawl.Types.PutSticker` cites this issue.
+- `Parun.Types.PutSticker` cites this issue.
 
 ### Synthetic card draft
 
@@ -1987,7 +1987,7 @@ Synthetic Sticker Swap {1} Artifact: "{1}, {T}: Move a sticker from a permanent 
   - Capability-widening sweep (`docs/agents/implementing.md`): `grep -rn -i 'sticker\|ticket' source --include='*.hs'` and read every comment; `grep -rn 'Energy, Poison\|player counters are' source --include='*.hs'` for prose listing the player counter kinds.
   - Counting absolutes: `grep -rn 'ChosenPermanent' source --include='*.hs'` comments that count its producers (Wormfang Crab, Mirkwood Trapper) are now falsified by Pyrodancer; fix them. Same for `GainPlayerCounters` producer counts.
   - CR citations: for each rule in `git diff origin/main -U0 | grep -o 'CR [0-9][0-9.a-z/-]*' | sort -u`, read it in `docs/rules.txt`.
-- [ ] **Step 2: Self-review.** `git fetch`, `git merge origin/main`, run the full suite, re-run m4, m5a, m5c, m6, m7b, m7d, m8a. Re-read every comment the diff touched against the one-line haddock rule. Read `gh api repos/tfausak/pawl/issues/872/dependencies/blocking` and name what this unblocked.
+- [ ] **Step 2: Self-review.** `git fetch`, `git merge origin/main`, run the full suite, re-run m4, m5a, m5c, m6, m7b, m7d, m8a. Re-read every comment the diff touched against the one-line haddock rule. Read `gh api repos/tfausak/parun/issues/872/dependencies/blocking` and name what this unblocked.
 - [ ] **Step 3: Open the PR.** `gh pr create --draft --title "Stickers unit 1: tickets, sheets and art stickers" --body-file $SCRATCH/pr.md`, the body:
 
 ```

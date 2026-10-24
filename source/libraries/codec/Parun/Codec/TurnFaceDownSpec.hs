@@ -1,0 +1,42 @@
+module Parun.Codec.TurnFaceDownSpec where
+
+import qualified Data.Set as Set
+import qualified Data.Text as Text
+import qualified Parun.Codec.TurnFaceDown as TurnFaceDown
+import qualified Parun.JsonCodec.Common as Common
+import qualified Parun.Spec as Spec
+import qualified Parun.Types.CardType as CardType
+import qualified Parun.Types.FaceDownCharacteristics as FaceDownCharacteristics
+import qualified Parun.Types.ObjectRef as ObjectRef
+import qualified Parun.Types.SlotName as SlotName
+import qualified Parun.Types.Subtype as Subtype
+import qualified Parun.Types.TurnFaceDown as TurnFaceDown
+import qualified Parun.Types.TypeLine as TypeLine
+
+spec :: (Monad m, Monad n) => Spec.Spec m n -> n ()
+spec s = Spec.describe s "Parun.Codec.TurnFaceDown" $ do
+  -- Backslide: CR 708.2a supplies the list, so the key is omitted.
+  Spec.it s "MkTurnFaceDown, no listed characteristics: the key is omitted" $
+    Common.assertCodec
+      s
+      (TurnFaceDown.codec Common.text)
+      (TurnFaceDown.MkTurnFaceDown (ObjectRef.InSlot (SlotName.MkSlotName (Text.pack "target"))) FaceDownCharacteristics.defaultValue)
+      " {\"ref\":{\"type\":\"InSlot\",\"value\":\"target\"}} "
+  -- Cyber Conversion: CR 708.2's listed set, written.
+  Spec.it s "MkTurnFaceDown, a listed set: the key is written" $
+    Common.assertCodec
+      s
+      (TurnFaceDown.codec Common.text)
+      ( TurnFaceDown.MkTurnFaceDown
+          (ObjectRef.InSlot (SlotName.MkSlotName (Text.pack "target")))
+          FaceDownCharacteristics.defaultValue
+            { FaceDownCharacteristics.typeLine =
+                TypeLine.MkTypeLine
+                  { TypeLine.supertypes = Set.empty,
+                    TypeLine.types = Set.fromList [CardType.Artifact, CardType.Creature],
+                    TypeLine.subtypes = Set.singleton Subtype.Cyberman
+                  }
+            }
+      )
+      " {\"characteristics\":{\"typeLine\":{\"subtypes\":[{\"type\":\"Cyberman\"}],\"types\":[{\"type\":\"Artifact\"},{\"type\":\"Creature\"}]}},\"ref\":{\"type\":\"InSlot\",\"value\":\"target\"}} "
+  Spec.it s "has a schema" $ Common.assertHasSchema s (TurnFaceDown.codec Common.text)

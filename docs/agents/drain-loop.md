@@ -63,7 +63,7 @@ Paste this, with the bound filled in:
 
 ---
 
-Work the pawl issue backlog autonomously until <BOUND>. First `git fetch` and
+Work the parun issue backlog autonomously until <BOUND>. First `git fetch` and
 read `git show origin/main:docs/agents/drain-loop.md`; follow its "Procedure"
 section exactly --- it is the standing procedure for this loop and carries the
 dispatch, research, merging and scheduling rules; do not improvise around it.
@@ -80,7 +80,7 @@ preferring `priority-high`. Below that tier, rank by dispatch shape, measured
 
 (i) **Blocker-consumer pairs** (+1.40), found by a scripted scan, not an
 agent: for every open issue, `gh api
-repos/tfausak/pawl/issues/N/dependencies/blocked_by`, and keep the pair when
+repos/tfausak/parun/issues/N/dependencies/blocked_by`, and keep the pair when
 the blocker is open, itself unblocked, and its only open dependent is the
 consumer. Run it inline before dispatching.
 
@@ -271,7 +271,7 @@ slots; it does not stop several worktrees running `cabal` at once, and with
 three going an 8 GB machine is unusable. Every `cabal` invocation in every
 lane goes through `script/with-build-lock.sh`, which queues on lock files and
 takes over a lock whose owner has died. It admits two builds at once
-(`PAWL_BUILD_SLOTS`, measured 2026-09-02: one `cabal test` peaks near 1.8 GB
+(`PARUN_BUILD_SLOTS`, measured 2026-09-02: one `cabal test` peaks near 1.8 GB
 resident); set it to one if the machine is unhappy. Put that in every brief;
 lanes beyond the slot count just queue.
 

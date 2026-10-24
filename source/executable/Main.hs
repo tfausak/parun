@@ -1,4 +1,4 @@
-import qualified Pawl.Executable
+import qualified Parun.Executable
 
 main :: IO ()
-main = Pawl.Executable.main
+main = Parun.Executable.main

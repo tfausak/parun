@@ -4,7 +4,7 @@
 
 **Goal:** Land unit 2 of the stickers spec: name stickers as a CR 123.6 / 612.9 layer-3 text change at each placement's timestamp, the controller's position prompt (CR 123.6b), words and blanks (CR 123.6a), several names, face-down names (CR 708.2), and the letter, unique-vowel, name-sticker and word reads (CR 123.6d–e). Proved by Baaallerina, Sword-Swallowing Seraph, Wizards of the _____, Wolf in _____ Clothing, Angelic Harold, _____ _____ _____ Trespasser, _____ Balls of Fire, _____-o-saurus, and CR 123.6c's three examples (Fae of Wishes; It That Betrays with Seeker of the Way and Mirrorweave; Witness Protection). It does not close #872.
 
-**Architecture:** `StickerPlacement` gains `position`, written by `Sticker.put`. A pure `Pawl.Engine.NameWords` owns CR 123.6a's words, the insertion, and the letter and vowel counts. `Game.stickerWords` reads a name sticker's words off its owner's sheet. `Projection.stickerGathered` emits one layer-3 `Modification.InsertNameWords` per name sticker at the placement's timestamp, joined into `gatherGiven`, so it folds in timestamp order with `AddNamesMatching`, `HasFullText` and the new `Modification.SetName` (CR 612.8, Witness Protection), over the copiable values. `Effect.PutSticker` asks the object's controller `Prompt.ChooseNamePosition` and may bind the placed sticker (`bound`) into a new `Binding.sticker` field, which `Filter.Context.slotStickers` carries to `Quantity.UniqueVowelsOnSticker`. `Filter.View.nameStickers` feeds `Quantity.LettersOnNameStickers` and `Quantity.NameStickers`. `Filter.NameWordsAtLeast` reads `View.names`. `PlacesSticker` gains an `object` filter.
+**Architecture:** `StickerPlacement` gains `position`, written by `Sticker.put`. A pure `Parun.Engine.NameWords` owns CR 123.6a's words, the insertion, and the letter and vowel counts. `Game.stickerWords` reads a name sticker's words off its owner's sheet. `Projection.stickerGathered` emits one layer-3 `Modification.InsertNameWords` per name sticker at the placement's timestamp, joined into `gatherGiven`, so it folds in timestamp order with `AddNamesMatching`, `HasFullText` and the new `Modification.SetName` (CR 612.8, Witness Protection), over the copiable values. `Effect.PutSticker` asks the object's controller `Prompt.ChooseNamePosition` and may bind the placed sticker (`bound`) into a new `Binding.sticker` field, which `Filter.Context.slotStickers` carries to `Quantity.UniqueVowelsOnSticker`. `Filter.View.nameStickers` feeds `Quantity.LettersOnNameStickers` and `Quantity.NameStickers`. `Filter.NameWordsAtLeast` reads `View.names`. `PlacesSticker` gains an `object` filter.
 
 **Tech Stack:** Haskell (GHC via the repo's nix flake), cabal, tasty.
 **Spec:** docs/superpowers/specs/2026-10-09-stickers-design.md
@@ -12,22 +12,22 @@
 
 ## Global Constraints
 
-- Work only in `/Volumes/nvme/Developer/pawl/.claude/worktrees/872-stickers-2` (branch `872-stickers-unit-2`). Never `cd` to the primary checkout.
-- Before the first build, as a bare command: `/Volumes/nvme/Developer/pawl/script/warm-worktree.sh seed /Volumes/nvme/Developer/pawl/.claude/worktrees/872-stickers-2`. It copies `cabal.project.local` too; confirm the file is there.
+- Work only in `/Volumes/nvme/Developer/parun/.claude/worktrees/872-stickers-2` (branch `872-stickers-unit-2`). Never `cd` to the primary checkout.
+- Before the first build, as a bare command: `/Volumes/nvme/Developer/parun/script/warm-worktree.sh seed /Volumes/nvme/Developer/parun/.claude/worktrees/872-stickers-2`. It copies `cabal.project.local` too; confirm the file is there.
 - `$SCRATCH` is the session scratchpad. Prefix every `cabal` call with `script/with-build-lock.sh`, redirect to `$SCRATCH/<name>.log`, read the file. Never pipe `cabal`.
 - Build: `script/with-build-lock.sh cabal build -v0 all > "$SCRATCH/build.log" 2>&1`.
-- Subtree: `script/with-build-lock.sh cabal test --test-options '--timeout 120s --hide-successes -p Sticker' > "$SCRATCH/sticker.log" 2>&1`. Every pattern below is one word; for one holding a space, run the built binary (`find dist-newstyle -name pawl-test-suite -type f -perm -u+x`) with `pawl_datadir=$PWD/data`.
+- Subtree: `script/with-build-lock.sh cabal test --test-options '--timeout 120s --hide-successes -p Sticker' > "$SCRATCH/sticker.log" 2>&1`. Every pattern below is one word; for one holding a space, run the built binary (`find dist-newstyle -name parun-test-suite -type f -perm -u+x`) with `parun_datadir=$PWD/data`.
 - Full suite before each commit: `script/with-build-lock.sh cabal test --test-options '--timeout 120s --hide-successes' > "$SCRATCH/suite.log" 2>&1`. Record the count before Task 1.
 - Mutations build with `cabal.project.local`'s `-Werror`, so a mutation must leave no binding unused. Write the sed script to `$SCRATCH/mN.sed`, run `script/with-build-lock.sh script/mutate.sh FILE @$SCRATCH/mN.sed Sticker`, one at a time, alone in the checkout. Name the assertion that reddened and confirm it is the one named below; a green or a different red is a finding, diagnosed before moving on.
-- The rules core never cases on an effect's identity. `Effect.PutSticker` is cased only in `Pawl.Engine.Resolve*` and the exhaustive classification tables. The core cases on `StickerKind` (CR 123.1), never on a sheet or a sticker's text; the letter, vowel and word reads are open-half `Quantity`/`Filter` arms.
-- One type per `Pawl.Types.<TypeName>` module, type and instances only. Constructors take `Mk`. A haddock is one line plus its CR citation, except an elision paragraph or a note naming the proving test.
+- The rules core never cases on an effect's identity. `Effect.PutSticker` is cased only in `Parun.Engine.Resolve*` and the exhaustive classification tables. The core cases on `StickerKind` (CR 123.1), never on a sheet or a sticker's text; the letter, vowel and word reads are open-half `Quantity`/`Filter` arms.
+- One type per `Parun.Types.<TypeName>` module, type and instances only. Constructors take `Mk`. A haddock is one line plus its CR citation, except an elision paragraph or a note naming the proving test.
 - An elision gets an issue and a code-site comment saying only what is not implemented, ending `(#N)`. `#N1`–`#N6` are placeholders Task 8 replaces.
 - Read CR text from `docs/rules.txt` by rule number. Re-verify Oracle with `curl -s 'https://api.scryfall.com/cards/named?exact=<Name>'` (URL-encode the name; one request at a time) before writing a card; the texts below are Scryfall's of 2026-10-09.
-- Stage, `hooky fix`, stage again. A new module: stage `pawl.cabal`, run `cabal-gild pawl.cabal`. Card JSON: `script/format-json.sh fix FILE`. A card file is named by `Pawl.Slug.fromText` of its name: a run of underscores becomes one `_` (`Wizards of the _____` → `wizards-of-the-_.json`); CardSpec's slug lint names the expected file if one is wrong.
+- Stage, `hooky fix`, stage again. A new module: stage `parun.cabal`, run `cabal-gild parun.cabal`. Card JSON: `script/format-json.sh fix FILE`. A card file is named by `Parun.Slug.fromText` of its name: a run of underscores becomes one `_` (`Wizards of the _____` → `wizards-of-the-_.json`); CardSpec's slug lint names the expected file if one is wrong.
 - Never stash; copy aside and move back. Never `git checkout <file>` to revert.
 - Extensions only from `.hlint.yaml`. `case` over `maybe`, `let` over `where`, no backticks in new code.
 - Commit: a subject, at most two sentences of why, then `Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>`. Never put close, fix or resolve beside #872; write "related to #872".
-- Gameplay tests are Haskell specs in `Pawl.StickerSpec` with test-local answerers (unit 1's Divergence 12). Sheet positions in `committedSheets`' order: 0 Night Brushwagg Ringmaster, 1 Slimy Burrito Illusion, 2 Contortionist Otter Storm, 3 Ancestral Hot Dog Minotaur.
+- Gameplay tests are Haskell specs in `Parun.StickerSpec` with test-local answerers (unit 1's Divergence 12). Sheet positions in `committedSheets`' order: 0 Night Brushwagg Ringmaster, 1 Slimy Burrito Illusion, 2 Contortionist Otter Storm, 3 Ancestral Hot Dog Minotaur.
 
 ## Review Focus
 
@@ -57,18 +57,18 @@ These are the five input classes most likely to bite. Each has a test in its own
 ## Task 1: words, positions and a sticker's words
 
 **Files:**
-- Create: `source/libraries/engine/Pawl/Engine/NameWords.hs`; Modify: `pawl.cabal`
-- Modify: `source/libraries/types/Pawl/Types/StickerPlacement.hs`, `source/libraries/codec/Pawl/Codec/StickerPlacement.hs`, `source/libraries/codec/Pawl/Codec/ObjectSpec.hs`
-- Modify: `source/libraries/engine/Pawl/Engine/Sticker.hs`, `source/libraries/engine/Pawl/Engine/Game.hs`
-- Modify: `source/libraries/test/Pawl/StickerSpec.hs`
+- Create: `source/libraries/engine/Parun/Engine/NameWords.hs`; Modify: `parun.cabal`
+- Modify: `source/libraries/types/Parun/Types/StickerPlacement.hs`, `source/libraries/codec/Parun/Codec/StickerPlacement.hs`, `source/libraries/codec/Parun/Codec/ObjectSpec.hs`
+- Modify: `source/libraries/engine/Parun/Engine/Sticker.hs`, `source/libraries/engine/Parun/Engine/Game.hs`
+- Modify: `source/libraries/test/Parun/StickerSpec.hs`
 
 **Interfaces:**
 - Produces: `NameWords.isBlank :: Text -> Bool`, `NameWords.wordsOf :: CardName -> [Text]`, `NameWords.wordCount :: CardName -> Natural`, `NameWords.insertAfter :: Natural -> Text -> CardName -> CardName`, `NameWords.letterCount :: Text -> Text -> Natural`, `NameWords.uniqueVowels :: Text -> Natural`; `StickerPlacement.position :: Maybe Natural`; `Sticker.put :: PlayerId -> ObjectId -> StickerRef -> Maybe Natural -> GameState -> GameState`; `Game.stickerWords :: StickerRef -> GameState -> Maybe Text`; spec constants `night`, `slimy`, `otter`.
-- Consumes: `Pawl.Extra.Natural.length`, `Natural.toInt`, `Player.stickerSheets`, `StickerSheet.names`.
+- Consumes: `Parun.Extra.Natural.length`, `Natural.toInt`, `Player.stickerSheets`, `StickerSheet.names`.
 
 - [ ] **Step 0: Commit this plan** alone: "Add the stickers unit 2 plan".
 
-- [ ] **Step 1: Write the failing tests.** In `Pawl.StickerSpec`, add the imports `qualified Pawl.Engine.NameWords as NameWords` and `qualified Pawl.Types.CardName as CardName`, these top-level helpers after `stickerOn`:
+- [ ] **Step 1: Write the failing tests.** In `Parun.StickerSpec`, add the imports `qualified Parun.Engine.NameWords as NameWords` and `qualified Parun.Types.CardName as CardName`, these top-level helpers after `stickerOn`:
 
 ```haskell
 -- One of alice's name stickers, by its sheet's position in committedSheets'
@@ -120,20 +120,20 @@ change `stickerOn`'s placement to `Sticker.put S.alice oid ref Nothing gs`, and 
 
 In `ObjectSpec`'s line building `StickerPlacement.MkStickerPlacement (StickerRef.MkStickerRef ...) (Timestamp.MkTimestamp 5)`, append `Nothing`; the JSON stays as it is (the field is defaulted).
 
-- [ ] **Step 2: Run; expected failure** "Could not find module 'Pawl.Engine.NameWords'".
+- [ ] **Step 2: Run; expected failure** "Could not find module 'Parun.Engine.NameWords'".
 
-- [ ] **Step 3: Implement.** Create `source/libraries/engine/Pawl/Engine/NameWords.hs`:
+- [ ] **Step 3: Implement.** Create `source/libraries/engine/Parun/Engine/NameWords.hs`:
 
 ```haskell
 -- | CR 123.6a: the words of a name as name stickers count them, and CR
 -- 123.6d-e's letter and vowel reads. Pure text, no game state.
-module Pawl.Engine.NameWords where
+module Parun.Engine.NameWords where
 
 import qualified Data.Set as Set
 import qualified Data.Text as Text
 import Numeric.Natural (Natural)
-import qualified Pawl.Extra.Natural as Natural
-import qualified Pawl.Types.CardName as CardName
+import qualified Parun.Extra.Natural as Natural
+import qualified Parun.Types.CardName as CardName
 
 -- | CR 123.6a: a blank line, a run of underscores, is not a word.
 isBlank :: Text.Text -> Bool
@@ -149,7 +149,7 @@ wordCount = Natural.length . wordsOf
 
 -- | CR 123.6b-c: `word` after the first `k` words, or at the end of a name
 -- with fewer. A blank stays, and the word goes before a blank that follows
--- word k, pawl's reading (#N1).
+-- word k, parun's reading (#N1).
 insertAfter :: Natural -> Text.Text -> CardName.CardName -> CardName.CardName
 insertAfter k word name =
   let go :: Natural -> [Text.Text] -> [Text.Text]
@@ -171,7 +171,7 @@ uniqueVowels :: Text.Text -> Natural
 uniqueVowels text = Natural.length (Set.filter (\c -> elem c "aeiouy") (Set.fromList (Text.unpack (Text.toLower text))))
 ```
 
-Stage `pawl.cabal`, run `cabal-gild pawl.cabal`.
+Stage `parun.cabal`, run `cabal-gild parun.cabal`.
 
 `StickerPlacement.hs`, after `timestamp`:
 
@@ -181,7 +181,7 @@ Stage `pawl.cabal`, run `cabal-gild pawl.cabal`.
     position :: Maybe Natural.Natural
 ```
 
-with `import qualified Numeric.Natural as Natural`. Its codec gains `position <- Fields.defaulted "position" Nothing (Common.maybe Common.natural) StickerPlacement.position` and the field in the record (import `Pawl.JsonCodec.Common as Common`).
+with `import qualified Numeric.Natural as Natural`. Its codec gains `position <- Fields.defaulted "position" Nothing (Common.maybe Common.natural) StickerPlacement.position` and the field in the record (import `Parun.JsonCodec.Common as Common`).
 
 `Sticker.put` takes `Maybe Natural` after the `StickerRef` and writes it as `StickerPlacement.position`; extend its haddock: "CR 123.6b: `position` is a name sticker's".
 
@@ -216,16 +216,16 @@ Sites the new field reaches (CLAUDE.md item 4): `grep -rn 'MkStickerPlacement\|S
 ## Task 2: name stickers in layer 3
 
 **Files:**
-- Create: `source/libraries/types/Pawl/Types/NameInsertion.hs`, `source/libraries/codec/Pawl/Codec/NameInsertion.hs`; Modify: `pawl.cabal`
-- Modify: `source/libraries/types/Pawl/Types/Modification.hs`, `source/libraries/codec/Pawl/Codec/Modification.hs`, `source/libraries/codec/Pawl/Codec/ModificationSpec.hs`
-- Modify: `source/libraries/engine/Pawl/Engine/Projection.hs`, `source/libraries/engine/Pawl/Engine/Projection/Rewrite.hs`, `source/libraries/engine/Pawl/Engine/Interchangeable/Mentions.hs`, `source/libraries/types/Pawl/Types/ProjectedCharacteristics.hs` (haddock)
-- Modify: `source/libraries/test/Pawl/CardSpec.hs`, `source/libraries/test/Pawl/StickerSpec.hs`
+- Create: `source/libraries/types/Parun/Types/NameInsertion.hs`, `source/libraries/codec/Parun/Codec/NameInsertion.hs`; Modify: `parun.cabal`
+- Modify: `source/libraries/types/Parun/Types/Modification.hs`, `source/libraries/codec/Parun/Codec/Modification.hs`, `source/libraries/codec/Parun/Codec/ModificationSpec.hs`
+- Modify: `source/libraries/engine/Parun/Engine/Projection.hs`, `source/libraries/engine/Parun/Engine/Projection/Rewrite.hs`, `source/libraries/engine/Parun/Engine/Interchangeable/Mentions.hs`, `source/libraries/types/Parun/Types/ProjectedCharacteristics.hs` (haddock)
+- Modify: `source/libraries/test/Parun/CardSpec.hs`, `source/libraries/test/Parun/StickerSpec.hs`
 
 **Interfaces:**
 - Produces: `NameInsertion.MkNameInsertion {word :: Text, after :: Natural}`; `Modification.InsertNameWords NameInsertion`; `Projection.stickerGathered :: GameState -> [Gathered]`.
 - Consumes: Task 1's `NameWords.insertAfter`, `Game.stickerWords`, `StickerPlacement.position`.
 
-- [ ] **Step 1: Write the failing tests.** In `Pawl.StickerSpec` (imports `Pawl.Engine.Cast as Cast`, `Pawl.Types.Facing as Facing`):
+- [ ] **Step 1: Write the failing tests.** In `Parun.StickerSpec` (imports `Parun.Engine.Cast as Cast`, `Parun.Types.Facing as Facing`):
 
 ```haskell
   -- CR 123.6c's first example, with a committed word: Otter after Fae of
@@ -286,10 +286,10 @@ In `ModificationSpec`, after "HasFullText":
 
 - [ ] **Step 2: Run; expected failure** "Not in scope: data constructor 'Modification.InsertNameWords'".
 
-- [ ] **Step 3: Implement.** `Pawl.Types.NameInsertion`:
+- [ ] **Step 3: Implement.** `Parun.Types.NameInsertion`:
 
 ```haskell
-module Pawl.Types.NameInsertion where
+module Parun.Types.NameInsertion where
 
 import qualified Data.Text as Text
 import qualified Numeric.Natural as Natural
@@ -302,7 +302,7 @@ data NameInsertion = MkNameInsertion
   deriving (Eq, Ord, Show)
 ```
 
-`Pawl.Codec.NameInsertion` (unit 1's `Pawl.Codec.StickerPlacement` shape):
+`Parun.Codec.NameInsertion` (unit 1's `Parun.Codec.StickerPlacement` shape):
 
 ```haskell
 codec :: Codec.Codec NameInsertion.NameInsertion
@@ -316,7 +316,7 @@ codec = Fields.object $ do
 
 ```haskell
   | -- | layer 3, CR 123.6 / 612.9: a name sticker's word in this object's
-    -- names. Engine-minted (Pawl.Engine.Projection.stickerGathered); no card
+    -- names. Engine-minted (Parun.Engine.Projection.stickerGathered); no card
     -- authors it.
     InsertNameWords NameInsertion.NameInsertion
 ```
@@ -382,10 +382,10 @@ Not copiable by construction: `copiableCharacteristics` and `Game.copyStampOf` s
 ## Task 3: CR 612.8's set name, Witness Protection, and a copy beneath the sticker
 
 **Files:**
-- Modify: `source/libraries/types/Pawl/Types/Modification.hs`, `source/libraries/codec/Pawl/Codec/Modification.hs`, `source/libraries/codec/Pawl/Codec/ModificationSpec.hs`
-- Modify: `source/libraries/engine/Pawl/Engine/Projection.hs`, `Projection/Rewrite.hs`, `Interchangeable/Mentions.hs`, `source/libraries/test/Pawl/CardSpec.hs`
+- Modify: `source/libraries/types/Parun/Types/Modification.hs`, `source/libraries/codec/Parun/Codec/Modification.hs`, `source/libraries/codec/Parun/Codec/ModificationSpec.hs`
+- Modify: `source/libraries/engine/Parun/Engine/Projection.hs`, `Projection/Rewrite.hs`, `Interchangeable/Mentions.hs`, `source/libraries/test/Parun/CardSpec.hs`
 - Create: `data/cards/witness-protection.json`, `data/cards/it-that-betrays.json`, `data/cards/seeker-of-the-way.json`
-- Modify: `source/libraries/test/Pawl/StickerSpec.hs`
+- Modify: `source/libraries/test/Parun/StickerSpec.hs`
 
 **Interfaces:**
 - Produces: `Modification.SetName CardName`.
@@ -517,11 +517,11 @@ Every other arm as `InsertNameWords`' in Task 2, the same list; `Mentions` → `
 ## Task 4: placing a name sticker, Baaallerina and Sword-Swallowing Seraph
 
 **Files:**
-- Modify: `source/libraries/types/Pawl/Types/Prompt.hs`, `source/libraries/types/Pawl/Types/Response.hs`, `source/libraries/engine/Pawl/Engine/Replay.hs`, `source/libraries/test/Pawl/ReplaySpec.hs`
-- Modify: `source/libraries/scenario/Pawl/Scenario/Prompt.hs`, `source/libraries/scenario/Pawl/Scenario/Reply.hs`, `source/libraries/scenario/Pawl/Scenario.hs`
-- Modify: `source/libraries/engine/Pawl/Engine/Resolve/Effect.hs`
+- Modify: `source/libraries/types/Parun/Types/Prompt.hs`, `source/libraries/types/Parun/Types/Response.hs`, `source/libraries/engine/Parun/Engine/Replay.hs`, `source/libraries/test/Parun/ReplaySpec.hs`
+- Modify: `source/libraries/scenario/Parun/Scenario/Prompt.hs`, `source/libraries/scenario/Parun/Scenario/Reply.hs`, `source/libraries/scenario/Parun/Scenario.hs`
+- Modify: `source/libraries/engine/Parun/Engine/Resolve/Effect.hs`
 - Create: `data/cards/baaallerina.json`, `data/cards/sword-swallowing-seraph.json`
-- Modify: `source/libraries/test/Pawl/StickerSpec.hs`
+- Modify: `source/libraries/test/Parun/StickerSpec.hs`
 
 **Interfaces:**
 - Produces: `Prompt.ChooseNamePosition :: Decider -> PlayerId -> ObjectId -> NonEmpty Natural -> Prompt Natural`; `Response.ChoseNamePosition Natural`; `Resolve.Effect.namePosition :: ObjectId -> Game Natural`; spec helpers `Asked`, `Naming`, `naming`, `entersNaming`, `placingAt`.
@@ -531,7 +531,7 @@ Every other arm as `InsertNameWords`' in Task 2, the same list; `Mentions` → `
   - Baaallerina `{3}{U}` Creature — Sheep Performer 3/3: "Flying\nWhen this creature enters, you may put a name sticker on a nonland permanent you own.\n{2}{U}: Another target creature with a name sticker on it gains flying until end of turn."
   - Sword-Swallowing Seraph `{4}{W}{W}` Creature — Angel Performer 4/4: "Flying, vigilance\nWhen this creature enters, you may put a name sticker on a nonland permanent you own.\n{1}{W}, {T}: Put a +1/+1 counter on another target creature with a name sticker on it. Activate only as a sorcery."
 
-- [ ] **Step 2: Write the failing tests.** `Pawl.StickerSpec` helpers after `pyrodancerEnters` (imports `Pawl.Types.FaceDownReason as FaceDownReason`):
+- [ ] **Step 2: Write the failing tests.** `Parun.StickerSpec` helpers after `pyrodancerEnters` (imports `Parun.Types.FaceDownReason as FaceDownReason`):
 
 ```haskell
 -- What name placements asked, oldest first: each position prompt's chooser and
@@ -661,7 +661,7 @@ Cases:
   ChooseNamePosition :: Decider.Decider -> PlayerId.PlayerId -> ObjectId.ObjectId -> NonEmpty.NonEmpty Natural.Natural -> Prompt Natural.Natural
 ```
 
-`Response.hs`, after `ChoseSticker`: `| -- | CR 123.6b: the position a controller chose.` / `ChoseNamePosition Natural.Natural`. `Replay`: `encode` → `Prompt.ChooseNamePosition {} -> Response.ChoseNamePosition answer`; `decode` → `Prompt.ChooseNamePosition {} -> case response of Response.ChoseNamePosition n -> Just n; _ -> Nothing` (laid out as its neighbours); `defaultAnswer` → `-- CR 123.6b: the start of the name is always a position.` / `Prompt.ChooseNamePosition _ _ _ positions -> NonEmpty.head positions`. Scenario: `Pawl.Scenario.Prompt` decider arm `Prompt.ChooseNamePosition decider _ _ _ -> Just (Decider.unwrap decider)` and name arm `"ChooseNamePosition"`; `Pawl.Scenario.Reply` → `natural`; `Pawl.Scenario`'s legality → `Prompt.Type.ChooseNamePosition _ _ _ positions -> elem chosen positions`.
+`Response.hs`, after `ChoseSticker`: `| -- | CR 123.6b: the position a controller chose.` / `ChoseNamePosition Natural.Natural`. `Replay`: `encode` → `Prompt.ChooseNamePosition {} -> Response.ChoseNamePosition answer`; `decode` → `Prompt.ChooseNamePosition {} -> case response of Response.ChoseNamePosition n -> Just n; _ -> Nothing` (laid out as its neighbours); `defaultAnswer` → `-- CR 123.6b: the start of the name is always a position.` / `Prompt.ChooseNamePosition _ _ _ positions -> NonEmpty.head positions`. Scenario: `Parun.Scenario.Prompt` decider arm `Prompt.ChooseNamePosition decider _ _ _ -> Just (Decider.unwrap decider)` and name arm `"ChooseNamePosition"`; `Parun.Scenario.Reply` → `natural`; `Parun.Scenario`'s legality → `Prompt.Type.ChooseNamePosition _ _ _ positions -> elem chosen positions`.
 
 `Resolve/Effect.hs`, the `PutSticker` arm's placement (imports `NameWords`, `StickerKind`, `StickerRef`):
 
@@ -758,12 +758,12 @@ Prompt sites (CLAUDE.md item 4): `grep -rn 'ChooseSticker\|ChoseSticker' . --inc
 ## Task 5: "that sticker", Wizards of the _____, Wolf in _____ Clothing and _____-o-saurus
 
 **Files:**
-- Modify: `source/libraries/types/Pawl/Types/Binding.hs`, `source/libraries/codec/Pawl/Codec/Binding.hs`, `source/libraries/codec/Pawl/Codec/BindingSpec.hs`, `source/libraries/codec/Pawl/Codec/ObjectSpec.hs`
-- Modify: `source/libraries/engine/Pawl/Engine/Binding.hs`, `source/libraries/engine/Pawl/Engine/Filter.hs`, `source/libraries/engine/Pawl/Engine/Target.hs`, `source/libraries/engine/Pawl/Engine/Resolve/Slots.hs`, `source/libraries/engine/Pawl/Engine/Resolve/Effect.hs`
-- Modify: `source/libraries/types/Pawl/Types/PutSticker.hs`, `source/libraries/codec/Pawl/Codec/PutSticker.hs`, `source/libraries/codec/Pawl/Codec/EffectSpec.hs`, `Projection/Rewrite.hs`, `Interchangeable/Mentions.hs`
-- Modify: `source/libraries/types/Pawl/Types/Quantity.hs`, `source/libraries/codec/Pawl/Codec/Quantity.hs`, `source/libraries/codec/Pawl/Codec/QuantitySpec.hs`, `source/libraries/engine/Pawl/Engine/Quantity.hs`, `QuantitySlot.hs`, `Projection.hs`, `Star.hs`, `source/libraries/test/Pawl/CardSpec.hs`, `source/libraries/test/Pawl/EffectLintSpec.hs`
+- Modify: `source/libraries/types/Parun/Types/Binding.hs`, `source/libraries/codec/Parun/Codec/Binding.hs`, `source/libraries/codec/Parun/Codec/BindingSpec.hs`, `source/libraries/codec/Parun/Codec/ObjectSpec.hs`
+- Modify: `source/libraries/engine/Parun/Engine/Binding.hs`, `source/libraries/engine/Parun/Engine/Filter.hs`, `source/libraries/engine/Parun/Engine/Target.hs`, `source/libraries/engine/Parun/Engine/Resolve/Slots.hs`, `source/libraries/engine/Parun/Engine/Resolve/Effect.hs`
+- Modify: `source/libraries/types/Parun/Types/PutSticker.hs`, `source/libraries/codec/Parun/Codec/PutSticker.hs`, `source/libraries/codec/Parun/Codec/EffectSpec.hs`, `Projection/Rewrite.hs`, `Interchangeable/Mentions.hs`
+- Modify: `source/libraries/types/Parun/Types/Quantity.hs`, `source/libraries/codec/Parun/Codec/Quantity.hs`, `source/libraries/codec/Parun/Codec/QuantitySpec.hs`, `source/libraries/engine/Parun/Engine/Quantity.hs`, `QuantitySlot.hs`, `Projection.hs`, `Star.hs`, `source/libraries/test/Parun/CardSpec.hs`, `source/libraries/test/Parun/EffectLintSpec.hs`
 - Create: `data/cards/wizards-of-the-_.json`, `data/cards/wolf-in-_-clothing.json`, `data/cards/_-o-saurus.json`
-- Modify: `source/libraries/test/Pawl/StickerSpec.hs`
+- Modify: `source/libraries/test/Parun/StickerSpec.hs`
 
 **Interfaces:**
 - Produces: `Binding.sticker :: Maybe StickerRef`; `Engine.Binding.toSticker :: StickerRef -> Binding`; `Filter.Context.slotStickers :: Map SlotName StickerRef`; `PutSticker.bound :: Maybe SlotName`; `Quantity.UniqueVowelsOnSticker SlotName`; `Resolve.Effect.bindStickerSlot :: ObjectId -> SlotName -> StickerRef -> GameState -> GameState`.
@@ -965,11 +965,11 @@ Binding sites (CLAUDE.md item 4): `grep -rn 'MkBinding\|{ Binding.amount = \|Bin
 ## Task 6: the stickers' letters and count, Trespasser and _____ Balls of Fire
 
 **Files:**
-- Modify: `source/libraries/engine/Pawl/Engine/Filter.hs` (View), `source/libraries/engine/Pawl/Engine/Projection/View.hs`, `source/libraries/engine/Pawl/Engine/Count.hs`, `source/libraries/test/Pawl/FilterSpec.hs`, `source/libraries/test/Pawl/Support.hs`
-- Modify: `source/libraries/types/Pawl/Types/Quantity.hs`, `source/libraries/codec/Pawl/Codec/Quantity.hs`, `source/libraries/codec/Pawl/Codec/QuantitySpec.hs`, and Task 5's Quantity sites
-- Modify: `source/libraries/types/Pawl/Types/PlacesSticker.hs`, `source/libraries/codec/Pawl/Codec/PlacesSticker.hs`, `source/libraries/codec/Pawl/Codec/TriggerConditionSpec.hs`, `source/libraries/engine/Pawl/Engine/Event/Match.hs`, `Projection/Rewrite.hs`, `Interchangeable/Mentions.hs`, `source/libraries/test/Pawl/CardSpec.hs`, `source/libraries/test/Pawl/ZoneTriggerSpec.hs`
+- Modify: `source/libraries/engine/Parun/Engine/Filter.hs` (View), `source/libraries/engine/Parun/Engine/Projection/View.hs`, `source/libraries/engine/Parun/Engine/Count.hs`, `source/libraries/test/Parun/FilterSpec.hs`, `source/libraries/test/Parun/Support.hs`
+- Modify: `source/libraries/types/Parun/Types/Quantity.hs`, `source/libraries/codec/Parun/Codec/Quantity.hs`, `source/libraries/codec/Parun/Codec/QuantitySpec.hs`, and Task 5's Quantity sites
+- Modify: `source/libraries/types/Parun/Types/PlacesSticker.hs`, `source/libraries/codec/Parun/Codec/PlacesSticker.hs`, `source/libraries/codec/Parun/Codec/TriggerConditionSpec.hs`, `source/libraries/engine/Parun/Engine/Event/Match.hs`, `Projection/Rewrite.hs`, `Interchangeable/Mentions.hs`, `source/libraries/test/Parun/CardSpec.hs`, `source/libraries/test/Parun/ZoneTriggerSpec.hs`
 - Create: `data/cards/_-_-_-trespasser.json`, `data/cards/_-balls-of-fire.json`
-- Modify: `source/libraries/test/Pawl/StickerSpec.hs`
+- Modify: `source/libraries/test/Parun/StickerSpec.hs`
 
 **Interfaces:**
 - Produces: `Filter.View.nameStickers :: Seq Text`; `Quantity.LettersOnNameStickers Text`; `Quantity.NameStickers`; `PlacesSticker.object :: Filter Keyword`.
@@ -1126,9 +1126,9 @@ A type that gains a Filter (CLAUDE.md item 4): `Mentions` `TriggerCondition.Plac
 ## Task 7: words in a name, and Angelic Harold
 
 **Files:**
-- Modify: `source/libraries/types/Pawl/Types/Filter.hs`, `source/libraries/codec/Pawl/Codec/Filter.hs`, `source/libraries/codec/Pawl/Codec/FilterSpec.hs`, `source/libraries/engine/Pawl/Engine/Filter.hs`, `Count.hs`, `Projection.hs`, `Interchangeable/Mentions.hs`, `source/libraries/test/Pawl/CardSpec.hs`, `source/libraries/test/Pawl/FilterPositionLintSpec.hs`
+- Modify: `source/libraries/types/Parun/Types/Filter.hs`, `source/libraries/codec/Parun/Codec/Filter.hs`, `source/libraries/codec/Parun/Codec/FilterSpec.hs`, `source/libraries/engine/Parun/Engine/Filter.hs`, `Count.hs`, `Projection.hs`, `Interchangeable/Mentions.hs`, `source/libraries/test/Parun/CardSpec.hs`, `source/libraries/test/Parun/FilterPositionLintSpec.hs`
 - Create: `data/cards/angelic-harold.json`
-- Modify: `source/libraries/test/Pawl/StickerSpec.hs`
+- Modify: `source/libraries/test/Parun/StickerSpec.hs`
 
 **Interfaces:**
 - Produces: `Filter.NameWordsAtLeast Natural`.
@@ -1156,7 +1156,7 @@ A type that gains a Filter (CLAUDE.md item 4): `Mentions` `TriggerCondition.Plac
 
 - [ ] **Step 3: Run; expected failure** "Not in scope: data constructor 'Filter.NameWordsAtLeast'".
 
-- [ ] **Step 4: Implement.** `Pawl.Types.Filter`, after `HasNameOriginallyPrintedIn`:
+- [ ] **Step 4: Implement.** `Parun.Types.Filter`, after `HasNameOriginallyPrintedIn`:
 
 ```haskell
   | -- | CR 123.6a: one of the object's names has at least this many words, a
@@ -1199,28 +1199,28 @@ A type that gains a Filter (CLAUDE.md item 4): `Mentions` `TriggerCondition.Plac
 N1, title "Unclear where a name sticker's word goes in a name with a blank", labels `question,area:cards`:
 
 ```markdown
-> **Summary (2026-10-09).** Some Unfinity names have a blank line in them, like Wolf in _____ Clothing. The rules say a blank is not a word, and a name sticker never removes a word, but not whether the blank stays or where the sticker's word sits beside it. Pawl keeps the blank, does not count it, and puts the word before a blank that follows the chosen position: after two words, Wolf in Otter _____ Clothing. Wolf in _____ Clothing and _____ _____ _____ Trespasser are the cards that show it.
+> **Summary (2026-10-09).** Some Unfinity names have a blank line in them, like Wolf in _____ Clothing. The rules say a blank is not a word, and a name sticker never removes a word, but not whether the blank stays or where the sticker's word sits beside it. Parun keeps the blank, does not count it, and puts the word before a blank that follows the chosen position: after two words, Wolf in Otter _____ Clothing. Wolf in _____ Clothing and _____ _____ _____ Trespasser are the cards that show it.
 
 ### Details
 
-- CR 123.6a, CR 123.6b. `Pawl.Engine.NameWords.insertAfter` cites this issue.
+- CR 123.6a, CR 123.6b. `Parun.Engine.NameWords.insertAfter` cites this issue.
 - `_____-o-saurus` is read as one hyphenated word (CR 123.6a), so it counts.
 ```
 
 N2, title "Unclear how a name sticker changes an object with several names", labels `question,area:cards`:
 
 ```markdown
-> **Summary (2026-10-09).** A split card off the stack has two names, and a creature carrying Spy Kit has every nonlegendary creature card's name. The rules say a name sticker's word goes after a chosen number of words, but not which name, nor how many positions there are when the names differ in length. Pawl puts the word into every name, at the chosen position or at the end of a shorter name, and offers positions up to the longest name. Spy Kit on Grizzly Bears, stickered after it was equipped, is the case.
+> **Summary (2026-10-09).** A split card off the stack has two names, and a creature carrying Spy Kit has every nonlegendary creature card's name. The rules say a name sticker's word goes after a chosen number of words, but not which name, nor how many positions there are when the names differ in length. Parun puts the word into every name, at the chosen position or at the end of a shorter name, and offers positions up to the longest name. Spy Kit on Grizzly Bears, stickered after it was equipped, is the case.
 
 ### Details
 
-- CR 123.6b, CR 123.6c, CR 612.7, CR 709.4. `Pawl.Engine.Projection.applyModification`'s InsertNameWords arm and `Pawl.Engine.Resolve.Effect.namePosition` cite this issue.
+- CR 123.6b, CR 123.6c, CR 612.7, CR 709.4. `Parun.Engine.Projection.applyModification`'s InsertNameWords arm and `Parun.Engine.Resolve.Effect.namePosition` cite this issue.
 ```
 
 N3, title "Name stickers can't be counted by how many letters they have", labels `gap,expires:card-driven,area:effects`:
 
 ```markdown
-> **Summary (2026-10-09).** Fight the _____ Fight gives +0/+2 for each name sticker on it with eight or more letters, and Last Voyage of the _____ gives +2/+0 for each with seven or fewer. Pawl counts name stickers, but not by their letters. Fight the _____ Fight is the card to add, and it also needs "enchanted creature fights up to one target creature you don't control": no fight in pawl names the creature an Aura enchants.
+> **Summary (2026-10-09).** Fight the _____ Fight gives +0/+2 for each name sticker on it with eight or more letters, and Last Voyage of the _____ gives +2/+0 for each with seven or fewer. Parun counts name stickers, but not by their letters. Fight the _____ Fight is the card to add, and it also needs "enchanted creature fights up to one target creature you don't control": no fight in parun names the creature an Aura enchants.
 
 ### Details
 
@@ -1231,7 +1231,7 @@ N3, title "Name stickers can't be counted by how many letters they have", labels
 N4, title "Knight in _____ Armor can't have protection from names by their first letter", labels `gap,expires:card-driven,area:keywords`:
 
 ```markdown
-> **Summary (2026-10-09).** Knight in _____ Armor has protection from names that start with the same letter as a name sticker on it. Pawl's protection has no quality that reads a name's first letter. Knight in _____ Armor is the card.
+> **Summary (2026-10-09).** Knight in _____ Armor has protection from names that start with the same letter as a name sticker on it. Parun's protection has no quality that reads a name's first letter. Knight in _____ Armor is the card.
 
 ### Details
 
@@ -1241,7 +1241,7 @@ N4, title "Knight in _____ Armor can't have protection from names by their first
 N5, title "_____ _____ Rocketship can't choose a letter", labels `gap,expires:card-driven,area:effects`:
 
 ```markdown
-> **Summary (2026-10-09).** _____ _____ Rocketship, as it attacks, has its controller choose a letter and gets +1/+1 for each name sticker on it that begins with that letter. Pawl has no letter choice and no count of name stickers by their first letter. _____ _____ Rocketship is the card.
+> **Summary (2026-10-09).** _____ _____ Rocketship, as it attacks, has its controller choose a letter and gets +1/+1 for each name sticker on it that begins with that letter. Parun has no letter choice and no count of name stickers by their first letter. _____ _____ Rocketship is the card.
 
 ### Details
 
@@ -1251,11 +1251,11 @@ N5, title "_____ _____ Rocketship can't choose a letter", labels `gap,expires:ca
 N6, title "A Good Day to Pie can't return itself when you put a name sticker on a creature", labels `gap,expires:card-driven,area:triggers`:
 
 ```markdown
-> **Summary (2026-10-09).** A Good Day to Pie returns from your graveyard to your hand whenever you put a name sticker on a creature. Pawl's "whenever you put a sticker" triggers only from the battlefield. A Good Day to Pie is the card.
+> **Summary (2026-10-09).** A Good Day to Pie returns from your graveyard to your hand whenever you put a name sticker on a creature. Parun's "whenever you put a sticker" triggers only from the battlefield. A Good Day to Pie is the card.
 
 ### Details
 
-- CR 123.3, CR 113.6. `Pawl.Engine.Event.Trigger`'s zone table answers `battlefield` for `TriggerCondition.PlacesSticker`.
+- CR 123.3, CR 113.6. `Parun.Engine.Event.Trigger`'s zone table answers `battlefield` for `TriggerCondition.PlacesSticker`.
 ```
 
 - [ ] **Step 2: Cite them.** Replace `#N1`–`#N3` with the filed numbers; `grep -rn '#N[0-9]' source data docs` must return only this plan.
@@ -1265,16 +1265,16 @@ N6, title "A Good Day to Pie can't return itself when you put a name sticker on 
 
 ## Task 9: ingest, sweeps, self-review and the PR
 
-- [ ] **Step 1: Re-run `pawl ingest`** over units 1 and 2 (unit 1 skipped it):
-  - `jq -f script/ingest/candidates.jq /Volumes/nvme/Developer/pawl/_scratch/AtomicCards.json > "$SCRATCH/candidates.json"`
-  - `script/with-build-lock.sh cabal run -v0 pawl -- ingest "$SCRATCH/candidates.json" > "$SCRATCH/ingest.log" 2>&1`
+- [ ] **Step 1: Re-run `parun ingest`** over units 1 and 2 (unit 1 skipped it):
+  - `jq -f script/ingest/candidates.jq /Volumes/nvme/Developer/parun/_scratch/AtomicCards.json > "$SCRATCH/candidates.json"`
+  - `script/with-build-lock.sh cabal run -v0 parun -- ingest "$SCRATCH/candidates.json" > "$SCRATCH/ingest.log" 2>&1`
   - Read the log. Every pool card it names as disagreeing with MTGJSON among this unit's eleven and unit 1's five (Blorbian Buddy, Ticket Turbotubes, Proficient Pyrodancer, Wee Champion, Croakid Amphibonaut) is fixed here; a disagreement on any other card is filed or folded per CLAUDE.md. The sheets' stamped texts must not change (`git diff data/sticker-sheets`). Delete any new keyword-only card file it wrote (`git status --porcelain data/cards | grep '^??'`), out of this unit's scope, and say how many in the PR. `script/format-json.sh fix` every changed file, then the full suite.
 - [ ] **Step 2: Sweeps.**
   - `grep -rn '872' source docs data --include='*.hs' --include='*.md' --include='*.json'`: unit 1's meld, merge and restamp elisions and `Keyword.hs`' sticker kicker only.
   - `grep -rn -i 'name sticker\|sticker' source --include='*.hs'` and read every comment this unit touched; `grep -rn 'Spy Kit' source --include='*.hs'` for prose that says Spy Kit is layer 3's only name writer (`PC.names`' haddock, `AddNamesMatching`'s) and fix it.
   - Counting absolutes: `grep -rn 'HasSticker\|PlacesSticker\|PutSticker' source --include='*.hs'` comments naming their producers ("the one producer", Pyrodancer alone) are now falsified; fix them, including `Resolve.Effect`'s "the one producer's own filter".
   - CR citations: for each rule in `git diff origin/main -U0 | grep -o 'CR [0-9][0-9.a-z/-]*' | sort -u`, read it in `docs/rules.txt`.
-- [ ] **Step 3: Self-review.** `git fetch`, `git merge origin/main` (once, now), the full suite, then re-run m2a, m3b, m4a, m5d, m5f, m6b. Re-read every comment the diff touched against the one-line haddock rule. Read `gh api repos/tfausak/pawl/issues/872/dependencies/blocking` and name what this unblocked.
+- [ ] **Step 3: Self-review.** `git fetch`, `git merge origin/main` (once, now), the full suite, then re-run m2a, m3b, m4a, m5d, m5f, m6b. Re-read every comment the diff touched against the one-line haddock rule. Read `gh api repos/tfausak/parun/issues/872/dependencies/blocking` and name what this unblocked.
 - [ ] **Step 4: Open the PR.** `gh pr create --draft --title "Stickers unit 2: name stickers" --body-file $SCRATCH/pr.md`, the body:
 
 ```

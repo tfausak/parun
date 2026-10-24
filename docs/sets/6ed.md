@@ -3,7 +3,7 @@
 The Sixth Edition (6ED) cards not yet in the pool, and which wait on a
 capability. Derived 2026-10-23 from MTGJSON's set list against `data/cards/`.
 Re-derive the missing list by writing the set list as a deck (`1 Name` per
-line) and running `pawl deck` on it: every unresolved name is reported.
+line) and running `parun deck` on it: every unresolved name is reported.
 
 ## Expressible today
 

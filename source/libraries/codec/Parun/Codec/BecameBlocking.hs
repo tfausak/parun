@@ -1,0 +1,40 @@
+{-# LANGUAGE ApplicativeDo #-}
+
+module Parun.Codec.BecameBlocking where
+
+import qualified Data.Set as Set
+import qualified Parun.Codec.BlockProducer as BlockProducer
+import qualified Parun.Codec.ObjectId as ObjectId
+import qualified Parun.JsonCodec.Codec as Codec
+import qualified Parun.JsonCodec.Common as Common
+import qualified Parun.JsonCodec.Fields as Fields
+import qualified Parun.Types.BecameBlocking as BecameBlocking
+import qualified Parun.Types.BlockProducer as BlockProducer
+
+-- | A bare object keyed by the record's field names, replacing the two-element
+-- array this payload used to be. Runtime-only: GameEvent serialises transcripts,
+-- never card data.
+codec :: Codec.Codec BecameBlocking.BecameBlocking
+codec = Fields.object $ do
+  blocker <- Fields.required "blocker" ObjectId.codec BecameBlocking.blocker
+  attacker <- Fields.required "attacker" ObjectId.codec BecameBlocking.attacker
+  -- Defaulted rather than required, as DamageEvent's flags are: CR 509.1's
+  -- declaration is the producer of all but a handful of these events, so the key
+  -- rides only on CR 509.4's entry and on an effect's.
+  producer <- Fields.defaulted "producer" BlockProducer.Declared BlockProducer.codec BecameBlocking.producer
+  -- Defaulted for the same reason, and to the same value: CR 509.1's declaration
+  -- is the first thing that blocks any attacker, so every event it records
+  -- carries this clear too.
+  attackerWasBlocked <- Fields.defaulted "attackerWasBlocked" False Common.boolean BecameBlocking.attackerWasBlocked
+  -- Defaulted to the EMPTY set for the same reason once more: CR 509.1's
+  -- declaration finds every attacker it names unblocked, so the key rides only
+  -- on CR 509.4's entry at an attacker something was already blocking.
+  blockersBefore <- Fields.defaulted "blockersBefore" Set.empty (Common.set ObjectId.codec) BecameBlocking.blockersBefore
+  pure
+    BecameBlocking.MkBecameBlocking
+      { BecameBlocking.blocker = blocker,
+        BecameBlocking.attacker = attacker,
+        BecameBlocking.producer = producer,
+        BecameBlocking.attackerWasBlocked = attackerWasBlocked,
+        BecameBlocking.blockersBefore = blockersBefore
+      }

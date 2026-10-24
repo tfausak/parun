@@ -6,7 +6,7 @@
 
 **Architecture:** A new `GameState.lastChoice` timestamp records when a player was last offered an optional action; a single `Game.choose` wrapper around `Program.prompt` is the only thing that writes it, so the reset cannot be forgotten at a new prompt site. A `checkMandatoryLoop` guard at the heads of `playGame`'s and `priorityLoop`'s loops draws the game when `nextTimestamp - lastChoice` reaches a fixed limit. One labeled synthetic creature plus the pool's Aether Flash builds the proving loop.
 
-**Tech Stack:** Haskell (GHC 9.14.1 from the Nix flake), `cabal`, the `tasty` test suite via `Pawl.Spec`, `hooky` for format/lint.
+**Tech Stack:** Haskell (GHC 9.14.1 from the Nix flake), `cabal`, the `tasty` test suite via `Parun.Spec`, `hooky` for format/lint.
 
 **Spec:** `docs/superpowers/specs/2026-08-04-cr-104-4b-mandatory-loop-draw-design.md`. Read it before Task 1.
 
@@ -17,7 +17,7 @@
 - **Run the suite as** `cabal test --test-options '--timeout 1s --hide-successes'`. Never pipe its output — that stalls a ~30s suite for minutes.
 - **`hooky fix` then `hooky run`, on staged files only.** `git add` first; `hooky fix` reformats, so `git add` again before `hooky run`.
 - **Never trust recalled Magic rules.** Every CR claim is checked against `docs/rules.txt`, grepped by rule number, and the rule number goes in the code comment.
-- **Constructors take a `Mk` prefix.** Language extensions come from the allowlist in `.hlint.yaml`. No `fromIntegral`/`toEnum` — convert through `Pawl.Extra.*`.
+- **Constructors take a `Mk` prefix.** Language extensions come from the allowlist in `.hlint.yaml`. No `fromIntegral`/`toEnum` — convert through `Parun.Extra.*`.
 - **The rules core must never case on an effect's identity.** Nothing in this plan does; keep it that way.
 - **Do not edit this plan** to make a check pass. If it looks wrong, stop and say so.
 
@@ -31,37 +31,37 @@ The two CR texts this plan rests on, verbatim from `docs/rules.txt`:
 
 | File | Responsibility | Task |
 |---|---|---|
-| `source/libraries/types/Pawl/Types/GameState.hs` | new `lastChoice` field | 1 |
-| `source/libraries/engine/Pawl/Engine/Game.hs` | the `choose` choke point | 1 |
-| `source/libraries/engine/Pawl/Engine/Setup.hs` | initialize `lastChoice`, and set it at the two subgame seams | 1 |
-| `source/libraries/engine/Pawl/Engine/{Engine,Activate,Cast,Combat,Cost,Damage,Mana,Mulligan,Replacement,Resolve,Sba}.hs` | rewire prompt sites to `Game.choose` | 1 |
-| `source/libraries/engine/Pawl/Engine/Engine.hs` | `mandatoryLoopLimit`, `checkMandatoryLoop`, and the two loop heads | 2 |
+| `source/libraries/types/Parun/Types/GameState.hs` | new `lastChoice` field | 1 |
+| `source/libraries/engine/Parun/Engine/Game.hs` | the `choose` choke point | 1 |
+| `source/libraries/engine/Parun/Engine/Setup.hs` | initialize `lastChoice`, and set it at the two subgame seams | 1 |
+| `source/libraries/engine/Parun/Engine/{Engine,Activate,Cast,Combat,Cost,Damage,Mana,Mulligan,Replacement,Resolve,Sba}.hs` | rewire prompt sites to `Game.choose` | 1 |
+| `source/libraries/engine/Parun/Engine/Engine.hs` | `mandatoryLoopLimit`, `checkMandatoryLoop`, and the two loop heads | 2 |
 | `data/cards/synthetic-recursion.json` | the labeled synthetic half of the proving board | 3 |
-| `source/test-suite/Pawl/GameSpec.hs` | all tests (it already covers `Pawl.Engine.Game` and `Pawl.Engine.Engine`) | 1, 2, 3 |
+| `source/test-suite/Parun/GameSpec.hs` | all tests (it already covers `Parun.Engine.Game` and `Parun.Engine.Engine`) | 1, 2, 3 |
 
 ---
 
 ### Task 1: `GameState.lastChoice` and the `Game.choose` choke point
 
 **Files:**
-- Modify: `source/libraries/types/Pawl/Types/GameState.hs` (field, near `nextTimestamp` at :146)
-- Modify: `source/libraries/engine/Pawl/Engine/Game.hs` (add `choose`, after `freshTimestamp` at :50-53)
-- Modify: `source/libraries/engine/Pawl/Engine/Setup.hs` (`emptyGame` around :89, `subgameStateFrom` around :436, `funnelBack`)
+- Modify: `source/libraries/types/Parun/Types/GameState.hs` (field, near `nextTimestamp` at :146)
+- Modify: `source/libraries/engine/Parun/Engine/Game.hs` (add `choose`, after `freshTimestamp` at :50-53)
+- Modify: `source/libraries/engine/Parun/Engine/Setup.hs` (`emptyGame` around :89, `subgameStateFrom` around :436, `funnelBack`)
 - Modify: every engine module holding a `Trans.lift (Program.prompt …)` — `Engine.hs`, `Activate.hs`, `Cast.hs`, `Combat.hs`, `Cost.hs`, `Damage.hs`, `Mana.hs`, `Mulligan.hs`, `Replacement.hs`, `Resolve.hs`, `Sba.hs`
-- Test: `source/test-suite/Pawl/GameSpec.hs`
+- Test: `source/test-suite/Parun/GameSpec.hs`
 
 **Interfaces:**
-- Produces: `GameState.lastChoice :: Timestamp.Timestamp`; `Pawl.Engine.Game.choose :: Prompt.Prompt a -> Game.Type.Game a`
+- Produces: `GameState.lastChoice :: Timestamp.Timestamp`; `Parun.Engine.Game.choose :: Prompt.Prompt a -> Game.Type.Game a`
 - Consumes: nothing from earlier tasks
 
 - [ ] **Step 1: Write the two failing tests**
 
-Add to `source/test-suite/Pawl/GameSpec.hs`. Wire `lastChoiceSpec` into the module's aggregate `tests` list beside the other `*Spec` groups, following the shape of the neighbouring `restartReentrySpec` entry (it takes `s` and `registry` the same way).
+Add to `source/test-suite/Parun/GameSpec.hs`. Wire `lastChoiceSpec` into the module's aggregate `tests` list beside the other `*Spec` groups, following the shape of the neighbouring `restartReentrySpec` entry (it takes `s` and `registry` the same way).
 
 ```haskell
 -- CR 104.4b's "loops that contain an optional action": what makes an action
 -- optional is that the player had more than one answer. GameState.lastChoice is
--- how the engine remembers when that last happened, and Pawl.Engine.Game.choose
+-- how the engine remembers when that last happened, and Parun.Engine.Game.choose
 -- is the only thing that writes it.
 lastChoiceSpec :: (Monad m, Monad n) => Spec.Spec m n -> Registry.Registry m -> n ()
 lastChoiceSpec s registry = Spec.describe s "lastChoice (CR 104.4b)" $ do
@@ -105,7 +105,7 @@ Expected: a compile error, `GameState.lastChoice` is not a field of `GameState`.
 
 - [ ] **Step 3: Add the field**
 
-In `source/libraries/types/Pawl/Types/GameState.hs`, directly after `nextTimestamp` (:146):
+In `source/libraries/types/Parun/Types/GameState.hs`, directly after `nextTimestamp` (:146):
 
 ```haskell
     -- | CR 104.4b: the timestamp as of the last time a player was offered an
@@ -113,7 +113,7 @@ In `source/libraries/types/Pawl/Types/GameState.hs`, directly after `nextTimesta
     -- events have happened with no player able to decide anything, which is
     -- Engine.checkMandatoryLoop's heuristic for a loop of mandatory actions.
     --
-    -- Written only by Pawl.Engine.Game.choose, so a new prompt site cannot
+    -- Written only by Parun.Engine.Game.choose, so a new prompt site cannot
     -- forget to reset it. Concede is deliberately not one of its callers: CR
     -- 104.3a lets a player concede at any time, so if conceding counted, no
     -- loop would ever be mandatory.
@@ -122,7 +122,7 @@ In `source/libraries/types/Pawl/Types/GameState.hs`, directly after `nextTimesta
 
 - [ ] **Step 4: Initialize it, including at both subgame seams**
 
-In `source/libraries/engine/Pawl/Engine/Setup.hs`:
+In `source/libraries/engine/Parun/Engine/Setup.hs`:
 
 - `emptyGame` (near :89, beside `GameState.nextTimestamp = Timestamp.MkTimestamp 0`):
   ```haskell
@@ -133,7 +133,7 @@ In `source/libraries/engine/Pawl/Engine/Setup.hs`:
 
 - [ ] **Step 5: Add the choke point**
 
-In `source/libraries/engine/Pawl/Engine/Game.hs`, after `freshTimestamp` (:53). The module needs imports for `Control.Monad.Trans.Class as Trans`, `Control.Monad.Trans.State.Strict as State`, `Pawl.Types.Game as Game.Type`, `Pawl.Types.Program as Program` and `Pawl.Types.Prompt as Prompt` — all in the `types` sublibrary, so no dependency edge inverts.
+In `source/libraries/engine/Parun/Engine/Game.hs`, after `freshTimestamp` (:53). The module needs imports for `Control.Monad.Trans.Class as Trans`, `Control.Monad.Trans.State.Strict as State`, `Parun.Types.Game as Game.Type`, `Parun.Types.Program as Program` and `Parun.Types.Prompt as Prompt` — all in the `types` sublibrary, so no dependency edge inverts.
 
 ```haskell
 -- Ask a player something they could answer more than one way, and record that
@@ -164,7 +164,7 @@ choose p = do
 
 - [ ] **Step 6: Rewire every prompt site**
 
-Mechanically replace `Trans.lift (Program.prompt X)` with `Game.choose X` at every site listed below, dropping one layer of parentheses. Each module already imports `Pawl.Engine.Game as Game`; add the import where it does not. Remove any `Program`/`Trans` import that becomes unused — the build is warning-free, so the compiler will tell you.
+Mechanically replace `Trans.lift (Program.prompt X)` with `Game.choose X` at every site listed below, dropping one layer of parentheses. Each module already imports `Parun.Engine.Game as Game`; add the import where it does not. Remove any `Program`/`Trans` import that becomes unused — the build is warning-free, so the compiler will tell you.
 
 | Module | Sites |
 |---|---|
@@ -210,9 +210,9 @@ Expected: PASS, and the suite count is 2 higher than before. Nothing else should
 - [ ] **Step 9: Commit**
 
 ```bash
-git add source/libraries/types/Pawl/Types/GameState.hs source/libraries/engine/Pawl/Engine/ source/test-suite/Pawl/GameSpec.hs
+git add source/libraries/types/Parun/Types/GameState.hs source/libraries/engine/Parun/Engine/ source/test-suite/Parun/GameSpec.hs
 hooky fix
-git add source/libraries/types/Pawl/Types/GameState.hs source/libraries/engine/Pawl/Engine/ source/test-suite/Pawl/GameSpec.hs
+git add source/libraries/types/Parun/Types/GameState.hs source/libraries/engine/Parun/Engine/ source/test-suite/Parun/GameSpec.hs
 hooky run
 git commit -m "Record when a player was last offered a choice (#338)"
 ```
@@ -222,20 +222,20 @@ git commit -m "Record when a player was last offered a choice (#338)"
 ### Task 2: `checkMandatoryLoop` and the two loop heads
 
 **Files:**
-- Modify: `source/libraries/engine/Pawl/Engine/Engine.hs` (`priorityLoop` :645, `playGame` :1197)
-- Test: `source/test-suite/Pawl/GameSpec.hs`
+- Modify: `source/libraries/engine/Parun/Engine/Engine.hs` (`priorityLoop` :645, `playGame` :1197)
+- Test: `source/test-suite/Parun/GameSpec.hs`
 
 **Interfaces:**
-- Consumes: `GameState.lastChoice`, `Pawl.Engine.Game.choose` (Task 1)
+- Consumes: `GameState.lastChoice`, `Parun.Engine.Game.choose` (Task 1)
 - Produces: `Engine.mandatoryLoopLimit :: Natural.Natural`; `Engine.checkMandatoryLoop :: Game.Type.Game ()`
 
 - [ ] **Step 1: Write the failing tests**
 
-Add to `source/test-suite/Pawl/GameSpec.hs` and wire `mandatoryLoopSpec` into the aggregate `tests` list.
+Add to `source/test-suite/Parun/GameSpec.hs` and wire `mandatoryLoopSpec` into the aggregate `tests` list.
 
 ```haskell
 -- CR 104.4b, the guard itself. The gameplay proof that it is reached from a real
--- loop is in Pawl.GameSpec's "a mandatory loop" group; these three pin the
+-- loop is in Parun.GameSpec's "a mandatory loop" group; these three pin the
 -- boundary, which a board-level test cannot do precisely.
 mandatoryLoopSpec :: (Monad m, Monad n) => Spec.Spec m n -> n ()
 mandatoryLoopSpec s = Spec.describe s "the mandatory-loop guard (CR 104.4b)" $ do
@@ -283,7 +283,7 @@ Expected: a compile error, `Engine.mandatoryLoopLimit` and `Engine.checkMandator
 
 - [ ] **Step 3: Write the guard**
 
-In `source/libraries/engine/Pawl/Engine/Engine.hs`, above `priorityLoop`:
+In `source/libraries/engine/Parun/Engine/Engine.hs`, above `priorityLoop`:
 
 ```haskell
 -- CR 104.4b: how many events may happen with no player able to decide anything
@@ -349,9 +349,9 @@ Expected: PASS, suite count 4 higher.
 - [ ] **Step 6: Commit**
 
 ```bash
-git add source/libraries/engine/Pawl/Engine/Engine.hs source/test-suite/Pawl/GameSpec.hs
+git add source/libraries/engine/Parun/Engine/Engine.hs source/test-suite/Parun/GameSpec.hs
 hooky fix
-git add source/libraries/engine/Pawl/Engine/Engine.hs source/test-suite/Pawl/GameSpec.hs
+git add source/libraries/engine/Parun/Engine/Engine.hs source/test-suite/Parun/GameSpec.hs
 hooky run
 git commit -m "Draw a game stuck in a loop of mandatory actions (#338)"
 ```
@@ -362,17 +362,17 @@ git commit -m "Draw a game stuck in a loop of mandatory actions (#338)"
 
 **Files:**
 - Create: `data/cards/synthetic-recursion.json`
-- Test: `source/test-suite/Pawl/GameSpec.hs`
+- Test: `source/test-suite/Parun/GameSpec.hs`
 
 **Interfaces:**
 - Consumes: `Engine.mandatoryLoopLimit`, `Engine.checkMandatoryLoop` (Task 2)
 - Produces: nothing later tasks read
 
-Why a synthetic. The canonical board is Worldgorger Dragon reanimated by Animate Dead, and Animate Dead needs an Aura that enchants a card in a graveyard, rewrites its own enchant clause as it enters, re-attaches itself, and sacrifices the creature when it leaves — none of which pawl has. Endless Whispers, the other textbook loop, needs a static ability that grants a triggered ability, and `Pawl.Types.Modification` has no such arm. So the fixture is real Aether Flash plus one labeled synthetic, following `synthetic-restart.json` and `synthetic-subgame.json`. Task 4 files the issue that retires it.
+Why a synthetic. The canonical board is Worldgorger Dragon reanimated by Animate Dead, and Animate Dead needs an Aura that enchants a card in a graveyard, rewrites its own enchant clause as it enters, re-attaches itself, and sacrifices the creature when it leaves — none of which parun has. Endless Whispers, the other textbook loop, needs a static ability that grants a triggered ability, and `Parun.Types.Modification` has no such arm. So the fixture is real Aether Flash plus one labeled synthetic, following `synthetic-restart.json` and `synthetic-subgame.json`. Task 4 files the issue that retires it.
 
 - [ ] **Step 1: Write the card**
 
-`data/cards/synthetic-recursion.json` — a 1/1 creature reading "When this creature dies, return it to the battlefield." `SelfDies` binds CR 400.7e's `became` slot (`Pawl.Engine.Event.eventBindings`), which is the graveyard incarnation the `MoveToZone` names. `MoveToZone`'s JSON is two elements: the CR 110.5b default entry riders and the absent rebind slot are both elided by `Pawl.Codec.Effect.toJson`.
+`data/cards/synthetic-recursion.json` — a 1/1 creature reading "When this creature dies, return it to the battlefield." `SelfDies` binds CR 400.7e's `became` slot (`Parun.Engine.Event.eventBindings`), which is the graveyard incarnation the `MoveToZone` names. `MoveToZone`'s JSON is two elements: the CR 110.5b default entry riders and the absent rebind slot are both elided by `Parun.Codec.Effect.toJson`.
 
 ```json
 {
@@ -438,7 +438,7 @@ Why a synthetic. The canonical board is Worldgorger Dragon reanimated by Animate
 }
 ```
 
-Write it with sorted keys and pretty-printed (`jq -S . < f > f.tmp && mv f.tmp f`): `Pawl.CardsSpec`'s "each committed file re-parses to its compiled card" compares `Json.sortKeys` of both sides, and keys the codec omits when empty must be **absent**, not present-and-empty.
+Write it with sorted keys and pretty-printed (`jq -S . < f > f.tmp && mv f.tmp f`): `Parun.CardsSpec`'s "each committed file re-parses to its compiled card" compares `Json.sortKeys` of both sides, and keys the codec omits when empty must be **absent**, not present-and-empty.
 
 - [ ] **Step 2: Run the suite to confirm the card round-trips**
 
@@ -451,7 +451,7 @@ Expected: PASS. `S.allPrintings` sweeps `data/cards/`, so the new file gets whol
 
 - [ ] **Step 3: Write the two failing gameplay tests**
 
-Add to `source/test-suite/Pawl/GameSpec.hs` and wire `mandatoryLoopBoardSpec` into the aggregate `tests` list.
+Add to `source/test-suite/Parun/GameSpec.hs` and wire `mandatoryLoopBoardSpec` into the aggregate `tests` list.
 
 ```haskell
 -- CR 104.4b at gameplay level. Aether Flash deals 2 to each creature that
@@ -540,9 +540,9 @@ If instead the first test times out with the real limit, the loop is not looping
 - [ ] **Step 5: Commit**
 
 ```bash
-git add data/cards/synthetic-recursion.json source/test-suite/Pawl/GameSpec.hs
+git add data/cards/synthetic-recursion.json source/test-suite/Parun/GameSpec.hs
 hooky fix
-git add data/cards/synthetic-recursion.json source/test-suite/Pawl/GameSpec.hs
+git add data/cards/synthetic-recursion.json source/test-suite/Parun/GameSpec.hs
 hooky run
 git commit -m "Prove the CR 104.4b draw with a board that loops (#338)"
 ```
@@ -552,21 +552,21 @@ git commit -m "Prove the CR 104.4b draw with a board that loops (#338)"
 ### Task 4: retire the stale comments, file the follow-up, open the PR
 
 **Files:**
-- Modify: `source/libraries/engine/Pawl/Engine/Engine.hs` (`cleanupException`'s comment at :1150-1154, `playGame`'s at :1173-1196)
-- Modify: `source/test-suite/Pawl/GameSpec.hs` (replace `#N1` with the real issue number)
+- Modify: `source/libraries/engine/Parun/Engine/Engine.hs` (`cleanupException`'s comment at :1150-1154, `playGame`'s at :1173-1196)
+- Modify: `source/test-suite/Parun/GameSpec.hs` (replace `#N1` with the real issue number)
 
 **Interfaces:**
 - Consumes: everything from Tasks 1-3
 
 - [ ] **Step 1: Rewrite the two stale comments**
 
-Both currently say pawl has no loop detector and cite #338/#484 as open. `cleanupException`'s tail (:1150-1154) reads:
+Both currently say parun has no loop detector and cite #338/#484 as open. `cleanupException`'s tail (:1150-1154) reads:
 
-> It is NOT bounded in general, and Magic does not bound it either: an ability that triggers at the beginning of each cleanup step loops forever, and CR 104.4b's draw is the rules' answer to that rather than a bound on the loop. pawl does not detect such a loop (#484), which is the same engine-liveness gap #338 opened from the turn side.
+> It is NOT bounded in general, and Magic does not bound it either: an ability that triggers at the beginning of each cleanup step loops forever, and CR 104.4b's draw is the rules' answer to that rather than a bound on the loop. parun does not detect such a loop (#484), which is the same engine-liveness gap #338 opened from the turn side.
 
 Replace the last sentence with a statement that `playGame` and `priorityLoop` now apply CR 104.4b's draw through `checkMandatoryLoop`, so an unbounded cleanup chain ends in a draw rather than hanging. `playGame`'s comment (:1173-1196) keeps its library-and-draw-step argument — that argument is still the reason ordinary games end, and the guard is the backstop for the ones it does not cover — but its "so there is still no progress bound behind it (#338)" must go.
 
-Per `CLAUDE.md`, a comment citing an issue dies in the commit that closes the issue. A comment citing the test that *proves* a behavior is a different genre and outlives it — point at `Pawl.GameSpec`'s "a mandatory loop (CR 104.4b)" group.
+Per `CLAUDE.md`, a comment citing an issue dies in the commit that closes the issue. A comment citing the test that *proves* a behavior is a different genre and outlives it — point at `Parun.GameSpec`'s "a mandatory loop (CR 104.4b)" group.
 
 - [ ] **Step 2: File the follow-up issue**
 
@@ -577,7 +577,7 @@ gh issue create \
   --body "..."
 ```
 
-The body states: CR 104.4b's draw is implemented and proven, but by `data/cards/synthetic-recursion.json` rather than by a printing. The canonical board is Worldgorger Dragon reanimated by Animate Dead. What stands in the way — Animate Dead needs an Aura that enchants a card in a graveyard, an entry that rewrites its own enchant clause and re-attaches, and a leave-the-battlefield sacrifice; Worldgorger needs a mass exile of the other permanents you control and their return on leave. Endless Whispers is the alternative and needs a `Pawl.Types.Modification` arm that grants a triggered ability. Expiry trigger — card-driven: the first pair of real printings that forms a mandatory loop. Note that #484 was closed as a duplicate of #338 and that this is what is left of both.
+The body states: CR 104.4b's draw is implemented and proven, but by `data/cards/synthetic-recursion.json` rather than by a printing. The canonical board is Worldgorger Dragon reanimated by Animate Dead. What stands in the way — Animate Dead needs an Aura that enchants a card in a graveyard, an entry that rewrites its own enchant clause and re-attaches, and a leave-the-battlefield sacrifice; Worldgorger needs a mass exile of the other permanents you control and their return on leave. Endless Whispers is the alternative and needs a `Parun.Types.Modification` arm that grants a triggered ability. Expiry trigger — card-driven: the first pair of real printings that forms a mandatory loop. Note that #484 was closed as a duplicate of #338 and that this is what is left of both.
 
 Then replace `#N1` in `GameSpec.hs` with the number it returns.
 
@@ -597,11 +597,11 @@ Per `CLAUDE.md`, before opening the PR: re-check every CR citation added or touc
 - [ ] **Step 5: Commit and open the PR**
 
 ```bash
-git add -- source/libraries/engine/Pawl/Engine/Engine.hs source/test-suite/Pawl/GameSpec.hs
+git add -- source/libraries/engine/Parun/Engine/Engine.hs source/test-suite/Parun/GameSpec.hs
 hooky fix
-git add -- source/libraries/engine/Pawl/Engine/Engine.hs source/test-suite/Pawl/GameSpec.hs
+git add -- source/libraries/engine/Parun/Engine/Engine.hs source/test-suite/Parun/GameSpec.hs
 hooky run
-git commit -m "Retire the comments that said pawl cannot detect a loop (#338)"
+git commit -m "Retire the comments that said parun cannot detect a loop (#338)"
 git push -u origin 338-loop-of-mandatory-actions-draws
 gh pr create --draft --title "Draw a game stuck in a loop of mandatory actions" --body "..."
 ```

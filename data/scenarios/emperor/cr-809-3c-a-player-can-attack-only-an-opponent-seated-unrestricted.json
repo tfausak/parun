@@ -1,6 +1,6 @@
 {
   "description": "CR 809.3c a player can attack only an opponent seated immediately next to them",
-  "note": "Pawl.Engine.Emperor.setUp spelled out: alice, bob and carol are team 1 with bob its emperor, dave, erin and frank team 2 with erin its emperor; emperors at range 2 and generals at 1 (CR 809.3a), creatures deployable (CR 809.3b) and the Adjacent attack option (CR 809.3c). The control, with CR 507.1's unrestricted option in place of Adjacent: dave, in bob's range of 2, is attackable, so the main file's empty attack is the option and not the range.",
+  "note": "Parun.Engine.Emperor.setUp spelled out: alice, bob and carol are team 1 with bob its emperor, dave, erin and frank team 2 with erin its emperor; emperors at range 2 and generals at 1 (CR 809.3a), creatures deployable (CR 809.3b) and the Adjacent attack option (CR 809.3c). The control, with CR 507.1's unrestricted option in place of Adjacent: dave, in bob's range of 2, is attackable, so the main file's empty attack is the option and not the range.",
   "board": {
     "seats": [
       {

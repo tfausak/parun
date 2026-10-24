@@ -4,7 +4,7 @@ Guidance for Claude Code (and other agents) working in this repository. Rules
 only: the incidents that motivated them are in git history and the PRs that
 added them.
 
-## What Pawl is
+## What Parun is
 
 A pure Haskell rules engine for *Magic: The Gathering*, structured as a virtual
 machine with two halves:
@@ -168,7 +168,7 @@ to agents as written. What it doesn't say:
   beyond the subsystem names there are `area:keywords` (CR 701/702),
   `area:effects` (the effect DSL), `area:cards` (card data, faces, layouts,
   schemas, lints), `area:stack` (CR 601/602/608), `area:variants` (CR
-  313/315, subgames, Commander, the Ring, dungeons) and `area:client` (`pawl
+  313/315, subgames, Commander, the Ring, dungeons) and `area:client` (`parun
   play`: the text client, the line protocol, hotseat and bot seats).
 
 - Verify Oracle text with `curl -s
@@ -188,13 +188,13 @@ to agents as written. What it doesn't say:
   --- a skipped step, not a blocked one.
 
 - A card whose whole text is keywords is ingested, never hand-written: `jq -f
-  script/ingest/candidates.jq` over MTGJSON's `AtomicCards.json`, then `pawl
+  script/ingest/candidates.jq` over MTGJSON's `AtomicCards.json`, then `parun
   ingest` on the result. The same run gives every pool card its faces'
   `oracleText` and names on stderr each pool card that disagrees with MTGJSON;
   re-run it after adding cards by hand.
 
 - A card the DSL already expresses is translated before it is hand-written:
-  `pawl translate _scratch/mtgish/data/mtgish.lines.json CANDIDATES (NAME |
+  `parun translate _scratch/mtgish/data/mtgish.lines.json CANDIDATES (NAME |
   @FILE | --set CODE)...`, CANDIDATES being that same `candidates.jq` output.
   It writes only cards that render back to their Oracle text and names every
   other on stderr with the node kind it stopped at; `--out DIR` writes the
@@ -244,14 +244,14 @@ to agents as written. What it doesn't say:
   A BLOCKED issue records its blocker as a GitHub dependency, not as prose:
 
   ```
-  gh api -X POST repos/tfausak/pawl/issues/<N>/dependencies/blocked_by \
-    -F issue_id="$(gh api repos/tfausak/pawl/issues/<BLOCKER> --jq .id)"
+  gh api -X POST repos/tfausak/parun/issues/<N>/dependencies/blocked_by \
+    -F issue_id="$(gh api repos/tfausak/parun/issues/<BLOCKER> --jq .id)"
   ```
 
   Don't also write a `Blocked by #N` comment. A closed blocker KEEPS its link.
   A blocker with no issue is an untracked deficiency: file it, then link it.
   When a capability lands, read its dependents
-  (`gh api repos/tfausak/pawl/issues/N/dependencies/blocking`) and say in the
+  (`gh api repos/tfausak/parun/issues/N/dependencies/blocking`) and say in the
   PR body which issues it unblocked.
 
 - A spec or plan is optional; commit one in the same PR when the unit
@@ -281,9 +281,9 @@ to agents as written. What it doesn't say:
 
 4.  Find the sites `-Werror` won't. A `{}` or `_` pattern absorbs a new
     constructor or field silently; the recurring ones are
-    `Pawl.Engine.Event.Binding`'s `eventBindings` fallthrough, `Pawl.ZoneTriggerSpec`'s
+    `Parun.Engine.Event.Binding`'s `eventBindings` fallthrough, `Parun.ZoneTriggerSpec`'s
     hand-kept `everyTriggerCondition` and `representativeEvents`, and
-    `Pawl.CardSpec`'s filter and keyword traversals. An `Arm.tagged` codec's
+    `Parun.CardSpec`'s filter and keyword traversals. An `Arm.tagged` codec's
     `tagOf` is total, so a new constructor IS compile-forced there --- but only
     its tag: the arm itself is not, and a tag with no arm encodes as `{}`, so
     the constructor still owes a round-trip case. An `Arm.enum` codec derives
@@ -292,14 +292,14 @@ to agents as written. What it doesn't say:
     ones you read and why each is right as it stands.
 
     A TYPE THAT GAINS an ObjectId, a slot name or a Filter where it held none
-    is the inverse: `Pawl.Engine.Interchangeable.Mentions` matches every field
+    is the inverse: `Parun.Engine.Interchangeable.Mentions` matches every field
     of that type as a named discard, which compiles on. Give the type a
     function there and turn each discard of it into a read.
 
     A CONSTRUCTOR GREP has to allow for the module ALIAS. The same constructor is
     spelled `Keyword.Flying` in most of the tree and `Keyword.Type.Flying` where a
     module imports the type module under a second name, so a grep for the usual
-    spelling misses those arms. `Pawl.Engine.Filter`'s `rewriteKeyword` is where
+    spelling misses those arms. `Parun.Engine.Filter`'s `rewriteKeyword` is where
     that bites.
 
     A NEW FIELD's invisible site is positional record construction in the test
@@ -312,17 +312,17 @@ to agents as written. What it doesn't say:
     A RECORD UPDATE is the other one, and `-Werror`'s missing-fields check does
     not name it: an update keeps the old value of the field you added, so a
     descent that rebuilds a record silently drops it. The recurring site is
-    `Pawl.Engine.Projection.Rewrite`'s `rewriteEffect`, CR 612.1's text-change
+    `Parun.Engine.Projection.Rewrite`'s `rewriteEffect`, CR 612.1's text-change
     walk. Grep `{ SomeRecord.field = ` over the tree beside the construction
     sites, and say in the PR which you checked. The one update that keeps a
-    new field ON PURPOSE is `Pawl.Engine.Resolve.Effect.happenedBetween`, CR
+    new field ON PURPOSE is `Parun.Engine.Resolve.Effect.happenedBetween`, CR
     603.12's "did it happen": any write an instruction makes whether or not it
     happened --- a prune, a cache, a stamp, a zero tally, in a new field OR an
     existing one --- owes a copy-across there, or an ignored instruction arms
     its "when you do".
 
     A NEW READ OF A PERMANENT'S CARD goes through the projection
-    (`Pawl.Engine.Projection.View`) or the copiable record it stamps
+    (`Parun.Engine.Projection.View`) or the copiable record it stamps
     (`Game.copyStampOf`), never `Game.cardOf` or `Game.faceOf`, which answer
     the PRINTED card: a permanent that is a copy of the card, and a merged
     permanent (`Source.OfMerge`), then silently read the wrong thing. A Clone
@@ -330,10 +330,10 @@ to agents as written. What it doesn't say:
     `Binding.copyOf` of an object's bindings misses a conjured duplicate's
     values (`Object.duplicate`).
 
-    A new field or disjunct on `Pawl.Types.ProjectedCharacteristics` or
-    `Pawl.Engine.Filter`'s `View` must be filled in EVERY builder ---
-    `Pawl.Engine.Projection.View`'s `viewOfCard`, `viewOfCharacteristics` and
-    `copiableCharacteristics`, and `Pawl.Engine.Count`'s `viewOfSnapshot`.
+    A new field or disjunct on `Parun.Types.ProjectedCharacteristics` or
+    `Parun.Engine.Filter`'s `View` must be filled in EVERY builder ---
+    `Parun.Engine.Projection.View`'s `viewOfCard`, `viewOfCharacteristics` and
+    `copiableCharacteristics`, and `Parun.Engine.Count`'s `viewOfSnapshot`.
     Filling one compiles clean and the rest silently answer the old value. A
     `View` field read by id off the turn's log or a LastKnown field is
     `Count.lastKnownView`'s too: it updates `viewOfSnapshot`'s record, so a
@@ -363,8 +363,8 @@ project-specific rules it doesn't cover:
   and modules, split or merge them, change signatures freely --- never add
   deprecation shims or compat re-exports.
 
-- One type per module under `Pawl.Types.<TypeName>`, holding the type and its
-  instances only; cross-type logic lives in other `Pawl.*` modules.
+- One type per module under `Parun.Types.<TypeName>`, holding the type and its
+  instances only; cross-type logic lives in other `Parun.*` modules.
 
 - A constructor's haddock is ONE line saying what it means, plus its CR
   citation. Not a paragraph, not the rule's text, not a worked example, not the
@@ -381,7 +381,7 @@ project-specific rules it doesn't cover:
   invariant uses `UnsafeX` instead, marking that the bare constructor sidesteps
   it. Unwrap through an `unwrap` field.
 
-- Short names, disambiguated by module --- `Pawl.Types.Mana`, imported as
+- Short names, disambiguated by module --- `Parun.Types.Mana`, imported as
   `Mana`, rather than long prefixes.
 
 - A constructor, field or function that differs from an existing one only by a
@@ -394,10 +394,10 @@ project-specific rules it doesn't cover:
   something walks --- exists once. A second hand-kept copy goes stale exactly
   as item 4's traps do; derive it from the first or add to the first.
 
-- A new `Pawl.Types.Keyword` constructor that CARRIES A PAYLOAD owes a matching
-  `Pawl.Types.KeywordFamily` constructor in the same change --- that type is how
+- A new `Parun.Types.Keyword` constructor that CARRIES A PAYLOAD owes a matching
+  `Parun.Types.KeywordFamily` constructor in the same change --- that type is how
   a card says "a creature with toxic" rather than "with toxic 2". `-Werror`
-  catches the missing `Pawl.Engine.Keyword.familyOf` arm but not a missing
+  catches the missing `Parun.Engine.Keyword.familyOf` arm but not a missing
   family, since answering `Nothing` compiles.
 
 ## Adding a module

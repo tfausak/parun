@@ -8,13 +8,13 @@
 # target exists; it holds the owner's PID. Taking over a lock whose owner has
 # died is an atomic rename, so of several waiters exactly one wins. The path
 # is fixed rather than TMPDIR-relative so every shell locks the same file.
-# PAWL_BUILD_SLOTS builds may run at once (one lock file per slot; slot 0 is
+# PARUN_BUILD_SLOTS builds may run at once (one lock file per slot; slot 0 is
 # the base path, so an older copy of this script still shares it). Measured
 # 2026-09-02: one `cabal test` peaks at about 1.8 GB resident, so two fit an
 # 8 GB machine and three did not.
 set -euo pipefail
-base="${PAWL_BUILD_LOCK:-/tmp/pawl-build.lock}"
-slots="${PAWL_BUILD_SLOTS:-2}"
+base="${PARUN_BUILD_LOCK:-/tmp/parun-build.lock}"
+slots="${PARUN_BUILD_SLOTS:-2}"
 mine="$base.$$"
 child=""
 lock=""

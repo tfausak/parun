@@ -3,11 +3,11 @@
 *Design written 2026-07-23. Closes **GAP-C** (the player-counter substrate) and
 the first two customers of **GAP-S** (poison and energy). Umbrella:
 `docs/superpowers/specs/2026-07-20-m4.5-closed-half-gaps-design.md` §3, row P10.
-Issue: `tfausak/pawl#6`. Census: `docs/mtgish-gap-census.md` §3.4/§3.6.*
+Issue: `tfausak/parun#6`. Census: `docs/mtgish-gap-census.md` §3.4/§3.6.*
 
 ## 0. Why this phase, and what it proves
 
-Every counter pawl models today lives on an **object**: `Object.counters ::
+Every counter parun models today lives on an **object**: `Object.counters ::
 Map CounterKind Natural`, projected into P/T at layer 7c (M4f). But the
 comprehensive rules place counters on **players** too — poison, energy,
 experience, rad (CR 122.1, CR 122.1f). `Player` carries only `life` + `status`;
@@ -81,7 +81,7 @@ player-counter replacement funnel; mana of any color (§8).
 
 ## 2. Architecture
 
-### 2.1 `Pawl.Type.PlayerCounterKind`, a new type distinct from `CounterKind`
+### 2.1 `Parun.Type.PlayerCounterKind`, a new type distinct from `CounterKind`
 
 Object counters and player counters are **disjoint domains**. CR 122 has no
 counter kind that goes on both: +1/+1, keyword, shield, stun, finality, loyalty,
@@ -90,7 +90,7 @@ experience and rad counters are player-only (CR 122.1f,i; CR 107.14). So the
 player-counter kind is its own type, not an extension of `CounterKind`:
 
 ```haskell
-module Pawl.Type.PlayerCounterKind where
+module Parun.Type.PlayerCounterKind where
 
 data PlayerCounterKind
   = Energy -- CR 107.14
@@ -118,7 +118,7 @@ data Player = MkPlayer
   }
 ```
 
-One map for every player-counter kind, mirroring `Object.counters`. `Pawl.Setup`
+One map for every player-counter kind, mirroring `Object.counters`. `Parun.Setup`
 initializes it empty. A kind absent from the map means zero (the
 `Map.findWithDefault 0` convention `Object.counters` already uses). Unlike
 object counters — which "cease to exist" when the object changes zones (CR 122.2)
@@ -126,7 +126,7 @@ object counters — which "cease to exist" when the object changes zones (CR 122
 
 ### 2.3 The `Infect` keyword
 
-`Pawl.Type.Keyword` gains `Infect` (CR 702.90), placed by rule number (after
+`Parun.Type.Keyword` gains `Infect` (CR 702.90), placed by rule number (after
 `Fear` 702.36, before `Devoid` 702.114). Casing on it is not an invariant
 violation — a keyword is a citation, the same as `Flying` (see the type's own
 comment and the M2a spec §1). Infect is a *static ability*: it changes what the
@@ -149,14 +149,14 @@ data DamageEvent = MkDamageEvent
 (`Projection.hasKeyword Keyword.Infect source`), exactly as `dealtByDeathtouch`
 already is — CR 702.90d ("last known information" if the source has left) and CR
 702.90e ("no matter what zone"). It is set at all three construction sites so the
-behaviour is uniform: the two combat waves in `Pawl.Damage` and the noncombat
-`DealDamage` in `Pawl.Resolve`. The gate exercises only the combat path (Glistener
+behaviour is uniform: the two combat waves in `Parun.Damage` and the noncombat
+`DealDamage` in `Parun.Resolve`. The gate exercises only the combat path (Glistener
 Elf attacking), but setting it everywhere is cheap and correct; a noncombat
 infect source is card-driven, not blocked.
 
 ### 2.5 The damage diversion, read from the bit, never the keyword
 
-`Pawl.Damage.applyDamage`'s `markOne` fold gains two infect arms, dispatched on
+`Parun.Damage.applyDamage`'s `markOne` fold gains two infect arms, dispatched on
 the event's `dealtByInfect` **classification bit** — never on keyword identity,
 exactly as the CR 704.5h deathtouch SBA reads `dealtByDeathtouch` rather than
 re-deriving it. This keeps `applyDamage` invariant-clean:
@@ -184,14 +184,14 @@ deferred (§8).
 
 ### 2.6 The energy-gain effect
 
-`Pawl.Type.Effect` gains, mirroring `PutCounters`' general shape for objects:
+`Parun.Type.Effect` gains, mirroring `PutCounters`' general shape for objects:
 
 ```haskell
 GainPlayerCounters PlayerCounterKind Quantity
 ```
 
 Targetless — applied to the **resolving controller** ("you get {E}{E}"), like
-`Draw`. `Pawl.Resolve.applyEffect` evaluates the `Quantity` and adds that many
+`Draw`. `Parun.Resolve.applyEffect` evaluates the `Quantity` and adds that many
 counters of the kind to `controller`'s map. Longtusk Cub's trigger resolves as
 `GainPlayerCounters Energy (Literal 2)`. General on purpose: it subsumes any
 future self-scoped player counter (experience, rad) without a new opcode. A
@@ -200,13 +200,13 @@ Phyresis) needs a player recipient and is deferred (§8).
 
 ### 2.7 The energy-payment cost component
 
-`Pawl.Type.CostComponent` gains, mirroring `PayLife`'s specific shape:
+`Parun.Type.CostComponent` gains, mirroring `PayLife`'s specific shape:
 
 ```haskell
 PayEnergy Natural -- CR 107.14 / 118
 ```
 
-`Pawl.Cost` — the sole module that may case on `CostComponent` — reads it two
+`Parun.Cost` — the sole module that may case on `CostComponent` — reads it two
 ways: **payability** (the paying player has ≥ N energy counters; below that the
 cost is unpayable, CR 118.6) and **payment** (remove N energy counters, CR
 107.14: "To pay {E}, a player removes one energy counter from themselves").
@@ -221,7 +221,7 @@ hypothetical `PayResource`.
 
 ### 2.8 The poison-at-ten SBA
 
-`Pawl.Sba.losesNow` gains the CR 704.5c clause: a player with **ten or more**
+`Parun.Sba.losesNow` gains the CR 704.5c clause: a player with **ten or more**
 poison counters loses the game. It joins the existing disjunction (life ≤ 0, drew
 from empty library) in the same function, checked in the same settle loop, so the
 poison loss is simultaneous with and ordered exactly like the others. CR 104.3d's
@@ -230,12 +230,12 @@ framing — SBAs are checked whenever a player would receive priority (CR 704.3)
 
 ### 2.9 The deals-combat-damage-to-a-player trigger
 
-`Pawl.Type.TriggerCondition` gains `SelfDealsCombatDamageToPlayer` (CR 603.2 /
-509–510). `Pawl.Event.matchesTrigger` gains its arm: it matches a
+`Parun.Type.TriggerCondition` gains `SelfDealsCombatDamageToPlayer` (CR 603.2 /
+509–510). `Parun.Event.matchesTrigger` gains its arm: it matches a
 `GameEvent.DamageDealt ev` where `DamageEvent.source ev == bearer`,
 `DamageEvent.kind ev == DamageKind.Combat`, and `DamageEvent.target ev` is a
 player (`Recipient.ToPlayer`). It rides P4's event-history substrate — combat
-damage already records `DamageDealt` events (`Pawl.Damage.applyDamage`), so no
+damage already records `DamageDealt` events (`Parun.Damage.applyDamage`), so no
 new recording is needed. Longtusk Cub's triggered ability bears this condition.
 
 Note the pleasing interaction the tests cover: an *infect* creature dealing
@@ -245,10 +245,10 @@ the diversion is in what the damage *does*, not in whether it *happened*.
 
 ### 2.10 Serialization
 
-`Pawl.Codec` gains encode/decode for: `PlayerCounterKind` (both constructors),
+`Parun.Codec` gains encode/decode for: `PlayerCounterKind` (both constructors),
 the new `Player.counters` field, `Keyword.Infect`, `DamageEvent.dealtByInfect`,
 `Effect.GainPlayerCounters`, `CostComponent.PayEnergy`, and
-`TriggerCondition.SelfDealsCombatDamageToPlayer`. `Pawl.Codec` cases on every
+`TriggerCondition.SelfDealsCombatDamageToPlayer`. `Parun.Codec` cases on every
 constructor as the JSON data boundary — that is not the rules core casing on
 identity.
 
@@ -256,11 +256,11 @@ identity.
 
 - **The rules core never cases on an effect's identity.** `applyDamage` reads
   `DamageEvent.dealtByInfect` — a classification bit — not `case keyword`, and
-  not `case effect`. `Pawl.Cost` reads `CostComponent`'s payability
-  classification. `Pawl.Sba` reads a poison *count*. The only new casing homes
-  are the sanctioned ones: `Pawl.Resolve` (the effect interpreter),
-  `Pawl.Cost` (the cost interpreter), `Pawl.Event` (the trigger matcher), and
-  `Pawl.Codec` (the data boundary).
+  not `case effect`. `Parun.Cost` reads `CostComponent`'s payability
+  classification. `Parun.Sba` reads a poison *count*. The only new casing homes
+  are the sanctioned ones: `Parun.Resolve` (the effect interpreter),
+  `Parun.Cost` (the cost interpreter), `Parun.Event` (the trigger matcher), and
+  `Parun.Codec` (the data boundary).
 - **The engine makes no player's choice.** Poison and energy gains are forced by
   the rules (no choice to elide). Longtusk Cub's `PayEnergy` cost is a payment
   the *player* chooses to make by activating the ability; the engine only judges
@@ -268,7 +268,7 @@ identity.
 
 ## 4. What this phase does **not** touch
 
-- `Pawl.Projection` — player counters are not object characteristics; the layer
+- `Parun.Projection` — player counters are not object characteristics; the layer
   system (CR 613) is untouched. (The −1/−1 counters infect places *are* read by
   the projection, but through the counter path M4f already built.)
 - The layer-6 ability system — the counter→layer-6 path is deferred (§8).
@@ -317,29 +317,29 @@ Round-trip tests for the two card JSONs and for each new constructor / the new
 
 New:
 
-- `Pawl.Type.PlayerCounterKind` — `Energy | Poison`.
+- `Parun.Type.PlayerCounterKind` — `Energy | Poison`.
 - `data/cards/glistener-elf.json`, `data/cards/longtusk-cub.json`.
 
 Changed:
 
-- `Pawl.Type.Player` — `+ counters :: Map PlayerCounterKind Natural`.
-- `Pawl.Type.Keyword` — `+ Infect`.
-- `Pawl.Type.DamageEvent` — `+ dealtByInfect :: Bool`.
-- `Pawl.Type.Effect` — `+ GainPlayerCounters PlayerCounterKind Quantity`.
-- `Pawl.Type.CostComponent` — `+ PayEnergy Natural`.
-- `Pawl.Type.TriggerCondition` — `+ SelfDealsCombatDamageToPlayer`.
-- `Pawl.Damage` — set `dealtByInfect` at both combat sites; divert infect damage
+- `Parun.Type.Player` — `+ counters :: Map PlayerCounterKind Natural`.
+- `Parun.Type.Keyword` — `+ Infect`.
+- `Parun.Type.DamageEvent` — `+ dealtByInfect :: Bool`.
+- `Parun.Type.Effect` — `+ GainPlayerCounters PlayerCounterKind Quantity`.
+- `Parun.Type.CostComponent` — `+ PayEnergy Natural`.
+- `Parun.Type.TriggerCondition` — `+ SelfDealsCombatDamageToPlayer`.
+- `Parun.Damage` — set `dealtByInfect` at both combat sites; divert infect damage
   in `applyDamage`.
-- `Pawl.Resolve` — set `dealtByInfect` on the noncombat `DealDamage` event; apply
+- `Parun.Resolve` — set `dealtByInfect` on the noncombat `DealDamage` event; apply
   `GainPlayerCounters`; handle the new effect in the projection/legality helpers
   (targetless, like `Draw`/`AffectPlayers`).
-- `Pawl.Cost` — payability + payment for `PayEnergy`.
-- `Pawl.Sba` — poison-at-ten clause in `losesNow`.
-- `Pawl.Event` — `matchesTrigger` arm for `SelfDealsCombatDamageToPlayer`.
-- `Pawl.Setup` — initialize `Player.counters` empty.
-- `Pawl.Codec` — all of the above.
-- Test suite — `Pawl.SbaSpec`, `Pawl.DamageSpec`, `Pawl.CostSpec`,
-  `Pawl.EventSpec`, `Pawl.CodecSpec` (and any card-integration spec).
+- `Parun.Cost` — payability + payment for `PayEnergy`.
+- `Parun.Sba` — poison-at-ten clause in `losesNow`.
+- `Parun.Event` — `matchesTrigger` arm for `SelfDealsCombatDamageToPlayer`.
+- `Parun.Setup` — initialize `Player.counters` empty.
+- `Parun.Codec` — all of the above.
+- Test suite — `Parun.SbaSpec`, `Parun.DamageSpec`, `Parun.CostSpec`,
+  `Parun.EventSpec`, `Parun.CodecSpec` (and any card-integration spec).
 
 ## 7. Ordering within the phase (for the plan)
 

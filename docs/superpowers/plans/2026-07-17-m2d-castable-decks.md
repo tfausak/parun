@@ -13,16 +13,16 @@
 ## Global Constraints
 
 - Haskell 2010, **no language extensions** beyond the `GADTs`/`RankNTypes` already present. No `LambdaCase`, `OverloadedStrings`, etc.
-- Build must be **warning-clean** under `-Weverything` minus the allow-list. `-Werror` is not set — treat any warning as a failure. Verify with a **clean** build (incremental builds hide warnings): `rm -rf dist-newstyle/build/aarch64-osx/ghc-9.14.1/pawl-0.2026.7.16/{b,t,build}` then `cabal build all --enable-tests --enable-benchmarks 2>&1 | grep -c "warning:"` must print `0`.
+- Build must be **warning-clean** under `-Weverything` minus the allow-list. `-Werror` is not set — treat any warning as a failure. Verify with a **clean** build (incremental builds hide warnings): `rm -rf dist-newstyle/build/aarch64-osx/ghc-9.14.1/parun-0.2026.7.16/{b,t,build}` then `cabal build all --enable-tests --enable-benchmarks 2>&1 | grep -c "warning:"` must print `0`.
 - **No partial functions** written or used. No `head`/`error`/`undefined`/non-exhaustive matches.
-- **Qualified imports**, aliased to the last component (`Data.Map.Strict` → `Map`, `Pawl.Type.Deck` → `Deck`). Operators unqualified.
+- **Qualified imports**, aliased to the last component (`Data.Map.Strict` → `Map`, `Parun.Type.Deck` → `Deck`). Operators unqualified.
 - **`newtype` non-punning** with a `Mk` constructor: `newtype Deck = MkDeck …`.
-- **One type per module** under `Pawl.Type.<Name>`; logic lives in other `Pawl.*` modules.
+- **One type per module** under `Parun.Type.<Name>`; logic lives in other `Parun.*` modules.
 - **`Text` not `String`**; arbitrary-precision numbers (`Natural`, `Integer`).
 - **No list comprehensions.** Use `map`/`replicate`/`Monad.forM_`.
 - New `exposed-modules` come from the `-- cabal-gild: discover` directive — add the file and run `cabal-gild` via `hooky fix`; never hand-edit the field.
 - Each task is **one small complete commit on `main`**. After each task: `cabal build` warning-free, `hooky fix` then `git add -A` then `hooky run` passes, HLint applied, `cabal test` green.
-- This milestone adds **no new comprehensive rules**; the only CR already relied on is 305.6 (basic-land intrinsic mana ability from subtype), already cited in `Pawl.Mana`. No `rules.txt` re-verification needed beyond that.
+- This milestone adds **no new comprehensive rules**; the only CR already relied on is 305.6 (basic-land intrinsic mana ability from subtype), already cited in `Parun.Mana`. No `rules.txt` re-verification needed beyond that.
 
 ---
 
@@ -31,9 +31,9 @@
 Adds the two land types and their printings. Self-contained: no setup signatures change, so the suite stays green throughout.
 
 **Files:**
-- Modify: `source/library/Pawl/Type/Subtype.hs`
-- Modify: `source/library/Pawl/Mana.hs:38-51` (`subtypeMana`)
-- Modify: `source/library/Pawl/Card.hs` (add two printings)
+- Modify: `source/library/Parun/Type/Subtype.hs`
+- Modify: `source/library/Parun/Mana.hs:38-51` (`subtypeMana`)
+- Modify: `source/library/Parun/Card.hs` (add two printings)
 - Test: `source/test-suite/Main.hs`
 
 **Interfaces:**
@@ -82,7 +82,7 @@ Expected: compile failure — `Subtype.Swamp`, `Card.swampPrinting`, etc. not in
 
 - [x] **Step 3: Add the subtypes**
 
-In `source/library/Pawl/Type/Subtype.hs`, add `Swamp` and `Forest` to the `data Subtype` enumeration (keep the existing `deriving (Eq, Ord, Show)`):
+In `source/library/Parun/Type/Subtype.hs`, add `Swamp` and `Forest` to the `data Subtype` enumeration (keep the existing `deriving (Eq, Ord, Show)`):
 
 ```haskell
 data Subtype
@@ -105,7 +105,7 @@ data Subtype
 
 - [x] **Step 4: Add the mana mappings**
 
-In `source/library/Pawl/Mana.hs`, add two arms to `subtypeMana` (it is the only exhaustive `case` over `Subtype` in the library, so this is the only match to extend):
+In `source/library/Parun/Mana.hs`, add two arms to `subtypeMana` (it is the only exhaustive `case` over `Subtype` in the library, so this is the only match to extend):
 
 ```haskell
 subtypeMana subtype = case subtype of
@@ -127,7 +127,7 @@ subtypeMana subtype = case subtype of
 
 - [x] **Step 5: Add the basic-land printings**
 
-In `source/library/Pawl/Card.hs`, add `swampPrinting` and `forestPrinting`, each shaped exactly like `mountainPrinting` (mana ability granted from the subtype by CR 305.6, so not stored on the card):
+In `source/library/Parun/Card.hs`, add `swampPrinting` and `forestPrinting`, each shaped exactly like `mountainPrinting` (mana ability granted from the subtype by CR 305.6, so not stored on the card):
 
 ```haskell
 -- The Swamp's black mana ability is granted from its subtype by CR 305.6, so it
@@ -180,7 +180,7 @@ Expected: the four `BasicLand` cases pass; whole suite green.
 
 - [x] **Step 7: Clean-build warning check**
 
-Run: `rm -rf dist-newstyle/build/aarch64-osx/ghc-9.14.1/pawl-0.2026.7.16/{b,t,build} && cabal build all --enable-tests --enable-benchmarks 2>&1 | grep -c "warning:"`
+Run: `rm -rf dist-newstyle/build/aarch64-osx/ghc-9.14.1/parun-0.2026.7.16/{b,t,build} && cabal build all --enable-tests --enable-benchmarks 2>&1 | grep -c "warning:"`
 Expected: `0`
 
 - [x] **Step 8: Format, lint, commit**
@@ -200,9 +200,9 @@ Co-Authored-By: Claude Opus 4.8 (1M context) <noreply@anthropic.com>"
 Introduces `Deck`, the three named decks, `deckSize`/`mirror`, and rewrites `newGame`/`playFrom` to take `NonEmpty (PlayerId, Deck)`. Updates every red-red call site (library, benchmark, tests) at once — this is one atomic compile unit. **Behavior-preserving:** every game still runs red-red, so all existing assertions still hold.
 
 **Files:**
-- Create: `source/library/Pawl/Type/Deck.hs`
-- Modify: `source/library/Pawl/Setup.hs` (decks, `deckSize`, `mirror`, `newGame`)
-- Modify: `source/library/Pawl/Engine.hs:268-270` (`playFrom`)
+- Create: `source/library/Parun/Type/Deck.hs`
+- Modify: `source/library/Parun/Setup.hs` (decks, `deckSize`, `mirror`, `newGame`)
+- Modify: `source/library/Parun/Engine.hs:268-270` (`playFrom`)
 - Modify: `source/benchmark/Main.hs:84,91,97`
 - Modify: `source/test-suite/Main.hs` (matchup bindings; every `Setup.newGame bothPlayers`/`Engine.playFrom bothPlayers`; `deckTests`)
 
@@ -213,7 +213,7 @@ Introduces `Deck`, the three named decks, `deckSize`/`mirror`, and rewrites `new
 
 - [x] **Step 1: Write the failing test (new `deckTests`)**
 
-Replace the existing `deckTests` group in `source/test-suite/Main.hs` (currently at ~line 1102-1116, the one asserting `length Setup.deckList`) with this. Add `import qualified Pawl.Type.Deck as Deck` to the import block:
+Replace the existing `deckTests` group in `source/test-suite/Main.hs` (currently at ~line 1102-1116, the one asserting `length Setup.deckList`) with this. Add `import qualified Parun.Type.Deck as Deck` to the import block:
 
 ```haskell
 deckTests :: Tasty.TestTree
@@ -258,14 +258,14 @@ Expected: compile failure — `Deck`, `Setup.redDeck`, `Setup.deckSize`-as-funct
 
 - [x] **Step 3: Create the `Deck` type**
 
-Create `source/library/Pawl/Type/Deck.hs`:
+Create `source/library/Parun/Type/Deck.hs`:
 
 ```haskell
-module Pawl.Type.Deck where
+module Parun.Type.Deck where
 
 import Data.Map.Strict (Map)
 import Numeric.Natural (Natural)
-import Pawl.Type.Printing (Printing)
+import Parun.Type.Printing (Printing)
 
 -- A deck is a multiset of printings: a shuffle erases any order among the cards,
 -- so counts are the honest model. `Printing` and everything beneath it derive
@@ -278,7 +278,7 @@ Run `hooky fix` (or `cabal-gild`) so the `-- cabal-gild: discover` directive pic
 
 - [x] **Step 4: Add decks, `deckSize`, `mirror`, and a deck-expander to `Setup`**
 
-In `source/library/Pawl/Setup.hs`: add imports `import qualified Pawl.Type.Deck as Deck` and (if not already present) `import qualified Numeric.Natural as Natural` — actually use `Numeric.Natural (Natural)` for the signature. Replace the `deckList`/`deckSize` block (lines ~33-48) with:
+In `source/library/Parun/Setup.hs`: add imports `import qualified Parun.Type.Deck as Deck` and (if not already present) `import qualified Numeric.Natural as Natural` — actually use `Numeric.Natural (Natural)` for the signature. Replace the `deckList`/`deckSize` block (lines ~33-48) with:
 
 ```haskell
 -- Every deck is 36 land + 24 creature = 60, so two players conserve 120 objects
@@ -322,7 +322,7 @@ Add `import Numeric.Natural (Natural)` to the import list. `Card.warMammothPrint
 
 - [x] **Step 5: Rewrite `newGame` to take a matchup**
 
-In `source/library/Pawl/Setup.hs`, replace `newGame` (lines ~124-128) with:
+In `source/library/Parun/Setup.hs`, replace `newGame` (lines ~124-128) with:
 
 ```haskell
 -- Build each player's library from their deck's multiset, shuffle, draw.
@@ -342,7 +342,7 @@ newGame matchup = Monad.forM_ (NonEmpty.toList matchup) $ \(pid, deck) -> do
 
 - [x] **Step 6: Change `Engine.playFrom`**
 
-In `source/library/Pawl/Engine.hs`, add `import qualified Pawl.Type.Deck as Deck`, and change `playFrom` (lines ~268-270):
+In `source/library/Parun/Engine.hs`, add `import qualified Parun.Type.Deck as Deck`, and change `playFrom` (lines ~268-270):
 
 ```haskell
 playFrom :: NonEmpty.NonEmpty (PlayerId, Deck.Deck) -> Game Result
@@ -391,7 +391,7 @@ Expected: the new `Deck` cases pass; all previously-passing groups still pass.
 
 - [x] **Step 10: Clean-build warning check**
 
-Run: `rm -rf dist-newstyle/build/aarch64-osx/ghc-9.14.1/pawl-0.2026.7.16/{b,t,build} && cabal build all --enable-tests --enable-benchmarks 2>&1 | grep -c "warning:"`
+Run: `rm -rf dist-newstyle/build/aarch64-osx/ghc-9.14.1/parun-0.2026.7.16/{b,t,build} && cabal build all --enable-tests --enable-benchmarks 2>&1 | grep -c "warning:"`
 Expected: `0`
 
 - [x] **Step 11: Format, lint, commit**
@@ -518,7 +518,7 @@ Expected: all properties pass across both matchups; `GreenBlackSetup` passes.
 
 - [x] **Step 7: Clean-build warning check**
 
-Run: `rm -rf dist-newstyle/build/aarch64-osx/ghc-9.14.1/pawl-0.2026.7.16/{b,t,build} && cabal build all --enable-tests --enable-benchmarks 2>&1 | grep -c "warning:"`
+Run: `rm -rf dist-newstyle/build/aarch64-osx/ghc-9.14.1/parun-0.2026.7.16/{b,t,build} && cabal build all --enable-tests --enable-benchmarks 2>&1 | grep -c "warning:"`
 Expected: `0`
 
 - [x] **Step 8: Format, lint, commit**
@@ -632,7 +632,7 @@ Expected: both `Castability` cases pass; the pre-existing `Cast`/`Stack` groups 
 
 - [x] **Step 4: Clean-build warning check**
 
-Run: `rm -rf dist-newstyle/build/aarch64-osx/ghc-9.14.1/pawl-0.2026.7.16/{b,t,build} && cabal build all --enable-tests --enable-benchmarks 2>&1 | grep -c "warning:"`
+Run: `rm -rf dist-newstyle/build/aarch64-osx/ghc-9.14.1/parun-0.2026.7.16/{b,t,build} && cabal build all --enable-tests --enable-benchmarks 2>&1 | grep -c "warning:"`
 Expected: `0`
 
 - [x] **Step 5: Format, lint, commit**
@@ -693,7 +693,7 @@ Note: if it unexpectedly fails, that is a real signal combat is not engaging in 
 
 - [x] **Step 3: Clean-build warning check**
 
-Run: `rm -rf dist-newstyle/build/aarch64-osx/ghc-9.14.1/pawl-0.2026.7.16/{b,t,build} && cabal build all --enable-tests --enable-benchmarks 2>&1 | grep -c "warning:"`
+Run: `rm -rf dist-newstyle/build/aarch64-osx/ghc-9.14.1/parun-0.2026.7.16/{b,t,build} && cabal build all --enable-tests --enable-benchmarks 2>&1 | grep -c "warning:"`
 Expected: `0`
 
 - [x] **Step 4: Format, lint, commit**

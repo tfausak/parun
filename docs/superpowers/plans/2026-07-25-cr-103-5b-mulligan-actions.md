@@ -4,17 +4,17 @@
 
 **Goal:** Implement CR 103.5b — an effect that lets a player act "any time [that player] could mulligan" — so Serum Powder works in a main game, a restart (CR 727), and a subgame (CR 729).
 
-**Architecture:** A new `Prompt.MulliganAction` channel is offered inside `Mulligan.mulliganRounds`, immediately before each still-deciding player's `DeclareMulligan`, looping until they decline. The action's payload rides a new `Card.mulliganAction :: [Effect Card]` field read straight off the card (the ability functions in the hand, CR 113.6), and is performed by one new targetless opcode, `Effect.ExileHandThenDraw`. Because `Pawl.Resolve` sits *above* `Pawl.Mulligan` in the module graph (`Effect.RestartGame` → `Setup.restartGame` → `startGameFromCards` → `openingHands`), the effect performer is a **parameter** — `Pawl.Type.MulliganPerformer` — threaded through the four setup entry points, the `resolveSpellWith runSubgame` precedent.
+**Architecture:** A new `Prompt.MulliganAction` channel is offered inside `Mulligan.mulliganRounds`, immediately before each still-deciding player's `DeclareMulligan`, looping until they decline. The action's payload rides a new `Card.mulliganAction :: [Effect Card]` field read straight off the card (the ability functions in the hand, CR 113.6), and is performed by one new targetless opcode, `Effect.ExileHandThenDraw`. Because `Parun.Resolve` sits *above* `Parun.Mulligan` in the module graph (`Effect.RestartGame` → `Setup.restartGame` → `startGameFromCards` → `openingHands`), the effect performer is a **parameter** — `Parun.Type.MulliganPerformer` — threaded through the four setup entry points, the `resolveSpellWith runSubgame` precedent.
 
-**Tech Stack:** Haskell 2010 (GHC 9.14.1), `tasty`/`tasty-hunit`, the `StateT GameState (Program Prompt)` suspension monad, the hand-written JSON codec in `Pawl.Codec`.
+**Tech Stack:** Haskell 2010 (GHC 9.14.1), `tasty`/`tasty-hunit`, the `StateT GameState (Program Prompt)` suspension monad, the hand-written JSON codec in `Parun.Codec`.
 
 ## Global Constraints
 
-- **Haskell 2010, no language extensions** unless unavoidable. `Pawl.Type.Prompt` already has `{-# LANGUAGE GADTs #-}`; `Pawl.MulliganSpec` already has `GADTs` + `RankNTypes`. No new extensions are needed.
+- **Haskell 2010, no language extensions** unless unavoidable. `Parun.Type.Prompt` already has `{-# LANGUAGE GADTs #-}`; `Parun.MulliganSpec` already has `GADTs` + `RankNTypes`. No new extensions are needed.
 - **Warning-clean under `+pedantic` (`-Werror`).** Every exhaustive `Prompt` and `Effect` match must be updated or the build fails — that is the safety net for the mechanical arms in Tasks 1 and 2. Run `cabal build all --enable-tests --enable-benchmarks`; `cabal clean` first when a definitive warning check is needed. **Never run two builds concurrently.**
 - **No partial functions**, no boolean blindness, `Mk` constructor prefix, derive at least `Eq` and `Show`, `Text` not `String`, no list comprehensions, `let` over `where`, `case` over point-free.
-- **One type per module** under `Pawl.Type.<Name>`; qualified imports aliased to the last component; no explicit export lists; a module never imports its parents.
-- **The two invariants outrank this plan:** the engine never cases on a card's identity (only classifications), and never makes a player's choice. `Pawl.Mulligan` may *mention* `Effect` but must never `case` on one — the only module that may is `Pawl.Resolve`.
+- **One type per module** under `Parun.Type.<Name>`; qualified imports aliased to the last component; no explicit export lists; a module never imports its parents.
+- **The two invariants outrank this plan:** the engine never cases on a card's identity (only classifications), and never makes a player's choice. `Parun.Mulligan` may *mention* `Effect` but must never `case` on one — the only module that may is `Parun.Resolve`.
 - **TDD non-negotiable:** write each failing test, run it, watch it fail, then implement. Tick each `- [ ]` as you finish it.
 - **Every rules claim cites CR 103.5b** (or the specific sub-rule) and was checked against `docs/rules.txt`. Never write an expiry (milestone name) into a code comment — file an issue and cite `(#N)`.
 - **Commit style:** commit directly to `main`, one small complete commit per task. End commit messages with the two trailers from `CLAUDE.md` (Co-Authored-By + Claude-Session).
@@ -26,23 +26,23 @@
 
 ## File Structure
 
-- **Create** `source/library/Pawl/Type/MulliganPerformer.hs` — the `ObjectId -> PlayerId -> [Effect Card] -> Game ()` synonym (the `Pawl.Type.Game` synonym-module precedent).
+- **Create** `source/library/Parun/Type/MulliganPerformer.hs` — the `ObjectId -> PlayerId -> [Effect Card] -> Game ()` synonym (the `Parun.Type.Game` synonym-module precedent).
 - **Create** `data/cards/serum-powder.json` — the gate card.
-- **Modify** `source/library/Pawl/Type/Prompt.hs` — `+MulliganAction`.
-- **Modify** `source/library/Pawl/Type/Response.hs` — `+TookMulliganAction`.
-- **Modify** `source/library/Pawl/Type/Effect.hs` — `+ExileHandThenDraw`.
-- **Modify** `source/library/Pawl/Type/Card.hs` — `+mulliganAction`.
-- **Modify** `source/library/Pawl/Replay.hs` — `encode`/`decode`/`defaultAnswer` arms.
-- **Modify** `source/library/Pawl/Codec.hs` — the effect arms (2) and the card arms (encode-if-non-empty, decode-with-default, record field).
-- **Modify** `source/library/Pawl/Resolve.hs` — six exhaustive `Effect` arms, the opcode implementation, `performMulliganAction`, and the `RestartGame` arm.
-- **Modify** `source/library/Pawl/Mulligan.hs` — `actionsFor`, `mulliganWindow`, the performer parameter on `openingHands`/`mulliganRounds`.
-- **Modify** `source/library/Pawl/Setup.hs` — the performer parameter on `newGame`, `startGameFromCards`, `restartGame`.
-- **Modify** `source/library/Pawl/Engine.hs` — two call sites pass `Resolve.performMulliganAction`.
-- **Modify** the 13 exhaustive `Prompt` answerers: `source/test-suite/Pawl/Support.hs` (5), `source/benchmark/Main.hs` (3), `source/test-suite/Pawl/CastSpec.hs` (3), `source/test-suite/Pawl/GameSpec.hs` (2).
-- **Modify** `source/test-suite/Pawl/Support.hs` — also `+performer`, the one `MulliganPerformer` the tests pass.
-- **Modify** the four `Card.Type.MkCard` literals: `source/test-suite/Pawl/CardSpec.hs:203`, `source/test-suite/Pawl/ResolveSpec.hs:440,761,814`.
-- **Modify** `source/test-suite/Pawl/{ReplaySpec,CodecSpec,CardSpec,CardsSpec,ResolveSpec,MulliganSpec,SetupSpec,GameSpec}.hs` — new tests and re-signatured call sites.
-- **Modify** `pawl.cabal` — regenerated by `cabal-gild` (via `hooky fix`) for the new library module; do not hand-edit the discovered fields.
+- **Modify** `source/library/Parun/Type/Prompt.hs` — `+MulliganAction`.
+- **Modify** `source/library/Parun/Type/Response.hs` — `+TookMulliganAction`.
+- **Modify** `source/library/Parun/Type/Effect.hs` — `+ExileHandThenDraw`.
+- **Modify** `source/library/Parun/Type/Card.hs` — `+mulliganAction`.
+- **Modify** `source/library/Parun/Replay.hs` — `encode`/`decode`/`defaultAnswer` arms.
+- **Modify** `source/library/Parun/Codec.hs` — the effect arms (2) and the card arms (encode-if-non-empty, decode-with-default, record field).
+- **Modify** `source/library/Parun/Resolve.hs` — six exhaustive `Effect` arms, the opcode implementation, `performMulliganAction`, and the `RestartGame` arm.
+- **Modify** `source/library/Parun/Mulligan.hs` — `actionsFor`, `mulliganWindow`, the performer parameter on `openingHands`/`mulliganRounds`.
+- **Modify** `source/library/Parun/Setup.hs` — the performer parameter on `newGame`, `startGameFromCards`, `restartGame`.
+- **Modify** `source/library/Parun/Engine.hs` — two call sites pass `Resolve.performMulliganAction`.
+- **Modify** the 13 exhaustive `Prompt` answerers: `source/test-suite/Parun/Support.hs` (5), `source/benchmark/Main.hs` (3), `source/test-suite/Parun/CastSpec.hs` (3), `source/test-suite/Parun/GameSpec.hs` (2).
+- **Modify** `source/test-suite/Parun/Support.hs` — also `+performer`, the one `MulliganPerformer` the tests pass.
+- **Modify** the four `Card.Type.MkCard` literals: `source/test-suite/Parun/CardSpec.hs:203`, `source/test-suite/Parun/ResolveSpec.hs:440,761,814`.
+- **Modify** `source/test-suite/Parun/{ReplaySpec,CodecSpec,CardSpec,CardsSpec,ResolveSpec,MulliganSpec,SetupSpec,GameSpec}.hs` — new tests and re-signatured call sites.
+- **Modify** `parun.cabal` — regenerated by `cabal-gild` (via `hooky fix`) for the new library module; do not hand-edit the discovered fields.
 
 ---
 
@@ -51,14 +51,14 @@
 The wire only, no behavior. One commit, because a new GADT constructor breaks every exhaustive `Prompt` match until all 13 are updated.
 
 **Files:**
-- Modify: `source/library/Pawl/Type/Prompt.hs`, `source/library/Pawl/Type/Response.hs`, `source/library/Pawl/Replay.hs`
-- Modify (answerers): `source/test-suite/Pawl/Support.hs`, `source/benchmark/Main.hs`, `source/test-suite/Pawl/CastSpec.hs`, `source/test-suite/Pawl/GameSpec.hs`
-- Test: `source/test-suite/Pawl/ReplaySpec.hs`
+- Modify: `source/library/Parun/Type/Prompt.hs`, `source/library/Parun/Type/Response.hs`, `source/library/Parun/Replay.hs`
+- Modify (answerers): `source/test-suite/Parun/Support.hs`, `source/benchmark/Main.hs`, `source/test-suite/Parun/CastSpec.hs`, `source/test-suite/Parun/GameSpec.hs`
+- Test: `source/test-suite/Parun/ReplaySpec.hs`
 
 **Interfaces:**
 - Produces: `Prompt.MulliganAction :: Decider -> PlayerId -> [ObjectId] -> Prompt (Maybe ObjectId)`; `Response.TookMulliganAction (Maybe ObjectId)`.
 
-- [x] **Step 1: Write the failing test.** In `source/test-suite/Pawl/ReplaySpec.hs`, add this case immediately after the existing `"Bottom records and replays an ordered [ObjectId]"` case (around line 91), inside the same list:
+- [x] **Step 1: Write the failing test.** In `source/test-suite/Parun/ReplaySpec.hs`, add this case immediately after the existing `"Bottom records and replays an ordered [ObjectId]"` case (around line 91), inside the same list:
 
 ```haskell
           HU.testCase "MulliganAction records and replays a Maybe ObjectId" $
@@ -69,10 +69,10 @@ The wire only, no behavior. One commit, because a new GADT constructor breaks ev
 
 - [x] **Step 2: Run the test to verify it fails to COMPILE** (the constructor does not exist yet).
 
-Run: `cabal build pawl-test-suite --enable-tests 2>&1 | tail -20`
+Run: `cabal build parun-test-suite --enable-tests 2>&1 | tail -20`
 Expected: compile error — `Data constructor not in scope: Prompt.MulliganAction`.
 
-- [x] **Step 3: Add the `Prompt` constructor.** In `source/library/Pawl/Type/Prompt.hs`, append after `Bottom` (the last constructor):
+- [x] **Step 3: Add the `Prompt` constructor.** In `source/library/Parun/Type/Prompt.hs`, append after `Bottom` (the last constructor):
 
 ```haskell
   -- CR 103.5b: "If an effect allows a player to perform an action 'any time
@@ -98,7 +98,7 @@ Expected: compile error — `Data constructor not in scope: Prompt.MulliganActio
   MulliganAction :: Decider -> PlayerId -> [ObjectId] -> Prompt (Maybe ObjectId)
 ```
 
-- [x] **Step 4: Add the `Response` constructor.** In `source/library/Pawl/Type/Response.hs`, append inside the `data Response` sum, after `PutOnBottom [ObjectId]`:
+- [x] **Step 4: Add the `Response` constructor.** In `source/library/Parun/Type/Response.hs`, append inside the `data Response` sum, after `PutOnBottom [ObjectId]`:
 
 ```haskell
   | -- CR 103.5b: the hand card whose mulligan-window action a player took
@@ -110,7 +110,7 @@ Expected: compile error — `Data constructor not in scope: Prompt.MulliganActio
     TookMulliganAction (Maybe ObjectId)
 ```
 
-- [x] **Step 5: Wire `Pawl.Replay`.** Three edits in `source/library/Pawl/Replay.hs`:
+- [x] **Step 5: Wire `Parun.Replay`.** Three edits in `source/library/Parun/Replay.hs`:
 
 In `encode`, after the `Prompt.Bottom {}` arm:
 
@@ -138,7 +138,7 @@ In `defaultAnswer`, after the `Prompt.Bottom` arm:
 
 Line numbers shift as you edit — find them by searching for `Prompt.Bottom`:
 
-Run: `grep -n "Prompt.Bottom" source/test-suite/Pawl/Support.hs source/benchmark/Main.hs source/test-suite/Pawl/CastSpec.hs source/test-suite/Pawl/GameSpec.hs`
+Run: `grep -n "Prompt.Bottom" source/test-suite/Parun/Support.hs source/benchmark/Main.hs source/test-suite/Parun/CastSpec.hs source/test-suite/Parun/GameSpec.hs`
 Expected: 13 hits. Every one gets a sibling arm.
 
 - [x] **Step 7: Run the build and the test to verify they pass.**
@@ -160,15 +160,15 @@ git commit -m "feat(prompt): add the CR 103.5b MulliganAction channel (#182)"
 Serum Powder's payload. One commit, because a new `Effect` constructor breaks all nine exhaustive matches.
 
 **Files:**
-- Modify: `source/library/Pawl/Type/Effect.hs`, `source/library/Pawl/Codec.hs`, `source/library/Pawl/Resolve.hs`
-- Modify (exhaustive match): `source/test-suite/Pawl/CardSpec.hs` (`effectCounts`, around line 293)
-- Test: `source/test-suite/Pawl/ResolveSpec.hs`, `source/test-suite/Pawl/CodecSpec.hs`
+- Modify: `source/library/Parun/Type/Effect.hs`, `source/library/Parun/Codec.hs`, `source/library/Parun/Resolve.hs`
+- Modify (exhaustive match): `source/test-suite/Parun/CardSpec.hs` (`effectCounts`, around line 293)
+- Test: `source/test-suite/Parun/ResolveSpec.hs`, `source/test-suite/Parun/CodecSpec.hs`
 
 **Interfaces:**
 - Consumes: nothing from Task 1.
 - Produces: `Effect.ExileHandThenDraw :: Effect card` (nullary).
 
-- [x] **Step 1: Write the failing tests.** In `source/test-suite/Pawl/ResolveSpec.hs`, add this case to the top-level test list (anywhere in it; next to the Rest in Peace case near line 621 is a natural home):
+- [x] **Step 1: Write the failing tests.** In `source/test-suite/Parun/ResolveSpec.hs`, add this case to the top-level test list (anywhere in it; next to the Rest in Peace case near line 621 is a natural home):
 
 ```haskell
       HU.testCase "CR 103.5b ExileHandThenDraw exiles the whole hand, then draws that many" $ do
@@ -186,7 +186,7 @@ Serum Powder's payload. One commit, because a new `Effect` constructor breaks al
         HU.assertEqual "and the library is two shorter" 3 (length (Game.zoneMembers Zone.Library S.alice after)),
 ```
 
-In `source/test-suite/Pawl/CodecSpec.hs`, add this case next to the existing `"ExileAllGraveyards"` round-trip (around line 177):
+In `source/test-suite/Parun/CodecSpec.hs`, add this case next to the existing `"ExileAllGraveyards"` round-trip (around line 177):
 
 ```haskell
           HU.testCase "ExileHandThenDraw" $
@@ -195,10 +195,10 @@ In `source/test-suite/Pawl/CodecSpec.hs`, add this case next to the existing `"E
 
 - [x] **Step 2: Run the tests to verify they fail to COMPILE.**
 
-Run: `cabal build pawl-test-suite --enable-tests 2>&1 | tail -20`
+Run: `cabal build parun-test-suite --enable-tests 2>&1 | tail -20`
 Expected: compile error — `Data constructor not in scope: Effect.ExileHandThenDraw`.
 
-- [x] **Step 3: Add the opcode.** In `source/library/Pawl/Type/Effect.hs`, append after `PlaySubgame SlotName`:
+- [x] **Step 3: Add the opcode.** In `source/library/Parun/Type/Effect.hs`, append after `PlaySubgame SlotName`:
 
 ```haskell
   | -- CR 103.5b (Serum Powder): exile every card in the resolving controller's
@@ -217,7 +217,7 @@ Expected: compile error — `Data constructor not in scope: Effect.ExileHandThen
 
 - [x] **Step 4: Add the eight classification arms.** Each is a one-liner beside the module's existing `Effect.ExileAllGraveyards` arm.
 
-`source/library/Pawl/Codec.hs` — in `effectToJson` (beside line 1199) and `jsonToEffect` (beside line 1236):
+`source/library/Parun/Codec.hs` — in `effectToJson` (beside line 1199) and `jsonToEffect` (beside line 1236):
 
 ```haskell
   Effect.ExileHandThenDraw -> nullary (Text.pack "ExileHandThenDraw")
@@ -227,7 +227,7 @@ Expected: compile error — `Data constructor not in scope: Effect.ExileHandThen
     "ExileHandThenDraw" -> Right Effect.ExileHandThenDraw
 ```
 
-`source/library/Pawl/Resolve.hs` — five classification arms (`slotsOf` ~78, `readsX` ~119, `manaProduced` ~152, `searchesLibrary` ~185, `rewriteEffect` ~259):
+`source/library/Parun/Resolve.hs` — five classification arms (`slotsOf` ~78, `readsX` ~119, `manaProduced` ~152, `searchesLibrary` ~185, `rewriteEffect` ~259):
 
 ```haskell
   Effect.ExileHandThenDraw -> Set.empty      -- slotsOf: targetless
@@ -237,13 +237,13 @@ Expected: compile error — `Data constructor not in scope: Effect.ExileHandThen
   Effect.ExileHandThenDraw -> effect         -- rewriteEffect: no text to change
 ```
 
-`source/test-suite/Pawl/CardSpec.hs` — in `effectCounts` (beside line 293):
+`source/test-suite/Parun/CardSpec.hs` — in `effectCounts` (beside line 293):
 
 ```haskell
   Effect.ExileHandThenDraw -> []
 ```
 
-- [x] **Step 5: Implement the opcode.** In `source/library/Pawl/Resolve.hs`'s `applyEffectWith`, add an arm beside `Effect.ExileAllGraveyards` (around line 555):
+- [x] **Step 5: Implement the opcode.** In `source/library/Parun/Resolve.hs`'s `applyEffectWith`, add an arm beside `Effect.ExileAllGraveyards` (around line 555):
 
 ```haskell
   -- CR 103.5b (Serum Powder): "exile all the cards from your hand, then draw
@@ -278,15 +278,15 @@ git commit -m "feat(effect): add ExileHandThenDraw, Serum Powder's CR 103.5b pay
 ## Task 3: The `Card.mulliganAction` carrier
 
 **Files:**
-- Modify: `source/library/Pawl/Type/Card.hs`, `source/library/Pawl/Codec.hs`
-- Modify (record literals): `source/test-suite/Pawl/CardSpec.hs:203`, `source/test-suite/Pawl/ResolveSpec.hs:440,761,814`
-- Test: `source/test-suite/Pawl/CodecSpec.hs`
+- Modify: `source/library/Parun/Type/Card.hs`, `source/library/Parun/Codec.hs`
+- Modify (record literals): `source/test-suite/Parun/CardSpec.hs:203`, `source/test-suite/Parun/ResolveSpec.hs:440,761,814`
+- Test: `source/test-suite/Parun/CodecSpec.hs`
 
 **Interfaces:**
 - Consumes: `Effect.ExileHandThenDraw` (Task 2).
 - Produces: `CardT.mulliganAction :: Card -> [Effect Card]`.
 
-- [x] **Step 1: Write the failing tests.** In `source/test-suite/Pawl/CodecSpec.hs`, add both cases next to the existing `"a Card carrying player abilities round-trips"` / `"an empty playerAbilities list is omitted from the JSON"` pair (around lines 233–248):
+- [x] **Step 1: Write the failing tests.** In `source/test-suite/Parun/CodecSpec.hs`, add both cases next to the existing `"a Card carrying player abilities round-trips"` / `"an empty playerAbilities list is omitted from the JSON"` pair (around lines 233–248):
 
 ```haskell
           HU.testCase "a Card carrying a CR 103.5b mulligan action round-trips" $ do
@@ -306,14 +306,14 @@ git commit -m "feat(effect): add ExileHandThenDraw, Serum Powder's CR 103.5b pay
               Right pairs -> HU.assertBool "key absent" (notElem (Text.pack "mulliganAction") (fmap fst pairs)),
 ```
 
-`CodecSpec` may not yet import `Pawl.Type.Effect`; if not, add `import qualified Pawl.Type.Effect as Effect` to its import block.
+`CodecSpec` may not yet import `Parun.Type.Effect`; if not, add `import qualified Parun.Type.Effect as Effect` to its import block.
 
 - [x] **Step 2: Run the tests to verify they fail to COMPILE.**
 
-Run: `cabal build pawl-test-suite --enable-tests 2>&1 | tail -20`
+Run: `cabal build parun-test-suite --enable-tests 2>&1 | tail -20`
 Expected: compile error — `CardT.mulliganAction` is not a field of `Card`.
 
-- [x] **Step 3: Add the field.** In `source/library/Pawl/Type/Card.hs`, append inside `MkCard` after `playerAbilities`:
+- [x] **Step 3: Add the field.** In `source/library/Parun/Type/Card.hs`, append inside `MkCard` after `playerAbilities`:
 
 ```haskell
     -- CR 103.5b: the effects of this card's "any time you could mulligan"
@@ -330,9 +330,9 @@ Expected: compile error — `CardT.mulliganAction` is not a field of `Card`.
     mulliganAction :: [Effect Card]
 ```
 
-Note: `#N` is a placeholder replaced in Task 7 with the real issue number — do not leave it as `#N` at the end of the plan. `Pawl.Type.Card` already imports `Effect` for other fields? It does **not** — add `import Pawl.Type.Effect (Effect)` to its import block.
+Note: `#N` is a placeholder replaced in Task 7 with the real issue number — do not leave it as `#N` at the end of the plan. `Parun.Type.Card` already imports `Effect` for other fields? It does **not** — add `import Parun.Type.Effect (Effect)` to its import block.
 
-- [x] **Step 4: Wire the codec.** In `source/library/Pawl/Codec.hs`:
+- [x] **Step 4: Wire the codec.** In `source/library/Parun/Codec.hs`:
 
 `cardToJson` — append another optional-key block after the `alternativeCosts` one:
 
@@ -359,13 +359,13 @@ Note: `#N` is a placeholder replaced in Task 7 with the real issue number — do
                   Card.Type.mulliganAction = [],
 ```
 
-Run: `grep -n "MkCard" source/test-suite/Pawl/CardSpec.hs source/test-suite/Pawl/ResolveSpec.hs`
+Run: `grep -n "MkCard" source/test-suite/Parun/CardSpec.hs source/test-suite/Parun/ResolveSpec.hs`
 Expected: 4 hits (CardSpec 1, ResolveSpec 3). Each literal gets the field.
 
 - [x] **Step 6: Run the tests to verify they pass.**
 
 Run: `cabal build all --enable-tests --enable-benchmarks 2>&1 | tail -20 && cabal test 2>&1 | tail -20`
-Expected: warning-free build; both new codec cases pass, and every existing card file still round-trips byte-identically (`Pawl.CardsSpec`'s whole-directory sweep proves the omit-when-empty half).
+Expected: warning-free build; both new codec cases pass, and every existing card file still round-trips byte-identically (`Parun.CardsSpec`'s whole-directory sweep proves the omit-when-empty half).
 
 - [x] **Step 7: Format, lint, and commit.**
 
@@ -380,13 +380,13 @@ git commit -m "feat(card): carry a CR 103.5b mulligan action on Card (#182)"
 
 **Files:**
 - Create: `data/cards/serum-powder.json`
-- Test: `source/test-suite/Pawl/CardsSpec.hs`
+- Test: `source/test-suite/Parun/CardsSpec.hs`
 
 **Interfaces:**
 - Consumes: `Effect.ExileHandThenDraw` (Task 2), `CardT.mulliganAction` (Task 3).
 - Produces: the printing `"Serum Powder"` in the registry.
 
-- [x] **Step 1: Write the failing test.** In `source/test-suite/Pawl/CardsSpec.hs`, add this case next to the `clone.json` case in the same list:
+- [x] **Step 1: Write the failing test.** In `source/test-suite/Parun/CardsSpec.hs`, add this case next to the `clone.json` case in the same list:
 
 ```haskell
       HU.testCase "serum-powder.json loads as a {3} artifact with a CR 103.5b mulligan action" $ do
@@ -396,7 +396,7 @@ git commit -m "feat(card): carry a CR 103.5b mulligan action on Card (#182)"
         HU.assertEqual "one activated ability, the {T}: Add {C} mana ability" 1 (length (CardT.activatedAbilities c))
 ```
 
-`CardsSpec` may not yet import `Pawl.Type.Effect`; if not, add `import qualified Pawl.Type.Effect as Effect`.
+`CardsSpec` may not yet import `Parun.Type.Effect`; if not, add `import qualified Parun.Type.Effect as Effect`.
 
 - [x] **Step 2: Run the test to verify it fails.**
 
@@ -484,7 +484,7 @@ Expected: FAIL — the registry throws `UnknownCard` for `"Serum Powder"`.
 - [x] **Step 4: Run the tests to verify they pass.**
 
 Run: `cabal test 2>&1 | tail -20`
-Expected: PASS — including `Pawl.CardsSpec`'s "each committed file re-parses to its compiled card" and "every file name in data/cards is already a slug" sweeps, which now cover the new file.
+Expected: PASS — including `Parun.CardsSpec`'s "each committed file re-parses to its compiled card" and "every file name in data/cards is already a slug" sweeps, which now cover the new file.
 
 - [x] **Step 5: Format, lint, and commit.**
 
@@ -500,16 +500,16 @@ git commit -m "feat(cards): add Serum Powder, the CR 103.5b gate card (#182)"
 The behavior: the performer parameter, the classification, and the window loop. One commit — the parameter and the loop are one deliverable, and the parameter alone changes nothing observable.
 
 **Files:**
-- Create: `source/library/Pawl/Type/MulliganPerformer.hs`
-- Modify: `source/library/Pawl/Resolve.hs`, `source/library/Pawl/Mulligan.hs`, `source/library/Pawl/Setup.hs`, `source/library/Pawl/Engine.hs`
-- Modify (call sites): `source/test-suite/Pawl/Support.hs`, `source/test-suite/Pawl/SetupSpec.hs`, `source/test-suite/Pawl/GameSpec.hs`, `source/test-suite/Pawl/CastSpec.hs`, `source/test-suite/Pawl/MulliganSpec.hs`
-- Test: `source/test-suite/Pawl/MulliganSpec.hs`
+- Create: `source/library/Parun/Type/MulliganPerformer.hs`
+- Modify: `source/library/Parun/Resolve.hs`, `source/library/Parun/Mulligan.hs`, `source/library/Parun/Setup.hs`, `source/library/Parun/Engine.hs`
+- Modify (call sites): `source/test-suite/Parun/Support.hs`, `source/test-suite/Parun/SetupSpec.hs`, `source/test-suite/Parun/GameSpec.hs`, `source/test-suite/Parun/CastSpec.hs`, `source/test-suite/Parun/MulliganSpec.hs`
+- Test: `source/test-suite/Parun/MulliganSpec.hs`
 
 **Interfaces:**
 - Consumes: `Prompt.MulliganAction` (Task 1), `Effect.ExileHandThenDraw` (Task 2), `CardT.mulliganAction` (Task 3), the `"Serum Powder"` printing (Task 4).
 - Produces: `MulliganPerformer.MulliganPerformer = ObjectId -> PlayerId -> [Effect Card] -> Game ()`; `Resolve.performMulliganAction :: MulliganPerformer`; `Mulligan.actionsFor :: PlayerId -> GameState -> [(ObjectId, [Effect Card])]`; `Mulligan.openingHands :: MulliganPerformer -> [PlayerId] -> Game ()`; `Setup.newGame :: MulliganPerformer -> NonEmpty (PlayerId, Deck) -> Game ()`; `Setup.startGameFromCards :: MulliganPerformer -> Game ()`; `Setup.restartGame :: MulliganPerformer -> PlayerId -> Game ()`; `S.performer :: MulliganPerformer`.
 
-- [x] **Step 1: Write the failing tests.** In `source/test-suite/Pawl/MulliganSpec.hs`, add these helpers after `bottomReversedAnswer`, and the two cases to the `tests` list. Exactly one new import is needed — `import qualified Data.Maybe as Maybe`; everything else these use (`State`, `Program`, `Prompt`, `ObjectId`, `Printing`, `Registry`, `Replay`, `Set`, `GameState`, `Game`, `Zone`, `PlayerId`) is already imported there.
+- [x] **Step 1: Write the failing tests.** In `source/test-suite/Parun/MulliganSpec.hs`, add these helpers after `bottomReversedAnswer`, and the two cases to the `tests` list. Exactly one new import is needed — `import qualified Data.Maybe as Maybe`; everything else these use (`State`, `Program`, `Prompt`, `ObjectId`, `Printing`, `Registry`, `Replay`, `Set`, `GameState`, `Game`, `Zone`, `PlayerId`) is already imported there.
 
 ```haskell
 -- alice's library: a Serum Powder on top, then `n` Mountains; bob's is uniform
@@ -567,27 +567,27 @@ The `libSize` arithmetic: alice's library is 21 (one Powder + 20 Mountains). The
 
 - [x] **Step 2: Run the tests to verify they fail to COMPILE** (`Mulligan.openingHands` takes one argument today, and `S.performer` does not exist).
 
-Run: `cabal build pawl-test-suite --enable-tests 2>&1 | tail -20`
+Run: `cabal build parun-test-suite --enable-tests 2>&1 | tail -20`
 Expected: compile error — `Couldn't match expected type` on `Mulligan.openingHands`, and `S.performer` not in scope.
 
-- [x] **Step 3: Create the performer type.** Write `source/library/Pawl/Type/MulliganPerformer.hs`:
+- [x] **Step 3: Create the performer type.** Write `source/library/Parun/Type/MulliganPerformer.hs`:
 
 ```haskell
-module Pawl.Type.MulliganPerformer where
+module Parun.Type.MulliganPerformer where
 
-import Pawl.Type.Card (Card)
-import Pawl.Type.Effect (Effect)
-import Pawl.Type.Game (Game)
-import Pawl.Type.ObjectId (ObjectId)
-import Pawl.Type.PlayerId (PlayerId)
+import Parun.Type.Card (Card)
+import Parun.Type.Effect (Effect)
+import Parun.Type.Game (Game)
+import Parun.Type.ObjectId (ObjectId)
+import Parun.Type.PlayerId (PlayerId)
 
 -- CR 103.5b: how the closed half performs a mulligan-window action's effects --
 -- the hand card that granted the action, the player taking it, and the effects
 -- themselves.
 --
--- A PARAMETER rather than an import because Pawl.Resolve sits ABOVE
--- Pawl.Mulligan in the module graph (Effect.RestartGame -> Setup.restartGame ->
--- startGameFromCards -> openingHands), so Pawl.Mulligan importing Pawl.Resolve
+-- A PARAMETER rather than an import because Parun.Resolve sits ABOVE
+-- Parun.Mulligan in the module graph (Effect.RestartGame -> Setup.restartGame ->
+-- startGameFromCards -> openingHands), so Parun.Mulligan importing Parun.Resolve
 -- would close a cycle. That cycle is a fact about the RULES, not the layout: an
 -- opcode restarts a game, a game start draws opening hands, and drawing opening
 -- hands performs opcodes. The precedent is Resolve.resolveSpellWith, which takes
@@ -599,12 +599,12 @@ import Pawl.Type.PlayerId (PlayerId)
 type MulliganPerformer = ObjectId -> PlayerId -> [Effect Card] -> Game ()
 ```
 
-- [x] **Step 4: Implement the performer in `Pawl.Resolve`.** Add `import qualified Pawl.Type.MulliganPerformer as MulliganPerformer` to `source/library/Pawl/Resolve.hs`, then add this definition next to `applyEffect` (around line 910):
+- [x] **Step 4: Implement the performer in `Parun.Resolve`.** Add `import qualified Parun.Type.MulliganPerformer as MulliganPerformer` to `source/library/Parun/Resolve.hs`, then add this definition next to `applyEffect` (around line 910):
 
 ```haskell
--- CR 103.5b: perform the effects of a mulligan-window action. Pawl.Mulligan's
+-- CR 103.5b: perform the effects of a mulligan-window action. Parun.Mulligan's
 -- window loop reaches this through the MulliganPerformer parameter it is handed
--- (see Pawl.Type.MulliganPerformer for why it is a parameter).
+-- (see Parun.Type.MulliganPerformer for why it is a parameter).
 --
 -- The action does not use the stack -- CR 103.5b says the player PERFORMS it,
 -- not that they cast or activate anything -- so there is nothing to put on the
@@ -619,7 +619,7 @@ performMulliganAction source player =
   Monad.mapM_ (applyEffect source player Map.empty Map.empty Map.empty)
 ```
 
-- [x] **Step 5: Add the window to `Pawl.Mulligan`.** In `source/library/Pawl/Mulligan.hs`, add the imports `import qualified Data.Maybe as Maybe`, `import qualified Pawl.Type.Card as Card`, `import Pawl.Type.Effect (Effect)`, `import Pawl.Type.MulliganPerformer (MulliganPerformer)`, `import Pawl.Type.ObjectId (ObjectId)`, then add these two definitions (put them just before `mulliganRounds`):
+- [x] **Step 5: Add the window to `Parun.Mulligan`.** In `source/library/Parun/Mulligan.hs`, add the imports `import qualified Data.Maybe as Maybe`, `import qualified Parun.Type.Card as Card`, `import Parun.Type.Effect (Effect)`, `import Parun.Type.MulliganPerformer (MulliganPerformer)`, `import Parun.Type.ObjectId (ObjectId)`, then add these two definitions (put them just before `mulliganRounds`):
 
 ```haskell
 -- CR 103.5b: the cards in this player's hand that grant an action they may take
@@ -671,7 +671,7 @@ mulliganWindow perform pid = do
             mulliganWindow perform pid
 ```
 
-- [x] **Step 6: Thread the parameter through `Pawl.Mulligan`.** Change the two signatures and call the window. `openingHands`:
+- [x] **Step 6: Thread the parameter through `Parun.Mulligan`.** Change the two signatures and call the window. `openingHands`:
 
 ```haskell
 openingHands :: MulliganPerformer -> [PlayerId] -> Game ()
@@ -709,7 +709,7 @@ mulliganRounds perform counts deciding = do
 
 Keep the existing comments on `mulliganRounds` and its `case`; only the marked lines change.
 
-- [x] **Step 7: Thread the parameter through `Pawl.Setup` and `Pawl.Engine`.** In `source/library/Pawl/Setup.hs`, add `import Pawl.Type.MulliganPerformer (MulliganPerformer)` and change three definitions (bodies otherwise unchanged):
+- [x] **Step 7: Thread the parameter through `Parun.Setup` and `Parun.Engine`.** In `source/library/Parun/Setup.hs`, add `import Parun.Type.MulliganPerformer (MulliganPerformer)` and change three definitions (bodies otherwise unchanged):
 
 ```haskell
 newGame :: MulliganPerformer -> NonEmpty.NonEmpty (PlayerId, Deck.Deck) -> Game ()
@@ -728,13 +728,13 @@ restartGame perform starter = do
   startGameFromCards perform
 ```
 
-In `source/library/Pawl/Resolve.hs`, the `RestartGame` arm passes the one implementation:
+In `source/library/Parun/Resolve.hs`, the `RestartGame` arm passes the one implementation:
 
 ```haskell
   Effect.RestartGame -> Setup.restartGame performMulliganAction controller
 ```
 
-In `source/library/Pawl/Engine.hs`, two call sites (around lines 858 and 870):
+In `source/library/Parun/Engine.hs`, two call sites (around lines 858 and 870):
 
 ```haskell
   (result, finalSub) <- Trans.lift (State.runStateT (Setup.startGameFromCards Resolve.performMulliganAction >> playGame) sub0)
@@ -744,11 +744,11 @@ In `source/library/Pawl/Engine.hs`, two call sites (around lines 858 and 870):
   Setup.newGame Resolve.performMulliganAction matchup
 ```
 
-- [x] **Step 8: Add `S.performer` and fix every test call site.** In `source/test-suite/Pawl/Support.hs`, add `import qualified Pawl.Resolve as Resolve` and `import qualified Pawl.Type.MulliganPerformer as MulliganPerformer`, then:
+- [x] **Step 8: Add `S.performer` and fix every test call site.** In `source/test-suite/Parun/Support.hs`, add `import qualified Parun.Resolve as Resolve` and `import qualified Parun.Type.MulliganPerformer as MulliganPerformer`, then:
 
 ```haskell
--- The one CR 103.5b performer (Pawl.Resolve.performMulliganAction), so a test
--- that only wants a game set up does not have to reach into Pawl.Resolve for it.
+-- The one CR 103.5b performer (Parun.Resolve.performMulliganAction), so a test
+-- that only wants a game set up does not have to reach into Parun.Resolve for it.
 performer :: MulliganPerformer.MulliganPerformer
 performer = Resolve.performMulliganAction
 ```
@@ -777,7 +777,7 @@ git commit -m "feat(mulligan): offer CR 103.5b actions at the mulligan declarati
 The seven remaining behaviors from the spec's §6. Each is a separate assertion about a rule, so they land together as the rule's test suite.
 
 **Files:**
-- Test: `source/test-suite/Pawl/MulliganSpec.hs`
+- Test: `source/test-suite/Parun/MulliganSpec.hs`
 
 **Interfaces:**
 - Consumes: everything from Tasks 1–5 (`S.performer`, `powderGame`, `recordWindow`, `usePowder`).
@@ -931,7 +931,7 @@ Then add these seven cases to the `tests` list:
 - [x] **Step 2: Run the tests to verify they fail.**
 
 Run: `cabal test 2>&1 | tail -40`
-Expected: compile errors first (the new helpers reference nothing new, so this should compile) and then FAILs only if the Task 5 implementation is wrong. **If every case passes on the first run, that is the expected outcome for tests 1, 4, 5, 6 and 7** — they pin behavior Task 5 already implements. Tests 2 (later round) and 3 (repeats) are the ones most likely to expose a bug; if any case fails, fix `Pawl.Mulligan`, never the assertion.
+Expected: compile errors first (the new helpers reference nothing new, so this should compile) and then FAILs only if the Task 5 implementation is wrong. **If every case passes on the first run, that is the expected outcome for tests 1, 4, 5, 6 and 7** — they pin behavior Task 5 already implements. Tests 2 (later round) and 3 (repeats) are the ones most likely to expose a bug; if any case fails, fix `Parun.Mulligan`, never the assertion.
 
 - [x] **Step 3: Run the whole suite.**
 
@@ -950,7 +950,7 @@ git commit -m "test(mulligan): pin the seven CR 103.5b fidelity behaviors (#182)
 ## Task 7: Close out
 
 **Files:**
-- Modify: `source/library/Pawl/Type/Card.hs` (the `(#N)` placeholder), `source/library/Pawl/Card.hs` (the lint citation)
+- Modify: `source/library/Parun/Type/Card.hs` (the `(#N)` placeholder), `source/library/Parun/Card.hs` (the lint citation)
 - Modify: `docs/progress.md`, `CLAUDE.md`
 
 - [x] **Step 1: File the two deferral issues.**
@@ -962,10 +962,10 @@ gh issue create --title "A card declaring two CR 103.5b mulligan actions is unre
 
 gh issue create --title "The CardSpec lint family does not range over Card.mulliganAction" \
   --label gap --label expires:card-driven \
-  --body "\`Pawl.Card.allEffects\` is the spell's effects only -- it serves the D4 slot lint and the CR 612 text-change scan, both of which range over a spell's text. A slot named inside a \`Card.mulliganAction\` would therefore go unlinted. Nothing can name one today: \`Effect.ExileHandThenDraw\` is targetless and slotless. The lint should grow this with the first slotted mulligan action, not before. Spec: docs/superpowers/specs/2026-07-25-cr-103-5b-mulligan-actions-design.md section 3.1."
+  --body "\`Parun.Card.allEffects\` is the spell's effects only -- it serves the D4 slot lint and the CR 612 text-change scan, both of which range over a spell's text. A slot named inside a \`Card.mulliganAction\` would therefore go unlinted. Nothing can name one today: \`Effect.ExileHandThenDraw\` is targetless and slotless. The lint should grow this with the first slotted mulligan action, not before. Spec: docs/superpowers/specs/2026-07-25-cr-103-5b-mulligan-actions-design.md section 3.1."
 ```
 
-- [x] **Step 2: Replace the `(#N)` placeholder** in `source/library/Pawl/Type/Card.hs` with the first issue's real number, and add a citation to `Pawl.Card.allEffects` for the second:
+- [x] **Step 2: Replace the `(#N)` placeholder** in `source/library/Parun/Type/Card.hs` with the first issue's real number, and add a citation to `Parun.Card.allEffects` for the second:
 
 ```haskell
 -- Every effect across all of a card's modes, in printed (mode, then written)
@@ -996,12 +996,12 @@ Expected: warning-free (a clean build is the only one that shows warnings from u
   player who has not yet kept. Performing one is **not** taking a mulligan:
   nothing is shuffled or bottomed and the count is untouched, so it feeds
   neither CR 103.5's bottom count nor CR 103.5c's free allowance, and the
-  declaration still follows it. **The structural finding:** `Pawl.Resolve` sits
-  ABOVE `Pawl.Mulligan` (`Effect.RestartGame` → `Setup.restartGame` →
+  declaration still follows it. **The structural finding:** `Parun.Resolve` sits
+  ABOVE `Parun.Mulligan` (`Effect.RestartGame` → `Setup.restartGame` →
   `startGameFromCards` → `openingHands`), and that cycle is a fact about the
   rules rather than the layout — an opcode restarts a game, a game start draws
   opening hands, and drawing opening hands performs opcodes. The effect
-  performer is therefore a **parameter**, `Pawl.Type.MulliganPerformer`, threaded
+  performer is therefore a **parameter**, `Parun.Type.MulliganPerformer`, threaded
   through the four setup entry points; the `resolveSpellWith runSubgame`
   precedent, with no default, because "no mulligan performer" is not a real
   state of the world. **Added:** `Effect.ExileHandThenDraw` (one fused opcode —
@@ -1012,7 +1012,7 @@ Expected: warning-free (a clean build is the only one that shows warnings from u
   treatment so no committed card file changed; `Prompt.MulliganAction` +
   `Response.TookMulliganAction` + their `Replay` arms; `Mulligan.actionsFor` and
   `Mulligan.mulliganWindow`; `data/cards/serum-powder.json`; nine
-  `Pawl.MulliganSpec` cases. **Deferred:** a printing declaring two CR 103.5b
+  `Parun.MulliganSpec` cases. **Deferred:** a printing declaring two CR 103.5b
   actions (#N, card-driven); the `CardSpec` lint family's coverage of the new
   field (#N, card-driven). CR 103.6's opening-hand actions (#149) are a
   different mechanism at a different time — after the whole mulligan process —

@@ -1,0 +1,77 @@
+module Parun.Codec.BlockRequirementSpec where
+
+import qualified Parun.Codec.BlockRequirement as BlockRequirement
+import qualified Parun.JsonCodec.Common as Common
+import qualified Parun.Spec as Spec
+import qualified Parun.Types.Affected as Affected
+import qualified Parun.Types.Aggregation as Aggregation
+import qualified Parun.Types.BlockRequirement as BlockRequirement
+import qualified Parun.Types.Compares as Compares
+import qualified Parun.Types.Comparison as Comparison
+import qualified Parun.Types.Condition as Condition
+import qualified Parun.Types.Count as Count
+import qualified Parun.Types.Filter as Filter
+import qualified Parun.Types.InZone as InZone
+import qualified Parun.Types.PlayerRef as PlayerRef
+import qualified Parun.Types.PlayerRelation as PlayerRelation
+import qualified Parun.Types.Quantity as Quantity
+import qualified Parun.Types.RequirementArity as RequirementArity
+import qualified Parun.Types.Scope as Scope
+import qualified Parun.Types.Zone as Zone
+
+spec :: (Monad m, Monad n) => Spec.Spec m n -> n ()
+spec s = Spec.describe s "Parun.Codec.BlockRequirement" $ do
+  -- Lure's shape (CR 303.4m): the enchanted creature IS the attacker every
+  -- creature able to block must block, so the subject axis is absent.
+  Spec.it s "MkBlockRequirement" $
+    Common.assertCodec
+      s
+      BlockRequirement.codec
+      (BlockRequirement.MkBlockRequirement Nothing (Just Affected.Attached) Nothing RequirementArity.EachSubject)
+      " {\"attacker\":{\"type\":\"Attached\"}} "
+  -- Razorgrass Screen's shape: the requirement names its own source and no
+  -- attacker, so the object axis is the absent one.
+  Spec.it s "MkBlockRequirement with no attacker" $
+    Common.assertCodec
+      s
+      BlockRequirement.codec
+      (BlockRequirement.MkBlockRequirement (Just Affected.Attached) Nothing Nothing RequirementArity.EachSubject)
+      " {\"subject\":{\"type\":\"Attached\"}} "
+  -- Seton's Desire's shape: CR 509.1c's second reading, "or that it must block
+  -- if some condition is met", written as CR 604.2's "as long as" clause over
+  -- the cards in the controller's graveyard -- the same threshold clause
+  -- Parun.Codec.AttackRequirementSpec spells for Otarian Juggernaut.
+  Spec.it s "a gated requirement" $
+    Common.assertCodec
+      s
+      BlockRequirement.codec
+      ( BlockRequirement.MkBlockRequirement
+          Nothing
+          (Just Affected.Attached)
+          ( Just
+              ( Condition.Compares
+                  ( Compares.MkCompares
+                      ( Quantity.Count
+                          Count.MkCount
+                            { Count.scope = Scope.InZone (InZone.MkInZone Zone.Graveyard (PlayerRef.Relative PlayerRelation.You)),
+                              Count.filter = Filter.And [],
+                              Count.aggregation = Aggregation.Members
+                            }
+                      )
+                      Comparison.AtLeast
+                      (Quantity.Literal 7)
+                  )
+              )
+          )
+          RequirementArity.EachSubject
+      )
+      " {\"attacker\":{\"type\":\"Attached\"},\"while\":{\"type\":\"Compares\",\"value\":{\"measured\":{\"type\":\"Count\",\"value\":{\"aggregation\":{\"type\":\"Members\"},\"filter\":{\"type\":\"And\",\"value\":[]},\"scope\":{\"type\":\"InZone\",\"value\":{\"zone\":{\"type\":\"Graveyard\"},\"player\":{\"type\":\"Relative\",\"value\":{\"type\":\"You\"}}}}}},\"comparison\":{\"type\":\"AtLeast\"},\"threshold\":{\"type\":\"Literal\",\"value\":7}}}} "
+  -- Gaea's Protector's shape: CR 509.1c read as ONE requirement over every able
+  -- blocker, with the object axis naming the card printing it.
+  Spec.it s "a group requirement" $
+    Common.assertCodec
+      s
+      BlockRequirement.codec
+      (BlockRequirement.MkBlockRequirement Nothing (Just (Affected.Matching Filter.IsSource)) Nothing RequirementArity.AnySubject)
+      " {\"attacker\":{\"type\":\"Matching\",\"value\":{\"type\":\"IsSource\"}},\"arity\":{\"type\":\"AnySubject\"}} "
+  Spec.it s "has a schema" $ Common.assertHasSchema s BlockRequirement.codec

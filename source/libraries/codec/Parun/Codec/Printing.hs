@@ -1,0 +1,84 @@
+{-# LANGUAGE ApplicativeDo #-}
+
+module Parun.Codec.Printing where
+
+import qualified Data.List.NonEmpty as NonEmpty
+import qualified Data.Set as Set
+import qualified Data.Text as Text
+import qualified Parun.Codec.Card as Card
+import qualified Parun.Codec.CardName as CardName
+import qualified Parun.JsonCodec.Arm as Arm
+import qualified Parun.JsonCodec.Codec as Codec
+import qualified Parun.JsonCodec.Common as Common
+import qualified Parun.JsonCodec.Fields as Fields
+import qualified Parun.Types.Card as Card.Type
+import qualified Parun.Types.CardName as CardName.Type
+import qualified Parun.Types.Face as Face
+import qualified Parun.Types.Printing as Printing
+
+-- | The whole record, which is what a card FILE holds and what
+-- Parun.CodecIntegrationSpec's honesty round trip over the corpus reads.
+--
+-- The card's own keys plus CR 717.1's `lights`, which a card file never writes:
+-- Parun.Registry reads files as cards, and the lights belong to a printing.
+codec :: Codec.Codec Printing.Printing
+codec = Fields.object $ do
+  card <- Card.fields Printing.card
+  lights <- Fields.defaulted "lights" Set.empty (Common.set Common.natural) Printing.lights
+  pure Printing.MkPrinting {Printing.card = card, Printing.lights = lights}
+
+-- | A printing in a game state's intern table: its NAME where a resolver can
+-- reproduce it, and the whole record where none can.
+--
+-- The resolver is the portability knob and the decoder's only source of cards:
+-- one answering 'Nothing' for everything inlines the table, giving a
+-- self-contained state, with no second code path. @parun:registry@ sits ABOVE
+-- @parun:codec@, so a decoder cannot call a registry and the caller hands the
+-- lookup in instead.
+--
+-- @Named@ FAILS to decode when the resolver does not know the name, rather than
+-- guessing: a state is only as portable as the registry it was written against,
+-- and this is what makes the format say so.
+--
+-- @Inline@ carries every printing the resolver does not reproduce EXACTLY, which
+-- covers both the printings no registry could hold and a name it answers
+-- differently for. Two producers make the arm necessary rather than defensive:
+-- Parun.Engine.Ring.theRingEmblem builds The Ring's emblem as a function of the
+-- temptation count, and Parun.Engine.Event.resolveTokens hands back a card that
+-- has been through applyReplacements. Neither is in @data\/cards@.
+--
+-- The equality check is what makes @Named@ safe: a resolver answering with a
+-- DIFFERENT card under this name would decode to that other card, so the name is
+-- not written. A printing with lights is inlined for the same reason: a name
+-- resolves to a card, never to which printing of it (CR 717.1). Parun.Codec.PrintingSpec's "a name the resolver answers
+-- differently for is written out in full" is that case.
+reference :: (CardName.Type.CardName -> Maybe Card.Type.Card) -> Codec.Codec Printing.Printing
+reference resolve =
+  -- FIRST, so that Arm.tagged's take-the-first-matching-arm encoder prefers a
+  -- name; `inline` matches everything.
+  let named =
+        Arm.MkArm
+          { Arm.tag = "Named",
+            Arm.decodeValue = \mv -> do
+              name <- Common.withValue mv (Codec.decode CardName.codec)
+              case resolve name of
+                Nothing -> Left (Text.pack ("no such card: " <> Text.unpack (CardName.Type.unwrap name)))
+                Just card -> Right (Printing.ofCard card),
+            Arm.valueSchema = Arm.RequiredValue (Codec.schema CardName.codec),
+            Arm.projectValue = \printing ->
+              let name = firstFaceName (Printing.card printing)
+               in if resolve name == Just (Printing.card printing) && Set.null (Printing.lights printing)
+                    then Just (Just (Codec.encode CardName.codec name))
+                    else Nothing
+          }
+      inline = Arm.payload "Inline" codec id Just
+   in Arm.anonymous [named, inline]
+
+-- | The name a printing is written under. The FIRST face's, not the joined
+-- name: CR 709.4a gives a split card two names and no combined one, and
+-- Parun.Registry.index keys each face name separately, so a first face's name is
+-- a key the file-backed registry answers to while the joined one --
+-- Parun.Registry.filedAs, a filing convention rather than a name the card has --
+-- is not.
+firstFaceName :: Card.Type.Card -> CardName.Type.CardName
+firstFaceName = Face.name . NonEmpty.head . Card.Type.faces

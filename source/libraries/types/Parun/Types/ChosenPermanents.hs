@@ -1,0 +1,37 @@
+module Parun.Types.ChosenPermanents where
+
+import qualified Parun.Types.Filter as Filter
+import qualified Parun.Types.HowMany as HowMany
+import qualified Parun.Types.Keyword as Keyword
+import qualified Parun.Types.PlayerRef as PlayerRef
+
+-- | CR 608.2d's battlefield choice: what may be picked, WHO picks, and how many.
+--
+-- The Filter is read from the ABILITY's perspective whoever chooses -- CR 109.5's
+-- "you" is the ability's controller, and Wormfang Crab's "a permanent you control"
+-- keeps meaning the Crab's controller when an opponent is the one naming it. So
+-- the fields answer different questions and are named rather than positional,
+-- Parun.Types.ChosenCardInGraveyard's reason.
+--
+-- The CHOOSER is a PlayerRef naming ONE seat, Parun.Types.ChosenCardFromAmong's
+-- reading and not Parun.Types.Chooser's: that type folds over a PlayerScope of
+-- GRAVEYARDS, one per chooser, where the battlefield is one shared zone (CR
+-- 400.1) however many seats are in play. CR 608.2c's default is the resolving
+-- controller, which is what @Relative You@ spells; Wormfang Crab's "an opponent
+-- chooses a permanent you control" is @Relative Opponent@, the seat the
+-- controller names (CR 801.5c's hand-off included,
+-- Parun.Engine.Resolve.Effect.askedChooser). A slot a TRIGGER filled is the
+-- other road, and the one that outlives the resolution:
+-- Parun.Engine.Binding.triggerPlayer holds a seat named a priority window ago, so
+-- CR 800.4g's departed chooser is reachable from here
+-- (Parun.Engine.Resolve.Effect.askedChooser).
+--
+-- A ref naming NO seat -- an unfilled slot, or one holding something that is not
+-- a player -- names no permanent either, and that share of the instruction is
+-- ignored (CR 101.3), Parun.Engine.Resolve.Effect.chooseCardFromAmong's reading.
+data ChosenPermanents = MkChosenPermanents
+  { filter :: Filter.Filter Keyword.Keyword,
+    chooser :: PlayerRef.PlayerRef,
+    count :: HowMany.HowMany
+  }
+  deriving (Eq, Ord, Show)

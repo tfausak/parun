@@ -6,16 +6,16 @@
 
 **Architecture:** A third phase in `Mulligan.openingHands`, after the CR 103.5 process completes, offering each player in turn order the actions their opening hand grants, looping until they decline. The action's payload rides a new `Card.openingHandAction :: [Effect Card]` field, and needs **no new opcode**: `MoveToZone Binding.triggerSource Zone.Battlefield` is how this codebase already says "this permanent", so the performer just binds the granting card into the reserved `self` slot. Leyline's own ability is Rest in Peace's `ZoneChangeR` shape with a new `ControllerRelation.Opponents`, whose zone-change test is split out **owner-based** per CR 400.3.
 
-**Tech Stack:** Haskell 2010 (GHC 9.14.1), `tasty`/`tasty-hunit`, the `StateT GameState (Program Prompt)` suspension monad, the hand-written JSON codec in `Pawl.Codec`.
+**Tech Stack:** Haskell 2010 (GHC 9.14.1), `tasty`/`tasty-hunit`, the `StateT GameState (Program Prompt)` suspension monad, the hand-written JSON codec in `Parun.Codec`.
 
 ## Global Constraints
 
 - **Haskell 2010, no language extensions** unless unavoidable. The shared window loop takes the prompt constructor as an ordinary function argument (its result type is the fixed `Prompt (Maybe ObjectId)`), so no `RankNTypes` is needed in the library.
 - **Warning-clean under `+pedantic` (`-Werror`).** A new `Prompt` constructor breaks every exhaustive answerer and a new `ControllerRelation` constructor breaks all four of its consumers; that is the safety net for Tasks 1 and 2. Run `cabal build all --enable-tests --enable-benchmarks`; `cabal clean` first for a definitive warning check. **Never run two builds concurrently.**
-- **Adding or deleting a library module requires a direct `cabal-gild --io pawl.cabal`.** `hooky fix` only runs cabal-gild when `pawl.cabal` itself has a staged change, so a new or renamed module is otherwise missing from the discovered list and the build fails on `-Wmissing-home-modules`. Task 4 renames a module and hits this.
+- **Adding or deleting a library module requires a direct `cabal-gild --io parun.cabal`.** `hooky fix` only runs cabal-gild when `parun.cabal` itself has a staged change, so a new or renamed module is otherwise missing from the discovered list and the build fails on `-Wmissing-home-modules`. Task 4 renames a module and hits this.
 - **No partial functions**, no boolean blindness, `Mk` constructor prefix, derive at least `Eq` and `Show`, `Text` not `String`, no list comprehensions, `let` over `where`, `case` over point-free.
-- **One type per module** under `Pawl.Type.<Name>`; qualified imports aliased to the last component; no explicit export lists; a module never imports its parents.
-- **The two invariants outrank this plan:** the engine never cases on a card's identity (only classifications), and never makes a player's choice. `Pawl.Mulligan` may *mention* `Effect` but must never `case` on one.
+- **One type per module** under `Parun.Type.<Name>`; qualified imports aliased to the last component; no explicit export lists; a module never imports its parents.
+- **The two invariants outrank this plan:** the engine never cases on a card's identity (only classifications), and never makes a player's choice. `Parun.Mulligan` may *mention* `Effect` but must never `case` on one.
 - **TDD non-negotiable:** write each failing test, run it, watch it fail, then implement. Tick each `- [ ]` as you finish it.
 - **Every rules claim cites CR 103.6** (or the specific sub-rule) and was checked against `docs/rules.txt`. Never write an expiry into a code comment — file an issue and cite `(#N)`.
 - **Commit style:** commit directly to `main`, one small complete commit per task, with the two `CLAUDE.md` trailers.
@@ -28,21 +28,21 @@
 ## File Structure
 
 - **Create** `data/cards/leyline-of-the-void.json` — the gate card.
-- **Rename** `source/library/Pawl/Type/MulliganPerformer.hs` → `source/library/Pawl/Type/HandActionPerformer.hs`.
-- **Modify** `source/library/Pawl/Type/Prompt.hs` — `+OpeningHandAction`.
-- **Modify** `source/library/Pawl/Type/Response.hs` — `+TookOpeningHandAction`.
-- **Modify** `source/library/Pawl/Type/ControllerRelation.hs` — `+Opponents`.
-- **Modify** `source/library/Pawl/Type/Card.hs` — `+openingHandAction`.
-- **Modify** `source/library/Pawl/Replay.hs` — three arms.
-- **Modify** `source/library/Pawl/Codec.hs` — the card field, the relation's two arms.
-- **Modify** `source/library/Pawl/Replacement.hs` — the owner-based zone-change subject test, plus `Opponents` arms.
-- **Modify** `source/library/Pawl/Resolve.hs` — the performer's rename and its reserved-slot bindings.
-- **Modify** `source/library/Pawl/Mulligan.hs` — `actionsFor`'s selector, the shared `handWindow`, `openingHandActions`, the third phase.
-- **Modify** `source/library/Pawl/Setup.hs`, `source/library/Pawl/Engine.hs` — the renamed type and performer.
+- **Rename** `source/library/Parun/Type/MulliganPerformer.hs` → `source/library/Parun/Type/HandActionPerformer.hs`.
+- **Modify** `source/library/Parun/Type/Prompt.hs` — `+OpeningHandAction`.
+- **Modify** `source/library/Parun/Type/Response.hs` — `+TookOpeningHandAction`.
+- **Modify** `source/library/Parun/Type/ControllerRelation.hs` — `+Opponents`.
+- **Modify** `source/library/Parun/Type/Card.hs` — `+openingHandAction`.
+- **Modify** `source/library/Parun/Replay.hs` — three arms.
+- **Modify** `source/library/Parun/Codec.hs` — the card field, the relation's two arms.
+- **Modify** `source/library/Parun/Replacement.hs` — the owner-based zone-change subject test, plus `Opponents` arms.
+- **Modify** `source/library/Parun/Resolve.hs` — the performer's rename and its reserved-slot bindings.
+- **Modify** `source/library/Parun/Mulligan.hs` — `actionsFor`'s selector, the shared `handWindow`, `openingHandActions`, the third phase.
+- **Modify** `source/library/Parun/Setup.hs`, `source/library/Parun/Engine.hs` — the renamed type and performer.
 - **Modify** the exhaustive `Prompt` answerers: `Support.hs` (5), `benchmark/Main.hs` (3), `CastSpec.hs` (3), `GameSpec.hs` (2), and the non-wildcard `MulliganSpec` locals.
 - **Modify** the four `Card.Type.MkCard` literals: `CardSpec.hs`, `ResolveSpec.hs` (×3).
 - **Modify** `MulliganSpec.hs`, `CodecSpec.hs`, `CardsSpec.hs`, `ReplacementSpec.hs`, `Support.hs`.
-- **Modify** `pawl.cabal` — via a direct `cabal-gild --io pawl.cabal` after the Task 4 rename.
+- **Modify** `parun.cabal` — via a direct `cabal-gild --io parun.cabal` after the Task 4 rename.
 
 ---
 
@@ -51,14 +51,14 @@
 The wire only. One commit, because a new GADT constructor breaks every exhaustive `Prompt` match at once.
 
 **Files:**
-- Modify: `source/library/Pawl/Type/Prompt.hs`, `source/library/Pawl/Type/Response.hs`, `source/library/Pawl/Replay.hs`
+- Modify: `source/library/Parun/Type/Prompt.hs`, `source/library/Parun/Type/Response.hs`, `source/library/Parun/Replay.hs`
 - Modify (answerers): `Support.hs`, `benchmark/Main.hs`, `CastSpec.hs`, `GameSpec.hs`, `MulliganSpec.hs`
-- Test: `source/test-suite/Pawl/ReplaySpec.hs`
+- Test: `source/test-suite/Parun/ReplaySpec.hs`
 
 **Interfaces:**
 - Produces: `Prompt.OpeningHandAction :: Decider -> PlayerId -> [ObjectId] -> Prompt (Maybe ObjectId)`; `Response.TookOpeningHandAction (Maybe ObjectId)`.
 
-- [x] **Step 1: Write the failing test.** In `source/test-suite/Pawl/ReplaySpec.hs`, add this case immediately after the existing `"MulliganAction records and replays a Maybe ObjectId"` case:
+- [x] **Step 1: Write the failing test.** In `source/test-suite/Parun/ReplaySpec.hs`, add this case immediately after the existing `"MulliganAction records and replays a Maybe ObjectId"` case:
 
 ```haskell
           HU.testCase "OpeningHandAction records and replays a Maybe ObjectId" $
@@ -69,10 +69,10 @@ The wire only. One commit, because a new GADT constructor breaks every exhaustiv
 
 - [x] **Step 2: Run the test to verify it fails to COMPILE.**
 
-Run: `cabal build pawl-test-suite --enable-tests 2>&1 | tail -20`
+Run: `cabal build parun-test-suite --enable-tests 2>&1 | tail -20`
 Expected: compile error — `Data constructor not in scope: Prompt.OpeningHandAction`.
 
-- [x] **Step 3: Add the `Prompt` constructor.** In `source/library/Pawl/Type/Prompt.hs`, append after `MulliganAction`:
+- [x] **Step 3: Add the `Prompt` constructor.** In `source/library/Parun/Type/Prompt.hs`, append after `MulliganAction`:
 
 ```haskell
   -- CR 103.6: an action a card in this player's opening hand lets them take once
@@ -92,7 +92,7 @@ Expected: compile error — `Data constructor not in scope: Prompt.OpeningHandAc
   OpeningHandAction :: Decider -> PlayerId -> [ObjectId] -> Prompt (Maybe ObjectId)
 ```
 
-- [x] **Step 4: Add the `Response` constructor.** In `source/library/Pawl/Type/Response.hs`, append after `TookMulliganAction`:
+- [x] **Step 4: Add the `Response` constructor.** In `source/library/Parun/Type/Response.hs`, append after `TookMulliganAction`:
 
 ```haskell
   | -- CR 103.6: the hand card whose opening-hand action a player took (Nothing =
@@ -103,7 +103,7 @@ Expected: compile error — `Data constructor not in scope: Prompt.OpeningHandAc
     TookOpeningHandAction (Maybe ObjectId)
 ```
 
-- [x] **Step 5: Wire `Pawl.Replay`.** Three edits, each directly after the matching `MulliganAction` arm:
+- [x] **Step 5: Wire `Parun.Replay`.** Three edits, each directly after the matching `MulliganAction` arm:
 
 ```haskell
   Prompt.OpeningHandAction {} -> Response.TookOpeningHandAction answer
@@ -147,13 +147,13 @@ git commit -m "feat(prompt): add the CR 103.6 OpeningHandAction channel (#149)"
 Leyline's second ability needs a relation the type cannot express, and the shared matcher answers the wrong question for zone changes. Both land together: the new constructor is what forces the split to be written correctly.
 
 **Files:**
-- Modify: `source/library/Pawl/Type/ControllerRelation.hs`, `source/library/Pawl/Replacement.hs`, `source/library/Pawl/Codec.hs`
-- Test: `source/test-suite/Pawl/ReplacementSpec.hs`, `source/test-suite/Pawl/CodecSpec.hs`
+- Modify: `source/library/Parun/Type/ControllerRelation.hs`, `source/library/Parun/Replacement.hs`, `source/library/Parun/Codec.hs`
+- Test: `source/test-suite/Parun/ReplacementSpec.hs`, `source/test-suite/Parun/CodecSpec.hs`
 
 **Interfaces:**
 - Produces: `ControllerRelation.Opponents`; `Replacement.matchesZoneOwner :: GameState -> ObjectId -> ControllerRelation -> ObjectId -> Bool`.
 
-- [x] **Step 1: Write the failing tests.** In `source/test-suite/Pawl/ReplacementSpec.hs`, add these two cases to the top-level list. They build a Rest-in-Peace-shaped redirect with the new relation and check both halves of §3.5's claim. Add whatever imports the file lacks (`ReplacementEffect`, `ZoneChangePattern`, `ControllerRelation`, `Zone`, `Event`, `Game`, `Departure` are the likely ones — follow the file's existing aliases).
+- [x] **Step 1: Write the failing tests.** In `source/test-suite/Parun/ReplacementSpec.hs`, add these two cases to the top-level list. They build a Rest-in-Peace-shaped redirect with the new relation and check both halves of §3.5's claim. Add whatever imports the file lacks (`ReplacementEffect`, `ZoneChangePattern`, `ControllerRelation`, `Zone`, `Event`, `Game`, `Departure` are the likely ones — follow the file's existing aliases).
 
 ```haskell
       HU.testCase "CR 400.3: an Opponents zone-change redirect exiles an opponent's card, not your own" $ do
@@ -195,7 +195,7 @@ leylineEffect =
     Zone.Exile
 ```
 
-In `source/test-suite/Pawl/CodecSpec.hs`, extend the existing `ControllerRelation` coverage by adding a round-trip through the zone-change pattern with the new relation, beside the `ZoneChangePattern.whoseObject = ControllerRelation.Anyones` case near line 386:
+In `source/test-suite/Parun/CodecSpec.hs`, extend the existing `ControllerRelation` coverage by adding a round-trip through the zone-change pattern with the new relation, beside the `ZoneChangePattern.whoseObject = ControllerRelation.Anyones` case near line 386:
 
 ```haskell
           HU.testCase "a ZoneChangeR carrying Opponents round-trips" $
@@ -211,10 +211,10 @@ In `source/test-suite/Pawl/CodecSpec.hs`, extend the existing `ControllerRelatio
 
 - [x] **Step 2: Run the tests to verify they fail to COMPILE.**
 
-Run: `cabal build pawl-test-suite --enable-tests 2>&1 | tail -20`
+Run: `cabal build parun-test-suite --enable-tests 2>&1 | tail -20`
 Expected: `Data constructor not in scope: ControllerRelation.Opponents`.
 
-- [x] **Step 3: Add the constructor.** In `source/library/Pawl/Type/ControllerRelation.hs`:
+- [x] **Step 3: Add the constructor.** In `source/library/Parun/Type/ControllerRelation.hs`:
 
 ```haskell
 data ControllerRelation
@@ -222,7 +222,7 @@ data ControllerRelation
   | Anyones
   | -- CR 102.1: "an opponent" -- any other player. Leyline of the Void's "an
     -- opponent's graveyard". Read against the effect SOURCE's controller, like
-    -- its siblings, but see Pawl.Replacement: for a ZONE CHANGE the subject is
+    -- its siblings, but see Parun.Replacement: for a ZONE CHANGE the subject is
     -- the object's OWNER (CR 400.3), because the destination zone is theirs.
     --
     -- "Any other player" is CR 806.1's free-for-all reading, the /= test
@@ -232,7 +232,7 @@ data ControllerRelation
   deriving (Eq, Ord, Show)
 ```
 
-- [x] **Step 4: Split the zone-change subject test.** In `source/library/Pawl/Replacement.hs`, change the `ZoneChangeR` arm of `applies` to call the new function:
+- [x] **Step 4: Split the zone-change subject test.** In `source/library/Parun/Replacement.hs`, change the `ZoneChangeR` arm of `applies` to call the new function:
 
 ```haskell
         (ReplacementEffect.ZoneChangeR pat _, ProposedEvent.WouldChangeZone zc) ->
@@ -289,7 +289,7 @@ In the `TokenR` arm's inline `case` (around line 231):
               Nothing -> False
 ```
 
-- [x] **Step 6: Add the codec arms.** In `source/library/Pawl/Codec.hs`:
+- [x] **Step 6: Add the codec arms.** In `source/library/Parun/Codec.hs`:
 
 ```haskell
   ControllerRelation.Opponents -> "Opponents"
@@ -316,14 +316,14 @@ git commit -m "feat(replacement): add ControllerRelation.Opponents, owner-based 
 ## Task 3: The `Card.openingHandAction` carrier
 
 **Files:**
-- Modify: `source/library/Pawl/Type/Card.hs`, `source/library/Pawl/Codec.hs`, `source/library/Pawl/Mulligan.hs`
-- Modify (record literals): `source/test-suite/Pawl/CardSpec.hs`, `source/test-suite/Pawl/ResolveSpec.hs` (×3)
-- Test: `source/test-suite/Pawl/CodecSpec.hs`
+- Modify: `source/library/Parun/Type/Card.hs`, `source/library/Parun/Codec.hs`, `source/library/Parun/Mulligan.hs`
+- Modify (record literals): `source/test-suite/Parun/CardSpec.hs`, `source/test-suite/Parun/ResolveSpec.hs` (×3)
+- Test: `source/test-suite/Parun/CodecSpec.hs`
 
 **Interfaces:**
 - Produces: `CardT.openingHandAction :: Card -> [Effect Card]`; `Mulligan.actionsFor :: (Card.Card -> [Effect Card.Card]) -> PlayerId -> GameState -> [(ObjectId, [Effect Card.Card])]`.
 
-- [x] **Step 1: Write the failing tests.** In `source/test-suite/Pawl/CodecSpec.hs`, beside the two `mulliganAction` cases:
+- [x] **Step 1: Write the failing tests.** In `source/test-suite/Parun/CodecSpec.hs`, beside the two `mulliganAction` cases:
 
 ```haskell
           HU.testCase "a Card carrying a CR 103.6 opening-hand action round-trips" $ do
@@ -340,14 +340,14 @@ git commit -m "feat(replacement): add ControllerRelation.Opponents, owner-based 
               Right pairs -> HU.assertBool "key absent" (notElem (Text.pack "openingHandAction") (fmap fst pairs)),
 ```
 
-Add `import qualified Pawl.Binding as Binding` and `import qualified Pawl.Type.Zone as Zone` to `CodecSpec` if absent.
+Add `import qualified Parun.Binding as Binding` and `import qualified Parun.Type.Zone as Zone` to `CodecSpec` if absent.
 
 - [x] **Step 2: Run the tests to verify they fail to COMPILE.**
 
-Run: `cabal build pawl-test-suite --enable-tests 2>&1 | tail -20`
+Run: `cabal build parun-test-suite --enable-tests 2>&1 | tail -20`
 Expected: `CardT.openingHandAction` is not a field of `Card`.
 
-- [x] **Step 3: Add the field.** In `source/library/Pawl/Type/Card.hs`, after `mulliganAction`:
+- [x] **Step 3: Add the field.** In `source/library/Parun/Type/Card.hs`, after `mulliganAction`:
 
 ```haskell
     -- CR 103.6: the effects of this card's opening-hand action, in written
@@ -390,10 +390,10 @@ In `jsonToCard`, the binding and the record field:
 
 - [x] **Step 5: Add the field to the four `MkCard` literals.**
 
-Run: `grep -n "Card.Type.mulliganAction" source/test-suite/Pawl/CardSpec.hs source/test-suite/Pawl/ResolveSpec.hs`
+Run: `grep -n "Card.Type.mulliganAction" source/test-suite/Parun/CardSpec.hs source/test-suite/Parun/ResolveSpec.hs`
 Expected: 4 hits. Each gains a sibling `Card.Type.openingHandAction = [],`.
 
-- [x] **Step 6: Generalize `actionsFor` to take the field selector.** In `source/library/Pawl/Mulligan.hs`:
+- [x] **Step 6: Generalize `actionsFor` to take the field selector.** In `source/library/Parun/Mulligan.hs`:
 
 ```haskell
 -- CR 103.5b / CR 103.6: the cards in this player's hand that grant an action
@@ -435,10 +435,10 @@ git commit -m "feat(card): carry a CR 103.6 opening-hand action on Card (#149)"
 Rename the type and its implementation, and bind the granting card into the reserved `self` slot so `MoveToZone Binding.triggerSource _` resolves. No behavior changes for CR 103.5b; the binding is what makes Task 6's action possible.
 
 **Files:**
-- Rename: `source/library/Pawl/Type/MulliganPerformer.hs` → `source/library/Pawl/Type/HandActionPerformer.hs`
-- Modify: `source/library/Pawl/Resolve.hs`, `source/library/Pawl/Mulligan.hs`, `source/library/Pawl/Setup.hs`, `source/test-suite/Pawl/Support.hs`
-- Modify: `pawl.cabal` (via a direct `cabal-gild --io pawl.cabal`)
-- Test: `source/test-suite/Pawl/MulliganSpec.hs`
+- Rename: `source/library/Parun/Type/MulliganPerformer.hs` → `source/library/Parun/Type/HandActionPerformer.hs`
+- Modify: `source/library/Parun/Resolve.hs`, `source/library/Parun/Mulligan.hs`, `source/library/Parun/Setup.hs`, `source/test-suite/Parun/Support.hs`
+- Modify: `parun.cabal` (via a direct `cabal-gild --io parun.cabal`)
+- Test: `source/test-suite/Parun/MulliganSpec.hs`
 
 **Interfaces:**
 - Produces: `HandActionPerformer.HandActionPerformer`; `Resolve.performHandAction :: HandActionPerformer`.
@@ -471,13 +471,13 @@ Expected: FAIL — `Resolve.performHandAction` is not in scope (the rename has n
 - [x] **Step 3: Rename the type module.**
 
 ```bash
-git mv source/library/Pawl/Type/MulliganPerformer.hs source/library/Pawl/Type/HandActionPerformer.hs
+git mv source/library/Parun/Type/MulliganPerformer.hs source/library/Parun/Type/HandActionPerformer.hs
 ```
 
 Then in the file, rename the module and the synonym, and rewrite the doc comment's first paragraph:
 
 ```haskell
-module Pawl.Type.HandActionPerformer where
+module Parun.Type.HandActionPerformer where
 ```
 
 ```haskell
@@ -492,14 +492,14 @@ type HandActionPerformer = ObjectId -> PlayerId -> [Effect Card] -> Game ()
 
 Keep the rest of the comment (the cycle argument and the no-default argument) unchanged.
 
-- [x] **Step 4: Regenerate the cabal module list.** `hooky fix` will NOT do this — the rename leaves `pawl.cabal` with no staged change of its own.
+- [x] **Step 4: Regenerate the cabal module list.** `hooky fix` will NOT do this — the rename leaves `parun.cabal` with no staged change of its own.
 
 ```bash
-cabal-gild --io pawl.cabal && grep -n "HandActionPerformer\|MulliganPerformer" pawl.cabal
+cabal-gild --io parun.cabal && grep -n "HandActionPerformer\|MulliganPerformer" parun.cabal
 ```
-Expected: `Pawl.Type.HandActionPerformer` present, `Pawl.Type.MulliganPerformer` gone.
+Expected: `Parun.Type.HandActionPerformer` present, `Parun.Type.MulliganPerformer` gone.
 
-- [x] **Step 5: Rename the implementation and add the bindings.** In `source/library/Pawl/Resolve.hs`, rename `performMulliganAction` to `performHandAction`, update its import and signature, and replace its three empty maps:
+- [x] **Step 5: Rename the implementation and add the bindings.** In `source/library/Parun/Resolve.hs`, rename `performMulliganAction` to `performHandAction`, update its import and signature, and replace its three empty maps:
 
 ```haskell
 performHandAction :: HandActionPerformer.HandActionPerformer
@@ -545,13 +545,13 @@ git commit -m "refactor(resolve): the hand-action performer serves both windows 
 
 **Files:**
 - Create: `data/cards/leyline-of-the-void.json`
-- Test: `source/test-suite/Pawl/CardsSpec.hs`
+- Test: `source/test-suite/Parun/CardsSpec.hs`
 
 **Interfaces:**
 - Consumes: `ControllerRelation.Opponents` (Task 2), `CardT.openingHandAction` (Task 3).
 - Produces: the printing `"Leyline of the Void"`.
 
-- [x] **Step 1: Write the failing test.** In `source/test-suite/Pawl/CardsSpec.hs`, beside the Serum Powder case:
+- [x] **Step 1: Write the failing test.** In `source/test-suite/Parun/CardsSpec.hs`, beside the Serum Powder case:
 
 ```haskell
       HU.testCase "leyline-of-the-void.json loads with a CR 103.6a action and an Opponents redirect" $ do
@@ -685,8 +685,8 @@ git commit -m "feat(cards): add Leyline of the Void, the CR 103.6a gate card (#1
 ## Task 6: The CR 103.6 window
 
 **Files:**
-- Modify: `source/library/Pawl/Mulligan.hs`
-- Test: `source/test-suite/Pawl/MulliganSpec.hs`
+- Modify: `source/library/Parun/Mulligan.hs`
+- Test: `source/test-suite/Parun/MulliganSpec.hs`
 
 **Interfaces:**
 - Consumes: everything from Tasks 1–5.
@@ -795,7 +795,7 @@ and these cases to the `tests` list (`Text` needs importing into `MulliganSpec`)
 Run: `cabal test 2>&1 | tail -30`
 Expected: compile error on `Prompt.OpeningHandAction` in the local answerers is impossible (Task 1 added it), so these fail at runtime: no `opening` tag is ever recorded, the battlefield stays empty, and the ordering assertions get `[]`.
 
-- [x] **Step 3: Write the shared window loop.** In `source/library/Pawl/Mulligan.hs`, replace `mulliganWindow` with the parameterized `handWindow` and keep a thin CR 103.5b caller:
+- [x] **Step 3: Write the shared window loop.** In `source/library/Parun/Mulligan.hs`, replace `mulliganWindow` with the parameterized `handWindow` and keep a thin CR 103.5b caller:
 
 ```haskell
 -- The shared CR 103.5b / CR 103.6 loop: offer this player every action their
@@ -838,7 +838,7 @@ The CR 103.5b call site in `mulliganRounds` becomes:
     handWindow Card.mulliganAction Prompt.MulliganAction perform pid
 ```
 
-`Pawl.Mulligan` needs `import qualified Pawl.Type.Decider as Decider`. Keep `mulliganWindow`'s existing doc comment on the CR 103.5b call site as a short note; the general argument now lives on `handWindow`.
+`Parun.Mulligan` needs `import qualified Parun.Type.Decider as Decider`. Keep `mulliganWindow`'s existing doc comment on the CR 103.5b call site as a short note; the general argument now lives on `handWindow`.
 
 - [x] **Step 4: Add the CR 103.6 phase.**
 
@@ -905,7 +905,7 @@ git commit -m "feat(mulligan): open the CR 103.6 opening-hand window after the m
 ## Task 7: Close out
 
 **Files:**
-- Modify: `source/library/Pawl/Type/Card.hs` (the `(#N)` placeholder), `docs/progress.md`, `CLAUDE.md`
+- Modify: `source/library/Parun/Type/Card.hs` (the `(#N)` placeholder), `docs/progress.md`, `CLAUDE.md`
 
 - [x] **Step 1: File the two deferral issues.**
 
@@ -922,7 +922,7 @@ gh issue create --title "Gemstone Caverns (CR 103.6a with a rider)" \
 - [x] **Step 2: Replace the `(#N)` placeholder** in `Card.openingHandAction`'s comment with #183's number (the same one-action-per-card caveat `mulliganAction` cites), and comment on #184 so it covers the new field and the reserved-slot trap:
 
 ```bash
-gh issue comment 184 --body "This now applies to \`Card.openingHandAction\` too (#149), and that field makes the trap concrete: Leyline of the Void's action is \`MoveToZone Binding.triggerSource Zone.Battlefield\`, and \`Resolve.slotsOf\` DOES return the reserved \`self\` slot for it. So an equality-style D4 lint widened to these fields must subtract the reserved slot names (self, variableX, chosenModes, copySource, you) from the read-slots side before comparing, exactly as Pawl.Binding's comment warns -- otherwise it demands a targetSpecs entry the reserved-slot rule forbids, and becomes unsatisfiable."
+gh issue comment 184 --body "This now applies to \`Card.openingHandAction\` too (#149), and that field makes the trap concrete: Leyline of the Void's action is \`MoveToZone Binding.triggerSource Zone.Battlefield\`, and \`Resolve.slotsOf\` DOES return the reserved \`self\` slot for it. So an equality-style D4 lint widened to these fields must subtract the reserved slot names (self, variableX, chosenModes, copySource, you) from the read-slots side before comparing, exactly as Parun.Binding's comment warns -- otherwise it demands a targetSpecs entry the reserved-slot rule forbids, and becomes unsatisfiable."
 ```
 
 - [x] **Step 3: Verify the whole build and suite from clean.**

@@ -16,15 +16,15 @@
 
 ## Global Constraints
 
-- **Worktree:** work only in `/Volumes/nvme/Developer/pawl/.claude/worktrees/4391-private-looks`, on branch `4391-private-looks`, cut from `origin/main` at 35ea3e142. Never `cd` to the primary checkout. Before the first build, run `script/warm-worktree.sh seed /Volumes/nvme/Developer/pawl/.claude/worktrees/4391-private-looks` and confirm `ls cabal.project.local`.
+- **Worktree:** work only in `/Volumes/nvme/Developer/parun/.claude/worktrees/4391-private-looks`, on branch `4391-private-looks`, cut from `origin/main` at 35ea3e142. Never `cd` to the primary checkout. Before the first build, run `script/warm-worktree.sh seed /Volumes/nvme/Developer/parun/.claude/worktrees/4391-private-looks` and confirm `ls cabal.project.local`.
 - **Merging:** merge `origin/main` ONCE, in Task 4 Step 1, never mid-plan.
 - **cabal:** prefix every `cabal` call with `script/with-build-lock.sh`. Redirect output to a scratchpad file and read the file; never pipe into `head`.
 - **Test selection:** `-p` patterns contain NO spaces. Scenario tests are named by bare file name; every scenario this unit adds carries the stem `private-look`, so `-p private-look` selects them.
 - **Full suite:** `script/with-build-lock.sh cabal test --test-options '--timeout 120s --hide-successes' > "$SCRATCH/suite.log" 2>&1`. Record the count before Task 1.
 - **Effect identity:** the rules core never cases on an effect's identity. Emitting `Looked` from the `LookAt` resolver arm is the arm doing its own job; no classification reads `Effect.LookAt` elsewhere.
 - **CLAUDE.md item 4, new `GameEvent` constructor:**
-  - `Pawl.Codec.GameEvent` is `Arm.tagged`, so give it an arm and a round-trip case.
-  - `Pawl.Engine.Event.Binding.eventBindingsOver` has a `_ -> Map.empty` fallthrough. Read it and record why `Looked` binds nothing, or add an arm.
+  - `Parun.Codec.GameEvent` is `Arm.tagged`, so give it an arm and a round-trip case.
+  - `Parun.Engine.Event.Binding.eventBindingsOver` has a `_ -> Map.empty` fallthrough. Read it and record why `Looked` binds nothing, or add an arm.
   - Read the exhaustive matches in `Event/Match.hs`, `Event/Trigger.hs`, `Game.hs`, `Count.hs` and `Cost.hs`, and record what each does with `Looked`.
   - **`Looked` is NOT a reveal.** It must not count wherever `Revealed` is judged: CR 400.7j findability in `Count.hs`, reversal in `Cost.hs`, the lasting-reveal stamp in `Engine.placeBorne`, and miracle's trigger matching.
   - `ZoneTriggerSpec`'s `representativeEvents` and `everyTriggerCondition` need nothing unless a trigger condition is added.
@@ -34,7 +34,7 @@
   - Positional patterns that break the compile (fix each one): `Slots.hs`, `Mentions.hs` (~1873, which must also read the PlayerRef's slot names), `Projection/Rewrite.hs` (~670, CR 612.1's walk; a record update must carry the new field), `CardSpec.hs`, `EffectLintSpec.hs` and `EffectSpec.hs`.
   - Grep `{ LookAt.` and `MkLookAt` for every construction and update.
 - **CLAUDE.md item 4, a new `Prompt` constructor (Task 2):** if one is added, it owes `Scenario.Prompt.deciderOf` and `kindOf`, a `Response` constructor, `Replay.encode`, `Replay.decode` and `Replay.defaultAnswer`, the scenario `Answer` reply decoding, and every exhaustive match the compiler names. Read how `OfferedMiracleReveal` is wired end to end and mirror it.
-- **Types:** one type per `Pawl.Types.<TypeName>` module. A constructor's haddock is one line plus its CR citation. Every new codec gets a round-trip case.
+- **Types:** one type per `Parun.Types.<TypeName>` module. A constructor's haddock is one line plus its CR citation. Every new codec gets a round-trip case.
 - **Style:** `case` over `maybe`, `let` over `where`, no backticks, no partial `head`. Extensions only from `.hlint.yaml`.
 - **Mutations:** every proving check gets one. Run `script/with-build-lock.sh script/mutate.sh FILE @SCRIPT PATTERN`, with the sed script in a scratchpad file, keeping imports and bindings used (`-Werror`). Name the assertion that reddened. Never edit a file while a mutation runs on it.
 - **Card text:** verify Oracle text with `curl -s 'https://api.scryfall.com/cards/named?exact=<Name>'` before relying on a card.
@@ -51,7 +51,7 @@
 ## Review Focus
 
 1. **A look shows the looker alone.** The opponent's `Witnessed` stays empty. Test: Task 1, the Ponder (or Into the Wilds) scenario.
-2. **A look while controlled.** The controller witnesses it too (CR 723.4). Test: Task 1, a `Pawl.VisibilitySpec` case that records a look while `GameState.control` makes alice bob's decider.
+2. **A look while controlled.** The controller witnesses it too (CR 723.4). Test: Task 1, a `Parun.VisibilitySpec` case that records a look while `GameState.control` makes alice bob's decider.
 3. **Declining Enhanced Surveillance's look.** The extra cards are not witnessed, and they stay in place unnamed (CR 701.25b). Test: Task 2, the decline scenario.
 4. **A look is not a reveal.** No lasting-reveal stamp, and miracle's trigger and findability are unaffected. Test: Task 3, the miracle scenario's decline path, where the Wrath is witnessed by its drawer and `Seers` stays the drawer alone.
 5. **Two Enhanced Surveillances each ask** (per the 2018-10-05 ruling). Test: Task 2, the existing two-copies scenario, updated with two answers.
@@ -61,22 +61,22 @@
 ### Task 1: The `Looked` event, the `looker`, `witnessed`, and the `Witnessed` view
 
 **Files:**
-- Create: `source/libraries/types/Pawl/Types/Looked.hs`, `source/libraries/codec/Pawl/Codec/Looked.hs`, `.../LookedSpec.hs`. Use `Pawl.Types.Revealed` and its codec as the template.
-- Modify: `source/libraries/types/Pawl/Types/GameEvent.hs`, `source/libraries/codec/Pawl/Codec/GameEvent.hs` and its spec
-- Modify: `source/libraries/types/Pawl/Types/LookAt.hs`, `source/libraries/codec/Pawl/Codec/LookAt.hs` and its spec, plus every site in Global Constraints' `LookAt` bullet
-- Modify: `source/libraries/engine/Pawl/Engine/Event.hs` (a `look` recorder beside `reveal`), `source/libraries/engine/Pawl/Engine/Resolve/Effect.hs` (the `LookAt` arm, ~6117), `source/libraries/engine/Pawl/Engine/Keyword.hs` (hideaway's `LookAt`)
-- Modify: `source/libraries/engine/Pawl/Engine/Visibility.hs` (`witnessed`)
-- Modify: `source/libraries/types/Pawl/Types/View.hs`, `source/libraries/scenario/Pawl/Scenario.hs` (`renderView`), `data/scenarios/README.md`
+- Create: `source/libraries/types/Parun/Types/Looked.hs`, `source/libraries/codec/Parun/Codec/Looked.hs`, `.../LookedSpec.hs`. Use `Parun.Types.Revealed` and its codec as the template.
+- Modify: `source/libraries/types/Parun/Types/GameEvent.hs`, `source/libraries/codec/Parun/Codec/GameEvent.hs` and its spec
+- Modify: `source/libraries/types/Parun/Types/LookAt.hs`, `source/libraries/codec/Parun/Codec/LookAt.hs` and its spec, plus every site in Global Constraints' `LookAt` bullet
+- Modify: `source/libraries/engine/Parun/Engine/Event.hs` (a `look` recorder beside `reveal`), `source/libraries/engine/Parun/Engine/Resolve/Effect.hs` (the `LookAt` arm, ~6117), `source/libraries/engine/Parun/Engine/Keyword.hs` (hideaway's `LookAt`)
+- Modify: `source/libraries/engine/Parun/Engine/Visibility.hs` (`witnessed`)
+- Modify: `source/libraries/types/Parun/Types/View.hs`, `source/libraries/scenario/Parun/Scenario.hs` (`renderView`), `data/scenarios/README.md`
 - Create: `data/scenarios/visibility/cr-701-20e-private-look-ponder-shows-the-top-cards-to-its-caster-alone.json`
-- Test: `source/libraries/test/Pawl/VisibilitySpec.hs`
+- Test: `source/libraries/test/Parun/VisibilitySpec.hs`
 
 **Interfaces:**
 - Produces:
-  - `Pawl.Types.Looked`: `data Looked = MkLooked { card :: ObjectId, characteristics :: ProjectedCharacteristics, audience :: Set PlayerId }`
+  - `Parun.Types.Looked`: `data Looked = MkLooked { card :: ObjectId, characteristics :: ProjectedCharacteristics, audience :: Set PlayerId }`
   - `GameEvent.Looked Looked.Looked`
   - `LookAt.looker :: PlayerRef`
-  - `Pawl.Engine.Event.look :: PlayerId -> ObjectId -> Game ()`, which records the looker plus the looker's decider
-  - `Pawl.Engine.Visibility.witnessed :: PlayerId -> LoggedEvent -> Visibility`
+  - `Parun.Engine.Event.look :: PlayerId -> ObjectId -> Game ()`, which records the looker plus the looker's decider
+  - `Parun.Engine.Visibility.witnessed :: PlayerId -> LoggedEvent -> Visibility`
   - `View.Witnessed`
 
 - [ ] **Step 1: Baseline.** Seed the worktree, run the full suite, and record the count.
@@ -90,7 +90,7 @@
   - Give the four library cards distinct names so the rendered names discriminate.
   - Run `-p private-look` and expect a failure decoding `Witnessed`.
 
-- [ ] **Step 3: Write the failing spec case.** In `Pawl.VisibilitySpec`, add `"a look while controlled is witnessed by the controller too"`. Build a state in which alice is bob's decider: copy how the unit-1 Mindslaver or Word of Command spec support writes `GameState.control`, or build the row directly. Record `Event.look` for bob on a card, then assert:
+- [ ] **Step 3: Write the failing spec case.** In `Parun.VisibilitySpec`, add `"a look while controlled is witnessed by the controller too"`. Build a state in which alice is bob's decider: copy how the unit-1 Mindslaver or Word of Command spec support writes `GameState.control`, or build the row directly. Record `Event.look` for bob on a card, then assert:
   - `witnessed alice` on the logged event is `Visible`;
   - `witnessed bob` is `Visible`;
   - a third seat, if the support offers one, is `Obscured`.
@@ -116,8 +116,8 @@
 ### Task 2: Surveil's looks, and Enhanced Surveillance asks
 
 **Files:**
-- Modify: `source/libraries/engine/Pawl/Engine/Resolve/Effect.hs` (the Surveil arm ~6174 and `decideSurveil` ~11355), `source/libraries/engine/Pawl/Engine/PlayerEffect.hs` (`surveilExtra`, ~2744, and its #4391 note), plus the prompt plumbing if a prompt is added
-- Modify: `data/scenarios/library-order/cr-701-25b-*.json` (the three Enhanced Surveillance scenarios) and `source/libraries/test/Pawl/LibraryOrderSpec.hs` wherever their flow changes
+- Modify: `source/libraries/engine/Parun/Engine/Resolve/Effect.hs` (the Surveil arm ~6174 and `decideSurveil` ~11355), `source/libraries/engine/Parun/Engine/PlayerEffect.hs` (`surveilExtra`, ~2744, and its #4391 note), plus the prompt plumbing if a prompt is added
+- Modify: `data/scenarios/library-order/cr-701-25b-*.json` (the three Enhanced Surveillance scenarios) and `source/libraries/test/Parun/LibraryOrderSpec.hs` wherever their flow changes
 - Create: `data/scenarios/library-order/cr-701-25b-private-look-declining-enhanced-surveillance-leaves-the-extra-cards-unseen.json`
 
 - [ ] **Step 1: Decide the question's shape.**
@@ -146,8 +146,8 @@
 ### Task 3: The miracle look
 
 **Files:**
-- Modify: `source/libraries/engine/Pawl/Engine/Event.hs` (`offerMiracleReveal`, ~8743, and its #1412 note)
-- Modify: `source/libraries/test/Pawl/MassEffectSpec.hs` (the Carth look note ~1244 and its `revealed` helper, ~1279–1288; Ancestral Memories ~1000)
+- Modify: `source/libraries/engine/Parun/Engine/Event.hs` (`offerMiracleReveal`, ~8743, and its #1412 note)
+- Modify: `source/libraries/test/Parun/MassEffectSpec.hs` (the Carth look note ~1244 and its `revealed` helper, ~1279–1288; Ancestral Memories ~1000)
 - Create: `data/scenarios/event-trigger/cr-121-9-private-look-the-miracle-card-is-seen-by-its-drawer-before-the-reveal.json`
 
 - [ ] **Step 1: Write the failing scenario.** Copy the unit-2 miracle scenario `data/scenarios/event-trigger/cr-702-94b-lasting-reveal-the-miracle-card-stays-revealed-while-its-trigger-is-on-the-stack.json`, but answer `OfferedMiracleReveal` with Declines. Then check:
@@ -173,7 +173,7 @@
 
 - [ ] **Step 2: Elision upkeep.** Run `grep -rn '4391' . --include='*.hs'` and read every hit. Each site the unit implements gets rewritten:
   - the `Effect.LookAt` haddock;
-  - `Pawl.Types.LookAt`;
+  - `Parun.Types.LookAt`;
   - `PlayerEffect.surveilExtra`;
   - the `LookAt` resolver arm.
 
@@ -208,7 +208,7 @@
   - **Deferred:**
     - the scry/fateseal/search issue;
     - other events' payloads unredacted until unit 7 (#1412);
-    - unblocked: what `gh api repos/tfausak/pawl/issues/4391/dependencies/blocking` lists.
+    - unblocked: what `gh api repos/tfausak/parun/issues/4391/dependencies/blocking` lists.
   - End with `🤖 Generated with [Claude Code](https://claude.com/claude-code)`.
 
   Leave it a draft; the controller marks it ready after the final review.

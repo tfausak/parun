@@ -6,7 +6,7 @@
 
 **Architecture:** `Quantity` grows `Star`, `Plus` and `Count CountSpec` — a quantity that counts game state. The same counting quantity then behaves in two opposite ways, which is the phase's whole point: as a **characteristic-defining ability** it lives unevaluated in `ProjectedCharacteristics.characteristicPT` (seeded from `Card.characteristicPT`, copied by `copiableCharacteristics`, cleared by layer-6 `LoseAllAbilities`) and is evaluated **in place** at `Layer.CharacteristicPT` on every projection; as a **resolution-created continuous effect** it is evaluated once and rewritten to a `Literal` by `Projection.freezeQuantities`, called from `Resolve`'s `ModifyTarget` store path. `Modification.SwitchPowerToughness` adds the last sublayer. No new opcode, no new prompt, no change to `Object`, `GameState`, or the event pipeline.
 
-**Tech Stack:** Haskell 2010 (GHC 9.14.1 from the Nix flake), `tasty` + `tasty-hunit`, the hand-rolled `Pawl.Json`/`Pawl.Codec` card codec.
+**Tech Stack:** Haskell 2010 (GHC 9.14.1 from the Nix flake), `tasty` + `tasty-hunit`, the hand-rolled `Parun.Json`/`Parun.Codec` card codec.
 
 **Spec:** `docs/superpowers/specs/2026-07-21-p3b-characteristic-defined-pt-design.md`. Read §2 before Task 1, §5 before Task 3, and §8 before Task 8.
 
@@ -15,9 +15,9 @@
 Every task's requirements implicitly include all of these. They come from `CLAUDE.md` and are not negotiable.
 
 - **Haskell 2010, no language extensions** unless there is no alternative. `NamedFieldPuns` is permitted; `GADTs`/`RankNTypes` only in the suspension core. Test modules that already carry `{-# LANGUAGE GADTs #-}` / `{-# LANGUAGE RankNTypes #-}` keep them.
-- **No explicit export lists.** `module Pawl.Foo where`.
-- **One type per module** under `Pawl.Type.<TypeName>` (type + instances only). A module never imports its parents.
-- **Qualified imports aliased to the last component** (`Data.List` → `List`, `Pawl.Type.CountSpec` → `CountSpec`). One import group, alphabetical. The one documented exception is `Pawl.Support` as `S` in the test suite.
+- **No explicit export lists.** `module Parun.Foo where`.
+- **One type per module** under `Parun.Type.<TypeName>` (type + instances only). A module never imports its parents.
+- **Qualified imports aliased to the last component** (`Data.List` → `List`, `Parun.Type.CountSpec` → `CountSpec`). One import group, alphabetical. The one documented exception is `Parun.Support` as `S` in the test suite.
 - **No partial functions**, written or used. No `head`, `error`, `undefined`, or non-exhaustive matches.
 - **`newtype` liberally, non-punning constructors** (`MkFoo`). Build records with `do` + record syntax.
 - **Prefer explicit:** `case` over point-free; one equation with a `case` over multiple clauses; `let` over `where`; `$` over parens, `.` over chained `$`. No list comprehensions. No backtick-infixed functions.
@@ -38,21 +38,21 @@ Every task's requirements implicitly include all of these. They come from `CLAUD
 
 | File | Responsibility |
 |---|---|
-| `source/library/Pawl/Type/CountSpec.hs` | **new.** What a counting quantity counts. Quarantined card-shaped growth; P9 retires the whole type. |
+| `source/library/Parun/Type/CountSpec.hs` | **new.** What a counting quantity counts. Quarantined card-shaped growth; P9 retires the whole type. |
 
 **Library — modified:**
 
 | File | Responsibility after this plan |
 |---|---|
-| `source/library/Pawl/Type/Quantity.hs` | gains `Star`, `Plus Quantity Quantity`, `Count CountSpec` |
-| `source/library/Pawl/Quantity.hs` | `evaluate` gains the "you" `PlayerId`; the three new arms; `substituteStar`; `typesInAllGraveyards` |
-| `source/library/Pawl/Type/Card.hs` | gains `characteristicPT :: Maybe Quantity` |
-| `source/library/Pawl/Type/ProjectedCharacteristics.hs` | gains `characteristicPT :: Maybe (Quantity, Quantity)` |
-| `source/library/Pawl/Type/Modification.hs` | gains `SwitchPowerToughness` (layer 7d) |
-| `source/library/Pawl/Type/Subtype.hs` | gains `Lhurgoyf` (205.3m) and `Arcane` (205.3k) |
-| `source/library/Pawl/Projection.hs` | seeds `PC.characteristicPT`; folds layer 7a in place; `LoseAllAbilities` clears the CDA; `layer`/`applyModification` for the switch; new `freezeQuantities` |
-| `source/library/Pawl/Resolve.hs` | `ModifyTarget` freezes at store time against the source and its controller |
-| `source/library/Pawl/Codec.hs` | JSON for every type above |
+| `source/library/Parun/Type/Quantity.hs` | gains `Star`, `Plus Quantity Quantity`, `Count CountSpec` |
+| `source/library/Parun/Quantity.hs` | `evaluate` gains the "you" `PlayerId`; the three new arms; `substituteStar`; `typesInAllGraveyards` |
+| `source/library/Parun/Type/Card.hs` | gains `characteristicPT :: Maybe Quantity` |
+| `source/library/Parun/Type/ProjectedCharacteristics.hs` | gains `characteristicPT :: Maybe (Quantity, Quantity)` |
+| `source/library/Parun/Type/Modification.hs` | gains `SwitchPowerToughness` (layer 7d) |
+| `source/library/Parun/Type/Subtype.hs` | gains `Lhurgoyf` (205.3m) and `Arcane` (205.3k) |
+| `source/library/Parun/Projection.hs` | seeds `PC.characteristicPT`; folds layer 7a in place; `LoseAllAbilities` clears the CDA; `layer`/`applyModification` for the switch; new `freezeQuantities` |
+| `source/library/Parun/Resolve.hs` | `ModifyTarget` freezes at store time against the source and its controller |
+| `source/library/Parun/Codec.hs` | JSON for every type above |
 
 **Data — new card files** under `data/cards/`: `tarmogoyf.json`, `inner-calm-outer-strength.json`, `twisted-image.json`. **No existing card file changes** — `characteristicPT` is omitted when `Nothing`, the `copyOnEnter`/`colorIndicator` precedent.
 
@@ -60,14 +60,14 @@ Every task's requirements implicitly include all of these. They come from `CLAUD
 
 | File | Responsibility |
 |---|---|
-| `source/test-suite/Pawl/PowerToughnessSpec.hs` | **new.** The phase's own spec, the `ColorSpec` precedent: the CDA seed, layer 7a, the 611.2-scope guard, the freeze, the switch |
-| `source/test-suite/Pawl/CoreSpec.hs` | the `Quantity` group grows the new arms; its four existing `evaluate` call sites gain the "you" argument |
-| `source/test-suite/Pawl/CopySpec.hs` | gains the Clone-of-Tarmogoyf group (it owns `copyNewest`/`resolveAndSettle`) |
-| `source/test-suite/Pawl/Support.hs` | gains `addGraveyardCard` |
-| `source/test-suite/Pawl/Cards.hs` | three new printing fields, loads, and `allPrintings` entries |
+| `source/test-suite/Parun/PowerToughnessSpec.hs` | **new.** The phase's own spec, the `ColorSpec` precedent: the CDA seed, layer 7a, the 611.2-scope guard, the freeze, the switch |
+| `source/test-suite/Parun/CoreSpec.hs` | the `Quantity` group grows the new arms; its four existing `evaluate` call sites gain the "you" argument |
+| `source/test-suite/Parun/CopySpec.hs` | gains the Clone-of-Tarmogoyf group (it owns `copyNewest`/`resolveAndSettle`) |
+| `source/test-suite/Parun/Support.hs` | gains `addGraveyardCard` |
+| `source/test-suite/Parun/Cards.hs` | three new printing fields, loads, and `allPrintings` entries |
 | `source/test-suite/Main.hs` | wires `PowerToughnessSpec.tests` into `testTree` |
 
-New `Pawl.*Spec` files must be added to the test-suite `other-modules` list in `pawl.cabal` — that field is generated by a `-- cabal-gild: discover` directive, so add the file and let `hooky fix` regenerate it rather than hand-editing.
+New `Parun.*Spec` files must be added to the test-suite `other-modules` list in `parun.cabal` — that field is generated by a `-- cabal-gild: discover` directive, so add the file and let `hooky fix` regenerate it rather than hand-editing.
 
 ---
 
@@ -76,20 +76,20 @@ New `Pawl.*Spec` files must be added to the test-suite `other-modules` list in `
 `Quantity` grows the three arms the numeric tower has promised since M4a, and `evaluate` gains the "you" player that a player-scoped count needs. No card uses any of it yet.
 
 **Files:**
-- Create: `source/library/Pawl/Type/CountSpec.hs`
-- Modify: `source/library/Pawl/Type/Quantity.hs`
-- Modify: `source/library/Pawl/Quantity.hs`
-- Modify: `source/library/Pawl/Codec.hs`
-- Modify: `source/library/Pawl/Projection.hs` (call sites only)
-- Modify: `source/library/Pawl/Resolve.hs` (call sites only)
-- Test: `source/test-suite/Pawl/CoreSpec.hs`
+- Create: `source/library/Parun/Type/CountSpec.hs`
+- Modify: `source/library/Parun/Type/Quantity.hs`
+- Modify: `source/library/Parun/Quantity.hs`
+- Modify: `source/library/Parun/Codec.hs`
+- Modify: `source/library/Parun/Projection.hs` (call sites only)
+- Modify: `source/library/Parun/Resolve.hs` (call sites only)
+- Test: `source/test-suite/Parun/CoreSpec.hs`
 
 **Interfaces:**
-- Produces: `Pawl.Type.CountSpec.CountSpec` = `CardTypesInAllGraveyards | CardsInYourHand`; `Pawl.Type.Quantity.Quantity` gains `Star`, `Plus Quantity Quantity`, `Count CountSpec`; `Pawl.Quantity.evaluate :: GameState -> ObjectId -> Maybe PlayerId -> Quantity -> Maybe Integer`; `Pawl.Quantity.substituteStar :: Quantity -> Quantity -> Quantity`; `Pawl.Codec.countSpecToJson` / `jsonToCountSpec`.
+- Produces: `Parun.Type.CountSpec.CountSpec` = `CardTypesInAllGraveyards | CardsInYourHand`; `Parun.Type.Quantity.Quantity` gains `Star`, `Plus Quantity Quantity`, `Count CountSpec`; `Parun.Quantity.evaluate :: GameState -> ObjectId -> Maybe PlayerId -> Quantity -> Maybe Integer`; `Parun.Quantity.substituteStar :: Quantity -> Quantity -> Quantity`; `Parun.Codec.countSpecToJson` / `jsonToCountSpec`.
 
 - [x] **Step 1: Write the failing tests**
 
-In `source/test-suite/Pawl/CoreSpec.hs`, replace the whole `quantityTests` list with this (the four existing cases gain the new `Nothing` argument; five cases are new):
+In `source/test-suite/Parun/CoreSpec.hs`, replace the whole `quantityTests` list with this (the four existing cases gain the new `Nothing` argument; five cases are new):
 
 ```haskell
 quantityTests :: Cards.Cards -> Tasty.TestTree
@@ -178,13 +178,13 @@ quantityTests cards =
     ]
 ```
 
-Add these imports to `source/test-suite/Pawl/CoreSpec.hs` (alphabetically, in the single import group):
+Add these imports to `source/test-suite/Parun/CoreSpec.hs` (alphabetically, in the single import group):
 
 ```haskell
-import qualified Pawl.Type.CountSpec as CountSpec
+import qualified Parun.Type.CountSpec as CountSpec
 ```
 
-`S.addGraveyardCard` does not exist yet. Add it — and `addHandCard` beside it — to `source/test-suite/Pawl/Support.hs`, immediately after `addLibraryCard` (which they mirror — same object shape, a different zone and index).
+`S.addGraveyardCard` does not exist yet. Add it — and `addHandCard` beside it — to `source/test-suite/Parun/Support.hs`, immediately after `addLibraryCard` (which they mirror — same object shape, a different zone and index).
 
 **`addHandCard` is not redundant with `handOne`.** `handOne` (`Support.hs:439`) uses `Map.insert alice (Seq.singleton oid)`, which **replaces** alice's hand — calling it twice leaves one card, not two. It also sets the phase, active player and priority, which is what makes a cast possible. So the idiom for a multi-card hand is `handOne` **first** (for the card being cast, and for the phase setup), then `addHandCard` for each additional card:
 
@@ -242,14 +242,14 @@ addHandCard printing pid gs =
 - [x] **Step 2: Run the tests to verify they fail**
 
 Run: `cabal test 2>&1 | tail -40`
-Expected: FAIL — compilation errors, `Data constructor not in scope: Quantity.Type.Star`, `Module 'Pawl.Type.CountSpec' does not exist`, and `evaluate` applied to too many arguments.
+Expected: FAIL — compilation errors, `Data constructor not in scope: Quantity.Type.Star`, `Module 'Parun.Type.CountSpec' does not exist`, and `evaluate` applied to too many arguments.
 
-- [x] **Step 3: Create `Pawl.Type.CountSpec`**
+- [x] **Step 3: Create `Parun.Type.CountSpec`**
 
-Create `source/library/Pawl/Type/CountSpec.hs`:
+Create `source/library/Parun/Type/CountSpec.hs`:
 
 ```haskell
-module Pawl.Type.CountSpec where
+module Parun.Type.CountSpec where
 
 -- What a Quantity.Count counts. A first-order, analyzable classification, never
 -- a predicate function -- the TargetSpec.WallTarget posture: one hand-carved
@@ -262,7 +262,7 @@ module Pawl.Type.CountSpec where
 -- EXPIRES at P9.
 --
 -- Both inhabitants read only zone membership and PRINTED card types, never the
--- projection -- Pawl.Quantity cannot import Pawl.Projection (Projection imports
+-- projection -- Parun.Quantity cannot import Parun.Projection (Projection imports
 -- Quantity), and a count evaluated inside the layer fold would recurse into the
 -- fold that called it. A count over projected state ("lands you control") is a
 -- named deferral in the P3b spec, section 8.
@@ -279,12 +279,12 @@ data CountSpec
 
 - [x] **Step 4: Grow `Quantity`**
 
-In `source/library/Pawl/Type/Quantity.hs`, add the import and the three constructors. The module comment's "Grows:" paragraph is now partly cashed — update it to say so:
+In `source/library/Parun/Type/Quantity.hs`, add the import and the three constructors. The module comment's "Grows:" paragraph is now partly cashed — update it to say so:
 
 ```haskell
-module Pawl.Type.Quantity where
+module Parun.Type.Quantity where
 
-import Pawl.Type.CountSpec (CountSpec)
+import Parun.Type.CountSpec (CountSpec)
 ```
 
 Replace the "Grows:" comment paragraph with:
@@ -311,39 +311,39 @@ and add these arms after the `X` arm:
     Count CountSpec
 ```
 
-- [x] **Step 5: Teach `Pawl.Quantity` the new arms and the "you" player**
+- [x] **Step 5: Teach `Parun.Quantity` the new arms and the "you" player**
 
-Replace `source/library/Pawl/Quantity.hs` in full:
+Replace `source/library/Parun/Quantity.hs` in full:
 
 ```haskell
-module Pawl.Quantity where
+module Parun.Quantity where
 
 import qualified Data.Foldable as Foldable
 import qualified Data.Map.Strict as Map
 import Data.Set (Set)
 import qualified Data.Set as Set
-import qualified Pawl.Binding as Binding
-import qualified Pawl.Game as Game
-import qualified Pawl.Type.Card as Card
-import Pawl.Type.CardType (CardType)
-import qualified Pawl.Type.CountSpec as CountSpec
-import Pawl.Type.GameState (GameState)
-import qualified Pawl.Type.GameState as GameState
-import qualified Pawl.Type.ManaCost as ManaCost
-import qualified Pawl.Type.ManaSymbol as ManaSymbol
-import qualified Pawl.Type.Object as Object
-import Pawl.Type.ObjectId (ObjectId)
-import Pawl.Type.PlayerId (PlayerId)
-import Pawl.Type.Quantity (Quantity)
-import qualified Pawl.Type.Quantity as Quantity
-import qualified Pawl.Type.TypeLine as TypeLine
-import qualified Pawl.Type.Zone as Zone
+import qualified Parun.Binding as Binding
+import qualified Parun.Game as Game
+import qualified Parun.Type.Card as Card
+import Parun.Type.CardType (CardType)
+import qualified Parun.Type.CountSpec as CountSpec
+import Parun.Type.GameState (GameState)
+import qualified Parun.Type.GameState as GameState
+import qualified Parun.Type.ManaCost as ManaCost
+import qualified Parun.Type.ManaSymbol as ManaSymbol
+import qualified Parun.Type.Object as Object
+import Parun.Type.ObjectId (ObjectId)
+import Parun.Type.PlayerId (PlayerId)
+import Parun.Type.Quantity (Quantity)
+import qualified Parun.Type.Quantity as Quantity
+import qualified Parun.Type.TypeLine as TypeLine
+import qualified Parun.Type.Zone as Zone
 
 -- Nothing when the value cannot be determined.
 --
 -- `you` is the player a player-scoped count is relative to (CR 608.2h). The
 -- caller supplies it because this module cannot ask the projection who controls
--- what: Pawl.Projection imports Pawl.Quantity, so the arrow only points one way.
+-- what: Parun.Projection imports Parun.Quantity, so the arrow only points one way.
 -- Resolve passes the resolving spell's controller; Projection passes the
 -- object's own controller.
 evaluate :: GameState -> ObjectId -> Maybe PlayerId -> Quantity -> Maybe Integer
@@ -415,15 +415,15 @@ symbolValue symbol = case symbol of
 
 - [x] **Step 6: Update the six library call sites**
 
-In `source/library/Pawl/Resolve.hs`, every `Quantity.evaluate gs source quantity` becomes `Quantity.evaluate gs source (Just controller) quantity`. There are six, at lines 322, 435, 446, 460, 479 and 511. Run this to find them all and confirm the count:
+In `source/library/Parun/Resolve.hs`, every `Quantity.evaluate gs source quantity` becomes `Quantity.evaluate gs source (Just controller) quantity`. There are six, at lines 322, 435, 446, 460, 479 and 511. Run this to find them all and confirm the count:
 
 ```bash
-grep -n "Quantity.evaluate gs source quantity" source/library/Pawl/Resolve.hs | wc -l
+grep -n "Quantity.evaluate gs source quantity" source/library/Parun/Resolve.hs | wc -l
 ```
 
 Expected: `6`.
 
-In `source/library/Pawl/Projection.hs`, the four call sites inside `applyModification` and `baseCharacteristics` gain the affected object's own controller. In `applyModification`:
+In `source/library/Parun/Projection.hs`, the four call sites inside `applyModification` and `baseCharacteristics` gain the affected object's own controller. In `applyModification`:
 
 ```haskell
   Modification.SetBasePowerToughness p t ->
@@ -465,7 +465,7 @@ Also replace the stale note above `applyModification` — the `-- When X lands, 
 
 - [x] **Step 7: Add the codec arms**
 
-In `source/library/Pawl/Codec.hs`, add a `CountSpec` codec beside the other nullary codecs (put it immediately after the `CounterKind` pair, around line 158):
+In `source/library/Parun/Codec.hs`, add a `CountSpec` codec beside the other nullary codecs (put it immediately after the `CounterKind` pair, around line 158):
 
 ```haskell
 countSpecToJson :: CountSpec.CountSpec -> Value
@@ -507,7 +507,7 @@ jsonToQuantity value = do
     _ -> Left (Text.pack "unknown Quantity: " <> t)
 ```
 
-Add the import `import qualified Pawl.Type.CountSpec as CountSpec` in alphabetical position.
+Add the import `import qualified Parun.Type.CountSpec as CountSpec` in alphabetical position.
 
 - [x] **Step 8: Run the tests to verify they pass**
 
@@ -517,9 +517,9 @@ Expected: PASS, warning-free.
 - [x] **Step 9: Commit**
 
 ```bash
-git add source/library/Pawl/Type/CountSpec.hs source/library/Pawl/Type/Quantity.hs source/library/Pawl/Quantity.hs source/library/Pawl/Codec.hs source/library/Pawl/Projection.hs source/library/Pawl/Resolve.hs source/test-suite/Pawl/CoreSpec.hs source/test-suite/Pawl/Support.hs pawl.cabal
+git add source/library/Parun/Type/CountSpec.hs source/library/Parun/Type/Quantity.hs source/library/Parun/Quantity.hs source/library/Parun/Codec.hs source/library/Parun/Projection.hs source/library/Parun/Resolve.hs source/test-suite/Parun/CoreSpec.hs source/test-suite/Parun/Support.hs parun.cabal
 hooky fix
-git add source/library/Pawl/Type/CountSpec.hs source/library/Pawl/Type/Quantity.hs source/library/Pawl/Quantity.hs source/library/Pawl/Codec.hs source/library/Pawl/Projection.hs source/library/Pawl/Resolve.hs source/test-suite/Pawl/CoreSpec.hs source/test-suite/Pawl/Support.hs pawl.cabal
+git add source/library/Parun/Type/CountSpec.hs source/library/Parun/Type/Quantity.hs source/library/Parun/Quantity.hs source/library/Parun/Codec.hs source/library/Parun/Projection.hs source/library/Parun/Resolve.hs source/test-suite/Parun/CoreSpec.hs source/test-suite/Parun/Support.hs parun.cabal
 hooky run
 git commit -m "$(cat <<'EOF'
 feat(m4.5-p3b): Quantity.Star/Plus/Count, the counting quantity (CR 208.2, 608.2h)
@@ -528,7 +528,7 @@ Cashes the growth Quantity's own module comment has named since M4a. Count
 carries its own quarantined CountSpec rather than flat arms, so P9's filter
 language retires the card-shaped growth wholesale. evaluate gains the "you"
 player a player-scoped count needs -- supplied by the caller, since
-Pawl.Quantity cannot import Pawl.Projection.
+Parun.Quantity cannot import Parun.Projection.
 
 Co-Authored-By: Claude Opus 4.8 (1M context) <noreply@anthropic.com>
 EOF
@@ -542,16 +542,16 @@ EOF
 The card gains the ability; the projection seeds it as a pair of **unevaluated** quantities. Layer 7a is not wired yet, so Tarmogoyf still projects no P/T — which is exactly CR 613.4a and is what this task asserts.
 
 **Files:**
-- Modify: `source/library/Pawl/Type/Subtype.hs`
-- Modify: `source/library/Pawl/Type/Card.hs`
-- Modify: `source/library/Pawl/Type/ProjectedCharacteristics.hs`
-- Modify: `source/library/Pawl/Projection.hs`
-- Modify: `source/library/Pawl/Codec.hs`
+- Modify: `source/library/Parun/Type/Subtype.hs`
+- Modify: `source/library/Parun/Type/Card.hs`
+- Modify: `source/library/Parun/Type/ProjectedCharacteristics.hs`
+- Modify: `source/library/Parun/Projection.hs`
+- Modify: `source/library/Parun/Codec.hs`
 - Create: `data/cards/tarmogoyf.json`
-- Modify: `source/test-suite/Pawl/Cards.hs`
+- Modify: `source/test-suite/Parun/Cards.hs`
 - Modify: `source/test-suite/Main.hs`
-- Create: `source/test-suite/Pawl/PowerToughnessSpec.hs`
-- Test: `source/test-suite/Pawl/PowerToughnessSpec.hs`
+- Create: `source/test-suite/Parun/PowerToughnessSpec.hs`
+- Test: `source/test-suite/Parun/PowerToughnessSpec.hs`
 
 **Interfaces:**
 - Consumes: Task 1's `Quantity.Star` / `Plus` / `Count`, `Quantity.substituteStar`, `Codec.quantityToJson` / `jsonToQuantity`.
@@ -563,23 +563,23 @@ Look up Tarmogoyf on Scryfall and confirm, verbatim: its mana cost, its type lin
 
 - [x] **Step 1: Write the failing test**
 
-Create `source/test-suite/Pawl/PowerToughnessSpec.hs`:
+Create `source/test-suite/Parun/PowerToughnessSpec.hs`:
 
 ```haskell
--- Covers: Pawl.Projection (CR 613 layer 7 -- 7a characteristic-defined P/T, the
--- CR 608.2h freeze that 7b's stored effects owe, and 7d P/T switching), Pawl.Quantity
+-- Covers: Parun.Projection (CR 613 layer 7 -- 7a characteristic-defined P/T, the
+-- CR 608.2h freeze that 7b's stored effects owe, and 7d P/T switching), Parun.Quantity
 -- (the counting quantity) and the P3b gates (Tarmogoyf, Inner Calm Outer Strength,
 -- Twisted Image). Gameplay-level: each card is cast or resolved through the stack and
 -- the resulting game state is asserted on.
-module Pawl.PowerToughnessSpec where
+module Parun.PowerToughnessSpec where
 
-import qualified Pawl.Cards as Cards
-import qualified Pawl.Projection as Projection
-import qualified Pawl.Setup as Setup
-import qualified Pawl.Support as S
-import qualified Pawl.Type.CountSpec as CountSpec
-import qualified Pawl.Type.ProjectedCharacteristics as PC
-import qualified Pawl.Type.Quantity as Quantity.Type
+import qualified Parun.Cards as Cards
+import qualified Parun.Projection as Projection
+import qualified Parun.Setup as Setup
+import qualified Parun.Support as S
+import qualified Parun.Type.CountSpec as CountSpec
+import qualified Parun.Type.ProjectedCharacteristics as PC
+import qualified Parun.Type.Quantity as Quantity.Type
 import qualified Test.Tasty as Tasty
 import qualified Test.Tasty.HUnit as HU
 
@@ -613,7 +613,7 @@ tests cards =
     ]
 ```
 
-Wire it into `source/test-suite/Main.hs`: add `import qualified Pawl.PowerToughnessSpec as PowerToughnessSpec` in alphabetical position, and add `PowerToughnessSpec.tests cards,` to `testTree` immediately after `ProjectionSpec.tests cards,`.
+Wire it into `source/test-suite/Main.hs`: add `import qualified Parun.PowerToughnessSpec as PowerToughnessSpec` in alphabetical position, and add `PowerToughnessSpec.tests cards,` to `testTree` immediately after `ProjectionSpec.tests cards,`.
 
 - [x] **Step 2: Run the test to verify it fails**
 
@@ -622,13 +622,13 @@ Expected: FAIL — `Cards.tarmogoyfPrinting` is not in scope, and `PC.characteri
 
 - [x] **Step 3: Add the two fields and the subtype**
 
-In `source/library/Pawl/Type/Subtype.hs`, add after `Shapeshifter`:
+In `source/library/Parun/Type/Subtype.hs`, add after `Shapeshifter`:
 
 ```haskell
   | Lhurgoyf -- CR 205.3m (a creature type; Tarmogoyf's printed type)
 ```
 
-In `source/library/Pawl/Type/Card.hs`, add the import `import Pawl.Type.Quantity (Quantity)` and this field after `colorIndicator`:
+In `source/library/Parun/Type/Card.hs`, add the import `import Parun.Type.Quantity (Quantity)` and this field after `colorIndicator`:
 
 ```haskell
     -- CR 604.3 / 208.2a: this card's characteristic-defining P/T ability -- the
@@ -636,11 +636,11 @@ In `source/library/Pawl/Type/Card.hs`, add the import `import Pawl.Type.Quantity
     -- for. Nothing for every card without a star. A CDA is an ABILITY, not a
     -- number: the projection seeds it unevaluated so a copy acquires the ability
     -- (CR 707.2a) and layer 7a recomputes it on every projection. Read through
-    -- Pawl.Projection, never directly.
+    -- Parun.Projection, never directly.
     characteristicPT :: Maybe Quantity,
 ```
 
-In `source/library/Pawl/Type/ProjectedCharacteristics.hs`, add the import `import Pawl.Type.Quantity (Quantity)` and this field after `toughness`:
+In `source/library/Parun/Type/ProjectedCharacteristics.hs`, add the import `import Parun.Type.Quantity (Quantity)` and this field after `toughness`:
 
 ```haskell
     -- CR 613.4a layer 7a: the object's characteristic-defining P/T, as the pair of
@@ -653,7 +653,7 @@ In `source/library/Pawl/Type/ProjectedCharacteristics.hs`, add the import `impor
 
 - [x] **Step 4: Seed it in the projection, and write the card**
 
-In `source/library/Pawl/Projection.hs`, add this function immediately above `baseCharacteristics`:
+In `source/library/Parun/Projection.hs`, add this function immediately above `baseCharacteristics`:
 
 ```haskell
 -- CR 208.2 / 604.3: the card's characteristic-defining P/T as a pair of
@@ -671,7 +671,7 @@ seedCharacteristicPT card =
 
 In `baseCharacteristics`, add `PC.characteristicPT = Nothing,` to the no-card record (after `PC.toughness = Nothing,`) and `PC.characteristicPT = seedCharacteristicPT card,` to the card record (after the `PC.toughness = ...` field).
 
-In `source/library/Pawl/Codec.hs`, add `Subtype.Lhurgoyf -> "Lhurgoyf"` to `subtypeToJson` and `(Text.pack "Lhurgoyf", Subtype.Lhurgoyf)` to `jsonToSubtype`. Then append the new optional field to `cardToJson`, **after** the `colorIndicator` block so every existing file stays byte-identical:
+In `source/library/Parun/Codec.hs`, add `Subtype.Lhurgoyf -> "Lhurgoyf"` to `subtypeToJson` and `(Text.pack "Lhurgoyf", Subtype.Lhurgoyf)` to `jsonToSubtype`. Then append the new optional field to `cardToJson`, **after** the `colorIndicator` block so every existing file stays byte-identical:
 
 ```haskell
         ++ ( case CardT.characteristicPT c of
@@ -696,7 +696,7 @@ Create `data/cards/tarmogoyf.json` as a single line (match Step 0's confirmed va
 {"name":"Tarmogoyf","manaCost":[{"type":"Generic","value":1},{"type":"OfType","value":{"type":"Colored","value":{"type":"Green"}}}],"typeLine":{"supertypes":[],"types":[{"type":"Creature"}],"subtypes":[{"type":"Lhurgoyf"}]},"power":{"type":"Star"},"toughness":{"type":"Plus","value":[{"type":"Literal","value":1},{"type":"Star"}]},"keywords":[],"staticAbilities":[],"spell":{"modes":[{"effects":[],"targetSpecs":[]}],"selection":{"type":"ChooseExactly","value":1}},"activatedAbilities":[],"replacementEffects":[],"triggeredAbilities":[],"castingPermissions":[],"characteristicPT":{"type":"Count","value":{"type":"CardTypesInAllGraveyards"}}}
 ```
 
-In `source/test-suite/Pawl/Cards.hs`, add `tarmogoyfPrinting :: Printing.Printing,` to the record (after `aphoticWispsPrinting`, which needs a trailing comma added), `tarmogoyfPrinting_ <- loadPrinting "tarmogoyf"` to `loadCards`, `tarmogoyfPrinting = tarmogoyfPrinting_` to the returned record, and `tarmogoyfPrinting cards` to `allPrintings`. It is a **deterministic fixture**: in `allPrintings` for the M3.5 honesty round-trip, in **no** deck.
+In `source/test-suite/Parun/Cards.hs`, add `tarmogoyfPrinting :: Printing.Printing,` to the record (after `aphoticWispsPrinting`, which needs a trailing comma added), `tarmogoyfPrinting_ <- loadPrinting "tarmogoyf"` to `loadCards`, `tarmogoyfPrinting = tarmogoyfPrinting_` to the returned record, and `tarmogoyfPrinting cards` to `allPrintings`. It is a **deterministic fixture**: in `allPrintings` for the M3.5 honesty round-trip, in **no** deck.
 
 - [x] **Step 5: Run the tests to verify they pass**
 
@@ -714,9 +714,9 @@ Expected: only `?? data/cards/tarmogoyf.json`.
 - [x] **Step 6: Commit**
 
 ```bash
-git add source/library/Pawl/Type/Subtype.hs source/library/Pawl/Type/Card.hs source/library/Pawl/Type/ProjectedCharacteristics.hs source/library/Pawl/Projection.hs source/library/Pawl/Codec.hs data/cards/tarmogoyf.json source/test-suite/Pawl/Cards.hs source/test-suite/Pawl/PowerToughnessSpec.hs source/test-suite/Main.hs pawl.cabal
+git add source/library/Parun/Type/Subtype.hs source/library/Parun/Type/Card.hs source/library/Parun/Type/ProjectedCharacteristics.hs source/library/Parun/Projection.hs source/library/Parun/Codec.hs data/cards/tarmogoyf.json source/test-suite/Parun/Cards.hs source/test-suite/Parun/PowerToughnessSpec.hs source/test-suite/Main.hs parun.cabal
 hooky fix
-git add source/library/Pawl/Type/Subtype.hs source/library/Pawl/Type/Card.hs source/library/Pawl/Type/ProjectedCharacteristics.hs source/library/Pawl/Projection.hs source/library/Pawl/Codec.hs data/cards/tarmogoyf.json source/test-suite/Pawl/Cards.hs source/test-suite/Pawl/PowerToughnessSpec.hs source/test-suite/Main.hs pawl.cabal
+git add source/library/Parun/Type/Subtype.hs source/library/Parun/Type/Card.hs source/library/Parun/Type/ProjectedCharacteristics.hs source/library/Parun/Projection.hs source/library/Parun/Codec.hs data/cards/tarmogoyf.json source/test-suite/Parun/Cards.hs source/test-suite/Parun/PowerToughnessSpec.hs source/test-suite/Main.hs parun.cabal
 hooky run
 git commit -m "$(cat <<'EOF'
 feat(m4.5-p3b): seed the CDA as unevaluated quantities, add Tarmogoyf (CR 604.3)
@@ -739,8 +739,8 @@ EOF
 ### Task 3: Layer 7a, folded in place
 
 **Files:**
-- Modify: `source/library/Pawl/Projection.hs`
-- Test: `source/test-suite/Pawl/PowerToughnessSpec.hs`
+- Modify: `source/library/Parun/Projection.hs`
+- Test: `source/test-suite/Parun/PowerToughnessSpec.hs`
 
 **Interfaces:**
 - Consumes: Task 2's `PC.characteristicPT`; Task 1's `Quantity.evaluate`.
@@ -748,7 +748,7 @@ EOF
 
 - [x] **Step 1: Write the failing tests**
 
-Append these three cases to the `PowerToughness` list in `source/test-suite/Pawl/PowerToughnessSpec.hs` (add a comma after the last existing case):
+Append these three cases to the `PowerToughness` list in `source/test-suite/Parun/PowerToughnessSpec.hs` (add a comma after the last existing case):
 
 ```haskell
       HU.testCase "CR 613.4a Tarmogoyf's P/T is recomputed, not fixed at entry" $
@@ -792,13 +792,13 @@ Append these three cases to the `PowerToughness` list in `source/test-suite/Pawl
               HU.assertEqual "1+1 toughness + 1 counter" (Just 3) (Projection.toughnessOf goyfId gs)
 ```
 
-Add these imports to `source/test-suite/Pawl/PowerToughnessSpec.hs`:
+Add these imports to `source/test-suite/Parun/PowerToughnessSpec.hs`:
 
 ```haskell
-import qualified Pawl.Cast as Cast
-import qualified Pawl.Engine as Engine
-import qualified Pawl.Stack as Stack
-import qualified Pawl.Type.CounterKind as CounterKind
+import qualified Parun.Cast as Cast
+import qualified Parun.Engine as Engine
+import qualified Parun.Stack as Stack
+import qualified Parun.Type.CounterKind as CounterKind
 ```
 
 - [x] **Step 2: Run the tests to verify they fail**
@@ -808,7 +808,7 @@ Expected: FAIL — `Just 0 /= Nothing` (and the same for toughness). Layer 7a is
 
 - [x] **Step 3: Apply the CDA at layer 7a**
 
-In `source/library/Pawl/Projection.hs`, add this function immediately above `projectFrom`:
+In `source/library/Parun/Projection.hs`, add this function immediately above `projectFrom`:
 
 ```haskell
 -- CR 613.4a layer 7a: apply the object's own characteristic-defining P/T ability.
@@ -879,9 +879,9 @@ Expected: PASS, warning-free, with no regressions in `ProjectionSpec` or `CopySp
 - [x] **Step 5: Commit**
 
 ```bash
-git add source/library/Pawl/Projection.hs source/test-suite/Pawl/PowerToughnessSpec.hs
+git add source/library/Parun/Projection.hs source/test-suite/Parun/PowerToughnessSpec.hs
 hooky fix
-git add source/library/Pawl/Projection.hs source/test-suite/Pawl/PowerToughnessSpec.hs
+git add source/library/Parun/Projection.hs source/test-suite/Parun/PowerToughnessSpec.hs
 hooky run
 git commit -m "$(cat <<'EOF'
 feat(m4.5-p3b): fold layer 7a in place, so Tarmogoyf recomputes (CR 613.4a)
@@ -907,8 +907,8 @@ EOF
 CR 604.3 makes a characteristic-defining ability an ability, so `LoseAllAbilities` must remove it. **Read the P3b spec §5's "One honest negative result" before writing this**: the change is required by the CR but is *unobservable* in the current pool, and the test must say so in its own comment rather than pretend otherwise.
 
 **Files:**
-- Modify: `source/library/Pawl/Projection.hs`
-- Test: `source/test-suite/Pawl/PowerToughnessSpec.hs`
+- Modify: `source/library/Parun/Projection.hs`
+- Test: `source/test-suite/Parun/PowerToughnessSpec.hs`
 
 **Interfaces:**
 - Consumes: Task 3's layer-7a fold.
@@ -955,7 +955,7 @@ Expected: the "1/1" case PASSES (it is non-distinguishing, as documented); the "
 
 - [x] **Step 3: Clear it**
 
-In `source/library/Pawl/Projection.hs`, replace the `LoseAllAbilities` arm of `applyModification`:
+In `source/library/Parun/Projection.hs`, replace the `LoseAllAbilities` arm of `applyModification`:
 
 ```haskell
   -- CR 604.3: a characteristic-defining ability IS a static ability, so losing
@@ -979,9 +979,9 @@ Expected: PASS, warning-free.
 - [x] **Step 5: Commit**
 
 ```bash
-git add source/library/Pawl/Projection.hs source/test-suite/Pawl/PowerToughnessSpec.hs
+git add source/library/Parun/Projection.hs source/test-suite/Parun/PowerToughnessSpec.hs
 hooky fix
-git add source/library/Pawl/Projection.hs source/test-suite/Pawl/PowerToughnessSpec.hs
+git add source/library/Parun/Projection.hs source/test-suite/Parun/PowerToughnessSpec.hs
 hooky run
 git commit -m "$(cat <<'EOF'
 feat(m4.5-p3b): LoseAllAbilities strips the CDA at layer 6 (CR 604.3)
@@ -1006,7 +1006,7 @@ EOF
 This pays the bill P2 deferred by name: *"7b/CDA P/T-setting in copiable values (rides P3b, Tarmogoyf)"*. It lives in `CopySpec` because that module already owns `copyNewest` and `resolveAndSettle`.
 
 **Files:**
-- Test: `source/test-suite/Pawl/CopySpec.hs`
+- Test: `source/test-suite/Parun/CopySpec.hs`
 
 **Interfaces:**
 - Consumes: Task 3's layer-7a fold; `Cards.tarmogoyfPrinting`; `CopySpec.copyNewest`, `CopySpec.resolveAndSettle`, `CopySpec.cloneOnBattlefield`.
@@ -1014,7 +1014,7 @@ This pays the bill P2 deferred by name: *"7b/CDA P/T-setting in copiable values 
 
 - [x] **Step 1: Write the test**
 
-Append to the `Copy` list in `source/test-suite/Pawl/CopySpec.hs` (add a comma after the last existing case):
+Append to the `Copy` list in `source/test-suite/Parun/CopySpec.hs` (add a comma after the last existing case):
 
 ```haskell
       HU.testCase "Clone of Tarmogoyf copies the ABILITY, so both recompute (CR 707.2a)" $
@@ -1050,9 +1050,9 @@ This is the one task in this plan whose test is expected to pass without a prece
 - [x] **Step 3: Commit**
 
 ```bash
-git add source/test-suite/Pawl/CopySpec.hs
+git add source/test-suite/Parun/CopySpec.hs
 hooky fix
-git add source/test-suite/Pawl/CopySpec.hs
+git add source/test-suite/Parun/CopySpec.hs
 hooky run
 git commit -m "$(cat <<'EOF'
 test(m4.5-p3b): a Clone of Tarmogoyf copies the ability, not the number
@@ -1075,13 +1075,13 @@ EOF
 ### Task 6: The CR 608.2h freeze, and Inner Calm, Outer Strength
 
 **Files:**
-- Modify: `source/library/Pawl/Type/Subtype.hs`
-- Modify: `source/library/Pawl/Projection.hs`
-- Modify: `source/library/Pawl/Resolve.hs`
-- Modify: `source/library/Pawl/Codec.hs`
+- Modify: `source/library/Parun/Type/Subtype.hs`
+- Modify: `source/library/Parun/Projection.hs`
+- Modify: `source/library/Parun/Resolve.hs`
+- Modify: `source/library/Parun/Codec.hs`
 - Create: `data/cards/inner-calm-outer-strength.json`
-- Modify: `source/test-suite/Pawl/Cards.hs`
-- Test: `source/test-suite/Pawl/PowerToughnessSpec.hs`
+- Modify: `source/test-suite/Parun/Cards.hs`
+- Test: `source/test-suite/Parun/PowerToughnessSpec.hs`
 
 **Interfaces:**
 - Consumes: Task 1's `Quantity.Count` and `evaluate`.
@@ -1158,7 +1158,7 @@ Expected: the Opalescence case PASSES (it is a regression guard on existing beha
 
 - [x] **Step 3: Add `freezeQuantities`**
 
-In `source/library/Pawl/Projection.hs`, add this beside `rewriteModification` (which `Resolve` already delegates to for CR 612):
+In `source/library/Parun/Projection.hs`, add this beside `rewriteModification` (which `Resolve` already delegates to for CR 612):
 
 ```haskell
 -- CR 608.2h / 611.2d: evaluate a modification's quantities ONCE and rewrite them
@@ -1199,7 +1199,7 @@ freezeQuantities gs oid you m =
 
 - [x] **Step 4: Call it from `Resolve`**
 
-In `source/library/Pawl/Resolve.hs`, replace the `ModifyTarget` arm's body (lines 338–352) with:
+In `source/library/Parun/Resolve.hs`, replace the `ModifyTarget` arm's body (lines 338–352) with:
 
 ```haskell
           Just target ->
@@ -1224,13 +1224,13 @@ In `source/library/Pawl/Resolve.hs`, replace the `ModifyTarget` arm's body (line
 
 - [x] **Step 5: Add the subtype, the codec arm and the card**
 
-In `source/library/Pawl/Type/Subtype.hs`, add after `Lhurgoyf`:
+In `source/library/Parun/Type/Subtype.hs`, add after `Lhurgoyf`:
 
 ```haskell
   | Arcane -- CR 205.3k (a spell type; Inner Calm, Outer Strength's)
 ```
 
-In `source/library/Pawl/Codec.hs`, add `Subtype.Arcane -> "Arcane"` to `subtypeToJson` and `(Text.pack "Arcane", Subtype.Arcane)` to `jsonToSubtype`.
+In `source/library/Parun/Codec.hs`, add `Subtype.Arcane -> "Arcane"` to `subtypeToJson` and `(Text.pack "Arcane", Subtype.Arcane)` to `jsonToSubtype`.
 
 Create `data/cards/inner-calm-outer-strength.json` as a single line (**mana cost per Step 0**):
 
@@ -1238,7 +1238,7 @@ Create `data/cards/inner-calm-outer-strength.json` as a single line (**mana cost
 {"name":"Inner Calm, Outer Strength","manaCost":[{"type":"Generic","value":2},{"type":"OfType","value":{"type":"Colored","value":{"type":"Green"}}}],"typeLine":{"supertypes":[],"types":[{"type":"Instant"}],"subtypes":[{"type":"Arcane"}]},"power":null,"toughness":null,"keywords":[],"staticAbilities":[],"spell":{"modes":[{"effects":[{"type":"ModifyTarget","value":[{"type":"UntilEndOfTurn"},{"type":"ModifyPowerToughness","value":[{"type":"Count","value":{"type":"CardsInYourHand"}},{"type":"Count","value":{"type":"CardsInYourHand"}}]},"target"]}],"targetSpecs":[{"slot":"target","spec":{"type":"CreatureTarget"}}]}],"selection":{"type":"ChooseExactly","value":1}},"activatedAbilities":[],"replacementEffects":[],"triggeredAbilities":[],"castingPermissions":[]}
 ```
 
-In `source/test-suite/Pawl/Cards.hs`, add `innerCalmPrinting` to the record, to `loadCards` (`loadPrinting "inner-calm-outer-strength"`), to the returned record, and to `allPrintings`. Deterministic fixture; no deck.
+In `source/test-suite/Parun/Cards.hs`, add `innerCalmPrinting` to the record, to `loadCards` (`loadPrinting "inner-calm-outer-strength"`), to the returned record, and to `allPrintings`. Deterministic fixture; no deck.
 
 - [x] **Step 6: Run the tests to verify they pass**
 
@@ -1270,14 +1270,14 @@ Append one more case to the `PowerToughness` list:
 Run: `cabal test --test-options='-p "$0~/PowerToughness/"' 2>&1 | tail -20`
 Expected: PASS.
 
-`S.handOne` puts a card in **alice's** hand and `Cast.castSpell S.alice` casts it, so alice is the caster throughout; only the creature belongs to bob. If `S.handOne`'s owner is not alice, read its definition in `source/test-suite/Pawl/Support.hs:439` and adjust the assertion's player, not the test's intent.
+`S.handOne` puts a card in **alice's** hand and `Cast.castSpell S.alice` casts it, so alice is the caster throughout; only the creature belongs to bob. If `S.handOne`'s owner is not alice, read its definition in `source/test-suite/Parun/Support.hs:439` and adjust the assertion's player, not the test's intent.
 
 - [x] **Step 8: Commit**
 
 ```bash
-git add source/library/Pawl/Type/Subtype.hs source/library/Pawl/Projection.hs source/library/Pawl/Resolve.hs source/library/Pawl/Codec.hs data/cards/inner-calm-outer-strength.json source/test-suite/Pawl/Cards.hs source/test-suite/Pawl/PowerToughnessSpec.hs pawl.cabal
+git add source/library/Parun/Type/Subtype.hs source/library/Parun/Projection.hs source/library/Parun/Resolve.hs source/library/Parun/Codec.hs data/cards/inner-calm-outer-strength.json source/test-suite/Parun/Cards.hs source/test-suite/Parun/PowerToughnessSpec.hs parun.cabal
 hooky fix
-git add source/library/Pawl/Type/Subtype.hs source/library/Pawl/Projection.hs source/library/Pawl/Resolve.hs source/library/Pawl/Codec.hs data/cards/inner-calm-outer-strength.json source/test-suite/Pawl/Cards.hs source/test-suite/Pawl/PowerToughnessSpec.hs pawl.cabal
+git add source/library/Parun/Type/Subtype.hs source/library/Parun/Projection.hs source/library/Parun/Resolve.hs source/library/Parun/Codec.hs data/cards/inner-calm-outer-strength.json source/test-suite/Parun/Cards.hs source/test-suite/Parun/PowerToughnessSpec.hs parun.cabal
 hooky run
 git commit -m "$(cat <<'EOF'
 feat(m4.5-p3b): freeze a stored effect's quantities at resolution (CR 608.2h)
@@ -1309,12 +1309,12 @@ EOF
 ### Task 7: Layer 7d, the switch, and Twisted Image
 
 **Files:**
-- Modify: `source/library/Pawl/Type/Modification.hs`
-- Modify: `source/library/Pawl/Projection.hs`
-- Modify: `source/library/Pawl/Codec.hs`
+- Modify: `source/library/Parun/Type/Modification.hs`
+- Modify: `source/library/Parun/Projection.hs`
+- Modify: `source/library/Parun/Codec.hs`
 - Create: `data/cards/twisted-image.json`
-- Modify: `source/test-suite/Pawl/Cards.hs`
-- Test: `source/test-suite/Pawl/PowerToughnessSpec.hs`
+- Modify: `source/test-suite/Parun/Cards.hs`
+- Test: `source/test-suite/Parun/PowerToughnessSpec.hs`
 
 **Interfaces:**
 - Consumes: Task 3's layer-7a fold (Tarmogoyf is the asymmetric fixture this task needs); Task 6's `freezeQuantities` (which gains one identity arm).
@@ -1329,7 +1329,7 @@ EOF
 
 **This is functional errata, and it removes work from this task.** The New Phyrexia *printed* wording was "target **artifact or** creature's"; WotC dropped the artifact clause, because CR 208.3 says a noncreature permanent has no power or toughness, so switching a noncreature artifact's P/T never did anything.
 
-**Consequence: do NOT add `TargetSpec.ArtifactOrCreatureTarget`.** Twisted Image uses the existing `TargetSpec.CreatureTarget`. Steps 4 and 5 below have been rewritten accordingly — there is no new `TargetSpec` constructor, no new `Pawl.Target` arm, and no new target-spec codec arm in this task.
+**Consequence: do NOT add `TargetSpec.ArtifactOrCreatureTarget`.** Twisted Image uses the existing `TargetSpec.CreatureTarget`. Steps 4 and 5 below have been rewritten accordingly — there is no new `TargetSpec` constructor, no new `Parun.Target` arm, and no new target-spec codec arm in this task.
 
 Twisted Image's three Gatherer rulings, all dated **2021-03-19**, verbatim:
 
@@ -1438,7 +1438,7 @@ Append to the `PowerToughness` list:
               HU.assertBool "the switched 3/2 with 2 damage is dead" (not (Set.member goyfId (GameState.battlefield after)))
 ```
 
-Add to `source/test-suite/Pawl/PowerToughnessSpec.hs` a local `withEffect` helper (the `ColorSpec` idiom) and the imports it needs:
+Add to `source/test-suite/Parun/PowerToughnessSpec.hs` a local `withEffect` helper (the `ColorSpec` idiom) and the imports it needs:
 
 ```haskell
 -- Append a stored continuous effect affecting exactly `oid`. Object id 996 is a
@@ -1459,13 +1459,13 @@ withEffect oid m gs =
 
 ```haskell
 import qualified Data.Set as Set
-import qualified Pawl.Game as Game
-import qualified Pawl.Type.Affected as Affected
-import qualified Pawl.Type.ContinuousEffect as ContinuousEffect
-import qualified Pawl.Type.Duration as Duration
-import qualified Pawl.Type.GameState as GameState
-import qualified Pawl.Type.Modification as Modification
-import qualified Pawl.Type.ObjectId as ObjectId
+import qualified Parun.Game as Game
+import qualified Parun.Type.Affected as Affected
+import qualified Parun.Type.ContinuousEffect as ContinuousEffect
+import qualified Parun.Type.Duration as Duration
+import qualified Parun.Type.GameState as GameState
+import qualified Parun.Type.Modification as Modification
+import qualified Parun.Type.ObjectId as ObjectId
 ```
 
 - [x] **Step 2: Run the tests to verify they fail**
@@ -1475,7 +1475,7 @@ Expected: FAIL — `Data constructor not in scope: Modification.SwitchPowerTough
 
 - [x] **Step 3: Add the modification and the layer op**
 
-In `source/library/Pawl/Type/Modification.hs`, add after `SetColor`:
+In `source/library/Parun/Type/Modification.hs`, add after `SetColor`:
 
 ```haskell
   | -- layer 7d, CR 613.4d: switch this object's power and toughness. Takes the
@@ -1485,7 +1485,7 @@ In `source/library/Pawl/Type/Modification.hs`, add after `SetColor`:
     SwitchPowerToughness
 ```
 
-In `source/library/Pawl/Projection.hs`:
+In `source/library/Parun/Projection.hs`:
 
 - `layer`: add `Modification.SwitchPowerToughness -> Layer.SwitchPT`
 - `applyModification`: add
@@ -1503,9 +1503,9 @@ In `source/library/Pawl/Projection.hs`:
 
 - [x] **Step 4: Add the codec arms**
 
-**No `TargetSpec` change in this task** (Step 0's errata note). `Pawl.Type.TargetSpec` and `Pawl.Target` are untouched.
+**No `TargetSpec` change in this task** (Step 0's errata note). `Parun.Type.TargetSpec` and `Parun.Target` are untouched.
 
-In `source/library/Pawl/Codec.hs`, add `Modification.SwitchPowerToughness -> nullary (Text.pack "SwitchPowerToughness")` to `modificationToJson` and `"SwitchPowerToughness" -> Right Modification.SwitchPowerToughness` to `jsonToModification`. That is the whole codec change.
+In `source/library/Parun/Codec.hs`, add `Modification.SwitchPowerToughness -> nullary (Text.pack "SwitchPowerToughness")` to `modificationToJson` and `"SwitchPowerToughness" -> Right Modification.SwitchPowerToughness` to `jsonToModification`. That is the whole codec change.
 
 - [x] **Step 5: Add the card**
 
@@ -1515,7 +1515,7 @@ Create `data/cards/twisted-image.json` as a single line (**mana cost per Step 0*
 {"name":"Twisted Image","manaCost":[{"type":"OfType","value":{"type":"Colored","value":{"type":"Blue"}}}],"typeLine":{"supertypes":[],"types":[{"type":"Instant"}],"subtypes":[]},"power":null,"toughness":null,"keywords":[],"staticAbilities":[],"spell":{"modes":[{"effects":[{"type":"ModifyTarget","value":[{"type":"UntilEndOfTurn"},{"type":"SwitchPowerToughness"},"target"]},{"type":"Draw","value":{"type":"Literal","value":1}}],"targetSpecs":[{"slot":"target","spec":{"type":"CreatureTarget"}}]}],"selection":{"type":"ChooseExactly","value":1}},"activatedAbilities":[],"replacementEffects":[],"triggeredAbilities":[],"castingPermissions":[]}
 ```
 
-In `source/test-suite/Pawl/Cards.hs`, add `twistedImagePrinting` to the record, to `loadCards` (`loadPrinting "twisted-image"`), to the returned record, and to `allPrintings`. Deterministic fixture; no deck.
+In `source/test-suite/Parun/Cards.hs`, add `twistedImagePrinting` to the record, to `loadCards` (`loadPrinting "twisted-image"`), to the returned record, and to `allPrintings`. Deterministic fixture; no deck.
 
 - [x] **Step 6: Run the tests to verify they pass**
 
@@ -1525,9 +1525,9 @@ Expected: PASS, warning-free.
 - [x] **Step 7: Commit**
 
 ```bash
-git add source/library/Pawl/Type/Modification.hs source/library/Pawl/Projection.hs source/library/Pawl/Codec.hs data/cards/twisted-image.json source/test-suite/Pawl/Cards.hs source/test-suite/Pawl/PowerToughnessSpec.hs pawl.cabal
+git add source/library/Parun/Type/Modification.hs source/library/Parun/Projection.hs source/library/Parun/Codec.hs data/cards/twisted-image.json source/test-suite/Parun/Cards.hs source/test-suite/Parun/PowerToughnessSpec.hs parun.cabal
 hooky fix
-git add source/library/Pawl/Type/Modification.hs source/library/Pawl/Projection.hs source/library/Pawl/Codec.hs data/cards/twisted-image.json source/test-suite/Pawl/Cards.hs source/test-suite/Pawl/PowerToughnessSpec.hs pawl.cabal
+git add source/library/Parun/Type/Modification.hs source/library/Parun/Projection.hs source/library/Parun/Codec.hs data/cards/twisted-image.json source/test-suite/Parun/Cards.hs source/test-suite/Parun/PowerToughnessSpec.hs parun.cabal
 hooky run
 git commit -m "$(cat <<'EOF'
 feat(m4.5-p3b): layer 7d P/T switching, gated by Twisted Image (CR 613.4d)
@@ -1574,7 +1574,7 @@ Expected: a clean warning-free build, all tests passing, and the grep reporting 
 
 - [x] **Step 2: Correct the now-stale `Layer` module comment**
 
-`source/library/Pawl/Type/Layer.hs`'s header says *"only Ability (6), SetPT (7b), and ModifyPT (7c) have producers at M3b."* That has been false since Task 3 (7a) and Task 7 (7d). Replace that clause with:
+`source/library/Parun/Type/Layer.hs`'s header says *"only Ability (6), SetPT (7b), and ModifyPT (7c) have producers at M3b."* That has been false since Task 3 (7a) and Task 7 (7d). Replace that clause with:
 
 ```haskell
 -- sorts on. Complete for diffability against CR 613 (the Keyword posture).

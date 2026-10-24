@@ -9,7 +9,7 @@ single byte of what the codec puts on the wire.
 
 The commit is small enough to read in one screen, which hides how much of it is
 policy rather than edit. Seven rules come out of it, and one of them —
-`Pawl.Codec.Json` becoming `Pawl.Codec.Common` — is not a rename at all but a
+`Parun.Codec.Json` becoming `Parun.Codec.Common` — is not a rename at all but a
 redesign of the codec's base API.
 
 ## The rules
@@ -20,20 +20,20 @@ Each is stated so a reviewer can check a module against it.
 `-- | The @AbilityName ⇆ Json@ codec (#481).`, which says only what the module
 name says. **98 codec modules carry that header**, and #481 is closed, so these
 are 98 stale citations to a finished issue. A module keeps a haddock only when it
-has something non-obvious to say; `Pawl.Codec.Json`'s current header is an
+has something non-obvious to say; `Parun.Codec.Json`'s current header is an
 example that earns its place and moves to `Common`.
 
 **R2 — every import is qualified**, aliased to the module's last component, with
-`Pawl.Support as S` remaining the one documented exception (it is out of scope
+`Parun.Support as S` remaining the one documented exception (it is out of scope
 here). The repo-wide count:
 
 | Import | Sites |
 |---|---|
 | `Data.Text (Text)` | 98 (codec) + 4 (types) |
-| `Pawl.Json.Value (Value)` and `Value (Array)`/`(Null)` | 95 |
-| `Pawl.Json.Array (Array (MkArray))` | 21 |
-| sibling `Pawl.Codec.*` value imports | ~150 |
-| `Pawl.Types.*` type imports (types library) | ~230 |
+| `Parun.Json.Value (Value)` and `Value (Array)`/`(Null)` | 95 |
+| `Parun.Json.Array (Array (MkArray))` | 21 |
+| sibling `Parun.Codec.*` value imports | ~150 |
+| `Parun.Types.*` type imports (types library) | ~230 |
 | `Numeric.Natural (Natural)`, `Data.Set (Set)`, `Data.Map.Strict (Map)` | 51 |
 
 **R3 — a newtype is a record with an `unwrap` field.** 21 newtypes in the types
@@ -46,7 +46,7 @@ deliberately, as `AbilityName` did.
 is qualified. 101 `xToJson` and 105 `jsonToX` become `X.toJson` and
 `X.fromJson`. **Declaration order does not change** — a module that reads
 encoder-then-decoder today keeps that order, so the diff stays a rename.
-(`Pawl.Codec.AbilityName` already reads decoder-first; it stays as it is, since
+(`Parun.Codec.AbilityName` already reads decoder-first; it stays as it is, since
 the rule is "don't reorder", not "encoder must come first".)
 
 Eight modules hold a second codec pair. Those suffix the distinguishing word
@@ -75,12 +75,12 @@ or silently documents the wrong thing. **120 of 145** types modules and **27**
 codec modules have bare `--` blocks, so this needs per-comment judgment and is
 not a `sed`.
 
-**R7 — a spec beside every codec.** `Pawl.Codec.XSpec`, exposed from
+**R7 — a spec beside every codec.** `Parun.Codec.XSpec`, exposed from
 `library codec`, wired into `Main.hs`'s `spec`. Their signature is
 `(Monad m, Monad n) => Spec.Spec m n -> n ()`; `CLAUDE.md` currently documents
 `(Applicative m, Monad n)`, which `assertFromJson`'s bind rules out.
 
-## `Pawl.Codec.Json` → `Pawl.Codec.Common`
+## `Parun.Codec.Json` → `Parun.Codec.Common`
 
 `2dfeb6c` migrated 9 of ~40 helpers, and three of the nine changed *shape*, not
 just name. That is the redesign hiding inside the rename.
@@ -90,7 +90,7 @@ just name. That is the redesign hiding inside the rename.
 Bare nouns construct, `as*` extracts. The commit establishes both; they extend
 without argument.
 
-| `Pawl.Codec.Json` | `Pawl.Codec.Common` | Note |
+| `Parun.Codec.Json` | `Parun.Codec.Common` | Note |
 |---|---|---|
 | `jNull` | `null` | done |
 | `jBool` | `boolean` | done |
@@ -129,7 +129,7 @@ already has. Today they all say only `"expected object"`.
 ### Combinators: `encode*` / `decode*`
 
 The helpers taking an element codec cannot use `to*`/`from*`. In
-`Pawl.Codec.AbilityName` the implied self is `AbilityName`, so `toJson`
+`Parun.Codec.AbilityName` the implied self is `AbilityName`, so `toJson`
 *encodes*; in `Common` the implied self is JSON, so `toList` would *decode*. Same
 two words, opposite direction. `encode`/`decode` is unambiguous without a
 convention memo, and `decodeNullary` already reads that way.
@@ -153,9 +153,9 @@ convention memo, and `decodeNullary` already reads that way.
 ### Growth is on demand
 
 `Common` does not get a big-bang port. A helper moves when the first codec module
-being refactored needs it, under its new name. `Pawl.Codec.Json` shrinks and is
-deleted when its last consumer is gone — `Pawl.Registry` (`Json.parse`) and
-`Pawl.Corpus` are the two outside the codec library.
+being refactored needs it, under its new name. `Parun.Codec.Json` shrinks and is
+deleted when its last consumer is gone — `Parun.Registry` (`Json.parse`) and
+`Parun.Corpus` are the two outside the codec library.
 
 New helpers are welcome when a call site wants one; `integer` and `asBoolean`
 above are the first two.
@@ -166,7 +166,7 @@ above are the first two.
 changes:
 
 - **`assertJson` goes through `parse`.** It currently calls
-  `Pawl.Extra.Parsec.parseString Value.decode`, which does not pin the end of
+  `Parun.Extra.Parsec.parseString Value.decode`, which does not pin the end of
   input, so `"\"a\" trailing garbage"` would parse as `"a"` and the spec would
   pass. `Common.parse` already appends `Parsec.eof`; `assertJson` becomes
   `parse . Text.pack`, leaving one parser in the module rather than two that
@@ -180,14 +180,14 @@ changes:
   from one literal. With ~600 constructors to cover, one line per constructor
   instead of two is the difference between a large job and an unreasonable one.
 
-`Common` itself gets a `Pawl.Codec.CommonSpec`, which is where the existing
-`Pawl/JsonSpec.hs` cases for `parse`, `render`, `tagged` and `sortKeys` land.
+`Common` itself gets a `Parun.Codec.CommonSpec`, which is where the existing
+`Parun/JsonSpec.hs` cases for `parse`, `render`, `tagged` and `sortKeys` land.
 
 ## Tests
 
-Every codec module gets `Pawl.Codec.XSpec` with `describe "toJson"` /
-`describe "fromJson"` groups. One name collides: `Pawl.Types.TargetSpec` is a
-real type, so its codec's spec is `Pawl.Codec.TargetSpecSpec`. The doubled
+Every codec module gets `Parun.Codec.XSpec` with `describe "toJson"` /
+`describe "fromJson"` groups. One name collides: `Parun.Types.TargetSpec` is a
+real type, so its codec's spec is `Parun.Codec.TargetSpecSpec`. The doubled
 suffix is correct — the convention appends `Spec` to the module name, and a type
 whose name already ends in `Spec` gets no exception. **The bar is every constructor**: one
 `assertJsonCodec` line per constructor of the type, ~600 in total across the
@@ -200,19 +200,19 @@ that renamed every tag would still pass. A literal JSON string pins it. It is
 also the majority of the work in this refactor, well past the ~100 module
 rewrites, and it is why the bar is worth stating explicitly.
 
-`Pawl/CodecSpec.hs` (1392 lines, 164 cases) is emptied batch by batch and
+`Parun/CodecSpec.hs` (1392 lines, 164 cases) is emptied batch by batch and
 deleted; its bespoke shape assertions — the elision tests using `payloadHead`
 and `payloadLength` — move into the relevant `XSpec` rather than being dropped.
-`Pawl/JsonSpec.hs` moves to `Pawl.Codec.CommonSpec`. `Pawl/CardsSpec.hs` and
-`Pawl/Corpus.hs` keep their corpus-level round-trips over `data/cards/` and only
+`Parun/JsonSpec.hs` moves to `Parun.Codec.CommonSpec`. `Parun/CardsSpec.hs` and
+`Parun/Corpus.hs` keep their corpus-level round-trips over `data/cards/` and only
 switch `Json` to `Common`.
 
 ## Scope
 
 **In:** `source/libraries/types/` (145 modules), `source/libraries/codec/`
-(98 codecs plus `Common`), the 99 new `XSpec` modules, `pawl.cabal`,
-`source/test-suite/Main.hs`, and whatever `Pawl.Registry`, `Pawl.Corpus`,
-`Pawl.CardsSpec` and `Pawl.CodecSpec` must change to compile.
+(98 codecs plus `Common`), the 99 new `XSpec` modules, `parun.cabal`,
+`source/test-suite/Main.hs`, and whatever `Parun.Registry`, `Parun.Corpus`,
+`Parun.CardsSpec` and `Parun.CodecSpec` must change to compile.
 
 **Out:** the engine's 37 modules, and R2/R6 in every sublibrary other than
 `types` and `codec`. Those are a separate pass. The engine is the most
@@ -231,9 +231,9 @@ green.
 2. …N. Codec modules in dependency-layer batches, leaves first (`Color`,
    `Onset`, `Power`, …), `Card` and `Effect` last. Each commit carries the type
    module, the codec module, the new `XSpec`, the `Main.hs` wiring and the
-   `pawl.cabal` regeneration together, and deletes the cases it supersedes from
+   `parun.cabal` regeneration together, and deletes the cases it supersedes from
    `CodecSpec.hs`.
-3. Delete `Pawl.Codec.Json`, `Pawl/CodecSpec.hs`, `Pawl/JsonSpec.hs`.
+3. Delete `Parun.Codec.Json`, `Parun/CodecSpec.hs`, `Parun/JsonSpec.hs`.
 4. Sweep the 47 types with no codec module (`Game`, `GameState`, `Object`,
    `Player`, …) for R2, R3 and R6.
 5. Update `CLAUDE.md`: the spec signature is `(Monad m, Monad n)` for codec
@@ -247,7 +247,7 @@ those six should be in the same commit.
 
 - `cabal build all` warning-free under `-Weverything`, `hooky fix` then
   `hooky run` clean, per commit.
-- **`Pawl.CardsSpec` is the safety net.** It round-trips every file in
+- **`Parun.CardsSpec` is the safety net.** It round-trips every file in
   `data/cards/` and compares `sortKeys`-normalized values, so any accidental
   change to the wire format fails there regardless of which `XSpec` was written.
   It must stay green at every commit.
@@ -266,7 +266,7 @@ per `CLAUDE.md` — the rename is a good moment to catch a stale one, and a bad
 moment to propagate one.
 
 **~600 hand-written JSON literals is where a typo hides.** A wrong tag string in
-a literal produces a spec that agrees with a wrong encoder. `Pawl.CardsSpec`
+a literal produces a spec that agrees with a wrong encoder. `Parun.CardsSpec`
 catches this only for shapes that appear in `data/cards/`. Literals should be
 derived by reading the encoder, not by recalling the tag name.
 

@@ -1,0 +1,92 @@
+module Parun.Types.ForEach where
+
+import qualified Data.Sequence as Seq
+import qualified Parun.Types.LoopMembers as LoopMembers
+import qualified Parun.Types.ObjectRef as ObjectRef
+import qualified Parun.Types.PayGate as PayGate
+import qualified Parun.Types.PlayerRef as PlayerRef
+import qualified Parun.Types.SlotName as SlotName
+
+-- | CR 608.2f's per-object loop: the objects and players the ObjectRef names,
+-- each taken in turn with the body run once for it -- Soulfire Eruption's "for
+-- each of them, exile the top card of your library, then ... deals damage equal
+-- to that card's mana value to that permanent or player", and Rampage of the
+-- Clans' "for each permanent destroyed this way, its controller creates a 3/3
+-- green Centaur creature token", whose members are the permanents a destruction
+-- already removed and so are read through CR 608.2h.
+--
+-- Parametric in the EFFECT for Parun.Types.PreventNextDamage's reason: the
+-- record holds effects and Parun.Types.Effect holds the record, so naming Effect
+-- here would need an hs-boot file. Instantiated at `Effect card` where the arm
+-- is declared.
+data ForEach effect = MkForEach
+  { -- | The set swept ONCE, before the first iteration -- CR 608.2f's "which
+    -- objects" half, the same read every other ObjectRef-taking opcode makes.
+    -- Nothing the body does adds to or removes from it.
+    ref :: ObjectRef.ObjectRef,
+    -- | Whether the body runs for every swept member or for the ones the
+    -- resolving controller picks out of them, asked once before the first
+    -- iteration (CR 608.2d). Proved by Parun.AttackKeywordTriggerSpec's "CR
+    -- 702.116a at four seats a token is minted against the chosen opponent
+    -- alone".
+    members :: LoopMembers.LoopMembers,
+    -- | The name this iteration's member is bound under, for the body to read
+    -- as an ObjectRef.InSlot or a PlayerRef.InSlot. A DEFINITION, never a
+    -- target (CR 115.10a): the ref above may well have been filled by targeting
+    -- and carries CR 608.2b's re-validation, but this name is the loop's, not
+    -- the card's announcement.
+    slot :: SlotName.SlotName,
+    -- | The instructions run once per member, in written order (CR 608.2c). A
+    -- SEQUENCE is the whole point: an opcode naming a set applies ITSELF across
+    -- it, where this applies a list of them to each member in turn, so a later
+    -- instruction can act on what an earlier one produced FOR THAT MEMBER.
+    --
+    -- What the body BINDS is scoped to its own iteration and no further, which
+    -- Parun.Engine.Resolve.Effect's arm states; once the loop is over those names
+    -- hold the UNION across every member, so an instruction after it names the
+    -- whole batch -- Mirror Match's "exile those tokens", ONE delayed ability
+    -- rather than one per member. Parun.CombatCostSpec's
+    -- PutOntoBattlefieldBlocking group proves it.
+    body :: Seq.Seq effect,
+    -- | CR 608.2f's SECOND sentence: True where the loop's action "can't be
+    -- processed simultaneously", so each member is considered individually and
+    -- its events stand apart from the next member's. False -- rule 608.2f's "in
+    -- most cases", and what a card that says nothing gets -- runs the whole loop
+    -- inside one Parun.Types.EventGroup, so CR 603.6a's newcomers see each other
+    -- enter.
+    --
+    -- Rule 608.2f's own example is the True: Soulfire Eruption's player "can't
+    -- exile the top card of their library multiple times at the same time".
+    -- Mutalith Vortex Beast is another, by CR 121.2 -- cards are drawn one at a
+    -- time -- and Thieves' Auction a third, each player choosing from what the
+    -- player before left.
+    --
+    -- Not implemented: rule 608.2f's unit is the ACTION, and CR 608.2e says the
+    -- same for the order, so a body of two instructions owes an answer per
+    -- instruction where this field gives one for the whole loop (#3886).
+    --
+    -- Proved by Parun.CombatCostSpec's "CR 603.6a / 608.2f: every Mirror Match
+    -- token sees every other one enter", which is the False. The True has no
+    -- gameplay observer -- no printing in the pool watches a batch of library
+    -- exiles or of draws -- and is held instead by Parun.CardSpec's "a ForEach
+    -- whose body draws or reads a library top says it is not simultaneous",
+    -- which is where CR 121.2 and rule 608.2f's Soulfire Eruption example are
+    -- kept as rules rather than as a card's default.
+    individually :: Bool,
+    -- | CR 118.12a's "unless [a player] pays", offered once PER MEMBER, the body
+    -- running for a member only where the gate's branch selects someone --
+    -- Cleansing's "for each land, destroy that land unless any player pays 1
+    -- life". The gate's references read the member through `slot`. Every offer
+    -- for every member is made before the first body runs, in CR 101.4's APNAP
+    -- order over the payers (each payer's offers in member order), since the
+    -- offers are the choices and the body the action (CR 608.2e). Nothing is the
+    -- ungated loop. PayGate.offeredAt is not read here: a loop offers its own.
+    -- Proved by Parun.ResolveSpec's "an offer per member" group (Cleansing).
+    payGate :: Maybe PayGate.PayGate,
+    -- | The player the walk over the members starts with, then on in turn
+    -- order -- Thieves' Auction's "starting with you". Nothing is CR 101.4's
+    -- APNAP order. Proved by the scenario "Thieves' Auction's \"starting with
+    -- you\"" (thieves-auction-cast-by-a-nonactive-player-starts-with-its-caster).
+    startingWith :: Maybe PlayerRef.PlayerRef
+  }
+  deriving (Eq, Ord, Show)

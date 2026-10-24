@@ -4,9 +4,9 @@
 
 **Goal:** Close CR 727 (Restarting the Game) at the *rebuild* depth its labeled-synthetic gate demands — a shared `startGameFromCards` primitive that builds a game from an existing object pool (ownership preserved), a `restartGame` routine keyed off a generic nullary `RestartGame` opcode, and a `synthetic-restart` gate card that proves at gameplay level that restart rebuilds from the game's *actual cards* with the *restart's controller* as starting player (CR 727.1a/727.2/727.4) — **without** wiring live multi-turn `playGame` resumption (deferred by decision) and **without** casing on any card's identity.
 
-**Architecture:** Restart is **replace-in-place**: it rebuilds the single `GameState` slot from the objects already in the game, not from `Deck` definitions and not via `Setup.emptyGame` + `Setup.newGame` (which would mint fresh objects and pick the wrong starting player — the milestone's stated falsifier). Two new **`Setup`** functions do the work: `startGameFromCards :: Game ()` (reused verbatim by M5c subgames) and `restartGame :: PlayerId -> Game ()`. A new **nullary** `Effect.RestartGame` opcode (shaped like `ExileAllGraveyards`/`BecomeMonarch` — targetless, game-wide) resolves in `Pawl.Resolve.applyEffect` by calling `Setup.restartGame controller`; the starting player is the resolving controller (CR 727.1a), which `applyEffect` already holds, so no target slot is needed. A `synthetic-restart` artifact (the `Landform` labeled-synthetic-crutch pattern) carries an activated ability whose only effect is `RestartGame`, and drives the gameplay-level gate through the real priority loop.
+**Architecture:** Restart is **replace-in-place**: it rebuilds the single `GameState` slot from the objects already in the game, not from `Deck` definitions and not via `Setup.emptyGame` + `Setup.newGame` (which would mint fresh objects and pick the wrong starting player — the milestone's stated falsifier). Two new **`Setup`** functions do the work: `startGameFromCards :: Game ()` (reused verbatim by M5c subgames) and `restartGame :: PlayerId -> Game ()`. A new **nullary** `Effect.RestartGame` opcode (shaped like `ExileAllGraveyards`/`BecomeMonarch` — targetless, game-wide) resolves in `Parun.Resolve.applyEffect` by calling `Setup.restartGame controller`; the starting player is the resolving controller (CR 727.1a), which `applyEffect` already holds, so no target slot is needed. A `synthetic-restart` artifact (the `Landform` labeled-synthetic-crutch pattern) carries an activated ability whose only effect is `RestartGame`, and drives the gameplay-level gate through the real priority loop.
 
-**Tech Stack:** Haskell 2010 (GHC 9.14.1 from the Nix dev shell), `tasty` + `tasty-hunit`. Library under `source/library/Pawl/`; tests under `source/test-suite/Pawl/`; cards are JSON data files under `data/cards/`.
+**Tech Stack:** Haskell 2010 (GHC 9.14.1 from the Nix dev shell), `tasty` + `tasty-hunit`. Library under `source/library/Parun/`; tests under `source/test-suite/Parun/`; cards are JSON data files under `data/cards/`.
 
 ## Global Constraints
 
@@ -14,11 +14,11 @@ Every task's requirements implicitly include this section. Values copied verbati
 
 - **Warning-clean build.** `cabal build all --enable-tests --enable-benchmarks` must compile under `-Weverything` minus the allow-list, with `flags: +pedantic` (`-Werror`) on. Incremental builds hide warnings from unchanged modules — for a definitive check, `cabal clean` first. **Adding a constructor to `Effect` makes every `case effect of` non-exhaustive; `-Wincomplete-patterns` under `-Werror` will fail the build until all arms are added** — this is the safety net that guarantees Task 3 touches every dispatch site.
 - **No new language extensions.** Haskell 2010. `NamedFieldPuns` is permitted where it improves clarity but is not required here. Test files that pattern-match the `Prompt` GADT already carry `{-# LANGUAGE GADTs #-}`; do not add others.
-- **Qualified imports, aliased to the last component** (`Pawl.Setup` → `Setup`, `Data.List` → `List`); operators unqualified. One import group, no first/third-party split. A module never imports its parents; `A.B.C` never imports `A.B` or `A`.
+- **Qualified imports, aliased to the last component** (`Parun.Setup` → `Setup`, `Data.List` → `List`); operators unqualified. One import group, no first/third-party split. A module never imports its parents; `A.B.C` never imports `A.B` or `A`.
 - **No partial functions, written or used.** No `head`, `undefined`, `error`, `!!`, or non-exhaustive matches. Use `Data.Maybe.listToMaybe` instead of `head`. `Map.filter`/`Map.keys`/`map`, never a list comprehension (**CLAUDE.md: "No list comprehensions"**).
 - **`newtype`/record conventions.** Build records with `do` + record syntax or record-update syntax, not `<$>`/`<*>`. `case` over point-free; `let` over `where`.
 - **Cite the CR number in every rules-bearing comment.** Every CR claim below was checked against `docs/rules.txt` at this planning pass (CR 727 at lines 6246–6265; CR 103 "Starting the Game" at lines 258–322; CR 103.5 opening hands at 296; CR 103.8a starting player skips first draw at 318). Never trust recalled Magic rules; re-verify before the number drives code.
-- **The two invariants outrank this plan.** (1) The rules core reads a *classification*, never an effect's identity — restart is a routine keyed off a generic `RestartGame` opcode; `Pawl.Resolve` never grows a `case … Karn`. (2) The engine makes no choices — the starting player is fixed by rule (CR 727.1a: the controller), not prompted; shuffles remain `Prompt.Shuffle`. Nothing is elided.
+- **The two invariants outrank this plan.** (1) The rules core reads a *classification*, never an effect's identity — restart is a routine keyed off a generic `RestartGame` opcode; `Parun.Resolve` never grows a `case … Karn`. (2) The engine makes no choices — the starting player is fixed by rule (CR 727.1a: the controller), not prompted; shuffles remain `Prompt.Shuffle`. Nothing is elided.
 - **One small complete commit per task, on `main`.** Never push. Commit message trailer: `Co-Authored-By: Claude Opus 4.8 (1M context) <noreply@anthropic.com>`.
 - **`hooky` before done.** `git add -A` → `hooky fix` → `git add -A` → `hooky run` (acts on staged files only).
 - **TDD is not optional.** Write each failing test and run it to watch it fail before implementing. Tick each `- [ ]` as you finish it.
@@ -33,33 +33,33 @@ Every task's requirements implicitly include this section. Values copied verbati
 
 Exact shapes the tasks build on (paths/line numbers from this planning pass — re-confirm if the file has moved):
 
-- `Pawl.Setup` (`source/library/Pawl/Setup.hs`): `startingLife :: Integer` = 20 (line 33); `openingHand :: Int` = 7 (line 43); `emptyGame :: NonEmpty PlayerId -> GameState` (47) — the field template for a fresh `GameState`; `createCard` (95) — the per-object shape (`owner`, `source = Source.OfCard printing`, `zone = Zone.Library`, `tapped = Untapped`, `damage = 0`, `sickness = Sick`, `bindings = Map.empty`, `counters = Map.empty`, fresh `timestamp`); `shuffleLibrary :: PlayerId -> Game ()` (120) — issues `Prompt.Shuffle`; `newGame` (133). Setup already imports `Combat`, `Event`, `Game`, `Turn`, `Object`, `Player`, `Source`, `Status`, `Sickness`, `TapState`, `Zone`, `GameState`, `Map`, `Seq`, `Monad`, `NonEmpty`.
-- `Pawl.Type.GameState` (`source/library/Pawl/Type/GameState.hs`): one record, `deriving (Eq, Show)`. Fields used below: `objects :: Map ObjectId Object`, per-player `library`/`hand`/`graveyard :: Map PlayerId (Seq ObjectId)`, shared `battlefield`/`exile`/`command :: Set ObjectId`, `stack :: [ObjectId]`, `players :: Map PlayerId Player`, `manaPool`, `combat`, `events`, `scannedThrough`/`damageScannedThrough :: Natural`, `delayedTriggers`, `continuousEffects`, `replacements`, `playerEffects`, `turnOrder :: [PlayerId]`, `activePlayer :: PlayerId`, `phase :: Phase`, `remaining :: Seq Phase`, `priority :: Maybe PlayerId`, `passes :: Natural`, `turnNumber :: Natural`, `result :: Maybe Result`, `nextObjectId`, `nextTimestamp`, `drewFromEmpty :: Set PlayerId`, `landPlayed :: Set PlayerId`, `pendingControl`, `activeControl`, `monarch`, `exiledUntilMonarch`. **No RNG/seed field** — randomness is `Prompt.Shuffle`.
-- `Pawl.Type.Object` (`source/library/Pawl/Type/Object.hs`): `owner :: PlayerId` (stamped once, never changes), `source`, `zone`, `tapped`, `damage`, `sickness`, `bindings`, `counters`, `timestamp`.
-- `Pawl.Type.Source` (`source/library/Pawl/Type/Source.hs`): `OfCard Printing | OfToken Card | OfAbility ObjectId (ActivatedAbility Card) | OfTrigger ObjectId (TriggeredAbility Card) | OfEmblem Card | OfInherentTrigger PlayerId (TriggeredAbility Card)`. **Only `OfCard` is a Magic card** (CR 727.2 / 111.7).
-- `Pawl.Type.Player` (`source/library/Pawl/Type/Player.hs`): `MkPlayer { life :: Integer, status :: Status, counters :: Map PlayerCounterKind Natural }`. `Pawl.Type.Status`: `Playing | Departed Departure`.
-- `Pawl.Turn` (`source/library/Pawl/Turn.hs`): `firstPhase :: Phase` = `Phase.Beginning BeginningStep.Untap`; `laterPhases :: Seq Phase`. Both reused verbatim by `Setup.emptyGame`.
-- `Pawl.Type.Effect` (`source/library/Pawl/Type/Effect.hs`): `data Effect card = … deriving (Eq, Ord, Show)`. Nullary game-wide precedents: `ExileAllGraveyards` (constructor at line 58), `BecomeMonarch MonarchTarget` (192). Last constructor `ExileUntilMonarch SlotName` (198), `deriving` at 199.
-- `Pawl.Resolve` (`source/library/Pawl/Resolve.hs`) — the **only** module that cases on `Effect`. Six `case effect of` tables that each need a new arm: `slotsOf` (67), `readsX`/`effectReadsX` (104), `manaProduced` (135), `searchesLibrary` (166), `rewriteEffect` (236), `applyEffect` (405). Existing nullary arms to copy: `Effect.ExileAllGraveyards -> Set.empty` / `-> False` / `-> Nothing` / `-> False` / `-> effect`, and the `applyEffect` body at line 507. `applyEffect`'s signature: `ObjectId -> PlayerId -> Map SlotName (Subtype,Subtype) -> Map SlotName Bool -> Map SlotName Recipient -> Effect Card -> Game ()`; its second argument is `controller` (the resolving controller = CR 727.1a's starting player). **`Pawl.Resolve` does not currently import `Pawl.Setup`; add it** — `Setup` does not import `Resolve` (nor do `Event`/`Combat`/`Turn`, its deps), so there is no cycle.
-- `Pawl.Codec` (`source/library/Pawl/Codec.hs`): `effectToJson` — nullary pattern `Effect.ExileAllGraveyards -> nullary (Text.pack "ExileAllGraveyards")` (~1153); `jsonToEffect` — `"ExileAllGraveyards" -> Right Effect.ExileAllGraveyards` (~1188). A new opcode needs both arms or the `allPrintings` round-trip test fails. **CR 118.6 (Codec.hs:1299):** an absent/`null` `mana` field decodes to `Nothing` (an *unpayable* cost), never `{0}` — so an activatable ability must use `"mana": []` (a payable `{0}`), not `null`.
+- `Parun.Setup` (`source/library/Parun/Setup.hs`): `startingLife :: Integer` = 20 (line 33); `openingHand :: Int` = 7 (line 43); `emptyGame :: NonEmpty PlayerId -> GameState` (47) — the field template for a fresh `GameState`; `createCard` (95) — the per-object shape (`owner`, `source = Source.OfCard printing`, `zone = Zone.Library`, `tapped = Untapped`, `damage = 0`, `sickness = Sick`, `bindings = Map.empty`, `counters = Map.empty`, fresh `timestamp`); `shuffleLibrary :: PlayerId -> Game ()` (120) — issues `Prompt.Shuffle`; `newGame` (133). Setup already imports `Combat`, `Event`, `Game`, `Turn`, `Object`, `Player`, `Source`, `Status`, `Sickness`, `TapState`, `Zone`, `GameState`, `Map`, `Seq`, `Monad`, `NonEmpty`.
+- `Parun.Type.GameState` (`source/library/Parun/Type/GameState.hs`): one record, `deriving (Eq, Show)`. Fields used below: `objects :: Map ObjectId Object`, per-player `library`/`hand`/`graveyard :: Map PlayerId (Seq ObjectId)`, shared `battlefield`/`exile`/`command :: Set ObjectId`, `stack :: [ObjectId]`, `players :: Map PlayerId Player`, `manaPool`, `combat`, `events`, `scannedThrough`/`damageScannedThrough :: Natural`, `delayedTriggers`, `continuousEffects`, `replacements`, `playerEffects`, `turnOrder :: [PlayerId]`, `activePlayer :: PlayerId`, `phase :: Phase`, `remaining :: Seq Phase`, `priority :: Maybe PlayerId`, `passes :: Natural`, `turnNumber :: Natural`, `result :: Maybe Result`, `nextObjectId`, `nextTimestamp`, `drewFromEmpty :: Set PlayerId`, `landPlayed :: Set PlayerId`, `pendingControl`, `activeControl`, `monarch`, `exiledUntilMonarch`. **No RNG/seed field** — randomness is `Prompt.Shuffle`.
+- `Parun.Type.Object` (`source/library/Parun/Type/Object.hs`): `owner :: PlayerId` (stamped once, never changes), `source`, `zone`, `tapped`, `damage`, `sickness`, `bindings`, `counters`, `timestamp`.
+- `Parun.Type.Source` (`source/library/Parun/Type/Source.hs`): `OfCard Printing | OfToken Card | OfAbility ObjectId (ActivatedAbility Card) | OfTrigger ObjectId (TriggeredAbility Card) | OfEmblem Card | OfInherentTrigger PlayerId (TriggeredAbility Card)`. **Only `OfCard` is a Magic card** (CR 727.2 / 111.7).
+- `Parun.Type.Player` (`source/library/Parun/Type/Player.hs`): `MkPlayer { life :: Integer, status :: Status, counters :: Map PlayerCounterKind Natural }`. `Parun.Type.Status`: `Playing | Departed Departure`.
+- `Parun.Turn` (`source/library/Parun/Turn.hs`): `firstPhase :: Phase` = `Phase.Beginning BeginningStep.Untap`; `laterPhases :: Seq Phase`. Both reused verbatim by `Setup.emptyGame`.
+- `Parun.Type.Effect` (`source/library/Parun/Type/Effect.hs`): `data Effect card = … deriving (Eq, Ord, Show)`. Nullary game-wide precedents: `ExileAllGraveyards` (constructor at line 58), `BecomeMonarch MonarchTarget` (192). Last constructor `ExileUntilMonarch SlotName` (198), `deriving` at 199.
+- `Parun.Resolve` (`source/library/Parun/Resolve.hs`) — the **only** module that cases on `Effect`. Six `case effect of` tables that each need a new arm: `slotsOf` (67), `readsX`/`effectReadsX` (104), `manaProduced` (135), `searchesLibrary` (166), `rewriteEffect` (236), `applyEffect` (405). Existing nullary arms to copy: `Effect.ExileAllGraveyards -> Set.empty` / `-> False` / `-> Nothing` / `-> False` / `-> effect`, and the `applyEffect` body at line 507. `applyEffect`'s signature: `ObjectId -> PlayerId -> Map SlotName (Subtype,Subtype) -> Map SlotName Bool -> Map SlotName Recipient -> Effect Card -> Game ()`; its second argument is `controller` (the resolving controller = CR 727.1a's starting player). **`Parun.Resolve` does not currently import `Parun.Setup`; add it** — `Setup` does not import `Resolve` (nor do `Event`/`Combat`/`Turn`, its deps), so there is no cycle.
+- `Parun.Codec` (`source/library/Parun/Codec.hs`): `effectToJson` — nullary pattern `Effect.ExileAllGraveyards -> nullary (Text.pack "ExileAllGraveyards")` (~1153); `jsonToEffect` — `"ExileAllGraveyards" -> Right Effect.ExileAllGraveyards` (~1188). A new opcode needs both arms or the `allPrintings` round-trip test fails. **CR 118.6 (Codec.hs:1299):** an absent/`null` `mana` field decodes to `Nothing` (an *unpayable* cost), never `{0}` — so an activatable ability must use `"mana": []` (a payable `{0}`), not `null`.
 - Card data (`data/cards/*.json`): tagged JSON unions (`{"type": …, "value": …}`); nullary effects are `{"type": "Name"}` with no `"value"`. `mindslaver.json` is the structural template for an artifact with an activated ability. Synthetic cards use a `synthetic-` slug prefix (`synthetic-modal-activator.json` etc.).
-- `Pawl.Cards` (`source/test-suite/Pawl/Cards.hs`) — hand-written registry. Adding a card touches four sites: the `data Cards` record field (~16–99), a `…_ <- loadPrinting "<slug>"` line in `loadCards` (~111–192), the `… = …_,` record line (~195–277), and `allPrintings` (~281–363, required or the honesty/round-trip test flags it).
+- `Parun.Cards` (`source/test-suite/Parun/Cards.hs`) — hand-written registry. Adding a card touches four sites: the `data Cards` record field (~16–99), a `…_ <- loadPrinting "<slug>"` line in `loadCards` (~111–192), the `… = …_,` record line (~195–277), and `allPrintings` (~281–363, required or the honesty/round-trip test flags it).
 - Test harness: `Engine.runGamePure :: (forall r. Prompt r -> r) -> GameState -> Game a -> (a, GameState)`; `Engine.priorityLoop :: Game ()`; `Engine.checkSba :: Game ()`; `Stack.resolveTop :: Game ()`; `S.identityAnswer` (answers `Prompt.Shuffle ids -> ids`, `ChooseAction -> A.Pass`, everything else minimally); `S.addCreature :: Printing -> PlayerId -> GameState -> (ObjectId, GameState)` (places a permanent **Settled, Untapped, on the battlefield** under the player); `S.bothPlayers :: NonEmpty PlayerId` = alice then bob; `S.alice`, `S.bob`; `S.lifeOf :: PlayerId -> GameState -> Maybe Integer`; `S.handSize :: PlayerId -> GameState -> Int`. `isActivateAction :: A.Action -> Bool` already exists in `GameSpec.hs` (added in M5a).
 
 ## File structure
 
 | File | Change | Responsibility |
 |---|---|---|
-| `source/library/Pawl/Setup.hs` | Modify | Tasks 1–2: `startGameFromCards`, `rotateTo`, `restartGame`. |
-| `source/test-suite/Pawl/SetupSpec.hs` | Modify | Tasks 1–2: `startGameFromCards` and `restartGame` unit tests, including the CR 727.1a/727.2/727.3/727.4 falsifiers. |
-| `source/library/Pawl/Type/Effect.hs` | Modify | Task 3: the `RestartGame` nullary constructor. |
-| `source/library/Pawl/Resolve.hs` | Modify | Task 3: six dispatch arms + the `Setup` import + the `applyEffect` executor arm. |
-| `source/library/Pawl/Codec.hs` | Modify | Task 3: `effectToJson`/`jsonToEffect` arms. |
-| `source/test-suite/Pawl/ResolveSpec.hs` | Modify | Task 3: resolve a hand-built `RestartGame` ability end-to-end. |
+| `source/library/Parun/Setup.hs` | Modify | Tasks 1–2: `startGameFromCards`, `rotateTo`, `restartGame`. |
+| `source/test-suite/Parun/SetupSpec.hs` | Modify | Tasks 1–2: `startGameFromCards` and `restartGame` unit tests, including the CR 727.1a/727.2/727.3/727.4 falsifiers. |
+| `source/library/Parun/Type/Effect.hs` | Modify | Task 3: the `RestartGame` nullary constructor. |
+| `source/library/Parun/Resolve.hs` | Modify | Task 3: six dispatch arms + the `Setup` import + the `applyEffect` executor arm. |
+| `source/library/Parun/Codec.hs` | Modify | Task 3: `effectToJson`/`jsonToEffect` arms. |
+| `source/test-suite/Parun/ResolveSpec.hs` | Modify | Task 3: resolve a hand-built `RestartGame` ability end-to-end. |
 | `data/cards/synthetic-restart.json` | Create | Task 4: the labeled-synthetic gate card. |
-| `source/test-suite/Pawl/Cards.hs` | Modify | Task 4: register `syntheticRestartPrinting` (4 sites). |
-| `source/test-suite/Pawl/GameSpec.hs` | Modify | Task 5: gameplay-level headline gate through `priorityLoop`. |
-| GitHub issues (`tfausak/pawl`) | Create | Task 6: deferrals (live-loop re-entry; full Karn 727.5/727.5a). |
+| `source/test-suite/Parun/Cards.hs` | Modify | Task 4: register `syntheticRestartPrinting` (4 sites). |
+| `source/test-suite/Parun/GameSpec.hs` | Modify | Task 5: gameplay-level headline gate through `priorityLoop`. |
+| GitHub issues (`tfausak/parun`) | Create | Task 6: deferrals (live-loop re-entry; full Karn 727.5/727.5a). |
 | `docs/progress.md`, `CLAUDE.md`, umbrella spec | Modify | Task 7: completion entry, status replacement, phase tick. |
 
 ---
@@ -69,8 +69,8 @@ Exact shapes the tasks build on (paths/line numbers from this planning pass — 
 The reusable primitive (M5c's subgames call it verbatim). It rebuilds every player's library from the **objects already in the game** — each player's owned *cards*, wherever they sit — then shuffles and draws opening hands. Non-card objects (abilities on the stack, tokens, emblems, triggers) are **not** Magic cards (CR 727.2 / 111.7) and cease to exist. This is deliberately *not* `Setup.newGame` (which mints fresh objects from `Deck` definitions).
 
 **Files:**
-- Modify: `source/library/Pawl/Setup.hs` — one new top-level function.
-- Test: `source/test-suite/Pawl/SetupSpec.hs` — a new `restartTests` group wired into `tests`.
+- Modify: `source/library/Parun/Setup.hs` — one new top-level function.
+- Test: `source/test-suite/Parun/SetupSpec.hs` — a new `restartTests` group wired into `tests`.
 
 **Interfaces:**
 - Consumes: `GameState.{objects,turnOrder,…}`, `Object.{owner,source,zone,tapped,damage,sickness,bindings,counters}`, `Source.OfCard`, `Zone.Library`, `TapState.Untapped`, `Sickness.Sick`, `shuffleLibrary`, `openingHand`, `Event.drawCard`.
@@ -78,14 +78,14 @@ The reusable primitive (M5c's subgames call it verbatim). It rebuilds every play
 
 - [x] **Step 1: Write the failing test**
 
-Add a `restartTests` group and wire it into `SetupSpec.tests`. First, at the top of `source/test-suite/Pawl/SetupSpec.hs` add these imports to the import group (alphabetical among the `Pawl.*` imports):
+Add a `restartTests` group and wire it into `SetupSpec.tests`. First, at the top of `source/test-suite/Parun/SetupSpec.hs` add these imports to the import group (alphabetical among the `Parun.*` imports):
 
 ```haskell
 import qualified Data.List as List
 import qualified Data.Set as Set
-import qualified Pawl.Event as Event
-import qualified Pawl.Turn as Turn
-import qualified Pawl.Type.Object as Object
+import qualified Parun.Event as Event
+import qualified Parun.Turn as Turn
+import qualified Parun.Type.Object as Object
 ```
 
 Then append the group (top level) and update the aggregator. The helper `addMany` folds `S.addCreature` (which places each object on the battlefield) to build a pool of owned cards:
@@ -132,7 +132,7 @@ to
 tests cards = Tasty.testGroup "Setup" [setupTests cards, greenBlackSetupTests cards, deckTests cards, restartTests cards]
 ```
 
-> `S.PlayerId` may not be re-exported by `Support`; if the compiler cannot find it, import `Pawl.Type.PlayerId (PlayerId)` and write `PlayerId` in `addMany`'s signature instead. `Game.zoneMembers`, `GameState`, `Zone`, `Map` are already imported in `SetupSpec.hs`.
+> `S.PlayerId` may not be re-exported by `Support`; if the compiler cannot find it, import `Parun.Type.PlayerId (PlayerId)` and write `PlayerId` in `addMany`'s signature instead. `Game.zoneMembers`, `GameState`, `Zone`, `Map` are already imported in `SetupSpec.hs`.
 
 - [x] **Step 2: Run the test to verify it fails**
 
@@ -141,7 +141,7 @@ Expected: **compile error** — `Setup.startGameFromCards` is not in scope (not 
 
 - [x] **Step 3: Implement `startGameFromCards`**
 
-Append to `source/library/Pawl/Setup.hs` (after `newGame`):
+Append to `source/library/Parun/Setup.hs` (after `newGame`):
 
 ```haskell
 -- CR 727.2 / 729.2: build every player's library from an EXISTING object pool --
@@ -208,8 +208,8 @@ git commit -m "feat(m5b): startGameFromCards builds a game from an existing obje
 `restartGame starter` ends the current game and begins a new one in the same `GameState` slot: every card returns to its owner's new library (CR 727.2), the starting player is `starter` (CR 727.1a) so the turn order is rotated to begin with them (CR 103), players reset to 20 life / Playing / no counters, all transient game state clears, and the state settles to *just before the first turn's untap step* (CR 727.4): phase `Beginning Untap`, no priority, turn 1. The object/timestamp id supplies are preserved so reused cards keep unique ids.
 
 **Files:**
-- Modify: `source/library/Pawl/Setup.hs` — `rotateTo` + `restartGame`.
-- Test: `source/test-suite/Pawl/SetupSpec.hs` — four cases added to `restartTests` (727.1a, 727.2, 727.4, 727.3).
+- Modify: `source/library/Parun/Setup.hs` — `rotateTo` + `restartGame`.
+- Test: `source/test-suite/Parun/SetupSpec.hs` — four cases added to `restartTests` (727.1a, 727.2, 727.4, 727.3).
 
 **Interfaces:**
 - Consumes: `startGameFromCards`, `startingLife`, `Player.{life,status,counters}`, `Status.Playing`, `Combat.emptyCombat`, `Turn.{firstPhase,laterPhases}`, all `GameState` transient fields.
@@ -217,13 +217,13 @@ git commit -m "feat(m5b): startGameFromCards builds a game from an existing obje
 
 - [x] **Step 1: Write the failing tests**
 
-Add these four cases to the `restartTests` list in `source/test-suite/Pawl/SetupSpec.hs` (comma-separated after the Task 1 case). They need `Pawl.Sba`, `Pawl.Type.Status`, `Pawl.Type.Result`, and `Data.Maybe` imported — add to the import group any of these not already present:
+Add these four cases to the `restartTests` list in `source/test-suite/Parun/SetupSpec.hs` (comma-separated after the Task 1 case). They need `Parun.Sba`, `Parun.Type.Status`, `Parun.Type.Result`, and `Data.Maybe` imported — add to the import group any of these not already present:
 
 ```haskell
 import qualified Data.Maybe as Maybe
-import qualified Pawl.Sba as Sba
-import qualified Pawl.Type.Result as Result
-import qualified Pawl.Type.Status as Status
+import qualified Parun.Sba as Sba
+import qualified Parun.Type.Result as Result
+import qualified Parun.Type.Status as Status
 ```
 
 The cases:
@@ -288,7 +288,7 @@ The cases:
     ]
 ```
 
-> `Engine.checkSba` is defined in `Pawl.Engine` (`checkSba = Sba.checkStateBasedActions`); import `Pawl.Sba` only if you prefer `Sba.checkStateBasedActions` directly. `Game.lookupObject`, `Game.zoneMembers`, `Map`, `Zone` are already imported.
+> `Engine.checkSba` is defined in `Parun.Engine` (`checkSba = Sba.checkStateBasedActions`); import `Parun.Sba` only if you prefer `Sba.checkStateBasedActions` directly. `Game.lookupObject`, `Game.zoneMembers`, `Map`, `Zone` are already imported.
 
 - [x] **Step 2: Run the tests to verify they fail**
 
@@ -297,7 +297,7 @@ Expected: **compile error** — `Setup.restartGame` (and `rotateTo`) not in scop
 
 - [x] **Step 3: Implement `rotateTo` and `restartGame`**
 
-Append to `source/library/Pawl/Setup.hs` (after `startGameFromCards`):
+Append to `source/library/Parun/Setup.hs` (after `startGameFromCards`):
 
 ```haskell
 -- CR 103 / 727.1a: put `starter` at the head of the turn order, preserving the
@@ -380,8 +380,8 @@ git commit -m "feat(m5b): restartGame rebuilds the game in place (CR 727.1a/727.
 A **nullary** `Effect.RestartGame` opcode (targetless, game-wide — the `ExileAllGraveyards`/`BecomeMonarch` shape). It resolves by calling `Setup.restartGame controller`: CR 727.1a's starting player is the resolving controller, which `applyEffect` already holds, so no target slot exists. The engine reaches restart through this generic opcode, never through a card's identity.
 
 **Files:**
-- Modify: `source/library/Pawl/Type/Effect.hs` (constructor), `source/library/Pawl/Resolve.hs` (import + six arms), `source/library/Pawl/Codec.hs` (two arms).
-- Test: `source/test-suite/Pawl/ResolveSpec.hs` — resolve a hand-built `RestartGame` ability end-to-end.
+- Modify: `source/library/Parun/Type/Effect.hs` (constructor), `source/library/Parun/Resolve.hs` (import + six arms), `source/library/Parun/Codec.hs` (two arms).
+- Test: `source/test-suite/Parun/ResolveSpec.hs` — resolve a hand-built `RestartGame` ability end-to-end.
 
 **Interfaces:**
 - Consumes: `Setup.restartGame`, the `applyEffect` `controller` argument.
@@ -389,7 +389,7 @@ A **nullary** `Effect.RestartGame` opcode (targetless, game-wide — the `ExileA
 
 - [x] **Step 1: Write the failing test**
 
-Add to `source/test-suite/Pawl/ResolveSpec.hs`, in the same `testGroup` list that holds the existing CR 723.1 installation test (the M5a `installControlBy` case). This resolves a hand-built ability whose only effect is `RestartGame`, owned by bob, on a board where alice owns a card — and asserts the game restarted with bob as the starting player and alice's card preserved. Reuse the file's existing ability-construction imports (it already imports `Object`, `Source`, `ActivatedAbility`, `Modal`, `Mode`, `Cost.Type`, `ManaCost`, `Binding`, `Zone`, `TapState`, `Sickness`, `Seq`, `Set`, `Engine`, `Stack`, `Game`, `GameState`); it needs `Effect` and `Setup` — add `import qualified Pawl.Setup as Setup` and confirm `import qualified Pawl.Type.Effect as Effect` are present, plus `import qualified Data.Maybe as Maybe`, `import qualified Pawl.Type.Object as Object`.
+Add to `source/test-suite/Parun/ResolveSpec.hs`, in the same `testGroup` list that holds the existing CR 723.1 installation test (the M5a `installControlBy` case). This resolves a hand-built ability whose only effect is `RestartGame`, owned by bob, on a board where alice owns a card — and asserts the game restarted with bob as the starting player and alice's card preserved. Reuse the file's existing ability-construction imports (it already imports `Object`, `Source`, `ActivatedAbility`, `Modal`, `Mode`, `Cost.Type`, `ManaCost`, `Binding`, `Zone`, `TapState`, `Sickness`, `Seq`, `Set`, `Engine`, `Stack`, `Game`, `GameState`); it needs `Effect` and `Setup` — add `import qualified Parun.Setup as Setup` and confirm `import qualified Parun.Type.Effect as Effect` are present, plus `import qualified Data.Maybe as Maybe`, `import qualified Parun.Type.Object as Object`.
 
 ```haskell
       HU.testCase "CR 727.1a: resolving a RestartGame ability restarts with its controller as starting player" $
@@ -447,7 +447,7 @@ Expected: **compile error** — `Effect.RestartGame` is not a constructor of `Ef
 
 - [x] **Step 3: Add the `RestartGame` constructor**
 
-In `source/library/Pawl/Type/Effect.hs`, add a new constructor. Place it immediately after `ExileAllGraveyards` (line ~58) with a rules comment:
+In `source/library/Parun/Type/Effect.hs`, add a new constructor. Place it immediately after `ExileAllGraveyards` (line ~58) with a rules comment:
 
 ```haskell
   | -- CR 727.1/727.1a: restart the game. Targetless and game-wide (the
@@ -458,12 +458,12 @@ In `source/library/Pawl/Type/Effect.hs`, add a new constructor. Place it immedia
 
 - [x] **Step 4: Add the six `Resolve` dispatch arms and the `Setup` import**
 
-In `source/library/Pawl/Resolve.hs`:
+In `source/library/Parun/Resolve.hs`:
 
 First, add the import (in the import group, aliased to last component):
 
 ```haskell
-import qualified Pawl.Setup as Setup
+import qualified Parun.Setup as Setup
 ```
 
 Then add one arm to each of the five classification tables (copy the `ExileAllGraveyards` value in each — `RestartGame` reads no slot, no X, no mana, no library search, and has no rewritable land-type word):
@@ -486,7 +486,7 @@ Then add the executor arm to `applyEffect` (next to the `Effect.ExileAllGraveyar
 
 - [x] **Step 5: Add the two `Codec` arms**
 
-In `source/library/Pawl/Codec.hs`:
+In `source/library/Parun/Codec.hs`:
 
 - in `effectToJson`, next to `Effect.ExileAllGraveyards -> nullary (Text.pack "ExileAllGraveyards")`:
 
@@ -505,7 +505,7 @@ In `source/library/Pawl/Codec.hs`:
 Run: `cabal build all --enable-tests --enable-benchmarks && cabal test --test-options='-p "$0~/resolving a RestartGame ability/"'`
 Expected: **PASS** — warning-clean build (all `case effect of` sites now exhaustive), the resolution test green.
 
-If the build reports an **import cycle** between `Pawl.Resolve` and `Pawl.Setup`, STOP — this plan verified there is none (Setup and its deps do not import Resolve). A cycle means an unrelated import was added; do not paper over it by moving `restartGame`.
+If the build reports an **import cycle** between `Parun.Resolve` and `Parun.Setup`, STOP — this plan verified there is none (Setup and its deps do not import Resolve). A cycle means an unrelated import was added; do not paper over it by moving `restartGame`.
 
 - [x] **Step 7: Commit**
 
@@ -526,7 +526,7 @@ A labeled-synthetic artifact (the `Landform` crutch pattern) with an activated a
 
 **Files:**
 - Create: `data/cards/synthetic-restart.json`.
-- Modify: `source/test-suite/Pawl/Cards.hs` — register at four sites.
+- Modify: `source/test-suite/Parun/Cards.hs` — register at four sites.
 
 **Interfaces:**
 - Produces: `Cards.syntheticRestartPrinting :: Cards.Cards -> Printing.Printing`.
@@ -580,7 +580,7 @@ Write `data/cards/synthetic-restart.json`:
 
 - [x] **Step 2: Register the printing at all four `Cards.hs` sites**
 
-In `source/test-suite/Pawl/Cards.hs`:
+In `source/test-suite/Parun/Cards.hs`:
 
 1. Add the record field (in `data Cards`, after `mindslaverPrinting :: Printing.Printing,`):
 
@@ -631,7 +631,7 @@ git commit -m "feat(m5b): synthetic-restart gate card (labeled synthetic, expire
 The headline gate (CR 727.1/727.2/727.4). bob controls the `synthetic-restart` artifact; bob activates it through the **real priority loop**; it resolves, restarts the game, and the resulting state is a valid new game with bob as starting player, both players at 20 life with 7-card hands, every card back in its owner's library or hand, and the state settled just before the first untap step. This is strictly more end-to-end than Task 3's `resolveTop` test: it goes through activation, the stack, and priority.
 
 **Files:**
-- Modify: `source/test-suite/Pawl/GameSpec.hs` — one new answerer `restartAnswer`, one test case in `ruleTests`.
+- Modify: `source/test-suite/Parun/GameSpec.hs` — one new answerer `restartAnswer`, one test case in `ruleTests`.
 
 **Interfaces:**
 - Consumes: `Engine.{runGamePure,priorityLoop}`, `Setup.emptyGame`, `S.addCreature`, `Cards.{syntheticRestartPrinting,pikerPrinting,mountainPrinting}`, `isActivateAction` (already in `GameSpec`), `S.identityAnswer`, `Turn.firstPhase`.
@@ -639,7 +639,7 @@ The headline gate (CR 727.1/727.2/727.4). bob controls the `synthetic-restart` a
 
 - [x] **Step 1: Add the activation answerer**
 
-Append to `source/test-suite/Pawl/GameSpec.hs` (next to the other answerers, e.g. after `gateAnswer`). Add `import qualified Data.List as List`, `import qualified Data.Set as Set`, `import qualified Data.Maybe as Maybe`, `import qualified Pawl.Turn as Turn`, `import qualified Pawl.Type.Object as Object` to the import group if not present:
+Append to `source/test-suite/Parun/GameSpec.hs` (next to the other answerers, e.g. after `gateAnswer`). Add `import qualified Data.List as List`, `import qualified Data.Set as Set`, `import qualified Data.Maybe as Maybe`, `import qualified Parun.Turn as Turn`, `import qualified Parun.Type.Object as Object` to the import group if not present:
 
 ```haskell
 -- CR 727 gate strategy. Whoever has priority activates the only activation on the
@@ -666,11 +666,11 @@ restartAnswer p = case p of
 >   List.foldl' (\g _ -> snd (S.addCreature (Cards.mountainPrinting cards) pid g)) gs (replicate n ())
 > ```
 >
-> (If `S.PlayerId` is not exported by `Support`, import `Pawl.Type.PlayerId (PlayerId)` and use `PlayerId`.)
+> (If `S.PlayerId` is not exported by `Support`, import `Parun.Type.PlayerId (PlayerId)` and use `PlayerId`.)
 
 - [x] **Step 2: Add the gate test case to `ruleTests`**
 
-Insert into the `ruleTests` list in `source/test-suite/Pawl/GameSpec.hs` (comma-separated):
+Insert into the `ruleTests` list in `source/test-suite/Parun/GameSpec.hs` (comma-separated):
 
 ```haskell
       HU.testCase "CR 727.1/727.2/727.4 gameplay: bob activates a restart and the game rebuilds from its own cards" $
@@ -712,13 +712,13 @@ Because the machinery is now built, this characterization gate is expected to **
 Run the gate: `cabal build all --enable-tests --enable-benchmarks && cabal test --test-options='-p "$0~/bob activates a restart/"'`
 Expected: **PASS.**
 
-Then a **falsification check** — temporarily break `restartGame`'s starting-player rule in `source/library/Pawl/Setup.hs` by ignoring `starter`:
+Then a **falsification check** — temporarily break `restartGame`'s starting-player rule in `source/library/Parun/Setup.hs` by ignoring `starter`:
 
 ```haskell
             GameState.activePlayer = NonEmpty.head (NonEmpty.fromList (GameState.turnOrder gs)),
 ```
 
-(i.e. keep the old active player instead of `starter`). Re-run the gate: expected **FAIL** on the "bob is the new active player" assertion. **Revert** `Setup.hs` exactly and confirm `git diff source/library/Pawl/Setup.hs` is empty, then re-run: expected **PASS**. This proves the gate depends on CR 727.1a.
+(i.e. keep the old active player instead of `starter`). Re-run the gate: expected **FAIL** on the "bob is the new active player" assertion. **Revert** `Setup.hs` exactly and confirm `git diff source/library/Parun/Setup.hs` is empty, then re-run: expected **PASS**. This proves the gate depends on CR 727.1a.
 
 > Do not leave the mutation in. If the gate does *not* fail under the mutation, the test is not exercising the starting-player rule — investigate before proceeding.
 
@@ -740,22 +740,22 @@ git commit -m "test(m5b): gameplay gate — activating a restart rebuilds the ga
 Per `CLAUDE.md` ("file the issue, cite it inline"), each thing M5b elides gets a GitHub issue carrying status, rationale, and expiry trigger, with a code-site comment stating only what is *not* implemented plus `(#N)`. Two deferrals have M5b code sites: (a) **live `playGame` re-entry** after an in-play restart (the rebuild-only decision), and (b) **full Karn Liberated** (CR 727.5/727.5a exemption + put-onto-battlefield rider), which retires the synthetic gate.
 
 **Files:**
-- Create: two GitHub issues in `tfausak/pawl`.
-- Modify: `source/library/Pawl/Resolve.hs` — one comment at the `RestartGame` arm citing both issues.
+- Create: two GitHub issues in `tfausak/parun`.
+- Modify: `source/library/Parun/Resolve.hs` — one comment at the `RestartGame` arm citing both issues.
 
 **Interfaces:** none (comments + issues only).
 
 - [x] **Step 1: Check for duplicates, then file the live-loop-reentry issue**
 
 ```bash
-gh issue list --repo tfausak/pawl --search "restart"
+gh issue list --repo tfausak/parun --search "restart"
 ```
 
 If nothing covers it, file:
 
 ```bash
 gh issue create \
-  --repo tfausak/pawl \
+  --repo tfausak/parun \
   --title "Live playGame re-entry after an in-game restart (CR 727.4): abandon the current turn, resume into the new turn 1" \
   --label gap --label rules-correctness \
   --body "Status: deferred; not implemented in M5b.
@@ -764,7 +764,7 @@ M5b built the CR 727 rebuild primitive (Setup.restartGame / startGameFromCards) 
 
 To finish (CR 727.4 'finishes resolving just before the first turn's untap step; no player has priority'): a transient restart signal on GameState, with bail-out guards in Engine.priorityLoop (return without granting further priority) and Engine.runStep (skip advance/SBA and let the next playGame iteration run the fresh untap step). This is the control-flow half of restart-in-place; it pairs naturally with full Karn Liberated integration.
 
-Expiry trigger: milestone/card-driven (fires with full Karn Liberated, or whenever a played game must survive a restart). Cited at the RestartGame arm in Pawl.Resolve."
+Expiry trigger: milestone/card-driven (fires with full Karn Liberated, or whenever a played game must survive a restart). Cited at the RestartGame arm in Parun.Resolve."
 ```
 
 Record the number `N1`.
@@ -773,7 +773,7 @@ Record the number `N1`.
 
 ```bash
 gh issue create \
-  --repo tfausak/pawl \
+  --repo tfausak/parun \
   --title "Full Karn Liberated (CR 727.5/727.5a): the restart exemption + put-onto-battlefield rider retires the synthetic-restart gate" \
   --label gap --label rules-correctness --label expires:card-driven \
   --body "Status: deferred; M5b's gate is a labeled synthetic ('Restart', data/cards/synthetic-restart.json), the Landform crutch pattern.
@@ -784,14 +784,14 @@ When built, this retires the synthetic-restart gate card and its accessor (Cards
 
 Also parked here for M5c: CR 727.6 (restarting a SUBGAME leaves the main game unaffected; main-game references to the subgame winner/loser now refer to the restarted subgame) rides the subgame machinery M5c builds. And CR 727.2's 'cards brought in from outside the game' (Living Wish) needs a sideboard/outside-the-game subsystem -- subsystem-blocked, not scheduled.
 
-Expiry trigger: card-driven (Karn Liberated). Cited at the RestartGame arm in Pawl.Resolve."
+Expiry trigger: card-driven (Karn Liberated). Cited at the RestartGame arm in Parun.Resolve."
 ```
 
 Record the number `N2`.
 
 - [x] **Step 3: Add the inline citation at the `RestartGame` arm**
 
-In `source/library/Pawl/Resolve.hs`, extend the `RestartGame` arm's comment (from Task 3 Step 4) to cite both issues (replace `#N1`/`#N2` with the real numbers):
+In `source/library/Parun/Resolve.hs`, extend the `RestartGame` arm's comment (from Task 3 Step 4) to cite both issues (replace `#N1`/`#N2` with the real numbers):
 
 ```haskell
   -- CR 727.1/727.1a: restart the game. The starting player of the new game is
@@ -843,7 +843,7 @@ Expected: **all pass**, including the Task 1–5 additions. Do not proceed if an
 - [x] **Step 3: Invariant + rules audit**
 
 Confirm by inspection (note anything material in the commit body):
-- **Invariant 1:** `Pawl.Resolve` still cases only on the `RestartGame` *classification*; there is no `case … Karn` or card-identity match. `restartGame`/`startGameFromCards` read `Source.OfCard` (a classification), never a card name.
+- **Invariant 1:** `Parun.Resolve` still cases only on the `RestartGame` *classification*; there is no `case … Karn` or card-identity match. `restartGame`/`startGameFromCards` read `Source.OfCard` (a classification), never a card name.
 - **Invariant 2:** no choice was elided — the starting player is fixed by CR 727.1a (the controller), not prompted; shuffles remain `Prompt.Shuffle`. The two deferrals carry expiry-tagged issues (Task 6) cited inline.
 - **Rules re-check** against `docs/rules.txt`: CR 727.1 (6248), 727.1a (6250), 727.2 (6252), 727.3 (6255), 727.4 (6257), 727.5/727.5a (6259/6261), 727.6 (6263); CR 103.5 opening hands (296). Delegate this citation pass to a cheap model if using subagents (Haiku, per `docs/workflow.md`).
 

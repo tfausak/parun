@@ -62,7 +62,7 @@ keep the interesting seam isolated):
 
 1. **Replacement at the funnel (CR 614).** The `ZoneChange` event value, the
    `ReplacementEffect` leaf family, `changeZone` rewriting and emitting, and the
-   `Pawl.Event` module that owns event/pattern matching. Gate: **Rest in Peace
+   `Parun.Event` module that owns event/pattern matching. Gate: **Rest in Peace
    placed directly on the battlefield** (no trigger yet) redirects every
    graveyard-bound move to exile — a creature dying via SBA, a resolving Lightning
    Bolt from the stack, a discarded card from hand.
@@ -151,7 +151,7 @@ serialized path.
 
 ## 1. New and grown types
 
-**`Pawl.Type.ZoneChange`** (new) — the event value, the substrate both halves
+**`Parun.Type.ZoneChange`** (new) — the event value, the substrate both halves
 read:
 
 ```haskell
@@ -175,7 +175,7 @@ field later. Note the asymmetry the pipeline handles cleanly: replacements read 
 *proposed* change (pre-move — the old id, the requested destination), while the
 *emitted* event carries the resulting id and the resolved destination.
 
-**`Pawl.Type.ReplacementEffect`** (new) — the third leaf family (design.md's M3g
+**`Parun.Type.ReplacementEffect`** (new) — the third leaf family (design.md's M3g
 note: "replacement specifications, classified by the event pattern they
 intercept"), distinct from `Effect` (one-shot) and `Modification` (continuous):
 
@@ -197,7 +197,7 @@ the identity. "From anywhere" and "a card or token" are the *absence* of a sourc
 restriction and the *object-generality* of the predicate; both fall out of keying
 on destination alone.
 
-**`Pawl.Type.TriggeredAbility`** (new) — CR 603.1's "[condition], [effect]":
+**`Parun.Type.TriggeredAbility`** (new) — CR 603.1's "[condition], [effect]":
 
 ```haskell
 data TriggeredAbility = MkTriggeredAbility
@@ -212,7 +212,7 @@ data TriggeredAbility = MkTriggeredAbility
   deriving (Eq, Ord, Show)
 ```
 
-**`Pawl.Type.TriggerCondition`** (new) — the event pattern that fires a trigger,
+**`Parun.Type.TriggerCondition`** (new) — the event pattern that fires a trigger,
 the trigger-side analog of `ReplacementEffect`'s pattern:
 
 ```haskell
@@ -223,7 +223,7 @@ data TriggerCondition = SelfEnters
   deriving (Eq, Ord, Show)
 ```
 
-**`Pawl.Type.Effect`** grows one targetless opcode:
+**`Parun.Type.Effect`** grows one targetless opcode:
 
 ```haskell
   | ExileAllGraveyards  -- NEW (Rest in Peace's ETB)
@@ -235,7 +235,7 @@ graveyard→exile move matches no M3f trigger or replacement). It targets nothin
 `slotsOf`, `manaProduced`, `rewriteEffect` gain the arm (`Set.empty` / `Nothing` /
 identity — no land-type word, no mana, no slot).
 
-**`Pawl.Type.Source`** grows the trigger incarnation, parallel to M3e's
+**`Parun.Type.Source`** grows the trigger incarnation, parallel to M3e's
 `OfAbility`:
 
 ```haskell
@@ -255,7 +255,7 @@ existing `OfAbility` arm. The stack constructor names *what kind of object* this
 is — a classification, the same shape as the `OfCard`/`OfAbility` split — while
 resolution is shared (§4).
 
-**`Pawl.Type.Card`** grows two fields, empty for all but the gate:
+**`Parun.Type.Card`** grows two fields, empty for all but the gate:
 
 ```haskell
   -- CR 614: this card's replacement effects, active while it is on the
@@ -267,7 +267,7 @@ resolution is shared (§4).
   triggeredAbilities :: [TriggeredAbility]
 ```
 
-**`Pawl.Type.GameState`** grows the trigger-detection log, mirroring
+**`Parun.Type.GameState`** grows the trigger-detection log, mirroring
 `damageEvents`:
 
 ```haskell
@@ -277,7 +277,7 @@ resolution is shared (§4).
   zoneChanges :: [ZoneChange]
 ```
 
-**`Pawl.Card`** gains **Rest in Peace** (`{1}{W}`, Enchantment; one `SelfEnters`
+**`Parun.Card`** gains **Rest in Peace** (`{1}{W}`, Enchantment; one `SelfEnters`
 triggered ability `[ExileAllGraveyards]` with no slots; one `RedirectZoneChange
 Graveyard Exile` replacement) and a **Plains** basic-land printing (a white mana
 source, zero-opcode via CR 305.6, mirroring M3d's Island) so Rest in Peace is cast
@@ -312,7 +312,7 @@ changeZone oid dest gs = case lookupObject oid gs of
   the event or its modifications (CR 614.5 — "doesn't invoke itself repeatedly").
   For Rest in Peace: a `RedirectZoneChange Graveyard Exile` matches a proposed move
   to `Graveyard` and rewrites `to := Exile`; the rewritten event heads for exile,
-  which no longer matches, so the fold terminates with no self-loop. `Pawl.Event`
+  which no longer matches, so the fold terminates with no self-loop. `Parun.Event`
   is the **sole home of casing on `ReplacementEffect`** (the `Resolve`-over-`Effect`
   standing).
 - **Emitting the resolved event (CR 603.2g / 614.6).** The event appended to
@@ -335,7 +335,7 @@ criterion).
 
 ## 3. Phase 2 — triggered abilities (CR 603) and the CR 117.5 loop
 
-**Trigger detection.** A new function in `Pawl.Event`:
+**Trigger detection.** A new function in `Parun.Event`:
 
 ```haskell
 -- The battlefield/enters pass of the three-pass scan (prior-art-lessons.md §81).
@@ -346,7 +346,7 @@ triggersFrom :: [ZoneChange] -> GameState -> [PendingTrigger]
 ```
 
 A `PendingTrigger` names the source permanent, its controller (CR 603.3a — the
-controller when it triggered), and the `TriggeredAbility`. `Pawl.Event` is the
+controller when it triggered), and the `TriggeredAbility`. `Parun.Event` is the
 **sole home of casing on `TriggerCondition`**. Triggered abilities are read through
 `Projection.triggeredAbilitiesOf` (the `abilitiesOf`/`keywordsOf` move), so a
 Humility-stripped permanent contributes none.
@@ -415,7 +415,7 @@ resolveEffects :: ObjectId -> ObjectId -> [Effect] -> Map SlotName TargetSpec ->
 `resolveAbility abilId srcId ability = resolveEffects abilId srcId (effects ability)
 (targetSpecs ability)`; the `OfTrigger` arm calls `resolveEffects` directly. The
 only difference between the two kinds is *creation* — an activated ability is a
-player action paying a cost (M3e's `Pawl.Activate`); a triggered ability is placed
+player action paying a cost (M3e's `Parun.Activate`); a triggered ability is placed
 by the engine on an event match with no cost — and *creation* is entirely
 separate. On the stack they are one executor. `cease` (CR 608.2n) is unchanged and
 shared.
@@ -425,7 +425,7 @@ shared.
 - **The two-halves invariant holds through the event pipeline.** No closed-half
   module cases on a card's or an effect's *identity*. `Resolve` remains the sole
   home of `case effect of` (now including `ExileAllGraveyards`); the new
-  `Pawl.Event` is the sole home of casing on `ReplacementEffect` and
+  `Parun.Event` is the sole home of casing on `ReplacementEffect` and
   `TriggerCondition` — both open-half vocabularies classified by event pattern, the
   same standing `Resolve` has over `Effect` and `Projection` over `Modification`.
   `changeZone` and the CR 117.5 loop *ask* those classifications (does any
@@ -487,7 +487,7 @@ battlefield (settled), then:
   entry for a redirected graveyard move records `to = Exile` (so it could only fire
   an enters-exile trigger), not `Graveyard`.
 
-**Setup and decks.** `emptyGame` unchanged. A Plains printing joins `Pawl.Card`;
+**Setup and decks.** `emptyGame` unchanged. A Plains printing joins `Parun.Card`;
 the white fixtures cast or place Rest in Peace and assign timestamps from
 `freshTimestamp` as M3c–M3e do. Rest in Peace is a **deterministic fixture, out of
 the random decks**. Lightning Bolt (M3a) supplies the stack-spell falsifier.

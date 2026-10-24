@@ -1,0 +1,790 @@
+module Parun.Codec.FaceSpec where
+
+import qualified Control.Monad as Monad
+import qualified Data.List.NonEmpty as NonEmpty
+import qualified Data.Map.Strict as Map
+import qualified Data.Sequence as Seq
+import qualified Data.Set as Set
+import qualified Data.Text as Text
+import qualified Parun.Codec.Card as Card
+import qualified Parun.Codec.Face as Face
+import qualified Parun.Json.Value as Value
+import qualified Parun.JsonCodec.Codec as Codec
+import qualified Parun.JsonCodec.Common as Common
+import qualified Parun.Spec as Spec
+import qualified Parun.Types.AbilityKind as AbilityKind
+import qualified Parun.Types.AbilityName as AbilityName
+import qualified Parun.Types.ActivatedAbility as ActivatedAbility
+import qualified Parun.Types.ActivationProhibition as ActivationProhibition
+import qualified Parun.Types.Activator as Activator
+import qualified Parun.Types.Affected as Affected
+import qualified Parun.Types.AffectedUnless as AffectedUnless
+import qualified Parun.Types.AlternativeCost as AlternativeCost
+import qualified Parun.Types.AsCopy as AsCopy
+import qualified Parun.Types.AttachRestriction as AttachRestriction
+import qualified Parun.Types.AttackCost as AttackCost
+import qualified Parun.Types.AttackCostScope as AttackCostScope
+import qualified Parun.Types.AttackPermission as AttackPermission
+import qualified Parun.Types.AttackRequirement as AttackRequirement
+import qualified Parun.Types.BlockCost as BlockCost
+import qualified Parun.Types.BlockPermission as BlockPermission
+import qualified Parun.Types.BlockRequirement as BlockRequirement
+import qualified Parun.Types.Card as Card
+import qualified Parun.Types.CardName as CardName
+import qualified Parun.Types.CardType as CardType
+import qualified Parun.Types.CastingPermission as CastingPermission
+import qualified Parun.Types.CastingRestriction as CastingRestriction
+import qualified Parun.Types.CharacteristicPT as CharacteristicPT
+import qualified Parun.Types.Color as Color
+import qualified Parun.Types.CombatRestriction as CombatRestriction
+import qualified Parun.Types.CopyDomain as CopyDomain
+import qualified Parun.Types.CopyRecipient as CopyRecipient
+import qualified Parun.Types.Cost as Cost
+import qualified Parun.Types.CostChoice as CostChoice
+import qualified Parun.Types.CostComponent as CostComponent
+import qualified Parun.Types.CostDirection as CostDirection
+import qualified Parun.Types.CostReduction as CostReduction
+import qualified Parun.Types.CounterKind as CounterKind
+import qualified Parun.Types.CounterRestriction as CounterRestriction
+import qualified Parun.Types.Counterability as Counterability
+import qualified Parun.Types.CrewRestriction as CrewRestriction
+import qualified Parun.Types.Effect as Effect
+import qualified Parun.Types.EntryR as EntryR
+import qualified Parun.Types.EntryRestriction as EntryRestriction
+import qualified Parun.Types.EntryRewrite as EntryRewrite
+import qualified Parun.Types.Face as Face
+import qualified Parun.Types.Filter as Filter
+import qualified Parun.Types.GrantedAbility as GrantedAbility
+import qualified Parun.Types.HandAction as HandAction
+import qualified Parun.Types.Keyword as Keyword
+import qualified Parun.Types.Loyalty as Loyalty
+import qualified Parun.Types.ManaCost as ManaCost
+import qualified Parun.Types.ManaSymbol as ManaSymbol
+import qualified Parun.Types.Measure as Measure
+import qualified Parun.Types.Modal as Modal
+import qualified Parun.Types.Mode as Mode
+import qualified Parun.Types.ModeIndex as ModeIndex
+import qualified Parun.Types.ModeSelection as ModeSelection
+import qualified Parun.Types.Modification as Modification
+import qualified Parun.Types.PerCreature as PerCreature
+import qualified Parun.Types.PlayerEffect as PlayerEffect
+import qualified Parun.Types.PlayerRelation as PlayerRelation
+import qualified Parun.Types.PlayerScope as PlayerScope
+import qualified Parun.Types.PlayerStaticAbility as PlayerStaticAbility
+import qualified Parun.Types.Pool as Pool
+import qualified Parun.Types.Power as Power
+import qualified Parun.Types.PrintedReplacement as PrintedReplacement
+import qualified Parun.Types.Quantity as Quantity
+import qualified Parun.Types.ReplacementEffect as ReplacementEffect
+import qualified Parun.Types.RequirementArity as RequirementArity
+import qualified Parun.Types.SacrificeRestriction as SacrificeRestriction
+import qualified Parun.Types.SpecialAction as SpecialAction
+import qualified Parun.Types.StackObjectKind as StackObjectKind
+import qualified Parun.Types.StaticAbility as StaticAbility
+import qualified Parun.Types.Subtype as Subtype
+import qualified Parun.Types.Supertype as Supertype
+import qualified Parun.Types.TargetRestriction as TargetRestriction
+import qualified Parun.Types.TargetSlot as TargetSlot
+import qualified Parun.Types.Toughness as Toughness
+import qualified Parun.Types.TriggerCondition as TriggerCondition
+import qualified Parun.Types.TriggerLimit as TriggerLimit
+import qualified Parun.Types.TriggeredAbility as TriggeredAbility
+import qualified Parun.Types.TypeLine as TypeLine
+import qualified Parun.Types.UntapHold as UntapHold
+import qualified Parun.Types.UntapRestriction as UntapRestriction
+import qualified Parun.Types.Vanguard as Vanguard
+import qualified Parun.Types.Zone as Zone
+
+-- Fixtures --------------------------------------------------------------------
+--
+-- No registry here: the codec sublibrary sits above the test suite in the
+-- dependency table, so it cannot reach Parun.Registry or a real Printing. Every
+-- fixture below is a synthetic Face built by hand.
+
+-- | The face codec at the card knot Parun.Codec.Card ties, which is the only
+-- instantiation of it that exists: the six card-shaped fields need a card codec
+-- passed in, and Card's is the one.
+faceCodec :: Codec.Codec (Face.Face Card.Card)
+faceCodec = Face.codec Card.codec
+
+encodeFace :: Face.Face Card.Card -> Value.Value
+encodeFace = Codec.encode faceCodec
+
+decodeFace :: Value.Value -> Either Text.Text (Face.Face Card.Card)
+decodeFace = Codec.decode faceCodec
+
+-- | CR 700.2's non-modal shape, which is what a land or vanilla creature's
+-- spell payload is: one mode, no effects, forced.
+minimalModal :: Modal.Modal Card.Card (GrantedAbility.GrantedAbility Card.Card)
+minimalModal =
+  Modal.MkModal
+    (Seq.singleton (Mode.MkMode Seq.empty Map.empty))
+    (ModeSelection.ChooseExactly 1)
+
+-- | CR 603.6a's simplest trigger. The shape does not matter here, only that it
+-- is a well-typed TriggeredAbility Card.
+minimalTriggeredAbility :: TriggeredAbility.TriggeredAbility Card.Card (GrantedAbility.GrantedAbility Card.Card)
+minimalTriggeredAbility =
+  TriggeredAbility.MkTriggeredAbility TriggerCondition.SelfEnters minimalModal Nothing Nothing TriggerLimit.Unlimited Set.empty
+
+-- | Every required field set to a simple value, 'manaCost', 'power' and
+-- 'toughness' set to non-default values, and every other defaulted field left at
+-- its Haskell default. 'baseFaceJson' therefore carries no key for any of those
+-- defaulted fields, which is what lets one round-trip assertion prove both halves
+-- of every field's elision at once: an encoder that emitted a default, or a
+-- decoder that mis-defaulted an absent key, breaks the equality.
+baseFace :: Face.Face Card.Card
+baseFace =
+  Face.MkFace
+    { Face.name = CardName.MkCardName $ Text.pack "Test Card",
+      Face.oracleText = Nothing,
+      Face.manaCost = Just (ManaCost.MkManaCost [ManaSymbol.Generic 1]),
+      Face.typeLine = TypeLine.MkTypeLine Set.empty (Set.singleton CardType.Creature) Set.empty,
+      Face.power = Just (Power.MkPower (Quantity.Literal 1)),
+      Face.toughness = Just (Toughness.MkToughness (Quantity.Literal 1)),
+      Face.loyalty = Nothing,
+      Face.defense = Nothing,
+      Face.startingIntensity = Nothing,
+      Face.vanguard = Nothing,
+      Face.canBeYourCommander = False,
+      Face.claimsStartingPlayer = False,
+      Face.anteOnly = False,
+      Face.keywords = Map.empty,
+      Face.staticAbilities = [],
+      Face.spell = minimalModal,
+      Face.activatedAbilities = [],
+      Face.replacementEffects = [],
+      Face.triggeredAbilities = [],
+      Face.castingPermissions = [],
+      Face.castingRestrictions = [],
+      Face.colorIndicator = Set.empty,
+      Face.characteristicPT = Nothing,
+      Face.delayedAbilities = Map.empty,
+      Face.rooms = Seq.empty,
+      Face.dungeonEntryQuality = Nothing,
+      Face.playerAbilities = [],
+      Face.blockRequirements = [],
+      Face.blockPermissions = [],
+      Face.attackRequirements = [],
+      Face.combatRestrictions = [],
+      Face.sacrificeRestrictions = [],
+      Face.untapRestrictions = [],
+      Face.attachRestrictions = [],
+      Face.counterRestrictions = [],
+      Face.crewRestrictions = [],
+      Face.targetRestrictions = [],
+      Face.attackPermissions = [],
+      Face.activationProhibitions = [],
+      Face.entryRestrictions = [],
+      Face.attackCosts = [],
+      Face.blockCosts = [],
+      Face.additionalCosts = [],
+      Face.additionalCostChoices = [],
+      Face.modeCosts = Map.empty,
+      Face.modeChooser = PlayerRelation.You,
+      Face.maximumX = [],
+      Face.minimumX = 0,
+      Face.alternativeCosts = [],
+      Face.costReductions = [],
+      Face.mulliganActions = [],
+      Face.openingHandActions = [],
+      Face.specialActions = [],
+      Face.enchant = [],
+      Face.counterability = Counterability.Counterable
+    }
+
+-- | Every field at the default an omitted key means, which is what the minimal
+-- JSON above has to decode to.
+minimalFace :: Face.Face Card.Card
+minimalFace =
+  Face.MkFace
+    { Face.name = CardName.MkCardName (Text.pack "Mountain"),
+      Face.oracleText = Nothing,
+      Face.manaCost = Nothing,
+      Face.typeLine = TypeLine.MkTypeLine Set.empty (Set.singleton CardType.Land) Set.empty,
+      Face.power = Nothing,
+      Face.toughness = Nothing,
+      Face.loyalty = Nothing,
+      Face.defense = Nothing,
+      Face.startingIntensity = Nothing,
+      Face.vanguard = Nothing,
+      Face.canBeYourCommander = False,
+      Face.claimsStartingPlayer = False,
+      Face.anteOnly = False,
+      Face.keywords = Map.empty,
+      Face.colorIndicator = Set.empty,
+      Face.characteristicPT = Nothing,
+      Face.staticAbilities = [],
+      Face.spell = Face.defaultSpell,
+      Face.activatedAbilities = [],
+      Face.replacementEffects = [],
+      Face.triggeredAbilities = [],
+      Face.delayedAbilities = Map.empty,
+      Face.rooms = Seq.empty,
+      Face.dungeonEntryQuality = Nothing,
+      Face.castingPermissions = [],
+      Face.castingRestrictions = [],
+      Face.enchant = [],
+      Face.counterability = Counterability.Counterable,
+      Face.additionalCosts = [],
+      Face.additionalCostChoices = [],
+      Face.modeCosts = Map.empty,
+      Face.modeChooser = PlayerRelation.You,
+      Face.maximumX = [],
+      Face.minimumX = 0,
+      Face.alternativeCosts = [],
+      Face.costReductions = [],
+      Face.playerAbilities = [],
+      Face.blockRequirements = [],
+      Face.blockPermissions = [],
+      Face.attackRequirements = [],
+      Face.combatRestrictions = [],
+      Face.sacrificeRestrictions = [],
+      Face.untapRestrictions = [],
+      Face.attachRestrictions = [],
+      Face.counterRestrictions = [],
+      Face.crewRestrictions = [],
+      Face.targetRestrictions = [],
+      Face.attackPermissions = [],
+      Face.activationProhibitions = [],
+      Face.entryRestrictions = [],
+      Face.attackCosts = [],
+      Face.blockCosts = [],
+      Face.mulliganActions = [],
+      Face.openingHandActions = [],
+      Face.specialActions = []
+    }
+
+-- The same face the verbose literal below spells out: minimalFace's fields,
+-- with the type line a real basic land carries.
+mountainFace :: Face.Face Card.Card
+mountainFace =
+  minimalFace
+    { Face.typeLine =
+        TypeLine.MkTypeLine
+          (Set.singleton Supertype.Basic)
+          (Set.singleton CardType.Land)
+          (Set.singleton Subtype.Mountain)
+    }
+
+baseFaceJson :: String
+baseFaceJson =
+  "{\"name\":\"Test Card\",\"manaCost\":[{\"type\":\"Generic\",\"value\":1}],"
+    <> "\"typeLine\":{\"types\":[{\"type\":\"Creature\"}]},"
+    <> "\"power\":{\"type\":\"Literal\",\"value\":1},\"toughness\":{\"type\":\"Literal\",\"value\":1}}"
+
+-- | 'baseFace' with every field populated at once, except 'Face.spell', which
+-- nothing here overrides -- so 'populatedFaceJson' has no @"spell"@ key. That
+-- literal was produced by running 'encodeFace' on this exact value rather than
+-- transcribed by hand.
+populatedFace :: Face.Face Card.Card
+populatedFace =
+  baseFace
+    { Face.keywords = Map.singleton Keyword.Deathtouch 1,
+      Face.staticAbilities = [StaticAbility.MkStaticAbility Affected.Attached Nothing Set.empty Nothing Nothing (NonEmpty.singleton Modification.LoseAllAbilities)],
+      Face.activatedAbilities = [ActivatedAbility.MkActivatedAbility (Cost.MkCost (Just (ManaCost.MkManaCost [])) []) [] 0 Nothing minimalModal [] Activator.Controller Nothing (Just (AbilityName.MkAbilityName (Text.pack "activated"))) Nothing],
+      Face.replacementEffects = [PrintedReplacement.MkPrintedReplacement Nothing (ReplacementEffect.EntryR (EntryR.MkEntryR Filter.IsSource (EntryRewrite.AsCopy (AsCopy.MkAsCopy (Filter.HasCardType CardType.Creature) [] False Seq.empty (CopyDomain.InZone Zone.Battlefield) Nothing CopyRecipient.ThisObject True)))) Set.empty Nothing],
+      Face.triggeredAbilities = [minimalTriggeredAbility],
+      Face.castingPermissions = [CastingPermission.CastFromLibraryWhileSearching],
+      Face.loyalty = Just (Loyalty.Literal 3),
+      Face.colorIndicator = Set.singleton Color.White,
+      Face.characteristicPT = Just CharacteristicPT.MkCharacteristicPT {CharacteristicPT.power = Quantity.Measure Measure.ManaValue, CharacteristicPT.toughness = Quantity.Measure Measure.ManaValue},
+      Face.delayedAbilities = Map.singleton (AbilityName.MkAbilityName (Text.pack "trigger")) minimalTriggeredAbility,
+      Face.rooms = Seq.empty,
+      Face.dungeonEntryQuality = Nothing,
+      Face.playerAbilities = [PlayerStaticAbility.MkPlayerStaticAbility {PlayerStaticAbility.scope = PlayerScope.Related PlayerRelation.You, PlayerStaticAbility.condition = Nothing, PlayerStaticAbility.name = Nothing, PlayerStaticAbility.effect = PlayerEffect.CantCastSpells}],
+      Face.blockRequirements = [BlockRequirement.MkBlockRequirement Nothing (Just Affected.Attached) Nothing RequirementArity.EachSubject],
+      Face.blockPermissions = [BlockPermission.MkBlockPermission Affected.Attached (Just (Quantity.Literal 1)) Nothing],
+      Face.attackRequirements = [AttackRequirement.MkAttackRequirement Affected.Attached Nothing Nothing RequirementArity.EachSubject],
+      Face.combatRestrictions = [CombatRestriction.CantAttack (AffectedUnless.MkAffectedUnless Affected.Attached Nothing Nothing Nothing)],
+      Face.sacrificeRestrictions = [SacrificeRestriction.MkSacrificeRestriction Affected.Attached],
+      Face.untapRestrictions = [UntapRestriction.MkUntapRestriction Affected.Attached UntapHold.Forbidden Nothing],
+      Face.attachRestrictions = [AttachRestriction.MkAttachRestriction Affected.Attached (Filter.HasSubtype Subtype.Aura)],
+      Face.counterRestrictions = [CounterRestriction.MkCounterRestriction Affected.Attached (Just CounterKind.MinusOneMinusOne)],
+      Face.activationProhibitions = [ActivationProhibition.MkActivationProhibition Affected.Attached (Just AbilityKind.NonManaAbility) Nothing],
+      Face.entryRestrictions = [EntryRestriction.MkEntryRestriction Affected.Attached (Set.singleton Zone.Graveyard)],
+      Face.attackCosts = [AttackCost.MkAttackCost Affected.Attached (PerCreature.Fixed (Cost.MkCost (Just (ManaCost.MkManaCost [ManaSymbol.Generic 2])) [])) AttackCostScope.Controller],
+      Face.blockCosts = [BlockCost.MkBlockCost Affected.Attached (PerCreature.Fixed (Cost.MkCost (Just (ManaCost.MkManaCost [ManaSymbol.Generic 3])) [])) Nothing],
+      Face.additionalCosts = [CostComponent.TapThis],
+      Face.additionalCostChoices = [],
+      Face.modeCosts = Map.empty,
+      Face.modeChooser = PlayerRelation.You,
+      Face.maximumX = [Quantity.Measure Measure.ManaValue],
+      Face.minimumX = 1,
+      Face.alternativeCosts = [AlternativeCost.MkAlternativeCost Nothing (Cost.MkCost (Just (ManaCost.MkManaCost [])) [])],
+      Face.costReductions = [CostReduction.MkCostReduction (ManaCost.MkManaCost [ManaSymbol.Generic 3]) (Quantity.Literal 1) Nothing Nothing CostDirection.Less],
+      Face.counterability = Counterability.CantBeCountered,
+      Face.mulliganActions = [HandAction.MkHandAction Nothing [Effect.ExileHandThenDraw]],
+      Face.openingHandActions = [HandAction.MkHandAction Nothing [Effect.ExileHandThenDraw]],
+      Face.specialActions = [SpecialAction.DiscardThisAnyTime],
+      Face.enchant = [TargetSlot.required Pool.Creatures Nothing],
+      Face.castingRestrictions = [CastingRestriction.AttackedThisStep]
+    }
+
+populatedFaceJson :: String
+populatedFaceJson =
+  "{\"name\":\"Test Card\",\"manaCost\":[{\"type\":\"Generic\",\"value\":1}],"
+    <> "\"typeLine\":{\"types\":[{\"type\":\"Creature\"}]},"
+    <> "\"power\":{\"type\":\"Literal\",\"value\":1},\"toughness\":{\"type\":\"Literal\",\"value\":1},"
+    <> "\"keywords\":[{\"type\":\"Deathtouch\"}],"
+    <> "\"staticAbilities\":[{\"affected\":{\"type\":\"Attached\"},\"modifications\":[{\"type\":\"LoseAllAbilities\"}]}],"
+    <> "\"activatedAbilities\":[{\"cost\":{\"mana\":[]},"
+    <> "\"modal\":{\"modes\":[{}]},\"name\":\"activated\"}],"
+    <> "\"replacementEffects\":[{\"effect\":{\"type\":\"EntryR\",\"value\":{\"matching\":{\"type\":\"IsSource\"},\"rewrite\":{\"type\":\"AsCopy\",\"value\":{\"eligible\":{\"type\":\"HasCardType\",\"value\":{\"type\":\"Creature\"}}}}}}}],"
+    <> "\"triggeredAbilities\":[{\"condition\":{\"type\":\"SelfEnters\"},"
+    <> "\"modal\":{\"modes\":[{}]}}],"
+    <> "\"castingPermissions\":[{\"type\":\"CastFromLibraryWhileSearching\"}],"
+    <> "\"loyalty\":{\"type\":\"Literal\",\"value\":3},\"colorIndicator\":[{\"type\":\"White\"}],\"characteristicPT\":{\"power\":{\"type\":\"Measure\",\"value\":{\"type\":\"ManaValue\"}},\"toughness\":{\"type\":\"Measure\",\"value\":{\"type\":\"ManaValue\"}}},"
+    <> "\"delayedAbilities\":{\"trigger\":{\"condition\":{\"type\":\"SelfEnters\"},"
+    <> "\"modal\":{\"modes\":[{}]}}},"
+    <> "\"playerAbilities\":[{\"scope\":{\"type\":\"You\"},\"effect\":{\"type\":\"CantCastSpells\"}}],"
+    <> "\"blockRequirements\":[{\"attacker\":{\"type\":\"Attached\"}}],"
+    <> "\"blockPermissions\":[{\"affected\":{\"type\":\"Attached\"},\"additional\":{\"type\":\"Literal\",\"value\":1}}],"
+    <> "\"attackRequirements\":[{\"subject\":{\"type\":\"Attached\"}}],"
+    <> "\"combatRestrictions\":[{\"type\":\"CantAttack\",\"value\":{\"affected\":{\"type\":\"Attached\"}}}],"
+    <> "\"sacrificeRestrictions\":[{\"affected\":{\"type\":\"Attached\"}}],"
+    <> "\"untapRestrictions\":[{\"affected\":{\"type\":\"Attached\"}}],"
+    <> "\"attachRestrictions\":[{\"affected\":{\"type\":\"Attached\"},\"attachers\":{\"type\":\"HasSubtype\",\"value\":{\"type\":\"Aura\"}}}],"
+    <> "\"counterRestrictions\":[{\"affected\":{\"type\":\"Attached\"},\"kind\":{\"type\":\"MinusOneMinusOne\"}}],"
+    <> "\"activationProhibitions\":[{\"affected\":{\"type\":\"Attached\"},\"kind\":{\"type\":\"NonManaAbility\"}}],"
+    <> "\"entryRestrictions\":[{\"affected\":{\"type\":\"Attached\"},\"origins\":[{\"type\":\"Graveyard\"}]}],"
+    <> "\"attackCosts\":[{\"subject\":{\"type\":\"Attached\"},\"perAttacker\":{\"type\":\"Fixed\",\"value\":{\"mana\":[{\"type\":\"Generic\",\"value\":2}]}},\"scope\":{\"type\":\"Controller\"}}],"
+    <> "\"blockCosts\":[{\"subject\":{\"type\":\"Attached\"},\"perBlocker\":{\"type\":\"Fixed\",\"value\":{\"mana\":[{\"type\":\"Generic\",\"value\":3}]}}}],"
+    <> "\"additionalCosts\":[{\"type\":\"TapThis\"}],"
+    <> "\"maximumX\":[{\"type\":\"Measure\",\"value\":{\"type\":\"ManaValue\"}}],"
+    <> "\"minimumX\":1,"
+    <> "\"alternativeCosts\":[{\"cost\":{\"mana\":[]}}],"
+    <> "\"costReductions\":[{\"amount\":[{\"type\":\"Generic\",\"value\":3}],\"perEach\":{\"type\":\"Literal\",\"value\":1}}],"
+    <> "\"counterability\":{\"type\":\"CantBeCountered\"},"
+    <> "\"mulliganActions\":[{\"effects\":[{\"type\":\"ExileHandThenDraw\"}]}],"
+    <> "\"openingHandActions\":[{\"effects\":[{\"type\":\"ExileHandThenDraw\"}]}],"
+    <> "\"specialActions\":[{\"type\":\"DiscardThisAnyTime\"}],"
+    <> "\"enchant\":[{\"pool\":{\"type\":\"Creatures\"}}],"
+    <> "\"castingRestrictions\":[{\"type\":\"AttackedThisStep\"}]}"
+
+spec :: (Monad m, Monad n) => Spec.Spec m n -> n ()
+spec s = Spec.describe s "Parun.Codec.Face" $ do
+  -- name and typeLine are the only required keys: a face that says nothing else
+  -- is a vanilla card's face rather than a malformed file.
+  Spec.it s "a minimal face carries only name and typeLine" $
+    Common.assertJsonCodec
+      s
+      encodeFace
+      decodeFace
+      minimalFace
+      " {\"name\":\"Mountain\",\"typeLine\":{\"types\":[{\"type\":\"Land\"}]}} "
+  Spec.it s "MkFace, every required field present and every optional field absent" $
+    Common.assertJsonCodec s encodeFace decodeFace baseFace baseFaceJson
+  -- CR 702.85c, on the wire: Apex Devastator's "Cascade, cascade, cascade,
+  -- cascade" is four array entries, and they come back as a count of four rather
+  -- than collapsing the way a set would (data/cards/apex-devastator.json).
+  Spec.it s "a keyword printed four times decodes to a count of four" $
+    Common.assertJsonCodec
+      s
+      encodeFace
+      decodeFace
+      baseFace {Face.keywords = Map.singleton Keyword.Cascade 4}
+      ( "{\"name\":\"Test Card\",\"manaCost\":[{\"type\":\"Generic\",\"value\":1}],"
+          <> "\"typeLine\":{\"types\":[{\"type\":\"Creature\"}]},"
+          <> "\"power\":{\"type\":\"Literal\",\"value\":1},\"toughness\":{\"type\":\"Literal\",\"value\":1},"
+          <> "\"keywords\":[{\"type\":\"Cascade\"},{\"type\":\"Cascade\"},{\"type\":\"Cascade\"},{\"type\":\"Cascade\"}]}"
+      )
+  -- Most defaulted fields also get their own absent-key assertion below, not
+  -- just the aggregate round trip above: a decoder that defaulted the WRONG
+  -- field could still pass the aggregate equality if two defaults happened to
+  -- collide, and reading each field back out individually rules that out.
+  Spec.describe s "each defaulted field takes its default when its key is absent from the JSON" $ do
+    Spec.it s "loyalty (CR 306.5) defaults to Nothing" $ do
+      v <- Common.assertJson s baseFaceJson
+      Spec.assertEq s (Face.loyalty <$> decodeFace v) (Right Nothing)
+    Spec.it s "vanguard (CR 313.6/313.7) defaults to Nothing" $ do
+      v <- Common.assertJson s baseFaceJson
+      Spec.assertEq s (Face.vanguard <$> decodeFace v) (Right Nothing)
+    Spec.it s "colorIndicator (CR 204.1/204.2) defaults to the empty set" $ do
+      v <- Common.assertJson s baseFaceJson
+      Spec.assertEq s (Face.colorIndicator <$> decodeFace v) (Right Set.empty)
+    Spec.it s "characteristicPT (CR 604.3/208.2a) defaults to Nothing" $ do
+      v <- Common.assertJson s baseFaceJson
+      Spec.assertEq s (Face.characteristicPT <$> decodeFace v) (Right Nothing)
+    Spec.it s "delayedAbilities (CR 603.7) defaults to the empty map" $ do
+      v <- Common.assertJson s baseFaceJson
+      Spec.assertEq s (Face.delayedAbilities <$> decodeFace v) (Right Map.empty)
+    Spec.it s "playerAbilities (CR 604.1/604.2/611.1) defaults to the empty list" $ do
+      v <- Common.assertJson s baseFaceJson
+      Spec.assertEq s (Face.playerAbilities <$> decodeFace v) (Right [])
+    Spec.it s "blockRequirements (CR 509.1c) defaults to the empty list" $ do
+      v <- Common.assertJson s baseFaceJson
+      Spec.assertEq s (Face.blockRequirements <$> decodeFace v) (Right [])
+    Spec.it s "blockPermissions (CR 509.1a) defaults to the empty list" $ do
+      v <- Common.assertJson s baseFaceJson
+      Spec.assertEq s (Face.blockPermissions <$> decodeFace v) (Right [])
+    Spec.it s "attackRequirements (CR 508.1d) defaults to the empty list" $ do
+      v <- Common.assertJson s baseFaceJson
+      Spec.assertEq s (Face.attackRequirements <$> decodeFace v) (Right [])
+    Spec.it s "combatRestrictions (CR 508.1c/509.1b) defaults to the empty list" $ do
+      v <- Common.assertJson s baseFaceJson
+      Spec.assertEq s (Face.combatRestrictions <$> decodeFace v) (Right [])
+    Spec.it s "sacrificeRestrictions (CR 701.21a/101.2) defaults to the empty list" $ do
+      v <- Common.assertJson s baseFaceJson
+      Spec.assertEq s (Face.sacrificeRestrictions <$> decodeFace v) (Right [])
+    Spec.it s "untapRestrictions (CR 502.3/101.2) defaults to the empty list" $ do
+      v <- Common.assertJson s baseFaceJson
+      Spec.assertEq s (Face.untapRestrictions <$> decodeFace v) (Right [])
+    Spec.it s "crewRestrictions (CR 702.122d/101.2) defaults to the empty list" $ do
+      v <- Common.assertJson s baseFaceJson
+      Spec.assertEq s (Face.crewRestrictions <$> decodeFace v) (Right [])
+    Spec.it s "targetRestrictions (CR 115/101.2) defaults to the empty list" $ do
+      v <- Common.assertJson s baseFaceJson
+      Spec.assertEq s (Face.targetRestrictions <$> decodeFace v) (Right [])
+    Spec.it s "attackPermissions (CR 702.3b) defaults to the empty list" $ do
+      v <- Common.assertJson s baseFaceJson
+      Spec.assertEq s (Face.attackPermissions <$> decodeFace v) (Right [])
+    Spec.it s "attachRestrictions (CR 303.4/301.5/101.2) defaults to the empty list" $ do
+      v <- Common.assertJson s baseFaceJson
+      Spec.assertEq s (Face.attachRestrictions <$> decodeFace v) (Right [])
+    Spec.it s "counterRestrictions (CR 122.6/101.2) defaults to the empty list" $ do
+      v <- Common.assertJson s baseFaceJson
+      Spec.assertEq s (Face.counterRestrictions <$> decodeFace v) (Right [])
+    Spec.it s "activationProhibitions (CR 602.2/101.2) defaults to the empty list" $ do
+      v <- Common.assertJson s baseFaceJson
+      Spec.assertEq s (Face.activationProhibitions <$> decodeFace v) (Right [])
+    Spec.it s "entryRestrictions (CR 400.4a/101.2) defaults to the empty list" $ do
+      v <- Common.assertJson s baseFaceJson
+      Spec.assertEq s (Face.entryRestrictions <$> decodeFace v) (Right [])
+    Spec.it s "attackCosts (CR 508.1c/508.1h) defaults to the empty list" $ do
+      v <- Common.assertJson s baseFaceJson
+      Spec.assertEq s (Face.attackCosts <$> decodeFace v) (Right [])
+    Spec.it s "blockCosts (CR 509.1b/509.1d) defaults to the empty list" $ do
+      v <- Common.assertJson s baseFaceJson
+      Spec.assertEq s (Face.blockCosts <$> decodeFace v) (Right [])
+    Spec.it s "additionalCosts (CR 118.8) defaults to the empty list" $ do
+      v <- Common.assertJson s baseFaceJson
+      Spec.assertEq s (Face.additionalCosts <$> decodeFace v) (Right [])
+    Spec.it s "additionalCostChoices (CR 118.8) defaults to the empty list" $ do
+      v <- Common.assertJson s baseFaceJson
+      Spec.assertEq s (Face.additionalCostChoices <$> decodeFace v) (Right [])
+    Spec.it s "alternativeCosts (CR 118.9) defaults to the empty list" $ do
+      v <- Common.assertJson s baseFaceJson
+      Spec.assertEq s (Face.alternativeCosts <$> decodeFace v) (Right [])
+    Spec.it s "costReductions (CR 601.2f) defaults to the empty list" $ do
+      v <- Common.assertJson s baseFaceJson
+      Spec.assertEq s (Face.costReductions <$> decodeFace v) (Right [])
+    -- The registry-backed pair lives in Parun.CodecIntegrationSpec, which can
+    -- reach real Printings; this sublibrary cannot.
+    Spec.it s "counterability (CR 113.6g) defaults to Counterable" $ do
+      v <- Common.assertJson s baseFaceJson
+      Spec.assertEq s (Face.counterability <$> decodeFace v) (Right Counterability.Counterable)
+    Spec.it s "mulliganActions (CR 103.5b) defaults to the empty list" $ do
+      v <- Common.assertJson s baseFaceJson
+      Spec.assertEq s (Face.mulliganActions <$> decodeFace v) (Right [])
+    Spec.it s "openingHandActions (CR 103.6) defaults to the empty list" $ do
+      v <- Common.assertJson s baseFaceJson
+      Spec.assertEq s (Face.openingHandActions <$> decodeFace v) (Right [])
+    Spec.it s "specialActions (CR 116.2) defaults to the empty list" $ do
+      v <- Common.assertJson s baseFaceJson
+      Spec.assertEq s (Face.specialActions <$> decodeFace v) (Right [])
+    Spec.it s "enchant (CR 702.5a) defaults to the empty list" $ do
+      v <- Common.assertJson s baseFaceJson
+      Spec.assertEq s (Face.enchant <$> decodeFace v) (Right [])
+    Spec.it s "castingRestrictions (CR 601.3) defaults to the empty list" $ do
+      v <- Common.assertJson s baseFaceJson
+      Spec.assertEq s (Face.castingRestrictions <$> decodeFace v) (Right [])
+  -- The other half of every defaulted field's story: populated, it appears
+  -- under its own key and round-trips. Each case is 'baseFace' with exactly one
+  -- field changed, so its JSON is 'baseFaceJson' plus exactly one extra key.
+  Spec.describe s "each defaulted field round-trips when present" $ do
+    Spec.it s "loyalty" $
+      Common.assertJsonCodec
+        s
+        encodeFace
+        decodeFace
+        baseFace {Face.loyalty = Just (Loyalty.Literal 3)}
+        (init baseFaceJson <> ",\"loyalty\":{\"type\":\"Literal\",\"value\":3}}")
+    Spec.it s "colorIndicator" $
+      Common.assertJsonCodec
+        s
+        encodeFace
+        decodeFace
+        baseFace {Face.colorIndicator = Set.singleton Color.White}
+        (init baseFaceJson <> ",\"colorIndicator\":[{\"type\":\"White\"}]}")
+    Spec.it s "characteristicPT" $
+      Common.assertJsonCodec
+        s
+        encodeFace
+        decodeFace
+        baseFace {Face.characteristicPT = Just CharacteristicPT.MkCharacteristicPT {CharacteristicPT.power = Quantity.Measure Measure.ManaValue, CharacteristicPT.toughness = Quantity.Measure Measure.ManaValue}}
+        (init baseFaceJson <> ",\"characteristicPT\":{\"power\":{\"type\":\"Measure\",\"value\":{\"type\":\"ManaValue\"}},\"toughness\":{\"type\":\"Measure\",\"value\":{\"type\":\"ManaValue\"}}}}")
+    Spec.it s "delayedAbilities" $
+      Common.assertJsonCodec
+        s
+        encodeFace
+        decodeFace
+        baseFace {Face.delayedAbilities = Map.singleton (AbilityName.MkAbilityName (Text.pack "trigger")) minimalTriggeredAbility}
+        ( init baseFaceJson
+            <> ",\"delayedAbilities\":{\"trigger\":{\"condition\":{\"type\":\"SelfEnters\"},"
+            <> "\"modal\":{\"modes\":[{}]}}}}"
+        )
+    Spec.it s "playerAbilities" $
+      Common.assertJsonCodec
+        s
+        encodeFace
+        decodeFace
+        baseFace {Face.playerAbilities = [PlayerStaticAbility.MkPlayerStaticAbility {PlayerStaticAbility.scope = PlayerScope.Related PlayerRelation.You, PlayerStaticAbility.condition = Nothing, PlayerStaticAbility.name = Nothing, PlayerStaticAbility.effect = PlayerEffect.CantCastSpells}]}
+        (init baseFaceJson <> ",\"playerAbilities\":[{\"scope\":{\"type\":\"You\"},\"effect\":{\"type\":\"CantCastSpells\"}}]}")
+    Spec.it s "blockRequirements" $
+      Common.assertJsonCodec
+        s
+        encodeFace
+        decodeFace
+        baseFace {Face.blockRequirements = [BlockRequirement.MkBlockRequirement Nothing (Just Affected.Attached) Nothing RequirementArity.EachSubject]}
+        (init baseFaceJson <> ",\"blockRequirements\":[{\"attacker\":{\"type\":\"Attached\"}}]}")
+    Spec.it s "blockPermissions" $
+      Common.assertJsonCodec
+        s
+        encodeFace
+        decodeFace
+        baseFace {Face.blockPermissions = [BlockPermission.MkBlockPermission Affected.Attached (Just (Quantity.Literal 1)) Nothing]}
+        (init baseFaceJson <> ",\"blockPermissions\":[{\"affected\":{\"type\":\"Attached\"},\"additional\":{\"type\":\"Literal\",\"value\":1}}]}")
+    Spec.it s "attackRequirements" $
+      Common.assertJsonCodec
+        s
+        encodeFace
+        decodeFace
+        baseFace {Face.attackRequirements = [AttackRequirement.MkAttackRequirement Affected.Attached Nothing Nothing RequirementArity.EachSubject]}
+        (init baseFaceJson <> ",\"attackRequirements\":[{\"subject\":{\"type\":\"Attached\"}}]}")
+    Spec.it s "combatRestrictions" $
+      Common.assertJsonCodec
+        s
+        encodeFace
+        decodeFace
+        baseFace {Face.combatRestrictions = [CombatRestriction.CantAttack (AffectedUnless.MkAffectedUnless Affected.Attached Nothing Nothing Nothing)]}
+        (init baseFaceJson <> ",\"combatRestrictions\":[{\"type\":\"CantAttack\",\"value\":{\"affected\":{\"type\":\"Attached\"}}}]}")
+    Spec.it s "sacrificeRestrictions" $
+      Common.assertJsonCodec
+        s
+        encodeFace
+        decodeFace
+        baseFace {Face.sacrificeRestrictions = [SacrificeRestriction.MkSacrificeRestriction Affected.Attached]}
+        (init baseFaceJson <> ",\"sacrificeRestrictions\":[{\"affected\":{\"type\":\"Attached\"}}]}")
+    Spec.it s "untapRestrictions" $
+      Common.assertJsonCodec
+        s
+        encodeFace
+        decodeFace
+        baseFace {Face.untapRestrictions = [UntapRestriction.MkUntapRestriction Affected.Attached UntapHold.Forbidden Nothing]}
+        (init baseFaceJson <> ",\"untapRestrictions\":[{\"affected\":{\"type\":\"Attached\"}}]}")
+    Spec.it s "crewRestrictions" $
+      Common.assertJsonCodec
+        s
+        encodeFace
+        decodeFace
+        baseFace {Face.crewRestrictions = [CrewRestriction.MkCrewRestriction Affected.Attached]}
+        (init baseFaceJson <> ",\"crewRestrictions\":[{\"affected\":{\"type\":\"Attached\"}}]}")
+    Spec.it s "targetRestrictions" $
+      Common.assertJsonCodec
+        s
+        encodeFace
+        decodeFace
+        baseFace {Face.targetRestrictions = [TargetRestriction.MkTargetRestriction Affected.Attached StackObjectKind.Spell]}
+        (init baseFaceJson <> ",\"targetRestrictions\":[{\"affected\":{\"type\":\"Attached\"},\"kind\":{\"type\":\"Spell\"}}]}")
+    Spec.it s "attackPermissions" $
+      Common.assertJsonCodec
+        s
+        encodeFace
+        decodeFace
+        baseFace {Face.attackPermissions = [AttackPermission.MkAttackPermission Affected.Attached]}
+        (init baseFaceJson <> ",\"attackPermissions\":[{\"affected\":{\"type\":\"Attached\"}}]}")
+    Spec.it s "attachRestrictions" $
+      Common.assertJsonCodec
+        s
+        encodeFace
+        decodeFace
+        baseFace {Face.attachRestrictions = [AttachRestriction.MkAttachRestriction Affected.Attached (Filter.HasSubtype Subtype.Aura)]}
+        (init baseFaceJson <> ",\"attachRestrictions\":[{\"affected\":{\"type\":\"Attached\"},\"attachers\":{\"type\":\"HasSubtype\",\"value\":{\"type\":\"Aura\"}}}]}")
+    Spec.it s "counterRestrictions" $
+      Common.assertJsonCodec
+        s
+        encodeFace
+        decodeFace
+        baseFace {Face.counterRestrictions = [CounterRestriction.MkCounterRestriction Affected.Attached (Just CounterKind.MinusOneMinusOne)]}
+        (init baseFaceJson <> ",\"counterRestrictions\":[{\"affected\":{\"type\":\"Attached\"},\"kind\":{\"type\":\"MinusOneMinusOne\"}}]}")
+    Spec.it s "activationProhibitions" $
+      Common.assertJsonCodec
+        s
+        encodeFace
+        decodeFace
+        baseFace {Face.activationProhibitions = [ActivationProhibition.MkActivationProhibition Affected.Attached (Just AbilityKind.NonManaAbility) Nothing]}
+        (init baseFaceJson <> ",\"activationProhibitions\":[{\"affected\":{\"type\":\"Attached\"},\"kind\":{\"type\":\"NonManaAbility\"}}]}")
+    Spec.it s "entryRestrictions" $
+      Common.assertJsonCodec
+        s
+        encodeFace
+        decodeFace
+        baseFace {Face.entryRestrictions = [EntryRestriction.MkEntryRestriction Affected.Attached (Set.singleton Zone.Graveyard)]}
+        (init baseFaceJson <> ",\"entryRestrictions\":[{\"affected\":{\"type\":\"Attached\"},\"origins\":[{\"type\":\"Graveyard\"}]}]}")
+    Spec.it s "attackCosts" $
+      Common.assertJsonCodec
+        s
+        encodeFace
+        decodeFace
+        baseFace {Face.attackCosts = [AttackCost.MkAttackCost Affected.Attached (PerCreature.Fixed (Cost.MkCost (Just (ManaCost.MkManaCost [ManaSymbol.Generic 2])) [])) AttackCostScope.Controller]}
+        (init baseFaceJson <> ",\"attackCosts\":[{\"subject\":{\"type\":\"Attached\"},\"perAttacker\":{\"type\":\"Fixed\",\"value\":{\"mana\":[{\"type\":\"Generic\",\"value\":2}]}},\"scope\":{\"type\":\"Controller\"}}]}")
+    Spec.it s "blockCosts" $
+      Common.assertJsonCodec
+        s
+        encodeFace
+        decodeFace
+        baseFace {Face.blockCosts = [BlockCost.MkBlockCost Affected.Attached (PerCreature.Fixed (Cost.MkCost (Just (ManaCost.MkManaCost [ManaSymbol.Generic 3])) [])) Nothing]}
+        (init baseFaceJson <> ",\"blockCosts\":[{\"subject\":{\"type\":\"Attached\"},\"perBlocker\":{\"type\":\"Fixed\",\"value\":{\"mana\":[{\"type\":\"Generic\",\"value\":3}]}}}]}")
+    -- CR 700.2h, keyed by the mode's index into `spell` -- one mode here, so "0"
+    -- is the only key Parun.Codec.Face's range check admits.
+    Spec.it s "modeCosts" $
+      Common.assertJsonCodec
+        s
+        encodeFace
+        decodeFace
+        baseFace {Face.modeCosts = Map.singleton (ModeIndex.MkModeIndex 0) (Cost.MkCost (Just (ManaCost.MkManaCost [ManaSymbol.Generic 2])) [])}
+        (init baseFaceJson <> ",\"modeCosts\":{\"0\":{\"mana\":[{\"type\":\"Generic\",\"value\":2}]}}}")
+    -- The other half of the same rule: a key naming a mode `spell` does not have
+    -- is refused rather than dropped, which is Parun.Codec.Face.modeCostsInRange.
+    Spec.it s "modeCosts naming a mode the spell does not have is rejected" $
+      Spec.assertEqWith
+        s
+        "CR 700.2h: mode 1 of a one-mode spell is not a mode"
+        (Monad.void (Common.parse (Text.pack (init baseFaceJson <> ",\"modeCosts\":{\"1\":{\"mana\":[]}}}")) >>= decodeFace))
+        (Left (Text.pack "modeCosts names a mode the spell does not have"))
+    -- CR 700.2e, over two modes: the chooser chooses among modes, so a
+    -- one-mode spell naming one is refused (Parun.Codec.Face.chooserHasModes).
+    Spec.it s "modeChooser" $
+      Common.assertJsonCodec
+        s
+        encodeFace
+        decodeFace
+        baseFace {Face.modeChooser = PlayerRelation.Opponent, Face.spell = (Face.spell baseFace) {Modal.modes = Modal.modes (Face.spell baseFace) <> Modal.modes (Face.spell baseFace)}}
+        (init baseFaceJson <> ",\"modeChooser\":{\"type\":\"Opponent\"},\"spell\":{\"modes\":[{},{}]}}")
+    Spec.it s "modeChooser on a one-mode spell is rejected" $
+      Spec.assertEqWith
+        s
+        "CR 700.2e: a spell with one mode has no mode to choose"
+        (Monad.void (Common.parse (Text.pack (init baseFaceJson <> ",\"modeChooser\":{\"type\":\"Opponent\"}}")) >>= decodeFace))
+        (Left (Text.pack "modeChooser names a chooser for a spell with one mode"))
+    Spec.it s "additionalCosts" $
+      Common.assertJsonCodec
+        s
+        encodeFace
+        decodeFace
+        baseFace {Face.additionalCosts = [CostComponent.TapThis]}
+        (init baseFaceJson <> ",\"additionalCosts\":[{\"type\":\"TapThis\"}]}")
+    Spec.it s "additionalCostChoices" $
+      Common.assertJsonCodec
+        s
+        encodeFace
+        decodeFace
+        baseFace {Face.additionalCostChoices = [CostChoice.MkCostChoice (Cost.MkCost (Just (ManaCost.MkManaCost [])) [CostComponent.TapThis] NonEmpty.:| [Cost.MkCost (Just (ManaCost.MkManaCost [ManaSymbol.Generic 1])) []])]}
+        (init baseFaceJson <> ",\"additionalCostChoices\":[[{\"components\":[{\"type\":\"TapThis\"}],\"mana\":[]},{\"mana\":[{\"type\":\"Generic\",\"value\":1}]}]]}")
+    Spec.it s "alternativeCosts" $
+      Common.assertJsonCodec
+        s
+        encodeFace
+        decodeFace
+        baseFace {Face.alternativeCosts = [AlternativeCost.MkAlternativeCost Nothing (Cost.MkCost (Just (ManaCost.MkManaCost [])) [])]}
+        (init baseFaceJson <> ",\"alternativeCosts\":[{\"cost\":{\"mana\":[]}}]}")
+    Spec.it s "costReductions" $
+      Common.assertJsonCodec
+        s
+        encodeFace
+        decodeFace
+        baseFace {Face.costReductions = [CostReduction.MkCostReduction (ManaCost.MkManaCost [ManaSymbol.Generic 3]) (Quantity.Literal 1) Nothing Nothing CostDirection.Less]}
+        (init baseFaceJson <> ",\"costReductions\":[{\"amount\":[{\"type\":\"Generic\",\"value\":3}],\"perEach\":{\"type\":\"Literal\",\"value\":1}}]}")
+    Spec.it s "counterability" $
+      Common.assertJsonCodec
+        s
+        encodeFace
+        decodeFace
+        baseFace {Face.counterability = Counterability.CantBeCountered}
+        (init baseFaceJson <> ",\"counterability\":{\"type\":\"CantBeCountered\"}}")
+    Spec.it s "mulliganActions" $
+      Common.assertJsonCodec
+        s
+        encodeFace
+        decodeFace
+        baseFace {Face.mulliganActions = [HandAction.MkHandAction Nothing [Effect.ExileHandThenDraw]]}
+        (init baseFaceJson <> ",\"mulliganActions\":[{\"effects\":[{\"type\":\"ExileHandThenDraw\"}]}]}")
+    -- CR 103.5b caps nothing, so two actions must survive the round trip AS TWO.
+    -- The arms differ in length on purpose: a codec that flattened them would
+    -- read back one action of three effects, which is a different face.
+    Spec.it s "mulliganActions keeps two actions apart" $
+      Common.assertJsonCodec
+        s
+        encodeFace
+        decodeFace
+        baseFace {Face.mulliganActions = [HandAction.MkHandAction Nothing [Effect.ExileHandThenDraw], HandAction.MkHandAction Nothing [Effect.ExileHandThenDraw, Effect.ExileHandThenDraw]]}
+        ( init baseFaceJson
+            <> ",\"mulliganActions\":[{\"effects\":[{\"type\":\"ExileHandThenDraw\"}]},"
+            <> "{\"effects\":[{\"type\":\"ExileHandThenDraw\"},{\"type\":\"ExileHandThenDraw\"}]}]}"
+        )
+    Spec.it s "openingHandActions" $
+      Common.assertJsonCodec
+        s
+        encodeFace
+        decodeFace
+        baseFace {Face.openingHandActions = [HandAction.MkHandAction Nothing [Effect.ExileHandThenDraw]]}
+        (init baseFaceJson <> ",\"openingHandActions\":[{\"effects\":[{\"type\":\"ExileHandThenDraw\"}]}]}")
+    Spec.it s "specialActions" $
+      Common.assertJsonCodec
+        s
+        encodeFace
+        decodeFace
+        baseFace {Face.specialActions = [SpecialAction.DiscardThisAnyTime]}
+        (init baseFaceJson <> ",\"specialActions\":[{\"type\":\"DiscardThisAnyTime\"}]}")
+    Spec.it s "enchant" $
+      Common.assertJsonCodec
+        s
+        encodeFace
+        decodeFace
+        baseFace {Face.enchant = [TargetSlot.required Pool.Creatures Nothing]}
+        (init baseFaceJson <> ",\"enchant\":[{\"pool\":{\"type\":\"Creatures\"}}]}")
+    Spec.it s "castingRestrictions" $
+      Common.assertJsonCodec
+        s
+        encodeFace
+        decodeFace
+        baseFace {Face.castingRestrictions = [CastingRestriction.AttackedThisStep]}
+        (init baseFaceJson <> ",\"castingRestrictions\":[{\"type\":\"AttackedThisStep\"}]}")
+  -- CR 313.6 / 313.7: the populated half of the field above. A decode and not a
+  -- round trip, because the encoder writes this key in its codec position and
+  -- baseFaceJson can only be extended by appending.
+  Spec.it s "MkFace, a vanguard's printed modifiers" $ do
+    v <- Common.assertJson s " {\"name\":\"Gerrard\",\"typeLine\":{\"types\":[{\"type\":\"Vanguard\"}]},\"vanguard\":{\"handModifier\":-4,\"lifeModifier\":0}} "
+    Spec.assertEq s (Face.vanguard <$> decodeFace v) (Right (Just Vanguard.MkVanguard {Vanguard.handModifier = -4, Vanguard.lifeModifier = 0}))
+  -- CR 903.3a, here for the vanguard's reason: 'populatedFace' leaves this at its
+  -- default, so the True half needs a case of its own. The False half is
+  -- 'baseFace''s round trip, whose JSON carries no key at all.
+  Spec.it s "MkFace, CR 903.3a's can-be-your-commander ability" $ do
+    v <- Common.assertJson s " {\"name\":\"Freyalise\",\"typeLine\":{\"types\":[{\"type\":\"Planeswalker\"}]},\"canBeYourCommander\":true} "
+    Spec.assertEq s (Face.canBeYourCommander <$> decodeFace v) (Right True)
+  -- CR 103.1c, for the same reason: the True half needs its own case.
+  Spec.it s "MkFace, CR 103.1c's starting-player claim" $ do
+    v <- Common.assertJson s " {\"name\":\"Power Play\",\"typeLine\":{\"types\":[{\"type\":\"Conspiracy\"}]},\"claimsStartingPlayer\":true} "
+    Spec.assertEq s (Face.claimsStartingPlayer <$> decodeFace v) (Right True)
+  -- CR 407.3: the printed "Remove this card from your deck before playing if
+  -- you're not playing for ante", carried as a flag.
+  Spec.it s "an ante card decodes its flag" $ do
+    v <- Common.assertJson s " {\"name\":\"Contract from Below\",\"typeLine\":{\"types\":[{\"type\":\"Sorcery\"}]},\"anteOnly\":true} "
+    Spec.assertEq s (Face.anteOnly <$> decodeFace v) (Right True)
+  -- Alchemy's starting intensity, for the vanguard's reason.
+  Spec.it s "MkFace, a starting intensity" $ do
+    v <- Common.assertJson s " {\"name\":\"Static Discharge\",\"typeLine\":{\"types\":[{\"type\":\"Sorcery\"}]},\"startingIntensity\":3} "
+    Spec.assertEq s (Face.startingIntensity <$> decodeFace v) (Right (Just 3))
+  -- Every field at once, including the recursive card-in-card ones that only
+  -- Card itself ties the knot on.
+  Spec.it s "MkFace, every field populated at once" $
+    Common.assertJsonCodec s encodeFace decodeFace populatedFace populatedFaceJson
+  -- Omission is permitted on input, never required: a file that spells out
+  -- every default must still load.
+  Spec.it s "a pre-migration card file still decodes" $
+    Common.assertFromJson
+      s
+      decodeFace
+      " {\"name\":\"Mountain\",\"typeLine\":{\"supertypes\":[{\"type\":\"Basic\"}],\"types\":[{\"type\":\"Land\"}],\"subtypes\":[{\"type\":\"Mountain\"}]},\"manaCost\":null,\"power\":null,\"toughness\":null,\"keywords\":[],\"staticAbilities\":[],\"activatedAbilities\":[],\"replacementEffects\":[],\"triggeredAbilities\":[],\"castingPermissions\":[],\"spell\":{\"modes\":[{\"clauses\":[],\"targetSlots\":{}}],\"selection\":{\"type\":\"ChooseExactly\",\"value\":1}}} "
+      mountainFace

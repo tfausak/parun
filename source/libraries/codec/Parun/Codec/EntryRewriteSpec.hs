@@ -1,0 +1,342 @@
+module Parun.Codec.EntryRewriteSpec where
+
+import qualified Data.Sequence as Seq
+import qualified Data.Set as Set
+import qualified Parun.Codec.Card as Card
+import qualified Parun.Codec.Effect as Effect
+import qualified Parun.Codec.EntryRewrite as EntryRewrite
+import qualified Parun.Codec.GrantedAbility as GrantedAbility
+import qualified Parun.JsonCodec.Codec as Codec
+import qualified Parun.JsonCodec.Common as Common
+import qualified Parun.Spec as Spec
+import qualified Parun.Types.AsCopy as AsCopy
+import qualified Parun.Types.CardType as CardType
+import qualified Parun.Types.CopyClause as CopyClause
+import qualified Parun.Types.CopyDomain as CopyDomain
+import qualified Parun.Types.CopyException as CopyException
+import qualified Parun.Types.CopyRecipient as CopyRecipient
+import qualified Parun.Types.CounterKind as CounterKind
+import qualified Parun.Types.Effect as Effect.Type
+import qualified Parun.Types.EntersWith as EntersWith
+import qualified Parun.Types.EntryFlip as EntryFlip
+import qualified Parun.Types.EntryOption as EntryOption
+import qualified Parun.Types.EntryPrice as EntryPrice
+import qualified Parun.Types.EntryRewrite as EntryRewrite
+import qualified Parun.Types.ExileFromGraveyard as ExileFromGraveyard
+import qualified Parun.Types.Filter as Filter
+import qualified Parun.Types.HowMany as HowMany
+import qualified Parun.Types.Keyword as Keyword
+import qualified Parun.Types.Mill as Mill
+import qualified Parun.Types.PlayerRef as PlayerRef
+import qualified Parun.Types.PlayerRelation as PlayerRelation
+import qualified Parun.Types.PlayerScope as PlayerScope
+import qualified Parun.Types.Quantity as Quantity
+import qualified Parun.Types.SacrificeAnyNumber as SacrificeAnyNumber
+import qualified Parun.Types.SacrificeToEnter as SacrificeToEnter
+import qualified Parun.Types.SetPowerToughness as SetPowerToughness
+import qualified Parun.Types.Subtype as Subtype
+import qualified Parun.Types.Supertype as Supertype
+import qualified Parun.Types.WithCounters as WithCounters
+import qualified Parun.Types.Zone as Zone
+
+spec :: (Monad m, Monad n) => Spec.Spec m n -> n ()
+spec s = Spec.describe s "Parun.Codec.EntryRewrite" $ do
+  -- CR 707.5: Clone becomes a copy as it enters, excepting nothing -- so the
+  -- exception list is omitted and only the eligible filter is written.
+  Spec.it s "AsCopy (Clone)" $
+    Common.assertCodec
+      s
+      (EntryRewrite.codec (GrantedAbility.codec Card.codec) (Effect.codec Card.codec (GrantedAbility.codec Card.codec)))
+      (EntryRewrite.AsCopy (AsCopy.MkAsCopy (Filter.HasCardType CardType.Creature) [] False Seq.empty (CopyDomain.InZone Zone.Battlefield) Nothing CopyRecipient.ThisObject True))
+      " {\"type\":\"AsCopy\",\"value\":{\"eligible\":{\"type\":\"HasCardType\",\"value\":{\"type\":\"Creature\"}}}} "
+  -- CR 707.9b / 707.9d: Quicksilver Gargantuan's "except it's 7/7".
+  Spec.it s "AsCopy with an exception (Quicksilver Gargantuan)" $
+    Common.assertCodec
+      s
+      (EntryRewrite.codec (GrantedAbility.codec Card.codec) (Effect.codec Card.codec (GrantedAbility.codec Card.codec)))
+      (EntryRewrite.AsCopy (AsCopy.MkAsCopy (Filter.HasCardType CardType.Creature) [CopyClause.MkCopyClause Nothing [CopyException.SetPowerToughness (SetPowerToughness.MkSetPowerToughness 7 7)] Nothing] False Seq.empty (CopyDomain.InZone Zone.Battlefield) Nothing CopyRecipient.ThisObject True))
+      " {\"type\":\"AsCopy\",\"value\":{\"eligible\":{\"type\":\"HasCardType\",\"value\":{\"type\":\"Creature\"}},\"clauses\":[{\"exceptions\":[{\"type\":\"SetPowerToughness\",\"value\":{\"power\":7,\"toughness\":7}}]}]}} "
+  -- The narrowed set the widening exists for (#1512): Copy Enchantment's "any
+  -- enchantment", where Clone's is "any creature".
+  Spec.it s "AsCopy with a narrower eligible set (Copy Enchantment)" $
+    Common.assertCodec
+      s
+      (EntryRewrite.codec (GrantedAbility.codec Card.codec) (Effect.codec Card.codec (GrantedAbility.codec Card.codec)))
+      (EntryRewrite.AsCopy (AsCopy.MkAsCopy (Filter.HasCardType CardType.Enchantment) [] False Seq.empty (CopyDomain.InZone Zone.Battlefield) Nothing CopyRecipient.ThisObject True))
+      " {\"type\":\"AsCopy\",\"value\":{\"eligible\":{\"type\":\"HasCardType\",\"value\":{\"type\":\"Enchantment\"}}}} "
+  -- CR 208.2b: two P/T-and-keyword choices, enough to show the keyword union
+  -- isn't lost on the wire.
+  Spec.it s "ChoiceOf (Primal Plasma)" $
+    Common.assertCodec
+      s
+      (EntryRewrite.codec (GrantedAbility.codec Card.codec) (Effect.codec Card.codec (GrantedAbility.codec Card.codec)))
+      ( EntryRewrite.ChoiceOf
+          [ EntryOption.MkEntryOption {EntryOption.power = 3, EntryOption.toughness = 3, EntryOption.keywords = Set.empty, EntryOption.subtypes = Set.empty},
+            EntryOption.MkEntryOption {EntryOption.power = 1, EntryOption.toughness = 6, EntryOption.keywords = Set.singleton Keyword.Defender, EntryOption.subtypes = Set.empty}
+          ]
+      )
+      " {\"type\":\"ChoiceOf\",\"value\":[{\"power\":3,\"toughness\":3},{\"power\":1,\"toughness\":6,\"keywords\":[{\"type\":\"Defender\"}]}]} "
+  -- CR 614.1c with CR 705.2: the same two shapes picked by a coin instead of by
+  -- a player, keyed by face rather than listed.
+  Spec.it s "ChoiceByCoinFlip (Molten Sentry)" $
+    Common.assertCodec
+      s
+      (EntryRewrite.codec (GrantedAbility.codec Card.codec) (Effect.codec Card.codec (GrantedAbility.codec Card.codec)))
+      ( EntryRewrite.ChoiceByCoinFlip
+          EntryFlip.MkEntryFlip
+            { EntryFlip.heads = EntryOption.MkEntryOption {EntryOption.power = 5, EntryOption.toughness = 2, EntryOption.keywords = Set.singleton Keyword.Haste, EntryOption.subtypes = Set.empty},
+              EntryFlip.tails = EntryOption.MkEntryOption {EntryOption.power = 2, EntryOption.toughness = 5, EntryOption.keywords = Set.singleton Keyword.Defender, EntryOption.subtypes = Set.empty}
+            }
+      )
+      " {\"type\":\"ChoiceByCoinFlip\",\"value\":{\"heads\":{\"power\":5,\"toughness\":2,\"keywords\":[{\"type\":\"Haste\"}]},\"tails\":{\"power\":2,\"toughness\":5,\"keywords\":[{\"type\":\"Defender\"}]}}} "
+  -- CR 614.1c / 105.1: an as-enters choice of that many colours.
+  Spec.it s "ChooseColors (Tablet of the Guilds)" $
+    Common.assertCodec
+      s
+      (EntryRewrite.codec (GrantedAbility.codec Card.codec) (Effect.codec Card.codec (GrantedAbility.codec Card.codec)))
+      (EntryRewrite.ChooseColors 2)
+      " {\"type\":\"ChooseColors\",\"value\":2} "
+  Spec.it s "ChooseBasicLandType (Convincing Mirage)" $
+    Common.assertCodec
+      s
+      (EntryRewrite.codec (GrantedAbility.codec Card.codec) (Effect.codec Card.codec (GrantedAbility.codec Card.codec)))
+      EntryRewrite.ChooseBasicLandType
+      " {\"type\":\"ChooseBasicLandType\"} "
+  Spec.it s "ChooseCreatureType (Pillar of Origins)" $
+    Common.assertCodec
+      s
+      (EntryRewrite.codec (GrantedAbility.codec Card.codec) (Effect.codec Card.codec (GrantedAbility.codec Card.codec)))
+      EntryRewrite.ChooseCreatureType
+      " {\"type\":\"ChooseCreatureType\"} "
+  -- CR 702.155b / 714.3b: read ahead's pair of intrinsic abilities as one
+  -- rewrite, payload-free because rule 714.2d reads the bound off the Saga.
+  Spec.it s "ReadAhead (Love Song of Night and Day)" $
+    Common.assertCodec
+      s
+      (EntryRewrite.codec (GrantedAbility.codec Card.codec) (Effect.codec Card.codec (GrantedAbility.codec Card.codec)))
+      EntryRewrite.ReadAhead
+      " {\"type\":\"ReadAhead\"} "
+  -- CR 614.1c / 102.1: an as-enters player choice, payload-free because every
+  -- player in the game is the offer and no card narrows it.
+  Spec.it s "ChoosePlayer (Stuffy Doll)" $
+    Common.assertCodec
+      s
+      (EntryRewrite.codec (GrantedAbility.codec Card.codec) (Effect.codec Card.codec (GrantedAbility.codec Card.codec)))
+      EntryRewrite.ChoosePlayer
+      " {\"type\":\"ChoosePlayer\"} "
+  -- CR 614.1c / 201.4a: an as-enters name choice, carrying the restriction on
+  -- which cards' names may be chosen -- Null Chamber's "other than a basic land
+  -- card name", which is a supertype and a card type together.
+  Spec.it s "ChooseCardNames (Null Chamber)" $
+    Common.assertCodec
+      s
+      (EntryRewrite.codec (GrantedAbility.codec Card.codec) (Effect.codec Card.codec (GrantedAbility.codec Card.codec)))
+      (EntryRewrite.ChooseCardNames (Filter.Not (Filter.And [Filter.HasSupertype Supertype.Basic, Filter.HasCardType CardType.Land])))
+      " {\"type\":\"ChooseCardNames\",\"value\":{\"type\":\"Not\",\"value\":{\"type\":\"And\",\"value\":[{\"type\":\"HasSupertype\",\"value\":{\"type\":\"Basic\"}},{\"type\":\"HasCardType\",\"value\":{\"type\":\"Land\"}}]}}} "
+  -- CR 614.1c / 201.4a: the one-chooser twin, whose restriction Runed Halo
+  -- leaves empty.
+  Spec.it s "ChooseCardName (Runed Halo)" $
+    Common.assertCodec
+      s
+      (EntryRewrite.codec (GrantedAbility.codec Card.codec) (Effect.codec Card.codec (GrantedAbility.codec Card.codec)))
+      (EntryRewrite.ChooseCardName (Filter.And []))
+      " {\"type\":\"ChooseCardName\",\"value\":{\"type\":\"And\",\"value\":[]}} "
+  -- CR 614.1c / 306.5b: a planeswalker's intrinsic entry-with-counters rewrite.
+  Spec.it s "WithCounters (planeswalker loyalty)" $
+    Common.assertCodec
+      s
+      (EntryRewrite.codec (GrantedAbility.codec Card.codec) (Effect.codec Card.codec (GrantedAbility.codec Card.codec)))
+      (EntryRewrite.WithCounters (WithCounters.one CounterKind.Loyalty (Quantity.Literal 3)))
+      " {\"type\":\"WithCounters\",\"value\":[{\"kind\":{\"type\":\"Loyalty\"},\"count\":{\"type\":\"Literal\",\"value\":3}}]} "
+  -- CR 614.1c: Faerie Squadron's whole clause, counters and keyword in ONE row
+  -- (see #3288). A set of keywords, since "with first strike and trample"
+  -- (Cetavolver) is one clause naming two.
+  Spec.it s "EntersWith (Faerie Squadron)" $
+    Common.assertCodec
+      s
+      (EntryRewrite.codec (GrantedAbility.codec Card.codec) (Effect.codec Card.codec (GrantedAbility.codec Card.codec)))
+      (EntryRewrite.EntersWith (EntersWith.MkEntersWith (Just (WithCounters.one CounterKind.PlusOnePlusOne (Quantity.Literal 2))) (Set.singleton Keyword.Flying) Seq.empty))
+      " {\"type\":\"EntersWith\",\"value\":{\"counters\":[{\"kind\":{\"type\":\"PlusOnePlusOne\"},\"count\":{\"type\":\"Literal\",\"value\":2}}],\"keywords\":[{\"type\":\"Flying\"}]}} "
+  -- CR 702.136a: riot's rewrite, payload-free because rule 702.136a fixes both
+  -- halves. Minted from a keyword rather than written by a card, and round-tripped
+  -- anyway, because every arm of this type is.
+  Spec.it s "Riot (Zhur-Taa Goblin)" $
+    Common.assertCodec
+      s
+      (EntryRewrite.codec (GrantedAbility.codec Card.codec) (Effect.codec Card.codec (GrantedAbility.codec Card.codec)))
+      EntryRewrite.Riot
+      " {\"type\":\"Riot\"} "
+  -- CR 702.98a: unleash's rewrite, riot's without the declining half, and
+  -- payload-free for the same reason. Encoded distinctly from Riot, since a
+  -- transcript of one must not decode as the other.
+  Spec.it s "Unleash (Gore-House Chainwalker)" $ do
+    Common.assertCodec
+      s
+      (EntryRewrite.codec (GrantedAbility.codec Card.codec) (Effect.codec Card.codec (GrantedAbility.codec Card.codec)))
+      EntryRewrite.Unleash
+      " {\"type\":\"Unleash\"} "
+    Spec.assertBool s (Codec.encode (EntryRewrite.codec (GrantedAbility.codec Card.codec) (Effect.codec Card.codec (GrantedAbility.codec Card.codec))) EntryRewrite.Unleash /= Codec.encode (EntryRewrite.codec (GrantedAbility.codec Card.codec) (Effect.codec Card.codec (GrantedAbility.codec Card.codec))) EntryRewrite.Riot) "unleash and riot encode differently"
+  -- CR 702.44a: sunburst's rewrite, payload-free for riot's reason -- rule
+  -- 702.44a fixes both the counter kinds and where the count comes from. Encoded
+  -- distinctly from Unleash, since a transcript of one must not decode as the
+  -- other.
+  Spec.it s "Sunburst (Suntouched Myr)" $ do
+    Common.assertCodec
+      s
+      (EntryRewrite.codec (GrantedAbility.codec Card.codec) (Effect.codec Card.codec (GrantedAbility.codec Card.codec)))
+      EntryRewrite.Sunburst
+      " {\"type\":\"Sunburst\"} "
+    Spec.assertBool s (Codec.encode (EntryRewrite.codec (GrantedAbility.codec Card.codec) (Effect.codec Card.codec (GrantedAbility.codec Card.codec))) EntryRewrite.Sunburst /= Codec.encode (EntryRewrite.codec (GrantedAbility.codec Card.codec) (Effect.codec Card.codec (GrantedAbility.codec Card.codec))) EntryRewrite.Unleash) "sunburst and unleash encode differently"
+  -- CR 702.43a / 702.44c: Modular--Sunburst's rewrite, distinct from Sunburst's,
+  -- whose counter kind forks on card type.
+  Spec.it s "ModularSunburst (Arcbound Wanderer)" $ do
+    Common.assertCodec
+      s
+      (EntryRewrite.codec (GrantedAbility.codec Card.codec) (Effect.codec Card.codec (GrantedAbility.codec Card.codec)))
+      EntryRewrite.ModularSunburst
+      " {\"type\":\"ModularSunburst\"} "
+    Spec.assertBool s (Codec.encode (EntryRewrite.codec (GrantedAbility.codec Card.codec) (Effect.codec Card.codec (GrantedAbility.codec Card.codec))) EntryRewrite.ModularSunburst /= Codec.encode (EntryRewrite.codec (GrantedAbility.codec Card.codec) (Effect.codec Card.codec (GrantedAbility.codec Card.codec))) EntryRewrite.Sunburst) "modular--sunburst and sunburst encode differently"
+  -- CR 702.54a: bloodthirst's rewrite, which DOES carry its N -- the printed
+  -- number varies by card, where rule 702.136a fixes riot's. Encoded distinctly
+  -- from WithCounters, whose payload names a counter kind rule 702.54a fixes.
+  -- Rule 702.54b's X is the same arm with no number, since the sum it names is
+  -- the board's rather than the card's.
+  Spec.it s "Bloodthirst (Bloodrage Vampire)" $ do
+    Common.assertCodec
+      s
+      (EntryRewrite.codec (GrantedAbility.codec Card.codec) (Effect.codec Card.codec (GrantedAbility.codec Card.codec)))
+      (EntryRewrite.Bloodthirst (Just 1))
+      " {\"type\":\"Bloodthirst\",\"value\":1} "
+    Spec.assertBool
+      s
+      (Codec.encode (EntryRewrite.codec (GrantedAbility.codec Card.codec) (Effect.codec Card.codec (GrantedAbility.codec Card.codec))) (EntryRewrite.Bloodthirst (Just 1)) /= Codec.encode (EntryRewrite.codec (GrantedAbility.codec Card.codec) (Effect.codec Card.codec (GrantedAbility.codec Card.codec))) (EntryRewrite.WithCounters (WithCounters.one CounterKind.PlusOnePlusOne (Quantity.Literal 1))))
+      "bloodthirst 1 is not an unconditional +1/+1 counter"
+    Common.assertCodec
+      s
+      (EntryRewrite.codec (GrantedAbility.codec Card.codec) (Effect.codec Card.codec (GrantedAbility.codec Card.codec)))
+      (EntryRewrite.Bloodthirst Nothing)
+      " {\"type\":\"Bloodthirst\"} "
+    Spec.assertBool
+      s
+      (Codec.encode (EntryRewrite.codec (GrantedAbility.codec Card.codec) (Effect.codec Card.codec (GrantedAbility.codec Card.codec))) (EntryRewrite.Bloodthirst Nothing) /= Codec.encode (EntryRewrite.codec (GrantedAbility.codec Card.codec) (Effect.codec Card.codec (GrantedAbility.codec Card.codec))) (EntryRewrite.Bloodthirst (Just 0)))
+      "rule 702.54b's X is not bloodthirst 0"
+  -- CR 702.104a: tribute's rewrite, whose payload is rule 702.104a's printed N.
+  -- Bloodthirst's shape above with no Nothing in it, tribute having no X form.
+  Spec.it s "Tribute (Snake of the Golden Grove)" $ do
+    Common.assertCodec
+      s
+      (EntryRewrite.codec (GrantedAbility.codec Card.codec) (Effect.codec Card.codec (GrantedAbility.codec Card.codec)))
+      (EntryRewrite.Tribute 3)
+      " {\"type\":\"Tribute\",\"value\":3} "
+    Spec.assertBool
+      s
+      (Codec.encode (EntryRewrite.codec (GrantedAbility.codec Card.codec) (Effect.codec Card.codec (GrantedAbility.codec Card.codec))) (EntryRewrite.Tribute 3) /= Codec.encode (EntryRewrite.codec (GrantedAbility.codec Card.codec) (Effect.codec Card.codec (GrantedAbility.codec Card.codec))) (EntryRewrite.Bloodthirst (Just 3)))
+      "tribute 3 is not bloodthirst 3"
+  -- CR 702.150a: compleated's rewrite, whose payload is the number of PHYREXIAN
+  -- MANA SYMBOLS life was paid for rather than the counters subtracted -- rule
+  -- 702.150a's "two" is the rule's. Encoded distinctly from Bloodthirst, which
+  -- carries the same Natural and means something else entirely.
+  Spec.it s "Compleated (Tamiyo, Compleated Sage)" $ do
+    Common.assertCodec
+      s
+      (EntryRewrite.codec (GrantedAbility.codec Card.codec) (Effect.codec Card.codec (GrantedAbility.codec Card.codec)))
+      (EntryRewrite.Compleated 1)
+      " {\"type\":\"Compleated\",\"value\":1} "
+    Spec.assertBool
+      s
+      (Codec.encode (EntryRewrite.codec (GrantedAbility.codec Card.codec) (Effect.codec Card.codec (GrantedAbility.codec Card.codec))) (EntryRewrite.Compleated 1) /= Codec.encode (EntryRewrite.codec (GrantedAbility.codec Card.codec) (Effect.codec Card.codec (GrantedAbility.codec Card.codec))) (EntryRewrite.Bloodthirst (Just 1)))
+      "one Phyrexian symbol paid with life is not bloodthirst 1"
+  -- CR 614.1d: the tap-state rewrite a permanent's own text prints, payload-free
+  -- because rule 614.1d and CR 110.5b fix both halves.
+  Spec.it s "Tapped (Zof Bloodbog)" $
+    Common.assertCodec
+      s
+      (EntryRewrite.codec (GrantedAbility.codec Card.codec) (Effect.codec Card.codec (GrantedAbility.codec Card.codec)))
+      EntryRewrite.Tapped
+      " {\"type\":\"Tapped\"} "
+  -- CR 702.145b via CR 614.1d: the enters-transformed rewrite, payload-free
+  -- because the rule fixes every half -- which face comes from the card's layout,
+  -- and the condition from the game's designation.
+  Spec.it s "EntersTransformed (Infestation Expert)" $
+    Common.assertCodec
+      s
+      (EntryRewrite.codec (GrantedAbility.codec Card.codec) (Effect.codec Card.codec (GrantedAbility.codec Card.codec)))
+      EntryRewrite.EntersTransformed
+      " {\"type\":\"EntersTransformed\"} "
+  -- CR 614.1c: the same tap-state rewrite with a price on avoiding it, which is
+  -- card text rather than a rule's, so unlike Tapped above it carries a payload.
+  Spec.it s "OrTapped (Razorgrass Field)" $
+    Common.assertCodec
+      s
+      (EntryRewrite.codec (GrantedAbility.codec Card.codec) (Effect.codec Card.codec (GrantedAbility.codec Card.codec)))
+      (EntryRewrite.OrTapped (EntryPrice.PayLife 3))
+      " {\"type\":\"OrTapped\",\"value\":{\"type\":\"PayLife\",\"value\":3}} "
+  -- CR 616.1b: a control rewrite, payload-free because CR 109.5 derives the
+  -- player.
+  Spec.it s "UnderSourceControl (Gather Specimens)" $
+    Common.assertCodec
+      s
+      (EntryRewrite.codec (GrantedAbility.codec Card.codec) (Effect.codec Card.codec (GrantedAbility.codec Card.codec)))
+      EntryRewrite.UnderSourceControl
+      " {\"type\":\"UnderSourceControl\"} "
+  -- CR 614.1c / 701.21a: an as-enters sacrifice of any number, carrying both the
+  -- criterion the chosen permanents must match -- Shimatsu the Bloodcloaked's is
+  -- "any number of permanents", the empty conjunction -- and the counter kind the
+  -- count buys.
+  -- CR 702.38a's minted row: the multiplier alone, the criterion being the
+  -- entering object's own creature types rather than anything the row carries.
+  Spec.it s "Amplify (Feral Throwback)" $
+    Common.assertCodec
+      s
+      (EntryRewrite.codec (GrantedAbility.codec Card.codec) (Effect.codec Card.codec (GrantedAbility.codec Card.codec)))
+      (EntryRewrite.Amplify 2)
+      " {\"type\":\"Amplify\",\"value\":2} "
+  Spec.it s "SacrificeAnyNumber (Shimatsu the Bloodcloaked)" $
+    Common.assertCodec
+      s
+      (EntryRewrite.codec (GrantedAbility.codec Card.codec) (Effect.codec Card.codec (GrantedAbility.codec Card.codec)))
+      (EntryRewrite.SacrificeAnyNumber (SacrificeAnyNumber.MkSacrificeAnyNumber (Filter.And []) (Just CounterKind.PlusOnePlusOne) (Quantity.Literal 1)))
+      " {\"type\":\"SacrificeAnyNumber\",\"value\":{\"each\":{\"type\":\"Literal\",\"value\":1},\"filter\":{\"type\":\"And\",\"value\":[]},\"kind\":{\"type\":\"PlusOnePlusOne\"}}} "
+  -- The same rewrite buying no counters: Wood Elemental's count is read back by
+  -- a characteristic-defining ability instead (CR 208.2a), so the second element
+  -- is null. Its criterion is the narrowing one -- an untapped Forest (CR 110.5).
+  Spec.it s "SacrificeAnyNumber with no counters (Wood Elemental)" $
+    Common.assertCodec
+      s
+      (EntryRewrite.codec (GrantedAbility.codec Card.codec) (Effect.codec Card.codec (GrantedAbility.codec Card.codec)))
+      (EntryRewrite.SacrificeAnyNumber (SacrificeAnyNumber.MkSacrificeAnyNumber (Filter.And [Filter.HasSubtype Subtype.Forest, Filter.Not Filter.IsTapped]) Nothing (Quantity.Literal 1)))
+      " {\"type\":\"SacrificeAnyNumber\",\"value\":{\"each\":{\"type\":\"Literal\",\"value\":1},\"filter\":{\"type\":\"And\",\"value\":[{\"type\":\"HasSubtype\",\"value\":{\"type\":\"Forest\"}},{\"type\":\"Not\",\"value\":{\"type\":\"IsTapped\"}}]},\"kind\":null}} "
+  -- CR 614.1a / 614.12: Heart of Yavimaya's "sacrifice a Forest instead".
+  Spec.it s "SacrificeToEnter (Heart of Yavimaya)" $
+    Common.assertCodec
+      s
+      (EntryRewrite.codec (GrantedAbility.codec Card.codec) (Effect.codec Card.codec (GrantedAbility.codec Card.codec)))
+      (EntryRewrite.SacrificeToEnter (SacrificeToEnter.MkSacrificeToEnter 1 (Filter.HasSubtype Subtype.Forest)))
+      " {\"type\":\"SacrificeToEnter\",\"value\":{\"count\":1,\"filter\":{\"type\":\"HasSubtype\",\"value\":{\"type\":\"Forest\"}}}} "
+  -- CR 614.1c / 614.14: an as-enters exile, carrying the criterion the exiled
+  -- card must match -- Living Lore's "an instant or sorcery card".
+  Spec.it s "ExileFromGraveyard (Living Lore)" $
+    Common.assertCodec
+      s
+      (EntryRewrite.codec (GrantedAbility.codec Card.codec) (Effect.codec Card.codec (GrantedAbility.codec Card.codec)))
+      (EntryRewrite.ExileFromGraveyard (ExileFromGraveyard.MkExileFromGraveyard {ExileFromGraveyard.filter = Filter.Or [Filter.HasCardType CardType.Instant, Filter.HasCardType CardType.Sorcery], ExileFromGraveyard.players = PlayerScope.Related PlayerRelation.You, ExileFromGraveyard.count = HowMany.one, ExileFromGraveyard.orGraveyard = False, ExileFromGraveyard.kinds = [], ExileFromGraveyard.each = Quantity.Literal 1}))
+      " {\"type\":\"ExileFromGraveyard\",\"value\":{\"filter\":{\"type\":\"Or\",\"value\":[{\"type\":\"HasCardType\",\"value\":{\"type\":\"Instant\"}},{\"type\":\"HasCardType\",\"value\":{\"type\":\"Sorcery\"}}]}}} "
+  -- CR 614.1c / 301.5e: an as-enters host choice, carrying the filter the host
+  -- must match -- Grifter's Blade's "a creature you control it could be attached
+  -- to", CR 701.3a's atom written by the card.
+  Spec.it s "EntersAttachedTo (Grifter's Blade)" $
+    Common.assertCodec
+      s
+      (EntryRewrite.codec (GrantedAbility.codec Card.codec) (Effect.codec Card.codec (GrantedAbility.codec Card.codec)))
+      (EntryRewrite.EntersAttachedTo (Filter.And [Filter.HasCardType CardType.Creature, Filter.CanHostSubject]))
+      " {\"type\":\"EntersAttachedTo\",\"value\":{\"type\":\"And\",\"value\":[{\"type\":\"HasCardType\",\"value\":{\"type\":\"Creature\"}},{\"type\":\"CanHostSubject\"}]}} "
+  -- CR 614.1c: the rewrite that runs an effect -- Monstrous War-Leech's "mill
+  -- four cards". Its "if it was kicked" is NOT here: that clause rides
+  -- Parun.Types.PrintedReplacement one level up (CR 604.2).
+  Spec.it s "RunEffects (Monstrous War-Leech)" $
+    Common.assertCodec
+      s
+      (EntryRewrite.codec (GrantedAbility.codec Card.codec) (Effect.codec Card.codec (GrantedAbility.codec Card.codec)))
+      (EntryRewrite.RunEffects (Seq.fromList [Effect.Type.Mill (Mill.MkMill (PlayerRef.Relative PlayerRelation.You) (Quantity.Literal 4) Nothing Nothing)]))
+      " {\"type\":\"RunEffects\",\"value\":[{\"type\":\"Mill\",\"value\":{\"player\":{\"type\":\"Relative\",\"value\":{\"type\":\"You\"}},\"quantity\":{\"type\":\"Literal\",\"value\":4}}}]} "
+  Spec.it s "has a schema" $ Common.assertHasSchema s (EntryRewrite.codec (GrantedAbility.codec Card.codec) (Effect.codec Card.codec (GrantedAbility.codec Card.codec)))

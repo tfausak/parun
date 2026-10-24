@@ -4,21 +4,21 @@
 
 **Goal:** Close CR 729 (Subgames) — the M5 go/no-go — at the depth a labeled-synthetic Shahrazad stand-in demands: a subgame is a *function call* (`runStateT playGame subState` sequenced into the resolving effect through the **same** `Program Prompt` interpreter), reusing M5b's `startGameFromCards`; a generic `Effect.PlaySubgame SlotName` opcode runs the nested game and binds its outcome (the derived 2-player loser) to a slot; ordinary follow-on card data (an existing `DealDamage`) reads that slot (CR 729.1b); owned cards funnel **back** to the main library and reshuffle (CR 729.5); and Shahrazad-in-Shahrazad **nests arbitrarily** (CR 729.6) — all **without** casing on any card's identity and **without** widening the `Prompt` GADT.
 
-**Architecture:** A subgame runs as `Trans.lift (State.runStateT (Setup.startGameFromCards >> Engine.playGame) sub0)` **inside** the resolution of `Effect.PlaySubgame`. Because it is sequenced into the parent's `StateT GameState (Program Prompt)`, the subgame's prompts flow through the **same** `Program.foldProgram`/`Replay.record` fold the main game uses — so scripted test interpreters and deterministic replay work unchanged (this is why a `Prompt.PlaySubgame` constructor is **rejected**: it would consume the subgame's inner prompts *inside* the answer function, bypassing `Replay.record` and breaking determinism). The parent `GameState` sits untouched in the outer frame while the subgame runs (CR 729.1a). `playSubgame` lives in `Engine` (it needs `Engine.playGame`); since `Pawl.Resolve` sits **below** `Engine` and cannot import it, the runner is **injected** as a `Game Result` argument down the spell-resolution path via new `...With` variants (`Stack.resolveTopWith`, `Resolve.resolveSpellWith`, `Resolve.applyEffectWith`), with the existing bare names preserved as thin `...With Resolve.noSubgame` wrappers — so **none** of the 105 `Stack.resolveTop` / 9 `Resolve.applyEffect` existing test call sites change. Nesting (CR 729.6) is free recursion: each level's `priorityLoop` re-supplies `playSubgame`.
+**Architecture:** A subgame runs as `Trans.lift (State.runStateT (Setup.startGameFromCards >> Engine.playGame) sub0)` **inside** the resolution of `Effect.PlaySubgame`. Because it is sequenced into the parent's `StateT GameState (Program Prompt)`, the subgame's prompts flow through the **same** `Program.foldProgram`/`Replay.record` fold the main game uses — so scripted test interpreters and deterministic replay work unchanged (this is why a `Prompt.PlaySubgame` constructor is **rejected**: it would consume the subgame's inner prompts *inside* the answer function, bypassing `Replay.record` and breaking determinism). The parent `GameState` sits untouched in the outer frame while the subgame runs (CR 729.1a). `playSubgame` lives in `Engine` (it needs `Engine.playGame`); since `Parun.Resolve` sits **below** `Engine` and cannot import it, the runner is **injected** as a `Game Result` argument down the spell-resolution path via new `...With` variants (`Stack.resolveTopWith`, `Resolve.resolveSpellWith`, `Resolve.applyEffectWith`), with the existing bare names preserved as thin `...With Resolve.noSubgame` wrappers — so **none** of the 105 `Stack.resolveTop` / 9 `Resolve.applyEffect` existing test call sites change. Nesting (CR 729.6) is free recursion: each level's `priorityLoop` re-supplies `playSubgame`.
 
-**Tech Stack:** Haskell 2010 (GHC 9.14.1 from the Nix dev shell), `tasty` + `tasty-hunit`. Library under `source/library/Pawl/`; tests under `source/test-suite/Pawl/`; cards are JSON data files under `data/cards/`.
+**Tech Stack:** Haskell 2010 (GHC 9.14.1 from the Nix dev shell), `tasty` + `tasty-hunit`. Library under `source/library/Parun/`; tests under `source/test-suite/Parun/`; cards are JSON data files under `data/cards/`.
 
 ## Global Constraints
 
 Every task's requirements implicitly include this section. Values copied verbatim from `CLAUDE.md`.
 
 - **Warning-clean build.** `cabal build all --enable-tests --enable-benchmarks` must compile under `-Weverything` minus the allow-list, with `flags: +pedantic` (`-Werror`) on. Incremental builds hide warnings from unchanged modules — for a definitive check, `cabal clean` first. **Adding a constructor to `Effect` makes every `case effect of` non-exhaustive; `-Wincomplete-patterns` under `-Werror` fails the build until all arms are added** — this is the safety net that guarantees Task 2 touches every dispatch site.
-- **No new language extensions.** Haskell 2010. Test files that pattern-match the `Prompt` GADT already carry `{-# LANGUAGE GADTs #-}`; do not add others. `Pawl.Engine` already carries `{-# LANGUAGE RankNTypes #-}` (for the `forall r. Prompt r -> …` interpreter seam); do not add others there.
-- **Qualified imports, aliased to the last component** (`Pawl.Setup` → `Setup`, `Control.Monad.Trans.Class` → `Trans`); operators unqualified. One import group, no first/third-party split. A module never imports its parents; `A.B.C` never imports `A.B` or `A`.
+- **No new language extensions.** Haskell 2010. Test files that pattern-match the `Prompt` GADT already carry `{-# LANGUAGE GADTs #-}`; do not add others. `Parun.Engine` already carries `{-# LANGUAGE RankNTypes #-}` (for the `forall r. Prompt r -> …` interpreter seam); do not add others there.
+- **Qualified imports, aliased to the last component** (`Parun.Setup` → `Setup`, `Control.Monad.Trans.Class` → `Trans`); operators unqualified. One import group, no first/third-party split. A module never imports its parents; `A.B.C` never imports `A.B` or `A`.
 - **No partial functions, written or used.** No `head`, `undefined`, `error`, `!!`, or non-exhaustive matches. Use `Data.Maybe.listToMaybe` instead of `head`; `Data.Foldable.toList` to flatten a `Seq`; `Map.restrictKeys`/`Map.withoutKeys`/`Map.filter`/`Map.keys`, never a list comprehension (**CLAUDE.md: "No list comprehensions"**).
 - **`newtype`/record conventions.** Build records with `do` + record syntax or record-update syntax, not `<$>`/`<*>`. `case` over point-free; `let` over `where`.
 - **Cite the CR number in every rules-bearing comment.** Every CR claim below was checked against `docs/rules.txt` at this planning pass (CR 729 at lines 6273–6306: 729.1/6275, 729.1a/6277, 729.1b/6279, 729.2/6281, 729.3/6289, 729.4/6291, 729.4b/6295, 729.5/6297, 729.6/6306; CR 103 "Starting the Game" at 258–322; CR 704.5b draw-from-empty loss). Never trust recalled Magic rules; re-verify before the number drives code.
-- **The two invariants outrank this plan.** (1) The rules core reads a *classification*, never an effect's identity — the subgame's outcome plumbing stays generic (`PlaySubgame` binds a slot; "the loser takes damage" is ordinary follow-on `DealDamage` data); `Pawl.Resolve` never grows a `case … Shahrazad`. (2) The engine makes no choices — every subgame choice (down to shuffles) is a prompt through the same interpreter; the one place a choice is currently *elided* (CR 729.2's "randomly determine which player goes first" → deterministic head-of-turn-order, matching the existing `Setup.emptyGame` posture) carries a filed, named-expiry issue (Task 9).
+- **The two invariants outrank this plan.** (1) The rules core reads a *classification*, never an effect's identity — the subgame's outcome plumbing stays generic (`PlaySubgame` binds a slot; "the loser takes damage" is ordinary follow-on `DealDamage` data); `Parun.Resolve` never grows a `case … Shahrazad`. (2) The engine makes no choices — every subgame choice (down to shuffles) is a prompt through the same interpreter; the one place a choice is currently *elided* (CR 729.2's "randomly determine which player goes first" → deterministic head-of-turn-order, matching the existing `Setup.emptyGame` posture) carries a filed, named-expiry issue (Task 9).
 - **One small complete commit per task, on `main`.** Never push. Commit message trailer: `Co-Authored-By: Claude Opus 4.8 (1M context) <noreply@anthropic.com>`.
 - **`hooky` before done.** `git add -A` → `hooky fix` → `git add -A` → `hooky run` (acts on staged files only).
 - **TDD is not optional.** Write each failing test and run it to watch it fail before implementing. Tick each `- [ ]` as you finish it.
@@ -29,7 +29,7 @@ Every task's requirements implicitly include this section. Values copied verbati
 
 This is the **M5 go/no-go**; these decisions are the bet. Read them before Task 1. Each is grounded in the map made at this planning pass (paths/lines re-confirm if a file has moved).
 
-1. **Subgame = a lifted `runStateT`, never a new `Prompt`.** `playSubgame` does `Trans.lift (State.runStateT (Setup.startGameFromCards >> Engine.playGame) sub0)`. `Game = StateT GameState (Program Prompt)` (`Pawl.Type.Game:8`); lifting the subgame's `Program Prompt (Result, GameState)` into the parent `StateT` means the subgame's prompts are part of the **same** `Program` tree the outer `Program.foldProgram` / `Replay.record` folds (`Pawl.Replay:176-202`). A `Prompt.PlaySubgame` constructor would instead run the subgame *inside* the answer function (`answer p = foldProgram answer (runStateT playGame …)`), so the subgame's inner prompts never reach `Replay.record`'s `step` — **breaking replay determinism** (the M0 criterion). Rejected for that reason.
+1. **Subgame = a lifted `runStateT`, never a new `Prompt`.** `playSubgame` does `Trans.lift (State.runStateT (Setup.startGameFromCards >> Engine.playGame) sub0)`. `Game = StateT GameState (Program Prompt)` (`Parun.Type.Game:8`); lifting the subgame's `Program Prompt (Result, GameState)` into the parent `StateT` means the subgame's prompts are part of the **same** `Program` tree the outer `Program.foldProgram` / `Replay.record` folds (`Parun.Replay:176-202`). A `Prompt.PlaySubgame` constructor would instead run the subgame *inside* the answer function (`answer p = foldProgram answer (runStateT playGame …)`), so the subgame's inner prompts never reach `Replay.record`'s `step` — **breaking replay determinism** (the M0 criterion). Rejected for that reason.
 
 2. **The runner is injected downward, not imported upward.** `playSubgame :: Game Result` needs `Engine.playGame`, and `Engine` sits at the top of the import graph (`Engine` imports `Resolve`+`Stack`; `Stack` imports `Resolve`; nothing imports `Engine`). `Resolve.applyEffect` (bottom) resolves `PlaySubgame`, so it cannot reference `playSubgame`. The runner is threaded as a `Game Result` parameter through **new** `...With` variants only along the **spell** path (`Stack.resolveTopWith` → `Resolve.resolveSpellWith` → `Resolve.applyEffectWith`); the **bare** names are kept as `= …With Resolve.noSubgame` wrappers (`noSubgame = pure Result.Drawn`). `Engine.priorityLoop` calls `Stack.resolveTopWith playSubgame`. Nesting works because each nested `playGame`'s own `priorityLoop` re-supplies `playSubgame`.
    - **Why not thread everywhere:** `Stack.resolveTop` has **105** test call-refs and `Resolve.applyEffect` has **9**; the wrapper-preserves-bare-name strategy changes **none** of them. The ability path (`resolveEffects`/`resolveAbility`) keeps folding bare `applyEffect` (`noSubgame`) — an ability that plays a subgame is deferred (Task 9), and no gate card needs one.
@@ -38,7 +38,7 @@ This is the **M5 go/no-go**; these decisions are the bet. Read them before Task 
 
 4. **Construction/teardown is pure `GameState → GameState`, inheriting the id supply.** `Setup.subgameStateFrom` builds `sub0` from the parent's **library cards only** (CR 729.2 — `Map.restrictKeys` to the library object ids), resets players to a fresh game, empties all zones (`startGameFromCards` repopulates libraries from `objects`), and **inherits** the parent's `nextObjectId`/`nextTimestamp` so every object the subgame mints (CR 400.7 re-identification on each draw) gets an id **above** every parent id — guaranteeing no collision at funnel-back. `Setup.funnelBack` (CR 729.5) rebuilds each owner's library from the `OfCard` objects they own **anywhere** in the final subgame, drops the parent's old library objects, merges the returned cards (`Map.union` is collision-free by the id argument above), and advances the parent's id/timestamp supplies to the subgame's high-water mark. All other subgame objects and zones simply cease (they are dropped, not reverted). `playSubgame` then reshuffles each rebuilt library (`Prompt.Shuffle`).
 
-5. **First player is deterministic (elided RNG), and "the loser" is a 2-player derivation.** CR 729.2's "randomly determine which player goes first" has **no** prompt in pawl today (there is no first-player randomness constructor; `Setup.emptyGame` takes the head of the order). `subgameStateFrom` sets the subgame's active player to the head of the turn order — an elision filed with a named expiry (Task 9). `Result` stays `Won PlayerId | Drawn`; in the 2-player gate the loser is `listToMaybe (filter (/= winner) turnOrder)`, and a `Drawn` subgame binds nothing (the follow-on no-ops). Result-widening for a genuine multi-player "each player who doesn't win" is deferred (Task 9), exactly as the umbrella flags.
+5. **First player is deterministic (elided RNG), and "the loser" is a 2-player derivation.** CR 729.2's "randomly determine which player goes first" has **no** prompt in parun today (there is no first-player randomness constructor; `Setup.emptyGame` takes the head of the order). `subgameStateFrom` sets the subgame's active player to the head of the turn order — an elision filed with a named expiry (Task 9). `Result` stays `Won PlayerId | Drawn`; in the 2-player gate the loser is `listToMaybe (filter (/= winner) turnOrder)`, and a `Drawn` subgame binds nothing (the follow-on no-ops). Result-widening for a genuine multi-player "each player who doesn't win" is deferred (Task 9), exactly as the umbrella flags.
 
 6. **The gate card is a labeled synthetic (owner decision, this planning pass).** Real Shahrazad's rider — *"each player who doesn't win the subgame loses half their life, rounded up"* — needs life-loss + a half-current-life quantity + a multi-player non-winner scope, none of which exist. Per the `Landform` / `synthetic-restart` crutch (spec §1/§3), the gate is `synthetic-subgame` — a `{0}` Sorcery whose one mode is `[PlaySubgame "loser", DealDamage "loser" (Literal 3)]` — with a documented expiry naming **Shahrazad** (Task 9). The subgame *machinery* it exercises is identical to what Shahrazad needs; only the fixed-3 rider stands in for the half-life rider.
 
@@ -48,37 +48,37 @@ This is the **M5 go/no-go**; these decisions are the bet. Read them before Task 
 
 Exact shapes the tasks build on (paths/line numbers from this planning pass — re-confirm if a file has moved).
 
-- `Pawl.Setup` (`source/library/Pawl/Setup.hs`): `startingLife :: Integer` (line 33, = 20); `openingHand :: Int` (43, = 7); `emptyGame :: NonEmpty PlayerId -> GameState` (47) — the field template; `shuffleLibrary :: PlayerId -> Game ()` (120) — issues `Prompt.Shuffle`; `startGameFromCards :: Game ()` (146, M5b) — rebuilds every owner's library from **all** `Source.OfCard` objects in `GameState.objects`, shuffles, draws opening hands (M5c calls it on a subgame state whose `objects` are already restricted to library cards); `rotateTo :: PlayerId -> [PlayerId] -> [PlayerId]` (182, M5b); `restartGame :: PlayerId -> Game ()` (196, M5b — the field-by-field reset template `subgameStateFrom` mirrors). Setup already imports `Combat`, `Event`, `Game`, `Turn`, `Object`, `Player`, `Source`, `Status`, `Sickness`, `TapState`, `Zone`, `GameState`, `Map`, `Seq`, `Monad`, `NonEmpty`. **Add** `import qualified Data.Foldable as Foldable` and `import qualified Data.Set as Set` (Tasks 1) and `import qualified Pawl.Type.PlayerId` only if the compiler needs it (it is reached transitively).
-- `Pawl.Type.GameState` (`source/library/Pawl/Type/GameState.hs`), one record `deriving (Eq, Show)`. Fields used: `objects :: Map ObjectId Object`; per-player `library`/`hand`/`graveyard :: Map PlayerId (Seq ObjectId)`; shared `battlefield`/`exile`/`command :: Set ObjectId`; `stack :: [ObjectId]`; `players :: Map PlayerId Player`; `manaPool`; `combat`; `events`; `scannedThrough`/`damageScannedThrough :: Natural`; `delayedTriggers`; `continuousEffects`; `replacements`; `playerEffects`; `turnOrder :: [PlayerId]`; `activePlayer :: PlayerId`; `phase :: Phase`; `remaining :: Seq Phase`; `priority :: Maybe PlayerId`; `passes :: Natural`; `turnNumber :: Natural`; `result :: Maybe Result`; `nextObjectId`; `nextTimestamp`; `drewFromEmpty :: Set PlayerId`; `landPlayed :: Set PlayerId`; `pendingControl`; `activeControl`; `monarch`; `exiledUntilMonarch`. **No RNG/seed field.**
-- `Pawl.Type.ObjectId` (`.../Type/ObjectId.hs`) and `Pawl.Type.Timestamp` (`.../Type/Timestamp.hs`): both `deriving (Eq, Ord, Show)` — `max` is defined.
-- `Pawl.Type.Object` (`.../Type/Object.hs`): `owner :: PlayerId` (stamped once); `source`, `zone`, `tapped`, `damage`, `sickness`, `bindings`, `counters`, `timestamp`.
-- `Pawl.Type.Source`: `OfCard Printing | OfToken Card | OfAbility … | OfTrigger … | OfEmblem … | OfInherentTrigger …`. **Only `OfCard` is a Magic card** (CR 729.5 "traditional cards").
-- `Pawl.Type.Result` (`.../Type/Result.hs`): `data Result = Won PlayerId | Drawn deriving (Eq, Ord, Show)`.
-- `Pawl.Type.Recipient` (`.../Type/Recipient.hs`): `ToCreature ObjectId | ToPlayer PlayerId | ToObject ObjectId`.
-- `Pawl.Type.Binding` (`.../Type/Binding.hs`): record `MkBinding { target :: Maybe Recipient, subtypes, amount, modes, copy }`; `empty` is all-`Nothing`. `Pawl.Binding.targetsOf :: Map SlotName Binding -> Map SlotName Recipient` = `Map.mapMaybe Binding.target`; `Binding.subtypesOf`; reserved keys `variableX`/`chosenModes`/`triggerSource`.
-- `Pawl.Engine` (`source/library/Pawl/Engine.hs`): `playGame :: Game Result` (521–530) — loops `runStep` until `GameState.result` is `Just`; `priorityLoop :: Game ()` (line ~404, the `ChooseAction`/`Stack.resolveTop` site at ~420); `runGamePure :: (forall r. Prompt r -> r) -> GameState -> Game a -> (a, GameState)` (63); `checkSba :: Game ()` (95, = `Sba.checkStateBasedActions`). Engine imports `Resolve`, `Stack`, `Setup`; carries `{-# LANGUAGE RankNTypes #-}`. **Add** `import qualified Control.Monad.Trans.Class as Trans` (Task 4).
-- `Pawl.Stack` (`source/library/Pawl/Stack.hs`): `resolveTop :: Game ()` (30); the **spell** branch is `Resolve.resolveSpell oid` (line ~43); ability branches call `Resolve.resolveAbility` (~59) / `Resolve.resolveEffects` (~72, ~82). Imports `Resolve`.
-- `Pawl.Resolve` (`source/library/Pawl/Resolve.hs`) — the **only** module that cases on `Effect`. Classifier tables each needing a new `PlaySubgame` arm: `slotsOf` (67), `readsX`/`effectReadsX` (103/106), `manaProduced` (137), `searchesLibrary` (169), `rewriteEffect` (240). The write-half collector `definedSlots` (219) also needs an arm. Executor `applyEffect` (410, signature `ObjectId -> PlayerId -> Map SlotName (Subtype,Subtype) -> Map SlotName Bool -> Map SlotName Recipient -> Effect Card -> Game ()`; args `source controller bound legality chosen effect`). `resolveSpell` (298), fold at 337; `bindSlot :: ObjectId -> SlotName -> ObjectId -> GameState -> GameState` (837) — the `ToObject` binder to mirror for a `ToPlayer` binder. Resolve imports `Setup` (M5b), `Binding`, `Recipient`, `Result`? — **`Result` is not yet imported; add `import Pawl.Type.Result (Result)` and `import qualified Pawl.Type.Result as Result`** (Task 2).
-- `Pawl.Codec` (`source/library/Pawl/Codec.hs`): `slotNameToJson (MkSlotName t) = Json.jText t` (819) / `jsonToSlotName` (822); `effectToJson`'s slot-only arms use `Json.tagged "Name" (Just (slotNameToJson s))` (e.g. `ControlPlayerNextTurn` at 1155, `Counter` at 1158); `jsonToEffect`'s slot-only arms use `withValue mv (fmap Effect.Name . jsonToSlotName)` (e.g. `ChangeText` at 1186). `DealDamage` encodes as `Json.tagged "DealDamage" (Just (Array [slotNameToJson s, quantityToJson q]))` (1148) — JSON `{"type":"DealDamage","value":["<slot>",{"type":"Literal","value":N}]}`.
-- `Pawl.Cards` (`source/test-suite/Pawl/Cards.hs`): a new card touches four sites — the `data Cards` field (~16–99), a `…_ <- loadPrinting "<slug>"` line in `loadCards` (~111–192), the record line (~195–277), and `allPrintings` (~281–363).
-- Test harness: `Engine.runGamePure`; `Engine.priorityLoop`; `Engine.checkSba`; `Stack.resolveTop`; `S.identityAnswer` (in `Pawl.Support`, answers `Shuffle ids -> ids`, `ChooseAction -> A.Pass`, minimally otherwise); `S.addCreature :: Printing -> PlayerId -> GameState -> (ObjectId, GameState)` (places a permanent **Settled, Untapped, on the battlefield**); `S.bothPlayers :: NonEmpty PlayerId` (alice then bob); `S.alice`, `S.bob`; `S.lifeOf`, `S.handSize`. `Game.zoneMembers :: Zone -> PlayerId -> GameState -> [ObjectId]`; `Game.lookupObject`; `Game.freshObjectId`/`freshTimestamp`. `GameSpec.hs` already has `isCastAction`, `isActivateAction`, `addManyG` (M5a/M5b).
+- `Parun.Setup` (`source/library/Parun/Setup.hs`): `startingLife :: Integer` (line 33, = 20); `openingHand :: Int` (43, = 7); `emptyGame :: NonEmpty PlayerId -> GameState` (47) — the field template; `shuffleLibrary :: PlayerId -> Game ()` (120) — issues `Prompt.Shuffle`; `startGameFromCards :: Game ()` (146, M5b) — rebuilds every owner's library from **all** `Source.OfCard` objects in `GameState.objects`, shuffles, draws opening hands (M5c calls it on a subgame state whose `objects` are already restricted to library cards); `rotateTo :: PlayerId -> [PlayerId] -> [PlayerId]` (182, M5b); `restartGame :: PlayerId -> Game ()` (196, M5b — the field-by-field reset template `subgameStateFrom` mirrors). Setup already imports `Combat`, `Event`, `Game`, `Turn`, `Object`, `Player`, `Source`, `Status`, `Sickness`, `TapState`, `Zone`, `GameState`, `Map`, `Seq`, `Monad`, `NonEmpty`. **Add** `import qualified Data.Foldable as Foldable` and `import qualified Data.Set as Set` (Tasks 1) and `import qualified Parun.Type.PlayerId` only if the compiler needs it (it is reached transitively).
+- `Parun.Type.GameState` (`source/library/Parun/Type/GameState.hs`), one record `deriving (Eq, Show)`. Fields used: `objects :: Map ObjectId Object`; per-player `library`/`hand`/`graveyard :: Map PlayerId (Seq ObjectId)`; shared `battlefield`/`exile`/`command :: Set ObjectId`; `stack :: [ObjectId]`; `players :: Map PlayerId Player`; `manaPool`; `combat`; `events`; `scannedThrough`/`damageScannedThrough :: Natural`; `delayedTriggers`; `continuousEffects`; `replacements`; `playerEffects`; `turnOrder :: [PlayerId]`; `activePlayer :: PlayerId`; `phase :: Phase`; `remaining :: Seq Phase`; `priority :: Maybe PlayerId`; `passes :: Natural`; `turnNumber :: Natural`; `result :: Maybe Result`; `nextObjectId`; `nextTimestamp`; `drewFromEmpty :: Set PlayerId`; `landPlayed :: Set PlayerId`; `pendingControl`; `activeControl`; `monarch`; `exiledUntilMonarch`. **No RNG/seed field.**
+- `Parun.Type.ObjectId` (`.../Type/ObjectId.hs`) and `Parun.Type.Timestamp` (`.../Type/Timestamp.hs`): both `deriving (Eq, Ord, Show)` — `max` is defined.
+- `Parun.Type.Object` (`.../Type/Object.hs`): `owner :: PlayerId` (stamped once); `source`, `zone`, `tapped`, `damage`, `sickness`, `bindings`, `counters`, `timestamp`.
+- `Parun.Type.Source`: `OfCard Printing | OfToken Card | OfAbility … | OfTrigger … | OfEmblem … | OfInherentTrigger …`. **Only `OfCard` is a Magic card** (CR 729.5 "traditional cards").
+- `Parun.Type.Result` (`.../Type/Result.hs`): `data Result = Won PlayerId | Drawn deriving (Eq, Ord, Show)`.
+- `Parun.Type.Recipient` (`.../Type/Recipient.hs`): `ToCreature ObjectId | ToPlayer PlayerId | ToObject ObjectId`.
+- `Parun.Type.Binding` (`.../Type/Binding.hs`): record `MkBinding { target :: Maybe Recipient, subtypes, amount, modes, copy }`; `empty` is all-`Nothing`. `Parun.Binding.targetsOf :: Map SlotName Binding -> Map SlotName Recipient` = `Map.mapMaybe Binding.target`; `Binding.subtypesOf`; reserved keys `variableX`/`chosenModes`/`triggerSource`.
+- `Parun.Engine` (`source/library/Parun/Engine.hs`): `playGame :: Game Result` (521–530) — loops `runStep` until `GameState.result` is `Just`; `priorityLoop :: Game ()` (line ~404, the `ChooseAction`/`Stack.resolveTop` site at ~420); `runGamePure :: (forall r. Prompt r -> r) -> GameState -> Game a -> (a, GameState)` (63); `checkSba :: Game ()` (95, = `Sba.checkStateBasedActions`). Engine imports `Resolve`, `Stack`, `Setup`; carries `{-# LANGUAGE RankNTypes #-}`. **Add** `import qualified Control.Monad.Trans.Class as Trans` (Task 4).
+- `Parun.Stack` (`source/library/Parun/Stack.hs`): `resolveTop :: Game ()` (30); the **spell** branch is `Resolve.resolveSpell oid` (line ~43); ability branches call `Resolve.resolveAbility` (~59) / `Resolve.resolveEffects` (~72, ~82). Imports `Resolve`.
+- `Parun.Resolve` (`source/library/Parun/Resolve.hs`) — the **only** module that cases on `Effect`. Classifier tables each needing a new `PlaySubgame` arm: `slotsOf` (67), `readsX`/`effectReadsX` (103/106), `manaProduced` (137), `searchesLibrary` (169), `rewriteEffect` (240). The write-half collector `definedSlots` (219) also needs an arm. Executor `applyEffect` (410, signature `ObjectId -> PlayerId -> Map SlotName (Subtype,Subtype) -> Map SlotName Bool -> Map SlotName Recipient -> Effect Card -> Game ()`; args `source controller bound legality chosen effect`). `resolveSpell` (298), fold at 337; `bindSlot :: ObjectId -> SlotName -> ObjectId -> GameState -> GameState` (837) — the `ToObject` binder to mirror for a `ToPlayer` binder. Resolve imports `Setup` (M5b), `Binding`, `Recipient`, `Result`? — **`Result` is not yet imported; add `import Parun.Type.Result (Result)` and `import qualified Parun.Type.Result as Result`** (Task 2).
+- `Parun.Codec` (`source/library/Parun/Codec.hs`): `slotNameToJson (MkSlotName t) = Json.jText t` (819) / `jsonToSlotName` (822); `effectToJson`'s slot-only arms use `Json.tagged "Name" (Just (slotNameToJson s))` (e.g. `ControlPlayerNextTurn` at 1155, `Counter` at 1158); `jsonToEffect`'s slot-only arms use `withValue mv (fmap Effect.Name . jsonToSlotName)` (e.g. `ChangeText` at 1186). `DealDamage` encodes as `Json.tagged "DealDamage" (Just (Array [slotNameToJson s, quantityToJson q]))` (1148) — JSON `{"type":"DealDamage","value":["<slot>",{"type":"Literal","value":N}]}`.
+- `Parun.Cards` (`source/test-suite/Parun/Cards.hs`): a new card touches four sites — the `data Cards` field (~16–99), a `…_ <- loadPrinting "<slug>"` line in `loadCards` (~111–192), the record line (~195–277), and `allPrintings` (~281–363).
+- Test harness: `Engine.runGamePure`; `Engine.priorityLoop`; `Engine.checkSba`; `Stack.resolveTop`; `S.identityAnswer` (in `Parun.Support`, answers `Shuffle ids -> ids`, `ChooseAction -> A.Pass`, minimally otherwise); `S.addCreature :: Printing -> PlayerId -> GameState -> (ObjectId, GameState)` (places a permanent **Settled, Untapped, on the battlefield**); `S.bothPlayers :: NonEmpty PlayerId` (alice then bob); `S.alice`, `S.bob`; `S.lifeOf`, `S.handSize`. `Game.zoneMembers :: Zone -> PlayerId -> GameState -> [ObjectId]`; `Game.lookupObject`; `Game.freshObjectId`/`freshTimestamp`. `GameSpec.hs` already has `isCastAction`, `isActivateAction`, `addManyG` (M5a/M5b).
 
 ## File structure
 
 | File | Change | Responsibility |
 |---|---|---|
-| `source/library/Pawl/Setup.hs` | Modify | Task 1: `subgameStateFrom` (CR 729.2), `funnelBack` (CR 729.5) — pure `GameState` builders. |
-| `source/test-suite/Pawl/SetupSpec.hs` | Modify | Task 1: unit tests for the two builders (library-only construction; card return + id non-collision). |
-| `source/library/Pawl/Type/Effect.hs` | Modify | Task 2: the `PlaySubgame SlotName` constructor. |
-| `source/library/Pawl/Resolve.hs` | Modify | Tasks 2–3: five classifier arms + `definedSlots` arm + `Codec`-free wiring; `noSubgame`; `bindLoserSlot`; `applyEffectWith`/`applyEffect` wrapper; `resolveSpellWith`/`resolveSpell` wrapper + per-effect re-read. |
-| `source/library/Pawl/Codec.hs` | Modify | Task 2: `effectToJson`/`jsonToEffect` arms. |
-| `source/library/Pawl/Stack.hs` | Modify | Task 3: `resolveTopWith`/`resolveTop` wrapper. |
-| `source/library/Pawl/Engine.hs` | Modify | Task 4: `playSubgame`; `priorityLoop` → `resolveTopWith playSubgame`. |
-| `source/test-suite/Pawl/ResolveSpec.hs` | Modify | Task 3: mid-resolution binding visibility (stub runner). |
+| `source/library/Parun/Setup.hs` | Modify | Task 1: `subgameStateFrom` (CR 729.2), `funnelBack` (CR 729.5) — pure `GameState` builders. |
+| `source/test-suite/Parun/SetupSpec.hs` | Modify | Task 1: unit tests for the two builders (library-only construction; card return + id non-collision). |
+| `source/library/Parun/Type/Effect.hs` | Modify | Task 2: the `PlaySubgame SlotName` constructor. |
+| `source/library/Parun/Resolve.hs` | Modify | Tasks 2–3: five classifier arms + `definedSlots` arm + `Codec`-free wiring; `noSubgame`; `bindLoserSlot`; `applyEffectWith`/`applyEffect` wrapper; `resolveSpellWith`/`resolveSpell` wrapper + per-effect re-read. |
+| `source/library/Parun/Codec.hs` | Modify | Task 2: `effectToJson`/`jsonToEffect` arms. |
+| `source/library/Parun/Stack.hs` | Modify | Task 3: `resolveTopWith`/`resolveTop` wrapper. |
+| `source/library/Parun/Engine.hs` | Modify | Task 4: `playSubgame`; `priorityLoop` → `resolveTopWith playSubgame`. |
+| `source/test-suite/Parun/ResolveSpec.hs` | Modify | Task 3: mid-resolution binding visibility (stub runner). |
 | `data/cards/synthetic-subgame.json` | Create | Task 5: the labeled-synthetic gate card. |
-| `source/test-suite/Pawl/Cards.hs` | Modify | Task 5: register `syntheticSubgamePrinting` (4 sites). |
-| `source/test-suite/Pawl/GameSpec.hs` | Modify | Tasks 4, 6–8: `playSubgame` end-to-end; the three gameplay gates (729.1b/729.3, 729.5/729.4b, 729.6). |
-| GitHub issues (`tfausak/pawl`) | Create | Task 9: deferrals (first-player RNG; ability-path subgames; Result-widening; full Shahrazad; subsystem-blocked slices). |
+| `source/test-suite/Parun/Cards.hs` | Modify | Task 5: register `syntheticSubgamePrinting` (4 sites). |
+| `source/test-suite/Parun/GameSpec.hs` | Modify | Tasks 4, 6–8: `playSubgame` end-to-end; the three gameplay gates (729.1b/729.3, 729.5/729.4b, 729.6). |
+| GitHub issues (`tfausak/parun`) | Create | Task 9: deferrals (first-player RNG; ability-path subgames; Result-widening; full Shahrazad; subsystem-blocked slices). |
 | `docs/progress.md`, `CLAUDE.md`, umbrella spec | Modify | Task 10: completion entry, status replacement, phase tick (M5 exit). |
 
 ---
@@ -88,8 +88,8 @@ Exact shapes the tasks build on (paths/line numbers from this planning pass — 
 The two pure `GameState → GameState` halves of a subgame's lifecycle (CR 729.2 / 729.5). No monad, no prompts — those live in `playSubgame` (Task 4). Testable in isolation.
 
 **Files:**
-- Modify: `source/library/Pawl/Setup.hs` — two new top-level functions (after `restartGame`).
-- Test: `source/test-suite/Pawl/SetupSpec.hs` — a new `subgameTests` group wired into `tests`.
+- Modify: `source/library/Parun/Setup.hs` — two new top-level functions (after `restartGame`).
+- Test: `source/test-suite/Parun/SetupSpec.hs` — a new `subgameTests` group wired into `tests`.
 
 **Interfaces:**
 - Consumes: `GameState.{objects,library,turnOrder,players,nextObjectId,nextTimestamp,…}`, `Object.{owner,source,zone,tapped,damage,sickness,bindings,counters}`, `Source.OfCard`, `startingLife`, `Player.{life,status,counters}`, `Status.Playing`, `Combat.emptyCombat`, `Turn.{firstPhase,laterPhases}`, `Zone.Library`, `TapState.Untapped`, `Sickness.Sick`.
@@ -97,14 +97,14 @@ The two pure `GameState → GameState` halves of a subgame's lifecycle (CR 729.2
 
 - [x] **Step 1: Write the failing tests**
 
-At the top of `source/test-suite/Pawl/SetupSpec.hs` add to the import group (alphabetical among `Pawl.*`), any not already present:
+At the top of `source/test-suite/Parun/SetupSpec.hs` add to the import group (alphabetical among `Parun.*`), any not already present:
 
 ```haskell
 import qualified Data.Foldable as Foldable
 import qualified Data.Set as Set
-import qualified Pawl.Type.Object as Object
-import qualified Pawl.Type.Source as Source
-import qualified Pawl.Type.Zone as Zone
+import qualified Parun.Type.Object as Object
+import qualified Parun.Type.Source as Source
+import qualified Parun.Type.Zone as Zone
 ```
 
 Append this group (top level), reusing the `addMany` helper already defined in this file for `restartTests` (it folds `S.addCreature` to bulk up an owner's battlefield pool):
@@ -207,7 +207,7 @@ Expected: **compile error** — `Setup.subgameStateFrom` / `Setup.funnelBack` no
 
 - [x] **Step 3: Implement `subgameStateFrom` and `funnelBack`**
 
-Append to `source/library/Pawl/Setup.hs` (after `restartGame`), and add `import qualified Data.Foldable as Foldable` and `import qualified Data.Set as Set` to the import group:
+Append to `source/library/Parun/Setup.hs` (after `restartGame`), and add `import qualified Data.Foldable as Foldable` and `import qualified Data.Set as Set` to the import group:
 
 ```haskell
 -- CR 729.2: build a fresh subgame state from the parent's LIBRARY cards ONLY --
@@ -220,7 +220,7 @@ Append to `source/library/Pawl/Setup.hs` (after `restartGame`), and add `import 
 -- which are INHERITED from the parent so every object the subgame mints (CR 400.7)
 -- gets an id above every parent id -- funnelBack relies on that for non-collision.
 -- CR 729.2's "randomly determine which player goes first" is elided to the head of
--- the turn order (pawl has no first-player randomness prompt; the Setup.emptyGame
+-- the turn order (parun has no first-player randomness prompt; the Setup.emptyGame
 -- posture), filed with a named expiry.
 subgameStateFrom :: GameState -> GameState
 subgameStateFrom parent =
@@ -332,7 +332,7 @@ git commit -m "feat(m5c): subgameStateFrom + funnelBack, the CR 729.2/729.5 pure
 Add `Effect.PlaySubgame SlotName` and wire the *pure* halves: the five classifier arms (compiler-forced for `slotsOf`/`manaProduced`/`searchesLibrary`/`rewriteEffect`; hand-added for `readsX`), the `definedSlots` write-half arm (so a downstream `DealDamage` reading the slot passes the D4 lint), and the two `Codec` arms. The **executor** arm and the runner threading are Task 3; here the `applyEffect` arm is a documented placeholder so the build stays green.
 
 **Files:**
-- Modify: `source/library/Pawl/Type/Effect.hs` (constructor), `source/library/Pawl/Resolve.hs` (five classifier arms + `definedSlots` arm + placeholder executor arm), `source/library/Pawl/Codec.hs` (two arms).
+- Modify: `source/library/Parun/Type/Effect.hs` (constructor), `source/library/Parun/Resolve.hs` (five classifier arms + `definedSlots` arm + placeholder executor arm), `source/library/Parun/Codec.hs` (two arms).
 - Test: covered by the existing `allPrintings` round-trip and D4 lint once Task 5's card exists; here, a targeted `CodecSpec` assertion round-trips a hand-built `PlaySubgame`.
 
 **Interfaces:**
@@ -340,7 +340,7 @@ Add `Effect.PlaySubgame SlotName` and wire the *pure* halves: the five classifie
 
 - [x] **Step 1: Write the failing test**
 
-Add to `source/test-suite/Pawl/CodecSpec.hs`, in the effect round-trip group (near the other `jsonToEffect . effectToJson` assertions):
+Add to `source/test-suite/Parun/CodecSpec.hs`, in the effect round-trip group (near the other `jsonToEffect . effectToJson` assertions):
 
 ```haskell
             let e = Effect.PlaySubgame (SlotName.MkSlotName (Text.pack "loser"))
@@ -356,7 +356,7 @@ Expected: **compile error** — `Effect.PlaySubgame` is not a constructor.
 
 - [x] **Step 3: Add the constructor**
 
-In `source/library/Pawl/Type/Effect.hs`, add after `ExileUntilMonarch` (the current last constructor, ~line 202), before the `deriving`:
+In `source/library/Parun/Type/Effect.hs`, add after `ExileUntilMonarch` (the current last constructor, ~line 202), before the `deriving`:
 
 ```haskell
   | -- CR 729.1/729.1b: play a Magic subgame, then bind its outcome (the derived
@@ -370,7 +370,7 @@ In `source/library/Pawl/Type/Effect.hs`, add after `ExileUntilMonarch` (the curr
 
 - [x] **Step 4: Add the five classifier arms and the `definedSlots` arm**
 
-In `source/library/Pawl/Resolve.hs`:
+In `source/library/Parun/Resolve.hs`:
 
 - `slotsOf` (line ~67): `PlaySubgame` READS no target slot — it *defines* one. Add next to `Effect.Create {} -> Set.empty`:
 
@@ -413,7 +413,7 @@ In `source/library/Pawl/Resolve.hs`:
 
 - [x] **Step 5: Add the placeholder executor arm**
 
-In `source/library/Pawl/Resolve.hs`, add to `applyEffect`'s `case effect of` (next to the `Effect.RestartGame` arm) a **placeholder** — the real subgame-running arm is Task 3, but the build needs exhaustiveness now:
+In `source/library/Parun/Resolve.hs`, add to `applyEffect`'s `case effect of` (next to the `Effect.RestartGame` arm) a **placeholder** — the real subgame-running arm is Task 3, but the build needs exhaustiveness now:
 
 ```haskell
   -- CR 729.1: play a subgame. Wired to the injected runner in resolveSpellWith
@@ -424,7 +424,7 @@ In `source/library/Pawl/Resolve.hs`, add to `applyEffect`'s `case effect of` (ne
 
 - [x] **Step 6: Add the two `Codec` arms**
 
-In `source/library/Pawl/Codec.hs`:
+In `source/library/Parun/Codec.hs`:
 
 - `effectToJson`, next to `Effect.ControlPlayerNextTurn s -> …` (~1155):
 
@@ -461,8 +461,8 @@ git commit -m "feat(m5c): PlaySubgame opcode — constructor, classifiers, defin
 Thread a `Game Result` runner down the spell path and give `PlaySubgame` its real executor: run the runner, derive the 2-player loser from the `Result`, bind it into the slot, and make `resolveSpellWith` re-read bindings per effect so a later `DealDamage` sees the binding (CR 729.1b). All bare names stay as `…With noSubgame` wrappers, so no existing call site changes.
 
 **Files:**
-- Modify: `source/library/Pawl/Resolve.hs` — `noSubgame`, `bindLoserSlot`, `applyEffectWith`/`applyEffect`, `resolveSpellWith`/`resolveSpell` (+ per-effect re-read); imports.
-- Test: `source/test-suite/Pawl/ResolveSpec.hs` — a spell whose effects are `[PlaySubgame slot, DealDamage slot 3]`, run through `resolveSpellWith` with a **stub** runner returning `Won alice`, deals 3 to bob.
+- Modify: `source/library/Parun/Resolve.hs` — `noSubgame`, `bindLoserSlot`, `applyEffectWith`/`applyEffect`, `resolveSpellWith`/`resolveSpell` (+ per-effect re-read); imports.
+- Test: `source/test-suite/Parun/ResolveSpec.hs` — a spell whose effects are `[PlaySubgame slot, DealDamage slot 3]`, run through `resolveSpellWith` with a **stub** runner returning `Won alice`, deals 3 to bob.
 
 **Interfaces:**
 - Consumes: `applyEffect` executor site; `Binding`, `Recipient.ToPlayer`, `Result`.
@@ -470,7 +470,7 @@ Thread a `Game Result` runner down the spell path and give `PlaySubgame` its rea
 
 - [x] **Step 1: Write the failing test**
 
-Add to `source/test-suite/Pawl/ResolveSpec.hs`, in the same `testGroup` list that holds the M5b `RestartGame` resolution test. It hand-builds a spell object on the stack whose chosen mode's effects are `[PlaySubgame "loser", DealDamage "loser" (Literal 3)]`, then runs `resolveSpellWith` with a stub runner that returns `Won alice` (no real subgame). The loser is bob; bob must lose 3 life. Add `import qualified Pawl.Type.Result as Result` if absent; the file already imports the ability/spell-construction machinery used by the M5b test (`Object`, `Source`, `Modal`, `Mode`, `ModeSelection`, `ModeIndex`, `Effect`, `Binding`, `Quantity.Type`, `Zone`, `TapState`, `Sickness`, `Seq`, `Map`, `Set`, `Engine`, `Game`, `GameState`, `Resolve`).
+Add to `source/test-suite/Parun/ResolveSpec.hs`, in the same `testGroup` list that holds the M5b `RestartGame` resolution test. It hand-builds a spell object on the stack whose chosen mode's effects are `[PlaySubgame "loser", DealDamage "loser" (Literal 3)]`, then runs `resolveSpellWith` with a stub runner that returns `Won alice` (no real subgame). The loser is bob; bob must lose 3 life. Add `import qualified Parun.Type.Result as Result` if absent; the file already imports the ability/spell-construction machinery used by the M5b test (`Object`, `Source`, `Modal`, `Mode`, `ModeSelection`, `ModeIndex`, `Effect`, `Binding`, `Quantity.Type`, `Zone`, `TapState`, `Sickness`, `Seq`, `Map`, `Set`, `Engine`, `Game`, `GameState`, `Resolve`).
 
 ```haskell
       HU.testCase "CR 729.1b: PlaySubgame binds the loser, a later DealDamage reads it (mid-resolution binding visible)" $
@@ -514,11 +514,11 @@ Expected: **compile error** — `Resolve.resolveSpellWith` not in scope.
 
 - [x] **Step 3: Add `noSubgame`, `bindLoserSlot`, and the imports**
 
-In `source/library/Pawl/Resolve.hs`, add to the import group:
+In `source/library/Parun/Resolve.hs`, add to the import group:
 
 ```haskell
-import Pawl.Type.Result (Result)
-import qualified Pawl.Type.Result as Result
+import Parun.Type.Result (Result)
+import qualified Parun.Type.Result as Result
 ```
 
 Add two top-level helpers (near `bindSlot`, ~line 837):
@@ -541,11 +541,11 @@ bindLoserSlot holder slot loser gs =
    in gs {GameState.objects = Map.adjust put holder (GameState.objects gs)}
 ```
 
-> `Binding` (the `Pawl.Type.Binding` module, for `empty`/`target`) and `Recipient` are already imported by `Resolve.hs` (it constructs recipients elsewhere). Confirm the aliases; `Binding.empty` is `Pawl.Type.Binding.empty`.
+> `Binding` (the `Parun.Type.Binding` module, for `empty`/`target`) and `Recipient` are already imported by `Resolve.hs` (it constructs recipients elsewhere). Confirm the aliases; `Binding.empty` is `Parun.Type.Binding.empty`.
 
 - [x] **Step 4: Split `applyEffect` into `applyEffectWith` + wrapper**
 
-In `source/library/Pawl/Resolve.hs`, rename the executor. Change the header line
+In `source/library/Parun/Resolve.hs`, rename the executor. Change the header line
 
 ```haskell
 applyEffect :: ObjectId -> PlayerId -> Map.Map SlotName (Subtype, Subtype) -> Map.Map SlotName Bool -> Map.Map SlotName Recipient -> Effect Card.Type.Card -> Game ()
@@ -593,7 +593,7 @@ applyEffect = applyEffectWith noSubgame
 
 - [x] **Step 5: Split `resolveSpell` into `resolveSpellWith` + wrapper, with the per-effect binding re-read**
 
-In `source/library/Pawl/Resolve.hs`, replace `resolveSpell`'s definition (lines ~298–338). Rename it to `resolveSpellWith` taking the runner, and change the effect fold from a snapshot `mapM_` into a per-effect loop that **re-reads** the source's live bindings (so a slot `PlaySubgame` binds mid-fold is visible to the next effect). Keep the fizzle logic and the pre-fold `legalSlot` closure exactly as they are. The changed body:
+In `source/library/Parun/Resolve.hs`, replace `resolveSpell`'s definition (lines ~298–338). Rename it to `resolveSpellWith` taking the runner, and change the effect fold from a snapshot `mapM_` into a per-effect loop that **re-reads** the source's live bindings (so a slot `PlaySubgame` binds mid-fold is visible to the next effect). Keep the fizzle logic and the pre-fold `legalSlot` closure exactly as they are. The changed body:
 
 ```haskell
 -- CR 608.2b/608.2c, extended for CR 729.1b: resolve a spell, re-reading the
@@ -669,9 +669,9 @@ git commit -m "feat(m5c): inject a subgame runner; PlaySubgame binds the loser, 
 Give the runner a body: construct the subgame (CR 729.2), run `startGameFromCards >> playGame` as a **lifted** `runStateT` (the function call, sharing the interpreter), funnel cards back (CR 729.5), and reshuffle. Then wire `Engine.priorityLoop` to supply it via `Stack.resolveTopWith`.
 
 **Files:**
-- Modify: `source/library/Pawl/Stack.hs` — `resolveTopWith`/`resolveTop` wrapper.
-- Modify: `source/library/Pawl/Engine.hs` — `playSubgame`; `priorityLoop` uses `resolveTopWith playSubgame`; import `Trans`.
-- Test: `source/test-suite/Pawl/GameSpec.hs` — `playSubgame` on a crafted 2-player state returns `Won alice` (bob decks, CR 729.3) and funnels every card back (CR 729.5).
+- Modify: `source/library/Parun/Stack.hs` — `resolveTopWith`/`resolveTop` wrapper.
+- Modify: `source/library/Parun/Engine.hs` — `playSubgame`; `priorityLoop` uses `resolveTopWith playSubgame`; import `Trans`.
+- Test: `source/test-suite/Parun/GameSpec.hs` — `playSubgame` on a crafted 2-player state returns `Won alice` (bob decks, CR 729.3) and funnels every card back (CR 729.5).
 
 **Interfaces:**
 - Consumes: `Engine.playGame`, `Setup.{subgameStateFrom,startGameFromCards,funnelBack,shuffleLibrary}`, `Resolve.{resolveSpellWith,resolveTop}`.
@@ -679,7 +679,7 @@ Give the runner a body: construct the subgame (CR 729.2), run `startGameFromCard
 
 - [x] **Step 1: Split `Stack.resolveTop` into `resolveTopWith` + wrapper**
 
-In `source/library/Pawl/Stack.hs`, change `resolveTop`'s definition (line ~30) to take a runner and forward it to the **spell** branch only; keep the ability branches on the bare (no-subgame) resolvers. Rename the header:
+In `source/library/Parun/Stack.hs`, change `resolveTop`'s definition (line ~30) to take a runner and forward it to the **spell** branch only; keep the ability branches on the bare (no-subgame) resolvers. Rename the header:
 
 ```haskell
 -- The runner-aware resolve-the-top-of-stack: a resolving SPELL may play a subgame
@@ -707,14 +707,14 @@ resolveTop = resolveTopWith Resolve.noSubgame
 Add to `Stack.hs`'s import group (it needs the `Result` type for the signature and `Resolve.noSubgame`):
 
 ```haskell
-import Pawl.Type.Result (Result)
+import Parun.Type.Result (Result)
 ```
 
 > `Resolve` is already imported by `Stack.hs`; `Resolve.noSubgame`/`resolveSpellWith` come from Task 3.
 
 - [x] **Step 2: Write the failing test (playSubgame end-to-end)**
 
-Add to `source/test-suite/Pawl/GameSpec.hs`, in `ruleTests`. It builds a parent where alice's library has 8 Mountains and bob's has 3, runs `Engine.playSubgame` directly, and asserts the subgame result feeds back correctly: alice wins (bob decks on the opening draw, CR 729.3), and every card funnels back into a library (CR 729.5). Add `import qualified Pawl.Type.Result as Result` if absent. Reuse `addManyG` (already in `GameSpec.hs`) plus a local `poolToLibraryG` mirroring Task 1's helper.
+Add to `source/test-suite/Parun/GameSpec.hs`, in `ruleTests`. It builds a parent where alice's library has 8 Mountains and bob's has 3, runs `Engine.playSubgame` directly, and asserts the subgame result feeds back correctly: alice wins (bob decks on the opening draw, CR 729.3), and every card funnels back into a library (CR 729.5). Add `import qualified Parun.Type.Result as Result` if absent. Reuse `addManyG` (already in `GameSpec.hs`) plus a local `poolToLibraryG` mirroring Task 1's helper.
 
 ```haskell
       HU.testCase "CR 729.2/729.3/729.5: playSubgame runs a nested game, bob decks, cards funnel back" $
@@ -753,7 +753,7 @@ Expected: **compile error** — `Engine.playSubgame` not in scope.
 
 - [x] **Step 4: Implement `playSubgame` and wire `priorityLoop`**
 
-In `source/library/Pawl/Engine.hs`, add to the import group:
+In `source/library/Parun/Engine.hs`, add to the import group:
 
 ```haskell
 import qualified Control.Monad.Trans.Class as Trans
@@ -814,7 +814,7 @@ A labeled-synthetic `{0}` Sorcery (the `Landform` / `synthetic-restart` crutch) 
 
 **Files:**
 - Create: `data/cards/synthetic-subgame.json`.
-- Modify: `source/test-suite/Pawl/Cards.hs` — register at four sites.
+- Modify: `source/test-suite/Parun/Cards.hs` — register at four sites.
 
 **Interfaces:**
 - Produces: `Cards.syntheticSubgamePrinting :: Cards.Cards -> Printing.Printing`.
@@ -859,7 +859,7 @@ Write `data/cards/synthetic-subgame.json`:
 
 - [x] **Step 2: Register the printing at all four `Cards.hs` sites**
 
-In `source/test-suite/Pawl/Cards.hs`:
+In `source/test-suite/Parun/Cards.hs`:
 
 1. Record field (in `data Cards`, after `syntheticRestartPrinting :: Printing.Printing,`):
 
@@ -910,7 +910,7 @@ git commit -m "feat(m5c): synthetic-subgame gate card (labeled synthetic, expire
 The first headline gate. alice casts the `synthetic-subgame` sorcery **through the real priority loop**; it plays a nested game in which bob decks (CR 729.3), alice wins, and the follow-on `DealDamage` deals 3 to bob (CR 729.1b) — the derived loser. This is strictly more end-to-end than Task 3 (a stub runner) or Task 4 (`playSubgame` in isolation): it goes through activation, the stack, resolution, and the injected `playSubgame`.
 
 **Files:**
-- Modify: `source/test-suite/Pawl/GameSpec.hs` — one answerer `subgameAnswer`, one test case in `ruleTests`.
+- Modify: `source/test-suite/Parun/GameSpec.hs` — one answerer `subgameAnswer`, one test case in `ruleTests`.
 
 **Interfaces:**
 - Consumes: `Engine.{runGamePure,priorityLoop}`, `Setup.emptyGame`, `S.addCreature`, `Cards.{syntheticSubgamePrinting,mountainPrinting}`, `isCastAction`, `poolToLibraryG`, `S.identityAnswer`.
@@ -918,7 +918,7 @@ The first headline gate. alice casts the `synthetic-subgame` sorcery **through t
 
 - [x] **Step 1: Add the casting answerer**
 
-Append to `source/test-suite/Pawl/GameSpec.hs` (next to the other answerers, e.g. after `restartAnswer`):
+Append to `source/test-suite/Parun/GameSpec.hs` (next to the other answerers, e.g. after `restartAnswer`):
 
 ```haskell
 -- CR 729 gate strategy. Whoever has priority casts the only castable spell on the
@@ -1000,7 +1000,7 @@ handCard printing pid gs =
 Run: `cabal build all --enable-tests --enable-benchmarks && cabal test --test-options='-p "$0~/alice casts a subgame spell/"'`
 Expected: **PASS.**
 
-Then a **falsification check** — temporarily break the loser derivation in `source/library/Pawl/Resolve.hs`'s `PlaySubgame` arm by binding the **winner** instead of the loser (`Just loser` → bind `winner`): re-run the gate and expect **FAIL** (bob at 20, alice at 17). **Revert** exactly, confirm `git diff source/library/Pawl/Resolve.hs` is empty, and re-run: expect **PASS**. This proves the gate depends on the CR 729.1b outcome plumbing.
+Then a **falsification check** — temporarily break the loser derivation in `source/library/Parun/Resolve.hs`'s `PlaySubgame` arm by binding the **winner** instead of the loser (`Just loser` → bind `winner`): re-run the gate and expect **FAIL** (bob at 20, alice at 17). **Revert** exactly, confirm `git diff source/library/Parun/Resolve.hs` is empty, and re-run: expect **PASS**. This proves the gate depends on the CR 729.1b outcome plumbing.
 
 > Do not leave the mutation in. If the gate does not fail under it, the follow-on is not reading the bound loser — investigate before proceeding.
 
@@ -1022,14 +1022,14 @@ git commit -m "test(m5c): gameplay gate — subgame outcome feeds the parent eff
 The subgame's cards return to their owners' main libraries and reshuffle (CR 729.5), the main-game board survives, and a main-game **player counter** is unaffected by the subgame while subgame counters cease (CR 729.4b). Reuses Task 6's `subgameAnswer`.
 
 **Files:**
-- Modify: `source/test-suite/Pawl/GameSpec.hs` — one test case in `ruleTests`.
+- Modify: `source/test-suite/Parun/GameSpec.hs` — one test case in `ruleTests`.
 
 **Interfaces:**
 - Consumes: everything from Task 6 plus `Effect`/`GainPlayerCounters` machinery indirectly — here just set a counter on the parent player directly via `Player.counters` and assert it survives.
 
 - [x] **Step 1: Write the failing test**
 
-Insert into `ruleTests`. bob starts with a poison counter in the **main** game; after the subgame he still has exactly it (CR 729.4b: main-game counters are outside the subgame and untouched). Every owned card is back in a library and the main-game battlefield survivors are intact (CR 729.5). Add `import qualified Pawl.Type.PlayerCounterKind as PlayerCounterKind` if absent (poison's kind); confirm the kind constructor name against `Pawl.Type.PlayerCounterKind` (P10).
+Insert into `ruleTests`. bob starts with a poison counter in the **main** game; after the subgame he still has exactly it (CR 729.4b: main-game counters are outside the subgame and untouched). Every owned card is back in a library and the main-game battlefield survivors are intact (CR 729.5). Add `import qualified Parun.Type.PlayerCounterKind as PlayerCounterKind` if absent (poison's kind); confirm the kind constructor name against `Parun.Type.PlayerCounterKind` (P10).
 
 ```haskell
       HU.testCase "CR 729.5/729.4b gameplay: cards funnel back, main-game board survives, main-game counters untouched" $
@@ -1050,7 +1050,7 @@ Insert into `ruleTests`. bob starts with a poison counter in the **main** game; 
               HU.assertEqual "the main-game survivor is still on the battlefield" True (Set.member survivorId (GameState.battlefield after))
 ```
 
-> **Do not use `error` in library code** — the `Map.findWithDefault (error "bob") …` above is test-only sugar for "bob is always present"; if hlint or the no-partial rule flags it in tests too, replace with `Maybe.fromMaybe 0 (fmap (Map.findWithDefault 0 PlayerCounterKind.Poison . Player.counters) (Map.lookup S.bob (GameState.players after)))`. Confirm `PlayerCounterKind.Poison`'s exact constructor name (P10's `Pawl.Type.PlayerCounterKind`); adjust if it differs.
+> **Do not use `error` in library code** — the `Map.findWithDefault (error "bob") …` above is test-only sugar for "bob is always present"; if hlint or the no-partial rule flags it in tests too, replace with `Maybe.fromMaybe 0 (fmap (Map.findWithDefault 0 PlayerCounterKind.Poison . Player.counters) (Map.lookup S.bob (GameState.players after)))`. Confirm `PlayerCounterKind.Poison`'s exact constructor name (P10's `Parun.Type.PlayerCounterKind`); adjust if it differs.
 
 - [x] **Step 2: Run the test to verify it passes; prove teeth**
 
@@ -1077,7 +1077,7 @@ git commit -m "test(m5c): gameplay gate — funnel-back and main-game counter is
 The go/no-go falsifier the whole milestone exists to survive: a subgame that itself resolves a subgame. alice's **main-game library** contains a copy of the `synthetic-subgame` sorcery, so inside the subgame she draws and casts it, opening a **sub-subgame**; every level plays out (bob decks at each level), the recursion unwinds, and the top-level main game resumes intact — proving nesting is free recursion (no `GameState` stack field).
 
 **Files:**
-- Modify: `source/test-suite/Pawl/GameSpec.hs` — one test case in `ruleTests`.
+- Modify: `source/test-suite/Parun/GameSpec.hs` — one test case in `ruleTests`.
 
 **Interfaces:**
 - Consumes: everything from Task 6.
@@ -1152,13 +1152,13 @@ git commit -m "test(m5c): gameplay gate — arbitrary subgame nesting terminates
 Per `CLAUDE.md` ("file the issue, cite it inline"), every M5c elision gets a GitHub issue carrying status, rationale, and expiry trigger, with a code-site comment stating only what is *not* implemented plus `(#N)`.
 
 **Files:**
-- Create: GitHub issues in `tfausak/pawl`.
-- Modify: `source/library/Pawl/Setup.hs` (first-player elision comment), `source/library/Pawl/Resolve.hs` (ability-path + Result-widening + full-Shahrazad citations at the `PlaySubgame` arm).
+- Create: GitHub issues in `tfausak/parun`.
+- Modify: `source/library/Parun/Setup.hs` (first-player elision comment), `source/library/Parun/Resolve.hs` (ability-path + Result-widening + full-Shahrazad citations at the `PlaySubgame` arm).
 
 - [x] **Step 1: Check for duplicates, then file the issues**
 
 ```bash
-gh issue list --repo tfausak/pawl --search "subgame"
+gh issue list --repo tfausak/parun --search "subgame"
 ```
 
 File these (adjust wording if a duplicate exists). Record each returned number.
@@ -1166,43 +1166,43 @@ File these (adjust wording if a duplicate exists). Record each returned number.
 1. First-player RNG elision (CR 729.2 / CR 103.4):
 
 ```bash
-gh issue create --repo tfausak/pawl \
+gh issue create --repo tfausak/parun \
   --title "Subgame first player is deterministic (CR 729.2 'randomly determine which player goes first')" \
   --label elision --label rules-correctness \
-  --body "Status: elided in M5c. Setup.subgameStateFrom sets the subgame's active player to the head of the turn order, matching the existing Setup.emptyGame posture -- pawl has no first-player randomness prompt (the Prompt GADT has no such constructor; only Shuffle carries randomness). CR 729.2 (and CR 103.4) call for randomly determining the starting player. Expiry: fires when a first-player randomness prompt lands (a shared need with CR 103.4 for main games). Cited at Setup.subgameStateFrom."
+  --body "Status: elided in M5c. Setup.subgameStateFrom sets the subgame's active player to the head of the turn order, matching the existing Setup.emptyGame posture -- parun has no first-player randomness prompt (the Prompt GADT has no such constructor; only Shuffle carries randomness). CR 729.2 (and CR 103.4) call for randomly determining the starting player. Expiry: fires when a first-player randomness prompt lands (a shared need with CR 103.4 for main games). Cited at Setup.subgameStateFrom."
 ```
 
 2. Ability-path subgames:
 
 ```bash
-gh issue create --repo tfausak/pawl \
+gh issue create --repo tfausak/parun \
   --title "Subgame from an activated/triggered ability (PlaySubgame on the ability path)" \
   --label gap --label expires:card-driven \
-  --body "Status: deferred. M5c injects the subgame runner only down the SPELL path (Stack.resolveTopWith -> Resolve.resolveSpellWith -> applyEffectWith); the ability path (resolveEffects/resolveAbility) folds the bare applyEffect, whose PlaySubgame arm uses noSubgame (resolves as a draw, binds nothing). No real card plays a subgame from an ability (Shahrazad is a sorcery). Expiry: card-driven. Cited at the PlaySubgame arm in Pawl.Resolve."
+  --body "Status: deferred. M5c injects the subgame runner only down the SPELL path (Stack.resolveTopWith -> Resolve.resolveSpellWith -> applyEffectWith); the ability path (resolveEffects/resolveAbility) folds the bare applyEffect, whose PlaySubgame arm uses noSubgame (resolves as a draw, binds nothing). No real card plays a subgame from an ability (Shahrazad is a sorcery). Expiry: card-driven. Cited at the PlaySubgame arm in Parun.Resolve."
 ```
 
 3. Result widening for multi-player "each non-winner":
 
 ```bash
-gh issue create --repo tfausak/pawl \
+gh issue create --repo tfausak/parun \
   --title "Subgame outcome is a 2-player loser derivation (Result not widened for 'each player who doesn't win')" \
   --label gap --label rules-correctness \
-  --body "Status: deferred. PlaySubgame derives the single loser as listToMaybe (filter (/= winner) turnOrder) and a Drawn subgame binds nothing. CR 729.1b's real customer (Shahrazad: 'each player who doesn't win ... loses half their life') needs the full non-winner SET and a per-player half-life-rounded-up quantity. Pawl.Type.Result stays Won PlayerId | Drawn. Expiry: card-driven (full Shahrazad). Cited at the PlaySubgame arm in Pawl.Resolve."
+  --body "Status: deferred. PlaySubgame derives the single loser as listToMaybe (filter (/= winner) turnOrder) and a Drawn subgame binds nothing. CR 729.1b's real customer (Shahrazad: 'each player who doesn't win ... loses half their life') needs the full non-winner SET and a per-player half-life-rounded-up quantity. Parun.Type.Result stays Won PlayerId | Drawn. Expiry: card-driven (full Shahrazad). Cited at the PlaySubgame arm in Parun.Resolve."
 ```
 
 4. Full Shahrazad (retires the synthetic gate):
 
 ```bash
-gh issue create --repo tfausak/pawl \
+gh issue create --repo tfausak/parun \
   --title "Full Shahrazad (CR 729): the half-life-rounded-up rider retires the synthetic-subgame gate" \
   --label gap --label rules-correctness --label expires:card-driven \
-  --body "Status: deferred; M5c's gate is a labeled synthetic ('Synthetic Subgame', data/cards/synthetic-subgame.json), the Landform crutch. Shahrazad is the only real CR 729 card; its rider -- 'each player who doesn't win the subgame loses half their life, rounded up' -- needs a life-loss opcode, a half-current-life-rounded-up Quantity, and the multi-player non-winner scope (see the Result-widening issue). The subgame MACHINERY (PlaySubgame, funnelBack, nesting) is real and faithful; only the fixed-3 DealDamage rider stands in for the half-life rider. When built, this retires syntheticSubgamePrinting in favor of a real Shahrazad card + test. Also parked: CR 727.6 (restarting a subgame) rides this machinery. Expiry: card-driven (Shahrazad). Cited at the PlaySubgame arm in Pawl.Resolve."
+  --body "Status: deferred; M5c's gate is a labeled synthetic ('Synthetic Subgame', data/cards/synthetic-subgame.json), the Landform crutch. Shahrazad is the only real CR 729 card; its rider -- 'each player who doesn't win the subgame loses half their life, rounded up' -- needs a life-loss opcode, a half-current-life-rounded-up Quantity, and the multi-player non-winner scope (see the Result-widening issue). The subgame MACHINERY (PlaySubgame, funnelBack, nesting) is real and faithful; only the fixed-3 DealDamage rider stands in for the half-life rider. When built, this retires syntheticSubgamePrinting in favor of a real Shahrazad card + test. Also parked: CR 727.6 (restarting a subgame) rides this machinery. Expiry: card-driven (Shahrazad). Cited at the PlaySubgame arm in Parun.Resolve."
 ```
 
 5. Subsystem-blocked slices:
 
 ```bash
-gh issue create --repo tfausak/pawl \
+gh issue create --repo tfausak/parun \
   --title "Subgame subsystem-blocked slices (CR 729.2a-c / 729.4a / 729.5 second sentence / 729.5a-c)" \
   --label gap \
   --body "Status: deferred, subsystem-blocked (not scheduled). Nontraditional/supplementary decks (729.2a/729.5a), Vanguard (729.2b/729.5b), Commander (729.2c/729.5c), and cards brought INTO a subgame from a main game plus the main-game leave-the-zone triggers they queue until the main game resumes (729.4a, 729.5 second sentence) all ride subsystems M5 does not build (nontraditional cards, Vanguard, Commander, outside-the-game). CR 723.4 subgame prompt tagging / game-context is an M7/interpreter concern (subgame prompts are untagged today). Cited at Setup.funnelBack / Engine.playSubgame."
@@ -1210,14 +1210,14 @@ gh issue create --repo tfausak/pawl \
 
 - [x] **Step 2: Add the inline citations**
 
-In `source/library/Pawl/Setup.hs`, extend `subgameStateFrom`'s first-player comment to cite the elision issue (replace `#N1`):
+In `source/library/Parun/Setup.hs`, extend `subgameStateFrom`'s first-player comment to cite the elision issue (replace `#N1`):
 
 ```haskell
 -- ... CR 729.2's "randomly determine which player goes first" is elided to the
--- head of the turn order (pawl has no first-player randomness prompt) (#N1).
+-- head of the turn order (parun has no first-player randomness prompt) (#N1).
 ```
 
-In `source/library/Pawl/Resolve.hs`, extend the `PlaySubgame` arm's comment to cite the ability-path, Result-widening, and full-Shahrazad issues (replace `#N2`/`#N3`/`#N4`):
+In `source/library/Parun/Resolve.hs`, extend the `PlaySubgame` arm's comment to cite the ability-path, Result-widening, and full-Shahrazad issues (replace `#N2`/`#N3`/`#N4`):
 
 ```haskell
   -- ... Multi-player "each player who doesn't win" and a widened Result are
@@ -1226,7 +1226,7 @@ In `source/library/Pawl/Resolve.hs`, extend the `PlaySubgame` arm's comment to c
   -- half-life rider (#N4), which retires the synthetic gate.
 ```
 
-In `source/library/Pawl/Engine.hs`, add one line at `playSubgame` citing the subsystem-blocked slice (replace `#N5`):
+In `source/library/Parun/Engine.hs`, add one line at `playSubgame` citing the subsystem-blocked slice (replace `#N5`):
 
 ```haskell
 -- ... Nontraditional/Vanguard/Commander subgame movement and cards brought into
@@ -1272,7 +1272,7 @@ Expected: **all pass**, including Tasks 1–8. Do not proceed if anything is red
 - [x] **Step 3: Invariant + rules audit**
 
 Confirm by inspection (note anything material in the commit body):
-- **Invariant 1:** `Pawl.Resolve` cases only on the `PlaySubgame` *classification*; there is no `case … Shahrazad`. The outcome plumbing is generic — `PlaySubgame` binds a slot; "the loser takes damage" is ordinary `DealDamage` data. `playSubgame`/`subgameStateFrom`/`funnelBack` read `Source.OfCard` (a classification), never a card name.
+- **Invariant 1:** `Parun.Resolve` cases only on the `PlaySubgame` *classification*; there is no `case … Shahrazad`. The outcome plumbing is generic — `PlaySubgame` binds a slot; "the loser takes damage" is ordinary `DealDamage` data. `playSubgame`/`subgameStateFrom`/`funnelBack` read `Source.OfCard` (a classification), never a card name.
 - **Invariant 2:** every subgame choice is a prompt through the same interpreter (untagged; shuffles remain `Prompt.Shuffle`). The one elision (first-player RNG) carries an expiry-tagged issue (Task 9) cited inline.
 - **Rules re-check** against `docs/rules.txt`: CR 729.1 (6275), 729.1a (6277), 729.1b (6279), 729.2 (6281), 729.3 (6289), 729.4 (6291), 729.4b (6295), 729.5 (6297), 729.6 (6306); CR 103 (258); CR 704.5b draw-from-empty. Delegate this citation pass to a cheap model if using subagents (Haiku, per `docs/workflow.md`).
 

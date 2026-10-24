@@ -24,14 +24,14 @@ MTGJSON dump (`card-data-source`). The oracle text and the one ruling quoted in
 
 CR 118.1 says a cost is "an action or payment necessary to take another action",
 and CR 601.2f lists what those actions can be: "paying mana, tapping permanents,
-sacrificing permanents, discarding cards, and so on." Pawl can express two of
+sacrificing permanents, discarding cards, and so on." Parun can express two of
 them, both nullary and both self-referential:
 
 ```haskell
--- Pawl.Type.AdditionalCost
+-- Parun.Type.AdditionalCost
 data AdditionalCost = TapSelf | SacrificeSelf
 
--- Pawl.Type.AbilityCost
+-- Parun.Type.AbilityCost
 data AbilityCost = MkAbilityCost { mana :: Maybe ManaCost, additional :: [AdditionalCost] }
 ```
 
@@ -50,9 +50,9 @@ structural gap rather than missing vocabulary:
    that shapes this whole phase — an alternative cost is *not* a different mana
    cost. Fireblast's is entirely non-mana.
 
-P7 closed the *modification* half of GAP-Co: `Pawl.Cost.total` applies CR
+P7 closed the *modification* half of GAP-Co: `Parun.Cost.total` applies CR
 601.2f's increases and reductions to a cost. This phase closes the *payment*
-half, and in doing so makes `Pawl.Cost` a module about costs rather than a
+half, and in doing so makes `Parun.Cost` a module about costs rather than a
 module about one arithmetic step.
 
 ### Gate cards
@@ -100,7 +100,7 @@ parameterized `CostComponent` vocabulary with four inhabitants; the CR 118.6
 unpayable/`{0}` distinction carried in the type; spell-side additional costs (CR
 118.8) and printed alternative costs (CR 118.9) on `Card`; CR 118.9d's
 application of adjustments and additional costs to a chosen alternative; a
-payability predicate and a prompting payment path in `Pawl.Cost`, which becomes
+payability predicate and a prompting payment path in `Parun.Cost`, which becomes
 the sole casing home for the axis; two new prompts with named elisions; one new
 `PermanentCriterion` constructor; codec, replay and card-file migration.
 
@@ -120,7 +120,7 @@ on `ActivatedAbility`; this is a rules fact, not an elision, and needs no issue.
 ### 2.1 `Cost`, one type for spells and abilities
 
 ```haskell
--- Pawl.Type.Cost
+-- Parun.Type.Cost
 data Cost = MkCost
   { mana :: Maybe ManaCost,
     components :: [CostComponent]
@@ -128,22 +128,22 @@ data Cost = MkCost
   deriving (Eq, Ord, Show)
 ```
 
-`Pawl.Type.AbilityCost` is **retired**, not wrapped: the project has no API
+`Parun.Type.AbilityCost` is **retired**, not wrapped: the project has no API
 stability obligations, and one axis with two names is exactly the shape the
 umbrella's "one structural axis per phase" discipline exists to prevent.
 `ActivatedAbility.cost` becomes a `Cost`; a card's costs are *built* as `Cost`s
-by `Pawl.Cost.costsFor` (§2.4) rather than stored as one, because a spell has a
+by `Parun.Cost.costsFor` (§2.4) rather than stored as one, because a spell has a
 list of candidate costs and only one of them is printed in the mana-cost box.
 
-No module cycle appears: `Pawl.Type.Card` imports `Pawl.Type.Cost`, which imports
-`Pawl.Type.CostComponent`, which imports `Pawl.Type.PermanentCriterion` and
-`Pawl.Type.Subtype`. Nothing in the chain refers back to `Card`, so unlike
+No module cycle appears: `Parun.Type.Card` imports `Parun.Type.Cost`, which imports
+`Parun.Type.CostComponent`, which imports `Parun.Type.PermanentCriterion` and
+`Parun.Type.Subtype`. Nothing in the chain refers back to `Card`, so unlike
 `Effect`'s delayed-trigger knot this needs no parametricity trick.
 
 ### 2.2 `CostComponent`, the new vocabulary
 
 ```haskell
--- Pawl.Type.CostComponent
+-- Parun.Type.CostComponent
 data CostComponent
   = TapThis                              -- CR 602.1a's {T} symbol
   | SacrificeThis                        -- CR 701.21 (Mindslaver)
@@ -152,7 +152,7 @@ data CostComponent
   deriving (Eq, Ord, Show)
 ```
 
-`Pawl.Type.AdditionalCost` is retired; `TapThis`/`SacrificeThis` are its two
+`Parun.Type.AdditionalCost` is retired; `TapThis`/`SacrificeThis` are its two
 inhabitants renamed to match the new module's vocabulary (`Self` was
 `AdditionalCost`-relative; `This` is the object the cost is on).
 
@@ -179,7 +179,7 @@ cost has no access to at CR 601.2f time. A variable life payment is card-driven
 - **`Just (MkManaCost [])` = `{0}`.** CR 118.5/118.5a: a cost of `{0}` is real
   and payable — "the action necessary for a player to pay such a cost is the
   player's acknowledgment that they are paying it". `ManaCost` is a list of
-  symbols and the empty list already **is** `{0}` (`Pawl.Cost` says so today at
+  symbols and the empty list already **is** `{0}` (`Parun.Cost` says so today at
   CR 601.2f's floor).
 
 **This changes the meaning of an existing field.** `AbilityCost.mana`'s `Nothing`
@@ -188,7 +188,7 @@ every M3e mana ability. Under CR 118.6 that spelling is wrong, so **every
 existing ability migrates `Nothing → Just (MkManaCost [])`**, in the library
 defaults, in the card JSON, and in the fixtures. The migration is mechanical but
 load-bearing: leave a card file's `mana` field absent and its ability silently
-becomes unactivatable. `Pawl.ManaSpec`'s Llanowar Elves tests are the tripwire.
+becomes unactivatable. `Parun.ManaSpec`'s Llanowar Elves tests are the tripwire.
 
 Two rules then fall out of the shape instead of needing special cases, both from
 CR 118.6a:
@@ -205,7 +205,7 @@ CR 118.6a:
 ### 2.4 `costsFor`, and where CR 118.9d lands
 
 ```haskell
--- Pawl.Cost
+-- Parun.Cost
 costsFor :: ObjectId -> GameState -> [Cost]
 ```
 
@@ -288,12 +288,12 @@ characteristics — the standing house rule, and what makes the Blood Moon test 
 
 ```haskell
 pay :: PlayerId -> ObjectId -> Cost -> Game Payment
-data Payment = Paid | Unpaid   -- Pawl.Type.Payment
+data Payment = Paid | Unpaid   -- Parun.Type.Payment
 ```
 
 A sum type rather than `Bool`, per the house rule against boolean blindness, and
 one convention for the door rather than a fifth one (#79's complaint about
-`Pawl.Replacement`'s four).
+`Parun.Replacement`'s four).
 
 Order: the mana part first (CR 601.2g's mana window, then the mana half of
 601.2h), then components in printed order. CR 601.2h says the player may pay in
@@ -308,7 +308,7 @@ history all see it. §5's Khabál Ghoul test is the proof.
 Paying life is a direct `Player.life` subtraction (CR 119.4's "the payment is
 subtracted from their life total; in other words, the player loses that much
 life"), and the CR 704.5a state-based action that follows is the existing one in
-`Pawl.Sba` — untouched.
+`Parun.Sba` — untouched.
 
 ### 2.8 Two prompts, and their elisions
 
@@ -347,7 +347,7 @@ is already on the stack, and the existing full `State.put gs` restore covers it.
 
 ### 2.9 The read sites
 
-**`Pawl.Cast`.** `costOf` retires in favour of `Cost.costsFor`. `castable`
+**`Parun.Cast`.** `costOf` retires in favour of `Cost.costsFor`. `castable`
 becomes "at least one candidate cost is payable" — `any` over
 `canPay pid oid (total pid oid (substituteX 0 candidate) gs) gs` — keeping the
 CR 601.2b X=0 floor and the CR 601.2f rule that affordability is measured against
@@ -355,13 +355,13 @@ the *total*. `castableWhileSearching` gets the same treatment. `castSpell` gains
 the `ChooseCost` step and hands the chosen, X-substituted, totalled `Cost` to
 `Cost.pay`.
 
-**`Pawl.Activate`.** `canPayAdditional` and `payAdditional` are deleted;
+**`Parun.Activate`.** `canPayAdditional` and `payAdditional` are deleted;
 `activatable` calls `Cost.canPay` and `activateAbility` calls `Cost.pay`. Ability
 costs route through `Cost.total` too — no P7 vocabulary taxes an activation
 today, so nothing changes observably (#90 stays open as a *producer* gap), but
 there is now one door rather than two. `tapSicknessOk` stops reading
 `AdditionalCost.TapSelf` directly and asks `Cost.requiresTapSymbol`, so CR
-302.6's summoning-sickness gate consults a classification and `Pawl.Cost` remains
+302.6's summoning-sickness gate consults a classification and `Parun.Cost` remains
 the single casing home.
 
 ### 2.10 `PermanentCriterion` gains one constructor
@@ -379,10 +379,10 @@ describes; P9 still merges it with `CardCriterion` into one filter language, and
 
 ### 2.11 Serialization, replay, and the card files
 
-`Pawl.Codec` gains `Cost` and `CostComponent` round-trips, the two new `Card`
+`Parun.Codec` gains `Cost` and `CostComponent` round-trips, the two new `Card`
 fields, and the new `PermanentCriterion` arm; the `AbilityCost`/`AdditionalCost`
 codecs are deleted. `Payment` is runtime-only and never serialized.
-`Pawl.Replay` gains `Response.ChoseCost` and `Response.ChoseSacrifices` with
+`Parun.Replay` gains `Response.ChoseCost` and `Response.ChoseSacrifices` with
 their `promptToResponse`/`responseToAnswer` arms and short-transcript fallbacks:
 the **first offered cost** (the printed one — the least eventful) and the first
 `count` candidates in ascending order (mirroring `ChooseModes`' fallback).
@@ -390,16 +390,16 @@ the **first offered cost** (the printed one — the least eventful) and the firs
 **Every card file with an activated ability changes shape** (`cost.additional` →
 `cost.components`, and `cost.mana` becomes `[]` rather than absent — §2.3), and
 three new files land: `greed.json`, `fireblast.json`, `village-rites.json`, each
-registered in `Pawl.Cards` (a missing registration fails `Pawl.CardSpec`'s
+registered in `Parun.Cards` (a missing registration fails `Parun.CardSpec`'s
 directory-agreement test).
 
 ## 3. The two invariants
 
 **The rules core reads a classification, never an effect's identity.**
-`CostComponent` is a classification, and `Pawl.Cost` is its sole casing home —
-the `Pawl.PlayerEffect` pattern from P7, and the reason `requiresTapSymbol`
-exists instead of letting `Pawl.Activate` match a constructor. `Pawl.Cast` and
-`Pawl.Activate` learn nothing about which components exist; they ask "can this be
+`CostComponent` is a classification, and `Parun.Cost` is its sole casing home —
+the `Parun.PlayerEffect` pattern from P7, and the reason `requiresTapSymbol`
+exists instead of letting `Parun.Activate` match a constructor. `Parun.Cast` and
+`Parun.Activate` learn nothing about which components exist; they ask "can this be
 paid" and "pay it".
 
 **The engine makes no choices.** Both new decisions are prompts. `ChooseCost`
@@ -414,12 +414,12 @@ with the card that retires it.
   neither kind of cost changes a spell's mana cost — "Spells and abilities that
   ask for that spell's mana cost still see the original value." Mana value, and
   every future reader of it, is unaffected by anything here.
-- **`Pawl.Projection`** is read from and never edited: a cost is not a
+- **`Parun.Projection`** is read from and never edited: a cost is not a
   characteristic.
-- **`Pawl.Mana`** keeps pools, production and spending unchanged. `payCost` and
-  `canPay` are called by `Pawl.Cost` exactly as they are called today; #12's
+- **`Parun.Mana`** keeps pools, production and spending unchanged. `payCost` and
+  `canPay` are called by `Parun.Cost` exactly as they are called today; #12's
   mana-source prompt is untouched.
-- **`Pawl.Sba`** is untouched; Greed's death-by-payment runs through the existing
+- **`Parun.Sba`** is untouched; Greed's death-by-payment runs through the existing
   CR 704.5a check.
 - **P7's `applyAdjustments` and `costAdjustments`** are untouched; only `total`'s
   wrapper changes shape.
@@ -484,15 +484,15 @@ and you can't sacrifice additional creatures."*
 ### Migration coverage
 
 The `Nothing → Just []` change (§2.3) is behaviour-preserving for every existing
-ability, and the existing suites are its tripwire: `Pawl.ManaSpec` (Llanowar
-Elves), `Pawl.ActivateSpec` (Mindslaver, Prodigal Sorcerer), `Pawl.CodecSpec`
-(round-trips), `Pawl.CardSpec` (directory agreement).
+ability, and the existing suites are its tripwire: `Parun.ManaSpec` (Llanowar
+Elves), `Parun.ActivateSpec` (Mindslaver, Prodigal Sorcerer), `Parun.CodecSpec`
+(round-trips), `Parun.CardSpec` (directory agreement).
 
 ### Codec
 
 Round-trip `Cost`, `CostComponent`, the two new `Card` fields and the new
 `PermanentCriterion` arm, plus the three new card files through
-`Pawl.Cards`.
+`Parun.Cards`.
 
 ## 6. Module and type changes (summary)
 
@@ -500,43 +500,43 @@ Round-trip `Cost`, `CostComponent`, the two new `Card` fields and the new
 
 | Module | Contents |
 |---|---|
-| `Pawl.Type.Cost` | `Cost { mana :: Maybe ManaCost, components :: [CostComponent] }` |
-| `Pawl.Type.CostComponent` | `TapThis`, `SacrificeThis`, `PayLife`, `Sacrifice` |
-| `Pawl.Type.Payment` | `Paid`, `Unpaid` |
-| `Pawl.CostSpec` | the phase's tests (near-mirror of `Pawl.Cost`) |
+| `Parun.Type.Cost` | `Cost { mana :: Maybe ManaCost, components :: [CostComponent] }` |
+| `Parun.Type.CostComponent` | `TapThis`, `SacrificeThis`, `PayLife`, `Sacrifice` |
+| `Parun.Type.Payment` | `Paid`, `Unpaid` |
+| `Parun.CostSpec` | the phase's tests (near-mirror of `Parun.Cost`) |
 
 **Retired**
 
-`Pawl.Type.AbilityCost`, `Pawl.Type.AdditionalCost`, and `Pawl.Cast.costOf`.
+`Parun.Type.AbilityCost`, `Parun.Type.AdditionalCost`, and `Parun.Cast.costOf`.
 
 **Changed**
 
 | Module | Change |
 |---|---|
-| `Pawl.Cost` | `costsFor`, `total` (now `Cost -> Cost`), `canPay`, `canPayComponent`, `pay`, `requiresTapSymbol`; sole casing home |
-| `Pawl.Type.Card` | `+ additionalCosts`, `+ alternativeCosts` |
-| `Pawl.Type.ActivatedAbility` | `cost :: Cost` |
-| `Pawl.Type.PermanentCriterion` | `+ PermanentOfSubtype Subtype` |
-| `Pawl.Type.Prompt` | `+ ChooseCost`, `+ ChooseSacrifices` |
-| `Pawl.Type.Response` | `+ ChoseCost`, `+ ChoseSacrifices` |
-| `Pawl.Cast` | `castable`, `castableWhileSearching`, `castSpell`'s announcement sequence |
-| `Pawl.Activate` | `activatable`, `activateAbility`, `tapSicknessOk`; two helpers deleted |
-| `Pawl.Codec` | new types, new fields, deleted `AbilityCost`/`AdditionalCost` codecs |
-| `Pawl.Replay` | two prompt arms plus fallbacks |
+| `Parun.Cost` | `costsFor`, `total` (now `Cost -> Cost`), `canPay`, `canPayComponent`, `pay`, `requiresTapSymbol`; sole casing home |
+| `Parun.Type.Card` | `+ additionalCosts`, `+ alternativeCosts` |
+| `Parun.Type.ActivatedAbility` | `cost :: Cost` |
+| `Parun.Type.PermanentCriterion` | `+ PermanentOfSubtype Subtype` |
+| `Parun.Type.Prompt` | `+ ChooseCost`, `+ ChooseSacrifices` |
+| `Parun.Type.Response` | `+ ChoseCost`, `+ ChoseSacrifices` |
+| `Parun.Cast` | `castable`, `castableWhileSearching`, `castSpell`'s announcement sequence |
+| `Parun.Activate` | `activatable`, `activateAbility`, `tapSicknessOk`; two helpers deleted |
+| `Parun.Codec` | new types, new fields, deleted `AbilityCost`/`AdditionalCost` codecs |
+| `Parun.Replay` | two prompt arms plus fallbacks |
 | `data/cards/*.json` | every ability-bearing file migrated; three new files |
-| `Pawl.Cards` (test) | three new printings registered |
-| `source/benchmark/Main.hs`, `Pawl.Support` | answer the two new prompts |
+| `Parun.Cards` (test) | three new printings registered |
+| `source/benchmark/Main.hs`, `Parun.Support` | answer the two new prompts |
 
 ## 7. Ordering within the phase (for the plan)
 
 Substrate before consumer; each step one complete commit.
 
-1. `Pawl.Type.Cost` + `Pawl.Type.CostComponent` + codecs, with `AbilityCost` and
+1. `Parun.Type.Cost` + `Parun.Type.CostComponent` + codecs, with `AbilityCost` and
    `AdditionalCost` retired and every card file and fixture migrated —
    including `Nothing → Just []` (§2.3). Behaviour-identical; the existing suites
    are the assertion.
-2. `Pawl.Cost`'s door: `total` reshaped, `canPay`, `canPayComponent`, `pay`,
-   `requiresTapSymbol`, `Pawl.Type.Payment`. `Pawl.Activate` routes through it.
+2. `Parun.Cost`'s door: `total` reshaped, `canPay`, `canPayComponent`, `pay`,
+   `requiresTapSymbol`, `Parun.Type.Payment`. `Parun.Activate` routes through it.
    Still behaviour-identical.
 3. `PayLife` + `Greed` → the amount-bearing component, on the ability path.
 4. `Sacrifice` + `PermanentOfSubtype` + `ChooseSacrifices` + `Card.additionalCosts`
@@ -583,7 +583,7 @@ mid-announcement rewind), **#12** (mana-source prompt).
   spec (§9) left explicitly open.
 - Does **not** retire #38/#39/#40 (P9's filter language); `PermanentCriterion`
   is already on that list and gains one constructor here.
-- Does **not** close #90: the ability cost path now runs through `Pawl.Cost.total`,
+- Does **not** close #90: the ability cost path now runs through `Parun.Cost.total`,
   but the *producer* — a player effect that taxes an activation — still does not
   exist.
 - Updates the umbrella spec: P8's row ticked with its landed gate cards, and §4's

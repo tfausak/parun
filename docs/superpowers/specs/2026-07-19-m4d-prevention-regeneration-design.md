@@ -58,8 +58,8 @@ CR 614's replacement step will hook") and for a *new* destruction funnel
 **Phase 1 — damage prevention, the cancel shape (gate: Fog).**
 
 1. **Tag combat damage.** `DamageEvent` grows `kind :: DamageKind`
-   (`Combat | Noncombat`). Combat damage (`Pawl.Damage`) is `Combat`; a resolving
-   `DealDamage` (Blaze/Bolt, `Pawl.Resolve`) is `Noncombat`.
+   (`Combat | Noncombat`). Combat damage (`Parun.Damage`) is `Combat`; a resolving
+   `DealDamage` (Blaze/Bolt, `Parun.Resolve`) is `Noncombat`.
 2. **The prevention shield.** A `Prevention` leaf (`PreventAllCombatDamage`), a
    floating store `GameState.preventions`, the `Effect.Prevent Duration Prevention`
    opcode Fog resolves into, and `Event.applyPreventions` — the sole caser on
@@ -161,7 +161,7 @@ effect is `RegenerateSelf`, and the `Skeleton` subtype).
 
 ## 1. New and grown types
 
-**`Pawl.Type.DamageKind`** (new leaf — one type per module). Non-boolean-blind per
+**`Parun.Type.DamageKind`** (new leaf — one type per module). Non-boolean-blind per
 the style rule; the `DamageEvent` comment already sanctions growing the payload
 ("lifelink and M4 combat-damage triggers grow the payload rather than reshape
 it").
@@ -175,7 +175,7 @@ data DamageKind = Combat | Noncombat
   deriving (Eq, Ord, Show)
 ```
 
-**`Pawl.Type.DamageEvent`** grows one field:
+**`Parun.Type.DamageEvent`** grows one field:
 
 ```haskell
     -- CR 510 vs 608: combat damage or not. Set at deal time -- Damage tags Combat,
@@ -183,8 +183,8 @@ data DamageKind = Combat | Noncombat
     kind :: DamageKind
 ```
 
-**`Pawl.Type.Prevention`** (new leaf family — its own module). One constructor at
-M4d; **only `Pawl.Event` may case on it** (the `ReplacementEffect` / `Modification`
+**`Parun.Type.Prevention`** (new leaf family — its own module). One constructor at
+M4d; **only `Parun.Event` may case on it** (the `ReplacementEffect` / `Modification`
 standing). Extensible to the deferred shapes (from-a-source, next-N-amount).
 
 ```haskell
@@ -192,12 +192,12 @@ standing). Extensible to the deferred shapes (from-a-source, next-N-amount).
 -- it watches and cancels. PreventAllCombatDamage watches every Combat-kind event
 -- and drops it (Fog). Its own leaf family, distinct from Effect (one-shot),
 -- Modification (continuous, layered), and ReplacementEffect (zone-change redirect).
--- Only Pawl.Event may case on it.
+-- Only Parun.Event may case on it.
 data Prevention = PreventAllCombatDamage
   deriving (Eq, Ord, Show)
 ```
 
-**`Pawl.Type.ActivePrevention`** (new — mirrors `Pawl.Type.ContinuousEffect`, the
+**`Parun.Type.ActivePrevention`** (new — mirrors `Parun.Type.ContinuousEffect`, the
 stored-with-a-duration wrapper). A prevention spec plus how long it lasts. No
 timestamp (Fog has no ordering interaction; CR 615.7's multi-source choice is
 deferred), no source (CR 615.13 "prevented by" triggers are deferred).
@@ -214,7 +214,7 @@ data ActivePrevention = MkActivePrevention
   deriving (Eq, Ord, Show)
 ```
 
-**`Pawl.Type.GameState`** grows two stores:
+**`Parun.Type.GameState`** grows two stores:
 
 ```haskell
     -- CR 615.3: floating prevention effects from resolutions (Fog), each with a
@@ -228,7 +228,7 @@ data ActivePrevention = MkActivePrevention
     regenerationShields :: Map ObjectId Natural
 ```
 
-**`Pawl.Type.Effect`** grows two constructors. `Resolve` remains the sole module
+**`Parun.Type.Effect`** grows two constructors. `Resolve` remains the sole module
 that may `case` on `Effect`; both arms join `slotsOf`, `readsX`, `manaProduced`,
 `searchesLibrary`, and `rewriteEffect` (§4).
 
@@ -248,7 +248,7 @@ that may `case` on `Effect`; both arms join `slotsOf`, `readsX`, `manaProduced`,
     RegenerateSelf
 ```
 
-**`Pawl.Type.Subtype`** grows `Skeleton` (Drudge Skeletons' creature type),
+**`Parun.Type.Subtype`** grows `Skeleton` (Drudge Skeletons' creature type),
 following M4b's `Myr` — one catalog entry.
 
 **No new `Prompt`, `Response`, `Zone`, `ReplacementEffect`, or `TriggerCondition`.**
@@ -286,9 +286,9 @@ the event is what makes "prevented ⇒ never happened" literal.
   (`dealWave`); each wave consults `preventions`, so "all combat damage this turn"
   covers both the first-strike and regular waves and any additional combat phase —
   the duration, not per-wave bookkeeping, is what spans them.
-- **Module dependency.** `Pawl.Damage` gains an import of `Pawl.Event`.
-  `Pawl.Event` imports only `Pawl.Game` and `Pawl.Projection` (and types); neither
-  imports `Pawl.Damage`, so the edge is acyclic. `applyPreventions` is pure, so
+- **Module dependency.** `Parun.Damage` gains an import of `Parun.Event`.
+  `Parun.Event` imports only `Parun.Game` and `Parun.Projection` (and types); neither
+  imports `Parun.Damage`, so the edge is acyclic. `applyPreventions` is pure, so
   `applyDamage` stays `[DamageEvent] -> GameState -> GameState`.
 
 **The opcode.** `Effect.Prevent Duration Prevention` in `Resolve.applyEffect`
@@ -322,8 +322,8 @@ chokepoint every destruction flows through. In order:
 Step 3's action is the exact CR 701.19a text — "remove all damage marked on it and
 its controller taps it. If it's an attacking or blocking creature, remove it from
 combat." Removing from combat requires touching `GameState.combat`; the plan
-decides whether that reuses a `Pawl.Combat` helper or edits `Pawl.Type.Combat`'s
-maps directly (`Event` must not import `Pawl.Combat` if that would cycle — the
+decides whether that reuses a `Parun.Combat` helper or edits `Parun.Type.Combat`'s
+maps directly (`Event` must not import `Parun.Combat` if that would cycle — the
 plan checks).
 
 **The `Regenerability` seam (CR 701.19c), documented not built.** `Event.destroy`
@@ -385,7 +385,7 @@ per the D4 dataflow lint:
 - `rewriteEffect`: identity on both (a text-changer reaches neither a prevention
   spec nor a self-regeneration — no in-scope card needs it; §8-style deferral).
 
-**The codec.** `Pawl.Codec` gains arms for `Prevent` (serializing the `Duration`
+**The codec.** `Parun.Codec` gains arms for `Prevent` (serializing the `Duration`
 and the nested `Prevention` — `Prevention` gets its own tagged codec, `Duration`'s
 exists) and `RegenerateSelf` (nullary), plus a `Subtype.Skeleton` arm. `DamageKind`
 and the new `GameState` stores are **not** serialized — only card data is

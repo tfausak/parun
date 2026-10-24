@@ -1,0 +1,101 @@
+-- CR 101.2 / 122.6 / 613.11: the continuous effects that FORBID counters being put
+-- on an object. One of the modules on the axis CR 613.11 reaches past the layer
+-- system (alongside Parun.Engine.PlayerEffect, Parun.Engine.BlockRequirement,
+-- Parun.Engine.AttackRequirement, Parun.Engine.CombatRestriction,
+-- Parun.Engine.AttackCost, Parun.Engine.SacrificeRestriction,
+-- Parun.Engine.UntapRestriction, Parun.Engine.AttachRestriction and
+-- Parun.Engine.EntryRestriction). None is a layer, and no layer of
+-- Parun.Engine.Projection rewrites them.
+--
+-- The only reader of Parun.Types.CounterRestriction. Its callers ask a Bool about
+-- one object and one kind and never learn which card produced it.
+--
+-- TWO places ask, for the reason Parun.Engine.SacrificeRestriction's header gives
+-- about its own two: CR 101.2 makes the "can't" beat the "can", so a refused
+-- placement must neither be WRITTEN (Parun.Engine.Event.settleCounters, the door
+-- both of CR 122.6's roads share -- counters put on a permanent already on the
+-- battlefield, and counters an object is given as it enters) nor be reached
+-- around by CR 122.5's move, whose third impossibility is "the second object
+-- can't have counters put onto it" (Parun.Engine.Resolve's Effect.MoveCounters
+-- arm). Gating only the first would still take the counter OFF the source, which
+-- rule 122.5 forbids outright.
+--
+-- Asked AFTER CR 616.1's replacement loop has settled the placement, not before,
+-- and the settled object is what it is asked about. A row may redirect a
+-- placement onto a different object (Replacement.asCounters answers an ObjectId),
+-- so the object the prohibition is about is the one that would actually receive
+-- the counters rather than the one the effect named. Rule 614 replaces events
+-- that would happen; rule 101.2 then refuses what rule 614 settled on.
+module Parun.Engine.CounterRestriction where
+
+import qualified Data.Set as Set
+import qualified Parun.Engine.Projection as Projection
+import qualified Parun.Engine.Projection.Rewrite as Projection
+import qualified Parun.Engine.Projection.View as Projection
+import qualified Parun.Types.CounterKind as CounterKind
+import qualified Parun.Types.CounterRestriction as CounterRestriction
+import Parun.Types.GameState (GameState)
+import qualified Parun.Types.GameState as GameState
+import qualified Parun.Types.Keyword as Keyword
+import Parun.Types.ObjectId (ObjectId)
+import qualified Parun.Types.RuleAbilities as RuleAbilities
+
+-- CR 101.2 with CR 122.6: does an effect in force right now say that counters of
+-- `kind` CAN'T BE PUT ON `oid`? Solemnity's second sentence and Melira, Sylvok
+-- Outcast's second.
+--
+-- Parun.Engine.EntryRestriction.prohibited's body, gate for gate, and every step of
+-- its argument holds here unchanged: the same CR 305.7 and CR 613.1f ability
+-- losses are asked of the SOURCE, the same CR 612.1 word swap is applied to its
+-- affected set, and CR 613.11 is why the set is read against the FULL projection
+-- rather than a layer-bounded one.
+--
+-- A Bool about ONE object and ONE kind rather than a set over a candidate list,
+-- which is the shape of the question rather than a narrowing: the kind is a
+-- property of the individual placement, and both callers hold exactly one
+-- placement.
+prohibited :: ObjectId -> CounterKind.CounterKind Keyword.Keyword -> GameState -> Bool
+prohibited oid kind gs =
+  let setEffs = Projection.setLandSubtypeEffects gs
+      removed = Projection.abilityRemoval gs
+      -- The object's projection and the grant walk, taken once for every
+      -- source rather than once per source; both unforced until some
+      -- permanent actually reaches `named`.
+      view = Projection.project oid gs
+      grants = Projection.controlGrants gs
+      -- CR 613.11 puts these effects after every layer, so the affected set is
+      -- read against the FULL projection.
+      named source affected =
+        Projection.affectsUnder
+          grants
+          source
+          oid
+          affected
+          view
+          gs
+      -- CR 613.1f: what a stored grant gave the permanent, whose gates
+      -- Projection.grantedRuleAbilities has asked already, with no CR 612.1
+      -- word swap (CR 612.3) -- CombatRestriction.gathered's reading.
+      grantedRules = Projection.grantedRuleAbilities gs
+      fromGrant source = any (fromRestriction source []) (RuleAbilities.counterRestrictions (grantedRules source))
+      fromPermanent source = case RuleAbilities.counterRestrictions (Projection.ruleAbilitiesOf source gs) of
+        -- Every permanent in almost every game.
+        [] -> False
+        restrictions ->
+          (null setEffs || Projection.liveAfterLayers setEffs source gs)
+            && not (removed source)
+            && any (fromRestriction source (Projection.readerTextChanges source gs)) restrictions
+      -- The CR 305.7 setEffs gate and the CR 612.1 rewrite are REGRESSION FENCES
+      -- rather than proven behaviour, exactly as Parun.Engine.EntryRestriction's
+      -- header records of its own: neither printing in the pool is a land, and no
+      -- card in data/cards text-changes a Solemnity or a Melira. The CR 604.2
+      -- ability-loss gate is likewise unproven here. They are copied from
+      -- Parun.Engine.EntryRestriction because the CR states them and an
+      -- inconsistency between six carriers is the worse answer.
+      fromRestriction source changes restriction =
+        let affected = CounterRestriction.affected restriction
+         in -- Nothing is Solemnity's "counters", every kind; Just is Melira's
+            -- "-1/-1 counters" and refuses that kind alone.
+            maybe True (== kind) (CounterRestriction.kind restriction)
+              && named source (if null changes then affected else Projection.rewriteAffected changes affected)
+   in any (\source -> fromPermanent source || fromGrant source) (Set.toList (GameState.battlefield gs))

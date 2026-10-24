@@ -4,9 +4,9 @@
 
 **Goal:** Replace the engine's two drain queues with one turn-scoped event log carrying last-known-information snapshots, and grow `TriggerCondition` from "an event on this object" into a classification that also covers step beginnings (CR 603.2b), game *state* (CR 603.8), delayed abilities (CR 603.7) and intervening "if" (CR 603.4 / 608.2a) — proved by four gate cards.
 
-**Architecture:** `GameState.events :: Seq GameEvent` is appended by the existing change-and-emit funnels and **never cleared by a reader**; each reader (the CR 117.5 trigger scan, the CR 704 damage SBA) keeps a `Natural` watermark and consumes by bumping it. The log is cleared only at turn handoff. `Pawl.Event` stays the sole home of `case … TriggerCondition` and becomes the sole home of `case … StateCondition`; it gathers pending triggers from three sources (event-matched over *all* battlefield permanents, state-matched with derived armedness, delayed-store-matched) and `Pawl.Engine` orders them (CR 603.3b, a new prompt) and places them.
+**Architecture:** `GameState.events :: Seq GameEvent` is appended by the existing change-and-emit funnels and **never cleared by a reader**; each reader (the CR 117.5 trigger scan, the CR 704 damage SBA) keeps a `Natural` watermark and consumes by bumping it. The log is cleared only at turn handoff. `Parun.Event` stays the sole home of `case … TriggerCondition` and becomes the sole home of `case … StateCondition`; it gathers pending triggers from three sources (event-matched over *all* battlefield permanents, state-matched with derived armedness, delayed-store-matched) and `Parun.Engine` orders them (CR 603.3b, a new prompt) and places them.
 
-**Tech Stack:** Haskell 2010 (GHC 9.14.1 from the Nix flake), `tasty` + `tasty-hunit`, the hand-rolled `Pawl.Json`/`Pawl.Codec` card codec.
+**Tech Stack:** Haskell 2010 (GHC 9.14.1 from the Nix flake), `tasty` + `tasty-hunit`, the hand-rolled `Parun.Json`/`Parun.Codec` card codec.
 
 **Spec:** `docs/superpowers/specs/2026-07-21-p4-event-history-triggers-design.md`. Read §2.1–2.2 before Task 1, §2.3 before Tasks 2/4, §2.4 before Task 6, §2.6 before Task 7, §8 before Task 8.
 
@@ -15,9 +15,9 @@
 Every task's requirements implicitly include all of these. They come from `CLAUDE.md` and are not negotiable.
 
 - **Haskell 2010, no language extensions** unless there is no alternative. `NamedFieldPuns` is permitted; `GADTs`/`RankNTypes` only in the suspension core. Modules that already carry a `{-# LANGUAGE … #-}` pragma keep it.
-- **No explicit export lists.** `module Pawl.Foo where`.
-- **One type per module** under `Pawl.Type.<TypeName>` (type + instances only). A module never imports its parents; `A.B.C` must not import `A.B` or `A`.
-- **Qualified imports aliased to the last component** (`Data.Sequence` → `Seq`, `Pawl.Type.GameEvent` → `GameEvent`). One import group, alphabetical. The one documented exception is `Pawl.Support` as `S` in the test suite.
+- **No explicit export lists.** `module Parun.Foo where`.
+- **One type per module** under `Parun.Type.<TypeName>` (type + instances only). A module never imports its parents; `A.B.C` must not import `A.B` or `A`.
+- **Qualified imports aliased to the last component** (`Data.Sequence` → `Seq`, `Parun.Type.GameEvent` → `GameEvent`). One import group, alphabetical. The one documented exception is `Parun.Support` as `S` in the test suite.
 - **No partial functions**, written or used. No `head`, `error`, `undefined`, or non-exhaustive matches.
 - **`newtype` liberally, non-punning constructors** (`MkFoo`). Build records with `do` + record syntax, not `<$>`/`<*>`.
 - **Prefer explicit:** `case` over point-free; one equation with a `case` over multiple clauses; `let` over `where`; `$` over parens, `.` over chained `$`. No list comprehensions. No backtick-infixed functions.
@@ -50,63 +50,63 @@ All four gate cards were verified live against the Scryfall API while this plan 
 
 Both halves are load-bearing: **tokens count** (which is why the event payload is a snapshot, not a card reference — a token has no printed card, CR 111.3) and **deaths before the Ghoul arrived count** (which is why the log is turn-scoped and not drained).
 
-**Filename hazard, already checked.** `Codec.slugify` keeps alphanumerics, so Khabál Ghoul's slug is `khabál-ghoul` and its file must literally be `data/cards/khabál-ghoul.json`. `Pawl.CardSpec`'s directory/registry lint compares `Directory.listDirectory` output against that slug, so a filesystem that renormalised the name would fail the lint. This repo's volume is APFS and was verified to preserve NFC (`á` = U+00E1) round-trip through `listDirectory`. Write the file with a plain NFC `á`; if the lint ever reports a mismatch here, that is the cause.
+**Filename hazard, already checked.** `Codec.slugify` keeps alphanumerics, so Khabál Ghoul's slug is `khabál-ghoul` and its file must literally be `data/cards/khabál-ghoul.json`. `Parun.CardSpec`'s directory/registry lint compares `Directory.listDirectory` output against that slug, so a filesystem that renormalised the name would fail the lint. This repo's volume is APFS and was verified to preserve NFC (`á` = U+00E1) round-trip through `listDirectory`. Write the file with a plain NFC `á`; if the lint ever reports a mismatch here, that is the cause.
 
 ## File Structure
 
-**Library — new modules** (all `Pawl.Type.<Name>`, type + instances only):
+**Library — new modules** (all `Parun.Type.<Name>`, type + instances only):
 
 | File | Responsibility | Task |
 |---|---|---|
-| `source/library/Pawl/Type/GameEvent.hs` | One entry of the turn-scoped log: `Moved`, `DamageDealt`, `StepBegan` | 1 |
-| `source/library/Pawl/Type/TurnScope.hs` | `EachTurn \| ControllersTurn` — whose turn a step trigger watches | 2 |
-| `source/library/Pawl/Type/PendingTrigger.hs` | A trigger that has triggered but is not yet on the stack | 2 |
-| `source/library/Pawl/Type/StateCondition.hs` | CR 603.8 / 603.4 state predicates, hand-carved; EXPIRES at P9 | 4 |
-| `source/library/Pawl/Type/AbilityName.hs` | The name joining `ArmDelayedTrigger` to `Card.delayedAbilities` | 6 |
-| `source/library/Pawl/Type/DelayedTrigger.hs` | A CR 603.7 delayed ability awaiting its event | 6 |
+| `source/library/Parun/Type/GameEvent.hs` | One entry of the turn-scoped log: `Moved`, `DamageDealt`, `StepBegan` | 1 |
+| `source/library/Parun/Type/TurnScope.hs` | `EachTurn \| ControllersTurn` — whose turn a step trigger watches | 2 |
+| `source/library/Parun/Type/PendingTrigger.hs` | A trigger that has triggered but is not yet on the stack | 2 |
+| `source/library/Parun/Type/StateCondition.hs` | CR 603.8 / 603.4 state predicates, hand-carved; EXPIRES at P9 | 4 |
+| `source/library/Parun/Type/AbilityName.hs` | The name joining `ArmDelayedTrigger` to `Card.delayedAbilities` | 6 |
+| `source/library/Parun/Type/DelayedTrigger.hs` | A CR 603.7 delayed ability awaiting its event | 6 |
 
 **Library — modified:**
 
 | File | Responsibility after this plan |
 |---|---|
-| `source/library/Pawl/Type/GameState.hs` | `+events`, `+scannedThrough`, `+damageScannedThrough`, `+delayedTriggers`; `−zoneChanges`, `−damageEvents` |
-| `source/library/Pawl/Type/TriggerCondition.hs` | `+StepBegins Phase TurnScope`, `+StateIs StateCondition` |
-| `source/library/Pawl/Type/TriggeredAbility.hs` | `+intervening :: Maybe StateCondition` |
-| `source/library/Pawl/Type/Card.hs` | `+delayedAbilities :: Map AbilityName (TriggeredAbility Card)` |
-| `source/library/Pawl/Type/Effect.hs` | `+Sacrifice SlotName`, `+ArmDelayedTrigger AbilityName`; `Create` grows a `Maybe SlotName` |
-| `source/library/Pawl/Type/CountSpec.hs` | `+CreaturesDiedThisTurn` |
-| `source/library/Pawl/Type/Subtype.hs` | `+Barbarian`, `+Zombie` |
-| `source/library/Pawl/Type/Prompt.hs` | `+OrderTriggers` |
-| `source/library/Pawl/Type/Response.hs` | `+OrderedTriggers` |
-| `source/library/Pawl/Event.hs` | the log funnel (`recordEvent`, `movedOf`, `damageOf`, `unscanned*`); `sacrifice`; the three-source trigger gather; sole casing home for `TriggerCondition` and `StateCondition` |
-| `source/library/Pawl/Engine.hs` | step-begin emission, watermarked scan, the CR 603.3b ordering prompt, the pre-handoff settle, log clearing at handoff |
-| `source/library/Pawl/Sba.hs` | watermarked damage read |
-| `source/library/Pawl/Damage.hs` | `applyDamage` appends `DamageDealt` |
-| `source/library/Pawl/Resolve.hs` | `Sacrifice`, `ArmDelayedTrigger`, `Create`'s slot binding; reserved slots exempt from the CR 608.2b legality read |
-| `source/library/Pawl/Binding.hs` | reserved slots `triggerSource` ("self") and `you` |
-| `source/library/Pawl/Quantity.hs` | `CreaturesDiedThisTurn` folds the log |
-| `source/library/Pawl/Stack.hs` | the CR 608.2a intervening-"if" re-check |
-| `source/library/Pawl/Setup.hs` | `emptyGame`'s new fields |
-| `source/library/Pawl/Codec.hs` | JSON for every new/changed type |
-| `source/library/Pawl/Replay.hs` | `OrderTriggers` encode/decode/default |
+| `source/library/Parun/Type/GameState.hs` | `+events`, `+scannedThrough`, `+damageScannedThrough`, `+delayedTriggers`; `−zoneChanges`, `−damageEvents` |
+| `source/library/Parun/Type/TriggerCondition.hs` | `+StepBegins Phase TurnScope`, `+StateIs StateCondition` |
+| `source/library/Parun/Type/TriggeredAbility.hs` | `+intervening :: Maybe StateCondition` |
+| `source/library/Parun/Type/Card.hs` | `+delayedAbilities :: Map AbilityName (TriggeredAbility Card)` |
+| `source/library/Parun/Type/Effect.hs` | `+Sacrifice SlotName`, `+ArmDelayedTrigger AbilityName`; `Create` grows a `Maybe SlotName` |
+| `source/library/Parun/Type/CountSpec.hs` | `+CreaturesDiedThisTurn` |
+| `source/library/Parun/Type/Subtype.hs` | `+Barbarian`, `+Zombie` |
+| `source/library/Parun/Type/Prompt.hs` | `+OrderTriggers` |
+| `source/library/Parun/Type/Response.hs` | `+OrderedTriggers` |
+| `source/library/Parun/Event.hs` | the log funnel (`recordEvent`, `movedOf`, `damageOf`, `unscanned*`); `sacrifice`; the three-source trigger gather; sole casing home for `TriggerCondition` and `StateCondition` |
+| `source/library/Parun/Engine.hs` | step-begin emission, watermarked scan, the CR 603.3b ordering prompt, the pre-handoff settle, log clearing at handoff |
+| `source/library/Parun/Sba.hs` | watermarked damage read |
+| `source/library/Parun/Damage.hs` | `applyDamage` appends `DamageDealt` |
+| `source/library/Parun/Resolve.hs` | `Sacrifice`, `ArmDelayedTrigger`, `Create`'s slot binding; reserved slots exempt from the CR 608.2b legality read |
+| `source/library/Parun/Binding.hs` | reserved slots `triggerSource` ("self") and `you` |
+| `source/library/Parun/Quantity.hs` | `CreaturesDiedThisTurn` folds the log |
+| `source/library/Parun/Stack.hs` | the CR 608.2a intervening-"if" re-check |
+| `source/library/Parun/Setup.hs` | `emptyGame`'s new fields |
+| `source/library/Parun/Codec.hs` | JSON for every new/changed type |
+| `source/library/Parun/Replay.hs` | `OrderTriggers` encode/decode/default |
 
-**Data — new card files** under `data/cards/`: `barbarian-outcast.json`, `khabál-ghoul.json`, `tidal-wave.json`, `sarcomancy.json`. **No existing card file changes**: every new `Card` and `TriggeredAbility` field is omitted from the render when it is empty/`Nothing`, and `Create`'s slot is omitted when absent — the `copyOnEnter`/`characteristicPT` precedent. `Pawl.CardsSpec`'s byte-stability assertion is the check that this held.
+**Data — new card files** under `data/cards/`: `barbarian-outcast.json`, `khabál-ghoul.json`, `tidal-wave.json`, `sarcomancy.json`. **No existing card file changes**: every new `Card` and `TriggeredAbility` field is omitted from the render when it is empty/`Nothing`, and `Create`'s slot is omitted when absent — the `copyOnEnter`/`characteristicPT` precedent. `Parun.CardsSpec`'s byte-stability assertion is the check that this held.
 
 **Test suite:**
 
 | File | Responsibility |
 |---|---|
-| `source/test-suite/Pawl/TriggerSpec.hs` | **new.** The phase's own spec (the `PowerToughnessSpec`/`ColorSpec` precedent): the log, the scan, all four gate cards, the ordering scenario |
-| `source/test-suite/Pawl/Support.hs` | new fixtures/readers for the log; the new prompt arm in five answerers |
-| `source/test-suite/Pawl/Cards.hs` | four new printing fields, loads, and `allPrintings` entries |
-| `source/test-suite/Pawl/CardSpec.hs` | the new lint family members |
-| `source/test-suite/Pawl/CodecSpec.hs` | round-trips for every new type |
-| `source/test-suite/Pawl/ReplaySpec.hs` | the `OrderTriggers` transcript round-trip |
-| `source/test-suite/Pawl/{Damage,Resolve,Modal,Event}Spec.hs` | call sites that read the two removed fields |
-| `source/test-suite/Pawl/{Game,Cast,Copy}Spec.hs`, `source/benchmark/Main.hs` | the new prompt arm in their answerers |
+| `source/test-suite/Parun/TriggerSpec.hs` | **new.** The phase's own spec (the `PowerToughnessSpec`/`ColorSpec` precedent): the log, the scan, all four gate cards, the ordering scenario |
+| `source/test-suite/Parun/Support.hs` | new fixtures/readers for the log; the new prompt arm in five answerers |
+| `source/test-suite/Parun/Cards.hs` | four new printing fields, loads, and `allPrintings` entries |
+| `source/test-suite/Parun/CardSpec.hs` | the new lint family members |
+| `source/test-suite/Parun/CodecSpec.hs` | round-trips for every new type |
+| `source/test-suite/Parun/ReplaySpec.hs` | the `OrderTriggers` transcript round-trip |
+| `source/test-suite/Parun/{Damage,Resolve,Modal,Event}Spec.hs` | call sites that read the two removed fields |
+| `source/test-suite/Parun/{Game,Cast,Copy}Spec.hs`, `source/benchmark/Main.hs` | the new prompt arm in their answerers |
 | `source/test-suite/Main.hs` | wires `TriggerSpec.tests` into `testTree` |
 
-`Pawl.TriggerSpec` must be added to the test-suite `other-modules` list in `pawl.cabal` — that field is generated by a `-- cabal-gild: discover` directive, so add the file and let `hooky fix` regenerate it rather than hand-editing.
+`Parun.TriggerSpec` must be added to the test-suite `other-modules` list in `parun.cabal` — that field is generated by a `-- cabal-gild: discover` directive, so add the file and let `hooky fix` regenerate it rather than hand-editing.
 
 ---
 
@@ -115,49 +115,49 @@ Both halves are load-bearing: **tokens count** (which is why the event payload i
 The riskiest change, and deliberately **behaviour-preserving** — the existing suite is the regression test. `GameState.zoneChanges` and `GameState.damageEvents` become slices of one `Seq GameEvent` that no reader clears; each reader advances a watermark instead. The log is cleared at turn handoff, and `Engine.advance` settles once before handing off so no event is discarded unscanned.
 
 **Files:**
-- Create: `source/library/Pawl/Type/GameEvent.hs`
-- Modify: `source/library/Pawl/Type/GameState.hs`
-- Modify: `source/library/Pawl/Event.hs`
-- Modify: `source/library/Pawl/Damage.hs:157-172`
-- Modify: `source/library/Pawl/Sba.hs:52-58`, `:166-180`
-- Modify: `source/library/Pawl/Engine.hs:198-205`, `:381-404`
-- Modify: `source/library/Pawl/Setup.hs:68-69`
-- Modify: `source/library/Pawl/Codec.hs`
-- Test: `source/test-suite/Pawl/TriggerSpec.hs` (new), `source/test-suite/Pawl/Support.hs`, `source/test-suite/Pawl/CodecSpec.hs`, `source/test-suite/Pawl/{Damage,Resolve,Modal,Event}Spec.hs`, `source/test-suite/Main.hs`
+- Create: `source/library/Parun/Type/GameEvent.hs`
+- Modify: `source/library/Parun/Type/GameState.hs`
+- Modify: `source/library/Parun/Event.hs`
+- Modify: `source/library/Parun/Damage.hs:157-172`
+- Modify: `source/library/Parun/Sba.hs:52-58`, `:166-180`
+- Modify: `source/library/Parun/Engine.hs:198-205`, `:381-404`
+- Modify: `source/library/Parun/Setup.hs:68-69`
+- Modify: `source/library/Parun/Codec.hs`
+- Test: `source/test-suite/Parun/TriggerSpec.hs` (new), `source/test-suite/Parun/Support.hs`, `source/test-suite/Parun/CodecSpec.hs`, `source/test-suite/Parun/{Damage,Resolve,Modal,Event}Spec.hs`, `source/test-suite/Main.hs`
 
 **Interfaces:**
-- Produces: `Pawl.Type.GameEvent.GameEvent = Moved ZoneChange ProjectedCharacteristics | DamageDealt DamageEvent | StepBegan Phase PlayerId`; `GameState.events :: Seq GameEvent`, `GameState.scannedThrough :: Natural`, `GameState.damageScannedThrough :: Natural`; `Pawl.Event.recordEvent :: GameEvent -> GameState -> GameState`, `Pawl.Event.movedOf :: GameEvent -> Maybe ZoneChange`, `Pawl.Event.damageOf :: GameEvent -> Maybe DamageEvent`, `Pawl.Event.unscannedEvents :: GameState -> [GameEvent]`, `Pawl.Event.unscannedDamage :: GameState -> [DamageEvent]`, `Pawl.Event.placeObject :: PlayerId -> (Timestamp -> Object) -> Zone -> GameState -> (ObjectId, GameState)`; `Pawl.Codec.gameEventToJson` / `jsonToGameEvent`, `phaseToJson` / `jsonToPhase`; `Pawl.Support.damageEventsOf`, `zoneChangesOf`, `withEvent`.
+- Produces: `Parun.Type.GameEvent.GameEvent = Moved ZoneChange ProjectedCharacteristics | DamageDealt DamageEvent | StepBegan Phase PlayerId`; `GameState.events :: Seq GameEvent`, `GameState.scannedThrough :: Natural`, `GameState.damageScannedThrough :: Natural`; `Parun.Event.recordEvent :: GameEvent -> GameState -> GameState`, `Parun.Event.movedOf :: GameEvent -> Maybe ZoneChange`, `Parun.Event.damageOf :: GameEvent -> Maybe DamageEvent`, `Parun.Event.unscannedEvents :: GameState -> [GameEvent]`, `Parun.Event.unscannedDamage :: GameState -> [DamageEvent]`, `Parun.Event.placeObject :: PlayerId -> (Timestamp -> Object) -> Zone -> GameState -> (ObjectId, GameState)`; `Parun.Codec.gameEventToJson` / `jsonToGameEvent`, `phaseToJson` / `jsonToPhase`; `Parun.Support.damageEventsOf`, `zoneChangesOf`, `withEvent`.
 - Consumes: nothing new.
 
 - [x] **Step 1: Write the failing tests**
 
-Create `source/test-suite/Pawl/TriggerSpec.hs`:
+Create `source/test-suite/Parun/TriggerSpec.hs`:
 
 ```haskell
--- Covers M4.5 P4: the turn-scoped event log (Pawl.Type.GameEvent, GameState's
+-- Covers M4.5 P4: the turn-scoped event log (Parun.Type.GameEvent, GameState's
 -- log and watermarks), the widened CR 603.6a trigger scan, state triggers (CR
 -- 603.8), delayed triggers (CR 603.7), intervening "if" (CR 603.4 / 608.2a) and
 -- the CR 603.3b ordering prompt.
-module Pawl.TriggerSpec where
+module Parun.TriggerSpec where
 
 import qualified Data.Foldable as Foldable
 import qualified Data.Sequence as Seq
 import qualified Data.Set as Set
-import qualified Pawl.Cards as Cards
-import qualified Pawl.Engine as Engine
-import qualified Pawl.Event as Event
-import qualified Pawl.Game as Game
-import qualified Pawl.Projection as Projection
-import qualified Pawl.Sba as Sba
-import qualified Pawl.Setup as Setup
-import qualified Pawl.Support as S
-import qualified Pawl.Type.GameEvent as GameEvent
-import qualified Pawl.Type.GameState as GameState
-import qualified Pawl.Type.ObjectId as ObjectId
-import qualified Pawl.Type.Object as Object
-import qualified Pawl.Type.Source as Source
-import qualified Pawl.Type.Zone as Zone
-import qualified Pawl.Type.ZoneChange as ZoneChange
+import qualified Parun.Cards as Cards
+import qualified Parun.Engine as Engine
+import qualified Parun.Event as Event
+import qualified Parun.Game as Game
+import qualified Parun.Projection as Projection
+import qualified Parun.Sba as Sba
+import qualified Parun.Setup as Setup
+import qualified Parun.Support as S
+import qualified Parun.Type.GameEvent as GameEvent
+import qualified Parun.Type.GameState as GameState
+import qualified Parun.Type.ObjectId as ObjectId
+import qualified Parun.Type.Object as Object
+import qualified Parun.Type.Source as Source
+import qualified Parun.Type.Zone as Zone
+import qualified Parun.Type.ZoneChange as ZoneChange
 import qualified Test.Tasty as Tasty
 import qualified Test.Tasty.HUnit as HU
 
@@ -228,12 +228,12 @@ logTests cards =
     ]
 
 tests :: Cards.Cards -> Tasty.TestTree
-tests cards = Tasty.testGroup "Pawl.TriggerSpec" [logTests cards]
+tests cards = Tasty.testGroup "Parun.TriggerSpec" [logTests cards]
 ```
 
-Add to `source/test-suite/Main.hs`: `import qualified Pawl.TriggerSpec as TriggerSpec` (alphabetically, after `Pawl.SetupSpec`) and `TriggerSpec.tests cards,` as the last entry of `testTree`.
+Add to `source/test-suite/Main.hs`: `import qualified Parun.TriggerSpec as TriggerSpec` (alphabetically, after `Parun.SetupSpec`) and `TriggerSpec.tests cards,` as the last entry of `testTree`.
 
-Add to `source/test-suite/Pawl/CodecSpec.hs`, inside the top-level `Tasty.testGroup "Pawl.CodecSpec"` list, a new group (put it immediately before the closing `]`):
+Add to `source/test-suite/Parun/CodecSpec.hs`, inside the top-level `Tasty.testGroup "Parun.CodecSpec"` list, a new group (put it immediately before the closing `]`):
 
 ```haskell
       Tasty.testGroup
@@ -262,25 +262,25 @@ Add to `source/test-suite/Pawl/CodecSpec.hs`, inside the top-level `Tasty.testGr
         ]
 ```
 
-with these added imports in `CodecSpec.hs`: `Pawl.Projection` as `Projection`, `Pawl.Setup` as `Setup`, `Pawl.Support` as `S`, `Pawl.Type.BeginningStep` as `BeginningStep`, `Pawl.Type.CombatStep` as `CombatStep`, `Pawl.Type.DamageEvent` as `DamageEvent`, `Pawl.Type.DamageKind` as `DamageKind`, `Pawl.Type.EndingStep` as `EndingStep`, `Pawl.Type.GameEvent` as `GameEvent`, `Pawl.Type.Phase` as `Phase`, `Pawl.Type.ProjectedCharacteristics` as `PC` (if needed), `Pawl.Type.Recipient` as `Recipient`, `Pawl.Type.ZoneChange` as `ZoneChange`.
+with these added imports in `CodecSpec.hs`: `Parun.Projection` as `Projection`, `Parun.Setup` as `Setup`, `Parun.Support` as `S`, `Parun.Type.BeginningStep` as `BeginningStep`, `Parun.Type.CombatStep` as `CombatStep`, `Parun.Type.DamageEvent` as `DamageEvent`, `Parun.Type.DamageKind` as `DamageKind`, `Parun.Type.EndingStep` as `EndingStep`, `Parun.Type.GameEvent` as `GameEvent`, `Parun.Type.Phase` as `Phase`, `Parun.Type.ProjectedCharacteristics` as `PC` (if needed), `Parun.Type.Recipient` as `Recipient`, `Parun.Type.ZoneChange` as `ZoneChange`.
 
 - [x] **Step 2: Run the tests to verify they fail**
 
 Run: `cabal build all --enable-tests --enable-benchmarks`
-Expected: FAIL — `Pawl.TriggerSpec` does not exist; `Pawl.Type.GameEvent` is not a module; `Event.unscannedDamage`, `S.zoneChangesOf`, `S.damageEventsOf`, `S.withEvent`, `Codec.gameEventToJson`, `Codec.phaseToJson`, `GameState.events`, `GameState.scannedThrough`, `GameState.damageScannedThrough` are not in scope.
+Expected: FAIL — `Parun.TriggerSpec` does not exist; `Parun.Type.GameEvent` is not a module; `Event.unscannedDamage`, `S.zoneChangesOf`, `S.damageEventsOf`, `S.withEvent`, `Codec.gameEventToJson`, `Codec.phaseToJson`, `GameState.events`, `GameState.scannedThrough`, `GameState.damageScannedThrough` are not in scope.
 
 - [x] **Step 3: Add the `GameEvent` type**
 
-Create `source/library/Pawl/Type/GameEvent.hs`:
+Create `source/library/Parun/Type/GameEvent.hs`:
 
 ```haskell
-module Pawl.Type.GameEvent where
+module Parun.Type.GameEvent where
 
-import Pawl.Type.DamageEvent (DamageEvent)
-import Pawl.Type.Phase (Phase)
-import Pawl.Type.PlayerId (PlayerId)
-import Pawl.Type.ProjectedCharacteristics (ProjectedCharacteristics)
-import Pawl.Type.ZoneChange (ZoneChange)
+import Parun.Type.DamageEvent (DamageEvent)
+import Parun.Type.Phase (Phase)
+import Parun.Type.PlayerId (PlayerId)
+import Parun.Type.ProjectedCharacteristics (ProjectedCharacteristics)
+import Parun.Type.ZoneChange (ZoneChange)
 
 -- CR 608.2i: one entry of the turn-scoped record of what happened. "Some effects
 -- look back in time and require information about previous game states and
@@ -316,7 +316,7 @@ data GameEvent
 
 - [x] **Step 4: Swap the two drain queues for the log in `GameState`**
 
-In `source/library/Pawl/Type/GameState.hs`, replace the `damageEvents` and `zoneChanges` fields (and their comments) with:
+In `source/library/Parun/Type/GameState.hs`, replace the `damageEvents` and `zoneChanges` fields (and their comments) with:
 
 ```haskell
     -- CR 608.2i: what happened this turn, in order. Appended by the
@@ -333,11 +333,11 @@ In `source/library/Pawl/Type/GameState.hs`, replace the `damageEvents` and `zone
     damageScannedThrough :: Natural,
 ```
 
-Replace the `Pawl.Type.DamageEvent` and `Pawl.Type.ZoneChange` imports with `import Pawl.Type.GameEvent (GameEvent)`.
+Replace the `Parun.Type.DamageEvent` and `Parun.Type.ZoneChange` imports with `import Parun.Type.GameEvent (GameEvent)`.
 
 - [x] **Step 5: Make the funnels record instead of enqueue**
 
-In `source/library/Pawl/Event.hs`, add these accessors near the top (after the module comment's imports), and add `import qualified Data.Foldable as Foldable`, `import qualified Data.Sequence as Seq`, `import Pawl.Type.GameEvent (GameEvent)`, `import qualified Pawl.Type.GameEvent as GameEvent`:
+In `source/library/Parun/Event.hs`, add these accessors near the top (after the module comment's imports), and add `import qualified Data.Foldable as Foldable`, `import qualified Data.Sequence as Seq`, `import Parun.Type.GameEvent (GameEvent)`, `import qualified Parun.Type.GameEvent as GameEvent`:
 
 ```haskell
 -- CR 608.2i: append one entry to the turn-scoped log. The single write point;
@@ -370,7 +370,7 @@ unscannedDamage gs =
   Maybe.mapMaybe damageOf (Foldable.toList (Seq.drop (fromIntegral (GameState.damageScannedThrough gs)) (GameState.events gs)))
 ```
 
-`Pawl.Event` does not currently import `Data.Maybe`; add `import qualified Data.Maybe as Maybe`.
+`Parun.Event` does not currently import `Data.Maybe`; add `import qualified Data.Maybe as Maybe`.
 
 Replace `placeObject` and its two callers. `placeObject` no longer emits — each caller owns its own last-known-information snapshot, because only the caller knows which state to project against:
 
@@ -428,7 +428,7 @@ In `createToken`, replace the final `in placeObject …` with:
        in recordEvent (GameEvent.Moved (ZoneChange.MkZoneChange newId Zone.Battlefield Zone.Battlefield) snapshot) placed
 ```
 
-In `source/library/Pawl/Damage.hs`, change `applyDamage`'s last line from the `damageEvents` append to:
+In `source/library/Parun/Damage.hs`, change `applyDamage`'s last line from the `damageEvents` append to:
 
 ```haskell
    in -- CR 608.2i: each kept event is RECORDED, not enqueued. Sba consumes by
@@ -436,11 +436,11 @@ In `source/library/Pawl/Damage.hs`, change `applyDamage`'s last line from the `d
       List.foldl' (\g ev -> Event.recordEvent (GameEvent.DamageDealt ev) g) marked kept
 ```
 
-adding `import qualified Pawl.Type.GameEvent as GameEvent`.
+adding `import qualified Parun.Type.GameEvent as GameEvent`.
 
 - [x] **Step 6: Watermark the two readers, and settle before handoff**
 
-In `source/library/Pawl/Sba.hs`, change `woundedByDeathtouch`'s last line from `(GameState.damageEvents gs)` to `(Event.unscannedDamage gs)`, and update its comment's final sentence to read "…read from the WATERMARKED slice of the turn log, not a drained queue."
+In `source/library/Parun/Sba.hs`, change `woundedByDeathtouch`'s last line from `(GameState.damageEvents gs)` to `(Event.unscannedDamage gs)`, and update its comment's final sentence to read "…read from the WATERMARKED slice of the turn log, not a drained queue."
 
 Replace the `drained` binding in `performStateBasedActions` with:
 
@@ -454,7 +454,7 @@ Replace the `drained` binding in `performStateBasedActions` with:
 
 adding `import qualified Data.Sequence as Seq`.
 
-In `source/library/Pawl/Engine.hs`, rewrite `placePendingTriggers`'s body (leave `placeOne` and `apnapOrder` alone in this task) and update its comment's "Draining zoneChanges" sentence:
+In `source/library/Parun/Engine.hs`, rewrite `placePendingTriggers`'s body (leave `placeOne` and `apnapOrder` alone in this task) and update its comment's "Draining zoneChanges" sentence:
 
 ```haskell
 -- CR 603.3: put each triggered ability that fired since the last placement on the
@@ -500,7 +500,7 @@ Change `advance`'s empty-schedule branch:
       handoffTurn
 ```
 
-In `source/library/Pawl/Setup.hs`, replace the two `emptyGame` lines with:
+In `source/library/Parun/Setup.hs`, replace the two `emptyGame` lines with:
 
 ```haskell
           GameState.events = Seq.empty,
@@ -510,7 +510,7 @@ In `source/library/Pawl/Setup.hs`, replace the two `emptyGame` lines with:
 
 - [x] **Step 7: Add the codec arms**
 
-In `source/library/Pawl/Codec.hs`, add (after `zoneToJson`/`jsonToZone`, keeping the leaf-enum section together):
+In `source/library/Parun/Codec.hs`, add (after `zoneToJson`/`jsonToZone`, keeping the leaf-enum section together):
 
 ```haskell
 beginningStepToJson :: BeginningStep.BeginningStep -> Value
@@ -723,13 +723,13 @@ jsonToGameEvent value = do
     _ -> Left (Text.pack "unknown GameEvent: " <> t)
 ```
 
-Add the imports these need to `Codec.hs`: `Pawl.Type.BeginningStep`, `Pawl.Type.CombatStep`, `Pawl.Type.DamageEvent`, `Pawl.Type.DamageKind`, `Pawl.Type.EndingStep`, `Pawl.Type.GameEvent`, `Pawl.Type.Phase`, `Pawl.Type.ProjectedCharacteristics` as `PC`, `Pawl.Type.Recipient`, `Pawl.Type.ZoneChange`.
+Add the imports these need to `Codec.hs`: `Parun.Type.BeginningStep`, `Parun.Type.CombatStep`, `Parun.Type.DamageEvent`, `Parun.Type.DamageKind`, `Parun.Type.EndingStep`, `Parun.Type.GameEvent`, `Parun.Type.Phase`, `Parun.Type.ProjectedCharacteristics` as `PC`, `Parun.Type.Recipient`, `Parun.Type.ZoneChange`.
 
 Note `getOpt` and `jsonToBoolDefault` are declared further down the file today; move them up above this new block (or leave them — Haskell has no ordering requirement; keep them where they are).
 
 - [x] **Step 8: Update the test suite's readers of the two removed fields**
 
-In `source/test-suite/Pawl/Support.hs`, add to the `oneMountainState` record (replacing the `damageEvents`/`zoneChanges` lines):
+In `source/test-suite/Parun/Support.hs`, add to the `oneMountainState` record (replacing the `damageEvents`/`zoneChanges` lines):
 
 ```haskell
           GameState.events = Seq.empty,
@@ -760,11 +760,11 @@ withEvent event gs =
     }
 ```
 
-adding `import qualified Data.Foldable as Foldable`, `import qualified Pawl.Event as Event`, `import qualified Pawl.Type.DamageEvent as DamageEvent`, `import qualified Pawl.Type.GameEvent as GameEvent`, `import qualified Pawl.Type.ZoneChange as ZoneChange`.
+adding `import qualified Data.Foldable as Foldable`, `import qualified Parun.Event as Event`, `import qualified Parun.Type.DamageEvent as DamageEvent`, `import qualified Parun.Type.GameEvent as GameEvent`, `import qualified Parun.Type.ZoneChange as ZoneChange`.
 
 Then the call sites:
 
-- `source/test-suite/Pawl/DamageSpec.hs:164` — `(GameState.damageEvents combat)` → `(S.damageEventsOf combat)`.
+- `source/test-suite/Parun/DamageSpec.hs:164` — `(GameState.damageEvents combat)` → `(S.damageEventsOf combat)`.
 - `:201` — `events = GameState.damageEvents after` → `events = S.damageEventsOf after`.
 - `:218` — `(GameState.damageEvents after)` → `(S.damageEventsOf after)`.
 - `:241` — replace the whole test case with the watermark form:
@@ -778,23 +778,23 @@ Then the call sites:
               HU.assertBool "the record survives (CR 608.2i)" (not (null (S.damageEventsOf after))),
 ```
 
-adding `import qualified Pawl.Event as Event` to `DamageSpec.hs` if absent.
+adding `import qualified Parun.Event as Event` to `DamageSpec.hs` if absent.
 - `:245` — the comment "so the wave is still in damageEvents" → "so the wave is still unscanned in the turn log".
 - `:250` and `:261` — `(GameState.damageEvents fought)` → `(S.damageEventsOf fought)`.
-- `source/test-suite/Pawl/ResolveSpec.hs:169`, `:191`, `:203` — `(GameState.damageEvents …)` → `(S.damageEventsOf …)`.
+- `source/test-suite/Parun/ResolveSpec.hs:169`, `:191`, `:203` — `(GameState.damageEvents …)` → `(S.damageEventsOf …)`.
 - `:634` — replace the `wounded` binding with:
 
 ```haskell
             wounded = S.withEvent (GameEvent.DamageDealt (DamageEvent.MkDamageEvent (ObjectId.MkObjectId 900) (Recipient.ToCreature myrId) 1 True DamageKind.Combat)) gs
 ```
 
-adding `import qualified Pawl.Type.GameEvent as GameEvent`.
-- `source/test-suite/Pawl/ModalSpec.hs:163`, `:272` — `(GameState.damageEvents …)` → `(S.damageEventsOf …)`.
+adding `import qualified Parun.Type.GameEvent as GameEvent`.
+- `source/test-suite/Parun/ModalSpec.hs:163`, `:272` — `(GameState.damageEvents …)` → `(S.damageEventsOf …)`.
 - `:293` — `in (acId, gs1 {GameState.zoneChanges = [entered]})` → `in (acId, S.withEvent (GameEvent.Moved entered (Projection.project acId gs1)) gs1)`.
 - `:369` — `gs2 = gs1 {GameState.zoneChanges = [entered]}` → `gs2 = S.withEvent (GameEvent.Moved entered (Projection.project smtId gs1)) gs1`.
 
-`ModalSpec.hs` needs `import qualified Pawl.Projection as Projection` and `import qualified Pawl.Type.GameEvent as GameEvent` if absent.
-- `source/test-suite/Pawl/EventSpec.hs:58` — `case GameState.zoneChanges after of` → `case S.zoneChangesOf after of`.
+`ModalSpec.hs` needs `import qualified Parun.Projection as Projection` and `import qualified Parun.Type.GameEvent as GameEvent` if absent.
+- `source/test-suite/Parun/EventSpec.hs:58` — `case GameState.zoneChanges after of` → `case S.zoneChangesOf after of`.
 - `:133` — `(map ZoneChange.to (GameState.zoneChanges after))` → `(map ZoneChange.to (S.zoneChangesOf after))`.
 
 - [x] **Step 9: Run the tests to verify they pass**
@@ -805,7 +805,7 @@ Expected: PASS, including every pre-existing test — this task changes no behav
 - [x] **Step 10: Commit**
 
 ```bash
-git add source/library/Pawl/Type/GameEvent.hs source/library/Pawl/Type/GameState.hs source/library/Pawl/Event.hs source/library/Pawl/Damage.hs source/library/Pawl/Sba.hs source/library/Pawl/Engine.hs source/library/Pawl/Setup.hs source/library/Pawl/Codec.hs source/test-suite/Pawl/TriggerSpec.hs source/test-suite/Pawl/Support.hs source/test-suite/Pawl/CodecSpec.hs source/test-suite/Pawl/DamageSpec.hs source/test-suite/Pawl/ResolveSpec.hs source/test-suite/Pawl/ModalSpec.hs source/test-suite/Pawl/EventSpec.hs source/test-suite/Main.hs pawl.cabal
+git add source/library/Parun/Type/GameEvent.hs source/library/Parun/Type/GameState.hs source/library/Parun/Event.hs source/library/Parun/Damage.hs source/library/Parun/Sba.hs source/library/Parun/Engine.hs source/library/Parun/Setup.hs source/library/Parun/Codec.hs source/test-suite/Parun/TriggerSpec.hs source/test-suite/Parun/Support.hs source/test-suite/Parun/CodecSpec.hs source/test-suite/Parun/DamageSpec.hs source/test-suite/Parun/ResolveSpec.hs source/test-suite/Parun/ModalSpec.hs source/test-suite/Parun/EventSpec.hs source/test-suite/Main.hs parun.cabal
 hooky fix && git add -u && hooky run
 git commit -m "feat(m4.5-p4): one turn-scoped event log replaces the two drain queues"
 ```
@@ -817,20 +817,20 @@ git commit -m "feat(m4.5-p4): one turn-scoped event log replaces the two drain q
 Two halves of one change. `TriggerCondition` grows `StepBegins Phase TurnScope`, and `Engine.runStep` emits a `StepBegan` event — but a step trigger belongs to a permanent that has nothing to do with any event, so the scan must widen from M3f's newcomer-only walk to CR 603.6a's "*all* permanents on the battlefield (including the newcomers) are checked". Widening forces `matchesTrigger` to learn who bears the ability, which is what makes `SelfEnters` stay self-scoped.
 
 **Files:**
-- Create: `source/library/Pawl/Type/TurnScope.hs`, `source/library/Pawl/Type/PendingTrigger.hs`
-- Modify: `source/library/Pawl/Type/TriggerCondition.hs`
-- Modify: `source/library/Pawl/Event.hs:228-250`
-- Modify: `source/library/Pawl/Engine.hs` (`runStep`, `placePendingTriggers`, `placeOne`, `apnapOrder`)
-- Modify: `source/library/Pawl/Codec.hs`
-- Test: `source/test-suite/Pawl/TriggerSpec.hs`, `source/test-suite/Pawl/EventSpec.hs`, `source/test-suite/Pawl/CodecSpec.hs`, `source/test-suite/Pawl/Support.hs` (the new `emptyCharacteristics` fixture)
+- Create: `source/library/Parun/Type/TurnScope.hs`, `source/library/Parun/Type/PendingTrigger.hs`
+- Modify: `source/library/Parun/Type/TriggerCondition.hs`
+- Modify: `source/library/Parun/Event.hs:228-250`
+- Modify: `source/library/Parun/Engine.hs` (`runStep`, `placePendingTriggers`, `placeOne`, `apnapOrder`)
+- Modify: `source/library/Parun/Codec.hs`
+- Test: `source/test-suite/Parun/TriggerSpec.hs`, `source/test-suite/Parun/EventSpec.hs`, `source/test-suite/Parun/CodecSpec.hs`, `source/test-suite/Parun/Support.hs` (the new `emptyCharacteristics` fixture)
 
 **Interfaces:**
-- Consumes: `Pawl.Event.recordEvent`, `unscannedEvents`, `GameEvent.StepBegan` (Task 1).
-- Produces: `Pawl.Type.TurnScope.TurnScope = EachTurn | ControllersTurn`; `Pawl.Type.PendingTrigger.PendingTrigger` with fields `source :: ObjectId`, `controller :: PlayerId`, `ability :: TriggeredAbility Card`, `bindings :: Map SlotName Binding`; `TriggerCondition.StepBegins Phase TurnScope`; `Pawl.Event.matchesTrigger :: ObjectId -> PlayerId -> TriggerCondition -> GameEvent -> Bool`; `Pawl.Event.eventTriggers :: [GameEvent] -> GameState -> [PendingTrigger]`; `Pawl.Event.gatherTriggers :: [GameEvent] -> GameState -> [PendingTrigger]`; `Pawl.Engine.placeOne :: PendingTrigger -> Game ()`; `Pawl.Engine.apnapOrder :: GameState -> [PendingTrigger] -> [PendingTrigger]`; `Pawl.Codec.turnScopeToJson` / `jsonToTurnScope`.
+- Consumes: `Parun.Event.recordEvent`, `unscannedEvents`, `GameEvent.StepBegan` (Task 1).
+- Produces: `Parun.Type.TurnScope.TurnScope = EachTurn | ControllersTurn`; `Parun.Type.PendingTrigger.PendingTrigger` with fields `source :: ObjectId`, `controller :: PlayerId`, `ability :: TriggeredAbility Card`, `bindings :: Map SlotName Binding`; `TriggerCondition.StepBegins Phase TurnScope`; `Parun.Event.matchesTrigger :: ObjectId -> PlayerId -> TriggerCondition -> GameEvent -> Bool`; `Parun.Event.eventTriggers :: [GameEvent] -> GameState -> [PendingTrigger]`; `Parun.Event.gatherTriggers :: [GameEvent] -> GameState -> [PendingTrigger]`; `Parun.Engine.placeOne :: PendingTrigger -> Game ()`; `Parun.Engine.apnapOrder :: GameState -> [PendingTrigger] -> [PendingTrigger]`; `Parun.Codec.turnScopeToJson` / `jsonToTurnScope`.
 
 - [x] **Step 1: Write the failing tests**
 
-Add to `source/test-suite/Pawl/TriggerSpec.hs` a new group, and add it to the `tests` list:
+Add to `source/test-suite/Parun/TriggerSpec.hs` a new group, and add it to the `tests` list:
 
 ```haskell
 -- CR 603.2b / 603.6a: a step begins, and EVERY permanent is checked.
@@ -887,7 +887,7 @@ scanTests cards =
     ]
 ```
 
-Add these imports to `TriggerSpec.hs`: `Data.Maybe` as `Maybe`, `Pawl.Type.BeginningStep` as `BeginningStep`, `Pawl.Type.EndingStep` as `EndingStep`, `Pawl.Type.PendingTrigger` as `PendingTrigger`, `Pawl.Type.Phase` as `Phase`, `Pawl.Type.TriggerCondition` as `TriggerCondition`, `Pawl.Type.TurnScope` as `TurnScope`.
+Add these imports to `TriggerSpec.hs`: `Data.Maybe` as `Maybe`, `Parun.Type.BeginningStep` as `BeginningStep`, `Parun.Type.EndingStep` as `EndingStep`, `Parun.Type.PendingTrigger` as `PendingTrigger`, `Parun.Type.Phase` as `Phase`, `Parun.Type.TriggerCondition` as `TriggerCondition`, `Parun.Type.TurnScope` as `TurnScope`.
 
 Add to `CodecSpec.hs`'s "P4 runtime types" group:
 
@@ -902,9 +902,9 @@ Add to `CodecSpec.hs`'s "P4 runtime types" group:
               (TriggerCondition.StepBegins (Phase.Ending EndingStep.EndStep) TurnScope.EachTurn),
 ```
 
-with `Pawl.Type.TriggerCondition` and `Pawl.Type.TurnScope` imported.
+with `Parun.Type.TriggerCondition` and `Parun.Type.TurnScope` imported.
 
-Three tests in `source/test-suite/Pawl/EventSpec.hs:85-100` call the two functions whose signatures change. They belong to the scan, which now lives in `TriggerSpec` — **port them, do not drop them.** Move all three out of `EventSpec.hs` and into `TriggerSpec.hs`'s `scanTests` group, rewritten against the new signatures:
+Three tests in `source/test-suite/Parun/EventSpec.hs:85-100` call the two functions whose signatures change. They belong to the scan, which now lives in `TriggerSpec` — **port them, do not drop them.** Move all three out of `EventSpec.hs` and into `TriggerSpec.hs`'s `scanTests` group, rewritten against the new signatures:
 
 - `"CR 603.6a: Rest in Peace entering yields its ETB trigger"` is now an exact duplicate of the new `"a SelfEnters trigger still fires on its own entry"` case above (same fixture, same assertions, stronger form). Drop **only** this one; its coverage is strictly retained.
 - `"a graveyard-bound event yields no enters trigger"` becomes:
@@ -930,7 +930,7 @@ Three tests in `source/test-suite/Pawl/EventSpec.hs:85-100` call the two functio
                 not (Event.matchesTrigger bearer S.alice TriggerCondition.SelfEnters (movedTo Zone.Graveyard)),
 ```
 
-That second one needs a snapshot value for an object that does not exist. Add to `source/test-suite/Pawl/Support.hs`:
+That second one needs a snapshot value for an object that does not exist. Add to `source/test-suite/Parun/Support.hs`:
 
 ```haskell
 -- The characteristics of nothing: what Projection.baseCharacteristics yields for
@@ -940,21 +940,21 @@ emptyCharacteristics :: PC.ProjectedCharacteristics
 emptyCharacteristics = Projection.project (ObjectId.MkObjectId 999) (Setup.emptyGame bothPlayers)
 ```
 
-with `import qualified Pawl.Type.ProjectedCharacteristics as PC`.
+with `import qualified Parun.Type.ProjectedCharacteristics as PC`.
 
 Then delete the now-unused `TriggerCondition` / `ZoneChange` imports from `EventSpec.hs` if the compiler reports them unused.
 
 - [x] **Step 2: Run the tests to verify they fail**
 
 Run: `cabal build all --enable-tests --enable-benchmarks`
-Expected: FAIL — `Pawl.Type.TurnScope` and `Pawl.Type.PendingTrigger` do not exist; `Event.matchesTrigger` has the wrong arity; `Event.gatherTriggers`, `Codec.turnScopeToJson` are not in scope.
+Expected: FAIL — `Parun.Type.TurnScope` and `Parun.Type.PendingTrigger` do not exist; `Event.matchesTrigger` has the wrong arity; `Event.gatherTriggers`, `Codec.turnScopeToJson` are not in scope.
 
 - [x] **Step 3: Add the two new types and the condition arm**
 
-Create `source/library/Pawl/Type/TurnScope.hs`:
+Create `source/library/Parun/Type/TurnScope.hs`:
 
 ```haskell
-module Pawl.Type.TurnScope where
+module Parun.Type.TurnScope where
 
 -- CR 603.2b / 603.3a: whose turn a step-beginning trigger watches. "At the
 -- beginning of EACH end step" is EachTurn; "at the beginning of YOUR upkeep" is
@@ -970,21 +970,21 @@ data TurnScope
   deriving (Eq, Ord, Show)
 ```
 
-Create `source/library/Pawl/Type/PendingTrigger.hs`:
+Create `source/library/Parun/Type/PendingTrigger.hs`:
 
 ```haskell
-module Pawl.Type.PendingTrigger where
+module Parun.Type.PendingTrigger where
 
 import Data.Map.Strict (Map)
-import Pawl.Type.Binding (Binding)
-import Pawl.Type.Card (Card)
-import Pawl.Type.ObjectId (ObjectId)
-import Pawl.Type.PlayerId (PlayerId)
-import Pawl.Type.SlotName (SlotName)
-import Pawl.Type.TriggeredAbility (TriggeredAbility)
+import Parun.Type.Binding (Binding)
+import Parun.Type.Card (Card)
+import Parun.Type.ObjectId (ObjectId)
+import Parun.Type.PlayerId (PlayerId)
+import Parun.Type.SlotName (SlotName)
+import Parun.Type.TriggeredAbility (TriggeredAbility)
 
 -- CR 603.3: an ability that has TRIGGERED but is not yet on the stack. Gathered
--- by Pawl.Event at the CR 117.5 boundary, ordered and placed by Pawl.Engine.
+-- by Parun.Event at the CR 117.5 boundary, ordered and placed by Parun.Engine.
 --
 -- `source` is the object the ability belongs to (CR 113.7's source of the ability);
 -- `controller` is who controls the ability (CR 603.3a). `bindings` is the
@@ -1000,15 +1000,15 @@ data PendingTrigger = MkPendingTrigger
   deriving (Eq, Show)
 ```
 
-In `source/library/Pawl/Type/TriggerCondition.hs`, replace the whole module body:
+In `source/library/Parun/Type/TriggerCondition.hs`, replace the whole module body:
 
 ```haskell
-module Pawl.Type.TriggerCondition where
+module Parun.Type.TriggerCondition where
 
-import Pawl.Type.Phase (Phase)
-import Pawl.Type.TurnScope (TurnScope)
+import Parun.Type.Phase (Phase)
+import Parun.Type.TurnScope (TurnScope)
 
--- CR 603.2: the pattern that fires a triggered ability. Only Pawl.Event may case
+-- CR 603.2: the pattern that fires a triggered ability. Only Parun.Event may case
 -- on it.
 data TriggerCondition
   = -- CR 603.6a: "when this ... enters [the battlefield]" -- fires when the object
@@ -1027,7 +1027,7 @@ data TriggerCondition
 
 - [x] **Step 4: Widen the scan**
 
-In `source/library/Pawl/Event.hs`, replace `matchesTrigger` and `triggersFrom` wholesale:
+In `source/library/Parun/Event.hs`, replace `matchesTrigger` and `triggersFrom` wholesale:
 
 ```haskell
 -- CR 603.2: does this condition fire on this event, for the permanent that bears
@@ -1074,19 +1074,19 @@ eventTriggers events gs =
    in concatMap (\event -> concatMap (forOne event) permanents) events
 
 -- Everything that has triggered and is not yet on the stack. One function, so
--- Pawl.Engine never needs to know how many sources there are. Grows a state pass
+-- Parun.Engine never needs to know how many sources there are. Grows a state pass
 -- (CR 603.8) at Task 4 and a delayed pass (CR 603.7) at Task 6.
 gatherTriggers :: [GameEvent] -> GameState -> [PendingTrigger]
 gatherTriggers events gs = eventTriggers events gs
 ```
 
-Add to `Event.hs`'s imports: `Pawl.Type.PendingTrigger (PendingTrigger)` and `qualified … as PendingTrigger`, `qualified Pawl.Type.TurnScope as TurnScope`. `Data.Map.Strict`, `Data.Set`, `Pawl.Projection`, `Pawl.Type.TriggeredAbility` and `Pawl.Type.Zone` are already imported. `Pawl.Type.Card` and `Pawl.Type.TriggeredAbility (TriggeredAbility)` may become unused; remove any import the build reports unused.
+Add to `Event.hs`'s imports: `Parun.Type.PendingTrigger (PendingTrigger)` and `qualified … as PendingTrigger`, `qualified Parun.Type.TurnScope as TurnScope`. `Data.Map.Strict`, `Data.Set`, `Parun.Projection`, `Parun.Type.TriggeredAbility` and `Parun.Type.Zone` are already imported. `Parun.Type.Card` and `Parun.Type.TriggeredAbility (TriggeredAbility)` may become unused; remove any import the build reports unused.
 
 - [x] **Step 5: Emit the step, and place a `PendingTrigger`**
 
-In `source/library/Pawl/Engine.hs`:
+In `source/library/Parun/Engine.hs`:
 
-**Comment-accuracy check this task owes (carried from Task 1's review).** `Pawl.Type.GameState`'s `events` comment says the log is appended "by `Engine.runStep`'s step-begin emission", and `Pawl.Type.GameEvent`'s `StepBegan` comment describes what a step trigger matches — both landed in Task 1 but were false until this task. **After implementing, re-read both comments and confirm they are now accurate.** Report that you did.
+**Comment-accuracy check this task owes (carried from Task 1's review).** `Parun.Type.GameState`'s `events` comment says the log is appended "by `Engine.runStep`'s step-begin emission", and `Parun.Type.GameEvent`'s `StepBegan` comment describes what a step trigger matches — both landed in Task 1 but were false until this task. **After implementing, re-read both comments and confirm they are now accurate.** Report that you did.
 
 `runStep` emits before its turn-based actions, so a beginning-of-step trigger is in the log by the time the step's first CR 117.5 boundary scans it:
 
@@ -1149,11 +1149,11 @@ apnapOrder gs pend =
    in filter mine pend ++ filter (not . mine) pend
 ```
 
-Add `import qualified Pawl.Type.GameEvent as GameEvent` and `import qualified Pawl.Type.PendingTrigger as PendingTrigger` to `Engine.hs`.
+Add `import qualified Parun.Type.GameEvent as GameEvent` and `import qualified Parun.Type.PendingTrigger as PendingTrigger` to `Engine.hs`.
 
 - [x] **Step 6: Add the codec arms**
 
-In `source/library/Pawl/Codec.hs`, add next to the other leaf enums:
+In `source/library/Parun/Codec.hs`, add next to the other leaf enums:
 
 ```haskell
 turnScopeToJson :: TurnScope.TurnScope -> Value
@@ -1187,7 +1187,7 @@ jsonToTriggerCondition value = do
     _ -> Left (Text.pack "unknown TriggerCondition: " <> t)
 ```
 
-adding `import qualified Pawl.Type.TurnScope as TurnScope`.
+adding `import qualified Parun.Type.TurnScope as TurnScope`.
 
 - [x] **Step 7: Run the tests to verify they pass**
 
@@ -1197,7 +1197,7 @@ Expected: PASS. The existing Rest in Peace whole-card test (`EventSpec.hs:101`) 
 - [x] **Step 8: Commit**
 
 ```bash
-git add source/library/Pawl/Type/TurnScope.hs source/library/Pawl/Type/PendingTrigger.hs source/library/Pawl/Type/TriggerCondition.hs source/library/Pawl/Event.hs source/library/Pawl/Engine.hs source/library/Pawl/Codec.hs source/test-suite/Pawl/TriggerSpec.hs source/test-suite/Pawl/EventSpec.hs source/test-suite/Pawl/CodecSpec.hs source/test-suite/Pawl/Support.hs pawl.cabal
+git add source/library/Parun/Type/TurnScope.hs source/library/Parun/Type/PendingTrigger.hs source/library/Parun/Type/TriggerCondition.hs source/library/Parun/Event.hs source/library/Parun/Engine.hs source/library/Parun/Codec.hs source/test-suite/Parun/TriggerSpec.hs source/test-suite/Parun/EventSpec.hs source/test-suite/Parun/CodecSpec.hs source/test-suite/Parun/Support.hs parun.cabal
 hooky fix && git add -u && hooky run
 git commit -m "feat(m4.5-p4): step-beginning events and the CR 603.6a widened trigger scan"
 ```
@@ -1209,21 +1209,21 @@ git commit -m "feat(m4.5-p4): step-beginning events and the CR 603.6a widened tr
 CR 701.21's keyword action, plus the mechanism that makes "this creature" expressible: the trigger's source object is bound into a reserved slot as the ability is placed, so `Sacrifice` needs no self-referential variant. This also fixes a latent hazard the reserved slot exposes — CR 608.2b's re-validation is about **targets**, and a slot with no target spec was never targeted, so it must not be judged illegal.
 
 **Files:**
-- Modify: `source/library/Pawl/Type/Effect.hs`
-- Modify: `source/library/Pawl/Binding.hs`
-- Modify: `source/library/Pawl/Event.hs`
-- Modify: `source/library/Pawl/Resolve.hs` (`slotsOf`, `readsX`, `manaProduced`, `searchesLibrary`, `rewriteEffect`, `resolveSpell`, `resolveEffects`, `applyEffect`)
-- Modify: `source/library/Pawl/Engine.hs` (`placeOne`)
-- Modify: `source/library/Pawl/Codec.hs`
-- Test: `source/test-suite/Pawl/TriggerSpec.hs`, `source/test-suite/Pawl/CardSpec.hs`, `source/test-suite/Pawl/CodecSpec.hs`
+- Modify: `source/library/Parun/Type/Effect.hs`
+- Modify: `source/library/Parun/Binding.hs`
+- Modify: `source/library/Parun/Event.hs`
+- Modify: `source/library/Parun/Resolve.hs` (`slotsOf`, `readsX`, `manaProduced`, `searchesLibrary`, `rewriteEffect`, `resolveSpell`, `resolveEffects`, `applyEffect`)
+- Modify: `source/library/Parun/Engine.hs` (`placeOne`)
+- Modify: `source/library/Parun/Codec.hs`
+- Test: `source/test-suite/Parun/TriggerSpec.hs`, `source/test-suite/Parun/CardSpec.hs`, `source/test-suite/Parun/CodecSpec.hs`
 
 **Interfaces:**
 - Consumes: `PendingTrigger` and `Engine.placeOne` (Task 2).
-- Produces: `Effect.Sacrifice SlotName`; `Pawl.Binding.triggerSource :: SlotName` (the text `"self"`), `Pawl.Binding.setTriggerSource :: ObjectId -> Map SlotName Binding -> Map SlotName Binding`; `Pawl.Event.sacrifice :: ObjectId -> GameState -> GameState`.
+- Produces: `Effect.Sacrifice SlotName`; `Parun.Binding.triggerSource :: SlotName` (the text `"self"`), `Parun.Binding.setTriggerSource :: ObjectId -> Map SlotName Binding -> Map SlotName Binding`; `Parun.Event.sacrifice :: ObjectId -> GameState -> GameState`.
 
 - [x] **Step 1: Write the failing tests**
 
-Add to `source/test-suite/Pawl/TriggerSpec.hs` (and to the `tests` list):
+Add to `source/test-suite/Parun/TriggerSpec.hs` (and to the `tests` list):
 
 ```haskell
 -- CR 701.21: sacrificing is its own keyword action -- NOT a destruction.
@@ -1269,9 +1269,9 @@ sacrificeTests cards =
     ]
 ```
 
-Add imports to `TriggerSpec.hs`: `Data.Map.Strict` as `Map`, `Pawl.Binding` as `Binding`, `Pawl.Type.Recipient` as `Recipient`.
+Add imports to `TriggerSpec.hs`: `Data.Map.Strict` as `Map`, `Parun.Binding` as `Binding`, `Parun.Type.Recipient` as `Recipient`.
 
-Add to `source/test-suite/Pawl/CardSpec.hs`'s `lintTests` list:
+Add to `source/test-suite/Parun/CardSpec.hs`'s `lintTests` list:
 
 ```haskell
       HU.testCase "the reserved trigger-source slot is never a declared target slot" $
@@ -1296,7 +1296,7 @@ Expected: FAIL — `Event.sacrifice`, `Binding.triggerSource` and `Effect.Sacrif
 
 - [x] **Step 3: Add the opcode, the funnel, and the reserved slot**
 
-In `source/library/Pawl/Type/Effect.hs`, add a constructor (after `Destroy`, whose comment it contrasts with):
+In `source/library/Parun/Type/Effect.hs`, add a constructor (after `Destroy`, whose comment it contrasts with):
 
 ```haskell
   | -- CR 701.21/701.21a: the slot's target permanent is sacrificed -- its
@@ -1307,12 +1307,12 @@ In `source/library/Pawl/Type/Effect.hs`, add a constructor (after `Destroy`, who
     -- One opcode, not a targetless SacrificeSelf plus a slotted variant on
     -- RegenerateSelf's precedent: "this creature" is expressible because
     -- Engine.placeOne binds the trigger's SOURCE into the reserved
-    -- Pawl.Binding.triggerSource slot, and "this creature" recurs far too often to
+    -- Parun.Binding.triggerSource slot, and "this creature" recurs far too often to
     -- pay for a second opcode.
     Sacrifice SlotName
 ```
 
-In `source/library/Pawl/Binding.hs`, add next to `copySource`:
+In `source/library/Parun/Binding.hs`, add next to `copySource`:
 
 ```haskell
 -- CR 113.7 / 603.7c: the reserved slot under which a triggered ability's SOURCE
@@ -1330,9 +1330,9 @@ setTriggerSource oid =
   Map.insert triggerSource (Binding.empty {Binding.target = Just (Recipient.ToObject oid)})
 ```
 
-adding `import Pawl.Type.ObjectId (ObjectId)` and `import qualified Pawl.Type.Recipient as Recipient` (the unqualified `Recipient` type import is already there).
+adding `import Parun.Type.ObjectId (ObjectId)` and `import qualified Parun.Type.Recipient as Recipient` (the unqualified `Recipient` type import is already there).
 
-In `source/library/Pawl/Event.hs`, add beside `destroy` and `counter`:
+In `source/library/Parun/Event.hs`, add beside `destroy` and `counter`:
 
 ```haskell
 -- CR 701.21/701.21a: the single sacrifice funnel. The permanent is put into its
@@ -1352,7 +1352,7 @@ sacrifice oid gs = case Game.lookupObject oid gs of
 
 - [x] **Step 4: Teach `Resolve` the opcode, and exempt reserved slots from CR 608.2b**
 
-In `source/library/Pawl/Resolve.hs`, add the `Sacrifice` arm to all five classification functions, in each case beside `Destroy`:
+In `source/library/Parun/Resolve.hs`, add the `Sacrifice` arm to all five classification functions, in each case beside `Destroy`:
 
 - `slotsOf`: `Effect.Sacrifice slot -> Set.singleton slot`
 - `readsX`: `Effect.Sacrifice _ -> False`
@@ -1379,7 +1379,7 @@ Then change the legality computation in **both** `resolveSpell` and `resolveEffe
 ```haskell
             legalSlot slot recipient = case Map.lookup slot specs of
               -- CR 608.2b is about TARGETS. A slot with no target spec is a
-              -- RESERVED binding -- the trigger's source (Pawl.Binding.triggerSource),
+              -- RESERVED binding -- the trigger's source (Parun.Binding.triggerSource),
               -- a token this resolution minted -- and was never targeted, so it can
               -- never have become an illegal target.
               Nothing -> True
@@ -1395,7 +1395,7 @@ Then change the legality computation in **both** `resolveSpell` and `resolveEffe
 
 - [x] **Step 5: Stamp the reserved slot at placement**
 
-In `source/library/Pawl/Engine.hs`, change `placeOne`'s final `State.modify'` so the source binding rides alongside the chosen targets:
+In `source/library/Parun/Engine.hs`, change `placeOne`'s final `State.modify'` so the source binding rides alongside the chosen targets:
 
 ```haskell
       -- CR 113.7 / 603.7c: the ability's SOURCE is bound under the reserved slot
@@ -1406,7 +1406,7 @@ In `source/library/Pawl/Engine.hs`, change `placeOne`'s final `State.modify'` so
 
 - [x] **Step 6: Add the codec arm**
 
-In `source/library/Pawl/Codec.hs`, add to `effectToJson` (beside `Destroy`):
+In `source/library/Parun/Codec.hs`, add to `effectToJson` (beside `Destroy`):
 
 ```haskell
   Effect.Sacrifice s -> Json.tagged (Text.pack "Sacrifice") (Just (slotNameToJson s))
@@ -1426,7 +1426,7 @@ Expected: PASS. The Rest in Peace whole-card test in `EventSpec.hs` is the regre
 - [x] **Step 8: Commit**
 
 ```bash
-git add source/library/Pawl/Type/Effect.hs source/library/Pawl/Binding.hs source/library/Pawl/Event.hs source/library/Pawl/Resolve.hs source/library/Pawl/Engine.hs source/library/Pawl/Codec.hs source/test-suite/Pawl/TriggerSpec.hs source/test-suite/Pawl/CardSpec.hs source/test-suite/Pawl/CodecSpec.hs
+git add source/library/Parun/Type/Effect.hs source/library/Parun/Binding.hs source/library/Parun/Event.hs source/library/Parun/Resolve.hs source/library/Parun/Engine.hs source/library/Parun/Codec.hs source/test-suite/Parun/TriggerSpec.hs source/test-suite/Parun/CardSpec.hs source/test-suite/Parun/CodecSpec.hs
 hooky fix && git add -u && hooky run
 git commit -m "feat(m4.5-p4): the Sacrifice opcode and the reserved trigger-source slot"
 ```
@@ -1438,19 +1438,19 @@ git commit -m "feat(m4.5-p4): the Sacrifice opcode and the reserved trigger-sour
 CR 603.8's trigger that is not an event: a condition over game *state*, checked at every CR 117.5 boundary, whose armedness is **derived** — an instance already on the stack suppresses a new one — so there is no bookkeeping field to leak. The sharpest falsifier in the phase is the flooding one: with no Swamps in play, exactly **one** trigger reaches the stack, not one per priority boundary.
 
 **Files:**
-- Create: `source/library/Pawl/Type/StateCondition.hs`, `data/cards/barbarian-outcast.json`
-- Modify: `source/library/Pawl/Type/TriggerCondition.hs`, `source/library/Pawl/Type/Subtype.hs`
-- Modify: `source/library/Pawl/Event.hs`
-- Modify: `source/library/Pawl/Codec.hs`
-- Test: `source/test-suite/Pawl/TriggerSpec.hs`, `source/test-suite/Pawl/Cards.hs`, `source/test-suite/Pawl/CodecSpec.hs`
+- Create: `source/library/Parun/Type/StateCondition.hs`, `data/cards/barbarian-outcast.json`
+- Modify: `source/library/Parun/Type/TriggerCondition.hs`, `source/library/Parun/Type/Subtype.hs`
+- Modify: `source/library/Parun/Event.hs`
+- Modify: `source/library/Parun/Codec.hs`
+- Test: `source/test-suite/Parun/TriggerSpec.hs`, `source/test-suite/Parun/Cards.hs`, `source/test-suite/Parun/CodecSpec.hs`
 
 **Interfaces:**
 - Consumes: `Event.gatherTriggers`, `PendingTrigger` (Task 2); `Effect.Sacrifice`, `Binding.triggerSource` (Task 3).
-- Produces: `Pawl.Type.StateCondition.StateCondition = YouControlNo Subtype | NoPermanentsOfSubtype Subtype`; `TriggerCondition.StateIs StateCondition`; `Pawl.Event.stateHolds :: PlayerId -> StateCondition -> GameState -> Bool`; `Pawl.Event.stateTriggers :: GameState -> [PendingTrigger]`; `Subtype.Barbarian`; `Pawl.Cards.barbarianOutcastPrinting`; `Pawl.Codec.stateConditionToJson` / `jsonToStateCondition`.
+- Produces: `Parun.Type.StateCondition.StateCondition = YouControlNo Subtype | NoPermanentsOfSubtype Subtype`; `TriggerCondition.StateIs StateCondition`; `Parun.Event.stateHolds :: PlayerId -> StateCondition -> GameState -> Bool`; `Parun.Event.stateTriggers :: GameState -> [PendingTrigger]`; `Subtype.Barbarian`; `Parun.Cards.barbarianOutcastPrinting`; `Parun.Codec.stateConditionToJson` / `jsonToStateCondition`.
 
 - [x] **Step 1: Write the failing tests**
 
-Add to `source/test-suite/Pawl/TriggerSpec.hs` (and to the `tests` list):
+Add to `source/test-suite/Parun/TriggerSpec.hs` (and to the `tests` list):
 
 ```haskell
 -- Barbarian Outcast {1}{R} Creature -- Human Barbarian Beast 2/2:
@@ -1517,7 +1517,7 @@ stateTriggerTests cards =
         ]
 ```
 
-Add imports to `TriggerSpec.hs`: `Pawl.Resolve` as `Resolve`, `Pawl.Stack` as `Stack`, `Pawl.Type.Subtype` as `Subtype`.
+Add imports to `TriggerSpec.hs`: `Parun.Resolve` as `Resolve`, `Parun.Stack` as `Stack`, `Parun.Type.Subtype` as `Subtype`.
 
 Add to `CodecSpec.hs`'s "P4 runtime types" group:
 
@@ -1534,21 +1534,21 @@ Add to `CodecSpec.hs`'s "P4 runtime types" group:
               (TriggerCondition.StateIs (StateCondition.YouControlNo Subtype.Swamp)),
 ```
 
-with `Pawl.Type.StateCondition` imported. (`Subtype.Zombie` lands in Task 5; for this task use `Subtype.Swamp` in both entries and switch the second to `Zombie` when Task 5 adds it.)
+with `Parun.Type.StateCondition` imported. (`Subtype.Zombie` lands in Task 5; for this task use `Subtype.Swamp` in both entries and switch the second to `Zombie` when Task 5 adds it.)
 
 - [x] **Step 2: Run the tests to verify they fail**
 
 Run: `cabal build all --enable-tests --enable-benchmarks`
-Expected: FAIL — `Pawl.Type.StateCondition` does not exist; `Cards.barbarianOutcastPrinting`, `Event.stateTriggers`, `Codec.stateConditionToJson` are not in scope.
+Expected: FAIL — `Parun.Type.StateCondition` does not exist; `Cards.barbarianOutcastPrinting`, `Event.stateTriggers`, `Codec.stateConditionToJson` are not in scope.
 
 - [x] **Step 3: Add the state-condition classification**
 
-Create `source/library/Pawl/Type/StateCondition.hs`:
+Create `source/library/Parun/Type/StateCondition.hs`:
 
 ```haskell
-module Pawl.Type.StateCondition where
+module Parun.Type.StateCondition where
 
-import Pawl.Type.Subtype (Subtype)
+import Parun.Type.Subtype (Subtype)
 
 -- CR 603.8 / 603.4: a predicate over game STATE rather than over an event. Two
 -- customers, one vocabulary: a state TRIGGER's condition (CR 603.8, checked at
@@ -1556,7 +1556,7 @@ import Pawl.Type.Subtype (Subtype)
 -- event occurs, CR 608.2a again on resolution).
 --
 -- Hand-carved, one variant per card -- the TargetSpec.WallTarget and CountSpec
--- posture, specific before general. Only Pawl.Event may case on it, and it reads
+-- posture, specific before general. Only Parun.Event may case on it, and it reads
 -- the PROJECTION: a subtype is CR 613 layer 4 and control is layer 2, so a card
 -- that changed either must change the answer.
 --
@@ -1571,17 +1571,17 @@ data StateCondition
   deriving (Eq, Ord, Show)
 ```
 
-In `source/library/Pawl/Type/TriggerCondition.hs`, add the arm and the import:
+In `source/library/Parun/Type/TriggerCondition.hs`, add the arm and the import:
 
 ```haskell
   | -- CR 603.8: a STATE trigger -- it fires whenever its condition is true, not
     -- when an event occurs. "It doesn't trigger again until the ability has
     -- resolved, has been countered, or has otherwise left the stack", which is why
-    -- Pawl.Event derives armedness from the stack rather than storing it.
+    -- Parun.Event derives armedness from the stack rather than storing it.
     StateIs StateCondition
 ```
 
-In `source/library/Pawl/Type/Subtype.hs`, append after `Arcane` (appending keeps every existing card file's subtype ordering byte-identical):
+In `source/library/Parun/Type/Subtype.hs`, append after `Arcane` (appending keeps every existing card file's subtype ordering byte-identical):
 
 ```haskell
   | Barbarian -- CR 205.3m (a creature type; Barbarian Outcast's)
@@ -1589,7 +1589,7 @@ In `source/library/Pawl/Type/Subtype.hs`, append after `Arcane` (appending keeps
 
 - [x] **Step 4: Evaluate the condition and gather state triggers**
 
-In `source/library/Pawl/Event.hs`, add the `StateIs` arm to `matchesTrigger`:
+In `source/library/Parun/Event.hs`, add the `StateIs` arm to `matchesTrigger`:
 
 ```haskell
   -- CR 603.8: a state trigger is not an event trigger. It never matches an entry
@@ -1656,11 +1656,11 @@ gatherTriggers :: [GameEvent] -> GameState -> [PendingTrigger]
 gatherTriggers events gs = eventTriggers events gs ++ stateTriggers gs
 ```
 
-Add `import Pawl.Type.StateCondition (StateCondition)` and `import qualified Pawl.Type.StateCondition as StateCondition` to `Event.hs`. `Pawl.Type.Source` is already imported.
+Add `import Parun.Type.StateCondition (StateCondition)` and `import qualified Parun.Type.StateCondition as StateCondition` to `Event.hs`. `Parun.Type.Source` is already imported.
 
 - [x] **Step 5: Add the codec arms and the card**
 
-In `source/library/Pawl/Codec.hs`:
+In `source/library/Parun/Codec.hs`:
 
 ```haskell
 stateConditionToJson :: StateCondition.StateCondition -> Value
@@ -1686,7 +1686,7 @@ plus the `StateIs` arms in `triggerConditionToJson` / `jsonToTriggerCondition`:
     ("StateIs", Just v) -> TriggerCondition.StateIs <$> jsonToStateCondition v
 ```
 
-and the `Barbarian` entries in `subtypeToJson` / `jsonToSubtype`. Add `import qualified Pawl.Type.StateCondition as StateCondition`.
+and the `Barbarian` entries in `subtypeToJson` / `jsonToSubtype`. Add `import qualified Parun.Type.StateCondition as StateCondition`.
 
 Create `data/cards/barbarian-outcast.json` — one line, exactly this, plus the trailing newline the repo's file-hygiene rule mandates:
 
@@ -1694,19 +1694,19 @@ Create `data/cards/barbarian-outcast.json` — one line, exactly this, plus the 
 {"name":"Barbarian Outcast","manaCost":[{"type":"Generic","value":1},{"type":"OfType","value":{"type":"Colored","value":{"type":"Red"}}}],"typeLine":{"supertypes":[],"types":[{"type":"Creature"}],"subtypes":[{"type":"Human"},{"type":"Beast"},{"type":"Barbarian"}]},"power":{"type":"Literal","value":2},"toughness":{"type":"Literal","value":2},"keywords":[],"staticAbilities":[],"spell":{"modes":[{"effects":[],"targetSpecs":[]}],"selection":{"type":"ChooseExactly","value":1}},"activatedAbilities":[],"replacementEffects":[],"triggeredAbilities":[{"condition":{"type":"StateIs","value":{"type":"YouControlNo","value":{"type":"Swamp"}}},"modal":{"modes":[{"effects":[{"type":"Sacrifice","value":"self"}],"targetSpecs":[]}],"selection":{"type":"ChooseExactly","value":1}}}],"castingPermissions":[]}
 ```
 
-The subtype array order is `Set.toAscList` order, i.e. the `Pawl.Type.Subtype` declaration order — `Human`, then `Beast`, then the newly appended `Barbarian`. If `Pawl.CardsSpec`'s byte-stability assertion reports a mismatch, the render is authoritative: the fix is to make the file match `Json.render (Codec.printingToJson p)`, never to weaken the assertion.
+The subtype array order is `Set.toAscList` order, i.e. the `Parun.Type.Subtype` declaration order — `Human`, then `Beast`, then the newly appended `Barbarian`. If `Parun.CardsSpec`'s byte-stability assertion reports a mismatch, the render is authoritative: the fix is to make the file match `Json.render (Codec.printingToJson p)`, never to weaken the assertion.
 
-In `source/test-suite/Pawl/Cards.hs`, add `barbarianOutcastPrinting :: Printing.Printing` to the record, `barbarianOutcastPrinting_ <- loadPrinting "barbarian-outcast"` to `loadCards`, the field to the returned `MkCards`, and `barbarianOutcastPrinting cards,` to `allPrintings`.
+In `source/test-suite/Parun/Cards.hs`, add `barbarianOutcastPrinting :: Printing.Printing` to the record, `barbarianOutcastPrinting_ <- loadPrinting "barbarian-outcast"` to `loadCards`, the field to the returned `MkCards`, and `barbarianOutcastPrinting cards,` to `allPrintings`.
 
 - [x] **Step 6: Run the tests to verify they pass**
 
 Run: `cabal build all --enable-tests --enable-benchmarks && cabal test`
-Expected: PASS, including `Pawl.CardsSpec`'s per-file re-parse and byte-stability assertions and `Pawl.CardSpec`'s directory/registry lint.
+Expected: PASS, including `Parun.CardsSpec`'s per-file re-parse and byte-stability assertions and `Parun.CardSpec`'s directory/registry lint.
 
 - [x] **Step 7: Commit**
 
 ```bash
-git add source/library/Pawl/Type/StateCondition.hs source/library/Pawl/Type/TriggerCondition.hs source/library/Pawl/Type/Subtype.hs source/library/Pawl/Event.hs source/library/Pawl/Codec.hs data/cards/barbarian-outcast.json source/test-suite/Pawl/TriggerSpec.hs source/test-suite/Pawl/Cards.hs source/test-suite/Pawl/CodecSpec.hs
+git add source/library/Parun/Type/StateCondition.hs source/library/Parun/Type/TriggerCondition.hs source/library/Parun/Type/Subtype.hs source/library/Parun/Event.hs source/library/Parun/Codec.hs data/cards/barbarian-outcast.json source/test-suite/Parun/TriggerSpec.hs source/test-suite/Parun/Cards.hs source/test-suite/Parun/CodecSpec.hs
 hooky fix && git add -u && hooky run
 git commit -m "feat(m4.5-p4): CR 603.8 state triggers with derived re-arming (Barbarian Outcast)"
 ```
@@ -1719,18 +1719,18 @@ The log becomes readable as history. `CountSpec` grows one arm that folds `GameS
 
 **Files:**
 - Create: `data/cards/khabál-ghoul.json`
-- Modify: `source/library/Pawl/Type/CountSpec.hs`, `source/library/Pawl/Type/Subtype.hs`
-- Modify: `source/library/Pawl/Quantity.hs`
-- Modify: `source/library/Pawl/Codec.hs`
-- Test: `source/test-suite/Pawl/TriggerSpec.hs`, `source/test-suite/Pawl/Cards.hs`, `source/test-suite/Pawl/CodecSpec.hs`
+- Modify: `source/library/Parun/Type/CountSpec.hs`, `source/library/Parun/Type/Subtype.hs`
+- Modify: `source/library/Parun/Quantity.hs`
+- Modify: `source/library/Parun/Codec.hs`
+- Test: `source/test-suite/Parun/TriggerSpec.hs`, `source/test-suite/Parun/Cards.hs`, `source/test-suite/Parun/CodecSpec.hs`
 
 **Interfaces:**
 - Consumes: `GameState.events`, `GameEvent.Moved` (Task 1); `TriggerCondition.StepBegins`, `TurnScope.EachTurn` (Task 2); `Binding.triggerSource` (Task 3).
-- Produces: `CountSpec.CreaturesDiedThisTurn`; `Subtype.Zombie`; `Pawl.Cards.khabalGhoulPrinting`.
+- Produces: `CountSpec.CreaturesDiedThisTurn`; `Subtype.Zombie`; `Parun.Cards.khabalGhoulPrinting`.
 
 - [x] **Step 1: Write the failing tests**
 
-Add to `source/test-suite/Pawl/TriggerSpec.hs` (and to the `tests` list):
+Add to `source/test-suite/Parun/TriggerSpec.hs` (and to the `tests` list):
 
 ```haskell
 -- Khabál Ghoul {2}{B} Creature -- Zombie 1/1: "At the beginning of each end step,
@@ -1812,7 +1812,7 @@ historyTests cards =
         ]
 ```
 
-Add imports to `TriggerSpec.hs`: `Pawl.Type.CounterKind` as `CounterKind`, `Pawl.Type.Printing` as `Printing`.
+Add imports to `TriggerSpec.hs`: `Parun.Type.CounterKind` as `CounterKind`, `Parun.Type.Printing` as `Printing`.
 
 Add to `CodecSpec.hs`'s "P4 runtime types" group:
 
@@ -1821,7 +1821,7 @@ Add to `CodecSpec.hs`'s "P4 runtime types" group:
             roundTrip "count" Codec.countSpecToJson Codec.jsonToCountSpec CountSpec.CreaturesDiedThisTurn,
 ```
 
-with `Pawl.Type.CountSpec` imported, and switch the second `StateCondition` round-trip entry added in Task 4 to `StateCondition.NoPermanentsOfSubtype Subtype.Zombie`.
+with `Parun.Type.CountSpec` imported, and switch the second `StateCondition` round-trip entry added in Task 4 to `StateCondition.NoPermanentsOfSubtype Subtype.Zombie`.
 
 - [x] **Step 2: Run the tests to verify they fail**
 
@@ -1830,7 +1830,7 @@ Expected: FAIL — `CountSpec.CreaturesDiedThisTurn`, `Subtype.Zombie` and `Card
 
 - [x] **Step 3: Add the counting arm**
 
-In `source/library/Pawl/Type/CountSpec.hs`, add the arm — and correct the type's header comment, whose "Both inhabitants read only zone membership and PRINTED card types" claim this arm changes:
+In `source/library/Parun/Type/CountSpec.hs`, add the arm — and correct the type's header comment, whose "Both inhabitants read only zone membership and PRINTED card types" claim this arm changes:
 
 ```haskell
   | -- CR 608.2i / 700.4: Khabál Ghoul. How many creatures DIED this turn -- were
@@ -1846,19 +1846,19 @@ Amend the header comment's third paragraph to:
 ```haskell
 -- The first two inhabitants read only zone membership and PRINTED card types, and
 -- CreaturesDiedThisTurn reads only the event log's own snapshots -- never the LIVE
--- projection. Pawl.Quantity cannot import Pawl.Projection (Projection imports
+-- projection. Parun.Quantity cannot import Parun.Projection (Projection imports
 -- Quantity), and a count evaluated inside the layer fold would recurse into the
 -- fold that called it. A count over live projected state ("lands you control") is
 -- a named deferral in the P3b spec, section 8.
 ```
 
-In `source/library/Pawl/Type/Subtype.hs`, append after `Barbarian`:
+In `source/library/Parun/Type/Subtype.hs`, append after `Barbarian`:
 
 ```haskell
   | Zombie -- CR 205.3m (a creature type; Khabál Ghoul's and Sarcomancy's token's)
 ```
 
-In `source/library/Pawl/Quantity.hs`, add the `countOf` arm and its helper:
+In `source/library/Parun/Quantity.hs`, add the `countOf` arm and its helper:
 
 ```haskell
   -- CR 700.4: "dies" means put into a graveyard FROM THE BATTLEFIELD.
@@ -1881,11 +1881,11 @@ died event = case event of
   GameEvent.StepBegan _ _ -> False
 ```
 
-Add to `Quantity.hs`'s imports: `qualified Pawl.Type.GameEvent as GameEvent`, `qualified Pawl.Type.ProjectedCharacteristics as PC`, `qualified Pawl.Type.ZoneChange as ZoneChange`. `Data.Foldable`, `Data.Set`, `Pawl.Type.CardType` and `Pawl.Type.Zone` are already imported. Note `Pawl.Quantity` cases on `GameEvent` here while `Pawl.Event` cases on it too — that is fine: `GameEvent` is a data record, not a case-restricted classification like `TriggerCondition`, whose sole casing home stays `Pawl.Event`.
+Add to `Quantity.hs`'s imports: `qualified Parun.Type.GameEvent as GameEvent`, `qualified Parun.Type.ProjectedCharacteristics as PC`, `qualified Parun.Type.ZoneChange as ZoneChange`. `Data.Foldable`, `Data.Set`, `Parun.Type.CardType` and `Parun.Type.Zone` are already imported. Note `Parun.Quantity` cases on `GameEvent` here while `Parun.Event` cases on it too — that is fine: `GameEvent` is a data record, not a case-restricted classification like `TriggerCondition`, whose sole casing home stays `Parun.Event`.
 
 - [x] **Step 4: Add the codec arm and the card**
 
-In `source/library/Pawl/Codec.hs`, add `CountSpec.CreaturesDiedThisTurn -> "CreaturesDiedThisTurn"` to `countSpecToJson` and the matching pair to `jsonToCountSpec`'s table, plus the `Zombie` entries in `subtypeToJson` / `jsonToSubtype`.
+In `source/library/Parun/Codec.hs`, add `CountSpec.CreaturesDiedThisTurn -> "CreaturesDiedThisTurn"` to `countSpecToJson` and the matching pair to `jsonToCountSpec`'s table, plus the `Zombie` entries in `subtypeToJson` / `jsonToSubtype`.
 
 Create `data/cards/khabál-ghoul.json` — note the non-ASCII `á` (NFC, U+00E1) in **both** the file name and the `name` field; `Codec.slugify` keeps alphanumerics, so the slug is `khabál-ghoul`:
 
@@ -1893,17 +1893,17 @@ Create `data/cards/khabál-ghoul.json` — note the non-ASCII `á` (NFC, U+00E1)
 {"name":"Khabál Ghoul","manaCost":[{"type":"Generic","value":2},{"type":"OfType","value":{"type":"Colored","value":{"type":"Black"}}}],"typeLine":{"supertypes":[],"types":[{"type":"Creature"}],"subtypes":[{"type":"Zombie"}]},"power":{"type":"Literal","value":1},"toughness":{"type":"Literal","value":1},"keywords":[],"staticAbilities":[],"spell":{"modes":[{"effects":[],"targetSpecs":[]}],"selection":{"type":"ChooseExactly","value":1}},"activatedAbilities":[],"replacementEffects":[],"triggeredAbilities":[{"condition":{"type":"StepBegins","value":[{"type":"Ending","value":{"type":"EndStep"}},{"type":"EachTurn"}]},"modal":{"modes":[{"effects":[{"type":"PutCounters","value":[{"type":"PlusOnePlusOne"},{"type":"Count","value":{"type":"CreaturesDiedThisTurn"}},"self"]}],"targetSpecs":[]}],"selection":{"type":"ChooseExactly","value":1}}}],"castingPermissions":[]}
 ```
 
-In `source/test-suite/Pawl/Cards.hs`, add `khabalGhoulPrinting` (an ASCII field name for a non-ASCII slug) with `khabalGhoulPrinting_ <- loadPrinting "khabál-ghoul"`, the record field, and the `allPrintings` entry.
+In `source/test-suite/Parun/Cards.hs`, add `khabalGhoulPrinting` (an ASCII field name for a non-ASCII slug) with `khabalGhoulPrinting_ <- loadPrinting "khabál-ghoul"`, the record field, and the `allPrintings` entry.
 
 - [x] **Step 5: Run the tests to verify they pass**
 
 Run: `cabal build all --enable-tests --enable-benchmarks && cabal test`
-Expected: PASS, including `Pawl.CardSpec`'s "the data/cards directory and Cards.allPrintings agree, by slug" test — that one is the check that the non-ASCII file name survived the filesystem round trip.
+Expected: PASS, including `Parun.CardSpec`'s "the data/cards directory and Cards.allPrintings agree, by slug" test — that one is the check that the non-ASCII file name survived the filesystem round trip.
 
 - [x] **Step 6: Commit**
 
 ```bash
-git add source/library/Pawl/Type/CountSpec.hs source/library/Pawl/Type/Subtype.hs source/library/Pawl/Quantity.hs source/library/Pawl/Codec.hs "data/cards/khabál-ghoul.json" source/test-suite/Pawl/TriggerSpec.hs source/test-suite/Pawl/Cards.hs source/test-suite/Pawl/CodecSpec.hs
+git add source/library/Parun/Type/CountSpec.hs source/library/Parun/Type/Subtype.hs source/library/Parun/Quantity.hs source/library/Parun/Codec.hs "data/cards/khabál-ghoul.json" source/test-suite/Parun/TriggerSpec.hs source/test-suite/Parun/Cards.hs source/test-suite/Parun/CodecSpec.hs
 hooky fix && git add -u && hooky run
 git commit -m "feat(m4.5-p4): CR 608.2i turn history, counted from the log's snapshots (Khabál Ghoul)"
 ```
@@ -1915,18 +1915,18 @@ git commit -m "feat(m4.5-p4): CR 608.2i turn history, counted from the log's sna
 CR 603.7's trigger that belongs to no object on the battlefield. `Effect` is first-order and non-recursive, so the delayed ability's payload cannot live inside an opcode: it is **card data** (`Card.delayedAbilities`, keyed by name) and the opcode only **arms** it. `Create` grows an optional slot so the token it mints is referable by the ability armed in the same resolution — that is how CR 603.7c's "it" is remembered.
 
 **Files:**
-- Create: `source/library/Pawl/Type/AbilityName.hs`, `source/library/Pawl/Type/DelayedTrigger.hs`, `data/cards/tidal-wave.json`
-- Modify: `source/library/Pawl/Type/Effect.hs`, `source/library/Pawl/Type/Card.hs`, `source/library/Pawl/Type/GameState.hs`
-- Modify: `source/library/Pawl/Card.hs`, `source/library/Pawl/Event.hs`, `source/library/Pawl/Engine.hs`, `source/library/Pawl/Resolve.hs`, `source/library/Pawl/Setup.hs`, `source/library/Pawl/Codec.hs`
-- Test: `source/test-suite/Pawl/TriggerSpec.hs`, `source/test-suite/Pawl/Support.hs`, `source/test-suite/Pawl/Cards.hs`, `source/test-suite/Pawl/CardSpec.hs`, `source/test-suite/Pawl/CodecSpec.hs`
+- Create: `source/library/Parun/Type/AbilityName.hs`, `source/library/Parun/Type/DelayedTrigger.hs`, `data/cards/tidal-wave.json`
+- Modify: `source/library/Parun/Type/Effect.hs`, `source/library/Parun/Type/Card.hs`, `source/library/Parun/Type/GameState.hs`
+- Modify: `source/library/Parun/Card.hs`, `source/library/Parun/Event.hs`, `source/library/Parun/Engine.hs`, `source/library/Parun/Resolve.hs`, `source/library/Parun/Setup.hs`, `source/library/Parun/Codec.hs`
+- Test: `source/test-suite/Parun/TriggerSpec.hs`, `source/test-suite/Parun/Support.hs`, `source/test-suite/Parun/Cards.hs`, `source/test-suite/Parun/CardSpec.hs`, `source/test-suite/Parun/CodecSpec.hs`
 
 **Interfaces:**
 - Consumes: `PendingTrigger` (Task 2), `Effect.Sacrifice` + `Binding.triggerSource` (Task 3), `TriggerCondition.StepBegins` (Task 2).
-- Produces: `Pawl.Type.AbilityName.AbilityName = MkAbilityName Text`; `Pawl.Type.DelayedTrigger.DelayedTrigger` with fields `ability`, `source`, `controller`, `bindings`; `Card.delayedAbilities :: Map AbilityName (TriggeredAbility Card)`; `Effect.ArmDelayedTrigger AbilityName`; `Effect.Create Quantity card (Maybe SlotName)`; `GameState.delayedTriggers :: Seq DelayedTrigger`; `Pawl.Event.gatherTriggers :: [GameEvent] -> GameState -> ([PendingTrigger], Seq DelayedTrigger)`; `Pawl.Card.delayedEffects`; `Pawl.Resolve.armedAbilities`, `definedSlots`, `bindsSeveralTokens`, `bindSlot`; `Pawl.Cards.tidalWavePrinting`.
+- Produces: `Parun.Type.AbilityName.AbilityName = MkAbilityName Text`; `Parun.Type.DelayedTrigger.DelayedTrigger` with fields `ability`, `source`, `controller`, `bindings`; `Card.delayedAbilities :: Map AbilityName (TriggeredAbility Card)`; `Effect.ArmDelayedTrigger AbilityName`; `Effect.Create Quantity card (Maybe SlotName)`; `GameState.delayedTriggers :: Seq DelayedTrigger`; `Parun.Event.gatherTriggers :: [GameEvent] -> GameState -> ([PendingTrigger], Seq DelayedTrigger)`; `Parun.Card.delayedEffects`; `Parun.Resolve.armedAbilities`, `definedSlots`, `bindsSeveralTokens`, `bindSlot`; `Parun.Cards.tidalWavePrinting`.
 
 - [x] **Step 1: Write the failing tests**
 
-Add to `source/test-suite/Pawl/TriggerSpec.hs` (and to the `tests` list):
+Add to `source/test-suite/Parun/TriggerSpec.hs` (and to the `tests` list):
 
 ```haskell
 -- Tidal Wave {2}{U} Instant: "Create a 5/5 blue Wall creature token with defender.
@@ -1990,11 +1990,11 @@ delayedTests cards =
         ]
 ```
 
-Add imports to `TriggerSpec.hs`: `Pawl.Cast` as `Cast`, `Pawl.Type.Keyword` as `Keyword`.
+Add imports to `TriggerSpec.hs`: `Parun.Cast` as `Cast`, `Parun.Type.Keyword` as `Keyword`.
 
 Update the two Task 2 scan tests that call `Event.gatherTriggers` — it now returns a pair. Change `length (Event.gatherTriggers …)` to `length (fst (Event.gatherTriggers …))` and `case Event.gatherTriggers … of [pt] ->` to `case fst (Event.gatherTriggers … ) of [pt] ->`.
 
-Add to `source/test-suite/Pawl/CardSpec.hs`'s `lintTests` list:
+Add to `source/test-suite/Parun/CardSpec.hs`'s `lintTests` list:
 
 ```haskell
       -- The AbilityName half of the D4 dataflow lint (CR 603.7): an
@@ -2048,19 +2048,19 @@ Add to `CodecSpec.hs`'s "P4 runtime types" group:
              in roundTrip "delayed" Codec.delayedTriggerToJson Codec.jsonToDelayedTrigger entry,
 ```
 
-with `Pawl.Type.AbilityName`, `Pawl.Type.DelayedTrigger`, `Pawl.Type.TriggeredAbility` and `Pawl.Binding` imported. Also change the existing Create round-trip, if `CodecSpec` has one, to pass `Nothing` as the third argument. The `TriggeredAbility.intervening` field lands in Task 8; until then omit it from this literal, and add it when Task 8 introduces it.
+with `Parun.Type.AbilityName`, `Parun.Type.DelayedTrigger`, `Parun.Type.TriggeredAbility` and `Parun.Binding` imported. Also change the existing Create round-trip, if `CodecSpec` has one, to pass `Nothing` as the third argument. The `TriggeredAbility.intervening` field lands in Task 8; until then omit it from this literal, and add it when Task 8 introduces it.
 
 - [x] **Step 2: Run the tests to verify they fail**
 
 Run: `cabal build all --enable-tests --enable-benchmarks`
-Expected: FAIL — `Pawl.Type.AbilityName` and `Pawl.Type.DelayedTrigger` do not exist; `Card.Type.delayedAbilities`, `GameState.delayedTriggers`, `Cards.tidalWavePrinting`, `Resolve.armedAbilities` are not in scope; `Effect.Create` has the wrong arity.
+Expected: FAIL — `Parun.Type.AbilityName` and `Parun.Type.DelayedTrigger` do not exist; `Card.Type.delayedAbilities`, `GameState.delayedTriggers`, `Cards.tidalWavePrinting`, `Resolve.armedAbilities` are not in scope; `Effect.Create` has the wrong arity.
 
 - [x] **Step 3: Add the two new types and the two data fields**
 
-Create `source/library/Pawl/Type/AbilityName.hs`:
+Create `source/library/Parun/Type/AbilityName.hs`:
 
 ```haskell
-module Pawl.Type.AbilityName where
+module Parun.Type.AbilityName where
 
 import Data.Text (Text)
 
@@ -2076,18 +2076,18 @@ newtype AbilityName = MkAbilityName Text
   deriving (Eq, Ord, Show)
 ```
 
-Create `source/library/Pawl/Type/DelayedTrigger.hs`:
+Create `source/library/Parun/Type/DelayedTrigger.hs`:
 
 ```haskell
-module Pawl.Type.DelayedTrigger where
+module Parun.Type.DelayedTrigger where
 
 import Data.Map.Strict (Map)
-import Pawl.Type.Binding (Binding)
-import Pawl.Type.Card (Card)
-import Pawl.Type.ObjectId (ObjectId)
-import Pawl.Type.PlayerId (PlayerId)
-import Pawl.Type.SlotName (SlotName)
-import Pawl.Type.TriggeredAbility (TriggeredAbility)
+import Parun.Type.Binding (Binding)
+import Parun.Type.Card (Card)
+import Parun.Type.ObjectId (ObjectId)
+import Parun.Type.PlayerId (PlayerId)
+import Parun.Type.SlotName (SlotName)
+import Parun.Type.TriggeredAbility (TriggeredAbility)
 
 -- CR 603.7: a delayed triggered ability that has been created and is waiting for
 -- its trigger event. A concrete `TriggeredAbility Card`, exactly as
@@ -2110,7 +2110,7 @@ data DelayedTrigger = MkDelayedTrigger
   deriving (Eq, Show)
 ```
 
-In `source/library/Pawl/Type/Card.hs`, add the field after `triggeredAbilities`:
+In `source/library/Parun/Type/Card.hs`, add the field after `triggeredAbilities`:
 
 ```haskell
     -- CR 603.7: this card's DELAYED triggered abilities, keyed by name -- the
@@ -2125,9 +2125,9 @@ In `source/library/Pawl/Type/Card.hs`, add the field after `triggeredAbilities`:
     delayedAbilities :: Map AbilityName (TriggeredAbility Card),
 ```
 
-with `import Data.Map.Strict (Map)` and `import Pawl.Type.AbilityName (AbilityName)`.
+with `import Data.Map.Strict (Map)` and `import Parun.Type.AbilityName (AbilityName)`.
 
-In `source/library/Pawl/Type/Effect.hs`, add the arm and grow `Create`:
+In `source/library/Parun/Type/Effect.hs`, add the arm and grow `Create`:
 
 ```haskell
   | -- CR 603.7: create a delayed triggered ability -- the one this card declares
@@ -2150,12 +2150,12 @@ and change `Create`'s signature to `Create Quantity card (Maybe SlotName)`, appe
     -- lint catches a spell mode that tries, so this fails loudly, never silently). A DEFINITION, not a read: it is not a target and never appears in
     -- targetSpecs. Defined only for a single-token create; a Create that binds a
     -- slot while making several tokens is a named deferral (the P4 spec, section
-    -- 8) that the Pawl.CardSpec lint family rejects rather than guessing at.
+    -- 8) that the Parun.CardSpec lint family rejects rather than guessing at.
 ```
 
-with `import Pawl.Type.AbilityName (AbilityName)`.
+with `import Parun.Type.AbilityName (AbilityName)`.
 
-In `source/library/Pawl/Type/GameState.hs`, add after `damageScannedThrough`:
+In `source/library/Parun/Type/GameState.hs`, add after `damageScannedThrough`:
 
 ```haskell
     -- CR 603.7: delayed triggered abilities awaiting their event, in creation
@@ -2166,9 +2166,9 @@ In `source/library/Pawl/Type/GameState.hs`, add after `damageScannedThrough`:
     delayedTriggers :: Seq DelayedTrigger,
 ```
 
-with `import Pawl.Type.DelayedTrigger (DelayedTrigger)`, and add `GameState.delayedTriggers = Seq.empty,` to `Setup.emptyGame` and to `Support.oneMountainState`.
+with `import Parun.Type.DelayedTrigger (DelayedTrigger)`, and add `GameState.delayedTriggers = Seq.empty,` to `Setup.emptyGame` and to `Support.oneMountainState`.
 
-In `source/library/Pawl/Card.hs`, add:
+In `source/library/Parun/Card.hs`, add:
 
 ```haskell
 -- CR 603.7: every effect across all of a card's DELAYED abilities' modes. The
@@ -2177,11 +2177,11 @@ delayedEffects :: Card.Card -> [Effect Card.Card]
 delayedEffects card = concatMap (Modal.allEffects . TriggeredAbility.modal) (Map.elems (Card.delayedAbilities card))
 ```
 
-with `import qualified Data.Map.Strict as Map` and `import qualified Pawl.Type.TriggeredAbility as TriggeredAbility`.
+with `import qualified Data.Map.Strict as Map` and `import qualified Parun.Type.TriggeredAbility as TriggeredAbility`.
 
 - [x] **Step 4: Arm, bind, and fire**
 
-In `source/library/Pawl/Resolve.hs`, update the five classification functions for `Create`'s new arity and add the two new arms:
+In `source/library/Parun/Resolve.hs`, update the five classification functions for `Create`'s new arity and add the two new arms:
 
 - `slotsOf`: `Effect.Create _ _ _ -> Set.empty` (with `-- Create's slot is a DEFINITION, not a read: it is not a target, so the D4 lint must not see it here.`) and `Effect.ArmDelayedTrigger _ -> Set.empty`
 - `readsX`: `Effect.Create quantity _ _ -> quantity == Quantity.Type.X` and `Effect.ArmDelayedTrigger _ -> False`
@@ -2222,7 +2222,7 @@ bindsSeveralTokens effects =
    in any offends effects
 ```
 
-with `import Pawl.Type.AbilityName (AbilityName)`.
+with `import Parun.Type.AbilityName (AbilityName)`.
 
 Replace `applyEffect`'s `Create` arm and add `ArmDelayedTrigger`:
 
@@ -2285,7 +2285,7 @@ bindSlot holder slot target gs =
    in gs {GameState.objects = Map.adjust put holder (GameState.objects gs)}
 ```
 
-`Pawl.Resolve` already imports `Pawl.Binding` as `Binding`; import the record type as `qualified Pawl.Type.Binding as Binding.Type` — or, if the alias-to-last-component rule makes that awkward, add the constructor helper to `Pawl.Binding` instead and call it from here. Prefer the latter: add to `source/library/Pawl/Binding.hs`
+`Parun.Resolve` already imports `Parun.Binding` as `Binding`; import the record type as `qualified Parun.Type.Binding as Binding.Type` — or, if the alias-to-last-component rule makes that awkward, add the constructor helper to `Parun.Binding` instead and call it from here. Prefer the latter: add to `source/library/Parun/Binding.hs`
 
 ```haskell
 -- A binding that names one object and nothing else -- what a token bound by a
@@ -2296,7 +2296,7 @@ toObject oid = Binding.empty {Binding.target = Just (Recipient.ToObject oid)}
 
 and rewrite `setTriggerSource` as `setTriggerSource oid = Map.insert triggerSource (toObject oid)` and `bindSlot`'s `put` as `Map.insert slot (Binding.toObject target)`.
 
-In `source/library/Pawl/Event.hs`, add the delayed pass and widen the gather:
+In `source/library/Parun/Event.hs`, add the delayed pass and widen the gather:
 
 ```haskell
 -- CR 603.7: delayed abilities whose trigger event is among these events. Each one
@@ -2321,16 +2321,16 @@ delayedPending events gs =
 
 -- Everything that has triggered and is not yet on the stack, from all three
 -- sources, plus the delayed store as it stands afterwards. One function, so
--- Pawl.Engine never needs to know how many sources there are.
+-- Parun.Engine never needs to know how many sources there are.
 gatherTriggers :: [GameEvent] -> GameState -> ([PendingTrigger], Seq.Seq DelayedTrigger)
 gatherTriggers events gs =
   let (fromDelayed, surviving) = delayedPending events gs
    in (eventTriggers events gs ++ stateTriggers gs ++ fromDelayed, surviving)
 ```
 
-with `import Pawl.Type.DelayedTrigger (DelayedTrigger)` and `import qualified Pawl.Type.DelayedTrigger as DelayedTrigger`.
+with `import Parun.Type.DelayedTrigger (DelayedTrigger)` and `import qualified Parun.Type.DelayedTrigger as DelayedTrigger`.
 
-In `source/library/Pawl/Engine.hs`, thread the store through `placePendingTriggers`, and merge the captured bindings in `placeOne`:
+In `source/library/Parun/Engine.hs`, thread the store through `placePendingTriggers`, and merge the captured bindings in `placeOne`:
 
 ```haskell
 placePendingTriggers :: Game Bool
@@ -2359,7 +2359,7 @@ placePendingTriggers = do
 
 - [x] **Step 5: Add the codec arms and the card**
 
-In `source/library/Pawl/Codec.hs`:
+In `source/library/Parun/Codec.hs`:
 
 ```haskell
 abilityNameToJson :: AbilityName.AbilityName -> Value
@@ -2470,7 +2470,7 @@ jsonToDelayedTrigger value = do
       }
 ```
 
-adding `import qualified Pawl.Type.Binding as Binding` and `import qualified Pawl.Type.DelayedTrigger as DelayedTrigger` to `Codec.hs`.
+adding `import qualified Parun.Type.Binding as Binding` and `import qualified Parun.Type.DelayedTrigger as DelayedTrigger` to `Codec.hs`.
 
 In `effectToJson`, replace the `Create` arm and add the new one:
 
@@ -2499,7 +2499,7 @@ In `cardToJson`, append after the `characteristicPT` block:
            )
 ```
 
-and in `jsonToCard`, `delayed <- mapFromDefault jsonToDelayedAbilities (getOpt (Text.pack "delayedAbilities") ps)` plus `CardT.delayedAbilities = delayed` in the record. Add `import qualified Pawl.Type.AbilityName as AbilityName`.
+and in `jsonToCard`, `delayed <- mapFromDefault jsonToDelayedAbilities (getOpt (Text.pack "delayedAbilities") ps)` plus `CardT.delayedAbilities = delayed` in the record. Add `import qualified Parun.Type.AbilityName as AbilityName`.
 
 Create `data/cards/tidal-wave.json` (one line, plus the trailing newline):
 
@@ -2507,17 +2507,17 @@ Create `data/cards/tidal-wave.json` (one line, plus the trailing newline):
 {"name":"Tidal Wave","manaCost":[{"type":"Generic","value":2},{"type":"OfType","value":{"type":"Colored","value":{"type":"Blue"}}}],"typeLine":{"supertypes":[],"types":[{"type":"Instant"}],"subtypes":[]},"power":null,"toughness":null,"keywords":[],"staticAbilities":[],"spell":{"modes":[{"effects":[{"type":"Create","value":[{"type":"Literal","value":1},{"name":"Wall","manaCost":null,"typeLine":{"supertypes":[],"types":[{"type":"Creature"}],"subtypes":[{"type":"Wall"}]},"power":{"type":"Literal","value":5},"toughness":{"type":"Literal","value":5},"keywords":[{"type":"Defender"}],"staticAbilities":[],"spell":{"modes":[{"effects":[],"targetSpecs":[]}],"selection":{"type":"ChooseExactly","value":1}},"activatedAbilities":[],"replacementEffects":[],"triggeredAbilities":[],"castingPermissions":[],"colorIndicator":[{"type":"Blue"}]},"token"]},{"type":"ArmDelayedTrigger","value":"sacrifice it"}],"targetSpecs":[]}],"selection":{"type":"ChooseExactly","value":1}},"activatedAbilities":[],"replacementEffects":[],"triggeredAbilities":[],"castingPermissions":[],"delayedAbilities":[{"name":"sacrifice it","ability":{"condition":{"type":"StepBegins","value":[{"type":"Ending","value":{"type":"EndStep"}},{"type":"EachTurn"}]},"modal":{"modes":[{"effects":[{"type":"Sacrifice","value":"token"}],"targetSpecs":[]}],"selection":{"type":"ChooseExactly","value":1}}}}]}
 ```
 
-In `source/test-suite/Pawl/Cards.hs`, register `tidalWavePrinting` (load `"tidal-wave"`), and add it to `allPrintings`.
+In `source/test-suite/Parun/Cards.hs`, register `tidalWavePrinting` (load `"tidal-wave"`), and add it to `allPrintings`.
 
 - [x] **Step 6: Run the tests to verify they pass**
 
 Run: `cabal build all --enable-tests --enable-benchmarks && cabal test`
-Expected: PASS. `Pawl.CardsSpec`'s byte-stability assertion over every *existing* card file is the check that adding `delayedAbilities` and `Create`'s slot left them untouched.
+Expected: PASS. `Parun.CardsSpec`'s byte-stability assertion over every *existing* card file is the check that adding `delayedAbilities` and `Create`'s slot left them untouched.
 
 - [x] **Step 7: Commit**
 
 ```bash
-git add source/library/Pawl/Type/AbilityName.hs source/library/Pawl/Type/DelayedTrigger.hs source/library/Pawl/Type/Effect.hs source/library/Pawl/Type/Card.hs source/library/Pawl/Type/GameState.hs source/library/Pawl/Card.hs source/library/Pawl/Binding.hs source/library/Pawl/Event.hs source/library/Pawl/Engine.hs source/library/Pawl/Resolve.hs source/library/Pawl/Setup.hs source/library/Pawl/Codec.hs data/cards/tidal-wave.json source/test-suite/Pawl/TriggerSpec.hs source/test-suite/Pawl/Support.hs source/test-suite/Pawl/Cards.hs source/test-suite/Pawl/CardSpec.hs source/test-suite/Pawl/CodecSpec.hs
+git add source/library/Parun/Type/AbilityName.hs source/library/Parun/Type/DelayedTrigger.hs source/library/Parun/Type/Effect.hs source/library/Parun/Type/Card.hs source/library/Parun/Type/GameState.hs source/library/Parun/Card.hs source/library/Parun/Binding.hs source/library/Parun/Event.hs source/library/Parun/Engine.hs source/library/Parun/Resolve.hs source/library/Parun/Setup.hs source/library/Parun/Codec.hs data/cards/tidal-wave.json source/test-suite/Parun/TriggerSpec.hs source/test-suite/Parun/Support.hs source/test-suite/Parun/Cards.hs source/test-suite/Parun/CardSpec.hs source/test-suite/Parun/CodecSpec.hs
 hooky fix && git add -u && hooky run
 git commit -m "feat(m4.5-p4): CR 603.7 delayed triggered abilities, armed by opcode (Tidal Wave)"
 ```
@@ -2531,18 +2531,18 @@ M3f elided the trigger-ordering choice with a documented expiry: *"until a secon
 The centerpiece test is the phase's whole thesis in one scenario: Tidal Wave's delayed sacrifice and Khabál Ghoul's counter trigger at the beginning of the *same* end step under one controller, the controller must order them, and **the order changes the answer** — because CR 608.2h determines the count when the effect is applied, the thing counted is a token with no printed card, and the death happened at a boundary the trigger scan had already passed.
 
 **Files:**
-- Modify: `source/library/Pawl/Type/Prompt.hs`, `source/library/Pawl/Type/Response.hs`
-- Modify: `source/library/Pawl/Engine.hs`, `source/library/Pawl/Replay.hs`
-- Modify: `source/test-suite/Pawl/Support.hs`, `source/test-suite/Pawl/{Game,Cast,Copy}Spec.hs`, `source/benchmark/Main.hs`
-- Test: `source/test-suite/Pawl/TriggerSpec.hs`, `source/test-suite/Pawl/ReplaySpec.hs`
+- Modify: `source/library/Parun/Type/Prompt.hs`, `source/library/Parun/Type/Response.hs`
+- Modify: `source/library/Parun/Engine.hs`, `source/library/Parun/Replay.hs`
+- Modify: `source/test-suite/Parun/Support.hs`, `source/test-suite/Parun/{Game,Cast,Copy}Spec.hs`, `source/benchmark/Main.hs`
+- Test: `source/test-suite/Parun/TriggerSpec.hs`, `source/test-suite/Parun/ReplaySpec.hs`
 
 **Interfaces:**
 - Consumes: everything from Tasks 1–6.
-- Produces: `Prompt.OrderTriggers :: Decider -> PlayerId -> [ObjectId] -> Prompt [Natural]`; `Response.OrderedTriggers [Natural]`; `Pawl.Engine.orderPending :: [PendingTrigger] -> Game [PendingTrigger]`. `Pawl.Engine.apnapOrder` is **replaced** by `Pawl.Engine.apnapPlayers :: GameState -> [PendingTrigger] -> [PlayerId]`.
+- Produces: `Prompt.OrderTriggers :: Decider -> PlayerId -> [ObjectId] -> Prompt [Natural]`; `Response.OrderedTriggers [Natural]`; `Parun.Engine.orderPending :: [PendingTrigger] -> Game [PendingTrigger]`. `Parun.Engine.apnapOrder` is **replaced** by `Parun.Engine.apnapPlayers :: GameState -> [PendingTrigger] -> [PlayerId]`.
 
 - [x] **Step 1: Write the failing tests**
 
-Add to `source/test-suite/Pawl/TriggerSpec.hs` (and to the `tests` list):
+Add to `source/test-suite/Parun/TriggerSpec.hs` (and to the `tests` list):
 
 ```haskell
 -- CR 603.3b: "that player puts them on the stack in any order they choose". The
@@ -2611,9 +2611,9 @@ orderingTests cards =
         ]
 ```
 
-Add imports to `TriggerSpec.hs`: `Control.Monad.Trans.State.Strict` as `State`, `Pawl.Type.Prompt` as `Prompt`, and the `{-# LANGUAGE GADTs #-}` and `{-# LANGUAGE RankNTypes #-}` pragmas (an answerer that pattern-matches a `Prompt r` needs `GADTs`; passing one to `runGamePure` needs `RankNTypes`), matching `Pawl.Support`'s header. `orderLast` and `countingAnswer` carry explicit signatures inside the `let`, which needs `ScopedTypeVariables`-free rank-1 types — they are, since `r` is universally quantified by the `Prompt r` GADT match; if GHC objects, lift both to top-level definitions in the module rather than adding an extension.
+Add imports to `TriggerSpec.hs`: `Control.Monad.Trans.State.Strict` as `State`, `Parun.Type.Prompt` as `Prompt`, and the `{-# LANGUAGE GADTs #-}` and `{-# LANGUAGE RankNTypes #-}` pragmas (an answerer that pattern-matches a `Prompt r` needs `GADTs`; passing one to `runGamePure` needs `RankNTypes`), matching `Parun.Support`'s header. `orderLast` and `countingAnswer` carry explicit signatures inside the `let`, which needs `ScopedTypeVariables`-free rank-1 types — they are, since `r` is universally quantified by the `Prompt r` GADT match; if GHC objects, lift both to top-level definitions in the module rather than adding an extension.
 
-Add to `source/test-suite/Pawl/ReplaySpec.hs`'s `combatReplayTests` list:
+Add to `source/test-suite/Parun/ReplaySpec.hs`'s `combatReplayTests` list:
 
 ```haskell
           HU.testCase "OrderTriggers records and replays a permutation" $
@@ -2634,7 +2634,7 @@ Expected: FAIL — `Prompt.OrderTriggers` is not a constructor.
 
 - [x] **Step 3: Add the prompt and its response**
 
-In `source/library/Pawl/Type/Prompt.hs`:
+In `source/library/Parun/Type/Prompt.hs`:
 
 ```haskell
   -- CR 603.3b: "If a player controlled two or more triggered abilities ... that
@@ -2654,7 +2654,7 @@ In `source/library/Pawl/Type/Prompt.hs`:
   OrderTriggers :: Decider -> PlayerId -> [ObjectId] -> Prompt [Natural]
 ```
 
-In `source/library/Pawl/Type/Response.hs`:
+In `source/library/Parun/Type/Response.hs`:
 
 ```haskell
   | -- CR 603.3b: the order a player chose for their simultaneous triggers, as a
@@ -2662,7 +2662,7 @@ In `source/library/Pawl/Type/Response.hs`:
     OrderedTriggers [Natural]
 ```
 
-In `source/library/Pawl/Replay.hs`, add the three arms:
+In `source/library/Parun/Replay.hs`, add the three arms:
 
 ```haskell
   Prompt.OrderTriggers {} -> Response.OrderedTriggers answer
@@ -2678,7 +2678,7 @@ In `source/library/Pawl/Replay.hs`, add the three arms:
   Prompt.OrderTriggers _ _ sources -> map fromIntegral (take (length sources) [0 :: Int ..])
 ```
 
-Add the same canonical-order arm to every other answerer: `Pawl.Support`'s `identityAnswer`, `castAnswer`, `aggressiveAnswer`, `playLandAnswer` and `randomAnswer` (the last wrapped in `pure`), `Pawl.GameSpec`'s two answerers, `Pawl.CastSpec`'s three, `Pawl.CopySpec`'s one, and `source/benchmark/Main.hs`'s `alwaysPass`, `castAnswer` and `fightAnswer`. In each, the line is:
+Add the same canonical-order arm to every other answerer: `Parun.Support`'s `identityAnswer`, `castAnswer`, `aggressiveAnswer`, `playLandAnswer` and `randomAnswer` (the last wrapped in `pure`), `Parun.GameSpec`'s two answerers, `Parun.CastSpec`'s three, `Parun.CopySpec`'s one, and `source/benchmark/Main.hs`'s `alwaysPass`, `castAnswer` and `fightAnswer`. In each, the line is:
 
 ```haskell
   Prompt.OrderTriggers _ _ sources -> map fromIntegral (take (length sources) [0 :: Int ..])
@@ -2686,7 +2686,7 @@ Add the same canonical-order arm to every other answerer: `Pawl.Support`'s `iden
 
 - [x] **Step 4: Ask the question in `Engine`**
 
-In `source/library/Pawl/Engine.hs`, replace `apnapOrder` with the APNAP player walk plus the per-controller ordering, and call it from `placePendingTriggers`:
+In `source/library/Parun/Engine.hs`, replace `apnapOrder` with the APNAP player walk plus the per-controller ordering, and call it from `placePendingTriggers`:
 
 ```haskell
 -- CR 101.4 / 603.3b: the players who control a pending trigger, active player
@@ -2753,7 +2753,7 @@ Expected: PASS. The two centerpiece cases must give **different** counter totals
 - [x] **Step 6: Commit**
 
 ```bash
-git add source/library/Pawl/Type/Prompt.hs source/library/Pawl/Type/Response.hs source/library/Pawl/Engine.hs source/library/Pawl/Replay.hs source/test-suite/Pawl/TriggerSpec.hs source/test-suite/Pawl/ReplaySpec.hs source/test-suite/Pawl/Support.hs source/test-suite/Pawl/GameSpec.hs source/test-suite/Pawl/CastSpec.hs source/test-suite/Pawl/CopySpec.hs source/benchmark/Main.hs
+git add source/library/Parun/Type/Prompt.hs source/library/Parun/Type/Response.hs source/library/Parun/Engine.hs source/library/Parun/Replay.hs source/test-suite/Parun/TriggerSpec.hs source/test-suite/Parun/ReplaySpec.hs source/test-suite/Parun/Support.hs source/test-suite/Parun/GameSpec.hs source/test-suite/Parun/CastSpec.hs source/test-suite/Parun/CopySpec.hs source/benchmark/Main.hs
 hooky fix && git add -u && hooky run
 git commit -m "feat(m4.5-p4): CR 603.3b trigger ordering is a prompt, retiring M3f's elision"
 ```
@@ -2766,17 +2766,17 @@ The last gate, and the cheapest: `StateCondition` already exists, so CR 603.4 an
 
 **Files:**
 - Create: `data/cards/sarcomancy.json`
-- Modify: `source/library/Pawl/Type/TriggeredAbility.hs`
-- Modify: `source/library/Pawl/Binding.hs`, `source/library/Pawl/Event.hs`, `source/library/Pawl/Engine.hs`, `source/library/Pawl/Stack.hs`, `source/library/Pawl/Codec.hs`
-- Test: `source/test-suite/Pawl/TriggerSpec.hs`, `source/test-suite/Pawl/Cards.hs`, `source/test-suite/Pawl/CardSpec.hs`, `source/test-suite/Pawl/CodecSpec.hs`
+- Modify: `source/library/Parun/Type/TriggeredAbility.hs`
+- Modify: `source/library/Parun/Binding.hs`, `source/library/Parun/Event.hs`, `source/library/Parun/Engine.hs`, `source/library/Parun/Stack.hs`, `source/library/Parun/Codec.hs`
+- Test: `source/test-suite/Parun/TriggerSpec.hs`, `source/test-suite/Parun/Cards.hs`, `source/test-suite/Parun/CardSpec.hs`, `source/test-suite/Parun/CodecSpec.hs`
 
 **Interfaces:**
 - Consumes: `StateCondition`, `Event.stateHolds` (Task 4); `Binding.setTriggerSource` (Task 3).
-- Produces: `TriggeredAbility.intervening :: Maybe StateCondition`; `Pawl.Binding.you :: SlotName` (the text `"you"`), `Pawl.Binding.setYou :: PlayerId -> Map SlotName Binding -> Map SlotName Binding`; `Pawl.Cards.sarcomancyPrinting`.
+- Produces: `TriggeredAbility.intervening :: Maybe StateCondition`; `Parun.Binding.you :: SlotName` (the text `"you"`), `Parun.Binding.setYou :: PlayerId -> Map SlotName Binding -> Map SlotName Binding`; `Parun.Cards.sarcomancyPrinting`.
 
 - [x] **Step 1: Write the failing tests**
 
-Add to `source/test-suite/Pawl/TriggerSpec.hs` (and to the `tests` list):
+Add to `source/test-suite/Parun/TriggerSpec.hs` (and to the `tests` list):
 
 ```haskell
 -- Sarcomancy {B} Enchantment: "When this enchantment enters, create a 2/2 black
@@ -2851,7 +2851,7 @@ zombieTokenOf cards =
         [] -> Printing.card (Cards.pikerPrinting cards)
 ```
 
-Add imports to `TriggerSpec.hs`: `Pawl.Modal` as `Modal`, `Pawl.Type.Card` as `Card.Type`, `Pawl.Type.Color` as `Color`, `Pawl.Type.Effect` as `Effect`, `Pawl.Type.TriggeredAbility` as `TriggeredAbility`.
+Add imports to `TriggerSpec.hs`: `Parun.Modal` as `Modal`, `Parun.Type.Card` as `Card.Type`, `Parun.Type.Color` as `Color`, `Parun.Type.Effect` as `Effect`, `Parun.Type.TriggeredAbility` as `TriggeredAbility`.
 
 Add to `CardSpec.hs`'s `lintTests` list:
 
@@ -2877,7 +2877,7 @@ Add to `CodecSpec.hs`'s "P4 runtime types" group:
              in roundTrip "ta" Codec.triggeredAbilityToJson Codec.jsonToTriggeredAbility ability,
 ```
 
-with `Pawl.Type.TriggeredAbility` imported.
+with `Parun.Type.TriggeredAbility` imported.
 
 - [x] **Step 2: Run the tests to verify they fail**
 
@@ -2886,7 +2886,7 @@ Expected: FAIL — `TriggeredAbility.intervening` is not a field; `Binding.you` 
 
 - [x] **Step 3: Add the field and the reserved "you" slot**
 
-In `source/library/Pawl/Type/TriggeredAbility.hs`, add the field:
+In `source/library/Parun/Type/TriggeredAbility.hs`, add the field:
 
 ```haskell
     -- CR 603.4: an intervening "if" clause. The SAME predicate vocabulary a CR
@@ -2897,9 +2897,9 @@ In `source/library/Pawl/Type/TriggeredAbility.hs`, add the field:
     intervening :: Maybe StateCondition
 ```
 
-with `import Pawl.Type.StateCondition (StateCondition)`. Note this is the field a hand-built `MkTriggeredAbility` must now supply; the codebase builds them positionally in `Codec` only, which Step 5 updates.
+with `import Parun.Type.StateCondition (StateCondition)`. Note this is the field a hand-built `MkTriggeredAbility` must now supply; the codebase builds them positionally in `Codec` only, which Step 5 updates.
 
-In `source/library/Pawl/Binding.hs`, add beside `triggerSource`:
+In `source/library/Parun/Binding.hs`, add beside `triggerSource`:
 
 ```haskell
 -- CR 109.5: the reserved slot under which a triggered ability's CONTROLLER is
@@ -2913,9 +2913,9 @@ setYou :: PlayerId -> Map SlotName Binding -> Map SlotName Binding
 setYou pid = Map.insert you (Binding.empty {Binding.target = Just (Recipient.ToPlayer pid)})
 ```
 
-with `import Pawl.Type.PlayerId (PlayerId)`.
+with `import Parun.Type.PlayerId (PlayerId)`.
 
-In `source/library/Pawl/Engine.hs`, stamp it in `placeOne` alongside the source slot:
+In `source/library/Parun/Engine.hs`, stamp it in `placeOne` alongside the source slot:
 
 ```haskell
 Binding.setYou controller (Binding.setTriggerSource srcId (Map.union (Binding.fromChoices chosen Map.empty Nothing chosenModes) (PendingTrigger.bindings pending)))
@@ -2923,7 +2923,7 @@ Binding.setYou controller (Binding.setTriggerSource srcId (Map.union (Binding.fr
 
 - [x] **Step 4: Check the condition at both sites**
 
-In `source/library/Pawl/Event.hs`, filter the gather (CR 603.4):
+In `source/library/Parun/Event.hs`, filter the gather (CR 603.4):
 
 ```haskell
 gatherTriggers :: [GameEvent] -> GameState -> ([PendingTrigger], Seq.Seq DelayedTrigger)
@@ -2943,7 +2943,7 @@ interveningHolds gs pending =
     Just cond -> stateHolds (PendingTrigger.controller pending) cond gs
 ```
 
-In `source/library/Pawl/Stack.hs`, gate the `OfTrigger` branch (CR 608.2a):
+In `source/library/Parun/Stack.hs`, gate the `OfTrigger` branch (CR 608.2a):
 
 ```haskell
         Source.OfTrigger srcId ability ->
@@ -2963,7 +2963,7 @@ In `source/library/Pawl/Stack.hs`, gate the `OfTrigger` branch (CR 608.2a):
 
 - [x] **Step 5: Add the codec arm and the card**
 
-In `source/library/Pawl/Codec.hs`, replace `triggeredAbilityToJson` / `jsonToTriggeredAbility`. The field is omitted when `Nothing`, so every card file that predates P4 renders byte-identically:
+In `source/library/Parun/Codec.hs`, replace `triggeredAbilityToJson` / `jsonToTriggeredAbility`. The field is omitted when `Nothing`, so every card file that predates P4 renders byte-identically:
 
 ```haskell
 triggeredAbilityToJson :: TriggeredAbility.TriggeredAbility CardT.Card -> Value
@@ -2998,7 +2998,7 @@ Create `data/cards/sarcomancy.json` (one line, plus the trailing newline):
 {"name":"Sarcomancy","manaCost":[{"type":"OfType","value":{"type":"Colored","value":{"type":"Black"}}}],"typeLine":{"supertypes":[],"types":[{"type":"Enchantment"}],"subtypes":[]},"power":null,"toughness":null,"keywords":[],"staticAbilities":[],"spell":{"modes":[{"effects":[],"targetSpecs":[]}],"selection":{"type":"ChooseExactly","value":1}},"activatedAbilities":[],"replacementEffects":[],"triggeredAbilities":[{"condition":{"type":"SelfEnters"},"modal":{"modes":[{"effects":[{"type":"Create","value":[{"type":"Literal","value":1},{"name":"Zombie","manaCost":null,"typeLine":{"supertypes":[],"types":[{"type":"Creature"}],"subtypes":[{"type":"Zombie"}]},"power":{"type":"Literal","value":2},"toughness":{"type":"Literal","value":2},"keywords":[],"staticAbilities":[],"spell":{"modes":[{"effects":[],"targetSpecs":[]}],"selection":{"type":"ChooseExactly","value":1}},"activatedAbilities":[],"replacementEffects":[],"triggeredAbilities":[],"castingPermissions":[],"colorIndicator":[{"type":"Black"}]}]}],"targetSpecs":[]}],"selection":{"type":"ChooseExactly","value":1}}},{"condition":{"type":"StepBegins","value":[{"type":"Beginning","value":{"type":"Upkeep"}},{"type":"ControllersTurn"}]},"modal":{"modes":[{"effects":[{"type":"DealDamage","value":["you",{"type":"Literal","value":1}]}],"targetSpecs":[]}],"selection":{"type":"ChooseExactly","value":1}},"intervening":{"type":"NoPermanentsOfSubtype","value":{"type":"Zombie"}}}],"castingPermissions":[]}
 ```
 
-In `source/test-suite/Pawl/Cards.hs`, register `sarcomancyPrinting` (load `"sarcomancy"`) and add it to `allPrintings`.
+In `source/test-suite/Parun/Cards.hs`, register `sarcomancyPrinting` (load `"sarcomancy"`) and add it to `allPrintings`.
 
 - [x] **Step 6: Run the full suite, clean**
 
@@ -3008,7 +3008,7 @@ Expected: PASS, warning-free. The clean build is the definitive warning check �
 - [x] **Step 7: Commit**
 
 ```bash
-git add source/library/Pawl/Type/TriggeredAbility.hs source/library/Pawl/Binding.hs source/library/Pawl/Event.hs source/library/Pawl/Engine.hs source/library/Pawl/Stack.hs source/library/Pawl/Codec.hs data/cards/sarcomancy.json source/test-suite/Pawl/TriggerSpec.hs source/test-suite/Pawl/Cards.hs source/test-suite/Pawl/CardSpec.hs source/test-suite/Pawl/CodecSpec.hs
+git add source/library/Parun/Type/TriggeredAbility.hs source/library/Parun/Binding.hs source/library/Parun/Event.hs source/library/Parun/Engine.hs source/library/Parun/Stack.hs source/library/Parun/Codec.hs data/cards/sarcomancy.json source/test-suite/Parun/TriggerSpec.hs source/test-suite/Parun/Cards.hs source/test-suite/Parun/CardSpec.hs source/test-suite/Parun/CodecSpec.hs
 hooky fix && git add -u && hooky run
 git commit -m "feat(m4.5-p4): CR 603.4/608.2a intervening if at both check sites (Sarcomancy)"
 ```

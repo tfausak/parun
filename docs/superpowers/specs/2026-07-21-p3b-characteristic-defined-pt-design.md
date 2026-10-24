@@ -22,7 +22,7 @@ and **must be re-verified against Scryfall** before it lands in a card file
 ## 0. Why this phase, and what it proves
 
 `Layer.CharacteristicPT` (7a) and `Layer.SwitchPT` (7d) both sit in
-`Pawl.Type.Layer` with **no producer**. `Quantity` has three arms — `Literal`,
+`Parun.Type.Layer` with **no producer**. `Quantity` has three arms — `Literal`,
 `ManaValue`, `X` — and its own module comment names the missing ones and cites
 this phase's gate card by name: *"Grows: Star (a characteristic-defining ability
 — Tarmogoyf's power), Plus Quantity Quantity (Tarmogoyf's 1+\*)"*. design.md
@@ -56,7 +56,7 @@ graveyard that changes after the creature entered, a Clone, and a switch.
 
 ### The live bug this phase also closes
 
-`Pawl.Resolve`'s `ModifyTarget` arm carries this comment (`Resolve.hs:340`):
+`Parun.Resolve`'s `ModifyTarget` arm carries this comment (`Resolve.hs:340`):
 
 > *"The Modification's quantities are stored as-is (Literals); CR 611.2b's freeze
 > is a no-op until X exists, at which point evaluate-and-freeze …"*
@@ -125,7 +125,7 @@ counting quantity both 7a and 7b need.
 
 **Out of scope, deferred with named expiries** — §8. Notably CR 208.2b's
 "enters as" P/T choice (a replacement-effect shape → **P5**), counts that read
-*projected* state (needs quantity evaluation to move into `Pawl.Projection`), a
+*projected* state (needs quantity evaluation to move into `Parun.Projection`), a
 one-axis 7b set, and `Quantity.Half`/`Infinite`.
 
 **Not in this milestone by construction.** The general filter/criterion language
@@ -136,7 +136,7 @@ build P9.
 
 ### 2.1 The numeric tower grows
 
-`Pawl.Type.Quantity` gains three arms, and a new sibling module carries the
+`Parun.Type.Quantity` gains three arms, and a new sibling module carries the
 card-shaped growth:
 
 ```haskell
@@ -146,7 +146,7 @@ data Quantity
   | Plus Quantity Quantity        -- CR 208.2: 1+*
   | Count CountSpec               -- what * (or "for each") counts
 
--- Pawl.Type.CountSpec
+-- Parun.Type.CountSpec
 data CountSpec                    -- EXPIRES at P9
   = CardTypesInAllGraveyards      -- Tarmogoyf
   | CardsInYourHand               -- Inner Calm, Outer Strength
@@ -165,7 +165,7 @@ And it would not even cover the gate: Tarmogoyf counts distinct **card types**,
 not objects, so a "count objects matching a criterion" shape needs a special arm
 regardless.
 
-`Pawl.Quantity.evaluate` gains a "you" `PlayerId` for player-scoped counts:
+`Parun.Quantity.evaluate` gains a "you" `PlayerId` for player-scoped counts:
 
 ```haskell
 evaluate :: GameState -> ObjectId -> Maybe PlayerId -> Quantity -> Maybe Integer
@@ -184,9 +184,9 @@ evaluate :: GameState -> ObjectId -> Maybe PlayerId -> Quantity -> Maybe Integer
   the honest answer, not a hole.
 
 Both counts read only zone membership and printed card types, so **quantity
-evaluation stays in `Pawl.Quantity`**. A count over *projected* state ("lands you
+evaluation stays in `Parun.Quantity`**. A count over *projected* state ("lands you
 control" — a Blood Moon'd land is still a land, a stolen land is not yours) would
-need `Pawl.Projection`, which `Pawl.Quantity` cannot import without a cycle;
+need `Parun.Projection`, which `Parun.Quantity` cannot import without a cycle;
 that is a named deferral (§8), not an oversight.
 
 A new pure helper resolves the printed star:
@@ -291,11 +291,11 @@ deferred `Gathered` precedence key stays deferred, unchanged.
 
 ### 2.4 Layer 7b — the CR 608.2h freeze
 
-A new `Pawl.Projection.freezeQuantities` evaluates a `Modification`'s quantities
+A new `Parun.Projection.freezeQuantities` evaluates a `Modification`'s quantities
 and rewrites each to a `Literal`, leaving any unevaluable one alone. It lives in
-`Projection` because it pattern-matches `Modification`, which `Pawl.Projection`
+`Projection` because it pattern-matches `Modification`, which `Parun.Projection`
 is the sole home for — symmetric with the existing `rewriteModification` that
-`Pawl.Resolve` already delegates to for CR 612 text-changing.
+`Parun.Resolve` already delegates to for CR 612 text-changing.
 
 `Resolve`'s `ModifyTarget` arm calls it **at store time**, against the **source
 spell and the source's controller**. That is what CR 608.2h requires (*determined
@@ -338,15 +338,15 @@ Twisted Image is `ModifyTarget UntilEndOfTurn SwitchPowerToughness slot` +
 `Card.characteristicPT` is omitted when `Nothing`, so no existing card file
 changes. `CountSpec`, the three new `Quantity` arms, `SwitchPowerToughness`,
 and the two new `Subtype` arms all round-trip
-through `Pawl.Codec`, and M3.5's honesty property
+through `Parun.Codec`, and M3.5's honesty property
 (`jsonToCard . cardToJson ≡ Right`) covers them the moment a card populates them.
 
 ## 3. The two invariants
 
 1. **Classification, never identity.** `SwitchPowerToughness` is open-half
-   vocabulary cased on solely by `Pawl.Projection`;
-   `Count`/`CountSpec` is a classification evaluated by `Pawl.Quantity`.
-   `freezeQuantities` pattern-matches `Modification` **inside `Pawl.Projection`**,
+   vocabulary cased on solely by `Parun.Projection`;
+   `Count`/`CountSpec` is a classification evaluated by `Parun.Quantity`.
+   `freezeQuantities` pattern-matches `Modification` **inside `Parun.Projection`**,
    preserving the sole-casing home, and `Resolve` delegates to it exactly as it
    already delegates `rewriteModification`. No module learns what card it is
    looking at.
@@ -402,7 +402,7 @@ Each kills one specific naive implementation.
 | 5 | 7d switches the **printed / base** box | Twisted Image on a 2/3 Tarmogoyf → **3/2**. Switching before 7a switches `Nothing`/`Nothing`, and the CDA then writes 2/3 back over it. A symmetric fixture proves nothing here — a `+1/+1` counter commutes with the switch — so Tarmogoyf's asymmetric `N`/`N+1` is the only asymmetric source in the pool and the two gate cards falsify each other. |
 | 6 | the switch is permanent state rather than a layer op | Two Twisted Images on the same creature → back to normal (CR 613.4d, two applications). And a switched Tarmogoyf still tracks the graveyards: 3/2 becomes 4/3 when a third card type arrives. |
 | 7 | a stored quantity is evaluated against the **target** | Inner Calm, Outer Strength counts the **caster's** hand, not the target's controller's. Cast it at an opponent's creature with differing hand sizes. |
-| 8 | the switch is a display concern rather than a real characteristic | **Twisted Image's own ruling** (§5, rulings): a creature that survived 2 damage at 2/3 is at 3/**2** after the switch, and CR 704.5g kills it at the next SBA check — because damage stays marked (CR 514.2) while toughness moves. Machinery pawl has had since M1b. |
+| 8 | the switch is a display concern rather than a real characteristic | **Twisted Image's own ruling** (§5, rulings): a creature that survived 2 damage at 2/3 is at 3/**2** after the switch, and CR 704.5g kills it at the next SBA check — because damage stays marked (CR 514.2) while toughness moves. Machinery parun has had since M1b. |
 | 9 | a CDA is a battlefield-only effect | **Tarmogoyf's own ruling** (§5): its P/T is defined in *every* zone, and a Tarmogoyf **in a graveyard counts itself**. `projectFrom` is not zone-scoped, so the in-place fold (§2.3) answers this; a `gather`-based implementation cannot. |
 
 ### One honest negative result
@@ -431,7 +431,7 @@ card that…" — a search of the corpus says the retiring card is a long way of
   creature) plus creature-subtype removal, and `Modification` has only
   `AddCardType`. Two new layer-4 operations for one observation.
 - **Dress Down** is the closest *shape*: an enchantment whose middle clause,
-  "Creatures lose all abilities", is exactly the Humility-shaped static pawl
+  "Creatures lose all abilities", is exactly the Humility-shaped static parun
   already encodes (`AllCreatures` → `LoseAllAbilities`) with **no P/T set**. It
   drags in Flash (CR 702.8 **(verify)**), a beginning-of-end-step trigger
   (**P4**), and a Sacrifice effect.
@@ -462,7 +462,7 @@ own (§5, falsifiers 8 and 9), not just transcriptions:
 - **Twisted Image** — *"Because damage remains marked on a creature until the
   damage is removed as the turn ends, nonlethal damage dealt to a creature may
   become lethal if you switch its power and toughness during that turn."* A
-  gameplay-level 7d falsifier that needs nothing pawl lacks: damage marking and
+  gameplay-level 7d falsifier that needs nothing parun lacks: damage marking and
   the CR 704.5g lethal-damage SBA have both existed since M1b.
 
 Still to pull: Twisted Image's counters-are-applied-before-the-switch ruling, and
@@ -472,16 +472,16 @@ Inner Calm, Outer Strength's determined-on-resolution ruling.
 
 | Module | Change |
 |---|---|
-| `Pawl.Type.Quantity` | `+ Star`, `+ Plus Quantity Quantity`, `+ Count CountSpec` |
-| `Pawl.Type.CountSpec` | **new module** — `CardTypesInAllGraveyards`, `CardsInYourHand` |
-| `Pawl.Quantity` | the three new arms; `evaluate` gains the "you" `PlayerId`; `+ substituteStar` |
-| `Pawl.Type.Card` | `+ characteristicPT :: Maybe Quantity` (serialized only when `Just`) |
-| `Pawl.Type.ProjectedCharacteristics` | `+ characteristicPT :: Maybe (Quantity, Quantity)` |
-| `Pawl.Type.Modification` | `+ SwitchPowerToughness` — layer 7d |
-| `Pawl.Type.Subtype` | `+ Arcane` (CR 205.3k spell type, Inner Calm's type line); `+ Lhurgoyf` (CR 205.3m creature type, Tarmogoyf's) |
-| `Pawl.Projection` | 7a in-place fold in `projectFrom`; seed of `PC.characteristicPT`; `LoseAllAbilities` clears it; `layer`/`applyModification` for `SwitchPowerToughness`; `+ freezeQuantities` |
-| `Pawl.Resolve` | `ModifyTarget` freezes at store time against the source and its controller; the `611.2b` citation becomes `611.2d`/`608.2h` |
-| `Pawl.Codec` | the new `Quantity` arms, `CountSpec`, `characteristicPT`, `SwitchPowerToughness`, the two `Subtype` arms |
+| `Parun.Type.Quantity` | `+ Star`, `+ Plus Quantity Quantity`, `+ Count CountSpec` |
+| `Parun.Type.CountSpec` | **new module** — `CardTypesInAllGraveyards`, `CardsInYourHand` |
+| `Parun.Quantity` | the three new arms; `evaluate` gains the "you" `PlayerId`; `+ substituteStar` |
+| `Parun.Type.Card` | `+ characteristicPT :: Maybe Quantity` (serialized only when `Just`) |
+| `Parun.Type.ProjectedCharacteristics` | `+ characteristicPT :: Maybe (Quantity, Quantity)` |
+| `Parun.Type.Modification` | `+ SwitchPowerToughness` — layer 7d |
+| `Parun.Type.Subtype` | `+ Arcane` (CR 205.3k spell type, Inner Calm's type line); `+ Lhurgoyf` (CR 205.3m creature type, Tarmogoyf's) |
+| `Parun.Projection` | 7a in-place fold in `projectFrom`; seed of `PC.characteristicPT`; `LoseAllAbilities` clears it; `layer`/`applyModification` for `SwitchPowerToughness`; `+ freezeQuantities` |
+| `Parun.Resolve` | `ModifyTarget` freezes at store time against the source and its controller; the `611.2b` citation becomes `611.2d`/`608.2h` |
+| `Parun.Codec` | the new `Quantity` arms, `CountSpec`, `characteristicPT`, `SwitchPowerToughness`, the two `Subtype` arms |
 | `data/cards/` | 3 new files; no existing file changes |
 
 No new opcode. No new prompt. No change to `Object`, `GameState`, or the event
@@ -495,7 +495,7 @@ first (CLAUDE.md: TDD is not optional).
 1. **Pin all three cards against Scryfall** — text, mana cost, printed P/T, and
    type line. The MTGJSON candidates in this spec are a search result, not a
    source (`card-data-source`).
-2. `Quantity.Star` / `Plus` / `Count` + `Pawl.Type.CountSpec` + `evaluate`'s "you"
+2. `Quantity.Star` / `Plus` / `Count` + `Parun.Type.CountSpec` + `evaluate`'s "you"
    parameter + `substituteStar` + codec. Test: evaluation only, including
    `Star ⇒ Nothing` and both counts.
 3. `Card.characteristicPT` + the `PC.characteristicPT` seed + codec. Test: the
@@ -518,7 +518,7 @@ first (CLAUDE.md: TDD is not optional).
 |---|---|
 | Power and toughness counting **different** things (one `Star` per card) | the first card whose two axes count different things |
 | `LoseAllAbilities` clearing the CDA is **unobservable** (§5) | **Dress Down** (needs Flash + P4's end-step trigger + Sacrifice) or **Soul Sculptor** (needs layer-4 card-type *replacement*), whichever lands first. The Aura family — Darksteel Mutation and kin — is blocked on Attach and is not in M4.5 |
-| `Count` over **projected** state ("lands you control", "Elves on the battlefield") | **Strength of Cedars** / **Wirewood Pride** — either forces quantity evaluation to move into `Pawl.Projection` (a cycle from `Pawl.Quantity` today) |
+| `Count` over **projected** state ("lands you control", "Elves on the battlefield") | **Strength of Cedars** / **Wirewood Pride** — either forces quantity evaluation to move into `Parun.Projection` (a cycle from `Parun.Quantity` today) |
 | Counting **projected** card types of graveyard cards (§2.1 reads printed types) | the first effect that changes a graveyard card's types |
 | `CountSpec` as a whole | **P9**'s criterion / filter language |
 | CR 208.2b "as this creature enters …" P/T choice (a replacement effect that sets copiable values) | **P5**, the replacement-engine phase |
@@ -559,5 +559,5 @@ characteristic that recomputes on every projection, survives being copied as an
 *ability* rather than a number (CR 707.2a), and can be stripped at layer 6 —
 while a continuous effect created by a spell's resolution freezes its quantities
 once, at resolution (CR 608.2h), and a static ability and a characteristic-defining
-ability do not. Tarmogoyf, named in `Pawl.Type.Quantity`'s own comment and in
+ability do not. Tarmogoyf, named in `Parun.Type.Quantity`'s own comment and in
 design.md §2.12 and §6 as the numeric tower's payoff, works.

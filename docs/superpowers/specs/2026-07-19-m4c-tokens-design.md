@@ -125,7 +125,7 @@ token `Card`.
 
 ## 1. New and grown types
 
-**`Pawl.Type.Source`** grows its first card-less constructor. The type is already
+**`Parun.Type.Source`** grows its first card-less constructor. The type is already
 `data`; the comment predicting `OfToken` is discharged:
 
 ```haskell
@@ -144,7 +144,7 @@ data Source
   deriving (Eq, Ord, Show)
 ```
 
-**`Pawl.Type.Effect`** grows one constructor. `Resolve` remains the sole module
+**`Parun.Type.Effect`** grows one constructor. `Resolve` remains the sole module
 that may `case` on `Effect`; the new arm is added to `slotsOf`, `readsX`,
 `manaProduced`, `searchesLibrary`, and `rewriteEffect` (§4, §5).
 
@@ -160,7 +160,7 @@ that may `case` on `Effect`; the new arm is added to `slotsOf`, `readsX`,
     Create Quantity Card
 ```
 
-**`Pawl.Type.Subtype`** needs **no change** — `Goblin` already exists (Goblin
+**`Parun.Type.Subtype`** needs **no change** — `Goblin` already exists (Goblin
 Piker is "Goblin Warrior"), so Dragon Fodder's token subtype is already in the
 catalog. (Where a future token needs a novel creature type, the catalog grows one
 entry, following M4b's `Myr`.)
@@ -173,7 +173,7 @@ all (§3).
 ## 2. The create-from-nothing primitive (the gate machinery)
 
 **`Event.createToken :: PlayerId -> Card -> GameState -> GameState`**, a sibling
-of `changeZone` in `Pawl.Event`. It lives here, not in `Pawl.Game`, for the same
+of `changeZone` in `Parun.Event`. It lives here, not in `Parun.Game`, for the same
 reason `changeZone` does: it must emit into `GameState.zoneChanges`, which this
 module owns, and it is a change-and-emit primitive.
 
@@ -299,7 +299,7 @@ must reach a token's printed words — deferred, no in-scope card needs it). The
 invariant holds: `Resolve` is still the only module that cases on an `Effect`, and
 it reads classifications, never an effect's identity, everywhere else.
 
-**The codec.** `Pawl.Codec` gains a `Create` arm serializing `Quantity` and the
+**The codec.** `Parun.Codec` gains a `Create` arm serializing `Quantity` and the
 nested `Card` (`cardToJson`/`jsonToCard` recurse — a token-maker card contains a
 full card). `Source`/`Object`/`GameState` are never serialized (only card data
 files are), so `OfToken` needs no codec. The honesty round-trip iterates

@@ -6,16 +6,16 @@
 
 **Architecture:** A payload-free layer-2 `Modification.SetControllerToSource` whose player is *derived* at projection time from the effect's source's controller, rather than baked at resolution the way `SetController` is. `Projection.controllerOf` — today a lean fold over stored continuous effects only — additionally gathers control-granting static abilities from battlefield permanents, merged under CR 613.7's timestamp ordering, with the hoisting and cycle-escape that `staticAbilitiesLive`/`liveGiven` already model.
 
-**Tech Stack:** Haskell 2010 (GHC 9.14.1), `tasty`/`tasty-hunit`, `tasty-bench`, the `StateT GameState (Program Prompt)` suspension monad, the hand-written JSON codec in `Pawl.Codec`, the on-demand card registry in `Pawl.Registry`.
+**Tech Stack:** Haskell 2010 (GHC 9.14.1), `tasty`/`tasty-hunit`, `tasty-bench`, the `StateT GameState (Program Prompt)` suspension monad, the hand-written JSON codec in `Parun.Codec`, the on-demand card registry in `Parun.Registry`.
 
 ## Global Constraints
 
 - **Haskell 2010, no language extensions.** Only `GADTs`, `RankNTypes` and `NamedFieldPuns` are permitted; this phase needs none.
 - **Warning-clean under `+pedantic` (`-Werror`).** A new `Modification` constructor breaks every exhaustive match at once — that is the safety net. Run `cabal build all --enable-tests --enable-benchmarks`; `cabal clean` first for a definitive check. **Never run two builds concurrently** — `jobs: $ncpus` already saturates the machine.
-- **No library module is added or deleted in this phase**, so `hooky fix` handles `pawl.cabal`; no direct `cabal-gild` run is needed.
+- **No library module is added or deleted in this phase**, so `hooky fix` handles `parun.cabal`; no direct `cabal-gild` run is needed.
 - **No partial functions**, no boolean blindness, `Mk` constructor prefix, derive at least `Eq` and `Show`, `Text` not `String`, no list comprehensions, `let` over `where`, `case` over point-free, `do` + record syntax to build records.
-- **One type per module** under `Pawl.Type.<Name>`; qualified imports aliased to the last component; no explicit export lists; a module never imports its parents.
-- **`Pawl.Projection` is the ONLY module permitted to case on `Modification`.** `Pawl.Departure` asks its questions through `Projection.givesControlTo` precisely so the case stays there. Keep it that way.
+- **One type per module** under `Parun.Type.<Name>`; qualified imports aliased to the last component; no explicit export lists; a module never imports its parents.
+- **`Parun.Projection` is the ONLY module permitted to case on `Modification`.** `Parun.Departure` asks its questions through `Projection.givesControlTo` precisely so the case stays there. Keep it that way.
 - **The two invariants outrank this plan:** the engine never cases on a card's *identity* (only classifications), and never makes a player's choice.
 - **TDD non-negotiable:** write each failing test, run it, watch it fail, then implement. Tick each `- [ ]` as you finish it.
 - **Every rules claim cites the CR** and was checked against `docs/rules.txt`. Never write an expiry into a code comment — file an issue and cite `(#N)`.
@@ -24,7 +24,7 @@
 
 **Spec:** `docs/superpowers/specs/2026-07-25-auras-design.md`. Phase (b) is spec §3.8–§3.11.
 
-**Phase (a) landed first** (`49c388d`..`2dcfd1f`): `Subtype.Aura`, `Card.enchant`, `Object.attachedTo`, `Affected.Attached`, `Event.changeZoneAttaching`, `Pawl.Stack`'s Aura branch, and CR 704.5m in `Sba.fallsOff`.
+**Phase (a) landed first** (`49c388d`..`2dcfd1f`): `Subtype.Aura`, `Card.enchant`, `Object.attachedTo`, `Affected.Attached`, `Event.changeZoneAttaching`, `Parun.Stack`'s Aura branch, and CR 704.5m in `Sba.fallsOff`.
 
 ---
 
@@ -44,7 +44,7 @@ So `controllerOf` needs its **own lean gather** — one that reads `Card.staticA
 
 Control Magic uses `Attached`. A control-granting static ability with a `Matching` affected set is a real gap that this phase defers with an issue — it must not be silently treated as "does not apply".
 
-### 2. `Pawl.Departure` contains two written correctness proofs whose premises this phase invalidates
+### 2. `Parun.Departure` contains two written correctness proofs whose premises this phase invalidates
 
 These are not stale comments. `Departure.hs` argues, in prose, that two clauses of CR 800.4a are *empty by construction*, and both arguments name the premise this phase breaks:
 
@@ -61,17 +61,17 @@ After this phase there is a second construction site and a third source of contr
 - `data/cards/control-magic.json` — the gate card.
 
 **Modify (library):**
-- `source/library/Pawl/Type/Modification.hs` — `+SetControllerToSource`.
-- `source/library/Pawl/Projection.hs` — `layer`, `applyModification` and the other exhaustive `Modification` matches; the new `controlGrants` / `controllerOfGiven`; `controls`; `givesControlTo`.
-- `source/library/Pawl/Departure.hs` — the two re-derived proofs, and `givesControlTo`'s use if the re-derivation demands it.
-- `source/library/Pawl/Engine.hs` — `settleAll`'s comment (#62).
-- `source/library/Pawl/Codec.hs` — the `Modification` tag pair.
+- `source/library/Parun/Type/Modification.hs` — `+SetControllerToSource`.
+- `source/library/Parun/Projection.hs` — `layer`, `applyModification` and the other exhaustive `Modification` matches; the new `controlGrants` / `controllerOfGiven`; `controls`; `givesControlTo`.
+- `source/library/Parun/Departure.hs` — the two re-derived proofs, and `givesControlTo`'s use if the re-derivation demands it.
+- `source/library/Parun/Engine.hs` — `settleAll`'s comment (#62).
+- `source/library/Parun/Codec.hs` — the `Modification` tag pair.
 
 **Modify (test-suite):**
-- `source/test-suite/Pawl/ProjectionSpec.hs` — control from a static ability.
-- `source/test-suite/Pawl/CombatSpec.hs` — the synthetic fixture retires (#33).
-- `source/test-suite/Pawl/AuraSpec.hs` — the cross-turn settle (#62) and the Control Magic scenarios.
-- `source/test-suite/Pawl/DepartureSpec.hs` — CR 800.4a with an Aura.
+- `source/test-suite/Parun/ProjectionSpec.hs` — control from a static ability.
+- `source/test-suite/Parun/CombatSpec.hs` — the synthetic fixture retires (#33).
+- `source/test-suite/Parun/AuraSpec.hs` — the cross-turn settle (#62) and the Control Magic scenarios.
+- `source/test-suite/Parun/DepartureSpec.hs` — CR 800.4a with an Aura.
 - `source/benchmark/Main.hs` — an Aura-bearing scenario, so a projection regression is catchable.
 
 ---
@@ -81,15 +81,15 @@ After this phase there is a second construction site and a third source of contr
 The constructor and its classifications. No behaviour yet — nothing produces it.
 
 **Files:**
-- Modify: `source/library/Pawl/Type/Modification.hs`, `source/library/Pawl/Projection.hs`, `source/library/Pawl/Codec.hs`
-- Test: `source/test-suite/Pawl/ProjectionSpec.hs`, `source/test-suite/Pawl/CodecSpec.hs`
+- Modify: `source/library/Parun/Type/Modification.hs`, `source/library/Parun/Projection.hs`, `source/library/Parun/Codec.hs`
+- Test: `source/test-suite/Parun/ProjectionSpec.hs`, `source/test-suite/Parun/CodecSpec.hs`
 
 **Interfaces:**
 - Produces: `Modification.SetControllerToSource`; `Projection.layer Modification.SetControllerToSource == Layer.Control`. Consumed by Tasks 2, 5.
 
 - [x] **Step 1: Write the failing test**
 
-In `source/test-suite/Pawl/ProjectionSpec.hs`:
+In `source/test-suite/Parun/ProjectionSpec.hs`:
 
 ```haskell
 -- CR 613.1b: layer 2 is where control-changing effects apply, whether the new
@@ -99,7 +99,7 @@ HU.testCase "CR 613.1b: SetControllerToSource is a layer-2 modification" $
   HU.assertEqual "layer 2" Layer.Control (Projection.layer Modification.SetControllerToSource),
 ```
 
-And in `source/test-suite/Pawl/CodecSpec.hs`, add `Modification.SetControllerToSource` to whichever round-trip list already covers `Modification` values. If none exists, add a single round-trip case matching the file's existing style.
+And in `source/test-suite/Parun/CodecSpec.hs`, add `Modification.SetControllerToSource` to whichever round-trip list already covers `Modification` values. If none exists, add a single round-trip case matching the file's existing style.
 
 - [x] **Step 2: Run test to verify it fails**
 
@@ -108,7 +108,7 @@ Expected: FAIL to compile — `Data constructor not in scope: Modification.SetCo
 
 - [x] **Step 3: Add the constructor**
 
-In `source/library/Pawl/Type/Modification.hs`, after `SetController`:
+In `source/library/Parun/Type/Modification.hs`, after `SetController`:
 
 ```haskell
   | -- layer 2, CR 613.1b: this object's controller becomes the controller of THIS
@@ -141,7 +141,7 @@ In `source/library/Pawl/Type/Modification.hs`, after `SetController`:
   -- static ability, which the projection re-derives and never stores. CR 800.4a's
   -- second clause ends stored effects, so there is nothing here to end -- the
   -- static-ability path is handled by clause 1 removing the source object (see
-  -- Pawl.Departure).
+  -- Parun.Departure).
   Modification.SetControllerToSource -> False
 ```
 
@@ -157,9 +157,9 @@ Expected: PASS, warning-free.
 - [x] **Step 6: Commit**
 
 ```bash
-git add source/library/Pawl/ source/test-suite/Pawl/
+git add source/library/Parun/ source/test-suite/Parun/
 hooky fix
-git add source/library/Pawl/ source/test-suite/Pawl/
+git add source/library/Parun/ source/test-suite/Parun/
 hooky run
 git commit -m "feat(modification): add SetControllerToSource, layer 2 derived from the source (CR 613.1b)"
 ```
@@ -172,8 +172,8 @@ The phase's centre. The card and the projection change land together, for the sa
 
 **Files:**
 - Create: `data/cards/control-magic.json`
-- Modify: `source/library/Pawl/Projection.hs`
-- Test: `source/test-suite/Pawl/ProjectionSpec.hs`, `source/test-suite/Pawl/AuraSpec.hs`
+- Modify: `source/library/Parun/Projection.hs`
+- Test: `source/test-suite/Parun/ProjectionSpec.hs`, `source/test-suite/Parun/AuraSpec.hs`
 
 **Interfaces:**
 - Consumes: `Modification.SetControllerToSource` (Task 1); `Object.attachedTo`, `Affected.Attached`, `Card.enchant` (phase (a)).
@@ -183,7 +183,7 @@ Scryfall-verified 2026-07-25: `Control Magic` — `{2}{U}{U}` — `Enchantment �
 
 - [x] **Step 1: Write the failing tests**
 
-In `source/test-suite/Pawl/AuraSpec.hs`:
+In `source/test-suite/Parun/AuraSpec.hs`:
 
 ```haskell
 -- CR 613.1b / 303.4e: Control Magic's static ability moves control of the
@@ -246,7 +246,7 @@ Run `cabal test` again: the card now loads, and the control tests fail on behavi
 
 - [x] **Step 4: Add the lean control gather**
 
-In `source/library/Pawl/Projection.hs`, above `controllerOf`:
+In `source/library/Parun/Projection.hs`, above `controllerOf`:
 
 ```haskell
 -- One control-granting static ability, flattened: the source that carries it and
@@ -360,7 +360,7 @@ controllerOfGiven grants visited oid gs = case Game.lookupObject oid gs of
               setters -> Just (snd (List.maximumBy (Ord.comparing fst) setters))
 ```
 
-Two notes on that body. The stored path's `namesFrom` now also has an `Attached` arm it will never exercise — `Pawl.Resolve` builds only `Affected.TheseObjects` for stored effects — which is deliberate: one affected-set test shared by both paths beats two that can drift. And the `Ord.comparing fst` tie-break behaviour is unchanged from the existing `controllerOf`; do not "improve" it here.
+Two notes on that body. The stored path's `namesFrom` now also has an `Attached` arm it will never exercise — `Parun.Resolve` builds only `Affected.TheseObjects` for stored effects — which is deliberate: one affected-set test shared by both paths beats two that can drift. And the `Ord.comparing fst` tie-break behaviour is unchanged from the existing `controllerOf`; do not "improve" it here.
 
 - [x] **Step 6: Hoist in `controls`**
 
@@ -383,9 +383,9 @@ Expected: PASS, warning-free.
 - [x] **Step 8: Commit**
 
 ```bash
-git add data/cards/control-magic.json source/library/Pawl/Projection.hs source/test-suite/Pawl/
+git add data/cards/control-magic.json source/library/Parun/Projection.hs source/test-suite/Parun/
 hooky fix
-git add data/cards/control-magic.json source/library/Pawl/Projection.hs source/test-suite/Pawl/
+git add data/cards/control-magic.json source/library/Parun/Projection.hs source/test-suite/Parun/
 hooky run
 git commit -m "feat(projection): control from a static ability, proven by Control Magic (CR 613.1b)"
 ```
@@ -397,15 +397,15 @@ git commit -m "feat(projection): control from a static ability, proven by Contro
 The deferral Control Magic exists to retire. Every control effect before this one was until-end-of-turn, so the thief never reached their own untap step still holding the creature.
 
 **Files:**
-- Modify: `source/library/Pawl/Engine.hs` (the `settleAll` comment)
-- Test: `source/test-suite/Pawl/AuraSpec.hs`
+- Modify: `source/library/Parun/Engine.hs` (the `settleAll` comment)
+- Test: `source/test-suite/Parun/AuraSpec.hs`
 
 **Interfaces:**
 - Consumes: the Control Magic printing and the new `controllerOf` (Task 2).
 
 - [x] **Step 1: Write the failing test**
 
-In `source/test-suite/Pawl/AuraSpec.hs`. The point is that the stolen creature is still alice's at *her* untap step, settles there, and can then attack — which no until-end-of-turn effect could ever exercise:
+In `source/test-suite/Parun/AuraSpec.hs`. The point is that the stolen creature is still alice's at *her* untap step, settles there, and can then attack — which no until-end-of-turn effect could ever exercise:
 
 ```haskell
 -- CR 302.6 across turns (#62): control from an Aura is INDEFINITE, so alice
@@ -426,7 +426,7 @@ HU.testCase "CR 302.6 (#62): a creature held under indefinite control settles at
   HU.assertBool "and it has settled under her control, so it can attack" (Combat.canAttack S.alice creature settled),
 ```
 
-If `S.resick` does not exist, add it to `Pawl.Support` beside `S.attach` — a state fixture setting `Object.sickness = Sickness.Sick` on one object, mirroring `S.attach`'s shape and comment style. Do not reach for `Resolve.applyEffect` to induce sickness; that is the synthetic path Task 4 is deleting.
+If `S.resick` does not exist, add it to `Parun.Support` beside `S.attach` — a state fixture setting `Object.sickness = Sickness.Sick` on one object, mirroring `S.attach`'s shape and comment style. Do not reach for `Resolve.applyEffect` to induce sickness; that is the synthetic path Task 4 is deleting.
 
 - [x] **Step 2: Run test to verify it fails**
 
@@ -445,15 +445,15 @@ Expected: PASS, warning-free.
 - [x] **Step 5: Commit and close the issue**
 
 ```bash
-git add source/library/Pawl/Engine.hs source/test-suite/Pawl/
+git add source/library/Parun/Engine.hs source/test-suite/Parun/
 hooky fix
-git add source/library/Pawl/Engine.hs source/test-suite/Pawl/
+git add source/library/Parun/Engine.hs source/test-suite/Parun/
 hooky run
 git commit -m "test(engine): settle a creature held under indefinite control across turns (#62)"
-gh issue close 62 --comment "Control Magic's control is indefinite, so the thief reaches their own untap step still holding the creature. Covered by a test in Pawl.AuraSpec; Engine.settleAll's forward reference to 'the Auras / Control Magic phase' is gone."
+gh issue close 62 --comment "Control Magic's control is indefinite, so the thief reaches their own untap step still holding the creature. Covered by a test in Parun.AuraSpec; Engine.settleAll's forward reference to 'the Auras / Control Magic phase' is gone."
 ```
 
-Also check `source/library/Pawl/Type/Sickness.hs:15` — issue #62 names it as the citation site. If a `(#62)` comment lives there, it dies in this commit.
+Also check `source/library/Parun/Type/Sickness.hs:15` — issue #62 names it as the citation site. If a `(#62)` comment lives there, it dies in this commit.
 
 ---
 
@@ -462,14 +462,14 @@ Also check `source/library/Pawl/Type/Sickness.hs:15` — issue #62 names it as t
 `CombatSpec`'s CR 302.6 test uses a hand-built `Effect.GainControl` because no real card could steal a creature without granting haste. Control Magic can.
 
 **Files:**
-- Modify: `source/test-suite/Pawl/CombatSpec.hs`
+- Modify: `source/test-suite/Parun/CombatSpec.hs`
 
 **Interfaces:**
 - Consumes: the Control Magic printing (Task 2).
 
 - [x] **Step 1: Rewrite the test against the real card**
 
-In `source/test-suite/Pawl/CombatSpec.hs`, the `controlChangeSicknessTests` group holds a case labelled "SYNTHETIC (labeled crutch, spec §4)" that builds `Effect.GainControl` by hand via `Resolve.applyEffect`. Replace the fixture with Control Magic, keeping the assertion the test exists to make — that a creature which just changed control is summoning sick and cannot attack:
+In `source/test-suite/Parun/CombatSpec.hs`, the `controlChangeSicknessTests` group holds a case labelled "SYNTHETIC (labeled crutch, spec §4)" that builds `Effect.GainControl` by hand via `Resolve.applyEffect`. Replace the fixture with Control Magic, keeping the assertion the test exists to make — that a creature which just changed control is summoning sick and cannot attack:
 
 ```haskell
 controlChangeSicknessTests :: Registry.Type.Registry -> Tasty.TestTree
@@ -501,9 +501,9 @@ Expected: PASS, warning-free.
 - [x] **Step 3: Commit and close the issue**
 
 ```bash
-git add source/test-suite/Pawl/CombatSpec.hs
+git add source/test-suite/Parun/CombatSpec.hs
 hooky fix
-git add source/test-suite/Pawl/CombatSpec.hs
+git add source/test-suite/Parun/CombatSpec.hs
 hooky run
 git commit -m "test(combat): retire the synthetic steal fixture for Control Magic (#33)"
 gh issue close 33 --comment "Control Magic replaces the hand-built Effect.GainControl in CombatSpec's CR 302.6 control-change test. The labelled crutch and its comment are gone."
@@ -513,11 +513,11 @@ gh issue close 33 --comment "Control Magic replaces the hand-built Effect.GainCo
 
 ## Task 5: CR 800.4a — re-derive two proofs
 
-`Pawl.Departure` argues in prose that two clauses of CR 800.4a are empty by construction. Both arguments name a premise this phase just broke. **This task is an investigation with a test, not a comment edit** — do the reasoning first, and let what you find decide what the code needs.
+`Parun.Departure` argues in prose that two clauses of CR 800.4a are empty by construction. Both arguments name a premise this phase just broke. **This task is an investigation with a test, not a comment edit** — do the reasoning first, and let what you find decide what the code needs.
 
 **Files:**
-- Modify: `source/library/Pawl/Departure.hs`, and `source/library/Pawl/Projection.hs` only if the re-derivation demands it
-- Test: `source/test-suite/Pawl/DepartureSpec.hs`
+- Modify: `source/library/Parun/Departure.hs`, and `source/library/Parun/Projection.hs` only if the re-derivation demands it
+- Test: `source/test-suite/Parun/DepartureSpec.hs`
 
 **Interfaces:**
 - Consumes: `Projection.controllerOf`, `Projection.givesControlTo` (Tasks 1–2).
@@ -534,7 +534,7 @@ Work through CR 800.4a's clauses in order, with a control-granting Aura in the p
 
 - [x] **Step 2: Write the failing test**
 
-In `source/test-suite/Pawl/DepartureSpec.hs`, whatever your re-derivation concluded, pin it:
+In `source/test-suite/Parun/DepartureSpec.hs`, whatever your re-derivation concluded, pin it:
 
 ```haskell
 -- CR 800.4a with a control-granting Aura. Alice owns and controls Control Magic
@@ -561,7 +561,7 @@ Match `Departure.depart`'s actual signature and argument order — read it rathe
 - [x] **Step 3: Run test to verify it fails, or does not**
 
 Run: `cabal test`
-Expected: PASS is the likely outcome — clause 1 does the work. **A passing test here is the point, not a failure of TDD:** the test is a regression guard for a proof, and the proof predicts it passes. If it FAILS, you have found a real CR 800.4a bug; report it before fixing, because the fix belongs in `Projection.givesControlTo`'s classification (keeping the `Modification` case inside `Pawl.Projection`) and that is a design decision.
+Expected: PASS is the likely outcome — clause 1 does the work. **A passing test here is the point, not a failure of TDD:** the test is a regression guard for a proof, and the proof predicts it passes. If it FAILS, you have found a real CR 800.4a bug; report it before fixing, because the fix belongs in `Projection.givesControlTo`'s classification (keeping the `Modification` case inside `Parun.Projection`) and that is a design decision.
 
 - [x] **Step 4: Rewrite the two proofs**
 
@@ -575,9 +575,9 @@ Expected: PASS, warning-free.
 - [x] **Step 6: Commit**
 
 ```bash
-git add source/library/Pawl/ source/test-suite/Pawl/DepartureSpec.hs
+git add source/library/Parun/ source/test-suite/Parun/DepartureSpec.hs
 hooky fix
-git add source/library/Pawl/ source/test-suite/Pawl/DepartureSpec.hs
+git add source/library/Parun/ source/test-suite/Parun/DepartureSpec.hs
 hooky run
 git commit -m "fix(departure): re-derive CR 800.4a's proofs for static-ability control"
 ```
@@ -590,14 +590,14 @@ Phase (a)'s final review found `Sba.fallsOff` re-deriving the whole board per Au
 
 **Files:**
 - Modify: `source/benchmark/Main.hs`
-- Possibly modify: `source/test-suite/Pawl/Cards.hs` (a deck list, if the benchmark draws from one)
+- Possibly modify: `source/test-suite/Parun/Cards.hs` (a deck list, if the benchmark draws from one)
 
 **Interfaces:**
 - Consumes: the Control Magic and Unholy Strength printings.
 
 - [x] **Step 1: Read how the benchmark builds its scenarios**
 
-`source/benchmark/Main.hs` is a single `tasty-bench` file. Find how it constructs the boards it measures — whether from the `Pawl.Cards` deck lists, from `Pawl.Support` fixtures, or inline. Note which scenario exercises the state-based-action sweep and the projection most heavily; that is the one an Aura belongs in.
+`source/benchmark/Main.hs` is a single `tasty-bench` file. Find how it constructs the boards it measures — whether from the `Parun.Cards` deck lists, from `Parun.Support` fixtures, or inline. Note which scenario exercises the state-based-action sweep and the projection most heavily; that is the one an Aura belongs in.
 
 - [x] **Step 2: Add an Aura-bearing scenario**
 
@@ -613,9 +613,9 @@ Record the numbers for the new case in your report. This is a **baseline for fut
 - [x] **Step 4: Commit**
 
 ```bash
-git add source/benchmark/Main.hs source/test-suite/Pawl/Cards.hs
+git add source/benchmark/Main.hs source/test-suite/Parun/Cards.hs
 hooky fix
-git add source/benchmark/Main.hs source/test-suite/Pawl/Cards.hs
+git add source/benchmark/Main.hs source/test-suite/Parun/Cards.hs
 hooky run
 git commit -m "bench: cover an Aura-bearing board, so projection regressions are visible"
 ```

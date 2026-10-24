@@ -1,0 +1,2603 @@
+-- Reading an object's characteristics: the printed and copiable
+-- characteristics a projection starts from, the last-known view, control
+-- grants and the controller question. Sits below Parun.Engine.Projection,
+-- which layers the continuous effects on top. Split out of it for size.
+module Parun.Engine.Projection.View where
+
+import Control.Applicative ((<|>))
+import qualified Control.Monad as Monad
+import qualified Data.Foldable as Foldable
+import qualified Data.List as List
+import Data.Map.Strict (Map)
+import qualified Data.Map.Strict as Map
+import qualified Data.Maybe as Maybe
+import qualified Data.Ord as Ord
+import qualified Data.Sequence as Seq
+import Data.Set (Set)
+import qualified Data.Set as Set
+import Numeric.Natural (Natural)
+import qualified Parun.Engine.AbilityZone as AbilityZone
+import qualified Parun.Engine.Battle as Battle
+import qualified Parun.Engine.Binding as Binding
+import qualified Parun.Engine.Card as Card
+import qualified Parun.Engine.Commander as Commander
+import qualified Parun.Engine.Condition as Condition
+import qualified Parun.Engine.Count as Count
+import qualified Parun.Engine.Defender as Defender
+import qualified Parun.Engine.Deploy as Deploy
+import qualified Parun.Engine.Filter as Filter
+import qualified Parun.Engine.Game as Game
+import qualified Parun.Engine.Keyword as Keyword
+import qualified Parun.Engine.ManaAbility as ManaAbility
+import qualified Parun.Engine.Modal as Modal
+import qualified Parun.Engine.Plane as Plane
+import qualified Parun.Engine.Quantity as Quantity
+import qualified Parun.Engine.SourceContext as SourceContext
+import qualified Parun.Engine.Star as Star
+import qualified Parun.Engine.Subtype as Subtype
+import qualified Parun.Engine.Vanguard as Vanguard
+import qualified Parun.Extra.Natural as Natural
+import qualified Parun.Types.ActivatedAbility as ActivatedAbility
+import qualified Parun.Types.ActivatedAbilitySource as ActivatedAbilitySource
+import qualified Parun.Types.Affected as Affected
+import qualified Parun.Types.AttackTarget as AttackTarget
+import qualified Parun.Types.BlockStatus as BlockStatus
+import qualified Parun.Types.Card as Card.Type
+import qualified Parun.Types.CardType as CardType
+import qualified Parun.Types.CharacteristicPT as CharacteristicPT
+import qualified Parun.Types.Color as Color
+import qualified Parun.Types.Combat as Combat
+import qualified Parun.Types.Condition as Condition.Type
+import qualified Parun.Types.ContinuousEffect as ContinuousEffect
+import qualified Parun.Types.CopyException as CopyException
+import qualified Parun.Types.CounterKind as CounterKind
+import qualified Parun.Types.Face as Face
+import qualified Parun.Types.Facing as Facing
+import qualified Parun.Types.Filter as Filter.Type
+import qualified Parun.Types.GameSettings as GameSettings
+import Parun.Types.GameState (GameState)
+import qualified Parun.Types.GameState as GameState
+import qualified Parun.Types.GrantedAbility as GrantedAbility
+import qualified Parun.Types.InherentTriggerSource as InherentTriggerSource
+import Parun.Types.Keyword (Keyword)
+import qualified Parun.Types.Keyword as Keyword.Type
+import qualified Parun.Types.LastKnown as LastKnown
+import qualified Parun.Types.Mana as Mana
+import qualified Parun.Types.ManaCost as ManaCost
+import qualified Parun.Types.ManaUnit as ManaUnit
+import qualified Parun.Types.Modification as Modification
+import qualified Parun.Types.Object as Object
+import Parun.Types.ObjectId (ObjectId)
+import qualified Parun.Types.PlayerId as PlayerId
+import qualified Parun.Types.Power as Power
+import Parun.Types.ProjectedCharacteristics (ProjectedCharacteristics)
+import qualified Parun.Types.ProjectedCharacteristics as PC
+import qualified Parun.Types.Prototype as Prototype
+import qualified Parun.Types.Quantity as Quantity.Type
+import qualified Parun.Types.RangeOfInfluence as RangeOfInfluence
+import qualified Parun.Types.Recipient as Recipient
+import qualified Parun.Types.RuleAbilities as RuleAbilities
+import qualified Parun.Types.SetPowerToughness as SetPowerToughness
+import qualified Parun.Types.Sickness as Sickness
+import Parun.Types.SlotName (SlotName)
+import qualified Parun.Types.Source as Source
+import qualified Parun.Types.SpecialAction as SpecialAction
+import qualified Parun.Types.StaticAbility as StaticAbility
+import qualified Parun.Types.StickerPlacement as StickerPlacement
+import qualified Parun.Types.Subtype as Subtype.Type
+import qualified Parun.Types.Teams as Teams
+import Parun.Types.Timestamp (Timestamp)
+import qualified Parun.Types.Toughness as Toughness
+import qualified Parun.Types.TriggeredAbility as TriggeredAbility
+import qualified Parun.Types.TriggeredAbilitySource as TriggeredAbilitySource
+import qualified Parun.Types.TypeLine as TypeLine
+import qualified Parun.Types.Zone as Zone
+
+-- The characteristics view of a printed card, from the FACE alone. The axes that
+-- only an OBJECT can have are Nothing or empty, and each says so at its field.
+--
+-- Its readers are Parun.ProjectionSpec's, which ask about a printed face with no
+-- game around it, Parun.Engine.Replacement.matchesTokenLot, which asks about a
+-- token that is proposed and not yet minted (CR 111.3) through
+-- viewOfCardLapsed below, and the readers of a
+-- card outside the game -- Parun.Engine.Event.eligible, referenceAdmits below,
+-- Parun.Interpreter.legalCardName. A reader that holds
+-- an OBJECT takes viewOfObject instead, in whatever zone the object sits -- see
+-- #1911, which moved the last of them.
+viewOfCard :: Face.Face Card.Type.Card -> Filter.View
+viewOfCard = viewOfCardLapsed Set.empty
+
+-- viewOfCard less the activated abilities whose CR 604.2 "as long as" clause
+-- is in `lapsed`, Count.snapshotRoster's reading: for a token lot's given text,
+-- all of whose clauses Parun.Engine.Replacement.matchesTokenLot withholds.
+viewOfCardLapsed :: Set Condition.Type.Condition -> Face.Face Card.Type.Card -> Filter.View
+viewOfCardLapsed lapsed face =
+  let typeLine = Face.typeLine face
+      roster = filter (Count.grantHeld lapsed) (printedAbilitiesOf face)
+   in Filter.MkView
+        { -- CR 201.1 off the printed FACE. A multi-faced card's combined view
+          -- carries the halves joined for rendering (Engine.Card.merge2); CR
+          -- 709.4a's set is viewOfCharacteristics', which has an id to ask
+          -- Game.namesOf about.
+          Filter.names = Set.singleton (Face.name face),
+          Filter.cardTypes = TypeLine.types typeLine,
+          Filter.supertypes = TypeLine.supertypes typeLine,
+          -- CR 604.3 / 702.114a: a CDA functions in all zones, and this view
+          -- enters no CR 613 fold, so devoid is applied here.
+          Filter.colors =
+            if definesColorless (Face.keywordSet face)
+              then Set.empty
+              else printedColorsOf face,
+          -- CR 604.3 / 702.73a, the same one layer down: changeling "works
+          -- everywhere".
+          Filter.subtypes =
+            if definesEveryCreatureType (Face.keywordSet face)
+              then Set.union Subtype.everyCreatureType (TypeLine.subtypes typeLine)
+              else TypeLine.subtypes typeLine,
+          -- CR 702: read off the printed face, like the type line above.
+          Filter.keywords = Face.keywordSet face,
+          -- CR 208.1 read off the PRINTED power box -- see printedPower below.
+          Filter.power = printedPower face,
+          -- CR 208.1's other half off the printed toughness box.
+          Filter.toughness = printedToughness face,
+          -- The printed starting intensity; no intensify effect reaches a face.
+          Filter.intensity = fmap toInteger (Face.startingIntensity face),
+          -- CR 202.3: printed on the card, and rule 202.3 names no zone.
+          Filter.manaValue = Just (Quantity.manaValueOf face),
+          -- CR 202.1 off the same printed box the value above totals; Nothing for
+          -- CR 202.1b's land, which has no mana cost where it still has a 0.
+          Filter.manaCost = Face.manaCost face,
+          Filter.controller = Nothing,
+          -- CR 108.3 gives an owner to a card IN THE GAME; this builder describes
+          -- a printed FACE, so there is nothing to read Object.owner off.
+          -- viewOfCharacteristics is the view that holds an id and answers, in
+          -- whatever zone the object sits.
+          Filter.owner = Nothing,
+          -- CR 400.1 / 109.1: a printed card being matched by a search is not an
+          -- object, so there is no zone for IsInZone to read either.
+          Filter.zone = Nothing,
+          -- CR 601.2a: a printed FACE was never cast, so WasCastFrom is vacuously
+          -- False against it -- `zone` above's reason.
+          Filter.castFrom = Nothing,
+          -- CR 115.1: a printed face is on no stack and targets nothing.
+          Filter.targets = Set.empty,
+          Filter.targetViews = Map.empty,
+          Filter.targetCount = 0,
+          -- Not an object, so no identity for IsSource to compare.
+          Filter.identity = Nothing,
+          Filter.playerIdentity = Nothing,
+          -- CR 506.3 / 509.1a: a card off the battlefield never attacked or
+          -- blocked; CR 303.4b: nor is it attached to anything.
+          Filter.attacking = False,
+          -- CR 508.1b: a printed face attacks nothing, for the reason above.
+          Filter.attackingPlayer = Nothing,
+          -- CR 508.1b: nor any planeswalker, for the same reason.
+          Filter.attackingPlaneswalkerController = Nothing,
+          -- CR 310.9d: nor any battle, for the same reason.
+          Filter.attackingBattleProtector = Nothing,
+          Filter.blocking = False,
+          Filter.blockStatus = Nothing,
+          Filter.blockers = Set.empty,
+          Filter.attackedThisTurn = False,
+          Filter.couldAttackThisTurn = False,
+          -- CR 508.1a / 509.1a: a printed face is in no combat, for the reason
+          -- `attacking` above is False.
+          Filter.declaredAttackerThisCombat = False,
+          -- CR 508.3b's other half, False for the same reason: a printed face is
+          -- in no combat, so nothing was declared attacking it.
+          Filter.declaredAttackedThisCombat = False,
+          Filter.declaredBlockerThisCombat = False,
+          -- CR 701.17a mills an OBJECT; this builder describes a printed FACE.
+          -- viewOfCharacteristics is the view that holds an id and answers.
+          Filter.milledThisTurn = False,
+          -- CR 120.1a: damage is dealt to a battle, a creature or a
+          -- planeswalker, and this builder describes a printed FACE rather than
+          -- a permanent. viewOfCharacteristics is the view that holds an id and
+          -- answers.
+          Filter.dealtDamageThisTurn = False,
+          -- CR 400.7 enters an OBJECT; this builder describes a printed FACE --
+          -- `milledThisTurn` above's reason.
+          Filter.enteredThisTurn = False,
+          -- CR 702.122c relates a creature to a Vehicle it crewed, and this
+          -- builder describes a printed FACE rather than either --
+          -- `milledThisTurn` above's reason.
+          Filter.crewedThisTurn = Set.empty,
+          -- CR 702.51c relates a creature to a spell it convoked, and this
+          -- builder describes a printed FACE rather than either -- the field
+          -- above's reason.
+          Filter.convokedThisTurn = Set.empty,
+          -- CR 702.171c relates a creature to a Mount it saddled; the field
+          -- above's reason.
+          Filter.saddledThisTurn = Set.empty,
+          -- CR 120.1: an OBJECT deals damage; the field above's reason.
+          Filter.dealtDamageTo = Set.empty,
+          -- CR 302.6 asks about an OBJECT a player controls; this builder
+          -- describes a printed FACE, which is none -- `milledThisTurn` above's
+          -- reason.
+          Filter.controlledSinceTurnBegan = False,
+          Filter.attachedToView = Nothing,
+          -- CR 303.4b's mirror, and Nothing for the same reason: a printed face
+          -- is not an object, so no permanent's Object.attachedTo names it.
+          Filter.attachedViews = [],
+          Filter.attachedTo = Nothing,
+          -- CR 701.3a: only Parun.Engine.Resolve's AttachTarget arm fills this
+          -- field, and its candidates are battlefield permanents.
+          Filter.canHostSubject = False,
+          -- CR 701.3a's other side: only Parun.Engine.Resolve's Effect.Search arm
+          -- fills this field, and it overlays it onto viewOfObject rather than
+          -- reaching this builder, which holds a printed FACE and no board.
+          Filter.canAttachToSubject = False,
+          -- CR 111.6: "A token isn't a card." CR 704.5d already made a token in
+          -- any zone this builder describes cease to exist.
+          Filter.token = False,
+          -- CR 903.3's designation is made of a card in a DECK and answered of an
+          -- object; a printed face carries neither, so IsCommander is vacuously
+          -- False here, `token` above's posture.
+          Filter.commander = False,
+          -- CR 113.3b: an ability on the stack is never a printed face, so this
+          -- builder's candidate cannot be one.
+          Filter.activatedAbility = False,
+          -- CR 113.1c, the line above widened to CR 113.3's other kind: a printed
+          -- face is no ability on the stack either.
+          Filter.ability = False,
+          -- CR 114.5: an emblem is not a card (CR 114.3 leaves it no printed
+          -- face), so this builder's candidate cannot be one.
+          Filter.emblem = False,
+          -- CR 113.7, for the line above's reason: no ability, so no source.
+          Filter.abilitySource = Nothing,
+          Filter.tapped = False,
+          -- CR 110.5d: only permanents have status, and this is a printed FACE
+          -- with no object behind it -- the rule's own answer rather than an
+          -- unknown, `transformed` below's reason one status category over.
+          Filter.faceDown = False,
+          -- Nothing rather than this very view: CR 708.12's subject is the card
+          -- representing an object, and this builder IS a printed face, so a
+          -- self-reference would only recur. Filter.representedCard says so.
+          Filter.representedCard = Nothing,
+          -- CR 406.3 writes its rider onto an object in exile, and this is a
+          -- printed FACE with no object behind it -- the line above's reason,
+          -- one rule over.
+          Filter.exiledFaceDown = False,
+          -- CR 701.27g asks about a permanent on the battlefield; this is a
+          -- printed FACE with no object behind it, so the rule's own answer is
+          -- False rather than an unknown.
+          Filter.transformed = False,
+          -- CR 122.1a-b: a counter can sit on a card off the battlefield, but this
+          -- builder describes a printed FACE, so there is nothing to be on.
+          Filter.counters = Map.empty,
+          -- CR 123.1: a printed face has no object to be on.
+          Filter.stickers = Seq.empty,
+          -- CR 701.54b: the designation rides an OBJECT, and CR 701.54a gives it
+          -- only to a battlefield permanent.
+          Filter.ringBearerFor = Nothing,
+          Filter.paired = Nothing,
+          -- The designations ride an OBJECT, and each of those rules gives its
+          -- designation only to a permanent.
+          Filter.designations = Set.empty,
+          -- CR 701.37c's X is set on a PERMANENT -- `designations` above, same
+          -- sentence.
+          Filter.designationValues = Map.empty,
+          Filter.storedResults = Map.empty,
+          -- CR 716.2b gives a level to a PERMANENT, and this builder describes a
+          -- printed face.
+          Filter.classLevel = Nothing,
+          Filter.paidCosts = Map.empty,
+          -- CR 702.104a's ability functions as a PERMANENT enters, and this
+          -- builder describes a printed face -- `designations` above, same
+          -- sentence.
+          Filter.tributePaid = False,
+          Filter.castUsing = Nothing,
+          -- CR 702.143c asks about a card in exile or a spell, and this builder
+          -- describes a printed face.
+          Filter.foretold = False,
+          -- CR 718.3: a prototyped SPELL is cast, and this builder describes a
+          -- printed face.
+          Filter.prototyped = False,
+          -- CR 601.2h pays the cost of a SPELL, and this builder describes a
+          -- printed face.
+          Filter.manaSpentTagColors = Map.empty,
+          -- CR 202.1a's mana cost is paid for a SPELL -- `manaSpentTagColors` above,
+          -- same sentence.
+          Filter.manaSpentAmount = 0,
+          -- CR 602.1 / 605.1a off the PRINTED face, through the roster every view
+          -- builder reads (Keyword.activatedAbilitiesOf): the printed abilities
+          -- and rule 702's, battlefield ones included -- a Vehicle card HAS crew
+          -- (CR 702.122a). No text change reaches a printed face, and CR 804.2
+          -- gives its ability to a creature on the battlefield only. Zirda, the
+          -- Dawnwaker's companion condition is read here, since a card outside
+          -- the game has no object to project.
+          --
+          -- CR 305.6's intrinsic ability through the reader every view builder
+          -- shares: a Mountain must answer the same here as it does on the
+          -- battlefield.
+          Filter.activatedAbilityKinds = ManaAbility.abilityKinds (Subtype.intrinsicManaAbility (TypeLine.types typeLine) (TypeLine.subtypes typeLine)) roster,
+          -- CR 702.184c reaches a permanent's CONTROLLER; this builder describes
+          -- a printed FACE with no controller and no board to grant it one.
+          Filter.grantsStationToughness = False
+        }
+
+-- viewOfCard's activated-ability roster: the face's own list and rule 702's.
+printedAbilitiesOf :: Face.Face Card.Type.Card -> [ActivatedAbility.ActivatedAbility Card.Type.Card (GrantedAbility.GrantedAbility Card.Type.Card)]
+printedAbilitiesOf face =
+  Keyword.activatedAbilitiesOf False (Face.keywordSet face) (Face.activatedAbilities face <> Keyword.battlefieldAbilitiesOf (Face.keywords face))
+
+-- CR 108.1 / 400.11: does a card of the Oracle card reference, which no game
+-- holds, match the filter a conjure picks over it by
+-- (Parun.Types.ConjureCards.Reference)? Read off the printed card through
+-- viewOfCard, Parun.Engine.Event.eligible's posture for a card outside the game.
+-- The amount is the bound Filter.Measures' EnclosingAmount operand reads.
+--
+-- The one judgement both sides make: Parun.Interpreter.lookingUpCards narrows the
+-- reference by it, and the conjure filters the card it is handed back through
+-- it rather than trusting the answer.
+referenceAdmits :: Teams.Teams -> Maybe Integer -> Filter.Type.Filter Keyword -> Card.Type.Card -> Bool
+referenceAdmits teams amount predicate card =
+  Filter.matches
+    ((Filter.contextFor teams Nothing Nothing) {Filter.slotAmount = amount})
+    (viewOfCard (Game.resolveFaceFor Nothing card))
+    predicate
+
+-- CR 208.1's PRINTED power box, for a card off the battlefield. Nothing for a
+-- face with no power box, since CR 208.1 gives power only to creature cards.
+--
+-- CR 208.2b's zero is the STAR's answer here, and only here. Deliberately NOT
+-- Quantity.evaluate's Star arm, which stays Nothing: there a star that survived
+-- baseCharacteristics is a hole rather than a zero. A face with a characteristicPT
+-- answers Nothing here, since CR 208.2a's number is applyCharacteristicPT's, in
+-- every zone (CR 604.3).
+printedPower :: Face.Face Card.Type.Card -> Maybe Integer
+printedPower face = case Face.characteristicPT face of
+  Just _ -> Nothing
+  Nothing -> case fmap Power.unwrap (Face.power face) of
+    Just (Quantity.Type.Literal n) -> Just n
+    Just Quantity.Type.Star -> Just 0
+    -- Every other shape: no power box at all, or a box holding neither a number
+    -- nor CR 208.2's bare star. The latter is unreachable -- a composite box like
+    -- 1+* comes with a characteristicPT and left through the arm above.
+    _ -> Nothing
+
+-- printedPower's mirror, arm for arm, on the printed toughness box. CR 208.2b's
+-- sentence names power and toughness together, so the star reads 0 here too.
+printedToughness :: Face.Face Card.Type.Card -> Maybe Integer
+printedToughness face = case Face.characteristicPT face of
+  Just _ -> Nothing
+  Nothing -> case fmap Toughness.unwrap (Face.toughness face) of
+    Just (Quantity.Type.Literal n) -> Just n
+    Just Quantity.Type.Star -> Just 0
+    _ -> Nothing
+
+-- CR 302.6: has `controller` had this object under their control continuously
+-- since their most recent turn began? Object.sickness is the engine's record of
+-- rule 302.6's condition, and it names a PLAYER because the rule's subject is
+-- one: Parun.Engine.Engine.checkControlContinuity drops a `Settled p` the moment p stops
+-- controlling the object, so the comparison is what makes a creature stolen this
+-- turn answer False under its NEW controller as well as its old one.
+settledUnder :: ObjectId -> Maybe PlayerId.PlayerId -> GameState -> Bool
+settledUnder oid controller gs = case (Game.lookupObject oid gs, controller) of
+  (Just object, Just pid) -> Object.sickness object == Sickness.Settled pid
+  _ -> False
+
+-- Shared assembly: fill a View from a projection's characteristics, a supplied
+-- controller and supplied counters.
+--
+-- Counters and `peers` come in as arguments because CR 109.3's characteristic
+-- list holds neither: only the caller knows whether it reads a live object or CR
+-- 608.2h's record of one, and only the caller knows how deep the fold it stands
+-- in has got. `peers` must be a bounded reader -- a full projection taken here
+-- re-enters gather, whose CR 604.2 gate is object-independent, and loops.
+--
+-- A FENCE the compiler cannot keep: filterReadsPeers enumerates the fields filled
+-- through `peers` below, so filling a new one -- or repointing an existing one at
+-- `peers` -- means giving the atom that reads it a True arm there. Nothing warns
+-- if you do not; CR 613.8a's cheap arm in projectDeciding would just start
+-- skipping real dependencies.
+viewOfCharacteristics :: Count.ViewOf -> ObjectId -> ProjectedCharacteristics -> Maybe PlayerId.PlayerId -> Map (CounterKind.CounterKind Keyword.Type.Keyword) Natural -> GameState -> Filter.View
+viewOfCharacteristics peers oid pc controller counters gs =
+  Filter.MkView
+    { -- CR 201.1 / 709.4a off the PROJECTION: names are copiable (CR 707.2), so a
+      -- Clone answers to what it copied.
+      Filter.names = PC.names pc,
+      Filter.cardTypes = PC.cardTypes pc,
+      -- CR 205.4 / 613.1d off the PROJECTION: layer 4 writes supertypes too.
+      Filter.supertypes = PC.supertypes pc,
+      Filter.colors = PC.colors pc,
+      Filter.subtypes = PC.subtypes pc,
+      -- CR 109.3 / 613.1f: abilities are characteristics and layer 6 writes them.
+      -- keysSet because PC.keywords counts instances and HasKeyword asks membership.
+      Filter.keywords = Map.keysSet (PC.keywords pc),
+      Filter.power = PC.power pc,
+      Filter.toughness = PC.toughness pc,
+      Filter.intensity = PC.intensity pc,
+      -- CR 202.3 / 707.2 off the PROJECTION: mana cost is copiable, so layer 1
+      -- replaces it. The printed cost is read in baseCharacteristics.
+      Filter.manaValue = PC.manaValue pc,
+      -- CR 202.1 / 707.2 off the PROJECTION beside the value it totals, so CR
+      -- 700.5's devotion counts a Clone's copied symbols rather than its printed
+      -- ones (Parun.DevotionSpec).
+      Filter.manaCost = PC.manaCost pc,
+      Filter.controller = controller,
+      -- CR 108.3 / 110.2 / 111.2: read off the OBJECT rather than through the
+      -- `controller` parameter, since layer 2 has already moved control and
+      -- nothing moves ownership. Nothing for an id naming nothing, which CR 608.2b
+      -- wants of a gone target; Count.lastKnownView gives CR 608.2h's answer
+      -- over it for the readers owed one.
+      Filter.owner = fmap Object.owner (Game.lookupObject oid gs),
+      -- CR 400.1 off the OBJECT beside its owner, and for `owner`'s reason: CR
+      -- 109.3 counts no zone among the characteristics, so no projection carries
+      -- one. Nothing for an id naming nothing (CR 608.2h), and for an object
+      -- outside the game (CR 400.11, Game.zoneOf).
+      Filter.zone = Game.zoneOf oid gs,
+      -- CR 601.2a off the OBJECT beside its zone, and for that field's reason
+      -- squared: no projection carries a zone, and CR 400.7 leaves the spell no
+      -- memory of the one it came from either, so Parun.Engine.Cast's two stamps
+      -- are the only place the answer exists. Nothing for an id naming nothing
+      -- and for every object that was never cast.
+      Filter.castFrom = Game.lookupObject oid gs >>= Object.castFrom,
+      -- CR 115.1 off the OBJECT's bindings, live: CR 601.2c fixed the targets and
+      -- CR 115.7 can move them, so nothing here is a stamp. Empty for an id
+      -- naming nothing and for everything off the stack.
+      Filter.targets = targetsOfStackObject gs oid,
+      -- CR 115.1's targets one indirection along, filled beside them and lazily:
+      -- nothing forces this map but Filter.TargetsOnlyOne's and TargetsMatching's
+      -- nests.
+      Filter.targetViews = targetViewsOfStackObject peers gs oid,
+      Filter.targetCount = targetCountOfStackObject gs oid,
+      Filter.identity = Just oid,
+      Filter.playerIdentity = Nothing,
+      -- CR 508.1k: a combat status, not a characteristic (CR 109.3). CR 506.4 takes
+      -- a departed creature out of the record, so Count.lastKnownView writes CR
+      -- 608.2h's answer over this one.
+      Filter.attacking = Game.isAttacking oid gs,
+      -- CR 508.1b: the same map's VALUE, kept only when it names a player. A
+      -- creature attacking a planeswalker or a battle answers Nothing here and
+      -- True above, which is CR 509.1a's and CR 802.4a's own three-way split --
+      -- deliberately NOT Parun.Engine.Defender.playerOfAttacker, which answers CR
+      -- 508.5 and would fold all three into one player.
+      Filter.attackingPlayer = case Map.lookup oid (Combat.attackers (GameState.combat gs)) of
+        Just (AttackTarget.OfPlayer pid) -> Just pid
+        _ -> Nothing,
+      -- CR 508.1b: the SAME map's value, kept only when it names a planeswalker,
+      -- and then followed to that planeswalker's CONTROLLER -- which CR 613.1b
+      -- lets layer 2 move, so a Confiscated planeswalker answers the Aura's
+      -- controller and not CR 108.3's owner.
+      --
+      -- Battlefield membership guards the read, as the battle arm below and
+      -- Defender.playerOf's do: CR 506.4 removes a planeswalker from combat when it
+      -- phases out or leaves the battlefield, while CR 506.4c keeps the creature
+      -- attacking with nothing to read -- and Game.removeFromCombat deletes only the
+      -- departed permanent's own key, exactly as rule 506.4c demands, so the entry
+      -- naming it survives. Neither half is wrong; the composition was. Without the
+      -- guard controllerOf still answers, off GameState.objects, which CR 702.26d
+      -- keeps a phased-out permanent in -- the read Parun.Types.GameState's phasedOut
+      -- field already names as the wrong one there. Parun.CombatEffectSpec's "CR
+      -- 506.4c a planeswalker that phases out stops being attacked" pair is the board.
+      --
+      -- The two clauses of rule 506.4 that leave the object on the battlefield under
+      -- the same id are the other two conjuncts, and each is its own leg of
+      -- Parun.CombatEffectSpec's Aura Graft pair:
+      --
+      -- CONTROLLER, compared against the seat recorded as this creature joined
+      -- combat (Parun.Types.Combat's attackedUnder), which is rule 506.4's own
+      -- comparand. Defender.defendingPlayers is the fallback where nothing was
+      -- recorded -- a combat record built by hand -- and only an approximation of
+      -- it: CR 506.2 admits only a defending player's planeswalkers into a
+      -- declaration, so at TWO seats "its controller changes" and "its controller
+      -- is no longer a defending player" name the same planeswalkers, while CR
+      -- 802.2's several defending players tell them apart. MEMBERSHIP rather than
+      -- Maybe equality on that path, which two Nothings satisfy; the arm answers
+      -- Nothing there either way.
+      --
+      -- THE RECORD answers at every moment CR 117.5 samples, so only a read
+      -- inside the resolution that moved control reaches this conjunct:
+      -- data/scenarios/planeswalker-combat's "stolen mid-resolution" pair, where
+      -- Synthetic Turncoat Oath steals the attacked planeswalker and then looks
+      -- for its attackers, proves the recorded-seat branch. The fallback branch
+      -- is reached only by a hand-built combat record.
+      --
+      -- CARD TYPE, through `peers`, which is what makes rule 506.4's planeswalker
+      -- clause reachable without Projection.isPlaneswalkerOf: that one calls project,
+      -- the re-entry `peers` exists to keep out of this function, while `peers` is
+      -- the caller's own bounded reader -- so a Song of the Dryads in layer 4 is seen
+      -- by every caller whose depth has passed layer 4, and by no caller that has
+      -- not. Only PC.cardTypes is forced, and only for an id in Combat.attackers'
+      -- VALUES: no permanent is ever both, since a declaration wants the attacker
+      -- under the active player and the attacked planeswalker under the defending
+      -- one, so this cannot re-enter itself.
+      --
+      -- THE RECORD, first and above all three: rule 506.4 lists EVENTS, so a
+      -- controller who changes and changes back inside one combat leaves the
+      -- planeswalker removed while every conjunct below re-derives it back in.
+      -- Combat.attackingNothing is what makes the removal stick, keyed by this
+      -- attacker; Parun.Types.Combat says why it is stored, and
+      -- Parun.Engine.Combat.noteAttackingNothing is its one writer. The conjuncts
+      -- stay because that record is sampled at CR 117.5's moments and this
+      -- function is asked at every other one.
+      --
+      -- controllerOf is the lean fold rather than a projection, which is what
+      -- makes it safe here: `viewUpTo` already calls it for the candidate's own
+      -- controller from INSIDE the CR 613 layer fold, so asking it for one more
+      -- object re-enters nothing that `peers` guards against.
+      Filter.attackingPlaneswalkerController = case Map.lookup oid (Combat.attackers (GameState.combat gs)) of
+        Just (AttackTarget.OfPlaneswalker pw)
+          | Set.notMember oid (Combat.attackingNothing (GameState.combat gs)),
+            Set.member pw (GameState.battlefield gs),
+            Maybe.maybe
+              (List.any (\defending -> controllerOf pw gs == Just defending) (Defender.defendingPlayers gs))
+              (\seat -> controllerOf pw gs == Just seat)
+              (Map.lookup oid (Combat.attackedUnder (GameState.combat gs))),
+            any (Set.member CardType.Planeswalker . Filter.cardTypes) (peers pw) ->
+              controllerOf pw gs
+        -- CR 506.4e: a battle announcement whose permanent stopped being a
+        -- battle but is still a planeswalker its protector controls, the second
+        -- disjunct of Parun.Engine.Combat.targetStillAttacked's battle arm. A
+        -- regression fence: mutating it away leaves the suite green, as no test
+        -- puts Soul Snare on that board.
+        Just target@(AttackTarget.OfBattle pw)
+          | Set.notMember oid (Combat.attackingNothing (GameState.combat gs)),
+            Set.member pw (GameState.battlefield gs),
+            attackedControllerHeld oid target gs,
+            attackedProtectorHeld oid pw gs,
+            Maybe.isJust (Battle.protectorOf pw gs),
+            controllerOf pw gs == Battle.protectorOf pw gs,
+            List.any (\defending -> controllerOf pw gs == Just defending) (Defender.defendingPlayers gs),
+            any (Set.member CardType.Planeswalker . Filter.cardTypes) (peers pw) ->
+              controllerOf pw gs
+        _ -> Nothing,
+      -- CR 310.9d: the SAME map's last arm, followed to the attacked battle's
+      -- PROTECTOR -- the seat that rule substitutes for the defending player while
+      -- the battle is being attacked, and not the battle's controller.
+      --
+      -- Battlefield membership guards the read the way Defender.playerOf's battle
+      -- arm does: CR 506.4 stops a departed battle being attacked while CR 506.4c
+      -- keeps the creature attacking, so the honest answer there is Nothing rather
+      -- than a protector.
+      --
+      -- The GUARD is a regression fence rather than a proven behavior. CR 400.7
+      -- leaves the object that reaches the new zone with no designation to read
+      -- either (Parun.BattleSpec, "CR 400.7 a battle that leaves the battlefield
+      -- forgets its protector"), so dropping it changes no board parun can build
+      -- and mutating it to True leaves the suite green.
+      --
+      -- Battle.protectorOf is an Object.protector lookup and reads no projection,
+      -- so unlike controllerOf above it re-enters nothing at all.
+      --
+      -- The other conjuncts are rule 506.4's battle clauses, arm for arm with the
+      -- planeswalker field above: the PROTECTOR, which CR 310.9d makes the
+      -- defending player while a battle is attacked, compared against the seat
+      -- recorded as this creature joined combat (attackedProtectorHeld), and the
+      -- CARD TYPE through `peers`. The type conjunct is load-bearing precisely because CR 310.9g keeps
+      -- the designation when a permanent stops being a battle, so Battle.protectorOf
+      -- goes on answering; Parun.BattleSpec's "CR 506.4 a battle that stops being a
+      -- battle" pair is the board.
+      --
+      -- The CONTROLLER clause is attackedControllerHeld, for the planeswalker
+      -- field's reason: THE RECORD answers at CR 117.5's moments, and only a read
+      -- inside the resolution that moved control reaches the conjunct.
+      -- data/scenarios/battle's "steals mid-resolution" pair is the board, its
+      -- protector stealing the battle with Synthetic Turncoat Oath. The 506.4e
+      -- arms of both fields ask it too, unobserved: no test puts Soul Snare or
+      -- Synthetic Bulwark Snare on that board.
+      --
+      -- The PROTECTOR conjunct answers mid-resolution for the same reason: the
+      -- record answers at CR 117.5's moments. data/scenarios/battle's "protector
+      -- changes mid-combat" pair is the board, Synthetic Shifting Allegiance
+      -- handing the role to a player who also defends (CR 802.2) and then looking
+      -- for its attackers.
+      --
+      -- Combat.attackingNothing leads here as it does above, and for the same
+      -- reason: it is the only conjunct that remembers a removal rather
+      -- than re-deriving it.
+      Filter.attackingBattleProtector = case Map.lookup oid (Combat.attackers (GameState.combat gs)) of
+        Just target@(AttackTarget.OfBattle battle)
+          | Set.notMember oid (Combat.attackingNothing (GameState.combat gs)),
+            Set.member battle (GameState.battlefield gs),
+            attackedControllerHeld oid target gs,
+            attackedProtectorHeld oid battle gs,
+            any (Set.member CardType.Battle . Filter.cardTypes) (peers battle) ->
+              Battle.protectorOf battle gs
+        -- CR 506.4e: a planeswalker announcement whose permanent is a battle
+        -- too, or stopped being a planeswalker but is still a battle, is a battle
+        -- being attacked. Parun.PlaneswalkerCombatSpec's PlaneswalkerBattleInCombat
+        -- is the board.
+        Just target@(AttackTarget.OfPlaneswalker battle)
+          | Set.notMember oid (Combat.attackingNothing (GameState.combat gs)),
+            Set.member battle (GameState.battlefield gs),
+            attackedControllerHeld oid target gs,
+            List.any (\defending -> Battle.protectorOf battle gs == Just defending) (Defender.defendingPlayers gs),
+            any (Set.member CardType.Battle . Filter.cardTypes) (peers battle) ->
+              Battle.protectorOf battle gs
+        _ -> Nothing,
+      -- CR 509.1g: likewise. Combat.blockers is keyed by ATTACKER, so blocking is
+      -- membership in some attacker's set rather than a key lookup. CR 506.4 takes
+      -- a departed creature out of the record, so Count.lastKnownView gives
+      -- CR 608.2h's answer over this one too.
+      Filter.blocking = Game.isBlocking oid gs,
+      -- CR 509.1h: the key lookup the line above is careful not to be, so a
+      -- blocked creature stays blocked once every creature blocking it has left
+      -- combat. Unblocked only once blockers are declared (CR 508.4d for one
+      -- put onto the battlefield attacking afterwards).
+      --
+      -- Not implemented: CR 509.1h's "an effect says that it becomes
+      -- unblocked", which nothing writes, so a blocked attacker stays blocked
+      -- for the rest of combat (#5005).
+      Filter.blockStatus =
+        let c = GameState.combat gs
+         in if Map.member oid (Combat.blockers c)
+              then Just BlockStatus.Blocked
+              else
+                if Map.member oid (Combat.attackers c) && Combat.blockersDeclared c
+                  then Just BlockStatus.Unblocked
+                  else Nothing,
+      Filter.blockers = Map.findWithDefault Set.empty oid (Combat.blockers (GameState.combat gs)),
+      -- CR 608.2i: what this object did this turn and this combat, off the
+      -- turn's log and the combat record. Each reader is shared with
+      -- Count.lastKnownView, which asks it of an id that has ceased.
+      Filter.attackedThisTurn = Count.attackedThisTurn oid gs,
+      Filter.couldAttackThisTurn = Count.couldAttackThisTurn oid gs,
+      Filter.declaredAttackerThisCombat = Count.declaredAttackerThisCombat oid gs,
+      Filter.declaredAttackedThisCombat = Count.declaredAttackedThisCombat oid gs,
+      Filter.declaredBlockerThisCombat = Count.declaredBlockerThisCombat oid gs,
+      Filter.milledThisTurn = Count.milledThisTurn oid gs,
+      Filter.dealtDamageThisTurn = Count.dealtDamageThisTurn oid gs,
+      Filter.enteredThisTurn = Game.enteredThisTurn oid gs,
+      Filter.crewedThisTurn = Count.crewedThisTurn oid gs,
+      Filter.convokedThisTurn = Count.convokedThisTurn oid gs,
+      Filter.saddledThisTurn = Count.saddledThisTurn oid gs,
+      Filter.dealtDamageTo = Count.dealtDamageTo oid gs,
+      -- CR 302.6: Object.sickness, compared against the PROJECTED controller
+      -- rather than read as a bare flag -- rule 302.6's subject is a player, so
+      -- `Settled` names one, and Parun.Engine.Engine.checkControlContinuity drops a
+      -- settle whose player stopped controlling the object.
+      Filter.controlledSinceTurnBegan = settledUnder oid controller gs,
+      -- CR 701.3a: not a characteristic, so the attachment comes off
+      -- Object.attachedTo -- but the HOST's characteristics are projected, so it
+      -- arrives as a view of its own read through `peers` (CR 613.1). CR 303.4 /
+      -- 110.1: narrowed to a host on the battlefield, which is what makes
+      -- `AttachedTo (And [])` mean "attached to a permanent". The view under the
+      -- Just must stay lazy -- `peers` will project again.
+      Filter.attachedToView =
+        Game.lookupObject oid gs
+          >>= Object.attachedTo
+          >>= Recipient.objectOf
+          >>= \host -> if Set.member host (GameState.battlefield gs) then peers host else Nothing,
+      -- CR 303.4b / 301.5a with the arrow turned round: the permanents attached TO
+      -- this candidate, Parun.Engine.Game.attachments' sweep. Each attacher's own
+      -- characteristics come through `peers`, at this caller's depth, which is
+      -- what keeps a HasAttached reached from inside the layer fold out of a loop.
+      -- The list must stay lazy in its spine: nothing forces the sweep unless a
+      -- Filter names the atom.
+      Filter.attachedViews = Maybe.mapMaybe peers (Set.toList (Game.attachments oid gs)),
+      -- CR 701.3a / 301.5a: the same attachment as the HOST'S ID -- IsAttachedToSource
+      -- compares it against the match's source, which this builder does not know.
+      -- Not narrowed to the battlefield the way `attachedToView` is.
+      Filter.attachedTo = Game.hostOf oid gs,
+      -- CR 701.3a: filled only by Resolve's AttachTarget arm, the one place that
+      -- knows what is being moved.
+      Filter.canHostSubject = False,
+      -- CR 701.3a's other side: filled only by Resolve's Effect.Search arm, the
+      -- one place that can resolve Parun.Types.Search.subject to the host the
+      -- instruction fixed. Overlaid onto this
+      -- builder's result rather than passed in, so a search pays for it only when
+      -- its filter names the atom.
+      Filter.canAttachToSubject = False,
+      -- CR 111.6: fixed for the life of the object (CR 400.7). False for an id
+      -- naming nothing, which CR 608.2b wants of a gone TARGET;
+      -- Count.lastKnownView gives CR 608.2h's answer over it for the
+      -- readers owed one, exactly as `owner` above has it.
+      Filter.token = Game.isToken oid gs,
+      -- CR 903.3, read off the owner's designation for `token` above's reason: it
+      -- is fixed before the game begins (CR 702.124a) and no rule rewrites it.
+      -- False for an id naming nothing.
+      Filter.commander = Commander.isCommander oid gs,
+      -- CR 113.3b, read off Object.source for `token` above's reason: which of CR
+      -- 113.3's kinds an ability is is fixed for the life of the object. False
+      -- for an id naming nothing, and for every object that is not an ability on
+      -- the stack.
+      Filter.activatedAbility = Game.isActivatedAbility oid gs,
+      -- CR 113.1c, the line above widened to take CR 113.3c's triggered kind as
+      -- well, and read off Object.source in the same way.
+      Filter.ability = Game.isAbility oid gs,
+      -- CR 114.5, read off Object.source for the two lines above's reason. False
+      -- for an id naming nothing, and for every object that is not an emblem.
+      Filter.emblem = Game.isEmblem oid gs,
+      -- CR 113.7: the source's view, through `peers` at this caller's depth while
+      -- it exists (attachedViews' reason) and through CR 113.7a's last known
+      -- information once it has left -- Green Slime countering the ability of an
+      -- artifact sacrificed to activate it still reads "from an artifact source".
+      -- Nothing for anything that is not an ability on the stack. Lazy, so a
+      -- Filter that never names the atom pays nothing.
+      Filter.abilitySource = Game.abilitySourceOf oid gs >>= Count.orLastKnown peers gs,
+      Filter.tapped = Game.isTapped oid gs,
+      -- CR 110.5's other status, and the only site that fills the field. Read off
+      -- Object.facing, never off the projection: CR 110.5a says status is not a
+      -- characteristic in as many words. Never Object.exiledFaceDown beside it,
+      -- which CR 110.5d says has no correlation to this.
+      --
+      -- The battlefield conjunct is CR 110.5d's own -- only permanents have
+      -- status -- and is a REGRESSION FENCE rather than a proved behaviour, for
+      -- `transformed` below's reason: the object it excludes is a face-down SPELL
+      -- on the stack (CR 708.4), which is reachable, but every pool that reaches
+      -- the atom today is already scoped to the battlefield, so dropping the
+      -- conjunct leaves the suite green.
+      Filter.faceDown = Set.member oid (GameState.battlefield gs) && maybe False (Facing.isFaceDown . Object.facing) (Game.lookupObject oid gs),
+      -- CR 708.12's "ignoring any continuous effects", and the only site that
+      -- fills the field: the card representing this object, read off
+      -- Game.faceUpFaceOf so that CR 708.2a's substitution in Game.faceOf does not
+      -- reach it. Nothing where no card is behind the object -- a token, an
+      -- ability on the stack -- and Filter.RepresentedByCard is False there.
+      --
+      -- NOT scoped to the battlefield, unlike `faceDown` above: CR 708.12's read
+      -- is of a card, which an object in any zone either has or has not.
+      Filter.representedCard = fmap viewOfCard (Game.faceUpFaceOf oid gs),
+      -- CR 406.3's rider, and the only site that fills the field. NO zone
+      -- conjunct beside it, unlike the line above: Object.exiledFaceDown is
+      -- per-incarnation state that only the move into exile writes, and CR 400.7
+      -- mints a fresh incarnation on the way out, so the object it is True of is
+      -- in exile by construction.
+      Filter.exiledFaceDown = maybe False Object.exiledFaceDown (Game.lookupObject oid gs),
+      -- CR 701.27g's three conjuncts, and the only site that fills the field. The
+      -- face is read CURRENT -- Game.isFrontFaceUp reads Object.face, never the
+      -- Object.turnedOverAt beside it -- which is the rule's first exclusion, a
+      -- permanent front face up being untransformed however it got there. The
+      -- second is that "an object represented by more than one card, such as a
+      -- melded or merged permanent, is never considered a transformed permanent,
+      -- even if it has components that are back face up", which Game.componentsOf
+      -- answers for a melded permanent and for a merged one alike.
+      --
+      -- That conjunct is LOAD-BEARING, and the first exclusion does not stand in
+      -- for it. A melded permanent is stamped Object.face = Nothing
+      -- (Parun.Engine.Event.meld) and Game.turnFaceOver refuses to turn it over (CR
+      -- 712.4c), but neither is the only writer of that field: CR 616.1's entry
+      -- loop runs over a melded permanent like any other entry, and
+      -- Parun.Engine.Event's EntryRewrite.EntersTransformed arm writes Object.face
+      -- outright -- so a combined face printing daybound enters back face up at
+      -- night (CR 702.145b, ranked by CR 616.1d; not CR 712.13a, which is the
+      -- stack road alone) and this conjunct is the only thing answering.
+      -- Parun.MeldSpec's "CR 701.27g a melded permanent that entered with its back
+      -- face up is still not one" is that board, and dropping the conjunct
+      -- reddens it. That board melds into a daybound double-faced card, which no
+      -- printed meld pair combines into -- the combined face is card data the
+      -- opcode carries, the same stand-in Game.turnFaceOver's CR 712.4c arm is
+      -- proved by -- so the rule is read where the printings cannot reach it.
+      --
+      -- The battlefield conjunct is a REGRESSION FENCE rather than a proved
+      -- behaviour: every Count that reaches the atom is already scoped to a
+      -- zone, so dropping it leaves the suite green. It is CR 701.27g's own
+      -- wording, and the object it excludes -- a double-faced spell on the stack
+      -- with its back face up (CR 712.11a) -- is reachable, so the conjunct
+      -- stays.
+      Filter.transformed =
+        Set.member oid (GameState.battlefield gs)
+          && not (Game.isFrontFaceUp oid gs)
+          && maybe True (Seq.null . Game.componentsOf . Object.source) (Game.lookupObject oid gs),
+      Filter.counters = counters,
+      -- CR 123.1: off the object, live, `designations`' posture. Not
+      -- implemented: CR 608.2h's record of a departed object's stickers (#4890).
+      Filter.stickers = foldMap (Seq.fromList . Maybe.mapMaybe (\p -> Game.stickerContent (StickerPlacement.sticker p) gs) . Foldable.toList . Object.stickers) (Game.lookupObject oid gs),
+      -- CR 701.54b: a designation rather than a characteristic. Nothing for an id
+      -- naming no object -- a designation dies with the permanent (CR 400.7).
+      Filter.ringBearerFor = Game.lookupObject oid gs >>= Object.ringBearerFor,
+      Filter.paired = Game.lookupObject oid gs >>= Object.paired,
+      -- Designations rather than characteristics: ringBearerFor's posture above.
+      Filter.designations = maybe Set.empty Object.designations (Game.lookupObject oid gs),
+      -- CR 701.37c: the number the mark was set with, read live off the object
+      -- beside the mark itself -- `designations`' posture above.
+      Filter.designationValues = foldMap Object.designationValues (Game.lookupObject oid gs),
+      -- CR 607.5: the results stored for the abilities layer 1a leaves it, so a
+      -- copy's reading ability sees none its printed pair stored.
+      Filter.storedResults = foldMap (Game.storedResultsUnder (Game.acquisitionOf oid gs)) (Game.lookupObject oid gs),
+      -- CR 716.2b: a designation too, so `designations`' posture again -- and
+      -- Nothing for an id naming no object leaves CR 716.2d to answer level 1 at
+      -- the read, which is what a CR 608.2h asker gets for a permanent that is
+      -- gone.
+      Filter.classLevel = Game.lookupObject oid gs >>= Object.classLevel,
+      -- CR 601.2b: read live off the object. For one that has left its zone,
+      -- Count.lastKnownView overrides this with LastKnown.paidCosts, so the CR 608.2h
+      -- path answers "kicked" for a kicked spell that has left the stack.
+      Filter.paidCosts = foldMap Object.paidCosts (Game.lookupObject oid gs),
+      -- CR 702.104b: read live off the object, with no last-known override --
+      -- `castUsing` below's posture, for the reason the field's own comment in
+      -- Parun.Engine.Filter gives.
+      Filter.tributePaid = any Object.tributePaid (Game.lookupObject oid gs),
+      -- CR 400.7d: read live off the object, with no last-known override.
+      Filter.castUsing = Object.castUsing =<< Game.lookupObject oid gs,
+      -- CR 702.143c: read live off the object, `castUsing`'s posture.
+      Filter.foretold = any (Maybe.isJust . Object.foretold) (Game.lookupObject oid gs),
+      -- CR 718.3c / 718.3d: a copy's answer rides its copiable values (CR
+      -- 718.2a); the object's own flag answers for an original whose copiable
+      -- values are something else's, face down (CR 708.2) or a copy (CR 707.2).
+      Filter.prototyped = PC.prototyped pc || any Object.prototyped (Game.lookupObject oid gs),
+      -- CR 400.7d / CR 107.4h: read live off the object like `castUsing`, and
+      -- keyed by tag with CR 202.2's colours beside it, which is the whole of what
+      -- the vocabulary asks (see the field's own comment in Parun.Engine.Filter).
+      -- The object may be a CR 602.2a ability on the stack as well as a spell or
+      -- the permanent one became; every one of them carries the field.
+      --
+      -- unionWith and not the Map monoid, which is left-biased: two units sharing
+      -- a tag must contribute BOTH their colours, or a spell paid with one snow
+      -- Forest and one snow Mountain answers for whichever came first.
+      Filter.manaSpentTagColors =
+        Map.unionsWith
+          Set.union
+          [ Map.fromSet (const (foldMap Set.singleton (Quantity.colorOfManaType (ManaUnit.manaType unit)))) (ManaUnit.tags unit)
+          | object <- Maybe.maybeToList (Game.lookupObject oid gs),
+            unit <- Mana.unwrap (Object.manaSpent object)
+          ],
+      -- CR 202.1a off the same record one field over: how many units were spent,
+      -- for rule 702.191a's increment.
+      Filter.manaSpentAmount = maybe 0 (Natural.length . Mana.unwrap . Object.manaSpent) (Game.lookupObject oid gs),
+      -- CR 602.1 / 605.1a off the PROJECTION like `keywords`: abilities are
+      -- characteristics (CR 109.3) written by layer 6. The whole list the object
+      -- HAS, not the list it can activate here. LAZY -- see the field's own comment
+      -- in Parun.Engine.Filter.
+      --
+      -- CR 305.6's intrinsic ability is a disjunct here and not a member of that
+      -- list, because Count.abilitiesOf mints rule 702's abilities (and CR
+      -- 804.2's) and not rule 305's: what it folds is PC.activatedAbilities plus
+      -- the keyword map, and no layer writes "{T}: Add {R}" onto a Mountain. Read off the
+      -- PROJECTION, so a land that lost its basic land type in layer 4 has lost
+      -- the ability with it (CR 305.7) and one that lost all its abilities in
+      -- layer 6 has too (CR 613.1f).
+      Filter.activatedAbilityKinds = ManaAbility.abilityKinds (Subtype.intrinsicManaAbilityOf pc) (abilitiesFromCharacteristics peers pc oid gs),
+      -- CR 702.184c off the PROJECTION, applyModification's GrantsStationToughness
+      -- arm being layer 6's only writer.
+      Filter.grantsStationToughness = PC.grantsStationToughness pc
+    }
+
+-- CR 506.4's controller clause, asked live: does the permanent this attacker's
+-- announcement names still have the controller recorded as the attacker joined
+-- combat (Parun.Types.Combat's attackedUnder for a planeswalker,
+-- attackedControlledBy for a battle)? Parun.Engine.Combat.noteAttackingNothing
+-- asks the same at CR 117.5's moments; this answers at every other one. True
+-- where nothing was recorded, as there.
+attackedControllerHeld :: ObjectId -> AttackTarget.AttackTarget -> GameState -> Bool
+attackedControllerHeld attacker target gs =
+  let c = GameState.combat gs
+      held record attacked = maybe True (\seat -> controllerOf attacked gs == Just seat) (Map.lookup attacker (record c))
+   in case target of
+        AttackTarget.OfPlayer _ -> True
+        AttackTarget.OfPlaneswalker pw -> held Combat.attackedUnder pw
+        AttackTarget.OfBattle battle -> held Combat.attackedControlledBy battle
+
+-- CR 506.4's protector clause, asked live: is the battle this attacker's
+-- announcement names still protected by the player recorded as the attacker
+-- joined combat (Parun.Types.Combat's attackedUnder, CR 310.9d's seat)?
+-- Parun.Engine.Combat.noteAttackingNothing asks the same at CR 117.5's moments.
+-- Where nothing was recorded -- a combat record built by hand -- membership in
+-- Defender.defendingPlayers stands in, which CR 802.2's several defending
+-- players make only an approximation.
+attackedProtectorHeld :: ObjectId -> ObjectId -> GameState -> Bool
+attackedProtectorHeld attacker battle gs =
+  maybe
+    (List.any (\defending -> Battle.protectorOf battle gs == Just defending) (Defender.defendingPlayers gs))
+    (\seat -> Battle.protectorOf battle gs == Just seat)
+    (Map.lookup attacker (Combat.attackedUnder (GameState.combat gs)))
+
+-- CR 122.1: the counters on an object right now, and none for an id naming nothing.
+countersOf :: ObjectId -> GameState -> Map (CounterKind.CounterKind Keyword.Type.Keyword) Natural
+countersOf oid gs = maybe Map.empty Object.counters (Game.lookupObject oid gs)
+
+-- CR 707.2 / 613.1a: an object's layer-1 (copy) result -- its stamped copy
+-- snapshot when it has one, the printed base otherwise. Base-or-snapshot only, so
+-- counters, pumps, control and ability grants are never part of a copiable value.
+-- Not a recursion: a copy of a copy stored resolved values when it was stamped.
+--
+-- CR 730.2a's merge arrives on the SAME arm as a copy, and deliberately: the two
+-- share layer 1a (CR 613.2a), Parun.Engine.Event.merge stamps the record
+-- withMergedAbilities below builds, and whichever of them stamped LAST is what
+-- CR 613.7's timestamp order leaves. So no reader has to know that a merged
+-- permanent is one, and an earlier copy effect on the target cannot outrank the
+-- merge -- which is exactly what it did before #3371.
+copiableCharacteristics :: ObjectId -> GameState -> ProjectedCharacteristics
+copiableCharacteristics oid gs = case copiableSnapshotOf oid gs of
+  Just snapshot -> snapshot
+  -- CR 709.5's last sentence puts a copy of a Room on this arm rather than the
+  -- one above, copiableSnapshotOf below answering Nothing for it: the rule copies
+  -- the shared type line's two static abilities and which half each
+  -- characteristic is in, not the subtraction they produced on the copied
+  -- permanent, and the designations those abilities read are CR 709.5c's, which
+  -- belong to this object. So the copiable values are rebuilt from the copied
+  -- card's halves against THIS object's doors, which is what baseCharacteristics
+  -- does with Game.halvesOf underneath it.
+  --
+  -- The stamp's CR 707.9 exceptions are copiable values too (CR 707.9a /
+  -- 707.9b), and so are the abilities a merge grafted onto it (CR 702.140e), so
+  -- both are re-applied over that rebuild rather than lost with the snapshot it
+  -- went around. Parun.RoomSpec's "CR 707.9a a copy of a Room keeps the
+  -- changeling its copy effect gave it" and Parun.MutateSpec's "CR 702.140e
+  -- mutating under an animated Room keeps the abilities from under it" prove
+  -- them.
+  Nothing ->
+    let owed = rebuiltStampOf oid gs
+        excepted = withCopyExceptions Nothing Nothing (foldMap PC.exceptions owed) (baseCharacteristics oid gs)
+     in List.foldl' (flip withMergedAbilities) excepted (foldMap PC.mergedDonors owed)
+
+-- CR 707.9 / 702.140e: the stamp `copiableCharacteristics` above owes its
+-- rebuild the exceptions and grafts of -- the stamp, when copiableSnapshotOf
+-- went around it for its halves, and none when it answered Nothing for having no
+-- stamp or for being face down, since CR 708.2's listed characteristics replace
+-- them with the rest.
+rebuiltStampOf :: ObjectId -> GameState -> Maybe ProjectedCharacteristics
+rebuiltStampOf oid gs
+  | maybe False (Facing.isFaceDown . Object.facing) (Game.lookupObject oid gs) = Nothing
+  | derivesFromCopiedHalves oid gs = stampedSnapshotOf oid gs
+  | otherwise = Nothing
+
+-- CR 707.9a / 707.9b: fold a copy effect's exceptions into copiable values and
+-- record them there SETTLED (settleCopyException below), after any the values
+-- already carried, so a rebuild of these values -- or of a copy of them (CR
+-- 707.2) -- re-applies them in the order they first applied. `this` and `own`
+-- are applyCopyException's; a re-application passes Nothing for both, which the
+-- settled list no longer asks about.
+withCopyExceptions :: Maybe Source.Source -> Maybe ProjectedCharacteristics -> [CopyException.CopyException (GrantedAbility.GrantedAbility Card.Type.Card)] -> ProjectedCharacteristics -> ProjectedCharacteristics
+withCopyExceptions this own exceptions pc =
+  (List.foldl' (applyCopyException this own) pc exceptions)
+    { PC.exceptions = PC.exceptions pc <> concatMap (settleCopyException this own) exceptions
+    }
+
+-- CR 707.9: an exception with the copy effect's context answered, so it means
+-- the same thing re-applied later with none. GainThisAbility becomes the ability
+-- it pointed at (CR 707.9a) and DontCopyColors the colours it retained (CR
+-- 707.9c); each drops where applyCopyException's own arm does nothing. One arm
+-- per constructor, applyCopyException's reason: a new one that reads the
+-- context has to be decided here.
+--
+-- Those two arms are a regression fence: Vesuvan Doppelganger and Unstable
+-- Shapeshifter would reach them by copying an animated Room, and no test builds
+-- that board.
+settleCopyException :: Maybe Source.Source -> Maybe ProjectedCharacteristics -> CopyException.CopyException (GrantedAbility.GrantedAbility Card.Type.Card) -> [CopyException.CopyException (GrantedAbility.GrantedAbility Card.Type.Card)]
+settleCopyException this own exception = case exception of
+  CopyException.GainThisAbility -> case this of
+    Just (Source.OfTrigger triggered) -> [CopyException.GainAbility (GrantedAbility.Triggered (TriggeredAbilitySource.ability triggered))]
+    Just (Source.OfAbility activated) -> [CopyException.GainAbility (GrantedAbility.Activated (ActivatedAbilitySource.ability activated))]
+    _ -> []
+  CopyException.DontCopyColors -> case own of
+    Just mine -> [CopyException.SetColors (PC.colors mine)]
+    Nothing -> []
+  CopyException.SetPowerToughness _ -> [exception]
+  CopyException.GainKeywords _ -> [exception]
+  CopyException.AddCardTypes _ -> [exception]
+  CopyException.AddSubtypes _ -> [exception]
+  CopyException.AddSupertypes _ -> [exception]
+  CopyException.SetCardTypes _ -> [exception]
+  CopyException.SetCreatureSubtypes _ -> [exception]
+  CopyException.RemoveSupertypes _ -> [exception]
+  CopyException.SetName _ -> [exception]
+  CopyException.SetColors _ -> [exception]
+  CopyException.NoManaCost -> [exception]
+  CopyException.GainAbility _ -> [exception]
+
+-- One arm per CopyException constructor, no wildcard, for Event.apply's reason: a
+-- new exception shape must break the build here rather than silently copy without
+-- it.
+applyCopyException :: Maybe Source.Source -> Maybe PC.ProjectedCharacteristics -> PC.ProjectedCharacteristics -> CopyException.CopyException (GrantedAbility.GrantedAbility Card.Type.Card) -> PC.ProjectedCharacteristics
+applyCopyException this own snapshot exception = case exception of
+  -- CR 707.9b sets the pair; CR 707.9d is the second write -- an exception that
+  -- "provides a specific set of values for a certain characteristic" does not
+  -- copy the characteristic-defining ability that defines it, and leaving the CDA
+  -- in the snapshot would let layer 7a overwrite the pair
+  -- (Projection.applyCharacteristicPT). Not defensive, unlike
+  -- Replacement.applyEntryOption's same write: Quicksilver Gargantuan copying a
+  -- Tarmogoyf is exactly this case.
+  CopyException.SetPowerToughness (SetPowerToughness.MkSetPowerToughness p t) ->
+    snapshot
+      { PC.power = Just p,
+        PC.toughness = Just t,
+        PC.characteristicPT = Nothing
+      }
+  -- CR 707.9a: the gained abilities become part of the copiable values "along
+  -- with any other abilities that were copied", so this ADDS rather than sets.
+  -- unionWith (+) and not a plain union, Replacement.applyEntryOption's reason:
+  -- an instance gained here is a second instance on a copy that already had the
+  -- keyword, and CR 702.105b makes each instance of dethrone trigger separately.
+  --
+  -- Nothing else moves. CR 604.3a(2) makes an ability acquired through a copy
+  -- effect characteristic-defining, and writing it here is what delivers that:
+  -- Projection's layer-4 seed reads these keywords, so an excepted changeling
+  -- reaches applySubtypeDefining (CR 613.3, CR 702.73a) rather than being
+  -- granted in timestamp order. No companion strip either, unlike the arm above
+  -- -- CR 707.9d applies to an exception that provides VALUES for a
+  -- characteristic, and gaining an ability provides none.
+  CopyException.GainKeywords keywords ->
+    snapshot {PC.keywords = Map.unionWith (+) (PC.keywords snapshot) (Map.fromSet (const 1) keywords)}
+  -- CR 707.9a over a whole ability rather than a keyword: "this ability" is
+  -- appended to the copied ones for the arm above's reason.
+  --
+  -- WHICH LIST is CR 113.3's classification of the carrier and never a question
+  -- about which ability it is, so the closed half stays closed: a triggered
+  -- carrier (Unstable Shapeshifter) joins triggeredAbilities and an activated one
+  -- (Dimir Doppelganger) activatedAbilities. Every other arm appends nothing --
+  -- a spell, an emblem and CR 725.2's sourceless trigger have no ability to point
+  -- at, and neither does the CR 707.5 entry road's Nothing.
+  --
+  -- The ability written here still CONTAINS this exception, which is what makes
+  -- the reference self-renewing: the copy's own instance is what resolves next,
+  -- and it points at itself again. Parun.CopySpec's "the Shapeshifter copies a
+  -- second creature with the ability it kept" and "Dimir Doppelganger's
+  -- activated ability survives the copy it makes" prove it, one road each.
+  --
+  -- CR 604.3a is silent here and that is right: it makes a copy-acquired STATIC
+  -- ability characteristic-defining, and neither a triggered nor an activated
+  -- ability is static or defines a characteristic. CR 707.9d's strip is silent
+  -- for the GainKeywords arm's reason -- an ability provides no values.
+  CopyException.GainThisAbility -> case this of
+    Just (Source.OfTrigger triggered) ->
+      snapshot {PC.triggeredAbilities = PC.triggeredAbilities snapshot <> [TriggeredAbilitySource.ability triggered]}
+    Just (Source.OfAbility activated) ->
+      snapshot {PC.activatedAbilities = PC.activatedAbilities snapshot <> [ActivatedAbilitySource.ability activated]}
+    _ -> snapshot
+  -- CR 707.9a over a QUOTED ability (Mercurial Pretender): appended for the arm
+  -- above's reason, into the list CR 113.3's classification of the quotation
+  -- names. In the snapshot, so a Clone of the copy has it too (CR 707.2) and its
+  -- source is whichever permanent carries it (CR 113.7) -- Parun.CopySpec's
+  -- "Mercurial Pretender's copy has the quoted ability, and so does a Clone of
+  -- it" proves both.
+  CopyException.GainAbility granted -> case granted of
+    GrantedAbility.Activated activated ->
+      snapshot {PC.activatedAbilities = PC.activatedAbilities snapshot <> [activated]}
+    GrantedAbility.Triggered triggered ->
+      snapshot {PC.triggeredAbilities = PC.triggeredAbilities snapshot <> [triggered]}
+    GrantedAbility.Static static ->
+      snapshot {PC.staticAbilities = PC.staticAbilities snapshot <> [static]}
+    GrantedAbility.Rules rules ->
+      snapshot {PC.ruleAbilities = PC.ruleAbilities snapshot <> rules}
+    -- A regression fence: no printing's copy exception grants a quoted
+    -- replacement ability (MTGJSON 2026-08-23, `except ... has "If`, no hit).
+    GrantedAbility.Replacement replacement ->
+      snapshot {PC.replacementEffects = PC.replacementEffects snapshot <> [replacement]}
+    -- Into the COPIABLE list, the Static arm's reason. A regression fence: no
+    -- printing's copy exception grants a player ability (MTGJSON 2026-08-23,
+    -- `except ... has "You`, no hit).
+    GrantedAbility.Player player ->
+      snapshot {PC.playerAbilities = PC.playerAbilities snapshot <> [player]}
+    -- Into the COPIABLE list, the Static arm's reason. A regression fence: no
+    -- copy exception grants one (MTGJSON 2026-08-23, `except ... has "This
+    -- spell costs`, no hit).
+    GrantedAbility.SelfCostReduction reduction ->
+      snapshot {PC.costReductions = PC.costReductions snapshot <> [reduction]}
+    -- Into the COPIABLE list, the Static arm's reason. Unproven: no card in
+    -- data/cards/ writes a copy exception granting one.
+    GrantedAbility.SelfAlternativeCost alternative ->
+      snapshot {PC.alternativeCosts = PC.alternativeCosts snapshot <> [alternative]}
+    -- No face prints this permission, so there is no copiable list to put it
+    -- in; it is recorded as granted. Unproven: no card in data/cards/ writes a
+    -- copy exception granting one.
+    GrantedAbility.SelfSpendManaAsThough clause ->
+      snapshot {PC.grantedSpendManaAsThough = PC.grantedSpendManaAsThough snapshot <> [clause]}
+  -- CR 707.9b / 205.1b: "in addition to its other types", so a UNION over the
+  -- copied type line rather than the replacement CR 205.1a's own sentence would
+  -- make. Phyrexian Metamorph copying a Goblin Piker is an artifact creature.
+  --
+  -- Nothing else moves, and CR 707.9d is why: its strip "does not apply to copy
+  -- effects with exceptions that state the object is a certain card type,
+  -- supertype, and/or subtype 'in addition to its other types'", so unlike the
+  -- SetPowerToughness arm above this one leaves the copied
+  -- characteristic-defining ability in place. A Metamorph copying a Tarmogoyf is
+  -- an artifact and still recomputes its P/T off the graveyards --
+  -- Parun.CopySpec's "a type exception keeps the copied CDA where a value
+  -- exception does not" is what proves it.
+  CopyException.AddCardTypes types ->
+    snapshot {PC.cardTypes = Set.union (PC.cardTypes snapshot) types}
+  -- CR 707.9b / 205.3: "a Wall in addition to its other types" (Wall of Stolen
+  -- Identity), the same union one part of the type line over. Into the snapshot
+  -- for the arms above's reason, which is what makes the added subtype survive a
+  -- second copy (CR 707.2 / 707.9b): Parun.CopySpec's "a token copy of Wall of
+  -- Stolen Identity's copy is still a Wall" is what proves it, since a CR 613
+  -- layer-4 write over the Wall copy would be left behind on the token and no
+  -- "destroy target Wall" would find it.
+  --
+  -- Nothing else moves, for AddCardTypes' reason: CR 707.9d's carve-out names
+  -- subtype alongside card type, so the copied characteristic-defining ability
+  -- stays -- a copy of a creature with changeling still has every creature type
+  -- (CR 707.9d's Glasspool Mimic example).
+  CopyException.AddSubtypes subtypes ->
+    snapshot {PC.subtypes = Set.union (PC.subtypes snapshot) subtypes}
+  -- CR 707.9b / 205.1b over CR 205.4a's part of the type line: "it's legendary in
+  -- addition to its other types" (Sakashima the Impostor), so a UNION where the
+  -- arm below takes a difference. CR 205.4b says the same one object at a time --
+  -- one that gains a supertype keeps the ones it had.
+  --
+  -- Into the snapshot for the arms above's reason, and read at gameplay level by
+  -- CR 704.5j: Parun.CopySpec's "two Sakashimas copying different creatures are one
+  -- legend rule apart" is what proves the supertype arrived, since two copies that
+  -- did not gain it would both stand.
+  --
+  -- Nothing else moves, for AddCardTypes' reason: CR 707.9d's carve-out names
+  -- supertype, and no parun characteristic-defining ability defines one anyway.
+  CopyException.AddSupertypes supertypes ->
+    snapshot {PC.supertypes = Set.union (PC.supertypes snapshot) supertypes}
+  -- CR 707.9b / 205.1a's set: the clause's card types replace the copied ones,
+  -- instant and sorcery kept, and a subtype correlating with no card type the
+  -- copy still has goes with the type that carried it -- Projection's
+  -- SetCardType arm over the copiable values.
+  -- data/scenarios/dino-dna-copies-drop-the-copied-land-type-and-changeling.json
+  -- proves the strip (Dryad Arbor's Forest).
+  CopyException.SetCardTypes types ->
+    let kept = Set.union types (Set.filter retainedThroughCardTypeSet (PC.cardTypes snapshot))
+     in snapshot {PC.cardTypes = kept, PC.subtypes = Set.filter (correspondsTo kept) (PC.subtypes snapshot)}
+  -- CR 707.9b / 205.1a's set over CR 205.3m's creature types: every copied
+  -- creature type goes and the clause's come in. CR 707.9d strips changeling
+  -- (CR 702.73a), the ability that would define them; the same scenario
+  -- proves it (Avian Changeling).
+  CopyException.SetCreatureSubtypes subtypes ->
+    snapshot
+      { PC.subtypes = Set.union subtypes (Set.filter (not . Subtype.isCreatureType) (PC.subtypes snapshot)),
+        PC.keywords = Map.delete Keyword.Type.Changeling (PC.keywords snapshot)
+      }
+  -- CR 707.9b over CR 205.4a's part of the type line: "except it isn't legendary"
+  -- (Multiversal Recruitment), so a DIFFERENCE rather than an empty set -- the
+  -- clause names one supertype and a copy of a snow legendary permanent is still
+  -- snow.
+  --
+  -- Into the snapshot for the arms above's reason, which is what makes the
+  -- excepted value survive a second copy (CR 707.2 / 707.9b): Parun.CopySpec's
+  -- "and so is a token copy of that token" is what proves it, since a CR 613
+  -- layer-4 write over the token would be left behind there and CR 704.5j would
+  -- take one of the two legends.
+  --
+  -- Nothing else moves. CR 707.9d's strip would drop a characteristic-defining
+  -- ability that defines the excepted characteristic, and none defines a
+  -- supertype (Parun.Types.CopyException's arm).
+  CopyException.RemoveSupertypes supertypes ->
+    snapshot {PC.supertypes = Set.difference (PC.supertypes snapshot) supertypes}
+  -- CR 707.9b over CR 201.1's name: "except its name is Sakashima the Impostor",
+  -- so the clause's one name REPLACES whatever the copied object's were (CR
+  -- 709.4a's pair among them).
+  --
+  -- Into the snapshot for the arms above's reason. CR 707.9d has nothing to
+  -- strip: no parun characteristic-defining ability defines a name.
+  CopyException.SetName name ->
+    snapshot {PC.names = Set.singleton name}
+  -- CR 707.9b over CR 105.2: "except it's white" REPLACES the copied colours,
+  -- colour indicator included, which is CR 707.9d's second sentence. Its first
+  -- strips the colour-defining ability, and devoid (CR 702.114a) is the one
+  -- Projection.applyColorDefining would read off the snapshot at layer 5. That
+  -- strip is a regression fence: no embalm or eternalize card has devoid, and
+  -- Hour of Eternity's "4/4 black Zombie" copy of a devoid creature card is the
+  -- board that would prove it.
+  CopyException.SetColors colors ->
+    snapshot
+      { PC.colors = colors,
+        PC.keywords = Map.filterWithKey (\keyword _ -> not (definesColorless (Set.singleton keyword))) (PC.keywords snapshot)
+      }
+  -- CR 707.9b over CR 202.1: no mana cost, so CR 202.3a's mana value 0. The
+  -- colours stay as copied, since the snapshot carries them apart from the cost;
+  -- a printed clause changes them through SetColors above. No
+  -- characteristic-defining ability defines a mana cost, so CR 707.9d has
+  -- nothing to strip.
+  CopyException.NoManaCost ->
+    snapshot {PC.manaCost = Nothing, PC.manaValue = Just 0}
+  -- CR 707.9c over CR 105.2: "it doesn't copy that creature's color" (Vesuvan
+  -- Doppelganger), so the copy RETAINS its own colours where SetColors above
+  -- states new ones. `own` is the subject's copiable values read off the
+  -- pre-effect board, which on the CR 707.5 entry road is its printed card and
+  -- on CR 707.4's road whatever a previous copy effect left -- and since that
+  -- previous copy took this same exception, a Doppelganger that has copied
+  -- before is still its printed blue.
+  --
+  -- The keyword strip is CR 707.9d's first two sentences, SetColors' reason: an
+  -- effect that "doesn't copy a certain characteristic" does not copy the
+  -- characteristic-defining ability defining it, and for colour the colour
+  -- indicator too. Devoid (CR 702.114a) is the one such ability
+  -- Projection.applyColorDefining would read out of the snapshot at layer 5.
+  --
+  -- The strip is a REGRESSION FENCE rather than a proven behaviour, SetColors'
+  -- reason: no devoid creature is a Doppelganger target any test builds, and a
+  -- board with one is what would prove it.
+  --
+  -- Nothing for `own` is the CR 707.1 token mint, where there is no earlier
+  -- object to retain a value from and so nothing to do. No printed card reaches
+  -- it: every decline-to-copy clause is Vesuvan Doppelganger's, on the two
+  -- roads above.
+  CopyException.DontCopyColors -> case own of
+    Nothing -> snapshot
+    Just mine ->
+      snapshot
+        { PC.colors = PC.colors mine,
+          PC.keywords = Map.filterWithKey (\keyword _ -> not (definesColorless (Set.singleton keyword))) (PC.keywords snapshot)
+        }
+
+-- CR 613.2a / 613.2b: an object's LAYER 1a value -- `copiableCharacteristics`
+-- above with layer 1b's face-down substitution not yet applied. CR 708.8 names
+-- the same value from the other side: it is what a permanent's copiable values
+-- revert to when it turns face up.
+--
+-- ONE caller and one rule. CR 730.2a makes a merge a copiable effect that CR
+-- 613.2a puts in layer 1a, so what Parun.Engine.Event.merge folds is what layer
+-- 1a had left each side -- never what layer 1b afterwards did to the permanent.
+-- Read through `copiableCharacteristics` instead and a merge onto a face-down
+-- permanent freezes CR 708.2a's nameless 2/2 into the stamp, so the merged
+-- permanent goes on being a nameless 2/2 once it turns face up.
+--
+-- Written as a COUNTERFACTUAL BOARD rather than as a second seed, which is
+-- Parun.Engine.Game.faceUpFaceOf's own posture one module over: the question is
+-- "what would this object's layer-1a value be if it were face up", and each of
+-- the three forks that answers it -- `copiableSnapshotOf` below, and
+-- Game.faceOf and Game.namesOf under `baseCharacteristics` -- reads
+-- Object.facing off the board rather than taking it as an argument. One map
+-- insert, on the merge road only.
+--
+-- No CR 613.7f timestamp rides the rewrite, and none should: nothing here turns
+-- anything over, and the board is thrown away with the read.
+copiableCharacteristicsFaceUp :: ObjectId -> GameState -> ProjectedCharacteristics
+copiableCharacteristicsFaceUp oid gs =
+  copiableCharacteristics
+    oid
+    gs {GameState.objects = Map.adjust (\o -> o {Object.facing = Facing.FaceUp}) oid (GameState.objects gs)}
+
+-- CR 730.2h: `copiableCharacteristicsFaceUp` above asked of a side that is
+-- FLIPPED -- "that component's alternative characteristics are used instead of
+-- its normal characteristics if the merged permanent is flipped". Equal to the
+-- face-up read for a side that is not a flip card, Game.resolveFaceFor's flipped
+-- arm needing a Card.flippedFace to fire, so Parun.Engine.Event.merge asks it of
+-- BOTH sides and the rule's "if a merged permanent contains a flip card" falls
+-- out rather than being tested.
+--
+-- The same COUNTERFACTUAL BOARD the neighbour above is written as, and stacked
+-- on it: CR 110.5 makes flipped and face-down two of one rule's status
+-- categories, and the question here is what layer 1a would say of this side with
+-- both of them settled the way the merge needs. On a side that is already a
+-- MERGED permanent the counterfactual reaches `stampedSnapshotOf` below instead,
+-- which answers with the flipped reading that merge stamped -- so a merge onto a
+-- merged permanent carries the older merge's flip component forward.
+copiableCharacteristicsFlipped :: ObjectId -> GameState -> ProjectedCharacteristics
+copiableCharacteristicsFlipped oid gs =
+  copiableCharacteristicsFaceUp oid (Game.withFlipped True oid gs)
+
+-- CR 707.3: the copy snapshot an object's copiable RULES TEXT is read from --
+-- Nothing for an object that is copying nothing, and Nothing again for one whose
+-- snapshot copied HALVES, whose rules text every reader must re-derive against
+-- this object's own unlocked designations instead (copiableCharacteristics
+-- above).
+--
+-- THE accessor all eight of those readers share -- the record above,
+-- staticAbilitiesOf, abilityFaceOf and copiableSpecialActionsOf below,
+-- Parun.Engine.Projection's copiableReplacementsOf, anyCopiableKeyword and
+-- copiableMintsType, and
+-- Parun.Engine.PlayerEffect's playerAbilitiesOf -- so that no two of them can
+-- answer differently about one object. Four of the eight are disjuncts of ONE
+-- predicate (Parun.Engine.Projection.replacementsAffecting's baseHas), which is
+-- what makes a per-reader fork a bug waiting rather than a style question: that
+-- predicate's
+-- False SKIPS the projection, so a reader left behind hides a copy's ability
+-- rather than reporting it.
+--
+-- Two of those eight have a producer over a copied door -- copiableReplacementsOf
+-- (Torture Pit, proved by Parun.RoomSpec's "CR 707.2a a copy of a Room gathers the
+-- replacement effect behind the door IT unlocked") and playerAbilitiesOf
+-- (Steaming Sauna). anyCopiableKeyword, copiableMintsType and
+-- copiableSpecialActionsOf have none and are REGRESSION FENCES: no printed Room
+-- half prints a keyword,
+-- none is a Saga, a planeswalker or a battle, and none grants a CR 116.2
+-- permission (Scryfall `t:room`, 2026-09-05), so nothing can redden if they are
+-- left behind again.
+--
+-- FACE DOWN answers Nothing before either of those questions is asked, so all
+-- eight readers fall through to the printed read and Game.faceOf hands them
+-- Card.faceDownFace. CR 613.2b orders layer 1b after layer 1a, so CR 708.2's
+-- listed characteristics replace what a copy effect stamped rather than losing to
+-- it -- Game.halvesOf's and Game.prepareSpellOf's fork, one field over, and here
+-- rather than in any one reader because a per-reader fork is what this accessor
+-- exists to prevent. The stamp itself rides through untouched, which is what CR
+-- 708.8 reverts to.
+copiableSnapshotOf :: ObjectId -> GameState -> Maybe ProjectedCharacteristics
+copiableSnapshotOf oid gs
+  | maybe False (Facing.isFaceDown . Object.facing) (Game.lookupObject oid gs) = Nothing
+  | derivesFromCopiedHalves oid gs = Nothing
+  | otherwise = stampedSnapshotOf oid gs
+
+-- CR 709.5 / 709.5c: is this object's copiable rules text a set of HALVES it
+-- copied, to be read against its own unlocked designations? The one fork
+-- copiableSnapshotOf above makes, so no reader has to know it exists.
+--
+-- The BATTLEFIELD conjunct is Game.resolveFaceFor's own, which is what makes the
+-- two agree: only there do CR 709.5c's designations exist for the subtraction to
+-- read, so a card in a graveyard that became a copy of a Room keeps reading the
+-- frozen snapshot, which is CR 709.4's combined view of the copied card.
+--
+-- The second disjunct is a spell cast as one of its stamp's halves, or as its
+-- Adventure or Omen half (CR 709.3b, 715.3b, 720.3b): it has only that half's
+-- characteristics, which Game.resolveFaceFor hands the seed.
+derivesFromCopiedHalves :: ObjectId -> GameState -> Bool
+derivesFromCopiedHalves oid gs = case stampedSnapshotOf oid gs of
+  Nothing -> False
+  Just snapshot ->
+    ( Maybe.isJust (PC.halves snapshot)
+        && fmap Object.zone (Game.lookupObject oid gs) == Just Zone.Battlefield
+    )
+      || maybe False (Maybe.isJust . Game.copiedHalfOf) (Game.lookupObject oid gs)
+
+-- CR 707.3's raw stamp: what Parun.Engine.Resolve and Parun.Engine.Event wrote to
+-- Binding.copyOf, or a conjured duplicate carries (Game.copyStampOf), before
+-- rule 709.5's question is asked of it. The projection's ONE read of that
+-- binding, and only copiableSnapshotOf and derivesFromCopiedHalves
+-- above call it; Parun.Engine.Game.copiableOf makes the other read in the
+-- engine, off the object it already holds.
+--
+-- LAYER 1a IS NOT THE BINDING ALONE. A copy effect that stated a duration is
+-- stored rather than stamped (Parun.Types.ActiveCopy), so the object is read as
+-- Game.lookupLayerOne leaves it, a stored row laid over its binding. Here rather than in any one reader, for the
+-- reason copiableSnapshotOf above gives: a per-reader fork is what that accessor
+-- exists to prevent.
+--
+-- CR 730.2h is the one fork: a FLIPPED merged permanent reads the flipped
+-- reading its merge nested in the stamp (PC.flipped), so each flip component
+-- contributes its alternative characteristics. CR 110.5a keeps status out of the
+-- characteristics, which is why this is a choice between two stamped readings
+-- rather than a CR 613 layer -- Parun.Types.Object.flipped says the same of the
+-- unmerged road, where Game.resolveFaceFor makes the substitution at the face
+-- seam a merged permanent's stamp goes around. CR 730.2i needs no fork here:
+-- Game.turnFaceOver swaps the turned reading into Binding.copyOf itself.
+--
+-- CR 707.3 is the same fork for a COPY of a flip card: a flipped permanent reads
+-- the alternative reading its copy stamp carries, and one whose
+-- stamp carries none -- CR 110.5c's flipped permanent that became a copy of
+-- Runeclaw Bear -- keeps its status to no effect.
+stampedSnapshotOf :: ObjectId -> GameState -> Maybe ProjectedCharacteristics
+stampedSnapshotOf oid gs = do
+  object <- Game.lookupLayerOne oid gs
+  let stamped = Game.copyStampOf object
+  if Object.flipped object
+    then fmap (\stamp -> Maybe.fromMaybe stamp (PC.flipped stamp)) stamped
+    else stamped
+
+-- CR 707.2 / 608.2: the face a spell on the stack announces against and
+-- resolves, its spell abilities and type line read off its COPIABLE values
+-- rather than the printed card -- so a spell that became a copy of another
+-- resolves the copied text, and CR 715.3d's and 720.3d's riders ask whether the
+-- COPY is an Adventure or an Omen (Parun.Engine.Resolve.finishSpell). Equal to
+-- Game.faceOf for an object copying nothing, whose copiable values are seeded
+-- from that same face. Parun.CopySpec's "CR 707.2 a spell that becomes a copy of
+-- a Bolt" and "CR 707.2 an Adventure that becomes a copy of a Bolt" prove it.
+spellFaceOf :: ObjectId -> GameState -> Maybe (Face.Face Card.Type.Card)
+spellFaceOf oid gs =
+  let copiable = copiableCharacteristics oid gs
+      typeLine = TypeLine.MkTypeLine (PC.supertypes copiable) (PC.cardTypes copiable) (PC.subtypes copiable)
+   in fmap (\face -> face {Face.spell = PC.spell copiable, Face.typeLine = typeLine}) (Game.faceOf oid gs)
+
+-- CR 707.2 / 113.6: the face an object OFF the battlefield has its abilities read
+-- from -- Game.faceOfObject with its copiable values' abilities, keywords and type
+-- line (copiableSnapshotOf) laid over it. The ONE read every reader of "which
+-- abilities does this card have where it is" takes: Parun.Engine.Projection's zone
+-- gatherers and their prefilters, and Parun.Engine.Event.Trigger's zone
+-- candidates. So a conjured duplicate of a Clone copying Anger has Anger's
+-- abilities in a graveyard, as the projection says it does. Parun.ConjureSpec's
+-- "a duplicate of a Clone of" Anger, Bloodghast and Arrogant Wurm cases prove the
+-- static, the triggered and the keyword-minted side.
+--
+-- PROJECTION-FREE, staticAbilitiesOf's reason: the gatherers run while the
+-- projection is being built. Only the fields an ability read asks are laid over,
+-- the delayed-ability declarations among them (CR 707.2).
+--
+-- Walked per card in every hand and library on every projection behind
+-- Parun.Engine.Projection.mayStateZone, so an object carrying no stamp on a board
+-- storing no copy effect skips copiableSnapshotOf's lookups.
+--
+-- Nothing for a card CR 121.8 keeps face down, baseCharacteristics' reason: it
+-- has no abilities to read, including a row it states for a hand.
+-- Parun.CastSpec's face-down Progenitus pair proves it.
+abilityFaceOf :: ObjectId -> Object.Object -> GameState -> Maybe (Face.Face Card.Type.Card)
+abilityFaceOf oid obj gs
+  | Game.keptFaceDown oid gs = Nothing
+  | otherwise =
+      let stamped =
+            if Maybe.isNothing (Game.copyStampOf obj) && not (Object.flipped obj) && null (GameState.copyEffects gs)
+              then Nothing
+              else copiableSnapshotOf oid gs
+          overlay face pc =
+            face
+              { Face.typeLine = TypeLine.MkTypeLine (PC.supertypes pc) (PC.cardTypes pc) (PC.subtypes pc),
+                Face.keywords = PC.keywords pc,
+                Face.staticAbilities = PC.staticAbilities pc,
+                Face.playerAbilities = PC.playerAbilities pc,
+                Face.specialActions = PC.specialActions pc,
+                Face.activatedAbilities = PC.activatedAbilities pc,
+                Face.replacementEffects = PC.replacementEffects pc,
+                Face.triggeredAbilities = PC.triggeredAbilities pc,
+                Face.delayedAbilities = PC.delayedAbilities pc,
+                Face.enchant = PC.enchant pc,
+                Face.castingPermissions = PC.castingPermissions pc,
+                Face.spell = PC.spell pc
+              }
+       in fmap (\face -> maybe face (overlay face) stamped) (Game.faceOfObject gs obj)
+
+-- `abilityFaceOf` for a caller that holds only the id.
+abilityFaceOfId :: ObjectId -> GameState -> Maybe (Face.Face Card.Type.Card)
+abilityFaceOfId oid gs = Game.lookupObject oid gs >>= \obj -> abilityFaceOf oid obj gs
+
+-- CR 612.5: the object whose copiable rules text `oid` carries -- `oid` itself
+-- unless a stored ExchangeTextBoxes effect moved another's text box onto it.
+-- The ability-list readers below ask it first, which is what moves a static
+-- ability, a player static ability, a special action and a rule-affecting
+-- ability with the text box they are printed in: those lists are gathered from
+-- the copiable characteristics rather than read off the layer-3 fold that
+-- moves the rest (Parun.Engine.Projection.exchangeTextBoxFrom).
+--
+-- CR 613.7 orders two exchanges by timestamp, and the later one moves what the
+-- earlier one left, so the swaps compose latest-first. Stored effects alone,
+-- which keeps this PROJECTION-FREE for staticAbilitiesOf's reason: a static
+-- ability's affected set is never a TheseObjects pair, so none can exchange.
+--
+-- The word changes a moved ability is rewritten by are the ones its text box
+-- took, wherever it was when each applied: Parun.Engine.Projection.textChangesAffecting
+-- reads them off layer 3, which orders them against the exchange by CR 613.7
+-- and 613.8.
+textBoxHolderOf :: ObjectId -> GameState -> ObjectId
+textBoxHolderOf oid gs =
+  let swapOf eff = case (ContinuousEffect.modification eff, ContinuousEffect.affected eff) of
+        (Modification.ExchangeTextBoxes, Affected.TheseObjects pair) -> case Set.toList pair of
+          [a, b] -> Just (ContinuousEffect.timestamp eff, a, b)
+          _ -> Nothing
+        _ -> Nothing
+      swaps = List.sortOn (\(ts, _, _) -> Ord.Down ts) (Maybe.mapMaybe swapOf (GameState.continuousEffects gs))
+      step x (_, a, b)
+        | x == a = b
+        | x == b = a
+        | otherwise = x
+   in List.foldl' step oid swaps
+
+-- CR 612.5 / 608.2h: the copy snapshot `carrier`'s rules text is read from,
+-- `holder` being textBoxHolderOf's answer. copiableSnapshotOf's, except for a
+-- holder an exchange moved onto `carrier` that has since LEFT: Exchange of
+-- Words' ruling keeps the survivor's text box, so it is read off the copiable
+-- values the holder left with. Parun.ProjectionSpec's "CR 612.5 the Sentry keeps
+-- Akiri's pump after she dies" proves it.
+carriedSnapshotOf :: ObjectId -> ObjectId -> GameState -> Maybe ProjectedCharacteristics
+carriedSnapshotOf carrier holder gs
+  | holder /= carrier = Monad.join (Game.liveOrLastKnown (const (copiableSnapshotOf holder gs)) (Just . LastKnown.copiable) holder gs)
+  | otherwise = copiableSnapshotOf holder gs
+
+-- CR 613.7a: the timestamp of the effects `carrier`'s static abilities
+-- generate -- its own, or the later timestamp of the exchange that put another
+-- object's text box on it, since that exchange is the effect that gave it those
+-- abilities. Parun.ProjectionSpec's "CR 613.7a a levelled Student's text box
+-- applies after the Wings on its new host" proves it.
+staticTimestampOf :: ObjectId -> Object.Object -> GameState -> Timestamp
+staticTimestampOf carrier obj gs
+  | textBoxHolderOf carrier gs == carrier = Object.timestamp obj
+  | otherwise =
+      let touching eff = case (ContinuousEffect.modification eff, ContinuousEffect.affected eff) of
+            (Modification.ExchangeTextBoxes, Affected.TheseObjects pair) | Set.member carrier pair -> Just (ContinuousEffect.timestamp eff)
+            _ -> Nothing
+       in List.foldl' max (Object.timestamp obj) (Maybe.mapMaybe touching (GameState.continuousEffects gs))
+
+-- CR 707.2a: the static abilities this object's copiable rules text gives it --
+-- its copy snapshot's when it has one, its printed face's otherwise. Equal to
+-- PC.staticAbilities (copiableCharacteristics oid gs) by construction on an
+-- object no exchange touches, since that is what both arms of
+-- baseCharacteristics seed the field from.
+--
+-- Written as its own read rather than through copiableCharacteristics for two
+-- reasons, both structural. It stays PROJECTION-FREE, which controlGrants below
+-- requires of everything it touches -- baseCharacteristics asks controllerOf,
+-- and controllerOf is built on controlGrants. And it costs one map lookup on
+-- the ordinary permanent, where the seed spends Game.namesOf and two
+-- Quantity.evaluates, so the readers below stay as cheap as the printed read
+-- they replace.
+-- CR 702.161a's living metal is APPENDED rather than read at a use site, and
+-- appended HERE rather than at the one caller that folds these into layers: the
+-- list's index is CR 613.6's memo key and Parun.Engine.Event's departure handover
+-- indexes the same list, so the two walks must agree on what is at each position.
+-- Printed abilities keep their indices; a minted one takes the position after.
+--
+-- Off the COPIABLE keywords, like the rest of this function: what a keyword
+-- MEANS would otherwise have to be known before layer 6 has decided who holds
+-- it. A living metal a resolution grants is minted by grantedStaticAbilitiesOf
+-- below instead. Devoid and changeling take the other road out of that --
+-- grantedDefiningParts emits their defining half as a second PART of whatever
+-- grants the keyword, so neither needs an ability minted here.
+--
+-- CR 612.5 reads the list off textBoxHolderOf above, so a text box an exchange
+-- moved brings its static abilities with it. Parun.ProjectionSpec's "CR 612.5
+-- Akiri's pump moves with her text box" proves it.
+staticAbilitiesOf :: ObjectId -> GameState -> [StaticAbility.StaticAbility (GrantedAbility.GrantedAbility Card.Type.Card)]
+staticAbilitiesOf carrier gs =
+  let oid = textBoxHolderOf carrier gs
+   in case carriedSnapshotOf carrier oid gs of
+        Just snapshot -> PC.staticAbilities snapshot <> Keyword.mintedStaticAbilitiesOf (Map.keysSet (PC.keywords snapshot))
+        -- The printed read reaches a copied Room too, and has to: copiableSnapshotOf
+        -- above answers Nothing for one, and Game.faceOf answers with the copied card's
+        -- halves subtracted by THIS object's designations (CR 709.5).
+        Nothing -> foldMap (\face -> Face.staticAbilities face <> Keyword.mintedStaticAbilitiesOf (Face.keywordSet face)) (Game.faceOf oid gs)
+
+-- CR 613.1f / 113.3d: the static abilities stored layer-6 grants give `oid`
+-- (Streetwise Negotiator's backup), each with the timestamp of the grant, oldest
+-- first. Stored effects alone, which keeps this PROJECTION-FREE for
+-- staticAbilitiesOf's reason: every stored effect's set is CR 611.2c's
+-- TheseObjects, fixed as it began, so no layer has to decide who holds one.
+--
+-- Read off `oid` itself and never off textBoxHolderOf: a granted ability is not
+-- rules text (CR 612.3), so an exchange of text boxes leaves it where it is.
+--
+-- A stored grant of a KEYWORD whose meaning rule 702 states as a static ability
+-- (CR 702.161a's living metal) gives that ability too, minted as
+-- staticAbilitiesOf mints a printed one, at the grant's timestamp. Its effect
+-- then applies in its own layer (CR 613.1d), not in the grant's.
+-- Parun.ProjectionSpec's "CR 702.161a living metal granted by a RESOLUTION"
+-- proves it. A STATIC ability's grant of such a keyword mints here once CR
+-- 400.7b has stored it against the permanent (Parun.Engine.Stack.carryGrants),
+-- which stores a keyword granted at a mana cost already priced: The Caldaia's
+-- blitz {3} and Henzie "Toolbox" Torre's. A quoted static ability another
+-- static ability grants is gathered by Parun.Engine.Projection.withStaticGrants.
+grantedStaticAbilitiesOf :: ObjectId -> GameState -> [(Timestamp, StaticAbility.StaticAbility (GrantedAbility.GrantedAbility Card.Type.Card))]
+grantedStaticAbilitiesOf oid gs =
+  let grant eff = case (ContinuousEffect.modification eff, ContinuousEffect.affected eff) of
+        (Modification.GainAbility (GrantedAbility.Static sa), Affected.TheseObjects held) | Set.member oid held -> [(ContinuousEffect.timestamp eff, sa)]
+        (Modification.GainKeyword keyword, Affected.TheseObjects held) | Set.member oid held -> fmap ((,) (ContinuousEffect.timestamp eff)) (Keyword.mintedStaticAbilitiesOf (Set.singleton keyword))
+        _ -> []
+   in List.sortOn fst (concatMap grant (GameState.continuousEffects gs))
+
+-- CR 116.2: the special actions this object's copiable rules text grants -- its
+-- copy snapshot's when it has one, its printed face's otherwise.
+-- staticAbilitiesOf above in every respect, and split from it for the same two
+-- structural reasons; the one caller is Parun.Engine.Projection.specialActionsOf.
+--
+-- CR 707.2a is what puts the snapshot first: the permission is derived from the
+-- copied object's rules text, so a permanent that became a copy of Leonin
+-- Arbiter offers the {2} its own printed face never mentions, beside the
+-- prohibition Parun.Engine.PlayerEffect.playerAbilitiesOf already reads off that
+-- same snapshot. Parun.SpecialActionSpec's "CR 707.2a a copy of the Arbiter
+-- carries the offer with the ban" proves it.
+--
+-- CR 116.2e's discard is asked of this too, of a card in HAND
+-- (Parun.Engine.Action.discardableCards), where the printed face is the answer
+-- unless something made the object a copy.
+copiableSpecialActionsOf :: ObjectId -> GameState -> [SpecialAction.SpecialAction]
+copiableSpecialActionsOf carrier gs =
+  let oid = textBoxHolderOf carrier gs
+   in case carriedSnapshotOf carrier oid gs of
+        Just snapshot -> PC.specialActions snapshot
+        -- The printed read reaches a copied Room too, for staticAbilitiesOf's reason.
+        Nothing -> foldMap Face.specialActions (Game.faceOf oid gs)
+
+-- CR 613.11: the twelve rule-affecting ability families this object's copiable
+-- rules text gives it -- its copy snapshot's when it has one, its printed face's
+-- otherwise. copiableSpecialActionsOf above in every respect, and split out for
+-- the same two structural reasons.
+--
+-- THE reader for all twelve gatherer modules (Parun.Engine.CombatRestriction and
+-- its eleven siblings), through Parun.Engine.Projection.ruleAbilitiesOf, which
+-- is what makes the two rules it settles settle once:
+-- CR 707.2a, so a permanent that became a copy of Silent Arbiter limits attackers
+-- and its own printed face is never consulted, and CR 702.140e with CR 730.2a, so
+-- a merged permanent answers with every component's -- Parun.Engine.Event.merge
+-- having folded them into the snapshot at the merge's timestamp, which is why the
+-- components' printed faces are not walked here. A component that was itself a
+-- copy therefore contributes what it was a copy OF, which is what rule 730.2a's
+-- "copiable" asks for and what a per-component face walk would have got wrong.
+--
+-- Parun.MutateSpec's "CR 702.140e a Silent Arbiter under a Cubwarden still holds
+-- alice to one attacker" is what proves the merged read.
+--
+-- Copiable text only: what a layer-6 grant gave the object is
+-- Parun.Engine.Projection.grantedRuleAbilities, which each gatherer reads beside
+-- this.
+copiableRuleAbilitiesOf :: ObjectId -> GameState -> RuleAbilities.RuleAbilities
+copiableRuleAbilitiesOf carrier gs =
+  let oid = textBoxHolderOf carrier gs
+   in case carriedSnapshotOf carrier oid gs of
+        Just snapshot -> PC.ruleAbilities snapshot
+        -- The printed read reaches a copied Room too, for staticAbilitiesOf's reason.
+        Nothing -> foldMap ruleAbilitiesOfFace (Game.faceOf oid gs)
+
+-- The fifteen lists a printed face declares. Its own function so that the seed
+-- above and copiableRuleAbilitiesOf's fallback cannot drift on what a face
+-- contributes.
+ruleAbilitiesOfFace :: Face.Face Card.Type.Card -> RuleAbilities.RuleAbilities
+ruleAbilitiesOfFace face =
+  RuleAbilities.MkRuleAbilities
+    { RuleAbilities.activationProhibitions = Face.activationProhibitions face,
+      RuleAbilities.attachRestrictions = Face.attachRestrictions face,
+      RuleAbilities.attackCosts = Face.attackCosts face,
+      RuleAbilities.attackPermissions = Face.attackPermissions face,
+      RuleAbilities.attackRequirements = Face.attackRequirements face,
+      RuleAbilities.blockCosts = Face.blockCosts face,
+      RuleAbilities.blockPermissions = Face.blockPermissions face,
+      RuleAbilities.blockRequirements = Face.blockRequirements face,
+      RuleAbilities.combatRestrictions = Face.combatRestrictions face,
+      RuleAbilities.counterRestrictions = Face.counterRestrictions face,
+      RuleAbilities.crewRestrictions = Face.crewRestrictions face,
+      RuleAbilities.entryRestrictions = Face.entryRestrictions face,
+      RuleAbilities.sacrificeRestrictions = Face.sacrificeRestrictions face,
+      RuleAbilities.targetRestrictions = Face.targetRestrictions face,
+      RuleAbilities.untapRestrictions = Face.untapRestrictions face
+    }
+
+-- CR 208.2 / 604.3: the card's characteristic-defining P/T, with the printed star
+-- resolved to what the CDA counts. Nothing unless the card declares a CDA *and*
+-- has a printed power and toughness box (CR 208.1) for the star to sit in.
+--
+-- PER BOX: a printed face declares one ability and Parun.Codec.Face writes it into
+-- both slots, but CR 709.4c's combined view of a split card can hold one half's
+-- ability in each (Parun.Engine.Card.definedBox).
+seedCharacteristicPT :: Face.Face Card.Type.Card -> Maybe CharacteristicPT.CharacteristicPT
+seedCharacteristicPT face =
+  case (Face.characteristicPT face, Face.power face, Face.toughness face) of
+    (Just star, Just (Power.MkPower p), Just (Toughness.MkToughness t)) ->
+      Just
+        CharacteristicPT.MkCharacteristicPT
+          { CharacteristicPT.power = Star.substituteStar (CharacteristicPT.power star) p,
+            CharacteristicPT.toughness = Star.substituteStar (CharacteristicPT.toughness star) t
+          }
+    _ -> Nothing
+
+-- CR 406.3a / 613.1: an object with no characteristics at all. Two kinds have
+-- none -- an ability on the stack, which has no card behind it, and a card
+-- exiled face down, whose card is there but says nothing.
+noCharacteristics :: ProjectedCharacteristics
+noCharacteristics =
+  PC.MkProjectedCharacteristics
+    { PC.names = Set.empty,
+      PC.supertypes = Set.empty,
+      PC.keywords = Map.empty,
+      PC.colors = Set.empty,
+      -- CR 202.1 reads a mana cost off a card, and there is none to read.
+      PC.manaCost = Nothing,
+      -- CR 202.3a all the same: CR 109.1 makes an ability on the stack an
+      -- OBJECT, and an object with no mana cost has mana value 0 -- neither of
+      -- that rule's two exceptions (a nonmodal double-faced back face, a melded
+      -- permanent) is such an object. CR 603.3's "no other
+      -- characteristics" does not take it back: CR 109.3 lists mana COST as a
+      -- characteristic and not mana value, which rule 202.3 derives from it.
+      -- Parun.CounterspellSpec's Synthetic Weigh the Trigger group is what
+      -- proves the number.
+      PC.manaValue = Just 0,
+      PC.power = Nothing,
+      PC.toughness = Nothing,
+      PC.loyalty = Nothing,
+      PC.defense = Nothing,
+      PC.intensity = Nothing,
+      PC.characteristicPT = Nothing,
+      PC.cardTypes = Set.empty,
+      PC.subtypes = Set.empty,
+      PC.staticAbilities = [],
+      PC.playerAbilities = [],
+      PC.grantedPlayerAbilities = [],
+      PC.grantedStaticAbilities = [],
+      PC.grantedRuleAbilities = mempty,
+      -- CR 116.2: no characteristics, so no printed permission either.
+      PC.specialActions = [],
+      PC.activatedAbilities = [],
+      PC.replacementEffects = [],
+      PC.triggeredAbilities = [],
+      PC.delayedAbilities = Map.empty,
+      PC.enchant = [],
+      PC.castingPermissions = [],
+      -- CR 613.11: no characteristics, so none of the twelve families either.
+      PC.ruleAbilities = mempty,
+      PC.lostAllAbilities = False,
+      PC.hasFullText = False,
+      PC.wordChanges = [],
+      PC.textChangedKeywords = Map.empty,
+      PC.assignsCombatDamageWithToughness = False,
+      PC.combatDamageOptions = Set.empty,
+      -- CR 702.184c: an ability on the stack grants nothing to its
+      -- controller's station abilities of its own.
+      PC.grantsStationToughness = False,
+      -- CR 601.2b / 601.2f: no card, so no printed costs either.
+      PC.additionalCosts = [],
+      PC.additionalCostChoices = [],
+      PC.alternativeCosts = [],
+      PC.costReductions = [],
+      PC.grantedCostReductions = [],
+      PC.grantedAlternativeCosts = [],
+      PC.grantedSpendManaAsThough = [],
+      -- CR 709.5: no characteristics, so no halves either.
+      PC.halves = Nothing,
+      -- CR 707.9: no copy effect, so no exception either.
+      PC.exceptions = [],
+      -- CR 702.140e: no merge, so no graft either.
+      PC.mergedDonors = [],
+      -- CR 722.2b, for the same reason one line up.
+      PC.prepare = Nothing,
+      PC.alternativeSpell = Nothing,
+      -- CR 718.2a: no card, so no inset frame either.
+      PC.prototyped = False,
+      -- CR 113.3a: no card, so no spell ability either.
+      PC.spell = Face.defaultSpell,
+      -- CR 710.1b, for the same reason again.
+      PC.flipped = Nothing
+    }
+
+-- CR 202.3e's second half: on the stack each {X} in the mana cost counts the
+-- announced X (CR 107.3a), where baseCharacteristics counted 0. Applied to the
+-- FINISHED fold rather than the seed, so a layer-1 copiable snapshot holds no X:
+-- a spell copy counts the X it copied into its own bindings (CR 707.10), and a
+-- permanent counts none. A spell cast paying neither its mana cost nor an
+-- alternative cost with {X} announced none, so 0 (CR 107.3b).
+--
+-- The zone gate is a regression fence: CR 400.7's new incarnation clears the
+-- bindings off the stack, so dropping it leaves the suite green.
+-- Parun.CastPermissionSpec's "CR 601.2e an announced X that leaves the spell even
+-- takes the cast back" proves the stack reading.
+withAnnouncedX :: ObjectId -> GameState -> ProjectedCharacteristics -> ProjectedCharacteristics
+withAnnouncedX oid gs pc = case Game.lookupObject oid gs of
+  Just object
+    | Game.zoneOf oid gs == Just Zone.Stack,
+      Just x <- Binding.amountOf Binding.variableX (Object.bindings object) ->
+        pc {PC.manaValue = fmap (+ toInteger x * maybe 0 Quantity.variablesOf (PC.manaCost pc)) (PC.manaValue pc)}
+  _ -> pc
+
+-- Printed characteristics before any effect: CR 613.1's starting point.
+baseCharacteristics :: ObjectId -> GameState -> ProjectedCharacteristics
+baseCharacteristics oid gs = case Game.faceOf oid gs of
+  Nothing -> noCharacteristics
+  -- CR 406.3a: a card exiled face down has no characteristics, so the seed CR
+  -- 613.1 starts the layers from holds none either -- the card behind it is
+  -- read only by the readers the rules entitle, Parun.Engine.Cast's offer of a
+  -- play the exiling effect permitted (CR 406.3b) and Projection.projectShown's
+  -- look (CR 406.3), and never this projection. CR 110.5d keeps this apart from
+  -- Object.facing, which is CR 708's face-down PERMANENT and reaches the
+  -- projection through Game.faceOf.
+  Just _ | any Object.exiledFaceDown (Game.lookupObject oid gs) -> noCharacteristics
+  -- CR 121.8: so is a card drawn while a spell is being cast or an ability
+  -- activated, until it becomes cast or activated. Parun.Engine.Cost's
+  -- discardCandidates reads this seam, which is how the card "can't be used to
+  -- pay any part of the cost ... that would require ... specific
+  -- characteristics", and a "discard a card" it still pays.
+  Just _ | Game.keptFaceDown oid gs -> noCharacteristics
+  Just face ->
+    -- CR 718.3b's swap sits OUTSIDE the record rather than in four of its fields,
+    -- so that CR 718.5's "remain the same" is visible as the default: everything
+    -- the seed builds is the printed value, and withPrototype below rewrites exactly
+    -- the four characteristics rule 718.3b names.
+    withPrototype oid gs face $
+      -- The seed predates every layer, so it can describe no object: every view is
+      -- Nothing. That silences the printed box's board-reading shapes only where
+      -- they go through this view at all -- Parun.Engine.Count.evaluate reads a
+      -- Scope.InHistory snapshot and a Scope.OverPlayers player directly, so a Count
+      -- over either would read LIVE state here. What keeps both out is CR 208.1 /
+      -- 208.2: a printed box is a number or a star, and Parun.CardSpec's "every
+      -- printed power and toughness box is a number or a star" lint holds every
+      -- card's own faces to it. A MINTED face may print a computed box (CR 111.3),
+      -- which Resolve.bakeTokenCharacteristics stamps into a Literal as the token is
+      -- created -- undeterminable ones included, so the only quantity that reaches
+      -- this seed from a token is CR 208.2's star. Parun.CountSpec's Miming Slime
+      -- group is what proves that.
+      let seedViewOf = const Nothing
+          seedContext = SourceContext.sourceContext gs (controllerOf oid gs) oid
+       in PC.MkProjectedCharacteristics
+            { -- CR 709.4a: the names the object shows, which `face` cannot carry --
+              -- Game.namesOf decides which halves show.
+              PC.names = Game.namesOf oid gs,
+              PC.supertypes = TypeLine.supertypes (Face.typeLine face),
+              -- CR 702, and CR 707.2: the printed count is a copiable value, so a
+              -- Clone of Apex Devastator gets all four of its cascades. Layer 6
+              -- adds to it (Parun.KeywordTriggerSpec's Cascade group).
+              PC.keywords = Face.keywords face,
+              PC.colors = printedColorsOf face,
+              -- CR 202.1: the printed cost of the face the object is showing, so CR
+              -- 708.2a's face-down substitution leaves a face-down object with none.
+              -- `face` rather than Game.manaCostFacesOf below: CR 712.8e lends a
+              -- transformed permanent its front face's mana VALUE and not its cost,
+              -- and CR 202.3c's melded sum is a number no single cost states.
+              PC.manaCost = Face.manaCost face,
+              -- CR 202.3, derived here so the rest of the fold reads a number.
+              -- Game.manaCostFacesOf rather than `face`: CR 712.8e reads a transformed
+              -- permanent's mana value off its FRONT face's cost, and CR 708.2a's
+              -- face-down face has no mana cost (so CR 202.3a's 0). SUMMED because CR
+              -- 202.3c gives a melded permanent "the combined mana cost of the front
+              -- faces of each card that represents it"; every other object answers
+              -- with one face, whose sum is itself. An object with no card behind it
+              -- never arrives here -- Game.faceOf answers Nothing for it and the arm
+              -- above carries CR 202.3a's 0 -- so an empty Seq here is a printing the
+              -- game does not know (Game.frontFaceOfPrinting), which is Nothing.
+              PC.manaValue = case Game.manaCostFacesOf oid gs of
+                faces | Seq.null faces -> Nothing
+                faces -> Just (sum (fmap Quantity.manaValueOf faces)),
+              -- Quantity.evaluate, not Quantity.determine: CR 208.2a's "use 0
+              -- instead" belongs to a CDA, so a printed star with none behind it is
+              -- Nothing. A star given its value by CR 208.2b reports Nothing off the
+              -- battlefield; one with a CDA is filled at layer 7a.
+              PC.power = case Face.power face of
+                Nothing -> Nothing
+                Just (Power.MkPower q) -> Quantity.evaluate seedViewOf seedContext gs oid q,
+              PC.toughness = case Face.toughness face of
+                Nothing -> Nothing
+                Just (Toughness.MkToughness q) -> Quantity.evaluate seedViewOf seedContext gs oid q,
+              -- CR 306.5a: a literal number, copied through rather than evaluated.
+              PC.loyalty = Face.loyalty face,
+              -- CR 310.4a: a literal number, likewise.
+              PC.defense = Face.defense face,
+              -- Alchemy's printed starting intensity; Modification.Intensify adds
+              -- to it after the layers.
+              PC.intensity = fmap toInteger (Face.startingIntensity face),
+              PC.characteristicPT = seedCharacteristicPT face,
+              PC.cardTypes = TypeLine.types (Face.typeLine face),
+              PC.subtypes = TypeLine.subtypes (Face.typeLine face),
+              -- CR 604.1 / 613.10: the two ability lists the layer fold never
+              -- rewrites. In the SEED for enchant's reason below -- CR 707.2
+              -- names rules text among the copiable values -- which is what puts
+              -- a copied permanent's static and player abilities where
+              -- staticAbilitiesOf and Parun.Engine.PlayerEffect can find them
+              -- instead of on the copier's printed face (CR 707.2a).
+              PC.staticAbilities = Face.staticAbilities face,
+              PC.playerAbilities = Face.playerAbilities face,
+              -- Layer 6 writes this; the seed grants nothing.
+              PC.grantedPlayerAbilities = [],
+              PC.grantedStaticAbilities = [],
+              PC.grantedRuleAbilities = mempty,
+              -- CR 116.2, in the seed for the same reason and read by
+              -- copiableSpecialActionsOf below: CR 707.2a copies the abilities a
+              -- face's rules text derives, and CR 116.2d's permission is one of
+              -- them.
+              PC.specialActions = Face.specialActions face,
+              PC.activatedAbilities = Face.activatedAbilities face,
+              PC.replacementEffects = Face.replacementEffects face,
+              PC.triggeredAbilities = Face.triggeredAbilities face,
+              -- CR 707.2: rules text, so copiable, for enchant's reason below.
+              PC.delayedAbilities = Face.delayedAbilities face,
+              -- CR 702.5a's printed instances. In the SEED rather than folded in
+              -- later, so they ride copiableCharacteristics: CR 707.2 names rules
+              -- text among the copiable values, and a granted instance is not
+              -- copiable precisely because applyModification writes it after the
+              -- seed. Read off `face`, so CR 708.2a's face-down substitution leaves
+              -- a face-down permanent with none.
+              PC.enchant = Face.enchant face,
+              -- CR 601.3: the printed permissions, in the seed for enchant's
+              -- reason, so a granted one is not copiable.
+              PC.castingPermissions = Face.castingPermissions face,
+              -- CR 613.11: the twelve families CR 613.11 applies after the layer
+              -- system, off `face` for enchant's reason -- and copiable for
+              -- enchant's reason too, which is what carries them to a copy and,
+              -- through withMergedAbilities below, to a merged permanent's other
+              -- components (CR 702.140e).
+              PC.ruleAbilities = ruleAbilitiesOfFace face,
+              -- CR 613.1's starting point, before layer 6 has run:
+              -- applyModification's LoseAllAbilities arm is the only writer.
+              PC.lostAllAbilities = False,
+              -- Nor has layer 3.
+              PC.hasFullText = False,
+              -- The seed is CR 613.1's starting point, before layer 3 has run.
+              PC.wordChanges = [],
+              PC.textChangedKeywords = Map.empty,
+              -- CR 613.1's starting point, before rules-changing effects.
+              PC.assignsCombatDamageWithToughness = False,
+              PC.combatDamageOptions = Set.empty,
+              -- CR 613.1's starting point, before layer 6 has run:
+              -- applyModification's GrantsStationToughness arm is the only writer.
+              PC.grantsStationToughness = False,
+              -- CR 707.2: the cast-time costs printed in the rules text, copiable
+              -- with it, so a card carrying a copy stamp or a conjured
+              -- duplicate's values is cast with them (Game.castingFaceOf).
+              PC.additionalCosts = Face.additionalCosts face,
+              PC.additionalCostChoices = Face.additionalCostChoices face,
+              PC.alternativeCosts = Face.alternativeCosts face,
+              PC.costReductions = Face.costReductions face,
+              -- CR 613.1's starting point, before layer 6 has run.
+              PC.grantedCostReductions = [],
+              PC.grantedAlternativeCosts = [],
+              PC.grantedSpendManaAsThough = [],
+              -- CR 709.5 / 709.5b: the halves this object has, which -- like the
+              -- names above -- `face` cannot carry, a Face being one half's worth
+              -- of characteristics. Game.halvesOf decides, and it reads the copy
+              -- snapshot first, so a copy of a copy of a Room goes on carrying the
+              -- doors.
+              PC.halves = Game.halvesOf oid gs,
+              -- CR 613.1's starting point, before layer 1 has run: a copy
+              -- effect's exceptions arrive with its stamp, and
+              -- copiableCharacteristics re-applies them over this seed.
+              PC.exceptions = [],
+              -- The same starting point, for a merge's grafts.
+              PC.mergedDonors = [],
+              -- CR 722.2b: the prepare spell this object has, which `face` cannot
+              -- carry either -- CR 722.4 leaves the normal half alone in every
+              -- zone, so the inset frame is nowhere in it. Game.prepareSpellOf
+              -- decides, and it reads the copy snapshot first for halves' reason.
+              PC.prepare = Game.prepareSpellOf oid gs,
+              -- CR 715.2b / 720.2b: the Adventure or Omen half, prepare's reason.
+              PC.alternativeSpell = Game.alternativeSpellOf oid gs,
+              -- CR 718.4: the printed values, which withPrototype overrides.
+              PC.prototyped = False,
+              -- CR 707.2: rules text, so copiable, for enchant's reason.
+              PC.spell = Face.spell face,
+              -- CR 707.3: a copy stamp's alternative reading, which
+              -- Parun.Engine.Event.copiedSnapshot stamps. A printed flip card's
+              -- alternative half is its card's, read at Game.resolveFaceFor.
+              PC.flipped = Nothing
+            }
+
+-- CR 718.3b: "both a prototyped spell and the permanent it becomes have only its
+-- alternative set of power, toughness, and mana cost characteristics. If that
+-- mana cost includes one or more colored mana symbols, the spell and the
+-- permanent it becomes are also that color or colors." The four characteristics
+-- rule 718.3b names, swapped into the seed and nothing else swapped, which is CR
+-- 718.5.
+--
+-- IN THE SEED, which is what makes CR 718.2a fall out with no work of its own:
+-- "the existence and values of these alternative characteristics are part of the
+-- object's copiable values", and a copy freezes exactly this record
+-- (Parun.Engine.Event.copiedSnapshot over copiableCharacteristics). CR 718.3d's
+-- copy of a prototyped PERMANENT -- a Clone, whose own Object.prototyped is
+-- False -- reads the frozen values for that reason. CR 718.3c's copy of the
+-- SPELL needs neither: Parun.Engine.Resolve.Effect builds it from the original
+-- object, Object.prototyped included (CR 707.10's copied decisions), which is
+-- how data/scenarios/prototype's "CR 718.2a / 718.3c a copy of the prototyped
+-- spell is a white 2/2 too" passes.
+--
+-- PC.prototyped is set here too, so a record taken of this object's values
+-- (an event snapshot, Count.viewOfSnapshot) says so. A copy's answer, the last
+-- sentence of CR 718.3d, comes from Parun.Engine.Event.copiedReading, which also
+-- sets it from the copied object's own record. That is why a Clone already
+-- answers without this line, and why this line is a regression fence for
+-- snapshots alone.
+--
+-- CR 718.4 is not re-asked here. Object.prototyped is stamped only as the card
+-- is cast (Parun.Engine.Cast.stampPrototyped) and survives only the
+-- stack-to-battlefield move (Parun.Engine.Event.changeZoneAttaching), so a
+-- prototype card in every other zone answers False and keeps its printed
+-- characteristics, which is rule 718.4's sentence exactly.
+--
+-- The FIRST inset frame, and CR 718.1 is why one is enough: it gives a prototype
+-- card "a second set of power, toughness, and mana cost characteristics",
+-- singular, so no printing offers two for Object.prototyped's Bool to have to
+-- choose between.
+withPrototype :: ObjectId -> GameState -> Face.Face Card.Type.Card -> ProjectedCharacteristics -> ProjectedCharacteristics
+withPrototype oid gs face pc = case (maybe False Object.prototyped (Game.lookupObject oid gs), Keyword.prototypes (Face.keywordSet face)) of
+  (True, frame : _) ->
+    pc
+      { PC.manaCost = Just (Prototype.cost frame),
+        -- CR 202.3 off the inset cost, exactly as the printed field is derived
+        -- from the printed one.
+        PC.manaValue = Just (Quantity.manaCostValue (Prototype.cost frame)),
+        PC.power = Just (Prototype.power frame),
+        PC.toughness = Just (Prototype.toughness frame),
+        -- CR 202.2 with rule 718.3b's second sentence. printedColorsOf's own
+        -- shape, with the inset cost in place of the printed one: a colour
+        -- indicator is a separate characteristic (CR 204.2) that rule 718.3b does
+        -- not name, so it survives.
+        PC.colors = Set.union (Face.colorIndicator face) (manaCostColors (Just (Prototype.cost frame))),
+        PC.prototyped = True
+      }
+  _ -> pc
+
+-- CR 702.140e / 730.2a: the copiable values a MERGE leaves -- rule 730.2a's
+-- "only the characteristics of its topmost component" as the base, plus rule
+-- 702.140e's "all abilities of each card and token that represents it" folded in
+-- from the other side. `base` is the topmost side's record and `donor` the
+-- other's; which is which is CR 702.140c's over-or-under choice, made by
+-- Parun.Engine.Event.merge, the one caller.
+--
+-- OVER RECORDS rather than over printed faces, which is the whole of the fix for
+-- the defect this replaced, see #3371: each side contributes what LAYER 1a had
+-- already left it, so a component that was itself a copy contributes the copy's
+-- rules text (CR 707.2a) and a component that was itself merged contributes its
+-- own merged values. Read off the printed faces instead, a merge under a Clone
+-- would take Clone's own 0/0 box and its copy ability.
+--
+-- CR 613.2a is why the result is STAMPED at the merge rather than derived on
+-- every projection: layer 1a holds copy effects and merges together, CR 613.7
+-- orders them by timestamp, and CR 730.2a fixes this one's timestamp at "the
+-- time the objects merged". Freezing what layer 1a said at that moment is CR
+-- 707.2c's own posture for the copy effects it shares the sublayer with
+-- ("determined only at the time that effect first starts to apply"), and it is
+-- what makes an EARLIER copy effect on the target lose to the merge instead of
+-- silently replacing it. A LATER copy effect still wins, by re-stamping.
+--
+-- The permanent's TIMESTAMP is untouched: CR 730.2b keeps it the same object and
+-- CR 730.2c keeps every continuous effect that applied to it applying, so a
+-- merge that minted a new one would reorder every layer already on it.
+--
+-- The ability fields and no other, beside the record of the graft (PC.mergedDonors).
+-- PC.characteristicPT is one: CR 604.3 makes a power-and-toughness CDA an
+-- ability, and rule 730.2a's topmost box is only the copiable value layer 7a
+-- then overrides (CR 613.4a). It stays characteristic-defining rather than a
+-- layer-7b static ability: docs/decisions.md, "Whether an ability a merge
+-- grafts is still characteristic-defining". Parun.MutateSpec's "CR 702.140e a
+-- Cubwarden merged over or under Tarmogoyf keeps its power and toughness
+-- ability" proves it.
+--
+-- Each side arrives at LAYER 1a, through `copiableCharacteristicsFaceUp` above,
+-- so a FACE-DOWN component contributes its card's abilities rather than CR
+-- 708.2a's none: CR 730.2e gives a component a status, CR 109.3 keeps status out
+-- of the characteristics, and CR 613.2b applies rule 708.2's substitution to the
+-- resulting permanent one sublayer later.
+--
+-- CR 730.2h's flip component arrives here already read the way that rule asks
+-- for, Parun.Engine.Event.merge folding a SECOND result out of both sides'
+-- flipped records; this function is the same fold either way.
+withMergedAbilities :: ProjectedCharacteristics -> ProjectedCharacteristics -> ProjectedCharacteristics
+withMergedAbilities donor base =
+  base
+    { -- Recorded, so a rebuild of the base's halves re-grafts it
+      -- (copiableCharacteristics).
+      PC.mergedDonors = PC.mergedDonors base <> [donor],
+      -- CR 702.1: a keyword IS an ability, and the map counts instances, so a
+      -- component carrying a keyword the topmost one also has contributes a
+      -- second instance (CR 702.1b's redundancy is then the layer fold's).
+      PC.keywords = Map.unionWith (+) (PC.keywords base) (PC.keywords donor),
+      PC.staticAbilities = PC.staticAbilities base <> PC.staticAbilities donor,
+      PC.playerAbilities = PC.playerAbilities base <> PC.playerAbilities donor,
+      PC.specialActions = PC.specialActions base <> PC.specialActions donor,
+      PC.activatedAbilities = PC.activatedAbilities base <> PC.activatedAbilities donor,
+      PC.replacementEffects = PC.replacementEffects base <> PC.replacementEffects donor,
+      PC.triggeredAbilities = PC.triggeredAbilities base <> PC.triggeredAbilities donor,
+      -- Left-biased: CR 730.2a's tie-break between two components naming one.
+      PC.delayedAbilities = Map.union (PC.delayedAbilities base) (PC.delayedAbilities donor),
+      PC.enchant = PC.enchant base <> PC.enchant donor,
+      PC.castingPermissions = PC.castingPermissions base <> PC.castingPermissions donor,
+      -- CR 613.11's twelve families, whose Semigroup is the same concatenation
+      -- the eight fields above are written out with; Parun.Types.RuleAbilities
+      -- carries it so a new family cannot be added and left out here.
+      PC.ruleAbilities = PC.ruleAbilities base <> PC.ruleAbilities donor,
+      -- One box, so at most one side may carry one: the mutating spell's
+      -- never does (MTGJSON of 2026-08-23, cards with mutate and a * in
+      -- either box, no hit). Base first is arbitrary.
+      PC.characteristicPT = PC.characteristicPT base <|> PC.characteristicPT donor,
+      -- CR 702.140e / 118.8 / 118.9: a cost line in a component's rules text is
+      -- one of its abilities too, so a duplicate of the merged permanent owes
+      -- every component's. Parun.ConjureSpec's "CR 702.140e a duplicate of a
+      -- mutated Headless Skaab" proves it.
+      PC.additionalCosts = PC.additionalCosts base <> PC.additionalCosts donor,
+      PC.additionalCostChoices = PC.additionalCostChoices base <> PC.additionalCostChoices donor,
+      PC.alternativeCosts = PC.alternativeCosts base <> PC.alternativeCosts donor,
+      PC.costReductions = PC.costReductions base <> PC.costReductions donor
+    }
+
+-- CR 202.2 / 204.2 / 202.2b: an object's printed colours, from its mana cost's
+-- coloured symbols and its colour indicator. No devoid here: CR 702.114a makes it
+-- a CDA, which CR 613.3 puts at the start of layer 5 (applyColorDefining).
+printedColorsOf :: Face.Face Card.Type.Card -> Set Color.Color
+printedColorsOf face =
+  Set.union
+    (Face.colorIndicator face)
+    (manaCostColors (Face.manaCost face))
+
+-- CR 702.114a. The one place that decides what devoid means.
+definesColorless :: Set Keyword -> Bool
+definesColorless = Set.member Keyword.Type.Devoid
+
+-- CR 702.73a, definesColorless' twin: the one place changeling is decided.
+definesEveryCreatureType :: Set Keyword -> Bool
+definesEveryCreatureType = Set.member Keyword.Type.Changeling
+
+-- CR 202.1b: a land has no mana cost at all, so it contributes no colours.
+manaCostColors :: Maybe ManaCost.ManaCost -> Set Color.Color
+manaCostColors mc = case mc of
+  Nothing -> Set.empty
+  Just (ManaCost.MkManaCost symbols) -> Set.fromList (concatMap Quantity.symbolColors symbols)
+
+-- CR 113.6 / 614.12: the battlefield permanents whose static abilities FUNCTION
+-- right now. Everything on the battlefield, minus the permanents entering beside
+-- the one whose entry loop is running (GameState.enteringBeside), which this
+-- engine has already materialized but the rules have not let in yet: CR 614.12
+-- admits only the entering permanent's own static abilities and "continuous
+-- effects that already exist", and a sibling's are neither.
+--
+-- Empty of exclusions at every priority window, so outside an entry loop this is
+-- the battlefield. Three walks read it -- this module's static-ability gather,
+-- its CR 305.7 set-subtype scan and its layer-2 control grants -- which together
+-- are every place a permanent's own static ability becomes a continuous effect.
+-- All three read that ability list through staticAbilitiesOf, so a copy's rules
+-- text reaches each of them (CR 707.2a). Only the FIRST has an observer: Parun.ReplacementSpec's "a Wood Elemental
+-- reanimated beside Ashaya sacrifices nothing" goes red when it is widened back to
+-- the whole battlefield, and neither of the other two moves a case, because
+-- nothing in `data/cards/` puts a control-changer or a Blood Moon-shaped subtype
+-- setter into a batch. Those two are regression fences, kept because a projection
+-- that suppressed a sibling's ability in one walk and not the next would disagree
+-- with itself.
+--
+-- anyConditional deliberately does NOT narrow by it: a superset costs a second
+-- walk where a subset would leave a CR 604.2 clause wired open. Nor does
+-- Parun.Engine.Replacement.replacementsAffecting, whose siblings Event.loop
+-- already drops by SOURCE (channel 2 of applyReplacementsIn's note).
+abilitySources :: GameState -> [ObjectId]
+abilitySources gs = Set.toList (Set.difference (GameState.battlefield gs) (GameState.enteringBeside gs))
+
+-- CR 113.6b: does this static ability function from `zone`? THE zone
+-- classification -- one question, asked by each of gatherGiven's static-ability
+-- walks that HAS a CR 113.6 default to fall back on and by the two battlefield
+-- walks beside them
+-- (setLandSubtypeEffectsGiven and controlGrants), so a permanent's printed
+-- ability cannot become a continuous effect through one of those three and not
+-- the others.
+--
+-- An EMPTY set is an ability that states no zone, and then CR 113.6's own
+-- defaults stand -- which is what makes the caller's zone argument the whole
+-- answer for nearly every ability in the pool. A stated set is CR 113.6b's
+-- "only", so it replaces those defaults rather than adding to them;
+-- `fromGraveyardCard` above is the one caller that has to tell the two cases
+-- apart, because the default it would otherwise override is CR 113.6f's
+-- classification rather than a bare zone. The hand and library walks ask
+-- `statesZone` below instead, having no default at all to fall back on.
+--
+-- Structural, and deliberately not a Condition: CR 604.2's clause is asked of an
+-- ability some walk has already kept, so it could narrow a gather but never
+-- widen one.
+functionsFromZone :: Zone.Zone -> StaticAbility.StaticAbility card -> Bool
+functionsFromZone zone sa =
+  let zones = StaticAbility.functionsFrom sa
+   in Set.null zones || Set.member zone zones
+
+-- abilitiesGiven with the projection already in hand -- the half
+-- viewOfCharacteristics calls. Count.abilitiesOf's roster, which every view
+-- builder reads, narrowed by each ability's CR 604.2 grant: where the object
+-- is, the grant must function (AbilityZone.grantFunctionsIn, CR 113.6 /
+-- 113.6p / 702.178b) and its condition hold.
+--
+-- CR 613.1: the gate's board comes in as a parameter. Taking fullView here would
+-- not terminate for a caller inside the fold -- it re-enters `gather`, with no
+-- memo and no descending bound.
+abilitiesFromCharacteristics :: Count.ViewOf -> ProjectedCharacteristics -> ObjectId -> GameState -> [ActivatedAbility.ActivatedAbility Card.Type.Card (GrantedAbility.GrantedAbility Card.Type.Card)]
+abilitiesFromCharacteristics peers pc oid gs =
+  let functions ability = maybe True (\zone -> AbilityZone.grantFunctionsIn (Vanguard.homeZoneOf oid gs) (PC.delayedAbilities pc) zone ability) (lastZoneOf oid gs)
+      granted ability = functions ability && maybe True (grantHolds peers oid gs) (ActivatedAbility.condition ability)
+   in filter granted (ungatedAbilitiesOf pc oid gs)
+
+-- CR 604.2 / 608.2h: the "as long as" clauses among the roster above that do
+-- not hold -- what Parun.Engine.Event files in an object's LastKnown record as it
+-- ceases, since no board is left afterwards to ask them against
+-- (Count.lastKnownView). Keyed by the clause: the gate reads only the clause, the
+-- object and the board, so two abilities sharing a clause share its answer.
+lapsedGrantsOf :: Count.ViewOf -> ProjectedCharacteristics -> ObjectId -> GameState -> Set Condition.Type.Condition
+lapsedGrantsOf peers pc oid gs =
+  Set.fromList
+    [ cond
+    | ability <- ungatedAbilitiesOf pc oid gs,
+      Just cond <- [ActivatedAbility.condition ability],
+      not (grantHolds peers oid gs cond)
+    ]
+
+-- The two above's roster before CR 604.2's gate. CR 804.2's for a creature on
+-- the battlefield only (CR 109.2), or, for an id that has ceased, one whose CR
+-- 608.2h record was filed there.
+ungatedAbilitiesOf :: ProjectedCharacteristics -> ObjectId -> GameState -> [ActivatedAbility.ActivatedAbility Card.Type.Card (GrantedAbility.GrantedAbility Card.Type.Card)]
+ungatedAbilitiesOf pc oid gs = Count.abilitiesOf (Deploy.grants (maybe False (Count.deployIn gs) (lastZoneOf oid gs)) pc) pc
+
+-- CR 604.2: does a granted ability's "as long as" clause hold, with the
+-- object's controller as CR 109.5's "you".
+grantHolds :: Count.ViewOf -> ObjectId -> GameState -> Condition.Type.Condition -> Bool
+grantHolds peers oid gs = Condition.holds peers (SourceContext.sourceContext gs (controllerOf oid gs) oid) gs oid
+
+-- CR 115.1: what a stack object TARGETS -- the recipients under its declared
+-- target slots, which is CR 601.2c's (602.2b's, 603.3d's) announcement read live
+-- off Object.bindings, so a CR 115.7 change of target is seen at once. What
+-- Parun.Engine.Filter.View's `targets` is filled from.
+--
+-- RESTRICTED to the declared slots, because Binding.targets is not only a
+-- target: Parun.Engine.Binding.toRecipients writes a recipient set for CR
+-- 115.10a's non-targets too (a paid slot, a drawn pile). The declared slots are
+-- the chosen modes' (CR 700.2) under the instance names Parun.Engine.Modal gives
+-- them -- the names Parun.Engine.Cast, Activate and Engine bind under -- plus CR
+-- 303.4a's enchant slot for a card-backed spell, by its reserved NAME rather than
+-- off the projection: a bestowed grant (CR 702.103b) binds under the same name,
+-- and reading `enchantOf` here would run a projection inside every view.
+--
+-- Empty for anything off the stack: CR 115.1 makes a target a property of a
+-- spell or ability, and a permanent's bindings are its own resolution's. Empty
+-- for the three sources that are never on the stack at all.
+--
+-- Both the restriction and the zone guard are FENCES rather than proven
+-- behaviour: no board in the suite puts a non-target recipient binding on a
+-- stack object and then asks a target atom of it, nor asks one of a permanent
+-- carrying bindings, so dropping either leaves the suite green.
+targetsOfStackObject :: GameState -> ObjectId -> Set Recipient.Recipient
+targetsOfStackObject gs oid = Set.unions (Map.elems (targetSlotsOfStackObject gs oid))
+
+-- CR 601.2c: how many targets the stack object above has, per slot rather than
+-- unioned, so an object chosen by two instances of "target" counts twice. What
+-- Parun.Engine.Filter.View's `targetCount` is filled from.
+targetCountOfStackObject :: GameState -> ObjectId -> Natural
+targetCountOfStackObject gs oid = sum (fmap Natural.length (Map.elems (targetSlotsOfStackObject gs oid)))
+
+-- The two above's shared read: the declared target slots' recipients, by slot.
+targetSlotsOfStackObject :: GameState -> ObjectId -> Map SlotName (Set Recipient.Recipient)
+targetSlotsOfStackObject gs oid = maybe Map.empty targetsOf (Game.lookupObject oid gs)
+  where
+    targetsOf obj
+      | Object.zone obj /= Zone.Stack = Map.empty
+      | otherwise =
+          let bindings = Object.bindings obj
+              chosen = Binding.modesOf bindings
+              ofModal = Map.keysSet . Modal.modesTargetSlots chosen
+              -- CR 303.4a's enchant slot and CR 702.140a's mutate slot are declared
+              -- unconditionally: both are named by a RULE rather than by the face,
+              -- so a face read cannot see them, and the restriction below drops
+              -- either where the spell never filled it.
+              -- CR 702.47d's spliced slots beside the face's own.
+              ofFace face = Set.insert Card.mutateSlot (Set.insert Card.enchantSlot (Map.keysSet (Map.union (Card.modesTargetSlots chosen face) (Game.splicedTargetSlots obj gs))))
+              declared = case Object.source obj of
+                Source.OfCard _ -> maybe Set.empty ofFace (spellFaceOf oid gs)
+                Source.OfSpellCopy _ -> maybe Set.empty ofFace (spellFaceOf oid gs)
+                -- A cast copy of a card is card-backed the way the two arms above
+                -- are, so its printing's face answers: CR 722.3c's interned one-faced
+                -- prepare spell, or the card CR 707.12 copied.
+                Source.OfCardCopy _ -> maybe Set.empty ofFace (spellFaceOf oid gs)
+                Source.OfAbility src -> ofModal (ActivatedAbility.modal (ActivatedAbilitySource.ability src))
+                Source.OfTrigger src -> ofModal (TriggeredAbility.modal (TriggeredAbilitySource.ability src))
+                Source.OfInherentTrigger src -> ofModal (TriggeredAbility.modal (InherentTriggerSource.ability src))
+                Source.OfMeld _ -> Set.empty
+                Source.OfMerge _ -> Set.empty
+                Source.OfToken _ -> Set.empty
+                Source.OfEmblem _ -> Set.empty
+              -- A "for each opponent" slot binds per-player copies
+              -- (Modal.perPlayerSlot), each a target of its printed slot. A
+              -- REGRESSION FENCE: no test asks a target atom of such an object.
+              isDeclared slot _ = Set.member (maybe slot fst (Modal.perPlayerOf slot)) declared
+           in Map.filterWithKey isDeclared (Binding.targetsOf bindings)
+
+-- CR 115.1 one indirection along: a VIEW of each thing the stack object above
+-- targets, which is what Filter.TargetsOnlyOne's and TargetsMatching's nests
+-- are matched against. What Parun.Engine.Filter.View's `targetViews` is filled
+-- from.
+--
+-- Through `peers` for an object target, exactly as `attachedToView` is: the
+-- reader is bounded, and taking a full projection here would re-enter the fold
+-- viewOfCharacteristics stands in. A player target answers Count.playerView,
+-- which no projection reaches at all.
+--
+-- A recipient whose object is gone is DROPPED rather than mapped to a blank
+-- view: CR 608.2b leaves nothing to describe, and Parun.Engine.Filter answers the
+-- atom False for a missing key.
+targetViewsOfStackObject :: Count.ViewOf -> GameState -> ObjectId -> Map Recipient.Recipient Filter.View
+targetViewsOfStackObject peers gs oid =
+  Map.fromList
+    (Maybe.mapMaybe (\r -> fmap ((,) r) (viewOfRecipient peers gs r)) (Set.toList (targetsOfStackObject gs oid)))
+
+-- The view one recipient answers, splitting CR 115.1's two kinds of target: a
+-- player is Count.playerView's candidate, and an object one the bounded reader
+-- above answers for. Nothing for CR 406.4's pile, which is neither and which CR
+-- 601.2c never leaves on a stack object anyway.
+viewOfRecipient :: Count.ViewOf -> GameState -> Recipient.Recipient -> Maybe Filter.View
+viewOfRecipient peers gs r = case Recipient.playerOf r of
+  Just pid -> Just (Count.playerView gs pid)
+  Nothing -> Recipient.objectOf r >>= peers
+
+-- One control-granting static ability, flattened: the source, the timestamp
+-- its effect takes (CR 613.7a), and its CR 604.2 "as long as" clause, which
+-- layerTwo asks against its running table.
+data ControlGrant = MkControlGrant
+  { cgSource :: ObjectId,
+    cgAffected :: Affected.Affected,
+    cgTimestamp :: Timestamp,
+    cgCondition :: Maybe Condition.Type.Condition
+  }
+  deriving (Eq, Ord, Show)
+
+-- Every layer-2 control-granting STATIC ability on the battlefield, gathered
+-- once. NOT `gather`, and PROJECTION-FREE throughout: affects reads controllerOf
+-- to supply CR 109.5's "you", so a controlGrants that consulted the layers would
+-- be mutually recursive with it. That is why controlNames below reads copiable
+-- values rather than the projection, and why no CR 305.7 gate is applied here.
+-- Hoisted for the same reason setLandSubtypeEffects is: `controls` calls
+-- controllerOf once per battlefield object.
+--
+-- The ability list is staticAbilitiesOf, so a copy's control-granting text is
+-- read (CR 707.2a) -- which staticAbilitiesOf can supply without breaking the
+-- rule above, being projection-free itself. No case observes that: the pool's
+-- attachment grants (Confiscate, Control Magic, Synthetic Puppeteer's Yoke) are
+-- Auras, and a copy of an Aura would enter attached to nothing and be put into a
+-- graveyard by CR 704.5m, while no test stamps a copy binding on Synthetic
+-- Goblin Dominion, the one that is not an Aura. A regression fence, kept because
+-- the three walks over abilitySources must agree on which list they read.
+--
+-- CR 604.2's "as long as" clause is carried rather than asked: it is judged
+-- inside layerTwo, where the controllers it reads are the fold's own.
+controlGrants :: GameState -> [ControlGrant]
+controlGrants gs =
+  let grantsOf permId = case Game.lookupObject permId gs of
+        Nothing -> []
+        Just permObj ->
+          let isControl sa = any isControlOp (StaticAbility.modifications sa)
+              isControlOp m = case m of
+                Modification.SetControllerToSource -> True
+                _ -> False
+              toGrant ts sa =
+                MkControlGrant
+                  { cgSource = permId,
+                    cgAffected = StaticAbility.affected sa,
+                    cgTimestamp = ts,
+                    cgCondition = StaticAbility.condition sa
+                  }
+              keeps sa = isControl sa && functionsFromZone Zone.Battlefield sa
+           in -- A granted ability too, at CR 613.7a's later of the two timestamps,
+              -- for the reason permanentParts gathers one.
+              fmap (toGrant (staticTimestampOf permId permObj gs)) (filter keeps (staticAbilitiesOf permId gs))
+                <> fmap (\(ts, sa) -> toGrant (max (Object.timestamp permObj) ts) sa) (filter (keeps . snd) (grantedStaticAbilitiesOf permId gs))
+   in concatMap grantsOf (abilitySources gs)
+
+-- CR 303.4b's other destination: WHICH PLAYER this object is attached to --
+-- what an enchant-player Aura "enchants". Game.hostOf's twin, Nothing where the
+-- object is attached to nothing or to an object. Like Game.hostOf, no projection,
+-- read live off Object.attachedTo, so controlNames below may ask it.
+enchantedPlayerOf :: ObjectId -> GameState -> Maybe PlayerId.PlayerId
+enchantedPlayerOf oid gs = Game.lookupObject oid gs >>= Object.attachedTo >>= Recipient.playerOf
+
+-- CR 108.4 / 613.1b: an object's controller is its owner, overridden by layer-2
+-- control effects applied in CR 613.7/613.8 order. A lean fold rather than the
+-- full projection: control precedes P/T.
+controllerOf :: ObjectId -> GameState -> Maybe PlayerId.PlayerId
+controllerOf oid gs = controllerOfGiven (controlGrants gs) oid gs
+
+-- controllerOf with the grant list PRECOMPUTED.
+controllerOfGiven :: [ControlGrant] -> ObjectId -> GameState -> Maybe PlayerId.PlayerId
+controllerOfGiven grants oid gs = case Game.lookupObject oid gs of
+  Nothing -> Nothing
+  Just obj
+    -- CR 901.6: a face-up plane or phenomenon card's controller is the planar
+    -- controller.
+    | Object.zone obj == Zone.Command && Plane.isPlanarCard oid gs -> Just (Plane.planarController gs)
+    -- CR 901.10b: so is an ability from a phenomenon whose owner has left the
+    -- game.
+    | Object.zone obj == Zone.Stack && Plane.isOrphanedPhenomenonAbility oid gs -> Just (Plane.planarController gs)
+    | otherwise -> Just (Maybe.fromMaybe (defaultControllerOf obj) (Map.lookup oid (layerTwo grants gs)))
+
+-- One layer-2 control effect as the fold applies it: a stored
+-- Modification.SetController names its player, a control-granting static
+-- ability (ControlGrant) hands over to its source's controller.
+data ControlEffect = MkControlEffect
+  { ceIndex :: Int,
+    ceTimestamp :: Timestamp,
+    ceSource :: ObjectId,
+    ceAffected :: Affected.Affected,
+    cePlayer :: Maybe PlayerId.PlayerId,
+    ceCondition :: Maybe Condition.Type.Condition
+  }
+
+-- CR 613.1b's layer 2 as one fold: every control effect, applied one at a time
+-- to a running table of controllers, which answers only the objects some effect
+-- moved. CR 613.7: in timestamp order. CR 613.8a: an effect waits for another
+-- whose application would change what it names or who it hands them to --
+-- judged by applying that other effect and asking again -- and CR 613.8c
+-- re-asks after every application. CR 613.8b: when every remaining effect waits,
+-- the ones on a dependency loop apply in timestamp order, the fallback
+-- Parun.Engine.Projection's layer fold takes. Every read inside a step is the
+-- running table's, so nothing re-enters this fold.
+--
+-- Parun.AuraSpec's "CR 613.8b two Confiscates enchanting each other apply in
+-- timestamp order" proves the loop.
+layerTwo :: [ControlGrant] -> GameState -> Map ObjectId PlayerId.PlayerId
+layerTwo grants gs =
+  let stored =
+        [ (ContinuousEffect.timestamp eff, ContinuousEffect.source eff, ContinuousEffect.affected eff, Just pid, Nothing)
+        | eff <- GameState.continuousEffects gs,
+          Modification.SetController pid <- [ContinuousEffect.modification eff]
+        ]
+      granted = fmap (\g -> (cgTimestamp g, cgSource g, cgAffected g, Nothing, cgCondition g)) grants
+      effects = zipWith (\i (ts, src, aff, who, cond) -> MkControlEffect i ts src aff who cond) [0 ..] (stored <> granted)
+      controllerIn table o = case Map.lookup o table of
+        Just pid -> Just pid
+        Nothing -> fmap defaultControllerOf (Game.lookupObject o gs)
+      -- CR 604.2: a grant whose "as long as" clause is false names nothing. The
+      -- clause is judged at CR 613.6's decision point, its own layer, so the
+      -- view is copiable values and the table's controllers, as conditionHolds
+      -- bounds any other clause; CR 109.5's "you" is the source's controller
+      -- there. Asked through the table, a steal that flips the clause is one
+      -- this effect waits on (CR 613.8a). Parun.AuraSpec's "CR 604.2/613.8a a
+      -- control grant applies only while its as-long-as clause holds" proves
+      -- both.
+      holdsIn ctrl e = case ceCondition e of
+        Nothing -> True
+        Just cond ->
+          let src = ceSource e
+           in Condition.holds (Just . leanViewOf ctrl gs) (SourceContext.sourceContext gs (ctrl src) src) gs src cond
+      outcome table e =
+        let ctrl = controllerIn table
+            named = if holdsIn ctrl e then controlNames ctrl gs (ceSource e) (ceAffected e) else Set.empty
+         in (named, cePlayer e <|> ctrl (ceSource e))
+      apply table e = case outcome table e of
+        (named, Just pid) -> Set.foldr (`Map.insert` pid) table named
+        (_, Nothing) -> table
+      -- A stored effect's set is fixed at creation (CR 611.2c) and its player
+      -- named, so nothing can change what it does.
+      fixed e = Maybe.isJust (cePlayer e) && isTheseObjects (ceAffected e)
+      isTheseObjects a = case a of
+        Affected.TheseObjects _ -> True
+        _ -> False
+      go table pending = case pending of
+        [] -> table
+        _ ->
+          let -- Each effect's outcome now, and the table each would leave.
+              now = Map.fromList (fmap (\e -> (ceIndex e, outcome table e)) pending)
+              afterOf = Map.fromList (fmap (\f -> (ceIndex f, apply table f)) pending)
+              dependsOn e f =
+                ceIndex f /= ceIndex e
+                  && not (fixed e)
+                  && case Map.lookup (ceIndex f) afterOf of
+                    Just after -> after /= table && Just (outcome after e) /= Map.lookup (ceIndex e) now
+                    Nothing -> False
+              waits e = any (dependsOn e) pending
+              ready = filter (not . waits) pending
+              edges = Map.fromList (fmap (\e -> (ceIndex e, fmap ceIndex (filter (dependsOn e) pending))) pending)
+              reach seen queue = case queue of
+                [] -> seen
+                x : xs ->
+                  if Set.member x seen
+                    then reach seen xs
+                    else reach (Set.insert x seen) (Map.findWithDefault [] x edges <> xs)
+              onCycle e = Set.member (ceIndex e) (reach Set.empty (Map.findWithDefault [] (ceIndex e) edges))
+              batch = case ready of
+                _ : _ -> ready
+                -- Nothing ready means every remaining effect waits, so some are
+                -- on a loop; the fallback keeps minimumBy total.
+                [] -> case filter onCycle pending of
+                  [] -> pending
+                  cyclic -> cyclic
+              next = List.minimumBy (Ord.comparing (\e -> (ceTimestamp e, ceIndex e))) batch
+           in go (apply table next) (filter ((/= ceIndex next) . ceIndex) pending)
+      byTimestamp = List.sortOn (\e -> (ceTimestamp e, ceIndex e))
+   in -- Nothing waits when every effect is fixed, so CR 613.7 alone orders them.
+      if all fixed effects
+        then List.foldl' apply Map.empty (byTimestamp effects)
+        else go Map.empty effects
+
+-- CR 801.2d: is this object within @you@'s range of influence -- controlled by a
+-- player within range, or a battle protected by one? CR 801.4
+-- (Parun.Engine.Target.inRangeGiven), CR 801.6
+-- (Parun.Engine.Activatable.activatableGiven) and CR 801.10
+-- (Parun.Engine.Projection.affectsWith) read it.
+--
+-- Nothing is asked under an unlimited range, so a game without CR 801's option
+-- never takes the control fold. An object's controller is CR 108.4a's owner off
+-- the battlefield and the stack, which controllerOfGiven already answers.
+objectInRangeGiven :: [ControlGrant] -> PlayerId.PlayerId -> ObjectId -> GameState -> Bool
+objectInRangeGiven grants you oid gs = objectInRangeUnder (\o -> controllerOfGiven grants o gs) you oid gs
+
+-- objectInRangeGiven with the controllers supplied: layer 2's running table
+-- inside the fold, the finished fold outside it.
+objectInRangeUnder :: (ObjectId -> Maybe PlayerId.PlayerId) -> PlayerId.PlayerId -> ObjectId -> GameState -> Bool
+objectInRangeUnder = objectInRangeBy Game.inRangeOf
+
+-- CR 801.2c: objectInRangeGiven with the seats fixed as this turn began
+-- (Game.wasInRangeOf), so an object whose controller left the game this turn
+-- is judged by the seat they held. Such an object exists only inside CR
+-- 800.4a's fourth clause and CR 800.4c's exile, which is where
+-- Parun.Engine.Replacement.reaches asks it.
+objectWasInRangeGiven :: [ControlGrant] -> PlayerId.PlayerId -> ObjectId -> GameState -> Bool
+objectWasInRangeGiven grants you oid gs = objectInRangeBy Game.wasInRangeOf (\o -> controllerOfGiven grants o gs) you oid gs
+
+-- The two readings above, differing only in which seat check a player gets.
+objectInRangeBy :: (PlayerId.PlayerId -> PlayerId.PlayerId -> GameState -> Bool) -> (ObjectId -> Maybe PlayerId.PlayerId) -> PlayerId.PlayerId -> ObjectId -> GameState -> Bool
+objectInRangeBy seated ctrl you oid gs =
+  let reaches = maybe False (\pid -> seated you pid gs)
+   in case RangeOfInfluence.rangeOf (GameSettings.rangeOfInfluence (GameState.settings gs)) you of
+        Nothing -> True
+        Just _ -> reaches (ctrl oid) || reaches (Object.protector =<< Game.lookupObject oid gs)
+
+-- CR 801.10: is @oid@ within the range of influence of @source@'s controller?
+-- Parun.Engine.Projection.affectsWith's cut on a static ability's dynamic set.
+-- Asked of the limited-range option first, so a game without it takes no control
+-- fold; a source with no controller cuts nothing, and nor does a planar card
+-- (CR 801.18, Plane.exemptFromRange).
+inSourceRangeGiven :: [ControlGrant] -> ObjectId -> ObjectId -> GameState -> Bool
+inSourceRangeGiven grants source oid gs =
+  Map.null (RangeOfInfluence.unwrap (GameSettings.rangeOfInfluence (GameState.settings gs)))
+    || Plane.exemptFromRange source gs
+    || all (\you -> objectInRangeGiven grants you oid gs) (controllerOfGiven grants source gs)
+
+-- Which objects an affected set NAMES, for the CR 613.1b layer-2 control fold,
+-- with every controller it needs read off `ctrl` -- the fold's running table.
+-- Parameterized by the source because Affected.Attached asks about the SOURCE's
+-- state; a PREDICATE set needs controllers for CR 109.5's "you" and for a filter
+-- that asks.
+--
+-- MatchingAnywhere and MatchingOffBattlefield stay empty and so grant nothing,
+-- which is what the rule asks rather than an elision: CR 109.4 gives a
+-- controller only to an object on the battlefield or the stack, so the part of
+-- either set a control grant could observe is the part those two arms share
+-- with Matching's own.
+controlNames :: (ObjectId -> Maybe PlayerId.PlayerId) -> GameState -> ObjectId -> Affected.Affected -> Set ObjectId
+controlNames ctrl gs source a = case a of
+  Affected.TheseObjects s -> s
+  -- CR 303.4m: the source's own attachment, with no projection needed.
+  Affected.Attached -> maybe Set.empty Set.singleton (Game.hostOf source gs)
+  -- CR 611.3a: a static ability's effect is not locked in, so the set is
+  -- re-derived from the battlefield at every projection and a permanent that
+  -- enters later is in it. CR 613.1a/613.2c: layer 2 reads an object's COPIABLE
+  -- values, since layer 1 is the only layer before it and CR 613.8a confines
+  -- dependency to one layer -- so no layer-4 type change feeds this test, which
+  -- is what lets it run without projecting.
+  Affected.Matching f -> Set.filter (\oid -> matchesLeanly ctrl gs source f oid && controlReaches ctrl gs source oid) (GameState.battlefield gs)
+  Affected.MatchingAnywhere _ -> Set.empty
+  Affected.MatchingOffBattlefield _ -> Set.empty
+  -- A rider is stored against the object it names (Event.permissionRiders), and
+  -- the template names nothing.
+  Affected.PlayedThisWay _ -> Set.empty
+  -- CR 303.4b / 303.4m through a PLAYER: what the enchanted player controls,
+  -- read as Matching's battlefield walk narrowed by the candidate's controller
+  -- in the running table. CR 613.8a: another control effect that moves a
+  -- candidate changes what this one applies to, so layerTwo applies it first;
+  -- Parun.AuraSpec's "CR 613.8a/613.8b a permanent already stolen from the
+  -- enchanted player is not handed over again" proves it.
+  --
+  -- The battlefield bound is the arm's own, and it is what answers CR 702.26b
+  -- for a phased-out permanent, which Parun.Engine.Phasing.phaseOut removes from
+  -- that set. Parun.PhasingSpec's "CR 702.26b a phased-out permanent leaves a
+  -- control grant reached through its controller" proves it.
+  Affected.AttachedPlayerControls f -> case enchantedPlayerOf source gs of
+    Nothing -> Set.empty
+    Just pid ->
+      Set.filter
+        (\oid -> ctrl oid == Just pid && matchesLeanly ctrl gs source f oid)
+        (GameState.battlefield gs)
+
+-- CR 801.10 for a layer-2 grant: is `oid` within the range of influence of
+-- `source`'s controller, both read off the running table? A grant cannot bring
+-- an object into its own reach by taking it, since the table holds what the
+-- effects before it did. Asked of the limited-range option first, so a game
+-- without it takes no control fold. Parun.RangeOfInfluenceSpec's "CR 801.10 a
+-- control grant does not take a permanent outside its controller's range"
+-- proves it. A planar card's grant cuts nothing (CR 801.18,
+-- Plane.exemptFromRange): a regression fence, since no plane in `data/cards/`
+-- grants control by a static ability.
+controlReaches :: (ObjectId -> Maybe PlayerId.PlayerId) -> GameState -> ObjectId -> ObjectId -> Bool
+controlReaches ctrl gs source oid =
+  Map.null (RangeOfInfluence.unwrap (GameSettings.rangeOfInfluence (GameState.settings gs)))
+    || Plane.exemptFromRange source gs
+    || all (\you -> objectInRangeUnder ctrl you oid gs) (ctrl source)
+
+-- Does `oid` match a layer-2 affected set's Filter, read at the copiable values
+-- controlNames explains and with CR 109.5's "you" bound to the SOURCE's
+-- controller? Projection-free throughout, every controller read off `ctrl`.
+--
+-- Both of those controller reads are REGRESSION FENCES rather than proved
+-- behaviour: a filter only forces either one by asking about control, and
+-- neither of `data/cards/`'s two predicate control grants asks -- Synthetic
+-- Goblin Dominion's "You control all Goblins" and Synthetic Puppeteer's Yoke's
+-- filterless "all permanents". Blanking the perspective leaves the suite green.
+-- The card that would prove them is #197's shape, a control-dependent conjunct
+-- under a control grant.
+matchesLeanly :: (ObjectId -> Maybe PlayerId.PlayerId) -> GameState -> ObjectId -> Filter.Type.Filter Keyword.Type.Keyword -> ObjectId -> Bool
+matchesLeanly ctrl gs source f oid =
+  Filter.matches
+    (SourceContext.sourceContext gs (ctrl source) source)
+    (leanViewOf ctrl gs oid)
+    f
+
+-- The Filter.View a layer-2 affected set reads: copiable characteristics
+-- (CR 613.2c) and a controller from the running table. The counterpart to
+-- viewOfObjectGiven for a caller that must not project at all; a host is read
+-- the same way, which is finite for the reason viewOfObjectGiven gives.
+leanViewOf :: (ObjectId -> Maybe PlayerId.PlayerId) -> GameState -> ObjectId -> Filter.View
+leanViewOf ctrl gs oid =
+  viewOfCharacteristics
+    (Just . leanViewOf ctrl gs)
+    oid
+    (copiableCharacteristics oid gs)
+    (ctrl oid)
+    (countersOf oid gs)
+    gs
+
+-- CR 110.2 / 108.4a: the controller a CR 613.1b layer-2 effect OVERRIDES. A
+-- permanent's default controller is whoever it entered under (CR 110.2), and
+-- Object.enteredUnder is Nothing outside the two zones CR 109.4 gives a
+-- controller, leaving CR 108.4a's owner.
+defaultControllerOf :: Object.Object -> PlayerId.PlayerId
+defaultControllerOf obj = Maybe.fromMaybe (Object.owner obj) (Object.enteredUnder obj)
+
+-- CR 400.1 / 608.2h: the zone an object is in, or for an id that has ceased the
+-- zone its last-known record was filed from.
+lastZoneOf :: ObjectId -> GameState -> Maybe Zone.Zone
+lastZoneOf = Game.liveOrLastKnown Object.zone LastKnown.zone
+
+-- CR 205.3d: an object can't gain a subtype that doesn't correspond to one of
+-- its types. CR 205.1a's removal clause is the same question in the other
+-- direction, so Parun.Engine.Projection's SetCardType arm and the SetCardTypes
+-- copy exception above ask this too -- one predicate, so a subtype a card-type
+-- set would strip is one a later grant cannot put back.
+--
+-- For a modification the card types are the ones the WHOLE effect gives
+-- (Parun.Engine.Projection.cardTypesAfter, threaded through
+-- Parun.Engine.Projection.applyModification's unitTypes), not the ones the fold
+-- has reached: CR 613.7 orders EFFECTS within a layer and nothing orders one
+-- effect's own parts against each other, CR 613.6 those parts being the parts of
+-- one effect wherever they land. CR 613.6's Svogthos example is this rule in the CR's own words -- one
+-- effect gives the Plant Zombie types and the Creature card type they correspond
+-- to. So an effect may grant the card type and the subtype in either written
+-- order: Song of the Dryads reads "a colorless Forest land" and Life and Limb
+-- "Saproling creatures and Forest lands", each naming the subtype first, and both
+-- are transcribed that way. Proved by Parun.ProjectionSpec's "CR 205.3d/305.6 Song
+-- of the Dryads' Forest lands on the creature the same effect makes a land" and
+-- "CR 613.7/205.3d Life and Limb's Forest lands on the Saproling the same effect
+-- makes a land", one on each of Parun.Engine.Projection.projectDeciding's two
+-- roads.
+correspondsTo :: Set CardType.CardType -> Subtype.Type.Subtype -> Bool
+correspondsTo types subtype =
+  let family = Subtype.correlatedCardTypes subtype
+   in Set.null family || not (Set.disjoint family types)
+
+-- CR 205.1a's named exception to its own set: instant and sorcery are retained.
+-- Read by Parun.Engine.Projection.cardTypesAfter and the SetCardTypes copy
+-- exception above.
+retainedThroughCardTypeSet :: CardType.CardType -> Bool
+retainedThroughCardTypeSet t = t == CardType.Instant || t == CardType.Sorcery

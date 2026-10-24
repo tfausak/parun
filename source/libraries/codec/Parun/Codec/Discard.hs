@@ -1,0 +1,28 @@
+module Parun.Codec.Discard where
+
+import qualified Parun.Codec.AnyNumberDiscard as AnyNumberDiscard
+import qualified Parun.Codec.CountedDiscard as CountedDiscard
+import qualified Parun.Codec.TheseDiscard as TheseDiscard
+import qualified Parun.JsonCodec.Arm as Arm
+import qualified Parun.JsonCodec.Codec as Codec
+import qualified Parun.Types.Discard as Discard
+
+-- | Tagged like every other sum. Each arm carries a payload of its own rather
+-- than a positional array (#1464): Counted's is the record CR 701.9b's two
+-- questions make -- who, and how many -- and These' is the ref that names the
+-- set outright, with the slot it may bind. AnyNumber's is CountedDiscard's
+-- with the count left to the discarding player.
+codec :: Codec.Codec Discard.Discard
+codec =
+  Arm.tagged
+    tagOf
+    [ Arm.payload "Counted" CountedDiscard.codec Discard.Counted (\x -> case x of Discard.Counted y -> Just y; _ -> Nothing),
+      Arm.payload "These" TheseDiscard.codec Discard.These (\x -> case x of Discard.These y -> Just y; _ -> Nothing),
+      Arm.payload "AnyNumber" AnyNumberDiscard.codec Discard.AnyNumber (\x -> case x of Discard.AnyNumber y -> Just y; _ -> Nothing)
+    ]
+
+tagOf :: Discard.Discard -> String
+tagOf x = case x of
+  Discard.Counted {} -> "Counted"
+  Discard.These {} -> "These"
+  Discard.AnyNumber {} -> "AnyNumber"

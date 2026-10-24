@@ -2,9 +2,9 @@
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
-**Goal:** Apply the style established in `2dfeb6c` to all 145 types and 98 codecs, replacing `Pawl.Codec.Json` with `Pawl.Codec.Common` and giving every codec a spec that pins its wire format, without changing a single byte of what the codec emits.
+**Goal:** Apply the style established in `2dfeb6c` to all 145 types and 98 codecs, replacing `Parun.Codec.Json` with `Parun.Codec.Common` and giving every codec a spec that pins its wire format, without changing a single byte of what the codec emits.
 
-**Architecture:** `Pawl.Codec.Common` grows on demand as the base API; codec modules are converted in dependency-layer batches so each commit compiles; each converted module gains a sibling `Pawl.Codec.XSpec` asserting one literal-JSON case per constructor; `Pawl.Codec.Json` and `Pawl/CodecSpec.hs` are deleted once emptied.
+**Architecture:** `Parun.Codec.Common` grows on demand as the base API; codec modules are converted in dependency-layer batches so each commit compiles; each converted module gains a sibling `Parun.Codec.XSpec` asserting one literal-JSON case per constructor; `Parun.Codec.Json` and `Parun/CodecSpec.hs` are deleted once emptied.
 
 **Tech Stack:** GHC 9.14.1 via the Nix flake, `cabal`, `tasty`, `parsec`, `cabal-gild`, `hooky`.
 
@@ -13,14 +13,14 @@
 ## Global Constraints
 
 - **One PR, small commits.** Every commit builds warning-free and leaves the suite green. Do not open the PR until the last task is done.
-- **The wire format does not change.** `data/cards/` is never edited. `Pawl.CardsSpec` round-trips every card file and must stay green at every commit — it is the safety net.
+- **The wire format does not change.** `data/cards/` is never edited. `Parun.CardsSpec` round-trips every card file and must stay green at every commit — it is the safety net.
 - **One build at a time.** `cabal build all`, never just the library. Never poke inside `dist-newstyle`.
 - **`hooky` acts on staged files.** `git add`, then `hooky fix`, then `git add` again, then `hooky run`.
-- **`cabal-gild pawl.cabal` must be run directly** whenever a module is added or deleted; `hooky fix` only covers staged files and will not regenerate `exposed-modules` for a file it has not seen.
+- **`cabal-gild parun.cabal` must be run directly** whenever a module is added or deleted; `hooky fix` only covers staged files and will not regenerate `exposed-modules` for a file it has not seen.
 - **Scope is `source/libraries/types/` and `source/libraries/codec/` only.** The engine's 37 modules are out. Other files change only where they must to compile.
 - **Never trust recalled Magic rules.** Any CR citation a comment carries must be re-checked against `docs/rules.txt` when that comment is touched.
 - **Never edit this plan, weaken an assertion, or delete a test to make a check pass.** If the plan looks wrong, stop and say so.
-- Build must be warning-free under `-Weverything` (see `pawl.cabal`'s `common warnings`).
+- Build must be warning-free under `-Weverything` (see `parun.cabal`'s `common warnings`).
 
 ---
 
@@ -33,18 +33,18 @@ below.
 ### Rules
 
 - **R1** — delete the `-- | The @X ⇆ Json@ codec (#481).` module header. #481 is closed. Add a module haddock only if the module has something non-obvious to say.
-- **R2** — every import is `qualified <Module> as <LastComponent>`. No `import Data.Text (Text)`, no `import Pawl.Json.Value (Value)`, no `import Pawl.Json.Array (Array (MkArray))`, no `import Pawl.Codec.Foo (fooToJson, jsonToFoo)`.
-- **R3** — a newtype in `Pawl.Types` is a record with an `unwrap` field. Codec modules read through `X.unwrap` rather than pattern-matching `MkX`.
+- **R2** — every import is `qualified <Module> as <LastComponent>`. No `import Data.Text (Text)`, no `import Parun.Json.Value (Value)`, no `import Parun.Json.Array (Array (MkArray))`, no `import Parun.Codec.Foo (fooToJson, jsonToFoo)`.
+- **R3** — a newtype in `Parun.Types` is a record with an `unwrap` field. Codec modules read through `X.unwrap` rather than pattern-matching `MkX`.
 - **R4** — `xToJson` → `toJson`, `jsonToX` → `fromJson`. **Do not reorder declarations.**
 - **R5** — no `Text.pack` for a JSON key or tag; `Common.pair`, `Common.tagged`, `Common.nullary`, `Common.field`, `Common.decodeNullary` all take `String`.
 - **R6** — a bare `--` block *immediately above a declaration* becomes `-- |`. A floating note between or inside declarations stays bare.
-- **R7** — add `Pawl.Codec.XSpec` beside the module, one `assertJsonCodec` case per constructor.
+- **R7** — add `Parun.Codec.XSpec` beside the module, one `assertJsonCodec` case per constructor.
 
-**One name collides.** `Pawl.Types.TargetSpec` is a real type, so
-`Pawl.Codec.TargetSpec` is a real codec and its spec is
-`Pawl.Codec.TargetSpecSpec`. The doubled suffix is correct and deliberate — the
+**One name collides.** `Parun.Types.TargetSpec` is a real type, so
+`Parun.Codec.TargetSpec` is a real codec and its spec is
+`Parun.Codec.TargetSpecSpec`. The doubled suffix is correct and deliberate — the
 convention is "append `Spec` to the module name", and a type whose name ends in
-`Spec` does not get an exception. Do not shorten it to `Pawl.Codec.TargetSpec`,
+`Spec` does not get an exception. Do not shorten it to `Parun.Codec.TargetSpec`,
 which is the module under test.
 
 ### Secondary codec names
@@ -60,7 +60,7 @@ which is the module under test.
 | `defaultEntryRiders` | `EntryRiders.defaultValue` |
 | `optionalFilter` | `Filter.optional` |
 
-### `Pawl.Codec.Json` → `Pawl.Codec.Common` name map
+### `Parun.Codec.Json` → `Parun.Codec.Common` name map
 
 | `Json` | `Common` |
 |---|---|
@@ -93,8 +93,8 @@ which is the module under test.
 | `jsonToBoolDefault` | `decodeBooleanDefault` |
 | `sortKeys`, `render`, `parse` | unchanged |
 
-`Pawl.Json.Value (Value (Array))` pattern matches become `Value.Array`;
-`Pawl.Json.Array (Array (MkArray))` becomes `Array.MkArray`. So
+`Parun.Json.Value (Value (Array))` pattern matches become `Value.Array`;
+`Parun.Json.Array (Array (MkArray))` becomes `Array.MkArray`. So
 `Just (Array (MkArray [x, y]))` becomes `Just (Value.Array (Array.MkArray [x, y]))`.
 
 ### Worked shape A — nullary enum (`Color`)
@@ -103,13 +103,13 @@ Before:
 
 ```haskell
 -- | The @Color ⇆ Json@ codec (#481).
-module Pawl.Codec.Color where
+module Parun.Codec.Color where
 
 import Data.Text (Text)
 import qualified Data.Text as Text
-import qualified Pawl.Codec.Json as Json
-import Pawl.Json.Value (Value)
-import qualified Pawl.Types.Color as Color
+import qualified Parun.Codec.Json as Json
+import Parun.Json.Value (Value)
+import qualified Parun.Types.Color as Color
 
 colorToJson :: Color.Color -> Value
 colorToJson c = Json.nullary . Text.pack $ case c of
@@ -128,12 +128,12 @@ jsonToColor =
 After:
 
 ```haskell
-module Pawl.Codec.Color where
+module Parun.Codec.Color where
 
 import qualified Data.Text as Text
-import qualified Pawl.Codec.Common as Common
-import qualified Pawl.Json.Value as Value
-import qualified Pawl.Types.Color as Color
+import qualified Parun.Codec.Common as Common
+import qualified Parun.Json.Value as Value
+import qualified Parun.Types.Color as Color
 
 toJson :: Color.Color -> Value.Value
 toJson c = Common.nullary $ case c of
@@ -158,15 +158,15 @@ fromJson =
 Spec:
 
 ```haskell
-module Pawl.Codec.ColorSpec where
+module Parun.Codec.ColorSpec where
 
-import qualified Pawl.Codec.Color as Color
-import qualified Pawl.Codec.Common as Common
-import qualified Pawl.Spec as Spec
-import qualified Pawl.Types.Color as Color
+import qualified Parun.Codec.Color as Color
+import qualified Parun.Codec.Common as Common
+import qualified Parun.Spec as Spec
+import qualified Parun.Types.Color as Color
 
 spec :: (Monad m, Monad n) => Spec.Spec m n -> n ()
-spec s = Spec.describe s "Pawl.Codec.Color" $ do
+spec s = Spec.describe s "Parun.Codec.Color" $ do
   Spec.it s "White" $
     Common.assertJsonCodec s Color.toJson Color.fromJson Color.White "{\"type\":\"White\"}"
   Spec.it s "Blue" $
@@ -179,9 +179,9 @@ spec s = Spec.describe s "Pawl.Codec.Color" $ do
     Common.assertJsonCodec s Color.toJson Color.fromJson Color.Green "{\"type\":\"Green\"}"
 ```
 
-Note the two `Color` imports resolve to one alias — `Pawl.Codec.Color` and
-`Pawl.Types.Color` both alias to `Color`, which is legal and is exactly what
-`Pawl.Codec.AbilityNameSpec` does in `2dfeb6c`.
+Note the two `Color` imports resolve to one alias — `Parun.Codec.Color` and
+`Parun.Types.Color` both alias to `Color`, which is legal and is exactly what
+`Parun.Codec.AbilityNameSpec` does in `2dfeb6c`.
 
 ### Worked shape B — newtype delegating (`Power`)
 
@@ -195,10 +195,10 @@ jsonToPower :: Value -> Either Text Power.Power
 jsonToPower value = Power.MkPower <$> jsonToQuantity value
 ```
 
-After — note R3 requires adding `unwrap` to `Pawl.Types.Power` first:
+After — note R3 requires adding `unwrap` to `Parun.Types.Power` first:
 
 ```haskell
--- source/libraries/types/Pawl/Types/Power.hs
+-- source/libraries/types/Parun/Types/Power.hs
 newtype Power = MkPower
   { unwrap :: Quantity.Quantity
   }
@@ -206,13 +206,13 @@ newtype Power = MkPower
 ```
 
 ```haskell
--- source/libraries/codec/Pawl/Codec/Power.hs
-module Pawl.Codec.Power where
+-- source/libraries/codec/Parun/Codec/Power.hs
+module Parun.Codec.Power where
 
 import qualified Data.Text as Text
-import qualified Pawl.Codec.Quantity as Quantity
-import qualified Pawl.Json.Value as Value
-import qualified Pawl.Types.Power as Power
+import qualified Parun.Codec.Quantity as Quantity
+import qualified Parun.Json.Value as Value
+import qualified Parun.Types.Power as Power
 
 toJson :: Power.Power -> Value.Value
 toJson = Quantity.toJson . Power.unwrap
@@ -272,17 +272,17 @@ fromJson value = do
 
 The local `orDefault` helper in the current `jsonToEntryRiders` is exactly
 `decodeMaybe` plus a default; deleting it in favour of `Common.decodeMaybe` is
-part of the conversion. **Verify by test, not by eye** — `Pawl.CardsSpec` and the
+part of the conversion. **Verify by test, not by eye** — `Parun.CardsSpec` and the
 new `EntryRidersSpec` both cover it.
 
 ### Per-module procedure
 
 1. Add `unwrap` to the type if it is a newtype lacking one (R3), and convert its decl-attached comments to haddock (R6). Re-check any CR citation in a touched comment against `docs/rules.txt`.
 2. Rewrite the codec module per R1–R5. Add to `Common` any helper the module needs that is not there yet, under its name from the map above.
-3. Write `Pawl.Codec.XSpec` — one `assertJsonCodec` case per constructor of the type. **Derive every JSON literal by reading the encoder you just wrote, never by recalling a tag name.**
-4. Delete the cases this module supersedes from `source/test-suite/Pawl/CodecSpec.hs`. Bespoke shape assertions there (the elision tests built on `payloadHead` / `payloadLength`) move into the new `XSpec` — they are not dropped.
-5. Wire `Pawl.Codec.XSpec` into `source/test-suite/Main.hs` (`import qualified` at the top, `Pawl.Codec.XSpec.spec s` in `spec`, both alphabetical).
-6. `cabal-gild pawl.cabal`.
+3. Write `Parun.Codec.XSpec` — one `assertJsonCodec` case per constructor of the type. **Derive every JSON literal by reading the encoder you just wrote, never by recalling a tag name.**
+4. Delete the cases this module supersedes from `source/test-suite/Parun/CodecSpec.hs`. Bespoke shape assertions there (the elision tests built on `payloadHead` / `payloadLength`) move into the new `XSpec` — they are not dropped.
+5. Wire `Parun.Codec.XSpec` into `source/test-suite/Main.hs` (`import qualified` at the top, `Parun.Codec.XSpec.spec s` in `spec`, both alphabetical).
+6. `cabal-gild parun.cabal`.
 7. `cabal build all` — warning-free. `cabal test` — green.
 8. `git add -A`, `hooky fix`, `git add -A`, `hooky run`, commit.
 
@@ -324,39 +324,39 @@ Expected: all pass. **Write the total test count down** — it is reported in th
 
 ---
 
-## Task 2: `Pawl.Codec.Common` foundation
+## Task 2: `Parun.Codec.Common` foundation
 
 Builds out `Common` with everything the Recipe's name map promises, fixes
 `assertJson` to be `eof`-terminated, adds `sortKeys` normalization to
-`assertToJson`, and adds `assertJsonCodec`. `Pawl.Codec.Json` stays for now —
+`assertToJson`, and adds `assertJsonCodec`. `Parun.Codec.Json` stays for now —
 both modules coexist until Task 14.
 
 **Files:**
-- Modify: `source/libraries/codec/Pawl/Codec/Common.hs`
-- Create: `source/libraries/codec/Pawl/Codec/CommonSpec.hs`
+- Modify: `source/libraries/codec/Parun/Codec/Common.hs`
+- Create: `source/libraries/codec/Parun/Codec/CommonSpec.hs`
 - Modify: `source/test-suite/Main.hs`
-- Modify: `pawl.cabal`
+- Modify: `parun.cabal`
 
 **Interfaces:**
-- Consumes: `Pawl.Spec`, `Pawl.Json.*`, `Pawl.Decimal`, `Pawl.Extra.Integer`, `Pawl.Extra.Builder`
+- Consumes: `Parun.Spec`, `Parun.Json.*`, `Parun.Decimal`, `Parun.Extra.Integer`, `Parun.Extra.Builder`
 - Produces: every name in the Recipe's name map, plus `assertJson`, `assertFromJson`, `assertToJson`, `assertJsonCodec`. Tasks 3–15 consume these.
 
 - [ ] **Step 1: Write the failing spec**
 
-Create `source/libraries/codec/Pawl/Codec/CommonSpec.hs`. The `parse`, `render`,
-`tagged` and `sortKeys` cases are ported from `source/test-suite/Pawl/JsonSpec.hs`;
+Create `source/libraries/codec/Parun/Codec/CommonSpec.hs`. The `parse`, `render`,
+`tagged` and `sortKeys` cases are ported from `source/test-suite/Parun/JsonSpec.hs`;
 the `eof` case is new and is the reason this task exists.
 
 ```haskell
-module Pawl.Codec.CommonSpec where
+module Parun.Codec.CommonSpec where
 
 import qualified Data.Either as Either
 import qualified Data.Text as Text
-import qualified Pawl.Codec.Common as Common
-import qualified Pawl.Spec as Spec
+import qualified Parun.Codec.Common as Common
+import qualified Parun.Spec as Spec
 
 spec :: (Monad m, Monad n) => Spec.Spec m n -> n ()
-spec s = Spec.describe s "Pawl.Codec.Common" $ do
+spec s = Spec.describe s "Parun.Codec.Common" $ do
   Spec.describe s "parse" $ do
     Spec.it s "rejects trailing input" $
       Spec.assertBool s (Either.isLeft . Common.parse $ Text.pack "\"a\" x") "expected a parse failure"
@@ -398,20 +398,20 @@ cabal build all 2>&1 | tail -30
 Expected: FAIL to compile — `Common.render`, `Common.parse`, `Common.integer`,
 `Common.asTagged`, `Common.sortKeys`, `Common.assertJsonCodec` are not in scope.
 
-- [ ] **Step 3: Write `Pawl.Codec.Common` in full**
+- [ ] **Step 3: Write `Parun.Codec.Common` in full**
 
-Replace `source/libraries/codec/Pawl/Codec/Common.hs` with the following. The
-module haddock is ported from `Pawl.Codec.Json`, minus its stale `(#481)`.
+Replace `source/libraries/codec/Parun/Codec/Common.hs` with the following. The
+module haddock is ported from `Parun.Codec.Json`, minus its stale `(#481)`.
 
 ```haskell
 -- | Construction, normalization, and extraction helpers over the @json@
 -- sublibrary's 'Value.Value', plus the tagged-object convention the codec builds
 -- on, the element-generic combinators every per-type codec module is written in
 -- terms of, and the assertions its specs are written in terms of. Encoding and
--- decoding themselves live in 'Pawl.Json.Value'; this module adapts them to the
+-- decoding themselves live in 'Parun.Json.Value'; this module adapts them to the
 -- codec's @Either Text@ error channel.
 --
--- Nothing here names a @Pawl.Types@ type, which is what keeps it below all 98
+-- Nothing here names a @Parun.Types@ type, which is what keeps it below all 98
 -- per-type modules rather than in a cycle with them.
 --
 -- 'object' and 'asObject' trade in 'Pair.Pair' lists, which is the shape the
@@ -419,7 +419,7 @@ module haddock is ported from `Pawl.Codec.Json`, minus its stale `(#481)`.
 -- one, and reads them back by name. That order is incidental -- JSON objects are
 -- unordered, nothing checks the bytes of a card file, and 'sortKeys' exists to
 -- compare two values regardless of it.
-module Pawl.Codec.Common where
+module Parun.Codec.Common where
 
 import qualified Data.Foldable as Foldable
 import qualified Data.List as List
@@ -431,18 +431,18 @@ import qualified Data.Set as Set
 import qualified Data.Text as Text
 import qualified GHC.Stack as Stack
 import qualified Numeric.Natural as Natural
-import qualified Pawl.Decimal as Decimal
-import qualified Pawl.Extra.Builder as Builder
-import qualified Pawl.Extra.Integer as Integer
-import qualified Pawl.Json.Array as Array
-import qualified Pawl.Json.Boolean as Boolean
-import qualified Pawl.Json.Null as Null
-import qualified Pawl.Json.Number as Number
-import qualified Pawl.Json.Object as Object
-import qualified Pawl.Json.Pair as Pair
-import qualified Pawl.Json.String as String
-import qualified Pawl.Json.Value as Value
-import qualified Pawl.Spec as Spec
+import qualified Parun.Decimal as Decimal
+import qualified Parun.Extra.Builder as Builder
+import qualified Parun.Extra.Integer as Integer
+import qualified Parun.Json.Array as Array
+import qualified Parun.Json.Boolean as Boolean
+import qualified Parun.Json.Null as Null
+import qualified Parun.Json.Number as Number
+import qualified Parun.Json.Object as Object
+import qualified Parun.Json.Pair as Pair
+import qualified Parun.Json.String as String
+import qualified Parun.Json.Value as Value
+import qualified Parun.Spec as Spec
 import qualified Text.Parsec as Parsec
 
 -- Construction ---------------------------------------------------------------
@@ -681,7 +681,7 @@ decodeBooleanDefault d value = case value of
 -- Assertions -----------------------------------------------------------------
 
 -- | Asserts both directions of a codec against one JSON literal, which is the
--- shape almost every case in a @Pawl.Codec.XSpec@ takes.
+-- shape almost every case in a @Parun.Codec.XSpec@ takes.
 assertJsonCodec :: (Stack.HasCallStack, Monad m, Eq a, Show a) => Spec.Spec m n -> (a -> Value.Value) -> (Value.Value -> Either Text.Text a) -> a -> String -> m ()
 assertJsonCodec s enc dec x j = do
   assertToJson s enc x j
@@ -710,12 +710,12 @@ assertJson s j = case parse (Text.pack j) of
 - [ ] **Step 4: Wire the spec up**
 
 Add to `source/test-suite/Main.hs`:
-`import qualified Pawl.Codec.CommonSpec` (alphabetical, after
-`Pawl.Codec.AbilityNameSpec`) and `Pawl.Codec.CommonSpec.spec s` in `spec`
+`import qualified Parun.Codec.CommonSpec` (alphabetical, after
+`Parun.Codec.AbilityNameSpec`) and `Parun.Codec.CommonSpec.spec s` in `spec`
 (same position). Then:
 
 ```bash
-cabal-gild pawl.cabal
+cabal-gild parun.cabal
 ```
 
 - [ ] **Step 5: Verify**
@@ -730,7 +730,7 @@ Expected: warning-free build, green suite, count up by 7 from Task 1's baseline.
 
 ```bash
 git add -A && hooky fix && git add -A && hooky run
-git commit -m "Build out Pawl.Codec.Common and its spec"
+git commit -m "Build out Parun.Codec.Common and its spec"
 ```
 
 ---
@@ -744,14 +744,14 @@ of the codec import graph, leaves first, so every module's dependencies are
 already converted when its turn comes.
 
 **Files, for every task in this range:**
-- Modify: `source/libraries/types/Pawl/Types/<Name>.hs` for each listed name
-- Modify: `source/libraries/codec/Pawl/Codec/<Name>.hs` for each listed name
-- Create: `source/libraries/codec/Pawl/Codec/<Name>Spec.hs` for each listed name
-- Modify: `source/test-suite/Main.hs`, `source/test-suite/Pawl/CodecSpec.hs`, `pawl.cabal`
+- Modify: `source/libraries/types/Parun/Types/<Name>.hs` for each listed name
+- Modify: `source/libraries/codec/Parun/Codec/<Name>.hs` for each listed name
+- Create: `source/libraries/codec/Parun/Codec/<Name>Spec.hs` for each listed name
+- Modify: `source/test-suite/Main.hs`, `source/test-suite/Parun/CodecSpec.hs`, `parun.cabal`
 
 **Interfaces, for every task in this range:**
-- Consumes: every name in `Pawl.Codec.Common` from Task 2; `X.toJson` / `X.fromJson` from earlier tasks in this range
-- Produces: `X.toJson :: X.X -> Value.Value` and `X.fromJson :: Value.Value -> Either Text.Text X.X` for each listed name, plus any secondary name from the Recipe's table; and `Pawl.Codec.XSpec.spec :: (Monad m, Monad n) => Spec.Spec m n -> n ()`
+- Consumes: every name in `Parun.Codec.Common` from Task 2; `X.toJson` / `X.fromJson` from earlier tasks in this range
+- Produces: `X.toJson :: X.X -> Value.Value` and `X.fromJson :: Value.Value -> Either Text.Text X.X` for each listed name, plus any secondary name from the Recipe's table; and `Parun.Codec.XSpec.spec :: (Monad m, Monad n) => Spec.Spec m n -> n ()`
 
 ### Task 3: Layer 0, first half (20 modules)
 
@@ -787,7 +787,7 @@ and `SlotName` are newtypes needing `unwrap` (R3).
 - [ ] Run `cabal build all` and `cabal test`
 - [ ] Commit
 
-`TargetSpec`'s spec module is `Pawl.Codec.TargetSpecSpec` — see the note under
+`TargetSpec`'s spec module is `Parun.Codec.TargetSpecSpec` — see the note under
 R7 in the Recipe.
 
 ### Task 7: Layers 3 and 4 (8 modules)
@@ -819,7 +819,7 @@ constructors, `TriggerCondition` 26.
 ### Task 10: `Effect` (layer 9)
 
 - [ ] `Effect` — 77 constructors, 224 lines, the largest codec in the repo
-- [ ] Move `CodecSpec`'s `ArmDelayedTrigger`, `Create` and `MoveToZone` elision assertions (the ones built on `payloadHead` and `payloadLength`) into `Pawl.Codec.EffectSpec`, rewritten against JSON literals. **These assert an ELISION — that a default rider is not written — and must not be lost.**
+- [ ] Move `CodecSpec`'s `ArmDelayedTrigger`, `Create` and `MoveToZone` elision assertions (the ones built on `payloadHead` and `payloadLength`) into `Parun.Codec.EffectSpec`, rewritten against JSON literals. **These assert an ELISION — that a default rider is not written — and must not be lost.**
 - [ ] Run `cabal build all` and `cabal test`
 - [ ] Commit
 
@@ -851,13 +851,13 @@ bare (R6).
 
 ---
 
-## Task 14: Delete `Pawl.Codec.Json` and the old specs
+## Task 14: Delete `Parun.Codec.Json` and the old specs
 
 **Files:**
-- Delete: `source/libraries/codec/Pawl/Codec/Json.hs`
-- Delete: `source/test-suite/Pawl/CodecSpec.hs`
-- Delete: `source/test-suite/Pawl/JsonSpec.hs`
-- Modify: `source/libraries/registry/Pawl/Registry.hs`, `source/test-suite/Pawl/Corpus.hs`, `source/test-suite/Pawl/CardsSpec.hs`, `source/test-suite/Main.hs`, `pawl.cabal`
+- Delete: `source/libraries/codec/Parun/Codec/Json.hs`
+- Delete: `source/test-suite/Parun/CodecSpec.hs`
+- Delete: `source/test-suite/Parun/JsonSpec.hs`
+- Modify: `source/libraries/registry/Parun/Registry.hs`, `source/test-suite/Parun/Corpus.hs`, `source/test-suite/Parun/CardsSpec.hs`, `source/test-suite/Main.hs`, `parun.cabal`
 
 **Interfaces:**
 - Consumes: `Common.parse`, `Common.sortKeys` from Task 2
@@ -866,7 +866,7 @@ bare (R6).
 - [ ] **Step 1: Confirm `CodecSpec` is empty of codec cases**
 
 ```bash
-grep -c 'Spec.it s' source/test-suite/Pawl/CodecSpec.hs
+grep -c 'Spec.it s' source/test-suite/Parun/CodecSpec.hs
 ```
 
 Expected: `0`. If not, the remaining cases belong to a module Tasks 3–13
@@ -875,21 +875,21 @@ delete a case to make this step pass.**
 
 - [ ] **Step 2: Re-point the last three consumers**
 
-`source/libraries/registry/Pawl/Registry.hs:125` — `Json.parse` becomes
+`source/libraries/registry/Parun/Registry.hs:125` — `Json.parse` becomes
 `Common.parse`, and `jsonToCard` becomes `Card.fromJson`.
-`source/test-suite/Pawl/Corpus.hs:65` — the same two.
-`source/test-suite/Pawl/CardsSpec.hs:1189,1200` — `Json.parse` becomes
+`source/test-suite/Parun/Corpus.hs:65` — the same two.
+`source/test-suite/Parun/CardsSpec.hs:1189,1200` — `Json.parse` becomes
 `Common.parse`, `Json.sortKeys` becomes `Common.sortKeys`, `printingToJson`
 becomes `Printing.toJson`.
 
 - [ ] **Step 3: Delete and regenerate**
 
 ```bash
-git rm source/libraries/codec/Pawl/Codec/Json.hs source/test-suite/Pawl/CodecSpec.hs source/test-suite/Pawl/JsonSpec.hs
-cabal-gild pawl.cabal
+git rm source/libraries/codec/Parun/Codec/Json.hs source/test-suite/Parun/CodecSpec.hs source/test-suite/Parun/JsonSpec.hs
+cabal-gild parun.cabal
 ```
 
-Remove `Pawl.CodecSpec` and `Pawl.JsonSpec` from `source/test-suite/Main.hs`
+Remove `Parun.CodecSpec` and `Parun.JsonSpec` from `source/test-suite/Main.hs`
 (both the import and the call) and from the test suite's `other-modules`.
 
 - [ ] **Step 4: Verify**
@@ -898,14 +898,14 @@ Remove `Pawl.CodecSpec` and `Pawl.JsonSpec` from `source/test-suite/Main.hs`
 cabal build all 2>&1 | tail -20 && cabal test 2>&1 | tail -20
 ```
 
-Expected: warning-free, green. `Pawl.CardsSpec`'s corpus round-trip over
+Expected: warning-free, green. `Parun.CardsSpec`'s corpus round-trip over
 `data/cards/` passing here is the proof the wire format never moved.
 
 - [ ] **Step 5: Commit**
 
 ```bash
 git add -A && hooky fix && git add -A && hooky run
-git commit -m "Delete Pawl.Codec.Json and the monolithic codec spec"
+git commit -m "Delete Parun.Codec.Json and the monolithic codec spec"
 ```
 
 ---
@@ -915,7 +915,7 @@ git commit -m "Delete Pawl.Codec.Json and the monolithic codec spec"
 The 47 types the codec never touches still need R2, R3 and R6.
 
 **Files:**
-- Modify: `source/libraries/types/Pawl/Types/<Name>.hs` for each name below
+- Modify: `source/libraries/types/Parun/Types/<Name>.hs` for each name below
 
 **Interfaces:**
 - Consumes: nothing
@@ -969,9 +969,9 @@ git commit -m "Apply the type style to the types with no codec"
 
 Two changes in "Where the tests go": the spec signature for codec specs is
 `(Monad m, Monad n) => Spec.Spec m n -> n ()`, not `(Applicative m, Monad n)`;
-and codec specs live beside the codec (`Pawl.Codec.Color` →
-`Pawl.Codec.ColorSpec`) rather than in `source/test-suite/`. In "Code
-conventions", state the `toJson`/`fromJson` naming and that `Pawl.Codec.Common`
+and codec specs live beside the codec (`Parun.Codec.Color` →
+`Parun.Codec.ColorSpec`) rather than in `source/test-suite/`. In "Code
+conventions", state the `toJson`/`fromJson` naming and that `Parun.Codec.Common`
 is the codec's base module.
 
 - [ ] **Step 2: Self-review the branch**
@@ -1001,7 +1001,7 @@ baseline.
 The body must carry: what changed and why; the design calls made (`encode*` /
 `decode*` over `to*` / `from*` for combinators, `String` keys, one spec per
 codec) and the alternatives rejected; how it was verified (warning-free build,
-`hooky run` clean, suite count before → after, `Pawl.CardsSpec`'s corpus
+`hooky run` clean, suite count before → after, `Parun.CardsSpec`'s corpus
 round-trip as the proof the wire format is unchanged); and an explicit **"No"**
 to whether the diff makes the rules core case on an effect's identity — this
 diff adds no engine code at all.

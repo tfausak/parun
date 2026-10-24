@@ -24,7 +24,7 @@ follow-ups, and a fourth defect held together only by a comment.
    `Resolve.hs`; no card can falsify it.
 
 #52 arrives as a consequence: the card that proves #393 hardest (Full Throttle)
-carries a stated-duration delayed trigger, which CR 603.7b describes and pawl
+carries a stated-duration delayed trigger, which CR 603.7b describes and parun
 does not model.
 
 ## CR ground truth
@@ -47,7 +47,7 @@ Every rule below was read from `docs/rules.txt` at the line given.
 | 612.1 | 2934 | a text change applies to "any words or symbols printed on that object" |
 
 Note what CR 603.7b gives us: the stated-duration case is written into the rule
-that pawl currently implements only half of, so #52 is a gap in an existing
+that parun currently implements only half of, so #52 is a gap in an existing
 citation rather than a new mechanism.
 
 There is **no CR rule for "for the first time each turn."** The nearest, CR
@@ -58,7 +58,7 @@ a citation.
 
 ## Design
 
-### A. One notion of "this phase", in `Pawl.Turn`
+### A. One notion of "this phase", in `Parun.Turn`
 
 ```haskell
 -- Split what is left of the turn into THIS phase's remaining steps and
@@ -94,7 +94,7 @@ does this phase end", and CR 511.3 is cited once rather than twice.
 
 ### B. `Effect.AddPhases` (#393)
 
-New `Pawl.Type.ExtraPhase`:
+New `Parun.Type.ExtraPhase`:
 
 ```haskell
 data ExtraPhase = ExtraCombat | ExtraMain
@@ -192,8 +192,8 @@ whose CR 514.2 cleanup expiry is what bounds it to this turn.
 ### F. `Filter.rewrite` (#395)
 
 ```haskell
-Pawl.Filter.rewrite    :: [(Subtype, Subtype)] -> Filter    -> Filter
-Pawl.ObjectRef.rewrite :: [(Subtype, Subtype)] -> ObjectRef -> ObjectRef
+Parun.Filter.rewrite    :: [(Subtype, Subtype)] -> Filter    -> Filter
+Parun.ObjectRef.rewrite :: [(Subtype, Subtype)] -> ObjectRef -> ObjectRef
 ```
 
 `Filter.rewrite` maps `HasSubtype` through the pairs and recurses through
@@ -202,7 +202,7 @@ leaves `InSlot` alone and rewrites `EachMatching`'s filter.
 
 `Resolve.rewriteEffect` then threads it through every arm carrying a `Filter`:
 `Search`, `Destroy`, `PlayerSacrifices`, `AttachTarget`, `Untap`. It lives in
-`Pawl.Filter`, the module that owns the type's logic, mirroring where
+`Parun.Filter`, the module that owns the type's logic, mirroring where
 `Projection.rewriteModification` sits relative to `Modification`.
 
 Scope is held to the issue's: effects. Tokens and emblems keep the carve-out the
@@ -310,6 +310,6 @@ Each gameplay test is written first and seen red.
 ## Does the rules core case on an effect's identity?
 
 No. `Turn` takes a `Seq Phase` and an `ExtraPhase` list and knows nothing about
-effects. The new `case effect of` work is confined to `Pawl.Resolve`, that
+effects. The new `case effect of` work is confined to `Parun.Resolve`, that
 module's stated charter. `Filter.rewrite` cases on `Filter`, a characteristic
 predicate, never on which effect carried it.

@@ -6,7 +6,7 @@
 
 **Architecture:** Today the entry loop applies an `EntryR WithCounters` row by *performing* a counter placement, which opens a second, nested CR 616.1 loop inside the CR 122.6 funnel; that inner loop is where `CounterR` lives. The rules have no such inner event -- CR 614.1c makes "enters with N counters" a modification of the ENTRY, with the counters materializing once. This hoists the pool up to match: entry rows accumulate a PENDING per-kind count, `CounterR` and a new compleated row rewrite that pending count as siblings under CR 616.1e, and `runEntry` flushes it through the funnel's write-and-emit half once the loop drains. The funnel itself stays for every placement that is not an entry, which CR 614.16 requires.
 
-**Tech Stack:** Haskell, cabal, tasty. `pawl:types` -> `pawl:codec` -> `pawl:engine` -> `pawl:test`.
+**Tech Stack:** Haskell, cabal, tasty. `parun:types` -> `parun:codec` -> `parun:engine` -> `parun:test`.
 
 **Spec:** GitHub issue #1996 and its four comments. The owner's 2026-08-24 design call ("one CR 616.1 pool") is the direction; the 2026-08-25 comment records what a prior research pass established. Read both before starting.
 
@@ -14,9 +14,9 @@
 
 - Ground truth is `docs/rules.txt`, grepped by rule number. Never a rule number quoted in this plan or in the issue -- re-check every citation.
 - The rules core must never case on an effect's IDENTITY. Keywords are the stated exception (CLAUDE.md), so a `Keyword.Compleated` arm is legitimate; a `case effect of DealDamage{}` is not.
-- Constructors take a `Mk` prefix and never pun the type name. One type per module under `Pawl.Types.<TypeName>`.
+- Constructors take a `Mk` prefix and never pun the type name. One type per module under `Parun.Types.<TypeName>`.
 - Language extensions come from `.hlint.yaml`'s allowlist.
-- STAGE, then `hooky fix`, then `git add` again. Adding a module means staging `pawl.cabal` and running `cabal-gild pawl.cabal` directly.
+- STAGE, then `hooky fix`, then `git add` again. Adding a module means staging `parun.cabal` and running `cabal-gild parun.cabal` directly.
 - Commit before mutation testing, so a blocked commit does not destroy the baseline.
 - Copy `cabal.project.local` from the primary checkout before the first build in a fresh worktree, or `pedantic`/`-Werror` are off and green means nothing.
 
@@ -32,7 +32,7 @@ Recording these so the implementer does not relitigate them.
 
 **Why hoist and not push compleated down into the funnel.** A compleated row expressed against a counter PLACEMENT cannot tell Tamiyo entering from Tamiyo's `+1` loyalty ability resolving: `CounterCause` is `ByEffect | ByPlayer | ByRule` and both are `ByEffect`. Such a row would subtract two every activation. Recovering the distinction means reinventing entry framing one layer down, having already paid for the move. `Scaling` also has no subtracting arm (`Multiply | AddMore | Halve`).
 
-**Why `GameState` and not `Object` for the pending count.** `Pawl.Types.Object` has 39 fields and roughly forty construction sites, several of them fully positional in the test suite (`Pawl/ResolveSpec.hs:840`, `Pawl/CounterspellSpec.hs:171`, `Pawl/ZoneChangeSpec.hs:103`). A new `Map ... Natural` next to `counters :: Map ... Natural` would be absorbed silently in argument order -- the trap CLAUDE.md names, which bit PRs #2009 and #2021. `Pawl.Types.GameState` has three construction sites, all record syntax, and already carries `enteringBeside` (`GameState.hs:307`) with the save-and-restore discipline `runEntry` needs.
+**Why `GameState` and not `Object` for the pending count.** `Parun.Types.Object` has 39 fields and roughly forty construction sites, several of them fully positional in the test suite (`Parun/ResolveSpec.hs:840`, `Parun/CounterspellSpec.hs:171`, `Parun/ZoneChangeSpec.hs:103`). A new `Map ... Natural` next to `counters :: Map ... Natural` would be absorbed silently in argument order -- the trap CLAUDE.md names, which bit PRs #2009 and #2021. `Parun.Types.GameState` has three construction sites, all record syntax, and already carries `enteringBeside` (`GameState.hs:307`) with the save-and-restore discipline `runEntry` needs.
 
 **Why a separate map and not `Object.counters`.** Two sites place entry counters BEFORE `runEntry` (`Event.hs:3351` and `Event.hs:4045`), and both carry a comment resting on "no entry replacement in the pool reads a counter the entering object already has". A pending map distinct from `Object.counters` keeps that true by construction; reusing `Object.counters` would break it and make a doubling row scale counters the object already had.
 
@@ -45,22 +45,22 @@ Recording these so the implementer does not relitigate them.
 No behaviour change: the field is written by nobody and read by nobody. Landing it alone keeps the codec churn out of the behavioural diff.
 
 **Files:**
-- Modify: `source/libraries/types/Pawl/Types/GameState.hs` (beside `enteringBeside`, line 307)
-- Modify: `source/libraries/codec/Pawl/Codec/GameState.hs:88` (decode) and `:152` (assemble)
-- Modify: `source/libraries/engine/Pawl/Engine/Setup.hs:131`, `:454`, `:593`
-- Modify: `source/libraries/test/Pawl/Support.hs:1603`
-- Test: `source/libraries/codec/Pawl/Codec/GameStateSpec.hs`
+- Modify: `source/libraries/types/Parun/Types/GameState.hs` (beside `enteringBeside`, line 307)
+- Modify: `source/libraries/codec/Parun/Codec/GameState.hs:88` (decode) and `:152` (assemble)
+- Modify: `source/libraries/engine/Parun/Engine/Setup.hs:131`, `:454`, `:593`
+- Modify: `source/libraries/test/Parun/Support.hs:1603`
+- Test: `source/libraries/codec/Parun/Codec/GameStateSpec.hs`
 
 **Interfaces:**
 - Produces: `GameState.enteringCounters :: Map.Map ObjectId.ObjectId (Map.Map (CounterKind.CounterKind Keyword.Keyword) Natural.Natural)`
 
 - [ ] **Step 1: Add the field**
 
-In `Pawl.Types.GameState`, immediately after `enteringBeside`:
+In `Parun.Types.GameState`, immediately after `enteringBeside`:
 
 ```haskell
     -- | CR 614.1c: the counters each entering permanent is so far going to enter
-    -- WITH, pending. Written by Pawl.Engine.Event's entry rewrites and by the two
+    -- WITH, pending. Written by Parun.Engine.Event's entry rewrites and by the two
     -- doors that dress a permanent before its entry loop, rewritten by the
     -- CounterR and Compleated rows that CR 616.1 orders against each other, and
     -- flushed onto the object by runEntry once the loop drains.
@@ -83,7 +83,7 @@ Add `CounterKind` and `Keyword` imports if the module lacks them; `-Werror` will
 
 - [ ] **Step 2: Build to find every construction site**
 
-Run: `cabal build pawl:types pawl:codec pawl:engine 2>&1 | head -40`
+Run: `cabal build parun:types parun:codec parun:engine 2>&1 | head -40`
 Expected: FAIL, missing-field errors at `Setup.hs:131`, `:454`, `:593`, `Codec/GameState.hs:152`, `Support.hs:1603`. Record the list -- these are the only sites, and all use record syntax, so none can absorb the field positionally.
 
 - [ ] **Step 3: Fill in every site**
@@ -106,11 +106,11 @@ and at 152:
         GameState.enteringCounters = enteringCounters,
 ```
 
-Check the helper names against the neighbouring lines in that file rather than trusting this snippet -- `Common.map`'s key encoding for a non-text key may need the same treatment `counters` gets in `Pawl.Codec.Object`. Copy whatever that codec does for `Object.counters`, which has the identical inner type.
+Check the helper names against the neighbouring lines in that file rather than trusting this snippet -- `Common.map`'s key encoding for a non-text key may need the same treatment `counters` gets in `Parun.Codec.Object`. Copy whatever that codec does for `Object.counters`, which has the identical inner type.
 
 - [ ] **Step 4: Round-trip test**
 
-In `Pawl.Codec.GameStateSpec`, extend the existing full-state round-trip fixture so `enteringCounters` is non-empty in at least one case -- an empty map round-trips through almost any bug. Follow the file's existing `Common.assertJson` shape.
+In `Parun.Codec.GameStateSpec`, extend the existing full-state round-trip fixture so `enteringCounters` is non-empty in at least one case -- an empty map round-trips through almost any bug. Follow the file's existing `Common.assertJson` shape.
 
 - [ ] **Step 5: Build and test**
 
@@ -120,7 +120,7 @@ Expected: PASS, suite count up by the round-trip case.
 - [ ] **Step 6: Stage, format, commit**
 
 ```bash
-git add source/libraries/types/Pawl/Types/GameState.hs source/libraries/codec/Pawl/Codec/GameState.hs source/libraries/codec/Pawl/Codec/GameStateSpec.hs source/libraries/engine/Pawl/Engine/Setup.hs source/libraries/test/Pawl/Support.hs
+git add source/libraries/types/Parun/Types/GameState.hs source/libraries/codec/Parun/Codec/GameState.hs source/libraries/codec/Parun/Codec/GameStateSpec.hs source/libraries/engine/Parun/Engine/Setup.hs source/libraries/test/Parun/Support.hs
 hooky fix
 git add -u
 git commit -m "Add a pending entry-counter map to the game state"
@@ -133,7 +133,7 @@ git commit -m "Add a pending entry-counter map to the game state"
 Still no behaviour change: nothing writes to `enteringCounters`, so the flush is a no-op on every board. This isolates the funnel surgery from the semantic move.
 
 **Files:**
-- Modify: `source/libraries/engine/Pawl/Engine/Event.hs` -- `putCountersIn` (line 2407), `runEntry` (line 2188)
+- Modify: `source/libraries/engine/Parun/Engine/Event.hs` -- `putCountersIn` (line 2407), `runEntry` (line 2188)
 
 **Interfaces:**
 - Consumes: `GameState.enteringCounters` from Task 1
@@ -211,7 +211,7 @@ Expected: PASS, suite count UNCHANGED. Nothing writes `enteringCounters` yet, so
 - [ ] **Step 5: Commit**
 
 ```bash
-git add source/libraries/engine/Pawl/Engine/Event.hs
+git add source/libraries/engine/Parun/Engine/Event.hs
 hooky fix
 git add -u
 git commit -m "Split the counter funnel's write half out, and flush pending entry counters"
@@ -224,9 +224,9 @@ git commit -m "Split the counter funnel's write half out, and flush pending entr
 The behavioural pivot. Every path that gives a permanent counters as it enters stops placing them and starts accumulating them; `CounterR` gains an arm against `WouldEnter` so CR 614.16 still reaches them, now one level up. This lands as ONE task because splitting it reddens every Doubling Season test in between.
 
 **Files:**
-- Modify: `source/libraries/engine/Pawl/Engine/Event.hs` -- `apply`'s `WithCounters` (1384), `SacrificeAnyNumber` (~1525), `ReadAhead` (~1570), `Riot` (~1612), `Unleash`/`Bloodthirst` (~1660, ~1677) arms; the pre-entry doors at 3351 and 4045
-- Modify: `source/libraries/engine/Pawl/Engine/Replacement.hs` -- `applies` (389), `bucketOfEffect` (920), `readsApplier` (1023)
-- Test: `source/libraries/test/Pawl/SagaSpec.hs:179`, `source/libraries/test/Pawl/PlaneswalkerSpec.hs:401`
+- Modify: `source/libraries/engine/Parun/Engine/Event.hs` -- `apply`'s `WithCounters` (1384), `SacrificeAnyNumber` (~1525), `ReadAhead` (~1570), `Riot` (~1612), `Unleash`/`Bloodthirst` (~1660, ~1677) arms; the pre-entry doors at 3351 and 4045
+- Modify: `source/libraries/engine/Parun/Engine/Replacement.hs` -- `applies` (389), `bucketOfEffect` (920), `readsApplier` (1023)
+- Test: `source/libraries/test/Parun/SagaSpec.hs:179`, `source/libraries/test/Parun/PlaneswalkerSpec.hs:401`
 
 **Interfaces:**
 - Consumes: `GameState.enteringCounters`, `flushEnteringCounters` from Tasks 1-2
@@ -301,7 +301,7 @@ matchingEnteringCounters gs pattern oid =
         Just kind -> Map.filterWithKey (\k _ -> k == kind) pending
 ```
 
-Check each helper's real arity against the existing `WouldPutCounters` arm before writing -- the snippet above names `matchesPutter`, `matchesPermanent` and `matchesController` from that arm and their argument order may differ. Both new helpers are exported from `Pawl.Engine.Replacement`, since `Event.apply` calls them.
+Check each helper's real arity against the existing `WouldPutCounters` arm before writing -- the snippet above names `matchesPutter`, `matchesPermanent` and `matchesController` from that arm and their argument order may differ. Both new helpers are exported from `Parun.Engine.Replacement`, since `Event.apply` calls them.
 
 - [ ] **Step 4: Give `apply` the matching arm**
 
@@ -327,26 +327,26 @@ Neither needs a new arm -- both dispatch on the effect alone and `CounterR` alre
 
 - [ ] **Step 6: Build**
 
-Run: `cabal build pawl:engine 2>&1 | head -40`
+Run: `cabal build parun:engine 2>&1 | head -40`
 Expected: PASS. If `-Werror` names an unmatched `ProposedEvent` in `applies` or `apply`, an arm was missed.
 
 - [ ] **Step 7: Run the suite and read what moved**
 
 Run: `cabal test 2>&1 | tail -40`
-Expected: PASS with the count unchanged. The two tests that PROVE this path still work are `Pawl/SagaSpec.hs:179` ("CR 614.16 Doubling Season doubles the entering lore counter but NOT the turn-based one") and `Pawl/PlaneswalkerSpec.hs:401` ("CR 614.16 Doubling Season doubles a planeswalker's starting loyalty"). Both must stay green WITHOUT edits -- they are the regression gate for the whole hoist. `Pawl/SagaSpec.hs:201` (Vorinclex and the turn-based lore counter) exercises CR 714.3c, which is `ByRule` and not an entry, so it must be untouched by this task.
+Expected: PASS with the count unchanged. The two tests that PROVE this path still work are `Parun/SagaSpec.hs:179` ("CR 614.16 Doubling Season doubles the entering lore counter but NOT the turn-based one") and `Parun/PlaneswalkerSpec.hs:401` ("CR 614.16 Doubling Season doubles a planeswalker's starting loyalty"). Both must stay green WITHOUT edits -- they are the regression gate for the whole hoist. `Parun/SagaSpec.hs:201` (Vorinclex and the turn-based lore counter) exercises CR 714.3c, which is `ByRule` and not an entry, so it must be untouched by this task.
 
 If any test needs its EXPECTATION changed to pass, stop and report rather than editing it.
 
 - [ ] **Step 8: Mutate**
 
 Run: `script/mutate.sh` with the `WithCounters` arm's `addEnteringCounters` call deleted.
-Expected: `Pawl/PlaneswalkerSpec.hs:401` reddens on its loyalty assertion. Then restore, and delete the new `CounterR`/`WouldEnter` arm of `applies`.
+Expected: `Parun/PlaneswalkerSpec.hs:401` reddens on its loyalty assertion. Then restore, and delete the new `CounterR`/`WouldEnter` arm of `applies`.
 Expected: the same test reddens, now at 5 rather than 10 -- which is what proves CR 614.16 is reaching the entry pool and not surviving on some other path.
 
 - [ ] **Step 9: Commit**
 
 ```bash
-git add source/libraries/engine/Pawl/Engine/Event.hs source/libraries/engine/Pawl/Engine/Replacement.hs
+git add source/libraries/engine/Parun/Engine/Event.hs source/libraries/engine/Parun/Engine/Replacement.hs
 hooky fix
 git add -u
 git commit -m "Hoist entry counters into the entry loop's CR 616.1 pool"
@@ -357,11 +357,11 @@ git commit -m "Hoist entry counters into the entry loop's CR 616.1 pool"
 ### Task 4: Compleated becomes a row
 
 **Files:**
-- Modify: `source/libraries/types/Pawl/Types/EntryRewrite.hs`
-- Modify: `source/libraries/codec/Pawl/Codec/EntryRewrite.hs`
-- Modify: `source/libraries/engine/Pawl/Engine/Projection.hs:4039`
-- Modify: `source/libraries/engine/Pawl/Engine/Event.hs` (`apply`), `source/libraries/engine/Pawl/Engine/Replacement.hs` (`applies`, `bucketOfEffect`, `readsApplier`, `admitsEntry`)
-- Test: `source/libraries/test/Pawl/ManaSpec.hs` (Tamiyo group, from line 5923)
+- Modify: `source/libraries/types/Parun/Types/EntryRewrite.hs`
+- Modify: `source/libraries/codec/Parun/Codec/EntryRewrite.hs`
+- Modify: `source/libraries/engine/Parun/Engine/Projection.hs:4039`
+- Modify: `source/libraries/engine/Parun/Engine/Event.hs` (`apply`), `source/libraries/engine/Parun/Engine/Replacement.hs` (`applies`, `bucketOfEffect`, `readsApplier`, `admitsEntry`)
+- Test: `source/libraries/test/Parun/ManaSpec.hs` (Tamiyo group, from line 5923)
 
 **Interfaces:**
 - Consumes: `addEnteringCounters`, `GameState.enteringCounters`, the entry-level `CounterR` arm
@@ -369,7 +369,7 @@ git commit -m "Hoist entry counters into the entry loop's CR 616.1 pool"
 
 - [ ] **Step 1: Write the failing test**
 
-In `Pawl.ManaSpec`'s Tamiyo group (from line 5923), following the shape of the
+In `Parun.ManaSpec`'s Tamiyo group (from line 5923), following the shape of the
 five tests already there. `S.addCreature` puts Doubling Season on the
 battlefield and hands back its id, which is what tells the two rows apart in the
 CR 616.1 prompt: compleated's source is Tamiyo herself, Doubling Season's is the
@@ -408,7 +408,7 @@ And the answer beside `announcesBoth` at the foot of the module:
 -- Pay the {G/U/P} with life, and answer the CR 616.1e race by SOURCE -- Doubling
 -- Season's row names the enchantment, compleated's names Tamiyo -- so the
 -- assertion does not rest on the engine's canonical candidate order.
--- Pawl.ReplacementSpec.raceIsSelf is the same idiom.
+-- Parun.ReplacementSpec.raceIsSelf is the same idiom.
 racesCompleated :: Bool -> ObjectId.ObjectId -> Prompt.Prompt r -> r
 racesCompleated wantCompleated seasonId p = case p of
   Prompt.ChooseReplacement _ _ entries ->
@@ -418,17 +418,17 @@ racesCompleated wantCompleated seasonId p = case p of
 
 `wasReplacementChoice :: Response.Response -> Bool` needs writing beside
 `phyrexianAnnouncements` (line 5171), which shows how that module reads a
-recorded transcript; `Pawl/ReplacementSpec.hs:3067`'s `wasAskedToReplace` is the
+recorded transcript; `Parun/ReplacementSpec.hs:3067`'s `wasAskedToReplace` is the
 same predicate one module over, and may be copyable outright.
 
 - [ ] **Step 2: Run it to watch it fail**
 
 Run: `cabal test --test-options='-p "Tamiyo"' 2>&1 | tail -30`
-Expected: FAIL. Today pawl answers 6 with no prompt at all, so the first assertion passes by accident and the SECOND is the one that reddens -- and the test as written also fails to find a prompt to answer. Both are the divergence. Confirm the failure is the 8 assertion and not a helper that does not compile.
+Expected: FAIL. Today parun answers 6 with no prompt at all, so the first assertion passes by accident and the SECOND is the one that reddens -- and the test as written also fails to find a prompt to answer. Both are the divergence. Confirm the failure is the 8 assertion and not a helper that does not compile.
 
 - [ ] **Step 3: Add the constructor**
 
-In `Pawl.Types.EntryRewrite`:
+In `Parun.Types.EntryRewrite`:
 
 ```haskell
   | -- | CR 702.150a: compleated. "If this permanent would enter with one or more
@@ -503,7 +503,7 @@ That condition is also what makes CR 616.2 work: on the first iteration nothing 
 
 - [ ] **Step 6: Codec**
 
-`Pawl.Codec.EntryRewrite` uses `Arm.tagged` with a `_ -> Nothing` fallthrough (CLAUDE.md, #2262), so a missing arm compiles silently. Add the arm by hand and add its case to `Pawl.Codec.EntryRewriteSpec` -- follow `Bloodthirst`'s, which carries the same `Natural` payload.
+`Parun.Codec.EntryRewrite` uses `Arm.tagged` with a `_ -> Nothing` fallthrough (CLAUDE.md, #2262), so a missing arm compiles silently. Add the arm by hand and add its case to `Parun.Codec.EntryRewriteSpec` -- follow `Bloodthirst`'s, which carries the same `Natural` payload.
 
 - [ ] **Step 7: Run the test**
 
@@ -529,7 +529,7 @@ For each, name the assertion that reddened. A mutation reported only as "went re
 - [ ] **Step 10: Commit**
 
 ```bash
-git add source/libraries/types/Pawl/Types/EntryRewrite.hs source/libraries/codec/Pawl/Codec/EntryRewrite.hs source/libraries/codec/Pawl/Codec/EntryRewriteSpec.hs source/libraries/engine/Pawl/Engine/Projection.hs source/libraries/engine/Pawl/Engine/Event.hs source/libraries/engine/Pawl/Engine/Replacement.hs source/libraries/test/Pawl/ManaSpec.hs
+git add source/libraries/types/Parun/Types/EntryRewrite.hs source/libraries/codec/Parun/Codec/EntryRewrite.hs source/libraries/codec/Parun/Codec/EntryRewriteSpec.hs source/libraries/engine/Parun/Engine/Projection.hs source/libraries/engine/Parun/Engine/Event.hs source/libraries/engine/Parun/Engine/Replacement.hs source/libraries/test/Parun/ManaSpec.hs
 hooky fix
 git add -u
 git commit -m "Mint compleated as its own CR 616.1-orderable entry row"
@@ -540,9 +540,9 @@ git commit -m "Mint compleated as its own CR 616.1-orderable entry row"
 ### Task 5: The paperwork the issue owes
 
 **Files:**
-- Modify: `source/libraries/types/Pawl/Types/Keyword.hs` (the `Compleated` haddock, ~1152)
-- Modify: `source/libraries/engine/Pawl/Engine/Projection.hs` (the `intrinsicReplacementsOf` haddock, ~4021)
-- Modify: `source/libraries/engine/Pawl/Engine/Event.hs` (the comments at ~1537, ~1582, ~3344, ~4032 that say counters reach CR 614.16 "through the funnel")
+- Modify: `source/libraries/types/Parun/Types/Keyword.hs` (the `Compleated` haddock, ~1152)
+- Modify: `source/libraries/engine/Parun/Engine/Projection.hs` (the `intrinsicReplacementsOf` haddock, ~4021)
+- Modify: `source/libraries/engine/Parun/Engine/Event.hs` (the comments at ~1537, ~1582, ~3344, ~4032 that say counters reach CR 614.16 "through the funnel")
 - Modify: GitHub issue #877's body
 
 - [ ] **Step 1: Grep the bare issue number**
@@ -575,7 +575,7 @@ Line 43 of #877's body reads `702.150 Compleated (Tamiyo, Compleated Sage; CR 61
 - [ ] **Step 5: Check for dependents**
 
 ```bash
-gh api repos/tfausak/pawl/issues/1996/dependencies/blocking
+gh api repos/tfausak/parun/issues/1996/dependencies/blocking
 ```
 
 Say in the PR body which issues this unblocked, if any.

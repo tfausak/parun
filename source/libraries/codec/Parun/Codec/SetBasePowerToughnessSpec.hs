@@ -1,0 +1,33 @@
+module Parun.Codec.SetBasePowerToughnessSpec where
+
+import qualified Parun.Codec.SetBasePowerToughness as SetBasePowerToughness
+import qualified Parun.JsonCodec.Common as Common
+import qualified Parun.Spec as Spec
+import qualified Parun.Types.Quantity as Quantity
+import qualified Parun.Types.SetBasePowerToughness as SetBasePowerToughness
+
+spec :: (Monad m, Monad n) => Spec.Spec m n -> n ()
+spec s = Spec.describe s "Parun.Codec.SetBasePowerToughness" $ do
+  -- CR 613.1g, layer 7b. Asymmetric on purpose: a swapped codec would round-trip an equal pair.
+  Spec.it s "MkSetBasePowerToughness" $
+    Common.assertCodec
+      s
+      SetBasePowerToughness.codec
+      ( SetBasePowerToughness.MkSetBasePowerToughness
+          { SetBasePowerToughness.power = Just (Quantity.Literal 1),
+            SetBasePowerToughness.toughness = Just (Quantity.Literal 2)
+          }
+      )
+      " {\"power\":{\"type\":\"Literal\",\"value\":1},\"toughness\":{\"type\":\"Literal\",\"value\":2}} "
+  -- CR 613.4b's "and/or": an absent half is omitted, not written as null.
+  Spec.it s "toughness only" $
+    Common.assertCodec
+      s
+      SetBasePowerToughness.codec
+      ( SetBasePowerToughness.MkSetBasePowerToughness
+          { SetBasePowerToughness.power = Nothing,
+            SetBasePowerToughness.toughness = Just (Quantity.Literal 2)
+          }
+      )
+      " {\"toughness\":{\"type\":\"Literal\",\"value\":2}} "
+  Spec.it s "has a schema" $ Common.assertHasSchema s SetBasePowerToughness.codec

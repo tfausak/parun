@@ -1,0 +1,43 @@
+module Parun.Codec.ExtraTurnSpec where
+
+import qualified Data.Set as Set
+import qualified Parun.Codec.ExtraTurn as ExtraTurn
+import qualified Parun.JsonCodec.Common as Common
+import qualified Parun.Spec as Spec
+import qualified Parun.Types.BeginningStep as BeginningStep
+import qualified Parun.Types.ExtraTurn as ExtraTurn
+import qualified Parun.Types.ObjectId as ObjectId
+import qualified Parun.Types.Phase as Phase
+import qualified Parun.Types.PhaseSelector as PhaseSelector
+import qualified Parun.Types.PlayerId as PlayerId
+import qualified Parun.Types.Timestamp as Timestamp
+
+spec :: (Monad m, Monad n) => Spec.Spec m n -> n ()
+spec s = Spec.describe s "Parun.Codec.ExtraTurn" $ do
+  -- CR 500.7 with nothing skipped -- Time Warp.
+  Spec.it s "a turn that skips nothing" $
+    Common.assertCodec
+      s
+      ExtraTurn.codec
+      ExtraTurn.MkExtraTurn
+        { ExtraTurn.taker = PlayerId.MkPlayerId 1,
+          ExtraTurn.source = ObjectId.MkObjectId 4,
+          ExtraTurn.skipped = Set.empty,
+          ExtraTurn.createdAt = Timestamp.MkTimestamp 9
+        }
+      " {\"taker\":1,\"source\":4,\"skipped\":[],\"createdAt\":9} "
+  -- CR 500.11's skip, travelling WITH the turn rather than referencing it --
+  -- Savor the Moment's "skip the untap step of that turn".
+  Spec.it s "a turn whose untap step is skipped" $
+    Common.assertCodec
+      s
+      ExtraTurn.codec
+      ExtraTurn.MkExtraTurn
+        { ExtraTurn.taker = PlayerId.MkPlayerId 2,
+          ExtraTurn.source = ObjectId.MkObjectId 5,
+          ExtraTurn.skipped = Set.singleton (PhaseSelector.Step (Phase.Beginning BeginningStep.Untap)),
+          ExtraTurn.createdAt = Timestamp.MkTimestamp 11
+        }
+      " {\"taker\":2,\"source\":5,\"skipped\":[{\"type\":\"Step\",\"value\":{\"type\":\"Beginning\",\"value\":{\"type\":\"Untap\"}}}],\"createdAt\":11} "
+  Spec.it s "has a schema" $
+    Common.assertHasSchema s ExtraTurn.codec

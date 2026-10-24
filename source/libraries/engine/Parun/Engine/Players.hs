@@ -1,0 +1,285 @@
+module Parun.Engine.Players where
+
+import qualified Data.List as List
+import qualified Data.Map.Strict as Map
+import qualified Data.Maybe as Maybe
+import Data.Set (Set)
+import qualified Data.Set as Set
+import qualified Parun.Engine.Binding as Binding
+import qualified Parun.Engine.Filter as Filter
+import qualified Parun.Engine.Game as Game
+import qualified Parun.Engine.Turn as Turn
+import qualified Parun.Types.Acquisition as Acquisition
+import qualified Parun.Types.AttackTarget as AttackTarget
+import qualified Parun.Types.AttackingPlayers as AttackingPlayers
+import qualified Parun.Types.Chosen as Chosen
+import qualified Parun.Types.Combat as Combat
+import Parun.Types.Game (Game)
+import Parun.Types.GameState (GameState)
+import qualified Parun.Types.GameState as GameState
+import Parun.Types.ObjectId (ObjectId)
+import qualified Parun.Types.Player as Player
+import qualified Parun.Types.PlayerChoice as PlayerChoice
+import Parun.Types.PlayerId (PlayerId)
+import qualified Parun.Types.PlayerMeasure as PlayerMeasure
+import qualified Parun.Types.PlayerRef as PlayerRef
+import qualified Parun.Types.PlayerRelation as PlayerRelation
+import qualified Parun.Types.Prompt as Prompt
+import Parun.Types.Recipient (Recipient)
+import qualified Parun.Types.Recipient as Recipient
+import Parun.Types.SlotName (SlotName)
+import qualified Parun.Types.Superlative as Superlative
+
+-- | What a position asking "which players?" can read, so that 'named' answers
+-- every PlayerRef the same way wherever it is asked. The two askers differ only
+-- here: a count (Parun.Engine.Count.playersFor) reads its slots off a
+-- Filter.Context and its controllers off the caller's view, and a resolution
+-- (Parun.Engine.Resolve.Slots.playerRefPlayers) off CR 608.2b's legal slots and
+-- CR 608.2h's last known information.
+data Reads = MkReads
+  { -- | CR 109.5's "you". Nothing is an unframed evaluation, which only a
+    -- perspective-free reference can answer.
+    perspective :: Maybe PlayerId,
+    -- | Whether the evaluation carries bindings at all, so that a slot naming
+    -- nobody can exclude nobody. A reader with no source has none, and an
+    -- excluding reference names nobody there (Parun.Engine.Mana.recipientsOf).
+    bound :: Bool,
+    -- | CR 601.2c: the players a slot names, Nothing where it is not bound.
+    slotPlayers :: SlotName -> Maybe [PlayerId],
+    -- | The ONE object a slot names, Nothing where it names none or several.
+    slotObject :: SlotName -> Maybe ObjectId,
+    -- | CR 613.1b's controller of an object, as this position sees it.
+    controllerOf :: ObjectId -> Maybe PlayerId,
+    -- | CR 108.3's owner of an object, as this position sees it.
+    ownerOf :: ObjectId -> Maybe PlayerId,
+    -- | CR 607.5: which acquisition's choices this position reads off an
+    -- object -- Game.readingAcquisition for a resolution, Game.acquisitionOf
+    -- elsewhere.
+    acquisitionOf :: ObjectId -> Acquisition.Acquisition,
+    -- | The players a relation is judged over: CR 801.10 / 801.11's 'table'
+    -- for a spell or ability, every player still in the game where no range
+    -- applies (Parun.Engine.PlayerEffect.zoneOwners).
+    roster :: [PlayerId],
+    -- | CR 801.10: whether an answer read off a slot, an object or a choice
+    -- still reaches this position. A resolution cuts it to its 'table'; a
+    -- position that names a turn or a count rather than affecting anyone does
+    -- not cut.
+    reaches :: PlayerId -> Bool
+  }
+
+-- | What a RESOLUTION reads (CR 608.2): its controller as "you", the slots it
+-- filled (CR 608.2b's legal ones), and the controller, owner and acquisition
+-- reads the caller supplies -- CR 608.2h's last known information and CR
+-- 607.5's linked choices, from a module that sees the projection. CR 801.10:
+-- every answer is cut to the controller's 'table', so a player the clause
+-- names through an object or a choice --
+-- Stuffy Doll's chosen player under another controller -- is not affected
+-- from out of range. Parun.RangeOfInfluenceSpec's "CR 801.10 a chosen player
+-- outside the controller's range is dealt no damage" proves it. The range is
+-- the caller's @reach@ (Plane.rangePerspective), so CR 801.18's planar source
+-- cuts nobody.
+resolution :: (ObjectId -> Maybe PlayerId) -> (ObjectId -> Maybe PlayerId) -> (ObjectId -> Acquisition.Acquisition) -> Map.Map SlotName (Set Recipient) -> Maybe PlayerId -> PlayerId -> GameState -> Reads
+resolution controllerRead ownerRead acquisitionRead slots reach controller gs =
+  let reached = table reach gs
+   in MkReads
+        { perspective = Just controller,
+          bound = True,
+          slotPlayers = \slot -> fmap (Maybe.mapMaybe Recipient.playerOf . Set.toList) (Map.lookup slot slots),
+          slotObject = \slot -> Map.lookup slot (Binding.objectsIn slots),
+          controllerOf = controllerRead,
+          ownerOf = ownerRead,
+          acquisitionOf = acquisitionRead,
+          roster = reached,
+          reaches = (`elem` reached)
+        }
+
+-- | CR 102.1 / 801.5a / 801.10 / 801.11: the players still in the game that the
+-- perspective reaches, in Game.stillPlaying's order -- the table a spell or
+-- ability reaches, and the one a choice offers. A departed player keeps their
+-- row in GameState.players, so this is Game.stillPlaying rather than the map's
+-- keys; an unframed evaluation has no controller to measure range from, and
+-- cuts nothing else.
+table :: Maybe PlayerId -> GameState -> [PlayerId]
+table viewer gs = filter (\pid -> all (\you -> Game.inRangeOf you pid gs) viewer) (Game.stillPlaying gs)
+
+-- | The players on 'table' standing in this relation to the perspective,
+-- judged once through PlayerRelation.holds. Nothing where the relation needs a
+-- perspective and there is none.
+--
+-- "You" names the perspective outright: CR 801.2b keeps a player in their own
+-- range, so the range cut has nothing to remove, and CR 800.4i reads a
+-- departed player through their last known information rather than dropping
+-- them -- Specific's posture.
+related :: Maybe PlayerId -> GameState -> PlayerRelation.PlayerRelation -> Maybe [PlayerId]
+related viewer gs = relatedAmong (table viewer gs) viewer gs
+
+-- | 'related' over a roster the caller names, for a position whose table is
+-- not the perspective's range ('roster').
+relatedAmong :: [PlayerId] -> Maybe PlayerId -> GameState -> PlayerRelation.PlayerRelation -> Maybe [PlayerId]
+relatedAmong players viewer gs relation = case viewer of
+  Just you -> case relation of
+    PlayerRelation.You -> Just [you]
+    _ -> Just (filter (PlayerRelation.holds (Game.teams gs) relation you) players)
+  Nothing
+    | PlayerRelation.perspectiveFree relation -> Just players
+    | otherwise -> Nothing
+
+-- | CR 801.5a: the players @you@ may be offered for "choose a player" in this
+-- relation -- still in the game (CR 102.1), within range, and standing in the
+-- relation. THE candidate list every "choose a player" or "choose an
+-- opponent" builds; 'chooseOne' asks it.
+offer :: PlayerId -> GameState -> PlayerRelation.PlayerRelation -> [PlayerId]
+offer you gs = Maybe.fromMaybe [] . related (Just you) gs
+
+-- | CR 801.5a / 801.5c: the players @you@ may name to MAKE a choice in this
+-- relation -- "an opponent chooses", "of an opponent's choice". 'offer' where it
+-- holds anyone; otherwise the player in the relation closest to @you@'s left,
+-- the next in turn order (CR 101.4), still in the game. Nobody only where
+-- nobody in the game stands in the relation. Not for a player who is the
+-- choice's ANSWER ("choose an opponent"), whom @you@ choose and 'offer' cuts.
+--
+-- Parun.RangeOfInfluenceSpec's "CR 801.5c a choice no opponent in range can make
+-- goes to the nearest opponent to the controller's left" proves it.
+chooserOffer :: PlayerId -> GameState -> PlayerRelation.PlayerRelation -> [PlayerId]
+chooserOffer you gs relation = case offer you gs relation of
+  [] ->
+    let playing = Game.stillPlaying gs
+        stands pid = List.elem pid playing && PlayerRelation.holds (Game.teams gs) relation you pid
+     in take 1 (filter stands (drop 1 (Game.turnOrderFrom you gs)))
+  inRange -> inRange
+
+-- | CR 608.2d / 614.12a / 601.2c: @chooser@ picks one of the candidates, for
+-- @source@, through Game.chooseAmong. Prompt.ChoosePlayer where the offer holds
+-- the chooser and Prompt.ChooseOpponent where it cannot, so the prompt follows
+-- the candidate set rather than any scope's name; the latter carries @promise@,
+-- the CR 702.174a gift a payment names. Hexproof and shroud do not enter into
+-- it: a choice is not a target (CR 115.10a).
+chooseOne :: PlayerId -> ObjectId -> Maybe PlayerChoice.PlayerChoice -> [PlayerId] -> Game (Maybe PlayerId)
+chooseOne chooser source promise =
+  let question decider asked offered =
+        if elem asked offered
+          then Prompt.ChoosePlayer decider asked source offered
+          else Prompt.ChooseOpponent decider asked source promise offered
+   in Game.chooseAmong question chooser
+
+-- | The players a PlayerRef names, in PlayerId order, or Nothing where the
+-- position cannot answer it. THE one reading of every PlayerRef arm; a caller
+-- with an ordering rule imposes it, and a caller with no use for
+-- "unanswerable" reads Nothing as nobody.
+named :: Reads -> GameState -> PlayerRef.PlayerRef -> Maybe [PlayerId]
+named given gs ref = case ref of
+  -- The baked seat, uncut: see 'namedUncut'.
+  PlayerRef.Specific _ -> namedUncut given gs ref
+  _ -> fmap (filter (reaches given)) (namedUncut given gs ref)
+
+-- | 'named' before CR 801.10's cut on what the position reaches.
+namedUncut :: Reads -> GameState -> PlayerRef.PlayerRef -> Maybe [PlayerId]
+namedUncut given gs ref =
+  let you = perspective given
+      related' = relatedAmong (roster given) you gs
+      -- CR 702.26b: a baked object that is phased out names nothing.
+      unlessPhasedOut oid = if Map.member oid (GameState.phasedOut gs) then Nothing else Just oid
+      -- A slot naming nobody excludes nobody; with no bindings at all, nothing
+      -- was there to exclude anybody.
+      excluding name = if bound given then Just (Maybe.fromMaybe [] (slotPlayers given name)) else Nothing
+   in case ref of
+        PlayerRef.Relative relation -> related' relation
+        -- Every player minus every player the slot names (CR 104.2c's winning
+        -- team is several). A source that existed and then ceased, which CR
+        -- 729.5 leaves a resumed resolution holding, is not looked up: the
+        -- resolution's context carries the slot, read through
+        -- Parun.Engine.Resolve.liveBindings. Parun.OutsideTheGameSpec's Synthetic
+        -- Subgame Tithe case proves it.
+        PlayerRef.EachPlayerExcept name -> do
+          excluded <- excluding name
+          fmap (filter (`notElem` excluded)) (related' PlayerRelation.AnyPlayer)
+        -- CR 702.116a's "each opponent other than defending player": the arm
+        -- above narrowed by CR 102.2 / 102.3.
+        PlayerRef.EachOpponentExcept name -> do
+          excluded <- excluding name
+          fmap (filter (`notElem` excluded)) (related' PlayerRelation.Opponent)
+        -- ONE player or none: declining a slot that names several is CR
+        -- 601.2c's own answer, the one Binding.onlyOne gives every other such
+        -- reader. A slot's target is in range already (CR 801.4).
+        PlayerRef.InSlot name -> case slotPlayers given name of
+          Just [pid] -> Just [pid]
+          _ -> Nothing
+        -- InSlot's plural, off the same read: every player the slot names.
+        -- Jungle Wayfinder's CR 603.5 "may" seats and Bellowing Mauler's
+        -- Binding.gatePlayers are read this way.
+        PlayerRef.EachInSlot name -> slotPlayers given name
+        -- The baked seat. Not filtered against the roster: it names one specific
+        -- player, and what a departed seat can still be TRUE of is the reader's
+        -- question -- CR 725.4 takes the crown off a player as they leave, so
+        -- Quantity.IsMonarch reads 0 for one and Garland's duration ends.
+        PlayerRef.Specific pid -> Just [pid]
+        -- The fold's own candidate, which is a fact about the member being read
+        -- rather than about the board. Parun.Engine.Quantity answers it where the
+        -- view is, Quantity.forCandidate substitutes it in a SCOPE, and the
+        -- Effect.Search arm's ownersFor substitutes the searcher; what reaches
+        -- here has no candidate of either kind.
+        PlayerRef.Candidate -> Nothing
+        -- CR 613.1b / CR 608.2h: the controller of the object a slot names, as
+        -- the position sees it -- layer 2 decides who controls a permanent, and
+        -- the clause naming the player generally moved it first.
+        -- Parun.ResolveSpec's "bob, who controlled the bounced creature, went 20
+        -- -> 19" (Vapor Snag) proves the resolution's last-known road, and
+        -- Flunk's "that creature's controller's hand" (Parun.CountSpec) a count's.
+        PlayerRef.ControllerOfBound slot -> fmap pure (slotObject given slot >>= controllerOf given)
+        -- CR 108.3's owner, one field over. The Deck of Many Things' 20 band is
+        -- the producer (Parun.CardSpec): reanimating an opponent's creature and
+        -- having that opponent lose the game is where owner and controller part.
+        PlayerRef.OwnerOfBound slot -> fmap pure (slotObject given slot >>= ownerOf given)
+        -- CR 611.2b: the two arms above, BAKED -- the object named outright, so a
+        -- stored duration asks who controls or owns it NOW. Unanswered while the
+        -- object is phased out, which CR 702.26b treats as not existing. Proved
+        -- by
+        -- data/scenarios/cr-611-2b-a-stored-duration-reads-its-target-s-controller-and-owner-after-resolution.json
+        -- and, for phasing,
+        -- data/scenarios/phasing/cr-702-26f-a-duration-reading-its-permanent-s-controller-ends-when-it-phases-out.json.
+        PlayerRef.ControllerOfObject oid -> fmap pure (unlessPhasedOut oid >>= controllerOf given)
+        PlayerRef.OwnerOfObject oid -> fmap pure (unlessPhasedOut oid >>= ownerOf given)
+        -- CR 614.1c / CR 702.174b: the player the object a slot names chose,
+        -- read off Object.chosenPlayers rather than any view -- a choice is a
+        -- record, not a characteristic (CR 707.2) -- through CR 608.2h's
+        -- look-back. Parun.CastSpec's Scrapshooter killed in response still has
+        -- the promised opponent draw.
+        PlayerRef.ChosenPlayerOfBound slot choice -> fmap pure (slotObject given slot >>= \oid -> Game.choiceWithLastKnown Chosen.Players (acquisitionOf given oid) oid gs >>= Map.lookup choice)
+        -- CR 508.6: the players controlling a creature attacking the player a
+        -- slot names, narrowed by the printed relation -- Curse of Vitality's
+        -- "each opponent attacking that player". The LIVE combat record (CR
+        -- 608.2c): the sentence is present tense, so a creature CR 506.4 removed
+        -- from combat has taken its controller out. AttackTarget.OfPlayer alone,
+        -- CR 508.1b listing player, planeswalker and battle separately.
+        -- Unanswered where the slot names no one player.
+        PlayerRef.Attacking (AttackingPlayers.MkAttackingPlayers relation slot) -> do
+          attacked <- case slotPlayers given slot of
+            Just [pid] -> Just pid
+            _ -> Nothing
+          let sentAt = Map.keys (Map.filter (== AttackTarget.OfPlayer attacked) (Combat.attackers (GameState.combat gs)))
+              attackers = Maybe.mapMaybe (controllerOf given) sentAt
+          fmap (filter (`elem` attackers)) (related' relation)
+        -- The table's leaders on a measure, compared among the 'roster' alone:
+        -- CR 801.11 gives a spell or ability no information from outside its
+        -- controller's range.
+        PlayerRef.Superlative leading -> Just (superlative (controllerOf given) (roster given) gs leading)
+        -- CR 102.1 / 802.2: read off the turn, PlayerScope.InRole's answer.
+        PlayerRef.InRole role -> Just (filter (`elem` Turn.roleHolders role gs) (roster given))
+
+-- | The players among @roster@ whose measure stands in the superlative's
+-- comparison to every OTHER roster player's (Parun.Types.Superlative): with
+-- GreaterThan a tie names nobody, with AtLeast it names every tied player. A
+-- lone player is vacuously the leader; CR 104.2a has ended such a game.
+--
+-- @controllerOf@ is CR 613.1b's projected controller as the asker sees it, so a
+-- Mind Control counts the permanent for its new controller (CR 110.1 makes every
+-- object on the battlefield a permanent). Counters are read off the player row
+-- (CR 122.1).
+superlative :: (ObjectId -> Maybe PlayerId) -> [PlayerId] -> GameState -> Superlative.Superlative -> [PlayerId]
+superlative controllerOf' roster' gs leading =
+  let measureOf pid = case Superlative.measure leading of
+        PlayerMeasure.PermanentsControlled -> toInteger (length (filter ((== Just pid) . controllerOf') (Set.toList (GameState.battlefield gs))))
+        PlayerMeasure.CountersOf kind -> maybe 0 (toInteger . Map.findWithDefault 0 kind . Player.counters) (Map.lookup pid (GameState.players gs))
+      tallies = fmap (\pid -> (pid, measureOf pid)) roster'
+      stands (pid, n) = all (\(other, m) -> other == pid || Filter.compares (Superlative.comparison leading) n m) tallies
+   in fmap fst (filter stands tallies)

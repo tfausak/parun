@@ -1,6 +1,6 @@
-# Reduces MTGJSON's AtomicCards.json to what `pawl ingest` reads (#9): every
+# Reduces MTGJSON's AtomicCards.json to what `parun ingest` reads (#9): every
 # single-faced card as a record it may build, with the sets it was printed in
-# for `pawl translate --set`, and every face's Oracle text by card and face
+# for `parun translate --set`, and every face's Oracle text by card and face
 # name, which both stamp on the cards they write. Run as
 #   jq -f script/ingest/candidates.jq _scratch/AtomicCards.json > _scratch/candidates.json
 {

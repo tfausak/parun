@@ -77,7 +77,7 @@ replays deterministically with the new stored continuous-effect state.
 
 ## 1. New types
 
-**`Pawl.Type.Timestamp`** — `newtype Timestamp = MkTimestamp Natural`, drawn from
+**`Parun.Type.Timestamp`** — `newtype Timestamp = MkTimestamp Natural`, drawn from
 a monotonic **`GameState.nextTimestamp`** counter (shaped like `nextObjectId`).
 CR 613.7a: a static ability's timestamp is the timestamp of the object it is on,
 which per CR 613.7d is when that object entered the battlefield. So **`Object` grows
@@ -93,7 +93,7 @@ entry-order, and though both are monotone today, conflating them is exactly the
 kind of pun the project's explicit-types rule rejects. A dedicated newtype and
 counter say what they mean.
 
-**`Pawl.Type.Layer`** — the CR 613 layer enumeration, ordered by rule number,
+**`Parun.Type.Layer`** — the CR 613 layer enumeration, ordered by rule number,
 `Ord`-derived so the derived order *is* the application order. Complete for
 diffability against CR 613 (the `Keyword` posture), but only the sublayers with
 producers are exercised:
@@ -117,7 +117,7 @@ data Layer
 CR 613's application order, and that is the sole thing `project` sorts on. No
 `Enum`/`Bounded` — nothing enumerates layers or asks for bounds.
 
-**`Pawl.Type.Modification`** — the open-half continuous-effect vocabulary, *its
+**`Parun.Type.Modification`** — the open-half continuous-effect vocabulary, *its
 own leaf family* distinct from `Effect` (design.md's M3g note: "continuous-effect
 specifications, classified by layer"). Classification data plus its payload;
 `Modification.layer :: Modification -> Layer` is the ABI classification the rules
@@ -139,12 +139,12 @@ constructor). `layer` is a total function; a new constructor without a `layer`
 case fails the build (`-Weverything`), the same executor-coverage hygiene the
 `Resolve` incomplete-pattern warning gives `Effect`.
 
-**`Pawl.Type.Duration`** — `data Duration = UntilEndOfTurn`, the only stored
+**`Parun.Type.Duration`** — `data Duration = UntilEndOfTurn`, the only stored
 duration at M3b. Static abilities carry no `Duration`: they exist while their
 source and ability do, which is exactly "while re-derived from the battlefield."
 Grows `WhileSourceOnBattlefield`, `UntilYourNextTurn`, etc., as cards need them.
 
-**`Pawl.Type.ContinuousEffect`** — a stored, resolution-generated effect:
+**`Parun.Type.ContinuousEffect`** — a stored, resolution-generated effect:
 
 ```haskell
 data ContinuousEffect = MkContinuousEffect
@@ -157,7 +157,7 @@ data ContinuousEffect = MkContinuousEffect
   deriving (Eq, Ord, Show)
 ```
 
-**`Pawl.Type.Affected`** — what an effect applies to:
+**`Parun.Type.Affected`** — what an effect applies to:
 
 ```haskell
 data Affected
@@ -173,7 +173,7 @@ creature is a new id the effect no longer names — Giant Growth correctly stops
 battlefield, which is why static effects must be live-derived, not a fixed set
 captured once.
 
-**`Pawl.Type.StaticAbility`** — a card's printed static continuous ability:
+**`Parun.Type.StaticAbility`** — a card's printed static continuous ability:
 
 ```haskell
 data StaticAbility = MkStaticAbility
@@ -202,9 +202,9 @@ Humility declares two: `MkStaticAbility AllCreatures LoseAllAbilities` and
   `nextTimestamp :: Timestamp`.
 - **`Object`** gains `timestamp :: Timestamp`.
 
-## 2. The projection: `Pawl.Projection`
+## 2. The projection: `Parun.Projection`
 
-New logic module **`Pawl.Projection`** — the **single legitimate home of
+New logic module **`Parun.Projection`** — the **single legitimate home of
 `case`-on-`Modification`**, the continuous-effect analogue of `Resolve`'s
 standing over `Effect`. The invariant split is exact:
 

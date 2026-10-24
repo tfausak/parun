@@ -52,14 +52,14 @@ spell). The classification is the fork, and it is an ABI predicate three
 independent fused engines still had to grow explicitly (`prior-art-lessons.md`
 §8.2: Shandalar's `EA_MANA_SOURCE`, Duels'
 `COMPARTMENT_ID_TRIGGER_ABILITY_IS_MANA_ABILITY`, and the mana leak §1 names).
-pawl adds it as a classification of an ability's *structure* — produces mana and
+parun adds it as a classification of an ability's *structure* — produces mana and
 targets nothing — never of a card's identity.
 
 **The phased spine** (M3c/M3d structure: land the understood machinery, keep the
 one interesting bet isolated):
 
 1. **Activation onto the stack + the CR 605 classification.** `Source.OfAbility`,
-   `Action.Activate`, `Pawl.Activate`, the ability-object, `{T}` cost, targeting
+   `Action.Activate`, `Parun.Activate`, the ability-object, `{T}` cost, targeting
    at activation (CR 602.2b), resolve-then-cease, and the `isManaAbility`
    predicate with its two read-sites. Gate: **Prodigal Sorcerer** (ability on the
    stack, deals damage, ceases) and **Llanowar Elves** (mana ability, inline, no
@@ -145,7 +145,7 @@ the serialized path.
 
 ## 1. New and grown types
 
-**`Pawl.Type.ActivatedAbility`** (new) — CR 602.1's "[cost]: [effect]":
+**`Parun.Type.ActivatedAbility`** (new) — CR 602.1's "[cost]: [effect]":
 
 ```haskell
 data ActivatedAbility = MkActivatedAbility
@@ -166,7 +166,7 @@ tapping either of two Mountains), and abilities that differ are distinguished by
 their value. This is why `Action.Activate` carries the ability *value*, not an
 index or a name (§3).
 
-**`Pawl.Type.AbilityCost`** (new):
+**`Parun.Type.AbilityCost`** (new):
 
 ```haskell
 data AbilityCost = MkAbilityCost
@@ -177,7 +177,7 @@ data AbilityCost = MkAbilityCost
   deriving (Eq, Ord, Show)
 ```
 
-**`Pawl.Type.AdditionalCost`** (new):
+**`Parun.Type.AdditionalCost`** (new):
 
 ```haskell
 data AdditionalCost
@@ -189,7 +189,7 @@ data AdditionalCost
 Both name **the source permanent**; neither takes an argument. Costs that name
 another object, or a quantity, are future.
 
-**`Pawl.Type.Effect`** grows two opcodes; `DealDamage` is reused:
+**`Parun.Type.Effect`** grows two opcodes; `DealDamage` is reused:
 
 ```haskell
 data Effect
@@ -209,7 +209,7 @@ battlefield **tapped**, and shuffles (§5). The destination-and-tapped is baked
 into the opcode as Evolving Wilds' exact shape; a more general search-then-move
 composition is deferred (§9).
 
-**`Pawl.Type.CardCriterion`** (new) — a first-order, analyzable predicate over a
+**`Parun.Type.CardCriterion`** (new) — a first-order, analyzable predicate over a
 card, as data (not a closure):
 
 ```haskell
@@ -221,7 +221,7 @@ data CardCriterion
 Its one inhabitant is Evolving Wilds' target. Evaluated by a classifier reading a
 card's projected/base characteristics (§5), never its identity.
 
-**`Pawl.Type.Source`** grows the ability incarnation:
+**`Parun.Type.Source`** grows the ability incarnation:
 
 ```haskell
 data Source
@@ -238,7 +238,7 @@ so it resolves even if `src` has left the battlefield (subject to the LKI expiry
 §9). `Game.cardOf` gains `OfAbility _ _ -> Nothing` (an ability is not a card);
 consumers already tolerate `Nothing` (the fizzle, the bury).
 
-**`Pawl.Type.Action`** grows activation:
+**`Parun.Type.Action`** grows activation:
 
 ```haskell
 data Action
@@ -256,13 +256,13 @@ position"). The value flows straight into `OfAbility src ab` with no index
 indirection; Humility stripping the ability makes the membership check fail for
 free (§3, §6).
 
-**`Pawl.Type.Card`** grows the printed abilities:
+**`Parun.Type.Card`** grows the printed abilities:
 
 ```haskell
   activatedAbilities :: [ActivatedAbility]  -- CR 602. Empty for all but the gates.
 ```
 
-**`Pawl.Type.Prompt`** grows the library search:
+**`Parun.Type.Prompt`** grows the library search:
 
 ```haskell
   -- CR 701.23 / 701.23b. The [ObjectId] is the library cards MATCHING the
@@ -274,7 +274,7 @@ free (§3, §6).
 Reveal/hidden-information nuance is out of scope: a player searching their own
 library sees it. Reuses the existing `Shuffle` prompt afterward.
 
-**`Pawl.Card`** gains three printings: **Prodigal Sorcerer** (`{2}{U}`, one
+**`Parun.Card`** gains three printings: **Prodigal Sorcerer** (`{2}{U}`, one
 `{T}`-cost ability `[DealDamage slot 1]` with an `AnyTarget` slot), **Llanowar
 Elves** (`{G}`, one `{T}`-cost ability `[AddMana Green]`, no slots), and
 **Evolving Wilds** (Land, one `{T}`+`SacrificeSelf` ability `[Search
@@ -322,7 +322,7 @@ never the reverse). `slotsOf` gains `AddMana _ -> Set.empty`.
 
 ## 3. Activation and resolution
 
-A new module **`Pawl.Activate`** mirrors `Pawl.Cast`. Its shape follows CR 602.2
+A new module **`Parun.Activate`** mirrors `Parun.Cast`. Its shape follows CR 602.2
 (announce → choose targets → pay costs) and the `Cast` conventions
 (reject-not-repair, keep priority):
 

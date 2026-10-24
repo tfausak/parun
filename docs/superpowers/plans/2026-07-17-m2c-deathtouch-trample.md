@@ -10,11 +10,11 @@
 
 ## Starting point (already exists — do not recreate)
 
-M2b is complete and its tests pass. The engine, the `Program`/`Prompt` seam, `changeZone`, mana, casting, the stack, combat declaration, the two combat damage steps and `struckFirst` snapshot, the CR 508.8 skip, SBAs (`Sba.checkStateBasedActions`, single-pass), the keyword seam (`Pawl.Type.Keyword`, `Card.keywords`, `Game.keywordsOf`/`hasKeyword`), replay, the single-file test suite (`source/test-suite/Main.hs`) and benchmark all exist. This plan **modifies** them.
+M2b is complete and its tests pass. The engine, the `Program`/`Prompt` seam, `changeZone`, mana, casting, the stack, combat declaration, the two combat damage steps and `struckFirst` snapshot, the CR 508.8 skip, SBAs (`Sba.checkStateBasedActions`, single-pass), the keyword seam (`Parun.Type.Keyword`, `Card.keywords`, `Game.keywordsOf`/`hasKeyword`), replay, the single-file test suite (`source/test-suite/Main.hs`) and benchmark all exist. This plan **modifies** them.
 
 Read the spec before starting. The invariants it turns on:
 
-1. **Casing on a `Keyword` is NOT a violation of the closed/open invariant.** Rule 702 is the rulebook. See the note atop `Pawl.Type.Keyword`.
+1. **Casing on a `Keyword` is NOT a violation of the closed/open invariant.** Rule 702 is the rulebook. See the note atop `Parun.Type.Keyword`.
 2. **The closed half asks `Game.keywordsOf`/`hasKeyword`, never `Card.keywords`.** The 704.5h source-has-deathtouch read and the trample threshold both consult the projection.
 3. **Damage flows through one helper.** `applyCombatDamage` is the sole place damage is marked and the sole place events are emitted. Do not mark damage anywhere else.
 4. **The trample threshold is not a floor.** CR 702.19b lets a blocker be under-assigned; the threshold gates the *defender* only. Implement the implication, not `every blocker ≥ lethal`.
@@ -24,11 +24,11 @@ Read the spec before starting. The invariants it turns on:
 
 Every task's requirements implicitly include all of these:
 
-- **Warning-clean:** library, test suite, and benchmark compile under `-Weverything` minus the allow-list in `pawl.cabal`. A warning is a failure. `-Wunused-matches` is active: prefix genuinely unused binders with `_`. Check with a **clean** build (`rm -rf dist-newstyle/build/aarch64-osx/ghc-9.14.1/pawl-0.2026.7.16/{b,t,build}`) then `cabal build all --enable-tests --enable-benchmarks 2>&1 | grep -c "warning:"` must print `0` — incremental builds hide warnings.
+- **Warning-clean:** library, test suite, and benchmark compile under `-Weverything` minus the allow-list in `parun.cabal`. A warning is a failure. `-Wunused-matches` is active: prefix genuinely unused binders with `_`. Check with a **clean** build (`rm -rf dist-newstyle/build/aarch64-osx/ghc-9.14.1/parun-0.2026.7.16/{b,t,build}`) then `cabal build all --enable-tests --enable-benchmarks 2>&1 | grep -c "warning:"` must print `0` — incremental builds hide warnings.
 - **Boot libraries only** in the library. No new dependencies.
 - **Haskell 2010.** The only permitted extensions are `GADTs` and `RankNTypes`, per-file (already on `Prompt.hs` and `Replay.hs`).
 - **Non-punning constructors:** `Mk` prefix on newtypes and single-constructor records (`MkDamageEvent`). Multi-constructor ADTs plainly (`Recipient`, `Keyword`).
-- **One type per module** under `Pawl.Type.<TypeName>` — type and instances only. A module never imports its parents.
+- **One type per module** under `Parun.Type.<TypeName>` — type and instances only. A module never imports its parents.
 - **Derive at least `Eq` and `Show`.** `Recipient` also derives `Ord` (it is a `Map` key). `DamageEvent` derives `Eq`, `Ord`, `Show`.
 - **No partial functions, no list comprehensions, no backtick-infixed functions.** `Maybe`/`Either`, `case` over point-free, `let` over `where`, `$` over parens, `.` over chained `$`.
 - **Imports:** qualified, aliased to the last component; one import group; operators unqualified.
@@ -46,23 +46,23 @@ Every task's requirements implicitly include all of these:
 
 | File | Responsibility |
 |---|---|
-| `Pawl/Type/Recipient.hs` | `data Recipient = ToCreature ObjectId \| ToDefender PlayerId` — a combat-damage recipient |
-| `Pawl/Type/DamageEvent.hs` | `data DamageEvent = MkDamageEvent { source, target, amount }` — one dealt-damage record |
+| `Parun/Type/Recipient.hs` | `data Recipient = ToCreature ObjectId \| ToDefender PlayerId` — a combat-damage recipient |
+| `Parun/Type/DamageEvent.hs` | `data DamageEvent = MkDamageEvent { source, target, amount }` — one dealt-damage record |
 
 **Modified (library):**
 
 | File | Change |
 |---|---|
-| `Pawl/Type/Keyword.hs` | add `Deathtouch` (702.2), `Trample` (702.19), in CR order |
-| `Pawl/Type/Subtype.hs` | add `Rat`, `Elephant` |
-| `Pawl/Type/GameState.hs` | add `damageEvents :: [DamageEvent]` |
-| `Pawl/Type/Prompt.hs` | `AssignCombatDamage` takes `Map Recipient Natural` (thresholds), returns `Map Recipient Natural` |
-| `Pawl/Type/Response.hs` | `AssignedCombatDamage (Map Recipient Natural)` |
-| `Pawl/Card.hs` | `typhoidRatsPrinting`, `warMammothPrinting` |
-| `Pawl/Damage.hs` | events funnel; recipient/threshold assignment; `legalAssignment`; `blockerThreshold` |
-| `Pawl/Sba.hs` | CR 704.5h clause in `creatureDies`; drain `damageEvents` |
-| `Pawl/Replay.hs` | `defaultAnswer` for the new `AssignCombatDamage` shape |
-| `Pawl/Setup.hs` | `emptyGame` sets `damageEvents = []` |
+| `Parun/Type/Keyword.hs` | add `Deathtouch` (702.2), `Trample` (702.19), in CR order |
+| `Parun/Type/Subtype.hs` | add `Rat`, `Elephant` |
+| `Parun/Type/GameState.hs` | add `damageEvents :: [DamageEvent]` |
+| `Parun/Type/Prompt.hs` | `AssignCombatDamage` takes `Map Recipient Natural` (thresholds), returns `Map Recipient Natural` |
+| `Parun/Type/Response.hs` | `AssignedCombatDamage (Map Recipient Natural)` |
+| `Parun/Card.hs` | `typhoidRatsPrinting`, `warMammothPrinting` |
+| `Parun/Damage.hs` | events funnel; recipient/threshold assignment; `legalAssignment`; `blockerThreshold` |
+| `Parun/Sba.hs` | CR 704.5h clause in `creatureDies`; drain `damageEvents` |
+| `Parun/Replay.hs` | `defaultAnswer` for the new `AssignCombatDamage` shape |
+| `Parun/Setup.hs` | `emptyGame` sets `damageEvents = []` |
 
 **Modified (suites):** `source/test-suite/Main.hs`, `source/benchmark/Main.hs`.
 
@@ -85,7 +85,7 @@ Every task's requirements implicitly include all of these:
 `Deathtouch` and `Trample` join `Keyword`; `Rat` and `Elephant` join `Subtype`; `typhoidRatsPrinting` and `warMammothPrinting` join `Card`. No consumer yet.
 
 **Files:**
-- Modify: `source/library/Pawl/Type/Keyword.hs`, `source/library/Pawl/Type/Subtype.hs`, `source/library/Pawl/Card.hs`, `source/test-suite/Main.hs`
+- Modify: `source/library/Parun/Type/Keyword.hs`, `source/library/Parun/Type/Subtype.hs`, `source/library/Parun/Card.hs`, `source/test-suite/Main.hs`
 
 **Interfaces:**
 - Consumes: `Card.MkCard`, `Printing.MkPrinting`, `ManaCost.MkManaCost`, `ManaSymbol.Generic`/`OfType`, `ManaType.Colored`, `Color.Black`/`Green`, `Power.MkPower`, `Toughness.MkToughness`, `Quantity.Literal` (all exist).
@@ -114,7 +114,7 @@ m2cCardTests =
         HU.assertEqual "keywords" (Set.singleton Keyword.Trample) (Card.Type.keywords c)
     ]
 
-(In the test suite, `Pawl.Type.Quantity` is aliased `Quantity.Type` — note the qualifier differs from `Pawl/Card.hs`, which uses `Quantity`.)
+(In the test suite, `Parun.Type.Quantity` is aliased `Quantity.Type` — note the qualifier differs from `Parun/Card.hs`, which uses `Quantity`.)
 ```
 
 - [x] **Step 2: Run test to verify it fails**
@@ -124,7 +124,7 @@ Expected: FAIL — `typhoidRatsPrinting`/`warMammothPrinting` not in scope, `Dea
 
 - [x] **Step 3: Add the keywords and subtypes**
 
-In `source/library/Pawl/Type/Keyword.hs`, add the two constructors in CR-number order (Deathtouch before `Defender`; Trample between `Reach` and `Vigilance`) and update the count comment:
+In `source/library/Parun/Type/Keyword.hs`, add the two constructors in CR-number order (Deathtouch before `Defender`; Trample between `Reach` and `Vigilance`) and update the count comment:
 
 ```haskell
 data Keyword
@@ -140,11 +140,11 @@ data Keyword
   deriving (Eq, Ord, Show)
 ```
 
-In `source/library/Pawl/Type/Subtype.hs`, add `Rat` and `Elephant` to the list.
+In `source/library/Parun/Type/Subtype.hs`, add `Rat` and `Elephant` to the list.
 
 - [x] **Step 4: Add the two printings**
 
-In `source/library/Pawl/Card.hs`, add (verified against Scryfall `api.scryfall.com/cards/named?exact=…`, 2026-07-17 — both carry zero Gatherer rulings, french-vanilla oracle is the CR):
+In `source/library/Parun/Card.hs`, add (verified against Scryfall `api.scryfall.com/cards/named?exact=…`, 2026-07-17 — both carry zero Gatherer rulings, french-vanilla oracle is the CR):
 
 ```haskell
 -- Typhoid Rats: {B}, Creature - Rat, 1/1, Deathtouch (CR 702.2).
@@ -220,8 +220,8 @@ git commit -m "Add deathtouch and trample keywords with Typhoid Rats and War Mam
 `Recipient` and `DamageEvent` types; `GameState.damageEvents`; `Damage.applyCombatDamage` becomes change-and-emit; `gatherCombatDamage`/`attackerAssignment`/`blockerAssignment` produce `[DamageEvent]`. **No behavior change** to marked damage or life — only events are additionally recorded. The `AssignCombatDamage` prompt is untouched (Task 4).
 
 **Files:**
-- Create: `source/library/Pawl/Type/Recipient.hs`, `source/library/Pawl/Type/DamageEvent.hs`
-- Modify: `source/library/Pawl/Type/GameState.hs`, `source/library/Pawl/Damage.hs`, `source/library/Pawl/Setup.hs`, `source/test-suite/Main.hs`
+- Create: `source/library/Parun/Type/Recipient.hs`, `source/library/Parun/Type/DamageEvent.hs`
+- Modify: `source/library/Parun/Type/GameState.hs`, `source/library/Parun/Damage.hs`, `source/library/Parun/Setup.hs`, `source/test-suite/Main.hs`
 
 **Interfaces:**
 - Consumes: `Game.powerOf`, `Game.controllerOf`, `Combat.blockersOf`, `Program.prompt`, `Prompt.AssignCombatDamage` (old shape), `AttackTarget.OfPlayer`.
@@ -268,7 +268,7 @@ damageEventTests =
     ]
 ```
 
-Add to the test suite's import block: `import qualified Pawl.Type.DamageEvent as DamageEvent` and `import qualified Pawl.Type.Recipient as Recipient` (they sort between `Combat.Type`/`CombatStep` and `GameState`/`Keyword` respectively; `cabal-gild`/`hooky fix` will order them).
+Add to the test suite's import block: `import qualified Parun.Type.DamageEvent as DamageEvent` and `import qualified Parun.Type.Recipient as Recipient` (they sort between `Combat.Type`/`CombatStep` and `GameState`/`Keyword` respectively; `cabal-gild`/`hooky fix` will order them).
 
 - [x] **Step 2: Run test to verify it fails**
 
@@ -277,13 +277,13 @@ Expected: FAIL — `DamageEvent`, `Recipient`, `GameState.damageEvents` not in s
 
 - [x] **Step 3: Create the two types**
 
-`source/library/Pawl/Type/Recipient.hs`:
+`source/library/Parun/Type/Recipient.hs`:
 
 ```haskell
-module Pawl.Type.Recipient where
+module Parun.Type.Recipient where
 
-import Pawl.Type.ObjectId (ObjectId)
-import Pawl.Type.PlayerId (PlayerId)
+import Parun.Type.ObjectId (ObjectId)
+import Parun.Type.PlayerId (PlayerId)
 
 -- CR 510.1: combat damage is assigned to a blocking creature or to the player
 -- being attacked. Grows toward planeswalkers and battles (other attack targets)
@@ -295,14 +295,14 @@ data Recipient
   deriving (Eq, Ord, Show)
 ```
 
-`source/library/Pawl/Type/DamageEvent.hs`:
+`source/library/Parun/Type/DamageEvent.hs`:
 
 ```haskell
-module Pawl.Type.DamageEvent where
+module Parun.Type.DamageEvent where
 
 import Numeric.Natural (Natural)
-import Pawl.Type.ObjectId (ObjectId)
-import Pawl.Type.Recipient (Recipient)
+import Parun.Type.ObjectId (ObjectId)
+import Parun.Type.Recipient (Recipient)
 
 -- One instance of combat damage: a source dealt `amount` to `target`. The first
 -- reader is deathtouch's CR 704.5h SBA, which asks whether `source` has deathtouch
@@ -319,7 +319,7 @@ data DamageEvent = MkDamageEvent
 
 - [x] **Step 4: Add the GameState field and initialize it**
 
-In `source/library/Pawl/Type/GameState.hs`, import `DamageEvent` and add the field after `combat` (or anywhere in the record), with a comment:
+In `source/library/Parun/Type/GameState.hs`, import `DamageEvent` and add the field after `combat` (or anywhere in the record), with a comment:
 
 ```haskell
     -- CR 510: combat damage dealt this step, as events, for the SBA to read.
@@ -327,11 +327,11 @@ In `source/library/Pawl/Type/GameState.hs`, import `DamageEvent` and add the fie
     damageEvents :: [DamageEvent],
 ```
 
-In `source/library/Pawl/Setup.hs`, in `emptyGame`'s record, add `GameState.damageEvents = [],`.
+In `source/library/Parun/Setup.hs`, in `emptyGame`'s record, add `GameState.damageEvents = [],`.
 
 - [x] **Step 5: Rewrite the Damage assignment path to emit events**
 
-Replace `attackerAssignment`, `blockerAssignment`, `gatherCombatDamage`, and `applyCombatDamage` in `source/library/Pawl/Damage.hs`. Add imports `qualified Pawl.Type.DamageEvent as DamageEvent` and `qualified Pawl.Type.Recipient as Recipient`. Keep the CR 510.1e reject-not-repair comment.
+Replace `attackerAssignment`, `blockerAssignment`, `gatherCombatDamage`, and `applyCombatDamage` in `source/library/Parun/Damage.hs`. Add imports `qualified Parun.Type.DamageEvent as DamageEvent` and `qualified Parun.Type.Recipient as Recipient`. Keep the CR 510.1e reject-not-repair comment.
 
 ```haskell
 -- What one attacking creature assigns, as damage events carrying the source.
@@ -434,7 +434,7 @@ git commit -m "Route combat damage through a change-and-emit helper that records
 `Sba.creatureDies` gains the 704.5h clause (a wounded-by-deathtouch creature with toughness > 0 dies), reading `GameState.damageEvents` through `Game.hasKeyword`; `checkStateBasedActions` drains the events after burying, making "since the last SBA check" precise.
 
 **Files:**
-- Modify: `source/library/Pawl/Sba.hs`, `source/test-suite/Main.hs`
+- Modify: `source/library/Parun/Sba.hs`, `source/test-suite/Main.hs`
 
 **Interfaces:**
 - Consumes: `GameState.damageEvents`, `DamageEvent` fields, `Recipient.ToCreature`, `Game.hasKeyword`, `Keyword.Deathtouch`, `Game.toughnessOf` (all exist / from Tasks 1–2).
@@ -475,7 +475,7 @@ Expected: FAIL — "the Ogre is dead" gets 1 (no 704.5h yet), and "events draine
 
 - [x] **Step 3: Add the 704.5h clause and the drain**
 
-In `source/library/Pawl/Sba.hs`, add imports `qualified Pawl.Type.DamageEvent as DamageEvent`, `qualified Pawl.Type.Recipient as Recipient`, `qualified Pawl.Type.Keyword as Keyword`. Add a helper and extend `creatureDies`:
+In `source/library/Parun/Sba.hs`, add imports `qualified Parun.Type.DamageEvent as DamageEvent`, `qualified Parun.Type.Recipient as Recipient`, `qualified Parun.Type.Keyword as Keyword`. Add a helper and extend `creatureDies`:
 
 ```haskell
 -- CR 704.5h: a creature with toughness > 0 dealt damage by a deathtouch source
@@ -537,7 +537,7 @@ git commit -m "Destroy creatures wounded by a deathtouch source as CR 704.5h"
 `AssignCombatDamage` becomes keyword-agnostic: it carries `Map Recipient Natural` (legal recipients → lethal thresholds) and returns `Map Recipient Natural`. A pure `legalAssignment` encodes CR 702.19b's implication and is property-tested across the whole space. **Behavior-preserving:** the existing non-trample division still divides among blockers. Trample is Task 5.
 
 **Files:**
-- Modify: `source/library/Pawl/Type/Prompt.hs`, `source/library/Pawl/Type/Response.hs`, `source/library/Pawl/Replay.hs`, `source/library/Pawl/Damage.hs`, `source/test-suite/Main.hs`, `source/benchmark/Main.hs`
+- Modify: `source/library/Parun/Type/Prompt.hs`, `source/library/Parun/Type/Response.hs`, `source/library/Parun/Replay.hs`, `source/library/Parun/Damage.hs`, `source/test-suite/Main.hs`, `source/benchmark/Main.hs`
 
 **Interfaces:**
 - Consumes: `Recipient` (Task 2).
@@ -638,7 +638,7 @@ Expected: FAIL — `Damage.legalAssignment` not in scope.
 
 - [x] **Step 3: Change the prompt and response types**
 
-In `source/library/Pawl/Type/Prompt.hs`, import `Recipient` and change the constructor and its comment:
+In `source/library/Parun/Type/Prompt.hs`, import `Recipient` and change the constructor and its comment:
 
 ```haskell
   -- CR 510.1 / 702.19b: the attacker divides its power among the legal recipients.
@@ -649,7 +649,7 @@ In `source/library/Pawl/Type/Prompt.hs`, import `Recipient` and change the const
   AssignCombatDamage :: Decider -> PlayerId -> ObjectId -> Map Recipient Natural -> Natural -> Prompt (Map Recipient Natural)
 ```
 
-In `source/library/Pawl/Type/Response.hs`, import `Recipient` and change:
+In `source/library/Parun/Type/Response.hs`, import `Recipient` and change:
 
 ```haskell
   | AssignedCombatDamage (Map Recipient Natural)
@@ -657,7 +657,7 @@ In `source/library/Pawl/Type/Response.hs`, import `Recipient` and change:
 
 - [x] **Step 4: Add `legalAssignment` and issue the new prompt (non-trample behavior preserved)**
 
-In `source/library/Pawl/Damage.hs`, add the pure predicate and rewrite `attackerAssignment`'s multi-blocker branch to build the thresholds map (all `0` for now — non-trample), issue the new prompt, and validate with `legalAssignment`:
+In `source/library/Parun/Damage.hs`, add the pure predicate and rewrite `attackerAssignment`'s multi-blocker branch to build the thresholds map (all `0` for now — non-trample), issue the new prompt, and validate with `legalAssignment`:
 
 ```haskell
 -- CR 510.1e / 702.19b, as a pure predicate over the whole assignment. Legal iff it
@@ -710,7 +710,7 @@ Note the answer's keys are now `Recipient`, so `toEvent` builds the event direct
 
 - [x] **Step 5: Migrate `Replay.defaultAnswer`**
 
-In `source/library/Pawl/Replay.hs`, the `AssignCombatDamage` branch of `defaultAnswer` (currently destructures `_ _ _ blockers n` over a `Set` and returns `Map.singleton b n`). Replace with a legal default that dumps all power on the first non-defender recipient (defender gets nothing, so the gate is vacuous):
+In `source/library/Parun/Replay.hs`, the `AssignCombatDamage` branch of `defaultAnswer` (currently destructures `_ _ _ blockers n` over a `Set` and returns `Map.singleton b n`). Replace with a legal default that dumps all power on the first non-defender recipient (defender gets nothing, so the gate is vacuous):
 
 ```haskell
   -- Must be a LEGAL division (Damage.legalAssignment), or the attacker deals
@@ -725,7 +725,7 @@ In `source/library/Pawl/Replay.hs`, the `AssignCombatDamage` branch of `defaultA
           [] -> Map.empty
 ```
 
-Add `qualified Pawl.Type.Recipient as Recipient` to `Replay.hs`'s imports. `encode`/`decode` use `{}` and `AssignedCombatDamage answer`, which are unchanged.
+Add `qualified Parun.Type.Recipient as Recipient` to `Replay.hs`'s imports. `encode`/`decode` use `{}` and `AssignedCombatDamage answer`, which are unchanged.
 
 - [x] **Step 6: Migrate the interpreters in the test suite and benchmark**
 
@@ -747,7 +747,7 @@ The three structurally-different responders in `combatDamageTests` migrate as:
 - `dump` (line ~178): same as the common transform above.
 - `cheat` (line ~190, "99 each"): `Prompt.AssignCombatDamage _ _ _ thresholds _ -> Map.fromList (map (\r -> (r, 99)) (filter isCreatureRecipient (Map.keys thresholds)))`.
 
-And the prompt **construction** at test line ~293 (`damagePrompt = Prompt.AssignCombatDamage decider alice oid (Set.singleton oid) 2`) becomes `Prompt.AssignCombatDamage decider alice oid (Map.singleton (Recipient.ToCreature oid) 0) 2`. Add `qualified Pawl.Type.Recipient as Recipient` to the test suite and benchmark imports.
+And the prompt **construction** at test line ~293 (`damagePrompt = Prompt.AssignCombatDamage decider alice oid (Set.singleton oid) 2`) becomes `Prompt.AssignCombatDamage decider alice oid (Map.singleton (Recipient.ToCreature oid) 0) 2`. Add `qualified Parun.Type.Recipient as Recipient` to the test suite and benchmark imports.
 
 - [x] **Step 7: Run tests and clean-build**
 
@@ -769,7 +769,7 @@ git commit -m "Generalize AssignCombatDamage to recipients and lethal thresholds
 `attackerAssignment` computes trample thresholds (each blocker's lethal, the defender at 0) and the defender recipient when the attacker has trample, decides forced-vs-prompt, and validates via `legalAssignment`. The 702.2c deathtouch interaction is Task 6.
 
 **Files:**
-- Modify: `source/library/Pawl/Damage.hs`, `source/test-suite/Main.hs`
+- Modify: `source/library/Parun/Damage.hs`, `source/test-suite/Main.hs`
 
 **Interfaces:**
 - Consumes: `Game.hasKeyword`, `Keyword.Trample`, `Game.toughnessOf`, `Game.lookupObject`, `Object.damage`, `legalAssignment` (Task 4).
@@ -855,7 +855,7 @@ Expected: FAIL — the trample spill test gets `bob = 20` (trample not implement
 
 - [x] **Step 3: Compute trample thresholds and recipients**
 
-In `source/library/Pawl/Damage.hs`, add `blockerThreshold` (deathtouch consultation is Task 6, so the attacker is unused now — prefix `_attacker`):
+In `source/library/Parun/Damage.hs`, add `blockerThreshold` (deathtouch consultation is Task 6, so the attacker is unused now — prefix `_attacker`):
 
 ```haskell
 -- CR 702.19b: a blocker's lethal threshold is its toughness minus damage already
@@ -944,7 +944,7 @@ git commit -m "Assign trample overflow to the defending player past lethal (CR 7
 Deathtouch lowers each blocker's threshold to 1 (any nonzero assignment is lethal). One line in `blockerThreshold`. The falsifier is tested with a labeled synthetic trample+deathtouch fixture, since no printed card has both keywords and M2c has no granting (M3 expiry).
 
 **Files:**
-- Modify: `source/library/Pawl/Damage.hs`, `source/test-suite/Main.hs`
+- Modify: `source/library/Parun/Damage.hs`, `source/test-suite/Main.hs`
 
 **Interfaces:**
 - Consumes: `Game.hasKeyword`, `Keyword.Deathtouch` (Task 1); `blockerThreshold` (Task 5).
@@ -1008,7 +1008,7 @@ Expected: FAIL — the deathtouch case gets `bob = 20` (threshold is still full 
 
 - [x] **Step 3: Add the 702.2c collapse**
 
-In `source/library/Pawl/Damage.hs`, use the `attacker` argument (drop the `_` prefix) and add the deathtouch branch:
+In `source/library/Parun/Damage.hs`, use the `attacker` argument (drop the `_` prefix) and add the deathtouch branch:
 
 ```haskell
 -- CR 702.19b / 702.2c: a blocker's lethal threshold is toughness minus marked
@@ -1090,7 +1090,7 @@ Expected: all groups pass; conservation (120 objects), termination, ids ≥ 120,
 
 Run:
 ```bash
-rm -rf dist-newstyle/build/aarch64-osx/ghc-9.14.1/pawl-0.2026.7.16/{b,t,build}
+rm -rf dist-newstyle/build/aarch64-osx/ghc-9.14.1/parun-0.2026.7.16/{b,t,build}
 cabal build all --enable-tests --enable-benchmarks 2>&1 | grep -c "warning:"
 ```
 Expected: `0`.
