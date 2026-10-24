@@ -248,9 +248,10 @@ passPriorityFrom gs pid =
 -- its new controller's step nor left carrying a rider past the step that ends it.
 --
 -- What survives those is CR 502.3's own determination, the active player's to
--- make: a card type to confine the untap to (UntapHold.OfChosenType, Storage
--- Matrix), chosen first; then a printed "you may choose not to untap" (UntapHold.Elective) offers its
--- tapped permanents, and the ones they do not pick stay tapped; a cap
+-- make: first a card type to confine the untap to (UntapHold.OfChosenType,
+-- Storage Matrix); then a printed "you may choose not to untap"
+-- (UntapHold.Elective) offers its tapped permanents, and the ones they do not
+-- pick stay tapped; a cap
 -- (UntapHold.AtMost, Static Orb) offers the tapped permanents it counts, and
 -- UntapRestriction.settle keeps every cap. Only a tapped permanent nothing else
 -- holds back is offered, since for any other the untap's outcome is already
