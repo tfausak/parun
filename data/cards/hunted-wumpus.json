@@ -1,0 +1,113 @@
+{
+  "faces": [
+    {
+      "manaCost": [
+        {
+          "type": "Generic",
+          "value": 3
+        },
+        {
+          "type": "OfType",
+          "value": {
+            "type": "Colored",
+            "value": {
+              "type": "Green"
+            }
+          }
+        }
+      ],
+      "name": "Hunted Wumpus",
+      "oracleText": "When this creature enters, each other player may put a creature card from their hand onto the battlefield.",
+      "power": {
+        "type": "Literal",
+        "value": 6
+      },
+      "toughness": {
+        "type": "Literal",
+        "value": 6
+      },
+      "triggeredAbilities": [
+        {
+          "condition": {
+            "type": "SelfEnters"
+          },
+          "modal": {
+            "modes": [
+              {
+                "clauses": [
+                  {
+                    "effects": [
+                      {
+                        "type": "ForEach",
+                        "value": {
+                          "body": [
+                            {
+                              "type": "MoveToZone",
+                              "value": {
+                                "ref": {
+                                  "type": "ChosenCardInHand",
+                                  "value": {
+                                    "filter": {
+                                      "type": "HasCardType",
+                                      "value": {
+                                        "type": "Creature"
+                                      }
+                                    },
+                                    "player": {
+                                      "type": "InSlot",
+                                      "value": "player"
+                                    }
+                                  }
+                                },
+                                "riders": {
+                                  "underOwner": true
+                                },
+                                "zone": {
+                                  "type": "Battlefield"
+                                }
+                              }
+                            }
+                          ],
+                          "individually": true,
+                          "ref": {
+                            "type": "Players",
+                            "value": {
+                              "players": {
+                                "type": "EachInSlot",
+                                "value": "thoseWhoMay"
+                              }
+                            }
+                          },
+                          "slot": "player"
+                        }
+                      }
+                    ],
+                    "optionality": {
+                      "type": "Optional",
+                      "value": {
+                        "type": "EachPlayerExcept",
+                        "value": "you"
+                      }
+                    }
+                  }
+                ]
+              }
+            ]
+          }
+        }
+      ],
+      "typeLine": {
+        "subtypes": [
+          {
+            "type": "Beast"
+          }
+        ],
+        "types": [
+          {
+            "type": "Creature"
+          }
+        ]
+      }
+    }
+  ]
+}
