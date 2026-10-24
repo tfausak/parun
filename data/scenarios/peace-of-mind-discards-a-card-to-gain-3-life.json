@@ -1,0 +1,12 @@
+{
+  "description": "CR 602.2b whole card: Peace of Mind's {W}, discard a card: you gain 3 life",
+  "note": "Alice discards the Island she names, keeping her Hill Giant, and goes to 23.",
+  "board": {"active": "alice", "step": "PrecombatMain", "seats": [{"name": "alice", "battlefield": [{"card": "Peace of Mind", "label": "peace"}, {"card": "Plains", "label": "plains"}], "hand": [{"card": "Hill Giant", "label": "giant"}, {"card": "Island", "label": "isl"}], "library": [{"card": "Island"}, {"card": "Island"}, {"card": "Island"}, {"card": "Island"}]}, {"name": "bob", "library": [{"card": "Island"}, {"card": "Island"}, {"card": "Island"}, {"card": "Island"}]}]},
+  "timeline": [
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "do": {"Activate": {"object": "$peace", "mana": ["$plains"]}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "do": {"Answer": {"prompt": "ChooseDiscard", "with": ["$isl"]}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "do": "Pass"},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "check": {"Life": {"player": "alice", "life": 23}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "check": {"View": {"of": "Zone", "player": "alice", "zone": "Hand", "is": ["$giant"]}}}
+  ]
+}

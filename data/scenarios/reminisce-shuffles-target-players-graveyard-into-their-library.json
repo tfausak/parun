@@ -1,0 +1,14 @@
+{
+  "description": "CR 701.24a whole card: Reminisce makes target player shuffle their graveyard into their library",
+  "note": "Bob's two graveyard cards join his two-card library; alice's own graveyard is untouched.",
+  "board": {"active": "alice", "step": "PrecombatMain", "seats": [{"name": "alice", "manaPool": "UUU", "hand": [{"card": "Reminisce", "label": "reminisce"}], "graveyard": [{"card": "Grizzly Bears"}], "library": [{"card": "Island"}, {"card": "Island"}, {"card": "Island"}, {"card": "Island"}]}, {"name": "bob", "graveyard": [{"card": "Hill Giant", "label": "giant"}, {"card": "Gray Ogre", "label": "ogre"}], "library": [{"card": "Island", "label": "i1"}, {"card": "Island", "label": "i2"}]}]},
+  "timeline": [
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "do": {"Cast": {"object": "$reminisce", "targets": ["$bob"]}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "do": "Pass"},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "do": {"Answer": {"prompt": "Shuffle", "with": ["Hill Giant", "$i1", "Gray Ogre", "$i2"]}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "check": {"View": {"of": "Zone", "player": "bob", "zone": "Graveyard", "is": []}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "check": {"Count": {"player": "bob", "zone": "Library", "card": "Hill Giant", "count": 1}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "check": {"Count": {"player": "bob", "zone": "Library", "card": "Gray Ogre", "count": 1}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "check": {"Count": {"player": "alice", "zone": "Graveyard", "card": "Grizzly Bears", "count": 1}}}
+  ]
+}

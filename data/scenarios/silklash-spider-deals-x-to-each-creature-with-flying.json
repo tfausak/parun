@@ -1,0 +1,12 @@
+{
+  "description": "CR 107.3 / 602.2b whole card: Silklash Spider deals X damage to each creature with flying",
+  "note": "X is 2: bob's Serra Angel takes 2 and alice's own Ornithopter dies; bob's Hill Giant, without flying, takes nothing.",
+  "board": {"active": "alice", "step": "PrecombatMain", "seats": [{"name": "alice", "battlefield": [{"card": "Silklash Spider", "label": "spider"}, {"card": "Ornithopter", "label": "thopter"}, {"card": "Forest", "label": "f1"}, {"card": "Forest", "label": "f2"}, {"card": "Forest", "label": "f3"}, {"card": "Forest", "label": "f4"}], "library": [{"card": "Island"}, {"card": "Island"}, {"card": "Island"}, {"card": "Island"}]}, {"name": "bob", "battlefield": [{"card": "Hill Giant", "label": "giant"}, {"card": "Serra Angel", "label": "angel"}], "library": [{"card": "Island"}, {"card": "Island"}, {"card": "Island"}, {"card": "Island"}]}]},
+  "timeline": [
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "do": {"Activate": {"object": "$spider", "x": 2, "mana": ["$f1", "$f2", "$f3", "$f4"]}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "do": "Pass"},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "check": {"Damage": {"object": "$angel", "damage": 2}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "check": {"Damage": {"object": "$giant", "damage": 0}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "check": {"Count": {"player": "alice", "zone": "Graveyard", "card": "Ornithopter", "count": 1}}}
+  ]
+}

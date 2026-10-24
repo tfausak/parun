@@ -1,0 +1,8 @@
+{
+  "description": "CR 602.5 whole card: Weathered Wayfarer can't be activated while no opponent controls more lands than its controller",
+  "note": "The finding board with bob holding one land, as many as alice.",
+  "board": {"active": "alice", "step": "PrecombatMain", "seats": [{"name": "alice", "battlefield": [{"card": "Weathered Wayfarer", "label": "wayfarer", "ready": true}, {"card": "Plains", "label": "plains"}], "library": [{"card": "Grizzly Bears", "label": "bears"}, {"card": "Forest", "label": "forest"}, {"card": "Island", "label": "isl"}]}, {"name": "bob", "battlefield": [{"card": "Mountain"}], "library": [{"card": "Island"}, {"card": "Island"}, {"card": "Island"}, {"card": "Island"}]}]},
+  "timeline": [
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "refuse": {"Activate": {"object": "$wayfarer", "mana": ["$plains"]}}}
+  ]
+}

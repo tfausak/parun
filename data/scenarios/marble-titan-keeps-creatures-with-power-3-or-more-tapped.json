@@ -1,0 +1,10 @@
+{
+  "description": "CR 502.3 whole card: Marble Titan keeps every creature with power 3 or greater tapped through its controller's untap step",
+  "note": "Alice's Hill Giant and the Titan itself stay tapped; her Grizzly Bears, power 2, untaps beside them.",
+  "board": {"active": "bob", "step": "EndStep", "seats": [{"name": "alice", "battlefield": [{"card": "Marble Titan", "label": "titan", "tapped": true}, {"card": "Hill Giant", "label": "giant", "tapped": true}, {"card": "Grizzly Bears", "label": "bears", "tapped": true}], "library": [{"card": "Island"}, {"card": "Island"}, {"card": "Island"}, {"card": "Island"}]}, {"name": "bob", "library": [{"card": "Island"}, {"card": "Island"}, {"card": "Island"}, {"card": "Island"}]}]},
+  "timeline": [
+    {"turn": 2, "step": "Upkeep", "player": "alice", "check": {"Tapped": {"object": "$bears", "tapped": false}}},
+    {"turn": 2, "step": "Upkeep", "player": "alice", "check": {"Tapped": {"object": "$giant", "tapped": true}}},
+    {"turn": 2, "step": "Upkeep", "player": "alice", "check": {"Tapped": {"object": "$titan", "tapped": true}}}
+  ]
+}
