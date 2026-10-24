@@ -1,5 +1,6 @@
 module Parun.Types.CastingRestriction where
 
+import qualified Parun.Types.Color as Color
 import qualified Parun.Types.DuringPhase as DuringPhase
 import qualified Parun.Types.Phase as Phase
 import qualified Parun.Types.TurnScope as TurnScope
@@ -103,4 +104,8 @@ data CastingRestriction
     -- step of it -- Siren's Call's "during an opponent's turn". The mirror of
     -- Parun.Types.ActivationRestriction's arm of this name.
     DuringTurn TurnScope.TurnScope
+  | -- | CR 601.2h: only mana of this colour may pay for the spell's X -- Consume
+    -- Spirit's "Spend only black mana on X". A payment rule, not a gate:
+    -- Parun.Engine.Cost.confineX reads it.
+    SpendOnlyOnX Color.Color
   deriving (Eq, Ord, Show)

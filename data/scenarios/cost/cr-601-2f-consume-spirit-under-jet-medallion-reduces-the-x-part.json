@@ -1,0 +1,28 @@
+{
+  "description": "CR 601.2f Jet Medallion's reduction comes off Consume Spirit's X, so less of it must be black",
+  "note": "X 2 under Jet Medallion totals {2}{B}. Taking the reduction off the X leaves one black mana owed on X, so two Swamps and a Mountain pay it; taking it off the {1} would owe three black and refuse the cast. Drain Life's ruling lets cost reducers reduce the X part (docs/decisions.md). Bob takes 2 and alice gains 2.",
+  "board": {
+    "active": "alice",
+    "step": "PrecombatMain",
+    "seats": [
+      {
+        "name": "alice",
+        "battlefield": [
+          { "card": "Jet Medallion" },
+          { "card": "Swamp", "label": "s1" },
+          { "card": "Swamp", "label": "s2" },
+          { "card": "Mountain", "label": "m1" }
+        ],
+        "hand": [{ "card": "Consume Spirit", "label": "spirit" }],
+        "library": [{ "card": "Island" }]
+      },
+      { "name": "bob", "library": [{ "card": "Island" }] }
+    ]
+  },
+  "timeline": [
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "do": { "Cast": { "object": "$spirit", "x": 2, "targets": ["$bob"], "mana": ["$s1", "$s2", "$m1"] } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "do": "Pass" },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "check": { "Life": { "player": "bob", "life": 18 } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "check": { "Life": { "player": "alice", "life": 22 } } }
+  ]
+}

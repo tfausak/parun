@@ -75,6 +75,7 @@ import qualified Parun.Types.Behold as Behold
 import qualified Parun.Types.Binding as Binding.Type
 import qualified Parun.Types.CandidateCost as CandidateCost
 import qualified Parun.Types.Card as Card.Type
+import qualified Parun.Types.CardCount as CardCount
 import qualified Parun.Types.CardName as CardName
 import qualified Parun.Types.CardType as CardType
 import qualified Parun.Types.CastingPermission as CastingPermission
@@ -84,6 +85,7 @@ import qualified Parun.Types.Claim as Claim.Type
 import qualified Parun.Types.ClaimAxis as ClaimAxis
 import qualified Parun.Types.Clause as Clause
 import qualified Parun.Types.ClauseIndex as ClauseIndex
+import qualified Parun.Types.Color as Color
 import Parun.Types.Cost (Cost)
 import qualified Parun.Types.Cost as Cost
 import qualified Parun.Types.CostAdjustments as CostAdjustments
@@ -928,7 +930,7 @@ candidateCostsGiven permitted pid name oid gs =
                                      -- CR 702.81a ADDS to the printed cost rather than
                                      -- replacing it, jump-start's shape below, and
                                      -- names a QUALITY where rule 702.133a names none.
-                                     printed {Cost.components = Cost.components printed <> [CostComponent.DiscardCards (DiscardCards.MkDiscardCards 1 (Filter.Type.HasCardType CardType.Land))]}
+                                     printed {Cost.components = Cost.components printed <> [CostComponent.DiscardCards (DiscardCards.MkDiscardCards (CardCount.Exactly 1) (Filter.Type.HasCardType CardType.Land))]}
                                  ]
                                else []
                            )
@@ -939,7 +941,7 @@ candidateCostsGiven permitted pid name oid gs =
                                      (Just Keyword.Type.JumpStart)
                                      -- CR 702.133a's cost names no quality -- "discard a
                                      -- card" -- so the criterion admits everything.
-                                     printed {Cost.components = Cost.components printed <> [CostComponent.DiscardCards (DiscardCards.MkDiscardCards 1 (Filter.Type.And []))]}
+                                     printed {Cost.components = Cost.components printed <> [CostComponent.DiscardCards (DiscardCards.MkDiscardCards (CardCount.Exactly 1) (Filter.Type.And []))]}
                                  ]
                                else []
                            )
@@ -1366,6 +1368,27 @@ totalManas :: CostAdjustments.CostAdjustments -> ManaCost.ManaCost -> [ManaCost.
 totalManas adjustments =
   let resolutions = adjustmentResolutions adjustments
    in \manaCost -> concatMap (NonEmpty.toList . fmap snd . (`reductionOrders` manaCost)) resolutions
+
+-- CR 601.2h: Consume Spirit's "Spend only black mana on X", laid onto a cost
+-- `totalled` from `untotalled` (X substituted, CR 601.2f not yet applied): as much
+-- of its generic mana as X still accounts for becomes one symbol of that colour
+-- per mana. Only a TOTALLED cost is changed, so nothing upstream -- the mana
+-- value, a reduction, an added component -- reads the symbols.
+--
+-- A reduction comes off the X first (docs/decisions.md, "Cost reductions on a
+-- confined X"), since Drain Life's ruling lets it reduce the X part and every
+-- payment the other split allows this one allows too. An increase is
+-- unconfined mana. data/scenarios/cost's "Jet Medallion's reduction comes off
+-- Consume Spirit's X" proves the split.
+confineX :: Maybe Color.Color -> Natural -> CostAdjustments.CostAdjustments -> ManaCost.ManaCost -> ManaCost.ManaCost -> ManaCost.ManaCost
+confineX confinement x adjustments untotalled totalled = case confinement of
+  Nothing -> totalled
+  Just color ->
+    let generic = sum . fmap genericOf . ManaCost.unwrap
+        increased = applyAdjustments adjustments {CostAdjustments.reductions = []} untotalled
+        reduced = Natural.minusSaturating (generic increased) (generic totalled)
+        confined = min (generic totalled) (Natural.minusSaturating x reduced)
+     in ManaCost.MkManaCost (ManaCost.unwrap (withoutMana (ManaSymbol.Generic 0) confined totalled) <> List.genericReplicate confined (ManaSymbol.OfType (ManaType.Colored color)))
 
 -- CR 702.51b / 702.66b / 702.126b: the ways a keyword on this object lets part of
 -- an already TOTALLED mana cost be paid by spending something else -- tapping a
@@ -2747,8 +2770,13 @@ claimOf slots pid oid component gs =
         -- states a non-empty mana part, so `repeatsOf` settles at 1 before any axis
         -- matters.
         CostComponent.ExileThis -> claim (ClaimAxis.Removal Zone.Battlefield) itself 1
-        CostComponent.DiscardCards (DiscardCards.MkDiscardCards n criterion) ->
+        CostComponent.DiscardCards (DiscardCards.MkDiscardCards (CardCount.Exactly n) criterion) ->
           claim (ClaimAxis.Removal Zone.Hand) (Set.fromList (discardCandidates slots pid oid criterion gs)) n
+        -- Nothing: CR 701.9a's whole-hand discard is paid by whatever the hand
+        -- holds, an empty one included, so it spends nothing another component
+        -- could run short of. A FENCE: Slate of Ancestry states no other
+        -- component drawing on the hand.
+        CostComponent.DiscardCards (DiscardCards.MkDiscardCards CardCount.Every _) -> Nothing
         CostComponent.DiscardThis _ -> claim (ClaimAxis.Removal Zone.Hand) itself 1
         -- The same hand pool the two arms above claim, and on the same axis: what the
         -- payment spends is a card leaving the hand, and the battlefield end adds a
@@ -3926,8 +3954,12 @@ canPayComponent slots pid oid component gs = case component of
   -- additional cost. Load-bearing for the OFFER, which Cast.castable measures
   -- while the card is still in hand -- without it a hand of "Cathartic Reunion
   -- plus one other card" would offer the Reunion on the strength of itself.
-  CostComponent.DiscardCards (DiscardCards.MkDiscardCards n criterion) ->
+  CostComponent.DiscardCards (DiscardCards.MkDiscardCards (CardCount.Exactly n) criterion) ->
     Natural.length (discardCandidates slots pid oid criterion gs) >= n
+  -- "Discard your hand" discards every card there is, so an empty hand pays it
+  -- (CR 118.3 asks for no resource it lacks). data/scenarios/cost's "Slate of
+  -- Ancestry's discard-your-hand cost is paid with an empty hand" proves it.
+  CostComponent.DiscardCards (DiscardCards.MkDiscardCards CardCount.Every _) -> True
   -- CR 118.3: payable only if the hand holds a card the criterion admits. This
   -- is what keeps Hakbal of the Surging Soul's landless controller from being
   -- offered a cost they cannot pay -- CR 118.12's offer is gated on
@@ -6598,7 +6630,7 @@ payPayable perform moment paidFor slots pid oid component = case component of
   -- The discards are ONE event group, Sacrifice's reason; Parun.CostSpec's "CR
   -- 601.2h Cathartic Reunion's two discards fire Magmakin Artillerist once, for 2"
   -- proves it.
-  CostComponent.DiscardCards (DiscardCards.MkDiscardCards n criterion) -> do
+  CostComponent.DiscardCards (DiscardCards.MkDiscardCards (CardCount.Exactly n) criterion) -> do
     gs <- State.get
     let held = discardCandidates slots pid oid criterion gs
         decider = Decide.deciderFor pid gs
@@ -6612,6 +6644,13 @@ payPayable perform moment paidFor slots pid oid component = case component of
         Event.simultaneously (Monad.mapM_ (Event.discard DiscardCause.Ordinary pid) distinct)
         pure bindsNothing
       else pure Payment.Unpaid
+  -- Every matching card, Slate of Ancestry's "Discard your hand": nothing is
+  -- chosen, so nothing is asked (CR 701.9b's choice has one answer), and the
+  -- cards go as ONE event group, the arm above's reason.
+  CostComponent.DiscardCards (DiscardCards.MkDiscardCards CardCount.Every criterion) -> do
+    gs <- State.get
+    Event.simultaneously (Monad.mapM_ (Event.discard DiscardCause.Ordinary pid) (discardCandidates slots pid oid criterion gs))
+    pure bindsNothing
   -- CR 701.9a's move, through the funnel DiscardCards uses above. No prompt: the
   -- cost names this card.
   --

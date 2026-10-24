@@ -1,6 +1,6 @@
 module Parun.Types.DiscardCards where
 
-import qualified Numeric.Natural as Natural
+import qualified Parun.Types.CardCount as CardCount
 import qualified Parun.Types.Filter as Filter
 
 -- | The payload of Parun.Types.CostComponent's DiscardCards arm (#1620): CR
@@ -11,7 +11,8 @@ import qualified Parun.Types.Filter as Filter
 -- Parun.Types.CostComponent is.
 --
 -- count is Parun.Types.Sacrifice's reading and not
--- Parun.Types.TapForTotalPower's: the cards are chosen and counted exactly.
+-- Parun.Types.TapForTotalPower's: the cards are chosen and counted exactly,
+-- unless it is CardCount.Every, which chooses nothing.
 --
 -- The Filter admits everything for a cost that names no quality -- Cathartic
 -- Reunion's "discard two cards" is @And []@ -- rather than the field being
@@ -21,7 +22,7 @@ import qualified Parun.Types.Filter as Filter
 -- The Filter is matched against the card's CR 613 projection, which is the
 -- CostComponent arm's note rather than this record's.
 data DiscardCards keyword = MkDiscardCards
-  { count :: Natural.Natural,
+  { count :: CardCount.CardCount,
     whichCards :: Filter.Filter keyword
   }
   deriving (Eq, Ord, Show)

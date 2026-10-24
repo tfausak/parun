@@ -5,6 +5,7 @@ import qualified Parun.Codec.Keyword as Keyword
 import qualified Parun.JsonCodec.Codec as Codec
 import qualified Parun.JsonCodec.Common as Common
 import qualified Parun.Spec as Spec
+import qualified Parun.Types.CardCount as CardCount
 import qualified Parun.Types.CardType as CardType
 import qualified Parun.Types.DiscardCards as DiscardCards
 import qualified Parun.Types.Filter as Filter
@@ -24,20 +25,31 @@ spec s = Spec.describe s "Parun.Codec.DiscardCards" $ do
       s
       codec
       ( DiscardCards.MkDiscardCards
-          { DiscardCards.count = 1,
+          { DiscardCards.count = CardCount.Exactly 1,
             DiscardCards.whichCards = Filter.HasCardType CardType.Land
           }
       )
-      " {\"count\":1,\"whichCards\":{\"type\":\"HasCardType\",\"value\":{\"type\":\"Land\"}}} "
+      " {\"count\":{\"type\":\"Exactly\",\"value\":1},\"whichCards\":{\"type\":\"HasCardType\",\"value\":{\"type\":\"Land\"}}} "
   -- Cathartic Reunion's "discard two cards", which names none.
   Spec.it s "MkDiscardCards, a filter that admits everything" $
     Common.assertCodec
       s
       codec
       ( DiscardCards.MkDiscardCards
-          { DiscardCards.count = 2,
+          { DiscardCards.count = CardCount.Exactly 2,
             DiscardCards.whichCards = Filter.And []
           }
       )
-      " {\"count\":2,\"whichCards\":{\"type\":\"And\",\"value\":[]}} "
+      " {\"count\":{\"type\":\"Exactly\",\"value\":2},\"whichCards\":{\"type\":\"And\",\"value\":[]}} "
+  -- Slate of Ancestry's "Discard your hand".
+  Spec.it s "MkDiscardCards, every card in hand" $
+    Common.assertCodec
+      s
+      codec
+      ( DiscardCards.MkDiscardCards
+          { DiscardCards.count = CardCount.Every,
+            DiscardCards.whichCards = Filter.And []
+          }
+      )
+      " {\"count\":{\"type\":\"Every\"},\"whichCards\":{\"type\":\"And\",\"value\":[]}} "
   Spec.it s "has a schema" $ Common.assertHasSchema s codec

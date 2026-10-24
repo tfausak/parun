@@ -7,11 +7,13 @@ import qualified Data.Char as Char
 import qualified Data.Text as Text
 import qualified Parun.Oracle.Filter as Filter
 import qualified Parun.Oracle.Prose as Prose
+import qualified Parun.Types.CardCount as CardCount
 import qualified Parun.Types.Color as Color
 import qualified Parun.Types.Cost as Cost
 import qualified Parun.Types.CostAmount as CostAmount
 import qualified Parun.Types.CostComponent as CostComponent
 import qualified Parun.Types.DiscardCards as DiscardCards
+import qualified Parun.Types.Filter as Filter.Type
 import qualified Parun.Types.Hybrid as Hybrid
 import qualified Parun.Types.HybridPhyrexian as HybridPhyrexian
 import qualified Parun.Types.ManaCost as ManaCost
@@ -79,7 +81,8 @@ component self named c = case c of
   CostComponent.Sacrifice (Sacrifice.MkSacrifice (CostAmount.Fixed n) f) -> do
     p <- Filter.phrase f named
     fmap (Text.pack "Sacrifice " <>) (some (toInteger n) (Filter.MkNoun (Text.pack "permanent") (Just (Text.pack "permanents"))) p)
-  CostComponent.DiscardCards (DiscardCards.MkDiscardCards n f) -> do
+  CostComponent.DiscardCards (DiscardCards.MkDiscardCards CardCount.Every (Filter.Type.And [])) -> [Text.pack "Discard your hand"]
+  CostComponent.DiscardCards (DiscardCards.MkDiscardCards (CardCount.Exactly n) f) -> do
     p <- Filter.phrase f named
     let card = Filter.MkNoun (Text.pack "card") (Just (Text.pack "cards"))
     fmap (Text.pack "Discard " <>) (some (toInteger n) card (Filter.merge p (Filter.MkPhrase [] [card] [])))

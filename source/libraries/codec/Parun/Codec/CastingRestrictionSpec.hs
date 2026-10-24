@@ -4,6 +4,7 @@ import qualified Parun.Codec.CastingRestriction as CastingRestriction
 import qualified Parun.JsonCodec.Common as Common
 import qualified Parun.Spec as Spec
 import qualified Parun.Types.CastingRestriction as CastingRestriction
+import qualified Parun.Types.Color as Color
 import qualified Parun.Types.CombatStep as CombatStep
 import qualified Parun.Types.DuringPhase as DuringPhase
 import qualified Parun.Types.EndingStep as EndingStep
@@ -80,5 +81,12 @@ spec s = Spec.describe s "Parun.Codec.CastingRestriction" $ do
       CastingRestriction.codec
       (CastingRestriction.BeforeStep (Phase.Combat CombatStep.CombatDamage))
       " {\"type\":\"BeforeStep\",\"value\":{\"type\":\"Combat\",\"value\":{\"type\":\"CombatDamage\"}}} "
+  -- Consume Spirit's "Spend only black mana on X" (CR 601.2h).
+  Spec.it s "SpendOnlyOnX" $
+    Common.assertCodec
+      s
+      CastingRestriction.codec
+      (CastingRestriction.SpendOnlyOnX Color.Black)
+      " {\"type\":\"SpendOnlyOnX\",\"value\":{\"type\":\"Black\"}} "
   Spec.it s "has a schema" $
     Common.assertHasSchema s CastingRestriction.codec

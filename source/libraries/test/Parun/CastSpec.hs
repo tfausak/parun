@@ -46,6 +46,7 @@ import qualified Parun.Types.Action as A
 import qualified Parun.Types.BeginningStep as BeginningStep
 import qualified Parun.Types.BuybackDecision as BuybackDecision
 import qualified Parun.Types.CandidateCost as CandidateCost
+import qualified Parun.Types.CardCount as CardCount
 import qualified Parun.Types.CardIdentity as CardIdentity
 import qualified Parun.Types.CardName as CardName
 import qualified Parun.Types.CardType as CardType
@@ -4416,7 +4417,7 @@ jumpStartSpec s registry = Spec.describe s "JumpStart" $ do
       s
       "from the graveyard, the same {1}{R}{R} plus one discard"
       (costsOf fromGraveyard graveyardBoard)
-      [(printed, [CostComponent.DiscardCards (DiscardCards.MkDiscardCards 1 (Filter.And []))])]
+      [(printed, [CostComponent.DiscardCards (DiscardCards.MkDiscardCards (CardCount.Exactly 1) (Filter.And []))])]
   -- Rule 702.133a's "if the resulting spell is an instant or sorcery spell",
   -- flashback's clause word for word. No printing can reach the failing side --
   -- jump-start appears only on instants and sorceries -- so this is asserted at
@@ -4480,7 +4481,7 @@ retraceSpec s registry = Spec.describe s "Retrace" $ do
       s
       "from the graveyard, the same {R} plus one land discard"
       (costsOf fromGraveyard graveyardBoard)
-      [(printed, [CostComponent.DiscardCards (DiscardCards.MkDiscardCards 1 (Filter.HasCardType CardType.Land))])]
+      [(printed, [CostComponent.DiscardCards (DiscardCards.MkDiscardCards (CardCount.Exactly 1) (Filter.HasCardType CardType.Land))])]
 
 -- CR 702.187b's one static ability, on Electro's Bolt {2}{R} Sorcery, "Electro's
 -- Bolt deals 4 damage to target creature." plus mayhem {1}{R}.

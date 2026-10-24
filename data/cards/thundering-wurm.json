@@ -56,7 +56,10 @@
                           {
                             "type": "DiscardCards",
                             "value": {
-                              "count": 1,
+                              "count": {
+                                "type": "Exactly",
+                                "value": 1
+                              },
                               "whichCards": {
                                 "type": "HasCardType",
                                 "value": {
