@@ -1,0 +1,28 @@
+{
+  "description": "CR 614.1a Bewitching Leechcraft takes no +1/+1 counter for Seedborn Muse's untap in another player's untap step",
+  "note": "The Leechcraft replaces an untap during the enchanted creature's controller's untap step. Bob's turn 2 untap step is not alice's, so the Muse untaps her Grizzly Bears with both its counters still on it.",
+  "board": {
+    "seats": [
+      {
+        "name": "alice",
+        "battlefield": [
+          { "card": "Seedborn Muse", "label": "muse" },
+          { "card": "Grizzly Bears", "label": "bears", "tapped": true, "counters": [{ "key": { "type": "PlusOnePlusOne" }, "value": 2 }] },
+          { "card": "Bewitching Leechcraft", "label": "leechcraft", "attached": "bears" }
+        ],
+        "library": [{ "card": "Forest" }, { "card": "Forest" }, { "card": "Forest" }]
+      },
+      {
+        "name": "bob",
+        "battlefield": [{ "card": "Mountain", "label": "mountain" }],
+        "library": [{ "card": "Mountain" }, { "card": "Mountain" }, { "card": "Mountain" }]
+      }
+    ],
+    "active": "alice",
+    "step": "PrecombatMain"
+  },
+  "timeline": [
+    { "turn": 2, "step": "Upkeep", "player": "bob", "check": { "Counters": { "object": "$bears", "kind": { "type": "PlusOnePlusOne" }, "count": 2 } } },
+    { "turn": 2, "step": "Upkeep", "player": "bob", "check": { "Tapped": { "object": "$bears", "tapped": false } } }
+  ]
+}

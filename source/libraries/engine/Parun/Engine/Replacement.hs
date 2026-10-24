@@ -912,9 +912,13 @@ matchesPrinted viewOf gs event candidate =
         -- creature" is the same self-scope.
         --
         -- `during` is the one restriction on WHICH untaps a row reaches, read
-        -- off the board as the step the game is in. Nothing is rule 122.1d's
+        -- off the board as the step the game is in, and that step must be the
+        -- permanent's controller's: Seedborn Muse untaps in another player's
+        -- untap step (Parun.Engine.Engine.untapAll). Nothing is rule 122.1d's
         -- every untap.
-        (ReplacementEffect.UntapR untapR, ProposedEvent.WouldUntap oid) -> src == oid && maybe True (== GameState.phase gs) (UntapR.during untapR)
+        (ReplacementEffect.UntapR untapR, ProposedEvent.WouldUntap oid) ->
+          src == oid
+            && maybe True (\phase -> phase == GameState.phase gs && maybe False (Turn.isActive gs) (Projection.controllerOf oid gs)) (UntapR.during untapR)
         -- CR 614.1a / 120.4c: whose life total the row watches (CR 109.5's
         -- "your"), what caused the loss, and whether the loss would actually
         -- carry the player past the total the rewrite leaves them at.

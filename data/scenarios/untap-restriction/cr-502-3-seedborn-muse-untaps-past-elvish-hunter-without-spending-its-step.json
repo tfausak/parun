@@ -1,0 +1,39 @@
+{
+  "description": "CR 502.3 / 611.2a Seedborn Muse untaps a creature Elvish Hunter held, and the Hunter's next untap step is still alice's own",
+  "note": "Alice taps Prodigal Sorcerer to ping bob, then has Elvish Hunter say it doesn't untap during its controller's next untap step. Bob's turn 2 untap step is not that step, so the Muse untaps the Sorcerer and the Hunter's effect is not spent. Alice pings bob again in his upkeep, and her own turn 3 untap step is the one that holds the Sorcerer tapped.",
+  "board": {
+    "seats": [
+      {
+        "name": "alice",
+        "battlefield": [
+          { "card": "Seedborn Muse", "label": "muse" },
+          { "card": "Prodigal Sorcerer", "label": "sorcerer", "ready": true },
+          { "card": "Elvish Hunter", "label": "hunter", "ready": true },
+          { "card": "Forest", "label": "forest-1" },
+          { "card": "Forest", "label": "forest-2" }
+        ],
+        "library": [{ "card": "Forest" }, { "card": "Forest" }, { "card": "Forest" }]
+      },
+      {
+        "name": "bob",
+        "battlefield": [{ "card": "Mountain", "label": "mountain" }],
+        "library": [{ "card": "Mountain" }, { "card": "Mountain" }, { "card": "Mountain" }]
+      }
+    ],
+    "active": "alice",
+    "step": "PrecombatMain"
+  },
+  "timeline": [
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "do": { "Activate": { "object": "$sorcerer", "ability": 0, "targets": ["$bob"], "mana": [null] } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "do": "Pass" },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "do": { "Activate": { "object": "$hunter", "ability": 0, "targets": ["$sorcerer"], "mana": ["$forest-1", "$forest-2"] } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "do": "Pass" },
+    { "turn": 1, "step": "PostcombatMain", "player": "alice", "check": { "Tapped": { "object": "$sorcerer", "tapped": true } } },
+    { "turn": 2, "step": "Upkeep", "player": "bob", "check": { "Tapped": { "object": "$sorcerer", "tapped": false } } },
+    { "turn": 2, "step": "Upkeep", "player": "alice", "do": { "Activate": { "object": "$sorcerer", "ability": 0, "targets": ["$bob"], "mana": [null] } } },
+    { "turn": 2, "step": "Upkeep", "player": "alice", "do": "Pass" },
+    { "turn": 2, "step": "DrawStep", "player": "bob", "check": { "Tapped": { "object": "$sorcerer", "tapped": true } } },
+    { "turn": 3, "step": "Upkeep", "player": "alice", "check": { "Tapped": { "object": "$sorcerer", "tapped": true } } },
+    { "turn": 3, "step": "Upkeep", "player": "alice", "check": { "Tapped": { "object": "$hunter", "tapped": false } } }
+  ]
+}

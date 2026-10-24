@@ -11,7 +11,8 @@ codec =
     tagOf
     [ Arm.nullary "Forbidden" UntapHold.Forbidden,
       Arm.nullary "Elective" UntapHold.Elective,
-      Arm.payload "AtMost" Common.natural UntapHold.AtMost (\x -> case x of UntapHold.AtMost y -> Just y; _ -> Nothing)
+      Arm.payload "AtMost" Common.natural UntapHold.AtMost (\x -> case x of UntapHold.AtMost y -> Just y; _ -> Nothing),
+      Arm.nullary "DuringOthersSteps" UntapHold.DuringOthersSteps
     ]
 
 tagOf :: UntapHold.UntapHold -> String
@@ -19,3 +20,4 @@ tagOf x = case x of
   UntapHold.Forbidden -> "Forbidden"
   UntapHold.Elective -> "Elective"
   UntapHold.AtMost {} -> "AtMost"
+  UntapHold.DuringOthersSteps -> "DuringOthersSteps"

@@ -1290,7 +1290,7 @@ spec s registry = Spec.describe s "Mutate" $ do
     gomazoa <- S.printingOf s registry "Dormant Gomazoa"
     let untapping (h, b, sp) =
           let merged = S.tapObject h (merging MutateSide.Over h b sp)
-           in (h, S.runPure S.identityAnswer merged (Engine.untapAll S.alice))
+           in (h, S.runPure S.identityAnswer merged (Engine.untapAll [S.alice]))
         (host, after) = untapping (mutateBoard plains gomazoa cubwarden)
         (cHost, control) = untapping (mutateBoard plains falcon cubwarden)
     Spec.assertEqWith s "CR 702.140e/502.3 the merged permanent keeps the Gomazoa's prohibition and stays tapped" (fmap Object.tapped (Game.lookupObject host after)) (Just TapState.Tapped)
