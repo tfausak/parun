@@ -1,5 +1,7 @@
 module Pawl.Types.UntapHold where
 
+import qualified Numeric.Natural as Natural
+
 -- | CR 502.3: what keeps a permanent an untap restriction names from untapping
 -- during the untap step -- an effect's "can't" (CR 101.2), or the active
 -- player's own determination of "which permanents they control will untap".
@@ -14,4 +16,8 @@ data UntapHold
   | -- | Its controller may leave it tapped: "You may choose not to untap this
     -- artifact during your untap step" (CR 502.3).
     Elective
-  deriving (Bounded, Enum, Eq, Ord, Show)
+  | -- | No more than this many of them untap, the active player choosing which:
+    -- "players can't untap more than two permanents during their untap steps"
+    -- (CR 101.2, CR 502.3).
+    AtMost Natural.Natural
+  deriving (Eq, Ord, Show)
