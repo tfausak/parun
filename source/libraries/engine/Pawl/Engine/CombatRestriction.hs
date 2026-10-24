@@ -443,7 +443,7 @@ blockingAlone cr = case cr of
   CombatRestriction.CantAttackMoreThan {} -> Nothing
   CombatRestriction.CantBlockMoreThan {} -> Nothing
 
--- The PAIRWISE selector. Its own, and not a fourth of the three above, because
+-- The PAIRWISE selector. Its own, and not another of the ones above, because
 -- what it answers is an Affected TOGETHER WITH the Filter describing the blockers
 -- barred from it: the two are one sentence, and an Affected alone would say "this
 -- creature can't be blocked" full stop.
@@ -491,8 +491,8 @@ attackingPlayer cr = case cr of
   CombatRestriction.CantAttackMoreThan {} -> Nothing
   CombatRestriction.CantBlockMoreThan {} -> Nothing
 
--- The bound selectors. A separate pair from the five above rather than a sixth
--- and seventh of them, because what they answer is a NUMBER and no Affected can
+-- The bound selectors. A separate pair from the ones above rather than two more
+-- of them, because what they answer is a NUMBER and no Affected can
 -- stand in for one -- which is the whole reason the arms exist.
 --
 -- Each answers the scope beside the number: the attacking one CR 802.3a's
