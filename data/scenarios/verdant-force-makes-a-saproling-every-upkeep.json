@@ -1,0 +1,72 @@
+{
+  "description": "CR 503.1a / 111.1 whole card: Verdant Force creates a 1/1 green Saproling at the beginning of each upkeep, not only its controller's",
+  "note": "The game opens in bob's untap step: his upkeep gives alice a Saproling, and her own upkeep a second.",
+  "board": {
+    "active": "bob",
+    "step": "Untap",
+    "seats": [
+      {
+        "name": "alice",
+        "library": [
+          {
+            "card": "Island"
+          },
+          {
+            "card": "Island"
+          },
+          {
+            "card": "Island"
+          }
+        ],
+        "battlefield": [
+          {
+            "card": "Verdant Force",
+            "label": "force"
+          }
+        ]
+      },
+      {
+        "name": "bob",
+        "library": [
+          {
+            "card": "Island"
+          },
+          {
+            "card": "Island"
+          },
+          {
+            "card": "Island"
+          }
+        ]
+      }
+    ]
+  },
+  "timeline": [
+    {
+      "turn": 1,
+      "step": "DrawStep",
+      "player": "bob",
+      "check": {
+        "Count": {
+          "player": "alice",
+          "zone": "Battlefield",
+          "card": "Saproling Token",
+          "count": 1
+        }
+      }
+    },
+    {
+      "turn": 2,
+      "step": "DrawStep",
+      "player": "alice",
+      "check": {
+        "Count": {
+          "player": "alice",
+          "zone": "Battlefield",
+          "card": "Saproling Token",
+          "count": 2
+        }
+      }
+    }
+  ]
+}
