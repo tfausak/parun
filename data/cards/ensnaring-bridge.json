@@ -1,0 +1,82 @@
+{
+  "faces": [
+    {
+      "combatRestrictions": [
+        {
+          "type": "CantAttack",
+          "value": {
+            "affected": {
+              "type": "Matching",
+              "value": {
+                "type": "And",
+                "value": [
+                  {
+                    "type": "HasCardType",
+                    "value": {
+                      "type": "Creature"
+                    }
+                  },
+                  {
+                    "type": "Measures",
+                    "value": {
+                      "comparison": {
+                        "type": "GreaterThan"
+                      },
+                      "measure": {
+                        "type": "Power"
+                      },
+                      "operand": {
+                        "type": "EnclosingAmount"
+                      }
+                    }
+                  }
+                ]
+              }
+            },
+            "amount": {
+              "type": "Count",
+              "value": {
+                "aggregation": {
+                  "type": "Members"
+                },
+                "filter": {
+                  "type": "And",
+                  "value": []
+                },
+                "scope": {
+                  "type": "InZone",
+                  "value": {
+                    "player": {
+                      "type": "Relative",
+                      "value": {
+                        "type": "You"
+                      }
+                    },
+                    "zone": {
+                      "type": "Hand"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      ],
+      "manaCost": [
+        {
+          "type": "Generic",
+          "value": 3
+        }
+      ],
+      "name": "Ensnaring Bridge",
+      "oracleText": "Creatures with power greater than the number of cards in your hand can't attack.",
+      "typeLine": {
+        "types": [
+          {
+            "type": "Artifact"
+          }
+        ]
+      }
+    }
+  ]
+}

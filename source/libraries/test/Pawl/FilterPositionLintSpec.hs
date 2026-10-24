@@ -43,6 +43,7 @@ import qualified Pawl.Types.AffectedUnless as AffectedUnless
 import qualified Pawl.Types.Aggregation as Aggregation
 import qualified Pawl.Types.AloneUnless as AloneUnless
 import qualified Pawl.Types.AlternativeCost as AlternativeCost
+import qualified Pawl.Types.Anchor as Anchor
 import qualified Pawl.Types.AttachTarget as AttachTarget
 import qualified Pawl.Types.AttackCost as AttackCost
 import qualified Pawl.Types.AttackCostScope as AttackCostScope
@@ -292,7 +293,7 @@ filterAtomsOf leaf predicate = case predicate of
   Filter.Type.SameNameAsBound _ -> leaf predicate
   Filter.Type.SameControllerAsBound _ -> leaf predicate
   Filter.Type.SameControllerAsHostOfBound _ -> leaf predicate
-  Filter.Type.SharesCreatureTypeWithBound _ -> leaf predicate
+  Filter.Type.SharesCreatureTypeWith _ -> leaf predicate
   Filter.Type.HasChosenName {} -> leaf predicate
   Filter.Type.HasChosenColor -> leaf predicate
   Filter.Type.HasChosenSubtype -> leaf predicate
@@ -334,6 +335,7 @@ filterAtomsOf leaf predicate = case predicate of
   Filter.Type.HasAttached f -> filterAtomsOf leaf f
   Filter.Type.IsAttachedToSource -> leaf predicate
   Filter.Type.IsAttachedToEvaluated -> leaf predicate
+  Filter.Type.IsEvaluated -> leaf predicate
   Filter.Type.IsHostOfSource -> leaf predicate
   Filter.Type.EnteredWithSource -> leaf predicate
   Filter.Type.AttachedNoLaterThanSource -> leaf predicate
@@ -598,22 +600,25 @@ cantCrewVehiclesTag = Text.pack "CantCrewVehicles"
 --
 -- "pool" is the key that identifies a target slot -- Pawl.Codec.TargetSlot is the
 -- only codec in the tree that writes one -- and "amount" beside it is the slot
--- naming its bound. The other position that fills the bound is a conjure's
+-- naming its bound. The other positions that fill the bound are a conjure's
 -- reference pick (Pawl.Types.FromReference), the "Reference" arm of
--- Pawl.Codec.ConjureCards, whose value carries the same two keys. Only that
--- position's own "filter" subtree is counted, which is sound because a Filter
--- holds neither: nothing nests below it to be double-counted.
+-- Pawl.Codec.ConjureCards, whose value carries the same two keys, and a combat
+-- restriction's affected set beside its "amount" (Pawl.Types.AffectedUnless,
+-- Ensnaring Bridge). Only that position's own "filter" or "affected" subtree is
+-- counted, which is sound because neither holds a target slot, a reference pick
+-- or a restriction: nothing nests below it to be double-counted.
 amountedSlotAtoms :: Value.Value -> Int
 amountedSlotAtoms value = case value of
   Value.Array a -> sum (fmap amountedSlotAtoms (Array.unwrap a))
   Value.Object o ->
     let pairs = Object.unwrap o
         keyed k = fmap Pair.value (filter (\pair -> String.unwrap (Pair.name pair) == Text.pack k) pairs)
-        isReference = any (\v -> case v of Value.String t -> String.unwrap t == Text.pack "Reference"; _ -> False) (keyed "type")
-        referenceAtoms = sum (fmap amountedReferenceAtoms (if isReference then keyed "value" else []))
+        tagged names = any (\v -> case v of Value.String t -> String.unwrap t `elem` fmap Text.pack names; _ -> False) (keyed "type")
+        referenceAtoms = sum (fmap (amountedAtoms "filter") (if tagged ["Reference"] then keyed "value" else []))
+        restrictionAtoms = sum (fmap (amountedAtoms "affected") (if tagged ["CantAttack", "CantBlock"] then keyed "value" else []))
         here =
           if null (keyed "pool") || null (keyed "amount")
-            then referenceAtoms
+            then referenceAtoms + restrictionAtoms
             else sum (fmap (jsonAtoms enclosingAmountTag) (keyed "filter"))
      in here + sum (fmap (amountedSlotAtoms . Pair.value) pairs)
   Value.String _ -> 0
@@ -621,25 +626,28 @@ amountedSlotAtoms value = case value of
   Value.Boolean _ -> 0
   Value.Number _ -> 0
 
--- A conjure reference pick's value: its "filter" subtree's atoms where an
+-- A conjure reference pick's value, or a combat restriction's
+-- (Pawl.Types.AffectedUnless): the atoms of its subtree at `key` where an
 -- "amount" sits beside it, and none where it does not.
-amountedReferenceAtoms :: Value.Value -> Int
-amountedReferenceAtoms value = case value of
+amountedAtoms :: String -> Value.Value -> Int
+amountedAtoms key value = case value of
   Value.Object o ->
     let pairs = Object.unwrap o
         keyed k = fmap Pair.value (filter (\pair -> String.unwrap (Pair.name pair) == Text.pack k) pairs)
-     in if null (keyed "amount") then 0 else sum (fmap (jsonAtoms enclosingAmountTag) (keyed "filter"))
+     in if null (keyed "amount") then 0 else sum (fmap (jsonAtoms enclosingAmountTag) (keyed key))
   _ -> 0
 
--- How many CR 202.3 computed-bound operands this card carries in a target slot
--- or reference pick that names an amount, and how many anywhere else. The second
+-- How many CR 202.3 computed-bound operands this card carries in a target slot,
+-- reference pick or combat restriction that names an amount, and how many
+-- anywhere else. The second
 -- number is the offence; the first is what Celestine, the Living Saint
 -- legitimately has one of.
 --
 -- Pawl.Engine.Target.slotContext fills Filter.Context.slotAmount off the SLOT's
--- own Quantity, so the operand in a slot that names none -- or in a Count filter,
--- an affected set, a search filter, a cost criterion -- is a silent False rather
--- than a rejected card. This is where that is made loud.
+-- own Quantity (Pawl.Engine.CombatRestriction.amountFrame off a restriction's),
+-- so the operand in a slot that names none -- or in a Count filter, a static
+-- ability's affected set, a search filter, a cost criterion -- is a silent False
+-- rather than a rejected card. This is where that is made loud.
 enclosingAmountCounts :: Face.Face Card.Type.Card -> (Int, Int)
 enclosingAmountCounts card =
   let encoded = Codec.encode (Face.Codec.codec Card.codec) card
@@ -1026,7 +1034,12 @@ sameNameAsBoundOffends card =
 
 -- The CR 205.3m tag, spelled once.
 sharesCreatureTypeTag :: Text.Text
-sharesCreatureTypeTag = Text.pack "SharesCreatureTypeWithBound"
+sharesCreatureTypeTag = Text.pack "SharesCreatureTypeWith"
+
+-- The CR 205.3m atoms anchored at a SLOT in an encoding: every one but those
+-- anchored at the evaluated object, which evaluatedOffends polices instead.
+boundSharesAtoms :: Value.Value -> Int
+boundSharesAtoms value = jsonAtoms sharesCreatureTypeTag value - occurrences (atomJson (Filter.Type.SharesCreatureTypeWith Anchor.Evaluated)) value
 
 -- How many CR 205.3m atoms this card carries in a resolution's own positions --
 -- an effect's ObjectRef (Heirloom Blade), a clause's "if" (Mudbutton Clanger), a
@@ -1037,7 +1050,7 @@ sharesCreatureTypeTag = Text.pack "SharesCreatureTypeWithBound"
 -- is a silent True. The second number is the offence.
 sharesCreatureTypeCounts :: Face.Face Card.Type.Card -> (Int, Int)
 sharesCreatureTypeCounts card =
-  let total wanted = sum (fmap (\(_, f) -> filterAtoms sharesCreatureTypeTag f) (filter (\(framing, _) -> elem framing [SourceHostFramed, ClauseGateFramed, SearchFramed, MillTallyFramed, HandSweepFramed, InTargetSlot] == wanted) (cardFilters card)))
+  let total wanted = sum (fmap (\(_, f) -> boundSharesAtoms (atomJson f)) (filter (\(framing, _) -> elem framing [SourceHostFramed, ClauseGateFramed, SearchFramed, MillTallyFramed, HandSweepFramed, InTargetSlot] == wanted) (cardFilters card)))
    in (total True, total False)
 
 -- The atom outside those positions, or the traversal and the codec disagreeing
@@ -1046,7 +1059,7 @@ sharesCreatureTypeCounts card =
 sharesCreatureTypeOffends :: Face.Face Card.Type.Card -> Bool
 sharesCreatureTypeOffends card =
   let (framed, elsewhere) = sharesCreatureTypeCounts card
-   in elsewhere /= 0 || framed + elsewhere /= jsonAtoms sharesCreatureTypeTag (Codec.encode (Face.Codec.codec Card.codec) card)
+   in elsewhere /= 0 || framed + elsewhere /= boundSharesAtoms (Codec.encode (Face.Codec.codec Card.codec) card)
 
 -- The CR 608.2c bound-object operand's tag, spelled once.
 ofBoundTag :: Text.Text
@@ -1168,21 +1181,27 @@ hostOfSourceOffends card =
   let (framed, elsewhere) = hostOfSourceCounts card
    in elsewhere /= 0 || framed + elsewhere /= jsonAtoms hostOfSourceTag (Codec.encode (Face.Codec.codec Card.codec) card)
 
--- The tag of the atom aimed at a quantity's object, spelled once.
-evaluatedTag :: Text.Text
-evaluatedTag = Text.pack "IsAttachedToEvaluated"
+-- How many atoms aimed at a quantity's object an encoding carries:
+-- Filter.IsAttachedToEvaluated and Filter.IsEvaluated by tag, and
+-- Filter.SharesCreatureTypeWith whole, its anchor being what tells the two apart.
+evaluatedAtoms :: Value.Value -> Int
+evaluatedAtoms value =
+  jsonAtoms (Text.pack "IsAttachedToEvaluated") value
+    + jsonAtoms (Text.pack "IsEvaluated") value
+    + occurrences (atomJson (Filter.Type.SharesCreatureTypeWith Anchor.Evaluated)) value
 
--- How many Filter.IsAttachedToEvaluated atoms this card carries in a Count's
--- filter, and how many its encoding carries in all.
+-- How many of those atoms this card carries in a Count's filter, and how many
+-- its encoding carries in all.
 evaluatedCounts :: Face.Face Card.Type.Card -> (Int, Int)
 evaluatedCounts card =
-  ( sum (fmap (filterAtoms evaluatedTag . Count.Type.filter) (cardCounts card)),
-    jsonAtoms evaluatedTag (Codec.encode (Face.Codec.codec Card.codec) card)
+  ( sum (fmap (evaluatedAtoms . atomJson . Count.Type.filter) (cardCounts card)),
+    evaluatedAtoms (Codec.encode (Face.Codec.codec Card.codec) card)
   )
 
--- Filter.Context.evaluated is filled by Pawl.Engine.Quantity's Count arm, the
--- only caller of Pawl.Engine.Count.evaluate, and by nothing else, so the atom
--- anywhere but a Count's filter is a silent False. An atom the codec finds and
+-- Filter.Context.evaluated and evaluatedCreatureTypes are filled by
+-- Pawl.Engine.Quantity's Count arm, the only caller of
+-- Pawl.Engine.Count.evaluate, and by nothing else, so the atoms anywhere but a
+-- Count's filter are a silent False. An atom the codec finds and
 -- cardCounts does not is the offence -- misplaced, or in a blind spot of that
 -- traversal.
 evaluatedOffends :: Face.Face Card.Type.Card -> Bool
@@ -1713,7 +1732,7 @@ filterPositionLintSpec s registry = Spec.describe s "Lint" $ do
   -- answerable only where effectContext or Target.slotContext fills
   -- Filter.Context.slotCreatureTypes. See sharesCreatureTypeOffends for the two
   -- offences.
-  Spec.it s "CR 205.3m no card asks SharesCreatureTypeWithBound outside a resolution's own positions or a target slot" $ do
+  Spec.it s "CR 205.3m no card asks a slot-anchored SharesCreatureTypeWith outside a resolution's own positions or a target slot" $ do
     ps <- S.allPrintings s
     let offenders = filter (anyFace sharesCreatureTypeOffends . Printing.card) ps
     Spec.assertEqWith s "the atom sits only where a resolution or a target slot fills the creature types" (fmap (S.nameOf . Printing.card) offenders) []
@@ -1722,7 +1741,7 @@ filterPositionLintSpec s registry = Spec.describe s "Lint" $ do
     Spec.assertEqWith s "Heirloom Blade's two atoms are in its ObjectRefs" (sharesCreatureTypeCounts (S.combinedFace blade)) (2, 0)
     clanger <- S.printingOf s registry "Mudbutton Clanger"
     let face = S.combinedFace clanger
-        atom = Filter.Type.SharesCreatureTypeWithBound (SlotName.MkSlotName (Text.pack "self"))
+        atom = Filter.Type.SharesCreatureTypeWith (Anchor.Bound (SlotName.MkSlotName (Text.pack "self")))
         restricted = face {Face.counterRestrictions = [CounterRestriction.MkCounterRestriction (Affected.Matching atom) Nothing]}
     Spec.assertEqWith s "Mudbutton Clanger's one atom is in its clause's gate" (sharesCreatureTypeCounts face) (1, 0)
     unbury <- S.printingOf s registry "Unbury"
@@ -1888,8 +1907,8 @@ filterPositionLintSpec s registry = Spec.describe s "Lint" $ do
   -- axis is the SLOT rather than the Framing: Pawl.Engine.Target.slotContext fills
   -- Filter.Context.slotAmount off the target slot's own Quantity, so an
   -- EnclosingAmount operand in a slot naming no amount -- or anywhere that is not
-  -- a target slot or a conjure's reference pick at all -- is a silent False. See
-  -- enclosingAmountCounts.
+  -- a target slot, a conjure's reference pick or a combat restriction's affected
+  -- set at all -- is a silent False. See enclosingAmountCounts.
   Spec.it s "CR 202.3 no card compares against an enclosing amount outside a slot that names one" $ do
     ps <- S.allPrintings s
     let offenders = filter (anyFace enclosingAmountOffends . Printing.card) ps
@@ -1919,6 +1938,9 @@ filterPositionLintSpec s registry = Spec.describe s "Lint" $ do
     -- of Burgeoning Life.
     --
     -- At most, against the power: Spawnbroker's `theirs` slot and Nihiloor's.
+    --
+    -- Greater than, against the power, in a combat restriction's affected set:
+    -- Ensnaring Bridge.
     let authors =
           [ "Celestine, the Living Saint",
             "Ratchet, Field Medic",
@@ -1937,7 +1959,8 @@ filterPositionLintSpec s registry = Spec.describe s "Lint" $ do
             "Spawnbroker",
             "Nihiloor",
             "March of Otherworldly Light",
-            "March of Burgeoning Life"
+            "March of Burgeoning Life",
+            "Ensnaring Bridge"
           ]
     counted <- traverse (\name -> fmap (\p -> (name, enclosingAmountCounts (S.combinedFace p))) (S.printingOf s registry name)) authors
     Spec.assertEqWith s "each author's one operand is in the slot that names its bound" counted (fmap (\name -> (name, (1, 0))) authors)
@@ -1974,6 +1997,13 @@ filterPositionLintSpec s registry = Spec.describe s "Lint" $ do
             }
     Spec.assertEqWith s "a planted atom in a reference pick naming no amount is an offence" (enclosingAmountCounts (conjuring Nothing)) (0, 1)
     Spec.assertEqWith s "and one naming an amount is not" (enclosingAmountCounts (conjuring (Just (Quantity.Type.Literal 4)))) (1, 0)
+    -- And at the third: a combat restriction's affected set.
+    let restricting amount =
+          (S.combinedFace piker)
+            { Face.combatRestrictions = [CombatRestriction.CantAttack (AffectedUnless.MkAffectedUnless (Affected.Matching buried) Nothing Nothing amount)]
+            }
+    Spec.assertEqWith s "a planted atom in a restriction naming no amount is an offence" (enclosingAmountCounts (restricting Nothing)) (0, 1)
+    Spec.assertEqWith s "and one naming an amount is not" (enclosingAmountCounts (restricting (Just (Quantity.Type.Literal 4)))) (1, 0)
   -- CR 608.2d's other-candidates operand is answerable only in an edict's or a
   -- chosen permanent's own filter. See otherCandidateCounts.
   Spec.it s "CR 608.2d no card compares against other candidates outside an edict or a chosen permanent" $ do
@@ -2153,15 +2183,18 @@ filterPositionLintSpec s registry = Spec.describe s "Lint" $ do
     -- the OFFERED card (Pawl.Engine.Resolve.Effect.offerCastOnce), so neither the
     -- host nor a chosen value of the offering object answers there.
     Spec.assertEqWith s "an offer's cost is not source-framed" (sourceFramed SlotlessCostFramed, hostFramed SlotlessCostFramed) (False, False)
-  -- CR 613.4c's "attached to it": Filter.IsAttachedToEvaluated is answerable only
+  -- CR 613.4c's "it": the atoms aimed at a quantity's object are answerable only
   -- in a Count's filter. See evaluatedOffends.
-  Spec.it s "CR 613.4c no card asks IsAttachedToEvaluated outside a Count" $ do
+  Spec.it s "CR 613.4c no card asks an evaluated-object atom outside a Count" $ do
     ps <- S.allPrintings s
     let offenders = filter (anyFace evaluatedOffends . Printing.card) ps
     Spec.assertEqWith s "the atom sits only in a Count's filter" (fmap (S.nameOf . Printing.card) offenders) []
     -- NOT vacuous: Thran Power Suit writes it twice, once per half of its pump.
     suit <- S.printingOf s registry "Thran Power Suit"
     Spec.assertEqWith s "Thran Power Suit's two atoms are both in Counts" (evaluatedCounts (S.combinedFace suit)) (2, 2)
+    -- Coat of Arms writes IsEvaluated and the Evaluated anchor once per half.
+    coat <- S.printingOf s registry "Coat of Arms"
+    Spec.assertEqWith s "Coat of Arms' four atoms are all in Counts" (evaluatedCounts (S.combinedFace coat)) (4, 4)
     -- The rejected side: the same atom planted in a target slot.
     piker <- S.printingOf s registry "Goblin Piker"
     let buried = Filter.Type.And [Filter.Type.Or [Filter.Type.HasCardType CardType.Creature, Filter.Type.Not Filter.Type.IsAttachedToEvaluated]]
@@ -2172,6 +2205,13 @@ filterPositionLintSpec s registry = Spec.describe s "Lint" $ do
             }
     Spec.assertEqWith s "a planted atom is outside every Count" (evaluatedCounts planted) (0, 1)
     Spec.assertBool s (evaluatedOffends planted) "and the lint says so"
+    let others = Filter.Type.And [Filter.Type.Not Filter.Type.IsEvaluated, Filter.Type.SharesCreatureTypeWith Anchor.Evaluated]
+        plantedOthers =
+          (S.combinedFace piker)
+            { Face.spell =
+                Mint.oneModeTargeting (Map.singleton (SlotName.MkSlotName (Text.pack "target")) (TargetSlot.required Pool.Creatures (Just others))) Seq.empty
+            }
+    Spec.assertEqWith s "Coat of Arms' two atoms planted are outside every Count" (evaluatedCounts plantedOthers) (0, 2)
   -- CR 702.33d: a kicker tally names one of the face's OWN kicker keywords,
   -- joined to Pawl.Engine.Cast's per-keyword map by structural equality. See
   -- timesPaidOffends for why this is read off the encoding.
@@ -2986,7 +3026,7 @@ filterPositionLintSpec s registry = Spec.describe s "Lint" $ do
                 }
             ),
             ( "CR 508.1c's combat restriction",
-              base {Face.combatRestrictions = [CombatRestriction.CantAttack (AffectedUnless.MkAffectedUnless (Affected.Matching buried) Nothing Nothing)]}
+              base {Face.combatRestrictions = [CombatRestriction.CantAttack (AffectedUnless.MkAffectedUnless (Affected.Matching buried) Nothing Nothing Nothing)]}
             ),
             ( "CR 508.1h's cost to attack",
               base {Face.attackCosts = [AttackCost.MkAttackCost (Affected.Matching buried) (PerCreature.Fixed (Cost.Type.MkCost (Just (ManaCost.MkManaCost [ManaSymbol.Generic 2])) [])) AttackCostScope.Controller]}

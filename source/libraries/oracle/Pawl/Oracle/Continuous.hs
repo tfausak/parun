@@ -217,7 +217,7 @@ combatRestrictions context attached enchants rs = case rs of
       CombatRestriction.CantBlock a -> restricted a (Text.pack "can't block")
       _ -> []
     restricted a verb = case a of
-      AffectedUnless.MkAffectedUnless affected' Nothing Nothing -> do
+      AffectedUnless.MkAffectedUnless affected' Nothing Nothing Nothing -> do
         subject <- ruled context attached enchants affected'
         [Prose.sentence (Target.wording subject <> Text.pack " " <> verb)]
       _ -> []

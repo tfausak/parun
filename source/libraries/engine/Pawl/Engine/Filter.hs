@@ -17,6 +17,7 @@ import qualified Pawl.Engine.TextWord as TextWord
 import qualified Pawl.Engine.Turn as Turn
 import qualified Pawl.Types.AbilityKind as AbilityKind
 import qualified Pawl.Types.AbilityName as AbilityName
+import qualified Pawl.Types.Anchor as Anchor
 import qualified Pawl.Types.Behold as Behold
 import qualified Pawl.Types.BlockStatus as BlockStatus
 import qualified Pawl.Types.BoundMeasure as BoundMeasure
@@ -1083,9 +1084,11 @@ data Context = MkContext
     -- `amount`); this is that Quantity already evaluated, because this module
     -- holds no game state and cannot evaluate one.
     --
-    -- Pawl.Engine.Target.slotContext fills it for a target slot, and
+    -- Pawl.Engine.Target.slotContext fills it for a target slot,
     -- Pawl.Engine.Projection.View.referenceAdmits for a conjure's reference pick
-    -- (Pawl.Types.FromReference's `amount`). It is Nothing at every other
+    -- (Pawl.Types.FromReference's `amount`), and
+    -- Pawl.Engine.CombatRestriction.amountFrame for a combat restriction's
+    -- affected set (Pawl.Types.AffectedUnless's). It is Nothing at every other
     -- position, and Pawl.FilterPositionLintSpec's lint is what keeps a card out of
     -- them.
     --
@@ -1322,14 +1325,13 @@ data Context = MkContext
     -- are the type the rule asks about.
     subjectHostCardTypes :: Set.Set CardType.CardType,
     -- CR 205.3m: the CREATURE TYPES of the objects the slots hold, for
-    -- SharesCreatureTypeWithBound -- Heirloom Blade's "shares a creature type
-    -- with it", through Binding.triggerSource a kinship card's "with this
-    -- creature", and a sibling target slot's (Unbury). Filled by
+    -- SharesCreatureTypeWith's Bound anchor -- Heirloom Blade's "shares a
+    -- creature type with it", through Binding.triggerSource a kinship card's
+    -- "with this creature", and a sibling target slot's (Unbury). Filled by
     -- Pawl.Engine.Projection.framedBySlots; empty elsewhere, where the atom
-    -- widens, and
-    -- Pawl.FilterPositionLintSpec's "CR 205.3m no card asks
-    -- SharesCreatureTypeWithBound outside a resolution's own positions or a
-    -- target slot" keeps a card out of those.
+    -- widens, and Pawl.FilterPositionLintSpec's "CR 205.3m no card asks a
+    -- slot-anchored SharesCreatureTypeWith outside a resolution's own positions
+    -- or a target slot" keeps a card out of those.
     slotCreatureTypes :: Map.Map SlotName.SlotName (Set.Set Subtype.Subtype),
     -- CR 608.2c: the MEASURES of the object a resolution's slot holds, for the
     -- Measures atom's OfBound operand (Profaner of the Dead's "the exploited
@@ -1428,11 +1430,18 @@ data Context = MkContext
     -- "CR 303.4b no card asks IsHostOfSource where the source's host is unknown".
     sourceAttachedTo :: Maybe ObjectId.ObjectId,
     -- The object the surrounding Quantity is evaluated against, which
-    -- IsAttachedToEvaluated compares a candidate's host with. Filled by
-    -- Pawl.Engine.Quantity's Count arm alone; Nothing everywhere else, where the
-    -- atom answers False. Pawl.FilterPositionLintSpec's "CR 613.4c no card asks
-    -- IsAttachedToEvaluated outside a Count" keeps a card to the filled position.
+    -- IsAttachedToEvaluated compares a candidate's host with and IsEvaluated the
+    -- candidate itself. Filled by Pawl.Engine.Quantity's Count arm alone; Nothing
+    -- everywhere else, where the atoms answer False. Pawl.FilterPositionLintSpec's
+    -- "CR 613.4c no card asks an evaluated-object atom outside a Count" keeps a
+    -- card to the filled position.
     evaluated :: Maybe ObjectId.ObjectId,
+    -- CR 205.3m: the CREATURE TYPES of that object, for SharesCreatureTypeWith
+    -- Anchor.Evaluated (Coat of Arms' "shares at least one creature type with
+    -- it"). `evaluated` above's filler, position and lint; read off the view the
+    -- Count arm was handed, so the CR 613 projection's types and not the printed
+    -- ones. Nothing where unfilled, and the atom then answers False.
+    evaluatedCreatureTypes :: Maybe (Set.Set Subtype.Subtype),
     -- CR 400.7: the objects an effect of the SOURCE put onto the battlefield, as
     -- those objects, for EnteredWithSource (Animate Dead's enchant ability). Filled
     -- from GameState.enteredWith by Pawl.Engine.SourceContext; empty in contextFor
@@ -1673,7 +1682,7 @@ data Context = MkContext
 -- here owes both halves of the same pair: which way its unfilled read answers,
 -- and what holds a card to the positions that fill it.
 contextFor :: Teams.Teams -> Maybe PlayerId.PlayerId -> Maybe ObjectId.ObjectId -> Context
-contextFor t p s = MkContext {teams = t, perspective = p, source = s, sourceMeasures = Map.empty, sourceColors = Set.empty, sourceSectors = Set.empty, sourceNames = Set.empty, slotAmount = Nothing, defendingPlayers = [], activePlayers = [], recipient = Nothing, shares = Map.empty, slotObjects = Map.empty, cantCrewVehicles = Set.empty, slotNames = Map.empty, slotControllers = Map.empty, slotHostControllers = Map.empty, subjectHostCardTypes = Set.empty, slotCreatureTypes = Map.empty, slotMeasures = Map.empty, slotPlayers = Map.empty, boundAmounts = Map.empty, slotStickers = Map.empty, slotVotes = Map.empty, boundUnannounced = False, sourceAttachedTo = Nothing, evaluated = Nothing, sourceEntrants = Set.empty, sourceOwner = Nothing, sourceChosenNames = Map.empty, carrierChosenPlayer = Nothing, aimingController = Nothing, sourceChosenColors = Set.empty, sourceChosenSubtype = Nothing, sourceLastExiled = Nothing, sourceExiled = Map.empty, reader = Nothing, candidateMeasures = Nothing}
+contextFor t p s = MkContext {teams = t, perspective = p, source = s, sourceMeasures = Map.empty, sourceColors = Set.empty, sourceSectors = Set.empty, sourceNames = Set.empty, slotAmount = Nothing, defendingPlayers = [], activePlayers = [], recipient = Nothing, shares = Map.empty, slotObjects = Map.empty, cantCrewVehicles = Set.empty, slotNames = Map.empty, slotControllers = Map.empty, slotHostControllers = Map.empty, subjectHostCardTypes = Set.empty, slotCreatureTypes = Map.empty, slotMeasures = Map.empty, slotPlayers = Map.empty, boundAmounts = Map.empty, slotStickers = Map.empty, slotVotes = Map.empty, boundUnannounced = False, sourceAttachedTo = Nothing, evaluated = Nothing, evaluatedCreatureTypes = Nothing, sourceEntrants = Set.empty, sourceOwner = Nothing, sourceChosenNames = Map.empty, carrierChosenPlayer = Nothing, aimingController = Nothing, sourceChosenColors = Set.empty, sourceChosenSubtype = Nothing, sourceLastExiled = Nothing, sourceExiled = Map.empty, reader = Nothing, candidateMeasures = Nothing}
 
 -- contextFor over a game: its teams (CR 102.4) and its active players (CR 102.1,
 -- 805.4a) filled from the state, the two facts about the table a match may ask.
@@ -1991,8 +2000,14 @@ matches context view predicate = case predicate of
   -- made before the sibling target is chosen, and
   -- Pawl.Engine.Target.selectionLegal's joint check narrows it (Unbury's "two
   -- target creature cards that share a creature type").
-  Filter.SharesCreatureTypeWithBound slot -> case Map.lookup slot (slotCreatureTypes context) of
+  Filter.SharesCreatureTypeWith (Anchor.Bound slot) -> case Map.lookup slot (slotCreatureTypes context) of
     Nothing -> True
+    Just types -> not (Set.disjoint (subtypes view) types)
+  -- The same intersection against the object the surrounding quantity is aimed
+  -- at (CR 613.4c), and vacuously FALSE where nothing aims one: no CR 601.2c
+  -- offer stands behind a Count to narrow a widened answer afterwards.
+  Filter.SharesCreatureTypeWith Anchor.Evaluated -> case evaluatedCreatureTypes context of
+    Nothing -> False
     Just types -> not (Set.disjoint (subtypes view) types)
   -- CR 201.4 at both ends, the arm above's INTERSECTION for CR 201.4g's reason as
   -- much as CR 709.4a's: choosing one of a set of interchangeable names chooses
@@ -2245,6 +2260,11 @@ matches context view predicate = case predicate of
   Filter.IsAttachedToEvaluated -> case (attachedTo view, evaluated context) of
     (Just host, Just aimed) -> host == aimed
     _ -> False
+  -- CR 613.4c: IsSource's identity test against the object the surrounding
+  -- quantity is aimed at. Vacuously False where no quantity aims the match.
+  Filter.IsEvaluated -> case (identity view, evaluated context) of
+    (Just candidate, Just aimed) -> candidate == aimed
+    _ -> False
   -- CR 303.4b: the same comparison a THIRD way -- the source's host against the
   -- candidate, rather than the candidate's host against the source. A live read
   -- too, one record over: the caller re-reads Object.attachedTo on every match, so
@@ -2492,7 +2512,7 @@ rewrite pairs predicate = case predicate of
   Filter.SameNameAsBound _ -> predicate
   Filter.SameControllerAsBound _ -> predicate
   Filter.SameControllerAsHostOfBound _ -> predicate
-  Filter.SharesCreatureTypeWithBound _ -> predicate
+  Filter.SharesCreatureTypeWith _ -> predicate
   Filter.HasChosenName {} -> predicate
   Filter.HasChosenColor -> predicate
   Filter.HasChosenSubtype -> predicate
@@ -2544,6 +2564,7 @@ rewrite pairs predicate = case predicate of
   Filter.HasAttached f -> Filter.HasAttached (rewrite pairs f)
   Filter.IsAttachedToSource -> predicate
   Filter.IsAttachedToEvaluated -> predicate
+  Filter.IsEvaluated -> predicate
   Filter.IsHostOfSource -> predicate
   Filter.EnteredWithSource -> predicate
   Filter.AttachedNoLaterThanSource -> predicate
@@ -3248,7 +3269,7 @@ bakeBound players objects controllers predicate = case predicate of
   -- which is CR 601.2c's offer before the sibling target is chosen.
   Filter.SameControllerAsBound slot -> maybe predicate (Filter.Or . fmap Filter.ControlledByPlayer . Set.toList) (Map.lookup slot controllers)
   Filter.SameControllerAsHostOfBound _ -> predicate
-  Filter.SharesCreatureTypeWithBound _ -> predicate
+  Filter.SharesCreatureTypeWith _ -> predicate
   Filter.HasChosenName {} -> predicate
   Filter.HasChosenColor -> predicate
   Filter.HasChosenSubtype -> predicate
@@ -3300,6 +3321,7 @@ bakeBound players objects controllers predicate = case predicate of
   Filter.HasAttached f -> Filter.HasAttached (bakeBound players objects controllers f)
   Filter.IsAttachedToSource -> predicate
   Filter.IsAttachedToEvaluated -> predicate
+  Filter.IsEvaluated -> predicate
   Filter.IsHostOfSource -> predicate
   Filter.EnteredWithSource -> predicate
   Filter.AttachedNoLaterThanSource -> predicate
@@ -3425,7 +3447,7 @@ manaValueThresholds predicate = case predicate of
   Filter.SameNameAsBound _ -> []
   Filter.SameControllerAsBound _ -> []
   Filter.SameControllerAsHostOfBound _ -> []
-  Filter.SharesCreatureTypeWithBound _ -> []
+  Filter.SharesCreatureTypeWith _ -> []
   Filter.HasChosenName {} -> []
   Filter.HasChosenColor -> []
   Filter.HasChosenSubtype -> []
@@ -3472,6 +3494,7 @@ manaValueThresholds predicate = case predicate of
   Filter.HasAttached f -> manaValueThresholds f
   Filter.IsAttachedToSource -> []
   Filter.IsAttachedToEvaluated -> []
+  Filter.IsEvaluated -> []
   Filter.IsHostOfSource -> []
   Filter.EnteredWithSource -> []
   Filter.AttachedNoLaterThanSource -> []
@@ -3585,7 +3608,7 @@ statesAQuality predicate = case predicate of
   Filter.SameNameAsBound _ -> True
   Filter.SameControllerAsBound _ -> True
   Filter.SameControllerAsHostOfBound _ -> True
-  Filter.SharesCreatureTypeWithBound _ -> True
+  Filter.SharesCreatureTypeWith _ -> True
   -- CR 701.23b's "stated quality" for HasName's reason, one indirection along: the
   -- description is a card name whichever way the name was arrived at, so a search
   -- whose filter is this one may decline to find what it can see.
@@ -3639,6 +3662,7 @@ statesAQuality predicate = case predicate of
   Filter.HasAttached _ -> True
   Filter.IsAttachedToSource -> True
   Filter.IsAttachedToEvaluated -> True
+  Filter.IsEvaluated -> True
   Filter.IsHostOfSource -> True
   Filter.EnteredWithSource -> True
   Filter.AttachedNoLaterThanSource -> True
@@ -3754,7 +3778,7 @@ readsSourceValues predicate = case predicate of
   Filter.SameNameAsBound _ -> False
   Filter.SameControllerAsBound _ -> False
   Filter.SameControllerAsHostOfBound _ -> False
-  Filter.SharesCreatureTypeWithBound _ -> False
+  Filter.SharesCreatureTypeWith _ -> False
   Filter.HasChosenName {} -> True
   Filter.HasChosenColor -> True
   Filter.HasChosenSubtype -> True
@@ -3789,6 +3813,7 @@ readsSourceValues predicate = case predicate of
   Filter.HasAttached f -> readsSourceValues f
   Filter.IsAttachedToSource -> False
   Filter.IsAttachedToEvaluated -> False
+  Filter.IsEvaluated -> False
   Filter.IsHostOfSource -> False
   Filter.EnteredWithSource -> False
   Filter.AttachedNoLaterThanSource -> False
@@ -3842,7 +3867,7 @@ boundSlots = Const.getConst . overBoundSlots (Const.Const . Set.singleton)
 -- resolution's bindings a waiting replacement CAPTURES through here, and
 -- Pawl.Engine.Target.jointlyJudged fires CR 601.2c's joint check on
 -- boundSlots, which is the whole of what enforces SameControllerAsBound and
--- SharesCreatureTypeWithBound (the offer widens for them).
+-- SharesCreatureTypeWith (the offer widens for them).
 --
 -- The same descent `bakeBound` makes: a position that function does not bake is
 -- a position this one must not report as read. NOT descended into: the Filter a
@@ -3914,7 +3939,8 @@ overBoundSlotsWith f predicate = case predicate of
   -- with every member's host's controller.
   Filter.SameControllerAsHostOfBound slot -> fmap Filter.SameControllerAsHostOfBound (f SlotArity.Many slot)
   -- Reads the whole set too, off its own field.
-  Filter.SharesCreatureTypeWithBound slot -> fmap Filter.SharesCreatureTypeWithBound (f SlotArity.Many slot)
+  Filter.SharesCreatureTypeWith (Anchor.Bound slot) -> fmap (Filter.SharesCreatureTypeWith . Anchor.Bound) (f SlotArity.Many slot)
+  Filter.SharesCreatureTypeWith Anchor.Evaluated -> pure predicate
   Filter.HasChosenName {} -> pure predicate
   -- Reads no slot either: CR 105.2's colour arrives on Filter.Context.
   Filter.HasChosenColor -> pure predicate
@@ -3963,6 +3989,7 @@ overBoundSlotsWith f predicate = case predicate of
   Filter.HasAttached g -> fmap Filter.HasAttached (overBoundSlotsWith f g)
   Filter.IsAttachedToSource -> pure predicate
   Filter.IsAttachedToEvaluated -> pure predicate
+  Filter.IsEvaluated -> pure predicate
   Filter.IsHostOfSource -> pure predicate
   Filter.EnteredWithSource -> pure predicate
   Filter.AttachedNoLaterThanSource -> pure predicate

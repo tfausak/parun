@@ -4851,7 +4851,8 @@ mintedCombatRestrictionsFor keyword = case keyword of
         AffectedUnless.MkAffectedUnless
           { AffectedUnless.affected = Affected.Matching (Filter.And [Filter.IsSource, Filter.HasCounters CounterKind.PlusOnePlusOne]),
             AffectedUnless.unless = Nothing,
-            AffectedUnless.name = Nothing
+            AffectedUnless.name = Nothing,
+            AffectedUnless.amount = Nothing
           }
     ]
   Keyword.Riot -> []
@@ -5029,7 +5030,7 @@ mintedCombatRestrictionsFor keyword = case keyword of
   Keyword.Nightbound -> []
   -- CR 702.147a's static half: "This creature can't block." Unleash's row with the
   -- counter clause removed, rule 702.147a stating the restriction flat.
-  Keyword.Decayed -> [CombatRestriction.CantBlock (AffectedUnless.MkAffectedUnless (Affected.Matching Filter.IsSource) Nothing Nothing)]
+  Keyword.Decayed -> [CombatRestriction.CantBlock (AffectedUnless.MkAffectedUnless (Affected.Matching Filter.IsSource) Nothing Nothing Nothing)]
   Keyword.Compleated -> []
   Keyword.Reconfigure _ -> []
   Keyword.ReadAhead -> []

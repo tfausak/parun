@@ -2,6 +2,7 @@ module Pawl.Types.Filter where
 
 import qualified Numeric.Natural as Natural
 import qualified Pawl.Types.AbilityKind as AbilityKind
+import qualified Pawl.Types.Anchor as Anchor
 import qualified Pawl.Types.BlockStatus as BlockStatus
 import qualified Pawl.Types.CardName as CardName
 import qualified Pawl.Types.CardType as CardType
@@ -198,8 +199,8 @@ data Filter keyword
     -- narrows afterwards, and no such check stands behind an attach
     -- destination.
     SameControllerAsHostOfBound SlotName.SlotName
-  | -- | CR 205.3m: the candidate shares a creature type with the object this slot holds.
-    SharesCreatureTypeWithBound SlotName.SlotName
+  | -- | CR 205.3m: the candidate shares a creature type with the anchored object.
+    SharesCreatureTypeWith Anchor.Anchor
   | -- | CR 201.4: the candidate has a name the SOURCE has chosen earlier in the
     -- same resolution (CR 608.2c) -- Ancient Vendetta's "cards with that name" --
     -- by the chooser the NameChooser names. Set intersection, for CR 201.4g's
@@ -412,6 +413,10 @@ data Filter keyword
     -- affected creature under CR 613.4c. Vacuously False where no quantity aims
     -- the match.
     IsAttachedToEvaluated
+  | -- | CR 613.4c: the candidate IS the object the surrounding QUANTITY is
+    -- evaluated against -- Coat of Arms' "each other creature" is @Not
+    -- IsEvaluated@. IsSource's question about IsAttachedToEvaluated's object.
+    IsEvaluated
   | -- | CR 303.4b's "enchanted": the candidate is what the evaluation's SOURCE is
     -- attached to -- Ray of Frost's "enchanted creature", the third attachment
     -- direction. Vacuously False where the source is attached to nothing or to a

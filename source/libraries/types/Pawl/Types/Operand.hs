@@ -19,9 +19,9 @@ data Operand
     OfBound BoundMeasure.BoundMeasure
   | -- | CR 608.2c: a number an earlier clause bound at a slot.
     AmountInSlot SlotName.SlotName
-  | -- | CR 202.3 / 601.2c: the amount the enclosing target slot or conjure
-    -- reference names (Pawl.Types.TargetSlot's and Pawl.Types.FromReference's
-    -- @amount@).
+  | -- | CR 202.3 / 601.2c: the amount the enclosing target slot, conjure
+    -- reference or combat restriction names (Pawl.Types.TargetSlot's,
+    -- Pawl.Types.FromReference's and Pawl.Types.AffectedUnless's @amount@).
     EnclosingAmount
   | -- | CR 608.2d: that measure of every other candidate the enclosing choice offers (Crackling Doom).
     OfEachOtherCandidate Measure.Measure
