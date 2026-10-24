@@ -68,7 +68,7 @@ function plus flags."* Everything else in M2b is a consumer of it.
 
 ### What is wrong today
 
-Three pieces of `Pawl.Turn` assume the turn is a fixed, unconditional walk:
+Three pieces of `Parun.Turn` assume the turn is a fixed, unconditional walk:
 
 - `allPhases` (`Turn.hs:9`) is a static list of the twelve steps.
 - `next :: Phase -> Maybe Phase` (`Turn.hs:28`) walks that list to find a step's
@@ -82,7 +82,7 @@ expressible.
 
 The visible consequence is `git-bug 5f50eec`: on every turn where nobody attacks,
 `grantsPriority` still returns `True` for declare blockers and combat damage, so
-pawl grants two priority rounds that CR 508.8 says to skip. It is unobservable in
+parun grants two priority rounds that CR 508.8 says to skip. It is unobservable in
 game *state* only because casting is sorcery-speed (`Cast.sorcerySpeed`,
 `Cast.hs:34`, requires `isMainPhase`), so the extra windows can only be passed —
 but the `DecisionLog` already diverges from a faithful engine (§4).
@@ -95,7 +95,7 @@ static walk is replaced by popping the sequence; skipping and repeating a step
 become **edits to the sequence**.
 
 ```hs
--- Pawl.Type.GameState gains a field beside `phase`:
+-- Parun.Type.GameState gains a field beside `phase`:
 --   phase     :: Phase       -- the CURRENT step (unchanged; the occurrence in progress)
 --   remaining :: Seq Phase    -- the steps still scheduled this turn, in order
 ```
@@ -127,7 +127,7 @@ splice point.
 consumes the schedule:
 
 ```hs
--- Pawl.Engine
+-- Parun.Engine
 advance :: Game ()
 advance = do
   gs <- State.get
@@ -163,7 +163,7 @@ load-bearing prior art, not a first-principles bet — cite it, don't re-argue i
 ## 2. The two keywords
 
 ```hs
--- Pawl.Type.Keyword — CR 702, ordered by rule number.
+-- Parun.Type.Keyword — CR 702, ordered by rule number.
 data Keyword
   = Defender      -- 702.3
   | DoubleStrike  -- 702.4   (new)
@@ -179,7 +179,7 @@ Two constructors inserted **in CR-number order** (the M2a convention that keeps
 702.7. M2a's §1 already settled that casing on a keyword is not a violation of the
 closed/open invariant — a keyword is a numbered rule, the same kind of thing as
 `Phase`. Nothing about first strike changes that argument; see the note atop
-`Pawl.Type.Keyword` before "fixing" a `case keyword of FirstStrike -> …` into a
+`Parun.Type.Keyword` before "fixing" a `case keyword of FirstStrike -> …` into a
 classification.
 
 Both are read through M2a's projection, never off the card:
@@ -241,7 +241,7 @@ where transient combat state lives — the `Combat` record, which "exists to abs
 exactly this (M2a's banding note, `Type/Combat.hs`):
 
 ```hs
--- Pawl.Type.Combat gains:
+-- Parun.Type.Combat gains:
 --   struckFirst :: Maybe (Set ObjectId)
 --     Nothing            -- the first-strike combat damage step has not happened
 --     Just participants  -- it has; `participants` are the attackers and blockers
@@ -342,7 +342,7 @@ this is a **drop**, performed as a turn-based action at the declare attackers st
 right after attackers are declared:
 
 ```hs
--- Pawl.Engine.runTurnBasedActions, the DeclareAttackers case
+-- Parun.Engine.runTurnBasedActions, the DeclareAttackers case
 Phase.Combat CombatStep.DeclareAttackers -> do
   Combat.declareAttackers active
   -- CR 508.8 / 500.11: if no creatures were declared as attackers, remove the
@@ -363,7 +363,7 @@ the player declines). "Put onto the battlefield attacking" has no source at M2b
 because sorcery-speed casting (`Cast.sorcerySpeed`) means the skipped priority
 windows can only be passed. What it changes is the `DecisionLog`: a faithful
 engine does not ask the active player for an action in those two steps on an
-attacker-less turn, and today's pawl asks twice. Since attacker-less turns are the
+attacker-less turn, and today's parun asks twice. Since attacker-less turns are the
 common case in a random game (the opening turns, any turn with no untapped
 creatures), the drop is exercised across the property games in §6 — it is the one
 part of M2b that gets random-game coverage without a deck change.
@@ -397,7 +397,7 @@ makes the falsifiers razor-sharp: when a Tiger beats a Piker but two Pikers trad
 nothing but first strike can be responsible; when an unblocked Raptor deals four
 where an unblocked Tiger deals two, nothing but double strike can be.
 
-`Pawl.Type.Subtype` gains `Cat`, `Dinosaur` and `Beast` (enum growth, no shape
+`Parun.Type.Subtype` gains `Cat`, `Dinosaur` and `Beast` (enum growth, no shape
 change — subtypes are pure data with no engine logic behind them, exactly like
 M2a's `Human`/`Bird`/`Ogre`/`Centaur`). No new color: both cards are red, so the
 color axis the M2a spec was careful to avoid (its Yotian Soldier note) stays
@@ -480,7 +480,7 @@ implementation gets wrong:
 
 **The classification test, which is the point of the milestone:** the splice
 decision, the wave predicates and the skip all read `keywordsOf` and the attacker
-map, and **no call site in `Pawl.Turn`, `Pawl.Engine` or `Pawl.Damage` names a
+map, and **no call site in `Parun.Turn`, `Parun.Engine` or `Parun.Damage` names a
 card**. Asserted the way M2a asserted its seam — by a board the identity-based
 implementation would get wrong — here, the mixed-board test above, whose outcome
 depends only on which citations the creatures carry.

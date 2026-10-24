@@ -1,0 +1,482 @@
+-- Mode-scoped structural reads over a Modal payload (CR 700.2), shared by the
+-- spell (Face.spell) and both ability types. Parametric in `card`, and its only
+-- engine imports are Parun.Engine.Filter and Parun.Engine.QuantitySlot, neither of
+-- which reaches further than Parun.Engine.Keyword and Parun.Engine.Binding -- so
+-- there is no cycle, and Parun.Engine.Card imports THIS. Parun.Engine.Quantity
+-- itself is out of reach: it reads a board, so it sits above Parun.Engine.Game,
+-- which imports Parun.Engine.Card.
+module Parun.Engine.Modal where
+
+import qualified Data.Foldable as Foldable
+import qualified Data.List as List
+import Data.Map.Strict (Map)
+import qualified Data.Map.Strict as Map
+import qualified Data.Maybe as Maybe
+import qualified Data.Sequence as Seq
+import Data.Set (Set)
+import qualified Data.Set as Set
+import qualified Data.Text as Text
+import Numeric.Natural (Natural)
+import qualified Parun.Engine.Filter as Filter
+import qualified Parun.Engine.QuantitySlot as QuantitySlot
+import qualified Parun.Extra.Natural as Natural
+import qualified Parun.Types.ChooseBetween as ChooseBetween
+import qualified Parun.Types.Clause as Clause
+import Parun.Types.Effect (Effect)
+import qualified Parun.Types.Modal as Modal
+import qualified Parun.Types.Mode as Mode
+import qualified Parun.Types.ModeIndex as ModeIndex
+import qualified Parun.Types.ModeInstance as ModeInstance
+import qualified Parun.Types.ModeSelection as ModeSelection
+import qualified Parun.Types.PlayerId as PlayerId
+import qualified Parun.Types.Pool as Pool
+import qualified Parun.Types.SlotCount as SlotCount
+import Parun.Types.SlotName (SlotName)
+import qualified Parun.Types.SlotName as SlotName
+import Parun.Types.TargetSlot (TargetSlot)
+import qualified Parun.Types.TargetSlot as TargetSlot
+import qualified Parun.Types.ZoneScope as ZoneScope
+import qualified Text.Read as Read
+
+-- Each mode's effects, in printed (mode, then written) order (CR 608.2c) -- one
+-- inner list per mode, kept apart. The shape a caller wants when the MODE is
+-- the unit of choice but resolution is not in play, where flattening would fuse
+-- two alternatives into one. selectionClauses just below is what CR 700.2's
+-- selection makes of it, and is what Parun.Engine.Mana reads.
+modeEffects :: Modal.Modal card ability -> [[Effect card ability]]
+modeEffects m = fmap (Foldable.toList . Mode.allEffects) (Foldable.toList (Modal.modes m))
+
+-- Every effect across all modes, printed (mode, then written) order (CR
+-- 608.2c).
+allEffects :: Modal.Modal card ability -> [Effect card ability]
+allEffects m = concat (modeEffects m)
+
+-- CR 700.2/700.2a: every way this payload's SELECTION could be satisfied -- one
+-- inner list per legal set of modes, each already flattened into printed (mode,
+-- then written) order. The shape a caller wants when the unit of choice is the
+-- whole selection rather than a single mode: Parun.Engine.Mana reads it to
+-- enumerate the ways one mana ability could be activated, where a choose-two
+-- ability's option is a PAIR of modes adding both modes' mana.
+--
+-- CLAUSES rather than effects, because CR 608.2c's gate rides the clause
+-- (Clause.condition) and this module holds no board to read it against; the
+-- caller does.
+--
+-- Reduces to one selection per mode when the selection is "choose exactly
+-- one", which is what every printed mana ability asks. Targeting is not consulted, so CR
+-- 700.2a's "if one of the modes would be illegal ... that mode can't be chosen"
+-- does not narrow the list here; the one caller is Parun.Engine.Mana, and CR
+-- 605.1a already keeps a targeting ability from being a mana ability at all.
+--
+-- Every size the instruction allows, so a RANGE ("Choose one or both")
+-- contributes the selections of each size -- one mode alone adds less mana than
+-- both together, and both are ways the one activation could go.
+selectionClauses :: Modal.Modal card ability -> [[Clause.Clause card ability]]
+selectionClauses m =
+  let enumerate = if allowsRepeats m then combinationsWithRepeats else combinations
+      modeClauses = fmap (Foldable.toList . Mode.clauses) (Foldable.toList (Modal.modes m))
+   in fmap concat (concatMap (\n -> enumerate n modeClauses) (selectionSizes (Modal.selection m)))
+
+-- CR 700.2d: "If a player is allowed to choose more than one mode for a modal
+-- spell or ability, that player normally can't choose the same mode more than
+-- once." So these are the size-n SUBLISTS, taken without repetition and keeping
+-- the printed order -- not the size-n sequences.
+--
+-- Empty when the list is shorter than n, since no selection satisfies such a
+-- payload.
+combinations :: Natural -> [a] -> [[a]]
+combinations n xs
+  | n == 0 = [[]]
+  | otherwise = case xs of
+      [] -> []
+      h : t -> fmap (h :) (combinations (n - 1) t) <> combinations n t
+
+-- combinations' other half: CR 700.2d's exception, "some modal spells include
+-- the instruction 'You may choose the same mode more than once.'" These are the
+-- size-n MULTISUBSETS, keeping the printed order, so one element may be taken
+-- repeatedly and the same element's copies stay adjacent.
+--
+-- Empty only when the list is empty and n > 0 -- unlike combinations, a single
+-- option satisfies any n, which is exactly what the exception buys.
+combinationsWithRepeats :: Natural -> [a] -> [[a]]
+combinationsWithRepeats n xs
+  | n == 0 = [[]]
+  | otherwise = case xs of
+      [] -> []
+      -- `h : t` on the left rather than `t`: taking h does not consume it, so h
+      -- remains available to the smaller selection.
+      h : t -> fmap (h :) (combinationsWithRepeats (n - 1) (h : t)) <> combinationsWithRepeats n t
+
+-- The union of every mode's target slots. Slot names are unique across a card's
+-- modes, and that is CHECKED rather than merely intended: a CardSpec lint
+-- rejects the card whose two modes declare one name, which this union would
+-- otherwise collapse into a single entry.
+allTargetSlots :: Modal.Modal card ability -> Map SlotName TargetSlot
+allTargetSlots m = Map.unions (fmap Mode.targetSlots (Foldable.toList (Modal.modes m)))
+
+-- CR 700.2d: the slot a given INSTANCE of a chosen mode fills. "If that mode
+-- requires a target, the same player or object may be chosen as the target for
+-- each of those modes, or different targets may be chosen" -- so two instances of
+-- one repeated mode need two slots, or the second choice would overwrite the
+-- first and the rule's "different targets" would be unreachable.
+--
+-- Occurrence 0 keeps the PRINTED name, so a selection with no repeat -- which is
+-- every selection in the pool but the ones the handful of cards writing CR
+-- 700.2d's instruction allow, and most of even those -- binds the names it always
+-- did, and nothing downstream of a repeat-free cast can tell this function was
+-- ever called. Later occurrences take
+-- a suffix a card cannot print: Parun.CardSpec rejects a declared slot name
+-- containing '#'.
+--
+-- CR 702.47d's added text is named apart the same way: a spliced card's slots
+-- take a suffix naming which spliced card they came from, so the main spell's
+-- "target" and a spliced card's "target" are two slots, as the rule's "choose
+-- targets for the added text normally" needs.
+instanceSlot :: ModeInstance.ModeInstance -> SlotName -> SlotName
+instanceSlot mi slot =
+  let spliced = case ModeInstance.splice mi of
+        0 -> ""
+        k -> "#splice" <> show k
+      repeated = case ModeInstance.occurrence mi of
+        0 -> ""
+        k -> "#" <> show k
+   in case spliced <> repeated of
+        "" -> slot
+        suffix -> SlotName.MkSlotName (SlotName.unwrap slot <> Text.pack suffix)
+
+-- CR 601.2c: the slot one player's copy of a "for each opponent" slot is
+-- announced and bound under (Parun.Types.TargetSlot's perPlayer). A suffix a card
+-- cannot print, for instanceSlot's reason, so perPlayerOf reads it back.
+perPlayerSlot :: SlotName -> PlayerId.PlayerId -> SlotName
+perPlayerSlot slot pid = SlotName.MkSlotName (SlotName.unwrap slot <> perPlayerMark <> Text.pack (show (PlayerId.unwrap pid)))
+
+-- perPlayerSlot's inverse: the printed slot and the player, or Nothing for any
+-- other name.
+perPlayerOf :: SlotName -> Maybe (SlotName, PlayerId.PlayerId)
+perPlayerOf name =
+  let (prefix, digits) = Text.breakOnEnd perPlayerMark (SlotName.unwrap name)
+   in do
+        base <- Text.stripSuffix perPlayerMark prefix
+        pid <- Read.readMaybe (Text.unpack digits)
+        pure (SlotName.MkSlotName base, PlayerId.MkPlayerId pid)
+
+perPlayerMark :: Text.Text
+perPlayerMark = Text.pack "#player"
+
+-- CR 608.2c/700.2: the CHOSEN modes themselves, each with the ModeInstance
+-- naming which mode it is and which occurrence of it, in printed order. Out-of-
+-- range indices contribute nothing (total via Seq.lookup).
+--
+-- The ORDER is what CR 702.42b demands of an entwined spell, and what CR 700.2d
+-- demands of a repeated one ("treated as if that mode appeared that many times in
+-- sequence"): ModeIndex order IS printed order, and the chosen Seq is sorted, so
+-- a mode chosen twice contributes two adjacent instances.
+--
+-- Modes rather than a flat effect list because a mode is the unit CR 700.2c
+-- scopes targets to, and because it holds the clauses CR 603.5's "may" and CR
+-- 118.12a's "unless" each cover -- so a resolver that flattened first could ask
+-- neither question where it belongs. The instance rides along so the prompt can
+-- name which mode is asking and so the resolver can find that instance's own
+-- slots.
+chosenModes :: Seq.Seq ModeIndex.ModeIndex -> Modal.Modal card ability -> [(ModeInstance.ModeInstance, Mode.Mode card ability)]
+chosenModes chosen m =
+  let modeAt mi = fmap ((,) mi) (modeAtIndex (ModeInstance.index mi) m)
+   in Maybe.mapMaybe modeAt (instancesOf chosen)
+
+-- The chosen indices numbered by occurrence, sorted (CR 608.2c). Split out
+-- because the slots and the modes must agree instance for instance, and both
+-- read it.
+instancesOf :: Seq.Seq ModeIndex.ModeIndex -> [ModeInstance.ModeInstance]
+instancesOf chosen =
+  let number _ [] = []
+      number seen (idx : rest) =
+        let k = Maybe.fromMaybe 0 (Map.lookup idx seen)
+         in ModeInstance.MkModeInstance 0 idx k : number (Map.insert idx (k + 1) seen) rest
+   in number Map.empty (List.sort (Foldable.toList chosen))
+
+-- One mode by index, or Nothing when the index is out of range (total).
+modeAtIndex :: ModeIndex.ModeIndex -> Modal.Modal card ability -> Maybe (Mode.Mode card ability)
+modeAtIndex (ModeIndex.MkModeIndex n) m = Seq.lookup (Natural.toIntSaturating n) (Modal.modes m)
+
+-- CR 608.2c/700.2: only the CHOSEN modes' effects, flattened in ModeIndex then
+-- written order, with a mode chosen twice contributing its effects twice (CR
+-- 700.2d). A CLASSIFICATION read -- what effects these modes hold, of the kind
+-- Parun.Engine.ManaAbility asks -- where optionality is not part of the question;
+-- resolution goes through chosenModes instead.
+modesEffects :: Seq.Seq ModeIndex.ModeIndex -> Modal.Modal card ability -> [Effect card ability]
+modesEffects chosen m = concatMap (Foldable.toList . Mode.allEffects . snd) (chosenModes chosen m)
+
+-- CR 601.2c/700.2c: only the CHOSEN modes' target slots (union), each instance's
+-- slots under instanceSlot's name. Two modes may be chosen at once (CR 702.42a's
+-- entwine), which is what makes this union's collapse an observable wrong answer
+-- rather than a latent one -- so the CardSpec lint keeps a card whose modes share
+-- a slot name out of the pool, and instanceSlot keeps one mode's repeats from
+-- colliding with themselves.
+modesTargetSlots :: Seq.Seq ModeIndex.ModeIndex -> Modal.Modal card ability -> Map SlotName TargetSlot
+modesTargetSlots chosen m = Map.unions (fmap (\mi -> instanceTargetSlots mi m) (instancesOf chosen))
+
+-- CR 702.96b: the same modal with every mode's target slots dropped, which is
+-- what "that spell won't require any targets" leaves a castability gate to judge
+-- -- the MODES are still chosen and still have to be choosable, so this is
+-- narrower than answering the gate True. Parun.Engine.Cast.targetable is the
+-- reader.
+untargeted :: Modal.Modal card ability -> Modal.Modal card ability
+untargeted m = m {Modal.modes = fmap (\mode -> mode {Mode.targetSlots = Map.empty}) (Modal.modes m)}
+
+-- One chosen instance's target slots, renamed under that instance's slot names.
+-- The inverse of the projection instanceView applies before running the
+-- instance's effects, which still read the printed names.
+--
+-- The KEYS are not the whole rename: a slot's pool may itself name a sibling slot
+-- (Parun.Types.ZoneScope's InSlot, Dwell on the Past's "their graveyard"), so may
+-- its FILTER (Parun.Types.Filter's IsBound, Fall of the Hammer's "another
+-- target creature"), and so may its CR 202.3 computed bound
+-- (Parun.Types.Quantity), and all three are the printed name too. Renaming the
+-- keys alone would leave occurrence 1 pointing at occurrence 0's slot, so CR 700.2d's
+-- "different targets may be chosen" would silently read the first occurrence's
+-- answer. instanceScope below is that half.
+instanceTargetSlots :: ModeInstance.ModeInstance -> Modal.Modal card ability -> Map SlotName TargetSlot
+instanceTargetSlots mi m = maybe Map.empty (modeInstanceTargetSlots mi) (modeAtIndex (ModeInstance.index mi) m)
+
+-- instanceTargetSlots with the mode already in hand rather than looked up by
+-- index, which is what CR 608.2b's re-check holds: Parun.Engine.Resolve walks the
+-- chosen modes themselves. ONE builder, because the announcement's map and the
+-- re-check's map disagreeing about which slot belongs to which occurrence is
+-- exactly the defect; see #2806.
+modeInstanceTargetSlots :: ModeInstance.ModeInstance -> Mode.Mode card ability -> Map SlotName TargetSlot
+modeInstanceTargetSlots mi mode =
+  let declared = Map.keysSet (Mode.targetSlots mode)
+   in Map.mapKeys (instanceSlot mi) (fmap (instanceScope (ownSlot mi declared)) (Mode.targetSlots mode))
+
+-- CR 700.2d's rename NARROWED to the names the mode itself declares, which is the
+-- whole of what an occurrence copies: those are the keys instanceSlot suffixes, so
+-- a reference to one must follow it. Every other name a slot points at belongs to
+-- someone else's namespace -- CR 603.2's event bindings ("that player", printed-
+-- named on the ability object however many times the mode was chosen), CR 113.7's
+-- source, "you" -- and renaming one would leave an atom no environment is keyed by.
+--
+-- This is what makes the ORDER of the rename and CR 603.2's bake irrelevant, which
+-- is the defect it fixes: Parun.Engine.Engine.placeBorne bakes then renames and
+-- Parun.Engine.Resolve.resolveModesWith renames then bakes, and the two agree only
+-- because neither step now touches what the other reads. Proved by
+-- Parun.ModalSpec's "CR 700.2d a repeated mode on a trigger keeps reading the
+-- trigger's own bound player".
+ownSlot :: ModeInstance.ModeInstance -> Set SlotName -> SlotName -> SlotName
+ownSlot mi declared slot = if Set.member slot declared then instanceSlot mi slot else slot
+
+-- CR 700.2d applied to the slot NAMES a target slot carries, so everything the
+-- slot points at follows its mode's occurrence exactly as the key does: the
+-- pool's ZoneScope.InSlot, the sibling slots the FILTER reads (Filter.IsBound and
+-- the atoms beside it, which Parun.Engine.Filter.renameBound and boundSlots share
+-- one walk over), and the CR 202.3 computed bound the slot's `amount` carries
+-- (Parun.Engine.QuantitySlot.renameSlots, paired with that module's `slots` the
+-- same way). Those four fields are the whole of what a TargetSlot names; a
+-- `count` that is a printed number or CR 601.2b's announced X names no slot, and
+-- a computed one is a Quantity renamed exactly as the bound beside it is.
+--
+-- `rename` is ownSlot above, so a name the mode does not declare passes through.
+instanceScope :: (SlotName -> SlotName) -> TargetSlot -> TargetSlot
+instanceScope rename slot =
+  slot
+    { TargetSlot.pool = instancePool rename (TargetSlot.pool slot),
+      TargetSlot.filter = fmap (Filter.renameBound rename) (TargetSlot.filter slot),
+      TargetSlot.amount = fmap (QuantitySlot.renameSlots rename) (TargetSlot.amount slot),
+      TargetSlot.divided = fmap (QuantitySlot.renameSlots rename) (TargetSlot.divided slot),
+      TargetSlot.count = SlotCount.mapQuantity (QuantitySlot.renameSlots rename) (TargetSlot.count slot)
+    }
+
+-- instanceScope's rename over the pool itself: the two arms carrying a
+-- ZoneScope, and every other pool unchanged.
+instancePool :: (SlotName -> SlotName) -> Pool.Pool -> Pool.Pool
+instancePool rename pool = case pool of
+  Pool.CardsInGraveyard scope -> Pool.CardsInGraveyard (instanceZoneScope rename scope)
+  Pool.CreaturesAndCardsInGraveyard scope -> Pool.CreaturesAndCardsInGraveyard (instanceZoneScope rename scope)
+  Pool.Creatures -> pool
+  Pool.Players -> pool
+  Pool.AnyTarget -> pool
+  Pool.Permanents -> pool
+  Pool.Spells -> pool
+  Pool.Abilities -> pool
+  Pool.SpellsAndPermanents -> pool
+  Pool.PlayersAndPlaneswalkers -> pool
+  Pool.CardsInExile -> pool
+  Pool.CardsInAnte -> pool
+
+-- CR 109.5's Scoped arm and a baked BoundPlayer name no slot and are untouched;
+-- InSlot's is the printed name `rename` rewrites.
+instanceZoneScope :: (SlotName -> SlotName) -> ZoneScope.ZoneScope -> ZoneScope.ZoneScope
+instanceZoneScope rename scope = case scope of
+  ZoneScope.Scoped _ -> scope
+  ZoneScope.InSlot slot -> ZoneScope.InSlot (rename slot)
+  ZoneScope.ControllerOfBound slot -> ZoneScope.ControllerOfBound (rename slot)
+  ZoneScope.BoundPlayer _ -> scope
+
+-- CR 700.2d: the binding-shaped environment ONE chosen instance's effects read.
+-- Three parts, and each is a rule rather than a convenience:
+--
+--   * this instance's own slots appear under their PRINTED names, because an
+--     effect names the slot its card printed and knows nothing of occurrences.
+--     Occurrence 0's are already printed-named, so this is the identity there;
+--   * every OTHER chosen instance's slots are removed, so the second instance of
+--     a repeated mode cannot see the first's target and silently reuse it -- the
+--     shape that would make "different targets may be chosen" unobservable. This
+--     also removes a DIFFERENT chosen mode's slots, which the CardSpec read lint
+--     already forbids a mode from reading (it is per mode, exactly because CR
+--     700.2c scopes a target to the mode that asked for it);
+--   * everything that is not a chosen mode's target slot passes through: the
+--     reserved bindings (the source, "you", X, the chosen modes), CR 303.4a's
+--     enchant slot, and any slot this resolution has defined.
+--
+-- A slot a mode DEFINES (MoveToZone's, Create's, Destroy's, PlaySubgame's) is
+-- kept apart by Parun.Engine.Resolve.withDefinedSlots instead, which empties the
+-- printed name around each instance rather than projecting it here: those slots
+-- have readers that never come through this function.
+--
+-- Generic in the value so the legality map and the target map are projected by
+-- one function, which is what keeps them from disagreeing about which slot
+-- belongs to which instance.
+--
+-- `allSlots` is every chosen instance's slots (modesTargetSlots, already
+-- instance-named); `printed` is this instance's own mode's slots, under the names
+-- the card prints. Taken as arguments rather than derived from the payload
+-- because the two resolution paths hold different things: a spell's `allSlots`
+-- also carries CR 303.4a's enchant slot, which is the card's and not any mode's,
+-- and so must survive the projection.
+--
+-- A "for each opponent" slot's per-player copies (perPlayerSlot) are folded back
+-- under the slot's own name first, with (<>): the effect acts on every copy's
+-- target. `allSlots` is the UNSPLIT map, naming the slot and not its copies.
+instanceView :: (Semigroup v) => Map SlotName TargetSlot -> ModeInstance.ModeInstance -> Map SlotName TargetSlot -> Map SlotName v -> Map SlotName v
+instanceView allSlots mi printed env =
+  let gathered = Map.mapKeysWith (<>) (\slot -> maybe slot fst (perPlayerOf slot)) env
+      renamed = Maybe.mapMaybe (\slot -> fmap ((,) slot) (Map.lookup (instanceSlot mi slot) gathered)) (Map.keys printed)
+   in Map.union (Map.fromList renamed) (Map.withoutKeys gathered (Map.keysSet allSlots))
+
+-- The target slots of one mode by index (CR 700.2c: only the chosen mode's
+-- slots). Nothing if the index is out of range (total).
+modeTargetSlots :: ModeIndex.ModeIndex -> Modal.Modal card ability -> Maybe (Map SlotName TargetSlot)
+modeTargetSlots (ModeIndex.MkModeIndex n) m =
+  fmap Mode.targetSlots (Seq.lookup (Natural.toIntSaturating n) (Modal.modes m))
+
+-- CR 700.2: the FEWEST modes a selection satisfying this instruction may name.
+-- Equal to mostOf for an exact instruction, whichever half of CR 700.2d it is;
+-- a range's lower bound otherwise ("Choose one or both" is 1).
+leastOf :: ModeSelection.ModeSelection -> Natural
+leastOf selection = case selection of
+  ModeSelection.ChooseExactly n -> n
+  ModeSelection.ChooseExactlyWithRepeats n -> n
+  ModeSelection.ChooseBetween cb -> ChooseBetween.least cb
+
+-- CR 700.2: the MOST modes a selection satisfying this instruction may name --
+-- leastOf's counterpart, and the same number for every exact instruction.
+mostOf :: ModeSelection.ModeSelection -> Natural
+mostOf selection = case selection of
+  ModeSelection.ChooseExactly n -> n
+  ModeSelection.ChooseExactlyWithRepeats n -> n
+  ModeSelection.ChooseBetween cb -> ChooseBetween.most cb
+
+-- CR 700.2d: does this instruction print "You may choose the same mode more than
+-- once"? False is that rule's default -- "that player normally can't choose the
+-- same mode more than once" -- and is what all but a handful of cards in the pool
+-- answer, Mystic Confluence being the one PRINTING of the exception.
+--
+-- True implies leastOf == mostOf: no printing pairs the exception with a range,
+-- which is why Parun.Types.ModeSelection has no such constructor and why the
+-- repeating arms below read one bound and mean "the count".
+allowsRepeatsIn :: ModeSelection.ModeSelection -> Bool
+allowsRepeatsIn selection = case selection of
+  ModeSelection.ChooseExactly _ -> False
+  ModeSelection.ChooseExactlyWithRepeats _ -> True
+  ModeSelection.ChooseBetween {} -> False
+
+-- Every size a selection satisfying the printed instruction may have, ascending.
+-- One element for an exact instruction, `most - least + 1` for a range.
+selectionSizes :: ModeSelection.ModeSelection -> [Natural]
+selectionSizes selection = [leastOf selection .. mostOf selection]
+
+-- allowsRepeatsIn over the payload's own printed selection.
+allowsRepeats :: Modal.Modal card ability -> Bool
+allowsRepeats = allowsRepeatsIn . Modal.selection
+
+-- CR 700.2a/700.2b: the selection a player has NO choice about, if there is one
+-- -- the engine never makes a choice, and never asks a question with one answer.
+-- Nothing when a real choice remains, in which case Prompt.ChooseModes is issued.
+--
+-- Under CR 700.2d's default that is "as many legal modes as the selection demands
+-- or fewer": every legal mode must be taken. FEWER is included so the caller's
+-- own legality check rejects the whole announcement rather than this function
+-- inventing a selection, which is where CR 601.2e/603.3c take over.
+--
+-- Under the exception it is narrower, because a single legal mode now satisfies
+-- any count: one legal mode leaves only "that mode, n times", and no legal mode
+-- at all leaves nothing (rejected by the caller as above). Two legal modes and a
+-- count of three is a real choice even though there are fewer modes than the
+-- count, which is exactly the case the default has no analogue of.
+--
+-- A RANGE takes the default's arm, measured against its FLOOR, and that is the
+-- whole of it: "Choose one or both" with one legal mode leaves only that mode (CR
+-- 700.2a makes the other unchoosable), while two legal modes leave one, the other,
+-- or both -- three answers, so the prompt is issued. More generally a selection is
+-- forced only when one size is available and one subset has it, which for `legal`
+-- of size k and bounds least..most is k <= least; every k > least admits at least
+-- two answers.
+forcedSelection :: Set ModeIndex.ModeIndex -> ModeSelection.ModeSelection -> Maybe (Seq.Seq ModeIndex.ModeIndex)
+forcedSelection legal selection
+  -- "Choose zero" names nothing whatever is legal. No printing says it; the arm
+  -- is here so the two below may assume a positive ceiling.
+  | mostOf selection == 0 = Just Seq.empty
+  | allowsRepeatsIn selection = case Set.toAscList legal of
+      [] -> Just Seq.empty
+      [only] -> Just (Seq.replicate (Natural.toIntSaturating (mostOf selection)) only)
+      _ -> Nothing
+  | Natural.length legal <= leastOf selection = Just (Seq.fromList (Set.toAscList legal))
+  | otherwise = Nothing
+
+-- CR 700.2a: is there ANY selection satisfying this instruction, given which
+-- modes are legal? The question a cast-legality gate asks before a mode has been
+-- chosen, and CR 700.2d's exception is what stops it being a count comparison: a
+-- single legal mode satisfies "choose three" when the same mode may be chosen
+-- three times, and does not otherwise.
+--
+-- A range asks it of its FLOOR: "Choose one or both" needs one legal mode, not
+-- two, since choosing one is an answer the instruction allows.
+selectionPossible :: Set ModeIndex.ModeIndex -> ModeSelection.ModeSelection -> Bool
+selectionPossible legal selection
+  | mostOf selection == 0 = True
+  | allowsRepeatsIn selection = not (Set.null legal)
+  | otherwise = Natural.length legal >= leastOf selection
+
+-- CR 601.2b/700.2: does this answer really satisfy the printed instruction? The
+-- size is one the instruction allows -- a single number for an exact instruction,
+-- anything within the bounds for a range -- every mode named is legal (CR 700.2a),
+-- and no mode is named twice unless CR 700.2d's exception is printed. The
+-- reject-not-repair gate every announcement path runs before it stamps anything.
+selectionSatisfiedBy :: Set ModeIndex.ModeIndex -> ModeSelection.ModeSelection -> Seq.Seq ModeIndex.ModeIndex -> Bool
+selectionSatisfiedBy legal selection chosen =
+  let distinct = Set.fromList (Foldable.toList chosen)
+      size = Natural.length chosen
+   in size >= leastOf selection
+        && size <= mostOf selection
+        && Set.isSubsetOf distinct legal
+        && (allowsRepeatsIn selection || Set.size distinct == Seq.length chosen)
+
+-- CR 700.2: every answer selectionSatisfiedBy accepts over `legal`, each in
+-- printed order -- the announcements a gate standing before CR 601.2b has to
+-- consider when a cost reads the targets they bring (Parun.Engine.Cast.castAimable).
+-- Exponential in the mode count, which no printing takes past five.
+selections :: Set ModeIndex.ModeIndex -> ModeSelection.ModeSelection -> [Seq.Seq ModeIndex.ModeIndex]
+selections legal selection =
+  let choose :: Natural -> [ModeIndex.ModeIndex] -> [[ModeIndex.ModeIndex]]
+      choose n pool
+        | n == 0 = [[]]
+        | otherwise = case pool of
+            [] -> []
+            m : rest -> fmap (m :) (choose (n - 1) (if allowsRepeatsIn selection then pool else rest)) <> choose n rest
+   in [Seq.fromList picked | n <- selectionSizes selection, picked <- choose n (Set.toAscList legal)]
+
+-- How many modes are PRINTED, which is not the same question as how many the
+-- selection demands. CR 702.42a's entwine is what asks it: this is the count
+-- Parun.Engine.Cast substitutes for selectionCount when the entwine cost is
+-- paid.
+modeCount :: Modal.Modal card ability -> Natural
+modeCount = Natural.length . Modal.modes

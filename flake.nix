@@ -31,7 +31,7 @@
           ./CHANGELOG.md
           ./data
           ./LICENSE.txt
-          ./pawl.cabal
+          ./parun.cabal
           ./README.md
           ./source
         ];
@@ -42,7 +42,7 @@
         system:
         let
           pkgs = nixpkgs.legacyPackages.${system};
-          pawl = pkgs.lib.pipe (pkgs.haskellPackages.callCabal2nix "pawl" source { }) [
+          parun = pkgs.lib.pipe (pkgs.haskellPackages.callCabal2nix "parun" source { }) [
             pkgs.haskell.lib.compose.doBenchmark
             # Nothing in the tree uses Template Haskell, so the dynamic objects
             # GHC builds alongside the static ones are never loaded. cabal.project
@@ -53,7 +53,7 @@
             (pkgs.haskell.lib.compose.enableCabalFlag "pedantic")
             (pkgs.haskell.lib.compose.overrideCabal (old: {
               postInstall = (old.postInstall or "") + ''
-                install -D -m 755 dist/build/pawl-benchmark/pawl-benchmark "$out/bin/pawl-benchmark"
+                install -D -m 755 dist/build/parun-benchmark/parun-benchmark "$out/bin/parun-benchmark"
               '';
 
               testFlags = (old.testFlags or [ ]) ++ [
@@ -65,10 +65,10 @@
           ];
         in
         {
-          default = pawl;
-          benchmark = pkgs.runCommand "pawl-benchmark-results" { } ''
+          default = parun;
+          benchmark = pkgs.runCommand "parun-benchmark-results" { } ''
             mkdir -p "$out"
-            ${pawl}/bin/pawl-benchmark --csv "$out/bench.csv" +RTS -T
+            ${parun}/bin/parun-benchmark --csv "$out/bench.csv" +RTS -T
           '';
         }
       );
@@ -79,32 +79,33 @@
           pkgs = nixpkgs.legacyPackages.${system};
         in
         {
-          cabal = pkgs.runCommand "pawl-cabal-check" { nativeBuildInputs = [ pkgs.cabal-install ]; } ''
+          cabal = pkgs.runCommand "parun-cabal-check" { nativeBuildInputs = [ pkgs.cabal-install ]; } ''
             cd ${source}
             cabal check
             touch "$out"
           '';
 
           gild =
-            pkgs.runCommand "pawl-gild-check" { nativeBuildInputs = [ cabal-gild.packages.${system}.default ]; }
+            pkgs.runCommand "parun-gild-check"
+              { nativeBuildInputs = [ cabal-gild.packages.${system}.default ]; }
               ''
                 cd ${source}
-                cabal-gild --mode check pawl.cabal
+                cabal-gild --mode check parun.cabal
                 touch "$out"
               '';
 
-          hlint = pkgs.runCommand "pawl-hlint-check" { nativeBuildInputs = [ pkgs.hlint ]; } ''
+          hlint = pkgs.runCommand "parun-hlint-check" { nativeBuildInputs = [ pkgs.hlint ]; } ''
             cd ${source}
             hlint --hint=${./.hlint.yaml} --threads="$NIX_BUILD_CORES" source
             touch "$out"
           '';
 
-          nixfmt = pkgs.runCommand "pawl-nixfmt-check" { nativeBuildInputs = [ pkgs.nixfmt ]; } ''
+          nixfmt = pkgs.runCommand "parun-nixfmt-check" { nativeBuildInputs = [ pkgs.nixfmt ]; } ''
             nixfmt --check ${./flake.nix}
             touch "$out"
           '';
 
-          ormolu = pkgs.runCommand "pawl-ormolu-check" { nativeBuildInputs = [ pkgs.ormolu ]; } ''
+          ormolu = pkgs.runCommand "parun-ormolu-check" { nativeBuildInputs = [ pkgs.ormolu ]; } ''
             cd ${source}
             find source -name '*.hs' -print0 | xargs -0 ormolu --mode check
             touch "$out"

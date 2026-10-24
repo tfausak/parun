@@ -28,23 +28,23 @@
 
 # A traversal whose job is to be revisited when a payload gains a field cannot
 # write `{}`, which is what this hint asks for.
-- ignore: {name: "Use record patterns", within: [Pawl.Engine.Resolve.Slots.objectRefQuantities, Pawl.Engine.Resolve.Slots.objectRefPlayerRefs]}
+- ignore: {name: "Use record patterns", within: [Parun.Engine.Resolve.Slots.objectRefQuantities, Parun.Engine.Resolve.Slots.objectRefPlayerRefs]}
 
 # Restricted functions. Partial ones stay legal in tests, where blowing up at
 # runtime is the same as failing.
 - functions:
   - name: [Data.List.head, Data.List.tail, Data.List.!!, Data.Maybe.fromJust, Prelude.head, Prelude.tail, Prelude.!!, error, errorWithoutStackTrace, undefined]
-    within: ["**.*Spec", Pawl.Support]
+    within: ["**.*Spec", Parun.Support]
     message: "Return Maybe or Either instead."
   - name: [read, reads]
-    within: ["**.*Spec", Pawl.Support]
+    within: ["**.*Spec", Parun.Support]
     message: "Use a total parser, such as Text.Read.readMaybe."
   - name: [fromIntegral, fromInteger]
     within: []
-    message: "Use Pawl.Extra.Int, Pawl.Extra.Integer, or Pawl.Extra.Natural."
+    message: "Use Parun.Extra.Int, Parun.Extra.Integer, or Parun.Extra.Natural."
   - name: realToFrac
     within: []
-    message: "Use Pawl.Extra, adding the conversion there if it is missing."
+    message: "Use Parun.Extra, adding the conversion there if it is missing."
   - name: toEnum
     within: []
     message: "Use a named total conversion, such as Data.Char.chr."

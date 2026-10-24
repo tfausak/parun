@@ -1,0 +1,84 @@
+module Parun.Codec.DamagePatternSpec where
+
+import qualified Data.Text as Text
+import qualified Parun.Codec.DamagePattern as DamagePattern
+import qualified Parun.JsonCodec.Common as Common
+import qualified Parun.Spec as Spec
+import qualified Parun.Types.DamageKind as DamageKind
+import qualified Parun.Types.DamagePattern as DamagePattern
+import qualified Parun.Types.Filter as Filter
+import qualified Parun.Types.ObjectId as ObjectId
+import qualified Parun.Types.PlayerRelation as PlayerRelation
+import qualified Parun.Types.Recipient as Recipient
+import qualified Parun.Types.SlotName as SlotName
+
+spec :: (Monad m, Monad n) => Spec.Spec m n -> n ()
+spec s = Spec.describe s "Parun.Codec.DamagePattern" $ do
+  -- A named kind, no source restriction, no recipient restriction.
+  Spec.it s "a named kind" $
+    Common.assertCodec
+      s
+      DamagePattern.codec
+      (DamagePattern.MkDamagePattern (Just DamageKind.Combat) (Filter.And []) Nothing Nothing Nothing Nothing Nothing)
+      " {\"whichKind\":{\"type\":\"Combat\"}} "
+  -- No kind, no source, no recipient -- every field elided at its default, so
+  -- the pattern matches any damage instance whatsoever.
+  Spec.it s "no kind (matches any)" $
+    Common.assertCodec
+      s
+      DamagePattern.codec
+      (DamagePattern.MkDamagePattern Nothing (Filter.And []) Nothing Nothing Nothing Nothing Nothing)
+      " {} "
+  -- CR 614.15's keying: names the damage its own resolution is dealing, and
+  -- says nothing about the kind.
+  Spec.it s "the effect's own source (CR 614.15)" $
+    Common.assertCodec
+      s
+      DamagePattern.codec
+      (DamagePattern.MkDamagePattern Nothing Filter.IsSource Nothing Nothing Nothing Nothing Nothing)
+      " {\"whatSource\":{\"type\":\"IsSource\"}} "
+  -- The permanent a shield covers (CR 615.7's, and CR 615.3's unbounded one),
+  -- baked by Resolve's prevention arms and never authored on a card.
+  Spec.it s "a shielded recipient (CR 615.7)" $
+    Common.assertCodec
+      s
+      DamagePattern.codec
+      (DamagePattern.MkDamagePattern Nothing (Filter.And []) Nothing Nothing (Just (Recipient.ToCreature (ObjectId.MkObjectId 7))) Nothing Nothing)
+      " {\"whichRecipient\":{\"type\":\"ToCreature\",\"value\":7}} "
+  -- The recipient a CARD describes rather than one the engine baked -- Stormwild
+  -- Capridor's "to this creature".
+  Spec.it s "a described recipient (CR 615.1)" $
+    Common.assertCodec
+      s
+      DamagePattern.codec
+      (DamagePattern.MkDamagePattern (Just DamageKind.Noncombat) (Filter.And []) (Just Filter.IsSource) Nothing Nothing Nothing Nothing)
+      " {\"whichKind\":{\"type\":\"Noncombat\"},\"whatRecipient\":{\"type\":\"IsSource\"}} "
+  -- CR 615.7's DISJOINED recipient side, both halves written: Divine
+  -- Deflection's "you and/or permanents you control", where the player half is a
+  -- relation rather than an id and so is authorable beside the object filter.
+  Spec.it s "a described recipient covering a player too (CR 615.7)" $
+    Common.assertCodec
+      s
+      DamagePattern.codec
+      (DamagePattern.MkDamagePattern Nothing (Filter.And []) (Just (Filter.ControlledBy PlayerRelation.You)) (Just PlayerRelation.You) Nothing Nothing Nothing)
+      " {\"whatRecipient\":{\"type\":\"ControlledBy\",\"value\":{\"type\":\"You\"}},\"whoRecipient\":{\"type\":\"You\"}} "
+  -- CR 609.7a's chosen source, baked as an id by Resolve's prevention arms and
+  -- never authored either -- Healing Grace's "a source of your choice", whose
+  -- printed properties are none, so the trivial filter rides beside the id.
+  Spec.it s "a chosen source (CR 609.7a)" $
+    Common.assertCodec
+      s
+      DamagePattern.codec
+      (DamagePattern.MkDamagePattern Nothing (Filter.And []) Nothing Nothing Nothing (Just (ObjectId.MkObjectId 9)) Nothing)
+      " {\"whichSource\":9} "
+  -- CR 601.2c's recipient by SLOT, the one half of this pattern's recipient side
+  -- a card writes as a name rather than as a description -- Whippoorwill's "that
+  -- creature". Resolve turns it into `whichRecipient` above as the effect is
+  -- stored, so no stored pattern carries both.
+  Spec.it s "a recipient named by slot (CR 601.2c)" $
+    Common.assertCodec
+      s
+      DamagePattern.codec
+      (DamagePattern.MkDamagePattern Nothing (Filter.And []) Nothing Nothing Nothing Nothing (Just (SlotName.MkSlotName (Text.pack "target"))))
+      " {\"boundRecipient\":\"target\"} "
+  Spec.it s "has a schema" $ Common.assertHasSchema s DamagePattern.codec

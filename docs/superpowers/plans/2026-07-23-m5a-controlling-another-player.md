@@ -4,9 +4,9 @@
 
 **Goal:** Close out CR 723 (Controlling Another Player) by proving the already-built `Decider`/`activeControl` substrate at *gameplay level* with Mindslaver, adding the three small-correctness falsifiers (723.1a overwrite, 723.5a resource isolation, 723.6 concede guard), and filing the concede deferral — **without adding any new library types, opcodes, or prompts.**
 
-**Architecture:** M5a is a *close-out, not a new axis*. The control machinery already exists and is wired (`Pawl.Type.Decider`, `Pawl.Decide.deciderFor`, `GameState.pendingControl`/`activeControl`, `Effect.ControlPlayerNextTurn`, the `pendingControl → activeControl` promotion in `Engine.handoffTurn`). Every task here is a **test** against that correct substrate, plus one documentation comment and one GitHub issue. Because the machinery is already correct, these gate/falsifier tests are expected to **pass on first run**; each test task therefore includes an explicit *falsification check* (a named one-line mutation that must turn the test red, then is reverted) so the test's teeth are proven, honoring the TDD discipline for characterization tests.
+**Architecture:** M5a is a *close-out, not a new axis*. The control machinery already exists and is wired (`Parun.Type.Decider`, `Parun.Decide.deciderFor`, `GameState.pendingControl`/`activeControl`, `Effect.ControlPlayerNextTurn`, the `pendingControl → activeControl` promotion in `Engine.handoffTurn`). Every task here is a **test** against that correct substrate, plus one documentation comment and one GitHub issue. Because the machinery is already correct, these gate/falsifier tests are expected to **pass on first run**; each test task therefore includes an explicit *falsification check* (a named one-line mutation that must turn the test red, then is reverted) so the test's teeth are proven, honoring the TDD discipline for characterization tests.
 
-**Tech Stack:** Haskell 2010 (GHC 9.14.1 from the Nix dev shell), `tasty` + `tasty-hunit`. Tests live in `source/test-suite/Pawl/`. Cards are data files under `data/cards/`.
+**Tech Stack:** Haskell 2010 (GHC 9.14.1 from the Nix dev shell), `tasty` + `tasty-hunit`. Tests live in `source/test-suite/Parun/`. Cards are data files under `data/cards/`.
 
 ## Global Constraints
 
@@ -14,7 +14,7 @@ Every task's requirements implicitly include this section. Values copied verbati
 
 - **Warning-clean build.** `cabal build all --enable-tests --enable-benchmarks` must compile under `-Weverything` minus the allow-list, with `flags: +pedantic` (`-Werror`) on. Incremental builds hide warnings from unchanged modules — for a definitive check, `cabal clean` first.
 - **No new language extensions.** Haskell 2010. `GameSpec.hs` and `ResolveSpec.hs` already carry `{-# LANGUAGE GADTs #-}` (needed for pattern-matching the `Prompt` GADT). Do not add others.
-- **Qualified imports, aliased to the last component** (`Pawl.Decide` → `Decide`); operators unqualified. One import group.
+- **Qualified imports, aliased to the last component** (`Parun.Decide` → `Decide`); operators unqualified. One import group.
 - **No partial functions.** No `head`, `undefined`, `error`, or non-exhaustive matches. Answerers over the `Prompt` GADT that delegate to another answerer for the unhandled constructors use a `_ -> otherAnswer p` catch-all — this is total.
 - **Cite the CR number in every rules-bearing comment.** Every CR claim was checked against `docs/rules.txt` (lines 6157–6188 for CR 723; 104.3a at line 340; 405.6g at line 2062). Never trust recalled Magic rules.
 - **The two invariants outrank this plan.** (1) The rules core reads a *classification*, never an effect's identity — 723 stays a `Decider` swap at `Decide.deciderFor`; the engine never cases on "is this Mindslaver." (Test answerers *may* inspect actions/effects — the invariant governs the engine core, not test code.) (2) The engine makes no choices — every controlled choice is a prompt routed to the controller's `Decider`; nothing is elided.
@@ -27,17 +27,17 @@ Every task's requirements implicitly include this section. Values copied verbati
 
 These already exist and are correct. Tasks assert against them; do not modify them (except the one comment in Task 5).
 
-- `Pawl.Type.Decider` — `newtype Decider = MkDecider PlayerId` (`Eq, Ord, Show`).
-- `Pawl.Decide.deciderFor :: PlayerId -> GameState -> Decider` (`source/library/Pawl/Decide.hs:14-17`):
+- `Parun.Type.Decider` — `newtype Decider = MkDecider PlayerId` (`Eq, Ord, Show`).
+- `Parun.Decide.deciderFor :: PlayerId -> GameState -> Decider` (`source/library/Parun/Decide.hs:14-17`):
   ```haskell
   deciderFor pid gs = case GameState.activeControl gs of
     Just decider | pid == GameState.activePlayer gs -> decider
     _ -> Decider.MkDecider pid
   ```
-- `GameState.pendingControl :: Map PlayerId Decider` and `GameState.activeControl :: Maybe Decider` (`source/library/Pawl/Type/GameState.hs:94,99`).
-- `Effect.ControlPlayerNextTurn SlotName` resolved in `Pawl.Resolve.applyEffect` (`source/library/Pawl/Resolve.hs:511-519`): `Map.insert target (MkDecider controller)` into `pendingControl`. The `controller` is `Object.owner obj` of the resolving ability (`Resolve.hs:368`).
-- `Engine.handoffTurn` (`source/library/Pawl/Engine.hs:441-470`) promotes `activeControl = Map.lookup newActive (pendingControl gs)` and `pendingControl = Map.delete newActive (...)`.
-- Priority action site: `Engine.priorityLoop` (`source/library/Pawl/Engine.hs:404-407`) issues `Prompt.ChooseAction (Decide.deciderFor p gs) p (Action.legalActions p gs)`.
+- `GameState.pendingControl :: Map PlayerId Decider` and `GameState.activeControl :: Maybe Decider` (`source/library/Parun/Type/GameState.hs:94,99`).
+- `Effect.ControlPlayerNextTurn SlotName` resolved in `Parun.Resolve.applyEffect` (`source/library/Parun/Resolve.hs:511-519`): `Map.insert target (MkDecider controller)` into `pendingControl`. The `controller` is `Object.owner obj` of the resolving ability (`Resolve.hs:368`).
+- `Engine.handoffTurn` (`source/library/Parun/Engine.hs:441-470`) promotes `activeControl = Map.lookup newActive (pendingControl gs)` and `pendingControl = Map.delete newActive (...)`.
+- Priority action site: `Engine.priorityLoop` (`source/library/Parun/Engine.hs:404-407`) issues `Prompt.ChooseAction (Decide.deciderFor p gs) p (Action.legalActions p gs)`.
 - `Cost.pay pid oid` and `Mana.payCost pid` debit `pid` exclusively — cost payment is already 723.5a-correct by construction; the only `Decider` in the payment path (`Cost.hs:258`, `ChooseSacrifices`) governs *who chooses*, not whose resources.
 
 ## Existing test assets reused (already in `GameSpec.hs`)
@@ -46,19 +46,19 @@ These already exist and are correct. Tasks assert against them; do not modify th
 - `isCastAction :: A.Action -> Bool` (`GameSpec.hs:434-437`).
 - `handBobBolt :: Cards.Cards -> GameState -> (ObjectId, GameState)` (`GameSpec.hs:369-385`) — one Lightning Bolt in bob's hand.
 - `namedIs :: Text -> Maybe Object.Object -> Bool` (`GameSpec.hs:387-396`).
-- Support fixtures (`Pawl.Support`, aliased `S`): `addCreature`, `combatBoardOf`, `runCombat`, `lifeOf`, `tappedCount`, `handSize`, `bothPlayers`, `alice`, `bob`. `addCreature` places a permanent `Settled`, `Untapped`, on the battlefield under the given player.
+- Support fixtures (`Parun.Support`, aliased `S`): `addCreature`, `combatBoardOf`, `runCombat`, `lifeOf`, `tappedCount`, `handSize`, `bothPlayers`, `alice`, `bob`. `addCreature` places a permanent `Settled`, `Untapped`, on the battlefield under the given player.
 
 ## File structure
 
 | File | Change | Responsibility |
 |---|---|---|
-| `source/test-suite/Pawl/GameSpec.hs` | Modify | Tasks 1, 2, 4: gameplay-level control tests in `ruleTests`; new answerers `gateAnswer`, `controlCombatAnswer`, helper `isActivateAction`; add `import qualified Pawl.Decide as Decide`. |
-| `source/test-suite/Pawl/ResolveSpec.hs` | Modify | Task 3: 723.1a overwrite falsifier next to the existing installation test; helper `installControlBy`. |
-| `source/library/Pawl/Engine.hs` | Modify (comment only) | Task 5: inline concede guard note at the `ChooseAction` site. |
-| GitHub issue (`tfausak/pawl`) | Create | Task 5: concede-subsystem deferral. |
+| `source/test-suite/Parun/GameSpec.hs` | Modify | Tasks 1, 2, 4: gameplay-level control tests in `ruleTests`; new answerers `gateAnswer`, `controlCombatAnswer`, helper `isActivateAction`; add `import qualified Parun.Decide as Decide`. |
+| `source/test-suite/Parun/ResolveSpec.hs` | Modify | Task 3: 723.1a overwrite falsifier next to the existing installation test; helper `installControlBy`. |
+| `source/library/Parun/Engine.hs` | Modify (comment only) | Task 5: inline concede guard note at the `ChooseAction` site. |
+| GitHub issue (`tfausak/parun`) | Create | Task 5: concede-subsystem deferral. |
 | `docs/progress.md`, `CLAUDE.md`, umbrella spec | Modify | Task 6: completion entry, status bullet replacement, phase tick. |
 
-No library `Pawl.Type.*` modules are added or changed. M5a introduces **zero** new opcodes, prompts, or types.
+No library `Parun.Type.*` modules are added or changed. M5a introduces **zero** new opcodes, prompts, or types.
 
 ---
 
@@ -67,7 +67,7 @@ No library `Pawl.Type.*` modules are added or changed. M5a introduces **zero** n
 The headline gate (CR 723.1 / 723.3). Alice activates a **real** Mindslaver through the driver loop targeting bob; the engine installs pending control, promotes it on bob's turn, alice makes bob's action/mode/target choices for bob's turn, and control lapses at the next turn boundary. This is strictly more end-to-end than either existing test: `ResolveSpec` drives the effect via `Stack.resolveTop`+`handoffTurn` (no activation, no controlled turn through the loop); the existing `GameSpec` 723.3/723.5 test sets `activeControl` by hand and runs one `priorityLoop`.
 
 **Files:**
-- Modify: `source/test-suite/Pawl/GameSpec.hs` — add import (top, in the import group), two new top-level helpers, one test case in `ruleTests` (the list ending at `GameSpec.hs:360`).
+- Modify: `source/test-suite/Parun/GameSpec.hs` — add import (top, in the import group), two new top-level helpers, one test case in `ruleTests` (the list ending at `GameSpec.hs:360`).
 
 **Interfaces:**
 - Consumes: `Engine.runGamePure`, `Engine.priorityLoop`, `Engine.handoffTurn`, `Setup.emptyGame`, `S.addCreature`, `Cards.mindslaverPrinting`, `Cards.mountainPrinting`, `handBobBolt`, `isCastAction`, `slaveAnswer`, `Decide.deciderFor`, `GameState.{pendingControl,activeControl,activePlayer}`, `Decider.MkDecider`.
@@ -75,15 +75,15 @@ The headline gate (CR 723.1 / 723.3). Alice activates a **real** Mindslaver thro
 
 - [x] **Step 1: Add the `Decide` import**
 
-In the import group of `source/test-suite/Pawl/GameSpec.hs` (alphabetically near the other `Pawl.*` imports, e.g. just after `import qualified Pawl.Cost as Cost` on line 18), add:
+In the import group of `source/test-suite/Parun/GameSpec.hs` (alphabetically near the other `Parun.*` imports, e.g. just after `import qualified Parun.Cost as Cost` on line 18), add:
 
 ```haskell
-import qualified Pawl.Decide as Decide
+import qualified Parun.Decide as Decide
 ```
 
 - [x] **Step 2: Add the activation helper and the gate answerer**
 
-Append these two top-level definitions to `source/test-suite/Pawl/GameSpec.hs` (put them next to `slaveAnswer`, after line 437):
+Append these two top-level definitions to `source/test-suite/Parun/GameSpec.hs` (put them next to `slaveAnswer`, after line 437):
 
 ```haskell
 -- Is this a legal-action Activate? On the gate board (a Mindslaver plus basic
@@ -118,7 +118,7 @@ gateAnswer p = case p of
 
 - [x] **Step 3: Add the gate test case to `ruleTests`**
 
-Insert this test into the `ruleTests` list in `source/test-suite/Pawl/GameSpec.hs`. Add a comma after the existing final element (the `"CR 723.3/723.5 ..."` case that currently ends the list at line 359, before the closing `]` on line 360), then add:
+Insert this test into the `ruleTests` list in `source/test-suite/Parun/GameSpec.hs`. Add a comma after the existing final element (the `"CR 723.3/723.5 ..."` case that currently ends the list at line 359, before the closing `]` on line 360), then add:
 
 ```haskell
       HU.testCase "CR 723.1/723.3 gameplay: Mindslaver hands alice bob's whole turn, then control lapses" $
@@ -180,7 +180,7 @@ Expected: **PASS.** The substrate is already correct, so this characterization g
 
 - [x] **Step 5: Falsification check — prove the gate has teeth**
 
-Temporarily make control a no-op to confirm the gate actually exercises it. In `source/library/Pawl/Decide.hs`, change the body of `deciderFor` to ignore `activeControl`:
+Temporarily make control a no-op to confirm the gate actually exercises it. In `source/library/Parun/Decide.hs`, change the body of `deciderFor` to ignore `activeControl`:
 
 ```haskell
 deciderFor pid _gs = Decider.MkDecider pid
@@ -189,7 +189,7 @@ deciderFor pid _gs = Decider.MkDecider pid
 Run: `cabal build all --enable-tests --enable-benchmarks && cabal test --test-options='-p "$0~/Mindslaver hands alice bob/"'`
 Expected: **FAIL** — with control neutered, alice never gets bob's `ChooseAction`, bob keeps 20 life, and `deciderFor S.bob bobsTurn` is bob. This proves the gate depends on the control substrate.
 
-Then **revert** `Decide.hs` exactly (restore the two-line `case GameState.activeControl gs of ...` body) and re-run: expected **PASS**. Confirm `git diff source/library/Pawl/Decide.hs` is empty.
+Then **revert** `Decide.hs` exactly (restore the two-line `case GameState.activeControl gs of ...` body) and re-run: expected **PASS**. Confirm `git diff source/library/Parun/Decide.hs` is empty.
 
 - [x] **Step 6: Commit**
 
@@ -209,7 +209,7 @@ git commit -m "test(m5a): gameplay gate — Mindslaver controls bob's whole turn
 CR 723.5's second example: "The controller of another player decides which of that player's creatures attack." The gate (Task 1) covers action/mode/target routing but not combat. This test drives bob's combat through the engine under control, with alice declaring bob's attacker.
 
 **Files:**
-- Modify: `source/test-suite/Pawl/GameSpec.hs` — one new answerer `controlCombatAnswer`, one test case in `ruleTests`.
+- Modify: `source/test-suite/Parun/GameSpec.hs` — one new answerer `controlCombatAnswer`, one test case in `ruleTests`.
 
 **Interfaces:**
 - Consumes: `S.combatBoardOf`, `S.runCombat`, `S.lifeOf`, `slaveAnswer`, `Decider.MkDecider`, `GameState.{activePlayer,activeControl}`, `Prompt.{DeclareAttackers,AssignCombatDamage}`.
@@ -217,7 +217,7 @@ CR 723.5's second example: "The controller of another player decides which of th
 
 - [x] **Step 1: Add the combat answerer**
 
-Append to `source/test-suite/Pawl/GameSpec.hs` (near the other answerers):
+Append to `source/test-suite/Parun/GameSpec.hs` (near the other answerers):
 
 ```haskell
 -- CR 723.5 combat: alice, controlling bob, declares bob's attackers. Attackers
@@ -262,11 +262,11 @@ Add (comma-separated) into `ruleTests`:
 cabal build all --enable-tests --enable-benchmarks
 cabal test --test-options='-p "$0~/alice declares bob.s attackers/"'
 ```
-Expected: **PASS.** If it fails, investigate combat's use of `deciderFor` in `Pawl.Combat` (`Combat.hs:191,219`) — do not weaken the test.
+Expected: **PASS.** If it fails, investigate combat's use of `deciderFor` in `Parun.Combat` (`Combat.hs:191,219`) — do not weaken the test.
 
 - [x] **Step 4: Falsification check**
 
-In `source/library/Pawl/Decide.hs`, neuter `deciderFor` as in Task 1 Step 5 (`deciderFor pid _gs = Decider.MkDecider pid`). Run the test: expected **FAIL** (attackers prompt now carries Decider = bob → `[]` → no attack → alice stays 20). Revert `Decide.hs`, re-run: expected **PASS**, `git diff` empty.
+In `source/library/Parun/Decide.hs`, neuter `deciderFor` as in Task 1 Step 5 (`deciderFor pid _gs = Decider.MkDecider pid`). Run the test: expected **FAIL** (attackers prompt now carries Decider = bob → `[]` → no attack → alice stays 20). Revert `Decide.hs`, re-run: expected **PASS**, `git diff` empty.
 
 - [x] **Step 5: Commit**
 
@@ -286,7 +286,7 @@ git commit -m "test(m5a): combat choices route to the controller (CR 723.5)"
 CR 723.1a: "Multiple player-controlling effects that affect the same player overwrite each other. The last one to be created is the one that works." A continuous effect from resolution is *created* when the spell/ability resolves (CR 613.7d), so last-created = last-resolved = last `Map.insert` — and `pendingControl :: Map PlayerId Decider` overwrites on insert. This test resolves two `ControlPlayerNextTurn` effects at the same target (bob) with different controllers and asserts the second wins. It lives beside the existing installation test in `ResolveSpec`, which already imports the ability-construction machinery.
 
 **Files:**
-- Modify: `source/test-suite/Pawl/ResolveSpec.hs` — a helper `installControlBy` and a test case near the existing `"CR 723.1: Mindslaver's ability installs pending control ..."` case (around line 527–565).
+- Modify: `source/test-suite/Parun/ResolveSpec.hs` — a helper `installControlBy` and a test case near the existing `"CR 723.1: Mindslaver's ability installs pending control ..."` case (around line 527–565).
 
 **Interfaces:**
 - Consumes (all already imported in `ResolveSpec.hs`): `Setup.emptyGame`, `S.addCreature`, `Cards.mindslaverPrinting`, `Game.freshObjectId`, `Game.freshTimestamp`, `Object.MkObject`, `Source.OfAbility`, `ActivatedAbility.MkActivatedAbility`, `Cost.Type.MkCost`, `ManaCost.MkManaCost`, `ManaSymbol.Generic`, `CostComponent.{TapThis,SacrificeThis}`, `Modal.MkModal`, `Mode.MkMode`, `Effect.ControlPlayerNextTurn`, `TargetSpec.MkTargetSpec`, `Pool.Players`, `Exclusion.IncludesSource`, `ModeSelection.ChooseExactly`, `ModeIndex.MkModeIndex`, `Binding.fromChoices`, `Recipient.ToPlayer`, `SlotName.MkSlotName`, `Zone.Stack`, `Engine.runGamePure`, `S.identityAnswer`, `Stack.resolveTop`, `Decider.MkDecider`, `GameState.pendingControl`.
@@ -296,7 +296,7 @@ CR 723.1a: "Multiple player-controlling effects that affect the same player over
 
 - [x] **Step 1: Add the `installControlBy` helper**
 
-Append to `source/test-suite/Pawl/ResolveSpec.hs` (top level, near the existing 723 test's helpers). The `Object.owner` is the resolving ability's controller (`Resolve.hs:368` uses `effectController = Object.owner obj`), so setting `owner = controller` installs `MkDecider controller`:
+Append to `source/test-suite/Parun/ResolveSpec.hs` (top level, near the existing 723 test's helpers). The `Object.owner` is the resolving ability's controller (`Resolve.hs:368` uses `effectController = Object.owner obj`), so setting `owner = controller` installs `MkDecider controller`:
 
 ```haskell
 -- Build a Mindslaver-shaped ControlPlayerNextTurn ability owned by `controller`,
@@ -367,13 +367,13 @@ Expected: **PASS** — `Map.insert` overwrites, and the second resolution is the
 
 - [x] **Step 4: Falsification check**
 
-In `source/library/Pawl/Resolve.hs`, temporarily change the `ControlPlayerNextTurn` arm (line ~517) from `Map.insert` to insert-only-if-absent, so a second effect would NOT overwrite:
+In `source/library/Parun/Resolve.hs`, temporarily change the `ControlPlayerNextTurn` arm (line ~517) from `Map.insert` to insert-only-if-absent, so a second effect would NOT overwrite:
 
 ```haskell
 gs {GameState.pendingControl = Map.insertWith (\_new old -> old) target (Decider.MkDecider controller) (GameState.pendingControl gs)}
 ```
 
-Run the test: expected **FAIL** (the first effect's alice would wrongly survive). This proves the test pins the overwrite semantics. **Revert** to the original `Map.insert ...` line, re-run: expected **PASS**, `git diff source/library/Pawl/Resolve.hs` empty.
+Run the test: expected **FAIL** (the first effect's alice would wrongly survive). This proves the test pins the overwrite semantics. **Revert** to the original `Map.insert ...` line, re-run: expected **PASS**, `git diff source/library/Parun/Resolve.hs` empty.
 
 - [x] **Step 5: Commit**
 
@@ -393,7 +393,7 @@ git commit -m "test(m5a): player-controlling effects overwrite, last created win
 CR 723.5a: "The controller of another player can use only that player's resources (cards, mana, and so on) to pay costs for that player." Cost payment is already correct by construction (`Cost.pay pid`/`Mana.payCost pid` debit `pid`). The existing 723.3/723.5 test shows bob's resources *move*; it does not assert alice's stay *put*. This test adds the negative half: with alice and bob each holding an untapped Mountain, alice-as-bob casts bob's Bolt, and **alice's Mountain remains untapped** and **alice's hand is unchanged**.
 
 **Files:**
-- Modify: `source/test-suite/Pawl/GameSpec.hs` — one test case in `ruleTests`. Reuses `slaveAnswer`, `handBobBolt`, `S.addCreature`, `S.tappedCount`, `S.handSize`, `S.lifeOf`.
+- Modify: `source/test-suite/Parun/GameSpec.hs` — one test case in `ruleTests`. Reuses `slaveAnswer`, `handBobBolt`, `S.addCreature`, `S.tappedCount`, `S.handSize`, `S.lifeOf`.
 
 **Interfaces:**
 - Consumes: `Setup.emptyGame`, `S.addCreature`, `Cards.mountainPrinting`, `handBobBolt`, `slaveAnswer`, `Engine.{runGamePure,priorityLoop}`, `GameState.{activePlayer,phase,priority,activeControl}`, `Decider.MkDecider`.
@@ -457,8 +457,8 @@ git commit -m "test(m5a): controller spends only the controlled player's resourc
 CR 723.6: "The controller of another player can't make that player concede." Concede is **unimplemented** — `Departure.Conceded` exists but is never constructed; there is no `Concede` action, prompt, or handler. Concede-at-any-time is a new player-action axis outside M5a's close-out scope (decided: *defer concede, ship guard*). This task files the deferral and leaves the durable guard: an inline note at the priority `ChooseAction` site stating what is not implemented and the CR 723.6 constraint that concede must read the true player, never the `Decider`. Per `CLAUDE.md`: file the issue, cite it inline; the comment states only what is *not* implemented, plus `(#N)`.
 
 **Files:**
-- Create: GitHub issue in `tfausak/pawl`.
-- Modify: `source/library/Pawl/Engine.hs` — one comment above line 405 (`let decider = Decide.deciderFor p gs`).
+- Create: GitHub issue in `tfausak/parun`.
+- Modify: `source/library/Parun/Engine.hs` — one comment above line 405 (`let decider = Decide.deciderFor p gs`).
 
 **Interfaces:** none (comment + issue only).
 
@@ -468,12 +468,12 @@ Run (adjust wording only if a near-duplicate already exists — check `gh issue 
 
 ```bash
 gh issue create \
-  --repo tfausak/pawl \
+  --repo tfausak/parun \
   --title "Concede special action (CR 104.3a / 405.6g): a player may concede at any time; must bypass the Decider (CR 723.6)" \
   --label gap --label rules-correctness \
   --body "Status: deferred; not implemented in M5a.
 
-Concede is entirely unbuilt. \`Departure.Conceded\` exists (Pawl/Type/Departure.hs) but is never constructed; there is no \`Concede\` action (Pawl/Type/Action.hs has only Pass/Play/Cast/Activate), no concede prompt, and no handler. The only departure the engine produces is \`Departure.Lost\` via SBAs (Sba.hs).
+Concede is entirely unbuilt. \`Departure.Conceded\` exists (Parun/Type/Departure.hs) but is never constructed; there is no \`Concede\` action (Parun/Type/Action.hs has only Pass/Play/Cast/Activate), no concede prompt, and no handler. The only departure the engine produces is \`Departure.Lost\` via SBAs (Sba.hs).
 
 Rationale for deferral: M5a is a close-out of the existing player-control substrate ('proof and edges, not machinery'). Concede-at-any-time (CR 104.3a: 'A player can concede the game at any time'; CR 405.6g) is a genuine new player-action axis — a priority-independent special action the prompt-driven engine does not yet model. Out of M5a's scope.
 
@@ -488,7 +488,7 @@ Record the issue number `N` printed by the command; you need it for Step 2.
 
 - [x] **Step 2: Add the inline guard comment in `Engine.hs`**
 
-In `source/library/Pawl/Engine.hs`, immediately above line 405 (`let decider = Decide.deciderFor p gs` inside `priorityLoop`), add (replace `#N` with the issue number from Step 1):
+In `source/library/Parun/Engine.hs`, immediately above line 405 (`let decider = Decide.deciderFor p gs` inside `priorityLoop`), add (replace `#N` with the issue number from Step 1):
 
 ```haskell
                 -- CR 723.6: concede is not implemented — there is no Concede
@@ -562,7 +562,7 @@ Add after the M4.5 P11 entry (matching the surrounding bullet style):
   makes bob's action/mode/target choices (and, in a sibling test, bob's combat
   attackers, CR 723.5) for bob's turn, and control lapses at the following turn
   boundary. The decisions it proves: **723 is an indirection, already built** —
-  the substrate (`Pawl.Type.Decider`, `Decide.deciderFor`, `pendingControl`/
+  the substrate (`Parun.Type.Decider`, `Decide.deciderFor`, `pendingControl`/
   `activeControl`, `Effect.ControlPlayerNextTurn`, the `handoffTurn` promotion)
   needed no change; M5a adds proof and edges, not machinery. The three edges:
   **723.1a** — player-controlling effects overwrite, last created wins, because a

@@ -1,0 +1,195 @@
+module Parun.Types.ActivationRestriction where
+
+import qualified Parun.Types.Condition as Condition
+import qualified Parun.Types.DuringPhase as DuringPhase
+import qualified Parun.Types.ManaSpecification as ManaSpecification
+import qualified Parun.Types.Phase as Phase
+import qualified Parun.Types.TurnScope as TurnScope
+
+-- | CR 602.5: ONE clause of the "activate only ..." rider an activated ability
+-- prints about itself -- CR 602.5b's "a restriction on its use".
+--
+-- A LIST of them on the ability (Parun.Types.ActivatedAbility.restrictions), and
+-- CR 602.5 -- "A player can't begin to activate an ability that's prohibited from
+-- being activated" -- is what makes the list a conjunction: every clause printed
+-- must hold. The EMPTY list is the default, which leaves the ability whatever
+-- window the rules already give it -- CR 602.2's priority for one on the stack,
+-- CR 605.3a's two for a mana ability -- so it needs no arm of its own.
+--
+-- A list rather than one total description of the window because Kongming's
+-- Contraptions prints two clauses at once -- "Activate only during the declare
+-- attackers step and only if you've been attacked this step" -- and a total
+-- description can hold exactly one. That is the same pressure Rally the Troops
+-- put on the casting side, which is a list for the same reason.
+--
+-- A sum type rather than a Bool apiece: no boolean blindness, and a clause that
+-- names no window at all ("only once", "only once each turn") is a constructor
+-- here rather than a flag on the ability.
+--
+-- Deliberately NOT a synonym for Parun.Types.CastingRestriction, which carries two
+-- arms spelled the same way. CR 307.5's last two sentences are the reason and
+-- they forbid the two READERS agreeing -- Parun.Engine.Cast must consult casting
+-- prohibitions and Parun.Engine.ActivationRestriction must not. The two
+-- vocabularies do not coincide either: SorcerySpeed below is a clause only an ability can print,
+-- since for a spell CR 307.1 IS the window rather than a rider on it.
+data ActivationRestriction
+  = -- | CR 602.5d's "Activate only as a sorcery" (CR 702.6a's equip mints it,
+    -- and Grinning Ignus prints the phrase itself), and every other ability that
+    -- carries the same phrase.
+    --
+    -- CR 307.5 defines it narrowly: the player must have priority, it must be
+    -- during the main phase of their turn, and the stack must be empty. Its last
+    -- sentence is load-bearing and easy to get wrong -- the check must NOT consult
+    -- casting prohibitions (Rule of Law, Silence). Three facts about the game
+    -- state and nothing else, and every arm below is held to the same discipline.
+    SorcerySpeed
+  | -- | CR 500.1: activatable only while the game is in this step or phase, on a
+    -- turn the scope admits. Desert's "Activate only during the end of combat
+    -- step" (CR 511.1) is EachTurn; Llanowar Augur's "Activate only during your
+    -- upkeep" is ControllersTurn.
+    --
+    -- TWO axes because CR 500.1 supplies only one: it breaks a turn into phases
+    -- and steps and says nothing about whose turn it is, which CR 102.1 makes a
+    -- separate fact. A rider that names both narrows both, so an arm carrying
+    -- only the phase would be strictly more permissive than the card.
+    --
+    -- A Parun.Types.PhaseSelector rather than a bare Parun.Types.Phase, because
+    -- CR 500.1 breaks three of the five phases into steps and a Phase value is
+    -- one SCHEDULE ENTRY -- so it names a step, or a stepless main phase (CR
+    -- 505.2), and can never name the combat phase as a whole. Jade Statue's
+    -- "Activate only during combat" is PhaseSelector.CombatPhase.
+    -- Parun.Engine.Turn.inWindow is the reader, and it is a containment test
+    -- rather than an equality. Parun.Types.CastingRestriction.DuringPhase now
+    -- carries this same bundle, so both sides read one window vocabulary.
+    --
+    -- The TurnScope is the same type Parun.Types.TriggerCondition.StepBegins
+    -- carries and means the same thing: CR 109.5 makes a printed "your" name the
+    -- ability's controller, which for an activated ability is the player CR 602.2
+    -- already restricts activation to.
+    --
+    -- "An opponent's turn" (Trade Caravan, Nettling Imp) is sayable here --
+    -- TurnScope.OpponentsTurn -- beside the window this arm requires. A rider
+    -- that names a turn and NO window is DuringTurn below.
+    DuringPhase DuringPhase.DuringPhase
+  | -- | CR 102.1 alone: activatable only on a turn the scope admits, in any phase
+    -- or step of it. Lavinia, Foil to Conspiracy prints the whole rider as
+    -- "Activate only during an opponent's turn"; Disrupting Scepter and
+    -- Gwendlyn Di Corci print the ControllersTurn half.
+    --
+    -- A SIBLING ARM rather than a Maybe PhaseSelector inside DuringPhase. CR
+    -- 500.1's windows and CR 102.1's turn are separate facts, and an arm meaning
+    -- "no window at all" is a different thing from one naming a step: an
+    -- optional field makes every reader of DuringPhase rule out an absence that
+    -- Parun.Types.DuringPhase deliberately has no form for on its other axis
+    -- either.
+    --
+    -- Not expressible as DuringPhase over a "whole turn" PhaseSelector: CR 500.1
+    -- breaks the turn into five phases and a PhaseSelector value names one
+    -- schedule entry, so the turn as a whole is outside that type's vocabulary
+    -- by construction.
+    DuringTurn TurnScope.TurnScope
+  | -- | "Activate only if you've been attacked this step", asked of the player
+    -- activating the ability. Kongming's Contraptions prints it alongside
+    -- DuringPhase, which is what made this type a list.
+    --
+    -- CR 506.2 (CR 507.1 where the seat count makes it a choice) settles who the
+    -- defending player is, and CR 508.3b makes "attacked" a fact about a creature
+    -- having been DECLARED attacking that player rather than one of their
+    -- planeswalkers.
+    -- Parun.Engine.Turn.attackedThisStep is the reader, shared verbatim with
+    -- Parun.Types.CastingRestriction's arm of the same name: the clause is one
+    -- question about the combat record, and the two gates differ in what ELSE
+    -- they may read rather than in what this asks.
+    AttackedThisStep
+  | -- | CR 506.7b, through CR 506.7g: "Activate only during combat after
+    -- blockers are declared" (Trap Runner). CR 506.7g is what makes this the
+    -- same clause Parun.Types.CastingRestriction prints under this name -- "rules
+    -- 506.7 and 506.7a-f apply to abilities ... just as they apply to spells" --
+    -- so the two arms share Parun.Engine.Turn.afterBlockersDeclared verbatim,
+    -- as AttackedThisStep above already does.
+    --
+    -- No TurnScope beside it, unlike DuringPhase: the printed clause names no
+    -- turn, and CR 506.7c gives it every combat phase of one rather than a
+    -- chosen player's, so a second axis here would be strictly narrower than the
+    -- card.
+    AfterBlockersDeclared
+  | -- | CR 506.7, through CR 506.7g: "Activate only during combat before combat
+    -- damage has been dealt" (Save Point). CR 506.7c is the "during combat" half
+    -- -- a turn with two combat phases admits the ability in either -- and the
+    -- rest of CR 506.7 the "before the combat damage step" half.
+    -- Parun.Engine.Turn.beforeCombatDamage is the reader.
+    --
+    -- NOT DuringPhase over PhaseSelector.CombatPhase, which would be strictly
+    -- more permissive than the card: Turn.inWindow is a containment test, so that
+    -- window also admits the combat damage step (CR 510.3 gives priority only
+    -- after CR 510.2's turn-based action, so damage HAS been dealt there) and the
+    -- end of combat step. Nor the negation of AfterBlockersDeclared above, which
+    -- would exclude the declare blockers step the card admits.
+    BeforeCombatDamage
+  | -- | CR 506.7a / 506.7g: only before this step first begins this turn --
+    -- Capricious Sorcerer's "before attackers are declared", Mana Cache's
+    -- "before the end step". Parun.Engine.Turn.beforeStep is the reader.
+    BeforeStep Phase.Phase
+  | -- | CR 602.5: "Activate only if [a fact about the board]" -- Barbarian
+    -- Ring's "Activate only if there are seven or more cards in your
+    -- graveyard". The first arm here that reads no window at all.
+    --
+    -- NOT Parun.Types.ActivatedAbility.condition, which is the "as long as"
+    -- clause of a static ability that GRANTS the ability: that gate makes the
+    -- ability absent from the projection (Parun.Engine.Projection.abilitiesGiven),
+    -- while CR 602.5 prohibits activating an ability the object still has. CR
+    -- 613.1f's named removal reads the abilities an object has, so the two are
+    -- not interchangeable.
+    OnlyIf Condition.Condition
+  | -- | CR 602.5b's "restriction on its use" counted rather than timed:
+    -- "Activate only once", which CR 702.177a's exhaust rewrites itself into
+    -- (Greenbelt Guardian).
+    --
+    -- ONCE PER GAME, not per turn: rule 702.177a's sentence states no period, so
+    -- nothing resets it. CR 602.5b keys it to the OBJECT -- "the restriction
+    -- continues to apply to that object even if its controller changes" -- and CR
+    -- 400.7 then ends it at a zone change, the permanent that returns being a new
+    -- object with no memory. Parun.Types.Object.activatedOnce is that memory and
+    -- Parun.Types.Object.newIncarnation the forgetting.
+    --
+    -- The one arm whose answer depends on the ABILITY as well as the board, which
+    -- is why Parun.Engine.ActivationRestriction.restrictionsOk takes one: every
+    -- other clause reads a phase, a turn, a combat record or the board, and this
+    -- reads which ability of this object has already been spent. Rule 702.177a's
+    -- "each exhaust ability" is that grain -- Loot, the Pathfinder prints three,
+    -- and spending one leaves the others.
+    --
+    -- Loot's first is a MANA ability, which CR 605.3b keeps off the stack, so CR
+    -- 605.3a's two windows read this arm through Parun.Types.ManaOption rather
+    -- than through Parun.Engine.Activate.
+    OnlyOnce
+  | -- | CR 602.5b's own example of a "restriction on its use": "Activate only
+    -- once each turn" (Locust Swarm). CR 702.142a's boast rewrites itself into
+    -- the same words, and CR 702.57b states them of every forecast ability.
+    --
+    -- ONCE PER TURN, so OnlyOnce above is not it: the two sentences differ only
+    -- in the period, and this one resets at every turn handoff. Its memory is
+    -- Parun.Types.GameState.activatedThisTurn rather than an object field for
+    -- exactly that reason -- Parun.Engine.Engine.beginTurnOf clears it beside the
+    -- event log and CR 121.1's draw tally, and a stamp on the object would need a
+    -- sweep of every zone to say the same thing.
+    --
+    -- Keyed by the OBJECT and the ability, the grain both halves of CR 602.5b
+    -- need: the restriction "continues to apply to that object even if its
+    -- controller changes", and a permanent may print the rider on one of two
+    -- abilities (Locust Swarm regenerates freely and untaps once). CR 400.7's
+    -- forgetting is free, the returning permanent being a new object with a new
+    -- id.
+    OnlyOnceEachTurn
+  | -- | "Activate only any time it makes sense" (Goblin Bookie): activatable only
+    -- inside CR 706.2's modification of a die roll, where the ability resolves
+    -- at once. No rule grants that window (CR 117.1b); Parun.DiceSpec's Goblin
+    -- Bookie group proves the reading.
+    DuringDieRoll
+  | -- | CR 602.5e's "Activate only as an instant": the player must have priority
+    -- (CR 304.5), so never inside a payment -- Rhystic Cave.
+    InstantSpeed
+  | -- | CR 602.2b: the activation may be paid only with mana this names -- Throne
+    -- of Eldraine's "Spend only mana of the chosen color to activate this ability".
+    SpendOnly ManaSpecification.ManaSpecification
+  deriving (Eq, Ord, Show)

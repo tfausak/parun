@@ -2,22 +2,22 @@
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
-**Goal:** One game loop, `Pawl.Engine.Driver`, that any answerer plugs into
+**Goal:** One game loop, `Parun.Engine.Driver`, that any answerer plugs into
 (a scenario timeline now; a human, a bot, or chance later), with observers
-that see every prompt and answer. `Pawl.Scenario` is rebuilt on it with no
+that see every prompt and answer. `Parun.Scenario` is rebuilt on it with no
 behaviour change.
 
 **Architecture:** An `Answerer m` wraps the `forall r. Asked r -> m r`
 callback that `Engine.runGameAsked` already takes. An `Observer m` is a
 pair of hooks, run before and after each answer. `Driver.ask` composes the
 two. `Driver.bySeat` routes a prompt to its seat's answerer via
-`deciderOf`, which moves here from `Pawl.Scenario.Prompt`. `Driver.match`
+`deciderOf`, which moves here from `Parun.Scenario.Prompt`. `Driver.match`
 plays a whole game from a matchup. `Driver.drive` steps from a state until
 the game ends, the step budget runs out, or a stop predicate holds. The
 scenario timeline becomes one answerer, and its interleaved checks become
 one observer.
 
-**Tech Stack:** Haskell (GHC via the flake), cabal sublibraries, `Pawl.Spec`
+**Tech Stack:** Haskell (GHC via the flake), cabal sublibraries, `Parun.Spec`
 test DSL, transformers' `StateT`.
 
 **Spec:** `docs/superpowers/specs/2026-10-17-play-portal-client-design.md`
@@ -27,17 +27,17 @@ test DSL, transformers' `StateT`.
 
 - No new non-boot dependency.
 - The rules core never cases on an effect's identity, and nothing in this
-  unit touches `Pawl.Engine` rules modules.
-- One type per module under `Pawl.Types.<TypeName>`. Constructors take a
+  unit touches `Parun.Engine` rules modules.
+- One type per module under `Parun.Types.<TypeName>`. Constructors take a
   `Mk` prefix, and a type unwraps through an `unwrap` field.
 - Language extensions come only from `.hlint.yaml`'s allowlist (`GADTs` and
   `RankNTypes` are on it).
 - Every existing scenario under `data/scenarios/` passes unchanged, and so
-  does every `Pawl.ScenarioSpec` case. No assertion is edited, weakened or
+  does every `Parun.ScenarioSpec` case. No assertion is edited, weakened or
   deleted.
 - This PR is unit 1 of #5182. Its body says "related to #5182", never a
   closing keyword.
-- Naming: `Pawl.Types.Decider` already exists (the seat that makes a
+- Naming: `Parun.Types.Decider` already exists (the seat that makes a
   controlled player's choices, CR 723.5). The new type is therefore
   `Answerer`, matching the tree's existing word for it.
 
@@ -59,28 +59,28 @@ test DSL, transformers' `StateT`.
 
 ---
 
-### Task 1: `Pawl.Engine.Driver` and its types
+### Task 1: `Parun.Engine.Driver` and its types
 
 **Files:**
-- Create: `source/libraries/types/Pawl/Types/Answerer.hs`
-- Create: `source/libraries/types/Pawl/Types/Observer.hs`
-- Create: `source/libraries/engine/Pawl/Engine/Driver.hs`
-- Create: `source/libraries/test/Pawl/DriverSpec.hs`
-- Modify: `source/libraries/test/Pawl/Test.hs` (wire `DriverSpec.spec`)
-- Modify: `source/libraries/scenario/Pawl/Scenario/Prompt.hs` (delete
+- Create: `source/libraries/types/Parun/Types/Answerer.hs`
+- Create: `source/libraries/types/Parun/Types/Observer.hs`
+- Create: `source/libraries/engine/Parun/Engine/Driver.hs`
+- Create: `source/libraries/test/Parun/DriverSpec.hs`
+- Modify: `source/libraries/test/Parun/Test.hs` (wire `DriverSpec.spec`)
+- Modify: `source/libraries/scenario/Parun/Scenario/Prompt.hs` (delete
   `deciderOf`)
-- Modify: `source/libraries/scenario/Pawl/Scenario.hs` (call
+- Modify: `source/libraries/scenario/Parun/Scenario.hs` (call
   `Driver.deciderOf`)
-- Modify: `source/libraries/test/Pawl/ZoneChangeSpec.hs` (comment naming
-  `Pawl.Scenario.Prompt.deciderOf`)
-- Modify: `pawl.cabal` (stage it; `cabal-gild pawl.cabal` regenerates the
+- Modify: `source/libraries/test/Parun/ZoneChangeSpec.hs` (comment naming
+  `Parun.Scenario.Prompt.deciderOf`)
+- Modify: `parun.cabal` (stage it; `cabal-gild parun.cabal` regenerates the
   module lists)
 
 **Interfaces:**
 - Produces, used by Task 2 and units 3–5:
-  - `Pawl.Types.Answerer`:
+  - `Parun.Types.Answerer`:
     `newtype Answerer m = MkAnswerer {unwrap :: forall r. Asked.Asked r -> m r}`
-  - `Pawl.Types.Observer`:
+  - `Parun.Types.Observer`:
     `data Observer m = MkObserver {before :: forall r. Asked.Asked r -> m (), after :: forall r. Asked.Asked r -> r -> m ()}`
   - `Driver.deciderOf :: Prompt.Prompt r -> Maybe PlayerId.PlayerId`
     (moved verbatim from `Scenario.Prompt.deciderOf`, comment and all)
@@ -99,9 +99,9 @@ test DSL, transformers' `StateT`.
     budget is 0, `GameState.result` is `Just`, or the predicate answers
     `True`, and it decrements the budget by one per step)
 
-- [ ] **Step 1: Write `Pawl.DriverSpec`**
+- [ ] **Step 1: Write `Parun.DriverSpec`**
 
-  The module's head comment says it covers `Pawl.Engine.Driver`. Its
+  The module's head comment says it covers `Parun.Engine.Driver`. Its
   signature is
   `spec :: (Monad m, Monad n) => Spec.Spec m n -> Registry.Registry m -> n ()`,
   under `Spec.describe s "Driver"`. Every test plays
@@ -135,7 +135,7 @@ test DSL, transformers' `StateT`.
     - `"transcript"`: the `Just` values equal
       `snd (Replay.record S.castAnswer (Setup.gameWith GameSettings.plain (fmap fst matchup)) (Engine.playFrom matchup))`.
   - `stops`: "drive stops when its predicate says so". The start state is
-    `snd (Engine.runGamePure S.castAnswer (Setup.gameWith GameSettings.plain (fmap fst matchup)) (Setup.newGame (Resolve.performHandAction Engine.playSubgame) matchup))`, with `Resolve` being `Pawl.Engine.Resolve.Effect`.
+    `snd (Engine.runGamePure S.castAnswer (Setup.gameWith GameSettings.plain (fmap fst matchup)) (Setup.newGame (Resolve.performHandAction Engine.playSubgame) matchup))`, with `Resolve` being `Parun.Engine.Resolve.Effect`.
     Run `drive [] castAnswerer 1000 (\gs -> pure (GameState.turnNumber gs >= 3)) start`.
     Assertions:
     - `"turn"`: `turnNumber == 3`;
@@ -146,14 +146,14 @@ test DSL, transformers' `StateT`.
   - `budget`: "a budget of 0 takes no step". Assertion `"untouched"`: the
     result `== start`.
 
-- [ ] **Step 2: Run it and watch it fail to compile** (`Pawl.Engine.Driver`
+- [ ] **Step 2: Run it and watch it fail to compile** (`Parun.Engine.Driver`
   does not exist)
 
   Run:
-  `script/with-build-lock.sh cabal build pawl:test > "$SCRATCH/build.log" 2>&1`
+  `script/with-build-lock.sh cabal build parun:test > "$SCRATCH/build.log" 2>&1`
   Expected: the module is not found.
 
-- [ ] **Step 3: Create the two type modules and `Pawl.Engine.Driver`**
+- [ ] **Step 3: Create the two type modules and `Parun.Engine.Driver`**
 
   Each type module holds the type alone, with a one-line haddock. Move
   `deciderOf` and its whole comment verbatim, delete it from
@@ -161,11 +161,11 @@ test DSL, transformers' `StateT`.
   comment. The module comment of `Driver` says what it is: the one loop
   every answerer plugs into (#5182).
 
-- [ ] **Step 4: Stage `pawl.cabal`, run `cabal-gild pawl.cabal`, and run
+- [ ] **Step 4: Stage `parun.cabal`, run `cabal-gild parun.cabal`, and run
   the new spec**
 
   Run:
-  `script/with-build-lock.sh cabal run pawl:test -- -p Driver > "$SCRATCH/t1.log" 2>&1`
+  `script/with-build-lock.sh cabal run parun:test -- -p Driver > "$SCRATCH/t1.log" 2>&1`
   (use the suite's existing pattern flag, the one `docs/agents/implementing.md` shows)
   Expected: all six tests pass.
 
@@ -181,10 +181,10 @@ test DSL, transformers' `StateT`.
 
 - [ ] **Step 6: Commit** — `Add a driver that any answerer plugs into`
 
-### Task 2: Rebuild `Pawl.Scenario` on the driver
+### Task 2: Rebuild `Parun.Scenario` on the driver
 
 **Files:**
-- Modify: `source/libraries/scenario/Pawl/Scenario.hs`
+- Modify: `source/libraries/scenario/Parun/Scenario.hs`
 
 **Interfaces:**
 - Consumes: `Driver.ask`, `Driver.drive`, `Answerer`, `Observer` (Task 1).
@@ -224,7 +224,7 @@ test DSL, transformers' `StateT`.
 - [ ] **Step 4: Run the whole suite**
 
   Run:
-  `script/with-build-lock.sh cabal run pawl:test > "$SCRATCH/t2.log" 2>&1`
+  `script/with-build-lock.sh cabal run parun:test > "$SCRATCH/t2.log" 2>&1`
   Expected: every test passes, including every `data/scenarios` file. Record
   the test count before and after. If a `ScenarioSpec` failure-kind
   assertion now reports a different failure, stop and report it rather than

@@ -1,0 +1,59 @@
+module Parun.Types.ActiveAttackRequirement where
+
+import qualified Parun.Types.AttackTarget as AttackTarget
+import qualified Parun.Types.Expiry as Expiry
+import qualified Parun.Types.ObjectId as ObjectId
+import qualified Parun.Types.PlayerId as PlayerId
+import qualified Parun.Types.RestrictedCreatures as RestrictedCreatures
+import qualified Parun.Types.Timestamp as Timestamp
+
+-- | CR 508.1d / 613.11: a stored, resolution-generated ATTACKING REQUIREMENT,
+-- held in GameState.attackRequirements. The attack-axis analogue of
+-- Parun.Types.ActiveBlockRequirement, and the carrier that says WHAT the creature
+-- has to attack: Alluring Siren's "target creature an opponent controls attacks
+-- you this turn if able".
+--
+-- Parun.Types.AttackRequirement, the PRINTED carrier, states the same two axes,
+-- its object as a Parun.Types.RequiredDefender rather than an AttackTarget,
+-- because a static ability has no resolution to fix its object at.
+--
+-- The subject axis is Parun.Types.ActiveAttackProhibition's: a Named id the
+-- resolution froze (Alluring Siren TARGETS its creature, CR 115.1), or a Matching
+-- class CR 611.2c keeps dynamic (Taunt's "creatures that player controls").
+--
+-- The object, where one is named, is ONE of CR 508.1b's announcements, which is
+-- the rule: Alluring Siren's ruling is that a creature able to attack either you
+-- or a planeswalker you control must attack YOU, so "attacks you" is obeyed by
+-- exactly one announcement, and Gideon Jura's "attack Gideon Jura" by another.
+-- Goad (CR 701.15b) wants the COMPLEMENT of a seat instead -- "a player other
+-- than the controller of the permanent that caused it to be goaded" -- which
+-- this field cannot say: it rides Object.goadedBy, whose seats
+-- Parun.Engine.AttackRequirement instantiates against CR 508.1b's list directly.
+-- Rule 701.15a fixes goad's duration and CR 701.15d deduplicates its goaders,
+-- neither of which a row here could state.
+--
+-- `expiry` decides when a Parun.Engine.Expiry sweep drops it (CR 514.2, 611.2a,
+-- 611.2b); Alluring Siren's "this turn" arms Expiry.AtCleanup.
+--
+-- `timestamp` is stored for ActiveBlockRequirement's reason: CR 613.11 orders by
+-- timestamp (CR 613.7), and nothing observes it yet because two requirements
+-- cannot conflict -- CR 508.1d counts them and never resolves them against each
+-- other.
+--
+-- Runtime-only: card data writes the printed carrier, never one of these. It
+-- does have a codec (Parun.Codec.ActiveAttackRequirement), because a game in
+-- progress has to be writable to JSON (#126).
+data ActiveAttackRequirement = MkActiveAttackRequirement
+  { source :: ObjectId.ObjectId,
+    -- | CR 109.5's "you" for a Matching class, baked at resolution: the source
+    -- is a sorcery in a graveyard by the time the class is read.
+    controller :: PlayerId.PlayerId,
+    timestamp :: Timestamp.Timestamp,
+    expiry :: Expiry.Expiry,
+    -- | The creatures that must attack -- CR 508.1d's subject axis.
+    attacker :: RestrictedCreatures.RestrictedCreatures ObjectId.ObjectId,
+    -- | What it must attack -- CR 508.1d's object axis, as CR 508.1b's
+    -- announcement. Nothing names none, so any announcement obeys it.
+    defender :: Maybe AttackTarget.AttackTarget
+  }
+  deriving (Eq, Ord, Show)

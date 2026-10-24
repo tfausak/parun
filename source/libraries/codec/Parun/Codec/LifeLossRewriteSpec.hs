@@ -1,0 +1,41 @@
+module Parun.Codec.LifeLossRewriteSpec where
+
+import qualified Parun.Codec.LifeLossRewrite as LifeLossRewrite
+import qualified Parun.JsonCodec.Common as Common
+import qualified Parun.Spec as Spec
+import qualified Parun.Types.LifeLossRewrite as LifeLossRewrite
+import qualified Parun.Types.Scaling as Scaling
+
+spec :: (Monad m, Monad n) => Spec.Spec m n -> n ()
+spec s = Spec.describe s "Parun.Codec.LifeLossRewrite" $ do
+  -- Worship's "reduces it to 1 instead".
+  Spec.it s "LeaveAtLeast" $
+    Common.assertCodec
+      s
+      LifeLossRewrite.codec
+      (LifeLossRewrite.LeaveAtLeast 1)
+      " {\"type\":\"LeaveAtLeast\",\"value\":1} "
+  -- Bloodletter of Aclazotz' "they lose twice that much life instead".
+  Spec.it s "Scaled" $
+    Common.assertCodec
+      s
+      LifeLossRewrite.codec
+      (LifeLossRewrite.Scaled (Scaling.Multiply 2))
+      " {\"type\":\"Scaled\",\"value\":{\"type\":\"Multiply\",\"value\":2}} "
+  -- Ashiok, Wicked Manipulator's "exile that many cards from the top of your
+  -- library instead".
+  Spec.it s "ExileFromTopOfYourLibrary" $
+    Common.assertCodec
+      s
+      LifeLossRewrite.codec
+      LifeLossRewrite.ExileFromTopOfYourLibrary
+      " {\"type\":\"ExileFromTopOfYourLibrary\"} "
+  -- Strong, the Brutish Thespian's "you gain life rather than lose life from
+  -- radiation".
+  Spec.it s "GainInstead" $
+    Common.assertCodec
+      s
+      LifeLossRewrite.codec
+      LifeLossRewrite.GainInstead
+      " {\"type\":\"GainInstead\"} "
+  Spec.it s "has a schema" $ Common.assertHasSchema s LifeLossRewrite.codec

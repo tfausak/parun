@@ -2,21 +2,21 @@
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
-**Goal:** Replace the hand-maintained `Pawl.Cards` record (449 lines, one field
-per card) with `Pawl.Registry` — a lazily loading, memoizing card pool keyed on
+**Goal:** Replace the hand-maintained `Parun.Cards` record (449 lines, one field
+per card) with `Parun.Registry` — a lazily loading, memoizing card pool keyed on
 the slugified card name — so adding a card means adding one JSON file.
 
 **Architecture:** `Codec.slugify` becomes a case-folding, ASCII-transliterating,
-idempotent function. `Pawl.Type.Registry` holds a root directory and an
-`MVar (Map Text Card)`; `Pawl.Registry` is the library's only IO-performing
+idempotent function. `Parun.Type.Registry` holds a root directory and an
+`MVar (Map Text Card)`; `Parun.Registry` is the library's only IO-performing
 module, an IO shell around the pure codec that reads `<root>/<slug>.json` on a
 cache miss and verifies the parsed card's own name slugifies back to that slug.
 The test suite threads a `Registry` exactly where it threads `Cards` today, and
-migrates module by module — `Pawl.Cards` and the registry coexist until the last
+migrates module by module — `Parun.Cards` and the registry coexist until the last
 task, so every commit compiles and the whole suite passes.
 
 **Tech Stack:** GHC 9.14.1 from the Nix flake, Haskell 2010 (no extensions),
-`tasty` + `tasty-hunit` + `tasty-quickcheck`, hand-rolled JSON via `Pawl.Json`.
+`tasty` + `tasty-hunit` + `tasty-quickcheck`, hand-rolled JSON via `Parun.Json`.
 
 **Spec:** `docs/superpowers/specs/2026-07-24-card-registry-design.md`. Read the
 section a task cites before starting it.
@@ -25,16 +25,16 @@ section a task cites before starting it.
 
 - **Haskell 2010, no language extensions.** `NamedFieldPuns` is permitted where
   it improves record-heavy clarity. No `LambdaCase`, no `OverloadedStrings`.
-- **No explicit export lists.** `module Pawl.Foo where`.
-- **One type per module** under `Pawl.Type.<TypeName>` — type and instances only.
-  A `Pawl.Type.*` module may import a sibling `Pawl.Type.*` but never a parent.
+- **No explicit export lists.** `module Parun.Foo where`.
+- **One type per module** under `Parun.Type.<TypeName>` — type and instances only.
+  A `Parun.Type.*` module may import a sibling `Parun.Type.*` but never a parent.
 - **No partial functions**, written or used. No `head`, `error`, `undefined`, or
   non-exhaustive matches. Failures in IO are `ioError`, never `error`.
 - **Constructors take a `Mk` prefix** and never pun the type name: `MkRegistry`.
 - **Qualified imports aliased to the last component** (`Data.Map.Strict` → `Map`).
-  Documented exception, used by this plan: where `Pawl.Registry` is imported as
+  Documented exception, used by this plan: where `Parun.Registry` is imported as
   `Registry`, the type module takes a dotted alias —
-  `import qualified Pawl.Type.Registry as Registry.Type`. `Pawl.Support` is
+  `import qualified Parun.Type.Registry as Registry.Type`. `Parun.Support` is
   imported as `S`.
 - **Derive at least `Eq` and `Show`.** `Registry` is the documented exception: it
   derives `Eq` only, because `MVar` has no `Show` instance. Say so at the type.
@@ -50,8 +50,8 @@ section a task cites before starting it.
   afterwards. Stage explicit paths, not `git add -A` — other sessions may share
   this checkout.
 - **New modules are discovered by `cabal-gild`**, not hand-edited into
-  `pawl.cabal`. `hooky fix` runs it. A *deleted* module needs a direct
-  `cabal-gild --io pawl.cabal`.
+  `parun.cabal`. `hooky fix` runs it. A *deleted* module needs a direct
+  `cabal-gild --io parun.cabal`.
 - **One small complete commit per task**, directly on `main`. Never push.
 - Commit messages end with:
   `Co-Authored-By: Claude Opus 5 (1M context) <noreply@anthropic.com>`
@@ -70,15 +70,15 @@ behave.
 
 ## File Structure
 
-**Created (library):** `source/library/Pawl/Type/Registry.hs` (the type),
-`source/library/Pawl/Registry.hs` (loading and caching).
+**Created (library):** `source/library/Parun/Type/Registry.hs` (the type),
+`source/library/Parun/Registry.hs` (loading and caching).
 
-**Created (test suite):** `source/test-suite/Pawl/RegistrySpec.hs`.
+**Created (test suite):** `source/test-suite/Parun/RegistrySpec.hs`.
 
-**Modified (library):** `source/library/Pawl/Codec.hs` (`slugify` only).
+**Modified (library):** `source/library/Parun/Codec.hs` (`slugify` only).
 
-**Modified (test suite):** `Main.hs`, `Pawl/Support.hs`, `Pawl/Cards.hs`, and all
-28 `Pawl/*Spec.hs` modules that name a card.
+**Modified (test suite):** `Main.hs`, `Parun/Support.hs`, `Parun/Cards.hs`, and all
+28 `Parun/*Spec.hs` modules that name a card.
 
 **Modified (data):** `data/cards/khabál-ghoul.json` →
 `data/cards/khabal-ghoul.json`, `data/cards/serpent-s-gift.json` →
@@ -88,7 +88,7 @@ behave.
 `loadPrinting`).
 
 **Deleted (end state):** the `Cards` record, `Cards.loadPrinting`,
-`Cards.allPrintings`. `Pawl.Cards` survives holding only the four decks.
+`Cards.allPrintings`. `Parun.Cards` survives holding only the four decks.
 
 ---
 
@@ -98,13 +98,13 @@ Spec §1. `Codec.slugify` currently lowercases and keeps every alphanumeric
 character, including non-ASCII letters (`Khabál Ghoul` → `khabál-ghoul`) and
 turns an apostrophe into a separator (`Serpent's Gift` → `serpent-s-gift`). It
 becomes case-folding, ASCII-only and apostrophe-dropping. Because
-`Pawl.CardSpec` asserts that the `data/cards` listing agrees with
+`Parun.CardSpec` asserts that the `data/cards` listing agrees with
 `slugify . name`, the two file renames must land in this same commit.
 
 **Files:**
-- Modify: `source/library/Pawl/Codec.hs:1746-1755` (the `-- Slug` section)
-- Modify: `source/test-suite/Pawl/CodecSpec.hs` (add a `Tasty.testGroup "slugify"`)
-- Modify: `source/test-suite/Pawl/Cards.hs:131,177` (the two changed slugs)
+- Modify: `source/library/Parun/Codec.hs:1746-1755` (the `-- Slug` section)
+- Modify: `source/test-suite/Parun/CodecSpec.hs` (add a `Tasty.testGroup "slugify"`)
+- Modify: `source/test-suite/Parun/Cards.hs:131,177` (the two changed slugs)
 - Rename: `data/cards/khabál-ghoul.json`, `data/cards/serpent-s-gift.json`
 
 **Interfaces:**
@@ -118,7 +118,7 @@ The comment written in Step 4 cites it, so it must exist first.
 ```bash
 gh issue create --label chore --title "Slugs are not unique over the full card pool" --body "Status: not implemented. \`Codec.slugify\` keys the card registry (#145) and is unique over the committed corpus, but not over the full ~34,660-name pool: \`Glimpse the Unthinkable\` collides with \`Glimpse, the Unthinkable\` (Mystery Booster 2 #594, promoTypes [\"playtest\"], legal in no format), five Unknown Event joke cards collide with their real counterparts (\`Lava, Axe\` vs \`Lava Axe\` and siblings), and two blank-name cards (\`_____\`, \`______\`) slugify to the empty string. No two tournament-legal cards collide, so nothing is broken today: a file name holds one card, and the registry rejects an empty slug.
 
-Whoever imports the full pool needs a disambiguation rule (set code plus collector number is the obvious one). Until then the corpus-wide uniqueness check in Pawl.CardSpec is the guard.
+Whoever imports the full pool needs a disambiguation rule (set code plus collector number is the obvious one). Until then the corpus-wide uniqueness check in Parun.CardSpec is the guard.
 
 Expiry: card-driven (fires when the full pool is imported)."
 ```
@@ -127,8 +127,8 @@ Note the issue number it prints; call it `#N` below.
 
 - [x] **Step 2: Write the failing tests**
 
-Add to `source/test-suite/Pawl/CodecSpec.hs`, inside the top-level list in
-`tests` (the module already imports `Data.Text as Text`, `Pawl.Codec as Codec`,
+Add to `source/test-suite/Parun/CodecSpec.hs`, inside the top-level list in
+`tests` (the module already imports `Data.Text as Text`, `Parun.Codec as Codec`,
 `Test.Tasty as Tasty`, `Test.Tasty.HUnit as HU` and `Test.Tasty.QuickCheck as
 QC` — add any that are missing):
 
@@ -178,7 +178,7 @@ Expected: FAIL — `serpents-gift` (got `serpent-s-gift`), `khabal-ghoul` (got
 
 - [x] **Step 4: Rewrite `slugify`**
 
-Replace `source/library/Pawl/Codec.hs:1746-1755` (the whole `-- Slug` section)
+Replace `source/library/Parun/Codec.hs:1746-1755` (the whole `-- Slug` section)
 with:
 
 ```haskell
@@ -196,10 +196,10 @@ with:
 -- rather than leaking a non-ASCII byte into a file name.
 --
 -- Idempotent -- the output is already [a-z0-9-] with no runs and no edge
--- hyphens -- which is why Pawl.Registry needs only one lookup function: a card
+-- hyphens -- which is why Parun.Registry needs only one lookup function: a card
 -- name and its slug are the same lookup.
 --
--- Unique over the committed corpus (Pawl.CardSpec checks it), but not over the
+-- Unique over the committed corpus (Parun.CardSpec checks it), but not over the
 -- full ~34k-name pool: joke-set, playtest and blank-name cards collide (#N).
 slugify :: Text -> Text
 slugify t =
@@ -253,7 +253,7 @@ transliterate c = case c of
 ```
 
 Replace `#N` with the issue number from Step 1. `Data.Char` was imported into
-`Pawl.Codec` only for `Char.isAlphaNum` in the old `slugify`; if nothing else
+`Parun.Codec` only for `Char.isAlphaNum` in the old `slugify`; if nothing else
 uses it, delete the import or the build fails on `-Wunused-imports`.
 
 - [x] **Step 5: Rename the two card files and their loader lines**
@@ -263,7 +263,7 @@ git mv "data/cards/khabál-ghoul.json" data/cards/khabal-ghoul.json
 git mv data/cards/serpent-s-gift.json data/cards/serpents-gift.json
 ```
 
-In `source/test-suite/Pawl/Cards.hs`, change the two `loadPrinting` strings:
+In `source/test-suite/Parun/Cards.hs`, change the two `loadPrinting` strings:
 `"serpent-s-gift"` → `"serpents-gift"` (line 131) and `"khabál-ghoul"` →
 `"khabal-ghoul"` (line 177).
 
@@ -277,9 +277,9 @@ the new rule agree.
 - [x] **Step 7: Commit**
 
 ```bash
-git add source/library/Pawl/Codec.hs source/test-suite/Pawl/CodecSpec.hs source/test-suite/Pawl/Cards.hs data/cards
+git add source/library/Parun/Codec.hs source/test-suite/Parun/CodecSpec.hs source/test-suite/Parun/Cards.hs data/cards
 hooky fix
-git add source/library/Pawl/Codec.hs source/test-suite/Pawl/CodecSpec.hs source/test-suite/Pawl/Cards.hs data/cards
+git add source/library/Parun/Codec.hs source/test-suite/Parun/CodecSpec.hs source/test-suite/Parun/Cards.hs data/cards
 hooky run
 git commit -m "refactor: slugify to ASCII, case-folded, apostrophe-free (#145)"
 ```
@@ -292,9 +292,9 @@ Spec §2 and §3. Two new library modules and their spec. Nothing else changes �
 no caller uses them yet.
 
 **Files:**
-- Create: `source/library/Pawl/Type/Registry.hs`
-- Create: `source/library/Pawl/Registry.hs`
-- Create: `source/test-suite/Pawl/RegistrySpec.hs`
+- Create: `source/library/Parun/Type/Registry.hs`
+- Create: `source/library/Parun/Registry.hs`
+- Create: `source/test-suite/Parun/RegistrySpec.hs`
 - Modify: `source/test-suite/Main.hs` (wire `RegistrySpec.tests` in)
 
 **Interfaces:**
@@ -310,23 +310,23 @@ no caller uses them yet.
 
 - [x] **Step 1: Write the failing spec**
 
-Create `source/test-suite/Pawl/RegistrySpec.hs`:
+Create `source/test-suite/Parun/RegistrySpec.hs`:
 
 ```haskell
--- Covers Pawl.Registry and Pawl.Type.Registry. Every test builds its own corpus
+-- Covers Parun.Registry and Parun.Type.Registry. Every test builds its own corpus
 -- in a temporary directory: the committed data/cards is read-only here, and the
 -- failure modes (a missing file, a malformed file, a file whose name disagrees
 -- with its file name) have no representative in it by construction.
-module Pawl.RegistrySpec where
+module Parun.RegistrySpec where
 
 import qualified Control.Exception as Exception
 import qualified Data.List as List
 import qualified Data.Text as Text
 import qualified Data.Text.IO as TextIO
-import qualified Pawl.Registry as Registry
-import qualified Pawl.Type.Card as Card
-import qualified Pawl.Type.Printing as Printing
-import qualified Pawl.Type.Registry as Registry.Type
+import qualified Parun.Registry as Registry
+import qualified Parun.Type.Card as Card
+import qualified Parun.Type.Printing as Printing
+import qualified Parun.Type.Registry as Registry.Type
 import qualified System.Directory as Directory
 import qualified System.IO.Error as IOError
 import qualified Test.Tasty as Tasty
@@ -338,7 +338,7 @@ import qualified Test.Tasty.HUnit as HU
 withCorpus :: String -> [(FilePath, Text.Text)] -> (Registry.Type.Registry -> IO a) -> IO a
 withCorpus label files action = do
   tmp <- Directory.getTemporaryDirectory
-  let dir = tmp <> "/pawl-registry-spec-" <> label
+  let dir = tmp <> "/parun-registry-spec-" <> label
   Exception.bracket_
     ( do
         Directory.createDirectoryIfMissing True dir
@@ -368,7 +368,7 @@ nameOf = Card.name . Printing.card
 tests :: Tasty.TestTree
 tests =
   Tasty.testGroup
-    "Pawl.RegistrySpec"
+    "Parun.RegistrySpec"
     [ HU.testCase "a card loads by its real name" $ do
         piker <- pikerJson
         withCorpus "by-name" [("goblin-piker.json", piker)] $ \registry -> do
@@ -416,32 +416,32 @@ tests =
 ```
 
 Wire it into `source/test-suite/Main.hs`: add
-`import qualified Pawl.RegistrySpec as RegistrySpec` and `RegistrySpec.tests,`
+`import qualified Parun.RegistrySpec as RegistrySpec` and `RegistrySpec.tests,`
 to the `testTree` list (it takes no argument).
 
 - [x] **Step 2: Run the spec to verify it fails**
 
 Run: `cabal build all --enable-tests --enable-benchmarks`
-Expected: FAIL to compile — `Could not find module 'Pawl.Registry'`.
+Expected: FAIL to compile — `Could not find module 'Parun.Registry'`.
 
 - [x] **Step 3: Write the type**
 
-Create `source/library/Pawl/Type/Registry.hs`:
+Create `source/library/Parun/Type/Registry.hs`:
 
 ```haskell
 -- The card pool: a root directory of one-card-per-file JSON, plus the cards
 -- read from it so far. Not a record of every card -- nothing is read until it is
 -- asked for, so a root holding the whole ~34k-card pool costs one MVar.
-module Pawl.Type.Registry where
+module Parun.Type.Registry where
 
 import qualified Control.Concurrent.MVar as MVar
 import qualified Data.Map.Strict as Map
 import qualified Data.Text as Text
-import qualified Pawl.Type.Card as Card
+import qualified Parun.Type.Card as Card
 
 data Registry = MkRegistry
   { root :: FilePath,
-    -- Keyed by slug (Pawl.Codec.slugify of the card's name). An MVar rather
+    -- Keyed by slug (Parun.Codec.slugify of the card's name). An MVar rather
     -- than an IORef because the test suite is built -threaded and tasty runs
     -- cases concurrently: holding it across the read-and-parse is what makes
     -- "each file is parsed at most once" exact rather than merely likely.
@@ -454,24 +454,24 @@ data Registry = MkRegistry
 
 - [x] **Step 4: Write the loader**
 
-Create `source/library/Pawl/Registry.hs`:
+Create `source/library/Parun/Registry.hs`:
 
 ```haskell
 -- Loading cards from a directory of JSON files, one card per file, each named
 -- by the slug of the card's own name. This is the library's only module that
 -- performs IO: it is the shell around the pure codec, and the only place in the
 -- library that touches a file system.
-module Pawl.Registry where
+module Parun.Registry where
 
 import qualified Control.Concurrent.MVar as MVar
 import qualified Data.Map.Strict as Map
 import qualified Data.Text as Text
 import qualified Data.Text.IO as TextIO
-import qualified Pawl.Codec as Codec
-import qualified Pawl.Json as Json
-import qualified Pawl.Type.Card as Card
-import qualified Pawl.Type.Printing as Printing
-import qualified Pawl.Type.Registry as Registry
+import qualified Parun.Codec as Codec
+import qualified Parun.Json as Json
+import qualified Parun.Type.Card as Card
+import qualified Parun.Type.Printing as Printing
+import qualified Parun.Type.Registry as Registry
 
 new :: FilePath -> IO Registry.Registry
 new root = do
@@ -544,9 +544,9 @@ Expected: PASS — nothing else changed yet.
 - [x] **Step 7: Commit**
 
 ```bash
-git add source/library/Pawl/Registry.hs source/library/Pawl/Type/Registry.hs source/test-suite/Pawl/RegistrySpec.hs source/test-suite/Main.hs pawl.cabal
+git add source/library/Parun/Registry.hs source/library/Parun/Type/Registry.hs source/test-suite/Parun/RegistrySpec.hs source/test-suite/Main.hs parun.cabal
 hooky fix
-git add source/library/Pawl/Registry.hs source/library/Pawl/Type/Registry.hs source/test-suite/Pawl/RegistrySpec.hs source/test-suite/Main.hs pawl.cabal
+git add source/library/Parun/Registry.hs source/library/Parun/Type/Registry.hs source/test-suite/Parun/RegistrySpec.hs source/test-suite/Main.hs parun.cabal
 hooky run
 git commit -m "feat: add a lazily loading, caching card registry (#145)"
 ```
@@ -555,7 +555,7 @@ git commit -m "feat: add a lazily loading, caching card registry (#145)"
 
 ### Task 3: Support fixtures take printings, not the record
 
-Spec §4. `Pawl.Support`'s fixtures currently take the whole `Cards` record to
+Spec §4. `Parun.Support`'s fixtures currently take the whole `Cards` record to
 reach one or two fields. Making them take `Printing`s decouples them from *how*
 a caller got the card, which is what lets Tasks 4–10 migrate one spec module at
 a time. Callers in this task keep passing `Cards.xPrinting cards` — the record
@@ -563,10 +563,10 @@ is still alive.
 
 The rule: **a fixture that needs one card takes a `Printing`; a fixture that
 needs several takes several.** No fixture takes the registry (except the corpus
-sweep below), so `Pawl.Support` stays pure.
+sweep below), so `Parun.Support` stays pure.
 
 **Files:**
-- Modify: `source/test-suite/Pawl/Support.hs` (lines 432-433, 482-488, 609-610,
+- Modify: `source/test-suite/Parun/Support.hs` (lines 432-433, 482-488, 609-610,
   647-648, 678-703, 706-709, 744-745, 956-957, 964-966, 980-987, 990-991,
   1049-1053)
 - Modify: every spec module that calls one of the changed fixtures (find them
@@ -600,7 +600,7 @@ Every hit is edited in Step 3. Keep the list — the build will confirm it.
 
 - [x] **Step 2: Rewrite the fixtures**
 
-In `source/test-suite/Pawl/Support.hs`:
+In `source/test-suite/Parun/Support.hs`:
 
 Delete `addPiker` (lines 432-433), `mountainsInPlay` (646-648) and `pikerCard`
 (956-957) outright — each is a one-liner over a fixture that already takes a
@@ -674,7 +674,7 @@ anthemEmblemCard piker =
     }
 
 -- The cards M2a adds, paired with the single keyword each must carry. Named
--- rather than loaded here so Pawl.Support stays pure: the caller loads them.
+-- rather than loaded here so Parun.Support stays pure: the caller loads them.
 m2aKeywords :: [(String, Keyword.Keyword)]
 m2aKeywords =
   [ ("Bird Maiden", Keyword.Flying),
@@ -718,8 +718,8 @@ allPrintings registry = do
   mapM (Registry.printing registry) slugs
 ```
 
-Add the imports `Pawl.Registry as Registry`, `Pawl.Type.Registry as
-Registry.Type` and `System.Directory as Directory` to `Pawl.Support`.
+Add the imports `Parun.Registry as Registry`, `Parun.Type.Registry as
+Registry.Type` and `System.Directory as Directory` to `Parun.Support`.
 
 - [x] **Step 3: Update every call site**
 
@@ -740,7 +740,7 @@ still from the record. Mechanically:
 | `S.boltInHand cards n ph` | `S.boltInHand (Cards.mountainPrinting cards) (Cards.lightningBoltPrinting cards) n ph` |
 | `S.boltAtBobsPiker cards` | `S.boltAtBobsPiker (Cards.pikerPrinting cards) (Cards.mountainPrinting cards) (Cards.lightningBoltPrinting cards)` |
 
-`S.m2aPrintings cards` has one caller, `Pawl.CardSpec`, which has no registry
+`S.m2aPrintings cards` has one caller, `Parun.CardSpec`, which has no registry
 until Task 10. So in *this* task its test keeps using the record, through an
 inline list at the call site:
 
@@ -789,8 +789,8 @@ For each module in the batch:
 1. Change the signature and binder:
    `tests :: Cards.Cards -> Tasty.TestTree` / `tests cards =` becomes
    `tests :: Registry.Type.Registry -> Tasty.TestTree` / `tests registry =`.
-2. Swap the import `Pawl.Cards as Cards` for `Pawl.Registry as Registry` and
-   `Pawl.Type.Registry as Registry.Type`.
+2. Swap the import `Parun.Cards as Cards` for `Parun.Registry as Registry` and
+   `Parun.Type.Registry as Registry.Type`.
 3. In each test case, load the cards it names at the top of the body and use the
    bound printing. `HU.testCase "..." $ let ... in ...` becomes
    `HU.testCase "..." $ do { ...loads...; let ...; ...assertions... }`.
@@ -800,7 +800,7 @@ For each module in the batch:
 
 The card name for each old field is in the **Appendix** at the end of this plan.
 
-Worked example — `Pawl.CountSpec` before:
+Worked example — `Parun.CountSpec` before:
 
 ```haskell
 tests :: Cards.Cards -> Tasty.TestTree
@@ -900,22 +900,22 @@ git commit -m "refactor(test): load cards from the registry in <batch> (#145)"
 
 ### Task 10: The corpus-wide specs
 
-`Pawl.CardSpec` and `Pawl.CardsSpec` are the two modules that sweep the whole
+`Parun.CardSpec` and `Parun.CardsSpec` are the two modules that sweep the whole
 corpus rather than naming cards. They migrate to the directory listing, which is
 the point of the exercise: a card file nobody registers is currently invisible,
 and after this task it cannot be.
 
 **Files:**
-- Modify: `source/test-suite/Pawl/CardSpec.hs` (16 `allPrintings` uses, the
+- Modify: `source/test-suite/Parun/CardSpec.hs` (16 `allPrintings` uses, the
   directory-agreement test at 371-387, the M2a list from Task 3)
-- Modify: `source/test-suite/Pawl/CardsSpec.hs`
+- Modify: `source/test-suite/Parun/CardsSpec.hs`
 - Modify: `source/test-suite/Main.hs` (two lines)
 
 **Interfaces:**
 - Consumes: `S.allPrintings`, `S.corpusSlugs`, `S.m2aKeywords` (Task 3),
   `Registry.printing`, `Registry.card` (Task 2).
 
-- [x] **Step 1: Migrate `Pawl.CardsSpec`**
+- [x] **Step 1: Migrate `Parun.CardsSpec`**
 
 Replace its body with the registry-driven form. `Codec.slugify` still keys
 everything, so the round-trip test is unchanged in substance:
@@ -924,7 +924,7 @@ everything, so the round-trip test is unchanged in substance:
 tests :: Registry.Type.Registry -> Tasty.TestTree
 tests registry =
   Tasty.testGroup
-    "Pawl.CardsSpec"
+    "Parun.CardsSpec"
     [ HU.testCase "slugs are unique" $ do
         ps <- S.allPrintings registry
         let slugs = fmap slugOf ps
@@ -944,7 +944,7 @@ tests registry =
 would have failed first" note becomes "unreachable: `S.allPrintings` would have
 failed in IO first".
 
-- [x] **Step 2: Migrate `Pawl.CardSpec`'s directory test**
+- [x] **Step 2: Migrate `Parun.CardSpec`'s directory test**
 
 Replace the test at lines 371-387 ("the data/cards directory and
 Cards.allPrintings agree, by slug") with the sweep that the registry makes
@@ -953,7 +953,7 @@ loading every file *is* the assertion:
 
 ```haskell
       HU.testCase "every file in data/cards loads, and its card is named by its file name" $ do
-        -- The registry checks name-against-file-name on each load (Pawl.Registry.load),
+        -- The registry checks name-against-file-name on each load (Parun.Registry.load),
         -- so sweeping the listing is the whole assertion: a stray file, a file whose
         -- card was renamed, and a file that no test happens to name all fail here.
         -- A hand-kept list is exactly what forgets the file nobody loads.
@@ -962,7 +962,7 @@ loading every file *is* the assertion:
         mapM_ (Registry.card registry) slugs,
 ```
 
-- [x] **Step 3: Migrate the rest of `Pawl.CardSpec`**
+- [x] **Step 3: Migrate the rest of `Parun.CardSpec`**
 
 Apply the Tasks 4-9 recipe to the remaining cases: 16 `Cards.allPrintings cards`
 uses become `ps <- S.allPrintings registry`, and each named field becomes a
@@ -1013,13 +1013,13 @@ git commit -m "refactor(test): sweep the card corpus by directory listing (#145)
 ### Task 11: The decks
 
 The four decks are the last thing reading the record. They become registry-fed
-and IO, along with the `Pawl.Support` matchup fixtures and their two callers.
+and IO, along with the `Parun.Support` matchup fixtures and their two callers.
 
 **Files:**
-- Modify: `source/test-suite/Pawl/Cards.hs:381-449` (the four decks)
-- Modify: `source/test-suite/Pawl/Support.hs:103-119` (`redRed`, `greenBlack`,
+- Modify: `source/test-suite/Parun/Cards.hs:381-449` (the four decks)
+- Modify: `source/test-suite/Parun/Support.hs:103-119` (`redRed`, `greenBlack`,
   `blueBlack`, `matchups`, `landsOnly`)
-- Modify: `source/test-suite/Pawl/SetupSpec.hs`, `source/test-suite/Pawl/PropertySpec.hs`
+- Modify: `source/test-suite/Parun/SetupSpec.hs`, `source/test-suite/Parun/PropertySpec.hs`
 - Modify: `source/test-suite/Main.hs`
 
 **Interfaces:**
@@ -1031,7 +1031,7 @@ and IO, along with the `Pawl.Support` matchup fixtures and their two callers.
 
 - [x] **Step 1: Rewrite the decks**
 
-In `source/test-suite/Pawl/Cards.hs`, keeping every existing comment (the
+In `source/test-suite/Parun/Cards.hs`, keeping every existing comment (the
 swap-in rationales are load-bearing — they explain the 60-card and 120-object
 conservation counts):
 
@@ -1066,7 +1066,7 @@ Skeletons 4, Murder 4, Mind Rot 4, Instill Infection 4).
 
 - [x] **Step 2: Rewrite the matchup fixtures**
 
-In `source/test-suite/Pawl/Support.hs`:
+In `source/test-suite/Parun/Support.hs`:
 
 ```haskell
 redRed :: Registry.Type.Registry -> IO (NonEmpty.NonEmpty (PlayerId.PlayerId, Deck.Deck))
@@ -1102,7 +1102,7 @@ landsOnly registry = do
   pure (Setup.mirror (Deck.MkDeck (Map.singleton mountain 60)) bothPlayers)
 ```
 
-- [x] **Step 3: Migrate `Pawl.PropertySpec`**
+- [x] **Step 3: Migrate `Parun.PropertySpec`**
 
 The properties reach IO through `QC.ioProperty`, which `Test.Tasty.QuickCheck`
 re-exports:
@@ -1127,7 +1127,7 @@ propertyTests registry =
 Keep `iterations` and every `QC.counterexample` label exactly as they are — the
 labels are how a failure names the invariant that broke.
 
-- [x] **Step 4: Migrate `Pawl.SetupSpec`** with the Tasks 4-9 recipe; its
+- [x] **Step 4: Migrate `Parun.SetupSpec`** with the Tasks 4-9 recipe; its
       `Cards.redDeck cards` uses become `deck <- Cards.redDeck registry`.
 
 - [x] **Step 5: Build and run**
@@ -1155,7 +1155,7 @@ Nothing reads `Cards.Cards` any more. This task removes it, the loader, and the
 benchmark's private copy of the same loading.
 
 **Files:**
-- Modify: `source/test-suite/Pawl/Cards.hs` (delete the record, `loadPrinting`,
+- Modify: `source/test-suite/Parun/Cards.hs` (delete the record, `loadPrinting`,
   `loadCards`, `allPrintings`; keep the four decks)
 - Modify: `source/test-suite/Main.hs` (one registry, one-argument `testTree`)
 - Modify: `source/benchmark/Main.hs:182-183` (its own `loadPrinting`)
@@ -1166,18 +1166,18 @@ benchmark's private copy of the same loading.
 rg -n 'Cards\.(Cards|MkCards|loadCards|loadPrinting|allPrintings|\w+Printing)' source
 ```
 
-Expected: hits only in `source/test-suite/Pawl/Cards.hs` itself. Anything else
+Expected: hits only in `source/test-suite/Parun/Cards.hs` itself. Anything else
 means a module was missed in Tasks 4-11 — migrate it before continuing.
 
 - [x] **Step 2: Delete the record and the loaders**
 
-In `source/test-suite/Pawl/Cards.hs`, delete `data Cards`, `loadPrinting`,
+In `source/test-suite/Parun/Cards.hs`, delete `data Cards`, `loadPrinting`,
 `loadCards` and `allPrintings`, leaving only the four decks. Replace the module
 header comment with:
 
 ```haskell
 -- The decks the random-game properties and setup tests play with. Cards
--- themselves come from Pawl.Registry, one file per card, loaded on demand; this
+-- themselves come from Parun.Registry, one file per card, loaded on demand; this
 -- module is only the four hand-tuned 60-card lists, whose comments explain the
 -- swap-ins that keep each at 60 cards (and so the CR 400.7 conservation count
 -- at 120).
@@ -1194,7 +1194,7 @@ main = do
 testTree :: Registry.Type.Registry -> Tasty.TestTree
 testTree registry =
   Tasty.testGroup
-    "pawl"
+    "parun"
     [ CoreSpec.tests registry,
       ...every module taking `registry`, RegistrySpec.tests and the
       no-argument specs (BindingSpec, DecideSpec, DepartureSpec, JsonSpec,
@@ -1202,9 +1202,9 @@ testTree registry =
     ]
 ```
 
-`Main.hs` no longer names `Pawl.Cards` at all — the decks are reached through
-`SetupSpec` and `Pawl.Support`, not through `Main` — so drop its
-`import qualified Pawl.Cards as Cards`, or the build fails on
+`Main.hs` no longer names `Parun.Cards` at all — the decks are reached through
+`SetupSpec` and `Parun.Support`, not through `Main` — so drop its
+`import qualified Parun.Cards as Cards`, or the build fails on
 `-Wunused-imports`.
 
 - [x] **Step 4: Switch the benchmark to the registry**
@@ -1237,19 +1237,19 @@ Expected: no warnings (the `pedantic` flag turns any into an error).
 - [x] **Step 7: Commit and close the issue**
 
 ```bash
-git add source/test-suite source/benchmark pawl.cabal
+git add source/test-suite source/benchmark parun.cabal
 hooky fix
-git add source/test-suite source/benchmark pawl.cabal
+git add source/test-suite source/benchmark parun.cabal
 hooky run
 git commit -m "refactor: retire the Cards record for the registry (#145)"
-gh issue close 145 --comment "Done. Cards load from Pawl.Registry by name, parsed on demand and at most once per registry; adding a card is adding one file. The slug rule is Codec.slugify (case-folded, ASCII, apostrophe-free) and Pawl.CardSpec sweeps the directory so a file nobody names still gets loaded and checked."
+gh issue close 145 --comment "Done. Cards load from Parun.Registry by name, parsed on demand and at most once per registry; adding a card is adding one file. The slug rule is Codec.slugify (case-folded, ASCII, apostrophe-free) and Parun.CardSpec sweeps the directory so a file nobody names still gets loaded and checked."
 ```
 
 ---
 
 ## Appendix: field to card name
 
-The `Pawl.Cards` field each spec module uses, and the name to load instead.
+The `Parun.Cards` field each spec module uses, and the name to load instead.
 `Registry.printing registry "<name>"` for a `Printing`, `Registry.card registry
 "<name>"` for a `Card`.
 

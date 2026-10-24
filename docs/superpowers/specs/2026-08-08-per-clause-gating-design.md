@@ -46,13 +46,13 @@ gets wrong.
 
 **#335's own nominated card is not expressible.** Satyr Wayfinder needs "reveal the top
 four cards of your library, you may put a land card from among them into your hand" --
-pawl has no look-at-N-and-choose machinery at all (`SearchDestination.RevealThenHand` is
+parun has no look-at-N-and-choose machinery at all (`SearchDestination.RevealThenHand` is
 reachable only from the `Search` opcode). That section of the issue needs correcting.
 
 **And there is a trap in this shape worth recording.** Urban Evolution, Scale the
 Heights and the real Explore all print "You may play an additional land this turn."
 That "may" is the permission's own wording, not CR 603.5's
-resolution-time choice: pawl models it `Mandatory` plus
+resolution-time choice: parun models it `Mandatory` plus
 `PlayerEffect.PlayAdditionalLands`, which already exists, and such a card would exercise
 nothing here. The issue's original Explore example fell into exactly this, and the
 Oracle text it quoted does not even match the printing.
@@ -68,7 +68,7 @@ hidden-zone selection, which is #559's neighbourhood and larger than either.
 
 ## Design
 
-### `Pawl.Types.Clause`
+### `Parun.Types.Clause`
 
 A new type in the `types` sublibrary:
 
@@ -97,7 +97,7 @@ branch lands with Standstill, not before.
 **No `targetSpecs` on a `Clause`.** CR 601.2c fixes targets as the spell is cast, which
 is the mode's job, not the clause's. That asymmetry IS the design.
 
-### `Pawl.Types.Mode`
+### `Parun.Types.Mode`
 
     data Mode card = MkMode
       { clauses :: Seq.Seq (Clause card),
@@ -108,20 +108,20 @@ is the mode's job, not the clause's. That asymmetry IS the design.
 `Mode` is exactly a `Mode` with one `Clause`, which is what makes the migration
 mechanical rather than semantic.
 
-### `Pawl.Types.ClauseIndex`
+### `Parun.Types.ClauseIndex`
 
     newtype ClauseIndex = MkClauseIndex { unwrap :: Natural.Natural }
 
 A sibling of `ModeIndex`, existing for the same reason: a prompt has to say which clause
 is asking.
 
-### `Pawl.Types.Effect`: `RemoveCounters`
+### `Parun.Types.Effect`: `RemoveCounters`
 
     RemoveCounters CounterKind.CounterKind Quantity.Quantity SlotName.SlotName
 
 `PutCounters`' mirror (CR 122), and a separate constructor rather than a signed amount
 for the reason `RemovePlayerCounters` already gives against `GainPlayerCounters`: a
-signed delta fuses two events that "whenever a counter is put on" text tells apart. Pawl
+signed delta fuses two events that "whenever a counter is put on" text tells apart. Parun
 has **no counter removal at any site today** -- `RemovePlayerCounters` is the player
 axis -- so this closes a real gap rather than scaffolding one card.
 
@@ -158,7 +158,7 @@ two instructions is one clause holding two effects, hence one prompt, which is C
 ### Prompts
 
 `Prompt.ChooseOptional` and `Prompt.ChooseToPay` each gain a `ClauseIndex` beside their
-`ModeIndex`. That is an ABI change reaching `Pawl.Engine.Replay` and the four spec
+`ModeIndex`. That is an ABI change reaching `Parun.Engine.Replay` and the four spec
 modules that build these prompts.
 
 A clause whose effects can do nothing is still asked, exactly as an optional mode with
@@ -168,10 +168,10 @@ would be the closed-half-cases-on-effect-identity failure, so it is not an optio
 
 ### Codec
 
-A new `Pawl.Codec.Clause` and its spec; `Pawl.Codec.Mode` encodes `clauses` in place of
-`effects`/`optionality`/`unlessPaid`. A new `Pawl.Codec.ClauseIndex` and spec.
-`pawl.cabal` regenerated with `cabal-gild pawl.cabal` directly -- six new modules
-counting `Pawl.Types.Clause` and `Pawl.Types.ClauseIndex`, and `hooky fix` will not pick
+A new `Parun.Codec.Clause` and its spec; `Parun.Codec.Mode` encodes `clauses` in place of
+`effects`/`optionality`/`unlessPaid`. A new `Parun.Codec.ClauseIndex` and spec.
+`parun.cabal` regenerated with `cabal-gild parun.cabal` directly -- six new modules
+counting `Parun.Types.Clause` and `Parun.Types.ClauseIndex`, and `hooky fix` will not pick
 any of them up.
 
 ### The card data migration
@@ -191,7 +191,7 @@ before staging.
 `Resolve.slotsOf`, `Resolve.definedSlots` and `Resolve.armedAbilities` walk clauses. The
 two CR 612 text-change `rewriteMode` sites (`Projection`, `Resolve`) gain a nested
 `fmap`. `Mode.effects` has 16 reader sites in all, across seven files -- six of them the
-lint family in `Pawl.CardSpec`. And the inline `MkMode` mints in `Face`,
+lint family in `Parun.CardSpec`. And the inline `MkMode` mints in `Face`,
 `Keyword` (five), `Monarch`, `Battle`, `Rad` and `Speed` each wrap their effects in one
 default clause.
 
@@ -207,7 +207,7 @@ Wide and shallow, and `-Werror` finds every site.
 - **A `SkipUnless Gate N` predicated-execution opcode**, which keeps the effect list
   flat. A relative skip count is a jump, and `design.md` section 1 rules it out in as
   many words: "real bytecode has jumps, and yours must not."
-- **An `If condition [Effect] [Effect]` arm on `Effect`.** `Pawl.Types.Effect`'s own
+- **An `If condition [Effect] [Effect]` arm on `Effect`.** `Parun.Types.Effect`'s own
   header already rejects it: it puts a branch between two effect lists and makes
   `Resolve.applyEffect` recurse.
 - **Reusing `Modal` with a new `ModeSelection` constructor meaning "all of them, in
@@ -216,7 +216,7 @@ Wide and shallow, and `-Werror` finds every site.
   `Binding.modes`, and CR 700.2d's repetition (#791, #996) all start answering about
   clauses as though they were modes. That is the closed/open fusion `CLAUDE.md` names as
   the project's single failure mode.
-- **A `Gate` sum with an `And` combinator.** See `Pawl.Types.Clause` above.
+- **A `Gate` sum with an `And` combinator.** See `Parun.Types.Clause` above.
 - **Riders staying on `Mode` with an index range naming which clauses they cover.**
   Smallest diff to the types, but it puts an index into card data that nothing checks,
   and a stale range is a silent miscompile of the card.
@@ -252,7 +252,7 @@ Wide and shallow, and `-Werror` finds every site.
   the exercising case fails at 3/3 rather than 4/4. Both put back.
 
 - **Codec round trip** for `Clause` and `ClauseIndex` in the usual spec shape, plus the
-  existing `Pawl.Codec.ModeSpec` cases rewritten to the new nesting.
+  existing `Parun.Codec.ModeSpec` cases rewritten to the new nesting.
 
 - **Suite count before -> after**, and `ormolu --mode check $(git ls-files '*.hs')`
   repo-wide before pushing, since `hooky fix` only formats staged files.
@@ -287,6 +287,6 @@ Wide and shallow, and `-Werror` finds every site.
   amass (CR 701.47a) from #876, plus #808's third bullet reached from the other
   direction. Adapt is the cheap producer: its condition is already expressible as
   `Quantity.ObjectCounters PlusOnePlusOne` against `Literal 0`, where monstrosity needs a
-  *monstrous* designation pawl has no carrier for.
+  *monstrous* designation parun has no carrier for.
 - **#996** is untouched: a clause index is not a slot name, and `Modal.instanceSlot`'s
   printed-name collision is unaffected either way.

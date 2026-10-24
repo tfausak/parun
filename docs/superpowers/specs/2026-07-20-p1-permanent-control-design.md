@@ -59,10 +59,10 @@ fight (nothing would revert it at cleanup). So control rides the existing
 `GameState.continuousEffects` store and the projection, exactly as Giant Growth's
 P/T does.
 
-### 2.2 Control lives in `Pawl.Projection` (the module graph requires it)
+### 2.2 Control lives in `Parun.Projection` (the module graph requires it)
 
-`Pawl.Projection` imports `Pawl.Game`, never the reverse, and the standing
-invariant is that **only `Pawl.Projection` may `case` on a `Modification`**. Both
+`Parun.Projection` imports `Parun.Game`, never the reverse, and the standing
+invariant is that **only `Parun.Projection` may `case` on a `Modification`**. Both
 facts point the same way:
 
 - **`controllerOf` moves from `Game` to `Projection`.** `Projection.controllerOf ::
@@ -125,7 +125,7 @@ settles the creature across turns, is the Auras phase; §7.)
   untap is future (§7). Real vocabulary breadth (design.md §4's "obvious verbs").
 - **`Modification.SetController PlayerId`** (new) at `Layer.Control`. Its sole
   reader/applier is `Projection.controllerOf` (§2.2). Adds a `PlayerId` import to
-  `Pawl.Type.Modification`; `Projection.layer` classifies it as `Layer.Control`.
+  `Parun.Type.Modification`; `Projection.layer` classifies it as `Layer.Control`.
 - **Haste rider — reused, not new.** Act of Treason's "gains haste until end of
   turn" is `ModifyTarget UntilEndOfTurn (GainKeyword Haste) slot`, the M3b path
   Serpent's Gift already exercises. Verify `GainKeyword Haste` folds at layer 6 and
@@ -201,17 +201,17 @@ Verify each against `rules.txt` when the plan touches it.
 
 ## 6. Module & type changes (summary)
 
-- `Pawl.Type.Effect` — add `GainControl Duration SlotName`, `Untap SlotName`.
-- `Pawl.Type.Modification` — add `SetController PlayerId` (import `PlayerId`).
-- `Pawl.Projection` — add `controllerOf` (fold layer-2 `SetController`), `controls`;
+- `Parun.Type.Effect` — add `GainControl Duration SlotName`, `Untap SlotName`.
+- `Parun.Type.Modification` — add `SetController PlayerId` (import `PlayerId`).
+- `Parun.Projection` — add `controllerOf` (fold layer-2 `SetController`), `controls`;
   `layer (SetController _) = Control`.
-- `Pawl.Game` — delete `controllerOf`; keep `zoneMembers` owner-based.
-- `Pawl.Resolve` — execute `GainControl` (bake source controller, store effect, set
+- `Parun.Game` — delete `controllerOf`; keep `zoneMembers` owner-based.
+- `Parun.Resolve` — execute `GainControl` (bake source controller, store effect, set
   `Sick`) and `Untap`; add both to the five classifications.
-- `Pawl.Mana` — route produced mana through `Projection.controllerOf`.
-- `Pawl.Combat` / `Pawl.Engine` / `Pawl.Activate` — "you control" enumerations →
+- `Parun.Mana` — route produced mana through `Projection.controllerOf`.
+- `Parun.Combat` / `Parun.Engine` / `Parun.Activate` — "you control" enumerations →
   `Projection.controls`; `controllerOf` calls → `Projection.controllerOf`.
-- `Pawl.Codec` — `GainControl` / `Untap` / `SetController` arms; round-trip covers
+- `Parun.Codec` — `GainControl` / `Untap` / `SetController` arms; round-trip covers
   Act of Treason and the synthetic.
 - `data/cards/act-of-treason.json` (+ the synthetic fixture) added; `allPrintings`
   updated.

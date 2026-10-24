@@ -1,0 +1,35 @@
+module Parun.Codec.MonarchWatchSpec where
+
+import qualified Parun.Codec.MonarchWatch as MonarchWatch
+import qualified Parun.JsonCodec.Common as Common
+import qualified Parun.Spec as Spec
+import qualified Parun.Types.EventGroup as EventGroup
+import qualified Parun.Types.MonarchWatch as MonarchWatch
+import qualified Parun.Types.PlayerId as PlayerId
+
+spec :: (Monad m, Monad n) => Spec.Spec m n -> n ()
+spec s = Spec.describe s "Parun.Codec.MonarchWatch" $ do
+  -- CR 725: the watch is armed and nothing has happened yet.
+  Spec.it s "a watch nothing has satisfied" $
+    Common.assertCodec
+      s
+      MonarchWatch.codec
+      MonarchWatch.MkMonarchWatch
+        { MonarchWatch.controller = PlayerId.MkPlayerId 1,
+          MonarchWatch.due = Nothing
+        }
+      " {\"controller\":1} "
+  -- The recorded EVENT, which is what the field is: a crown that went to an
+  -- opponent and back inside one resolution still frees the prisoner (#208), so
+  -- a state written between the crowning and the settle has to carry the true.
+  Spec.it s "a watch an opponent's crowning has satisfied" $
+    Common.assertCodec
+      s
+      MonarchWatch.codec
+      MonarchWatch.MkMonarchWatch
+        { MonarchWatch.controller = PlayerId.MkPlayerId 2,
+          MonarchWatch.due = Just (EventGroup.MkEventGroup 7)
+        }
+      " {\"controller\":2,\"due\":7} "
+  Spec.it s "has a schema" $
+    Common.assertHasSchema s MonarchWatch.codec

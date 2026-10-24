@@ -10,11 +10,11 @@
 
 ## Starting point (already exists — do not recreate)
 
-M2a is complete and its tests pass. The engine, the `Program`/`Prompt` seam, `changeZone`, mana, casting, the stack, combat declaration, simultaneous combat damage, SBAs, the keyword seam (`Pawl.Type.Keyword`, `Card.keywords`, `Game.keywordsOf`/`hasKeyword`), replay, the single-file test suite (`source/test-suite/Main.hs`) and benchmark all exist. This plan **modifies** them.
+M2a is complete and its tests pass. The engine, the `Program`/`Prompt` seam, `changeZone`, mana, casting, the stack, combat declaration, simultaneous combat damage, SBAs, the keyword seam (`Parun.Type.Keyword`, `Card.keywords`, `Game.keywordsOf`/`hasKeyword`), replay, the single-file test suite (`source/test-suite/Main.hs`) and benchmark all exist. This plan **modifies** them.
 
 Read the spec before starting. The invariants it turns on:
 
-1. **Casing on a `Keyword` is NOT a violation of the closed/open invariant.** Rule 702 is the rulebook; a keyword is a numbered rule, not an effect. See M2a spec §1 and the note atop `Pawl.Type.Keyword` before "fixing" a `case keyword of` into a classification.
+1. **Casing on a `Keyword` is NOT a violation of the closed/open invariant.** Rule 702 is the rulebook; a keyword is a numbered rule, not an effect. See M2a spec §1 and the note atop `Parun.Type.Keyword` before "fixing" a `case keyword of` into a classification.
 2. **The closed half asks `Game.keywordsOf`, never `Card.keywords`.** Layer 6 grants abilities at M3; the wave and splice decisions read the projection **live, at the step boundary**, never precomputed at combat start.
 3. **The two combat damage steps are two steps.** The second is a spliced step, so it gets its own CR 510.3 priority window and its own SBA check for free from the step machinery. Do not deal both waves inside one handler.
 4. **Every rules claim is checked against `docs/rules.txt`.** The load-bearing rules are CR 506.1, 508.8, 500.8, 500.9, 500.11, 510.1–510.5, 702.4, 702.7. Cite the number in the code.
@@ -23,11 +23,11 @@ Read the spec before starting. The invariants it turns on:
 
 Every task's requirements implicitly include all of these:
 
-- **Warning-clean:** library, test suite, and benchmark compile under `-Weverything` minus the allow-list in `pawl.cabal`. A warning is a failure. `-Wunused-matches` is active: prefix genuinely unused binders with `_`. `-Wmonomorphism-restriction` is active: a `let` without a signature that needs one is a failure — annotate it. Check with a **clean** build (`rm -rf dist-newstyle/build/aarch64-osx/ghc-9.14.1/pawl-0.2026.7.16/{b,t,build}`) — incremental builds hide warnings.
+- **Warning-clean:** library, test suite, and benchmark compile under `-Weverything` minus the allow-list in `parun.cabal`. A warning is a failure. `-Wunused-matches` is active: prefix genuinely unused binders with `_`. `-Wmonomorphism-restriction` is active: a `let` without a signature that needs one is a failure — annotate it. Check with a **clean** build (`rm -rf dist-newstyle/build/aarch64-osx/ghc-9.14.1/parun-0.2026.7.16/{b,t,build}`) — incremental builds hide warnings.
 - **Boot libraries only** in the library (`base`, `containers`, `text`, `transformers`). No new dependencies.
 - **Haskell 2010.** The only permitted extensions are `GADTs` and `RankNTypes`, per-file.
 - **Non-punning constructors:** `Mk` prefix on newtypes and single-constructor records. Multi-constructor ADTs are written plainly.
-- **One type per module** under `Pawl.Type.<TypeName>` — **type and instances only**. Cross-type logic lives in other `Pawl.*` modules. A module never imports its parents.
+- **One type per module** under `Parun.Type.<TypeName>` — **type and instances only**. Cross-type logic lives in other `Parun.*` modules. A module never imports its parents.
 - **Derive at least `Eq` and `Show`.** `Combat` derives `Ord`, so everything inside it must too (`Maybe (Set ObjectId)` does).
 - **No partial functions.** `Maybe`/`Either`, never `head`/`error`/non-exhaustive matches. Prefer `let` over `where`, `case` over point-free, `$` over parens and `.` over chained `$`.
 - **No list comprehensions, no backtick-infixed functions.** `.hlint.yaml` already ignores the hints that contradict the house style; if HLint suggests one anyway, restructure rather than suppress.
@@ -46,20 +46,20 @@ Every task's requirements implicitly include all of these:
 
 | File | Change |
 |---|---|
-| `Pawl/Type/GameState.hs` | add `remaining :: Seq Phase` |
-| `Pawl/Type/Combat.hs` | add `struckFirst :: Maybe (Set ObjectId)` |
-| `Pawl/Type/Keyword.hs` | add `FirstStrike`, `DoubleStrike` (CR order) |
-| `Pawl/Type/Subtype.hs` | add `Cat`, `Dinosaur`, `Beast` |
-| `Pawl/Turn.hs` | delete `next`; add `laterPhases`, `dropSkippedCombatSteps`, `spliceSecondDamage` |
-| `Pawl/Engine.hs` | `advance` pops the schedule; `handoffTurn` refills it; skip + splice wiring |
-| `Pawl/Combat.hs` | `skipEmptyCombat`; `emptyCombat` sets `struckFirst` |
-| `Pawl/Damage.hs` | `dealCombatDamage :: Game Bool`, wave predicates, `gatherCombatDamage` takes a filter |
-| `Pawl/Setup.hs` | `emptyGame` sets `remaining` |
-| `Pawl/Card.hs` | `sabretoothTigerPrinting`, `ridgetopRaptorPrinting` |
+| `Parun/Type/GameState.hs` | add `remaining :: Seq Phase` |
+| `Parun/Type/Combat.hs` | add `struckFirst :: Maybe (Set ObjectId)` |
+| `Parun/Type/Keyword.hs` | add `FirstStrike`, `DoubleStrike` (CR order) |
+| `Parun/Type/Subtype.hs` | add `Cat`, `Dinosaur`, `Beast` |
+| `Parun/Turn.hs` | delete `next`; add `laterPhases`, `dropSkippedCombatSteps`, `spliceSecondDamage` |
+| `Parun/Engine.hs` | `advance` pops the schedule; `handoffTurn` refills it; skip + splice wiring |
+| `Parun/Combat.hs` | `skipEmptyCombat`; `emptyCombat` sets `struckFirst` |
+| `Parun/Damage.hs` | `dealCombatDamage :: Game Bool`, wave predicates, `gatherCombatDamage` takes a filter |
+| `Parun/Setup.hs` | `emptyGame` sets `remaining` |
+| `Parun/Card.hs` | `sabretoothTigerPrinting`, `ridgetopRaptorPrinting` |
 
 **Modified (suites):** `source/test-suite/Main.hs`.
 
-**Untouched, deliberately:** `Pawl/Type/Prompt.hs`, `Pawl/Type/Response.hs`, `Pawl/Replay.hs`, and all eight interpreters. M2b is additive across the decision seam, like M2a. If a task appears to need a prompt change, stop — that is a corner the spec's §3 exists to avoid.
+**Untouched, deliberately:** `Parun/Type/Prompt.hs`, `Parun/Type/Response.hs`, `Parun/Replay.hs`, and all eight interpreters. M2b is additive across the decision seam, like M2a. If a task appears to need a prompt change, stop — that is a corner the spec's §3 exists to avoid.
 
 ## Task ordering rationale
 
@@ -76,7 +76,7 @@ Every task's requirements implicitly include all of these:
 `GameState.remaining`, `Turn.laterPhases`, `advance` pops the schedule, `handoffTurn` refills it, `Turn.next` deleted. **No behavior change** — every phase runs in the same order as before.
 
 **Files:**
-- Modify: `source/library/Pawl/Type/GameState.hs`, `source/library/Pawl/Turn.hs`, `source/library/Pawl/Engine.hs`, `source/library/Pawl/Setup.hs`, `source/test-suite/Main.hs`
+- Modify: `source/library/Parun/Type/GameState.hs`, `source/library/Parun/Turn.hs`, `source/library/Parun/Engine.hs`, `source/library/Parun/Setup.hs`, `source/test-suite/Main.hs`
 
 **Interfaces:**
 - Consumes: `Turn.allPhases`, `Turn.firstPhase`, `Engine.runStep`, `Engine.runGamePure` (all exist).
@@ -158,7 +158,7 @@ Expected: FAIL — `GameState.remaining` and `Turn.laterPhases` not in scope.
 
 - [x] **Step 3: Add the field to `GameState`**
 
-In `source/library/Pawl/Type/GameState.hs`, add the field immediately after `phase :: Phase,`:
+In `source/library/Parun/Type/GameState.hs`, add the field immediately after `phase :: Phase,`:
 
 ```haskell
     phase :: Phase,
@@ -171,9 +171,9 @@ In `source/library/Pawl/Type/GameState.hs`, add the field immediately after `pha
 
 `Seq` and `Phase` are already imported by this module.
 
-- [x] **Step 4: Rework `Pawl.Turn`**
+- [x] **Step 4: Rework `Parun.Turn`**
 
-`source/library/Pawl/Turn.hs` — add the two imports, delete `next`, add `laterPhases`:
+`source/library/Parun/Turn.hs` — add the two imports, delete `next`, add `laterPhases`:
 
 ```haskell
 import Data.Sequence (Seq)
@@ -195,7 +195,7 @@ Leave `allPhases`, `firstPhase`, `grantsPriority` and `isMainPhase` as they are.
 
 - [x] **Step 5: Rework `advance` and `handoffTurn`**
 
-In `source/library/Pawl/Engine.hs`, add the import (keep the block sorted):
+In `source/library/Parun/Engine.hs`, add the import (keep the block sorted):
 
 ```haskell
 import qualified Data.Sequence as Seq
@@ -232,7 +232,7 @@ In `runStep`, change the final `advance phase` to `advance` (it no longer takes 
 
 - [x] **Step 6: Set `remaining` in `Setup.emptyGame`**
 
-In `source/library/Pawl/Setup.hs`, add the field immediately after `GameState.phase = Turn.firstPhase,`:
+In `source/library/Parun/Setup.hs`, add the field immediately after `GameState.phase = Turn.firstPhase,`:
 
 ```haskell
           GameState.phase = Turn.firstPhase,
@@ -288,7 +288,7 @@ git commit -m "Make the turn data: a schedule the engine pops"
 `git-bug 5f50eec`. When nobody attacks, drop the declare blockers and combat damage steps from the schedule (CR 500.11: proceed as though they didn't exist).
 
 **Files:**
-- Modify: `source/library/Pawl/Turn.hs`, `source/library/Pawl/Combat.hs`, `source/library/Pawl/Engine.hs`, `source/test-suite/Main.hs`
+- Modify: `source/library/Parun/Turn.hs`, `source/library/Parun/Combat.hs`, `source/library/Parun/Engine.hs`, `source/test-suite/Main.hs`
 
 **Interfaces:**
 - Consumes: Task 1's `GameState.remaining`; `Combat.emptyCombat` shape (`attackers`).
@@ -360,9 +360,9 @@ inCombatPhase p = case p of
 Run: `cabal test --test-options='-p "/Skip/"' 2>&1 > /tmp/t.txt; grep -m3 -E "error|not in scope" /tmp/t.txt`
 Expected: FAIL — `Turn.dropSkippedCombatSteps` not in scope.
 
-- [x] **Step 3: Add the drop to `Pawl.Turn`**
+- [x] **Step 3: Add the drop to `Parun.Turn`**
 
-In `source/library/Pawl/Turn.hs`, append:
+In `source/library/Parun/Turn.hs`, append:
 
 ```haskell
 -- CR 508.8 / 500.11: drop the declare blockers and combat damage steps from a
@@ -379,12 +379,12 @@ dropSkippedCombatSteps =
    in Seq.filter (\p -> not (skipped p))
 ```
 
-- [x] **Step 4: Add `skipEmptyCombat` to `Pawl.Combat`**
+- [x] **Step 4: Add `skipEmptyCombat` to `Parun.Combat`**
 
-In `source/library/Pawl/Combat.hs`, add the import (keep the block sorted):
+In `source/library/Parun/Combat.hs`, add the import (keep the block sorted):
 
 ```haskell
-import qualified Pawl.Turn as Turn
+import qualified Parun.Turn as Turn
 ```
 
 Append:
@@ -403,7 +403,7 @@ skipEmptyCombat gs =
 
 - [x] **Step 5: Wire it into the declare attackers step**
 
-In `source/library/Pawl/Engine.hs`, in `runTurnBasedActions`, replace the declare attackers case:
+In `source/library/Parun/Engine.hs`, in `runTurnBasedActions`, replace the declare attackers case:
 
 ```haskell
     Phase.Combat CombatStep.DeclareAttackers -> do
@@ -438,11 +438,11 @@ git-bug bug status close 5f50eec
 `FirstStrike` and `DoubleStrike` in CR-number order; Sabretooth Tiger and Ridgetop Raptor; three new subtypes. Nothing consumes them yet.
 
 **Files:**
-- Modify: `source/library/Pawl/Type/Keyword.hs`, `source/library/Pawl/Type/Subtype.hs`, `source/library/Pawl/Card.hs`, `source/test-suite/Main.hs`
+- Modify: `source/library/Parun/Type/Keyword.hs`, `source/library/Parun/Type/Subtype.hs`, `source/library/Parun/Card.hs`, `source/test-suite/Main.hs`
 
 **Interfaces:**
 - Consumes: Task 1 (none directly); `Game.keywordsOf`/`hasKeyword`, `addCreature` (M2a).
-- Produces: `Pawl.Card.sabretoothTigerPrinting`, `Pawl.Card.ridgetopRaptorPrinting :: Printing`
+- Produces: `Parun.Card.sabretoothTigerPrinting`, `Parun.Card.ridgetopRaptorPrinting :: Printing`
 
 Both cards are **verified against Scryfall** (`api.scryfall.com/cards/named?exact=…`, checked 2026-07-17, zero Gatherer rulings). Do not "correct" them from memory:
 
@@ -502,7 +502,7 @@ Expected: FAIL — `Card.sabretoothTigerPrinting` not in scope.
 
 - [x] **Step 3: Add the keywords**
 
-`source/library/Pawl/Type/Keyword.hs` — insert `DoubleStrike` and `FirstStrike` in CR-number order and update the header comment's count line:
+`source/library/Parun/Type/Keyword.hs` — insert `DoubleStrike` and `FirstStrike` in CR-number order and update the header comment's count line:
 
 ```haskell
 data Keyword
@@ -520,7 +520,7 @@ In the block comment above the type, change the "Five, because five have consume
 
 - [x] **Step 4: Add the subtypes**
 
-`source/library/Pawl/Type/Subtype.hs` — append `Cat`, `Dinosaur`, `Beast`:
+`source/library/Parun/Type/Subtype.hs` — append `Cat`, `Dinosaur`, `Beast`:
 
 ```haskell
 data Subtype
@@ -539,7 +539,7 @@ data Subtype
 
 - [x] **Step 5: Add the printings**
 
-Append to `source/library/Pawl/Card.hs`:
+Append to `source/library/Parun/Card.hs`:
 
 ```haskell
 -- The M2b keyword cards. Each is mono-red, a 2/1 (the same body as a Goblin
@@ -624,7 +624,7 @@ git commit -m "Add first strike and double strike, with Sabretooth Tiger and Rid
 CR 510.4. `Combat.struckFirst` snapshot, the wave predicates, the splice, the "still on the battlefield" guard. Double strike is the falsifier.
 
 **Files:**
-- Modify: `source/library/Pawl/Type/Combat.hs`, `source/library/Pawl/Combat.hs`, `source/library/Pawl/Damage.hs`, `source/library/Pawl/Engine.hs`, `source/test-suite/Main.hs`
+- Modify: `source/library/Parun/Type/Combat.hs`, `source/library/Parun/Combat.hs`, `source/library/Parun/Damage.hs`, `source/library/Parun/Engine.hs`, `source/test-suite/Main.hs`
 
 **Interfaces:**
 - Consumes: Task 1's `GameState.remaining`; Task 3's keywords and printings; `Game.hasKeyword`, `Game.lookupObject`, `runCombat`.
@@ -730,7 +730,7 @@ Expected: FAIL — `Combat.Type.struckFirst` not in scope.
 
 - [x] **Step 3: Add `struckFirst` to the `Combat` type**
 
-In `source/library/Pawl/Type/Combat.hs`, add the field after `blockers`:
+In `source/library/Parun/Type/Combat.hs`, add the field after `blockers`:
 
 ```haskell
     blockers :: Map ObjectId (Set ObjectId),
@@ -752,7 +752,7 @@ In `source/library/Pawl/Type/Combat.hs`, add the field after `blockers`:
 
 - [x] **Step 4: Reset `struckFirst` in `emptyCombat`**
 
-In `source/library/Pawl/Combat.hs`, add the field to `emptyCombat`:
+In `source/library/Parun/Combat.hs`, add the field to `emptyCombat`:
 
 ```haskell
 emptyCombat :: Combat
@@ -764,9 +764,9 @@ emptyCombat =
     }
 ```
 
-- [x] **Step 5: Add the splice to `Pawl.Turn`**
+- [x] **Step 5: Add the splice to `Parun.Turn`**
 
-In `source/library/Pawl/Turn.hs`, append:
+In `source/library/Parun/Turn.hs`, append:
 
 ```haskell
 -- CR 510.4 / 500.9: a second combat damage step, spliced directly after the
@@ -776,13 +776,13 @@ spliceSecondDamage :: Seq Phase -> Seq Phase
 spliceSecondDamage remaining = Phase.Combat CombatStep.CombatDamage Seq.<| remaining
 ```
 
-- [x] **Step 6: Rewrite the combat damage step in `Pawl.Damage`**
+- [x] **Step 6: Rewrite the combat damage step in `Parun.Damage`**
 
-In `source/library/Pawl/Damage.hs`, add the import (keep the block sorted):
+In `source/library/Parun/Damage.hs`, add the import (keep the block sorted):
 
 ```haskell
-import qualified Pawl.Type.Keyword as Keyword
-import qualified Pawl.Type.Zone as Zone
+import qualified Parun.Type.Keyword as Keyword
+import qualified Parun.Type.Zone as Zone
 ```
 
 Give `gatherCombatDamage` a per-participant filter (this is the only change to its body — the two `filter`s), and leave `attackerAssignment`, `blockerAssignment` and `applyCombatDamage` exactly as they are:
@@ -854,7 +854,7 @@ dealWave assigns = do
 
 - [x] **Step 7: Splice the second step in the engine**
 
-In `source/library/Pawl/Engine.hs`, in `runTurnBasedActions`, replace the combat damage case:
+In `source/library/Parun/Engine.hs`, in `runTurnBasedActions`, replace the combat damage case:
 
 ```haskell
     Phase.Combat CombatStep.CombatDamage -> do
@@ -947,7 +947,7 @@ Expected: PASS. If either fails, something added or changed a prompt — M2b mus
 - [x] **Step 5: Full warning-clean build and benchmark**
 
 ```bash
-rm -rf dist-newstyle/build/aarch64-osx/ghc-9.14.1/pawl-0.2026.7.16/{b,t,build}
+rm -rf dist-newstyle/build/aarch64-osx/ghc-9.14.1/parun-0.2026.7.16/{b,t,build}
 cabal build all --enable-tests --enable-benchmarks 2>&1 | grep -c "warning:"
 ```
 
@@ -978,6 +978,6 @@ Then update `CLAUDE.md`'s "Current work and tracking": mark M2b complete (spec a
 4. **The mixed-board total (bob == 12) does not by itself say *which* creature struck twice** — (tiger twice, raptor once) also sums to 8. The single-creature controls pin it: raptor-alone lands bob at 16 (twice) and tiger-alone at 18 (once). Read the `FirstStrike` group as a set; no one case is sufficient, which is why the controls are not padding.
 5. **The spec's §6 "no priority in a skipped step, across seeds" property is realized deterministically, not as a QuickCheck property, and this is a real adaptation.** The `Prompt` carries a `PlayerId` but not the phase it was asked in, and the interpreter (`forall r. Prompt r -> r`) cannot see `GameState`, so "a prompt timestamped to a skipped step" is not observable from a seeded game without new machinery. The `Skip` group tests the fix at its source instead — the schedule literally no longer contains the two steps (CR 500.11's "as though it didn't exist"), so they cannot grant priority. That is stronger than counting prompts, and it needs no new type. Flagged so the reviewer does not read a missing QuickCheck property as a gap.
 6. **`struckFirst` stores a set where a Bool would do at M2b, on purpose.** Nothing changes keywords mid-combat now, so the snapshot always equals "current strikers" and a bare flag would route the waves correctly. The set is stored because it *is* CR 510.4's "had first strike or double strike as the first step began," it routes safely even for a 0-power first striker (which the flag-by-emptiness alternative would mis-handle), and it is what M3 needs when the projection starts moving. Do not "simplify" it to a `Bool`.
-7. **`skipEmptyCombat` lives in `Pawl.Combat`, the splice wiring in `Pawl.Engine`.** Both edit `GameState.remaining`. The skip is triggered by `declareAttackers` (Combat's) and reads `Combat.attackers`, so it sits with combat and imports `Turn` for the pure sequence op; the splice is triggered by `dealCombatDamage`'s return and is applied where the step is dispatched. `Turn` owns the pure schedule algebra (`dropSkippedCombatSteps`, `spliceSecondDamage`); the two consumers apply it. `Turn` imports only `Type.*`, so `Combat`→`Turn` and `Engine`→`Turn` are acyclic.
+7. **`skipEmptyCombat` lives in `Parun.Combat`, the splice wiring in `Parun.Engine`.** Both edit `GameState.remaining`. The skip is triggered by `declareAttackers` (Combat's) and reads `Combat.attackers`, so it sits with combat and imports `Turn` for the pure sequence op; the splice is triggered by `dealCombatDamage`'s return and is applied where the step is dispatched. `Turn` owns the pure schedule algebra (`dropSkippedCombatSteps`, `spliceSecondDamage`); the two consumers apply it. `Turn` imports only `Type.*`, so `Combat`→`Turn` and `Engine`→`Turn` are acyclic.
 8. **Every `Card.MkCard` now carries `keywords`, and Task 3 adds two more sites.** The two M2b printings set it explicitly; `-Werror` (via the missing-field warning) confirms nothing was left unset. No existing `Card.MkCard` site changes.
 9. **`runCombat` and `runToFirstStrikeDone` are bounded at 24 steps.** A combat phase has at most five steps here, so 24 is slack, not a real limit — but if a test ever hits the bound, it means the schedule is not draining (a splice that never stops, or `advance` not popping), and the bounded loop turns that into a failed assertion instead of a hang.

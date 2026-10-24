@@ -57,7 +57,7 @@ convention **ends** here and the spec says why: **mono-red** (see §6).
 
 ## 1. Keyword additions
 
-`Pawl.Type.Keyword` gains two constructors, inserted **by rule number** so the
+`Parun.Type.Keyword` gains two constructors, inserted **by rule number** so the
 type stays diffable against rule 702 (M2a's ordering discipline):
 
 ```hs
@@ -95,7 +95,7 @@ deliberately: **build the event, with a minimal payload, not just a bit.**
 
 ### The event
 
-A new one-type module `Pawl.Type.DamageEvent`:
+A new one-type module `Parun.Type.DamageEvent`:
 
 ```hs
 data DamageEvent = MkDamageEvent
@@ -136,7 +136,7 @@ creature-targeted ones.
 
 ## 3. Deathtouch, part two: the state-based action (CR 704.5h)
 
-`Pawl.Sba.creatureDies` today checks CR 704.5f (toughness ≤ 0) and 704.5g (marked
+`Parun.Sba.creatureDies` today checks CR 704.5f (toughness ≤ 0) and 704.5g (marked
 damage ≥ toughness). M2c adds the third clause, **CR 704.5h**: a creature with
 toughness **greater than 0** that has been dealt damage by a source with deathtouch
 since the last SBA check is destroyed.
@@ -193,7 +193,7 @@ so it gates the defender rather than every recipient; see Validation below.
 
 ### The recipient type
 
-A new one-type module `Pawl.Type.Recipient`:
+A new one-type module `Parun.Type.Recipient`:
 
 ```hs
 data Recipient
@@ -318,7 +318,7 @@ one **synthetic fixture** the engine cannot yet express with a real card.
 Both are genuinely vanilla-plus-one-keyword (their entire behavior is a type line,
 cost, P/T and one 702 citation — zero opcodes) and both carry **zero** Gatherer
 rulings (french-vanilla keywords' oracle is the CR itself, per M2b's §5).
-`Pawl.Type.Subtype` gains `Rat` and `Elephant` (enum growth, no shape change, like
+`Parun.Type.Subtype` gains `Rat` and `Elephant` (enum growth, no shape change, like
 M2a's and M2b's subtypes). Neither joins the deck; both are exercised by fixtures,
 placed directly on the battlefield (`combatBoardOf`), as M2b's cards were.
 
@@ -348,7 +348,7 @@ merely *counts* those abilities, and has neither) — and M2c has no granting ef
 to put deathtouch onto a trampler (Basilisk Collar is Equipment, M4; a layer-6
 grant is M3). So the falsifier is tested with a **clearly-labeled synthetic
 fixture**: a test-local 3/3 carrying `{Deathtouch, Trample}`, defined in
-`source/test-suite/Main.hs` (not in the engine's `Pawl.Card` library), with a
+`source/test-suite/Main.hs` (not in the engine's `Parun.Card` library), with a
 comment stating that no printed card combines these and that M2c lacks the granting
 that M3 will use to replace it.
 
@@ -410,7 +410,7 @@ implementation gets wrong:
 
 **The classification test, the point of the milestone.** The 704.5h predicate, the
 lethal threshold, and the 702.2c threshold all read `keywordsOf` / `hasKeyword` and the
-damage events, and **no call site in `Pawl.Sba` or `Pawl.Damage` names a card**.
+damage events, and **no call site in `Parun.Sba` or `Parun.Damage` names a card**.
 Asserted the M2a/M2b way — by boards the identity-based implementation gets wrong:
 the interaction falsifier above, whose outcome depends only on which citations the
 source carries.

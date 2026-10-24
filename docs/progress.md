@@ -1,6 +1,6 @@
 # Milestone log
 
-pawl's comprehensive-rules core is built milestone by milestone (M0 → M7; the
+parun's comprehensive-rules core is built milestone by milestone (M0 → M7; the
 full path and the M3a–M3g split table are in `docs/design.md` §3). This file is
 the **completion log**: one distilled entry per landed milestone — its gate
 card, the load-bearing decision it proved, the opcodes and types it added, and
@@ -69,9 +69,9 @@ issue it closes are the record, and no further entries are appended here. See
   `docs/superpowers/plans/2026-07-17-m2d-castable-decks.md`.
 - **M3a is complete** (the first opcode — Lightning Bolt as data. A first-order,
   non-recursive `Effect` AST (`DealDamage SlotName Quantity`) referenced by named
-  slots (`SlotName`), with `Pawl.Resolve` the *sole* module that may `case` on an
+  slots (`SlotName`), with `Parun.Resolve` the *sole* module that may `case` on an
   `Effect` — executor plus `slotsOf`, the read half of the D4 dataflow lint that
-  equates every printing's slot reads to its declared `targetSpecs`. `Pawl.Target`
+  equates every printing's slot reads to its declared `targetSpecs`. `Parun.Target`
   owns targeting legality (CR 115.4 `AnyTarget`), shared by casting and the CR
   608.2b re-validation. Casting prompts `ChooseTargets`, reject-not-repair, and
   stamps `Object.targets` on the new stack incarnation (reset by `changeZone`, CR
@@ -84,7 +84,7 @@ issue it closes are the record, and no further entries are appended here. See
   `redDeck` give instant speed random-game coverage. Spec and plan kept as
   reference: `docs/superpowers/specs/2026-07-17-m3a-effects-design.md` and
   `docs/superpowers/plans/2026-07-17-m3a-effects.md`.
-- **M3b is complete** (continuous effects: `Pawl.Projection` runs the CR 613
+- **M3b is complete** (continuous effects: `Parun.Projection` runs the CR 613
   single-effect layer fold over a type family — `Timestamp`, `Layer`,
   `Duration`, `Affected`, `Modification`, `ContinuousEffect`, `StaticAbility`,
   `ProjectedCharacteristics` — and `Effect.ModifyTarget` is ONE opcode driving
@@ -99,7 +99,7 @@ issue it closes are the record, and no further entries are appended here. See
   `docs/superpowers/specs/2026-07-18-m3b-continuous-effects-design.md` and
   `docs/superpowers/plans/2026-07-18-m3b-continuous-effects.md`.
 - **M3c is complete** (the CR 613.8 *existence* dependency — the go/no-go for the
-  whole continuous-effects approach, a genuine YES. `Pawl.Projection` folds a full
+  whole continuous-effects approach, a genuine YES. `Parun.Projection` folds a full
   projected **type line** (`cardTypes`, `subtypes`, `rulesTextActive` on
   `ProjectedCharacteristics`) layer by layer, evaluating each effect's affected-set
   against the *partial* projection, so a layer-4 type change is visible to a
@@ -200,7 +200,7 @@ issue it closes are the record, and no further entries are appended here. See
   603). One decision is forced by the gate: Rest in Peace must catch a creature
   killed by a **state-based action**, and `Sba.checkStateBasedActions` is pure —
   so the replacement seam applies **purely** (`changeZone` stays `GameState ->
-  GameState`, consulting a purely-computed rewrite). `Pawl.Event` is the sole
+  GameState`, consulting a purely-computed rewrite). `Parun.Event` is the sole
   `case`-on-`ReplacementEffect`/`TriggerCondition` home (the `Resolve`-for-`Effect`
   move — the closed half reads a *classification*, never the identity). New leaves:
   `ZoneChange`, `ReplacementEffect.RedirectZoneChange`, `TriggeredAbility` /
@@ -260,29 +260,29 @@ issue it closes are the record, and no further entries are appended here. See
   cardToJson ≡ Right` for every card — made progressively load-bearing (P1 value,
   P2 through text, P3 files re-parse and re-render byte-stable), which fails
   loudly the day a closure is smuggled into the card model. A hand-rolled JSON
-  layer ported from `_scratch/scrod` and reconciled to pawl's rules:
-  `Pawl.Type.Decimal` (mantissa/exponent, no `Double`), `Pawl.Type.Json` (scrod's
+  layer ported from `_scratch/scrod` and reconciled to parun's rules:
+  `Parun.Type.Decimal` (mantissa/exponent, no `Double`), `Parun.Type.Json` (scrod's
   seven-newtype split flattened to one `Value` sum; `Object` an ordered assoc list
-  so render is canonical by construction), and `Pawl.Json` (`parse`/`render` via
-  `bytestring`/`parsec`, both new **boot-lib** deps, no `aeson`). `Pawl.Codec` is
+  so render is canonical by construction), and `Parun.Json` (`parse`/`render` via
+  `bytestring`/`parsec`, both new **boot-lib** deps, no `aeson`). `Parun.Codec` is
   the **sole** `Card ⇆ Json` authority — free `xToJson`/`jsonToX` values, no type
   classes — over the transitive closure of `Card`'s fields; casing on an effect's
-  identity there is open-half serialization machinery, exactly as `Pawl.Resolve`
+  identity there is open-half serialization machinery, exactly as `Parun.Resolve`
   may `case` on `Effect`. The §2.12 **tagged-sum discipline** is the central risk
   it retires: P/T and mana are not `Int`, so every sum serializes as a tagged
   object (`{"type":"Literal","value":5}`) and only genuine cardinals become bare
   JSON numbers. **The relocation makes the invariant a build-level fact**: the ~30
   hand-written card values and the decks left the engine library for the test
-  suite's `Pawl.Cards`; `Pawl.Card` keeps only classifications (`isLand`, …),
-  `Pawl.Setup` only mechanism — the closed half can no longer *name* a card, so §1
+  suite's `Parun.Cards`; `Parun.Card` keeps only classifications (`isLand`, …),
+  `Parun.Setup` only mechanism — the closed half can no longer *name* a card, so §1
   is enforced by the module graph, not discipline. **Files are the source of
   truth**: every card renders to a committed `data/cards/<slug>.json`, the
   hand-written `MkCard` literals are **deleted**, and both non-engine consumers
   read the files — both by true `IO` loading. The benchmark loads only the cards
   its decks name; the test suite loads the whole pool once in `main` and threads a
-  `Pawl.Cards.Cards` record into every `tests` tree (the decks and `allPrintings`
+  `Parun.Cards.Cards` record into every `tests` tree (the decks and `allPrintings`
   are functions of it). **The TH shim's named expiry was cashed immediately**: the
-  milestone first shipped a compile-time Template Haskell shim (`Pawl.Cards.Load`
+  milestone first shipped a compile-time Template Haskell shim (`Parun.Cards.Load`
   splicing `Lift`-derived `Printing`s) to keep the fixtures pure without churning
   ~15 files, then — before M4 — converted the test suite to `IO` loading like the
   benchmark and deleted the shim, `TemplateHaskell`, and the per-module `DeriveLift`
@@ -295,7 +295,7 @@ issue it closes are the record, and no further entries are appended here. See
   `head`). Note: the plan's `git grep 'MkCard' == nothing` check is an over-broad
   proxy for "the pool literals are gone" — two pre-existing inline unit-test
   fixtures (synthetic "Some Instant"/"T" cards, no JSON files) correctly remain;
-  `Pawl.Cards` itself names no card literally (it loads them all from disk). Spec
+  `Parun.Cards` itself names no card literally (it loads them all from disk). Spec
   and plan kept as reference:
   `docs/superpowers/specs/2026-07-19-m3.5-cards-as-data-files-design.md` and
   `docs/superpowers/plans/2026-07-19-m3.5-cards-as-data-files.md`.
@@ -310,10 +310,10 @@ issue it closes are the record, and no further entries are appended here. See
   *Phase 1 (behavior-preserving refactor)*: the two parallel `Object` choice-maps
   (`targets`, M3a; `chosenSubtypes`, M3d) unify into one `Object.bindings ::
   Map SlotName Binding` — the risk-register's D4 "named binding slots," generalized
-  when X arrived as the **second customer**. `Pawl.Type.Binding` is a product
+  when X arrived as the **second customer**. `Parun.Type.Binding` is a product
   record (`target`/`subtypes`/`amount`, each `Maybe`) so one slot can carry several
   kinds of choice at once (Magical Hack's slot is both targeted and word-swapped);
-  `Pawl.Binding` holds the logic — projections `targetsOf`/`subtypesOf`/`amountOf`,
+  `Parun.Binding` holds the logic — projections `targetsOf`/`subtypesOf`/`amountOf`,
   the write-site `fromChoices`, and the reserved slot `variableX`. Every reader
   migrated to a projection; the M3a–M3g suite (unchanged) is the regression net,
   green before and after. *Phase 2 (X)*: `Quantity.X` (evaluated by
@@ -330,7 +330,7 @@ issue it closes are the record, and no further entries are appended here. See
   gated at payment, reject-not-repair). The **D4 lint generalizes to the value
   half**: `Resolve.readsX` — a card reads `X` iff it declares `{X}` in its cost —
   with the reserved X slot exempt from the target-slot reads-equal-declares
-  equality. **Invariants preserved**: `Pawl.Resolve` stays the sole home of
+  equality. **Invariants preserved**: `Parun.Resolve` stays the sole home of
   `case effect of`/`case quantity of`; X is a genuine player choice and is
   prompted (never elided). **Deck note**: Blaze joins `redDeck` for random X-cost
   coverage by swapping in for four Goblin Pikers, keeping the deck at 60 (so the
@@ -456,8 +456,8 @@ issue it closes are the record, and no further entries are appended here. See
   `Event.destroy` — so a shield saves a creature from lethal combat damage but never
   from toughness ≤ 0. **Module-cycle discipline:** `Event.destroy` removes a
   permanent from combat by editing `GameState.combat` through the *type* module
-  `Pawl.Type.Combat` (never `Pawl.Combat`, which imports `Pawl.Sba` → `Pawl.Event`
-  and would cycle); `Pawl.Damage` importing `Pawl.Event` is acyclic. New subtype
+  `Parun.Type.Combat` (never `Parun.Combat`, which imports `Parun.Sba` → `Parun.Event`
+  and would cycle); `Parun.Damage` importing `Parun.Event` is acyclic. New subtype
   **`Subtype.Skeleton`**. Two cards (Fog, Drudge Skeletons), Scryfall-verified,
   swapped 4-for-4 into the green and black decks (each stays 60; card-backed
   conservation stays 120 — regeneration keeps the same object, no mint). The
@@ -493,7 +493,7 @@ issue it closes are the record, and no further entries are appended here. See
   round-trip. Gate + falsifier are gameplay-level tests through the cast/resolve
   pipeline (the racing-counters scenario proves a spell can target a spell and that
   the second Cancel fizzles when its target is gone, moved exactly once).
-  `Pawl.Resolve` stays the sole `case effect of` home; `Event` the sole funnel home;
+  `Parun.Resolve` stays the sole `case effect of` home; `Event` the sole funnel home;
   `Target` the sole targeting-legality home. **No new prompt/response** (Cancel
   targets through the existing `ChooseTargets`; countering is unprompted). **Named
   elisions/expiries**: spec §7 carries the list — `Event.counter` is ungated for
@@ -516,7 +516,7 @@ issue it closes are the record, and no further entries are appended here. See
   as Giant Growth — 7d is P/T *switching*), so **no new `Layer` constructor** was
   added and, 7c being purely additive, pre-combining a permanent's counters into
   one net delta and using the object's own timestamp are both unobservable (a
-  theorem, not an elision). New type **`Pawl.Type.CounterKind`** (`PlusOnePlusOne |
+  theorem, not an elision). New type **`Parun.Type.CounterKind`** (`PlusOnePlusOne |
   MinusOneMinusOne`, `Ord` load-bearing as a `Map` key); new **`Object.counters ::
   Map CounterKind Natural`** field — per-incarnation state reset by `changeZone`
   (CR 122.2: counters "cease to exist" on a zone change) and, unlike `damage`, NOT
@@ -546,7 +546,7 @@ issue it closes are the record, and no further entries are appended here. See
   4-for-4 into the green/black decks (each stays 60; card-backed conservation stays
   120 — a counter mints no object), giving the `greenBlack` matchup random counter
   coverage; both cards' JSON joins `allPrintings` for the honesty round-trip.
-  `Pawl.Resolve` stays the sole `case effect of` home; `Pawl.Projection` the sole
+  `Parun.Resolve` stays the sole `case effect of` home; `Parun.Projection` the sole
   `case … Modification` home. **No new prompt/response** (both cards target through
   the existing `ChooseTargets`; putting counters is unprompted, CR 122.6). **Named
   deferred expiries:** spec §9 carries the list — non-P/T counter kinds, a
@@ -566,13 +566,13 @@ issue it closes are the record, and no further entries are appended here. See
   modes': with no Wall on the board Chaos Charm is still castable via its
   damage/haste modes, and casting the damage mode must bind only the `creature`
   slot, never `wall`. The decision proved is that **modality is a shared,
-  Card-free parametric payload** — four new types, `Pawl.Type.ModeIndex`
+  Card-free parametric payload** — four new types, `Parun.Type.ModeIndex`
   (a `Natural` ordinal; CR 608.2c resolution order and CR 700.2d/g's "chosen
   twice"/copy semantics make the ordinal load-bearing, not incidental),
-  `Pawl.Type.ModeSelection` (`ChooseExactly Natural` today, a sum so `ChooseAtLeast`/
-  escalate/pawprint can join later without primitive blindness), `Pawl.Type.Mode`
+  `Parun.Type.ModeSelection` (`ChooseExactly Natural` today, a sum so `ChooseAtLeast`/
+  escalate/pawprint can join later without primitive blindness), `Parun.Type.Mode`
   (one option's own `effects :: Seq (Effect card)` and `targetSpecs :: Map SlotName
-  TargetSpec`), and `Pawl.Type.Modal` (`modes :: Seq (Mode card)` plus the
+  TargetSpec`), and `Parun.Type.Modal` (`modes :: Seq (Mode card)` plus the
   `selection`) — parametric in `card` exactly like `Effect`/`ActivatedAbility`
   (M4c), so activated and triggered abilities can adopt the same payload as a
   **named fast-follow** without a module cycle; only `Card.spell :: Modal Card`
@@ -582,23 +582,23 @@ issue it closes are the record, and no further entries are appended here. See
   `spell`, verified against the existing suite before Chaos Charm's own tests were
   added, plus a structural-then-canonical migration of the 44 pre-existing
   `data/cards/*.json` files through the codec). New reader surface on
-  `Pawl.Card`: `allEffects`/`allTargetSpecs` (whole-card views, e.g. the
+  `Parun.Card`: `allEffects`/`allTargetSpecs` (whole-card views, e.g. the
   X-declaration lint) and the mode-scoped `modeTargetSpecs`/`modesEffects`/
   `modesTargetSpecs`; the **D4 dataflow lint itself moved per-mode** (equality of
   each mode's own read slots against its own declared slots, `Mode.effects`
   against `Mode.targetSpecs`, not a flattened whole-card view). **One new binding slot**: `Binding.modes :: Maybe (Set
-  ModeIndex)`, stored only under the reserved `Pawl.Binding.chosenModes` slot and
+  ModeIndex)`, stored only under the reserved `Parun.Binding.chosenModes` slot and
   read back by `modesOf` (CR 700.2/601.2b — a `Set` because CR 700.2d's "same mode
   twice" is future work, not yet a multiset). **One new prompt/response pair**:
   `Prompt.ChooseModes`/`Response.ChoseModes`, wired through `Replay` (deterministic
   replay picks the lowest-indexed legal modes) and every test-suite prompt
   answerer, including `randomAnswer` (so random games now exercise the modal
-  choice). **Castability**: `Pawl.Cast.fillableModes` (CR 700.2a — a mode is
+  choice). **Castability**: `Parun.Cast.fillableModes` (CR 700.2a — a mode is
   fillable only if every one of its slots has a legal recipient; illegal targets
   exclude the whole mode, never a partial choice) and `targetable` generalized to
   "at least as many modes fillable as the selection demands" (identical to "every
   slot fillable" for a non-modal card, so M3b's Giant Growth falsifier is
-  unchanged). **Resolution**: `Pawl.Resolve.effectsOf`/`resolveSpell` re-scoped to
+  unchanged). **Resolution**: `Parun.Resolve.effectsOf`/`resolveSpell` re-scoped to
   read and re-validate only the *chosen* modes' effects and slots (an unchosen
   mode's effects never resolve, CR 608.2c; its fizzle check per CR 608.2b is
   likewise chosen-modes-only). **New Wall machinery**, the falsifier's own
@@ -612,7 +612,7 @@ issue it closes are the record, and no further entries are appended here. See
   random games — `randomAnswer`'s `ChooseModes` arm now drives real modal choices
   in the random `redRed` matchup (mode 0, "destroy target Wall," is never legal —
   no Wall in any deck — so it offers `{1,2}`).
-  `Pawl.Resolve` stays the sole `case effect of` home; `Pawl.Cast` cases on
+  `Parun.Resolve` stays the sole `case effect of` home; `Parun.Cast` cases on
   `ModeSelection` as an orchestration tag, the same posture it already has for
   timing, never on a card's identity. **Named deferred expiries:** spec §13
   carries the list; those with a live code site are filed under the `elision`
@@ -638,10 +638,10 @@ issue it closes are the record, and no further entries are appended here. See
   trigger-only novelty a spell has no analog for is **CR 603.3c/700.2b**: a modal
   triggered ability is *placed on the stack first*, and only removed after if no
   mode can be legally chosen — where an uncastable modal spell is simply never
-  offered. New machinery: `Pawl.Modal`, a shared Card-free logic module lifting
+  offered. New machinery: `Parun.Modal`, a shared Card-free logic module lifting
   M4g's mode-scoped readers (`allEffects`/`allTargetSpecs`/`modesEffects`/
   `modesTargetSpecs`/`selectionCount`) off `Card.spell` so `Activate`/`Engine`/
-  `Resolve`/`Mana` read any `Modal card` directly, with `Pawl.Card` reduced to
+  `Resolve`/`Mana` read any `Modal card` directly, with `Parun.Card` reduced to
   one-line delegations; `TargetSpec.NonlandPermanentTarget` (CR 109.2/110.4 — a
   battlefield permanent whose projected types exclude Land) plus
   `Target.selfExcludes`/`legalSetsExcluding` (CR "another" — drops the targeting
@@ -764,7 +764,7 @@ its own gate card and spec, landed as it completes. Umbrella:
   The drain is the **narrow single-choice first version of P5's monadic replacement
   engine**, not throwaway — the `copyOnEnter` classification and entry-funnel hook
   are reused, the bespoke settle pass folds into CR 614.12/616 at P5. New
-  types/fields: `Binding.copy`; `Pawl.Binding` reserved slots `copySource`/
+  types/fields: `Binding.copy`; `Parun.Binding` reserved slots `copySource`/
   `asEntersPending` + `copyOf`/`setCopy`/`pendingCopy`/`markPending`/`clearPending`;
   `Card.copyOnEnter :: Bool` (a classification, read by the funnel/drain, never a
   card identity); `Subtype.Shapeshifter`; `Prompt.ChooseCopyTarget` /
@@ -773,8 +773,8 @@ its own gate card and spec, landed as it completes. Umbrella:
   gained `Ord` (to ride a `Binding`). `Card.copyOnEnter` serializes **only when
   True**, so the 44 pre-existing `data/cards/*.json` stay byte-identical; Clone is a
   **blue deterministic fixture** (`data/cards/clone.json`, in `allPrintings` for the
-  honesty round-trip, no random-game deck). `Pawl.Resolve` stays the sole
-  `case`-on-`Effect` home; `Pawl.Projection` the sole `case`-on-`Modification` home;
+  honesty round-trip, no random-game deck). `Parun.Resolve` stays the sole
+  `case`-on-`Effect` home; `Parun.Projection` the sole `case`-on-`Modification` home;
   the copy target is a genuine prompt, never elided. **Named deferred expiries:**
   spec §7 carries the list — static-ability copying, unprojected copiable values,
   ongoing "becomes a copy", copy-spell and copy-token, simultaneous entry of
@@ -855,12 +855,12 @@ its own gate card and spec, landed as it completes. Umbrella:
   would also read as nonblack, so only red proves it). **The gate card that
   is a labeled synthetic**: `synthetic-devoid-drone.json` (`{1}{B}` 2/2,
   Devoid, no other text) — all 26 black-costed devoid creatures on Scryfall
-  carry a rider pawl cannot express (a self-effect such as Slaughter Drone's
-  `{C}: gains deathtouch`, needing a `ModifySelf` opcode pawl has no self
+  carry a rider parun cannot express (a self-effect such as Slaughter Drone's
+  `{C}: gains deathtouch`, needing a `ModifySelf` opcode parun has no self
   slot for; an unbuilt `TriggerCondition` beyond `SelfEnters`, needed by
   Culling Drone/Silent Skimmer/Sky Scourer/Reaver Drone; or menace), and the
   one french-vanilla devoid creature, **Vestige of Emrakul** (`{3}{R}` 3/4,
-  Devoid + Trample), needs nothing pawl lacks but is red-costed, so its
+  Devoid + Trample), needs nothing parun lacks but is red-costed, so its
   colour conflict is unobservable through this phase's black-keyed readers.
   **Expiry:** a `ModifySelf` opcode (or a self slot) makes Slaughter Drone
   encodable, a new `TriggerCondition` makes Culling Drone or Silent Skimmer
@@ -939,7 +939,7 @@ its own gate card and spec, landed as it completes. Umbrella:
   New numeric-tower arms: `Quantity.Star` (CR 208.2's printed `*`, evaluates to
   `Nothing` — notation, not a value), `Quantity.Plus Quantity Quantity`
   (composes `1+*`), `Quantity.Count CountSpec` (new sibling module
-  `Pawl.Type.CountSpec`: `CardTypesInAllGraveyards`, `CardsInYourHand` —
+  `Parun.Type.CountSpec`: `CardTypesInAllGraveyards`, `CardsInYourHand` —
   quarantined, **expires at P9**'s criterion language, same posture as
   `WallTarget`); `Quantity.evaluate` gained a "you" `PlayerId` for
   player-scoped counts; a new `substituteStar` helper replaces `Star` with the
@@ -962,7 +962,7 @@ its own gate card and spec, landed as it completes. Umbrella:
   freezing the number (CR 707.2b's converse). **This pays P2's deferred
   bill**, named there verbatim: *"7b/CDA P/T-setting in copiable values (rides
   P3b, Tarmogoyf)."* **A latent bug closed, and its citation corrected**:
-  `Pawl.Resolve`'s `ModifyTarget` arm had carried a comment since M4a citing
+  `Parun.Resolve`'s `ModifyTarget` arm had carried a comment since M4a citing
   **CR 611.2b** for a freeze it never performed, claiming it was a no-op
   "until X exists" — but 611.2b is the *"for as long as"* duration rule, not
   the freeze rule, and X had existed since M4a, so the stated precondition had
@@ -1114,7 +1114,7 @@ its own gate card and spec, landed as it completes. Umbrella:
   is a token with no printed card, and the death happened at a boundary the scan
   already passed; an engine that picks the order silently, re-derives from print,
   or reads a drained queue fails one of the four. **Types and opcodes**: new
-  `Pawl.Type.GameEvent` (`Moved ZoneChange !ProjectedCharacteristics` /
+  `Parun.Type.GameEvent` (`Moved ZoneChange !ProjectedCharacteristics` /
   `DamageDealt DamageEvent` / `StepBegan Phase PlayerId` — `ZoneChange` and
   `DamageEvent` survive as the payloads they already were, a re-homing, not a
   redesign), `TurnScope` (`EachTurn`/`ControllersTurn`), `PendingTrigger`,
@@ -1131,7 +1131,7 @@ its own gate card and spec, landed as it completes. Umbrella:
   customers — that reuse is why 603.4 was cheap to include); `Card` gains
   `delayedAbilities`; `Effect.Create` grows a `Maybe SlotName`; `CountSpec`
   gains `CreaturesDiedThisTurn` (folds the log and reads `PC.cardTypes`, never
-  `Game.cardOf`; `Pawl.Quantity` still does **not** import `Pawl.Projection`, so
+  `Game.cardOf`; `Parun.Quantity` still does **not** import `Parun.Projection`, so
   the layer-fold recursion hazard stays impossible);
   `Prompt.OrderTriggers`/`Response.OrderedTriggers`. `GameState` gains
   `events`, `scannedThrough`, `damageScannedThrough` and `delayedTriggers`, and
@@ -1243,7 +1243,7 @@ its own gate card and spec, landed as it completes. Umbrella:
   build, hlint clean, `cabal bench` statistically identical to baseline; the
   whole-branch review found **zero Critical and zero Important** code defects and
   confirmed both invariants branch-wide (`TriggerCondition.`/`StateCondition.`
-  appear outside `Pawl.Event`/`Pawl.Codec` nowhere). The umbrella's next phase is
+  appear outside `Parun.Event`/`Parun.Codec` nowhere). The umbrella's next phase is
   **P5** (replacement event coverage + CR 616, subsuming #1);
   **P6 and P7 are now unblocked**, each adding a *reader* of this log rather than
   a mechanism, which is the whole reason P4 preceded them. Spec and plan kept as
@@ -1286,13 +1286,13 @@ its own gate card and spec, landed as it completes. Umbrella:
   loop must re-collect candidates against the CURRENT state on every
   iteration, not decide once from the original candidate list, and it did not
   appear anywhere in the umbrella's own gate-card prediction — this spec added
-  it after the umbrella was written. **Deleted:** `Pawl.Type.Prevention`,
+  it after the umbrella was written. **Deleted:** `Parun.Type.Prevention`,
   `ActivePrevention` (the old shield-only record), `GameState.preventions`,
   `regenerationShields`, `Card.copyOnEnter`, `Engine.drainAsEntersChoices` and
   the `Binding` pending marker it drained, `Event.applyReplacements` /
   `applyPreventions` / `cancels` / `regenerate` / `markCopyOnEnter`,
   `Target.legalCopyTargets`, `Effect.Prevent` / `RegenerateSelf`. **Added:**
-  `Pawl.Replacement` (the CR 616.1 loop, collection, bucketing, `choose`,
+  `Parun.Replacement` (the CR 616.1 loop, collection, bucketing, `choose`,
   `chooserOf`, the entry loop, `legalCopyTargets`'s replacement); six
   `ProposedEvent` arms (`WouldChangeZone` / `WouldEnter` / `WouldDealDamage` /
   `WouldBeDestroyed` / `WouldPutCounters` / `WouldCreateTokens`); six
@@ -1317,10 +1317,10 @@ its own gate card and spec, landed as it completes. Umbrella:
   `clone.json` each with the task introducing `Effect.Replace` /
   `WouldBeDestroyed` / `EntryR AsCopy` — so every task's commit left the suite
   green, never a multi-task migration in flight. (3) **Four internal types the
-  spec's own module inventory did not list** — `Pawl.Type.CandidateId`,
-  `Pawl.Type.ReplacementCandidate` and `Pawl.Type.ReplacementBucket` joined
+  spec's own module inventory did not list** — `Parun.Type.CandidateId`,
+  `Parun.Type.ReplacementCandidate` and `Parun.Type.ReplacementBucket` joined
   `ProposedEvent` under the one-type-per-module rule rather than living as
-  anonymous tuples inside `Pawl.Replacement`. **Two things this note must be
+  anonymous tuples inside `Parun.Replacement`. **Two things this note must be
   honest about, because reviews forced their retraction mid-phase.** CR
   616.1c's dedicated `CopyOnEntry` bucket split is correct but is **not** what
   makes the centerpiece work — on the entering Clone's first iteration,
@@ -1353,7 +1353,7 @@ its own gate card and spec, landed as it completes. Umbrella:
   prevented-triggers) is **updated, not closed** — `source` and `timestamp`
   retire the "no way to report either" blocker, but CR 615.7 needs a
   cross-event allocation the per-event loop shape cannot express, and CR
-  615.13 needs `Pawl.Damage.resolveDamage`'s return type widened to report
+  615.13 needs `Parun.Damage.resolveDamage`'s return type widened to report
   which candidate applied, two different remaining blockers now named instead
   of one unstated one; eleven new issues filed for this phase's own
   deferrals, #68–#78 (ten from the plan's own list plus one — #78 — found
@@ -1376,9 +1376,9 @@ its own gate card and spec, landed as it completes. Umbrella:
 - **M4.5 P6 is complete** (conditional and event durations, GAP-D). A stored
   effect's duration now has a **beginning** as well as an end. `Duration` — the
   printed card-data vocabulary — split from a new runtime-only `Expiry`, and
-  the whole life cycle moved into one module: `Pawl.Expiry` is the **sole home
-  of `case … Expiry`**, the standing `Pawl.Resolve` has over `Effect` and
-  `Pawl.Projection` over `Modification`. **Two gate cards, each falsifying a
+  the whole life cycle moved into one module: `Parun.Expiry` is the **sole home
+  of `case … Expiry`**, the standing `Parun.Resolve` has over `Effect` and
+  `Parun.Projection` over `Modification`. **Two gate cards, each falsifying a
   different fixed point.** **Master Thief** is CR 611.2b's own printed example
   — the rules text names the card — and its three Gatherer rulings *are* three
   of the four tests, verbatim. The load-bearing one is **the latch**: "If
@@ -1397,9 +1397,9 @@ its own gate card and spec, landed as it completes. Umbrella:
   `UntilEndOfTurn` stand-in dies at its own CR 514.2 cleanup, and an expiry
   implemented by scanning P4's event log for a matching `StepBegan` dies *at
   birth*, because the effect is created during an upkeep whose untap step has
-  already happened this turn. **Added:** `Pawl.Type.Expiry`
+  already happened this turn. **Added:** `Parun.Type.Expiry`
   (`AtCleanup | Never | While PlayerId StateCondition | AtTurnOf PlayerId`) and
-  `Pawl.Expiry` (`arm`, `dropAtCleanup`, `dropAtHandoff`, `sweepConditional`);
+  `Parun.Expiry` (`arm`, `dropAtCleanup`, `dropAtHandoff`, `sweepConditional`);
   `Duration.ForAsLongAs`/`UntilYourNextTurn`; `StateCondition.YouControlSource`
   (that vocabulary's third customer, after CR 603.8 state triggers and CR 603.4
   intervening "if"s); `TargetSpec.ArtifactTarget`/`OpponentCreatureTarget`;
@@ -1408,7 +1408,7 @@ its own gate card and spec, landed as it completes. Umbrella:
   `Projection.dropEndOfTurnEffects`, `Event.dropEndOfTurnReplacements` — two
   sweeps that differed only in which module their list lived in, now one
   `dropAtCleanup` over both carriers — and the `duration` field on
-  `ContinuousEffect` and `ActiveReplacement`. **`Pawl.Target` became
+  `ContinuousEffect` and `ActiveReplacement`. **`Parun.Target` became
   source-relative**: `legalRecipients`, `stillLegal` and `legalSets` all take
   the targeting source, because `OpponentCreatureTarget` is the first spec
   whose legal set depends on *who is choosing* (CR 109.5 with CR 613.1b —
@@ -1485,9 +1485,9 @@ its own gate card and spec, landed as it completes. Umbrella:
   it has no test at all), plus #85 from departure (3). #62's cross-turn settle
   is untouched — no test this phase holds a permanent under conditional control
   across an untap step. **Two files were touched beyond the plan's
-  expectations**, worth knowing for the next phase: `Pawl.Mana.subtypeMana`
+  expectations**, worth knowing for the next phase: `Parun.Mana.subtypeMana`
   twice, because every new `Subtype` constructor breaks its exhaustive `case`;
-  and `Pawl.Support`, which gained a shared `continuousEffectAffects` fixture.
+  and `Parun.Support`, which gained a shared `continuousEffectAffects` fixture.
   **Final suite 732/732**, warning-clean on a from-scratch `cabal clean` build,
   `hooky run` clean. `cabal bench`: goldfish 11.6ms, casting 12.6ms, fighting
   12.6ms — issue #66 (pre-existing) still makes all three benchmarks execute
@@ -1505,16 +1505,16 @@ its own gate card and spec, landed as it completes. Umbrella:
   layers a machine for computing an *object's* characteristics; CR 613.10 and CR
   613.11 apply their effects *after* that machine has run. So there is no new
   `Layer`, no new `Modification`, no `Affected` constructor, and
-  `Pawl.Projection` was **read from and never edited** — mechanically proven,
-  not asserted: `git diff --stat 1b5d24a -- Pawl/Projection.hs
-  Pawl/Type/{Layer,Modification,Affected,ContinuousEffect,StaticAbility,Player}.hs`
+  `Parun.Projection` was **read from and never edited** — mechanically proven,
+  not asserted: `git diff --stat 1b5d24a -- Parun/Projection.hs
+  Parun/Type/{Layer,Modification,Affected,ContinuousEffect,StaticAbility,Player}.hs`
   is empty across the phase's twelve commits. The first invariant has the same
   kind of audit from the other side: a tree-wide grep for any `PlayerEffect.`,
-  `PlayerScope.` or `SpellCriterion.` constructor outside `Pawl.PlayerEffect`,
-  `Pawl.Codec` and `Pawl.Type.*` returns nothing, so **`Pawl.PlayerEffect` is
-  the sole rules home of casing on this axis** — the standing that `Pawl.Resolve`
-  has over `Effect`, `Pawl.Projection` over `Modification` and `Pawl.Expiry`
-  over `Expiry`. `Pawl.Resolve` names `AffectPlayers` as an opcode and passes its
+  `PlayerScope.` or `SpellCriterion.` constructor outside `Parun.PlayerEffect`,
+  `Parun.Codec` and `Parun.Type.*` returns nothing, so **`Parun.PlayerEffect` is
+  the sole rules home of casing on this axis** — the standing that `Parun.Resolve`
+  has over `Effect`, `Parun.Projection` over `Modification` and `Parun.Expiry`
+  over `Expiry`. `Parun.Resolve` names `AffectPlayers` as an opcode and passes its
   payload through *without importing the payload's type at all*: the invariant
   is enforced by the import list, not by discipline. **Five gate cards, each
   falsifying a different fixed point.** **Rule of Law** ("each player can't cast
@@ -1550,21 +1550,21 @@ its own gate card and spec, landed as it completes. Umbrella:
   word 'skip' are replacement effects", so they are P5's carrier, not P7's.
   Filed as #98. `Engine.skipsDraw`'s CR 103.7a first-turn skip is a *turn-based
   rule* rather than an effect and correctly stays where it is. **Added:**
-  `Pawl.Type.PlayerEffect` (`CantCastSpells | CantCastMoreThan |
+  `Parun.Type.PlayerEffect` (`CantCastSpells | CantCastMoreThan |
   IncreaseSpellCost | ReduceSpellCost | NoMaximumHandSize` — increase and reduce
   are two constructors, never one signed delta, because CR 601.2f orders them
-  and CR 118.7a restricts only the reduction), `Pawl.Type.PlayerScope`,
-  `Pawl.Type.SpellCriterion`, `Pawl.Type.PlayerStaticAbility` (the printed
-  carrier) and `Pawl.Type.ActivePlayerEffect` (the stored one); `Pawl.PlayerEffect`
+  and CR 118.7a restricts only the reduction), `Parun.Type.PlayerScope`,
+  `Parun.Type.SpellCriterion`, `Parun.Type.PlayerStaticAbility` (the printed
+  carrier) and `Parun.Type.ActivePlayerEffect` (the stored one); `Parun.PlayerEffect`
   (`applying`, `inScope`, `prohibitsCasting`, `castsThisTurn`, `costAdjustments`,
-  `matchesSpell`, `maximumHandSize`, `defaultMaximumHandSize`) and `Pawl.Cost`
+  `matchesSpell`, `maximumHandSize`, `defaultMaximumHandSize`) and `Parun.Cost`
   (`total`, `applyAdjustments`); `Card.playerAbilities`,
   `GameState.playerEffects`, `Effect.AffectPlayers`, `GameEvent.SpellCast`,
   `Event.castOf`, `Subtype.Soldier`; six read sites (`Cast.castable`,
   `Cast.castableWhileSearching`, `Cast.castSpell`, `Engine.discardToHandSize`,
-  `Pawl.Expiry`'s three sweeps, `Pawl.Resolve`); and five card files. **Four
+  `Parun.Expiry`'s three sweeps, `Parun.Resolve`); and five card files. **Four
   deliberate departures from P7's own spec**, refinements rather than drift:
-  (1) `Pawl.Cost` is factored into a stateful `total` and a **pure**
+  (1) `Parun.Cost` is factored into a stateful `total` and a **pure**
   `applyAdjustments :: ([Natural], [Natural]) -> ManaCost -> ManaCost`, which is
   what lets the CR 601.2f order and the CR 118.7a floor be unit-tested without a
   board; (2) the total cost is **canonicalized** — one leading `Generic` symbol,
@@ -1589,8 +1589,8 @@ its own gate card and spec, landed as it completes. Umbrella:
   same generic component. **The phase's transferable lesson is about
   citations, and it is sharper than P5's or P6's.** The *plan itself* shipped
   three classes of rule-citation error, and review caught all three — though
-  the CR 102.1 fix initially landed only in `Pawl.PlayerEffect.inScope` and
-  missed its sibling comment in `Pawl.Type.PlayerScope`, which the final
+  the CR 102.1 fix initially landed only in `Parun.PlayerEffect.inScope` and
+  missed its sibling comment in `Parun.Type.PlayerScope`, which the final
   whole-branch review caught and corrected on its own pass: CR 102.1
   where 102.2 was meant (102.1 defines *player*; 102.2 is the two-player
   opponent rule, and 102.3's teams are exactly why the implementation's
@@ -1621,16 +1621,16 @@ its own gate card and spec, landed as it completes. Umbrella:
   positive control so the negative assertion cannot pass because the Panglacial
   Wurm was never castable at all. **Tracking:** **#3 is closed**, and with it
   git-bug `c5a985d` (GAP-P) and the *modification* half of GAP-Co; **#4** (P8,
-  the cost *payment* half) stays open, and `Pawl.Cost.total` cites it where
+  the cost *payment* half) stays open, and `Parun.Cost.total` cites it where
   additional and alternative costs would land. #38 (`StateCondition`), #39
   (`CountSpec`) and #40 (the `TargetSpec` family) are cited and **not** retired —
-  `Pawl.Type.SpellCriterion` joins that list as a **fourth** member of the family
+  `Parun.Type.SpellCriterion` joins that list as a **fourth** member of the family
   P9's filter language replaces, and says so in its own header. Eleven deferrals
   filed and cited at their code sites: #88 (CR 601.2f's reduction order) and #89
   (`castSpell` computes the total cost against an object still in *hand*, CR
   601.2a having already moved it to the stack) were filed during the phase rather
   than batched at close-out; #90 (activated-ability cost modification has no
-  producer — `Pawl.Activate` hands `AbilityCost.mana` straight to `Pawl.Mana` and
+  producer — `Parun.Activate` hands `AbilityCost.mana` straight to `Parun.Mana` and
   never reaches `Cost.total`), #91 (CR 118.7b–g's colored, colorless, hybrid,
   Phyrexian and snow reductions are unrepresentable behind `ReduceSpellCost`'s
   bare `Natural`), #92 (CR 613.10's *player*-affecting tier — protection from red
@@ -1645,7 +1645,7 @@ its own gate card and spec, landed as it completes. Umbrella:
   because both of P7's prohibitions are quality-free; Void Winnower is 601.3a's
   own worked example), #96 (player-scoped casting and land-play permissions have
   no carrier: `Card.castingPermissions` is object-scoped for Panglacial Wurm, and
-  `Pawl.Action`'s land gate is a `Set PlayerId` where CR 305.2a wants a count),
+  `Parun.Action`'s land gate is a `Set PlayerId` where CR 305.2a wants a count),
   #97 (no card arms a conditional or turn-relative expiry on the stored player
   carrier, the sibling of #84 on the third and last carrier) and #98 (the CR
   614.1b skips correction above). **Final suite 788/788**, warning-clean on a
@@ -1664,7 +1664,7 @@ its own gate card and spec, landed as it completes. Umbrella:
   `docs/superpowers/plans/2026-07-22-p7-player-effects.md`.
 - **M4.5 P8 is complete** (cost generalization and alternative costs, the
   *payment* half of GAP-Co — and with P7's modification half, the whole of
-  GAP-Co is now closed). pawl has **one `Cost` type for spells and activated
+  GAP-Co is now closed). parun has **one `Cost` type for spells and activated
   abilities**: `{mana :: Maybe ManaCost, components :: [CostComponent]}`, where
   the `Maybe` carries CR 118.6's own distinction — `Nothing` is an *unpayable*
   cost ("this card has no mana cost"), `Just (MkManaCost [])` is a payable `{0}`
@@ -1698,24 +1698,24 @@ its own gate card and spec, landed as it completes. Umbrella:
   **object**, not a spell (`SpellCriterion.NoncreatureSpell` is "no creature card
   type on the projection"), so a noncreature *permanent* matches it, and Thalia
   would tax Mindslaver's `{4}` activation to `{5}` — Thalia taxes noncreature
-  **spells**. So `Pawl.Activate` pays the ability's **printed** cost, **#90 was
+  **spells**. So `Parun.Activate` pays the ability's **printed** cost, **#90 was
   commented, not closed** (routing an ability cost through `total` is a
   regression, not a no-op), and a Thalia × Mindslaver regression test in
-  `Pawl.CostSpec` pins it. **Added:** `Pawl.Type.Cost`, `Pawl.Type.CostComponent`
+  `Parun.CostSpec` pins it. **Added:** `Parun.Type.Cost`, `Parun.Type.CostComponent`
   (`TapThis | SacrificeThis | PayLife Natural | Sacrifice Natural
   PermanentCriterion` — `SacrificeThis` is deliberately not `Sacrifice 1 this`,
   because CR 602.1a's self-referential cost offers no choice) and
-  `Pawl.Type.Payment` (`Paid | Unpaid`, the no-boolean-blindness door);
-  `Pawl.Cost` grew from one arithmetic step into the axis's **sole casing home**
+  `Parun.Type.Payment` (`Paid | Unpaid`, the no-boolean-blindness door);
+  `Parun.Cost` grew from one arithmetic step into the axis's **sole casing home**
   — `costsFor`, `total` (now `Cost -> Cost`), `canPay`, `canPayComponent`, `pay`,
   `payComponents`, `payComponent`, `requiresTapSymbol`, `substituteX`,
   `hasVariable`, `matchesCriterion`, `sacrificeCandidates`, `unpayable`,
   `firstOffered`; `Card.additionalCosts` and `Card.alternativeCosts`;
   `PermanentCriterion.PermanentOfSubtype`; `Prompt.ChooseCost`/`ChooseSacrifices`
-  and their responses; `Pawl.Cast.payableCost`; three card files (Greed, Village
-  Rites, Fireblast); and `Pawl.CostSpec`. **Retired:** `Pawl.Type.AbilityCost`,
-  `Pawl.Type.AdditionalCost`, `Pawl.Cast.costOf`,
-  `Pawl.Activate.canPayAdditional`/`payAdditional`. **Six deliberate departures
+  and their responses; `Parun.Cast.payableCost`; three card files (Greed, Village
+  Rites, Fireblast); and `Parun.CostSpec`. **Retired:** `Parun.Type.AbilityCost`,
+  `Parun.Type.AdditionalCost`, `Parun.Cast.costOf`,
+  `Parun.Activate.canPayAdditional`/`payAdditional`. **Six deliberate departures
   from the spec:** (1) the correction above — ability costs are paid at printed
   value, #90 commented; (2) `Cost.pay` is **transactional** — it captures the
   entry state and restores it on `Unpaid`, because it spends mana and pays
@@ -1726,7 +1726,7 @@ its own gate card and spec, landed as it completes. Umbrella:
   nine `ChooseCost` fallback sites one answer instead of nine copies; (4)
   `PermanentCriterion` is matched at **two** sites — `Cost.matchesCriterion`
   alongside `Replacement.matchesPermanent` — because sharing would make
-  `Pawl.Cost` import `Pawl.Replacement` and collide with #72's queued CR 614.12b
+  `Parun.Cost` import `Parun.Replacement` and collide with #72's queued CR 614.12b
   fix (filed as #111); (5) `Cost.costsFor` arrives whole and grows twice rather
   than surviving as a discarded `Cast.costOf` intermediate; (6)
   `Cast.payableCost` is a named predicate, not three copies of the same
@@ -1763,11 +1763,11 @@ its own gate card and spec, landed as it completes. Umbrella:
   `docs/superpowers/plans/2026-07-22-p8-cost-generalization.md`.
 - **M4.5 P9 is complete** (the target-filter predicate language, GAP-F). The
   decision it proves: **one first-order, non-recursive predicate language,
-  `Pawl.Type.Filter`, subsumes the whole hand-carved classification family** —
-  `Pawl.Type.TargetSpec`'s per-card variants, `CardCriterion`,
+  `Parun.Type.Filter`, subsumes the whole hand-carved classification family** —
+  `Parun.Type.TargetSpec`'s per-card variants, `CardCriterion`,
   `PermanentCriterion`, `SpellCriterion`, and `Affected`'s dynamic sets — and
   does it across BOTH projected (battlefield/stack) and printed (off-battlefield)
-  subjects through one identity-blind evaluator, `Pawl.Filter.matches ::
+  subjects through one identity-blind evaluator, `Parun.Filter.matches ::
   Context -> View -> Filter -> Bool`. `Filter` (`HasCardType`, `HasSupertype`,
   `HasColor`, `HasSubtype`, `PowerAtLeast Integer`, `ControlledBy
   PlayerRelation`, plus `And`/`Or`/`Not`) cases only on characteristics, never
@@ -1800,16 +1800,16 @@ its own gate card and spec, landed as it completes. Umbrella:
   execution, since `opalescence.json` is a live producer and its "each other"
   self-exclusion test (`ProjectionSpec.hs`, "Opalescence is not itself a
   creature") would have regressed had the exclusion been elided. **Added:**
-  `Pawl.Type.Filter`, `Pawl.Type.Pool`, `Pawl.Type.Exclusion`,
-  `Pawl.Type.PlayerRelation`; the `Pawl.Filter` evaluator (`View`, `Context`,
+  `Parun.Type.Filter`, `Parun.Type.Pool`, `Parun.Type.Exclusion`,
+  `Parun.Type.PlayerRelation`; the `Parun.Filter` evaluator (`View`, `Context`,
   `matches`); `Projection.viewOfObject`/`viewOfCard`. **Retired outright** (no
-  compat shims): `Pawl.Type.CardCriterion`, `Pawl.Type.PermanentCriterion`,
-  `Pawl.Type.SpellCriterion`, and the old per-card `TargetSpec` variants
+  compat shims): `Parun.Type.CardCriterion`, `Parun.Type.PermanentCriterion`,
+  `Parun.Type.SpellCriterion`, and the old per-card `TargetSpec` variants
   (`NonblackCreatureTarget`, `WallTarget`, `ArtifactTarget`,
   `OpponentCreatureTarget`, …) and `Affected` constructors (`AllCreatures`,
   `AllLands`, `AllNonbasicLands`, `CreaturesOfColor`, `OtherNonAuraEnchantments`).
   **Regeneration** (Terror's/Reprisal's "It can't be regenerated" clause) is out
-  of scope — pawl has no regeneration shield yet — filed and cited at the gate
+  of scope — parun has no regeneration shield yet — filed and cited at the gate
   test (#113), the same precedent P8's cross-checks set. **#38/#39
   re-scoped, not closed**: `StateCondition` and `CountSpec` keep a second
   concept, scope + aggregation + threshold comparison, that `Filter` does not
@@ -1845,9 +1845,9 @@ its own gate card and spec, landed as it completes. Umbrella:
   is a bidirectional player counter** — the same
   `PlayerCounterKind` that poison uses is gained by an effect and spent by a
   cost, so no separate "energy pool" type was needed. **Added:**
-  `Pawl.Type.PlayerCounterKind` (`Poison | Energy`, distinct from
-  `Pawl.Type.CounterKind` — CR 122.1's marker sits on either "an object or
-  player", and pawl keeps those two placements as separate types rather than
+  `Parun.Type.PlayerCounterKind` (`Poison | Energy`, distinct from
+  `Parun.Type.CounterKind` — CR 122.1's marker sits on either "an object or
+  player", and parun keeps those two placements as separate types rather than
   one shared vocabulary); `Player.counters :: Map PlayerCounterKind Natural`;
   `Keyword.Infect` (702.90, ordered after
   `Fear`/before `Devoid`); `DamageEvent.dealtByInfect`; `Effect.GainPlayerCounters
@@ -1856,7 +1856,7 @@ its own gate card and spec, landed as it completes. Umbrella:
   `CostComponent.PayEnergy Natural`; `TriggerCondition.SelfDealsCombatDamageToPlayer`
   (CR 510.1b/510.2, filtered from the existing `DamageDealt` event log, no new
   recording); and the poison-at-ten SBA (CR 704.5c) beside the life-total-loss
-  SBA in `Pawl.Sba`. **One incidental fix surfaced by Longtusk Cub's own
+  SBA in `Parun.Sba`. **One incidental fix surfaced by Longtusk Cub's own
   activated ability:** `Activate.activateAbility` now binds the source
   permanent under the reserved self slot before resolving (CR 113.7), so "put
   a +1/+1 counter on Longtusk Cub" resolves as a slot read exactly as
@@ -1882,7 +1882,7 @@ its own gate card and spec, landed as it completes. Umbrella:
   the battlefield, you become the monarch. When Palace Jailer enters the
   battlefield, exile target creature an opponent controls until an opponent
   becomes the monarch.") and a **labeled synthetic emblem source**
-  (`S.anthemEmblemCard`, Support.hs — pawl models no planeswalker or the Ring
+  (`S.anthemEmblemCard`, Support.hs — parun models no planeswalker or the Ring
   to mint a real one; #125). The decisions it proves: **the command zone is a
   seventh zone whose residents' static abilities function *from* the zone,
   off the battlefield** — the projection's uniform static-ability walk grows
@@ -1911,14 +1911,14 @@ its own gate card and spec, landed as it completes. Umbrella:
   `GameState.exiledUntilMonarch`; `Source.OfEmblem Card`,
   `Source.OfInherentTrigger PlayerId (TriggeredAbility Card)`;
   `Effect.CreateEmblem Card`, `Effect.BecomeMonarch MonarchTarget`,
-  `Effect.ExileUntilMonarch`; `Pawl.Type.MonarchTarget` (`TheController` |
+  `Effect.ExileUntilMonarch`; `Parun.Type.MonarchTarget` (`TheController` |
   `ControllerOfSource`, CR 725.2's two distinct "who becomes the monarch"
-  readings — pawl has no general player-spec for effects yet, so this is the
+  readings — parun has no general player-spec for effects yet, so this is the
   minimal two-constructor shape the phase needs); `GameEvent.BecameMonarch
   PlayerId`; `TriggerCondition.CreatureDealtCombatDamageToMonarch` (not
   bearer-scoped, unlike P10's `SelfDealsCombatDamageToPlayer` — it matches
   any creature whose combat damage recipient is the current monarch, riding
-  P4's existing `DamageDealt` event history); `Pawl.Monarch` (the inherent
+  P4's existing `DamageDealt` event history); `Parun.Monarch` (the inherent
   trigger scanner and placement, and the exile-return sweep); and the
   projection's command-zone gather pass plus a source's-controller
   perspective for `Projection.affects` (the emblem's anthem is the first
@@ -1956,7 +1956,7 @@ its own gate card and spec, landed as it completes. Umbrella:
   makes bob's action/mode/target choices (and, in a sibling test, bob's combat
   attackers, CR 723.5) for bob's turn, and control lapses at the following turn
   boundary. The decisions it proves: **723 is an indirection, already built** —
-  the substrate (`Pawl.Type.Decider`, `Decide.deciderFor`, `pendingControl`/
+  the substrate (`Parun.Type.Decider`, `Decide.deciderFor`, `pendingControl`/
   `activeControl`, `Effect.ControlPlayerNextTurn`, the `handoffTurn` promotion)
   needed no change; M5a adds proof and edges, not machinery. The three edges:
   **723.1a** — player-controlling effects overwrite, last created wins, because a
@@ -2017,7 +2017,7 @@ its own gate card and spec, landed as it completes. Umbrella:
   stack field. Its gate is a 2-level nested run plus a termination guard
   (`runGamePure` would simply not return if the recursion looped). CR 729.1a's
   isolation means a subgame's *internal* choices leave no trace in the parent
-  `GameState` — but the interpreter **transcript** (`Pawl.Replay.record`'s
+  `GameState` — but the interpreter **transcript** (`Parun.Replay.record`'s
   `[Response]` log) *is* a top-level observable, and it discriminates nesting
   depth: each level's setup (`subgameStateFrom` → `startGameFromCards`) and
   `playSubgame`'s CR 729.5 funnel-back each shuffle every player's library once,
@@ -2067,7 +2067,7 @@ its own gate card and spec, landed as it completes. Umbrella:
 - **Mulligans (CR 103.5) are implemented** (issue-driven gap closure #141, not an
   M5 phase; surfaced by M5c's whole-branch review, which found `Setup.newGame` and
   `Setup.startGameFromCards` both drew an unconditional seven-card opening hand with
-  no mulligan step). **What it establishes:** a new `Pawl.Mulligan` module owns the
+  no mulligan step). **What it establishes:** a new `Parun.Mulligan` module owns the
   whole CR 103.5 process behind one entry point, `openingHands :: [PlayerId] ->
   Game ()`, which `Setup.newGame` (main game) and `Setup.startGameFromCards`
   (restart CR 727 + subgames CR 729) both call — so the London mulligan lands once
@@ -2086,14 +2086,14 @@ its own gate card and spec, landed as it completes. Umbrella:
   field: no in-game effect asks how many mulligans a player took. **Falls out for
   free:** the CR 727.3 / 729.3 short-deck loss still fires "regardless of any
   mulligans," because a short library sets `drewFromEmpty` on the initial draw and
-  that flag survives the whole loop. **Added:** `Pawl.Type.MulliganDecision`
+  that flag survives the whole loop. **Added:** `Parun.Type.MulliganDecision`
   (`Mulligan | Keep`, a sum type — no boolean blindness); two prompts
   `Prompt.DeclareMulligan` and `Prompt.Bottom` (each carrying a `Decider`, so CR 723
   is satisfied for free — at setup `activeControl` is `Nothing`) with their
-  `Response` mirrors and `Replay` encode/decode/defaultAnswer arms; `Pawl.Mulligan`
+  `Response` mirrors and `Replay` encode/decode/defaultAnswer arms; `Parun.Mulligan`
   (`openingHand`, `shuffleLibrary` — both moved out of `Setup` to break the import
   cycle one-way — and the `openingHands`/`mulliganRounds`/`takeMulligan` loop);
-  `Pawl.MulliganSpec` (nine cases, including teeth-verified proofs that a chosen
+  `Parun.MulliganSpec` (nine cases, including teeth-verified proofs that a chosen
   bottom *order* is honored and that a kept player is not re-asked). **Deferred:**
   CR 103.5c's multiplayer/Brawl free first mulligan (#148, `area:multiplayer`);
   CR 103.6 opening-hand actions — Leyline, Gemstone Caverns (#149, card-driven);
@@ -2109,10 +2109,10 @@ its own gate card and spec, landed as it completes. Umbrella:
   wholesale, and a single-constructor `Condition = MkCondition Count Comparison
   Quantity` compares a count to a `Quantity` threshold. **The load-bearing
   decision it proved:** a count can read the CR 613 layer-system projection
-  without a module cycle or non-termination. `Pawl.Count` owns the fold,
+  without a module cycle or non-termination. `Parun.Count` owns the fold,
   parameterized by an injected `ViewOf = ObjectId -> Maybe Filter.View`, so it
-  never imports `Pawl.Projection` (which imports `Pawl.Quantity`, which imports
-  `Pawl.Count`); inside the layer fold, `Projection.viewUpTo` supplies candidates
+  never imports `Parun.Projection` (which imports `Parun.Quantity`, which imports
+  `Parun.Count`); inside the layer fold, `Projection.viewUpTo` supplies candidates
   projected through the layers **already applied** (`projectUpTo bound =
   projectWith (< bound)`), so a count at layer L sees `< L`, a nested count at
   K < L sees `< K`, the bound strictly decreases and `Layer` is finite —
@@ -2136,11 +2136,11 @@ its own gate card and spec, landed as it completes. Umbrella:
   controller (CR 109.5, `applyModification` builds its context from the gathered
   candidate's `gSource`), while a characteristic-defining ability keeps the
   object's own controller (CR 604.3a(3), `applyCharacteristicPT`). **Added:**
-  `Pawl.Type.{Count,Scope,PlayerRef,EventShape,Aggregation,Comparison,Condition}`,
-  `Pawl.Count`, `Pawl.Condition`, `Projection.{projectWith,projectUpTo,viewUpTo,
+  `Parun.Type.{Count,Scope,PlayerRef,EventShape,Aggregation,Comparison,Condition}`,
+  `Parun.Count`, `Parun.Condition`, `Projection.{projectWith,projectUpTo,viewUpTo,
   fullView}`, `Filter.IsSource` + the two-field `Filter.Context`, and the
-  `Subtype` pair Nightmare/Horse; **deleted:** `Pawl.Type.StateCondition`,
-  `Pawl.Type.CountSpec`, `Event.stateHolds`, `Quantity.{countOf,
+  `Subtype` pair Nightmare/Horse; **deleted:** `Parun.Type.StateCondition`,
+  `Parun.Type.CountSpec`, `Event.stateHolds`, `Quantity.{countOf,
   typesInAllGraveyards,died}`. Suite 952 → 984. **Deferred:** the CR 613.8
   approximation (#157); `Comparison.AtLeast`/`AtMost` have no producer, awaiting
   the first nonzero threshold, which likely also forces a conditional `Effect`
@@ -2230,7 +2230,7 @@ its own gate card and spec, landed as it completes. Umbrella:
     milestone's one **live** rules divergence, now on the record: the CR
     507.1/703.4h defending-player choice does arise when the active player has
     departed — their opponents are still in the game, so there is a real choice
-    among them — and pawl resolves it silently as "nobody defends" instead of
+    among them — and parun resolves it silently as "nobody defends" instead of
     handing it to the next seat. The divergence is **unobservable, not
     vacuous**: CR 506.2's first sentence makes the attacking player the active
     player and CR 800.4a leaves a departed player controlling no creature, so a
@@ -2256,7 +2256,7 @@ its own gate card and spec, landed as it completes. Umbrella:
   *set*; `PlayerEffect.inScope` and `Filter.matches`'s `ControlledBy` arm each
   test one candidate at a time, which is why neither had a set size to get
   wrong.) The *control flow* around a departure was two-player-shaped in four
-  concentrated places, which is what M5.6 closes. `Pawl.Type.Result` is deliberately **not** widened —
+  concentrated places, which is what M5.6 closes. `Parun.Type.Result` is deliberately **not** widened —
   CR 104.1/104.2a/104.4a give a free-for-all exactly one outcome, and the
   per-player outcome already lives in `Player.status`. CR 801's limited range of
   influence is never used and no field exists for it — every rule under it is
@@ -2280,15 +2280,15 @@ its own gate card and spec, landed as it completes. Umbrella:
   count nor CR 103.5c's free allowance, and the declaration still follows it.
   The window runs BEFORE the hand-size read, which is load-bearing: an action
   that empties the hand makes the declaration a forced keep under CR 103.5's
-  final sentence. **The structural finding:** `Pawl.Resolve` sits ABOVE
-  `Pawl.Mulligan` (`Effect.RestartGame` → `Setup.restartGame` →
+  final sentence. **The structural finding:** `Parun.Resolve` sits ABOVE
+  `Parun.Mulligan` (`Effect.RestartGame` → `Setup.restartGame` →
   `startGameFromCards` → `openingHands`), and that cycle is a fact about the
   rules rather than the layout — an opcode restarts a game, a game start draws
   opening hands, and drawing opening hands performs opcodes. The effect
-  performer is therefore a **parameter**, `Pawl.Type.MulliganPerformer`, threaded
+  performer is therefore a **parameter**, `Parun.Type.MulliganPerformer`, threaded
   through the four setup entry points; the `resolveSpellWith runSubgame`
   precedent, with no default, because "no mulligan performer" is not a real
-  state of the world (whereas `Resolve.noSubgame` is). `Pawl.Mulligan` mentions
+  state of the world (whereas `Resolve.noSubgame` is). `Parun.Mulligan` mentions
   `Effect` but never cases on one: the candidate list is a classification (does
   this hand card declare an action?), and the payload is handed to the performer
   opaquely. **Added:** `Effect.ExileHandThenDraw` (one fused opcode — "that
@@ -2299,7 +2299,7 @@ its own gate card and spec, landed as it completes. Umbrella:
   treatment so all 86 committed card files stayed byte-identical;
   `Prompt.MulliganAction` + `Response.TookMulliganAction` + their `Replay` arms;
   `Mulligan.actionsFor` and `Mulligan.mulliganWindow`;
-  `data/cards/serum-powder.json`; nine `Pawl.MulliganSpec` cases. **Falls out
+  `data/cards/serum-powder.json`; nine `Parun.MulliganSpec` cases. **Falls out
   for free:** the CR 727.3 / 729.3 short-deck loss fires through the action too,
   because the redraw is the ordinary `Event.drawCard` funnel. Suite 1109 → 1124.
   **Deferred:** a printing declaring two CR 103.5b actions (#183, card-driven);
@@ -2317,7 +2317,7 @@ its own gate card and spec, landed as it completes. Umbrella:
   diverge exactly where M5.6b made them diverge: with CR 103.5c's free first
   mulligan, a player at three seats who has taken one mulligan bottoms **zero**
   cards, not one, and an answerer sees only the prompt payload, never the
-  `GameState`. The payload is now `Pawl.Type.MulliganOffer`, a record of
+  `GameState`. The payload is now `Parun.Type.MulliganOffer`, a record of
   `taken` and `bottomCount` — a record rather than two adjacent `Natural`s,
   which would be swappable in silence at the construction site and misreadable
   at every answerer. **The drift guard is the real win:** `Mulligan.offerFor`
@@ -2330,7 +2330,7 @@ its own gate card and spec, landed as it completes. Umbrella:
   quality of the information supplied, which is why it was filed rather than
   folded into M5.6b. **Cheaper than the issue estimated:** it predicted a touch
   of every exhaustive `Prompt` answerer, but 16 of the 24 sites match with
-  `Prompt.DeclareMulligan {}` and are arity-agnostic, so `Pawl.Support` and
+  `Prompt.DeclareMulligan {}` and are arity-agnostic, so `Parun.Support` and
   `source/benchmark/Main.hs` did not change at all; only eight binding sites
   did. Suite 1124 → 1125, the new case pinning that three seats and two seats
   agree on `taken` at every step and disagree on the cost at every step.
@@ -2363,7 +2363,7 @@ its own gate card and spec, landed as it completes. Umbrella:
   arms; `Mulligan.handWindow` (the CR 103.5b loop generalized over the card field
   it reads and the prompt channel it offers) and `Mulligan.openingHandActions`;
   `data/cards/leyline-of-the-void.json`. **Renamed:**
-  `Pawl.Type.MulliganPerformer` → `HandActionPerformer` and
+  `Parun.Type.MulliganPerformer` → `HandActionPerformer` and
   `Resolve.performMulliganAction` → `performHandAction`, since CR 103.6's window
   is explicitly not a mulligan and the type was one day old with every site
   compiler-enforced. Suite 1125 → 1140. **Deferred:** CR 103.6b's reveal, which
@@ -2402,12 +2402,12 @@ its own gate card and spec, landed as it completes. Umbrella:
     target-spec seam is not single: `Card.allTargetSpecs`/`modesTargetSpecs`
     serve most consumers, but `Target.fillableModes` and the D4 lint reach past
     them to `Mode.targetSpecs` directly — merging the enchant slot in only
-    `Pawl.Card` would have left an Aura with no legal creature **castable**,
+    `Parun.Card` would have left an Aura with no legal creature **castable**,
     then countered on resolution for lacking one, when CR 601.2c means it
     could never have been cast at all — so `fillableModes` grew an extra-slots
     parameter and castability had to be taught the enchant slot separately
     from targeting. Second, an Aura spell is the first permanent spell in this
-    pool that can fizzle: `Pawl.Stack` previously sent every permanent spell to
+    pool that can fizzle: `Parun.Stack` previously sent every permanent spell to
     the battlefield with no target check at all, so `Resolve.targetsAllIllegal`
     was extracted and consulted before an Aura enters (CR 608.2b), with
     `Event.changeZoneAttaching` doing the entry-attached half of CR 303.4 when
@@ -2417,7 +2417,7 @@ its own gate card and spec, landed as it completes. Umbrella:
     that buries the creature still judges the Aura against a state where that
     creature existed; the tests pin both passes deliberately. No new opcode.
     Added: `Subtype.Aura`, `Card.enchant`, `Object.attachedTo`,
-    `Affected.Attached`, `Event.changeZoneAttaching`, `Pawl.Stack`'s Aura
+    `Affected.Attached`, `Event.changeZoneAttaching`, `Parun.Stack`'s Aura
     branch, CR 704.5m in `Sba.fallsOff`. Suite 1140 → 1153. Deferred:
     `Attach`/CR 303.4j, no opcode moves an Aura already on the battlefield
     (#187); CR 303.4f/g/i, an Aura entering other than by resolving as an Aura
@@ -2479,7 +2479,7 @@ its own gate card and spec, landed as it completes. Umbrella:
     rewritten to state that instead of forward-referencing this phase. The
     synthetic steal fixture in `CombatSpec` — a hand-built `Effect.GainControl`
     standing in for a card that could steal a creature without granting haste
-    — was retired for Control Magic itself, closing #33. `Pawl.Departure`'s two
+    — was retired for Control Magic itself, closing #33. `Parun.Departure`'s two
     CR 800.4a "empty by construction" proofs, which named `controllerOf`'s old
     shape and `Modification`'s old single control-construction-site as their
     premises, were **re-derived, not merely reworded**: both conclusions
@@ -2496,7 +2496,7 @@ its own gate card and spec, landed as it completes. Umbrella:
     `CardSpec` now asserts no card's `Effect.ModifyTarget` carries a control
     modification (`Projection.layer modification == Layer.Control`, asked as a
     classification so the case on `Modification` stays inside
-    `Pawl.Projection`) — closing the gap between "no card does this" being
+    `Parun.Projection`) — closing the gap between "no card does this" being
     true by luck and true by enforcement — with one residual, unreachable
     case left open: a *stored* `SetControllerToSource` that only card JSON
     (not gameplay) could author is not ended by CR 800.4a's second clause

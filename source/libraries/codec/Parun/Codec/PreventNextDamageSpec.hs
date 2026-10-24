@@ -1,0 +1,103 @@
+module Parun.Codec.PreventNextDamageSpec where
+
+import qualified Data.Sequence as Seq
+import qualified Data.Text as Text
+import qualified Parun.Codec.PreventNextDamage as PreventNextDamage
+import qualified Parun.JsonCodec.Codec as Codec
+import qualified Parun.JsonCodec.Common as Common
+import qualified Parun.Spec as Spec
+import qualified Parun.Types.DamageKind as DamageKind
+import qualified Parun.Types.Duration as Duration
+import qualified Parun.Types.Filter as Filter
+import qualified Parun.Types.ObjectRef as ObjectRef
+import qualified Parun.Types.PlayerRelation as PlayerRelation
+import qualified Parun.Types.PreventNextDamage as PreventNextDamage
+import qualified Parun.Types.Quantity as Quantity
+import qualified Parun.Types.SlotName as SlotName
+
+-- | The @effect@ parameter is instantiated at 'Text.Text' rather than at
+-- 'Parun.Types.Effect.Effect': the record is parametric in it precisely so that
+-- neither module names the other, and a codec round trip proves the shape at any
+-- type. Parun.Codec.EffectSpec covers the real instantiation.
+codec :: Codec.Codec (PreventNextDamage.PreventNextDamage Text.Text)
+codec = PreventNextDamage.codec Common.text
+
+spec :: (Monad m, Monad n) => Spec.Spec m n -> n ()
+spec s = Spec.describe s "Parun.Codec.PreventNextDamage" $ do
+  -- CR 615.7's shield naming no kind and carrying no CR 615.5 clause, which is
+  -- Mending Hands: both optional keys are elided rather than written out.
+  Spec.it s "MkPreventNextDamage, kind and riders elided" $
+    Common.assertCodec
+      s
+      codec
+      ( PreventNextDamage.MkPreventNextDamage
+          { PreventNextDamage.duration = Duration.UntilEndOfTurn,
+            PreventNextDamage.kind = Nothing,
+            PreventNextDamage.ref = Just (ObjectRef.InSlot (SlotName.MkSlotName (Text.pack "target"))),
+            PreventNextDamage.whatRecipient = Nothing,
+            PreventNextDamage.whoRecipient = Nothing,
+            PreventNextDamage.chosenSource = Nothing,
+            PreventNextDamage.quantity = Quantity.Literal 4,
+            PreventNextDamage.riders = Seq.empty
+          }
+      )
+      " {\"duration\":{\"type\":\"UntilEndOfTurn\"},\"ref\":{\"type\":\"InSlot\",\"value\":\"target\"},\"quantity\":{\"type\":\"Literal\",\"value\":4}} "
+  -- Decorated Griffin's "combat" and Test of Faith's CR 615.5 additional effect,
+  -- together.
+  Spec.it s "MkPreventNextDamage, kind and riders written" $
+    Common.assertCodec
+      s
+      codec
+      ( PreventNextDamage.MkPreventNextDamage
+          { PreventNextDamage.duration = Duration.UntilEndOfTurn,
+            PreventNextDamage.kind = Just DamageKind.Combat,
+            PreventNextDamage.ref = Just (ObjectRef.InSlot (SlotName.MkSlotName (Text.pack "target"))),
+            PreventNextDamage.whatRecipient = Nothing,
+            PreventNextDamage.whoRecipient = Nothing,
+            PreventNextDamage.chosenSource = Nothing,
+            PreventNextDamage.quantity = Quantity.Literal 3,
+            PreventNextDamage.riders = Seq.singleton (Text.pack "a rider")
+          }
+      )
+      " {\"duration\":{\"type\":\"UntilEndOfTurn\"},\"kind\":{\"type\":\"Combat\"},\"ref\":{\"type\":\"InSlot\",\"value\":\"target\"},\"quantity\":{\"type\":\"Literal\",\"value\":3},\"riders\":[\"a rider\"]} "
+  -- CR 609.7a's "by a source of your choice", which is Healing Grace: the key is
+  -- WRITTEN and its Filter is the trivial one, since the card names no property
+  -- the chosen source must have. Elided and present-but-trivial are different
+  -- shields, so the round trip has to keep them apart.
+  Spec.it s "MkPreventNextDamage, CR 609.7a's chosen source" $
+    Common.assertCodec
+      s
+      codec
+      ( PreventNextDamage.MkPreventNextDamage
+          { PreventNextDamage.duration = Duration.UntilEndOfTurn,
+            PreventNextDamage.kind = Nothing,
+            PreventNextDamage.ref = Just (ObjectRef.InSlot (SlotName.MkSlotName (Text.pack "target"))),
+            PreventNextDamage.whatRecipient = Nothing,
+            PreventNextDamage.whoRecipient = Nothing,
+            PreventNextDamage.chosenSource = Just (Filter.And []),
+            PreventNextDamage.quantity = Quantity.Literal 3,
+            PreventNextDamage.riders = Seq.empty
+          }
+      )
+      " {\"duration\":{\"type\":\"UntilEndOfTurn\"},\"ref\":{\"type\":\"InSlot\",\"value\":\"target\"},\"chosenSource\":{\"type\":\"And\",\"value\":[]},\"quantity\":{\"type\":\"Literal\",\"value\":3}} "
+  -- Divine Deflection's shield, which names no ref at all: the recipients are
+  -- DESCRIBED (CR 611.2c) rather than named by the resolution, so both printed
+  -- halves are written and "ref" is absent -- the shape that decodes to one
+  -- shared CR 615.7 pool instead of one shield per recipient.
+  Spec.it s "MkPreventNextDamage, a described recipient side and no ref" $
+    Common.assertCodec
+      s
+      codec
+      ( PreventNextDamage.MkPreventNextDamage
+          { PreventNextDamage.duration = Duration.UntilEndOfTurn,
+            PreventNextDamage.kind = Nothing,
+            PreventNextDamage.ref = Nothing,
+            PreventNextDamage.whatRecipient = Just (Filter.ControlledBy PlayerRelation.You),
+            PreventNextDamage.whoRecipient = Just PlayerRelation.You,
+            PreventNextDamage.chosenSource = Nothing,
+            PreventNextDamage.quantity = Quantity.Literal 3,
+            PreventNextDamage.riders = Seq.empty
+          }
+      )
+      " {\"duration\":{\"type\":\"UntilEndOfTurn\"},\"whatRecipient\":{\"type\":\"ControlledBy\",\"value\":{\"type\":\"You\"}},\"whoRecipient\":{\"type\":\"You\"},\"quantity\":{\"type\":\"Literal\",\"value\":3}} "
+  Spec.it s "has a schema" $ Common.assertHasSchema s codec

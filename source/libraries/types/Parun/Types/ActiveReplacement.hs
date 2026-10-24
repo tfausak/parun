@@ -1,0 +1,133 @@
+module Parun.Types.ActiveReplacement where
+
+import qualified Data.Map.Strict as Map
+import qualified Data.Set as Set
+import qualified Parun.Types.Card as Card
+import qualified Parun.Types.Condition as Condition
+import qualified Parun.Types.Effect as Effect
+import qualified Parun.Types.Expiry as Expiry
+import qualified Parun.Types.GrantedAbility as GrantedAbility
+import qualified Parun.Types.ObjectId as ObjectId
+import qualified Parun.Types.PlayerId as PlayerId
+import qualified Parun.Types.PreventionRider as PreventionRider
+import qualified Parun.Types.ReplacementEffect as ReplacementEffect
+import qualified Parun.Types.ReplacementOrigin as ReplacementOrigin
+import qualified Parun.Types.SlotName as SlotName
+import qualified Parun.Types.Timestamp as Timestamp
+import qualified Parun.Types.Uses as Uses
+
+-- | CR 614.3 / 615.3: a floating, resolution-generated replacement effect, held in
+-- GameState.replacements. The event-pipeline analog of ContinuousEffect: the
+-- projection re-derives a permanent's static replacement abilities live, while
+-- these are stored because the object that made them may be long gone.
+--
+-- `expiry` decides when a sweep drops it (Parun.Engine.Expiry; CR 514.2). Both
+-- of the durations that need a producer here have one, run end to end by
+-- Parun.ExpirySpec: CR 611.2a's turn-relative expiry by Dovin, Hand of Control's
+-- -1, and CR 611.2b's conditional one by Old Fat Spider Can't See Me's chapter
+-- II, whose shield lasts for as long as that Saga is on the battlefield.
+-- `uses` is CR 614.3's used-up count, and the
+-- prevention shields are the rows that do not use it: a CR 615.7 shield's
+-- remaining amount rides DamageRewrite.PreventNext instead, because 615.7 counts
+-- damage where this field counts applications, and an unbounded one (CR 615.3)
+-- has nothing to count at all.
+--
+-- CR 615.7's multi-source choice is asked over
+-- Parun.Engine.Event.resolveDamageBatch's batch: each DamageEvent still runs
+-- its own CR 616.1 loop, and what the shielded player (or the shielded
+-- permanent's controller) decides is how many of the shield's remaining POINTS
+-- go to each of the events it contests, which CR 616.1's APNAP clause has
+-- already grouped by chooser (Parun.Engine.Replacement.orderBatch).
+--
+-- `timestamp` doubles as this instance's CR 614.5 identity:
+-- GameState.nextTimestamp is monotone, so no two floating replacements share one.
+-- That identity is also what CR 615.13's preventions are GROUPED by
+-- (Parun.Engine.Replacement.groupPreventions), so a shield spent across two
+-- simultaneous events fires a "when damage is prevented" ability once -- and it
+-- rides the recorded event, which is how a trigger is keyed to the prevention
+-- that fired it ("prevented this way"; see Parun.Types.DamagePrevented).
+--
+-- `origin` is CR 614.15's question, and this carrier is the only one that can be
+-- asked it: a self-replacement is an effect of a resolving spell or ability,
+-- which is exactly what a floating, resolution-generated row is. The projection's
+-- side of `collect` needs no such field, because CR 614.15 scopes a
+-- self-replacement effect to a resolving spell or ability, ruling static
+-- replacement abilities out.
+data ActiveReplacement = MkActiveReplacement
+  { effect :: ReplacementEffect.ReplacementEffect Card.Card (GrantedAbility.GrantedAbility Card.Card) (Effect.Effect Card.Card (GrantedAbility.GrantedAbility Card.Card)),
+    source :: ObjectId.ObjectId,
+    -- | CR 109.5's "you", BAKED as the row is installed rather than re-derived
+    -- from `source`, the same posture Parun.Types.ContinuousEffect and
+    -- Parun.Types.PlayerEffect take: the source of a floating replacement is a
+    -- resolving spell, and CR 608.2n has put it in its owner's graveyard as a NEW
+    -- object (CR 400.7) long before the row is consulted. Gather Specimens makes
+    -- it observable -- both halves of its text are relative to a player its own
+    -- source can no longer name.
+    --
+    -- The projection's side of Parun.Engine.Replacement.collect needs no such
+    -- field: a permanent's static replacement ability has its source on the
+    -- battlefield, so "you" is read live -- which is also the rules' answer, since
+    -- a stolen Furnace of Rath's "you" follows the theft.
+    controller :: PlayerId.PlayerId,
+    timestamp :: Timestamp.Timestamp,
+    expiry :: Expiry.Expiry,
+    uses :: Uses.Uses,
+    origin :: ReplacementOrigin.ReplacementOrigin,
+    -- | The printed "if" the installing clause carried (Parun.Types.Replace's own
+    -- field), travelling with the row rather than gating whether it was
+    -- installed. CR 614.1: a replacement effect is not locked in ahead of time,
+    -- so its applicability is asked as the event would happen --
+    -- Parun.Engine.Replacement.collect drops a row whose clause is false, and the
+    -- row stays in GameState.replacements to be asked again.
+    --
+    -- The SAME posture Parun.Types.PrintedReplacement.condition takes on a
+    -- permanent's static ability, and asked against the same board -- CR
+    -- 614.12a's, which holds no permanent that is mid-entry. This field's reader
+    -- is Parun.Engine.Replacement.collect and that one's is
+    -- Parun.Engine.Projection.replacementsOf; both narrow through
+    -- Parun.Engine.Projection.boardAsEntering. What differs is CR 109.5's "you":
+    -- `controller` above is baked, so a floating clause's "you" survives the
+    -- resolution that is about to end.
+    --
+    -- Nothing on every row the engine bakes: only Parun.Types.Effect's Replace
+    -- opcode carries a printed clause, and every other installer here writes its
+    -- pattern out in full.
+    condition :: Maybe Condition.Condition,
+    -- | CR 615.5's additional effect for a FLOATING row: Nothing on every row
+    -- but a shield installed by one of the three prevention opcodes whose rider is
+    -- non-empty. Copied forward to Parun.Types.ReplacementCandidate and then to
+    -- Parun.Types.Prevention, since the row may be spent and dropped in the very
+    -- application that fires it.
+    --
+    -- A whole Parun.Types.PreventionRider rather than the bare program a card
+    -- writes (DamageR.riders), because this carrier is the one that must
+    -- snapshot: the spell that installed the row is gone, so its chosen targets
+    -- and its CR 109.5 "you" cannot be re-derived. A permanent's static ability
+    -- keeps both live and needs no such field.
+    rider :: Maybe PreventionRider.PreventionRider,
+    -- | The objects the INSTALLING resolution's slots named, captured as the row
+    -- is installed -- the same snapshot Parun.Types.DelayedTrigger takes for CR
+    -- 603.7c's "it", and taken for the same reason: the resolution ends, and with
+    -- it the object whose bindings these were. It is what lets a pattern's
+    -- Filter.IsBound name one object rather than a class (Dire Fleet Daredevil's
+    -- "that spell"), which a printed Filter cannot do.
+    --
+    -- EMPTY for a row installed outside a resolution: the projection's side of
+    -- Parun.Engine.Replacement.collect carries none at all, a permanent's static
+    -- ability having no resolution behind it.
+    --
+    -- NARROWED to what the row itself names -- Parun.Engine.Resolve's
+    -- replacementRowSlots, over the row's pattern and its rewrite alike -- so that
+    -- CR 609.7a can read this map as the objects the waiting effect refers to.
+    -- Both installers restrict it: installDamageRow's rows are empty for a shield
+    -- naming no slot, and an Effect.Replace's keep its clause's reads beside the
+    -- row's. What the map does NOT hold is an id a resolution baked into the
+    -- pattern itself; Parun.Engine.Resolve.Effect.referentsOfReplacement reports those.
+    --
+    -- REWRITTEN by CR 400.7h: a card cast under a permission this row's source
+    -- granted becomes a new object (CR 400.7), and Parun.Engine.Cast.followIntoSpell
+    -- moves the name onto it, which is what makes "that spell" a claim about the
+    -- spell rather than about the card that is no longer there.
+    slots :: Map.Map SlotName.SlotName (Set.Set ObjectId.ObjectId)
+  }
+  deriving (Eq, Ord, Show)

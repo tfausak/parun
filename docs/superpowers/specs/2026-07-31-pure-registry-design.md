@@ -2,7 +2,7 @@
 
 ## The problem
 
-`Pawl.Registry` is a concrete record over `IO`:
+`Parun.Registry` is a concrete record over `IO`:
 
 ```haskell
 data Registry = MkRegistry { root :: FilePath, cache :: MVar (Map Slug Card) }
@@ -115,7 +115,7 @@ file name matches its own name. That is a lint over `data/cards`, not a question
 anyone asks a registry — and it is the only reason `Registry` would need a second
 field.
 
-It moves out of the library entirely, to `source/test-suite/Pawl/Corpus.hs`:
+It moves out of the library entirely, to `source/test-suite/Parun/Corpus.hs`:
 
 ```haskell
 slugsIn :: FilePath -> IO [Slug.Slug]
@@ -128,7 +128,7 @@ enumerating directories at all — it reads one named file.
 
 ### E. The test suite absorbs the `Either`
 
-2697 call sites take a card. None of them should grow a `case`. `Pawl.Support`
+2697 call sites take a card. None of them should grow a `case`. `Parun.Support`
 absorbs it, and `Spec.assertFailure` is the natural absorber:
 
 ```haskell
@@ -144,7 +144,7 @@ Once no spec mentions `IO` directly, the 30 registry-backed modules relax from
 `Spec.Spec IO n -> Registry.Registry -> n ()` to
 `(Monad m) => Spec.Spec m n -> Registry.Registry m -> n ()`.
 
-`Pawl.RegistrySpec` is the exception and stays at `IO` by rights: it tests the
+`Parun.RegistrySpec` is the exception and stays at `IO` by rights: it tests the
 file-backed strategy, including failure modes that only a filesystem has.
 
 ### E2. Nothing needs to demonstrate the purity
@@ -152,7 +152,7 @@ file-backed strategy, including failure modes that only a filesystem has.
 `design.md` §4 says a capability is not done until something exercises it. That
 rule is about the open half — an effect the engine can express but no card
 reaches is a branch nobody has checked. It does not apply here, and an earlier
-draft misapplied it by proposing a `mapRegistry` plus a pure `Pawl.Spec` backend
+draft misapplied it by proposing a `mapRegistry` plus a pure `Parun.Spec` backend
 to "prove" the abstraction.
 
 There is nothing to prove. `spec :: (Monad m) => Spec.Spec m n -> Registry.Registry m -> n ()`
@@ -167,7 +167,7 @@ buys a property no test has to maintain.
 
 `card :: Registry -> String -> IO Card` takes a bare `String`, slugified
 internally, so `"Goblin Piker"` and `"goblin-piker"` are one lookup.
-`Pawl.Types.CardName` (`newtype CardName = MkCardName Text.Text`) makes the
+`Parun.Types.CardName` (`newtype CardName = MkCardName Text.Text`) makes the
 argument say what it is.
 
 Without `OverloadedStrings` the newtype would cost
@@ -176,7 +176,7 @@ which is a worse document than the `String` it replaced. So the newtype is what
 the *interface* speaks, and a `String` helper is what callers use:
 
 ```haskell
--- Pawl.Registry
+-- Parun.Registry
 named :: Registry m -> String -> m (Either CardError.CardError Card.Card)
 ```
 
@@ -216,7 +216,7 @@ the guarantee and the room, not a capability anyone exercises today.
 ## Risks
 
 - **The sweep is large** — 2697 call sites across 30 modules. Mechanical, but the
-  same class of change as the pawl:spec conversion, where a rename silently
+  same class of change as the parun:spec conversion, where a rename silently
   invalidated seven comments. The plan budgets a comment sweep.
 - **`fileRegistry` being pure to construct means a bad root is not diagnosed at
   construction.** Today `Registry.new` checks the directory so a mistyped

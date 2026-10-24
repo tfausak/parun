@@ -100,7 +100,7 @@ restricted counters ("counter target spell with mana value N / of a color").
 
 ## 1. The target spec — `SpellTarget`
 
-`Pawl.Type.TargetSpec` gains one constructor:
+`Parun.Type.TargetSpec` gains one constructor:
 
 ```
 | -- CR 115: "target spell" -- an object on the stack that is a spell (a card on
@@ -130,7 +130,7 @@ because `Target`'s `SpellTarget` arm happens to pre-filter to `GameState.stack`.
 This is a **classification, not an identity case** — structurally identical to
 `Stack.resolveTop`'s `Card.isPermanent` read and `Mana.isManaAbility`. It lands as
 a small pure helper `Game.isSpell :: ObjectId -> GameState -> Bool` (home in
-`Pawl.Game`, beside `cardOf`; `Target` is the consumer). Casing on the `Source`
+`Parun.Game`, beside `cardOf`; `Target` is the consumer). Casing on the `Source`
 constructor is permitted — it is a classification of the object's *kind*, never of
 the card's identity.
 
@@ -142,7 +142,7 @@ now-current stack; a target no longer present is not in the set.
 
 ## 2. The opcode — `Effect.Counter SlotName`
 
-`Pawl.Type.Effect` gains one constructor:
+`Parun.Type.Effect` gains one constructor:
 
 ```
 | -- CR 701.6: counter the slot's target spell -- remove it from the stack and put
@@ -153,7 +153,7 @@ now-current stack; a target no longer present is not in the set.
   Counter SlotName
 ```
 
-The five Effect-classifying functions in `Pawl.Resolve` each gain a `Counter`
+The five Effect-classifying functions in `Parun.Resolve` each gain a `Counter`
 arm — all five case exhaustively, so the compiler forces each new arm. (`readsX`'s
 NOTE warns that a Quantity field's X-ness is *not* compiler-checked, but the arm
 itself is still forced; `Counter` has no Quantity, so its arm is simply `False`):
@@ -183,7 +183,7 @@ funnel does.
 
 ## 3. The funnel — `Event.counter`
 
-`Pawl.Event` gains a funnel mirroring `Event.destroy`:
+`Parun.Event` gains a funnel mirroring `Event.destroy`:
 
 ```
 -- The single counter funnel (CR 701.6). A countered spell is removed from the
@@ -251,9 +251,9 @@ their CR numbers.
 
 ## 6. Module and dependency notes
 
-- `Game.isSpell` lives in `Pawl.Game` (beside `cardOf`); `Target` (which already
+- `Game.isSpell` lives in `Parun.Game` (beside `cardOf`); `Target` (which already
   imports `Game`) is the consumer. No new import edge of concern.
-- `Event.counter` lives in `Pawl.Event` beside `destroy`/`changeZone`; it calls
+- `Event.counter` lives in `Parun.Event` beside `destroy`/`changeZone`; it calls
   `changeZone` (same module) — no cycle. `Resolve` already imports `Event`.
 - `Resolve` stays the sole `case effect of` home; `Event` stays the sole home of
   casing on replacement/trigger classifications; `Target` stays the sole home of
@@ -287,7 +287,7 @@ Each is due with the first real card that needs it:
 
 - **Closed/open separation.** The rules core reads two classifications and no
   identities: `Game.isSpell` (a `Source`-kind read) and `SpellTarget` legality (a
-  `TargetSpec` read). `Pawl.Resolve` is the only module that cases on the `Counter`
+  `TargetSpec` read). `Parun.Resolve` is the only module that cases on the `Counter`
   opcode. There is no `case card of Cancel -> …` anywhere.
 - **First-order, non-recursive DSL.** `Counter SlotName` carries a name, no
   function, no nested effect. It adds no control flow.

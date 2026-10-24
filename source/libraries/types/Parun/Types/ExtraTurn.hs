@@ -1,0 +1,40 @@
+module Parun.Types.ExtraTurn where
+
+import qualified Data.Set as Set
+import qualified Parun.Types.ObjectId as ObjectId
+import qualified Parun.Types.PhaseSelector as PhaseSelector
+import qualified Parun.Types.PlayerId as PlayerId
+import qualified Parun.Types.Timestamp as Timestamp
+
+-- | CR 500.7: one turn that has been created and not yet taken, as an entry on
+-- GameState.extraTurns. Runtime-only, like ActiveReplacement: card data writes
+-- the Effect.TakeExtraTurn that makes one, never one of these.
+--
+-- `skipped` is CR 500.11's "cause a step, phase, or turn to be skipped", scoped
+-- to THIS turn and to no other -- Savor the Moment's "skip the untap step of
+-- that turn", where "that turn" is the one the same resolution just created.
+-- Empty for Time Warp, which skips nothing.
+--
+-- The skips travel WITH the turn rather than referencing it, which makes the
+-- scoping structural. CR 500.7 takes the most recently created turn first, so a
+-- skip phrased as "your next untap step" (CR 614.10a, what Effect.SkipPhase
+-- installs) would land on the wrong turn as soon as a second extra-turn effect
+-- resolved after this one -- Time Warp and Savor the Moment in the same turn.
+--
+-- `source` is CR 113.7's source of the effect that created the turn, carried so
+-- the skips can become ActiveReplacements naming it when the turn begins
+-- (Parun.Engine.Replacement.installTurnSkips). CR 608.2n has put Savor the Moment
+-- into its owner's graveyard long before then.
+--
+-- `createdAt` is the turn's identity, so a delayed ability armed for "that
+-- turn" (Onset.FromThatExtraTurn, Final Fortune) and an effect lasting during it
+-- (Duration.DuringThatExtraTurn, Alchemist's Gambit) can name it: CR 500.7's stack
+-- means "your next turn" is a different turn once a later effect creates
+-- another.
+data ExtraTurn = MkExtraTurn
+  { taker :: PlayerId.PlayerId,
+    source :: ObjectId.ObjectId,
+    skipped :: Set.Set PhaseSelector.PhaseSelector,
+    createdAt :: Timestamp.Timestamp
+  }
+  deriving (Eq, Ord, Show)

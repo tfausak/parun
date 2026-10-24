@@ -4,7 +4,7 @@ Issue: #648. Follow-ups on naming: #649 (registry lookup), #650 (plural names).
 
 ## 1. The problem
 
-`Pawl.Types.Card` is one flat record of 28 printed characteristics — one name,
+`Parun.Types.Card` is one flat record of 28 printed characteristics — one name,
 one mana cost, one type line, one text. Every card layout the comprehensive
 rules enumerate that prints more than one set of characteristics is therefore
 unrepresentable: CR 709 split, CR 710 flip, CR 712 double-faced, CR 715
@@ -36,13 +36,13 @@ here is shaped for them.
 ## 3. Types
 
 ```haskell
--- Pawl.Types.Face
+-- Parun.Types.Face
 data Face card = MkFace { name, manaCost, typeLine, power, …, openingHandAction }
 
--- Pawl.Types.Layout
+-- Parun.Types.Layout
 data Layout = Normal | Split
 
--- Pawl.Types.Card
+-- Parun.Types.Card
 data Card = MkCard { layout :: Layout, faces :: NonEmpty (Face Card) }
 ```
 
@@ -80,7 +80,7 @@ the whole change rests on, and it is what makes the 227-file migration safe.
 
 ## 4. Which face is live
 
-Two closed-half functions in `Pawl.Engine.Card`, both casing on `Layout`:
+Two closed-half functions in `Parun.Engine.Card`, both casing on `Layout`:
 
 - **`combined :: Card -> Face Card`** — CR 709.4, the characteristics a card has
   in every zone except the stack. Under `Split`: the union of the faces' card
@@ -123,7 +123,7 @@ Three properties worth stating, because they are what keep the join cheap:
   is nowhere to write a combined name, so the joined string and the filename slug
   cannot drift apart. It also means the separator is a one-line decision, not a
   data migration.
-- **The slug is indifferent to it.** `Pawl.Slug.fromText` maps `/` to a space and
+- **The slug is indifferent to it.** `Parun.Slug.fromText` maps `/` to a space and
   splits on words, so `"Wax//Wane"` and `"Wax // Wane"` both slugify to
   `wax-wane`. Sourcing a card from Scryfall, which spaces its separator, cannot
   produce a different filename.
@@ -257,7 +257,7 @@ Gameplay-level tests, per `design.md` §4:
    ability half: its two halves are vanilla instants whose only text is a spell
    payload, and `Face.spell` is deliberately not merged (only the chosen half
    ever resolves). The union of card types, subtypes, keywords and the three
-   printed ability lists is proven instead against `Pawl.CardSpec`'s hand-built
+   printed ability lists is proven instead against `Parun.CardSpec`'s hand-built
    `splitCard`, whose halves differ on each of those axes.
 5. `named registry "Wax"` and `named registry "Wane"` both resolve the one card.
 6. The corpus lint holds that every card's face names are pairwise distinct.

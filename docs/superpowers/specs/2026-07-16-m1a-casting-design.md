@@ -139,7 +139,7 @@ answer. Typing those honestly needs M4's effect DSL, so inventing them now would
 mean designing that DSL early and badly, in the place it is most dangerous.
 
 **No source `ObjectId` on a unit.** Snow cares about a *property* of the source,
-not its identity. Storing a reference would also be fragile in pawl specifically:
+not its identity. Storing a reference would also be fragile in parun specifically:
 mana outlives its source (tap a land, the land is destroyed in response, the mana
 remains), and CR 400.7 mints a fresh id on every zone change, so the reference
 dangles by construction. Properties are captured at production time.
@@ -182,7 +182,7 @@ data ManaSymbol = Generic Natural | OfType ManaType
 Goblin Piker's cost is `[Generic 1, OfType (Colored Red)]`. `ManaSymbol` grows
 hybrid, Phyrexian, snow, and X.
 
-### `Pawl.Mana`
+### `Parun.Mana`
 
 Intrinsic mana abilities (CR 305.6): a Mountain's `{T}: Add {R}` is **derived from
 its subtype**, never stored on the card — the card data stays a type line, exactly
@@ -206,7 +206,7 @@ an atomic shortcut, so the shape holds when mana abilities multiply.
 
 ## 3. The stack and casting
 
-### `Pawl.Cast`
+### `Parun.Cast`
 
 `Action.Cast ObjectId` is legal only at sorcery speed (CR 302.1 / 307.1): a main phase,
 the active player, an **empty stack**, and an affordable cost. This is the same
@@ -222,19 +222,19 @@ accidentally correct, because lands can only be played by the active player.
 CR 117.3c gives priority to the player who *took the action*. Using the actor is
 both correct and no harder.
 
-### `Pawl.Stack` — resolution by classification
+### `Parun.Stack` — resolution by classification
 
 `resolveTop` reads the stack object's type line, asks whether it is a **permanent
 spell**, and if so changes its zone to the battlefield (CR 608.3); otherwise it
 goes to the graveyard.
 
-This needs `Pawl.Type.CardType` to gain `Creature`, plus two classification
-queries in **`Pawl.Card`** — not in `Pawl.Type.CardType`, which per the
+This needs `Parun.Type.CardType` to gain `Creature`, plus two classification
+queries in **`Parun.Card`** — not in `Parun.Type.CardType`, which per the
 one-type-per-module rule holds the type and its instances only:
 
 ```hs
-Pawl.Card.isPermanentType :: CardType -> Bool   -- CR 110.1
-Pawl.Card.isPermanent     :: Card -> Bool       -- any permanent type on the type line
+Parun.Card.isPermanentType :: CardType -> Bool   -- CR 110.1
+Parun.Card.isPermanent     :: Card -> Bool       -- any permanent type on the type line
 ```
 
 CR 110.1's permanent types are an enumeration: closed half, finite. **The engine
@@ -283,7 +283,7 @@ data Prompt r where
   ChooseDiscard :: Decider -> PlayerId -> [ObjectId] -> Natural -> Prompt [ObjectId]
 ```
 
-`Response` gains its mirror. `Pawl.Replay`'s `encode`/`decode`/`defaultAnswer` are
+`Response` gains its mirror. `Parun.Replay`'s `encode`/`decode`/`defaultAnswer` are
 exhaustive matches on `Prompt`, so the compiler forces the new constructor through
 the replay layer under `-Weverything -Werror`. `defaultAnswer` must stay total.
 
@@ -294,22 +294,22 @@ orchestrates the rest.
 
 | Module | Responsibility |
 |---|---|
-| `Pawl.Type.Quantity` | the numeric model |
-| `Pawl.Type.Power`, `Pawl.Type.Toughness` | newtypes over `Quantity` |
-| `Pawl.Type.Color`, `Pawl.Type.ManaType` | mana taxonomy |
-| `Pawl.Type.ManaUnit`, `Pawl.Type.Mana` | pool contents |
-| `Pawl.Type.ManaSymbol`, `Pawl.Type.ManaCost` | costs |
-| `Pawl.Mana` | intrinsic abilities, produce/spend, CR 500.4 |
-| `Pawl.Cast` | cast legality and the CR 601 sequence |
-| `Pawl.Stack` | `resolveTop`, classification dispatch |
+| `Parun.Type.Quantity` | the numeric model |
+| `Parun.Type.Power`, `Parun.Type.Toughness` | newtypes over `Quantity` |
+| `Parun.Type.Color`, `Parun.Type.ManaType` | mana taxonomy |
+| `Parun.Type.ManaUnit`, `Parun.Type.Mana` | pool contents |
+| `Parun.Type.ManaSymbol`, `Parun.Type.ManaCost` | costs |
+| `Parun.Mana` | intrinsic abilities, produce/spend, CR 500.4 |
+| `Parun.Cast` | cast legality and the CR 601 sequence |
+| `Parun.Stack` | `resolveTop`, classification dispatch |
 
-Modified: `Pawl.Type.Card` (gains `manaCost :: Maybe ManaCost`, `power`,
-`toughness`; lands have no mana cost per CR 202.1), `Pawl.Type.CardType` (gains
-`Creature`), `Pawl.Type.Subtype` (gains `Goblin`, `Warrior`),
-`Pawl.Type.GameState` (gains `manaPool :: Map PlayerId Mana`), `Pawl.Type.Action`
-(gains `Cast`), `Pawl.Type.Prompt`/`Response` (gain `ChooseDiscard`), `Pawl.Card`
-(gains `pikerPrinting`, `isPermanent`, `isCreature`), `Pawl.Action`, `Pawl.Setup`
-(deck composition), `Pawl.Engine`, `Pawl.Replay`.
+Modified: `Parun.Type.Card` (gains `manaCost :: Maybe ManaCost`, `power`,
+`toughness`; lands have no mana cost per CR 202.1), `Parun.Type.CardType` (gains
+`Creature`), `Parun.Type.Subtype` (gains `Goblin`, `Warrior`),
+`Parun.Type.GameState` (gains `manaPool :: Map PlayerId Mana`), `Parun.Type.Action`
+(gains `Cast`), `Parun.Type.Prompt`/`Response` (gain `ChooseDiscard`), `Parun.Card`
+(gains `pikerPrinting`, `isPermanent`, `isCreature`), `Parun.Action`, `Parun.Setup`
+(deck composition), `Parun.Engine`, `Parun.Replay`.
 
 ## Explicitly deferred past M1a
 

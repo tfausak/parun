@@ -1,0 +1,76 @@
+module Parun.Codec.TransformedSpec where
+
+import qualified Data.Set as Set
+import qualified Data.Text as Text
+import qualified Parun.Codec.ProjectedCharacteristicsSpec as ProjectedCharacteristicsSpec
+import qualified Parun.Codec.Transformed as Transformed
+import qualified Parun.JsonCodec.Common as Common
+import qualified Parun.Spec as Spec
+import qualified Parun.Types.Compares as Compares
+import qualified Parun.Types.Comparison as Comparison
+import qualified Parun.Types.Condition as Condition
+import qualified Parun.Types.ObjectId as ObjectId
+import qualified Parun.Types.PlayerId as PlayerId
+import qualified Parun.Types.ProjectedCharacteristics as PC
+import qualified Parun.Types.Quantity as Quantity
+import qualified Parun.Types.Transformed as Transformed
+
+-- The shared sample's rendering with its names array emptied, for the CR 708.2a
+-- case below. A substitution rather than a second literal: the two halves of an
+-- assertCodec have to describe the same record, and rebuilding the whole
+-- rendering by hand is how they come apart.
+noNamesJson :: String
+noNamesJson =
+  Text.unpack
+    ( Text.replace
+        (Text.pack "\"names\":[\"Test Creature\"]")
+        (Text.pack "\"names\":[]")
+        (Text.pack ProjectedCharacteristicsSpec.testCharacteristicsJson)
+    )
+
+spec :: (Monad m, Monad n) => Spec.Spec m n -> n ()
+spec s = Spec.describe s "Parun.Codec.Transformed" $ do
+  -- CR 701.27a, with CR 701.27e's characteristics: the whole projection of the
+  -- permanent as it stood the instant the turn finished, Parun.Codec.Moved's
+  -- shape over the same sample.
+  --
+  -- And with CR 603.10's other two axes beside it, which CR 109.3 keeps out of a
+  -- ProjectedCharacteristics: who controlled the permanent, and what was attached
+  -- to it. Both carry non-default values here, so the round trip is over a
+  -- written pair rather than over the omission the case below asserts.
+  Spec.it s "MkTransformed carries the sampled characteristics" $
+    Common.assertCodec
+      s
+      Transformed.codec
+      ( Transformed.MkTransformed
+          { Transformed.object = ObjectId.MkObjectId 1,
+            Transformed.characteristics = ProjectedCharacteristicsSpec.testCharacteristics,
+            Transformed.controller = Just (PlayerId.MkPlayerId 3),
+            Transformed.attachments = Set.fromList [ObjectId.MkObjectId 7, ObjectId.MkObjectId 9],
+            Transformed.lapsedGrants = Set.singleton (Condition.Compares (Compares.MkCompares (Quantity.Literal 3) Comparison.AtLeast (Quantity.Literal 5)))
+          }
+      )
+      ( "{\"object\":1,\"characteristics\":"
+          <> ProjectedCharacteristicsSpec.testCharacteristicsJson
+          <> ",\"controller\":3,\"attachments\":[7,9],\"lapsedGrants\":[{\"type\":\"Compares\",\"value\":{\"measured\":{\"type\":\"Literal\",\"value\":3},\"comparison\":{\"type\":\"AtLeast\"},\"threshold\":{\"type\":\"Literal\",\"value\":5}}}]}"
+      )
+  -- CR 708.2a's none, which is a real answer rather than an absence: a permanent
+  -- with no name turned over triggers no "transforms into" ability at all, and
+  -- the empty array has to survive the round trip for the matcher to see it.
+  --
+  -- This one leaves the CR 603.10 axes at their defaults, so it is also where the
+  -- two keys are asserted ABSENT from the encoding.
+  Spec.it s "MkTransformed, a permanent with no name" $
+    Common.assertCodec
+      s
+      Transformed.codec
+      ( Transformed.MkTransformed
+          { Transformed.object = ObjectId.MkObjectId 2,
+            Transformed.characteristics = ProjectedCharacteristicsSpec.testCharacteristics {PC.names = Set.empty},
+            Transformed.controller = Nothing,
+            Transformed.attachments = Set.empty,
+            Transformed.lapsedGrants = Set.empty
+          }
+      )
+      ("{\"object\":2,\"characteristics\":" <> noNamesJson <> "}")
+  Spec.it s "has a schema" $ Common.assertHasSchema s Transformed.codec

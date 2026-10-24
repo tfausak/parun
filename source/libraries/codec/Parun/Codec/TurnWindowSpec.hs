@@ -1,0 +1,40 @@
+module Parun.Codec.TurnWindowSpec where
+
+import qualified Parun.Codec.TurnWindow as TurnWindow
+import qualified Parun.JsonCodec.Common as Common
+import qualified Parun.Spec as Spec
+import qualified Parun.Types.PlayerId as PlayerId
+import qualified Parun.Types.Timestamp as Timestamp
+import qualified Parun.Types.TurnWindow as TurnWindow
+
+-- | One case per arm of the stored onset's life cycle (Parun.Types.TurnWindow): no
+-- restriction, waiting for a player's next turn or for one extra turn, and
+-- settled on the turn that turned out to be.
+spec :: (Monad m, Monad n) => Spec.Spec m n -> n ()
+spec s = Spec.describe s "Parun.Codec.TurnWindow" $ do
+  Spec.it s "AnyTurn" $
+    Common.assertCodec
+      s
+      TurnWindow.codec
+      TurnWindow.AnyTurn
+      " {\"type\":\"AnyTurn\"} "
+  Spec.it s "NextTurnOf" $
+    Common.assertCodec
+      s
+      TurnWindow.codec
+      (TurnWindow.NextTurnOf (PlayerId.MkPlayerId 3))
+      " {\"type\":\"NextTurnOf\",\"value\":3} "
+  Spec.it s "OnTurn carries the settled turn number" $
+    Common.assertCodec
+      s
+      TurnWindow.codec
+      (TurnWindow.OnTurn 7)
+      " {\"type\":\"OnTurn\",\"value\":7} "
+  Spec.it s "OnExtraTurn names the extra turn by its creation stamp" $
+    Common.assertCodec
+      s
+      TurnWindow.codec
+      (TurnWindow.OnExtraTurn (Timestamp.MkTimestamp 12))
+      " {\"type\":\"OnExtraTurn\",\"value\":12} "
+  Spec.it s "has a schema" $
+    Common.assertHasSchema s TurnWindow.codec

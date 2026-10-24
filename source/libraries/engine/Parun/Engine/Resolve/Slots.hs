@@ -1,0 +1,3646 @@
+-- The static reading of an effect: which slots it defines and reads, which
+-- object and player references it carries, whether its slots are exhaustive
+-- and whether it reads X. Pure over the effect's shape; Parun.CardSpec's lints
+-- and Parun.Engine.Resolve.Effect both ask it. Split out of
+-- Parun.Engine.Resolve for size; nothing here resolves anything.
+module Parun.Engine.Resolve.Slots where
+
+import qualified Data.Containers.ListUtils as ListUtils
+import qualified Data.Foldable as Foldable
+import qualified Data.Functor.Const as Functor
+import qualified Data.List as List
+import qualified Data.List.NonEmpty as NonEmpty
+import qualified Data.Map.Strict as Map
+import qualified Data.Maybe as Maybe
+import qualified Data.Sequence as Seq
+import Data.Set (Set)
+import qualified Data.Set as Set
+import Numeric.Natural (Natural)
+import qualified Parun.Engine.Binding as Binding
+import qualified Parun.Engine.Filter as Filter
+import qualified Parun.Engine.Game as Game
+import qualified Parun.Engine.Plane as Plane
+import qualified Parun.Engine.PlayerEffect as PlayerEffect
+import qualified Parun.Engine.Players as Players
+import qualified Parun.Engine.Projection as Projection
+import qualified Parun.Engine.Projection.View as Projection
+import qualified Parun.Engine.Quantity as Quantity
+import qualified Parun.Engine.QuantitySlot as QuantitySlot
+import qualified Parun.Engine.SourceContext as SourceContext
+import qualified Parun.Engine.Target as Target
+import qualified Parun.Extra.Integer as Integer
+import qualified Parun.Types.AbilityName as AbilityName
+import qualified Parun.Types.ActivateManaAbilities as ActivateManaAbilities
+import qualified Parun.Types.ActivatedAbility as ActivatedAbility
+import qualified Parun.Types.ActivatedAbilitySource as ActivatedAbilitySource
+import qualified Parun.Types.AffectPlayers as AffectPlayers
+import qualified Parun.Types.AffectedPlayers as AffectedPlayers
+import qualified Parun.Types.AimedAt as AimedAt
+import qualified Parun.Types.AimedPlayers as AimedPlayers
+import qualified Parun.Types.Amass as Amass.Type
+import qualified Parun.Types.Ante as Ante
+import qualified Parun.Types.AnyNumberDiscard as AnyNumberDiscard
+import qualified Parun.Types.AnyNumberMatching as AnyNumberMatching
+import qualified Parun.Types.ArmDelayedTrigger as ArmDelayedTrigger
+import qualified Parun.Types.ArrangeInLibrary as ArrangeInLibrary
+import qualified Parun.Types.ArrangedArrival as ArrangedArrival
+import qualified Parun.Types.AsCopy as AsCopy
+import qualified Parun.Types.AttachAll as AttachAll
+import qualified Parun.Types.AttachBound as AttachBound
+import qualified Parun.Types.AttachR as AttachR
+import qualified Parun.Types.AttachRewrite as AttachRewrite
+import qualified Parun.Types.AttachTarget as AttachTarget
+import qualified Parun.Types.AttachedToBound as AttachedToBound
+import qualified Parun.Types.AttackTargetRef as AttackTargetRef
+import qualified Parun.Types.AttackingPlayers as AttackingPlayers
+import qualified Parun.Types.BecomeCopy as BecomeCopy
+import qualified Parun.Types.Bid as Bid
+import qualified Parun.Types.Binding as Binding.Type
+import qualified Parun.Types.Blight as Blight.Type
+import qualified Parun.Types.Card as Card.Type
+import qualified Parun.Types.CastRepetition as CastRepetition
+import qualified Parun.Types.ChangeText as ChangeText
+import qualified Parun.Types.ChooseCardName as ChooseCardName
+import qualified Parun.Types.ChooseNumber as ChooseNumber
+import qualified Parun.Types.ChoosePermanents as ChoosePermanents
+import qualified Parun.Types.ChoosePlayer as ChoosePlayer
+import qualified Parun.Types.ChoosePlayerAtRandom as ChoosePlayerAtRandom
+import qualified Parun.Types.Chooser as Chooser
+import qualified Parun.Types.ChosenCardFromAmong as ChosenCardFromAmong
+import qualified Parun.Types.ChosenCardInGraveyard as ChosenCardInGraveyard
+import qualified Parun.Types.ChosenCardInHand as ChosenCardInHand
+import qualified Parun.Types.ChosenPermanents as ChosenPermanents
+import qualified Parun.Types.Clause as Clause
+import qualified Parun.Types.Compares as Compares
+import qualified Parun.Types.Condition as Condition.Type
+import qualified Parun.Types.Conjure as Conjure
+import qualified Parun.Types.ConjureCards as ConjureCards
+import qualified Parun.Types.Connive as Connive
+import qualified Parun.Types.ControlPlayer as ControlPlayer
+import qualified Parun.Types.ControlSides as ControlSides
+import qualified Parun.Types.ControlSlots as ControlSlots
+import qualified Parun.Types.ControllerRelation as ControllerRelation
+import qualified Parun.Types.CopyClause as CopyClause
+import qualified Parun.Types.CopyOriginal as CopyOriginal
+import qualified Parun.Types.CopyStackObject as CopyStackObject
+import qualified Parun.Types.CopyTargets as CopyTargets
+import qualified Parun.Types.CostBasis as CostBasis
+import qualified Parun.Types.Count as Count.Type
+import qualified Parun.Types.CountedDiscard as CountedDiscard
+import qualified Parun.Types.Counter as Counter
+import qualified Parun.Types.CounterDestination as CounterDestination
+import qualified Parun.Types.CounterPattern as CounterPattern
+import qualified Parun.Types.CounterR as CounterR
+import qualified Parun.Types.CounterSubject as CounterSubject
+import qualified Parun.Types.Create as Create
+import qualified Parun.Types.CreateCopy as CreateCopy
+import qualified Parun.Types.DamagePart as DamagePart
+import qualified Parun.Types.DamagePattern as DamagePattern
+import qualified Parun.Types.DamageR as DamageR
+import qualified Parun.Types.DamageRewrite as DamageRewrite
+import qualified Parun.Types.DealDamage as DealDamage
+import qualified Parun.Types.Designate as Designate
+import qualified Parun.Types.Destroy as Destroy
+import qualified Parun.Types.DestructionR as DestructionR
+import qualified Parun.Types.DieRollR as DieRollR
+import qualified Parun.Types.Discard as Discard
+import qualified Parun.Types.DoesNotUntapNext as DoesNotUntapNext
+import qualified Parun.Types.Draw as Draw
+import qualified Parun.Types.DrawCountR as DrawCountR
+import qualified Parun.Types.DrawR as DrawR
+import qualified Parun.Types.DrawRewrite as DrawRewrite
+import qualified Parun.Types.Duration as Duration
+import qualified Parun.Types.DurationEvent as DurationEvent
+import qualified Parun.Types.EachCardFromAmong as EachCardFromAmong
+import qualified Parun.Types.EachCardInExiledPile as EachCardInExiledPile
+import qualified Parun.Types.EachCardInGraveyard as EachCardInGraveyard
+import qualified Parun.Types.EachCardInHand as EachCardInHand
+import qualified Parun.Types.Earthbend as Earthbend
+import Parun.Types.Effect (Effect)
+import qualified Parun.Types.Effect as Effect
+import qualified Parun.Types.EntersWith as EntersWith
+import qualified Parun.Types.EntryAttack as EntryAttack
+import qualified Parun.Types.EntryBlock as EntryBlock
+import qualified Parun.Types.EntryController as EntryController
+import qualified Parun.Types.EntryPrice as EntryPrice
+import qualified Parun.Types.EntryR as EntryR
+import qualified Parun.Types.EntryRewrite as EntryRewrite
+import qualified Parun.Types.EntryRiders as EntryRiders
+import qualified Parun.Types.ExchangeBlocks as ExchangeBlocks
+import qualified Parun.Types.ExchangeCardZones as ExchangeCardZones
+import qualified Parun.Types.ExchangeOwnership as ExchangeOwnership
+import qualified Parun.Types.ExchangeSides as ExchangeSides
+import qualified Parun.Types.ExchangeValues as ExchangeValues
+import qualified Parun.Types.ExchangeZones as ExchangeZones
+import qualified Parun.Types.ExchangedValue as ExchangedValue
+import qualified Parun.Types.ExileFromGraveyard as ExileFromGraveyard
+import qualified Parun.Types.ExileHaunting as ExileHaunting
+import qualified Parun.Types.Face as Face
+import qualified Parun.Types.Fight as Fight
+import qualified Parun.Types.Filter as Filter.Type
+import qualified Parun.Types.FlipCoin as FlipCoin
+import qualified Parun.Types.ForEach as ForEach
+import qualified Parun.Types.ForEachNumber as ForEachNumber
+import qualified Parun.Types.ForbidAttack as ForbidAttack
+import qualified Parun.Types.ForbidBeingBlocked as ForbidBeingBlocked
+import qualified Parun.Types.FromAnywhere as FromAnywhere
+import qualified Parun.Types.FromOutsideTheGame as FromOutsideTheGame
+import qualified Parun.Types.FromReference as FromReference
+import qualified Parun.Types.GainControl as GainControl
+import qualified Parun.Types.GameLossR as GameLossR
+import Parun.Types.GameState (GameState)
+import qualified Parun.Types.GameState as GameState
+import qualified Parun.Types.GrantLookAtExiled as GrantLookAtExiled
+import qualified Parun.Types.GrantPlayFromExile as GrantPlayFromExile
+import qualified Parun.Types.GrantedAbility as GrantedAbility
+import qualified Parun.Types.HowMany as HowMany
+import qualified Parun.Types.InitiativeTarget as InitiativeTarget
+import qualified Parun.Types.InstructionR as InstructionR
+import qualified Parun.Types.Keyword as Keyword.Type
+import qualified Parun.Types.LastKnown as LastKnown
+import qualified Parun.Types.LibraryPlacement as LibraryPlacement
+import qualified Parun.Types.LifeGainR as LifeGainR
+import qualified Parun.Types.LifeLoss as LifeLoss
+import qualified Parun.Types.LifeLossPattern as LifeLossPattern
+import qualified Parun.Types.LifeLossR as LifeLossR
+import qualified Parun.Types.LookAt as LookAt
+import qualified Parun.Types.MakeForetold as MakeForetold
+import qualified Parun.Types.ManaAddition as ManaAddition
+import qualified Parun.Types.Meld as Meld
+import qualified Parun.Types.Mill as Mill
+import qualified Parun.Types.MillTally as MillTally
+import qualified Parun.Types.Modal as Modal
+import qualified Parun.Types.Mode as Mode
+import qualified Parun.Types.ModifyTarget as ModifyTarget
+import qualified Parun.Types.MonarchTarget as MonarchTarget
+import qualified Parun.Types.MoveCounters as MoveCounters
+import qualified Parun.Types.MoveMana as MoveMana
+import qualified Parun.Types.MoveToZone as MoveToZone
+import qualified Parun.Types.MovedKinds as MovedKinds
+import qualified Parun.Types.Object as Object
+import Parun.Types.ObjectId (ObjectId)
+import Parun.Types.ObjectRef (ObjectRef)
+import qualified Parun.Types.ObjectRef as ObjectRef
+import qualified Parun.Types.OfferCast as OfferCast
+import qualified Parun.Types.Onset as Onset
+import qualified Parun.Types.Optionality as Optionality
+import qualified Parun.Types.OrElse as OrElse
+import qualified Parun.Types.PayGate as PayGate
+import qualified Parun.Types.PermanentActed as PermanentActed
+import qualified Parun.Types.PlaneswalkR as PlaneswalkR
+import qualified Parun.Types.PlaneswalkRewrite as PlaneswalkRewrite
+import qualified Parun.Types.PlayerCounters as PlayerCounters
+import Parun.Types.PlayerId (PlayerId)
+import qualified Parun.Types.PlayerQuantity as PlayerQuantity
+import Parun.Types.PlayerRef (PlayerRef)
+import qualified Parun.Types.PlayerRef as PlayerRef
+import qualified Parun.Types.PlayerSacrifices as PlayerSacrifices
+import qualified Parun.Types.PlayersWho as PlayersWho
+import qualified Parun.Types.Pool as Pool
+import qualified Parun.Types.Power as Power
+import qualified Parun.Types.PreventAllDamage as PreventAllDamage
+import qualified Parun.Types.PreventNextDamage as PreventNextDamage
+import qualified Parun.Types.PreventNextDamageInstance as PreventNextDamageInstance
+import qualified Parun.Types.Prohibit as Prohibit
+import qualified Parun.Types.PutCounters as PutCounters
+import qualified Parun.Types.PutCountersFrom as PutCountersFrom
+import qualified Parun.Types.PutSticker as PutSticker
+import qualified Parun.Types.Quantity as Quantity.Type
+import qualified Parun.Types.RandomCardInGraveyard as RandomCardInGraveyard
+import qualified Parun.Types.RandomCardInHand as RandomCardInHand
+import qualified Parun.Types.RandomCardInLibrary as RandomCardInLibrary
+import Parun.Types.Recipient (Recipient)
+import qualified Parun.Types.Recipient as Recipient
+import qualified Parun.Types.RedirectDamage as RedirectDamage
+import qualified Parun.Types.RemovalCount as RemovalCount
+import qualified Parun.Types.RemoveCounters as RemoveCounters
+import qualified Parun.Types.RemoveCountersAmong as RemoveCountersAmong
+import qualified Parun.Types.RemovePlayerCounters as RemovePlayerCounters
+import qualified Parun.Types.Repeat as Repeat
+import qualified Parun.Types.RepeatIf as RepeatIf
+import qualified Parun.Types.Replace as Replace
+import qualified Parun.Types.ReplacementEffect as ReplacementEffect
+import qualified Parun.Types.RequireAttack as RequireAttack
+import qualified Parun.Types.RequireBlock as RequireBlock
+import qualified Parun.Types.RestrictedCreatures as RestrictedCreatures
+import qualified Parun.Types.Reveal as Reveal
+import qualified Parun.Types.RollDie as RollDie
+import qualified Parun.Types.SacrificeAnyNumber as SacrificeAnyNumber
+import qualified Parun.Types.SacrificeEffect as SacrificeEffect
+import qualified Parun.Types.SacrificeToEnter as SacrificeToEnter
+import qualified Parun.Types.Search as Search
+import qualified Parun.Types.SetClassLevel as SetClassLevel
+import qualified Parun.Types.SetHalfLocked as SetHalfLocked
+import qualified Parun.Types.SetOwner as SetOwner
+import qualified Parun.Types.ShuffleIntoLibrary as ShuffleIntoLibrary
+import qualified Parun.Types.SkipPhase as SkipPhase
+import Parun.Types.SlotArity (SlotArity)
+import qualified Parun.Types.SlotArity as SlotArity
+import qualified Parun.Types.SlotCount as SlotCount
+import Parun.Types.SlotName (SlotName)
+import qualified Parun.Types.SlotPerPlayer as SlotPerPlayer
+import qualified Parun.Types.Source as Source
+import qualified Parun.Types.SpeedDecrease as SpeedDecrease
+import qualified Parun.Types.StackObjectKind as StackObjectKind
+import qualified Parun.Types.TakeExtraTurn as TakeExtraTurn
+import qualified Parun.Types.TargetChooser as TargetChooser
+import qualified Parun.Types.TargetSlot as TargetSlot
+import qualified Parun.Types.TheseDiscard as TheseDiscard
+import qualified Parun.Types.TokenPattern as TokenPattern
+import qualified Parun.Types.TokenR as TokenR
+import qualified Parun.Types.TopOfLibrary as TopOfLibrary
+import qualified Parun.Types.TopOfLibraryUntil as TopOfLibraryUntil
+import qualified Parun.Types.Toughness as Toughness
+import qualified Parun.Types.TriggeredAbility as TriggeredAbility
+import qualified Parun.Types.TurnFaceDown as TurnFaceDown
+import qualified Parun.Types.TurnUpR as TurnUpR
+import qualified Parun.Types.TurnUpRewrite as TurnUpRewrite
+import qualified Parun.Types.Vote as Vote
+import qualified Parun.Types.VoteChoices as VoteChoices
+import qualified Parun.Types.VoteObjects as VoteObjects
+import qualified Parun.Types.VotePlayers as VotePlayers
+import qualified Parun.Types.WithCounters as WithCounters
+import qualified Parun.Types.Zone as Zone
+import qualified Parun.Types.ZoneChangePattern as ZoneChangePattern
+import qualified Parun.Types.ZoneChangeR as ZoneChangeR
+import qualified Parun.Types.ZoneScope as ZoneScope
+
+-- The read side of the D4 dataflow lint: WHICH slots, and HOW MANY recipients
+-- apiece (a slot read through an ObjectRef can hold CR 601.2c's "up to two").
+-- These combinators join, taking the conservative arity wherever two reads
+-- disagree; written out rather than left to Map's left-biased Monoid.
+joinTwo :: Map.Map SlotName SlotArity -> Map.Map SlotName SlotArity -> Map.Map SlotName SlotArity
+joinTwo = Map.unionWith min
+
+joinSlots :: [Map.Map SlotName SlotArity] -> Map.Map SlotName SlotArity
+joinSlots = foldr joinTwo Map.empty
+
+oneSlot :: SlotName -> Map.Map SlotName SlotArity
+oneSlot slot = Map.singleton slot SlotArity.One
+
+insertOne :: SlotName -> Map.Map SlotName SlotArity -> Map.Map SlotName SlotArity
+insertOne slot = joinTwo (oneSlot slot)
+
+-- The slots a Quantity reads, on both halves of Parun.Types.SlotName's one flat
+-- namespace. Quantity.objectSlots names an OBJECT and evaluates against it, so a
+-- slot naming several leaves Parun.Engine.Filter.slotOneObject with nothing to
+-- pick and the whole number unanswered -- SlotArity.One. Every other slot
+-- QuantitySlot.slots reports is a Quantity.InSlot, which reads the slot's AMOUNT
+-- instead (Parun.Engine.Binding.amountOf) and cannot be damaged by a plural slot
+-- at all -- SlotArity.Amount, an entry stating a read without claiming an arity.
+--
+-- Both halves are reported so that the KEYS stay QuantitySlot.slots' whole answer:
+-- an InSlot read is a read, and the D4 dataflow lint counts it; see #2774.
+-- Map.union is left-biased, so a slot read both ways is One.
+--
+-- Two further halves neither of those two functions reports, and a number that
+-- names a slot only through one of them is a read nobody else recovers --
+-- Resolve.slotsOf inspects a player reference only on an effect's OWN field:
+--
+--   * QuantitySlot.nestedRefs' -- a PlayerRef buried in the number ("cards equal
+--     to the number of cards target opponent discarded this turn", Dream
+--     Salvage), and CR 400.7j's Scope.OverBound, which names a slot outright
+--     (Psychic Miasma's "if a land card is discarded this way"). The arities are
+--     playerRefSlots' rather than One across the board, for targetSlotSlots'
+--     reason: EachInSlot takes every player a slot names and CR 400.7j's fold
+--     every object, so neither is damaged by a plural slot.
+--   * Every nested Count's FILTER (QuantitySlot.nestedCounts). A Filter.IsBound
+--     under a fold is judged against the resolving object's bindings --
+--     Filter.matches' IsBound arm, against the Context's slotObjects -- exactly as
+--     one on an effect's own field is, and the pool writes the shape (Caldera
+--     Breaker, Into the Wilds, Wild Evocation). Classified by filterSlotsOf, as
+--     an effect's own Filter is: that arm reads the whole GROUP a slot names,
+--     and the atoms that read one thing are Filter.singularSlots'.
+quantitySlots :: Quantity.Type.Quantity -> Map.Map SlotName SlotArity
+quantitySlots quantity =
+  joinSlots
+    ( Map.union
+        (Map.fromSet (const SlotArity.One) (Quantity.objectSlots quantity))
+        (Map.fromSet (const SlotArity.Amount) (QuantitySlot.slots quantity))
+        : fmap (filterSlotsOf . Count.Type.filter) (QuantitySlot.nestedCounts quantity)
+          <> fmap (either playerRefSlots (`Map.singleton` SlotArity.Many)) (Set.toList (QuantitySlot.nestedRefs quantity))
+    )
+
+-- The slots a CR 608.2g repetition's budget reads, Rod of Absorption's X.
+repetitionSlots :: CastRepetition.CastRepetition -> Map.Map SlotName SlotArity
+repetitionSlots = joinSlots . fmap quantitySlots . repetitionQuantities
+
+-- The Quantity a CR 608.2g repetition carries: Rod of Absorption's budget.
+repetitionQuantities :: CastRepetition.CastRepetition -> [Quantity.Type.Quantity]
+repetitionQuantities repetition = case repetition of
+  CastRepetition.Once -> []
+  CastRepetition.AnyNumber -> []
+  CastRepetition.WithinTotalManaValue quantity -> [quantity]
+
+-- The Quantities an entry rider carries: CR 122.6's count per counter kind, which
+-- a card may write as anything a Quantity spells. A position the three walkers
+-- below would otherwise pass over -- every arm that reads a rider matches it as
+-- `_` -- so the reads are spelled out here and each walker goes through this.
+-- CR 611.2e's effects carry theirs through Projection.quantitiesOf, as
+-- ModifyTarget's modification does.
+riderQuantities :: EntryRiders.EntryRiders Quantity.Type.Quantity ability -> [Quantity.Type.Quantity]
+riderQuantities riders = Map.elems (EntryRiders.counters riders) <> foldMap Projection.quantitiesOf (EntryRiders.characteristics riders)
+
+-- The Quantity a MoveToZone's placement carries, CR 401.7's depth: Unexpectedly
+-- Absent's X. The walkers read it beside riderQuantities.
+placementQuantities :: LibraryPlacement.LibraryPlacement -> [Quantity.Type.Quantity]
+placementQuantities placement = case placement of
+  LibraryPlacement.Stated _ -> []
+  LibraryPlacement.OwnerChooses -> []
+  LibraryPlacement.RandomOrder _ -> []
+  LibraryPlacement.ArrangedBy _ -> []
+  LibraryPlacement.Beneath quantity -> [quantity]
+  LibraryPlacement.BeneathOrBottom quantity -> [quantity]
+
+-- The Quantities an Effect.Create's TOKEN CARD carries that the CREATING effect
+-- evaluates rather than the token: the printed power and toughness of every
+-- face, and nothing else. CR 111.3 makes the value the effect defines part of
+-- the token's text, and Parun.Engine.Resolve.Effect.bakeTokenCharacteristics is
+-- where that happens -- against the RESOLUTION's own object, context and slots,
+-- so a box naming a slot is this effect speaking and all three walkers below
+-- (slotsOf, ownSlotsAreExhaustive, readsX) have to report it -- Phyrexian
+-- Rebirth's "where X is the number of creatures destroyed this way".
+--
+-- P/T is the whole of it because it is the whole of what bakeTokenCharacteristics
+-- evaluates; every other Quantity on the token's card is literal text, read at
+-- the TOKEN's own resolution in its own (empty) bindings. So this function and
+-- that one have to widen together: a box baked here but not reported would be a
+-- slot read the CR 603.3b dataflow lint cannot see.
+tokenBoxQuantities :: Card.Type.Card -> [Quantity.Type.Quantity]
+tokenBoxQuantities card =
+  foldMap
+    (\face -> foldMap (pure . Power.unwrap) (Face.power face) <> foldMap (pure . Toughness.unwrap) (Face.toughness face))
+    (Card.Type.faces card)
+
+-- The slots an entry rider READS: CR 509.4's specified block
+-- (EntryBlock.Specified), CR 303.4i's
+-- attachment, CR 508.4's
+-- specified attack (EntryAttack.SameAs) and CR 702.116a's narrowed one
+-- (EntryAttack.UnderPlayer); every other rider is a flag or a Quantity
+-- (riderQuantities above). Each read singly -- CR 509.4 names one attacking
+-- creature, CR 303.4i one host, CR 702.49c one returned creature, CR 702.116a
+-- one player. The attachment at arity One even though its printing writes "up to
+-- one target" (Preston Garvey, Minuteman): the arity is how MANY the effect may
+-- read, and an empty answer is CR 303.4i's undefined object rather than a second
+-- reading.
+--
+-- ALL THREE opcodes reach it, and all three apply it: a Create hands its tokens
+-- to Parun.Engine.Combat.putOntoBattlefieldBlocking from the minting loop (Flash
+-- Foliage), a CreateCopy its copies (Mirror Match), and a MoveToZone the card it
+-- moved, from moveOne (Aetherplasm). What stays inert is the rider on a
+-- destination other than the battlefield, which Parun.CardSpec lints.
+-- CR 110.2a's instructed player, the one reference an entry rider holds.
+riderPlayerRefs :: EntryRiders.EntryRiders count ability -> [PlayerRef]
+riderPlayerRefs riders = case EntryRiders.under riders of
+  EntryController.Instructed who -> [who]
+  EntryController.Owner -> []
+
+riderSlots :: EntryRiders.EntryRiders count ability -> Map.Map SlotName SlotArity
+riderSlots riders =
+  let attacked = case EntryRiders.attacking riders of
+        Just (EntryAttack.SameAs slot) -> oneSlot slot
+        -- CR 702.116a's slot, read singly too: the rule names ONE player, whom
+        -- the token attacks or whose planeswalker it does.
+        Just (EntryAttack.UnderPlayer slot) -> oneSlot slot
+        Just EntryAttack.Chosen -> Map.empty
+        Nothing -> Map.empty
+      blocked = case EntryRiders.blocking riders of
+        Just (EntryBlock.Specified slot) -> oneSlot slot
+        Just EntryBlock.Chosen -> Map.empty
+        Nothing -> Map.empty
+   in joinSlots [attacked, blocked, maybe Map.empty oneSlot (EntryRiders.attachedTo riders)]
+
+-- The slots a PlayerRef reads. InSlot, ControllerOfBound, OwnerOfBound,
+-- ChosenPlayerOfBound and Attacking name one at arity One, and EachInSlot,
+-- EachPlayerExcept and EachOpponentExcept one at arity Many; the rest name none, and
+-- the arms below carry the reason for each arity that is not self-evident.
+playerRefSlots :: PlayerRef -> Map.Map SlotName SlotArity
+playerRefSlots ref = case ref of
+  -- Every player the slot names is excluded -- CR 104.2c's winning team is
+  -- several.
+  PlayerRef.EachPlayerExcept slot -> Map.singleton slot SlotArity.Many
+  -- CR 702.116a's excluded seat, read the same way.
+  PlayerRef.EachOpponentExcept slot -> Map.singleton slot SlotArity.Many
+  PlayerRef.Relative _ -> Map.empty
+  PlayerRef.InSlot slot -> Map.singleton slot SlotArity.One
+  -- Read at arity MANY, which is the whole of what parts it from the arm above.
+  PlayerRef.EachInSlot slot -> Map.singleton slot SlotArity.Many
+  PlayerRef.Specific _ -> Map.empty
+  -- Specific's answer: the baked object is named outright.
+  PlayerRef.ControllerOfObject _ -> Map.empty
+  PlayerRef.OwnerOfObject _ -> Map.empty
+  PlayerRef.Candidate -> Map.empty
+  -- Read at arity one: a slot naming several objects names no one controller.
+  PlayerRef.ControllerOfBound slot -> Map.singleton slot SlotArity.One
+  -- Read at arity one for the arm above's reason: a slot naming several objects
+  -- names no one owner.
+  PlayerRef.OwnerOfBound slot -> Map.singleton slot SlotArity.One
+  -- Read at arity one for that arm's reason: a slot naming several objects names
+  -- no one chooser.
+  PlayerRef.ChosenPlayerOfBound slot _ -> Map.singleton slot SlotArity.One
+  -- Read at arity one for that arm's reason: a slot naming several players names
+  -- no one player to have been attacked.
+  PlayerRef.Attacking (AttackingPlayers.MkAttackingPlayers _ slot) -> Map.singleton slot SlotArity.One
+  PlayerRef.Superlative _ -> Map.empty
+  PlayerRef.InRole _ -> Map.empty
+
+-- The slots an AffectedPlayers reads. Only Named does, and only ever one player.
+affectedPlayersSlots :: AffectedPlayers.AffectedPlayers SlotName -> Map.Map SlotName SlotArity
+affectedPlayersSlots affected = case affected of
+  AffectedPlayers.Scoped _ -> Map.empty
+  AffectedPlayers.Named slot -> Map.singleton slot SlotArity.One
+
+-- The slots a Chooser reads: only BoundInSlot, and only ever one player.
+chooserSlots :: Chooser.Chooser -> Map.Map SlotName SlotArity
+chooserSlots chooser = case chooser of
+  Chooser.TheController -> Map.empty
+  Chooser.EachInScope -> Map.empty
+  Chooser.BoundInSlot slot -> Map.singleton slot SlotArity.One
+
+-- The slots a ZoneScope reads. Only InSlot names one, and at arity Many: the
+-- reader takes the whole recipient set, so "each of up to two target players'
+-- graveyards" would be seen whole.
+zoneScopeSlots :: ZoneScope.ZoneScope -> Map.Map SlotName SlotArity
+zoneScopeSlots scope = case scope of
+  ZoneScope.Scoped _ -> Map.empty
+  ZoneScope.InSlot slot -> Map.singleton slot SlotArity.Many
+  -- Arity ONE, where the arm above is Many: Hour of Glory's "its controller"
+  -- names the controller of the ONE object the slot holds, so a plural slot
+  -- aimed here would have no singular answer -- PlayerRef.ControllerOfBound's
+  -- reading, one type over.
+  ZoneScope.ControllerOfBound slot -> Map.singleton slot SlotArity.One
+  -- Already resolved: names no slot.
+  ZoneScope.BoundPlayer _ -> Map.empty
+
+-- The slots an ObjectRef reads. InSlot names one directly,
+-- EachCardInGraveyard and EachCardInHand name one through their scope, and
+-- EachMatching through its Filter; the other sweeping arms name none. Reporting
+-- a scope's slot does not make the SWEPT CARDS targets -- CR 115.10a needs the
+-- word "target" against them, and a graveyard scope says it against the
+-- PLAYER, so what CR 608.2b judges is still the card's own target slot, holding
+-- that player, and not this read.
+--
+-- The PlayerRefs the four per-player arms hold are taken from
+-- objectRefPlayerRefs below rather than arm by arm, so no arm of the case names
+-- one.
+objectRefSlots :: ObjectRef -> Map.Map SlotName SlotArity
+objectRefSlots ref = joinTwo (joinSlots (fmap playerRefSlots (objectRefPlayerRefs ref))) $ case ref of
+  ObjectRef.InSlot slot -> Map.singleton slot SlotArity.Many
+  -- InSlot's read of the slot, never a target (CR 115.10a).
+  ObjectRef.FromAnywhere (FromAnywhere.MkFromAnywhere slot among) -> Map.fromList [(named, SlotArity.Many) | named <- slot : Foldable.toList among]
+  -- Rain of Daggers' "all creatures target opponent controls": the sweep's
+  -- ControlledByBound is the only read of its target slot.
+  ObjectRef.EachMatching filter_ -> filterSlotsOf filter_
+  -- The per-player sweeps that name a slot are this one and EachCardInHand below:
+  -- CR 400.1's per-player zones leave "whose" to be said, and Angel of Finality
+  -- says it by pointing at the player another slot of the same announcement
+  -- targets. Reported, not dropped, because the D4 dataflow lint reads this: a
+  -- card whose ONLY use of that slot is the scope would otherwise declare a
+  -- target nothing reads.
+  ObjectRef.EachCardInGraveyard (EachCardInGraveyard.MkEachCardInGraveyard scope _) -> zoneScopeSlots scope
+  ObjectRef.EachCardInYourHand -> Map.empty
+  -- The arm above's scope over the other per-player zone, reported for its
+  -- reason: Amnesia's ONLY use of its target slot is this scope, so dropping the
+  -- read would have the D4 dataflow lint call that target unread.
+  ObjectRef.EachCardInHand (EachCardInHand.MkEachCardInHand scope _) -> zoneScopeSlots scope
+  -- EachCardInYourHand's answer over the other hidden per-player zone: the
+  -- seat is CR 109.5's "you", so no slot names it.
+  ObjectRef.EachCardInYourLibrary _ -> Map.empty
+  -- The arm above's answer: the owner is CR 109.5's "you".
+  ObjectRef.EachCardYouOwn _ -> Map.empty
+  ObjectRef.EachCardInExiledPile _ -> Map.empty
+  ObjectRef.EachCardEncodedOnSource {} -> Map.empty
+  ObjectRef.EachSpell _ -> Map.empty
+  ObjectRef.EachAbility _ -> Map.empty
+  ObjectRef.EachOnStack _ -> Map.empty
+  ObjectRef.EachPlayer -> Map.empty
+  ObjectRef.EachOpponent -> Map.empty
+  -- The seat comes from the source's own entry choice (CR 614.12a), not a slot.
+  ObjectRef.ChosenPlayer -> Map.empty
+  -- The seat is objectRefPlayerRefs' half, joined at the head (Deflecting
+  -- Palm's ControllerOfBound); the narrowing Filter is a read like a sweep's.
+  ObjectRef.Players (PlayersWho.MkPlayersWho _ who) -> foldMap filterSlotsOf who
+  ObjectRef.TopOfLibrary (TopOfLibrary.MkTopOfLibrary _ count) -> quantitySlots count
+  -- The arm above's count, and no more: the SEAT is objectRefPlayerRefs' half.
+  -- What a MATCH is is a Filter, and no arm here reports the slots a Filter
+  -- reads, for the reason the header states.
+  ObjectRef.TopOfLibraryUntil (TopOfLibraryUntil.MkTopOfLibraryUntil _ _ count) -> quantitySlots count
+  -- No count and no filter, so the SEAT is the whole read -- and it is
+  -- objectRefPlayerRefs' half, reported by the fold this case is joined into.
+  ObjectRef.TopOfGraveyard _ -> Map.empty
+  -- Both halves name a slot: WHO CHOOSES through the Chooser, and WHOSE
+  -- graveyards through the scope -- reported for EachCardInGraveyard's reason,
+  -- since Grasping Tentacles' scope is a read of the slot its own mill targets.
+  --
+  -- Joined with the COUNT's own slots, TopOfLibrary's arm above and for its
+  -- reason.
+  ObjectRef.ChosenCardInGraveyard (ChosenCardInGraveyard.MkChosenCardInGraveyard chooser scope _ count) -> joinTwo (joinTwo (chooserSlots chooser) (zoneScopeSlots scope)) (quantitySlots count)
+  -- CR 402.3: the choosers own the hands, so the PlayerRef is reported by
+  -- objectRefPlayerRefs rather than here; the COUNT's slots are this arm's.
+  ObjectRef.ChosenCardInHand (ChosenCardInHand.MkChosenCardInHand _ _ count) -> quantitySlots count
+  -- The first of the two arms whose CANDIDATES come from a slot -- the plural is
+  -- below -- where the two chosen arms above name a slot only through their
+  -- chooser. Reported for EachCardInGraveyard's
+  -- reason -- the D4 dataflow lint reads this, and a group one clause binds and a
+  -- later one reads is exactly the dataflow that lint checks. Many, not One,
+  -- which is the arity InSlot reports of the same binding: the ref reads every
+  -- member of the group to offer them.
+  --
+  -- Joined with the COUNT's own slots, TopOfLibrary's arm above and for its
+  -- reason; the CHOOSER's are the generic playerRefSlots fold this case is joined
+  -- into, which is what makes Intuition's target opponent a read.
+  ObjectRef.ChosenCardFromAmong (ChosenCardFromAmong.MkChosenCardFromAmong slot _ count _) -> joinTwo (Map.singleton slot SlotArity.Many) (maybe Map.empty quantitySlots (HowMany.quantity count))
+  -- The arm above's read, for its reasons: the candidates come from a slot, and
+  -- the ref reads every member of the group to match them.
+  ObjectRef.EachCardFromAmong (EachCardFromAmong.MkEachCardFromAmong slot _) -> Map.singleton slot SlotArity.Many
+  -- The seats whose hands randomness reads are ChosenCardInHand's, and reported
+  -- where that arm's are; the COUNT is TopOfLibrary's read, for its reason.
+  ObjectRef.RandomCardInHand (RandomCardInHand.MkRandomCardInHand _ _ count) -> quantitySlots count
+  -- ChosenCardInGraveyard's read with the chooser struck out: the graveyards
+  -- come through the scope, and the COUNT is TopOfLibrary's read.
+  ObjectRef.RandomCardInGraveyard (RandomCardInGraveyard.MkRandomCardInGraveyard scope _ count) -> joinTwo (zoneScopeSlots scope) (quantitySlots count)
+  -- RandomCardInHand's read one hidden zone over: the seat is reported where
+  -- that arm's is, and the COUNT is TopOfLibrary's read.
+  ObjectRef.RandomCardInLibrary (RandomCardInLibrary.MkRandomCardInLibrary _ _ count) -> quantitySlots count
+  -- EachMatching's answer: the candidates come off the battlefield, so only the
+  -- Filter reads a slot of its own. The CHOOSER's slots are the generic
+  -- playerRefSlots fold this case is joined into, ChosenCardFromAmong's route
+  -- above, which is what makes a chooser's slot a read. The CEILING is TopOfLibrary's read.
+  -- The Filter's read is a REGRESSION FENCE: no card in data/cards/ reads a slot
+  -- only through this Filter, so dropping it leaves the suite green.
+  ObjectRef.ChosenPermanents choice -> joinTwo (filterSlotsOf (ChosenPermanents.filter choice)) (maybe Map.empty quantitySlots (HowMany.quantity (ChosenPermanents.count choice)))
+  -- The host is read out of the slot, and the Filter over what is attached to
+  -- it may name slots of its own.
+  ObjectRef.AttachedToBound (AttachedToBound.MkAttachedToBound slot filter_) -> joinTwo (Map.singleton slot SlotArity.Many) (filterSlotsOf filter_)
+  -- Every ref's own reads; the PlayerRefs are objectRefPlayerRefs', which recurses.
+  ObjectRef.AllOf refs -> joinSlots (fmap objectRefSlots (NonEmpty.toList refs))
+
+-- The Quantities an ObjectRef carries: the two library walks' counts.
+-- Exhaustive, no wildcard, and every payload destructured positionally rather
+-- than as `{}`: slotsAreExhaustive, readsX and Parun.CardSpec's Count traversal
+-- all reach a nested Quantity through this, over effectObjectRefs below rather
+-- than arm by arm, so this is the one place a payload gaining a Quantity field
+-- has to be revisited -- a `{}` here would keep compiling, which is the shape
+-- that let a widened field go unread (#2729).
+objectRefQuantities :: ObjectRef -> [Quantity.Type.Quantity]
+objectRefQuantities ref = case ref of
+  ObjectRef.InSlot _ -> []
+  ObjectRef.EachMatching _ -> []
+  ObjectRef.EachCardInGraveyard (EachCardInGraveyard.MkEachCardInGraveyard _ _) -> []
+  ObjectRef.EachCardInYourHand -> []
+  ObjectRef.EachCardInHand (EachCardInHand.MkEachCardInHand _ _) -> []
+  ObjectRef.EachCardInYourLibrary _ -> []
+  ObjectRef.EachCardYouOwn _ -> []
+  ObjectRef.EachCardInExiledPile _ -> []
+  ObjectRef.EachCardEncodedOnSource _ -> []
+  ObjectRef.EachSpell _ -> []
+  ObjectRef.EachAbility _ -> []
+  ObjectRef.EachOnStack _ -> []
+  ObjectRef.EachPlayer -> []
+  ObjectRef.EachOpponent -> []
+  ObjectRef.ChosenPlayer -> []
+  -- A seat, never a count.
+  ObjectRef.Players _ -> []
+  ObjectRef.TopOfLibrary (TopOfLibrary.MkTopOfLibrary _ count) -> [count]
+  -- The arm above's count, measured in MATCHES rather than in cards.
+  ObjectRef.TopOfLibraryUntil (TopOfLibraryUntil.MkTopOfLibraryUntil _ _ count) -> [count]
+  -- CR 404.1's top card is ONE card, so the graveyard arm states no depth at all.
+  ObjectRef.TopOfGraveyard _ -> []
+  -- How many cards each chooser picks out of a graveyard or a hand -- Fall of
+  -- the Thran's and Aquatic Subtlety's printed two. A REGRESSION FENCE for the
+  -- ChosenCardFromAmong arm below's reason: every count in the pool is a
+  -- Literal, which reads no slot.
+  ObjectRef.ChosenCardInGraveyard (ChosenCardInGraveyard.MkChosenCardInGraveyard _ _ _ count) -> [count]
+  ObjectRef.ChosenCardInHand (ChosenCardInHand.MkChosenCardInHand _ _ count) -> [count]
+  -- How many cards are picked out of the group -- Ancestral Memories' printed
+  -- two, the library walks' counts above being the only other ObjectRef numbers.
+  -- A REGRESSION FENCE rather than proven behaviour: every count in the pool is a
+  -- Literal, which reads no slot, so dropping this leaves the suite green.
+  ObjectRef.ChosenCardFromAmong (ChosenCardFromAmong.MkChosenCardFromAmong _ _ count _) -> Foldable.toList (HowMany.quantity count)
+  ObjectRef.EachCardFromAmong (EachCardFromAmong.MkEachCardFromAmong _ _) -> []
+  -- How many cards randomness names out of each hand -- Fall's printed two. A
+  -- REGRESSION FENCE for the arm above's reason: every count in the pool is a
+  -- Literal, which reads no slot.
+  ObjectRef.RandomCardInHand (RandomCardInHand.MkRandomCardInHand _ _ count) -> [count]
+  -- How many cards randomness names out of each graveyard -- Make a Wish's
+  -- printed two. The arm above's regression fence, for its reason.
+  ObjectRef.RandomCardInGraveyard (RandomCardInGraveyard.MkRandomCardInGraveyard _ _ count) -> [count]
+  -- How many cards a seek names -- the Gates' printed one. The arm above's
+  -- regression fence, for its reason.
+  ObjectRef.RandomCardInLibrary (RandomCardInLibrary.MkRandomCardInLibrary _ _ count) -> [count]
+  -- At most how many permanents are chosen -- Teferi, Hero of Dominaria's
+  -- printed two.
+  ObjectRef.ChosenPermanents choice -> Foldable.toList (HowMany.quantity (ChosenPermanents.count choice))
+  ObjectRef.AttachedToBound _ -> []
+  ObjectRef.FromAnywhere _ -> []
+  ObjectRef.AllOf refs -> concatMap objectRefQuantities refs
+
+-- Every PlayerRef nested in one ObjectRef -- effectPlayerRefs' other half, and
+-- the seat a per-player walk counts against. objectRefSlots takes its player
+-- reads from here, so a reference dropped here stops being reported there.
+--
+-- No wildcard, objectRefQuantities' discipline above.
+objectRefPlayerRefs :: ObjectRef -> [PlayerRef]
+objectRefPlayerRefs ref = case ref of
+  ObjectRef.InSlot _ -> []
+  ObjectRef.EachMatching _ -> []
+  ObjectRef.EachCardInGraveyard (EachCardInGraveyard.MkEachCardInGraveyard _ _) -> []
+  ObjectRef.EachCardInYourHand -> []
+  ObjectRef.EachCardInHand (EachCardInHand.MkEachCardInHand _ _) -> []
+  ObjectRef.EachCardInYourLibrary _ -> []
+  ObjectRef.EachCardYouOwn _ -> []
+  ObjectRef.EachCardInExiledPile _ -> []
+  ObjectRef.EachCardEncodedOnSource _ -> []
+  ObjectRef.EachSpell _ -> []
+  ObjectRef.EachAbility _ -> []
+  ObjectRef.EachOnStack _ -> []
+  ObjectRef.EachPlayer -> []
+  ObjectRef.EachOpponent -> []
+  ObjectRef.ChosenPlayer -> []
+  -- The reference IS a seat, so it is its own whole answer here.
+  ObjectRef.Players (PlayersWho.MkPlayersWho player _) -> [player]
+  ObjectRef.TopOfLibrary (TopOfLibrary.MkTopOfLibrary player _) -> [player]
+  ObjectRef.TopOfLibraryUntil (TopOfLibraryUntil.MkTopOfLibraryUntil player _ _) -> [player]
+  -- Whose graveyard, the two library walks' own read over CR 400.1's other
+  -- per-player zone.
+  ObjectRef.TopOfGraveyard player -> [player]
+  ObjectRef.ChosenCardInGraveyard (ChosenCardInGraveyard.MkChosenCardInGraveyard _ _ _ _) -> []
+  ObjectRef.ChosenCardInHand (ChosenCardInHand.MkChosenCardInHand player _ _) -> [player]
+  -- The seat that picks out of the group -- Animal Magnetism's opponent, and by
+  -- default CR 608.2c's resolving controller.
+  --
+  -- No card observes this report: the D4 dataflow lint subtracts a slot the
+  -- mode's own ChoosePlayer DEFINES from both sides of its equality, and that is
+  -- the only kind of slot a printed chooser names. Parun.CardSpec's planted
+  -- objectRefPlayerRefPositions pins it, and this arm's sibling below.
+  ObjectRef.ChosenCardFromAmong (ChosenCardFromAmong.MkChosenCardFromAmong _ _ _ chooser) -> [chooser]
+  ObjectRef.EachCardFromAmong (EachCardFromAmong.MkEachCardFromAmong _ _) -> []
+  ObjectRef.RandomCardInHand (RandomCardInHand.MkRandomCardInHand player _ _) -> [player]
+  -- ChosenCardInGraveyard's answer: the graveyards are named by a ZoneScope,
+  -- which is not a PlayerRef, and randomness names no seat at all.
+  ObjectRef.RandomCardInGraveyard (RandomCardInGraveyard.MkRandomCardInGraveyard _ _ _) -> []
+  -- RandomCardInHand's answer: the one seat whose library is reached.
+  ObjectRef.RandomCardInLibrary (RandomCardInLibrary.MkRandomCardInLibrary player _ _) -> [player]
+  -- The seat that picks off the battlefield -- Wormfang Crab's opponent, and
+  -- by default CR 608.2c's resolving controller. Pinned as the arm above is.
+  ObjectRef.ChosenPermanents choice -> [ChosenPermanents.chooser choice]
+  ObjectRef.AttachedToBound _ -> []
+  ObjectRef.FromAnywhere _ -> []
+  ObjectRef.AllOf refs -> concatMap objectRefPlayerRefs refs
+
+-- The refs a CR 707.10 answer names: rule 707.10d's candidates, and nothing for
+-- the other two, neither of which describes anything.
+copyTargetsRefs :: CopyTargets.CopyTargets -> [ObjectRef]
+copyTargetsRefs targets = case targets of
+  CopyTargets.Copied -> []
+  CopyTargets.ChosenByController -> []
+  CopyTargets.ForEach refs -> NonEmpty.toList refs
+  CopyTargets.Stated ref -> [ref]
+
+-- Every ObjectRef this ONE effect holds, its own only: a nested effect's refs
+-- are its own answer here, reached by whichever caller recurses.
+--
+-- The single enumeration of where an ObjectRef sits in an opcode. Its readers
+-- -- slotsOf here, and slotsAreExhaustive, readsX and Parun.CardSpec's Count
+-- traversal below -- call this rather than naming the opcodes themselves, so
+-- they cannot come to disagree about which opcodes hold a ref. The test a
+-- reader can apply: no arm of any of those four names an ObjectRef field.
+--
+-- No wildcard, and the arms that hold a ref destructure positionally: a new
+-- opcode the compiler forces, and so does a new FIELD on a payload that already
+-- holds one. What neither the compiler nor this shape catches is an existing
+-- field WIDENED to an ObjectRef, which is how a nested Quantity went unread
+-- once (#2729). Two things pay for that: slotsOf's corpus lints, since a ref
+-- dropped here stops being reported there, and Parun.CardSpec's planted
+-- objectRefPositions, which is the only observer of a position no card writes.
+effectObjectRefs :: Effect card ability -> [ObjectRef]
+effectObjectRefs effect = case effect of
+  Effect.DealDamage (DealDamage.MkDealDamage parts _ _ _) -> Foldable.toList (fmap DamagePart.ref parts)
+  Effect.Fight {} -> []
+  Effect.ModifyTarget (ModifyTarget.MkModifyTarget _ _ ref _) -> [ref]
+  Effect.ChangeText {} -> []
+  Effect.AddMana {} -> []
+  Effect.Firebend {} -> []
+  Effect.ActivateManaAbilities {} -> []
+  Effect.MoveMana {} -> []
+  Effect.Search {} -> []
+  Effect.ExileAllGraveyards -> []
+  -- CR 727.5's exemption, absent when nothing is exempt.
+  Effect.RestartGame exempt -> Maybe.maybeToList exempt
+  Effect.ControlPlayerNextTurn {} -> []
+  Effect.ControlPlayerThisResolution {} -> []
+  Effect.Destroy (Destroy.MkDestroy ref _ _ _ _) -> [ref]
+  Effect.Sacrifice (SacrificeEffect.MkSacrificeEffect ref _ _) -> [ref]
+  Effect.Attach {} -> []
+  Effect.AttachAsThoughCreature {} -> []
+  Effect.AttachTarget {} -> []
+  Effect.AttachTargetToEach {} -> []
+  Effect.AttachBound {} -> []
+  Effect.AttachAll (AttachAll.MkAttachAll ref _) -> [ref]
+  Effect.MoveToZone (MoveToZone.MkMoveToZone ref _ _ _ _ _ _) -> [ref]
+  Effect.Draw {} -> []
+  Effect.Mill {} -> []
+  Effect.Reveal (Reveal.MkReveal ref _) -> [ref]
+  Effect.FromOutsideTheGame {} -> []
+  Effect.ExileThisSpell -> []
+  Effect.LookAt (LookAt.MkLookAt ref _ _) -> [ref]
+  Effect.Scry {} -> []
+  Effect.Surveil {} -> []
+  Effect.Fateseal {} -> []
+  Effect.Clash {} -> []
+  -- The batch CR 702.85b's actions choose from.
+  Effect.AsYouCascade slot -> [ObjectRef.InSlot slot]
+  Effect.Explore ref -> [ref]
+  Effect.Assemble ref -> Maybe.maybeToList ref
+  Effect.ArrangeInLibrary (ArrangeInLibrary.MkArrangeInLibrary ref _) -> [ref]
+  Effect.Connive (Connive.MkConnive _ ref) -> [ref]
+  Effect.Discard subject -> case subject of
+    Discard.Counted {} -> []
+    Discard.These (TheseDiscard.MkTheseDiscard ref _) -> [ref]
+    Discard.AnyNumber {} -> []
+  Effect.LoseLife {} -> []
+  Effect.GainLife {} -> []
+  Effect.ExchangeLifeTotals {} -> []
+  Effect.ExchangeValues (ExchangeValues.MkExchangeValues one other _) -> foldMap exchangedObjectRefs [one, other]
+  Effect.ExchangeZones {} -> []
+  Effect.ExchangeCardZones (ExchangeCardZones.MkExchangeCardZones one other) -> [one, other]
+  Effect.SetLifeTotal {} -> []
+  Effect.LoseGame {} -> []
+  Effect.WinGame {} -> []
+  Effect.DrawGame {} -> []
+  Effect.RedistributeLifeTotals -> []
+  Effect.IncreaseSpeed {} -> []
+  Effect.DecreaseSpeed {} -> []
+  Effect.Create {} -> []
+  -- A written conjure names no object -- its candidates are card data -- and nor
+  -- does a reference pick, whose candidates are in no game; a duplicate names
+  -- the object it is a duplicate OF, which is the arm that makes a conjure able
+  -- to target (Sinister Reflections).
+  Effect.Conjure (Conjure.MkConjure _ cards _ _ _) -> case cards of
+    ConjureCards.Written {} -> []
+    ConjureCards.Duplicate ref -> [ref]
+    ConjureCards.Reference {} -> []
+  Effect.CreateCopy (CreateCopy.MkCreateCopy _ ref _ _ _) -> [ref]
+  -- Both sides: CR 707.2's copiable values come off one and go onto the other.
+  -- The exceptions beside them read no slot: CR 707.9a's "this ability" is the
+  -- resolving object's own, and neither of CR 707.9b's arms names an object.
+  Effect.BecomeCopy (BecomeCopy.MkBecomeCopy original subject _ _ _) -> case original of
+    CopyOriginal.OfObject ref -> [ref, subject]
+    CopyOriginal.Named _ -> [subject]
+  -- BOTH refs: CR 707.10d's candidates are named by a ref of their own, and a
+  -- slot it reads is as much a read of this effect's as the copied object's.
+  Effect.CopyStackObject (CopyStackObject.MkCopyStackObject ref targets _ _ _) -> ref : copyTargetsRefs targets
+  Effect.Replace {} -> []
+  Effect.SkipPhase {} -> []
+  -- Absent where the shield's recipients are described rather than named.
+  Effect.PreventNextDamage (PreventNextDamage.MkPreventNextDamage _ _ ref _ _ _ _ _) -> Maybe.maybeToList ref
+  Effect.PreventAllDamage (PreventAllDamage.MkPreventAllDamage _ _ ref _ _ _ _ _ _) -> Maybe.maybeToList ref
+  -- One ref, and never optional: CR 615.8's shield always names its recipient.
+  Effect.PreventNextDamageInstance (PreventNextDamageInstance.MkPreventNextDamageInstance _ ref _ _) -> [ref]
+  -- CR 614.9's two sides, the damage's old recipient -- absent where the card
+  -- describes it instead -- and its new one.
+  Effect.RedirectDamage (RedirectDamage.MkRedirectDamage _ _ _ from _ _ to _ _ _) -> Maybe.maybeToList from <> [to]
+  Effect.Counter (Counter.MkCounter ref _ _ _) -> [ref]
+  Effect.PutCounters (PutCounters.MkPutCounters _ _ ref) -> [ref]
+  Effect.DistributeCounters (PutCounters.MkPutCounters _ _ ref) -> [ref]
+  Effect.RemoveCounters {} -> []
+  Effect.RemoveCountersAmong (RemoveCountersAmong.MkRemoveCountersAmong _ from _ _) -> [from]
+  -- CR 122.5's two sides, either of which may name a group.
+  Effect.MoveCounters (MoveCounters.MkMoveCounters from _ _ to) -> [from, to]
+  -- CR 122.8's taker; the giver is a slot.
+  Effect.PutCountersFrom (PutCountersFrom.MkPutCountersFrom _ _ ref) -> [ref]
+  Effect.GainPlayerCounters {} -> []
+  Effect.RemovePlayerCounters {} -> []
+  Effect.PayAnyEnergy {} -> []
+  Effect.ChooseNumber {} -> []
+  Effect.Tap ref -> [ref]
+  Effect.Untap ref -> [ref]
+  Effect.Unattach ref -> [ref]
+  Effect.Detain ref -> [ref]
+  Effect.Goad ref -> [ref]
+  Effect.Pair ref -> [ref]
+  Effect.DoesNotUntapNext payload -> [DoesNotUntapNext.ref payload]
+  Effect.Transform ref -> [ref]
+  Effect.Convert ref -> [ref]
+  Effect.Flip ref -> [ref]
+  -- The components; the combined face beside them is card data, not a ref.
+  Effect.Meld (Meld.MkMeld objects _) -> [objects]
+  Effect.PhaseOut ref -> [ref]
+  Effect.TurnFaceDown (TurnFaceDown.MkTurnFaceDown ref _) -> [ref]
+  Effect.TurnFaceUp {} -> []
+  Effect.RemoveFromCombat ref -> [ref]
+  Effect.BecomesBlocked {} -> []
+  -- The two attackers come out of a target SLOT, not an ObjectRef.
+  Effect.SwitchBlockers {} -> []
+  Effect.ExchangeBlocks {} -> []
+  Effect.AddPhases {} -> []
+  Effect.EndTurn -> []
+  Effect.EndCombatPhase -> []
+  Effect.GainControl (GainControl.MkGainControl _ ref _) -> [ref]
+  Effect.ExchangeControl _ -> []
+  Effect.ArmDelayedTrigger {} -> []
+  Effect.AffectPlayers {} -> []
+  -- CR 509.1a's two sides, the creature required to block and what it blocks,
+  -- each only when a ref names it: the Matching arm is a Filter.
+  Effect.RequireBlock (RequireBlock.MkRequireBlock _ blocker attacker _) -> namedRefs blocker <> foldMap namedRefs attacker
+  Effect.Prohibit (Prohibit.MkProhibit _ _ affected) -> namedRefs affected
+  -- Both sides, each only when a ref names it: the attacker's Matching arm is a
+  -- Filter, and a defender naming players is effectPlayerRefs'.
+  Effect.RequireAttack (RequireAttack.MkRequireAttack _ attacker defender) ->
+    namedRefs attacker
+      <> case defender of
+        Nothing -> []
+        Just (AttackTargetRef.Players _) -> []
+        Just (AttackTargetRef.Permanents ref) -> [ref]
+  -- One side only, and only when a ref names it: the Matching arm is a Filter
+  -- (CR 611.2c's class), and what the attack is aimed at is effectPlayerRefs'.
+  Effect.ForbidAttack (ForbidAttack.MkForbidAttack _ affected _) -> namedRefs affected
+  -- No ref at all: the class is a Filter (CR 611.2c).
+  Effect.ForbidBeingBlocked {} -> []
+  Effect.CreateEmblem {} -> []
+  Effect.BecomeMonarch {} -> []
+  Effect.TakeTheInitiative {} -> []
+  Effect.Designate {} -> []
+  Effect.SetClassLevel {} -> []
+  Effect.Unsuspect ref -> [ref]
+  Effect.SetHalfLocked {} -> []
+  Effect.CounterAndMark {} -> []
+  Effect.BecomeProtector {} -> []
+  Effect.Mentor {} -> []
+  Effect.Exploit -> []
+  Effect.GiveGift -> []
+  Effect.ItBecomes {} -> []
+  Effect.ExileHaunting {} -> []
+  Effect.PlaySubgame {} -> []
+  Effect.ChoosePlayer {} -> []
+  Effect.ChoosePlayerAtRandom {} -> []
+  Effect.ChoosePermanents {} -> []
+  Effect.ChooseSector {} -> []
+  Effect.RollDie {} -> []
+  Effect.FlipCoin {} -> []
+  Effect.ExileHandThenDraw -> []
+  Effect.NoteManaSpent -> []
+  Effect.Proliferate -> []
+  Effect.Reroll -> []
+  Effect.RerollStoredResults _ -> []
+  Effect.ChooseCardName {} -> []
+  Effect.ChooseQuality _ -> []
+  Effect.Bolster {} -> []
+  Effect.Amass {} -> []
+  Effect.Blight {} -> []
+  -- CR 701.66a's "target land you control".
+  Effect.Earthbend (Earthbend.MkEarthbend _ ref) -> [ref]
+  -- CR 701.65a's "those objects".
+  Effect.Airbend ref -> [ref]
+  Effect.TemptWithTheRing -> []
+  Effect.OpenAttraction -> []
+  Effect.Planeswalk -> []
+  Effect.ChaosEnsues -> []
+  Effect.Abandon -> []
+  Effect.ClaimPrize -> []
+  Effect.Forage -> []
+  Effect.Populate -> []
+  Effect.TimeTravel -> []
+  Effect.Recruit -> []
+  Effect.Learn -> []
+  Effect.Cloak {} -> []
+  Effect.ManifestDread {} -> []
+  Effect.Venture {} -> []
+  Effect.PlayerSacrifices {} -> []
+  Effect.Vote {} -> []
+  Effect.Bid {} -> []
+  Effect.TakeExtraTurn {} -> []
+  Effect.ShuffleIntoLibrary (ShuffleIntoLibrary.MkShuffleIntoLibrary _ refs _) -> NonEmpty.toList refs
+  Effect.Ante (Ante.MkAnte _ ref _) -> [ref]
+  Effect.PutSticker (PutSticker.MkPutSticker _ ref _ _ _ _) -> [ref]
+  Effect.SetOwner (SetOwner.MkSetOwner _ ref) -> [ref]
+  Effect.ExchangeOwnership (ExchangeOwnership.MkExchangeOwnership one other) -> [one, other]
+  Effect.Shuffle {} -> []
+  Effect.OfferCast (OfferCast.MkOfferCast ref _ _ _ _ _ _ _ _) -> [ref]
+  Effect.OfferNamedCopy {} -> []
+  Effect.OfferNotedCopy {} -> []
+  Effect.GrantPlayFromExile (GrantPlayFromExile.MkGrantPlayFromExile _ _ ref _ _ _ _ _ _ _) -> [ref]
+  Effect.GrantLookAtExiled grant -> [GrantLookAtExiled.cards grant]
+  Effect.MakePlotted ref -> [ref]
+  Effect.MakeForetold x -> [MakeForetold.cards x]
+  Effect.MakeWarped ref -> [ref]
+  -- CR 608.2f's set, swept once; the body's own refs are the caller's recursion.
+  Effect.ForEach (ForEach.MkForEach ref _ _ _ _ _ _) -> [ref]
+  Effect.ForEachNumber {} -> []
+  Effect.Repeat {} -> []
+  Effect.RepeatIf {} -> []
+  Effect.Heal ref -> [ref]
+  Effect.ChooseNewTargets ref -> [ref]
+  Effect.ChangeTargets ref -> [ref]
+
+-- Every PlayerRef this ONE effect holds in a field of its own: not the ones
+-- nested in an ObjectRef it carries (objectRefPlayerRefs), not the ones nested
+-- in a Quantity (Parun.Engine.Quantity's readers), and not a nested effect's,
+-- which are its own answer here.
+--
+-- The single enumeration of where a PlayerRef sits in an opcode, and
+-- effectObjectRefs' twin one type over. Its readers -- slotsOf here, and
+-- Parun.CardSpec's plural-slot lint -- call this rather than naming the opcodes
+-- themselves, so they cannot come to disagree about which opcodes hold one. The
+-- test a reader can apply: no arm of either names a PlayerRef field.
+--
+-- No wildcard: a new opcode the compiler forces. The arms that hold a reference
+-- in a field of their own read it through the payload's ACCESSOR, so a new field
+-- beside it cannot be absorbed in argument order. What neither the compiler nor
+-- this shape catches is an existing field WIDENED to a PlayerRef; slotsOf's
+-- corpus lints pay for that, since a reference dropped here stops being reported
+-- there, and so does Parun.CardSpec's planted playerRefPositions.
+--
+-- A reference nested in a DURATION is the third half, beside the one nested in
+-- an ObjectRef: the arms carrying a Duration join durationPlayerRefs in exactly
+-- where slotsOf joins durationSlots. The arms that do NOT are the ones with
+-- nothing to join -- ownSlotsAreExhaustive already refuses a slot-naming
+-- duration on eight of them, and ArmDelayedTrigger captures the whole
+-- environment (CR 603.7c) rather than enumerating it -- save the player its
+-- onset names, which the arming itself reads.
+effectPlayerRefs :: Effect card ability -> [PlayerRef]
+effectPlayerRefs effect = case effect of
+  Effect.DealDamage {} -> []
+  Effect.Fight {} -> []
+  Effect.ModifyTarget x -> durationPlayerRefs (ModifyTarget.duration x)
+  Effect.ChangeText x -> durationPlayerRefs (ChangeText.duration x)
+  Effect.AddMana (ManaAddition.MkManaAddition ref _ _ _ _ _ _) -> [ref]
+  Effect.Firebend (ManaAddition.MkManaAddition ref _ _ _ _ _ _) -> [ref]
+  Effect.ActivateManaAbilities (ActivateManaAbilities.MkActivateManaAbilities ref _) -> [ref]
+  Effect.MoveMana (MoveMana.MkMoveMana from to) -> from : Maybe.maybeToList to
+  Effect.Search (Search.MkSearch searcher owner _ _ _ _ _ _ _ _ _ _ _) -> [searcher, owner]
+  Effect.ExileAllGraveyards -> []
+  Effect.RestartGame {} -> []
+  Effect.ControlPlayerNextTurn {} -> []
+  Effect.ControlPlayerThisResolution {} -> []
+  Effect.Destroy {} -> []
+  Effect.Sacrifice {} -> []
+  Effect.Attach {} -> []
+  Effect.AttachAsThoughCreature {} -> []
+  Effect.AttachTarget {} -> []
+  Effect.AttachTargetToEach {} -> []
+  Effect.AttachBound {} -> []
+  Effect.AttachAll {} -> []
+  Effect.MoveToZone move ->
+    riderPlayerRefs (MoveToZone.riders move) <> case MoveToZone.placement move of
+      LibraryPlacement.ArrangedBy arrival -> [ArrangedArrival.chooser arrival]
+      _ -> []
+  Effect.Draw (Draw.MkDraw ref _ _) -> [ref]
+  Effect.Mill (Mill.MkMill ref _ _ _) -> [ref]
+  Effect.Reveal {} -> []
+  Effect.FromOutsideTheGame {} -> []
+  Effect.ExileThisSpell -> []
+  Effect.LookAt (LookAt.MkLookAt _ _ looker) -> [looker]
+  Effect.Scry (PlayerQuantity.MkPlayerQuantity ref _) -> [ref]
+  Effect.Surveil (PlayerQuantity.MkPlayerQuantity ref _) -> [ref]
+  Effect.Fateseal (PlayerQuantity.MkPlayerQuantity ref _) -> [ref]
+  Effect.Clash {} -> []
+  Effect.AsYouCascade {} -> []
+  Effect.Explore {} -> []
+  Effect.Assemble {} -> []
+  Effect.ArrangeInLibrary (ArrangeInLibrary.MkArrangeInLibrary _ chooser) -> [chooser]
+  Effect.Connive {} -> []
+  Effect.Discard subject -> case subject of
+    Discard.Counted (CountedDiscard.MkCountedDiscard ref _ _) -> [ref]
+    Discard.These {} -> []
+    Discard.AnyNumber (AnyNumberDiscard.MkAnyNumberDiscard ref _ _) -> [ref]
+  Effect.LoseLife (LifeLoss.MkLifeLoss ref _ _ _) -> [ref]
+  Effect.GainLife (PlayerQuantity.MkPlayerQuantity ref _) -> [ref]
+  Effect.ExchangeLifeTotals {} -> []
+  Effect.ExchangeValues (ExchangeValues.MkExchangeValues one other duration) -> foldMap exchangedPlayerRefs [one, other] <> durationPlayerRefs duration
+  Effect.ExchangeZones x -> [ExchangeZones.player x]
+  -- Each side's players are its ref's, objectRefPlayerRefs' half.
+  Effect.ExchangeCardZones {} -> []
+  Effect.SetLifeTotal (PlayerQuantity.MkPlayerQuantity ref _) -> [ref]
+  Effect.LoseGame ref -> [ref]
+  Effect.WinGame ref -> [ref]
+  Effect.DrawGame -> []
+  Effect.RedistributeLifeTotals -> []
+  Effect.IncreaseSpeed (PlayerQuantity.MkPlayerQuantity ref _) -> [ref]
+  Effect.DecreaseSpeed (SpeedDecrease.MkSpeedDecrease ref _ _) -> [ref]
+  Effect.Create (Create.MkCreate _ _ _ _ creator) -> [creator]
+  Effect.Conjure {} -> []
+  Effect.CreateCopy {} -> []
+  Effect.BecomeCopy x -> foldMap durationPlayerRefs (BecomeCopy.duration x)
+  Effect.CopyStackObject (CopyStackObject.MkCopyStackObject _ _ _ copier _) -> [copier]
+  Effect.Replace x -> durationPlayerRefs (Replace.duration x)
+  Effect.SkipPhase (SkipPhase.MkSkipPhase ref _ _ duration) -> ref : durationPlayerRefs duration
+  Effect.PreventNextDamage x -> durationPlayerRefs (PreventNextDamage.duration x)
+  Effect.PreventAllDamage x -> durationPlayerRefs (PreventAllDamage.duration x)
+  Effect.PreventNextDamageInstance x -> durationPlayerRefs (PreventNextDamageInstance.duration x)
+  Effect.RedirectDamage x -> durationPlayerRefs (RedirectDamage.duration x)
+  Effect.Counter {} -> []
+  Effect.PutCounters {} -> []
+  Effect.DistributeCounters {} -> []
+  Effect.RemoveCounters {} -> []
+  Effect.RemoveCountersAmong {} -> []
+  Effect.MoveCounters {} -> []
+  Effect.PutCountersFrom {} -> []
+  Effect.GainPlayerCounters (PlayerCounters.MkPlayerCounters ref _ _) -> [ref]
+  Effect.RemovePlayerCounters removal -> [RemovePlayerCounters.player removal]
+  Effect.PayAnyEnergy {} -> []
+  Effect.ChooseNumber number -> [ChooseNumber.chooser number]
+  Effect.Tap {} -> []
+  Effect.Untap {} -> []
+  Effect.Unattach {} -> []
+  Effect.Detain {} -> []
+  Effect.Goad {} -> []
+  Effect.Pair {} -> []
+  Effect.DoesNotUntapNext {} -> []
+  Effect.Transform {} -> []
+  Effect.Convert {} -> []
+  Effect.Flip {} -> []
+  Effect.Meld {} -> []
+  Effect.PhaseOut {} -> []
+  Effect.TurnFaceDown {} -> []
+  Effect.TurnFaceUp {} -> []
+  Effect.RemoveFromCombat {} -> []
+  Effect.BecomesBlocked {} -> []
+  Effect.SwitchBlockers {} -> []
+  Effect.ExchangeBlocks {} -> []
+  Effect.AddPhases {} -> []
+  Effect.EndTurn -> []
+  Effect.EndCombatPhase -> []
+  Effect.GainControl (GainControl.MkGainControl _ _ to) -> [to]
+  Effect.ExchangeControl {} -> []
+  Effect.ArmDelayedTrigger arm -> case ArmDelayedTrigger.onset arm of
+    Onset.FromNextTurnOf ref -> [ref]
+    Onset.Immediately -> []
+    Onset.FromThatExtraTurn -> []
+  -- CR 400.1's zone reference, which lives inside the permission payloads rather
+  -- than in a field of the opcode -- so the walk is
+  -- Parun.Engine.PlayerEffect.playerRefsIn's and this arm joins it in, which is
+  -- what puts Sen Triplets' "that player's hand" slot into slotsOf's answer.
+  Effect.AffectPlayers (AffectPlayers.MkAffectPlayers _ _ playerEffect) -> PlayerEffect.playerRefsIn playerEffect
+  Effect.RequireBlock {} -> []
+  Effect.Prohibit {} -> []
+  Effect.RequireAttack (RequireAttack.MkRequireAttack duration _ defender) -> case defender of
+    Just (AttackTargetRef.Players ref) -> ref : durationPlayerRefs duration
+    Just (AttackTargetRef.Permanents _) -> durationPlayerRefs duration
+    Nothing -> durationPlayerRefs duration
+  -- The players a slot names, where the restriction is aimed at them (Chaos
+  -- Dragon's "those players").
+  Effect.ForbidAttack (ForbidAttack.MkForbidAttack _ _ aimedAt) -> case fmap AimedAt.defenders aimedAt of
+    Just (AimedPlayers.EachInSlot slot) -> [PlayerRef.EachInSlot slot]
+    _ -> []
+  Effect.ForbidBeingBlocked {} -> []
+  Effect.CreateEmblem {} -> []
+  Effect.BecomeMonarch {} -> []
+  Effect.TakeTheInitiative {} -> []
+  Effect.Designate {} -> []
+  Effect.SetClassLevel {} -> []
+  Effect.Unsuspect {} -> []
+  Effect.SetHalfLocked {} -> []
+  Effect.CounterAndMark {} -> []
+  Effect.BecomeProtector {} -> []
+  Effect.Mentor {} -> []
+  Effect.Exploit -> []
+  Effect.GiveGift -> []
+  Effect.ItBecomes {} -> []
+  Effect.ExileHaunting {} -> []
+  Effect.PlaySubgame {} -> []
+  Effect.ChoosePlayer {} -> []
+  Effect.ChoosePlayerAtRandom {} -> []
+  -- The seat that picks -- Archfiend of Depravity's "that player" -- and the
+  -- one that picks a pile (CR 700.3).
+  Effect.ChoosePermanents choice -> ChosenPermanents.chooser (ChoosePermanents.permanents choice) : Foldable.toList (ChoosePermanents.pileChooser choice)
+  Effect.ChooseSector {} -> []
+  Effect.RollDie {} -> []
+  -- The seat that flips -- Mana Clash's target opponent (CR 705.1).
+  Effect.FlipCoin flipCoin -> [FlipCoin.flipper flipCoin]
+  Effect.ExileHandThenDraw -> []
+  Effect.NoteManaSpent -> []
+  Effect.Proliferate -> []
+  Effect.Reroll -> []
+  Effect.RerollStoredResults _ -> []
+  Effect.ChooseCardName (ChooseCardName.MkChooseCardName ref _) -> [ref]
+  Effect.ChooseQuality _ -> []
+  Effect.Bolster {} -> []
+  Effect.Amass {} -> []
+  Effect.Blight (Blight.Type.MkBlight ref _ _) -> [ref]
+  -- Rule 701.66a reaches no player the card did not target.
+  Effect.Earthbend {} -> []
+  -- Rule 701.65a names the owner of each exiled card, whom no slot can hold.
+  Effect.Airbend {} -> []
+  Effect.TemptWithTheRing -> []
+  Effect.OpenAttraction -> []
+  Effect.Planeswalk -> []
+  Effect.ChaosEnsues -> []
+  Effect.Abandon -> []
+  Effect.ClaimPrize -> []
+  Effect.Forage -> []
+  Effect.Populate -> []
+  Effect.TimeTravel -> []
+  Effect.Recruit -> []
+  Effect.Learn -> []
+  -- CR 701.58a's own reference: whose library the top card comes off.
+  Effect.Cloak ref -> [ref]
+  -- CR 701.62a's: whose library the two cards come off.
+  Effect.ManifestDread ref -> [ref]
+  Effect.Venture {} -> []
+  Effect.PlayerSacrifices (PlayerSacrifices.MkPlayerSacrifices players _ _) -> [players]
+  -- CR 701.38a's specified player, the seat the vote starts with.
+  Effect.Vote (Vote.MkVote starter _ _) -> [starter]
+  -- The bidders are every player, CR 109.5's "you" opening.
+  Effect.Bid {} -> []
+  Effect.TakeExtraTurn takeExtraTurn -> [TakeExtraTurn.player takeExtraTurn]
+  Effect.ShuffleIntoLibrary (ShuffleIntoLibrary.MkShuffleIntoLibrary named _ _) -> Maybe.maybeToList named
+  Effect.Ante (Ante.MkAnte player _ _) -> [player]
+  Effect.PutSticker (PutSticker.MkPutSticker player _ _ _ _ _) -> [player]
+  Effect.SetOwner (SetOwner.MkSetOwner player _) -> [player]
+  Effect.ExchangeOwnership {} -> []
+  Effect.Shuffle ref -> [ref]
+  Effect.OfferCast (OfferCast.MkOfferCast _ caster _ _ _ _ _ _ _) -> [caster]
+  Effect.OfferNamedCopy {} -> []
+  Effect.OfferNotedCopy {} -> []
+  -- CR 601.3's "that player", the seat the permission is written for.
+  Effect.GrantPlayFromExile x -> durationPlayerRefs (GrantPlayFromExile.duration x) <> [GrantPlayFromExile.player x]
+  Effect.GrantLookAtExiled {} -> []
+  Effect.MakePlotted {} -> []
+  Effect.MakeForetold {} -> []
+  Effect.MakeWarped {} -> []
+  Effect.ForEach loop -> Maybe.maybeToList (ForEach.startingWith loop)
+  Effect.ForEachNumber {} -> []
+  Effect.Repeat (Repeat.MkRepeat chooser _ _) -> [chooser]
+  Effect.RepeatIf {} -> []
+  Effect.Heal {} -> []
+  Effect.ChooseNewTargets {} -> []
+  Effect.ChangeTargets {} -> []
+
+-- The slots a MonarchTarget reads: only the targeted arm names one.
+monarchTargetSlots :: MonarchTarget.MonarchTarget -> Map.Map SlotName SlotArity
+monarchTargetSlots target = case target of
+  MonarchTarget.TheController -> Map.empty
+  MonarchTarget.ControllerOfSource -> Map.empty
+  MonarchTarget.InSlot slot -> Map.singleton slot SlotArity.One
+
+-- WithController reads one target; BetweenTargets takes both sides out of one
+-- slot (CR 601.2c) and so must see the whole set.
+exchangeSidesSlots :: ExchangeSides.ExchangeSides -> Map.Map SlotName SlotArity
+exchangeSidesSlots sides = case sides of
+  ExchangeSides.WithController slot -> Map.singleton slot SlotArity.One
+  ExchangeSides.BetweenTargets slot -> Map.singleton slot SlotArity.Many
+
+-- The ObjectRef one side of a CR 701.12g exchange holds: a power or a
+-- toughness names its creature, a life total names none.
+exchangedObjectRefs :: ExchangedValue.ExchangedValue -> [ObjectRef]
+exchangedObjectRefs value = case value of
+  ExchangedValue.LifeTotal _ -> []
+  ExchangedValue.Power ref -> [ref]
+  ExchangedValue.Toughness ref -> [ref]
+
+-- exchangedObjectRefs' twin one type over: a life total names its player.
+exchangedPlayerRefs :: ExchangedValue.ExchangedValue -> [PlayerRef]
+exchangedPlayerRefs value = case value of
+  ExchangedValue.LifeTotal ref -> [ref]
+  ExchangedValue.Power _ -> []
+  ExchangedValue.Toughness _ -> []
+
+-- exchangeSidesSlots one type over: WithinSlot takes both permanents out of
+-- one slot -- CR 601.2c's target or CR 608.2d's choices -- and so must see the
+-- whole set, where WithSource reads the one permanent beside CR 113.7's source
+-- object.
+controlSidesSlots :: ControlSides.ControlSides -> Map.Map SlotName SlotArity
+controlSidesSlots sides = case sides of
+  ControlSides.WithinSlot slot -> Map.singleton slot SlotArity.Many
+  ControlSides.WithSource slot -> Map.singleton slot SlotArity.One
+  ControlSides.BetweenSlots (ControlSlots.MkControlSlots one two) -> Map.fromList [(one, SlotArity.One), (two, SlotArity.One)]
+
+-- The one legitimate home of `case effect of`: this module is the VM's opcode
+-- semantics (design.md section 1). slotsOf is the read half of the dataflow lint;
+-- X is not one of its reads, readsX below being X's own half.
+--
+-- The ObjectRefs and the PlayerRefs this effect holds are taken from
+-- effectObjectRefs and effectPlayerRefs at the head rather than arm by arm, so
+-- no arm of the case names either.
+-- slotsOf over an instruction sequence that runs with `defined` already bound:
+-- each instruction's reads, less `defined` and what the instructions ahead of
+-- it bind (CR 608.2c).
+sequenceSlots :: Set SlotName -> [Effect Card.Type.Card (GrantedAbility.GrantedAbility Card.Type.Card)] -> Map.Map SlotName SlotArity
+sequenceSlots defined = joinSlots . snd . List.mapAccumL (\seen effect -> (seen <> boundSlots effect, Map.withoutKeys (slotsOf effect) seen)) defined
+
+slotsOf :: Effect Card.Type.Card (GrantedAbility.GrantedAbility Card.Type.Card) -> Map.Map SlotName SlotArity
+slotsOf effect = joinTwo (joinTwo (joinSlots (fmap objectRefSlots (effectObjectRefs effect))) (joinSlots (fmap playerRefSlots (effectPlayerRefs effect)))) $ case effect of
+  -- The dealer is a read like any other (CR 120.2b), and one object (CR 120.1).
+  Effect.DealDamage (DealDamage.MkDealDamage parts dealer _ _) ->
+    joinTwo
+      (joinSlots (fmap (quantitySlots . DamagePart.quantity) (Foldable.toList parts)))
+      (maybe Map.empty oneSlot dealer)
+  -- BOTH fighters: CR 701.14a reads each one's power against the other, so a
+  -- slot named by only one half would still look dangling.
+  Effect.Fight (Fight.MkFight first second) -> joinTwo (oneSlot first) (oneSlot second)
+  -- The modification's own quantities read slots too, through
+  -- Projection.quantitiesOf. The per-object name is subtracted: the arm itself
+  -- binds it while it freezes, and nowhere else.
+  Effect.ModifyTarget (ModifyTarget.MkModifyTarget duration modification _ each) ->
+    joinTwo (maybe id Map.delete each (joinSlots (fmap quantitySlots (Projection.quantitiesOf modification)))) (durationSlots duration)
+  Effect.ChangeText (ChangeText.MkChangeText _ _ slot duration) -> joinTwo (oneSlot slot) (durationSlots duration)
+  Effect.AddMana {} -> Map.empty
+  Effect.Firebend {} -> Map.empty
+  -- The actor is effectPlayerRefs' half, joined at the head; the FILTER is a
+  -- read like Search's, a card naming a slot in it being read here.
+  Effect.ActivateManaAbilities (ActivateManaAbilities.MkActivateManaAbilities _ filter_) -> filterSlotsOf filter_
+  -- Both refs are effectPlayerRefs' half.
+  Effect.MoveMana {} -> Map.empty
+  -- The count and the FILTER: both references are effectPlayerRefs' half, and a
+  -- search filter naming a slot is a read like any other now that the arm
+  -- matches it in the resolution's own context -- Bifurcate's "with the same
+  -- name as target nontoken creature" is the whole of what its target slot is
+  -- for, so without this the D4 dataflow lint would call that slot unread.
+  Effect.Search (Search.MkSearch _ _ _ _ quantity filter_ _ _ subject _ _ _ _) ->
+    joinTwo
+      (joinTwo (joinSlots (fmap quantitySlots (Maybe.maybeToList quantity))) (filterSlotsOf filter_))
+      -- CR 701.3a's fixed host, read at arity ONE: a slot naming several objects
+      -- names no one host for "an Aura card that could enchant that creature" to
+      -- be about, which is what Parun.Engine.Filter.slotOneObject already reports.
+      (maybe Map.empty oneSlot subject)
+  Effect.ExileAllGraveyards -> Map.empty
+  Effect.Proliferate -> Map.empty
+  Effect.Reroll -> Map.empty
+  -- A READ: the slot names the permanent whose stored results are rerolled.
+  Effect.RerollStoredResults slot -> oneSlot slot
+  -- CR 201.4's name is not an object, so the choice binds no slot of its own and
+  -- the restriction Filter names none either -- a Filter reads a slot only
+  -- through Filter.boundSlots, and no card writes one of those atoms here. The
+  -- CHOOSER's slot is effectPlayerRefs' half, joined at the head above (Petra
+  -- Sphinx's "target player").
+  Effect.ChooseCardName _ -> Map.empty
+  Effect.ChooseQuality _ -> Map.empty
+  -- No slot: the card comes from outside the game, where CR 400.11c lets nothing
+  -- target and so nothing was announced (CR 601.2c).
+  Effect.FromOutsideTheGame _ -> Map.empty
+  Effect.ExileThisSpell -> Map.empty
+  Effect.Bolster quantity -> quantitySlots quantity
+  -- The COUNT only: the amass slot is a DEFINITION, not a read, Create's reason.
+  Effect.Amass (Amass.Type.MkAmass quantity _ _) -> quantitySlots quantity
+  -- The count and the blighters; the slot is a DEFINITION, Amass's reason above.
+  Effect.Blight (Blight.Type.MkBlight _ quantity _) -> quantitySlots quantity
+  Effect.Earthbend (Earthbend.MkEarthbend quantity _) -> quantitySlots quantity
+  Effect.Airbend {} -> Map.empty
+  Effect.TemptWithTheRing -> Map.empty
+  Effect.OpenAttraction -> Map.empty
+  Effect.Planeswalk -> Map.empty
+  Effect.ChaosEnsues -> Map.empty
+  Effect.Abandon -> Map.empty
+  Effect.ClaimPrize -> Map.empty
+  Effect.Forage -> Map.empty
+  Effect.Populate -> Map.empty
+  Effect.TimeTravel -> Map.empty
+  Effect.Recruit -> Map.empty
+  Effect.Learn -> Map.empty
+  Effect.Cloak {} -> Map.empty
+  Effect.ManifestDread {} -> Map.empty
+  Effect.Venture {} -> Map.empty
+  Effect.ExileHandThenDraw -> Map.empty
+  Effect.NoteManaSpent -> Map.empty
+  -- The players are effectPlayerRefs' half, joined at the head above.
+  Effect.PlayerSacrifices (PlayerSacrifices.MkPlayerSacrifices _ _ quantity) -> quantitySlots quantity
+  -- The object vote's listed choices are a Filter and nothing else: the starter
+  -- is effectPlayerRefs' half, joined at the head above, and the slot this
+  -- WRITES is boundSlots' half. A word vote reads no slot at all -- its words
+  -- are the slots it writes -- and neither does a player vote.
+  Effect.Vote (Vote.MkVote _ choices _) -> case choices of
+    VoteChoices.Objects objects -> filterSlotsOf (VoteObjects.filter objects)
+    VoteChoices.Words _ -> Map.empty
+    VoteChoices.Players _ -> Map.empty
+  -- The opening bid is the read; the two slots are boundSlots' half.
+  Effect.Bid bid -> quantitySlots (Bid.opening bid)
+  Effect.RestartGame _ -> Map.empty
+  Effect.ControlPlayerNextTurn slot -> oneSlot slot
+  Effect.ControlPlayerThisResolution (ControlPlayer.MkControlPlayer slot _) -> oneSlot slot
+  -- The three slot fields are DEFINITIONS, not reads; they belong to boundSlots
+  -- below.
+  Effect.Destroy {} -> Map.empty
+  -- The ref is the whole read, and the head above already took it.
+  Effect.Sacrifice {} -> Map.empty
+  Effect.TurnFaceDown {} -> Map.empty
+  Effect.TurnFaceUp slot -> oneSlot slot
+  Effect.RemoveFromCombat _ -> Map.empty
+  Effect.BecomesBlocked slot -> oneSlot slot
+  -- SlotArity.Many, unlike the arm above: CR 601.2c gives this one instance of
+  -- the word "target" exactly two recipients and resolution reads both.
+  Effect.SwitchBlockers slot -> Map.singleton slot SlotArity.Many
+  Effect.ExchangeBlocks (ExchangeBlocks.MkExchangeBlocks firstSlot secondSlot) -> insertOne firstSlot (oneSlot secondSlot)
+  Effect.MoveToZone (MoveToZone.MkMoveToZone _ _ riders _ _ placement _) -> joinTwo (joinSlots (fmap quantitySlots (riderQuantities riders <> placementQuantities placement))) (riderSlots riders)
+  -- CR 121.1's bound slot is a DEFINITION, not a read: see boundSlots below.
+  Effect.Draw (Draw.MkDraw _ quantity _) -> quantitySlots quantity
+  -- The tally's slot and CR 701.17c's are DEFINITIONS, not reads: see boundSlots
+  -- below.
+  Effect.Mill (Mill.MkMill _ quantity _ _) -> quantitySlots quantity
+  -- The bound slot is a DEFINITION, not a read.
+  Effect.Reveal {} -> Map.empty
+  -- The bound slot is a DEFINITION, not a read.
+  Effect.LookAt {} -> Map.empty
+  Effect.Scry (PlayerQuantity.MkPlayerQuantity _ quantity) -> quantitySlots quantity
+  Effect.Surveil (PlayerQuantity.MkPlayerQuantity _ quantity) -> quantitySlots quantity
+  Effect.Fateseal (PlayerQuantity.MkPlayerQuantity _ quantity) -> quantitySlots quantity
+  Effect.Clash {} -> Map.empty
+  Effect.AsYouCascade {} -> Map.empty
+  Effect.Explore _ -> Map.empty
+  Effect.Assemble _ -> Map.empty
+  Effect.ArrangeInLibrary _ -> Map.empty
+  Effect.Connive (Connive.MkConnive quantity _) -> quantitySlots quantity
+  Effect.Discard subject -> case subject of
+    -- The bound slot is a DEFINITION, not a read, so it is not joined in here.
+    -- The discarders are a PlayerRef, reported at the head with every other one.
+    Discard.Counted (CountedDiscard.MkCountedDiscard _ quantity _) -> quantitySlots quantity
+    Discard.These {} -> Map.empty
+    -- The ceiling's read joined with what the card filter reads. The discarders
+    -- are a PlayerRef, reported at the head with every other one.
+    Discard.AnyNumber (AnyNumberDiscard.MkAnyNumberDiscard _ (AnyNumberMatching.MkAnyNumberMatching filter_ atMost) _) ->
+      joinTwo (maybe Map.empty quantitySlots atMost) (filterSlotsOf filter_)
+  Effect.LoseLife (LifeLoss.MkLifeLoss _ quantity _ _) -> quantitySlots quantity
+  Effect.GainLife (PlayerQuantity.MkPlayerQuantity _ quantity) -> quantitySlots quantity
+  Effect.ExchangeLifeTotals sides -> exchangeSidesSlots sides
+  -- Both sides' references are effectObjectRefs' and effectPlayerRefs' halves.
+  Effect.ExchangeValues x -> durationSlots (ExchangeValues.duration x)
+  Effect.ExchangeZones {} -> Map.empty
+  Effect.ExchangeCardZones {} -> Map.empty
+  Effect.SetLifeTotal (PlayerQuantity.MkPlayerQuantity _ quantity) -> quantitySlots quantity
+  Effect.LoseGame {} -> Map.empty
+  Effect.WinGame {} -> Map.empty
+  Effect.DrawGame {} -> Map.empty
+  Effect.RedistributeLifeTotals -> Map.empty
+  Effect.IncreaseSpeed (PlayerQuantity.MkPlayerQuantity _ quantity) -> quantitySlots quantity
+  Effect.DecreaseSpeed d -> quantitySlots (SpeedDecrease.quantity d)
+  -- Create's slot is a DEFINITION, not a read, so the lint must not see it here.
+  -- CR 111.2's creator is a READ -- Rampage of the Clans names the controller of
+  -- the permanent the loop around it bound -- reported at the head with every
+  -- other PlayerRef. So is CR 509.4's blocking rider, which names the attacker
+  -- the token enters blocking (Flash Foliage's target), and that one is here.
+  -- The token's own printed P/T is a read too, and for the same reason the
+  -- riders' counts are: CR 111.3 has the CREATING effect define it, in this
+  -- resolution's slots (tokenBoxQuantities).
+  Effect.Create (Create.MkCreate quantity card riders _ _) -> joinSlots [quantitySlots quantity, joinSlots (fmap quantitySlots (riderQuantities riders <> tokenBoxQuantities card)), riderSlots riders]
+  -- The COUNT and a reference pick's bound: the conjure's other candidates are
+  -- literal card data, its destination is a constructor, and the conjurer is
+  -- the resolving controller.
+  Effect.Conjure conjure -> joinSlots (fmap quantitySlots (conjureQuantities conjure))
+  Effect.CreateCopy (CreateCopy.MkCreateCopy quantity _ riders _ _) -> joinSlots [quantitySlots quantity, joinSlots (fmap quantitySlots (riderQuantities riders)), riderSlots riders]
+  -- The DURATION reads slots, ModifyTarget's arm above; the two refs are
+  -- effectObjectRefs' half.
+  Effect.BecomeCopy (BecomeCopy.MkBecomeCopy _ _ duration _ _) -> foldMap durationSlots duration
+  Effect.CopyStackObject (CopyStackObject.MkCopyStackObject _ _ quantity _ _) -> quantitySlots quantity
+  -- The Duration and Condition each carry Quantities; a Quantity.InSlot is a read.
+  -- The ROW's own Filters and Quantities are READS too (replacementRowReads):
+  -- Filter.IsBound in one names an object an earlier effect of this same
+  -- resolution defined (Dire Fleet Daredevil's "that spell"), which is what the
+  -- row's captured environment answers at CR 616.1.
+  Effect.Replace (Replace.MkReplace duration _ _ condition re) ->
+    joinSlots [durationSlots duration, joinSlots (fmap conditionSlots (Maybe.maybeToList condition)), replacementRowSlots re]
+  Effect.SkipPhase x -> durationSlots (SkipPhase.duration x)
+  -- CR 615.5's rider reads slots of its own, so its reads join this effect's,
+  -- LESS the reserved amount and source slots: the prevention binds those
+  -- itself, and Resolve.runPreventionRider is the writer.
+  --
+  -- The card-authored FILTERS are reads too, replacementRowSlots' answer for
+  -- the same DamageR row one carrier over: the recipient description rides the
+  -- installed row and is re-asked at each damage event, and CR 609.7a's
+  -- chosen-source predicate is asked once as this effect resolves. CR 609.7b's
+  -- printed source properties are not among them -- this opcode has no such
+  -- field, and its installDamageRow call passes the trivial predicate. A
+  -- Filter.IsBound in either names a slot of this resolution.
+  Effect.PreventNextDamage (PreventNextDamage.MkPreventNextDamage duration _ _ whatRecipient _ chosenSource quantity rider) ->
+    joinSlots
+      [ durationSlots duration,
+        quantitySlots quantity,
+        joinSlots (fmap filterSlotsOf (Maybe.maybeToList whatRecipient <> Maybe.maybeToList chosenSource)),
+        riderSlotsOf rider
+      ]
+  -- The same reads, minus the shield size this opcode does not carry and plus CR
+  -- 609.7b's printed source properties, the one field only this opcode spells
+  -- out; they ride the row and are rechecked at the damage event (CR 615.9).
+  Effect.PreventAllDamage (PreventAllDamage.MkPreventAllDamage duration _ _ whatRecipient _ _ chosenSource whatSource rider) ->
+    joinSlots
+      [ durationSlots duration,
+        joinSlots (fmap filterSlotsOf (Maybe.maybeToList whatRecipient <> Maybe.maybeToList chosenSource <> [whatSource])),
+        riderSlotsOf rider
+      ]
+  -- The two arms above's reads, minus every field this opcode does not carry: a
+  -- duration, CR 609.7a's chosen-source predicate, and the rider.
+  Effect.PreventNextDamageInstance (PreventNextDamageInstance.MkPreventNextDamageInstance duration _ chosenSource rider) ->
+    joinSlots [durationSlots duration, filterSlotsOf chosenSource, riderSlotsOf rider]
+  -- CR 614.9's redirection reads what PreventNextDamage reads, minus a rider it
+  -- cannot carry: the recipient and source descriptions ride the row, CR
+  -- 609.7a's chosen-source predicate is asked once here, and the counted amount
+  -- is evaluated once here too.
+  Effect.RedirectDamage (RedirectDamage.MkRedirectDamage duration _ amount _ whatRecipient _ _ chosenSource _ whatSource) ->
+    joinSlots
+      [ durationSlots duration,
+        joinSlots (fmap quantitySlots (Maybe.maybeToList amount)),
+        joinSlots (fmap filterSlotsOf (Maybe.maybeToList whatRecipient <> Maybe.maybeToList chosenSource <> [whatSource]))
+      ]
+  -- The bound slot is a DEFINITION, not a read: see boundSlots below.
+  Effect.Counter {} -> Map.empty
+  Effect.PutCounters (PutCounters.MkPutCounters _ quantity _) -> quantitySlots quantity
+  Effect.DistributeCounters (PutCounters.MkPutCounters _ quantity _) -> quantitySlots quantity
+  -- CR 122.8 reads its tally off ONE object, so `from` is read singly, where the
+  -- destination is an ObjectRef and may sweep.
+  Effect.PutCountersFrom (PutCountersFrom.MkPutCountersFrom from _ _) -> oneSlot from
+  Effect.RemoveCounters (RemoveCounters.MkRemoveCounters _ quantity slot _) -> insertOne slot (quantitySlots quantity)
+  Effect.RemoveCountersAmong (RemoveCountersAmong.MkRemoveCountersAmong count _ _ _) -> foldMap quantitySlots (RemovalCount.quantityOf count)
+  -- CR 122.5's pair: BOTH sides are ObjectRefs, joined at slotsOf's head with
+  -- every other ref, so neither is read here. The count reads
+  -- slots of its own -- Black Panther, Wakandan King's "all +1/+1 counters" is a
+  -- Quantity.AgainstSlot aimed at the slot its `from` names -- so it joins in
+  -- here rather than being left to look dangling. The bound slot is a
+  -- DEFINITION, not a read: see boundSlots below.
+  --
+  -- Both sides report SlotArity.Many, every ObjectRef.InSlot being a whole-set
+  -- read. A slot the COUNT names as an OBJECT still comes out One:
+  -- joinTwo is Map.unionWith min and a Quantity.AgainstSlot reads its object
+  -- singly, so Black Panther's `land` -- named by both halves -- keeps the arity
+  -- that says "up to two target creatures" cannot fill it. A count reading that
+  -- same name's AMOUNT would not narrow it, reading no object at all
+  -- (quantitySlots above).
+  Effect.MoveCounters (MoveCounters.MkMoveCounters _ kinds _ _) -> foldMap quantitySlots (MovedKinds.quantityOf kinds)
+  Effect.GainPlayerCounters (PlayerCounters.MkPlayerCounters _ _ quantity) -> quantitySlots quantity
+  Effect.RemovePlayerCounters removal -> quantitySlots (RemovePlayerCounters.quantity removal)
+  -- The SlotName is a DEFINITION, not a read; it belongs to boundSlots below.
+  Effect.PayAnyEnergy _ -> Map.empty
+  Effect.ChooseNumber _ -> Map.empty
+  Effect.Tap _ -> Map.empty
+  Effect.Untap _ -> Map.empty
+  Effect.Unattach _ -> Map.empty
+  Effect.Detain _ -> Map.empty
+  Effect.Goad _ -> Map.empty
+  Effect.Pair _ -> Map.empty
+  Effect.GrantLookAtExiled _ -> Map.empty
+  Effect.MakePlotted _ -> Map.empty
+  Effect.MakeForetold _ -> Map.empty
+  Effect.MakeWarped _ -> Map.empty
+  Effect.DoesNotUntapNext _ -> Map.empty
+  Effect.Transform _ -> Map.empty
+  Effect.Convert _ -> Map.empty
+  Effect.Flip _ -> Map.empty
+  -- The combined back face is literal card data and names no slot.
+  Effect.Meld {} -> Map.empty
+  Effect.PhaseOut _ -> Map.empty
+  Effect.AddPhases _ -> Map.empty
+  Effect.EndTurn -> Map.empty
+  Effect.EndCombatPhase -> Map.empty
+  -- Both refs are the generic folds' half, joined at the head.
+  Effect.GainControl {} -> Map.empty
+  Effect.ExchangeControl sides -> controlSidesSlots sides
+  Effect.ArmDelayedTrigger {} -> Map.empty
+  -- Two reads, on the two halves of one opcode: the seat AffectedPlayers.Named
+  -- names, and CR 601.2c's RECIPIENT a stored damage-pattern effect names
+  -- (Whippoorwill's "that creature"). The second is Many, and for
+  -- ObjectRef.InSlot's reason: Resolve.bakeDamagePatternRecipient reads the
+  -- whole set and stores one effect per recipient, so a slot holding two is not
+  -- silently narrowed to one.
+  Effect.AffectPlayers (AffectPlayers.MkAffectPlayers _ affected playerEffect) ->
+    joinTwo
+      (affectedPlayersSlots affected)
+      (joinSlots (fmap (\slot -> Map.singleton slot SlotArity.Many) (PlayerEffect.boundRecipientSlots playerEffect)))
+  -- RequireAttack's reading below, for a Matching blocker or class.
+  Effect.RequireBlock (RequireBlock.MkRequireBlock duration blocker attacker _) -> joinTwo (durationSlots duration) (joinTwo (matchingSlots blocker) (foldMap matchingSlots attacker))
+  Effect.Prohibit (Prohibit.MkProhibit _ duration affected) -> joinTwo (durationSlots duration) (matchingSlots affected)
+  Effect.ForbidAttack {} -> Map.empty
+  -- The class is a FILTER read, RequireAttack's Matching arm below.
+  Effect.ForbidBeingBlocked (ForbidBeingBlocked.MkForbidBeingBlocked duration f barred) -> joinTwo (durationSlots duration) (joinTwo (filterSlotsOf f) (filterSlotsOf barred))
+  -- CR 508.1b's two sides are reported at the head when a ref names the
+  -- creatures; a Matching class is a FILTER read, Search's, and the Duration is
+  -- ModifyTarget's -- Taunt's "target player" is read by both and nothing else.
+  Effect.RequireAttack (RequireAttack.MkRequireAttack duration attacker _) ->
+    joinTwo (durationSlots duration) (matchingSlots attacker)
+  Effect.CreateEmblem {} -> Map.empty
+  -- CR 725.1's crown names a target slot only in the InSlot arm.
+  Effect.BecomeMonarch target -> monarchTargetSlots target
+  -- CR 726.1 names no target slot at all: neither InitiativeTarget arm reads one.
+  Effect.TakeTheInitiative _ -> Map.empty
+  -- A READ: the slot names the permanent gaining the designation. CR 701.37c's
+  -- X is an AMOUNT the same resolution may have bound, Effect.Create's count
+  -- posture, so its own slots are joined in.
+  Effect.Designate (Designate.MkDesignate _ slot value) -> joinTwo (oneSlot slot) (joinSlots (fmap quantitySlots (Foldable.toList value)))
+  Effect.SetClassLevel (SetClassLevel.MkSetClassLevel _ slot) -> oneSlot slot
+  Effect.Unsuspect _ -> Map.empty
+  -- A READ, Designate's: the slot names the permanent whose half is locked or
+  -- unlocked. WHICH half is chosen at resolution and is no slot of any kind.
+  Effect.SetHalfLocked (SetHalfLocked.MkSetHalfLocked _ _ slot) -> oneSlot slot
+  -- A READ, Designate's: the slot names where the counter goes.
+  Effect.CounterAndMark (PermanentActed.MkPermanentActed _ slot) -> oneSlot slot
+  Effect.BecomeProtector slot -> oneSlot slot
+  Effect.Mentor slot -> oneSlot slot
+  Effect.Exploit -> Map.empty
+  Effect.GiveGift -> Map.empty
+  Effect.ItBecomes _ -> Map.empty
+  Effect.ExileHaunting (ExileHaunting.MkExileHaunting card slot) -> joinSlots [oneSlot card, oneSlot slot]
+  Effect.Attach slot -> oneSlot slot
+  Effect.AttachAsThoughCreature slot -> oneSlot slot
+  Effect.AttachTarget (AttachTarget.MkAttachTarget slot _) -> oneSlot slot
+  Effect.AttachTargetToEach (AttachTarget.MkAttachTarget slot _) -> oneSlot slot
+  -- Two READS: the binding the entrant sits in and the slot the card targeted.
+  -- Both are read rather than bound, so both belong here; CardSpec's
+  -- declared-equals-read lint subtracts the reserved `became` from this side.
+  Effect.AttachBound (AttachBound.MkAttachBound subject destination) -> joinSlots [oneSlot subject, oneSlot destination]
+  -- The movers are effectObjectRefs' half; the destination FILTER is a read like
+  -- Search's (Glamer Spinners' "with the same controller" as its target).
+  Effect.AttachAll (AttachAll.MkAttachAll _ destination) -> filterSlotsOf destination
+  -- CR 729.1/729.1b: the slot is a DEFINITION (the subgame's winner), not a read.
+  Effect.PlaySubgame _ -> Map.empty
+  -- A DEFINITION too: chosen as this effect is applied (CR 608.2d), never read.
+  Effect.ChoosePlayer _ -> Map.empty
+  Effect.ChooseSector _ -> Map.empty
+  Effect.ChoosePlayerAtRandom _ -> Map.empty
+  -- The slot is a DEFINITION; the reads are the ceiling's and the Filter's, and
+  -- the chooser is a PlayerRef, reported at the head with every other one.
+  Effect.ChoosePermanents (ChoosePermanents.MkChoosePermanents (ChosenPermanents.MkChosenPermanents filter_ _ count) _ _) ->
+    joinTwo (maybe Map.empty quantitySlots (HowMany.quantity count)) (filterSlotsOf filter_)
+  -- A DEFINITION for the result slot (boundSlots below), but CR 706.2's modifier
+  -- is a READ: the instruction's own Quantity may name a slot an earlier effect
+  -- of this same resolution bound, CR 608.2c following the list in written order.
+  --
+  -- A SHAPE CORRECTION, not a tested behaviour: every modifier in data/cards/ is
+  -- a Count naming no slot (Diviner's Portent) and every count is a Literal
+  -- (Valiant Endeavor), so leaving this Map.empty leaves the suite green. A card whose roll added "the number of cards you drew this
+  -- way" would refute that. The same holds of the two arms below.
+  Effect.RollDie rollDie -> quantitySlots (RollDie.count rollDie) <> maybe Map.empty quantitySlots (RollDie.modifier rollDie)
+  -- And a DEFINITION too, on top of the slots the coin count reads.
+  Effect.FlipCoin flipCoin -> quantitySlots (FlipCoin.count flipCoin)
+  -- The slots the turn count reads (Ral Zarek's tally of heads).
+  Effect.TakeExtraTurn takeExtraTurn -> quantitySlots (TakeExtraTurn.count takeExtraTurn)
+  Effect.ShuffleIntoLibrary {} -> Map.empty
+  Effect.Ante {} -> Map.empty
+  -- The slots the ticket-cost cap reads (Pin Collection's X).
+  Effect.PutSticker putSticker -> foldMap quantitySlots (PutSticker.ticketCap putSticker)
+  Effect.SetOwner {} -> Map.empty
+  Effect.ExchangeOwnership {} -> Map.empty
+  -- The arm above's library read, reported at the head; nothing is shuffled into
+  -- it, so there is no ref beside it either.
+  Effect.Shuffle {} -> Map.empty
+  -- The REFERENCE alone: the caster is a PlayerRef and is reported at the head.
+  -- This one is a read, bound by an earlier effect of the list (CR 400.7) where
+  -- it names a slot at all.
+  -- And the slots Rod of Absorption's total reads (its X).
+  Effect.OfferCast (OfferCast.MkOfferCast ref _ _ _ _ repetition _ _ _) -> joinTwo (objectRefSlots ref) (repetitionSlots repetition)
+  Effect.OfferNamedCopy {} -> Map.empty
+  Effect.OfferNotedCopy {} -> Map.empty
+  Effect.GrantPlayFromExile grant -> joinTwo (durationSlots (GrantPlayFromExile.duration grant)) (maybe Map.empty conditionSlots (GrantPlayFromExile.condition grant))
+  -- What the BODY reads from outside the loop, and what its per-member gate
+  -- reads (modeSlots' payer, multiplier and basis). The loop's own member slot
+  -- and what an earlier body instruction bound are the loop's own definitions
+  -- (boundSlots below), so they are no read: an optional clause holding only
+  -- such reads would otherwise be judged inert before the loop has run
+  -- (Parun.Engine.Resolve.clauseIsInert, Bruna, Light of Alabaster's "you may
+  -- attach to it any number of Auras").
+  Effect.ForEach (ForEach.MkForEach _ _ slot body _ gate _) -> joinTwo (maybe Map.empty payGateSlots gate) (sequenceSlots (Set.singleton slot) (Foldable.toList body))
+  Effect.ForEachNumber (ForEachNumber.MkForEachNumber upTo slot body) -> joinTwo (quantitySlots upTo) (sequenceSlots (Set.singleton slot) (Foldable.toList body))
+  Effect.Repeat (Repeat.MkRepeat _ body gate) -> joinSlots (maybe Map.empty conditionSlots gate : fmap slotsOf (Foldable.toList body))
+  -- What the process and the "if" read, and the condition itself: a read of
+  -- what the process bound, which boundSlots below defines.
+  Effect.RepeatIf (RepeatIf.MkRepeatIf process condition ifHolds) -> joinSlots (conditionSlots condition : fmap slotsOf (Foldable.toList (process <> ifHolds)))
+  Effect.Heal _ -> Map.empty
+  Effect.ChooseNewTargets _ -> Map.empty
+  Effect.ChangeTargets _ -> Map.empty
+
+-- Every PlayerRef nested in a Duration: the seat CR 611.2a's window is counted
+-- against, which only UntilEndOfNextTurnOf states. durationSlots' twin one type
+-- over, and read by effectPlayerRefs rather than here, so the slot it names
+-- reaches Parun.EffectLintSpec's singly-read classification the way every other
+-- reference does.
+durationPlayerRefs :: Duration.Duration -> [PlayerRef]
+durationPlayerRefs duration = case duration of
+  Duration.UntilEndOfNextTurnOf ref -> [ref]
+  -- The seat the WINDOW is counted against, read exactly as the arm above's is.
+  Duration.DuringNextTurnOf ref -> [ref]
+  Duration.DuringNextUntapStepOf ref -> [ref]
+  -- CR 109.5's "you" is no reference at all.
+  Duration.DuringYourNextTurn -> []
+  Duration.DuringThatExtraTurn -> []
+  Duration.UntilEndOfTurn -> []
+  Duration.Indefinite -> []
+  Duration.Perpetual -> []
+  Duration.UntilYourNextTurn -> []
+  Duration.UntilYourNextStep _ -> []
+  Duration.UntilEndOfYourNextTurn -> []
+  -- A Condition's own references are Quantity.bakePlayerRef's half, reached
+  -- through conditionSlots rather than through a list of references.
+  Duration.ForAsLongAs _ -> []
+  Duration.UntilPaid _ -> []
+  Duration.UntilEndOfCombat -> []
+  Duration.UntilEndOfCombatOnYourNextTurn -> []
+  Duration.UntilUsed -> []
+  -- A criterion's seats are Filter atoms, reached through durationSlots.
+  Duration.UntilEvent _ -> []
+
+-- CR 611.2b: only ForAsLongAs carries a Quantity, through its Condition.
+durationSlots :: Duration.Duration -> Map.Map SlotName SlotArity
+durationSlots duration = case duration of
+  Duration.UntilEndOfTurn -> Map.empty
+  Duration.Indefinite -> Map.empty
+  Duration.Perpetual -> Map.empty
+  Duration.UntilYourNextTurn -> Map.empty
+  Duration.UntilYourNextStep _ -> Map.empty
+  Duration.UntilEndOfYourNextTurn -> Map.empty
+  -- The seat the window is counted against, read exactly as every other
+  -- PlayerRef position is (CR 601.2c).
+  Duration.UntilEndOfNextTurnOf ref -> playerRefSlots ref
+  Duration.DuringNextTurnOf ref -> playerRefSlots ref
+  Duration.DuringNextUntapStepOf ref -> playerRefSlots ref
+  Duration.DuringYourNextTurn -> Map.empty
+  Duration.DuringThatExtraTurn -> Map.empty
+  Duration.ForAsLongAs condition -> conditionSlots condition
+  -- A Cost reads no slot: the activation cost of an ability is not walked by
+  -- modeSlots either, and CR 116.2c's price is paid outside any resolution, so
+  -- there is no binding environment for it to name.
+  Duration.UntilPaid _ -> Map.empty
+  Duration.UntilEndOfCombat -> Map.empty
+  Duration.UntilEndOfCombatOnYourNextTurn -> Map.empty
+  -- No slot either: Expiry.WhenUsed reads the effect's own Filter, which is
+  -- walked wherever that effect's payload is (Parun.Engine.PlayerEffect), not
+  -- here.
+  Duration.UntilUsed -> Map.empty
+  -- CR 611.2a: a cast's criterion may name a seat by slot, which
+  -- Parun.Engine.Expiry.arm bakes.
+  Duration.UntilEvent DurationEvent.SourceTurnedFaceDown -> Map.empty
+  Duration.UntilEvent DurationEvent.Planeswalked -> Map.empty
+  Duration.UntilEvent (DurationEvent.SpellCast criterion) -> filterSlotsOf criterion
+
+-- Both sides of a comparison are a Quantity, and either may read a slot.
+conditionSlots :: Condition.Type.Condition -> Map.Map SlotName SlotArity
+conditionSlots condition = case condition of
+  Condition.Type.Compares c ->
+    joinTwo (quantitySlots (Compares.measured c)) (quantitySlots (Compares.threshold c))
+  Condition.Type.Any conditions -> joinSlots (fmap conditionSlots conditions)
+  Condition.Type.All conditions -> joinSlots (fmap conditionSlots conditions)
+  Condition.Type.During _ -> Map.empty
+
+-- Everything one waiting ROW can name a slot with: the Filters its pattern and its
+-- rewrite describe things with, and the Quantities its rewrite counts with. A
+-- Filter.IsBound in any of them, and a Quantity.InSlot in any of them, is a read
+-- of the installing resolution's binding environment
+-- (Parun.Types.ActiveReplacement).
+--
+-- ONE declaration for THREE consumers, which is why the rewrite is not left to a
+-- second function: replacementRowSlots below reports it as what the effect reads
+-- (CR 603.3b, through slotsOf's Replace arm); installDamageRow and the
+-- Effect.Replace resolution arm restrict what the installed row CAPTURES to it;
+-- and referredToSources reads that captured map back out as CR 609.7a's "any
+-- object referred to by ... a replacement or prevention effect that's waiting to
+-- apply". A read missing here is one the row cannot answer at the event, with no
+-- -Werror to catch it and no help from the card dataflow lint, whose read side is
+-- this same function.
+--
+-- The two halves are returned TOGETHER rather than by two traversals, so that
+-- ownSlotsAreExhaustive's Replace arm and the slot walk cannot come apart about
+-- what an arm holds.
+--
+-- SYNTACTIC rather than per-reader: a slot NAME anywhere in the row's own data is
+-- an object the row refers to, whether or not the arm reading it happens to build
+-- a slot-aware Filter.Context today. That is what CR 609.7a asks for, and it is
+-- the safe direction for the capture.
+--
+-- CR 614.9's printed DESTINATION is walked with the damage pattern beside it and
+-- is not a pattern: it is read in the same
+-- Parun.Engine.Replacement.candidateContext the pattern is, so IsBound means the
+-- same thing in both and a slot declared for one is declared for the other.
+--
+-- No wildcard: an arm added to Parun.Types.ReplacementEffect must answer here, and
+-- the ones carrying neither Filter nor Quantity say so rather than falling
+-- through. The nested EFFECTS a rewrite or a CR 615.5 rider carries are NOT here
+-- and are not missing: what one of those reads is a whole effect's worth of
+-- reads rather than a Filter or a Quantity, so replacementRowEffects below
+-- declares them and replacementRowSlots joins slotsOf over the answer.
+replacementRowReads :: ReplacementEffect.ReplacementEffect Card.Type.Card (GrantedAbility.GrantedAbility Card.Type.Card) (Effect Card.Type.Card (GrantedAbility.GrantedAbility Card.Type.Card)) -> ([Filter.Type.Filter Keyword.Type.Keyword], [Quantity.Type.Quantity])
+replacementRowReads re = case re of
+  -- The rewrite is a Zone, a LibraryPosition and Bools (Parun.Types.ZoneChangeR):
+  -- nothing that can name a slot, so the pattern is the whole of it.
+  ReplacementEffect.ZoneChangeR (ZoneChangeR.MkZoneChangeR pat _ _ _ _ _) -> ([ZoneChangePattern.whatObject pat], [])
+  ReplacementEffect.EntryR (EntryR.MkEntryR pat rewrite) -> addFilter pat (entryRewriteReads rewrite)
+  ReplacementEffect.DamageR (DamageR.MkDamageR pat rewrite _) ->
+    ( DamagePattern.whatSource pat : (Maybe.maybeToList (DamagePattern.whatRecipient pat) <> damageRewriteFilters rewrite),
+      []
+    )
+  -- CR 614.1a's printed subject (Pyramids' "target land"); the rewrite is nullary.
+  ReplacementEffect.DestructionR (DestructionR.MkDestructionR matching _) -> (Maybe.maybeToList matching, [])
+  -- The rewrite is one Scaling, which is a constructor and a Natural.
+  ReplacementEffect.CounterR (CounterR.MkCounterR pat _) -> ([CounterPattern.onWhat pat], [])
+  -- The pattern's Filter over what the token is; the scaling is a number and
+  -- the appended token is card data of its own, so neither reads a slot.
+  ReplacementEffect.TokenR (TokenR.MkTokenR pat _ _) -> ([TokenPattern.whatToken pat], [])
+  ReplacementEffect.TurnUpR (TurnUpR.MkTurnUpR pat _ _ rewrite) -> addFilter pat (turnUpRewriteReads rewrite)
+  ReplacementEffect.AttachR (AttachR.MkAttachR pat (AttachRewrite.AsCopy asCopy)) -> addFilter pat (asCopyReads asCopy)
+  ReplacementEffect.AttachR (AttachR.MkAttachR pat (AttachRewrite.ChooseColors _)) -> ([pat], [])
+  ReplacementEffect.UntapR _ -> ([], [])
+  -- A LifeLossPattern is one ControllerRelation and one LifeLossCause, and no arm
+  -- of LifeLossRewrite carries a Filter or a Quantity: no read at all.
+  ReplacementEffect.LifeLossR {} -> ([], [])
+  -- One ControllerRelation and one Scaling: no read at all, LifeLossR's answer.
+  ReplacementEffect.LifeGainR {} -> ([], [])
+  -- The pattern is one ControllerRelation; a Filter can only ride the REWRITE, and
+  -- drawRewriteReads below is what reports it.
+  ReplacementEffect.DrawR (DrawR.MkDrawR _ rewrite) -> drawRewriteReads rewrite
+  -- A DrawCountR is one ControllerRelation, one threshold and one nullary rewrite.
+  -- DrawR's answer, and for its reason.
+  ReplacementEffect.DrawCountR {} -> ([], [])
+  -- An InstructionR is one instruction, one ControllerRelation and one scaling
+  -- or DrawInstead. DrawCountR's answer, and for its reason.
+  ReplacementEffect.InstructionR {} -> ([], [])
+  -- One ControllerRelation and one nullary rewrite: no read at all, DrawCountR's
+  -- answer and for its reason.
+  ReplacementEffect.DieRollR {} -> ([], [])
+  ReplacementEffect.AssembleR matching -> ([matching], [])
+  -- One ControllerRelation; the effects run instead are replacementRowEffects'.
+  ReplacementEffect.GameLossR {} -> ([], [])
+  ReplacementEffect.PlaneswalkR {} -> ([], [])
+  ReplacementEffect.PhaseR _ -> ([], [])
+
+-- A row's pattern Filter joined onto what its rewrite reads.
+addFilter :: Filter.Type.Filter Keyword.Type.Keyword -> ([Filter.Type.Filter Keyword.Type.Keyword], [Quantity.Type.Quantity]) -> ([Filter.Type.Filter Keyword.Type.Keyword], [Quantity.Type.Quantity])
+addFilter filter_ (filters, quantities) = (filter_ : filters, quantities)
+
+-- What an ENTRY rewrite reads, beside its row's pattern. Total over
+-- Parun.Types.EntryRewrite and no wildcard, replacementRowReads' discipline: an arm
+-- gaining a Filter or a Quantity must answer here rather than have its reads go
+-- undeclared. The arms answering nothing carry Naturals, constructors and literal
+-- card data, none of which can name a slot.
+--
+-- Every arm here is a REGRESSION FENCE rather than a proven behaviour: the
+-- Effect.Replace rows in data/cards/ carry Tapped, UnderSourceControl (Gather
+-- Specimens) and WithCounters (Zameck Guildmage), and none of the three names a
+-- slot -- Zameck's count is a Quantity.Literal -- so neutralizing any arm leaves
+-- the whole suite green. They are written because the narrowing one caller over
+-- is only sound if this list is complete -- a rewrite read left out is a slot the
+-- installed row does not carry, and the Filter or Quantity that wanted it then
+-- answers vacuously at the event.
+entryRewriteReads :: EntryRewrite.EntryRewrite (GrantedAbility.GrantedAbility Card.Type.Card) (Effect Card.Type.Card (GrantedAbility.GrantedAbility Card.Type.Card)) -> ([Filter.Type.Filter Keyword.Type.Keyword], [Quantity.Type.Quantity])
+entryRewriteReads rewrite = case rewrite of
+  -- CR 707.9e's additional counters are Quantities beside the eligible filter,
+  -- and read at the entry exactly as the CR 614.1c row's below are.
+  EntryRewrite.AsCopy asCopy -> asCopyReads asCopy
+  EntryRewrite.ChoiceOf _ -> ([], [])
+  EntryRewrite.ChoiceByCoinFlip _ -> ([], [])
+  EntryRewrite.ChooseColors {} -> ([], [])
+  EntryRewrite.ChooseBasicLandType -> ([], [])
+  EntryRewrite.ChooseCreatureType -> ([], [])
+  EntryRewrite.ChoosePlayer -> ([], [])
+  EntryRewrite.ChooseCardNames restriction -> ([restriction], [])
+  EntryRewrite.ChooseCardName restriction -> ([restriction], [])
+  -- CR 614.1c's count per kind, evaluated as the row applies and against the ROW's
+  -- Context (Parun.Engine.Event's WithCounters arm), so a Quantity.InSlot in one
+  -- reads the captured map. The KINDS beside them cannot name a slot.
+  EntryRewrite.WithCounters counters -> ([], Map.elems (WithCounters.counters counters))
+  -- The counter half is the arm above's answer, and CR 614.1c's granted keywords
+  -- name no slot: a keyword may CARRY a Filter (CR 702.14c's landwalk), and that
+  -- Filter is judged against the board rather than against a resolution's
+  -- bindings -- the answer AsCopy's exceptions get above, whose CR 707.9a
+  -- keywords are not reported either. A quoted ability's slots are its own,
+  -- bound when IT resolves, CopyException.GainAbility's answer.
+  EntryRewrite.EntersWith entersWith -> ([], foldMap (Map.elems . WithCounters.counters) (EntersWith.counters entersWith))
+  EntryRewrite.UnderSourceControl -> ([], [])
+  -- BOTH halves: the permanents the sacrifice may take, and CR 702.82a's
+  -- per-sacrifice multiplier beside them, which is a Quantity that may name a
+  -- slot exactly as the WithCounters arm above is.
+  EntryRewrite.SacrificeAnyNumber sacrifice -> ([SacrificeAnyNumber.filter sacrifice], [SacrificeAnyNumber.each sacrifice])
+  EntryRewrite.SacrificeToEnter sacrifice -> ([SacrificeToEnter.filter sacrifice], [])
+  -- CR 702.38a names no slot: its offer is a set of creature types read off the
+  -- entering object's projection, never a Filter a resolution could bind.
+  EntryRewrite.Amplify _ -> ([], [])
+  -- The cards the exile may take, and the count beside them, a Quantity read at
+  -- the entry exactly as the WithCounters arm's above is.
+  EntryRewrite.ExileFromGraveyard exile -> ([ExileFromGraveyard.filter exile], Foldable.toList (HowMany.quantity (ExileFromGraveyard.count exile)) <> [ExileFromGraveyard.each exile])
+  -- The destinations the entering permanent may arrive attached to, the arm
+  -- above's shape one zone over: a Filter over battlefield permanents, reported
+  -- here although an entry replacement has no resolution whose slots it could
+  -- name (Parun.Engine.Event evaluates it under a bare Filter.contextFor).
+  EntryRewrite.EntersAttachedTo filter_ -> ([filter_], [])
+  EntryRewrite.Riot -> ([], [])
+  EntryRewrite.ReadAhead -> ([], [])
+  EntryRewrite.Unleash -> ([], [])
+  EntryRewrite.Sunburst -> ([], [])
+  EntryRewrite.ModularSunburst -> ([], [])
+  EntryRewrite.Bloodthirst _ -> ([], [])
+  EntryRewrite.Tribute _ -> ([], [])
+  EntryRewrite.Compleated _ -> ([], [])
+  EntryRewrite.Tapped -> ([], [])
+  EntryRewrite.OrTapped (EntryPrice.PayLife _) -> ([], [])
+  EntryRewrite.OrTapped (EntryPrice.Reveal filter_) -> ([filter_], [])
+  EntryRewrite.EntersTransformed -> ([], [])
+  -- The nested effects' reads are replacementRowEffects' answer rather than this
+  -- one's, for the reason replacementRowReads' header gives.
+  EntryRewrite.RunEffects _ -> ([], [])
+
+-- What a TURN-UP rewrite reads. entryRewriteReads' two shapes and its discipline:
+-- CR 702.37b's count is evaluated against the row's Context, and CR 303.4k's host
+-- description is a Filter.
+turnUpRewriteReads :: TurnUpRewrite.TurnUpRewrite ability effect -> ([Filter.Type.Filter Keyword.Type.Keyword], [Quantity.Type.Quantity])
+turnUpRewriteReads rewrite = case rewrite of
+  TurnUpRewrite.WithCounters counters -> ([], Map.elems (WithCounters.counters counters))
+  TurnUpRewrite.MayAttachTo filter_ -> ([filter_], [])
+  TurnUpRewrite.AsCopy asCopy -> asCopyReads asCopy
+
+-- What a copy rewrite reads, on either event class: the eligible filter, and
+-- each clause's CR 707.9f condition and CR 707.9e counters. The duration names
+-- no slot -- every arm an AsCopy states is one durationSlots answers empty for.
+asCopyReads :: AsCopy.AsCopy ability effect -> ([Filter.Type.Filter Keyword.Type.Keyword], [Quantity.Type.Quantity])
+asCopyReads asCopy =
+  let clause part = foldMap conditionQuantities (CopyClause.condition part) <> foldMap (Map.elems . WithCounters.counters) (CopyClause.counters part)
+   in ([AsCopy.eligible asCopy], foldMap clause (AsCopy.clauses asCopy))
+
+-- Every Quantity a Condition holds: both sides of a comparison, plus whatever a
+-- disjunction or a conjunction nests (Parun.Types.Condition).
+--
+-- ONE enumeration, which Parun.CardSpec's conditionCounts and conditionFilters
+-- both take from too. A Quantity carries card text on two axes -- the Filter of
+-- every Count under it, and the Filter a CR 122.1b keyword counter hides under
+-- its CounterKind -- so a traversal that reaches a Condition's Counts directly
+-- reaches only the first (#2740).
+conditionQuantities :: Condition.Type.Condition -> [Quantity.Type.Quantity]
+conditionQuantities condition = case condition of
+  Condition.Type.Compares c -> [Compares.measured c, Compares.threshold c]
+  Condition.Type.Any conditions -> foldMap conditionQuantities conditions
+  Condition.Type.All conditions -> foldMap conditionQuantities conditions
+  Condition.Type.During _ -> []
+
+-- What a DRAW rewrite reads. entryRewriteReads' discipline again, and the answer
+-- is SYNTACTIC rather than per-reader: CR 400.11c keeps a spell or ability from
+-- affecting a card outside the game, so no slot of any resolution can name one and
+-- Event.eligible's own comment says Filter.IsBound answers nothing there -- but a
+-- slot NAME in the row's own data is still an object the row refers to (CR
+-- 609.7a), and declaring it is the safe direction for the capture.
+drawRewriteReads :: DrawRewrite.DrawRewrite -> ([Filter.Type.Filter Keyword.Type.Keyword], [Quantity.Type.Quantity])
+drawRewriteReads rewrite = case rewrite of
+  DrawRewrite.GainLife _ -> ([], [])
+  DrawRewrite.FromOutsideTheGame payload -> ([FromOutsideTheGame.filter payload], [])
+  -- CR 702.52a's dredge carries a bare count: no Filter, and the N is the
+  -- keyword's own rather than a Quantity a slot could name.
+  DrawRewrite.Dredge _ -> ([], [])
+  DrawRewrite.YouDraw -> ([], [])
+  DrawRewrite.OthersMayPayLife _ -> ([], [])
+  DrawRewrite.FromGraveyardOrLose -> ([], [])
+
+-- replacementRowReads as a slot map. Arity One for every FILTER read, a
+-- Filter.IsBound being a membership test rather than a target slot; the QUANTITY
+-- half is quantitySlots' answer, so a Quantity.InSlot reports SlotArity.Amount --
+-- CR 614.1c's WithCounters and CR 702.37b's are the two rewrites that can carry
+-- one. The two capture sites take Map.keysSet, so the arity reaches only slotsOf's
+-- Replace arm.
+replacementRowSlots :: ReplacementEffect.ReplacementEffect Card.Type.Card (GrantedAbility.GrantedAbility Card.Type.Card) (Effect Card.Type.Card (GrantedAbility.GrantedAbility Card.Type.Card)) -> Map.Map SlotName SlotArity
+replacementRowSlots re =
+  let (filters, quantities) = replacementRowReads re
+   in joinSlots (fmap filterSlotsOf filters <> fmap quantitySlots quantities <> fmap slotsOf (replacementRowEffects re) <> fmap relationSlots (relationsOf re))
+
+-- The slot a ControllerRelation.InSlot names, at arity Many: the install bakes
+-- every player the slot holds (Parun.Engine.Resolve.Effect's Effect.Replace arm).
+relationSlots :: ControllerRelation.ControllerRelation -> Map.Map SlotName SlotArity
+relationSlots rel = case rel of
+  ControllerRelation.InSlot slot -> Map.singleton slot SlotArity.Many
+  ControllerRelation.Related _ -> Map.empty
+  ControllerRelation.EnchantedPlayers -> Map.empty
+  ControllerRelation.Among _ -> Map.empty
+
+-- Every ControllerRelation one row's pattern carries.
+relationsOf :: ReplacementEffect.ReplacementEffect card ability effect -> [ControllerRelation.ControllerRelation]
+relationsOf = Functor.getConst . overRelations (Functor.Const . pure)
+
+-- CR 614.1: every ControllerRelation one row's pattern carries, as a traversal,
+-- so the read above and the install's bake cannot disagree about where they sit.
+--
+-- No wildcard, replacementRowReads' discipline: an arm whose pattern comes to
+-- carry a relation must answer here, or an InSlot in it is never baked and admits
+-- nobody.
+overRelations :: (Applicative f) => (ControllerRelation.ControllerRelation -> f ControllerRelation.ControllerRelation) -> ReplacementEffect.ReplacementEffect card ability effect -> f (ReplacementEffect.ReplacementEffect card ability effect)
+overRelations f re = case re of
+  ReplacementEffect.ZoneChangeR r ->
+    let pat = ZoneChangeR.matching r
+     in (\w -> ReplacementEffect.ZoneChangeR r {ZoneChangeR.matching = pat {ZoneChangePattern.whoseObject = w}}) <$> f (ZoneChangePattern.whoseObject pat)
+  ReplacementEffect.CounterR r ->
+    let pat = CounterR.matching r
+     in (\subject whose onWho -> ReplacementEffect.CounterR r {CounterR.matching = pat {CounterPattern.subject = subject, CounterPattern.whose = whose, CounterPattern.onWho = onWho}})
+          <$> overSubject (CounterPattern.subject pat)
+          <*> f (CounterPattern.whose pat)
+          <*> traverse f (CounterPattern.onWho pat)
+  ReplacementEffect.TokenR r ->
+    let pat = TokenR.matching r
+     in (\w -> ReplacementEffect.TokenR r {TokenR.matching = pat {TokenPattern.whose = w}}) <$> f (TokenPattern.whose pat)
+  ReplacementEffect.LifeLossR r ->
+    let pat = LifeLossR.matching r
+     in (\w -> ReplacementEffect.LifeLossR r {LifeLossR.matching = pat {LifeLossPattern.whose = w}}) <$> f (LifeLossPattern.whose pat)
+  ReplacementEffect.LifeGainR r -> (\w -> ReplacementEffect.LifeGainR r {LifeGainR.whose = w}) <$> f (LifeGainR.whose r)
+  ReplacementEffect.DrawR r -> (\w -> ReplacementEffect.DrawR r {DrawR.whose = w}) <$> f (DrawR.whose r)
+  ReplacementEffect.DrawCountR r -> (\w -> ReplacementEffect.DrawCountR r {DrawCountR.whose = w}) <$> f (DrawCountR.whose r)
+  ReplacementEffect.InstructionR r -> (\w -> ReplacementEffect.InstructionR r {InstructionR.whose = w}) <$> f (InstructionR.whose r)
+  ReplacementEffect.DieRollR r -> (\w -> ReplacementEffect.DieRollR r {DieRollR.whose = w}) <$> f (DieRollR.whose r)
+  ReplacementEffect.AssembleR _ -> pure re
+  ReplacementEffect.GameLossR r -> (\w -> ReplacementEffect.GameLossR r {GameLossR.whose = w}) <$> f (GameLossR.whose r)
+  ReplacementEffect.PlaneswalkR r -> (\w -> ReplacementEffect.PlaneswalkR r {PlaneswalkR.whose = w}) <$> f (PlaneswalkR.whose r)
+  -- CR 109.5's relation rides EntryR's Filter (Filter.ControlledBy) and DamageR's
+  -- PlayerRelation; the other four name no player at all.
+  ReplacementEffect.EntryR _ -> pure re
+  ReplacementEffect.DamageR _ -> pure re
+  ReplacementEffect.DestructionR _ -> pure re
+  ReplacementEffect.TurnUpR _ -> pure re
+  ReplacementEffect.AttachR _ -> pure re
+  ReplacementEffect.UntapR _ -> pure re
+  ReplacementEffect.PhaseR _ -> pure re
+  where
+    overSubject subject = case subject of
+      CounterSubject.ByPlayer rel -> CounterSubject.ByPlayer <$> f rel
+      CounterSubject.ByEffect -> pure subject
+      CounterSubject.ByAnything -> pure subject
+
+-- The card-authored EFFECT PROGRAMS one waiting row carries: CR 614.1c's "as
+-- [this permanent] enters, [do something]", CR 614.1a's "instead [do something]"
+-- (Kill-Suit Cultist), and CR 615.5's additional effect on a DamageR.
+--
+-- Declared apart from replacementRowReads beside it because what a nested effect
+-- reads is not a Filter or a Quantity but a whole effect's worth of reads --
+-- slotsOf's answer -- and the three consumers that ask what a row reads
+-- (replacementRowSlots above, slotsAreExhaustive and readsX below) each want it
+-- through their own recursion rather than flattened.
+--
+-- No wildcard, replacementRowReads' discipline: an arm that comes to nest a
+-- program must answer here rather than have its reads go undeclared. The two
+-- rewrite types are asked through exhaustive helpers below for the same reason.
+--
+-- Proved by Synthetic Proxy Strike's scenario under data/scenarios/
+-- damage-replacement/, whose nested Destroy reads a slot its DamageR pattern
+-- does not name: dropping this answer leaves that slot unannounced at cast (CR
+-- 601.2c) and uncaptured at install (CR 609.7a).
+replacementRowEffects :: ReplacementEffect.ReplacementEffect Card.Type.Card (GrantedAbility.GrantedAbility Card.Type.Card) (Effect Card.Type.Card (GrantedAbility.GrantedAbility Card.Type.Card)) -> [Effect Card.Type.Card (GrantedAbility.GrantedAbility Card.Type.Card)]
+replacementRowEffects re = case re of
+  ReplacementEffect.EntryR (EntryR.MkEntryR _ rewrite) -> entryRewriteEffects rewrite
+  -- CR 615.5's rider and CR 614.1a's instead-effects both, and in that order:
+  -- the rider is the card's own field beside the rewrite.
+  ReplacementEffect.DamageR (DamageR.MkDamageR _ rewrite riders) -> Foldable.toList riders <> damageRewriteEffects rewrite
+  ReplacementEffect.ZoneChangeR _ -> []
+  ReplacementEffect.DestructionR _ -> []
+  ReplacementEffect.CounterR _ -> []
+  ReplacementEffect.TokenR _ -> []
+  ReplacementEffect.TurnUpR _ -> []
+  ReplacementEffect.AttachR _ -> []
+  ReplacementEffect.UntapR _ -> []
+  ReplacementEffect.LifeLossR _ -> []
+  ReplacementEffect.LifeGainR _ -> []
+  ReplacementEffect.DrawR _ -> []
+  ReplacementEffect.DrawCountR _ -> []
+  ReplacementEffect.InstructionR _ -> []
+  ReplacementEffect.DieRollR _ -> []
+  ReplacementEffect.AssembleR _ -> []
+  -- CR 614.1a's "instead [do something]" for a loss of the game (Lich's Mirror).
+  ReplacementEffect.GameLossR (GameLossR.MkGameLossR _ effects) -> Foldable.toList effects
+  ReplacementEffect.PlaneswalkR r -> (case PlaneswalkR.rewrite r of PlaneswalkRewrite.ArrangeTopTwo -> []; PlaneswalkRewrite.RunEffects effects -> Foldable.toList effects)
+  ReplacementEffect.PhaseR _ -> []
+
+-- The program an ENTRY rewrite runs. entryRewriteReads' discipline: no wildcard,
+-- so a second arm that nests one is asked here rather than losing its reads.
+entryRewriteEffects :: EntryRewrite.EntryRewrite (GrantedAbility.GrantedAbility Card.Type.Card) (Effect Card.Type.Card (GrantedAbility.GrantedAbility Card.Type.Card)) -> [Effect Card.Type.Card (GrantedAbility.GrantedAbility Card.Type.Card)]
+entryRewriteEffects rewrite = case rewrite of
+  EntryRewrite.RunEffects effects -> Foldable.toList effects
+  -- CR 707.9g's linked trigger is not run by the rewrite: it resolves as its own
+  -- ability, under the bindings Parun.Engine.Event.becomeCopyAs stamps on it, so
+  -- nothing it reads is the row's to capture.
+  EntryRewrite.AsCopy _ -> []
+  EntryRewrite.ChoiceOf _ -> []
+  EntryRewrite.ChoiceByCoinFlip _ -> []
+  EntryRewrite.ChooseColors {} -> []
+  EntryRewrite.ChooseBasicLandType -> []
+  EntryRewrite.ChooseCreatureType -> []
+  EntryRewrite.ChoosePlayer -> []
+  EntryRewrite.ChooseCardNames _ -> []
+  EntryRewrite.ChooseCardName _ -> []
+  EntryRewrite.WithCounters _ -> []
+  EntryRewrite.EntersWith _ -> []
+  EntryRewrite.UnderSourceControl -> []
+  EntryRewrite.SacrificeAnyNumber _ -> []
+  EntryRewrite.SacrificeToEnter _ -> []
+  EntryRewrite.Amplify _ -> []
+  EntryRewrite.ExileFromGraveyard _ -> []
+  EntryRewrite.EntersAttachedTo _ -> []
+  EntryRewrite.Riot -> []
+  EntryRewrite.ReadAhead -> []
+  EntryRewrite.Unleash -> []
+  EntryRewrite.Sunburst -> []
+  EntryRewrite.ModularSunburst -> []
+  EntryRewrite.Bloodthirst _ -> []
+  EntryRewrite.Tribute _ -> []
+  EntryRewrite.Compleated _ -> []
+  EntryRewrite.Tapped -> []
+  EntryRewrite.OrTapped _ -> []
+  EntryRewrite.EntersTransformed -> []
+
+-- The program a DAMAGE rewrite runs. entryRewriteEffects' twin, and its
+-- discipline: no wildcard.
+damageRewriteEffects :: DamageRewrite.DamageRewrite (Effect Card.Type.Card (GrantedAbility.GrantedAbility Card.Type.Card)) -> [Effect Card.Type.Card (GrantedAbility.GrantedAbility Card.Type.Card)]
+damageRewriteEffects rewrite = case rewrite of
+  DamageRewrite.RunEffects effects -> Foldable.toList effects
+  DamageRewrite.PreventAll -> []
+  DamageRewrite.PreventRemovingShieldCounter -> []
+  DamageRewrite.PreventNext _ -> []
+  DamageRewrite.PreventAllBut _ -> []
+  DamageRewrite.PreventUpTo _ -> []
+  DamageRewrite.SetAmount _ -> []
+  DamageRewrite.Scale _ -> []
+  DamageRewrite.Redirect _ -> []
+  DamageRewrite.RedirectNext _ _ -> []
+  DamageRewrite.RedirectMatching _ -> []
+  DamageRewrite.TurnFaceUp -> []
+
+-- The Filters a damage REWRITE holds, which is CR 614.9's printed destination and
+-- nothing else. No wildcard, replacementRowSlots' discipline: a later rewrite
+-- describing something must answer here rather than have its slot reads go
+-- undeclared.
+damageRewriteFilters :: DamageRewrite.DamageRewrite (Effect Card.Type.Card (GrantedAbility.GrantedAbility Card.Type.Card)) -> [Filter.Type.Filter Keyword.Type.Keyword]
+damageRewriteFilters rewrite = case rewrite of
+  DamageRewrite.RedirectMatching f -> [f]
+  DamageRewrite.Redirect _ -> []
+  DamageRewrite.RedirectNext _ _ -> []
+  DamageRewrite.PreventAll -> []
+  DamageRewrite.PreventRemovingShieldCounter -> []
+  DamageRewrite.PreventNext _ -> []
+  DamageRewrite.PreventAllBut _ -> []
+  DamageRewrite.PreventUpTo _ -> []
+  DamageRewrite.SetAmount _ -> []
+  DamageRewrite.Scale _ -> []
+  -- The nested effects are replacementRowEffects' answer above, not a Filter of
+  -- the rewrite's own.
+  DamageRewrite.RunEffects _ -> []
+  DamageRewrite.TurnFaceUp -> []
+
+-- One Filter's slot reads, each at the arity its atom reads it with
+-- (Filter.slotArities): Many for an atom taking the whole set, which since
+-- Binding.objectsBySlot is every target of a multi-target slot at resolution too.
+filterSlotsOf :: Filter.Type.Filter Keyword.Type.Keyword -> Map.Map SlotName SlotArity
+filterSlotsOf = Filter.slotArities
+
+-- A CR 615.5 rider's slot reads, less the reserved amount and source slots that
+-- Parun.Engine.Resolve.Effect.runPreventionRider binds as the rider runs.
+riderSlotsOf :: Seq.Seq (Effect Card.Type.Card (GrantedAbility.GrantedAbility Card.Type.Card)) -> Map.Map SlotName SlotArity
+riderSlotsOf rider =
+  Map.withoutKeys
+    (joinSlots (fmap slotsOf (Foldable.toList rider)))
+    (Set.fromList [Binding.eventAmount, Binding.preventedDamageSource])
+
+-- CR 603.3b: is slotsOf's answer the WHOLE of what applying this effect reads off
+-- the resolving object's bindings? A classification of effect SHAPE, never of
+-- which effect it is; Engine.orderInert may elide CR 603.3b's ordering prompt
+-- only for an ability that reads nothing.
+--
+-- Four ways this and slotsOf come apart, one per False or guard below:
+-- ArmDelayedTrigger captures the whole environment (CR 603.7c); a Duration
+-- slotsOf's arm drops can still name a slot (CR 611.2b); a PlayerRef nested in a
+-- Quantity is Quantity.slotsAreExhaustive's half; CR 725.2's ControllerOfSource
+-- reads the trigger-source slot, which is not a target.
+--
+-- The Quantities nested in this effect's ObjectRefs are taken from
+-- effectObjectRefs here rather than arm by arm, so no arm of the case below
+-- names a ref.
+slotsAreExhaustive :: Effect Card.Type.Card (GrantedAbility.GrantedAbility Card.Type.Card) -> Bool
+slotsAreExhaustive effect = all (all Quantity.slotsAreExhaustive . objectRefQuantities) (effectObjectRefs effect) && ownSlotsAreExhaustive effect
+
+-- slotsAreExhaustive's half that is not an ObjectRef's: this opcode's own
+-- fields, and its nested effects through the recursion back into it.
+--
+-- No wildcard: a new opcode must answer here as well as in slotsOf. The `{}`
+-- arms answer a constant, so a new FIELD on one is not forced.
+ownSlotsAreExhaustive :: Effect Card.Type.Card (GrantedAbility.GrantedAbility Card.Type.Card) -> Bool
+ownSlotsAreExhaustive effect = case effect of
+  Effect.DealDamage (DealDamage.MkDealDamage parts _ _ _) -> all (Quantity.slotsAreExhaustive . DamagePart.quantity) parts
+  Effect.Fight {} -> True
+  Effect.ModifyTarget (ModifyTarget.MkModifyTarget duration modification _ _) ->
+    durationSlotsAreExhaustive duration
+      && all Quantity.slotsAreExhaustive (Projection.quantitiesOf modification)
+  Effect.ChangeText x -> durationSlotsAreExhaustive (ChangeText.duration x)
+  Effect.AddMana _ -> True
+  Effect.Firebend _ -> True
+  Effect.ActivateManaAbilities _ -> True
+  Effect.MoveMana _ -> True
+  -- The COUNT's own nested reads. The filter's are exhaustive by construction:
+  -- slotsOf reports them through Filter.boundSlots, the one walk that enumerates
+  -- what a Filter reads, and no Filter atom carries a Quantity for
+  -- Quantity.slotsAreExhaustive to be about.
+  Effect.Search (Search.MkSearch _ _ _ _ quantity _ _ _ _ _ _ _ _) -> all Quantity.slotsAreExhaustive quantity
+  Effect.ExileAllGraveyards -> True
+  Effect.Proliferate -> True
+  Effect.Reroll -> True
+  Effect.RerollStoredResults _ -> True
+  Effect.ChooseCardName _ -> True
+  Effect.ChooseQuality _ -> True
+  Effect.FromOutsideTheGame _ -> True
+  Effect.ExileThisSpell -> True
+  Effect.Bolster quantity -> Quantity.slotsAreExhaustive quantity
+  Effect.Amass (Amass.Type.MkAmass quantity _ _) -> Quantity.slotsAreExhaustive quantity
+  Effect.Blight (Blight.Type.MkBlight _ quantity _) -> Quantity.slotsAreExhaustive quantity
+  Effect.Earthbend (Earthbend.MkEarthbend quantity _) -> Quantity.slotsAreExhaustive quantity
+  Effect.Airbend {} -> True
+  Effect.TemptWithTheRing -> True
+  Effect.OpenAttraction -> True
+  Effect.Planeswalk -> True
+  Effect.ChaosEnsues -> True
+  Effect.Abandon -> True
+  Effect.ClaimPrize -> True
+  Effect.Forage -> True
+  Effect.Populate -> True
+  Effect.TimeTravel -> True
+  Effect.Recruit -> True
+  Effect.Learn -> True
+  Effect.Cloak {} -> True
+  Effect.ManifestDread {} -> True
+  Effect.Venture {} -> True
+  Effect.ExileHandThenDraw -> True
+  Effect.NoteManaSpent -> True
+  Effect.PlayerSacrifices (PlayerSacrifices.MkPlayerSacrifices _ _ quantity) -> Quantity.slotsAreExhaustive quantity
+  Effect.Vote {} -> True
+  Effect.Bid bid -> Quantity.slotsAreExhaustive (Bid.opening bid)
+  Effect.RestartGame _ -> True
+  Effect.ControlPlayerNextTurn _ -> True
+  Effect.ControlPlayerThisResolution _ -> True
+  Effect.Destroy {} -> True
+  Effect.Sacrifice _ -> True
+  Effect.TurnFaceDown _ -> True
+  Effect.TurnFaceUp _ -> True
+  Effect.RemoveFromCombat _ -> True
+  Effect.BecomesBlocked _ -> True
+  Effect.SwitchBlockers _ -> True
+  Effect.ExchangeBlocks _ -> True
+  -- The entry rider nests a Quantity of its own, CR 122.6's count per kind; the
+  -- ref's is effectObjectRefs' above.
+  Effect.MoveToZone (MoveToZone.MkMoveToZone _ _ riders _ _ placement _) -> all Quantity.slotsAreExhaustive (riderQuantities riders <> placementQuantities placement)
+  Effect.Draw (Draw.MkDraw _ quantity _) -> Quantity.slotsAreExhaustive quantity
+  Effect.Mill (Mill.MkMill _ quantity _ _) -> Quantity.slotsAreExhaustive quantity
+  Effect.Reveal {} -> True
+  Effect.LookAt {} -> True
+  Effect.Scry (PlayerQuantity.MkPlayerQuantity _ quantity) -> Quantity.slotsAreExhaustive quantity
+  Effect.Surveil (PlayerQuantity.MkPlayerQuantity _ quantity) -> Quantity.slotsAreExhaustive quantity
+  Effect.Fateseal (PlayerQuantity.MkPlayerQuantity _ quantity) -> Quantity.slotsAreExhaustive quantity
+  Effect.Clash {} -> True
+  Effect.AsYouCascade {} -> True
+  Effect.Explore {} -> True
+  Effect.Assemble {} -> True
+  Effect.ArrangeInLibrary {} -> True
+  Effect.Connive (Connive.MkConnive quantity _) -> Quantity.slotsAreExhaustive quantity
+  Effect.Discard subject -> case subject of
+    Discard.Counted (CountedDiscard.MkCountedDiscard _ quantity _) -> Quantity.slotsAreExhaustive quantity
+    Discard.These {} -> True
+    Discard.AnyNumber (AnyNumberDiscard.MkAnyNumberDiscard _ (AnyNumberMatching.MkAnyNumberMatching _ atMost) _) -> all Quantity.slotsAreExhaustive atMost
+  Effect.LoseLife (LifeLoss.MkLifeLoss _ quantity _ _) -> Quantity.slotsAreExhaustive quantity
+  Effect.GainLife (PlayerQuantity.MkPlayerQuantity _ quantity) -> Quantity.slotsAreExhaustive quantity
+  Effect.ExchangeLifeTotals _ -> True
+  Effect.ExchangeValues x -> durationSlotsAreExhaustive (ExchangeValues.duration x)
+  Effect.ExchangeZones {} -> True
+  Effect.ExchangeCardZones {} -> True
+  Effect.SetLifeTotal (PlayerQuantity.MkPlayerQuantity _ quantity) -> Quantity.slotsAreExhaustive quantity
+  Effect.LoseGame {} -> True
+  Effect.WinGame {} -> True
+  Effect.DrawGame {} -> True
+  Effect.RedistributeLifeTotals -> True
+  Effect.IncreaseSpeed (PlayerQuantity.MkPlayerQuantity _ quantity) -> Quantity.slotsAreExhaustive quantity
+  Effect.DecreaseSpeed d -> Quantity.slotsAreExhaustive (SpeedDecrease.quantity d)
+  -- CR 111.1's token is minted with empty bindings, so its card is literal text
+  -- but for the printed P/T box, which CR 111.3 has the creating effect define.
+  -- Its entry riders are not either: CR 122.6's count per kind is the effect
+  -- speaking, read in the resolution's own slots.
+  Effect.Create (Create.MkCreate quantity card riders _ _) -> all Quantity.slotsAreExhaustive (quantity : riderQuantities riders <> tokenBoxQuantities card)
+  -- Every WRITTEN candidate is literal text THROUGHOUT, unlike Create's token
+  -- above: nothing bakes a conjured card's printed box, so
+  -- Parun.Engine.Resolve.Effect hands the one it picks to Event.conjure exactly
+  -- as written, and a DUPLICATE reads its card off the board rather than out of
+  -- the opcode. The COUNT is the effect speaking, read in the resolution's own
+  -- slots -- CreateCopy's arm below reads its own ref the same way, which is to
+  -- say not at all.
+  Effect.Conjure conjure -> all Quantity.slotsAreExhaustive (conjureQuantities conjure)
+  Effect.CreateCopy (CreateCopy.MkCreateCopy quantity _ riders _ _) -> all Quantity.slotsAreExhaustive (quantity : riderQuantities riders)
+  Effect.BecomeCopy (BecomeCopy.MkBecomeCopy _ _ duration _ _) -> all durationSlotsAreExhaustive duration
+  Effect.CopyStackObject (CopyStackObject.MkCopyStackObject _ _ quantity _ _) -> Quantity.slotsAreExhaustive quantity
+  -- The ReplacementEffect's own reads are replacementRowReads', and slotsOf
+  -- reports them through replacementRowSlots: its Filters name no target slot, and
+  -- the Quantities a counter rewrite counts with are asked here. The effects a
+  -- rewrite or a CR 615.5 rider nests are asked through their own recursion, the
+  -- posture the three prevention opcodes below take with their riders.
+  Effect.Replace (Replace.MkReplace duration _ _ condition re) ->
+    durationSlotsAreExhaustive duration
+      && all conditionSlotsAreExhaustive condition
+      && all Quantity.slotsAreExhaustive (snd (replacementRowReads re))
+      && all slotsAreExhaustive (replacementRowEffects re)
+  Effect.SkipPhase (SkipPhase.MkSkipPhase _ _ _ duration) -> durationSlotsAreExhaustive duration
+  Effect.PreventNextDamage (PreventNextDamage.MkPreventNextDamage duration _ _ _ _ _ quantity rider) ->
+    durationSlotsAreExhaustive duration && Quantity.slotsAreExhaustive quantity && all slotsAreExhaustive rider
+  Effect.PreventAllDamage (PreventAllDamage.MkPreventAllDamage duration _ _ _ _ _ _ _ rider) ->
+    durationSlotsAreExhaustive duration && all slotsAreExhaustive rider
+  Effect.PreventNextDamageInstance (PreventNextDamageInstance.MkPreventNextDamageInstance duration _ _ rider) ->
+    durationSlotsAreExhaustive duration && all slotsAreExhaustive rider
+  Effect.RedirectDamage (RedirectDamage.MkRedirectDamage duration _ amount _ _ _ _ _ _ _) -> durationSlotsAreExhaustive duration && all Quantity.slotsAreExhaustive amount
+  Effect.Counter {} -> True
+  Effect.PutCounters (PutCounters.MkPutCounters _ quantity _) -> Quantity.slotsAreExhaustive quantity
+  Effect.DistributeCounters (PutCounters.MkPutCounters _ quantity _) -> Quantity.slotsAreExhaustive quantity
+  -- No Quantity at all: CR 122.8 names neither a kind nor a count.
+  Effect.PutCountersFrom {} -> True
+  Effect.RemoveCounters (RemoveCounters.MkRemoveCounters _ quantity _ _) -> Quantity.slotsAreExhaustive quantity
+  Effect.RemoveCountersAmong (RemoveCountersAmong.MkRemoveCountersAmong count _ _ _) -> all Quantity.slotsAreExhaustive (RemovalCount.quantityOf count)
+  -- The count the moved kinds may write. CR 122.5's GIVER carries the other one,
+  -- through the ObjectRef it became when the first side was widened to a group,
+  -- and it is effectObjectRefs' above -- an arm reading the kinds alone kept
+  -- compiling (#2729).
+  Effect.MoveCounters (MoveCounters.MkMoveCounters _ kinds _ _) -> all Quantity.slotsAreExhaustive (MovedKinds.quantityOf kinds)
+  Effect.GainPlayerCounters (PlayerCounters.MkPlayerCounters _ _ quantity) -> Quantity.slotsAreExhaustive quantity
+  Effect.RemovePlayerCounters removal -> Quantity.slotsAreExhaustive (RemovePlayerCounters.quantity removal)
+  Effect.PayAnyEnergy _ -> True
+  Effect.ChooseNumber _ -> True
+  Effect.Tap _ -> True
+  Effect.Untap _ -> True
+  Effect.Unattach _ -> True
+  Effect.Detain _ -> True
+  Effect.Goad _ -> True
+  Effect.Pair _ -> True
+  Effect.GrantLookAtExiled _ -> True
+  Effect.MakePlotted _ -> True
+  Effect.MakeForetold _ -> True
+  Effect.MakeWarped _ -> True
+  Effect.DoesNotUntapNext _ -> True
+  Effect.Transform _ -> True
+  Effect.Convert _ -> True
+  Effect.Flip _ -> True
+  -- The combined face is interned with EMPTY bindings, CreateEmblem's reason, so
+  -- its text is literal.
+  Effect.Meld _ -> True
+  Effect.PhaseOut _ -> True
+  Effect.AddPhases _ -> True
+  Effect.EndTurn -> True
+  Effect.EndCombatPhase -> True
+  -- slotsOf's arm drops this Duration, so the slotless test is made here.
+  Effect.GainControl (GainControl.MkGainControl duration _ _) ->
+    Map.null (durationSlots duration) && durationSlotsAreExhaustive duration
+  Effect.ExchangeControl _ -> True
+  -- CR 603.7c: the armed ability inherits this object's whole environment.
+  Effect.ArmDelayedTrigger {} -> False
+  -- GainControl's reason for the Duration.
+  Effect.AffectPlayers (AffectPlayers.MkAffectPlayers duration _ _) ->
+    Map.null (durationSlots duration) && durationSlotsAreExhaustive duration
+  -- slotsOf reports the Duration and a Matching class's Filter, RequireAttack's
+  -- reading below.
+  Effect.RequireBlock (RequireBlock.MkRequireBlock duration _ _ _) -> durationSlotsAreExhaustive duration
+  Effect.Prohibit (Prohibit.MkProhibit _ duration _) -> durationSlotsAreExhaustive duration
+  Effect.ForbidAttack (ForbidAttack.MkForbidAttack duration _ _) ->
+    Map.null (durationSlots duration) && durationSlotsAreExhaustive duration
+  -- slotsOf reports the Duration and the class's Filter, ModifyTarget's and
+  -- Search's readings.
+  Effect.RequireAttack (RequireAttack.MkRequireAttack duration _ _) -> durationSlotsAreExhaustive duration
+  Effect.ForbidBeingBlocked (ForbidBeingBlocked.MkForbidBeingBlocked duration _ _) -> durationSlotsAreExhaustive duration
+  -- CR 114.2's emblem is minted with EMPTY bindings, so its card is literal text.
+  Effect.CreateEmblem _ -> True
+  Effect.BecomeMonarch MonarchTarget.TheController -> True
+  -- The one arm answering NO: CR 725.2 reads Binding.triggerSource.
+  Effect.BecomeMonarch MonarchTarget.ControllerOfSource -> False
+  Effect.BecomeMonarch (MonarchTarget.InSlot _) -> True
+  Effect.TakeTheInitiative InitiativeTarget.TheController -> True
+  -- CR 726.2 reads Binding.triggerSource, Effect.BecomeMonarch ControllerOfSource's answer.
+  Effect.TakeTheInitiative InitiativeTarget.ControllerOfSource -> False
+  Effect.Designate (Designate.MkDesignate _ _ value) -> all Quantity.slotsAreExhaustive value
+  Effect.SetClassLevel (SetClassLevel.MkSetClassLevel _ _) -> True
+  Effect.Unsuspect _ -> True
+  Effect.SetHalfLocked (SetHalfLocked.MkSetHalfLocked {}) -> True
+  Effect.CounterAndMark _ -> True
+  Effect.BecomeProtector _ -> True
+  Effect.Mentor _ -> True
+  Effect.Exploit -> True
+  Effect.GiveGift -> True
+  Effect.ItBecomes _ -> True
+  Effect.ExileHaunting (ExileHaunting.MkExileHaunting _ _) -> True
+  Effect.Attach _ -> True
+  Effect.AttachAsThoughCreature _ -> True
+  Effect.AttachTarget (AttachTarget.MkAttachTarget _ _) -> True
+  Effect.AttachTargetToEach (AttachTarget.MkAttachTarget _ _) -> True
+  Effect.AttachBound (AttachBound.MkAttachBound _ _) -> True
+  Effect.AttachAll (AttachAll.MkAttachAll _ _) -> True
+  -- CR 729.1b: a DEFINITION, and the subgame reads no binding of the outer game.
+  Effect.PlaySubgame _ -> True
+  -- PlaySubgame's answer: a definition reads no slot.
+  Effect.ChoosePlayer _ -> True
+  Effect.ChooseSector _ -> True
+  Effect.ChoosePlayerAtRandom _ -> True
+  Effect.ChoosePermanents choice -> all Quantity.slotsAreExhaustive (HowMany.quantity (ChosenPermanents.count (ChoosePermanents.permanents choice)))
+  Effect.RollDie rollDie -> Quantity.slotsAreExhaustive (RollDie.count rollDie) && all Quantity.slotsAreExhaustive (RollDie.modifier rollDie)
+  Effect.FlipCoin flipCoin -> Quantity.slotsAreExhaustive (FlipCoin.count flipCoin)
+  Effect.TakeExtraTurn takeExtraTurn -> Quantity.slotsAreExhaustive (TakeExtraTurn.count takeExtraTurn)
+  Effect.ShuffleIntoLibrary {} -> True
+  Effect.Ante {} -> True
+  Effect.PutSticker putSticker -> all Quantity.slotsAreExhaustive (PutSticker.ticketCap putSticker)
+  Effect.SetOwner {} -> True
+  Effect.ExchangeOwnership {} -> True
+  Effect.Shuffle {} -> True
+  Effect.OfferCast {} -> True
+  Effect.OfferNamedCopy {} -> True
+  Effect.OfferNotedCopy {} -> True
+  Effect.GrantPlayFromExile grant -> durationSlotsAreExhaustive (GrantPlayFromExile.duration grant) && all conditionSlotsAreExhaustive (GrantPlayFromExile.condition grant)
+  -- PreventNextDamage's answer for the body, plus its own ref's: a PlayerRef
+  -- nested in the DEPTH is one slotsOf cannot see.
+  Effect.ForEach (ForEach.MkForEach _ _ _ body _ gate _) -> all slotsAreExhaustive body && all (all Quantity.slotsAreExhaustive . PayGate.perEach) gate
+  Effect.ForEachNumber (ForEachNumber.MkForEachNumber upTo _ body) -> Quantity.slotsAreExhaustive upTo && all slotsAreExhaustive body
+  Effect.Repeat (Repeat.MkRepeat _ body gate) -> all conditionSlotsAreExhaustive gate && all slotsAreExhaustive body
+  Effect.RepeatIf (RepeatIf.MkRepeatIf process condition ifHolds) -> conditionSlotsAreExhaustive condition && all slotsAreExhaustive (process <> ifHolds)
+  Effect.Heal _ -> True
+  Effect.ChooseNewTargets _ -> True
+  Effect.ChangeTargets _ -> True
+
+-- CR 611.2b: only ForAsLongAs reads anything, through its Condition.
+durationSlotsAreExhaustive :: Duration.Duration -> Bool
+durationSlotsAreExhaustive duration = case duration of
+  Duration.UntilEndOfTurn -> True
+  Duration.Indefinite -> True
+  Duration.Perpetual -> True
+  Duration.UntilYourNextTurn -> True
+  Duration.UntilYourNextStep _ -> True
+  Duration.UntilEndOfYourNextTurn -> True
+  -- playerRefSlots' answer is complete for every arm: a PlayerRef names at
+  -- most one slot and nothing nested inside it names another.
+  Duration.UntilEndOfNextTurnOf _ -> True
+  Duration.DuringNextTurnOf _ -> True
+  Duration.DuringNextUntapStepOf _ -> True
+  Duration.DuringYourNextTurn -> True
+  Duration.DuringThatExtraTurn -> True
+  Duration.ForAsLongAs condition -> conditionSlotsAreExhaustive condition
+  -- durationSlots' answer: a Cost reads no slot, so its enumeration is complete.
+  Duration.UntilPaid _ -> True
+  Duration.UntilEndOfCombat -> True
+  Duration.UntilEndOfCombatOnYourNextTurn -> True
+  Duration.UntilUsed -> True
+  Duration.UntilEvent _ -> True
+
+-- conditionSlots' mirror: both sides are a Quantity.
+conditionSlotsAreExhaustive :: Condition.Type.Condition -> Bool
+conditionSlotsAreExhaustive condition = case condition of
+  Condition.Type.Compares c ->
+    Quantity.slotsAreExhaustive (Compares.measured c) && Quantity.slotsAreExhaustive (Compares.threshold c)
+  Condition.Type.Any conditions -> all conditionSlotsAreExhaustive conditions
+  Condition.Type.All conditions -> all conditionSlotsAreExhaustive conditions
+  Condition.Type.During _ -> True
+
+-- conditionSlots' mirror for X: does either side of any comparison read it?
+conditionReadsX :: Condition.Type.Condition -> Bool
+conditionReadsX condition = case condition of
+  Condition.Type.Compares c -> Quantity.readsX (Compares.measured c) || Quantity.readsX (Compares.threshold c)
+  Condition.Type.Any conditions -> any conditionReadsX conditions
+  Condition.Type.All conditions -> any conditionReadsX conditions
+  Condition.Type.During _ -> False
+
+-- Does any of these effects read X? A card that reads X must declare it in its
+-- cost (CR 107.3, CR 107.3a, CR 118.4), the same reads-equal-declares contract
+-- slotsOf draws for target slots.
+--
+-- NOTE: when an opcode gains a Quantity FIELD, add its arm here by hand. A new
+-- OPCODE the compiler forces, this case being exhaustive; widening an existing
+-- one it does not, since an arm written `{} -> False` keeps compiling. That is
+-- how a Quantity nested in an ObjectRef went unread once (#2729), so those are
+-- taken from effectObjectRefs ahead of the case and no arm below names one.
+readsX :: [Effect Card.Type.Card (GrantedAbility.GrantedAbility Card.Type.Card)] -> Bool
+readsX =
+  let effectReadsX effect = any (any Quantity.readsX . objectRefQuantities) (effectObjectRefs effect) || effectOwnReadsX effect
+      -- effectReadsX's half that is not an ObjectRef's: this opcode's own fields,
+      -- and its nested effects through the recursion back into readsX.
+      effectOwnReadsX effect = case effect of
+        Effect.DealDamage (DealDamage.MkDealDamage parts _ _ _) -> any (Quantity.readsX . DamagePart.quantity) parts
+        Effect.Fight {} -> False
+        -- Untamed Might's "+X/+X" sits inside the Modification, not on the effect.
+        Effect.ModifyTarget (ModifyTarget.MkModifyTarget _ modification _ _) -> any Quantity.readsX (Projection.quantitiesOf modification)
+        Effect.ChangeText {} -> False
+        Effect.AddMana _ -> False
+        Effect.Firebend _ -> False
+        Effect.ActivateManaAbilities _ -> False
+        Effect.MoveMana _ -> False
+        Effect.Search (Search.MkSearch _ _ _ _ quantity _ _ _ _ _ _ _ _) -> any Quantity.readsX quantity
+        Effect.ExileAllGraveyards -> False
+        Effect.Proliferate -> False
+        Effect.Reroll -> False
+        Effect.RerollStoredResults _ -> False
+        -- No Quantity: rule 201.4 chooses one name and states no count.
+        Effect.ChooseCardName _ -> False
+        Effect.ChooseQuality _ -> False
+        Effect.FromOutsideTheGame _ -> False
+        Effect.ExileThisSpell -> False
+        Effect.Bolster quantity -> Quantity.readsX quantity
+        Effect.Amass (Amass.Type.MkAmass quantity _ _) -> Quantity.readsX quantity
+        Effect.Blight (Blight.Type.MkBlight _ quantity _) -> Quantity.readsX quantity
+        Effect.Earthbend (Earthbend.MkEarthbend quantity _) -> Quantity.readsX quantity
+        Effect.Airbend {} -> False
+        Effect.TemptWithTheRing -> False
+        Effect.OpenAttraction -> False
+        Effect.Planeswalk -> False
+        Effect.ChaosEnsues -> False
+        Effect.Abandon -> False
+        Effect.ClaimPrize -> False
+        Effect.Forage -> False
+        Effect.Populate -> False
+        Effect.TimeTravel -> False
+        Effect.Recruit -> False
+        Effect.Learn -> False
+        Effect.Cloak {} -> False
+        Effect.ManifestDread {} -> False
+        Effect.Venture {} -> False
+        Effect.ExileHandThenDraw -> False
+        Effect.NoteManaSpent -> False
+        Effect.PlayerSacrifices (PlayerSacrifices.MkPlayerSacrifices _ _ quantity) -> Quantity.readsX quantity
+        Effect.Vote {} -> False
+        Effect.Bid bid -> Quantity.readsX (Bid.opening bid)
+        Effect.RestartGame _ -> False
+        Effect.ControlPlayerNextTurn _ -> False
+        Effect.ControlPlayerThisResolution _ -> False
+        Effect.Destroy {} -> False
+        Effect.Sacrifice _ -> False
+        Effect.TurnFaceDown _ -> False
+        Effect.TurnFaceUp _ -> False
+        Effect.RemoveFromCombat _ -> False
+        Effect.BecomesBlocked _ -> False
+        Effect.SwitchBlockers _ -> False
+        Effect.ExchangeBlocks _ -> False
+        -- The entry rider is a nested position of its own, CR 122.6's count per
+        -- kind, and no ObjectRef holds it.
+        Effect.MoveToZone (MoveToZone.MkMoveToZone _ _ riders _ _ placement _) -> any Quantity.readsX (riderQuantities riders <> placementQuantities placement)
+        Effect.Draw (Draw.MkDraw _ quantity _) -> Quantity.readsX quantity
+        Effect.Mill (Mill.MkMill _ quantity _ _) -> Quantity.readsX quantity
+        Effect.Reveal {} -> False
+        Effect.LookAt {} -> False
+        Effect.Scry (PlayerQuantity.MkPlayerQuantity _ quantity) -> Quantity.readsX quantity
+        Effect.Surveil (PlayerQuantity.MkPlayerQuantity _ quantity) -> Quantity.readsX quantity
+        Effect.Fateseal (PlayerQuantity.MkPlayerQuantity _ quantity) -> Quantity.readsX quantity
+        Effect.Clash {} -> False
+        Effect.AsYouCascade {} -> False
+        Effect.Explore {} -> False
+        Effect.Assemble {} -> False
+        Effect.ArrangeInLibrary {} -> False
+        Effect.Connive (Connive.MkConnive quantity _) -> Quantity.readsX quantity
+        Effect.Discard subject -> case subject of
+          Discard.Counted (CountedDiscard.MkCountedDiscard _ quantity _) -> Quantity.readsX quantity
+          Discard.These {} -> False
+          Discard.AnyNumber (AnyNumberDiscard.MkAnyNumberDiscard _ (AnyNumberMatching.MkAnyNumberMatching _ atMost) _) -> any Quantity.readsX atMost
+        Effect.LoseLife (LifeLoss.MkLifeLoss _ quantity _ _) -> Quantity.readsX quantity
+        Effect.GainLife (PlayerQuantity.MkPlayerQuantity _ quantity) -> Quantity.readsX quantity
+        Effect.ExchangeLifeTotals _ -> False
+        Effect.ExchangeValues _ -> False
+        Effect.ExchangeZones _ -> False
+        Effect.ExchangeCardZones _ -> False
+        Effect.SetLifeTotal (PlayerQuantity.MkPlayerQuantity _ quantity) -> Quantity.readsX quantity
+        Effect.LoseGame {} -> False
+        Effect.WinGame {} -> False
+        Effect.DrawGame {} -> False
+        Effect.RedistributeLifeTotals -> False
+        Effect.IncreaseSpeed (PlayerQuantity.MkPlayerQuantity _ quantity) -> Quantity.readsX quantity
+        Effect.DecreaseSpeed d -> Quantity.readsX (SpeedDecrease.quantity d)
+        -- The token's printed P/T box reaches CR 601.2b's X too: it is the
+        -- creating effect's number (tokenBoxQuantities).
+        Effect.Create (Create.MkCreate quantity card riders _ _) -> any Quantity.readsX (quantity : riderQuantities riders <> tokenBoxQuantities card)
+        Effect.Conjure conjure -> any Quantity.readsX (conjureQuantities conjure)
+        Effect.CopyStackObject (CopyStackObject.MkCopyStackObject _ _ quantity _ _) -> Quantity.readsX quantity
+        Effect.CreateCopy (CreateCopy.MkCreateCopy quantity _ riders _ _) -> any Quantity.readsX (quantity : riderQuantities riders)
+        Effect.BecomeCopy {} -> False
+        -- CR 601.2b's X reaches the effects a rewrite or a CR 615.5 rider nests,
+        -- the three prevention opcodes' posture with their own riders.
+        Effect.Replace (Replace.MkReplace _ _ _ _ re) -> readsX (replacementRowEffects re)
+        Effect.SkipPhase {} -> False
+        -- CR 601.2b's X reaches the rider too.
+        Effect.PreventNextDamage (PreventNextDamage.MkPreventNextDamage _ _ _ _ _ _ quantity rider) -> Quantity.readsX quantity || readsX (Foldable.toList rider)
+        Effect.PreventAllDamage (PreventAllDamage.MkPreventAllDamage _ _ _ _ _ _ _ _ rider) -> readsX (Foldable.toList rider)
+        Effect.PreventNextDamageInstance (PreventNextDamageInstance.MkPreventNextDamageInstance _ _ _ rider) -> readsX (Foldable.toList rider)
+        Effect.RedirectDamage (RedirectDamage.MkRedirectDamage _ _ amount _ _ _ _ _ _ _) -> any Quantity.readsX amount
+        Effect.Counter {} -> False
+        Effect.PutCounters (PutCounters.MkPutCounters _ quantity _) -> Quantity.readsX quantity
+        Effect.DistributeCounters (PutCounters.MkPutCounters _ quantity _) -> Quantity.readsX quantity
+        Effect.PutCountersFrom {} -> False
+        Effect.RemoveCounters (RemoveCounters.MkRemoveCounters _ quantity _ _) -> Quantity.readsX quantity
+        Effect.RemoveCountersAmong (RemoveCountersAmong.MkRemoveCountersAmong count _ _ _) -> any Quantity.readsX (RemovalCount.quantityOf count)
+        Effect.MoveCounters (MoveCounters.MkMoveCounters _ kinds _ _) -> any Quantity.readsX (MovedKinds.quantityOf kinds)
+        Effect.GainPlayerCounters (PlayerCounters.MkPlayerCounters _ _ quantity) -> Quantity.readsX quantity
+        Effect.RemovePlayerCounters removal -> Quantity.readsX (RemovePlayerCounters.quantity removal)
+        -- CR 107.14's amount is asked for as the spell resolves, never CR
+        -- 601.2b's announced X.
+        Effect.PayAnyEnergy _ -> False
+        Effect.ChooseNumber _ -> False
+        Effect.Tap _ -> False
+        Effect.Untap _ -> False
+        Effect.Unattach _ -> False
+        Effect.Detain _ -> False
+        Effect.Goad _ -> False
+        Effect.Pair _ -> False
+        Effect.GrantLookAtExiled _ -> False
+        Effect.MakePlotted _ -> False
+        Effect.MakeForetold _ -> False
+        Effect.MakeWarped _ -> False
+        Effect.DoesNotUntapNext _ -> False
+        Effect.Transform _ -> False
+        Effect.Convert _ -> False
+        Effect.Flip _ -> False
+        Effect.Meld _ -> False
+        Effect.PhaseOut _ -> False
+        Effect.AddPhases _ -> False
+        Effect.EndTurn -> False
+        Effect.EndCombatPhase -> False
+        Effect.GainControl (GainControl.MkGainControl {}) -> False
+        Effect.ExchangeControl _ -> False
+        Effect.ArmDelayedTrigger {} -> False
+        Effect.AffectPlayers {} -> False
+        Effect.RequireBlock {} -> False
+        Effect.Prohibit {} -> False
+        Effect.ForbidAttack {} -> False
+        Effect.ForbidBeingBlocked {} -> False
+        Effect.RequireAttack {} -> False
+        Effect.CreateEmblem {} -> False
+        Effect.BecomeMonarch {} -> False
+        Effect.TakeTheInitiative {} -> False
+        Effect.Designate (Designate.MkDesignate _ _ value) -> any Quantity.readsX value
+        Effect.SetClassLevel (SetClassLevel.MkSetClassLevel _ _) -> False
+        Effect.Unsuspect _ -> False
+        Effect.SetHalfLocked (SetHalfLocked.MkSetHalfLocked {}) -> False
+        Effect.CounterAndMark _ -> False
+        Effect.BecomeProtector _ -> False
+        Effect.Mentor _ -> False
+        Effect.Exploit -> False
+        Effect.GiveGift -> False
+        Effect.ItBecomes _ -> False
+        Effect.ExileHaunting {} -> False
+        Effect.Attach _ -> False
+        Effect.AttachAsThoughCreature _ -> False
+        Effect.AttachTarget {} -> False
+        Effect.AttachTargetToEach {} -> False
+        Effect.AttachBound {} -> False
+        Effect.AttachAll {} -> False
+        Effect.PlaySubgame _ -> False
+        Effect.ChoosePlayer _ -> False
+        Effect.ChooseSector _ -> False
+        Effect.ChoosePlayerAtRandom _ -> False
+        Effect.ChoosePermanents choice -> any Quantity.readsX (HowMany.quantity (ChosenPermanents.count (ChoosePermanents.permanents choice)))
+        -- CR 706.2's modifier and CR 706.1's count are ordinary Quantities, so
+        -- either may be the X the caster announced (CR 601.2b; Neverwinter
+        -- Hydra's "roll X dice").
+        Effect.RollDie rollDie -> Quantity.readsX (RollDie.count rollDie) || any Quantity.readsX (RollDie.modifier rollDie)
+        -- The number of coins is an ordinary Quantity, so it may be the X the
+        -- caster announced (Flock of Rabid Sheep's "flip X coins").
+        Effect.FlipCoin flipCoin -> Quantity.readsX (FlipCoin.count flipCoin)
+        -- The number of turns is an ordinary Quantity too.
+        Effect.TakeExtraTurn takeExtraTurn -> Quantity.readsX (TakeExtraTurn.count takeExtraTurn)
+        Effect.ShuffleIntoLibrary {} -> False
+        Effect.Ante {} -> False
+        -- The ticket-cost cap may be the X announced for the spell that became
+        -- the source (Pin Collection, CR 107.3m).
+        Effect.PutSticker putSticker -> any Quantity.readsX (PutSticker.ticketCap putSticker)
+        Effect.SetOwner {} -> False
+        Effect.ExchangeOwnership {} -> False
+        Effect.Shuffle {} -> False
+        Effect.OfferCast offer -> any Quantity.readsX (repetitionQuantities (OfferCast.repetition offer))
+        Effect.OfferNamedCopy {} -> False
+        Effect.OfferNotedCopy {} -> False
+        Effect.GrantPlayFromExile {} -> False
+        -- CR 608.2f's body is an effect list like any other, so an X inside it counts.
+        Effect.ForEach (ForEach.MkForEach _ _ _ body _ _ _) -> readsX (Foldable.toList body)
+        Effect.ForEachNumber (ForEachNumber.MkForEachNumber upTo _ body) -> Quantity.readsX upTo || readsX (Foldable.toList body)
+        Effect.Repeat (Repeat.MkRepeat _ body gate) -> any conditionReadsX gate || readsX (Foldable.toList body)
+        Effect.RepeatIf (RepeatIf.MkRepeatIf process condition ifHolds) -> conditionReadsX condition || readsX (Foldable.toList (process <> ifHolds))
+        Effect.Heal _ -> False
+        Effect.ChooseNewTargets _ -> False
+        Effect.ChangeTargets _ -> False
+   in any effectReadsX
+
+-- slotsOf's mirror for ONE effect: the slots it BINDS rather than reads, which
+-- is also the set Parun.CardSpec's reserved-name sweep ranges over. Exhaustive
+-- deliberately: a wildcard would file a new bind position under "binds nothing"
+-- in both the dataflow lint and that sweep, with no diagnostic.
+boundSlots :: Effect Card.Type.Card (GrantedAbility.GrantedAbility Card.Type.Card) -> Set SlotName
+boundSlots effect = case effect of
+  -- CR 400.7: the incarnation minted at the destination.
+  Effect.MoveToZone (MoveToZone.MkMoveToZone _ _ _ mSlot _ _ _) -> foldMap Set.singleton mSlot
+  -- MoveToZone's reason: the anted incarnations (CR 400.7).
+  Effect.Ante (Ante.MkAnte _ _ mSlot) -> foldMap Set.singleton mSlot
+  -- MoveToZone's reason: the shuffled-in incarnations (CR 400.7).
+  Effect.ShuffleIntoLibrary shuffleIntoLibrary -> foldMap Set.singleton (ShuffleIntoLibrary.slot shuffleIntoLibrary)
+  -- CR 123.6e: the placed sticker.
+  Effect.PutSticker putSticker -> foldMap Set.singleton (PutSticker.bound putSticker)
+  Effect.SetOwner {} -> Set.empty
+  Effect.ExchangeOwnership {} -> Set.empty
+  -- The tokens this Create minted, for CR 603.7c's delayed trigger to name.
+  Effect.Create (Create.MkCreate _ _ _ mSlot _) -> foldMap Set.singleton mSlot
+  -- Create's reason: the conjured cards, for CR 603.7c.
+  Effect.Conjure (Conjure.MkConjure _ _ _ _ mSlot) -> foldMap Set.singleton mSlot
+  -- Create's reason: the copy tokens minted, for CR 603.7c.
+  Effect.CreateCopy (CreateCopy.MkCreateCopy _ _ _ mSlot _) -> foldMap Set.singleton mSlot
+  -- CR 400.7h: the spell the offered cast put on the stack.
+  Effect.OfferCast offer -> foldMap Set.singleton (OfferCast.slot offer)
+  -- Binds nothing: no new object comes into existence.
+  Effect.BecomeCopy {} -> Set.empty
+  Effect.CopyStackObject {} -> Set.empty
+  -- CR 729.1b: the subgame's winner, reported rather than chosen.
+  Effect.PlaySubgame slot -> Set.singleton slot
+  -- CR 608.2d: the player this effect chose.
+  Effect.ChoosePlayer choice -> Set.singleton (ChoosePlayer.slot choice)
+  Effect.ChoosePlayerAtRandom choice -> Set.singleton (ChoosePlayerAtRandom.slot choice)
+  -- CR 608.2d: the permanents this effect's chooser picked.
+  Effect.ChoosePermanents choice -> Set.singleton (ChoosePermanents.slot choice)
+  Effect.ChooseSector slot -> Set.singleton slot
+  -- CR 706.4: the result the roller used, and, where the card reads it, the
+  -- other result of the same instruction, for a later effect of this resolution
+  -- to read as Quantity.InSlot.
+  -- The players who had the highest result, where several rolled.
+  Effect.RollDie rollDie -> Set.singleton (RollDie.slot rollDie) <> foldMap Set.singleton (RollDie.other rollDie) <> foldMap Set.singleton (RollDie.highest rollDie)
+  -- CR 705.2: how many of the instruction's flips the flipping player won (or
+  -- how many coins came up heads), and, where the card reads it, how many they
+  -- lost, for a later effect of this resolution to read as Quantity.InSlot.
+  Effect.FlipCoin flipCoin -> Set.singleton (FlipCoin.slot flipCoin) <> foldMap Set.singleton (FlipCoin.misses flipCoin)
+  -- Three slots CR 701.8's destruction may define: how many permanents it
+  -- ACTUALLY destroyed, for a later "for each ... destroyed this way"; the cards
+  -- it put into a graveyard, for a later clause that NAMES them (CR 400.7's
+  -- incarnations); and the PERMANENTS it destroyed, for a later clause that
+  -- walks them one at a time.
+  Effect.Destroy (Destroy.MkDestroy _ _ mSlot mBuried mPermanents) -> foldMap Set.singleton mSlot <> foldMap Set.singleton mBuried <> foldMap Set.singleton mPermanents
+  -- How many permanents CR 701.21a actually sacrificed, Destroy's `slot`.
+  Effect.Sacrifice (SacrificeEffect.MkSacrificeEffect _ _ mSacrificed) -> foldMap Set.singleton mSacrificed
+  -- How many milled cards matched the tally's filter (CR 728.1), and WHICH cards
+  -- the mill put in the graveyard, for a later clause that names them (CR
+  -- 701.17c). Two slots and not one: a card may write either without the other.
+  Effect.Mill (Mill.MkMill _ _ mTally mSlot) -> foldMap (Set.singleton . MillTally.slot) mTally <> foldMap Set.singleton mSlot
+  -- The cards CR 701.20a's reveal showed, where the card named a slot. Optional,
+  -- where LookAt's is not: the GameEvent.Revealed in the log is a record already.
+  Effect.Reveal (Reveal.MkReveal _ mSlot) -> foldMap Set.singleton mSlot
+  -- The cards CR 701.20e's look showed, for a later clause to name.
+  Effect.LookAt (LookAt.MkLookAt _ slot _) -> Set.singleton slot
+  Effect.Scry {} -> Set.empty
+  Effect.Surveil {} -> Set.empty
+  Effect.Fateseal {} -> Set.empty
+  Effect.Clash slot -> Set.singleton slot
+  Effect.AsYouCascade {} -> Set.empty
+  Effect.Explore {} -> Set.empty
+  Effect.Assemble {} -> Set.empty
+  Effect.ArrangeInLibrary {} -> Set.empty
+  Effect.Connive {} -> Set.empty
+  -- CR 120.4b's damage actually dealt, summed over every recipient, for Syphon
+  -- Soul's "the damage dealt this way" (Parun.Types.DealDamage.tally).
+  Effect.DealDamage (DealDamage.MkDealDamage _ _ _ mTally) -> foldMap Set.singleton mTally
+  Effect.Fight {} -> Set.empty
+  Effect.ModifyTarget {} -> Set.empty
+  Effect.ChangeText {} -> Set.empty
+  Effect.AddMana _ -> Set.empty
+  Effect.Firebend _ -> Set.empty
+  Effect.ActivateManaAbilities _ -> Set.empty
+  Effect.MoveMana _ -> Set.empty
+  -- CR 400.7: the incarnations the destination minted.
+  Effect.Search search -> foldMap Set.singleton (Search.slot search)
+  Effect.ExileAllGraveyards -> Set.empty
+  Effect.Proliferate -> Set.empty
+  Effect.Reroll -> Set.empty
+  Effect.RerollStoredResults _ -> Set.empty
+  -- Binds nothing: the name goes on the SOURCE (Object.chosenNames) and is read
+  -- back off it by Filter.HasChosenName, so no slot carries it.
+  Effect.ChooseCardName _ -> Set.empty
+  Effect.ChooseQuality _ -> Set.empty
+  Effect.FromOutsideTheGame _ -> Set.empty
+  Effect.ExileThisSpell -> Set.empty
+  Effect.Bolster _ -> Set.empty
+  -- CR 701.47c's "the amassed Army": the creature the amasser chose.
+  Effect.Amass (Amass.Type.MkAmass _ _ mSlot) -> foldMap Set.singleton mSlot
+  -- CR 701.68c's "blighted creature", the rule one over and the same shape.
+  Effect.Blight (Blight.Type.MkBlight _ _ mSlot) -> foldMap Set.singleton mSlot
+  -- Binding.earthbentLand is stamped by Parun.Engine.Resolve.Effect, not defined
+  -- here: it is a reserved slot the engine writes for its own delayed ability,
+  -- and reporting it would make every earthbending card fail Parun.CardSpec's
+  -- reserved-binding sweep.
+  Effect.Earthbend _ -> Set.empty
+  -- Binding.airbentObjects is stamped by the MoveToZone Parun.Engine.Airbend
+  -- mints, and is reserved for the same reason Binding.earthbentLand is.
+  Effect.Airbend _ -> Set.empty
+  Effect.TemptWithTheRing -> Set.empty
+  Effect.OpenAttraction -> Set.empty
+  Effect.Planeswalk -> Set.empty
+  Effect.ChaosEnsues -> Set.empty
+  Effect.Abandon -> Set.empty
+  Effect.ClaimPrize -> Set.empty
+  Effect.Forage -> Set.empty
+  Effect.Populate -> Set.empty
+  Effect.TimeTravel -> Set.empty
+  Effect.Recruit -> Set.empty
+  Effect.Learn -> Set.empty
+  Effect.Cloak {} -> Set.empty
+  Effect.ManifestDread {} -> Set.empty
+  Effect.Venture {} -> Set.empty
+  Effect.ExileHandThenDraw -> Set.empty
+  Effect.NoteManaSpent -> Set.empty
+  Effect.PlayerSacrifices {} -> Set.empty
+  -- CR 701.38a: the objects tied for most votes, for the later effect that
+  -- acts on them (Council's Judgment's exile). For a word vote it is one slot
+  -- per word, each holding that word's tally for the clause connected to it
+  -- (CR 701.38b, Plea for Power). For a player vote it is the one slot holding
+  -- every player's tally (Mob Verdict).
+  Effect.Vote (Vote.MkVote _ choices _) -> case choices of
+    VoteChoices.Objects objects -> Set.singleton (VoteObjects.slot objects)
+    VoteChoices.Words voteWords -> Set.fromList (NonEmpty.toList voteWords)
+    VoteChoices.Players players -> Set.singleton (VotePlayers.slot players)
+  -- The high bid and the high bidder, for the instructions that act on them.
+  Effect.Bid (Bid.MkBid _ highBid highBidder) -> Set.fromList [highBid, highBidder]
+  Effect.RestartGame _ -> Set.empty
+  Effect.ControlPlayerNextTurn _ -> Set.empty
+  Effect.ControlPlayerThisResolution _ -> Set.empty
+  Effect.TurnFaceDown _ -> Set.empty
+  Effect.TurnFaceUp _ -> Set.empty
+  Effect.RemoveFromCombat _ -> Set.empty
+  Effect.BecomesBlocked _ -> Set.empty
+  Effect.SwitchBlockers _ -> Set.empty
+  Effect.ExchangeBlocks _ -> Set.empty
+  -- CR 121.1's cards "drawn this way", as CR 400.7's incarnations in the hand
+  -- they arrived in.
+  Effect.Draw (Draw.MkDraw _ _ mSlot) -> foldMap Set.singleton mSlot
+  -- CR 701.9a's cards "discarded this way", as CR 400.7's incarnations.
+  --
+  -- PROVEN rather than fenced: Psychic Miasma's second clause counts over CR
+  -- 400.7j's fold of this slot, Resolve.modeSlots folds a clause's condition and
+  -- quantitySlots above reports that scope, so emptying this arm reddens
+  -- Parun.CardSpec's "no dangling or unused slots".
+  Effect.Discard subject -> case subject of
+    Discard.Counted (CountedDiscard.MkCountedDiscard _ _ mDiscarded) -> foldMap Set.singleton mDiscarded
+    Discard.These (TheseDiscard.MkTheseDiscard _ mDiscarded) -> foldMap Set.singleton mDiscarded
+    Discard.AnyNumber (AnyNumberDiscard.MkAnyNumberDiscard _ _ mDiscarded) -> foldMap Set.singleton mDiscarded
+  -- How much life was ACTUALLY lost, summed over the players the instruction
+  -- named, for rule 702.101a's "that much" (Parun.Types.LifeLoss.tally).
+  Effect.LoseLife (LifeLoss.MkLifeLoss _ _ _ mTally) -> foldMap Set.singleton mTally
+  Effect.GainLife {} -> Set.empty
+  Effect.ExchangeLifeTotals _ -> Set.empty
+  Effect.ExchangeValues _ -> Set.empty
+  Effect.ExchangeZones _ -> Set.empty
+  Effect.ExchangeCardZones _ -> Set.empty
+  Effect.SetLifeTotal {} -> Set.empty
+  Effect.LoseGame {} -> Set.empty
+  Effect.WinGame {} -> Set.empty
+  Effect.DrawGame {} -> Set.empty
+  Effect.RedistributeLifeTotals -> Set.empty
+  Effect.IncreaseSpeed {} -> Set.empty
+  Effect.DecreaseSpeed {} -> Set.empty
+  -- A name the nested effects author, the three prevention opcodes' posture with
+  -- their own riders.
+  Effect.Replace (Replace.MkReplace _ _ _ _ re) -> foldMap boundSlots (replacementRowEffects re)
+  Effect.SkipPhase {} -> Set.empty
+  -- The shield itself binds nothing; CR 615.5's rider is an effect list, so a
+  -- name IT authors is a name this card authors. All three shields.
+  Effect.PreventNextDamage (PreventNextDamage.MkPreventNextDamage _ _ _ _ _ _ _ rider) -> foldMap boundSlots rider
+  Effect.PreventAllDamage (PreventAllDamage.MkPreventAllDamage _ _ _ _ _ _ _ _ rider) -> foldMap boundSlots rider
+  Effect.PreventNextDamageInstance (PreventNextDamageInstance.MkPreventNextDamageInstance _ _ _ rider) -> foldMap boundSlots rider
+  Effect.RedirectDamage {} -> Set.empty
+  -- How many spells this countering ACTUALLY countered, for a "for each spell
+  -- countered this way", and the permanents whose abilities were (CR 113.7).
+  Effect.Counter (Counter.MkCounter _ mSlot mSources mInstead) -> foldMap Set.singleton mSlot <> foldMap Set.singleton mSources <> foldMap (foldMap Set.singleton . CounterDestination.slot) mInstead
+  Effect.PutCounters {} -> Set.empty
+  Effect.DistributeCounters {} -> Set.empty
+  Effect.PutCountersFrom {} -> Set.empty
+  -- CR 122.1: how many counters the removal actually took off, where the card
+  -- reads it back -- Destroy's count slot one opcode over.
+  Effect.RemoveCounters removeCounters -> foldMap Set.singleton (RemoveCounters.tally removeCounters)
+  Effect.RemoveCountersAmong removeCounters -> foldMap Set.singleton (RemoveCountersAmong.tally removeCounters)
+  -- How many counters CR 122.5 ACTUALLY moved, for a "that much life".
+  Effect.MoveCounters (MoveCounters.MkMoveCounters _ _ mSlot _) -> foldMap Set.singleton mSlot
+  Effect.GainPlayerCounters {} -> Set.empty
+  Effect.RemovePlayerCounters removal -> foldMap Set.singleton (RemovePlayerCounters.tally removal)
+  -- CR 107.14: how much {E} the payer paid, for a later effect of the same
+  -- resolution to read as Quantity.InSlot.
+  Effect.PayAnyEnergy slot -> Set.singleton slot
+  Effect.ChooseNumber (ChooseNumber.MkChooseNumber slot _ _) -> Set.singleton slot
+  Effect.Tap _ -> Set.empty
+  Effect.Untap _ -> Set.empty
+  Effect.Unattach _ -> Set.empty
+  Effect.Detain _ -> Set.empty
+  Effect.Goad _ -> Set.empty
+  Effect.Pair _ -> Set.empty
+  Effect.GrantLookAtExiled _ -> Set.empty
+  Effect.MakePlotted _ -> Set.empty
+  Effect.MakeForetold _ -> Set.empty
+  Effect.MakeWarped _ -> Set.empty
+  Effect.DoesNotUntapNext _ -> Set.empty
+  Effect.Transform _ -> Set.empty
+  Effect.Convert _ -> Set.empty
+  Effect.Flip _ -> Set.empty
+  -- CR 701.42a's melded permanent is bound to nothing: no printing names it later
+  -- in its own instruction list.
+  Effect.Meld _ -> Set.empty
+  Effect.PhaseOut _ -> Set.empty
+  Effect.AddPhases _ -> Set.empty
+  Effect.EndTurn -> Set.empty
+  Effect.EndCombatPhase -> Set.empty
+  Effect.GainControl (GainControl.MkGainControl {}) -> Set.empty
+  Effect.ExchangeControl _ -> Set.empty
+  Effect.ArmDelayedTrigger {} -> Set.empty
+  Effect.AffectPlayers {} -> Set.empty
+  Effect.RequireBlock {} -> Set.empty
+  Effect.Prohibit {} -> Set.empty
+  Effect.ForbidAttack {} -> Set.empty
+  Effect.ForbidBeingBlocked {} -> Set.empty
+  Effect.RequireAttack {} -> Set.empty
+  Effect.CreateEmblem {} -> Set.empty
+  Effect.BecomeMonarch {} -> Set.empty
+  Effect.TakeTheInitiative {} -> Set.empty
+  Effect.Designate (Designate.MkDesignate {}) -> Set.empty
+  Effect.SetClassLevel (SetClassLevel.MkSetClassLevel _ _) -> Set.empty
+  Effect.Unsuspect _ -> Set.empty
+  Effect.SetHalfLocked (SetHalfLocked.MkSetHalfLocked {}) -> Set.empty
+  Effect.CounterAndMark _ -> Set.empty
+  Effect.BecomeProtector _ -> Set.empty
+  Effect.Mentor _ -> Set.empty
+  Effect.Exploit -> Set.empty
+  Effect.GiveGift -> Set.empty
+  Effect.ItBecomes _ -> Set.empty
+  Effect.ExileHaunting {} -> Set.empty
+  Effect.Attach _ -> Set.empty
+  Effect.AttachAsThoughCreature _ -> Set.empty
+  Effect.AttachTarget {} -> Set.empty
+  Effect.AttachTargetToEach {} -> Set.empty
+  Effect.AttachBound {} -> Set.empty
+  Effect.AttachAll {} -> Set.empty
+  Effect.TakeExtraTurn {} -> Set.empty
+  Effect.Shuffle {} -> Set.empty
+  Effect.OfferNamedCopy {} -> Set.empty
+  Effect.OfferNotedCopy {} -> Set.empty
+  Effect.GrantPlayFromExile {} -> Set.empty
+  -- The loop's member slot, plus every name the BODY authors -- which the loop
+  -- really does leave bound once it is over, to the union across its members
+  -- (Parun.Engine.Resolve.Effect's arm).
+  Effect.ForEach (ForEach.MkForEach _ _ slot body _ _ _) -> Set.insert slot (foldMap boundSlots body)
+  Effect.ForEachNumber (ForEachNumber.MkForEachNumber _ slot body) -> Set.insert slot (foldMap boundSlots body)
+  Effect.Repeat (Repeat.MkRepeat _ body _) -> foldMap boundSlots body
+  Effect.RepeatIf (RepeatIf.MkRepeatIf process _ ifHolds) -> foldMap boundSlots (process <> ifHolds)
+  Effect.Heal _ -> Set.empty
+  Effect.ChooseNewTargets _ -> Set.empty
+  Effect.ChangeTargets _ -> Set.empty
+
+-- CR 608.2b: the ONE recipient still legal in `slot`, for a reader that can take
+-- only one -- nothing when the slot named none, its target became illegal, or it
+-- names SEVERAL (Binding.oneBySlot). Parun.AbilitySlotLintSpec's "no
+-- multi-target slot is read one at a time" keeps a card from aiming one of those
+-- at such a reader.
+legalOne :: SlotName -> Map.Map SlotName (Set Recipient) -> Maybe Recipient
+legalOne slot legal = Map.lookup slot (Binding.oneBySlot legal)
+
+-- The same read for a reader that takes them ALL, CR 608.2b's illegal ones
+-- already dropped.
+legalMany :: SlotName -> Map.Map SlotName (Set Recipient) -> [Recipient]
+legalMany slot legal = Set.toList (Map.findWithDefault Set.empty slot legal)
+
+-- The players a PlayerRef names DURING a resolution, read from the slots this
+-- resolution filled rather than the source's bindings -- Parun.Engine.Players'
+-- one reading of every arm, with CR 608.2h's last known information answering
+-- who controlled or owned an object the clause has already moved. Nobody where
+-- that reading is unanswerable: an unfilled or illegal slot is a no-op (CR
+-- 608.2b). In PlayerId order; a caller with an ordering rule imposes it.
+playerRefPlayers :: Map.Map SlotName (Set Recipient) -> ObjectId -> ObjectId -> PlayerId -> GameState -> PlayerRef -> [PlayerId]
+playerRefPlayers legal resolving source controller gs =
+  Maybe.fromMaybe [] . Players.named (resolutionReads legal resolving source controller gs) gs
+
+-- What a resolution of `resolving`, an ability of @source@, reads
+-- (Players.resolution), off CR 608.2h's last known controller and owner and
+-- the choices of the abilities it came with (Game.readingAcquisition), cut to
+-- the range Plane.rangePerspective gives it.
+resolutionReads :: Map.Map SlotName (Set Recipient) -> ObjectId -> ObjectId -> PlayerId -> GameState -> Players.Reads
+resolutionReads legal resolving source controller gs =
+  Players.resolution (`Projection.controllerWithLastKnown` gs) (`Game.ownerWithLastKnown` gs) (Game.readingAcquisition resolving source gs) legal (Plane.rangePerspective source controller gs) controller gs
+
+-- CR 109.2's battlefield, narrowed by an effect-borne Filter and sorted into CR
+-- 608.2f's APNAP order. ObjectRef.EachMatching's whole answer, and the
+-- CANDIDATES ObjectRef.ChosenPermanents offers -- shared so a card cannot find
+-- the sweep and the offer disagreeing about what matches.
+--
+-- CR 303.4b's host is supplied here and for EachCardInGraveyard below. Read
+-- live, so an Aura moved between the trigger and its resolution acts on the host
+-- it has now.
+--
+-- Through effectContext, so the resolution's own slot bindings ride along and a
+-- sweep can exclude what another slot already named: Showstopping Surprise's
+-- "each OTHER creature" is `Not (IsBound "target")`. Filter.IsBound answers False
+-- for every candidate against an empty slot map, so a bare contextFor here would
+-- leave such a card silently sweeping in its own target. It is also what answers
+-- a CONTROLLER-relative conjunct -- Tovolar's "Human Werewolves you control" is
+-- `ControlledBy You`, read against CR 109.5's perspective.
+battlefieldMatching :: Map.Map SlotName (Set Recipient) -> ObjectId -> PlayerId -> ObjectId -> GameState -> Filter.Type.Filter Keyword.Type.Keyword -> [ObjectId]
+battlefieldMatching legal resolving controller source gs filter_ =
+  let context = effectContext gs resolving controller source legal (slotBindings resolving gs)
+      viewOf = Projection.viewsOf gs
+      -- CR 603.2's player slots baked in, exactly as Parun.Engine.Target.bakeSlots
+      -- does it for a MODE's target filter and off the same map: Filter.matches
+      -- answers Filter.ControlledByBound False wherever the Context binds its
+      -- slot to no one player, so an unbaked "that player controls" sweeps nobody rather than sweeping wrong.
+      -- Total War's "destroy all untapped non-Wall creatures that player
+      -- controls" is the phrase, and Parun.CardTriggerSpec's Total War group is
+      -- what proves it.
+      baked = Filter.bakeBound (Binding.playerSlots (slotBindings resolving gs)) Map.empty Map.empty filter_
+      grants = Projection.controlGrants gs
+      -- CR 801.10 / 801.5a: only permanents in the controller's range, so the
+      -- sweep and the ChosenPermanents offer agree -- every one for CR 801.18's
+      -- planar source (Plane.rangePerspective).
+      reach = Plane.rangePerspective source controller gs
+      -- CR 608.2d: the OfEachOtherCandidate operand compares against the rest
+      -- of what matches (Filter.amongCandidates) -- Juxtapose's "the creature
+      -- you each control with the greatest mana value".
+      matching =
+        Filter.amongCandidates context viewOf baked $
+          filter
+            (\oid -> all (\you -> Projection.objectInRangeGiven grants you oid gs) reach)
+            -- CR 614.12: less a batch an entry loop or its as-enters effects hold
+            -- off the battlefield (GameState.enteringBeside) -- Ixidron's sweep
+            -- misses a creature entering beside it.
+            (Set.toList (Set.difference (GameState.battlefield gs) (GameState.enteringBeside gs)))
+      order = Game.apnapOrder gs
+      last_ = length order
+      seat oid = case Projection.controllerOf oid gs of
+        Nothing -> last_
+        Just pid -> Maybe.fromMaybe last_ (List.elemIndex pid order)
+   in List.sortOn (\oid -> (seat oid, oid)) matching
+
+-- The objects an ObjectRef names DURING a resolution, for every arm whose answer
+-- is a READ. The arms that are a CR 608.2d QUESTION answer [] here and are
+-- carried out by the opcode arms that reach the Game monad. InSlot takes every
+-- recipient CR 608.2b left legal
+-- (CR 601.2c); a slot bound to a GROUP is answered before that question, a group
+-- being a definition rather than a target (CR 115.10a).
+--
+-- EachMatching folds the battlefield (CR 109.2) against the projection, so a
+-- permanent that is a creature only by a layer-4 effect is in the set -- through
+-- battlefieldMatching above, which is that fold and is shared with the
+-- ChosenPermanents offer. The filter context is this effect's own -- CR 109.5's
+-- "you" is the ability's controller -- because the filter IS the ability's card
+-- text. EachCardInGraveyard is the same
+-- fold over CR 400.1's per-player graveyards (CR 109.2a).
+--
+-- WHEN: at the moment the caller runs (CR 608.2c), and the list is then FIXED --
+-- one half of CR 608.2f's simultaneous processing. The other half is the
+-- caller's: it hands the whole list to its funnel as one batch rather than
+-- calling it per element (Event.destroy's haddock).
+--
+-- The two callers that store a CONTINUOUS effect -- ModifyTarget and GainControl
+-- -- owe CR 611.2c: the set is determined when the effect begins, so those arms
+-- freeze this answer as Affected.TheseObjects, less what CR 702.26e leaves out
+-- (Resolve.Effect.frozenAffected). Nothing enforces it; a third storing caller
+-- must not reach for Affected.Matching, a STATIC ability's set.
+--
+-- ORDER, for the arms folding over CR 400.1's per-player zones: APNAP (CR
+-- 608.2f), then ascending ObjectId. The arms over a SHARED zone keep that zone's
+-- own order (CR 101.4). `forEachOrder` is where CR 608.2f's secondary sentence
+-- and CR 701.44d's per-seat choice open, and both ask rather than reading this
+-- order.
+objectRefObjects :: Map.Map SlotName (Set Recipient) -> ObjectId -> PlayerId -> ObjectId -> GameState -> ObjectRef -> [ObjectId]
+objectRefObjects legal resolving controller source gs ref = case ref of
+  ObjectRef.InSlot slot -> case slotGroup slot resolving gs of
+    -- The slot names every object bound there as a group, all at once. Ahead of
+    -- the target read and not subject to `legal`: a group binding is a definition,
+    -- never a target (CR 115.10a). slotGroup says why being ahead is safe.
+    Just group -> Foldable.toList group
+    Nothing -> Maybe.mapMaybe Recipient.objectOf (legalMany slot legal)
+  ObjectRef.EachMatching filter_ -> battlefieldMatching legal resolving controller source gs filter_
+  -- A CR 608.2d question, so this pure sweep answers nothing for it: the
+  -- candidates are battlefieldMatching's, but WHICH of them the instruction names
+  -- is the chooser's, and Resolve.Effect.askingObjects is where it is asked. Under
+  -- an opcode that never reaches that function this empty answer is an inert
+  -- card-data error, which Parun.EffectLintSpec's inertChoosers rejects at load
+  -- time.
+  ObjectRef.ChosenPermanents _ -> []
+  -- CR 303.4b read off each object the slot holds: what is attached to it now,
+  -- or -- once it has left -- CR 608.2h's record of what was attached as it left,
+  -- still on the battlefield. CR 704.5n has unattached an Equipment from a
+  -- creature that died before its dies trigger resolves (Rhuk, Hexgold Nabber),
+  -- and Fumble asks in the same resolution that bounced the host. Through
+  -- battlefieldMatching, so the Filter and the APNAP order are EachMatching's.
+  ObjectRef.AttachedToBound (AttachedToBound.MkAttachedToBound slot filter_) ->
+    let hosts = objectRefObjects legal resolving controller source gs (ObjectRef.InSlot slot)
+        attachedTo host
+          | Set.member host (GameState.battlefield gs) = Game.attachments host gs
+          | otherwise = maybe Set.empty LastKnown.attached (Game.lastKnownOf host gs)
+        attached = foldMap attachedTo hosts
+     in filter (`Set.member` attached) (battlefieldMatching legal resolving controller source gs filter_)
+  -- CR 400.7's link read back: each object the slot holds, followed through
+  -- this turn's logged zone changes to the object it is now -- and, given an
+  -- `among`, kept only where that slot holds the incarnation too (CR 400.7j).
+  -- The scenario ante-bronze-tablet-destroyed-in-response-trades-only-the-target
+  -- proves the `among` half.
+  ObjectRef.FromAnywhere (FromAnywhere.MkFromAnywhere slot among) ->
+    let held named = objectRefObjects legal resolving controller source gs (ObjectRef.InSlot named)
+        followed = Maybe.mapMaybe (\oid -> Game.currentIncarnation oid gs) (held slot)
+     in maybe followed (\named -> filter (`elem` held named) followed) among
+  -- Each ref's objects in the order written, an object two refs name once.
+  ObjectRef.AllOf refs -> ListUtils.nubOrd (concatMap (objectRefObjects legal resolving controller source gs) refs)
+  -- EachMatching's sweep with CR 109.2's battlefield default switched off by the
+  -- card's own words (CR 109.2a), over CR 400.1's per-player zone. Whose
+  -- graveyards is Target.zoneScopePlayers -- either the perspective's own
+  -- reading of CR 109.5 or the players another slot of this announcement targets
+  -- -- and what matches within each is graveyardCardsOf.
+  ObjectRef.EachCardInGraveyard (EachCardInGraveyard.MkEachCardInGraveyard scope filter_) ->
+    -- With CR 303.4b's host filled for Animate Dead's "return enchanted
+    -- creature card".
+    let context = effectContext gs resolving controller source legal (slotBindings resolving gs)
+     in concatMap (\pid -> graveyardCardsOf context gs pid filter_) (Target.zoneScopePlayers (Plane.rangePerspective source controller gs) (Just controller) legal scope gs)
+  -- CR 400.1's per-player zone again, but only the RESOLVING CONTROLLER's, so no
+  -- scope to fold over and no APNAP order to impose. In the zone's own order,
+  -- which no rule reads: CR 402.3 leaves a hand's arrangement to its owner.
+  ObjectRef.EachCardInYourHand -> Game.zoneMembers Zone.Hand controller gs
+  -- The arm above's zone under EachCardInGraveyard's scope and filter: CR
+  -- 109.2a's reading again, over the hands Target.zoneScopePlayers names rather
+  -- than the resolving controller's alone. In APNAP order (CR 608.2f) across
+  -- seats, and within a seat in the hand's own order, which no rule reads (CR
+  -- 402.3) -- the arm above's answer.
+  --
+  -- effectContext and NOT Filter.contextFor, so the resolution's own slot
+  -- bindings and their CR 201.2a names ride along and a filter reading a slot is
+  -- not vacuously False here. PROVED by Parun.ResolveSpec's Hour of Glory cases:
+  -- its sweep is Filter.SameNameAsBound over the target the FIRST clause exiled,
+  -- so swapping in a bare Filter.contextFor exiles nothing. The sibling sweeps
+  -- are written the same way for the reason spelled out at EachMatching above.
+  ObjectRef.EachCardInHand (EachCardInHand.MkEachCardInHand scope mFilter) ->
+    let context = effectContext gs resolving controller source legal (slotBindings resolving gs)
+        held pid = case mFilter of
+          Nothing -> Game.zoneMembers Zone.Hand pid gs
+          Just filter_ -> handCardsOf context gs pid filter_
+     in concatMap held (Target.zoneScopePlayers (Plane.rangePerspective source controller gs) (Just controller) legal scope gs)
+  -- CR 400.1's other hidden per-player zone, and only the RESOLVING
+  -- CONTROLLER's, so no scope to fold over and no APNAP order to impose --
+  -- EachCardInYourHand's answer above. CR 400.12 is what makes "from your
+  -- library" name every card in it, and CR 109.2a is what a stated Filter reads
+  -- -- Caldera Breaker's "all Mountain cards". In the library's own
+  -- order, top card first, which CR 401.2 keeps players from looking at or
+  -- changing; the narrowing does not reorder, and the cards that did not match
+  -- stay where they were.
+  --
+  -- NOT a search (CR 701.23a) and so no shuffle (CR 701.24): neither producer's
+  -- text says "search" or "find", so CR 701.23b's "isn't required to find" and
+  -- CR 701.23f's search triggers have nothing to reach. A stated characteristic
+  -- does not make it one -- rule 701.23b governs a player who is SEARCHING, and
+  -- nothing here asks anyone to.
+  ObjectRef.EachCardInYourLibrary mFilter ->
+    let inLibrary = Game.zoneMembers Zone.Library controller gs
+     in case mFilter of
+          Nothing -> inLibrary
+          Just filter_ ->
+            let context = effectContext gs resolving controller source legal (slotBindings resolving gs)
+                viewOf = Projection.viewsOf gs
+             in filter (\oid -> Filter.matches context (viewOf oid) filter_) inLibrary
+  -- CR 108.3's owner over every zone at once, so no APNAP order to impose:
+  -- ascending id, the objects map's own order. CR 108.2 keeps a token and a
+  -- copy out of "card"; Game.isCardObject is that classification, a regression
+  -- fence rather than a proved line, since no board here holds a token or a
+  -- copy the Filter would match. data/scenarios/static-discharge-intensifies.json
+  -- proves the owner test and the reach into a hand.
+  ObjectRef.EachCardYouOwn filter_ ->
+    let context = effectContext gs resolving controller source legal (slotBindings resolving gs)
+        viewOf = Projection.viewsOf gs
+        owned oid obj = Object.owner obj == controller && Game.isCardObject oid gs && Filter.matches context (viewOf oid) filter_
+     in Map.keys (Map.filterWithKey owned (GameState.objects gs))
+  -- CR 607.2a's linked set: the cards Game.linkedPile files against this
+  -- effect's SOURCE, which a stated Filter then narrows. `source` and not
+  -- `resolving`, since rule 607.2a links two abilities of one OBJECT and for a
+  -- dies trigger the two ids differ. CR 400.1 makes exile one SHARED zone -- no
+  -- player to ask, and no APNAP sort, so ascending id and thus arrival order.
+  --
+  -- Only what the exiling abilities paired with the RESOLVING one exiled
+  -- (Binding.isLinkedExile): a printed reader skips what an ability acquired
+  -- from an exiled card exiled, and an acquired one reads only its own pair's
+  -- (CR 607.5). data/scenarios/wormfang-crab-returns-only-what-its-own-trigger-exiled.json
+  -- is the proof.
+  --
+  -- Rule 607.2a's wording ALONE: an ability referring back to what its own
+  -- earlier instruction exiled is CR 400.7j in CR 608.2c's written order, and
+  -- names the slot that instruction bound instead -- Hanweir Battlements' "exile
+  -- them, then meld them into Hanweir, the Writhing Township" is that printing,
+  -- and its Meld reads an InSlot.
+  --
+  -- A NAMED pile is the cards that one ability exiled: CR 607.2a links the
+  -- reference to it, so another exiling ability of the same object is not
+  -- read. Parun.ResolveSpec's "CR 607.2a Synthetic Split Reliquary returns only
+  -- what its warden ability exiled" is what proves it.
+  ObjectRef.EachCardInExiledPile (EachCardInExiledPile.MkEachCardInExiledPile pile mFilter) ->
+    let context = effectContext gs resolving controller source legal (slotBindings resolving gs)
+        viewOf = Projection.viewsOf gs
+        stated oid = case mFilter of
+          Nothing -> True
+          Just filter_ -> Filter.matches context (viewOf oid) filter_
+     in filter stated (Game.linkedPile (resolvingAbilityName resolving gs) pile source gs)
+  -- CR 702.99b's relation, the arm above's shape over GameState.encoded. Keyed
+  -- on the source's id alone, so a trigger whose creature has since left still
+  -- finds the card; no Gatherer ruling on cipher covers that case.
+  -- docs/decisions.md, "Whether a cipher trigger finds its card after the
+  -- creature leaves".
+  ObjectRef.EachCardEncodedOnSource mFilter ->
+    let context = effectContext gs resolving controller source legal (slotBindings resolving gs)
+        viewOf = Projection.viewsOf gs
+        stated oid = case mFilter of
+          Nothing -> True
+          Just filter_ -> Filter.matches context (viewOf oid) filter_
+     in filter
+          (\oid -> Map.lookup oid (GameState.encoded gs) == Just source && stated oid)
+          (Set.toList (GameState.exile gs))
+  -- CR 109.2b's reading of a description carrying the word "spell" -- the stack,
+  -- not the battlefield. Game.isSpell keeps the abilities sharing the zone out
+  -- (CR 112.1), a classification of the object's kind and not of its identity. In
+  -- the STACK's own order, top first (CR 405.2), not APNAP: one shared zone has an
+  -- order the rules already read. Read LIVE (CR 608.2c).
+  ObjectRef.EachSpell filter_ ->
+    let context = effectContext gs resolving controller source legal (slotBindings resolving gs)
+        viewOf = Projection.viewsOf gs
+     in filter
+          (\oid -> Game.isSpell oid gs && Filter.matches context (viewOf oid) filter_)
+          (GameState.stack gs)
+  -- CR 113.9's second sentence, "effects that specifically counter abilities":
+  -- the arm above with Game.isAbility in place of Game.isSpell, the SIBLING
+  -- classification and never its complement. A mana ability is never here to be
+  -- swept (CR 605.3b), and a static ability never uses the stack at all (CR
+  -- 113.9). Same order, top first (CR 405.2), and read LIVE (CR 608.2c).
+  ObjectRef.EachAbility filter_ ->
+    let context = effectContext gs resolving controller source legal (slotBindings resolving gs)
+        viewOf = Projection.viewsOf gs
+     in filter
+          (\oid -> Game.isAbility oid gs && Filter.matches context (viewOf oid) filter_)
+          (GameState.stack gs)
+  -- CR 405.1's whole zone: the two arms above without their classification, since
+  -- a sentence naming spells AND abilities names everything the stack holds. Same
+  -- order, top first (CR 405.2), and read LIVE (CR 608.2c).
+  ObjectRef.EachOnStack filter_ ->
+    let context = effectContext gs resolving controller source legal (slotBindings resolving gs)
+        viewOf = Projection.viewsOf gs
+     in filter
+          (\oid -> Filter.matches context (viewOf oid) filter_)
+          (GameState.stack gs)
+  -- Names players and so no objects at all.
+  ObjectRef.EachPlayer -> []
+  ObjectRef.EachOpponent -> []
+  ObjectRef.ChosenPlayer -> []
+  ObjectRef.Players _ -> []
+  -- CR 401.2's ordered pile, whose head is the top (CR 121.1). The depth is taken
+  -- from EACH named library, top first, and a shorter library gives what it has
+  -- (CR 609.3). Restricted to the players still in the turn order and delivered in
+  -- it (CR 608.2f, CR 101.4), which also drops a player CR 800.4 removed.
+  --
+  -- The depth is a Quantity evaluated HERE (CR 608.2c), off the announcement CR
+  -- 601.2b left on the resolving object -- which is why `resolving` rather than
+  -- `source` is the announcedOn id -- and ONCE for the whole ref, no printing
+  -- writing a per-library depth. A depth that will not evaluate, or evaluates
+  -- negative, is ZERO cards (CR 107.1b): a REGRESSION FENCE, since making the
+  -- fallback 5 leaves the suite green.
+  ObjectRef.TopOfLibrary (TopOfLibrary.MkTopOfLibrary player count) ->
+    let named = playerRefPlayers legal resolving source controller gs player
+        viewOf = effectViewOf source legal gs
+        context = effectContext gs resolving controller source legal (slotBindings resolving gs)
+        depth = maybe 0 Integer.toNaturalSaturating (Quantity.evaluateFor viewOf context gs resolving source count)
+     in concatMap
+          (\pid -> List.genericTake depth (Game.zoneMembers Zone.Library pid gs))
+          (filter (`elem` named) (Game.apnapOrder gs))
+  -- The arm above's walk with its Quantity counting MATCHES rather than cards:
+  -- the same prefix of CR 401.2's ordered pile taken from its head (CR 121.1),
+  -- ended by the card whose match brings the tally up to the count instead of by
+  -- a counted depth. That card is IN the prefix, which is what Treasure Hunt's
+  -- "until you reveal a nonland card" and Open the Way's "until you reveal X land
+  -- cards" both say -- the walk stops having reached it, not before it.
+  --
+  -- A library holding fewer matches than the count is given up whole (CR 609.3),
+  -- which `walkDown` does by running out of cards; the rest of the instruction is
+  -- then performed on all of it (CR 101.3). An empty library names nothing, for
+  -- the same reason, and so does a count of zero -- an unevaluable or negative
+  -- one being clamped to zero here (CR 107.1b), the arm above's clamp.
+  --
+  -- Per named library and in APNAP order, the arm above's fold, so "each
+  -- player's" walks each pile separately rather than one across the table. The
+  -- Filter is matched against each card's own projection as the walk reaches it
+  -- (CR 608.2c) -- the context is this resolution's, so a filter reading a slot
+  -- this resolution bound sees it.
+  ObjectRef.TopOfLibraryUntil (TopOfLibraryUntil.MkTopOfLibraryUntil player filter_ count) ->
+    let named = playerRefPlayers legal resolving source controller gs player
+        viewOf = effectViewOf source legal gs
+        context = effectContext gs resolving controller source legal (slotBindings resolving gs)
+        wanted = maybe 0 Integer.toNaturalSaturating (Quantity.evaluateFor viewOf context gs resolving source count)
+        viewOfCard = Projection.viewsOf gs
+        matches oid = Filter.matches context (viewOfCard oid) filter_
+        walkDown remaining oids =
+          if remaining <= (0 :: Natural)
+            then []
+            else case oids of
+              [] -> []
+              oid : rest -> oid : walkDown (if matches oid then remaining - 1 else remaining) rest
+        walk pid = walkDown wanted (Game.zoneMembers Zone.Library pid gs)
+     in concatMap walk (filter (`elem` named) (Game.apnapOrder gs))
+  -- CR 404.1's ordered pile, whose top is the NEWEST arrival -- the LAST member,
+  -- the opposite end from the two library walks above, because
+  -- Game.insertIntoZone appends a graveyard arrival where it prepends a library
+  -- one. One card per named graveyard, in APNAP order over the players still in
+  -- the turn order (CR 608.2f, CR 101.4), and none at all from an empty one (CR
+  -- 101.3). No Quantity to evaluate and no prompt: CR 404.2 keeps a graveyard's
+  -- order out of the players' hands, so "the top card" names exactly one.
+  ObjectRef.TopOfGraveyard player ->
+    let named = playerRefPlayers legal resolving source controller gs player
+     in Maybe.mapMaybe
+          (`Game.topOfGraveyard` gs)
+          (filter (`elem` named) (Game.apnapOrder gs))
+  -- A card somebody CHOOSES is a QUESTION, and this function cannot ask one;
+  -- Resolve.Effect.askingObjects does, ChosenPermanents' note above.
+  ObjectRef.ChosenCardInGraveyard {} -> []
+  ObjectRef.ChosenCardInHand {} -> []
+  ObjectRef.ChosenCardFromAmong {} -> []
+  -- The arm above's plural, and answered HERE rather than deferred, which is the
+  -- whole difference between them: "all land cards revealed this way" asks
+  -- nobody anything, so every opcode reading this function gets the set. The
+  -- members are InSlot's own read of the slot -- the arm at the head of this
+  -- case, so the sentence naming the matches and a later one naming the rest
+  -- cannot see different groups -- narrowed by the ref's Filter against each
+  -- member's CR 613 projection, matched when the effect executes (CR 608.2c) in
+  -- this effect's own context (CR 109.5). The group's mint order survives, which
+  -- CR 608.2f leaves standing.
+  ObjectRef.EachCardFromAmong (EachCardFromAmong.MkEachCardFromAmong slot filter_) ->
+    matchingFromAmong legal resolving controller source gs filter_ $
+      objectRefObjects legal resolving controller source gs (ObjectRef.InSlot slot)
+  -- Randomness, answered for real by Resolve.Effect.askingObjects.
+  ObjectRef.RandomCardInHand _ -> []
+  ObjectRef.RandomCardInGraveyard _ -> []
+  ObjectRef.RandomCardInLibrary _ -> []
+
+-- The cards in ONE player's graveyard matching the filter, in ascending
+-- ObjectId. The filter is matched in THIS EFFECT's context -- the caller's, so
+-- CR 109.5's "you" is the resolving controller rather than whoever is choosing,
+-- and the resolution's own slots ride along: Midnight Tilling's "from among
+-- them" is `IsBound` over the slot its own mill defined, which a bare contextFor
+-- would answer False for on every candidate.
+graveyardCardsOf :: Filter.Context -> GameState -> PlayerId -> Filter.Type.Filter Keyword.Type.Keyword -> [ObjectId]
+graveyardCardsOf context gs pid filter_ =
+  let viewOf = Projection.viewsOf gs
+   in List.sort
+        ( filter
+            (\oid -> Filter.matches context (viewOf oid) filter_)
+            (Game.zoneMembers Zone.Graveyard pid gs)
+        )
+
+-- The cards in ONE player's hand matching the filter: graveyardCardsOf one zone
+-- over. The filter is matched in THIS EFFECT's context, so `controller` is CR
+-- 109.5's "you" rather than whoever is choosing.
+--
+-- NOT sorted, where the graveyard sibling sorts: the candidates keep the zone's
+-- own order, which no rule reads (CR 402.3). Narrowing must not reorder.
+handCardsOf :: Filter.Context -> GameState -> PlayerId -> Filter.Type.Filter Keyword.Type.Keyword -> [ObjectId]
+handCardsOf context gs pid filter_ =
+  let viewOf = Projection.viewsOf gs
+   in filter
+        (\oid -> Filter.matches context (viewOf oid) filter_)
+        (Game.zoneMembers Zone.Hand pid gs)
+
+-- The cards in ONE player's library matching the filter: handCardsOf one
+-- hidden zone over, and SORTED, graveyardCardsOf's order: CR 401.2 keeps the
+-- library's order from everyone, so the candidates must not carry it.
+libraryCardsOf :: Filter.Context -> GameState -> PlayerId -> Filter.Type.Filter Keyword.Type.Keyword -> [ObjectId]
+libraryCardsOf context gs pid filter_ =
+  let viewOf = Projection.viewsOf gs
+   in List.sort
+        ( filter
+            (\oid -> Filter.matches context (viewOf oid) filter_)
+            (Game.zoneMembers Zone.Library pid gs)
+        )
+
+-- The objects a Create bound into `slot` as a GROUP, read off the RESOLVING
+-- stack object's live bindings rather than out of `chosen`, which projects CR
+-- 601.2c's targets only. Live is what lets a later effect of the same resolution
+-- name what an earlier Create minted.
+--
+-- A Just here wins over the slot's target, which would skip a CR 608.2b
+-- re-validation. A payment of several objects carries both fields, naming the
+-- same objects, and is never a declared target; otherwise a Parun.CardSpec lint
+-- ("no delayed ability declares a target slot under a name its card defines")
+-- rules the case out, so this arm never actually chooses.
+slotGroup :: SlotName -> ObjectId -> GameState -> Maybe (Seq.Seq ObjectId)
+slotGroup slot resolving gs = Binding.objectsOf slot (resolvingBindings resolving gs)
+
+-- The bindings of the object whose own resolution this is, live while it is still
+-- on the stack and CR 608.2h's last known information once it is not.
+--
+-- A spell that MOVES ITSELF is the whole reason for the second half: CR 201.5 lets
+-- Chronomantic Escape's "exile Chronomantic Escape with three time counters on it"
+-- name the resolving spell, and CR 400.7 then deletes the id the clause after it
+-- would read its slots off -- including the slot the move itself just defined.
+-- GameState.stackArchive is the reading the funnel filed as the object left the
+-- stack, which is that object's bindings as of the move.
+--
+-- Map.adjust over BOTH maps is the writer's side of the same fact
+-- (Parun.Engine.Resolve.Effect's overHolderBindings), so the two cannot drift; the
+-- READ prefers the live board, since rule 702.50a's epic files its archive entry
+-- while the spell is still on the stack and that entry must not answer for it.
+resolvingBindings :: ObjectId -> GameState -> Map.Map SlotName Binding.Type.Binding
+resolvingBindings resolving gs = case Game.lookupObject resolving gs of
+  Just obj -> Object.bindings obj
+  Nothing -> maybe Map.empty Object.bindings (Map.lookup resolving (GameState.stackArchive gs))
+
+-- The context every effect of a resolution evaluates its quantities and its
+-- ref-borne filters in: CR 109.5's "you" is the resolving controller, the source
+-- frames CR 113.7, and the resolution's slots ride along through
+-- Projection.framedBySlots, the filler a target slot's own filter is matched
+-- through too (Parun.Engine.Target.slotContext).
+--
+-- Of the TARGET half, only the recipients CR 608.2b left LEGAL: an illegal
+-- target is one "it fails to determine any such information" about, so it
+-- drops out of every slot-derived field. A slot naming several legal objects
+-- names all of them (Binding.objectsBySlot): Command the Dreadhorde's "the total
+-- mana value of those cards" reads both its targets, which the scenario
+-- "CR 601.2c Command the Dreadhorde deals damage equal to the total mana value
+-- of both its targets" in data/scenarios/target proves.
+--
+-- The GROUP half comes in beside `legal` rather than through it: CR 115.10a makes
+-- a group a definition and never a target, so it owes CR 608.2b nothing and is
+-- read live off the resolving object (slotBindings) instead, as CR 608.2c's
+-- clauses in order want -- a slot an earlier clause defined is visible to a
+-- later one. The AMOUNTS ride the same live read, which is why the parameter is
+-- the whole binding map rather than the groups alone: a number an earlier
+-- clause stamped (bindAmountSlot) is on the resolving object exactly as a group
+-- is.
+--
+-- CR 607.2d's CHOSEN values -- CR 201.4's names, CR 105.2's colour and CR 205.3's
+-- creature type -- come from Parun.Engine.Projection.framedWith, with the
+-- source's projected characteristics (CR 702.85a's cascade, CR 702.60a's
+-- ripple), and this is their only filler on the resolution side -- the search filter's and the mill tally's
+-- alike, which each overlaid the names for themselves until Petra Sphinx wanted
+-- them at an ObjectRef's own filter too, see #2992. What holds a CARD to the
+-- positions this fills is Parun.FilterPositionLintSpec, not this function.
+effectContext :: GameState -> ObjectId -> PlayerId -> ObjectId -> Map.Map SlotName (Set Recipient) -> Map.Map SlotName Binding.Type.Binding -> Filter.Context
+effectContext gs resolving controller source legal bindings =
+  Projection.framedBySlots
+    gs
+    (Binding.recipientsBySlot legal bindings)
+    -- CR 607.2d: the SOURCE's choices (CR 113.7), read LIVE for the group
+    -- half's reason: CR 608.2c has the clauses carried out in order, so the
+    -- name an earlier clause chose is part of the state a later one is read
+    -- against -- Petra Sphinx's "if that card has the chosen name" over the
+    -- card its own reveal bound. CR 608.2h's last-known reader is inside
+    -- choicesOf, for the source that has already left (Conjurer's Ban).
+    -- Brass Herald's "creature cards of the chosen type revealed this way" is
+    -- the chosen subtype's proof (Parun.ResolveSpec). CR 607.5: only the choices
+    -- of the abilities the resolving one came with (Game.readingAcquisition).
+    (Projection.framedWith (SourceContext.choicesOf (Game.readingAcquisition resolving source gs source) source gs) source gs (Filter.contextIn gs (Just controller) (Just source)))
+      { -- CR 608.2c: the numbers earlier clauses of THIS resolution stamped on
+        -- slots, for the Filter.Measures operand that compares a candidate
+        -- against one (AmountInSlot) -- Localized Destruction's "power equal to
+        -- the amount of {E} paid this way". Live off the resolving object, the
+        -- group half's own read, so a clause reads what the clause before it bound.
+        Filter.boundAmounts = Map.mapMaybe Binding.Type.amount bindings,
+        Filter.slotStickers = Map.mapMaybe Binding.Type.sticker bindings,
+        Filter.slotVotes = Map.mapMaybe Binding.Type.votes bindings,
+        -- CR 607.5: the resolving ability's own name, so what it means by
+        -- "exiled with" its source is its own pair's. A REGRESSION FENCE: no
+        -- ability in data/cards/ an object can acquire reads a quantity or a
+        -- filter of its pile as it resolves; its EachCardInExiledPile is
+        -- objectRefObjects' own resolvingAbilityName read.
+        Filter.reader = resolvingAbilityName resolving gs
+      }
+
+-- effectContext with `slot` naming `oid` alone, for an effect applied once per
+-- object -- CR 701.10b's "that creature" under ModifyTarget's `each`. Re-framed
+-- through Projection.framedBySlots with the narrowed map rather than by
+-- overriding slotObjects, so every slot-derived field (names, controllers,
+-- toughness) reads that one object too.
+effectContextNaming :: SlotName -> ObjectId -> GameState -> ObjectId -> PlayerId -> ObjectId -> Map.Map SlotName (Set Recipient) -> Map.Map SlotName Binding.Type.Binding -> Filter.Context
+effectContextNaming slot oid gs resolving controller source legal bindings =
+  Projection.framedBySlots
+    gs
+    (Map.insert slot (Set.singleton (Recipient.ToObject oid)) (Binding.recipientsBySlot legal bindings))
+    (effectContext gs resolving controller source legal bindings)
+
+-- Every object a resolution's TARGET slots name, CR 608.2b's legal ones only:
+-- what effectViewOf below answers through CR 608.2h's last-known reader.
+effectTargetObjects :: Map.Map SlotName (Set Recipient) -> Set ObjectId
+effectTargetObjects = foldMap (Set.fromList . Maybe.mapMaybe Recipient.objectOf . Set.toList)
+
+-- The GROUP bindings a resolution has made so far, read LIVE off the resolving
+-- object (CR 608.2c): a slot an earlier clause of this same resolution defined is
+-- part of the state a later one is read against, which is exactly what "from
+-- among them" needs. By the name the effect wrote, as slotGroup above reads it.
+slotBindings :: ObjectId -> GameState -> Map.Map SlotName Binding.Type.Binding
+slotBindings = resolvingBindings
+
+-- CR 608.2h's reader for one resolution: Projection.viewWithLastKnown, which
+-- answers the SOURCE off its last known information, widened to every object a
+-- slot of this resolution names.
+--
+-- A TARGET is one: `legal` already omits a target CR 608.2b found illegal as
+-- resolution began, so a slot's object that is gone now was moved by an earlier
+-- instruction of this same resolution, and CR 608.2h answers it off its last
+-- known information. Swords to Plowshares' "its power" is read after its own
+-- exile; the scenario "CR 608.2h Swords to Plowshares gains its controller the
+-- exiled creature's power" in data/scenarios/resolve proves it.
+--
+-- Binding.sacrificedPermanent is another -- CR 601.2h paid the cost before the
+-- ability was on the stack at all, and CR 701.21a put the permanent in a
+-- graveyard as a new object (CR 400.7) -- which is Jarad, Golgari Lich Lord's
+-- "the sacrificed creature's power".
+--
+-- Binding.departedPermanent is a third, and CR 603.10a is why: what a
+-- leaves-the-battlefield trigger says "it" about is the permanent as it last
+-- existed on the battlefield, which CR 400.7 has already deleted by the time the
+-- ability resolves. Resourceful Defense's "put those counters" reads its whole CR
+-- 122.8 tally through here.
+--
+-- Any other id keeps viewWithLastKnown's blank for a gone object.
+effectViewOf :: ObjectId -> Map.Map SlotName (Set Recipient) -> GameState -> ObjectId -> Maybe Filter.View
+effectViewOf source legal gs oid =
+  if Set.member oid (effectTargetObjects legal)
+    then Projection.viewWithLastKnownAnywhere gs oid
+    else Projection.viewWithLastKnown source gs oid
+
+-- The members of a group that a ref's own Filter matches: the shared half of "a
+-- card from among them" and "all cards from among them", so the choice one makes
+-- and the sweep the other takes cannot come apart.
+--
+-- Matched in THIS EFFECT's context -- CR 109.5's "you" is the resolving
+-- controller and not whoever is choosing, and the resolution's own slot bindings
+-- ride along -- against the CR 613 projection, so a card a continuous effect
+-- made a creature is a creature card here. The caller's order survives, which
+-- for a group is mint order (CR 608.2f).
+--
+-- Through effectViewOf, so a member that no longer exists answers from CR
+-- 608.2h's last known information and one with none filed matches nothing:
+-- Comeuppance's "damage from a creature source" asks it of a source that may
+-- have left before its CR 615.5 rider runs, and Parun.DamageReplacementSpec's "a
+-- creature source that has left is still a creature source" proves it.
+matchingFromAmong :: Map.Map SlotName (Set Recipient) -> ObjectId -> PlayerId -> ObjectId -> GameState -> Filter.Type.Filter Keyword.Type.Keyword -> [ObjectId] -> [ObjectId]
+matchingFromAmong legal resolving controller source gs filter_ members =
+  let context = effectContext gs resolving controller source legal (slotBindings resolving gs)
+      viewOf = effectViewOf source legal gs
+   in filter (maybe False (\view -> Filter.matches context view filter_) . viewOf) members
+
+-- Every slot ONE target slot reads: its pool's, its filter's, and its CR 202.3
+-- computed bound's. Its own name is not among them -- this is what the slot
+-- READS, and CR 601.2c binds it only once it has been answered.
+--
+-- Its own function because a card declares a target slot in THREE places, and
+-- each needs its own reader. Enumerated off the three types that hold one:
+--
+--   * Mode.targetSlots -- CR 601.2c's ordinary target, declared inside a mode.
+--     modeSlots below folds this one, and the corpus lint that pairs a mode's
+--     reads with its declarations is what consumes it.
+--   * Face.enchant -- CR 303.4a's enchant slot, declared on the face BESIDE the
+--     modes (Card.enchantSlotMap), so it is in no mode's declared set.
+--   * Modification.GainEnchant -- the same slot GRANTED by a CR 613.1f layer 6
+--     effect (Cloudform, the Licids, CR 702.103b's bestow). What answers it is
+--     never the granting mode: the grant is a CR 611.2 continuous effect that
+--     outlives the resolution that made it, so by the time CR 601.2c chooses for
+--     a bestowed spell (Card.modesTargetSlotsGiven) or CR 303.4c's state-based
+--     action re-reads CR 702.5a against a permanent, the announcement the grant
+--     was written in is gone. Declaring the name would not rescue it.
+--
+-- The last two are one claim, and Parun.CardSpec's "an enchant slot reads no slot,
+-- printed or granted" sweep is what states it: neither may read anything.
+targetSlotSlots :: TargetSlot.TargetSlot -> Map.Map SlotName SlotArity
+targetSlotSlots slot =
+  -- CR 601.2c's "that player" of a "for each opponent" slot is bound by the
+  -- slot itself (Target.announcedSlots), so it is not a read of anything else.
+  maybe id (Map.delete . SlotPerPlayer.slot) (TargetSlot.perPlayer slot) $
+    joinSlots
+      [ poolSlot (TargetSlot.pool slot),
+        -- Every slot the slot's own FILTER names -- CR 603.2's "target artifact or
+        -- enchantment that player controls".
+        maybe Map.empty (Map.fromSet (const SlotArity.One) . Filter.boundSlots) (TargetSlot.filter slot),
+        -- And every slot its CR 202.3 computed bound names -- Venerable Warsinger's
+        -- "mana value X or less ... where X is the amount of damage this creature
+        -- dealt to that player", whose X is the trigger's own event amount
+        -- (Parun.Engine.Binding.eventAmount). Target.slotContext is what answers it,
+        -- off the announcement the caller hands over.
+        --
+        -- What it buys is the pairing -- a card whose bound names an amount its
+        -- CONDITION does not supply (Parun.Engine.Event.Binding.eventBindingSlots) is caught
+        -- only because the read is reported here. No card in data/cards/ misauthors
+        -- that pairing, so the proof is a planted one.
+        --
+        -- quantitySlots' WHOLE answer, which is what makes a bound naming a slot
+        -- only through a PlayerRef buried inside the number ("mana value X or less,
+        -- where X is the amount of life THAT PLAYER gained this turn") or through CR
+        -- 400.7j's Scope.OverBound visible to the equality above.
+        -- Parun.AbilitySlotLintSpec's "the lint itself catches a computed bound
+        -- naming a slot through a player" is the case that proves it.
+        maybe Map.empty quantitySlots (TargetSlot.amount slot),
+        -- CR 601.2c's computed COUNT is a Quantity too, and names slots the same
+        -- way its bound does, so it is reported beside it or a slot named only
+        -- there would dangle.
+        maybe Map.empty quantitySlots (SlotCount.quantity (TargetSlot.count slot)),
+        -- CR 601.2d's divided total names slots the same way (Rolling Thunder's X).
+        maybe Map.empty quantitySlots (TargetSlot.divided slot),
+        -- And the seat a CR 115.1 chooser names through a binding -- Curse of
+        -- Inertia's "that attacking player", which its condition must supply.
+        case TargetSlot.chooser slot of
+          Just (TargetChooser.InSlot named) -> oneSlot named
+          Just (TargetChooser.Relative _) -> Map.empty
+          Nothing -> Map.empty
+      ]
+
+-- Every slot a whole MODE reads: its effects', every payer CR 118.12a's "unless
+-- [a player] pays" names, every slot that gate's own "for each" counts over,
+-- every slot a gate's described cost reads a mana cost off,
+-- every slot a CR 701.46a "if" tests, and every slot a target slot's own pool,
+-- filter or bound names. A payer, multiplier, gate or pool slot no effect also
+-- reads would otherwise dangle.
+modeSlots :: Mode.Mode Card.Type.Card (GrantedAbility.GrantedAbility Card.Type.Card) -> Map.Map SlotName SlotArity
+modeSlots mode =
+  let -- Every clause's gate: CR 118.12 scopes a resolution cost to its clause.
+      gateSlot = maybe Map.empty payGateSlots . Clause.payGate
+      -- And every clause's ASKER, for its reason: CR 603.5's "may" is scoped to a
+      -- clause too, and Jungle Wayfinder's names the table rather than a slot --
+      -- but a card may name one, and an asker slot no effect also reads would
+      -- otherwise dangle.
+      askerSlot clause = case Clause.optionality clause of
+        Optionality.Mandatory -> Map.empty
+        Optionality.Optional ref -> playerRefSlots ref
+      -- And every clause's branch CHOOSER, for the same reason one rider over: CR
+      -- 608.2d's announcement is scoped to a clause pair and its reference may
+      -- name a slot.
+      chooserSlot = maybe Map.empty (playerRefSlots . OrElse.chooser) . Clause.orElse
+      -- And every clause's CR 701.46a "if", which CR 608.2c lets read what an
+      -- earlier clause of the same resolution bound: Psychic Miasma's "if a land
+      -- card is discarded this way" counts over CR 400.7j's fold of the slot its
+      -- first clause binds. A gate is the ONLY place a card may read a slot and
+      -- perform nothing, so a read reported nowhere else dangles here.
+      conditionSlot = maybe Map.empty conditionSlots . Clause.condition
+   in joinSlots
+        [ joinSlots (fmap slotsOf (Foldable.toList (Mode.allEffects mode))),
+          joinSlots (fmap gateSlot (Foldable.toList (Mode.clauses mode))),
+          joinSlots (fmap askerSlot (Foldable.toList (Mode.clauses mode))),
+          joinSlots (fmap chooserSlot (Foldable.toList (Mode.clauses mode))),
+          joinSlots (fmap conditionSlot (Foldable.toList (Mode.clauses mode))),
+          joinSlots (fmap targetSlotSlots (Map.elems (Mode.targetSlots mode)))
+        ]
+
+-- Every slot a CR 118.12 gate reads, wherever it rides (a clause, or a CR
+-- 608.2f loop's ForEach.payGate). Its payer; its "for each" multiplier
+-- (Parun.Types.PayGate.perEach), which payGatePaidBy evaluates against the
+-- resolution's own context, reported whole for targetSlotSlots' computed
+-- bound's reason; and the slot a DESCRIBED cost reads its mana part off
+-- (Parun.Types.CostBasis, Flash's "its mana cost reduced by {2}"), at arity ONE
+-- since a slot naming several names no one mana cost and `describedCosts`
+-- answers Nothing there rather than picking.
+payGateSlots :: PayGate.PayGate -> Map.Map SlotName SlotArity
+payGateSlots gate =
+  joinSlots
+    [ playerRefSlots (PayGate.payer gate),
+      maybe Map.empty quantitySlots (PayGate.perEach gate),
+      maybe Map.empty (oneSlot . CostBasis.slot) (PayGate.basis gate)
+    ]
+
+-- The slot a target pool draws its candidates from, if it draws them from one
+-- (CR 400.1's per-player graveyard), read singly.
+poolSlot :: Pool.Pool -> Map.Map SlotName SlotArity
+poolSlot pool = case pool of
+  Pool.Creatures -> Map.empty
+  Pool.Players -> Map.empty
+  Pool.AnyTarget -> Map.empty
+  Pool.Permanents -> Map.empty
+  Pool.Spells -> Map.empty
+  Pool.Abilities -> Map.empty
+  Pool.SpellsAndPermanents -> Map.empty
+  Pool.PlayersAndPlaneswalkers -> Map.empty
+  Pool.CardsInGraveyard scope -> case scope of
+    ZoneScope.Scoped _ -> Map.empty
+    ZoneScope.InSlot slot -> oneSlot slot
+    ZoneScope.ControllerOfBound slot -> oneSlot slot
+    ZoneScope.BoundPlayer _ -> Map.empty
+  Pool.CardsInExile -> Map.empty
+  Pool.CardsInAnte -> Map.empty
+  -- The graveyard half's scope; the battlefield half names no slot.
+  Pool.CreaturesAndCardsInGraveyard scope -> case scope of
+    ZoneScope.Scoped _ -> Map.empty
+    ZoneScope.InSlot slot -> oneSlot slot
+    ZoneScope.ControllerOfBound slot -> oneSlot slot
+    ZoneScope.BoundPlayer _ -> Map.empty
+
+-- Every slot a TRIGGERED ability reads: each mode's (modeSlots) and its CR
+-- 603.4 intervening "if"'s. CR 805.4d's "refers to that player" is asked of it.
+triggeredAbilitySlots :: TriggeredAbility.TriggeredAbility Card.Type.Card (GrantedAbility.GrantedAbility Card.Type.Card) -> Map.Map SlotName SlotArity
+triggeredAbilitySlots ability =
+  joinSlots
+    ( maybe Map.empty conditionSlots (TriggeredAbility.intervening ability)
+        : fmap modeSlots (Foldable.toList (Modal.modes (TriggeredAbility.modal ability)))
+    )
+
+-- The quantities a conjure reads: its count, and a reference pick's bound
+-- (Parun.Types.FromReference's amount).
+conjureQuantities :: Conjure.Conjure card -> [Quantity.Type.Quantity]
+conjureQuantities conjure =
+  Conjure.quantity conjure : case Conjure.cards conjure of
+    ConjureCards.Written {} -> []
+    ConjureCards.Duplicate {} -> []
+    ConjureCards.Reference from -> Maybe.maybeToList (FromReference.amount from)
+
+-- | CR 115.1's kind of the spell or ability `resolving` is, which CR 608.2b's
+-- re-check and CR 115.7's and CR 707.10c's re-choices hand the targeting
+-- funnel (Parun.Engine.TargetRestriction reads it). Every caller holds an object
+-- it has just looked up on the stack, so the Spell an object of no kind gets is
+-- never answered.
+resolvingKind :: ObjectId -> GameState -> StackObjectKind.StackObjectKind
+resolvingKind resolving gs = Maybe.fromMaybe StackObjectKind.Spell (Game.stackObjectKind resolving gs)
+
+-- | CR 607.2a's name for the ability resolving as `resolving`: an activated
+-- ability's ActivatedAbility.name, which is how a linked reference names one of
+-- two exiling abilities of an object, and how one acquired from an exiled card
+-- names its pair (Binding.isLinkedExile). Nothing for every other kind of
+-- object, none of which carries a name a reference could state.
+resolvingAbilityName :: ObjectId -> GameState -> Maybe AbilityName.AbilityName
+resolvingAbilityName resolving gs = case fmap Object.source (Game.lookupObject resolving gs) of
+  Nothing -> Nothing
+  Just src -> case src of
+    Source.OfAbility a -> ActivatedAbility.name (ActivatedAbilitySource.ability a)
+    Source.OfTrigger _ -> Nothing
+    Source.OfInherentTrigger _ -> Nothing
+    Source.OfCard _ -> Nothing
+    Source.OfSpellCopy _ -> Nothing
+    Source.OfCardCopy _ -> Nothing
+    Source.OfMeld _ -> Nothing
+    Source.OfMerge _ -> Nothing
+    Source.OfToken _ -> Nothing
+    Source.OfEmblem _ -> Nothing
+
+-- The ref a Parun.Types.RestrictedCreatures names, when its Named arm does; the
+-- Matching arm is a Filter, read by matchingSlots instead.
+namedRefs :: RestrictedCreatures.RestrictedCreatures ObjectRef -> [ObjectRef]
+namedRefs restricted = case restricted of
+  RestrictedCreatures.Named ref -> [ref]
+  RestrictedCreatures.Matching _ -> []
+
+-- The slots a Matching class's Filter reads (CR 611.2c), Search's reading; a
+-- Named ref is reported at the head by namedRefs.
+matchingSlots :: RestrictedCreatures.RestrictedCreatures ObjectRef -> Map.Map SlotName SlotArity
+matchingSlots restricted = case restricted of
+  RestrictedCreatures.Named _ -> Map.empty
+  RestrictedCreatures.Matching f -> filterSlotsOf f

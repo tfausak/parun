@@ -8,7 +8,7 @@
 phases are modelled at the width the rule actually has, and CR 612's word swap
 reaches a `Filter` carried by an effect.
 
-**Architecture:** `Pawl.Turn` gains one function that answers "where does this
+**Architecture:** `Parun.Turn` gains one function that answers "where does this
 phase end" (`thisPhase`), and both the drop side and the splice side use it.
 `Effect.AddCombatAndMainPhase` becomes `Effect.AddPhases [ExtraPhase]`. A history
 atom (`Filter.AttackedThisTurn`) and a trigger frequency
@@ -33,17 +33,17 @@ Read it before Task 1; it carries the CR argument each task implements.
   `_scratch/` and never from memory.
 - **No unchecked numeric conversions.** `fromIntegral`, `fromInteger`,
   `realToFrac`, `toEnum` are banned by `.hlint.yaml`; go through
-  `Pawl.Extra.Int` / `Integer` / `Natural`.
+  `Parun.Extra.Int` / `Integer` / `Natural`.
 - **Constructors take a `Mk` prefix and never pun the type name.**
-- **One type per module** under `Pawl.Type.<TypeName>`.
+- **One type per module** under `Parun.Type.<TypeName>`.
 - **`hooky` acts on staged files only.** `git add` first, then `hooky fix`, then
   `git add` again, then `hooky run`.
-- **Adding or deleting a module needs a direct `cabal-gild pawl.cabal`** —
+- **Adding or deleting a module needs a direct `cabal-gild parun.cabal`** —
   `hooky fix` skips it.
 - **Never write an expiry into a code comment.** A comment states only what is
   not implemented, plus `(#N)`.
 - **The rules core must not case on an effect's identity.** New `case effect of`
-  work belongs in `Pawl.Resolve` only.
+  work belongs in `Parun.Resolve` only.
 - **Commit after each task.** The branch's internal history is working state;
   merges are squashed.
 
@@ -52,8 +52,8 @@ Read it before Task 1; it carries the CR argument each task implements.
 ### Task 1: `Turn.thisPhase` — one notion of where a phase ends
 
 **Files:**
-- Modify: `source/library/Pawl/Turn.hs` (`dropSkippedCombatSteps`, ~line 76–104)
-- Test: `source/test-suite/Pawl/TurnSpec.hs`
+- Modify: `source/library/Parun/Turn.hs` (`dropSkippedCombatSteps`, ~line 76–104)
+- Test: `source/test-suite/Parun/TurnSpec.hs`
 
 **Interfaces:**
 - Produces: `Turn.thisPhase :: Phase -> Seq Phase -> (Seq Phase, Seq Phase)` and
@@ -179,7 +179,7 @@ dropSkippedCombatSteps phase remaining =
 
 - [ ] **Step 5: Update the caller and the four existing tests**
 
-`source/library/Pawl/Combat.hs:87` passes `GameState.phase gs`:
+`source/library/Parun/Combat.hs:87` passes `GameState.phase gs`:
 
 ```haskell
 then gs {GameState.remaining = Turn.dropSkippedCombatSteps (GameState.phase gs) (GameState.remaining gs)}
@@ -200,7 +200,7 @@ Expected: no warnings; all tests pass, suite count up by 3.
 - [ ] **Step 7: Commit**
 
 ```bash
-git add source/library/Pawl/Turn.hs source/library/Pawl/Combat.hs source/test-suite/Pawl/TurnSpec.hs
+git add source/library/Parun/Turn.hs source/library/Parun/Combat.hs source/test-suite/Parun/TurnSpec.hs
 hooky fix && git add -u && hooky run
 git commit -m "Give Turn one notion of where a phase ends (CR 511.3)"
 ```
@@ -210,13 +210,13 @@ git commit -m "Give Turn one notion of where a phase ends (CR 511.3)"
 ### Task 2: `Effect.AddPhases [ExtraPhase]` (#393)
 
 **Files:**
-- Create: `source/library/Pawl/Type/ExtraPhase.hs`
-- Modify: `source/library/Pawl/Type/Effect.hs` (~line 281–295), `Pawl/Turn.hs`,
-  `Pawl/Resolve.hs` (lines 134, 181, 227, 268, 363, 1626–1633), `Pawl/Codec.hs`
-  (1533, 1615), `pawl.cabal` (via `cabal-gild`)
+- Create: `source/library/Parun/Type/ExtraPhase.hs`
+- Modify: `source/library/Parun/Type/Effect.hs` (~line 281–295), `Parun/Turn.hs`,
+  `Parun/Resolve.hs` (lines 134, 181, 227, 268, 363, 1626–1633), `Parun/Codec.hs`
+  (1533, 1615), `parun.cabal` (via `cabal-gild`)
 - Modify: `data/cards/aggravated-assault.json`
-- Test: `source/test-suite/Pawl/TurnSpec.hs`, `source/test-suite/Pawl/CodecSpec.hs`
-  (253), `source/test-suite/Pawl/CardSpec.hs` (377)
+- Test: `source/test-suite/Parun/TurnSpec.hs`, `source/test-suite/Parun/CodecSpec.hs`
+  (253), `source/test-suite/Parun/CardSpec.hs` (377)
 
 **Interfaces:**
 - Consumes: `Turn.thisPhase` from Task 1.
@@ -269,10 +269,10 @@ HU.testCase "CR 500.8 splicePhases inserts a multi-phase list in written order" 
 Run: `cabal test 2>&1 | tail -30`
 Expected: FAIL — `ExtraPhase` and `Turn.splicePhases` not in scope.
 
-- [ ] **Step 3: Create `Pawl/Type/ExtraPhase.hs`**
+- [ ] **Step 3: Create `Parun/Type/ExtraPhase.hs`**
 
 ```haskell
-module Pawl.Type.ExtraPhase where
+module Parun.Type.ExtraPhase where
 
 -- CR 500.8: one phase an effect adds to a turn. The rule does not fix WHICH
 -- phases are added -- "Some effects can add phases to a turn. They do this by
@@ -280,7 +280,7 @@ module Pawl.Type.ExtraPhase where
 -- vary: Aggravated Assault adds a combat phase and a main phase, Aurelia, the
 -- Warleader adds only a combat phase, Full Throttle adds two combat phases.
 --
--- A whole phase, never a step: what Pawl.Turn.expandExtraPhase inserts for
+-- A whole phase, never a step: what Parun.Turn.expandExtraPhase inserts for
 -- ExtraCombat is CR 506.1's five steps in order, and for ExtraMain is the single
 -- stepless main phase CR 505.2 describes.
 data ExtraPhase
@@ -294,7 +294,7 @@ data ExtraPhase
   deriving (Eq, Ord, Show)
 ```
 
-Then run `cabal-gild --io pawl.cabal` (a new module; `hooky fix` skips this).
+Then run `cabal-gild --io parun.cabal` (a new module; `hooky fix` skips this).
 
 - [ ] **Step 4: Replace `spliceCombatAndMainPhase` with `splicePhases`**
 
@@ -393,7 +393,7 @@ phase, where `thisPhase`'s prefix is empty and the splice is still a head-cons.
 - [ ] **Step 10: Commit**
 
 ```bash
-git add -A source/ data/ pawl.cabal
+git add -A source/ data/ parun.cabal
 hooky fix && git add -u && hooky run
 git commit -m "Give CR 500.8's added phases a payload (#393)"
 ```
@@ -403,12 +403,12 @@ git commit -m "Give CR 500.8's added phases a payload (#393)"
 ### Task 3: `Filter.AttackedThisTurn` + Relentless Assault (#394)
 
 **Files:**
-- Modify: `source/library/Pawl/Type/Filter.hs`, `Pawl/Filter.hs` (`View`,
-  `playerView`, `matches`), `Pawl/Projection.hs` (the two `View` builders and
-  `filterReads`), `Pawl/Codec.hs`
+- Modify: `source/library/Parun/Type/Filter.hs`, `Parun/Filter.hs` (`View`,
+  `playerView`, `matches`), `Parun/Projection.hs` (the two `View` builders and
+  `filterReads`), `Parun/Codec.hs`
 - Create: `data/cards/relentless-assault.json`
-- Test: `source/test-suite/Pawl/FilterSpec.hs`, `source/test-suite/Pawl/TurnSpec.hs`,
-  `source/test-suite/Pawl/CodecSpec.hs`
+- Test: `source/test-suite/Parun/FilterSpec.hs`, `source/test-suite/Parun/TurnSpec.hs`,
+  `source/test-suite/Parun/CodecSpec.hs`
 
 **Interfaces:**
 - Consumes: `Effect.AddPhases` from Task 2.
@@ -470,7 +470,7 @@ In `Type/Filter.hs`, after `IsAttacking`:
     -- The fourth atom, after IsAttacking, IsAttachedToCreature and IsToken,
     -- reading something CR 109.3 leaves off the characteristic list. Their
     -- defence covers this one: what happened earlier this turn is a RULES record
-    -- the closed half owns outright (CR 608.2i, Pawl.Type.GameEvent), so reading
+    -- the closed half owns outright (CR 608.2i, Parun.Type.GameEvent), so reading
     -- it is the same kind of act as reading a card type, and casing on an
     -- EFFECT's identity is still what the invariant forbids and still not what
     -- this does.
@@ -479,7 +479,7 @@ In `Type/Filter.hs`, after `IsAttacking`:
 
 - [ ] **Step 4: Add the `View` field and the matcher arm**
 
-In `Pawl/Filter.hs`, a field after `attacking`. **Lazy**, like
+In `Parun/Filter.hs`, a field after `attacking`. **Lazy**, like
 `attachedToCreature`, with the reason stated: filling it folds the whole turn's
 event log, and nothing forces it unless a `Filter` actually contains the atom.
 `playerView` sets it `False` (CR 506.3: only a creature can attack, and a player
@@ -507,7 +507,7 @@ not, and a `playerView` does not.
 Verify against Scryfall first:
 
 ```bash
-curl -sS -H 'User-Agent: pawl-dev/1.0' \
+curl -sS -H 'User-Agent: parun-dev/1.0' \
   'https://api.scryfall.com/cards/named?exact=Relentless%20Assault'
 ```
 
@@ -548,14 +548,14 @@ git commit -m "Add Filter.AttackedThisTurn, with Relentless Assault (#394)"
 ### Task 4: `SelfAttacks` gains a frequency
 
 **Files:**
-- Create: `source/library/Pawl/Type/TriggerFrequency.hs`
-- Modify: `source/library/Pawl/Type/TriggerCondition.hs` (~line 62–77),
-  `Pawl/Event.hs` (`matchesTrigger`, the `SelfAttacks` arm ~line 664, plus the
-  `AttackerDeclared` arms of the sibling conditions), `Pawl/Codec.hs`,
-  `pawl.cabal` (via `cabal-gild`)
+- Create: `source/library/Parun/Type/TriggerFrequency.hs`
+- Modify: `source/library/Parun/Type/TriggerCondition.hs` (~line 62–77),
+  `Parun/Event.hs` (`matchesTrigger`, the `SelfAttacks` arm ~line 664, plus the
+  `AttackerDeclared` arms of the sibling conditions), `Parun/Codec.hs`,
+  `parun.cabal` (via `cabal-gild`)
 - Modify: `data/cards/hanweir-garrison.json`
-- Test: `source/test-suite/Pawl/EventSpec.hs` or `TriggerSpec.hs`,
-  `source/test-suite/Pawl/CodecSpec.hs`
+- Test: `source/test-suite/Parun/EventSpec.hs` or `TriggerSpec.hs`,
+  `source/test-suite/Parun/CodecSpec.hs`
 
 **Interfaces:**
 - Produces: `TriggerFrequency.TriggerFrequency = EveryTime | FirstTimeEachTurn`;
@@ -581,10 +581,10 @@ still counts as the first for each.
 Run: `cabal test 2>&1 | tail -30`
 Expected: FAIL — `SelfAttacks` is nullary, so the payload does not typecheck.
 
-- [ ] **Step 3: Create `Pawl/Type/TriggerFrequency.hs`**
+- [ ] **Step 3: Create `Parun/Type/TriggerFrequency.hs`**
 
 ```haskell
-module Pawl.Type.TriggerFrequency where
+module Parun.Type.TriggerFrequency where
 
 -- How often a trigger condition may match within one turn.
 --
@@ -606,7 +606,7 @@ data TriggerFrequency
   deriving (Eq, Ord, Show)
 ```
 
-Run `cabal-gild --io pawl.cabal`.
+Run `cabal-gild --io parun.cabal`.
 
 - [ ] **Step 4: Add the payload and the match**
 
@@ -644,7 +644,7 @@ existing gameplay tests must pass unchanged.
 
 ```bash
 cabal build all 2>&1 | grep -i warn; cabal test 2>&1 | tail -20
-git add -A source/ data/ pawl.cabal
+git add -A source/ data/ parun.cabal
 hooky fix && git add -u && hooky run
 git commit -m "Let SelfAttacks say how often it matches (CR 508.3a)"
 ```
@@ -654,10 +654,10 @@ git commit -m "Let SelfAttacks say how often it matches (CR 508.3a)"
 ### Task 5: Aurelia, the Warleader — the proof for Tasks 1, 2 and 4
 
 **Files:**
-- Modify: `source/library/Pawl/Type/Subtype.hs` and its edit-site set (the
-  compiler enumerates them; `Pawl.Mana.subtypeMana` is the easy one to miss)
+- Modify: `source/library/Parun/Type/Subtype.hs` and its edit-site set (the
+  compiler enumerates them; `Parun.Mana.subtypeMana` is the easy one to miss)
 - Create: `data/cards/aurelia-the-warleader.json`
-- Test: `source/test-suite/Pawl/TurnSpec.hs`
+- Test: `source/test-suite/Parun/TurnSpec.hs`
 
 **Interfaces:**
 - Consumes: `Turn.thisPhase` (Task 1), `Effect.AddPhases` (Task 2),
@@ -713,7 +713,7 @@ needs an arm.
 Verify against Scryfall first:
 
 ```bash
-curl -sS -H 'User-Agent: pawl-dev/1.0' \
+curl -sS -H 'User-Agent: parun-dev/1.0' \
   'https://api.scryfall.com/cards/named?exact=Aurelia,%20the%20Warleader'
 ```
 
@@ -740,15 +740,15 @@ git commit -m "Add Aurelia, the Warleader, splicing a phase from inside combat (
 ### Task 6: Stated-duration delayed triggers (#52)
 
 **Files:**
-- Modify: `source/library/Pawl/Type/DelayedTrigger.hs`,
-  `Pawl/Type/Effect.hs` (`ArmDelayedTrigger`, ~line 307),
-  `Pawl/Resolve.hs` (1280–1300, plus the five classification arms),
-  `Pawl/Event.hs` (`delayedPending`, ~1214–1226),
-  `Pawl/Expiry.hs` (`dropAtCleanup` 53, `sweepConditional` 87, `dropAtTurnOf` 133),
-  `Pawl/Codec.hs`, `Pawl/Departure.hs:136` (comment)
+- Modify: `source/library/Parun/Type/DelayedTrigger.hs`,
+  `Parun/Type/Effect.hs` (`ArmDelayedTrigger`, ~line 307),
+  `Parun/Resolve.hs` (1280–1300, plus the five classification arms),
+  `Parun/Event.hs` (`delayedPending`, ~1214–1226),
+  `Parun/Expiry.hs` (`dropAtCleanup` 53, `sweepConditional` 87, `dropAtTurnOf` 133),
+  `Parun/Codec.hs`, `Parun/Departure.hs:136` (comment)
 - Modify: `data/cards/tidal-wave.json`
-- Test: `source/test-suite/Pawl/EventSpec.hs`, `source/test-suite/Pawl/ExpirySpec.hs`,
-  `source/test-suite/Pawl/CodecSpec.hs`, `source/test-suite/Pawl/CardSpec.hs`
+- Test: `source/test-suite/Parun/EventSpec.hs`, `source/test-suite/Parun/ExpirySpec.hs`,
+  `source/test-suite/Parun/CodecSpec.hs`, `source/test-suite/Parun/CardSpec.hs`
 
 **Interfaces:**
 - Produces: `Effect.ArmDelayedTrigger :: AbilityName -> Maybe Duration -> Effect card`;
@@ -847,7 +847,7 @@ git commit -m "Let a delayed trigger carry CR 603.7b's stated duration (#52)"
 
 **Files:**
 - Create: `data/cards/full-throttle.json`
-- Test: `source/test-suite/Pawl/TurnSpec.hs`
+- Test: `source/test-suite/Parun/TurnSpec.hs`
 
 **Interfaces:**
 - Consumes: `Effect.AddPhases` (Task 2), `Filter.AttackedThisTurn` (Task 3),
@@ -874,7 +874,7 @@ Expected: FAIL — no "Full Throttle" printing.
 Verify against Scryfall first:
 
 ```bash
-curl -sS -H 'User-Agent: pawl-dev/1.0' \
+curl -sS -H 'User-Agent: parun-dev/1.0' \
   'https://api.scryfall.com/cards/named?exact=Full%20Throttle'
 ```
 
@@ -907,11 +907,11 @@ git commit -m "Add Full Throttle, two added combat phases and a repeating trigge
 ### Task 8: `Filter.rewrite` + Boil (#395)
 
 **Files:**
-- Modify: `source/library/Pawl/Filter.hs`, `Pawl/Resolve.hs` (`rewriteEffect`,
-  320–380). There is **no** `Pawl/ObjectRef.hs` logic module — `objectRefObjects`
+- Modify: `source/library/Parun/Filter.hs`, `Parun/Resolve.hs` (`rewriteEffect`,
+  320–380). There is **no** `Parun/ObjectRef.hs` logic module — `objectRefObjects`
   lives in `Resolve.hs:769`, so `rewriteObjectRef` goes there too, beside it.
 - Create: `data/cards/boil.json`
-- Test: `source/test-suite/Pawl/FilterSpec.hs`, `source/test-suite/Pawl/ResolveSpec.hs`
+- Test: `source/test-suite/Parun/FilterSpec.hs`, `source/test-suite/Parun/ResolveSpec.hs`
 
 **Interfaces:**
 - Produces: `Filter.rewrite :: [(Subtype, Subtype)] -> Filter -> Filter`.
@@ -982,7 +982,7 @@ condition is out of scope here.
 Verify against Scryfall first:
 
 ```bash
-curl -sS -H 'User-Agent: pawl-dev/1.0' 'https://api.scryfall.com/cards/named?exact=Boil'
+curl -sS -H 'User-Agent: parun-dev/1.0' 'https://api.scryfall.com/cards/named?exact=Boil'
 ```
 
 `{3}{R}` Instant, "Destroy all Islands." →

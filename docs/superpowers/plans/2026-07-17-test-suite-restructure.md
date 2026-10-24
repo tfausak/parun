@@ -3,14 +3,14 @@
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
 **Goal:** Split the single-file `source/test-suite/Main.hs` into per-subsystem
-spec modules that near-mirror the library, with a shared `Pawl.Support` prelude,
+spec modules that near-mirror the library, with a shared `Parun.Support` prelude,
 and make the property tests durable (universal invariants only; the three
 existence/exit-criterion properties become deterministic tests).
 
-**Architecture:** `Main.hs` becomes a thin aggregator. Each `Pawl.<Area>Spec`
-module lives under `source/test-suite/Pawl/`, exposes a single `tests ::
+**Architecture:** `Main.hs` becomes a thin aggregator. Each `Parun.<Area>Spec`
+module lives under `source/test-suite/Parun/`, exposes a single `tests ::
 Tasty.TestTree`, and heads with a comment listing the library modules it covers.
-`Pawl.Support` holds cross-cutting fixtures/answerers/assertions and is imported
+`Parun.Support` holds cross-cutting fixtures/answerers/assertions and is imported
 `qualified ... as S`. The migration is incremental — the full suite is green after
 every commit — never a big-bang move.
 
@@ -30,36 +30,36 @@ tasty-quickcheck), cabal-gild, hooky.
   after Task 14 is **262** (the three existence properties convert 3→3, and the
   lands-only-decks property adds 1).
 - Qualified imports aliased to the last component. The sole documented exception:
-  `import qualified Pawl.Support as S`.
-- Each `Pawl.<Area>Spec` exposes `tests :: Tasty.TestTree` and opens with a
+  `import qualified Parun.Support as S`.
+- Each `Parun.<Area>Spec` exposes `tests :: Tasty.TestTree` and opens with a
   header comment naming the library modules it covers.
-- New `Pawl.*` test modules are registered in the test-suite stanza's
+- New `Parun.*` test modules are registered in the test-suite stanza's
   `other-modules` (see Task 1 for discover-vs-hand-list). Run `hooky fix` (which
   runs cabal-gild); never hand-edit a discovered field.
 - Before each commit: `git add <explicit paths>`, `hooky fix`, re-`git add`,
-  `hooky run`, then commit. If cabal-gild rewrites `pawl.cabal`, `git add
-  pawl.cabal` too. Commit messages are plain sentences ending with:
+  `hooky run`, then commit. If cabal-gild rewrites `parun.cabal`, `git add
+  parun.cabal` too. Commit messages are plain sentences ending with:
   `Co-Authored-By: Claude Fable 5 <noreply@anthropic.com>`
-- Test players are `alice`/`bob` (now in `Pawl.Support`); tests are named by CR
+- Test players are `alice`/`bob` (now in `Parun.Support`); tests are named by CR
   number where one applies; cards by real name.
 
 ---
 
-### Task 1: `Pawl.Support` and the multi-module machinery
+### Task 1: `Parun.Support` and the multi-module machinery
 
 **Files:**
-- Create: `source/test-suite/Pawl/Support.hs`
-- Modify: `pawl.cabal` (test-suite stanza gains `other-modules`)
+- Create: `source/test-suite/Parun/Support.hs`
+- Modify: `parun.cabal` (test-suite stanza gains `other-modules`)
 - Modify: `source/test-suite/Main.hs` (remove the moved definitions; import them
-  from `Pawl.Support`)
+  from `Parun.Support`)
 
 **Interfaces:**
-- Produces: module `Pawl.Support` exporting (no export list) the cross-cutting
+- Produces: module `Parun.Support` exporting (no export list) the cross-cutting
   fixtures/answerers/assertions listed below. Later tasks import it
   `qualified ... as S`.
 
-**What moves into `Pawl.Support`** — cut these top-level definitions verbatim from
-`Main.hs` and paste them into `Pawl.Support`, together with the transitive closure
+**What moves into `Parun.Support`** — cut these top-level definitions verbatim from
+`Main.hs` and paste them into `Parun.Support`, together with the transitive closure
 of any private helper they reference (the compiler will name any that are still
 missing):
 
@@ -80,9 +80,9 @@ Group-local helpers (`tramplingAnswer`, `discardLastAnswer`, `recordingAnswer`,
 `resolvedCreature`, and the various `*Answer`/scenario helpers used by exactly one
 group) STAY in `Main.hs` for now; they travel with their group in later tasks.
 
-- [x] **Step 1: Create `Pawl.Support` with the module header and the moved definitions**
+- [x] **Step 1: Create `Parun.Support` with the module header and the moved definitions**
 
-Create `source/test-suite/Pawl/Support.hs` beginning with:
+Create `source/test-suite/Parun/Support.hs` beginning with:
 
 ```haskell
 -- Cross-cutting test fixtures, answerers, and assertions shared by two or more
@@ -90,32 +90,32 @@ Create `source/test-suite/Pawl/Support.hs` beginning with:
 -- everywhere (the one documented exception to alias-to-last-component; these
 -- names appear on nearly every test line). Group-local helpers live with their
 -- group, not here.
-module Pawl.Support where
+module Parun.Support where
 ```
 
 Then paste the moved definitions (from the "What moves" list above) below it, and
 add the imports each needs (the same `qualified` library imports `Main.hs`
-already uses — copy the relevant import lines). Build errors from `Pawl.Support`
+already uses — copy the relevant import lines). Build errors from `Parun.Support`
 referencing a name still in `Main.hs` mean that name's definition must also move
-here; follow the closure until `Pawl.Support` compiles.
+here; follow the closure until `Parun.Support` compiles.
 
-- [x] **Step 2: Register the module in `pawl.cabal` and wire `Main.hs`**
+- [x] **Step 2: Register the module in `parun.cabal` and wire `Main.hs`**
 
-In the `test-suite pawl-test-suite` stanza, directly under `main-is: Main.hs`, add:
+In the `test-suite parun-test-suite` stanza, directly under `main-is: Main.hs`, add:
 
 ```
   other-modules:
     -- cabal-gild: discover source/test-suite
 ```
 
-Run `cabal-gild pawl.cabal pawl.cabal` (or `hooky fix`) and inspect the generated
-`other-modules`. It MUST list `Pawl.Support` and MUST NOT list `Main`. If `Main`
+Run `cabal-gild parun.cabal parun.cabal` (or `hooky fix`) and inspect the generated
+`other-modules`. It MUST list `Parun.Support` and MUST NOT list `Main`. If `Main`
 appears (cabal will later error "module ‘Main’ is defined in multiple files" or
 "Main listed in other-modules and main-is"), replace the discover directive with
-a hand-maintained list and add `Pawl.Support` to it:
+a hand-maintained list and add `Parun.Support` to it:
 
 ```
-  other-modules: Pawl.Support
+  other-modules: Parun.Support
 ```
 
 Record which form you used in the commit message; later tasks either rely on
@@ -126,7 +126,7 @@ an explicit unqualified import of exactly the moved names (transitional
 scaffolding; it shrinks and disappears as groups leave `Main.hs`):
 
 ```haskell
-import Pawl.Support
+import Parun.Support
   ( addCreature, addPiker, aggressiveAnswer, alice, bob, boltInHand, bothPlayers,
     castAnswer, combatBoard, combatBoardOf, countByName, creaturesInPlay,
     fightWith, greenBlack, handOne, handSize, identityAnswer, inCombatPhase,
@@ -148,41 +148,41 @@ Expected: `All 261 tests passed`.
 - [x] **Step 4: Commit**
 
 ```bash
-git add source/test-suite/Pawl/Support.hs source/test-suite/Main.hs pawl.cabal
-hooky fix && git add source/test-suite/Pawl/Support.hs source/test-suite/Main.hs pawl.cabal && hooky run
-git commit -m "Extract Pawl.Support and add the multi-module test machinery
+git add source/test-suite/Parun/Support.hs source/test-suite/Main.hs parun.cabal
+hooky fix && git add source/test-suite/Parun/Support.hs source/test-suite/Main.hs parun.cabal && hooky run
+git commit -m "Extract Parun.Support and add the multi-module test machinery
 
 Co-Authored-By: Claude Fable 5 <noreply@anthropic.com>"
 ```
 
 ---
 
-### Task 2: `Pawl.CoreSpec`
+### Task 2: `Parun.CoreSpec`
 
 **Files:**
-- Create: `source/test-suite/Pawl/CoreSpec.hs`
+- Create: `source/test-suite/Parun/CoreSpec.hs`
 - Modify: `source/test-suite/Main.hs` (remove `programTests`, `quantityTests`;
-  import `Pawl.CoreSpec`; wire `CoreSpec.tests` into `testTree`)
-- Modify: `pawl.cabal` only if `other-modules` is hand-listed.
+  import `Parun.CoreSpec`; wire `CoreSpec.tests` into `testTree`)
+- Modify: `parun.cabal` only if `other-modules` is hand-listed.
 
 **Interfaces:**
-- Consumes: `Pawl.Support` (as `S`) for any shared helper these groups use.
+- Consumes: `Parun.Support` (as `S`) for any shared helper these groups use.
 - Produces: `CoreSpec.tests :: Tasty.TestTree` grouping `programTests` and
   `quantityTests`.
 
 - [x] **Step 1: Create the spec module**
 
-Create `source/test-suite/Pawl/CoreSpec.hs`:
+Create `source/test-suite/Parun/CoreSpec.hs`:
 
 ```haskell
--- Covers the VM core: Pawl.Type.Program (the suspension interpreter) and
--- Pawl.Quantity (numeric evaluation).
-module Pawl.CoreSpec where
+-- Covers the VM core: Parun.Type.Program (the suspension interpreter) and
+-- Parun.Quantity (numeric evaluation).
+module Parun.CoreSpec where
 ```
 
 Move `programTests` and `quantityTests` (and any group-local helper used only by
 them) verbatim from `Main.hs`. Add the `qualified` imports they need (copy the
-relevant lines from `Main.hs`; import `Pawl.Support as S` only if a shared helper
+relevant lines from `Main.hs`; import `Parun.Support as S` only if a shared helper
 is used, replacing the bare name with `S.<name>`). Add the aggregator:
 
 ```haskell
@@ -193,33 +193,33 @@ tests = Tasty.testGroup "Core" [programTests, quantityTests]
 - [x] **Step 2: Wire into `Main.hs`**
 
 In `Main.hs`: delete `programTests` and `quantityTests`; add
-`import qualified Pawl.CoreSpec`; in `testTree`'s list replace the two entries
-with `CoreSpec.tests`. If any name in the transitional `Pawl.Support` explicit
+`import qualified Parun.CoreSpec`; in `testTree`'s list replace the two entries
+with `CoreSpec.tests`. If any name in the transitional `Parun.Support` explicit
 import is now unused in `Main.hs`, remove it from that list.
 
 - [x] **Step 3: Register and build**
 
-If `other-modules` is hand-listed, add `Pawl.CoreSpec`. Then:
+If `other-modules` is hand-listed, add `Parun.CoreSpec`. Then:
 Run: `cabal build all --enable-tests --enable-benchmarks 2>&1 | tail -3` → clean.
 Run: `cabal test 2>&1 | grep -E "tests? passed|out of"` → `All 261 tests passed`.
 
 - [x] **Step 4: Commit**
 
 ```bash
-git add source/test-suite/Pawl/CoreSpec.hs source/test-suite/Main.hs pawl.cabal
-hooky fix && git add source/test-suite/Pawl/CoreSpec.hs source/test-suite/Main.hs pawl.cabal && hooky run
-git commit -m "Move the Program and Quantity tests into Pawl.CoreSpec
+git add source/test-suite/Parun/CoreSpec.hs source/test-suite/Main.hs parun.cabal
+hooky fix && git add source/test-suite/Parun/CoreSpec.hs source/test-suite/Main.hs parun.cabal && hooky run
+git commit -m "Move the Program and Quantity tests into Parun.CoreSpec
 
 Co-Authored-By: Claude Fable 5 <noreply@anthropic.com>"
 ```
 
 ---
 
-### Task 3: `Pawl.CardSpec`
+### Task 3: `Parun.CardSpec`
 
 **Files:**
-- Create: `source/test-suite/Pawl/CardSpec.hs`
-- Modify: `source/test-suite/Main.hs`, `pawl.cabal` (if hand-listed)
+- Create: `source/test-suite/Parun/CardSpec.hs`
+- Modify: `source/test-suite/Main.hs`, `parun.cabal` (if hand-listed)
 
 **Interfaces:**
 - Produces: `CardSpec.tests` grouping `cardTests`, `lintTests`, `m2aCardTests`,
@@ -227,12 +227,12 @@ Co-Authored-By: Claude Fable 5 <noreply@anthropic.com>"
 
 - [x] **Step 1: Create the spec module**
 
-Create `source/test-suite/Pawl/CardSpec.hs`:
+Create `source/test-suite/Parun/CardSpec.hs`:
 
 ```haskell
--- Covers Pawl.Card: card data, type-line rules, every printing, and the D4
+-- Covers Parun.Card: card data, type-line rules, every printing, and the D4
 -- dataflow lint.
-module Pawl.CardSpec where
+module Parun.CardSpec where
 ```
 
 Move `cardTests`, `lintTests`, `m2aCardTests`, `m2bCardTests`, `m2cCardTests`,
@@ -249,32 +249,32 @@ tests =
 
 - [x] **Step 2: Wire into `Main.hs`**
 
-Delete the six groups from `Main.hs`; add `import qualified Pawl.CardSpec`;
+Delete the six groups from `Main.hs`; add `import qualified Parun.CardSpec`;
 replace their `testTree` entries with `CardSpec.tests`. Prune any now-unused
-`Pawl.Support` import names.
+`Parun.Support` import names.
 
 - [x] **Step 3: Register and build**
 
-Add `Pawl.CardSpec` to `other-modules` if hand-listed. Then build clean and
+Add `Parun.CardSpec` to `other-modules` if hand-listed. Then build clean and
 `cabal test` → `All 261 tests passed`.
 
 - [x] **Step 4: Commit**
 
 ```bash
-git add source/test-suite/Pawl/CardSpec.hs source/test-suite/Main.hs pawl.cabal
-hooky fix && git add source/test-suite/Pawl/CardSpec.hs source/test-suite/Main.hs pawl.cabal && hooky run
-git commit -m "Move the card-data and lint tests into Pawl.CardSpec
+git add source/test-suite/Parun/CardSpec.hs source/test-suite/Main.hs parun.cabal
+hooky fix && git add source/test-suite/Parun/CardSpec.hs source/test-suite/Main.hs parun.cabal && hooky run
+git commit -m "Move the card-data and lint tests into Parun.CardSpec
 
 Co-Authored-By: Claude Fable 5 <noreply@anthropic.com>"
 ```
 
 ---
 
-### Task 4: `Pawl.SetupSpec`
+### Task 4: `Parun.SetupSpec`
 
 **Files:**
-- Create: `source/test-suite/Pawl/SetupSpec.hs`
-- Modify: `source/test-suite/Main.hs`, `pawl.cabal` (if hand-listed)
+- Create: `source/test-suite/Parun/SetupSpec.hs`
+- Modify: `source/test-suite/Main.hs`, `parun.cabal` (if hand-listed)
 
 **Interfaces:**
 - Produces: `SetupSpec.tests` grouping `setupTests`, `greenBlackSetupTests`,
@@ -282,11 +282,11 @@ Co-Authored-By: Claude Fable 5 <noreply@anthropic.com>"
 
 - [x] **Step 1: Create the spec module**
 
-Create `source/test-suite/Pawl/SetupSpec.hs`:
+Create `source/test-suite/Parun/SetupSpec.hs`:
 
 ```haskell
--- Covers Pawl.Setup and Pawl.Type.Deck: setup, deck composition, opening hands.
-module Pawl.SetupSpec where
+-- Covers Parun.Setup and Parun.Type.Deck: setup, deck composition, opening hands.
+module Parun.SetupSpec where
 ```
 
 Move `setupTests`, `greenBlackSetupTests`, `deckTests` and their group-local
@@ -298,8 +298,8 @@ tests = Tasty.testGroup "Setup" [setupTests, greenBlackSetupTests, deckTests]
 ```
 
 - [x] **Step 2: Wire into `Main.hs`** — delete the three groups, `import qualified
-  Pawl.SetupSpec`, replace their `testTree` entries with `SetupSpec.tests`, prune
-  unused `Pawl.Support` imports.
+  Parun.SetupSpec`, replace their `testTree` entries with `SetupSpec.tests`, prune
+  unused `Parun.Support` imports.
 
 - [x] **Step 3: Register and build** — add to `other-modules` if hand-listed;
   build clean; `cabal test` → `All 261 tests passed`.
@@ -307,31 +307,31 @@ tests = Tasty.testGroup "Setup" [setupTests, greenBlackSetupTests, deckTests]
 - [x] **Step 4: Commit**
 
 ```bash
-git add source/test-suite/Pawl/SetupSpec.hs source/test-suite/Main.hs pawl.cabal
-hooky fix && git add source/test-suite/Pawl/SetupSpec.hs source/test-suite/Main.hs pawl.cabal && hooky run
-git commit -m "Move the setup and deck tests into Pawl.SetupSpec
+git add source/test-suite/Parun/SetupSpec.hs source/test-suite/Main.hs parun.cabal
+hooky fix && git add source/test-suite/Parun/SetupSpec.hs source/test-suite/Main.hs parun.cabal && hooky run
+git commit -m "Move the setup and deck tests into Parun.SetupSpec
 
 Co-Authored-By: Claude Fable 5 <noreply@anthropic.com>"
 ```
 
 ---
 
-### Task 5: `Pawl.TurnSpec`
+### Task 5: `Parun.TurnSpec`
 
 **Files:**
-- Create: `source/test-suite/Pawl/TurnSpec.hs`
-- Modify: `source/test-suite/Main.hs`, `pawl.cabal` (if hand-listed)
+- Create: `source/test-suite/Parun/TurnSpec.hs`
+- Modify: `source/test-suite/Main.hs`, `parun.cabal` (if hand-listed)
 
 **Interfaces:**
 - Produces: `TurnSpec.tests` grouping `turnTests`, `turnDataTests`, `skipTests`.
 
 - [x] **Step 1: Create the spec module**
 
-Create `source/test-suite/Pawl/TurnSpec.hs`:
+Create `source/test-suite/Parun/TurnSpec.hs`:
 
 ```haskell
--- Covers Pawl.Turn: turn structure, the phase schedule, and the CR 508.8 skips.
-module Pawl.TurnSpec where
+-- Covers Parun.Turn: turn structure, the phase schedule, and the CR 508.8 skips.
+module Parun.TurnSpec where
 ```
 
 Move `turnTests`, `turnDataTests`, `skipTests` and their group-local skip
@@ -343,10 +343,10 @@ tests = Tasty.testGroup "Turn" [turnTests, turnDataTests, skipTests]
 ```
 
 Note: `skipTests` uses the shared `S.combatBoardOf`, `S.runCombat`, and
-`S.inCombatPhase` (all in `Pawl.Support` from Task 1) — reference them qualified.
+`S.inCombatPhase` (all in `Parun.Support` from Task 1) — reference them qualified.
 
 - [x] **Step 2: Wire into `Main.hs`** — delete the three groups, `import qualified
-  Pawl.TurnSpec`, replace `testTree` entries with `TurnSpec.tests`, prune unused
+  Parun.TurnSpec`, replace `testTree` entries with `TurnSpec.tests`, prune unused
   imports.
 
 - [x] **Step 3: Register and build** — add to `other-modules` if hand-listed;
@@ -355,20 +355,20 @@ Note: `skipTests` uses the shared `S.combatBoardOf`, `S.runCombat`, and
 - [x] **Step 4: Commit**
 
 ```bash
-git add source/test-suite/Pawl/TurnSpec.hs source/test-suite/Main.hs pawl.cabal
-hooky fix && git add source/test-suite/Pawl/TurnSpec.hs source/test-suite/Main.hs pawl.cabal && hooky run
-git commit -m "Move the turn-structure tests into Pawl.TurnSpec
+git add source/test-suite/Parun/TurnSpec.hs source/test-suite/Main.hs parun.cabal
+hooky fix && git add source/test-suite/Parun/TurnSpec.hs source/test-suite/Main.hs parun.cabal && hooky run
+git commit -m "Move the turn-structure tests into Parun.TurnSpec
 
 Co-Authored-By: Claude Fable 5 <noreply@anthropic.com>"
 ```
 
 ---
 
-### Task 6: `Pawl.GameSpec`
+### Task 6: `Parun.GameSpec`
 
 **Files:**
-- Create: `source/test-suite/Pawl/GameSpec.hs`
-- Modify: `source/test-suite/Main.hs`, `pawl.cabal` (if hand-listed)
+- Create: `source/test-suite/Parun/GameSpec.hs`
+- Modify: `source/test-suite/Main.hs`, `parun.cabal` (if hand-listed)
 
 **Interfaces:**
 - Produces: `GameSpec.tests` grouping `gameTests`, `actionTests`,
@@ -376,13 +376,13 @@ Co-Authored-By: Claude Fable 5 <noreply@anthropic.com>"
 
 - [x] **Step 1: Create the spec module**
 
-Create `source/test-suite/Pawl/GameSpec.hs`:
+Create `source/test-suite/Parun/GameSpec.hs`:
 
 ```haskell
--- Covers Pawl.Game, Pawl.Engine, and Pawl.Action: zones and changeZone, legal
+-- Covers Parun.Game, Parun.Engine, and Parun.Action: zones and changeZone, legal
 -- actions, object facts, engine steps, and engine-rule integration (priority
 -- rounds, the CR 103.7a draw skip, CR 514.2 discard, CR 704.5b deck-out).
-module Pawl.GameSpec where
+module Parun.GameSpec where
 ```
 
 Move `gameTests`, `actionTests`, `objectFactTests`, `engineTests`, `ruleTests`
@@ -398,7 +398,7 @@ tests =
 ```
 
 - [x] **Step 2: Wire into `Main.hs`** — delete the five groups, `import qualified
-  Pawl.GameSpec`, replace `testTree` entries with `GameSpec.tests`, prune unused
+  Parun.GameSpec`, replace `testTree` entries with `GameSpec.tests`, prune unused
   imports.
 
 - [x] **Step 3: Register and build** — add to `other-modules` if hand-listed;
@@ -407,20 +407,20 @@ tests =
 - [x] **Step 4: Commit**
 
 ```bash
-git add source/test-suite/Pawl/GameSpec.hs source/test-suite/Main.hs pawl.cabal
-hooky fix && git add source/test-suite/Pawl/GameSpec.hs source/test-suite/Main.hs pawl.cabal && hooky run
-git commit -m "Move the game, action, and engine-rule tests into Pawl.GameSpec
+git add source/test-suite/Parun/GameSpec.hs source/test-suite/Main.hs parun.cabal
+hooky fix && git add source/test-suite/Parun/GameSpec.hs source/test-suite/Main.hs parun.cabal && hooky run
+git commit -m "Move the game, action, and engine-rule tests into Parun.GameSpec
 
 Co-Authored-By: Claude Fable 5 <noreply@anthropic.com>"
 ```
 
 ---
 
-### Task 7: `Pawl.ManaSpec`
+### Task 7: `Parun.ManaSpec`
 
 **Files:**
-- Create: `source/test-suite/Pawl/ManaSpec.hs`
-- Modify: `source/test-suite/Main.hs`, `pawl.cabal` (if hand-listed)
+- Create: `source/test-suite/Parun/ManaSpec.hs`
+- Modify: `source/test-suite/Main.hs`, `parun.cabal` (if hand-listed)
 
 **Interfaces:**
 - Produces: `ManaSpec.tests` grouping `manaTests`, `castabilityTests`.
@@ -428,8 +428,8 @@ Co-Authored-By: Claude Fable 5 <noreply@anthropic.com>"
 - [x] **Step 1: Create the spec module**
 
 ```haskell
--- Covers Pawl.Mana: mana payment and castability.
-module Pawl.ManaSpec where
+-- Covers Parun.Mana: mana payment and castability.
+module Parun.ManaSpec where
 ```
 
 Move `manaTests`, `castabilityTests` and their group-local helpers verbatim; add
@@ -441,7 +441,7 @@ tests = Tasty.testGroup "Mana" [manaTests, castabilityTests]
 ```
 
 - [x] **Step 2: Wire into `Main.hs`** — delete the two groups, `import qualified
-  Pawl.ManaSpec`, replace entries with `ManaSpec.tests`, prune unused imports.
+  Parun.ManaSpec`, replace entries with `ManaSpec.tests`, prune unused imports.
 
 - [x] **Step 3: Register and build** — add to `other-modules` if hand-listed;
   build clean; `cabal test` → `All 261 tests passed`.
@@ -449,20 +449,20 @@ tests = Tasty.testGroup "Mana" [manaTests, castabilityTests]
 - [x] **Step 4: Commit**
 
 ```bash
-git add source/test-suite/Pawl/ManaSpec.hs source/test-suite/Main.hs pawl.cabal
-hooky fix && git add source/test-suite/Pawl/ManaSpec.hs source/test-suite/Main.hs pawl.cabal && hooky run
-git commit -m "Move the mana and castability tests into Pawl.ManaSpec
+git add source/test-suite/Parun/ManaSpec.hs source/test-suite/Main.hs parun.cabal
+hooky fix && git add source/test-suite/Parun/ManaSpec.hs source/test-suite/Main.hs parun.cabal && hooky run
+git commit -m "Move the mana and castability tests into Parun.ManaSpec
 
 Co-Authored-By: Claude Fable 5 <noreply@anthropic.com>"
 ```
 
 ---
 
-### Task 8: `Pawl.CastSpec`
+### Task 8: `Parun.CastSpec`
 
 **Files:**
-- Create: `source/test-suite/Pawl/CastSpec.hs`
-- Modify: `source/test-suite/Main.hs`, `pawl.cabal` (if hand-listed)
+- Create: `source/test-suite/Parun/CastSpec.hs`
+- Modify: `source/test-suite/Main.hs`, `parun.cabal` (if hand-listed)
 
 **Interfaces:**
 - Produces: `CastSpec.tests` grouping `castTests`, `castEngineTests`,
@@ -471,9 +471,9 @@ Co-Authored-By: Claude Fable 5 <noreply@anthropic.com>"
 - [x] **Step 1: Create the spec module**
 
 ```haskell
--- Covers Pawl.Cast and Pawl.Stack: cast timing, the stack, discard, and
+-- Covers Parun.Cast and Parun.Stack: cast timing, the stack, discard, and
 -- summoning sickness.
-module Pawl.CastSpec where
+module Parun.CastSpec where
 ```
 
 Move `castTests`, `castEngineTests`, `stackTests`, `discardTests`, `sicknessTests`
@@ -490,7 +490,7 @@ tests =
 ```
 
 - [x] **Step 2: Wire into `Main.hs`** — delete the five groups, `import qualified
-  Pawl.CastSpec`, replace entries with `CastSpec.tests`, prune unused imports.
+  Parun.CastSpec`, replace entries with `CastSpec.tests`, prune unused imports.
 
 - [x] **Step 3: Register and build** — add to `other-modules` if hand-listed;
   build clean; `cabal test` → `All 261 tests passed`.
@@ -498,20 +498,20 @@ tests =
 - [x] **Step 4: Commit**
 
 ```bash
-git add source/test-suite/Pawl/CastSpec.hs source/test-suite/Main.hs pawl.cabal
-hooky fix && git add source/test-suite/Pawl/CastSpec.hs source/test-suite/Main.hs pawl.cabal && hooky run
-git commit -m "Move the casting, stack, and discard tests into Pawl.CastSpec
+git add source/test-suite/Parun/CastSpec.hs source/test-suite/Main.hs parun.cabal
+hooky fix && git add source/test-suite/Parun/CastSpec.hs source/test-suite/Main.hs parun.cabal && hooky run
+git commit -m "Move the casting, stack, and discard tests into Parun.CastSpec
 
 Co-Authored-By: Claude Fable 5 <noreply@anthropic.com>"
 ```
 
 ---
 
-### Task 9: `Pawl.CombatSpec`
+### Task 9: `Parun.CombatSpec`
 
 **Files:**
-- Create: `source/test-suite/Pawl/CombatSpec.hs`
-- Modify: `source/test-suite/Main.hs`, `pawl.cabal` (if hand-listed)
+- Create: `source/test-suite/Parun/CombatSpec.hs`
+- Modify: `source/test-suite/Main.hs`, `parun.cabal` (if hand-listed)
 
 **Interfaces:**
 - Produces: `CombatSpec.tests` grouping `combatLegalityTests`, `declareTests`,
@@ -521,9 +521,9 @@ Co-Authored-By: Claude Fable 5 <noreply@anthropic.com>"
 - [x] **Step 1: Create the spec module**
 
 ```haskell
--- Covers Pawl.Combat: attack/block legality, combat damage, and the combat
+-- Covers Parun.Combat: attack/block legality, combat damage, and the combat
 -- keywords (flying, reach, defender, vigilance, haste, first/double strike).
-module Pawl.CombatSpec where
+module Parun.CombatSpec where
 ```
 
 Move the ten groups above and their group-local helpers (`declaredAttackers` and
@@ -540,11 +540,11 @@ tests =
 ```
 
 The combat drivers `S.fightWith`/`S.runCombat`/`S.inCombatPhase` are in
-`Pawl.Support` (Task 1) — reference them qualified. `declaredAttackers` is used
+`Parun.Support` (Task 1) — reference them qualified. `declaredAttackers` is used
 only by the combat groups, so it stays local to this spec.
 
 - [x] **Step 2: Wire into `Main.hs`** — delete the ten groups, `import qualified
-  Pawl.CombatSpec`, replace entries with `CombatSpec.tests`, prune unused imports.
+  Parun.CombatSpec`, replace entries with `CombatSpec.tests`, prune unused imports.
 
 - [x] **Step 3: Register and build** — add to `other-modules` if hand-listed;
   build clean; `cabal test` → `All 261 tests passed`.
@@ -552,20 +552,20 @@ only by the combat groups, so it stays local to this spec.
 - [x] **Step 4: Commit**
 
 ```bash
-git add source/test-suite/Pawl/CombatSpec.hs source/test-suite/Main.hs pawl.cabal
-hooky fix && git add source/test-suite/Pawl/CombatSpec.hs source/test-suite/Main.hs pawl.cabal && hooky run
-git commit -m "Move the combat and keyword tests into Pawl.CombatSpec
+git add source/test-suite/Parun/CombatSpec.hs source/test-suite/Main.hs parun.cabal
+hooky fix && git add source/test-suite/Parun/CombatSpec.hs source/test-suite/Main.hs parun.cabal && hooky run
+git commit -m "Move the combat and keyword tests into Parun.CombatSpec
 
 Co-Authored-By: Claude Fable 5 <noreply@anthropic.com>"
 ```
 
 ---
 
-### Task 10: `Pawl.DamageSpec`
+### Task 10: `Parun.DamageSpec`
 
 **Files:**
-- Create: `source/test-suite/Pawl/DamageSpec.hs`
-- Modify: `source/test-suite/Main.hs`, `pawl.cabal` (if hand-listed)
+- Create: `source/test-suite/Parun/DamageSpec.hs`
+- Modify: `source/test-suite/Main.hs`, `parun.cabal` (if hand-listed)
 
 **Interfaces:**
 - Produces: `DamageSpec.tests` grouping `damageTests`, `damageEventTests`,
@@ -575,10 +575,10 @@ Co-Authored-By: Claude Fable 5 <noreply@anthropic.com>"
 - [x] **Step 1: Create the spec module**
 
 ```haskell
--- Covers Pawl.Damage and Pawl.Sba: the damage funnel, deathtouch, trample, and
+-- Covers Parun.Damage and Parun.Sba: the damage funnel, deathtouch, trample, and
 -- state-based actions. (m2cPropertyTests is deterministic fixture coverage, not
 -- QuickCheck properties.)
-module Pawl.DamageSpec where
+module Parun.DamageSpec where
 ```
 
 Move the nine groups above and their group-local helpers (`tramplingAnswer`,
@@ -596,7 +596,7 @@ tests =
 ```
 
 - [x] **Step 2: Wire into `Main.hs`** — delete the nine groups, `import qualified
-  Pawl.DamageSpec`, replace entries with `DamageSpec.tests`, prune unused imports.
+  Parun.DamageSpec`, replace entries with `DamageSpec.tests`, prune unused imports.
 
 - [x] **Step 3: Register and build** — add to `other-modules` if hand-listed;
   build clean; `cabal test` → `All 261 tests passed`.
@@ -604,20 +604,20 @@ tests =
 - [x] **Step 4: Commit**
 
 ```bash
-git add source/test-suite/Pawl/DamageSpec.hs source/test-suite/Main.hs pawl.cabal
-hooky fix && git add source/test-suite/Pawl/DamageSpec.hs source/test-suite/Main.hs pawl.cabal && hooky run
-git commit -m "Move the damage and state-based-action tests into Pawl.DamageSpec
+git add source/test-suite/Parun/DamageSpec.hs source/test-suite/Main.hs parun.cabal
+hooky fix && git add source/test-suite/Parun/DamageSpec.hs source/test-suite/Main.hs parun.cabal && hooky run
+git commit -m "Move the damage and state-based-action tests into Parun.DamageSpec
 
 Co-Authored-By: Claude Fable 5 <noreply@anthropic.com>"
 ```
 
 ---
 
-### Task 11: `Pawl.ResolveSpec`
+### Task 11: `Parun.ResolveSpec`
 
 **Files:**
-- Create: `source/test-suite/Pawl/ResolveSpec.hs`
-- Modify: `source/test-suite/Main.hs`, `pawl.cabal` (if hand-listed)
+- Create: `source/test-suite/Parun/ResolveSpec.hs`
+- Modify: `source/test-suite/Main.hs`, `parun.cabal` (if hand-listed)
 
 **Interfaces:**
 - Produces: `ResolveSpec.tests` grouping `targetTests`, `resolveTests`,
@@ -626,9 +626,9 @@ Co-Authored-By: Claude Fable 5 <noreply@anthropic.com>"
 - [x] **Step 1: Create the spec module**
 
 ```haskell
--- Covers Pawl.Resolve and Pawl.Target: targeting legality, spell resolution, and
+-- Covers Parun.Resolve and Parun.Target: targeting legality, spell resolution, and
 -- the CR 608.2b fizzle.
-module Pawl.ResolveSpec where
+module Parun.ResolveSpec where
 ```
 
 Move `targetTests`, `resolveTests`, `fizzleTests` and their group-local helpers
@@ -641,7 +641,7 @@ tests = Tasty.testGroup "Resolve" [targetTests, resolveTests, fizzleTests]
 ```
 
 - [x] **Step 2: Wire into `Main.hs`** — delete the three groups, `import qualified
-  Pawl.ResolveSpec`, replace entries with `ResolveSpec.tests`, prune unused
+  Parun.ResolveSpec`, replace entries with `ResolveSpec.tests`, prune unused
   imports.
 
 - [x] **Step 3: Register and build** — add to `other-modules` if hand-listed;
@@ -650,20 +650,20 @@ tests = Tasty.testGroup "Resolve" [targetTests, resolveTests, fizzleTests]
 - [x] **Step 4: Commit**
 
 ```bash
-git add source/test-suite/Pawl/ResolveSpec.hs source/test-suite/Main.hs pawl.cabal
-hooky fix && git add source/test-suite/Pawl/ResolveSpec.hs source/test-suite/Main.hs pawl.cabal && hooky run
-git commit -m "Move the targeting and resolution tests into Pawl.ResolveSpec
+git add source/test-suite/Parun/ResolveSpec.hs source/test-suite/Main.hs parun.cabal
+hooky fix && git add source/test-suite/Parun/ResolveSpec.hs source/test-suite/Main.hs parun.cabal && hooky run
+git commit -m "Move the targeting and resolution tests into Parun.ResolveSpec
 
 Co-Authored-By: Claude Fable 5 <noreply@anthropic.com>"
 ```
 
 ---
 
-### Task 12: `Pawl.ReplaySpec`
+### Task 12: `Parun.ReplaySpec`
 
 **Files:**
-- Create: `source/test-suite/Pawl/ReplaySpec.hs`
-- Modify: `source/test-suite/Main.hs`, `pawl.cabal` (if hand-listed)
+- Create: `source/test-suite/Parun/ReplaySpec.hs`
+- Modify: `source/test-suite/Main.hs`, `parun.cabal` (if hand-listed)
 
 **Interfaces:**
 - Produces: `ReplaySpec.tests` grouping `replayTests`, `combatReplayTests`.
@@ -671,8 +671,8 @@ Co-Authored-By: Claude Fable 5 <noreply@anthropic.com>"
 - [x] **Step 1: Create the spec module**
 
 ```haskell
--- Covers Pawl.Replay: record/replay transcript round-trips.
-module Pawl.ReplaySpec where
+-- Covers Parun.Replay: record/replay transcript round-trips.
+module Parun.ReplaySpec where
 ```
 
 Move `replayTests`, `combatReplayTests` and their group-local helpers verbatim;
@@ -684,7 +684,7 @@ tests = Tasty.testGroup "Replay" [replayTests, combatReplayTests]
 ```
 
 - [x] **Step 2: Wire into `Main.hs`** — delete the two groups, `import qualified
-  Pawl.ReplaySpec`, replace entries with `ReplaySpec.tests`, prune unused imports.
+  Parun.ReplaySpec`, replace entries with `ReplaySpec.tests`, prune unused imports.
 
 - [x] **Step 3: Register and build** — add to `other-modules` if hand-listed;
   build clean; `cabal test` → `All 261 tests passed`.
@@ -692,20 +692,20 @@ tests = Tasty.testGroup "Replay" [replayTests, combatReplayTests]
 - [x] **Step 4: Commit**
 
 ```bash
-git add source/test-suite/Pawl/ReplaySpec.hs source/test-suite/Main.hs pawl.cabal
-hooky fix && git add source/test-suite/Pawl/ReplaySpec.hs source/test-suite/Main.hs pawl.cabal && hooky run
-git commit -m "Move the record/replay tests into Pawl.ReplaySpec
+git add source/test-suite/Parun/ReplaySpec.hs source/test-suite/Main.hs parun.cabal
+hooky fix && git add source/test-suite/Parun/ReplaySpec.hs source/test-suite/Main.hs parun.cabal && hooky run
+git commit -m "Move the record/replay tests into Parun.ReplaySpec
 
 Co-Authored-By: Claude Fable 5 <noreply@anthropic.com>"
 ```
 
 ---
 
-### Task 13: `Pawl.PropertySpec` (move the property group as-is)
+### Task 13: `Parun.PropertySpec` (move the property group as-is)
 
 **Files:**
-- Create: `source/test-suite/Pawl/PropertySpec.hs`
-- Modify: `source/test-suite/Main.hs`, `pawl.cabal` (if hand-listed)
+- Create: `source/test-suite/Parun/PropertySpec.hs`
+- Modify: `source/test-suite/Main.hs`, `parun.cabal` (if hand-listed)
 
 **Interfaces:**
 - Produces: `PropertySpec.tests` (initially the whole `propertyTests` group,
@@ -718,7 +718,7 @@ Co-Authored-By: Claude Fable 5 <noreply@anthropic.com>"
 -- Covers cross-cutting universal QuickCheck invariants (true for every seed).
 -- The three existence/exit-criterion properties are converted to deterministic
 -- tests in their subsystem specs by the next task.
-module Pawl.PropertySpec where
+module Parun.PropertySpec where
 ```
 
 Move `propertyTests` and its helpers (`someLifeChanged`, `creatureDied`,
@@ -731,7 +731,7 @@ tests = Tasty.testGroup "Properties" [propertyTests]
 ```
 
 - [x] **Step 2: Wire into `Main.hs`** — delete `propertyTests` and its helpers,
-  `import qualified Pawl.PropertySpec`, replace the `testTree` entry with
+  `import qualified Parun.PropertySpec`, replace the `testTree` entry with
   `PropertySpec.tests`, prune unused imports.
 
 - [x] **Step 3: Register and build** — add to `other-modules` if hand-listed;
@@ -740,9 +740,9 @@ tests = Tasty.testGroup "Properties" [propertyTests]
 - [x] **Step 4: Commit**
 
 ```bash
-git add source/test-suite/Pawl/PropertySpec.hs source/test-suite/Main.hs pawl.cabal
-hooky fix && git add source/test-suite/Pawl/PropertySpec.hs source/test-suite/Main.hs pawl.cabal && hooky run
-git commit -m "Move the property suite into Pawl.PropertySpec
+git add source/test-suite/Parun/PropertySpec.hs source/test-suite/Main.hs parun.cabal
+hooky fix && git add source/test-suite/Parun/PropertySpec.hs source/test-suite/Main.hs parun.cabal && hooky run
+git commit -m "Move the property suite into Parun.PropertySpec
 
 Co-Authored-By: Claude Fable 5 <noreply@anthropic.com>"
 ```
@@ -752,15 +752,15 @@ Co-Authored-By: Claude Fable 5 <noreply@anthropic.com>"
 ### Task 14: Finalize the properties — convert existence checks, add the durable one
 
 **Files:**
-- Modify: `source/test-suite/Pawl/CombatSpec.hs` (new deterministic test)
-- Modify: `source/test-suite/Pawl/DamageSpec.hs` (new deterministic test)
-- Modify: `source/test-suite/Pawl/ResolveSpec.hs` (new deterministic test)
-- Modify: `source/test-suite/Pawl/PropertySpec.hs` (drop the three existence
+- Modify: `source/test-suite/Parun/CombatSpec.hs` (new deterministic test)
+- Modify: `source/test-suite/Parun/DamageSpec.hs` (new deterministic test)
+- Modify: `source/test-suite/Parun/ResolveSpec.hs` (new deterministic test)
+- Modify: `source/test-suite/Parun/PropertySpec.hs` (drop the three existence
   properties and their helpers; add the lands-only-decks property)
-- Modify: `source/test-suite/Pawl/Support.hs` (add the `landsOnly` matchup fixture)
+- Modify: `source/test-suite/Parun/Support.hs` (add the `landsOnly` matchup fixture)
 
 **Interfaces:**
-- Consumes: from `Pawl.Support` — `S.combatBoard`, `S.combatBoardOf`,
+- Consumes: from `Parun.Support` — `S.combatBoard`, `S.combatBoardOf`,
   `S.runCombat`, `S.fightWith`, `S.aggressiveAnswer`, `S.creaturesInPlay`,
   `S.lifeOf`, `S.runRandomGame`, `S.landsOnly`; the ResolveSpec-local
   `boltAtBobsPiker`; and `Stack.resolveTop`, `Sba.checkStateBasedActions`,
@@ -768,7 +768,7 @@ Co-Authored-By: Claude Fable 5 <noreply@anthropic.com>"
 - Produces: three named deterministic successor tests; the `landsOnly` matchup;
   the `landsOnlyDecks` property. Final suite count **262**.
 
-- [x] **Step 1: Add the deterministic combat successor to `Pawl.CombatSpec`**
+- [x] **Step 1: Add the deterministic combat successor to `Parun.CombatSpec`**
 
 In `combatDamageTests` (or a small new group `exitCriterionTests` added to
 `CombatSpec.tests`), add:
@@ -782,7 +782,7 @@ In `combatDamageTests` (or a small new group `exitCriterionTests` added to
          in HU.assertEqual "defender took two" (Just 18) (S.lifeOf S.bob after)
 ```
 
-- [x] **Step 2: Add the deterministic death successor to `Pawl.DamageSpec`**
+- [x] **Step 2: Add the deterministic death successor to `Parun.DamageSpec`**
 
 Add to an appropriate group (e.g. `creatureSbaTests`):
 
@@ -798,7 +798,7 @@ Add to an appropriate group (e.g. `creatureSbaTests`):
               HU.assertEqual "blocker died" 0 (S.creaturesInPlay S.bob after)
 ```
 
-- [x] **Step 3: Add the deterministic instant successor to `Pawl.ResolveSpec`**
+- [x] **Step 3: Add the deterministic instant successor to `Parun.ResolveSpec`**
 
 Add to `resolveTests`:
 
@@ -811,9 +811,9 @@ Add to `resolveTests`:
          in HU.assertEqual "one card in the graveyard" 1 (length (Game.zoneMembers Zone.Graveyard S.alice after))
 ```
 
-- [x] **Step 4: Add the `landsOnly` matchup to `Pawl.Support`**
+- [x] **Step 4: Add the `landsOnly` matchup to `Parun.Support`**
 
-In `Pawl.Support`, next to `redRed`/`greenBlack`:
+In `Parun.Support`, next to `redRed`/`greenBlack`:
 
 ```haskell
 -- A 60-basic-land mirror: no spell can be cast and no creature can attack, so the
@@ -823,12 +823,12 @@ landsOnly :: NonEmpty.NonEmpty (PlayerId.PlayerId, Deck.Deck)
 landsOnly = Setup.mirror (Deck.MkDeck (Map.singleton Card.mountainPrinting 60)) bothPlayers
 ```
 
-(Add `Data.Map.Strict`, `Pawl.Type.Deck`, `Pawl.Card`, `Pawl.Setup`,
-`Pawl.Type.PlayerId`, `Data.List.NonEmpty` imports if not already present.)
+(Add `Data.Map.Strict`, `Parun.Type.Deck`, `Parun.Card`, `Parun.Setup`,
+`Parun.Type.PlayerId`, `Data.List.NonEmpty` imports if not already present.)
 
 - [x] **Step 5: Remove the three existence properties, add the durable one**
 
-In `Pawl.PropertySpec`, delete the three `QC.testProperty` entries
+In `Parun.PropertySpec`, delete the three `QC.testProperty` entries
 `combat happens: some seed changes a life total`,
 `green-black: some seed sends a creature to the graveyard`, and
 `instants happen: some seed casts a Bolt`, and delete the now-unused helpers
@@ -847,7 +847,7 @@ In `Pawl.PropertySpec`, delete the three `QC.testProperty` entries
               )
 ```
 
-(Ensure `Data.Maybe`, `Data.Set`, and `Pawl.Type.GameState` are imported in
+(Ensure `Data.Maybe`, `Data.Set`, and `Parun.Type.GameState` are imported in
 `PropertySpec`.)
 
 - [x] **Step 6: Build and run the full suite**
@@ -860,8 +860,8 @@ tests + 1 lands-only property).
 - [x] **Step 7: Commit**
 
 ```bash
-git add source/test-suite/Pawl/CombatSpec.hs source/test-suite/Pawl/DamageSpec.hs source/test-suite/Pawl/ResolveSpec.hs source/test-suite/Pawl/PropertySpec.hs source/test-suite/Pawl/Support.hs
-hooky fix && git add source/test-suite/Pawl/CombatSpec.hs source/test-suite/Pawl/DamageSpec.hs source/test-suite/Pawl/ResolveSpec.hs source/test-suite/Pawl/PropertySpec.hs source/test-suite/Pawl/Support.hs && hooky run
+git add source/test-suite/Parun/CombatSpec.hs source/test-suite/Parun/DamageSpec.hs source/test-suite/Parun/ResolveSpec.hs source/test-suite/Parun/PropertySpec.hs source/test-suite/Parun/Support.hs
+hooky fix && git add source/test-suite/Parun/CombatSpec.hs source/test-suite/Parun/DamageSpec.hs source/test-suite/Parun/ResolveSpec.hs source/test-suite/Parun/PropertySpec.hs source/test-suite/Parun/Support.hs && hooky run
 git commit -m "Convert the exit-criterion properties to deterministic tests; add the lands-only-decks invariant
 
 Co-Authored-By: Claude Fable 5 <noreply@anthropic.com>"
@@ -876,16 +876,16 @@ Co-Authored-By: Claude Fable 5 <noreply@anthropic.com>"
 - Modify: `CLAUDE.md` (replace the single-file guidance)
 
 **Interfaces:**
-- Consumes: every `Pawl.<Area>Spec.tests`.
+- Consumes: every `Parun.<Area>Spec.tests`.
 - Produces: a `Main.hs` of only imports + `testTree` + `defaultMain`; updated
   project guidance.
 
 - [x] **Step 1: Verify `Main.hs` is a pure aggregator**
 
 Confirm `Main.hs` now contains only: the module header, `import qualified
-Pawl.<Area>Spec` lines (one per spec), a `Test.Tasty`/`Test.Tasty.Ingredients`
+Parun.<Area>Spec` lines (one per spec), a `Test.Tasty`/`Test.Tasty.Ingredients`
 import as needed, `testTree`, and `main`. Delete any leftover transitional
-`import Pawl.Support (...)` line (nothing in `Main.hs` should reference a Support
+`import Parun.Support (...)` line (nothing in `Main.hs` should reference a Support
 helper anymore). If any helper or group definition still remains in `Main.hs`,
 it was missed by an earlier task — move it to the spec that uses it and note which.
 
@@ -900,10 +900,10 @@ commands" section (`cabal test` — the `tasty` suite, "kept as a single file
 
 ```
 - `cabal test` — the `tasty` suite (`tasty-hunit` + `tasty-quickcheck`), split by
-  subsystem under `source/test-suite/Pawl/`. Each `Pawl.<Area>Spec` near-mirrors a
-  library module (`Pawl.Foo` ↔ `Pawl.FooSpec`), exposes `tests :: TestTree`, and
+  subsystem under `source/test-suite/Parun/`. Each `Parun.<Area>Spec` near-mirrors a
+  library module (`Parun.Foo` ↔ `Parun.FooSpec`), exposes `tests :: TestTree`, and
   heads with a comment listing the modules it covers; `Main.hs` only aggregates
-  them. Shared fixtures live in `Pawl.Support`, imported `qualified ... as S` (the
+  them. Shared fixtures live in `Parun.Support`, imported `qualified ... as S` (the
   one documented exception to alias-to-last-component); a group-local helper stays
   with its group.
 ```
@@ -913,11 +913,11 @@ The second is in the "Adding a module" section (tests "go in the single
 Change it to:
 
 ```
-Tests go in the subsystem spec under `source/test-suite/Pawl/` that near-mirrors
-the library module under test (`Pawl.Foo` → `Pawl.FooSpec`); a new subsystem gets
-a new `Pawl.<Area>Spec` exposing `tests :: TestTree`, wired into `Main.hs`'s
-`testTree`. Shared fixtures go in `Pawl.Support` (aliased `S`); group-local
-helpers stay with their group. New `Pawl.*Spec` files are picked up by cabal-gild
+Tests go in the subsystem spec under `source/test-suite/Parun/` that near-mirrors
+the library module under test (`Parun.Foo` → `Parun.FooSpec`); a new subsystem gets
+a new `Parun.<Area>Spec` exposing `tests :: TestTree`, wired into `Main.hs`'s
+`testTree`. Shared fixtures go in `Parun.Support` (aliased `S`); group-local
+helpers stay with their group. New `Parun.*Spec` files are picked up by cabal-gild
 — run `hooky fix`.
 ```
 

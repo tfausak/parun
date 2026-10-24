@@ -1,0 +1,359 @@
+module Parun.Types.KeywordFamily where
+
+-- | CR 702. WHICH KEYWORD a Parun.Types.Keyword is, with its payload dropped --
+-- what card text means by "a creature with toxic" or "a creature with a morph
+-- ability", as against "a creature with toxic 2".
+--
+-- The CR draws this line itself, in both places the cards come from. CR 702.14a:
+-- "Landwalk is a GENERIC TERM that appears within an object's rules text as
+-- '[type]walk'" -- the generic term and the written instance are different things
+-- by the rule's own wording. CR 702.164a: "Toxic is a static ability. It is
+-- written 'toxic N,' where N is a number" -- the ability is toxic, and N is how
+-- it is written. So this type names the ability and Parun.Types.Keyword names the
+-- written instance; Parun.Types.Filter asks for either.
+--
+-- One constructor per PAYLOAD-CARRYING Keyword constructor, and deliberately none
+-- for the nullary ones. A nullary keyword's family would be the keyword, so
+-- Filter.HasKeywordFamily would say exactly what Filter.HasKeyword already says
+-- and "a creature with flying" would have two spellings. As it stands the two
+-- atoms partition: HasKeyword Flying is the only way to write CR 702.9's
+-- question, and HasKeywordFamily Toxic the only way to write CR 702.164's.
+--
+-- PAYLOAD-FREE, which is the whole point. A family designator that carried a
+-- representative keyword -- HasKeywordFamily (Toxic 2) meaning "any toxic" --
+-- would make two structurally different values observably equal, which is the
+-- objection that sank widening HasKeyword in place (#522).
+--
+-- It imports NOTHING, and that is load-bearing rather than incidental:
+-- Parun.Types.Filter can name this type concretely while keeping the `keyword`
+-- parameter that CR 702.14c's landwalk filter and CR 702.37a's morph cost force
+-- on it. A family type that named Keyword instead would reopen that cycle.
+--
+-- THE CONSTRUCTORS BELOW are this pool's, not Magic's. Rule 702 runs to 702.194,
+-- roughly a third of those keywords written with a cost or an N; the ones here are
+-- those of them Parun.Types.Keyword models. The set grows with that type -- the
+-- remaining cost-bearing keywords all land here eventually -- so a
+-- constructor is owed whenever a payload-carrying Keyword constructor is added,
+-- not whenever a card first asks for one. Parun.Engine.Keyword.familyOf is
+-- exhaustive and takes no wildcard, so the compiler asks for the decision.
+data KeywordFamily
+  = -- | CR 702.6a: equip [cost]. Bureau Headmaster's "equip abilities you
+    -- activate cost {1} less to activate" is the card asking, through
+    -- Parun.Types.ActivationCriteria's @grantedBy@ rather than through a
+    -- Filter.
+    Equip
+  | -- | CR 702.11d: hexproof from [quality].
+    Hexproof
+  | -- | CR 702.14a: "[type]walk".
+    Landwalk
+  | -- | CR 702.16a: protection from [quality]. The family a card writing "a
+    -- creature with protection" names, as against protection from black; no card
+    -- in the pool asks yet, and it is owed at the keyword rather than at the
+    -- first asker.
+    Protection
+  | -- | CR 702.21a: ward [cost]. The family a card writing "a creature with
+    -- ward" names, as against ward {2}; no card in the pool asks yet, and it is
+    -- owed at the keyword rather than at the first asker.
+    Ward
+  | -- | CR 702.23a: rampage N.
+    Rampage
+  | -- | CR 702.24a: cumulative upkeep [cost]. The family a card writing "a
+    -- permanent with cumulative upkeep" names, as against cumulative upkeep {1};
+    -- no card in the pool asks yet, and it is owed at the keyword rather than at
+    -- the first asker.
+    CumulativeUpkeep
+  | -- | CR 702.27a: buyback [cost]. No card in the pool asks yet, and it is owed
+    -- at the keyword rather than at the first asker.
+    Buyback
+  | -- | CR 702.29a: cycling [cost], and CR 702.29e's typecycling.
+    Cycling
+  | -- | CR 702.30a: echo [cost]. The family a card writing "a permanent with
+    -- echo" names, as against echo {1}{G}; no card in the pool asks yet, and it
+    -- is owed at the keyword rather than at the first asker.
+    Echo
+  | -- | CR 702.32a: fading N.
+    Fading
+  | -- | CR 702.33a: kicker [cost], with CR 702.33c's multikicker ("a multikicker
+    -- cost is a kicker cost") and CR 702.33h's sticker kicker ("means Kicker").
+    Kicker
+  | -- | CR 702.34a: flashback [cost].
+    Flashback
+  | -- | CR 702.37a: morph [cost]. CR 702.37e writes this family in the CR's own
+    -- voice -- "a face-down permanent you control with A MORPH ABILITY" -- and
+    -- Backslide's "target creature with a morph ability" is the card asking
+    -- (#920).
+    Morph
+  | -- | CR 702.38a: amplify N. The family a card writing "a creature with
+    -- amplify" names, as against amplify 2; no card in the pool asks yet, and it
+    -- is owed at the keyword rather than at the first asker.
+    Amplify
+  | -- | CR 702.41a: affinity for [text]. The family a card writing "a spell with
+    -- affinity" names, as against affinity for artifacts; no card in the pool
+    -- asks yet, and it is owed at the keyword rather than at the first asker.
+    Affinity
+  | -- | CR 702.42a: entwine [cost].
+    Entwine
+  | -- | CR 702.43a: modular N. Arcbound Overseer's "each creature you control
+    -- with modular" is the card asking, over an Arcbound Worker whose modular 1
+    -- is not the Overseer's 6.
+    Modular
+  | -- | CR 702.45a: bushido N.
+    Bushido
+  | -- | CR 702.46a: soulshift N.
+    Soulshift
+  | -- | CR 702.47a: splice onto [quality] [cost].
+    Splice
+  | -- | CR 702.48a: [quality] offering.
+    Offering
+  | -- | CR 702.49a: ninjutsu [cost], and CR 702.49d's commander ninjutsu, a
+    -- variant of it. Silver-Fur Master's "ninjutsu abilities you
+    -- activate cost {1} less to activate" is the card asking, through
+    -- Parun.Types.ActivationCriteria's @grantedBy@ rather than through a Filter;
+    -- it is not in the pool yet, and the family is owed at the keyword.
+    Ninjutsu
+  | -- | CR 702.52a: dredge N. The family "a card with dredge" would name, as
+    -- against dredge 3; no card in the pool asks yet, and it is owed at the
+    -- keyword rather than at the first asker.
+    Dredge
+  | -- | CR 702.54a: bloodthirst N, and CR 702.54b's bloodthirst X with it -- the
+    -- family is what "a creature with bloodthirst" names, which is the shape a
+    -- card would ask in.
+    Bloodthirst
+  | -- | CR 702.62a: suspend N--[cost]. The family a card would name "a card with
+    -- suspend" by, as against suspend 1--{R}; CR 701.56a's time travel asks that
+    -- question of the keyword itself (Parun.Engine.TimeTravel.suspendedCandidates),
+    -- so no card in the pool asks yet and it is owed at the keyword rather than at
+    -- the first asker.
+    Suspend
+  | -- | CR 702.63a: vanishing N.
+    Vanishing
+  | -- | CR 702.58a: graft N. No card in the pool asks yet, and it is owed at the
+    -- keyword rather than at the first asker.
+    Graft
+  | -- | CR 702.64a: absorb N. No card in the pool asks yet, and it is owed at
+    -- the keyword rather than at the first asker.
+    Absorb
+  | -- | CR 702.65a: aura swap [cost]. No card in the pool asks yet, and it is
+    -- owed at the keyword rather than at the first asker.
+    AuraSwap
+  | -- | CR 702.67a: fortify [cost]. Equip's family one rule over; no card in the
+    -- pool asks yet, and it is owed at the keyword rather than at the first
+    -- asker.
+    Fortify
+  | -- | CR 702.68a: frenzy N.
+    Frenzy
+  | -- | CR 702.70a: poisonous N.
+    Poisonous
+  | -- | CR 702.72a: champion an [object]. The family a card writing "a creature
+    -- with champion" names, as against champion a Merfolk; no card in the pool
+    -- asks yet, and it is owed at the keyword rather than at the first asker.
+    Champion
+  | -- | CR 702.74a: evoke [cost]; the family Quantity.CastUsing names.
+    Evoke
+  | -- | CR 702.75a: hideaway N. The family a card writing "a permanent with
+    -- hideaway" names, as against hideaway 4; no card in the pool asks yet, and
+    -- it is owed at the keyword rather than at the first asker.
+    Hideaway
+  | -- | CR 702.76a: prowl [cost]; the family Quantity.CastUsing names for Morsel
+    -- Theft's "if this spell's prowl cost was paid".
+    Prowl
+  | -- | CR 702.77a: reinforce N-[cost].
+    Reinforce
+  | -- | CR 702.82a: devour N.
+    Devour
+  | -- | CR 702.84a: unearth [cost]. The family a card writing "a creature card
+    -- with unearth" names, as against unearth {B}; no card in the pool asks yet,
+    -- and it is owed at the keyword rather than at the first asker.
+    Unearth
+  | -- | CR 702.128a: embalm [cost].
+    Embalm
+  | -- | CR 702.129a: eternalize [cost].
+    Eternalize
+  | -- | CR 702.86a: annihilator N.
+    Annihilator
+  | -- | CR 702.87a: level up [cost]. The family a card writing "a creature with
+    -- level up" names, as against level up {W}; no card in the pool asks yet, and
+    -- it is owed at the keyword rather than at the first asker.
+    LevelUp
+  | -- | CR 702.104a: tribute N. The family "a creature with tribute" names, as
+    -- against tribute 3; no card in the pool asks yet, and it is owed at the
+    -- keyword rather than at the first asker.
+    Tribute
+  | -- | CR 702.107a: outlast [cost].
+    Outlast
+  | -- | CR 702.109a: dash [cost]; the family Quantity.CastUsing names.
+    Dash
+  | -- | CR 702.112a: renown N.
+    Renown
+  | -- | CR 702.113a: awaken N--[cost]; the family Quantity.CastUsing names, which
+    -- is how Part the Waterveil's clause asks rule 702.113a's "if this spell's
+    -- awaken cost was paid".
+    Awaken
+  | -- | CR 702.120a: escalate [cost].
+    Escalate
+  | -- | CR 702.122a: crew N.
+    Crew
+  | -- | CR 702.124i: partner—[text], whichever of the four. No card in the pool
+    -- asks yet, and it is owed at the keyword rather than at the first asker.
+    PartnerText
+  | -- | CR 702.124j: partner with [name], whichever name. No card in the pool
+    -- asks yet, and it is owed at the keyword rather than at the first asker.
+    PartnerWith
+  | -- | CR 702.123a: fabricate N.
+    Fabricate
+  | -- | CR 702.130a: afflict N.
+    Afflict
+  | -- | CR 702.135a: afterlife N.
+    Afterlife
+  | -- | CR 702.138a: escape--[cost]. The family a card writing "a creature card
+    -- with escape" would name, as against escape--{4}{G}; no card in the pool
+    -- asks yet, and it is owed at the keyword rather than at the first asker.
+    Escape
+  | -- | CR 702.94a: miracle [cost].
+    Miracle
+  | -- | CR 702.162a: more than meets the eye [cost]. The family a card writing
+    -- "a card with more than meets the eye" would name, as against more than
+    -- meets the eye {1}{W}; no card in the pool asks yet, and it is owed at the
+    -- keyword rather than at the first asker.
+    MoreThanMeetsTheEye
+  | -- | CR 702.164a: toxic N. The family Flensing Raptor's "another target
+    -- creature you control with toxic" names.
+    Toxic
+  | -- | CR 702.165a: backup N. The family a card writing "a creature with
+    -- backup" would name, as against backup 1; no card in the pool asks yet, and
+    -- it is owed at the keyword rather than at the first asker.
+    Backup
+  | -- | CR 702.168a: disguise [cost]. CR 702.168d writes this family in the CR's
+    -- own voice -- "a face-down permanent you control with A DISGUISE ABILITY" --
+    -- and CR 701.58d names it again; no card in the pool asks yet, and it is owed
+    -- at the keyword rather than at the first asker.
+    Disguise
+  | -- | CR 702.152a: blitz [cost]; the family Quantity.CastUsing names.
+    Blitz
+  | -- | CR 702.117a: surge [cost]. The family a card writing "a card with
+    -- surge" would name; no card in the pool asks yet, and it is owed at the
+    -- keyword rather than at the first asker.
+    Surge
+  | -- | CR 702.137a: spectacle [cost]. The family a card writing "a card with
+    -- spectacle" would name; no card in the pool asks yet, and it is owed at the
+    -- keyword rather than at the first asker.
+    Spectacle
+  | -- | CR 702.173a: freerunning [cost]. The family a card writing "a card with
+    -- freerunning" would name; no card in the pool asks yet, and it is owed at
+    -- the keyword rather than at the first asker.
+    Freerunning
+  | -- | CR 702.170a: plot [cost].
+    Plot
+  | -- | CR 702.171a: saddle N. The family a card writing "a creature with
+    -- saddle" names, as against saddle 2; no card in the pool asks yet, and it
+    -- is owed at the keyword rather than at the first asker.
+    Saddle
+  | -- | CR 702.143a: foretell [cost].
+    Foretell
+  | -- | CR 702.139a: companion--[condition]. The family a card writing "a card
+    -- with companion" would name, as against Zirda's own condition; no card in
+    -- the pool asks yet, and it is owed at the keyword rather than at the first
+    -- asker.
+    Companion
+  | -- | CR 702.103a: bestow [cost]. No card in the pool asks yet, and it is owed
+    -- at the keyword rather than at the first asker.
+    Bestow
+  | -- | CR 702.160a: prototype [cost] -- [power]\/[toughness]. The family a card
+    -- writing "a card with prototype" would name, as against one prototype
+    -- card's own inset frame; no card in the pool asks yet, and it is owed at
+    -- the keyword rather than at the first asker.
+    Prototype
+  | -- | CR 702.140a: mutate [cost]. The family a card writing "a creature with
+    -- mutate" would name, as against one card's own mutate cost; no card in the
+    -- pool asks yet, and it is owed at the keyword rather than at the first
+    -- asker.
+    Mutate
+  | -- | CR 702.157a: squad [cost]. No card in the pool asks yet, and it is owed
+    -- at the keyword rather than at the first asker.
+    Squad
+  | -- | CR 702.175a: offspring [cost]. No card in the pool asks yet, and it is
+    -- owed at the keyword rather than at the first asker.
+    Offspring
+  | -- | CR 702.174a: gift a [something]. The family a card writing "a spell with
+    -- gift" would name, as against one card's own [something]; no card in the
+    -- pool asks yet, and it is owed at the keyword rather than at the first
+    -- asker.
+    Gift
+  | -- | CR 702.56a: replicate [cost]. No card in the pool asks yet, and it is
+    -- owed at the keyword rather than at the first asker.
+    Replicate
+  | -- | CR 702.59a: recover [cost]. No card in the pool asks yet, and it is owed
+    -- at the keyword rather than at the first asker.
+    Recover
+  | -- | CR 702.60a: ripple N. No card in the pool asks yet, and it is owed at
+    -- the keyword rather than at the first asker.
+    Ripple
+  | -- | CR 702.153a: casualty N. No card in the pool asks yet, and it is owed at
+    -- the keyword rather than at the first asker.
+    Casualty
+  | -- | CR 702.187b / 702.187c: mayhem, with a cost or without. No card in the pool asks yet, and it is owed
+    -- at the keyword rather than at the first asker.
+    Mayhem
+  | -- | CR 702.35a: madness [cost]. No card in the pool asks yet, and it is owed
+    -- at the keyword rather than at the first asker.
+    Madness
+  | -- | CR 702.97a: scavenge [cost]. No card in the pool asks yet, and it is
+    -- owed at the keyword rather than at the first asker.
+    Scavenge
+  | -- | CR 702.141a: encore [cost]. No card in the pool asks yet, and it is
+    -- owed at the keyword rather than at the first asker.
+    Encore
+  | -- | CR 702.148a: cleave [cost]; the family Quantity.CastUsing names for Path
+    -- of Peril.
+    Cleave
+  | -- | CR 702.96a: overload [cost]; the family Quantity.CastUsing names for
+    -- Cyclonic Rift's two readings.
+    Overload
+  | -- | CR 702.194a: teamwork N. No card in the pool asks yet, and it is owed at
+    -- the keyword rather than at the first asker.
+    Teamwork
+  | -- | CR 702.188a: web-slinging [cost]; the family Quantity.CastUsing names for
+    -- Spiders-Man, Heroic Horde's "if they were cast using web-slinging".
+    WebSlinging
+  | -- | CR 702.190a: sneak [cost]. No card in the pool asks yet, and it is owed at
+    -- the keyword rather than at the first asker.
+    Sneak
+  | -- | CR 702.181a: mobilize N. No card in the pool asks yet, and it is owed at
+    -- the keyword rather than at the first asker.
+    Mobilize
+  | -- | CR 702.189a: firebending N. No card in the pool asks yet, and it is owed
+    -- at the keyword rather than at the first asker.
+    Firebending
+  | -- | CR 702.119a: emerge [cost]. No card in the pool asks yet, and it is owed
+    -- at the keyword rather than at the first asker.
+    Emerge
+  | -- | CR 702.53a: transmute [cost]. No card in the pool asks yet, and it is
+    -- owed at the keyword rather than at the first asker.
+    Transmute
+  | -- | CR 702.71a: transfigure [cost]. No card in the pool asks yet, and it is
+    -- owed at the keyword rather than at the first asker.
+    Transfigure
+  | -- | CR 702.185a: warp [cost]. Sliver Weftwinder's "Sliver cards in your hand
+    -- have warp {3}" grants an instance rather than asking about one, so no card
+    -- in the pool asks yet; it is owed at the keyword rather than at the first
+    -- asker.
+    Warp
+  | -- | CR 702.146a: disturb [cost]. No card in the pool asks yet, and it is
+    -- owed at the keyword rather than at the first asker.
+    Disturb
+  | -- | CR 702.180a: harmonize [cost]. No card in the pool asks yet, and it is
+    -- owed at the keyword rather than at the first asker.
+    Harmonize
+  | -- | CR 702.176a: impending N--[cost]; the family Quantity.CastUsing names
+    -- for rule 702.176a's "this permanent's impending cost was paid".
+    Impending
+  | -- | CR 702.151a: reconfigure [cost]. No card in the pool asks yet, and it is
+    -- owed at the keyword rather than at the first asker.
+    Reconfigure
+  | -- | CR 702.167a: craft with [materials] [cost]. No card in the pool asks yet,
+    -- and it is owed at the keyword rather than at the first asker.
+    Craft
+  | -- | CR 716.2: a class level bar, whatever its level; CR 716.2c's "to gain a
+    -- Class level".
+    ClassLevel
+  deriving (Bounded, Enum, Eq, Ord, Show)

@@ -6,7 +6,7 @@ number of tests.
 
 ## Census (origin/main @ 097d9d0, grep-level, per `Spec.it` block)
 
-`pawl:test` holds 7726 `Spec.it` blocks; the remaining ~3.8k tasty cases are
+`parun:test` holds 7726 `Spec.it` blocks; the remaining ~3.8k tasty cases are
 codec specs in other libraries, which never move.
 
 | Bucket | Blocks | Moves? |
@@ -19,7 +19,7 @@ codec specs in other libraries, which never move.
 | Pure queries over a hand-built state | 3224 | no: unit tests |
 | Whole games from decks | 40 | no, not in this unit |
 
-So the realistic target is about 1,600 blocks, a fifth of `pawl:test`. The
+So the realistic target is about 1,600 blocks, a fifth of `parun:test`. The
 buckets are grep heuristics; step 1 replaces them with exact numbers.
 
 What those 1,600 need beyond piece 1's vocabulary:
@@ -122,7 +122,7 @@ The PR B body carries:
 - the census table as measured in step 1;
 - converted, dropped at each gate, and flagged, per reason;
 - the sample review;
-- the compile-time delta for `pawl:test`, cold build before and after.
+- the compile-time delta for `parun:test`, cold build before and after.
 
 Scenario files go in one subdirectory per source spec, so the directory stays
 navigable and a later split of the corpus is free.

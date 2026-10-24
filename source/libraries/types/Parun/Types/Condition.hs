@@ -1,0 +1,61 @@
+module Parun.Types.Condition where
+
+import qualified Parun.Types.Compares as Compares
+import qualified Parun.Types.DuringPhase as DuringPhase
+
+-- | A predicate over game STATE rather than over an event, with one vocabulary
+-- and several customers: a state trigger's condition (CR 603.8, checked at every
+-- CR 117.5 boundary), an intervening "if" (CR 603.4 when the trigger event
+-- occurs, CR 608.2a again on resolution), a "for as long as" duration
+-- (CR 611.2b, Parun.Engine.Expiry.arm and Parun.Engine.Expiry.sweepConditional),
+-- a printed static ability's "as long as" clause (CR 604.2,
+-- Parun.Types.StaticAbility.condition and Parun.Engine.Projection.gatherStatic),
+-- that same clause on a printed REPLACEMENT ability
+-- (Parun.Types.PrintedReplacement.condition and
+-- Parun.Engine.Projection.replacementsOf), and its floating twin on a row a
+-- resolution installed (CR 614.1, Parun.Types.Replace.condition and
+-- Parun.Engine.Replacement.collect).
+--
+-- The duration and the "as long as" clauses are the pair most easily confused,
+-- and CR 611.2c's parenthetical keeps them apart: the duration ENDS a stored
+-- effect once, while the clause gates one that is re-derived every read.
+--
+-- ONE comparison, one step-or-phase window, and a disjunction and a
+-- conjunction of them, and no other escape hatch. CR 611.2b's "for as long as
+-- you control this creature" is a source-restricted count of one
+-- (Filter.IsSource), not a special arm.
+--
+-- A Count's Scope may name a slot (PlayerRef.InSlot), and this Condition may be
+-- stored into a Parun.Types.Expiry.While for a "for as long as" duration. Such a
+-- reference outlives its slot binding, so Parun.Engine.Condition.bakeBound
+-- substitutes the seat (or, for an object's controller or owner, the object)
+-- for the slot as the duration begins; Parun.ExpirySpec's Garland, Royal
+-- Kidnapper group is what proves the stored condition still answers once the
+-- resolution that stored it is over, and the Synthetic Borrowed Vigil scenario
+-- under data/scenarios/ proves the object half.
+data Condition
+  = -- | One comparison, whose three parts are Parun.Types.Compares -- see there
+    -- for why both sides are a full Quantity.
+    Compares Compares.Compares
+  | -- | True when ANY of these is -- CR 702.100a's "power is greater ... and/or
+    -- toughness is greater", which is two comparisons of two different
+    -- characteristics and so cannot be folded into one Compares.
+    --
+    -- Filter's Or, transplanted: a flat sibling arm rather than a wrapper type,
+    -- so it nests. `Any []` is False, which is the fold's unit and not a
+    -- trivial-truth arm -- `All []` below spells that.
+    Any [Condition]
+  | -- | True when EVERY one of these is -- the conjunction inside one arm of a
+    -- printed disjunction, which is the shape Nissa, Steward of Elements' second
+    -- ability has: "if it's a land card or a creature card with mana value less
+    -- than or equal to the number of loyalty counters on Nissa". The second
+    -- disjunct is two tests of two different quantities -- a card type and a mana
+    -- value -- so it folds into neither one Compares nor an Any.
+    --
+    -- `All []` is True, the fold's unit, which is Filter's `And []` one type over.
+    -- There is still no Not: no rule in the pool asks for one.
+    All [Condition]
+  | -- | True while the turn is inside this phase or step of the turns its scope
+    -- names, "your" being the reader's perspective (CR 500.1, CR 109.5).
+    During DuringPhase.DuringPhase
+  deriving (Eq, Ord, Show)

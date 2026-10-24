@@ -1,0 +1,756 @@
+module Parun.Engine.Stack where
+
+import qualified Control.Monad as Monad
+import qualified Control.Monad.Trans.State.Strict as State
+import qualified Data.Foldable as Foldable
+import qualified Data.List as List
+import qualified Data.List.NonEmpty as NonEmpty
+import qualified Data.Map.Strict as Map
+import qualified Data.Maybe as Maybe
+import qualified Data.Sequence as Seq
+import qualified Data.Set as Set
+import Numeric.Natural (Natural)
+import qualified Parun.Engine.AbilityZone as AbilityZone
+import qualified Parun.Engine.Binding as Binding
+import qualified Parun.Engine.Card as Card
+import qualified Parun.Engine.Combat as Combat
+import qualified Parun.Engine.Condition as Condition
+import qualified Parun.Engine.Decide as Decide
+import qualified Parun.Engine.Event as Event
+import qualified Parun.Engine.Event.Trigger as Trigger
+import qualified Parun.Engine.Expiry as Expiry
+import qualified Parun.Engine.Filter as Filter
+import qualified Parun.Engine.Game as Game
+import qualified Parun.Engine.Keyword as Keyword
+import qualified Parun.Engine.Modal as Modal
+import qualified Parun.Engine.Projection as Projection
+import qualified Parun.Engine.Projection.View as Projection
+import qualified Parun.Engine.Resolve as Resolve
+import qualified Parun.Engine.Resolve.Effect as Resolve
+import qualified Parun.Engine.SourceContext as SourceContext
+import qualified Parun.Types.ActivatedAbilitySource as ActivatedAbilitySource
+import qualified Parun.Types.Affected as Affected
+import qualified Parun.Types.Card as Card.Type
+import qualified Parun.Types.CardType as CardType
+import qualified Parun.Types.CarryOver as CarryOver
+import qualified Parun.Types.Chosen as Chosen
+import qualified Parun.Types.Condition as Condition.Type
+import qualified Parun.Types.ContinuousEffect as ContinuousEffect
+import qualified Parun.Types.ControlDuration as ControlDuration
+import qualified Parun.Types.Cost as Cost
+import qualified Parun.Types.Duration as Duration
+import qualified Parun.Types.EntryRiders as EntryRiders
+import qualified Parun.Types.Expiry as Expiry.Type
+import qualified Parun.Types.Facing as Facing
+import Parun.Types.Game (Game)
+import qualified Parun.Types.GameState as GameState
+import qualified Parun.Types.GrantedAbility as GrantedAbility
+import qualified Parun.Types.InherentTriggerSource as InherentTriggerSource
+import qualified Parun.Types.Keyword as Keyword.Type
+import qualified Parun.Types.KeywordInstance as KeywordInstance
+import qualified Parun.Types.LibraryPosition as LibraryPosition
+import qualified Parun.Types.Modification as Modification
+import qualified Parun.Types.Object as Object
+import Parun.Types.ObjectId (ObjectId)
+import qualified Parun.Types.PlayerChoice as PlayerChoice
+import qualified Parun.Types.PlayerControl as PlayerControl
+import Parun.Types.PlayerId (PlayerId)
+import qualified Parun.Types.PrintingId as PrintingId
+import qualified Parun.Types.ProjectedCharacteristics as PC
+import qualified Parun.Types.Prompt as Prompt
+import qualified Parun.Types.Recipient as Recipient
+import Parun.Types.Result (Result)
+import qualified Parun.Types.Source as Source
+import qualified Parun.Types.Subtype as Subtype
+import qualified Parun.Types.TapState as TapState
+import qualified Parun.Types.TriggerCondition as TriggerCondition
+import qualified Parun.Types.TriggeredAbility as TriggeredAbility
+import qualified Parun.Types.TriggeredAbilitySource as TriggeredAbilitySource
+import qualified Parun.Types.TurnWindow as TurnWindow
+import qualified Parun.Types.Zone as Zone
+
+-- The runner-aware resolve-the-top-of-stack: resolve one object, then let go of
+-- the control its resolution held (CR 723.2).
+resolveTopWith :: Game Result -> Game ()
+resolveTopWith runSubgame = do
+  top <- State.gets GameState.stack
+  Foldable.for_ (take 1 top) (State.modify' . beginResolutionControl)
+  resolveOneWith runSubgame
+  State.modify' endResolutionControl
+
+-- CR 723.2: "you control the player while that spell is resolving" -- the rows
+-- waiting on `oid` take hold as it begins to resolve, in place, so CR 723.1a's
+-- creation order is kept, and lapse with the rest of its resolution's rows.
+beginResolutionControl :: ObjectId -> GameState.GameState -> GameState.GameState
+beginResolutionControl oid gs =
+  let wake row
+        | PlayerControl.duration row == ControlDuration.WhileResolving oid = row {PlayerControl.duration = ControlDuration.UntilResolutionEnds}
+        | otherwise = row
+   in gs {GameState.control = fmap (fmap wake) (GameState.control gs)}
+
+-- CR 723.2's lapse -- "until Word of Command finishes resolving". Applied after
+-- resolveOneWith rather than inside its spell branch, since either kind of
+-- object could carry the opcode, and this is the one place that knows a
+-- resolution is over.
+--
+-- Every UntilResolutionEnds row and not just the resolving object's, because a
+-- resolution is not re-entrant: nothing runs between the effect that wrote a row
+-- and this call except the rest of that same resolution.
+--
+-- The CR 723.1 row UNDER it survives, which is the point of the stack: rule
+-- 723.1a's "overwrite" is the continuous-effect sense, so once the later effect
+-- has ended the earlier one is again the last created and works for the rest of
+-- the turn -- a Word of Command cast at a Mindslavered player hands that player
+-- back to the Mindslaver's controller, not to themselves; see #3351. Rule
+-- 723.1's own expiry stays Parun.Engine.Engine.beginTurnOf's, and
+-- Parun.GameSpec's "CR 723.1a gameplay: Word of Command over a Mindslaver hands
+-- bob back to alice, not to himself" is what proves the hand-back.
+--
+-- A WhileResolving row outlives the resolution only while its spell is still on
+-- the stack: one countered or otherwise gone (CR 400.7) will never resolve.
+endResolutionControl :: GameState.GameState -> GameState.GameState
+endResolutionControl gs = gs {GameState.control = Map.mapMaybe (outlivesResolution (GameState.stack gs)) (GameState.control gs)}
+
+-- The rows of one player's control stack that a resolution ending leaves in
+-- place, or Nothing where none is left -- a player under no control has no key.
+outlivesResolution :: [ObjectId] -> NonEmpty.NonEmpty PlayerControl.PlayerControl -> Maybe (NonEmpty.NonEmpty PlayerControl.PlayerControl)
+outlivesResolution stack =
+  let survives row = case PlayerControl.duration row of
+        ControlDuration.UntilTurnEnds -> True
+        ControlDuration.UntilResolutionEnds -> False
+        ControlDuration.WhileResolving oid -> elem oid stack
+        -- Lifted by the search that installed it, which ends inside the
+        -- resolution; none is left here to keep.
+        ControlDuration.WhileSearching -> False
+   in NonEmpty.nonEmpty . NonEmpty.filter survives
+
+-- One object resolves. CR 729.1a's "the spell or ability that created the
+-- subgame" names both kinds of object, so the injected runner goes to the spell
+-- branch and to all three ability branches alike; see #137. Engine.priorityLoop
+-- supplies playSubgame.
+--
+-- CR 608.3: a resolving permanent spell becomes a permanent on the battlefield;
+-- anything else resolves its effects and then goes to its owner's graveyard
+-- (Resolve.resolveSpellWith -- the CR 608.2 executor).
+--
+-- THE INVARIANT: this dispatches on a CLASSIFICATION -- is-it-a-permanent, read
+-- off the type line -- and never on the card's identity. There must never be a
+-- `case card of ...` here; that is the fusion of the closed and open halves
+-- that sinks the project.
+resolveOneWith :: Game Result -> Game ()
+resolveOneWith runSubgame = do
+  gs <- State.get
+  case GameState.stack gs of
+    [] -> pure ()
+    oid : rest -> case Game.lookupObject oid gs of
+      -- A stack id that does not resolve is a bug elsewhere; drop it rather
+      -- than wedging the loop.
+      Nothing -> State.put gs {GameState.stack = rest}
+      Just obj -> case Object.source obj of
+        Source.OfCard printingId -> resolveCardBacked runSubgame oid rest printingId
+        -- A token is never on the stack (created onto the battlefield, never
+        -- cast), and neither is a melded permanent: CR 701.42a puts the two cards
+        -- onto the battlefield directly rather than announcing anything.
+        Source.OfMeld _ -> State.put gs {GameState.stack = rest}
+        -- Nor is a merged permanent: CR 730.2 merges an object INTO a permanent
+        -- already on the battlefield.
+        Source.OfMerge _ -> State.put gs {GameState.stack = rest}
+        Source.OfToken _ -> State.put gs {GameState.stack = rest}
+        Source.OfAbility ActivatedAbilitySource.MkActivatedAbilitySource {ActivatedAbilitySource.source = srcId, ActivatedAbilitySource.ability = ability} -> do
+          -- CR 601.3's offer is NOT made here. It belongs to the Search effect
+          -- itself (Resolve's Effect.Search arm), so it sees the state the player
+          -- is actually searching from and reaches searching SPELLS too (#57).
+          Resolve.resolveAbilityWith runSubgame oid srcId ability
+        Source.OfTrigger TriggeredAbilitySource.MkTriggeredAbilitySource {TriggeredAbilitySource.source = srcId, TriggeredAbilitySource.ability = ability} ->
+          -- CR 608.2a: an intervening "if" is checked AGAIN as the ability
+          -- resolves. Object.owner is the ability's controller, which is "you".
+          --
+          -- CR 608.2h supplies the view, for the reason
+          -- Event.interveningHolds gives at the gather-time half of this rule:
+          -- a leaves-the-battlefield ability's source is gone by construction
+          -- (CR 603.10a, CR 400.7), and Projection.fullView would describe it
+          -- as an object with no characteristics. The two checks must read
+          -- alike, or a trigger that passed the gather would be removed here
+          -- for no reason.
+          --
+          -- The ability's own bindings supply the context's slot objects, as
+          -- Event.interveningHolds supplies the pending trigger's: rule 702.100a's
+          -- "that creature" is the entrant at Binding.became, not the source. So
+          -- CR 608.2h is owed to that entrant too and the view is the UNSCOPED
+          -- one -- an entrant killed while the trigger waited is compared at the
+          -- power and toughness it last had, and read for the owner CR 400.3 asks
+          -- of Breathless Knight's clause, which are the reads this arm alone
+          -- observes: at gather time the entrant is still there by construction.
+          --
+          -- CR 303.4b's host rides in beside the slots, and Event.interveningHolds
+          -- supplies it at the gather-time half for the reason the view above must
+          -- match: Ray of Frost's "if enchanted creature is red" would otherwise
+          -- pass one check and fail the other.
+          case TriggeredAbility.intervening ability of
+            Just cond
+              | not (interveningStillHolds gs obj srcId (TriggeredAbility.condition ability) cond) ->
+                  State.modify' (Game.cease oid)
+            _ ->
+              let chosen = Binding.modesOf (Object.bindings obj)
+                  modal = TriggeredAbility.modal ability
+               in Resolve.resolveModesWith runSubgame oid srcId (Modal.chosenModes chosen modal)
+        -- CR 114.5: an emblem is never on the stack (created into the command
+        -- zone, never cast). Drop it, like a token.
+        Source.OfEmblem _ -> State.put gs {GameState.stack = rest}
+        Source.OfSpellCopy printingId -> resolveCardBacked runSubgame oid rest printingId
+        -- CR 722.3c calls the cast copy a SPELL in as many words -- "that
+        -- permanent loses the prepared designation at the time the spell becomes
+        -- cast" -- and CR 608.1 then resolves it like any other. So the same road
+        -- the two card-backed arms above take, through the printing the mint
+        -- interned.
+        Source.OfCardCopy printingId -> resolveCardBacked runSubgame oid rest printingId
+        Source.OfInherentTrigger InherentTriggerSource.MkInherentTriggerSource {InherentTriggerSource.ability = ability} ->
+          -- An inherent ability has no source object, so the ability object
+          -- itself stands in for one and Object.owner is its controller -- the
+          -- monarch for CR 725.2's two abilities, the player whose engines are
+          -- running for CR 702.179d's.
+          --
+          -- CR 608.2a: the intervening "if" is checked AGAIN as the ability
+          -- resolves, exactly as the OfTrigger arm above does it. Rule 725.2's
+          -- abilities have none, so this was once elided; rule 702.179d's "if
+          -- your speed is less than 4" is one, and eliding it would let a
+          -- trigger that waited on the stack raise a speed already at max.
+          --
+          -- No board reaches the removal today, and the branch is here because
+          -- CR 608.2a says so rather than because anything observes it: rule
+          -- 702.179d admits one trigger a turn and nothing else in the pool moves
+          -- a player's speed, so the answer cannot change between the CR 603.4
+          -- check in Event.interveningHolds and this one. The two are mutually
+          -- redundant, not jointly redundant -- Parun.SpeedSpec's "speed stops at
+          -- 4" case fails when BOTH are removed.
+          --
+          -- The view is the same unscoped one the arm above passes, so the rule
+          -- cannot mean one thing for a borne trigger and another for an inherent
+          -- one. It describes `oid` as an object with no characteristics either
+          -- way -- sound because an inherent ability's condition reads a PLAYER
+          -- (CR 702.179d's "your speed"), never the object it hangs on, there
+          -- being none to read.
+          --
+          -- CR 303.4b's host is left unsupplied here for that same reason: `oid` is
+          -- the ability object, which CR 303.4 never attaches to anything, so the
+          -- field would be Nothing however it was filled.
+          case TriggeredAbility.intervening ability of
+            Just cond
+              | not (interveningStillHolds gs obj oid (TriggeredAbility.condition ability) cond) ->
+                  State.modify' (Game.cease oid)
+            _ ->
+              let chosen = Binding.modesOf (Object.bindings obj)
+                  modal = TriggeredAbility.modal ability
+               in Resolve.resolveModesWith runSubgame oid oid (Modal.chosenModes chosen modal)
+
+-- CR 608.2a's re-check of an intervening "if", asked of a triggered ability that
+-- is ALREADY ON THE STACK: does its condition still hold? False is the removal
+-- the two arms above perform.
+--
+-- ONE function for both of them, which is what keeps rule 608.2a from meaning
+-- one thing for a borne trigger and another for an inherent one. The two arms
+-- differ only in which id stands in for the source -- the bearer for a borne
+-- ability, the ability object itself for an inherent one -- and passing
+-- Game.hostOf that id is right either way: CR 303.4 attaches nothing to an
+-- ability object, so the field is Nothing for the inherent arm however it is
+-- filled.
+--
+-- The TRIGGER CONDITION rides in beside them for CR 107.3m: it is what
+-- Parun.Engine.Condition.inheritedX cases on to seed the announced X the clause may
+-- read, and Event.interveningHolds seeds it from the same function so the two
+-- checks cannot disagree.
+--
+-- `obj` is the ABILITY on the stack, whose Object.owner is CR 109.5's "you" and
+-- whose bindings supply the context's slots; `srcId` is what the condition's own
+-- Filter.IsSource means. The view is Projection.viewWithLastKnownAnywhere for the
+-- reason the arms above give: CR 608.2h is owed to every object the clause reads.
+--
+-- Named rather than inlined so a test can ask the resolution's own question
+-- without driving a board that cannot tell the two answers apart --
+-- Parun.SpecialActionSpec's Rift Bolt pair is the caller that needs it, CR
+-- 702.62a's "if it's exiled" being a clause whose two readings agree on today's
+-- board (see Parun.Engine.Keyword.stillExiled).
+interveningStillHolds :: GameState.GameState -> Object.Object -> ObjectId -> TriggerCondition.TriggerCondition -> Condition.Type.Condition -> Bool
+interveningStillHolds gs obj srcId trigger =
+  Condition.holds
+    (Projection.viewWithLastKnownAnywhere gs)
+    -- CR 607.5: the choices of the abilities the trigger came with, which it
+    -- froze as it went on the stack, whatever its source has since become.
+    (Projection.framedByBindings gs (Object.bindings obj) (Projection.framedWith (SourceContext.choicesOf (Maybe.fromMaybe (Game.acquisitionOf srcId gs) (Game.frozenAcquisition (Object.source obj))) srcId gs) srcId gs (Filter.contextIn gs (Just (Object.owner obj)) (Just srcId))) {Filter.boundAmounts = Condition.inheritedX trigger srcId gs})
+    gs
+    srcId
+
+-- The no-subgame resolve-top (every existing caller and test): a resolving spell
+-- or ability with a PlaySubgame effect would draw. Engine's live loop uses
+-- resolveTopWith.
+resolveTop :: Game ()
+resolveTop = resolveTopWith Resolve.noSubgame
+
+-- The object or player an Aura spell's enchant slot names (CR 303.4 / 303.4a).
+-- Nothing when the slot is unbound, which CR 303.4a makes unreachable for a cast
+-- Aura -- the slot is a required target, and rule 702.5a prints no "up to", so
+-- it names exactly one recipient.
+--
+-- The recipient is handed on UNCHANGED, tag and all, so CR 303.4c's re-check
+-- (Sba.stillLegalEnchant) can compare the stored value against the same pool's
+-- candidates without re-deriving how it is referenced. Event's CR 303.4f arm gets
+-- the same tag a different way, off Attach.attachmentFor, because there is no cast
+-- target for it to hand on; routing this one through attachmentFor too would let a
+-- legally targeted Aura whose admission answer differs cancel its own resolution.
+enchantedBy :: ObjectId -> GameState.GameState -> Maybe Recipient.Recipient
+enchantedBy oid gs = case Game.lookupObject oid gs of
+  Nothing -> Nothing
+  Just obj -> Map.lookup Card.enchantSlot (Binding.oneBySlot (Binding.targetsOf (Object.bindings obj)))
+
+-- CR 702.140c's "target creature", read off the slot rule 702.140a's ability
+-- added -- `enchantedBy` above's shape one keyword over. Nothing where the slot
+-- was never filled, and nothing where the target is not an object, which CR
+-- 702.140a's Pool.Creatures already excludes.
+mutatingTarget :: ObjectId -> GameState.GameState -> Maybe ObjectId
+mutatingTarget oid gs = do
+  obj <- Game.lookupObject oid gs
+  Map.lookup Card.mutateSlot (Binding.objectSlots (Object.bindings obj))
+
+-- CR 608.3 for a resolving spell that has a printing behind it -- CR 108's card
+-- (Source.OfCard) and CR 112.1a's copy of one (Source.OfSpellCopy), which CR 608.2
+-- resolves "exactly as it resolves the original": effects then CR 608.2n's
+-- graveyard for a nonpermanent, where CR 704.5e removes a copy; the battlefield
+-- for a permanent, where CR 608.3f makes a copy a token AS IT ARRIVES --
+-- Parun.Engine.Event's zone-change funnel rewrites the arriving incarnation's
+-- Source, so the two arms share every line here and neither asks which it holds.
+-- ONE classification for both: is-it-a-permanent, read off the type line.
+--
+-- Unreachable `_`: a PrintingId is minted only by Game.intern, which inserts, and
+-- the caller looked the object up. Drops the id rather than wedging the loop,
+-- which is what resolveTopWith's arms do for a source with no card behind it.
+resolveCardBacked :: Game Result -> ObjectId -> [ObjectId] -> PrintingId.PrintingId -> Game ()
+resolveCardBacked runSubgame oid rest printingId = do
+  gs <- State.get
+  case (Game.lookupObject oid gs, Game.cardOfPrinting printingId gs) of
+    (Just obj, Just card) -> do
+      -- CR 702.103e: "As a bestowed Aura spell begins resolving, if its
+      -- target is illegal, it ceases to be bestowed and the effect making
+      -- it an Aura spell ends. It continues resolving as a creature
+      -- spell." CR 608.3b is the same sentence from the resolution side,
+      -- and routes such a spell to CR 608.3a.
+      --
+      -- BEFORE the Aura test below rather than inside the CR 608.2b
+      -- fizzle arm it replaces, and that ordering is the whole of the
+      -- fix: is-it-an-Aura is a projection read, and CR 702.103b's effect
+      -- is minted from this very field
+      -- (Parun.Engine.Projection.bestowGathered). Clearing it after the
+      -- branch was taken would leave the spell in the Aura arm it no
+      -- longer belongs in.
+      --
+      -- The CR 608.2b question (Resolve.targetsAllIllegal) stands in for
+      -- rule 702.103e's "its target": bestow grants exactly one target,
+      -- the enchant slot CR 702.103b adds, and Nyxborn Rollicker --
+      -- data/cards/'s one bestow card -- prints no other. A bestowed spell
+      -- that ALSO printed a still-legal target would keep resolving as an
+      -- Aura here, where rule 702.103e reads the enchant slot alone.
+      --
+      -- One-way, like Parun.Engine.Sba's CR 702.103f clear: nothing sets
+      -- the field back.
+      Monad.when (Object.bestowed obj && Resolve.targetsAllIllegal oid gs) $
+        State.modify' (\g -> g {GameState.objects = Map.adjust (\o -> o {Object.bestowed = False}) oid (GameState.objects g)})
+      -- Re-read, so every classification below sees the projection the
+      -- clear above produced. `obj` is NOT re-read: the clear touches one
+      -- Bool, and the fields taken off `obj` further down (its face, its
+      -- facing, its default controller) are none of them that Bool.
+      --
+      -- A REGRESSION FENCE at the Aura test alone, said plainly rather
+      -- than left to look tested: pointing that one read back at `gs`
+      -- leaves the suite green, because an unbestowed spell has no
+      -- enchant slot and Resolve.targetsAllIllegal answers False for a
+      -- spell with none, so the Aura arm hands the same board back. It is
+      -- CR 702.103e's "the effect making it an Aura spell ends" written
+      -- out, not a passing test.
+      --
+      -- CR 702.140b: "as a mutating creature spell begins resolving, if its
+      -- target is illegal, it ceases to be a mutating creature spell and
+      -- continues resolving as a creature spell and will be put onto the
+      -- battlefield under the control of the spell's controller". The bestow
+      -- clear above, line for line: the record is what the merge branch below
+      -- reads, so it has to be taken back BEFORE that branch is chosen, and
+      -- Resolve.targetsAllIllegal stands in for rule 702.140b's "its target"
+      -- because rule 702.140a's ability adds exactly one target slot and no
+      -- mutate card in data/cards/ prints another.
+      --
+      -- One-way, the bestow clear's posture: nothing sets the field back.
+      Monad.when (Object.mutating obj && Resolve.targetsAllIllegal oid gs) $
+        State.modify' (\g -> g {GameState.objects = Map.adjust (\o -> o {Object.mutating = False}) oid (GameState.objects g)})
+      gs1 <- State.get
+      -- CR 709.3b: if this spell has a face singled out, its classification
+      -- is read off THAT half, not the two combined -- routed through
+      -- Game.faceOf rather than Card.combined directly, so this
+      -- is-it-a-permanent/is-it-an-Aura check narrows the same way every
+      -- OTHER characteristic read of a stack object already does
+      -- (Cost.costsFor resolves the same way, through Game.resolveFace).
+      -- Action.playableLands asks the same question of a land play through
+      -- Card.landFaces, which CR 712.12 gives the same shape: a chosen face
+      -- where the layout has one, and the combined view where it does not.
+      --
+      -- Falls back to the combined view for parity with faceOf's own
+      -- fallback; unreachable here since `obj` already resolved via this
+      -- same `oid`.
+      let face = Maybe.fromMaybe (Card.combined card) (Game.faceOf oid gs1)
+          -- CR 712.13 / 709.5d: the half this spell showed on the stack,
+          -- carried onto the permanent for the layouts whose rules say so and
+          -- dropped for the rest (Card.enteringFace). What the permanent then
+          -- does with it is the MOVE's question and not this one -- CR 712.13
+          -- leaves a double-faced permanent showing the face, CR 709.5d turns
+          -- a Room's into an unlocked designation. Read off `obj` rather than
+          -- off `face`, because what the rules carry is the object's own
+          -- record of which half is up and not the face a fallback resolved
+          -- to. Asked of the halves the spell's copiable values give it (CR
+          -- 709.5b), so a card carrying a Room's opens the door it was cast as.
+          entering = Card.enteringFace (Maybe.fromMaybe card (Game.halvesCardOf obj card)) (Object.face obj)
+          -- CR 110.2b: "the permanent's controller by default is the player
+          -- who put that spell onto the stack" -- CR 405.4's caster, which is
+          -- what Object.enteredUnder holds for a spell and what
+          -- defaultControllerOf reads off it. It is Object.owner for every
+          -- spell whose caster owns the card, which is why this argument was
+          -- Nothing until one did not (#83).
+          --
+          -- The DEFAULT and not Resolve.spellController's projected answer,
+          -- which is the same rule's other half: an effect that gave someone
+          -- control of the permanent SPELL leaves them controlling the
+          -- permanent, and CR 110.2b flags that as a different thing from the
+          -- default precisely because CR 800.4c tells them apart. Writing a
+          -- layer-2 answer into this field would put a control-changing
+          -- effect on the wrong side of that line (see Parun.Types.Object).
+          -- A stolen spell's thief controls the permanent through the layer-2
+          -- effect CarryOver.Carried re-keys onto it (below), not through
+          -- this field; Parun.SpecialActionSpec's Aethersnatch pair observes it.
+          --
+          -- PROVED by Parun.CastRestrictionSpec's HostageTaker group: alice casts
+          -- bob's Goblin Piker out of the Taker's exile and the permanent
+          -- answers to alice, so Object.owner here goes red.
+          controller = Projection.defaultControllerOf obj
+          -- CR 702.140c: is this still a mutating creature spell with a legal
+          -- target? Read off `gs1` and not `obj`, since the CR 702.140b clear
+          -- above may have taken the record back.
+          mutating = maybe False Object.mutating (Game.lookupObject oid gs1)
+          -- CR 702.190b: the riders a spell cast for its sneak cost carries onto
+          -- the permanent it becomes -- tapped, and attacking whatever the
+          -- creature the cost returned was attacking. Nothing for every other
+          -- cast, which enters untapped and out of combat.
+          --
+          -- Read off Object.castUsing, the record CR 601.2b's announcement wrote
+          -- (Parun.Engine.Cast), which is rule 702.190b's own "whose sneak cost
+          -- was paid" -- a classification of the cost that was paid, never the
+          -- identity of the spell's effect.
+          sneak = Keyword.castUsingEntry (Object.castUsing obj)
+          -- Resolved against `gs1`, BEFORE the move: the slot the cost bound
+          -- lives on the spell, and CR 400.7 deletes that object as it enters.
+          -- CR 608.2h is what still answers, the returned creature having left
+          -- the battlefield as the cost was paid.
+          sneakAttack = sneak >>= \riders -> Resolve.entryAttack Map.empty oid riders gs1
+          -- CR 608.3's permanent entry, named so that the Aura branch and the
+          -- refusing mutate branch below reach the same move rather than
+          -- restating it. `seed` is CR 303.4's host and `facing` CR 708.4's
+          -- status, the two things those branches differ in.
+          entersAs seed facing = do
+            Monad.void (Resolve.noteResolved oid (Resolve.spellController obj oid gs1))
+            -- CR 400.7b, stored against the spell so the move's CarryOver.Carried
+            -- re-keys it onto the permanent before CR 614.12's entry loop reads
+            -- it.
+            State.modify' (carryGrants oid)
+            arrivals <- Event.changeZoneAttaching Nothing Set.empty oid Zone.Battlefield LibraryPosition.defaultValue seed (maybe TapState.Untapped EntryRiders.tapped sneak) Map.empty (Just controller) entering facing False CarryOver.Carried False Seq.empty
+            -- After the move, against the instances the permanent has.
+            State.modify' (\g -> foldr settlePromises g arrivals)
+            -- AFTER the move, ninjutsu's ordering one opcode over
+            -- (Parun.Engine.Resolve.Effect's MoveToZone arm): the permanent has
+            -- to be on the battlefield before CR 508.4 can put it in combat, and
+            -- CR 506.3a-c are guards inside that function rather than here.
+            Monad.forM_ sneakAttack (\choice -> Monad.mapM_ (Combat.putOntoBattlefieldAttacking choice) arrivals)
+            armBecame oid obj gs1 arrivals
+          entersOrdinarily = entersAs Nothing (Object.facing obj)
+       in if not (Card.isPermanent face)
+            then Resolve.resolveSpellWith runSubgame oid
+            else
+              if mutating
+                then -- CR 702.140c: "as a mutating creature spell resolves, if
+                -- its target is legal, it doesn't enter the battlefield. Rather,
+                -- it merges with the target creature and becomes one object
+                -- represented by more than one card or token". So this branch
+                -- takes NO zone change at all: `Event.merge` rewrites the
+                -- target's component list and forgets the spell, which is CR
+                -- 730.2b's "isn't considered to have just entered the
+                -- battlefield" written as the absence of an entry rather than as
+                -- a flag on one.
+                --
+                -- The side is asked HERE, as the spell resolves, which is where
+                -- rule 702.140c puts the choice -- not at CR 601.2b's
+                -- announcement, where the target itself is chosen. Never elided:
+                -- CR 730.2a makes the two answers differ in the merged
+                -- permanent's every characteristic.
+                --
+                -- A merge that REFUSES (Event.mergeable's own note: a spell rule
+                -- 730.2's "card or copy" cannot name) falls through to the
+                -- ordinary entry below, so the spell resolves as the creature
+                -- spell it also is rather than being lost. Asked BEFORE the side
+                -- is, so a player is never put a question whose answer the
+                -- refusal would then discard.
+                  case mutatingTarget oid gs1 of
+                    Just victim | Event.mergeable oid victim gs1 -> do
+                      side <- Game.choose (Prompt.ChooseMutateSide (Decide.deciderFor controller gs1) controller oid victim)
+                      Monad.void (Resolve.noteResolved oid (Resolve.spellController obj oid gs1))
+                      merged <- Event.merge oid victim side
+                      -- A FENCE, said plainly: `mergeable` above asked the same
+                      -- two reads off the same board, and nothing between them
+                      -- can change it, so this never fires.
+                      Monad.unless merged entersOrdinarily
+                    _ -> entersOrdinarily
+                else
+                  -- `entering` is carried on BOTH branches below: CR 712.13 is
+                  -- about the resolving spell rather than about which kind of
+                  -- permanent it becomes, and an Aura back face would carry its
+                  -- face for the same reason a creature one does.
+                  --
+                  -- CarryOver.Carried is on both for CR 400.7a and CR 400.7c,
+                  -- and these two branches are the only places in the engine
+                  -- that pass it: an effect that changed the permanent SPELL,
+                  -- and a prevention shield that watched it as a source of
+                  -- damage, keep applying to the permanent it becomes. The move
+                  -- itself performs the re-key, before the CR 614.1c entry loop
+                  -- reads the entering permanent's own rows (Event.carryOver,
+                  -- CR 614.12).
+                  if not (Set.member Subtype.Aura (Projection.subtypesOf oid gs1))
+                    then -- CR 708.4's last sentence: "the permanent the spell becomes
+                    -- will be a face-down permanent". A STATUS carried across a
+                    -- zone change, which CR 400.7 otherwise forgets -- so it is
+                    -- read off the resolving spell and handed to the move,
+                    -- exactly as `entering` is. A closed-half read: rule 110.5's
+                    -- status, never the card's identity.
+                    --
+                    -- The Aura branch below carries FaceUp instead, and cannot
+                    -- need this: it is reached only for a spell the projection
+                    -- calls an Aura, and a face-down spell's face is
+                    -- Card.faceDownFace -- whose subtypes are the ones the
+                    -- listing names, and no listing in the pool names Aura.
+                    --
+                    -- `entersOrdinarily` is that move, named above because CR
+                    -- 702.140c's branch reaches it too when a merge refuses.
+                      entersOrdinarily
+                    else -- CR 303.4a made this spell target, so CR 608.2b applies
+                    -- to it. THE INVARIANT: is-it-an-Aura is a SUBTYPE read
+                    -- (CR 205.3h), the same closed-half classification as
+                    -- is-it-a-permanent above it.
+                    --
+                    -- Off the PROJECTION rather than off the printed type line,
+                    -- because CR 702.103b's bestow makes a spell an Aura on the
+                    -- stack that prints no such subtype -- the same read
+                    -- Parun.Engine.Sba.cannotBeAttached and
+                    -- Parun.Engine.Attach.attachmentFor already take one zone
+                    -- over. Resolve.targetSlotsOf, which the fizzle test below
+                    -- goes through, reads the enchant ability off that same
+                    -- projection, so the branch and its target check cannot
+                    -- disagree about what an Aura is.
+                    --
+                    -- A spell that was bestowed and lost its target is not
+                    -- here: CR 702.103e unbestowed it above, so the projection
+                    -- no longer calls it an Aura and it took the branch
+                    -- above.
+                      if Resolve.targetsAllIllegal oid gs1
+                        then Event.changeZone oid Zone.Graveyard
+                        else
+                          -- CR 303.4: an Aura ENTERS attached, so the target is
+                          -- seeded into the new incarnation rather than written
+                          -- after the move (see Event.changeZoneAttaching).
+                          entersAs (enchantedBy oid gs1) Facing.FaceUp
+    _ -> State.put gs {GameState.stack = rest}
+
+-- CR 400.7b: "effects from static abilities that grant an ability to a permanent
+-- spell that functions on the battlefield continue to apply to the permanent
+-- that spell becomes". Each such grant another object's static ability is making
+-- to the resolving spell is STORED against it, at that ability's timestamp (CR
+-- 613.7a), for Event.carryOver to re-key across the move -- the road a
+-- permission's rider already takes (Event.permissionRiders).
+--
+-- Expiry.Never is CR 611.3d's "if no duration is stated, it lasts until the
+-- end of the game": the grant outlives its source leaving, and a static
+-- ability states no duration of its own.
+--
+-- Only a grant `functionsOnBattlefield` passes is stored, which is the rule's
+-- "that functions on the battlefield": a prowl or a split second a spell was
+-- given stays behind. Parun.PlanechaseSpec's "CR 400.7b" group proves both
+-- halves.
+--
+-- A keyword granted at the spell's own mana cost is stored at the cost it had
+-- HERE, the cost Object.castUsing recorded if it was paid: CR 702.152b's "that
+-- blitz ability" is the instance paid for, so a permanent that becomes a copy
+-- of something else keeps Henzie "Toolbox" Torre's blitz as paid. Parun.CastSpec's
+-- "Henzie" group proves it with a Clone.
+carryGrants :: ObjectId -> GameState.GameState -> GameState.GameState
+carryGrants oid gs =
+  let subtypes = Projection.subtypesOf oid gs
+      priced modification = case modification of
+        Modification.GainKeywordAtManaCost keyword -> Modification.GainKeyword (Keyword.withCost keyword (Cost.MkCost (PC.manaCost (Projection.project oid gs)) []))
+        _ -> modification
+      row (src, ts, modification) =
+        ContinuousEffect.MkContinuousEffect
+          { ContinuousEffect.source = src,
+            ContinuousEffect.timestamp = ts,
+            ContinuousEffect.expiry = Expiry.Type.Never,
+            ContinuousEffect.modification = priced modification,
+            ContinuousEffect.affected = Affected.TheseObjects (Set.singleton oid)
+          }
+      rows = fmap row (filter (\(_, _, modification) -> functionsOnBattlefield subtypes modification) (Projection.staticPartsOn oid gs))
+   in if null rows then gs else gs {GameState.continuousEffects = GameState.continuousEffects gs <> rows}
+
+-- CR 400.7d / 702.174a: the gift payments and promises a permanent carried from
+-- the spell it was, kept for the instances it has as it enters: its own, and the
+-- grants carried onto it (carryGrants). Each payment stays keyed by its instance,
+-- so the card's own payoff reads only its own gift's (CR 607.2i,
+-- KeywordDesignator.Printed). Only promised instances keep an entry, and the
+-- promise of the ith becomes Own i, the ordinal Keyword.gift's ith enters
+-- trigger reads beside the ith entry of Object.paidCosts.
+--
+-- A lost instance's payment is dropped with its promise: no ability the
+-- permanent has is linked to it (CR 607.2i, 607.5), and an own instance a copy
+-- effect overwrote is already gone (Event.unlinkLostPayments). So a
+-- Scrapshooter entering as Essence of the Wild gives the Host's gift to the
+-- opponent promised it, which the scenarios
+-- cr-607-5-scrapshooter-entering-as-essence-of-the-wild-gives-the-host-s-gift-to-bob-and-not-its-own-to-carol
+-- and cr-607-5-a-clone-of-scrapshooter-whose-paid-host-gift-was-lost-gives-no-gift
+-- prove.
+settlePromises :: ObjectId -> GameState.GameState -> GameState.GameState
+settlePromises oid gs = case Game.lookupObject oid gs of
+  Nothing -> gs
+  Just obj ->
+    let acquisition = Game.acquisitionOf oid gs
+        promises = Maybe.fromMaybe Map.empty (Game.currentChoice Chosen.Players oid gs)
+        gifts = [something | Keyword.Type.Gift something <- Map.keys (Object.paidCosts obj)]
+        settle (paid, kept) something =
+          let keyword = Keyword.Type.Gift something
+              live = Projection.keywordInstances keyword oid gs
+              promisedTo which = Map.lookup (PlayerChoice.Promised something which) promises
+              promised = [(which, opponent) | which <- live, Just opponent <- [promisedTo which]]
+              settled = Map.fromList [(which, 1 :: Natural) | (which, _) <- promised]
+              unpromised = Map.filterWithKey (\key _ -> not (isPromiseOf something key)) kept
+              rekeyed = Map.fromList [(PlayerChoice.Promised something (KeywordInstance.Own i), opponent) | (i, (_, opponent)) <- zip [1 ..] promised]
+              settledPaid = if any (> 0) settled then Map.insert keyword settled paid else Map.delete keyword paid
+           in (settledPaid, Map.union rekeyed unpromised)
+        isPromiseOf something key = case key of
+          PlayerChoice.Promised g _ -> g == something
+          PlayerChoice.AsEnters -> False
+        (paid', promises') = List.foldl' settle (Object.paidCosts obj, promises) gifts
+        settledObject = obj {Object.paidCosts = paid'}
+     in if null gifts then gs else Game.recordChoice Chosen.Players acquisition (const (Just promises')) oid (gs {GameState.objects = Map.insert oid settledObject (GameState.objects gs)})
+
+-- CR 400.7b's "an ability ... that functions on the battlefield", asked of one
+-- part of a grant. A keyword by Keyword.functionsOnBattlefield; a whole quoted
+-- ability by the CR 113.6 zone each of its kinds already answers -- a triggered
+-- ability's trigger conditions and effect (Trigger.zonesFunctionedIn), an
+-- activated ability's cost and effect (AbilityZone.functionsIn), a static
+-- ability's or replacement's stated zones -- with the default battlefield for a
+-- rules or player ability, and the stack for the three CR 113.6d puts there.
+-- Anything that is not an ability (a colour, a power) stops at the move: CR
+-- 400.7a carries only what spells and activated or triggered abilities did.
+functionsOnBattlefield :: Set.Set Subtype.Subtype -> Modification.Modification (GrantedAbility.GrantedAbility Card.Type.Card) -> Bool
+functionsOnBattlefield subtypes modification = case modification of
+  Modification.GainKeyword keyword -> Keyword.functionsOnBattlefield keyword
+  Modification.GainKeywordAtManaCost keyword -> Keyword.functionsOnBattlefield (Keyword.withCost keyword (Cost.MkCost Nothing []))
+  Modification.GainAbility ability -> case ability of
+    GrantedAbility.Triggered triggered -> Set.member Zone.Battlefield (Trigger.zonesFunctionedIn subtypes Map.empty triggered)
+    GrantedAbility.Activated activated -> AbilityZone.functionsIn Zone.Battlefield Map.empty Zone.Battlefield activated
+    GrantedAbility.Static static -> Projection.functionsFromZone Zone.Battlefield static
+    GrantedAbility.Replacement replacement -> Projection.functionsFromZoneOfRow Zone.Battlefield replacement
+    GrantedAbility.Rules _ -> True
+    GrantedAbility.Player _ -> True
+    GrantedAbility.SelfCostReduction _ -> False
+    GrantedAbility.SelfAlternativeCost _ -> False
+    GrantedAbility.SelfSpendManaAsThough _ -> False
+  _ -> False
+
+-- What a spell's Object.castUsing record buys the permanent it becomes: CR
+-- 702.109a's, CR 702.152a's and CR 702.185a's delayed ability, and CR 702.62a's
+-- haste.
+--
+-- CR 702.109a's, CR 702.152a's and CR 702.185a's second static ability: a spell
+-- cast for its dash, blitz or warp cost creates, as it resolves (CR 603.7a), a
+-- delayed triggered ability naming "the permanent this spell becomes" -- the
+-- arrival, bound under Keyword.becameSlot, so a later zone change leaves it
+-- naming nothing (CR 603.7c). Not a trigger of the permanent's: nothing goes on
+-- the stack as it enters.
+--
+-- CR 603.7d: the spell is the source and its controller as it resolved the
+-- controller. A copy of the spell carries the record too (CR 707.10,
+-- Keyword.copiedCastUsing), and so arms its own; Parun.CastSpec's "Dash" group
+-- proves both. An arrival a replacement put anywhere but the battlefield is no
+-- permanent and arms nothing, and the Aura branch arms like the other: both are
+-- rule 702.109a written out and unobserved, no dash, blitz or warp card in
+-- data/cards/ being an Aura or entering elsewhere.
+--
+-- ONLY WHILE THE SPELL STILL HAS THE KEYWORD IT WAS CAST FOR, read off its
+-- projection on the pre-move board: the delayed ability is that keyword's own
+-- static ability's, so a copy of a spell whose blitz an effect granted the
+-- original (CR 707.2) and a spell that lost its granted blitz before resolving
+-- arm nothing. Parun.PlanechaseSpec's Double Major case proves it.
+armBecame :: ObjectId -> Object.Object -> GameState.GameState -> Seq.Seq ObjectId -> Game ()
+armBecame oid obj gs1 arrivals = do
+  gs <- State.get
+  let permanents = filter (\arrival -> fmap Object.zone (Game.lookupObject arrival gs) == Just Zone.Battlefield) (Foldable.toList arrivals)
+      stillHas keyword = Map.member keyword (Projection.keywordsOf oid gs1)
+      ability = Keyword.resolutionDelayedAbility (Monad.mfilter stillHas (Object.castUsing obj)) >>= Keyword.mintedDelayedAbility
+      arm delayed permanent = Event.armDelayed delayed oid (Resolve.spellController obj oid gs1) (Map.singleton Keyword.becameSlot (Binding.toObject permanent)) (Just TurnWindow.AnyTurn) Nothing
+  Foldable.for_ ability (\delayed -> State.modify' (\g -> List.foldl' (flip (arm delayed)) g permanents))
+  -- CR 702.62a's last sentence, off the same record and at the same moment the
+  -- delayed abilities above are armed: a spell cast for the cost suspend's third
+  -- ability offered gains haste, which the permanent it becomes is what carries.
+  --
+  -- "IF YOU CAST A CREATURE SPELL THIS WAY" is asked of the SPELL, off the
+  -- projection rather than the printed card and on the pre-move board where it
+  -- still exists -- the reading the Aura branch above takes of its own subtype
+  -- question. So a spell whose type line an effect changed answers for what it
+  -- was, not for whatever the permanent turns out to be.
+  --
+  -- "YOU" IS THE CASTER (CR 405.4, defaultControllerOf), not the controller the
+  -- spell resolved under, and "until you lose control of the spell" ended for
+  -- good (CR 611.2b) if any layer-2 effect ever gave the spell to someone else:
+  -- a spell's control changes only by a resolved effect over a fixed id set
+  -- (installControl, CR 611.2c), and one taken back is still in the list. A
+  -- caster who kept the spell but not the permanent is grantHaste's never-started
+  -- duration. Parun.SpecialActionSpec's Aethersnatch pair proves the scan; the
+  -- caster argument is a REGRESSION FENCE behind it, since a board where it
+  -- differs from the resolving controller fails the scan too.
+  let caster = Projection.defaultControllerOf obj
+      gaveAway eff = case (ContinuousEffect.modification eff, ContinuousEffect.affected eff) of
+        (Modification.SetController pid, Affected.TheseObjects oids) -> pid /= caster && Set.member oid oids
+        _ -> False
+      keptSpell = not (any gaveAway (GameState.continuousEffects gs1))
+      hasted = if keptSpell && Set.member CardType.Creature (Projection.cardTypesOf oid gs1) then Keyword.castUsingHaste (Object.castUsing obj) else Nothing
+  Foldable.for_ hasted $ \duration ->
+    Foldable.for_ permanents (grantHaste duration caster)
+
+-- CR 611.2: one stored continuous effect granting haste, for a duration that
+-- ends when its own source stops being controlled by `controller`.
+--
+-- A STORED effect and not a stamp, Parun.Engine.Event's riot arm's reasons: it
+-- lands in CR 613.1f's layer 6 with a timestamp for an ability-remover to be
+-- ordered against, and CR 611.2c fixes the affected set to the one permanent
+-- here rather than re-deriving it.
+--
+-- The SOURCE is the permanent itself, riot's reading of CR 113.7 one keyword
+-- over: it is the object the grant is about, and the duration's clause counts it
+-- through Filter.IsSource. No bindings: this is a resolution's aftermath rather
+-- than a clause of one, so the duration can name no slot.
+grantHaste :: Duration.Duration -> PlayerId -> ObjectId -> Game ()
+grantHaste duration controller permanent =
+  State.modify' $ \g ->
+    case Expiry.arm (flip Game.acquisitionOf) Map.empty controller permanent duration g of
+      -- CR 611.2b: the duration never started -- the caster does not control the
+      -- arrival -- so nothing is stored.
+      Nothing -> g
+      Just expiry ->
+        let (ts, g1) = Game.freshTimestamp g
+            eff =
+              ContinuousEffect.MkContinuousEffect
+                { ContinuousEffect.source = permanent,
+                  ContinuousEffect.timestamp = ts,
+                  ContinuousEffect.expiry = expiry,
+                  ContinuousEffect.modification = Modification.GainKeyword Keyword.Type.Haste,
+                  ContinuousEffect.affected = Affected.TheseObjects (Set.singleton permanent)
+                }
+         in g1 {GameState.continuousEffects = eff : GameState.continuousEffects g1}

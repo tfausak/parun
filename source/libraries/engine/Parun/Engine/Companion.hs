@@ -1,0 +1,255 @@
+-- Rule 702.139 in the one voice the rest of the engine cannot supply for itself:
+-- CR 103.2b's pre-game reveal of a card whose condition this player's starting
+-- deck fulfills, and CR 116.2g's special action that pays {3} to put that card
+-- into their hand from outside the game.
+--
+-- Parun.Engine.Foretell is the same module for rule 702.143 and this one is
+-- written to its shape -- a gate, an offer, and a performer that pays before it
+-- moves anything. What is different is the ZONE the card comes from: outside the
+-- game is not one (CR 400.11), so no object stands for the companion and
+-- Parun.Engine.Event.bringChosen is the door rather than a zone change.
+--
+-- THE INVARIANT: rule 702 is part of the rulebook, so reading Keyword.Companion
+-- here is the same closed-half act as reading a Phase. This module never asks
+-- which CARD is being revealed -- the condition is a Filter the card carries, and
+-- `fulfilled` evaluates it through the same generic matcher a wish's filter goes
+-- through.
+module Parun.Engine.Companion where
+
+import qualified Control.Monad as Monad
+import qualified Control.Monad.Trans.State.Strict as State
+import qualified Data.Foldable as Foldable
+import qualified Data.List as List
+import qualified Data.List.NonEmpty as NonEmpty
+import qualified Data.Map.Strict as Map
+import qualified Data.Maybe as Maybe
+import qualified Parun.Engine.Ante as Ante
+import qualified Parun.Engine.Cost as Cost
+import qualified Parun.Engine.Decide as Decide
+import qualified Parun.Engine.Event as Event
+import qualified Parun.Engine.Filter as Filter
+import qualified Parun.Engine.Game as Game
+import qualified Parun.Engine.Projection.View as Projection
+import qualified Parun.Engine.Turn as Turn
+import Parun.Types.Cost (Cost)
+import qualified Parun.Types.Cost as Cost.Type
+import qualified Parun.Types.Face as Face
+import qualified Parun.Types.Facing as Facing
+import qualified Parun.Types.Filter as Filter.Type
+import Parun.Types.Game (Game)
+import Parun.Types.GameState (GameState)
+import qualified Parun.Types.GameState as GameState
+import Parun.Types.Keyword (Keyword)
+import qualified Parun.Types.Keyword as Keyword
+import qualified Parun.Types.ManaAbilityPerformer as ManaAbilityPerformer
+import qualified Parun.Types.ManaCost as ManaCost
+import qualified Parun.Types.ManaSymbol as ManaSymbol
+import qualified Parun.Types.OutsideCard as OutsideCard
+import qualified Parun.Types.OutsideDestination as OutsideDestination
+import qualified Parun.Types.OutsideObject as OutsideObject
+import qualified Parun.Types.PaymentSubject as PaymentSubject
+import qualified Parun.Types.Player as Player
+import Parun.Types.PlayerId (PlayerId)
+import Parun.Types.PrintingId (PrintingId)
+import qualified Parun.Types.Prompt as Prompt
+
+-- CR 116.2g: what the special action costs -- "may pay {3} to put that card from
+-- outside the game into their hand".
+--
+-- Minted here rather than read off Keyword.Companion, Parun.Engine.Foretell's
+-- `actionCost` reason: rule 116.2g fixes this amount for every printing, and the
+-- keyword's own payload is the CONDITION rather than a price.
+actionCost :: Cost Keyword
+actionCost =
+  Cost.Type.MkCost
+    { Cost.Type.mana = Just (ManaCost.MkManaCost [ManaSymbol.Generic 3]),
+      Cost.Type.components = []
+    }
+
+-- CR 702.139a's condition, read off a printing's printed face, or Nothing for a
+-- printing with no companion ability.
+--
+-- The PRINTED face, Parun.Engine.Event.eligible's reason: a card outside the game
+-- has no object to project (CR 400.11), and rule 702.139a says the ability
+-- "functions outside the game", so there is nothing else to read it from.
+conditionOf :: PrintingId -> GameState -> Maybe (Filter.Type.Filter Keyword)
+conditionOf printingId gs = do
+  card <- Game.cardOfPrinting printingId gs
+  let face = Game.resolveFaceFor Nothing card
+  Maybe.listToMaybe
+    ( Maybe.mapMaybe
+        (\keyword -> case keyword of Keyword.Companion predicate -> Just predicate; _ -> Nothing)
+        (Foldable.toList (Face.keywordSet face))
+    )
+
+-- CR 702.139a: does this player's STARTING DECK fulfill the condition? Every card
+-- in it must match, which is what makes one Filter enough to state a condition
+-- written "each [subject] card ... [requirement]" -- the implication is an @Or@.
+--
+-- Player.startingDeck and never the library, which is rule 702.139b's whole
+-- point: the deck as it stood once the sideboard was set aside and before the
+-- commander was, not what is left after CR 103.5's opening hands.
+--
+-- Matched through a BARE Filter.contextFor with no source and no slot bindings,
+-- Parun.Engine.Event.eligible's posture: nothing is resolving before the game
+-- begins, so no slot could be bound and no object could be the source.
+--
+-- Against the PRINTED face, though a starting-deck card does have a library
+-- object by the time this runs: CR 103.2b's moment is before the first turn, so
+-- no CR 611 continuous effect exists to have changed anything, and the printed
+-- face is the whole of what a projection could answer. It is also the only
+-- reading available for a Commander game's commander, which CR 702.139b counts
+-- and CR 903.6 has already put in the command zone.
+fulfilled :: Filter.Type.Filter Keyword -> PlayerId -> GameState -> Bool
+fulfilled predicate pid gs =
+  let context = Filter.contextIn gs (Just pid) Nothing
+      deck = maybe Map.empty Player.startingDeck (Map.lookup pid (GameState.players gs))
+      admits printingId = case Game.cardOfPrinting printingId gs of
+        Nothing -> False
+        Just card -> Filter.matches context (Projection.viewOfCard (Game.resolveFaceFor Nothing card)) predicate
+   in all (admits . fst) (filter (\(_, n) -> n > 0) (Map.toAscList deck))
+
+-- CR 103.2b: the cards this player may reveal as a companion -- the ones they own
+-- outside the game that have a companion ability whose condition their starting
+-- deck fulfills, in interning order.
+--
+-- Player.outsideTheGame and not the sideboard field on the deck, because rule
+-- 103.2b runs AFTER rule 103.2a has set the sideboard aside; Parun.Engine.Setup.createDeck
+-- is what interns it into the pool this reads.
+--
+-- In a subgame, CR 729.4's main-game objects (GameState.outsideObjects) are
+-- outside the game too, so each one this player owns is offered on the same
+-- terms -- Parun.Engine.Event.eligible's two sources. A FACE-DOWN one is not:
+-- CR 708.2 leaves it no abilities, so it has no companion ability to reveal.
+revealable :: PlayerId -> GameState -> [OutsideCard.OutsideCard]
+revealable pid gs =
+  let pool = maybe Map.empty Player.outsideTheGame (Map.lookup pid (GameState.players gs))
+      admits printingId = case conditionOf printingId gs of
+        Nothing -> False
+        Just predicate -> not (barredPrinting printingId) && fulfilled predicate pid gs
+      -- CR 407.3. A regression fence: no companion prints the ante reminder
+      -- (Scryfall o:"playing for ante" o:companion, 2026-10-08, no hit; a
+      -- companion printing it would refute this).
+      barredPrinting printingId = case Game.cardOfPrinting printingId gs of
+        Nothing -> False
+        Just card -> Ante.barred (GameState.settings gs) (Game.resolveFaceFor Nothing card)
+      fromPool = fmap (OutsideCard.InPool . fst) (filter (\(printingId, n) -> n > 0 && admits printingId) (Map.toAscList pool))
+      admitsOuter entry =
+        OutsideObject.owner entry == pid
+          && not (Facing.isFaceDown (OutsideObject.facing entry))
+          && admits (OutsideObject.printing entry)
+      fromOuter = fmap (OutsideCard.InAnotherGame . fst) (filter (admitsOuter . snd) (Map.toAscList (GameState.outsideObjects gs)))
+   in fromPool <> fromOuter
+
+-- CR 116.2g: is this card still outside the game, where the special action has
+-- to find it?
+stillOutside :: PlayerId -> OutsideCard.OutsideCard -> GameState -> Bool
+stillOutside pid card gs = case card of
+  OutsideCard.InPool printingId ->
+    Map.findWithDefault 0 printingId (maybe Map.empty Player.outsideTheGame (Map.lookup pid (GameState.players gs))) > 0
+  OutsideCard.InAnotherGame outerId -> Map.member outerId (GameState.outsideObjects gs)
+
+-- CR 103.2b: put the reveal to this player, and record what they revealed.
+--
+-- OPTIONAL, which is the rule's own "if any players WISH to reveal": the prompt
+-- is raised whenever there is anything to reveal, since declining is a real
+-- choice even where only one card is offered -- unlike CR 309.2a's dungeon, where
+-- a lone candidate leaves nothing to decide.
+--
+-- FILTERED, NOT TRUSTED, Parun.Engine.Dungeon.enter's posture: an answer naming a
+-- printing this player may not reveal is read as declining.
+--
+-- The card is NOT taken out of Player.outsideTheGame, which is rule 103.2b's last
+-- sentence: "the revealed card remains outside the game". CR 116.2g is what
+-- spends it.
+reveal :: PlayerId -> Game ()
+reveal pid = do
+  gs0 <- State.get
+  case NonEmpty.nonEmpty (revealable pid gs0) of
+    Nothing -> pure ()
+    Just offered -> do
+      answer <- Game.choose (Prompt.ChooseCompanion (Decide.deciderFor pid gs0) pid offered)
+      let chosen = case answer of
+            Nothing -> Nothing
+            Just card ->
+              if List.elem card (NonEmpty.toList offered) then Just card else Nothing
+      State.modify' $ \gs ->
+        gs
+          { GameState.players =
+              Map.adjust (\p -> p {Player.companion = chosen}) pid (GameState.players gs)
+          }
+
+-- CR 116.2g: may this player take the companion special action right now?
+--
+-- Four conjuncts, one per clause of the rule: they chose a companion, they have
+-- not taken the action yet this game, the window is a main phase of their own
+-- turn with the stack empty (Turn.sorcerySpeedWindow, which is CR 116.2k's
+-- window too), and the {3} is payable.
+--
+-- A FIFTH that rule 116.2g leaves implicit: the card is still outside the game.
+-- It fails where something else brought the revealed card in first -- a wish
+-- whose filter admits it (CR 400.11b) spends the same pool entry or outside
+-- object.
+--
+-- The payability check is Cost.canPay and NOT Cost.total's CR 601.2f
+-- adjustments, Parun.Engine.Foretell.canForetell's reason: that rule totals the
+-- cost of a spell being cast or an ability being activated, and a special action
+-- is neither (#90).
+--
+-- The PRIORITY clause has no conjunct, for the reason CR 116.2a's land play has
+-- none: legalActions is asked only of the priority holder.
+canTake :: PlayerId -> GameState -> Bool
+canTake pid gs = case Map.lookup pid (GameState.players gs) of
+  Nothing -> False
+  Just player -> case Player.companion player of
+    Nothing -> False
+    Just card ->
+      not (Player.companionTaken player)
+        && stillOutside pid card gs
+        && Turn.sorcerySpeedWindow pid gs
+        && Cost.canPay PaymentSubject.ForNeither pid (GameState.nextObjectId gs) actionCost gs
+
+-- CR 116.2g / 702.139a: pay {3} and put the companion into this player's hand.
+--
+-- REJECT-NOT-REPAIR, and the payment first, Parun.Engine.Foretell.foretell's
+-- reasons: a payment that fails restores the state from before it was attempted
+-- and the card stays outside the game.
+--
+-- The cost is priced against an id taken off the supply and given to no object.
+-- There is no source object to name, outside the game being no zone (CR 400.11),
+-- and rule 116.2g fixes the amount, so nothing a source could contribute is read;
+-- the id is a stand-in that makes every object lookup answer Nothing. TAKEN off
+-- the supply rather than peeked at, unlike canTake's, because a mana ability
+-- activated to pay this cost may mint an object, and the peeked id is exactly the
+-- one such an object would be given.
+--
+-- Event.bringChosen and not a zone change, Event.bringIn's reason: no object
+-- stood for the card, so the card is MINTED into the hand. That call spends the
+-- pool entry, or for a main-game object records CR 729.4a's crossing, which is
+-- CR 702.139c -- the card "remains in the game until the game ends", so a
+-- second action could not find it again even if the flag below did not stop
+-- one.
+take :: ManaAbilityPerformer.ManaAbilityPerformer -> PlayerId -> Game ()
+take perform pid = do
+  before <- State.get
+  if not (canTake pid before)
+    then pure ()
+    else case Map.lookup pid (GameState.players before) >>= Player.companion of
+      Nothing -> pure ()
+      Just card -> do
+        -- `before` is taken ahead of `freshObjectId`, which bumps
+        -- GameState.nextObjectId, so CR 733.1's reversal inside Cost.payAction
+        -- puts the counter back with the rest. Nothing observes it either way:
+        -- an object id is opaque and the counter only ever rises.
+        noSource <- State.state Game.freshObjectId
+        paid <- Cost.payAction perform before PaymentSubject.ForNeither 0 pid noSource actionCost
+        Monad.forM_ paid $ \_ -> do
+          -- CR 702.139a names the hand, which is the whole of what the
+          -- destination says here: this is the rulebook's own action, not a
+          -- card's sentence.
+          _ <- Event.bringChosen OutsideDestination.Hand False pid [card]
+          State.modify' $ \gs ->
+            gs
+              { GameState.players =
+                  Map.adjust (\p -> p {Player.companionTaken = True}) pid (GameState.players gs)
+              }

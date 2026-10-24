@@ -4,7 +4,7 @@
 
 **Goal:** A card revealed by a cost, by an activation from a hidden zone, by a reveal that causes a trigger, or from an opening hand stays visible to every player for as long as the CR says (CR 701.20a, 702.49b, 702.57b, 702.94b, 103.6b), and `sees` reads it.
 
-**Architecture:** A per-incarnation field, `Object.revealed :: Maybe RevealWindow`, is stamped at each writer and reset by `Object.newIncarnation`, so a zone change ends a reveal (CR 400.7) with no code. Nothing sweeps the field: `Pawl.Engine.Visibility.sees` gains one term that answers `Visible` to every seat while the window is live, and liveness is derived from the state.
+**Architecture:** A per-incarnation field, `Object.revealed :: Maybe RevealWindow`, is stamped at each writer and reset by `Object.newIncarnation`, so a zone change ends a reveal (CR 400.7) with no code. Nothing sweeps the field: `Parun.Engine.Visibility.sees` gains one term that answers `Visible` to every seat while the window is live, and liveness is derived from the state.
 
 **Tech Stack:** Haskell (GHC via the repo's nix flake), cabal, tasty, JSON scenarios under `data/scenarios/`.
 
@@ -12,14 +12,14 @@
 
 ## Global Constraints
 
-- Work only in `/Volumes/nvme/Developer/pawl/.claude/worktrees/1408-lasting-reveals` (branch `1408-lasting-reveals`, cut from `origin/main` at 507d8680d). Never `cd` to the primary checkout. Before the first build, run `script/warm-worktree.sh seed /Volumes/nvme/Developer/pawl/.claude/worktrees/1408-lasting-reveals` and confirm `ls cabal.project.local`.
+- Work only in `/Volumes/nvme/Developer/parun/.claude/worktrees/1408-lasting-reveals` (branch `1408-lasting-reveals`, cut from `origin/main` at 507d8680d). Never `cd` to the primary checkout. Before the first build, run `script/warm-worktree.sh seed /Volumes/nvme/Developer/parun/.claude/worktrees/1408-lasting-reveals` and confirm `ls cabal.project.local`.
 - Merge `origin/main` ONCE, in Task 5 Step 1, never mid-plan.
 - Prefix every `cabal` call with `script/with-build-lock.sh`. Redirect output to a scratchpad file and read the file; never pipe into `head`.
 - Scenario test names are the bare FILE NAME, so select them by a file-name stem: `-p lasting-reveal`, which every scenario this unit adds carries. Spec groups are selected by their `describe` text. The command is `script/with-build-lock.sh cabal test --test-options '--timeout 120s --hide-successes -p <pattern>' > "$SCRATCH/x.log" 2>&1`.
 - Full suite: the same command with no `-p`. Record the count before Task 1.
 - The rules core never cases on an effect's identity. Casing on `Keyword.Forecast` (CR 702) and on a `RevealCause` is allowed; casing on an `Effect` constructor is not.
-- CLAUDE.md item 4 applies in full to the new `Object` field: `Object.new`, `Codec.Object` plus `Pawl.Codec.ObjectSpec`'s positional `MkObject`, `Pawl.Engine.Reversal.objectWith`, and `Pawl.Engine.Interchangeable` (the field holds an `ObjectId`). Grep `{ Object.` record updates too.
-- One type per `Pawl.Types.<TypeName>` module. A constructor's haddock is one line plus its CR citation. Every new codec gets a spec round-trip case.
+- CLAUDE.md item 4 applies in full to the new `Object` field: `Object.new`, `Codec.Object` plus `Parun.Codec.ObjectSpec`'s positional `MkObject`, `Parun.Engine.Reversal.objectWith`, and `Parun.Engine.Interchangeable` (the field holds an `ObjectId`). Grep `{ Object.` record updates too.
+- One type per `Parun.Types.<TypeName>` module. A constructor's haddock is one line plus its CR citation. Every new codec gets a spec round-trip case.
 - Style: `case` over `maybe`, `let` over `where`, no backticks, no partial `head`, extensions only from `.hlint.yaml`.
 - Every proving check gets a mutation: `script/with-build-lock.sh script/mutate.sh FILE @SCRIPT PATTERN`, with the sed script in a scratchpad file, keeping every import and binding used (`-Werror`). Name the assertion that reddened. Never edit a file while a mutation runs on it.
 - Never stash. Stage, `hooky fix`, `git add` again.
@@ -28,17 +28,17 @@
 
 ## Divergences from the spec
 
-- **Serum Powder does not prove CR 103.6b.** Its mulligan action is `ExileHandThenDraw`, which reveals nothing. No-Regrets Egret's reveal is a CR 103.5b mulligan action, the momentary case. Chancellor of the Forge is the only CR 103.6b producer. Scenario boards start mid-turn and cannot express the pre-game window (`data/scenarios/README.md`: setup is a state), so its proof is a `Pawl.MulliganSpec` test.
+- **Serum Powder does not prove CR 103.6b.** Its mulligan action is `ExileHandThenDraw`, which reveals nothing. No-Regrets Egret's reveal is a CR 103.5b mulligan action, the momentary case. Chancellor of the Forge is the only CR 103.6b producer. Scenario boards start mid-turn and cannot express the pre-game window (`data/scenarios/README.md`: setup is a state), so its proof is a `Parun.MulliganSpec` test.
 - **Forecast gets a third window.** CR 702.57b keeps the card revealed "until it leaves the player's hand or until a step or phase that isn't an upkeep step begins". That outlives the ability on the stack, so `WhileOnStack` would end it too early. Steeling Stance is in the pool.
 - **"The first turn begins" is derived from the log.** `Setup` sets `turnNumber = 1` before the mulligans, so the turn number cannot say. The window is live while `turnNumber == 1` and no `GameEvent.StepBegan` is in `GameState.events`. The log is cleared at turn handoff, where `turnNumber` rises, and `Engine` logs `StepBegan` as each step begins. Task 1 Step 2 confirms that the first step of turn 1 logs it; if it does not, stop and report.
-- **CR 603.10a's "an object that all players can see" reader is not switched.** `Pawl.Engine.Event.Match` decides it from the zone's hidden-ness alone, so a revealed card leaving a hand under-reads. Moving it onto the new status needs the departed incarnation's window, and that is its own change. Task 5 files it with a producer.
+- **CR 603.10a's "an object that all players can see" reader is not switched.** `Parun.Engine.Event.Match` decides it from the zone's hidden-ness alone, so a revealed card leaving a hand under-reads. Moving it onto the new status needs the departed incarnation's window, and that is its own change. Task 5 files it with a producer.
 
 ## Review Focus
 
 1. **The window ends when the stack object leaves.** A revealed card in hand must stop being visible to the opponent once the ability resolves, not merely be visible while it is pending. Test: Task 3 (miracle), the check after the trigger resolves and the Wrath stays in hand.
 2. **A cost reveal on a spell.** The window tracks the SPELL's stack object, not the revealed card's. Test: Task 2 (Living Destiny), the checks during and after resolution.
 3. **Forecast outlives its ability.** The card stays revealed after the ability resolves, for the rest of the upkeep, and not after. Test: Task 4 (Steeling Stance), the checks in Upkeep after resolution and then in Draw.
-4. **The opening-hand reveal ends as the first turn begins.** Test: Task 1, `Pawl.MulliganSpec`.
+4. **The opening-hand reveal ends as the first turn begins.** Test: Task 1, `Parun.MulliganSpec`.
 5. **A zone change ends the reveal.** The ninja goes from hand to battlefield, and its hand incarnation's window must not follow it. Test: Task 4, after the ninjutsu resolves.
 
 ---
@@ -46,41 +46,41 @@
 ### Task 1: The window, its liveness, and CR 103.6b
 
 **Files:**
-- Create: `source/libraries/types/Pawl/Types/RevealWindow.hs`
-- Create: `source/libraries/codec/Pawl/Codec/RevealWindow.hs` and `source/libraries/codec/Pawl/Codec/RevealWindowSpec.hs` (pattern: `Pawl.Codec.RevealCause`, `Pawl.Codec.RevealCauseSpec`)
-- Modify: `source/libraries/types/Pawl/Types/Object.hs` (field after `exileLookers`, plus `new`)
-- Modify: `source/libraries/codec/Pawl/Codec/Object.hs`, `source/libraries/codec/Pawl/Codec/ObjectSpec.hs`
-- Modify: `source/libraries/engine/Pawl/Engine/Reversal.hs` (`objectWith`, compile-forced)
-- Modify: `source/libraries/engine/Pawl/Engine/Interchangeable.hs` (read the new ObjectId)
-- Modify: `source/libraries/engine/Pawl/Engine/Visibility.hs` (the new term)
-- Modify: `source/libraries/engine/Pawl/Engine/Event.hs` (the stamp helper)
-- Modify: `source/libraries/engine/Pawl/Engine/Mulligan.hs` (the CR 103.6b writer)
-- Test: `source/libraries/test/Pawl/MulliganSpec.hs`
+- Create: `source/libraries/types/Parun/Types/RevealWindow.hs`
+- Create: `source/libraries/codec/Parun/Codec/RevealWindow.hs` and `source/libraries/codec/Parun/Codec/RevealWindowSpec.hs` (pattern: `Parun.Codec.RevealCause`, `Parun.Codec.RevealCauseSpec`)
+- Modify: `source/libraries/types/Parun/Types/Object.hs` (field after `exileLookers`, plus `new`)
+- Modify: `source/libraries/codec/Parun/Codec/Object.hs`, `source/libraries/codec/Parun/Codec/ObjectSpec.hs`
+- Modify: `source/libraries/engine/Parun/Engine/Reversal.hs` (`objectWith`, compile-forced)
+- Modify: `source/libraries/engine/Parun/Engine/Interchangeable.hs` (read the new ObjectId)
+- Modify: `source/libraries/engine/Parun/Engine/Visibility.hs` (the new term)
+- Modify: `source/libraries/engine/Parun/Engine/Event.hs` (the stamp helper)
+- Modify: `source/libraries/engine/Parun/Engine/Mulligan.hs` (the CR 103.6b writer)
+- Test: `source/libraries/test/Parun/MulliganSpec.hs`
 
 **Interfaces:**
 - Produces:
-  - `Pawl.Types.RevealWindow.RevealWindow`, with constructors `WhileOnStack ObjectId`, `UntilFirstTurn` and `DuringUpkeep Natural`.
+  - `Parun.Types.RevealWindow.RevealWindow`, with constructors `WhileOnStack ObjectId`, `UntilFirstTurn` and `DuringUpkeep Natural`.
   - the field `Object.revealed :: Maybe RevealWindow`.
-  - `Pawl.Engine.Event.stampReveal :: RevealWindow -> ObjectId -> Game ()`.
-  - `Pawl.Engine.Visibility.revealedNow :: ObjectId -> GameState -> Visibility`.
+  - `Parun.Engine.Event.stampReveal :: RevealWindow -> ObjectId -> Game ()`.
+  - `Parun.Engine.Visibility.revealedNow :: ObjectId -> GameState -> Visibility`.
 
 - [ ] **Step 1: Baseline.** Seed the worktree, run the full suite, and record the count.
 
-- [ ] **Step 2: Confirm the first-turn signal.** Read `Pawl.Engine.Engine` where `GameEvent.StepBegan` is recorded, and where the turn handoff clears `GameState.events`. Confirm that turn 1's first step logs `StepBegan` before any player gets priority, and that `Setup.newGame` and `Setup.restartGame` start with no `StepBegan` in the log. If either fails, stop and report NEEDS_CONTEXT.
+- [ ] **Step 2: Confirm the first-turn signal.** Read `Parun.Engine.Engine` where `GameEvent.StepBegan` is recorded, and where the turn handoff clears `GameState.events`. Confirm that turn 1's first step logs `StepBegan` before any player gets priority, and that `Setup.newGame` and `Setup.restartGame` start with no `StepBegan` in the log. If either fails, stop and report NEEDS_CONTEXT.
 
-- [ ] **Step 3: Write the failing test.** In `Pawl.MulliganSpec`, beside the existing Chancellor of the Forge test (it uses `chancellorGame`, `revealedNames` and `throughFirstUpkeep`), add `"CR 103.6b a card revealed from the opening hand stays revealed until the first turn begins"`. It runs the opening-hand window with Chancellor revealed, then asserts:
+- [ ] **Step 3: Write the failing test.** In `Parun.MulliganSpec`, beside the existing Chancellor of the Forge test (it uses `chancellorGame`, `revealedNames` and `throughFirstUpkeep`), add `"CR 103.6b a card revealed from the opening hand stays revealed until the first turn begins"`. It runs the opening-hand window with Chancellor revealed, then asserts:
   - `Visibility.sees` for the OPPONENT on the Chancellor in its owner's hand is `Visible` before the first turn;
   - the same read after the first turn's first step has begun (drive the game the way `throughFirstUpkeep` does) is `Obscured`.
 
   Find the Chancellor's id the way the existing test finds it. Run `-p '103.6b a card revealed'` and expect a failure on the first assertion (`Obscured`).
 
-- [ ] **Step 4: The type.** In `Pawl.Types.RevealWindow`:
+- [ ] **Step 4: The type.** In `Parun.Types.RevealWindow`:
 
 ```haskell
-module Pawl.Types.RevealWindow where
+module Parun.Types.RevealWindow where
 
 import Numeric.Natural (Natural)
-import Pawl.Types.ObjectId (ObjectId)
+import Parun.Types.ObjectId (ObjectId)
 
 -- | How long a lasting reveal lasts (CR 701.20a).
 data RevealWindow
@@ -110,11 +110,11 @@ Match the import style of the sibling type modules.
   - `ObjectSpec`'s positional `MkObject` and its JSON strings;
   - `Reversal.objectWith`.
 
-Write `Pawl.Codec.RevealWindow` in the style of `Pawl.Codec.RevealCause` (an `Arm.tagged` codec, so give every constructor an arm). `RevealWindowSpec` round-trips all three constructors. Wire the spec the way `RevealCauseSpec` is wired.
+Write `Parun.Codec.RevealWindow` in the style of `Parun.Codec.RevealCause` (an `Arm.tagged` codec, so give every constructor an arm). `RevealWindowSpec` round-trips all three constructors. Wire the spec the way `RevealCauseSpec` is wired.
 
-- [ ] **Step 6: Interchangeable.** `WhileOnStack` names an object. Read how `Pawl.Engine.Interchangeable` treats `Object.exileLookers` and `Object.attachedTo` (`objects` compares Objects whole; `namedByAnother` reads `attachedTo` and `bindings`). If `Mentions` (or its equivalent) enumerates Object fields by name, make the new field a read rather than a discard. If nothing enumerates fields there, the whole-Object comparison already distinguishes two cards with different windows: record which case you found, and why it is right, in the report.
+- [ ] **Step 6: Interchangeable.** `WhileOnStack` names an object. Read how `Parun.Engine.Interchangeable` treats `Object.exileLookers` and `Object.attachedTo` (`objects` compares Objects whole; `namedByAnother` reads `attachedTo` and `bindings`). If `Mentions` (or its equivalent) enumerates Object fields by name, make the new field a read rather than a discard. If nothing enumerates fields there, the whole-Object comparison already distinguishes two cards with different windows: record which case you found, and why it is right, in the report.
 
-- [ ] **Step 7: The stamp and the liveness term.** In `Pawl.Engine.Event`, beside `reveal`:
+- [ ] **Step 7: The stamp and the liveness term.** In `Parun.Engine.Event`, beside `reveal`:
 
 ```haskell
 -- | CR 701.20a: keep a revealed card revealed for a window.
@@ -122,7 +122,7 @@ stampReveal :: RevealWindow.RevealWindow -> ObjectId -> Game ()
 stampReveal window oid = State.modify (\gs -> gs {GameState.objects = Map.adjust (\obj -> obj {Object.revealed = Just window}) oid (GameState.objects gs)})
 ```
 
-If the module already has an object-update helper, use it; match the module's idiom. In `Pawl.Engine.Visibility`:
+If the module already has an object-update helper, use it; match the module's idiom. In `Parun.Engine.Visibility`:
 
 ```haskell
 -- | CR 701.20a: a card in a lasting reveal is seen by every player while its
@@ -159,7 +159,7 @@ The `_` arm in `begun` is over `GameEvent`, which is legitimate here: only `Step
 ### Task 2: A cost reveal lasts while its spell or ability is on the stack
 
 **Files:**
-- Modify: `source/libraries/engine/Pawl/Engine/Cost.hs` (the cost-reveal sites: `RevealCardFromHand` ~6627, `beholdObjects`' hand case ~2419, `RevealTopOfLibrary` ~6359; grep `Event.reveal` in the file)
+- Modify: `source/libraries/engine/Parun/Engine/Cost.hs` (the cost-reveal sites: `RevealCardFromHand` ~6627, `beholdObjects`' hand case ~2419, `RevealTopOfLibrary` ~6359; grep `Event.reveal` in the file)
 - Create: `data/scenarios/cost/cr-701-20a-lasting-reveal-living-destiny-s-revealed-card-stays-revealed-while-it-is-cast.json`
 
 **Interfaces:**
@@ -187,8 +187,8 @@ The `_` arm in `begun` is over `GameEvent`, which is legitimate here: only `Step
 ### Task 3: A reveal that causes a trigger lasts while the trigger is on the stack (miracle)
 
 **Files:**
-- Modify: `source/libraries/engine/Pawl/Engine/Engine.hs` (`placeBorne`, ~840)
-- Modify: `source/libraries/engine/Pawl/Engine/Event.hs` (`offerMiracleReveal`'s elision, ~8757)
+- Modify: `source/libraries/engine/Parun/Engine/Engine.hs` (`placeBorne`, ~840)
+- Modify: `source/libraries/engine/Parun/Engine/Event.hs` (`offerMiracleReveal`'s elision, ~8757)
 - Create: `data/scenarios/event-trigger/cr-702-94b-lasting-reveal-the-miracle-card-stays-revealed-while-its-trigger-is-on-the-stack.json`
 
 - [ ] **Step 1: Write the failing scenario.** Start from `data/scenarios/event-trigger/cr-121-9-the-draw-step-s-own-draw-opens-the-window.json` (turn 2, Wrath on top). Keep its board and the `OfferedMiracleReveal` → `Exercises` answer. After the existing `{ "View": { "of": "Stack", "is": ["trigger of Thunderous Wrath"] } }` check:
@@ -209,7 +209,7 @@ The `_` arm in `begun` is over `GameEvent`, which is legitimate here: only `Step
 ### Task 4: An activation from a hidden zone, and forecast
 
 **Files:**
-- Modify: `source/libraries/engine/Pawl/Engine/Activate.hs` (`revealIfHidden` ~84, called ~117; `abilId` minted ~119)
+- Modify: `source/libraries/engine/Parun/Engine/Activate.hs` (`revealIfHidden` ~84, called ~117; `abilId` minted ~119)
 - Create: `data/scenarios/activate/cr-702-49b-lasting-reveal-the-ninja-stays-revealed-while-ninjutsu-is-on-the-stack.json`
 - Create: `data/scenarios/activate/cr-702-57b-lasting-reveal-steeling-stance-stays-revealed-for-the-rest-of-the-upkeep.json`
 
@@ -256,7 +256,7 @@ The `_` arm in `begun` is over `GameEvent`, which is legitimate here: only `Step
 - [ ] **Step 3: File the CR 603.10a follow-up.** Before filing, search the open issues by title.
   - Title: "A revealed card leaving a hand doesn't count as one every player could see".
   - Labels: `rules-correctness`, `area:triggers` if it exists, otherwise `area:zones`.
-  - Body: a dated plain-language summary (2026-10-11); the site (`Pawl.Engine.Event.Match`'s CR 603.10a "an object that all players can see" read, decided from the zone alone); that it should read the departed incarnation's reveal window; and the card that would exercise it, a pool card that triggers on an object being put into a hand or library that #3064 used (find it with `gh issue view 3064`).
+  - Body: a dated plain-language summary (2026-10-11); the site (`Parun.Engine.Event.Match`'s CR 603.10a "an object that all players can see" read, decided from the zone alone); that it should read the departed incarnation's reveal window; and the card that would exercise it, a pool card that triggers on an object being put into a hand or library that #3064 used (find it with `gh issue view 3064`).
   - Name it in the PR's deferred line.
 
 - [ ] **Step 4: Self-review.**
@@ -283,7 +283,7 @@ The `_` arm in `begun` is over `GameEvent`, which is legitimate here: only `Step
     - CR 603.10a's reader (the new issue);
     - #2568's inverse;
     - unproven paths (the activation cost reveal, if Task 2 found no card);
-    - unblocked: what `gh api repos/tfausak/pawl/issues/1408/dependencies/blocking` and the same for #3045 list.
+    - unblocked: what `gh api repos/tfausak/parun/issues/1408/dependencies/blocking` and the same for #3045 list.
   - End with `🤖 Generated with [Claude Code](https://claude.com/claude-code)`.
 
   Leave it a draft; the controller marks it ready after the final review.

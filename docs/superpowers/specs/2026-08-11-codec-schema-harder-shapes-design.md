@@ -15,10 +15,10 @@ argument:
   one codec, so none of them can be expressed.
 - **Collections.** 57 fields use `encodeList`, `encodeSet`, `encodeSeq`,
   `encodeNonEmpty` or `encodeMultiset`. `Common.maybe` is the only
-  `Codec`-shaped lifting the slice built, and `Pawl.JsonSchema.Schema` has no
+  `Codec`-shaped lifting the slice built, and `Parun.JsonSchema.Schema` has no
   array vocabulary at all -- no `array`, `items` or `prefixItems`, and no
   `boolean` either.
-- **A decode that fails on the assembled record.** `Pawl.Codec.TypeLine`
+- **A decode that fails on the assembled record.** `Parun.Codec.TypeLine`
   rejects an empty `types` set (CR 205.1) between two field reads.
   `Applicative`-only `Fields` has nowhere to put that.
 - **Parametric codecs**, which the first slice explicitly did not retire.
@@ -56,8 +56,8 @@ a `case` and an arm list of the same size. Script it, then read the diff stat.
 
 `Keyword` needs `Cost`, `Cost` needs `CostComponent`, `CostComponent` needs
 `Filter`, and `Filter`'s only instantiation is `Filter Keyword` --
-`Pawl.Types.Keyword`'s own header says it "TIES THE KNOT that
-`Pawl.Types.Filter`'s keyword parameter opens". Those five convert in one commit
+`Parun.Types.Keyword`'s own header says it "TIES THE KNOT that
+`Parun.Types.Filter`'s keyword parameter opens". Those five convert in one commit
 or not at all. There is no ordering that lands them separately, and an adapter
 that wrapped an unconverted `Keyword` in a `Codec` would have to invent a schema
 for it, which is a lie rather than a shim.
@@ -68,7 +68,7 @@ case, and the first time a codec is `Codec keyword -> Codec (Filter keyword)`.
 
 ## New machinery
 
-### Array vocabulary, in `Pawl.JsonSchema.Schema`
+### Array vocabulary, in `Parun.JsonSchema.Schema`
 
 ```hs
 boolean :: Schema
@@ -80,7 +80,7 @@ tupleOf :: [Schema] -> Schema                -- prefixItems, minItems, maxItems
 `tupleOf` pins both bounds, because a tagged arm's payload array is a fixed
 shape rather than a list that happens to have two elements.
 
-### Collections, in `Pawl.JsonCodec.Common`
+### Collections, in `Parun.JsonCodec.Common`
 
 ```hs
 tuple :: Codec.Codec a -> Codec.Codec b -> Codec.Codec (a, b)
@@ -105,7 +105,7 @@ recounting repeats.
 
 `tuple` is arity 2 and that is deliberate: all seven multi-payload arms in this
 closure are arity 2. Repo-wide there are 39 at arity 2, 7 at arity 3 and 2 at
-arity 4 -- every one of the higher arities in `Pawl.Codec.GameEvent`, which this
+arity 4 -- every one of the higher arities in `Parun.Codec.GameEvent`, which this
 change does not touch. Building `tuple3` and `tuple4` with no caller here would
 be capability nobody exercises; #1263 carries them.
 
@@ -118,7 +118,7 @@ Arm.payload "Hybrid" (Common.tuple ManaType.codec ManaType.codec) (uncurry ManaS
 That is why `Arm` gains nothing in this change. A dedicated `Arm.payload2`
 would have been a second way to say the same thing.
 
-### A validation hook, in `Pawl.JsonCodec.Fields`
+### A validation hook, in `Parun.JsonCodec.Fields`
 
 ```hs
 objectWith :: (Typeable.Typeable o) => (o -> Either Text.Text o) -> Fields o o -> Codec.Codec o

@@ -83,7 +83,7 @@ never reads the opcode.
 ## 2. The seam
 
 ```hs
--- Pawl.Type.Keyword — CR 702. Ordered by rule number, not by arrival.
+-- Parun.Type.Keyword — CR 702. Ordered by rule number, not by arrival.
 data Keyword
   = Defender   -- 702.3
   | Flying     -- 702.9
@@ -105,7 +105,7 @@ will look arbitrary otherwise: `Keyword`'s constructors read in CR order, so the
 type is diffable against rule 702 itself.
 
 ```hs
--- Pawl.Type.Card gains:
+-- Parun.Type.Card gains:
 keywords :: Set Keyword
 ```
 
@@ -117,7 +117,7 @@ M2b and M2c. **EXPIRES** when the first non-redundant keyword lands (§6).
 ### The query is a function, not a field read
 
 ```hs
--- Pawl.Game
+-- Parun.Game
 -- The keywords an object currently has (CR 702).
 --
 -- EXPIRES at M3: layer 6 grants and removes abilities, at which point this stops
@@ -144,7 +144,7 @@ fix should be local when it comes.
 `Keyword` is a sum type whose constructors happen to all be nullary today. It
 must not be an enum that has to be reshaped the moment a parameterized keyword
 lands, and that is not far off — the M2a punchlist alone contains
-`Landwalk Subtype` (CR 702.14; pawl already has Mountains, so Mountainwalk is
+`Landwalk Subtype` (CR 702.14; parun already has Mountains, so Mountainwalk is
 immediately real) and intimidate, which reads colors. Protection is
 `Protection Quality` and Ward is `Ward Cost`.
 
@@ -154,12 +154,12 @@ constructor is written in M2a, because none has a consumer; the *shape* is a
 
 ## 3. What each keyword touches
 
-Four of the five are a clause inside a function `Pawl.Combat` already has.
+Four of the five are a clause inside a function `Parun.Combat` already has.
 Flying and reach are the exception, and they are the reason this section is long:
 they land on CR 509.1's structure, and getting that structure wrong is how M2a
 would paint the engine into a corner for menace.
 
-No prompt changes. `Pawl.Type.Prompt`, `Pawl.Type.Response`, `Pawl.Replay` and
+No prompt changes. `Parun.Type.Prompt`, `Parun.Type.Response`, `Parun.Replay` and
 all eight interpreters are untouched — M2a is additive across the decision seam,
 unlike M1b's Task 5.
 
@@ -188,7 +188,7 @@ the one case that misleads.
 Therefore the split follows the rules' own seam:
 
 ```hs
--- Pawl.Combat
+-- Parun.Combat
 
 -- CR 509.1a: about the blocker ALONE -- untapped, controlled by the defending
 -- player, a creature. Unchanged from M1b. These creatures can block SOMETHING;
@@ -259,7 +259,7 @@ a fixture that hand-sets `Card.keywords` on a Piker would be testing the field
 rather than a card. Each keyword needs a real printing that carries it.
 
 **A printing is not a deck-list entry, and the two decisions are separate.** All
-five keywords get a printing, because a printing is data in `Pawl.Card` and costs
+five keywords get a printing, because a printing is data in `Parun.Card` and costs
 nothing; only **one** joins the deck list, because that is what changes the shape
 of a random game and gives a deck-composition bug somewhere to hide.
 
@@ -299,7 +299,7 @@ through" property (§5) needs it in there. It **replaces** Pikers rather than
 adding to the deck: the list stays at 60, so conservation stays at 120 objects
 and M1b's property is unchanged rather than retuned.
 
-`Pawl.Type.Subtype` gains `Human`, `Bird`, `Ogre` and `Centaur` (it has
+`Parun.Type.Subtype` gains `Human`, `Bird`, `Ogre` and `Centaur` (it has
 `Mountain`, `Goblin` and `Warrior` today). Enum growth, no shape change.
 
 ## 5. Testing approach
@@ -339,7 +339,7 @@ actions.
 
 **The classification test, which is the point of the milestone:** a Mountain, a
 Piker and a flier all pass through `canBlock` and `canAttack`, and no call site
-in `Pawl.Combat` mentions a card name. This is asserted the way M1b asserted it —
+in `Parun.Combat` mentions a card name. This is asserted the way M1b asserted it —
 by the Mountain-with-damage-marked test — i.e. by a case the identity-based
 implementation gets wrong.
 
@@ -421,7 +421,7 @@ is.
 
 **CR 508.8 is violated on `main` today** (`git-bug 5f50eec`). `Turn.grantsPriority`
 returns `True` for the declare blockers and combat damage steps unconditionally,
-so on every turn where nobody attacks, pawl grants two priority rounds that CR
+so on every turn where nobody attacks, parun grants two priority rounds that CR
 508.8 says to skip — and CR 500.11 defines skipping as "proceed past it as though
 it didn't exist."
 

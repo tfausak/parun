@@ -17,9 +17,9 @@ Copied from the spec (`docs/superpowers/specs/2026-07-19-m4a-numeric-tower-bindi
 - **Build all suites:** `cabal build all --enable-tests --enable-benchmarks`.
 - **No partial functions** — no `head`/`undefined`/`error`/non-exhaustive matches. `Maybe`/`Either`.
 - **`newtype`/`data` + smart constructors, non-punning** — `MkBinding`, never `Binding` as the constructor. New sum constructors take no `Mk` prefix (`X`, `Variable`, `Sorcery`).
-- **One type per module** under `Pawl.Type.<Name>` (type + instances only); logic in other `Pawl.*` modules. Qualified imports aliased to the last component; operators unqualified; prefer functions to operators.
+- **One type per module** under `Parun.Type.<Name>` (type + instances only); logic in other `Parun.*` modules. Qualified imports aliased to the last component; operators unqualified; prefer functions to operators.
 - **Arbitrary-precision numbers** — `Natural` for X, `Integer` for `Quantity.evaluate`'s result. Never fixed-width.
-- **The two invariants outrank this plan:** the engine never cases on a card's *identity* (only classifications), and never makes a player's choice (elide only indistinguishable options, with a named expiry). `Pawl.Resolve` is the sole `case effect of` / `case quantity of` home.
+- **The two invariants outrank this plan:** the engine never cases on a card's *identity* (only classifications), and never makes a player's choice (elide only indistinguishable options, with a named expiry). `Parun.Resolve` is the sole `case effect of` / `case quantity of` home.
 - **TDD is not optional** — write each failing test, run it, watch it fail, then implement. For the Phase 1 refactor the regression net is the *existing* suite: it must be green before and after.
 - **Every rules claim checked against `docs/rules.txt`** with the CR number in the code comment. Card text is Scryfall-verified (Blaze: `{X}{R}`, Sorcery, "Blaze deals X damage to any target." — fetched 2026-07-19).
 - **After each change:** `cabal build all` warning-free; `git add -A` then `hooky fix`, `git add -A` again, then `hooky run` passes; HLint applied. Each task is one small complete commit on `main`.
@@ -27,29 +27,29 @@ Copied from the spec (`docs/superpowers/specs/2026-07-19-m4a-numeric-tower-bindi
 ## File Structure
 
 **New files:**
-- `source/library/Pawl/Type/Binding.hs` — the `Binding` product record (target/subtypes/amount per slot).
-- `source/library/Pawl/Binding.hs` — logic over `Map SlotName Binding`: projections (`targetsOf`, `subtypesOf`, `amountOf`), the reserved X slot (`variableX`), and the write-site constructor (`fromChoices`).
+- `source/library/Parun/Type/Binding.hs` — the `Binding` product record (target/subtypes/amount per slot).
+- `source/library/Parun/Binding.hs` — logic over `Map SlotName Binding`: projections (`targetsOf`, `subtypesOf`, `amountOf`), the reserved X slot (`variableX`), and the write-site constructor (`fromChoices`).
 - `data/cards/blaze.json` — Blaze as card data.
 
 **Modified — library:**
-- `Pawl/Type/Object.hs` — drop `targets`/`chosenSubtypes`, add `bindings`.
-- `Pawl/Type/Quantity.hs` — add `X`. `Pawl/Type/ManaSymbol.hs` — add `Variable`. `Pawl/Type/CardType.hs` — add `Sorcery`.
-- `Pawl/Type/Prompt.hs` — add `ChooseX`. `Pawl/Type/Response.hs` — add `ChoseX`.
-- `Pawl/Quantity.hs` — `evaluate` X arm; `manaValueOf` Variable=0.
-- `Pawl/Mana.hs` — `substituteX`; Variable arms in the symbol helpers.
-- `Pawl/Cast.hs` — `ChooseX` in `castSpell`; `substituteX 0` castability floor.
-- `Pawl/Resolve.hs`, `Pawl/Activate.hs`, `Pawl/Event.hs`, `Pawl/Setup.hs`, `Pawl/Engine.hs` — migrate readers/constructors to `bindings`.
-- `Pawl/Replay.hs` — `ChooseX`/`ChoseX` record + replay arms.
-- `Pawl/Codec.hs` — `Variable`, `X`, `Sorcery` Codec arms.
+- `Parun/Type/Object.hs` — drop `targets`/`chosenSubtypes`, add `bindings`.
+- `Parun/Type/Quantity.hs` — add `X`. `Parun/Type/ManaSymbol.hs` — add `Variable`. `Parun/Type/CardType.hs` — add `Sorcery`.
+- `Parun/Type/Prompt.hs` — add `ChooseX`. `Parun/Type/Response.hs` — add `ChoseX`.
+- `Parun/Quantity.hs` — `evaluate` X arm; `manaValueOf` Variable=0.
+- `Parun/Mana.hs` — `substituteX`; Variable arms in the symbol helpers.
+- `Parun/Cast.hs` — `ChooseX` in `castSpell`; `substituteX 0` castability floor.
+- `Parun/Resolve.hs`, `Parun/Activate.hs`, `Parun/Event.hs`, `Parun/Setup.hs`, `Parun/Engine.hs` — migrate readers/constructors to `bindings`.
+- `Parun/Replay.hs` — `ChooseX`/`ChoseX` record + replay arms.
+- `Parun/Codec.hs` — `Variable`, `X`, `Sorcery` Codec arms.
 
 **Modified — test suite:**
-- `Pawl/Support.hs` — `bindings` in fixture constructors; `ChooseX` arm in every answerer.
-- `Pawl/GameSpec.hs` — rewrite the CR 400.7 reset tests to assert on `bindings`.
-- `Pawl/CastSpec.hs`, `Pawl/ResolveSpec.hs` — migrate constructors/readers.
-- `Pawl/CardSpec.hs` — generalized D4 lint; printing count 30→31.
-- `Pawl/BindingSpec.hs` (new) — unit tests for the `Pawl.Binding` logic.
-- `Pawl/CastSpec.hs` / a Blaze gameplay group — X scenarios.
-- `Pawl/Cards.hs` — register `blazePrinting`; add to `allPrintings`, `redDeck`.
+- `Parun/Support.hs` — `bindings` in fixture constructors; `ChooseX` arm in every answerer.
+- `Parun/GameSpec.hs` — rewrite the CR 400.7 reset tests to assert on `bindings`.
+- `Parun/CastSpec.hs`, `Parun/ResolveSpec.hs` — migrate constructors/readers.
+- `Parun/CardSpec.hs` — generalized D4 lint; printing count 30→31.
+- `Parun/BindingSpec.hs` (new) — unit tests for the `Parun.Binding` logic.
+- `Parun/CastSpec.hs` / a Blaze gameplay group — X scenarios.
+- `Parun/Cards.hs` — register `blazePrinting`; add to `allPrintings`, `redDeck`.
 
 ---
 
@@ -58,10 +58,10 @@ Copied from the spec (`docs/superpowers/specs/2026-07-19-m4a-numeric-tower-bindi
 ### Task 1: The `Binding` type and its logic module
 
 **Files:**
-- Create: `source/library/Pawl/Type/Binding.hs`
-- Create: `source/library/Pawl/Binding.hs`
-- Test: `source/test-suite/Pawl/BindingSpec.hs` (new)
-- Modify: `source/test-suite/pawl.cabal` `other-modules` (add `Pawl.BindingSpec`); `source/test-suite/Pawl/Main.hs` (wire `BindingSpec.tests`)
+- Create: `source/library/Parun/Type/Binding.hs`
+- Create: `source/library/Parun/Binding.hs`
+- Test: `source/test-suite/Parun/BindingSpec.hs` (new)
+- Modify: `source/test-suite/parun.cabal` `other-modules` (add `Parun.BindingSpec`); `source/test-suite/Parun/Main.hs` (wire `BindingSpec.tests`)
 
 **Interfaces:**
 - Produces:
@@ -75,27 +75,27 @@ Copied from the spec (`docs/superpowers/specs/2026-07-19-m4a-numeric-tower-bindi
 
 - [x] **Step 1: Write the failing test**
 
-Create `source/test-suite/Pawl/BindingSpec.hs`:
+Create `source/test-suite/Parun/BindingSpec.hs`:
 
 ```haskell
--- Covers: Pawl.Type.Binding, Pawl.Binding
-module Pawl.BindingSpec where
+-- Covers: Parun.Type.Binding, Parun.Binding
+module Parun.BindingSpec where
 
 import qualified Data.Map.Strict as Map
 import qualified Data.Text as Text
-import qualified Pawl.Binding as Binding
-import qualified Pawl.Type.Binding as Binding.Type
-import qualified Pawl.Type.Recipient as Recipient
-import qualified Pawl.Type.SlotName as SlotName
-import qualified Pawl.Type.Subtype as Subtype
+import qualified Parun.Binding as Binding
+import qualified Parun.Type.Binding as Binding.Type
+import qualified Parun.Type.Recipient as Recipient
+import qualified Parun.Type.SlotName as SlotName
+import qualified Parun.Type.Subtype as Subtype
 import qualified Test.Tasty as Tasty
 import qualified Test.Tasty.HUnit as HU
-import qualified Pawl.Support as S
+import qualified Parun.Support as S
 
 tests :: Tasty.TestTree
 tests =
   Tasty.testGroup
-    "Pawl.Binding"
+    "Parun.Binding"
     [ HU.testCase "fromChoices merges a shared slot's target and subtypes" $
         let slot = SlotName.MkSlotName (Text.pack "target")
             r = Recipient.ToPlayer S.alice
@@ -115,20 +115,20 @@ tests =
 - [x] **Step 2: Run test to verify it fails**
 
 Run: `cabal build all --enable-tests 2>&1 | tail -20`
-Expected: FAIL — `Could not find module 'Pawl.Type.Binding'` / `Pawl.Binding`.
+Expected: FAIL — `Could not find module 'Parun.Type.Binding'` / `Parun.Binding`.
 
 - [x] **Step 3: Write the `Binding` type**
 
-Create `source/library/Pawl/Type/Binding.hs`:
+Create `source/library/Parun/Type/Binding.hs`:
 
 ```haskell
 {-# LANGUAGE NamedFieldPuns #-}
 
-module Pawl.Type.Binding where
+module Parun.Type.Binding where
 
 import Numeric.Natural (Natural)
-import Pawl.Type.Recipient (Recipient)
-import Pawl.Type.Subtype (Subtype)
+import Parun.Type.Recipient (Recipient)
+import Parun.Type.Subtype (Subtype)
 
 -- CR 601.2: the cast-time choices bound to one named slot of a spell or ability
 -- on the stack. A record, not a sum, because one slot may carry several kinds of
@@ -151,23 +151,23 @@ empty :: Binding
 empty = MkBinding {target = Nothing, subtypes = Nothing, amount = Nothing}
 ```
 
-- [x] **Step 4: Write the `Pawl.Binding` logic module**
+- [x] **Step 4: Write the `Parun.Binding` logic module**
 
-Create `source/library/Pawl/Binding.hs`:
+Create `source/library/Parun/Binding.hs`:
 
 ```haskell
-module Pawl.Binding where
+module Parun.Binding where
 
 import Data.Map.Strict (Map)
 import qualified Data.Map.Strict as Map
 import qualified Data.Text as Text
 import Numeric.Natural (Natural)
-import Pawl.Type.Binding (Binding)
-import qualified Pawl.Type.Binding as Binding
-import Pawl.Type.Recipient (Recipient)
-import Pawl.Type.SlotName (SlotName)
-import qualified Pawl.Type.SlotName as SlotName
-import Pawl.Type.Subtype (Subtype)
+import Parun.Type.Binding (Binding)
+import qualified Parun.Type.Binding as Binding
+import Parun.Type.Recipient (Recipient)
+import Parun.Type.SlotName (SlotName)
+import qualified Parun.Type.SlotName as SlotName
+import Parun.Type.Subtype (Subtype)
 
 -- CR 601.2b: the reserved slot under which a spell's single chosen X is stored.
 -- No card's targetSpecs may name it (the D4 lint enforces this): X is not a
@@ -220,16 +220,16 @@ firstJust :: Maybe a -> Maybe a -> Maybe a
 firstJust a b = maybe b Just a
 ```
 
-(Note the `{-# LANGUAGE NamedFieldPuns #-}` pragma is on `Pawl.Type.Binding` for the record; `Pawl.Binding` uses qualified field updates and needs no pragma.)
+(Note the `{-# LANGUAGE NamedFieldPuns #-}` pragma is on `Parun.Type.Binding` for the record; `Parun.Binding` uses qualified field updates and needs no pragma.)
 
 - [x] **Step 5: Wire `BindingSpec` into the suite**
 
-In `source/test-suite/pawl.cabal`, add `Pawl.BindingSpec` to `other-modules` (keep alphabetical). In `source/test-suite/Pawl/Main.hs`, import `qualified Pawl.BindingSpec as BindingSpec` and add `BindingSpec.tests` to the aggregated `testTree`.
+In `source/test-suite/parun.cabal`, add `Parun.BindingSpec` to `other-modules` (keep alphabetical). In `source/test-suite/Parun/Main.hs`, import `qualified Parun.BindingSpec as BindingSpec` and add `BindingSpec.tests` to the aggregated `testTree`.
 
 - [x] **Step 6: Run test to verify it passes**
 
 Run: `cabal build all --enable-tests --enable-benchmarks && cabal test 2>&1 | tail -20`
-Expected: PASS — `Pawl.Binding` group green; whole suite still green.
+Expected: PASS — `Parun.Binding` group green; whole suite still green.
 
 - [x] **Step 7: Format, lint, commit**
 
@@ -243,9 +243,9 @@ git commit -m "M4a: the Binding record and its logic module (no wiring yet)"
 ### Task 2: Migrate `Object` to the binding environment
 
 **Files:**
-- Modify: `source/library/Pawl/Type/Object.hs` (drop `targets`, `chosenSubtypes`; add `bindings`)
-- Modify: `source/library/Pawl/Cast.hs:170`, `source/library/Pawl/Activate.hs:88-89,109`, `source/library/Pawl/Setup.hs:100-101`, `source/library/Pawl/Engine.hs:213-214`, `source/library/Pawl/Event.hs:46`, `source/library/Pawl/Resolve.hs:147,156,170,178`
-- Modify: `source/test-suite/Pawl/Support.hs` (constructors at 257,284,314,341,369,527), `source/test-suite/Pawl/CastSpec.hs:264,360-361`, `source/test-suite/Pawl/GameSpec.hs:99-100,113-133,353-354`, `source/test-suite/Pawl/ResolveSpec.hs:233`
+- Modify: `source/library/Parun/Type/Object.hs` (drop `targets`, `chosenSubtypes`; add `bindings`)
+- Modify: `source/library/Parun/Cast.hs:170`, `source/library/Parun/Activate.hs:88-89,109`, `source/library/Parun/Setup.hs:100-101`, `source/library/Parun/Engine.hs:213-214`, `source/library/Parun/Event.hs:46`, `source/library/Parun/Resolve.hs:147,156,170,178`
+- Modify: `source/test-suite/Parun/Support.hs` (constructors at 257,284,314,341,369,527), `source/test-suite/Parun/CastSpec.hs:264,360-361`, `source/test-suite/Parun/GameSpec.hs:99-100,113-133,353-354`, `source/test-suite/Parun/ResolveSpec.hs:233`
 
 **Interfaces:**
 - Consumes: `Binding.fromChoices`, `Binding.targetsOf`, `Binding.subtypesOf`, `Binding.empty` (Task 1).
@@ -253,7 +253,7 @@ git commit -m "M4a: the Binding record and its logic module (no wiring yet)"
 
 - [x] **Step 1: Rewrite the CR 400.7 reset tests first (they are the behavior spec)**
 
-In `source/test-suite/Pawl/GameSpec.hs`, replace the two reset tests (`~113-133`) so they assert on `bindings`:
+In `source/test-suite/Parun/GameSpec.hs`, replace the two reset tests (`~113-133`) so they assert on `bindings`:
 
 ```haskell
         HU.testCase "CR 400.7 changeZone resets bindings" $
@@ -267,7 +267,7 @@ In `source/test-suite/Pawl/GameSpec.hs`, replace the two reset tests (`~113-133`
            in HU.assertEqual "reset to empty" (Just Map.empty) (fmap Object.bindings movedObj),
 ```
 
-Match the exact fixture plumbing of the existing test (the `someOid`, the move). Add `import qualified Pawl.Binding as Binding` and `import qualified Pawl.Type.Binding` as needed.
+Match the exact fixture plumbing of the existing test (the `someOid`, the move). Add `import qualified Parun.Binding as Binding` and `import qualified Parun.Type.Binding` as needed.
 
 - [x] **Step 2: Run to verify the reset test fails to compile**
 
@@ -276,7 +276,7 @@ Expected: FAIL — `Object.bindings` not in scope / `targets` still the field.
 
 - [x] **Step 3: Change the `Object` type**
 
-In `source/library/Pawl/Type/Object.hs`, delete the `targets` and `chosenSubtypes` fields and their comments; add:
+In `source/library/Parun/Type/Object.hs`, delete the `targets` and `chosenSubtypes` fields and their comments; add:
 
 ```haskell
     -- CR 601.2: the choices bound while casting, by slot name. Empty for
@@ -287,23 +287,23 @@ In `source/library/Pawl/Type/Object.hs`, delete the `targets` and `chosenSubtype
     bindings :: Map SlotName Binding,
 ```
 
-Add `import Pawl.Type.Binding (Binding)`; drop the now-unused `Recipient`/`Subtype` imports if the compiler flags them (they may still be used elsewhere — let `-Weverything` guide).
+Add `import Parun.Type.Binding (Binding)`; drop the now-unused `Recipient`/`Subtype` imports if the compiler flags them (they may still be used elsewhere — let `-Weverything` guide).
 
 - [x] **Step 4: Migrate the library constructors and readers**
 
 - `Setup.hs:100-101`, `Engine.hs:213-214`, `Activate.hs:88-89`: replace the two `Map.empty` field lines with `Object.bindings = Map.empty,`.
 - `Event.hs:46`: replace `Object.targets = Map.empty, Object.chosenSubtypes = Map.empty` with `Object.bindings = Map.empty`.
-- `Cast.hs:170`: replace `(\o -> o {Object.targets = chosen, Object.chosenSubtypes = bound})` with `(\o -> o {Object.bindings = Binding.fromChoices chosen bound Nothing})`. Add `import qualified Pawl.Binding as Binding`.
+- `Cast.hs:170`: replace `(\o -> o {Object.targets = chosen, Object.chosenSubtypes = bound})` with `(\o -> o {Object.bindings = Binding.fromChoices chosen bound Nothing})`. Add `import qualified Parun.Binding as Binding`.
 - `Activate.hs:109`: replace `(\o -> o {Object.targets = chosen})` with `(\o -> o {Object.bindings = Binding.fromChoices chosen Map.empty Nothing})`. Add the `Binding` import.
 - `Resolve.hs:147,170`: `chosen = Object.targets obj` becomes `chosen = Binding.targetsOf (Object.bindings obj)`.
-- `Resolve.hs:156,178`: `Object.chosenSubtypes obj` becomes `Binding.subtypesOf (Object.bindings obj)`. Add `import qualified Pawl.Binding as Binding` to `Resolve.hs`. (`applyEffect`'s signature is unchanged — it still takes the projected `Map SlotName (Subtype, Subtype)` and `Map SlotName Recipient`.)
+- `Resolve.hs:156,178`: `Object.chosenSubtypes obj` becomes `Binding.subtypesOf (Object.bindings obj)`. Add `import qualified Parun.Binding as Binding` to `Resolve.hs`. (`applyEffect`'s signature is unchanged — it still takes the projected `Map SlotName (Subtype, Subtype)` and `Map SlotName Recipient`.)
 
 - [x] **Step 5: Migrate the test constructors and readers**
 
 - `Support.hs` (six sites), `CastSpec.hs:360-361`, `GameSpec.hs:99-100,353-354`: replace each `Object.targets = Map.empty, Object.chosenSubtypes = Map.empty` pair with `Object.bindings = Map.empty`.
 - `CastSpec.hs:264`: `Object.targets obj` becomes `Binding.targetsOf (Object.bindings obj)`.
 - `ResolveSpec.hs:233`: `Object.targets = Map.singleton slot (Recipient.ToObject targetLand)` becomes `Object.bindings = Binding.fromChoices (Map.singleton slot (Recipient.ToObject targetLand)) Map.empty Nothing`.
-- Add `import qualified Pawl.Binding as Binding` to each touched test module.
+- Add `import qualified Parun.Binding as Binding` to each touched test module.
 
 - [x] **Step 6: Build and run the full suite**
 
@@ -324,8 +324,8 @@ git commit -m "M4a: migrate Object.targets/chosenSubtypes to one bindings enviro
 ### Task 3: `ManaSymbol.Variable`
 
 **Files:**
-- Modify: `source/library/Pawl/Type/ManaSymbol.hs`, `source/library/Pawl/Quantity.hs:26-29`, `source/library/Pawl/Mana.hs:130-131,135-136`, `source/library/Pawl/Codec.hs:336-347`
-- Test: `source/test-suite/Pawl/CodecSpec.hs` (or wherever ManaSymbol round-trip lives — the honesty round-trip already iterates `allPrintings`; add a direct unit)
+- Modify: `source/library/Parun/Type/ManaSymbol.hs`, `source/library/Parun/Quantity.hs:26-29`, `source/library/Parun/Mana.hs:130-131,135-136`, `source/library/Parun/Codec.hs:336-347`
+- Test: `source/test-suite/Parun/CodecSpec.hs` (or wherever ManaSymbol round-trip lives — the honesty round-trip already iterates `allPrintings`; add a direct unit)
 
 **Interfaces:**
 - Produces: `ManaSymbol.Variable` (the `{X}` symbol); Codec arms; `Variable`-as-0 in the mana-value / generic-amount helpers.
@@ -349,7 +349,7 @@ Expected: FAIL — `Variable` not a constructor of `ManaSymbol`.
 
 - [x] **Step 3: Add the constructor**
 
-In `source/library/Pawl/Type/ManaSymbol.hs`:
+In `source/library/Parun/Type/ManaSymbol.hs`:
 
 ```haskell
 data ManaSymbol
@@ -387,8 +387,8 @@ git commit -m "M4a: ManaSymbol.Variable ({X}) with Codec and zero contribution o
 ### Task 4: `Mana.substituteX` and the castability floor
 
 **Files:**
-- Modify: `source/library/Pawl/Mana.hs` (add `substituteX`), `source/library/Pawl/Cast.hs:77,100` (floor)
-- Test: `source/test-suite/Pawl/ManaSpec.hs`
+- Modify: `source/library/Parun/Mana.hs` (add `substituteX`), `source/library/Parun/Cast.hs:77,100` (floor)
+- Test: `source/test-suite/Parun/ManaSpec.hs`
 
 **Interfaces:**
 - Produces: `Mana.substituteX :: Natural -> ManaCost -> ManaCost`.
@@ -396,7 +396,7 @@ git commit -m "M4a: ManaSymbol.Variable ({X}) with Codec and zero contribution o
 
 - [x] **Step 1: Write the failing test**
 
-In `source/test-suite/Pawl/ManaSpec.hs`:
+In `source/test-suite/Parun/ManaSpec.hs`:
 
 ```haskell
       HU.testCase "substituteX replaces each Variable with Generic X, keeping order" $
@@ -421,7 +421,7 @@ Expected: FAIL — `substituteX` not in scope.
 
 - [x] **Step 3: Implement `substituteX`**
 
-In `source/library/Pawl/Mana.hs`:
+In `source/library/Parun/Mana.hs`:
 
 ```haskell
 -- CR 601.2f: the total cost with X resolved -- each Variable symbol becomes
@@ -441,7 +441,7 @@ substituteX x (ManaCost.MkManaCost symbols) =
 
 - [x] **Step 4: Apply the castability floor**
 
-In `source/library/Pawl/Cast.hs`, the affordability checks must treat a `{X}` cost as affordable when payable at X=0 (a caster may always choose X=0):
+In `source/library/Parun/Cast.hs`, the affordability checks must treat a `{X}` cost as affordable when payable at X=0 (a caster may always choose X=0):
 - Line ~77 in `castable`: `&& Mana.canPay pid (Mana.substituteX 0 cost) gs`.
 - Line ~100 in `castableWhileSearching`: `Just cost -> Mana.canPay pid (Mana.substituteX 0 cost) gs`.
 
@@ -464,8 +464,8 @@ git commit -m "M4a: Mana.substituteX and the X=0 castability floor"
 ### Task 5: `Quantity.X` and its evaluation
 
 **Files:**
-- Modify: `source/library/Pawl/Type/Quantity.hs`, `source/library/Pawl/Quantity.hs:13-16`, `source/library/Pawl/Codec.hs:355-366`
-- Test: `source/test-suite/Pawl/QuantitySpec.hs` (or wherever `evaluate` is tested)
+- Modify: `source/library/Parun/Type/Quantity.hs`, `source/library/Parun/Quantity.hs:13-16`, `source/library/Parun/Codec.hs:355-366`
+- Test: `source/test-suite/Parun/QuantitySpec.hs` (or wherever `evaluate` is tested)
 
 **Interfaces:**
 - Produces: `Quantity.X`; `Quantity.evaluate` resolves `X` from the source object's `bindings`.
@@ -473,7 +473,7 @@ git commit -m "M4a: Mana.substituteX and the X=0 castability floor"
 
 - [x] **Step 1: Write the failing test**
 
-In `source/test-suite/Pawl/QuantitySpec.hs`, seed an object carrying an amount and assert `evaluate` reads it:
+In `source/test-suite/Parun/QuantitySpec.hs`, seed an object carrying an amount and assert `evaluate` reads it:
 
 ```haskell
       HU.testCase "evaluate reads X from the object's binding environment" $
@@ -494,21 +494,21 @@ Expected: FAIL — `X` not a constructor of `Quantity`.
 
 - [x] **Step 3: Add the constructor and the evaluation arm**
 
-In `source/library/Pawl/Type/Quantity.hs`:
+In `source/library/Parun/Type/Quantity.hs`:
 
 ```haskell
 data Quantity
   = Literal Integer
   | ManaValue
   | -- CR 601.2b: X -- a value the caster chose while casting, read from the
-    -- object's binding environment (Pawl.Binding.variableX). One-shot only: a
+    -- object's binding environment (Parun.Binding.variableX). One-shot only: a
     -- continuous effect must FREEZE this to a Literal when stored (Projection.hs
     -- note), which no M4a card exercises.
     X
   deriving (Eq, Ord, Show)
 ```
 
-In `source/library/Pawl/Quantity.hs`, add to `evaluate`:
+In `source/library/Parun/Quantity.hs`, add to `evaluate`:
 
 ```haskell
   Quantity.X -> case Game.lookupObject oid gs of
@@ -516,11 +516,11 @@ In `source/library/Pawl/Quantity.hs`, add to `evaluate`:
     Just obj -> fmap toInteger (Binding.amountOf Binding.variableX (Object.bindings obj))
 ```
 
-Add `import qualified Pawl.Binding as Binding` and `import qualified Pawl.Type.Object as Object`.
+Add `import qualified Parun.Binding as Binding` and `import qualified Parun.Type.Object as Object`.
 
 - [x] **Step 4: Add the Codec arms**
 
-In `source/library/Pawl/Codec.hs`:
+In `source/library/Parun/Codec.hs`:
 - `quantityToJson` (~357): add `Quantity.X -> nullary (Text.pack "X")`.
 - `jsonToQuantity` (~364): add `("X", _) -> Right Quantity.X`.
 
@@ -541,9 +541,9 @@ git commit -m "M4a: Quantity.X, evaluated from the object binding environment, w
 ### Task 6: The `ChooseX` prompt, response, and replay wiring
 
 **Files:**
-- Modify: `source/library/Pawl/Type/Prompt.hs`, `source/library/Pawl/Type/Response.hs`, `source/library/Pawl/Replay.hs:30-33,63-72`
-- Modify: `source/test-suite/Pawl/Support.hs` (every answerer — the compiler lists them)
-- Test: `source/test-suite/Pawl/ReplaySpec.hs` (or wherever the record/replay round-trip lives)
+- Modify: `source/library/Parun/Type/Prompt.hs`, `source/library/Parun/Type/Response.hs`, `source/library/Parun/Replay.hs:30-33,63-72`
+- Modify: `source/test-suite/Parun/Support.hs` (every answerer — the compiler lists them)
+- Test: `source/test-suite/Parun/ReplaySpec.hs` (or wherever the record/replay round-trip lives)
 
 **Interfaces:**
 - Produces: `Prompt.ChooseX :: Decider -> PlayerId -> ObjectId -> Prompt Natural`; `Response.ChoseX Natural`; the `Replay` record/replay arms.
@@ -567,7 +567,7 @@ Expected: FAIL — `ChooseX`/`ChoseX` not in scope.
 
 - [x] **Step 3: Add the prompt and response**
 
-In `source/library/Pawl/Type/Prompt.hs`:
+In `source/library/Parun/Type/Prompt.hs`:
 
 ```haskell
   -- CR 601.2b: choose the value of X while casting (the ObjectId is the spell).
@@ -578,7 +578,7 @@ In `source/library/Pawl/Type/Prompt.hs`:
   ChooseX :: Decider -> PlayerId -> ObjectId -> Prompt Natural
 ```
 
-In `source/library/Pawl/Type/Response.hs`, add to the sum:
+In `source/library/Parun/Type/Response.hs`, add to the sum:
 
 ```haskell
   | -- CR 601.2b: the value of X a caster chose, serialized so a DecisionLog
@@ -590,7 +590,7 @@ Add `import Numeric.Natural (Natural)` to `Response.hs` if not already present (
 
 - [x] **Step 4: Wire `Replay` (record and replay)**
 
-In `source/library/Pawl/Replay.hs`:
+In `source/library/Parun/Replay.hs`:
 - Record side (~30-33): `Prompt.ChooseX {} -> Response.ChoseX answer`.
 - Replay side (~63-72): `Response.ChoseX n -> Just n`.
 
@@ -617,8 +617,8 @@ git commit -m "M4a: ChooseX prompt, ChoseX response, and replay wiring"
 ### Task 7: Prompt and bind X in `castSpell`
 
 **Files:**
-- Modify: `source/library/Pawl/Cast.hs:133-174` (`castSpell`)
-- Test: `source/test-suite/Pawl/CastSpec.hs`
+- Modify: `source/library/Parun/Cast.hs:133-174` (`castSpell`)
+- Test: `source/test-suite/Parun/CastSpec.hs`
 
 **Interfaces:**
 - Consumes: `ChooseX` (Task 6), `substituteX` (Task 4), `Binding.fromChoices` (Task 1), `ManaSymbol.Variable`.
@@ -626,7 +626,7 @@ git commit -m "M4a: ChooseX prompt, ChoseX response, and replay wiring"
 
 - [x] **Step 1: Write the failing test**
 
-In `source/test-suite/Pawl/CastSpec.hs`, cast a Variable-cost spell (use Blaze if Task 8 lands first, or a synthetic `{X}{R}` fixture) with an answerer returning X=3; assert the stack object carries the amount and the substituted cost was paid:
+In `source/test-suite/Parun/CastSpec.hs`, cast a Variable-cost spell (use Blaze if Task 8 lands first, or a synthetic `{X}{R}` fixture) with an answerer returning X=3; assert the stack object carries the amount and the substituted cost was paid:
 
 ```haskell
       HU.testCase "casting a {X}{R} spell at X=3 stamps amount 3 and pays {3}{R}" $
@@ -645,7 +645,7 @@ Expected: FAIL — `castSpell` does not prompt `ChooseX`; amount is `Nothing`.
 
 - [x] **Step 3: Add the X step to `castSpell`**
 
-In `source/library/Pawl/Cast.hs`, before the target prompt (CR 601.2b precedes 601.2c), choose X when the cost carries a `Variable`, thread it into both the paid cost and the stamped bindings:
+In `source/library/Parun/Cast.hs`, before the target prompt (CR 601.2b precedes 601.2c), choose X when the cost carries a `Variable`, thread it into both the paid cost and the stamped bindings:
 
 ```haskell
         let decider = Decide.deciderFor pid gs
@@ -665,7 +665,7 @@ In `source/library/Pawl/Cast.hs`, before the target prompt (CR 601.2b precedes 6
             -- Object.bindings = Binding.fromChoices chosen bound mAmount
 ```
 
-Replace the existing single-map stamp (from Task 2's `Binding.fromChoices chosen bound Nothing`) with `Binding.fromChoices chosen bound mAmount`. Add `import qualified Pawl.Type.ManaSymbol as ManaSymbol` and `import qualified Pawl.Type.ManaCost as ManaCost` if not already present.
+Replace the existing single-map stamp (from Task 2's `Binding.fromChoices chosen bound Nothing`) with `Binding.fromChoices chosen bound mAmount`. Add `import qualified Parun.Type.ManaSymbol as ManaSymbol` and `import qualified Parun.Type.ManaCost as ManaCost` if not already present.
 
 - [x] **Step 4: Run to verify it passes**
 
@@ -684,17 +684,17 @@ git commit -m "M4a: castSpell prompts and binds X (CR 601.2b), paying the substi
 ### Task 8: Blaze as card data (with `CardType.Sorcery`)
 
 **Files:**
-- Modify: `source/library/Pawl/Type/CardType.hs`, `source/library/Pawl/Codec.hs:111-123`
+- Modify: `source/library/Parun/Type/CardType.hs`, `source/library/Parun/Codec.hs:111-123`
 - Create: `data/cards/blaze.json`
-- Modify: `source/test-suite/Pawl/Cards.hs` (register `blazePrinting`; `allPrintings`; `redDeck`)
-- Modify: `source/test-suite/Pawl/CardSpec.hs:168` (printing count 30 → 31)
+- Modify: `source/test-suite/Parun/Cards.hs` (register `blazePrinting`; `allPrintings`; `redDeck`)
+- Modify: `source/test-suite/Parun/CardSpec.hs:168` (printing count 30 → 31)
 
 **Interfaces:**
 - Produces: `CardType.Sorcery`; `Cards.blazePrinting :: Cards -> Printing`; Blaze in `allPrintings` and `redDeck`.
 
 - [x] **Step 1: Write the failing test**
 
-In `source/test-suite/Pawl/CardSpec.hs` (or `CardsSpec`), assert Blaze loads with the right shape:
+In `source/test-suite/Parun/CardSpec.hs` (or `CardsSpec`), assert Blaze loads with the right shape:
 
 ```haskell
       HU.testCase "Blaze is a {X}{R} Sorcery dealing X to any target" $
@@ -713,7 +713,7 @@ Expected: FAIL — `Cards.blazePrinting` not in scope; `CardType.Sorcery` not a 
 
 - [x] **Step 3: Add `CardType.Sorcery` and its Codec**
 
-In `source/library/Pawl/Type/CardType.hs`, add after `Instant`:
+In `source/library/Parun/Type/CardType.hs`, add after `Instant`:
 
 ```haskell
   | -- CR 307: a sorcery, cast only at sorcery speed (not a permanent). Blaze is
@@ -721,7 +721,7 @@ In `source/library/Pawl/Type/CardType.hs`, add after `Instant`:
     Sorcery
 ```
 
-In `source/library/Pawl/Codec.hs`:
+In `source/library/Parun/Codec.hs`:
 - `cardTypeToJson` (~115): add `CardType.Sorcery -> "Sorcery"`.
 - `jsonToCardType` assoc list (~123): add `(Text.pack "Sorcery", CardType.Sorcery)`.
 
@@ -735,7 +735,7 @@ Create `data/cards/blaze.json` (one line, matching the pool's render format):
 
 - [x] **Step 5: Register Blaze in `Cards.hs`**
 
-In `source/test-suite/Pawl/Cards.hs`: add `blazePrinting :: Printing.Printing` to the record; `blazePrinting_ <- loadPrinting "blaze"` in the loader; `blazePrinting = blazePrinting_` in the record build; add `blazePrinting cards,` to `allPrintings`; and add `(blazePrinting cards, 4)` to `redDeck`. Update `CardSpec.hs:168` count assertion from `30` to `31`.
+In `source/test-suite/Parun/Cards.hs`: add `blazePrinting :: Printing.Printing` to the record; `blazePrinting_ <- loadPrinting "blaze"` in the loader; `blazePrinting = blazePrinting_` in the record build; add `blazePrinting cards,` to `allPrintings`; and add `(blazePrinting cards, 4)` to `redDeck`. Update `CardSpec.hs:168` count assertion from `30` to `31`.
 
 - [x] **Step 6: Run to verify it passes**
 
@@ -754,14 +754,14 @@ git commit -m "M4a: Blaze as card data, plus CardType.Sorcery"
 ### Task 9: Generalize the D4 lint for X
 
 **Files:**
-- Modify: `source/library/Pawl/Resolve.hs` (add an X-reader classifier) and `source/test-suite/Pawl/CardSpec.hs:155-177` (the lint group)
+- Modify: `source/library/Parun/Resolve.hs` (add an X-reader classifier) and `source/test-suite/Parun/CardSpec.hs:155-177` (the lint group)
 
 **Interfaces:**
 - Produces: `Resolve.readsX :: [Effect] -> Bool` (an effect list references `Quantity.X`); a lint conjunct "reads X ⟺ cost has a Variable"; the reserved X slot exempt from the target-slot equality.
 
 - [x] **Step 1: Write the failing test**
 
-In `source/test-suite/Pawl/CardSpec.hs`, extend `lintTests`:
+In `source/test-suite/Parun/CardSpec.hs`, extend `lintTests`:
 
 ```haskell
       HU.testCase "every printing that reads X declares {X}, and vice versa" $
@@ -791,7 +791,7 @@ Expected: FAIL — `Resolve.readsX` not in scope.
 
 - [x] **Step 3: Add the X-reader classifier**
 
-In `source/library/Pawl/Resolve.hs`, alongside `slotsOf`:
+In `source/library/Parun/Resolve.hs`, alongside `slotsOf`:
 
 ```haskell
 -- D4 (the value half): does any of these effects read X? A card that reads X
@@ -830,7 +830,7 @@ git commit -m "M4a: generalize the D4 lint -- a card reads X iff it declares {X}
 ### Task 10: Blaze gameplay scenarios and random-game coverage
 
 **Files:**
-- Modify: `source/test-suite/Pawl/CastSpec.hs` (or a new `M4aCards` group in `CardSpec.hs`) — the X scenarios
+- Modify: `source/test-suite/Parun/CastSpec.hs` (or a new `M4aCards` group in `CardSpec.hs`) — the X scenarios
 - Modify: the property suite entry points if a new `ChooseX` interpreter arm needs asserting (Support.hs answerers already updated in Task 6)
 
 **Interfaces:**

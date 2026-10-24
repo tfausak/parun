@@ -1,0 +1,77 @@
+-- | CR 701.36, populate: "choose a creature token you control and create a
+-- token that's a copy of that creature token", and the whole of the keyword
+-- action.
+--
+-- Parun.Engine.Forage's sibling, and standing on the same ground: rule 701 is a
+-- keyword-action rule exactly as rule 702 is a keyword rule, so the procedure
+-- lives in the engine rather than in card data. The closed\/open invariant
+-- forbids the rules core casing on an EFFECT's identity, and nothing here does
+-- -- Parun.Engine.Resolve.Effect's Effect.Populate arm calls in without saying
+-- which effect it is.
+--
+-- Rule 701.36 has no "whenever a player populates", so there is no GameEvent
+-- here and no trigger condition to hang one on -- Parun.Engine.Forage writes
+-- PlayerAction.Forage only because Corpseberry Cultivator watches it. Scryfall
+-- @o:"populates"@, 2026-09-18, returns no card; a printing worded that way is
+-- what would need one.
+module Parun.Engine.Populate where
+
+import qualified Control.Monad as Monad
+import qualified Control.Monad.Trans.State.Strict as State
+import qualified Data.List as List
+import qualified Data.Map.Strict as Map
+import qualified Data.Set as Set
+import qualified Parun.Engine.Event as Event
+import qualified Parun.Engine.Game as Game
+import qualified Parun.Engine.Projection as Projection
+import Parun.Types.Game (Game)
+import qualified Parun.Types.GameState as GameState
+import Parun.Types.ObjectId (ObjectId)
+import Parun.Types.PlayerId (PlayerId)
+import qualified Parun.Types.Prompt as Prompt
+import qualified Parun.Types.TapState as TapState
+
+-- | CR 701.36a's candidate set: every creature token this player controls.
+--
+-- The creature half is read off the PROJECTION (CR 613), so a token animated by
+-- a continuous effect is a candidate and a creature token that has stopped being
+-- a creature is not. The token half is Game.isToken, CR 111.6's fixed answer,
+-- which no effect can change.
+--
+-- ASCENDING, so the single-candidate shortcut below and a transcript are
+-- deterministic -- Parun.Engine.Forage.foodCandidates' posture.
+candidates :: PlayerId -> GameState.GameState -> [ObjectId]
+candidates pid gs =
+  List.sort (filter (\oid -> Game.isToken oid gs && Projection.isCreatureOf oid gs) (Projection.controls pid gs))
+
+-- | CR 701.36a: choose a creature token this player controls and create a token
+-- that's a copy of it.
+--
+-- The ObjectId is the object the prompt names -- the spell or ability resolving.
+--
+-- Asked through Game.chooseAmong.
+--
+-- CHOOSE, not target: rule 701.36a says "a creature token you control" without
+-- saying "target", so nothing was declared on the stack (CR 601.2c) and there is
+-- no CR 608.2b legality to re-check.
+--
+-- CR 701.36b: a player controlling no creature token creates nothing, which the
+-- rule states outright rather than leaving to CR 608.2d.
+--
+-- The copy is minted through Event.createTokens with the chosen token's COPIABLE
+-- values (CR 707.2), which is the same funnel and the same snapshot
+-- Parun.Engine.Resolve.Effect's Effect.CreateCopy arm uses -- so CR 614.12's
+-- entry loop and CR 111.5's rollback point are the ones every token gets. CR
+-- 707.2 copies no counters and rule 701.36a states no riders, so the copy enters
+-- untapped and bare.
+populate :: PlayerId -> ObjectId -> Game ()
+populate pid resolving = do
+  gs <- State.get
+  chosen <- Game.chooseAmong (\decider asked -> Prompt.ChoosePermanent decider asked resolving) pid (candidates pid gs)
+  Monad.forM_ chosen $ \token -> do
+    -- Against the LIVE state and not `gs`, Parun.Engine.Event.bringInto's care:
+    -- the choice above wrote the answer into the transcript, and minting off
+    -- the state from before the prompt would drop that.
+    minting <- State.get
+    Monad.forM_ (Game.cardOfWithLastKnown token minting) $ \card ->
+      Monad.void (Event.createTokens pid card (Just (Event.copiedSnapshotWithLastKnown token minting)) 1 TapState.Untapped Map.empty Nothing Set.empty)

@@ -6,13 +6,13 @@
 
 **Architecture:** Counters live in a new `Object.counters :: Map CounterKind Natural` field (per-incarnation, reset by `changeZone`, untouched by cleanup — the `damage`/`sickness`/`bindings` posture). A new `Effect.PutCounters` opcode edits that field in place at resolution. The projection injects each counter-bearing object's net counter delta as one synthetic layer-7c `ModifyPowerToughness` folded by the existing path. A new `Sba` arm performs CR 704.5q annihilation.
 
-**Tech Stack:** Haskell 2010 (GHC 9.14.1, no extensions beyond `GADTs`/`RankNTypes`/`NamedFieldPuns`), tasty (`tasty-hunit` + `tasty-quickcheck`), the hand-rolled JSON codec (`Pawl.Codec`/`Pawl.Json`), cards as `data/cards/*.json`.
+**Tech Stack:** Haskell 2010 (GHC 9.14.1, no extensions beyond `GADTs`/`RankNTypes`/`NamedFieldPuns`), tasty (`tasty-hunit` + `tasty-quickcheck`), the hand-rolled JSON codec (`Parun.Codec`/`Parun.Json`), cards as `data/cards/*.json`.
 
 ## Global Constraints
 
 - **Warning-clean build, `-Werror` via the `pedantic` flag.** Every task ends green under `cabal build all --enable-tests --enable-benchmarks`. Incremental builds hide warnings from unchanged modules; when in doubt `cabal clean` first.
-- **Two invariants outrank this plan.** The rules core never cases on a card's *identity*, only classifications (`Pawl.Resolve` is the sole `case effect of` home; `Pawl.Projection` the sole `case … Modification` home). The engine never makes a player's choice.
-- **Haskell 2010, project style:** one type per `Pawl.Type.<Name>` module; qualified imports aliased to the last component; operators unqualified; `newtype`/`Mk`-prefixed constructors, non-punning; no partial functions; no list comprehensions; `case` over point-free; explicit `Text` not `String`; arbitrary-precision numbers. Derive at least `Eq` and `Show`.
+- **Two invariants outrank this plan.** The rules core never cases on a card's *identity*, only classifications (`Parun.Resolve` is the sole `case effect of` home; `Parun.Projection` the sole `case … Modification` home). The engine never makes a player's choice.
+- **Haskell 2010, project style:** one type per `Parun.Type.<Name>` module; qualified imports aliased to the last component; operators unqualified; `newtype`/`Mk`-prefixed constructors, non-punning; no partial functions; no list comprehensions; `case` over point-free; explicit `Text` not `String`; arbitrary-precision numbers. Derive at least `Eq` and `Show`.
 - **Rules discipline:** every rules claim is checked against `docs/rules.txt` and the CR number cited in the code comment. Never trust recalled Magic rules.
 - **TDD, one commit per task.** Write the failing test, run it to watch it fail, implement minimally, run it green, then run `hooky`. Never weaken an assertion or edit a test to pass.
 - **Formatting/lint before every commit:** `git add -A && hooky fix && git add -A && hooky run` (hooky acts on *staged* files only), then commit. Apply HLint suggestions or justify the exception.
@@ -24,19 +24,19 @@
 
 ## File Structure
 
-- **Create** `source/library/Pawl/Type/CounterKind.hs` — the `CounterKind` leaf enum.
-- **Modify** `source/library/Pawl/Type/Object.hs` — add the `counters` field.
-- **Modify** `source/library/Pawl/Event.hs` — reset `counters` in `changeZone`; init in `createToken`.
-- **Modify** `source/library/Pawl/Setup.hs`, `source/library/Pawl/Engine.hs`, `source/library/Pawl/Activate.hs` — init `counters = Map.empty` at each `MkObject` site.
-- **Modify** `source/library/Pawl/Type/Effect.hs` — the `PutCounters` constructor.
-- **Modify** `source/library/Pawl/Resolve.hs` — five classification arms, the `applyEffect` arm, the `putCounters` helper.
-- **Modify** `source/library/Pawl/Codec.hs` — `counterKindToJson`/`jsonToCounterKind` and the `PutCounters` effect arms.
-- **Modify** `source/library/Pawl/Projection.hs` — `counterGathered` + append in `gather`.
-- **Modify** `source/library/Pawl/Sba.hs` — the CR 704.5q annihilation arm.
+- **Create** `source/library/Parun/Type/CounterKind.hs` — the `CounterKind` leaf enum.
+- **Modify** `source/library/Parun/Type/Object.hs` — add the `counters` field.
+- **Modify** `source/library/Parun/Event.hs` — reset `counters` in `changeZone`; init in `createToken`.
+- **Modify** `source/library/Parun/Setup.hs`, `source/library/Parun/Engine.hs`, `source/library/Parun/Activate.hs` — init `counters = Map.empty` at each `MkObject` site.
+- **Modify** `source/library/Parun/Type/Effect.hs` — the `PutCounters` constructor.
+- **Modify** `source/library/Parun/Resolve.hs` — five classification arms, the `applyEffect` arm, the `putCounters` helper.
+- **Modify** `source/library/Parun/Codec.hs` — `counterKindToJson`/`jsonToCounterKind` and the `PutCounters` effect arms.
+- **Modify** `source/library/Parun/Projection.hs` — `counterGathered` + append in `gather`.
+- **Modify** `source/library/Parun/Sba.hs` — the CR 704.5q annihilation arm.
 - **Create** `data/cards/battlegrowth.json`, `data/cards/instill-infection.json`.
-- **Modify** `source/test-suite/Pawl/Support.hs` — `addCounter` helper + `MkObject` field at 8 sites.
-- **Modify** `source/test-suite/Pawl/Cards.hs` — load, record fields, `allPrintings`, deck swaps.
-- **Modify** `source/test-suite/Pawl/{EventSpec,ProjectionSpec,ResolveSpec,CodecSpec}.hs` — tests; plus `MkObject` field at their construction sites.
+- **Modify** `source/test-suite/Parun/Support.hs` — `addCounter` helper + `MkObject` field at 8 sites.
+- **Modify** `source/test-suite/Parun/Cards.hs` — load, record fields, `allPrintings`, deck swaps.
+- **Modify** `source/test-suite/Parun/{EventSpec,ProjectionSpec,ResolveSpec,CodecSpec}.hs` — tests; plus `MkObject` field at their construction sites.
 - **Modify** `docs/design.md`, `docs/progress.md`, `CLAUDE.md` — the 7d→7c correction, the milestone-completion entry, the status note.
 
 ---
@@ -44,20 +44,20 @@
 ## Task 1: `CounterKind` type + `Object.counters` storage
 
 **Files:**
-- Create: `source/library/Pawl/Type/CounterKind.hs`
-- Modify: `source/library/Pawl/Type/Object.hs` (add field after `bindings`)
-- Modify: `source/library/Pawl/Event.hs:98` (changeZone reset), `source/library/Pawl/Event.hs:168` (createToken)
-- Modify: `source/library/Pawl/Setup.hs:95`, `source/library/Pawl/Engine.hs:204`, `source/library/Pawl/Activate.hs:83`
-- Modify: `source/test-suite/Pawl/Support.hs` (8 `MkObject` sites + new `addCounter` helper)
-- Modify (compiler-flagged `MkObject` sites): `source/test-suite/Pawl/GameSpec.hs:110,365`, `source/test-suite/Pawl/CastSpec.hs:395`, `source/test-suite/Pawl/ResolveSpec.hs:249,277,306,366,398,478` (record) and `ResolveSpec.hs:510,659` (positional)
-- Test: `source/test-suite/Pawl/EventSpec.hs`
+- Create: `source/library/Parun/Type/CounterKind.hs`
+- Modify: `source/library/Parun/Type/Object.hs` (add field after `bindings`)
+- Modify: `source/library/Parun/Event.hs:98` (changeZone reset), `source/library/Parun/Event.hs:168` (createToken)
+- Modify: `source/library/Parun/Setup.hs:95`, `source/library/Parun/Engine.hs:204`, `source/library/Parun/Activate.hs:83`
+- Modify: `source/test-suite/Parun/Support.hs` (8 `MkObject` sites + new `addCounter` helper)
+- Modify (compiler-flagged `MkObject` sites): `source/test-suite/Parun/GameSpec.hs:110,365`, `source/test-suite/Parun/CastSpec.hs:395`, `source/test-suite/Parun/ResolveSpec.hs:249,277,306,366,398,478` (record) and `ResolveSpec.hs:510,659` (positional)
+- Test: `source/test-suite/Parun/EventSpec.hs`
 
 **Interfaces:**
 - Produces: `CounterKind.CounterKind` = `PlusOnePlusOne | MinusOneMinusOne` (`Eq`, `Ord`, `Show`); `Object.counters :: Map CounterKind.CounterKind Natural`; `S.addCounter :: CounterKind.CounterKind -> Natural -> ObjectId -> GameState -> GameState`.
 
 - [x] **Step 1: Write the failing test**
 
-Add to `source/test-suite/Pawl/EventSpec.hs`. Add imports `import qualified Pawl.Type.CounterKind as CounterKind` and (if absent) `import qualified Data.Map.Strict as Map`. Add this test case into the existing `tests` tree's top-level list (mirror a neighboring `HU.testCase`):
+Add to `source/test-suite/Parun/EventSpec.hs`. Add imports `import qualified Parun.Type.CounterKind as CounterKind` and (if absent) `import qualified Data.Map.Strict as Map`. Add this test case into the existing `tests` tree's top-level list (mirror a neighboring `HU.testCase`):
 
 ```haskell
       HU.testCase "CR 122.2 counters cease to exist when an object changes zones" $
@@ -82,10 +82,10 @@ Expected: FAIL — `Not in scope: type constructor CounterKind`, `addCounter`, a
 
 - [x] **Step 3a: Create the `CounterKind` module**
 
-`source/library/Pawl/Type/CounterKind.hs`:
+`source/library/Parun/Type/CounterKind.hs`:
 
 ```haskell
-module Pawl.Type.CounterKind where
+module Parun.Type.CounterKind where
 
 -- CR 122: a counter is a marker that modifies characteristics or interacts with a
 -- rule (CR 122.1). Its KIND is a closed-half classification -- the same posture as
@@ -104,7 +104,7 @@ Run `cabal-gild` via `hooky fix` later so `exposed-modules` picks it up (the `--
 
 - [x] **Step 3b: Add the `Object.counters` field**
 
-In `source/library/Pawl/Type/Object.hs`, add the import `import Pawl.Type.CounterKind (CounterKind)` (alphabetical among the `Pawl.Type.*` imports) and the field immediately after `bindings`:
+In `source/library/Parun/Type/Object.hs`, add the import `import Parun.Type.CounterKind (CounterKind)` (alphabetical among the `Parun.Type.*` imports) and the field immediately after `bindings`:
 
 ```haskell
     -- CR 122.1: counters placed on this permanent, counted per kind. Persistent
@@ -138,7 +138,7 @@ The build's `-Wmissing-fields` under `-Werror` flags any record site you miss �
 
 - [x] **Step 3d: Add the `addCounter` test helper**
 
-In `source/test-suite/Pawl/Support.hs` add `import qualified Pawl.Type.CounterKind as CounterKind` and a helper (place near `markDamage`/`addRegenShield`):
+In `source/test-suite/Parun/Support.hs` add `import qualified Parun.Type.CounterKind as CounterKind` and a helper (place near `markDamage`/`addRegenShield`):
 
 ```haskell
 -- Put `n` counters of a kind directly onto an object's per-incarnation state,
@@ -167,10 +167,10 @@ git commit -m "M4f: CounterKind type + Object.counters per-incarnation storage (
 ## Task 2: `Effect.PutCounters` opcode + Resolve wiring + Codec
 
 **Files:**
-- Modify: `source/library/Pawl/Type/Effect.hs`
-- Modify: `source/library/Pawl/Resolve.hs` (`slotsOf`, `readsX`, `manaProduced`, `searchesLibrary`, `rewriteEffect`, `applyEffect`, new `putCounters`)
-- Modify: `source/library/Pawl/Codec.hs`
-- Test: `source/test-suite/Pawl/CodecSpec.hs`
+- Modify: `source/library/Parun/Type/Effect.hs`
+- Modify: `source/library/Parun/Resolve.hs` (`slotsOf`, `readsX`, `manaProduced`, `searchesLibrary`, `rewriteEffect`, `applyEffect`, new `putCounters`)
+- Modify: `source/library/Parun/Codec.hs`
+- Test: `source/test-suite/Parun/CodecSpec.hs`
 
 **Interfaces:**
 - Consumes: `CounterKind.CounterKind` (Task 1).
@@ -178,7 +178,7 @@ git commit -m "M4f: CounterKind type + Object.counters per-incarnation storage (
 
 - [x] **Step 1: Write the failing test**
 
-In `source/test-suite/Pawl/CodecSpec.hs`, add (imports `import qualified Pawl.Type.CounterKind as CounterKind`, and `Effect`/`Quantity`/`SlotName` if not present):
+In `source/test-suite/Parun/CodecSpec.hs`, add (imports `import qualified Parun.Type.CounterKind as CounterKind`, and `Effect`/`Quantity`/`SlotName` if not present):
 
 ```haskell
       HU.testCase "PutCounters effect round-trips through the codec" $
@@ -189,7 +189,7 @@ In `source/test-suite/Pawl/CodecSpec.hs`, add (imports `import qualified Pawl.Ty
         HU.assertEqual "minus" (Right CounterKind.MinusOneMinusOne) (Codec.jsonToCounterKind (Codec.counterKindToJson CounterKind.MinusOneMinusOne)),
 ```
 
-(Match the exact `SlotName` constructor to the codebase — confirm with `grep 'MkSlotName\|textToSlotName' source/library/Pawl/Type/SlotName.hs`; use whatever the existing tests use.)
+(Match the exact `SlotName` constructor to the codebase — confirm with `grep 'MkSlotName\|textToSlotName' source/library/Parun/Type/SlotName.hs`; use whatever the existing tests use.)
 
 - [x] **Step 2: Run test to verify it fails**
 
@@ -198,7 +198,7 @@ Expected: FAIL — `PutCounters`, `counterKindToJson`, `jsonToCounterKind` not i
 
 - [x] **Step 3a: Add the opcode**
 
-In `source/library/Pawl/Type/Effect.hs`, add the import `import Pawl.Type.CounterKind (CounterKind)` and the constructor (place beside the other targeted verbs):
+In `source/library/Parun/Type/Effect.hs`, add the import `import Parun.Type.CounterKind (CounterKind)` and the constructor (place beside the other targeted verbs):
 
 ```haskell
   | -- CR 122.6: put this many counters of this kind on the slot's target permanent.
@@ -213,7 +213,7 @@ In `source/library/Pawl/Type/Effect.hs`, add the import `import Pawl.Type.Counte
 
 - [x] **Step 3b: Add the five classification arms in `Resolve.hs`**
 
-Add `import qualified Pawl.Type.CounterKind as CounterKind` (if a qualified alias is needed anywhere; the arms below don't name it, so it may not be). Add each arm:
+Add `import qualified Parun.Type.CounterKind as CounterKind` (if a qualified alias is needed anywhere; the arms below don't name it, so it may not be). Add each arm:
 
 - `slotsOf`: `Effect.PutCounters _ _ slot -> Set.singleton slot`
 - `readsX` (`effectReadsX`): `Effect.PutCounters _ quantity _ -> quantity == Quantity.Type.X`
@@ -249,7 +249,7 @@ putCounters oid kind n gs =
 
 - [x] **Step 3d: Add the Codec arms in `Codec.hs`**
 
-Add `import qualified Pawl.Type.CounterKind as CounterKind`. Add the enum codec (model on `cardTypeToJson`/`jsonToCardType`):
+Add `import qualified Parun.Type.CounterKind as CounterKind`. Add the enum codec (model on `cardTypeToJson`/`jsonToCardType`):
 
 ```haskell
 counterKindToJson :: CounterKind.CounterKind -> Value
@@ -266,7 +266,7 @@ jsonToCounterKind =
     ]
 ```
 
-(`decodeNullary` and `nullary` are the exact helpers `cardTypeToJson`/`jsonToCardType` use — `sed -n '112,132p' source/library/Pawl/Codec.hs` to confirm; copy that shape verbatim.)
+(`decodeNullary` and `nullary` are the exact helpers `cardTypeToJson`/`jsonToCardType` use — `sed -n '112,132p' source/library/Parun/Codec.hs` to confirm; copy that shape verbatim.)
 
 Add the `effectToJson` arm (Array of three, like `Discard`):
 
@@ -299,8 +299,8 @@ git commit -m "M4f: Effect.PutCounters opcode + Resolve wiring + codec (CR 122.6
 ## Task 3: Projection layer-7c injection
 
 **Files:**
-- Modify: `source/library/Pawl/Projection.hs` (`counterGathered`, append in `gather`)
-- Test: `source/test-suite/Pawl/ProjectionSpec.hs`
+- Modify: `source/library/Parun/Projection.hs` (`counterGathered`, append in `gather`)
+- Test: `source/test-suite/Parun/ProjectionSpec.hs`
 
 **Interfaces:**
 - Consumes: `Object.counters` (Task 1), `S.addCounter` (Task 1).
@@ -308,7 +308,7 @@ git commit -m "M4f: Effect.PutCounters opcode + Resolve wiring + codec (CR 122.6
 
 - [x] **Step 1: Write the failing tests**
 
-In `source/test-suite/Pawl/ProjectionSpec.hs` (add `import qualified Pawl.Type.CounterKind as CounterKind` if absent), add to the `tests` tree:
+In `source/test-suite/Parun/ProjectionSpec.hs` (add `import qualified Parun.Type.CounterKind as CounterKind` if absent), add to the `tests` tree:
 
 ```haskell
       HU.testCase "CR 122.1a a +1/+1 counter adds +1/+1 (layer 7c)" $
@@ -335,7 +335,7 @@ In `source/test-suite/Pawl/ProjectionSpec.hs` (add `import qualified Pawl.Type.C
               HU.assertEqual "toughness 1 + 1 + 3" (Just 5) (Projection.toughnessOf oid gs),
 ```
 
-(Confirm the `S.withEffect` helper name/signature used by the existing Giant-Growth projection tests — `grep 'withEffect' source/test-suite/Pawl/*.hs`; reuse it verbatim. Confirm `Cards.forestPrinting`/`pikerPrinting` are the right fixtures for a green creature.)
+(Confirm the `S.withEffect` helper name/signature used by the existing Giant-Growth projection tests — `grep 'withEffect' source/test-suite/Parun/*.hs`; reuse it verbatim. Confirm `Cards.forestPrinting`/`pikerPrinting` are the right fixtures for a green creature.)
 
 - [x] **Step 2: Run test to verify it fails**
 
@@ -344,7 +344,7 @@ Expected: FAIL — counters are stored but do not affect projected P/T yet (powe
 
 - [x] **Step 3: Inject counters into `gather`**
 
-In `source/library/Pawl/Projection.hs` add `import qualified Pawl.Type.CounterKind as CounterKind` and the producer:
+In `source/library/Parun/Projection.hs` add `import qualified Parun.Type.CounterKind as CounterKind` and the producer:
 
 ```haskell
 -- CR 122.1a / 613.4c: a +1/+1 counter adds +1/+1 and a -1/-1 counter adds -1/-1,
@@ -402,8 +402,8 @@ git commit -m "M4f: project counters as layer-7c P/T (CR 122.1a / 613.4c)"
 ## Task 4: CR 704.5q annihilation state-based action
 
 **Files:**
-- Modify: `source/library/Pawl/Sba.hs` (`performStateBasedActions`)
-- Test: `source/test-suite/Pawl/EventSpec.hs`
+- Modify: `source/library/Parun/Sba.hs` (`performStateBasedActions`)
+- Test: `source/test-suite/Parun/EventSpec.hs`
 
 **Interfaces:**
 - Consumes: `Object.counters` (Task 1), `S.addCounter` (Task 1), `Sba.checkStateBasedActions`.
@@ -411,7 +411,7 @@ git commit -m "M4f: project counters as layer-7c P/T (CR 122.1a / 613.4c)"
 
 - [x] **Step 1: Write the failing tests**
 
-In `source/test-suite/Pawl/EventSpec.hs` add:
+In `source/test-suite/Parun/EventSpec.hs` add:
 
 ```haskell
       HU.testCase "CR 704.5q both counter kinds annihilate to zero (symmetric)" $
@@ -435,7 +435,7 @@ In `source/test-suite/Pawl/EventSpec.hs` add:
               HU.assertEqual "toughness still 2" (Just 2) (Projection.toughnessOf oid after),
 ```
 
-(Add `import qualified Pawl.Projection as Projection` to `EventSpec` if absent.)
+(Add `import qualified Parun.Projection as Projection` to `EventSpec` if absent.)
 
 - [x] **Step 2: Run test to verify it fails**
 
@@ -444,7 +444,7 @@ Expected: FAIL — counters are not annihilated (symmetric case still shows `{Pl
 
 - [x] **Step 3: Add the annihilation arm to `performStateBasedActions`**
 
-In `source/library/Pawl/Sba.hs` add `import qualified Data.Maybe as Maybe` (if absent) and `import qualified Pawl.Type.CounterKind as CounterKind`. Inside the `let` block of `performStateBasedActions`, add (reading the *incoming* `gs` for CR 704.4 simultaneity):
+In `source/library/Parun/Sba.hs` add `import qualified Data.Maybe as Maybe` (if absent) and `import qualified Parun.Type.CounterKind as CounterKind`. Inside the `let` block of `performStateBasedActions`, add (reading the *incoming* `gs` for CR 704.4 simultaneity):
 
 ```haskell
       -- CR 704.5q / 122.3: a permanent with both a +1/+1 and a -1/-1 counter has N
@@ -502,8 +502,8 @@ git commit -m "M4f: CR 704.5q / 122.3 counter annihilation state-based action"
 
 **Files:**
 - Create: `data/cards/battlegrowth.json`, `data/cards/instill-infection.json`
-- Modify: `source/test-suite/Pawl/Cards.hs` (record fields, loader lines, `allPrintings`, `greenDeck`, `blackDeck`)
-- Modify: `source/test-suite/Pawl/ResolveSpec.hs` (gameplay gate tests; retire the synthetic −0/−1 fixture at lines 616–632)
+- Modify: `source/test-suite/Parun/Cards.hs` (record fields, loader lines, `allPrintings`, `greenDeck`, `blackDeck`)
+- Modify: `source/test-suite/Parun/ResolveSpec.hs` (gameplay gate tests; retire the synthetic −0/−1 fixture at lines 616–632)
 
 **Interfaces:**
 - Consumes: everything from Tasks 1–4; the M3.5 loader (`Cards.loadPrinting`), `S.handOne`, `Cast.castSpell`, `Stack.resolveTop`, `Sba.checkStateBasedActions`, `S.addCreature`, `S.landsInPlay`.
@@ -511,7 +511,7 @@ git commit -m "M4f: CR 704.5q / 122.3 counter annihilation state-based action"
 
 - [x] **Step 1: Write the failing gate tests**
 
-In `source/test-suite/Pawl/ResolveSpec.hs`, add a `countersTests :: Cards.Cards -> Tasty.TestTree` group (model its scenario plumbing on `zoneChangeTests`' Murder/Unsummon cases — `S.handOne`, `Cast.castSpell S.alice`, `Stack.resolveTop`, `S.identityAnswer`; target with `S.identityAnswer` if it points a single-creature slot at the only legal creature, else use an answer that aims at the intended creature — inspect how the Murder test lands its target and reuse that path), and wire it into this spec's exported `tests` list.
+In `source/test-suite/Parun/ResolveSpec.hs`, add a `countersTests :: Cards.Cards -> Tasty.TestTree` group (model its scenario plumbing on `zoneChangeTests`' Murder/Unsummon cases — `S.handOne`, `Cast.castSpell S.alice`, `Stack.resolveTop`, `S.identityAnswer`; target with `S.identityAnswer` if it points a single-creature slot at the only legal creature, else use an answer that aims at the intended creature — inspect how the Murder test lands its target and reuse that path), and wire it into this spec's exported `tests` list.
 
 Cover exactly these cases:
 
@@ -579,7 +579,7 @@ countersTests cards =
     ]
 ```
 
-Add imports to `ResolveSpec` as needed: `Pawl.Type.CounterKind as CounterKind`, `Data.Map.Strict as Map` (present), `Pawl.Projection` (present). Verify `S.addLibraryCard`, `S.handSize`, `Game.zoneMembers`, `Zone.Hand` are the right names (all seen in Support/ResolveSpec).
+Add imports to `ResolveSpec` as needed: `Parun.Type.CounterKind as CounterKind`, `Data.Map.Strict as Map` (present), `Parun.Projection` (present). Verify `S.addLibraryCard`, `S.handSize`, `Game.zoneMembers`, `Zone.Hand` are the right names (all seen in Support/ResolveSpec).
 
 - [x] **Step 2: Run test to verify it fails**
 
@@ -649,7 +649,7 @@ In `blackDeck`, change `(typhoidRatsPrinting cards, 12)` to `8` and add:
 
 - [x] **Step 3d: Retire the synthetic −0/−1 fixture**
 
-In `source/test-suite/Pawl/ResolveSpec.hs` lines ~616–632, the two "CR 704.5f … does NOT save" tests use `withEffect … (Modification.ModifyPowerToughness (Quantity.Literal 0) (Quantity.Literal (-1)))`. Replace that synthetic continuous effect with a real −1/−1 counter, keeping each test's assertion intact:
+In `source/test-suite/Parun/ResolveSpec.hs` lines ~616–632, the two "CR 704.5f … does NOT save" tests use `withEffect … (Modification.ModifyPowerToughness (Quantity.Literal 0) (Quantity.Literal (-1)))`. Replace that synthetic continuous effect with a real −1/−1 counter, keeping each test's assertion intact:
 
 - Indestructible test (Myr 0/1): replace `zeroed = withEffect myrId … (Literal 0)(Literal (-1)) gs` with `zeroed = S.addCounter CounterKind.MinusOneMinusOne 1 myrId gs`.
 - Regeneration test (Piker 2/1): replace `zeroed = withEffect victim … (Literal 0)(Literal (-1)) gs` with `zeroed = S.addCounter CounterKind.MinusOneMinusOne 1 victim gs`.

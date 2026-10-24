@@ -1,0 +1,149 @@
+module Parun.Codec.ManaAdditionSpec where
+
+import qualified Data.Text as Text
+import qualified Parun.Codec.ManaAddition as ManaAddition
+import qualified Parun.JsonCodec.Common as Common
+import qualified Parun.Spec as Spec
+import qualified Parun.Types.AbilityName as AbilityName
+import qualified Parun.Types.CardType as CardType
+import qualified Parun.Types.Color as Color
+import qualified Parun.Types.Filter as Filter
+import qualified Parun.Types.ManaAddition as ManaAddition
+import qualified Parun.Types.ManaProduction as ManaProduction
+import qualified Parun.Types.ManaRestriction as ManaRestriction
+import qualified Parun.Types.ManaRetention as ManaRetention
+import qualified Parun.Types.ManaType as ManaType
+import qualified Parun.Types.PlayerRef as PlayerRef
+import qualified Parun.Types.PlayerRelation as PlayerRelation
+import qualified Parun.Types.Quantity as Quantity
+import qualified Parun.Types.SlotName as SlotName
+import qualified Parun.Types.WhenSpent as WhenSpent
+
+spec :: (Monad m, Monad n) => Spec.Spec m n -> n ()
+spec s = Spec.describe s "Parun.Codec.ManaAddition" $ do
+  -- CR 109.5's unwritten "you": Llanowar Elves' "Add {G}" names nobody, so the
+  -- key is absent from the wire in both directions.
+  Spec.it s "MkManaAddition, the unwritten recipient" $
+    Common.assertCodec
+      s
+      ManaAddition.codec
+      ( ManaAddition.MkManaAddition
+          { ManaAddition.player = PlayerRef.Relative PlayerRelation.You,
+            ManaAddition.count = Quantity.Literal 1,
+            ManaAddition.production = ManaProduction.OfType (ManaType.Colored Color.Green),
+            ManaAddition.retention = ManaRetention.Ordinary,
+            ManaAddition.restriction = Nothing,
+            ManaAddition.rider = Nothing,
+            ManaAddition.whenSpent = Nothing
+          }
+      )
+      " {\"production\":{\"type\":\"OfType\",\"value\":{\"type\":\"Colored\",\"value\":{\"type\":\"Green\"}}}} "
+  -- Shizuko, Caller of Autumn's "that player adds", over the slot CR 603.2b's
+  -- step event bound; Stadium Vendors writes the same key over the slot its own
+  -- ChoosePlayer bound.
+  Spec.it s "MkManaAddition, a named recipient" $
+    Common.assertCodec
+      s
+      ManaAddition.codec
+      ( ManaAddition.MkManaAddition
+          { ManaAddition.player = PlayerRef.InSlot (SlotName.MkSlotName (Text.pack "thatPlayer")),
+            ManaAddition.count = Quantity.Literal 1,
+            ManaAddition.production = ManaProduction.OfType (ManaType.Colored Color.Green),
+            ManaAddition.retention = ManaRetention.Ordinary,
+            ManaAddition.restriction = Nothing,
+            ManaAddition.rider = Nothing,
+            ManaAddition.whenSpent = Nothing
+          }
+      )
+      " {\"player\":{\"type\":\"InSlot\",\"value\":\"thatPlayer\"},\"production\":{\"type\":\"OfType\",\"value\":{\"type\":\"Colored\",\"value\":{\"type\":\"Green\"}}}} "
+  -- The pair the defaulted key needs: an absent @retention@ IS Ordinary (both
+  -- cases above), and Shizuko's third sentence is the one printing that writes
+  -- it. Nothing forces this case -- a record codec's field list is not checked
+  -- against the record -- so deleting the field from Parun.Codec.ManaAddition
+  -- shows up here or nowhere.
+  Spec.it s "MkManaAddition, a retention written on the wire" $
+    Common.assertCodec
+      s
+      ManaAddition.codec
+      ( ManaAddition.MkManaAddition
+          { ManaAddition.player = PlayerRef.InSlot (SlotName.MkSlotName (Text.pack "thatPlayer")),
+            ManaAddition.count = Quantity.Literal 1,
+            ManaAddition.production = ManaProduction.OfType (ManaType.Colored Color.Green),
+            ManaAddition.retention = ManaRetention.UntilEndOfTurn,
+            ManaAddition.restriction = Nothing,
+            ManaAddition.rider = Nothing,
+            ManaAddition.whenSpent = Nothing
+          }
+      )
+      " {\"player\":{\"type\":\"InSlot\",\"value\":\"thatPlayer\"},\"production\":{\"type\":\"OfType\",\"value\":{\"type\":\"Colored\",\"value\":{\"type\":\"Green\"}}},\"retention\":{\"type\":\"UntilEndOfTurn\"}} "
+  -- The same pair for CR 106.6's spending restriction, and it needs its own case
+  -- for the reason the retention one gives: nothing forces the field.
+  -- Geosurge writes it on a spell and Mishra's Workshop on a mana ability.
+  Spec.it s "MkManaAddition, a spending restriction written on the wire" $
+    Common.assertCodec
+      s
+      ManaAddition.codec
+      ( ManaAddition.MkManaAddition
+          { ManaAddition.player = PlayerRef.Relative PlayerRelation.You,
+            ManaAddition.count = Quantity.Literal 1,
+            ManaAddition.production = ManaProduction.OfType (ManaType.Colored Color.Red),
+            ManaAddition.retention = ManaRetention.Ordinary,
+            ManaAddition.restriction = Just (ManaRestriction.onlyCasts (Filter.Or [Filter.HasCardType CardType.Artifact, Filter.HasCardType CardType.Creature])),
+            ManaAddition.rider = Nothing,
+            ManaAddition.whenSpent = Nothing
+          }
+      )
+      " {\"production\":{\"type\":\"OfType\",\"value\":{\"type\":\"Colored\",\"value\":{\"type\":\"Red\"}}},\"restriction\":{\"casts\":{\"type\":\"Or\",\"value\":[{\"type\":\"HasCardType\",\"value\":{\"type\":\"Artifact\"}},{\"type\":\"HasCardType\",\"value\":{\"type\":\"Creature\"}}]}}} "
+  -- CR 106.6's other subject, and the pair that keeps the two halves of
+  -- Parun.Types.ManaRestriction from collapsing on the wire: Omen Hawker's "spend
+  -- this mana only to activate abilities" writes the OTHER key, with the trivial
+  -- predicate, since the card says nothing about which abilities.
+  Spec.it s "MkManaAddition, a restriction whose subject is an activation" $
+    Common.assertCodec
+      s
+      ManaAddition.codec
+      ( ManaAddition.MkManaAddition
+          { ManaAddition.player = PlayerRef.Relative PlayerRelation.You,
+            ManaAddition.count = Quantity.Literal 1,
+            ManaAddition.production = ManaProduction.OfType ManaType.Colorless,
+            ManaAddition.retention = ManaRetention.Ordinary,
+            ManaAddition.restriction = Just (ManaRestriction.none {ManaRestriction.activations = Just (Filter.And [])}),
+            ManaAddition.rider = Nothing,
+            ManaAddition.whenSpent = Nothing
+          }
+      )
+      " {\"production\":{\"type\":\"OfType\",\"value\":{\"type\":\"Colorless\"}},\"restriction\":{\"activations\":{\"type\":\"And\",\"value\":[]}}} "
+  -- Stadium Vendors' "two mana of any one color they choose": the count is the
+  -- one field a card writes to make CR 105.4's choice cover more than one mana.
+  Spec.it s "MkManaAddition, a count written on the wire" $
+    Common.assertCodec
+      s
+      ManaAddition.codec
+      ( ManaAddition.MkManaAddition
+          { ManaAddition.player = PlayerRef.InSlot (SlotName.MkSlotName (Text.pack "chosen")),
+            ManaAddition.count = Quantity.Literal 2,
+            ManaAddition.production = ManaProduction.AnyColor,
+            ManaAddition.retention = ManaRetention.Ordinary,
+            ManaAddition.restriction = Nothing,
+            ManaAddition.rider = Nothing,
+            ManaAddition.whenSpent = Nothing
+          }
+      )
+      " {\"count\":{\"type\":\"Literal\",\"value\":2},\"player\":{\"type\":\"InSlot\",\"value\":\"chosen\"},\"production\":{\"type\":\"AnyColor\"}} "
+  -- Pyromancer's Goggles: CR 106.6's third shape names a delayed ability.
+  Spec.it s "MkManaAddition, a spend trigger written on the wire" $
+    Common.assertCodec
+      s
+      ManaAddition.codec
+      ( ManaAddition.MkManaAddition
+          { ManaAddition.player = PlayerRef.Relative PlayerRelation.You,
+            ManaAddition.count = Quantity.Literal 1,
+            ManaAddition.production = ManaProduction.OfType ManaType.Colorless,
+            ManaAddition.retention = ManaRetention.Ordinary,
+            ManaAddition.restriction = Nothing,
+            ManaAddition.rider = Nothing,
+            ManaAddition.whenSpent = Just (WhenSpent.MkWhenSpent (Filter.And []) (AbilityName.MkAbilityName (Text.pack "copy")))
+          }
+      )
+      " {\"production\":{\"type\":\"OfType\",\"value\":{\"type\":\"Colorless\"}},\"whenSpent\":{\"casts\":{\"type\":\"And\",\"value\":[]},\"ability\":\"copy\"}} "
+  Spec.it s "has a schema" $ Common.assertHasSchema s ManaAddition.codec

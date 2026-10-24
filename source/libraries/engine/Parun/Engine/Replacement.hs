@@ -1,0 +1,4358 @@
+-- CR 616.1's SELECTION half: which replacement effects exist, which of them
+-- apply to a proposed event, how they bucket and order, who chooses among them,
+-- and how a chosen row is spent. Everything here answers a question ABOUT an
+-- event; nothing here performs one.
+--
+-- The other half -- CR 616.1's loop itself and `apply`, which carries out the
+-- chosen rewrite -- lives in Parun.Engine.Event, next to the CR 400.7 zone-change
+-- funnel. That is not a preference: the two are mutually recursive by the rules.
+-- A zone change raises its event through the loop, because CR 614.1's replacement
+-- effects "watch for a particular event that would happen" and a zone change is
+-- one of those, and a chosen rewrite can itself change zones -- CR 614.1c's "as this permanent enters,
+-- sacrifice any number of permanents" is a replacement whose application is a CR
+-- 701.21a sacrifice. One module has to hold both ends of that cycle, and it is
+-- the performing one.
+--
+-- So this module must NOT import Parun.Engine.Event, and the classification it
+-- exports is what Event calls down into. That is also why the entry copy-target
+-- legal set lives here rather than in Parun.Engine.Target -- Target imports
+-- Parun.Engine.Sba, which imports Parun.Engine.Event.
+--
+-- Casing on ProposedEvent and ReplacementEffect is shared with Parun.Engine.Event
+-- and nowhere else, beside Parun.Engine.Resolve (Effect) and
+-- Parun.Engine.Projection (Modification). Parun.Codec also cases on
+-- ReplacementEffect, but only as the JSON data boundary, never to decide game
+-- behaviour.
+module Parun.Engine.Replacement where
+
+import qualified Control.Applicative as Applicative
+import qualified Control.Monad as Monad
+import qualified Control.Monad.Trans.State.Strict as State
+import qualified Data.Containers.ListUtils as ListUtils
+import qualified Data.List as List
+import qualified Data.List.NonEmpty as NonEmpty
+import qualified Data.Map.Strict as Map
+import qualified Data.Maybe as Maybe
+import qualified Data.Ord as Ord
+import qualified Data.Sequence as Seq
+import Data.Set (Set)
+import qualified Data.Set as Set
+import Numeric.Natural (Natural)
+import qualified Parun.Engine.Binding as Binding
+import qualified Parun.Engine.Card as Card
+import qualified Parun.Engine.Condition as Condition
+import qualified Parun.Engine.Count as Count
+import qualified Parun.Engine.Decide as Decide
+import qualified Parun.Engine.Deploy as Deploy
+import qualified Parun.Engine.Expiry as Expiry.Engine
+import qualified Parun.Engine.Filter as Filter
+import qualified Parun.Engine.Game as Game
+import qualified Parun.Engine.Mint as Mint
+import qualified Parun.Engine.Plane as Plane
+import qualified Parun.Engine.PlayerEffect as PlayerEffect
+import qualified Parun.Engine.Projection as Projection
+import qualified Parun.Engine.Projection.View as Projection
+import qualified Parun.Engine.Quantity as Quantity
+import qualified Parun.Engine.SacrificeRestriction as SacrificeRestriction
+import qualified Parun.Engine.SourceContext as SourceContext
+import qualified Parun.Engine.Turn as Turn
+import qualified Parun.Extra.Int as Int
+import qualified Parun.Extra.Natural as Natural
+import qualified Parun.Types.ActivatedAbility as ActivatedAbility
+import qualified Parun.Types.ActiveCopy as ActiveCopy
+import qualified Parun.Types.ActiveReplacement as ActiveReplacement
+import qualified Parun.Types.AsCopy as AsCopy
+import qualified Parun.Types.AttachR as AttachR
+import qualified Parun.Types.AttachRewrite as AttachRewrite
+import Parun.Types.CandidateId (CandidateId)
+import qualified Parun.Types.CandidateId as CandidateId
+import Parun.Types.Card (Card)
+import qualified Parun.Types.Card as Card.Type
+import qualified Parun.Types.Chosen as Chosen
+import Parun.Types.ControllerRelation (ControllerRelation)
+import qualified Parun.Types.ControllerRelation as ControllerRelation
+import qualified Parun.Types.CopyCoverage as CopyCoverage
+import qualified Parun.Types.CopyDomain as CopyDomain
+import qualified Parun.Types.CopyException as CopyException
+import qualified Parun.Types.CounterCause as CounterCause
+import qualified Parun.Types.CounterKind as CounterKind
+import qualified Parun.Types.CounterPattern as CounterPattern
+import qualified Parun.Types.CounterR as CounterR
+import qualified Parun.Types.CounterSubject as CounterSubject
+import qualified Parun.Types.DamageEvent as DamageEvent
+import qualified Parun.Types.DamagePattern as DamagePattern
+import qualified Parun.Types.DamageR as DamageR
+import qualified Parun.Types.DamageRewrite as DamageRewrite
+import qualified Parun.Types.Daytime as Daytime
+import qualified Parun.Types.DestructionCause as DestructionCause
+import qualified Parun.Types.DestructionR as DestructionR
+import qualified Parun.Types.DestructionRewrite as DestructionRewrite
+import qualified Parun.Types.DieRollR as DieRollR
+import qualified Parun.Types.DieRollRewrite as DieRollRewrite
+import qualified Parun.Types.DrawCountR as DrawCountR
+import qualified Parun.Types.DrawCountRewrite as DrawCountRewrite
+import qualified Parun.Types.DrawR as DrawR
+import qualified Parun.Types.DrawRewrite as DrawRewrite
+import qualified Parun.Types.Effect as Effect
+import qualified Parun.Types.EntryOption as EntryOption
+import qualified Parun.Types.EntryR as EntryR
+import qualified Parun.Types.EntryRewrite as EntryRewrite
+import qualified Parun.Types.Expiry as Expiry
+import Parun.Types.ExtraTurn (ExtraTurn)
+import qualified Parun.Types.ExtraTurn as ExtraTurn
+import qualified Parun.Types.Filter as Filter.Type
+import qualified Parun.Types.FloatingCandidate as FloatingCandidate
+import qualified Parun.Types.FromOutsideTheGame as FromOutsideTheGame
+import Parun.Types.Game (Game)
+import qualified Parun.Types.GameLossR as GameLossR
+import Parun.Types.GameState (GameState)
+import qualified Parun.Types.GameState as GameState
+import qualified Parun.Types.GrantedAbility as GrantedAbility
+import qualified Parun.Types.InstanceOrdinal as InstanceOrdinal
+import qualified Parun.Types.InstructionR as InstructionR
+import qualified Parun.Types.InstructionRewrite as InstructionRewrite
+import qualified Parun.Types.Keyword as Keyword.Type
+import qualified Parun.Types.LibraryPosition as LibraryPosition
+import qualified Parun.Types.LifeGainR as LifeGainR
+import qualified Parun.Types.LifeGainRewrite as LifeGainRewrite
+import qualified Parun.Types.LifeLossPattern as LifeLossPattern
+import qualified Parun.Types.LifeLossR as LifeLossR
+import qualified Parun.Types.LifeLossRewrite as LifeLossRewrite
+import qualified Parun.Types.Object as Object
+import Parun.Types.ObjectId (ObjectId)
+import qualified Parun.Types.PermanentCandidate as PermanentCandidate
+import qualified Parun.Types.PhasePattern as PhasePattern
+import Parun.Types.PhaseSelector (PhaseSelector)
+import qualified Parun.Types.PlaneswalkR as PlaneswalkR
+import qualified Parun.Types.PlaneswalkRewrite as PlaneswalkRewrite
+import qualified Parun.Types.Player as Player
+import qualified Parun.Types.PlayerChoice as PlayerChoice
+import qualified Parun.Types.PlayerCounterKind as PlayerCounterKind
+import Parun.Types.PlayerId (PlayerId)
+import qualified Parun.Types.PlayerInstruction as PlayerInstruction
+import qualified Parun.Types.PlayerRef as PlayerRef
+import qualified Parun.Types.PlayerRelation as PlayerRelation
+import Parun.Types.PlayerScope (PlayerScope)
+import qualified Parun.Types.PlayersDealtDamage as PlayersDealtDamage
+import Parun.Types.Prevention (Prevention)
+import qualified Parun.Types.Prevention as Prevention
+import qualified Parun.Types.PreventionRider as PreventionRider
+import qualified Parun.Types.ProjectedCharacteristics as PC
+import qualified Parun.Types.Prompt as Prompt
+import Parun.Types.ProposedEvent (ProposedEvent)
+import qualified Parun.Types.ProposedEvent as ProposedEvent
+import qualified Parun.Types.Quantity as Quantity.Type
+import qualified Parun.Types.Recipient as Recipient
+import qualified Parun.Types.Regenerability as Regenerability
+import Parun.Types.ReplacementBucket (ReplacementBucket)
+import qualified Parun.Types.ReplacementBucket as ReplacementBucket
+import Parun.Types.ReplacementCandidate (ReplacementCandidate)
+import qualified Parun.Types.ReplacementCandidate as ReplacementCandidate
+import Parun.Types.ReplacementEffect (ReplacementEffect)
+import qualified Parun.Types.ReplacementEffect as ReplacementEffect
+import Parun.Types.ReplacementEntry (ReplacementEntry)
+import qualified Parun.Types.ReplacementEntry as ReplacementEntry
+import qualified Parun.Types.ReplacementOrigin as ReplacementOrigin
+import qualified Parun.Types.ReplacementProvenance as ReplacementProvenance
+import qualified Parun.Types.SacrificeToEnter as SacrificeToEnter
+import qualified Parun.Types.Scaling as Scaling
+import qualified Parun.Types.SlotName as SlotName
+import qualified Parun.Types.Source as Source
+import qualified Parun.Types.Subtype as Subtype
+import qualified Parun.Types.Throw as Throw
+import qualified Parun.Types.ThrowKind as ThrowKind
+import Parun.Types.Timestamp (Timestamp)
+import qualified Parun.Types.TokenLot as TokenLot
+import qualified Parun.Types.TokenPattern as TokenPattern
+import qualified Parun.Types.TokenR as TokenR
+import qualified Parun.Types.TriggerCondition as TriggerCondition
+import qualified Parun.Types.TriggeredAbility as TriggeredAbility
+import qualified Parun.Types.TurnUpR as TurnUpR
+import qualified Parun.Types.TurnUpRewrite as TurnUpRewrite
+import qualified Parun.Types.UntapR as UntapR
+import qualified Parun.Types.Uses as Uses
+import qualified Parun.Types.Zone as Zone
+import Parun.Types.ZoneChange (ZoneChange)
+import qualified Parun.Types.ZoneChange as ZoneChange
+import qualified Parun.Types.ZoneChangePattern as ZoneChangePattern
+import qualified Parun.Types.ZoneChangeR as ZoneChangeR
+
+asZoneChange :: ProposedEvent -> Maybe ZoneChange
+asZoneChange event = case event of
+  ProposedEvent.WouldChangeZone zc _ _ _ -> Just zc
+  ProposedEvent.WouldEnter _ -> Nothing
+  ProposedEvent.WouldDealDamage _ -> Nothing
+  ProposedEvent.WouldBeDestroyed {} -> Nothing
+  ProposedEvent.WouldPutCounters {} -> Nothing
+  ProposedEvent.WouldPutPlayerCounters {} -> Nothing
+  ProposedEvent.WouldCreateTokens {} -> Nothing
+  ProposedEvent.WouldBeginPhase {} -> Nothing
+  ProposedEvent.WouldTurnFaceUp {} -> Nothing
+  ProposedEvent.WouldBecomeAttached {} -> Nothing
+  ProposedEvent.WouldUntap _ -> Nothing
+  ProposedEvent.WouldLoseLife {} -> Nothing
+  ProposedEvent.WouldGainLife {} -> Nothing
+  ProposedEvent.WouldDraw _ -> Nothing
+  ProposedEvent.WouldPerform {} -> Nothing
+  ProposedEvent.WouldThrow _ -> Nothing
+  ProposedEvent.WouldLoseGame {} -> Nothing
+  ProposedEvent.WouldPlaneswalk {} -> Nothing
+
+-- Every replacement effect instance in the game, in the engine's canonical
+-- order, which is what the ChooseReplacement prompt indexes into:
+--
+--   1. STATIC abilities (Projection.replacementsAffecting): battlefield
+--      permanents ascending by id, then the command zone's emblems and vanguard
+--      cards, whose abilities CR 113.6p leaves functioning there, then the rows a card STATES
+--      it functions from elsewhere with (CR 113.6b) -- the stack, then the
+--      graveyards, then the hands, then the libraries -- and last the rows a
+--      RULE mints for a card in a hand (CR 702.35a's madness); each object's own
+--      effects in printed order. Read from `sources`, which for a CR 608.2f
+--      batch is the board the batch began in rather than the live one (see
+--      Event.applyReplacementsIn).
+--   2. The FLOATING store (GameState.replacements): newest first, since every
+--      installer prepends as it creates the row. Always the LIVE store, never a
+--      frozen one: CR 614.3 spends a one-shot as it is applied, and `consume`
+--      writes that back here.
+--   3. The CR 613.11 PLAYER axis (PlayerEffect.protectionCarriers), by seat: rule
+--      702.16e's "or player", which no permanent's ability list holds because a
+--      player has no keywords and no characteristics. Re-derived from the board
+--      like segment 1 and spent like it -- nothing to consume.
+--
+-- Segments 1 and 2 drop a row whose printed clause is false right now, which is
+-- CR 614.1's "they aren't locked in ahead of time": the permanent segment's CR
+-- 604.2 clause in Projection.replacementsOf, the floating one's in `lives` below.
+-- Segment 3's twin of that is PlayerEffect.applying, whose own CR 604.2 gate
+-- drops a carrier that has stopped applying.
+--
+-- The first two segments take separate arguments -- rather than one GameState
+-- apiece, which would be two interchangeable parameters of the same type -- so
+-- the split cannot be got backwards. The third reads `sources` for segment 1's
+-- reason: it is derived from the board, so it must be derived from the board a CR
+-- 608.2f batch began in.
+collect :: GameState -> [ActiveReplacement.ActiveReplacement] -> [ReplacementCandidate]
+collect sources floating =
+  let fromPermanent (instance_, (src, provenance, re)) =
+        ReplacementCandidate.MkReplacementCandidate
+          { -- CR 614.5 / 702.136b: one identity per INSTANCE, so a permanent
+            -- carrying one ability twice gets the rule's two opportunities.
+            ReplacementCandidate.identity =
+              CandidateId.OfPermanent
+                PermanentCandidate.MkPermanentCandidate
+                  { PermanentCandidate.source = src,
+                    -- CR 615.13's "this way", carried from where the row was
+                    -- built rather than inferred from its value here. See
+                    -- Parun.Types.ReplacementProvenance and `printedBy`.
+                    PermanentCandidate.provenance = provenance,
+                    PermanentCandidate.effect = re,
+                    PermanentCandidate.ordinal = instance_
+                  },
+            ReplacementCandidate.effect = re,
+            ReplacementCandidate.source = src,
+            -- CR 109.5: "you" is the SOURCE's controller, read live off the
+            -- board this segment was gathered from -- a stolen Furnace of Rath
+            -- belongs to whoever holds it now.
+            ReplacementCandidate.controller = Projection.controllerOf src sources,
+            -- CR 614.3's lifetime, which a static ability does not have: this
+            -- segment is re-derived from the board on every iteration, and
+            -- `consume` is a no-op for it. So there is no duration to expire and no
+            -- use to spend, which is what Nothing says -- not an unknown one.
+            ReplacementCandidate.lifetime = Nothing,
+            -- CR 614.15: a printed replacement ability is a STATIC ability,
+            -- which puts it outside the self-replacement class -- so this
+            -- segment is never CR 616.1a's, whatever it replaces.
+            ReplacementCandidate.origin = ReplacementOrigin.Other,
+            -- CR 615.5, built rather than copied: the additional effect is
+            -- printed on the ability (DamageR.riders) and the environment it
+            -- runs in is read off the live board (see `printedRider`).
+            ReplacementCandidate.rider = printedRider src (Projection.controllerOf src sources) re,
+            -- No resolution installed this segment, so there is nothing it could
+            -- have bound: a printed static ability is re-derived from the board,
+            -- and Filter.IsBound is vacuously False in it.
+            ReplacementCandidate.slots = Map.empty,
+            ReplacementCandidate.choices = Nothing
+          }
+      fromFloating active =
+        ReplacementCandidate.MkReplacementCandidate
+          { ReplacementCandidate.identity =
+              CandidateId.OfFloating
+                FloatingCandidate.MkFloatingCandidate
+                  { FloatingCandidate.source = ActiveReplacement.source active,
+                    FloatingCandidate.timestamp = ActiveReplacement.timestamp active
+                  },
+            ReplacementCandidate.effect = ActiveReplacement.effect active,
+            ReplacementCandidate.source = ActiveReplacement.source active,
+            -- CR 109.5, BAKED at installation rather than derived: this row's
+            -- source is a spell CR 608.2n has already put in its owner's
+            -- graveyard as a new object with a new id, so `source` names nothing
+            -- the board can answer about. See Parun.Types.ActiveReplacement.
+            ReplacementCandidate.controller = Just (ActiveReplacement.controller active),
+            -- CR 614.3, read straight off the row: this is the segment that has a
+            -- lifetime, and `consume` spends only the row that applied. Two rows
+            -- alike in `effect` and unlike here are therefore NOT interchangeable
+            -- to `choose` below.
+            ReplacementCandidate.lifetime = Just (ActiveReplacement.expiry active, ActiveReplacement.uses active),
+            -- CR 614.15: a floating row IS an effect of a resolving spell or
+            -- ability, so this is the one segment that can carry a
+            -- self-replacement, and the row itself says whether it does.
+            ReplacementCandidate.origin = ActiveReplacement.origin active,
+            -- CR 615.5, copied off the row rather than looked up later: the row
+            -- may be dropped by the very application that fires the rider
+            -- (`setShield` drops a shield reduced to 0).
+            ReplacementCandidate.rider = ActiveReplacement.rider active,
+            -- The installing resolution's bindings, carried through so a row's
+            -- own pattern can name one object (see Parun.Types.ActiveReplacement).
+            ReplacementCandidate.slots = ActiveReplacement.slots active,
+            ReplacementCandidate.choices = Nothing
+          }
+      -- CR 702.16e's PLAYER half: "any damage that would be dealt by sources that
+      -- have the stated quality to a permanent or player with protection is
+      -- prevented." The permanent half is a row rule 702.16 mints onto the
+      -- permanent (Parun.Engine.Keyword.mintedReplacementsOf); a player has no
+      -- keywords, so its half rides the CR 613.11 axis and is minted here, where
+      -- the rows PlayerEffect.protectionCarriers gathers can be read.
+      --
+      -- CandidateId.OfPermanent with a MINTED provenance rather than a third arm
+      -- of that type, and the fit is exact rather than a reuse: CR 614.5's
+      -- identity for this row is (carrier, effect value, ordinal), the carrier is
+      -- the object whose static ability grants the protection, and CR 615.13's
+      -- "prevented this way" must not see it -- which is precisely what Minted
+      -- says (see Parun.Types.ReplacementProvenance). The effect value names the
+      -- protected player, so one carrier protecting two seats is two instances,
+      -- and the ordinal is 0 because equal rows here are interchangeable: two of
+      -- one carrier's stored rows share it while baking different names (CR
+      -- 608.2h), and whichever applies prevents all of that damage (CR
+      -- 702.16e), leaving the other nothing to prevent. A per-row ordinal leaves
+      -- the Synthetic Name Ward scenario green, so it was not added.
+      --
+      -- No collision with segment 1's rows off the same carrier: `whichRecipient`
+      -- is engine-baked and no card may write it (Parun.CardSpec's
+      -- engineOnlyOffends), and rule 702.16's keyword row writes `whatRecipient`
+      -- instead.
+      --
+      -- CR 109.5's "you" is the CARRIER's controller, not the protected player --
+      -- the two differ the moment a scope wider than PlayerScope.Related You appears --
+      -- and Absolute Virtue's Filter.OfRelatedPlayer reads it, as
+      -- PlayerEffect.protectedFromGiven's targeting and Aura bars do. Runed
+      -- Halo's Filter.HasChosenName and The Stasis Coffin's empty conjunction
+      -- read none, and the recipient side is a baked id.
+      --
+      -- That atom is also why Runed Halo's effect value no longer varies with
+      -- WHICH names the carrier holds, where the literal disjunction it replaced
+      -- did. The identity above is unharmed: the carrier's id is its own
+      -- component, so two carriers protecting one seat stay two instances, and
+      -- this segment is re-derived from the board every iteration (see below), so
+      -- a row can never outlive what it was built from.
+      --
+      -- Nothing to consume and no rider: this segment is re-derived from the board
+      -- every iteration, exactly as segment 1 is, and CR 615.10 leaves a static
+      -- shield unreduced.
+      fromProtectedPlayer (pid, src, baked, quality) =
+        ReplacementCandidate.MkReplacementCandidate
+          { ReplacementCandidate.identity =
+              CandidateId.OfPermanent
+                PermanentCandidate.MkPermanentCandidate
+                  { PermanentCandidate.source = src,
+                    PermanentCandidate.provenance = ReplacementProvenance.Minted,
+                    PermanentCandidate.effect = protectionShield pid quality,
+                    PermanentCandidate.ordinal = InstanceOrdinal.MkInstanceOrdinal 0
+                  },
+            ReplacementCandidate.effect = protectionShield pid quality,
+            ReplacementCandidate.source = src,
+            ReplacementCandidate.controller = Projection.controllerOf src sources,
+            ReplacementCandidate.lifetime = Nothing,
+            ReplacementCandidate.origin = ReplacementOrigin.Other,
+            ReplacementCandidate.rider = Nothing,
+            ReplacementCandidate.slots = Map.empty,
+            ReplacementCandidate.choices = baked
+          }
+      -- Rule 702.16e's row for one (protected player, carrier) pair.
+      --
+      -- The quality is the row's own, handed over by protectionCarriers -- the
+      -- SAME Filter PlayerEffect.protectedFromGiven matches for the targeting and
+      -- Aura bars, so the three consequences of rule 702.16 cannot disagree about
+      -- which sources carry it. Runed Halo's is CR 201.4's chosen names spelled as
+      -- Filter.HasChosenName, so a carrier that has chosen nothing matches no
+      -- source rather than shielding against everything; The Stasis Coffin's is
+      -- rule 702.16j's empty conjunction, which matches every source.
+      --
+      -- That atom answers here because candidateContext fills
+      -- Filter.sourceChosenNames off the carrier; it is what makes the read LIVE
+      -- at the damage event (CR 609.7b) rather than frozen when this row was
+      -- gathered.
+      --
+      -- `whichRecipient` and not `whoRecipient`, though both name a player: the
+      -- protected seat is an id this segment knows, where a PlayerRelation would
+      -- have to be read against a perspective, and CR 109.5's "you" on this row is
+      -- the carrier's controller rather than the protected player.
+      --
+      -- No kind, rule 702.16e saying "any damage", and no printed recipient half
+      -- at all -- `whatRecipient` is the permanent half's spelling and this row is
+      -- the other one.
+      protectionShield pid quality =
+        ReplacementEffect.DamageR
+          DamageR.MkDamageR
+            { DamageR.matching =
+                DamagePattern.MkDamagePattern
+                  { DamagePattern.whichKind = Nothing,
+                    DamagePattern.whatSource = quality,
+                    DamagePattern.whatRecipient = Nothing,
+                    DamagePattern.whoRecipient = Nothing,
+                    DamagePattern.whichRecipient = Just (Recipient.ToPlayer pid),
+                    DamagePattern.whichSource = Nothing,
+                    DamagePattern.boundRecipient = Nothing
+                  },
+              DamageR.rewrite = DamageRewrite.PreventAll,
+              DamageR.riders = Seq.empty
+            }
+      -- CR 614.1: a replacement effect is not locked in ahead of time, so the
+      -- printed "if" the installing clause carried is asked HERE rather than at
+      -- installation -- the row stays in GameState.replacements and is asked
+      -- again next time. The permanent segment's twin is
+      -- Projection.replacementsOf, which drops its own clause the same way --
+      -- CR 604.2's there, since a permanent's is a static ability's, and CR
+      -- 614.3's here, since a resolution installed this row.
+      --
+      -- The BOARD is Projection.boardAsEntering's, as replacementsOf's is, and
+      -- for a reason neither of those two rules states: CR 614.12a puts the
+      -- choice an entry replacement requires "before the permanent enters the
+      -- battlefield", so a permanent the CR 616.1 loop is mid-way through has
+      -- not entered and is on nobody's battlefield for ANY count made in that
+      -- window. That is a claim about zone membership rather than about which
+      -- segment asks, which is why the two segments cannot differ on it -- the
+      -- same reason Event.apply's EntryRewrite.WithCounters arm reads that board
+      -- for a floating row and a printed one alike. The VIEW stays live, as
+      -- replacementsOf's does: what the rule takes off the board is membership,
+      -- not characteristics.
+      --
+      -- Proven by Parun.ReplacementSpec's Synthetic Magnetic Lockdown pair, the
+      -- floating twin of its Frontier Mastodon pairs.
+      --
+      -- Only the CLAUSE narrows, and `applies` below keeps the live board
+      -- deliberately: a row's PATTERN is answered against ONE object's view
+      -- (matchesFiltered), against controllerOf, and against zone ownership, none
+      -- of which folds the battlefield index boardAsEntering subtracts from, and
+      -- the object each of them asks about is the entering permanent itself.
+      -- `admitsEntry`'s Bloodthirst arm is the one measurement on that path, and
+      -- it reads the event log rather than the board. So the two boards cannot
+      -- differ there, and passing the narrowed one would say the same thing more
+      -- obscurely.
+      --
+      -- CR 109.5's "you" is the row's BAKED controller, and the reading object is
+      -- its source: the clause outlives the resolution that installed it, so
+      -- there is nothing live to derive either from. The row's captured slots
+      -- ride along, so a clause and its pattern read one context
+      -- (candidateContext's).
+      --
+      -- CR 611.2a: a row under a window waits for that window first -- False
+      -- Peace's "all combat phases of their next turn" (Expiry.begun).
+      lives active =
+        Expiry.Engine.begun sources (ActiveReplacement.expiry active) && case ActiveReplacement.condition active of
+          Nothing -> True
+          Just condition ->
+            Condition.holds
+              (Projection.fullView sources)
+              (Projection.framedBySlots sources (fmap (Set.map Recipient.ToObject) (ActiveReplacement.slots active)) (Projection.sourceContext sources (Just (ActiveReplacement.controller active)) (ActiveReplacement.source active)))
+              (Projection.boardAsEntering sources)
+              (ActiveReplacement.source active)
+              condition
+   in fmap fromPermanent (numberInstances (Projection.replacementsAffecting sources))
+        <> fmap fromFloating (filter lives floating)
+        <> fmap fromProtectedPlayer (PlayerEffect.protectionCarriers sources)
+
+-- CR 615.5: the additional effect a PERMANENT's static prevention ability
+-- prints, packaged with the environment it will run in.
+--
+-- Nothing wherever the ability prints none, which is every arm but DamageR and
+-- every DamageR whose `riders` is empty -- so the wildcard is over effects that
+-- have nowhere to write one, not over effects this function declines to read.
+--
+-- The environment is BUILT here rather than snapshotted at installation, which
+-- is the whole difference between this rider and a floating row's (see
+-- Parun.Types.ActiveReplacement): this ability's source is still an object the
+-- board can answer about, so CR 109.5's "you" is whoever controls it now, and a
+-- static ability targets nothing (CR 115.10a), so there are no chosen targets to carry -- the slot map
+-- is empty. A source the board can no longer answer for has no "you", and gets
+-- no rider rather than one performed by nobody.
+--
+-- `src` is CR 113.7's source, which for a static ability is the object that
+-- prints it -- so the rider runs against the same object today's shielded
+-- recipient is (Stormwild Capridor shields itself).
+--
+-- CR 115.1 / 113.7: the RESERVED self slot is bound to that source, which is not
+-- a target and so does not contradict the paragraph above -- Parun.Engine.Resolve
+-- .performHandAction binds the same slot the same way for the same reason. It is
+-- what lets a rider naming its own permanent by slot say "it": Protean Hydra's
+-- "prevent that damage and remove that many +1/+1 counters from it", where
+-- Parun.Types.RemoveCounters names a slot and Parun.Types.PutCounters (Stormwild
+-- Capridor) names an ObjectRef and needs no binding.
+printedRider :: ObjectId -> Maybe PlayerId -> ReplacementEffect Card (GrantedAbility.GrantedAbility Card) (Effect.Effect Card (GrantedAbility.GrantedAbility Card)) -> Maybe PreventionRider.PreventionRider
+printedRider src you re = case re of
+  ReplacementEffect.DamageR damageR
+    | not (Seq.null (DamageR.riders damageR)),
+      Just controller <- you ->
+        Just
+          PreventionRider.MkPreventionRider
+            { PreventionRider.effects = DamageR.riders damageR,
+              PreventionRider.targets = Map.singleton Binding.triggerSource (Set.singleton (Recipient.ToObject src)),
+              PreventionRider.controller = controller,
+              PreventionRider.source = src
+            }
+  _ -> Nothing
+
+-- CR 614.5 / 702.136b: number each gathered row by how many rows EQUAL to it
+-- came before, so a permanent holding one ability twice offers two instances
+-- rather than one -- "if a permanent has multiple instances of riot, each works
+-- separately".
+--
+-- An ordinal among EQUALS rather than a position in the list, because the list
+-- is re-derived every CR 616.1f iteration and CR 616.2 lets an application
+-- change what is in it -- an entry replacement gained or lost anywhere earlier
+-- would renumber a surviving row, handing it an identity CR 614.5 has already
+-- spent. Counting equals cannot do that: a row is only ever renumbered by
+-- another row it is already equal to.
+--
+-- Swapping this for a plain `zip [0 ..]` leaves the suite green, so that is a
+-- fence rather than a proven line: no board in the pool moves a duplicated
+-- replacement's position mid-loop. What the ordinal DOES prove is the duplicate
+-- itself -- dropping it to a constant reddens Parun.ReplacementSpec's two
+-- "CR 702.136b riot twice" cases.
+numberInstances :: [(ObjectId, ReplacementProvenance.ReplacementProvenance, ReplacementEffect Card (GrantedAbility.GrantedAbility Card) (Effect.Effect Card (GrantedAbility.GrantedAbility Card)))] -> [(InstanceOrdinal.InstanceOrdinal, (ObjectId, ReplacementProvenance.ReplacementProvenance, ReplacementEffect Card (GrantedAbility.GrantedAbility Card) (Effect.Effect Card (GrantedAbility.GrantedAbility Card))))]
+numberInstances =
+  let step seen row =
+        let n = Map.findWithDefault 0 row seen
+         in (Map.insert row (n + 1) seen, (InstanceOrdinal.MkInstanceOrdinal n, row))
+   in snd . List.mapAccumL step Map.empty
+
+-- The candidates that apply to this event. `asOf` is Nothing for a lone event
+-- and Just the pre-batch board for a CR 608.2f batch (see Event.applyReplacementsIn);
+-- `gs` is always the live state.
+--
+-- NOT the last word on which candidates the CR 616.1 loop offers: Event.loop
+-- drops every candidate a permanent entering BESIDE this event's subject sources
+-- (CR 614.12). That filter needs the batch, which is the loop's parameter rather
+-- than this one's.
+--
+-- `applies` reads the pre-batch board too, not just `collect`: `collect` derives
+-- a permanent row's CR 109.5 "you" off it, and a source the batch has already
+-- removed has no controller, so the two have to agree on which board that is.
+applicable :: Maybe GameState -> GameState -> ProposedEvent -> [ReplacementCandidate]
+applicable asOf gs event =
+  let sources = Maybe.fromMaybe gs asOf
+      -- One gather and one grant walk, shared by every candidate asked.
+      viewOf = Projection.viewsOf sources
+      grants = Projection.controlGrants sources
+   in filter (applies viewOf grants sources event) (collect sources (GameState.replacements gs))
+
+-- CR 614.1: does this instance apply to this proposed event? The arms must agree
+-- on the EVENT CLASS -- which the type already rules out for the impossible
+-- pairs -- and the pattern must admit the event's subject.
+--
+-- CR 701.19c / 122.1c: may this destruction rewrite be applied to this
+-- destruction? Asked here, where a candidate is offered the event, so a shield
+-- that is refused is also never CONSUMED. Each arm reads the field its own rule
+-- names and ignores the other, which is why this reads the rewrite rather than
+-- rejecting or admitting the whole DestructionR class:
+--
+--   * CR 701.19c bars a REGENERATION shield from a destruction that can't be
+--     regenerated, and says nothing about what caused the destruction --
+--     regeneration replaces CR 704.5g's lethal-damage destruction, which is the
+--     shield's whole point.
+--   * CR 122.1c's replacement watches only for a destruction "as the result of an
+--     EFFECT", and says nothing about regenerability -- "removing a shield counter
+--     in this way isn't the same as regenerating a creature", so Terror's clause
+--     does not touch it. The rule's own reading of that restriction is the ruling
+--     that a shielded creature "may still be destroyed by state-based actions if
+--     it has damage marked on it equal to its toughness".
+admits :: Regenerability.Regenerability -> DestructionCause.DestructionCause -> DestructionRewrite.DestructionRewrite -> Bool
+admits regenerability cause rewrite = case rewrite of
+  DestructionRewrite.Regenerate -> regenerability == Regenerability.Regenerable
+  DestructionRewrite.RemoveShieldCounter -> cause == DestructionCause.ByEffect
+  -- CR 702.89a states neither restriction: "if enchanted permanent would be
+  -- destroyed" reaches CR 704.5g's lethal damage and a spell's destroy alike,
+  -- and umbra armor is not a regeneration, so CR 701.19c's prohibition leaves it
+  -- standing.
+  DestructionRewrite.UmbraArmor -> True
+  -- Pyramids' shield is not a regeneration (CR 701.19c) and names no cause.
+  DestructionRewrite.Heal -> True
+
+-- CR 614.1: which permanent's destruction each rewrite watches for when its row
+-- prints no subject of its own.
+--
+-- CR 201.5 / 201.5c / 701.19a: "regenerate THIS creature" names the ability's own
+-- source, so a regeneration is self-only. CR 122.1c's "this permanent" is the
+-- same self-scope reached from the other direction: the effect is minted onto the
+-- permanent holding the counters. CR 702.89a is the one that is not self-scoped
+-- -- the ability is the Aura's and the event is the enchanted permanent's -- which
+-- is why this is a function of the board rather than an equality.
+--
+-- A function rather than a Filter written onto every such row because these
+-- subjects are the RULES' words, not a card's: two of the three name the source
+-- itself and the third names its attachment.
+scopes :: GameState -> DestructionRewrite.DestructionRewrite -> ObjectId -> ObjectId -> Bool
+scopes gs rewrite src oid = case rewrite of
+  DestructionRewrite.Regenerate -> src == oid
+  DestructionRewrite.RemoveShieldCounter -> src == oid
+  -- CR 702.89a's "enchanted permanent": what the AURA is attached to, read off
+  -- Object.attachedTo. A row whose source is attached to a player (CR 303.4a's
+  -- other Aura shape) matches nothing, which is right -- rule 702.89a's subject
+  -- is a permanent.
+  DestructionRewrite.UmbraArmor ->
+    (Recipient.objectOf =<< (Object.attachedTo =<< Game.lookupObject src gs)) == Just oid
+  -- Read only for a row printing no subject, which no heal shield does; the
+  -- self-scope is regeneration's reading of an unnamed subject.
+  DestructionRewrite.Heal -> src == oid
+
+-- CR 615.7: a spent shield is not an applicable prevention effect at all, and is
+-- refused HERE rather than applied for nothing -- as `admits` refuses a
+-- regeneration shield CR 701.19c bars, and for the same reason: a candidate
+-- refused by `applies` is never spent, and never counts among the applicable
+-- sources whose ordering CR 615.7 asks about.
+--
+-- `setShield` drops a floating row the moment it reaches 0, so the only 0 that
+-- can reach this test is one written into card data -- which
+-- Parun.Types.DamageRewrite forbids. Total rather than partial.
+-- The one instantiation of Parun.Types.DamageRewrite this module works at, its
+-- effect parameter filled in as Parun.Types.Face declares it. Named for
+-- Parun.Engine.Projection.Rewrite's `Modification`: the parameter is a
+-- module-cycle device, so no caller here ever varies it.
+type Rewrite = DamageRewrite.DamageRewrite (Effect.Effect Card (GrantedAbility.GrantedAbility Card))
+
+unspent :: Rewrite -> Bool
+unspent rewrite = case rewrite of
+  DamageRewrite.PreventNext remaining -> remaining > 0
+  DamageRewrite.PreventAll -> True
+  -- CR 615.10's static shield is never used up -- it "will apply separately to
+  -- damage from other applicable events" -- so there is nothing to spend and
+  -- nothing to refuse.
+  DamageRewrite.PreventAllBut _ -> True
+  -- CR 702.64b says as much of absorb's ceiling -- it "will apply separately to
+  -- damage from other sources, or to damage dealt by the same source at a
+  -- different time" -- so there is nothing to spend and nothing to refuse.
+  DamageRewrite.PreventUpTo _ -> True
+  -- CR 122.1c's prevention is spent by the COUNTER going away, not by a number on
+  -- the row: Projection.shieldOf mints it only while a counter is there, so a
+  -- shield spent to nothing is gone from the gathered list rather than present and
+  -- refused here.
+  DamageRewrite.PreventRemovingShieldCounter -> True
+  DamageRewrite.SetAmount _ -> True
+  DamageRewrite.Scale _ -> True
+  -- CR 614.9's uncounted redirection has nothing to spend: it moves the
+  -- recipient and leaves the amount alone, so no application can exhaust it.
+  -- Its printed twin is the same rewrite with the destination described rather
+  -- than named.
+  DamageRewrite.Redirect _ -> True
+  DamageRewrite.RedirectMatching _ -> True
+  -- The counted redirection is spent as PreventNext is, in damage.
+  DamageRewrite.RedirectNext remaining _ -> remaining > 0
+  -- CR 614.1a's "instead [do something]" stores no amount either: Kill-Suit
+  -- Cultist's "the next time" is Uses.Once on the row that carries it, which the
+  -- CR 614.3 use count spends rather than this.
+  DamageRewrite.RunEffects _ -> True
+  -- Illusionary Mask's row stores nothing either: turning the permanent face up
+  -- ends the status it is minted from, which is what takes the row away.
+  DamageRewrite.TurnFaceUp -> True
+
+-- CR 122.1c: does this damage rewrite admit the event's RECIPIENT? The shield's
+-- prevention says "if damage would be dealt to THIS permanent", and that
+-- self-scope is asked here rather than through DamagePattern.whichRecipient for
+-- the reason Projection.shieldOf gives: that field is compared to the event's
+-- Parun.Types.Recipient tag, which records how the damage reached its recipient
+-- rather than only which permanent it reached.
+--
+-- Every other rewrite answers True, its scope being the pattern's business alone
+-- (Fog shields no one in particular; CR 615.7's row names its recipient in the
+-- pattern). Exhaustive, so a later rewrite with a scope of its own is asked here
+-- rather than silently given every recipient.
+admitsRecipient :: ObjectId -> Rewrite -> DamageEvent.DamageEvent -> Bool
+admitsRecipient src rewrite de = case rewrite of
+  DamageRewrite.PreventRemovingShieldCounter -> Recipient.objectOf (DamageEvent.target de) == Just src
+  DamageRewrite.PreventAll -> True
+  DamageRewrite.PreventNext _ -> True
+  DamageRewrite.PreventAllBut _ -> True
+  DamageRewrite.PreventUpTo _ -> True
+  DamageRewrite.SetAmount _ -> True
+  DamageRewrite.Scale _ -> True
+  DamageRewrite.Redirect _ -> True
+  DamageRewrite.RedirectNext _ _ -> True
+  DamageRewrite.RedirectMatching _ -> True
+  DamageRewrite.RunEffects _ -> True
+  -- Illusionary Mask's two rows scope themselves by pattern, one naming the
+  -- source and one the recipient (Projection.turnUpOf).
+  DamageRewrite.TurnFaceUp -> True
+
+-- CR 614.1: does this replacement apply to this event -- its printed pattern
+-- matches (`matchesPrinted`), and CR 801.13a lets it reach (`reaches`)?
+applies :: (ObjectId -> Filter.View) -> [Projection.ControlGrant] -> GameState -> ProposedEvent -> ReplacementCandidate -> Bool
+applies viewOf grants gs event candidate = matchesPrinted viewOf gs event candidate && reaches grants gs event candidate
+
+-- CR 801.13a: a replacement that would affect an object or player outside its
+-- controller's range does nothing to it -- so a row whose event affects one is
+-- not applied, the event being that one portion. Always under an unlimited
+-- range, and for a row with no controller.
+--
+-- A prevention or a redirection answers for itself instead: CR 801.13b
+-- (`preventsInRange`) and the destination (`redirectDestination`). Every other
+-- damage rewrite -- Furnace of Rath's doubling, Kill-Suit Cultist's
+-- "destroy it instead" -- affects the recipient, as `affected` names it.
+--
+-- An object is judged by CR 801.2c's seats as this turn began
+-- (Projection.objectWasInRangeGiven), so CR 800.4a's and CR 800.4c's exile of a
+-- permanent whose controller left this turn is still in range of the rows
+-- that were in range of that seat. Parun.DepartureSpec's "CR 801.2c a survivor's
+-- exile replacement still reaches a departing neighbour's permanent" proves it.
+reaches :: [Projection.ControlGrant] -> GameState -> ProposedEvent -> ReplacementCandidate -> Bool
+reaches grants gs event candidate = case (reachOf gs candidate, ReplacementCandidate.effect candidate) of
+  (Nothing, _) -> True
+  (Just _, ReplacementEffect.DamageR (DamageR.MkDamageR _ rewrite _))
+    | prevents rewrite || redirects rewrite -> True
+  (Just you, _) ->
+    let (objects, players) = affected event
+     in all (\oid -> Projection.objectWasInRangeGiven grants you oid gs) objects
+          && all (\pid -> Game.inRangeOf you pid gs) players
+
+-- CR 801.13a: the objects and players a replaced event would affect. A moving
+-- or entering object is read under the controller it has as the event is
+-- proposed, which for one entering is the one it enters under.
+--
+-- A TOTAL case, Parun.Engine.Event.Trigger.participants' reason: a new event
+-- class must be read against the rule rather than silently counted in range.
+affected :: ProposedEvent -> ([ObjectId], [PlayerId])
+affected event = case event of
+  ProposedEvent.WouldChangeZone zc _ _ _ -> ([ZoneChange.object zc], [])
+  ProposedEvent.WouldEnter oid -> ([oid], [])
+  ProposedEvent.WouldDealDamage de -> (Maybe.maybeToList (Recipient.objectOf (DamageEvent.target de)), Maybe.maybeToList (Recipient.playerOf (DamageEvent.target de)))
+  ProposedEvent.WouldBeDestroyed oid _ _ -> ([oid], [])
+  ProposedEvent.WouldPutCounters _ oid _ _ -> ([oid], [])
+  ProposedEvent.WouldPutPlayerCounters _ pid _ _ -> ([], [pid])
+  ProposedEvent.WouldCreateTokens pid _ -> ([], [pid])
+  ProposedEvent.WouldBeginPhase _ pid -> ([], [pid])
+  ProposedEvent.WouldTurnFaceUp oid _ -> ([oid], [])
+  ProposedEvent.WouldBecomeAttached oid -> ([oid], [])
+  ProposedEvent.WouldUntap oid -> ([oid], [])
+  ProposedEvent.WouldLoseLife _ pid _ -> ([], [pid])
+  ProposedEvent.WouldGainLife pid _ -> ([], [pid])
+  ProposedEvent.WouldDraw pid -> ([], [pid])
+  ProposedEvent.WouldPerform _ performer pid _ -> (Maybe.maybeToList performer, [pid])
+  ProposedEvent.WouldThrow throw -> ([], [Throw.thrower throw])
+  ProposedEvent.WouldLoseGame pid -> ([], [pid])
+  ProposedEvent.WouldPlaneswalk pid _ -> ([], [pid])
+
+-- CR 614.12: does this entry pattern confine itself to its own source ("this
+-- permanent"), rather than naming a general subset of permanents that happens
+-- to include it? A conjunct of Filter.IsSource is the only atom that confines.
+confinedToSource :: Filter.Type.Filter keyword -> Bool
+confinedToSource pat = case pat of
+  Filter.Type.IsSource -> True
+  Filter.Type.And fs -> any confinedToSource fs
+  _ -> False
+
+-- CR 614.1: does this replacement's printed pattern match this event?
+matchesPrinted :: (ObjectId -> Filter.View) -> GameState -> ProposedEvent -> ReplacementCandidate -> Bool
+matchesPrinted viewOf gs event candidate =
+  let src = ReplacementCandidate.source candidate
+   in case (ReplacementCandidate.effect candidate, event) of
+        -- CR 614.1a: which zone changes this redirect intercepts -- the
+        -- destination, the moving object's OWNER, and (Anafenza, the Foremost's
+        -- "a nontoken creature") what the moving object IS.
+        --
+        -- A pattern naming NO destination admits every one, which is CR 702.34a's
+        -- "instead of putting it anywhere else"; the destinations are not
+        -- enumerated, so this is a Maybe rather than a set of zones. A pattern
+        -- naming a DISCARD cause admits only a CR 701.9a discard of that cause
+        -- (Library of Leng's "if an effect causes you to discard").
+        (ReplacementEffect.ZoneChangeR (ZoneChangeR.MkZoneChangeR pat _ _ _ _ _), ProposedEvent.WouldChangeZone zc discarded _ resolving) ->
+          maybe True (== ZoneChange.to zc) (ZoneChangePattern.whenDestination pat)
+            && maybe True ((== discarded) . Just) (ZoneChangePattern.whenDiscarded pat)
+            && (resolving || not (ZoneChangePattern.duringResolution pat))
+            && matchesZoneOwner gs candidate (ZoneChangePattern.whoseObject pat) (ZoneChange.object zc)
+            && matchesFiltered viewOf gs candidate (ZoneChangePattern.whatObject pat) (ZoneChange.object zc)
+        -- CR 615.1: which events the pattern admits (see matchesDamagePattern),
+        -- plus the one fact about the ROW rather than the event -- a shield
+        -- spent to nothing is no longer a prevention effect.
+        --
+        -- CR 614.9's prohibition is asked HERE and not in an inert application,
+        -- which is the asymmetry `redirectable` below derives: a redirection a
+        -- card forbids is not applicable, so it never reaches CR 616.1's choice.
+        (ReplacementEffect.DamageR (DamageR.MkDamageR pat rewrite _), ProposedEvent.WouldDealDamage de) ->
+          matchesDamagePattern viewOf gs (candidateContext gs candidate) pat de
+            && unspent rewrite
+            && admitsRecipient src rewrite de
+            && (not (redirects rewrite) || redirectable viewOf gs de)
+            && (not (prevents rewrite) || preventsInRange gs (reachOf gs candidate) pat rewrite de)
+        -- CR 614.1a: a printed subject (Pyramids' "target land") is matched as
+        -- a Filter; absent one, the rewrite names its subject by identity or by
+        -- attachment, which `scopes` reads off the board.
+        (ReplacementEffect.DestructionR (DestructionR.MkDestructionR matching rewrite), ProposedEvent.WouldBeDestroyed oid regenerability cause) ->
+          maybe (scopes gs rewrite src oid) (\f -> matchesFiltered viewOf gs candidate f oid) matching && admits regenerability cause rewrite
+        (ReplacementEffect.CounterR (CounterR.MkCounterR pat _), ProposedEvent.WouldPutCounters cause oid kind _) ->
+          -- Our own encoding convention, not a rule: `whichKind = Nothing` means
+          -- any kind, never no kind.
+          maybe True (== kind) (CounterPattern.whichKind pat)
+            && matchesPutter gs candidate (CounterPattern.subject pat) cause
+            && matchesController gs candidate (CounterPattern.whose pat) oid
+            && matchesPermanent viewOf gs Nothing Map.empty Nothing (CounterPattern.onWhat pat) oid
+        -- CR 122.1 / 614.1: the same pattern against a PLAYER recipient. A
+        -- pattern naming a kind admits none of these: `whichKind` is the object
+        -- kinds, and a player can hold no counter of one (see
+        -- Parun.Types.CounterPattern), so Hardened Scales stays off a poison
+        -- counter without saying so.
+        (ReplacementEffect.CounterR (CounterR.MkCounterR pat _), ProposedEvent.WouldPutPlayerCounters cause pid _ _) ->
+          Maybe.isNothing (CounterPattern.whichKind pat)
+            && matchesPutter gs candidate (CounterPattern.subject pat) cause
+            && maybe False (\rel -> matchesPlayer gs candidate rel pid) (CounterPattern.onWho pat)
+        -- CR 614.16 at the ENTRY level: the counters this permanent is entering
+        -- with are a placement this row may scale, and CR 616.1 orders it against
+        -- every other row modifying the same entry. What it scales is the PENDING
+        -- count; see GameState.enteringCounters.
+        --
+        -- The cause is synthesized as the one the entry counters WOULD have been
+        -- placed under -- CR 122.6a's default putter, the object's controller --
+        -- so matchesPutter still parts Vorinclex's "if you would put" from CR
+        -- 614.16's "if an effect would put" (#847). Reading it off the flush
+        -- rather than off the event is what keeps the two levels answering alike.
+        (ReplacementEffect.CounterR (CounterR.MkCounterR pat _), ProposedEvent.WouldEnter oid) ->
+          case Projection.controllerOf oid gs of
+            Nothing -> False
+            Just putter ->
+              not (Map.null (matchingEnteringCounters gs pat oid))
+                && matchesPutter gs candidate (CounterPattern.subject pat) (CounterCause.ByEffect putter)
+                && matchesController gs candidate (CounterPattern.whose pat) oid
+                && matchesPermanent viewOf gs Nothing Map.empty Nothing (CounterPattern.onWhat pat) oid
+        -- CR 109.5: "under YOUR control" -- the tokens' controller against the
+        -- candidate's "you". No producer today names an opponent here.
+        --
+        -- And WHAT is being created (Queen Allenal of Ruadach's "creature
+        -- tokens"): "one or more" is ANY lot matching, each judged off what the
+        -- creating effect gives its token (CR 111.3) since none is minted yet.
+        (ReplacementEffect.TokenR (TokenR.MkTokenR pat _ _), ProposedEvent.WouldCreateTokens pid lots) ->
+          matchesPlayer gs candidate (TokenPattern.whose pat) pid
+            && any (matchesTokenLot gs (candidateContext gs candidate) (TokenPattern.whatToken pat) pid) lots
+        -- CR 614.1b / 500.11: a skip intercepts a step or phase BEGINNING, and
+        -- names exactly which one -- and, for a player-scoped skip, whose.
+        --
+        -- EQUALITY on the PhaseSelector, so a pattern naming a whole phase
+        -- (Stonehorn Dignitary) matches only the phase question Engine.runStep
+        -- raises at that phase's first step, and one naming a step matches only
+        -- the step question. That is what keeps CR 500.1's decomposition of a
+        -- phase into steps out of this comparison.
+        --
+        -- The event's PlayerId is the ACTIVE player, which is also whose step
+        -- this is: every step and phase in a turn belongs to the player whose
+        -- turn it is, or to their team (CR 805.4). So Fatigue is `whosePhase ==
+        -- Just that player`, widened to the team by the paragraph below, and
+        -- Nothing is Eon Hub's symmetric skip, which reads no PlayerId at all.
+        -- The SOURCE's controller is not consulted: unlike matchesController's
+        -- CR 109.5 "you", the player here was named by the effect, not derived.
+        --
+        -- CR 805.8: under the shared team turns option a skip naming any player
+        -- on the active team is that team's, so a teammate's row matches too.
+        (ReplacementEffect.PhaseR pat, ProposedEvent.WouldBeginPhase selector pid) ->
+          PhasePattern.whichPhase pat == selector
+            && maybe True (Turn.sharesTurn gs pid) (PhasePattern.whosePhase pat)
+        -- CR 614.1c-d: which entering permanents this replacement watches, as a
+        -- Filter over the entering object (see Parun.Types.ReplacementEffect).
+        -- 614.1c's self-scope is Filter.IsSource; 614.1d's is a characteristic
+        -- filter.
+        --
+        -- CR 614.12: the entering permanent's own ability applies to it only
+        -- where it affects that permanent alone. A creature entering as a copy
+        -- of Essence of the Wild has "creatures you control enter as a copy",
+        -- which names a subset that includes it, so it is not offered against
+        -- its own entry. The scenario
+        -- cr-616-1f-grizzly-bears-applying-essence-then-infinite-reflection-enters-a-hill-giant
+        -- proves it.
+        (ReplacementEffect.EntryR (EntryR.MkEntryR pat rewrite), ProposedEvent.WouldEnter oid) ->
+          matchesFiltered viewOf gs candidate pat oid
+            && admitsEntry gs oid rewrite
+            && (src /= oid || confinedToSource pat)
+        -- CR 614.1e: which permanents turning face up this replacement watches.
+        -- The same Filter language the entry arm above uses, and every producer
+        -- writes Filter.IsSource -- CR 614.1e's printed wording is always "as
+        -- THIS permanent is turned face up".
+        --
+        -- Matched against the LIVE projection, which for this event is the
+        -- permanent as it is turning over: Event.performTurnFaceUp has already
+        -- written Facing.FaceUp when it raises the event, so CR 708.11's "would
+        -- have ... after it's turned face up" is answered by asking about the
+        -- board rather than by a counterfactual.
+        --
+        -- TurnUpR.requiring and TurnUpR.paying are the second and third
+        -- conjuncts, and they are the ROW's own condition rather than the
+        -- rewrite class's. CR 702.37b's megamorph counter is the one row that
+        -- carries them -- "put a +1/+1 counter on it IF ITS MEGAMORPH COST WAS
+        -- PAID to turn it face up" -- so the row is refused down CR 701.40c's
+        -- manifest road, off an Effect.TurnFaceUp that names no procedure at
+        -- all, and down CR 702.37e's own procedure when it paid a plain morph
+        -- cost, none having paid that megamorph cost. Refused
+        -- rather than consumed and skipped, which is CR 614.1's own shape for an
+        -- ability whose condition is not met.
+        --
+        -- NOT scoped by rewrite class: CR 614.1e applies down every road, and a
+        -- card writing an "as this creature is turned face up, put N counters on
+        -- it" clause of its own -- Bubble Smuggler, whose road up is CR 702.168d's
+        -- disguise procedure -- states no such condition; see #987. CR 303.4k's
+        -- MayAttachTo has none either. Parun.CardSpec holds that no printing
+        -- authors a `requiring` or a `paying` at all, which is what keeps a
+        -- card's row unconditional here.
+        (ReplacementEffect.TurnUpR turnUpR, ProposedEvent.WouldTurnFaceUp oid road) ->
+          matchesFiltered viewOf gs candidate (TurnUpR.matching turnUpR) oid
+            && maybe True (\required -> fmap fst road == Just required) (TurnUpR.requiring turnUpR)
+            && maybe True (\required -> fmap snd road == Just required) (TurnUpR.paying turnUpR)
+        -- The TurnUpR arm's reading one event class over: the Filter is matched
+        -- against the live projection of the permanent becoming attached, which
+        -- Parun.Engine.Event.attach has already moved, and every producer writes
+        -- Filter.IsSource ("as THIS Equipment becomes attached").
+        (ReplacementEffect.AttachR attachR, ProposedEvent.WouldBecomeAttached oid) ->
+          matchesFiltered viewOf gs candidate (AttachR.matching attachR) oid
+        -- CR 122.1d's "a permanent with a stun counter on it" is the self-scope
+        -- DestructionR's arm reads one event class over: the row is minted onto
+        -- the permanent holding the counters, so `src` IS the rule's subject and
+        -- UntapR needs no subject. Bewitching Leechcraft's granted "this
+        -- creature" is the same self-scope.
+        --
+        -- `during` is the one restriction on WHICH untaps a row reaches, read
+        -- off the board as the step the game is in. Nothing is rule 122.1d's
+        -- every untap.
+        (ReplacementEffect.UntapR untapR, ProposedEvent.WouldUntap oid) -> src == oid && maybe True (== GameState.phase gs) (UntapR.during untapR)
+        -- CR 614.1a / 120.4c: whose life total the row watches (CR 109.5's
+        -- "your"), what caused the loss, and whether the loss would actually
+        -- carry the player past the total the rewrite leaves them at.
+        --
+        -- That third conjunct is CR 120.4d's own Worship example, which states
+        -- it as APPLICABILITY rather than as a rewrite that changes nothing:
+        -- "Worship's effect sees that the damage event would not reduce the
+        -- player's life total to less than 1, so Worship's effect is not
+        -- applied." So a loss the row would leave alone never reaches CR 616.1's
+        -- choice, is never spent under CR 614.5, and prompts nobody.
+        (ReplacementEffect.LifeLossR (LifeLossR.MkLifeLossR pat rewrite), ProposedEvent.WouldLoseLife cause pid n) ->
+          maybe True (== cause) (LifeLossPattern.whichCause pat)
+            && matchesPlayer gs candidate (LifeLossPattern.whose pat) pid
+            && breaches gs (ReplacementCandidate.controller candidate) rewrite pid n
+        -- CR 614.1a / 119.10: whose life total the row watches (CR 109.5's
+        -- "your"), and whether the rewrite would actually resize the gain. That
+        -- second conjunct is LifeLossR's third above, and for its reason: a gain
+        -- the row would leave alone never reaches CR 616.1's choice and is never
+        -- spent under CR 614.5.
+        (ReplacementEffect.LifeGainR (LifeGainR.MkLifeGainR whose rewrite), ProposedEvent.WouldGainLife pid n) ->
+          matchesPlayer gs candidate whose pid
+            && resizes rewrite n
+        -- CR 121.6 / 614.11: whose card draws the row watches (CR 109.5's "you",
+        -- or Plagiarize's target player, baked by CR 601.2c's resolution).
+        -- The whole of the pattern, there being nothing else about a draw to
+        -- narrow by. The `stocked` conjunct beside it is rule 702.52a's own
+        -- condition and NOT a general applicability test: rule 614.11's first
+        -- sentence makes a draw replacement apply even when the library is
+        -- empty, which is why `stocked` answers True for every rewrite but
+        -- dredge.
+        --
+        -- Every producer but dredge installs a FLOATING row, whose "you" was baked
+        -- when it resolved and survives the source leaving the battlefield --
+        -- which Ring of Ma'rûf's own cost makes it do; see relationHolds and #2662.
+        (ReplacementEffect.DrawR pat, ProposedEvent.WouldDraw pid) ->
+          matchesPlayer gs candidate (DrawR.whose pat) pid
+            && stocked gs (DrawR.rewrite pat) pid
+        -- CR 121.2a: whose draw INSTRUCTIONS the row watches (CR 109.5's "you"),
+        -- and the number it names. Alms Collector's "two or more" is a condition on
+        -- the event rather than a rewrite that changes nothing, LifeLossR's third
+        -- conjunct above: an instruction naming one card never reaches CR 616.1's
+        -- choice and is never spent under CR 614.5.
+        (ReplacementEffect.DrawCountR pat, ProposedEvent.WouldPerform PlayerInstruction.DrawCards _ pid n) ->
+          n >= DrawCountR.atLeast pat
+            && matchesPlayer gs candidate (DrawCountR.whose pat) pid
+        -- CR 614.1a: which instruction the row watches and whose (CR 109.5's
+        -- "you"), which is the whole of the pattern -- each instruction concerns
+        -- the player it names, CR 705.2's last sentence saying so outright of a
+        -- flip, and has no source, amount or destination to narrow by. No
+        -- threshold where DrawCountR has one: Bruvac the Grandiloquent's "one or
+        -- more" is met by every proposed instruction. No `admits` either: every
+        -- printed rewrite changes the event.
+        (ReplacementEffect.InstructionR row, ProposedEvent.WouldPerform instruction _ pid _) ->
+          InstructionR.instruction row == instruction
+            && matchesPlayer gs candidate (InstructionR.whose row) pid
+        -- The same, for the one instruction no WouldPerform carries: a flip is a
+        -- WouldThrow of coins (Parun.Types.Throw), and a row naming FlipCoin
+        -- watches its flipper.
+        --
+        -- Every rewrite reaches a flip however earlier rows left it (CR 616.2):
+        -- Krark's Thumb's ruling has a second Thumb replace each coin of the
+        -- first's "flip two coins and ignore one", so Pokey, the Scallywagg's "if
+        -- you would flip a coin" reaches each coin of it too.
+        (ReplacementEffect.InstructionR row, ProposedEvent.WouldThrow throw) ->
+          InstructionR.instruction row == PlayerInstruction.FlipCoin
+            && Throw.kind throw == ThrowKind.Coins
+            && matchesPlayer gs candidate (InstructionR.whose row) (Throw.thrower throw)
+        -- CR 706.1 / 614.1a: whose die rolls the row watches (CR 109.5's "you"),
+        -- the InstructionR arm above and for its reason -- an instruction to roll
+        -- concerns the roller and nobody else. Pixie Guide's sentence says "one
+        -- or more dice" with no dN and no count to narrow by, and always adds a
+        -- die, so there is no board on which it would change nothing.
+        --
+        -- Pokey, the Scallywagg's "if you would roll a d20" reaches every roll of
+        -- d20s, however many and however many ignored: the InstructionR arm's
+        -- reading of Krark's Thumb's ruling, die for coin.
+        (ReplacementEffect.DieRollR (DieRollR.MkDieRollR whose rewrite), ProposedEvent.WouldThrow throw) -> case Throw.kind throw of
+          ThrowKind.Coins -> False
+          ThrowKind.Dice sides ->
+            matchesPlayer gs candidate whose (Throw.thrower throw)
+              && case rewrite of
+                DieRollRewrite.ExtraIgnoringLowest -> True
+                DieRollRewrite.FlipCoinInstead -> sides == 20
+        -- The Unstable FAQ with CR 614.1a: the permanent assembling, judged by
+        -- the row's Filter (Steamflogger Boss's "a Rigger you control"). An
+        -- instruction a player carries out names no permanent, so no row of
+        -- this shape reaches it. No `admits`: doubling always changes the count.
+        --
+        -- Read through last known information (CR 608.2h): a Rigger that left
+        -- before its "it assembles" resolved still assembles, as the Rigger it
+        -- last was -- matchesDamageSource's fallback.
+        (ReplacementEffect.AssembleR matching, ProposedEvent.WouldPerform PlayerInstruction.Assemble (Just oid) _ _) ->
+          Filter.matches (candidateContext gs candidate) (Maybe.fromMaybe (viewOf oid) (Projection.viewWithLastKnownAnywhere gs oid)) matching
+        -- CR 104.3 / 614.1a: whose losses of the game the row watches -- Lich's
+        -- Mirror's "you".
+        (ReplacementEffect.GameLossR pat, ProposedEvent.WouldLoseGame pid) ->
+          matchesPlayer gs candidate (GameLossR.whose pat) pid
+        -- CR 701.31 / 614.1a: whose planeswalks the row watches, and for which
+        -- cause -- Fixed Point in Time's "as a result of rolling the planar die"
+        -- (CR 701.31c).
+        (ReplacementEffect.PlaneswalkR pat, ProposedEvent.WouldPlaneswalk pid cause) ->
+          matchesPlayer gs candidate (PlaneswalkR.whose pat) pid && all (== cause) (PlaneswalkR.cause pat)
+        -- Every row below falls through to False because an arm ABOVE already
+        -- matches every event of that class: a row below fires only for a
+        -- MISMATCHED class, where False is the correct answer rather than a
+        -- stand-in for "not yet implemented".
+        (ReplacementEffect.ZoneChangeR {}, _) -> False
+        (ReplacementEffect.EntryR {}, _) -> False
+        (ReplacementEffect.DamageR {}, _) -> False
+        (ReplacementEffect.DestructionR _, _) -> False
+        (ReplacementEffect.CounterR {}, _) -> False
+        (ReplacementEffect.TokenR {}, _) -> False
+        (ReplacementEffect.TurnUpR {}, _) -> False
+        (ReplacementEffect.AttachR {}, _) -> False
+        (ReplacementEffect.UntapR _, _) -> False
+        (ReplacementEffect.LifeLossR {}, _) -> False
+        (ReplacementEffect.LifeGainR {}, _) -> False
+        (ReplacementEffect.DrawR {}, _) -> False
+        (ReplacementEffect.DrawCountR {}, _) -> False
+        (ReplacementEffect.InstructionR {}, _) -> False
+        (ReplacementEffect.DieRollR {}, _) -> False
+        (ReplacementEffect.AssembleR {}, _) -> False
+        (ReplacementEffect.GameLossR {}, _) -> False
+        (ReplacementEffect.PlaneswalkR {}, _) -> False
+        (ReplacementEffect.PhaseR _, _) -> False
+
+-- CR 614.1a: would this rewrite actually change the loss? `admits` and `unspent`
+-- above, for the life-total class. A row this answers False for never reaches CR
+-- 616.1's choice, is never spent under CR 614.5, and prompts nobody.
+--
+-- CR 120.4d's own Worship example is where the CR states that posture out loud,
+-- and it states it as APPLICABILITY rather than as a rewrite that changes nothing:
+-- "Worship's effect sees that the damage event would not reduce the player's life
+-- total to less than 1, so Worship's effect is not applied."
+--
+-- `you` is CR 109.5's, the APPLYING row's controller, which is a different seat
+-- from `pid` for any pattern but LifeLossPattern's Related You. Nothing where the row
+-- has no controller: an ability whose "you" names nobody states no condition it
+-- can meet.
+--
+-- An arm may read the PROPOSED AMOUNT here rather than in the printed CR 604.2
+-- condition a Parun.Types.PrintedReplacement carries, because no
+-- Parun.Types.Condition can see it: a condition is asked of the BOARD, and "at
+-- least that many" is asked of the event.
+-- CR 702.52a / 702.52b: does this draw rewrite's own condition hold? Dredge is
+-- the one arm with such a condition -- "as long as you have at least N cards in
+-- your library" -- and rule 702.52b is the same sentence read the other way, so a
+-- library short of N keeps the row out of CR 616.1's offer entirely rather than
+-- offering a dredge that mills nothing.
+--
+-- The COUNT of the milling player's library, `breaches`'s
+-- ExileFromTopOfYourLibrary arm and for its reason. The player asked is the one
+-- the EVENT named, which is who rule 702.52a mills; the row reaches this only
+-- once ControllerRelation.Related You has made that seat the card's own owner.
+stocked :: GameState -> DrawRewrite.DrawRewrite -> PlayerId -> Bool
+stocked gs rewrite pid = case rewrite of
+  DrawRewrite.Dredge n -> Natural.length (Game.zoneMembers Zone.Library pid gs) >= n
+  DrawRewrite.GainLife _ -> True
+  DrawRewrite.FromOutsideTheGame _ -> True
+  DrawRewrite.YouDraw -> True
+  DrawRewrite.OthersMayPayLife _ -> True
+  DrawRewrite.FromGraveyardOrLose -> True
+
+breaches :: GameState -> Maybe PlayerId -> LifeLossRewrite.LifeLossRewrite -> PlayerId -> Natural -> Bool
+breaches gs you rewrite pid n = case rewrite of
+  -- Read off the LIVE board rather than off the event, because the event carries
+  -- only the loss and the rule's threshold is on the resulting TOTAL. A player
+  -- already at or below the floor answers True -- the loss would still take them
+  -- lower -- and the rewrite then cuts it to nothing.
+  --
+  -- A player id nothing is filed under answers False: no total to compare, so
+  -- nothing to replace.
+  LifeLossRewrite.LeaveAtLeast floor_ -> case Map.lookup pid (GameState.players gs) of
+    Nothing -> False
+    Just player -> Player.life player - toInteger n < toInteger floor_
+  -- The board is not consulted: a scaling's whole applicability is arithmetic on
+  -- the proposed amount, and rule 119.6's own death check is a state-based action
+  -- rather than a bound this may not cross.
+  --
+  -- `Scaled (Multiply 1)` and `Scaled (AddMore 0)` resize nothing and are refused
+  -- here. That is the Worship example's posture carried over rather than a rule of
+  -- its own -- the CR states applicability only for the floor case -- and no
+  -- printing in data/cards/ scales a life loss by an identity, so the refusal is a
+  -- fence rather than a proved behaviour.
+  LifeLossRewrite.Scaled scaling -> scale scaling n /= n
+  -- Ashiok, Wicked Manipulator's "while your library has at least that many cards
+  -- in it". Its own ruling states the other side: "If you would pay life while
+  -- you control Ashiok and your library does not have at least that many cards in
+  -- it, you'll just pay life as normal."
+  --
+  -- A COUNT of the library rather than a check that the top `n` exist, which is
+  -- the same question asked of a list -- Parun.Engine.Game.zoneMembers is the
+  -- library in top-first order, and Parun.Engine.Event's arm takes its cards off
+  -- the front of that same list.
+  LifeLossRewrite.ExileFromTopOfYourLibrary ->
+    maybe False (\owner -> Natural.length (Game.zoneMembers Zone.Library owner gs) >= n) you
+  -- Strong, the Brutish Thespian's clause states no applicability at all: a loss
+  -- turned into a gain of the same size always changes the event, and rule 614.6
+  -- removes it whatever the board says. Event.resolveLifeLoss never proposes a
+  -- loss of 0, so there is no zero case to refuse.
+  LifeLossRewrite.GainInstead -> True
+
+-- CR 614.1a: would this rewrite actually change the gain? `breaches` above, for
+-- the gain class -- and simpler, since no arm of Parun.Types.LifeGainRewrite
+-- reads the board. A gain the funnel proposes is never 0 (CR 119.10), so
+-- DrawInstead always changes it.
+--
+-- `Scaled (Multiply 1)` and `Scaled (AddMore 0)` resize nothing and are refused,
+-- which is `breaches`' Scaled arm carried over word for word: a fence rather than
+-- a proved behaviour, no printing in data/cards/ scaling a life gain by an
+-- identity.
+resizes :: LifeGainRewrite.LifeGainRewrite -> Natural -> Bool
+resizes rewrite n = case rewrite of
+  LifeGainRewrite.Scaled scaling -> scale scaling n /= n
+  LifeGainRewrite.DrawInstead -> True
+
+-- Does the REWRITE itself admit this entry, over and above the pattern matching
+-- the entering object? `admits` and `unspent` above, for the entry class.
+--
+-- Almost every rewrite answers True unconditionally, because almost every
+-- producer states its whole applicability in the wording the pattern already
+-- carries. An ability that states a further condition of its own is what needs an
+-- arm here: rule 702.145b's night-and-double-faced pair, and rule 702.54a's "if
+-- an opponent was dealt damage this turn".
+--
+-- ONLY A RULE'S CONDITION, and every arm below is one. A CARD's condition on its
+-- own entry clause -- Dust Animus's "if you control five or more untapped lands",
+-- Monstrous War-Leech's "if it was kicked" -- is written where every other
+-- card-authored gate on a replacement ability goes, CR 604.2's clause on
+-- Parun.Types.PrintedReplacement, which Parun.Engine.Projection.replacementsOf has
+-- already asked against the entering permanent (CR 614.12) before a row reaches
+-- here. One condition mechanism, not two: no arm below reads a card-authored
+-- condition, only a rule's.
+--
+-- One arm per constructor, no wildcard, so a new rewrite with a condition breaks
+-- the build here as well as in bucketOfEffect, readsApplier and Event.apply. A
+-- wildcard defaulting to True would silently apply such a rewrite always.
+--
+-- The GameState is `applies`' own, which for a CR 608.2f batch is the PRE-BATCH
+-- board rather than the live one (see `applicable`). Immaterial today -- every
+-- WouldEnter reaches here from Event.runEntry, which passes no `asOf` -- but a
+-- batched entry would read the designation and the card off a frozen board.
+admitsEntry :: GameState -> ObjectId -> EntryRewrite.EntryRewrite ability effect -> Bool
+admitsEntry gs oid rewrite = case rewrite of
+  EntryRewrite.AsCopy _ -> True
+  EntryRewrite.ChoiceOf _ -> True
+  EntryRewrite.ChoiceByCoinFlip _ -> True
+  EntryRewrite.ChooseColors {} -> True
+  EntryRewrite.ChooseBasicLandType -> True
+  EntryRewrite.ChooseCreatureType -> True
+  EntryRewrite.ChoosePlayer -> True
+  EntryRewrite.ChooseCardNames _ -> True
+  EntryRewrite.ChooseCardName _ -> True
+  EntryRewrite.WithCounters {} -> True
+  -- CR 614.1c states no condition of its own: "it enters with flying" is
+  -- unconditional, and Faerie Squadron's "if this creature was kicked" is the
+  -- CARD's clause, which rides CR 604.2 on Parun.Types.PrintedReplacement and has
+  -- already been asked before this row was collected -- RunEffects' answer below,
+  -- and for its reason.
+  EntryRewrite.EntersWith _ -> True
+  EntryRewrite.UnderSourceControl -> True
+  EntryRewrite.SacrificeAnyNumber {} -> True
+  -- CR 614.1a states no condition: too few candidates is the card's "if you
+  -- don't" branch, settled in Parun.Engine.Event's arm rather than here.
+  EntryRewrite.SacrificeToEnter {} -> True
+  -- CR 702.38a states no condition of its own, the arm above's answer: an empty
+  -- hand is nothing to reveal rather than a row that does not apply.
+  EntryRewrite.Amplify _ -> True
+  -- CR 614.1c states no condition of its own: "as this creature enters, exile an
+  -- instant or sorcery card from your graveyard" is unconditional. An empty
+  -- graveyard is nothing to exile rather than a row that does not apply, which CR
+  -- 101.3 settles in Parun.Engine.Event's arm rather than here.
+  EntryRewrite.ExileFromGraveyard _ -> True
+  -- CR 614.1c states no condition of its own: "as this Equipment enters, choose a
+  -- creature you control it could be attached to" is unconditional. No candidate
+  -- is CR 301.5e -- it enters unattached -- rather than a row that does not
+  -- apply, which Parun.Engine.Event's arm settles rather than this one.
+  EntryRewrite.EntersAttachedTo _ -> True
+  -- CR 702.155b states no condition of its own -- a Saga with read ahead always
+  -- has both intrinsic abilities -- so this admits every entry the row is
+  -- collected for. CR 702.155a's turn-scoped narrowing is not a condition on the
+  -- ENTRY at all; it gates the chapter TRIGGERS, in Parun.Engine.Saga.
+  EntryRewrite.ReadAhead -> True
+  EntryRewrite.Riot -> True
+  EntryRewrite.Unleash -> True
+  -- CR 702.44b's own condition, the ability's rather than the pattern's:
+  -- sunburst "adds counters only if the object with sunburst is entering the
+  -- battlefield from the stack as a resolving spell and only if one or more
+  -- colored mana was spent on its costs". Both halves are one read of
+  -- Parun.Engine.Projection.colorsSpentOf: only a resolving spell arrives holding
+  -- a payment (see that function), so a non-empty set of colours is the whole
+  -- rule.
+  --
+  -- Asked here rather than in Event's arm for bloodthirst's reason above -- a
+  -- rewrite that applied and then placed nothing would still take a CR 616.1e
+  -- bucket, and could be handed the entry ahead of a rewrite with something to
+  -- do. The counters cannot tell the two readings apart; the bucket can.
+  --
+  -- A REGRESSION FENCE rather than proved behaviour: no board races sunburst
+  -- against a second CR 616.1e row, so answering True unconditionally leaves the
+  -- suite green (2026-09-13). Bloodthirst's Kismet case is the shape that would
+  -- observe it.
+  EntryRewrite.Sunburst -> not (Set.null (Projection.colorsSpentOf oid gs))
+  -- CR 702.44c sets modular's number by sunburst, so rule 702.44b's condition
+  -- comes with it.
+  EntryRewrite.ModularSunburst -> not (Set.null (Projection.colorsSpentOf oid gs))
+  -- CR 702.54a's own condition, the ability's rather than the pattern's: "IF AN
+  -- OPPONENT WAS DEALT DAMAGE THIS TURN, this permanent enters with N +1/+1
+  -- counters on it." Asked here rather than in Event's arm for rule 702.145b's
+  -- reason below -- a rewrite that applied and then placed nothing would still
+  -- take a CR 616.1e bucket and could be handed the entry ahead of a rewrite with
+  -- something to do.
+  --
+  -- The measurement is Quantity.PlayersDealtDamageThisTurn, which reads CR
+  -- 120.3a's damaged-player record (Parun.Engine.Game.damagedPlayer): damage to
+  -- an opponent's creature or to the controller herself is not damage to an
+  -- opponent, and CR 119.4's bare life loss is not damage at all. "Was an
+  -- opponent dealt damage" is that count compared against zero.
+  --
+  -- RULE 702.54b'S X FORM STATES NO CONDITION -- "this permanent enters with X
+  -- +1/+1 counters on it, where X is the total damage your opponents have been
+  -- dealt this turn" -- so Nothing admits the entry whatever the log holds, and X
+  -- is read where the row applies (Parun.Engine.Event). Petrified Wood-Kin with no
+  -- damage dealt enters with zero counters because X is zero, not because the row
+  -- was refused.
+  --
+  -- The COUNTERS cannot tell the two readings apart: X is a sum over the same
+  -- opponents the arm below counts, so X is greater than zero exactly when that
+  -- arm answers True, and admitting unconditionally places the same counters as
+  -- admitting under rule 702.54a's condition would. CR 616.1's bucket is where
+  -- they diverge, and a board does make that visible -- an opponent's Kismet
+  -- (EntryRewrite.Tapped) is a second CR 616.1e candidate for the entering
+  -- Petrified Wood-Kin, so with nothing dealt this turn admitting the row leaves
+  -- two rows to race and raises Prompt.ChooseReplacement, where refusing it under
+  -- rule 702.54a's condition would leave one row and ask nobody. That prompt is
+  -- what Parun.ReplacementSpec's Kismet case asserts.
+  --
+  -- CR 109.5's "you" is the ENTERING object's controller, read live off the board
+  -- rather than off the candidate -- AsCopy's and SacrificeAnyNumber's posture,
+  -- and what keeps `readsApplier` honest in answering False for this arm. The two
+  -- coincide for a minted row, whose Filter.IsSource makes the entering permanent
+  -- its own source; reading the object is what would still be right for a granted
+  -- one.
+  --
+  -- The window is the event log's, which Engine.beginTurnOf clears at the turn
+  -- handoff -- so "this turn" costs nothing here.
+  EntryRewrite.Bloodthirst Nothing -> True
+  EntryRewrite.Bloodthirst (Just _) ->
+    let context = Projection.sourceContext gs (Projection.controllerOf oid gs) oid
+     in maybe False (> 0) (Quantity.evaluate (Projection.fullView gs) context gs oid (Quantity.Type.PlayersDealtDamageThisTurn PlayersDealtDamage.MkPlayersDealtDamage {PlayersDealtDamage.player = PlayerRef.Relative PlayerRelation.Opponent, PlayersDealtDamage.kind = Nothing}))
+  -- CR 702.150a's own first condition, the ability's rather than the pattern's:
+  -- "If this permanent WOULD ENTER WITH ONE OR MORE LOYALTY COUNTERS ON IT". The
+  -- pending count is what that asks about (GameState.enteringCounters), so the
+  -- row is inapplicable until CR 306.5b's has placed something -- which is also
+  -- what makes CR 616.2 sequence the two: this row and CR 614.16's multiplier
+  -- become applicable together on the pass after the loyalty row applied.
+  --
+  -- Rule 702.150a's SECOND condition -- "chose to pay life for any part of its
+  -- cost" -- is asked where the row is minted instead
+  -- (Parun.Engine.Projection.intrinsicReplacementsOf), since CR 118.13a's
+  -- announcement is recorded on the SPELL and this function is handed the
+  -- permanent.
+  EntryRewrite.Compleated _ -> Map.findWithDefault 0 CounterKind.Loyalty (enteringCountersOf gs oid) > 0
+  -- CR 702.104a states no condition at all: the ability functions as the creature
+  -- enters, and both of the questions it asks are players'.
+  EntryRewrite.Tribute _ -> True
+  EntryRewrite.Tapped -> True
+  EntryRewrite.OrTapped _ -> True
+  -- CR 614.1c's "as [this permanent] enters, [do something]". No condition here
+  -- and Bloodthirst above is the contrast: rule 702.54a's condition is a RULE's,
+  -- so it has nowhere else to live, while Monstrous War-Leech's "if it was
+  -- kicked" is the CARD's and rides CR 604.2's clause on
+  -- Parun.Types.PrintedReplacement, which Parun.Engine.Projection.replacementsOf
+  -- has already asked before this row was ever collected.
+  EntryRewrite.RunEffects _ -> True
+  -- CR 702.145b's own two conditions, both of them the ability's rather than the
+  -- pattern's: "IF IT IS NIGHT and this permanent is REPRESENTED BY A
+  -- DOUBLE-FACED CARD, it enters transformed."
+  --
+  -- Asked here rather than in Event's arm so that CR 616.1 never offers the row:
+  -- a rewrite that applied and then did nothing would still take CR 616.1d's
+  -- bucket, and CR 616.1's highest-non-empty rule would hand it the entry ahead
+  -- of a rewrite that had something to do.
+  --
+  -- The layout half is Card.backFace, which is Nothing for exactly the cards CR
+  -- 712.1 does not count as double-faced -- the same question CR 712.14a asks one
+  -- rule over (Parun.Engine.Event.changeZoneEntering). It is asked at all because
+  -- daybound can be GRANTED: nothing stops a static ability from putting it on a
+  -- permanent with no second face, and the rule's condition is what says nothing
+  -- happens then.
+  EntryRewrite.EntersTransformed ->
+    GameState.daytime gs == Just Daytime.Night
+      && Maybe.isJust (Game.cardOf oid gs >>= Card.backFace)
+
+-- CR 614.16 versus CR 614.1: does this placement's PROVENANCE satisfy the
+-- pattern's subject?
+--
+-- ByEffect is rule 614.16's own subject, "if an EFFECT would put one or more
+-- counters" -- so it admits exactly that rule's two causes and no others. CR 609.1
+-- makes CR 714.3c's turn-based action neither, which is what keeps Doubling Season
+-- off a Saga's advancing lore counter, and it makes a cost paid under CR 601.2h
+-- neither for the same reason, which keeps Doubling Season off Soul Immolation's
+-- "blight X".
+--
+-- ByPlayer is a clause naming a PLAYER instead (Vorinclex, Monstrous Raider's "if
+-- you would put", "if an opponent would put"). Rule 714.3c has "that player" put
+-- the lore counter, so such a clause reaches it: the two subjects disagree about
+-- exactly this case, which is why the cause rides the event to here rather than
+-- being spent at the funnel's door (#847).
+--
+-- ByAnything is a clause naming neither (Hardened Scales, Vizier of Remedies).
+-- Rule 614.1 gives it nothing to narrow by, so every cause satisfies it -- CR
+-- 120.3d's wither and infect counters included, which is the placement no other
+-- subject and no other axis of the pattern can reach.
+-- CR 614.12b: the FIXED sacrifice an entry rewrite demands, if it demands one
+-- -- how many, and matching what. Every other rewrite is optional, "any number"
+-- or spends nothing, so no earlier choice can leave it owing what it cannot pay.
+entryCostOf :: EntryRewrite.EntryRewrite ability effect -> Maybe (Natural, Filter.Type.Filter Keyword.Type.Keyword)
+entryCostOf rewrite = case rewrite of
+  EntryRewrite.SacrificeToEnter s -> Just (SacrificeToEnter.count s, SacrificeToEnter.filter s)
+  EntryRewrite.AsCopy _ -> Nothing
+  EntryRewrite.ChoiceOf _ -> Nothing
+  EntryRewrite.ChoiceByCoinFlip _ -> Nothing
+  EntryRewrite.ChooseColors {} -> Nothing
+  EntryRewrite.ChooseBasicLandType -> Nothing
+  EntryRewrite.ChooseCreatureType -> Nothing
+  EntryRewrite.ChoosePlayer -> Nothing
+  EntryRewrite.ChooseCardNames _ -> Nothing
+  EntryRewrite.ChooseCardName _ -> Nothing
+  EntryRewrite.WithCounters _ -> Nothing
+  EntryRewrite.EntersWith _ -> Nothing
+  EntryRewrite.UnderSourceControl -> Nothing
+  EntryRewrite.SacrificeAnyNumber _ -> Nothing
+  EntryRewrite.ExileFromGraveyard _ -> Nothing
+  EntryRewrite.EntersAttachedTo _ -> Nothing
+  EntryRewrite.Riot -> Nothing
+  EntryRewrite.ReadAhead -> Nothing
+  EntryRewrite.Unleash -> Nothing
+  EntryRewrite.Sunburst -> Nothing
+  EntryRewrite.ModularSunburst -> Nothing
+  EntryRewrite.Bloodthirst _ -> Nothing
+  EntryRewrite.Amplify _ -> Nothing
+  EntryRewrite.Tribute _ -> Nothing
+  EntryRewrite.Compleated _ -> Nothing
+  EntryRewrite.Tapped -> Nothing
+  EntryRewrite.OrTapped _ -> Nothing
+  EntryRewrite.EntersTransformed -> Nothing
+  EntryRewrite.RunEffects _ -> Nothing
+
+-- Every way to take exactly `n` of the candidates, in their order.
+subsetsOf :: Natural -> [a] -> [[a]]
+subsetsOf 0 _ = [[]]
+subsetsOf _ [] = []
+subsetsOf n (x : xs) = fmap (x :) (subsetsOf (n - 1) xs) <> subsetsOf n xs
+
+-- CR 614.12b with CR 614.13b: can every demand, each a count out of its own
+-- candidates, still be paid from what `used` has not already taken, no
+-- permanent paying twice?
+jointlyPayable :: Set ObjectId -> [(Natural, [ObjectId])] -> Bool
+jointlyPayable _ [] = True
+jointlyPayable used ((n, pool) : rest) =
+  any (\chosen -> jointlyPayable (used <> Set.fromList chosen) rest) (subsetsOf n (filter (`Set.notMember` used) pool))
+
+matchesPutter :: GameState -> ReplacementCandidate -> CounterSubject.CounterSubject -> CounterCause.CounterCause -> Bool
+matchesPutter gs candidate subject cause = case (subject, cause) of
+  (CounterSubject.ByEffect, CounterCause.ByEffect _) -> True
+  (CounterSubject.ByEffect, CounterCause.ByPayment _) -> False
+  (CounterSubject.ByEffect, CounterCause.ByRule _) -> False
+  -- The three causes coincide here on purpose, and the rows are written out
+  -- rather than collapsed through CounterCause.putter: a player clause asks WHO,
+  -- and every cause names a player, but a fourth cause must be read against rule
+  -- 614.16 above before it is answered here.
+  (CounterSubject.ByPlayer rel, CounterCause.ByEffect pid) -> matchesPlayer gs candidate rel pid
+  (CounterSubject.ByPlayer rel, CounterCause.ByPayment pid) -> matchesPlayer gs candidate rel pid
+  (CounterSubject.ByPlayer rel, CounterCause.ByRule pid) -> matchesPlayer gs candidate rel pid
+  -- Written out for the same reason, and answering True for a reason of its own:
+  -- the clause narrows by nothing, not by "any player".
+  (CounterSubject.ByAnything, CounterCause.ByEffect _) -> True
+  (CounterSubject.ByAnything, CounterCause.ByPayment _) -> True
+  (CounterSubject.ByAnything, CounterCause.ByRule _) -> True
+
+-- CR 614.1: the ONE judgement of a ControllerRelation. The readers below each
+-- extract the player their rule names -- the event's player, an object's
+-- controller or an object's owner -- and ask nothing else, so a new constructor
+-- is one arm here that `-Werror` names rather than several it does not (see
+-- #2854, where the Opponents arm shipped as `/=` in one reader and CR 102.3 in
+-- the other three). The Related arm is Parun.Types.PlayerRelation.holdsFor, the
+-- same judge a filter, a trigger condition and a player effect go through.
+--
+-- CR 109.5's "you" is the CANDIDATE's (ReplacementCandidate.controller), for
+-- every reader alike: a permanent's row derives it from its source's controller
+-- live, while a FLOATING row baked one at installation because CR 608.2n has
+-- already moved its source to another zone as a new object (CR 400.7). Reading
+-- the source instead unscopes such a row the moment the source leaves the
+-- battlefield, and hands it to its owner on the way; see #2662.
+--
+-- Nothing matches nothing, on either side, for every relation but AnyPlayer: an
+-- effect with no controller states no relation it could satisfy and has no
+-- opponents, and an unknown player is nobody's. CR 108.4a's owner fallback is
+-- Projection.controllerOf's already, so `theirs` is Nothing only for an id
+-- naming no object, which no proposed event carries.
+--
+-- CR 303.4b's enchanted player is read off the SOURCE's attachment rather than
+-- supplied, because every reader has the source in hand and no segment bakes
+-- one: a floating row's source has left the battlefield, so it enchants nobody
+-- and the arm admits nothing.
+relationHolds :: GameState -> ReplacementCandidate -> ControllerRelation -> Maybe PlayerId -> Bool
+relationHolds gs candidate rel theirs = case rel of
+  ControllerRelation.Related relation -> PlayerRelation.holdsFor (Game.teams gs) relation (ReplacementCandidate.controller candidate) theirs
+  ControllerRelation.EnchantedPlayers -> Maybe.isJust theirs && Projection.enchantedPlayerOf (ReplacementCandidate.source candidate) gs == theirs
+  -- An InSlot the install never baked names nobody: a printed row has no
+  -- resolution whose slots it could read.
+  ControllerRelation.InSlot _ -> False
+  ControllerRelation.Among players -> maybe False (`Set.member` players) theirs
+
+-- CR 109.5 / 614.1: does this PLAYER satisfy a pattern's relation? The players a
+-- pattern names outright rather than through an object -- the token's
+-- controller (CR 111.2), the player putting counters (CR 122.6a) and the player
+-- receiving them (CR 122.1), the drawer, the loser of life.
+matchesPlayer :: GameState -> ReplacementCandidate -> ControllerRelation -> PlayerId -> Bool
+matchesPlayer gs candidate rel pid = relationHolds gs candidate rel (Just pid)
+
+-- CR 109.5 / 614.1: does `oid` satisfy this pattern's controller relation?
+-- Controller-based, unlike matchesZoneOwner below. Parun.TeamSpec's "CR 102.4 a
+-- your-team replacement reaches a teammate's permanent and not an opponent's"
+-- proves the Related arm through this reader.
+matchesController :: GameState -> ReplacementCandidate -> ControllerRelation -> ObjectId -> Bool
+matchesController gs candidate rel oid = relationHolds gs candidate rel (Projection.controllerOf oid gs)
+
+-- CR 614.1 / 615.1: is this DAMAGE coming from a source the pattern admits?
+-- Matched through Parun.Engine.Filter, against the PROJECTED view of the damage's
+-- own source (CR 113.7a) -- for a resolving spell, the spell on the stack, which
+-- is also the object Resolve installs a floating row under.
+--
+-- Two readings ride one Filter. CR 609.7b's characteristic shield (Luminesce's
+-- "black sources and red sources") is a predicate over that view, rechecked here
+-- at the event exactly as the rule says rather than locked in when the shield was
+-- created; CR 614.15's "this way" is `Filter.IsSource`, which compares the
+-- candidate's identity to the Context's source and so keys Galvanic Blast's
+-- metalcraft clause to the damage its own resolution deals. `And []` admits
+-- everything and never forces the view, which is what keeps CR 615.10's "if a
+-- source would deal damage" free of a projection.
+--
+-- The Context's source is a MAYBE because CR 615.12's carrier has one: a "damage
+-- can't be prevented" effect stored by a resolution has no permanent behind it.
+-- Nothing names no object, so IsSource -- the "THIS creature" of a printed clause
+-- -- is vacuously False for it, and no printing writes that pair anyway.
+--
+-- CR 608.2h decides WHICH view: a source no longer in the zone it was expected to
+-- be in is read from its last known information, which is CR 113.7a's own
+-- sentence from the shield's side and CR 702.2e's from the keyword's. Ghitu
+-- Fire-Eater is the case -- it sacrifices itself to pay for the ability that then
+-- deals its damage -- and without the fallback Luminesce's colour disjuncts both
+-- answer False on the blank view a dead id projects, so a red source's damage
+-- goes unprevented. viewWithLastKnownAnywhere rather than viewWithLastKnown: the
+-- id in hand IS the source, so there is no second object for the scoped reader to
+-- protect from the substitution.
+--
+-- Nothing from that reader means the object is gone AND nothing was filed, which
+-- falls back to the live blank view rather than to False -- today's behaviour,
+-- kept because `And []` above must still admit everything when the view is
+-- unavailable. No board separates the two: Parun.Engine.Event files a record for
+-- every object that leaves a zone, and Parun.Engine.Departure for every object of
+-- a departing player.
+--
+-- Control rides the same view: CR 702.16k judges a departed source by the
+-- controller it last had (CR 113.7a), not by CR 108.4a's owner fallback for the
+-- card it left behind. Proved by Parun.DamageSpec's "a stolen Fire-Eater sacrificed at a
+-- Nemesis naming its owner still deals its damage".
+matchesDamageSource :: (ObjectId -> Filter.View) -> GameState -> Filter.Context -> Filter.Type.Filter Keyword.Type.Keyword -> DamageEvent.DamageEvent -> Bool
+matchesDamageSource viewOf gs context filter_ de =
+  let oid = DamageEvent.source de
+      view = Maybe.fromMaybe (viewOf oid) (Projection.viewWithLastKnownAnywhere gs oid)
+   in Filter.matches context view filter_
+
+-- CR 615.1 / 614.1a: does this damage event have the qualities the pattern
+-- names? Five of them: a pattern naming no KIND admits combat and noncombat
+-- alike (CR 510.2's dealing versus CR 608's), one narrowing the SOURCE admits
+-- only the damage a source it describes is dealing (CR 120.1's "an object that
+-- deals damage is the source of that damage" -- CR 609.7b's characteristic, or
+-- CR 614.15's identity), one DESCRIBING the recipient admits only damage
+-- addressed to an object matching it (Stormwild Capridor's "to this creature"),
+-- one NAMING a recipient admits only the damage addressed to the permanent or
+-- player the engine baked in (CR 615.7), and one NAMING a source admits only the
+-- damage the one object a player chose is dealing (CR 609.7a).
+--
+-- That chosen source is compared by ID and its properties are not re-read here:
+-- CR 615.9 splits the question in two, and the property half is the Filter
+-- conjunct above, so a shield against "a red source of your choice" whose source
+-- has stopped being red matches this conjunct and fails that one.
+--
+-- ONE reading of what a DamagePattern means, shared by the two questions that
+-- ask it: `applies` above, for CR 615.1's shields and CR 614.1a's replacements,
+-- and `preventable` below, for CR 615.12's narrowed "can't be prevented"
+-- (Excruciator). A second reading would let Excruciator's clause and Fog's
+-- disagree about what "combat damage from this source" means.
+--
+-- The rewrite is NOT asked about here, though `applies` asks `unspent` right
+-- after: a spent shield is a row that no longer exists as a prevention effect,
+-- which is a fact about the ROW and not about which events the pattern admits.
+matchesDamagePattern :: (ObjectId -> Filter.View) -> GameState -> Filter.Context -> DamagePattern.DamagePattern -> DamageEvent.DamageEvent -> Bool
+matchesDamagePattern viewOf gs context pat de =
+  maybe True (== DamageEvent.kind de) (DamagePattern.whichKind pat)
+    && matchesDamageSource viewOf gs context (DamagePattern.whatSource pat) de
+    && matchesPrintedRecipient viewOf context de pat
+    && maybe True (== DamageEvent.target de) (DamagePattern.whichRecipient pat)
+    && maybe True (== DamageEvent.source de) (DamagePattern.whichSource pat)
+
+-- CR 615.1: does the damage's recipient satisfy the pattern's PRINTED recipient
+-- side, which is the DISJUNCTION of its object half and its player half?
+--
+-- Divine Deflection's "you and/or permanents you control" is one CR 615.7 shield
+-- over both kinds of recipient, so the two halves are joined by `or` and not by
+-- the `and` every other conjunct of matchesDamagePattern uses. Reading them as a
+-- conjunction would admit nothing at all: CR 120.3a's two kinds of recipient are
+-- disjoint, so no damage event satisfies an object filter and a player relation
+-- at once.
+--
+-- Neither half is a pattern that says nothing about the recipient: that pattern
+-- carries Nothing on BOTH halves and admits every recipient, which is the
+-- unrestricted reading DamagePattern documents and the empty disjunction would
+-- get backwards.
+matchesPrintedRecipient :: (ObjectId -> Filter.View) -> Filter.Context -> DamageEvent.DamageEvent -> DamagePattern.DamagePattern -> Bool
+matchesPrintedRecipient viewOf context de pat = case (DamagePattern.whatRecipient pat, DamagePattern.whoRecipient pat) of
+  (Nothing, Nothing) -> True
+  (what, who) ->
+    maybe False (matchesDamageRecipient viewOf context de) what
+      || maybe False (matchesRecipientPlayer context de) who
+
+-- CR 120.3a / 109.5: is this damage addressed to a PLAYER the pattern's printed
+-- clause names -- Divine Deflection's "dealt to you"?
+--
+-- False for an OBJECT recipient, matchesDamageRecipient's answer with the kinds
+-- swapped: the two halves each admit one of CR 120.3a's two kinds and neither
+-- guesses about the other.
+--
+-- "You" is the CONTEXT's perspective, which for a floating row is the controller
+-- baked when the row was installed (candidateContext) rather than a controller
+-- re-derived from a source the resolution has already left behind. A context with
+-- no perspective is judged as relationHolds judges a candidate with no "you".
+matchesRecipientPlayer :: Filter.Context -> DamageEvent.DamageEvent -> PlayerRelation.PlayerRelation -> Bool
+matchesRecipientPlayer context de relation = case Recipient.playerOf (DamageEvent.target de) of
+  Nothing -> False
+  Just pid -> PlayerRelation.holdsFor (Filter.teams context) relation (Filter.perspective context) (Just pid)
+
+-- CR 615.1: does the damage's RECIPIENT have the qualities the pattern's PRINTED
+-- clause names -- Stormwild Capridor's "if noncombat damage would be dealt to
+-- this creature"?
+--
+-- Read in the candidate's own Context, matchesDamageSource's exactly: the two
+-- filters of one pattern must agree on what IsSource and CR 109.5's "you" mean,
+-- and for a permanent's static ability both are answered off the permanent.
+--
+-- False for a PLAYER recipient (CR 120.3a), which is the only answer a Filter can
+-- give about something that is not an object. Nothing is lost by it: a pattern
+-- saying nothing about the recipient carries Nothing rather than a trivial
+-- filter, so this is reached only where a card really did describe an object, and
+-- a pattern whose sentence ALSO names a player says so in `whoRecipient`, which
+-- matchesPrintedRecipient asks beside this one.
+matchesDamageRecipient :: (ObjectId -> Filter.View) -> Filter.Context -> DamageEvent.DamageEvent -> Filter.Type.Filter Keyword.Type.Keyword -> Bool
+matchesDamageRecipient viewOf context de filter_ = case Recipient.objectOf (DamageEvent.target de) of
+  Nothing -> False
+  Just oid -> Filter.matches context (viewOf oid) filter_
+
+-- CR 614.1: does this ZONE CHANGE's object satisfy the pattern's relation?
+--
+-- The subject is the object's OWNER, not its controller, and that is a rules
+-- fact rather than a convenience: CR 400.3 and CR 404.1 make the destination
+-- zone the owner's, so Leyline of the Void's "an opponent's graveyard" asks who
+-- OWNS the card. A creature stolen with Act of Treason still dies to its owner's
+-- graveyard, which a controller-based test would get backwards.
+--
+-- Split out of matchesController, which stays controller-based for CR 109.5's
+-- "you" on a counter or token pattern. Leyline of the Void and Anafenza, the
+-- Foremost both name Opponents, and Parun.EventSpec's Anafenza group is what makes
+-- the relation observable: her controller's own dying creature reaches her own
+-- graveyard where an opponent's is exiled. What is NOT exercised is the owner /
+-- controller difference itself -- no test steals a creature and then kills it --
+-- so the argument for reading the owner stays the rules one above.
+--
+-- CR 109.5's "you" comes from the CANDIDATE and not from a fresh
+-- Projection.controllerOf on the source, because the two segments answer it
+-- differently and only the candidate knows which it is: a permanent's row is
+-- derived live off the board, while a FLOATING row baked its controller at
+-- installation precisely because its source is a spell CR 608.2n has already
+-- moved to another zone as a new object. Deriving it here instead silently
+-- unscoped every floating "your graveyard" redirect the moment its own source
+-- left the stack -- Yawgmoth's Will's second sentence, whose proof is
+-- Parun.PlayerEffectSpec's YawgmothsWill group.
+--
+-- CR 102.3's opponents and not "not mine": a teammate's card reaches their own
+-- graveyard, and Parun.TeamSpec's "CR 102.3 a teammate's card is not put into an
+-- opponent's graveyard" is the test that proves it through this reader.
+-- CR 303.4b's enchanted player is Wheel of Sun and Moon's, and
+-- Parun.ZoneChangeSpec's "Wheel of Sun and Moon reroutes only the enchanted
+-- player's cards" is the proof.
+matchesZoneOwner :: GameState -> ReplacementCandidate -> ControllerRelation -> ObjectId -> Bool
+matchesZoneOwner gs candidate rel oid = relationHolds gs candidate rel (fmap Object.owner (Game.lookupObject oid gs))
+
+-- Which permanents a pattern admits, matched through Parun.Engine.Filter over the
+-- PROJECTED view: creature-ness (CR 205.2b / 300.2 / 613.1d, so an Opalescence'd
+-- enchantment counts) and subtype membership (CR 205.3, so Blood Moon is seen).
+--
+-- The SOURCE is a parameter of its own, apart from `you` below, because the two
+-- atoms they decide are not the same question: CR 109.5's "you" is a player
+-- and IsSource names an object. Nothing where no object frames the match, which
+-- leaves IsSource vacuously False.
+--
+-- sacrificeCandidates below is the one caller that narrows a whole battlefield
+-- with it, and Parun.Engine.Cost, Parun.Engine.Event and Parun.Engine.Resolve's
+-- edict all reach it through that -- so there is no duplicate matcher to keep in
+-- step (#111).
+--
+-- `slots` is what the surrounding announcement or resolution bound, for a
+-- criterion that names one of them -- "a creature other than the target",
+-- Filter.IsBound. A counter pattern is read off a static ability with nothing
+-- announced, so its two callers hand over none.
+--
+-- `you` is CR 109.5's "you" the criterion is read from -- "Sacrifice X
+-- Treasures you control" names the payer -- and Nothing for a counter pattern,
+-- which names whose permanent through its own field.
+--
+-- The source's frame rides along (Projection.framedBy), CR 607.2d's
+-- link from "choose a creature type" to a cost printed beside it: Doom Cannon's
+-- "Sacrifice a creature of the chosen type" (Parun.CostSpec's Doom Cannon group).
+matchesPermanent :: (ObjectId -> Filter.View) -> GameState -> Maybe PlayerId -> Map.Map SlotName.SlotName (Set Recipient.Recipient) -> Maybe ObjectId -> Filter.Type.Filter Keyword.Type.Keyword -> ObjectId -> Bool
+matchesPermanent viewOf gs you slots source filter_ oid =
+  Filter.matches (permanentContext gs you slots source) (viewOf oid) filter_
+
+-- matchesPermanent's Context, which sacrificeCandidates also frames its pool by.
+permanentContext :: GameState -> Maybe PlayerId -> Map.Map SlotName.SlotName (Set Recipient.Recipient) -> Maybe ObjectId -> Filter.Context
+permanentContext gs you slots source =
+  let base = Projection.contextWithSlots gs you source slots
+   in maybe base (\asking -> Projection.framedBy asking gs base) source
+
+-- CR 701.21a: the permanents this player may sacrifice for a Filter, ascending --
+-- the order Prompt.ChooseSacrifices and Prompt.ChooseAnyNumber offer
+-- them in, which is what makes both the elision test and the transcript fallback
+-- deterministic.
+--
+-- Here rather than in Parun.Engine.Cost, which was where it lived while paying a
+-- cost was the only way to sacrifice anything: CR 614.1c's as-enters sacrifice
+-- (EntryRewrite.SacrificeAnyNumber) asks the same question from Parun.Engine.Event,
+-- which is BELOW Cost. One home keeps CR 701.21a's "a permanent they control"
+-- answered once.
+--
+-- The Maybe ObjectId is what the criterion's `Not IsSource` means by "another"
+-- -- the permanent whose cost is being paid, or whose as-enters ability is
+-- asking. Gift of Doom is why it is here: its morph cost is "sacrifice ANOTHER
+-- creature", and CR 708.2a makes the face-down permanent paying that cost a
+-- creature itself, so without the frame it could pay by sacrificing itself.
+-- That is the same failure Parun.Engine.Cost.tapCandidates records for CR
+-- 702.122a, where a Vehicle that had become a creature could crew itself.
+--
+-- CR 101.2 subtracts the permanents an effect in force says CAN'T be sacrificed
+-- (Garland, Royal Kidnapper), which is what makes such a permanent unofferable
+-- rather than merely unsacrificeable: this one function is what
+-- Parun.Engine.Cost's CR 118.3 payability count, its Prompt.ChooseSacrifices
+-- offer, Parun.Engine.Resolve's edict and Parun.Engine.Event's as-enters offer all
+-- read. The other half of the gate is in Event.sacrificeIn, for the instructions
+-- that name a victim without consulting a candidate list.
+--
+-- `slots` is matchesPermanent's: Parun.Engine.Cost hands over CR 601.2c's targets
+-- (Cost.announcedSlots) and Parun.Engine.Resolve's edict its Context's, while the
+-- as-enters offer has nothing to hand, no announcement being in flight there.
+--
+-- `you` is matchesPermanent's: the payer of a cost or the controller of the
+-- entering permanent, who is also `pid` there, but the edict's CONTROLLER rather
+-- than its victim. data/scenarios/grim-hireling-sacrifices-x-treasures.json
+-- proves the cost reading.
+sacrificeCandidates :: Maybe PlayerId -> Map.Map SlotName.SlotName (Set Recipient.Recipient) -> PlayerId -> Maybe ObjectId -> Filter.Type.Filter Keyword.Type.Keyword -> GameState -> [ObjectId]
+sacrificeCandidates you slots pid source filter_ gs =
+  let viewOf = Projection.viewsOf gs
+      context = permanentContext gs you slots source
+      -- CR 608.2d: the OfEachOtherCandidate operand compares against the
+      -- permanents the edict would offer were it absent (Filter.amongCandidates).
+      -- Before CR 101.2's subtraction below: a creature that can't be sacrificed
+      -- is still among the creatures that player controls.
+      matching = List.sort (Filter.amongCandidates context viewOf filter_ (Projection.controls pid gs))
+      forbidden = SacrificeRestriction.cantBeSacrificed matching gs
+   in filter (\oid -> not (Set.member oid forbidden)) matching
+
+-- CR 614.1c: the cards in the graveyards of the players `scope` names, read
+-- from this player's perspective (CR 109.5), that an as-enters exile may take,
+-- ascending -- the order the prompts offer them in, which is what lets a test
+-- pin its answer by index (Parun.PowerToughnessSpec's Living Lore) and what
+-- makes the transcript fallback deterministic.
+--
+-- sacrificeCandidates' shape one zone over, and the two differences are the
+-- rules': CR 701.21a's restrictions are about sacrificing and reach no card in a
+-- graveyard, and the filter is matched against the CARD's projection there (CR
+-- 400.7) rather than against a permanent's.
+--
+-- MINUS GameState.enteringPending, which is CR 614.13a's "or any other object
+-- entering the battlefield at the same time" -- its own example is Sutured
+-- Ghoul and Runeclaw Bear entering together out of one graveyard. A batch bound
+-- for the battlefield is moved one member at a time (Parun.Engine.Resolve.Effect's
+-- MoveToZone folds moveOne, each member's runEntry finishing before the next
+-- departs), so the members still to come are sitting in the graveyard this reads.
+-- The `batch` set the entry loop carries does not name them: it holds the
+-- siblings that have already ARRIVED, whose CR 400.7 incarnations are on the
+-- battlefield and so are no candidate here. Parun.PowerToughnessSpec's Sutured
+-- Ghoul pair proves it.
+graveyardCandidates :: PlayerId -> PlayerScope -> Filter.Type.Filter Keyword.Type.Keyword -> GameState -> [ObjectId]
+graveyardCandidates pid scope filter_ gs =
+  let context = Filter.contextIn gs (Just pid) Nothing
+      viewOf = Projection.viewsOf gs
+      owners = Maybe.fromMaybe [] (PlayerEffect.playersInScope (Just pid) (Just pid) gs scope)
+      offered oid = not (Map.member oid (GameState.enteringPending gs)) && Filter.matches context (viewOf oid) filter_
+   in List.sort (concatMap (\owner -> filter offered (Game.zoneMembers Zone.Graveyard owner gs)) owners)
+
+-- CR 614.1a / 614.1c-d: does the event's subject satisfy this replacement's
+-- Filter? Both the ENTERING object of an entry replacement and the MOVING object
+-- of a zone-change redirect, which is one question asked of one candidate --
+-- CR 614.1a puts no restriction on what a replacement may look at, so the two
+-- classes narrow by the same predicate language.
+--
+-- The same evaluator matchesPermanent uses, over the same projected view, but
+-- with a FRAMED Context rather than an empty one, because every filter in the
+-- pool that reaches here reads it: CR 614.1c's `IsSource` asks whether the
+-- candidate IS the effect's source (Clone, Primal Plasma, CR 306.5b's loyalty,
+-- and CR 702.34a's "exile THIS card" on the zone-change side), and CR 614.1d's
+-- `ControlledBy Opponent` asks who the candidate's controller is relative to CR
+-- 109.5's "you" (Gather Specimens as a floating row, Kismet as printed static
+-- text). The perspective is the CANDIDATE's controller, which for a floating row
+-- is the baked one -- deriving it from the
+-- source here would answer Nothing for every row whose spell has resolved, and a
+-- Nothing perspective makes ControlledBy vacuously False.
+--
+-- CR 614.12 is why the view is the LIVE projection of the materialized object
+-- rather than of the card it came from: a previous iteration's rewrite has to be
+-- visible to this one, including CR 616.1b's own change to who would control it.
+--
+-- CR 608.2h never fires on the zone-change side, and that is why the plain
+-- projection is right for a creature that "would die": Parun.Engine.Event runs
+-- this loop BEFORE the move, so the dying creature is still on the battlefield in
+-- `gs` and is read as it last existed there rather than as the card it becomes in
+-- the graveyard (CR 400.7). For a CR 608.2f batch `gs` is the pre-batch board
+-- Replacement.applicable passed down, which is that same reading.
+matchesFiltered :: (ObjectId -> Filter.View) -> GameState -> ReplacementCandidate -> Filter.Type.Filter Keyword.Type.Keyword -> ObjectId -> Bool
+matchesFiltered viewOf gs candidate filter_ oid =
+  Filter.matches (candidateContext gs candidate) (viewOf oid) filter_
+
+-- The Context a candidate's own Filters are read in: CR 109.5's "you" is the
+-- ROW's controller -- the baked one for a floating row, since deriving it from
+-- the source would answer Nothing once the spell that made it has resolved --
+-- and the source is what CR 614.1c's and CR 614.15's `IsSource` compares against.
+--
+-- Shared by matchesFiltered above and by the damage arm of `applies`, so a
+-- shield naming its source by characteristic (Luminesce) and an entry
+-- replacement naming its own permanent (Clone) read one context.
+--
+-- The row's own captured slot bindings ride along, which is what lets a floating
+-- pattern's Filter.IsBound name the object the INSTALLING resolution bound
+-- (Dire Fleet Daredevil's "that spell"); empty for a permanent's static ability,
+-- where the atom is vacuously False.
+--
+-- CR 303.4b's host rides along too, read LIVE off the board rather than carried:
+-- the source of a permanent's static replacement is on the battlefield to be
+-- asked what it is attached to, which is what lets Pariah's printed redirect
+-- destination say "enchanted creature" (Filter.IsHostOfSource). Nothing for a
+-- floating row whose source has left, the atom's ordinary vacuous answer.
+--
+-- CR 201.4's chosen names and CR 614.1c's chosen player ride along on the same
+-- footing, and LIVE for CR 609.7b's reason: a prevention shield's source half is
+-- rechecked at the event, so a name or a seat the source chose between the row's
+-- installation and the damage is the one this reads. The names, with the
+-- colour and subtype beside them, go through Parun.Engine.SourceContext, which
+-- falls back to CR 608.2h's last known information for a source already in a
+-- graveyard; a stored effect's shield reads the choices it baked as it began
+-- instead (ReplacementCandidate.choices, CR 608.2h). The player has no such
+-- fallback because Parun.Types.LastKnown records no chosen player, and rule
+-- 702.16k's carrier is a permanent on the battlefield whenever its own static
+-- ability mints a row.
+candidateContext :: GameState -> ReplacementCandidate -> Filter.Context
+candidateContext gs candidate =
+  let source = ReplacementCandidate.source candidate
+      choices = Maybe.fromMaybe (SourceContext.choicesOf (Game.acquisitionOf source gs) source gs) (ReplacementCandidate.choices candidate)
+   in Projection.framedBySlots
+        gs
+        (fmap (Set.map Recipient.ToObject) (ReplacementCandidate.slots candidate))
+        (Projection.framedWith choices source gs (Projection.sourceContext gs (ReplacementCandidate.controller candidate) source))
+          { Filter.carrierChosenPlayer = Game.currentChoice Chosen.Players source gs >>= Map.lookup PlayerChoice.AsEnters
+          }
+
+-- A lot's token is judged off the characteristics the creating effect gives it
+-- (CR 111.3) -- its given text, or for CR 707.1's copy token the copiable values
+-- it takes (CR 707.2). The controller is the event's player (CR 111.2), which is
+-- what lets a lot say "under your control" on the Filter axis too.
+--
+-- NOT as it would exist on the battlefield: CR 614.12 reads that for the
+-- replacements of CR 614.1c-d, which modify how a permanent enters, and a token
+-- replacement modifies its creation instead (Divine Visitation's March of the
+-- Machines ruling, Draconic Visitor's Mycosynth Lattice one). So the token's own
+-- static abilities, functioning only on the battlefield (CR 113.6, 604.2), grant
+-- it nothing yet: every "as long as" clause of its activated abilities is
+-- withheld, whatever the board or the creation's status would make of it.
+-- data/scenarios/replacement's Synthetic Minting Ledger pair proves the copy
+-- arm; the given-text arm is a regression fence, no token in data/cards/ being
+-- given such a clause.
+matchesTokenLot :: GameState -> Filter.Context -> Filter.Type.Filter Keyword.Type.Keyword -> PlayerId -> TokenLot.TokenLot -> Bool
+matchesTokenLot gs context filter_ pid lot =
+  let deploys = Count.deployIn gs Zone.Battlefield
+      clausesOf = Set.fromList . Maybe.mapMaybe ActivatedAbility.condition
+      view = case TokenLot.copy lot of
+        -- No OWNER, matching the viewOfCard branch below, which has no object to
+        -- read CR 108.3 off either: a lot that named one would answer two ways
+        -- for the same token depending on whether it was a copy.
+        Just snapshot ->
+          Count.viewOfSnapshot deploys (Just pid) Nothing True Map.empty Zone.Battlefield Zone.Battlefield (clausesOf (Count.abilitiesOf (Deploy.grants deploys snapshot) snapshot)) snapshot
+        -- CR 111.1: what the lot describes is a TOKEN whichever way its
+        -- characteristics were given, so `token` is True here as it is in the
+        -- copy branch above. Projection.viewOfCard answers False, describing a
+        -- printed face rather than the object this lot would mint.
+        Nothing ->
+          let face = NonEmpty.head (Card.Type.faces (TokenLot.card lot))
+           in (Projection.viewOfCardLapsed (clausesOf (Projection.printedAbilitiesOf face)) face) {Filter.controller = Just pid, Filter.token = True}
+   in Filter.matches context view filter_
+
+-- The counters `oid` is so far entering with, empty outside an entry (see
+-- GameState.enteringCounters).
+enteringCountersOf :: GameState -> ObjectId -> Map.Map (CounterKind.CounterKind Keyword.Type.Keyword) Natural
+enteringCountersOf gs oid = Map.findWithDefault Map.empty oid (GameState.enteringCounters gs)
+
+-- Those of them a pattern's kind admits. CR 614.16's rows name no kind (Doubling
+-- Season doubles any counter), and `whichKind = Nothing` is this module's "any
+-- kind" for the reason the WouldPutCounters arm gives.
+matchingEnteringCounters :: GameState -> CounterPattern.CounterPattern -> ObjectId -> Map.Map (CounterKind.CounterKind Keyword.Type.Keyword) Natural
+matchingEnteringCounters gs pat oid =
+  let pending = enteringCountersOf gs oid
+   in case CounterPattern.whichKind pat of
+        Nothing -> pending
+        Just kind -> Map.filterWithKey (\k _ -> k == kind) pending
+
+-- CR 614.1a: apply a scaling to a number. "Plus one" and "twice that many" are
+-- the same operation with different data, and so is Furnace of Rath's doubling
+-- -- which is why CounterR, TokenR (CR 614.16's two shapes) and DamageR all
+-- rewrite through this one function.
+scale :: Scaling.Scaling -> Natural -> Natural
+scale s n = case s of
+  Scaling.Multiply m -> n * m
+  Scaling.AddMore m -> n + m
+  -- CR 122.1: saturating, for the reason Parun.Types.Scaling gives -- and one of
+  -- the two scalings that can answer zero.
+  Scaling.Subtract m -> Natural.minusSaturating n m
+  -- CR 107.1a: "half that many . . . rounded down", which `div` on Natural
+  -- already is. One is what makes this answer zero, as Subtract above does.
+  Scaling.Halve -> n `div` 2
+
+-- CR 616.1a-e: take the HIGHEST non-empty bucket. Ord on ReplacementBucket is
+-- ascending in the CR's own order, so that is the minimum present; the fold seeds
+-- from Other (the largest) so it needs no partial `minimum`.
+highestBucket :: [ReplacementCandidate] -> [ReplacementCandidate]
+highestBucket candidates =
+  let bucketed = fmap (\c -> (bucketOf c, c)) candidates
+      best = List.foldl' min ReplacementBucket.Other (fmap fst bucketed)
+   in fmap snd (filter (\entry -> fst entry == best) bucketed)
+
+-- CR 616.1a-e: which bucket a candidate falls in.
+--
+-- CR 616.1a is asked FIRST and is answered by the candidate's ORIGIN, not by its
+-- payload: CR 614.15 defines the self-replacement class by which ability created
+-- the effect, so no ReplacementEffect value could answer it (see
+-- Parun.Types.ReplacementOrigin). Every remaining step reads the payload's SHAPE,
+-- never its identity.
+bucketOf :: ReplacementCandidate -> ReplacementBucket
+bucketOf candidate = case ReplacementCandidate.origin candidate of
+  ReplacementOrigin.SelfReplacement -> ReplacementBucket.SelfReplacement
+  ReplacementOrigin.Other -> bucketOfEffect (ReplacementCandidate.effect candidate)
+
+-- CR 616.1b-e: which bucket an effect that is NOT CR 614.15's falls in.
+bucketOfEffect :: ReplacementEffect Card (GrantedAbility.GrantedAbility Card) (Effect.Effect Card (GrantedAbility.GrantedAbility Card)) -> ReplacementBucket
+bucketOfEffect re = case re of
+  ReplacementEffect.ZoneChangeR {} -> ReplacementBucket.Other
+  -- CR 616.1c: entering as a copy is its own, HIGHER bucket. The split only
+  -- becomes observable where an AsCopy races another entry replacement of NO
+  -- HIGHER bucket in the SAME iteration, which is an entering Clone under an
+  -- opponent's Kismet -- proved by Parun.ReplacementSpec's "the copy bucket
+  -- outranks Kismet's, so no order is asked", on the absence of the prompt, since
+  -- CR 616.1f makes the two orders converge on one board. An entering Clone on
+  -- its own does not exercise it: AsCopy is the only applicable candidate on the
+  -- first iteration, and what carries the rest is CR 616.1f's re-collection plus CR
+  -- 614.5's identity being keyed on the effect VALUE rather than a list
+  -- position, which keeps the newly-acquired ChoiceOf distinct from the
+  -- already-applied AsCopy. Gather Specimens racing an entering Clone is a real
+  -- same-iteration race, but CR 616.1b's bucket outranks this one, so it
+  -- exercises that arm instead.
+  -- CR 707.9's exceptions do not move the bucket: rule 616.1c asks whether the
+  -- object is entering as a copy, which an excepted copy still is.
+  ReplacementEffect.EntryR (EntryR.MkEntryR _ (EntryRewrite.AsCopy _)) -> ReplacementBucket.CopyOnEntry
+  -- CR 616.1a-d name self-replacement, entering under a control effect, entering
+  -- as a copy and entering with the back face up. None of the next five arms is
+  -- any of those, so CR 616.1e is what applies to each.
+  ReplacementEffect.EntryR (EntryR.MkEntryR _ (EntryRewrite.ChoiceOf _)) -> ReplacementBucket.Other
+  ReplacementEffect.EntryR (EntryR.MkEntryR _ (EntryRewrite.ChoiceByCoinFlip _)) -> ReplacementBucket.Other
+  ReplacementEffect.EntryR (EntryR.MkEntryR _ EntryRewrite.ChooseColors {}) -> ReplacementBucket.Other
+  ReplacementEffect.EntryR (EntryR.MkEntryR _ EntryRewrite.ChooseBasicLandType) -> ReplacementBucket.Other
+  ReplacementEffect.EntryR (EntryR.MkEntryR _ EntryRewrite.ChooseCreatureType) -> ReplacementBucket.Other
+  ReplacementEffect.EntryR (EntryR.MkEntryR _ EntryRewrite.ChoosePlayer) -> ReplacementBucket.Other
+  ReplacementEffect.EntryR (EntryR.MkEntryR _ (EntryRewrite.ChooseCardNames _)) -> ReplacementBucket.Other
+  ReplacementEffect.EntryR (EntryR.MkEntryR _ (EntryRewrite.ChooseCardName _)) -> ReplacementBucket.Other
+  ReplacementEffect.EntryR (EntryR.MkEntryR _ (EntryRewrite.WithCounters {})) -> ReplacementBucket.Other
+  -- CR 616.1e for the arm above's reason, one payload over: what the permanent
+  -- enters WITH is neither whose it is, what it copies nor which face is up.
+  ReplacementEffect.EntryR (EntryR.MkEntryR _ (EntryRewrite.EntersWith _)) -> ReplacementBucket.Other
+  ReplacementEffect.EntryR (EntryR.MkEntryR _ (EntryRewrite.SacrificeAnyNumber {})) -> ReplacementBucket.Other
+  -- CR 616.1e: whether the permanent enters at all is neither whose it is, what
+  -- it copies nor which face is up.
+  ReplacementEffect.EntryR (EntryR.MkEntryR _ (EntryRewrite.SacrificeToEnter {})) -> ReplacementBucket.Other
+  -- CR 616.1e for the arm above's reason: what the permanent enters WITH is
+  -- neither whose it is, what it copies nor which face is up.
+  ReplacementEffect.EntryR (EntryR.MkEntryR _ (EntryRewrite.Amplify _)) -> ReplacementBucket.Other
+  -- CR 616.1e for the arm above's reason, one zone over: which card leaves a
+  -- graveyard is neither whose the permanent is, what it copies nor which face is
+  -- up.
+  ReplacementEffect.EntryR (EntryR.MkEntryR _ (EntryRewrite.ExileFromGraveyard _)) -> ReplacementBucket.Other
+  -- CR 616.1e for the arm above's reason: what the permanent arrives ATTACHED to
+  -- is neither whose it is, what it copies nor which face is up.
+  ReplacementEffect.EntryR (EntryR.MkEntryR _ (EntryRewrite.EntersAttachedTo _)) -> ReplacementBucket.Other
+  -- CR 702.136a is none of CR 616.1a-d either: riot rewrites what the permanent
+  -- enters WITH, never whose it is, what it copies or which face is up.
+  -- CR 616.1e for CR 702.155b's reason: read ahead rewrites how many lore
+  -- counters the Saga enters with, never whose it is, what it copies or which
+  -- face is up.
+  ReplacementEffect.EntryR (EntryR.MkEntryR _ EntryRewrite.ReadAhead) -> ReplacementBucket.Other
+  ReplacementEffect.EntryR (EntryR.MkEntryR _ EntryRewrite.Riot) -> ReplacementBucket.Other
+  -- CR 702.98a is none of CR 616.1a-d for riot's reason, one keyword over.
+  ReplacementEffect.EntryR (EntryR.MkEntryR _ EntryRewrite.Unleash) -> ReplacementBucket.Other
+  -- CR 702.44a is none of CR 616.1a-d for riot's reason, one keyword over:
+  -- sunburst rewrites what the permanent enters WITH.
+  ReplacementEffect.EntryR (EntryR.MkEntryR _ EntryRewrite.Sunburst) -> ReplacementBucket.Other
+  ReplacementEffect.EntryR (EntryR.MkEntryR _ EntryRewrite.ModularSunburst) -> ReplacementBucket.Other
+  -- CR 702.54a is none of CR 616.1a-d for riot's reason too: bloodthirst rewrites
+  -- what the permanent enters WITH. Its condition does not change the bucket --
+  -- `admitsEntry` has already kept an unsatisfied row out of the collection.
+  ReplacementEffect.EntryR (EntryR.MkEntryR _ (EntryRewrite.Bloodthirst _)) -> ReplacementBucket.Other
+  -- CR 702.104a is none of CR 616.1a-d for bloodthirst's reason above: tribute
+  -- rewrites what the permanent enters WITH.
+  ReplacementEffect.EntryR (EntryR.MkEntryR _ (EntryRewrite.Tribute _)) -> ReplacementBucket.Other
+  -- CR 616.1a-d name self-replacement, control on entry, copy on entry and back
+  -- face up; CR 702.150a is none of them -- compleated rewrites HOW MANY loyalty
+  -- counters the permanent enters with. So CR 616.1e, the same bucket CR 614.16's
+  -- counter multipliers fall in, which is what puts the two rows in one race.
+  ReplacementEffect.EntryR (EntryR.MkEntryR _ (EntryRewrite.Compleated _)) -> ReplacementBucket.Other
+  -- CR 614.1d is none of CR 616.1a-d either: a tap-state rewrite changes the
+  -- STATUS the permanent enters with (CR 110.5b), never whose it is, what it
+  -- copies or which face is up. So CR 616.1e.
+  ReplacementEffect.EntryR (EntryR.MkEntryR _ EntryRewrite.Tapped) -> ReplacementBucket.Other
+  -- CR 614.1c's priced variant of the same rewrite is none of CR 616.1a-d
+  -- either, and the price does not make it one: what the rewrite changes is still
+  -- the STATUS the permanent enters with (CR 110.5b), and CR 701.20b makes a
+  -- reveal change nothing at all. So CR 616.1e.
+  ReplacementEffect.EntryR (EntryR.MkEntryR _ (EntryRewrite.OrTapped _)) -> ReplacementBucket.Other
+  -- CR 616.1b: a control-on-entry rewrite is one step ABOVE the copy bucket, and
+  -- Gather Specimens racing an entering Clone is the board where the two orders
+  -- disagree: taking the control rewrite first hands Clone's own CR 109.5 copy
+  -- choice to the NEW controller, and taking the copy first hands it to the old
+  -- one.
+  ReplacementEffect.EntryR (EntryR.MkEntryR _ EntryRewrite.UnderSourceControl) -> ReplacementBucket.ControlOnEntry
+  -- CR 616.1d, and the only arm that is: "replacement and/or prevention effects
+  -- that would cause a card to enter the battlefield with its back face up".
+  -- That is the whole of what daybound's rewrite does (CR 702.145b), so it ranks
+  -- below CR 616.1c's copy bucket and above everything else.
+  --
+  -- The ordering is proved by Parun.ReplacementSpec's "the back-face bucket
+  -- outranks Kismet's, so no order is asked": a daybound creature entering at
+  -- night under an opponent's Kismet, again on the absence of the prompt.
+  ReplacementEffect.EntryR (EntryR.MkEntryR _ EntryRewrite.EntersTransformed) -> ReplacementBucket.BackFaceOnEntry
+  -- CR 616.1e: an as-enters rewrite that runs an effect is none of CR 616.1a-d --
+  -- it is not a self-replacement, does not change the permanent's controller, is
+  -- not a copy and shows no other face -- so it falls to the catch-all bucket
+  -- with every other entry rewrite that merely does something.
+  ReplacementEffect.EntryR (EntryR.MkEntryR _ (EntryRewrite.RunEffects _)) -> ReplacementBucket.Other
+  ReplacementEffect.DamageR {} -> ReplacementBucket.Other
+  ReplacementEffect.DestructionR _ -> ReplacementBucket.Other
+  ReplacementEffect.CounterR {} -> ReplacementBucket.Other
+  ReplacementEffect.TokenR {} -> ReplacementBucket.Other
+  -- CR 616.1a-d are all about entering the battlefield; turning face up is not,
+  -- so CR 616.1e -- for the copy rewrite too, since CR 616.1c's copy is one made
+  -- "as it enters the battlefield".
+  ReplacementEffect.TurnUpR {} -> ReplacementBucket.Other
+  -- CR 616.1a-d are all about entering the battlefield; becoming attached is
+  -- not, so CR 616.1e -- for the copy rewrite too, TurnUpR's reason.
+  ReplacementEffect.AttachR {} -> ReplacementBucket.Other
+  -- CR 616.1a-d are all about entering the battlefield and copying; becoming
+  -- untapped is neither, so CR 616.1e.
+  ReplacementEffect.UntapR _ -> ReplacementBucket.Other
+  -- CR 616.1a-d are all about entering the battlefield and copying; a life total
+  -- is neither, so CR 616.1e.
+  ReplacementEffect.LifeLossR {} -> ReplacementBucket.Other
+  ReplacementEffect.LifeGainR {} -> ReplacementBucket.Other
+  -- CR 616.1a-d are all about entering the battlefield and copying; drawing a
+  -- card is neither, so CR 616.1e.
+  ReplacementEffect.DrawR {} -> ReplacementBucket.Other
+  -- CR 616.1a-d are all about entering the battlefield and copying; an instruction
+  -- to draw cards is neither, so CR 616.1e.
+  ReplacementEffect.DrawCountR {} -> ReplacementBucket.Other
+  -- CR 616.1a-d are all about entering the battlefield and copying; a player's
+  -- instruction to mill, flip, proliferate, scry or face a choice is neither, so
+  -- CR 616.1e.
+  ReplacementEffect.InstructionR {} -> ReplacementBucket.Other
+  -- CR 616.1a-d are all about entries and copies; rolling dice is none of them, so
+  -- CR 616.1e. InstructionR's answer one rule over.
+  ReplacementEffect.DieRollR {} -> ReplacementBucket.Other
+  -- CR 616.1a-d are all about entries and copies; assembling is none of them, so
+  -- CR 616.1e.
+  ReplacementEffect.AssembleR {} -> ReplacementBucket.Other
+  -- CR 616.1a-d are all about entering the battlefield and copying; losing
+  -- the game is neither, so CR 616.1e.
+  ReplacementEffect.GameLossR {} -> ReplacementBucket.Other
+  ReplacementEffect.PlaneswalkR {} -> ReplacementBucket.Other
+  -- CR 616.1a-d are all about entries and copies; a skip is none of those, so it
+  -- falls to CR 616.1e.
+  ReplacementEffect.PhaseR _ -> ReplacementBucket.Other
+
+-- Does applying this effect read the CANDIDATE that is applying it -- something
+-- riding the ReplacementCandidate rather than the ReplacementEffect?
+--
+-- A CLASSIFICATION of effects, the same genre as bucketOf above: what SHAPE an
+-- effect has, never which effect it is. Its sole consumer is `choose` below,
+-- which folds CR 109.5's "you" into its indistinguishability test exactly for
+-- the arms that answer True.
+--
+-- Consumption is deliberately NOT what this asks about. Every Event.apply arm spends
+-- its own candidate (CR 614.5), but the loop gives each candidate its own
+-- opportunity in any order, so which was spent first is not a board difference.
+--
+-- One arm per constructor, no wildcard, and the EntryR and TurnUpR arms split per
+-- rewrite, so a new constructor breaks the build HERE as well as in
+-- bucketOfEffect and Event.apply. A wildcard defaulting to False would hand an
+-- author who teaches Event.apply a new controller-reading rewrite an unasked choice
+-- instead of a build failure.
+readsApplier :: ReplacementEffect Card (GrantedAbility.GrantedAbility Card) (Effect.Effect Card (GrantedAbility.GrantedAbility Card)) -> Bool
+readsApplier re = case re of
+  -- The destination zone is the effect's own field, and the pattern is matched
+  -- before Event.apply runs (Rest in Peace, Leyline of the Void). CR 701.20's
+  -- reveal rider does not change the answer: it shows the MOVING object's owner
+  -- (CR 400.3), never the row's controller. An OPTIONAL row does read it:
+  -- Event.apply asks the candidate's controller its "you may".
+  ReplacementEffect.ZoneChangeR r -> ZoneChangeR.optional r
+  -- CR 707.5 / 109.5: the eligible filter's "you" is the candidate's
+  -- controller (legalCopyTargets reads candidateContext), but readsSource
+  -- already folds the source in for this arm, and two rows on one source share
+  -- its controller, so the controller distinguishes nothing more.
+  ReplacementEffect.EntryR (EntryR.MkEntryR _ (EntryRewrite.AsCopy _)) -> False
+  -- Same chooser, and the options ride the effect: CR 614.1c's "enters as"
+  -- (Primal Plasma).
+  ReplacementEffect.EntryR (EntryR.MkEntryR _ (EntryRewrite.ChoiceOf _)) -> False
+  -- NO chooser at all, and the options ride the effect just the same: CR 705.2's
+  -- first sentence makes the face nobody's to pick, so two such rows are the same
+  -- offer whoever's is applying (Molten Sentry).
+  ReplacementEffect.EntryR (EntryR.MkEntryR _ (EntryRewrite.ChoiceByCoinFlip _)) -> False
+  -- Same chooser again, with no payload at all: CR 105.1's five colours are the
+  -- whole offer whoever's row is applying (Painter's Servant).
+  ReplacementEffect.EntryR (EntryR.MkEntryR _ EntryRewrite.ChooseColors {}) -> False
+  ReplacementEffect.EntryR (EntryR.MkEntryR _ EntryRewrite.ChooseBasicLandType) -> False
+  ReplacementEffect.EntryR (EntryR.MkEntryR _ EntryRewrite.ChooseCreatureType) -> False
+  -- Same chooser again, and the CANDIDATES are the board's rather than the
+  -- applier's: CR 102.1's players in the game are the whole offer whoever's row
+  -- is applying (Stuffy Doll).
+  ReplacementEffect.EntryR (EntryR.MkEntryR _ EntryRewrite.ChoosePlayer) -> False
+  -- Two choosers rather than one, and neither is the candidate's: the entering
+  -- object's controller is read live off the board for ChooseColors' reason, and
+  -- CR 102.2's opponent is derived from that same player. The restriction rides
+  -- the effect (CR 201.4a).
+  ReplacementEffect.EntryR (EntryR.MkEntryR _ (EntryRewrite.ChooseCardNames _)) -> False
+  -- ONE chooser, and still not the applier's: the entering object's controller
+  -- is read live off the board for ChooseColors' reason.
+  ReplacementEffect.EntryR (EntryR.MkEntryR _ (EntryRewrite.ChooseCardName _)) -> False
+  -- CR 614.1c's "enters with": the counter kind and count are the effect's own
+  -- fields, and they land on the entering object (CR 306.5b's loyalty included).
+  ReplacementEffect.EntryR (EntryR.MkEntryR _ (EntryRewrite.WithCounters {})) -> False
+  -- CR 614.1c's "enters with" one payload over: the counters and the keywords are
+  -- the effect's own fields, and the CR 611.2 grant the keywords become names the
+  -- ENTERING object as both its source and its affected set, so nothing here is
+  -- read off the applier.
+  ReplacementEffect.EntryR (EntryR.MkEntryR _ (EntryRewrite.EntersWith _)) -> False
+  -- CR 614.1c again, and NO despite performing a sacrifice: the sacrificing
+  -- player is the ENTERING object's controller, read live off the board at CR
+  -- 614.12a's moment for AsCopy's reason, and the criterion and counter kind ride
+  -- the effect. Two such rows would offer the same player the same permanents.
+  ReplacementEffect.EntryR (EntryR.MkEntryR _ (EntryRewrite.SacrificeAnyNumber {})) -> False
+  -- CR 614.1a: NO, for the arm above's reason -- the sacrificing player is the
+  -- ENTERING object's controller and the criterion rides the effect.
+  ReplacementEffect.EntryR (EntryR.MkEntryR _ (EntryRewrite.SacrificeToEnter {})) -> False
+  -- CR 702.38a: NO despite showing a card, for the arm above's reason. The hand
+  -- looked at is the ENTERING object's controller's, read live off the board at
+  -- CR 614.12a's moment, and the multiplier rides the effect. Two such rows would
+  -- offer the same player the same cards.
+  ReplacementEffect.EntryR (EntryR.MkEntryR _ (EntryRewrite.Amplify _)) -> False
+  -- CR 614.1c: NO despite spending a card, for SacrificeAnyNumber's reason. The
+  -- chooser is the ENTERING object's controller, and the graveyards looked at
+  -- are the ones the effect's scope names from that player's perspective (CR
+  -- 109.5) -- "your graveyard", "a graveyard" -- read live off the board at CR
+  -- 614.12a's moment; the criterion, scope and count ride the effect. Two such
+  -- rows would offer the same player the same cards.
+  ReplacementEffect.EntryR (EntryR.MkEntryR _ (EntryRewrite.ExileFromGraveyard _)) -> False
+  -- CR 614.1c: NO, for the arm above's reason. The chooser is the ENTERING
+  -- object's controller -- "you control" in an ability the permanent prints
+  -- about itself -- read live off the board at CR 614.12a's moment, and the
+  -- filter rides the effect. Two such rows would offer the same player the same
+  -- creatures.
+  ReplacementEffect.EntryR (EntryR.MkEntryR _ (EntryRewrite.EntersAttachedTo _)) -> False
+  -- CR 702.155b: the chooser is the ENTERING Saga's controller, read live off
+  -- the board for riot's reason below, and the bound is the entering Saga's own
+  -- final chapter number (CR 714.2d) rather than anything the row carries -- so
+  -- nothing about this rewrite is read off the applier.
+  ReplacementEffect.EntryR (EntryR.MkEntryR _ EntryRewrite.ReadAhead) -> False
+  -- CR 702.136a: riot's chooser is the ENTERING object's controller, read live
+  -- off the board for AsCopy's reason, and the rewrite carries no payload at all
+  -- -- rule 702.136a fixes both halves. Two riot rows are always on the SAME
+  -- object, since CR 614.1c's ability is the entering permanent's own, and they
+  -- offer that permanent's controller the same two outcomes -- so which applies
+  -- first is not a board difference.
+  ReplacementEffect.EntryR (EntryR.MkEntryR _ EntryRewrite.Riot) -> False
+  -- CR 702.98a: riot's answer, and every word of its reasoning holds -- the
+  -- chooser is the entering object's controller and the rewrite carries no
+  -- payload, so two unleash rows offer that player the same counter twice.
+  ReplacementEffect.EntryR (EntryR.MkEntryR _ EntryRewrite.Unleash) -> False
+  -- CR 702.44a: no chooser at all, and no payload -- both the count and the
+  -- counter kind are read off the ENTERING object, which is the same object
+  -- whichever row is applying. Two sunburst rows place the same counters in
+  -- either order.
+  ReplacementEffect.EntryR (EntryR.MkEntryR _ EntryRewrite.Sunburst) -> False
+  -- CR 702.44c: sunburst's answer, with the counter kind fixed by CR 702.43a.
+  ReplacementEffect.EntryR (EntryR.MkEntryR _ EntryRewrite.ModularSunburst) -> False
+  -- CR 702.54a: no chooser at all, and the count rides the effect. The condition
+  -- `admitsEntry` asks reads the ENTERING object's controller rather than the
+  -- applier, so two bloodthirst rows on one permanent are admitted together and
+  -- place the same counters in either order. Rule 702.54b's X is the same answer
+  -- for the same reason: Parun.Engine.Event reads its sum off that controller's
+  -- opponents, and two X rows on one permanent read one number.
+  ReplacementEffect.EntryR (EntryR.MkEntryR _ (EntryRewrite.Bloodthirst _)) -> False
+  -- CR 702.104a: the choosers are the ENTERING object's controller and the opponent
+  -- they name, read live off the board rather than off the candidate -- so two
+  -- tribute rows on one permanent ask the same pair of questions in either order.
+  ReplacementEffect.EntryR (EntryR.MkEntryR _ (EntryRewrite.Tribute _)) -> False
+  -- CR 702.150a: no chooser at all, and the symbol count rides the effect.
+  -- Applying it reads the row's payload and the entering object's pending
+  -- counters, nothing off the candidate -- so two compleated rows of equal count
+  -- subtract the same amount in either order.
+  ReplacementEffect.EntryR (EntryR.MkEntryR _ (EntryRewrite.Compleated _)) -> False
+  -- CR 614.1d: no chooser at all, and no payload -- the rewrite sets one status on
+  -- the object the event already named (CR 110.5b), so it applies the same way
+  -- whoever's row is applying it. Two such rows are the same write twice.
+  ReplacementEffect.EntryR (EntryR.MkEntryR _ EntryRewrite.Tapped) -> False
+  -- CR 614.1c: NO despite spending a resource, for SacrificeAnyNumber's reason.
+  -- The payer is the ENTERING object's controller -- "you" in an "as this
+  -- permanent enters" ability the permanent prints about itself -- read live off
+  -- the board at CR 614.12a's moment rather than off the candidate, and the
+  -- price rides the effect. Two such rows are always on the same object and
+  -- would offer that object's controller the same price.
+  ReplacementEffect.EntryR (EntryR.MkEntryR _ (EntryRewrite.OrTapped _)) -> False
+  -- THE ONE ARM THAT ANSWERS YES. CR 616.1b / 110.2 / 109.5: the rewrite hands
+  -- the permanent to the candidate's own `controller`, baked when the row was
+  -- installed. Two Gather Specimens are one card, so their `effect` values are
+  -- identical while their controllers are not, and applying one puts the
+  -- permanent somewhere applying the other does not.
+  ReplacementEffect.EntryR (EntryR.MkEntryR _ EntryRewrite.UnderSourceControl) -> True
+  -- CR 702.145b: no chooser at all, and no payload -- the rewrite shows
+  -- the back face of the card the event already named, and which face that is
+  -- comes from the card. Two such rows are the same write twice, Tapped's answer.
+  ReplacementEffect.EntryR (EntryR.MkEntryR _ EntryRewrite.EntersTransformed) -> False
+  -- CR 614.1c's as-enters effects, Bloodthirst's and SacrificeAnyNumber's answer
+  -- for their reason: Parun.Engine.Event's arm reads CR 109.5's "you" off the
+  -- ENTERING object rather than off the candidate, so two rows alike in `effect`
+  -- run the same effects for the same player whoever holds the row.
+  ReplacementEffect.EntryR (EntryR.MkEntryR _ (EntryRewrite.RunEffects _)) -> False
+  -- The rewritten amount is the effect's (Galvanic Blast, Furnace of Rath), and
+  -- a prevention prevents the same event whoever's row it is (Fog). CR 615.7's
+  -- shield is no exception: what makes two shields differ is how much each has
+  -- LEFT, which rides the effect value and so is already inside `choose`'s
+  -- comparison rather than needing the applier to be read.
+  ReplacementEffect.DamageR {} -> False
+  -- CR 701.19a acts on the creature being destroyed and names no player.
+  ReplacementEffect.DestructionR _ -> False
+  -- The scaling is the effect's, and it rewrites the count on the object the
+  -- event already named (Hardened Scales, Doubling Season).
+  ReplacementEffect.CounterR {} -> False
+  -- CR 614.16, the same shape one event class over: the player the tokens are
+  -- created FOR rides the EVENT, not the candidate, so Doubling Season doubles
+  -- the same player's tokens whoever's row applies.
+  ReplacementEffect.TokenR {} -> False
+  -- CR 702.37b via CR 614.1e: the counter kind and count are the effect's own
+  -- fields and they land on the object the event already named, which is
+  -- WithCounters' answer one event class over. The inner sum is cased so a
+  -- second TurnUpRewrite -- CR 208.2b's power-and-toughness setter -- has to be
+  -- decided here rather than inheriting this answer.
+  ReplacementEffect.TurnUpR (TurnUpR.MkTurnUpR _ _ _ (TurnUpRewrite.WithCounters {})) -> False
+  -- CR 303.4k: "the AURA's controller" makes the choice, and the Aura is the
+  -- object the event already named -- so the player asked is read off the event
+  -- rather than off whose row is applying, and two identical rows would put the
+  -- same question to the same player. The destination Filter is the effect's own
+  -- field, inside `choose`'s comparison already.
+  ReplacementEffect.TurnUpR (TurnUpR.MkTurnUpR _ _ _ (TurnUpRewrite.MayAttachTo _)) -> False
+  -- CR 707.4 / 109.5: the EntryR AsCopy arm's answer on the other event class --
+  -- the chooser is the turning permanent's controller, read off the event.
+  ReplacementEffect.TurnUpR (TurnUpR.MkTurnUpR _ _ _ (TurnUpRewrite.AsCopy _)) -> False
+  -- The same answer for an attaching permanent: the chooser is its controller,
+  -- read off the event.
+  ReplacementEffect.AttachR (AttachR.MkAttachR _ (AttachRewrite.AsCopy _)) -> False
+  -- CR 105.1's five colours are the whole offer whoever's row is applying, the
+  -- entry arm's answer.
+  ReplacementEffect.AttachR (AttachR.MkAttachR _ (AttachRewrite.ChooseColors _)) -> False
+  -- CR 122.1d acts on the permanent becoming untapped and names no player -- CR
+  -- 701.19a's answer one event class over, and for its reason.
+  ReplacementEffect.UntapR _ -> False
+  -- The rewrite is the effect's own field and the player is the one the event
+  -- already named, so two rows alike in `effect` resize the same loss the same way
+  -- whoever holds them. CR 109.5's "your" is read in `applies` rather than in
+  -- Event.apply, which is CounterR's split exactly.
+  --
+  -- The inner sum is cased, TurnUpR's discipline above for its reason: a rewrite
+  -- that DOES read the applier has to be decided here rather than inheriting this
+  -- answer, and nothing else in this module would break its build.
+  ReplacementEffect.LifeLossR (LifeLossR.MkLifeLossR _ (LifeLossRewrite.LeaveAtLeast _)) -> False
+  ReplacementEffect.LifeLossR (LifeLossR.MkLifeLossR _ (LifeLossRewrite.Scaled _)) -> False
+  -- CR 616.1 / 109.5: the exile comes off the CANDIDATE's own controller's
+  -- library, so two rows alike in `effect` and unlike in `you` empty different
+  -- libraries -- and `breaches` asks that same seat's count, so one may apply
+  -- where the other does not. The other arm that answers True,
+  -- EntryRewrite.UnderSourceControl, answers it under a different rule; what the
+  -- two share is reading the candidate's own `controller` to apply.
+  --
+  -- A FENCE rather than a proved behaviour, and provably so: the only printing
+  -- with this rewrite pairs it with LifeLossPattern's Related You, so two such rows
+  -- match one loss only if their two controllers are the same seat -- which CR
+  -- 704.5j's legend rule does not leave standing. No board can put the two
+  -- answers apart, and False would still be the wrong classification.
+  ReplacementEffect.LifeLossR (LifeLossR.MkLifeLossR _ LifeLossRewrite.ExileFromTopOfYourLibrary) -> True
+  -- The life goes to the seat the EVENT named and the amount is the event's own,
+  -- so two rows alike in `effect` gain the same player the same life whoever holds
+  -- them -- the resizing arms' answer, not the exiling arm's.
+  ReplacementEffect.LifeLossR (LifeLossR.MkLifeLossR _ LifeLossRewrite.GainInstead) -> False
+  -- The gain side's whole rewrite sum, and the two resizing loss arms' answer:
+  -- the scaling is the effect's own field and the player is the one the event
+  -- named. Cased on the inner sum, LifeLossR's discipline above for its reason.
+  ReplacementEffect.LifeGainR (LifeGainR.MkLifeGainR _ (LifeGainRewrite.Scaled _)) -> False
+  -- The drawer is the player the EVENT named and the count is the event's own,
+  -- the arm above's answer.
+  ReplacementEffect.LifeGainR (LifeGainR.MkLifeGainR _ LifeGainRewrite.DrawInstead) -> False
+  -- The player who gains the life is the one the EVENT named, and the amount is
+  -- the effect's own field, so two rows alike in `effect` gain the same seat the
+  -- same life whoever holds them. CR 109.5's "you" is read in `applies` rather
+  -- than in Event.apply, which is CounterR's split exactly.
+  --
+  -- The inner sum is cased, LifeLossR's discipline above for its reason: a
+  -- rewrite that DOES read the applier has to be decided here rather than
+  -- inheriting this answer.
+  ReplacementEffect.DrawR (DrawR.MkDrawR _ (DrawRewrite.GainLife _)) -> False
+  -- The card goes to the player the EVENT named and the filter and the reveal
+  -- ride the effect, so GainLife's answer above carries over. The one value this
+  -- rewrite reads off the CANDIDATE is `source`, which reaches nothing but the
+  -- Filter.Context Event.eligible scans the pool under -- `readsSource`'s
+  -- question, not this one.
+  ReplacementEffect.DrawR (DrawR.MkDrawR _ (DrawRewrite.FromOutsideTheGame _)) -> False
+  -- The miller is the seat the EVENT named and the count is the effect's own
+  -- field, so GainLife's answer above carries over. The card returned rides the
+  -- CANDIDATE rather than the effect, which is `readsSource`'s question and not
+  -- this one.
+  ReplacementEffect.DrawR (DrawR.MkDrawR _ (DrawRewrite.Dredge _)) -> False
+  -- CR 109.5: "you draw a card" -- the drawer is the row's own controller, so
+  -- two rows alike in `effect` and unlike in `you` hand the draw to different
+  -- seats. DrawCountRewrite.EachDrawOne's answer, and for its reason.
+  ReplacementEffect.DrawR (DrawR.MkDrawR _ DrawRewrite.YouDraw) -> True
+  -- The card revealed is the drawer's and the payers are the players OTHER than
+  -- the drawer, both read off the EVENT, and the life is the effect's own field.
+  -- GainLife's answer, and for its reason.
+  ReplacementEffect.DrawR (DrawR.MkDrawR _ (DrawRewrite.OthersMayPayLife _)) -> False
+  -- The graveyard searched and the player who loses are both the drawer the
+  -- EVENT named. GainLife's answer, and for its reason.
+  ReplacementEffect.DrawR (DrawR.MkDrawR _ DrawRewrite.FromGraveyardOrLose) -> False
+  -- CR 121.2a: "you and that player each draw a card" -- the "you" is the row's
+  -- own controller, so two rows alike in `effect` and unlike in `you` hand the
+  -- extra card to different seats. LifeLossRewrite.ExileFromTopOfYourLibrary's
+  -- answer, and for its reason. Unlike that one this is a PROVED behaviour rather
+  -- than a fence: Alms Collector is not legendary, so two of them under different
+  -- controllers stand at once, and Parun.ReplacementSpec's "CR 616.1 two collectors
+  -- under different controllers are told apart, and the drawer chooses" is what
+  -- proves the drawer is asked which one applies.
+  ReplacementEffect.DrawCountR (DrawCountR.MkDrawCountR _ _ DrawCountRewrite.EachDrawOne) -> True
+  -- The instruction is carried out by the seat the EVENT named, and a resized
+  -- count is the effect's own field, so two rows alike in `effect` leave the same
+  -- player the same instruction whoever holds them -- Bruvac the Grandiloquent's
+  -- "they mill twice that many" names the milling player and nobody else, and
+  -- Eligeth's drawer is the scryer. LifeGainRewrite.Scaled's answer, and for its
+  -- reason; the inner sum is cased so a rewrite that DOES read the applier has to
+  -- be decided here.
+  ReplacementEffect.InstructionR (InstructionR.MkInstructionR _ _ (InstructionRewrite.Scaled _)) -> False
+  ReplacementEffect.InstructionR (InstructionR.MkInstructionR _ _ InstructionRewrite.DrawInstead) -> False
+  -- Pokey's "you may" is asked of the row's controller, who is the flipper its
+  -- "you" names: the seat the EVENT named.
+  ReplacementEffect.InstructionR (InstructionR.MkInstructionR _ _ InstructionRewrite.RollD20Instead) -> False
+  -- The dice are thrown by the seat the EVENT named and the extra die is the
+  -- effect's own field, so two rows alike in `effect` leave the same roller the
+  -- same number of dice and the same number ignored whoever holds them.
+  -- InstructionR's answer, and for its reason.
+  ReplacementEffect.DieRollR (DieRollR.MkDieRollR _ DieRollRewrite.ExtraIgnoringLowest) -> False
+  -- InstructionR's RollD20Instead answer, and for its reason.
+  ReplacementEffect.DieRollR (DieRollR.MkDieRollR _ DieRollRewrite.FlipCoinInstead) -> False
+  ReplacementEffect.AssembleR {} -> False
+  -- CR 109.5: the effects run as the row's own controller, the reset's "you".
+  ReplacementEffect.GameLossR {} -> True
+  -- Susan Foreman's arrangement is of the planar deck of the player the EVENT
+  -- named, who also chooses. InstructionR's answer, and for its reason.
+  ReplacementEffect.PlaneswalkR (PlaneswalkR.MkPlaneswalkR _ _ PlaneswalkRewrite.ArrangeTopTwo) -> False
+  -- GameLossR's answer, and for its reason.
+  ReplacementEffect.PlaneswalkR (PlaneswalkR.MkPlaneswalkR _ _ (PlaneswalkRewrite.RunEffects _)) -> True
+  -- CR 614.10: a skip replaces the step or phase with nothing. The player it is
+  -- ABOUT is baked into PhasePattern.whosePhase, on the EFFECT, where this
+  -- comparison already sees it.
+  ReplacementEffect.PhaseR _ -> False
+
+-- CR 614.6: does applying this effect replace a coin flip with a die roll or a
+-- roll with a flip (Pokey, the Scallywagg), so the funnel that proposed one has
+-- to carry out the other? Parun.Engine.Event.flipOneCoin keeps such a row out of
+-- the offer on a road that cannot. A CLASSIFICATION of the row, one arm per
+-- constructor and no wildcard, readsApplier's discipline.
+substitutesAction :: ReplacementEffect Card (GrantedAbility.GrantedAbility Card) (Effect.Effect Card (GrantedAbility.GrantedAbility Card)) -> Bool
+substitutesAction effect = case effect of
+  ReplacementEffect.InstructionR row -> case InstructionR.rewrite row of
+    InstructionRewrite.Scaled _ -> False
+    InstructionRewrite.DrawInstead -> False
+    InstructionRewrite.RollD20Instead -> True
+  ReplacementEffect.DieRollR row -> case DieRollR.rewrite row of
+    DieRollRewrite.ExtraIgnoringLowest -> False
+    DieRollRewrite.FlipCoinInstead -> True
+  ReplacementEffect.DrawR {} -> False
+  ReplacementEffect.ZoneChangeR {} -> False
+  ReplacementEffect.EntryR {} -> False
+  ReplacementEffect.DamageR {} -> False
+  ReplacementEffect.DestructionR _ -> False
+  ReplacementEffect.CounterR {} -> False
+  ReplacementEffect.TokenR {} -> False
+  ReplacementEffect.TurnUpR {} -> False
+  ReplacementEffect.AttachR {} -> False
+  ReplacementEffect.UntapR _ -> False
+  ReplacementEffect.LifeLossR {} -> False
+  ReplacementEffect.LifeGainR {} -> False
+  ReplacementEffect.DrawCountR {} -> False
+  ReplacementEffect.AssembleR {} -> False
+  ReplacementEffect.GameLossR {} -> False
+  ReplacementEffect.PlaneswalkR {} -> False
+  ReplacementEffect.PhaseR _ -> False
+
+-- Does applying this effect read the candidate's SOURCE -- the object the row
+-- was minted onto -- so that two rows alike in `effect` leave different boards?
+--
+-- readsApplier's twin one field over, the same genre and the same sole consumer:
+-- `choose` folds `source` into its indistinguishability test exactly for the
+-- arms that answer True.
+--
+-- Rule 702.52a's dredge answers True outright: "return THIS CARD from your
+-- graveyard to your hand" names the row's own source, so two dredgers in one
+-- graveyard return different cards and the drawer must be asked which. A
+-- draw-replacing wish answers True only where its filter reads the source's
+-- characteristics or choices; every other arm's use of `source` is a test run BEFORE Event.apply --
+-- `applies`, `scopes` -- which picks the candidates rather than what one does.
+--
+-- One arm per CONSTRUCTOR, with only DrawR's inner sum split: a new
+-- constructor breaks the build here, and a new REWRITE under an existing
+-- constructor is covered by that same argument until one of them names its own
+-- source.
+readsSource :: ReplacementEffect Card (GrantedAbility.GrantedAbility Card) (Effect.Effect Card (GrantedAbility.GrantedAbility Card)) -> Bool
+readsSource effect = case effect of
+  ReplacementEffect.DrawR (DrawR.MkDrawR _ (DrawRewrite.Dredge _)) -> True
+  ReplacementEffect.DrawR (DrawR.MkDrawR _ (DrawRewrite.GainLife _)) -> False
+  ReplacementEffect.DrawR (DrawR.MkDrawR _ DrawRewrite.YouDraw) -> False
+  -- The source only names the offer (Prompt.ChooseToPay); what is paid and where
+  -- the card goes do not depend on it.
+  ReplacementEffect.DrawR (DrawR.MkDrawR _ (DrawRewrite.OthersMayPayLife _)) -> False
+  -- The source only names the prompt and the queued loss; which cards are offered
+  -- and who loses do not depend on it.
+  ReplacementEffect.DrawR (DrawR.MkDrawR _ DrawRewrite.FromGraveyardOrLose) -> False
+  -- CR 616.1: Event.eligible scans the pool under Projection.sourceContext
+  -- framed by this candidate's source, so a filter naming any of the source's
+  -- characteristics or choices (Filter.readsSourceValues) can offer different
+  -- cards under two sources; every other source-relative atom reads a field of
+  -- the candidate (its identity, owner, targets, host, combat or crew record)
+  -- that a card outside the game lacks. So two Synthetic Wishful Djinns of
+  -- different power offer different cards and the drawer is asked, while two
+  -- Rings of Ma'rûf (`And []`) offer the same and are not.
+  -- Parun.OutsideTheGameSpec's "CR 616.1 two Djinns of different power are a
+  -- choice, and the answer decides what arrives", "CR 616.1 two Rings' wishes
+  -- are not a choice" and "CR 616.1 two wishes sharing a colour with
+  -- differently coloured sources are a choice" prove them.
+  ReplacementEffect.DrawR (DrawR.MkDrawR _ (DrawRewrite.FromOutsideTheGame payload)) -> Filter.readsSourceValues (FromOutsideTheGame.filter payload)
+  ReplacementEffect.ZoneChangeR {} -> False
+  -- CR 707.5: the object copied is read relative to the source (Essence of the
+  -- Wild's "this creature", Infinite Reflection's "enchanted creature"), so
+  -- two such rows on different sources make different copies and the entering
+  -- creature's controller is asked which applies last.
+  ReplacementEffect.EntryR (EntryR.MkEntryR _ (EntryRewrite.AsCopy _)) -> True
+  ReplacementEffect.EntryR {} -> False
+  ReplacementEffect.DamageR {} -> False
+  ReplacementEffect.DestructionR _ -> False
+  ReplacementEffect.CounterR {} -> False
+  ReplacementEffect.TokenR {} -> False
+  ReplacementEffect.TurnUpR {} -> False
+  ReplacementEffect.AttachR {} -> False
+  ReplacementEffect.UntapR _ -> False
+  ReplacementEffect.LifeLossR {} -> False
+  ReplacementEffect.LifeGainR {} -> False
+  ReplacementEffect.DrawCountR {} -> False
+  ReplacementEffect.InstructionR {} -> False
+  ReplacementEffect.DieRollR {} -> False
+  ReplacementEffect.AssembleR {} -> False
+  -- CR 113.7: the effects run with the candidate's source as theirs, so one
+  -- naming its source reaches a different object under each.
+  ReplacementEffect.GameLossR {} -> True
+  -- The arrangement reads no source; the effects are GameLossR's.
+  ReplacementEffect.PlaneswalkR (PlaneswalkR.MkPlaneswalkR _ _ PlaneswalkRewrite.ArrangeTopTwo) -> False
+  ReplacementEffect.PlaneswalkR (PlaneswalkR.MkPlaneswalkR _ _ (PlaneswalkRewrite.RunEffects _)) -> True
+  ReplacementEffect.PhaseR _ -> False
+
+-- CR 616.1: the affected object's controller (or its owner if it has none), or
+-- the affected player, chooses one to apply. Anything not elided below prompts.
+--
+-- TWO ELISIONS, both of them choices the rules make indistinguishable:
+--
+--   * ONE candidate -- there is nothing to choose.
+--   * several candidates INDISTINGUISHABLE -- each still gets its own CR 614.5
+--     opportunity, so every order produces the same board. Only the PROMPT is
+--     elided, never an application.
+--
+-- Indistinguishable is `distinguishing` below: equal in `effect` and in CR
+-- 614.3's `lifetime`, plus -- for the effects whose application READS the
+-- applying candidate -- equal in CR 109.5's "you". Candidates equal in `effect`
+-- can still differ in `source` and in `controller`, so "equal in `effect`"
+-- implies "every order yields the same board" only for effects that apply the
+-- same way whoever is applying them. readsApplier is the classification that
+-- separates those two, and EntryRewrite.UnderSourceControl is the one arm it
+-- answers True for.
+--
+-- `lifetime` is folded in UNCONDITIONALLY, and for a reason that has nothing to
+-- do with how an effect applies: `consume` spends the row that applied and
+-- leaves the rest standing, so two rows differing in when they die or how often
+-- they may fire leave DIFFERENT boards behind whichever way round they are
+-- taken. CR 614.10a says so outright for the case that reaches it -- "one effect
+-- will be satisfied in skipping the first occurrence, while the other will remain
+-- until another occurrence can be skipped" -- and Brine Elemental's Expiry.Never
+-- skip beside Savor the Moment's Expiry.AtCleanup one is that case, two PhaseR
+-- rows equal in every other field. Two rows alike in `lifetime` are still elided:
+-- spending either leaves a store of the same shape.
+--
+-- Folding `controller` in UNCONDITIONALLY would be sound as well, and wrong the
+-- other way: two Rest in Peace under different controllers exile the same card
+-- to the same zone whichever applies, so asking about them would raise a
+-- question the rules leave nothing to decide.
+--
+-- `source` is folded in CONDITIONALLY, by `readsSource` above, for the reason
+-- `controller` is: unconditionally would ask about two Rest in Peace that exile
+-- the same card to the same zone whichever applies.
+--
+-- `origin` is NOT such a hole: highestBucket has already partitioned by bucket,
+-- and CR 616.1a's bucket is exactly an origin of SelfReplacement, so every
+-- candidate reaching this comparison shares one origin.
+choose :: GameState -> ProposedEvent -> [ReplacementCandidate] -> Game (Maybe ReplacementCandidate)
+choose gs event candidates =
+  let -- What two candidates must agree on to be interchangeable here.
+      distinguishing c =
+        ( ReplacementCandidate.effect c,
+          ReplacementCandidate.lifetime c,
+          if readsApplier (ReplacementCandidate.effect c)
+            then ReplacementCandidate.controller c
+            else Nothing,
+          -- `readsSource`'s half of the same test: CR 702.52a's dredge returns
+          -- the row's own source, so two dredgers in one graveyard are two
+          -- different boards and the drawer is asked which.
+          if readsSource (ReplacementCandidate.effect c)
+            then Just (ReplacementCandidate.source c)
+            else Nothing
+        )
+   in case candidates of
+        [] -> pure Nothing
+        first : rest ->
+          if all (\c -> distinguishing c == distinguishing first) rest
+            then pure (Just first)
+            else case chooserOf gs event of
+              -- No chooser: the affected object is gone. Apply the canonical first
+              -- rather than prompt nobody -- and in particular make no choice on behalf
+              -- of a player who is not there to make it.
+              Nothing -> pure (Just first)
+              Just pid -> do
+                let decider = Decide.deciderFor pid gs
+                answer <- Game.choose (Prompt.ChooseReplacement decider pid (fmap entryOf candidates))
+                -- Reject-not-repair, as payment and Engine.permute already do: an
+                -- out-of-range index leaves the canonical first standing rather than
+                -- dropping the event or crashing.
+                pure (Just (at candidates answer first))
+
+-- What a candidate looks like to the player being asked (#74): its source and
+-- the effect that distinguishes it from another of the same source. A
+-- projection, not a computation -- the candidate already carries both.
+entryOf :: ReplacementCandidate -> ReplacementEntry
+entryOf c =
+  ReplacementEntry.MkReplacementEntry
+    { ReplacementEntry.source = ReplacementCandidate.source c,
+      ReplacementEntry.effect = ReplacementCandidate.effect c
+    }
+
+-- Total index into a list, with a fallback.
+at :: [a] -> Natural -> a -> a
+at xs i fallback = case List.genericDrop i xs of
+  h : _ -> h
+  [] -> fallback
+
+-- CR 616.1 / 108.4: who decides. Projection.controllerOf already falls back to
+-- the owner, so CR 616.1's owner clause is free.
+--
+-- One answer per event, because one proposed event has exactly one affected
+-- object. CR 616.1's APNAP clause therefore has nothing to say at this scale and
+-- is honoured a level up, where a whole batch of simultaneous events can present
+-- choices to two players at once: `orderBatch` sorts the batch by this
+-- function's answer before any of it is asked.
+--
+-- CR 800.4h is applied over the answer: rule 616.1 is a RULE requiring a choice,
+-- so one falling to a player who has left goes to the next player in turn order
+-- instead (Game.ruleChooser), and Nothing when no seat is left to take it.
+-- Parun.DepartureSpec's "a replacement choice inside the departure's exile goes
+-- to the next player" proves it for CR 800.4a's exile; CR 800.4c's
+-- (Departure.exileOrphanedByEndedControl) reaches the same wrapper.
+chooserOf :: GameState -> ProposedEvent -> Maybe PlayerId
+chooserOf gs event = affectedChooserOf gs event >>= Game.ruleChooser gs
+
+-- CR 616.1's own question, before rule 800.4h is applied to the answer.
+affectedChooserOf :: GameState -> ProposedEvent -> Maybe PlayerId
+affectedChooserOf gs event = case event of
+  ProposedEvent.WouldChangeZone zc _ _ _ -> Projection.controllerOf (ZoneChange.object zc) gs
+  -- CR 616.1's affected object's controller, read LIVE off the materialized
+  -- permanent -- which for an entry is the player it WOULD enter under, and
+  -- which a CR 616.1b rewrite may already have changed on an earlier iteration.
+  ProposedEvent.WouldEnter oid -> Projection.controllerOf oid gs
+  -- Read LIVE off the event in hand, as the entry arm above is: CR 614.9's
+  -- redirection changes the recipient, so an earlier CR 616.1f iteration may
+  -- already have moved the question to another player's object. Event.loop
+  -- re-enters with the rewritten event, so this is that player.
+  ProposedEvent.WouldDealDamage de -> case DamageEvent.target de of
+    Recipient.ToPlayer pid -> Just pid
+    Recipient.ToCreature oid -> Projection.controllerOf oid gs
+    Recipient.ToPlaneswalker oid -> Projection.controllerOf oid gs
+    -- The battle's CONTROLLER, not its protector. CR 616.1 asks for the affected
+    -- object's controller and CR 310.9d substitutes the protector only for the
+    -- "defending player", which rule 616 nowhere says.
+    Recipient.ToBattle oid -> Projection.controllerOf oid gs
+    Recipient.ToObject oid -> Projection.controllerOf oid gs
+    -- Unreachable: CR 406.4's pile is a candidate at CR 601.2c and never a
+    -- target, so nothing deals damage to one.
+    Recipient.ToPile _ -> Nothing
+  ProposedEvent.WouldBeDestroyed oid _ _ -> Projection.controllerOf oid gs
+  ProposedEvent.WouldPutCounters _ oid _ _ -> Projection.controllerOf oid gs
+  -- CR 616.1's affected player is the one the event happens to, which for a
+  -- counter put on a PLAYER is that player -- not the one putting it.
+  ProposedEvent.WouldPutPlayerCounters _ pid _ _ -> Just pid
+  ProposedEvent.WouldCreateTokens pid _ -> Just pid
+  -- CR 616.1's "affected player": a step or phase beginning affects no object,
+  -- so the player whose turn it is chooses among applicable skips.
+  ProposedEvent.WouldBeginPhase _ pid -> Just pid
+  -- CR 616.1's affected object is the permanent turning over, and its controller
+  -- is CR 702.37e's "you" -- the player who took the special action.
+  ProposedEvent.WouldTurnFaceUp oid _ -> Projection.controllerOf oid gs
+  -- CR 616.1's affected object is the permanent becoming attached, and its
+  -- controller is the "you" of its own "as this becomes attached" ability.
+  ProposedEvent.WouldBecomeAttached oid -> Projection.controllerOf oid gs
+  -- CR 616.1's affected object is the permanent that would become untapped, and
+  -- CR 122.1d gives its controller the choice among applicable rows even at CR
+  -- 502.3's turn-based action, where that controller is the active player.
+  ProposedEvent.WouldUntap oid -> Projection.controllerOf oid gs
+  -- CR 616.1's affected player is the one the event happens to, which for a life
+  -- loss is the player losing it -- WouldPutPlayerCounters' answer, and for its
+  -- reason. Not the damage's source or its controller: by CR 120.4c the damage
+  -- is dealt and settled, and what is being replaced is a result of it.
+  ProposedEvent.WouldLoseLife _ pid _ -> Just pid
+  -- CR 616.1's affected player is the one the event happens to, which for a life
+  -- gain is the player gaining it -- WouldLoseLife's answer one direction over.
+  -- Not the source causing the gain: CR 119.10 reads the clause as "if a source
+  -- would cause [a player] to gain life", and the player is who it happens to.
+  ProposedEvent.WouldGainLife pid _ -> Just pid
+  -- CR 616.1's affected player is the one the event happens to, which for a draw
+  -- is the player who would draw the card -- WouldLoseLife's answer, and for its
+  -- reason. There is no affected OBJECT: CR 121.1's card is not chosen until the
+  -- draw happens.
+  ProposedEvent.WouldDraw pid -> Just pid
+  -- CR 616.1: an instruction is addressed to the player it names, so that is
+  -- the seat choosing among applicable rows -- where a Rigger assembles it is
+  -- the Rigger's controller. data/scenarios/library-order's "CR
+  -- 616.1 Eligeth and Kenessos: the scryer orders them" proves it for a scry.
+  ProposedEvent.WouldPerform _ _ pid _ -> Just pid
+  -- CR 616.1 / 705.2 / 706.1: the instruction is addressed to the flipper or
+  -- the roller, and neither rule involves another seat -- CR 705.2's last
+  -- sentence says so outright of a flip ("no other players are involved").
+  ProposedEvent.WouldThrow throw -> Just (Throw.thrower throw)
+  ProposedEvent.WouldLoseGame pid -> Just pid
+  -- CR 616.1 / 701.31a: the planeswalking player, the planar controller.
+  ProposedEvent.WouldPlaneswalk pid _ -> Just pid
+
+-- CR 208.2b / 707.2: stamp a chosen entry shape into the object's copiable
+-- snapshot. Power and toughness are SET; keywords and subtypes are UNIONED into
+-- whatever is already there, which is what Primal Plasma's own Gatherer ruling
+-- requires -- a 1/6 with flying and defender is only reachable if the choice
+-- ADDS defender to a snapshot that already carries flying from the copy.
+--
+-- WHERE it is written follows layer 1a's reading: a stored copy row covering
+-- the object (Vesuvan Shapeshifter's copy, which can end) outranks the stamp, so
+-- the choice goes into the newest such row, carved out for this object alone,
+-- and ends with it (CR 611.2a). The stamp otherwise. data/scenarios/copy's
+-- "CR 616.2 a Vesuvan Shapeshifter copying a 2/2-flying Plasma" proves the row
+-- road.
+applyEntryOption :: ObjectId -> EntryOption.EntryOption -> GameState -> GameState
+applyEntryOption oid option gs =
+  let base = Projection.copiableCharacteristics oid gs
+      stamped =
+        base
+          { PC.power = Just (EntryOption.power option),
+            PC.toughness = Just (EntryOption.toughness option),
+            -- Defensive, not load-bearing: CR 208.2a and CR 208.2b are
+            -- alternatives, so a card with a ChoiceOf has no
+            -- characteristic-defining ability and this field is already Nothing.
+            PC.characteristicPT = Nothing,
+            -- The option's keywords are one card's printed text (CR 208.2b), so
+            -- each arrives once; unionWith (+) adds them to whatever the copy
+            -- snapshot already carries rather than absorbing a repeat.
+            PC.keywords = Map.unionWith (+) (PC.keywords base) (Map.fromSet (const 1) (EntryOption.keywords option)),
+            -- Primal Clay's "Wall ... in addition to its other types".
+            PC.subtypes = Set.union (PC.subtypes base) (EntryOption.subtypes option)
+          }
+      write o = o {Object.bindings = Binding.setCopy stamped (Object.bindings o)}
+      -- A row following its source's host is not among them: what an
+      -- entering object is attached to is decided as it enters, so no such
+      -- row covers it yet.
+      fixed row = case ActiveCopy.covers row of
+        CopyCoverage.These oids -> Just (row, oids)
+        CopyCoverage.SourceHost _ -> Nothing
+        CopyCoverage.Attachment _ -> Nothing
+      covering = List.sortOn (Ord.Down . ActiveCopy.timestamp . fst) (filter (Set.member oid . snd) (Maybe.mapMaybe fixed (GameState.copyEffects gs)))
+   in case covering of
+        (newest, oids) : _ ->
+          let others = filter (/= newest) (GameState.copyEffects gs)
+              remaining = Set.delete oid oids
+              rest = newest {ActiveCopy.covers = CopyCoverage.These remaining}
+              alone = newest {ActiveCopy.covers = CopyCoverage.These (Set.singleton oid), ActiveCopy.snapshot = stamped, ActiveCopy.turned = Nothing}
+           in gs {GameState.copyEffects = alone : [rest | not (Set.null remaining)] <> others}
+        [] -> gs {GameState.objects = Map.adjust write oid (GameState.objects gs)}
+
+-- CR 707.9: fold a copy effect's "except ..." clauses into the snapshot the copy
+-- is about to be stamped with. Left fold, so a later clause overrides an earlier
+-- one on the same characteristic -- no printed card writes two that collide, and
+-- the printed order is the order the sentence reads in.
+--
+-- Into the SNAPSHOT and not onto the object, which is CR 707.9b: the excepted
+-- value "becomes part of the copiable values of the copy", so a token copy of
+-- the copy inherits it (CR 707.2) where a CR 613 layer-7b write would be left
+-- behind. Parun.CopySpec's "a token copy of an excepted copy keeps the exception"
+-- is what proves the two apart: it reads 7/7 here and the copied Tarmogoyf's CDA
+-- under the layer reading.
+--
+-- The first argument is the RESOLVING object's Parun.Types.Source -- what CR
+-- 707.9a's "this ability" points at is the ability the copy effect is written
+-- inside, and only the caller knows which object that is. A Source and not an
+-- ability, because CR 707.9a names no kind: the arm reads a triggered carrier
+-- and an activated one out of the same value, and every other arm of CR 113.3's
+-- classification has no ability to point at. Nothing on the CR 707.5 entry road,
+-- where the copy effect is a replacement effect and no printed card writes those
+-- two words (Scryfall @o:"enter as a copy" o:"except it has this ability"@,
+-- 2026-09-06, no hit; Copycrook would refute it by quoting an ability instead).
+--
+-- The second argument is the SUBJECT's own copiable values, read off the board
+-- before this copy effect applied -- CR 707.9c's "the affected objects instead
+-- retain their original values", which is the one thing an exception cannot get
+-- from the copied object. Nothing on the CR 707.1 token road, where the subject
+-- did not exist a moment ago. Per subject and not per effect: CR 707.4's road
+-- names a set, and two Doppelgangers becoming copies of the same original retain
+-- their own colours apart.
+--
+-- Into BOTH readings of a copy of a flip card, since CR 707.9b makes the
+-- exception a copiable value whichever half the copy's status picks (CR 707.3)
+-- -- CR 110.5c's flipped Dimir Doppelganger keeps "this ability". Proved by
+-- Parun.FlipSpec's flipped Sakashima. The retained value the CR 707.9c arm writes
+-- is the subject's UNFLIPPED reading in both, since no flip card prints a
+-- decline-to-copy clause.
+applyCopyExceptions :: Maybe Source.Source -> Maybe PC.ProjectedCharacteristics -> [CopyException.CopyException (GrantedAbility.GrantedAbility Card)] -> PC.ProjectedCharacteristics -> PC.ProjectedCharacteristics
+applyCopyExceptions this own exceptions snapshot =
+  let excepted = Projection.withCopyExceptions this own exceptions
+   in (excepted snapshot) {PC.flipped = fmap excepted (PC.flipped snapshot)}
+
+-- CR 707.5 / 614.12a: the objects an entering copy may choose. Members of the
+-- rewrite's domain matching its printed noun phrase, other than itself, minus
+-- anything entering in the same batch (see the CR 614.12a note on
+-- Event.applyReplacementsIn for why the batch set, not 614.13a, is what excludes
+-- them).
+--
+-- The Filter comes off the card (Parun.Types.AsCopy's `eligible`) rather than
+-- being hardcoded here (#1512): Clone writes "any creature" and Copy Enchantment
+-- "any enchantment", and this function must not know which. The domain is the
+-- card's too (Parun.Types.AsCopy's `among`): the battlefield for Clone, for
+-- Superior Spider-Man's "any creature card in a graveyard" every player's
+-- graveyard, and for Dinosaur Headdress's "an exiled creature card used to craft
+-- this Equipment" its craft materials (Game.linkedPile). Any other zone
+-- answers nothing.
+--
+-- Matched through each candidate's own CR 613 projection, revealableFromHand's
+-- reading, so a continuous effect that made a permanent an enchantment reaches
+-- it. The Context is the REPLACEMENT's (candidateContext): its source is what
+-- "this" names and its controller is CR 109.5's "you". For Clone's own ability
+-- that is the entering object; for another permanent's (Essence of the Wild's
+-- "a copy of this creature", Filter.IsSource, and Infinite Reflection's "of
+-- enchanted creature", Filter.IsHostOfSource) it is that permanent. The linked
+-- pile is the source's too (CR 607.2a). The entering object's controller
+-- chooses, and only within their range (CR 801.5a).
+legalCopyTargets :: Filter.Context -> Set ObjectId -> Filter.Type.Filter Keyword.Type.Keyword -> CopyDomain.CopyDomain -> ObjectId -> GameState -> [ObjectId]
+legalCopyTargets context batch filter_ among self gs =
+  let chooser = Projection.controllerOf self gs
+      viewOf = Projection.viewsOf gs
+      grants = Projection.controlGrants gs
+      eligible oid =
+        oid /= self
+          && not (Set.member oid batch)
+          && Filter.matches context (viewOf oid) filter_
+          && all (\you -> Projection.objectInRangeGiven grants you oid gs) chooser
+      domain = case among of
+        CopyDomain.InZone Zone.Battlefield -> Set.toAscList (GameState.battlefield gs)
+        CopyDomain.InZone Zone.Graveyard -> concatMap (\pid -> Game.zoneMembers Zone.Graveyard pid gs) (GameState.turnOrder gs)
+        CopyDomain.InZone _ -> []
+        CopyDomain.InPile pile -> Game.linkedPile Nothing pile (Maybe.fromMaybe self (Filter.source context)) gs
+   in filter eligible domain
+
+-- CR 707.9g / 603.11: the triggered ability linked to a CR 707.5 entry
+-- replacement ("When you do, ..."), as the reflexive entry
+-- Parun.Engine.Event.becomeCopyAs arms where a copy was made.
+-- TriggerCondition.Reflexive, enlist's posture for its own linked ability
+-- (Parun.Engine.Keyword.enlistReflexive): the
+-- entry's existence is the "you do", and it fires at the next gather (CR 603.3),
+-- after the permanent has entered. Nothing for a row that links none.
+linkedCopyTrigger :: AsCopy.AsCopy ability (Effect.Effect Card (GrantedAbility.GrantedAbility Card)) -> Maybe (TriggeredAbility.TriggeredAbility Card (GrantedAbility.GrantedAbility Card))
+linkedCopyTrigger asCopy
+  | Seq.null (AsCopy.whenYouDo asCopy) = Nothing
+  | otherwise =
+      Just (Mint.trigger TriggerCondition.Reflexive (AsCopy.whenYouDo asCopy))
+
+-- CR 614.1c / 701.20a: the cards a player may reveal from their hand to satisfy
+-- an "as this enters, you may reveal a [matching] card from your hand" ability
+-- (Rustic Clachan). Beside legalCopyTargets for its reason: an entry rewrite's
+-- offer is classification, and this module is what Parun.Engine.Event calls down
+-- into for it.
+--
+-- Matched through each card's own CR 613 projection, the reading Effect.Search's
+-- CR 701.23a filter takes one zone over: rule 613.1 starts from the actual object
+-- and names no zone, so a continuous effect that made a card a Kithkin card
+-- reaches it in a hand.
+--
+-- No perspective and no source in the context (CR 109.5): the printed filter
+-- states a quality of the card ("a Kithkin card") and names no player, so
+-- ControlledBy and IsSource are vacuously False. Whose hand is asked by the zone
+-- lookup instead, which is the whole of the "from your hand" in the sentence.
+revealableFromHand :: PlayerId -> Filter.Type.Filter Keyword.Type.Keyword -> GameState -> [ObjectId]
+revealableFromHand pid filter_ gs =
+  let viewOf = Projection.viewsOf gs
+      matching oid = Filter.matches (Filter.contextIn gs Nothing Nothing) (viewOf oid) filter_
+   in filter matching (Game.zoneMembers Zone.Hand pid gs)
+
+-- CR 702.38a: the cards a player may reveal from their hand for an amplify
+-- ability -- the ones sharing a creature type with the entering object.
+-- revealableFromHand above with a set intersection where that one has a Filter,
+-- and for the reason Parun.Types.EntryRewrite's Amplify arm gives: the criterion
+-- names the ENTERING object's creature types, which no Filter an entry
+-- replacement carries can say.
+--
+-- Matched through each card's own CR 613 projection, revealableFromHand's
+-- reading, so a continuous effect that made a card a Dragon card reaches it in a
+-- hand. The types on the other side are the caller's, read off the entering
+-- object's projection at CR 614.12a's moment.
+--
+-- Rule 702.38a's "you can't reveal this card or any other cards that are
+-- entering the battlefield at the same time" needs nothing written: this engine
+-- materializes every member of the batch on the battlefield before the entry
+-- loop runs (Parun.Engine.Event.runEntry), so no card entering beside this one is
+-- in a hand for the walk below to find.
+amplifiableFromHand :: PlayerId -> Set Subtype.Subtype -> GameState -> [ObjectId]
+amplifiableFromHand pid types gs =
+  let viewOf = Projection.viewsOf gs
+      sharing oid = not (Set.disjoint types (Filter.subtypes (viewOf oid)))
+   in filter sharing (Game.zoneMembers Zone.Hand pid gs)
+
+-- CR 614.3: a floating replacement whose `uses` is Once is spent by being
+-- applied. A permanent's STATIC replacement ability has no use count at all --
+-- it is re-derived from the battlefield every iteration -- so only the floating
+-- store is touched here. Parun.ReplacementSpec's "CR 701.19b a static
+-- regeneration ability replaces every destruction, not just the next one" is
+-- what proves the difference: a Mossbridge Troll and a Drudge Skeletons take the
+-- same two destructions, and only the Skeletons' shield is spent.
+consume :: CandidateId -> Game ()
+consume identity_ = case identity_ of
+  CandidateId.OfPermanent {} -> pure ()
+  CandidateId.OfFloating floating ->
+    State.modify' $ \gs ->
+      let src = FloatingCandidate.source floating
+          ts = FloatingCandidate.timestamp floating
+          spent active =
+            ActiveReplacement.source active == src
+              && ActiveReplacement.timestamp active == ts
+              && ActiveReplacement.uses active == Uses.Once
+       in gs {GameState.replacements = filter (not . spent) (GameState.replacements gs)}
+
+-- CR 615.7: write back what is left of a shield after it prevented some damage,
+-- and drop the row entirely once nothing is -- a row that can prevent nothing is
+-- not a prevention effect (`unspent` above refuses it either way).
+--
+-- The floating twin of `consume`, and a separate function rather than a case in
+-- it, because the two spend a row in different UNITS: `consume` spends CR
+-- 614.3's use per application, this spends CR 615.7's shield per point of
+-- damage. Both key on (source, timestamp), the row's CR 614.5 identity, which is
+-- untouched by rewriting its `effect` -- so a partly-spent shield is the same
+-- instance to the applied-set the CR 616.1 loop carries.
+--
+-- A permanent's static replacement ability is a no-op here, as in `consume`, and
+-- for a stronger reason than having no row to write: CR 615.10's static shields
+-- are deliberately NOT reduced, since they apply separately to each event. No
+-- card can print a PreventNext at all (see Parun.Types.DamageRewrite), so this
+-- arm has no producer.
+--
+-- The caller passes the rewrite with the new remainder already written in --
+-- PreventNext for a shield, RedirectNext for Harm's Way's counted redirection,
+-- which is spent in the same unit -- and the 0 that drops the row is read off
+-- `remainingOf`, so the two counted rewrites cannot disagree about when a row
+-- is used up.
+setShield :: CandidateId -> DamageR.DamageR (Effect.Effect Card (GrantedAbility.GrantedAbility Card)) -> Rewrite -> Game ()
+setShield identity_ damageR spent = case identity_ of
+  CandidateId.OfPermanent {} -> pure ()
+  CandidateId.OfFloating floating ->
+    State.modify' $ \gs ->
+      let src = FloatingCandidate.source floating
+          ts = FloatingCandidate.timestamp floating
+          mine active =
+            ActiveReplacement.source active == src
+              && ActiveReplacement.timestamp active == ts
+          rewrite active
+            | not (mine active) = Just active
+            | remainingOf spent == Just 0 = Nothing
+            | otherwise = Just active {ActiveReplacement.effect = ReplacementEffect.DamageR damageR {DamageR.rewrite = spent}}
+       in gs {GameState.replacements = Maybe.mapMaybe rewrite (GameState.replacements gs)}
+
+-- CR 615.7's remaining amount, for the two rewrites that count one down --
+-- Mending Hands' shield and Harm's Way's counted redirection -- and Nothing for
+-- every rewrite that has no such number. `unspent` reads the same field through
+-- its own arms and `allocations` reads it through this one; this is the
+-- write-back's reading.
+--
+-- A CLASSIFICATION of effects, in `prevents`' genre: one arm per constructor,
+-- no wildcard, so a third counted rewrite is asked here rather than never
+-- dropped at 0.
+remainingOf :: Rewrite -> Maybe Natural
+remainingOf rewrite = case rewrite of
+  DamageRewrite.PreventNext remaining -> Just remaining
+  DamageRewrite.RedirectNext remaining _ -> Just remaining
+  DamageRewrite.PreventAll -> Nothing
+  DamageRewrite.PreventAllBut _ -> Nothing
+  -- CR 702.64a's ceiling stores no remainder for the same reason: rule 702.64b
+  -- renews it rather than counting it down.
+  DamageRewrite.PreventUpTo _ -> Nothing
+  DamageRewrite.PreventRemovingShieldCounter -> Nothing
+  DamageRewrite.SetAmount _ -> Nothing
+  DamageRewrite.Scale _ -> Nothing
+  DamageRewrite.Redirect _ -> Nothing
+  DamageRewrite.RedirectMatching _ -> Nothing
+  DamageRewrite.RunEffects _ -> Nothing
+  DamageRewrite.TurnFaceUp -> Nothing
+
+-- CR 614.9 over the counted shape CR 615.7 states for preventions -- the
+-- redirect's own countdown rests on Harm's Way's rulings: how much of this
+-- damage event the candidate's rewrite will actually MOVE, where that is less
+-- than the whole event. Harm's Way's "the next 2 damage ... is dealt to any
+-- target instead" meeting a 5-damage event moves 2 and leaves 3 on the original
+-- recipient, and that residue is a second EVENT rather than a smaller one --
+-- which is what separates this from PreventNext, whose residue is the same
+-- event shrunk and is handled inside its own arm of Event.apply. Event.loop
+-- splits the event on this answer before applying the candidate to the covered
+-- part.
+--
+-- Nothing for every rewrite that takes the event whole, for a counted redirect
+-- large enough to cover all of it, and for one CR 614.9's guard has made inert
+-- (a destination that left): that one hands the event back unchanged and
+-- spends nothing (CR 609.7b), so there is nothing to split.
+--
+-- `allowances` is the batch's CR 615.7 allocation for THIS event (`orderBatch`),
+-- empty for a lone proposal and for a batch nothing is contested in; where it
+-- names a countdown, that share caps what the countdown covers here, which is
+-- how the shielded side's division of the points is carried into the loop.
+--
+-- A CLASSIFICATION of effects, in `prevents`' genre: one arm per constructor,
+-- no wildcard.
+partialCoverage :: GameState -> Map.Map CandidateId Natural -> ReplacementCandidate -> ProposedEvent -> Maybe Natural
+partialCoverage gs allowances candidate event = case (ReplacementCandidate.effect candidate, event) of
+  (ReplacementEffect.DamageR (DamageR.MkDamageR _ rewrite _), ProposedEvent.WouldDealDamage de) -> case rewrite of
+    DamageRewrite.RedirectNext remaining dest
+      | Maybe.isJust (redirectDestination gs candidate dest) && covered < DamageEvent.amount de -> Just covered
+      | otherwise -> Nothing
+      where
+        covered = min remaining (Map.findWithDefault (DamageEvent.amount de) (ReplacementCandidate.identity candidate) allowances)
+    -- CR 615.7's shield does its own arithmetic (Event.apply), shrinking the
+    -- event rather than splitting it -- so nothing to split UNLESS the batch's
+    -- allocation gave it less than the whole event, which is the one share it
+    -- must not exceed here.
+    DamageRewrite.PreventNext _
+      | Just allowed <- Map.lookup (ReplacementCandidate.identity candidate) allowances,
+        allowed < DamageEvent.amount de ->
+          Just allowed
+      | otherwise -> Nothing
+    DamageRewrite.PreventAll -> Nothing
+    DamageRewrite.PreventAllBut _ -> Nothing
+    DamageRewrite.PreventUpTo _ -> Nothing
+    DamageRewrite.PreventRemovingShieldCounter -> Nothing
+    DamageRewrite.SetAmount _ -> Nothing
+    DamageRewrite.Scale _ -> Nothing
+    DamageRewrite.Redirect _ -> Nothing
+    -- CR 614.1a's "instead [do something]" takes the event whole, however large:
+    -- the effects replace it rather than covering some of its damage.
+    DamageRewrite.RunEffects _ -> Nothing
+    DamageRewrite.RedirectMatching _ -> Nothing
+    -- Illusionary Mask's rewrite leaves the event whole: the damage it lets
+    -- through is all of it.
+    DamageRewrite.TurnFaceUp -> Nothing
+  _ -> Nothing
+
+-- The two halves of a damage event `partialCoverage` split: the covered part,
+-- which the candidate is applied to, and the residue, which continues through
+-- the loop as an event of its own with the same source, recipient and riders.
+-- Nothing for an event that is not damage or a cover that is not smaller than
+-- it; the caller has already asked `partialCoverage`, so neither arises.
+splitDamage :: Natural -> ProposedEvent -> Maybe (ProposedEvent, ProposedEvent)
+splitDamage covered event = case event of
+  ProposedEvent.WouldDealDamage de
+    | covered < DamageEvent.amount de ->
+        Just
+          ( ProposedEvent.WouldDealDamage de {DamageEvent.amount = covered},
+            ProposedEvent.WouldDealDamage de {DamageEvent.amount = DamageEvent.amount de - covered}
+          )
+  _ -> Nothing
+
+-- CR 120.4's damage EVENT, whose granularity is one source, one recipient, one
+-- moment: the events of one moment that name the same recipient are summed into
+-- one. Char's "4 damage to any target and 2 damage to you", aimed at its own
+-- caster, deals that caster one event of 6; Harm's Way pointed AT the permanent
+-- its chosen source is already damaging moves 2 of a 3 back where they started,
+-- and the recipient is dealt 3 once.
+--
+-- Nothing in the CR individuates simultaneous damage more finely than by source.
+-- CR 615.7 puts its allocation question only to damage dealt "by two or more
+-- applicable sources at the same time"; CR 120.4a computes excess against "damage
+-- from other sources that would be dealt at the same time"; CR 120.9 scopes a
+-- trigger's "damage dealt" to the sources it names. CR 701.14c is the rule's own
+-- worked instance of this collapse: a creature that fights itself "deals damage
+-- to itself equal to twice its power" -- one blow, not its power twice.
+-- docs/decisions.md, "Whether one instruction naming a recipient twice deals
+-- one damage event".
+--
+-- Keyed on the whole event but its amount, so two events merge only when their
+-- source, their recipient, their kind and every CR 702 deal-time rider agree --
+-- the source among them, so this could not merge two dealers' damage even if it
+-- were handed some. The first occurrence keeps its place: the batch's order is
+-- the order its events are offered in when CR 615.7 asks which of them a shield
+-- prevents.
+--
+-- TWO callers, each over one moment with one dealer -- which is why the key's
+-- source component is a fence rather than an observable: neither hands this a
+-- list with two dealers in it. A CR 510.2 batch does hold several, and it never
+-- comes here as a batch; two blockers striking one creature stay two events and
+-- fire enrage twice (Parun.LifeTriggerSpec).
+--
+--   * Parun.Engine.Resolve's DealDamage arm, over ONE instruction, which has
+--     exactly one dealer (CR 120.1) and one moment (CR 608.2f). Combat must NOT
+--     come through there -- two attacking creatures hitting one player are two
+--     sources, so CR 615.10's floor applies to each -- and neither must a fight,
+--     whose two blows have different dealers (CR 701.14a).
+--   * Event.resolveDamage, over what ONE proposal's CR 616.1 loop came out with:
+--     `splitDamage`'s inverse, rejoining the halves a counted redirect split off
+--     when both ended up on the same recipient. Without it that recipient is
+--     recorded as taking two events, and its "whenever this creature is dealt
+--     damage" trigger (Ripjaw Raptor), its CR 119.2 life loss and its CR 120.3c
+--     loyalty removal each read twice.
+--
+-- Observable at both. Parun.ReplacementSpec's Ajani Steadfast emblem case proves
+-- the first: CR 615.10's floor applies once per event, so 4 and 2 at one
+-- recipient deal 1 as one event and would deal 2 as two. Parun.DamageReplacementSpec's
+-- "a redirect onto the recipient it was already aimed at deals one event, not
+-- two" proves the second, off the one card Ripjaw Raptor's enrage draws.
+oneEventPerRecipient :: [DamageEvent.DamageEvent] -> [DamageEvent.DamageEvent]
+oneEventPerRecipient events =
+  let key event = event {DamageEvent.amount = 0}
+      total event = sum (fmap DamageEvent.amount (filter (\other -> key other == key event) events))
+   in fmap (\event -> event {DamageEvent.amount = total event}) (ListUtils.nubOrdOn key events)
+
+-- CR 615.1a: is this damage rewrite a PREVENTION effect, rather than one of CR
+-- 614.1a's replacements? "Effects that use the word 'prevent' are prevention
+-- effects", and that word is what CR 615.13's trigger watches for -- so a
+-- SetAmount that cuts an event from 3 to 1 has prevented nothing, though it
+-- shrank the event exactly as a shield would.
+--
+-- A CLASSIFICATION of effects -- what SHAPE a rewrite has, never which effect it
+-- is -- in the same genre as bucketOf and readsApplier above, and
+-- contestedResource below. One arm per constructor, no wildcard, so a new
+-- rewrite that prevents damage breaks the build here rather than silently going
+-- unreported.
+--
+-- A question about the REWRITE alone, and deliberately not about the event: CR
+-- 615.12's unpreventable damage is still met by a prevention effect, which is
+-- still a prevention effect for having prevented nothing of it. `preventable`
+-- below is the other half, and `inertPrevention` asks them together.
+prevents :: Rewrite -> Bool
+prevents rewrite = case rewrite of
+  DamageRewrite.PreventNext _ -> True
+  DamageRewrite.PreventAll -> True
+  -- Temple Altisaur says "prevent all but 1 of that damage", so CR 615.1a makes
+  -- this one a prevention too -- which is the whole reason it is not SetAmount.
+  DamageRewrite.PreventAllBut _ -> True
+  -- Rule 702.64a says "prevent N of that damage", so CR 615.1a makes absorb a
+  -- prevention too -- which is what keeps it out of SetAmount.
+  DamageRewrite.PreventUpTo _ -> True
+  -- CR 122.1c says "prevent that damage", so CR 615.1a makes this one too.
+  DamageRewrite.PreventRemovingShieldCounter -> True
+  DamageRewrite.SetAmount _ -> False
+  DamageRewrite.Scale _ -> False
+  -- CR 614.9's redirection is a rule-614 replacement. Turn the Tables never says
+  -- "prevent" -- the damage is still dealt, one recipient over -- so this False
+  -- is what keeps `preventionBy`, `inertPrevention` and CR 615.13's trigger away
+  -- from it.
+  DamageRewrite.Redirect _ -> False
+  -- Harm's Way counts its damage down as a shield does and still never says
+  -- "prevent": the 2 it moves is dealt, one recipient over.
+  DamageRewrite.RedirectNext _ _ -> False
+  DamageRewrite.RedirectMatching _ -> False
+  -- Kill-Suit Cultist says "destroy that creature instead" and never "prevent",
+  -- so CR 615.1a keeps this one out too -- though, unlike a redirect, no damage
+  -- is dealt anywhere. CR 615.13's trigger does not see it.
+  DamageRewrite.RunEffects _ -> False
+  -- Illusionary Mask says "instead it's turned face up and ... is dealt damage":
+  -- the damage is dealt, so CR 615.1a has nothing to call a prevention.
+  DamageRewrite.TurnFaceUp -> False
+
+-- CR 615.12: applied to damage that CAN'T be prevented, does this rewrite still
+-- spend what `contestedResource` counts? The rule's middle and last sentences
+-- disagree by rewrite, which is why this is not `prevents`: CR 122.1c's counter
+-- is an ADDITIONAL effect and comes off either way ("any additional effects they
+-- have will take place"), where CR 615.7's stored amount is an "existing damage
+-- prevention shield" and is explicitly not reduced.
+--
+-- Must agree arm for arm with Parun.Engine.Event.applyInertly, which is where the
+-- spending actually happens; True here without a corresponding action there would
+-- contest a resource nothing consumes.
+--
+-- A CLASSIFICATION of effects, in `prevents`' genre: one arm per constructor, no
+-- wildcard, so a new prevention rewrite with an additional effect breaks the
+-- build here.
+spentInertly :: Rewrite -> Bool
+spentInertly rewrite = case rewrite of
+  DamageRewrite.PreventRemovingShieldCounter -> True
+  DamageRewrite.PreventNext _ -> False
+  -- CR 615.10's static shield has no stored amount at all, and no additional
+  -- effect of its own, so there is nothing for CR 615.12's middle clause to run
+  -- and nothing for its last clause to protect. `contestedResource` gives it no
+  -- supply either, so it never reaches `hitsOf`.
+  DamageRewrite.PreventAllBut _ -> False
+  -- CR 702.64a's ceiling stores nothing and carries no additional effect
+  -- either, and `contestedResource` gives it no supply, so it never reaches
+  -- `hitsOf`.
+  DamageRewrite.PreventUpTo _ -> False
+  -- Fog has no resource to spend at all, so this could answer either way;
+  -- `contestedResource` gives it no supply and it never reaches `hitsOf`.
+  DamageRewrite.PreventAll -> False
+  -- CR 614.1a's replacements are not preventions, are applied in full to
+  -- unpreventable damage, and have no contested resource either.
+  DamageRewrite.SetAmount _ -> False
+  DamageRewrite.Scale _ -> False
+  DamageRewrite.Redirect _ -> False
+  DamageRewrite.RedirectNext _ _ -> False
+  DamageRewrite.RedirectMatching _ -> False
+  DamageRewrite.RunEffects _ -> False
+  DamageRewrite.TurnFaceUp -> False
+
+-- CR 801.13b: does this prevention reach this damage from its controller's
+-- range? One naming the source reaches only an in-range source, one naming the
+-- recipient only an in-range recipient, and one naming neither (Fog) only
+-- damage whose source and recipient are both in range. Always under an
+-- unlimited range, and for a row with no controller.
+--
+-- A pattern names the source by `whichSource` or a `whatSource` narrower than
+-- every source; the recipient by any of its recipient halves, or by CR
+-- 122.1c's shield, whose recipient is its own permanent (`admitsRecipient`).
+-- A source with no controller cuts nothing.
+preventsInRange :: GameState -> Maybe PlayerId -> DamagePattern.DamagePattern -> Rewrite -> DamageEvent.DamageEvent -> Bool
+preventsInRange gs controller pat rewrite de = case controller of
+  Nothing -> True
+  Just you ->
+    let namesSource = Maybe.isJust (DamagePattern.whichSource pat) || DamagePattern.whatSource pat /= Filter.Type.And []
+        namesRecipient =
+          Maybe.isJust (DamagePattern.whatRecipient pat)
+            || Maybe.isJust (DamagePattern.whoRecipient pat)
+            || Maybe.isJust (DamagePattern.whichRecipient pat)
+            || Maybe.isJust (DamagePattern.boundRecipient pat)
+            || rewrite == DamageRewrite.PreventRemovingShieldCounter
+        sourceWithin = case DamageEvent.dealtByController de Applicative.<|> Projection.controllerOf (DamageEvent.source de) gs of
+          Nothing -> True
+          Just pid -> Game.inRangeOf you pid gs
+        recipientWithin = recipientInRange gs you (DamageEvent.target de)
+     in (sourceWithin || (namesRecipient && not namesSource))
+          && (recipientWithin || (namesSource && not namesRecipient))
+
+-- CR 801.2d: is this damage recipient within @you@'s range -- a player in
+-- range, or an object controlled (a battle, or protected) by one? A pile of
+-- face-down cards names no one, so it is.
+recipientInRange :: GameState -> PlayerId -> Recipient.Recipient -> Bool
+recipientInRange gs you recipient = case (Recipient.objectOf recipient, Recipient.playerOf recipient) of
+  (Just oid, _) -> Projection.objectInRangeGiven (Projection.controlGrants gs) you oid gs
+  (Nothing, Just pid) -> Game.inRangeOf you pid gs
+  (Nothing, Nothing) -> True
+
+-- CR 614.9: the destination a redirection effect may still use, re-derived
+-- against the CURRENT state at redirect time. Nothing is the rule's guard --
+-- "if one of those permanents is no longer on the battlefield ... or is no
+-- longer a battle, creature, or planeswalker ... the effect does nothing" --
+-- and Event.apply then hands the event back UNCHANGED rather than dropping it.
+--
+-- BOTH of the rule's conditions, though only the card-type one has an observer
+-- today: a destination that LEFT is caught by that one already, because CR
+-- 400.7 mints a new object on a zone change and the dead id then projects no
+-- card types at all. The membership test is what covers the route CR 400.7 does
+-- not -- CR 702.26b's phased-out permanent, which keeps its id and its zone and
+-- is nonetheless treated as not existing. Deleting it leaves the suite green;
+-- it is a fence, not a proven line.
+--
+-- Damage.damageRecipient asks the card-type half alone, of an object that is on
+-- the battlefield by construction. Not shared with it because Parun.Engine.Damage
+-- sits ABOVE this module.
+--
+-- Re-TAGGED off the live projection rather than merely tested, so a destination
+-- that stopped being a creature and became a planeswalker is redirected to as
+-- what it now is (CR 613.1d).
+--
+-- The rule's last sentence, a player destination who has left the game, is
+-- Game.stillPlaying. Proven by Parun.DamageReplacementSpec's "CR 614.9 the
+-- destination left the game". Its "from" half needs no guard: no damage is dealt
+-- to a departed player (CR 102.1), so none is redirected away from one --
+-- Parun.DepartureSpec's Fanatic of Mogis proves it for each opponent.
+--
+-- CR 801.13a: a destination outside the redirecting effect's controller's
+-- range is no destination either, so that portion does nothing.
+redirectDestination :: GameState -> ReplacementCandidate -> Recipient.Recipient -> Maybe Recipient.Recipient
+redirectDestination gs candidate dest = Monad.mfilter (withinRangeOf gs (reachOf gs candidate)) $ case Recipient.objectOf dest of
+  Nothing -> Monad.mfilter (maybe True (`elem` Game.stillPlaying gs) . Recipient.playerOf) (Just dest)
+  Just oid -> liveDestination gs oid
+
+-- CR 801.13a / 801.18: whose range of influence bounds this replacement's
+-- reach -- its controller's, or nobody's for a planar card's
+-- (Plane.exemptFromRange), which every reader then treats as a row with no
+-- controller. A regression fence: no plane in `data/cards/` prints a
+-- replacement effect.
+reachOf :: GameState -> ReplacementCandidate -> Maybe PlayerId
+reachOf gs candidate
+  | Plane.exemptFromRange (ReplacementCandidate.source candidate) gs = Nothing
+  | otherwise = ReplacementCandidate.controller candidate
+
+-- CR 801.13a: may a redirection controlled by this player send damage here?
+-- Always for a row with no controller.
+withinRangeOf :: GameState -> Maybe PlayerId -> Recipient.Recipient -> Bool
+withinRangeOf gs controller dest = maybe True (\you -> recipientInRange gs you dest) controller
+
+-- CR 614.9's two conditions asked of ONE object id, and the CR 613.1d re-tag
+-- beside them. Split out of redirectDestination above so the PRINTED
+-- destination below reaches the same three lines: a description and a baked id
+-- must agree about what a live destination is, or Pariah and Turn the Tables
+-- would disagree about a phased-out creature.
+liveDestination :: GameState -> ObjectId -> Maybe Recipient.Recipient
+liveDestination gs oid
+  | not (Set.member oid (GameState.battlefield gs)) = Nothing
+  | Projection.isCreatureOf oid gs = Just (Recipient.ToCreature oid)
+  | Projection.isPlaneswalkerOf oid gs = Just (Recipient.ToPlaneswalker oid)
+  | Projection.isBattleOf oid gs = Just (Recipient.ToBattle oid)
+  | otherwise = Nothing
+
+-- CR 614.9: which recipient a PRINTED redirection sends the damage to --
+-- Pariah's "is dealt to enchanted creature instead".
+--
+-- The battlefield's UNIQUE match, read live at the damage event rather than
+-- swept when the ability began, for the CR 611.2c reason DamagePattern's
+-- printed recipient halves give: a static ability's destination is a
+-- description, so an Aura that changes what it enchants redirects somewhere
+-- else from then on.
+--
+-- None is CR 614.9's "the effect does nothing", which Parun.Engine.Event.apply
+-- turns into the event handed back unchanged -- the same answer a baked
+-- destination that left the battlefield gets, and for the same sentence.
+-- SEVERAL is that answer too, and no card in the pool reaches it: the pool's one
+-- printed destination is Filter.IsHostOfSource (Pariah), which names at most one
+-- permanent. Nothing in the type stops a card describing several, so this is the
+-- answer the rule leaves for that shape -- it redirects to "another battle,
+-- creature, planeswalker, or player" and never to a set.
+--
+-- The battlefield rather than every object, because that is where CR 614.9's
+-- own guard puts a destination; liveDestination then answers the rest.
+--
+-- The Filter is read in the candidate's Context (candidateContext), and CR
+-- 801.13a asked as redirectDestination asks it.
+printedDestination :: GameState -> ReplacementCandidate -> Filter.Type.Filter Keyword.Type.Keyword -> Maybe Recipient.Recipient
+printedDestination gs candidate filter_ =
+  let viewOf = Projection.viewsOf gs
+      context = candidateContext gs candidate
+   in Monad.mfilter (withinRangeOf gs (reachOf gs candidate)) $ case filter (\oid -> Filter.matches context (viewOf oid) filter_) (Set.toList (GameState.battlefield gs)) of
+        [oid] -> liveDestination gs oid
+        _ -> Nothing
+
+-- CR 615.12: could a prevention effect prevent any of this damage event, or is
+-- this damage that "can't be prevented" (Spider-Punk)?
+--
+-- FALSE does not mean the prevention effect is inapplicable, and the rule is
+-- emphatic about the difference: "any applicable prevention effects are STILL
+-- APPLIED to it. Those effects won't prevent any damage, but any additional
+-- effects they have will take place." So `applies` is untouched by this
+-- question, the CR 616.1 loop still offers the row and still marks it applied --
+-- which is CR 615.12a's "just once", falling straight out of the applied-set the
+-- loop already carries -- and what changes is only that the event survives
+-- undiminished and the shield is not spent ("existing damage prevention shields
+-- won't be reduced by damage that can't be prevented"). The application's
+-- ADDITIONAL effect still happens, in Parun.Engine.Event.applyInertly.
+--
+-- Asked per EVENT, because that is what the rule's own subject is and what the
+-- printed clauses narrow: Spider-Punk's sentence admits every event, and
+-- Excruciator's admits only the ones its own 7/7 is the source of, on the same
+-- board and in the same batch.
+--
+-- A DISJUNCTION over the standing effects, for CR 101.2's reason and the shape
+-- every prohibition takes: one applicable "can't" is enough and nothing outvotes
+-- it. `any` rather than a count because AnyPlayer puts one effect on the list
+-- once per seat.
+--
+-- Delegated to Parun.Engine.PlayerEffect, which owns the CR 613.10/613.11 axis
+-- this lives on, so this module never sees a PlayerEffect constructor -- it
+-- reads only the DamagePattern each effect hands back, with the same
+-- matchesDamagePattern that reads a shield's.
+--
+-- CR 109.5's "you" for one of these patterns is the controller of the ability's
+-- own source (Questing Beast's "creatures you control"), derived here rather than
+-- carried: unlike a floating shield row, both of CR 615.12's carriers name a
+-- source to derive it from -- the printed static ability's permanent, and the
+-- object a CR 611.2c stored effect resolved off (Lava Burst's own spell, still on
+-- the stack while the damage it deals is proposed).
+preventable :: (ObjectId -> Filter.View) -> GameState -> DamageEvent.DamageEvent -> Bool
+preventable viewOf gs de = not (any (\(src, pat) -> matchesDamagePattern viewOf gs (patternContext gs src) pat de) (PlayerEffect.unpreventable gs))
+
+-- CR 109.5's Context for a CR 613.10/613.11 pattern: the perspective is the
+-- controller of the effect's own source, derived off the board rather than
+-- carried. Shared by the two questions of that shape so they cannot disagree
+-- about what "you" and IsSource mean.
+patternContext :: GameState -> Maybe ObjectId -> Filter.Context
+patternContext gs src = maybe id (`Projection.framedBy` gs) src (Filter.contextIn gs (src >>= \oid -> Projection.controllerOf oid gs) src)
+
+-- CR 614.9: is this rewrite a REDIRECTION -- "dealt instead to another permanent
+-- or player"? The classification `redirectable` below is gated on, in the genre
+-- of `prevents` and `spentInertly` above: one arm per constructor, no wildcard,
+-- so a second rewrite that moves a damage event's recipient is asked here rather
+-- than silently escaping a card's prohibition.
+redirects :: Rewrite -> Bool
+redirects rewrite = case rewrite of
+  DamageRewrite.Redirect _ -> True
+  -- The same rule with the destination described rather than named, so a card
+  -- forbidding redirection (Lava Burst) stops both.
+  DamageRewrite.RedirectMatching _ -> True
+  -- And the same rule counted down, so it stops Harm's Way too.
+  DamageRewrite.RedirectNext _ _ -> True
+  DamageRewrite.PreventNext _ -> False
+  DamageRewrite.PreventAll -> False
+  DamageRewrite.PreventAllBut _ -> False
+  DamageRewrite.PreventUpTo _ -> False
+  DamageRewrite.PreventRemovingShieldCounter -> False
+  -- CR 614.1a's two amount rewrites leave the recipient where it was, so neither
+  -- deals the damage "instead to another permanent or player".
+  DamageRewrite.SetAmount _ -> False
+  DamageRewrite.Scale _ -> False
+  -- The effects run in the damage's place, so nothing is dealt to anybody: no
+  -- recipient moves and CR 614.9's prohibition has nothing to stop.
+  DamageRewrite.RunEffects _ -> False
+  -- The damage reaches the recipient it was proposed for.
+  DamageRewrite.TurnFaceUp -> False
+
+-- CR 614.9: may a redirection effect move this damage event, or does a card
+-- forbid it (Lava Burst)?
+--
+-- FALSE means the redirection is NOT APPLICABLE, and that is where this parts
+-- company with `preventable` beside it. CR 615.12 keeps an inapplicable
+-- prevention in the applicable set -- "any applicable prevention effects are
+-- still applied to it ... any additional effects they have will take place" --
+-- and rule 614.9 states no twin of that sentence; its only "the effect does
+-- nothing" case is a destination that left the battlefield or a player who left
+-- the game (redirectDestination above). So `applies` drops the row instead, and
+-- CR 616.1's loop never offers it as a choice.
+--
+-- Asked per EVENT for `preventable`'s reason, and read through the same
+-- matchesDamagePattern, so one reading of what a DamagePattern means serves CR
+-- 615.1's shields, CR 615.12's prohibition and this one.
+--
+-- Delegated to Parun.Engine.PlayerEffect, which owns the CR 613.10/613.11 axis:
+-- this module sees a DamagePattern and never a PlayerEffect constructor.
+redirectable :: (ObjectId -> Filter.View) -> GameState -> DamageEvent.DamageEvent -> Bool
+redirectable viewOf gs de = not (any (\(src, pat) -> matchesDamagePattern viewOf gs (patternContext gs src) pat de) (PlayerEffect.unredirectable gs))
+
+-- CR 615.12: is this the pairing the rule describes -- a PREVENTION effect
+-- chosen against damage that CAN'T BE PREVENTED? Just means the application
+-- happens and prevents nothing: Parun.Engine.Event's CR 616.1 loop hands the event
+-- back undiminished and marks the row applied, spending neither a use nor a point
+-- of shield.
+--
+-- The REWRITE comes back rather than a Bool, because CR 615.12's middle clause --
+-- "any additional effects they have will take place" -- makes the inert
+-- application's remaining obligation a question about which prevention this is.
+-- Parun.Engine.Event.applyInertly is where that is answered, per constructor, so
+-- the classification stays here and the doing stays there.
+--
+-- The two halves above, asked together, and asked HERE so that the loop reads
+-- one classification rather than composing two. `prevents` is the effect half
+-- and refuses CR 614.1a's SetAmount and Scale, which prevent nothing and are not
+-- what the rule is about: Furnace of Rath doubles unpreventable damage like any
+-- other.
+--
+-- The wildcard is over (effect, event) PAIRS, where it is the only way to say
+-- "this pair is not a prevention of damage" -- preventionBy's arrangement, for
+-- preventionBy's reason: the per-constructor obligation is discharged by
+-- `prevents`, which this delegates to.
+inertPrevention :: GameState -> ReplacementCandidate -> ProposedEvent -> Maybe Rewrite
+inertPrevention gs candidate event = case (ReplacementCandidate.effect candidate, event) of
+  (ReplacementEffect.DamageR (DamageR.MkDamageR _ rewrite _), ProposedEvent.WouldDealDamage de)
+    | prevents rewrite && not (preventable (Projection.viewsOf gs) gs de) ->
+        Just rewrite
+  _ -> Nothing
+
+-- CR 615.5 / 615.13: the application of a prevention effect that just happened,
+-- carrying how much of the event it prevented and the additional effect it owes.
+-- Nothing means the pair is not a prevention of damage at all.
+--
+-- `before` is the event as it was offered to Event.apply and `after` what came back,
+-- so the amount is the CR 615.6 arithmetic read off the pair: Nothing means the event
+-- does not happen at all, which is the whole of it prevented.
+--
+-- `inert` is Event.loop's own `inertPrevention` answer, Just when CR 615.12 made
+-- this application prevent nothing, and it is what makes an UNDIMINISHED event
+-- still report a prevention -- at an amount of 0. The rule is emphatic that such
+-- an effect is still applied and that "any additional effects they have will take
+-- place", and CR 615.5's rider travels on this record. Passed in rather than
+-- re-derived: this function is handed no board, and the board it would have to
+-- ask is not the one the classification was made against -- `applyInertly` has
+-- run in between.
+--
+-- ZERO is therefore a load-bearing amount, and the two consumers in
+-- Parun.Engine.Damage read it differently. The CR 615.5 rider queue takes every
+-- entry, the rule owing the rider nothing about how much was prevented; CR
+-- 615.13's DamagePrevented record is gated above 0, which is that rule's own
+-- condition -- such an ability triggers each time a prevention effect is applied
+-- "and prevents some or all of that damage".
+--
+-- The wildcard is over (effect, event) PAIRS, where it is the only way to say
+-- "this pair is not a prevention of damage"; the per-constructor obligation this
+-- module carries is discharged by `prevents` above, which the guard delegates to.
+preventionBy :: Maybe Rewrite -> ReplacementCandidate -> ProposedEvent -> Maybe ProposedEvent -> Maybe Prevention
+preventionBy inert candidate before after = case (ReplacementCandidate.effect candidate, before) of
+  (ReplacementEffect.DamageR (DamageR.MkDamageR _ rewrite _), ProposedEvent.WouldDealDamage de)
+    | prevents rewrite ->
+        let was = DamageEvent.amount de
+            -- The event that did not happen prevented all of it (CR 615.6).
+            now = maybe 0 DamageEvent.amount (after >>= asDamageEvent)
+         in if Maybe.isJust inert || was > now
+              then
+                Just
+                  Prevention.MkPrevention
+                    { Prevention.by = ReplacementCandidate.identity candidate,
+                      -- ONE ENTRY, this event's own: CR 120.1's source and the
+                      -- recipient of the event as PROPOSED, which is the reading
+                      -- CR 615.13 asks for --
+                      -- its ability watches "damage that WOULD be dealt [and] is
+                      -- prevented". Damage CAN now be redirected
+                      -- (DamageRewrite.Redirect), and the two readings still
+                      -- never diverge, because a redirect prevents nothing (CR
+                      -- 615.1a) -- `prevents` refuses it above, so no redirect
+                      -- ever reaches here. `groupPreventions` is what widens the
+                      -- map, one batch at a time.
+                      --
+                      -- Zero on the CR 615.12 path, which `applyInertly` makes
+                      -- exact: it hands the event back whole, so `now` is `was`.
+                      Prevention.amounts = Map.singleton (DamageEvent.source de) (Map.singleton (DamageEvent.target de) (was - now)),
+                      -- CR 615.5's additional effect, carried out of the loop
+                      -- so a caller that CAN run effects finds it. Copied, not
+                      -- inspected: this module never asks what the rider is.
+                      Prevention.rider = ReplacementCandidate.rider candidate
+                    }
+              else Nothing
+  _ -> Nothing
+
+-- CR 615.13's "prevented THIS WAY": which object's own PRINTED prevention effect
+-- an application was, or Nothing when no card printed it. What
+-- TriggerCondition.SelfPreventsDamage compares against its bearer.
+--
+-- A floating row is always a card's: CR 615.3's shields are installed by the
+-- resolution of a spell or ability, and `source` is the object whose text said
+-- so. Proved by Parun.ReplacementSpec's "CR 615.9 / 615.13 samite ministration
+-- gains life from a black source it named", where the shield and the delayed
+-- trigger are both the instant's, so answering Nothing here withholds the life.
+--
+-- A permanent's is too, unless the row was minted onto it by a rule rather than
+-- printed on its card -- CR 122.1c's shield-counter pair and CR 702.16e's
+-- protection are the preventions that reach here that way. Neither is text the
+-- card set up, so a "prevented this way" trigger on that same permanent is not
+-- about either: the counter or the keyword prevented the damage and the printed
+-- effect never applied. Rule 702.16e holds even where the card PRINTS the
+-- keyword, "this way" pointing at the preceding sentence rather than at the
+-- object.
+--
+-- READ OFF THE CANDIDATE rather than inferred from its effect, because rule
+-- 702.16e's row is a plain PreventAll naming the permanent itself -- the same
+-- value Phyrexian Vindicator and Stormwild Capridor print, so no reading of the
+-- effect can separate them. The mark is made where the row is built and the
+-- segments are still apart -- Parun.Engine.Projection.replacementsOf for the
+-- keyword's permanent half, `collect`'s player segment for rule 702.16e's other
+-- one; see Parun.Types.ReplacementProvenance.
+printedBy :: CandidateId.CandidateId -> Maybe ObjectId
+printedBy candidate = case candidate of
+  CandidateId.OfFloating floating -> Just (FloatingCandidate.source floating)
+  CandidateId.OfPermanent permanent -> case PermanentCandidate.provenance permanent of
+    ReplacementProvenance.Minted -> Nothing
+    ReplacementProvenance.Printed -> Just (PermanentCandidate.source permanent)
+
+-- CR 615.13: collapse a batch's per-event preventions to one entry per applying
+-- INSTANCE, carrying what that instance prevented from each source to each
+-- recipient.
+--
+-- Keyed on the instance alone, which is the rule's own unit: 615.13 counts one
+-- application of one prevention effect "to one or more simultaneous damage
+-- events", whoever those events were addressed to. A shield over a player and
+-- the permanents they control is the producer that tells the two readings
+-- apart: one source's hits on both run CR 615.5's rider ONCE with that source's
+-- total, which Parun.DamageReplacementSpec's Comeuppance "come back as ONE 5"
+-- proves by counting the rider's damage events rather than summing them.
+--
+-- The recipients survive as the KEYS of the collapsed amount rather than as part
+-- of the key, because a trigger scoped to one of them still has to read its own
+-- share -- Selfless Squire's "damage that would be dealt to you", where the same
+-- shield also covered a permanent.
+--
+-- Ascending by key, so the CR 608.2i record -- and therefore the CR 603.3b order
+-- these triggers are offered in -- is canonical rather than gather-dependent.
+--
+-- A CR 615.12 entry, whose amount is 0, merges harmlessly and is the rule: one
+-- application of one prevention effect to several simultaneous events reports
+-- what it prevented across all of them, which the unpreventable ones added
+-- nothing to. So a batch mixing the two still records CR 615.13's trigger --
+-- some of the damage WAS prevented -- and a batch of only inert ones sums to 0,
+-- which Parun.Engine.Damage's record then leaves out.
+--
+-- Only the AMOUNTS are summed. CR 615.5's rider is a property of the INSTANCE,
+-- and the key already fixes the instance, so every entry merged here carries the
+-- same rider and taking either side is taking the same value.
+--
+-- The SOURCE is not keyed on either: it is the OUTER key of the collapsed amount,
+-- beside the recipients within it, so one application covering two sources --
+-- Comeuppance stopping two attackers in one combat damage step -- is still ONE
+-- prevention under rule 615.13, and keeps both sources and each one's share.
+-- Parun.DamageReplacementSpec's Comeuppance group proves the rider's per-source
+-- read and its Judgment of Alexander group the trigger's.
+groupPreventions :: [Prevention] -> [Prevention]
+groupPreventions ps =
+  let merge (a1, r1) (a2, _) = (Map.unionWith (Map.unionWith (+)) a1 a2, r1)
+      keyed =
+        Map.fromListWith
+          merge
+          (fmap (\p -> (Prevention.by p, (Prevention.amounts p, Prevention.rider p))) ps)
+      rebuild (by, (amounts, rider)) =
+        Prevention.MkPrevention {Prevention.by = by, Prevention.amounts = amounts, Prevention.rider = rider}
+   in fmap rebuild (Map.toAscList keyed)
+
+-- CR 615.7: when two or more applicable sources would deal damage to a shielded
+-- recipient at the same time, that recipient chooses which damage the shield
+-- prevents. CR 101.4c generalizes it to every prevention a simultaneous batch can
+-- exhaust -- CR 122.1c's shield counters are the second such shape -- since the
+-- player owes both events a CR 616.1 choice and "if no order is specified, the
+-- player chooses the order".
+--
+-- Asked as an ORDER over the contested events for the resources counted in
+-- WHOLE EVENTS or applications -- CR 122.1c's shield counters, CR 614.3's use
+-- count -- because a pick repeated is an order there: such a row covers a whole
+-- event or none of it, which nobody may decline or divide. The countdowns
+-- counted in POINTS are divisible, and `allocations` asks those as an
+-- allocation instead.
+--
+-- CR 616.1's APNAP clause is honoured here too, and over the WHOLE batch rather
+-- than only over the shield questions: `byApnap` groups the batch by chooser
+-- before anything is asked and `askSeat` exhausts one seat's questions before
+-- the next's, so every question one player is owed -- CR 615.7's division, CR
+-- 122.1c's order and each of their events' CR 616.1 choices alike -- is asked
+-- before the next player's. A lone ProposedEvent still has exactly one affected object
+-- and therefore one chooser, which is why the batch is the only place the clause
+-- can be honoured at all.
+--
+-- The two rules settle DIFFERENT LEVELS and so cannot contend for this list. CR
+-- 615.7's freedom is entirely within one chooser: `contested` and `allocations`
+-- both split a row's contested hits by whoever CR 616.1 asks about each of them
+-- -- all three read the chooser off the recipient through `chooserOf` -- so a
+-- row covering recipients with two different choosers contributes one group
+-- each rather than one group asked of the wrong player. `askOne` then permutes,
+-- and `askAllocation` divides, only within that player's own positions. CR
+-- 101.4c is the rule that licenses it: a player making several simultaneous
+-- choices makes them in the order specified, or chooses the order themselves.
+orderBatch :: [DamageEvent.DamageEvent] -> Game ([DamageEvent.DamageEvent], [Map.Map CandidateId Natural])
+orderBatch events = do
+  gs <- State.get
+  -- Sorted FIRST: `contested` and `allocations` both report batch positions, so
+  -- they have to see the list `askOne` will splice into.
+  let sorted = byApnap gs events
+      seats =
+        List.sortOn
+          (seatOf gs)
+          ( Set.toList
+              ( Set.fromList
+                  (fmap fst (contested gs sorted) <> fmap (\(_, _, pid, _) -> pid) (allocations gs sorted))
+              )
+          )
+  (ordered, allowances) <- Monad.foldM askSeat (sorted, Map.empty) seats
+  pure (ordered, fmap (\i -> Map.findWithDefault Map.empty i allowances) (zipWith const [0 ..] ordered))
+
+-- Every question one seat is owed about this batch, asked before the next
+-- seat's: CR 616.1's APNAP clause, which is why the two kinds are folded
+-- together here rather than swept for separately.
+--
+-- The seat's ORDER question comes first, and its allocations are computed
+-- against the list that answer produced. That is what keeps the positions an
+-- allocation names honest: `askOne` permutes only within one chooser's own
+-- positions, and both `contested` and `allocations` read the chooser off each
+-- hit's recipient, so no later seat's answer can move an event this seat has
+-- already divided its countdown over.
+askSeat :: ([DamageEvent.DamageEvent], Map.Map Natural (Map.Map CandidateId Natural)) -> PlayerId -> Game ([DamageEvent.DamageEvent], Map.Map Natural (Map.Map CandidateId Natural))
+askSeat (batch, allowances) pid = do
+  before <- State.get
+  ordered <- case lookup pid (contested before batch) of
+    Nothing -> pure batch
+    Just positions -> askOne batch (pid, positions)
+  after <- State.get
+  divided <- Monad.foldM (askAllocation ordered) allowances (filter (\(_, _, chooser, _) -> chooser == pid) (allocations after ordered))
+  pure (ordered, divided)
+
+-- CR 615.7's own sentence -- "the player or the controller of the permanent
+-- chooses which damage the shield prevents" -- asked as an ALLOCATION: how many
+-- of the countdown's points go to each event it is contested over. Harm's Way's
+-- rulings say the same of the counted redirect, and say it in points: "If you
+-- like, you can choose to redirect 1 damage that would be dealt by the chosen
+-- source to each of two different recipients."
+--
+-- What there is to divide is the row's remainder less whatever an earlier seat
+-- has already committed of it, capped at what this seat's hits could absorb --
+-- CR 615.7's "once the shield has been reduced to 0, any remaining damage is
+-- dealt normally" read forwards. A shield is neither optional nor declinable, so
+-- the answer must spend all of that; a division that does not, or that gives an
+-- event more than its own amount, is rejected rather than repaired and the
+-- canonical division stands.
+--
+-- Elided on the two readings the rule cannot tell apart: one hit, where the
+-- whole share is forced onto it, and a share large enough for every hit, where
+-- every division covers everything.
+askAllocation :: [DamageEvent.DamageEvent] -> Map.Map Natural (Map.Map CandidateId Natural) -> (CandidateId, Natural, PlayerId, [Natural]) -> Game (Map.Map Natural (Map.Map CandidateId Natural))
+askAllocation ordered allowances (identity_, left, pid, positions) = do
+  gs <- State.get
+  let byPosition :: Map.Map Natural DamageEvent.DamageEvent
+      byPosition = Map.fromList (zip [0 ..] ordered)
+      group = Maybe.mapMaybe (\i -> Map.lookup i byPosition) positions
+      committed = sum (fmap (Map.findWithDefault 0 identity_) (Map.elems allowances))
+      share = min (left - min left committed) (sum (fmap DamageEvent.amount group))
+      canonical = spendDown share group
+      record division = List.foldl' (\acc (i, n) -> Map.insertWith (<>) i (Map.singleton identity_ n) acc) allowances (zip positions division)
+  if length group < 2 || share >= sum (fmap DamageEvent.amount group)
+    then pure (record canonical)
+    else do
+      answer <- Game.choose (Prompt.AllocateDamage (Decide.deciderFor pid gs) pid group share)
+      let honoured
+            | length answer == length group,
+              sum answer == share,
+              and (zipWith (\n event -> n <= DamageEvent.amount event) answer group) =
+                answer
+            | otherwise = canonical
+      pure (record honoured)
+
+-- Spend a countdown down a list of events in their own order, each taking as
+-- much as it can. The canonical division, and the one parun settled a contested
+-- batch by before the division became the shielded side's to choose.
+spendDown :: Natural -> [DamageEvent.DamageEvent] -> [Natural]
+spendDown countdown =
+  snd . List.mapAccumL (\left event -> let spend = min left (DamageEvent.amount event) in (left - spend, spend)) countdown
+
+-- CR 615.7 / Harm's Way's rulings: the countdowns a batch cannot satisfy, one
+-- entry per (row, chooser) as (the row's identity, what it has left, whose
+-- choice it is, the batch positions it is contested over).
+--
+-- The two counted rewrites and no others, read off `remainingOf` -- the same
+-- total classification the write-back uses, so a third counted rewrite is
+-- allocated rather than silently ordered.
+--
+-- The CONTEST is judged over the whole row before the split by chooser, which is
+-- the rule's own unit: the pool is exhausted by everything it admits, not by one
+-- seat's share of it. Two seats sharing one row are then asked in APNAP order,
+-- each seeing what is left (`askAllocation`).
+allocations :: GameState -> [DamageEvent.DamageEvent] -> [(CandidateId, Natural, PlayerId, [Natural])]
+allocations gs events =
+  let indexed :: [(Natural, DamageEvent.DamageEvent)]
+      indexed = zip [0 ..] events
+      viewOf = Projection.viewsOf gs
+      grants = Projection.controlGrants gs
+      allocationsBy candidate = Maybe.fromMaybe [] $ do
+        rewrite <- damageRewriteOf candidate
+        left <- remainingOf rewrite
+        let hits = hitsOf viewOf grants gs indexed candidate
+        Monad.guard (length hits >= 2)
+        Monad.guard (left < sum (fmap (DamageEvent.amount . snd) hits))
+        pure
+          ( fmap
+              (\(pid, ps) -> (ReplacementCandidate.identity candidate, left, pid, Set.toAscList (Set.fromList ps)))
+              (Map.toList (Map.fromListWith (<>) (Maybe.mapMaybe (\(position, event) -> fmap (\pid -> (pid, [position])) (chooserOf gs (ProposedEvent.WouldDealDamage event))) hits)))
+          )
+   in concatMap allocationsBy (collect gs (GameState.replacements gs))
+
+-- The damage rewrite a candidate carries, and Nothing for a candidate that
+-- rewrites some other class of event.
+damageRewriteOf :: ReplacementCandidate -> Maybe Rewrite
+damageRewriteOf candidate = case ReplacementCandidate.effect candidate of
+  ReplacementEffect.DamageR (DamageR.MkDamageR _ rewrite _) -> Just rewrite
+  _ -> Nothing
+
+-- The indexed batch entries one candidate admits, CR 615.12's filter included.
+-- Shared by `contested` and `allocations`, so the order question and the
+-- allocation question judge the same hits.
+--
+-- CR 615.12's filter is a PREVENTION's: a redirect never prevents, so
+-- unpreventable damage contends for Harm's Way's 2 exactly as any other damage
+-- does, and `applies` alone says whether the row reaches it.
+hitsOf :: (ObjectId -> Filter.View) -> [Projection.ControlGrant] -> GameState -> [(Natural, DamageEvent.DamageEvent)] -> ReplacementCandidate -> [(Natural, DamageEvent.DamageEvent)]
+hitsOf viewOf grants gs indexed candidate =
+  let contends event = case damageRewriteOf candidate of
+        Just rewrite -> not (prevents rewrite) || preventable viewOf gs event || spentInertly rewrite
+        Nothing -> False
+   in filter
+        ( \entry ->
+            contends (snd entry)
+              && applies viewOf grants gs (ProposedEvent.WouldDealDamage (snd entry)) candidate
+        )
+        indexed
+
+-- CR 615.7: a candidate the batch's allocation gave none of its countdown to
+-- covers none of this event, so CR 616.1 never offers it. Event.loop's filter,
+-- which is why the Map's shape stays here rather than being read there.
+allocatedOut :: Map.Map CandidateId Natural -> ReplacementCandidate -> Bool
+allocatedOut allowances candidate = Map.lookup (ReplacementCandidate.identity candidate) allowances == Just 0
+
+-- CR 616.1 / 101.4: group a batch by whose CR 616.1 choice each event is, active
+-- player first. A stable sort, so events sharing a chooser keep their gather
+-- order and CR 615.7's within-chooser permutation is left to `askOne`.
+--
+-- An event with no chooser -- its affected object has left -- sorts last with
+-- the unseated, since `choose` will not prompt for it either.
+byApnap :: GameState -> [DamageEvent.DamageEvent] -> [DamageEvent.DamageEvent]
+byApnap gs =
+  let rank de = maybe (unseated gs) (seatOf gs) (chooserOf gs (ProposedEvent.WouldDealDamage de))
+   in List.sortOn rank
+
+-- CR 101.4: how far down APNAP order a player sits. A player off the seating
+-- roster sorts last, the fallback Resolve.objectRefObjects takes for the same
+-- lookup.
+seatOf :: GameState -> PlayerId -> Int
+seatOf gs pid = Maybe.fromMaybe (unseated gs) (List.elemIndex pid (Game.apnapOrder gs))
+
+-- The seat index that sorts after every real one.
+unseated :: GameState -> Int
+unseated = length . Game.apnapOrder
+
+-- Ask one chooser for the order of the positions their shields are contested
+-- over, and splice the answer back into the batch.
+--
+-- The events keep their POSITIONS in the batch and only trade places with each
+-- other, so a second chooser's group -- a different recipient's -- is neither
+-- moved nor renumbered by the first's answer.
+askOne :: [DamageEvent.DamageEvent] -> (PlayerId, [Natural]) -> Game [DamageEvent.DamageEvent]
+askOne batch (pid, positions) = do
+  gs <- State.get
+  let byPosition :: Map.Map Natural DamageEvent.DamageEvent
+      byPosition = Map.fromList (zip [0 ..] batch)
+      group = Maybe.mapMaybe (\i -> Map.lookup i byPosition) positions
+  case group of
+    -- Unreachable: `contested` only reports a group of two or more.
+    [] -> pure batch
+    first : _ -> do
+      let decider = Decide.deciderFor pid gs
+      answer <- Game.choose (Prompt.OrderDamage decider pid group)
+      -- Reject-not-repair, as `choose` and Engine's trigger ordering already do:
+      -- an answer that is not a permutation of the offered indices leaves the
+      -- canonical order standing rather than dropping or duplicating an event.
+      let permuted =
+            if List.sort answer == zipWith const [0 ..] group
+              then fmap (\i -> at group i first) answer
+              else group
+          moved = Map.fromList (zip positions permuted)
+      pure (fmap (\(i, e) -> Map.findWithDefault e i moved) (zip [0 ..] batch))
+
+-- The batch positions one chooser's whole-event resources -- CR 122.1c's shield
+-- counters, CR 614.3's use count -- have to be ordered across, one entry per
+-- chooser, in CR 616.1's APNAP order.
+--
+-- A resource is CONTESTED when it admits two or more of the batch's events (CR
+-- 615.7) and cannot cover all of them -- the comparison being made in the unit
+-- its OWN rule counts, which `contestedResource` below supplies: whole events
+-- for CR 122.1c's shield counters, applications for CR 614.3's use count. One
+-- large enough to cover the lot takes all of it whatever the order, so there is
+-- nothing to ask.
+--
+-- Several shields contribute ONE question per CHOOSER, over the union of what
+-- they contest: the order the batch is settled in is a single fact about the
+-- batch, and asking twice would ask the same player to state it twice.
+--
+-- The union is per chooser rather than per recipient, so one player shielding
+-- two different creatures orders both creatures' events in one answer. That is a
+-- WIDER question than either shield needs -- neither shield can reach the
+-- other's events -- but a superset of a question is still the player's answer,
+-- and splitting it would ask the same player twice about one batch.
+--
+-- CR 615.12's damage is left out of the union for a shield the rule's last
+-- sentence protects, and that is an elision the rule itself licenses rather than
+-- a shortcut: a CR 615.7 shield prevents none of an unpreventable event and is
+-- not reduced by it, so every order of a batch of them leads to the same board
+-- and there is nothing for the shielded player to decide. `spentInertly` is where
+-- that stops being true -- CR 122.1c's counter comes off whether or not the
+-- damage could be prevented, so an unpreventable event competes for it exactly as
+-- a preventable one does. Filtered per EVENT rather than per batch, so a batch
+-- mixing preventable and unpreventable damage still asks about the part the
+-- shield's own resource is contested over -- which a narrowed clause reaches: an
+-- Excruciator and an ordinary creature hitting one shielded permanent at once is
+-- exactly that batch.
+contested :: GameState -> [DamageEvent.DamageEvent] -> [(PlayerId, [Natural])]
+contested gs events =
+  let indexed :: [(Natural, DamageEvent.DamageEvent)]
+      indexed = zip [0 ..] events
+      viewOf = Projection.viewsOf gs
+      grants = Projection.controlGrants gs
+      -- CR 615.7's chooser is CR 616.1's, read off each hit's own shielded
+      -- recipient and GROUPED, since one shield can cover recipients with
+      -- different choosers: Divine Deflection's covers a player and the
+      -- permanents they control, and nothing in a DamagePattern's recipient side
+      -- confines a described set to one seat. A hit whose recipient has left has
+      -- no chooser and is dropped, there being no one to ask about it.
+      --
+      -- The CONTEST is judged over the whole shield before the split, which is
+      -- the rule's own unit: the pool is exhausted by everything it admits, not
+      -- by one seat's share of it.
+      contestedBy candidate = Maybe.fromMaybe [] $ do
+        (left, demand) <- contestedResource gs candidate
+        case hitsOf viewOf grants gs indexed candidate of
+          hits@(_ : _ : _)
+            | left < demand (fmap snd hits) ->
+                pure
+                  ( Map.toList
+                      ( Map.fromListWith
+                          (<>)
+                          ( Maybe.mapMaybe
+                              (\(position, event) -> fmap (\pid -> (pid, [position])) (chooserOf gs (ProposedEvent.WouldDealDamage event)))
+                              hits
+                          )
+                      )
+                  )
+          _ -> Nothing
+      groups = concatMap contestedBy (collect gs (GameState.replacements gs))
+      merged = Map.fromListWith (<>) groups
+   in fmap
+        (\(pid, positions) -> (pid, Set.toAscList (Set.fromList positions)))
+        (List.sortOn (seatOf gs . fst) (Map.toList merged))
+
+-- CR 122.1c / 614.3: a prevention that a batch can exhaust in WHOLE EVENTS or
+-- applications, as the pair (what it has left, what a set of events would demand
+-- of it). Nothing for an effect no batch can run out of, and Nothing for the two
+-- countdowns counted in POINTS, which `allocations` divides instead.
+--
+-- The units are the rules' own and not interchangeable. CR 615.7's shield
+-- "counts only the amount of damage; the number of events or sources dealing it
+-- doesn't matter", so an ORDER cannot express its answer and `allocations`
+-- asks it. CR 122.1c's pair prevents a whole event per counter whatever its
+-- amount, so its unit is events -- and what it has left is a number on the
+-- PERMANENT rather than on the row, which is why this reads the board.
+--
+-- A CLASSIFICATION of effects -- what SHAPE an effect has, never which effect it
+-- is -- in the same genre as bucketOf and readsApplier above. One arm per
+-- constructor, no wildcard, so a new rewrite a batch can exhaust breaks the
+-- build here rather than silently going unasked about.
+contestedResource :: GameState -> ReplacementCandidate -> Maybe (Natural, [DamageEvent.DamageEvent] -> Natural)
+contestedResource gs candidate = case ReplacementCandidate.effect candidate of
+  ReplacementEffect.DamageR (DamageR.MkDamageR _ rewrite _) -> case rewrite of
+    -- CR 615.7's own shield, and Harm's Way's counted redirection beside it
+    -- ("Harm's Way will redirect just 2 of that damage ... You choose which 2
+    -- damage is redirected" -- its Oracle rulings; the CR states the counted
+    -- allocation only for preventions, so the redirect's rests on those). Both
+    -- are counted in POINTS, which an order cannot divide: they are allocated
+    -- instead, by `allocations` above, which reads the same countdown off
+    -- `remainingOf`.
+    DamageRewrite.PreventNext _ -> Nothing
+    DamageRewrite.RedirectNext _ _ -> Nothing
+    -- CR 122.1c: one counter per application, so a batch of n events demands n
+    -- of them, and the permanent's counters are the supply.
+    DamageRewrite.PreventRemovingShieldCounter ->
+      Just (Projection.shieldCounters (ReplacementCandidate.source candidate) gs, Int.toNaturalSaturating . length)
+    -- Fog is unlimited for its duration, so there is nothing to allocate: it
+    -- prevents every event it admits and the order cannot matter.
+    DamageRewrite.PreventAll -> Nothing
+    -- CR 615.10 states the opposite of CR 615.7 for a static shield: it "will
+    -- apply separately to damage from other applicable events that would happen
+    -- at the same time", so a batch cannot exhaust it and there is nothing to
+    -- allocate.
+    DamageRewrite.PreventAllBut _ -> Nothing
+    -- CR 702.64b states the same of absorb as CR 615.10 does of the shield
+    -- above: a batch cannot exhaust it, so there is nothing to allocate.
+    DamageRewrite.PreventUpTo _ -> Nothing
+    DamageRewrite.SetAmount _ -> Nothing
+    DamageRewrite.Scale _ -> Nothing
+    DamageRewrite.Redirect _ -> Nothing
+    DamageRewrite.RedirectMatching _ -> Nothing
+    -- CR 614.3's use count is what a run-effects rewrite spends, and it is
+    -- counted in APPLICATIONS -- CR 122.1c's unit above, not CR 615.7's -- so a
+    -- ONCE row meeting two simultaneous events it admits is exhausted by either
+    -- and the shielded object's controller chooses which (CR 616.1). Kill-Suit
+    -- Cultist's "the next time" is such a row.
+    --
+    -- An UNLIMITED one has nothing to allocate, Fog's answer above: it replaces
+    -- every event it admits and the order cannot matter. Nothing for a
+    -- permanent's static replacement ability too, which carries no lifetime at
+    -- all and whose `consume` is a no-op.
+    DamageRewrite.RunEffects _ -> case fmap snd (ReplacementCandidate.lifetime candidate) of
+      Just Uses.Once -> Just (1, Int.toNaturalSaturating . length)
+      Just Uses.Unlimited -> Nothing
+      Nothing -> Nothing
+    -- Turning face up spends the STATUS the row is minted from, and a batch's
+    -- later events then find no row at all, so there is nothing to allocate:
+    -- whichever event comes first turns the permanent up, and every one of them
+    -- is dealt.
+    DamageRewrite.TurnFaceUp -> Nothing
+  ReplacementEffect.ZoneChangeR {} -> Nothing
+  ReplacementEffect.EntryR {} -> Nothing
+  ReplacementEffect.DestructionR _ -> Nothing
+  ReplacementEffect.CounterR {} -> Nothing
+  ReplacementEffect.TokenR {} -> Nothing
+  ReplacementEffect.TurnUpR {} -> Nothing
+  ReplacementEffect.AttachR {} -> Nothing
+  ReplacementEffect.UntapR _ -> Nothing
+  -- CR 614.1a: neither resizing life-total rewrite is a supply a batch can run out
+  -- of. A floor is re-read off the board every application, and once the player is
+  -- at it a further loss is cut to nothing rather than exhausting anything; a
+  -- scaling is arithmetic on whatever amount arrives.
+  --
+  -- A LIBRARY is a supply, and a batch could in principle empty one -- but this
+  -- classification is only ever asked of a CR 510.2 damage batch (`contested`
+  -- above filters by WouldDealDamage), and no LifeLossR row matches one. So the
+  -- answer for the exiling rewrite is Nothing because the question never arrives,
+  -- not because the resource is inexhaustible; `breaches` is where the count is
+  -- actually read, once per proposal.
+  ReplacementEffect.LifeLossR {} -> Nothing
+  -- A scaling on the gain side is arithmetic on whatever amount arrives, the
+  -- resizing loss arms above and for their reason.
+  ReplacementEffect.LifeGainR {} -> Nothing
+  -- The question never arrives: `contested` above filters by WouldDealDamage,
+  -- which no DrawR row matches. A life gain is no supply in any case; CR 400.11b's
+  -- pool IS one, and `bringInto` is where its own exhaustion is read.
+  ReplacementEffect.DrawR {} -> Nothing
+  -- The instruction class one rule up, and the same answer for the same reason:
+  -- `contested` asks only about a damage batch.
+  ReplacementEffect.DrawCountR {} -> Nothing
+  -- Resizing an instruction's count is arithmetic on whatever arrives, and
+  -- `contested` above asks only about a damage batch in any case. DrawCountR's
+  -- answer.
+  ReplacementEffect.InstructionR {} -> Nothing
+  -- Adding a die to an instruction is arithmetic on whatever arrives, and
+  -- `contested` above asks only about a damage batch. InstructionR's answer.
+  ReplacementEffect.DieRollR {} -> Nothing
+  -- Doubling a count of Contraptions is arithmetic on whatever arrives.
+  -- InstructionR's answer.
+  ReplacementEffect.AssembleR {} -> Nothing
+  -- `contested` asks only about a damage batch.
+  ReplacementEffect.GameLossR {} -> Nothing
+  ReplacementEffect.PlaneswalkR {} -> Nothing
+  ReplacementEffect.PhaseR _ -> Nothing
+
+asDamageEvent :: ProposedEvent -> Maybe DamageEvent.DamageEvent
+asDamageEvent event = case event of
+  ProposedEvent.WouldDealDamage de -> Just de
+  ProposedEvent.WouldChangeZone {} -> Nothing
+  ProposedEvent.WouldEnter _ -> Nothing
+  ProposedEvent.WouldBeDestroyed {} -> Nothing
+  ProposedEvent.WouldPutCounters {} -> Nothing
+  ProposedEvent.WouldPutPlayerCounters {} -> Nothing
+  ProposedEvent.WouldCreateTokens {} -> Nothing
+  ProposedEvent.WouldBeginPhase {} -> Nothing
+  ProposedEvent.WouldTurnFaceUp {} -> Nothing
+  ProposedEvent.WouldBecomeAttached {} -> Nothing
+  ProposedEvent.WouldUntap _ -> Nothing
+  ProposedEvent.WouldLoseLife {} -> Nothing
+  ProposedEvent.WouldGainLife {} -> Nothing
+  ProposedEvent.WouldDraw _ -> Nothing
+  ProposedEvent.WouldPerform {} -> Nothing
+  ProposedEvent.WouldThrow _ -> Nothing
+  ProposedEvent.WouldLoseGame {} -> Nothing
+  ProposedEvent.WouldPlaneswalk {} -> Nothing
+
+asDestruction :: ProposedEvent -> Maybe ObjectId
+asDestruction event = case event of
+  ProposedEvent.WouldBeDestroyed target _ _ -> Just target
+  ProposedEvent.WouldChangeZone {} -> Nothing
+  ProposedEvent.WouldEnter _ -> Nothing
+  ProposedEvent.WouldDealDamage _ -> Nothing
+  ProposedEvent.WouldPutCounters {} -> Nothing
+  ProposedEvent.WouldPutPlayerCounters {} -> Nothing
+  ProposedEvent.WouldCreateTokens {} -> Nothing
+  ProposedEvent.WouldBeginPhase {} -> Nothing
+  ProposedEvent.WouldTurnFaceUp {} -> Nothing
+  ProposedEvent.WouldBecomeAttached {} -> Nothing
+  ProposedEvent.WouldUntap _ -> Nothing
+  ProposedEvent.WouldLoseLife {} -> Nothing
+  ProposedEvent.WouldGainLife {} -> Nothing
+  ProposedEvent.WouldDraw _ -> Nothing
+  ProposedEvent.WouldPerform {} -> Nothing
+  ProposedEvent.WouldThrow _ -> Nothing
+  ProposedEvent.WouldLoseGame {} -> Nothing
+  ProposedEvent.WouldPlaneswalk {} -> Nothing
+
+-- asDestruction's twin one event class over: the permanent that actually becomes
+-- untapped, or Nothing when a replacement took the event.
+asUntap :: ProposedEvent -> Maybe ObjectId
+asUntap event = case event of
+  ProposedEvent.WouldUntap oid -> Just oid
+  ProposedEvent.WouldChangeZone {} -> Nothing
+  ProposedEvent.WouldEnter _ -> Nothing
+  ProposedEvent.WouldDealDamage _ -> Nothing
+  ProposedEvent.WouldBeDestroyed {} -> Nothing
+  ProposedEvent.WouldPutCounters {} -> Nothing
+  ProposedEvent.WouldPutPlayerCounters {} -> Nothing
+  ProposedEvent.WouldCreateTokens {} -> Nothing
+  ProposedEvent.WouldBeginPhase {} -> Nothing
+  ProposedEvent.WouldTurnFaceUp {} -> Nothing
+  ProposedEvent.WouldBecomeAttached {} -> Nothing
+  ProposedEvent.WouldLoseLife {} -> Nothing
+  ProposedEvent.WouldGainLife {} -> Nothing
+  ProposedEvent.WouldDraw _ -> Nothing
+  ProposedEvent.WouldPerform {} -> Nothing
+  ProposedEvent.WouldThrow _ -> Nothing
+  ProposedEvent.WouldLoseGame {} -> Nothing
+  ProposedEvent.WouldPlaneswalk {} -> Nothing
+
+-- asUntap's twin one event class over: the player who actually draws a card, or
+-- Nothing when a replacement took the event (CR 614.6).
+asDraw :: ProposedEvent -> Maybe PlayerId
+asDraw event = case event of
+  ProposedEvent.WouldDraw pid -> Just pid
+  ProposedEvent.WouldPerform {} -> Nothing
+  ProposedEvent.WouldThrow _ -> Nothing
+  ProposedEvent.WouldLoseGame {} -> Nothing
+  ProposedEvent.WouldPlaneswalk {} -> Nothing
+  ProposedEvent.WouldChangeZone {} -> Nothing
+  ProposedEvent.WouldEnter _ -> Nothing
+  ProposedEvent.WouldDealDamage _ -> Nothing
+  ProposedEvent.WouldBeDestroyed {} -> Nothing
+  ProposedEvent.WouldPutCounters {} -> Nothing
+  ProposedEvent.WouldPutPlayerCounters {} -> Nothing
+  ProposedEvent.WouldCreateTokens {} -> Nothing
+  ProposedEvent.WouldBeginPhase {} -> Nothing
+  ProposedEvent.WouldTurnFaceUp {} -> Nothing
+  ProposedEvent.WouldBecomeAttached {} -> Nothing
+  ProposedEvent.WouldUntap _ -> Nothing
+  ProposedEvent.WouldLoseLife {} -> Nothing
+  ProposedEvent.WouldGainLife {} -> Nothing
+
+-- asDraw's twin one event class up: who was instructed to carry out THIS
+-- instruction and how many times once CR 616.1's loop has settled it, or Nothing
+-- when a row replaced it outright (CR 614.6). A row that turns one instruction
+-- into another (Eligeth, Crossroads Augur's draw instead of a scry) proposes the
+-- new one as an event of its own, so a different instruction here is none.
+asPerformed :: PlayerInstruction.PlayerInstruction -> ProposedEvent -> Maybe (PlayerId, Natural)
+asPerformed instruction event = case event of
+  ProposedEvent.WouldPerform performed _ pid n
+    | performed == instruction -> Just (pid, n)
+    | otherwise -> Nothing
+  ProposedEvent.WouldThrow _ -> Nothing
+  ProposedEvent.WouldLoseGame {} -> Nothing
+  ProposedEvent.WouldPlaneswalk {} -> Nothing
+  ProposedEvent.WouldDraw _ -> Nothing
+  ProposedEvent.WouldChangeZone {} -> Nothing
+  ProposedEvent.WouldEnter _ -> Nothing
+  ProposedEvent.WouldDealDamage _ -> Nothing
+  ProposedEvent.WouldBeDestroyed {} -> Nothing
+  ProposedEvent.WouldPutCounters {} -> Nothing
+  ProposedEvent.WouldPutPlayerCounters {} -> Nothing
+  ProposedEvent.WouldCreateTokens {} -> Nothing
+  ProposedEvent.WouldBeginPhase {} -> Nothing
+  ProposedEvent.WouldTurnFaceUp {} -> Nothing
+  ProposedEvent.WouldBecomeAttached {} -> Nothing
+  ProposedEvent.WouldUntap _ -> Nothing
+  ProposedEvent.WouldLoseLife {} -> Nothing
+  ProposedEvent.WouldGainLife {} -> Nothing
+
+-- asPerformed one rule over. Answers the WHOLE payload rather than a pair, since
+-- Parun.Types.Throw's fields are all read back by Parun.Engine.Event's flip and
+-- roll funnels and naming them beats ordering them.
+asThrow :: ProposedEvent -> Maybe Throw.Throw
+asThrow event = case event of
+  ProposedEvent.WouldThrow throw -> Just throw
+  ProposedEvent.WouldPerform {} -> Nothing
+  ProposedEvent.WouldLoseGame {} -> Nothing
+  ProposedEvent.WouldPlaneswalk {} -> Nothing
+  ProposedEvent.WouldDraw _ -> Nothing
+  ProposedEvent.WouldChangeZone {} -> Nothing
+  ProposedEvent.WouldEnter _ -> Nothing
+  ProposedEvent.WouldDealDamage _ -> Nothing
+  ProposedEvent.WouldBeDestroyed {} -> Nothing
+  ProposedEvent.WouldPutCounters {} -> Nothing
+  ProposedEvent.WouldPutPlayerCounters {} -> Nothing
+  ProposedEvent.WouldCreateTokens {} -> Nothing
+  ProposedEvent.WouldBeginPhase {} -> Nothing
+  ProposedEvent.WouldTurnFaceUp {} -> Nothing
+  ProposedEvent.WouldBecomeAttached {} -> Nothing
+  ProposedEvent.WouldUntap _ -> Nothing
+  ProposedEvent.WouldLoseLife {} -> Nothing
+  ProposedEvent.WouldGainLife {} -> Nothing
+
+asCounters :: ProposedEvent -> Maybe (ObjectId, CounterKind.CounterKind Keyword.Type.Keyword, Natural)
+asCounters event = case event of
+  ProposedEvent.WouldPutCounters _ oid kind n -> Just (oid, kind, n)
+  ProposedEvent.WouldChangeZone {} -> Nothing
+  ProposedEvent.WouldEnter _ -> Nothing
+  ProposedEvent.WouldDealDamage _ -> Nothing
+  ProposedEvent.WouldBeDestroyed {} -> Nothing
+  ProposedEvent.WouldPutPlayerCounters {} -> Nothing
+  ProposedEvent.WouldCreateTokens {} -> Nothing
+  ProposedEvent.WouldBeginPhase {} -> Nothing
+  ProposedEvent.WouldTurnFaceUp {} -> Nothing
+  ProposedEvent.WouldBecomeAttached {} -> Nothing
+  ProposedEvent.WouldUntap _ -> Nothing
+  ProposedEvent.WouldLoseLife {} -> Nothing
+  ProposedEvent.WouldGainLife {} -> Nothing
+  ProposedEvent.WouldDraw _ -> Nothing
+  ProposedEvent.WouldPerform {} -> Nothing
+  ProposedEvent.WouldThrow _ -> Nothing
+  ProposedEvent.WouldLoseGame {} -> Nothing
+  ProposedEvent.WouldPlaneswalk {} -> Nothing
+
+-- asCounters' player half. The CAUSE is dropped by both, for the same reason: what
+-- the funnel needs back is the placement to carry out, and the provenance has
+-- already been read by every row that could apply.
+asPlayerCounters :: ProposedEvent -> Maybe (PlayerId, PlayerCounterKind.PlayerCounterKind, Natural)
+asPlayerCounters event = case event of
+  ProposedEvent.WouldPutPlayerCounters _ pid kind n -> Just (pid, kind, n)
+  ProposedEvent.WouldChangeZone {} -> Nothing
+  ProposedEvent.WouldEnter _ -> Nothing
+  ProposedEvent.WouldDealDamage _ -> Nothing
+  ProposedEvent.WouldBeDestroyed {} -> Nothing
+  ProposedEvent.WouldPutCounters {} -> Nothing
+  ProposedEvent.WouldCreateTokens {} -> Nothing
+  ProposedEvent.WouldBeginPhase {} -> Nothing
+  ProposedEvent.WouldTurnFaceUp {} -> Nothing
+  ProposedEvent.WouldBecomeAttached {} -> Nothing
+  ProposedEvent.WouldUntap _ -> Nothing
+  ProposedEvent.WouldLoseLife {} -> Nothing
+  ProposedEvent.WouldGainLife {} -> Nothing
+  ProposedEvent.WouldDraw _ -> Nothing
+  ProposedEvent.WouldPerform {} -> Nothing
+  ProposedEvent.WouldThrow _ -> Nothing
+  ProposedEvent.WouldLoseGame {} -> Nothing
+  ProposedEvent.WouldPlaneswalk {} -> Nothing
+
+-- asPlayerCounters' sibling one event class over: the player who would lose life
+-- and how much of the loss has survived, or Nothing when a replacement took the
+-- event outright. The CAUSE is dropped for that function's reason -- what the
+-- funnel needs back is the loss to carry out, and the provenance has already been
+-- read by every row that could apply.
+asLifeLoss :: ProposedEvent -> Maybe (PlayerId, Natural)
+asLifeLoss event = case event of
+  ProposedEvent.WouldLoseLife _ pid n -> Just (pid, n)
+  ProposedEvent.WouldGainLife {} -> Nothing
+  ProposedEvent.WouldChangeZone {} -> Nothing
+  ProposedEvent.WouldEnter _ -> Nothing
+  ProposedEvent.WouldDealDamage _ -> Nothing
+  ProposedEvent.WouldBeDestroyed {} -> Nothing
+  ProposedEvent.WouldPutCounters {} -> Nothing
+  ProposedEvent.WouldPutPlayerCounters {} -> Nothing
+  ProposedEvent.WouldCreateTokens {} -> Nothing
+  ProposedEvent.WouldBeginPhase {} -> Nothing
+  ProposedEvent.WouldTurnFaceUp {} -> Nothing
+  ProposedEvent.WouldBecomeAttached {} -> Nothing
+  ProposedEvent.WouldUntap _ -> Nothing
+  ProposedEvent.WouldDraw _ -> Nothing
+  ProposedEvent.WouldPerform {} -> Nothing
+  ProposedEvent.WouldThrow _ -> Nothing
+  ProposedEvent.WouldLoseGame {} -> Nothing
+  ProposedEvent.WouldPlaneswalk {} -> Nothing
+
+-- asLifeLoss the other direction: the player who would gain life and how much of
+-- the gain has survived, or Nothing when a replacement took the event outright.
+asLifeGain :: ProposedEvent -> Maybe (PlayerId, Natural)
+asLifeGain event = case event of
+  ProposedEvent.WouldGainLife pid n -> Just (pid, n)
+  ProposedEvent.WouldLoseLife {} -> Nothing
+  ProposedEvent.WouldChangeZone {} -> Nothing
+  ProposedEvent.WouldEnter _ -> Nothing
+  ProposedEvent.WouldDealDamage _ -> Nothing
+  ProposedEvent.WouldBeDestroyed {} -> Nothing
+  ProposedEvent.WouldPutCounters {} -> Nothing
+  ProposedEvent.WouldPutPlayerCounters {} -> Nothing
+  ProposedEvent.WouldCreateTokens {} -> Nothing
+  ProposedEvent.WouldBeginPhase {} -> Nothing
+  ProposedEvent.WouldTurnFaceUp {} -> Nothing
+  ProposedEvent.WouldBecomeAttached {} -> Nothing
+  ProposedEvent.WouldUntap _ -> Nothing
+  ProposedEvent.WouldDraw _ -> Nothing
+  ProposedEvent.WouldPerform {} -> Nothing
+  ProposedEvent.WouldThrow _ -> Nothing
+  ProposedEvent.WouldLoseGame {} -> Nothing
+  ProposedEvent.WouldPlaneswalk {} -> Nothing
+
+asTokens :: ProposedEvent -> Maybe (PlayerId, Seq.Seq TokenLot.TokenLot)
+asTokens event = case event of
+  ProposedEvent.WouldCreateTokens pid lots -> Just (pid, lots)
+  ProposedEvent.WouldChangeZone {} -> Nothing
+  ProposedEvent.WouldEnter _ -> Nothing
+  ProposedEvent.WouldDealDamage _ -> Nothing
+  ProposedEvent.WouldBeDestroyed {} -> Nothing
+  ProposedEvent.WouldPutCounters {} -> Nothing
+  ProposedEvent.WouldPutPlayerCounters {} -> Nothing
+  ProposedEvent.WouldBeginPhase {} -> Nothing
+  ProposedEvent.WouldTurnFaceUp {} -> Nothing
+  ProposedEvent.WouldBecomeAttached {} -> Nothing
+  ProposedEvent.WouldUntap _ -> Nothing
+  ProposedEvent.WouldLoseLife {} -> Nothing
+  ProposedEvent.WouldGainLife {} -> Nothing
+  ProposedEvent.WouldDraw _ -> Nothing
+  ProposedEvent.WouldPerform {} -> Nothing
+  ProposedEvent.WouldThrow _ -> Nothing
+  ProposedEvent.WouldLoseGame {} -> Nothing
+  ProposedEvent.WouldPlaneswalk {} -> Nothing
+
+-- CR 500.11 / 614.1b: an extra turn is beginning, so the steps and phases IT
+-- skips become floating replacement effects, one per selector. Called by
+-- Engine.takeNextTurn at the moment the turn actually begins, and only for a turn
+-- that does begin (CR 800.4k).
+--
+-- Here rather than in Parun.Engine.Resolve, which installs Effect.SkipPhase's
+-- rows: the two differ only on WHEN the row exists, and this module is the one
+-- that reads GameState.replacements. The row is the shape Resolve builds for a
+-- "next" skip -- PhaseR, scoped to the taker, Uses.Once -- so
+-- Event.beginsPhase answers a turn-scoped skip and a next-occurrence skip
+-- through one mechanism, and CR 616.1's loop orders them against each other
+-- for free.
+--
+-- Installed AT THE TURN'S START rather than at the resolution that created the
+-- turn, which is the whole point: CR 614.10a's "next" would otherwise name
+-- whatever step came first in the meantime, and CR 500.7 lets that be a different
+-- turn entirely. CR 614.10 bars skipping a step, phase or turn that has already
+-- started; nothing of this turn has started yet, since Engine.beginTurnOf has
+-- only scheduled it and Engine.runStep asks Event.beginsPhase before the untap step's
+-- first observable moment.
+--
+-- Expiry.AtCleanup, not Never, and not because of CR 514.2 -- the card states no
+-- duration. The skip names ONE turn and cannot apply to another, so the last
+-- moment of that turn is the last moment it could matter, and AtCleanup is the
+-- store for exactly that. Uses.Once is CR 614.10a's per-occurrence spend, and it
+-- is what actually fires for the one card in the pool. The sweep reaches a turn
+-- whose ending phase was skipped too, Engine.cleanupSecondAction running it on
+-- that road as well, so an unspent row is held to its turn there as here.
+installTurnSkips :: ExtraTurn -> GameState -> GameState
+installTurnSkips entry gs =
+  let install g selector =
+        let (ts, g1) = Game.freshTimestamp g
+            active =
+              ActiveReplacement.MkActiveReplacement
+                { ActiveReplacement.effect =
+                    ReplacementEffect.PhaseR
+                      PhasePattern.MkPhasePattern
+                        { PhasePattern.whichPhase = selector,
+                          -- The turn's taker, which for a step or phase OF that
+                          -- turn is also whose step it is (see PhasePattern).
+                          PhasePattern.whosePhase = Just (ExtraTurn.taker entry)
+                        },
+                  -- CR 113.7: the source of the effect that created the turn.
+                  ActiveReplacement.source = ExtraTurn.source entry,
+                  -- CR 109.5's "you" for this row. Nothing reads it: a PhaseR
+                  -- names its player outright and has no ControllerRelation to
+                  -- resolve. The TAKER rather than the effect's controller,
+                  -- because these skips ride the turn (see Parun.Types.ExtraTurn)
+                  -- and the effect that created it is long gone by the time the
+                  -- turn begins.
+                  ActiveReplacement.controller = ExtraTurn.taker entry,
+                  ActiveReplacement.timestamp = ts,
+                  ActiveReplacement.expiry = Expiry.AtCleanup,
+                  ActiveReplacement.uses = Uses.Once,
+                  ActiveReplacement.origin = ReplacementOrigin.Other,
+                  -- No clause: the skip is unconditional (see
+                  -- Parun.Types.ActiveReplacement).
+                  ActiveReplacement.condition = Nothing,
+                  ActiveReplacement.rider = Nothing,
+                  ActiveReplacement.slots = Map.empty
+                }
+         in g1 {GameState.replacements = active : GameState.replacements g1}
+   in List.foldl' install gs (Set.toAscList (ExtraTurn.skipped entry))
+
+-- CR 608.2n's move is what all four of these rows watch, and
+-- Parun.Engine.Resolve.finishSpell mints them immediately before it proposes that
+-- move, so each rewrite and every other row watching the same move reach CR
+-- 616.1's loop together and the spell's controller orders them (CR 616.1e). Rest
+-- in Peace over a bought-back Elvish Fury is the board that observes it: buyback
+-- first puts the card in its owner's hand, Rest in Peace first exiles it and CR
+-- 614.6 leaves buyback nothing to replace. Parun.CastSpec's "CR 616.1e buyback
+-- taken before Rest in Peace puts the spell into its owner's hand" and "CR 616.1e
+-- Rest in Peace taken first exiles the bought-back spell instead" drive both
+-- orders.
+--
+-- MINTED AT THE MOVE rather than gathered off the stack as printed rows, which is
+-- how each rule's "as it resolves" is scoped: all four leave a countered (CR
+-- 701.6a) or a fizzled (CR 608.2b) spell in the graveyard, and neither road
+-- reaches finishSpell, so a standing row keyed on a graveyard destination would
+-- over-apply to both.
+--
+-- installTurnSkips' shape in every other respect. Uses.Once and Expiry.Never are
+-- flashback's pair (Parun.Engine.Cast.armCastFromGraveyard): the move happens
+-- once, and none of the four rules states a duration. A row another is taken
+-- ahead of is left unspent and is inert, CR 400.7 giving the moved card a new id
+-- that Filter.IsSource cannot match -- and `rowApplied` reads that leftover back
+-- out.
+--
+-- ReplacementOrigin.Other, not SelfReplacement: CR 604.2 has a static ability
+-- create the continuous effect, and CR 614.15 scopes a self-replacement to an
+-- effect of a RESOLVING spell replacing that spell's own effect. So CR 616.1a
+-- buckets neither these nor Rest in Peace, and CR 616.1e is the step that applies.
+installSpellMoveRow :: Zone.Zone -> Bool -> ObjectId -> PlayerId -> GameState -> (Timestamp, GameState)
+installSpellMoveRow destination shuffling spellId caster gs =
+  let (ts, gs1) = Game.freshTimestamp gs
+      active =
+        ActiveReplacement.MkActiveReplacement
+          { ActiveReplacement.effect =
+              ReplacementEffect.ZoneChangeR
+                ( ZoneChangeR.MkZoneChangeR
+                    ZoneChangePattern.MkZoneChangePattern
+                      { -- Each of the four rules names the destination it
+                        -- replaces, so the pattern does too -- and a row that
+                        -- named none would re-fire on its own output.
+                        ZoneChangePattern.whenDestination = Just Zone.Graveyard,
+                        ZoneChangePattern.whoseObject = ControllerRelation.Related PlayerRelation.AnyPlayer,
+                        -- Each says "this spell", so the row is scoped to the
+                        -- object it was minted for -- castFromGraveyardExile's
+                        -- Filter.IsSource, and for its reason.
+                        ZoneChangePattern.whatObject = Filter.Type.IsSource,
+                        ZoneChangePattern.whenDiscarded = Nothing,
+                        ZoneChangePattern.duringResolution = False
+                      }
+                    destination
+                    False
+                    shuffling
+                    LibraryPosition.defaultValue
+                    False
+                ),
+            -- CR 113.7: the spell itself, which the pattern's IsSource is
+            -- compared against.
+            ActiveReplacement.source = spellId,
+            -- CR 109.5's "you". Nothing in these rewrites reads it -- each
+            -- destination is the OWNER's zone, which Event.changeZone decides off
+            -- the moving object (CR 400.3) -- but the row carries it as every
+            -- other row does, armCastFromGraveyard's posture.
+            ActiveReplacement.controller = caster,
+            ActiveReplacement.timestamp = ts,
+            ActiveReplacement.expiry = Expiry.Never,
+            ActiveReplacement.uses = Uses.Once,
+            ActiveReplacement.origin = ReplacementOrigin.Other,
+            -- No clause: each rule's own condition is a fact finishSpell has
+            -- already read before minting the row (see
+            -- Parun.Types.ActiveReplacement).
+            ActiveReplacement.condition = Nothing,
+            ActiveReplacement.rider = Nothing,
+            ActiveReplacement.slots = Map.empty
+          }
+   in (ts, gs1 {GameState.replacements = active : GameState.replacements gs1})
+
+-- CR 702.27a's second static ability: "if the buyback cost was paid, put this
+-- spell into its owner's hand instead of into that player's graveyard as it
+-- resolves". Its condition is the designation Parun.Engine.Cast.stampBoughtBack
+-- wrote.
+installBuybackReturn :: ObjectId -> PlayerId -> GameState -> (Timestamp, GameState)
+installBuybackReturn = installSpellMoveRow Zone.Hand False
+
+-- CR 702.88a's static ability: "if this spell was cast from your hand, instead of
+-- putting it into your graveyard as it resolves, exile it".
+--
+-- The DELAYED ABILITY rule 702.88a creates is not this row's: a ZoneChangeR
+-- rewrites a destination and nothing else, so finishSpell arms it after the move
+-- lands, against the incarnation CR 400.7 minted -- and only where `rowApplied`
+-- says THIS row is what moved the card, CR 614.6 leaving an outraced rule 702.88a
+-- nothing to apply.
+installReboundExile :: ObjectId -> PlayerId -> GameState -> (Timestamp, GameState)
+installReboundExile = installSpellMoveRow Zone.Exile False
+
+-- CR 715.3d's first sentence: "Instead of putting a spell that was cast as an
+-- Adventure into its owner's graveyard as it resolves, its controller exiles it."
+-- Its second sentence -- the permission on the exiled card -- is finishSpell's,
+-- armed off `rowApplied` the way rule 702.88a's delayed ability is.
+installAdventureExile :: ObjectId -> PlayerId -> GameState -> (Timestamp, GameState)
+installAdventureExile = installSpellMoveRow Zone.Exile False
+
+-- CR 720.3d: "As an Omen spell resolves, its controller shuffles it into its
+-- owner's library instead of putting it into its owner's graveyard as it
+-- resolves." CR 701.24a's randomisation is the row's own `shuffling` rider --
+-- Nexus of Fate's -- which is what keeps the shuffle from happening on an order
+-- that sent the card somewhere other than a library.
+installOmenShuffle :: ObjectId -> PlayerId -> GameState -> (Timestamp, GameState)
+installOmenShuffle = installSpellMoveRow Zone.Library True
+
+-- CR 614.3 / 614.6: is the row installSpellMoveRow minted at `ts` what moved the
+-- card? `consume` deletes a spent Uses.Once row, so a row still standing is one
+-- CR 616.1's loop never chose -- which is how finishSpell tells rule 702.88a's own
+-- exile from Rest in Peace's, the two being the same destination.
+rowApplied :: ObjectId -> Timestamp -> GameState -> Bool
+rowApplied spellId ts gs =
+  let standing active = ActiveReplacement.source active == spellId && ActiveReplacement.timestamp active == ts
+   in not (any standing (GameState.replacements gs))
+
+asPhaseBegin :: ProposedEvent -> Maybe (PhaseSelector, PlayerId)
+asPhaseBegin event = case event of
+  ProposedEvent.WouldBeginPhase selector pid -> Just (selector, pid)
+  ProposedEvent.WouldChangeZone {} -> Nothing
+  ProposedEvent.WouldEnter _ -> Nothing
+  ProposedEvent.WouldDealDamage _ -> Nothing
+  ProposedEvent.WouldBeDestroyed {} -> Nothing
+  ProposedEvent.WouldPutCounters {} -> Nothing
+  ProposedEvent.WouldPutPlayerCounters {} -> Nothing
+  ProposedEvent.WouldCreateTokens {} -> Nothing
+  ProposedEvent.WouldTurnFaceUp {} -> Nothing
+  ProposedEvent.WouldBecomeAttached {} -> Nothing
+  ProposedEvent.WouldUntap _ -> Nothing
+  ProposedEvent.WouldLoseLife {} -> Nothing
+  ProposedEvent.WouldGainLife {} -> Nothing
+  ProposedEvent.WouldDraw _ -> Nothing
+  ProposedEvent.WouldPerform {} -> Nothing
+  ProposedEvent.WouldThrow _ -> Nothing
+  ProposedEvent.WouldLoseGame {} -> Nothing
+  ProposedEvent.WouldPlaneswalk {} -> Nothing

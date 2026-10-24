@@ -1,0 +1,97 @@
+-- CR 101.2 / 400.4a / 613.11: the continuous effects that FORBID an object from
+-- entering the battlefield. One of the modules on the axis CR 613.11 reaches past
+-- the layer system (alongside Parun.Engine.PlayerEffect,
+-- Parun.Engine.BlockRequirement, Parun.Engine.AttackRequirement,
+-- Parun.Engine.CombatRestriction, Parun.Engine.AttackCost,
+-- Parun.Engine.SacrificeRestriction and Parun.Engine.UntapRestriction). None is a
+-- layer, and no layer of Parun.Engine.Projection rewrites them.
+--
+-- The only reader of Parun.Types.EntryRestriction. Each caller asks a Bool about
+-- one entry and never learns which card produced it.
+--
+-- TWO places ask, as Parun.Engine.SacrificeRestriction's two do.
+-- Parun.Engine.Event.changeZoneAttaching is the funnel every battlefield MOVE
+-- reaches -- a resolving permanent spell, a resolving Effect.MoveToZone, a land
+-- play, a search that puts a card onto the battlefield, CR 701.40a's manifest --
+-- so gating it there gates all of them at once. CR 111.5's token takes no move at
+-- all, so Event.createTokens asks separately, passing Zone.Battlefield as the
+-- origin because that is where the token it has just minted sits.
+module Parun.Engine.EntryRestriction where
+
+import qualified Data.Set as Set
+import qualified Parun.Engine.Projection as Projection
+import qualified Parun.Engine.Projection.Rewrite as Projection
+import qualified Parun.Engine.Projection.View as Projection
+import qualified Parun.Types.EntryRestriction as EntryRestriction
+import Parun.Types.GameState (GameState)
+import qualified Parun.Types.GameState as GameState
+import Parun.Types.ObjectId (ObjectId)
+import qualified Parun.Types.RuleAbilities as RuleAbilities
+import Parun.Types.Zone (Zone)
+
+-- CR 101.2 with CR 400.4a: does an effect in force right now say that `oid`,
+-- currently in `origin`, CAN'T ENTER THE BATTLEFIELD? Grafdigger's Cage's first
+-- sentence.
+--
+-- Parun.Engine.SacrificeRestriction.cantBeSacrificed's body, gate for gate, and
+-- every step of its argument holds here unchanged: the same CR 305.7 and CR
+-- 613.1f ability losses are asked of the SOURCE, the same CR 612.1 word swap is
+-- applied to its affected set, and CR 613.11 is why the set is read against the
+-- FULL projection rather than a layer-bounded one.
+--
+-- A Bool about ONE object rather than that function's set over a candidate list,
+-- which is the shape of the question rather than a narrowing: `origin` is a
+-- property of the individual entry, so a candidate list would need one zone per
+-- candidate, and each caller holds exactly one entry.
+--
+-- `origin` is passed in rather than read off the object, because the caller knows
+-- which entry is being judged: Parun.Engine.Event.changeZoneAttaching asks after CR
+-- 616.1's replacement loop has settled the event (CR 614.6), where the object is
+-- still in the zone it is leaving, and Event.createTokens asks about a token that
+-- is already on the battlefield -- see there for why that reading also decides
+-- which printings can reach a token at all.
+prohibited :: ObjectId -> Zone -> GameState -> Bool
+prohibited oid origin gs =
+  let setEffs = Projection.setLandSubtypeEffects gs
+      removed = Projection.abilityRemoval gs
+      -- The object's projection and the grant walk, taken once for every
+      -- source rather than once per source; both unforced until some
+      -- permanent actually reaches `named`.
+      view = Projection.project oid gs
+      grants = Projection.controlGrants gs
+      -- CR 613.11 puts these effects after every layer, so the affected set is
+      -- read against the FULL projection.
+      named source affected =
+        Projection.affectsUnder
+          grants
+          source
+          oid
+          affected
+          view
+          gs
+      -- CR 613.1f: what a stored grant gave the permanent, whose gates
+      -- Projection.grantedRuleAbilities has asked already, with no CR 612.1
+      -- word swap (CR 612.3) -- CombatRestriction.gathered's reading.
+      grantedRules = Projection.grantedRuleAbilities gs
+      fromGrant source = any (fromRestriction source []) (RuleAbilities.entryRestrictions (grantedRules source))
+      fromPermanent source = case RuleAbilities.entryRestrictions (Projection.ruleAbilitiesOf source gs) of
+        -- Every permanent in almost every game.
+        [] -> False
+        restrictions ->
+          (null setEffs || Projection.liveAfterLayers setEffs source gs)
+            && not (removed source)
+            && any (fromRestriction source (Projection.readerTextChanges source gs)) restrictions
+      -- Two of the three gates above are REGRESSION FENCES rather than proven
+      -- behaviour, and both were mutated: CR 305.7's setEffs gate cannot fire for
+      -- any printing in the pool, none of which is a land, and no card in
+      -- data/cards text-changes one of them, so dropping the CR
+      -- 612.1 rewrite below leaves the suite green. They are copied from
+      -- Parun.Engine.SacrificeRestriction because the CR states them and an
+      -- inconsistency between five carriers is the worse answer. The CR 604.2
+      -- ability-loss gate IS proven -- Parun.EntryRestrictionSpec's Titania's Song
+      -- leg.
+      fromRestriction source changes restriction =
+        let affected = EntryRestriction.affected restriction
+         in Set.member origin (EntryRestriction.origins restriction)
+              && named source (if null changes then affected else Projection.rewriteAffected changes affected)
+   in any (\source -> fromPermanent source || fromGrant source) (Set.toList (GameState.battlefield gs))

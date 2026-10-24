@@ -5,7 +5,7 @@ split this builds on).
 
 ## 1. The problem
 
-`Pawl.Registry` resolves a name by slugifying it and reading `<slug>.json`. That
+`Parun.Registry` resolves a name by slugifying it and reading `<slug>.json`. That
 is one name per card, and CR 709.4a gives a split card two: "Each split card has
 two names. If an effect instructs a player to choose a card name and the player
 wants to choose a split card's name, the player must choose one of those names
@@ -23,9 +23,9 @@ convention stands in for the rules.
 ## 2. Scope
 
 **In:** the lookup path, its failure semantics, and the collapse of the
-enumerate-and-parse duplication between `Pawl.Registry` and `Pawl.Corpus`.
+enumerate-and-parse duplication between `Parun.Registry` and `Parun.Corpus`.
 
-**Out:** printings (the tier above cards — `Pawl.Types.Printing` is already a
+**Out:** printings (the tier above cards — `Parun.Types.Printing` is already a
 hollow `newtype` over `Card` and the engine already speaks it, so the seam is
 waiting); matching a *chosen* name against an object, which is a projection
 question (#650); meld (#369).
@@ -47,15 +47,15 @@ slugify is idempotent, so both remain the same lookup.
 
 The filename becomes **only a stem**: nothing in the lookup path reads it, and a
 file could be named anything. That the corpus files itself by the joined slug
-survives as a lint in the test suite, which is where a claim about what pawl
-ships belongs — a new `Pawl.CardSpec` sweep derives the path from the card and
+survives as a lint in the test suite, which is where a claim about what parun
+ships belongs — a new `Parun.CardSpec` sweep derives the path from the card and
 reads it, so the convention is enforced there.
 
 ### 3.1 The cost
 
 Startup becomes O(pool) rather than O(cards actually used): a caller who wants
 one card pays to parse all of them. At 232 files and 372 KB that is a cost the
-test suite already pays many times over per run — `Pawl.Support.allPrintings`
+test suite already pays many times over per run — `Parun.Support.allPrintings`
 alone is unmemoized and reads the pool whole, called repeatedly from `CardSpec`,
 `CardsSpec` and `CodecIntegrationSpec`. The pool is hand-authored and
 card-driven, so it grows by single cards rather than by sets.
@@ -93,7 +93,7 @@ single-face card would need a pointer file beside its face file.
 - `parseCard`'s filename identity check and its `name`/`slug` parameters; it
   becomes `ByteString -> Either Text Card`, since `loadRoot` pairs each result
   with the path it came from.
-- **`Pawl.Types.CardError`.** `fetchCard` becomes `CardName -> m (Maybe Card)`.
+- **`Parun.Types.CardError`.** `fetchCard` becomes `CardName -> m (Maybe Card)`.
   `Invalid` becomes unreachable (§6), which leaves one constructor carrying one
   bit plus the name the caller already passed in — and both consumers,
   `fetchOrThrow` in the benchmark and `Support.cardOf`, only ever `show` it and
@@ -101,10 +101,10 @@ single-face card would need a pointer file beside its face file.
   did you mean…?" should not have to string-match a `show`, has no such caller
   today. Messages improve: `no such card: Fog` rather than
   `Missing (MkCardName "Fog")`.
-- **`Pawl.Corpus` and `Pawl.CorpusSpec`.** Reading and parsing every file in a
+- **`Parun.Corpus` and `Parun.CorpusSpec`.** Reading and parsing every file in a
   root *is* the registry's construction now, so the lint's enumerate-and-parse
-  moves into `Pawl.Registry` and `Pawl.Support` calls it directly. Deleting a
-  module needs `cabal-gild pawl.cabal` run directly; `hooky fix` acts on staged
+  moves into `Parun.Registry` and `Parun.Support` calls it directly. Deleting a
+  module needs `cabal-gild parun.cabal` run directly; `hooky fix` acts on staged
   files and skips it.
 
 The filing convention itself survives as `Registry.filedAs :: Card -> Slug` —
@@ -120,7 +120,7 @@ can ask for a named card and nothing else.
 
 ## 6. Failure at construction
 
-A new `Pawl.Exceptions.InvalidCorpus { root :: FilePath, problems :: [String] }`,
+A new `Parun.Exceptions.InvalidCorpus { root :: FilePath, problems :: [String] }`,
 base-only like `MissingRoot` — the `exceptions` sublibrary sits above `types` and
 cannot speak `CardName`. It is thrown once, listing **every** unparseable file
 with its reason and **every** ambiguous name with the paths claiming it, sorted
@@ -139,7 +139,7 @@ representable, and a silent last-one-wins would be a lookup quietly serving a
 card it was not asked for. A collision is fatal wherever it comes from — two
 cards claiming one name, or one card repeating its own face name.
 
-This is a new check rather than a moved one. `Pawl.CardSpec`'s existing "a card's
+This is a new check rather than a moved one. `Parun.CardSpec`'s existing "a card's
 face names are pairwise distinct" lint is **intra**-card, and is what makes
 `Engine.Card.faceNamed` well-defined; the check here is **inter**-card, and no
 lint holds it today. It also lowers what #166 (closed) left standing: slugs are
@@ -162,14 +162,14 @@ names and no combined one. Removing it is the point of the issue: nothing in the
 lookup path should depend on a joined name.
 
 Real deck exports do write the joined form. Normalizing it to one of the card's
-names is a deck-list parser's job, and pawl has no deck-list format today (the
+names is a deck-list parser's job, and parun has no deck-list format today (the
 benchmark's decks are built in Haskell). Filed as a follow-up rather than
 answered here.
 
 ## 8. Tests
 
 Every case runs against a throwaway corpus in a temp directory, as
-`Pawl.RegistrySpec` already does — the committed `data/cards` is read-only there,
+`Parun.RegistrySpec` already does — the committed `data/cards` is read-only there,
 and these failure modes have no representative in it by construction.
 
 The proving test is a **polarity flip of an existing case**, which is what makes

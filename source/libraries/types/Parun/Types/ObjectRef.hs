@@ -1,0 +1,175 @@
+module Parun.Types.ObjectRef where
+
+import qualified Data.List.NonEmpty as NonEmpty
+import qualified Parun.Types.AttachedToBound as AttachedToBound
+import qualified Parun.Types.ChosenCardFromAmong as ChosenCardFromAmong
+import qualified Parun.Types.ChosenCardInGraveyard as ChosenCardInGraveyard
+import qualified Parun.Types.ChosenCardInHand as ChosenCardInHand
+import qualified Parun.Types.ChosenPermanents as ChosenPermanents
+import qualified Parun.Types.EachCardFromAmong as EachCardFromAmong
+import qualified Parun.Types.EachCardInExiledPile as EachCardInExiledPile
+import qualified Parun.Types.EachCardInGraveyard as EachCardInGraveyard
+import qualified Parun.Types.EachCardInHand as EachCardInHand
+import qualified Parun.Types.Filter as Filter
+import qualified Parun.Types.FromAnywhere as FromAnywhere
+import qualified Parun.Types.Keyword as Keyword
+import qualified Parun.Types.PlayerRef as PlayerRef
+import qualified Parun.Types.PlayersWho as PlayersWho
+import qualified Parun.Types.RandomCardInGraveyard as RandomCardInGraveyard
+import qualified Parun.Types.RandomCardInHand as RandomCardInHand
+import qualified Parun.Types.RandomCardInLibrary as RandomCardInLibrary
+import qualified Parun.Types.SlotName as SlotName
+import qualified Parun.Types.TopOfLibrary as TopOfLibrary
+import qualified Parun.Types.TopOfLibraryUntil as TopOfLibraryUntil
+
+-- | WHICH OBJECTS an object-affecting effect names -- the object-side counterpart
+-- of Parun.Types.PlayerRef.
+--
+-- InSlot stands apart from the other arms: its objects were named BEFORE the
+-- effect runs -- a slot, filled at cast or as the ability was placed -- where
+-- every other arm's are found AS it runs. That is the distinction CR 115.10a
+-- draws: only InSlot can name a target, and AllOf only by holding one.
+data ObjectRef
+  = -- | CR 601.2c / 608.2b: the objects bound in a slot -- the one Recipient a
+    -- target or a reserved binding put there, or every member where the slot
+    -- holds a group, which is a definition rather than a target (CR 115.10a).
+    InSlot SlotName.SlotName
+  | -- | CR 109.2 / Day of Judgment: every permanent on the battlefield matching
+    -- the Filter, swept when the effect executes (CR 608.2c).
+    EachMatching (Filter.Filter Keyword.Keyword)
+  | -- | CR 109.2a / Rise of the Dark Realms: every card matching the Filter in the
+    -- graveyards the payload's ZoneScope names.
+    EachCardInGraveyard EachCardInGraveyard.EachCardInGraveyard
+  | -- | CR 109.2a / Ignorant Bliss: every card in the resolving controller's hand,
+    -- nullary because CR 400.2's hidden zone and CR 109.5's "you" leave neither a
+    -- player nor a filter to state.
+    EachCardInYourHand
+  | -- | CR 109.2a / Amnesia: every card the optional Filter matches in the hands
+    -- the payload's ZoneScope names.
+    EachCardInHand EachCardInHand.EachCardInHand
+  | -- | CR 400.12 / 109.2a / Leveler, Caldera Breaker: every card in the resolving
+    -- controller's library that the optional Filter matches. Not CR 701.23a's
+    -- search, so no search trigger fires and CR 701.24 shuffles nothing -- proved
+    -- by Parun.MassEffectSpec's "CR 701.23a a sweep is not a search, and CR 701.24
+    -- shuffles nothing".
+    EachCardInYourLibrary (Maybe (Filter.Filter Keyword.Keyword))
+  | -- | CR 108.2 / 108.3 / Static Discharge: every card the resolving controller
+    -- owns that the Filter matches, in every zone at once -- Alchemy's "cards you
+    -- own named Static Discharge". Never a token or a copy, which CR 108.2 keeps
+    -- out of "card".
+    EachCardYouOwn (Filter.Filter Keyword.Keyword)
+  | -- | CR 607.2a / Hoarding Dragon, Synthetic Split Reliquary: every card in
+    -- exile in one of this effect's source's linked piles, narrowed by the
+    -- optional Filter.
+    EachCardInExiledPile EachCardInExiledPile.EachCardInExiledPile
+  | -- | CR 702.99a / Last Thoughts: every card in exile encoded on this effect's
+    -- source, narrowed by the optional Filter.
+    EachCardEncodedOnSource (Maybe (Filter.Filter Keyword.Keyword))
+  | -- | CR 109.2b / Swift Silence: every spell on the stack matching the Filter,
+    -- abilities excluded (CR 113.9).
+    EachSpell (Filter.Filter Keyword.Keyword)
+  | -- | CR 113.9 / Kadena's Silencer: every activated or triggered ability on the
+    -- stack matching the Filter, spells excluded (CR 112.1). The arm above's
+    -- mirror, over the other kind of object the zone holds.
+    EachAbility (Filter.Filter Keyword.Keyword)
+  | -- | CR 405.1 / Glen Elendra's Answer: every object on the stack matching the
+    -- Filter, without either arm above's kind test.
+    EachOnStack (Filter.Filter Keyword.Keyword)
+  | -- | CR 120.3a / Molten Disaster: every player in the game, an ObjectRef because
+    -- a damage clause's ref is one. Parun.ReplacementSpec's Molten Disaster case
+    -- proves that a clause naming this arm beside an EachMatching is one CR 608.2f
+    -- batch.
+    EachPlayer
+  | -- | CR 102.1 / 120.3a / Soul Immolation: every opponent of the resolving
+    -- controller, the arm above narrowed by CR 109.5's perspective.
+    EachOpponent
+  | -- | CR 614.12a / 120.3a / Stuffy Doll: the player this effect's source chose as
+    -- it entered the battlefield, read off Object.chosenPlayers there, or off
+    -- CR 608.2h's last known information once it has left.
+    ChosenPlayer
+  | -- | CR 120.3a: the players a PlayerRef names, narrowed by an optional
+    -- player Filter -- Deflecting Palm's "that source's controller", where the
+    -- seat is identified by an object a slot holds rather than by a noun a card
+    -- can print, and Disorder's "each player who controls a white creature".
+    --
+    -- The three arms above are the printed NOUNS ("each player", "each
+    -- opponent", the seat Stuffy Doll chose) and this one is the INDIRECTION,
+    -- which is why it is a fourth arm rather than a widening that swallows them:
+    -- Parun.Types.PlayerRef can spell every one of those too, and rewriting the
+    -- pool onto this arm would trade three names a reader recognises for one
+    -- that has to be unfolded.
+    Players PlayersWho.PlayersWho
+  | -- | CR 401.2 / 121.1 / Count on Luck, Act on Impulse: the cards on top of the
+    -- libraries the payload's PlayerRef names, as deep as its Quantity, deepest
+    -- named last.
+    TopOfLibrary TopOfLibrary.TopOfLibrary
+  | -- | CR 401.2 / Treasure Hunt, Open the Way: the cards on top of a library down
+    -- to and INCLUDING the one whose match completes the payload's count.
+    TopOfLibraryUntil TopOfLibraryUntil.TopOfLibraryUntil
+  | -- | CR 404.1 / Soldevi Digger: the top card of each graveyard the PlayerRef
+    -- names -- the NEWEST arrival, which is the LAST member of the pile and the
+    -- opposite end from the library arms above (Parun.Engine.Game.insertIntoZone
+    -- appends a graveyard arrival). No depth, no Filter and no prompt: CR 404.2
+    -- leaves the order out of the players' hands, so "the top card" names exactly
+    -- one and there is nothing to ask -- and Scryfall
+    -- @o:/top card of .*graveyard/@, 2026-09-06, returns no printing that reads
+    -- this position more than one card deep. A card naming "the top two cards of
+    -- your graveyard" would want the depth the library arm above carries.
+    TopOfGraveyard PlayerRef.PlayerRef
+  | -- | CR 608.2d / Port of Karfell: a card in a graveyard matching the Filter,
+    -- chosen as the effect runs rather than targeted (CR 115.1).
+    --
+    -- The payload's count is what Fall of the Thran's "each player returns two
+    -- land cards from their graveyard" states, and the picks it names are
+    -- DISTINCT -- Parun.MassEffectSpec's "CR 608.2d each player returns two
+    -- DISTINCT land cards from their own graveyard" is what proves it.
+    --
+    -- A QUESTION rather than a read, asked by
+    -- Parun.Engine.Resolve.Effect.askingObjects; Parun.EffectLintSpec's
+    -- inertChoosers states which opcodes may carry it.
+    ChosenCardInGraveyard ChosenCardInGraveyard.ChosenCardInGraveyard
+  | -- | CR 608.2d / 402.3 / Karn Liberated: cards in a hand matching the Filter,
+    -- as many as the payload's count, chosen as the effect runs by the seat whose
+    -- hand it is -- which is why one PlayerRef does the chooser's and the zone's
+    -- duty at once.
+    --
+    -- Never a target, because parun has no target pool over a hidden zone (#559).
+    ChosenCardInHand ChosenCardInHand.ChosenCardInHand
+  | -- | CR 608.2d / Commune with the Gods: a card chosen out of the group a slot
+    -- holds -- the printed "from among them" -- read through
+    -- Parun.Engine.Resolve.Effect.fromAmongMembers.
+    ChosenCardFromAmong ChosenCardFromAmong.ChosenCardFromAmong
+  | -- | CR 608.2c / Mulch: every card in the group a slot holds that the Filter
+    -- matches -- the printed "all land cards revealed this way", the arm above's
+    -- plural and a read rather than a question.
+    EachCardFromAmong EachCardFromAmong.EachCardFromAmong
+  | -- | CR 701.20a / 701.9b / Merfolk Spy, Fall, Hymn to Tourach: the cards
+    -- randomness names out of the hands the PlayerRef names, asked of the
+    -- interpreter through Prompt.RandomObject and filtered back against the
+    -- candidates.
+    RandomCardInHand RandomCardInHand.RandomCardInHand
+  | -- | CR 404.1 / 608.2c / Ghoulraiser, Make a Wish: the cards randomness names
+    -- out of the graveyards the ZoneScope names, asked of the interpreter through
+    -- Prompt.RandomObject and filtered back against the candidates. The arm above
+    -- over a PUBLIC zone (CR 400.2), which is why a ZoneScope stands where that
+    -- arm's single PlayerRef does.
+    RandomCardInGraveyard RandomCardInGraveyard.RandomCardInGraveyard
+  | -- | Alchemy's seek / Gate to Seatower: the cards randomness names out of the
+    -- library the PlayerRef names, asked of the interpreter through
+    -- Prompt.RandomObject -- no search, no reveal, no shuffle.
+    RandomCardInLibrary RandomCardInLibrary.RandomCardInLibrary
+  | -- | CR 608.2d / 701.42a: the permanents on the battlefield matching the
+    -- payload's Filter that its chooser picks as the effect runs, one or up to a
+    -- ceiling (Hanweir Battlements, Wormfang Crab; Tovolar, Dire Overlord, Teferi,
+    -- Hero of Dominaria). Parun.Engine.Resolve.Effect.chosenPermanents asks it.
+    ChosenPermanents ChosenPermanents.ChosenPermanents
+  | -- | CR 303.4b / 301.5a / 608.2h: the permanents attached to the object a slot holds,
+    -- or attached as it left (Rhuk, Hexgold Nabber; Fumble).
+    AttachedToBound AttachedToBound.AttachedToBound
+  | -- | CR 400.7: the object a slot holds, followed to wherever it is now.
+    FromAnywhere FromAnywhere.FromAnywhere
+  | -- | CR 608.2f: every object each ref names, as one action on all of them --
+    -- Hanweir Battlements' source and chosen permanent, proved by Parun.MeldSpec's
+    -- "CR 608.2f the pair leaves the battlefield in one event".
+    AllOf (NonEmpty.NonEmpty ObjectRef)
+  deriving (Eq, Ord, Show)

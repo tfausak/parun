@@ -153,7 +153,7 @@ migration generalizes an existing precedent; it does not invent one.
 - Expiry trigger: `expires:milestone` (a scheduled phase retires it) versus
   `expires:card-driven` (it fires when a card demands it, with no date).
   This distinction is **not expressible as a GitHub milestone** and roughly half
-  of pawl's expiries are card-driven — `Mana.hs:202` expires "the moment mana
+  of parun's expiries are card-driven — `Mana.hs:202` expires "the moment mana
   sources differ in any way a player could care about". It must be a label.
 - Area: `layers`, `combat`, `mana`, `events`, `triggers`, `prompts`,
   `replacement`, `targeting`, `test-suite`.

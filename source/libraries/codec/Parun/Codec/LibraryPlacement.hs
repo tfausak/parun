@@ -1,0 +1,40 @@
+module Parun.Codec.LibraryPlacement where
+
+import qualified Parun.Codec.ArrangedArrival as ArrangedArrival
+import qualified Parun.Codec.LibraryPosition as LibraryPosition
+import qualified Parun.Codec.Quantity as Quantity
+import qualified Parun.JsonCodec.Arm as Arm
+import qualified Parun.JsonCodec.Codec as Codec
+import qualified Parun.Types.LibraryPlacement as LibraryPlacement
+
+-- | A stated placement writes its OWN tag and carries the position as the
+-- payload, rather than passing the position's tag through as the placement's.
+-- Passing it through read as though a placement were a widened position, and it
+-- cost the schema the claim 'Arm.tagged' otherwise makes: a decoder dispatching
+-- on the JSON type of what it was handed cannot be stated as @oneOf@ over
+-- branches a reader can tell apart (#1304).
+--
+-- The two tags were also what told a placement from a zone in
+-- 'Parun.Codec.Effect'\'s @moveTail@. That function is gone (#1305): a placement
+-- is now a NAMED KEY on 'Parun.Types.MoveToZone', so nothing has to tell the two
+-- apart by shape.
+codec :: Codec.Codec LibraryPlacement.LibraryPlacement
+codec =
+  Arm.tagged
+    tagOf
+    [ Arm.payload "Stated" LibraryPosition.codec LibraryPlacement.Stated (\x -> case x of LibraryPlacement.Stated y -> Just y; _ -> Nothing),
+      Arm.nullary "OwnerChooses" LibraryPlacement.OwnerChooses,
+      Arm.payload "RandomOrder" LibraryPosition.codec LibraryPlacement.RandomOrder (\x -> case x of LibraryPlacement.RandomOrder y -> Just y; _ -> Nothing),
+      Arm.payload "ArrangedBy" ArrangedArrival.codec LibraryPlacement.ArrangedBy (\x -> case x of LibraryPlacement.ArrangedBy y -> Just y; _ -> Nothing),
+      Arm.payload "Beneath" Quantity.codec LibraryPlacement.Beneath (\x -> case x of LibraryPlacement.Beneath y -> Just y; _ -> Nothing),
+      Arm.payload "BeneathOrBottom" Quantity.codec LibraryPlacement.BeneathOrBottom (\x -> case x of LibraryPlacement.BeneathOrBottom y -> Just y; _ -> Nothing)
+    ]
+
+tagOf :: LibraryPlacement.LibraryPlacement -> String
+tagOf x = case x of
+  LibraryPlacement.Stated {} -> "Stated"
+  LibraryPlacement.OwnerChooses {} -> "OwnerChooses"
+  LibraryPlacement.RandomOrder {} -> "RandomOrder"
+  LibraryPlacement.ArrangedBy {} -> "ArrangedBy"
+  LibraryPlacement.Beneath {} -> "Beneath"
+  LibraryPlacement.BeneathOrBottom {} -> "BeneathOrBottom"

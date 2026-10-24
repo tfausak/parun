@@ -1,0 +1,181 @@
+-- Rule 709.5 in the one voice the rest of the engine cannot supply for itself:
+-- CR 116.2m's special action that pays a locked door's mana cost to open it,
+-- plus CR 709.5c's locked/unlocked derivation, which the special action and the
+-- CR 709.5f/g opcode (Parun.Engine.Resolve's SetHalfLocked arm) both filter their
+-- offers through.
+--
+-- Everything ELSE rule 709.5 says is arranged so that no module has to know this
+-- one exists. CR 709.5's subtraction lives at Parun.Engine.Game.resolveFaceFor,
+-- which every characteristic read reaches through Game.faceOf, so they all get it
+-- for free; CR 709.5d's entering designation lives
+-- at Parun.Engine.Event.changeZoneAttaching, inside the move; CR 709.5h's trigger
+-- is an ordinary Parun.Types.TriggerCondition matched against a
+-- Parun.Types.GameEvent. What is left is an action a player takes, and an action
+-- needs a place to be offered from and performed in. Parun.Engine.FaceDown is the
+-- same module for rule 708, and this one is written to its shape.
+--
+-- THE INVARIANT: rule 709 is part of the rulebook, so reading
+-- Parun.Types.Layout's Room here is the same closed-half act as reading a Phase.
+-- This module never asks which CARD a door belongs to; a half is a Face with a
+-- name and a mana cost, and that is all of it that is read.
+module Parun.Engine.Room where
+
+import qualified Control.Monad as Monad
+import qualified Control.Monad.Trans.State.Strict as State
+import qualified Data.List.NonEmpty as NonEmpty
+import qualified Data.Maybe as Maybe
+import qualified Data.Set as Set
+import qualified Parun.Engine.Card as Card
+import qualified Parun.Engine.Cost as Cost
+import qualified Parun.Engine.Event as Event
+import qualified Parun.Engine.Game as Game
+import qualified Parun.Engine.Projection.View as Projection
+import qualified Parun.Engine.Turn as Turn
+import qualified Parun.Types.Card as Card.Type
+import Parun.Types.CardName (CardName)
+import Parun.Types.Cost (Cost)
+import qualified Parun.Types.Cost as Cost.Type
+import qualified Parun.Types.Face as Face
+import Parun.Types.Game (Game)
+import Parun.Types.GameState (GameState)
+import qualified Parun.Types.GameState as GameState
+import Parun.Types.Keyword (Keyword)
+import qualified Parun.Types.ManaAbilityPerformer as ManaAbilityPerformer
+import qualified Parun.Types.Object as Object
+import Parun.Types.ObjectId (ObjectId)
+import qualified Parun.Types.PaymentSubject as PaymentSubject
+import Parun.Types.PlayerId (PlayerId)
+import qualified Parun.Types.Zone as Zone
+
+-- CR 709.5c: the halves of this permanent that are LOCKED -- "a particular half
+-- of a permanent is said to be 'unlocked' if it has the appropriate unlocked
+-- designation. Otherwise, that half is said to be locked."
+--
+-- Empty for everything that is not a Room permanent, which is CR 709.5c's own
+-- scope read twice over: only an object with a shared type line among its
+-- copiable values has halves for a designation to name (Game.halvesOf), and only
+-- a permanent on the battlefield can have one.
+--
+-- Answers the FACES rather than their names, because two of its callers need the
+-- mana cost off each (CR 709.5e's unlock cost): canUnlock and unlock below, both
+-- through unlockCostOf. The others -- unlockable below, and Parun.Engine.Resolve's
+-- SetHalfLocked arm -- take only the name.
+--
+-- Read off the object's COPIABLE halves (Game.halvesOf) rather than off the card
+-- printed underneath it: CR 709.5's last sentence makes which half a
+-- characteristic is in a copiable value and CR 709.5b makes the halves'
+-- existence one, so a permanent that copied a Room is offered the COPIED Room's
+-- doors. Parun.RoomSpec's "CR 709.5b a permanent that copied a Room is offered
+-- the copied Room's doors" is what proves it.
+lockedHalves :: ObjectId -> GameState -> [Face.Face Card.Type.Card]
+lockedHalves = halvesWhere not
+
+-- CR 709.5c's other side, the halves that ARE unlocked -- the set CR 709.5g's
+-- lock chooses from ("a player chooses an unlocked half of that permanent"), as
+-- lockedHalves is the set CR 709.5e's special action and CR 709.5f's unlock both
+-- choose from.
+--
+-- The COMPLEMENT of lockedHalves under the same gate rather than
+-- Object.unlockedHalves read directly, so the two answers cannot disagree about
+-- what a half is: a position in that set past the object's copiable halves is
+-- no half at all, and rule 709.5c scopes both questions to a permanent
+-- with a shared type line on the battlefield.
+unlockedHalves :: ObjectId -> GameState -> [Face.Face Card.Type.Card]
+unlockedHalves = halvesWhere id
+
+-- The two above, sharing rule 709.5c's gate and its printed order. The predicate
+-- reads whether the half has its unlocked designation.
+halvesWhere :: (Bool -> Bool) -> ObjectId -> GameState -> [Face.Face Card.Type.Card]
+halvesWhere keep oid gs = Maybe.fromMaybe [] $ do
+  obj <- Game.lookupObject oid gs
+  card <- Game.halvesOf oid gs
+  if Object.zone obj /= Zone.Battlefield
+    then Nothing
+    else
+      Just
+        ( fmap
+            snd
+            (filter (keep . fst) (NonEmpty.toList (Card.withOpenness (Object.unlockedHalves obj) card)))
+        )
+
+-- CR 709.5e: the unlock cost of one half -- "a player who controls a permanent
+-- that has one or more locked halves may pay THE MANA COST of a locked half of
+-- that permanent to give that permanent the appropriate unlocked designation.
+-- This cost is referred to as an 'unlock cost.'"
+--
+-- The half's PRINTED mana cost and nothing else: the rule names the mana cost of
+-- the half, and CR 709.5's subtraction has already taken that cost away from the
+-- permanent, so a projected read would find the wrong object's. A face with no
+-- mana cost at all yields an unpayable one, which CR 118.6 is already the rule
+-- for -- no printed Room half is such a face.
+unlockCostOf :: Face.Face Card.Type.Card -> Cost Keyword
+unlockCostOf face = Cost.Type.MkCost (Face.manaCost face) []
+
+-- CR 709.5e / 116.2m: may this player unlock this half of this permanent right
+-- now? Four conjuncts, each a clause of the rule:
+--
+--   * the permanent has this half among its LOCKED ones (lockedHalves above),
+--     which also settles that it is a Room permanent at all;
+--   * this player CONTROLS it ("a player who controls a permanent");
+--   * the window is a main phase of their own turn with the stack empty ("any
+--     time they have priority and the stack is empty during a main phase of
+--     their turn"), which is CR 307.5's sorcery-speed window conjunct for
+--     conjunct -- so it is asked through Turn.sorcerySpeedWindow rather than a
+--     near-copy that can drift;
+--   * the unlock cost is payable. An action the player cannot take is not
+--     offered, which is Parun.Engine.Action.legalActions' posture throughout.
+--
+-- The payability check is Cost.canPay and NOT Cost.total's CR 601.2f
+-- adjustments, for the reason FaceDown.canTurnFaceUp gives: that rule totals the
+-- cost of a spell being cast or an ability being activated, and a special action
+-- is neither (#90).
+--
+-- The PRIORITY clause has no conjunct, for the reason CR 116.2a's land play has
+-- none: legalActions is asked only of the priority holder.
+canUnlock :: PlayerId -> ObjectId -> CardName -> GameState -> Bool
+canUnlock pid oid half gs =
+  case filter ((== half) . Face.name) (lockedHalves oid gs) of
+    [] -> False
+    face : _ ->
+      Projection.controllerOf oid gs == Just pid
+        && Turn.sorcerySpeedWindow pid gs
+        && Cost.canPay (PaymentSubject.Unlocking oid) pid oid (unlockCostOf face) gs
+
+-- Every door this player may unlock right now, in battlefield order and then
+-- printed order -- what Action.Unlock is built from, and the shape
+-- FaceDown.turnableFaceUp has for the same reason.
+--
+-- ONE ENTRY PER DOOR, never one per permanent: which half to unlock is the
+-- player's choice (CR 709.5e says "a locked half"), and offering each as its own
+-- legal action is how the engine avoids making it. A Room with both doors shut
+-- and the mana for both offers two.
+unlockable :: PlayerId -> GameState -> [(ObjectId, CardName)]
+unlockable pid gs =
+  let forOne oid = fmap ((,) oid . Face.name) (filter (\face -> canUnlock pid oid (Face.name face) gs) (lockedHalves oid gs))
+   in concatMap forOne (Set.toAscList (GameState.battlefield gs))
+
+-- CR 709.5e, in the rule's own order: pay the unlock cost, then give the
+-- permanent the appropriate unlocked designation.
+--
+-- REJECT-NOT-REPAIR, the posture FaceDown.turnFaceUp, Cast.castSpell and
+-- Activate.activateAbility all take: a payment that fails restores the state
+-- from before it was attempted and the door stays shut. The rule's order is what
+-- makes that correct rather than merely tidy -- the cost is paid before the
+-- designation is given, so a failed payment has opened nothing to undo.
+--
+-- No CR 400.7 incarnation is minted and nothing enters: unlocking is not a zone
+-- change, so damage, counters, attachments, the CR 613.7d timestamp and every
+-- continuous effect naming the permanent ride through untouched, and no
+-- enters-the-battlefield ability is offered the newly opened door's text.
+unlock :: ManaAbilityPerformer.ManaAbilityPerformer -> PlayerId -> ObjectId -> CardName -> Game ()
+unlock perform pid oid half = do
+  before <- State.get
+  if not (canUnlock pid oid half before)
+    then pure ()
+    else case filter ((== half) . Face.name) (lockedHalves oid before) of
+      [] -> pure ()
+      face : _ -> do
+        paid <- Cost.payAction perform before (PaymentSubject.Unlocking oid) 0 pid oid (unlockCostOf face)
+        -- CR 709.5e names the actor itself: the player who paid the unlock cost
+        -- is the one who unlocked the door.
+        Monad.forM_ paid $ \_ -> Event.unlockHalves pid oid (Set.singleton half)

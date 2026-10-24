@@ -1,0 +1,156 @@
+module Parun.Codec.DurationSpec where
+
+import qualified Data.Text as Text
+import qualified Parun.Codec.Duration as Duration
+import qualified Parun.JsonCodec.Codec as Codec
+import qualified Parun.JsonCodec.Common as Common
+import qualified Parun.Spec as Spec
+import qualified Parun.Types.Color as Color
+import qualified Parun.Types.Compares as Compares
+import qualified Parun.Types.Comparison as Comparison
+import qualified Parun.Types.Condition as Condition
+import qualified Parun.Types.Cost as Cost
+import qualified Parun.Types.Duration as Duration
+import qualified Parun.Types.DurationEvent as DurationEvent
+import qualified Parun.Types.EndingStep as EndingStep
+import qualified Parun.Types.ManaCost as ManaCost
+import qualified Parun.Types.ManaSymbol as ManaSymbol
+import qualified Parun.Types.ManaType as ManaType
+import qualified Parun.Types.Phase as Phase
+import qualified Parun.Types.PlayerRef as PlayerRef
+import qualified Parun.Types.Quantity as Quantity
+import qualified Parun.Types.SlotName as SlotName
+
+spec :: (Monad m, Monad n) => Spec.Spec m n -> n ()
+spec s = Spec.describe s "Parun.Codec.Duration" $ do
+  Spec.it s "UntilEndOfTurn" $
+    Common.assertCodec
+      s
+      Duration.codec
+      Duration.UntilEndOfTurn
+      " {\"type\":\"UntilEndOfTurn\"} "
+  -- CR 611.2a: for the rest of the game.
+  Spec.it s "Indefinite" $
+    Common.assertCodec
+      s
+      Duration.codec
+      Duration.Indefinite
+      " {\"type\":\"Indefinite\"} "
+  -- Alchemy's "perpetually" (Pearl Collector), which no rule of the CR names.
+  -- Distinct on the wire from Indefinite above, whose lifetime it shares: the two
+  -- differ only in whether the effect follows its objects across a zone change,
+  -- so a codec that collapsed them would silently make every rest-of-game effect
+  -- perpetual.
+  Spec.it s "Perpetual" $ do
+    Common.assertCodec
+      s
+      Duration.codec
+      Duration.Perpetual
+      " {\"type\":\"Perpetual\"} "
+    Spec.assertBool
+      s
+      (Codec.encode Duration.codec Duration.Perpetual /= Codec.encode Duration.codec Duration.Indefinite)
+      "perpetual and indefinite encode differently"
+  -- CR 611.2a: until your next turn.
+  Spec.it s "UntilYourNextTurn" $
+    Common.assertCodec
+      s
+      Duration.codec
+      Duration.UntilYourNextTurn
+      " {\"type\":\"UntilYourNextTurn\"} "
+  -- CR 611.2a: until a step of your turn next begins.
+  Spec.it s "UntilYourNextStep carries its step" $
+    Common.assertCodec
+      s
+      Duration.codec
+      (Duration.UntilYourNextStep (Phase.Ending EndingStep.EndStep))
+      " {\"type\":\"UntilYourNextStep\",\"value\":{\"type\":\"Ending\",\"value\":{\"type\":\"EndStep\"}}} "
+  -- CR 611.2a: until the END of your next turn, a whole turn later.
+  Spec.it s "UntilEndOfYourNextTurn" $
+    Common.assertCodec
+      s
+      Duration.codec
+      Duration.UntilEndOfYourNextTurn
+      " {\"type\":\"UntilEndOfYourNextTurn\"} "
+  -- CR 611.2a: the arm above's window against a seat a reference names, carrying
+  -- that reference (Suspend Aggression's "their next turn").
+  Spec.it s "UntilEndOfNextTurnOf carries its reference" $
+    Common.assertCodec
+      s
+      Duration.codec
+      (Duration.UntilEndOfNextTurnOf (PlayerRef.ControllerOfBound (SlotName.MkSlotName (Text.pack "exiled"))))
+      " {\"type\":\"UntilEndOfNextTurnOf\",\"value\":{\"type\":\"ControllerOfBound\",\"value\":\"exiled\"}} "
+  -- CR 611.2a: the WINDOW, carrying the reference its seat is sampled from (Wall
+  -- of Dust's "its controller's next turn").
+  Spec.it s "DuringNextTurnOf carries its reference" $
+    Common.assertCodec
+      s
+      Duration.codec
+      (Duration.DuringNextTurnOf (PlayerRef.ControllerOfBound (SlotName.MkSlotName (Text.pack "thatAttacker"))))
+      " {\"type\":\"DuringNextTurnOf\",\"value\":{\"type\":\"ControllerOfBound\",\"value\":\"thatAttacker\"}} "
+  -- CR 611.2a / 502.3: the untap step's window (Exhaustion's "their next untap
+  -- step").
+  Spec.it s "DuringNextUntapStepOf carries its reference" $
+    Common.assertCodec
+      s
+      Duration.codec
+      (Duration.DuringNextUntapStepOf (PlayerRef.InSlot (SlotName.MkSlotName (Text.pack "target"))))
+      " {\"type\":\"DuringNextUntapStepOf\",\"value\":{\"type\":\"InSlot\",\"value\":\"target\"}} "
+  -- CR 611.2a: the same window against CR 109.5's "you" (Galvanic Relay).
+  Spec.it s "DuringYourNextTurn" $
+    Common.assertCodec
+      s
+      Duration.codec
+      Duration.DuringYourNextTurn
+      " {\"type\":\"DuringYourNextTurn\"} "
+  -- CR 611.2a / 500.7: the extra turn the same resolution created (Alchemist's
+  -- Gambit).
+  Spec.it s "DuringThatExtraTurn" $
+    Common.assertCodec
+      s
+      Duration.codec
+      Duration.DuringThatExtraTurn
+      " {\"type\":\"DuringThatExtraTurn\"} "
+  -- CR 611.2b, carrying its Condition.
+  Spec.it s "ForAsLongAs carries its condition" $
+    Common.assertCodec
+      s
+      Duration.codec
+      (Duration.ForAsLongAs (Condition.Compares (Compares.MkCompares (Quantity.Literal 0) Comparison.Exactly (Quantity.Literal 0))))
+      " {\"type\":\"ForAsLongAs\",\"value\":{\"type\":\"Compares\",\"value\":{\"measured\":{\"type\":\"Literal\",\"value\":0},\"comparison\":{\"type\":\"Exactly\"},\"threshold\":{\"type\":\"Literal\",\"value\":0}}}} "
+  -- CR 500.5a: until end of combat.
+  Spec.it s "UntilEndOfCombat" $
+    Common.assertCodec
+      s
+      Duration.codec
+      Duration.UntilEndOfCombat
+      " {\"type\":\"UntilEndOfCombat\"} "
+  -- CR 500.5a / 611.2a: until end of combat on your next turn (Brazen Cannonade).
+  Spec.it s "UntilEndOfCombatOnYourNextTurn" $
+    Common.assertCodec
+      s
+      Duration.codec
+      Duration.UntilEndOfCombatOnYourNextTurn
+      " {\"type\":\"UntilEndOfCombatOnYourNextTurn\"} "
+  -- CR 611.2a / 116.2c: "You may pay {U} to end this effect" (Gliding Licid).
+  Spec.it s "UntilPaid carries the cost" $
+    Common.assertCodec
+      s
+      Duration.codec
+      (Duration.UntilPaid (Cost.MkCost (Just (ManaCost.MkManaCost [ManaSymbol.OfType (ManaType.Colored Color.Blue)])) []))
+      " {\"type\":\"UntilPaid\",\"value\":{\"mana\":[{\"type\":\"OfType\",\"value\":{\"type\":\"Colored\",\"value\":{\"type\":\"Blue\"}}}]}} "
+  -- CR 611.2a / Scout's Warning: "the next ... this turn", ended by its own use.
+  Spec.it s "UntilUsed" $
+    Common.assertCodec
+      s
+      Duration.codec
+      Duration.UntilUsed
+      " {\"type\":\"UntilUsed\"} "
+  -- CR 611.2a / Vesuvan Shapeshifter: "until this creature is turned face down".
+  Spec.it s "UntilEvent" $
+    Common.assertCodec
+      s
+      Duration.codec
+      (Duration.UntilEvent DurationEvent.SourceTurnedFaceDown)
+      " {\"type\":\"UntilEvent\",\"value\":{\"type\":\"SourceTurnedFaceDown\"}} "
+  Spec.it s "has a schema" $ Common.assertHasSchema s Duration.codec

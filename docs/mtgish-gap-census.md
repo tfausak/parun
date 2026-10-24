@@ -1,19 +1,19 @@
-# mtgish → pawl closed-half gap census
+# mtgish → parun closed-half gap census
 
 *Analysis written 2026-07-20, at M4g's completion (M4 done). Diffs the mtgish
-card-parser's structural vocabulary against pawl's closed-half axes to surface
+card-parser's structural vocabulary against parun's closed-half axes to surface
 rules machinery with no roadmap home. **A census, not a plan** — nothing here is
 committed to the M-path; §4/§6 record recommendations for triage.*
 
 ## 0. Purpose
 
 mtgish (`_scratch/mtgish`) parses Oracle text into a structured vocabulary. This
-document diffs mtgish's *structural* type system against pawl's closed-half
+document diffs mtgish's *structural* type system against parun's closed-half
 **classification axes** to find rules machinery the real card pool demands that
-pawl's M0–M7 roadmap does not yet name.
+parun's M0–M7 roadmap does not yet name.
 
 **What this is not.** It is not a diff of mtgish's 1,317 `Action` variants against
-pawl's 18 `Effect` opcodes. A new *effect* is never a pawl blind spot — the open
+parun's 18 `Effect` opcodes. A new *effect* is never a parun blind spot — the open
 half grows forever by design (design.md §1). The blind spots live in the **closed
 half**: the mechanisms an effect hangs off. So the useful signal is entirely in
 mtgish's *non-Action* enums.
@@ -22,18 +22,18 @@ mtgish's *non-Action* enums.
 
 mtgish is a **transliteration** engine: its enums are identity-shaped and
 un-normalized (385 `Trigger` variants, ~150 `CounterType`s, ~250 `PlayerEffect`s).
-Diffing variant-for-variant would just reproduce the over-granularity pawl exists
+Diffing variant-for-variant would just reproduce the over-granularity parun exists
 to reject. So **every mtgish enum is folded to its underlying mechanism class**
 before comparison:
 
-| mtgish source (variant count) | folds to → pawl axis |
+| mtgish source (variant count) | folds to → parun axis |
 |---|---|
 | `ReplacementAction*` / `ReplacableEvent*` (~50 enums, ~130 `Would…` families) | replacement/prevention **event coverage** |
 | `Trigger` (385) | trigger-condition classes (`TriggerCondition`) |
 | `Cost` (~200) | cost classes (`AbilityCost` / `AdditionalCost`) |
 | `Condition` (243) | predicate / target-filter classes (`TargetSpec`) |
 | `StaticLayer1–7Effect` (~60) | layer operations (`Modification`) |
-| `PlayerEffect` (~250) | **player-scoped continuous effects** (no pawl axis) |
+| `PlayerEffect` (~250) | **player-scoped continuous effects** (no parun axis) |
 | `Expiration` (~45) | duration classes (`Duration`) |
 | `CounterType` (~150) | counter kinds + counter *substrate* (`CounterKind`) |
 | zone-bearing enums (`CardsInHand`, `CardInExile`, `PermanentIsPutIntoTheCommandZone`…) | `Zone` |
@@ -44,7 +44,7 @@ every CR number below is marked *(verify)* and must be checked against
 `docs/rules.txt` before it drives code. Mechanism *names* are reliable; section
 numbers are not, until checked.
 
-## 2. Baseline — pawl's closed-half axes today (at M4g, M4 complete)
+## 2. Baseline — parun's closed-half axes today (at M4g, M4 complete)
 
 | Axis | Module | Variants now |
 |---|---|---|
@@ -62,7 +62,7 @@ numbers are not, until checked.
 | Keywords | `Keyword` | 10 (evergreen combat) |
 | Player state | `Player` | `life`, `status` only |
 
-These counts are *expected* to be small — pawl has just completed M4. The census is about
+These counts are *expected* to be small — parun has just completed M4. The census is about
 which axes have **no roadmap entry for a whole mechanism class**, not about low
 counts on axes that grow through normal M4-tail vocabulary work.
 
@@ -76,7 +76,7 @@ of design.md §6).
 
 ### 3.1 Replacement / prevention — GAP (breadth), shapes mostly planned
 
-pawl models replacement as **specific typed shapes**: `RedirectZoneChange` (M3f,
+parun models replacement as **specific typed shapes**: `RedirectZoneChange` (M3f,
 Rest in Peace), `PreventAllCombatDamage` (M4d, Fog), plus regeneration shields
 (M4d). The roadmap frames M4d as adding "the cancel shape vs. M3f's redirect" —
 i.e. the *shape* taxonomy (redirect / cancel / modify) is understood.
@@ -92,7 +92,7 @@ The gap mtgish reveals is **event coverage**. Its ~130 `Would…` families fold 
 > draw-step / extra-turn · would-scry / mill / explore / proliferate / roll-dice /
 > flip-coin / search / planeswalk / copy-spell / get-energy · would-lose-the-game
 
-pawl has wired **two** of these (~zone-change, combat-damage) plus regeneration.
+parun has wired **two** of these (~zone-change, combat-damage) plus regeneration.
 The replacement *engine* (`GameState.preventions`, `Event.applyPreventions`, the
 `changeZone` funnel carrying replacements) exists — but each new event that must
 become interceptable is real closed-half work, and the roadmap only names damage
@@ -107,7 +107,7 @@ facet, this is its **event-coverage** facet; together they are the full story.*
 
 ### 3.2 Player-scoped continuous effects & restrictions — GAP (no axis exists)
 
-mtgish's `PlayerEffect` (~250 variants) folds to a mechanism pawl **has no axis
+mtgish's `PlayerEffect` (~250 variants) folds to a mechanism parun **has no axis
 for at all**. Representative classes:
 
 - **Permission grants:** `MayPlayAdditionalLands`, `MayCastSpellsFromGraveyard`,
@@ -119,7 +119,7 @@ for at all**. Representative classes:
 - **Value overrides:** `SetMaximumHandSize`, `LifeTotalCantChange`,
   `DamageDoesntCauseLifeLoss`.
 
-pawl's `ContinuousEffect` + `Modification` + `Affected` are **object-oriented** —
+parun's `ContinuousEffect` + `Modification` + `Affected` are **object-oriented** —
 every `Modification` constructor edits an object's characteristics (P/T, types,
 abilities, subtype words). There is no player-scoped continuous-effect axis, and
 `Player` carries only `life` + `status`. This is the single largest unroadmapped
@@ -150,11 +150,11 @@ is an effect of any kind, so both correctly stay plain engine predicates.
 
 ### 3.3 Layer operations — GAP (layers 1, 2, 5, and CDA missing)
 
-pawl's layer system exists (`Layer`, `ProjectedCharacteristics`, the projection).
+parun's layer system exists (`Layer`, `ProjectedCharacteristics`, the projection).
 `Modification` implements operations in layers 3, 4, 6, 7b, 7c. mtgish's
-`StaticLayer1–7Effect` reveals whole layers pawl has no operation for:
+`StaticLayer1–7Effect` reveals whole layers parun has no operation for:
 
-| Layer | mtgish operations | pawl status |
+| Layer | mtgish operations | parun status |
 |---|---|---|
 | **1 copy** | `IsACopyOf`, `SetCopiablePT`, `AddCopiableAbility`, mutate | **GAP** — no copy mechanism anywhere (Clone, copy-spell). CR 707 (verify). |
 | **2 control** | `SetController` | **GAP (deep)** — `Object` has only `owner`, **no `controller` field**, so a changed controller has nowhere to live; `Modification` has no control op. Player-control (Mindslaver, `GameState.pendingControl`, CR 723) is a *different* mechanism and does **not** cover Control Magic / Threaten (CR 613 layer 2 — verify). |
@@ -171,10 +171,10 @@ section, and §5 flags the layer system as the canary.
 ### 3.4 New closed-half subsystems (player-state) — GAP (mostly unroadmapped)
 
 Each of these is a small closed-half rules section the card pool needs; mtgish
-carries first-class support (Actions + Expirations + Triggers). pawl has none, and
+carries first-class support (Actions + Expirations + Triggers). parun has none, and
 M5 lists only the "nightmares" (723/727/729/732/733), not these:
 
-| Subsystem | mtgish evidence | pawl / roadmap |
+| Subsystem | mtgish evidence | parun / roadmap |
 |---|---|---|
 | **Monarch** | `BecomeTheMonarch`, `UntilAPlayerBecomesTheMonarch`, `CantBecomeTheMonarch` | GAP *(CR 720ish — verify)* |
 | **Day / Night** | `BecomeDay`, `BecomeNight`, `WhenDayBecomesNightOr…` | GAP |
@@ -198,7 +198,7 @@ substrate).
 
 ### 3.5 Zones — GAP (Command missing), one implemented-axis under-model
 
-pawl's `Zone` has 6. The comprehensive rules define 7 game zones *(CR 400.1 —
+parun's `Zone` has 6. The comprehensive rules define 7 game zones *(CR 400.1 —
 verify)*; **Command** is absent. Command is needed for **emblems** (3.4) and
 command-zone casting, even before Commander-format questions.
 
@@ -221,9 +221,9 @@ charge counter is a named counter, no new mechanism). The structural gaps:
 - **Counters on players** — poison/energy/experience/rad live on *players*.
   `Player` has no counter map; `Object.counters` is per-object. GAP (ties to 3.4).
 - **Ability-granting counters** — `FlyingCounter`, `DeathtouchCounter`, etc. must
-  feed the *layer 6* ability system, not just P/T. pawl's counter→layer-7c
+  feed the *layer 6* ability system, not just P/T. parun's counter→layer-7c
   projection (M4f) does not generalize to granting keywords. GAP (small).
-- **Defense / lore counters** — bound to battles / sagas (card types pawl doesn't
+- **Defense / lore counters** — bound to battles / sagas (card types parun doesn't
   model yet). VOCAB-gated on those card types. Loyalty counters are built
   (`CounterKind.Loyalty`, CR 122.1e), with the planeswalker card type.
 
@@ -231,7 +231,7 @@ charge counter is a named counter, no new mechanism). The structural gaps:
 
 ### 3.7 Durations — GAP (conditional & event-relative)
 
-`Duration` has 2. mtgish `Expiration` (~45) folds to classes pawl cannot express:
+`Duration` has 2. mtgish `Expiration` (~45) folds to classes parun cannot express:
 
 - **Conditional / "as long as"** — `ForAsLongAsPermanentHasACounter…`,
   `UntilPermanentNoLongerPassesFilter` (CR 611.2 — verify). GAP.
@@ -270,7 +270,7 @@ sub-gaps the fold exposes:
 constructor for a single card, Wall of Stone) is itself the tell: targeting grows
 one hand-carved variant per card. mtgish's `Condition` (243) and its filter grammar
 show targeting needs a **general predicate/filter language** (power ≥ N,
-controlled-by, color, has-keyword, in-zone, …). pawl already has `CardCriterion`
+controlled-by, color, has-keyword, in-zone, …). parun already has `CardCriterion`
 (for `Search`); the gap is unifying target selection onto a criterion language
 rather than growing `TargetSpec`.
 
@@ -280,7 +280,7 @@ Structural, and upstream of a large fraction of M4-tail cards.
 ### 3.10 Costs — GAP (generalization + modification)
 
 `AbilityCost` = mana + `[AdditionalCost]`, with `AdditionalCost` a closed 2-variant
-enum. mtgish `Cost` (~200) folds to classes pawl can't express: pay-life,
+enum. mtgish `Cost` (~200) folds to classes parun can't express: pay-life,
 pay-energy, sacrifice(other/N/type), discard, exile-from-zone, tap-others, reveal,
 mill-self, return-to-hand, remove/add-counters. Plus two structural mechanisms:
 

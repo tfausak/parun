@@ -4,9 +4,9 @@
 
 **Goal:** Replace the engine's four separate, pure, choiceless replacement paths (zone-change fold, prevention filter, regeneration map, as-enters drain) with **one** monadic path over **one** proposed-event vocabulary, driven by CR 616.1's re-collecting loop and a real `ChooseReplacement` prompt.
 
-**Architecture:** `ProposedEvent` names six replaceable *event classes*; `ReplacementEffect` names *(event class, rewrite shape)* pairs with the scoping carried as pattern **data**; a new `Pawl.Replacement` module is the sole home of casing on either, and implements CR 616.1's loop — collect (minus CR 614.5's already-applied set), bucket by 616.1a–e, choose (prompting only when the choice is real), apply, repeat. Every change-and-emit funnel (`changeZone`, `destroy`, `createTokens`, the new `putCounters`, `Damage.applyDamage`) raises its proposed event through that loop, which forces those funnels — and `Sba.performStateBasedActions` above them — to become `Game`-monadic.
+**Architecture:** `ProposedEvent` names six replaceable *event classes*; `ReplacementEffect` names *(event class, rewrite shape)* pairs with the scoping carried as pattern **data**; a new `Parun.Replacement` module is the sole home of casing on either, and implements CR 616.1's loop — collect (minus CR 614.5's already-applied set), bucket by 616.1a–e, choose (prompting only when the choice is real), apply, repeat. Every change-and-emit funnel (`changeZone`, `destroy`, `createTokens`, the new `putCounters`, `Damage.applyDamage`) raises its proposed event through that loop, which forces those funnels — and `Sba.performStateBasedActions` above them — to become `Game`-monadic.
 
-**Tech Stack:** Haskell 2010 (GHC 9.14.1 from the Nix flake), `tasty` + `tasty-hunit`, the hand-rolled `Pawl.Json`/`Pawl.Codec` card codec.
+**Tech Stack:** Haskell 2010 (GHC 9.14.1 from the Nix flake), `tasty` + `tasty-hunit`, the hand-rolled `Parun.Json`/`Parun.Codec` card codec.
 
 **Spec:** `docs/superpowers/specs/2026-07-21-p5-replacement-events-design.md`. Read §2.1–2.3 before Task 1, §2.7 before Task 2, §2.4 before Task 3, §2.6 before Task 4, §2.5 before Tasks 7–8, §8 before Task 10.
 
@@ -15,9 +15,9 @@
 Every task's requirements implicitly include all of these. They come from `CLAUDE.md` and are not negotiable.
 
 - **Haskell 2010, no language extensions** unless there is no alternative. `NamedFieldPuns` is permitted; `GADTs`/`RankNTypes` only in the suspension core and in test modules that already carry the pragma. Modules that already carry a `{-# LANGUAGE … #-}` pragma keep it.
-- **No explicit export lists.** `module Pawl.Foo where`.
-- **One type per module** under `Pawl.Type.<TypeName>` (type + instances only). A module never imports its parents; `A.B.C` must not import `A.B` or `A`.
-- **Qualified imports aliased to the last component** (`Data.Sequence` → `Seq`, `Pawl.Type.ProposedEvent` → `ProposedEvent`). One import group, alphabetical. The one documented exception is `Pawl.Support` as `S` in the test suite.
+- **No explicit export lists.** `module Parun.Foo where`.
+- **One type per module** under `Parun.Type.<TypeName>` (type + instances only). A module never imports its parents; `A.B.C` must not import `A.B` or `A`.
+- **Qualified imports aliased to the last component** (`Data.Sequence` → `Seq`, `Parun.Type.ProposedEvent` → `ProposedEvent`). One import group, alphabetical. The one documented exception is `Parun.Support` as `S` in the test suite.
 - **No partial functions**, written or used. No `head`, `error`, `undefined`, or non-exhaustive matches.
 - **`newtype` liberally, non-punning constructors** (`MkFoo`). Build records with `do`/`pure` + record syntax, not `<$>`/`<*>`.
 - **Prefer explicit:** `case` over point-free; one equation with a `case` over multiple clauses; `let` over `where`; `$` over parens, `.` over chained `$`. No list comprehensions. No backtick-infixed functions.
@@ -27,7 +27,7 @@ Every task's requirements implicitly include all of these. They come from `CLAUD
 - **No API stability obligations.** Rename, reshape, and delete freely; never add a compat shim or keep an old name.
 - **Every rules claim is checked against `docs/rules.txt`** and the rule number is cited in the code comment. Never trust recalled Magic rules.
 - **Build must be warning-clean.** `cabal build all --enable-tests --enable-benchmarks` with `flags: +pedantic` (which is `-Werror`). Incremental builds hide warnings from unchanged modules; `cabal clean` first when a definitive check is needed.
-- **Import lists are not spelled out** in every snippet below. When a step's code names `Monad.void`/`Monad.when`/`Monad.replicateM`, `Maybe.isJust`/`Maybe.catMaybes`, `Set.*`, `List.*`, `Ord.Down` or a `Pawl.Type.*` module, add the qualified import (aliased to the last component, one alphabetical group). GHC names every missing one.
+- **Import lists are not spelled out** in every snippet below. When a step's code names `Monad.void`/`Monad.when`/`Monad.replicateM`, `Maybe.isJust`/`Maybe.catMaybes`, `Set.*`, `List.*`, `Ord.Down` or a `Parun.Type.*` module, add the qualified import (aliased to the last component, one alphabetical group). GHC names every missing one.
 - **New library modules** go under `source/library/` and are picked up by the `-- cabal-gild: discover` directive — add the file and run `hooky fix`; never hand-edit `exposed-modules`. **New test modules must be added to the test-suite `other-modules` list** by the same `cabal-gild` discovery, and wired into `source/test-suite/Main.hs`'s `testTree`.
 - **Before every commit:** `git add <the paths this task names>`, then `hooky fix`, then `git add` again, then `hooky run`. `hooky` acts on **staged** files only; if you skip the `git add`, it reports "hooks skipped" and checks nothing.
 - **TDD is not optional.** Write the failing test and actually run it to watch it fail before implementing.
@@ -48,7 +48,7 @@ All four new gate cards were verified live against the Scryfall API while this p
 
 Note **Corpsejack Menace is `Creature — Fungus`** (one subtype, not two) and **4/4**.
 
-None of these four is added to any deck in `Pawl.Cards`. They are deterministic fixtures, like Clone and Tarmogoyf — adding them would perturb `PropertySpec`'s card-backed conservation counts for no gain.
+None of these four is added to any deck in `Parun.Cards`. They are deterministic fixtures, like Clone and Tarmogoyf — adding them would perturb `PropertySpec`'s card-backed conservation counts for no gain.
 
 ## Three deliberate departures from the spec
 
@@ -56,7 +56,7 @@ State these in the completion note (Task 10). They are corrections, not drift.
 
 1. **CR 614.5's identity is `(source, effect value)`, not `(source, index)`.** The spec's §2.4 step 1 says "(source, index)". Index identity makes the phase's own centerpiece unreachable: a Clone applies its `EntryR AsCopy` (index 0 of its one-element list), which replaces its copiable snapshot with a Primal Plasma's — whose `EntryR (ChoiceOf …)` is then *also* index 0 of the new list. The already-applied set would swallow the newly-acquired ability and CR 616.2 would never fire. Value identity keeps every §5 scenario correct (two Hardened Scales are two *sources*; Doubling Season's two clauses are two *values*). Its only cost — a single source with two textually identical replacement abilities gets one opportunity instead of two — has no producer and gets an issue in Task 10.
 2. **The data-file migrations land with the opcode that needs them, not all in Task 1.** `rest-in-peace.json` migrates in Task 1 (the `ReplacementEffect` reshape forces it); `fog.json` in Task 4, `drudge-skeletons.json` in Task 5, `clone.json` in Task 7 — each with the task that introduces `Effect.Replace` / `WouldBeDestroyed` / `EntryR AsCopy`. Every task therefore ends with a green suite, which §7's "every task is one commit that leaves the suite green" requires.
-3. **Four internal types the spec's §6 inventory does not list** — `Pawl.Type.ProposedEvent` is listed, but the loop also needs `Pawl.Type.CandidateId`, `Pawl.Type.ReplacementCandidate` and `Pawl.Type.ReplacementBucket`. They land in Task 3, under the one-type-per-module rule, rather than as anonymous tuples inside `Pawl.Replacement`.
+3. **Four internal types the spec's §6 inventory does not list** — `Parun.Type.ProposedEvent` is listed, but the loop also needs `Parun.Type.CandidateId`, `Parun.Type.ReplacementCandidate` and `Parun.Type.ReplacementBucket`. They land in Task 3, under the one-type-per-module rule, rather than as anonymous tuples inside `Parun.Replacement`.
 
 ## File structure
 
@@ -64,28 +64,28 @@ State these in the completion note (Task 10). They are corrections, not drift.
 
 | Module | Responsibility | Task |
 |---|---|---|
-| `Pawl/Type/ControllerRelation.hs` | `Yours` / `Anyones`, relative to the effect source's controller | 1 |
-| `Pawl/Type/PermanentCriterion.hs` | `AnyPermanent` / `CreaturePermanent` (P9 absorbs it) | 1 |
-| `Pawl/Type/ZoneChangePattern.hs` | which zone changes a redirect intercepts | 1 |
-| `Pawl/Type/CounterPattern.hs` | which counter placements a scaling replacement intercepts | 1 |
-| `Pawl/Type/TokenPattern.hs` | which token creations a scaling replacement intercepts | 1 |
-| `Pawl/Type/DamagePattern.hs` | which damage events a prevention intercepts | 1 |
-| `Pawl/Type/Scaling.hs` | `Multiply` / `AddMore` — the count rewrite | 1 |
-| `Pawl/Type/EntryOption.hs` | one shape an "as it enters" choice offers (P/T + keywords) | 1 |
-| `Pawl/Type/EntryRewrite.hs` | `AsCopy` / `ChoiceOf [EntryOption]` | 1 |
-| `Pawl/Type/DamageRewrite.hs` | `PreventAll` | 1 |
-| `Pawl/Type/DestructionRewrite.hs` | `Regenerate` | 1 |
-| `Pawl/Type/ProposedEvent.hs` | the six replaceable event classes | 3 |
-| `Pawl/Type/CandidateId.hs` | CR 614.5's one-opportunity identity | 3 |
-| `Pawl/Type/ReplacementCandidate.hs` | one applicable-or-not effect instance | 3 |
-| `Pawl/Type/ReplacementBucket.hs` | CR 616.1a–e, `Ord`-ascending | 3 |
-| `Pawl/Replacement.hs` | **the CR 616.1 loop** — sole home of casing on `ProposedEvent` and `ReplacementEffect` | 3 |
-| `Pawl/Type/Uses.hs` | `Unlimited` / `Once` (CR 614.3) | 4 |
-| `Pawl/Type/ActiveReplacement.hs` | a floating replacement: effect + source + timestamp + duration + uses | 4 |
+| `Parun/Type/ControllerRelation.hs` | `Yours` / `Anyones`, relative to the effect source's controller | 1 |
+| `Parun/Type/PermanentCriterion.hs` | `AnyPermanent` / `CreaturePermanent` (P9 absorbs it) | 1 |
+| `Parun/Type/ZoneChangePattern.hs` | which zone changes a redirect intercepts | 1 |
+| `Parun/Type/CounterPattern.hs` | which counter placements a scaling replacement intercepts | 1 |
+| `Parun/Type/TokenPattern.hs` | which token creations a scaling replacement intercepts | 1 |
+| `Parun/Type/DamagePattern.hs` | which damage events a prevention intercepts | 1 |
+| `Parun/Type/Scaling.hs` | `Multiply` / `AddMore` — the count rewrite | 1 |
+| `Parun/Type/EntryOption.hs` | one shape an "as it enters" choice offers (P/T + keywords) | 1 |
+| `Parun/Type/EntryRewrite.hs` | `AsCopy` / `ChoiceOf [EntryOption]` | 1 |
+| `Parun/Type/DamageRewrite.hs` | `PreventAll` | 1 |
+| `Parun/Type/DestructionRewrite.hs` | `Regenerate` | 1 |
+| `Parun/Type/ProposedEvent.hs` | the six replaceable event classes | 3 |
+| `Parun/Type/CandidateId.hs` | CR 614.5's one-opportunity identity | 3 |
+| `Parun/Type/ReplacementCandidate.hs` | one applicable-or-not effect instance | 3 |
+| `Parun/Type/ReplacementBucket.hs` | CR 616.1a–e, `Ord`-ascending | 3 |
+| `Parun/Replacement.hs` | **the CR 616.1 loop** — sole home of casing on `ProposedEvent` and `ReplacementEffect` | 3 |
+| `Parun/Type/Uses.hs` | `Unlimited` / `Once` (CR 614.3) | 4 |
+| `Parun/Type/ActiveReplacement.hs` | a floating replacement: effect + source + timestamp + duration + uses | 4 |
 
-**Deleted library modules.** `Pawl/Type/Prevention.hs` and `Pawl/Type/ActivePrevention.hs` (Task 4).
+**Deleted library modules.** `Parun/Type/Prevention.hs` and `Parun/Type/ActivePrevention.hs` (Task 4).
 
-**New test module.** `source/test-suite/Pawl/ReplacementSpec.hs` — near-mirrors `Pawl.Replacement`; holds §5 scenarios 1–16 and 18–20 and 22. Scenario 17 (Rest in Peace) stays in `EventSpec` and scenario 21 (Fog) stays in `ResolveSpec`/`DamageSpec` as regressions on the new path.
+**New test module.** `source/test-suite/Parun/ReplacementSpec.hs` — near-mirrors `Parun.Replacement`; holds §5 scenarios 1–16 and 18–20 and 22. Scenario 17 (Rest in Peace) stays in `EventSpec` and scenario 21 (Fog) stays in `ResolveSpec`/`DamageSpec` as regressions on the new path.
 
 **New card data.** `data/cards/hardened-scales.json` and `corpsejack-menace.json` (Task 6), `primal-plasma.json` (Task 8), `doubling-season.json` (Task 9).
 
@@ -98,20 +98,20 @@ State these in the completion note (Task 10). They are corrections, not drift.
 `ReplacementEffect` grows from one card-shaped constructor into six event-class arms with pattern data. The existing pure zone-change fold is adapted to the new shape and stays pure; no CR 616 loop yet.
 
 **Files:**
-- Create: `source/library/Pawl/Type/ControllerRelation.hs`, `PermanentCriterion.hs`, `ZoneChangePattern.hs`, `CounterPattern.hs`, `TokenPattern.hs`, `DamagePattern.hs`, `Scaling.hs`, `EntryOption.hs`, `EntryRewrite.hs`, `DamageRewrite.hs`, `DestructionRewrite.hs` (all under `source/library/Pawl/Type/`)
-- Modify: `source/library/Pawl/Type/ReplacementEffect.hs` (whole file)
-- Modify: `source/library/Pawl/Codec.hs` (add 11 codec pairs; replace `replacementEffectToJson`/`jsonToReplacementEffect` at lines 954–963)
-- Modify: `source/library/Pawl/Projection.hs:646-654` (`replacementsAffecting` returns pairs)
-- Modify: `source/library/Pawl/Event.hs:171` and `:296-309` (`applyReplacements`/`applyOne`)
+- Create: `source/library/Parun/Type/ControllerRelation.hs`, `PermanentCriterion.hs`, `ZoneChangePattern.hs`, `CounterPattern.hs`, `TokenPattern.hs`, `DamagePattern.hs`, `Scaling.hs`, `EntryOption.hs`, `EntryRewrite.hs`, `DamageRewrite.hs`, `DestructionRewrite.hs` (all under `source/library/Parun/Type/`)
+- Modify: `source/library/Parun/Type/ReplacementEffect.hs` (whole file)
+- Modify: `source/library/Parun/Codec.hs` (add 11 codec pairs; replace `replacementEffectToJson`/`jsonToReplacementEffect` at lines 954–963)
+- Modify: `source/library/Parun/Projection.hs:646-654` (`replacementsAffecting` returns pairs)
+- Modify: `source/library/Parun/Event.hs:171` and `:296-309` (`applyReplacements`/`applyOne`)
 - Modify: `data/cards/rest-in-peace.json`
-- Test: `source/test-suite/Pawl/EventSpec.hs:31-43`, `source/test-suite/Pawl/CodecSpec.hs:178`, `source/test-suite/Pawl/ProjectionSpec.hs:387`
+- Test: `source/test-suite/Parun/EventSpec.hs:31-43`, `source/test-suite/Parun/CodecSpec.hs:178`, `source/test-suite/Parun/ProjectionSpec.hs:387`
 
 **Interfaces:**
 - Produces: `ReplacementEffect = ZoneChangeR ZoneChangePattern Zone | EntryR EntryRewrite | DamageR DamagePattern DamageRewrite | DestructionR DestructionRewrite | CounterR CounterPattern Scaling | TokenR TokenPattern Scaling`, deriving `(Eq, Ord, Show)`; `Projection.replacementsAffecting :: GameState -> [(ObjectId, ReplacementEffect)]`; codec pairs `<x>ToJson`/`jsonTo<X>` for all 11 new types.
 
 - [x] **Step 1: Write the failing codec round-trip test**
 
-In `source/test-suite/Pawl/CodecSpec.hs`, replace the `RedirectZoneChange` round-trip at line 178 with this one (keep the surrounding `testCase` scaffolding style used by its neighbours; add `import qualified Pawl.Type.ControllerRelation as ControllerRelation`, `CounterPattern`, `CounterKind`, `EntryOption`, `EntryRewrite`, `Keyword`, `PermanentCriterion`, `Scaling`, `ZoneChangePattern` as needed):
+In `source/test-suite/Parun/CodecSpec.hs`, replace the `RedirectZoneChange` round-trip at line 178 with this one (keep the surrounding `testCase` scaffolding style used by its neighbours; add `import qualified Parun.Type.ControllerRelation as ControllerRelation`, `CounterPattern`, `CounterKind`, `EntryOption`, `EntryRewrite`, `Keyword`, `PermanentCriterion`, `Scaling`, `ZoneChangePattern` as needed):
 
 ```haskell
       HU.testCase "a ZoneChangeR replacement round-trips" $
@@ -147,14 +147,14 @@ In `source/test-suite/Pawl/CodecSpec.hs`, replace the `RedirectZoneChange` round
 - [x] **Step 2: Run it to watch it fail**
 
 Run: `cabal build all --enable-tests --enable-benchmarks 2>&1 | tail -30`
-Expected: FAIL to compile — `Not in scope: data constructor 'ReplacementEffect.ZoneChangeR'` (and the new `Pawl.Type.*` modules are missing).
+Expected: FAIL to compile — `Not in scope: data constructor 'ReplacementEffect.ZoneChangeR'` (and the new `Parun.Type.*` modules are missing).
 
 - [x] **Step 3: Add the eleven leaf type modules**
 
-`source/library/Pawl/Type/ControllerRelation.hs`:
+`source/library/Parun/Type/ControllerRelation.hs`:
 
 ```haskell
-module Pawl.Type.ControllerRelation where
+module Parun.Type.ControllerRelation where
 
 -- CR 614.1 / 109.5: whose object a replacement's pattern admits, relative to the
 -- controller of the effect's SOURCE (that is what "you" means on a permanent's
@@ -169,15 +169,15 @@ data ControllerRelation
   deriving (Eq, Ord, Show)
 ```
 
-`source/library/Pawl/Type/PermanentCriterion.hs`:
+`source/library/Parun/Type/PermanentCriterion.hs`:
 
 ```haskell
-module Pawl.Type.PermanentCriterion where
+module Parun.Type.PermanentCriterion where
 
 -- CR 614.1: which permanents a replacement's pattern admits. Hardened Scales
 -- scopes to creatures; Doubling Season's counter clause to any permanent.
 --
--- The sibling of Pawl.Type.CardCriterion, deliberately NOT merged with it: P9
+-- The sibling of Parun.Type.CardCriterion, deliberately NOT merged with it: P9
 -- merges both into one filter language, and merging them here would be building
 -- half of P9 with one customer.
 data PermanentCriterion
@@ -186,13 +186,13 @@ data PermanentCriterion
   deriving (Eq, Ord, Show)
 ```
 
-`source/library/Pawl/Type/ZoneChangePattern.hs`:
+`source/library/Parun/Type/ZoneChangePattern.hs`:
 
 ```haskell
-module Pawl.Type.ZoneChangePattern where
+module Parun.Type.ZoneChangePattern where
 
-import Pawl.Type.ControllerRelation (ControllerRelation)
-import Pawl.Type.Zone (Zone)
+import Parun.Type.ControllerRelation (ControllerRelation)
+import Parun.Type.Zone (Zone)
 
 -- CR 614.1a: which zone changes a redirect intercepts. Rest in Peace is
 -- (Graveyard, Anyones) -- any object that would be put into a graveyard from
@@ -206,14 +206,14 @@ data ZoneChangePattern = MkZoneChangePattern
   deriving (Eq, Ord, Show)
 ```
 
-`source/library/Pawl/Type/CounterPattern.hs`:
+`source/library/Parun/Type/CounterPattern.hs`:
 
 ```haskell
-module Pawl.Type.CounterPattern where
+module Parun.Type.CounterPattern where
 
-import Pawl.Type.ControllerRelation (ControllerRelation)
-import Pawl.Type.CounterKind (CounterKind)
-import Pawl.Type.PermanentCriterion (PermanentCriterion)
+import Parun.Type.ControllerRelation (ControllerRelation)
+import Parun.Type.CounterKind (CounterKind)
+import Parun.Type.PermanentCriterion (PermanentCriterion)
 
 -- CR 122.6 / 614.1: which counter placements a scaling replacement intercepts.
 -- Hardened Scales is (Just PlusOnePlusOne, Yours, CreaturePermanent); Doubling
@@ -228,12 +228,12 @@ data CounterPattern = MkCounterPattern
   deriving (Eq, Ord, Show)
 ```
 
-`source/library/Pawl/Type/TokenPattern.hs`:
+`source/library/Parun/Type/TokenPattern.hs`:
 
 ```haskell
-module Pawl.Type.TokenPattern where
+module Parun.Type.TokenPattern where
 
-import Pawl.Type.ControllerRelation (ControllerRelation)
+import Parun.Type.ControllerRelation (ControllerRelation)
 
 -- CR 111.1 / 614.1: which token creations a scaling replacement intercepts.
 -- Doubling Season's token clause is Yours ("under your control"). No card
@@ -244,12 +244,12 @@ newtype TokenPattern = MkTokenPattern
   deriving (Eq, Ord, Show)
 ```
 
-`source/library/Pawl/Type/DamagePattern.hs`:
+`source/library/Parun/Type/DamagePattern.hs`:
 
 ```haskell
-module Pawl.Type.DamagePattern where
+module Parun.Type.DamagePattern where
 
-import Pawl.Type.DamageKind (DamageKind)
+import Parun.Type.DamageKind (DamageKind)
 
 -- CR 615.1: which damage events a prevention intercepts. Fog is (Just Combat).
 -- Nothing means any kind. CR 615's shields that name a SOURCE, an AMOUNT, or a
@@ -260,10 +260,10 @@ newtype DamagePattern = MkDamagePattern
   deriving (Eq, Ord, Show)
 ```
 
-`source/library/Pawl/Type/Scaling.hs`:
+`source/library/Parun/Type/Scaling.hs`:
 
 ```haskell
-module Pawl.Type.Scaling where
+module Parun.Type.Scaling where
 
 import Numeric.Natural (Natural)
 
@@ -277,13 +277,13 @@ data Scaling
   deriving (Eq, Ord, Show)
 ```
 
-`source/library/Pawl/Type/EntryOption.hs`:
+`source/library/Parun/Type/EntryOption.hs`:
 
 ```haskell
-module Pawl.Type.EntryOption where
+module Parun.Type.EntryOption where
 
 import Data.Set (Set)
-import Pawl.Type.Keyword (Keyword)
+import Parun.Type.Keyword (Keyword)
 
 -- CR 208.2b / 614.1c: one of the shapes an "as this creature enters, it becomes
 -- your choice of ..." ability offers. Primal Plasma's three are (3,3,{}),
@@ -302,12 +302,12 @@ data EntryOption = MkEntryOption
   deriving (Eq, Ord, Show)
 ```
 
-`source/library/Pawl/Type/EntryRewrite.hs`:
+`source/library/Parun/Type/EntryRewrite.hs`:
 
 ```haskell
-module Pawl.Type.EntryRewrite where
+module Parun.Type.EntryRewrite where
 
-import Pawl.Type.EntryOption (EntryOption)
+import Parun.Type.EntryOption (EntryOption)
 
 -- CR 614.1c: how an "as this permanent enters" replacement modifies the entry.
 -- AsCopy is Clone (CR 707.5, and a real "may" -- declining is legal); ChoiceOf
@@ -321,10 +321,10 @@ data EntryRewrite
   deriving (Eq, Ord, Show)
 ```
 
-`source/library/Pawl/Type/DamageRewrite.hs`:
+`source/library/Parun/Type/DamageRewrite.hs`:
 
 ```haskell
-module Pawl.Type.DamageRewrite where
+module Parun.Type.DamageRewrite where
 
 -- CR 615.1: how a prevention rewrites a damage event. PreventAll cancels it
 -- outright (Fog) -- CR 615.6, a prevented event never happens. CR 615.7's shared
@@ -334,10 +334,10 @@ data DamageRewrite = PreventAll
   deriving (Eq, Ord, Show)
 ```
 
-`source/library/Pawl/Type/DestructionRewrite.hs`:
+`source/library/Parun/Type/DestructionRewrite.hs`:
 
 ```haskell
-module Pawl.Type.DestructionRewrite where
+module Parun.Type.DestructionRewrite where
 
 -- CR 614.8 / 701.19a: how a replacement rewrites a would-be-destroyed event.
 -- Regenerate is "instead, tap it, remove all damage from it, and remove it from
@@ -349,20 +349,20 @@ data DestructionRewrite = Regenerate
 
 - [x] **Step 4: Reshape `ReplacementEffect`**
 
-Replace the whole of `source/library/Pawl/Type/ReplacementEffect.hs`:
+Replace the whole of `source/library/Parun/Type/ReplacementEffect.hs`:
 
 ```haskell
-module Pawl.Type.ReplacementEffect where
+module Parun.Type.ReplacementEffect where
 
-import Pawl.Type.CounterPattern (CounterPattern)
-import Pawl.Type.DamagePattern (DamagePattern)
-import Pawl.Type.DamageRewrite (DamageRewrite)
-import Pawl.Type.DestructionRewrite (DestructionRewrite)
-import Pawl.Type.EntryRewrite (EntryRewrite)
-import Pawl.Type.Scaling (Scaling)
-import Pawl.Type.TokenPattern (TokenPattern)
-import Pawl.Type.ZoneChangePattern (ZoneChangePattern)
-import Pawl.Type.Zone (Zone)
+import Parun.Type.CounterPattern (CounterPattern)
+import Parun.Type.DamagePattern (DamagePattern)
+import Parun.Type.DamageRewrite (DamageRewrite)
+import Parun.Type.DestructionRewrite (DestructionRewrite)
+import Parun.Type.EntryRewrite (EntryRewrite)
+import Parun.Type.Scaling (Scaling)
+import Parun.Type.TokenPattern (TokenPattern)
+import Parun.Type.ZoneChangePattern (ZoneChangePattern)
+import Parun.Type.Zone (Zone)
 
 -- CR 614.1a: a replacement effect, classified by the EVENT CLASS it intercepts
 -- and the REWRITE SHAPE it applies. One arm per replaceable event class -- the
@@ -382,7 +382,7 @@ import Pawl.Type.Zone (Zone)
 -- ("[Objects] enter the battlefield ...", Essence of the Wild) has no producer,
 -- so the field appears when a card needs it rather than as speculative structure.
 --
--- Only Pawl.Replacement may case on this for RULES purposes; Pawl.Codec also
+-- Only Parun.Replacement may case on this for RULES purposes; Parun.Codec also
 -- cases on every constructor, but only as the JSON data boundary.
 data ReplacementEffect
   = ZoneChangeR ZoneChangePattern Zone
@@ -396,7 +396,7 @@ data ReplacementEffect
 
 - [x] **Step 5: Add the codec pairs**
 
-In `source/library/Pawl/Codec.hs`, add the eleven import lines (alphabetically, alongside the existing `Pawl.Type.*` imports): `ControllerRelation`, `CounterPattern`, `DamagePattern`, `DamageRewrite`, `DestructionRewrite`, `EntryOption`, `EntryRewrite`, `PermanentCriterion`, `Scaling`, `TokenPattern`, `ZoneChangePattern`. Then add, next to the existing `preventionToJson` block:
+In `source/library/Parun/Codec.hs`, add the eleven import lines (alphabetically, alongside the existing `Parun.Type.*` imports): `ControllerRelation`, `CounterPattern`, `DamagePattern`, `DamageRewrite`, `DestructionRewrite`, `EntryOption`, `EntryRewrite`, `PermanentCriterion`, `Scaling`, `TokenPattern`, `ZoneChangePattern`. Then add, next to the existing `preventionToJson` block:
 
 ```haskell
 controllerRelationToJson :: ControllerRelation.ControllerRelation -> Value
@@ -605,7 +605,7 @@ jsonToReplacementEffect value = do
 
 - [x] **Step 6: Carry the source through `replacementsAffecting`**
 
-A `ControllerRelation` needs the effect's source, which a bare `[ReplacementEffect]` cannot supply. In `source/library/Pawl/Projection.hs`, replace `replacementsAffecting` (lines 646–654):
+A `ControllerRelation` needs the effect's source, which a bare `[ReplacementEffect]` cannot supply. In `source/library/Parun/Projection.hs`, replace `replacementsAffecting` (lines 646–654):
 
 ```haskell
 -- CR 614.6: every replacement effect active on the battlefield, PAIRED WITH ITS
@@ -631,7 +631,7 @@ replacementsAffecting gs =
 
 - [x] **Step 7: Adapt the pure zone-change fold**
 
-In `source/library/Pawl/Event.hs`, change line 171 to `resolved = applyReplacements gs (Projection.replacementsAffecting gs) proposed`, and replace `applyReplacements`/`applyOne` (lines 296–309):
+In `source/library/Parun/Event.hs`, change line 171 to `resolved = applyReplacements gs (Projection.replacementsAffecting gs) proposed`, and replace `applyReplacements`/`applyOne` (lines 296–309):
 
 ```haskell
 -- CR 614: rewrite the proposed zone change by each active replacement, paired
@@ -641,7 +641,7 @@ In `source/library/Pawl/Event.hs`, change line 171 to `resolved = applyReplaceme
 --
 -- This pure fold is a TRANSITIONAL shape. It cannot ask a question and it invents
 -- an order when two replacements apply -- CR 616.1's own violation, which this
--- phase exists to retire. Pawl.Replacement replaces it entirely; nothing else
+-- phase exists to retire. Parun.Replacement replaces it entirely; nothing else
 -- about it is meant to survive.
 applyReplacements :: GameState -> [(ObjectId, ReplacementEffect)] -> ZoneChange -> ZoneChange
 applyReplacements gs res zc = List.foldl' (applyOne gs) zc res
@@ -669,7 +669,7 @@ matchesController gs src rel oid = case rel of
   ControllerRelation.Yours -> Projection.controllerOf oid gs == Projection.controllerOf src gs
 ```
 
-Add `import Pawl.Type.ControllerRelation (ControllerRelation)`, `import qualified Pawl.Type.ControllerRelation as ControllerRelation` and `import qualified Pawl.Type.ZoneChangePattern as ZoneChangePattern` to `Pawl.Event`.
+Add `import Parun.Type.ControllerRelation (ControllerRelation)`, `import qualified Parun.Type.ControllerRelation as ControllerRelation` and `import qualified Parun.Type.ZoneChangePattern as ZoneChangePattern` to `Parun.Event`.
 
 - [x] **Step 8: Migrate `rest-in-peace.json`**
 
@@ -681,7 +681,7 @@ Replace the `replacementEffects` value in `data/cards/rest-in-peace.json` (leave
 
 - [x] **Step 9: Update the three existing tests that name the old constructor**
 
-`source/test-suite/Pawl/EventSpec.hs`, replace the three `applyReplacements` cases at lines 31–43:
+`source/test-suite/Parun/EventSpec.hs`, replace the three `applyReplacements` cases at lines 31–43:
 
 ```haskell
     [ HU.testCase "CR 614.1a a graveyard-bound move is redirected to exile" $
@@ -702,9 +702,9 @@ Replace the `replacementEffects` value in `data/cards/rest-in-peace.json` (leave
          in HU.assertEqual "battlefield unchanged" Zone.Battlefield (ZoneChange.to (Event.applyReplacements gs [(ObjectId.MkObjectId 0, rip)] proposed)),
 ```
 
-Add `import qualified Pawl.Type.ControllerRelation as ControllerRelation` and `import qualified Pawl.Type.ZoneChangePattern as ZoneChangePattern` to `EventSpec`.
+Add `import qualified Parun.Type.ControllerRelation as ControllerRelation` and `import qualified Parun.Type.ZoneChangePattern as ZoneChangePattern` to `EventSpec`.
 
-`source/test-suite/Pawl/ProjectionSpec.hs:387` — replace `[ReplacementEffect.RedirectZoneChange Zone.Graveyard Zone.Exile]` with `[ReplacementEffect.ZoneChangeR (ZoneChangePattern.MkZoneChangePattern Zone.Graveyard ControllerRelation.Anyones) Zone.Exile]`, importing the two modules. That assertion reads `Projection.replacementsOf`, which still returns `[ReplacementEffect]` — unchanged. If the assertion instead reads `replacementsAffecting`, wrap the expectation as a `[(ObjectId, ReplacementEffect)]` pair list.
+`source/test-suite/Parun/ProjectionSpec.hs:387` — replace `[ReplacementEffect.RedirectZoneChange Zone.Graveyard Zone.Exile]` with `[ReplacementEffect.ZoneChangeR (ZoneChangePattern.MkZoneChangePattern Zone.Graveyard ControllerRelation.Anyones) Zone.Exile]`, importing the two modules. That assertion reads `Projection.replacementsOf`, which still returns `[ReplacementEffect]` — unchanged. If the assertion instead reads `replacementsAffecting`, wrap the expectation as a `[(ObjectId, ReplacementEffect)]` pair list.
 
 - [x] **Step 10: Build and run the suite**
 
@@ -714,7 +714,7 @@ Expected: PASS, whole suite green (670+ cases), no warnings.
 - [x] **Step 11: Commit**
 
 ```bash
-git add source/library/Pawl/Type/ControllerRelation.hs source/library/Pawl/Type/PermanentCriterion.hs source/library/Pawl/Type/ZoneChangePattern.hs source/library/Pawl/Type/CounterPattern.hs source/library/Pawl/Type/TokenPattern.hs source/library/Pawl/Type/DamagePattern.hs source/library/Pawl/Type/Scaling.hs source/library/Pawl/Type/EntryOption.hs source/library/Pawl/Type/EntryRewrite.hs source/library/Pawl/Type/DamageRewrite.hs source/library/Pawl/Type/DestructionRewrite.hs source/library/Pawl/Type/ReplacementEffect.hs source/library/Pawl/Codec.hs source/library/Pawl/Event.hs source/library/Pawl/Projection.hs data/cards/rest-in-peace.json source/test-suite/Pawl/EventSpec.hs source/test-suite/Pawl/CodecSpec.hs source/test-suite/Pawl/ProjectionSpec.hs pawl.cabal
+git add source/library/Parun/Type/ControllerRelation.hs source/library/Parun/Type/PermanentCriterion.hs source/library/Parun/Type/ZoneChangePattern.hs source/library/Parun/Type/CounterPattern.hs source/library/Parun/Type/TokenPattern.hs source/library/Parun/Type/DamagePattern.hs source/library/Parun/Type/Scaling.hs source/library/Parun/Type/EntryOption.hs source/library/Parun/Type/EntryRewrite.hs source/library/Parun/Type/DamageRewrite.hs source/library/Parun/Type/DestructionRewrite.hs source/library/Parun/Type/ReplacementEffect.hs source/library/Parun/Codec.hs source/library/Parun/Event.hs source/library/Parun/Projection.hs data/cards/rest-in-peace.json source/test-suite/Parun/EventSpec.hs source/test-suite/Parun/CodecSpec.hs source/test-suite/Parun/ProjectionSpec.hs parun.cabal
 hooky fix
 git add -u
 hooky run
@@ -734,16 +734,16 @@ Co-Authored-By: Claude Opus 4.8 (1M context) <noreply@anthropic.com>"
 **The one task that carries the risk.** Zero behaviour change; the whole existing suite must stay green. Nothing new is added — the five change-and-emit funnels and the state-based-action pass simply stop being pure `GameState -> GameState` and become `Game`, because in Task 3 they will each need to prompt.
 
 **Files:**
-- Modify: `source/library/Pawl/Event.hs` (`placeObject`, `changeZone`, `destroy`, `regenerate`, `counter`, `sacrifice`, `createToken`, `drawCard`)
-- Modify: `source/library/Pawl/Damage.hs:157-174` (`applyDamage`), `:217-220` (`dealWave`)
-- Modify: `source/library/Pawl/Sba.hs:101-183` (`checkStateBasedActions`, `performStateBasedActions`)
-- Modify: `source/library/Pawl/Resolve.hs` (lines 300, 308, 387, 464, 481, 491, 500, 509, 521, 533, 556–572, 612, 690–696)
-- Modify: `source/library/Pawl/Engine.hs:93`, `:96`, `:141-142`, `:393-395`, `:436`
-- Modify: `source/library/Pawl/Stack.hs:42`
-- Modify: `source/library/Pawl/Cast.hs:202-213`
-- Modify: `source/library/Pawl/Activate.hs:133-149`
-- Modify: `source/library/Pawl/Setup.hs:123-124`
-- Test: `source/test-suite/Pawl/Support.hs` (add `runPure`, `settleSba`), and every spec that calls a now-monadic function
+- Modify: `source/library/Parun/Event.hs` (`placeObject`, `changeZone`, `destroy`, `regenerate`, `counter`, `sacrifice`, `createToken`, `drawCard`)
+- Modify: `source/library/Parun/Damage.hs:157-174` (`applyDamage`), `:217-220` (`dealWave`)
+- Modify: `source/library/Parun/Sba.hs:101-183` (`checkStateBasedActions`, `performStateBasedActions`)
+- Modify: `source/library/Parun/Resolve.hs` (lines 300, 308, 387, 464, 481, 491, 500, 509, 521, 533, 556–572, 612, 690–696)
+- Modify: `source/library/Parun/Engine.hs:93`, `:96`, `:141-142`, `:393-395`, `:436`
+- Modify: `source/library/Parun/Stack.hs:42`
+- Modify: `source/library/Parun/Cast.hs:202-213`
+- Modify: `source/library/Parun/Activate.hs:133-149`
+- Modify: `source/library/Parun/Setup.hs:123-124`
+- Test: `source/test-suite/Parun/Support.hs` (add `runPure`, `settleSba`), and every spec that calls a now-monadic function
 
 **Interfaces:**
 - Consumes: nothing from Task 1 beyond a compiling tree.
@@ -751,7 +751,7 @@ Co-Authored-By: Claude Opus 4.8 (1M context) <noreply@anthropic.com>"
 
 - [x] **Step 1: Add the two test helpers first (they are what keeps the test ripple mechanical)**
 
-In `source/test-suite/Pawl/Support.hs`, next to `fightWith`:
+In `source/test-suite/Parun/Support.hs`, next to `fightWith`:
 
 ```haskell
 -- Run a Game action purely under an answerer and keep only the final state. The
@@ -767,16 +767,16 @@ settleSba :: GameState.GameState -> GameState.GameState
 settleSba gs = runPure identityAnswer gs Sba.checkStateBasedActions
 ```
 
-Add `import qualified Pawl.Sba as Sba` to `Support.hs`.
+Add `import qualified Parun.Sba as Sba` to `Support.hs`.
 
 - [x] **Step 2: Run the build to confirm the helpers compile against the still-pure engine**
 
 Run: `cabal build all --enable-tests --enable-benchmarks 2>&1 | tail -20`
 Expected: FAIL — `Couldn't match type 'GameState -> GameState' with 'StateT GameState …'` on `settleSba`. That is the failing check for this task: it is red precisely because `Sba.checkStateBasedActions` is still pure.
 
-- [x] **Step 3: Make `Pawl.Event`'s funnels monadic**
+- [x] **Step 3: Make `Parun.Event`'s funnels monadic**
 
-`source/library/Pawl/Event.hs`. Add `import qualified Control.Monad.Trans.State.Strict as State` and `import Pawl.Type.Game (Game)`. Rewrite these seven definitions (every comment above each one is kept verbatim; only the body and signature change):
+`source/library/Parun/Event.hs`. Add `import qualified Control.Monad.Trans.State.Strict as State` and `import Parun.Type.Game (Game)`. Rewrite these seven definitions (every comment above each one is kept verbatim; only the body and signature change):
 
 ```haskell
 placeObject :: PlayerId -> (Timestamp.Timestamp -> Object.Object) -> Zone -> Game ObjectId
@@ -880,7 +880,7 @@ drawCard pid = do
 
 - [x] **Step 4: Make `Damage.applyDamage` monadic**
 
-`source/library/Pawl/Damage.hs`, replacing lines 157–174 and 217–220 (keeping the comments):
+`source/library/Parun/Damage.hs`, replacing lines 157–174 and 217–220 (keeping the comments):
 
 ```haskell
 applyDamage :: [DamageEvent.DamageEvent] -> Game ()
@@ -906,7 +906,7 @@ dealWave assigns = do
 
 - [x] **Step 5: Make `Sba` monadic**
 
-`source/library/Pawl/Sba.hs`, replacing lines 98–183. The classification is still computed once against the pre-pass state (CR 704.4 simultaneity); only the *moves* become monadic binds:
+`source/library/Parun/Sba.hs`, replacing lines 98–183. The classification is still computed once against the pre-pass state (CR 704.4 simultaneity); only the *moves* become monadic binds:
 
 ```haskell
 -- CR 704.3 says to repeat until no state-based action is performed. One pass is
@@ -1005,17 +1005,17 @@ performStateBasedActions = do
   pure acted
 ```
 
-Add `import qualified Control.Monad as Monad`, `import qualified Control.Monad.Trans.State.Strict as State` and `import Pawl.Type.Game (Game)` to `Pawl.Sba`.
+Add `import qualified Control.Monad as Monad`, `import qualified Control.Monad.Trans.State.Strict as State` and `import Parun.Type.Game (Game)` to `Parun.Sba`.
 
 - [x] **Step 6: Follow the funnels through the six calling modules**
 
 Each of these is the same rewrite: a `State.modify' (f … gs)` or a `List.foldl'` over `GameState` becomes a monadic bind or `Monad.mapM_`. Work them in this order and rebuild after each file.
 
-`source/library/Pawl/Stack.hs:42` — `then Event.changeZone oid Zone.Battlefield`.
+`source/library/Parun/Stack.hs:42` — `then Event.changeZone oid Zone.Battlefield`.
 
-`source/library/Pawl/Setup.hs:124` — `drawCard pid = Event.drawCard pid`.
+`source/library/Parun/Setup.hs:124` — `drawCard pid = Event.drawCard pid`.
 
-`source/library/Pawl/Engine.hs`:
+`source/library/Parun/Engine.hs`:
 - `:93` — `checkSba = Sba.checkStateBasedActions`
 - `:96` — `drawFor pid = Event.drawCard pid`
 - `:141-142` — replace `toGraveyard`/`State.modify'` with `Monad.mapM_ (\oid -> Event.changeZone oid Zone.Graveyard) toDiscard`
@@ -1029,7 +1029,7 @@ Each of these is the same rewrite: a `State.modify' (f … gs)` or a `List.foldl
                     loop
   ```
 
-`source/library/Pawl/Cast.hs:202-213`:
+`source/library/Parun/Cast.hs:202-213`:
 ```haskell
               Just paid -> do
                 State.put paid
@@ -1048,7 +1048,7 @@ Each of these is the same rewrite: a `State.modify' (f … gs)` or a `List.foldl
                         }
 ```
 
-`source/library/Pawl/Activate.hs:133-149` — `payAdditional` becomes monadic and `payAll` becomes a `mapM_`:
+`source/library/Parun/Activate.hs:133-149` — `payAdditional` becomes monadic and `payAll` becomes a `mapM_`:
 ```haskell
           State.modify' (\g -> g {GameState.objects = Map.adjust (\o -> o {Object.bindings = Binding.fromChoices chosen Map.empty Nothing chosenModes}) abilId (GameState.objects g)})
           let additional = AbilityCost.additional (ActivatedAbility.cost ability)
@@ -1074,7 +1074,7 @@ payAdditional srcId c = case c of
   AdditionalCost.SacrificeSelf -> Event.changeZone srcId Zone.Graveyard
 ```
 
-`source/library/Pawl/Resolve.hs` — thirteen sites. Each `State.modify' $ \gs -> case … of (Just recipient, True) -> … Event.f target gs; _ -> gs` becomes:
+`source/library/Parun/Resolve.hs` — thirteen sites. Each `State.modify' $ \gs -> case … of (Just recipient, True) -> … Event.f target gs; _ -> gs` becomes:
 ```haskell
   Effect.Destroy slot -> do
     gs <- State.get
@@ -1160,7 +1160,7 @@ Expected: three timings, statistically indistinguishable from before (the monad 
 - [x] **Step 11: Commit**
 
 ```bash
-git add source/library/Pawl/Event.hs source/library/Pawl/Damage.hs source/library/Pawl/Sba.hs source/library/Pawl/Resolve.hs source/library/Pawl/Engine.hs source/library/Pawl/Stack.hs source/library/Pawl/Cast.hs source/library/Pawl/Activate.hs source/library/Pawl/Setup.hs source/test-suite/Pawl
+git add source/library/Parun/Event.hs source/library/Parun/Damage.hs source/library/Parun/Sba.hs source/library/Parun/Resolve.hs source/library/Parun/Engine.hs source/library/Parun/Stack.hs source/library/Parun/Cast.hs source/library/Parun/Activate.hs source/library/Parun/Setup.hs source/test-suite/Parun
 hooky fix
 git add -u
 hooky run
@@ -1176,16 +1176,16 @@ Co-Authored-By: Claude Opus 4.8 (1M context) <noreply@anthropic.com>"
 
 ---
 
-### Task 3: `Pawl.Replacement` — the CR 616.1 loop, with `WouldChangeZone` wired
+### Task 3: `Parun.Replacement` — the CR 616.1 loop, with `WouldChangeZone` wired
 
 **Files:**
-- Create: `source/library/Pawl/Type/ProposedEvent.hs`, `CandidateId.hs`, `ReplacementCandidate.hs`, `ReplacementBucket.hs`
-- Create: `source/library/Pawl/Replacement.hs`
-- Create: `source/test-suite/Pawl/ReplacementSpec.hs`
-- Modify: `source/library/Pawl/Type/Prompt.hs` (add `ChooseReplacement`), `Response.hs` (add `ChoseReplacement`), `source/library/Pawl/Replay.hs` (three arms)
-- Modify: `source/library/Pawl/Event.hs` (`changeZone` calls the loop; delete `applyReplacements`, `applyOne`, `matchesController`)
-- Modify: `source/test-suite/Pawl/Support.hs` (five answerers), `source/test-suite/Pawl/EventSpec.hs` (drop the three `applyReplacements` unit cases — the function is gone), `source/test-suite/Pawl/CopySpec.hs` (`copyNewest` falls through, no change needed)
-- Modify: `source/test-suite/Main.hs`, `pawl.cabal`
+- Create: `source/library/Parun/Type/ProposedEvent.hs`, `CandidateId.hs`, `ReplacementCandidate.hs`, `ReplacementBucket.hs`
+- Create: `source/library/Parun/Replacement.hs`
+- Create: `source/test-suite/Parun/ReplacementSpec.hs`
+- Modify: `source/library/Parun/Type/Prompt.hs` (add `ChooseReplacement`), `Response.hs` (add `ChoseReplacement`), `source/library/Parun/Replay.hs` (three arms)
+- Modify: `source/library/Parun/Event.hs` (`changeZone` calls the loop; delete `applyReplacements`, `applyOne`, `matchesController`)
+- Modify: `source/test-suite/Parun/Support.hs` (five answerers), `source/test-suite/Parun/EventSpec.hs` (drop the three `applyReplacements` unit cases — the function is gone), `source/test-suite/Parun/CopySpec.hs` (`copyNewest` falls through, no change needed)
+- Modify: `source/test-suite/Main.hs`, `parun.cabal`
 
 **Interfaces:**
 - Consumes: `ReplacementEffect` and its patterns (Task 1); `Event.changeZone :: ObjectId -> Zone -> Game ()` (Task 2).
@@ -1193,28 +1193,28 @@ Co-Authored-By: Claude Opus 4.8 (1M context) <noreply@anthropic.com>"
 
 - [x] **Step 1: Write the failing test**
 
-Create `source/test-suite/Pawl/ReplacementSpec.hs`:
+Create `source/test-suite/Parun/ReplacementSpec.hs`:
 
 ```haskell
 {-# LANGUAGE GADTs #-}
 {-# LANGUAGE RankNTypes #-}
 
--- Covers: Pawl.Replacement (the CR 616.1 loop, its buckets and its prompt) and
+-- Covers: Parun.Replacement (the CR 616.1 loop, its buckets and its prompt) and
 -- the funnels that raise proposed events through it. Gameplay-level throughout:
 -- put a board together, cast or resolve, assert on game state.
-module Pawl.ReplacementSpec where
+module Parun.ReplacementSpec where
 
 import qualified Data.Set as Set
-import qualified Pawl.Cards as Cards
-import qualified Pawl.Event as Event
-import qualified Pawl.Game as Game
-import qualified Pawl.Replay as Replay
-import qualified Pawl.Setup as Setup
-import qualified Pawl.Support as S
-import qualified Pawl.Type.Game as Game.Type
-import qualified Pawl.Type.GameState as GameState
-import qualified Pawl.Type.Response as Response
-import qualified Pawl.Type.Zone as Zone
+import qualified Parun.Cards as Cards
+import qualified Parun.Event as Event
+import qualified Parun.Game as Game
+import qualified Parun.Replay as Replay
+import qualified Parun.Setup as Setup
+import qualified Parun.Support as S
+import qualified Parun.Type.Game as Game.Type
+import qualified Parun.Type.GameState as GameState
+import qualified Parun.Type.Response as Response
+import qualified Parun.Type.Zone as Zone
 import qualified Test.Tasty as Tasty
 import qualified Test.Tasty.HUnit as HU
 
@@ -1234,7 +1234,7 @@ wasAskedToReplace = any isReplacement
 tests :: Cards.Cards -> Tasty.TestTree
 tests cards =
   Tasty.testGroup
-    "Pawl.Replacement"
+    "Parun.Replacement"
     [ HU.testCase "CR 614.5 two Rest in Peaces redirect once, not twice" $
         let (_, g0) = S.addCreature (Cards.restInPeacePrinting cards) S.alice (Setup.emptyGame S.bothPlayers)
             (_, g1) = S.addCreature (Cards.restInPeacePrinting cards) S.alice g0
@@ -1254,9 +1254,9 @@ tests cards =
 
 `S.PromptOf` does not exist; write the signature inline instead as
 `answersFor :: (forall r. Prompt.Prompt r -> r) -> GameState.GameState -> Game.Type.Game a -> [Response.Response]`
-with `import qualified Pawl.Type.Prompt as Prompt`.
+with `import qualified Parun.Type.Prompt as Prompt`.
 
-Register it: add `ReplacementSpec.tests cards` to `testTree` in `source/test-suite/Main.hs` (after `CopySpec.tests cards`) with the matching `import qualified Pawl.ReplacementSpec as ReplacementSpec`, and let `hooky fix` add `Pawl.ReplacementSpec` to the test-suite `other-modules` via `cabal-gild`.
+Register it: add `ReplacementSpec.tests cards` to `testTree` in `source/test-suite/Main.hs` (after `CopySpec.tests cards`) with the matching `import qualified Parun.ReplacementSpec as ReplacementSpec`, and let `hooky fix` add `Parun.ReplacementSpec` to the test-suite `other-modules` via `cabal-gild`.
 
 - [x] **Step 2: Run it to watch it fail**
 
@@ -1265,21 +1265,21 @@ Expected: FAIL — `Not in scope: data constructor 'Response.ChoseReplacement'`.
 
 - [x] **Step 3: Add the four loop types**
 
-`source/library/Pawl/Type/ProposedEvent.hs`:
+`source/library/Parun/Type/ProposedEvent.hs`:
 
 ```haskell
-module Pawl.Type.ProposedEvent where
+module Parun.Type.ProposedEvent where
 
 import Numeric.Natural (Natural)
-import Pawl.Type.Card (Card)
-import Pawl.Type.CounterKind (CounterKind)
-import Pawl.Type.DamageEvent (DamageEvent)
-import Pawl.Type.ObjectId (ObjectId)
-import Pawl.Type.PlayerId (PlayerId)
-import Pawl.Type.ZoneChange (ZoneChange)
+import Parun.Type.Card (Card)
+import Parun.Type.CounterKind (CounterKind)
+import Parun.Type.DamageEvent (DamageEvent)
+import Parun.Type.ObjectId (ObjectId)
+import Parun.Type.PlayerId (PlayerId)
+import Parun.Type.ZoneChange (ZoneChange)
 
 -- CR 614.6: an event as it WOULD happen -- the thing a replacement effect
--- rewrites. Deliberately distinct from Pawl.Type.GameEvent: a GameEvent is
+-- rewrites. Deliberately distinct from Parun.Type.GameEvent: a GameEvent is
 -- HISTORY (it carries a CR 608.2h last-known-information snapshot and exists only
 -- after the fact), while a ProposedEvent exists only while it is being replaced,
 -- and the one that survives the CR 616.1 loop is the one that actually happens.
@@ -1302,14 +1302,14 @@ data ProposedEvent
   deriving (Eq, Show)
 ```
 
-`source/library/Pawl/Type/CandidateId.hs`:
+`source/library/Parun/Type/CandidateId.hs`:
 
 ```haskell
-module Pawl.Type.CandidateId where
+module Parun.Type.CandidateId where
 
-import Pawl.Type.ObjectId (ObjectId)
-import Pawl.Type.ReplacementEffect (ReplacementEffect)
-import Pawl.Type.Timestamp (Timestamp)
+import Parun.Type.ObjectId (ObjectId)
+import Parun.Type.ReplacementEffect (ReplacementEffect)
+import Parun.Type.Timestamp (Timestamp)
 
 -- CR 614.5's identity: "A replacement effect doesn't invoke itself repeatedly; it
 -- gets only one opportunity to affect an event or any modified events that may
@@ -1339,14 +1339,14 @@ data CandidateId
   deriving (Eq, Ord, Show)
 ```
 
-`source/library/Pawl/Type/ReplacementCandidate.hs`:
+`source/library/Parun/Type/ReplacementCandidate.hs`:
 
 ```haskell
-module Pawl.Type.ReplacementCandidate where
+module Parun.Type.ReplacementCandidate where
 
-import Pawl.Type.CandidateId (CandidateId)
-import Pawl.Type.ObjectId (ObjectId)
-import Pawl.Type.ReplacementEffect (ReplacementEffect)
+import Parun.Type.CandidateId (CandidateId)
+import Parun.Type.ObjectId (ObjectId)
+import Parun.Type.ReplacementEffect (ReplacementEffect)
 
 -- One replacement effect instance as the CR 616.1 loop sees it: what it does,
 -- whose it is (CR 109.5's "you", which every ControllerRelation pattern reads),
@@ -1361,10 +1361,10 @@ data ReplacementCandidate = MkReplacementCandidate
   deriving (Eq, Ord, Show)
 ```
 
-`source/library/Pawl/Type/ReplacementBucket.hs`:
+`source/library/Parun/Type/ReplacementBucket.hs`:
 
 ```haskell
-module Pawl.Type.ReplacementBucket where
+module Parun.Type.ReplacementBucket where
 
 -- CR 616.1a-e: the five ordered buckets the affected player picks from. The
 -- HIGHEST non-empty bucket wins, and Ord here is ascending in the CR's own order,
@@ -1386,7 +1386,7 @@ data ReplacementBucket
 
 - [x] **Step 4: Add the prompt, the response, and the replay arms**
 
-`source/library/Pawl/Type/Prompt.hs`, appended to the GADT:
+`source/library/Parun/Type/Prompt.hs`, appended to the GADT:
 
 ```haskell
   -- CR 616.1: with two or more applicable replacement or prevention effects in
@@ -1411,7 +1411,7 @@ data ReplacementBucket
   ChooseReplacement :: Decider -> PlayerId -> [ObjectId] -> Prompt Natural
 ```
 
-`source/library/Pawl/Type/Response.hs`, appended:
+`source/library/Parun/Type/Response.hs`, appended:
 
 ```haskell
   | -- CR 616.1: the index of the replacement effect a player chose to apply next,
@@ -1419,7 +1419,7 @@ data ReplacementBucket
     ChoseReplacement Natural
 ```
 
-`source/library/Pawl/Replay.hs`:
+`source/library/Parun/Replay.hs`:
 - `encode`: `Prompt.ChooseReplacement {} -> Response.ChoseReplacement answer`
 - `decode`: `Prompt.ChooseReplacement {} -> case response of Response.ChoseReplacement n -> Just n; _ -> Nothing`
 - `defaultAnswer`:
@@ -1429,17 +1429,17 @@ data ReplacementBucket
   Prompt.ChooseReplacement {} -> 0
   ```
 
-`source/test-suite/Pawl/Support.hs` — add `Prompt.ChooseReplacement {} -> 0` to `identityAnswer`, `castAnswer`, `aggressiveAnswer` and `playLandAnswer`, and `Prompt.ChooseReplacement {} -> pure 0` to `randomAnswer`.
+`source/test-suite/Parun/Support.hs` — add `Prompt.ChooseReplacement {} -> 0` to `identityAnswer`, `castAnswer`, `aggressiveAnswer` and `playLandAnswer`, and `Prompt.ChooseReplacement {} -> pure 0` to `randomAnswer`.
 
-- [x] **Step 5: Write `Pawl.Replacement`**
+- [x] **Step 5: Write `Parun.Replacement`**
 
-Create `source/library/Pawl/Replacement.hs`:
+Create `source/library/Parun/Replacement.hs`:
 
 ```haskell
 -- CR 616.1's loop: the SOLE home of casing on ProposedEvent and
--- ReplacementEffect, a fourth sole-casing home beside Pawl.Resolve (Effect),
--- Pawl.Event (TriggerCondition / StateCondition) and Pawl.Projection
--- (Modification). Pawl.Codec also cases on ReplacementEffect, but only as the
+-- ReplacementEffect, a fourth sole-casing home beside Parun.Resolve (Effect),
+-- Parun.Event (TriggerCondition / StateCondition) and Parun.Projection
+-- (Modification). Parun.Codec also cases on ReplacementEffect, but only as the
 -- JSON data boundary, never to decide game behaviour.
 --
 -- Read CR 616.1 literally: it is not an ordering prompt, it is a LOOP. Choose one
@@ -1450,45 +1450,45 @@ Create `source/library/Pawl/Replacement.hs`:
 -- another one modified the event. A foldl' over a list computed once is
 -- structurally incapable of either.
 --
--- This module must NOT import Pawl.Event: Event raises proposed events through
+-- This module must NOT import Parun.Event: Event raises proposed events through
 -- this loop, so the dependency runs one way only. That is also why the entry
--- copy-target legal set lives here rather than in Pawl.Target (Task 7) -- Target
--- imports Pawl.Sba, which imports Pawl.Event.
-module Pawl.Replacement where
+-- copy-target legal set lives here rather than in Parun.Target (Task 7) -- Target
+-- imports Parun.Sba, which imports Parun.Event.
+module Parun.Replacement where
 
 import qualified Control.Monad.Trans.Class as Trans
 import qualified Control.Monad.Trans.State.Strict as State
 import qualified Data.List as List
 import Numeric.Natural (Natural)
-import qualified Pawl.Decide as Decide
-import qualified Pawl.Projection as Projection
-import Pawl.Type.CandidateId (CandidateId)
-import qualified Pawl.Type.CandidateId as CandidateId
-import qualified Pawl.Type.ControllerRelation as ControllerRelation
-import qualified Pawl.Type.DamageEvent as DamageEvent
-import Pawl.Type.Game (Game)
-import Pawl.Type.GameState (GameState)
-import Pawl.Type.ObjectId (ObjectId)
-import Pawl.Type.PlayerId (PlayerId)
-import qualified Pawl.Type.Program as Program
-import Pawl.Type.ProposedEvent (ProposedEvent)
-import qualified Pawl.Type.ProposedEvent as ProposedEvent
-import qualified Pawl.Type.Prompt as Prompt
-import qualified Pawl.Type.Recipient as Recipient
-import Pawl.Type.ReplacementBucket (ReplacementBucket)
-import qualified Pawl.Type.ReplacementBucket as ReplacementBucket
-import Pawl.Type.ReplacementCandidate (ReplacementCandidate)
-import qualified Pawl.Type.ReplacementCandidate as ReplacementCandidate
-import Pawl.Type.ReplacementEffect (ReplacementEffect)
-import qualified Pawl.Type.ReplacementEffect as ReplacementEffect
-import Pawl.Type.ZoneChange (ZoneChange)
-import qualified Pawl.Type.ZoneChange as ZoneChange
-import qualified Pawl.Type.ZoneChangePattern as ZoneChangePattern
+import qualified Parun.Decide as Decide
+import qualified Parun.Projection as Projection
+import Parun.Type.CandidateId (CandidateId)
+import qualified Parun.Type.CandidateId as CandidateId
+import qualified Parun.Type.ControllerRelation as ControllerRelation
+import qualified Parun.Type.DamageEvent as DamageEvent
+import Parun.Type.Game (Game)
+import Parun.Type.GameState (GameState)
+import Parun.Type.ObjectId (ObjectId)
+import Parun.Type.PlayerId (PlayerId)
+import qualified Parun.Type.Program as Program
+import Parun.Type.ProposedEvent (ProposedEvent)
+import qualified Parun.Type.ProposedEvent as ProposedEvent
+import qualified Parun.Type.Prompt as Prompt
+import qualified Parun.Type.Recipient as Recipient
+import Parun.Type.ReplacementBucket (ReplacementBucket)
+import qualified Parun.Type.ReplacementBucket as ReplacementBucket
+import Parun.Type.ReplacementCandidate (ReplacementCandidate)
+import qualified Parun.Type.ReplacementCandidate as ReplacementCandidate
+import Parun.Type.ReplacementEffect (ReplacementEffect)
+import qualified Parun.Type.ReplacementEffect as ReplacementEffect
+import Parun.Type.ZoneChange (ZoneChange)
+import qualified Parun.Type.ZoneChange as ZoneChange
+import qualified Parun.Type.ZoneChangePattern as ZoneChangePattern
 import Data.Set (Set)
 import qualified Data.Set as Set
 
 -- CR 614: settle a proposed zone change. Nothing means the move does not happen.
--- The typed door Pawl.Event uses, so Event never cases on a ProposedEvent.
+-- The typed door Parun.Event uses, so Event never cases on a ProposedEvent.
 resolveZoneChange :: ZoneChange -> Game (Maybe ZoneChange)
 resolveZoneChange zc = do
   outcome <- applyReplacements (ProposedEvent.WouldChangeZone zc)
@@ -1668,7 +1668,7 @@ apply candidate event =
 
 - [x] **Step 6: Point `Event.changeZone` at the loop and delete the fold**
 
-In `source/library/Pawl/Event.hs`, delete `applyReplacements`, `applyOne` and `matchesController`, drop the now-unused `ControllerRelation`/`ZoneChangePattern`/`ReplacementEffect`/`List` imports, add `import qualified Pawl.Replacement as Replacement` and `import qualified Pawl.Type.ProposedEvent as ProposedEvent`, and rewrite `changeZone`:
+In `source/library/Parun/Event.hs`, delete `applyReplacements`, `applyOne` and `matchesController`, drop the now-unused `ControllerRelation`/`ZoneChangePattern`/`ReplacementEffect`/`List` imports, add `import qualified Parun.Replacement as Replacement` and `import qualified Parun.Type.ProposedEvent as ProposedEvent`, and rewrite `changeZone`:
 
 ```haskell
 changeZone :: ObjectId -> Zone -> Game ()
@@ -1711,7 +1711,7 @@ The doubled `Game.removeFromZones` above is deliberately not written that way �
 
 - [x] **Step 7: Retire the three `EventSpec` unit cases — porting the one whose coverage is not otherwise carried**
 
-`Event.applyReplacements` no longer exists, so the three `testCase`s at `source/test-suite/Pawl/EventSpec.hs:31-43` cannot stay in that shape. Two of them are now covered gameplay-level: "a graveyard-bound move is redirected to exile" by `EventSpec`'s existing Rest in Peace cases, and "the redirect does not re-apply" by `ReplacementSpec`'s "two Rest in Peaces redirect once". The third — a move whose destination the pattern does not match is untouched — is **not** covered anywhere else, so it is PORTED, not deleted. Delete the three unit cases, remove the now-unused `ReplacementEffect`/`ControllerRelation`/`ZoneChangePattern`/`ObjectId` imports, and add to `source/test-suite/Pawl/ReplacementSpec.hs`:
+`Event.applyReplacements` no longer exists, so the three `testCase`s at `source/test-suite/Parun/EventSpec.hs:31-43` cannot stay in that shape. Two of them are now covered gameplay-level: "a graveyard-bound move is redirected to exile" by `EventSpec`'s existing Rest in Peace cases, and "the redirect does not re-apply" by `ReplacementSpec`'s "two Rest in Peaces redirect once". The third — a move whose destination the pattern does not match is untouched — is **not** covered anywhere else, so it is PORTED, not deleted. Delete the three unit cases, remove the now-unused `ReplacementEffect`/`ControllerRelation`/`ZoneChangePattern`/`ObjectId` imports, and add to `source/test-suite/Parun/ReplacementSpec.hs`:
 
 ```haskell
       HU.testCase "CR 614.1a a move whose destination the pattern misses is untouched" $
@@ -1733,11 +1733,11 @@ Expected: PASS. In particular the existing Rest in Peace gameplay cases (§5 sce
 - [x] **Step 9: Commit**
 
 ```bash
-git add source/library/Pawl/Replacement.hs source/library/Pawl/Type/ProposedEvent.hs source/library/Pawl/Type/CandidateId.hs source/library/Pawl/Type/ReplacementCandidate.hs source/library/Pawl/Type/ReplacementBucket.hs source/library/Pawl/Type/Prompt.hs source/library/Pawl/Type/Response.hs source/library/Pawl/Replay.hs source/library/Pawl/Event.hs source/test-suite/Pawl/ReplacementSpec.hs source/test-suite/Pawl/Support.hs source/test-suite/Pawl/EventSpec.hs source/test-suite/Main.hs pawl.cabal
+git add source/library/Parun/Replacement.hs source/library/Parun/Type/ProposedEvent.hs source/library/Parun/Type/CandidateId.hs source/library/Parun/Type/ReplacementCandidate.hs source/library/Parun/Type/ReplacementBucket.hs source/library/Parun/Type/Prompt.hs source/library/Parun/Type/Response.hs source/library/Parun/Replay.hs source/library/Parun/Event.hs source/test-suite/Parun/ReplacementSpec.hs source/test-suite/Parun/Support.hs source/test-suite/Parun/EventSpec.hs source/test-suite/Main.hs parun.cabal
 hooky fix
 git add -u
 hooky run
-git commit -m "feat(m4.5-p5): Pawl.Replacement implements the CR 616.1 loop
+git commit -m "feat(m4.5-p5): Parun.Replacement implements the CR 616.1 loop
 
 Collect (minus CR 614.5's applied set), bucket by 616.1a-e, choose --
 prompting via ChooseReplacement only when the choice is real -- apply,
@@ -1752,11 +1752,11 @@ Co-Authored-By: Claude Opus 4.8 (1M context) <noreply@anthropic.com>"
 ### Task 4: Prevention folded in — `Effect.Replace`, `GameState.replacements`, `Uses`
 
 **Files:**
-- Create: `source/library/Pawl/Type/Uses.hs`, `source/library/Pawl/Type/ActiveReplacement.hs`
-- Delete: `source/library/Pawl/Type/Prevention.hs`, `source/library/Pawl/Type/ActivePrevention.hs`
-- Modify: `source/library/Pawl/Type/GameState.hs` (`preventions` → `replacements`), `Effect.hs` (`Prevent` → `Replace`), `Pawl/Replacement.hs`, `Pawl/Event.hs` (delete `applyPreventions`/`cancels`, rename `dropEndOfTurnPreventions`), `Pawl/Damage.hs`, `Pawl/Resolve.hs`, `Pawl/Engine.hs:185`, `Pawl/Setup.hs:73`, `Pawl/Codec.hs`
+- Create: `source/library/Parun/Type/Uses.hs`, `source/library/Parun/Type/ActiveReplacement.hs`
+- Delete: `source/library/Parun/Type/Prevention.hs`, `source/library/Parun/Type/ActivePrevention.hs`
+- Modify: `source/library/Parun/Type/GameState.hs` (`preventions` → `replacements`), `Effect.hs` (`Prevent` → `Replace`), `Parun/Replacement.hs`, `Parun/Event.hs` (delete `applyPreventions`/`cancels`, rename `dropEndOfTurnPreventions`), `Parun/Damage.hs`, `Parun/Resolve.hs`, `Parun/Engine.hs:185`, `Parun/Setup.hs:73`, `Parun/Codec.hs`
 - Modify: `data/cards/fog.json`
-- Test: `source/test-suite/Pawl/Support.hs` (`addPrevention` → `addReplacement`, `oneMountainState`), `DamageSpec.hs:155-170`, `ResolveSpec.hs:452-464`, `ReplacementSpec.hs` (scenario 22)
+- Test: `source/test-suite/Parun/Support.hs` (`addPrevention` → `addReplacement`, `oneMountainState`), `DamageSpec.hs:155-170`, `ResolveSpec.hs:452-464`, `ReplacementSpec.hs` (scenario 22)
 
 **Interfaces:**
 - Consumes: `Replacement.applyReplacements` (Task 3); `Damage.applyDamage :: [DamageEvent] -> Game ()` (Task 2).
@@ -1764,7 +1764,7 @@ Co-Authored-By: Claude Opus 4.8 (1M context) <noreply@anthropic.com>"
 
 - [x] **Step 1: Write the failing tests (§5 scenarios 21 and 22)**
 
-Scenario 21 already exists as `ResolveSpec.hs`'s "CR 615 Fog prevents combat damage but not spell damage (the gate)"; change only its shield-count assertion from `GameState.preventions` to `GameState.replacements`. Add scenario 22 to `source/test-suite/Pawl/ReplacementSpec.hs`:
+Scenario 21 already exists as `ResolveSpec.hs`'s "CR 615 Fog prevents combat damage but not spell damage (the gate)"; change only its shield-count assertion from `GameState.preventions` to `GameState.replacements`. Add scenario 22 to `source/test-suite/Parun/ReplacementSpec.hs`:
 
 ```haskell
       HU.testCase "CR 615.10 Fog prevents both attackers' damage in one batch" $
@@ -1791,10 +1791,10 @@ Expected: FAIL to compile — `GameState.replacements` is not a field of `GameSt
 
 - [x] **Step 3: Add `Uses` and `ActiveReplacement`, delete the two prevention types**
 
-`source/library/Pawl/Type/Uses.hs`:
+`source/library/Parun/Type/Uses.hs`:
 
 ```haskell
-module Pawl.Type.Uses where
+module Parun.Type.Uses where
 
 -- CR 614.3: floating replacement and prevention effects "last until they're used
 -- up or their duration has expired". Regeneration is CR 701.19a's "the NEXT time
@@ -1810,16 +1810,16 @@ data Uses
   deriving (Eq, Ord, Show)
 ```
 
-`source/library/Pawl/Type/ActiveReplacement.hs`:
+`source/library/Parun/Type/ActiveReplacement.hs`:
 
 ```haskell
-module Pawl.Type.ActiveReplacement where
+module Parun.Type.ActiveReplacement where
 
-import Pawl.Type.Duration (Duration)
-import Pawl.Type.ObjectId (ObjectId)
-import Pawl.Type.ReplacementEffect (ReplacementEffect)
-import Pawl.Type.Timestamp (Timestamp)
-import Pawl.Type.Uses (Uses)
+import Parun.Type.Duration (Duration)
+import Parun.Type.ObjectId (ObjectId)
+import Parun.Type.ReplacementEffect (ReplacementEffect)
+import Parun.Type.Timestamp (Timestamp)
+import Parun.Type.Uses (Uses)
 
 -- CR 614.3 / 615.3: a floating, resolution-generated replacement effect, held in
 -- GameState.replacements. The event-pipeline analog of ContinuousEffect: the
@@ -1832,7 +1832,7 @@ import Pawl.Type.Uses (Uses)
 -- 615.7's multi-source choice are no longer STRUCTURALLY blocked, only
 -- card-blocked.
 --
--- `timestamp` doubles as this instance's CR 614.5 identity (Pawl.Type.CandidateId):
+-- `timestamp` doubles as this instance's CR 614.5 identity (Parun.Type.CandidateId):
 -- GameState.nextTimestamp is monotone, so no two floating replacements share one.
 data ActiveReplacement = MkActiveReplacement
   { effect :: ReplacementEffect,
@@ -1844,26 +1844,26 @@ data ActiveReplacement = MkActiveReplacement
   deriving (Eq, Ord, Show)
 ```
 
-Delete `source/library/Pawl/Type/Prevention.hs` and `source/library/Pawl/Type/ActivePrevention.hs`.
+Delete `source/library/Parun/Type/Prevention.hs` and `source/library/Parun/Type/ActivePrevention.hs`.
 
 - [x] **Step 4: Reshape `GameState` and `Effect`**
 
-`source/library/Pawl/Type/GameState.hs`, replacing the `preventions` field (lines 57–60):
+`source/library/Parun/Type/GameState.hs`, replacing the `preventions` field (lines 57–60):
 
 ```haskell
     -- CR 614.3 / 615.3: floating replacement effects from resolutions (Fog's
     -- prevention, Drudge Skeletons' regeneration shield), each with a duration
     -- cleanup consults (CR 514.2) and a use count (CR 614.3). The event-pipeline
     -- analog of continuousEffects; a permanent's STATIC replacement abilities are
-    -- not here -- the projection re-derives those live. Pawl.Replacement reads it.
+    -- not here -- the projection re-derives those live. Parun.Replacement reads it.
     replacements :: [ActiveReplacement],
 ```
 
-with `import Pawl.Type.ActiveReplacement (ActiveReplacement)` replacing the `ActivePrevention` import. Leave `regenerationShields` in place; Task 5 removes it.
+with `import Parun.Type.ActiveReplacement (ActiveReplacement)` replacing the `ActivePrevention` import. Leave `regenerationShields` in place; Task 5 removes it.
 
-`source/library/Pawl/Setup.hs:73` — `emptyGame` builds the record literally, so change `GameState.preventions = [],` to `GameState.replacements = [],` there too. (`regenerationShields` stays until Task 5.)
+`source/library/Parun/Setup.hs:73` — `emptyGame` builds the record literally, so change `GameState.preventions = [],` to `GameState.replacements = [],` there too. (`regenerationShields` stays until Task 5.)
 
-`source/library/Pawl/Type/Effect.hs`, replacing the `Prevent` constructor (lines 111–115):
+`source/library/Parun/Type/Effect.hs`, replacing the `Prevent` constructor (lines 111–115):
 
 ```haskell
   | -- CR 614.3 / 615.3: install a floating replacement effect for a duration, with
@@ -1877,15 +1877,15 @@ with `import Pawl.Type.ActiveReplacement (ActiveReplacement)` replacing the `Act
     -- payload names, which is data. Targetless (a floating replacement watches a
     -- CLASS of events, not a chosen object) and unprompted. Resolve stores it into
     -- GameState.replacements with this effect's SOURCE (CR 608.2g) and a fresh
-    -- timestamp; Pawl.Replacement applies it.
+    -- timestamp; Parun.Replacement applies it.
     Replace Duration Uses ReplacementEffect
 ```
 
-with `import Pawl.Type.ReplacementEffect (ReplacementEffect)` and `import Pawl.Type.Uses (Uses)` replacing the `Prevention` import.
+with `import Parun.Type.ReplacementEffect (ReplacementEffect)` and `import Parun.Type.Uses (Uses)` replacing the `Prevention` import.
 
 - [x] **Step 5: Teach the loop about damage, uses, and the floating store**
 
-`source/library/Pawl/Replacement.hs`:
+`source/library/Parun/Replacement.hs`:
 
 Add to `collect` so it reads both sources:
 
@@ -1972,7 +1972,7 @@ asDamageEvent event = case event of
 
 - [x] **Step 6: Route the damage batch through the loop**
 
-`source/library/Pawl/Damage.hs`, replacing `applyDamage`:
+`source/library/Parun/Damage.hs`, replacing `applyDamage`:
 
 ```haskell
 -- CR 120.3e / 120.3a: mark damage on creatures, drain life from players -- AND
@@ -2006,11 +2006,11 @@ applyDamage events = do
   State.modify' (\gs -> List.foldl' (\g ev -> Event.recordEvent (GameEvent.DamageDealt ev) g) (List.foldl' markOne gs survivors) survivors)
 ```
 
-Add `import qualified Data.Maybe as Maybe` and `import qualified Pawl.Replacement as Replacement` to `Pawl.Damage`.
+Add `import qualified Data.Maybe as Maybe` and `import qualified Parun.Replacement as Replacement` to `Parun.Damage`.
 
 - [x] **Step 7: Delete the prevention path and rename the cleanup**
 
-`source/library/Pawl/Event.hs`: delete `applyPreventions` and `cancels` (lines 89–102), and replace `dropEndOfTurnPreventions` (lines 104–108):
+`source/library/Parun/Event.hs`: delete `applyPreventions` and `cancels` (lines 89–102), and replace `dropEndOfTurnPreventions` (lines 104–108):
 
 ```haskell
 -- CR 514.2: at cleanup, drop until-end-of-turn floating replacements (the
@@ -2024,15 +2024,15 @@ dropEndOfTurnReplacements gs =
    in gs {GameState.replacements = filter keep (GameState.replacements gs)}
 ```
 
-`source/library/Pawl/Engine.hs:185` — `State.modify' Event.dropEndOfTurnReplacements` (leave the `Event.clearRegenerationShields` line; Task 5 deletes it).
+`source/library/Parun/Engine.hs:185` — `State.modify' Event.dropEndOfTurnReplacements` (leave the `Event.clearRegenerationShields` line; Task 5 deletes it).
 
-- [x] **Step 8: Swap the opcode in `Pawl.Resolve` and `Pawl.Codec`**
+- [x] **Step 8: Swap the opcode in `Parun.Resolve` and `Parun.Codec`**
 
-`source/library/Pawl/Resolve.hs` — in `slotsOf`, `readsX`, `manaProduced`, `searchesLibrary` and `rewriteEffect`, replace the `Effect.Prevent _ _` arm with `Effect.Replace {}` (same result in each: `Set.empty` / `False` / `Nothing` / `False` / `effect`). Then replace the `Effect.Prevent` executor arm (lines 594–598):
+`source/library/Parun/Resolve.hs` — in `slotsOf`, `readsX`, `manaProduced`, `searchesLibrary` and `rewriteEffect`, replace the `Effect.Prevent _ _` arm with `Effect.Replace {}` (same result in each: `Set.empty` / `False` / `Nothing` / `False` / `effect`). Then replace the `Effect.Prevent` executor arm (lines 594–598):
 
 ```haskell
   Effect.Replace duration uses re ->
-    -- CR 614.3 / 615.3: install the floating replacement; Pawl.Replacement
+    -- CR 614.3 / 615.3: install the floating replacement; Parun.Replacement
     -- consults it at every funnel until cleanup drops it (CR 514.2) or its use is
     -- spent. Targetless and unprompted. CR 608.2g: the SOURCE is this effect's
     -- source, which is what CR 615.13's "prevented" triggers will read (#58).
@@ -2049,7 +2049,7 @@ dropEndOfTurnReplacements gs =
        in gs1 {GameState.replacements = active : GameState.replacements gs1}
 ```
 
-`source/library/Pawl/Codec.hs` — delete `preventionToJson`/`jsonToPrevention` and its import; add `usesToJson`/`jsonToUses`:
+`source/library/Parun/Codec.hs` — delete `preventionToJson`/`jsonToPrevention` and its import; add `usesToJson`/`jsonToUses`:
 
 ```haskell
 usesToJson :: Uses.Uses -> Value
@@ -2090,7 +2090,7 @@ Replace Fog's single effect (leave every other key byte-identical):
 
 - [x] **Step 10: Update the test fixtures**
 
-`source/test-suite/Pawl/Support.hs`:
+`source/test-suite/Parun/Support.hs`:
 - replace `addPrevention` with
 
   ```haskell
@@ -2104,7 +2104,7 @@ Replace Fog's single effect (leave every other key byte-identical):
 - in `oneMountainState`, replace `GameState.preventions = []` with `GameState.replacements = []`
 - swap the `ActivePrevention` import for `ActiveReplacement`
 
-`source/test-suite/Pawl/DamageSpec.hs:155-170` — build the shield with the new type and rename the cleanup call:
+`source/test-suite/Parun/DamageSpec.hs:155-170` — build the shield with the new type and rename the cleanup call:
 
 ```haskell
       HU.testCase "CR 615 a prevention drops combat damage but spares Noncombat" $
@@ -2139,7 +2139,7 @@ Replace Fog's single effect (leave every other key byte-identical):
          in HU.assertEqual "no replacements remain" [] (GameState.replacements dropped)
 ```
 
-`source/test-suite/Pawl/ResolveSpec.hs:460` — `HU.assertEqual "Fog installed one replacement" 1 (length (GameState.replacements resolved))`.
+`source/test-suite/Parun/ResolveSpec.hs:460` — `HU.assertEqual "Fog installed one replacement" 1 (length (GameState.replacements resolved))`.
 
 - [x] **Step 11: Build and run**
 
@@ -2149,14 +2149,14 @@ Expected: PASS. §5 scenarios 21 and 22 green; `grep -rn "Prevention" source/` r
 - [x] **Step 12: Commit**
 
 ```bash
-git add source/library/Pawl/Type/Uses.hs source/library/Pawl/Type/ActiveReplacement.hs source/library/Pawl/Type/GameState.hs source/library/Pawl/Type/Effect.hs source/library/Pawl/Replacement.hs source/library/Pawl/Event.hs source/library/Pawl/Damage.hs source/library/Pawl/Resolve.hs source/library/Pawl/Engine.hs source/library/Pawl/Codec.hs data/cards/fog.json source/test-suite/Pawl pawl.cabal
-git rm source/library/Pawl/Type/Prevention.hs source/library/Pawl/Type/ActivePrevention.hs
+git add source/library/Parun/Type/Uses.hs source/library/Parun/Type/ActiveReplacement.hs source/library/Parun/Type/GameState.hs source/library/Parun/Type/Effect.hs source/library/Parun/Replacement.hs source/library/Parun/Event.hs source/library/Parun/Damage.hs source/library/Parun/Resolve.hs source/library/Parun/Engine.hs source/library/Parun/Codec.hs data/cards/fog.json source/test-suite/Parun parun.cabal
+git rm source/library/Parun/Type/Prevention.hs source/library/Parun/Type/ActivePrevention.hs
 hooky fix
 git add -u
 hooky run
 git commit -m "feat(m4.5-p5): prevention folds into the one replacement path
 
-Effect.Prevent and Pawl.Type.Prevention are gone; Fog is
+Effect.Prevent and Parun.Type.Prevention are gone; Fog is
 Replace UntilEndOfTurn Unlimited (DamageR (Just Combat) PreventAll).
 Each event of a damage batch runs its own CR 616.1 loop against the same
 pre-damage state (CR 615.10), with the batch preserved as scheduling.
@@ -2170,9 +2170,9 @@ Co-Authored-By: Claude Opus 4.8 (1M context) <noreply@anthropic.com>"
 ### Task 5: Regeneration folded in — `WouldBeDestroyed` and `Uses = Once`
 
 **Files:**
-- Modify: `source/library/Pawl/Game.hs` (gains `removeFromCombat`), `Pawl/Event.hs` (`destroy` raises the event; delete `regenerate`, `removeFromCombat`, `clearRegenerationShields`), `Pawl/Replacement.hs`, `Pawl/Type/GameState.hs` (delete `regenerationShields`), `Pawl/Type/Effect.hs` (delete `RegenerateSelf`), `Pawl/Resolve.hs` (six case tables + the executor arm), `Pawl/Engine.hs:186`, `Pawl/Setup.hs:74`, `Pawl/Codec.hs`
+- Modify: `source/library/Parun/Game.hs` (gains `removeFromCombat`), `Parun/Event.hs` (`destroy` raises the event; delete `regenerate`, `removeFromCombat`, `clearRegenerationShields`), `Parun/Replacement.hs`, `Parun/Type/GameState.hs` (delete `regenerationShields`), `Parun/Type/Effect.hs` (delete `RegenerateSelf`), `Parun/Resolve.hs` (six case tables + the executor arm), `Parun/Engine.hs:186`, `Parun/Setup.hs:74`, `Parun/Codec.hs`
 - Modify: `data/cards/drudge-skeletons.json`
-- Test: `source/test-suite/Pawl/Support.hs` (`addRegenShield` reimplemented, `oneMountainState`), `EventSpec.hs:131-160`, `ActivateSpec.hs:144`, `TriggerSpec.hs:266-270`, `ReplacementSpec.hs` (scenarios 18–20)
+- Test: `source/test-suite/Parun/Support.hs` (`addRegenShield` reimplemented, `oneMountainState`), `EventSpec.hs:131-160`, `ActivateSpec.hs:144`, `TriggerSpec.hs:266-270`, `ReplacementSpec.hs` (scenarios 18–20)
 
 **Interfaces:**
 - Consumes: `ActiveReplacement`, `Uses`, `Replacement.consume` (Task 4).
@@ -2180,7 +2180,7 @@ Co-Authored-By: Claude Opus 4.8 (1M context) <noreply@anthropic.com>"
 
 - [x] **Step 1: Write the failing tests (§5 scenarios 18, 19, 20)**
 
-Add to `source/test-suite/Pawl/ReplacementSpec.hs`:
+Add to `source/test-suite/Parun/ReplacementSpec.hs`:
 
 ```haskell
       HU.testCase "CR 701.19a Uses=Once: the first destruction is replaced, the second is not" $
@@ -2214,21 +2214,21 @@ Add to `source/test-suite/Pawl/ReplacementSpec.hs`:
               HU.assertEqual "the shield is intact" 1 (length (GameState.replacements after))
 ```
 
-`Activate.activateAbility`'s third argument shape must match its actual signature — read `source/library/Pawl/Activate.hs`'s top-level signature and use whatever ability identifier it takes (the existing `ActivateSpec.hs` regeneration test at line 144 already calls it correctly; copy that call site verbatim rather than guessing).
+`Activate.activateAbility`'s third argument shape must match its actual signature — read `source/library/Parun/Activate.hs`'s top-level signature and use whatever ability identifier it takes (the existing `ActivateSpec.hs` regeneration test at line 144 already calls it correctly; copy that call site verbatim rather than guessing).
 
 - [x] **Step 2: Run to watch it fail**
 
-Run: `cabal build all --enable-tests --enable-benchmarks && cabal test --test-options='-p "Pawl.Replacement"' 2>&1 | tail -30`
+Run: `cabal build all --enable-tests --enable-benchmarks && cabal test --test-options='-p "Parun.Replacement"' 2>&1 | tail -30`
 Expected: FAIL — "the shield was spent" reports the old `regenerationShields` path leaving `GameState.replacements` empty from the start, and "Rest in Peace never sees it" passes only by accident of the hardcoded precedence this task is removing.
 
-- [x] **Step 3: Move `removeFromCombat` down to `Pawl.Game`**
+- [x] **Step 3: Move `removeFromCombat` down to `Parun.Game`**
 
-`Pawl.Replacement` performs regeneration, and it must not import `Pawl.Event`. Move the function verbatim (comment included, with the parenthetical about Event's import restriction rewritten) from `source/library/Pawl/Event.hs:213-223` to `source/library/Pawl/Game.hs`:
+`Parun.Replacement` performs regeneration, and it must not import `Parun.Event`. Move the function verbatim (comment included, with the parenthetical about Event's import restriction rewritten) from `source/library/Parun/Event.hs:213-223` to `source/library/Parun/Game.hs`:
 
 ```haskell
 -- CR 701.19a: if a permanent is attacking or blocking, remove it from combat.
 -- Edits the GameState.combat maps directly. It lives here, in the lowest layer,
--- because both Pawl.Event and Pawl.Replacement need it and neither may import the
+-- because both Parun.Event and Parun.Replacement need it and neither may import the
 -- other.
 removeFromCombat :: ObjectId -> GameState -> GameState
 removeFromCombat oid gs =
@@ -2241,11 +2241,11 @@ removeFromCombat oid gs =
    in gs {GameState.combat = c1}
 ```
 
-with `import qualified Pawl.Type.Combat as Combat` added to `Pawl.Game`.
+with `import qualified Parun.Type.Combat as Combat` added to `Parun.Game`.
 
 - [x] **Step 4: Teach the loop about destruction**
 
-`source/library/Pawl/Replacement.hs` — add to `applies` (above the catch-alls):
+`source/library/Parun/Replacement.hs` — add to `applies` (above the catch-alls):
 
 ```haskell
         -- CR 201.5 / 201.5c / 701.19a: "regenerate THIS creature" names the
@@ -2285,7 +2285,7 @@ resolveDestruction oid = do
 
 - [x] **Step 5: Raise the event from `Event.destroy`**
 
-`source/library/Pawl/Event.hs` — delete `regenerate` and `removeFromCombat`, delete `clearRegenerationShields`, and rewrite `destroy` (keeping its comment, with the regeneration sentence rewritten):
+`source/library/Parun/Event.hs` — delete `regenerate` and `removeFromCombat`, delete `clearRegenerationShields`, and rewrite `destroy` (keeping its comment, with the regeneration sentence rewritten):
 
 ```haskell
 -- The single destruction funnel (CR 701.8 / 702.12b): every destruction -- the
@@ -2311,17 +2311,17 @@ destroy oid = do
           Monad.when happens (changeZone oid Zone.Graveyard)
 ```
 
-`source/library/Pawl/Engine.hs:186` — delete the `State.modify' Event.clearRegenerationShields` line (Task 4's `dropEndOfTurnReplacements` already drops the `UntilEndOfTurn` shields).
+`source/library/Parun/Engine.hs:186` — delete the `State.modify' Event.clearRegenerationShields` line (Task 4's `dropEndOfTurnReplacements` already drops the `UntilEndOfTurn` shields).
 
 - [x] **Step 6: Delete `regenerationShields` and `RegenerateSelf`**
 
-`source/library/Pawl/Type/GameState.hs` — delete the `regenerationShields` field and its comment. `source/library/Pawl/Setup.hs:74` — delete the matching `GameState.regenerationShields = Map.empty,` line from `emptyGame` (and its now-unused `Map` import if nothing else there uses it).
+`source/library/Parun/Type/GameState.hs` — delete the `regenerationShields` field and its comment. `source/library/Parun/Setup.hs:74` — delete the matching `GameState.regenerationShields = Map.empty,` line from `emptyGame` (and its now-unused `Map` import if nothing else there uses it).
 
-`source/library/Pawl/Type/Effect.hs` — delete the `RegenerateSelf` constructor and its comment.
+`source/library/Parun/Type/Effect.hs` — delete the `RegenerateSelf` constructor and its comment.
 
-`source/library/Pawl/Resolve.hs` — delete the `Effect.RegenerateSelf` arm from `slotsOf`, `readsX`, `manaProduced`, `searchesLibrary`, `rewriteEffect`, and from `applyEffect` (lines 599–604).
+`source/library/Parun/Resolve.hs` — delete the `Effect.RegenerateSelf` arm from `slotsOf`, `readsX`, `manaProduced`, `searchesLibrary`, `rewriteEffect`, and from `applyEffect` (lines 599–604).
 
-`source/library/Pawl/Codec.hs` — delete the `Effect.RegenerateSelf` encode arm and the `("RegenerateSelf", _)` decode arm.
+`source/library/Parun/Codec.hs` — delete the `Effect.RegenerateSelf` encode arm and the `("RegenerateSelf", _)` decode arm.
 
 - [x] **Step 7: Migrate `drudge-skeletons.json`**
 
@@ -2335,7 +2335,7 @@ Replace the ability's single effect (leave every other key byte-identical):
 
 Keeping the name means the twelve existing call sites do not change.
 
-`source/test-suite/Pawl/Support.hs`:
+`source/test-suite/Parun/Support.hs`:
 
 ```haskell
 -- Seed a regeneration shield directly (bypasses activating a regenerate ability;
@@ -2382,7 +2382,7 @@ Expected: PASS. §5 scenarios 18, 19, 20 green; `grep -rn "regenerationShields\|
 - [x] **Step 11: Commit**
 
 ```bash
-git add source/library/Pawl source/test-suite/Pawl data/cards/drudge-skeletons.json
+git add source/library/Parun source/test-suite/Parun data/cards/drudge-skeletons.json
 hooky fix
 git add -u
 hooky run
@@ -2405,11 +2405,11 @@ Co-Authored-By: Claude Opus 4.8 (1M context) <noreply@anthropic.com>"
 The gate. Hardened Scales and Corpsejack Menace apply to the *same* event with *different* rewrites, so the outcome depends on the order and the engine must ask.
 
 **Files:**
-- Modify: `source/library/Pawl/Type/Subtype.hs` (add `Fungus`), `source/library/Pawl/Codec.hs` (two subtype tables)
-- Modify: `source/library/Pawl/Event.hs` (add `putCounters`), `Pawl/Replacement.hs`, `Pawl/Resolve.hs` (the `PutCounters` arm; delete the pure `putCounters` helper)
+- Modify: `source/library/Parun/Type/Subtype.hs` (add `Fungus`), `source/library/Parun/Codec.hs` (two subtype tables)
+- Modify: `source/library/Parun/Event.hs` (add `putCounters`), `Parun/Replacement.hs`, `Parun/Resolve.hs` (the `PutCounters` arm; delete the pure `putCounters` helper)
 - Create: `data/cards/hardened-scales.json`, `data/cards/corpsejack-menace.json`
-- Modify: `source/test-suite/Pawl/Cards.hs` (two printings)
-- Test: `source/test-suite/Pawl/ReplacementSpec.hs`
+- Modify: `source/test-suite/Parun/Cards.hs` (two printings)
+- Test: `source/test-suite/Parun/ReplacementSpec.hs`
 
 **Interfaces:**
 - Consumes: the loop and `Replacement.consume` (Tasks 3–5).
@@ -2417,7 +2417,7 @@ The gate. Hardened Scales and Corpsejack Menace apply to the *same* event with *
 
 - [x] **Step 1: Write the failing tests**
 
-Add these helpers and seven cases to `source/test-suite/Pawl/ReplacementSpec.hs`:
+Add these helpers and seven cases to `source/test-suite/Parun/ReplacementSpec.hs`:
 
 ```haskell
 -- alice controls one Forest plus `mine`; bob controls `theirs`; alice holds one
@@ -2520,7 +2520,7 @@ Expected: FAIL — `Cards.hardenedScalesPrinting` is not in scope.
 
 - [x] **Step 3: Add the `Fungus` subtype**
 
-`source/library/Pawl/Type/Subtype.hs` — add `| Fungus -- CR 205.3m (a creature type; Corpsejack Menace's)` at the end. `source/library/Pawl/Codec.hs` — add `Subtype.Fungus -> "Fungus"` to `subtypeToJson` and `(Text.pack "Fungus", Subtype.Fungus)` to `jsonToSubtype`.
+`source/library/Parun/Type/Subtype.hs` — add `| Fungus -- CR 205.3m (a creature type; Corpsejack Menace's)` at the end. `source/library/Parun/Codec.hs` — add `Subtype.Fungus -> "Fungus"` to `subtypeToJson` and `(Text.pack "Fungus", Subtype.Fungus)` to `jsonToSubtype`.
 
 - [x] **Step 4: Write the two card files**
 
@@ -2536,11 +2536,11 @@ Expected: FAIL — `Cards.hardenedScalesPrinting` is not in scope.
 {"name":"Corpsejack Menace","manaCost":[{"type":"Generic","value":2},{"type":"OfType","value":{"type":"Colored","value":{"type":"Black"}}},{"type":"OfType","value":{"type":"Colored","value":{"type":"Green"}}}],"typeLine":{"supertypes":[],"types":[{"type":"Creature"}],"subtypes":[{"type":"Fungus"}]},"power":{"type":"Literal","value":4},"toughness":{"type":"Literal","value":4},"keywords":[],"staticAbilities":[],"spell":{"modes":[{"effects":[],"targetSpecs":[]}],"selection":{"type":"ChooseExactly","value":1}},"activatedAbilities":[],"replacementEffects":[{"type":"CounterR","value":[{"whichKind":{"type":"PlusOnePlusOne"},"whose":{"type":"Yours"},"onWhat":{"type":"CreaturePermanent"}},{"type":"Multiply","value":2}]}],"triggeredAbilities":[],"castingPermissions":[]}
 ```
 
-Add `hardenedScalesPrinting` and `corpsejackMenacePrinting` fields to `Pawl.Cards`'s `MkCards` record, `loadPrinting "hardened-scales"` / `"corpsejack-menace"` to `loadCards`, and both to `allPrintings`. Do **not** add either to a deck — `CardSpec`'s slug lint requires the directory and `allPrintings` to agree, and `PropertySpec`'s conservation counts require the decks to stay at 60.
+Add `hardenedScalesPrinting` and `corpsejackMenacePrinting` fields to `Parun.Cards`'s `MkCards` record, `loadPrinting "hardened-scales"` / `"corpsejack-menace"` to `loadCards`, and both to `allPrintings`. Do **not** add either to a deck — `CardSpec`'s slug lint requires the directory and `allPrintings` to agree, and `PropertySpec`'s conservation counts require the decks to stay at 60.
 
 - [x] **Step 5: Add the counter funnel and its loop arms**
 
-`source/library/Pawl/Replacement.hs` — add to `applies`:
+`source/library/Parun/Replacement.hs` — add to `applies`:
 
 ```haskell
         (ReplacementEffect.CounterR pat _, ProposedEvent.WouldPutCounters oid kind _) ->
@@ -2592,7 +2592,7 @@ asCounters event = case event of
   ProposedEvent.WouldCreateTokens {} -> Nothing
 ```
 
-`source/library/Pawl/Event.hs` — add the funnel next to `destroy`:
+`source/library/Parun/Event.hs` — add the funnel next to `destroy`:
 
 ```haskell
 -- The single counter funnel (CR 122.6). Before P5 the PutCounters opcode edited
@@ -2615,7 +2615,7 @@ putCounters oid kind n = do
            in gs {GameState.objects = Map.adjust bump target (GameState.objects gs)}
 ```
 
-`source/library/Pawl/Resolve.hs` — delete the pure `putCounters` helper (lines 682–686) and rewrite the executor arm:
+`source/library/Parun/Resolve.hs` — delete the pure `putCounters` helper (lines 682–686) and rewrite the executor arm:
 
 ```haskell
   Effect.PutCounters kind quantity slot -> do
@@ -2633,7 +2633,7 @@ putCounters oid kind n = do
 
 - [x] **Step 6: Run the seven scenarios**
 
-Run: `cabal build all --enable-tests --enable-benchmarks && cabal test --test-options='-p "Pawl.Replacement"' 2>&1 | tail -30`
+Run: `cabal build all --enable-tests --enable-benchmarks && cabal test --test-options='-p "Parun.Replacement"' 2>&1 | tail -30`
 Expected: PASS, all seven.
 
 - [x] **Step 7: Run the whole suite**
@@ -2644,7 +2644,7 @@ Expected: PASS. In particular the existing `+1/+1`/`-1/-1` counter tests in `Res
 - [x] **Step 8: Commit**
 
 ```bash
-git add source/library/Pawl data/cards/hardened-scales.json data/cards/corpsejack-menace.json source/test-suite/Pawl pawl.cabal
+git add source/library/Parun data/cards/hardened-scales.json data/cards/corpsejack-menace.json source/test-suite/Parun parun.cabal
 hooky fix
 git add -u
 hooky run
@@ -2666,12 +2666,12 @@ Co-Authored-By: Claude Opus 4.8 (1M context) <noreply@anthropic.com>"
 P2's mark-then-drain seam is retired. The copy choice now happens *inside* the zone change, before the `Moved` event exists — so no trigger scan and no state-based action can observe the interim object, and P2's observable-equivalence argument is discharged rather than re-inherited.
 
 **Files:**
-- Modify: `source/library/Pawl/Replacement.hs` (batch parameter, `runEntry`, `legalCopyTargets`, `EntryR AsCopy`)
-- Modify: `source/library/Pawl/Event.hs` (`changeZone` runs the entry loop; delete `markCopyOnEnter`, `cardOfObject`)
-- Modify: `source/library/Pawl/Engine.hs` (delete `drainAsEntersChoices`, `drainOneCopy`, `applyCopyChoice`; `settleForPriority` drops `drained`)
-- Modify: `source/library/Pawl/Binding.hs` (delete `asEntersPending`, `markPending`, `clearPending`, `pendingCopy`)
-- Modify: `source/library/Pawl/Target.hs` (delete `legalCopyTargets`)
-- Modify: `source/library/Pawl/Type/Card.hs` (delete `copyOnEnter`), `source/library/Pawl/Codec.hs`, `source/library/Pawl/Type/Prompt.hs` (`ChooseCopyTarget`'s comment)
+- Modify: `source/library/Parun/Replacement.hs` (batch parameter, `runEntry`, `legalCopyTargets`, `EntryR AsCopy`)
+- Modify: `source/library/Parun/Event.hs` (`changeZone` runs the entry loop; delete `markCopyOnEnter`, `cardOfObject`)
+- Modify: `source/library/Parun/Engine.hs` (delete `drainAsEntersChoices`, `drainOneCopy`, `applyCopyChoice`; `settleForPriority` drops `drained`)
+- Modify: `source/library/Parun/Binding.hs` (delete `asEntersPending`, `markPending`, `clearPending`, `pendingCopy`)
+- Modify: `source/library/Parun/Target.hs` (delete `legalCopyTargets`)
+- Modify: `source/library/Parun/Type/Card.hs` (delete `copyOnEnter`), `source/library/Parun/Codec.hs`, `source/library/Parun/Type/Prompt.hs` (`ChooseCopyTarget`'s comment)
 - Modify: `data/cards/clone.json`
 - Test: `CopySpec.hs`, `BindingSpec.hs:60-65`, `CardsSpec.hs:29-32`, `CodecSpec.hs:228-231`, `CardSpec.hs:153`, `ResolveSpec.hs:238`, `ReplacementSpec.hs` (scenario 16)
 
@@ -2681,7 +2681,7 @@ P2's mark-then-drain seam is retired. The copy choice now happens *inside* the z
 
 - [x] **Step 1: Write the failing test (§5 scenario 16)**
 
-Add to `source/test-suite/Pawl/ReplacementSpec.hs`:
+Add to `source/test-suite/Parun/ReplacementSpec.hs`:
 
 ```haskell
       HU.testCase "CR 707.5 declining the copy leaves a 0/0 that dies (CR 704.5f)" $
@@ -2721,7 +2721,7 @@ Expected: FAIL — the Clone is still a 0/0 (`Just 0`), because the choice is dr
 
 - [x] **Step 3: Thread the CR 614.13a batch through the loop**
 
-`source/library/Pawl/Replacement.hs` — replace the entry point and give `loop` and `apply` the batch:
+`source/library/Parun/Replacement.hs` — replace the entry point and give `loop` and `apply` the batch:
 
 ```haskell
 applyReplacements :: ProposedEvent -> Game (Maybe ProposedEvent)
@@ -2745,7 +2745,7 @@ applyReplacementsIn batch = loop batch Set.empty
 
 - [x] **Step 4: Make `EntryR AsCopy` a real replacement**
 
-`source/library/Pawl/Replacement.hs`:
+`source/library/Parun/Replacement.hs`:
 
 `bucketOf` — split the `EntryR` arm:
 
@@ -2797,7 +2797,7 @@ applyReplacementsIn batch = loop batch Set.empty
               pure (Just event)
 ```
 
-and the legal set, moved down from `Pawl.Target` (which imports `Pawl.Sba`, which imports `Pawl.Event`, which imports this module — so it cannot live there any more):
+and the legal set, moved down from `Parun.Target` (which imports `Parun.Sba`, which imports `Parun.Event`, which imports this module — so it cannot live there any more):
 
 ```haskell
 -- CR 707.5 / 614.13a: the permanents an entering copy may choose. Battlefield
@@ -2832,7 +2832,7 @@ runEntry batch oid = Monad.void (applyReplacementsIn batch (ProposedEvent.WouldE
 
 - [x] **Step 5: Run the entry loop from `changeZone`, and delete the marker**
 
-`source/library/Pawl/Event.hs` — delete `markCopyOnEnter` and `cardOfObject`; `placeObject`'s `obj` binding becomes `obj = mkObj ts`. In `changeZone`, insert the entry loop between `placeObject` and `recordEvent`:
+`source/library/Parun/Event.hs` — delete `markCopyOnEnter` and `cardOfObject`; `placeObject`'s `obj` binding becomes `obj = mkObj ts`. In `changeZone`, insert the entry loop between `placeObject` and `recordEvent`:
 
 ```haskell
         Just settled -> do
@@ -2856,7 +2856,7 @@ runEntry batch oid = Monad.void (applyReplacementsIn batch (ProposedEvent.WouldE
 
 - [x] **Step 6: Retire the drain and the pending marker**
 
-`source/library/Pawl/Engine.hs` — delete `drainAsEntersChoices`, `drainOneCopy` and `applyCopyChoice` (lines 342–379), and simplify `settleForPriority`:
+`source/library/Parun/Engine.hs` — delete `drainAsEntersChoices`, `drainOneCopy` and `applyCopyChoice` (lines 342–379), and simplify `settleForPriority`:
 
 ```haskell
 -- CR 117.5: each time a player would receive priority, perform state-based
@@ -2877,17 +2877,17 @@ settleForPriority = do
   Monad.when (acted || placed) settleForPriority
 ```
 
-`source/library/Pawl/Binding.hs` — delete `asEntersPending`, `markPending`, `clearPending` and `pendingCopy`. Keep `copySource`, `copyOf` and `setCopy`.
+`source/library/Parun/Binding.hs` — delete `asEntersPending`, `markPending`, `clearPending` and `pendingCopy`. Keep `copySource`, `copyOf` and `setCopy`.
 
-`source/library/Pawl/Target.hs` — delete `legalCopyTargets` and any imports it alone needed.
+`source/library/Parun/Target.hs` — delete `legalCopyTargets` and any imports it alone needed.
 
-`source/library/Pawl/Type/Prompt.hs` — update `ChooseCopyTarget`'s comment: replace "Answered at the settle boundary (P2 drain), not at cast -- the choice is made as the object enters." with "Answered inside the zone change that puts the object onto the battlefield (CR 614.12a), before the enters event is recorded -- the choice really is made as the object enters. The legal set excludes anything entering in the same batch (CR 614.13a)."
+`source/library/Parun/Type/Prompt.hs` — update `ChooseCopyTarget`'s comment: replace "Answered at the settle boundary (P2 drain), not at cast -- the choice is made as the object enters." with "Answered inside the zone change that puts the object onto the battlefield (CR 614.12a), before the enters event is recorded -- the choice really is made as the object enters. The legal set excludes anything entering in the same batch (CR 614.13a)."
 
 - [x] **Step 7: Delete `Card.copyOnEnter` and migrate `clone.json`**
 
-`source/library/Pawl/Type/Card.hs` — delete the `copyOnEnter` field and its comment. A card-specific boolean on the card type was the closest thing in the engine to a fused half.
+`source/library/Parun/Type/Card.hs` — delete the `copyOnEnter` field and its comment. A card-specific boolean on the card type was the closest thing in the engine to a fused half.
 
-`source/library/Pawl/Codec.hs` — delete the `copyOnEnter` encode clause from `cardToJson` and its binding in `jsonToCard`.
+`source/library/Parun/Codec.hs` — delete the `copyOnEnter` encode clause from `cardToJson` and its binding in `jsonToCard`.
 
 `data/cards/clone.json` — drop `,"copyOnEnter":true` and change `"replacementEffects":[]` to:
 
@@ -2912,7 +2912,7 @@ Expected: PASS. `grep -rn "copyOnEnter\|drainAsEntersChoices\|pendingCopy\|asEnt
 - [x] **Step 10: Commit**
 
 ```bash
-git add source/library/Pawl data/cards/clone.json source/test-suite/Pawl pawl.cabal
+git add source/library/Parun data/cards/clone.json source/test-suite/Parun parun.cabal
 hooky fix
 git add -u
 hooky run
@@ -2935,12 +2935,12 @@ Co-Authored-By: Claude Opus 4.8 (1M context) <noreply@anthropic.com>"
 A Clone entering as a copy of a 2/2-flying Primal Plasma must end up **1/6 with flying and defender** if its controller picks the third option. Getting there requires applying the copy first (CR 616.1c's bucket), observing that the object *now has* an ability it did not have an iteration ago, recognising it as newly applicable (CR 616.2), prompting for it, and letting it overwrite P/T while leaving the copied keyword alone. No implementation that computes its candidate list once can produce that board.
 
 **Files:**
-- Modify: `source/library/Pawl/Type/Prompt.hs`, `Response.hs`, `source/library/Pawl/Replay.hs`, `source/test-suite/Pawl/Support.hs` (five answerers)
-- Modify: `source/library/Pawl/Replacement.hs` (the `ChoiceOf` arm and `applyEntryOption`)
-- Modify: `source/library/Pawl/Type/Subtype.hs` (add `Elemental`), `source/library/Pawl/Codec.hs`
-- Modify: `source/library/Pawl/Projection.hs` (the `baseCharacteristics` note about `*` P/T is now false)
-- Create: `data/cards/primal-plasma.json`; modify `source/test-suite/Pawl/Cards.hs`
-- Test: `source/test-suite/Pawl/ReplacementSpec.hs`
+- Modify: `source/library/Parun/Type/Prompt.hs`, `Response.hs`, `source/library/Parun/Replay.hs`, `source/test-suite/Parun/Support.hs` (five answerers)
+- Modify: `source/library/Parun/Replacement.hs` (the `ChoiceOf` arm and `applyEntryOption`)
+- Modify: `source/library/Parun/Type/Subtype.hs` (add `Elemental`), `source/library/Parun/Codec.hs`
+- Modify: `source/library/Parun/Projection.hs` (the `baseCharacteristics` note about `*` P/T is now false)
+- Create: `data/cards/primal-plasma.json`; modify `source/test-suite/Parun/Cards.hs`
+- Test: `source/test-suite/Parun/ReplacementSpec.hs`
 
 **Interfaces:**
 - Consumes: `Replacement.runEntry`, `legalCopyTargets`, the batch parameter (Task 7).
@@ -2948,7 +2948,7 @@ A Clone entering as a copy of a 2/2-flying Primal Plasma must end up **1/6 with 
 
 - [x] **Step 1: Write the failing tests**
 
-Add to `source/test-suite/Pawl/ReplacementSpec.hs`:
+Add to `source/test-suite/Parun/ReplacementSpec.hs`:
 
 ```haskell
 -- alice controls `n` untapped Islands in a main phase with priority, holding one
@@ -3049,7 +3049,7 @@ Expected: FAIL — `Not in scope: 'Cards.primalPlasmaPrinting'`, and `Prompt.Cho
 
 - [x] **Step 3: Add the prompt and response**
 
-`source/library/Pawl/Type/Prompt.hs`:
+`source/library/Parun/Type/Prompt.hs`:
 
 ```haskell
   -- CR 208.2b / 614.1c: as an object enters, its controller chooses among the
@@ -3065,9 +3065,9 @@ Expected: FAIL — `Not in scope: 'Cards.primalPlasmaPrinting'`, and `Prompt.Cho
   ChooseEntryOption :: Decider -> PlayerId -> ObjectId -> [EntryOption] -> Prompt Natural
 ```
 
-with `import Pawl.Type.EntryOption (EntryOption)`.
+with `import Parun.Type.EntryOption (EntryOption)`.
 
-`source/library/Pawl/Type/Response.hs`:
+`source/library/Parun/Type/Response.hs`:
 
 ```haskell
   | -- CR 208.2b: the index of the entry shape a player chose as an object entered,
@@ -3075,7 +3075,7 @@ with `import Pawl.Type.EntryOption (EntryOption)`.
     ChoseEntryOption Natural
 ```
 
-`source/library/Pawl/Replay.hs` — `encode`: `Prompt.ChooseEntryOption {} -> Response.ChoseEntryOption answer`; `decode`: the matching `Response.ChoseEntryOption n -> Just n` arm; `defaultAnswer`:
+`source/library/Parun/Replay.hs` — `encode`: `Prompt.ChooseEntryOption {} -> Response.ChoseEntryOption answer`; `decode`: the matching `Response.ChoseEntryOption n -> Just n` arm; `defaultAnswer`:
 
 ```haskell
   -- CR 208.2b: the first offered shape is always a legal answer (this is asked
@@ -3083,11 +3083,11 @@ with `import Pawl.Type.EntryOption (EntryOption)`.
   Prompt.ChooseEntryOption {} -> 0
 ```
 
-`source/test-suite/Pawl/Support.hs` — add `Prompt.ChooseEntryOption {} -> 0` to the four pure answerers and `Prompt.ChooseEntryOption {} -> pure 0` to `randomAnswer`.
+`source/test-suite/Parun/Support.hs` — add `Prompt.ChooseEntryOption {} -> 0` to the four pure answerers and `Prompt.ChooseEntryOption {} -> pure 0` to `randomAnswer`.
 
 - [x] **Step 4: Implement the `ChoiceOf` rewrite**
 
-`source/library/Pawl/Replacement.hs` — add to `apply`:
+`source/library/Parun/Replacement.hs` — add to `apply`:
 
 ```haskell
     -- CR 208.2b: "As this creature enters, it becomes your choice of ..." The
@@ -3149,7 +3149,7 @@ applyEntryOption oid option gs =
 
 - [x] **Step 5: Add the `Elemental` subtype and the card**
 
-`source/library/Pawl/Type/Subtype.hs` — add `| Elemental -- CR 205.3m (a creature type; Primal Plasma's)`. `source/library/Pawl/Codec.hs` — add the two table entries.
+`source/library/Parun/Type/Subtype.hs` — add `| Elemental -- CR 205.3m (a creature type; Primal Plasma's)`. `source/library/Parun/Codec.hs` — add the two table entries.
 
 `data/cards/primal-plasma.json`:
 
@@ -3157,11 +3157,11 @@ applyEntryOption oid option gs =
 {"name":"Primal Plasma","manaCost":[{"type":"Generic","value":3},{"type":"OfType","value":{"type":"Colored","value":{"type":"Blue"}}}],"typeLine":{"supertypes":[],"types":[{"type":"Creature"}],"subtypes":[{"type":"Elemental"},{"type":"Shapeshifter"}]},"power":{"type":"Star"},"toughness":{"type":"Star"},"keywords":[],"staticAbilities":[],"spell":{"modes":[{"effects":[],"targetSpecs":[]}],"selection":{"type":"ChooseExactly","value":1}},"activatedAbilities":[],"replacementEffects":[{"type":"EntryR","value":{"type":"ChoiceOf","value":[{"power":3,"toughness":3,"keywords":[]},{"power":2,"toughness":2,"keywords":[{"type":"Flying"}]},{"power":1,"toughness":6,"keywords":[{"type":"Defender"}]}]}}],"triggeredAbilities":[],"castingPermissions":[]}
 ```
 
-Add `primalPlasmaPrinting` to `Pawl.Cards`'s record, `loadCards` (`loadPrinting "primal-plasma"`) and `allPrintings`. Do not add it to a deck.
+Add `primalPlasmaPrinting` to `Parun.Cards`'s record, `loadCards` (`loadPrinting "primal-plasma"`) and `allPrintings`. Do not add it to a deck.
 
-- [x] **Step 6: Correct the now-false `*`-P/T note in `Pawl.Projection`**
+- [x] **Step 6: Correct the now-false `*`-P/T note in `Parun.Projection`**
 
-`source/library/Pawl/Projection.hs`'s `baseColorsOf` comment (around line 314) ends with "no card in the pool has `*` P/T and is therefore not a licence to seed a dynamic CDA". Primal Plasma now does. Replace that clause with:
+`source/library/Parun/Projection.hs`'s `baseColorsOf` comment (around line 314) ends with "no card in the pool has `*` P/T and is therefore not a licence to seed a dynamic CDA". Primal Plasma now does. Replace that clause with:
 
 ```haskell
 -- has `*` P/T with NO characteristic-defining ability behind it -- Primal Plasma
@@ -3175,7 +3175,7 @@ Add `primalPlasmaPrinting` to `Pawl.Cards`'s record, `loadCards` (`loadPrinting 
 
 - [x] **Step 7: Run the four scenarios, then the whole suite**
 
-Run: `cabal test --test-options='-p "Pawl.Replacement"' 2>&1 | tail -30`
+Run: `cabal test --test-options='-p "Parun.Replacement"' 2>&1 | tail -30`
 Expected: PASS, including the centerpiece.
 
 Run: `cabal build all --enable-tests --enable-benchmarks && cabal test 2>&1 | tail -20`
@@ -3184,7 +3184,7 @@ Expected: PASS.
 - [x] **Step 8: Commit**
 
 ```bash
-git add source/library/Pawl data/cards/primal-plasma.json source/test-suite/Pawl pawl.cabal
+git add source/library/Parun data/cards/primal-plasma.json source/test-suite/Parun parun.cabal
 hooky fix
 git add -u
 hooky run
@@ -3207,9 +3207,9 @@ Co-Authored-By: Claude Opus 4.8 (1M context) <noreply@anthropic.com>"
 One card, **two** event classes; and CR 616.1g's nesting, which is only assertable now that Task 7 exists.
 
 **Files:**
-- Modify: `source/library/Pawl/Event.hs` (`createToken` → `createTokens`), `Pawl/Replacement.hs`, `Pawl/Resolve.hs` (the `Create` arm)
-- Create: `data/cards/doubling-season.json`; modify `source/test-suite/Pawl/Cards.hs`
-- Test: `source/test-suite/Pawl/ReplacementSpec.hs`, `source/test-suite/Pawl/EventSpec.hs` (the one `Event.createToken` call site)
+- Modify: `source/library/Parun/Event.hs` (`createToken` → `createTokens`), `Parun/Replacement.hs`, `Parun/Resolve.hs` (the `Create` arm)
+- Create: `data/cards/doubling-season.json`; modify `source/test-suite/Parun/Cards.hs`
+- Test: `source/test-suite/Parun/ReplacementSpec.hs`, `source/test-suite/Parun/EventSpec.hs` (the one `Event.createToken` call site)
 
 **Interfaces:**
 - Consumes: `Replacement.runEntry` and the batch (Task 7).
@@ -3217,7 +3217,7 @@ One card, **two** event classes; and CR 616.1g's nesting, which is only assertab
 
 - [x] **Step 1: Write the failing tests**
 
-Add to `source/test-suite/Pawl/ReplacementSpec.hs`. These reuse `castAndResolve`, `counterBoard`, `raceAnswer` and `countersOn`, which Task 6 added to this same file — tasks run strictly in order, so they are already there.
+Add to `source/test-suite/Parun/ReplacementSpec.hs`. These reuse `castAndResolve`, `counterBoard`, `raceAnswer` and `countersOn`, which Task 6 added to this same file — tasks run strictly in order, so they are already there.
 
 ```haskell
       HU.testCase "CR 616.1g Doubling Season turns Dragon Fodder's two Goblins into four" $
@@ -3259,7 +3259,7 @@ Expected: FAIL — `Not in scope: 'Cards.doublingSeasonPrinting'`.
 
 - [x] **Step 3: Add the token arms to the loop**
 
-`source/library/Pawl/Replacement.hs` — `applies`:
+`source/library/Parun/Replacement.hs` — `applies`:
 
 ```haskell
         (ReplacementEffect.TokenR pat _, ProposedEvent.WouldCreateTokens pid _ _) ->
@@ -3299,7 +3299,7 @@ asTokens event = case event of
 
 - [x] **Step 4: Turn `createToken` into `createTokens`**
 
-`source/library/Pawl/Event.hs`, replacing `createToken`:
+`source/library/Parun/Event.hs`, replacing `createToken`:
 
 ```haskell
 -- CR 111.2: create `n` tokens with the given effect-defined characteristics under
@@ -3352,7 +3352,7 @@ recordEntry newId = do
 
 - [x] **Step 5: Point `Effect.Create` at it**
 
-`source/library/Pawl/Resolve.hs`, replacing the `Create` arm (lines 547–573):
+`source/library/Parun/Resolve.hs`, replacing the `Create` arm (lines 547–573):
 
 ```haskell
   Effect.Create quantity card mSlot -> do
@@ -3380,7 +3380,7 @@ recordEntry newId = do
       _ -> pure ()
 ```
 
-`source/test-suite/Pawl/EventSpec.hs` — its one `Event.createToken` call becomes `Event.createTokens … 1` (the returned ids can be ignored with `Monad.void` or bound and discarded).
+`source/test-suite/Parun/EventSpec.hs` — its one `Event.createToken` call becomes `Event.createTokens … 1` (the returned ids can be ignored with `Monad.void` or bound and discarded).
 
 - [x] **Step 6: Add the card**
 
@@ -3392,11 +3392,11 @@ recordEntry newId = do
 
 Check that trailing brace count — the `replacementEffects` array closes with `]` before `,"triggeredAbilities"`. Validate with `python3 -m json.tool data/cards/doubling-season.json` before committing.
 
-Add `doublingSeasonPrinting` to `Pawl.Cards`'s record, `loadCards` and `allPrintings`; not to a deck.
+Add `doublingSeasonPrinting` to `Parun.Cards`'s record, `loadCards` and `allPrintings`; not to a deck.
 
 - [x] **Step 7: Run the four scenarios, then everything**
 
-Run: `cabal test --test-options='-p "Pawl.Replacement"' 2>&1 | tail -30`
+Run: `cabal test --test-options='-p "Parun.Replacement"' 2>&1 | tail -30`
 Expected: PASS, all of §5's 1–16, 18–20 and 22.
 
 Run: `cabal build all --enable-tests --enable-benchmarks && cabal test 2>&1 | tail -20`
@@ -3405,7 +3405,7 @@ Expected: PASS.
 - [x] **Step 8: Commit**
 
 ```bash
-git add source/library/Pawl data/cards/doubling-season.json source/test-suite/Pawl pawl.cabal
+git add source/library/Parun data/cards/doubling-season.json source/test-suite/Parun parun.cabal
 hooky fix
 git add -u
 hooky run
@@ -3448,7 +3448,7 @@ Run each `gh issue create` and record the number it prints. Labels come from CLA
 | I | CR 208.2b: an unapplied `*` P/T projects nothing rather than 0 | `rules-correctness`, `expires:card-driven` | Unobservable on the battlefield (the entry loop always applies first); a Primal Plasma card in hand/library/graveyard reports `Nothing` where the rule says 0. Sibling of #65. |
 | J | CR 603.7c: a slot-binding Create can mint several tokens once a replacement scales it | `bug`, `expires:card-driven` | The `#53` lint checks the PRINTED quantity; Doubling Season doubling a Tidal Wave's Wall binds "it" to the first token and leaves the rest unnamed. |
 
-Then update **#58** (CR 615.7 / 615.13) with a comment rather than closing it: `ActiveReplacement` now carries `source` and `timestamp`, so both are card-blocked rather than structure-blocked; CR 615.7's shared N-damage shield additionally needs a cross-event allocation the per-event batch shape cannot express (`Pawl.Damage.applyDamage`'s comment records this).
+Then update **#58** (CR 615.7 / 615.13) with a comment rather than closing it: `ActiveReplacement` now carries `source` and `timestamp`, so both are card-blocked rather than structure-blocked; CR 615.7's shared N-damage shield additionally needs a cross-event allocation the per-event batch shape cannot express (`Parun.Damage.applyDamage`'s comment records this).
 
 - [x] **Step 2: Sweep the `(#N)` placeholders**
 
@@ -3464,21 +3464,21 @@ Run each and confirm the expected result:
 
 ```bash
 grep -rn "Prevention\|ActivePrevention\|regenerationShields\|copyOnEnter\|drainAsEntersChoices\|applyPreventions" source/ data/    # no output
-grep -rln "ProposedEvent\.\|ReplacementEffect\." source/library/ | grep -v "Pawl/Replacement.hs\|Pawl/Codec.hs\|Pawl/Type/"        # no output
+grep -rln "ProposedEvent\.\|ReplacementEffect\." source/library/ | grep -v "Parun/Replacement.hs\|Parun/Codec.hs\|Parun/Type/"        # no output
 cabal clean && cabal build all --enable-tests --enable-benchmarks                                                                  # warning-free
 cabal test                                                                                                                          # all green
 git add -A && hooky run                                                                                                             # passes
 cabal bench                                                                                                                         # three timings, no large regression
 ```
 
-The second grep is the **first invariant's audit**: `Pawl.Replacement` is the sole rules home of casing on either type, `Pawl.Codec` is the JSON boundary, and `Pawl.Type.*` modules only construct. Anything else in the output is a fusion of the two halves and must be fixed, not excused.
+The second grep is the **first invariant's audit**: `Parun.Replacement` is the sole rules home of casing on either type, `Parun.Codec` is the JSON boundary, and `Parun.Type.*` modules only construct. Anything else in the output is a fusion of the two halves and must be fixed, not excused.
 
 - [x] **Step 4: Append the `docs/progress.md` completion entry**
 
 One entry, in the file's established voice, recording what P5 *established* — not what is left. It must state:
 - the gate cards and what each falsified (Hardened Scales + Corpsejack Menace: the order decides the board, so a fold has to invent one; Doubling Season: one card, two event classes, plus CR 616.1g nesting; Clone + Primal Plasma: CR 616.2, which no single-pass implementation can produce);
-- what was deleted (`Pawl.Type.Prevention`, `ActivePrevention`, `GameState.preventions`, `regenerationShields`, `Card.copyOnEnter`, `Engine.drainAsEntersChoices` and the `Binding` pending marker, `Event.applyReplacements`/`applyPreventions`/`cancels`/`regenerate`/`markCopyOnEnter`, `Target.legalCopyTargets`, `Effect.Prevent`/`RegenerateSelf`);
-- what was added (`Pawl.Replacement`; `ProposedEvent`'s six arms; `ReplacementEffect`'s six; `ActiveReplacement`/`Uses`; `Effect.Replace`; `Event.putCounters`/`createTokens`; `Prompt.ChooseReplacement`/`ChooseEntryOption`; the monadic funnels and `Sba.performStateBasedActions :: Game Bool`);
+- what was deleted (`Parun.Type.Prevention`, `ActivePrevention`, `GameState.preventions`, `regenerationShields`, `Card.copyOnEnter`, `Engine.drainAsEntersChoices` and the `Binding` pending marker, `Event.applyReplacements`/`applyPreventions`/`cancels`/`regenerate`/`markCopyOnEnter`, `Target.legalCopyTargets`, `Effect.Prevent`/`RegenerateSelf`);
+- what was added (`Parun.Replacement`; `ProposedEvent`'s six arms; `ReplacementEffect`'s six; `ActiveReplacement`/`Uses`; `Effect.Replace`; `Event.putCounters`/`createTokens`; `Prompt.ChooseReplacement`/`ChooseEntryOption`; the monadic funnels and `Sba.performStateBasedActions :: Game Bool`);
 - the **three departures** listed at the top of this plan, with their reasons;
 - tracking: `48b17cb`/issue #1 (M3f replacement seam, GAP-R **and** the CR 616 facet) **closed**; #58 **updated, not closed**; ten new issues (A–J above) filed. Note the family resemblance P4's spec drew: P4 retired the *trigger* ordering elision (603.3b), P5 retires the *replacement* ordering elision (616.1) — different rules, different mechanisms, same shape of mistake;
 - the final suite count, that the build is warning-clean on a from-scratch `cabal clean` build, and the benchmark comparison;
@@ -3498,7 +3498,7 @@ One entry, in the file's established voice, recording what P5 *established* — 
 - [x] **Step 7: Commit**
 
 ```bash
-git add docs/progress.md CLAUDE.md docs/superpowers/specs/2026-07-20-m4.5-closed-half-gaps-design.md source/library/Pawl
+git add docs/progress.md CLAUDE.md docs/superpowers/specs/2026-07-20-m4.5-closed-half-gaps-design.md source/library/Parun
 hooky fix
 git add -u
 hooky run
@@ -3521,7 +3521,7 @@ Expected: `0`.
 
 | Spec section | Where it lands |
 |---|---|
-| §2.1 one vocabulary of proposed events | Task 3 (`Pawl.Type.ProposedEvent`) |
+| §2.1 one vocabulary of proposed events | Task 3 (`Parun.Type.ProposedEvent`) |
 | §2.2 one event-class-general `ReplacementEffect` + patterns | Task 1 |
 | §2.3 one place effects come from (`GameState.replacements`, `Effect.Replace`, `Uses`) | Task 4 |
 | §2.4 the CR 616.1 loop, buckets, applied set, `ChooseReplacement` | Task 3 (with the identity correction) |

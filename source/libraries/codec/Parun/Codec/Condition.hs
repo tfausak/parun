@@ -1,0 +1,37 @@
+module Parun.Codec.Condition where
+
+import qualified Parun.Codec.Compares as Compares
+import qualified Parun.Codec.DuringPhase as DuringPhase
+import qualified Parun.JsonCodec.Arm as Arm
+import qualified Parun.JsonCodec.Codec as Codec
+import qualified Parun.JsonCodec.Common as Common
+import qualified Parun.Types.Condition as Condition
+
+-- | Tagged like every other sum. The two shapes were previously told apart by
+-- their KEYS -- a comparison by @measured@\/@comparison@\/@threshold@ and a
+-- disjunction by a lone @any@ -- which read as well as a tag but could not be
+-- stated as a schema a decoder guarantees (#1304).
+--
+-- A bundle since @Compares@ gained a record for 'Parun.JsonCodec.Fields.object'
+-- to name (#1305); the wire format is unchanged by either step, since the
+-- record's field names are the keys the payload already carried.
+--
+-- @Any@ and @All@ recurse on 'codec' itself, which terminates for
+-- 'Parun.Codec.Quantity''s reason: 'Parun.JsonSchema.Define.define' registers the
+-- name before running the body, so re-entry emits a @$ref@.
+codec :: Codec.Codec Condition.Condition
+codec =
+  Arm.tagged
+    tagOf
+    [ Arm.payload "Compares" Compares.codec Condition.Compares (\x -> case x of Condition.Compares y -> Just y; _ -> Nothing),
+      Arm.payload "Any" (Common.list codec) Condition.Any (\x -> case x of Condition.Any y -> Just y; _ -> Nothing),
+      Arm.payload "All" (Common.list codec) Condition.All (\x -> case x of Condition.All y -> Just y; _ -> Nothing),
+      Arm.payload "During" DuringPhase.codec Condition.During (\x -> case x of Condition.During y -> Just y; _ -> Nothing)
+    ]
+
+tagOf :: Condition.Condition -> String
+tagOf x = case x of
+  Condition.Compares {} -> "Compares"
+  Condition.Any {} -> "Any"
+  Condition.All {} -> "All"
+  Condition.During {} -> "During"

@@ -6,7 +6,7 @@
 
 **Architecture:**
 - `Vote` gains `secret :: Bool`. Its codec defaults the field to `False`, so the existing vote cards need no change.
-- `Pawl.Types.Ballot` describes one cast vote: a voter, plus an object or a word.
+- `Parun.Types.Ballot` describes one cast vote: a voter, plus an object or a word.
 - Two new events:
   - `GameEvent.Voted { ballot, audience :: Set PlayerId }`. Its audience is every player for an open vote, and the voter plus the voter's decider for a secret one (CR 723.4).
   - `GameEvent.VotesRevealed { ballots }`, logged once, after a secret vote's last ballot.
@@ -18,8 +18,8 @@
 
 ## Global Constraints
 
-- **Worktree.** Work only in `/Volumes/nvme/Developer/pawl/.claude/worktrees/4452-secret-vote`, on branch `4452-secret-vote`, cut from `origin/main` at fd2075afd. Never `cd` to the primary checkout or to any other worktree. Before the first build, run `script/warm-worktree.sh seed /Volumes/nvme/Developer/pawl/.claude/worktrees/4452-secret-vote`, then confirm with `ls cabal.project.local`.
-- **Concurrent work.** Another agent is implementing hidden agenda (#3497) in its own worktree. Its changes touch `Pawl.Engine.Visibility`, `Pawl.Engine.Event` and `Pawl.Scenario`. Never touch that worktree. Keep this unit's edits to those three files small and local, so the end-of-work merge stays easy.
+- **Worktree.** Work only in `/Volumes/nvme/Developer/parun/.claude/worktrees/4452-secret-vote`, on branch `4452-secret-vote`, cut from `origin/main` at fd2075afd. Never `cd` to the primary checkout or to any other worktree. Before the first build, run `script/warm-worktree.sh seed /Volumes/nvme/Developer/parun/.claude/worktrees/4452-secret-vote`, then confirm with `ls cabal.project.local`.
+- **Concurrent work.** Another agent is implementing hidden agenda (#3497) in its own worktree. Its changes touch `Parun.Engine.Visibility`, `Parun.Engine.Event` and `Parun.Scenario`. Never touch that worktree. Keep this unit's edits to those three files small and local, so the end-of-work merge stays easy.
 - **Merging.** Merge `origin/main` once, in Task 3 Step 1, and never mid-plan.
 - **Running cabal.**
   - Prefix every `cabal` call with `script/with-build-lock.sh`.
@@ -36,7 +36,7 @@
   - New `Vote` field:
     - Grep every `MkVote` and every `{ Vote.`; `Projection.Rewrite` must carry the field through.
     - Read the `Mentions` arms for `Vote`.
-- **Types and haddocks.** One type per `Pawl.Types.<TypeName>` module. A constructor's haddock is one line plus its CR citation. Every new codec gets a round-trip case.
+- **Types and haddocks.** One type per `Parun.Types.<TypeName>` module. A constructor's haddock is one line plus its CR citation. Every new codec gets a round-trip case.
 - **Style.** `case` over `maybe`, `let` over `where`, no backticks, no partial `head`, and extensions only from `.hlint.yaml`.
 - **Mutations.** Every proving check gets one: `script/with-build-lock.sh script/mutate.sh FILE @SCRIPT PATTERN`, with the sed script in a scratchpad file. Keep imports and bindings used, so `-Werror` still compiles. Name the assertion that reddened. Never edit a file while a mutation runs on it.
 - **Oracle text.** Verify it with `curl -s 'https://api.scryfall.com/cards/named?exact=<Name>'`. Checked 2026-10-11, Truth or Consequences: {2}{U}{R} Sorcery, "Secret council — Each player secretly votes for truth or consequences, then those votes are revealed. You draw cards equal to the number of truth votes. Then choose an opponent at random. Truth or Consequences deals 3 damage to that player for each consequences vote."
@@ -56,20 +56,20 @@
 2. **The reveal shows every ballot to everyone,** in voting order. Test: Task 2, the same scenario's reveal entries.
 3. **An open vote is seen by everyone as it is cast.** Test: Task 1, the Council's Judgment scenario.
 4. **The tallies still drive the card.** Truth or Consequences draws cards equal to the truth votes and deals 3 damage per consequences vote to a random opponent. Test: Task 2, the life and hand-count checks.
-5. **A vote made while controlled is witnessed by the controller too** (CR 723.4). Test: Task 1, a `Pawl.VisibilitySpec` case.
+5. **A vote made while controlled is witnessed by the controller too** (CR 723.4). Test: Task 1, a `Parun.VisibilitySpec` case.
 
 ---
 
 ### Task 1: Ballots and the vote log
 
 **Files:**
-- Create: `source/libraries/types/Pawl/Types/Ballot.hs`, `Voted.hs`, `VotesRevealed.hs` (or one payload type per event, matching `Looked`'s style), plus their codecs and specs.
-- Modify: `source/libraries/types/Pawl/Types/Vote.hs`, `source/libraries/codec/Pawl/Codec/Vote.hs` and its spec.
-- Modify: `source/libraries/types/Pawl/Types/GameEvent.hs`, `source/libraries/codec/Pawl/Codec/GameEvent.hs` and its spec, and every `GameEvent` match the compiler names.
-- Modify: `source/libraries/engine/Pawl/Engine/Resolve/Effect.hs` (the `Vote` arm, ~6773–6824, and its `cast` helper).
-- Modify: `source/libraries/engine/Pawl/Engine/Visibility.hs` (`witnessed`) and `source/libraries/scenario/Pawl/Scenario.hs` (the `Witnessed` arm), plus `data/scenarios/README.md`.
+- Create: `source/libraries/types/Parun/Types/Ballot.hs`, `Voted.hs`, `VotesRevealed.hs` (or one payload type per event, matching `Looked`'s style), plus their codecs and specs.
+- Modify: `source/libraries/types/Parun/Types/Vote.hs`, `source/libraries/codec/Parun/Codec/Vote.hs` and its spec.
+- Modify: `source/libraries/types/Parun/Types/GameEvent.hs`, `source/libraries/codec/Parun/Codec/GameEvent.hs` and its spec, and every `GameEvent` match the compiler names.
+- Modify: `source/libraries/engine/Parun/Engine/Resolve/Effect.hs` (the `Vote` arm, ~6773–6824, and its `cast` helper).
+- Modify: `source/libraries/engine/Parun/Engine/Visibility.hs` (`witnessed`) and `source/libraries/scenario/Parun/Scenario.hs` (the `Witnessed` arm), plus `data/scenarios/README.md`.
 - Create: `data/scenarios/visibility/cr-701-38a-open-vote-council-s-judgment-votes-are-seen-by-everyone.json`.
-- Test: `source/libraries/test/Pawl/VisibilitySpec.hs`.
+- Test: `source/libraries/test/Parun/VisibilitySpec.hs`.
 
 **Interfaces:**
 - **Produces:**
@@ -88,7 +88,7 @@
       - `Witnessed` for alice lists both ballots, e.g. `["alice voted Hill Giant", "bob voted Goblin Piker"]`.
       - `Witnessed` for bob lists the same.
     - Render an object choice by its snapshot or last-known name, so a destroyed object still names itself. Record the exact rendering in the report.
-  - **Spec case.** In `Pawl.VisibilitySpec`, add `"a secret ballot is witnessed by its voter and the voter's controller"`. Build a state in which alice decides for bob (copy the unit-4 controlled-look case), log a secret `Voted` for bob, and assert:
+  - **Spec case.** In `Parun.VisibilitySpec`, add `"a secret ballot is witnessed by its voter and the voter's controller"`. Build a state in which alice decides for bob (copy the unit-4 controlled-look case), log a secret `Voted` for bob, and assert:
     - `witnessed alice` is `Visible`;
     - `witnessed bob` is `Visible`;
     - a third seat is `Obscured`;

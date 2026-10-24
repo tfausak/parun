@@ -73,7 +73,7 @@ site — never write an expiry into the comment):
 
 - **CR 103.5c** — in a multiplayer game (one beginning with more than two players,
   CR 800.1) and in any Brawl game, the first mulligan a player takes doesn't count
-  toward the bottom count or the mulligan limit. pawl does not model formats or
+  toward the bottom count or the mulligan limit. parun does not model formats or
   variants, so the Brawl half has nowhere to read from; the multiplayer half is
   cheap but is deferred with the rest of the multiplayer backlog (#87, #143, #147).
   Labels: `gap, rules-correctness, area:multiplayer`. The two-player counter this
@@ -98,13 +98,13 @@ through the mulligan path, not rebuild it.
 
 ## 3. Architecture
 
-### 3.1 A new logic module, `Pawl.Mulligan`
+### 3.1 A new logic module, `Parun.Mulligan`
 
 Owns the entire CR 103.5 process. Exposes:
 
 ```haskell
 -- The starting hand size (CR 103.5, "normally seven"). Moves here from Setup;
--- Pawl.hs's re-export updates from Setup.openingHand to Mulligan.openingHand.
+-- Parun.hs's re-export updates from Setup.openingHand to Mulligan.openingHand.
 openingHand :: Int
 
 -- Run the whole CR 103.5 process for these players, in turn order. Assumes each
@@ -183,7 +183,7 @@ Bottom :: Decider -> PlayerId -> [ObjectId] -> Natural -> Prompt [ObjectId]
 
 New types (one per module, per conventions):
 
-- `Pawl.Type.MulliganDecision` — `data MulliganDecision = Mulligan | Keep`
+- `Parun.Type.MulliganDecision` — `data MulliganDecision = Mulligan | Keep`
   deriving `(Eq, Show)`. A sum type, not `Bool` (no boolean blindness).
 - `Response` gains `DeclaredMulligan MulliganDecision` and `PutOnBottom [ObjectId]`.
 
@@ -193,7 +193,7 @@ even when *which* cards are forced, so the answer must preserve order.
 
 ### 4.1 Replay integration
 
-`Pawl.Replay` gains the four mechanical additions:
+`Parun.Replay` gains the four mechanical additions:
 
 - `encode`: `DeclareMulligan {} -> Response.DeclaredMulligan answer`;
   `Bottom {} -> Response.PutOnBottom answer`.
@@ -253,7 +253,7 @@ openingHands owners:
   DeclareMulligan prompt carries only `counts[pid]`, and `counts[pid] == 0` cannot
   distinguish "never decided" from "kept immediately," so a stateless decider
   cannot tell it already kept. The engine threads the pool.
-- **Declare-all-then-take-all** (3a fully before 3c): pawl is sequential, so CR
+- **Declare-all-then-take-all** (3a fully before 3c): parun is sequential, so CR
   103.5's "at the same time" is modeled as *collect every declaration, then apply
   every mulligan*. Because a hand is hidden information, no player's redraw is
   observable to another player's still-pending declaration in the same round, so
@@ -272,7 +272,7 @@ openingHands owners:
   the redraw is a full `openingHand` draw even on later mulligans; the reduction
   is entirely in the bottoming count, never in the draw count.
 
-## 6. Testing (`Pawl.MulliganSpec`, new; wired into `Main.hs`)
+## 6. Testing (`Parun.MulliganSpec`, new; wired into `Main.hs`)
 
 Real fixtures over synthetic ones (tests-prefer-real-cards): Mountain/Piker over a
 `Setup.mirror` deck, as the existing setup tests do.
@@ -306,13 +306,13 @@ into a compile error, so none can be silently missed.
 
 ## 7. Blast radius
 
-- **New:** `Pawl.Type.MulliganDecision`, `Pawl.Mulligan`, `Pawl.MulliganSpec`
+- **New:** `Parun.Type.MulliganDecision`, `Parun.Mulligan`, `Parun.MulliganSpec`
   (added to test-suite `other-modules` and `Main.hs`'s `testTree`).
-- **Modified:** `Pawl.Type.Prompt` (+2 constructors), `Pawl.Type.Response`
-  (+2 constructors), `Pawl.Replay` (encode/decode/defaultAnswer),
-  `Pawl.Setup` (`newGame` restructure; `startGameFromCards` draw-loop swap;
-  `shuffleLibrary` + `openingHand` move out), `Pawl.hs` (re-export update),
-  `Pawl.Engine` (`playSubgame` reshuffle → `Mulligan.shuffleLibrary`), every
+- **Modified:** `Parun.Type.Prompt` (+2 constructors), `Parun.Type.Response`
+  (+2 constructors), `Parun.Replay` (encode/decode/defaultAnswer),
+  `Parun.Setup` (`newGame` restructure; `startGameFromCards` draw-loop swap;
+  `shuffleLibrary` + `openingHand` move out), `Parun.hs` (re-export update),
+  `Parun.Engine` (`playSubgame` reshuffle → `Mulligan.shuffleLibrary`), every
   exhaustive `Prompt` answerer (Support, benchmark, CastSpec, GameSpec locals).
 - **Comments:** the `#141` elision notes in `Setup.hs` are removed; the incorrect
   `CR 103.4` citations are corrected to CR 103.5 in the same edit. The
@@ -324,7 +324,7 @@ into a compile error, so none can be silently missed.
 1. `cabal build all --enable-tests --enable-benchmarks` is warning-clean under
    `+pedantic`.
 2. `hooky fix` applied, `hooky run` passes; HLint clean.
-3. `Pawl.MulliganSpec` passes; the CR 727.3 / 729.3 short-deck tests still pass.
+3. `Parun.MulliganSpec` passes; the CR 727.3 / 729.3 short-deck tests still pass.
 4. Every rules claim cites CR 103.5 (or the specific sub-rule) and was checked
    against `docs/rules.txt`.
 5. Issues filed for the CR 103.5c, 103.6, and 103.2a/b deferrals; `(#N)` citations

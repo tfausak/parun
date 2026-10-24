@@ -377,23 +377,23 @@ Everything else stays Haskell 2010, per the style guide.
 
 ## Proposed module layout
 
-**One type per module**, namespaced `Pawl.Type.<TypeName>`, each holding the type
+**One type per module**, namespaced `Parun.Type.<TypeName>`, each holding the type
 and its instances. This keeps recompilation units small (a change to one type
 doesn't rebuild its neighbours) and aids readability. Short exported names,
-disambiguated by module (`Pawl.Type.Object.Object`, imported as `Object`); a
-module never imports its parents, but importing a sibling `Pawl.Type.*` is fine.
+disambiguated by module (`Parun.Type.Object.Object`, imported as `Object`); a
+module never imports its parents, but importing a sibling `Parun.Type.*` is fine.
 
 Type modules (M0): `ObjectId`, `PlayerId`, `Object`, `Source`, `TapState`,
 `Zone`, `Printing`, `Card`, `TypeLine`, `Supertype`, `CardType`, `Subtype`,
 `Phase`, `BeginningStep`, `CombatStep`, `EndingStep`, `Player`, `Status`,
 `Departure`, `Result`, `GameState`, `Prompt`, `Decider`, `Action`, `Program`
 (the generic operational monad), `Game` (the `StateT` alias), `DecisionLog` —
-each as `Pawl.Type.<Name>`.
+each as `Parun.Type.<Name>`.
 
 Logic modules (layout flexible, not one-per-anything): turn advancement
 (`next` / `firstPhase`), the `changeZone` primitive, state-based actions,
 legal-action generation, the interpreter / `runGame`, and the engine loop. A
-top-level `Pawl` re-exports the public API.
+top-level `Parun` re-exports the public API.
 
 ## Explicitly deferred past M0
 

@@ -12,22 +12,22 @@
 
 ## Global Constraints
 
-- Work only in `/Volumes/nvme/Developer/pawl/.claude/worktrees/872-stickers-3` (branch `872-stickers-unit-3`, cut from origin/main 212cfd24a). Never `cd` to the primary checkout.
-- Before the first build, as a bare command: `/Volumes/nvme/Developer/pawl/script/warm-worktree.sh seed /Volumes/nvme/Developer/pawl/.claude/worktrees/872-stickers-3`. It copies `cabal.project.local` too; confirm the file is there.
+- Work only in `/Volumes/nvme/Developer/parun/.claude/worktrees/872-stickers-3` (branch `872-stickers-unit-3`, cut from origin/main 212cfd24a). Never `cd` to the primary checkout.
+- Before the first build, as a bare command: `/Volumes/nvme/Developer/parun/script/warm-worktree.sh seed /Volumes/nvme/Developer/parun/.claude/worktrees/872-stickers-3`. It copies `cabal.project.local` too; confirm the file is there.
 - `$SCRATCH` is the session scratchpad. Prefix every `cabal` call with `script/with-build-lock.sh`, redirect to `$SCRATCH/<name>.log`, read the file. Never pipe `cabal`.
 - Build: `script/with-build-lock.sh cabal build -v0 all > "$SCRATCH/build.log" 2>&1`.
-- Subtree: `script/with-build-lock.sh cabal test --test-options '--timeout 120s --hide-successes -p Sticker' > "$SCRATCH/sticker.log" 2>&1`. Every pattern below is one word; for one holding a space, run the built binary (`find dist-newstyle -name pawl-test-suite -type f -perm -u+x`) with `pawl_datadir=$PWD/data`.
+- Subtree: `script/with-build-lock.sh cabal test --test-options '--timeout 120s --hide-successes -p Sticker' > "$SCRATCH/sticker.log" 2>&1`. Every pattern below is one word; for one holding a space, run the built binary (`find dist-newstyle -name parun-test-suite -type f -perm -u+x`) with `parun_datadir=$PWD/data`.
 - Full suite before each commit: `script/with-build-lock.sh cabal test --test-options '--timeout 120s --hide-successes' > "$SCRATCH/suite.log" 2>&1`. Record the count before Task 1.
 - Mutations build with `cabal.project.local`'s `-Werror`, so a mutation must leave no binding unused. Write the sed script to `$SCRATCH/mN.sed`, run `script/with-build-lock.sh script/mutate.sh FILE @$SCRATCH/mN.sed PATTERN` with the one-word PATTERN named, one at a time, alone in the checkout. The sed texts below are written against the code as this plan gives it; re-anchor them on the formatted file if ormolu reflowed a line. A PATTERN matches test names suite-wide; read the group path `mutate.sh` prints and confirm it is `Sticker`. Name the assertion that reddened and confirm it is the one named; a green or a different red is a finding, diagnosed before moving on.
-- The rules core never cases on an effect's identity. The core cases on `StickerKind` (CR 123.1) and on CR 113.3's ability kind, never on a sheet or what a sticker grants: `stickerGrants` hands every keyword and ability over unread. `Effect.PutSticker` is cased only in `Pawl.Engine.Resolve*` and the exhaustive classification tables.
-- One type per `Pawl.Types.<TypeName>` module, type and instances only. Constructors take `Mk`. A haddock is one line plus its CR citation, except an elision paragraph or a note naming the proving test.
+- The rules core never cases on an effect's identity. The core cases on `StickerKind` (CR 123.1) and on CR 113.3's ability kind, never on a sheet or what a sticker grants: `stickerGrants` hands every keyword and ability over unread. `Effect.PutSticker` is cased only in `Parun.Engine.Resolve*` and the exhaustive classification tables.
+- One type per `Parun.Types.<TypeName>` module, type and instances only. Constructors take `Mk`. A haddock is one line plus its CR citation, except an elision paragraph or a note naming the proving test.
 - An elision gets an issue and a code-site comment saying only what is not implemented, ending `(#N)`. `#N1`–`#N3` are placeholders Task 8 replaces.
 - Read CR text from `docs/rules.txt` by rule number. Re-verify Oracle with `curl -s 'https://api.scryfall.com/cards/named?exact=<Name>'` (URL-encoded, one request at a time) before writing a card or sheet; the texts below are Scryfall's of 2026-10-09.
-- Stage, `hooky fix`, stage again. Card and sheet JSON: `script/format-json.sh fix FILE`. A card file is named by `Pawl.Slug.fromText` of its name; CardSpec's slug lint names the expected file if one is wrong.
+- Stage, `hooky fix`, stage again. Card and sheet JSON: `script/format-json.sh fix FILE`. A card file is named by `Parun.Slug.fromText` of its name; CardSpec's slug lint names the expected file if one is wrong.
 - Never stash; copy aside and move back. Never `git checkout <file>` to revert.
 - Extensions only from `.hlint.yaml`. `case` over `maybe`, `let` over `where`, no backticks in new code.
 - Commit: a subject, at most two sentences of why, then `Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>`. Never put close, fix or resolve beside #872; write "related to #872".
-- Gameplay tests are Haskell specs in `Pawl.StickerSpec` with test-local answerers (unit 1's Divergence 12). Sheet positions in `committedSheets`' order: 0 Night Brushwagg Ringmaster, 1 Slimy Burrito Illusion, 2 Contortionist Otter Storm, 3 Ancestral Hot Dog Minotaur; `withJuggler` appends 4 Unsanctioned Ancient Juggler.
+- Gameplay tests are Haskell specs in `Parun.StickerSpec` with test-local answerers (unit 1's Divergence 12). Sheet positions in `committedSheets`' order: 0 Night Brushwagg Ringmaster, 1 Slimy Burrito Illusion, 2 Contortionist Otter Storm, 3 Ancestral Hot Dog Minotaur; `withJuggler` appends 4 Unsanctioned Ancient Juggler.
 
 ## Review Focus
 
@@ -60,9 +60,9 @@ These are the five input classes most likely to bite. Each has a test in its own
 ## Task 1: a sticker's printed data and ticket cost, and Unsanctioned Ancient Juggler
 
 **Files:**
-- Modify: `source/libraries/engine/Pawl/Engine/Game.hs`, `source/libraries/engine/Pawl/Engine/Sticker.hs`
+- Modify: `source/libraries/engine/Parun/Engine/Game.hs`, `source/libraries/engine/Parun/Engine/Sticker.hs`
 - Create: `data/sticker-sheets/unsanctioned-ancient-juggler.json`
-- Modify: `source/libraries/test/Pawl/StickerSpec.hs`
+- Modify: `source/libraries/test/Parun/StickerSpec.hs`
 
 **Interfaces:**
 - Produces: `Game.stickerSheetOf :: StickerRef -> GameState -> Maybe StickerSheet`, `Game.abilityStickerOf :: StickerRef -> GameState -> Maybe AbilitySticker`, `Game.powerToughnessStickerOf :: StickerRef -> GameState -> Maybe PowerToughnessSticker`; `Sticker.ticketCost :: StickerRef -> GameState -> Natural`; spec helpers `aliceSticker`, `withJuggler`, `placingRef` and the sticker constants below.
@@ -103,7 +103,7 @@ These are the five input classes most likely to bite. Each has a test in its own
 }
 ```
 
-In `Pawl.StickerSpec`, add the imports `qualified Pawl.Engine.Keyword as KeywordEngine` and `qualified Pawl.Types.GrantedAbility as GrantedAbility`, these helpers after `otter`:
+In `Parun.StickerSpec`, add the imports `qualified Parun.Engine.Keyword as KeywordEngine` and `qualified Parun.Types.GrantedAbility as GrantedAbility`, these helpers after `otter`:
 
 ```haskell
 -- One of alice's stickers, by its sheet's position, its kind and its index
@@ -180,7 +180,7 @@ and at the end of `spec`:
 
 - [ ] **Step 3: Run; expected failure** "Not in scope: 'Sticker.ticketCost'".
 
-- [ ] **Step 4: Implement.** `Game.hs` (imports `qualified Pawl.Types.AbilitySticker as AbilitySticker`, `qualified Pawl.Types.PowerToughnessSticker as PowerToughnessSticker`), replacing `stickerWords`:
+- [ ] **Step 4: Implement.** `Game.hs` (imports `qualified Parun.Types.AbilitySticker as AbilitySticker`, `qualified Parun.Types.PowerToughnessSticker as PowerToughnessSticker`), replacing `stickerWords`:
 
 ```haskell
 -- | CR 123.2: the sheet a sticker is printed on, among its owner's brought
@@ -226,7 +226,7 @@ powerToughnessStickerOf ref gs = case StickerRef.kind ref of
   StickerKind.Art -> Nothing
 ```
 
-`Sticker.hs` (imports `qualified Pawl.Types.AbilitySticker as AbilitySticker`, `qualified Pawl.Types.PowerToughnessSticker as PowerToughnessSticker`), after `available`:
+`Sticker.hs` (imports `qualified Parun.Types.AbilitySticker as AbilitySticker`, `qualified Parun.Types.PowerToughnessSticker as PowerToughnessSticker`), after `available`:
 
 ```haskell
 -- | CR 123.3c / 107.17a: a sticker's ticket cost, printed on its sheet; a name
@@ -252,14 +252,14 @@ Format the sheet JSON with `script/format-json.sh fix`.
 ## Task 2: ability stickers in layer 6, in every public zone
 
 **Files:**
-- Modify: `source/libraries/engine/Pawl/Engine/Projection.hs`, `source/libraries/engine/Pawl/Engine/CombatRestriction.hs`
-- Modify: `source/libraries/test/Pawl/StickerSpec.hs`
+- Modify: `source/libraries/engine/Parun/Engine/Projection.hs`, `source/libraries/engine/Parun/Engine/CombatRestriction.hs`
+- Modify: `source/libraries/test/Parun/StickerSpec.hs`
 
 **Interfaces:**
 - Produces: `Projection.stickerGrants :: AbilitySticker -> [Modification]`; `Projection.stickerWrites :: (Modification -> Bool) -> GameState -> Bool`; `stickerGathered`'s ability arm.
 - Consumes: Task 1's `Game.abilityStickerOf`.
 
-- [ ] **Step 1: Write the failing tests.** In `Pawl.StickerSpec`:
+- [ ] **Step 1: Write the failing tests.** In `Parun.StickerSpec`:
 
 ```haskell
   -- Every one of unit 1's eight ability stickers on its own Grizzly Bears:
@@ -294,11 +294,11 @@ Format the sheet JSON with `script/format-json.sh fix`.
     Spec.assertEqWith s "CR 613.7 Yixlid Jailer entering after the sticker takes flying away" (flies jailedAfter) False
 ```
 
-Add the import `qualified Pawl.Types.ProjectedCharacteristics as PC`.
+Add the import `qualified Parun.Types.ProjectedCharacteristics as PC`.
 
 - [ ] **Step 2: Run; expected failure** "CR 113.3b Contortionist's {T} ability is the Bears' one activated ability" (0 against 1).
 
-- [ ] **Step 3: Implement.** `Projection.hs` (imports `qualified Pawl.Types.AbilitySticker as AbilitySticker`, `qualified Pawl.Types.PowerToughnessSticker as PowerToughnessSticker`). Replace `stickerGathered` and its comment; Task 3 adds the P/T arm to the same `parts`:
+- [ ] **Step 3: Implement.** `Projection.hs` (imports `qualified Parun.Types.AbilitySticker as AbilitySticker`, `qualified Parun.Types.PowerToughnessSticker as PowerToughnessSticker`). Replace `stickerGathered` and its comment; Task 3 adds the P/T arm to the same `parts`:
 
 ```haskell
 -- CR 123.6 / 123.7 / 613.7k: each sticker on an object is a continuous effect
@@ -365,8 +365,8 @@ Add `|| stickerWrites writes gs` to `grantInForce`, `|| stickerWrites mints gs` 
 ## Task 3: P/T stickers in layer 7b
 
 **Files:**
-- Modify: `source/libraries/engine/Pawl/Engine/Projection.hs`
-- Modify: `source/libraries/test/Pawl/StickerSpec.hs`
+- Modify: `source/libraries/engine/Parun/Engine/Projection.hs`
+- Modify: `source/libraries/test/Parun/StickerSpec.hs`
 
 **Interfaces:**
 - Produces: `stickerGathered`'s P/T arm.
@@ -486,9 +486,9 @@ Extend the comment's first paragraph with "and a P/T sticker's numbers in layer 
 ## Task 4: ticket costs, the cap and the waiver, and Lineprancers
 
 **Files:**
-- Modify: `source/libraries/types/Pawl/Types/PutSticker.hs`, `source/libraries/codec/Pawl/Codec/PutSticker.hs`, `source/libraries/codec/Pawl/Codec/EffectSpec.hs`
-- Modify: `source/libraries/engine/Pawl/Engine/Sticker.hs`, `source/libraries/engine/Pawl/Engine/Resolve/Effect.hs`, `source/libraries/engine/Pawl/Engine/Resolve/Slots.hs`, `source/libraries/engine/Pawl/Engine/Projection/Rewrite.hs`, `source/libraries/engine/Pawl/Engine/Interchangeable/Mentions.hs`
-- Modify: `source/libraries/test/Pawl/CardSpec.hs`, `source/libraries/test/Pawl/EffectLintSpec.hs`, `source/libraries/test/Pawl/StickerSpec.hs`
+- Modify: `source/libraries/types/Parun/Types/PutSticker.hs`, `source/libraries/codec/Parun/Codec/PutSticker.hs`, `source/libraries/codec/Parun/Codec/EffectSpec.hs`
+- Modify: `source/libraries/engine/Parun/Engine/Sticker.hs`, `source/libraries/engine/Parun/Engine/Resolve/Effect.hs`, `source/libraries/engine/Parun/Engine/Resolve/Slots.hs`, `source/libraries/engine/Parun/Engine/Projection/Rewrite.hs`, `source/libraries/engine/Parun/Engine/Interchangeable/Mentions.hs`
+- Modify: `source/libraries/test/Parun/CardSpec.hs`, `source/libraries/test/Parun/EffectLintSpec.hs`, `source/libraries/test/Parun/StickerSpec.hs`
 - Create: `data/cards/lineprancers.json`
 
 **Interfaces:**
@@ -527,7 +527,7 @@ Extend the comment's first paragraph with "and a P/T sticker's numbers in layer 
 }]}
 ```
 
-In `Pawl.StickerSpec` (imports `qualified Pawl.Types.ActiveBlockRequirement as ActiveBlockRequirement`, `qualified Pawl.Types.SlotName as SlotName`):
+In `Parun.StickerSpec` (imports `qualified Parun.Types.ActiveBlockRequirement as ActiveBlockRequirement`, `qualified Parun.Types.SlotName as SlotName`):
 
 ```haskell
   -- Review Focus 3, and Review Focus 1 through the card. Alice has no tickets
@@ -586,7 +586,7 @@ In `EffectSpec`, keep the PutSticker case's JSON and give its value `Nothing Fal
 - [ ] **Step 3: Run; expected failure** "Couldn't match expected type" at `EffectSpec`'s new case, or, once it builds, "CR 123.3c alice spent both tickets" (2 against 0).
 
 - [ ] **Step 4: Implement.**
-  - `Types/PutSticker.hs` (import `qualified Pawl.Types.Quantity as Quantity`), between `kinds` and `bound`:
+  - `Types/PutSticker.hs` (import `qualified Parun.Types.Quantity as Quantity`), between `kinds` and `bound`:
 
     ```haskell
         -- | CR 123.3c: "with ticket cost X or less" (Pin Collection).
@@ -595,8 +595,8 @@ In `EffectSpec`, keep the PutSticker case's JSON and give its value `Nothing Fal
         free :: Bool,
     ```
 
-  - `Codec/PutSticker.hs` (import `qualified Pawl.Codec.Quantity as Quantity`): `ticketCap <- Fields.defaulted "ticketCap" Nothing (Common.maybe Quantity.codec) PutSticker.ticketCap` and `free <- Fields.defaulted "free" False Common.boolean PutSticker.free`, both in the record.
-  - `Sticker.hs` (import `qualified Pawl.Types.PlayerCounterKind as PlayerCounterKind`), after `ticketCost`:
+  - `Codec/PutSticker.hs` (import `qualified Parun.Codec.Quantity as Quantity`): `ticketCap <- Fields.defaulted "ticketCap" Nothing (Common.maybe Quantity.codec) PutSticker.ticketCap` and `free <- Fields.defaulted "free" False Common.boolean PutSticker.free`, both in the record.
+  - `Sticker.hs` (import `qualified Parun.Types.PlayerCounterKind as PlayerCounterKind`), after `ticketCost`:
 
     ```haskell
     -- | CR 123.3 / 123.3c: the stickers `pid` may put on `oid`: `available`, less
@@ -662,9 +662,9 @@ In `EffectSpec`, keep the PutSticker case's JSON and give its value `Nothing Fal
 ## Task 5: CR 123.7a's grant, CR 107.3m's X, Pin Collection and Shadowspear
 
 **Files:**
-- Modify: `source/libraries/types/Pawl/Types/Modification.hs`, `source/libraries/codec/Pawl/Codec/Modification.hs`, `source/libraries/codec/Pawl/Codec/ModificationSpec.hs`
-- Modify: `source/libraries/engine/Pawl/Engine/Projection.hs`, `source/libraries/engine/Pawl/Engine/Projection/Rewrite.hs`, `source/libraries/engine/Pawl/Engine/Interchangeable/Mentions.hs`, `source/libraries/engine/Pawl/Engine/Engine.hs`, `source/libraries/types/Pawl/Types/Object.hs` (haddock)
-- Modify: `source/libraries/test/Pawl/CardSpec.hs`, `source/libraries/test/Pawl/StickerSpec.hs`
+- Modify: `source/libraries/types/Parun/Types/Modification.hs`, `source/libraries/codec/Parun/Codec/Modification.hs`, `source/libraries/codec/Parun/Codec/ModificationSpec.hs`
+- Modify: `source/libraries/engine/Parun/Engine/Projection.hs`, `source/libraries/engine/Parun/Engine/Projection/Rewrite.hs`, `source/libraries/engine/Parun/Engine/Interchangeable/Mentions.hs`, `source/libraries/engine/Parun/Engine/Engine.hs`, `source/libraries/types/Parun/Types/Object.hs` (haddock)
+- Modify: `source/libraries/test/Parun/CardSpec.hs`, `source/libraries/test/Parun/StickerSpec.hs`
 - Create: `data/cards/pin-collection.json`, `data/cards/shadowspear.json`
 
 **Interfaces:**
@@ -718,7 +718,7 @@ In `EffectSpec`, keep the PutSticker case's JSON and give its value `Nothing Fal
 }]}
 ```
 
-In `Pawl.StickerSpec`, a helper after `placingRef`:
+In `Parun.StickerSpec`, a helper after `placingRef`:
 
 ```haskell
 -- alice casts Pin Collection with X = `x` and everything resolves under
@@ -802,7 +802,7 @@ and the cases:
         -- `src`, read off the stickers and never off src's projection, so a
         -- layer-6 loss on src does not reach them. Each goes through the
         -- GainKeyword or GainAbility arm, the receiver its source (CR 113.7).
-        -- Pawl.StickerSpec's Shadowspear case proves it.
+        -- Parun.StickerSpec's Shadowspear case proves it.
         Modification.GainAbilitiesOfStickers ->
           let granted = foldMap (concatMap (\p -> foldMap stickerGrants (Game.abilityStickerOf (StickerPlacement.sticker p) gs)) . Foldable.toList . Object.stickers) (Game.lookupObject src gs)
            in List.foldl' (\acc g -> applyModification textBoxOf viewOf src stamp gs oid unitTypes affected g acc) pc granted
@@ -839,9 +839,9 @@ and the cases:
 ## Task 6: "that creature" for a placement, and Tusk and Whiskers
 
 **Files:**
-- Modify: `source/libraries/engine/Pawl/Engine/Event/Binding.hs`
+- Modify: `source/libraries/engine/Parun/Engine/Event/Binding.hs`
 - Create: `data/cards/tusk-and-whiskers.json`
-- Modify: `source/libraries/test/Pawl/StickerSpec.hs`
+- Modify: `source/libraries/test/Parun/StickerSpec.hs`
 
 **Interfaces:**
 - Produces: `eventBindings`' `(PlacesSticker, StickerPut)` arm; `eventBindingSlots`' `PlacesSticker _ -> Set.singleton Binding.became`.
@@ -873,7 +873,7 @@ and the cases:
 }]}
 ```
 
-In `Pawl.StickerSpec`:
+In `Parun.StickerSpec`:
 
 ```haskell
   -- One board, two answers: Night's menace (ability) or Otter's 5/1 (P/T) on
@@ -919,7 +919,7 @@ In `Pawl.StickerSpec`:
     Binding.setBecame (StickerPut.object put) Map.empty
 ```
 
-and `eventBindingSlots`' `TriggerCondition.PlacesSticker _ -> Set.singleton Binding.became`, its comment naming Tusk and Whiskers. `Pawl.LeavesTriggerSpec`'s "eventBindingSlots names exactly the keys eventBindings stamps" pins the pair through `ZoneTriggerSpec`'s representative `StickerPut`.
+and `eventBindingSlots`' `TriggerCondition.PlacesSticker _ -> Set.singleton Binding.became`, its comment naming Tusk and Whiskers. `Parun.LeavesTriggerSpec`'s "eventBindingSlots names exactly the keys eventBindings stamps" pins the pair through `ZoneTriggerSpec`'s representative `StickerPut`.
 
 - [ ] **Step 5: Run** `-p Sticker`, `-p Trigger`, `-p Card`, then the full suite. Expected: green.
 
@@ -932,9 +932,9 @@ and `eventBindingSlots`' `TriggerCondition.PlacesSticker _ -> Set.singleton Bind
 ## Task 7: CR 123.8a's sticker P/T, and Ambassador Blorpityblorpboop
 
 **Files:**
-- Modify: `source/libraries/types/Pawl/Types/Quantity.hs`, `source/libraries/codec/Pawl/Codec/Quantity.hs`, `source/libraries/codec/Pawl/Codec/QuantitySpec.hs`
-- Modify: `source/libraries/engine/Pawl/Engine/Filter.hs`, `source/libraries/engine/Pawl/Engine/Projection/View.hs`, `source/libraries/engine/Pawl/Engine/Count.hs`, `source/libraries/engine/Pawl/Engine/Quantity.hs`, `source/libraries/engine/Pawl/Engine/QuantitySlot.hs`, `source/libraries/engine/Pawl/Engine/Projection.hs`, `source/libraries/engine/Pawl/Engine/Interchangeable/Mentions.hs`
-- Modify: `source/libraries/test/Pawl/FilterSpec.hs`, `source/libraries/test/Pawl/Support.hs`, `source/libraries/test/Pawl/StickerSpec.hs`
+- Modify: `source/libraries/types/Parun/Types/Quantity.hs`, `source/libraries/codec/Parun/Codec/Quantity.hs`, `source/libraries/codec/Parun/Codec/QuantitySpec.hs`
+- Modify: `source/libraries/engine/Parun/Engine/Filter.hs`, `source/libraries/engine/Parun/Engine/Projection/View.hs`, `source/libraries/engine/Parun/Engine/Count.hs`, `source/libraries/engine/Parun/Engine/Quantity.hs`, `source/libraries/engine/Parun/Engine/QuantitySlot.hs`, `source/libraries/engine/Parun/Engine/Projection.hs`, `source/libraries/engine/Parun/Engine/Interchangeable/Mentions.hs`
+- Modify: `source/libraries/test/Parun/FilterSpec.hs`, `source/libraries/test/Parun/Support.hs`, `source/libraries/test/Parun/StickerSpec.hs`
 - Create: `data/cards/ambassador-blorpityblorpboop.json`
 
 **Interfaces:**
@@ -976,7 +976,7 @@ and `eventBindingSlots`' `TriggerCondition.PlacesSticker _ -> Set.singleton Bind
 }]}
 ```
 
-In `Pawl.StickerSpec` (imports `qualified Pawl.Types.CombatStep as CombatStep`, `qualified Pawl.Types.GameEvent as GameEvent`, `qualified Pawl.Types.StepBegan as StepBegan`):
+In `Parun.StickerSpec` (imports `qualified Parun.Types.CombatStep as CombatStep`, `qualified Parun.Types.GameEvent as GameEvent`, `qualified Parun.Types.StepBegan as StepBegan`):
 
 ```haskell
   -- Review Focus 5. Ambassador's own trigger puts Otter's 5/1 on the Bears;
@@ -1058,33 +1058,33 @@ In `Pawl.StickerSpec` (imports `qualified Pawl.Types.CombatStep as CombatStep`, 
 N1, title "Eldrazi Guacamole Tightrope's sheet can't be added: no self-cast-from-graveyard with an extra cost", labels `gap,expires:card-driven,area:cards`:
 
 ```markdown
-> **Summary (2026-10-09).** The sticker sheet Eldrazi Guacamole Tightrope has an ability sticker reading "You may cast this card from your graveyard by paying 2 life in addition to paying its other costs". Pawl's permission for a card to cast itself from a graveyard carries no extra cost, and a player permission that does only works from a permanent. Eldrazi Guacamole Tightrope is the sheet to add; it is also the sheet whose ability sticker matters off the battlefield.
+> **Summary (2026-10-09).** The sticker sheet Eldrazi Guacamole Tightrope has an ability sticker reading "You may cast this card from your graveyard by paying 2 life in addition to paying its other costs". Parun's permission for a card to cast itself from a graveyard carries no extra cost, and a player permission that does only works from a permanent. Eldrazi Guacamole Tightrope is the sheet to add; it is also the sheet whose ability sticker matters off the battlefield.
 
 ### Details
 
-- CR 113.6f, CR 123.7, CR 601.2f. `Pawl.Types.CastingPermission.CastFromGraveyard` has no payload; `Pawl.Types.CastFromZone.additionalCosts` rides `PlayerEffect.CastFrom`, gathered from permanents.
+- CR 113.6f, CR 123.7, CR 601.2f. `Parun.Types.CastingPermission.CastFromGraveyard` has no payload; `Parun.Types.CastFromZone.additionalCosts` rides `PlayerEffect.CastFrom`, gathered from permanents.
 - Its other stickers (haste, 1/4, 5/3) are expressible now.
 ```
 
 N2, title "A static ability on an ability sticker doesn't apply to the stickered object", labels `gap,expires:card-driven,area:cards`:
 
 ```markdown
-> **Summary (2026-10-09).** Some ability stickers print a static ability: Trained Blessed Mind's "Threshold — As long as seven or more cards are in your graveyard, this creature gets +4/+0 and has trample", Vampire Champion Fury's hellbent, Mystic Doom Sandwich's "must be blocked if able". Pawl grants a sticker's keywords, activated and triggered abilities, but a static or rule ability granted to the object itself joins no list, and nor does a keyword rule 702 states as a static ability. Trained Blessed Mind is the sheet to add.
+> **Summary (2026-10-09).** Some ability stickers print a static ability: Trained Blessed Mind's "Threshold — As long as seven or more cards are in your graveyard, this creature gets +4/+0 and has trample", Vampire Champion Fury's hellbent, Mystic Doom Sandwich's "must be blocked if able". Parun grants a sticker's keywords, activated and triggered abilities, but a static or rule ability granted to the object itself joins no list, and nor does a keyword rule 702 states as a static ability. Trained Blessed Mind is the sheet to add.
 
 ### Details
 
-- CR 113.3d, CR 123.7, CR 613.1f. `Pawl.Engine.Projection.stickerGathered` cites this issue; `Pawl.Engine.Projection.View.grantedStaticAbilitiesOf` reads stored grants only.
-- `Pawl.StickerSpec`'s "no committed ability sticker carries a static or rule ability" keeps such a sheet out until this lands; delete it then.
+- CR 113.3d, CR 123.7, CR 613.1f. `Parun.Engine.Projection.stickerGathered` cites this issue; `Parun.Engine.Projection.View.grantedStaticAbilitiesOf` reads stored grants only.
+- `Parun.StickerSpec`'s "no committed ability sticker carries a static or rule ability" keeps such a sheet out until this lands; delete it then.
 ```
 
 N3, title "Clandestine Chameleon can't have the abilities of stickers on other permanents and graveyard cards", labels `gap,expires:card-driven,area:effects`:
 
 ```markdown
-> **Summary (2026-10-09).** Clandestine Chameleon has all abilities of ability stickers on other permanents you own and cards in your graveyard. Pawl's grant of a sticker's abilities reads only the stickers on the granting object itself (Pin Collection). Clandestine Chameleon is the card.
+> **Summary (2026-10-09).** Clandestine Chameleon has all abilities of ability stickers on other permanents you own and cards in your graveyard. Parun's grant of a sticker's abilities reads only the stickers on the granting object itself (Pin Collection). Clandestine Chameleon is the card.
 
 ### Details
 
-- CR 123.7a. `Pawl.Types.Modification.GainAbilitiesOfStickers` cites this issue.
+- CR 123.7a. `Parun.Types.Modification.GainAbilitiesOfStickers` cites this issue.
 - Its "you get {TK}{TK}, then you may put a sticker on a nonland permanent you own" is expressible now.
 ```
 
@@ -1095,16 +1095,16 @@ N3, title "Clandestine Chameleon can't have the abilities of stickers on other p
 
 ## Task 9: ingest, sweeps, self-review and the PR
 
-- [ ] **Step 1: Re-run `pawl ingest`:**
-  - `jq -f script/ingest/candidates.jq /Volumes/nvme/Developer/pawl/_scratch/AtomicCards.json > "$SCRATCH/candidates.json"`
-  - `script/with-build-lock.sh cabal run -v0 pawl -- ingest "$SCRATCH/candidates.json" > "$SCRATCH/ingest.log" 2>&1`
+- [ ] **Step 1: Re-run `parun ingest`:**
+  - `jq -f script/ingest/candidates.jq /Volumes/nvme/Developer/parun/_scratch/AtomicCards.json > "$SCRATCH/candidates.json"`
+  - `script/with-build-lock.sh cabal run -v0 parun -- ingest "$SCRATCH/candidates.json" > "$SCRATCH/ingest.log" 2>&1`
   - Read the log. Every disagreement it names among this unit's five cards and the Juggler sheet is fixed here; one on any other card is filed or folded per CLAUDE.md. The four unit-1 sheets' stamped texts must not change (`git diff data/sticker-sheets`). Delete any new keyword-only card file it wrote (`git status --porcelain data/cards | grep '^??'`), out of scope, and say how many in the PR. `script/format-json.sh fix` every changed file, then the full suite.
 - [ ] **Step 2: Sweeps.**
   - `grep -rn '872' source docs data --include='*.hs' --include='*.md' --include='*.json'`: unit 1's meld, merge and restamp elisions and `Keyword.hs`' sticker kicker only.
   - `grep -rn -i 'sticker\|ticket' source --include='*.hs'` and read every comment this unit touched; counting absolutes ("the one producer", "art stickers carry no data", "Game.stickerWords answers Nothing for every other kind") are now false: fix them.
   - `grep -rn '{ *PutSticker\.\|PutSticker\.[a-z]* = ' source --include='*.hs'` for a record update that keeps an old `ticketCap` or `free`; `Rewrite.rewriteEffect` is the one rebuilding it.
   - CR citations: for each rule in `git diff origin/main -U0 | grep -o 'CR [0-9][0-9.a-z/-]*' | sort -u`, read it in `docs/rules.txt`.
-- [ ] **Step 3: Self-review.** `git fetch`, `git merge origin/main` (once, now), the full suite, then re-run m2b, m3a, m4a, m5a, m6, m7a. Re-read every comment the diff touched against the one-line haddock rule. Read `gh api repos/tfausak/pawl/issues/872/dependencies/blocking` and name what this unblocked.
+- [ ] **Step 3: Self-review.** `git fetch`, `git merge origin/main` (once, now), the full suite, then re-run m2b, m3a, m4a, m5a, m6, m7a. Re-read every comment the diff touched against the one-line haddock rule. Read `gh api repos/tfausak/parun/issues/872/dependencies/blocking` and name what this unblocked.
 - [ ] **Step 4: Open the PR.** `gh pr create --draft --title "Stickers unit 3: ability and P/T stickers, ticket costs" --body-file $SCRATCH/pr.md`, the body:
 
 ```

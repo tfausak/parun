@@ -11,7 +11,7 @@ number; the gate card's text is checked against Scryfall. The next step is a
 ## 0. Why this exists
 
 `Mulligan.openingHands` stops when the CR 103.5 mulligan process ends. CR 103.6
-defines one more step before the first turn, and pawl has no seam for it: no card
+defines one more step before the first turn, and parun has no seam for it: no card
 can begin the game on the battlefield, and no card can be revealed from an
 opening hand.
 
@@ -70,12 +70,12 @@ Void.
 **Explicitly deferred** (file as a GitHub issue, cite `(#N)` at the code site):
 
 - **CR 103.6b** — revealing a card from the opening hand (the Chancellor cycle).
-  It needs two pieces of state nothing else in pawl wants yet: a per-object
+  It needs two pieces of state nothing else in parun wants yet: a per-object
   *revealed* flag cleared when the first turn begins, and once-only tracking so a
   card cannot be revealed twice. 103.6a needs neither — putting the card onto the
   battlefield removes it from the hand, which is its own once-only guard. Labels:
   `gap, expires:card-driven`.
-- **CR 103.6c** — shared team turns. Needs the format/variant concept pawl does
+- **CR 103.6c** — shared team turns. Needs the format/variant concept parun does
   not have (#175), the same posture CR 103.5d and CR 801–811 already take. No new
   issue; it belongs to #175.
 - **Gemstone Caverns** — a 103.6a card, but its rider ("with a luck counter on
@@ -104,9 +104,9 @@ openingHands perform owners = do
 exactly the order CR 103.6 asks for, and all three setup paths already funnel
 through this one entry point.
 
-**`Pawl.Mulligan` keeps its name.** The module will own a rule that is explicitly
+**`Parun.Mulligan` keeps its name.** The module will own a rule that is explicitly
 *not* a mulligan, which is a fair objection — the alternative considered was
-renaming it `Pawl.OpeningHand` to match its own entry point and its actual
+renaming it `Parun.OpeningHand` to match its own entry point and its actual
 charter, which the no-API-stability rule makes cheap (ten importers). Rejected
 because the split would be worse than the mismatch: `openingHands` has to stay
 one function (both setup paths call it, and CR 103.6 is *defined* relative to the
@@ -148,11 +148,11 @@ Its two callers pass `Card.mulliganAction` and `Card.openingHandAction`.
 CR 103.6a's action is "puts that card onto the battlefield" — a single-object
 move to a known zone, which `Effect.MoveToZone SlotName Zone` already *is*. The
 only question is how the card names itself, and the codebase has already answered
-it. `Pawl.Type.Effect`'s `Sacrifice` comment:
+it. `Parun.Type.Effect`'s `Sacrifice` comment:
 
 > One opcode, not a targetless `SacrificeSelf` plus a slotted variant: "this
 > creature" is expressible because `Engine.placeOne` binds the trigger's SOURCE
-> into the reserved `Pawl.Binding.triggerSource` slot
+> into the reserved `Parun.Binding.triggerSource` slot
 
 So Leyline's action is data, with no ISA change at all:
 
@@ -192,8 +192,8 @@ priority of turn 1, which is where CR 103.6 leaves it.
 
 ### 3.4 The performer's name
 
-`Pawl.Type.MulliganPerformer` is now used by two windows, one of which CR 103.6
-explicitly is not. It is renamed `Pawl.Type.HandActionPerformer`, with
+`Parun.Type.MulliganPerformer` is now used by two windows, one of which CR 103.6
+explicitly is not. It is renamed `Parun.Type.HandActionPerformer`, with
 `Resolve.performMulliganAction` → `Resolve.performHandAction`; `S.performer` keeps
 its name. Same drift argument as §3.1, but here the fix is genuinely cheap: the
 type has one implementation, is threaded through four functions, and every site
@@ -257,7 +257,7 @@ for the reason `ChoseDefender`'s comment records: `decode` must return `Nothing`
 for a response that does not match the prompt being asked, and two prompts
 sharing a constructor cannot do that.
 
-`Pawl.Replay` gains the three mechanical arms; `defaultAnswer` is `Nothing`
+`Parun.Replay` gains the three mechanical arms; `defaultAnswer` is `Nothing`
 (declining is always legal and least-eventful, mirroring `MulliganAction`).
 
 Every exhaustive `Prompt` answerer gains an arm answering `Nothing`. As with
@@ -312,7 +312,7 @@ ask, don't prompt.
 (`startGameFromCards` derives it from `Departure.stillPlayingInOrder`), so a
 player who has left gets no window, exactly as they get no opening hand.
 
-## 6. Testing (`Pawl.MulliganSpec`, extended)
+## 6. Testing (`Parun.MulliganSpec`, extended)
 
 1. **The action is offered after the mulligan process, not during it.** A
    recording interpreter shows every `DeclareMulligan` for both players before the
@@ -331,7 +331,7 @@ player who has left gets no window, exactly as they get no opening hand.
    the Leyline on the battlefield when the first turn begins.
 8. **Replay determinism.** A `record` / `replay` round-trip over a game with an
    opening-hand action reproduces the final state.
-9. **Leyline's replacement works** (`Pawl.ReplacementSpec` or `ResolveSpec`): a
+9. **Leyline's replacement works** (`Parun.ReplacementSpec` or `ResolveSpec`): a
    card that would be put into an opponent's graveyard is exiled instead, while
    the Leyline controller's own card still reaches their graveyard — the
    assertion that distinguishes `Opponents` from `Anyones`.
@@ -340,22 +340,22 @@ player who has left gets no window, exactly as they get no opening hand.
     graveyard, so it is *not* exiled. This is the case a controller-based test
     would get wrong.
 
-`Pawl.CardsSpec` covers `leyline-of-the-void.json` by its whole-directory sweeps;
-`Pawl.CodecSpec` gains the `openingHandAction` and `ControllerRelation.Opponents`
+`Parun.CardsSpec` covers `leyline-of-the-void.json` by its whole-directory sweeps;
+`Parun.CodecSpec` gains the `openingHandAction` and `ControllerRelation.Opponents`
 round-trips.
 
 ## 7. Blast radius
 
 - **New:** `data/cards/leyline-of-the-void.json`.
-- **Renamed:** `Pawl.Type.MulliganPerformer` → `Pawl.Type.HandActionPerformer`;
+- **Renamed:** `Parun.Type.MulliganPerformer` → `Parun.Type.HandActionPerformer`;
   `Resolve.performMulliganAction` → `Resolve.performHandAction`.
-- **Modified types:** `Pawl.Type.Card` (+`openingHandAction`),
-  `Pawl.Type.Prompt` (+`OpeningHandAction`), `Pawl.Type.Response`
-  (+`TookOpeningHandAction`), `Pawl.Type.ControllerRelation` (+`Opponents`).
-- **Modified logic:** `Pawl.Codec` (the card field, the relation arm),
-  `Pawl.Replay` (three arms), `Pawl.Resolve` (the performer's bindings and its
-  name), `Pawl.Mulligan` (`actionsFor`'s selector, the shared window loop,
-  `openingHandActions`, the third phase), `Pawl.Replacement` (the owner-based
+- **Modified types:** `Parun.Type.Card` (+`openingHandAction`),
+  `Parun.Type.Prompt` (+`OpeningHandAction`), `Parun.Type.Response`
+  (+`TookOpeningHandAction`), `Parun.Type.ControllerRelation` (+`Opponents`).
+- **Modified logic:** `Parun.Codec` (the card field, the relation arm),
+  `Parun.Replay` (three arms), `Parun.Resolve` (the performer's bindings and its
+  name), `Parun.Mulligan` (`actionsFor`'s selector, the shared window loop,
+  `openingHandActions`, the third phase), `Parun.Replacement` (the owner-based
   zone-change subject test).
 - **Modified tests:** every exhaustive `Prompt` answerer, the four
   `Card.Type.MkCard` literals, `MulliganSpec`, `CodecSpec`, `CardsSpec`, and the
@@ -384,7 +384,7 @@ round-trips.
 - **#184 gains a note rather than a sibling.** The `CardSpec` lint family does not
   range over `Card.mulliganAction`; it now does not range over
   `Card.openingHandAction` either. That issue also inherits the trap
-  `Pawl.Binding`'s comment already documents: `Resolve.slotsOf` returns the
+  `Parun.Binding`'s comment already documents: `Resolve.slotsOf` returns the
   reserved `self` slot for a `MoveToZone Binding.triggerSource _`, so an
   equality-style D4 lint widened to these fields must subtract the reserved slot
   names before comparing, or it becomes unsatisfiable. Comment on #184; do not

@@ -6,15 +6,15 @@
 
 **Architecture:** Attachment is base object state (`Object.attachedTo`), seeded as the Aura *enters* rather than set afterward. An Aura's target comes from a new `Card.enchant :: Maybe TargetSpec` merged into `Card.allTargetSpecs`/`Card.modesTargetSpecs` under the well-known slot `"enchant"`, so cast-time targeting and CR 608.2b re-validation both fall out — but `Target.fillableModes` and the D4 lint read `Mode.targetSpecs` *directly* and must each be taught separately. A new payload-free `Affected.Attached` lets a static ability name "the enchanted permanent".
 
-**Tech Stack:** Haskell 2010 (GHC 9.14.1), `tasty`/`tasty-hunit`, the `StateT GameState (Program Prompt)` suspension monad, the hand-written JSON codec in `Pawl.Codec`, the on-demand card registry in `Pawl.Registry`.
+**Tech Stack:** Haskell 2010 (GHC 9.14.1), `tasty`/`tasty-hunit`, the `StateT GameState (Program Prompt)` suspension monad, the hand-written JSON codec in `Parun.Codec`, the on-demand card registry in `Parun.Registry`.
 
 ## Global Constraints
 
 - **Haskell 2010, no language extensions.** Only `GADTs`, `RankNTypes` and `NamedFieldPuns` are permitted, and this phase needs none of them.
 - **Warning-clean under `+pedantic` (`-Werror`).** A new `Subtype`, `Affected` or `Card` field breaks every exhaustive match at once — that is the safety net, not a nuisance. Run `cabal build all --enable-tests --enable-benchmarks`; `cabal clean` first for a definitive check, because incremental builds hide warnings from unchanged modules. **Never run two builds concurrently** — `jobs: $ncpus` already saturates the machine.
-- **No library module is added or deleted in this phase**, so `hooky fix` handles `pawl.cabal`; no direct `cabal-gild` run is needed. One *test-suite* module is added (Task 7), which **does** require adding it by hand to the test-suite `other-modules` list.
+- **No library module is added or deleted in this phase**, so `hooky fix` handles `parun.cabal`; no direct `cabal-gild` run is needed. One *test-suite* module is added (Task 7), which **does** require adding it by hand to the test-suite `other-modules` list.
 - **No partial functions**, no boolean blindness, `Mk` constructor prefix, derive at least `Eq` and `Show`, `Text` not `String`, no list comprehensions, `let` over `where`, `case` over point-free, `do` + record syntax to build records.
-- **One type per module** under `Pawl.Type.<Name>`; qualified imports aliased to the last component; no explicit export lists; a module never imports its parents.
+- **One type per module** under `Parun.Type.<Name>`; qualified imports aliased to the last component; no explicit export lists; a module never imports its parents.
 - **The two invariants outrank this plan:** the engine never cases on a card's *identity* (only classifications), and never makes a player's choice. `Card.isAura` is a **subtype** read off the type line — the same closed-half classification as the `Card.isPermanent` beside it (CR 205.3h), and not a violation. See spec §3.4.
 - **TDD non-negotiable:** write each failing test, run it, watch it fail, then implement. Tick each `- [ ]` as you finish it.
 - **Every rules claim cites the CR** and was checked against `docs/rules.txt`. Never write an expiry into a code comment — file an issue and cite `(#N)`.
@@ -29,33 +29,33 @@
 
 **Create:**
 - `data/cards/unholy-strength.json` — the gate card. The registry loads cards on demand by name, so this file is the *entire* card-addition cost; `S.allPrintings` sweeps the directory and gives it whole-pool codec coverage automatically.
-- `source/test-suite/Pawl/AuraSpec.hs` — the phase's gameplay-level suite (`tests :: TestTree`), wired into `Main.hs`.
+- `source/test-suite/Parun/AuraSpec.hs` — the phase's gameplay-level suite (`tests :: TestTree`), wired into `Main.hs`.
 
 **Modify (library):**
-- `source/library/Pawl/Type/Subtype.hs` — `+Aura`.
-- `source/library/Pawl/Type/Object.hs` — `+attachedTo`.
-- `source/library/Pawl/Type/Card.hs` — `+enchant`.
-- `source/library/Pawl/Type/Affected.hs` — `+Attached`.
-- `source/library/Pawl/Mana.hs` — the exhaustive `subtypeMana` arm.
-- `source/library/Pawl/Card.hs` — `isAura`, `enchantSlot`, `enchantSpecs`, and the two merging functions.
-- `source/library/Pawl/Target.hs` — `fillableModes` takes an extra-slots map.
-- `source/library/Pawl/Activate.hs`, `source/library/Pawl/Engine.hs` — three callers pass `Map.empty`.
-- `source/library/Pawl/Event.hs` — `changeZoneAttaching`, and `attachedTo` in `mkObj`.
-- `source/library/Pawl/Projection.hs` — the `Affected.Attached` arm.
-- `source/library/Pawl/Resolve.hs` — the fizzle test extracted to `targetsAllIllegal`.
-- `source/library/Pawl/Stack.hs` — the Aura resolution branch.
-- `source/library/Pawl/Sba.hs` — CR 704.5m, and the stale one-pass comment.
-- `source/library/Pawl/Codec.hs` — subtype pair, `Affected.Attached` pair, the `enchant` field.
+- `source/library/Parun/Type/Subtype.hs` — `+Aura`.
+- `source/library/Parun/Type/Object.hs` — `+attachedTo`.
+- `source/library/Parun/Type/Card.hs` — `+enchant`.
+- `source/library/Parun/Type/Affected.hs` — `+Attached`.
+- `source/library/Parun/Mana.hs` — the exhaustive `subtypeMana` arm.
+- `source/library/Parun/Card.hs` — `isAura`, `enchantSlot`, `enchantSpecs`, and the two merging functions.
+- `source/library/Parun/Target.hs` — `fillableModes` takes an extra-slots map.
+- `source/library/Parun/Activate.hs`, `source/library/Parun/Engine.hs` — three callers pass `Map.empty`.
+- `source/library/Parun/Event.hs` — `changeZoneAttaching`, and `attachedTo` in `mkObj`.
+- `source/library/Parun/Projection.hs` — the `Affected.Attached` arm.
+- `source/library/Parun/Resolve.hs` — the fizzle test extracted to `targetsAllIllegal`.
+- `source/library/Parun/Stack.hs` — the Aura resolution branch.
+- `source/library/Parun/Sba.hs` — CR 704.5m, and the stale one-pass comment.
+- `source/library/Parun/Codec.hs` — subtype pair, `Affected.Attached` pair, the `enchant` field.
 
 **Modify (data):**
 - `data/cards/opalescence.json` — the non-Aura qualifier (#114).
 
 **Modify (test-suite):**
-- `source/test-suite/Pawl/Support.hs` — `attach`.
-- `source/test-suite/Pawl/CardSpec.hs` — two new lints.
-- `source/test-suite/Pawl/ProjectionSpec.hs` — the #114 assertion and the wrong CR 305.2 citation.
-- `source/test-suite/Pawl/Main.hs` — wire `AuraSpec`.
-- `pawl.cabal` — `AuraSpec` in the test-suite `other-modules`.
+- `source/test-suite/Parun/Support.hs` — `attach`.
+- `source/test-suite/Parun/CardSpec.hs` — two new lints.
+- `source/test-suite/Parun/ProjectionSpec.hs` — the #114 assertion and the wrong CR 305.2 citation.
+- `source/test-suite/Parun/Main.hs` — wire `AuraSpec`.
+- `parun.cabal` — `AuraSpec` in the test-suite `other-modules`.
 
 ---
 
@@ -64,8 +64,8 @@
 The subtype alone. One commit, because the constructor breaks three exhaustive matches at once.
 
 **Files:**
-- Modify: `source/library/Pawl/Type/Subtype.hs`, `source/library/Pawl/Mana.hs`, `source/library/Pawl/Codec.hs`
-- Test: `source/test-suite/Pawl/ManaSpec.hs`
+- Modify: `source/library/Parun/Type/Subtype.hs`, `source/library/Parun/Mana.hs`, `source/library/Parun/Codec.hs`
+- Test: `source/test-suite/Parun/ManaSpec.hs`
 
 **Interfaces:**
 - Produces: `Subtype.Aura`; `Codec.subtypeToJson Subtype.Aura == nullary "Aura"`.
@@ -88,7 +88,7 @@ Record the seven numbers before continuing; every `(#N)` below refers to one of 
 
 - [x] **Step 1: Write the failing test**
 
-In `source/test-suite/Pawl/ManaSpec.hs`, inside the existing `subtypeMana` group:
+In `source/test-suite/Parun/ManaSpec.hs`, inside the existing `subtypeMana` group:
 
 ```haskell
 HU.testCase "CR 205.3h: Aura is an enchantment type, so it has no CR 305.6 intrinsic mana" $
@@ -102,7 +102,7 @@ Expected: FAIL to compile — `Data constructor not in scope: Subtype.Aura`.
 
 - [x] **Step 3: Add the constructor**
 
-At the end of `data Subtype` in `source/library/Pawl/Type/Subtype.hs`, after `Horse`:
+At the end of `data Subtype` in `source/library/Parun/Type/Subtype.hs`, after `Horse`:
 
 ```haskell
   | -- CR 205.3h: an ENCHANTMENT type. Appended rather than grouped with the other
@@ -114,7 +114,7 @@ At the end of `data Subtype` in `source/library/Pawl/Type/Subtype.hs`, after `Ho
 
 - [x] **Step 4: Add the three exhaustive arms**
 
-`source/library/Pawl/Mana.hs`, at the end of `subtypeMana`'s case:
+`source/library/Parun/Mana.hs`, at the end of `subtypeMana`'s case:
 
 ```haskell
   -- CR 205.3h: Aura is an enchantment type. CR 305.6's intrinsic mana ability is
@@ -123,7 +123,7 @@ At the end of `data Subtype` in `source/library/Pawl/Type/Subtype.hs`, after `Ho
   Subtype.Aura -> Nothing
 ```
 
-`source/library/Pawl/Codec.hs`, at the end of `subtypeToJson`'s case:
+`source/library/Parun/Codec.hs`, at the end of `subtypeToJson`'s case:
 
 ```haskell
   Subtype.Aura -> "Aura"
@@ -143,29 +143,29 @@ Expected: PASS, warning-free.
 - [x] **Step 6: Commit**
 
 ```bash
-git add source/library/Pawl/Type/Subtype.hs source/library/Pawl/Mana.hs source/library/Pawl/Codec.hs source/test-suite/Pawl/ManaSpec.hs
+git add source/library/Parun/Type/Subtype.hs source/library/Parun/Mana.hs source/library/Parun/Codec.hs source/test-suite/Parun/ManaSpec.hs
 hooky fix
-git add source/library/Pawl/Type/Subtype.hs source/library/Pawl/Mana.hs source/library/Pawl/Codec.hs source/test-suite/Pawl/ManaSpec.hs
+git add source/library/Parun/Type/Subtype.hs source/library/Parun/Mana.hs source/library/Parun/Codec.hs source/test-suite/Parun/ManaSpec.hs
 hooky run
 git commit -m "feat(subtype): add Aura, the first enchantment type (CR 205.3h)"
 ```
 
 ---
 
-## Task 2: `Card.enchant` and the `Pawl.Card` classifications
+## Task 2: `Card.enchant` and the `Parun.Card` classifications
 
 The carrier and its readers. No behaviour yet — a card can *declare* an enchant spec and nothing consults it.
 
 **Files:**
-- Modify: `source/library/Pawl/Type/Card.hs`, `source/library/Pawl/Card.hs`, `source/library/Pawl/Codec.hs`
-- Test: `source/test-suite/Pawl/CardSpec.hs`
+- Modify: `source/library/Parun/Type/Card.hs`, `source/library/Parun/Card.hs`, `source/library/Parun/Codec.hs`
+- Test: `source/test-suite/Parun/CardSpec.hs`
 
 **Interfaces:**
-- Produces: `Card.Type.enchant :: Card -> Maybe TargetSpec`; `Pawl.Card.isAura :: Card -> Bool`; `Pawl.Card.enchantSlot :: SlotName`; `Pawl.Card.enchantSpecs :: Card -> Map SlotName TargetSpec`. Consumed by Tasks 4 and 6.
+- Produces: `Card.Type.enchant :: Card -> Maybe TargetSpec`; `Parun.Card.isAura :: Card -> Bool`; `Parun.Card.enchantSlot :: SlotName`; `Parun.Card.enchantSpecs :: Card -> Map SlotName TargetSpec`. Consumed by Tasks 4 and 6.
 
 - [x] **Step 1: Write the failing test**
 
-In `source/test-suite/Pawl/CardSpec.hs`, in the lint group:
+In `source/test-suite/Parun/CardSpec.hs`, in the lint group:
 
 ```haskell
 HU.testCase "a card with no enchant ability declares no enchant slot" $ do
@@ -183,7 +183,7 @@ Expected: FAIL to compile — `enchant`, `isAura` and `enchantSpecs` are not in 
 
 - [x] **Step 3: Add the field**
 
-In `source/library/Pawl/Type/Card.hs`, add to the import list `import Pawl.Type.TargetSpec (TargetSpec)`, and add the field after `castingPermissions`:
+In `source/library/Parun/Type/Card.hs`, add to the import list `import Parun.Type.TargetSpec (TargetSpec)`, and add the field after `castingPermissions`:
 
 ```haskell
     -- CR 702.5a: this card's `enchant` ability -- "Enchant [object or player]"
@@ -203,7 +203,7 @@ In `source/library/Pawl/Type/Card.hs`, add to the import list `import Pawl.Type.
 
 - [x] **Step 4: Add the codec arms**
 
-In `source/library/Pawl/Codec.hs`, in `cardToJson`, alongside the `characteristicPT` block (the exact precedent — a `Maybe` field omitted when absent):
+In `source/library/Parun/Codec.hs`, in `cardToJson`, alongside the `characteristicPT` block (the exact precedent — a `Maybe` field omitted when absent):
 
 ```haskell
         <> ( case CardT.enchant c of
@@ -224,12 +224,12 @@ and in the `MkCard` record: `CardT.enchant = enchant,`.
 
 - [x] **Step 5: Add the classifications**
 
-In `source/library/Pawl/Card.hs` (add `import qualified Pawl.Type.SlotName as SlotName`, `import qualified Data.Text as Text`, `import qualified Pawl.Type.Subtype as Subtype`):
+In `source/library/Parun/Card.hs` (add `import qualified Parun.Type.SlotName as SlotName`, `import qualified Data.Text as Text`, `import qualified Parun.Type.Subtype as Subtype`):
 
 ```haskell
 -- CR 205.3h / 303.4: is this card an Aura? A SUBTYPE read off the printed type
 -- line, exactly the kind of closed-half classification isPermanent is -- NOT a
--- case on the card's identity. Pawl.Stack dispatches on it (CR 303.4's "an Aura
+-- case on the card's identity. Parun.Stack dispatches on it (CR 303.4's "an Aura
 -- enters the battlefield attached"), which is the one place the difference
 -- between an Aura and any other enchantment is a rules difference.
 isAura :: Card.Card -> Bool
@@ -237,7 +237,7 @@ isAura c = Set.member Subtype.Aura (TypeLine.subtypes (Card.typeLine c))
 
 -- CR 303.4a: the slot an Aura spell's required target is bound under. A genuine
 -- target, so it lives in the ordinary target namespace and is NOT one of
--- Pawl.Binding's reserved names -- those exist precisely because they are not
+-- Parun.Binding's reserved names -- those exist precisely because they are not
 -- targets. The CardSpec lint holds that no mode declares this name, which is
 -- what makes the merge below collision-free.
 enchantSlot :: SlotName
@@ -245,7 +245,7 @@ enchantSlot = SlotName.MkSlotName (Text.pack "enchant")
 
 -- CR 303.4a / 702.5a: the enchant ability's target spec as a one-entry slot map,
 -- empty for every non-Aura. Merged into the two functions below, and passed to
--- Target.fillableModes by Pawl.Cast so castability accounts for it.
+-- Target.fillableModes by Parun.Cast so castability accounts for it.
 enchantSpecs :: Card.Card -> Map SlotName TargetSpec
 enchantSpecs card = case Card.enchant card of
   Nothing -> Map.empty
@@ -260,9 +260,9 @@ Expected: PASS, warning-free. Every `MkCard` record literal in the test suite fa
 - [x] **Step 7: Commit**
 
 ```bash
-git add source/library/Pawl/Type/Card.hs source/library/Pawl/Card.hs source/library/Pawl/Codec.hs source/test-suite/
+git add source/library/Parun/Type/Card.hs source/library/Parun/Card.hs source/library/Parun/Codec.hs source/test-suite/
 hooky fix
-git add source/library/Pawl/Type/Card.hs source/library/Pawl/Card.hs source/library/Pawl/Codec.hs source/test-suite/
+git add source/library/Parun/Type/Card.hs source/library/Parun/Card.hs source/library/Parun/Codec.hs source/test-suite/
 hooky run
 git commit -m "feat(card): carry CR 702.5a's enchant ability on Card"
 ```
@@ -276,16 +276,16 @@ Base state plus the entry seam. CR 303.4 says an Aura *enters* attached, so the 
 **This task has no Aura in it.** The field, its reset, and the seed are properties of *objects*, not of Auras — CR 400.7 resets attachment for the same reason it resets damage and counters. The gate card arrives in Task 4, which is what makes this task's fixture two ordinary permanents rather than a real Aura.
 
 **Files:**
-- Modify: `source/library/Pawl/Type/Object.hs`, `source/library/Pawl/Event.hs`, `source/library/Pawl/Setup.hs`, `source/library/Pawl/Monarch.hs`, `source/library/Pawl/Activate.hs`, `source/library/Pawl/Engine.hs`, `source/library/Pawl/Resolve.hs`
-- Modify: `source/test-suite/Pawl/Support.hs`
-- Test: `source/test-suite/Pawl/EventSpec.hs`
+- Modify: `source/library/Parun/Type/Object.hs`, `source/library/Parun/Event.hs`, `source/library/Parun/Setup.hs`, `source/library/Parun/Monarch.hs`, `source/library/Parun/Activate.hs`, `source/library/Parun/Engine.hs`, `source/library/Parun/Resolve.hs`
+- Modify: `source/test-suite/Parun/Support.hs`
+- Test: `source/test-suite/Parun/EventSpec.hs`
 
 **Interfaces:**
 - Produces: `Object.attachedTo :: Maybe ObjectId`; `Event.changeZoneAttaching :: ObjectId -> Zone -> Maybe ObjectId -> Game (Maybe ObjectId)`; `S.attach :: ObjectId -> ObjectId -> GameState -> GameState`. Consumed by Tasks 4, 7 and 8.
 
 - [x] **Step 1: Write the failing test**
 
-In `source/test-suite/Pawl/EventSpec.hs`. Two Goblin Pikers, deliberately — this asserts that CR 400.7 clears the FIELD, which is true of every object regardless of type, and it must not wait on the Aura printing Task 4 adds:
+In `source/test-suite/Parun/EventSpec.hs`. Two Goblin Pikers, deliberately — this asserts that CR 400.7 clears the FIELD, which is true of every object regardless of type, and it must not wait on the Aura printing Task 4 adds:
 
 ```haskell
 HU.testCase "CR 400.7: a zone change forgets attachment" $ do
@@ -311,7 +311,7 @@ Expected: FAIL to compile — `Object.attachedTo` and `S.attach` are not in scop
 
 - [x] **Step 3: Add the field**
 
-In `source/library/Pawl/Type/Object.hs`, add `import Pawl.Type.ObjectId (ObjectId)` and the field after `counters`:
+In `source/library/Parun/Type/Object.hs`, add `import Parun.Type.ObjectId (ObjectId)` and the field after `counters`:
 
 ```haskell
     -- CR 303.4b: the object this permanent is attached to -- what CR 303.4b calls
@@ -337,7 +337,7 @@ Add `Object.attachedTo = Nothing` to the six `Object.MkObject` literals the comp
 
 - [x] **Step 4: Seed it through the zone change**
 
-In `source/library/Pawl/Event.hs`, rename the body and add the seeded entry point:
+In `source/library/Parun/Event.hs`, rename the body and add the seeded entry point:
 
 ```haskell
 changeZoneReturning :: ObjectId -> Zone -> Game (Maybe ObjectId)
@@ -363,7 +363,7 @@ changeZoneAttaching oid requestedDest seed = do
 
 - [x] **Step 5: Add the test fixture**
 
-In `source/test-suite/Pawl/Support.hs`:
+In `source/test-suite/Parun/Support.hs`:
 
 ```haskell
 -- CR 303.4b: attach `rider` to `host` directly, without casting. A STATE fixture
@@ -384,9 +384,9 @@ Expected: PASS, warning-free.
 - [x] **Step 7: Commit**
 
 ```bash
-git add source/library/Pawl/ source/test-suite/Pawl/
+git add source/library/Parun/ source/test-suite/Parun/
 hooky fix
-git add source/library/Pawl/ source/test-suite/Pawl/
+git add source/library/Parun/ source/test-suite/Parun/
 hooky run
 git commit -m "feat(object): attachment is base state, seeded as the object enters (CR 303.4)"
 ```
@@ -399,8 +399,8 @@ The gate card, the affected-set constructor its static ability needs, and the tw
 
 **Files:**
 - Create: `data/cards/unholy-strength.json`
-- Modify: `source/library/Pawl/Type/Affected.hs`, `source/library/Pawl/Projection.hs`, `source/library/Pawl/Codec.hs`
-- Test: `source/test-suite/Pawl/CardSpec.hs`, `source/test-suite/Pawl/PowerToughnessSpec.hs`
+- Modify: `source/library/Parun/Type/Affected.hs`, `source/library/Parun/Projection.hs`, `source/library/Parun/Codec.hs`
+- Test: `source/test-suite/Parun/CardSpec.hs`, `source/test-suite/Parun/PowerToughnessSpec.hs`
 
 **Interfaces:**
 - Consumes: `Subtype.Aura` (Task 1); `Card.Type.enchant`, `Card.isAura`, `Card.enchantSlot` (Task 2); `Object.attachedTo`, `S.attach` (Task 3).
@@ -412,7 +412,7 @@ Adding the card costs exactly one file. The registry loads cards on demand by na
 
 - [x] **Step 1: Write the failing tests**
 
-In `source/test-suite/Pawl/CardSpec.hs`:
+In `source/test-suite/Parun/CardSpec.hs`:
 
 ```haskell
 HU.testCase "Unholy Strength is a {B} Aura enchanting a creature for +2/+1" $ do
@@ -447,7 +447,7 @@ HU.testCase "a card is an Aura iff it declares an enchant ability" $ do
   let offends c = Card.isAura c /= Maybe.isJust (Card.Type.enchant c)
       offenders = filter (offends . Printing.card) ps
   HU.assertEqual "Aura iff enchant" [] (fmap (Card.Type.name . Printing.card) offenders),
--- Pawl.Card.allTargetSpecs binds the enchant spec under this name (Task 6), so a
+-- Parun.Card.allTargetSpecs binds the enchant spec under this name (Task 6), so a
 -- mode declaring it would be silently shadowed.
 HU.testCase "no mode declares a slot named enchant" $ do
   ps <- S.allPrintings registry
@@ -456,7 +456,7 @@ HU.testCase "no mode declares a slot named enchant" $ do
   HU.assertEqual "the enchant slot is never hand-declared" [] (fmap (Card.Type.name . Printing.card) offenders),
 ```
 
-And in `source/test-suite/Pawl/PowerToughnessSpec.hs`, the behavioural test — this is the one that proves `Attached` works:
+And in `source/test-suite/Parun/PowerToughnessSpec.hs`, the behavioural test — this is the one that proves `Attached` works:
 
 ```haskell
 HU.testCase "CR 303.4m: an attached Unholy Strength gives the enchanted creature +2/+1" $ do
@@ -482,7 +482,7 @@ Expected: FAIL to compile — `Affected.Attached` is not in scope.
 
 - [x] **Step 3: Add the constructor**
 
-In `source/library/Pawl/Type/Affected.hs`:
+In `source/library/Parun/Type/Affected.hs`:
 
 ```haskell
   | -- CR 303.4m: the object this ability's SOURCE is attached to -- "enchanted
@@ -502,7 +502,7 @@ Extend the module's own header comment to describe three kinds rather than two.
 
 - [x] **Step 4: Add the projection arm**
 
-In `source/library/Pawl/Projection.hs`, in `affects`:
+In `source/library/Parun/Projection.hs`, in `affects`:
 
 ```haskell
   -- CR 303.4m: read the SOURCE's attachment, not the candidate's. An unattached
@@ -516,7 +516,7 @@ Then fix every other exhaustive `Affected` match the compiler names. The one at 
 
 - [x] **Step 5: Add the codec arms**
 
-In `source/library/Pawl/Codec.hs`:
+In `source/library/Parun/Codec.hs`:
 
 ```haskell
   Affected.Attached -> Json.tagged (Text.pack "Attached") Nothing
@@ -609,7 +609,7 @@ Match the exact shape the neighbouring nullary tags use — check how another pa
 }
 ```
 
-Check `targetSpecToJson` and the `Affected` encoder in `Pawl.Codec` for the exact key names, and correct the `enchant` and `affected` objects above to match what the encoders actually emit — the whole-pool canonical-emission test will tell you immediately if they do not.
+Check `targetSpecToJson` and the `Affected` encoder in `Parun.Codec` for the exact key names, and correct the `enchant` and `affected` objects above to match what the encoders actually emit — the whole-pool canonical-emission test will tell you immediately if they do not.
 
 - [x] **Step 7: Run tests to verify they pass**
 
@@ -619,9 +619,9 @@ Expected: PASS, warning-free.
 - [x] **Step 8: Commit**
 
 ```bash
-git add data/cards/unholy-strength.json source/library/Pawl/ source/test-suite/Pawl/
+git add data/cards/unholy-strength.json source/library/Parun/ source/test-suite/Parun/
 hooky fix
-git add data/cards/unholy-strength.json source/library/Pawl/ source/test-suite/Pawl/
+git add data/cards/unholy-strength.json source/library/Parun/ source/test-suite/Parun/
 hooky run
 git commit -m "feat(cards): add Unholy Strength, and Affected.Attached for the enchanted permanent (CR 303.4m)"
 ```
@@ -634,7 +634,7 @@ An Aura printing now exists, so the qualifier is testable for the first time.
 
 **Files:**
 - Modify: `data/cards/opalescence.json`
-- Modify: `source/test-suite/Pawl/ProjectionSpec.hs`
+- Modify: `source/test-suite/Parun/ProjectionSpec.hs`
 
 **Interfaces:**
 - Consumes: `Subtype.Aura` (Task 1), the Unholy Strength printing (Task 4).
@@ -643,7 +643,7 @@ Opalescence reads "Each other non-Aura enchantment is a creature in addition to 
 
 - [x] **Step 1: Write the failing test**
 
-In `source/test-suite/Pawl/ProjectionSpec.hs`, in the Opalescence group:
+In `source/test-suite/Parun/ProjectionSpec.hs`, in the Opalescence group:
 
 ```haskell
 -- Opalescence's own text says "each other NON-AURA enchantment". Card text, not
@@ -690,14 +690,14 @@ Expected: PASS.
 
 - [x] **Step 5: Retire the citations**
 
-Delete the `(#114)` comment at `source/test-suite/Pawl/ProjectionSpec.hs:455` and the sentence it guards. While the file is open, fix the neighbouring comment that attributes "each OTHER enchantment" to *CR 305.2* — 305.2 is the one-land-per-turn rule; Opalescence's "each other" is card text with no rule number.
+Delete the `(#114)` comment at `source/test-suite/Parun/ProjectionSpec.hs:455` and the sentence it guards. While the file is open, fix the neighbouring comment that attributes "each OTHER enchantment" to *CR 305.2* — 305.2 is the one-land-per-turn rule; Opalescence's "each other" is card text with no rule number.
 
 - [x] **Step 6: Commit and close the issue**
 
 ```bash
-git add data/cards/opalescence.json source/test-suite/Pawl/ProjectionSpec.hs
+git add data/cards/opalescence.json source/test-suite/Parun/ProjectionSpec.hs
 hooky fix
-git add data/cards/opalescence.json source/test-suite/Pawl/ProjectionSpec.hs
+git add data/cards/opalescence.json source/test-suite/Parun/ProjectionSpec.hs
 hooky run
 git commit -m "fix(cards): enforce Opalescence's non-Aura qualifier (#114)"
 gh issue close 114 --comment "Subtype.Aura now exists, so the qualifier is a Not (HasSubtype Aura) conjunct in both of Opalescence's affected sets, tested against Unholy Strength."
@@ -710,8 +710,8 @@ gh issue close 114 --comment "Subtype.Aura now exists, so the qualifier is a Not
 The merge, plus `Target.fillableModes`'s extra-slots parameter. Without the second half, an Aura with no legal creature is castable and then countered on resolution — which CR 601.2c says can never happen (spec §3.3, item 1).
 
 **Files:**
-- Modify: `source/library/Pawl/Card.hs`, `source/library/Pawl/Target.hs`, `source/library/Pawl/Cast.hs`, `source/library/Pawl/Activate.hs`, `source/library/Pawl/Engine.hs`
-- Test: `source/test-suite/Pawl/CastSpec.hs`
+- Modify: `source/library/Parun/Card.hs`, `source/library/Parun/Target.hs`, `source/library/Parun/Cast.hs`, `source/library/Parun/Activate.hs`, `source/library/Parun/Engine.hs`
+- Test: `source/test-suite/Parun/CastSpec.hs`
 
 **Interfaces:**
 - Consumes: `Card.enchantSpecs`, `Card.enchantSlot` (Task 2); the Unholy Strength printing (Task 4).
@@ -719,7 +719,7 @@ The merge, plus `Target.fillableModes`'s extra-slots parameter. Without the seco
 
 - [x] **Step 1: Write the failing test**
 
-In `source/test-suite/Pawl/CastSpec.hs`:
+In `source/test-suite/Parun/CastSpec.hs`:
 
 ```haskell
 HU.testCase "CR 303.4a: an Aura spell targets, so it prompts for the creature it enchants" $ do
@@ -755,7 +755,7 @@ Expected: the first case FAILS (`specs` is empty — the merge does not exist); 
 
 - [x] **Step 3: Merge the enchant slot into the two spec functions**
 
-In `source/library/Pawl/Card.hs`:
+In `source/library/Parun/Card.hs`:
 
 ```haskell
 -- CR 303.4a: an Aura spell's target is defined by its enchant ability, not by a
@@ -776,7 +776,7 @@ Leave `modeTargetSpecs` (singular, by index) alone — it answers "what does mod
 
 - [x] **Step 4: Teach `fillableModes` the extra slots**
 
-In `source/library/Pawl/Target.hs`:
+In `source/library/Parun/Target.hs`:
 
 ```haskell
 -- CR 700.2a: the mode indices all of whose target slots have a legal recipient
@@ -822,9 +822,9 @@ Expected: PASS, warning-free.
 - [x] **Step 7: Commit**
 
 ```bash
-git add source/library/Pawl/ source/test-suite/Pawl/
+git add source/library/Parun/ source/test-suite/Parun/
 hooky fix
-git add source/library/Pawl/ source/test-suite/Pawl/
+git add source/library/Parun/ source/test-suite/Parun/
 hooky run
 git commit -m "feat(target): an Aura spell's enchant slot reaches targeting and castability (CR 303.4a)"
 ```
@@ -836,19 +836,19 @@ git commit -m "feat(target): an Aura spell's enchant slot reaches targeting and 
 The end-to-end path, and the phase's headline test.
 
 **Files:**
-- Modify: `source/library/Pawl/Resolve.hs`, `source/library/Pawl/Stack.hs`
-- Create: `source/test-suite/Pawl/AuraSpec.hs`
-- Modify: `source/test-suite/Pawl/Main.hs`, `pawl.cabal`
+- Modify: `source/library/Parun/Resolve.hs`, `source/library/Parun/Stack.hs`
+- Create: `source/test-suite/Parun/AuraSpec.hs`
+- Modify: `source/test-suite/Parun/Main.hs`, `parun.cabal`
 
 **Interfaces:**
 - Consumes: `Card.isAura`, `Card.enchantSlot` (Task 2); `Event.changeZoneAttaching` (Task 3); the merged specs (Task 6).
 - Produces: `Resolve.targetsAllIllegal :: ObjectId -> GameState -> Bool`.
 
-`AuraSpec` heads with a comment listing the modules it covers, exposes `tests :: TestTree`, and is added to `Main.hs`'s `testTree` **and** to the test-suite `other-modules` list in `pawl.cabal` by hand.
+`AuraSpec` heads with a comment listing the modules it covers, exposes `tests :: TestTree`, and is added to `Main.hs`'s `testTree` **and** to the test-suite `other-modules` list in `parun.cabal` by hand.
 
 - [x] **Step 1: Write the failing test**
 
-Create `source/test-suite/Pawl/AuraSpec.hs` with the standard header comment and:
+Create `source/test-suite/Parun/AuraSpec.hs` with the standard header comment and:
 
 ```haskell
 HU.testCase "CR 303.4: a resolving Aura spell enters the battlefield attached to its target" $ do
@@ -889,7 +889,7 @@ Expected: the first case FAILS (the Aura enters unattached — `attachedTo` is `
 
 - [x] **Step 3: Extract the fizzle test**
 
-In `source/library/Pawl/Resolve.hs`, lift the `specs`/`chosen`/`legalSlot`/`fizzles` computation out of `resolveSpellWith` (currently `Resolve.hs:335-348`) into a top-level function, and have `resolveSpellWith` call it. One implementation, so the Aura path and the ordinary spell path cannot drift:
+In `source/library/Parun/Resolve.hs`, lift the `specs`/`chosen`/`legalSlot`/`fizzles` computation out of `resolveSpellWith` (currently `Resolve.hs:335-348`) into a top-level function, and have `resolveSpellWith` call it. One implementation, so the Aura path and the ordinary spell path cannot drift:
 
 ```haskell
 -- CR 608.2b: are ALL of this spell's targets illegal? "For every instance of the
@@ -899,7 +899,7 @@ In `source/library/Pawl/Resolve.hs`, lift the `specs`/`chosen`/`legalSlot`/`fizz
 -- they are vacuously legal.
 --
 -- Shared by the ordinary spell path (resolveSpellWith) and the Aura path
--- (Pawl.Stack), which is the whole point of it being a function: an Aura spell is
+-- (Parun.Stack), which is the whole point of it being a function: an Aura spell is
 -- the first PERMANENT spell that can be countered on resolution, and a second
 -- copy of this logic would drift.
 targetsAllIllegal :: ObjectId -> GameState -> Bool
@@ -922,7 +922,7 @@ Keep `resolveSpellWith`'s existing per-effect re-read of `legalSlot` exactly as 
 
 - [x] **Step 4: Add the Stack branch**
 
-In `source/library/Pawl/Stack.hs`, replace the `Source.OfCard` arm:
+In `source/library/Parun/Stack.hs`, replace the `Source.OfCard` arm:
 
 ```haskell
         Source.OfCard printing ->
@@ -967,7 +967,7 @@ enchantedBy oid gs = case Game.lookupObject oid gs of
 
 - [x] **Step 5: Wire the new spec module**
 
-Add `Pawl.AuraSpec` to `source/test-suite/Pawl/Main.hs`'s `testTree` and to the test-suite `other-modules` list in `pawl.cabal`.
+Add `Parun.AuraSpec` to `source/test-suite/Parun/Main.hs`'s `testTree` and to the test-suite `other-modules` list in `parun.cabal`.
 
 - [x] **Step 6: Run tests to verify they pass**
 
@@ -977,9 +977,9 @@ Expected: PASS, warning-free.
 - [x] **Step 7: Commit**
 
 ```bash
-git add source/library/Pawl/ source/test-suite/Pawl/ pawl.cabal
+git add source/library/Parun/ source/test-suite/Parun/ parun.cabal
 hooky fix
-git add source/library/Pawl/ source/test-suite/Pawl/ pawl.cabal
+git add source/library/Parun/ source/test-suite/Parun/ parun.cabal
 hooky run
 git commit -m "feat(stack): an Aura spell fizzles or enters attached (CR 303.4, CR 608.2b)"
 ```
@@ -991,8 +991,8 @@ git commit -m "feat(stack): an Aura spell fizzles or enters attached (CR 303.4, 
 The state-based action, and the stale comment it falsifies.
 
 **Files:**
-- Modify: `source/library/Pawl/Sba.hs`
-- Test: `source/test-suite/Pawl/AuraSpec.hs`
+- Modify: `source/library/Parun/Sba.hs`
+- Test: `source/test-suite/Parun/AuraSpec.hs`
 
 **Interfaces:**
 - Consumes: `Object.attachedTo` (Task 3), `Target.stillLegal`, `Card.Type.enchant` (Task 2).
@@ -1001,7 +1001,7 @@ The state-based action, and the stale comment it falsifies.
 
 - [x] **Step 1: Write the failing test**
 
-In `source/test-suite/Pawl/AuraSpec.hs`:
+In `source/test-suite/Parun/AuraSpec.hs`:
 
 ```haskell
 -- CR 704.5m, and CR 704.3's repeat. SBAs are simultaneous, so the pass that
@@ -1045,7 +1045,7 @@ Expected: FAIL — the Aura stays on the battlefield after both passes.
 
 - [x] **Step 3: Add the state-based action**
 
-In `source/library/Pawl/Sba.hs`, add the predicate:
+In `source/library/Parun/Sba.hs`, add the predicate:
 
 ```haskell
 -- CR 704.5m: "If an Aura is attached to an illegal object or player, or is not
@@ -1126,9 +1126,9 @@ Expected: PASS, warning-free.
 - [x] **Step 6: Commit**
 
 ```bash
-git add source/library/Pawl/Sba.hs source/test-suite/Pawl/AuraSpec.hs
+git add source/library/Parun/Sba.hs source/test-suite/Parun/AuraSpec.hs
 hooky fix
-git add source/library/Pawl/Sba.hs source/test-suite/Pawl/AuraSpec.hs
+git add source/library/Parun/Sba.hs source/test-suite/Parun/AuraSpec.hs
 hooky run
 git commit -m "feat(sba): an Aura attached to nothing or to an illegal object falls off (CR 704.5m)"
 ```
@@ -1183,5 +1183,5 @@ Phase (b) (`docs/superpowers/plans/` — written after this one lands) takes:
 
 - `Modification.SetControllerToSource` and `Projection.controllerOf` gathering static abilities, hoisted against the O(permanents³) blowup `Projection.hs:542-546` records.
 - The visited-set recursion escape, reusing #37's shape with `Object.owner` as the escape value.
-- `Pawl.Departure`'s CR 800.4a interaction and the two comments it falsifies (`Departure.hs:222`, `Departure.hs:261`).
+- `Parun.Departure`'s CR 800.4a interaction and the two comments it falsifies (`Departure.hs:222`, `Departure.hs:261`).
 - Control Magic, closing #33 and #62.

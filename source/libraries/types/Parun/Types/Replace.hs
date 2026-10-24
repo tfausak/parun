@@ -1,0 +1,38 @@
+module Parun.Types.Replace where
+
+import qualified Parun.Types.Condition as Condition
+import qualified Parun.Types.Duration as Duration
+import qualified Parun.Types.ReplacementEffect as ReplacementEffect
+import qualified Parun.Types.ReplacementOrigin as ReplacementOrigin
+import qualified Parun.Types.Uses as Uses
+
+-- | CR 614: install a floating replacement effect -- how long it lasts, how many
+-- times it applies, what it attaches to, what gates its creation, and what it
+-- actually rewrites.
+--
+-- Parametric in the EFFECT for Parun.Types.DamageR's reason, and in the ABILITY
+-- for Parun.Types.ReplacementEffect's, instantiated at `Effect card ability` and
+-- `ability` where Parun.Types.Effect declares the arm that holds it.
+data Replace card ability effect = MkReplace
+  { duration :: Duration.Duration,
+    uses :: Uses.Uses,
+    origin :: ReplacementOrigin.ReplacementOrigin,
+    -- | The clause's printed "if". Nothing is the unconditional case, which is
+    -- most of them, so the key is elided rather than written null.
+    --
+    -- NOT a gate on installation: CR 614.1 makes a replacement effect's
+    -- applicability a question asked as the event would happen, so Resolve copies
+    -- this onto Parun.Types.ActiveReplacement.condition and the CR 616.1 loop asks
+    -- it there. Galvanic Blast cannot tell the two apart -- a CR 614.15
+    -- self-replacement is installed and applied inside one resolution, with no
+    -- window for the board to change -- and a row with a stated duration can
+    -- (Synthetic Voltaic Surge).
+    --
+    -- The same posture Parun.Types.PrintedReplacement.condition takes on a
+    -- permanent's static ability, which is CR 604.1's "simply true", and asked
+    -- against the same board -- see that field for which one, and why CR 614.12a
+    -- leaves the two segments no room to differ on it.
+    condition :: Maybe Condition.Condition,
+    effect :: ReplacementEffect.ReplacementEffect card ability effect
+  }
+  deriving (Eq, Ord, Show)

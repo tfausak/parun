@@ -1,0 +1,58 @@
+module Parun.Codec.CombatRestriction where
+
+import qualified Parun.Codec.AffectedUnless as AffectedUnless
+import qualified Parun.Codec.AloneUnless as AloneUnless
+import qualified Parun.Codec.AttackLimitUnless as AttackLimitUnless
+import qualified Parun.Codec.CantAttackPlayer as CantAttackPlayer
+import qualified Parun.Codec.CantBeBlockedBy as CantBeBlockedBy
+import qualified Parun.Codec.CantBlockCreatures as CantBlockCreatures
+import qualified Parun.Codec.LimitUnless as LimitUnless
+import qualified Parun.JsonCodec.Arm as Arm
+import qualified Parun.JsonCodec.Codec as Codec
+import qualified Parun.Types.CombatRestriction as CombatRestriction
+
+-- | TAGGED, where each arm's payload is an object with named keys: this type is
+-- a sum over which declaration the restriction forbids and in what shape.
+--
+-- The tag's payload is an OBJECT rather than the Affected itself, because every
+-- arm carries at least two things and the last is CR 508.1c's "unless" gate.
+-- Named keys and not a positional array, for Parun.Codec.Condition's reason:
+-- "affected" and "unless" cannot be swapped by accident. The subject-carrying
+-- arms share one record, the two "alone" arms adding "alongside", the two SIZE-BOUNDING ones have a record each, both
+-- spelling their first key "limit" instead of "affected", and the two CR 509.1b
+-- PAIRWISE ones have one each, adding "blockers" or "attackers" -- so the tag plus the key set is the whole
+-- of what distinguishes them. The attacking bound is the one with a second key,
+-- CR 802.3a's "defenders".
+--
+-- The wire format is unchanged by the conversion to a bundle: those three
+-- payloads were already named objects, and giving each a record only supplied
+-- the name their schema definitions needed.
+--
+-- The attacking PAIRWISE arm has a fourth payload, which adds "defenders": the
+-- players the restricted creatures may not attack (CR 508.1b).
+codec :: Codec.Codec CombatRestriction.CombatRestriction
+codec =
+  Arm.tagged
+    tagOf
+    [ Arm.payload "CantAttack" AffectedUnless.codec CombatRestriction.CantAttack (\x -> case x of CombatRestriction.CantAttack y -> Just y; _ -> Nothing),
+      Arm.payload "CantBlock" AffectedUnless.codec CombatRestriction.CantBlock (\x -> case x of CombatRestriction.CantBlock y -> Just y; _ -> Nothing),
+      Arm.payload "CantBeBlockedBy" CantBeBlockedBy.codec CombatRestriction.CantBeBlockedBy (\x -> case x of CombatRestriction.CantBeBlockedBy y -> Just y; _ -> Nothing),
+      Arm.payload "CantBlockCreatures" CantBlockCreatures.codec CombatRestriction.CantBlockCreatures (\x -> case x of CombatRestriction.CantBlockCreatures y -> Just y; _ -> Nothing),
+      Arm.payload "CantAttackPlayer" CantAttackPlayer.codec CombatRestriction.CantAttackPlayer (\x -> case x of CombatRestriction.CantAttackPlayer y -> Just y; _ -> Nothing),
+      Arm.payload "CantAttackAlone" AloneUnless.codec CombatRestriction.CantAttackAlone (\x -> case x of CombatRestriction.CantAttackAlone y -> Just y; _ -> Nothing),
+      Arm.payload "CantBlockAlone" AloneUnless.codec CombatRestriction.CantBlockAlone (\x -> case x of CombatRestriction.CantBlockAlone y -> Just y; _ -> Nothing),
+      Arm.payload "CantAttackMoreThan" AttackLimitUnless.codec CombatRestriction.CantAttackMoreThan (\x -> case x of CombatRestriction.CantAttackMoreThan y -> Just y; _ -> Nothing),
+      Arm.payload "CantBlockMoreThan" LimitUnless.codec CombatRestriction.CantBlockMoreThan (\x -> case x of CombatRestriction.CantBlockMoreThan y -> Just y; _ -> Nothing)
+    ]
+
+tagOf :: CombatRestriction.CombatRestriction -> String
+tagOf x = case x of
+  CombatRestriction.CantAttack {} -> "CantAttack"
+  CombatRestriction.CantBlock {} -> "CantBlock"
+  CombatRestriction.CantBeBlockedBy {} -> "CantBeBlockedBy"
+  CombatRestriction.CantBlockCreatures {} -> "CantBlockCreatures"
+  CombatRestriction.CantAttackPlayer {} -> "CantAttackPlayer"
+  CombatRestriction.CantAttackAlone {} -> "CantAttackAlone"
+  CombatRestriction.CantBlockAlone {} -> "CantBlockAlone"
+  CombatRestriction.CantAttackMoreThan {} -> "CantAttackMoreThan"
+  CombatRestriction.CantBlockMoreThan {} -> "CantBlockMoreThan"

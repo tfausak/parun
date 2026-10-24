@@ -1,0 +1,298 @@
+{-# LANGUAGE GADTs #-}
+{-# LANGUAGE RankNTypes #-}
+
+-- Covers Parun.Engine.Vanguard and the CR 902 readings its callers make:
+-- Parun.Engine.Setup's starting life, command zone and rebuild paths,
+-- Parun.Engine.Mulligan's starting hand size, and Parun.Engine.PlayerEffect's
+-- maximum hand size. Also three of the five walks that let a vanguard's abilities
+-- function from the command zone, all of which ask
+-- Vanguard.functionsFromCommandZone: Parun.Engine.Projection's static and
+-- replacement ones and Parun.Engine.CombatRestriction.inForce. Parun.Engine.Event's
+-- triggered one and Parun.Engine.Activate's activated one are scenarios under
+-- data/scenarios/vanguard.
+module Parun.VanguardSpec where
+
+import qualified Data.List as List
+import qualified Data.Map.Strict as Map
+import qualified Data.Sequence as Seq
+import qualified Data.Set as Set
+import qualified Data.Text as Text
+import Numeric.Natural (Natural)
+import qualified Parun.Engine.Combat as Combat
+import qualified Parun.Engine.Damage as Damage
+import qualified Parun.Engine.Engine as Engine
+import qualified Parun.Engine.Event as Event
+import qualified Parun.Engine.Filter as Filter
+import qualified Parun.Engine.Game as Game
+import qualified Parun.Engine.Mulligan as Mulligan
+import qualified Parun.Engine.PlayerEffect as PlayerEffect
+import qualified Parun.Engine.Projection as Projection
+import qualified Parun.Engine.Setup as Setup
+import qualified Parun.Engine.Vanguard as Vanguard
+import qualified Parun.Registry as Registry
+import qualified Parun.Spec as Spec
+import qualified Parun.Support as S
+import qualified Parun.Types.CardName as CardName
+import qualified Parun.Types.Combat as Combat.Type
+import qualified Parun.Types.CombatStep as CombatStep
+import qualified Parun.Types.DamageEvent as DamageEvent
+import qualified Parun.Types.DamageKind as DamageKind
+import qualified Parun.Types.Deck as Deck
+import qualified Parun.Types.Facing as Facing
+import qualified Parun.Types.GameState as GameState
+import qualified Parun.Types.Keyword as Keyword
+import qualified Parun.Types.LastKnown as LastKnown
+import qualified Parun.Types.MulliganDecision as MulliganDecision
+import qualified Parun.Types.MulliganOffer as MulliganOffer
+import qualified Parun.Types.Object as Object
+import qualified Parun.Types.ObjectId as ObjectId
+import qualified Parun.Types.Phase as Phase
+import qualified Parun.Types.PlayerId as PlayerId
+import qualified Parun.Types.Printing as Printing
+import qualified Parun.Types.Prompt as Prompt
+import qualified Parun.Types.Recipient as Recipient
+import qualified Parun.Types.Zone as Zone
+
+-- A deck of thirty Mountains, plus whichever vanguard card the leg brings. Every
+-- leg below is a pair of boards built from this and differing in exactly that
+-- one argument.
+deckOf :: Printing.Printing -> Maybe Printing.Printing -> Deck.Deck
+deckOf mountain vanguard =
+  Deck.MkDeck
+    { Deck.cards = Map.singleton mountain 30,
+      Deck.commander = Set.empty,
+      Deck.vanguard = vanguard,
+      Deck.dungeons = Set.empty,
+      Deck.sideboard = Map.empty,
+      Deck.conspiracies = Map.empty,
+      Deck.sideDecks = Map.empty,
+      Deck.stickerSheets = Seq.empty
+    }
+
+-- Alice brings `vanguard`, bob brings none. Bob's deck is built too, so his
+-- library is stocked for the opening draws (CR 104.3c would otherwise deck him)
+-- and he is the in-board control for every per-player assertion.
+built :: Printing.Printing -> Maybe Printing.Printing -> GameState.GameState
+built mountain vanguard =
+  S.runPure S.identityAnswer (Setup.emptyGame S.bothPlayers) $ do
+    Setup.createDeck S.alice (deckOf mountain vanguard)
+    Setup.createDeck S.bob (deckOf mountain Nothing)
+
+-- Keep the first hand, so the opening draw is what the hand size assertions read.
+keepAnswer :: Prompt.Prompt r -> r
+keepAnswer p = case p of
+  Prompt.DeclareMulligan {} -> MulliganDecision.Keep
+  _ -> S.identityAnswer p
+
+-- Mulligan exactly once, then keep, bottoming whatever the engine offers first.
+mulliganOnceAnswer :: Prompt.Prompt r -> r
+mulliganOnceAnswer p = case p of
+  Prompt.DeclareMulligan _ pid offer ->
+    if pid == S.alice && MulliganOffer.taken offer == 0 then MulliganDecision.Mulligan else MulliganDecision.Keep
+  _ -> S.identityAnswer p
+
+opened :: (forall r. Prompt.Prompt r -> r) -> GameState.GameState -> GameState.GameState
+opened answer gs = S.runPure answer gs (Mulligan.openingHands S.performer [S.alice, S.bob])
+
+handSize :: GameState.GameState -> Int
+handSize gs = length (Game.zoneMembers Zone.Hand S.alice gs)
+
+commandNames :: GameState.GameState -> [CardName.CardName]
+commandNames gs = fmap (\oid -> maybe (CardName.MkCardName (Text.pack "?")) S.nameOf (Game.cardOf oid gs)) (Game.zoneMembers Zone.Command S.alice gs)
+
+-- One noncombat hit, the shape Parun.Engine.Damage.applyDamage takes.
+hit :: ObjectId.ObjectId -> Recipient.Recipient -> Natural -> DamageEvent.DamageEvent
+hit src recipient n = DamageEvent.MkDamageEvent src recipient n False False False 0 Nothing Nothing mempty False DamageKind.Noncombat
+
+-- How much life `pid` lost between the two boards. A difference rather than a
+-- total, because the vanguard's own CR 902.4 modifier moves the starting number
+-- and the pair here differs in exactly the vanguard.
+lifeLost :: PlayerId.PlayerId -> GameState.GameState -> GameState.GameState -> Maybe Integer
+lifeLost pid before after = (-) <$> S.lifeOf pid before <*> S.lifeOf pid after
+
+-- `built`'s board moved into a declare-attackers step with alice active and bob
+-- defending, which is Support.combatBoardOf's shape -- rebuilt here rather than
+-- called, because that fixture starts from an empty game and this one has to keep
+-- the command zone Setup.createDeck filled.
+declaringAttackers :: GameState.GameState -> GameState.GameState
+declaringAttackers gs =
+  gs
+    { GameState.activePlayer = S.alice,
+      GameState.phase = Phase.Combat CombatStep.DeclareAttackers,
+      GameState.combat = Combat.emptyCombat {Combat.Type.defenders = [S.bob]}
+    }
+
+spec :: (Monad m, Monad n) => Spec.Spec m n -> Registry.Registry m -> n ()
+spec s registry = Spec.describe s "Vanguard" $ do
+  -- CR 902.3 / CR 313.2: the card is placed beside the library before the game
+  -- begins, which is the command zone, and it is NOT one of the deck's cards --
+  -- the library is the thirty Mountains and nothing more.
+  Spec.it s "CR 902.3 a vanguard card begins the game face up in the command zone" $ do
+    mountain <- S.printingOf s registry "Mountain"
+    gerrard <- S.printingOf s registry "Gerrard"
+    let with = built mountain (Just gerrard)
+        without = built mountain Nothing
+    Spec.assertEqWith s "the vanguard is in alice's command zone" (commandNames with) [CardName.MkCardName (Text.pack "Gerrard")]
+    Spec.assertEqWith s "face up" (fmap (\oid -> fmap Object.facing (Game.lookupObject oid with)) (Game.zoneMembers Zone.Command S.alice with)) [Just Facing.FaceUp]
+    Spec.assertEqWith s "and not among the thirty cards of her library" (length (Game.zoneMembers Zone.Library S.alice with)) 30
+    Spec.assertEqWith s "bob, who brought none, has an empty command zone" (Game.zoneMembers Zone.Command S.bob with) []
+    Spec.assertEqWith s "and neither has alice on the deck that differs only in that field" (commandNames without) []
+
+  -- CR 902.4 / CR 313.7: twenty plus or minus the life modifier. Three legs on
+  -- one deck: Selenia's +7, Gerrard's printed +0 -- which must NOT be read as
+  -- "no vanguard" -- and no vanguard at all.
+  Spec.it s "CR 902.4 the starting life total is twenty plus the life modifier" $ do
+    mountain <- S.printingOf s registry "Mountain"
+    gerrard <- S.printingOf s registry "Gerrard"
+    selenia <- S.printingOf s registry "Selenia"
+    Spec.assertEqWith s "Selenia's +7" (S.lifeOf S.alice (built mountain (Just selenia))) (Just 27)
+    Spec.assertEqWith s "Gerrard's +0" (S.lifeOf S.alice (built mountain (Just gerrard))) (Just 20)
+    Spec.assertEqWith s "no vanguard at all" (S.lifeOf S.alice (built mountain Nothing)) (Just 20)
+    Spec.assertEqWith s "and bob, on the same board, keeps CR 103.4's twenty" (S.lifeOf S.bob (built mountain (Just selenia))) (Just 20)
+
+  -- CR 902.5 / CR 313.6: seven cards, as modified. Gerrard's -4 and Selenia's +1
+  -- move it in both directions off the same board.
+  Spec.it s "CR 902.5 the opening hand is seven cards as modified by the hand modifier" $ do
+    mountain <- S.printingOf s registry "Mountain"
+    gerrard <- S.printingOf s registry "Gerrard"
+    selenia <- S.printingOf s registry "Selenia"
+    Spec.assertEqWith s "Gerrard's -4 draws three" (handSize (opened keepAnswer (built mountain (Just gerrard)))) 3
+    Spec.assertEqWith s "Selenia's +1 draws eight" (handSize (opened keepAnswer (built mountain (Just selenia)))) 8
+    Spec.assertEqWith s "no vanguard draws CR 103.5's seven" (handSize (opened keepAnswer (built mountain Nothing))) 7
+    Spec.assertEqWith s "and bob draws seven beside her" (length (Game.zoneMembers Zone.Hand S.bob (opened keepAnswer (built mountain (Just gerrard))))) 7
+
+  -- CR 902.5a: a mulligan "draws a new hand equal to their starting hand size",
+  -- which is the modified number and not seven. At two seats no mulligan is free
+  -- (CR 103.5c), so the first one bottoms one card: three drawn less one bottomed
+  -- against seven drawn less one bottomed.
+  Spec.it s "CR 902.5a a mulligan redraws to the modified starting hand size" $ do
+    mountain <- S.printingOf s registry "Mountain"
+    gerrard <- S.printingOf s registry "Gerrard"
+    Spec.assertEqWith s "Gerrard: three redrawn, one bottomed" (handSize (opened mulliganOnceAnswer (built mountain (Just gerrard)))) 2
+    Spec.assertEqWith s "no vanguard: seven redrawn, one bottomed" (handSize (opened mulliganOnceAnswer (built mountain Nothing))) 6
+
+  -- CR 902.5b / CR 402.2: the maximum hand size takes the same modifier, and CR
+  -- 514.1's cleanup discard is where a player pays it. Driven through
+  -- Engine.discardToHandSize rather than asserted off
+  -- PlayerEffect.maximumHandSize, so the number is read where the rule spends it.
+  Spec.it s "CR 902.5b the maximum hand size is seven as modified" $ do
+    mountain <- S.printingOf s registry "Mountain"
+    gerrard <- S.printingOf s registry "Gerrard"
+    let -- Both legs enter the cleanup holding SEVEN, which is what makes the pair
+        -- differ in one thing: Gerrard's opening hand is three, so it is topped up
+        -- to the seven the control draws on its own.
+        sevenInHand vanguard =
+          let board = opened keepAnswer (built mountain vanguard)
+           in List.foldl' (\g _ -> snd (S.addHandCard mountain S.alice g)) board (replicate (7 - handSize board) ())
+        trimmed vanguard = handSize (S.runPure S.identityAnswer (sevenInHand vanguard) (Engine.discardToHandSize S.alice))
+    Spec.assertEqWith s "both legs hold seven going in" (fmap (handSize . sevenInHand) [Just gerrard, Nothing]) [7, 7]
+    Spec.assertEqWith s "Gerrard's -4 trims her to three" (trimmed (Just gerrard)) 3
+    Spec.assertEqWith s "and without him CR 402.2's seven takes nothing" (trimmed Nothing) 7
+    Spec.assertEqWith s "the number CR 402.2's fold seeds itself with, for Gerrard" (PlayerEffect.maximumHandSize S.alice (built mountain (Just gerrard))) (Just 3)
+    Spec.assertEqWith s "and for bob beside him" (PlayerEffect.maximumHandSize S.bob (built mountain (Just gerrard))) (Just 7)
+
+  -- CR 902.7 / CR 313.4 again: "its static abilities affect the game" from the
+  -- command zone. Selenia's grant reaches alice's creature and not bob's, so the
+  -- ability's controller is CR 902.6's owner and the walk is not handing the
+  -- keyword to the board.
+  Spec.it s "CR 902.7 a vanguard's static ability functions from the command zone" $ do
+    mountain <- S.printingOf s registry "Mountain"
+    piker <- S.printingOf s registry "Goblin Piker"
+    selenia <- S.printingOf s registry "Selenia"
+    let place vanguard =
+          let (mine, g1) = S.addPermanent piker S.alice (built mountain vanguard)
+              (theirs, g2) = S.addPermanent piker S.bob g1
+           in (mine, theirs, g2)
+        (aliceCreature, bobCreature, board) = place (Just selenia)
+        (aliceControl, _, control) = place Nothing
+    Spec.assertBool s (Projection.hasKeyword Keyword.Vigilance aliceCreature board) "alice's creature has vigilance"
+    Spec.assertBool s (not (Projection.hasKeyword Keyword.Vigilance bobCreature board)) "bob's, on the same board, does not"
+    Spec.assertBool s (not (Projection.hasKeyword Keyword.Vigilance aliceControl control)) "and neither does alice's on the board without the vanguard"
+
+  -- CR 902.7 / CR 313.4, third kind of printed ability: a replacement effect.
+  -- Mishra (Vanguard, hand +0 / life -3, "If a creature you control would deal
+  -- damage, it deals double that damage instead" -- checked against Scryfall,
+  -- 2026-09-01) against a batch holding one hit from alice's creature and one
+  -- from bob's, so the rewrite's own "you control" half is read on the same
+  -- board and cannot be what makes the pair differ.
+  Spec.it s "CR 902.7 a vanguard's replacement effect functions from the command zone" $ do
+    mountain <- S.printingOf s registry "Mountain"
+    piker <- S.printingOf s registry "Goblin Piker"
+    mishra <- S.printingOf s registry "Mishra"
+    let place vanguard =
+          let (mine, g1) = S.addPermanent piker S.alice (built mountain vanguard)
+              (theirs, board) = S.addPermanent piker S.bob g1
+              after = S.runPure S.identityAnswer board (Damage.applyDamage [hit mine (Recipient.ToPlayer S.bob) 3, hit theirs (Recipient.ToPlayer S.alice) 5])
+           in (lifeLost S.bob board after, lifeLost S.alice board after)
+        (bobLost, aliceLost) = place (Just mishra)
+        (bobControl, aliceControl) = place Nothing
+    Spec.assertEqWith s "with Mishra, her creature's 3 reaches bob as 6" bobLost (Just 6)
+    Spec.assertEqWith s "and bob's 5, on the same board, is not doubled" aliceLost (Just 5)
+    Spec.assertEqWith s "without him the 3 stays a 3" bobControl (Just 3)
+    Spec.assertEqWith s "and the 5 stays a 5" aliceControl (Just 5)
+
+  -- CR 902.7 / CR 313.4, fourth kind: a combat restriction. No printed vanguard
+  -- states one -- every vanguard whose text names attacking or blocking either
+  -- grants a keyword (Lyna's shadow, Two-Headed Giant of Foriys Avatar's menace),
+  -- pumps (Goblin Warchief Avatar), or states a CR 509.1c REQUIREMENT rather than
+  -- a restriction (Sisters of Stone Death Avatar's "must be blocked if able"),
+  -- checked over Scryfall's whole `t:vanguard` list on 2026-09-01 -- so the
+  -- producer is synthetic, which CR 313.4's "any number of static ... abilities"
+  -- is what permits.
+  Spec.it s "CR 902.7 a vanguard's combat restriction functions from the command zone" $ do
+    mountain <- S.printingOf s registry "Mountain"
+    piker <- S.printingOf s registry "Goblin Piker"
+    avatar <- S.printingOf s registry "Synthetic Pacifist Avatar"
+    let place vanguard =
+          let (mine, placed) = S.addPermanent piker S.alice (built mountain vanguard)
+           in (mine, declaringAttackers placed)
+        (barred, board) = place (Just avatar)
+        (free, control) = place Nothing
+    Spec.assertBool s (not (Combat.legalAttackDeclaration S.alice [barred] board)) "CR 508.1c: her Piker may not be declared attacking"
+    Spec.assertBool s (Combat.legalAttackDeclaration S.alice [free] control) "and may on the board that differs only in the vanguard"
+    Spec.assertBool s (not (Combat.canAttack S.alice barred board)) "so it is not a CR 508.1a candidate either"
+    Spec.assertEqWith s "where without the vanguard it is the one offered" (Combat.legalAttackers S.alice control) [free]
+
+  -- CR 113.6p / 608.2h: an object's record keeps the home its unstated
+  -- abilities functioned in, which Count.lastKnownView reads. No rule moves a
+  -- vanguard out of the command zone (CR 313.2), so Event.forgetObject stands
+  -- in for a plane's planeswalk away (Planechase.toBottom), which files the same
+  -- record. The control is that record with only its home rewritten to CR
+  -- 113.6's battlefield default.
+  Spec.it s "CR 113.6p a departed vanguard's record keeps its as-long-as activated ability" $ do
+    mountain <- S.printingOf s registry "Mountain"
+    relic <- S.printingOf s registry "Darksteel Relic"
+    avatar <- S.printingOf s registry "Synthetic Steward Avatar"
+    let (_, placed) = S.addPermanent relic S.alice (built mountain (Just avatar))
+    case Vanguard.vanguardOf S.alice placed of
+      Nothing -> Spec.assertFailure s "alice has no vanguard"
+      Just steward -> do
+        let gone = Event.forgetObject placed steward
+            control = gone {GameState.lastKnown = Map.adjust (\lk -> lk {LastKnown.home = Zone.Battlefield}) steward (GameState.lastKnown gone)}
+            hasOne g = fmap (not . Set.null . Filter.activatedAbilityKinds) (Projection.viewWithLastKnownAnywhere g steward)
+        Spec.assertBool s (hasOne gone == Just True) "CR 608.2h: the record's view has the activated ability"
+        Spec.assertBool s (hasOne control == Just False) "and the same record with a battlefield home does not"
+
+  -- CR 313.2 against CR 727.2: a restart puts every card into its owner's new
+  -- library, and the vanguard card is the exception -- it stays where it is, and
+  -- rule 902.4's life total is dealt out again from it.
+  Spec.it s "CR 313.2 / 727.1 a restarted game keeps the vanguard in the command zone" $ do
+    mountain <- S.printingOf s registry "Mountain"
+    selenia <- S.printingOf s registry "Selenia"
+    let restarted = S.runPure keepAnswer (built mountain (Just selenia)) (Setup.restartGame S.performer Set.empty S.alice)
+    Spec.assertEqWith s "still in the command zone" (commandNames restarted) [CardName.MkCardName (Text.pack "Selenia")]
+    Spec.assertEqWith s "and CR 902.4's twenty-seven is dealt out again" (S.lifeOf S.alice restarted) (Just 27)
+    Spec.assertEqWith s "her opening hand is eight again" (handSize restarted) 8
+
+  -- CR 729.2b and CR 729.5b: the vanguard card crosses into a subgame and comes
+  -- back out of it, which is the pair CR 729.2c and CR 729.5c make for a
+  -- commander.
+  Spec.it s "CR 729.2b / 729.5b a subgame takes the vanguard card and gives it back" $ do
+    mountain <- S.printingOf s registry "Mountain"
+    selenia <- S.printingOf s registry "Selenia"
+    let parent = built mountain (Just selenia)
+        sub = S.runPure keepAnswer (Setup.subgameStateFrom S.alice parent) (Setup.startGameFromCards S.performer Set.empty)
+        back = Setup.funnelBack sub parent
+    Spec.assertEqWith s "the subgame's command zone holds it" (commandNames sub) [CardName.MkCardName (Text.pack "Selenia")]
+    Spec.assertEqWith s "and CR 902.4 applies inside the subgame too" (S.lifeOf S.alice sub) (Just 27)
+    Spec.assertEqWith s "the main game has it back when the subgame ends" (commandNames back) [CardName.MkCardName (Text.pack "Selenia")]

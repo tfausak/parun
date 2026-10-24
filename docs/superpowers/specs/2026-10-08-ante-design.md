@@ -2,7 +2,7 @@
 
 ## The problem
 
-Pawl has no ante zone and no way to change a card's owner. CR 407.3 closes the
+Parun has no ante zone and no way to change a card's owner. CR 407.3 closes the
 category at nine cards; four of them change ownership. `Object.owner` is
 written only at construction and never updated, and the engine leans on that:
 `Game.removeFromZones` finds a card's library, hand or graveyard by its OWNER,
@@ -27,14 +27,14 @@ Three units, landed in order, this spec committed with the first:
 Out:
 
 - CR 407.3's deck half (no ante card in a non-ante deck or sideboard) is deck
-  validation, which pawl does not do at all (#4458); related to #884.
+  validation, which parun does not do at all (#4458); related to #884.
 - A team win's payout (CR 810.8a makes the team win; CR 407.2 names one
   winner). Elided with an issue; the follow-up is a prompt letting the winning
   team assign each card.
 - An ownership change to a commander (`Player.commander` is keyed by owner;
   Bronze Tablet would silently strip the designation). Filed, cited at
   `Commander.commanderPrintingOf`.
-- "This change in ownership is permanent" beyond the game: pawl models one game,
+- "This change in ownership is permanent" beyond the game: parun models one game,
   never a match (#2997). The report is the whole of it.
 
 ## The cards
@@ -80,7 +80,7 @@ list, `Scenario`'s `Seat`, `ZoneTriggerSpec`'s public-destination rows,
 **Setup (CR 407.2).** In `Setup.startGameFromCards` and `Setup.newGame`, after
 `claimStartingPlayer` and `Companion.reveal`, before `Mulligan.openingHands`:
 each player in turn order moves `Game.ask (Prompt.RandomObject library)` into
-ante through the zone-change funnel. An empty library antes nothing. Pawl has
+ante through the zone-change funnel. An empty library antes nothing. Parun has
 already shuffled, so the random card comes from the library rather than the
 deck; the two are indistinguishable, and that is an elision with an issue and a
 site comment. Living in `startGameFromCards` means a subgame (CR 729.2 follows
@@ -173,7 +173,7 @@ filed and cited there (#4835). Unit 3's card identity folds it in.
 ## Unit 3: the ownership report
 
 **Card identity.** `Object.identity :: Maybe CardIdentity`
-(`Pawl.Types.CardIdentity`): a serial, the number of the id the card was first
+(`Parun.Types.CardIdentity`): a serial, the number of the id the card was first
 minted under, and its CR 108.3 starting owner. Set where a card is minted
 (`Setup.blankObject`, `Event.cardObject`, a dungeon card; a melded permanent
 takes its first card's), carried by `newIncarnation`, a restart and a subgame,
@@ -195,7 +195,7 @@ current owner. `TeamWon` pays nothing, an elision with an issue (above). A
 range-of-influence partial draw is a departure, and CR 800.4n keeps those
 players' ante cards in the game for the eventual winner.
 
-**Report.** `Pawl.Engine.Ante.ownershipChanges :: GameState -> Map ObjectId
+**Report.** `Parun.Engine.Ante.ownershipChanges :: GameState -> Map ObjectId
 (PlayerId, PlayerId)`, starting owner to owner, for every card whose two
 differ, read after the payout; a scenario `View` (`OwnershipChanges`) renders
 it. It reads the cards still in the game, so a card that left with a departed

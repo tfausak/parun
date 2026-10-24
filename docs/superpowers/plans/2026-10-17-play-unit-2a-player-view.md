@@ -19,7 +19,7 @@ It is never a redacted copy of the state. The parts are:
   `Visibility.witnessed`.
 
 **Tech Stack:** Haskell; the `types`, `engine`, `codec` and `test`
-sublibraries; `Pawl.Spec`.
+sublibraries; `Parun.Spec`.
 
 **Spec:** `docs/superpowers/specs/2026-10-17-play-portal-client-design.md`,
 unit 2. Unit 2 is split in two:
@@ -31,7 +31,7 @@ unit 2. Unit 2 is split in two:
 ## Global Constraints
 
 - No new non-boot dependency.
-- One type per module under `Pawl.Types.<TypeName>`. Constructors take a
+- One type per module under `Parun.Types.<TypeName>`. Constructors take a
   `Mk` prefix, and haddocks are one line with their CR citation.
 - Every read of a permanent's card goes through the projection
   (`Projection.project`), never `Game.cardOf`.
@@ -71,17 +71,17 @@ unit 2. Unit 2 is split in two:
 ### Task 1: The view types and their codecs
 
 **Files:**
-- Create: `source/libraries/types/Pawl/Types/ObjectView.hs`
-- Create: `source/libraries/types/Pawl/Types/SeatView.hs`
-- Create: `source/libraries/types/Pawl/Types/PlayerView.hs`
-- Create: `source/libraries/codec/Pawl/Codec/ObjectView.hs` and its
+- Create: `source/libraries/types/Parun/Types/ObjectView.hs`
+- Create: `source/libraries/types/Parun/Types/SeatView.hs`
+- Create: `source/libraries/types/Parun/Types/PlayerView.hs`
+- Create: `source/libraries/codec/Parun/Codec/ObjectView.hs` and its
   `ObjectViewSpec.hs`
-- Create: `source/libraries/codec/Pawl/Codec/SeatView.hs` and its
+- Create: `source/libraries/codec/Parun/Codec/SeatView.hs` and its
   `SeatViewSpec.hs`
-- Create: `source/libraries/codec/Pawl/Codec/PlayerView.hs` and its
+- Create: `source/libraries/codec/Parun/Codec/PlayerView.hs` and its
   `PlayerViewSpec.hs`
-- Modify: `source/libraries/test/Pawl/Test.hs` (wire the three codec specs)
-- Modify: `pawl.cabal` (stage it, then run `cabal-gild`)
+- Modify: `source/libraries/test/Parun/Test.hs` (wire the three codec specs)
+- Modify: `parun.cabal` (stage it, then run `cabal-gild`)
 
 **Interfaces (produced):**
 
@@ -110,10 +110,10 @@ data PlayerView = MkPlayerView
 ```
 
 All three derive `Eq, Show`. Each codec is a `Fields.object` with every key
-`required`, following `Pawl.Codec.Looked`'s shape:
+`required`, following `Parun.Codec.Looked`'s shape:
 
-- `counters` uses `Common.multiset`, as `Pawl.Codec.Object` and
-  `Pawl.Codec.Player` do;
+- `counters` uses `Common.multiset`, as `Parun.Codec.Object` and
+  `Parun.Codec.Player` do;
 - `characteristics` uses `Common.maybe ProjectedCharacteristics.codec`;
 - `attachedTo` uses `Common.maybe Recipient.codec`.
 
@@ -128,12 +128,12 @@ All three derive `Eq, Show`. Each codec is a `Fields.object` with every key
   expect them to pass.**
 - [ ] **Step 5: Commit:** `Add the per-player view types and their codecs`.
 
-### Task 2: `Pawl.Engine.PlayerView.viewFor`
+### Task 2: `Parun.Engine.PlayerView.viewFor`
 
 **Files:**
-- Create: `source/libraries/engine/Pawl/Engine/PlayerView.hs`
-- Create: `source/libraries/test/Pawl/PlayerViewSpec.hs`, wired into
-  `Pawl.Test`
+- Create: `source/libraries/engine/Parun/Engine/PlayerView.hs`
+- Create: `source/libraries/test/Parun/PlayerViewSpec.hs`, wired into
+  `Parun.Test`
 
 **Interfaces:**
 - Produces `viewFor :: PlayerId -> GameState -> PlayerView`, used by units
@@ -149,7 +149,7 @@ All three derive `Eq, Show`. Each codec is a `Fields.object` with every key
     `Visibility.witnessed pid` is `Visible`.
   - `seats` follows `GameState.turnOrder`.
 
-- [ ] **Step 1: Write `Pawl.PlayerViewSpec`** under `describe "PlayerView"`.
+- [ ] **Step 1: Write `Parun.PlayerViewSpec`** under `describe "PlayerView"`.
   Use a game after setup, with red for alice and green for bob:
   `snd (Engine.runGamePure S.castAnswer (Setup.gameWith GameSettings.plain [alice, bob]) (Setup.newGame (Resolve.performHandAction Engine.playSubgame) matchup))`,
   where `matchup` pairs alice with `Cards.redDeck` and bob with
@@ -175,7 +175,7 @@ All three derive `Eq, Show`. Each codec is a `Fields.object` with every key
     `GameEvent.Looked` entry with audience `{alice}` to `GameState.events`.
     Alice's `witnessed` has length 1; bob's has length 0.
 - [ ] **Step 2: Build and watch it fail.**
-- [ ] **Step 3: Implement `Pawl.Engine.PlayerView`.**
+- [ ] **Step 3: Implement `Parun.Engine.PlayerView`.**
 - [ ] **Step 4: Run `-p PlayerView` and the full suite; expect both to
   pass.**
 - [ ] **Step 5: Mutate** with `script/mutate.sh` and an `@FILE` script, then

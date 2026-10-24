@@ -1,0 +1,79 @@
+module Parun.Types.ActivePlayerEffect where
+
+import qualified Parun.Types.AbilityName as AbilityName
+import qualified Parun.Types.AffectedPlayers as AffectedPlayers
+import qualified Parun.Types.Expiry as Expiry
+import qualified Parun.Types.ObjectId as ObjectId
+import qualified Parun.Types.PlayerEffect as PlayerEffect
+import qualified Parun.Types.PlayerId as PlayerId
+import qualified Parun.Types.SourceChoices as SourceChoices
+import qualified Parun.Types.Timestamp as Timestamp
+
+-- | CR 611.1 / 613.11: a stored, resolution-generated player or rules-modifying
+-- continuous effect, held in GameState.playerEffects. The player-axis analogue of
+-- ActiveReplacement and ContinuousEffect: the printed carrier
+-- (Parun.Types.PlayerStaticAbility) is re-derived live from the battlefield, while
+-- these are stored because the object that made them may be long gone.
+--
+-- `controller` is STORED, where ContinuousEffect stores none, and has to be: a
+-- stored Modification re-reads its source's PROJECTED controller (CR 613.1b),
+-- which works only because the source is a permanent. Silence is an INSTANT, so
+-- by the time its effect is live the source is in a graveyard with no controller
+-- to project and "your opponents" would be unanswerable.
+--
+-- `scope`'s Scoped arm, by contrast, stays DYNAMIC. CR 611.2c freezes a stored
+-- effect's object set but carves out this axis: a rules-modifying effect can
+-- affect objects that were not affected when it began. There is no analogue of
+-- Affected.TheseObjects here, and the scope that arm carries is the same
+-- PlayerScope the printed carrier holds.
+--
+-- The Named arm is the half the printed carrier cannot have: the seat the ability
+-- TARGETED (CR 601.2c), baked by Resolve as the effect begins because the
+-- bindings that answered the slot are gone once the resolution is over. That is
+-- the same move Expiry.While makes with Condition.bakeBound, and it is not a
+-- freeze of the CR 611.2c kind -- see Parun.Types.AffectedPlayers.
+--
+-- `expiry` decides when a Parun.Engine.Expiry sweep drops it (CR 514.2, 611.2a,
+-- 611.2b). Every arm the pool reaches has a producer: AtCleanup (Silence),
+-- Never (Sea Gate Restoration's "for the rest of the game"), AtTurnOf
+-- (Blossoming Calm) and While (Synthetic Conditional Silence, which is
+-- synthetic because a "for as long as" player effect is printed as a static on a
+-- permanent and so rides Parun.Types.PlayerStaticAbility instead).
+-- Parun.PlayerEffectSpec's groups of those names are the proof.
+--
+-- `timestamp` is CR 613.7b's stamp, taken as the effect began, and it is READ:
+-- Parun.Engine.PlayerEffect.applying merges these rows into the printed carrier's
+-- by it, so CR 613.10's and CR 613.11's timestamp order holds across the two
+-- carriers rather than within each (Parun.PlayerEffectSpec's Sea Gate Restoration
+-- against The Ten Rings is the proof).
+--
+-- Runtime-only: card data writes Parun.Types.PlayerStaticAbility, never one of
+-- these. It does have a codec (Parun.Codec.ActivePlayerEffect), because a game in
+-- progress has to be writable to JSON (#126); see #1059 for the older claim that
+-- a stored carrier had none.
+data ActivePlayerEffect = MkActivePlayerEffect
+  { -- | The object that resolved -- for an activated or triggered ability, CR
+    -- 113.7's source of it. Often an id nothing holds any more: an instant is in
+    -- its owner's graveyard (CR 608.2n) under a fresh id (CR 400.7) before its
+    -- own effect is ever read. That is not a reason to drop it:
+    -- Parun.Engine.PlayerEffect.applying hands it to every consumer, and CR
+    -- 608.2h's last-known record is filed under exactly this id, which is what
+    -- lets Parun.Engine.SourceContext.choicesOf still answer its chosen colour
+    -- and subtype. A dead id equals no live candidate, so Filter.IsSource simply
+    -- answers False for one.
+    source :: ObjectId.ObjectId,
+    controller :: PlayerId.PlayerId,
+    -- | CR 608.2h / 611.2a: what `source` had chosen as the effect began, baked
+    -- so a later choice by the same permanent leaves this row's alone.
+    choices :: SourceChoices.SourceChoices,
+    timestamp :: Timestamp.Timestamp,
+    expiry :: Expiry.Expiry,
+    scope :: AffectedPlayers.AffectedPlayers PlayerId.PlayerId,
+    effect :: PlayerEffect.PlayerEffect,
+    -- | CR 607.5: the name of the activated ability whose resolution began the
+    -- effect (Parun.Engine.Resolve.Slots.resolvingAbilityName), so a reference
+    -- to cards exiled with `source` reads that ability's pair. Nothing for an
+    -- unnamed one, a trigger or a spell.
+    ability :: Maybe AbilityName.AbilityName
+  }
+  deriving (Eq, Ord, Show)

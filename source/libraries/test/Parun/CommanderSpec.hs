@@ -1,0 +1,1509 @@
+{-# LANGUAGE GADTs #-}
+{-# LANGUAGE RankNTypes #-}
+
+-- Covers Parun.Engine.Commander (CR 903.3's designation, CR 903.6's starting zone,
+-- CR 903.8's permission and tax, CR 903.9a's state-based action, CR 903.9b's
+-- command-zone replacement), CR 702.124h's and CR 702.124i's two-commander
+-- designations, the
+-- Player.commander and Player.commanderCasts fields, Deck's commander, CR
+-- 702.124k's Background designation and the Filter.IsCommander atom that reads
+-- it, the Zone.Command arm of Parun.Engine.Cast.castableZones, and the CR 903.8
+-- increase Parun.Engine.Cost.spellAdjustments folds into CR 601.2f. Also the
+-- commander half of Parun.Engine.Setup's subgame pair -- CR 729.2c in and CR
+-- 729.5c out -- and the commander half of its restart, CR 727.5a. Those live
+-- here rather than in Parun.SetupSpec because they need a designated commander
+-- and this is the file that builds one.
+--
+-- CR 903.12h's Brawl group is here for the same reason, and because it is the
+-- CR 903.10a group's board with one setting changed.
+--
+-- Shimatsu the Bloodcloaked is the card pool for every group but CR 903.10a's,
+-- which needs a commander that can attack and says why it uses its own: {3}{R}
+-- Legendary Creature -- Demon Spirit 0/0, "As Shimatsu enters, sacrifice any
+-- number of permanents. Shimatsu enters with that many +1/+1 counters on it."
+--
+-- Chosen because it KILLS ITSELF. Sacrificing nothing leaves a 0/0, which CR
+-- 704.5f buries on the next state-based action check -- so the whole CR 903 cycle
+-- (cast from the command zone, resolve, die, be offered back, be recast dearer)
+-- runs on one card with no removal spell and no second colour of mana.
+--
+-- Deliberately not Kokusho, the Evening Star, the obvious pick: its dies trigger
+-- would have to be modeled honestly, and "you gain life equal to the life lost
+-- this way" is a dynamic quantity parun cannot express. Shimatsu reaches rule 903
+-- without reaching for it.
+--
+-- Its printed cost is {3}{R}, so the tax is directly readable in the mana spent:
+-- four the first time, six the second (CR 903.8's {2}), eight the third.
+--
+-- The Partner group is the one that needs a second commander, and takes a second
+-- pool for it: Rograkh, Son of Rohgahh ({0} Legendary Creature -- Kobold Warrior
+-- 0/1, "First strike, menace, trample / Partner") and Akiri, Line-Slinger
+-- ({R}{W} Legendary Creature -- Kor Soldier Ally 0/3, "First strike, vigilance /
+-- Akiri gets +1\/+0 for each artifact you control. / Partner"). Rograkh's {0}
+-- is what makes CR 702.124d readable: his cast spends no mana, so whatever the
+-- board then pays for Akiri is her own cost and CR 903.8's tax alone.
+--
+-- The Partner text group takes that same fixture and the "partner—Friends
+-- forever" pair Bjorna, Nightfall Alchemist ({U}{R} Legendary Creature -- Human
+-- 1\/3) and Hargilde, Kindly Runechanter ({2}{W}{U} Legendary Creature -- Human
+-- 2\/3), beside April O'Neil, Live on the Scene ({1}{U} Legendary Creature --
+-- Human Detective 2\/1), whose "partner—Character select" is the other text.
+--
+-- The Choose a Background group takes that same fixture and a third pool: Wilson,
+-- Refined Grizzly ({1}{G} Legendary Creature -- Bear Warrior 2\/2, "This spell
+-- can't be countered. \/ Reach, vigilance, trample \/ Ward {2} \/ Choose a
+-- Background") and Raised by Giants ({5}{G} Legendary Enchantment -- Background,
+-- "Commander creatures you own have base power and toughness 10\/10 and are
+-- Giants in addition to their other types"). Raised by Giants is the Background
+-- whose text reads the designation back, which is what makes CR 702.124k
+-- observable at gameplay level rather than only in the command zone.
+--
+-- The Doctor's companion group takes that same fixture and a fourth pool: Rose
+-- Noble ({3}{U} Legendary Creature -- Human 2\/3, "Ward {2} \/ Whenever you cast
+-- a Doctor spell or creature spell with doctor's companion, draw a card. \/
+-- Doctor's companion") and The Fugitive Doctor ({3}{R}{G} Legendary Creature --
+-- Time Lord Doctor 4\/4), which was already in the pool. Rose Noble's own
+-- trigger reads the keyword back, which is what gives CR 702.124m a second
+-- observer besides the command zone.
+--
+-- The Bounce group adds two of bob's spells and the Islands to cast them with:
+-- Unsummon ({U} Instant, "return target creature to its owner's hand") for rule
+-- 903.9b's hand half and Griptide ({3}{U} Instant, "put target creature on top of
+-- its owner's library") for its library half. Evacuation ({3}{U}{U} Instant,
+-- "return all creatures to their owners' hands") is the one event that reaches
+-- two commanders, which is rule 903.9b's exception to CR 614.5.
+module Parun.CommanderSpec where
+
+import qualified Data.Foldable as Foldable
+import qualified Data.List as List
+import qualified Data.Map.Strict as Map
+import qualified Data.Maybe as Maybe
+import qualified Data.Sequence as Seq
+import qualified Data.Set as Set
+import qualified Data.Text as Text
+import Numeric.Natural (Natural)
+import qualified Parun.Engine.Action as Action
+import qualified Parun.Engine.Activatable as Activatable
+import qualified Parun.Engine.Activate as Activate
+import qualified Parun.Engine.Cast as Cast
+import qualified Parun.Engine.Combat as Combat
+import qualified Parun.Engine.Commander as Commander
+import qualified Parun.Engine.Damage as Damage
+import qualified Parun.Engine.Departure as Departure
+import qualified Parun.Engine.Engine as Engine
+import qualified Parun.Engine.Event as Event
+import qualified Parun.Engine.FaceDown as FaceDown
+import qualified Parun.Engine.Game as Game
+import qualified Parun.Engine.Interchangeable as Interchangeable
+import qualified Parun.Engine.Projection as Projection
+import qualified Parun.Engine.Setup as Setup
+import qualified Parun.Engine.Stack as Stack
+import qualified Parun.Registry as Registry
+import qualified Parun.Spec as Spec
+import qualified Parun.Support as S
+import qualified Parun.Types.Action as A
+import qualified Parun.Types.AnyNumberOf as AnyNumberOf
+import qualified Parun.Types.AttackTarget as AttackTarget
+import qualified Parun.Types.CardName as CardName
+import qualified Parun.Types.CardType as CardType
+import qualified Parun.Types.Combat as Combat.Type
+import qualified Parun.Types.CombatStep as CombatStep
+import qualified Parun.Types.CommandZoneDecision as CommandZoneDecision
+import qualified Parun.Types.CounterKind as CounterKind
+import qualified Parun.Types.DamageKind as DamageKind
+import qualified Parun.Types.Deck as Deck
+import qualified Parun.Types.Departure as Departure.Type
+import qualified Parun.Types.Facing as Facing
+import qualified Parun.Types.GameSettings as GameSettings
+import qualified Parun.Types.GameState as GameState
+import qualified Parun.Types.Keyword as Keyword
+import qualified Parun.Types.Object as Object
+import qualified Parun.Types.ObjectId as ObjectId
+import qualified Parun.Types.OptionalDecision as OptionalDecision
+import qualified Parun.Types.Phase as Phase
+import qualified Parun.Types.Player as Player
+import qualified Parun.Types.PlayerId as PlayerId
+import qualified Parun.Types.Printing as Printing
+import qualified Parun.Types.Prompt as Prompt
+import qualified Parun.Types.Recipient as Recipient
+import qualified Parun.Types.Regenerability as Regenerability
+import qualified Parun.Types.Source as Source
+import qualified Parun.Types.Status as Status
+import qualified Parun.Types.Subtype as Subtype.Type
+import qualified Parun.Types.TapState as TapState
+import qualified Parun.Types.TurnUpProcedure as TurnUpProcedure
+import qualified Parun.Types.Zone as Zone
+
+-- Alice's board: `lands` Mountains, and Shimatsu designated as her commander and
+-- so started in the command zone (CR 903.6). Built through Setup.createDeck, the
+-- real path, rather than by placing the object directly -- the designation and the
+-- zone are what this file is about.
+commanderBoard :: Printing.Printing -> Printing.Printing -> Int -> GameState.GameState
+commanderBoard mountain shimatsu lands =
+  let deck = Deck.MkDeck {Deck.cards = Map.empty, Deck.commander = Set.singleton shimatsu, Deck.vanguard = Nothing, Deck.dungeons = Set.empty, Deck.sideboard = Map.empty, Deck.conspiracies = Map.empty, Deck.sideDecks = Map.empty, Deck.stickerSheets = Seq.empty}
+      -- A precombat main phase with alice holding priority and an empty stack,
+      -- which is Support.handOne's shape. CR 302.1 -- a creature card is cast
+      -- "during a main phase of their turn when the stack is empty" -- is a
+      -- precondition of the whole file rather than anything rule 903 says: rule
+      -- 903.8 changes the ZONE a commander may be cast from, never the timing.
+      board =
+        (S.landsInPlay mountain lands)
+          { GameState.phase = Phase.PrecombatMain,
+            GameState.activePlayer = S.alice,
+            GameState.priority = Just S.alice
+          }
+   in S.runPure S.identityAnswer board (Setup.createDeck S.alice deck)
+
+-- What is in the command zone, in id order -- one object on most boards here,
+-- two where a second player is designated one.
+inCommandZone :: GameState.GameState -> [ObjectId.ObjectId]
+inCommandZone = Set.toAscList . GameState.command
+
+-- CR 903.8's tally, one entry per commander alice has cast from the command
+-- zone, in printing-id order (CR 702.124d keys it per commander). Empty until
+-- she casts one, since an absent key reads as zero.
+commanderCastsOf :: GameState.GameState -> [Integer]
+commanderCastsOf gs = foldMap (fmap toInteger . Map.elems . Player.commanderCasts) (Map.lookup S.alice (GameState.players gs))
+
+-- How many lands are tapped -- what the mana actually spent on a cast is read off,
+-- since every land here is a Mountain tapping for one.
+tappedCount :: GameState.GameState -> Int
+tappedCount gs =
+  length (filter (\oid -> fmap Object.tapped (Game.lookupObject oid gs) == Just TapState.Tapped) (Set.toList (GameState.battlefield gs)))
+
+spec :: (Monad m, Monad n) => Spec.Spec m n -> Registry.Registry m -> n ()
+spec s registry = Spec.describe s "Parun.Engine.Commander" $ do
+  designationSpec s registry
+  castSpec s registry
+  taxSpec s registry
+  taxPerCardSpec s registry
+  partnerSpec s registry
+  partnerTextSpec s registry
+  partnerWithSpec s registry
+  backgroundSpec s registry
+  doctorsCompanionSpec s registry
+  bounceSpec s registry
+  orderingSpec s registry
+  commanderDamageSpec s registry
+  brawlSpec s registry
+  subgameSpec s registry
+  restartSpec s registry
+  ninjutsuSpec s registry
+
+designationSpec :: (Monad m, Monad n) => Spec.Spec m n -> Registry.Registry m -> n ()
+designationSpec s registry = Spec.describe s "Designation" $ do
+  -- CR 903.6: "at the start of the game, each player puts their commander from
+  -- their deck face up into the command zone", and CR 903.3's designation is
+  -- recorded on the player because it "is an attribute of the card itself" that
+  -- "the card retains even when it changes zones".
+  Spec.it s "CR 903.3/903.6 the commander starts in the command zone, designated" $ do
+    mountain <- S.printingOf s registry "Mountain"
+    shimatsu <- S.printingOf s registry "Shimatsu the Bloodcloaked"
+    let gs = commanderBoard mountain shimatsu 4
+    Spec.assertEqWith s "one card in the command zone" (length (inCommandZone gs)) 1
+    Spec.assertEqWith s "alice is designated it" (fmap (commanderPrintingsOf gs) (Map.lookup S.alice (GameState.players gs))) (Just [shimatsu])
+    Spec.assertEqWith s "and it is her commander" (fmap (\oid -> Commander.isCommander oid gs) (inCommandZone gs)) [True]
+    Spec.assertEqWith s "having cast it no times yet" (commanderCastsOf gs) []
+  -- CR 903.3: the designation is "an attribute of the card itself", so a second
+  -- Cid, Timeless Artificer in the deck -- which its own text allows -- is no
+  -- commander. Each Cid is put onto the battlefield and destroyed in turn, and
+  -- only the designated one is offered CR 903.9a's return; the answerer accepts
+  -- every offer. Between the two deaths Ornithopter reads Cid's anthem: one
+  -- Artificer she controls and one Artificer card in her graveyard.
+  Spec.it s "CR 903.3 a second copy of the commander's card is not a commander" $ do
+    mountain <- S.printingOf s registry "Mountain"
+    cid <- S.printingOf s registry "Cid, Timeless Artificer"
+    ornithopter <- S.printingOf s registry "Ornithopter"
+    let deck = Deck.MkDeck {Deck.cards = Map.fromList [(cid, 1), (mountain, 3)], Deck.commander = Set.singleton cid, Deck.vanguard = Nothing, Deck.dungeons = Set.empty, Deck.sideboard = Map.empty, Deck.conspiracies = Map.empty, Deck.sideDecks = Map.empty, Deck.stickerSheets = Seq.empty}
+        built = S.runPure S.identityAnswer (Setup.emptyGame S.bothPlayers) (Setup.createDeck S.alice deck)
+        cidsIn ids gs = filter (\oid -> fmap S.nameOf (Game.cardOf oid gs) == Just (S.printingName cid)) ids
+        intoPlay' oid gs = S.runPureWith S.identityAnswer gs (Event.changeZoneReturning oid Zone.Battlefield)
+        killed arrived gs = S.runPure reclaiming gs (Event.destroy Regenerability.Regenerable (Foldable.toList arrived) >> Engine.settleForPriority)
+    case (cidsIn (Game.zoneMembers Zone.Library S.alice built) built, inCommandZoneNamed cid built) of
+      ([second], [commander]) -> do
+        let (secondArrived, secondInPlay) = intoPlay' second built
+            secondDead = killed secondArrived secondInPlay
+            (_, withThopter) = S.addPermanent ornithopter S.alice secondDead
+            (commanderArrived, commanderInPlay') = intoPlay' commander withThopter
+            commanderDead = killed commanderArrived commanderInPlay'
+            thopter = List.find (\oid -> fmap S.nameOf (Game.cardOf oid withThopter) == Just (S.printingName ornithopter)) (Set.toList (GameState.battlefield withThopter))
+        Spec.assertEqWith s "CR 903.9a the second Cid stays in her graveyard, offered nothing, beside the commander still in the command zone" (length (cidsIn (Game.zoneMembers Zone.Graveyard S.alice secondDead) secondDead), length (inCommandZone secondDead)) (1, 1)
+        Spec.assertEqWith s "the designated Cid is offered the return and takes it" (length (inCommandZoneNamed cid commanderDead), length (cidsIn (Game.zoneMembers Zone.Graveyard S.alice commanderDead) commanderDead)) (1, 1)
+        Spec.assertEqWith s "Cid's anthem: Ornithopter gets +2/+2 for the Artificer she controls and the one in her graveyard" (thopter >>= (`S.powerToughnessOf` commanderInPlay')) (Just (2, 4))
+        Spec.assertEqWith s "setup: the library Cid is no commander, the command-zone one is" (Commander.isCommander second built, Commander.isCommander commander built) (False, True)
+      _ -> Spec.assertFailure s "expected one Cid in the library and one in the command zone"
+  -- CR 903.3 against the engine's own choices: the commander Cid and a second
+  -- Cid project alike, but which of them a cost taps or an effect takes is a
+  -- real choice, so they are not interchangeable. Two Cids neither of which is
+  -- the commander are the control leg, and are. All three are put into her
+  -- graveyard the same way, unsettled, so CR 903.9a asks nothing yet.
+  Spec.it s "CR 903.3 a commander is not interchangeable with another copy of its card" $ do
+    mountain <- S.printingOf s registry "Mountain"
+    cid <- S.printingOf s registry "Cid, Timeless Artificer"
+    let deck = Deck.MkDeck {Deck.cards = Map.fromList [(cid, 2), (mountain, 3)], Deck.commander = Set.singleton cid, Deck.vanguard = Nothing, Deck.dungeons = Set.empty, Deck.sideboard = Map.empty, Deck.conspiracies = Map.empty, Deck.sideDecks = Map.empty, Deck.stickerSheets = Seq.empty}
+        built = S.runPure S.identityAnswer (Setup.emptyGame S.bothPlayers) (Setup.createDeck S.alice deck)
+        named gs = filter (\oid -> fmap S.nameOf (Game.cardOf oid gs) == Just (S.printingName cid))
+        cids = named built (Game.zoneMembers Zone.Library S.alice built <> inCommandZone built)
+        inPlay = List.foldl' (\g oid -> S.runPure S.identityAnswer g (Event.changeZone oid Zone.Graveyard)) built cids
+        alike = Interchangeable.objects (Projection.projectAll inPlay) inPlay
+    case List.partition (`Commander.isCommander` inPlay) (named inPlay (Game.zoneMembers Zone.Graveyard S.alice inPlay)) of
+      ([commander], [first, second]) -> do
+        Spec.assertEqWith s "CR 903.3 the commander is not alike with another Cid" (alike commander first, alike first commander) (False, False)
+        Spec.assertEqWith s "control leg: two Cids that are not the commander are alike" (alike first second) True
+      _ -> Spec.assertFailure s "expected three Cids in her graveyard, one of them the commander"
+  -- CR 903.3a: "some cards have an ability that states the card can be your
+  -- commander", which is what lets a card rule 903.3's own restriction --
+  -- "a creature card, a Vehicle card, or a Spacecraft card with one or more
+  -- power\/toughness boxes" -- would otherwise refuse be designated.
+  --
+  -- TWO boards differing in that printed ability and in nothing else that rule
+  -- 903.3 reads. Freyalise, Llanowar's Fury ({3}{G}{G} Legendary Planeswalker --
+  -- Freyalise, loyalty 3, "Freyalise, Llanowar's Fury can be your commander" --
+  -- checked against Scryfall, 2026-09-18) prints it; Serra the Benevolent is a
+  -- legendary planeswalker that does not. Neither is a creature, a Vehicle or a
+  -- Spacecraft card, so rule 903.3a is the only thing that can have designated
+  -- one of them. A single board would pass on an engine that designated whatever
+  -- the deck named, which is what parun did before this.
+  Spec.it s "CR 903.3/903.3a a legendary planeswalker is designated only if it says it can be your commander" $ do
+    mountain <- S.printingOf s registry "Mountain"
+    freyalise <- S.printingOf s registry "Freyalise, Llanowar's Fury"
+    serra <- S.printingOf s registry "Serra the Benevolent"
+    let said = commanderBoard mountain freyalise 0
+        silent = commanderBoard mountain serra 0
+    Spec.assertEqWith s "CR 903.3a Freyalise is alice's commander in the command zone" (fmap (\oid -> Commander.isCommander oid said) (inCommandZone said)) [True]
+    Spec.assertEqWith s "CR 903.3 Serra reaches no zone at all, her designation refused" (length (inCommandZone silent)) 0
+    Spec.assertEqWith s "and alice is designated nothing" (fmap (commanderPrintingsOf silent) (Map.lookup S.alice (GameState.players silent))) (Just [])
+  -- CR 903.3's "(a) a creature card", asked of the card as rule 903.3 judges it
+  -- -- before the game begins -- and not of its printed type line. Grist, the
+  -- Hunger Tide is a legendary PLANESWALKER card that is "a 1\/1 Insect creature"
+  -- in every zone but the battlefield (CR 113.6c) and prints no "can be your
+  -- commander", so it is designated where the case above's Serra, the same
+  -- printed card type without either, is not.
+  Spec.it s "CR 903.3 a legendary planeswalker that is a creature card off the battlefield is designated" $ do
+    mountain <- S.printingOf s registry "Mountain"
+    grist <- S.printingOf s registry "Grist, the Hunger Tide"
+    let gs = commanderBoard mountain grist 0
+    Spec.assertEqWith s "Grist is alice's commander in the command zone" (fmap (\oid -> Commander.isCommander oid gs) (inCommandZone gs)) [True]
+  -- The falsifier for a commander smuggled into the library: CR 903.6 puts it in
+  -- the command zone and shuffles "the REMAINING cards of their deck" into the
+  -- library, so the commander is in exactly one of the two.
+  Spec.it s "CR 903.6 the commander is not also in the library" $ do
+    mountain <- S.printingOf s registry "Mountain"
+    shimatsu <- S.printingOf s registry "Shimatsu the Bloodcloaked"
+    let gs = commanderBoard mountain shimatsu 4
+    Spec.assertEqWith s "alice's library is empty" (length (Game.zoneMembers Zone.Library S.alice gs)) 0
+  -- CR 903.5 counts the deck "including its commander", so a deck whose only card
+  -- IS the commander is one card, not zero.
+  Spec.it s "CR 903.5 the commander counts toward the deck's size" $ do
+    shimatsu <- S.printingOf s registry "Shimatsu the Bloodcloaked"
+    let deck = Deck.MkDeck {Deck.cards = Map.empty, Deck.commander = Set.singleton shimatsu, Deck.vanguard = Nothing, Deck.dungeons = Set.empty, Deck.sideboard = Map.empty, Deck.conspiracies = Map.empty, Deck.sideDecks = Map.empty, Deck.stickerSheets = Seq.empty}
+    Spec.assertEqWith s "one card" (Setup.deckSize deck) 1
+    Spec.assertEqWith s "and none without a commander" (Setup.deckSize (Deck.fromCards Map.empty)) 0
+  -- CR 113.6: rule 113.6p functions an EMBLEM's and a VANGUARD card's abilities in
+  -- the command zone, and names no commander, so a commander's fall back on the
+  -- rule's own default -- the battlefield. The Walls of Ba Sing Se ({8} Legendary
+  -- Artifact Creature -- Wall 0/30, "Defender / Other permanents you control have
+  -- indestructible" -- checked against Scryfall, 2026-09-01) is the pool's
+  -- commander whose static ability would otherwise reach the whole board from
+  -- there.
+  --
+  -- The pair differs in ONE thing: whether a Walls is also on the battlefield. The
+  -- command-zone one is present in both legs, so the positive leg is what proves
+  -- the ability is expressible at all and the negative is about the zone.
+  Spec.it s "CR 113.6 a commander's static ability does not function from the command zone" $ do
+    mountain <- S.printingOf s registry "Mountain"
+    walls <- S.printingOf s registry "The Walls of Ba Sing Se"
+    piker <- S.printingOf s registry "Goblin Piker"
+    let (pikerId, board) = S.addPermanent piker S.alice (commanderBoard mountain walls 0)
+        (_, played) = S.addPermanent walls S.alice board
+    Spec.assertBool s (not (Projection.hasKeyword Keyword.Indestructible pikerId board)) "her Piker is not indestructible while the Walls sits in the command zone"
+    Spec.assertBool s (Projection.hasKeyword Keyword.Indestructible pikerId played) "and is once a Walls is on the battlefield beside it"
+    Spec.assertEqWith s "setup: the command zone holds the Walls on both boards" (fmap (length . inCommandZone) [board, played]) [1, 1]
+  -- CR 113.6b, the OTHER exception this walk has to keep: "an ability that states
+  -- which zones it functions in functions only from those zones". It sits beside
+  -- CR 113.6p in rule 113.6's list rather than under it, so the object's own kind
+  -- decides nothing once a row names a zone. Grist, the Hunger Tide ({1}{B}{G}
+  -- Legendary Planeswalker -- Grist, "As long as Grist isn't on the battlefield,
+  -- it's a 1/1 Insect creature in addition to its other types" -- checked
+  -- against Scryfall, 2026-09-01) is an ordinary commander whose row states this
+  -- zone, so it is a creature there; CR 113.6c is the negative form that row
+  -- expresses, the same one Parun.ProjectionSpec reads in a hand and on the stack.
+  --
+  -- ONE board carrying BOTH commanders, so the two limbs are told apart on a
+  -- single game rather than across boards that differ in more than the rule:
+  -- alice's Grist states the command zone and functions there, bob's Walls states
+  -- nothing and does not. Without the second half a walk that simply stopped
+  -- gating would pass.
+  Spec.it s "CR 113.6b/113.6c a commander's ability that states the command zone functions from there" $ do
+    mountain <- S.printingOf s registry "Mountain"
+    grist <- S.printingOf s registry "Grist, the Hunger Tide"
+    walls <- S.printingOf s registry "The Walls of Ba Sing Se"
+    piker <- S.printingOf s registry "Goblin Piker"
+    let deckFor c = Deck.MkDeck {Deck.cards = Map.empty, Deck.commander = Set.singleton c, Deck.vanguard = Nothing, Deck.dungeons = Set.empty, Deck.sideboard = Map.empty, Deck.conspiracies = Map.empty, Deck.sideDecks = Map.empty, Deck.stickerSheets = Seq.empty}
+        seated = S.runPure S.identityAnswer (commanderBoard mountain grist 0) (Setup.createDeck S.bob (deckFor walls))
+        (pikerId, board) = S.addPermanent piker S.bob seated
+        (_, played) = S.addPermanent walls S.bob board
+    case (Game.zoneMembers Zone.Command S.alice board, Game.zoneMembers Zone.Command S.bob board) of
+      ([gristId], [_]) -> do
+        Spec.assertEqWith s "CR 113.6b Grist is a 1/1 in the command zone" (S.powerToughnessOf gristId board) (Just (1, 1))
+        Spec.assertBool s (Set.member CardType.Creature (Projection.cardTypesOf gristId board)) "and a creature there"
+        Spec.assertBool s (Set.member Subtype.Type.Insect (Projection.subtypesOf gristId board)) "an Insect one, CR 205.1b keeping its printed Grist type beside it"
+        Spec.assertBool s (Set.member Subtype.Type.Grist (Projection.subtypesOf gristId board)) "which it still has"
+        -- The other limb on the same board: the Walls states no zone, so CR 113.6p
+        -- decides, and a commander is not on that list.
+        Spec.assertBool s (not (Projection.hasKeyword Keyword.Indestructible pikerId board)) "bob's Piker is not indestructible from a Walls in bob's command zone"
+        Spec.assertBool s (Projection.hasKeyword Keyword.Indestructible pikerId played) "and is once a Walls is on the battlefield beside it"
+      _ -> Spec.assertFailure s "expected one commander in each command zone"
+  -- The same two limbs on a PRINTED REPLACEMENT ROW, which
+  -- Parun.Engine.Projection.replacementsAffecting gathered by object rather than
+  -- by row until this case: rule 113.6p's list filtered the zone before any row's
+  -- stated set was asked, so a commander's row naming the command zone was
+  -- dropped; see #2904. Parun.ZoneReplacementSpec has the other four zones, and this one
+  -- is here because a commander is what puts a card in the command zone.
+  --
+  -- Synthetic Archival Warden is "{1}{W} Legendary Creature -- Human Advisor 2/2.
+  -- If a creature you own would be put into a graveyard from anywhere, put it on
+  -- the bottom of your library instead. This ability functions only in the
+  -- command zone." Owns rather than controls, which is what
+  -- Parun.Types.ZoneChangePattern's `whoseObject` asks of a zone change (CR
+  -- 400.3), and Anafenza's own words for the same reason. SYNTHETIC because no
+  -- printing states this zone on a
+  -- REPLACEMENT row: the corpus's only row naming it is Nexus of Fate's, an
+  -- instant that can never be in a command zone, and Scryfall's "o:'in the
+  -- command zone' (t:creature or t:planeswalker)", 2026-09-01, returns the seven
+  -- Eminence-shaped commanders (Arahbo, Edgar Markov, Inalla, Oloro, Sahir, Sidar
+  -- Jabari, The Ur-Dragon), whose stated-zone abilities are triggers and a cost
+  -- reduction. So the CLAUSE is printed and only this event class is not.
+  --
+  -- TWO boards, each carrying ONE of the two rows against The Walls of Ba Sing Se
+  -- in the other seat, and alice's Goblin Piker dies on both. Which seat each row
+  -- has to sit in is forced by the row: the Warden's names a creature YOU own, so
+  -- it is alice's commander, and Anafenza, the Foremost's names an opponent's, so
+  -- she is bob's. Anafenza is the control because her row states
+  -- no zone: an engine that answered rule 113.6b by dropping rule 113.6p's gate
+  -- rather than by splitting the zone would exile that Piker.
+  --
+  -- Both rows on ONE board would not show it. CR 616.1 lets the affected object's
+  -- controller apply one of them first, and the Warden's redirect changes the
+  -- destination the other is waiting for (CR 614.6), so the exile never happens
+  -- and the board answers the same either way -- which is what a mutation
+  -- dropping the gate proved before this case was split in two.
+  Spec.it s "CR 113.6b a commander's replacement row that states the command zone functions from there" $ do
+    mountain <- S.printingOf s registry "Mountain"
+    warden <- S.printingOf s registry "Synthetic Archival Warden"
+    anafenza <- S.printingOf s registry "Anafenza, the Foremost"
+    walls <- S.printingOf s registry "The Walls of Ba Sing Se"
+    piker <- S.printingOf s registry "Goblin Piker"
+    let deckFor c = Deck.MkDeck {Deck.cards = Map.empty, Deck.commander = Set.singleton c, Deck.vanguard = Nothing, Deck.dungeons = Set.empty, Deck.sideboard = Map.empty, Deck.conspiracies = Map.empty, Deck.sideDecks = Map.empty, Deck.stickerSheets = Seq.empty}
+        stating = S.runPure S.identityAnswer (commanderBoard mountain warden 0) (Setup.createDeck S.bob (deckFor walls))
+        unstated = S.runPure S.identityAnswer (commanderBoard mountain walls 0) (Setup.createDeck S.bob (deckFor anafenza))
+        binned base =
+          let (pikerId, board) = S.addPermanent piker S.alice base
+           in S.runPure S.identityAnswer board (Event.changeZone pikerId Zone.Graveyard)
+    Spec.assertEqWith s "CR 113.6b the Warden's row states this zone and functions from it, so alice's creature is in her library" (length (Game.zoneMembers Zone.Library S.alice (binned stating))) 1
+    Spec.assertEqWith s "and the graveyard the move aimed at is empty" (length (Game.zoneMembers Zone.Graveyard S.alice (binned stating))) 0
+    Spec.assertEqWith s "CR 113.6p is still the other limb: bob's Anafenza states no zone, so alice's creature reaches her graveyard" (length (Game.zoneMembers Zone.Graveyard S.alice (binned unstated))) 1
+    Spec.assertEqWith s "and nothing was exiled" (length (Game.zoneMembers Zone.Exile S.alice (binned unstated))) 0
+    Spec.assertEqWith s "setup: a commander in each command zone on both boards, and an empty library for the redirect to fill" (fmap (length . inCommandZone) [stating, unstated], length (Game.zoneMembers Zone.Library S.alice stating)) ([2, 2], 0)
+
+castSpec :: (Monad m, Monad n) => Spec.Spec m n -> Registry.Registry m -> n ()
+castSpec s registry = Spec.describe s "Cast" $ do
+  -- CR 903.8's first sentence: "a player may cast a commander they own from the
+  -- command zone". The command zone is not a castable zone for anything else, so
+  -- this is the whole of the permission.
+  Spec.it s "CR 903.8 the owner may cast their commander from the command zone" $ do
+    mountain <- S.printingOf s registry "Mountain"
+    shimatsu <- S.printingOf s registry "Shimatsu the Bloodcloaked"
+    let gs = commanderBoard mountain shimatsu 4
+    case inCommandZone gs of
+      [oid] -> do
+        Spec.assertEqWith s "alice may cast it" (S.castable S.alice oid gs) True
+        -- CR 903.8 says "a commander THEY OWN": bob may not cast alice's.
+        Spec.assertEqWith s "bob may not" (S.castable S.bob oid gs) False
+      _ -> Spec.assertBool s False "expected one commander"
+  -- The falsifier for a command zone that became castable for everything: an
+  -- object in the command zone that is not a commander is not castable from there.
+  Spec.it s "CR 903.8 a non-commander in the command zone is not castable" $ do
+    mountain <- S.printingOf s registry "Mountain"
+    shimatsu <- S.printingOf s registry "Shimatsu the Bloodcloaked"
+    let gs = commanderBoard mountain shimatsu 4
+        -- Strip the designation, leaving the same object in the same zone.
+        undesignated = gs {GameState.players = Map.adjust (\p -> p {Player.commander = Set.empty}) S.alice (GameState.players gs)}
+    case inCommandZone gs of
+      [oid] -> Spec.assertEqWith s "not castable once it is nobody's commander" (S.castable S.alice oid undesignated) False
+      _ -> Spec.assertBool s False "expected one commander"
+  -- Disguise Agent {1}{U} 1/3, "Commanders you own have disguise. Their disguise
+  -- cost is equal to their mana cost." Isamaru, Hound of Konda {W} prints no
+  -- disguise, so the face-down cast from the command zone is the grant's (CR
+  -- 613.1f, 702.168a), and the two boards differ only in the Agent.
+  --
+  -- Four Plains: {3} for the cast, then rule 702.168d's "what the permanent's
+  -- disguise cost would be if it were face up" -- Isamaru's own {W}, which no
+  -- face-down permanent has (CR 708.2a) and which the Agent's {1}{U} is not.
+  Spec.it s "CR 702.168a Disguise Agent's disguise casts a commander face down and turns it up for its mana cost" $ do
+    plains <- S.printingOf s registry "Plains"
+    isamaru <- S.printingOf s registry "Isamaru, Hound of Konda"
+    agent <- S.printingOf s registry "Disguise Agent"
+    let bare = commanderBoard plains isamaru 4
+        agented = snd (S.addPermanent agent S.alice bare)
+        isamaruName = CardName.MkCardName (Text.pack "Isamaru, Hound of Konda")
+        faceDownCasts gs = [(oid, facing) | A.Cast oid _ facing@(Facing.FaceDown _) <- Action.legalActions S.alice gs]
+    Spec.assertEqWith s "CR 702.168a the Agent offers the commander face down, and without it nothing does" (fmap fst (faceDownCasts agented), faceDownCasts bare) (inCommandZone bare, [])
+    case (inCommandZone bare, faceDownCasts agented) of
+      ([oid], [(_, facing)]) -> do
+        let cast = S.runPure S.identityAnswer agented (Cast.castSpell S.manaPerformer S.alice oid isamaruName facing >> Stack.resolveTop)
+        case Set.toList (Set.difference (GameState.battlefield cast) (GameState.battlefield agented)) of
+          [permanent] -> do
+            Spec.assertEqWith s "CR 702.168d the disguise procedure is open at Isamaru's {W}" (FaceDown.turnableFaceUp S.alice cast) [(permanent, TurnUpProcedure.Disguise)]
+            let up = S.runPure S.identityAnswer cast (FaceDown.turnFaceUp S.manaPerformer S.alice TurnUpProcedure.Disguise permanent)
+            Spec.assertEqWith s "CR 702.168d it is face up" (fmap Object.facing (Game.lookupObject permanent up)) (Just Facing.FaceUp)
+            Spec.assertEqWith s "{3} and then {W}: all four Plains tapped" (tappedCount up) 4
+          entered -> Spec.assertFailure s ("expected one permanent to enter, got " <> show entered)
+      (commanders, offers) -> Spec.assertFailure s ("expected one commander and one face-down offer, got " <> show (commanders, offers))
+
+taxSpec :: (Monad m) => Spec.Spec m n -> Registry.Registry m -> n ()
+taxSpec s registry = Spec.describe s "Tax" $ do
+  -- CR 903.8's second sentence, at zero: the FIRST cast from the command zone has
+  -- no previous cast to pay for, so it costs the printed {3}{R} and nothing more.
+  Spec.it s "CR 903.8 the first cast costs the printed cost" $ do
+    mountain <- S.printingOf s registry "Mountain"
+    shimatsu <- S.printingOf s registry "Shimatsu the Bloodcloaked"
+    let gs = commanderBoard mountain shimatsu 10
+    case inCommandZone gs of
+      [oid] -> do
+        Spec.assertEqWith s "no tax yet" (Commander.tax S.alice oid gs) 0
+        let after = S.runPure S.identityAnswer gs (S.cast S.alice oid)
+        Spec.assertEqWith s "four Mountains paid" (tappedCount after) 4
+        Spec.assertEqWith s "and the cast is counted" (commanderCastsOf after) [1]
+      _ -> Spec.assertBool s False "expected one commander"
+
+-- Alice's board with TWO commanders designated (CR 702.124h), built through
+-- Setup.createDeck like commanderBoard above -- the designation is what these
+-- cases are about, so nothing is placed by hand.
+--
+-- `lands` Mountains and as many Plains, since Akiri's {R}{W} needs both colours.
+-- The tax case below wants exactly ONE of each: what a cast taps is not readable
+-- off a wider board, because paying {W} from a board whose Mountains sort first
+-- taps every Mountain on the way to a Plains, taxed or not.
+partnerBoard :: Printing.Printing -> Printing.Printing -> Int -> [Printing.Printing] -> GameState.GameState
+partnerBoard mountain plains lands commanders =
+  let deck = Deck.MkDeck {Deck.cards = Map.empty, Deck.commander = Set.fromList commanders, Deck.vanguard = Nothing, Deck.dungeons = Set.empty, Deck.sideboard = Map.empty, Deck.conspiracies = Map.empty, Deck.sideDecks = Map.empty, Deck.stickerSheets = Seq.empty}
+      board =
+        (S.landsFor plains S.alice lands (S.landsInPlay mountain lands))
+          { GameState.phase = Phase.PrecombatMain,
+            GameState.activePlayer = S.alice,
+            GameState.priority = Just S.alice
+          }
+   in S.runPure S.identityAnswer board (Setup.createDeck S.alice deck)
+
+-- The command-zone object representing one printing, which is how a case tells
+-- alice's two commanders apart: CR 400.7 gives each a fresh id, and the printed
+-- name is what survives.
+inCommandZoneNamed :: Printing.Printing -> GameState.GameState -> [ObjectId.ObjectId]
+inCommandZoneNamed printing gs =
+  filter (\oid -> fmap S.nameOf (Game.cardOf oid gs) == Just (S.nameOf (Printing.card printing))) (inCommandZone gs)
+
+-- The card `printing` names, taken out of alice's command zone and put where
+-- `place` puts a fresh object of it, keeping the card's identity -- so it is
+-- still the commander (CR 903.3). Where no such card is in the command zone the
+-- fresh object is placed as it is, and is no commander.
+asCommanderCard :: Printing.Printing -> (GameState.GameState -> (ObjectId.ObjectId, GameState.GameState)) -> GameState.GameState -> (ObjectId.ObjectId, GameState.GameState)
+asCommanderCard printing place gs =
+  let carried = Maybe.listToMaybe [(cid, identity) | cid <- inCommandZoneNamed printing gs, Just identity <- [Game.lookupObject cid gs >>= Object.identity]]
+      (oid, placed) = place (maybe gs (\(cid, _) -> Game.deleteObject cid gs) carried)
+      keep obj = maybe obj (\(_, identity) -> obj {Object.identity = Just identity}) carried
+   in (oid, placed {GameState.objects = Map.adjust keep oid (GameState.objects placed)})
+
+-- Cast this commander, resolve it, bin the permanent it became, and settle --
+-- which is CR 903.9a's offer, accepted by `reclaiming`. Shimatsu resolves as a
+-- 0/0 that CR 704.5f buries on its own, and Rograkh is a 0/1 that lives, so the
+-- trip back has to be made explicitly.
+castAndReclaim :: Printing.Printing -> ObjectId.ObjectId -> GameState.GameState -> GameState.GameState
+castAndReclaim printing oid gs =
+  let resolved = S.runPure reclaiming (S.runPure reclaiming gs (S.cast S.alice oid)) Stack.resolveTop
+      onBattlefield =
+        filter (\o -> fmap S.nameOf (Game.cardOf o resolved) == Just (S.nameOf (Printing.card printing))) (Set.toAscList (GameState.battlefield resolved))
+      binned = List.foldl' (\g o -> S.runPure reclaiming g (Event.changeZone o Zone.Graveyard)) resolved onBattlefield
+   in S.runPure reclaiming binned Engine.settleForPriority
+
+-- CR 903.8: "each previous time the player casting it has cast IT". alice and
+-- bob each command a Jedit Ojanen; she has cast hers once, and then comes to own
+-- bob's (as Bronze Tablet would, CR 407.3). Casting his from the command zone
+-- costs her nothing extra, and hers still costs {2}.
+taxPerCardSpec :: (Monad m) => Spec.Spec m n -> Registry.Registry m -> n ()
+taxPerCardSpec s registry = Spec.describe s "Tax" $ do
+  Spec.it s "CR 903.8 another deck's copy of the commander is not taxed by her own casts" $ do
+    jedit <- S.printingOf s registry "Jedit Ojanen"
+    let board = designating [(S.alice, jedit), (S.bob, jedit)] (Setup.emptyGame S.bothPlayers)
+        ownedBy pid = List.find (\oid -> fmap Object.owner (Game.lookupObject oid board) == Just pid) (inCommandZone board)
+    case (ownedBy S.alice, ownedBy S.bob) of
+      (Just hers, Just his) -> do
+        let after = Game.setOwner his S.alice (Commander.recordCast S.alice hers board)
+        Spec.assertEqWith s "CR 903.8 bob's Jedit, hers now, is untaxed" (Commander.tax S.alice his after) 0
+        Spec.assertEqWith s "and her own still costs {2} more" (Commander.tax S.alice hers after) 2
+      _ -> Spec.assertFailure s "expected a Jedit in each command zone"
+
+partnerSpec :: (Monad m, Monad n) => Spec.Spec m n -> Registry.Registry m -> n ()
+partnerSpec s registry = Spec.describe s "Partner" $ do
+  -- CR 702.124h: "you may designate two legendary cards as your commander rather
+  -- than one if each of them has partner", and CR 702.124b starts both in the
+  -- command zone.
+  Spec.it s "CR 702.124h two cards with partner are both designated" $ do
+    mountain <- S.printingOf s registry "Mountain"
+    plains <- S.printingOf s registry "Plains"
+    rograkh <- S.printingOf s registry "Rograkh, Son of Rohgahh"
+    akiri <- S.printingOf s registry "Akiri, Line-Slinger"
+    let gs = partnerBoard mountain plains 6 [rograkh, akiri]
+    Spec.assertEqWith s "both are in the command zone" (List.sort (commandZoneNames gs)) (List.sort [S.nameOf (Printing.card rograkh), S.nameOf (Printing.card akiri)])
+    Spec.assertEqWith s "and both are commanders" (fmap (\oid -> Commander.isCommander oid gs) (inCommandZone gs)) [True, True]
+    Spec.assertEqWith s "she is designated both" (fmap (List.sort . commanderPrintingsOf gs) (Map.lookup S.alice (GameState.players gs))) (Just (List.sort [rograkh, akiri]))
+  -- The negative, on the same fixture with ONE printing swapped: Shimatsu has no
+  -- partner, so CR 702.124h admits neither designation and the deck starts no
+  -- commander at all. Parun has no channel to refuse a deck (#4458), and this is
+  -- what it does instead.
+  Spec.it s "CR 702.124h a second commander without partner is refused" $ do
+    mountain <- S.printingOf s registry "Mountain"
+    plains <- S.printingOf s registry "Plains"
+    rograkh <- S.printingOf s registry "Rograkh, Son of Rohgahh"
+    shimatsu <- S.printingOf s registry "Shimatsu the Bloodcloaked"
+    let refused = partnerBoard mountain plains 6 [rograkh, shimatsu]
+        control = partnerBoard mountain plains 6 [rograkh]
+    Spec.assertEqWith s "nothing is in the command zone" (commandZoneNames refused) []
+    Spec.assertEqWith s "and she is designated nothing" (fmap (commanderPrintingsOf refused) (Map.lookup S.alice (GameState.players refused))) (Just [])
+    Spec.assertEqWith s "control leg: the same deck naming Rograkh alone still designates him (CR 903.3)" (commandZoneNames control) [S.nameOf (Printing.card rograkh)]
+  -- CR 702.124d against CR 903.8, and the whole reason Player.commanderCasts is
+  -- keyed per commander: "when casting a commander with partner, ignore how many
+  -- times your other commander has been cast".
+  --
+  -- ONE Mountain and ONE Plains, which is exactly Akiri's printed {R}{W} and
+  -- nothing over. Rograkh costs {0}, so casting him spends none of it and leaves
+  -- her cost the only thing the board can still pay -- and only if it is her
+  -- printed cost. A single shared counter charges her CR 903.8's {2} for
+  -- Rograkh's cast, which two lands cannot pay, so she is not castable at all.
+  Spec.it s "CR 702.124d the other commander ignores this one's casts" $ do
+    mountain <- S.printingOf s registry "Mountain"
+    plains <- S.printingOf s registry "Plains"
+    rograkh <- S.printingOf s registry "Rograkh, Son of Rohgahh"
+    akiri <- S.printingOf s registry "Akiri, Line-Slinger"
+    let gs = partnerBoard mountain plains 1 [rograkh, akiri]
+    case (inCommandZoneNamed rograkh gs, inCommandZoneNamed akiri gs) of
+      ([first], [before]) -> do
+        Spec.assertEqWith s "setup: neither commander is taxed yet, and both are castable" (fmap (\o -> (Commander.tax S.alice o gs, S.castable S.alice o gs)) [first, before]) [(0, True), (0, True)]
+        let back = castAndReclaim rograkh first gs
+        case (inCommandZoneNamed rograkh back, inCommandZoneNamed akiri back) of
+          ([second], [hers]) -> do
+            Spec.assertEqWith s "CR 702.124d: Akiri is still castable, so the two lands still cover her printed cost" (S.castable S.alice hers back) True
+            let hired = S.runPure reclaiming back (S.cast S.alice hers)
+            Spec.assertEqWith s "and casting her spent both of them and no more" (tappedCount hired) 2
+            Spec.assertEqWith s "CR 903.8 still charges Rograkh himself for his own cast" (Commander.tax S.alice second back) 2
+            Spec.assertEqWith s "while Akiri is charged nothing" (Commander.tax S.alice hers back) 0
+            Spec.assertEqWith s "his {0} cast spent no land, so what she paid was hers alone" (tappedCount back) 0
+            Spec.assertEqWith s "and one cast is tallied, against him" (commanderCastsOf back) [1]
+          _ -> Spec.assertBool s False "expected Rograkh back in the command zone beside Akiri"
+      _ -> Spec.assertBool s False "expected both commanders in the command zone"
+  -- CR 702.124d against CR 903.10a: "consider damage from each of your two
+  -- commanders separately". Eleven from each is twenty-two between them and
+  -- eleven apiece, so nobody has been dealt 21 by the SAME commander. One tally
+  -- shared by the pair reads 22 and takes the game off bob.
+  --
+  -- Both commanders are taken out of the command zone CR 903.6 started them in
+  -- and put onto the battlefield (`asCommanderCard`), which is the cheapest
+  -- board that has two commanders dealing damage.
+  Spec.it s "CR 702.124d two partners dealing eleven each kill nobody" $ do
+    mountain <- S.printingOf s registry "Mountain"
+    plains <- S.printingOf s registry "Plains"
+    rograkh <- S.printingOf s registry "Rograkh, Son of Rohgahh"
+    akiri <- S.printingOf s registry "Akiri, Line-Slinger"
+    let gs = partnerBoard mountain plains 1 [rograkh, akiri]
+        -- CR 903.7: bob is in the same Commander game, and the fixture builds
+        -- only alice's deck, so his forty is set here. Without it CR 704.5a's
+        -- zero life would decide every case below before rule 903.10a could.
+        seated = gs {GameState.players = Map.adjust (\p -> p {Player.life = 40}) S.bob (GameState.players gs)}
+        (rogOid, withRograkh) = asCommanderCard rograkh (S.addPermanent rograkh S.alice) seated
+        (akiriOid, both) = asCommanderCard akiri (S.addPermanent akiri S.alice) withRograkh
+        hit n oid g = S.settleSba (S.runPure S.identityAnswer g (Damage.applyDamage [Event.damageEvent g DamageKind.Combat oid (Recipient.ToPlayer S.bob) n]))
+        eleven = hit 11 akiriOid (hit 11 rogOid both)
+    Spec.assertEqWith s "CR 702.124d: eleven from each leaves bob in the game" (statusOf S.bob eleven) (Just Status.Playing)
+    Spec.assertEqWith s "the two tallies stand apart at eleven each" (tallyFrom S.alice S.bob eleven) [11, 11]
+    Spec.assertEqWith s "and he took all 22 life, so CR 704.5a is not what spared him" (S.lifeOf S.bob eleven) (Just 18)
+    -- The positive leg, on that same board one swing further: eleven more from
+    -- Rograkh alone takes HIS tally to 22, which is rule 903.10a's "21 or more
+    -- by the same commander". The two boards differ in that one hit.
+    let lethal = hit 11 rogOid eleven
+    Spec.assertEqWith s "CR 903.10a: twenty-two from Rograkh alone loses bob the game" (statusOf S.bob lethal) (Just (Status.Departed Departure.Type.Lost))
+    Spec.assertEqWith s "at 7 life, so CR 704.5a is not what killed him either" (S.lifeOf S.bob lethal) (Just 7)
+    Spec.assertEqWith s "and it was his tally that reached it, not Akiri's" (List.sort (tallyFrom S.alice S.bob lethal)) [11, 22]
+
+partnerTextSpec :: (Monad m, Monad n) => Spec.Spec m n -> Registry.Registry m -> n ()
+partnerTextSpec s registry = Spec.describe s "Partner text" $ do
+  -- CR 702.124i: "each of them has the same 'partner—[text]' ability", and CR
+  -- 702.124b starts both in the command zone.
+  Spec.it s "CR 702.124i two cards with the same partner—[text] are both designated" $ do
+    mountain <- S.printingOf s registry "Mountain"
+    plains <- S.printingOf s registry "Plains"
+    bjorna <- S.printingOf s registry "Bjorna, Nightfall Alchemist"
+    hargilde <- S.printingOf s registry "Hargilde, Kindly Runechanter"
+    let gs = partnerBoard mountain plains 6 [bjorna, hargilde]
+    Spec.assertEqWith s "both are in the command zone" (List.sort (commandZoneNames gs)) (List.sort [S.nameOf (Printing.card bjorna), S.nameOf (Printing.card hargilde)])
+    Spec.assertEqWith s "she is designated both" (fmap (List.sort . commanderPrintingsOf gs) (Map.lookup S.alice (GameState.players gs))) (Just (List.sort [bjorna, hargilde]))
+  -- Each leg is the control board with ONE printing swapped. April O'Neil has
+  -- partner—Character select, a different text; Akiri has plain partner, which
+  -- CR 702.124f keeps from combining with this one.
+  Spec.it s "CR 702.124i the pair admits only the same text" $ do
+    mountain <- S.printingOf s registry "Mountain"
+    plains <- S.printingOf s registry "Plains"
+    bjorna <- S.printingOf s registry "Bjorna, Nightfall Alchemist"
+    hargilde <- S.printingOf s registry "Hargilde, Kindly Runechanter"
+    april <- S.printingOf s registry "April O'Neil, Live on the Scene"
+    akiri <- S.printingOf s registry "Akiri, Line-Slinger"
+    let board = partnerBoard mountain plains 6
+    Spec.assertEqWith s "control leg: Bjorna beside Hargilde designates both" (List.length (commandZoneNames (board [bjorna, hargilde]))) 2
+    Spec.assertEqWith s "CR 702.124i: Bjorna beside a different partner—[text] designates neither" (commandZoneNames (board [bjorna, april])) []
+    Spec.assertEqWith s "CR 702.124f: plain partner is not this one, so Bjorna beside Akiri designates neither" (commandZoneNames (board [bjorna, akiri])) []
+    Spec.assertEqWith s "control leg: Bjorna named alone still is (CR 903.3)" (commandZoneNames (board [bjorna])) [S.nameOf (Printing.card bjorna)]
+
+partnerWithSpec :: (Monad m, Monad n) => Spec.Spec m n -> Registry.Registry m -> n ()
+partnerWithSpec s registry = Spec.describe s "Partner with" $ do
+  -- CR 702.124j: "each has a 'partner with [name]' ability with the other's
+  -- name", and CR 702.124b starts both in the command zone.
+  Spec.it s "CR 702.124j two cards that name each other are both designated" $ do
+    mountain <- S.printingOf s registry "Mountain"
+    plains <- S.printingOf s registry "Plains"
+    silvar <- S.printingOf s registry "Silvar, Devourer of the Free"
+    trynn <- S.printingOf s registry "Trynn, Champion of Freedom"
+    let gs = partnerBoard mountain plains 6 [silvar, trynn]
+    Spec.assertEqWith s "both are in the command zone" (List.sort (commandZoneNames gs)) (List.sort [S.nameOf (Printing.card silvar), S.nameOf (Printing.card trynn)])
+    Spec.assertEqWith s "she is designated both" (fmap (List.sort . commanderPrintingsOf gs) (Map.lookup S.alice (GameState.players gs))) (Just (List.sort [silvar, trynn]))
+  -- Each leg is the control board with ONE printing swapped. Lore Weaver has
+  -- partner with, but names Ley Weaver rather than Silvar; Akiri has plain
+  -- partner, which CR 702.124f keeps from combining with this one; and Ley
+  -- Weaver beside Lore Weaver DO name each other, which is what makes rule
+  -- 702.124j's "two LEGENDARY cards" the only thing refusing that pair.
+  Spec.it s "CR 702.124j the pair admits only two legendary cards that name each other" $ do
+    mountain <- S.printingOf s registry "Mountain"
+    plains <- S.printingOf s registry "Plains"
+    silvar <- S.printingOf s registry "Silvar, Devourer of the Free"
+    trynn <- S.printingOf s registry "Trynn, Champion of Freedom"
+    ley <- S.printingOf s registry "Ley Weaver"
+    lore <- S.printingOf s registry "Lore Weaver"
+    akiri <- S.printingOf s registry "Akiri, Line-Slinger"
+    let board = partnerBoard mountain plains 6
+    Spec.assertEqWith s "control leg: Silvar beside Trynn designates both" (List.length (commandZoneNames (board [silvar, trynn]))) 2
+    Spec.assertEqWith s "CR 702.124j: Silvar beside a partner with naming somebody else designates neither" (commandZoneNames (board [silvar, lore])) []
+    Spec.assertEqWith s "CR 702.124j: Ley Weaver and Lore Weaver name each other but are not legendary, so neither is designated" (commandZoneNames (board [ley, lore])) []
+    Spec.assertEqWith s "CR 702.124f: plain partner is not this one, so Silvar beside Akiri designates neither" (commandZoneNames (board [silvar, akiri])) []
+    Spec.assertEqWith s "control leg: Silvar named alone still is (CR 903.3)" (commandZoneNames (board [silvar])) [S.nameOf (Printing.card silvar)]
+
+backgroundSpec :: (Monad m, Monad n) => Spec.Spec m n -> Registry.Registry m -> n ()
+backgroundSpec s registry = Spec.describe s "Choose a Background" $ do
+  -- CR 702.124k: "you may designate two cards as your commander rather than one
+  -- if one of them is this card and the other is a legendary Background
+  -- enchantment card", and CR 702.124b starts both in the command zone.
+  Spec.it s "CR 702.124k a Background is designated beside the card that chooses it" $ do
+    mountain <- S.printingOf s registry "Mountain"
+    plains <- S.printingOf s registry "Plains"
+    wilson <- S.printingOf s registry "Wilson, Refined Grizzly"
+    raised <- S.printingOf s registry "Raised by Giants"
+    let gs = partnerBoard mountain plains 6 [wilson, raised]
+    Spec.assertEqWith s "both are in the command zone" (List.sort (commandZoneNames gs)) (List.sort [S.nameOf (Printing.card wilson), S.nameOf (Printing.card raised)])
+    Spec.assertEqWith s "and both are commanders, the enchantment as much as the creature" (fmap (\oid -> Commander.isCommander oid gs) (inCommandZone gs)) [True, True]
+    Spec.assertEqWith s "she is designated both" (fmap (List.sort . commanderPrintingsOf gs) (Map.lookup S.alice (GameState.players gs))) (Just (List.sort [wilson, raised]))
+  -- CR 702.124k's exclusion, which the rule states in BOTH directions: a card
+  -- with "choose a Background" beside anything that is not a legendary Background
+  -- enchantment card, and a legendary Background enchantment card that no "choose
+  -- a Background" commander accompanies -- including one named on its own, since
+  -- rule 702.124k's second clause admits no exception for a lone Background.
+  --
+  -- Each leg is the control board with ONE printing swapped, so nothing but the
+  -- pairing differs. Akiri is the sharpest of the three: she has a partner
+  -- ability, which CR 702.124f keeps from combining with this one.
+  Spec.it s "CR 702.124k the exclusion runs both ways" $ do
+    mountain <- S.printingOf s registry "Mountain"
+    plains <- S.printingOf s registry "Plains"
+    wilson <- S.printingOf s registry "Wilson, Refined Grizzly"
+    raised <- S.printingOf s registry "Raised by Giants"
+    akiri <- S.printingOf s registry "Akiri, Line-Slinger"
+    shimatsu <- S.printingOf s registry "Shimatsu the Bloodcloaked"
+    let board = partnerBoard mountain plains 6
+    Spec.assertEqWith s "control leg: Wilson beside the Background designates both" (List.length (commandZoneNames (board [wilson, raised]))) 2
+    Spec.assertEqWith s "CR 702.124k: Wilson beside a card that is no Background designates neither" (commandZoneNames (board [wilson, shimatsu])) []
+    Spec.assertEqWith s "CR 702.124f: a partner ability is not this one, so Akiri beside the Background designates neither" (commandZoneNames (board [akiri, raised])) []
+    Spec.assertEqWith s "CR 702.124k: and a Background named alone is no commander either" (commandZoneNames (board [raised])) []
+    Spec.assertEqWith s "control leg: Wilson named alone still is (CR 903.3)" (commandZoneNames (board [wilson])) [S.nameOf (Printing.card wilson)]
+  -- The designation read at gameplay level, which is what makes it more than a
+  -- bookkeeping entry: Raised by Giants says "commander creatures you own have
+  -- base power and toughness 10\/10 and are Giants in addition to their other
+  -- types", and Wilson is a commander only because rule 702.124k let the pair
+  -- stand.
+  --
+  -- Two boards differing in ONE thing, the deck's second named card. Akiri makes
+  -- the negative: CR 702.124f refuses her beside the Background, so neither card
+  -- is designated and Wilson is the 2\/2 Bear Warrior he is printed as. Both
+  -- boards put the same two permanents on the battlefield, so the enchantment is
+  -- there and applying in each.
+  Spec.it s "CR 702.124k a Background reads the designation its own limb created" $ do
+    mountain <- S.printingOf s registry "Mountain"
+    plains <- S.printingOf s registry "Plains"
+    wilson <- S.printingOf s registry "Wilson, Refined Grizzly"
+    raised <- S.printingOf s registry "Raised by Giants"
+    akiri <- S.printingOf s registry "Akiri, Line-Slinger"
+    let played pair =
+          let (wilsonId, withWilson) = asCommanderCard wilson (S.addPermanent wilson S.alice) (partnerBoard mountain plains 6 pair)
+              (_, both) = S.addPermanent raised S.alice withWilson
+           in (wilsonId, both)
+        (designatedId, designated) = played [wilson, raised]
+        (refusedId, refused) = played [akiri, raised]
+    Spec.assertEqWith s "CR 702.124k: Wilson is a commander, so the Background sets him to 10/10" (S.powerToughnessOf designatedId designated) (Just (10, 10))
+    Spec.assertBool s (Set.member Subtype.Type.Giant (Projection.subtypesOf designatedId designated)) "and makes him a Giant"
+    Spec.assertBool s (Set.member Subtype.Type.Bear (Projection.subtypesOf designatedId designated)) "in addition to the Bear he is printed as (CR 205.1b)"
+    Spec.assertEqWith s "negative leg: the same enchantment leaves an undesignated Wilson at his printed 2/2" (S.powerToughnessOf refusedId refused) (Just (2, 2))
+    Spec.assertBool s (not (Set.member Subtype.Type.Giant (Projection.subtypesOf refusedId refused))) "and no Giant"
+  -- CR 613.1f / 113.7: Master Chef ({2}{G} Legendary Enchantment -- Background)
+  -- gives commander creatures you own "This creature enters with an additional
+  -- +1/+1 counter on it" and "Other creatures you control enter with an
+  -- additional +1/+1 counter on them" -- quoted REPLACEMENT abilities a live
+  -- static ability grants, so they are the receiver's, and its "you" is Wilson's
+  -- controller. Wilson is named alone and the Chef merely played, so nothing
+  -- in the command zone grants anything; naming Akiri instead is the negative
+  -- leg, where Wilson is no commander and receives nothing.
+  Spec.it s "CR 613.1f Master Chef's quoted replacements belong to the commander it grants them to" $ do
+    mountain <- S.printingOf s registry "Mountain"
+    plains <- S.printingOf s registry "Plains"
+    wilson <- S.printingOf s registry "Wilson, Refined Grizzly"
+    chef <- S.printingOf s registry "Master Chef"
+    akiri <- S.printingOf s registry "Akiri, Line-Slinger"
+    elves <- S.printingOf s registry "Llanowar Elves"
+    let counters = S.counterOf CounterKind.PlusOnePlusOne
+        resolve printing gs =
+          let (oid, staged) = asCommanderCard printing (S.spellOnStack printing S.alice) gs
+           in (oid, S.runPure S.identityAnswer staged (Stack.resolveTop >> Engine.settleForPriority))
+        arrival printing gs =
+          let (_, after) = resolve printing gs
+           in case Set.toList (Set.difference (GameState.battlefield after) (GameState.battlefield gs)) of
+                [oid] -> Just (counters oid after)
+                _ -> Nothing
+        withChef pair = snd (S.addPermanent chef S.alice (partnerBoard mountain plains 6 pair))
+        withWilson pair = snd (asCommanderCard wilson (S.addPermanent wilson S.alice) (withChef pair))
+    -- CR 614.12: the Chef's effect already exists and would apply to Wilson on
+    -- the battlefield, so his own granted row modifies how he enters.
+    Spec.assertEqWith s "CR 614.12 the commander enters with its own counter" (arrival wilson (withChef [wilson])) (Just 1)
+    Spec.assertEqWith s "another creature alice controls enters with the commander's counter" (arrival elves (withWilson [wilson])) (Just 1)
+    Spec.assertEqWith s "negative leg: beside an undesignated Wilson it enters with none" (arrival elves (withWilson [akiri])) (Just 0)
+
+doctorsCompanionSpec :: (Monad m, Monad n) => Spec.Spec m n -> Registry.Registry m -> n ()
+doctorsCompanionSpec s registry = Spec.describe s "Doctor's companion" $ do
+  -- CR 702.124m: "you may designate two legendary creature cards as your
+  -- commander rather than one if one of them is this card and the other is a
+  -- legendary Time Lord Doctor creature card that has no other creature types",
+  -- and CR 702.124b starts both in the command zone.
+  Spec.it s "CR 702.124m the Doctor is designated beside their companion" $ do
+    mountain <- S.printingOf s registry "Mountain"
+    plains <- S.printingOf s registry "Plains"
+    rose <- S.printingOf s registry "Rose Noble"
+    doctor <- S.printingOf s registry "The Fugitive Doctor"
+    let gs = partnerBoard mountain plains 6 [rose, doctor]
+    Spec.assertEqWith s "both are in the command zone" (List.sort (commandZoneNames gs)) (List.sort [S.nameOf (Printing.card rose), S.nameOf (Printing.card doctor)])
+    Spec.assertEqWith s "and both are commanders" (fmap (\oid -> Commander.isCommander oid gs) (inCommandZone gs)) [True, True]
+    Spec.assertEqWith s "she is designated both" (fmap (List.sort . commanderPrintingsOf gs) (Map.lookup S.alice (GameState.players gs))) (Just (List.sort [rose, doctor]))
+  -- Rule 702.124m names the OTHER card exactly -- "a legendary Time Lord Doctor
+  -- creature card" -- and CR 702.124f keeps this limb from combining with any
+  -- other partner ability. Each leg is the control board with ONE printing
+  -- swapped.
+  --
+  -- Rule 702.124m is one-sided where rule 702.124k is not: it forbids no Doctor
+  -- named alone, so the last two legs are the CR 903.3 designation each card
+  -- still gets by itself.
+  --
+  -- The clause this board cannot reach is "has no other creature types". Every
+  -- printed Time Lord Doctor is exactly a Time Lord Doctor -- Scryfall
+  -- t:legendary t:"time lord" t:doctor, 2026-09-08, no card with a third
+  -- creature type -- so `Commander.isTheDoctor`'s equality is a regression fence
+  -- on that clause rather than a proven path. Susan Foreman, a legendary Time
+  -- Lord that is no Doctor, is the printing that would prove the other half of
+  -- the same equality, and she is not in the pool.
+  Spec.it s "CR 702.124m the pair admits only a Doctor" $ do
+    mountain <- S.printingOf s registry "Mountain"
+    plains <- S.printingOf s registry "Plains"
+    rose <- S.printingOf s registry "Rose Noble"
+    doctor <- S.printingOf s registry "The Fugitive Doctor"
+    akiri <- S.printingOf s registry "Akiri, Line-Slinger"
+    shimatsu <- S.printingOf s registry "Shimatsu the Bloodcloaked"
+    let board = partnerBoard mountain plains 6
+    Spec.assertEqWith s "control leg: Rose Noble beside the Doctor designates both" (List.length (commandZoneNames (board [rose, doctor]))) 2
+    Spec.assertEqWith s "CR 702.124m: Rose Noble beside a legendary creature that is no Time Lord Doctor designates neither" (commandZoneNames (board [rose, shimatsu])) []
+    Spec.assertEqWith s "CR 702.124f: a partner ability is not this one, so Akiri beside the Doctor designates neither" (commandZoneNames (board [akiri, doctor])) []
+    Spec.assertEqWith s "CR 903.3: the Doctor named alone is still designated, which rule 702.124m does not forbid" (commandZoneNames (board [doctor])) [S.nameOf (Printing.card doctor)]
+    Spec.assertEqWith s "and so is Rose Noble alone" (commandZoneNames (board [rose])) [S.nameOf (Printing.card rose)]
+  -- Rose Noble's own trigger, which is what gives the keyword an observer inside
+  -- the game: "whenever you cast a Doctor spell or creature spell with doctor's
+  -- companion, draw a card". Two boards differing in ONE thing, the spell cast --
+  -- a second Rose Noble, which the trigger reads, against Rograkh, whose partner
+  -- ability CR 702.124n keeps out of it.
+  --
+  -- Rograkh's {0} is what makes the pair fair: the same four Islands pay for
+  -- either cast, so a leg that failed to draw cannot have failed to cast.
+  Spec.it s "CR 702.124m a card reads the keyword back" $ do
+    island <- S.printingOf s registry "Island"
+    rose <- S.printingOf s registry "Rose Noble"
+    rograkh <- S.printingOf s registry "Rograkh, Son of Rohgahh"
+    let base =
+          (S.landsInPlay island 4)
+            { GameState.phase = Phase.PrecombatMain,
+              GameState.activePlayer = S.alice,
+              GameState.priority = Just S.alice
+            }
+        cast spell =
+          let (_, withRose) = S.addPermanent rose S.alice base
+              (_, stocked) = S.addLibraryCard island S.alice withRose
+              (oid, ready) = S.addObjectIn Zone.Hand spell S.alice stocked
+              announced = S.runPure S.identityAnswer ready (S.cast S.alice oid)
+              settled = S.runPure S.identityAnswer announced Engine.settleForPriority
+           in S.runPure S.identityAnswer settled Stack.resolveTop
+        librarySize gs = length (Game.zoneMembers Zone.Library S.alice gs)
+    Spec.assertEqWith s "casting a creature spell with doctor's companion draws the card" (librarySize (cast rose)) 0
+    Spec.assertEqWith s "negative leg: Rograkh is a creature spell with a partner ability that is not this one, so nothing is drawn" (librarySize (cast rograkh)) 1
+    Spec.assertEqWith s "control leg: the negative leg really cast its spell, so it did not merely fail to draw for want of a cast" (S.handSize S.alice (cast rograkh)) 0
+
+-- Answers CR 903.9b's offer with Returns for exactly one seat and Leaves for every
+-- other, which is what tells "asked alice" apart from "asked bob" and from "never
+-- asked at all": bob is the one casting the bounce here, so an answerer that said
+-- yes to everybody could not distinguish the three.
+--
+-- Also sacrifices ONE permanent as Shimatsu enters, so it resolves as a 1/1 and
+-- survives CR 704.5f. A 0/0 dies before anything can bounce it and is then offered
+-- back by CR 903.9a -- the other rule -- which would pass every case below for the
+-- wrong reason. Replay.defaultAnswer's own arm sacrifices ALL the candidates,
+-- which would take alice's whole board, so this arm is not it.
+answering :: PlayerId.PlayerId -> Prompt.Prompt r -> r
+answering who p = case p of
+  Prompt.ReturnCommander _ pid _ -> if pid == who then CommandZoneDecision.Returns else CommandZoneDecision.Leaves
+  Prompt.ChooseAnyNumber _ _ _ AnyNumberOf.ToSacrifice candidates _ -> Set.fromList (take 1 candidates)
+  _ -> S.identityAnswer p
+
+-- alice's commander cast from the command zone and resolved, so it is a 1/1 on the
+-- battlefield; bob holding `bounce` with `islands` untapped Islands to cast it.
+--
+-- BOB bounces ALICE's commander, which is load-bearing: rule 903.9b's "may" is the
+-- OWNER's (CR 400.3 sends the card to its owner's hand or library in the first
+-- place), and if alice bounced her own the owner and the spell's controller would
+-- coincide and every assertion about who was asked would be vacuous.
+bounceBoard :: Printing.Printing -> Printing.Printing -> Printing.Printing -> Printing.Printing -> Int -> (GameState.GameState, ObjectId.ObjectId)
+bounceBoard mountain island shimatsu bounce islands =
+  let start = commanderBoard mountain shimatsu 10
+      answer = answering S.alice
+      inPlay = case inCommandZone start of
+        -- CR 903.6 puts exactly one card there, which the Designation group
+        -- asserts; the empty list cannot arise, and the cases below assert the
+        -- commander reached the battlefield before bouncing it either way.
+        oid : _ -> S.runPure answer (S.runPure answer start (S.cast S.alice oid)) Stack.resolveTop
+        [] -> start
+      (bounceId, board) = S.addHandCard bounce S.bob (S.landsFor island S.bob islands inPlay)
+   in (board, bounceId)
+
+-- bob casts the bounce spell at the only creature on the board -- alice's
+-- commander, unless a case strips her designation first -- and lets it resolve.
+bouncing :: (forall r. Prompt.Prompt r -> r) -> ObjectId.ObjectId -> GameState.GameState -> GameState.GameState
+bouncing answer bounceId gs = S.runPure answer (S.runPure answer gs (S.cast S.bob bounceId)) Stack.resolveTop
+
+bounceSpec :: (Monad m, Monad n) => Spec.Spec m n -> Registry.Registry m -> n ()
+bounceSpec s registry = Spec.describe s "Bounce" $ do
+  -- CR 903.9b: "if a commander would be put into its owner's hand or library from
+  -- anywhere, its owner may put it into the command zone instead". Unsummon's
+  -- "return target creature to its owner's hand" is the hand half.
+  --
+  -- The answerer says yes to ALICE alone, so this case fails three ways: if the
+  -- engine never asks, if it asks bob (the spell's controller), or if it moves the
+  -- card without asking anyone.
+  Spec.it s "CR 903.9b a commander bounced to its owner's hand may go to the command zone" $ do
+    mountain <- S.printingOf s registry "Mountain"
+    island <- S.printingOf s registry "Island"
+    shimatsu <- S.printingOf s registry "Shimatsu the Bloodcloaked"
+    unsummon <- S.printingOf s registry "Unsummon"
+    let (board, bounceId) = bounceBoard mountain island shimatsu unsummon 1
+    Spec.assertEqWith s "her commander is on the battlefield to be bounced" (S.creaturesInPlay S.alice board) 1
+    Spec.assertEqWith s "and the command zone is empty" (length (inCommandZone board)) 0
+    let after = bouncing (answering S.alice) bounceId board
+    Spec.assertEqWith s "it is in the command zone" (length (inCommandZone after)) 1
+    Spec.assertEqWith s "and not in her hand" (length (Game.zoneMembers Zone.Hand S.alice after)) 0
+    Spec.assertEqWith s "still her commander" (fmap (\oid -> Commander.isCommander oid after) (inCommandZone after)) [True]
+  -- CR 903.9b is a "may". Declining leaves the commander where the spell sent it,
+  -- which is the falsifier for an engine that redirected without asking.
+  Spec.it s "CR 903.9b declining leaves it in her hand" $ do
+    mountain <- S.printingOf s registry "Mountain"
+    island <- S.printingOf s registry "Island"
+    shimatsu <- S.printingOf s registry "Shimatsu the Bloodcloaked"
+    unsummon <- S.printingOf s registry "Unsummon"
+    let (board, bounceId) = bounceBoard mountain island shimatsu unsummon 1
+        after = bouncing S.identityAnswer bounceId board
+    Spec.assertEqWith s "the command zone is empty" (length (inCommandZone after)) 0
+    Spec.assertEqWith s "and it is in her hand" (length (Game.zoneMembers Zone.Hand S.alice after)) 1
+  -- CR 400.3 sends the card to its OWNER's hand, and rule 903.9b gives that owner
+  -- the choice -- not the player who cast the bounce. The same board as the
+  -- accepting case with the answerer's yes moved from alice to bob: if the engine
+  -- asked the spell's controller, this would land in the command zone.
+  Spec.it s "CR 903.9b the owner is asked, not the player who bounced it" $ do
+    mountain <- S.printingOf s registry "Mountain"
+    island <- S.printingOf s registry "Island"
+    shimatsu <- S.printingOf s registry "Shimatsu the Bloodcloaked"
+    unsummon <- S.printingOf s registry "Unsummon"
+    let (board, bounceId) = bounceBoard mountain island shimatsu unsummon 1
+        after = bouncing (answering S.bob) bounceId board
+    Spec.assertEqWith s "bob's yes moves nothing" (length (inCommandZone after)) 0
+    Spec.assertEqWith s "and it is in alice's hand" (length (Game.zoneMembers Zone.Hand S.alice after)) 1
+  -- Rule 903.9b names a LIBRARY as well as a hand, and Griptide's "put target
+  -- creature on top of its owner's library" is that half. The discriminator for a
+  -- fix that read Zone.Hand alone.
+  Spec.it s "CR 903.9b a commander put on top of its owner's library may go to the command zone" $ do
+    mountain <- S.printingOf s registry "Mountain"
+    island <- S.printingOf s registry "Island"
+    shimatsu <- S.printingOf s registry "Shimatsu the Bloodcloaked"
+    griptide <- S.printingOf s registry "Griptide"
+    let (board, bounceId) = bounceBoard mountain island shimatsu griptide 4
+    Spec.assertEqWith s "alice's library is empty to begin with" (length (Game.zoneMembers Zone.Library S.alice board)) 0
+    let after = bouncing (answering S.alice) bounceId board
+    Spec.assertEqWith s "it is in the command zone" (length (inCommandZone after)) 1
+    Spec.assertEqWith s "and not in her library" (length (Game.zoneMembers Zone.Library S.alice after)) 0
+  -- The library half's own anti-vacuity control: declining puts it in the library,
+  -- so the accepting case above is not passing on a board where nothing moved.
+  Spec.it s "CR 903.9b declining leaves it in her library" $ do
+    mountain <- S.printingOf s registry "Mountain"
+    island <- S.printingOf s registry "Island"
+    shimatsu <- S.printingOf s registry "Shimatsu the Bloodcloaked"
+    griptide <- S.printingOf s registry "Griptide"
+    let (board, bounceId) = bounceBoard mountain island shimatsu griptide 4
+        after = bouncing S.identityAnswer bounceId board
+    Spec.assertEqWith s "the command zone is empty" (length (inCommandZone after)) 0
+    Spec.assertEqWith s "and it is in her library" (length (Game.zoneMembers Zone.Library S.alice after)) 1
+  -- Rule 903.9b is about a COMMANDER. The paired negative differs from the
+  -- accepting case in exactly one thing -- alice's designation, stripped as
+  -- Cast's non-commander case strips it -- so the same creature bounced by the
+  -- same spell under the same answerer goes to her hand and is offered nothing.
+  Spec.it s "CR 903.9b an ordinary creature is not offered the command zone" $ do
+    mountain <- S.printingOf s registry "Mountain"
+    island <- S.printingOf s registry "Island"
+    shimatsu <- S.printingOf s registry "Shimatsu the Bloodcloaked"
+    unsummon <- S.printingOf s registry "Unsummon"
+    let (board, bounceId) = bounceBoard mountain island shimatsu unsummon 1
+        undesignated = board {GameState.players = Map.adjust (\p -> p {Player.commander = Set.empty}) S.alice (GameState.players board)}
+        after = bouncing (answering S.alice) bounceId undesignated
+    Spec.assertEqWith s "nothing reaches the command zone" (length (inCommandZone after)) 0
+    Spec.assertEqWith s "and it is in her hand" (length (Game.zoneMembers Zone.Hand S.alice after)) 1
+  -- CR 903.9b's last sentence: "this replacement effect may apply more than once
+  -- to the same event. This is an exception to rule 614.5." Evacuation -- "return
+  -- all creatures to their owners' hands" -- is that event: CR 608.2f makes the
+  -- whole sweep one event, and two of the creatures it returns are commanders, so
+  -- the offer has to be made twice.
+  --
+  -- THREE SEATS and TWO ANSWERS, which is what an engine getting only one
+  -- application cannot produce: carol casts the spell so neither owner is the
+  -- caster, alice answers Returns and bob answers Leaves, and the two commanders
+  -- end in different zones. One application -- whichever commander it was spent
+  -- on -- leaves the other card in its owner's hand with no question asked, so
+  -- both assertions below would have to read the same answer.
+  --
+  -- Asserted on the PRINTED NAMES: CR 400.7 mints a fresh id on every zone
+  -- change, so nothing on this board can be followed by the id it started with.
+  Spec.it s "CR 903.9b the offer applies once per commander in the same event" $ do
+    island <- S.printingOf s registry "Island"
+    kalakscion <- S.printingOf s registry "Kalakscion, Hunger Tyrant"
+    jedit <- S.printingOf s registry "Jedit Ojanen"
+    evacuation <- S.printingOf s registry "Evacuation"
+    let seated = designating [(S.alice, kalakscion), (S.bob, jedit)] S.threePlayerGame
+        inPlay = intoPlay S.bob (intoPlay S.alice seated)
+        (castId, board) = S.addHandCard evacuation S.carol (S.landsFor island S.carol 5 inPlay)
+        answer = answering S.alice
+        after = S.runPure answer (S.runPure answer board (S.cast S.carol castId)) Stack.resolveTop
+    Spec.assertEqWith s "alice accepted, so her Kalakscion is the one card in the command zone" (commandZoneNames after) [S.nameOf (Printing.card kalakscion)]
+    Spec.assertEqWith s "bob declined, so his Jedit went to his hand instead" (handNames S.bob after) [S.nameOf (Printing.card jedit)]
+    -- The proxies, kept after the two above: both commanders really were on the
+    -- battlefield to be returned, and neither started in a hand.
+    Spec.assertEqWith s "setup: the command zone was empty and both commanders were in play" (commandZoneNames board, S.creaturesInPlay S.alice board, S.creaturesInPlay S.bob board) ([], 1, 1)
+    Spec.assertEqWith s "setup: and neither owner held a card" (handNames S.alice board <> handNames S.bob board) []
+
+-- CR 616.1e: rule 903.9b's offer is one of the effects the affected object's
+-- controller orders. Synthetic Hand Interdiction's "if a card would be put into a
+-- player's hand from anywhere, exile it instead" competes for Unsummon's bounce,
+-- and each effect stops applying once the other has moved the destination.
+--
+-- Answered by `returningOnly` for the object ON THE BATTLEFIELD: CR 903.9a's
+-- state-based offer names the fresh exile id instead (CR 400.7), so accepting
+-- there cannot pass these cases for the wrong rule.
+orderingSpec :: (Monad m, Monad n) => Spec.Spec m n -> Registry.Registry m -> n ()
+orderingSpec s registry = Spec.describe s "Ordering" $ do
+  Spec.it s "CR 616.1e/903.9b the owner may apply the offer before a card's redirect" $ do
+    (board, bounceId, commander) <- interdicted s registry
+    let after = bouncing (returningOnly commander) bounceId board
+    Spec.assertEqWith s "it went straight to the command zone" (length (inCommandZone after)) 1
+  Spec.it s "CR 616.1e declining the offer first lets the redirect exile it" $ do
+    (board, bounceId, _) <- interdicted s registry
+    let after = bouncing S.identityAnswer bounceId board
+    Spec.assertEqWith s "it is in exile" (length (Game.zoneMembers Zone.Exile S.alice after)) 1
+
+-- bounceBoard with Synthetic Hand Interdiction on the battlefield, and alice's
+-- commander's id there.
+interdicted :: (Monad m) => Spec.Spec m n -> Registry.Registry m -> m (GameState.GameState, ObjectId.ObjectId, ObjectId.ObjectId)
+interdicted s registry = do
+  mountain <- S.printingOf s registry "Mountain"
+  island <- S.printingOf s registry "Island"
+  shimatsu <- S.printingOf s registry "Shimatsu the Bloodcloaked"
+  unsummon <- S.printingOf s registry "Unsummon"
+  interdiction <- S.printingOf s registry "Synthetic Hand Interdiction"
+  let (board, bounceId) = bounceBoard mountain island shimatsu unsummon 1
+      guarded = snd (S.addPermanent interdiction S.bob board)
+  case commanderInPlay S.alice guarded of
+    Just commander -> pure (guarded, bounceId, commander)
+    Nothing -> Spec.assertFailure s "setup: expected alice's commander on the battlefield"
+
+-- Returns for `oid` alone and Leaves for every other object; every controller
+-- declines to put the offer first.
+returningOnly :: ObjectId.ObjectId -> Prompt.Prompt r -> r
+returningOnly oid p = case p of
+  Prompt.ReturnCommander _ _ asked -> if asked == oid then CommandZoneDecision.Returns else CommandZoneDecision.Leaves
+  Prompt.ChooseCommandZoneOfferFirst {} -> OptionalDecision.Declines
+  _ -> S.identityAnswer p
+
+-- CR 702.49d's pool: Yuriko, the Tiger's Shadow -- {1}{U}{B} Legendary Creature
+-- -- Human Ninja 1/3, "Commander ninjutsu {U}{B}" and "Whenever a Ninja you
+-- control deals combat damage to a player, reveal the top card of your library
+-- and put that card into your hand. Each opponent loses life equal to that card's
+-- mana value." Ninja of the Deep Hours, whose ninjutsu is CR 702.49a's plain
+-- one, is the paired control.
+--
+-- Every board: alice attacks bob with two Goblin Pikers and nothing blocks
+-- them, and two Islands and two Swamps pay {U}{B} or Ninja of the Deep Hours'
+-- {1}{U} twice over -- so once one ninjutsu has resolved, a second unblocked
+-- attacker and the mana for a second activation are still there, and only the
+-- zone the ninja is in can withhold it.
+ninjutsuAttack :: (Monad m) => Spec.Spec m n -> Registry.Registry m -> m GameState.GameState
+ninjutsuAttack s registry = do
+  piker <- S.printingOf s registry "Goblin Piker"
+  island <- S.printingOf s registry "Island"
+  swamp <- S.printingOf s registry "Swamp"
+  let (g0, _, _) = S.combatBoardOf [piker, piker] []
+      lands = [island, island, swamp, swamp]
+  pure (List.foldl' (\g land -> snd (S.addPermanent land S.alice g)) g0 lands)
+
+-- The attack declared, bob declaring no blockers (he has no creatures), and
+-- alice holding priority in the declare blockers step, where the Pikers are
+-- unblocked creatures (CR 509.1h) for rule 702.49's cost to return.
+declaredAttack :: GameState.GameState -> GameState.GameState
+declaredAttack gs =
+  let attacked = S.runPure S.aggressiveAnswer gs (Combat.declareAttackers S.manaPerformer S.alice)
+   in (S.runPure S.aggressiveAnswer attacked {GameState.phase = Phase.Combat CombatStep.DeclareBlockers} (Combat.declareBlockers S.manaPerformer)) {GameState.priority = Just S.alice}
+
+-- ninjutsuAttack with `printing` in alice's hand, then moved to `zone` when that
+-- is not the hand. The same road for both cards, so the pair below differs in the
+-- card alone; CR 702.49d asks only where the card is, not whether it is a
+-- commander.
+ninjaIn :: (Monad m) => Spec.Spec m n -> Registry.Registry m -> String -> Zone.Zone -> m (ObjectId.ObjectId, GameState.GameState)
+ninjaIn s registry name zone = do
+  printing <- S.printingOf s registry name
+  board <- ninjutsuAttack s registry
+  let (inHand, g0) = S.addHandCard printing S.alice board
+      moved = if zone == Zone.Hand then g0 else S.runPure S.identityAnswer g0 (Event.changeZone inHand zone)
+      declared = declaredAttack moved
+  case [oid | oid <- Set.toList (Map.keysSet (GameState.objects declared)), fmap Object.zone (Game.lookupObject oid declared) == Just zone, fmap S.nameOf (Game.cardOf oid declared) == Just (S.nameOf (Printing.card printing))] of
+    [oid] -> pure (oid, declared)
+    _ -> Spec.assertFailure s ("setup: expected one " <> name <> " in " <> show zone)
+
+-- Activate the one ninjutsu ability `oid` offers and resolve it; the resolved
+-- board, and the id, name, attack target and tap state of what arrived on the
+-- battlefield.
+ninjutsuIn :: ObjectId.ObjectId -> GameState.GameState -> Maybe (GameState.GameState, [(ObjectId.ObjectId, (Maybe CardName.CardName, Maybe AttackTarget.AttackTarget, Maybe TapState.TapState))])
+ninjutsuIn oid gs = case Activatable.abilitiesFor oid gs of
+  [ability] ->
+    let activated = S.runPure S.aggressiveAnswer gs (Activate.activateAbility S.alice oid ability)
+        resolved = S.runPure S.aggressiveAnswer activated Stack.resolveTop
+        arrived = Set.toList (Set.difference (GameState.battlefield resolved) (GameState.battlefield activated))
+        describe new = (new, (fmap S.nameOf (Game.cardOf new resolved), Map.lookup new (Combat.Type.attackers (GameState.combat resolved)), fmap Object.tapped (Game.lookupObject new resolved)))
+     in Just (resolved, fmap describe arrived)
+  _ -> Nothing
+
+ninjutsuSpec :: (Monad m, Monad n) => Spec.Spec m n -> Registry.Registry m -> n ()
+ninjutsuSpec s registry = Spec.describe s "Commander ninjutsu" $ do
+  -- The real Commander road: Yuriko designated by Setup.createDeck and so started
+  -- in the command zone (CR 903.6), and Shimatsu ({3}{R}, mana value 4) on top
+  -- of alice's library for the combat-damage trigger. The arrival is asserted
+  -- first; the trigger's reveal and life loss follow once combat damage is dealt.
+  Spec.it s "CR 702.49d Yuriko ninjutsus in from the command zone for an unblocked attacker" $ do
+    yuriko <- S.printingOf s registry "Yuriko, the Tiger's Shadow"
+    shimatsu <- S.printingOf s registry "Shimatsu the Bloodcloaked"
+    piker <- S.printingOf s registry "Goblin Piker"
+    board <- ninjutsuAttack s registry
+    let deck = Deck.MkDeck {Deck.cards = Map.empty, Deck.commander = Set.singleton yuriko, Deck.vanguard = Nothing, Deck.dungeons = Set.empty, Deck.sideboard = Map.empty, Deck.conspiracies = Map.empty, Deck.sideDecks = Map.empty, Deck.stickerSheets = Seq.empty}
+        seated = S.runPure S.identityAnswer board (Setup.createDeck S.alice deck)
+        (_, stocked) = S.addLibraryCard shimatsu S.alice seated
+        gs = declaredAttack stocked
+        yurikoName = S.nameOf (Printing.card yuriko)
+        outcome = case inCommandZone gs of
+          [yurikoId] -> ninjutsuIn yurikoId gs
+          _ -> Nothing
+    Spec.assertEqWith s "CR 702.49d Yuriko entered from the command zone tapped and attacking bob (CR 702.49c)" (fmap (fmap snd . snd) outcome) (Just [(Just yurikoName, Just (AttackTarget.OfPlayer S.bob), Just TapState.Tapped)])
+    case outcome of
+      Just (resolved, [(arrivedId, _)]) -> do
+        -- CR 702.49d's "also functions while the card ... is in the command
+        -- zone" is a hand and a command zone and nothing else: on the
+        -- battlefield, with the second Piker still unblocked and two lands
+        -- still untapped, Yuriko offers no ninjutsu (CR 113.6b).
+        Spec.assertBool s (not (any (isActivationOf arrivedId) (Action.legalActions S.alice resolved))) "CR 113.6b on the battlefield Yuriko offers no commander ninjutsu"
+        Spec.assertEqWith s "and is no longer in the command zone" (commandZoneNames resolved) []
+        Spec.assertEqWith s "one Piker went home to alice's hand" (handNames S.alice resolved) [S.nameOf (Printing.card piker)]
+        let damaged = S.runCombat S.aggressiveAnswer resolved {GameState.phase = Phase.Combat CombatStep.CombatDamage, GameState.remaining = S.phasesAfter (Phase.Combat CombatStep.CombatDamage)}
+        Spec.assertEqWith s "Yuriko's trigger: bob lost her 1 and the other Piker's 2 combat damage plus Shimatsu's mana value 4" (liftA2 (-) (S.lifeOf S.bob resolved) (S.lifeOf S.bob damaged)) (Just 7)
+        Spec.assertEqWith s "and Shimatsu went to alice's hand beside the Piker" (List.sort (handNames S.alice damaged)) (List.sort [S.nameOf (Printing.card piker), S.nameOf (Printing.card shimatsu)])
+      _ -> Spec.assertFailure s "expected Yuriko alone in the command zone, offering one ability"
+
+  -- The pair: the same road into the command zone for both cards, so the
+  -- variant is the one difference. Plain ninjutsu functions only from a hand (CR
+  -- 702.49a); commander ninjutsu also from the command zone (CR 702.49d).
+  Spec.it s "CR 702.49a plain ninjutsu is not offered from the command zone, where commander ninjutsu is" $ do
+    (ninjaId, ninjaBoard) <- ninjaIn s registry "Ninja of the Deep Hours" Zone.Command
+    (yurikoId, yurikoBoard) <- ninjaIn s registry "Yuriko, the Tiger's Shadow" Zone.Command
+    Spec.assertBool s (any (isActivationOf yurikoId) (Action.legalActions S.alice yurikoBoard)) "CR 702.49d Yuriko's commander ninjutsu is offered from the command zone"
+    Spec.assertBool s (not (any (isActivationOf ninjaId) (Action.legalActions S.alice ninjaBoard))) "CR 702.49a the Ninja's plain ninjutsu is not"
+
+  -- CR 702.49d's "from your hand or the command zone": the hand half still
+  -- works, though the move names no origin.
+  Spec.it s "CR 702.49d commander ninjutsu still functions from a hand" $ do
+    yuriko <- S.printingOf s registry "Yuriko, the Tiger's Shadow"
+    (yurikoId, gs) <- ninjaIn s registry "Yuriko, the Tiger's Shadow" Zone.Hand
+    Spec.assertEqWith s "Yuriko entered from alice's hand tapped and attacking bob" (fmap (fmap snd . snd) (ninjutsuIn yurikoId gs)) (Just [(Just (S.nameOf (Printing.card yuriko)), Just (AttackTarget.OfPlayer S.bob), Just TapState.Tapped)])
+
+-- Is this action an activation of an ability of `oid`?
+isActivationOf :: ObjectId.ObjectId -> A.Action -> Bool
+isActivationOf oid a = case a of
+  A.Activate o _ -> o == oid
+  _ -> False
+
+-- The printed names of the cards in the command zone, in id order. NAMES and not
+-- ids because CR 400.7 makes the object that arrives a different one from the
+-- object that left.
+commandZoneNames :: GameState.GameState -> [CardName.CardName]
+commandZoneNames gs = Maybe.mapMaybe (\oid -> fmap S.nameOf (Game.cardOf oid gs)) (inCommandZone gs)
+
+-- The same read of a player's hand.
+handNames :: PlayerId.PlayerId -> GameState.GameState -> [CardName.CardName]
+handNames pid gs = Maybe.mapMaybe (\oid -> fmap S.nameOf (Game.cardOf oid gs)) (Game.zoneMembers Zone.Hand pid gs)
+
+-- CR 903.10a's pool, which Shimatsu cannot serve: a 0/0 dies to CR 704.5f before
+-- it can attack.
+--
+--   * Kalakscion, Hunger Tyrant -- {1}{B}{B} Legendary Creature -- Crocodile 7/2,
+--     vanilla. Three attacks deal exactly 21, rule 903.10a's threshold hit on the
+--     nose rather than overshot, and 21 against CR 903.7's forty leaves the victim
+--     at 19 -- comfortably alive, so CR 704.5a is provably not what killed them. A
+--     commander that could deal 21 in one swing would leave the two state-based
+--     actions racing.
+--   * Jedit Ojanen -- {4}{W}{W}{U} Legendary Creature -- Cat Warrior 5/5, vanilla.
+--     The second commander the "same commander" case needs, at a power distinct
+--     from 7 so the two tallies can never be confused.
+--
+-- Every seat gets a commander designated even when it never leaves the command
+-- zone, because CR 903.7's forty life is what the victim needs.
+
+-- CR 903.3: designate each seat's commander through Setup.createDeck, the real
+-- path -- which is also where CR 903.7's forty life comes from.
+designating :: [(PlayerId.PlayerId, Printing.Printing)] -> GameState.GameState -> GameState.GameState
+designating seats gs0 =
+  let one g (pid, printing) =
+        S.runPure S.identityAnswer g $
+          Setup.createDeck pid Deck.MkDeck {Deck.cards = Map.empty, Deck.commander = Set.singleton printing, Deck.vanguard = Nothing, Deck.dungeons = Set.empty, Deck.sideboard = Map.empty, Deck.conspiracies = Map.empty, Deck.sideDecks = Map.empty, Deck.stickerSheets = Seq.empty}
+   in List.foldl' one gs0 seats
+
+-- Move a player's commander out of the command zone onto the battlefield through
+-- Event.changeZone. Deliberately not CAST: CR 903.8's cast is the Tax group's
+-- business, and this group needs nothing but the commander in play.
+intoPlay :: PlayerId.PlayerId -> GameState.GameState -> GameState.GameState
+intoPlay pid gs =
+  let mine = filter (\oid -> fmap Object.owner (Game.lookupObject oid gs) == Just pid) (inCommandZone gs)
+   in List.foldl' (\g oid -> S.runPure S.identityAnswer g (Event.changeZone oid Zone.Battlefield)) gs mine
+
+-- alice's commander on the battlefield, bob's still in the command zone.
+commanderDuel :: Printing.Printing -> Printing.Printing -> GameState.GameState
+commanderDuel mine theirs =
+  intoPlay S.alice (designating [(S.alice, mine), (S.bob, theirs)] (Setup.emptyGame S.bothPlayers))
+
+-- The commander `pid` owns on the battlefield, if any.
+commanderInPlay :: PlayerId.PlayerId -> GameState.GameState -> Maybe ObjectId.ObjectId
+commanderInPlay pid gs =
+  let ours oid = Commander.isCommander oid gs && fmap Object.owner (Game.lookupObject oid gs) == Just pid
+   in List.find ours (Set.toList (GameState.battlefield gs))
+
+-- CR 903.10a's tally: the combat damage `victim` has been dealt by each commander
+-- `owner` brought, one entry per designated card in identity order. A LIST and not
+-- a sum, which is CR 702.124d -- "consider damage from each of your two
+-- commanders separately" -- so a partner pair's two entries stay apart here as
+-- they do in Player.commanderDamage.
+tallyFrom :: PlayerId.PlayerId -> PlayerId.PlayerId -> GameState.GameState -> [Natural]
+tallyFrom owner victim gs =
+  let tally = foldMap Player.commanderDamage (Map.lookup victim (GameState.players gs))
+      designated = foldMap Player.commander (Map.lookup owner (GameState.players gs))
+   in fmap (\identity -> Map.findWithDefault 0 identity tally) (Set.toAscList designated)
+
+statusOf :: PlayerId.PlayerId -> GameState.GameState -> Maybe Status.Status
+statusOf pid gs = fmap Player.status (Map.lookup pid (GameState.players gs))
+
+commanderDamageSpec :: (Monad m, Monad n) => Spec.Spec m n -> Registry.Registry m -> n ()
+commanderDamageSpec s registry = Spec.describe s "CommanderDamage" $ do
+  -- CR 903.10a counts COMBAT damage, so the same commander dealing the same
+  -- twenty-one points outside combat tallies nothing -- and the victim, at the
+  -- same 19 the lethal case below leaves them at, is still playing.
+  Spec.it s "CR 903.10a noncombat damage from a commander is not tallied" $ do
+    kalakscion <- S.printingOf s registry "Kalakscion, Hunger Tyrant"
+    jedit <- S.printingOf s registry "Jedit Ojanen"
+    let board = commanderDuel kalakscion jedit
+    case commanderInPlay S.alice board of
+      Nothing -> Spec.assertBool s False "expected alice's commander on the battlefield"
+      Just oid -> do
+        let event = Event.damageEvent board DamageKind.Noncombat oid (Recipient.ToPlayer S.bob) 21
+            after = S.settleSba (S.runPure S.identityAnswer board (Damage.applyDamage [event]))
+        Spec.assertEqWith s "bob lost the 21 life" (S.lifeOf S.bob after) (Just 19)
+        Spec.assertEqWith s "nothing was tallied" (tallyFrom S.alice S.bob after) [0]
+        Spec.assertEqWith s "and he is still playing" (statusOf S.bob after) (Just Status.Playing)
+  -- CR 903.10a's "by the same commander": bob's and carol's decks each
+  -- designate a Jedit Ojanen, two cards of one printing. Eleven combat damage
+  -- from each is twenty-two from two commanders, so alice is still playing.
+  Spec.it s "CR 903.10a two decks' copies of one commander are two commanders" $ do
+    jedit <- S.printingOf s registry "Jedit Ojanen"
+    let board = intoPlay S.carol (intoPlay S.bob (designating [(S.bob, jedit), (S.carol, jedit)] (Setup.emptyGame S.threePlayers)))
+        seated = board {GameState.players = Map.adjust (\p -> p {Player.life = 40}) S.alice (GameState.players board)}
+        hit n oid g = S.settleSba (S.runPure S.identityAnswer g (Damage.applyDamage [Event.damageEvent g DamageKind.Combat oid (Recipient.ToPlayer S.alice) n]))
+    case (commanderInPlay S.bob seated, commanderInPlay S.carol seated) of
+      (Just bobs, Just carols) -> do
+        let after = hit 11 carols (hit 11 bobs seated)
+        Spec.assertEqWith s "CR 903.10a eleven from each leaves alice in the game" (statusOf S.alice after) (Just Status.Playing)
+        Spec.assertEqWith s "the two tallies stand apart at eleven each" (tallyFrom S.bob S.alice after, tallyFrom S.carol S.alice after) ([11], [11])
+        Spec.assertEqWith s "and she took all 22 life" (S.lifeOf S.alice after) (Just 18)
+      _ -> Spec.assertFailure s "expected bob's and carol's commanders on the battlefield"
+
+-- Alice's Brawl deck with one commander, built through Setup.createDeck like
+-- commanderBoard -- CR 903.12a's option turned on before the deck is built,
+-- since CR 903.12f's life total is set by Setup.createDeck.
+brawlDesignating :: Printing.Printing -> GameState.GameState
+brawlDesignating commander =
+  let brawling = Setup.gameWith GameSettings.plain {GameSettings.brawl = True} S.bothPlayers
+      deck = Deck.MkDeck {Deck.cards = Map.empty, Deck.commander = Set.singleton commander, Deck.vanguard = Nothing, Deck.dungeons = Set.empty, Deck.sideboard = Map.empty, Deck.conspiracies = Map.empty, Deck.sideDecks = Map.empty, Deck.stickerSheets = Seq.empty}
+   in S.runPure S.identityAnswer brawling (Setup.createDeck S.alice deck)
+
+brawlSpec :: (Monad m) => Spec.Spec m n -> Registry.Registry m -> n ()
+brawlSpec s registry = Spec.describe s "Brawl" $ do
+  -- CR 903.12c adds "(b) a planeswalker card" to the three kinds CR 903.3 allows,
+  -- and that is the whole of rule 903.12c's difference from rule 903.3. The same
+  -- card and the same one-commander deck the Designation group above shows a
+  -- Commander deck cannot designate, through the same Setup.createDeck, with
+  -- GameSettings.brawl the only thing rule 903.3 reads that differs.
+  Spec.it s "CR 903.12c a legendary planeswalker IS a Brawl deck's commander" $ do
+    serra <- S.printingOf s registry "Serra the Benevolent"
+    let board = brawlDesignating serra
+    Spec.assertEqWith s "Serra is alice's commander in the command zone" (fmap (\oid -> Commander.isCommander oid board) (inCommandZone board)) [True]
+
+-- Accepts CR 903.9a's offer; everything else is the identity answerer. The
+-- default (Script.declining, via Replay.defaultAnswer) LEAVES the commander where
+-- it is, so a test that wants the return has to say so -- which is what makes the
+-- pair of cases below discriminating.
+reclaiming :: Prompt.Prompt r -> r
+reclaiming p = case p of
+  Prompt.ReturnCommander {} -> CommandZoneDecision.Returns
+  _ -> S.identityAnswer p
+
+-- Alice's board with her LIBRARY stocked, which commanderBoard's is not: its
+-- deck holds nothing but the commander, so every library count below would
+-- compare 0 to 0 and pass vacuously. Five Mountains in the deck and two on the
+-- battlefield make the library the other destination this group tells apart
+-- from the command zone, and give the parent non-library survivors besides.
+subgameParent :: Printing.Printing -> Printing.Printing -> GameState.GameState
+subgameParent mountain shimatsu =
+  let deck = Deck.MkDeck {Deck.cards = Map.singleton mountain 5, Deck.commander = Set.singleton shimatsu, Deck.vanguard = Nothing, Deck.dungeons = Set.empty, Deck.sideboard = Map.empty, Deck.conspiracies = Map.empty, Deck.sideDecks = Map.empty, Deck.stickerSheets = Seq.empty}
+   in S.runPure S.identityAnswer (S.landsInPlay mountain 2) (Setup.createDeck S.alice deck)
+
+-- The subgame as playSubgame builds it: CR 729.2 / 729.2c's move in, then CR
+-- 103's setup. Both halves, because startGameFromCards is what would funnel a
+-- commander that entered the subgame's command zone straight into a library.
+playedSubgame :: GameState.GameState -> GameState.GameState
+playedSubgame parent =
+  snd (Engine.runGamePure S.identityAnswer (Setup.subgameStateFrom S.alice parent) (Setup.startGameFromCards S.performer Set.empty))
+
+-- Take the commander out of the subgame's command zone and put it in alice's
+-- subgame graveyard, which is CR 729.5c's "(if it's there)" being false. Written
+-- by hand rather than cast and killed: what rule 729.5 reads is the ZONE the
+-- card is in as the subgame ends, and a subgame cast is a different unit's path.
+--
+-- Under a FRESH id, because CR 400.7 mints one on every zone change and a
+-- commander that really left would have crossed two of them. That is the shape
+-- funnelBack has to survive: the id the parent's command zone still names no
+-- longer exists in the subgame, so keeping the parent's copy would leave a
+-- second object for one card.
+outOfCommandZone :: GameState.GameState -> GameState.GameState
+outOfCommandZone gs = case inCommandZone gs of
+  [] -> gs
+  oid : _ -> case Game.lookupObject oid gs of
+    Nothing -> gs
+    Just obj ->
+      let (new, gs1) = Game.freshObjectId gs
+          dead = (Object.newIncarnation obj) {Object.zone = Zone.Graveyard}
+       in gs1
+            { GameState.command = Set.delete oid (GameState.command gs1),
+              GameState.graveyard = Map.insertWith (<>) S.alice (Seq.singleton new) (GameState.graveyard gs1),
+              GameState.objects = Map.insert new dead (Map.delete oid (GameState.objects gs1))
+            }
+
+subgameSpec :: (Monad m, Monad n) => Spec.Spec m n -> Registry.Registry m -> n ()
+subgameSpec s registry = Spec.describe s "Subgame" $ do
+  -- CR 729.2c: "as a subgame of a Commander game starts, each player moves their
+  -- commander from the main-game command zone (if it's there) to the subgame
+  -- command zone". CR 729.2's pool is the library cards, so the commander is the
+  -- one card that enters a subgame from anywhere else.
+  Spec.it s "CR 729.2c the commander enters the subgame's command zone" $ do
+    mountain <- S.printingOf s registry "Mountain"
+    shimatsu <- S.printingOf s registry "Shimatsu the Bloodcloaked"
+    let parent = subgameParent mountain shimatsu
+        moved = Setup.subgameStateFrom S.alice parent
+        sub = playedSubgame parent
+    -- Pins the fixture: an empty parent command zone or an empty library would
+    -- make everything below pass for the wrong reason.
+    Spec.assertEqWith s "the parent really has one commander in its command zone" (length (inCommandZone parent)) 1
+    Spec.assertEqWith s "and a five-card library to tell it apart from" (length (Game.zoneMembers Zone.Library S.alice parent)) 5
+    -- The move itself, before CR 103's setup runs: subgameStateFrom is the half
+    -- of playSubgame that rule 729.2c names, and it has to leave the subgame
+    -- state self-consistent -- the object in the pool AND in the zone set.
+    Spec.assertEqWith s "the moved-in state already has it in the subgame command zone" (inCommandZone moved) (inCommandZone parent)
+    Spec.assertEqWith s "and the object came with it" (fmap (`Map.member` GameState.objects moved) (inCommandZone parent)) [True]
+    Spec.assertEqWith s "the subgame's command zone holds one card too" (length (inCommandZone sub)) 1
+    Spec.assertEqWith s "the subgame knows it as alice's commander" (fmap (\oid -> Commander.isCommander oid sub) (inCommandZone sub)) [True]
+    Spec.assertEqWith s "and it sits in the subgame's command zone, not a library" (fmap (\oid -> fmap Object.zone (Game.lookupObject oid sub)) (inCommandZone sub)) [Just Zone.Command]
+    -- CR 729.1a: the parent is untouched while the subgame runs, so the move in
+    -- is a copy at this point; funnelBack is what settles where the card ends up.
+    Spec.assertEqWith s "the main-game command zone is unchanged by the subgame" (inCommandZone parent) (inCommandZone (subgameParent mountain shimatsu))
+  -- CR 729.5c: "at the end of a subgame of a Commander game, each player moves
+  -- their commander from the subgame command zone (if it's there) to the
+  -- main-game command zone" -- and CR 729.5's first sentence excludes it from the
+  -- cards that go to the library. The library is the destination the old code
+  -- chose, so the two counts together are what discriminate.
+  Spec.it s "CR 729.5/729.5c a commander in the subgame command zone comes back to the main-game command zone" $ do
+    mountain <- S.printingOf s registry "Mountain"
+    shimatsu <- S.printingOf s registry "Shimatsu the Bloodcloaked"
+    let parent = subgameParent mountain shimatsu
+        sub = playedSubgame parent
+        after = Setup.funnelBack sub parent
+    Spec.assertEqWith s "it really ended the subgame in the subgame command zone" (length (inCommandZone sub)) 1
+    Spec.assertEqWith s "one card in the main-game command zone" (length (inCommandZone after)) 1
+    Spec.assertEqWith s "and it is still alice's commander" (fmap (\oid -> Commander.isCommander oid after) (inCommandZone after)) [True]
+    Spec.assertEqWith
+      s
+      "alice's library is exactly the size it was, so the commander is not in it"
+      (length (Game.zoneMembers Zone.Library S.alice after))
+      (length (Game.zoneMembers Zone.Library S.alice parent))
+    Spec.assertEqWith s "the parent's two battlefield lands survived (CR 729.5's untouched main game)" (Set.size (GameState.battlefield after)) 2
+    Spec.assertEqWith s "and no object id collides: the card is in exactly one zone" (Map.size (GameState.objects after)) (2 + 5 + 1)
+  -- CR 729.5c's "(if it's there)" is a real condition, not a licence to spare
+  -- every commander: one that ended the subgame anywhere else is an ordinary
+  -- traditional card and CR 729.5's first sentence puts it in the main-game
+  -- library. The board differs from the case above in the subgame ZONE alone.
+  Spec.it s "CR 729.5 a commander that left the subgame command zone goes to the main-game library" $ do
+    mountain <- S.printingOf s registry "Mountain"
+    shimatsu <- S.printingOf s registry "Shimatsu the Bloodcloaked"
+    let parent = subgameParent mountain shimatsu
+        played = playedSubgame parent
+        sub = outOfCommandZone played
+        after = Setup.funnelBack sub parent
+    -- The pair: `played` and `sub` differ in the commander's subgame zone and in
+    -- nothing else, so the first assertion is what keeps the second from holding
+    -- because there was never a commander there to move.
+    Spec.assertEqWith s "it was in the subgame's command zone to begin with" (length (inCommandZone played)) 1
+    Spec.assertEqWith s "it really left the subgame's command zone" (length (inCommandZone sub)) 0
+    Spec.assertEqWith s "nothing is left in the main-game command zone" (length (inCommandZone after)) 0
+    Spec.assertEqWith
+      s
+      "alice's library is one card bigger: the commander came back to it instead"
+      (length (Game.zoneMembers Zone.Library S.alice after))
+      (length (Game.zoneMembers Zone.Library S.alice parent) + 1)
+    Spec.assertEqWith s "she is still designated it (CR 903.3 survives the subgame)" (fmap (commanderPrintingsOf after) (Map.lookup S.alice (GameState.players after))) (Just [shimatsu])
+    Spec.assertEqWith s "and no copy is left behind" (Map.size (GameState.objects after)) (2 + 5 + 1)
+  -- CR 729.1b: nothing that happened in the subgame means anything in the main
+  -- game, so a player who LOST the subgame is still playing the main one and
+  -- their commander is still in its command zone. Three seats, because CR 800.1
+  -- makes only a multiplayer subgame reach CR 800.4a's object removal -- which
+  -- deletes bob's subgame commander outright, leaving funnelBack nothing to move
+  -- back and the parent's own copy as the only source.
+  Spec.it s "CR 729.5c a commander whose owner departed inside a multiplayer subgame is still in the main-game command zone" $ do
+    shimatsu <- S.printingOf s registry "Shimatsu the Bloodcloaked"
+    jedit <- S.printingOf s registry "Jedit Ojanen"
+    let parent = designating [(S.alice, shimatsu), (S.bob, jedit)] (Setup.emptyGame S.threePlayers)
+        sub0 = Setup.subgameStateFrom S.alice parent
+        (_, seated) = Engine.runGamePure S.identityAnswer sub0 (Setup.startGameFromCards S.performer Set.empty)
+        departed = S.departs Departure.Type.Lost S.bob seated
+        after = Setup.funnelBack departed parent
+    Spec.assertEqWith s "two commanders went in" (length (inCommandZone parent)) 2
+    Spec.assertEqWith s "the subgame really was multiplayer, so CR 800.4a's removal fired" (Departure.continuesAfterDeparture departed) True
+    Spec.assertEqWith s "and bob has nothing left in the subgame" (Map.keys (Map.filter (\o -> Object.owner o == S.bob) (GameState.objects departed))) []
+    Spec.assertEqWith s "both are back in the main-game command zone" (fmap (\oid -> fmap Object.owner (Game.lookupObject oid after)) (inCommandZone after)) [Just S.alice, Just S.bob]
+    Spec.assertEqWith s "and neither was funnelled into a library" (length (Game.zoneMembers Zone.Library S.alice after) + length (Game.zoneMembers Zone.Library S.bob after)) 0
+
+restartSpec :: (Monad m, Monad n) => Spec.Spec m n -> Registry.Registry m -> n ()
+restartSpec s registry = Spec.describe s "Restart" $ do
+  -- CR 727.5a: "in a Commander game, a commander that has been exempted from the
+  -- procedure that restarts the game won't begin the new game in the command
+  -- zone. However, it remains that deck's commander for the new game."
+  --
+  -- One sentence each, on a pair of restarts that differ in the exempt set and
+  -- in nothing else. Both halves live in Parun.Engine.Setup and this is what
+  -- proves them: the first in startGameFromCards, which drops the
+  -- exempt objects before it picks each owner's commander out of the rebuilt
+  -- pool; the second in resetPlayers, which deliberately leaves Player.commander
+  -- alone.
+  Spec.it s "CR 727.5a an exempted commander does not begin the new game in the command zone but is still the deck's commander" $ do
+    mountain <- S.printingOf s registry "Mountain"
+    shimatsu <- S.printingOf s registry "Shimatsu the Bloodcloaked"
+    let gs = commanderBoard mountain shimatsu 4
+    case inCommandZone gs of
+      [cmd] -> do
+        -- Exile first, because CR 727.5's only producer (Karn Liberated)
+        -- exiles before it restarts, and because startGameFromCards intersects
+        -- the exempt set with GameState.exile -- an exemption naming a card in
+        -- the command zone reaches nothing at all.
+        let exiled = S.runPure S.identityAnswer gs (Event.changeZone cmd Zone.Exile)
+            -- CR 400.7 mints a fresh id on the way to exile, so the exempt set
+            -- has to name the POST-move object, read back out of the zone.
+            oid = case Set.toAscList (GameState.exile exiled) of
+              o : _ -> o
+              [] -> S.noSource
+            after = S.runPure S.identityAnswer exiled (Setup.restartGame S.performer (Set.singleton oid) S.alice)
+            kept = S.runPure S.identityAnswer exiled (Setup.restartGame S.performer Set.empty S.alice)
+        -- Pins the fixture: without these every assertion below could hold
+        -- because there was no commander in exile to exempt.
+        Spec.assertEqWith s "the commander really reached exile, as one object" (Set.size (GameState.exile exiled)) 1
+        Spec.assertEqWith s "and is still alice's commander there" (Commander.isCommander oid exiled) True
+        -- CR 727.5a's first sentence: the discriminating assertion.
+        Spec.assertEqWith s "the exempted commander is not in the new game's command zone" (inCommandZone after) []
+        Spec.assertEqWith s "CR 727.5: it stayed in exile, where the exemption left it" (Set.member oid (GameState.exile after)) True
+        -- CR 727.5a's second sentence, read both off the player and off the
+        -- object, since Commander.isCommander is what every other rule asks.
+        Spec.assertEqWith s "it remains that deck's commander" (fmap (commanderPrintingsOf after) (Map.lookup S.alice (GameState.players after))) (Just [shimatsu])
+        Spec.assertEqWith s "so the exiled card is still recognised as her commander" (Commander.isCommander oid after) True
+        -- The control leg, and the reason the first assertion is not passing on
+        -- an engine that never refills the command zone: the SAME board and the
+        -- SAME restart, exempting nothing, puts the very same object back (CR
+        -- 903.6). startGameFromCards reuses the object as a key, so the id is
+        -- comparable across the rebuild.
+        Spec.assertEqWith s "control leg: unexempted, CR 903.6 puts it back in the command zone" (inCommandZone kept) [oid]
+        Spec.assertEqWith s "and it left exile to get there" (Set.member oid (GameState.exile kept)) False
+      _ -> Spec.assertFailure s "fixture should give alice one commander in the command zone"
+
+  -- CR 903.6 / 702.124b: a restarted game puts EACH commander back into the
+  -- command zone, so a partner pair is two cards there and none in the library.
+  Spec.it s "CR 903.6/702.124b a restarted Commander game puts both partners into the command zone" $ do
+    mountain <- S.printingOf s registry "Mountain"
+    plains <- S.printingOf s registry "Plains"
+    rograkh <- S.printingOf s registry "Rograkh, Son of Rohgahh"
+    akiri <- S.printingOf s registry "Akiri, Line-Slinger"
+    let gs = partnerBoard mountain plains 1 [rograkh, akiri]
+        after = S.runPure S.identityAnswer gs (Setup.restartGame S.performer Set.empty S.alice)
+    Spec.assertEqWith s "setup: both partners start in the command zone" (length (inCommandZone gs)) 2
+    Spec.assertEqWith s "CR 903.6 both are in the new game's command zone" (List.sort (fmap (\oid -> fmap S.nameOf (Game.cardOf oid after)) (inCommandZone after))) (List.sort [Just (S.printingName rograkh), Just (S.printingName akiri)])
+
+-- Her commanders AS PRINTINGS: Player.commander names card identities, so each
+-- is resolved through the object that card is now, and these assertions compare
+-- against the printings the fixture was built with.
+commanderPrintingsOf :: GameState.GameState -> Player.Player -> [Printing.Printing]
+commanderPrintingsOf gs pl =
+  Maybe.mapMaybe (`Game.printingOf` gs) (Set.toAscList (Set.fromList [printingId | obj <- Map.elems (GameState.objects gs), Just identity <- [Object.identity obj], Set.member identity (Player.commander pl), Source.OfCard printingId <- [Object.source obj]]))

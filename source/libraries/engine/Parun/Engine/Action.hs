@@ -1,0 +1,362 @@
+module Parun.Engine.Action where
+
+import qualified Data.Containers.ListUtils as ListUtils
+import qualified Data.List as List
+import qualified Data.Maybe as Maybe
+import qualified Parun.Engine.Activatable as Activatable
+import qualified Parun.Engine.Cast as Cast
+import qualified Parun.Engine.Companion as Companion
+import qualified Parun.Engine.Conspiracy as Conspiracy
+import qualified Parun.Engine.Cost as Cost
+import qualified Parun.Engine.EndEffect as EndEffect
+import qualified Parun.Engine.FaceDown as FaceDown
+import qualified Parun.Engine.Foretell as Foretell
+import qualified Parun.Engine.Game as Game
+import qualified Parun.Engine.Ignore as Ignore
+import qualified Parun.Engine.Planechase as Planechase
+import qualified Parun.Engine.PlayerEffect as PlayerEffect
+import qualified Parun.Engine.Plot as Plot
+import qualified Parun.Engine.Projection as Projection
+import qualified Parun.Engine.Projection.View as Projection
+import qualified Parun.Engine.Room as Room
+import qualified Parun.Engine.Snapshot as Snapshot
+import qualified Parun.Engine.Suspend as Suspend
+import qualified Parun.Engine.Target as Target
+import qualified Parun.Engine.Turn as Turn
+import Parun.Types.Action (Action)
+import qualified Parun.Types.Action as Action
+import qualified Parun.Types.CardName as CardName
+import qualified Parun.Types.Facing as Facing
+import Parun.Types.GameState (GameState)
+import qualified Parun.Types.Object as Object
+import Parun.Types.ObjectId (ObjectId)
+import Parun.Types.PlayerId (PlayerId)
+import qualified Parun.Types.SpecialAction as SpecialAction
+import qualified Parun.Types.Zone as Zone
+
+-- The land plays this player may make right now: CR 305.1's land cards in their
+-- hand plus the ones an effect lets them play from elsewhere, minus the ones an
+-- effect prohibits, each paired with CR 712.12's chosen face (Nothing where no
+-- face is chosen -- see Parun.Engine.Card.landFaces).
+--
+-- THREE SOURCES, because CR 305.1's "from their hand" is the rule's own
+-- allowance and CR 101.1 lets a card widen it. The player's OWN hand needs no
+-- permission; the granted piles are a CR 613.11 player-axis grant, which names
+-- both the zone and whose copy of it (Crucible of Worlds and Yawgmoth's Will
+-- their own graveyard, Sen Triplets an opponent's hand) -- or, for a Play-verb
+-- permission (Serra Paragon), a pile narrowed card by card; and exile is the
+-- object-borne permission CR 715.3d and Effect.GrantPlayFromExile write. That
+-- split is the same one Parun.Engine.Cast.castableZones draws for the cast side,
+-- and the exile source is read through that module's own zoneCandidates so the
+-- two can never disagree about where to look -- CR 601.3's permission names a
+-- PLAYER, and exile is filed by owner, so a land somebody else owns has to be
+-- reachable.
+--
+-- A granted LIBRARY is its top card, Future Sight's land half: the narrowing is
+-- Cast.pileCandidates', the one the cast side reads for the other half of that
+-- sentence, so neither side can drift from the other about which card is on top.
+--
+-- Reading the OBJECT-BORNE permission with Cast.permitsPlayFromExile and not
+-- Cast.permitsCastFromExile is the whole of what makes this the PLAY side: the
+-- plotted and foretold permissions that one also folds in each say "may cast it"
+-- (CR 702.170d, CR 702.143a), where CR 601.1a makes playing a card either
+-- playing it as a land or casting it -- and this is the first of those.
+--
+-- ONE CARD MAY APPEAR TWICE, in principle: CR 712.12 has the player choose among
+-- "its faces that's a land", so a modal double-faced card with two land faces
+-- would offer both. That shape falls out of landFaces returning a list; no
+-- printing reaches it.
+--
+-- The PROHIBITION is asked here and not in legalActions' `canPlayLand` gate,
+-- because it is per-CARD rather than per-turn: CR 305.2/305.3's limits are about
+-- the player and settle the whole list at once, while Null Chamber's is about
+-- the land's name and stops one card while leaving the rest playable.
+--
+-- Asked against the name of the CARD IN THE ZONE it is played from, and not
+-- against the face chosen to be played: CR 712.8a gives a double-faced card
+-- "only the characteristics of its front face" while it is anywhere but the
+-- battlefield or the stack -- which is every zone this list draws from -- so the
+-- land a player is playing is named by that face while they play it. CR 712.19
+-- does let the chooser name the OTHER face -- "the player may choose the name of
+-- either face of a double-faced card but not both" -- and naming it prohibits
+-- nothing here, which is the same reading from the other side rather than a
+-- second decision. A land with SEVERAL names is asked as a set, CR 709.4a's "one
+-- of its names": no printed land has two, but the prohibition is a membership
+-- test rather than a comparison all the same.
+--
+-- Both are one Filter read against the OBJECT as this zone shows it
+-- (Filter.HasChosenName for Null Chamber, City in a Bottle's names beside it),
+-- turned up first by CR 406.3a's Cast.turnedUpForPlay: a land exiled face down
+-- is face up by the time it is played.
+playableLands :: PlayerId -> GameState -> [(ObjectId, Maybe CardName.CardName)]
+playableLands pid gs =
+  let playable oid = case (Game.lookupObject oid gs, Game.cardOfHandMember oid gs) of
+        (Just obj, Just card) ->
+          if PlayerEffect.prohibitsPlayingLand pid oid (Cast.turnedUpForPlay oid Facing.FaceUp gs)
+            then []
+            else fmap (\(mName, _) -> (oid, mName)) (Game.landFacesOf obj card)
+        _ -> []
+      -- CR 305.1's own zone, which needs no permission.
+      fromHand = Game.zoneMembers Zone.Hand pid gs
+      -- The pile or none of it: the grant narrows no land (see
+      -- Parun.Types.PlayerEffect.PlayLandsFrom), so it is asked once per pile
+      -- rather than per card, and WHOSE pile is the grant's own answer -- CR
+      -- 400.1's per-player zone being what its reference names. Which cards a
+      -- named pile amounts to is the ZONE's answer below and not the grant's.
+      --
+      -- Nubbed, because two grants naming one pile would otherwise offer every
+      -- land in it twice.
+      --
+      -- Read through Cast.pileCandidates and never Game.zoneMembers, which is
+      -- what makes "from the top of your library" mean one card here as well:
+      -- Future Sight states the play half and the cast half in one sentence, so
+      -- the two sides share the narrowing rather than each keeping their own.
+      fromGranted = ListUtils.nubOrd (concatMap (\(zone, owner) -> Cast.pileCandidates zone owner gs) (PlayerEffect.playLandPiles pid gs))
+      -- CR 305.1 / 601.3: a Play-verb permission (Serra Paragon) narrows by
+      -- card and has a budget, so each land in the piles it opens is asked
+      -- whether a use is left for it.
+      permitted oid = maybe False (\obj -> not (null (PlayerEffect.landPermissionsFrom pid (Object.zone obj) oid gs))) (Game.lookupObject oid gs)
+      fromPermitted = concatMap (\(zone, owner) -> filter permitted (Cast.pileCandidates zone owner gs)) (PlayerEffect.playPermissionPiles pid gs)
+      -- Per card instead, because CR 715.3d's permission is state on ONE exiled
+      -- incarnation naming ONE player.
+      fromExile = filter (\oid -> Cast.permitsLandPlayFromExile pid oid gs) (Cast.zoneCandidates Zone.Exile pid gs)
+      -- CR 702.187c: per card as well, the permission being the card's own
+      -- costless mayhem and the discard that arms it this player's.
+      fromMayhem = filter (\oid -> PlayerEffect.mayPlayByMayhem pid oid gs) (Game.zoneMembers Zone.Graveyard pid gs)
+   in concatMap playable (ListUtils.nubOrd (fromHand <> fromGranted <> fromPermitted <> fromExile <> fromMayhem))
+
+-- The cards in this player's hand whose text grants CR 116.2e's special
+-- action: Circling Vultures' "you may discard this card any time you could cast
+-- an instant".
+--
+-- Read through Projection.specialActionsOf (CR 613.1f), since the ability
+-- functions in the hand and an effect may take it away there: Patriar's
+-- Humiliation's perpetual "loses all abilities" follows the card back to its
+-- owner's hand. A hand member with no card behind it -- a token, an ability --
+-- contributes nothing, playableLands' reading one function above.
+--
+-- The permission is a CLASSIFICATION and not an identity: this asks whether the
+-- card data grants the operation, never which card it is.
+discardableCards :: PlayerId -> GameState -> [ObjectId]
+discardableCards pid gs =
+  let grantsIt oid = Maybe.isJust (Game.cardOfHandMember oid gs) && List.elem SpecialAction.DiscardThisAnyTime (Projection.specialActionsOf oid gs)
+   in filter grantsIt (Game.zoneMembers Zone.Hand pid gs)
+
+legalActions :: PlayerId -> GameState -> [Action]
+legalActions pid gs =
+  let -- CR 305.3: "a player can't play a land, for any reason, if it isn't their
+      -- turn." The one conjunct of CR 116.2a's window that CR 702.8a does NOT
+      -- lift, which is why it is asked here, per PLAYER, while the phase and the
+      -- empty stack are asked per CARD in landTimingOk below. Dryad Arbor's own
+      -- ruling reads the split the same way: a land granted flash "can't be
+      -- played during another player's turn", and the land plays remaining still
+      -- gate it.
+      canPlayLand = Cast.landDropOpen pid gs
+      -- CR 305.1 / 116.2a: the rest of the window is a main phase with the stack
+      -- empty, which together with the active-player conjunct above is CR 307.5's
+      -- "as a sorcery" window conjunct for conjunct -- so it is asked through the
+      -- one predicate rather than a near-copy that can drift (see
+      -- Turn.sorcerySpeedWindow).
+      --
+      -- Asked per CARD, because CR 702.8a's "you may play this card any time you
+      -- could cast an instant" lifts it for the card the keyword is on and for no
+      -- other -- CR 601.1a's "playing a card" being playing it as a land or
+      -- casting it, whichever is appropriate. Read through Cast.flashOn, the same
+      -- function Cast.instantSpeed reads for the cast half of that sentence, so
+      -- the two halves cannot disagree about where flash is read from. The face
+      -- is the one this play would put onto the battlefield (CR 712.12), resolved
+      -- the way Cast.proposedFace resolves the half being cast.
+      --
+      -- The CR 613.11 player axis's "as though it had flash" (CR 601.3b),
+      -- which Cast.timingOk reads beside Cast.instantSpeed for a cast:
+      -- PlayerEffect.mayPlayAsThoughItHadFlash is that axis's PLAY-scoped
+      -- reader, since a cast-scoped grant (Vedalken Orrery) says "cast" and
+      -- never widens a land play (CR 305.1). A printing whose permission says
+      -- PLAY rather than cast -- Scout's Warning -- moves this window too, by
+      -- CR 601.1a.
+      landTimingOk (oid, mName) =
+        Turn.sorcerySpeedWindow pid gs
+          || maybe False (\card -> Cast.flashOn oid (Game.resolveFace mName card) gs) (Game.cardOf oid gs)
+          || PlayerEffect.mayPlayAsThoughItHadFlash pid oid gs
+      lands = if canPlayLand then fmap (uncurry Action.Play) (filter landTimingOk (playableLands pid gs)) else []
+      -- CR 709.3: one action per castable HALF, so choosing a half is choosing
+      -- an action and the engine never asks which one. CR 702.37d adds one more
+      -- per half with morph, for the same reason: casting face down is a second
+      -- cast of the same card, not a rider on the first.
+      spells = fmap (\(oid, name, facing) -> Action.Cast oid name facing) (Cast.castableSpells pid gs)
+      -- CR 116.2b / 702.37e: turning a face-down permanent face up is a special
+      -- action a player may take any time they have priority, so it joins the
+      -- menu beside CR 116.2a's land play rather than going through the stack.
+      -- Ungated by phase or by an empty stack, which it shares with CR 116.2e's
+      -- discard below: CR 116.2a and CR 116.2m both state those restrictions and
+      -- CR 116.2b and CR 116.2e state neither.
+      --
+      -- ONE ACTION PER PROCEDURE, which is CR 701.40c's choice made the way CR
+      -- 709.3's cast and CR 709.5e's unlock below make theirs: a manifested morph
+      -- card may be turned face up by either rule's procedure, at two different
+      -- prices, and the engine names both rather than one.
+      turnUps = fmap (uncurry Action.TurnFaceUp) (FaceDown.turnableFaceUp pid gs)
+      -- CR 116.2m / 709.5e: the third special action, and the one whose window is
+      -- CR 116.2a's rather than CR 116.2b's -- "any time they have priority and
+      -- the stack is empty during a main phase of their turn". That gate is
+      -- Turn.sorcerySpeedWindow, asked inside Room.canUnlock beside the cost, so
+      -- the two clauses of one rule stay together.
+      --
+      -- ONE ACTION PER DOOR, for the reason CR 709.3's cast offers one per half:
+      -- which door to open is the player's choice, and offering each as its own
+      -- legal action is how the engine avoids making it.
+      unlocks = fmap (uncurry Action.Unlock) (Room.unlockable pid gs)
+      -- CR 116.2e: the fourth special action, and the SECOND one ungated by
+      -- phase and by an empty stack -- "a player can take such an action any
+      -- time they have priority", which is CR 116.2b's window rather than CR
+      -- 116.2a's.
+      --
+      -- The card's own wording is "any time you could cast an instant", and this
+      -- deliberately does not ask that: CR 116.2e's last sentence states the
+      -- timing the rules use, so no casting permission or restriction is
+      -- consulted. legalActions is only ever called for the player with
+      -- priority, so the rule's condition is already met by being here.
+      discards = fmap Action.DiscardFromHand (discardableCards pid gs)
+      -- CR 116.2d: the fifth special action, and the THIRD ungated by phase and
+      -- by an empty stack -- "a player can take such an action any time they
+      -- have priority", CR 116.2b's window again.
+      --
+      -- ONE ACTION PER GRANT, which is per NAMED ABILITY rather than per
+      -- permanent: CR 116.2d's subject is "the effect from that ability", so a
+      -- permanent granting the permission on one of two unrelated abilities
+      -- offers two actions and the player chooses. No printed producer does --
+      -- Damping Engine's two abilities come from one sentence and share one name,
+      -- so its offer is still a single action.
+      ignores = fmap (uncurry Action.Ignore) (Ignore.ignorable pid gs)
+      -- CR 116.2c: the eighth special action, and the FOURTH ungated by phase and
+      -- by an empty stack -- "a player can take such an action any time they have
+      -- priority, unless that effect specifies another timing restriction", which
+      -- is CR 116.2b's window plus an escape clause no producer uses.
+      --
+      -- ONE ACTION PER SOURCE, not per stored effect: CR 116.2c ends "that
+      -- effect", the printed sentence, and Gliding Licid's one sentence stores
+      -- four continuous effects that must end together. Nothing is left for the
+      -- player to choose once the permanent is chosen.
+      endings = fmap Action.EndEffect (EndEffect.endable pid gs)
+      -- CR 116.2k / 702.170a: the sixth special action, and the second whose
+      -- window is CR 116.2a's rather than CR 116.2b's -- "any time you have
+      -- priority during your main phase while the stack is empty". That gate is
+      -- Turn.sorcerySpeedWindow, asked inside Plot.canPlot beside the cost, so
+      -- the clauses of one rule stay together.
+      plots = fmap (uncurry Action.Plot) (Plot.plottable pid gs)
+      -- CR 116.2h / 702.143a: the seventh special action, and a THIRD window --
+      -- "any time a player has priority during their turn", which is neither CR
+      -- 116.2b's (any priority at all) nor CR 116.2a's sorcery speed. The gate is
+      -- asked inside Foretell.canForetell beside the {2}, for plots' reason.
+      foretells = fmap Action.Foretell (Foretell.foretellable pid gs)
+      -- CR 116.2f / 702.62a: the ninth special action, and a FOURTH window --
+      -- "any time they have priority, but only if they could begin to cast that
+      -- card by putting it onto the stack". Neither CR 116.2b's bare priority
+      -- nor CR 116.2a's sorcery speed: the card's own castability is the gate,
+      -- so a sorcery with suspend is offered at sorcery speed and an instant
+      -- with suspend whenever it could be cast. Asked inside Suspend.canSuspend
+      -- beside the cost, for plots' reason.
+      suspends = fmap Action.Suspend (Suspend.suspendable pid gs)
+      -- CR 116.2g / 702.139a: the eighth special action, back on CR 116.2a's
+      -- window -- "any time they have priority and the stack is empty during a
+      -- main phase of their turn" -- plus a once-per-game clause no other
+      -- special action carries. Both are asked inside Companion.canTake beside
+      -- the {3}, for plots' reason.
+      --
+      -- A list of at most one, where the two above are a list per card: rule
+      -- 116.2g's subject is the one companion CR 103.2b let this player reveal.
+      companions = if Companion.canTake pid gs then [Action.PutCompanionIntoHand] else []
+      -- CR 116.2i / 901.9: rolling the planar die, on CR 116.2a's window with a
+      -- cost that rises each time. Both are asked inside Planechase.canRoll.
+      planarRolls = if Planechase.canRoll pid gs then [Action.RollPlanarDie] else []
+      -- CR 116.2j / 702.106c: any time they have priority, CR 116.2b's window.
+      conspiracies = fmap Action.TurnConspiracyFaceUp (Conspiracy.turnable pid gs)
+      -- CR 702.29a: a HAND is a source of activations too, not just the
+      -- battlefield -- cycling functions only while the card is in a player's
+      -- hand. So is a GRAVEYARD, by CR 113.6m: Loxodon Surveyor's "{3}, Exile
+      -- this card from your graveyard: Draw a card" functions only there. Which
+      -- abilities an object offers from where is Activatable.abilitiesFor's
+      -- question; this list only says where to look, and the three zones are
+      -- pairwise disjoint.
+      --
+      -- ONE control-grant walk and ONE whole-board projection for the whole
+      -- enumeration, threaded into both halves of the loop. Each object would
+      -- otherwise be projected three times plus a grant walk for its
+      -- controller, at a boundary the priority loop reaches on every pass;
+      -- sharing them rested on GHC's CSE before and is now stated (#200, #315,
+      -- #316). The board is a snapshot of this one `gs` and this is a pure
+      -- function of it, so nothing can move between the projection and its
+      -- uses. Threaded into the cost and target gates too, which used to hoist
+      -- a board apiece per call and so per permanent (#716).
+      --
+      -- Not implemented: nothing asserts that line. An allocation guard held it
+      -- with a fixture per depth of the gate chain -- a mana ability stops at
+      -- CR 605.1a and never reaches those two gates, a non-mana one runs the
+      -- whole chain -- until measuring bytes was judged too compiler-specific
+      -- to keep. A regression here fails nothing (gap #578). What is left in
+      -- the non-mana path is still O(N) per permanent without being a
+      -- whole-board structure to hoist -- the per-candidate filter over the
+      -- shared pool below (#1448).
+      grants = Projection.controlGrants gs
+      pcs = Projection.projectAll gs
+      -- ONE mana-source sweep of each kind for the whole enumeration. Each is a
+      -- walk of everything this player controls, asking each what mana routes it
+      -- offers, and neither depends on which permanent's ability is being gated
+      -- -- so the cost gate took an identical one per ability until it was
+      -- handed this one (#1073).
+      --
+      -- TWO sweeps and not one, because the two questions differ: CR 605.3a's
+      -- offer at the end of this list is every source that could be tapped right
+      -- now (`manaSources`), while the cost gate is judged against what the
+      -- supply walk can count (`supplySources`, Mana.supplyCapacity), which drops
+      -- the CR 118.3 read of each route's own mana part and carries that mana as
+      -- a demand instead, and which drops what CR 601.2a's and CR 602.2a's move
+      -- puts out of reach (Cost.stackedManaActivations). NEITHER list contains
+      -- the other: in `data/cards/` a Transmogrant Altar beside no black source
+      -- is a supply source and no offer, and a Grinning Ignus in CR 307.5's
+      -- window is an offer and no supply. The gate must take the supply list;
+      -- taking the offer list would drop the demand-carrying options
+      -- Mana.payableResolutionsGiven weighs and count a source its own payment
+      -- could not reach.
+      manaSources = Cost.activationManaSourcesGiven grants pcs pid gs
+      supplySources = Cost.supplyManaSourcesGiven grants pcs pid gs
+      -- ONE set of base target pools for the whole enumeration, for the same
+      -- reason: CR 115's candidate set for a Pool is a function of `gs` alone
+      -- (Target.Pools), so building one per slot per ability walked the
+      -- battlefield once per permanent. Lazy per pool, so an enumeration that
+      -- targets only creatures pays for the creature walk alone (#1073).
+      pools = Target.poolsOf (Snapshot.MkSnapshot pcs grants) gs
+      activations =
+        let forObject oid =
+              fmap (Action.Activate oid) (filter (\ab -> Activatable.activatableGiven pools supplySources pid oid ab gs) (Activatable.abilitiesForGiven pcs oid gs))
+         in concatMap forObject (Activatable.activationSourcesGiven grants pcs pid gs)
+      -- CR 605.3a's first window -- "a player may activate an activated mana
+      -- ability whenever they have priority" -- which the activation list above
+      -- cannot serve: Activatable.activatableGiven refuses a mana ability outright,
+      -- because CR 605.3b keeps it off the stack and that is the only thing an
+      -- Action.Activate does with one.
+      --
+      -- Cost.activationManaSourcesGiven is the whole gate, and it is the SAME
+      -- list CR 605.3a's other two windows are served from (Cost.payMana's
+      -- candidates, where CR 605.3c drops whichever ability is already
+      -- mid-activation):
+      -- controlled, open to any player (CR 602.1b) or tappable under a grant
+      -- (Piracy), per Mana.routeAccess, and
+      -- offering some route Cost.manaActivations admits
+      -- -- CR 118.3's payability of the ability's own cost (CR 602.2b), which
+      -- carries CR 107.5's tapped permanent and CR 302.6's sick creature with
+      -- it, plus CR 602.5's printed "activate only ..." rider, which CR 605.1
+      -- leaves on an ability a timing restriction cannot disqualify. ONE sweep
+      -- for the whole enumeration rather than one per permanent, on the board
+      -- this function already walked.
+      --
+      -- That gate is also what keeps the offer from being one a player could
+      -- take forever: taking it spends what the cost charged, and the gate
+      -- refuses the source once it cannot charge it again -- a tapped permanent
+      -- cannot pay {T} (CR 107.5), a sacrificed Blood Pet is gone. Cost.tapForMana
+      -- picks among exactly the options this gate admitted -- one predicate,
+      -- asked at the offer and at the payment, so the two cannot disagree.
+      -- Parun.ManaSpec's "the menu carries one activation per untapped source" is
+      -- the proof.
+      manaAbilityActivations = fmap Action.ActivateManaAbility manaSources
+   in Action.Pass : lands <> spells <> turnUps <> unlocks <> discards <> ignores <> endings <> plots <> foretells <> suspends <> companions <> planarRolls <> conspiracies <> activations <> manaAbilityActivations

@@ -1,6 +1,6 @@
 {
   "description": "CR 800.4i Avenge costs {2} less after bob attacks carol and leaves the game",
-  "note": "bob attacks carol on turn 2 and concedes on turn 3, so the attacker has left. carol pays with four Plains, and Avenge destroys alice's Hill Giant. Pawl.CostSpec's Avenge group asks again once bob's turn would have begun.",
+  "note": "bob attacks carol on turn 2 and concedes on turn 3, so the attacker has left. carol pays with four Plains, and Avenge destroys alice's Hill Giant. Parun.CostSpec's Avenge group asks again once bob's turn would have begun.",
   "board": {
     "active": "alice",
     "step": "PrecombatMain",

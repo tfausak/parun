@@ -5,7 +5,7 @@
 **Goal:** Replace the whole family of hand-carved classification-as-data enums
 (`TargetSpec`, `CardCriterion`, `PermanentCriterion`, `SpellCriterion`, and
 `Affected`'s dynamic sets) with one first-order, statically-analyzable
-object-predicate language — `Pawl.Type.Filter` — evaluated by a single generic
+object-predicate language — `Parun.Type.Filter` — evaluated by a single generic
 matcher, proven by Doom Blade, Terror, and Reprisal.
 
 **Architecture:** `Filter` is closed-half *vocabulary* (it cases on
@@ -35,11 +35,11 @@ these:
   spell produced a `Filter`.
 - **Haskell 2010, no language extensions** unless unavoidable. No `LambdaCase`,
   `OverloadedStrings`. `NamedFieldPuns` permitted for record-heavy clarity.
-- **One type per module** under `Pawl.Type.<TypeName>` (type + instances only).
-  Logic in other `Pawl.*` modules. A module never imports its parents; a sibling
-  `Pawl.Type.*` import is fine. Evaluator-local records may live in a logic module
-  (precedent: `Gathered` inside `Pawl.Projection`).
-- **No explicit export lists** (`module Pawl.Foo where`).
+- **One type per module** under `Parun.Type.<TypeName>` (type + instances only).
+  Logic in other `Parun.*` modules. A module never imports its parents; a sibling
+  `Parun.Type.*` import is fine. Evaluator-local records may live in a logic module
+  (precedent: `Gathered` inside `Parun.Projection`).
+- **No explicit export lists** (`module Parun.Foo where`).
 - **Qualified imports**, aliased to the last component (`Data.Set` → `Set`);
   operators unqualified. `A.B.C` must not import `A.B` or `A`.
 - **`newtype` + smart constructors, non-punning:** constructors take a `Mk`
@@ -47,7 +47,7 @@ these:
 - **No partial functions.** `Maybe`/`Either`, never `head`/`error`/`undefined`/
   non-exhaustive matches.
 - **No boolean blindness** — a custom sum type beats a bare `Bool` (this is why
-  self-exclusion is a `Pawl.Type.Exclusion` value, not a `Bool`).
+  self-exclusion is a `Parun.Type.Exclusion` value, not a `Bool`).
 - **Derive at least `Eq` and `Show`.** `Filter`, `Pool`, `Exclusion`,
   `PlayerRelation` also derive `Ord` (they sit inside `Set`/`Map` keys and
   `Ord`-deriving `Card`).
@@ -56,7 +56,7 @@ these:
   records; `let` over `where`; `$` over parens, `.` over chained `$`.
 - **No API stability obligations.** Delete `CardCriterion` / `PermanentCriterion`
   / `SpellCriterion` outright; no compat shims or re-exports.
-- **Build must be warning-clean** under `-Weverything` minus the `pawl.cabal`
+- **Build must be warning-clean** under `-Weverything` minus the `parun.cabal`
   allow-list; `+pedantic` makes any warning a `-Werror` failure. Suites break
   separately from the library, so always build `all`.
 - **Every rules claim checked against `docs/rules.txt`**, with the CR number cited
@@ -82,14 +82,14 @@ these:
   then the build above.
 - Full test suite: `cabal test`
 - One tasty group by name pattern: `cabal test --test-options='-p "<pattern>"'`
-  (e.g. `-p "Pawl.Filter"`). The pattern matches the test-tree path.
+  (e.g. `-p "Parun.Filter"`). The pattern matches the test-tree path.
 - Format + lint (staged files only — `git add -A` first): `hooky fix` then
   `git add -A` again then `hooky run`.
 - After adding a `data/cards/*.json` file, it is picked up only once registered in
-  `source/test-suite/Pawl/Cards.hs` (three sites: record field, `loadPrinting`
+  `source/test-suite/Parun/Cards.hs` (three sites: record field, `loadPrinting`
   binding, `allPrintings` list).
-- New library modules and new `Pawl.*Spec` modules are auto-discovered by the
-  `-- cabal-gild: discover` directives in `pawl.cabal`; run `cabal-gild` (via
+- New library modules and new `Parun.*Spec` modules are auto-discovered by the
+  `-- cabal-gild: discover` directives in `parun.cabal`; run `cabal-gild` (via
   `hooky fix`) — never hand-edit `exposed-modules`/`other-modules`. A new spec
   module ALSO needs manual wiring into `source/test-suite/Main.hs`.
 
@@ -99,48 +99,48 @@ these:
 
 **New library modules**
 
-- `source/library/Pawl/Type/PlayerRelation.hs` — `data PlayerRelation = You |
+- `source/library/Parun/Type/PlayerRelation.hs` — `data PlayerRelation = You |
   Opponent`. Who an object's controller is relative to the evaluation's
   perspective.
-- `source/library/Pawl/Type/Filter.hs` — `data Filter` — the recursive-but-finite
+- `source/library/Parun/Type/Filter.hs` — `data Filter` — the recursive-but-finite
   object predicate (atoms + `And`/`Or`/`Not`). One type; the core vocabulary.
-- `source/library/Pawl/Type/Pool.hs` — `data Pool` — the closed set of target
+- `source/library/Parun/Type/Pool.hs` — `data Pool` — the closed set of target
   recipient kinds (which objects are candidates, and how they're referenced).
-- `source/library/Pawl/Type/Exclusion.hs` — `data Exclusion = IncludesSource |
+- `source/library/Parun/Type/Exclusion.hs` — `data Exclusion = IncludesSource |
   ExcludesSource` — whether a target slot admits its own source ("another").
-- `source/library/Pawl/Filter.hs` — the evaluator (logic, not a type module):
+- `source/library/Parun/Filter.hs` — the evaluator (logic, not a type module):
   the `View` record, the `Context` newtype, and `matches`. Depends only on the
-  `Pawl.Type.*` leaves — **must not import `Pawl.Projection`** (cycle).
+  `Parun.Type.*` leaves — **must not import `Parun.Projection`** (cycle).
 
 **Reshaped library modules**
 
-- `source/library/Pawl/Type/TargetSpec.hs` — from a 12-constructor enum to
+- `source/library/Parun/Type/TargetSpec.hs` — from a 12-constructor enum to
   `data TargetSpec = MkTargetSpec Pool (Maybe Filter) Exclusion`.
-- `source/library/Pawl/Type/Affected.hs` — from six constructors to
+- `source/library/Parun/Type/Affected.hs` — from six constructors to
   `TheseObjects (Set ObjectId) | Matching Exclusion Filter`.
-- `source/library/Pawl/Type/Effect.hs` — `Search` carries `Filter`, not
+- `source/library/Parun/Type/Effect.hs` — `Search` carries `Filter`, not
   `CardCriterion`.
-- `source/library/Pawl/Target.hs` — `legalRecipients`/`selfExcludes` over the new
+- `source/library/Parun/Target.hs` — `legalRecipients`/`selfExcludes` over the new
   `TargetSpec`; new private `basePool`.
-- `source/library/Pawl/Projection.hs` — new `viewOfObject`, `viewOfCard`, and a
+- `source/library/Parun/Projection.hs` — new `viewOfObject`, `viewOfCard`, and a
   private `viewOfCharacteristics`; `affects` rewritten to call `Filter.matches`.
-- `source/library/Pawl/Cost.hs`, `source/library/Pawl/Replacement.hs`,
-  `source/library/Pawl/PlayerEffect.hs`, `source/library/Pawl/Resolve.hs` — their
+- `source/library/Parun/Cost.hs`, `source/library/Parun/Replacement.hs`,
+  `source/library/Parun/PlayerEffect.hs`, `source/library/Parun/Resolve.hs` — their
   criterion matchers become `Filter.matches`.
-- `source/library/Pawl/Codec.hs` — new `filterToJson`/`jsonToFilter`,
+- `source/library/Parun/Codec.hs` — new `filterToJson`/`jsonToFilter`,
   `poolToJson`, `exclusionToJson`, `playerRelationToJson` and inverses; reshaped
   `targetSpecToJson`/`jsonToTargetSpec`, `affectedToJson`/`jsonToAffected`,
   `Search` arm; deleted `cardCriterion*`/`permanentCriterion*`/`spellCriterion*`.
 
 **Deleted library modules**
 
-- `source/library/Pawl/Type/CardCriterion.hs`
-- `source/library/Pawl/Type/PermanentCriterion.hs`
-- `source/library/Pawl/Type/SpellCriterion.hs`
+- `source/library/Parun/Type/CardCriterion.hs`
+- `source/library/Parun/Type/PermanentCriterion.hs`
+- `source/library/Parun/Type/SpellCriterion.hs`
 
 **New test module**
 
-- `source/test-suite/Pawl/FilterSpec.hs` — unit tests for `Filter.matches` (pure,
+- `source/test-suite/Parun/FilterSpec.hs` — unit tests for `Filter.matches` (pure,
   hand-built `View`s) and the codec round-trip. Wired into `Main.hs`.
 
 **Card data (JSON) migrated** — every file whose `targetSpecs`/`Search`/criterion
@@ -151,45 +151,45 @@ tag changes shape. Enumerated per task.
 ## Task 1: The `Filter` predicate type and its evaluator
 
 **Files:**
-- Create: `source/library/Pawl/Type/PlayerRelation.hs`
-- Create: `source/library/Pawl/Type/Filter.hs`
-- Create: `source/library/Pawl/Filter.hs`
-- Create/Test: `source/test-suite/Pawl/FilterSpec.hs`
+- Create: `source/library/Parun/Type/PlayerRelation.hs`
+- Create: `source/library/Parun/Type/Filter.hs`
+- Create: `source/library/Parun/Filter.hs`
+- Create/Test: `source/test-suite/Parun/FilterSpec.hs`
 - Modify: `source/test-suite/Main.hs` (import + `testTree` entry)
 
 **Interfaces:**
 - Produces:
-  - `Pawl.Type.PlayerRelation.PlayerRelation = You | Opponent` (`Eq, Ord, Show`).
-  - `Pawl.Type.Filter.Filter` with constructors `HasCardType CardType`,
+  - `Parun.Type.PlayerRelation.PlayerRelation = You | Opponent` (`Eq, Ord, Show`).
+  - `Parun.Type.Filter.Filter` with constructors `HasCardType CardType`,
     `HasSupertype Supertype`, `HasColor Color`, `HasSubtype Subtype`,
     `PowerAtLeast Integer`, `ControlledBy PlayerRelation`, `And [Filter]`,
     `Or [Filter]`, `Not Filter` (`Eq, Ord, Show`).
-  - `Pawl.Filter.View = MkView { cardTypes :: Set CardType, supertypes :: Set
+  - `Parun.Filter.View = MkView { cardTypes :: Set CardType, supertypes :: Set
     Supertype, colors :: Set Color, subtypes :: Set Subtype, power :: Maybe
     Integer, controller :: Maybe PlayerId }` (`Eq, Show`).
-  - `Pawl.Filter.Context` — `newtype Context = MkContext { perspective :: Maybe
+  - `Parun.Filter.Context` — `newtype Context = MkContext { perspective :: Maybe
     PlayerId }` (`Eq, Show`).
-  - `Pawl.Filter.matches :: Context -> View -> Filter -> Bool`.
+  - `Parun.Filter.matches :: Context -> View -> Filter -> Bool`.
 
 - [ ] **Step 1: Write the failing evaluator tests**
 
-Create `source/test-suite/Pawl/FilterSpec.hs`. It heads with a comment listing the
-modules it covers (`Pawl.Type.Filter`, `Pawl.Type.PlayerRelation`, `Pawl.Filter`),
+Create `source/test-suite/Parun/FilterSpec.hs`. It heads with a comment listing the
+modules it covers (`Parun.Type.Filter`, `Parun.Type.PlayerRelation`, `Parun.Filter`),
 exposes `tests :: TestTree`, and takes no `Cards` argument (pure).
 
 ```haskell
--- Covers Pawl.Type.Filter, Pawl.Type.PlayerRelation, Pawl.Filter.
-module Pawl.FilterSpec where
+-- Covers Parun.Type.Filter, Parun.Type.PlayerRelation, Parun.Filter.
+module Parun.FilterSpec where
 
 import qualified Data.Set as Set
-import qualified Pawl.Filter as Filter
-import qualified Pawl.Type.CardType as CardType
-import qualified Pawl.Type.Color as Color
-import qualified Pawl.Type.Filter as Filter.Type
-import qualified Pawl.Type.PlayerId as PlayerId
-import qualified Pawl.Type.PlayerRelation as PlayerRelation
-import qualified Pawl.Type.Subtype as Subtype
-import qualified Pawl.Type.Supertype as Supertype
+import qualified Parun.Filter as Filter
+import qualified Parun.Type.CardType as CardType
+import qualified Parun.Type.Color as Color
+import qualified Parun.Type.Filter as Filter.Type
+import qualified Parun.Type.PlayerId as PlayerId
+import qualified Parun.Type.PlayerRelation as PlayerRelation
+import qualified Parun.Type.Subtype as Subtype
+import qualified Parun.Type.Supertype as Supertype
 import qualified Test.Tasty as Tasty
 import qualified Test.Tasty.HUnit as HU
 
@@ -229,7 +229,7 @@ noPerspective = Filter.MkContext Nothing
 tests :: Tasty.TestTree
 tests =
   Tasty.testGroup
-    "Pawl.Filter"
+    "Parun.Filter"
     [ HU.testCase "HasCardType matches when present" $
         HU.assertBool "creature" (Filter.matches self blackCreature (Filter.Type.HasCardType CardType.Creature)),
       HU.testCase "HasCardType fails when absent" $
@@ -266,26 +266,26 @@ tests =
     ]
 ```
 
-Note the alias `Filter.Type` for `Pawl.Type.Filter` is a deliberate exception to
+Note the alias `Filter.Type` for `Parun.Type.Filter` is a deliberate exception to
 "alias to the last component" (the last component `Filter` already names the
 evaluator module); flag it with a one-line comment in the import group.
 
 - [ ] **Step 2: Wire FilterSpec into Main.hs**
 
-In `source/test-suite/Main.hs` add `import qualified Pawl.FilterSpec` (alphabetical
+In `source/test-suite/Main.hs` add `import qualified Parun.FilterSpec` (alphabetical
 position) and add `FilterSpec.tests` to the `testTree` list (it is card-free, like
 `BindingSpec`/`DecideSpec`/`JsonSpec` — no `cards` argument).
 
 - [ ] **Step 3: Run the tests to verify they fail (do not compile yet)**
 
 Run: `cabal build all --enable-tests --enable-benchmarks`
-Expected: FAIL — `Pawl.Type.Filter`, `Pawl.Type.PlayerRelation`, `Pawl.Filter`
+Expected: FAIL — `Parun.Type.Filter`, `Parun.Type.PlayerRelation`, `Parun.Filter`
 not found / not in scope.
 
-- [ ] **Step 4: Create `Pawl.Type.PlayerRelation`**
+- [ ] **Step 4: Create `Parun.Type.PlayerRelation`**
 
 ```haskell
-module Pawl.Type.PlayerRelation where
+module Parun.Type.PlayerRelation where
 
 -- Who an object's controller is, relative to the perspective the evaluation
 -- carries (the source's controller when targeting; the effect's controller for a
@@ -297,27 +297,27 @@ data PlayerRelation
   deriving (Eq, Ord, Show)
 ```
 
-- [ ] **Step 5: Create `Pawl.Type.Filter`**
+- [ ] **Step 5: Create `Parun.Type.Filter`**
 
 ```haskell
-module Pawl.Type.Filter where
+module Parun.Type.Filter where
 
-import Pawl.Type.CardType (CardType)
-import Pawl.Type.Color (Color)
-import Pawl.Type.PlayerRelation (PlayerRelation)
-import Pawl.Type.Subtype (Subtype)
-import Pawl.Type.Supertype (Supertype)
+import Parun.Type.CardType (CardType)
+import Parun.Type.Color (Color)
+import Parun.Type.PlayerRelation (PlayerRelation)
+import Parun.Type.Subtype (Subtype)
+import Parun.Type.Supertype (Supertype)
 
 -- A first-order, non-recursive-in-meaning-but-finitely-recursive-in-structure
 -- predicate over one object, expressed as data and evaluated by one generic
--- matcher (Pawl.Filter.matches) that never learns which effect produced it. Its
+-- matcher (Parun.Filter.matches) that never learns which effect produced it. Its
 -- atoms case on CHARACTERISTICS (card type, supertype, colour, subtype, power,
 -- controller) exactly as the rules already case on a CardType -- casing on a
 -- characteristic classification is legitimate; the invariant forbids only casing
 -- on an EFFECT's identity, which this type never does.
 --
 -- Flat, not layered: the atoms and the And/Or/Not combinators are sibling arms of
--- one type, mirroring Pawl.Type.Quantity's flat `Plus Quantity Quantity`
+-- one type, mirroring Parun.Type.Quantity's flat `Plus Quantity Quantity`
 -- alongside its leaf arms. A Simple/combinator split would buy an enforceable
 -- normal form only if it also restricted the recursion (CNF/DNF); unrestricted it
 -- guarantees nothing the flat type does not.
@@ -337,28 +337,28 @@ data Filter
   deriving (Eq, Ord, Show)
 ```
 
-- [ ] **Step 6: Create the `Pawl.Filter` evaluator**
+- [ ] **Step 6: Create the `Parun.Filter` evaluator**
 
 `View`/`Context` are evaluator-local records in a logic module (precedent:
-`Gathered` in `Pawl.Projection`). This module must NOT import `Pawl.Projection`
-— the two view *builders* live in `Pawl.Projection` (Task 3) to keep the
+`Gathered` in `Parun.Projection`). This module must NOT import `Parun.Projection`
+— the two view *builders* live in `Parun.Projection` (Task 3) to keep the
 dependency one-way (`Projection` → `Filter`).
 
 ```haskell
-module Pawl.Filter where
+module Parun.Filter where
 
 import qualified Data.Set as Set
-import qualified Pawl.Type.CardType as CardType
-import qualified Pawl.Type.Color as Color
-import qualified Pawl.Type.Filter as Filter
-import qualified Pawl.Type.PlayerId as PlayerId
-import qualified Pawl.Type.PlayerRelation as PlayerRelation
-import qualified Pawl.Type.Subtype as Subtype
-import qualified Pawl.Type.Supertype as Supertype
+import qualified Parun.Type.CardType as CardType
+import qualified Parun.Type.Color as Color
+import qualified Parun.Type.Filter as Filter
+import qualified Parun.Type.PlayerId as PlayerId
+import qualified Parun.Type.PlayerRelation as PlayerRelation
+import qualified Parun.Type.Subtype as Subtype
+import qualified Parun.Type.Supertype as Supertype
 
 -- The characteristics a Filter atom consults. Supplied by the projection on the
 -- battlefield/stack, and by the printed card off the battlefield (the two
--- builders live in Pawl.Projection). `power` and `controller` are Nothing off the
+-- builders live in Parun.Projection). `power` and `controller` are Nothing off the
 -- battlefield -- a card in a library has neither under the rules that matter here
 -- -- so PowerAtLeast / ControlledBy are vacuously False there, which no search
 -- filter uses.
@@ -405,7 +405,7 @@ matches context view filter = case filter of
 - [ ] **Step 7: Run the tests to verify they pass**
 
 Run: `cabal build all --enable-tests --enable-benchmarks` then
-`cabal test --test-options='-p "Pawl.Filter"'`
+`cabal test --test-options='-p "Parun.Filter"'`
 Expected: PASS (all FilterSpec cases green). Then run the full `cabal test` to
 confirm nothing else broke.
 
@@ -421,9 +421,9 @@ git commit -m "feat(m4.5-p9): the Filter predicate type and its generic evaluato
 ## Task 2: JSON codec for `Filter`, `PlayerRelation`
 
 **Files:**
-- Modify: `source/library/Pawl/Codec.hs` (add `filterToJson`/`jsonToFilter`,
+- Modify: `source/library/Parun/Codec.hs` (add `filterToJson`/`jsonToFilter`,
   `playerRelationToJson`/`jsonToPlayerRelation`)
-- Test: `source/test-suite/Pawl/CodecSpec.hs` (round-trip cases)
+- Test: `source/test-suite/Parun/CodecSpec.hs` (round-trip cases)
 
 **Interfaces:**
 - Consumes: the recursive-sum codec pattern already used by `quantityToJson` /
@@ -437,14 +437,14 @@ git commit -m "feat(m4.5-p9): the Filter predicate type and its generic evaluato
 
 - [ ] **Step 1: Confirm the atom codecs exist**
 
-Run: `grep -nE 'cardTypeToJson|jsonToCardType|supertypeToJson|jsonToSupertype|colorToJson|jsonToColor|subtypeToJson|jsonToSubtype' source/library/Pawl/Codec.hs`
+Run: `grep -nE 'cardTypeToJson|jsonToCardType|supertypeToJson|jsonToSupertype|colorToJson|jsonToColor|subtypeToJson|jsonToSubtype' source/library/Parun/Codec.hs`
 Expected: all eight present. If `cardTypeToJson`/`supertypeToJson` (or inverses)
 are missing, add them first mirroring `colorToJson`/`jsonToColor`, and note it in
 the commit. Do not proceed until every atom the `Filter` codec needs exists.
 
 - [ ] **Step 2: Write the failing round-trip tests**
 
-In `source/test-suite/Pawl/CodecSpec.hs`, add a `HU.testCase` in the appropriate
+In `source/test-suite/Parun/CodecSpec.hs`, add a `HU.testCase` in the appropriate
 group. Cover every atom plus a nested recursive value (so `And`/`Or`/`Not`
 recursion is exercised), and `PlayerRelation`.
 
@@ -466,8 +466,8 @@ recursion is exercised), and `PlayerRelation`.
         [PlayerRelation.You, PlayerRelation.Opponent]
 ```
 
-Add the needed imports (`Pawl.Type.Filter as Filter`, `Pawl.Type.PlayerRelation as
-PlayerRelation`, and `Pawl.Type.Supertype`, `Pawl.Type.Subtype` if not present).
+Add the needed imports (`Parun.Type.Filter as Filter`, `Parun.Type.PlayerRelation as
+PlayerRelation`, and `Parun.Type.Supertype`, `Parun.Type.Subtype` if not present).
 
 - [ ] **Step 3: Run to verify failure**
 
@@ -542,12 +542,12 @@ git commit -m "feat(m4.5-p9): JSON codec for Filter and PlayerRelation"
 
 ---
 
-## Task 3: The two `View` builders in `Pawl.Projection`
+## Task 3: The two `View` builders in `Parun.Projection`
 
 **Files:**
-- Modify: `source/library/Pawl/Projection.hs` (add `viewOfObject`, `viewOfCard`,
+- Modify: `source/library/Parun/Projection.hs` (add `viewOfObject`, `viewOfCard`,
   private `viewOfCharacteristics`, private `printedSupertypes`)
-- Test: `source/test-suite/Pawl/ProjectionSpec.hs`
+- Test: `source/test-suite/Parun/ProjectionSpec.hs`
 
 **Interfaces:**
 - Consumes: `Projection.project :: ObjectId -> GameState ->
@@ -564,7 +564,7 @@ git commit -m "feat(m4.5-p9): JSON codec for Filter and PlayerRelation"
 
 - [ ] **Step 1: Write the failing builder tests**
 
-In `source/test-suite/Pawl/ProjectionSpec.hs`, add cases proving `viewOfObject`
+In `source/test-suite/Parun/ProjectionSpec.hs`, add cases proving `viewOfObject`
 reads the projection and `viewOfCard` reads the printed card. Use existing
 `S.addCreature`/board fixtures and a printed `Card` from `cards`.
 
@@ -586,16 +586,16 @@ reads the projection and `viewOfCard` reads the printed card. Use existing
 Match the existing `ProjectionSpec` board-construction idiom (read the file's top
 fixtures first; use the same `S.` helpers already imported there). Use a real
 basic land the loader already registers (`Cards.mountainPrinting` or equivalent —
-confirm the field name in `source/test-suite/Pawl/Cards.hs`).
+confirm the field name in `source/test-suite/Parun/Cards.hs`).
 
 - [ ] **Step 2: Run to verify failure**
 
 Run: `cabal test --test-options='-p "Projection"'`
 Expected: FAIL — `Projection.viewOfObject` / `Projection.viewOfCard` not in scope.
 
-- [ ] **Step 3: Implement the builders in `Pawl.Projection`**
+- [ ] **Step 3: Implement the builders in `Parun.Projection`**
 
-Add `import qualified Pawl.Filter as Filter` (this is the one-way dependency
+Add `import qualified Parun.Filter as Filter` (this is the one-way dependency
 `Projection` → `Filter`; `Filter` never imports `Projection`). Place the builders
 near `project`/`controllerOf`.
 
@@ -679,22 +679,22 @@ Doom Blade, Lightning Bolt, Murder, and the whole existing target test suite are
 the safety net — they must stay green with identical behaviour.
 
 **Files:**
-- Create: `source/library/Pawl/Type/Pool.hs`, `source/library/Pawl/Type/Exclusion.hs`
-- Modify: `source/library/Pawl/Type/TargetSpec.hs`
-- Modify: `source/library/Pawl/Target.hs` (`legalRecipients`, `selfExcludes`, new
+- Create: `source/library/Parun/Type/Pool.hs`, `source/library/Parun/Type/Exclusion.hs`
+- Modify: `source/library/Parun/Type/TargetSpec.hs`
+- Modify: `source/library/Parun/Target.hs` (`legalRecipients`, `selfExcludes`, new
   private `basePool`)
-- Modify: `source/library/Pawl/Codec.hs` (`targetSpecToJson`/`jsonToTargetSpec`;
+- Modify: `source/library/Parun/Codec.hs` (`targetSpecToJson`/`jsonToTargetSpec`;
   add `poolToJson`/`jsonToPool`, `exclusionToJson`/`jsonToExclusion`)
 - Modify: the card JSON files listed in Step 6
 - Modify: the test fixtures listed in Step 7
 
 **Interfaces:**
 - Produces:
-  - `Pawl.Type.Pool.Pool = Creatures | Players | AnyTarget | Permanents | Spells |
+  - `Parun.Type.Pool.Pool = Creatures | Players | AnyTarget | Permanents | Spells |
     SpellsAndPermanents` (`Eq, Ord, Show`).
-  - `Pawl.Type.Exclusion.Exclusion = IncludesSource | ExcludesSource`
+  - `Parun.Type.Exclusion.Exclusion = IncludesSource | ExcludesSource`
     (`Eq, Ord, Show`).
-  - `Pawl.Type.TargetSpec.TargetSpec = MkTargetSpec Pool (Maybe Filter) Exclusion`
+  - `Parun.Type.TargetSpec.TargetSpec = MkTargetSpec Pool (Maybe Filter) Exclusion`
     (`Eq, Ord, Show`).
   - `Target.legalRecipients :: ObjectId -> TargetSpec -> GameState -> Set
     Recipient` (signature unchanged); `Target.selfExcludes :: TargetSpec -> Bool`.
@@ -708,7 +708,7 @@ blindness), and `selfExcludes` reads it.
 
 - [ ] **Step 1: Write the failing behaviour tests**
 
-Add to `source/test-suite/Pawl/ResolveSpec.hs`'s `targetTests` a test asserting the
+Add to `source/test-suite/Parun/ResolveSpec.hs`'s `targetTests` a test asserting the
 new shape reproduces `NonblackCreatureTarget`'s behaviour, plus that a bare
 `Creatures` pool with `Nothing` narrows nothing, plus that `ExcludesSource` drops
 the source. Read the file's existing `targetTests` fixtures first and reuse them.
@@ -728,8 +728,8 @@ the source. Read the file's existing `targetTests` fixtures first and reuse them
       HU.assertBool "includes" (not (Target.selfExcludes (TargetSpec.MkTargetSpec Pool.Creatures Nothing Exclusion.IncludesSource)))
 ```
 
-Add imports for `Pawl.Type.Pool as Pool`, `Pawl.Type.Exclusion as Exclusion`,
-`Pawl.Type.Filter as Filter`, `Pawl.Type.PlayerRelation` as needed. Construct
+Add imports for `Parun.Type.Pool as Pool`, `Parun.Type.Exclusion as Exclusion`,
+`Parun.Type.Filter as Filter`, `Parun.Type.PlayerRelation` as needed. Construct
 `blackOid`/`plainOid`/`gs`/`expectedAllCreatures` with the same helpers the
 surrounding `targetTests` already use.
 
@@ -738,10 +738,10 @@ surrounding `targetTests` already use.
 Run: `cabal build all --enable-tests --enable-benchmarks`
 Expected: FAIL — `Pool`, `Exclusion` not found; `MkTargetSpec` arity mismatch.
 
-- [ ] **Step 3: Create `Pawl.Type.Pool` and `Pawl.Type.Exclusion`**
+- [ ] **Step 3: Create `Parun.Type.Pool` and `Parun.Type.Exclusion`**
 
 ```haskell
-module Pawl.Type.Pool where
+module Parun.Type.Pool where
 
 -- CR 115: the closed set of recipient kinds a target slot may draw from, fixing
 -- both WHICH objects are candidates and HOW they are referenced
@@ -759,7 +759,7 @@ data Pool
 ```
 
 ```haskell
-module Pawl.Type.Exclusion where
+module Parun.Type.Exclusion where
 
 -- CR 601.2c: whether a target slot admits its own source as a legal target.
 -- "another" excludes it; the default includes it. A property of the slot, not of
@@ -770,16 +770,16 @@ data Exclusion
   deriving (Eq, Ord, Show)
 ```
 
-- [ ] **Step 4: Reshape `Pawl.Type.TargetSpec`**
+- [ ] **Step 4: Reshape `Parun.Type.TargetSpec`**
 
 Replace the whole 12-constructor enum with:
 
 ```haskell
-module Pawl.Type.TargetSpec where
+module Parun.Type.TargetSpec where
 
-import Pawl.Type.Exclusion (Exclusion)
-import Pawl.Type.Filter (Filter)
-import Pawl.Type.Pool (Pool)
+import Parun.Type.Exclusion (Exclusion)
+import Parun.Type.Filter (Filter)
+import Parun.Type.Pool (Pool)
 
 -- What a target slot may hold: a closed Pool of candidate recipients (CR 115),
 -- narrowed by an open Filter (Nothing = the whole pool, e.g. bare "target
@@ -792,7 +792,7 @@ data TargetSpec = MkTargetSpec Pool (Maybe Filter) Exclusion
 
 - [ ] **Step 5: Rewrite `Target.legalRecipients` and `selfExcludes`**
 
-First `Read source/library/Pawl/Target.hs` (lines ~1-175). The current
+First `Read source/library/Parun/Target.hs` (lines ~1-175). The current
 `legalRecipients` has one `case spec of` arm per old constructor; each arm builds a
 base recipient set then, for restricted specs, narrows it. Refactor so the base set
 comes from a `basePool` helper (extract the *exact* set-construction expressions
@@ -887,7 +887,7 @@ Task 2 confirmed the codecs; encode one value in `cabal repl` if unsure).
 
 - [ ] **Step 7: Update the codec and the Haskell test fixtures**
 
-Codec — `Read source/library/Pawl/Codec.hs:663-694` and `:1141-1155`, then:
+Codec — `Read source/library/Parun/Codec.hs:663-694` and `:1141-1155`, then:
 
 ```haskell
 poolToJson :: Pool.Pool -> Value
@@ -986,7 +986,7 @@ gh issue close 40 --comment "Closed by M4.5 P9: the TargetSpec family collapses 
 
 **Files:**
 - Create: `data/cards/terror.json`, `data/cards/reprisal.json`
-- Modify: `source/test-suite/Pawl/Cards.hs` (three sites each: record field,
+- Modify: `source/test-suite/Parun/Cards.hs` (three sites each: record field,
   `loadPrinting` binding, `allPrintings` entry)
 - Test: add gate tests (in `ResolveSpec.hs`'s `targetTests`, or a small dedicated
   group) proving Terror's `And`-of-negations and Reprisal's `PowerAtLeast`.
@@ -1065,7 +1065,7 @@ Same "can't be regenerated" omission as Terror.
 
 - [ ] **Step 5: Register both cards in `Cards.hs`**
 
-`Read source/test-suite/Pawl/Cards.hs` and add, for each card, in alphabetical
+`Read source/test-suite/Parun/Cards.hs` and add, for each card, in alphabetical
 position: the `Cards` record field (`terrorPrinting :: Printing.Printing`), the
 `loadPrinting` binding (`terrorPrinting_ <- loadPrinting "terror"`), the
 `MkCards {...}` assignment, and the `allPrintings` list entry
@@ -1099,14 +1099,14 @@ git commit -m "test(m4.5-p9): Terror and Reprisal gate the And-of-negations and 
 ## Task 6: `CardCriterion` → `Filter` (Effect.Search; reads a printed card off the battlefield)
 
 **Files:**
-- Delete: `source/library/Pawl/Type/CardCriterion.hs`
-- Modify: `source/library/Pawl/Type/Effect.hs` (`Search Filter`)
-- Modify: `source/library/Pawl/Resolve.hs` (`matchesCriterion` → `Filter.matches`
+- Delete: `source/library/Parun/Type/CardCriterion.hs`
+- Modify: `source/library/Parun/Type/Effect.hs` (`Search Filter`)
+- Modify: `source/library/Parun/Resolve.hs` (`matchesCriterion` → `Filter.matches`
   over `viewOfCard`; the `Search` arm)
-- Modify: `source/library/Pawl/Codec.hs` (delete `cardCriterion*`; `Search` arm
+- Modify: `source/library/Parun/Codec.hs` (delete `cardCriterion*`; `Search` arm
   carries `filterToJson`/`jsonToFilter`)
 - Modify: `data/cards/evolving-wilds.json` (the `Search` value)
-- Test: `source/test-suite/Pawl/ResolveSpec.hs` (basic-land-search gate)
+- Test: `source/test-suite/Parun/ResolveSpec.hs` (basic-land-search gate)
 
 **Interfaces:**
 - Consumes: `Effect.Search Filter`; `Projection.viewOfCard`; `Filter.matches`.
@@ -1143,9 +1143,9 @@ new path).
 
 - [ ] **Step 3: Delete `CardCriterion`; make `Search` carry `Filter`**
 
-Delete `source/library/Pawl/Type/CardCriterion.hs`. In
-`source/library/Pawl/Type/Effect.hs` change `import Pawl.Type.CardCriterion
-(CardCriterion)` to `import Pawl.Type.Filter (Filter)` and the constructor `Search
+Delete `source/library/Parun/Type/CardCriterion.hs`. In
+`source/library/Parun/Type/Effect.hs` change `import Parun.Type.CardCriterion
+(CardCriterion)` to `import Parun.Type.Filter (Filter)` and the constructor `Search
 CardCriterion` to `Search Filter`. Update the doc comment to cite CR 701.23a and
 that the criterion is now a `Filter` over the printed-card view.
 
@@ -1204,16 +1204,16 @@ git commit -m "feat(m4.5-p9): Effect.Search carries a Filter over the printed-ca
 ## Task 7: `PermanentCriterion` → `Filter`
 
 **Files:**
-- Delete: `source/library/Pawl/Type/PermanentCriterion.hs`
-- Modify: `source/library/Pawl/Cost.hs` (`matchesCriterion` → `Filter.matches` over
+- Delete: `source/library/Parun/Type/PermanentCriterion.hs`
+- Modify: `source/library/Parun/Cost.hs` (`matchesCriterion` → `Filter.matches` over
   `viewOfObject`; `sacrificeCandidates`)
-- Modify: `source/library/Pawl/Replacement.hs` (`matchesPermanent` →
+- Modify: `source/library/Parun/Replacement.hs` (`matchesPermanent` →
   `Filter.matches`)
-- Modify: `source/library/Pawl/Codec.hs` (delete `permanentCriterion*`; any
+- Modify: `source/library/Parun/Codec.hs` (delete `permanentCriterion*`; any
   carrying type — e.g. a `CostComponent`/`Replacement` field — now holds `Filter`)
 - Modify: the card JSON using a permanent criterion (Fireblast's Sacrifice-a-
   Mountain cost; any others found by grep)
-- Test: `source/test-suite/Pawl/CostSpec.hs`, `source/test-suite/Pawl/ReplacementSpec.hs`
+- Test: `source/test-suite/Parun/CostSpec.hs`, `source/test-suite/Parun/ReplacementSpec.hs`
 
 **Interfaces:**
 - Consumes: `Projection.viewOfObject`; `Filter.matches`.
@@ -1245,9 +1245,9 @@ Expected: FAIL — mismatched constructor / not-in-scope once producers change.
 
 - [ ] **Step 4: Delete the type; change the carriers to `Filter`**
 
-Delete `source/library/Pawl/Type/PermanentCriterion.hs`. In every carrier type
+Delete `source/library/Parun/Type/PermanentCriterion.hs`. In every carrier type
 found in Step 1, replace the `PermanentCriterion` field with `Filter` (import
-`Pawl.Type.Filter`).
+`Parun.Type.Filter`).
 
 - [ ] **Step 5: Rewrite the matchers**
 
@@ -1257,7 +1257,7 @@ found in Step 1, replace the `PermanentCriterion` field with `Filter` (import
 player). `sacrificeCandidates` keeps filtering `Projection.controls pid gs` by that
 predicate. In `Replacement`, replace `matchesPermanent` the same way and delete the
 `#111` "deliberate duplicate to avoid a Cost→Replacement cycle" comment — both now
-depend only on the lower `Pawl.Filter`.
+depend only on the lower `Parun.Filter`.
 
 - [ ] **Step 6: Update the codec and migrate the JSON**
 
@@ -1290,14 +1290,14 @@ git commit -m "feat(m4.5-p9): Cost and Replacement narrow permanents through Fil
 ## Task 8: `SpellCriterion` → `Filter`
 
 **Files:**
-- Delete: `source/library/Pawl/Type/SpellCriterion.hs`
-- Modify: `source/library/Pawl/PlayerEffect.hs` (`matchesSpell` → `Filter.matches`
+- Delete: `source/library/Parun/Type/SpellCriterion.hs`
+- Modify: `source/library/Parun/PlayerEffect.hs` (`matchesSpell` → `Filter.matches`
   over `viewOfObject`; the carrying `PlayerEffect` constructors)
-- Modify: `source/library/Pawl/Codec.hs` (delete `spellCriterion*`; carriers hold
+- Modify: `source/library/Parun/Codec.hs` (delete `spellCriterion*`; carriers hold
   `Filter`)
 - Modify: the card JSON naming a spell criterion (Thalia; Sapphire Medallion; any
   others by grep)
-- Test: `source/test-suite/Pawl/PlayerEffectSpec.hs`
+- Test: `source/test-suite/Parun/PlayerEffectSpec.hs`
 
 **Interfaces:**
 - Consumes: `Projection.viewOfObject`; `Filter.matches`.
@@ -1323,7 +1323,7 @@ Expected: FAIL — not-in-scope / arity mismatch once carriers change.
 
 - [ ] **Step 4: Delete the type; change carriers to `Filter`; rewrite `matchesSpell`**
 
-Delete `source/library/Pawl/Type/SpellCriterion.hs`. In `PlayerEffect`, change the
+Delete `source/library/Parun/Type/SpellCriterion.hs`. In `PlayerEffect`, change the
 carrier fields to `Filter` and rewrite `matchesSpell criterion oid gs` to
 `Filter.matches (Filter.MkContext (Projection.controllerOf oid gs)) (Projection.viewOfObject oid gs) filter`.
 (A cost-adjustment filter today references only card type / colour, not a player;
@@ -1371,27 +1371,27 @@ git commit -m "feat(m4.5-p9): spell cost-adjustment matches through Filter"
 > (AllCreatures), `urborg-tomb-of-yawgmoth.json` (AllLands), `blood-moon.json`
 > (AllNonbasicLands), `bad-moon.json` (CreaturesOfColor). So this task **preserves
 > self-exclusion** by carrying an `Exclusion` (reused from Task 4's
-> `Pawl.Type.Exclusion`) inside the `Matching` arm — `Matching Exclusion Filter` —
+> `Parun.Type.Exclusion`) inside the `Matching` arm — `Matching Exclusion Filter` —
 > which keeps the type finite/analyzable, reuses the existing self-exclusion
 > vocabulary, and preserves every card's behaviour exactly. **No deferral issue is
 > filed** (nothing is deferred; behaviour is preserved).
 
 **Files:**
-- Modify: `source/library/Pawl/Type/Affected.hs` (two arms; the `Matching` arm
+- Modify: `source/library/Parun/Type/Affected.hs` (two arms; the `Matching` arm
   carries `Exclusion` + `Filter`)
-- Modify: `source/library/Pawl/Projection.hs` (`affects` rewritten to
+- Modify: `source/library/Parun/Projection.hs` (`affects` rewritten to
   `Filter.matches`, keeping the `source` param to apply `ExcludesSource`)
-- Modify: `source/library/Pawl/Codec.hs` (`affectedToJson`/`jsonToAffected`)
+- Modify: `source/library/Parun/Codec.hs` (`affectedToJson`/`jsonToAffected`)
 - Modify: the FIVE producer card JSON files — `humility.json`,
   `urborg-tomb-of-yawgmoth.json`, `blood-moon.json`, `bad-moon.json`,
   `opalescence.json` (opalescence has TWO effects, both carrying the affected set)
-- Test: `source/test-suite/Pawl/ProjectionSpec.hs` (esp. the Opalescence
+- Test: `source/test-suite/Parun/ProjectionSpec.hs` (esp. the Opalescence
   self-exclusion test at :370 — MUST stay green), `CodecSpec.hs`,
-  `source/test-suite/Pawl/Support.hs`, and any of `DamageSpec`/`ExpirySpec`/
+  `source/test-suite/Parun/Support.hs`, and any of `DamageSpec`/`ExpirySpec`/
   `CombatSpec` that build `Affected` values
 
 **Interfaces:**
-- Consumes: `Pawl.Type.Exclusion.Exclusion = IncludesSource | ExcludesSource`
+- Consumes: `Parun.Type.Exclusion.Exclusion = IncludesSource | ExcludesSource`
   (from Task 4); `Filter.matches`; `Projection.viewOfCharacteristics`.
 - Produces: `Affected = TheseObjects (Set ObjectId) | Matching Exclusion Filter`
   (`Eq, Ord, Show`); `Projection.affects` evaluates `Matching` against the partial
@@ -1422,7 +1422,7 @@ atom `IncludesSource`, and an `ExcludesSource` with a nested `And`/`Not`) plus
         ]
 ```
 
-Add imports for `Pawl.Type.Exclusion as Exclusion`, `Pawl.Type.Subtype as Subtype`
+Add imports for `Parun.Type.Exclusion as Exclusion`, `Parun.Type.Subtype as Subtype`
 if not already present.
 
 - [ ] **Step 3: Run to verify failure**
@@ -1431,15 +1431,15 @@ Run: `cabal build all --enable-tests --enable-benchmarks`
 Expected: FAIL — `Affected.Matching` arity mismatch / not found; the six-arm
 patterns are non-exhaustive.
 
-- [ ] **Step 4: Reshape `Pawl.Type.Affected`**
+- [ ] **Step 4: Reshape `Parun.Type.Affected`**
 
 ```haskell
-module Pawl.Type.Affected where
+module Parun.Type.Affected where
 
 import Data.Set (Set)
-import Pawl.Type.Exclusion (Exclusion)
-import Pawl.Type.Filter (Filter)
-import Pawl.Type.ObjectId (ObjectId)
+import Parun.Type.Exclusion (Exclusion)
+import Parun.Type.Filter (Filter)
+import Parun.Type.ObjectId (ObjectId)
 
 -- Which objects a continuous effect applies to.
 data Affected
@@ -1450,7 +1450,7 @@ data Affected
 
 - [ ] **Step 5: Rewrite `Projection.affects` (keeping the `source` parameter)**
 
-`Read source/library/Pawl/Projection.hs:155-195` (the `Gathered` record, `affects`,
+`Read source/library/Parun/Projection.hs:155-195` (the `Gathered` record, `affects`,
 `isBasic`), `:340-355` (`affectsBase`), and `:596-655` (`projectFrom`'s call). The
 `source`/`gSource` machinery STAYS — it now feeds the `ExcludesSource` case.
 Replace the six-arm `affects` body:
@@ -1476,7 +1476,7 @@ affects source oid a partial gs = case a of
 
 Keep the `affects source oid a ...` argument order matching the existing signature
 and both call sites (`projectFrom` and `affectsBase`) unchanged in how they pass
-`source`. Import `Pawl.Type.Exclusion as Exclusion`. The `isBasic`/`printedSupertypes`
+`source`. Import `Parun.Type.Exclusion as Exclusion`. The `isBasic`/`printedSupertypes`
 unification from Task 3 stays if still used; if `affects` was `isBasic`'s only caller
 and the `Matching` collapse removed that call, remove `isBasic` (grep first).
 (Note: `where` here binds a two-clause helper; the project prefers a `let`/`case`,
@@ -1593,9 +1593,9 @@ Confirm each clause of spec §8 holds:
 - Doom Blade, Terror, Reprisal cast/resolve with legal sets from `Filter.matches`.
 - The basic-land search and a `PermanentCriterion` consumer (Fireblast) match
   through the same evaluator.
-- `Pawl.Type.TargetSpec` is `Pool + Maybe Filter + Exclusion`, no per-card variant.
+- `Parun.Type.TargetSpec` is `Pool + Maybe Filter + Exclusion`, no per-card variant.
 - `CardCriterion`, `PermanentCriterion`, `SpellCriterion` modules are gone:
-  `ls source/library/Pawl/Type/ | grep -iE 'CardCriterion|PermanentCriterion|SpellCriterion'` returns nothing.
+  `ls source/library/Parun/Type/ | grep -iE 'CardCriterion|PermanentCriterion|SpellCriterion'` returns nothing.
 - `Affected`'s dynamic sets are `Matching Exclusion Filter`.
 - #40 closed, #38/#39 re-scoped.
 
@@ -1617,7 +1617,7 @@ goes in `docs/progress.md`. Add the P9 completion entry to `docs/progress.md`
 (gate cards Doom Blade / Terror / Reprisal; the decision it proved — one predicate
 language subsumes the whole classification family across projected and printed
 subjects; the types added: `Filter`, `Pool`, `Exclusion`, `PlayerRelation`, and the
-`Pawl.Filter` evaluator).
+`Parun.Filter` evaluator).
 
 - [ ] **Step 4: Commit the docs**
 
@@ -1662,21 +1662,21 @@ gh issue close 5 --comment "Closed by M4.5 P9: the Filter predicate language shi
 - §8 exit criterion → Task 10 Step 2.
 
 **Deviations from the spec's sketches (deliberate, justified):**
-- `Pool` and `Exclusion` are their own `Pawl.Type.*` modules (spec sketched `Pool`
-  inside `Pawl.Type.TargetSpec`) — required by the one-type-per-module rule;
+- `Pool` and `Exclusion` are their own `Parun.Type.*` modules (spec sketched `Pool`
+  inside `Parun.Type.TargetSpec`) — required by the one-type-per-module rule;
   precedent is `Quantity` importing `CountSpec`.
 - `TargetSpec` gains a third field `Exclusion` (spec sketched two) — the 2-field
   sketch has nowhere for §3/§4a's self-exclusion to live; a sum type avoids boolean
   blindness.
-- `viewOfObject`/`viewOfCard` live in `Pawl.Projection`, not `Pawl.Filter` (spec
-  put `viewOfCard` in `Pawl.Filter`) — `viewOfCard` needs `baseColorsOf` and
+- `viewOfObject`/`viewOfCard` live in `Parun.Projection`, not `Parun.Filter` (spec
+  put `viewOfCard` in `Parun.Filter`) — `viewOfCard` needs `baseColorsOf` and
   `viewOfObject` needs `project`, both in `Projection`; siting them there keeps the
   dependency one-way and avoids a `Filter` ↔ `Projection` cycle. `Context` drops
   the unused `source` field (self-exclusion is never a `Filter` atom, so `matches`
   never reads it) — YAGNI + newtype rules.
 - `Affected` self-exclusion is PRESERVED (Task 9, plan-corrected during execution):
   the `Matching` arm carries `Exclusion` (`Matching Exclusion Filter`, reusing Task
-  4's `Pawl.Type.Exclusion`). The original draft's plan to drop it and file a
+  4's `Parun.Type.Exclusion`). The original draft's plan to drop it and file a
   deferral issue rested on a false premise — `opalescence.json` is a live producer
   and `ProjectionSpec.hs:370` tests the "each other" self-exclusion — so dropping it
   would regress a real card and break a test. Reusing `Exclusion` keeps the type

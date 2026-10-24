@@ -1,0 +1,1647 @@
+{-# LANGUAGE GADTs #-}
+
+-- Covers: Parun.Engine.Projection (CR 613 layer 7 -- 7a characteristic-defined P/T, the
+-- CR 608.2h freeze that 7b's stored effects owe, 7c modification and 7d P/T
+-- switching), Parun.Engine.Quantity and Parun.Engine.ManaCount (the counting
+-- quantities, and CR 208.2a's substitution of 0 for a number a CDA cannot
+-- determine) and the P3b/M5.5 gates (Tarmogoyf, Inner Calm Outer Strength,
+-- Twisted Image, Nightmare, Monstrous War-Leech, Omnath Locus of Mana, Serra
+-- Avatar), plus CR 604.2's "as long as" gate on a printed static ability (Kird
+-- Ape for the clause that names a player, Knight of Grace for the one that names
+-- none), CR 613.4c's layer 7c anthem narrowed by a keyword its affected
+-- objects have (Hand of the Praetors), and CR 208.5's 0 for a creature left
+-- with no value for its power or toughness (Ashaya, Soul of the Wild under
+-- Blood Moon) -- read off the finished fold, off the MID-FOLD view a same-layer
+-- count gets (Synthetic Withering Comparison), off the fold's own
+-- accumulator, where CR 613.4c's modification has to have the substituted 0 to
+-- add to (Glorious Anthem), and off the running board's picture of ANOTHER
+-- object, where the count reads the modification the anthem made there (both
+-- cards on one board) --, plus
+-- CR 109.5's static-ability perspective on a player-scoped
+-- count (Empyrial Armor on an opponent's creature) and CR 613.4c's NEGATIVE
+-- layer-7c modification of an announced value (Toxic Deluge's -X/-X, CR 107.1b),
+-- and CR 107.1a's rounding -- both directions in one modification (Aspect of
+-- Wolf), and a CDA halving a maximum folded over the PLAYERS (Malignus), and CR
+-- 607.2a's linked exile pile read from a static ability, where there is no
+-- resolution slot to aim at (Phyrexian Ingester), and CR 614.14's linked pile,
+-- filled by an as-enters exile out of a graveyard and read by a CDA (Living
+-- Lore), and CR 701.10's and CR 701.11's arithmetic on a creature's box, which
+-- rules 701.10b-c and 701.11b-c define as a layer-7c modification read off the
+-- fold (Unleash Fury, Synthetic Threefold Growth).
+-- Gameplay-level: each card is cast or resolved through the stack and the
+-- resulting game state is asserted on.
+module Parun.PowerToughnessSpec where
+
+import qualified Data.List as List
+import qualified Data.List.NonEmpty as NonEmpty
+import qualified Data.Map.Strict as Map
+import qualified Data.Maybe as Maybe
+import qualified Data.Ord as Ord
+import qualified Data.Sequence as Seq
+import qualified Data.Set as Set
+import qualified Data.Text as Text
+import qualified Parun.Engine.Engine as Engine
+import qualified Parun.Engine.Event as Event
+import qualified Parun.Engine.Game as Game
+import qualified Parun.Engine.Projection as Projection
+import qualified Parun.Engine.Projection.View as Projection
+import qualified Parun.Engine.Setup as Setup
+import qualified Parun.Engine.Stack as Stack
+import qualified Parun.Registry as Registry
+import qualified Parun.Scenario as Scenario
+import qualified Parun.Spec as Spec
+import qualified Parun.Support as S
+import qualified Parun.Types.Aggregation as Aggregation
+import qualified Parun.Types.AnyNumberOf as AnyNumberOf
+import qualified Parun.Types.Arithmetic as Arithmetic
+import qualified Parun.Types.CardName as CardName
+import qualified Parun.Types.CharacteristicPT as CharacteristicPT
+import qualified Parun.Types.Choices as Choices
+import qualified Parun.Types.Combat as Combat.Type
+import qualified Parun.Types.CombatStep as CombatStep
+import qualified Parun.Types.Count as Count.Type
+import qualified Parun.Types.CounterKind as CounterKind
+import qualified Parun.Types.DistinctOf as DistinctOf
+import qualified Parun.Types.Face as Face
+import qualified Parun.Types.Filter as Filter.Type
+import qualified Parun.Types.GameEvent as GameEvent
+import qualified Parun.Types.GameState as GameState
+import qualified Parun.Types.Halved as Halved
+import qualified Parun.Types.InZone as InZone
+import qualified Parun.Types.Keyword as Keyword
+import qualified Parun.Types.LifeChange as LifeChange
+import qualified Parun.Types.Modification as Modification
+import qualified Parun.Types.ModifyPowerToughness as ModifyPowerToughness
+import qualified Parun.Types.Object as Object
+import qualified Parun.Types.ObjectId as ObjectId
+import qualified Parun.Types.OptionalDecision as OptionalDecision
+import qualified Parun.Types.PaymentDecision as PaymentDecision
+import qualified Parun.Types.Phase as Phase
+import qualified Parun.Types.Player as Player
+import qualified Parun.Types.PlayerId as PlayerId
+import qualified Parun.Types.PlayerRef as PlayerRef
+import qualified Parun.Types.PlayerRelation as PlayerRelation
+import qualified Parun.Types.Plus as Plus
+import qualified Parun.Types.Printing as Printing
+import qualified Parun.Types.ProjectedCharacteristics as PC
+import qualified Parun.Types.Prompt as Prompt
+import qualified Parun.Types.Quantity as Quantity.Type
+import qualified Parun.Types.Recipient as Recipient
+import qualified Parun.Types.Rounding as Rounding
+import qualified Parun.Types.Scope as Scope
+import qualified Parun.Types.Seat as Seat
+import qualified Parun.Types.Sickness as Sickness
+import qualified Parun.Types.SlotName as SlotName
+import qualified Parun.Types.Subtype as Subtype
+import qualified Parun.Types.Zone as Zone
+
+spec :: (Monad m, Monad n) => Spec.Spec m n -> Registry.Registry m -> n ()
+spec s registry = Spec.describe s "Parun.Engine.PowerToughness" $ do
+  Spec.it s "CR 604.3 the seed carries the CDA as QUANTITIES, with the printed star substituted" $ do
+    -- CR 707.2a: a copy acquires the ABILITY, so what the seed (and therefore
+    -- the copiable value) holds must be unevaluated. Tarmogoyf's printed box is
+    -- \*/1+*, so the pair is <count> and 1+<count>.
+    tarmogoyf <- S.printingOf s registry "Tarmogoyf"
+    let gs0 = Setup.emptyGame S.bothPlayers
+        (goyfId, gs) = S.addPermanent tarmogoyf S.alice gs0
+        -- CR 208.2a: Tarmogoyf's shape -- distinct card types over every
+        -- graveyard.
+        count =
+          Quantity.Type.Count
+            ( Count.Type.MkCount
+                (Scope.InZone (InZone.MkInZone Zone.Graveyard (PlayerRef.Relative PlayerRelation.AnyPlayer)))
+                (Filter.Type.And [])
+                (Aggregation.Distinct DistinctOf.CardTypes)
+            )
+    Spec.assertEqWith
+      s
+      "the CDA pair"
+      (PC.characteristicPT (Projection.baseCharacteristics goyfId gs))
+      (Just (CharacteristicPT.MkCharacteristicPT count (Quantity.Type.Arithmetic (Arithmetic.Plus (Plus.MkPlus (Quantity.Type.Literal 1) count)))))
+  Spec.it s "CR 613.4a no P/T value exists before layer 7a applies one" $ do
+    -- The seed evaluates the printed Star, which is deliberately Nothing.
+    tarmogoyf <- S.printingOf s registry "Tarmogoyf"
+    let gs0 = Setup.emptyGame S.bothPlayers
+        (goyfId, gs) = S.addPermanent tarmogoyf S.alice gs0
+        seeded = Projection.baseCharacteristics goyfId gs
+    Spec.assertEqWith s "no seeded power" (PC.power seeded) Nothing
+    Spec.assertEqWith s "no seeded toughness" (PC.toughness seeded) Nothing
+  Spec.it s "an ordinary card has no CDA" $ do
+    piker <- S.printingOf s registry "Goblin Piker"
+    let gs0 = Setup.emptyGame S.bothPlayers
+        (pikerId, gs) = S.addPermanent piker S.alice gs0
+    Spec.assertEqWith s "none" (PC.characteristicPT (Projection.baseCharacteristics pikerId gs)) Nothing
+  Spec.it s "CR 208.2a 2007-10-01 the CDA works in all zones, and a Goyf in a graveyard counts itself" $ do
+    -- Gatherer ruling on Tarmogoyf (WotC, 2007-10-01): "The ability that
+    -- defines Tarmogoyf's power and toughness works in all zones, not just
+    -- the battlefield. If Tarmogoyf is in your graveyard, it will count
+    -- itself." CR 604.3 says a CDA functions in all zones, and CR 208.2a
+    -- repeats it for P/T. This is the assertion that a gather-based
+    -- implementation cannot make: gather only walks the battlefield.
+    tarmogoyf <- S.printingOf s registry "Tarmogoyf"
+    let gs0 = Setup.emptyGame S.bothPlayers
+        (goyfId, gs) = S.addGraveyardCard tarmogoyf S.alice gs0
+    Spec.assertEqWith s "the Goyf in the graveyard is a creature card, so power 1" (Projection.powerOf goyfId gs) (Just 1)
+    Spec.assertEqWith s "1+1 toughness" (Projection.toughnessOf goyfId gs) (Just 2)
+  Spec.it s "CR 613.4a/613.4c layer 7a runs before 7c, so a counter adds to the CDA" $ do
+    lightningBolt <- S.printingOf s registry "Lightning Bolt"
+    tarmogoyf <- S.printingOf s registry "Tarmogoyf"
+    let gs0 = Setup.emptyGame S.bothPlayers
+        (_, withCard) = S.addGraveyardCard lightningBolt S.alice gs0
+        (goyfId, board) = S.addPermanent tarmogoyf S.alice withCard
+        gs = S.addCounter CounterKind.PlusOnePlusOne 1 goyfId board
+    Spec.assertEqWith s "1 card type + 1 counter" (Projection.powerOf goyfId gs) (Just 2)
+    Spec.assertEqWith s "1+1 toughness + 1 counter" (Projection.toughnessOf goyfId gs) (Just 3)
+  Spec.it s "CR 604.3 Humility removes the CDA, and a Humility'd Tarmogoyf is 1/1" $ do
+    -- NON-DISTINGUISHING BY CONSTRUCTION, and deliberately kept anyway.
+    -- Humility is layer 6 (LoseAllAbilities) AND layer 7b (base P/T 1/1), and
+    -- 7b overwrites 7a either way -- so this test passes whether or not
+    -- LoseAllAbilities clears characteristicPT. It is here because "a
+    -- Humility'd Tarmogoyf is 1/1" is a real ruling worth pinning, not because
+    -- it proves the clearing.
+    --
+    -- What WOULD distinguish: a "loses all abilities" card that does not also
+    -- set P/T. Attachment itself has landed (Parun.Types.Object.attachedTo,
+    -- Affected.Attached), but the Darksteel Mutation family still needs
+    -- layer-4 card-type REPLACEMENT (turning the enchanted creature into a
+    -- 0/0), which does not exist yet; Soul Sculptor needs the same
+    -- layer-4 REPLACEMENT; Dress Down needs Flash, a beginning-of-end-step
+    -- trigger (P4) and Sacrifice. See the P3b spec, section 8.
+    lightningBolt <- S.printingOf s registry "Lightning Bolt"
+    tarmogoyf <- S.printingOf s registry "Tarmogoyf"
+    humility <- S.printingOf s registry "Humility"
+    let gs0 = Setup.emptyGame S.bothPlayers
+        (_, withBolt) = S.addGraveyardCard lightningBolt S.alice gs0
+        (goyfId, board) = S.addPermanent tarmogoyf S.alice withBolt
+        gs = S.withHumility humility board
+    Spec.assertEqWith s "1 power" (Projection.powerOf goyfId gs) (Just 1)
+    Spec.assertEqWith s "1 toughness" (Projection.toughnessOf goyfId gs) (Just 1)
+  Spec.it s "CR 604.3 LoseAllAbilities clears the CDA from the projected characteristics" $ do
+    -- The clearing itself, asserted directly on the projection rather than
+    -- through P/T -- the only channel through which it IS observable today.
+    tarmogoyf <- S.printingOf s registry "Tarmogoyf"
+    humility <- S.printingOf s registry "Humility"
+    let gs0 = Setup.emptyGame S.bothPlayers
+        (goyfId, board) = S.addPermanent tarmogoyf S.alice gs0
+        gs = S.withHumility humility board
+    Spec.assertEqWith s "no CDA survives layer 6" (PC.characteristicPT (Projection.project goyfId gs)) Nothing
+  Spec.it s "CR 611.2 the freeze does NOT reach a static ability's continuous effect" $ do
+    -- Opalescence's SetBasePowerToughness carries ManaValue, and CR 611.2 scopes
+    -- the freeze to effects created by a spell's RESOLUTION. A static ability's
+    -- effect is regenerated from the permanent every projection and evaluated
+    -- per AFFECTED object. Were ManaValue frozen against the wrong object, this
+    -- would evaluate against Opalescence itself (mana value 4, from {2}{W}{W}),
+    -- not Bad Moon's own (mana value 2, from {1}{B}).
+    --
+    -- The expected 3/3, not the naively-expected 2/2: Opalescence's layer 7b
+    -- sets Bad Moon's base to 2/2 (its own mana value), but layer 4 also makes
+    -- Bad Moon itself a black creature -- and Bad Moon's own oracle text,
+    -- "Black creatures get +1/+1", carries no "other" exclusion (unlike a lord
+    -- effect), so its layer 7c ModifyPowerToughness applies to ITSELF too.
+    -- Verified directly (not from recall): docs/rules.txt has no CR 613 clause
+    -- excluding a source from its own static ability. 3/3 is still nowhere
+    -- near the 5/5 a ManaValue-against-Opalescence leak would produce (4/4
+    -- base + Bad Moon's own +1/+1), so the falsifier still distinguishes.
+    opalescence <- S.printingOf s registry "Opalescence"
+    badMoon <- S.printingOf s registry "Bad Moon"
+    let gs0 = Setup.emptyGame S.bothPlayers
+        (_, withOpal) = S.addPermanent opalescence S.alice gs0
+        (moonId, gs) = S.addPermanent badMoon S.alice withOpal
+    Spec.assertEqWith s "Bad Moon's own mana value (2) plus its own +1/+1, not Opalescence's mana value (4)" (Projection.powerOf moonId gs) (Just 3)
+    Spec.assertEqWith s "and its toughness is 3" (Projection.toughnessOf moonId gs) (Just 3)
+  Spec.it s "CR 613.4d the switch takes the value AFTER layers 7a-7c" $ do
+    -- THE ORDERING FALSIFIER, and the reason Tarmogoyf and Twisted Image are in
+    -- the same phase: a symmetric fixture (a +1/+1 counter, Giant Growth)
+    -- COMMUTES with the switch and proves nothing. Tarmogoyf's N/N+1 is the
+    -- pool's only asymmetric P/T, so it is the only thing that can witness the
+    -- order. Two card types in graveyards -> a 2/3 -> switched, a 3/2.
+    -- Switching before 7a would switch Nothing/Nothing and the CDA would then
+    -- write 2/3 straight back over it.
+    island <- S.printingOf s registry "Island"
+    lightningBolt <- S.printingOf s registry "Lightning Bolt"
+    piker <- S.printingOf s registry "Goblin Piker"
+    tarmogoyf <- S.printingOf s registry "Tarmogoyf"
+    twistedImage <- S.printingOf s registry "Twisted Image"
+    let base = S.landsInPlay island 1
+        (_, g1) = S.addGraveyardCard lightningBolt S.alice base
+        (_, g2) = S.addGraveyardCard piker S.alice g1
+        (goyfId, board) = S.addPermanent tarmogoyf S.alice g2
+        (gs, tiId) = S.handOne twistedImage board
+        cast = snd (Engine.runGamePure S.identityAnswer gs (S.cast S.alice tiId))
+        after = snd (Engine.runGamePure S.identityAnswer cast Stack.resolveTop)
+    Spec.assertEqWith s "before: a 2/3" (Projection.powerOf goyfId board) (Just 2)
+    Spec.assertEqWith s "before: toughness 3" (Projection.toughnessOf goyfId board) (Just 3)
+    Spec.assertEqWith s "after: power is the old toughness" (Projection.powerOf goyfId after) (Just 3)
+    Spec.assertEqWith s "after: toughness is the old power" (Projection.toughnessOf goyfId after) (Just 2)
+  Spec.it s "CR 613.4d a switched CDA still tracks the graveyards" $ do
+    -- After the switch, a THIRD distinct card type lands in a graveyard, and
+    -- the Goyf's CDA (still recomputed live every projection, CR 604.3) must
+    -- pick it up underneath the still-active switch. Divination (Sorcery), not
+    -- Giant Growth: Giant Growth is an Instant, the same type Lightning Bolt
+    -- already contributed, so it would add no NEW type and this fixture would
+    -- silently test nothing beyond the previous case.
+    island <- S.printingOf s registry "Island"
+    lightningBolt <- S.printingOf s registry "Lightning Bolt"
+    piker <- S.printingOf s registry "Goblin Piker"
+    tarmogoyf <- S.printingOf s registry "Tarmogoyf"
+    twistedImage <- S.printingOf s registry "Twisted Image"
+    divination <- S.printingOf s registry "Divination"
+    let base = S.landsInPlay island 1
+        (_, g1) = S.addGraveyardCard lightningBolt S.alice base
+        (_, g2) = S.addGraveyardCard piker S.alice g1
+        (goyfId, board) = S.addPermanent tarmogoyf S.alice g2
+        (gs, tiId) = S.handOne twistedImage board
+        cast = snd (Engine.runGamePure S.identityAnswer gs (S.cast S.alice tiId))
+        after = snd (Engine.runGamePure S.identityAnswer cast Stack.resolveTop)
+        (_, later) = S.addGraveyardCard divination S.bob after
+    Spec.assertEqWith s "a third card type: 3/4 switched is 4/3, power" (Projection.powerOf goyfId later) (Just 4)
+    Spec.assertEqWith s "and toughness" (Projection.toughnessOf goyfId later) (Just 3)
+  Spec.it s "CR 613.4d 2021-03-19 the switch applies last regardless of WHEN it began" $ do
+    -- Gatherer ruling on Twisted Image (WotC, 2021-03-19): "Effects that switch
+    -- a creature's power and toughness apply after all other effects,
+    -- REGARDLESS OF WHEN THOSE EFFECTS BEGAN TO APPLY. For instance, if you
+    -- target a 1/2 creature then give it +2/+0 later in the turn, it's a 2/3
+    -- creature, not a 4/1 creature."
+    --
+    -- The switch is installed FIRST (earlier timestamp) and the pump SECOND, so
+    -- a timestamp-ordered implementation would switch then pump. Layer order
+    -- (CR 613.4c before 613.4d) must beat timestamp order. The pump is +2/+0 --
+    -- ASYMMETRIC, per the ruling's own example, because a symmetric one cannot
+    -- tell the two orders apart.
+    --
+    -- Goblin Piker is 2/1. Correct: 7c gives 4/1, 7d switches to 1/4.
+    -- Timestamp-ordered: switch gives 1/2, then the pump gives 3/2.
+    piker <- S.printingOf s registry "Goblin Piker"
+    let gs0 = Setup.emptyGame S.bothPlayers
+        (pikerId, board) = S.addPermanent piker S.alice gs0
+        switched = S.withEffect pikerId Modification.SwitchPowerToughness board
+        gs = S.withEffect pikerId (Modification.ModifyPowerToughness (ModifyPowerToughness.MkModifyPowerToughness (Quantity.Type.Literal 2) (Quantity.Type.Literal 0))) switched
+    Spec.assertEqWith s "power is the pumped toughness" (Projection.powerOf pikerId gs) (Just 1)
+    Spec.assertEqWith s "toughness is the pumped power" (Projection.toughnessOf pikerId gs) (Just 4)
+  Spec.it s "CR 613.4d 2021-03-19 two switches return the object to normal" $ do
+    piker <- S.printingOf s registry "Goblin Piker"
+    let gs0 = Setup.emptyGame S.bothPlayers
+        (pikerId, board) = S.addPermanent piker S.alice gs0
+        once = S.withEffect pikerId Modification.SwitchPowerToughness board
+        twice = S.withEffect pikerId Modification.SwitchPowerToughness once
+    Spec.assertEqWith s "once: the 2/1 is a 1/2" (Projection.powerOf pikerId once) (Just 1)
+    Spec.assertEqWith s "twice: back to 2" (Projection.powerOf pikerId twice) (Just 2)
+    Spec.assertEqWith s "twice: back to 1 toughness" (Projection.toughnessOf pikerId twice) (Just 1)
+  Spec.it s "CR 208.2a Nightmare counts the Swamps you control" $ do
+    swamp <- S.printingOf s registry "Swamp"
+    nightmare <- S.printingOf s registry "Nightmare"
+    let gs0 = Setup.emptyGame S.bothPlayers
+        (_, gs1) = S.addPermanent swamp S.alice gs0
+        (_, gs2) = S.addPermanent swamp S.alice gs1
+        (_, gs3) = S.addPermanent swamp S.bob gs2
+        (nightId, gs) = S.addPermanent nightmare S.alice gs3
+    Spec.assertEqWith s "power" (Projection.powerOf nightId gs) (Just 2)
+    Spec.assertEqWith s "toughness" (Projection.toughnessOf nightId gs) (Just 2)
+  Spec.it s "CR 613.1d Urborg makes every land a Swamp, and Nightmare counts them" $ do
+    -- THE FALSIFIER for a printed-type count. Nothing touches the Nightmare;
+    -- its power moves because a layer-4 type-changer entered.
+    mountain <- S.printingOf s registry "Mountain"
+    forest <- S.printingOf s registry "Forest"
+    nightmare <- S.printingOf s registry "Nightmare"
+    urborg <- S.printingOf s registry "Urborg, Tomb of Yawgmoth"
+    let gs0 = Setup.emptyGame S.bothPlayers
+        (_, gs1) = S.addPermanent mountain S.alice gs0
+        (_, gs2) = S.addPermanent forest S.alice gs1
+        (nightId, gs3) = S.addPermanent nightmare S.alice gs2
+        (_, gs) = S.addPermanent urborg S.alice gs3
+    Spec.assertEqWith s "both lands are Swamps, plus Urborg itself (IncludesSource): 3" (Projection.powerOf nightId gs) (Just 3)
+  Spec.it s "CR 613.5 a Swamp entering or leaving moves the P/T on the next projection" $ do
+    -- CR 613.5: continuous application is automatic -- nothing touches
+    -- Nightmare when a Swamp enters or leaves, only the next projection's
+    -- read of the battlefield. The Swamp leaves through Event.changeZone --
+    -- the same zone-change machinery a real destroy, sacrifice, or bounce
+    -- runs, which mints the departing permanent a fresh object id in its
+    -- new zone (CR 400.7) -- rather than by deleting it out of
+    -- GameState.objects directly, a state the engine itself never
+    -- produces.
+    nightmare <- S.printingOf s registry "Nightmare"
+    swamp <- S.printingOf s registry "Swamp"
+    let gs0 = Setup.emptyGame S.bothPlayers
+        (nightId, g1) = S.addPermanent nightmare S.alice gs0
+        (_, g2) = S.addPermanent swamp S.alice g1
+        (swamp2, g3) = S.addPermanent swamp S.alice g2
+        g4 = snd (Engine.runGamePure S.identityAnswer g3 (Event.changeZone swamp2 Zone.Graveyard))
+    Spec.assertEqWith s "one Swamp: power 1" (Projection.powerOf nightId g2) (Just 1)
+    Spec.assertEqWith s "a second Swamp enters: power 2" (Projection.powerOf nightId g3) (Just 2)
+    Spec.assertEqWith s "it leaves again: power back to 1" (Projection.powerOf nightId g4) (Just 1)
+  Spec.it s "CR 613.1d/305.7 Blood Moon strips Urborg's own Swamp-granting ability" $ do
+    -- Urborg enters first (earlier timestamp) and swamps itself; Blood Moon
+    -- enters second and SETS its subtype to Mountain. CR 305.7: a land whose
+    -- subtype is SET to a basic type loses every ability generated by its
+    -- rules text -- including Urborg's OWN "every land is a Swamp" ability.
+    -- Parun.Engine.Projection.liveGiven excludes that ability from `gather`
+    -- entirely (reading BASE characteristics, not a timestamp race), so Urborg
+    -- ends up a bare Mountain with nothing left for Nightmare to count.
+    --
+    -- THE POSITIVE CONTROL: a basic Swamp sits on the board alongside
+    -- Urborg. Blood Moon's own filter is land-and-NOT-basic, so the basic
+    -- Swamp is untouched by it and stays a Swamp. A count that never really
+    -- matches HasSubtype, or a land-subtype effect that (wrongly)
+    -- suppresses every permanent's static abilities, would return 0 here
+    -- exactly as a correct implementation returns for Urborg alone -- only
+    -- a count that genuinely sees the basic Swamp reaches 1.
+    nightmare <- S.printingOf s registry "Nightmare"
+    swamp <- S.printingOf s registry "Swamp"
+    urborg <- S.printingOf s registry "Urborg, Tomb of Yawgmoth"
+    bloodMoon <- S.printingOf s registry "Blood Moon"
+    let gs0 = Setup.emptyGame S.bothPlayers
+        (nightId, g1) = S.addPermanent nightmare S.alice gs0
+        (_, g2) = S.addPermanent swamp S.alice g1
+        (_, g3) = S.addPermanent urborg S.alice g2
+        (_, gs) = S.addPermanent bloodMoon S.alice g3
+    Spec.assertEqWith s "Urborg is a bare Mountain now; only the basic Swamp remains" (Projection.powerOf nightId gs) (Just 1)
+  Spec.it s "CR 305.7 the outcome does not depend on entry order" $ do
+    -- THE FALSIFIER for a naive per-layer TIMESTAMP-ONLY implementation: the
+    -- previous test's order reversed -- Blood Moon enters FIRST, Urborg
+    -- SECOND. A plain CR 613.7 timestamp fold would apply Urborg's LATER
+    -- AddLandSubtype Swamp after Blood Moon's SetLandSubtype Mountain and
+    -- get a Swamp back (Mountain AND Swamp). Parun instead gates Urborg's own
+    -- ability on CR 305.7 liveness read against BASE characteristics
+    -- (Parun.Engine.Projection.liveGiven), which does not depend on timestamps at
+    -- all, so the result matches the previous test regardless of order.
+    --
+    -- This pair is NOT actually a CR 613.7 timestamp race: it is CR 613.8
+    -- dependency, and the dependency runs only one way, so order was never
+    -- going to matter here regardless of how Parun is built. By CR 613.8a,
+    -- Urborg's AddLandSubtype effect DEPENDS ON Blood Moon's SetLandSubtype
+    -- effect -- applying Blood Moon changes the EXISTENCE of Urborg's
+    -- effect, because CR 305.7 strips every ability generated by a land's
+    -- own rules text (Urborg's Swamp-granting ability included) the moment
+    -- that land's subtype is SET to a basic type. Blood Moon's effect does
+    -- NOT depend on Urborg's: Blood Moon's filter excludes "basic" lands,
+    -- and "basic" is a supertype (CR 205.4a), which an AddLandSubtype
+    -- effect cannot add or remove (CR 305.7's own text: "doesn't add or
+    -- remove any card types ... or supertypes"), so nothing Urborg does can
+    -- change what Blood Moon's filter matches. Per CR 613.8b, a dependent
+    -- effect waits to apply until just after the effect(s) it depends on
+    -- have applied -- so Blood Moon applies first regardless of timestamps,
+    -- and Urborg's ability is already dead by the time it would otherwise
+    -- run. Note which mechanism carries this pair: the EXISTENCE half of CR
+    -- 613.8a clause (b), which lives in the dedicated CR 305.7 liveness gate,
+    -- not the applies-to reorder in projectWith. The reorder would not save
+    -- it -- by the time it ran, Urborg's ability would have to still exist to
+    -- be ordered at all.
+    --
+    -- THE POSITIVE CONTROL, as in the previous test: a basic Swamp sits
+    -- alongside the other two permanents. It is immune to Blood Moon (which
+    -- excludes basic lands), so it stays a Swamp and keeps the count off a
+    -- vacuous 0.
+    nightmare <- S.printingOf s registry "Nightmare"
+    swamp <- S.printingOf s registry "Swamp"
+    bloodMoon <- S.printingOf s registry "Blood Moon"
+    urborg <- S.printingOf s registry "Urborg, Tomb of Yawgmoth"
+    let gs0 = Setup.emptyGame S.bothPlayers
+        (nightId, g1) = S.addPermanent nightmare S.alice gs0
+        (_, g2) = S.addPermanent swamp S.alice g1
+        (_, g3) = S.addPermanent bloodMoon S.alice g2
+        (_, gs) = S.addPermanent urborg S.alice g3
+    Spec.assertEqWith s "still 1: order does not matter" (Projection.powerOf nightId gs) (Just 1)
+  Spec.it s "CR 604.3 Humility erases the CDA, and a Humility'd Nightmare is 1/1" $ do
+    -- NON-DISTINGUISHING BY CONSTRUCTION, same shape as the Tarmogoyf
+    -- Humility test above. Humility is layer 6 (LoseAllAbilities) AND
+    -- layer 7b (SetBasePowerToughness 1/1), and 7b would overwrite
+    -- whatever the CDA leaves behind regardless of whether 6 actually ran
+    -- first -- so the power/toughness assertions below cannot show that
+    -- layer 6 ran BEFORE layer 7a; only the CDA-clearing assertion can.
+    -- And even that one proves the clearing happened, not an ordering:
+    -- `characteristicPT` is populated once from the seed and is untouched
+    -- by SetBasePowerToughness (which writes only PC.power/PC.toughness),
+    -- so `Nothing` here means LoseAllAbilities actually cleared it, not
+    -- that some later step merely hid a CDA that was still there. With
+    -- layer 7b setting a P/T either way, no ordering between "cleared" and
+    -- "never ran" is directly observable from this fixture -- only the
+    -- clearing itself is, and that is all this test claims.
+    swamp <- S.printingOf s registry "Swamp"
+    nightmare <- S.printingOf s registry "Nightmare"
+    humility <- S.printingOf s registry "Humility"
+    let gs0 = Setup.emptyGame S.bothPlayers
+        (_, g1) = S.addPermanent swamp S.alice gs0
+        (_, g2) = S.addPermanent swamp S.alice g1
+        (nightId, g3) = S.addPermanent nightmare S.alice g2
+        gs = S.withHumility humility g3
+    Spec.assertEqWith s "no CDA survives layer 6" (PC.characteristicPT (Projection.project nightId gs)) Nothing
+    Spec.assertEqWith s "1 power" (Projection.powerOf nightId gs) (Just 1)
+    Spec.assertEqWith s "1 toughness" (Projection.toughnessOf nightId gs) (Just 1)
+  Spec.it s "CR 303.4m: an attached Unholy Strength gives the enchanted creature +2/+1" $ do
+    piker <- S.printingOf s registry "Goblin Piker"
+    unholyStrength <- S.printingOf s registry "Unholy Strength"
+    let base = Setup.emptyGame S.bothPlayers
+        -- Goblin Piker is a 2/1.
+        (creature, withCreature) = S.addPermanent piker S.bob base
+        (aura, withAura) = S.addPermanent unholyStrength S.alice withCreature
+        attached = S.attach aura creature withAura
+    Spec.assertEqWith s "unattached, the ability names nothing" (Projection.powerOf creature withAura, Projection.toughnessOf creature withAura) (Just 2, Just 1)
+    Spec.assertEqWith s "attached, +2/+1" (Projection.powerOf creature attached, Projection.toughnessOf creature attached) (Just 4, Just 2)
+  -- CR 208.2a's last sentence: "If the ability needs to use a number that can't
+  -- be determined, including inside a calculation, use 0 instead of that
+  -- number." Monstrous War-Leech's power and toughness are each the greatest
+  -- mana value among cards in YOUR graveyard, and an empty graveyard has no
+  -- greatest -- Parun.Engine.Count.aggregate says so, honestly, with Nothing.
+  -- The number cannot be determined, so the CDA uses 0.
+  --
+  -- Monstrous War-Leech's other two sentences -- its kicker and the as-enters
+  -- mill that kicking turns on -- are modelled, and Parun.ReplacementSpec's
+  -- "Monstrous War-Leech" group proves them. They stay out of these fixtures'
+  -- way regardless: two of the three build the permanent directly rather than
+  -- casting a spell, and the third has no blue mana, so no kicker is on offer and
+  -- the graveyard these fixtures read is only ever the one they set up.
+  Spec.it s "CR 208.2a an undeterminable CDA number is 0: an empty graveyard makes the Leech a 0/0" $ do
+    leech <- S.printingOf s registry "Monstrous War-Leech"
+    let gs0 = Setup.emptyGame S.bothPlayers
+        (leechId, gs) = S.addPermanent leech S.alice gs0
+    Spec.assertEqWith s "0 power, not absent" (Projection.powerOf leechId gs) (Just 0)
+    Spec.assertEqWith s "0 toughness, not absent" (Projection.toughnessOf leechId gs) (Just 0)
+  Spec.it s "CR 208.2a only the undeterminable number is replaced: one Lightning Bolt in the graveyard makes it 1/1" $ do
+    -- The other side of the same fixture, so the 0/0 above is the RULE and not
+    -- a CDA that never computes anything: Lightning Bolt's mana value is 1
+    -- (CR 202.3), so the greatest among a one-card graveyard is 1.
+    lightningBolt <- S.printingOf s registry "Lightning Bolt"
+    leech <- S.printingOf s registry "Monstrous War-Leech"
+    let gs0 = Setup.emptyGame S.bothPlayers
+        (_, withBolt) = S.addGraveyardCard lightningBolt S.alice gs0
+        (leechId, gs) = S.addPermanent leech S.alice withBolt
+    Spec.assertEqWith s "1 power" (Projection.powerOf leechId gs) (Just 1)
+    Spec.assertEqWith s "1 toughness" (Projection.toughnessOf leechId gs) (Just 1)
+  omnathSpec s registry
+  serraAvatarSpec s registry
+  brightspearZealotSpec s registry
+  kirdApeSpec s registry
+  knightOfGraceSpec s registry
+  knightOfMaliceSpec s registry
+  woodElementalSpec s registry
+  handOfThePraetorsSpec s registry
+  ashayaBloodMoonSpec s registry
+  witheringComparisonSpec s registry
+  gloriousAnthemAshayaSpec s registry
+  witheringAnthemSpec s registry
+  malignusSpec s registry
+  fortifyingDraughtSpec s registry
+  ingesterSpec s registry
+  livingLoreSpec s registry
+  suturedGhoulSpec s registry
+  unleashFurySpec s registry
+  attachedToEachSpec s registry
+
+-- CR 208.5: "If a creature somehow has no value for its power, its power is 0.
+-- The same is true for toughness."
+--
+-- Ashaya, Soul of the Wild ({3}{G}{G} Legendary Creature -- Elemental, printed
+-- \*/*), whole text: "Ashaya, Soul of the Wild's power and toughness are each
+-- equal to the number of lands you control. Each nontoken creature you control
+-- is a Forest land in addition to its other types." Blood Moon ({2}{R}
+-- Enchantment), whole text: "Nonbasic lands are Mountains." Oracle text for
+-- both verified against Scryfall.
+--
+-- It takes both cards to reach the rule at all, and the path runs through
+-- Ashaya's SECOND sentence pointed at herself: she is a nontoken creature her
+-- controller controls, so she makes herself a Forest land -- a land with no
+-- Basic supertype, which is what Blood Moon's "nonbasic" means (CR 205.4a).
+-- Blood Moon then sets that land's subtype, and CR 305.7's "it loses all
+-- abilities generated from its rules text" takes her characteristic-defining
+-- ability (CR 604.3 makes a CDA a static ability like any other) -- which was
+-- her only source of a P/T value, the printed box being a star.
+--
+-- She is still a creature afterwards: CR 305.7's "Setting a land's subtype
+-- doesn't add or remove any card types (such as creature)". So the state is
+-- exactly rule 208.5's premise -- a creature with no value for its power --
+-- and 0 rather than blank is what CR 704.5f then acts on.
+--
+-- Goblin Piker rides along as the control. Blood Moon makes it a Mountain too
+-- (Ashaya made it a land as well), but its 2/1 is PRINTED rather than defined
+-- by an ability, so CR 305.7 leaves the numbers alone and rule 208.5 never
+-- reaches it. Its 2 is also the one number on this board that no other
+-- assertion's expected value could be confused with.
+ashayaBloodMoonSpec :: (Monad m) => Spec.Spec m n -> Registry.Registry m -> n ()
+ashayaBloodMoonSpec s registry = Spec.describe s "Ashaya, Soul of the Wild under Blood Moon" $ do
+  -- The fixture's live half: with the CDA intact Ashaya counts five lands --
+  -- three Mountains, herself, and the Piker she animated -- so a 5/5 here is
+  -- what makes the 0/0 below a change rather than a fixture that never worked.
+  Spec.it s "CR 604.3 before Blood Moon, Ashaya's CDA counts the lands she makes: 5/5" $ do
+    (_, ashayaId, pikerId, gs) <- ashayaBoard s registry
+    Spec.assertEqWith s "three Mountains, Ashaya and the Piker" (S.powerToughnessOf ashayaId gs) (Just (5, 5))
+    Spec.assertEqWith s "the Piker keeps its printed box" (S.powerToughnessOf pikerId gs) (Just (2, 1))
+
+-- alice, with three untapped Mountains, Ashaya and a Goblin Piker on the
+-- battlefield and Blood Moon in hand. Mountains rather than the Forests
+-- Ashaya's ability names: they pay Blood Moon's {2}{R}, and being BASIC they
+-- are the half of the board Blood Moon does not touch.
+ashayaBoard ::
+  (Monad m) =>
+  Spec.Spec m n ->
+  Registry.Registry m ->
+  m (ObjectId.ObjectId, ObjectId.ObjectId, ObjectId.ObjectId, GameState.GameState)
+ashayaBoard s registry = do
+  mountain <- S.printingOf s registry "Mountain"
+  piker <- S.printingOf s registry "Goblin Piker"
+  ashaya <- S.printingOf s registry "Ashaya, Soul of the Wild"
+  bloodMoon <- S.printingOf s registry "Blood Moon"
+  let (ashayaId, g1) = S.addPermanent ashaya S.alice (S.landsInPlay mountain 3)
+      (pikerId, g2) = S.addPermanent piker S.alice g1
+      (gs, bloodMoonId) = S.handOne bloodMoon g2
+  pure (bloodMoonId, ashayaId, pikerId, gs)
+
+-- CR 208.5 asked of a MID-FOLD view rather than of the finished one. Rule 613
+-- lets an effect's magnitude be a count, and CR 613 puts no bound on the state
+-- that count is computed from, so a count taken while layer 7c is being applied
+-- reads the same creature the rule above describes -- one whose only source of a
+-- P/T value CR 305.7 stripped. The finished fold answered 0 there long before
+-- this; the fold's own view answered "no value", and the two disagreeing is the
+-- defect.
+--
+-- The sublayer is what makes the question askable. Below CR 613.4a's layer 7a
+-- every star creature is legitimately without a value, so substituting 0 there
+-- would report it for all of them; from layer 7b on, whether the creature has one
+-- is settled. Projection.noValueAt is that gate, and CR 613.1's order is Layer's
+-- derived Ord.
+--
+-- Synthetic Withering Comparison, {2}{B} Enchantment, whole text: "Creatures your
+-- opponents control get -X/-X, where X is the greatest power among Mountain
+-- creatures you control." Synthetic because no printed card puts a P/T read
+-- inside the layer fold: every printed "greatest power" reader is a resolving
+-- spell's X, which CR 608.2h freezes at resolution and never re-reads. Nothing in
+-- the CR forbids the card -- CR 613.4c is an ordinary layer-7c modification and
+-- CR 613.8a clause (b) is what orders its magnitude.
+--
+-- Blood Moon is what makes the count's members Mountains at all, so before it
+-- resolves the count folds over an EMPTY set. Count.evaluate answers Nothing
+-- there, exactly as it does for a set holding a member with no value -- which is
+-- why the case below reads the board before and after rather than trusting one
+-- state.
+witheringComparisonSpec :: (Monad m, Monad n) => Spec.Spec m n -> Registry.Registry m -> n ()
+witheringComparisonSpec s registry = Spec.describe s "CR 208.5 inside the layer fold" $ do
+  -- The fixture's live half. No creature alice controls is a Mountain yet -- they
+  -- are Forests, by Ashaya's second sentence -- so the count is over nothing,
+  -- answers Nothing, and bob's Piker keeps its printed 2/1. Ashaya's own 5/5 says
+  -- her characteristic-defining ability is still there to be stripped.
+  Spec.it s "CR 604.3 before Blood Moon the count folds over no Mountain creature" $ do
+    (_, ashayaId, giantId, pikerId, gs) <- witheringBoard s registry
+    Spec.assertEqWith s "three Mountains, Ashaya and the Giant" (S.powerToughnessOf ashayaId gs) (Just (5, 5))
+    Spec.assertEqWith s "the Giant keeps its printed box" (S.powerToughnessOf giantId gs) (Just (3, 3))
+    Spec.assertEqWith s "bob's Piker is untouched" (S.powerToughnessOf pikerId gs) (Just (2, 1))
+  -- The magnitude itself, read before the state-based check that removes both
+  -- creatures: CR 613.4c wrote -3/-3, not merely "something lethal". Ashaya is
+  -- still there and still a 0/0, which is the reading the case above rests on.
+  Spec.it s "CR 613.4c the modification is the greatest power among them, Ashaya read as 0" $ do
+    (bloodMoonId, ashayaId, giantId, pikerId, gs) <- witheringBoard s registry
+    let resolved = S.runPure S.identityAnswer gs (S.cast S.alice bloodMoonId >> Stack.resolveTop)
+    Spec.assertEqWith s "bob's Piker took -3/-3" (S.powerToughnessOf pikerId resolved) (Just (-1, -2))
+    Spec.assertEqWith s "CR 208.5 Ashaya is a 0/0" (S.powerToughnessOf ashayaId resolved) (Just (0, 0))
+    Spec.assertEqWith s "alice's own Giant is not an opponent's creature" (S.powerToughnessOf giantId resolved) (Just (3, 3))
+
+-- alice, with three untapped Mountains, Ashaya, a Hill Giant (3/3, vanilla) and
+-- Synthetic Withering Comparison on the battlefield, and Blood Moon in hand; bob
+-- with a Goblin Piker (2/1, vanilla). Mountains rather than Forests for
+-- ashayaBoard's reason -- they pay Blood Moon's {2}{R} and are the basic half
+-- Blood Moon does not touch.
+--
+-- Three seats are not wanted here: the roles the count tells apart are the
+-- ability's own controller ("you") and its opponents, and one opponent settles
+-- both. The Giant rather than a second Piker so the greatest power (3) is not
+-- also bob's creature's power (2), and the shrunk toughness (-2) is not any
+-- printed number on the board.
+--
+-- Returns Blood Moon, Ashaya, the Giant, bob's Piker and the board.
+witheringBoard ::
+  (Monad m) =>
+  Spec.Spec m n ->
+  Registry.Registry m ->
+  m (ObjectId.ObjectId, ObjectId.ObjectId, ObjectId.ObjectId, ObjectId.ObjectId, GameState.GameState)
+witheringBoard s registry = do
+  mountain <- S.printingOf s registry "Mountain"
+  giant <- S.printingOf s registry "Hill Giant"
+  piker <- S.printingOf s registry "Goblin Piker"
+  ashaya <- S.printingOf s registry "Ashaya, Soul of the Wild"
+  bloodMoon <- S.printingOf s registry "Blood Moon"
+  comparison <- S.printingOf s registry "Synthetic Withering Comparison"
+  let (ashayaId, g1) = S.addPermanent ashaya S.alice (S.landsInPlay mountain 3)
+      (giantId, g2) = S.addPermanent giant S.alice g1
+      (_, g3) = S.addPermanent comparison S.alice g2
+      (pikerId, g4) = S.addPermanent piker S.bob g3
+      (gs, bloodMoonId) = S.handOne bloodMoon g4
+  pure (bloodMoonId, ashayaId, giantId, pikerId, gs)
+
+-- CR 613.4c's layer-7c modification of a creature CR 208.5 has already answered
+-- for. Same board as "Ashaya, Soul of the Wild under Blood Moon" above, plus
+-- Glorious Anthem ({1}{W}{W} Enchantment, whole text: "Creatures you control get
+-- +1/+1." Oracle text verified against Scryfall).
+--
+-- Rule 208.5 substitutes 0 for a creature that has no value for its power, and
+-- nothing in rule 613 makes a layer-7c modification skip such a creature: the
+-- anthem adds to the 0, so a stripped Ashaya is a 1/1 and CR 704.5f leaves her
+-- standing. Reading her as "no value" all the way through layer 7c instead
+-- discards the +1/+1 and substitutes 0 only afterwards, which buries her -- the
+-- board difference this case exists to falsify, and it is the SURVIVAL that is
+-- the gameplay-level claim.
+--
+-- The Piker is the guard against an anthem that pumps nothing: it is under the
+-- same Blood Moon, its 2/1 is printed rather than defined, and 3/2 is a pair no
+-- other permanent on this board wears.
+gloriousAnthemAshayaSpec :: (Monad m) => Spec.Spec m n -> Registry.Registry m -> n ()
+gloriousAnthemAshayaSpec s registry = Spec.describe s "Glorious Anthem on Ashaya under Blood Moon" $ do
+  -- The fixture's live half: before Blood Moon her characteristic-defining
+  -- ability is intact, counting three Mountains, herself and the Piker, and the
+  -- anthem is already adding its +1/+1 to both creatures. A 6/6 here is what
+  -- makes the 1/1 below a change rather than a fixture that never worked.
+  Spec.it s "CR 604.3/613.4c before Blood Moon the anthem adds to the CDA's 5/5" $ do
+    (_, ashayaId, pikerId, gs) <- anthemAshayaBoard s registry
+    Spec.assertEqWith s "five lands plus the anthem" (S.powerToughnessOf ashayaId gs) (Just (6, 6))
+    Spec.assertEqWith s "the Piker's printed 2/1 plus the anthem" (S.powerToughnessOf pikerId gs) (Just (3, 2))
+
+-- ashayaBoard plus Glorious Anthem on the battlefield. Returns Blood Moon,
+-- Ashaya, the Piker and the board.
+anthemAshayaBoard ::
+  (Monad m) =>
+  Spec.Spec m n ->
+  Registry.Registry m ->
+  m (ObjectId.ObjectId, ObjectId.ObjectId, ObjectId.ObjectId, GameState.GameState)
+anthemAshayaBoard s registry = do
+  mountain <- S.printingOf s registry "Mountain"
+  piker <- S.printingOf s registry "Goblin Piker"
+  ashaya <- S.printingOf s registry "Ashaya, Soul of the Wild"
+  bloodMoon <- S.printingOf s registry "Blood Moon"
+  anthem <- S.printingOf s registry "Glorious Anthem"
+  let (ashayaId, g1) = S.addPermanent ashaya S.alice (S.landsInPlay mountain 3)
+      (pikerId, g2) = S.addPermanent piker S.alice g1
+      (_, g3) = S.addPermanent anthem S.alice g2
+      (gs, bloodMoonId) = S.handOne bloodMoon g3
+  pure (bloodMoonId, ashayaId, pikerId, gs)
+
+-- The two units above composed: CR 613.4c's anthem and a same-layer count that
+-- reads the creature the anthem pumps. The count is taken MID-FOLD, off the
+-- running board's picture of the OTHER objects, so it exercises
+-- projectDeciding's `snapshot` rather than the `seeded` accumulator the case
+-- above proves.
+--
+-- witheringBoard's cards minus the Hill Giant, plus Glorious Anthem. Dropping
+-- the Giant is what makes the board discriminate: Ashaya has to BE the maximum
+-- the count reads, since with the Giant present its 3 dominates whatever Ashaya
+-- is read as and both readings agree.
+--
+-- CR 305.7 strips Ashaya's characteristic-defining ability, CR 208.5 makes her
+-- power 0, and CR 613.4c's anthem adds 1 -- on the count's picture of her as
+-- much as on her own, since rule 613 gives the two no different state. She is
+-- the only Mountain creature alice controls, so Synthetic Withering Comparison
+-- writes -1/-1, bob's Piker is a 1/0, and CR 704.5f buries it. Reading her as
+-- "no value" through layer 7c discards the anthem there and substitutes 0 only
+-- on the way out, which writes -0/-0 and leaves the Piker standing at 2/1 --
+-- the board difference this case exists to falsify.
+--
+-- CR 613.8a clause (b) is what orders the two: applying the anthem changes what
+-- the comparison does to the Piker, so the anthem goes first and the comparison
+-- reads her pumped power.
+witheringAnthemSpec :: (Monad m, Monad n) => Spec.Spec m n -> Registry.Registry m -> n ()
+witheringAnthemSpec s registry = Spec.describe s "CR 208.5 mid-fold under an anthem" $ do
+  -- The fixture's live half. Alice's four lands (three Mountains and Ashaya
+  -- herself, a Forest by her own second sentence) make her a 4/4, and the anthem
+  -- adds 1. No creature alice controls is a Mountain yet, so the count folds
+  -- over nothing and bob's Piker keeps its printed 2/1 -- the anthem is alice's,
+  -- so it never reaches him.
+  Spec.it s "CR 604.3 before Blood Moon the count folds over no Mountain creature" $ do
+    (_, ashayaId, pikerId, gs) <- witheringAnthemBoard s registry
+    Spec.assertEqWith s "four lands plus the anthem" (S.powerToughnessOf ashayaId gs) (Just (5, 5))
+    Spec.assertEqWith s "bob's Piker is untouched by alice's anthem" (S.powerToughnessOf pikerId gs) (Just (2, 1))
+  -- The magnitude itself, read before the state-based check removes the Piker:
+  -- CR 613.4c wrote -1/-1, not merely "something lethal". Ashaya's own 1/1 here
+  -- is what the count had to agree with.
+  Spec.it s "CR 613.4c the modification is Ashaya's pumped power, not her stripped one" $ do
+    (bloodMoonId, ashayaId, pikerId, gs) <- witheringAnthemBoard s registry
+    let resolved = S.runPure S.identityAnswer gs (S.cast S.alice bloodMoonId >> Stack.resolveTop)
+    Spec.assertEqWith s "bob's Piker took -1/-1" (S.powerToughnessOf pikerId resolved) (Just (1, 0))
+    Spec.assertEqWith s "CR 208.5 plus the anthem make Ashaya a 1/1" (S.powerToughnessOf ashayaId resolved) (Just (1, 1))
+
+-- alice, with three untapped Mountains, Ashaya, Glorious Anthem and Synthetic
+-- Withering Comparison on the battlefield, and Blood Moon in hand; bob with a
+-- Goblin Piker (2/1, vanilla). No Hill Giant, unlike witheringBoard: see
+-- witheringAnthemSpec.
+--
+-- Returns Blood Moon, Ashaya, bob's Piker and the board.
+witheringAnthemBoard ::
+  (Monad m) =>
+  Spec.Spec m n ->
+  Registry.Registry m ->
+  m (ObjectId.ObjectId, ObjectId.ObjectId, ObjectId.ObjectId, GameState.GameState)
+witheringAnthemBoard s registry = do
+  mountain <- S.printingOf s registry "Mountain"
+  piker <- S.printingOf s registry "Goblin Piker"
+  ashaya <- S.printingOf s registry "Ashaya, Soul of the Wild"
+  bloodMoon <- S.printingOf s registry "Blood Moon"
+  anthem <- S.printingOf s registry "Glorious Anthem"
+  comparison <- S.printingOf s registry "Synthetic Withering Comparison"
+  let (ashayaId, g1) = S.addPermanent ashaya S.alice (S.landsInPlay mountain 3)
+      (_, g2) = S.addPermanent anthem S.alice g1
+      (_, g3) = S.addPermanent comparison S.alice g2
+      (pikerId, g4) = S.addPermanent piker S.bob g3
+      (gs, bloodMoonId) = S.handOne bloodMoon g4
+  pure (bloodMoonId, ashayaId, pikerId, gs)
+
+-- CR 613.4c layer 7c, narrowed by a KEYWORD the affected object has: Hand of the
+-- Praetors, {3}{B} Creature -- Phyrexian Zombie 3/2, "Other creatures you
+-- control with infect get +1/+1."
+--
+-- Three narrowings in one printed line -- "other" (the ability's own source,
+-- excluded by Filter.Not Filter.IsSource), "you control" (CR 109.5's "you",
+-- which for a static ability is the current controller of the object it is on),
+-- and "with infect" (CR 702.90) -- and each case below moves exactly one, so an
+-- Affected filter that admitted every creature is distinguishable from one that
+-- reads all three.
+--
+-- Every printed box on the board is a different pair -- the Hand's 3/2, Glistener
+-- Elf's 1/1, Goblin Piker's 2/1 -- so no assertion's expected value is reachable
+-- by pumping the wrong creature.
+--
+-- The cast trigger on the same card is Parun.TriggerSpec's.
+handOfThePraetorsSpec :: (Monad m, Monad n) => Spec.Spec m n -> Registry.Registry m -> n ()
+handOfThePraetorsSpec s registry = Spec.describe s "Hand of the Praetors" $ do
+  -- THE case, and the "other" half beside it: the Elf grows and the Hand, which
+  -- also has infect and is also a creature alice controls, does not grow itself.
+  Spec.it s "CR 613.4c an infect creature you control gets +1/+1, and the Hand does not pump itself" $ do
+    hand <- S.printingOf s registry "Hand of the Praetors"
+    elf <- S.printingOf s registry "Glistener Elf"
+    let (elfId, alone) = S.addPermanent elf S.alice (Setup.emptyGame S.bothPlayers)
+        (handId, gs) = S.addPermanent hand S.alice alone
+    Spec.assertEqWith s "the Elf is its printed 1/1 with no Hand out" (S.powerToughnessOf elfId alone) (Just (1, 1))
+    Spec.assertEqWith s "and a 2/2 once the Hand is" (S.powerToughnessOf elfId gs) (Just (2, 2))
+    Spec.assertEqWith s "'other': the Hand stays its printed 3/2" (S.powerToughnessOf handId gs) (Just (3, 2))
+  -- The KEYWORD half, moved on its own: still a creature, still alice's, and
+  -- Goblin Piker (2/1, no keywords) is left alone.
+  Spec.it s "CR 702.90 a creature you control WITHOUT infect gets nothing" $ do
+    hand <- S.printingOf s registry "Hand of the Praetors"
+    piker <- S.printingOf s registry "Goblin Piker"
+    let (pikerId, withPiker) = S.addPermanent piker S.alice (Setup.emptyGame S.bothPlayers)
+        gs = snd (S.addPermanent hand S.alice withPiker)
+    Spec.assertEqWith s "the Piker is its printed 2/1" (S.powerToughnessOf pikerId gs) (Just (2, 1))
+  -- The CONTROLLER half, moved on its own: the same infect creature, on the same
+  -- shared battlefield (CR 400.1), under bob.
+  Spec.it s "CR 109.5 'you control': an opponent's infect creature is not pumped" $ do
+    hand <- S.printingOf s registry "Hand of the Praetors"
+    elf <- S.printingOf s registry "Glistener Elf"
+    let (bobsElf, withBobs) = S.addPermanent elf S.bob (Setup.emptyGame S.bothPlayers)
+        (alicesElf, withBoth) = S.addPermanent elf S.alice withBobs
+        gs = snd (S.addPermanent hand S.alice withBoth)
+    Spec.assertEqWith s "bob's Elf is its printed 1/1" (S.powerToughnessOf bobsElf gs) (Just (1, 1))
+    -- The positive control on the same board: alice's own copy of the very same
+    -- printing does grow, so the silence above is the controller and nothing else.
+    Spec.assertEqWith s "and alice's own copy is a 2/2" (S.powerToughnessOf alicesElf gs) (Just (2, 2))
+
+-- Wood Elemental ({3}{G} Creature -- Elemental, printed */*), whole text: "As
+-- this creature enters, sacrifice any number of untapped Forests." / "Wood
+-- Elemental's power and toughness are each equal to the number of Forests
+-- sacrificed as it entered." Oracle text verified against Scryfall.
+--
+-- The first CDA in the pool whose quantity is a Quantity.InSlot. That is the arm
+-- whose Nothing means "unanswered" outright: the entry replacement
+-- (EntryRewrite.SacrificeAnyNumber) stamps the count on the permanent it made,
+-- so an incarnation that never entered has nothing to read and CR 208.2a's last
+-- sentence -- "if the ability needs to use a number that can't be determined,
+-- including inside a calculation, use 0 instead of that number" -- supplies the
+-- 0. Parun.Engine.Quantity.determine is where that happens; the first test below
+-- is what proves it for this arm, as Monstrous War-Leech's empty graveyard above
+-- does for an Aggregation.Greatest over no candidates.
+--
+-- It is also the first card whose Filter reads CR 110.5's tap status
+-- (Filter.IsTapped, spelled `Not IsTapped` for "untapped").
+--
+-- The counter half of the same entry rewrite is Shimatsu the Bloodcloaked's, in
+-- data/scenarios/replacement/.
+woodElementalSpec :: (Monad m) => Spec.Spec m n -> Registry.Registry m -> n ()
+woodElementalSpec s registry = Spec.describe s "Wood Elemental" $ do
+  -- CR 604.3: a characteristic-defining ability functions in all zones, so the
+  -- card in hand has a power and a toughness to report -- and no number of
+  -- Forests sacrificed as it entered, because it has not entered. CR 208.2a
+  -- makes that 0 rather than leaving the box blank.
+  Spec.it s "CR 208.2a a Wood Elemental that has not entered has an undeterminable count, so it is 0/0" $ do
+    forest <- S.printingOf s registry "Forest"
+    woodElemental <- S.printingOf s registry "Wood Elemental"
+    let (gs, held) = S.handOne woodElemental (S.landsInPlay forest 8)
+    Spec.assertEqWith s "the seed is the slot the entry replacement fills" (PC.characteristicPT (Projection.baseCharacteristics held gs)) (Just (CharacteristicPT.MkCharacteristicPT sacrificedCount sacrificedCount))
+    Spec.assertEqWith s "0/0" (S.powerToughnessOf held gs) (Just (0, 0))
+
+-- Parun.Engine.Binding.sacrificedCount as a Quantity, which is what Wood
+-- Elemental's characteristicPT holds. Spelled out here rather than imported from
+-- the engine so the assertion is against the NAME the card data commits to.
+sacrificedCount :: Quantity.Type.Quantity
+sacrificedCount = Quantity.Type.InSlot (SlotName.MkSlotName (Text.pack "thatMany"))
+
+-- The newest battlefield permanent with this printed name -- ids ascend, and CR
+-- 400.7 mints a fresh one on every zone change, so the id a cast was handed
+-- names nothing on the battlefield.
+newestNamed :: String -> GameState.GameState -> Maybe ObjectId.ObjectId
+newestNamed wanted gs =
+  let named oid = fmap Face.name (Game.faceOf oid gs) == Just (CardName.MkCardName (Text.pack wanted))
+   in Maybe.listToMaybe (List.sortOn Ord.Down (filter named (Set.toList (GameState.battlefield gs))))
+
+-- Brightspear Zealot ({2}{W} Creature -- Human Soldier, printed 2/4): "Vigilance
+-- / This creature gets +2/+0 as long as you've cast two or more spells this
+-- turn." Oracle text checked 2026-09-11.
+--
+-- Kird Ape's clause over CR 601.2i's cast log rather than the battlefield: a
+-- Count over Scope.InHistory SpellCast, read live by CR 604.2. bob's cast is on
+-- the log beside alice's first, so an engine counting every caster's spells
+-- reads 4/4 before alice's second.
+brightspearZealotSpec :: (Monad m) => Spec.Spec m n -> Registry.Registry m -> n ()
+brightspearZealotSpec s registry =
+  Spec.describe s "Brightspear Zealot" . Spec.it s "CR 604.2 +2/+0 once YOU have cast two spells this turn, and an opponent's cast is not one" $ do
+    zealot <- S.printingOf s registry "Brightspear Zealot"
+    bolt <- S.printingOf s registry "Lightning Bolt"
+    mountain <- S.printingOf s registry "Mountain"
+    let lands = S.landsFor mountain S.bob 1 (S.landsFor mountain S.alice 2 (Setup.emptyGame S.bothPlayers))
+        (zealotId, g1) = S.addPermanent zealot S.alice lands
+        (first, g2) = S.addHandCard bolt S.alice g1
+        (second, g3) = S.addHandCard bolt S.alice g2
+        (bobs, g4) = S.addHandCard bolt S.bob g3
+        -- Every Bolt at bob, so no damage lands on the Zealot.
+        atPlayer :: Prompt.Prompt r -> r
+        atPlayer p = case p of
+          Prompt.ChooseTargets _ _ _ asked -> fmap (\(_, offered) -> Set.filter (== Recipient.ToPlayer S.bob) offered) asked
+          _ -> S.identityAnswer p
+        castBy pid oid gs = S.runPure atPlayer gs {GameState.priority = Just pid} (S.cast pid oid >> Stack.resolveTop)
+        oneEach = castBy S.bob bobs (castBy S.alice first g4)
+        twoOfAlices = castBy S.alice second oneEach
+    Spec.assertEqWith s "alice's one cast and bob's one: still 2/4" (S.powerToughnessOf zealotId oneEach) (Just (2, 4))
+    Spec.assertEqWith s "alice's second cast: 4/4" (S.powerToughnessOf zealotId twoOfAlices) (Just (4, 4))
+
+-- Kird Ape ({R} Creature -- Ape, printed 1/1), whole text: "This creature gets
+-- +1/+2 as long as you control a Forest." Oracle text verified against Scryfall.
+--
+-- CR 613.4c layer 7c, like Omnath's and unlike Serra Avatar's: the printed
+-- box is 1/1, so the pump is a modification rather than a characteristic-defining
+-- ability. What is new is the "as long as" clause -- the first
+-- StaticAbility.condition in the pool.
+--
+-- CR 604.1 makes a static ability "simply true" and CR 604.2 keeps its effect
+-- active while the permanent is on the battlefield and has the ability; the clause
+-- narrows that to while a Forest is also there. CR 613.5 is why every test below
+-- can assert two different answers on ONE board with nothing but a permanent
+-- moving in between: the layer system is "continually and automatically
+-- performed", so the modification stops and starts with no trigger, no resolution
+-- and no stored effect anywhere.
+--
+-- Deliberately NOT CR 611.2b's "for as long as" duration, which ends a stored
+-- effect once and for good; CR 611.2c's parenthetical ("Note that this works
+-- differently than a continuous effect from a static ability") is the rule that
+-- keeps the two apart, and the last test here is the observable difference -- the
+-- bonus comes BACK.
+kirdApeSpec :: (Monad m, Monad n) => Spec.Spec m n -> Registry.Registry m -> n ()
+kirdApeSpec s registry = Spec.describe s "Kird Ape" $ do
+  -- Both halves of the clause on one board, with a permanent ENTERING between the
+  -- two assertions. Asserting only the second half would pass for an engine that
+  -- ignored the condition entirely; asserting only the first would pass for one
+  -- that dropped the ability outright.
+  Spec.it s "CR 604.2 a 1/1 with no Forest, and a 2/3 the moment one enters" $ do
+    kirdApe <- S.printingOf s registry "Kird Ape"
+    forest <- S.printingOf s registry "Forest"
+    mountain <- S.printingOf s registry "Mountain"
+    let (_, withMountain) = S.addPermanent mountain S.alice (Setup.emptyGame S.bothPlayers)
+        (apeId, noForest) = S.addPermanent kirdApe S.alice withMountain
+        withForest = snd (S.addPermanent forest S.alice noForest)
+    Spec.assertEqWith s "a Mountain is not a Forest" (S.powerToughnessOf apeId noForest) (Just (1, 1))
+    Spec.assertEqWith s "a Forest entered" (S.powerToughnessOf apeId withForest) (Just (2, 3))
+  -- CR 109.5: "you" is the ability's SOURCE's controller. Bob's Forest is on the
+  -- same battlefield -- the Count's scope is every player's (CR 400.1 makes the
+  -- battlefield shared) -- so an engine that counted Forests rather than Forests
+  -- YOU control reads 2/3 here.
+  Spec.it s "CR 109.5 an opponent's Forest is not one you control" $ do
+    kirdApe <- S.printingOf s registry "Kird Ape"
+    forest <- S.printingOf s registry "Forest"
+    let (apeId, board) = S.addPermanent kirdApe S.alice (Setup.emptyGame S.bothPlayers)
+        bobsForest = snd (S.addPermanent forest S.bob board)
+    Spec.assertEqWith s "bob's Forest does nothing" (S.powerToughnessOf apeId bobsForest) (Just (1, 1))
+  -- The clause read against the PROJECTION rather than the printed type line, and
+  -- the flip driven by a real cast: Convincing Mirage's CR 614.1c as-enters choice
+  -- makes the Forest an Island in layer 4 (CR 613.1d), which is strictly before
+  -- the layer 7c the pump lands in, so the Ape shrinks. An engine that asked
+  -- whether alice controlled a card PRINTED "Forest" leaves it a 2/3.
+  --
+  -- Also the CR 611.2c half: the Aura leaves and the +1/+2 comes back, which a
+  -- duration could not do.
+  Spec.it s "CR 613.1d a Convincing Mirage'd Forest stops being one, and the pump stops with it" $ do
+    kirdApe <- S.printingOf s registry "Kird Ape"
+    forest <- S.printingOf s registry "Forest"
+    island <- S.printingOf s registry "Island"
+    convincingMirage <- S.printingOf s registry "Convincing Mirage"
+    let base = S.landsInPlay island 4
+        (forestId, withForest) = S.addPermanent forest S.alice base
+        (apeId, withApe) = S.addPermanent kirdApe S.alice withForest
+        (withAura, auraSpell) = S.handOne convincingMirage withApe
+        cast = S.runPure (mirageOn forestId Subtype.Island) withAura (S.cast S.alice auraSpell)
+        enchanted = S.runPure (mirageOn forestId Subtype.Island) cast Stack.resolveTop
+        -- CR 704.5m sends an Aura attached to nothing to the graveyard, but this
+        -- only needs the Forest back: the Aura is removed from the battlefield
+        -- directly, so its layer-4 effect is simply no longer gathered.
+        unenchanted = removeFromBattlefield (auraOf enchanted) enchanted
+    Spec.assertEqWith s "2/3 while the Forest is a Forest" (S.powerToughnessOf apeId withApe) (Just (2, 3))
+    Spec.assertEqWith s "CR 305.7 the land is now only an Island" (Projection.subtypesOf forestId enchanted) (Set.singleton Subtype.Island)
+    Spec.assertEqWith s "so the Ape is back to 1/1" (S.powerToughnessOf apeId enchanted) (Just (1, 1))
+    Spec.assertEqWith s "and 2/3 again once the Aura is gone" (S.powerToughnessOf apeId unenchanted) (Just (2, 3))
+
+-- Convincing Mirage's two prompts: its CR 303.4a enchant slot, forced onto the
+-- one land the test cares about (the board offers five), and its CR 614.1c
+-- as-enters basic land type. Everything else defers to S.identityAnswer.
+-- Parun.AuraSpec has the same answerer for the same card; this one is local
+-- because the group needs it and nothing else here does.
+mirageOn :: ObjectId.ObjectId -> Subtype.Subtype -> Prompt.Prompt r -> r
+mirageOn landId subtype p = case p of
+  Prompt.ChooseTargets _ _ _ sets -> fmap (const (Set.singleton (Recipient.ToObject landId))) sets
+  Prompt.ChooseBasicLandType {} -> subtype
+  _ -> S.identityAnswer p
+
+-- The one Convincing Mirage on the battlefield, by printed name (the
+-- leechesOnBattlefield precedent above: the cast's ObjectId names a spell that
+-- CR 400.7 has already replaced).
+auraOf :: GameState.GameState -> ObjectId.ObjectId
+auraOf gs =
+  let isMirage oid = maybe False (\f -> Face.name f == CardName.MkCardName (Text.pack "Convincing Mirage")) (Game.faceOf oid gs)
+   in case filter isMirage (Set.toList (GameState.battlefield gs)) of
+        oid : _ -> oid
+        [] -> ObjectId.MkObjectId 999
+
+-- Take a permanent off the battlefield without routing it anywhere, so a test can
+-- ask what the board looks like once its continuous effect is no longer gathered.
+-- Not a zone change: nothing here is a CR 400.7 move, and no test using it reads
+-- the graveyard.
+removeFromBattlefield :: ObjectId.ObjectId -> GameState.GameState -> GameState.GameState
+removeFromBattlefield oid gs =
+  gs
+    { GameState.battlefield = Set.delete oid (GameState.battlefield gs),
+      GameState.objects = Map.delete oid (GameState.objects gs)
+    }
+
+-- Knight of Grace ({1}{W} Creature -- Human Knight, printed 2/2), third line:
+-- "This creature gets +1/+0 as long as any player controls a black permanent."
+-- Oracle text verified against Scryfall. Its other two lines, first strike and CR
+-- 702.11d's "hexproof from black", are Parun.TargetSpec's half.
+--
+-- The SAME shape as Kird Ape's clause above -- a CR 604.2 "as long as" gate on a
+-- printed static ability, counting a population over the battlefield -- with one
+-- difference that is the whole reason it earns a case of its own: "ANY player
+-- controls" drops the ControlledBy conjunct. Kird Ape's clause is CR 109.5's
+-- "you" and Knight of Grace's names no player at all, so the Count's filter is
+-- bare and its InZone scope (CR 400.1's shared battlefield, with Relative AnyPlayer) does
+-- all the sweeping.
+knightOfGraceSpec :: (Monad m, Monad n) => Spec.Spec m n -> Registry.Registry m -> n ()
+knightOfGraceSpec s registry = Spec.describe s "Knight of Grace" $ do
+  -- Both halves of the clause on one board, with the black permanent ENTERING
+  -- between the two assertions (Kird Ape's first case's rationale): asserting only
+  -- the 3/2 passes for an engine that ignored the condition, and only the 2/2 for
+  -- one that dropped the ability.
+  --
+  -- BOB's Bog Wraith ({3}{B} Creature -- Wraith), not alice's, and the Knight is
+  -- alice's: that is what discriminates "any player controls" from a
+  -- ControlledBy You mis-authoring, which reads 2/2 here.
+  --
+  -- Toughness is asserted too, so a ModifyPowerToughness 1 1 mis-authoring of the
+  -- "+1/+0" fails rather than passing on the power alone.
+  Spec.it s "CR 604.2 a 2/2 with no black permanent, and a 3/2 once ANY player controls one" $ do
+    knight <- S.printingOf s registry "Knight of Grace"
+    bogWraith <- S.printingOf s registry "Bog Wraith"
+    let (knightId, alone) = S.addPermanent knight S.alice (Setup.emptyGame S.bothPlayers)
+        withBlack = snd (S.addPermanent bogWraith S.bob alone)
+    Spec.assertEqWith s "no black permanent anywhere" (S.powerToughnessOf knightId alone) (Just (2, 2))
+    Spec.assertEqWith s "bob's black creature entered, and it is any player's" (S.powerToughnessOf knightId withBlack) (Just (3, 2))
+  -- The other side of "any player": the Knight's OWN controller counts too. A
+  -- mis-authoring that narrowed the filter the other way -- to what an opponent
+  -- controls -- passes the case above and fails this one.
+  Spec.it s "CR 604.2 the Knight's own controller is one of the any players" $ do
+    knight <- S.printingOf s registry "Knight of Grace"
+    bogWraith <- S.printingOf s registry "Bog Wraith"
+    let (knightId, alone) = S.addPermanent knight S.alice (Setup.emptyGame S.bothPlayers)
+        withBlack = snd (S.addPermanent bogWraith S.alice alone)
+    Spec.assertEqWith s "alice's own black creature turns it on as readily" (S.powerToughnessOf knightId withBlack) (Just (3, 2))
+
+-- Knight of Malice ({1}{B} Creature -- Human Knight, printed 2/2), third line:
+-- "This creature gets +1/+0 as long as any player controls a white permanent."
+-- Oracle text verified against Scryfall. Its other two lines, first strike and CR
+-- 702.11d's "hexproof from white", are Parun.TargetSpec's half, where Celestial
+-- Dawn is what makes the hexproof interesting.
+--
+-- Knight of Grace's clause with its colour swapped, so the case is the PAIR on
+-- one board: each Knight is the other's condition, and a filter transcribed from
+-- the mirror without the swap reads the Malice as a 3/2 on the board where it
+-- stands alone.
+knightOfMaliceSpec :: (Monad m) => Spec.Spec m n -> Registry.Registry m -> n ()
+knightOfMaliceSpec s registry = Spec.describe s "Knight of Malice" $ do
+  Spec.it s "CR 604.2 a 2/2 with no white permanent, and a 3/2 once ANY player controls one" $ do
+    malice <- S.printingOf s registry "Knight of Malice"
+    grace <- S.printingOf s registry "Knight of Grace"
+    let (maliceId, alone) = S.addPermanent malice S.alice (Setup.emptyGame S.bothPlayers)
+        (graceId, both) = S.addPermanent grace S.bob alone
+    Spec.assertEqWith s "no white permanent anywhere" (S.powerToughnessOf maliceId alone) (Just (2, 2))
+    Spec.assertEqWith s "bob's white Knight entered, and it is any player's" (S.powerToughnessOf maliceId both) (Just (3, 2))
+    Spec.assertEqWith s "and the mirror reads alice's black Knight the same way" (S.powerToughnessOf graceId both) (Just (3, 2))
+
+-- Serra Avatar ({4}{W}{W}{W} Creature -- Avatar, printed */*), first line: "Serra
+-- Avatar's power and toughness are each equal to your life total." Oracle text
+-- verified against Scryfall.
+--
+-- CR 604.3 layer 7a, like Tarmogoyf's and Nightmare's above and unlike Omnath's:
+-- the printed box is a star, so the pair comes from a characteristic-defining
+-- ability rather than from a CR 613.4c modification. What is new is WHAT it
+-- reads -- Quantity.LifeTotal, CR 119.1's scalar attached to a PLAYER, which is
+-- neither a population over a zone (Count) nor a mana pool (ManaCount).
+--
+-- The card's second line, the CR 603.6 from-anywhere graveyard trigger, is
+-- Parun.TriggerSpec's half.
+serraAvatarSpec :: (Monad m, Monad n) => Spec.Spec m n -> Registry.Registry m -> n ()
+serraAvatarSpec s registry = Spec.describe s "Serra Avatar" $ do
+  -- CR 707.2a again, for the reason Tarmogoyf's seed test above states: what the
+  -- seed holds must be the unevaluated quantity, not a number frozen at entry.
+  Spec.it s "CR 604.3 the seed carries the life total as a QUANTITY, with the printed star substituted" $ do
+    avatar <- S.printingOf s registry "Serra Avatar"
+    let (avatarId, gs) = S.addPermanent avatar S.alice (Setup.emptyGame S.bothPlayers)
+        yourLife = Quantity.Type.LifeTotal (PlayerRef.Relative PlayerRelation.You)
+    Spec.assertEqWith s "both boxes are the same quantity" (PC.characteristicPT (Projection.baseCharacteristics avatarId gs)) (Just (CharacteristicPT.MkCharacteristicPT yourLife yourLife))
+  Spec.it s "CR 119.1 a starting life total of 20 makes it a 20/20" $ do
+    avatar <- S.printingOf s registry "Serra Avatar"
+    let (avatarId, gs) = S.addPermanent avatar S.alice (Setup.emptyGame S.bothPlayers)
+    Spec.assertEqWith s "alice is at 20" (S.lifeOf S.alice gs) (Just 20)
+    Spec.assertEqWith s "power" (Projection.powerOf avatarId gs) (Just 20)
+    Spec.assertEqWith s "toughness" (Projection.toughnessOf avatarId gs) (Just 20)
+
+-- Omnath, Locus of Mana ({2}{G} Legendary Creature -- Elemental), second line:
+-- "Omnath gets +1/+1 for each unspent green mana you have." Oracle text verified
+-- against Scryfall.
+--
+-- CR 613.4c layer 7c -- a MODIFICATION, not a characteristic-defining ability:
+-- the printed box says 1/1, so there is no CR 208.2a star for a CDA to define and
+-- the pump rides on the static ability instead. That is why these tests read
+-- Projection.powerOf and never PC.characteristicPT, unlike Tarmogoyf's and
+-- Nightmare's above.
+--
+-- The magnitude is a Quantity.ManaCount, which counts a MANA POOL rather than a
+-- zone: CR 400.1 lists seven zones and the pool is none of them, and CR 106.4
+-- gives it its own existence attached to a player.
+omnathSpec :: (Monad m, Monad n) => Spec.Spec m n -> Registry.Registry m -> n ()
+omnathSpec s registry = Spec.describe s "Omnath, Locus of Mana" $ do
+  Spec.it s "CR 613.4c an empty pool adds nothing, so Omnath is its printed 1/1" $ do
+    omnath <- S.printingOf s registry "Omnath, Locus of Mana"
+    let (omnathId, gs) = S.addPermanent omnath S.alice (Setup.emptyGame S.bothPlayers)
+    Spec.assertEqWith s "power" (Projection.powerOf omnathId gs) (Just 1)
+    Spec.assertEqWith s "toughness" (Projection.toughnessOf omnathId gs) (Just 1)
+  Spec.it s "CR 613.4c Omnath gets +1/+1 for each unspent green mana you have" $ do
+    forest <- S.printingOf s registry "Forest"
+    omnath <- S.printingOf s registry "Omnath, Locus of Mana"
+    let (omnathId, g1) = S.addPermanent omnath S.alice (Setup.emptyGame S.bothPlayers)
+        (first, g2) = S.addPermanent forest S.alice g1
+        (second, g3) = S.addPermanent forest S.alice g2
+        floated = tapAll [first, second] g3
+    Spec.assertEqWith s "two green floating: 1+2 power" (Projection.powerOf omnathId floated) (Just 3)
+    Spec.assertEqWith s "and 1+2 toughness" (Projection.toughnessOf omnathId floated) (Just 3)
+  -- THE LIVENESS FALSIFIER, and the reason the count belongs in the projection
+  -- rather than in a sampled or stored value. CR 106.4's pool changes whenever a
+  -- mana ability resolves, which CR 605.3a lets happen any time its controller
+  -- has priority and CR 605.3b has happen immediately, off the stack -- so there
+  -- is no state-based action (CR 704.3) and no priority pass between tapping the
+  -- Forest and Omnath being bigger. Nothing here calls
+  -- Engine.settleForPriority, and the assertions bracket a single tap.
+  --
+  -- The base characteristics are asserted unchanged alongside, which is what
+  -- rules out the pump having been baked into the seed: the printed 1/1 is still
+  -- 1/1 at layer 7a while the projection reads 4/4.
+  Spec.it s "CR 106.4 the count is live: tapping a Forest grows Omnath with nothing settled in between" $ do
+    forest <- S.printingOf s registry "Forest"
+    omnath <- S.printingOf s registry "Omnath, Locus of Mana"
+    let (omnathId, g1) = S.addPermanent omnath S.alice (Setup.emptyGame S.bothPlayers)
+        (first, g2) = S.addPermanent forest S.alice g1
+        (second, g3) = S.addPermanent forest S.alice g2
+        (third, board) = S.addPermanent forest S.alice g3
+        one = tapAll [first] board
+        two = tapAll [second] one
+        three = tapAll [third] two
+    Spec.assertEqWith s "nothing tapped yet" (Projection.powerOf omnathId board) (Just 1)
+    Spec.assertEqWith s "one Forest" (Projection.powerOf omnathId one) (Just 2)
+    Spec.assertEqWith s "two Forests" (Projection.powerOf omnathId two) (Just 3)
+    Spec.assertEqWith s "three Forests" (Projection.powerOf omnathId three) (Just 4)
+    Spec.assertEqWith s "the seed still says 1" (PC.power (Projection.baseCharacteristics omnathId three)) (Just 1)
+    Spec.assertBool s (null (GameState.continuousEffects three)) "no continuous effect was stored for the pump"
+  -- CR 106.1a: only GREEN mana counts. An Island's {U} floats in the same pool
+  -- and is invisible to the count -- the falsifier for a ManaCount that ignores
+  -- its filter and just measures the pool's size.
+  Spec.it s "CR 106.1a blue mana in the same pool does not pump Omnath" $ do
+    island <- S.printingOf s registry "Island"
+    forest <- S.printingOf s registry "Forest"
+    omnath <- S.printingOf s registry "Omnath, Locus of Mana"
+    let (omnathId, g1) = S.addPermanent omnath S.alice (Setup.emptyGame S.bothPlayers)
+        (islandId, g2) = S.addPermanent island S.alice g1
+        (forestId, g3) = S.addPermanent forest S.alice g2
+        blueOnly = tapAll [islandId] g3
+        both = tapAll [forestId] blueOnly
+    Spec.assertEqWith s "one blue floating, still 1/1" (Projection.powerOf omnathId blueOnly) (Just 1)
+    Spec.assertEqWith s "the green one is what moves it" (Projection.powerOf omnathId both) (Just 2)
+  -- CR 109.5: "you" in a static ability's text is the ability's SOURCE's
+  -- controller. THE FALSIFIER for reading the affected object's controller (or
+  -- no perspective at all): Omnath is the affected object here as well as the
+  -- source, so the two coincide -- what separates them is BOB's pool, which a
+  -- PlayerRef.Relative AnyPlayer fold would add in.
+  --
+  -- This is the first static ability in the pool whose modification carries a
+  -- player-scoped quantity, so it is also the first test of
+  -- Projection.applyModification's context. It cannot separate the SOURCE's
+  -- controller from the AFFECTED object's, though, because here they are the same
+  -- permanent -- the Empyrial Armor group below is what does that.
+  Spec.it s "CR 109.5 the count reads Omnath's controller: an opponent's green mana does not pump it" $ do
+    forest <- S.printingOf s registry "Forest"
+    omnath <- S.printingOf s registry "Omnath, Locus of Mana"
+    let (omnathId, g1) = S.addPermanent omnath S.alice (Setup.emptyGame S.bothPlayers)
+        (bobsForest, g2) = S.addPermanent forest S.bob g1
+        (alicesForest, g3) = S.addPermanent forest S.alice g2
+        bobFloats = tapAll [bobsForest] g3
+        bothFloat = tapAll [alicesForest] bobFloats
+    Spec.assertEqWith s "bob's green is not alice's" (Projection.powerOf omnathId bobFloats) (Just 1)
+    Spec.assertEqWith s "alice's own green is" (Projection.powerOf omnathId bothFloat) (Just 2)
+
+-- Tap each permanent for mana in turn, threading the state. Every source here is
+-- a basic land with one mana ability and one colour, so CR 605.3a's activation
+-- asks nothing that S.identityAnswer has to choose between.
+tapAll :: [ObjectId.ObjectId] -> GameState.GameState -> GameState.GameState
+tapAll oids gs = List.foldl' (\g oid -> S.runPure S.identityAnswer g (S.tapForMana oid)) gs oids
+
+-- Malignus ({3}{R}{R} Creature -- Elemental Spirit, printed */*), first line:
+-- "Malignus's power and toughness are each equal to half the highest life total
+-- among your opponents, rounded up." Oracle text verified against
+-- api.scryfall.com.
+--
+-- Its second line -- "Damage that would be dealt by this creature can't be
+-- prevented" (CR 615.12) -- is on the card verbatim, written with the same
+-- PlayerEffect.DamageCantBePrevented carrier Excruciator prints and covered by
+-- that card's own group; nothing is omitted from the transcription.
+--
+-- Two capabilities in one CDA (CR 604.3, layer 7a): CR 107.1a's rounding, and an
+-- Aggregation.Greatest folding a per-PLAYER quantity over Scope.OverPlayers --
+-- the maximum reads each candidate's own life through
+-- Parun.Types.PlayerRef.Candidate. That reference is written by several cards in
+-- data/cards/ -- Arbiter of Knollridge folds the same Greatest over the whole
+-- table, and Jungle Wayfinder writes it in a search's owner -- but no other one
+-- puts it under a CDA.
+--
+-- Three seats with DISTINCT life totals, alice's highest of all: 39 for alice,
+-- 13 for bob and 21 for carol. Every wrong reading lands on a different number
+-- -- all players rather than the opponents gives 20, the least rather than the
+-- greatest gives 7, a sum gives 17, and rounding down gives 10 where the card
+-- gives 11.
+malignusSpec :: (Monad m, Monad n) => Spec.Spec m n -> Registry.Registry m -> n ()
+malignusSpec s registry = Spec.describe s "Malignus" $ do
+  -- CR 707.2a, the Tarmogoyf and Serra Avatar seed tests' reason: what the seed
+  -- holds is the unevaluated quantity, so a copy acquires the ability rather
+  -- than a frozen number.
+  Spec.it s "CR 604.3 the seed carries the halved fold as a QUANTITY, with the printed star substituted" $ do
+    malignus <- S.printingOf s registry "Malignus"
+    let (malignusId, gs) = malignusBoard malignus
+        halfTheHighest =
+          Quantity.Type.Arithmetic
+            ( Arithmetic.Halved
+                ( Halved.MkHalved
+                    Rounding.Up
+                    ( Quantity.Type.Count
+                        ( Count.Type.MkCount
+                            (Scope.OverPlayers (PlayerRef.Relative PlayerRelation.Opponent))
+                            (Filter.Type.And [])
+                            (Aggregation.Greatest (Quantity.Type.LifeTotal PlayerRef.Candidate))
+                        )
+                    )
+                )
+            )
+    Spec.assertEqWith s "both boxes are the same quantity" (PC.characteristicPT (Projection.baseCharacteristics malignusId gs)) (Just (CharacteristicPT.MkCharacteristicPT halfTheHighest halfTheHighest))
+  Spec.it s "CR 107.1a half of the opponents' highest life total, rounded UP" $ do
+    malignus <- S.printingOf s registry "Malignus"
+    let (malignusId, gs) = malignusBoard malignus
+    Spec.assertEqWith s "alice highest of all, and the two opponents apart" (fmap (\pid -> S.lifeOf pid gs) [S.alice, S.bob, S.carol]) [Just 39, Just 13, Just 21]
+    Spec.assertEqWith s "carol's 21 halved upward, not alice's 39 and not bob's 13" (S.powerToughnessOf malignusId gs) (Just (11, 11))
+  -- THE LIVENESS FALSIFIER, and the tie case in one: bob overtakes carol at 25,
+  -- so the maximum moves seats, and carol joining him there does not change it.
+  -- Nothing touches Malignus between the reads -- only the next projection's
+  -- fold.
+  Spec.it s "CR 119.3 the fold re-reads: bob at 25 makes it a 13/13, and a tie at 25 keeps it there" $ do
+    malignus <- S.printingOf s registry "Malignus"
+    let (malignusId, gs) = malignusBoard malignus
+        bobAhead = atLife S.bob 25 gs
+        tied = atLife S.carol 25 bobAhead
+    Spec.assertEqWith s "11/11 before" (S.powerToughnessOf malignusId gs) (Just (11, 11))
+    Spec.assertEqWith s "bob's 25 halved upward" (S.powerToughnessOf malignusId bobAhead) (Just (13, 13))
+    Spec.assertEqWith s "a second seat at 25 is still one maximum" (S.powerToughnessOf malignusId tied) (Just (13, 13))
+
+-- alice's Malignus on a three-seat board held at 39 / 13 / 21.
+malignusBoard :: Printing.Printing -> (ObjectId.ObjectId, GameState.GameState)
+malignusBoard malignus =
+  let (malignusId, gs) = S.addPermanent malignus S.alice S.threePlayerGame
+   in (malignusId, atLife S.alice 39 (atLife S.bob 13 (atLife S.carol 21 gs)))
+
+-- One seat's life total, set outright. CR 119.3 changes a life total whenever an
+-- effect says so, and what these cases are about is what the next projection
+-- READS, so no spell has to be cast to move one.
+atLife :: PlayerId.PlayerId -> Integer -> GameState.GameState -> GameState.GameState
+atLife pid n gs = gs {GameState.players = Map.adjust (\p -> p {Player.life = n}) pid (GameState.players gs)}
+
+-- Answers Prompt.ChooseTargets with one fixed recipient -- CR 601.2c's choice,
+-- which S.identityAnswer declines.
+aimRecipient :: Recipient.Recipient -> Prompt.Prompt r -> r
+aimRecipient recipient p = case p of
+  Prompt.ChooseTargets _ _ _ sets -> fmap (const (Set.singleton recipient)) sets
+  _ -> S.identityAnswer p
+
+-- alice has two Forests untapped, a Goblin Piker (2/1) and two Fortifying
+-- Draughts in hand; bob has Russet Wolves (3/3). BOB HAS ALREADY GAINED 7 LIFE
+-- THIS TURN, planted in the log, which is the negative control CR 109.5's "you"
+-- needs on a two-seat board: every X below is a number no reading of bob's tally
+-- can produce.
+--
+-- The numbers are chosen so no two readings coincide. Each Draught gains 2, so
+-- COUNTING the gain events (1, then 2) and SUMMING the amounts (2, then 4) never
+-- agree; 7, 9 and 11 are what a reading that saw bob's gain would give.
+draughtBoard ::
+  Printing.Printing ->
+  Printing.Printing ->
+  Printing.Printing ->
+  Printing.Printing ->
+  (ObjectId.ObjectId, ObjectId.ObjectId, ObjectId.ObjectId, ObjectId.ObjectId, GameState.GameState)
+draughtBoard forest piker wolves draught =
+  let (pikerId, withPiker) = S.addPermanent piker S.alice (S.landsInPlay forest 2)
+      (wolvesId, withWolves) = S.addPermanent wolves S.bob withPiker
+      (withOne, firstId) = S.handOne draught withWolves
+      (secondId, withTwo) = S.addHandCard draught S.alice withOne
+   in (pikerId, wolvesId, firstId, secondId, S.withEvents [GameEvent.LifeGained (LifeChange.MkLifeChange S.bob 7)] withTwo)
+
+-- Cast one Fortifying Draught at this recipient and resolve it.
+castDraught :: Recipient.Recipient -> ObjectId.ObjectId -> GameState.GameState -> GameState.GameState
+castDraught recipient draughtId gs =
+  S.runPure (aimRecipient recipient) gs (S.cast S.alice draughtId >> Stack.resolveTop >> Engine.settleForPriority)
+
+-- Fortifying Draught ({G} Instant, Oracle text verified against Scryfall): "You
+-- gain 2 life. Target creature gets +X/+X until end of turn, where X is the
+-- amount of life you gained this turn."
+--
+-- The card Quantity.LifeGainedThisTurn was waiting for. CR 119.3's gain is
+-- recorded as GameEvent.LifeGained, and CR 608.2i's turn-scoped log is where the
+-- total comes from -- so the quantity is a SUM of amounts over that log
+-- (Game.lifeGainedThisTurn), not a count of its entries.
+--
+-- CR 608.2c is what makes the card read its own gain: the two instructions are
+-- followed in printed order, so by the time the modification is created the
+-- Draught's own 2 is already in the log. CR 608.2h / 611.2d then freeze the value
+-- into the stored layer-7c effect (Projection.freezeQuantities), which is why a
+-- later gain does not grow a pump that has already been made.
+fortifyingDraughtSpec :: (Monad m) => Spec.Spec m n -> Registry.Registry m -> n ()
+fortifyingDraughtSpec s registry = Spec.describe s "Fortifying Draught" $ do
+  -- THE PROVING CASE, and the ACCUMULATION control: the second Draught reads 4
+  -- and not 2, so the tally is the turn's whole gain rather than the last event.
+  -- Falsifiers: reading only the last gain leaves the Piker a 6/5; counting
+  -- events rather than summing amounts leaves it a 5/4; reading every player's
+  -- gain makes the first pump +9/+9.
+  Spec.it s "CR 119.3/608.2i two gains in one turn add up: +2/+2 then +4/+4" $ do
+    forest <- S.printingOf s registry "Forest"
+    piker <- S.printingOf s registry "Goblin Piker"
+    wolves <- S.printingOf s registry "Russet Wolves"
+    draught <- S.printingOf s registry "Fortifying Draught"
+    let (pikerId, _, firstId, secondId, gs) = draughtBoard forest piker wolves draught
+        afterOne = castDraught (Recipient.ToCreature pikerId) firstId gs
+        afterTwo = castDraught (Recipient.ToCreature pikerId) secondId afterOne
+    Spec.assertEqWith s "the printed box before either spell" (S.powerToughnessOf pikerId gs) (Just (2, 1))
+    Spec.assertEqWith s "the first Draught read its own 2 and nobody else's" (S.powerToughnessOf pikerId afterOne) (Just (4, 3))
+    Spec.assertEqWith s "the second read 4 -- both gains, summed" (S.powerToughnessOf pikerId afterTwo) (Just (8, 7))
+    Spec.assertEqWith s "alice gained 2 twice" (S.lifeOf S.alice afterTwo) (Just 24)
+    Spec.assertEqWith s "bob's planted 7 was never paid to anyone" (S.lifeOf S.bob afterTwo) (Just 20)
+
+-- Phyrexian Ingester ({6}{U} Creature -- Phyrexian Beast 3/3, Oracle text fetched
+-- from Scryfall 2026-09-05): "Imprint -- When this creature enters, you may exile
+-- target nontoken creature. / This creature gets +X/+Y, where X is the exiled
+-- creature card's power and Y is its toughness."
+--
+-- CR 607.2a is what makes the second ability find the first one's card, and
+-- Quantity.AgainstExiledPile is the read: a STATIC ability (CR 604.1) has no
+-- resolution and so no slot for Quantity.AgainstSlot to aim at, which is what
+-- separates this card from Bioplasm above. The number is recomputed at every
+-- projection rather than frozen (CR 613.4c layer 7c, applied by
+-- Projection.applyModification), so it FALLS when CR 400.7 takes the card out of
+-- exile.
+--
+-- The board is built so no two readings agree. bob's Nessian Asp is a 4/5, so
+-- reading toughness where the card says power gives 8/7 rather than 7/8; bob's
+-- Goblin Piker (2/1) is a second legal target the trigger is not aimed at, so the
+-- prompt offers more candidates than it takes; and alice already has a Russet
+-- Wolves (3/3) sitting in exile that NOTHING exiled, so a read that swept the
+-- exile zone instead of following GameState.exiledWith would give 10/11.
+ingesterBoard ::
+  Printing.Printing ->
+  Printing.Printing ->
+  Printing.Printing ->
+  Printing.Printing ->
+  (ObjectId.ObjectId, ObjectId.ObjectId, GameState.GameState)
+ingesterBoard ingester asp piker wolves =
+  let gs0 = Setup.emptyGame S.bothPlayers
+      (aspId, gs1) = S.addPermanent asp S.bob gs0
+      (_, gs2) = S.addPermanent piker S.bob gs1
+      (_, gs3) = S.addExiledCard wolves S.alice gs2
+      (ingesterId, gs4) = S.entersWithTrigger ingester S.alice gs3
+   in (ingesterId, aspId, gs4)
+
+-- Aims the imprint trigger at `victim` by FILTERING the offered set (never by
+-- building a recipient of its own, which CR 608.2b would drop at resolution), and
+-- answers the "you may" with `decision`. Rank-1 like S.attackTo, so partially
+-- applying it gives the rank-2 answerer S.runPure wants.
+ingesterAnswer :: OptionalDecision.OptionalDecision -> ObjectId.ObjectId -> Prompt.Prompt r -> r
+ingesterAnswer decision victim p = case p of
+  Prompt.ChooseTargets _ _ _ offered -> S.preferring (== Recipient.ToCreature victim) offered
+  Prompt.ChooseOptional {} -> decision
+  _ -> S.identityAnswer p
+
+-- The trigger placed on the stack (CR 603.3d, where its target is chosen) and then
+-- resolved, under one answerer.
+ingesterPlay :: OptionalDecision.OptionalDecision -> ObjectId.ObjectId -> GameState.GameState -> (GameState.GameState, GameState.GameState)
+ingesterPlay decision victim board =
+  let staged = S.runPure (ingesterAnswer decision victim) board Engine.settleForPriority
+   in (staged, S.runPure (ingesterAnswer decision victim) staged (Stack.resolveTop >> Engine.settleForPriority))
+
+-- The card in exile whose printed name is `name`.
+exiledNamed :: String -> GameState.GameState -> [ObjectId.ObjectId]
+exiledNamed name gs =
+  let matches oid = maybe False (\f -> Face.name f == CardName.MkCardName (Text.pack name)) (Game.faceOf oid gs)
+   in filter matches (Set.toList (GameState.exile gs))
+
+ingesterSpec :: (Monad m, Monad n) => Spec.Spec m n -> Registry.Registry m -> n ()
+ingesterSpec s registry = Spec.describe s "Phyrexian Ingester" $ do
+  -- THE PROVING CASE. Power and toughness are asserted together and take
+  -- DIFFERENT amounts, and the assertion runs on the finished projection rather
+  -- than on any proxy.
+  Spec.it s "CR 607.2a/613.4c the static ability reads the card its own trigger exiled" $ do
+    ingester <- S.printingOf s registry "Phyrexian Ingester"
+    asp <- S.printingOf s registry "Nessian Asp"
+    piker <- S.printingOf s registry "Goblin Piker"
+    wolves <- S.printingOf s registry "Russet Wolves"
+    let (ingesterId, aspId, board) = ingesterBoard ingester asp piker wolves
+        (staged, after) = ingesterPlay OptionalDecision.Exercises aspId board
+    Spec.assertEqWith s "printed 3/3 while the trigger is still on the stack" (S.powerToughnessOf ingesterId staged) (Just (3, 3))
+    Spec.assertEqWith s "+4/+5 off the exiled 4/5" (S.powerToughnessOf ingesterId after) (Just (7, 8))
+    Spec.assertEqWith s "the Asp is the card in exile" (length (exiledNamed "Nessian Asp" after)) 1
+    -- The bonus is not frozen: CR 400.7 makes the card in the graveyard a new
+    -- object, GameState.exile no longer holds the one the link names, and the
+    -- static ability recomputes to nothing. A REGRESSION FENCE against a future
+    -- freeze rather than a proof of the zone read -- the evaluator's arm says
+    -- why neither reading of the pile can tell this board apart.
+    Spec.assertEqWith
+      s
+      "and it falls back to 3/3 once the exiled card leaves exile"
+      (S.powerToughnessOf ingesterId (foldr (\oid gs -> S.runPure S.identityAnswer gs (Event.changeZone oid Zone.Graveyard)) after (exiledNamed "Nessian Asp" after)))
+      (Just (3, 3))
+  -- The paired control, differing in exactly one thing: the "you may" is
+  -- declined, so nothing is exiled and the link names nothing. The Russet Wolves
+  -- is still sitting in exile, which is what makes this a control on the RELATION
+  -- rather than on the zone being empty.
+  Spec.it s "CR 607.3 an empty linked pile leaves the printed 3/3" $ do
+    ingester <- S.printingOf s registry "Phyrexian Ingester"
+    asp <- S.printingOf s registry "Nessian Asp"
+    piker <- S.printingOf s registry "Goblin Piker"
+    wolves <- S.printingOf s registry "Russet Wolves"
+    let (ingesterId, aspId, board) = ingesterBoard ingester asp piker wolves
+        after = snd (ingesterPlay OptionalDecision.Declines aspId board)
+    Spec.assertEqWith s "still the printed 3/3" (S.powerToughnessOf ingesterId after) (Just (3, 3))
+    Spec.assertEqWith s "the Asp never left the battlefield" (S.onBattlefield aspId after) True
+    Spec.assertEqWith s "and the unlinked card is still in exile" (length (exiledNamed "Russet Wolves" after)) 1
+
+-- The cards in alice's graveyard with this printed name. Graveyards are indexed
+-- by OWNER (CR 108.3), which is who Parun.Support puts a card there for.
+graveyardNamed :: String -> GameState.GameState -> [ObjectId.ObjectId]
+graveyardNamed name gs =
+  let matches oid = maybe False (\f -> Face.name f == CardName.MkCardName (Text.pack name)) (Game.faceOf oid gs)
+   in filter matches (Game.zoneMembers Zone.Graveyard S.alice gs)
+
+-- Answer the as-enters exile with the SECOND card offered, pinned by index so a
+-- broken offer cannot be repaired by an answerer that searches for the card the
+-- assertion wants. The offer ascends by ObjectId, which is the order the fixture
+-- put the cards in the graveyard in.
+picksSecondCard :: Prompt.Prompt r -> r
+picksSecondCard p = case p of
+  Prompt.ChooseCardInGraveyard _ _ _ offered _ -> case offered of
+    _ NonEmpty.:| (second : _) -> second
+    only NonEmpty.:| [] -> only
+  _ -> S.identityAnswer p
+
+-- Living Lore ({3}{U} Creature -- Avatar, printed */*), text: "As this creature
+-- enters, exile an instant or sorcery card from your graveyard." / "Living
+-- Lore's power and toughness are each equal to the exiled card's mana value."
+-- Oracle text verified against Scryfall 2026-09-05.
+--
+-- The first card whose entry replacement SPENDS A CARD IN A GRAVEYARD
+-- (EntryRewrite.ExileFromGraveyard), and the first whose CDA reads CR 614.14's
+-- link -- Phyrexian Ingester's pile above is filled by a triggered ability
+-- instead (CR 607.2a), so the two prove the two halves of rule 607.2.
+--
+-- Its third ability, "whenever this creature deals combat damage, you may
+-- sacrifice it. If you do, you may cast the exiled card without paying its mana
+-- cost", is TriggerCondition.DealsCombatDamage over a CR 118.12 pay gate.
+livingLoreSpec :: (Monad m) => Spec.Spec m n -> Registry.Registry m -> n ()
+livingLoreSpec s registry = Spec.describe s "Living Lore" $ do
+  -- CR 510.1c: a blocked Living Lore deals its combat damage to its blocker
+  -- alone, and that fires the third ability. Silent Arbiter (1/5) survives the
+  -- 4 damage, so only the exiled Day of Judgment, cast after the sacrifice, can
+  -- destroy it. The pair differs only in whether alice pays.
+  Spec.it s "CR 510.1c / 118.12 combat damage to its blocker lets it be sacrificed to cast the exiled card" $ do
+    paid <- livingLoreCombat s registry PaymentDecision.Pays
+    declined <- livingLoreCombat s registry PaymentDecision.Declines
+    Spec.assertEqWith s "CR 608.2g paid: the free Day of Judgment destroyed the blocker" (S.countOnBattlefieldByName (CardName.MkCardName (Text.pack "Silent Arbiter")) S.bob paid) 0
+    Spec.assertEqWith s "declined: the blocker stands" (S.countOnBattlefieldByName (CardName.MkCardName (Text.pack "Silent Arbiter")) S.bob declined) 1
+    Spec.assertEqWith s "paid: Living Lore was sacrificed and Day of Judgment resolved" (length (graveyardNamed "Living Lore" paid), length (graveyardNamed "Day of Judgment" paid)) (1, 1)
+    Spec.assertEqWith s "declined: Day of Judgment is still in exile" (length (exiledNamed "Day of Judgment" declined)) 1
+
+-- Living Lore enters exiling a lone Day of Judgment (a 4/4), then attacks bob,
+-- whose Silent Arbiter blocks it; `decision` answers the sacrifice.
+livingLoreCombat :: (Monad m) => Spec.Spec m n -> Registry.Registry m -> PaymentDecision.PaymentDecision -> m GameState.GameState
+livingLoreCombat s registry decision = do
+  livingLore <- S.printingOf s registry "Living Lore"
+  island <- S.printingOf s registry "Island"
+  judgment <- S.printingOf s registry "Day of Judgment"
+  arbiter <- S.printingOf s registry "Silent Arbiter"
+  let withJudgment = snd (S.addGraveyardCard judgment S.alice (S.landsInPlay island 4))
+      (gs, held) = S.handOne livingLore (snd (S.addPermanent arbiter S.bob withJudgment))
+      entered = S.runPure picksSecondCard gs (S.cast S.alice held >> Stack.resolveTop >> Engine.settleForPriority)
+      settle o = o {Object.sickness = Sickness.Settled S.alice}
+      ready loreId =
+        entered
+          { GameState.objects = Map.adjust settle loreId (GameState.objects entered),
+            GameState.phase = Phase.Combat CombatStep.DeclareAttackers,
+            GameState.combat = (GameState.combat entered) {Combat.Type.defenders = [S.bob]},
+            GameState.remaining = S.phasesAfter (Phase.Combat CombatStep.DeclareAttackers)
+          }
+      answer :: Prompt.Prompt r -> r
+      answer p = case p of
+        Prompt.ChooseToPay {} -> decision
+        Prompt.OfferedCast {} -> OptionalDecision.Exercises
+        _ -> S.aggressiveAnswer p
+  case newestNamed "Living Lore" entered of
+    Nothing -> pure entered
+    Just loreId -> pure (S.runCombat answer (ready loreId))
+
+-- Sutured Ghoul ({4}{B}{B}{B} Creature -- Zombie, printed */*), text: "Trample /
+-- As this creature enters, exile any number of creature cards from your
+-- graveyard. / Sutured Ghoul's power is equal to the total power of the exiled
+-- cards and its toughness is equal to their total toughness." Oracle text
+-- verified against Scryfall 2026-10-11.
+--
+-- CR 614.13a's own example: "If Sutured Ghoul and Runeclaw Bear enter the
+-- battlefield from your graveyard at the same time, you can't choose to exile
+-- either of them". Rise of the Dark Realms puts both onto the battlefield as one
+-- CR 608.2f sweep, the Ghoul moved first, so the Bear is still in the graveyard
+-- while the Ghoul's exile is offered. The answerer takes every card offered, so
+-- an offer that wrongly held the Bear would exile it.
+suturedGhoulSpec :: (Monad m, Monad n) => Spec.Spec m n -> Registry.Registry m -> n ()
+suturedGhoulSpec s registry = Spec.describe s "Sutured Ghoul" $ do
+  Spec.it s "CR 614.13a a creature card entering beside it is no candidate for its exile" $ do
+    ghoul <- S.printingOf s registry "Sutured Ghoul"
+    bear <- S.printingOf s registry "Runeclaw Bear"
+    rise <- S.printingOf s registry "Rise of the Dark Realms"
+    swamp <- S.printingOf s registry "Swamp"
+    let withGhoul = snd (S.addGraveyardCard ghoul S.alice (S.landsInPlay swamp 9))
+        (gs, held) = S.handOne rise (snd (S.addGraveyardCard bear S.alice withGhoul))
+        after = S.runPure exilingEveryOffer gs (S.cast S.alice held >> Stack.resolveTop >> Engine.settleForPriority)
+    Spec.assertEqWith s "the Bear entered: it was never offered to the Ghoul's exile" (S.countOnBattlefieldByName (CardName.MkCardName (Text.pack "Runeclaw Bear")) S.alice after) 1
+    Spec.assertEqWith s "nothing was exiled" (length (exiledNamed "Runeclaw Bear" after)) 0
+    Spec.assertEqWith s "so the Ghoul entered a 0/0 and died (CR 704.5f)" (length (graveyardNamed "Sutured Ghoul" after)) 1
+  -- The paired control, differing in how the Ghoul arrives: cast alone, with the
+  -- Bear left behind in the graveyard, the same answerer exiles it.
+  Spec.it s "CR 614.1c a creature card that is not entering is offered, and the Ghoul is its size" $ do
+    ghoul <- S.printingOf s registry "Sutured Ghoul"
+    bear <- S.printingOf s registry "Runeclaw Bear"
+    swamp <- S.printingOf s registry "Swamp"
+    let (gs, held) = S.handOne ghoul (snd (S.addGraveyardCard bear S.alice (S.landsInPlay swamp 7)))
+        after = S.runPure exilingEveryOffer gs (S.cast S.alice held >> Stack.resolveTop >> Engine.settleForPriority)
+    Spec.assertEqWith s "the Ghoul is a 2/2 off the exiled Bear" (fmap (`S.powerToughnessOf` after) (newestNamed "Sutured Ghoul" after)) (Just (Just (2, 2)))
+    Spec.assertEqWith s "and the Bear is in exile" (length (exiledNamed "Runeclaw Bear" after)) 1
+
+-- Answer the as-enters exile with every card offered, so what was offered is
+-- what is exiled.
+exilingEveryOffer :: Prompt.Prompt r -> r
+exilingEveryOffer p = case p of
+  Prompt.ChooseAnyNumber _ _ _ AnyNumberOf.ToExile offered _ -> Set.fromList offered
+  _ -> S.identityAnswer p
+
+-- The PROJECTED box -- the finished layer fold, never the printed values -- of
+-- every object whose card carries this name. A list rather than a Maybe so the
+-- assertion also says HOW MANY such objects there were: a doubling that somehow
+-- left two is a different failure from one that doubled wrong.
+boxesOfNamed :: String -> GameState.GameState -> [Maybe (Integer, Integer)]
+boxesOfNamed name gs = fmap (`S.powerToughnessOf` gs) (Scenario.namedObjects (CardName.MkCardName (Text.pack name)) gs)
+
+-- Unleash Fury ({1}{R} Instant -- "Double the power of target creature until end
+-- of turn", Oracle text verified against Scryfall 2026-09-10).
+--
+-- CR 701.10b DEFINES the instruction rather than adding a game action to it:
+-- "that creature gets +X\/+0, where X is that creature's power as the spell or
+-- ability that doubles its power resolves". So doubling needs no opcode of its
+-- own. It is Effect.ModifyTarget carrying CR 613.4c's layer-7c
+-- Modification.ModifyPowerToughness, with the power leg Quantity.AgainstSlot of
+-- Quantity.Measure Power and the toughness leg a literal 0 -- the pair Rush of Blood
+-- already writes -- and CR 611.2d's freeze at resolution is exactly what "as the
+-- spell resolves" means. CR 701.10a is the same sentence read as a
+-- classification: the effect MODIFIES and does not set, which is what keeps it
+-- out of layer 7b.
+--
+-- CR 701.10c needs no second shape either: X there is the difference between 0
+-- and a negative power, which is that power, and Quantity's Integer already
+-- carries the sign (CR 107.1b). The second case below is that branch.
+unleashFurySpec :: (Monad m) => Spec.Spec m n -> Registry.Registry m -> n ()
+unleashFurySpec s registry = Spec.describe s "Unleash Fury" $ do
+  -- THE PROVING CASE, and the reason an anthem is on the board: the power
+  -- doubled is the one the layer fold has already produced, not the printed box.
+  -- A Goblin Piker (2\/1) under Glorious Anthem is a 3\/2, so CR 701.10b's X is
+  -- 3 and the right answer is 6\/2. Falsifiers, all distinct: a freeze reading
+  -- the printed 2 gives 5\/2; a board with no anthem gives 4\/1; +X\/+X gives
+  -- 6\/5.
+  Spec.it s "CR 701.10b/613.4c the doubled power is the one layer 7c already built, not the printed one" $ do
+    let furyBoard anthems =
+          let mine =
+                ( S.battlefield
+                    S.alice
+                    ( anthems
+                        <> [ S.aliased "victim" (S.permanent "Goblin Piker"),
+                             S.aliased "first" (S.permanent "Mountain"),
+                             S.aliased "second" (S.permanent "Mountain")
+                           ]
+                    )
+                )
+                  { Seat.hand = Seq.singleton (S.aliased "spell" (S.cardSetup "Unleash Fury"))
+                  }
+           in S.board (mine NonEmpty.:| [S.playerSetup S.bob]) S.alice S.precombatMain
+        choices =
+          Choices.none
+            { Choices.targets = Just [S.aliasRef "victim"],
+              Choices.manaSources = Seq.fromList [Just (S.aliasRef "first"), Just (S.aliasRef "second")]
+            }
+        script = S.turn 1 [S.on S.precombatMain S.alice (S.castAction (S.aliasRef "spell") choices)]
+    after <- S.play s registry (furyBoard [S.permanent "Glorious Anthem"]) script S.priorityGame
+    control <- S.play s registry (furyBoard []) script S.priorityGame
+    Spec.assertEqWith s "the Piker is a 6/2: +3/+0 off the anthem's 3, never +2/+0 off the printed 2" (boxesOfNamed "Goblin Piker" after) [Just (6, 2)]
+    Spec.assertEqWith s "and 4/1 on the board that differs only in the anthem, so the doubled value moved with layer 7c" (boxesOfNamed "Goblin Piker" control) [Just (4, 1)]
+    Spec.assertEqWith s "two Mountains paid {1}{R}" (S.tappedCount S.alice after) 2
+    Spec.assertEqWith s "Unleash Fury resolved out of hand" (S.handSize S.alice after) 0
+
+-- Filter.IsAttachedToEvaluated's producers: a CR 613.4c pump whose count is of
+-- what is attached to EACH creature it affects, not to its own source. Oracle
+-- text re-fetched from Scryfall 2026-09-29 for all four.
+attachedToEachSpec :: (Monad m, Monad n) => Spec.Spec m n -> Registry.Registry m -> n ()
+attachedToEachSpec s registry = Spec.describe s "attached to it" $ do
+  -- Bruenor Battlehammer {2}{R}{W} 5/3: "Each creature you control gets +2/+0
+  -- for each Equipment attached to it." Golem-Skin Gauntlets: "Equipped creature
+  -- gets +1/+0 for each Equipment attached to it." The Piker wears two Equipment
+  -- and Bruenor one, so the source's count (1) and the Piker's (2) differ, and a
+  -- read of the source's would leave the Gauntlets counting nothing at all.
+  Spec.it s "CR 613.4c Bruenor and Golem-Skin Gauntlets count what is attached to each creature they pump" $ do
+    bruenor <- S.printingOf s registry "Bruenor Battlehammer"
+    gauntlets <- S.printingOf s registry "Golem-Skin Gauntlets"
+    bonesplitter <- S.printingOf s registry "Bonesplitter"
+    piker <- S.printingOf s registry "Goblin Piker"
+    giant <- S.printingOf s registry "Hill Giant"
+    let (dwarf, g1) = S.addPermanent bruenor S.alice (Setup.emptyGame S.bothPlayers)
+        (carrier, g2) = S.addPermanent piker S.alice g1
+        (bare, g3) = S.addPermanent giant S.alice g2
+        (worn, g4) = S.addPermanent gauntlets S.alice g3
+        (split, g5) = S.addPermanent bonesplitter S.alice g4
+        (own, g6) = S.addPermanent bonesplitter S.alice g5
+        gs = S.attach own dwarf (S.attach split carrier (S.attach worn carrier g6))
+    Spec.assertEqWith s "the Piker is 2/1 + 2/+0 (Bonesplitter) + 2/+0 (Gauntlets) + 4/+0 (Bruenor)" (S.powerToughnessOf carrier gs) (Just (10, 1))
+    Spec.assertEqWith s "Bruenor is 5/3 + 2/+0 (Bonesplitter) + 2/+0 (itself)" (S.powerToughnessOf dwarf gs) (Just (9, 3))
+    Spec.assertEqWith s "and the unequipped Giant is a plain 3/3" (S.powerToughnessOf bare gs) (Just (3, 3))
+  -- CR 707.2: bob's Clone of alice's Bruenor has the static ability and pumps
+  -- bob's creatures by what each of THEM wears -- alice's Piker is untouched.
+  Spec.it s "CR 707.2 a Clone of Bruenor counts what is attached to each creature its controller controls" $ do
+    bruenor <- S.printingOf s registry "Bruenor Battlehammer"
+    clone <- S.printingOf s registry "Clone"
+    bonesplitter <- S.printingOf s registry "Bonesplitter"
+    piker <- S.printingOf s registry "Goblin Piker"
+    giant <- S.printingOf s registry "Hill Giant"
+    let (dwarf, g1) = S.addPermanent bruenor S.alice (Setup.emptyGame S.bothPlayers)
+        (carrier, g2) = S.addPermanent piker S.alice g1
+        (bobs, g3) = S.addPermanent giant S.bob g2
+        (split, g4) = S.addPermanent bonesplitter S.bob g3
+        (_, staged) = S.spellOnStack clone S.bob (S.attach split bobs g4)
+        copyBruenor :: Prompt.Prompt r -> r
+        copyBruenor p = case p of
+          Prompt.ChooseCopyTarget {} -> Just dwarf
+          _ -> S.identityAnswer p
+        after = snd (Engine.runGamePure copyBruenor staged (Stack.resolveTop >> Engine.settleForPriority))
+    Spec.assertEqWith s "bob's Giant is 3/3 + 2/+0 (Bonesplitter) + 2/+0 (the Clone)" (S.powerToughnessOf bobs after) (Just (7, 3))
+    Spec.assertEqWith s "and alice's unequipped Piker is a plain 2/1" (S.powerToughnessOf carrier after) (Just (2, 1))
+  -- Auramancer's Guise {2}{U}{U}: "Enchanted creature gets +2/+2 for each Aura
+  -- attached to it and has vigilance." Thran Power Suit {2}: "Equipped creature
+  -- gets +1/+1 for each Aura and Equipment attached to it and has ward {2}." The
+  -- Giant carries two Auras and one Equipment, so the Guise's count (2) and the
+  -- Suit's (3) differ.
+  Spec.it s "CR 613.4c Auramancer's Guise counts Auras and Thran Power Suit Auras and Equipment on the creature" $ do
+    guise <- S.printingOf s registry "Auramancer's Guise"
+    suit <- S.printingOf s registry "Thran Power Suit"
+    unholy <- S.printingOf s registry "Unholy Strength"
+    giant <- S.printingOf s registry "Hill Giant"
+    let (carrier, g1) = S.addPermanent giant S.alice (Setup.emptyGame S.bothPlayers)
+        (guised, g2) = S.addPermanent guise S.alice g1
+        (strength, g3) = S.addPermanent unholy S.alice g2
+        (suited, g4) = S.addPermanent suit S.alice g3
+        gs = S.attach suited carrier (S.attach strength carrier (S.attach guised carrier g4))
+    Spec.assertEqWith s "the Giant is 3/3 + 4/+4 (Guise) + 3/+3 (Suit) + 2/+1 (Unholy Strength)" (S.powerToughnessOf carrier gs) (Just (12, 11))
+    Spec.assertBool s (Projection.hasKeyword Keyword.Vigilance carrier gs) "the Guise grants vigilance"
+    Spec.assertBool s (any isWard (Map.keys (Projection.keywordsOf carrier gs))) "the Suit grants ward"
+  where
+    isWard k = case k of
+      Keyword.Ward {} -> True
+      _ -> False

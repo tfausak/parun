@@ -6,13 +6,13 @@
 
 **Architecture:** Control is *not* a base `Object` field — it is computed by `Projection.controllerOf` folding layer-2 `SetController` continuous effects (timestamp last-wins) over `Object.owner`, exactly as Giant Growth's P/T rides the projection. A new `Projection.controls` enumerates the battlefield permanents a player controls, and the "you control" call sites (attackers, blockers, mana sources, untap/settle, activations) switch to it from the owner-based `Game.zoneMembers Battlefield`. Two new opcodes — `GainControl` (installs the until-end-of-turn control effect and re-Sicks the creature, CR 302.6) and `Untap` — plus the reused layer-6 haste grant express Act of Treason. `Game.controllerOf` is deleted; everything routes through `Projection.controllerOf`.
 
-**Tech Stack:** Haskell 2010 (GHC 9.14.1, no extensions beyond `GADTs`/`RankNTypes`/`NamedFieldPuns`), tasty (`tasty-hunit` + `tasty-quickcheck`), the hand-rolled JSON codec (`Pawl.Codec`/`Pawl.Json`), cards as `data/cards/*.json`.
+**Tech Stack:** Haskell 2010 (GHC 9.14.1, no extensions beyond `GADTs`/`RankNTypes`/`NamedFieldPuns`), tasty (`tasty-hunit` + `tasty-quickcheck`), the hand-rolled JSON codec (`Parun.Codec`/`Parun.Json`), cards as `data/cards/*.json`.
 
 ## Global Constraints
 
 - **Warning-clean build, `-Werror` via the `pedantic` flag.** Every task ends green under `cabal build all --enable-tests --enable-benchmarks`. Incremental builds hide warnings from unchanged modules; when in doubt `cabal clean` first.
-- **Two invariants outrank this plan.** The rules core never cases on a card's *identity*, only classifications: `Pawl.Resolve` is the sole `case effect of` home; `Pawl.Projection` is the sole `case … Modification` home (so `SetController` is applied only in `Projection`, and `Pawl.Codec` may case on it purely as serialization, the standing exception). The engine never makes a player's choice — `GainControl`'s new controller is *derived* (the source's controller, CR 611.2c), never prompted.
-- **Haskell 2010, project style:** one type per `Pawl.Type.<Name>` module; qualified imports aliased to the last component; operators unqualified; `newtype`/`Mk`-prefixed constructors, non-punning; **no partial functions**; **no list comprehensions**; `case` over point-free; `let` over `where`; explicit `Text` not `String`; arbitrary-precision numbers. Derive at least `Eq` and `Show`.
+- **Two invariants outrank this plan.** The rules core never cases on a card's *identity*, only classifications: `Parun.Resolve` is the sole `case effect of` home; `Parun.Projection` is the sole `case … Modification` home (so `SetController` is applied only in `Projection`, and `Parun.Codec` may case on it purely as serialization, the standing exception). The engine never makes a player's choice — `GainControl`'s new controller is *derived* (the source's controller, CR 611.2c), never prompted.
+- **Haskell 2010, project style:** one type per `Parun.Type.<Name>` module; qualified imports aliased to the last component; operators unqualified; `newtype`/`Mk`-prefixed constructors, non-punning; **no partial functions**; **no list comprehensions**; `case` over point-free; `let` over `where`; explicit `Text` not `String`; arbitrary-precision numbers. Derive at least `Eq` and `Show`.
 - **Rules discipline:** every rules claim is checked against `docs/rules.txt` and the CR number cited in the code comment. Never trust recalled Magic rules. **The spec marks all CR numbers *(verify)*; verify each before it drives code** (control = CR 108.4 / 110.2; control-changing effects = layer 2 / CR 613.1b; summoning sickness = CR 302.6; the effect's set fixed at creation = CR 611.2c; until-end-of-turn wear-off = CR 514.2; untap keyword action = CR 701.20).
 - **TDD, one commit per task.** Write the failing test, run it to watch it fail, implement minimally, run it green, then run `hooky`. Never weaken an assertion or delete a test to pass.
 - **Formatting/lint before every commit:** `git add -A && hooky fix && git add -A && hooky run` (hooky acts on *staged* files only), then commit. Apply HLint suggestions or justify the exception.
@@ -24,19 +24,19 @@
 
 ## File Structure
 
-- **Modify** `source/library/Pawl/Type/Modification.hs` — add `SetController PlayerId` (layer-2 op); import `PlayerId`.
-- **Modify** `source/library/Pawl/Type/Effect.hs` — add `GainControl Duration SlotName` and `Untap SlotName`.
-- **Modify** `source/library/Pawl/Projection.hs` — `layer` arm for `SetController`; `isSet` and `rewriteModification` arms; new `controllerOf` and `controls`.
-- **Modify** `source/library/Pawl/Game.hs` — delete `controllerOf` (moved to `Projection`).
-- **Modify** `source/library/Pawl/Resolve.hs` — `applyEffect` arms for `GainControl` and `Untap`; their five classification arms (`slotsOf`/`readsX`/`manaProduced`/`searchesLibrary`/`rewriteEffect`); switch the two source-controller reads (`resolveSpell`/`resolveAbility`) from `Object.owner` to `Projection.controllerOf`.
-- **Modify** `source/library/Pawl/Combat.hs` — `legalAttackers`/`legalBlockers` candidate set → `Projection.controls`.
-- **Modify** `source/library/Pawl/Mana.hs` — mana-source enumeration → `Projection.controls`; `tapForMana` routes produced mana to `Projection.controllerOf`, not `Object.owner`.
-- **Modify** `source/library/Pawl/Engine.hs` — `untapAll`/`settleAll` → `Projection.controls`.
-- **Modify** `source/library/Pawl/Action.hs` — battlefield-permanent enumeration → `Projection.controls`; add the `Pawl.Projection` import.
-- **Modify** `source/library/Pawl/Codec.hs` — `modificationToJson`/`jsonToModification` `SetController` arm (+ a `PlayerId` codec pair); `effectToJson`/`jsonToEffect` arms for `GainControl` and `Untap`.
+- **Modify** `source/library/Parun/Type/Modification.hs` — add `SetController PlayerId` (layer-2 op); import `PlayerId`.
+- **Modify** `source/library/Parun/Type/Effect.hs` — add `GainControl Duration SlotName` and `Untap SlotName`.
+- **Modify** `source/library/Parun/Projection.hs` — `layer` arm for `SetController`; `isSet` and `rewriteModification` arms; new `controllerOf` and `controls`.
+- **Modify** `source/library/Parun/Game.hs` — delete `controllerOf` (moved to `Projection`).
+- **Modify** `source/library/Parun/Resolve.hs` — `applyEffect` arms for `GainControl` and `Untap`; their five classification arms (`slotsOf`/`readsX`/`manaProduced`/`searchesLibrary`/`rewriteEffect`); switch the two source-controller reads (`resolveSpell`/`resolveAbility`) from `Object.owner` to `Projection.controllerOf`.
+- **Modify** `source/library/Parun/Combat.hs` — `legalAttackers`/`legalBlockers` candidate set → `Projection.controls`.
+- **Modify** `source/library/Parun/Mana.hs` — mana-source enumeration → `Projection.controls`; `tapForMana` routes produced mana to `Projection.controllerOf`, not `Object.owner`.
+- **Modify** `source/library/Parun/Engine.hs` — `untapAll`/`settleAll` → `Projection.controls`.
+- **Modify** `source/library/Parun/Action.hs` — battlefield-permanent enumeration → `Projection.controls`; add the `Parun.Projection` import.
+- **Modify** `source/library/Parun/Codec.hs` — `modificationToJson`/`jsonToModification` `SetController` arm (+ a `PlayerId` codec pair); `effectToJson`/`jsonToEffect` arms for `GainControl` and `Untap`.
 - **Create** `data/cards/act-of-treason.json` — the gate card.
-- **Modify** `source/test-suite/Pawl/Cards.hs` — load `act-of-treason`, add the record field, add it to `allPrintings`.
-- **Modify** `source/test-suite/Pawl/{ProjectionSpec,ResolveSpec,CombatSpec,ManaSpec,CodecSpec}.hs` — tests (create a `ProjectionSpec`/`ManaSpec` group if absent — check `Main.hs`).
+- **Modify** `source/test-suite/Parun/Cards.hs` — load `act-of-treason`, add the record field, add it to `allPrintings`.
+- **Modify** `source/test-suite/Parun/{ProjectionSpec,ResolveSpec,CombatSpec,ManaSpec,CodecSpec}.hs` — tests (create a `ProjectionSpec`/`ManaSpec` group if absent — check `Main.hs`).
 - **Modify** `docs/progress.md`, `docs/design.md` marker if needed, `CLAUDE.md` — completion note; retire the `Sickness` "EXPIRES at M3" comment.
 
 ---
@@ -44,11 +44,11 @@
 ## Task 1: The `SetController` layer-2 modification and the projected controller
 
 **Files:**
-- Modify: `source/library/Pawl/Type/Modification.hs`
-- Modify: `source/library/Pawl/Projection.hs`
-- Modify: `source/library/Pawl/Game.hs`
-- Modify: `source/library/Pawl/Codec.hs`
-- Test: `source/test-suite/Pawl/ProjectionSpec.hs`
+- Modify: `source/library/Parun/Type/Modification.hs`
+- Modify: `source/library/Parun/Projection.hs`
+- Modify: `source/library/Parun/Game.hs`
+- Modify: `source/library/Parun/Codec.hs`
+- Test: `source/test-suite/Parun/ProjectionSpec.hs`
 
 **Interfaces:**
 - Produces: `Modification.SetController :: PlayerId -> Modification`; `Projection.controllerOf :: ObjectId -> GameState -> Maybe PlayerId`; `Projection.controls :: PlayerId -> GameState -> [ObjectId]`.
@@ -56,12 +56,12 @@
 
 - [x] **Step 1: Confirm the exhaustive-match footprint of `Modification`**
 
-Run: `rg -n 'Modification\.GainKeyword|case .* of' source/library/Pawl/Projection.hs source/library/Pawl/Codec.hs`
+Run: `rg -n 'Modification\.GainKeyword|case .* of' source/library/Parun/Projection.hs source/library/Parun/Codec.hs`
 Expected: the functions that pattern-match every `Modification` constructor are `Projection.layer`, `Projection.isSet`, `Projection.rewriteModification`, `Codec.modificationToJson`, `Codec.jsonToModification`. Each needs a `SetController` arm (Steps 5–6, 8). Note their line numbers.
 
 - [x] **Step 2: Write the failing test for `controllerOf` (last-write-wins over `owner`)**
 
-In `source/test-suite/Pawl/ProjectionSpec.hs`, add to the test group (mirror an existing `ProjectionSpec` case for helper style; `S.addPiker`, `Game.freshTimestamp`):
+In `source/test-suite/Parun/ProjectionSpec.hs`, add to the test group (mirror an existing `ProjectionSpec` case for helper style; `S.addPiker`, `Game.freshTimestamp`):
 
 ```haskell
 HU.testCase "CR 108.4 a SetController effect overrides owner; last timestamp wins" $
@@ -85,7 +85,7 @@ HU.testCase "CR 108.4 a SetController effect overrides owner; last timestamp win
         HU.assertEqual "bob controls nothing" [] (Projection.controls S.bob gs)
 ```
 
-Add imports as needed: `Pawl.Type.ContinuousEffect`, `Pawl.Type.Affected`, `Pawl.Type.Duration`, `Pawl.Type.Modification`, `Data.Set`, `Pawl.Game`, `Pawl.Type.GameState`, `Pawl.Projection`.
+Add imports as needed: `Parun.Type.ContinuousEffect`, `Parun.Type.Affected`, `Parun.Type.Duration`, `Parun.Type.Modification`, `Data.Set`, `Parun.Game`, `Parun.Type.GameState`, `Parun.Projection`.
 
 - [x] **Step 3: Run the test to verify it fails**
 
@@ -94,7 +94,7 @@ Expected: FAIL — `Modification.SetController` and `Projection.controllerOf`/`c
 
 - [x] **Step 4: Add the `SetController` constructor**
 
-In `source/library/Pawl/Type/Modification.hs`, add the import `import Pawl.Type.PlayerId (PlayerId)` and a constructor (with a CR-cited comment):
+In `source/library/Parun/Type/Modification.hs`, add the import `import Parun.Type.PlayerId (PlayerId)` and a constructor (with a CR-cited comment):
 
 ```haskell
   | -- layer 2, CR 613.1b: set this object's controller. The PlayerId is BAKED at
@@ -106,14 +106,14 @@ In `source/library/Pawl/Type/Modification.hs`, add the import `import Pawl.Type.
 
 - [x] **Step 5: Add the `layer`, `isSet`, and `rewriteModification` arms in `Projection`**
 
-In `source/library/Pawl/Projection.hs`:
+In `source/library/Parun/Projection.hs`:
 - `layer` — add `Modification.SetController _ -> Layer.Control`.
 - `isSet` — add `Modification.SetController _ -> False` (it is not the land-subtype "set" that gates static-ability liveness; CR 305.7 is unrelated). Verify the existing `isSet` semantics at the line found in Step 1 and match them.
 - `rewriteModification` (text-change, M3d) — add `Modification.SetController _ -> m` (a control op has no subtype words for CR 612 to rewrite; identity).
 
 - [x] **Step 6: Add `controllerOf` and `controls`, delete `Game.controllerOf`**
 
-In `source/library/Pawl/Projection.hs` add (note: no list comprehensions; `List.maximumBy` only on the non-empty branch, so it stays total):
+In `source/library/Parun/Projection.hs` add (note: no list comprehensions; `List.maximumBy` only on the non-empty branch, so it stays total):
 
 ```haskell
 -- CR 108.4 / 613.1b: the controller of an object is its owner, overridden by
@@ -145,11 +145,11 @@ controls :: PlayerId -> GameState -> [ObjectId]
 controls pid gs = filter (\oid -> controllerOf oid gs == Just pid) (Set.toList (GameState.battlefield gs))
 ```
 
-Add imports if absent: `qualified Data.List as List`, `qualified Data.Ord as Ord`, `qualified Data.Maybe as Maybe`, `qualified Pawl.Type.ContinuousEffect as ContinuousEffect`, `qualified Pawl.Type.Affected as Affected`, `qualified Pawl.Type.Object as Object`. Then **delete `controllerOf` from `source/library/Pawl/Game.hs`** (and its now-unused imports). The build will surface every caller; leave those for Task 4 except making Task 1 compile — temporarily, callers can qualify `Projection.controllerOf` where trivial, but the systematic switch is Task 4. (If deleting `Game.controllerOf` breaks too many modules to compile Task 1 in isolation, keep the delete and fix callers here as a mechanical rename `Game.controllerOf` → `Projection.controllerOf`; that rename is behavior-preserving because both return `owner` until an effect exists.)
+Add imports if absent: `qualified Data.List as List`, `qualified Data.Ord as Ord`, `qualified Data.Maybe as Maybe`, `qualified Parun.Type.ContinuousEffect as ContinuousEffect`, `qualified Parun.Type.Affected as Affected`, `qualified Parun.Type.Object as Object`. Then **delete `controllerOf` from `source/library/Parun/Game.hs`** (and its now-unused imports). The build will surface every caller; leave those for Task 4 except making Task 1 compile — temporarily, callers can qualify `Projection.controllerOf` where trivial, but the systematic switch is Task 4. (If deleting `Game.controllerOf` breaks too many modules to compile Task 1 in isolation, keep the delete and fix callers here as a mechanical rename `Game.controllerOf` → `Projection.controllerOf`; that rename is behavior-preserving because both return `owner` until an effect exists.)
 
 - [x] **Step 7: Add the `SetController` codec arms**
 
-In `source/library/Pawl/Codec.hs`, add `import qualified Pawl.Type.PlayerId as PlayerId` and a `PlayerId` codec pair (mirroring `quantityToJson`'s `Literal` arm — `Json.jInt` builds the number, `Json.asInteger` reads it):
+In `source/library/Parun/Codec.hs`, add `import qualified Parun.Type.PlayerId as PlayerId` and a `PlayerId` codec pair (mirroring `quantityToJson`'s `Literal` arm — `Json.jInt` builds the number, `Json.asInteger` reads it):
 
 ```haskell
 playerIdToJson :: PlayerId.PlayerId -> Value
@@ -178,10 +178,10 @@ git commit -m "feat(m4.5-p1): SetController layer-2 modification + Projection.co
 ## Task 2: The `Untap` opcode
 
 **Files:**
-- Modify: `source/library/Pawl/Type/Effect.hs`
-- Modify: `source/library/Pawl/Resolve.hs`
-- Modify: `source/library/Pawl/Codec.hs`
-- Test: `source/test-suite/Pawl/ResolveSpec.hs`
+- Modify: `source/library/Parun/Type/Effect.hs`
+- Modify: `source/library/Parun/Resolve.hs`
+- Modify: `source/library/Parun/Codec.hs`
+- Test: `source/test-suite/Parun/ResolveSpec.hs`
 
 **Interfaces:**
 - Produces: `Effect.Untap :: SlotName -> Effect card`.
@@ -213,7 +213,7 @@ Expected: FAIL — `Effect.Untap` not in scope.
 
 - [x] **Step 3: Add the `Untap` constructor**
 
-In `source/library/Pawl/Type/Effect.hs`:
+In `source/library/Parun/Type/Effect.hs`:
 
 ```haskell
   | -- CR 701.20: untap the slot's target permanent. Single-target (Act of
@@ -223,7 +223,7 @@ In `source/library/Pawl/Type/Effect.hs`:
 
 - [x] **Step 4: Add the `applyEffect` arm and the five classifications**
 
-In `source/library/Pawl/Resolve.hs`, add to `applyEffect` (mirror the `Destroy`/`MoveToZone` slot-and-legality pattern):
+In `source/library/Parun/Resolve.hs`, add to `applyEffect` (mirror the `Destroy`/`MoveToZone` slot-and-legality pattern):
 
 ```haskell
   Effect.Untap slot ->
@@ -258,10 +258,10 @@ git commit -m "feat(m4.5-p1): Untap opcode"
 ## Task 3: The `GainControl` opcode
 
 **Files:**
-- Modify: `source/library/Pawl/Type/Effect.hs`
-- Modify: `source/library/Pawl/Resolve.hs`
-- Modify: `source/library/Pawl/Codec.hs`
-- Test: `source/test-suite/Pawl/ResolveSpec.hs`
+- Modify: `source/library/Parun/Type/Effect.hs`
+- Modify: `source/library/Parun/Resolve.hs`
+- Modify: `source/library/Parun/Codec.hs`
+- Test: `source/test-suite/Parun/ResolveSpec.hs`
 
 **Interfaces:**
 - Produces: `Effect.GainControl :: Duration -> SlotName -> Effect card`.
@@ -294,7 +294,7 @@ Expected: FAIL — `Effect.GainControl` not in scope.
 
 - [x] **Step 3: Add the `GainControl` constructor**
 
-In `source/library/Pawl/Type/Effect.hs`:
+In `source/library/Parun/Type/Effect.hs`:
 
 ```haskell
   | -- CR 613.1b / 611.2c: install a layer-2 control effect on the slot's target
@@ -340,7 +340,7 @@ Classifications: `slotsOf` → `GainControl _ slot -> [slot]`; `readsX (GainCont
 
 - [x] **Step 5: Route the source-controller reads through the projection**
 
-In `source/library/Pawl/Resolve.hs`, change the two sites that pass the effect's controller (found at `resolveSpell`/`resolveAbility`, ~lines 242 and 264) from `Object.owner obj` to the projected controller, so a **controlled** permanent's ability resolves under the thief (CR 613 / 608.2g):
+In `source/library/Parun/Resolve.hs`, change the two sites that pass the effect's controller (found at `resolveSpell`/`resolveAbility`, ~lines 242 and 264) from `Object.owner obj` to the projected controller, so a **controlled** permanent's ability resolves under the thief (CR 613 / 608.2g):
 
 ```haskell
 -- was: (Object.owner obj)
@@ -370,8 +370,8 @@ git commit -m "feat(m4.5-p1): GainControl opcode + projected source controller i
 ## Task 4: Switch the "you control" call sites off owner
 
 **Files:**
-- Modify: `source/library/Pawl/Combat.hs`, `source/library/Pawl/Mana.hs`, `source/library/Pawl/Engine.hs`, `source/library/Pawl/Action.hs`
-- Test: `source/test-suite/Pawl/CombatSpec.hs`, `source/test-suite/Pawl/ManaSpec.hs`
+- Modify: `source/library/Parun/Combat.hs`, `source/library/Parun/Mana.hs`, `source/library/Parun/Engine.hs`, `source/library/Parun/Action.hs`
+- Test: `source/test-suite/Parun/CombatSpec.hs`, `source/test-suite/Parun/ManaSpec.hs`
 
 **Interfaces:**
 - Consumes: `Projection.controls`, `Projection.controllerOf`.
@@ -418,7 +418,7 @@ HU.testCase "mana from a controlled permanent goes to its controller, not owner"
         HU.assertBool "bob received none" (null (manaUnitsOf (Mana.poolOf S.bob after)))
 ```
 
-(`manaUnitsOf` unwraps `Mana.MkMana units`; use the existing accessor — check `Pawl.Type.Mana`.)
+(`manaUnitsOf` unwraps `Mana.MkMana units`; use the existing accessor — check `Parun.Type.Mana`.)
 
 - [x] **Step 2: Run to verify they fail**
 
@@ -441,7 +441,7 @@ In the mana-source enumeration (`Mana.hs:115`): `filter isSource (Projection.con
 
 - [x] **Step 5: Switch `Engine` and `Action`**
 
-`Engine.untapAll`/`settleAll`: replace `Game.zoneMembers Zone.Battlefield pid gs` with `Projection.controls pid gs` (both already have `gs` in scope; `Engine` imports `Projection`). `Action` (`Action.hs:42`, the battlefield-permanent enumeration for activations): replace with `Projection.controls pid gs` and add `import qualified Pawl.Projection as Projection`. **Leave the `Zone.Hand` enumerations (`Action.hs:29`, `Engine.hs:126`) and `Target.hs:40` unchanged** — hand is owner-relative, and `Target` builds a union over players (owner vs control gives the same set).
+`Engine.untapAll`/`settleAll`: replace `Game.zoneMembers Zone.Battlefield pid gs` with `Projection.controls pid gs` (both already have `gs` in scope; `Engine` imports `Projection`). `Action` (`Action.hs:42`, the battlefield-permanent enumeration for activations): replace with `Projection.controls pid gs` and add `import qualified Parun.Projection as Projection`. **Leave the `Zone.Hand` enumerations (`Action.hs:29`, `Engine.hs:126`) and `Target.hs:40` unchanged** — hand is owner-relative, and `Target` builds a union over players (owner vs control gives the same set).
 
 - [x] **Step 6: Build and run all tests**
 
@@ -461,8 +461,8 @@ git commit -m "feat(m4.5-p1): route you-control call sites through Projection.co
 
 **Files:**
 - Create: `data/cards/act-of-treason.json`
-- Modify: `source/test-suite/Pawl/Cards.hs`
-- Test: `source/test-suite/Pawl/ResolveSpec.hs` (gate scenario), `source/test-suite/Pawl/CodecSpec.hs` (round-trip, if it enumerates cards explicitly)
+- Modify: `source/test-suite/Parun/Cards.hs`
+- Test: `source/test-suite/Parun/ResolveSpec.hs` (gate scenario), `source/test-suite/Parun/CodecSpec.hs` (round-trip, if it enumerates cards explicitly)
 
 **Interfaces:**
 - Consumes: the loader `Cards.loadPrinting`, `Cards.allPrintings`; `Cast.castSpell`, `Stack.resolveTop`, `Engine.runGamePure`, `S.handOne`, `S.landsInPlay`, `S.addCreature`, `Combat.legalAttackers`.
@@ -528,7 +528,7 @@ git commit -m "feat(m4.5-p1): Act of Treason card + gate scenario (steal, untap,
 ## Task 6: The summoning-sickness synthetic scenario
 
 **Files:**
-- Test: `source/test-suite/Pawl/CombatSpec.hs`
+- Test: `source/test-suite/Parun/CombatSpec.hs`
 
 **Interfaces:**
 - Consumes: `Resolve.applyEffect` with `GainControl` (no haste rider); `Combat.canAttack`.
@@ -570,11 +570,11 @@ git commit -m "test(m4.5-p1): synthetic control-change summoning-sickness scenar
 ## Task 7: Documentation and tracking
 
 **Files:**
-- Modify: `source/library/Pawl/Type/Sickness.hs`, `docs/progress.md`, `CLAUDE.md`
+- Modify: `source/library/Parun/Type/Sickness.hs`, `docs/progress.md`, `CLAUDE.md`
 
 - [x] **Step 1: Retire the `Sickness` "EXPIRES at M3" comment**
 
-In `source/library/Pawl/Type/Sickness.hs`, update the comment: control-change sickness is now handled (P1) — `GainControl` re-Sicks the target (CR 302.6); the untap-step settle (`Engine.settleAll`, now controller-based) clears it. Note the remaining deferral: cross-turn settle under *indefinite* control is the Auras phase.
+In `source/library/Parun/Type/Sickness.hs`, update the comment: control-change sickness is now handled (P1) — `GainControl` re-Sicks the target (CR 302.6); the untap-step settle (`Engine.settleAll`, now controller-based) clears it. Note the remaining deferral: cross-turn settle under *indefinite* control is the Auras phase.
 
 - [x] **Step 2: Add the P1 completion note to `docs/progress.md`**
 

@@ -33,7 +33,7 @@ simulation, for exactly that reason.)
 The same noise fills the specs. 512 `Common.assertJsonCodec` sites carry a JSON
 literal, and most of them spell out fields that say nothing.
 
-`Pawl.Codec.Card` already shows where this ends up. Its `toJson` is in two tiers:
+`Parun.Codec.Card` already shows where this ends up. Its `toJson` is in two tiers:
 **12 keys written unconditionally**, and **16 hand-rolled `if null then [] else
 [...]` blocks** for the ones added later. The comments admit the split is
 historical rather than principled:
@@ -59,7 +59,7 @@ lacks defaults to `False` for the same reason: `DamageEvent.dealtByDeathtouch`,
 they take the value that means the same "nothing to say here":
 `dealtByLifelink :: Maybe PlayerId` defaults to `Nothing`, and
 `dealtByToxic :: Natural` defaults to `0`. That zero is R1, not the R5 exception
-below: `Pawl.Types.DamageEvent`'s own field comment says "Zero for a source
+below: `Parun.Types.DamageEvent`'s own field comment says "Zero for a source
 without toxic", and CR 702.164b defines total toxic value as a sum of `N`s, so
 zero is the empty sum rather than a printable toxic value. Contrast
 `EntryOption.power`, where 0 is a real printed characteristic.
@@ -90,7 +90,7 @@ Seven qualify, and two of them already have hand-rolled decode halves
 | `ActivationTiming` | `AnyTime` | no restriction |
 
 `ModeSelection` joins them at `Modal.selection`, defaulting to `ChooseExactly 1`.
-That is not a new judgment: `Pawl.Types.Modal`'s header already reads "A non-modal
+That is not a new judgment: `Parun.Types.Modal`'s header already reads "A non-modal
 payload is one Mode with ChooseExactly 1."
 
 **R3 — identity fields are never omissible.** `ObjectId`, `PlayerId`, `CardName`,
@@ -142,7 +142,7 @@ field (`power`, `toughness`, `manaCost`, `whichKind`, `whichRecipient`).
 
 ## The mechanism
 
-Three functions in `Pawl.Codec.Common`:
+Three functions in `Parun.Codec.Common`:
 
 ```haskell
 -- | A field that is always written and must be present.
@@ -162,7 +162,7 @@ defaultedField ::
 
 `toJson` becomes `Common.object . concat $ [...]`, one line per field, so whether
 a field is required reads down the left edge instead of being split across two
-tiers a hundred lines apart. `Pawl.Codec.Modal` in full:
+tiers a hundred lines apart. `Parun.Codec.Modal` in full:
 
 ```haskell
 defaultSelection :: ModeSelection.ModeSelection
@@ -209,7 +209,7 @@ flags while every identity field stays required.
 Tagged `"value"` payloads are out of scope: `Common.tagged` already omits `value`
 when there is none, and a constructor's payload is not a defaulted record field.
 
-Nothing under `Pawl.Engine` or `Pawl.Types` changes. The diff does not make the
+Nothing under `Parun.Engine` or `Parun.Types` changes. The diff does not make the
 rules core case on an effect's identity; it does not touch the rules core at all.
 
 ## Migration

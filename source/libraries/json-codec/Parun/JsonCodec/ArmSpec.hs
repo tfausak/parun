@@ -1,0 +1,166 @@
+module Parun.JsonCodec.ArmSpec where
+
+import qualified Data.Either as Either
+import qualified Data.Text as Text
+import qualified Parun.JsonCodec.Arm as Arm
+import qualified Parun.JsonCodec.Codec as Codec
+import qualified Parun.JsonCodec.Common as Common
+import qualified Parun.Spec as Spec
+
+data Example
+  = Plain
+  | Sized Integer
+  | Loose (Maybe Integer)
+  deriving (Eq, Ord, Show)
+
+-- | An all-nullary sum, for 'Arm.enum'. Separate from 'Example' because that
+-- one carries payloads and so cannot be 'Enum'.
+data Flat
+  = First
+  | Middle
+  | Last
+  deriving (Bounded, Enum, Eq, Ord, Show)
+
+flatCodec :: Codec.Codec Flat
+flatCodec = Arm.enum
+
+size :: Codec.Codec Integer
+size = Common.integer
+
+arms :: [Arm.Arm Example]
+arms =
+  [ Arm.nullary "Plain" Plain,
+    Arm.payload "Sized" size Sized (\x -> case x of Sized n -> Just n; _ -> Nothing),
+    Arm.optionalPayload "Loose" size Loose (\x -> case x of Loose mn -> Just mn; _ -> Nothing)
+  ]
+
+codec :: Codec.Codec Example
+codec = Arm.tagged tagOf arms
+
+-- | An arm list that deliberately OMITS a constructor 'tagOf' names, to pin
+-- what 'Arm.tagged' does when the tag has no arm -- the half of the coverage
+-- question a total 'tagOf' does NOT answer.
+partialCodec :: Codec.Codec Example
+partialCodec = Arm.tagged tagOf [Arm.nullary "Plain" Plain]
+
+-- | The whole arm list under a tag function that names the WRONG arm for
+-- 'Sized'. Pins that the encoder picks the arm BY TAG rather than by scanning
+-- the matchers: a scan would find @Sized@\'s own arm and write it, where
+-- selecting by tag reaches @Plain@\'s arm, whose matcher declines the value.
+-- 'Parun.Codec.CostComponent'\'s @DiscardThis@ is the in-tree shape.
+crossedCodec :: Codec.Codec Example
+crossedCodec = Arm.tagged (\x -> case x of Sized {} -> "Plain"; _ -> tagOf x) arms
+
+keyedCodec :: Codec.Codec Example
+keyedCodec = Arm.keyed tagOf arms
+
+flatKeyedCodec :: Codec.Codec Flat
+flatKeyedCodec = Arm.keyedEnum
+
+spec :: (Monad m, Monad n) => Spec.Spec m n -> n ()
+spec s = Spec.describe s "Parun.JsonCodec.Arm" $ do
+  Spec.it s "round trips a nullary arm" $
+    Common.assertCodec s codec Plain " {\"type\":\"Plain\"} "
+
+  Spec.it s "round trips a payload arm" $
+    Common.assertCodec s codec (Sized 2) " {\"type\":\"Sized\",\"value\":2} "
+
+  Spec.it s "names the type in an unknown tag's error" $
+    Spec.assertEq
+      s
+      (Common.parse (Text.pack " {\"type\":\"Nope\"} ") >>= Codec.decode codec)
+      (Left (Text.pack "unknown Example: Nope"))
+
+  Spec.it s "rejects a payload arm with no value" $
+    Spec.assertBool
+      s
+      (Either.isLeft (Common.parse (Text.pack " {\"type\":\"Sized\"} ") >>= Codec.decode codec))
+      "expected a decode failure"
+
+  -- The shape 'Arm.optionalPayload' exists for: BOTH forms decode under one
+  -- tag, unlike 'payload', which rejects the value-absent one.
+  Spec.it s "round trips an optional-payload arm with and without a value" $ do
+    Common.assertCodec s codec (Loose (Just 2)) " {\"type\":\"Loose\",\"value\":2} "
+    Common.assertCodec s codec (Loose Nothing) " {\"type\":\"Loose\"} "
+
+  -- Every constructor, not a representative one: the whole point of 'Arm.enum'
+  -- is that the arm list IS @[minBound ..]@, so the exhaustive assertion is the
+  -- one that would catch a derivation covering only part of the type.
+  Spec.it s "enum round trips every constructor, tagged by its name" $ do
+    Common.assertCodec s flatCodec First " {\"type\":\"First\"} "
+    Common.assertCodec s flatCodec Middle " {\"type\":\"Middle\"} "
+    Common.assertCodec s flatCodec Last " {\"type\":\"Last\"} "
+
+  -- An unknown tag still fails rather than falling through to some arm, and the
+  -- error names the type the same way a hand-written 'tagged' does.
+  Spec.it s "enum rejects an unknown tag" $
+    Spec.assertBool
+      s
+      (Either.isLeft (Common.parse (Text.pack " {\"type\":\"Absent\"} ") >>= Codec.decode flatCodec))
+      "expected a decode failure"
+
+  -- What a total 'tagOf' does NOT check: that the tag it names has an arm. What
+  -- 'Arm.tagged' must NOT do is write something that decodes to another value,
+  -- so the unmatched case is @{}@ -- the one object 'Common.asTagged' rejects --
+  -- and the round trip fails loudly instead.
+  Spec.it s "an unmatched value encodes as a document that will not decode" $ do
+    Spec.assertEq s (Common.render (Codec.encode partialCodec (Sized 1))) (Text.pack "{}")
+    Spec.assertBool
+      s
+      (Either.isLeft (Codec.decode partialCodec (Codec.encode partialCodec (Sized 1))))
+      "expected the unmatched encoding to fail to decode"
+    -- The arms it DOES name are unaffected.
+    Common.assertCodec s partialCodec Plain " {\"type\":\"Plain\"} "
+
+  Spec.it s "encodes through the arm the tag function names, not the first arm that matches" $ do
+    Spec.assertEq s (Common.render (Codec.encode crossedCodec (Sized 1))) (Text.pack "{}")
+    -- Same arm list, right tag function: the value the scan would have found.
+    Common.assertCodec s codec (Sized 1) " {\"type\":\"Sized\",\"value\":1} "
+
+  Spec.it s "enum has a schema" $ Common.assertHasSchema s flatCodec
+
+  Spec.describe s "keyed" $ do
+    Spec.it s "writes a nullary arm as its bare tag" $
+      Common.assertCodec s keyedCodec Plain " \"Plain\" "
+
+    Spec.it s "writes a payload arm as an object keyed by its tag" $
+      Common.assertCodec s keyedCodec (Sized 2) " {\"Sized\":2} "
+
+    Spec.it s "reads an optional-payload arm in both shapes" $ do
+      Common.assertCodec s keyedCodec (Loose (Just 2)) " {\"Loose\":2} "
+      Common.assertCodec s keyedCodec (Loose Nothing) " \"Loose\" "
+
+    Spec.it s "rejects a payload arm written bare" $
+      Spec.assertBool
+        s
+        (Either.isLeft (Common.parse (Text.pack " \"Sized\" ") >>= Codec.decode keyedCodec))
+        "expected a decode failure"
+
+    Spec.it s "rejects an object with two keys" $
+      Spec.assertBool
+        s
+        (Either.isLeft (Common.parse (Text.pack " {\"Sized\":1,\"Loose\":2} ") >>= Codec.decode keyedCodec))
+        "expected a decode failure"
+
+    Spec.it s "rejects an unknown tag" $
+      Spec.assertBool
+        s
+        (Either.isLeft (Common.parse (Text.pack " \"Nope\" ") >>= Codec.decode keyedCodec))
+        "expected a decode failure"
+
+    Spec.it s "keyedEnum writes every constructor as a bare string" $ do
+      Common.assertEnumCodec s flatKeyedCodec
+      Common.assertCodec s flatKeyedCodec Middle " \"Middle\" "
+
+    Spec.it s "has a schema" $ do
+      Common.assertHasSchema s keyedCodec
+      Common.assertHasSchema s flatKeyedCodec
+
+  Spec.it s "has a schema" $
+    Common.assertHasSchema s codec
+
+tagOf :: Example -> String
+tagOf x = case x of
+  Plain {} -> "Plain"
+  Sized {} -> "Sized"
+  Loose {} -> "Loose"

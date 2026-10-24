@@ -4,11 +4,11 @@
 its first resident) and the **monarch** customer of **GAP-S**. This is the last
 remaining M4.5 phase. Umbrella:
 `docs/superpowers/specs/2026-07-20-m4.5-closed-half-gaps-design.md` §3, row P11.
-Issue: `tfausak/pawl#7`. Census: `docs/mtgish-gap-census.md` §3.4/§3.5.*
+Issue: `tfausak/parun#7`. Census: `docs/mtgish-gap-census.md` §3.4/§3.5.*
 
 ## 0. Why this phase, and what it proves
 
-pawl's `Zone` has six members (Library, Hand, Graveyard, Battlefield, Stack,
+parun's `Zone` has six members (Library, Hand, Graveyard, Battlefield, Stack,
 Exile). The comprehensive rules define **seven** game zones (CR 400.1); the
 **Command** zone is absent. The Command zone is "a game area reserved for certain
 specialized objects that have an overarching effect on the game, yet are not
@@ -22,12 +22,12 @@ bundles them only because each is small:
   abilities and *no other characteristics* (CR 114.1/114.3), living in the command
   zone, whose abilities function *there* (CR 114.4 / 113.6p). The single structural
   claim GAP-Z must prove is that a **static ability functions from outside the
-  battlefield** — that pawl's continuous-effect projection can gather a static
+  battlefield** — that parun's continuous-effect projection can gather a static
   ability whose source is in the command zone, not on the battlefield.
 - **The monarch (a customer of GAP-S).** The monarch is a *player designation*
   (CR 725.1), and it needs **nothing** from the command zone — it is a
   player-state axis in its own right. Its structural novelty is CR 725.2's **two
-  inherent triggered abilities that have no source**: pawl has never carried an
+  inherent triggered abilities that have no source**: parun has never carried an
   ability that belongs to no object.
 
 The two are driven by one real gate card (Palace Jailer, monarch) and one labeled
@@ -53,7 +53,7 @@ demands them.
 
 ### The emblem source, and why it is synthetic
 
-Nearly every emblem in Magic is created by a **planeswalker ultimate**. pawl does
+Nearly every emblem in Magic is created by a **planeswalker ultimate**. parun does
 not model planeswalkers (a whole card type — loyalty counters, loyalty abilities,
 the planeswalker uniqueness rule), and modelling one would dwarf GAP-Z, which the
 umbrella calls "small." The only tournament-legal *non*-planeswalker emblem sources
@@ -133,7 +133,7 @@ leaving the game (§8).
 
 ### 2.1 `Zone.Command` and `GameState.command`
 
-`Zone` gains a seventh constructor, `Command` (CR 400.1). Zones in pawl are stored
+`Zone` gains a seventh constructor, `Command` (CR 400.1). Zones in parun are stored
 as per-zone collections on `GameState` keyed into the shared `objects` map;
 `command` is a `Set ObjectId` (shared across players, like `battlefield`/`exile`;
 CR 400.1 — the command zone is not per-player). The `Zone` value on an emblem
@@ -184,7 +184,7 @@ ordering layers.
 
 ### 2.4 The projection gathers command-zone static abilities
 
-`Pawl.Projection.gather` today walks `GameState.battlefield` for permanents' static
+`Parun.Projection.gather` today walks `GameState.battlefield` for permanents' static
 abilities (`fromPermanent`). It gains a symmetric pass over `GameState.command`:
 
 ```
@@ -226,7 +226,7 @@ ceases to be simply because `monarch` is overwritten. Setting the monarch **emit
 `GameEvent.BecameMonarch p`** (§2.8), which is what the steal trigger's duration and
 any future monarch trigger key off.
 
-*Why an enum and not a general player-spec:* pawl has no general "which player" spec
+*Why an enum and not a general player-spec:* parun has no general "which player" spec
 for effects yet (P10's player effects are targetless; #120 tracks the targeted
 case). The two monarch cases are the entire need this phase; a two-constructor
 `MonarchTarget` is the minimal honest shape. Generalizing to a player-spec axis is
@@ -235,7 +235,7 @@ deferred to whatever card first needs it.
 ### 2.7 The two inherent triggers: `Source.OfInherentTrigger`
 
 CR 725.2's two abilities "have no source and are controlled by the player who was
-the monarch at the time the abilities triggered." pawl's on-stack triggered ability
+the monarch at the time the abilities triggered." parun's on-stack triggered ability
 carries its source object (`Source.OfTrigger ObjectId (TriggeredAbility Card)`); an
 inherent monarch trigger has no such object. `Source` gains:
 
@@ -295,7 +295,7 @@ before its own duration is evaluated — and is noted in §8.
 
 ### 2.10 Serialization
 
-Every new type and constructor gets `Pawl.Codec` encode/decode arms as the JSON
+Every new type and constructor gets `Parun.Codec` encode/decode arms as the JSON
 data boundary (never to decide behaviour): `Zone.Command`, `Source.OfEmblem`,
 `Source.OfInherentTrigger`, `Effect.CreateEmblem`, `Effect.BecomeMonarch`,
 `MonarchTarget`, the new `TriggerCondition`, `GameEvent.BecameMonarch`, the monarch
@@ -355,29 +355,29 @@ is unaffected).
 ### Codec
 
 Round-trip tests for every new constructor in §2.10 in the subsystem specs that
-mirror the touched modules (`Pawl.ZoneSpec`, `Pawl.SourceSpec`, `Pawl.EffectSpec`,
-`Pawl.TriggerConditionSpec`, `Pawl.GameEventSpec`, and the projection/monarch
+mirror the touched modules (`Parun.ZoneSpec`, `Parun.SourceSpec`, `Parun.EffectSpec`,
+`Parun.TriggerConditionSpec`, `Parun.GameEventSpec`, and the projection/monarch
 gameplay tests in their subsystem specs).
 
 ## 6. Module and type changes (summary)
 
-- `Pawl.Type.Zone` — add `Command`.
-- `Pawl.Type.Source` — add `OfEmblem Card`, `OfInherentTrigger PlayerId
+- `Parun.Type.Zone` — add `Command`.
+- `Parun.Type.Source` — add `OfEmblem Card`, `OfInherentTrigger PlayerId
   (TriggeredAbility Card)`.
-- `Pawl.Type.Effect` — add `CreateEmblem Card`, `BecomeMonarch MonarchTarget`.
-- `Pawl.Type.MonarchTarget` — **new** (`TheController` | `ControllerOfSource`).
-- `Pawl.Type.TriggerCondition` — add the "creature dealt combat damage to the
+- `Parun.Type.Effect` — add `CreateEmblem Card`, `BecomeMonarch MonarchTarget`.
+- `Parun.Type.MonarchTarget` — **new** (`TheController` | `ControllerOfSource`).
+- `Parun.Type.TriggerCondition` — add the "creature dealt combat damage to the
   monarch" constructor.
-- `Pawl.Type.GameEvent` — add `BecameMonarch PlayerId`.
-- `Pawl.Type.GameState` — add `command :: Set ObjectId`, `monarch :: Maybe
+- `Parun.Type.GameEvent` — add `BecameMonarch PlayerId`.
+- `Parun.Type.GameState` — add `command :: Set ObjectId`, `monarch :: Maybe
   PlayerId`.
-- `Pawl.Type.Expiry` (P6) — add the monarch-designation condition.
-- `Pawl.Projection` — add the command-zone `fromEmblem` gather pass.
+- `Parun.Type.Expiry` (P6) — add the monarch-designation condition.
+- `Parun.Projection` — add the command-zone `fromEmblem` gather pass.
 - The trigger scanner — synthesize the two inherent monarch abilities while
   `monarch = Just p`.
 - `Effect` resolution — `CreateEmblem` and `BecomeMonarch` executors; the latter
   emits `BecameMonarch`.
-- `Pawl.Codec`, `Pawl.Setup` — the arms and seeds of §2.10.
+- `Parun.Codec`, `Parun.Setup` — the arms and seeds of §2.10.
 - Every existing case-on-`Zone` / case-on-`Source` / case-on-`Effect` /
   case-on-`TriggerCondition` / case-on-`GameEvent` site gains its new arm
   (`cabal build` warning-clean enforces exhaustiveness).
@@ -407,7 +407,7 @@ expiry trigger (CLAUDE.md "File the issue, cite it inline"):
 - **The synthetic emblem source** — a labeled crutch; expires (`expires:card-driven`)
   when planeswalkers or the Ring land and a real card can mint an emblem.
 - **Command-zone casting** (Commander tax, CR 903.8) — no gate card; `expires:card-driven`.
-- **CR 725.4 monarch reassignment on a player leaving the game** — pawl is
+- **CR 725.4 monarch reassignment on a player leaving the game** — parun is
   multiplayer-capable, but this edge fires only when a player leaves; no gate card.
   `expires:card-driven` (a card/format that removes a player). Related to #87.
 - **CR 725.5** (a static effect keyed to "the monarch" with no monarch present) —
@@ -423,7 +423,7 @@ expiry trigger (CLAUDE.md "File the issue, cite it inline"):
 
 ## 9. Tracking
 
-Umbrella issue `tfausak/pawl#7`. On completion, replace the CLAUDE.md status
+Umbrella issue `tfausak/parun#7`. On completion, replace the CLAUDE.md status
 bullet (never append) and add the milestone-completion-log entry to
 `docs/progress.md`. The deferral issues above are filed at kickoff and cited at
 their code sites.

@@ -1,0 +1,362 @@
+module Parun.Engine.Mulligan where
+
+import qualified Control.Monad as Monad
+import qualified Control.Monad.Trans.State.Strict as State
+import qualified Data.Containers.ListUtils as ListUtils
+import qualified Data.List as List
+import qualified Data.Map.Strict as Map
+import qualified Data.Set as Set
+import qualified Numeric.Natural
+import qualified Parun.Engine.Binding as Binding
+import qualified Parun.Engine.Condition as Condition
+import qualified Parun.Engine.Decide as Decide
+import qualified Parun.Engine.Event as Event
+import qualified Parun.Engine.Game as Game
+import qualified Parun.Engine.Projection as Projection
+import qualified Parun.Engine.Turn as Turn
+import qualified Parun.Engine.Vanguard as Vanguard
+import qualified Parun.Extra.Natural as Natural
+import qualified Parun.Types.Card as Card
+import qualified Parun.Types.Decider as Decider
+import qualified Parun.Types.Effect as Effect
+import qualified Parun.Types.Face as Face
+import Parun.Types.Game (Game)
+import qualified Parun.Types.GameSettings as GameSettings
+import qualified Parun.Types.GameState as GameState
+import qualified Parun.Types.HandAction as HandAction
+import qualified Parun.Types.HandActionIndex as HandActionIndex
+import Parun.Types.HandActionPerformer (HandActionPerformer)
+import qualified Parun.Types.HandWindowCap as HandWindowCap
+import qualified Parun.Types.MulliganDecision as MulliganDecision
+import qualified Parun.Types.MulliganOffer as MulliganOffer
+import Parun.Types.ObjectId (ObjectId)
+import qualified Parun.Types.ObjectRef as ObjectRef
+import Parun.Types.PlayerId (PlayerId)
+import qualified Parun.Types.Prompt as Prompt
+import qualified Parun.Types.Reveal as Reveal
+import qualified Parun.Types.RevealWindow as RevealWindow
+import qualified Parun.Types.Zone as Zone
+
+-- CR 103.5: the starting hand size. Deliberately NOT shared with CR 402.2's
+-- maximum hand size (PlayerEffect.defaultMaximumHandSize), a different seven
+-- the rules keep apart -- CR 902.5 and CR 902.5b modify the two by the same hand
+-- modifier (Parun.Engine.Vanguard.handSize) without making them one number.
+openingHand :: Numeric.Natural.Natural
+openingHand = 7
+
+-- CR 103.5 / CR 902.5: how many cards THIS player draws for an opening hand --
+-- rule 103.5's seven, as modified by CR 313.6's hand modifier where they brought
+-- a vanguard card. Both of this module's draws go through it, which is CR
+-- 902.5a: a mulligan "draws a new hand equal to their starting hand size", the
+-- same number as the first one.
+--
+-- Read per player and per draw rather than settled once, because it is read off
+-- a card in the command zone; CR 313.2 keeps that card there, so the two readings
+-- cannot disagree today, and reading live is what stays right if one ever could.
+startingHandSize :: PlayerId -> GameState.GameState -> Numeric.Natural.Natural
+startingHandSize = Vanguard.handSize openingHand
+
+-- CR 103.5: draw opening hands, then run the declaration/mulligan/bottom round
+-- loop to completion. Assumes each player's library is already built and
+-- shuffled. The per-player mulligan count is a local Map (absent = 0) read only
+-- by this loop, so it never enters GameState. `owners` is in turn order from
+-- the starting player.
+--
+-- CR 805.3a / 805.3b: under the shared team turns option the starting team's
+-- players go first and then each other team's in turn order, which is `owners`
+-- regrouped by team.
+--
+-- Not implemented: CR 103.5d's order within a team under the shared team turns
+-- option, which that team chooses (#4014).
+openingHands :: HandActionPerformer -> [PlayerId] -> Game ()
+openingHands perform seated = do
+  owners <- State.gets (\gs -> List.sortOn (\pid -> List.findIndex (Turn.sharesTurn gs pid) seated) seated)
+  -- CR 103.5 sentence 1: every player draws a full opening hand. A short
+  -- library sets drewFromEmpty here, and the flag survives the loop -- CR 727.3
+  -- / 729.3.
+  Monad.forM_
+    owners
+    ( \pid -> do
+        n <- State.gets (startingHandSize pid)
+        Monad.replicateM_ (Natural.toIntSaturating n) (Event.drawCard pid)
+    )
+  mulliganRounds perform Map.empty owners
+  -- CR 103.6: the opening-hand window, after the WHOLE CR 103.5 process.
+  openingHandActions perform owners
+  -- CR 103.8: the starting player takes their first turn only after all of this,
+  -- so none of the draws above -- CR 103.5's opening hands, and every mulligan's
+  -- redraw -- was made during a turn. GameState.drawsThisTurn counts CR 121.1's
+  -- draws PER TURN, and the handoff that would otherwise clear it does not run
+  -- before turn one.
+  State.modify' (\gs -> gs {GameState.drawsThisTurn = Map.empty})
+
+-- CR 103.5b / CR 103.6: every action the cards in this player's hand grant from
+-- the window `field` names, keyed by the granting card AND which of that card's
+-- actions it is, and paired with the effects that action performs. A card
+-- printing two actions contributes two entries, in printed order -- nothing in
+-- CR 103 caps the number, and the two are different offers. A CLASSIFICATION,
+-- not an identity test: this asks whether the card declares an action, never
+-- which card it is.
+--
+-- Read straight off the face (Game.faceOf) and never through the projection:
+-- these abilities function in the HAND (CR 113.6), where this reader takes the
+-- printed card (#4709).
+actionsFor :: (Face.Face Card.Card -> [HandAction.HandAction Card.Card]) -> PlayerId -> GameState.GameState -> [((ObjectId, HandActionIndex.HandActionIndex), HandAction.HandAction Card.Card)]
+actionsFor field pid gs =
+  let withActions oid = case Game.faceOf oid gs of
+        Nothing -> []
+        Just face -> zipWith (\i action -> ((oid, HandActionIndex.MkHandActionIndex i), action)) [0 ..] (field face)
+   in concatMap withActions (Game.zoneMembers Zone.Hand pid gs)
+
+-- CR 103.6: does this action's own clause allow the player to take it? Gemstone
+-- Caverns' "you're not the starting player" is the pool's one gate, and an action
+-- that writes none is allowed to everyone.
+--
+-- Evaluated against the CARD IN HAND, with the acting player as CR 109.5's "you"
+-- -- that rule's OWNER clause, since a card in a hand has no controller -- so
+-- PlayerRef.Relative You resolves to the player being offered the action. The
+-- perspective is passed in rather than derived, which is also why this needs no
+-- projected controller for a card the projection does not reach.
+--
+-- A CLASSIFICATION, not an identity test, exactly as actionsFor above is: this
+-- asks whether the card's own gate holds, never which card it is.
+allows :: PlayerId -> ObjectId -> HandAction.HandAction Card.Card -> GameState.GameState -> Bool
+allows pid oid action gs = case HandAction.condition action of
+  Nothing -> True
+  Just condition -> Condition.holds (Projection.fullView gs) (Projection.sourceContext gs (Just pid) oid) gs oid condition
+
+-- CR 103.6b: is this action the rule's reveal -- does taking it reveal the
+-- granting card itself? The one kind of action CR 103.6b caps, so the one
+-- handWindowExcept's RevealOncePerCard asks about.
+--
+-- Casing on Effect here is Parun.Engine.ManaAbility's classification, not a
+-- breach of design.md section 1: every arm answers the one question in the
+-- type, and none acts on which effect it is.
+revealsItself :: HandAction.HandAction Card.Card -> Bool
+revealsItself = any isSelfReveal . HandAction.effects
+  where
+    isSelfReveal effect = case effect of
+      Effect.Reveal reveal -> Reveal.ref reveal == ObjectRef.InSlot Binding.triggerSource
+      _ -> False
+
+-- The shared CR 103.5b / CR 103.6 loop: offer this player every action their
+-- hand grants through `field`, on the `question` channel, until they decline or
+-- none is left. Performing one is never a mulligan and never a cost. Both rules
+-- let a player act more than once, which is why this recurses rather than asking
+-- once.
+--
+-- TERMINATION IS THE PLAYER'S WHERE THE RULE LEAVES IT SO -- the CR 103.5b
+-- window, whose `cap` is Repeatable. An action need not move its card out of the
+-- hand: No-Regrets Egret's only reveals, so the same entry is offered again and
+-- again, and CR 103.5b caps nothing. Bounding the offers there -- one per entry,
+-- say -- would be the engine making a choice the rule leaves to the player, so
+-- that loop ends when they decline and not before. An interpreter that never
+-- declines never leaves the window, which is CR 104.4b's optional loop: those
+-- are not draws and the rules give nothing to break one with. The CR 103.6
+-- window terminates either way: its cap takes a revealed card's reveals out of
+-- the offers, and CR 103.6a's action takes the card out of the hand. CardSpec's
+-- "CR 103.6 every opening-hand action reveals its card or puts it onto the
+-- battlefield" holds the card data to those two.
+--
+-- Proved by MulliganSpec's "an action that leaves its card in hand is offered
+-- again", which takes the Egret twice and then declines. Card DATA that makes
+-- an action a no-op -- one reading a slot nothing binds -- reaches the same
+-- loop with a keen interpreter, and CardSpec's CR 103.5b / CR 103.6 dataflow
+-- lint from #184 is what rejects it; that belongs at load, not here.
+--
+-- CR 103.6b's cap is the `cap` parameter, and the reason this loop takes one:
+-- the CR 103.6 window may not re-offer a reveal of a card already revealed,
+-- and the CR 103.5b window must (No-Regrets Egret). See Parun.Types.HandWindowCap
+-- for why the cap is per card and why it spares CR 103.6a's action.
+--
+-- CR 103.6b's second sentence, "the card remains revealed until the first turn
+-- begins", is the stamp handWindowExcept writes after a reveal in the CR 103.6
+-- window alone. Proved by MulliganSpec's "CR 103.6b a card revealed from the
+-- opening hand stays revealed until the first turn begins".
+handWindow ::
+  HandWindowCap.HandWindowCap ->
+  (Face.Face Card.Card -> [HandAction.HandAction Card.Card]) ->
+  (Decider.Decider -> PlayerId -> [(ObjectId, HandActionIndex.HandActionIndex)] -> Prompt.Prompt (Maybe (ObjectId, HandActionIndex.HandActionIndex))) ->
+  HandActionPerformer ->
+  PlayerId ->
+  Game ()
+handWindow cap = handWindowExcept cap Set.empty
+
+-- handWindow's body, carrying the cards this window has already revealed. The
+-- set is a LOOP-LOCAL fact about one player's one visit to one window, so it
+-- never enters GameState -- the mulligan counts' argument, one rule over.
+--
+-- A set of cards and not of (card, action) keys: CR 103.6b caps the CARD.
+handWindowExcept ::
+  HandWindowCap.HandWindowCap ->
+  Set.Set ObjectId ->
+  (Face.Face Card.Card -> [HandAction.HandAction Card.Card]) ->
+  (Decider.Decider -> PlayerId -> [(ObjectId, HandActionIndex.HandActionIndex)] -> Prompt.Prompt (Maybe (ObjectId, HandActionIndex.HandActionIndex))) ->
+  HandActionPerformer ->
+  PlayerId ->
+  Game ()
+handWindowExcept cap revealed field question perform pid = do
+  -- Filtered before the offer, not after the answer: an action the rule no longer
+  -- allows is not a choice the player is asked to make. Two filters, and the
+  -- SAME line is where both live -- CR 103.6b's cap, and the action's own printed
+  -- clause (`allows`). Re-read on every pass of the loop rather than once, so an
+  -- action taken earlier in this window that changed the board is seen by the
+  -- next read.
+  candidates <- State.gets (\gs -> filter (\((oid, _), action) -> uncapped oid action && allows pid oid action gs) (actionsFor field pid gs))
+  case candidates of
+    -- Where the rules leave nothing to ask, don't prompt.
+    [] -> pure ()
+    _ -> do
+      decider <- State.gets (Decide.deciderFor pid)
+      answer <- Game.choose (question decider pid (fmap fst candidates))
+      case answer of
+        Nothing -> pure ()
+        -- The card AND the index, because a card granting two actions leaves the
+        -- card alone ambiguous, and picking either one for the player would be
+        -- the engine making a choice.
+        Just key -> case lookup key candidates of
+          -- A key that was not offered: validated by MEMBERSHIP, the
+          -- Action.Activate posture, which keeps this total with no partial
+          -- lookup and no way for an interpreter to conjure an action.
+          Nothing -> pure ()
+          Just action -> do
+            perform (fst key) pid (HandAction.effects action)
+            -- CR 103.6b: the CR 103.6 window's reveal lasts; CR 103.5b's does not.
+            Monad.when (cap == HandWindowCap.RevealOncePerCard && revealsItself action) (Event.stampReveal RevealWindow.UntilFirstTurn (fst key))
+            let revealed2 = if revealsItself action then Set.insert (fst key) revealed else revealed
+            handWindowExcept cap revealed2 field question perform pid
+  where
+    uncapped oid action = case cap of
+      HandWindowCap.Repeatable -> True
+      HandWindowCap.RevealOncePerCard -> not (revealsItself action && Set.member oid revealed)
+
+-- CR 103.6: the starting player acts first, then each other player in turn
+-- order, which is exactly the order `owners` arrives in. A player who has left
+-- the game is not here to act -- the rebuild paths derive `owners` from
+-- Game.stillPlayingInOrder, so they get no window and no opening hand.
+openingHandActions :: HandActionPerformer -> [PlayerId] -> Game ()
+openingHandActions perform owners =
+  Monad.forM_ owners (handWindow HandWindowCap.RevealOncePerCard Face.openingHandActions Prompt.OpeningHandAction perform)
+
+-- CR 103.5: repeat the declare-all-then-take-all round until no still-deciding
+-- player mulligans. `deciding` is the players who have NOT yet kept -- keeping
+-- is terminal, so a player who keeps drops out of the pool and is never asked
+-- again.
+mulliganRounds :: HandActionPerformer -> Map.Map PlayerId Numeric.Natural.Natural -> [PlayerId] -> Game ()
+mulliganRounds perform counts deciding = do
+  -- CR 103.5: the starting player declares first, then each other in turn order
+  -- (turn order is preserved: `deciding` is filtered from the original
+  -- `owners`). A player whose hand is already zero cannot mulligan (final
+  -- sentence) and is treated as Keep without being asked -- which also drops
+  -- them from the pool.
+  decisions <- Monad.forM deciding $ \pid -> do
+    -- CR 103.5b: the window comes FIRST -- the action is taken "at a time they
+    -- would declare", and the declaration follows it. Reading the hand size
+    -- after it is load-bearing: an action that empties the hand makes this a
+    -- forced keep under CR 103.5's final sentence.
+    handWindow HandWindowCap.Repeatable Face.mulliganActions Prompt.MulliganAction perform pid
+    handSize <- State.gets (length . Game.zoneMembers Zone.Hand pid)
+    if handSize <= 0
+      then pure (pid, MulliganDecision.Keep)
+      else do
+        decider <- State.gets (Decide.deciderFor pid)
+        offer <- State.gets (offerFor counts pid)
+        decision <- Game.choose (Prompt.DeclareMulligan decider pid offer)
+        pure (pid, decision)
+  let mulliganers = fmap fst (filter (\(_, d) -> d == MulliganDecision.Mulligan) decisions)
+  case mulliganers of
+    -- CR 103.5: a round with no mulligans ends the process; the remaining hands
+    -- are opening hands.
+    [] -> pure ()
+    _ -> do
+      -- CR 103.5 takes every mulligan simultaneously. parun is sequential;
+      -- because a hand is hidden information, applying them in turn order is
+      -- observably equivalent.
+      counts2 <- Monad.foldM takeMulligan counts mulliganers
+      -- Kept players have dropped out; only this round's mulliganers decide
+      -- again.
+      mulliganRounds perform counts2 mulliganers
+
+-- CR 103.5c / CR 800.6: how many of a player's mulligans are free -- do not
+-- count toward the cards bottomed or the mulligans allowed.
+--
+-- CR 800.1: a multiplayer game BEGINS with more than two players, rather than
+-- currently having them. GameState.turnOrder is the permanent seating roster,
+-- so counting seats answers that directly and a game that drops to two players
+-- by departure keeps its free mulligan. A rebuilt game (CR 727.1, CR 729.2) is
+-- seated from the players who were in the game it came from, so it answers for
+-- itself.
+--
+-- CR 903.12g grants the same allowance to any Brawl game, which CR 103.5c
+-- states as the UNION of the two causes rather than as two rules: "in a
+-- multiplayer game AND in any Brawl game". So this is one disjunction and not a
+-- sum -- a two-seat Brawl game and a five-seat ordinary one get the same one
+-- free mulligan, and a five-seat Brawl game gets one and not two.
+--
+-- A Natural rather than a Bool, because the caller subtracts this.
+freeMulligans :: GameState.GameState -> Numeric.Natural.Natural
+freeMulligans gs =
+  if length (GameState.turnOrder gs) > 2 || GameSettings.brawl (GameState.settings gs)
+    then 1
+    else 0
+
+-- CR 103.5 / 103.5c: what this player is told at their declaration -- the raw
+-- number of mulligans they have taken, and how many cards taking one more would
+-- put on the bottom of their library.
+--
+-- THE one place that turns a raw count into a cost. Both readers go through it:
+-- Prompt.DeclareMulligan reports it, and takeMulligan bottoms by it, so what a
+-- player is promised and what the mulligan actually costs cannot drift (#176).
+offerFor :: Map.Map PlayerId Numeric.Natural.Natural -> PlayerId -> GameState.GameState -> MulliganOffer.MulliganOffer
+offerFor counts pid gs =
+  let taken = Map.findWithDefault 0 pid counts
+      free = freeMulligans gs
+      count = taken + 1
+   in MulliganOffer.MkMulliganOffer
+        { MulliganOffer.taken = taken,
+          -- CR 103.5c: the free mulligans do not count. Natural subtraction is
+          -- partial below zero, so the comparison is explicit rather than
+          -- clamped after the fact.
+          MulliganOffer.bottomCount = if count > free then count - free else 0
+        }
+
+-- CR 103.5: one player takes a mulligan -- shuffle the hand back, redraw a full
+-- hand, then bottom one card per mulligan taken, in the player's chosen order,
+-- less the free allowance (CR 103.5c). The RAW count is what goes back into the
+-- map and what Prompt.DeclareMulligan reports, since it is what CR 103.5c
+-- subtracts FROM.
+takeMulligan :: Map.Map PlayerId Numeric.Natural.Natural -> PlayerId -> Game (Map.Map PlayerId Numeric.Natural.Natural)
+takeMulligan counts pid = do
+  handIds <- State.gets (Game.zoneMembers Zone.Hand pid)
+  Monad.forM_ handIds (\oid -> Event.changeZone oid Zone.Library)
+  Event.shuffleLibrary pid
+  handSize <- State.gets (startingHandSize pid)
+  Monad.replicateM_ (Natural.toIntSaturating handSize) (Event.drawCard pid)
+  -- The SAME offer the declaration prompt reported -- offerFor is a pure
+  -- function of `counts`, `pid` and the seat roster, none of which the redraw
+  -- touches -- so this bottoms exactly what the player was promised.
+  offer <- State.gets (offerFor counts pid)
+  let count = MulliganOffer.taken offer + 1
+      counted = MulliganOffer.bottomCount offer
+  newHand <- State.gets (Game.zoneMembers Zone.Hand pid)
+  let n = min counted (Natural.length newHand)
+  bottomChosen <-
+    if n > 0 && length newHand >= 2
+      then do
+        decider <- State.gets (Decide.deciderFor pid)
+        answer <- Game.choose (Prompt.Bottom decider pid newHand n)
+        -- CR 103.5: the cards bottomed come from THIS hand, and there are
+        -- exactly `n` of them. Filtered, not trusted (#222); a short answer is
+        -- topped up from the front of the hand. nub, not just filter: an answer
+        -- naming one card twice would bottom it twice, and the second
+        -- changeZone is a no-op on an id that has already moved, so the hand
+        -- would end up one card too big rather than visibly wrong.
+        let kept = List.genericTake n (ListUtils.nubOrd (filter (\oid -> List.elem oid newHand) answer))
+            topUp = List.genericTake (n - Natural.length kept) (filter (\oid -> List.notElem oid kept) newHand)
+        pure (kept <> topUp)
+      else -- CR 103.5: with nothing to bottom (a free mulligan, CR 103.5c) or a
+      -- hand of 0 or 1, there is exactly one possible outcome; where the rules
+      -- leave nothing to ask, don't prompt -- bottom whatever `n` names.
+        pure (List.genericTake n newHand)
+  Monad.forM_ bottomChosen (\oid -> Event.changeZone oid Zone.Library)
+  pure (Map.insert pid count counts)

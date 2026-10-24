@@ -70,8 +70,8 @@ alice plays green (tramplers), bob plays black (deathtouchers).
 
 ## 1. Subtypes and mana
 
-`Pawl.Type.Subtype` gains `Swamp` and `Forest` (enum growth, no shape change, as
-M2a's and M2b's subtypes were). `Pawl.Mana.subtypeMana` — the CR 305.6
+`Parun.Type.Subtype` gains `Swamp` and `Forest` (enum growth, no shape change, as
+M2a's and M2b's subtypes were). `Parun.Mana.subtypeMana` — the CR 305.6
 classification that grants a basic land its intrinsic mana ability from its
 subtype — gains `Swamp -> Just (Colored Black)` and `Forest -> Just (Colored
 Green)`. `Color` already has all five colors, so no enum growth there.
@@ -86,7 +86,7 @@ would expire that, and M2d adds none.
 A deck is order-independent — it is shuffled before play, so any ordering among its
 cards is meaningless. The honest model is a **multiset**, not a list:
 
-- New `newtype Deck = MkDeck (Map Printing Natural)` in `Pawl.Type.Deck` (one type
+- New `newtype Deck = MkDeck (Map Printing Natural)` in `Parun.Type.Deck` (one type
   per module; a newtype over the naked `Map`, giving it a name and preventing
   accidental mixing with other maps). `Printing` and every type beneath it already
   derive `Ord`, so `Map Printing Natural` needs no new instances.
@@ -102,7 +102,7 @@ a `countByName` fold.
 Every deck is **36 land + 24 creature = 60**, so `Game.objectCount` stays 120 in
 any matchup and M1b's conservation property is untouched:
 
-| Deck (in `Pawl.Setup`) | Lands | Creatures |
+| Deck (in `Parun.Setup`) | Lands | Creatures |
 |---|---|---|
 | `redDeck` (was `deckList`) | 36 Mountain | 16 Goblin Piker + 8 Bird Maiden |
 | `greenDeck` (new) | 36 Forest | 24 War Mammoth |
@@ -140,7 +140,7 @@ a one-word wrap:
 
 ## 4. The basic-land printings
 
-`Pawl.Card` gains `swampPrinting` and `forestPrinting`, each shaped exactly like
+`Parun.Card` gains `swampPrinting` and `forestPrinting`, each shaped exactly like
 `mountainPrinting`: a `Basic Land — <Subtype>` with `manaCost = Nothing`, no
 power/toughness, no keywords, and no stored mana ability (it is granted from the
 subtype by CR 305.6, so the engine derives it — the card never names it). Basic

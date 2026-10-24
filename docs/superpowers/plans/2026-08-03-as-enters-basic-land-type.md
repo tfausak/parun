@@ -20,13 +20,13 @@
 - **One build at a time.** `direnv exec . cabal build all`, never bare `cabal`, never just the library — the suites break separately. Never poke inside `dist-newstyle`. Never `cabal clean`.
 - **Run every tool through direnv:** `direnv exec . cabal build all`, `direnv exec . cabal test`, `direnv exec . hooky fix`.
 - **`hooky` acts on staged files.** `git add`, then `hooky fix`, then `git add` again, then `hooky run`.
-- **`cabal-gild pawl.cabal` must be run directly** whenever a module is added or deleted. This plan adds **no** module, so it should not be needed.
+- **`cabal-gild parun.cabal` must be run directly** whenever a module is added or deleted. This plan adds **no** module, so it should not be needed.
 - **Never trust recalled Magic rules.** Every CR citation this plan writes into a comment was checked against `docs/rules.txt` on 2026-08-03: 105.1, 205.1b, 205.3i, 303.4a, 303.4c, 303.4d, 305.6, 305.7, 400.7, 604.3, 608.2d, 612.1, 613.1c, 613.1d, 613.7a, 613.7d, 614.1c, 614.12, 614.12a, 702.5a, 704.5m, 707.5. Any *other* citation you touch must be re-checked before you leave it there.
-- **The rules core must not case on an effect's identity.** `Pawl.Engine.Projection` is the one module allowed to case on `Modification`. Do not add a `case` on `Modification` anywhere else.
+- **The rules core must not case on an effect's identity.** `Parun.Engine.Projection` is the one module allowed to case on `Modification`. Do not add a `case` on `Modification` anywhere else.
 - **Fix a stale comment in the commit that falsifies it, never in a closing sweep.** A sweep is how several of PR #626's seventeen findings survived to review. Each task below names the prose it breaks.
 - **Never edit this plan, weaken an assertion, or delete a test to make a check pass.** If the plan looks wrong, stop and say so.
 - **`git add` explicit paths, never `git add -A`.** Other sessions may share this checkout.
-- Build must be warning-free under `-Weverything` (`pawl.cabal`'s `common warnings`).
+- Build must be warning-free under `-Weverything` (`parun.cabal`'s `common warnings`).
 - Baseline: **2590 passing** on `main`. Report the count after.
 
 ## Settled design calls
@@ -70,14 +70,14 @@ enumerates the sites. The totals below were counted by reading on 2026-08-03 —
   `Codec.EntryRewrite.toJson`/`fromJson`.
 - **`Prompt`** — a GADT, so only *total* deciders are forced. Confirmed by
   reading: `Replay.hs` **3**, `source/benchmark/Main.hs` **3**,
-  `source/test-suite/Pawl/Support.hs` **4**,
-  `source/test-suite/Pawl/GameSpec.hs` **2**,
-  `source/test-suite/Pawl/CastSpec.hs` **3**. Fifteen arms.
+  `source/test-suite/Parun/Support.hs` **4**,
+  `source/test-suite/Parun/GameSpec.hs` **2**,
+  `source/test-suite/Parun/CastSpec.hs` **3**. Fifteen arms.
   `ColorSpec.hs`, `ReplacementSpec.hs` and `ReplaySpec.hs` fall through to
   `S.identityAnswer` and are **not** forced — the precedent plan named
   `ReplacementSpec.hs` as forced and it is not.
-- **`Response`** — `Replay.hs` only. **There is no `Pawl.Codec.Response` and no
-  `Pawl.Codec.Object`**; the precedent plan named both and neither exists. Those
+- **`Response`** — `Replay.hs` only. **There is no `Parun.Codec.Response` and no
+  `Parun.Codec.Object`**; the precedent plan named both and neither exists. Those
   two types have no JSON codec, so Tasks 1–3 have no codec work.
 
 ---
@@ -88,12 +88,12 @@ Pure mechanical rename, no behaviour change and no new test. Done first so every
 later task is written against the final name. The suite count must not move.
 
 **Files:**
-- Modify: `source/libraries/types/Pawl/Types/Prompt.hs`, `.../Response.hs`
-- Modify: `source/libraries/engine/Pawl/Engine/Replay.hs`, `.../Resolve.hs`
-- Modify: `source/libraries/types/Pawl/Types/Effect.hs` (a comment citation)
-- Modify: `source/libraries/engine/Pawl/Engine/Projection.hs` (a comment citation)
+- Modify: `source/libraries/types/Parun/Types/Prompt.hs`, `.../Response.hs`
+- Modify: `source/libraries/engine/Parun/Engine/Replay.hs`, `.../Resolve.hs`
+- Modify: `source/libraries/types/Parun/Types/Effect.hs` (a comment citation)
+- Modify: `source/libraries/engine/Parun/Engine/Projection.hs` (a comment citation)
 - Modify: `source/benchmark/Main.hs`
-- Modify: `source/test-suite/Pawl/Support.hs`, `.../GameSpec.hs`, `.../CastSpec.hs`, and any spec citing the old name
+- Modify: `source/test-suite/Parun/Support.hs`, `.../GameSpec.hs`, `.../CastSpec.hs`, and any spec citing the old name
 
 **Interfaces:**
 - Renames `Prompt.ChooseBasicLandTypes` → `Prompt.ChooseLandTypeSwap` and
@@ -119,7 +119,7 @@ the stale-cross-reference hazard and are the reason this is a task rather than a
   -- payload's arity, so it cannot be confused with ChooseBasicLandType below --
   -- the singular as-enters choice, which is a different rule (CR 614.1c), a
   -- different moment (entry, not resolution) and a different subsystem
-  -- (Pawl.Engine.Replacement, not Pawl.Engine.Resolve).
+  -- (Parun.Engine.Replacement, not Parun.Engine.Resolve).
   ChooseLandTypeSwap :: Decider.Decider -> PlayerId.PlayerId -> ObjectId.ObjectId -> SlotName.SlotName -> Prompt (Subtype.Subtype, Subtype.Subtype)
 ```
 
@@ -133,12 +133,12 @@ spec that names the response.
 - [ ] **Step 3: Fix the prose citations**
 
 At minimum — re-derive the list from Step 1 rather than trusting this one:
-- `source/libraries/types/Pawl/Types/Effect.hs` (~line 86), which cites the
+- `source/libraries/types/Parun/Types/Effect.hs` (~line 86), which cites the
   prompt by name in the CR 608.2d discussion.
-- `source/libraries/engine/Pawl/Engine/Projection.hs`'s `rewriteModification`
+- `source/libraries/engine/Parun/Engine/Projection.hs`'s `rewriteModification`
   `SetCreatureSubtype` arm (~line 1154), which cites it explaining why `from` is
   never a creature type.
-- `source/test-suite/Pawl/ResolveSpec.hs`'s `MagicalHackTiming` group and any
+- `source/test-suite/Parun/ResolveSpec.hs`'s `MagicalHackTiming` group and any
   module header naming the prompt.
 
 - [ ] **Step 4: Verify green and commit**
@@ -161,8 +161,8 @@ git commit -m "Rename Magical Hack's prompt to ChooseLandTypeSwap"
 Storage only. Mirrors `Object.chosenColor` exactly, including the CR 400.7 reset.
 
 **Files:**
-- Modify: `source/libraries/types/Pawl/Types/Object.hs`
-- Modify: `source/libraries/engine/Pawl/Engine/Event.hs` (the `changeZone` reset)
+- Modify: `source/libraries/types/Parun/Types/Object.hs`
+- Modify: `source/libraries/engine/Parun/Engine/Event.hs` (the `changeZone` reset)
 - Modify: every `MkObject` construction site the build names
 
 **Interfaces:**
@@ -178,7 +178,7 @@ Neither exists.
 
 - [ ] **Step 1: Add the field**
 
-`source/libraries/types/Pawl/Types/Object.hs`, directly after `chosenColor`:
+`source/libraries/types/Parun/Types/Object.hs`, directly after `chosenColor`:
 
 ```haskell
     -- | CR 614.1c: a basic land type this object's controller chose as it
@@ -203,7 +203,7 @@ Neither exists.
     chosenSubtype :: Maybe Subtype.Subtype,
 ```
 
-Add `import qualified Pawl.Types.Subtype as Subtype` in alphabetical position if
+Add `import qualified Parun.Types.Subtype as Subtype` in alphabetical position if
 absent.
 
 - [ ] **Step 2: Let the build enumerate the construction sites**
@@ -213,8 +213,8 @@ absent.
 The sites that set `chosenColor` (and so must set this) are `Engine/Monarch.hs`,
 `Engine/Engine.hs`, `Engine/Setup.hs`, `Engine/Activate.hs`, `Engine/Event.hs`
 (two — the record near line 735 and `mkObj` near line 350), `Engine/Resolve.hs`,
-`test-suite/Pawl/CastSpec.hs`, `test-suite/Pawl/GameSpec.hs`,
-`test-suite/Pawl/Support.hs`. `Nothing` at each.
+`test-suite/Parun/CastSpec.hs`, `test-suite/Parun/GameSpec.hs`,
+`test-suite/Parun/Support.hs`. `Nothing` at each.
 
 - [ ] **Step 3: Reset it on a zone change, and fix the comment above the reset**
 
@@ -240,10 +240,10 @@ git commit -m "Record a basic land type chosen as an object enters"
 ## Task 3: `Prompt.ChooseBasicLandType` and `Response.ChoseBasicLandType`
 
 **Files:**
-- Modify: `source/libraries/types/Pawl/Types/Prompt.hs`, `.../Response.hs`
-- Modify: `source/libraries/engine/Pawl/Engine/Replay.hs`
+- Modify: `source/libraries/types/Parun/Types/Prompt.hs`, `.../Response.hs`
+- Modify: `source/libraries/engine/Parun/Engine/Replay.hs`
 - Modify: `source/benchmark/Main.hs`
-- Modify: `source/test-suite/Pawl/Support.hs`, `.../GameSpec.hs`, `.../CastSpec.hs`, `.../ReplaySpec.hs`
+- Modify: `source/test-suite/Parun/Support.hs`, `.../GameSpec.hs`, `.../CastSpec.hs`, `.../ReplaySpec.hs`
 
 **Interfaces:**
 - Produces:
@@ -271,7 +271,7 @@ together and a reader meets both at once:
   -- answers with a PAIR because CR 612's word swap needs two words (Magical
   -- Hack's "one basic land type" and the "another" replacing it); this is a
   -- single choice, made at a different moment (entry, not resolution) and by a
-  -- different subsystem (Pawl.Engine.Replacement, not Pawl.Engine.Resolve).
+  -- different subsystem (Parun.Engine.Replacement, not Parun.Engine.Resolve).
   -- Answering it with a pair and dropping half would be the engine deciding
   -- something no player was asked.
   --
@@ -300,7 +300,7 @@ together and a reader meets both at once:
     ChoseBasicLandType Subtype.Subtype
 ```
 
-There is no `Pawl.Codec.Response`; do not go looking for one.
+There is no `Parun.Codec.Response`; do not go looking for one.
 
 - [ ] **Step 3: Let the build enumerate the decider sites**
 
@@ -330,7 +330,7 @@ plan miscounted; add it and note it.
 
 - [ ] **Step 4: Add the replay test**
 
-`source/test-suite/Pawl/ReplaySpec.hs` has a `ChooseColor` record-and-replay
+`source/test-suite/Parun/ReplaySpec.hs` has a `ChooseColor` record-and-replay
 test. Add the `ChooseBasicLandType` twin, following that test's actual shape.
 
 - [ ] **Step 5: Verify green and commit**
@@ -346,9 +346,9 @@ git commit -m "Add the CR 614.1c basic-land-type choice prompt"
 ## Task 4: `EntryRewrite.ChooseBasicLandType`
 
 **Files:**
-- Modify: `source/libraries/types/Pawl/Types/EntryRewrite.hs`
-- Modify: `source/libraries/codec/Pawl/Codec/EntryRewrite.hs`, `.../EntryRewriteSpec.hs`
-- Modify: `source/libraries/engine/Pawl/Engine/Replacement.hs`
+- Modify: `source/libraries/types/Parun/Types/EntryRewrite.hs`
+- Modify: `source/libraries/codec/Parun/Codec/EntryRewrite.hs`, `.../EntryRewriteSpec.hs`
+- Modify: `source/libraries/engine/Parun/Engine/Replacement.hs`
 
 **Interfaces:**
 - Produces: `EntryRewrite.ChooseBasicLandType` (nullary), wire tag
@@ -463,12 +463,12 @@ from its rules text, its old land types, and any copiable effects affecting that
 land, and it gains the appropriate mana ability for each new basic land type."
 
 **Files:**
-- Modify: `source/libraries/types/Pawl/Types/Modification.hs`
-- Modify: `source/libraries/codec/Pawl/Codec/Modification.hs`, `.../ModificationSpec.hs`
-- Modify: `source/libraries/engine/Pawl/Engine/Projection.hs`
-- Modify: `source/libraries/types/Pawl/Types/ProjectedCharacteristics.hs` (two comments)
-- Modify: `source/test-suite/Pawl/Support.hs` (fixtures)
-- Modify: `source/test-suite/Pawl/ProjectionSpec.hs`
+- Modify: `source/libraries/types/Parun/Types/Modification.hs`
+- Modify: `source/libraries/codec/Parun/Codec/Modification.hs`, `.../ModificationSpec.hs`
+- Modify: `source/libraries/engine/Parun/Engine/Projection.hs`
+- Modify: `source/libraries/types/Parun/Types/ProjectedCharacteristics.hs` (two comments)
+- Modify: `source/test-suite/Parun/Support.hs` (fixtures)
+- Modify: `source/test-suite/Parun/ProjectionSpec.hs`
 
 **Interfaces:**
 - Produces: `Modification.SetLandSubtypeToChosen` (nullary), wire tag
@@ -477,7 +477,7 @@ land, and it gains the appropriate mana ability for each new basic land type."
 
 - [ ] **Step 1: Write the failing test**
 
-`source/test-suite/Pawl/ProjectionSpec.hs`, beside the existing
+`source/test-suite/Parun/ProjectionSpec.hs`, beside the existing
 `"CR 305.7 SetLandSubtype sets a Forest to only Mountain"` test (~line 616). No
 card needed — this drives the modification directly.
 
@@ -499,13 +499,13 @@ subtype.
 
 - [ ] **Step 2: Add the Support fixture**
 
-`source/test-suite/Pawl/Support.hs`, beside `attach`:
+`source/test-suite/Parun/Support.hs`, beside `attach`:
 
 ```haskell
 -- CR 614.1c: stamp the basic land type a permanent's controller would have
 -- chosen as it entered, without running the entry loop. A STATE fixture, the
 -- shape `attach` and `withEffect` already have -- the cast-it-for-real proof
--- that the choice is actually MADE is Pawl.AuraSpec's whole-card Convincing
+-- that the choice is actually MADE is Parun.AuraSpec's whole-card Convincing
 -- Mirage test, and this exists so a projection test does not have to cast.
 withChosenSubtype :: Subtype.Subtype -> ObjectId.ObjectId -> GameState.GameState -> GameState.GameState
 withChosenSubtype subtype oid gs =
@@ -622,7 +622,7 @@ passes. Do not flip it in this commit.
 
 - [ ] **Step 7: Fix the prose this commit falsifies**
 
-- `Pawl/Types/ProjectedCharacteristics.hs`, two field comments (~81, ~88) naming
+- `Parun/Types/ProjectedCharacteristics.hs`, two field comments (~81, ~88) naming
   "CR 305.7's SetLandSubtype at layer 4" as the clearer. Name
   `Projection.setLandSubtypeTo` — the helper this commit introduces — which is
   the stabler reference than either constructor.
@@ -645,7 +645,7 @@ git commit -m "Set a land's subtype to the one chosen as the source entered"
 
 **Files:**
 - Create: `data/cards/convincing-mirage.json`
-- Modify: `source/test-suite/Pawl/AuraSpec.hs`, `.../ManaSpec.hs`, `.../Support.hs`
+- Modify: `source/test-suite/Parun/AuraSpec.hs`, `.../ManaSpec.hs`, `.../Support.hs`
 
 **Design call — `Pool.Permanents` narrowed by a Land filter, not a new
 `Pool.Lands`.** `Pool` has no `Lands` arm and should not grow one for this.
@@ -708,19 +708,19 @@ replacement, and Blood Moon's static-ability shape.
 ```
 
 **Verify rather than assume:** subtype arrays must be sorted in `Ord`-declaration
-order (one entry here, trivially sorted), and `Pawl.Codec.Card` decodes `enchant`
+order (one entry here, trivially sorted), and `Parun.Codec.Card` decodes `enchant`
 through `TargetSpec.fromJson` — but **no Aura in the pool has used the filter
 half before**. If the decoder rejects it, that is a real gap and gets its own
-commit, not a workaround. `Pawl.CardSpec`'s "Aura iff enchant" lint is satisfied
+commit, not a workaround. `Parun.CardSpec`'s "Aura iff enchant" lint is satisfied
 in both directions.
 
 - [ ] **Step 2: Verify the card round-trips**
 
-`direnv exec . cabal test 2>&1 | tail -30` — `Pawl.CardsSpec` passes.
+`direnv exec . cabal test 2>&1 | tail -30` — `Parun.CardsSpec` passes.
 
 - [ ] **Step 3: Write the proving test**
 
-`source/test-suite/Pawl/AuraSpec.hs`, because it needs that file's cast-an-Aura
+`source/test-suite/Parun/AuraSpec.hs`, because it needs that file's cast-an-Aura
 machinery (`S.handOne`, `Cast.castSpell`, `Stack.resolveTop`, `aimRecipient`);
 the Crown of the Ages test (~line 507) is the model.
 
@@ -755,7 +755,7 @@ survives the cast (CR 400.7 re-mints the *Aura*, not the land).
 
 - [ ] **Step 4: The fold-half strip, on a land with real rules text**
 
-`source/test-suite/Pawl/ManaSpec.hs`, in the CR 305.6/305.7 group (~line 236),
+`source/test-suite/Parun/ManaSpec.hs`, in the CR 305.6/305.7 group (~line 236),
 following the Blood Moon'd Reliquary Tower test's exact shape. This proves the
 strip reaches an activated ability when the type was *chosen* rather than
 printed — and it is fold-half only, so it passes before Task 7.
@@ -773,7 +773,7 @@ printed — and it is fold-half only, so it passes before Task 7.
 
 - [ ] **Step 5: Fix the haddock this card falsifies, in this commit**
 
-`source/test-suite/Pawl/Support.hs`'s `attach` is **outright false** once this
+`source/test-suite/Parun/Support.hs`'s `attach` is **outright false** once this
 card exists: "Tagged ToCreature, which is the tag the real attach paths would
 store: every Aura in this pool has a Pool.Creatures enchant spec, and Target's
 candidates for that pool are ToCreature." Convincing Mirage's enchant spec is
@@ -810,8 +810,8 @@ Swamp in addition to its other land types" — and it is what the Blood Moon
 version of this test already uses.
 
 **Files:**
-- Modify: `source/test-suite/Pawl/ProjectionSpec.hs`
-- Modify: `source/libraries/engine/Pawl/Engine/Projection.hs`
+- Modify: `source/test-suite/Parun/ProjectionSpec.hs`
+- Modify: `source/libraries/engine/Parun/Engine/Projection.hs`
 
 - [ ] **Step 1: Write the failing test**
 
@@ -864,7 +864,7 @@ precisely the two-samplers bug; confirm you have seen it before fixing it.
             -- fold (applyModification) while leaving its static abilities in the
             -- candidate list -- the two halves of one rule disagreeing, which is
             -- what the "strips Urborg's static ability" test in
-            -- Pawl.ProjectionSpec exists to catch.
+            -- Parun.ProjectionSpec exists to catch.
             Modification.SetLandSubtypeToChosen -> True
 ```
 
@@ -874,7 +874,7 @@ leaving the existing named-`False` arms and the trailing wildcard alone.
 
 This is the commit that makes Convincing Mirage enter `setLandSubtypeEffects`, so
 it is the commit that falsifies these. Cite by function and arm, never by line.
-In `source/libraries/engine/Pawl/Engine/Projection.hs`:
+In `source/libraries/engine/Parun/Engine/Projection.hs`:
 
 1. **`controlGrants`'s `INVARIANT` block (#197)** — "it holds only because no
    SetLandSubtype in the pool … carries a Matching filter with ControlledBy in

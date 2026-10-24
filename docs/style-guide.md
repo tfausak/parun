@@ -8,7 +8,7 @@ in review. Above all, prefer clarity over cleverness.
 wherever HLint can state one, and is configured not to suggest against the
 rest. What follows is what it cannot state, or cannot state in full. Code
 compiles under `-Weverything -Werror` (`pedantic`), less the `-Wno-*` list in
-`pawl.cabal`'s `common library` stanza.
+`parun.cabal`'s `common library` stanza.
 
 ## Modules and imports
 
@@ -53,7 +53,7 @@ compiles under `-Weverything -Werror` (`pedantic`), less the `-Wno-*` list in
 - Avoid `String`; use `Text`.
 - Avoid `Int`; prefer arbitrary precision (`Integer`, `Natural`) unless a wire
   or storage format forces a width. Convert with the named total functions in
-  `Pawl.Extra.*`, never `fromIntegral`.
+  `Parun.Extra.*`, never `fromIntegral`.
 - Avoid `List` for anything but a stack or a once-iterated stream: `Seq` when
   order matters, `Set` when it doesn't.
 

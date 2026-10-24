@@ -2,7 +2,7 @@
 
 Spec: `docs/superpowers/specs/2026-07-31-pure-registry-design.md`.
 
-Turns `Pawl.Registry` from a concrete `IO` record into
+Turns `Parun.Registry` from a concrete `IO` record into
 `newtype Registry m = MkRegistry { fetchCard :: CardName -> m (Either CardError Card) }`,
 moves the corpus sweeps into the test suite, and relaxes 30 spec modules off `IO`.
 
@@ -22,7 +22,7 @@ moves the corpus sweeps into the test suite, and relaxes 30 spec modules off `IO
 Each task leaves the tree green, so each is a commit — except 3 and 4, which are
 one commit because the suite cannot build between them.
 
-### Task 1: `Pawl.Types.CardName` and `Pawl.Types.CardError`
+### Task 1: `Parun.Types.CardName` and `Parun.Types.CardError`
 
 Add both modules. `CardError` mentions only `CardName` and `String`, so `types`
 needs no new dependency.
@@ -32,14 +32,14 @@ newtype CardName = MkCardName {unwrap :: Text.Text}   -- Eq, Ord, Show
 data CardError = Missing CardName | Invalid CardName String   -- Eq, Show
 ```
 
-Nothing uses them yet. Run `cabal-gild pawl.cabal` directly — `hooky fix` skips
+Nothing uses them yet. Run `cabal-gild parun.cabal` directly — `hooky fix` skips
 it on module add.
 
 **Verify:** build warning-free; suite 2042.
 
-### Task 2: `Pawl.Corpus` in the test suite, and the 18 lint sites repointed
+### Task 2: `Parun.Corpus` in the test suite, and the 18 lint sites repointed
 
-New test-suite module `source/test-suite/Pawl/Corpus.hs`, holding the bodies of
+New test-suite module `source/test-suite/Parun/Corpus.hs`, holding the bodies of
 today's `Registry.slugs` and `Registry.load`:
 
 ```haskell
@@ -65,14 +65,14 @@ signature becomes `Spec.Spec IO n -> IO [Printing.Printing]`; the 18 call sites
 change from `S.allPrintings registry` to `S.allPrintings s`, and the modules that
 used a registry for nothing else stop taking one.
 
-`Pawl.Registry` still has its old API this task; only its enumeration callers move.
+`Parun.Registry` still has its old API this task; only its enumeration callers move.
 
 **Verify:** build warning-free; suite 2042; no `Registry.slugs`,
 `Registry.cards` or `Registry.printings` anywhere.
 
 ### Task 3: the `Registry` newtype (with Task 4, one commit)
 
-Rewrite `Pawl.Registry`:
+Rewrite `Parun.Registry`:
 
 ```haskell
 newtype Registry m = MkRegistry
@@ -102,7 +102,7 @@ import — the library no longer enumerates.
 
 ### Task 4: `S.printingOf` and the 2697-site sweep
 
-Add to `Pawl.Support`:
+Add to `Parun.Support`:
 
 ```haskell
 printingOf :: (Monad m) => Spec.Spec m n -> Registry.Registry m -> String -> m Printing.Printing
@@ -119,7 +119,7 @@ Sweep, per module:
 - `Registry.card registry "X"` → `S.cardOf s registry "X"`
 
 Mechanical and dispatchable to subagents, one module each, same protocol as the
-pawl:spec conversion: edit one file, do not build, do not touch `Main.hs`, report
+parun:spec conversion: edit one file, do not build, do not touch `Main.hs`, report
 before/after counts so a dropped site is visible.
 
 **The deck loaders take a fetch function, not a registry.** `redRed`,
@@ -163,8 +163,8 @@ matches only `RegistrySpec`.
 
 ### Task 6: retire the three exception types
 
-Delete `Pawl.Exceptions.{UnknownCard,CorruptCard,MisfiledCard}`; keep
-`MissingRoot`. Run `cabal-gild pawl.cabal` directly. `RegistrySpec`'s
+Delete `Parun.Exceptions.{UnknownCard,CorruptCard,MisfiledCard}`; keep
+`MissingRoot`. Run `cabal-gild parun.cabal` directly. `RegistrySpec`'s
 `expectException` / `expectExceptionWith` helpers collapse into ordinary
 assertions on the returned `CardError`, which is the point of the change.
 
@@ -201,17 +201,17 @@ Also correct the group's header comment: it says one game costs "~66 ms" and tha
 
 ### Task 8: comment sweep and docs
 
-The pawl:spec conversion taught that a rename of this size silently invalidates
+The parun:spec conversion taught that a rename of this size silently invalidates
 prose. Sweep for:
 
 - comments naming `Registry.printing`, `Registry.card`, `Registry.slugs`,
   `Registry.new`, `Registry.load`, `allPrintings`, `corpusSlugs`
 - comments describing the registry as lazy or caching — still true, but now of
   `fileRegistry` specifically rather than of the type
-- `Pawl.Registry`'s header, which claims to be "the library's only module that
+- `Parun.Registry`'s header, which claims to be "the library's only module that
   performs IO" and describes a record of root plus cache
 - `CLAUDE.md`'s sublibrary table row for `registry`, and its
-  "Where the tests go" section if `Pawl.Corpus` warrants a mention
+  "Where the tests go" section if `Parun.Corpus` warrants a mention
 
 **Verify:** `grep -rn "Registry\.\(printing\|card\|slugs\|new\|load\)" source/ docs/`
 returns only live references.

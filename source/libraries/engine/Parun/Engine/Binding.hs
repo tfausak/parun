@@ -1,0 +1,1800 @@
+module Parun.Engine.Binding where
+
+import Control.Applicative ((<|>))
+import qualified Control.Monad as Monad
+import qualified Data.Char as Char
+import qualified Data.Foldable as Foldable
+import qualified Data.List as List
+import Data.Map.Strict (Map)
+import qualified Data.Map.Strict as Map
+import qualified Data.Maybe as Maybe
+import Data.Sequence (Seq)
+import qualified Data.Sequence as Seq
+import Data.Set (Set)
+import qualified Data.Set as Set
+import qualified Data.Text as Text
+import Numeric.Natural (Natural)
+import qualified Parun.Types.AbilityName as AbilityName
+import Parun.Types.Binding (Binding)
+import qualified Parun.Types.Binding as Binding
+import qualified Parun.Types.ExileLink as ExileLink
+import qualified Parun.Types.ExiledPile as ExiledPile
+import Parun.Types.ModeIndex (ModeIndex)
+import Parun.Types.ObjectId (ObjectId)
+import qualified Parun.Types.ObjectId as ObjectId
+import Parun.Types.PlayerId (PlayerId)
+import Parun.Types.ProjectedCharacteristics (ProjectedCharacteristics)
+import Parun.Types.Recipient (Recipient)
+import qualified Parun.Types.Recipient as Recipient
+import Parun.Types.SlotName (SlotName)
+import qualified Parun.Types.SlotName as SlotName
+import qualified Parun.Types.StickerRef as StickerRef
+
+-- CR 601.2b: the reserved slot under which a spell's single chosen X is stored.
+-- No card's targetSlots may name it (lint-enforced): X is not a target, so it
+-- needs a key the target namespace cannot collide with.
+variableX :: SlotName
+variableX = SlotName.MkSlotName (Text.pack "X")
+
+-- CR 700.2: the reserved slot under which a modal spell's chosen modes are
+-- stored. No card's targetSlots may name it (lint-enforced): a mode is not a
+-- target. Distinct from variableX.
+chosenModes :: SlotName
+chosenModes = SlotName.MkSlotName (Text.pack "modes")
+
+-- CR 700.2e: the reserved slot under which the player who chose a spell's
+-- modes is bound, Fatal Lore's "that player". Stamped only for a face whose
+-- Face.modeChooser is not @You@. No card's targetSlots may name it: the chooser
+-- is not a target.
+modeChooser :: SlotName
+modeChooser = SlotName.MkSlotName (Text.pack "modeChooser")
+
+-- CR 707.5: the reserved slot under which an object's copy snapshot is stored.
+-- No card's targetSlots may name it: a copy source is not a target.
+copySource :: SlotName
+copySource = SlotName.MkSlotName (Text.pack "copySource")
+
+-- CR 111.3 / 730.2a: the reserved slot under which an object's OWN copiable
+-- values are stored where a stamp rather than a card holds them -- a token's or
+-- a copy's as it was created, a merged permanent's merge -- so a later copy
+-- effect stamped under `copySource` above covers them without erasing them. No
+-- card's targetSlots may name it: an object's own values are not a target.
+ownCopySource :: SlotName
+ownCopySource = SlotName.MkSlotName (Text.pack "ownCopySource")
+
+-- CR 730.2i: the reserved slot under which a MERGED permanent's reading of its
+-- merge with each double-faced component turned over is stored, beside
+-- `ownCopySource` above, its CR 730.2h flipped reading nested as PC.flipped as
+-- the current one's is. No card's targetSlots may name it: a merge is not a
+-- target.
+turnedMergeSource :: SlotName
+turnedMergeSource = SlotName.MkSlotName (Text.pack "turnedMergeSource")
+
+-- CR 701.20a / 730.2a: the reserved slot under which a MERGED permanent's
+-- reading of its merge with each side's copy effects left out is stored, where
+-- it differs from `ownCopySource`'s -- what a reveal of the face-down pile
+-- shows. No card's targetSlots may name it: a merge is not a target.
+shownMergeSource :: SlotName
+shownMergeSource = SlotName.MkSlotName (Text.pack "shownMergeSource")
+
+-- CR 702.165d: the reserved slot under which a triggered ability's SOURCE's
+-- copiable values (CR 707.2) are stamped as the ability is put on the stack
+-- (Parun.Engine.Engine.placeBorne), so what backup grants is fixed then rather
+-- than read off the source at resolution. No card's targetSlots may name it: a
+-- source is not a target.
+placedSourceCopy :: SlotName
+placedSourceCopy = SlotName.MkSlotName (Text.pack "placedSourceCopy")
+
+-- CR 113.7: the reserved slot under which a triggered ability's SOURCE object
+-- (the object whose ability triggered) is bound as the ability is placed, so
+-- "this creature" / "this enchantment" is a slot read rather than a
+-- self-referential opcode. No card's targetSlots may name it (lint-enforced): a
+-- source is not a target.
+--
+-- Stamped on a SPELL too, and by the same name, because CR 201.5 says the same
+-- thing about one: "text that refers to the object it's on by name means just
+-- that particular object", and what CR 608.2 resolves a spell's instructions
+-- against is the object on the stack. Parun.Engine.Cast.castSpell writes CR
+-- 601.2a's incarnation here alongside `you` below, so Chronomantic Escape's
+-- "exile Chronomantic Escape with three time counters on it" is the read a
+-- kinship card's "this creature" is. A COPY of a spell re-stamps it with the
+-- copy's own id, where a copy of an ABILITY keeps the original's under CR
+-- 707.10b -- Parun.Engine.Resolve.Effect's CopyStackObject arm draws that line,
+-- and Parun.ResolveSpec's "CR 201.5 a resolving spell naming itself" proves both.
+--
+-- Hazard this comment used to only predict, and which #1043 then resolved.
+-- CardSpec.hs's "declared slots == read slots" equality lint now walks a card's
+-- ABILITY modes as well as its spell's, and it would indeed be unsatisfiable
+-- stated naively -- Resolve.slotsOf returns this slot for an effect that reads
+-- it, while the rule above forbids the matching targetSlots entry. What makes it
+-- statable is the discipline this comment named: CardSpec.modalSlotsOffend
+-- SUBTRACTS the reserved names its carrier binds (this one, variableX,
+-- chosenModes, copySource, you, thatPlayer, became, thatSpell, thisAbility) from the READ side
+-- before comparing, rather than adding them to the declared side. Loosening it
+-- back to a subset check would silently retire its "declared but never read"
+-- half, which is the shape the ability lints carried until #1043.
+triggerSource :: SlotName
+triggerSource = SlotName.MkSlotName (Text.pack "self")
+
+-- CR 109.5: the reserved slot under which a spell's or an ability's CONTROLLER
+-- is bound ("you"), so a targetless self-referential clause -- Sarcomancy's
+-- "deals 1 damage to you" -- is a slot read rather than a new opcode.
+--
+-- Stamped on ALL THREE carriers, because rule 109.5 defines the word for all
+-- three. "The words 'you' and 'your' on an object refer to the object's
+-- controller, its would-be controller (if a player is attempting to play, cast,
+-- or activate it)" covers a spell, and Parun.Engine.Cast.castSpell answers it at
+-- CR 601.2i with the caster, who is the spell's controller. "For an activated
+-- ability, this is the player who activated the ability. For a triggered
+-- ability, this is the controller of the object when the ability triggered"
+-- covers the other two: Parun.Engine.Activate.activateAbility answers the first,
+-- Parun.Engine.Engine.placeBorne the second. CR 725.2's monarch pair is the fourth
+-- stamp site (Parun.Engine.Engine.placeSourceless): those abilities have no object
+-- for CR 109.5's triggered-ability sentence to name a controller of, and CR 725.2
+-- supplies one itself -- "controlled by the player who was the monarch at the
+-- time the abilities triggered".
+--
+-- Most spells that say "you" never touch this slot: they say it through an
+-- opcode carrying a PlayerRef, which Parun.Engine.Resolve answers from the
+-- resolving controller with no slot involved. The shape that needs the slot is
+-- damage, whose recipient is an ObjectRef whose only player-reaching arm is a
+-- bound one -- Char's "and 2 damage to you" (Parun.CastSpec's Char case).
+--
+-- "No card's targetSlots may name it" is lint-enforced as for the names above,
+-- and reaches spells and abilities alike: a card declaring a "you" target slot
+-- would be prompted for a target and have the answer clobbered by setYou.
+you :: SlotName
+you = SlotName.MkSlotName (Text.pack "you")
+
+-- CR 603.2: the reserved slot under which the PLAYER an event trigger's event
+-- names is bound -- "that player" in CR 702.70a's poisonous. Stamped by
+-- Parun.Engine.Event.Binding.eventBindings as the trigger is gathered, so the ability's
+-- payload reads an ordinary slot rather than a "the damaged player" opcode.
+--
+-- Distinct from `you` (CR 109.5, the ability's CONTROLLER): the player the
+-- event names is generally an opponent, and in a multiplayer game which
+-- opponent is not derivable from the controller at all.
+--
+-- Not a target (nothing was chosen), so CR 608.2b has nothing to re-validate --
+-- Resolve's legalSlot answers True for any slot that declares no target, which
+-- is how this stays readable at resolution. `you`'s "no card's targetSlots may
+-- name it" rule applies here too, under the same sweep. That an effect reading
+-- this slot sits under a condition that binds it is enforced by
+-- Parun.Engine.Event.Binding.eventBindingSlots, whose arms are the enumeration of the
+-- conditions that stamp it -- CR 400.3's owner under the returned-to-hand
+-- condition among them. Reading it under any other is a failing test.
+--
+-- The two attack conditions name DIFFERENT players under the one slot, and the
+-- slot is the printed PHRASE rather than the fact: CR 508.3a's is the defending
+-- player CR 508.5 resolves, and rule 508.3b's is the player attacked, which CR
+-- 508.1b announced. Each is what "that player" means on the card that reads it.
+triggerPlayer :: SlotName
+triggerPlayer = SlotName.MkSlotName (Text.pack "thatPlayer")
+
+-- CR 802.2a: the reserved slot under which the defending player a spell or
+-- ability CHOSE is bound, where it has no attacking creature to resolve
+-- "defending player" by -- Yare's "target creature defending player controls".
+-- Choosing the target is that choice, so it is the controllers of the chosen
+-- targets that are defending players, stamped as the targets are announced
+-- (Parun.Engine.Target.stampDefendingPlayers) so that CR 608.2b re-checks a
+-- target against the player chosen rather than against every defending player.
+--
+-- Not a target, so CR 608.2b re-validates nothing -- `gatePlayers`' posture,
+-- and the same "no card's targetSlots may name it" sweep applies.
+chosenDefendingPlayers :: SlotName
+chosenDefendingPlayers = SlotName.MkSlotName (Text.pack "chosenDefendingPlayers")
+
+-- CR 118.12a: the reserved slot under which the players a resolution cost's
+-- answer SELECTED are bound -- the printed word "they" in Rishadan Cutpurse's
+-- "each opponent sacrifices a permanent of their choice unless they pay {1}".
+-- Stamped by Parun.Engine.Resolve.payGateAdmits as the gate is answered, so the
+-- clause's own instructions read an ordinary slot rather than a "the players who
+-- didn't pay" opcode.
+--
+-- Which players are in it depends on Parun.Types.PayBranch: the IfNotPaid branch
+-- gets the offered players who did not pay, the IfPaid branch the ones who did,
+-- and the IfNonePaid branch every offered player, when none paid.
+-- One slot for all three, because the printed word is the same word and which
+-- branch a clause is is a fact about the CLAUSE.
+--
+-- SEVERAL players, which is the whole point and what parts it from
+-- `triggerPlayer`: CR 118.12a's rewriting is per player, so a gate whose payer
+-- names each opponent makes one offer per opponent and this slot holds every
+-- seat whose answer selected the branch. A reader that takes one recipient
+-- (Parun.Types.SlotArity.One) therefore reads NOTHING out of it once two seats
+-- are in it; PlayerRef.EachInSlot is the reader that takes them all. Bellowing Mauler
+-- aims a life-total opcode at this slot -- "each player loses 4 life unless
+-- they sacrifice a nontoken creature of their choice" -- and Parun.TriggerSpec's
+-- "CR 118.12a only the seats that did not pay lose the life" is where the
+-- plural read is proved, on a board where one of three seats paid.
+--
+-- Not a target (nothing was chosen), so CR 608.2b has nothing to re-validate --
+-- Resolve's legalSlot answers True for any slot that declares no target. `you`'s
+-- "no card's targetSlots may name it" rule applies here too, under the same
+-- sweep, and Parun.CardSpec's dataflow lint answers a read of it only for a mode
+-- one of whose clauses states a gate.
+gatePlayers :: SlotName
+gatePlayers = SlotName.MkSlotName (Text.pack "thosePlayers")
+
+-- CR 603.5: the reserved slot under which the players who TOOK a clause's
+-- printed "may" are bound -- the word "they" in a sentence whose "may" is not
+-- the resolving controller's. Jungle Wayfinder's "each player may search THEIR
+-- library" is the producer; its search names this slot as its searcher.
+--
+-- Stamped by Parun.Engine.Resolve.exercises as the "may" is answered, which is
+-- `gatePlayers` one question over -- and a separate name for that reason rather
+-- than for tidiness: one clause may carry both a printed "may" and a CR 118.12
+-- gate, and sharing the name would have the second answer overwrite the first.
+--
+-- SEVERAL players, and readable as several: PlayerRef.EachInSlot is the arm that
+-- takes them all, where PlayerRef.InSlot reads one and so reads NOBODY out of a
+-- slot holding two seats.
+--
+-- Not a target, so CR 608.2b re-validates nothing -- `gatePlayers`' posture, and
+-- the same "no card's targetSlots may name it" sweep applies. Parun.CardSpec's
+-- dataflow lint answers a read of it only for a mode one of whose clauses prints
+-- a "may".
+mayPlayers :: SlotName
+mayPlayers = SlotName.MkSlotName (Text.pack "thoseWhoMay")
+
+-- CR 701.55d: the reserved slot under which the player FACING a villainous
+-- choice is bound while their announced option is performed -- the word "that
+-- player" in a limb whose actions are aimed at the chooser rather than at the
+-- resolving controller. The Dalek Emperor's "that player sacrifices a creature
+-- of their choice" is the producer.
+--
+-- Stamped by Parun.Engine.Resolve.villainousPass, which is `mayPlayers` one
+-- question over, and a separate name for that reason: a limb may carry a printed
+-- "may" of its own, and sharing the name would have the second answer overwrite
+-- the first.
+--
+-- Rule 701.55d performs the process for one player at a time, so exactly ONE
+-- seat is in it whenever a limb reads it, and PlayerRef.InSlot and
+-- PlayerRef.EachInSlot therefore both answer it. That is a fact about the writer
+-- rather than about the type: the slot holds a player set like its two siblings.
+--
+-- Not a target, so CR 608.2b re-validates nothing -- `gatePlayers`' posture, and
+-- the same "no card's targetSlots may name it" sweep applies. Parun.CardSpec's
+-- dataflow lint answers a read of it only for a mode one of whose clauses is
+-- half of a villainous pair.
+facingPlayers :: SlotName
+facingPlayers = SlotName.MkSlotName (Text.pack "thoseFacing")
+
+-- CR 400.7e / CR 603.6c: the reserved slot under which a zone-change trigger's
+-- ARRIVING incarnation is bound -- and, since CR 708.7's readers took it, the
+-- slot for the object an event trigger's event NAMES more generally.
+--
+-- ONE slot for both directions of a zone change, because CR 400.7e is one rule
+-- about whatever moved, not a rule about the ability's bearer:
+--
+--   * a DEPARTURE, where the mover is the bearer -- Endless Cockroaches.
+--   * an ENTRY, where the mover is generally NOT the bearer -- Aether Flash.
+--     Here `triggerSource` is the enchantment and this slot is the entrant, two
+--     unrelated objects. The entrant may be gone by resolution (CR 608.2h),
+--     which is why an effect reading this slot must tolerate a dead id.
+--
+-- For the departure direction it is a SECOND name for what one printed word
+-- calls "it", and the two are not interchangeable, because CR 400.7 mints a
+-- fresh id on every zone change:
+--
+--   * `triggerSource` is CR 113.7a's SOURCE, the permanent as it was on the
+--     battlefield, read from CR 608.2h last known information by
+--     Projection.viewWithLastKnown. Everything the ability says ABOUT itself.
+--   * this slot is the CARD, wherever the move put it. Everything the ability
+--     DOES to itself, because the other no longer exists to be moved.
+--
+-- A THIRD reader, and not a zone change at all: CR 708.7's "whenever a permanent
+-- is turned face up", whose subject Pine Walker untaps. CR 708.8 leaves one
+-- permanent with one id there, so this slot and `triggerSource` name two
+-- unrelated OBJECTS rather than two incarnations of one card -- the Aether Flash
+-- shape above, not the Endless Cockroaches one. It is this slot and not a fresh
+-- one because CR 400.7e's slot is the printed word "it", the thing the EVENT
+-- names, and Parun.Engine.Resolve never learns which condition placed the ability
+-- it is reading a slot for.
+--
+-- CR 122.1's counter placement is the same shape and the same slot -- Auntie
+-- Ool, Cursewretch's "that creature" -- a marker going onto a permanent being no
+-- zone change either. It differs from the face-up pair in one way: CR 704.5f can
+-- have killed the subject before the CR 117.5 boundary, so the id here is dead
+-- as often as a departure's is.
+--
+-- A FOURTH, and the one case where the id does not come off the triggering event
+-- at all: CR 400.7f's "the new object that each Aura enchanting that permanent
+-- became in its owner's graveyard", where the event is the HOST's death and this
+-- slot is the bearer's own arrival, which CR 704.5m minted a pass later. Screams
+-- from Within's "return this card" is the reader, and it is the Endless
+-- Cockroaches shape once more -- two incarnations of one card -- so the same
+-- slot rather than a fresh one. Parun.Engine.Event.Trigger.eventTriggers is what supplies
+-- the id, off the batch.
+--
+-- Collapsing them either way is a silent wrong answer, not a type error:
+-- binding only the source makes every such effect a no-op on a dead id, and
+-- rebinding the source to the arrival redirects every viewWithLastKnown
+-- quantity read onto the graveyard card's printed characteristics.
+--
+-- A SECOND writer, and the same notion of "it" from the other side: an ability
+-- whose own effect performs the move binds the arrival here too, through
+-- Effect.MoveToZone's CR 400.7 slot. Rule 310.12b's "exile it, then you may cast
+-- it" is that shape (Parun.Engine.Battle.siegeDefeat), and the two writers cannot
+-- collide -- eventBindings stamps this slot only for the conditions
+-- Event.eventBindingSlots names, and a counter-removal condition is not one.
+-- No CARD may bind it, which Parun.CardSpec's reservedBindings sweep enforces.
+--
+-- Stamped by Parun.Engine.Event.Binding.eventBindings alongside `triggerPlayer`, and not
+-- a target -- same CR 608.2b posture as that slot, including the "no card's
+-- targetSlots may name it" sweep and the eventBindingSlots check on reads. A
+-- condition that binds it only SOMETIMES is accepted by that same lint through
+-- Event.eventBindingSlotsSometimes: CR 400.7e withholds this slot when the
+-- destination is hidden (CR 400.2), so the wider leaves-the-battlefield
+-- condition binds it for a death and not for a bounce, and the rule's own answer
+-- there is that the ability finds nothing.
+--
+-- ONE object usually, SEVERAL for a melded permanent leaving the battlefield:
+-- CR 712.21c makes an effect that finds what it became find both cards. The
+-- shape follows -- a recipient for one (setBecame), a group for several
+-- (setBecameGroup) -- and Parun.Engine.Event.Binding.setBecameArrivals is where the
+-- choice is made and justified. CR 701.62a's "a card you put into your
+-- graveyard this way" (Paranormal Analyst) is the other plural: a CR 701.40f
+-- refusal puts both looked-at cards there.
+became :: SlotName
+became = SlotName.MkSlotName (Text.pack "became")
+
+-- The card a zone change put into a HAND, the arrival CR 400.7e withholds from
+-- `became` because a hand is hidden (CR 400.2). Bound for the digital effects
+-- that reach it anyway -- Kithkin Brinefarer's "conjure a duplicate of that
+-- card", Volatile Rift's "it perpetually gets +X/+0" -- so the paper rule on
+-- `became` stands unchanged. Stamped by Parun.Engine.Event.Binding.eventBindings
+-- for TriggerCondition.CardLeavesZone; reserved and not a target, `became`'s
+-- posture.
+handArrival :: SlotName
+handArrival = SlotName.MkSlotName (Text.pack "handArrival")
+
+-- CR 603.2: the reserved slot under which the AMOUNT an event trigger's event
+-- names is bound -- the printed words "that much". Stamped by
+-- Parun.Engine.Event.Binding.eventBindings as the trigger is gathered, so the payload
+-- reads an ordinary Quantity.InSlot rather than a "how much was prevented" or
+-- "how much was gained" opcode.
+--
+-- ONE slot for every event that supplies a number, the way `became` is one slot
+-- for both directions of a zone change, and for the same reason: the printed word
+-- is the same word, and which rule produced the number is a fact about the
+-- CONDITION rather than about the slot. The conditions that stamp it today:
+--
+--   * CR 615.13's prevention -- "put that many +1/+1 counters" on Selfless
+--     Squire, "you gain that much life" on the same family's other cards.
+--   * CR 119.9's life gain -- Sanguine Bond's "target opponent loses that much
+--     life".
+--   * Its mirror, a player losing life -- Exquisite Blood's "you gain that much
+--     life".
+--   * CR 510.2's combat damage to a player, in both its bearer-scoped and its
+--     filtered form -- Questing Beast's "it deals that much damage to target
+--     planeswalker that player controls", Shroofus Sproutsire's "create that many
+--     1/1 green Saproling creature tokens".
+--   * CR 120.3's damage to the bearer -- Coalhauler Swine's "it deals that much
+--     damage to each player".
+--
+-- No ability bears two conditions, so they can never collide on one object, and
+-- Parun.Engine.Event.Binding.eventBindingSlots is what tells the card lint which of them
+-- makes the slot available.
+--
+-- A NUMBER, where triggerPlayer and became are references, so this is the first
+-- reserved slot read through Quantity rather than through a Ref. That is why
+-- Parun.Engine.Quantity.evaluateFor's InSlot arm looks on the stack object as well
+-- as on the effect's source: an amount an EFFECT bound mid-resolution lives on
+-- the source, and one the EVENT supplied lives where every other trigger binding
+-- does.
+--
+-- Read out of Parun.Types.GameState.ambientAmounts too, and written there by
+-- Parun.Engine.Resolve.Effect.runPreventionRider, which is CR 615.5's own channel: a
+-- rider whose shielded recipient is a player has no object at all to be bound
+-- on. Nothing writes THIS name onto a battlefield permanent any more: the
+-- prevention stamp was the one such writer and it is gone, and
+-- Resolve.bindAmountSlot -- the writer that can reach a permanent -- only ever
+-- writes a slot the CARD authored, which the reserved-name sweeps forbid being
+-- this one. So the ambient read, coming last, shadows nothing.
+--
+-- Not a target (nothing was chosen), so the same CR 608.2b posture and the same
+-- "no card's targetSlots may name it" sweep as `you`, `thatPlayer` and `became`.
+-- Swept on the BINDING side too, which matters here more than for any of those
+-- three: a card naming this one in an effect's bound SlotName -- Destroy's
+-- count, MoveToZone's incarnation -- would write it to the source, which
+-- evaluateFor's InSlot arm reads FIRST, shadowing the event's amount with the
+-- card's own. Parun.CardSpec's reservedBindings is that sweep.
+eventAmount :: SlotName
+eventAmount = SlotName.MkSlotName (Text.pack "thatMuch")
+
+-- CR 615.5 / 615.13 / 120.1: the reserved slot under which a prevention's
+-- SOURCE is bound -- the object that would have dealt the damage, which
+-- Deflecting Palm's and New Way Forward's "that source's controller" reads
+-- through PlayerRef.ControllerOfBound. Two writers, one per carrier, both off
+-- the sources keying the prevention's `amounts`: a CR 615.13 trigger's is
+-- Parun.Engine.Event.Binding.eventBindings, alongside `eventAmount`, binding
+-- every source its Filter admits at once (Judgment of Alexander's "that
+-- creature" over two attackers); a CR 615.5 rider's is
+-- Parun.Engine.Resolve.Effect.runPreventionRider, binding one source per run.
+--
+-- Distinct from `triggerSource` (CR 113.7a), which names the ability's own
+-- source: the bearer here is the card that shielded, and the object that would
+-- have dealt the damage is somebody else's. Distinct from `triggerPlayer` for
+-- the reason Parun.Types.PlayerRef.ControllerOfBound gives: the printed sentence
+-- names a player through an OBJECT, and CR 108.4's controller is read as the
+-- payload runs rather than snapshotted as the damage was stopped.
+--
+-- ROUTINELY DEAD by the time a trigger's payload runs -- the source may have
+-- been a spell that has since resolved (CR 609.7a admits one) -- which is
+-- `blockingCreature`'s posture and the payload's problem: every read of it goes
+-- through last known information, ControllerOfBound's own
+-- Projection.controllerWithLastKnown among them.
+--
+-- A CHARACTERISTIC of it reads its last known information through
+-- Parun.Engine.Resolve.Slots.effectViewOf, like any slot's object -- Comeuppance's
+-- "damage from a creature source", through ObjectRef.EachCardFromAmong.
+--
+-- Not a target (CR 115.10a; nothing was chosen), so the same CR 608.2b posture
+-- and the same "no card's targetSlots may name it" sweep as `became`, and the
+-- binding-side sweep `eventAmount` has.
+preventedDamageSource :: SlotName
+preventedDamageSource = SlotName.MkSlotName (Text.pack "thatDamageSource")
+
+-- CR 614.1c: the reserved slot under which an as-enters sacrifice records HOW
+-- MANY permanents were sacrificed -- Wood Elemental's "the number of Forests
+-- sacrificed as it entered". Stamped by Parun.Engine.Event's
+-- EntryRewrite.SacrificeAnyNumber arm on the entering permanent itself, so the
+-- card reads an ordinary Quantity.InSlot rather than a "how many did I eat"
+-- opcode. Second of eventAmount's kind, and read the same way.
+--
+-- Stamped on the PERMANENT and not on the spell that made it: CR 400.7 mints a
+-- new object on every zone change, so the count belongs to the incarnation that
+-- entered. That is also what makes CR 208.2a bite, since a Wood Elemental that
+-- has not entered -- one on the stack, or in any other zone, where CR 604.3 still
+-- runs its characteristic-defining ability -- carries no such binding, and the
+-- number of Forests it sacrificed as it entered genuinely cannot be determined.
+--
+-- Stamped even when NONE were sacrificed. A permanent that entered having
+-- sacrificed nothing has a determinable count of 0, which is a different fact
+-- from a Wood Elemental that never entered at all, and only the arithmetic
+-- coincides.
+--
+-- Not a target, so the same CR 608.2b posture and the same "no card's
+-- targetSlots may name it" sweep as eventAmount.
+sacrificedCount :: SlotName
+sacrificedCount = SlotName.MkSlotName (Text.pack "thatMany")
+
+-- CR 701.21a: the reserved slot under which the permanent a COST payment
+-- sacrificed is bound -- "the sacrificed creature" in Jarad, Golgari Lich Lord's
+-- "each opponent loses life equal to the sacrificed creature's power". Stamped
+-- by Parun.Engine.Activate as the activation's payment returns (CR 601.2h at the
+-- position CR 602.2b gives it), which is why the ability object holds it and its
+-- source permanent does not. Parun.Engine.Cast stamps a SPELL's payment onto the
+-- spell the same way, which is how Fling's "the sacrificed creature's power"
+-- reads it off its own additional cost -- proved by Parun.CostSpec's "CR 601.2h a
+-- creature sacrificed to pay a cast's additional cost is still readable when the
+-- spell resolves". A CR 118.12 cost paid AS a spell or ability resolves is
+-- folded onto the resolving object (Parun.Engine.Resolve.Effect.foldPaid), which
+-- is Feed the Pack's "the sacrificed creature's toughness".
+--
+-- The permanent is in a graveyard by the time the ability resolves, so every
+-- read of it is CR 608.2h's last known information; Parun.Engine.Resolve.Slots.effectViewOf
+-- is what licenses that for this slot.
+--
+-- Not needed for "sacrifice this": CR 113.7's `triggerSource` already names that
+-- permanent, and Projection.viewWithLastKnown answers a gone SOURCE by rule
+-- 608.2h without any of this.
+--
+-- Not a target, so the same CR 608.2b posture and the same "no card's
+-- targetSlots may name it" sweep as sacrificedCount above.
+sacrificedPermanent :: SlotName
+sacrificedPermanent = SlotName.MkSlotName (Text.pack "thatSacrificedPermanent")
+
+-- CR 601.2h: the reserved slot under which the permanents a COST payment
+-- returned to hand are bound -- what CR 702.49c's "the creature that was
+-- returned to its owner's hand" names. sacrificedPermanent's route and its
+-- posture: the permanent is a new object in a hand by the time the ability
+-- resolves (CR 400.7), so every read is CR 608.2h's last known information.
+--
+-- Not a target, so the same CR 608.2b posture and the same "no card's
+-- targetSlots may name it" sweep as sacrificedPermanent above.
+returnedPermanent :: SlotName
+returnedPermanent = SlotName.MkSlotName (Text.pack "thatReturnedPermanent")
+
+-- CR 601.2h: the reserved slot under which the permanents a COST payment
+-- exiled are bound -- Food Chain's "the exiled creature". returnedPermanent's
+-- posture: the ids as they were BEFORE the move, so every read is CR 608.2h's
+-- last known information of the permanent, not the card in exile.
+--
+-- Not a target, so the same CR 608.2b posture and the same "no card's
+-- targetSlots may name it" sweep as sacrificedPermanent above.
+exiledPermanent :: SlotName
+exiledPermanent = SlotName.MkSlotName (Text.pack "thatExiledPermanent")
+
+-- CR 601.2h: the reserved slot under which the card a COST payment exiled the
+-- object the cost is on is bound -- what CR 702.167a's "Return this card to the
+-- battlefield" names after craft's "Exile this permanent".
+-- sacrificedPermanent's route: Parun.Engine.Activate folds the payment's bound
+-- slots onto the ability object, so the later clause reads it like any other
+-- slot.
+--
+-- The EXILE incarnation rather than the id the object had before the move, which
+-- is the other way round from sacrificedPermanent: CR 400.7 makes the exiled
+-- card a new object, and it is that object the printed sentence goes on to move,
+-- so every read is CURRENT information (CR 608.2h's first clause) and
+-- Parun.Engine.Resolve.Slots.effectViewOf needs no arm.
+--
+-- Bound by Parun.Engine.Cost.payComponent's ExileThis and ExileThisFromGraveyard
+-- arms alike, the two components that exile the object the cost is on, and left
+-- UNBOUND where nothing arrived in exile -- a replacement effect may have sent
+-- the object elsewhere, and a slot naming the object that did not arrive would
+-- be read as CR 608.2h information the rules never granted.
+--
+-- Not a target, so the same CR 608.2b posture and the same "no card's
+-- targetSlots may name it" sweep as sacrificedPermanent above.
+exiledCard :: SlotName
+exiledCard = SlotName.MkSlotName (Text.pack "thatExiledCard")
+
+-- CR 702.167c: the reserved slot under which a CostComponent.ExileMaterials
+-- payment binds the materials' EXILE incarnations, exiledCard's reason. Folded
+-- onto the craft ability by Parun.Engine.Activate, and read by
+-- Parun.Engine.Resolve.Effect's MoveToZone arm, which links each card still in
+-- exile to the permanent that ability returns (GameState.exiledWith).
+--
+-- Not a target, so the same CR 608.2b posture and the same "no card's
+-- targetSlots may name it" sweep as sacrificedPermanent above.
+craftMaterials :: SlotName
+craftMaterials = SlotName.MkSlotName (Text.pack "thoseCraftMaterials")
+
+-- CR 702.167c: the ExileLink.ability a craft material's link carries, so "the
+-- exiled cards used to craft it" reads those cards alone and not what the
+-- permanent's other abilities exile (CR 607.2a). Reserved, as the slot names
+-- above are.
+craftLink :: AbilityName.AbilityName
+craftLink = AbilityName.MkAbilityName (Text.pack "thoseCraftMaterials")
+
+-- CR 607.2b / 614.14: the ExileLink.ability an as-enters exile's link carries
+-- (Parun.Engine.Event's EntryRewrite.ExileFromGraveyard arm), so "target
+-- creature card exiled with it" reads the cards that replacement exiled and not
+-- what the permanent's other abilities exile (CR 607.1's "and not by any other
+-- ability"). Reserved, as craftLink is.
+entryExileLink :: AbilityName.AbilityName
+entryExileLink = AbilityName.MkAbilityName (Text.pack "exiledAsThisEntered")
+
+-- CR 602.5c / 607.5: the name each activated ability an object acquires from
+-- one exiled card carries (Modification.GainExiledCardAbilities), drawn from
+-- that card's id and, for a named one, its own name, so two identically worded
+-- abilities acquired from two cards are two abilities to a restriction on their
+-- use, and none is the holder's own ability of that name. Reserved, as
+-- craftLink is.
+exiledCardAbility :: ObjectId -> Maybe AbilityName.AbilityName -> AbilityName.AbilityName
+exiledCardAbility oid = maybe card (qualified card)
+  where
+    card = AbilityName.MkAbilityName (exiledCardPrefix <> Text.pack (show (ObjectId.unwrap oid)))
+
+-- CR 607.2a / 607.5: whether exiledCardAbility gave this name, so what an
+-- ability acquired that way exiled is linked to none of its holder's own
+-- abilities.
+isExiledCardAbility :: AbilityName.AbilityName -> Bool
+isExiledCardAbility = Text.isPrefixOf exiledCardPrefix . AbilityName.unwrap
+
+-- Whether exiledCardAbility drew this name from `oid`.
+isAcquiredFrom :: ObjectId -> AbilityName.AbilityName -> Bool
+isAcquiredFrom oid name = pairOf (Just name) == Just (exiledCardAbility oid Nothing)
+
+-- | CR 607.5: the ability a name stated inside the ability `reader` means. A
+-- reader acquired from an exiled card means that card's ability of the name,
+-- as acquired beside it (exiledCardAbility); any other reader the name as
+-- written. Synthetic Split Reliquary's "the cards exiled with warden" and
+-- Gliding Licid's "loses this ability" are the readers, the second only for
+-- its own object (Parun.Engine.Resolve.Effect's ModifyTarget).
+-- data/scenarios/myr-welder-ignores-what-its-acquired-warden-exiled.json is
+-- the proof.
+nameAsRead :: Maybe AbilityName.AbilityName -> AbilityName.AbilityName -> AbilityName.AbilityName
+nameAsRead reader name = maybe name (`qualified` name) (pairOf reader)
+
+-- | CR 607.2a / 607.5: whether `link` files its card against `src` in `pile`,
+-- as a reader named `reader` means it. THE one membership test every reader of
+-- GameState.exiledWith goes through (Parun.Engine.Game.linkedPile).
+--
+-- OwnAbilities is every exiling ability paired with the reader: a reader
+-- acquired from an exiled card (isExiledCardAbility) is linked only to the
+-- abilities acquired from that card; every other reader -- printed, or
+-- "printed" by CR 607.1a's grant -- only to exiling abilities that were not
+-- acquired that way. OfAbility names one exiling ability as the reader means
+-- it (nameAsRead), the other two the reserved ones under entryExileLink and
+-- craftLink.
+isLinkedExile :: Maybe AbilityName.AbilityName -> ExiledPile.ExiledPile -> ObjectId -> ExileLink.ExileLink -> Bool
+isLinkedExile reader pile src link =
+  ExileLink.source link == src && case pile of
+    ExiledPile.OwnAbilities -> pairOf (ExileLink.ability link) == pairOf reader
+    ExiledPile.OfAbility name -> ExileLink.ability link == Just (nameAsRead reader name)
+    ExiledPile.AsItEntered -> ExileLink.ability link == Just entryExileLink
+    ExiledPile.CraftMaterials -> ExileLink.ability link == Just craftLink
+
+-- The exiled card a link's or a reader's ability name was acquired from, as
+-- exiledCardAbility names an unnamed ability of it; Nothing for the holder's
+-- own. Dropping a named one's own name is a REGRESSION FENCE: no card in
+-- data/cards/ pairs an acquired "exiled with" reader with a NAMED exiling
+-- ability beside it, so keeping the whole name leaves the suite green.
+pairOf :: Maybe AbilityName.AbilityName -> Maybe AbilityName.AbilityName
+pairOf = fmap (AbilityName.MkAbilityName . card . AbilityName.unwrap) . Monad.mfilter isExiledCardAbility
+  where
+    card t = exiledCardPrefix <> Text.takeWhile Char.isDigit (Text.drop (Text.length exiledCardPrefix) t)
+
+-- The name exiledCardAbility gives the ability named `name` acquired from the
+-- card whose unnamed abilities it names `card`.
+qualified :: AbilityName.AbilityName -> AbilityName.AbilityName -> AbilityName.AbilityName
+qualified card name = AbilityName.MkAbilityName (AbilityName.unwrap card <> Text.pack "/" <> AbilityName.unwrap name)
+
+exiledCardPrefix :: Text.Text
+exiledCardPrefix = Text.pack "thatExiledCard"
+
+-- CR 400.7j: the reserved slot under which the card a DiscardThis COST payment
+-- discarded is bound, as the object it became in the graveyard -- Calim, Djinn
+-- Emperor's "return Calim from your graveyard to the battlefield tapped" after
+-- "Discard Calim". exiledCard's route and posture: the new incarnation, so every
+-- read is CURRENT information, and unbound where the card did not arrive in a
+-- public zone.
+--
+-- Not a target, so the same CR 608.2b posture and the same "no card's
+-- targetSlots may name it" sweep as sacrificedPermanent above.
+discardedCard :: SlotName
+discardedCard = SlotName.MkSlotName (Text.pack "thatDiscardedCard")
+
+-- CR 601.2f: the reserved slot under which the permanents a COST payment TAPPED
+-- are bound -- "the tapped creature" in Unerring Sling's "deals damage equal to
+-- the tapped creature's power". Stamped by Parun.Engine.Activate off the payment
+-- CR 601.2h makes, sacrificedPermanent's route exactly. Parun.Engine.Cast stamps a
+-- spell's payment the same way, so the slot is readable on either carrier; no
+-- printing puts this component on a spell's additional cost, so nothing reads it
+-- there.
+--
+-- Unlike sacrificedPermanent, the permanent is still on the battlefield when the
+-- ability resolves -- CR 601.2h taps it, and tapping is not a zone change -- so
+-- CR 608.2h's first clause applies and every read is CURRENT information.
+-- Parun.Engine.Resolve.Slots.effectViewOf needs no arm for this slot; the ordinary
+-- Projection.viewWithLastKnown road answers it.
+--
+-- Not needed for {T}: CR 107.5 taps the SOURCE, which CR 113.7's `triggerSource`
+-- already names.
+--
+-- CostComponent.TapForTotalPower is deliberately NOT bound here. Its chosen set
+-- answers a different question -- CR 702.122a's crewing creatures -- and merging
+-- the two into one name would make Binding.onlyOne answer Nothing on a cost
+-- carrying both components, which data/cards/synthetic-crewed-battery.json
+-- prints. That set is `tappedForTotalPower` below.
+--
+-- Not a target (CR 115.10a), so the same CR 608.2b posture and the same "no
+-- card's targetSlots may name it" sweep as sacrificedPermanent above.
+tappedPermanent :: SlotName
+tappedPermanent = SlotName.MkSlotName (Text.pack "thatTappedPermanent")
+
+-- CR 707.9g: the object a CR 707.5 entry copied, bound for the triggered ability
+-- linked to that replacement -- Wall of Stolen Identity's "the copied
+-- creature". Stamped by Parun.Engine.Event.becomeCopyAs as it arms the ability,
+-- and framed there for a clause's CR 707.9f condition too (Undercover
+-- Operative's "that creature"). Not a target, so the same "no card's
+-- targetSlots may name it" sweep as tappedPermanent above.
+copiedObject :: SlotName
+copiedObject = SlotName.MkSlotName (Text.pack "thatCopiedObject")
+
+-- CR 601.2f again, for the OTHER tapping component: the permanents a
+-- CostComponent.TapForTotalPower payment tapped. Stamped by Parun.Engine.Activate
+-- off the payment CR 601.2h makes, tappedPermanent's route exactly.
+--
+-- Its own name rather than tappedPermanent's, for the reason that slot gives: a
+-- cost carrying both components (data/cards/synthetic-crewed-battery.json) would
+-- otherwise answer Binding.onlyOne Nothing for either question.
+--
+-- CR 702.122b and CR 702.171c are what read it: a creature "crews a Vehicle" or
+-- "saddles" a Mount when it is tapped to pay that ability's cost, and
+-- Parun.Engine.Activate puts this set on GameEvent.Crewed or GameEvent.Saddled as
+-- the payment completes so that Gearshift Ace's "whenever this creature crews a
+-- Vehicle" can find itself in it. The component is not those two keywords' alone,
+-- so the slot is named for the component; on any other cost nothing reads it.
+-- CR 702.122c's look-back reads that same event rather than this slot
+-- (Parun.Engine.Count.crewedThisTurn), the relation outliving the payment.
+--
+-- SET-VALUED and read as a set: CR 702.122a's "any number" is a set by
+-- construction, so a reader taking Binding.onlyOne of it would go quiet on every
+-- crew paid by more than one creature.
+--
+-- Not a target (CR 115.10a), so the same CR 608.2b posture and the same "no
+-- card's targetSlots may name it" sweep as tappedPermanent above.
+tappedForTotalPower :: SlotName
+tappedForTotalPower = SlotName.MkSlotName (Text.pack "thatTappedForTotalPower")
+
+-- CR 601.2f once more, for the component that CHOOSES a card and moves nothing:
+-- the card a CostComponent.RevealCardFromHand payment revealed -- "the revealed
+-- card" in Living Destiny's "you gain life equal to the revealed card's mana
+-- value". Stamped by Parun.Engine.Cast off the payment CR 601.2h makes, which is
+-- sacrificedPermanent's route on the CASTING side rather than the activating one.
+--
+-- The card is still in the payer's hand when the spell resolves -- CR 701.20b
+-- moves nothing, and CR 701.20a keeps it revealed until the spell leaves the
+-- stack -- so CR 608.2h's last-known clause is never reached: the card neither
+-- left the zone it was expected in nor was moved out of a public one. Every read
+-- is CURRENT information, tappedPermanent's posture rather than
+-- sacrificedPermanent's, and Parun.Engine.Resolve.Slots.effectViewOf needs no arm.
+--
+-- SINGULAR: every printing of this cost reveals one card, so Binding.onlyOne
+-- answers it.
+--
+-- Also bound by Parun.Engine.Event.Binding.eventBindings for CR 607.2h's "that
+-- card" -- the card a TriggerCondition.RevealedThisWay trigger's linked static
+-- revealed (God-Eternal Kefnet). That card CAN leave the hand before the trigger
+-- resolves, and Parun.Engine.Resolve.Effect.castableCopy then reads its last
+-- known information (CR 608.2h).
+--
+-- Not a target (CR 115.10a), so the same CR 608.2b posture and the same "no card's
+-- targetSlots may name it" sweep as the slots above.
+revealedCard :: SlotName
+revealedCard = SlotName.MkSlotName (Text.pack "thatRevealedCard")
+
+-- CR 701.4a: the reserved slot under which the objects a CostComponent.Behold
+-- payment beheld are bound -- what CR 701.4b's "if a [quality] was beheld" asks
+-- after (Osseous Exhale). revealedCard's route exactly: Parun.Engine.Cast folds
+-- the payment's bound slots onto the spell, and no printing puts this component
+-- on an activation cost.
+--
+-- Read by Quantity.WasBound and by nothing else, which is what rule 701.4b asks
+-- for: the phrase is about whether the action was taken, not about the object,
+-- so the reader must not go back to the board for the quality it had. That is
+-- also why the binding spans both of rule 701.4a's zones without a reader
+-- needing to know which one it came out of.
+--
+-- One object per behold, so a cost beholding three binds three (Kindle the
+-- Inner Flame); WasBound asks only whether the slot is bound.
+--
+-- Not a target (CR 115.10a), so the same CR 608.2b posture and the same "no
+-- card's targetSlots may name it" sweep as the slots above.
+beheldObject :: SlotName
+beheldObject = SlotName.MkSlotName (Text.pack "thatBeheldObject")
+
+-- CR 701.59a: the reserved slot under which the cards a
+-- CostComponent.CollectEvidence payment exiled are bound -- what CR 701.59c's
+-- linked "if evidence was collected" asks after, through Quantity.WasBound.
+-- beheldObject's route onto a spell, and carried onto the permanent the spell
+-- becomes by paidCostRecord below.
+--
+-- Not a target (CR 115.10a), so the same CR 608.2b posture and the same "no
+-- card's targetSlots may name it" sweep as the slots above. Nor a CR 609.7a
+-- referent: Parun.Engine.Resolve.Effect.referentsOfBindings drops it.
+collectedEvidence :: SlotName
+collectedEvidence = SlotName.MkSlotName (Text.pack "thatCollectedEvidence")
+
+-- CR 701.67a: the reserved slot under which a CostComponent.Waterbend payment
+-- binds the waterbend cost's amount -- what "if this spell's additional cost
+-- was paid" asks after through Quantity.WasBound (Spirit Water Revival), and
+-- carried onto the permanent by paidCostRecord below (Katara, Seeking
+-- Revenge). An AMOUNT, since rule 701.67a's payment may tap nothing.
+--
+-- Not a target (CR 115.10a), so the same CR 608.2b posture and the same "no
+-- card's targetSlots may name it" sweep as the slots above.
+waterbendCost :: SlotName
+waterbendCost = SlotName.MkSlotName (Text.pack "thatWaterbendCost")
+
+-- CR 118.1 / 601.2h: the reserved slot under which a
+-- CostComponent.RemoveCounters payment binds HOW MANY counters it took
+-- off -- Ooze Flux's "the number of +1\/+1 counters removed this way", which
+-- the payer settles while paying (CounterSpread.FromAmongAtLeast), so it can be
+-- read off nothing but the payment. An amount and nothing else, folded onto the
+-- ability by Parun.Engine.Activate as every payment's slots are.
+--
+-- Not a target (CR 115.10a), so the same CR 608.2b posture and the same "no
+-- card's targetSlots may name it" sweep as the slots above.
+removedCounters :: SlotName
+removedCounters = SlotName.MkSlotName (Text.pack "thatManyCountersRemoved")
+
+-- CR 400.7d: the part of a spell's binding environment the permanent it
+-- becomes keeps -- "information about the spell ... including what costs were
+-- paid to cast that spell". Parun.Engine.Event.changeZoneAttaching writes it
+-- onto the permanent, and Parun.Engine.Event.Trigger stamps it onto every
+-- ability that permanent triggers. Vitu-Ghazi Inspector is the reader.
+--
+-- collectedEvidence and waterbendCost (Katara, Seeking Revenge): beheldObject
+-- is the other slot a cost binds for a later "if" to read, and Scryfall
+-- `o:beheld -t:instant -t:sorcery`, 2026-09-25, returns no permanent that reads
+-- it. A permanent printing "if a [quality] was beheld" would want it here.
+paidCostRecord :: Map SlotName Binding -> Map SlotName Binding
+paidCostRecord bindings = Map.restrictKeys bindings (Set.fromList [collectedEvidence, waterbendCost])
+
+-- CR 702.122b: the reserved slot under which the VEHICLE a creature just crewed
+-- is bound -- the "that Vehicle" in Gearshift Ace's "whenever this creature crews
+-- a Vehicle, that Vehicle gains first strike until end of turn". Stamped by
+-- Parun.Engine.Event.Binding.eventBindings as the trigger is gathered, manaSource's
+-- route rather than a payment's.
+--
+-- Not `triggerSource` (CR 113.7): the bearer is the CREWER and the Vehicle is the
+-- other side of rule 702.122c's relation, which is exactly the pair the
+-- crewer-side wording keeps apart.
+--
+-- Every read is CURRENT information (CR 608.2h's first clause), tappedPermanent's
+-- reason: the Vehicle is on the battlefield when it is crewed, and a
+-- Vehicle that has left by the time the trigger resolves is one this effect
+-- modifies nothing of. Parun.Engine.Resolve.Slots.effectViewOf needs no arm.
+--
+-- Not a target (CR 115.10a), so the same CR 608.2b posture and the same "no
+-- card's targetSlots may name it" sweep as the slots above.
+crewedVehicle :: SlotName
+crewedVehicle = SlotName.MkSlotName (Text.pack "thatCrewedVehicle")
+
+-- CR 702.122e's rider: the reserved slot under which the creatures that paid
+-- THAT crew activation's cost are bound -- Mighty Servant of Leuk-o's "if it was
+-- crewed by exactly two creatures", which is an intervening "if" and so must
+-- mean only the crewers of the activation that caused the trigger. Stamped by
+-- Parun.Engine.Event.Binding.eventBindings off GameEvent.BecameCrewed, which
+-- Parun.Engine.Resolve carries the set on for exactly this reason.
+--
+-- Not `tappedForTotalPower` above, though the two hold the same ids: that slot
+-- is the PAYMENT's, folded onto the ability object and gone with it (CR 608.2n),
+-- while this one rides the trigger onto the stack. Rule 702.122e's rider is
+-- about which activation, so a Vehicle crewed twice in a turn has two triggers
+-- and each reads its own set here.
+--
+-- SET-VALUED for tappedForTotalPower's reason and bound as a GROUP
+-- (Binding.objects) rather than as recipients: rule 702.122a's "any number" is a
+-- set, and these are named, never targeted (CR 115.10a). The set carries no
+-- order the game gives it, so nothing may read it positionally; the only reader
+-- in the pool counts it.
+crewers :: SlotName
+crewers = SlotName.MkSlotName (Text.pack "thoseThatCrewedIt")
+
+-- CR 106.12a: the reserved slot under which the permanent that was TAPPED FOR
+-- MANA is bound -- the "its" in Wild Growth's "whenever enchanted land is tapped
+-- for mana, its controller adds an additional {G}", read through
+-- PlayerRef.ControllerOfBound. Stamped by
+-- Parun.Engine.Event.Binding.eventBindings as the trigger is gathered.
+--
+-- Distinct from `tappedPermanent` above, which is a COST slot Parun.Engine.Activate
+-- stamps off CR 601.2h's payment: that one names what an activation's cost
+-- tapped, this one what CR 106.12's activation was made OF. Merging them would
+-- make Binding.onlyOne answer Nothing for an ability whose cost taps other
+-- permanents.
+--
+-- Not redundant with `triggerSource` (CR 113.7): the bearer is the Aura and the
+-- permanent tapped for mana is its host, which is exactly the pair CR 106.12a's
+-- Aura wording keeps apart.
+--
+-- Every read is CURRENT information, `tappedPermanent`'s reason: tapping is not
+-- a zone change, so the permanent is still on the battlefield when CR 605.4a
+-- applies the ability, and Parun.Engine.Resolve.Slots.effectViewOf needs no arm.
+--
+-- Not a target (CR 115.10a), so the same CR 608.2b posture and the same "no
+-- card's targetSlots may name it" sweep as the slots above.
+manaSource :: SlotName
+manaSource = SlotName.MkSlotName (Text.pack "thatManaSource")
+
+-- CR 603.6c: the reserved slot under which the permanent a leaves-the-battlefield
+-- trigger WATCHED is bound -- the printed "it" in Resourceful Defense's "whenever
+-- a permanent you control leaves the battlefield, if it had counters on it, put
+-- those counters on target permanent you control". Stamped by
+-- Parun.Engine.Event.Binding.eventBindings as the trigger is gathered, alongside
+-- `triggerPlayer` and `became`.
+--
+-- ZoneChange.departed, NOT ZoneChange.object, and the two are the whole reason
+-- this slot is not `became`: CR 400.7e's arriving incarnation is a different
+-- object, which CR 122.2 left with no counters and whose controller CR 108.4a
+-- would hand back as its owner -- and CR 400.7e withholds it entirely for a
+-- hidden destination (CR 400.2), where this slot is bound just the same. What
+-- the card says "it" about is the permanent as it last existed on the
+-- battlefield, which is CR 603.10a's look-back and CR 608.2h's last known
+-- information.
+--
+-- Bound for the BYSTANDER conditions only --
+-- TriggerCondition.PermanentLeavesTheBattlefield, its destination-pinned
+-- PermanentReturnedToHand, its graveyard-pinned PermanentDies, where Cleopatra,
+-- Exiled Pharaoh's "draw a card for each counter on it" reads it, and, for CR
+-- 303.4b's enchanted creature, AttachedCreatureDies, where Banewasp Affliction's
+-- "that creature's controller loses life equal to its toughness" reads it, and
+-- CR 701.21a's PermanentSacrificed, where Prowling Geistcatcher's "if that
+-- creature was a token" reads it. Under
+-- TriggerCondition.SelfLeavesTheBattlefield and SelfDies the departed id already
+-- IS CR 113.7a's `triggerSource`, so a second name for one object would be the
+-- redundancy SelfPutIntoGraveyardFromAnywhere's empty floor declines.
+--
+-- Every read of it is CR 608.2h's last known information --
+-- Parun.Engine.Resolve.Slots.effectViewOf is what licenses that for this slot, exactly
+-- as it does for `sacrificedPermanent`, and for the same reason: the object is
+-- gone by construction, so viewWithLastKnown's blank answer for a non-source id
+-- would leave the clause permanently unanswerable. The trigger's own intervening
+-- "if" needs no arm there, Parun.Engine.Event.Trigger.interveningHolds and
+-- Parun.Engine.Stack's CR 608.2a re-check both reading the unscoped view already.
+--
+-- Not a target (CR 115.10a; nothing was chosen), so the same CR 608.2b posture
+-- and the same "no card's targetSlots may name it" sweep as `became` and
+-- `sacrificedPermanent`. Swept on the BINDING side too, for `eventAmount`'s
+-- reason: a card writing this name into an effect's bound SlotName would shadow
+-- the event's permanent with its own object.
+departedPermanent :: SlotName
+departedPermanent = SlotName.MkSlotName (Text.pack "thatDepartedPermanent")
+
+-- CR 701.66a: the reserved slot under which the land an earthbend animated is
+-- bound -- "that land", the subject of the delayed ability rule 701.66a creates.
+-- Stamped by Parun.Engine.Resolve.Effect's Earthbend arm onto the resolving
+-- object, so CR 603.7c's captured environment carries it and the delayed
+-- ability's TriggerCondition.BoundDiesOrIsExiled can name it.
+--
+-- Reserved rather than the card's own target slot name, because the delayed
+-- ability lives in the engine (rule 701 being the rulebook's) and so cannot know
+-- what a card called its slot. Not a target of the delayed ability (CR 115.10a):
+-- the target was chosen by the spell or ability that earthbent, and nothing
+-- re-checks it at CR 608.2b.
+earthbentLand :: SlotName
+earthbentLand = SlotName.MkSlotName (Text.pack "thatEarthbentLand")
+
+-- CR 701.65a: the reserved slot under which the objects an airbend exiled are
+-- bound -- "those objects", the subject of rule 701.65a's second sentence.
+-- Written by the MoveToZone Parun.Engine.Airbend mints and read back by
+-- Parun.Engine.Resolve.Effect's Airbend arm, which is the only reader: the
+-- permission that sentence states is stamped onto what the CR 400.7 funnel
+-- actually minted in exile, and nothing else can name those ids.
+--
+-- Reserved rather than the card's own slot name, earthbentLand's reason: the
+-- instruction lives in the engine (rule 701 being the rulebook's), so it cannot
+-- know what a card called its slot.
+airbentObjects :: SlotName
+airbentObjects = SlotName.MkSlotName (Text.pack "thoseAirbentObjects")
+
+-- CR 601.2i: the reserved slot under which a cast trigger's WATCHED SPELL is
+-- bound -- the printed "it" in Presence of the Master's "whenever a player casts
+-- an enchantment spell, counter it", and "that spell" wherever a card spells the
+-- word out. Stamped by Parun.Engine.Event.Binding.eventBindings as the trigger is
+-- gathered, alongside `triggerPlayer` and `became`, so the payload reads an
+-- ordinary slot rather than a "the spell that was cast" opcode.
+--
+-- NOT `became`, though both name an object an event produced, and the reason is
+-- the word itself: CR 400.7e's `became` is the incarnation a card BECAME on
+-- changing zones, and a spell being cast is not a zone change at all. CR 601.2a
+-- moved the card to the stack earlier in the casting process and CR 601.2i's
+-- event is the spell becoming CAST, at which point the object has become
+-- nothing -- it is the same stack object it already was. Reusing the name would
+-- also have to argue away a collision that is real rather than theoretical: an
+-- ability whose condition is a zone change and whose payload names the cast
+-- spell is not writable today, but the two writers are independent, and one slot
+-- for two unrelated rules is what forces such an argument every time a reader is
+-- added.
+--
+-- Distinct from `triggerSource` (CR 113.7a) for the same reason `became` is:
+-- under this condition the bearer is a permanent watching the stack while the
+-- spell is a separate object on it, controlled by another player as often as
+-- not.
+--
+-- Not a target -- nothing was chosen -- so the same CR 608.2b posture as
+-- `triggerPlayer` and `became`: Resolve's legalSlot answers True for a slot with
+-- no target slot, which is how CR 701.6a's countering reaches it at resolution.
+-- The "no card's targetSlots may name it" rule applies here too, under the same
+-- Parun.CardSpec sweep, and the binding side of that sweep matters just as much:
+-- a card writing this name into an effect's bound SlotName would shadow the
+-- event's spell with its own object.
+--
+-- A dead id is possible and is the payload's problem, exactly as it is for
+-- `became`: the spell can leave the stack before the trigger resolves (another
+-- counterspell, or a second Presence of the Master), which is the case CR 608.2h
+-- is about, and CR 701.6a's funnel no-ops on an id that names nothing.
+--
+-- Parun.Engine.Cost.armSpendTriggers binds it too, for the same object: the
+-- spell CR 106.6's spend-triggering mana was spent to cast (Pyromancer's
+-- Goggles' "copy that spell").
+castSpell :: SlotName
+castSpell = SlotName.MkSlotName (Text.pack "thatSpell")
+
+-- CR 602.2a / 603.3: the reserved slot under which an ABILITY'S OWN STACK
+-- OBJECT is bound -- the printed "this ability" in Forsworn Paladin's "if mana
+-- from a Treasure was spent to activate this ability" and in Ashling the
+-- Pilgrim's and Rumor Gatherer's "if this is the ... time this ability has
+-- resolved this turn". Stamped by Parun.Engine.Activate and, for a triggered
+-- ability, Parun.Engine.Engine.placeBorne as the ability is put on the stack,
+-- alongside `triggerSource` and `you`.
+--
+-- Distinct from `triggerSource` (CR 113.7), which names the ability's SOURCE:
+-- rule 602.2a creates the ability as an object that is not the source, and the
+-- two carry different records -- CR 400.7d's mana is the source's for the spell
+-- that became it and the ability's for the activation. Reading the source would
+-- answer about the wrong payment.
+--
+-- Not a target, so the same CR 608.2b posture as `castSpell`; the "no card's
+-- targetSlots may name it" rule and Parun.CardSpec's binding sweep apply here
+-- too.
+--
+-- Bound for an activated or object-borne triggered ability. CR 605.3b's mana
+-- ability never reaches the stack.
+--
+-- NOT a CR 609.7a referent, and Parun.Engine.Resolve.Effect.referentsOfBindings drops it
+-- by name for every carrier that reads a binding environment: this slot exists so
+-- a card can read the activation's own record -- what paid for it, and how many
+-- times it has resolved this turn -- not because printed text names the ability as
+-- some other object, and counting it would undo rule 609.7a's stop at "a spell on
+-- the stack".
+thisAbility :: SlotName
+thisAbility = SlotName.MkSlotName (Text.pack "thisAbility")
+
+-- CR 601.2c: the reserved slot under which a spell's or an activated ability's
+-- targets are bound AGAIN, all slots as one group, so a cost another permanent
+-- adds can ask "is this a target of that spell" without knowing the spell's slot
+-- names (Filter.IsTarget). A GROUP rather than a target binding, so nothing that
+-- counts or re-validates targets sees them twice. Stamped by
+-- Parun.Engine.Cast.castProposed and Parun.Engine.Activate.activateAbility as the
+-- targets are recorded, and handed to a payability gate's aiming the same way
+-- (withAnnouncedTargets). Not stamped for a triggered ability, which has no CR
+-- 601.2h payment for a cost to read it in.
+announcedTargets :: SlotName
+announcedTargets = SlotName.MkSlotName (Text.pack "announcedTargets")
+
+-- Bind every object a slot map names under announcedTargets.
+setAnnouncedTargets :: Map SlotName (Set Recipient) -> Map SlotName Binding -> Map SlotName Binding
+setAnnouncedTargets chosen =
+  let objects = Set.fromList (concatMap (Maybe.mapMaybe Recipient.objectOf . Set.toList) (Map.elems chosen))
+   in if Set.null objects then id else Map.insert announcedTargets (toObjects (Seq.fromList (Set.toAscList objects)))
+
+-- A gate's aiming with announcedTargets added, the shape Cost.announcedSlots
+-- reads off a stamped object: every OBJECT the aiming names, as a group.
+withAnnouncedTargets :: Map SlotName (Set Recipient) -> Map SlotName (Set Recipient)
+withAnnouncedTargets aiming =
+  let objects = Set.unions (Map.elems (objectsOfSlots aiming))
+   in if Set.null objects then aiming else Map.insert announcedTargets (Set.map Recipient.ToObject objects) aiming
+
+-- CR 601.2c: the reserved slot under which the SPELL OR ABILITY THAT DID THE
+-- TARGETING is bound -- rule 702.21a's "that spell or ability", which ward
+-- counters and whose controller ward offers the cost to. Stamped by
+-- Parun.Engine.Event.Binding.eventBindings as the trigger is gathered, alongside
+-- `castSpell` and the rest.
+--
+-- For BOTH sides of rule 601.2c's announcement, which is why it is worded over
+-- the targeting object rather than over what was targeted: the bearer becoming a
+-- target (TriggerCondition.SelfBecomesTargeted, ward's) and the bearer's
+-- CONTROLLER becoming one (TriggerCondition.ControllerBecomesTarget, Amulet of
+-- Safekeeping's "counter that spell or ability"). The object bound is the same
+-- field of the same event either way.
+--
+-- Distinct from `castSpell` even though both name a stack object: that one is the
+-- spell a CAST event named, and an activated ability targeting a warded permanent
+-- records no cast event at all. A payload naming the wrong one would still
+-- typecheck, so two slots make the mismatch a dead name instead.
+--
+-- Distinct from `triggerSource` (CR 113.7a) for `castSpell`'s reason: the bearer
+-- is a permanent watching the stack, and the targeting object is another object
+-- entirely -- one an opponent controls under the relation both readers' printings
+-- narrow to.
+--
+-- ONE object, never a group: rule 601.2c makes each chosen target its own
+-- becoming, so a spell naming the bearer twice is two events and two abilities,
+-- each holding one id -- which is also what keeps two ward triggers from
+-- countering one spell twice (CR 701.6a's funnel no-ops on the second).
+--
+-- Not a target (nothing was chosen), so the same CR 608.2b posture and the same
+-- "no card's targetSlots may name it" sweep as `castSpell`. A dead id is possible
+-- and is the payload's problem: the targeting spell can be countered by something
+-- else before the trigger reading this slot resolves.
+targetingObject :: SlotName
+targetingObject = SlotName.MkSlotName (Text.pack "thatTargetingObject")
+
+-- CR 509.3d: the reserved slot under which the CREATURE THAT BLOCKED the bearer
+-- is bound -- rule 702.25a's "the blocking creature". Stamped by
+-- Parun.Engine.Event.Binding.eventBindings as the trigger is gathered, alongside
+-- `triggerPlayer`, `became` and `castSpell`, so flanking's payload is an
+-- ordinary slot read rather than a "the creature that blocked me" opcode.
+--
+-- Distinct from `triggerSource` (CR 113.7a) for the reason `castSpell` is: under
+-- this condition the bearer is the ATTACKING creature and the blocker is another
+-- object, controlled by the defending player. Distinct from `became` because no
+-- zone change happened at all -- CR 509.1g makes a creature a blocking creature
+-- where it stands.
+--
+-- One slot per blocker, never a group: CR 509.3d triggers once for each creature
+-- that blocks, so two blockers are two abilities each naming one object, and
+-- nothing here holds a set.
+--
+-- Not a target (nothing was chosen), so the same CR 608.2b posture and the same
+-- "no card's targetSlots may name it" sweep as `triggerPlayer` and `became`. A
+-- dead id is possible and is the payload's problem, as it is for those: the
+-- blocker can leave the battlefield before the trigger resolves.
+blockingCreature :: SlotName
+blockingCreature = SlotName.MkSlotName (Text.pack "thatBlocker")
+
+-- CR 509.3b: `blockingCreature`'s mirror -- the reserved slot under which the
+-- CREATURE THE BEARER BLOCKED is bound, Loyal Sentry's "that creature". Stamped
+-- by Parun.Engine.Event.Binding.eventBindings off the same GameEvent.BecameBlocking,
+-- read from the BLOCKING side, so the bearer is the blocker and this names the
+-- attacker.
+--
+-- Distinct from `blockingCreature` rather than one "the other creature in this
+-- declaration" slot: a card reads whichever of the two it is not, and a payload
+-- that named the wrong one would still typecheck. Two slots make the mismatch a
+-- dead name instead.
+--
+-- One slot, never a group, and not a target: the same posture as
+-- `blockingCreature`, for the same reasons.
+blockedCreature :: SlotName
+blockedCreature = SlotName.MkSlotName (Text.pack "thatAttacker")
+
+-- CR 506.5: the reserved slot under which the creature that was declared as an
+-- attacker is bound -- rule 702.83a's "that creature", the one exalted pumps.
+-- Stamped by Parun.Engine.Event.Binding.eventBindings off GameEvent.AttackerDeclared --
+-- the same event whose CR 508.5 defending player annihilator reads through
+-- `triggerPlayer`, though this condition binds only the creature: rule 702.83a
+-- names no player.
+--
+-- NOT `triggerSource` (CR 113.7a), and that is the whole reason it exists: rule
+-- 702.83a's condition is "a creature YOU CONTROL attacks alone", so the bearer
+-- watches the declaration and is routinely a different permanent from the
+-- attacker -- an untapped Aven Squire held back while another creature attacks
+-- is the ordinary case, not the corner one.
+--
+-- Distinct from `blockedCreature` even though both name an attacking creature:
+-- that one is the attacker a BLOCK named (CR 509.3b), read from the blocker's
+-- side, and a payload naming the wrong one would still typecheck. Two slots make
+-- the mismatch a dead name instead.
+--
+-- One object, never a group: the slot is stamped per declaration event, and the
+-- only condition that reads it is one that fires when the declaration named
+-- exactly one creature. Not a target (nothing was chosen), so the same CR 608.2b
+-- posture and the same "no card's targetSlots may name it" sweep as
+-- `blockingCreature`; a dead id by resolution is the payload's problem, as it is
+-- there.
+attackingCreature :: SlotName
+attackingCreature = SlotName.MkSlotName (Text.pack "thatAttackingCreature")
+
+-- CR 508.3c: the reserved slot under which the attackers a batch attack trigger
+-- counted are bound -- Tyvar the Bellicose's "whenever one or more Elves you
+-- control attack, THEY gain deathtouch". Stamped by
+-- Parun.Engine.Event.Binding.eventBindings off GameEvent.AttackersDeclared: the
+-- declared attackers that player controls which the condition's Filter admits,
+-- so "they" names exactly what made the trigger fire.
+--
+-- A GROUP (Binding.objects), crewers' reason: named, never targeted (CR
+-- 115.10a), and a set CR 611.2c freezes when a resolution's effect begins, so a
+-- creature that joins the attack later is not among them. Unordered; nothing may
+-- read it positionally.
+attackingCreatures :: SlotName
+attackingCreatures = SlotName.MkSlotName (Text.pack "thoseAttackingCreatures")
+
+-- CR 508.3d / 508.3e: the reserved slot under which the player who DECLARED the
+-- attackers is bound. Stamped by Parun.Engine.Event.Binding.eventBindings off
+-- GameEvent.AttackersDeclared and GameEvent.BecameAttacked as the trigger is
+-- gathered.
+--
+-- "The attacking player" (Norn's Decree) and "that player" (Archnemesis) are the
+-- printed phrases: Norn's Decree reads it under CR 508.3d, Archnemesis under
+-- CR 508.3e.
+--
+-- Distinct from `triggerPlayer`, and that is why it exists: under CR 508.3e both
+-- players are subjects at once, and that slot already carries the ATTACKED one
+-- (CR 508.1b's announcement). One name per role, so a payload naming the wrong
+-- player reads a dead slot instead of the other seat.
+--
+-- ONE name across both conditions rather than one per condition: rule 508.3d and
+-- rule 508.3e name the same player by the same phrase, and a card moved from one
+-- condition to the other would otherwise have to be rewritten.
+--
+-- Not the ACTIVE player under another name, though CR 506.2 makes them the same
+-- seat on every board parun can build today: CR 508.1's declaration is what this
+-- reads, and Parun.Engine.Event stamps it from the event rather than from
+-- GameState.activePlayer.
+--
+-- Not a target (nothing was chosen), so the same CR 608.2b posture and the same
+-- "no card's targetSlots may name it" sweep as `attackingCreature`.
+attackingPlayer :: SlotName
+attackingPlayer = SlotName.MkSlotName (Text.pack "thatAttackingPlayer")
+
+-- CR 603.2c / 510.2: the reserved slot under which the CONTROLLER of the
+-- permanents a batch combat-damage trigger admitted is bound, as the damage was
+-- dealt -- Norn's Decree's "THAT OPPONENT gets a poison counter". Stamped by
+-- Parun.Engine.Event.Binding.eventBindings off each GameEvent.DamageDealt the
+-- condition matched, and one seat per trigger: Parun.Engine.Event.Trigger splits
+-- the batch by it, so damagers two players control are two occurrences.
+--
+-- Not `attackingPlayer`: a creature can deal combat damage to a player without
+-- attacking (CR 510.1d's blocker, its damage redirected by CR 614.9), and CR
+-- 805.10c's "attacking player" names one of several seats where this names the
+-- one whose creatures connected.
+damagersController :: SlotName
+damagersController = SlotName.MkSlotName (Text.pack "thatDamagersController")
+
+-- CR 120.1: the reserved slot under which the OBJECT THAT DEALT the damage --
+-- its source -- is bound: Aragorn, Hornburg Hero's "double the number of +1/+1
+-- counters on IT". Stamped by Parun.Engine.Event.Binding.eventBindings off the same
+-- GameEvent.DamageDealt the condition matched, so the payload is an ordinary slot
+-- read rather than a "the creature that hit them" opcode.
+--
+-- The name is combat's but the slot is not: IsDealtDamage stamps it for CR
+-- 120.3's noncombat damage too, which is Belltower Sphinx's "that source's
+-- controller". The wire spelling is `thatDamager` and cards already write it, so
+-- the name stays.
+--
+-- Distinct from `triggerSource` (CR 113.7a) for the reason `attackingCreature`
+-- is: the bystander form of the condition watches every permanent its controller
+-- has, so the bearer is routinely a different permanent from the damager, and
+-- Aragorn watching a Wolf of his own is the ordinary case rather than the corner
+-- one. The self-scoped SelfDealsCombatDamageToPlayer needs no such slot, its
+-- damager BEING the bearer.
+--
+-- One object per event, never a group: CR 510.2 deals all the assigned damage at
+-- once, but Parun.Engine.Damage records one DamageEvent per source-and-recipient
+-- pair, so two creatures connecting are two events and two abilities each naming
+-- one object.
+--
+-- Not a target (nothing was chosen), so the same CR 608.2b posture and the same
+-- "no card's targetSlots may name it" sweep as `blockingCreature`. A dead id is
+-- possible and is the payload's problem: a trampler can die to its blocker in the
+-- same CR 510.2 event.
+combatDamager :: SlotName
+combatDamager = SlotName.MkSlotName (Text.pack "thatDamager")
+
+-- CR 702.134c: the reserved slot under which the creature that WAS MENTORED is
+-- bound -- Aegis of the Legion's "put a shield counter on that creature". Stamped
+-- by Parun.Engine.Event.Binding.eventBindings off GameEvent.Mentored, alongside
+-- `blockingCreature` and the rest, so the payload is an ordinary slot read rather
+-- than a "the creature my equipped creature mentored" opcode.
+--
+-- The MENTORED creature and not the mentor, which is the pair's other half: rule
+-- 702.134c names both, and the printed sentence acts on the second. The first
+-- needs no slot -- Aegis' condition already reaches it through the source's
+-- attachment, and no printed payload names it.
+--
+-- Distinct from `triggerSource` (CR 113.7a) for `blockingCreature`'s reason and
+-- one more: the bearer here is an Equipment, so the mentor is not the bearer
+-- either, and the mentored creature is a third object again.
+--
+-- One object, never a group: rule 702.134a's ability has one target, so each
+-- resolution mentors exactly one creature and two mentors are two events. Not a
+-- target (nothing was chosen), so the same CR 608.2b posture and the same "no
+-- card's targetSlots may name it" sweep as `blockingCreature`; a dead id by
+-- resolution is the payload's problem, as it is there.
+mentoredCreature :: SlotName
+mentoredCreature = SlotName.MkSlotName (Text.pack "thatMentoredCreature")
+
+-- CR 702.110b's "a creature": the creature that was exploited, which Profaner
+-- of the Dead's "the exploited creature's toughness" and Henry Wu, InGen
+-- Geneticist's "the exploited creature had power 3" read. Stamped by
+-- Parun.Engine.Event.Binding.eventBindings as the trigger is gathered.
+--
+-- Distinct from `triggerSource` (CR 113.7a) for `mentoredCreature`'s reason: the
+-- exploiter is a different object from the creature it sacrificed, except where
+-- it sacrificed itself.
+--
+-- One object, never a group: rule 702.110b's ability sacrifices one creature, and
+-- two exploits are two events. Not a target (nothing was chosen), so the same CR
+-- 608.2b posture and the same "no card's targetSlots may name it" sweep as
+-- `blockingCreature`; the object is in a graveyard by the time the trigger
+-- resolves, and CR 608.2h's last-known reader is what answers for it.
+exploitedCreature :: SlotName
+exploitedCreature = SlotName.MkSlotName (Text.pack "thatExploitedCreature")
+
+-- CR 701.3a's "that creature": the object the BEARER became attached to, which
+-- Enormous Energy Blade's "tap that creature" reads. Stamped by
+-- Parun.Engine.Event.Binding.eventBindings as the trigger is gathered.
+--
+-- NOT `triggerSource` (CR 113.7a), which is the whole point of the pair: the
+-- bearer here is the ATTACHMENT, so the host is a second object. The host-scoped
+-- reading of the same event binds nothing at all -- there the bearer IS the host,
+-- and the attachment has no printed reader.
+--
+-- One object, never a group: CR 701.3a attaches one permanent to one object, and
+-- two attachments are two events. Not a target (nothing was chosen), so the same
+-- CR 608.2b posture and the same "no card's targetSlots may name it" sweep as
+-- `blockingCreature`.
+attachedHost :: SlotName
+attachedHost = SlotName.MkSlotName (Text.pack "thatHost")
+
+-- CR 701.3d's "that permanent": the object the bearer became UNATTACHED from,
+-- which Grafted Wargear's "sacrifice that permanent" reads. `attachedHost`'s
+-- mirror, stamped the same way off the other event.
+--
+-- Distinct from `attachedHost` rather than one "the host in this act" slot, for
+-- `blockedCreature`'s reason: a payload naming the wrong one would still
+-- typecheck, and two slots make the mismatch a dead name instead.
+--
+-- The id is routinely DEAD by resolution -- CR 701.3d counts the host leaving its
+-- zone as becoming unattached -- which is what CR 603.10c's look-back is for, and
+-- is the payload's problem exactly as it is for `blockingCreature`.
+--
+-- A CHARACTERISTIC of a dead former host reads its last known information
+-- through Parun.Engine.Resolve.Slots.effectViewOf, like any slot's object.
+-- Nothing in print asks for one: Scryfall o:"becomes unattached", 2026-09-05,
+-- returns Captain's Hook, Grafted Exoskeleton, Grafted Wargear, Killer Cosplay
+-- and Stitcher's Graft, and every one of them names the ex-host as a whole
+-- object rather than reading anything off it.
+unattachedHost :: SlotName
+unattachedHost = SlotName.MkSlotName (Text.pack "thatFormerHost")
+
+-- A binding that names one object and nothing else -- what a token bound by a
+-- Create (CR 603.7c) or a trigger's source slot holds.
+toObject :: ObjectId -> Binding
+toObject oid = toRecipients (Set.singleton (Recipient.ToObject oid))
+
+-- The general form of toObject and toPlayer below: a binding that names these
+-- recipients and nothing else. CR 601.2c's answer for one slot, which is a set
+-- because one instance of the word "target" may take several.
+toRecipients :: Set Recipient -> Binding
+toRecipients rs = Binding.empty {Binding.targets = if Set.null rs then Nothing else Just rs}
+
+-- A binding that names SEVERAL objects and nothing else -- what a Create binds
+-- for a card that refers back to every token it made at once, Thatcher Revolt's
+-- "those tokens", and what a Destroy binds for a card that refers back to the
+-- cards it buried, Come Back Wrong's "put into a graveyard this way".
+-- toObject's plural, and a distinct field rather than a list of
+-- Recipients: this is a definition and never a target (CR 115.10a), so it is not
+-- subject to CR 608.2b.
+toObjects :: Seq ObjectId -> Binding
+toObjects oids = Binding.empty {Binding.objects = Just oids}
+
+-- A binding that names one player and nothing else -- CR 729.1b's subgame winner
+-- and CR 608.2d's chosen opponent, both bound by Parun.Engine.Resolve's
+-- bindPlayerSlot. Mirrors toObject, but the recipient is a player (ToPlayer),
+-- not an object.
+toPlayer :: PlayerId -> Binding
+toPlayer pid = toRecipients (Set.singleton (Recipient.ToPlayer pid))
+
+-- toPlayer's plural: a binding that names SEVERAL players and nothing else --
+-- CR 118.12a's per-player gate answer, bound by Parun.Engine.Resolve under
+-- `gatePlayers`. Rides `targets` rather than `objects` for toPlayer's reason: a
+-- player is a Recipient (CR 115.1) and the objects field holds ObjectIds.
+toPlayers :: Set PlayerId -> Binding
+toPlayers = toRecipients . Set.map Recipient.ToPlayer
+
+-- A binding that names one NUMBER and nothing else -- what a Destroy that
+-- counts what it destroyed binds for a later "for each ... destroyed this way"
+-- to read, and what CR 615.13's prevented amount rides
+-- (Quantity.InSlot). Mirrors toObject and toPlayer, but the value is an
+-- amount rather than a recipient, so it rides the same field CR 601.2b's chosen
+-- X does.
+toAmount :: Natural -> Binding
+toAmount n = Binding.empty {Binding.amount = Just n}
+
+-- | A binding that holds one placed sticker and nothing else (CR 123.6e).
+toSticker :: StickerRef.StickerRef -> Binding
+toSticker ref = Binding.empty {Binding.sticker = Just ref}
+
+-- | A binding that holds one player vote's tally and nothing else (CR 701.38a).
+toVotes :: Map PlayerId Natural -> Binding
+toVotes tally = Binding.empty {Binding.votes = Just tally}
+
+-- Bind an object under the reserved triggerSource slot. Dedicated and
+-- single-purpose, so the insert cannot clobber another binding -- as below.
+setTriggerSource :: ObjectId -> Map SlotName Binding -> Map SlotName Binding
+setTriggerSource oid = Map.insert triggerSource (toObject oid)
+
+-- Bind a player under the reserved you slot.
+setYou :: PlayerId -> Map SlotName Binding -> Map SlotName Binding
+setYou pid = Map.insert you (toPlayer pid)
+
+-- Bind a player under the reserved modeChooser slot (CR 700.2e).
+setModeChooser :: PlayerId -> Map SlotName Binding -> Map SlotName Binding
+setModeChooser pid = Map.insert modeChooser (toPlayer pid)
+
+-- Bind a player under the reserved triggerPlayer slot.
+setTriggerPlayer :: PlayerId -> Map SlotName Binding -> Map SlotName Binding
+setTriggerPlayer pid = Map.insert triggerPlayer (toPlayer pid)
+
+-- Bind an object under the reserved became slot (CR 400.7e).
+setBecame :: ObjectId -> Map SlotName Binding -> Map SlotName Binding
+setBecame oid = Map.insert became (toObject oid)
+
+-- Bind an object under the reserved handArrival slot.
+setHandArrival :: ObjectId -> Map SlotName Binding -> Map SlotName Binding
+setHandArrival oid = Map.insert handArrival (toObject oid)
+
+-- Bind objects under the reserved preventedDamageSource slot (CR 615.13): every
+-- source one application covered, as recipients, so ObjectRef.InSlot names them
+-- all.
+setPreventedDamageSources :: Set ObjectId -> Map SlotName Binding -> Map SlotName Binding
+setPreventedDamageSources oids = Map.insert preventedDamageSource (toRecipients (Set.map Recipient.ToObject oids))
+
+-- setBecame for a plural: the SEVERAL cards a melded permanent became as it left
+-- the battlefield (CR 712.21c), or that a manifest dread put into a graveyard (CR
+-- 701.62a), bound as a group so an ObjectRef.InSlot reader acts on each of them.
+-- Parun.Engine.Event.Binding.setBecameArrivals says why the shape differs from
+-- setBecame's.
+setBecameGroup :: Seq ObjectId -> Map SlotName Binding -> Map SlotName Binding
+setBecameGroup oids = Map.insert became (toObjects oids)
+
+-- Bind an object under the reserved tappedPermanent slot (CR 701.26a).
+setTappedPermanent :: ObjectId -> Map SlotName Binding -> Map SlotName Binding
+setTappedPermanent oid = Map.insert tappedPermanent (toObject oid)
+
+-- Bind an object under the reserved manaSource slot (CR 106.12a).
+setManaSource :: ObjectId -> Map SlotName Binding -> Map SlotName Binding
+setManaSource oid = Map.insert manaSource (toObject oid)
+
+-- Bind an object under the reserved departedPermanent slot (CR 603.10a).
+setDepartedPermanent :: ObjectId -> Map SlotName Binding -> Map SlotName Binding
+setDepartedPermanent oid = Map.insert departedPermanent (toObject oid)
+
+-- Bind an object under the reserved castSpell slot (CR 601.2i).
+setCastSpell :: ObjectId -> Map SlotName Binding -> Map SlotName Binding
+setCastSpell oid = Map.insert castSpell (toObject oid)
+
+-- Bind an object under the reserved thisAbility slot (CR 602.2a, 603.3).
+setThisAbility :: ObjectId -> Map SlotName Binding -> Map SlotName Binding
+setThisAbility oid = Map.insert thisAbility (toObject oid)
+
+-- Bind an object under the reserved targetingObject slot (CR 601.2c).
+setTargetingObject :: ObjectId -> Map SlotName Binding -> Map SlotName Binding
+setTargetingObject oid = Map.insert targetingObject (toObject oid)
+
+-- Bind an object under the reserved blockingCreature slot (CR 509.3d).
+setBlockingCreature :: ObjectId -> Map SlotName Binding -> Map SlotName Binding
+setBlockingCreature oid = Map.insert blockingCreature (toObject oid)
+
+-- Bind an object under the reserved blockedCreature slot (CR 509.3b).
+setBlockedCreature :: ObjectId -> Map SlotName Binding -> Map SlotName Binding
+setBlockedCreature oid = Map.insert blockedCreature (toObject oid)
+
+-- Bind an object under the reserved attackingCreature slot (CR 506.5).
+setAttackingCreature :: ObjectId -> Map SlotName Binding -> Map SlotName Binding
+setAttackingCreature oid = Map.insert attackingCreature (toObject oid)
+
+-- Bind the counted attackers under the reserved attackingCreatures slot (CR 508.3c).
+setAttackingCreatures :: Seq ObjectId -> Map SlotName Binding -> Map SlotName Binding
+setAttackingCreatures oids = Map.insert attackingCreatures (toObjects oids)
+
+-- Bind a player under the reserved attackingPlayer slot (CR 508.3d / 508.3e).
+setAttackingPlayer :: PlayerId -> Map SlotName Binding -> Map SlotName Binding
+setAttackingPlayer pid = Map.insert attackingPlayer (toPlayer pid)
+
+-- Bind a player under the reserved damagersController slot (CR 603.2c).
+setDamagersController :: PlayerId -> Map SlotName Binding -> Map SlotName Binding
+setDamagersController pid = Map.insert damagersController (toPlayer pid)
+
+-- Bind an object under the reserved combatDamager slot (CR 510.2).
+setCombatDamager :: ObjectId -> Map SlotName Binding -> Map SlotName Binding
+setCombatDamager oid = Map.insert combatDamager (toObject oid)
+
+-- Bind an object under the reserved mentoredCreature slot (CR 702.134c).
+setMentoredCreature :: ObjectId -> Map SlotName Binding -> Map SlotName Binding
+setMentoredCreature oid = Map.insert mentoredCreature (toObject oid)
+
+-- Bind an object under the reserved exploitedCreature slot (CR 702.110b).
+setExploitedCreature :: ObjectId -> Map SlotName Binding -> Map SlotName Binding
+setExploitedCreature oid = Map.insert exploitedCreature (toObject oid)
+
+-- Bind an object under the reserved crewedVehicle slot (CR 702.122b).
+setCrewedVehicle :: ObjectId -> Map SlotName Binding -> Map SlotName Binding
+setCrewedVehicle oid = Map.insert crewedVehicle (toObject oid)
+
+-- Bind the crewing creatures under the reserved crewers slot (CR 702.122e).
+setCrewers :: Set ObjectId -> Map SlotName Binding -> Map SlotName Binding
+setCrewers oids = Map.insert crewers (toObjects (Seq.fromList (Set.toList oids)))
+
+-- Bind an object under the reserved attachedHost slot (CR 701.3a).
+setAttachedHost :: ObjectId -> Map SlotName Binding -> Map SlotName Binding
+setAttachedHost oid = Map.insert attachedHost (toObject oid)
+
+-- Bind an object under the reserved unattachedHost slot (CR 701.3d).
+setUnattachedHost :: ObjectId -> Map SlotName Binding -> Map SlotName Binding
+setUnattachedHost oid = Map.insert unattachedHost (toObject oid)
+
+-- Fold the slots a COST PAYMENT bound (Parun.Types.Payment.Paid) into a binding
+-- environment. Left-biased, and harmlessly so: every key here is a reserved
+-- name, which Parun.CardSpec's sweep keeps a card from declaring or binding, so
+-- there is nothing of the card's to clobber.
+--
+-- Set-valued like a target slot, so a payment that sacrificed SEVERAL permanents
+-- lands on `onlyOne`'s Nothing rather than on one of them, and a reader of the
+-- whole recipient set (Parun.Engine.Resolve.crewersOf) still has it. Those
+-- several are ALSO bound as a GROUP (toObjects), a payment's slot being a
+-- definition rather than a target (CR 115.10a), so the Filter.Context readers,
+-- which see a group but no multi-object target, see them too: CR 701.59c's "if
+-- evidence was collected" after a collection of two cards is Vitu-Ghazi
+-- Inspector's. Such a slot is the one kind that fills BOTH fields; they name the
+-- same objects, so no reader can see them disagree.
+setPaid :: Map SlotName Binding -> Map SlotName Binding -> Map SlotName Binding
+setPaid = Map.union
+
+-- The objects one cost component took, bound under a reserved slot in setPaid's
+-- shape.
+paidObjects :: SlotName -> Set Recipient -> Map SlotName Binding
+paidObjects slot recipients = Map.singleton slot (paidRecipients recipients)
+
+-- setPaid's shape for a payment's objects: the recipients, and the same objects
+-- as a group once there are two.
+paidRecipients :: Set Recipient -> Binding
+paidRecipients recipients =
+  let oids = Maybe.mapMaybe Recipient.objectOf (Set.toAscList recipients)
+   in if length oids >= 2
+        then (toRecipients recipients) {Binding.objects = Just (Seq.fromList oids)}
+        else toRecipients recipients
+
+-- The slots two components of one cost bound, in one map. Recipients are
+-- UNIONED per slot rather than left-biased: Jarad, Golgari Lich Lord's
+-- "Sacrifice a Swamp and a Forest" is two Sacrifice components writing one
+-- reserved name, and what that names is the pair -- which onlyOne then declines
+-- to read as a single object, rather than silently answering with whichever
+-- component was paid first. Amounts are SUMMED for the same reason.
+mergePaid :: Map SlotName Binding -> Map SlotName Binding -> Map SlotName Binding
+mergePaid =
+  let recipientsOf b = Maybe.fromMaybe Set.empty (Binding.targets b)
+      merge a b =
+        (paidRecipients (Set.union (recipientsOf a) (recipientsOf b)))
+          { Binding.amount = ((+) <$> Binding.amount a <*> Binding.amount b) <|> Binding.amount a <|> Binding.amount b
+          }
+   in Map.unionWith merge
+
+-- Bind a number under the reserved eventAmount slot (CR 603.2).
+setEventAmount :: Natural -> Map SlotName Binding -> Map SlotName Binding
+setEventAmount n = Map.insert eventAmount (toAmount n)
+
+-- The modes chosen for a spell, read from its binding environment. Empty when
+-- absent (defensive; cast always stamps it, forced or prompted).
+modesOf :: Map SlotName Binding -> Seq ModeIndex
+modesOf m = Maybe.fromMaybe Seq.empty (Binding.modes =<< Map.lookup chosenModes m)
+
+-- Project the chosen targets (CR 601.2c) out of a binding environment, dropping
+-- slots with no target. An empty set is dropped with them: a slot whose count
+-- was announced as zero (CR 115.6) is not a filled slot, and CR 608.2b's fizzle
+-- measures the filled ones.
+targetsOf :: Map SlotName Binding -> Map SlotName (Set Recipient)
+targetsOf = Map.filter (not . Set.null) . Map.mapMaybe Binding.targets
+
+-- The ONE object each of a binding environment's TARGET slots names, for a
+-- reader that compares a slot against a single id -- Parun.Engine.Event.Match's
+-- "that creature" trigger conditions. oneBySlot's object half over the
+-- environment's own targets; a Filter.Context's slot map is objectsBySlot
+-- below, which keeps a slot naming several.
+objectSlots :: Map SlotName Binding -> Map SlotName ObjectId
+objectSlots = objectsIn . targetsOf
+
+-- The PLAYER each target slot names, objectSlots' twin on the other kind of
+-- Recipient, and what Parun.Engine.Filter.bakeBound substitutes into a target
+-- slot's CR 603.2 "that player" atom.
+--
+-- No CR 608.2b legality filter: the slot this is read for is `triggerPlayer`,
+-- which the EVENT bound and which was never a target to become illegal.
+playerSlots :: Map SlotName Binding -> Map SlotName PlayerId
+playerSlots = playersIn . targetsOf
+
+-- playersBySlot over a whole environment's own targets, objectsBySlot's twin
+-- in slotObjects below.
+slotPlayers :: Map SlotName Binding -> Map SlotName (Set PlayerId)
+slotPlayers = playersBySlot . targetsOf
+
+-- What Parun.Engine.Filter.Context's slotPlayers holds: every PLAYER each target
+-- slot names, objectsBySlot's twin -- and kept apart from playerSlots because a
+-- reader of the field takes the whole set and narrows it itself
+-- (Parun.Engine.Count.slotPlayers), where playerSlots collapses to CR 601.2c's
+-- one recipient before its reader ever sees it.
+--
+-- ABSENT versus EMPTY is Filter.Context's own doctrine: a key for every target
+-- slot, so a slot naming only an object is here with an empty set and
+-- Count.slotPlayers declines it rather than falling back to the source's
+-- bindings, which for an ability is #1783's read.
+playersBySlot :: Map SlotName (Set Recipient) -> Map SlotName (Set PlayerId)
+playersBySlot = fmap (Set.fromList . Maybe.mapMaybe Recipient.playerOf . Set.toList)
+
+-- oneBySlot's player half, over the PROJECTED targets a resolution already
+-- holds rather than over a whole environment. Parun.Engine.Resolve reads it
+-- that way: its arms carry CR 601.2c's chosen recipients (already filtered by
+-- CR 608.2b) rather than the object's bindings, and that is what a CR 611.2b
+-- duration's condition is baked against at Parun.Engine.Expiry.arm.
+playersIn :: Map SlotName (Set Recipient) -> Map SlotName PlayerId
+playersIn = Map.mapMaybe Recipient.playerOf . oneBySlot
+
+-- oneBySlot's object half, playersIn's twin: what Parun.Engine.Quantity.bakeBound
+-- bakes a ControllerOfBound or OwnerOfBound to as a CR 611.2b duration begins.
+objectsIn :: Map SlotName (Set Recipient) -> Map SlotName ObjectId
+objectsIn = Map.mapMaybe Recipient.objectOf . oneBySlot
+
+-- The ONE recipient each slot of a TARGET map names: the singular read every
+-- helper above narrows, so a slot naming a player and an object answers neither
+-- (onlyOne's doctrine), and a slot an instruction bound to a GROUP is not in
+-- the map to answer at all.
+--
+-- Targets only, deliberately, where recipientsBySlot below reads the whole
+-- slot. The CR has no binding shape to choose between: a singular back
+-- reference ("that creature", CR 608.2c) has a singular antecedent, so each
+-- binder writes one object as the single shape (Resolve.bindObjects) and a
+-- group only where the instruction may produce several. A singular reader of
+-- a slot that can hold a group is therefore a card authored against the wrong
+-- antecedent, and Parun.EffectLintSpec's "no card reads a slot a plural move
+-- bound with a singular reader" rejects it -- a lint that holds only while a
+-- group, even of one, answers Nothing here rather than working on the boards
+-- where it happens to hold one. Parun.AbilitySlotLintSpec's "no multi-target
+-- slot is read one at a time" is the same fence for a slot CR 601.2c gave
+-- several targets.
+oneBySlot :: Map SlotName (Set Recipient) -> Map SlotName Recipient
+oneBySlot = Map.mapMaybe onlyOne
+
+-- The ONE recipient a slot names, or Nothing when it names none or several. What
+-- every reader that can point at one object and no more asks of a slot -- CR
+-- 601.2c lets a slot hold several, and a reader that cannot take them must not
+-- silently take one of them. Parun.Engine.Filter.slotOneObject states the same
+-- doctrine over a Filter.Context's whole slot.
+onlyOne :: Set Recipient -> Maybe Recipient
+onlyOne rs = case Set.toList rs of
+  [r] -> Just r
+  _ -> Nothing
+
+-- The amount (X) bound at a slot, if any.
+amountOf :: SlotName -> Map SlotName Binding -> Maybe Natural
+amountOf slot m = Binding.amount =<< Map.lookup slot m
+
+-- The objects bound as a GROUP at a slot, if any. Nothing when the slot holds a
+-- single target instead, or nothing at all -- so a reader that offers both shapes
+-- can tell "them" from "it" without a tag.
+objectsOf :: SlotName -> Map SlotName Binding -> Maybe (Seq ObjectId)
+objectsOf slot m = Binding.objects =<< Map.lookup slot m
+
+-- Every GROUP binding an environment holds, keyed by slot: objectsOf over the
+-- whole map, for a reader that wants them all at once rather than one name at a
+-- time. objectsBySlot's group half.
+groupsOf :: Map SlotName Binding -> Map SlotName (Seq ObjectId)
+groupsOf = Map.mapMaybe Binding.objects
+
+-- objectsBySlot over a whole environment's own targets, as announced: no CR
+-- 608.2b re-check, which is right for every caller -- CR 603.4's
+-- intervening-"if" is checked at CR 608.2a, before targets are re-checked, and
+-- the rest read an announcement or a payment rather than a resolution.
+slotObjects :: Map SlotName Binding -> Map SlotName (Set ObjectId)
+slotObjects m = objectsBySlot (targetsOf m) m
+
+-- THE answer to "what does each slot name", for every
+-- Parun.Engine.Filter.Context (Parun.Engine.Projection.framedBySlots): every
+-- recipient of a target slot, WHATEVER its count (CR 601.2c lets one slot hold
+-- several), every member of a group (CR 115.10a) as an object recipient, and a
+-- key for every slot the environment bound at all -- so an "up to one" slot
+-- answered with none (CR 601.2c) is present and EMPTY, apart from a slot nobody
+-- has answered yet, which is absent.
+--
+-- `targets` is the caller's, and WHICH targets is the one rules difference
+-- between callers: the announcement's own at CR 601.2c (Parun.Engine.Target),
+-- the recipients CR 608.2b left legal at resolution
+-- (Parun.Engine.Resolve.Slots.effectContext). Only the KEYS of `bindings` are
+-- read beside its groups, so a target CR 608.2b dropped stays dropped.
+recipientsBySlot :: Map SlotName (Set Recipient) -> Map SlotName Binding -> Map SlotName (Set Recipient)
+recipientsBySlot targets bindings =
+  Map.unionsWith
+    Set.union
+    [ targets,
+      fmap (Set.fromList . fmap Recipient.ToObject . Foldable.toList) (groupsOf bindings),
+      Set.empty <$ bindings
+    ]
+
+-- The objects each slot names, recipientsBySlot's object half: a slot naming
+-- none is absent, so `Map.member` and "names an object" are one question. A
+-- reader that can take no more than one narrows through
+-- Parun.Engine.Filter.slotOneObject; IsBound and Count's OverBound take the set,
+-- so Command the Dreadhorde's "those cards" is both of its targets.
+objectsBySlot :: Map SlotName (Set Recipient) -> Map SlotName Binding -> Map SlotName (Set ObjectId)
+objectsBySlot targets bindings = objectsOfSlots (recipientsBySlot targets bindings)
+
+-- The object half of a recipient map, a slot naming no object dropped.
+objectsOfSlots :: Map SlotName (Set Recipient) -> Map SlotName (Set ObjectId)
+objectsOfSlots = Map.filter (not . Set.null) . fmap (Set.fromList . Maybe.mapMaybe Recipient.objectOf . Set.toList)
+
+-- The copy snapshot stored on an object, if any (CR 707.2): a copy effect's
+-- stamp, over the object's own (`ownCopySource`).
+copyOf :: Map SlotName Binding -> Maybe ProjectedCharacteristics
+copyOf m = Binding.copy =<< (Map.lookup copySource m <|> Map.lookup ownCopySource m)
+
+-- The source's copiable values as this triggered ability was put on the stack,
+-- if they were stamped (CR 702.165d).
+placedSourceCopyOf :: Map SlotName Binding -> Maybe ProjectedCharacteristics
+placedSourceCopyOf m = Binding.copy =<< Map.lookup placedSourceCopy m
+
+-- Stamp them, under `placedSourceCopy` above.
+setPlacedSourceCopy :: ProjectedCharacteristics -> Map SlotName Binding -> Map SlotName Binding
+setPlacedSourceCopy pc = Map.insert placedSourceCopy (Binding.empty {Binding.copy = Just pc})
+
+-- CR 707.3: stamp a copy effect's snapshot under the reserved copySource slot,
+-- over whatever an earlier one stamped there. The object's own values
+-- (`setOwnCopy`) stay beneath it (CR 613.7).
+setCopy :: ProjectedCharacteristics -> Map SlotName Binding -> Map SlotName Binding
+setCopy pc = Map.insert copySource (Binding.empty {Binding.copy = Just pc})
+
+-- CR 111.3 / 707.2: stamp an object's own copiable values as it is created --
+-- a token's or a copy's -- or as it merges (CR 730.2a), under `ownCopySource`.
+-- Later than any copy effect stamped before it (CR 613.7), so that stamp goes.
+setOwnCopy :: ProjectedCharacteristics -> Map SlotName Binding -> Map SlotName Binding
+setOwnCopy pc = Map.insert ownCopySource (Binding.empty {Binding.copy = Just pc}) . Map.delete copySource
+
+-- CR 730.2a with CR 730.2i: readings of one merge, the current one as the
+-- object's own values, the turned-over one beside it, and CR 701.20a's shown
+-- one where it differs, each carrying its CR 730.2h flipped reading as
+-- PC.flipped, as a stored copy row does. The turned reading is stamped even
+-- where it equals the current one, so its slot is also the record that the own
+-- values are a merge's (`mergeStampHolds`).
+setMergeCopy :: ProjectedCharacteristics -> ProjectedCharacteristics -> ProjectedCharacteristics -> Map SlotName Binding -> Map SlotName Binding
+setMergeCopy pc turnedPc shownPc =
+  Map.alter (const (if shownPc == pc then Nothing else Just (Binding.empty {Binding.copy = Just shownPc}))) shownMergeSource
+    . Map.insert turnedMergeSource (Binding.empty {Binding.copy = Just turnedPc})
+    . setOwnCopy pc
+
+-- CR 730.2i: a merged permanent transforms, so each double-faced component turns
+-- over and the turned reading of its merge becomes the current one, its flipped
+-- reading with it, since CR 730.2h's flip component stays flipped (CR 710.4). A
+-- SWAP, so turning it back restores the reading it had. The components turn
+-- under a later copy effect too, which keeps covering them. The shown reading
+-- (`shownMergeSource`) stays: it is read face down alone, and CR 730.2j keeps a
+-- pile holding a face-up double-faced component from ever being turned so.
+turnMergeCopy :: Map SlotName Binding -> Map SlotName Binding
+turnMergeCopy m = case (Map.lookup ownCopySource m, Map.lookup turnedMergeSource m) of
+  (Just current, Just turned) -> Map.insert ownCopySource turned (Map.insert turnedMergeSource current m)
+  _ -> m
+
+-- CR 613.7 / 730.2a: is this merged permanent's copy stamp still its merge's,
+-- rather than a later copy effect's that covers it?
+mergeStampHolds :: Map SlotName Binding -> Bool
+mergeStampHolds m = Map.member turnedMergeSource m && not (Map.member copySource m)
+
+-- CR 708.10: these bindings without a copy effect's stamp -- the card beneath
+-- a face-down permanent that is a copy. The object's own values stay
+-- (`ownCopySource`): a token's or a copy's (CR 111.3), and a merge's (CR
+-- 730.2a), read with the copy effects its sides had left out
+-- (`shownMergeSource`).
+withoutCopyEffect :: Map SlotName Binding -> Map SlotName Binding
+withoutCopyEffect m = maybe id (Map.insert ownCopySource) (Map.lookup shownMergeSource m) (Map.delete copySource m)
+
+-- Build the binding environment stamped on a stack object at cast: the chosen
+-- targets, the chosen X under variableX, and any chosen modes under
+-- chosenModes. The reserved names cannot collide with a target slot
+-- (lint-enforced), so the merges below never actually merge; they are
+-- insertWith rather than insert so a future binding kind sharing a slot keeps
+-- both choices instead of clobbering one.
+fromChoices ::
+  Map SlotName (Set Recipient) ->
+  Maybe Natural ->
+  Seq ModeIndex ->
+  Map SlotName Binding
+fromChoices targets mAmount mModes =
+  let fromTargets = Map.filter (Maybe.isJust . Binding.targets) (fmap toRecipients targets)
+      withX = case mAmount of
+        Nothing -> fromTargets
+        Just n ->
+          Map.insertWith mergeBinding variableX (Binding.empty {Binding.amount = Just n}) fromTargets
+   in if Seq.null mModes
+        then withX
+        else Map.insertWith mergeBinding chosenModes (Binding.empty {Binding.modes = Just mModes}) withX
+
+-- CR 601.2d: each divided slot's announced division, stamped beside the
+-- slot's targets.
+setDivisions :: Map SlotName (Map Recipient Natural) -> Map SlotName Binding -> Map SlotName Binding
+setDivisions divisions bindings = Map.foldrWithKey (\slot division -> Map.insertWith mergeBinding slot (Binding.empty {Binding.division = Just division})) bindings divisions
+
+-- CR 601.2d: what each divided slot's division gave this recipient, matched by
+-- referent so a recipient retagged on its way to the effect still finds its
+-- part. A slot that gave it nothing has no key.
+sharesOf :: Recipient -> Map SlotName Binding -> Map SlotName Natural
+sharesOf recipient = Map.mapMaybe (fmap snd . List.find (Recipient.sameReferent recipient . fst) . Map.toList Monad.<=< Binding.division)
+
+-- CR 601.2b: the counts announced beside X (Parun.Engine.Cost.announcedCounts),
+-- each bound as an amount under its own slot, as `fromChoices` binds X.
+fromAnnounced :: Map SlotName Natural -> Map SlotName Binding
+fromAnnounced = fmap (\n -> Binding.empty {Binding.amount = Just n})
+
+-- Combine two bindings for the same slot, preferring the left's present choice
+-- in each field. Inputs are disjoint per field by construction, so this is a
+-- total, order-independent merge.
+mergeBinding :: Binding -> Binding -> Binding
+mergeBinding a b =
+  Binding.MkBinding
+    { Binding.targets = Binding.targets a <|> Binding.targets b,
+      Binding.amount = Binding.amount a <|> Binding.amount b,
+      Binding.modes = Binding.modes a <|> Binding.modes b,
+      Binding.copy = Binding.copy a <|> Binding.copy b,
+      Binding.objects = Binding.objects a <|> Binding.objects b,
+      Binding.sticker = Binding.sticker a <|> Binding.sticker b,
+      Binding.votes = Binding.votes a <|> Binding.votes b,
+      Binding.division = Binding.division a <|> Binding.division b
+    }
+
+-- CR 400.7h: `binding` with every naming of `old` renamed to `new`, each
+-- recipient keeping its kind. Built field by field, as mergeBinding is, so a
+-- new field is a missing-field error here rather than silently kept.
+renameObject :: ObjectId -> ObjectId -> Binding -> Binding
+renameObject old new binding =
+  let rename oid = if oid == old then new else oid
+      renameRecipient recipient = case recipient of
+        Recipient.ToCreature oid -> Recipient.ToCreature (rename oid)
+        Recipient.ToPlaneswalker oid -> Recipient.ToPlaneswalker (rename oid)
+        Recipient.ToBattle oid -> Recipient.ToBattle (rename oid)
+        Recipient.ToObject oid -> Recipient.ToObject (rename oid)
+        Recipient.ToPlayer pid -> Recipient.ToPlayer pid
+        Recipient.ToPile pile -> Recipient.ToPile pile
+   in Binding.MkBinding
+        { Binding.targets = fmap (Set.map renameRecipient) (Binding.targets binding),
+          Binding.amount = Binding.amount binding,
+          Binding.modes = Binding.modes binding,
+          Binding.copy = Binding.copy binding,
+          Binding.objects = fmap (fmap rename) (Binding.objects binding),
+          Binding.sticker = Binding.sticker binding,
+          Binding.votes = Binding.votes binding,
+          Binding.division = fmap (Map.mapKeys renameRecipient) (Binding.division binding)
+        }

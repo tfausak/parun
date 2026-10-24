@@ -9,19 +9,19 @@ Scryfall.*
 
 ## 0. Why this exists
 
-Auras are the largest single hole in the card pool. Nothing in pawl can attach
+Auras are the largest single hole in the card pool. Nothing in parun can attach
 one object to another: there is no `Object` field for it, no `Subtype.Aura`, no
 `enchant`, and no way for a static ability to name "the enchanted permanent".
 Four code sites already carry a comment saying so:
 
-- `source/test-suite/Pawl/CombatSpec.hs:608` — a synthetic steal-without-haste
+- `source/test-suite/Parun/CombatSpec.hs:608` — a synthetic steal-without-haste
   fixture stands in for an Aura (#33).
-- `source/test-suite/Pawl/ProjectionSpec.hs:455` — Opalescence's "each **other
+- `source/test-suite/Parun/ProjectionSpec.hs:455` — Opalescence's "each **other
   non-Aura** enchantment" qualifier is unenforced because `Aura` is not a
   modelled `Subtype` (#114).
-- `source/test-suite/Pawl/PowerToughnessSpec.hs:120` — the Darksteel Mutation
+- `source/test-suite/Parun/PowerToughnessSpec.hs:120` — the Darksteel Mutation
   family is blocked on attachment.
-- `source/library/Pawl/Engine.hs:166` — settling a permanent held under
+- `source/library/Parun/Engine.hs:166` — settling a permanent held under
   *indefinite* control, across the thief's own untap step, "is the Auras /
   Control Magic phase" (#62).
 
@@ -138,7 +138,7 @@ indefinite duration, crossing turns.
 
 ### 3.1 Attachment is base state, not a projection
 
-`Pawl.Type.Object` gains one field:
+`Parun.Type.Object` gains one field:
 
 ```haskell
 -- CR 303.4b: the object this permanent is attached to ("enchanted"). Base state,
@@ -166,16 +166,16 @@ costs a field widening rather than a type change.
 
 Both gate cards carry `Just (MkTargetSpec Pool.Creatures Nothing)`.
 
-**Codec.** `characteristicPT` is the exact precedent (`Pawl.Codec` ~1622 on
+**Codec.** `characteristicPT` is the exact precedent (`Parun.Codec` ~1622 on
 encode, ~1692 on decode): `getOpt` + `maybeFrom` on the way in, omitted from the
 object when `Nothing` on the way out. **No existing `data/cards/*.json` changes.**
 
 ### 3.3 One seam carries both targeting and re-validation
 
-`Card.allTargetSpecs` (`Pawl.Card:34`) and `Card.modesTargetSpecs`
-(`Pawl.Card:50`) merge the enchant spec in under a well-known slot name,
-`Pawl.Card.enchantSlot = MkSlotName "enchant"`. It lives in `Pawl.Card` rather
-than beside `Pawl.Binding`'s well-known names because those are *reserved* —
+`Card.allTargetSpecs` (`Parun.Card:34`) and `Card.modesTargetSpecs`
+(`Parun.Card:50`) merge the enchant spec in under a well-known slot name,
+`Parun.Card.enchantSlot = MkSlotName "enchant"`. It lives in `Parun.Card` rather
+than beside `Parun.Binding`'s well-known names because those are *reserved* —
 they exist precisely because they are not targets — and this one is. A lint
 forbids any card's own `targetSpecs` from declaring that name, so the merge can
 never shadow a declared slot. `Cast.hs:188` builds the cast-time prompt from
@@ -184,13 +184,13 @@ function, so CR 303.4a's target and CR 608.2b's re-validation both fall out of
 the merge.
 
 The enchant slot is a genuine target (CR 303.4a says so), so it lives in the
-ordinary target namespace — it is *not* a reserved slot in `Pawl.Binding`'s sense
+ordinary target namespace — it is *not* a reserved slot in `Parun.Binding`'s sense
 (`variableX`, `chosenModes`, `copySource`, `triggerSource`, `you`), all of which
 exist precisely because they are *not* targets.
 
 **But the seam is not single, and that is the trap this section exists to
 name.** Two consumers reach *past* `Card.allTargetSpecs`/`Card.modesTargetSpecs`
-and read `Mode.targetSpecs` straight off each mode. Merging in `Pawl.Card` is
+and read `Mode.targetSpecs` straight off each mode. Merging in `Parun.Card` is
 invisible to both:
 
 1. **`Target.fillableModes` (`Target.hs:119`) — a correctness bug if missed.**
@@ -223,7 +223,7 @@ invisible to both:
 
 ### 3.4 Resolution: `Stack`'s third branch, and the first fizzling permanent spell
 
-`Pawl.Stack:49` currently reads:
+`Parun.Stack:49` currently reads:
 
 ```haskell
 if Card.isPermanent (Printing.card printing)
@@ -292,7 +292,7 @@ predicate re-derived per candidate, and `Attached` is re-derived from the
 *source's* state. Unholy Strength is
 `MkStaticAbility Attached (ModifyPowerToughness (Literal 2) (Literal 1))`.
 
-`Pawl.Codec` gains the nullary tag pair (`affectedToJson:1016`,
+`Parun.Codec` gains the nullary tag pair (`affectedToJson:1016`,
 `jsonToAffected:1023`).
 
 ### 3.6 CR 704.5m, and the two-pass fall-off
@@ -342,8 +342,8 @@ becomes `Filter.Not (Filter.HasSubtype Subtype.Aura)` inside Opalescence's
 existing `Affected.Matching` filter, and the comment dies in the same commit.
 
 Per the `Subtype` edit-site set, this touches four places: the constructor
-(`Pawl.Type.Subtype`, cited `-- CR 205.3h`), `Codec.subtypeToJson`,
-`Codec.jsonToSubtype`, and **`Pawl.Mana.subtypeMana`**, whose `case` is fully
+(`Parun.Type.Subtype`, cited `-- CR 205.3h`), `Codec.subtypeToJson`,
+`Codec.jsonToSubtype`, and **`Parun.Mana.subtypeMana`**, whose `case` is fully
 exhaustive with no wildcard and needs an explicit `-> Nothing` arm. Card JSON
 stores subtypes in `Ord`-canonical (declaration) order.
 
@@ -435,7 +435,7 @@ taking this on faith.
 
 ### 3.11 Departure (CR 800.4a)
 
-`Pawl.Departure` implements CR 800.4a's clause 3 ("any effects which give that
+`Parun.Departure` implements CR 800.4a's clause 3 ("any effects which give that
 player control of any objects or players end") by scanning **stored** effects
 through `Projection.givesControlTo` (`Projection.hs:888`). A static-ability
 control source is not in that scan.
@@ -452,7 +452,7 @@ the game with them, its static ability goes with it, and the creature reverts
 with no clause-3 work at all. A test pins this. If it does not hold — if a
 reachable state exists where a departing player controls an Aura they do not own
 — `givesControlTo`'s classification is widened to cover the static-ability path,
-keeping the case on `Modification` inside `Pawl.Projection` where the invariant
+keeping the case on `Modification` inside `Parun.Projection` where the invariant
 requires it.
 
 ## 4. The two phases
@@ -473,7 +473,7 @@ Phase (b) depends on (a) entirely. Each phase is one plan and one session per
 ## 5. Card data
 
 Two `data/cards/*.json` files, `unholy-strength.json` and `control-magic.json`,
-plus four append-order edits each in `source/test-suite/Pawl/Cards.hs`: a
+plus four append-order edits each in `source/test-suite/Parun/Cards.hs`: a
 `<name>Printing` field in `MkCards`, a `loadPrinting "<slug>"` line, the `pure
 MkCards {…}` assignment, and an `allPrintings` entry — the last giving automatic
 whole-pool codec round-trip coverage. Neither gate card needs to join a deck
@@ -487,7 +487,7 @@ and one static ability.
 Gameplay-level, per `design.md` §4's opcode definition-of-done: an effect is not
 done until a card exercises it in a gameplay-level test.
 
-**Phase (a)** — `Pawl.ProjectionSpec` and a new `Pawl.AuraSpec`:
+**Phase (a)** — `Parun.ProjectionSpec` and a new `Parun.AuraSpec`:
 
 - Cast Unholy Strength on a creature; the creature projects +2/+1 and the Aura's
   `attachedTo` names it.
@@ -503,7 +503,7 @@ done until a card exercises it in a gameplay-level test.
   other" to *CR 305.2*, which is the one-land-per-turn rule; that citation is
   wrong and is corrected while the file is open.
 
-**Phase (b)** — `Pawl.CombatSpec`, `Pawl.ProjectionSpec`, `Pawl.DepartureSpec`:
+**Phase (b)** — `Parun.CombatSpec`, `Parun.ProjectionSpec`, `Parun.DepartureSpec`:
 
 - Control Magic takes a creature; `Projection.controllerOf` reports the Aura's
   controller, and the creature appears in their `Projection.controls`.
@@ -522,26 +522,26 @@ done until a card exercises it in a gameplay-level test.
 
 | Module | Change |
 | --- | --- |
-| `Pawl.Type.Object` | `attachedTo` field |
-| `Pawl.Type.Card` | `enchant` field |
-| `Pawl.Type.Subtype` | `Aura` constructor |
-| `Pawl.Type.Affected` | `Attached` constructor |
-| `Pawl.Type.Modification` | `SetControllerToSource` constructor |
-| `Pawl.Card` | `isAura`, `enchantSlot`, `enchantSpecs`; `allTargetSpecs`/`modesTargetSpecs` merge the enchant slot |
-| `Pawl.Target` | `fillableModes` takes the extra-slots map (§3.3) |
-| `Pawl.Activate`, `Pawl.Engine` | three `fillableModes` callers pass `Map.empty` |
-| `Pawl.Event` | `changeZoneAttaching`; `attachedTo` reset in `mkObj` |
-| `Pawl.Stack` | the Aura resolution branch |
-| `Pawl.Resolve` | fizzle test extracted to a shared helper |
-| `Pawl.Sba` | CR 704.5m; the stale one-pass comment |
-| `Pawl.Projection` | `layer`; `applyModification`; `controllerOf` gathers statics, hoisted, visited-set escape |
-| `Pawl.Departure` | two false comments; `givesControlTo` if §3.11's finding does not hold |
-| `Pawl.Mana` | the exhaustive `subtypeMana` arm |
-| `Pawl.Codec` | subtype pair, `Affected.Attached` pair, `enchant` field |
-| `source/test-suite/Pawl/CardSpec.hs` | the D4 lint's Aura arm |
-| `source/test-suite/Pawl/Cards.hs` | two printings |
+| `Parun.Type.Object` | `attachedTo` field |
+| `Parun.Type.Card` | `enchant` field |
+| `Parun.Type.Subtype` | `Aura` constructor |
+| `Parun.Type.Affected` | `Attached` constructor |
+| `Parun.Type.Modification` | `SetControllerToSource` constructor |
+| `Parun.Card` | `isAura`, `enchantSlot`, `enchantSpecs`; `allTargetSpecs`/`modesTargetSpecs` merge the enchant slot |
+| `Parun.Target` | `fillableModes` takes the extra-slots map (§3.3) |
+| `Parun.Activate`, `Parun.Engine` | three `fillableModes` callers pass `Map.empty` |
+| `Parun.Event` | `changeZoneAttaching`; `attachedTo` reset in `mkObj` |
+| `Parun.Stack` | the Aura resolution branch |
+| `Parun.Resolve` | fizzle test extracted to a shared helper |
+| `Parun.Sba` | CR 704.5m; the stale one-pass comment |
+| `Parun.Projection` | `layer`; `applyModification`; `controllerOf` gathers statics, hoisted, visited-set escape |
+| `Parun.Departure` | two false comments; `givesControlTo` if §3.11's finding does not hold |
+| `Parun.Mana` | the exhaustive `subtypeMana` arm |
+| `Parun.Codec` | subtype pair, `Affected.Attached` pair, `enchant` field |
+| `source/test-suite/Parun/CardSpec.hs` | the D4 lint's Aura arm |
+| `source/test-suite/Parun/Cards.hs` | two printings |
 
-Every `case` on `Modification` in `Pawl.Projection` is exhaustive with no
+Every `case` on `Modification` in `Parun.Projection` is exhaustive with no
 wildcard (`Projection.hs:54-64, 504, 518, 582, 890`), so the compiler enumerates
 the new constructor's sites. Likewise `Affected` in `Projection` and `Codec`.
 
@@ -585,10 +585,10 @@ Card-driven unless noted.
    attached to more than one object or player, the Aura's controller chooses".
    No effect attaches, so there is nothing to choose between. *Landed since:*
    `Effect.AttachTargetToEach` names a whole destination set and
-   `Pawl.Engine.Attach.arbitrate` reduces it, asking the SUBJECT’s controller
+   `Parun.Engine.Attach.arbitrate` reduces it, asking the SUBJECT’s controller
    rather than the resolving controller — CR 301.5c’s Equipment sentence at the
    same time. Synthetic Aura Diffusion is the producer, synthetic because the
-   Scryfall sweep `Pawl.AuraSpec`’s Arbitration group records found no printing
+   Scryfall sweep `Parun.AuraSpec`’s Arbitration group records found no printing
    that names more than one destination; see #191.
 6. **CR 303.4k** — face-down permanents do not exist.
 7. **CR 704.5n / 704.5p** — Equipment, Fortification, and attached

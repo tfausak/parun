@@ -1,0 +1,168 @@
+-- | CR 702.179, "start your engines!": speed as a per-player resource, the
+-- state-based action that starts it (CR 704.5aa) and the inherent triggered
+-- ability that raises it (CR 702.179d).
+--
+-- Parun.Engine.Monarch's sibling, and for the same reason: rule 702.179 gives a
+-- player an ability that rides no card's text, so the rules core mints it. Casing
+-- on Keyword.StartYourEngines here is casing on the RULEBOOK, which
+-- Parun.Types.Keyword's own comment licenses -- rule 702 is as much a part of the
+-- comprehensive rules as rule 704 is. Nothing here asks which EFFECT anything
+-- came from, which is the invariant that matters.
+--
+-- Where it DIVERGES from the monarch is what the designation is on. CR 725.1
+-- makes the monarch "a designation a player can have", at most one per game, so
+-- it is a GameState field; CR 702.179b makes speed a value EACH player has or
+-- lacks, so it rides Player.speed, as Player.ringTemptations does for CR 701.54c.
+--
+-- Rule 702.178's max speed is NOT here. CR 702.178a is a static ability -- "as
+-- long as your speed is 4, this object has '[Ability]'" -- so it is card data and
+-- not rules-core machinery: it rides Parun.Types.ActivatedAbility.condition, read
+-- back by Parun.Engine.Projection.abilitiesGiven on the battlefield and by
+-- Parun.Engine.Activatable.zoneAbilitiesOf where CR 702.178b's zone clause sends
+-- it. All this module owes it is the number the clause compares against, and
+-- Parun.Engine.Quantity's Speed arm.
+module Parun.Engine.Speed where
+
+import Data.Map.Strict (Map)
+import qualified Data.Map.Strict as Map
+import qualified Data.Maybe as Maybe
+import qualified Data.Sequence as Seq
+import qualified Data.Set as Set
+import Numeric.Natural (Natural)
+import qualified Parun.Engine.Mint as Mint
+import qualified Parun.Engine.Projection.View as Projection
+import Parun.Types.Card (Card)
+import qualified Parun.Types.Compares as Compares
+import qualified Parun.Types.Comparison as Comparison
+import qualified Parun.Types.Condition as Condition
+import qualified Parun.Types.Effect as Effect
+import Parun.Types.GameState (GameState)
+import qualified Parun.Types.GameState as GameState
+import qualified Parun.Types.GrantedAbility as GrantedAbility
+import qualified Parun.Types.Keyword as Keyword
+import Parun.Types.ObjectId (ObjectId)
+import qualified Parun.Types.Player as Player
+import Parun.Types.PlayerId (PlayerId)
+import qualified Parun.Types.PlayerQuantity as PlayerQuantity
+import qualified Parun.Types.PlayerRef as PlayerRef
+import qualified Parun.Types.PlayerRelation as PlayerRelation
+import qualified Parun.Types.ProjectedCharacteristics as PC
+import qualified Parun.Types.Quantity as Quantity
+import qualified Parun.Types.TriggerCondition as TriggerCondition
+import qualified Parun.Types.TriggerLimit as TriggerLimit
+import Parun.Types.TriggeredAbility (TriggeredAbility)
+import qualified Parun.Types.TriggeredAbility as TriggeredAbility
+
+-- | CR 702.179e: "a player has max speed if their speed is 4". The one number
+-- rule 702.179 names, and the one CR 702.178a's "as long as your speed is 4"
+-- compares against, so both readings share it.
+--
+-- A PROJECT DECISION, not a reading the CR supports: nothing in rule 702.179
+-- caps speed and nothing permits exceeding 4 either, so parun rules that an
+-- effect may push speed past 4 and that a player at 4 OR MORE has max speed.
+-- That is why every "Max speed --" card in data/cards/ writes CR 702.178a's
+-- gate as AtLeast 4 rather than the rule's literal Exactly 4, proven by
+-- Parun.SpeedSpec's "past 4 the Raceway keeps its max speed ability". If a
+-- future CR clarifies the other way, the edit is those gates and that case.
+-- docs/decisions.md, "Whether speed can pass 4".
+-- belowMaxSpeed below is NOT this question: CR 702.179d states its own "less
+-- than 4" and caps only its own climb.
+maxSpeed :: Natural
+maxSpeed = 4
+
+-- | CR 702.179f: a player's speed as an EFFECT sees it -- 0 for a player who has
+-- none. Parun.Engine.Quantity's Speed arm is the card-facing reader; this is the
+-- same reading for the rules core.
+--
+-- Nothing only for a player the game does not hold, which is "which player?"
+-- unanswered rather than a player with no speed.
+speedOf :: PlayerId -> GameState -> Maybe Natural
+speedOf pid gs = fmap (Maybe.fromMaybe 0 . Player.speed) (Map.lookup pid (GameState.players gs))
+
+-- | CR 704.5aa: the players who control a permanent with start your engines! and
+-- have no speed. The state-based action's CLASSIFIER half, kept pure and taking
+-- the pre-pass projection so Parun.Engine.Sba can judge it against the same board
+-- as every other CR 704.5 clause (CR 704.3's simultaneity).
+--
+-- Membership, not a count: CR 704.5aa asks whether a player controls "a permanent
+-- with start your engines!", so a second copy starts no second set of engines.
+--
+-- The PROJECTED keywords, never the printed ones, because the layer system grants
+-- and removes abilities -- a Muraganda Raceway whose rules text CR 305.7 stripped
+-- has no start your engines! to read, CR 613.1f says the same of a creature, and
+-- an effect that GRANTED the keyword would be found here.
+--
+-- Ascending, so the pass's writes and any transcript are deterministic.
+startingEngines :: Map ObjectId PC.ProjectedCharacteristics -> GameState -> [PlayerId]
+startingEngines pcs gs =
+  let revs oid = case Map.lookup oid pcs of
+        Nothing -> Nothing
+        Just pc ->
+          if Map.member Keyword.StartYourEngines (PC.keywords pc)
+            then Projection.controllerOf oid gs
+            else Nothing
+      revvers = Set.fromList (Maybe.mapMaybe revs (Set.toList (GameState.battlefield gs)))
+      unstarted pid = fmap Player.speed (Map.lookup pid (GameState.players gs)) == Just Nothing
+   in filter unstarted (Set.toAscList revvers)
+
+-- | CR 704.5aa's ACTION half: "that player's speed becomes 1".
+--
+-- A set and not an increase, so it cannot stack with CR 702.179d's rise -- and
+-- startingEngines above has already established the player had none, which is
+-- what makes the two agree.
+startEngines :: PlayerId -> GameState -> GameState
+startEngines pid gs =
+  gs {GameState.players = Map.adjust (\p -> p {Player.speed = Just 1}) pid (GameState.players gs)}
+
+-- | CR 702.179d, in full: "Whenever one or more opponents lose life during your
+-- turn, if your speed is less than 4, your speed increases by 1. This ability
+-- triggers only once each turn."
+--
+-- Minted here rather than carried in card data, on Parun.Engine.Monarch's terms:
+-- the text is printed in the comprehensive rules, not on Muraganda Raceway.
+--
+-- The intervening "if" is REAL, unlike either monarch ability's: CR 603.4 checks
+-- it when the trigger event occurs, which Event.interveningHolds does, and CR
+-- 608.2a checks it again on resolution, which Parun.Engine.Stack's
+-- OfInherentTrigger arm does. Both halves are needed -- an opponent losing life
+-- twice in one turn cannot raise speed past 4, and neither can a trigger that
+-- waited on the stack while something else did.
+--
+-- Single mode, no targets, forced (CR 603.3's "you" is the ability's controller
+-- and nothing is chosen), which is what lets Engine.placeSourceless put it on the
+-- stack unprompted.
+increaseAbility :: TriggeredAbility Card (GrantedAbility.GrantedAbility Card)
+increaseAbility =
+  (Mint.triggerIf TriggerCondition.OpponentLostLifeDuringYourTurn belowMaxSpeed (Seq.singleton (Effect.IncreaseSpeed (PlayerQuantity.MkPlayerQuantity (PlayerRef.Relative PlayerRelation.You) (Quantity.Literal 1)))))
+    { -- CR 702.179d's own "this ability triggers only once each turn", stated in
+      -- the data because the rule states it, and enforced from there like every
+      -- other rider: Event.withinTriggerLimit reads the CR 603.3b log, which
+      -- records a sourceless trigger under its controller.
+      TriggeredAbility.limit = TriggerLimit.OncePerTurn
+    }
+
+-- | CR 702.179d's "if your speed is less than 4", as the Condition both checks
+-- read. AtMost (maxSpeed - 1) rather than a "less than" comparison, because
+-- Parun.Types.Comparison has no strict arm and speed is a whole number, so the two
+-- state the same set -- this is the pool's first producer for AtMost (#158).
+belowMaxSpeed :: Condition.Condition
+belowMaxSpeed =
+  Condition.Compares
+    ( Compares.MkCompares
+        (Quantity.Speed (PlayerRef.Relative PlayerRelation.You))
+        Comparison.AtMost
+        (Quantity.Literal (toInteger maxSpeed - 1))
+    )
+
+-- | CR 702.179d: the speed increase, paired with each player who has it, for
+-- Parun.Engine.Event.Trigger.inherentTriggers. "Associated with a player having
+-- 1 or more speed" and "controlled by that player", so a player CR 704.5aa has
+-- not yet reached has no such ability.
+--
+-- "During your turn" is the condition's own (Event.Match's
+-- OpponentLostLifeDuringYourTurn arm), "if your speed is less than 4" is CR
+-- 603.4's check (Event.interveningHolds), and "only once each turn" is the
+-- rider Event.withinTriggerLimit spends -- each read where a printed ability's
+-- would be.
+abilities :: GameState -> [(PlayerId, TriggeredAbility Card (GrantedAbility.GrantedAbility Card))]
+abilities gs = [(pid, increaseAbility) | (pid, player) <- Map.toList (GameState.players gs), Maybe.maybe False (>= 1) (Player.speed player)]

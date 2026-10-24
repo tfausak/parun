@@ -20,7 +20,7 @@ quoted in §5 are what Scryfall returned on 2026-07-22.*
 
 ## 0. Why this phase, and what it proves
 
-`Pawl.Type.Duration` has exactly two inhabitants, and has had since M3b:
+`Parun.Type.Duration` has exactly two inhabitants, and has had since M3b:
 
 ```haskell
 data Duration
@@ -36,13 +36,13 @@ never dies. CR 611.2 describes two further shapes that neither can express.
    whole difficulty — **does not come back** if the condition holds again later.
    CR 611.2b also fires *before* the effect exists: *"If the 'for as long as'
    duration never starts, the effect does nothing."* So a duration has a
-   **beginning**, and pawl has no such moment today.
+   **beginning**, and parun has no such moment today.
 
 2. **An expiry keyed to a future event** — CR 611.2a's *"lasts as long as stated
    by the spell or ability creating it."* "Until your next turn" is not
    expressible as printed card data at all: *"your"* has to become a concrete
    `PlayerId` (CR 109.5) at the moment the effect is created, and the effect has
-   to outlive the cleanup step (CR 514.2) that ends every duration pawl
+   to outlive the cleanup step (CR 514.2) that ends every duration parun
    currently stores.
 
 Both shapes are carried by **two** types, not one: `ContinuousEffect.duration`
@@ -111,7 +111,7 @@ cheaply, it is a strictly additive second test, not a replacement.
 ## 1. Scope
 
 **In scope.** The `Duration` → `Expiry` split; the arming moment (CR 611.2b);
-`StateCondition`'s third customer; a new `Pawl.Expiry` module owning every
+`StateCondition`'s third customer; a new `Parun.Expiry` module owning every
 `case … Expiry`; three sweep sites; two `TargetSpec` variants and the
 source-relative `Target` signature they force; two card data files and their
 gameplay-level tests.
@@ -128,7 +128,7 @@ already uses twice — `ReplacementEffect` / `ActiveReplacement` and
 record that carries it are different types.
 
 ```haskell
--- Pawl.Type.Duration -- PRINTED. Appears in card JSON.
+-- Parun.Type.Duration -- PRINTED. Appears in card JSON.
 data Duration
   = UntilEndOfTurn                -- CR 514.2
   | Indefinite                    -- CR 611.2a
@@ -136,7 +136,7 @@ data Duration
   | UntilYourNextTurn             -- CR 611.2a
   deriving (Eq, Ord, Show)
 
--- Pawl.Type.Expiry -- STORED. Runtime only; never appears in card JSON.
+-- Parun.Type.Expiry -- STORED. Runtime only; never appears in card JSON.
 data Expiry
   = AtCleanup                     -- CR 514.2
   | Never                         -- CR 611.2a, "until the end of the game"
@@ -163,7 +163,7 @@ every construction site, which is four call sites.
 
 ### 2.2 The condition vocabulary is `StateCondition`'s third customer
 
-`Pawl.Type.StateCondition` (P4) already describes itself as *"a predicate over
+`Parun.Type.StateCondition` (P4) already describes itself as *"a predicate over
 game STATE rather than over an event"* with *"two customers, one vocabulary"* —
 a CR 603.8 state trigger's condition and a CR 603.4 intervening "if". A CR
 611.2b duration condition is a third predicate of exactly that kind, so it gets
@@ -185,7 +185,7 @@ control of Master Thief". CR 400.7 makes the first robust for free: a Master
 Thief that dies and returns is a new object with a new `ObjectId`, so the stored
 `source` can never be satisfied by the returning permanent.
 
-`Pawl.Event.stateHolds` **stays the sole home of `case … StateCondition`** and
+`Parun.Event.stateHolds` **stays the sole home of `case … StateCondition`** and
 grows a source parameter:
 
 ```haskell
@@ -197,11 +197,11 @@ have the ability's source in scope. Reusing the type also means one retirement
 path rather than two: `StateCondition` is already marked *"retired wholesale by
 P9's criterion/filter language (#38)"*, and this arm retires with it.
 
-### 2.3 `Pawl.Expiry`, the sole casing home
+### 2.3 `Parun.Expiry`, the sole casing home
 
-A new module `Pawl.Expiry` is **the only module that may `case` on `Expiry`** —
-the same standing `Pawl.Resolve` has over `Effect`, `Pawl.Projection` over
-`Modification`, and `Pawl.Event` over `TriggerCondition`. It exports four
+A new module `Parun.Expiry` is **the only module that may `case` on `Expiry`** —
+the same standing `Parun.Resolve` has over `Effect`, `Parun.Projection` over
+`Modification`, and `Parun.Event` over `TriggerCondition`. It exports four
 functions.
 
 ```haskell
@@ -238,18 +238,18 @@ sweep over both lists, and the cleanup step calls it once instead of twice.
 
 ### 2.4 The three sweep sites
 
-**Arming — `Pawl.Resolve.applyEffect`.** Three arms store a duration today:
+**Arming — `Parun.Resolve.applyEffect`.** Three arms store a duration today:
 `ModifyTarget`, `GainControl`, and `Replace`. Each calls
 `Expiry.arm controller source duration gs` and stores nothing on `Nothing`.
 Both `controller` (the effect's controller) and `source` (the resolving spell
 for a spell, the source permanent for an ability) are already bound in that
 function's scope, so no plumbing is added.
 
-**Cleanup — `Pawl.Engine.runStep`, `Ending Cleanup`.** The two existing
+**Cleanup — `Parun.Engine.runStep`, `Ending Cleanup`.** The two existing
 `State.modify'` calls collapse to one `State.modify' Expiry.dropAtCleanup`,
 still simultaneous with `Damage.removeAllDamage` per CR 514.2.
 
-**Priority — `Pawl.Engine.settleForPriority`.** The conditional sweep becomes
+**Priority — `Parun.Engine.settleForPriority`.** The conditional sweep becomes
 the loop's first step, ahead of state-based actions:
 
 ```haskell
@@ -270,7 +270,7 @@ fired. The sweep is a list scan that touches the projection only when a `While`
 is actually stored, so a game with no conditional effect pays nothing beyond the
 scan.
 
-**Turn handoff — `Pawl.Engine.handoffTurn`.** `dropAtHandoff` runs after
+**Turn handoff — `Parun.Engine.handoffTurn`.** `dropAtHandoff` runs after
 `activePlayer` has been updated, dropping every `AtTurnOf p` whose `p` is the
 **new** active player.
 
@@ -314,7 +314,7 @@ retired by P9's criterion language (**#40**):
   controller (CR 613.1b) is not the ability's controller. Hag of Inner Weakness.
 
 The second is the first spec whose legal set depends on *who is choosing*, which
-forces `Pawl.Target`'s two entry points to become source-relative:
+forces `Parun.Target`'s two entry points to become source-relative:
 
 ```haskell
 legalRecipients :: ObjectId -> TargetSpec -> GameState -> Set Recipient
@@ -322,11 +322,11 @@ stillLegal      :: ObjectId -> Recipient -> TargetSpec -> GameState -> Bool
 ```
 
 The source `ObjectId` is already threaded one level out —
-`legalSetsExcluding` takes it, and all three of its callers (`Pawl.Cast`,
-`Pawl.Activate`, `Pawl.Engine.placePendingTriggers`) pass the spell or ability
+`legalSetsExcluding` takes it, and all three of its callers (`Parun.Cast`,
+`Parun.Activate`, `Parun.Engine.placePendingTriggers`) pass the spell or ability
 object. This pushes it one level in. `Projection.controllerOf` on that source
 gives the ability's controller: CR 603.3a for a triggered ability, CR 109.5 in
-general. `stillLegal`'s two call sites in `Pawl.Resolve` have the same `source`
+general. `stillLegal`'s two call sites in `Parun.Resolve` have the same `source`
 in scope, so CR 608.2b's re-check at resolution is controller-relative too — a
 creature that comes under your control in response is no longer a legal target.
 
@@ -336,7 +336,7 @@ tempting cleanup and is explicitly not part of this phase.
 
 ### 2.6 Serialization
 
-`Pawl.Codec` grows `ForAsLongAs` and `UntilYourNextTurn` arms on
+`Parun.Codec` grows `ForAsLongAs` and `UntilYourNextTurn` arms on
 `durationToJson` / `jsonToDuration`, a `stateConditionToJson` /
 `jsonToStateCondition` arm for `YouControlSource`, and the two `TargetSpec`
 arms. **`Expiry` gets no codec at all** — like `Modification.SetController`, it
@@ -346,10 +346,10 @@ serialized, so there is nothing else to change.
 ## 3. The two invariants
 
 **The rules core reads a classification, never an effect's identity.** `Expiry`
-is a classification of *how long*, and `Pawl.Expiry` is its single casing home.
+is a classification of *how long*, and `Parun.Expiry` is its single casing home.
 Nothing in this phase asks which card produced an effect: the sweeps read
 `Expiry`, `stateHolds` reads `StateCondition`, the projection is untouched.
-`StateCondition` gaining a second reader (`Pawl.Expiry` calling
+`StateCondition` gaining a second reader (`Parun.Expiry` calling
 `Event.stateHolds`) is not a widening of the casing surface — the `case` itself
 stays in exactly one function.
 
@@ -462,30 +462,30 @@ set), so its tests derive from CR 611.2a and CR 514.2 directly.
 
 **New**
 
-- `Pawl.Type.Expiry` — `AtCleanup | Never | While PlayerId StateCondition | AtTurnOf PlayerId`.
-- `Pawl.Expiry` — `arm`, `dropAtCleanup`, `dropAtHandoff`, `sweepConditional`; sole home of `case … Expiry`.
+- `Parun.Type.Expiry` — `AtCleanup | Never | While PlayerId StateCondition | AtTurnOf PlayerId`.
+- `Parun.Expiry` — `arm`, `dropAtCleanup`, `dropAtHandoff`, `sweepConditional`; sole home of `case … Expiry`.
 - `data/cards/master-thief.json`, `data/cards/hag-of-inner-weakness.json`.
 
 **Changed**
 
-- `Pawl.Type.Duration` — `+ ForAsLongAs StateCondition`, `+ UntilYourNextTurn`.
-- `Pawl.Type.StateCondition` — `+ YouControlSource`.
-- `Pawl.Type.TargetSpec` — `+ ArtifactTarget`, `+ OpponentCreatureTarget`.
-- `Pawl.Type.ContinuousEffect` — `duration :: Duration` → `expiry :: Expiry`.
-- `Pawl.Type.ActiveReplacement` — `duration :: Duration` → `expiry :: Expiry`.
-- `Pawl.Event` — `stateHolds` gains an `ObjectId`; `dropEndOfTurnReplacements` **deleted**.
-- `Pawl.Projection` — `dropEndOfTurnEffects` **deleted**.
-- `Pawl.Target` — `legalRecipients` and `stillLegal` gain the source `ObjectId`; two new spec arms.
-- `Pawl.Resolve` — three storing arms call `Expiry.arm`; two `stillLegal` call sites pass the source.
-- `Pawl.Engine` — `settleForPriority` gains the sweep; `runStep`'s cleanup calls `dropAtCleanup`; `handoffTurn` calls `dropAtHandoff`.
-- `Pawl.Codec` — two `Duration` arms, one `StateCondition` arm, two `TargetSpec` arms.
+- `Parun.Type.Duration` — `+ ForAsLongAs StateCondition`, `+ UntilYourNextTurn`.
+- `Parun.Type.StateCondition` — `+ YouControlSource`.
+- `Parun.Type.TargetSpec` — `+ ArtifactTarget`, `+ OpponentCreatureTarget`.
+- `Parun.Type.ContinuousEffect` — `duration :: Duration` → `expiry :: Expiry`.
+- `Parun.Type.ActiveReplacement` — `duration :: Duration` → `expiry :: Expiry`.
+- `Parun.Event` — `stateHolds` gains an `ObjectId`; `dropEndOfTurnReplacements` **deleted**.
+- `Parun.Projection` — `dropEndOfTurnEffects` **deleted**.
+- `Parun.Target` — `legalRecipients` and `stillLegal` gain the source `ObjectId`; two new spec arms.
+- `Parun.Resolve` — three storing arms call `Expiry.arm`; two `stillLegal` call sites pass the source.
+- `Parun.Engine` — `settleForPriority` gains the sweep; `runStep`'s cleanup calls `dropAtCleanup`; `handoffTurn` calls `dropAtHandoff`.
+- `Parun.Codec` — two `Duration` arms, one `StateCondition` arm, two `TargetSpec` arms.
 
 ## 7. Ordering within the phase (for the plan)
 
 Substrate before consumers, and each step is a complete commit with its failing
 test written first.
 
-1. `Pawl.Type.Expiry`; rename the field on both carriers; `Pawl.Expiry` with
+1. `Parun.Type.Expiry`; rename the field on both carriers; `Parun.Expiry` with
    `arm` (three trivial arms), `dropAtCleanup`, and the two deletions it
    absorbs. Behaviour-neutral: every existing test must still pass.
 2. `Duration.UntilYourNextTurn` → `Expiry.AtTurnOf`; `dropAtHandoff` wired into
@@ -540,7 +540,7 @@ the comment.
 ## 10. Exit criterion
 
 GAP-D is closed when `Duration` can express a continuously re-checked condition
-and a future-event expiry; when `Pawl.Expiry` is the sole casing home for the
+and a future-event expiry; when `Parun.Expiry` is the sole casing home for the
 stored form and owns all three sweeps; and when both gate cards pass their
 gameplay-level tests — in particular test 3, the latch, which is the one an
 implementation that masks instead of deletes cannot pass, and test 6, which is

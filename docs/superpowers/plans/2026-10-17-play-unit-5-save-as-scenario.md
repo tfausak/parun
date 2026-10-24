@@ -1,7 +1,7 @@
 # Save a played game as a scenario (unit 5 of #5182) Implementation Plan
 
-**Goal:** `pawl play --save FILE` writes the game as a scenario file that
-`pawl scenario FILE` replays clean.
+**Goal:** `parun play --save FILE` writes the game as a scenario file that
+`parun scenario FILE` replays clean.
 
 **Spec:** `docs/superpowers/specs/2026-10-17-play-portal-client-design.md`,
 unit 5 and "My calls" (saved-game shape, self-contained, replays clean,
@@ -14,7 +14,7 @@ conceding and quitting).
   GameStart`. On the wire the key stays `"board"` for a board and is
   `"game"` for decks, so no existing file changes. A `GameStart` is its
   seats in turn order, each a label and its deck list's lines (`"12
-  Grizzly Bears"`), read by `Pawl.DeckList`, so a saved game is
+  Grizzly Bears"`), read by `Parun.DeckList`, so a saved game is
   self-contained and reads like a deck file.
 - **Every answer is recorded as an `Answer` move**, the runner's existing
   "a recording can answer anything one way" path, extended to
@@ -46,14 +46,14 @@ conceding and quitting).
 2. `ChooseAction` answered by an `Answer` at priority, after the moment's
    leading checks. Test: a board scenario whose `ChooseAction` Answer
    index casts a spell.
-3. `Pawl.Play.Record`: an observer that turns each answer into a timed
+3. `Parun.Play.Record`: an observer that turns each answer into a timed
    `Answer` entry. `Game.run` takes observers. Test: a seeded
    bot-versus-bot game recorded, encoded and decoded through the scenario
    codec, then run by `Scenario.run`, ends with the same result and every
    entry consumed. A human game saved after quitting mid-turn replays to
    the same turn.
-4. `pawl play --save FILE`, writing on the result, on quit and on Ctrl-C.
-   Smoke-test with `pawl scenario`.
+4. `parun play --save FILE`, writing on the result, on quit and on Ctrl-C.
+   Smoke-test with `parun scenario`.
 
 ## Review Focus
 

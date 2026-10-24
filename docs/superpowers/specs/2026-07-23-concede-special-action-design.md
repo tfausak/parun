@@ -7,7 +7,7 @@ document, not recalled.
 
 ## 0. Why this is hard
 
-`Pawl.Type.Prompt` is a *pull* channel. The engine learns a player's intent only
+`Parun.Type.Prompt` is a *pull* channel. The engine learns a player's intent only
 by issuing a prompt and blocking on the answer; the `Program` / `Replay`
 interpreter is driven by the engine, never by the player. CR 104.3a says
 
@@ -25,7 +25,7 @@ Two things that sound hard are not:
   nothing to respond to. The engine models this by applying it immediately and
   pushing nothing. No machinery.
 - **The consequence.** `Departure.Conceded` already exists (never constructed),
-  and `Pawl.Sba` already computes `leaving` / `departed` / `remaining` and sets
+  and `Parun.Sba` already computes `leaving` / `departed` / `remaining` and sets
   `Status.Departed`. What is missing is the *channel*, not the effect.
 
 The genuinely hard part is CR 723.6.
@@ -50,10 +50,10 @@ prompt constructor.
 ## 2. The channel
 
 ```haskell
--- Pawl.Type.Concession
+-- Parun.Type.Concession
 data Concession = Concedes | Continues
 
--- Pawl.Type.Prompt
+-- Parun.Type.Prompt
 Concede :: PlayerId -> Prompt Concession
 ```
 
@@ -90,15 +90,15 @@ The re-`loop` is dead code at two players — `leaveGame` sets a result, and the
 loop's existing `finished` check unwinds on the next iteration — but it is the
 correct multiplayer continuation and costs one line.
 
-## 4. The consequence: a new `Pawl.Departure`
+## 4. The consequence: a new `Parun.Departure`
 
 CR 104.3a (concede) is **immediate**. CR 104.3b (life ≤ 0) is a **state-based
 action**. The rules draw that line deliberately, and the code should not blur it
-by having `Engine` call into `Pawl.Sba` for something that is not a state-based
+by having `Engine` call into `Parun.Sba` for something that is not a state-based
 action.
 
-So the departure machinery moves out of `Pawl.Sba` into `Pawl.Departure`, beside
-`Pawl.Type.Departure` exactly as `Pawl.Expiry` / `Pawl.Filter` pair with their
+So the departure machinery moves out of `Parun.Sba` into `Parun.Departure`, beside
+`Parun.Type.Departure` exactly as `Parun.Expiry` / `Parun.Filter` pair with their
 types:
 
 ```haskell
@@ -123,7 +123,7 @@ leaveGame           :: Departure -> PlayerId -> Game ()
   `outcome <|> existing` precedence so an already-decided result is never
   overwritten.
 
-`Pawl.Sba` imports `Pawl.Departure` and calls `depart Departure.Lost`. Five call
+`Parun.Sba` imports `Parun.Departure` and calls `depart Departure.Lost`. Five call
 sites of `stillPlaying` across `Target`, `Engine`, and `Combat` re-point.
 
 ## 5. What falls out for free
@@ -140,27 +140,27 @@ sites of `stillPlaying` across `Target`, `Engine`, and `Combat` re-point.
 ## 6. Cost, stated plainly
 
 Every prompt has a `Response` arm and three `Replay` arms. This change therefore
-touches: `Pawl.Type.Concession` (new), `Pawl.Type.Prompt`, `Pawl.Type.Response`,
-`Pawl.Replay` ×3 (`encode`, `decode`, and `defaultAnswer` — the deterministic
+touches: `Parun.Type.Concession` (new), `Parun.Type.Prompt`, `Parun.Type.Response`,
+`Parun.Replay` ×3 (`encode`, `decode`, and `defaultAnswer` — the deterministic
 short-transcript fallback, which answers `Continues` as the least eventful
-choice), `Pawl.Departure` (new), `Pawl.Sba`, `Pawl.Engine`, plus the
+choice), `Parun.Departure` (new), `Parun.Sba`, `Parun.Engine`, plus the
 prompt-answering functions that case on the GADT *exhaustively*.
 
-`Pawl.Codec` needs **no** arm: `Response` has no JSON codec at all (it is
-referenced only by `Pawl.Replay` and `Pawl.Type.DecisionLog`), which is the same
+`Parun.Codec` needs **no** arm: `Response` has no JSON codec at all (it is
+referenced only by `Parun.Replay` and `Parun.Type.DecisionLog`), which is the same
 absence #126 tracks. An earlier draft of this section claimed two `Codec` arms;
 that was wrong.
 
 Most answer functions in the suite end in `_ -> S.identityAnswer p` and need
 nothing. The exhaustive ones — which `-Werror=incomplete-patterns` will name
-precisely — live in `Pawl.Support`, `Pawl.CastSpec`, `Pawl.GameSpec`,
-`Pawl.ReplaySpec`, and the benchmark's `Main.hs`.
+precisely — live in `Parun.Support`, `Parun.CastSpec`, `Parun.GameSpec`,
+`Parun.ReplaySpec`, and the benchmark's `Main.hs`.
 
 Prompt volume roughly doubles — the benchmark games issue 650–1800 `ChooseAction`
 prompts — and replay logs grow accordingly. That doubling is real and is the
 honest price for the *log*: every priority grant now writes both a `Concede`
 and a `ChooseAction` entry, so a persisted transcript is measurably larger.
-Conceding is a *distinguishable* option, so pawl's own invariant forbids eliding
+Conceding is a *distinguishable* option, so parun's own invariant forbids eliding
 the ask; only the set of points at which it is offered may be narrowed, which is
 §7.
 
@@ -225,7 +225,7 @@ priority, or any client that surfaces the race above.
 ## 8. Also out of scope
 
 - **CR 800.4** — objects leaving, ceasing to exist, or changing control when a
-  player leaves a multiplayer game. Two-player pawl never observes it; related to
+  player leaves a multiplayer game. Two-player parun never observes it; related to
   #87 (CR 800.4g), already labelled `expires:subsystem`.
 - **CR 104.3c–104.3j** and the other loss conditions. Untouched.
 

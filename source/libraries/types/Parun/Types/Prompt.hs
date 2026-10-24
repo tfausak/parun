@@ -1,0 +1,985 @@
+{-# LANGUAGE GADTs #-}
+
+module Parun.Types.Prompt where
+
+import qualified Data.List.NonEmpty as NonEmpty
+import qualified Data.Map.Strict as Map
+import qualified Data.Sequence as Seq
+import qualified Data.Set as Set
+import qualified Numeric.Natural as Natural
+import qualified Parun.Types.Action as Action
+import qualified Parun.Types.AnyNumberOf as AnyNumberOf
+import qualified Parun.Types.AttackTarget as AttackTarget
+import qualified Parun.Types.BallotChoice as BallotChoice
+import qualified Parun.Types.BuybackDecision as BuybackDecision
+import qualified Parun.Types.CandidateCost as CandidateCost
+import qualified Parun.Types.Card as Card
+import qualified Parun.Types.CardName as CardName
+import qualified Parun.Types.CastFromZone as CastFromZone
+import qualified Parun.Types.ClauseIndex as ClauseIndex
+import qualified Parun.Types.CoinFace as CoinFace
+import qualified Parun.Types.Color as Color
+import qualified Parun.Types.CombatDamageOption as CombatDamageOption
+import qualified Parun.Types.CommandZoneDecision as CommandZoneDecision
+import qualified Parun.Types.Concession as Concession
+import qualified Parun.Types.Cost as Cost
+import qualified Parun.Types.CostComponent as CostComponent
+import qualified Parun.Types.CounterKind as CounterKind
+import qualified Parun.Types.CounterKindFor as CounterKindFor
+import qualified Parun.Types.CounterSpread as CounterSpread
+import qualified Parun.Types.DamageEvent as DamageEvent
+import qualified Parun.Types.Decider as Decider
+import qualified Parun.Types.Designation as Designation
+import qualified Parun.Types.Dividing as Dividing
+import qualified Parun.Types.EntryOption as EntryOption
+import qualified Parun.Types.EntwineDecision as EntwineDecision
+import qualified Parun.Types.Facing as Facing
+import qualified Parun.Types.Filter as Filter
+import qualified Parun.Types.ForageMode as ForageMode
+import qualified Parun.Types.GameEvent as GameEvent
+import qualified Parun.Types.GraveyardArrangement as GraveyardArrangement
+import qualified Parun.Types.HandActionIndex as HandActionIndex
+import qualified Parun.Types.HybridPayment as HybridPayment
+import qualified Parun.Types.Keyword as Keyword
+import qualified Parun.Types.KeywordInstance as KeywordInstance
+import qualified Parun.Types.KickerDecision as KickerDecision
+import qualified Parun.Types.LearnMode as LearnMode
+import qualified Parun.Types.LibraryPosition as LibraryPosition
+import qualified Parun.Types.ManaCost as ManaCost
+import qualified Parun.Types.ManaOption as ManaOption
+import qualified Parun.Types.ManaSymbol as ManaSymbol
+import qualified Parun.Types.ManaType as ManaType
+import qualified Parun.Types.ManaUnit as ManaUnit
+import qualified Parun.Types.ModeIndex as ModeIndex
+import qualified Parun.Types.ModeSelection as ModeSelection
+import qualified Parun.Types.MoveSpread as MoveSpread
+import qualified Parun.Types.MulliganDecision as MulliganDecision
+import qualified Parun.Types.MulliganOffer as MulliganOffer
+import qualified Parun.Types.MutateSide as MutateSide
+import qualified Parun.Types.ObjectId as ObjectId
+import qualified Parun.Types.OptionalDecision as OptionalDecision
+import qualified Parun.Types.OutsideCard as OutsideCard
+import qualified Parun.Types.PayOffer as PayOffer
+import qualified Parun.Types.PaymentDecision as PaymentDecision
+import qualified Parun.Types.PhyrexianPayment as PhyrexianPayment
+import qualified Parun.Types.PlayerChoice as PlayerChoice
+import qualified Parun.Types.PlayerEffect as PlayerEffect
+import qualified Parun.Types.PlayerId as PlayerId
+import qualified Parun.Types.PrintingId as PrintingId
+import qualified Parun.Types.Recipient as Recipient
+import qualified Parun.Types.ReplacementEntry as ReplacementEntry
+import qualified Parun.Types.RollAdjustment as RollAdjustment
+import qualified Parun.Types.RoomIndex as RoomIndex
+import qualified Parun.Types.SearchPlace as SearchPlace
+import qualified Parun.Types.SlotName as SlotName
+import qualified Parun.Types.StickerRef as StickerRef
+import qualified Parun.Types.StoredResult as StoredResult
+import qualified Parun.Types.Subtype as Subtype
+import qualified Parun.Types.TargetCount as TargetCount
+import qualified Parun.Types.TextWord as TextWord
+import qualified Parun.Types.TimeTravelChoice as TimeTravelChoice
+import qualified Parun.Types.TriggerEntry as TriggerEntry
+import qualified Parun.Types.WordFamily as WordFamily
+import qualified Parun.Types.Zone as Zone
+
+-- | A question the engine puts to a player. The resolution-time choices share
+-- one posture: choose, not target (CR 115.1); filter the candidates rather
+-- than trusting the answer; raise the prompt only where two or more
+-- candidates make it a real choice, unless a "may" or an "any number" makes
+-- one candidate a real fork.
+data Prompt r where
+  ChooseAction :: Decider.Decider -> PlayerId.PlayerId -> [Action.Action] -> Prompt Action.Action
+  -- | CR 104.3a. No Decider: CR 723.6 needs the ask to reach the true player.
+  Concede :: PlayerId.PlayerId -> Prompt Concession.Concession
+  Shuffle :: [ObjectId.ObjectId] -> Prompt [ObjectId.ObjectId]
+  -- | CR 729.2 \/ 103.1c: a starting player drawn at random from these
+  -- players -- a subgame's seats, or the players claiming to be the starting
+  -- player -- and the turn order is then rotated to begin with them. No
+  -- Decider: randomness is not a choice.
+  RandomFirstPlayer :: NonEmpty.NonEmpty PlayerId.PlayerId -> Prompt PlayerId.PlayerId
+  -- | Which object randomness named (Parun.Types.ObjectRef.RandomCardInHand,
+  -- Parun.Types.ObjectRef.RandomCardInGraveyard,
+  -- Parun.Types.ObjectRef.RandomCardInLibrary).
+  -- Neither Decider nor PlayerId: randomness is not a choice, and CR 701.24a
+  -- makes who it is asked of unobservable; the caller filters the answer back.
+  RandomObject :: NonEmpty.NonEmpty ObjectId.ObjectId -> Prompt ObjectId.ObjectId
+  -- | CR 103.2d: which of these sheet positions randomness draws next.
+  -- RandomObject's reasons for carrying neither Decider nor PlayerId.
+  RandomStickerSheet :: NonEmpty.NonEmpty Natural.Natural -> Prompt Natural.Natural
+  -- | Which card randomness named out of a printed spellbook
+  -- (Parun.Types.Conjure's card list) or the reference cards a conjure's filter
+  -- admits (Prompt.ReferenceCards). RandomObject's shape and its reasons for
+  -- carrying neither Decider nor PlayerId, over NAMES rather than object ids
+  -- because a conjure's candidates are card data and no object exists yet; the
+  -- caller filters the answer back to a candidate.
+  RandomCard :: NonEmpty.NonEmpty CardName.CardName -> Prompt CardName.CardName
+  -- | Which card its controller CHOSE out of a printed spellbook (Follow the
+  -- Tracks's "conjure a card of your choice from Follow the Tracks's
+  -- spellbook"). RandomCard's payload, and its own constructor rather than that
+  -- one reused: CR 701.9b's distinction, so it carries the Decider and the seat
+  -- RandomCard deliberately does not. Asked only for two or more candidates,
+  -- and the caller filters the answer back to one.
+  ChooseConjuredCard :: Decider.Decider -> PlayerId.PlayerId -> NonEmpty.NonEmpty CardName.CardName -> Prompt CardName.CardName
+  -- | Which of the top N places of a library randomness put a conjured card at,
+  -- 1 being the top (Parun.Types.LibraryDepth.AtRandomInTop). RandomObject's
+  -- reasons for carrying neither Decider nor PlayerId; asked only for two or
+  -- more places, and the caller clamps the answer into range.
+  RandomDepth :: Natural.Natural -> Prompt Natural.Natural
+  -- | Which player randomness named out of the offered set
+  -- (Parun.Types.Effect.ChoosePlayerAtRandom); RandomObject's shape, asked only
+  -- for two or more.
+  --
+  -- ONE prompt where the deciding twin is two (ChooseOpponent beside
+  -- ChoosePlayer), because those two differ over an interpreter contract about
+  -- the CHOOSER -- whether the seat being asked is in the offer -- and this one
+  -- has no Decider to make that promise about. The offer is the whole question:
+  -- the payload's PlayerScope may put the resolving controller in it (Strax,
+  -- Sontaran Nurse) or leave them out (Ruhan of the Fomori), and Parun.CardSpec's
+  -- Strax case proves the first.
+  RandomPlayer :: NonEmpty.NonEmpty PlayerId.PlayerId -> Prompt PlayerId.PlayerId
+  -- | CR 706.1a: what an N-sided die came up -- CR 706.2's natural result, the
+  -- instruction's modifier added afterwards. RandomObject's reasons for
+  -- carrying neither Decider nor PlayerId.
+  RollDie :: Natural.Natural -> Prompt Natural.Natural
+  -- | CR 108.1 / 201.4: which card in the Oracle card reference a name
+  -- belongs to, Nothing where the reference holds none. Asked of the
+  -- interpreter after every Prompt.ChooseCardName answer, since the engine holds
+  -- no reference. RollDie's reasons for carrying neither Decider nor PlayerId.
+  LookUpCard :: CardName.CardName -> Prompt (Maybe Card.Card)
+  -- | CR 108.1: the names of the cards in the Oracle card reference the filter
+  -- admits, the Integer being the bound Filter.Measures' EnclosingAmount reads.
+  -- Asked of the interpreter by a conjure that picks from the reference
+  -- (Parun.Types.ConjureCards.Reference), since the engine holds no reference;
+  -- the pick is then RandomCard's. LookUpCard's reasons for carrying neither
+  -- Decider nor PlayerId.
+  ReferenceCards :: Filter.Filter Keyword.Keyword -> Maybe Integer -> Prompt [CardName.CardName]
+  -- | CR 612.7 / 108.1: every name in the Oracle card reference the filter
+  -- admits, judged off printed characteristics. Asked of the interpreter once per filter a live
+  -- Parun.Types.Modification's AddNamesMatching carries, since the projection
+  -- that reads the answer cannot ask. LookUpCard's reasons for carrying neither
+  -- Decider nor PlayerId.
+  ReferenceNames :: Filter.Filter Keyword.Keyword -> Prompt [CardName.CardName]
+  -- | CR 706.4: which result of one roll instruction the roller uses (Valiant
+  -- Endeavor's "roll two d6 and choose one result"); the answer indexes the
+  -- results, which are in roll order and may compare equal. A choice and not a
+  -- roll, so unlike RollDie above it carries a Decider and the seat. Not
+  -- raised where every result is the same number, which no card can tell from
+  -- either answer. Also which d20 of several Pokey, the Scallywagg rolled for
+  -- Krark's Thumb's coins is kept (the Thumb's "ignore one"), and which of
+  -- rolls tied for the lowest CR 706.6 ignores where they differ in thrower or
+  -- call (Parun.Engine.Dice.ignoreLowest), where no resolving object is at hand.
+  ChooseDieResult :: Decider.Decider -> PlayerId.PlayerId -> Maybe ObjectId.ObjectId -> NonEmpty.NonEmpty Natural.Natural -> Prompt Natural.Natural
+  -- | CR 706.8b: how many of each stored result on the object the seat
+  -- rerolls (Centaur of Attention's "reroll any number of this creature's
+  -- stored results"); the Map is what the object has, the answer clamped to
+  -- it. Stored results of one kind and value are indistinguishable, so the
+  -- answer counts them rather than naming one. Raised for one candidate too,
+  -- "any number" including none.
+  ChooseStoredRerolls :: Decider.Decider -> PlayerId.PlayerId -> ObjectId.ObjectId -> Map.Map StoredResult.StoredResult Natural.Natural -> Prompt (Map.Map StoredResult.StoredResult Natural.Natural)
+  -- | CR 706.2b's first step: whether a reroll a permanent offers is taken
+  -- (Clam-I-Am's "you may reroll that die"). A choice and not a roll, so it
+  -- carries a Decider and the seat where RollDie above carries neither.
+  --
+  -- The seat is the MODIFIER's "you" (CR 109.5) and not always the roller: Wall
+  -- of Fortune reaches every player's roll and puts the "may" -- and the cost --
+  -- on the Wall's controller.
+  --
+  -- The Natural is the NATURAL result the die came up, which is what rule
+  -- 706.2b hands the offer and the only thing separating this question from the
+  -- next die's. The die's SIZE is not here: every offer in force has already
+  -- been matched against it, so it narrows nothing the seat is deciding.
+  --
+  -- The Cost is CR 706.2a's "associated cost", Nothing where the modifier states
+  -- none -- or the activation cost of an ability activated inside the roll
+  -- (Goblin Bookie, ActivationRestriction.DuringDieRoll). Raised only once the payer can afford it, Prompt.ChooseToPay's posture
+  -- for CR 118.12 -- so an accepted offer is one that goes through.
+  --
+  -- Never elided. CR 706.2a's "may" makes one offer a real fork, and the two
+  -- answers are two different numbers on the board.
+  RerollDie :: Decider.Decider -> PlayerId.PlayerId -> Natural.Natural -> Maybe (Cost.Cost Keyword.Keyword) -> Prompt OptionalDecision.OptionalDecision
+  -- | CR 706.2b's second step: whether an increase-or-decrease modifier a
+  -- permanent offers is taken, on which die, and which way (Night Shift of the
+  -- Living Dead's "you may pay 1 life. If you do, increase or decrease the
+  -- result by 1"). Nothing declines; the Natural in the answer indexes the
+  -- results.
+  --
+  -- Asked once the instruction's every die has come up, with all the results
+  -- in roll order, since the printed ruling lets the roller see them all before
+  -- picking the one to shift. The results are Integers, unclamped: the
+  -- instruction's own modifier may have taken one below zero, and CR 706.2
+  -- clamps nothing before the last modifier. RerollDie's seat and cost, for its
+  -- reasons; the lone Natural is the amount.
+  AdjustDieRoll :: Decider.Decider -> PlayerId.PlayerId -> NonEmpty.NonEmpty Integer -> Natural.Natural -> Maybe (Cost.Cost Keyword.Keyword) -> Prompt (Maybe (Natural.Natural, RollAdjustment.RollAdjustment))
+  -- | CR 706.2b: which of two or more competing modifiers the player who
+  -- rolled applies next, an index into the candidates, each named by the object
+  -- stating it; re-asked after each one applies or is declined.
+  ChooseRollModifier :: Decider.Decider -> PlayerId.PlayerId -> NonEmpty.NonEmpty (Maybe ObjectId.ObjectId) -> Prompt Natural.Natural
+  -- | CR 705.1: which face a flipped coin came up, asked after CallCoin (CR
+  -- 705.2). RandomObject's reasons for carrying neither Decider nor PlayerId.
+  FlipCoin :: Prompt CoinFace.CoinFace
+  -- | CR 705.2: the face the flipping player calls before the coin comes up;
+  -- a face-only flip asks no call.
+  CallCoin :: Decider.Decider -> PlayerId.PlayerId -> Prompt CoinFace.CoinFace
+  -- | CR 705.1 / 614.1a: which face the flipper keeps when a replacement settled
+  -- one flip out of several coins (Krark's Thumb's "ignore one"). A choice and
+  -- not a flip, so unlike FlipCoin above it carries a Decider and the seat.
+  --
+  -- The answer is a FACE where ChooseDieResult's indexes its results, because
+  -- rule 705.1 designates only two sides: two coins showing the same face are the
+  -- same answer, so the candidates are the DISTINCT faces that came up and every
+  -- face the prompt is raised with is one of them. Not raised where every coin
+  -- agrees, which no card can tell from either answer.
+  ChooseCoinResult :: Decider.Decider -> PlayerId.PlayerId -> NonEmpty.NonEmpty CoinFace.CoinFace -> Prompt CoinFace.CoinFace
+  -- | CR 514.2. The [ObjectId] is the hand; the Natural is how many to discard.
+  ChooseDiscard :: Decider.Decider -> PlayerId.PlayerId -> [ObjectId.ObjectId] -> Natural.Natural -> Prompt [ObjectId.ObjectId]
+  -- | CR 701.22a: the top cards of the scrying player's library, top-first;
+  -- the answer is (bottom, top), each reading from that end inward.
+  ChooseScry :: Decider.Decider -> PlayerId.PlayerId -> [ObjectId.ObjectId] -> Prompt ([ObjectId.ObjectId], [ObjectId.ObjectId])
+  -- | CR 701.25a: ChooseScry's payload, the first list going to the graveyard
+  -- in the order it is put there (CR 404.3).
+  ChooseSurveil :: Decider.Decider -> PlayerId.PlayerId -> [ObjectId.ObjectId] -> Prompt ([ObjectId.ObjectId], [ObjectId.ObjectId])
+  -- | CR 701.29a: the first PlayerId is the fatesealer, asked and shown the
+  -- cards; the second is the library's owner. ChooseScry's answer.
+  ChooseFateseal :: Decider.Decider -> PlayerId.PlayerId -> PlayerId.PlayerId -> [ObjectId.ObjectId] -> Prompt ([ObjectId.ObjectId], [ObjectId.ObjectId])
+  -- | CR 701.44a: whether the exploring permanent (first ObjectId) bins the
+  -- revealed nonland card (second).
+  ChooseExplore :: Decider.Decider -> PlayerId.PlayerId -> ObjectId.ObjectId -> ObjectId.ObjectId -> Prompt OptionalDecision.OptionalDecision
+  -- | CR 507.1 / 703.4h: which opponent is the defending player; not asked
+  -- with one candidate (CR 506.2).
+  ChooseDefender :: Decider.Decider -> PlayerId.PlayerId -> NonEmpty.NonEmpty PlayerId.PlayerId -> Prompt PlayerId.PlayerId
+  -- | CR 601.2g / 602.2b: which mana source to activate next while the pool
+  -- does not yet cover the cost, once per source; nothing declines (CR
+  -- 118.3c). Never elided; the list is collapsed to one source per
+  -- interchangeability class (Parun.Engine.Interchangeable). The ManaCost is
+  -- the cost being paid, before the pool is spent on it.
+  ChooseManaSource :: Decider.Decider -> PlayerId.PlayerId -> ManaCost.ManaCost -> NonEmpty.NonEmpty ObjectId.ObjectId -> Prompt (Maybe ObjectId.ObjectId)
+  -- | CR 605.3a: which further source to activate once the pool already
+  -- covers the cost, or Nothing to pay; never elided, floating being
+  -- observable, and collapsed as ChooseManaSource is.
+  ChooseExtraManaSource :: Decider.Decider -> PlayerId.PlayerId -> NonEmpty.NonEmpty ObjectId.ObjectId -> Prompt (Maybe ObjectId.ObjectId)
+  -- | CR 733.1: whether one mana ability activated while making a reversed
+  -- action is reversed too, asked per activation, newest first
+  -- (Parun.Engine.Cost.reverseIllegal).
+  ReverseManaAbilities :: Decider.Decider -> PlayerId.PlayerId -> NonEmpty.NonEmpty ObjectId.ObjectId -> Prompt OptionalDecision.OptionalDecision
+  -- | CR 605.3b: which mana the source produces, as the mana ability resolves;
+  -- candidates are deduplicated by the whole option (Mana.manaOptionsOf).
+  ChooseManaYield :: Decider.Decider -> PlayerId.PlayerId -> ObjectId.ObjectId -> NonEmpty.NonEmpty ManaOption.ManaOption -> Prompt ManaOption.ManaOption
+  -- | CR 601.2h: which pool unit pays one symbol of a cost, once per mana
+  -- spent; elided where every way of paying leaves the same pool
+  -- (Parun.Engine.Mana.leftovers).
+  ChooseManaToSpend :: Decider.Decider -> PlayerId.PlayerId -> NonEmpty.NonEmpty ManaUnit.ManaUnit -> Prompt ManaUnit.ManaUnit
+  -- | CR 701.34a: which of the permanents and players holding a counter get
+  -- one more of each kind; elided only when both lists are empty.
+  ChooseProliferate :: Decider.Decider -> PlayerId.PlayerId -> [ObjectId.ObjectId] -> [PlayerId.PlayerId] -> Prompt (Set.Set ObjectId.ObjectId, Set.Set PlayerId.PlayerId)
+  -- | Reverse the Sands' redistribution of life totals (CR 119.7-8): each
+  -- chosen player maps to the player whose previous total they take, a
+  -- permutation Parun.Engine.Resolve checks. Elided below two candidates.
+  --
+  -- Not implemented: CR 810.9f's "not more than one member of each team"
+  -- (#4493).
+  ChooseRedistribution :: Decider.Decider -> PlayerId.PlayerId -> [(PlayerId.PlayerId, Integer)] -> Prompt (Map.Map PlayerId.PlayerId PlayerId.PlayerId)
+  -- | CR 701.54a: which creature becomes the tempted player's Ring-bearer;
+  -- not raised for zero, where CR 701.54d still tempts.
+  ChooseRingBearer :: Decider.Decider -> PlayerId.PlayerId -> NonEmpty.NonEmpty ObjectId.ObjectId -> Prompt ObjectId.ObjectId
+  -- | CR 701.39a: which of the creatures tied for least toughness is
+  -- bolstered; the ObjectId is the resolving object.
+  ChooseBolster :: Decider.Decider -> PlayerId.PlayerId -> ObjectId.ObjectId -> NonEmpty.NonEmpty ObjectId.ObjectId -> Prompt ObjectId.ObjectId
+  -- | CR 701.47a: which Army gets the amass counters, read after the rule's
+  -- token is created; not raised for zero (CR 701.47b).
+  ChooseAmass :: Decider.Decider -> PlayerId.PlayerId -> ObjectId.ObjectId -> NonEmpty.NonEmpty ObjectId.ObjectId -> Prompt ObjectId.ObjectId
+  -- | CR 701.68a: which creature is blighted, the candidates unnarrowed; not
+  -- raised for zero (CR 101.3, CR 701.68b).
+  ChooseBlight :: Decider.Decider -> PlayerId.PlayerId -> ObjectId.ObjectId -> NonEmpty.NonEmpty ObjectId.ObjectId -> Prompt ObjectId.ObjectId
+  -- | CR 701.4a: which object CostComponent.Behold or BeholdAndExile beholds
+  -- next -- a card in the payer's hand or a permanent they control, in one pool,
+  -- the ObjectId being the object the cost is on. Asked once per object; not
+  -- raised where the candidates left are no more than the objects still owed.
+  ChooseBehold :: Decider.Decider -> PlayerId.PlayerId -> ObjectId.ObjectId -> NonEmpty.NonEmpty ObjectId.ObjectId -> Prompt ObjectId.ObjectId
+  -- | CR 701.38a / 701.38b: which of the listed choices -- objects, words or
+  -- players -- this player votes for; the seats are asked one at a time,
+  -- starting with the one the effect specifies and proceeding in turn order.
+  -- Not raised for one candidate, where rule 701.38a's list holds a single
+  -- choice and voting decides nothing.
+  ChooseVote :: Decider.Decider -> PlayerId.PlayerId -> ObjectId.ObjectId -> NonEmpty.NonEmpty (BallotChoice.BallotChoice ObjectId.ObjectId) -> Prompt (BallotChoice.BallotChoice ObjectId.ObjectId)
+  -- | Which one of these counter kinds, the CounterKindFor saying what for: a
+  -- CR 122.5 move or a CR 614.1c entry. Not raised for one kind.
+  -- Parun.Engine.Replay answers each CounterKindFor with its own Response
+  -- constructor.
+  ChooseCounterKind :: Decider.Decider -> PlayerId.PlayerId -> CounterKindFor.CounterKindFor -> NonEmpty.NonEmpty (CounterKind.CounterKind Keyword.Keyword) -> Prompt (CounterKind.CounterKind Keyword.Keyword)
+  -- | CR 122.5: how many counters of each kind a move takes off the first
+  -- object onto the second, where the card leaves the count open; the Map is
+  -- what the first object has, the answer clamped to it. Raised for one
+  -- candidate too, "any number" including none.
+  ChooseMovedCounters :: Decider.Decider -> PlayerId.PlayerId -> ObjectId.ObjectId -> ObjectId.ObjectId -> Map.Map (CounterKind.CounterKind Keyword.Keyword) Natural.Natural -> Prompt (Map.Map (CounterKind.CounterKind Keyword.Keyword) Natural.Natural)
+  -- | CR 122.5: ChooseMovedCounters where the card states a floor ("one or
+  -- more"), so an empty answer is repaired to one counter of the first kind.
+  ChooseMovedCountersAtLeastOne :: Decider.Decider -> PlayerId.PlayerId -> ObjectId.ObjectId -> ObjectId.ObjectId -> Map.Map (CounterKind.CounterKind Keyword.Keyword) Natural.Natural -> Prompt (Map.Map (CounterKind.CounterKind Keyword.Keyword) Natural.Natural)
+  -- | CR 122.5: how many counters of each kind a move puts onto each of
+  -- several destinations, the total the MoveSpread states; the sum comes off
+  -- the first object, the tallies clamped in offered order.
+  ChooseDistributedMovedCounters :: Decider.Decider -> PlayerId.PlayerId -> ObjectId.ObjectId -> MoveSpread.MoveSpread -> Map.Map (CounterKind.CounterKind Keyword.Keyword) Natural.Natural -> NonEmpty.NonEmpty ObjectId.ObjectId -> Prompt (Map.Map ObjectId.ObjectId (Map.Map (CounterKind.CounterKind Keyword.Keyword) Natural.Natural))
+  -- | CR 122.5: a move's ChooseCounterKind with declining added ("up to one"); raised
+  -- for one candidate too, and an unoffered kind reads as declining.
+  ChooseMovedCounterOrNone :: Decider.Decider -> PlayerId.PlayerId -> ObjectId.ObjectId -> ObjectId.ObjectId -> NonEmpty.NonEmpty (CounterKind.CounterKind Keyword.Keyword) -> Prompt (Maybe (CounterKind.CounterKind Keyword.Keyword))
+  -- | CR 107.14: how much {E} the player pays to an Effect.PayAnyEnergy as
+  -- the object resolves; the Natural is their energy, enforced (CR 118.3),
+  -- and zero declines the "may". Not raised for a bound of 0, where that same
+  -- rule leaves 0 as the only payable amount.
+  ChoosePaidEnergy :: Decider.Decider -> PlayerId.PlayerId -> ObjectId.ObjectId -> Natural.Natural -> Prompt Natural.Natural
+  -- | CR 107.1c / 608.2d: the number an Effect.ChooseNumber binds as the object
+  -- resolves, or an Effect.Bid's bid; the Natural is its floor and the Maybe its
+  -- bound, the answer clamped to the bound. A bid's floor is the high bid, and
+  -- an answer not above it declines to top it. Answers as Response.ChoseNumber.
+  ChooseNumber :: Decider.Decider -> PlayerId.PlayerId -> ObjectId.ObjectId -> Natural.Natural -> Maybe Natural.Natural -> Prompt Natural.Natural
+  -- | CR 702.155b / 714.3b: which chapter a Saga with read ahead enters on; the
+  -- Natural is the final chapter (CR 714.2d), the answer clamped into the
+  -- range. Not raised for a range of one, nor for a bound of 0.
+  ChooseReadAheadChapter :: Decider.Decider -> PlayerId.PlayerId -> ObjectId.ObjectId -> Natural.Natural -> Prompt Natural.Natural
+  -- | CR 609.7a: which source of damage a prevention or redirection effect
+  -- that names one applies to; not raised for zero, where no shield is
+  -- installed.
+  ChooseDamageSource :: Decider.Decider -> PlayerId.PlayerId -> ObjectId.ObjectId -> NonEmpty.NonEmpty ObjectId.ObjectId -> Prompt ObjectId.ObjectId
+  -- | CR 603.7b: which of several simultaneous occurrences triggers a delayed
+  -- triggered ability with no stated duration; the answer indexes the events,
+  -- which are in log order and may compare equal.
+  ChooseDelayedTriggerEvent :: Decider.Decider -> PlayerId.PlayerId -> ObjectId.ObjectId -> NonEmpty.NonEmpty GameEvent.GameEvent -> Prompt Natural.Natural
+  -- | CR 608.2d: which graveyard card a Parun.Types.ObjectRef.ChosenCardInGraveyard
+  -- takes; the PlayerId is the chooser, who need not own the graveyard, asked
+  -- in APNAP order (CR 101.4). ONE of these per card the ref's count names, each
+  -- over the candidates the earlier asks left. The Seq is every card the pass
+  -- has already taken, beside who took it, which CR 101.4b lets a later chooser
+  -- know.
+  ChooseCardInGraveyard :: Decider.Decider -> PlayerId.PlayerId -> ObjectId.ObjectId -> NonEmpty.NonEmpty ObjectId.ObjectId -> Seq.Seq (PlayerId.PlayerId, ObjectId.ObjectId) -> Prompt ObjectId.ObjectId
+  -- | CR 608.2d: which card of their own hand a Parun.Types.ObjectRef.ChosenCardInHand
+  -- takes, asked once per card with what earlier asks did not take; also
+  -- CostComponent.PutCardFromHandOntoBattlefield's question while a
+  -- CR 118.12 cost is paid, and CostComponent.ExileCardsFromHand's (one card) and
+  -- RevealCardFromHand's while a CR 601.2h one is, where the ObjectId is the
+  -- object the cost is on.
+  ChooseCardInHand :: Decider.Decider -> PlayerId.PlayerId -> ObjectId.ObjectId -> NonEmpty.NonEmpty ObjectId.ObjectId -> Prompt ObjectId.ObjectId
+  -- | CR 608.2d: which card of a bound group a Parun.Types.ObjectRef.ChosenCardFromAmong
+  -- takes, asked once per card with what earlier asks did not take; the
+  -- PlayerId is the ref's chooser. Also CR 707.5: which card off the
+  -- battlefield a mandatory Parun.Types.AsCopy choice copies (Dinosaur
+  -- Headdress's craft materials), the ObjectId the object choosing.
+  ChooseCardFromAmong :: Decider.Decider -> PlayerId.PlayerId -> ObjectId.ObjectId -> NonEmpty.NonEmpty ObjectId.ObjectId -> Prompt ObjectId.ObjectId
+  -- | CR 309.2a \/ 701.49a: which of the dungeon printings they own a venturing
+  -- player brings in from outside the game (CR 400.11), there being no object
+  -- for it yet.
+  ChooseDungeon :: Decider.Decider -> PlayerId.PlayerId -> NonEmpty.NonEmpty PrintingId.PrintingId -> Prompt PrintingId.PrintingId
+  -- | CR 123.3: which available sticker the placer puts on this object.
+  -- ChooseDungeon's posture: asked at two or more, filtered rather than trusted.
+  ChooseSticker :: Decider.Decider -> PlayerId.PlayerId -> ObjectId.ObjectId -> NonEmpty.NonEmpty StickerRef.StickerRef -> Prompt StickerRef.StickerRef
+  -- | CR 702.33h: ChooseSticker with declining added ("you may put"); raised
+  -- for one candidate too, and an unoffered sticker reads as declining.
+  ChooseStickerOrNone :: Decider.Decider -> PlayerId.PlayerId -> ObjectId.ObjectId -> NonEmpty.NonEmpty StickerRef.StickerRef -> Prompt (Maybe StickerRef.StickerRef)
+  -- | CR 123.6b: after how many words of this object's name the controller
+  -- puts a name sticker's word.
+  ChooseNamePosition :: Decider.Decider -> PlayerId.PlayerId -> ObjectId.ObjectId -> NonEmpty.NonEmpty Natural.Natural -> Prompt Natural.Natural
+  -- | CR 103.2b \/ 702.139a: which card, if any, a player reveals from outside
+  -- the game as their companion, before the game begins. An OutsideCard for
+  -- ChooseFromOutsideTheGame's reason: in a subgame a main-game object is
+  -- outside the game too (CR 729.4), and which copy is revealed decides what
+  -- CR 116.2g's {3} later takes out of the main game (CR 729.4a).
+  --
+  -- A Maybe, unlike every other pre-game choice: rule 103.2b's "if any players
+  -- WISH to reveal" makes declining an answer, so the prompt is raised even where
+  -- one card is offered.
+  ChooseCompanion :: Decider.Decider -> PlayerId.PlayerId -> NonEmpty.NonEmpty OutsideCard.OutsideCard -> Prompt (Maybe OutsideCard.OutsideCard)
+  -- | CR 400.11c \/ 729.4: which cards a player brings in from outside the
+  -- game, at least the first Natural and at most the second; an OutsideCard
+  -- rather than a printing because which zone it leaves decides what triggers
+  -- (CR 729.4a). Two copies of one printing are one offer, which the answer may
+  -- name once per copy. Also a search's find outside the game (CR 701.23j),
+  -- asked after its find in the zones.
+  ChooseFromOutsideTheGame :: Decider.Decider -> PlayerId.PlayerId -> NonEmpty.NonEmpty OutsideCard.OutsideCard -> Natural.Natural -> Natural.Natural -> Prompt [OutsideCard.OutsideCard]
+  -- | CR 309.5a \/ 701.49b: which arrow out of the current room a venturing
+  -- player follows; the ObjectId is the dungeon card.
+  ChooseRoom :: Decider.Decider -> PlayerId.PlayerId -> ObjectId.ObjectId -> NonEmpty.NonEmpty RoomIndex.RoomIndex -> Prompt RoomIndex.RoomIndex
+  -- | CR 709.5f \/ 709.5g: which half of a permanent an effect locks or
+  -- unlocks, named by the half's own name (CR 709.4a); not raised for an
+  -- instruction naming every admitted half.
+  ChooseHalf :: Decider.Decider -> PlayerId.PlayerId -> ObjectId.ObjectId -> NonEmpty.NonEmpty CardName.CardName -> Prompt CardName.CardName
+  -- | CR 704.5j: which of two or more same-named legendary permanents its
+  -- controller keeps, one prompt per name. Never elided.
+  ChooseLegend :: Decider.Decider -> PlayerId.PlayerId -> NonEmpty.NonEmpty ObjectId.ObjectId -> Prompt ObjectId.ObjectId
+  -- | CR 508.1a: which of the legal attackers attack; what each attacks is
+  -- ChooseAttackTarget's step (CR 508.1b).
+  DeclareAttackers :: Decider.Decider -> PlayerId.PlayerId -> [ObjectId.ObjectId] -> Prompt [ObjectId.ObjectId]
+  -- | CR 508.1b: what one attacking creature attacks, the defending player
+  -- first; also CR 508.4's entering-attacking question (CR 506.3b). Elided at
+  -- one candidate.
+  ChooseAttackTarget :: Decider.Decider -> PlayerId.PlayerId -> ObjectId.ObjectId -> NonEmpty.NonEmpty AttackTarget.AttackTarget -> Prompt AttackTarget.AttackTarget
+  -- | CR 508.1g / 701.43d: whether one chosen attacker with exert is exerted;
+  -- never elided, CR 701.43b making an exerted creature exertable again.
+  ChooseExert :: Decider.Decider -> PlayerId.PlayerId -> ObjectId.ObjectId -> Prompt OptionalDecision.OptionalDecision
+  -- | CR 508.1g / 702.154a: which creature, if any, one chosen attacker with
+  -- enlist taps -- "up to one", so declining is always an answer and the prompt
+  -- is never elided, one candidate included. The candidates are filtered to rule
+  -- 702.154a's three conjuncts, so an answer outside them is rejected rather
+  -- than repaired.
+  ChooseEnlist :: Decider.Decider -> PlayerId.PlayerId -> ObjectId.ObjectId -> NonEmpty.NonEmpty ObjectId.ObjectId -> Prompt (Maybe ObjectId.ObjectId)
+  -- | CR 702.99a: the creature, if any, a resolving spell with cipher is
+  -- exiled encoded on -- a "may", so declining is always an answer. Not
+  -- ChooseTargets (CR 115.1).
+  ChooseEncode :: Decider.Decider -> PlayerId.PlayerId -> ObjectId.ObjectId -> NonEmpty.NonEmpty ObjectId.ObjectId -> Prompt (Maybe ObjectId.ObjectId)
+  -- | CR 509.1: the legal blockers, then the attackers; the answer maps each
+  -- blocking creature to the set it blocks (CR 509.1a's one can be raised), a
+  -- non-blocker absent. Parun.Engine.Combat.legalBlockDeclaration judges it.
+  DeclareBlockers :: Decider.Decider -> PlayerId.PlayerId -> [ObjectId.ObjectId] -> [ObjectId.ObjectId] -> Prompt (Map.Map ObjectId.ObjectId (Set.Set ObjectId.ObjectId))
+  -- | CR 510.1 / 702.19b: the assigning creature divides its power among the
+  -- recipients; the Map is recipient to lethal threshold (0 on the blocking
+  -- side, CR 510.1d). Damage.wellFormedAssignment and Damage.tiersCleared
+  -- validate.
+  AssignCombatDamage :: Decider.Decider -> PlayerId.PlayerId -> ObjectId.ObjectId -> Map.Map Recipient.Recipient Natural.Natural -> Natural.Natural -> Prompt (Map.Map Recipient.Recipient Natural.Natural)
+  -- | CR 510.1b-c: whether the creature the ObjectId names assigns all its
+  -- combat damage as the option allows rather than as those rules say. Asked
+  -- just before it assigns, wherever the option changes where its damage goes.
+  ChooseCombatDamageOption :: Decider.Decider -> PlayerId.PlayerId -> ObjectId.ObjectId -> CombatDamageOption.CombatDamageOption -> Prompt OptionalDecision.OptionalDecision
+  -- | CR 601.2c: per named slot of the object being cast, how many targets it
+  -- takes and the legal recipients; only the slots AnnounceTargets settled
+  -- are offered, so a declined CR 115.6 slot is absent. The PlayerId is the seat
+  -- announcing, which CR 115.1 makes the controller for every slot but one the
+  -- card hands to somebody else (Parun.Types.TargetSlot's `chooser`) -- so one
+  -- announcement can raise this prompt more than once, at a different seat each
+  -- time, over disjoint slots.
+  ChooseTargets :: Decider.Decider -> PlayerId.PlayerId -> ObjectId.ObjectId -> Map.Map SlotName.SlotName (Natural.Natural, Set.Set Recipient.Recipient) -> Prompt (Map.Map SlotName.SlotName (Set.Set Recipient.Recipient))
+  -- | CR 601.2c, before ChooseTargets: how many targets each variable slot
+  -- takes, within a range the board can supply
+  -- (Parun.Types.TargetCount.ceilingOn). Its PlayerId is ChooseTargets' -- the
+  -- seat announcing those slots, not necessarily the controller.
+  AnnounceTargets :: Decider.Decider -> PlayerId.PlayerId -> ObjectId.ObjectId -> Map.Map SlotName.SlotName (TargetCount.TargetCount, Set.Set Recipient.Recipient) -> Prompt (Map.Map SlotName.SlotName Natural.Natural)
+  -- | CR 612: the two words of one of these families a text-changing effect's
+  -- slot swaps, asked as the effect is applied (CR 608.2d); the second Set is
+  -- the words the new one may not be.
+  ChooseWordSwap :: Decider.Decider -> PlayerId.PlayerId -> ObjectId.ObjectId -> SlotName.SlotName -> Set.Set WordFamily.WordFamily -> Set.Set TextWord.TextWord -> Prompt (TextWord.TextWord, TextWord.TextWord)
+  -- | CR 614.1c: the one basic land type an entering object's controller
+  -- chooses, written to Object.chosenSubtype; no candidate list (CR 305.6).
+  ChooseBasicLandType :: Decider.Decider -> PlayerId.PlayerId -> ObjectId.ObjectId -> Prompt Subtype.Subtype
+  -- | CR 614.1c: the one creature type an entering object's controller chooses,
+  -- written to Object.chosenSubtype; no candidate list (CR 205.3m), the arm
+  -- above's posture.
+  ChooseCreatureType :: Decider.Decider -> PlayerId.PlayerId -> ObjectId.ObjectId -> Prompt Subtype.Subtype
+  -- | The printed "and/or" of a multi-place search: which of the offered places
+  -- (CR 701.23a's zones, CR 701.23j's outside the game) this searcher looks
+  -- through, a nonempty subset (Boonweaver Giant's "may" is why nonempty).
+  -- Asked ahead of CR 601.3's offer and the search.
+  ChooseSearchZones :: Decider.Decider -> PlayerId.PlayerId -> Set.Set SearchPlace.SearchPlace -> Prompt (Set.Set SearchPlace.SearchPlace)
+  -- | CR 701.23 / 701.23b: which of the matching cards across the zones
+  -- searched the searcher finds, at most the Natural. Fewer is legal for a
+  -- hidden zone (CR 400.2) stating a quality, an "up to", or no count;
+  -- Parun.Engine.Resolve completes a short answer from a public zone.
+  Search :: Decider.Decider -> PlayerId.PlayerId -> [ObjectId.ObjectId] -> Natural.Natural -> Prompt [ObjectId.ObjectId]
+  -- | CR 608.2g: the re-entrant cast during a library search (Panglacial Wurm),
+  -- offered in a loop before the find; one entry per castable half and facing
+  -- (CR 709.3, 708.4).
+  CastWhileSearching :: Decider.Decider -> PlayerId.PlayerId -> [(ObjectId.ObjectId, CardName.CardName, Facing.Facing)] -> Prompt (Maybe (ObjectId.ObjectId, CardName.CardName, Facing.Facing))
+  -- | CR 601.2b / 602.2b: the value of a variable, before targets -- X, or the
+  -- count a cost announces beside it (March of Wretched Sorrow's cards exiled),
+  -- named by the SlotName it binds under. The Naturals are the least value the
+  -- card permits (CR 101.1's "X can't be 0") and the greatest legally
+  -- announceable now (Cast.affordableX, Activatable.affordableX; Cost.maximumX
+  -- for CR 101.1's card-stated ceiling).
+  --
+  -- Advisory: the answer is filtered against neither. Announcing past what the
+  -- player can pay is answered by CR 601.2h's reversal (#741); outside what the
+  -- card permits, by the caller's own gate (CR 101.1, CR 101.2).
+  ChooseX :: Decider.Decider -> PlayerId.PlayerId -> ObjectId.ObjectId -> SlotName.SlotName -> Natural.Natural -> Natural.Natural -> Prompt Natural.Natural
+  -- | CR 702.42a: whether the modal spell is entwined, before ChooseModes; the
+  -- Cost is what entwining adds (CR 601.2f).
+  ChooseEntwine :: Decider.Decider -> PlayerId.PlayerId -> ObjectId.ObjectId -> Cost.Cost Keyword.Keyword -> Prompt EntwineDecision.EntwineDecision
+  -- | CR 702.140c: which side of the target creature a mutating creature spell
+  -- is put on, asked as the spell RESOLVES (CR 702.140c) and not at CR 601.2b's
+  -- announcement -- the ObjectIds are the resolving spell and the creature it
+  -- merges with. Never elided: CR 730.2a makes the two answers differ in the
+  -- merged permanent's every characteristic.
+  ChooseMutateSide :: Decider.Decider -> PlayerId.PlayerId -> ObjectId.ObjectId -> ObjectId.ObjectId -> Prompt MutateSide.MutateSide
+  -- | CR 701.61a: which half of forage the forager takes -- the ObjectId is the
+  -- object the forage hangs on, the spell or ability resolving (Treetop Sentries)
+  -- or the one whose CR 602.1a activation cost is being paid (Thornvault
+  -- Forager). Raised only where both halves can be carried out, which is what
+  -- makes it a choice (Parun.Engine.Forage.forage).
+  ChooseForage :: Decider.Decider -> PlayerId.PlayerId -> ObjectId.ObjectId -> Prompt ForageMode.ForageMode
+  -- | CR 701.48a: which branch of learning the learner takes, or Nothing to take
+  -- neither -- the rule's two "you may"s, which declining is always an answer to.
+  -- The ObjectId is the spell or ability resolving. The NonEmpty is the branches
+  -- that can be carried out at all (Parun.Engine.Learn.learn); raised whenever
+  -- there is one, since declining is a distinct outcome even then.
+  ChooseLearn :: Decider.Decider -> PlayerId.PlayerId -> ObjectId.ObjectId -> NonEmpty.NonEmpty LearnMode.LearnMode -> Prompt (Maybe LearnMode.LearnMode)
+  -- | CR 701.56a: which of the objects with time counters the time traveller
+  -- chooses, and which way each chosen one goes. The ObjectId is the spell or
+  -- ability resolving; the list is every candidate (Parun.Engine.TimeTravel), and
+  -- an object absent from the answer was not chosen at all.
+  --
+  -- Raised whenever there is ONE candidate, unlike the choose-one prompts beside
+  -- it: rule 701.56a's "any number" leaves a lone candidate three outcomes, so
+  -- performing the action still decides something.
+  ChooseTimeTravel :: Decider.Decider -> PlayerId.PlayerId -> ObjectId.ObjectId -> [ObjectId.ObjectId] -> Prompt (Map.Map ObjectId.ObjectId TimeTravelChoice.TimeTravelChoice)
+  -- | CR 701.30c: which end of their own library a clashing player puts the card
+  -- they revealed on. The first ObjectId is the spell or ability resolving; the
+  -- second is that player's own revealed card.
+  --
+  -- The NonEmpty carries EVERY card revealed in the clash beside the player who
+  -- revealed it, because rule 701.30c's reveal is simultaneous and public: a
+  -- decider sees the other card as well as their own. The Seq is the decisions
+  -- the clashing players before this one already made, in APNAP order, which CR
+  -- 101.4b lets a later decider know.
+  --
+  -- Asked of each clashing player in APNAP order (CR 101.4), and elided only
+  -- where the revealed card is that player's whole library: both ends are then
+  -- the same position (Parun.Engine.Resolve.Effect's clash).
+  ChooseClash :: Decider.Decider -> PlayerId.PlayerId -> ObjectId.ObjectId -> ObjectId.ObjectId -> NonEmpty.NonEmpty (PlayerId.PlayerId, ObjectId.ObjectId) -> Seq.Seq (PlayerId.PlayerId, LibraryPosition.LibraryPosition) -> Prompt LibraryPosition.LibraryPosition
+  -- | CR 601.2b: how many times the optional additional cost of that keyword --
+  -- kicker, multikicker, squad, offspring, replicate or casualty (CR 702.33a/c,
+  -- 702.157a, 702.175a, 702.56a, 702.153a) --
+  -- is paid, after ChooseModes and before ChooseCost; the Maybe Natural is the
+  -- limit across the spell's instances of it, Nothing for "any number of
+  -- times", and an answer past it is rejected. The KeywordInstance names the
+  -- one instance asked about where each is asked apart (CR 702.56b, 702.157b,
+  -- 702.174a; Keyword.paidPerInstance), Nothing where the question is about
+  -- them all.
+  ChooseKicker :: Decider.Decider -> PlayerId.PlayerId -> ObjectId.ObjectId -> Keyword.Keyword -> Maybe KeywordInstance.KeywordInstance -> Maybe Natural.Natural -> Prompt KickerDecision.KickerDecision
+  -- | CR 702.27a: whether the spell's buyback cost is paid, after ChooseKicker
+  -- and before ChooseCost (CR 601.2b); the Cost is what buying back adds (CR
+  -- 601.2f).
+  ChooseBuyback :: Decider.Decider -> PlayerId.PlayerId -> ObjectId.ObjectId -> Cost.Cost Keyword.Keyword -> Prompt BuybackDecision.BuybackDecision
+  -- | CR 702.47a/b: which cards in the caster's hand are spliced onto the spell,
+  -- and in what order their effects happen, after ChooseBuyback and before
+  -- ChooseCost (CR 601.2b). Each offer is a card and the splice cost it adds;
+  -- the empty answer splices nothing, and an answer naming a card twice or one
+  -- not offered is rejected.
+  ChooseSplice :: Decider.Decider -> PlayerId.PlayerId -> ObjectId.ObjectId -> [(ObjectId.ObjectId, Cost.Cost Keyword.Keyword)] -> Prompt [ObjectId.ObjectId]
+  -- | CR 702.132a: which other player assists the spell, asked of the caster
+  -- before CR 601.2g's mana window; the candidates are the other players still
+  -- in the game, and Nothing declines. Raised even for a single candidate,
+  -- declining being an answer on every board, and not raised where the total
+  -- cost holds no generic mana.
+  ChooseAssistant :: Decider.Decider -> PlayerId.PlayerId -> ObjectId.ObjectId -> NonEmpty.NonEmpty PlayerId.PlayerId -> Prompt (Maybe PlayerId.PlayerId)
+  -- | CR 702.132a: how much of the generic mana in the spell's total cost the
+  -- assisting player pays, asked of THEM once CR 601.2g's windows have closed;
+  -- the Natural is the most their pool pays, enforced (CR 118.3), and zero
+  -- declines. Not raised for a bound of 0, where zero is the only payable
+  -- amount.
+  ChooseAssistAmount :: Decider.Decider -> PlayerId.PlayerId -> ObjectId.ObjectId -> Natural.Natural -> Prompt Natural.Natural
+  -- | CR 903.9a: whether the owner returns their commander from a graveyard or
+  -- exile; declining leaves it until it moves there afresh.
+  ReturnCommander :: Decider.Decider -> PlayerId.PlayerId -> ObjectId.ObjectId -> Prompt CommandZoneDecision.CommandZoneDecision
+  -- | CR 616.1e / 903.9b: whether the affected object's controller applies the
+  -- owner's command-zone offer ahead of the other applicable replacement effects;
+  -- asked only when that controller is not the owner.
+  ChooseCommandZoneOfferFirst :: Decider.Decider -> PlayerId.PlayerId -> ObjectId.ObjectId -> Prompt OptionalDecision.OptionalDecision
+  -- | CR 401.2: which end of a library a card arrives at where the effect
+  -- leaves it open; the owner is asked (CR 400.3), in APNAP order, or the
+  -- countering spell's controller where it says "your choice" (Hinder). Never
+  -- elided; a stated end (Parun.Types.LibraryPlacement.Stated) is not asked.
+  -- The Natural is how many cards stay above the upper option, which a Top
+  -- answer picks: 0 for the top itself, 1 for "second from the top".
+  ChooseLibraryEnd :: Decider.Decider -> PlayerId.PlayerId -> ObjectId.ObjectId -> Natural.Natural -> Prompt LibraryPosition.LibraryPosition
+  -- | CR 401.4 / 608.2c: the player arranges two or more cards arriving at one
+  -- end of a library at once -- the owner, or the player the text names
+  -- (Agonizing Memories' caster); the answer permutes the indices, reading from
+  -- that end inward.
+  ArrangeLibraryArrivals :: Decider.Decider -> PlayerId.PlayerId -> LibraryPosition.LibraryPosition -> [ObjectId.ObjectId] -> Prompt [Natural.Natural]
+  -- | CR 401.4 / 608.2c: the player arranges two or more cards an effect puts
+  -- back into their owner's library at the positions those cards already occupy
+  -- (Ponder, Cruel Fate); the answer permutes the indices, reading from the top
+  -- of the library inward.
+  --
+  -- No LibraryPosition, which is the difference from ArrangeLibraryArrivals
+  -- above: nothing arrives, so there is no end for the effect to have stated.
+  -- Asked at two or more cards, rule 401.4's own count being where one order
+  -- stops being the only order.
+  ArrangeLibraryCards :: Decider.Decider -> PlayerId.PlayerId -> [ObjectId.ObjectId] -> Prompt [Natural.Natural]
+  -- | CR 404.3: the owner arranges two or more cards put into their graveyard at
+  -- once, from the top down; asked only while their Parun.Types.GraveyardOrder is
+  -- Matters.
+  ArrangeGraveyardArrivals :: Decider.Decider -> PlayerId.PlayerId -> [ObjectId.ObjectId] -> Prompt GraveyardArrangement.GraveyardArrangement
+  -- | CR 601.2b / 700.2a: the modes, before X and targets, from the legal ones;
+  -- a Seq because CR 700.2d may let one mode be chosen twice. A forced
+  -- selection is not asked. The PlayerId chooses, the caster's opponent under
+  -- CR 700.2e (Fatal Lore).
+  ChooseModes :: Decider.Decider -> PlayerId.PlayerId -> ObjectId.ObjectId -> Set.Set ModeIndex.ModeIndex -> ModeSelection.ModeSelection -> Prompt (Seq.Seq ModeIndex.ModeIndex)
+  -- | CR 707.5 / 614.1c / 614.12a: which permanent an object entering as a copy
+  -- copies, Nothing being the card's "may" declined; asked at one candidate,
+  -- not at none.
+  ChooseCopyTarget :: Decider.Decider -> PlayerId.PlayerId -> ObjectId.ObjectId -> [ObjectId.ObjectId] -> Prompt (Maybe ObjectId.ObjectId)
+  -- | CR 208.2b / 614.1c: which of the offered shapes an entering object becomes
+  -- (Primal Plasma), an index into the list, written into the copiable
+  -- snapshot (CR 707.2).
+  ChooseEntryOption :: Decider.Decider -> PlayerId.PlayerId -> ObjectId.ObjectId -> [EntryOption.EntryOption] -> Prompt Natural.Natural
+  -- | CR 702.136a / 614.1c: whether riot takes the +1\/+1 counter (Exercises)
+  -- or haste. Never elided.
+  ChooseRiot :: Decider.Decider -> PlayerId.PlayerId -> ObjectId.ObjectId -> Prompt OptionalDecision.OptionalDecision
+  -- | CR 702.98a / 614.1c: whether unleash takes the +1\/+1 counter; its own
+  -- constructor so a transcript cannot answer one as-enters "may" as another.
+  ChooseUnleash :: Decider.Decider -> PlayerId.PlayerId -> ObjectId.ObjectId -> Prompt OptionalDecision.OptionalDecision
+  -- | CR 702.104a \/ 614.1c: whether tribute N is paid, asked of the OPPONENT the
+  -- entering creature's controller chose rather than of the controller -- the arm
+  -- above's shape with the decider and the answering seat moved. Never elided:
+  -- the two answers are a bigger creature against the card's own
+  -- tribute-wasn't-paid trigger.
+  ChooseTribute :: Decider.Decider -> PlayerId.PlayerId -> ObjectId.ObjectId -> Natural.Natural -> Prompt OptionalDecision.OptionalDecision
+  -- | CR 614.1c with CR 119.4: whether N life is paid as the permanent enters
+  -- so it enters untapped; not asked below N life, a zero amount excepted (CR
+  -- 119.4b).
+  ChoosePayLifeOnEntry :: Decider.Decider -> PlayerId.PlayerId -> ObjectId.ObjectId -> Natural.Natural -> Prompt OptionalDecision.OptionalDecision
+  -- | CR 614.1c with CR 701.20a: which matching hand card is revealed as the
+  -- permanent enters so it enters untapped, Nothing declining; raised at one
+  -- candidate too.
+  ChooseRevealOnEntry :: Decider.Decider -> PlayerId.PlayerId -> ObjectId.ObjectId -> NonEmpty.NonEmpty ObjectId.ObjectId -> Prompt (Maybe ObjectId.ObjectId)
+  -- | CR 614.1c: a colour an entering object's controller chooses, from those
+  -- (CR 105.1) not already chosen for it.
+  ChooseColor :: Decider.Decider -> PlayerId.PlayerId -> ObjectId.ObjectId -> NonEmpty.NonEmpty Color.Color -> Prompt Color.Color
+  -- | Which of the offered marks the object is given: CR 702.158b's sector, for
+  -- the creature CR 704.5u assigns or the ability source whose CR 702.158d
+  -- choice it is, or the Unstable FAQ's sprocket, for the Contraption being
+  -- assembled.
+  ChooseDesignation :: Decider.Decider -> PlayerId.PlayerId -> ObjectId.ObjectId -> NonEmpty.NonEmpty Designation.Designation -> Prompt Designation.Designation
+  -- | CR 105.4 / 106.3: which mana a resolving object adds when the type it
+  -- names is not settled, from Parun.Engine.Mana.produced.
+  ChooseManaType :: Decider.Decider -> PlayerId.PlayerId -> ObjectId.ObjectId -> NonEmpty.NonEmpty ManaType.ManaType -> Prompt ManaType.ManaType
+  -- | CR 201.4: the card name a player chooses, as an object enters (CR 614.1c)
+  -- or as a resolution instructs (CR 608.2c); the Filter is CR 201.4a's
+  -- restriction, and the PlayerId is the chooser, asked in APNAP order. The Seq
+  -- is the names the choosers before this one already chose (CR 101.4b).
+  --
+  -- No candidate list: rule 201.4's offer is every card in the Oracle card
+  -- reference, which is not a set the engine holds. The answer is judged on the
+  -- far side of Parun.Engine.Engine.runGameAsked instead, by
+  -- Parun.Interpreter.policingCardNames, which resolves the name and matches the
+  -- Filter against it.
+  ChooseCardName :: Decider.Decider -> PlayerId.PlayerId -> ObjectId.ObjectId -> Filter.Filter Keyword.Keyword -> Seq.Seq (PlayerId.PlayerId, CardName.CardName) -> Prompt CardName.CardName
+  -- | Which opponent a card's text names, as a permanent enters (CR 614.12a),
+  -- which opponent an entering Aura enchants (CR 303.4f; Archnemesis), at
+  -- resolution for CR 701.29a's fateseal, for a resolving
+  -- Parun.Types.Effect.ChoosePlayer whose scope leaves the chooser out
+  -- (Skullwinder), or at CR 601.2c for which opponent ANNOUNCES a slot the
+  -- controller does not (CR 801.5a, Cuombajj Witches); the chooser is CR 109.5's
+  -- "you" at entry, the rule's actor at the fateseal, and the ability's
+  -- controller at the announcement.
+  --
+  -- The PlayerChoice is the record the answer is written to, where it is one:
+  -- CR 702.174a's promise of one gift instance as its cost is paid, which tells
+  -- two gift abilities' promises apart. Nothing for every other choice.
+  ChooseOpponent :: Decider.Decider -> PlayerId.PlayerId -> ObjectId.ObjectId -> Maybe PlayerChoice.PlayerChoice -> NonEmpty.NonEmpty PlayerId.PlayerId -> Prompt PlayerId.PlayerId
+  -- | CR 310.9a: which player protects the battle, chosen by its controller as
+  -- it enters and again under CR 310.11's state-based action; the candidates
+  -- are Parun.Engine.Battle.protectorCandidates.
+  ChooseProtector :: Decider.Decider -> PlayerId.PlayerId -> ObjectId.ObjectId -> NonEmpty.NonEmpty PlayerId.PlayerId -> Prompt PlayerId.PlayerId
+  -- | CR 614.1c with CR 614.12a: which player the entering permanent's
+  -- controller chooses (Stuffy Doll), or an entering Aura enchants (CR
+  -- 303.4f; Curse of Death's Hold), or, at resolution, which player a
+  -- resolving effect's controller chooses (CR 608.2d; Stadium Vendors), or which
+  -- active player a banding creature's controller names under CR 805.9
+  -- (Parun.Engine.Damage.blockerChooser), or which winner takes an ante card
+  -- after a team's win (CR 407.2 / 104.2c, Parun.Engine.Ante.payOut) -- the
+  -- ObjectId is the entering permanent, the resolving source, the banding
+  -- creature, or the ante card. The candidates
+  -- come from the caller, and this constructor rather than ChooseOpponent above
+  -- is the one raised exactly when they include the chooser.
+  ChoosePlayer :: Decider.Decider -> PlayerId.PlayerId -> ObjectId.ObjectId -> NonEmpty.NonEmpty PlayerId.PlayerId -> Prompt PlayerId.PlayerId
+  -- | CR 725.4 / 726.4 with CR 805.2: which active player takes a departing
+  -- holder's monarch, then initiative, under the shared team turns option.
+  ChooseActivePlayer :: Decider.Decider -> PlayerId.PlayerId -> NonEmpty.NonEmpty PlayerId.PlayerId -> Prompt PlayerId.PlayerId
+  -- | An order over one player's triggered abilities, a permutation of the
+  -- entries' indices. At Parun.Engine.Engine.orderPending it is CR 603.3b's
+  -- stack order, the last named resolving first, elided unless two or more
+  -- and observable (Parun.Engine.Engine.orderInert, CR 117.3b); at
+  -- Parun.Engine.Event.Trigger.delayedPending it is CR 101.4c's asking order, the first
+  -- named asked first, elided on the count alone.
+  OrderTriggers :: Decider.Decider -> PlayerId.PlayerId -> [TriggerEntry.TriggerEntry] -> Prompt [Natural.Natural]
+  -- | CR 122.1c / 614.3: the order a resource counted in whole events or
+  -- applications is offered two or more simultaneous damage events, a
+  -- permutation of their indices; asked only where the order is observable. A
+  -- countdown counted in POINTS is divisible and takes AllocateDamage below.
+  OrderDamage :: Decider.Decider -> PlayerId.PlayerId -> [DamageEvent.DamageEvent] -> Prompt [Natural.Natural]
+  -- | CR 615.7: how much of a counted shield's or redirect's remaining points
+  -- goes to each of two or more simultaneous damage events it covers, one
+  -- Natural per offered event and the payload's Natural what there is to
+  -- divide; asked only where two or more divisions differ.
+  AllocateDamage :: Decider.Decider -> PlayerId.PlayerId -> [DamageEvent.DamageEvent] -> Natural.Natural -> Prompt [Natural.Natural]
+  -- | CR 616.1: which of the applicable replacement effects applies next, an
+  -- index into the candidates, re-asked per iteration (CR 616.1f); elided
+  -- where the candidates are indistinguishable in effect and, where
+  -- Replacement.readsApplier, in CR 109.5's "you".
+  ChooseReplacement :: Decider.Decider -> PlayerId.PlayerId -> [ReplacementEntry.ReplacementEntry] -> Prompt Natural.Natural
+  -- | CR 702.52a: whether a draw is replaced by dredge -- Exercises mills the
+  -- payload's N and returns the card in the graveyard the ObjectId names,
+  -- Declines leaves the draw standing. Its own constructor for the as-enters
+  -- answers' reason. Never elided: rule 702.52a's "you may" is a real choice
+  -- wherever Parun.Engine.Replacement.applies offers the row.
+  ChooseDredge :: Decider.Decider -> PlayerId.PlayerId -> ObjectId.ObjectId -> Natural.Natural -> Prompt OptionalDecision.OptionalDecision
+  -- | CR 614.1a: whether an optional redirect ("you may put it on top of your
+  -- library instead", Library of Leng) whose source is the first ObjectId
+  -- applies to the moving card the second names. Never elided, ChooseDredge's
+  -- reason.
+  ChooseRedirect :: Decider.Decider -> PlayerId.PlayerId -> ObjectId.ObjectId -> ObjectId.ObjectId -> Prompt OptionalDecision.OptionalDecision
+  -- | CR 614.1a: whether an optional substitution whose source the ObjectId
+  -- names ("you may instead roll a d20", Pokey, the Scallywagg) replaces the
+  -- player's coin flip or die roll. Never elided, ChooseDredge's reason.
+  ChooseSubstitute :: Decider.Decider -> PlayerId.PlayerId -> ObjectId.ObjectId -> Prompt OptionalDecision.OptionalDecision
+  -- | CR 701.21a: which of the payer's matching permanents are sacrificed to
+  -- pay a cost, the Natural how many; asked only with more candidates than the
+  -- count. Not ChooseTargets: CR 115.1 makes a target only what the word
+  -- names. The Seq is what the players before this one in an edict's APNAP pass
+  -- already chose (CR 101.4b).
+  ChooseSacrifices :: Decider.Decider -> PlayerId.PlayerId -> ObjectId.ObjectId -> [ObjectId.ObjectId] -> Natural.Natural -> Seq.Seq (PlayerId.PlayerId, Set.Set ObjectId.ObjectId) -> Prompt (Set.Set ObjectId.ObjectId)
+  -- | CR 406.2: which cards are exiled from the payer's graveyard to pay a
+  -- cost; ChooseSacrifices' payload, posture and elision.
+  ChooseExilesFromGraveyard :: Decider.Decider -> PlayerId.PlayerId -> ObjectId.ObjectId -> [ObjectId.ObjectId] -> Natural.Natural -> Prompt (Set.Set ObjectId.ObjectId)
+  -- | CR 702.167a: which objects are exiled as a craft ability's [materials],
+  -- the arm above's payload, posture and elision over TWO zones at once -- the
+  -- payer's battlefield and their graveyard, which CR 702.167b reads one
+  -- criterion across. Its own constructor rather than the arm above, whose name
+  -- states a zone this pool is not confined to.
+  --
+  -- The Bool is rule 702.167a's "one or more": False makes the Natural the exact
+  -- count the arms above state, True makes it a MINIMUM the answer may exceed.
+  -- Carried rather than inferred, because the answerer cannot tell the two apart
+  -- from the pool and the number alone, and an engine that guessed would be
+  -- choosing how many to exile for the payer.
+  ChooseMaterials :: Decider.Decider -> PlayerId.PlayerId -> ObjectId.ObjectId -> [ObjectId.ObjectId] -> Natural.Natural -> Bool -> Prompt (Set.Set ObjectId.ObjectId)
+  -- | CR 701.59a: which cards are exiled from the payer\'s graveyard to collect
+  -- evidence, the Natural the TOTAL MANA VALUE they must reach rather than how
+  -- many. The arm above\'s payload read as a threshold, which is
+  -- ChooseTapsForTotalPower\'s relation to ChooseTaps -- and NEVER elided for its
+  -- reason: whether the answer is forced is a question about subsets, so eliding
+  -- it would decide for the player.
+  ChooseCollectEvidence :: Decider.Decider -> PlayerId.PlayerId -> ObjectId.ObjectId -> [ObjectId.ObjectId] -> Natural.Natural -> Prompt (Set.Set ObjectId.ObjectId)
+  -- | Any number of the candidates, the empty set included, at most the Natural
+  -- where there is one; the AnyNumberOf says what they are and what is done to
+  -- them. Asked at one candidate, where declining is a second answer, and
+  -- skipped at zero. Parun.Engine.Replay answers each AnyNumberOf with its own
+  -- Response constructor.
+  ChooseAnyNumber :: Decider.Decider -> PlayerId.PlayerId -> ObjectId.ObjectId -> AnyNumberOf.AnyNumberOf -> [ObjectId.ObjectId] -> Maybe Natural.Natural -> Prompt (Set.Set ObjectId.ObjectId)
+  -- | CR 700.3: which of the piles an effect separated objects into the player
+  -- takes, any of them possibly empty (CR 700.3d). Elided where the piles are
+  -- alike. Answers as Response.ChosePile.
+  ChoosePile :: Decider.Decider -> PlayerId.PlayerId -> ObjectId.ObjectId -> NonEmpty.NonEmpty (Set.Set ObjectId.ObjectId) -> Prompt (Set.Set ObjectId.ObjectId)
+  -- | CR 608.2d: which one of the matching permanents a resolving effect acts
+  -- on (Parun.Types.ChosenPermanents at HowMany.Exactly), asked once per pick;
+  -- at none the instruction is impossible (CR 101.3). Not ChooseTargets (CR
+  -- 115.1, CR 115.10a). Also CR
+  -- 509.4: which attacker a creature entering blocking blocks, the ObjectId
+  -- then being that creature. Also CR 701.3a: the one destination a group of
+  -- attachments moves to (Parun.Types.Effect's AttachAll). Also CR 616.1:
+  -- which Opposition Agent's exile applies to a search's finds.
+  ChoosePermanent :: Decider.Decider -> PlayerId.PlayerId -> ObjectId.ObjectId -> NonEmpty.NonEmpty ObjectId.ObjectId -> Prompt ObjectId.ObjectId
+  -- | CR 702.122a: which untapped permanents are tapped to crew, the Natural a
+  -- power threshold rather than a size (Parun.Engine.Cost validates the sum).
+  -- Never elided, forcedness being a question about subsets. Answers as
+  -- Response.ChoseTaps.
+  ChooseTapsForTotalPower :: Decider.Decider -> PlayerId.PlayerId -> ObjectId.ObjectId -> [ObjectId.ObjectId] -> Natural.Natural -> Prompt (Set.Set ObjectId.ObjectId)
+  -- | Which permanents are tapped to pay a cost naming how many (CR 601.2f);
+  -- ChooseSacrifices' shape and elision. Answers as Response.ChoseTaps.
+  ChooseTaps :: Decider.Decider -> PlayerId.PlayerId -> ObjectId.ObjectId -> [ObjectId.ObjectId] -> Natural.Natural -> Prompt (Set.Set ObjectId.ObjectId)
+  -- | Which permanents are returned to their owners\' hands to pay a cost naming
+  -- how many (CR 118.1); ChooseTaps\' shape, answering as Response.ChoseReturns
+  -- so a replay cannot tap what it should have returned.
+  ChooseReturns :: Decider.Decider -> PlayerId.PlayerId -> ObjectId.ObjectId -> [ObjectId.ObjectId] -> Natural.Natural -> Prompt (Set.Set ObjectId.ObjectId)
+  -- | Which permanents, or cards in the payer\'s hand, are exiled to pay a cost
+  -- naming how many (CR 118.1, 406.2); ChooseReturns\' shape, answering as
+  -- Response.ChoseExiles.
+  ChooseExiles :: Decider.Decider -> PlayerId.PlayerId -> ObjectId.ObjectId -> [ObjectId.ObjectId] -> Natural.Natural -> Prompt (Set.Set ObjectId.ObjectId)
+  -- | CR 118.1 as a cost: which ONE permanent loses the counters of one kind a
+  -- cost names (Zameck Guildmage). ChooseBlight's shape rather than ChooseTaps',
+  -- the count being counters and not objects, and elided at one candidate.
+  ChooseCounterRemoval :: Decider.Decider -> PlayerId.PlayerId -> ObjectId.ObjectId -> NonEmpty.NonEmpty ObjectId.ObjectId -> Prompt ObjectId.ObjectId
+  -- | CR 118.1 as a cost / CR 601.2h: how many of the counters of one kind a
+  -- cost names come off each permanent, the payer dividing the Natural among them
+  -- (Novijen Sages); the Map is what each candidate carries. Elided where only
+  -- one division exists, and an answer that does not add up is rejected. Also
+  -- CR 608.2d's division of an effect's counters of one kind (Overseer of Vault
+  -- 76).
+  ChooseCounterRemovalAmong :: Decider.Decider -> PlayerId.PlayerId -> ObjectId.ObjectId -> Natural.Natural -> Map.Map ObjectId.ObjectId Natural.Natural -> Prompt (Map.Map ObjectId.ObjectId Natural.Natural)
+  -- | CR 118.1 as a cost / CR 601.2h: ChooseCounterRemovalAmong where the
+  -- Natural is a floor, so the payer also settles how many come off (Ooze
+  -- Flux). Elided only where the candidates carry exactly the floor. Also CR
+  -- 608.2d's "any number" at a floor of zero (Galloping Lizrog).
+  ChooseCounterRemovalAtLeast :: Decider.Decider -> PlayerId.PlayerId -> ObjectId.ObjectId -> Natural.Natural -> Map.Map ObjectId.ObjectId Natural.Natural -> Prompt (Map.Map ObjectId.ObjectId Natural.Natural)
+  -- | CR 608.2d: ChooseCounterRemovalAmong where the Natural is a cap, so none
+  -- is an answer (Sensational Spider-Man). Never elided.
+  ChooseCounterRemovalUpTo :: Decider.Decider -> PlayerId.PlayerId -> ObjectId.ObjectId -> Natural.Natural -> Map.Map ObjectId.ObjectId Natural.Natural -> Prompt (Map.Map ObjectId.ObjectId Natural.Natural)
+  -- | CR 608.2d: how many of the Natural's new counters each candidate gets,
+  -- the answer naming only candidates, each at least one, summing to it.
+  -- Elided at one candidate.
+  ChooseCounterDistribution :: Decider.Decider -> PlayerId.PlayerId -> ObjectId.ObjectId -> Natural.Natural -> NonEmpty.NonEmpty ObjectId.ObjectId -> Prompt (Map.Map ObjectId.ObjectId Natural.Natural)
+  -- | CR 601.2d / 115.7f: what each of a slot's targets gets of the Dividing,
+  -- the answer naming every one, each at least one. Elided where only one
+  -- division exists.
+  ChooseDivision :: Decider.Decider -> PlayerId.PlayerId -> ObjectId.ObjectId -> Dividing.Dividing -> NonEmpty.NonEmpty Recipient.Recipient -> Prompt (Map.Map Recipient.Recipient Natural.Natural)
+  -- | CR 122.1 / CR 601.2h: how many counters of EACH kind come off each
+  -- permanent, where a cost names no kind (Tayam, Luminous Enigma), or an effect
+  -- does not (Eventide's Shadow, CR 608.2d); the Map is what each candidate
+  -- carries, and the CounterSpread how the Natural binds the answer. Elided
+  -- where only one division exists.
+  ChooseMixedCounterRemoval :: Decider.Decider -> PlayerId.PlayerId -> ObjectId.ObjectId -> CounterSpread.CounterSpread -> Natural.Natural -> Map.Map ObjectId.ObjectId (Map.Map (CounterKind.CounterKind Keyword.Keyword) Natural.Natural) -> Prompt (Map.Map ObjectId.ObjectId (Map.Map (CounterKind.CounterKind Keyword.Keyword) Natural.Natural))
+  -- | CR 701.3a: where an effect moving an attached permanent puts it, the
+  -- current host excluded (CR 701.3b); the offer is the card's text, so CR
+  -- 303.4j is left to the player. Elided at one candidate. The PlayerId is the
+  -- resolving controller for one named destination (CR 608.2d) and the
+  -- subject's controller for several (CR 303.4d, CR 301.5c). Also CR 608.2d:
+  -- which legal host a created Aura token enters attached to, among several
+  -- the effect names (Dunbarrow Revivalist's "one of them").
+  ChooseAttachment :: Decider.Decider -> PlayerId.PlayerId -> ObjectId.ObjectId -> NonEmpty.NonEmpty ObjectId.ObjectId -> Prompt ObjectId.ObjectId
+  -- | CR 303.4k with CR 614.1e: whether an Aura turned face up exercises its
+  -- printed "you may attach it"; never elided, declining leaving it to CR
+  -- 704.5m.
+  ChooseTurnUpAttachment :: Decider.Decider -> PlayerId.PlayerId -> ObjectId.ObjectId -> Prompt OptionalDecision.OptionalDecision
+  -- | Which of several costs the named player pays. Asked at five moments, all
+  -- of them "which cost", which is why one constructor serves all: CR 118.12\'s
+  -- choice among a resolution-time cost\'s options, ahead of Prompt.ChooseToPay
+  -- (Parun.Engine.Resolve.Effect.payGateAgreed); CR 601.2b\'s payable alternative and additional costs, after modes and
+  -- before X and targets (CR 118.9b makes an alternative cost optional); CR
+  -- 702.51b\'s, CR 702.66b\'s, CR 702.126b\'s and CR 701.67a\'s substitutes once the
+  -- total cost is locked in and CR 601.2g\'s mana window has closed
+  -- (Parun.Engine.Cost.announceSubstitutions); CR 702.37e\'s morph cost, for a
+  -- card printing more than one (Parun.Engine.FaceDown.turnFaceUp); and CR
+  -- 616.1\'s choice of which CR 702.35a madness ability exiled a discarded card,
+  -- offered as the costs they settle to and unfiltered, since nothing is paid yet
+  -- (Parun.Engine.Event.madnessChoice). The candidates are filtered by
+  -- payability at the first four, and an answer outside them is rejected.
+  -- Each carries the keyword ability that offered it, so two equal costs
+  -- offered by different abilities are two answers (CR 601.2b, 702.152a).
+  ChooseCost :: Decider.Decider -> PlayerId.PlayerId -> ObjectId.ObjectId -> [CandidateCost.CandidateCost] -> Prompt CandidateCost.CandidateCost
+  -- | CR 601.3 / 305.1: which of the permissions admitting a play of the
+  -- ObjectId it is made under (Nothing = none of them); asked only where two
+  -- would differ in the budget spent or the rider given (CR 400.7h, 400.7i).
+  ChoosePlayPermission :: Decider.Decider -> PlayerId.PlayerId -> ObjectId.ObjectId -> NonEmpty.NonEmpty (Maybe (ObjectId.ObjectId, CastFromZone.CastFromZone)) -> Prompt (Maybe (ObjectId.ObjectId, CastFromZone.CastFromZone))
+  -- | CR 601.2h: the order the non-mana components of a total cost are paid in,
+  -- a permutation of their printed indices, once per pass
+  -- (Parun.Engine.Cost.paidInSecondPass); asked only where observable
+  -- (Parun.Engine.Cost.orderObservable).
+  OrderCostComponents :: Decider.Decider -> PlayerId.PlayerId -> ObjectId.ObjectId -> [CostComponent.CostComponent Keyword.Keyword] -> Prompt [Natural.Natural]
+  -- | CR 508.1j / 509.1f: the order a combat toll's charges are paid in, one
+  -- entry per taxing permanent; asked only where observable
+  -- (Parun.Engine.Cost.tollOrderObservable).
+  OrderCombatTolls :: Decider.Decider -> PlayerId.PlayerId -> [ObjectId.ObjectId] -> Prompt [Natural.Natural]
+  -- | CR 712.21a: the order the owner puts a melded permanent's component cards
+  -- into their graveyard or library, first named put in first. CR 730.3a says
+  -- the sentence again for a merged permanent, so the name is the
+  -- leaving permanent's components rather than meld's.
+  OrderComponentCards :: Decider.Decider -> PlayerId.PlayerId -> Zone.Zone -> [PrintingId.PrintingId] -> Prompt [Natural.Natural]
+  -- | CR 123.5c: which of the objects a melded or merged permanent becomes in a
+  -- public zone keeps its stickers, by index; an index past the end reads as
+  -- the first.
+  ChooseStickerKeeper :: Decider.Decider -> PlayerId.PlayerId -> NonEmpty.NonEmpty PrintingId.PrintingId -> Prompt Natural.Natural
+  -- | The relative order of a per-object batch over one player's objects, a
+  -- permutation of the indices; the chooser is CR 608.2f's resolving
+  -- controller, CR 701.44d's exploring seat, or CR 707.10d's copying
+  -- controller. Groups are asked in APNAP order (CR 101.4), each for two or
+  -- more members.
+  OrderForEach :: Decider.Decider -> PlayerId.PlayerId -> ObjectId.ObjectId -> [Recipient.Recipient] -> Prompt [Natural.Natural]
+  -- | CR 608.2d: any number of the members a per-member loop swept, the ones
+  -- its body then runs for (Parun.Types.LoopMembers' AnyNumber); asked at one
+  -- candidate, skipped at zero. ChooseAnyNumber's shape over the
+  -- loop's own member type. Answers as Response.ChoseLoopMembers.
+  ChooseLoopMembers :: Decider.Decider -> PlayerId.PlayerId -> ObjectId.ObjectId -> [Recipient.Recipient] -> Prompt (Set.Set Recipient.Recipient)
+  -- | CR 608.2d: whether an Effect.Repeat runs its body again; the Natural is how
+  -- many times it has run, so two asks of one loop differ. Answers as
+  -- Response.ChoseRepeat.
+  ChooseRepeat :: Decider.Decider -> PlayerId.PlayerId -> ObjectId.ObjectId -> Natural.Natural -> Prompt OptionalDecision.OptionalDecision
+  -- | CR 613.7m: the relative order of the timestamps one player's objects
+  -- receive at one moment, first named stamped earlier; asked by
+  -- Parun.Engine.Restamp.order, per group in APNAP order, for two or more. CR
+  -- 712.21b / 730.3b ask it of the exiler instead (Parun.Engine.Restamp.orderFor).
+  OrderTimestamps :: Decider.Decider -> PlayerId.PlayerId -> [ObjectId.ObjectId] -> Prompt [Natural.Natural]
+  -- | CR 605.3a: the order one player activates a batch of mana abilities in
+  -- when an effect has them activate several at once (Drain Power), first named
+  -- activated first; asked by Parun.Engine.Resolve.Effect's ActivateManaAbilities
+  -- arm, per seat in APNAP order (CR 101.4), for two or more permanents.
+  OrderManaActivations :: Decider.Decider -> PlayerId.PlayerId -> [ObjectId.ObjectId] -> Prompt [Natural.Natural]
+  -- | CR 103.5: whether the player takes a mulligan, once per round in turn
+  -- order until they keep; the offer carries what a player at a table sees.
+  DeclareMulligan :: Decider.Decider -> PlayerId.PlayerId -> MulliganOffer.MulliganOffer -> Prompt MulliganDecision.MulliganDecision
+  -- | CR 103.5: which `count` cards of the redrawn hand go to the bottom of the
+  -- library, ordered; asked only at two or more cards.
+  Bottom :: Decider.Decider -> PlayerId.PlayerId -> [ObjectId.ObjectId] -> Natural.Natural -> Prompt [ObjectId.ObjectId]
+  -- | CR 103.5b: an action a card lets a player take "any time they could
+  -- mulligan", offered before each DeclareMulligan and after each action
+  -- taken; Nothing declines.
+  MulliganAction :: Decider.Decider -> PlayerId.PlayerId -> [(ObjectId.ObjectId, HandActionIndex.HandActionIndex)] -> Prompt (Maybe (ObjectId.ObjectId, HandActionIndex.HandActionIndex))
+  -- | CR 103.6: an opening-hand action once mulligans are complete, offered in
+  -- turn order until the player declines; a card acted on is not offered again
+  -- (CR 103.6b, Parun.Types.HandWindowCap), and each action's own condition
+  -- narrows the list.
+  OpeningHandAction :: Decider.Decider -> PlayerId.PlayerId -> [(ObjectId.ObjectId, HandActionIndex.HandActionIndex)] -> Prompt (Maybe (ObjectId.ObjectId, HandActionIndex.HandActionIndex))
+  -- | CR 603.5 / 608.2d: whether the named player exercises a printed "may",
+  -- on the clause the ModeIndex and ClauseIndex name (CR 608.2e), asked of
+  -- each player it covers in APNAP order. Elided where the clause is inert
+  -- (Parun.Engine.Resolve.clauseIsInert) and where CR 608.2d leaves nothing to
+  -- choose because its instructions cannot be carried out at all
+  -- (Parun.Engine.Resolve.Effect.clauseIsImpossible), both off the effects'
+  -- classification. The Seq is the answers the players before this one already
+  -- gave (CR 101.4b).
+  ChooseOptional :: Decider.Decider -> PlayerId.PlayerId -> ObjectId.ObjectId -> ModeIndex.ModeIndex -> ClauseIndex.ClauseIndex -> Seq.Seq (PlayerId.PlayerId, OptionalDecision.OptionalDecision) -> Prompt OptionalDecision.OptionalDecision
+  -- | CR 608.2d's "or": which of a mode's mutually exclusive clauses happens,
+  -- announced at resolution once per group and per chooser
+  -- (Parun.Types.OrElse.chooser), before ChooseOptional. Carries only the
+  -- branches CR 608.2d leaves to choose, and is elided where one or none
+  -- survives that filter (Parun.Engine.Resolve.chosenBranch) -- except a CR
+  -- 701.55a villainous choice (Parun.Types.OrElse.villainous), where rule 701.55b
+  -- puts both branches and elides nothing and rule 701.55d puts this question to
+  -- one seat at a time, its answer performed before the next seat is asked
+  -- (Parun.Engine.Resolve.villainousPass). Not ChooseModes, which CR 700.2 fixes
+  -- at cast. The Seq is the branches the choosers before this one already
+  -- announced (CR 101.4b). The Bool offers "neither" (Nothing) where every
+  -- branch carries a decline of its own (CR 603.5, CR 118.12), so the one
+  -- answer settles all three outcomes (Parun.Engine.Resolve.chosenBranch).
+  ChooseClause :: Decider.Decider -> PlayerId.PlayerId -> ObjectId.ObjectId -> ModeIndex.ModeIndex -> NonEmpty.NonEmpty ClauseIndex.ClauseIndex -> Bool -> Seq.Seq (PlayerId.PlayerId, Maybe ClauseIndex.ClauseIndex) -> Prompt (Maybe ClauseIndex.ClauseIndex)
+  -- | CR 608.2g: whether the player casts the card a resolving effect allows
+  -- them to (CR 310.12b), the CardName being the half CR 712.11a puts on the
+  -- stack; never elided, and not raised for CR 608.2g's "instructs".
+  OfferedCast :: Decider.Decider -> PlayerId.PlayerId -> ObjectId.ObjectId -> CardName.CardName -> Prompt OptionalDecision.OptionalDecision
+  -- | CR 601.3 / 709.3 / 712.11b / 715.3: WHICH CAST an OfferedCast makes, from
+  -- those Cast.castableWhenOffered admits; asked before the "may".
+  --
+  -- An object AND a name per option, because CR 601.3's offer ranges over a set
+  -- of cards (Shell of the Last Kappa's exiled pile) as readily as over the
+  -- halves of one (CR 709.3), and one prompt has to carry both -- a card with two
+  -- castable halves contributes two options naming the same object. Elided when
+  -- only one survives the gate.
+  ChooseOfferedCastSpell :: Decider.Decider -> PlayerId.PlayerId -> NonEmpty.NonEmpty (ObjectId.ObjectId, CardName.CardName) -> Prompt (ObjectId.ObjectId, CardName.CardName)
+  -- | CR 702.94a / 121.9: whether the drawn card is revealed for miracle, the
+  -- cast being OfferedCast's separate "may"; asked once per miracle ability,
+  -- named by its cost, until one is taken (CR 702.94b).
+  OfferedMiracleReveal :: Decider.Decider -> PlayerId.PlayerId -> ObjectId.ObjectId -> CardName.CardName -> Cost.Cost Keyword.Keyword -> Prompt OptionalDecision.OptionalDecision
+  -- | CR 701.25b / 701.38d / 121.9: whether the player takes up the "may" grant
+  -- the permanent's static ability gives them -- a surveil's extra cards, a
+  -- vote's extra ballots, God-Eternal Kefnet's reveal of the card just drawn;
+  -- asked once per such ability.
+  OfferedExtra :: Decider.Decider -> PlayerId.PlayerId -> ObjectId.ObjectId -> PlayerEffect.PlayerEffect -> Prompt OptionalDecision.OptionalDecision
+  -- | CR 118.12 / 118.12a: whether the named player -- the one the effects are
+  -- aimed at, not the resolving controller -- pays the cost a resolving object
+  -- offers, once per payment in APNAP order; also a draw replacement's offer
+  -- (PayOffer.InsteadOfDraw, CR 614.6). Not asked where CR 118.3 leaves
+  -- only declining, nor for CR 118.12's mandatory limb
+  -- (Parun.Types.PayObligation). Parun.ResolveSpec's PayGate group fails if this
+  -- prompt is raised there. The Seq is what the payers before this one answered
+  -- to the same offer (CR 101.4b).
+  ChooseToPay :: Decider.Decider -> PlayerId.PlayerId -> ObjectId.ObjectId -> PayOffer.PayOffer -> Cost.Cost Keyword.Keyword -> Seq.Seq (PlayerId.PlayerId, PaymentDecision.PaymentDecision) -> Prompt PaymentDecision.PaymentDecision
+  -- | CR 601.2b: whether 2 life or mana pays each Phyrexian symbol, one prompt
+  -- per symbol in printed order at CR 118.13's moments and for a combat toll
+  -- (Parun.Engine.Cost.announceToll); a hybrid Phyrexian symbol (CR 107.4f)
+  -- then asks AnnounceHybridHalf. Elided when only one route is payable.
+  AnnouncePhyrexianPayment :: Decider.Decider -> PlayerId.PlayerId -> ObjectId.ObjectId -> ManaSymbol.ManaSymbol -> NonEmpty.NonEmpty PhyrexianPayment.PhyrexianPayment -> Prompt PhyrexianPayment.PhyrexianPayment
+  -- | CR 601.2b: the nonhybrid equivalent for CR 107.4e's monocolored hybrid
+  -- ({2\/R}); AnnouncePhyrexianPayment's contract and elision.
+  AnnounceHybridPayment :: Decider.Decider -> PlayerId.PlayerId -> ObjectId.ObjectId -> ManaType.ManaType -> NonEmpty.NonEmpty HybridPayment.HybridPayment -> Prompt HybridPayment.HybridPayment
+  -- | CR 601.2b: which mana type CR 107.4e's colour\/colour hybrid ({G\/U})
+  -- takes; AnnouncePhyrexianPayment's contract, elided when only one half is
+  -- payable and for the degenerate `Hybrid t t`.
+  --
+  -- Both halves spend one mana, so this never changes CR 601.2f's total. What
+  -- it changes is WHICH unit of an oversupplied pool is consumed, and so what
+  -- floats -- proven by Parun.ManaSpec's "CR 601.2b whichever half of {G\/U} is
+  -- announced, the OTHER floats" Gyre Engineer case.
+  AnnounceHybridHalf :: Decider.Decider -> PlayerId.PlayerId -> ObjectId.ObjectId -> ManaSymbol.ManaSymbol -> NonEmpty.NonEmpty ManaType.ManaType -> Prompt ManaType.ManaType
+  -- | CR 118.7e: which half of a hybrid symbol a cost reduction is applied as,
+  -- at CR 601.2f, answered with the resulting symbol; not filtered by
+  -- payability, and elided only for the degenerate `Hybrid t t`.
+  ChooseReductionHalf :: Decider.Decider -> PlayerId.PlayerId -> ObjectId.ObjectId -> ManaSymbol.ManaSymbol -> NonEmpty.NonEmpty ManaSymbol.ManaSymbol -> Prompt ManaSymbol.ManaSymbol
+  -- | CR 601.2f: which of the totals the cost reductions' orders reach the
+  -- payer takes, cheapest first (Parun.Engine.Cost.applyAdjustments); raised
+  -- only where two totals differ, and not filtered by payability.
+  ChooseReducedCost :: Decider.Decider -> PlayerId.PlayerId -> ObjectId.ObjectId -> NonEmpty.NonEmpty ManaCost.ManaCost -> Prompt ManaCost.ManaCost

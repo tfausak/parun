@@ -1,0 +1,134 @@
+module Parun.Codec.ForEachSpec where
+
+import qualified Data.List.NonEmpty as NonEmpty
+import qualified Data.Sequence as Seq
+import qualified Data.Text as Text
+import qualified Parun.Codec.ForEach as ForEach
+import qualified Parun.JsonCodec.Codec as Codec
+import qualified Parun.JsonCodec.Common as Common
+import qualified Parun.Spec as Spec
+import qualified Parun.Types.CardType as CardType
+import qualified Parun.Types.Cost as Cost
+import qualified Parun.Types.CostAmount as CostAmount
+import qualified Parun.Types.CostChoice as CostChoice
+import qualified Parun.Types.CostComponent as CostComponent
+import qualified Parun.Types.Filter as Filter
+import qualified Parun.Types.ForEach as ForEach
+import qualified Parun.Types.LoopMembers as LoopMembers
+import qualified Parun.Types.ManaCost as ManaCost
+import qualified Parun.Types.ObjectRef as ObjectRef
+import qualified Parun.Types.PayBranch as PayBranch
+import qualified Parun.Types.PayGate as PayGate
+import qualified Parun.Types.PayObligation as PayObligation
+import qualified Parun.Types.PlayerRef as PlayerRef
+import qualified Parun.Types.PlayerRelation as PlayerRelation
+import qualified Parun.Types.SlotName as SlotName
+
+-- | The @effect@ parameter is instantiated at 'Text.Text' rather than at
+-- 'Parun.Types.Effect.Effect', for the reason Parun.Codec.PreventNextDamageSpec
+-- gives. Parun.Codec.EffectSpec covers the real instantiation.
+codec :: Codec.Codec (ForEach.ForEach Text.Text)
+codec = ForEach.codec Common.text
+
+spec :: (Monad m, Monad n) => Spec.Spec m n -> n ()
+spec s = Spec.describe s "Parun.Codec.ForEach" $ do
+  -- Soulfire Eruption's shape: the swept set is the spell's own target slot,
+  -- and the body's instructions read the member under the loop's name.
+  Spec.it s "MkForEach" $
+    Common.assertCodec
+      s
+      codec
+      ( ForEach.MkForEach
+          { ForEach.ref = ObjectRef.InSlot (SlotName.MkSlotName (Text.pack "victims")),
+            ForEach.members = LoopMembers.Every,
+            ForEach.slot = SlotName.MkSlotName (Text.pack "victim"),
+            ForEach.body = Seq.fromList [Text.pack "first", Text.pack "second"],
+            -- CR 608.2f's second sentence, which that rule's Soulfire Eruption
+            -- example states outright.
+            ForEach.individually = True,
+            ForEach.payGate = Nothing,
+            ForEach.startingWith = Nothing
+          }
+      )
+      " {\"ref\":{\"type\":\"InSlot\",\"value\":\"victims\"},\"slot\":\"victim\",\"body\":[\"first\",\"second\"],\"individually\":true} "
+  -- An empty body is representable rather than rejected: the codec's `required`
+  -- keys are about a key being ABSENT, and CR 101.3 already makes an
+  -- instruction that does nothing a no-op rather than an error.
+  Spec.it s "MkForEach with an empty body" $
+    Common.assertCodec
+      s
+      codec
+      ( ForEach.MkForEach
+          { ForEach.ref = ObjectRef.EachPlayer,
+            ForEach.members = LoopMembers.Every,
+            ForEach.slot = SlotName.MkSlotName (Text.pack "victim"),
+            ForEach.body = Seq.empty,
+            -- The default CR 608.2f's "in most cases" gives, so the key is absent
+            -- from the wire.
+            ForEach.individually = False,
+            ForEach.payGate = Nothing,
+            ForEach.startingWith = Nothing
+          }
+      )
+      " {\"ref\":{\"type\":\"EachPlayer\"},\"slot\":\"victim\",\"body\":[]} "
+  -- Rule 702.116a's "for each opponent ..., you may": the one non-default
+  -- membership, so the key is on the wire.
+  Spec.it s "MkForEach over any number of its members" $
+    Common.assertCodec
+      s
+      codec
+      ( ForEach.MkForEach
+          { ForEach.ref = ObjectRef.EachOpponent,
+            ForEach.members = LoopMembers.AnyNumber,
+            ForEach.slot = SlotName.MkSlotName (Text.pack "opponent"),
+            ForEach.body = Seq.singleton (Text.pack "mint"),
+            ForEach.individually = False,
+            ForEach.payGate = Nothing,
+            ForEach.startingWith = Nothing
+          }
+      )
+      " {\"ref\":{\"type\":\"EachOpponent\"},\"members\":{\"type\":\"AnyNumber\"},\"slot\":\"opponent\",\"body\":[\"mint\"]} "
+  -- Cleansing's "for each land, destroy that land unless any player pays 1
+  -- life": CR 118.12a's gate offered per member.
+  Spec.it s "MkForEach with a pay gate" $
+    Common.assertCodec
+      s
+      codec
+      ( ForEach.MkForEach
+          { ForEach.ref = ObjectRef.EachMatching (Filter.HasCardType CardType.Land),
+            ForEach.members = LoopMembers.Every,
+            ForEach.slot = SlotName.MkSlotName (Text.pack "land"),
+            ForEach.body = Seq.singleton (Text.pack "destroy"),
+            ForEach.individually = False,
+            ForEach.payGate =
+              Just
+                PayGate.MkPayGate
+                  { PayGate.payer = PlayerRef.Relative PlayerRelation.AnyPlayer,
+                    PayGate.cost = CostChoice.MkCostChoice (Cost.MkCost (Just (ManaCost.MkManaCost [])) [CostComponent.PayLife (CostAmount.Fixed 1)] NonEmpty.:| []),
+                    PayGate.basis = Nothing,
+                    PayGate.branch = PayBranch.IfNonePaid,
+                    PayGate.obligation = PayObligation.Optional,
+                    PayGate.perEach = Nothing,
+                    PayGate.offeredAt = Nothing
+                  },
+            ForEach.startingWith = Nothing
+          }
+      )
+      " {\"ref\":{\"type\":\"EachMatching\",\"value\":{\"type\":\"HasCardType\",\"value\":{\"type\":\"Land\"}}},\"slot\":\"land\",\"body\":[\"destroy\"],\"payGate\":{\"payer\":{\"type\":\"Relative\",\"value\":{\"type\":\"AnyPlayer\"}},\"cost\":{\"mana\":[],\"components\":[{\"type\":\"PayLife\",\"value\":{\"type\":\"Fixed\",\"value\":1}}]},\"branch\":{\"type\":\"IfNonePaid\"}}} "
+  -- Thieves' Auction's "starting with you".
+  Spec.it s "MkForEach starting with a player" $
+    Common.assertCodec
+      s
+      codec
+      ( ForEach.MkForEach
+          { ForEach.ref = ObjectRef.EachPlayer,
+            ForEach.members = LoopMembers.Every,
+            ForEach.slot = SlotName.MkSlotName (Text.pack "chooser"),
+            ForEach.body = Seq.singleton (Text.pack "choose"),
+            ForEach.individually = False,
+            ForEach.payGate = Nothing,
+            ForEach.startingWith = Just (PlayerRef.Relative PlayerRelation.You)
+          }
+      )
+      " {\"ref\":{\"type\":\"EachPlayer\"},\"slot\":\"chooser\",\"body\":[\"choose\"],\"startingWith\":{\"type\":\"Relative\",\"value\":{\"type\":\"You\"}}} "
+  Spec.it s "has a schema" $ Common.assertHasSchema s codec

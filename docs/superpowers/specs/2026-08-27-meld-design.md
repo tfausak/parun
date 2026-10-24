@@ -3,12 +3,12 @@
 ## The problem
 
 CR 701.42a melds two cards into "a single object represented by two cards", and
-pawl has no way to say that. `Source.OfCard` names exactly one `PrintingId`;
-`Pawl.Engine.Event`'s zone-change funnel is one object in and one object out;
-`Pawl.Registry.index` keys every face name of every card and rejects a pool where
+parun has no way to say that. `Source.OfCard` names exactly one `PrintingId`;
+`Parun.Engine.Event`'s zone-change funnel is one object in and one object out;
+`Parun.Registry.index` keys every face name of every card and rejects a pool where
 two cards claim one name, so the combined back face cannot be a face on both
-halves of the pair. Four live comments cite the gap: `Pawl.Types.Layout`,
-`Pawl.Engine.Card`, `Pawl.Types.Filter` and `Pawl.TransformSpec`.
+halves of the pair. Four live comments cite the gap: `Parun.Types.Layout`,
+`Parun.Engine.Card`, `Parun.Types.Filter` and `Parun.TransformSpec`.
 
 The card that drives this is Hanweir Battlements, whose third ability melds it
 with Hanweir Garrison -- already in the pool, front face only -- into Hanweir,
@@ -46,7 +46,7 @@ Township.`
 
 `hanweir-garrison.json` gains `"layout": "Meld"` and nothing else.
 
-`Pawl.Types.Layout` gains a `Meld` arm, and it marks a COMPONENT meld card
+`Parun.Types.Layout` gains a `Meld` arm, and it marks a COMPONENT meld card
 rather than the combined face. That is CR 712.4's own subject -- "meld cards have
 a Magic card face on one side and half of an oversized card face on the other" --
 and it is what Scryfall reports for both halves of the pair. Two rules need the
@@ -56,31 +56,31 @@ half carries its front face alone: CR 712.4b makes a meld card's back face
 meaningless except as part of a melded permanent, so nothing is lost.
 
 The codec is `Arm.enum`, so the wire format derives and every `case layout of` in
-the tree goes red. A `Pawl.CardSpec` lint holds a `Meld` card to exactly one
+the tree goes red. A `Parun.CardSpec` lint holds a `Meld` card to exactly one
 face.
 
 ## Where the combined face lives
 
 Inline in the meld ability, as `Effect.Meld`'s own `Card` payload -- the shape
 `Effect.Create` already uses to carry a token's characteristics -- and interned
-at resolution with `Game.intern`, exactly as `Pawl.Engine.Event.createTokens`
+at resolution with `Game.intern`, exactly as `Parun.Engine.Event.createTokens`
 interns a token card.
 
 Not a card file, and not a registry lookup, because the engine cannot do one: no
-`Pawl.Engine` module imports `Pawl.Registry` and `GameState` holds no name-keyed
+`Parun.Engine` module imports `Parun.Registry` and `GameState` holds no name-keyed
 map, so an `Effect.Meld` naming its result by name would have nothing to resolve
-the name against. Every card an effect brings into being in pawl today is either
+the name against. Every card an effect brings into being in parun today is either
 already an object in the game or is carried inline.
 
 This is also what dissolves the obstacle #369's body calls the first one an
 implementer meets: the combined face is never a key in the pool, so it cannot
-collide with anything in `Pawl.Registry.index`. CR 712.19 and CR 201.4e survive
+collide with anything in `Parun.Registry.index`. CR 712.19 and CR 201.4e survive
 it -- `Prompt.ChooseCardName` answers with whatever name the decider names and
 never enumerates the pool, so a player may already choose the combined back
 face's name.
 
 The pair is named by the ability that melds, which is where the printed text
-names it, so no card gains a `components` list. `Pawl.Types.Card` gains no field
+names it, so no card gains a `components` list. `Parun.Types.Card` gains no field
 either -- one there would be absorbed silently by positional record construction
 in the test suite, the trap CLAUDE.md records from PRs #2009 and #2021.
 
@@ -94,11 +94,11 @@ data Source
   | ...
 ```
 
-`Pawl.Types.MeldSource` carries `result :: PrintingId` and `components :: NonEmpty
+`Parun.Types.MeldSource` carries `result :: PrintingId` and `components :: NonEmpty
 PrintingId` -- `NonEmpty` rather than a pair because CR 712.5 happens to list
 seven pairs and nothing in CR 701.42 fixes the number at two.
 
-`Pawl.Engine.Game.cardOfSource` answers with the result card, so every
+`Parun.Engine.Game.cardOfSource` answers with the result card, so every
 characteristic read in the engine keeps working unchanged: CR 712.8g gives the
 melded permanent "only the characteristics of the combined back face". The
 components are read by exactly three rules -- CR 202.3c's mana value, CR 712.21's
@@ -112,8 +112,8 @@ Three vacuous rules become real cases, and the comments citing #369 at each are
 rewritten in the same change:
 
 - CR 701.27g, second exclusion -- an object represented by more than one card is
-  never a transformed permanent. `Pawl.Types.Filter`'s `Transformed` atom and
-  `Pawl.Engine.Projection`'s `transformed` field. The comment keeps citing #874
+  never a transformed permanent. `Parun.Types.Filter`'s `Transformed` atom and
+  `Parun.Engine.Projection`'s `transformed` field. The comment keeps citing #874
   for merged permanents.
 - CR 712.4c / 712.9 -- meld cards cannot transform or convert, and an instruction
   to do so is ignored. `Effect.Transform` aimed at a melded permanent does
@@ -121,7 +121,7 @@ rewritten in the same change:
 - CR 202.3c -- the mana value is "as though it had the combined mana cost of the
   front faces of each card that represents it" (Garrison's {2}{R} plus
   Battlements' none, so 3), and a copy of a melded permanent has mana value 0.
-  `Pawl.Engine.Card`'s mana-value and `showsBackFace` neighbourhood.
+  `Parun.Engine.Card`'s mana-value and `showsBackFace` neighbourhood.
 
 `Object.owner` for the melded permanent is the shared owner of its components;
 the ability that melds requires the activating player to own both, and no other
@@ -164,7 +164,7 @@ CR 712.21: "If a melded permanent leaves the battlefield, one permanent leaves
 the battlefield and two cards are put into the appropriate zone." One "dies"
 trigger, two "card put into a graveyard" triggers.
 
-`Pawl.Engine.Event`'s returning doors -- `changeZoneReturning`,
+`Parun.Engine.Event`'s returning doors -- `changeZoneReturning`,
 `changeZoneEntering`, `changeZoneAttaching`, `changeZoneInBatchReturning` -- answer
 `Maybe ObjectId` today, one CR 400.7 incarnation. They widen to a sequence of
 arriving ids: empty where they answer `Nothing` now, one element for every object
@@ -205,7 +205,7 @@ honest.
 
 ## Tests
 
-A new `Pawl.MeldSpec`, wired into `Pawl.Test`'s `spec`, covering the CR sections
+A new `Parun.MeldSpec`, wired into `Parun.Test`'s `spec`, covering the CR sections
 this change reaches; gameplay-level throughout, per `docs/design.md` section 4.
 
 - Both halves on the battlefield, the ability activated: one permanent named
@@ -218,14 +218,14 @@ this change reaches; gameplay-level throughout, per `docs/design.md` section 4.
 - `Effect.Transform` aimed at the melded permanent: nothing happens (CR 712.4c,
   712.9).
 - Mutagen Connoisseur beside the melded permanent: it is not a transformed
-  permanent (CR 701.27g), which is the assertion `Pawl.TransformSpec` records
+  permanent (CR 701.27g), which is the assertion `Parun.TransformSpec` records
   today as unreachable.
 - A meld that cannot happen -- the counterpart is a token copy -- leaves the
   exiled cards in exile (CR 701.42b/c).
 
 ## What this does not retire
 
-`Pawl.Types.Filter`'s `Transformed` atom keeps a citation for merged permanents
+`Parun.Types.Filter`'s `Transformed` atom keeps a citation for merged permanents
 (#874). The deferred rules under *Scope* keep theirs. Six of CR 712.5's seven
 meld pairs stay out of the pool; each is ordinary card-driven work, and the
 machinery here is what any of them would use.

@@ -4,16 +4,16 @@
 
 **Goal:** Add the targeted zone-change opcode family (Destroy, MoveToZone, Draw, Mill, Discard) plus the Indestructible keyword, proving M3f's `Event.changeZone` funnel generalizes into card-driven verbs and that *destroy ≠ move-to-graveyard*.
 
-**Architecture:** Five new first-order `Effect` constructors, each executed only by `Pawl.Resolve.applyEffect` through the existing `Event.changeZone` funnel. `Destroy` and the two lethal-damage state-based actions read a new `Keyword.Indestructible` through the projection. Each verb ships with a real, Scryfall-verified card (a JSON file under `data/cards/`) and a gameplay-level test that casts or resolves it through the stack.
+**Architecture:** Five new first-order `Effect` constructors, each executed only by `Parun.Resolve.applyEffect` through the existing `Event.changeZone` funnel. `Destroy` and the two lethal-damage state-based actions read a new `Keyword.Indestructible` through the projection. Each verb ships with a real, Scryfall-verified card (a JSON file under `data/cards/`) and a gameplay-level test that casts or resolves it through the stack.
 
-**Tech Stack:** Haskell 2010 (GHC 9.14.1, no extensions beyond `GADTs`/`RankNTypes`/`NamedFieldPuns` already in use), `tasty` (`tasty-hunit` + `tasty-quickcheck`), the hand-rolled `Pawl.Json`/`Pawl.Codec` card codec.
+**Tech Stack:** Haskell 2010 (GHC 9.14.1, no extensions beyond `GADTs`/`RankNTypes`/`NamedFieldPuns` already in use), `tasty` (`tasty-hunit` + `tasty-quickcheck`), the hand-rolled `Parun.Json`/`Parun.Codec` card codec.
 
 ## Global Constraints
 
 Copied verbatim from the spec (`docs/superpowers/specs/2026-07-19-m4b-zone-change-verbs-design.md`) and `CLAUDE.md`. Every task's requirements implicitly include these:
 
 - **`cabal build all --enable-tests --enable-benchmarks` must be warning-clean** (`-Weverything` minus the allow-list; the `+pedantic` flag makes any warning a build failure). When in doubt run `cabal clean` first — incremental builds hide warnings from unchanged modules.
-- **`Pawl.Resolve` is the sole home of `case effect of`**; `Pawl.Event` the sole home of `case` on `ReplacementEffect`/`TriggerCondition`; `Pawl.Codec` may case on an effect's identity (open-half serialization). No other closed-half module names a card or cases on an effect's identity.
+- **`Parun.Resolve` is the sole home of `case effect of`**; `Parun.Event` the sole home of `case` on `ReplacementEffect`/`TriggerCondition`; `Parun.Codec` may case on an effect's identity (open-half serialization). No other closed-half module names a card or cases on an effect's identity.
 - **`Keyword.Indestructible` is CR 702.12, a citation** — casing on it (read through `Projection.hasKeyword`/`PC.keywords`, never `Card.keywords`) is legitimate, the M2a rule.
 - **Every card is a `data/cards/<slug>.json` file** rendered by the codec; the committed file must equal `Json.render (Codec.printingToJson p) <> "\n"` (the `CardsSpec` P3 byte-stability check). Never hand-edit `Cards.allPrintings` field ordering carelessly — the honesty round-trip (`CodecSpec` P1/P2) iterates it.
 - **No language extensions** beyond those already present; **no partial functions** (`head`/`error`/`undefined`/non-exhaustive matches); **`Text` not `String`**; **arbitrary-precision `Natural`/`Integer`**; **`Mk`-prefixed non-punning constructors**; **qualified imports aliased to the last component**; **no explicit export lists**; **derive `Eq`/`Show`** (and `Ord` where the type is a map key).
@@ -25,24 +25,24 @@ Copied verbatim from the spec (`docs/superpowers/specs/2026-07-19-m4b-zone-chang
 
 ## File Structure
 
-Modules touched across the plan (no new library modules, so `pawl.cabal` needs no edit; no new test-spec module, so the test-suite `other-modules` needs no edit):
+Modules touched across the plan (no new library modules, so `parun.cabal` needs no edit; no new test-spec module, so the test-suite `other-modules` needs no edit):
 
 **Library (`source/library/`):**
-- `Pawl/Type/Effect.hs` — +5 constructors (`Destroy`, `MoveToZone`, `Draw`, `Mill`, `Discard`).
-- `Pawl/Type/Keyword.hs` — +`Indestructible` (702.12).
-- `Pawl/Type/TargetSpec.hs` — +`CreatureOrEnchantmentTarget`.
-- `Pawl/Type/Subtype.hs` — +`Myr`.
-- `Pawl/Resolve.hs` — new arms in `slotsOf`, `readsX`, `manaProduced`, `searchesLibrary`, `rewriteEffect`, and `applyEffect`.
-- `Pawl/Target.hs` — `legalRecipients` arm for `CreatureOrEnchantmentTarget`.
-- `Pawl/Sba.hs` — `creatureDies` indestructible guard (704.5g/704.5h, not 704.5f).
-- `Pawl/Event.hs` — new shared `drawCard` primitive.
-- `Pawl/Engine.hs` — `drawFor` delegates to `Event.drawCard`.
-- `Pawl/Setup.hs` — `drawCard` delegates to `Event.drawCard`.
-- `Pawl/Codec.hs` — arms for the 5 `Effect` constructors, `Indestructible`, `CreatureOrEnchantmentTarget`, `Myr`.
+- `Parun/Type/Effect.hs` — +5 constructors (`Destroy`, `MoveToZone`, `Draw`, `Mill`, `Discard`).
+- `Parun/Type/Keyword.hs` — +`Indestructible` (702.12).
+- `Parun/Type/TargetSpec.hs` — +`CreatureOrEnchantmentTarget`.
+- `Parun/Type/Subtype.hs` — +`Myr`.
+- `Parun/Resolve.hs` — new arms in `slotsOf`, `readsX`, `manaProduced`, `searchesLibrary`, `rewriteEffect`, and `applyEffect`.
+- `Parun/Target.hs` — `legalRecipients` arm for `CreatureOrEnchantmentTarget`.
+- `Parun/Sba.hs` — `creatureDies` indestructible guard (704.5g/704.5h, not 704.5f).
+- `Parun/Event.hs` — new shared `drawCard` primitive.
+- `Parun/Engine.hs` — `drawFor` delegates to `Event.drawCard`.
+- `Parun/Setup.hs` — `drawCard` delegates to `Event.drawCard`.
+- `Parun/Codec.hs` — arms for the 5 `Effect` constructors, `Indestructible`, `CreatureOrEnchantmentTarget`, `Myr`.
 
 **Card data (`data/cards/`):** `darksteel-myr.json`, `murder.json`, `unsummon.json`, `angelic-edict.json`, `divination.json`, `tome-scour.json`, `mind-rot.json`.
 
-**Test suite (`source/test-suite/Pawl/`):**
+**Test suite (`source/test-suite/Parun/`):**
 - `Cards.hs` — 7 accessors, 7 `loadPrinting` lines, 7 `allPrintings` entries, deck edits (Task 9).
 - `Support.hs` — `blueBlack` matchup and the `matchups` list (Task 9).
 - `ResolveSpec.hs` — new `indestructibleTests` and `zoneChangeTests` groups.
@@ -55,22 +55,22 @@ Modules touched across the plan (no new library modules, so `pawl.cabal` needs n
 Delivers the keyword and its SBA readers (CR 704.5g/704.5h guarded, 704.5f not), gated by Darksteel Myr in combat/deathtouch/zero-toughness scenarios. The Destroy-opcode reader lands in Task 2.
 
 **Files:**
-- Modify: `source/library/Pawl/Type/Keyword.hs`
-- Modify: `source/library/Pawl/Type/Subtype.hs`
-- Modify: `source/library/Pawl/Mana.hs:40-56` (`subtypeMana` — new `Myr -> Nothing` arm)
-- Modify: `source/library/Pawl/Sba.hs:66-83` (`creatureDies`)
-- Modify: `source/library/Pawl/Codec.hs` (`keywordToJson`/`jsonToKeyword`, `subtypeToJson`/`jsonToSubtype`)
+- Modify: `source/library/Parun/Type/Keyword.hs`
+- Modify: `source/library/Parun/Type/Subtype.hs`
+- Modify: `source/library/Parun/Mana.hs:40-56` (`subtypeMana` — new `Myr -> Nothing` arm)
+- Modify: `source/library/Parun/Sba.hs:66-83` (`creatureDies`)
+- Modify: `source/library/Parun/Codec.hs` (`keywordToJson`/`jsonToKeyword`, `subtypeToJson`/`jsonToSubtype`)
 - Create: `data/cards/darksteel-myr.json`
-- Modify: `source/test-suite/Pawl/Cards.hs`
-- Modify: `source/test-suite/Pawl/CardSpec.hs` (count 31 → 32, new card test)
-- Test: `source/test-suite/Pawl/ResolveSpec.hs` (new `indestructibleTests` group)
+- Modify: `source/test-suite/Parun/Cards.hs`
+- Modify: `source/test-suite/Parun/CardSpec.hs` (count 31 → 32, new card test)
+- Test: `source/test-suite/Parun/ResolveSpec.hs` (new `indestructibleTests` group)
 
 **Interfaces:**
 - Produces: `Keyword.Indestructible`; `Subtype.Myr`; `Cards.darksteelMyrPrinting :: Cards.Cards -> Printing.Printing`; `Sba.creatureDies` now guards 704.5g/704.5h with indestructibility.
 
 - [x] **Step 1: Write the failing tests**
 
-Add to `source/test-suite/Pawl/ResolveSpec.hs` a new group and wire it into `tests`. `withEffect` (already defined in this module) applies a test-local continuous effect for the 704.5f case; `DamageEvent`/`Recipient`/`Modification`/`Quantity`/`Keyword` are already imported.
+Add to `source/test-suite/Parun/ResolveSpec.hs` a new group and wire it into `tests`. `withEffect` (already defined in this module) applies a test-local continuous effect for the 704.5f case; `DamageEvent`/`Recipient`/`Modification`/`Quantity`/`Keyword` are already imported.
 
 ```haskell
 indestructibleTests :: Cards.Cards -> Tasty.TestTree
@@ -117,7 +117,7 @@ Expected: compile failure — `Cards.darksteelMyrPrinting` and `Keyword`/`Subtyp
 
 - [x] **Step 3: Add the keyword and subtype constructors**
 
-In `source/library/Pawl/Type/Keyword.hs`, insert `Indestructible -- 702.12` in rule-number order (between `Haste -- 702.10` and `Reach -- 702.17`):
+In `source/library/Parun/Type/Keyword.hs`, insert `Indestructible -- 702.12` in rule-number order (between `Haste -- 702.10` and `Reach -- 702.17`):
 
 ```haskell
   | Haste -- 702.10
@@ -125,14 +125,14 @@ In `source/library/Pawl/Type/Keyword.hs`, insert `Indestructible -- 702.12` in r
   | Reach -- 702.17
 ```
 
-In `source/library/Pawl/Type/Subtype.hs`, append `Myr` after `Elephant` (a creature type; the first Myr).
+In `source/library/Parun/Type/Subtype.hs`, append `Myr` after `Elephant` (a creature type; the first Myr).
 
 ```haskell
   | Elephant
   | Myr
 ```
 
-`Mana.subtypeMana` (`source/library/Pawl/Mana.hs:40-56`) is an exhaustive `case` on `Subtype` with no wildcard, so add the arm (a Myr is not a land subtype, so it produces no mana):
+`Mana.subtypeMana` (`source/library/Parun/Mana.hs:40-56`) is an exhaustive `case` on `Subtype` with no wildcard, so add the arm (a Myr is not a land subtype, so it produces no mana):
 
 ```haskell
   Subtype.Myr -> Nothing
@@ -142,11 +142,11 @@ In `source/library/Pawl/Type/Subtype.hs`, append `Myr` after `Elephant` (a creat
 
 - [x] **Step 4: Add the codec arms**
 
-In `source/library/Pawl/Codec.hs`, add `Indestructible` to `keywordToJson` (case arm `Keyword.Indestructible -> "Indestructible"`) and to the `jsonToKeyword` table (`(Text.pack "Indestructible", Keyword.Indestructible)`), keeping rule-number order. Add `Myr` to `subtypeToJson` (`Subtype.Myr -> "Myr"`) and to the `jsonToSubtype` table (`(Text.pack "Myr", Subtype.Myr)`).
+In `source/library/Parun/Codec.hs`, add `Indestructible` to `keywordToJson` (case arm `Keyword.Indestructible -> "Indestructible"`) and to the `jsonToKeyword` table (`(Text.pack "Indestructible", Keyword.Indestructible)`), keeping rule-number order. Add `Myr` to `subtypeToJson` (`Subtype.Myr -> "Myr"`) and to the `jsonToSubtype` table (`(Text.pack "Myr", Subtype.Myr)`).
 
 - [x] **Step 5: Add the indestructible guard to the SBA**
 
-In `source/library/Pawl/Sba.hs`, `creatureDies` (lines ~66-83): read indestructibility off the already-projected characteristics and guard 704.5g and 704.5h, leaving 704.5f ungated.
+In `source/library/Parun/Sba.hs`, `creatureDies` (lines ~66-83): read indestructibility off the already-projected characteristics and guard 704.5g and 704.5h, leaving 704.5f ungated.
 
 ```haskell
 creatureDies :: GameState -> PC.ProjectedCharacteristics -> ObjectId -> Bool
@@ -173,7 +173,7 @@ creatureDies gs pc oid =
             || (not indestructible && woundedByDeathtouch gs oid)
 ```
 
-Add `import qualified Pawl.Type.Keyword as Keyword` to `Pawl.Sba` (alphabetical within its import group).
+Add `import qualified Parun.Type.Keyword as Keyword` to `Parun.Sba` (alphabetical within its import group).
 
 - [x] **Step 6: Create the Darksteel Myr card file**
 
@@ -183,15 +183,15 @@ Create `data/cards/darksteel-myr.json` with exactly this content (single line, t
 {"name":"Darksteel Myr","manaCost":[{"type":"Generic","value":3}],"typeLine":{"supertypes":[],"types":[{"type":"Creature"},{"type":"Artifact"}],"subtypes":[{"type":"Myr"}]},"power":{"type":"Literal","value":0},"toughness":{"type":"Literal","value":1},"keywords":[{"type":"Indestructible"}],"staticAbilities":[],"effects":[],"activatedAbilities":[],"replacementEffects":[],"triggeredAbilities":[],"castingPermissions":[],"targetSpecs":[]}
 ```
 
-(If `CardsSpec` P3 later reports a byte mismatch, regenerate the exact bytes: `cabal repl pawl:test:test`, then `Data.Text.IO.putStr (Pawl.Json.render (Pawl.Codec.cardToJson <the card>) <> Data.Text.pack "\n")` and copy the output. The content above is computed to match.)
+(If `CardsSpec` P3 later reports a byte mismatch, regenerate the exact bytes: `cabal repl parun:test:test`, then `Data.Text.IO.putStr (Parun.Json.render (Parun.Codec.cardToJson <the card>) <> Data.Text.pack "\n")` and copy the output. The content above is computed to match.)
 
 - [x] **Step 7: Register the card**
 
-In `source/test-suite/Pawl/Cards.hs`: add the field `darksteelMyrPrinting :: Printing.Printing` to `MkCards`; add `darksteelMyrPrinting_ <- loadPrinting "darksteel-myr"` in `loadCards`; add `darksteelMyrPrinting = darksteelMyrPrinting_` to the returned record; add `darksteelMyrPrinting cards,` to `allPrintings`.
+In `source/test-suite/Parun/Cards.hs`: add the field `darksteelMyrPrinting :: Printing.Printing` to `MkCards`; add `darksteelMyrPrinting_ <- loadPrinting "darksteel-myr"` in `loadCards`; add `darksteelMyrPrinting = darksteelMyrPrinting_` to the returned record; add `darksteelMyrPrinting cards,` to `allPrintings`.
 
 - [x] **Step 8: Add the card-data test and bump the registry count**
 
-In `source/test-suite/Pawl/CardSpec.hs`, bump the registry-count assertion from 31 to 32:
+In `source/test-suite/Parun/CardSpec.hs`, bump the registry-count assertion from 31 to 32:
 
 ```haskell
       HU.testCase "the registry holds every printing (32 at M4b Task 1)" $
@@ -245,13 +245,13 @@ Claude-Session: https://claude.ai/code/session_01JrPQomB3CLM3ek2J4yVWFd"
 Delivers `Effect.Destroy` and its indestructible-aware executor, gated by Murder vs. a normal creature (→ graveyard) and vs. Darksteel Myr (unchanged — *destroy ≠ move-to-graveyard*).
 
 **Files:**
-- Modify: `source/library/Pawl/Type/Effect.hs`
-- Modify: `source/library/Pawl/Resolve.hs` (`slotsOf`, `readsX`, `manaProduced`, `searchesLibrary`, `rewriteEffect`, `applyEffect`)
-- Modify: `source/library/Pawl/Codec.hs` (`effectToJson`/`jsonToEffect`)
+- Modify: `source/library/Parun/Type/Effect.hs`
+- Modify: `source/library/Parun/Resolve.hs` (`slotsOf`, `readsX`, `manaProduced`, `searchesLibrary`, `rewriteEffect`, `applyEffect`)
+- Modify: `source/library/Parun/Codec.hs` (`effectToJson`/`jsonToEffect`)
 - Create: `data/cards/murder.json`
-- Modify: `source/test-suite/Pawl/Cards.hs`
-- Modify: `source/test-suite/Pawl/CardSpec.hs` (count 32 → 33, Murder card test)
-- Test: `source/test-suite/Pawl/ResolveSpec.hs` (new `zoneChangeTests` group)
+- Modify: `source/test-suite/Parun/Cards.hs`
+- Modify: `source/test-suite/Parun/CardSpec.hs` (count 32 → 33, Murder card test)
+- Test: `source/test-suite/Parun/ResolveSpec.hs` (new `zoneChangeTests` group)
 
 **Interfaces:**
 - Consumes: `Cards.darksteelMyrPrinting`, `Projection.hasKeyword`, `Event.changeZone` (all existing).
@@ -259,7 +259,7 @@ Delivers `Effect.Destroy` and its indestructible-aware executor, gated by Murder
 
 - [x] **Step 1: Write the failing tests**
 
-Add a `zoneChangeTests` group to `source/test-suite/Pawl/ResolveSpec.hs`. It reuses `S.landsInPlay`, `S.addCreature`, `S.handOne`, `S.identityAnswer`, `Cast.castSpell`, `Stack.resolveTop`. `identityAnswer`'s `ChooseTargets` picks `Set.lookupMin`, which for a single-creature board is that creature.
+Add a `zoneChangeTests` group to `source/test-suite/Parun/ResolveSpec.hs`. It reuses `S.landsInPlay`, `S.addCreature`, `S.handOne`, `S.identityAnswer`, `Cast.castSpell`, `Stack.resolveTop`. `identityAnswer`'s `ChooseTargets` picks `Set.lookupMin`, which for a single-creature board is that creature.
 
 ```haskell
 -- alice controls `n` Swamps and holds `printing` in a main phase with priority;
@@ -306,7 +306,7 @@ Expected: compile failure — `Cards.murderPrinting` and `Effect.Destroy` not in
 
 - [x] **Step 3: Add the `Destroy` constructor**
 
-In `source/library/Pawl/Type/Effect.hs`, add after `ControlPlayerNextTurn` (order does not matter for `data`, but keep the block tidy):
+In `source/library/Parun/Type/Effect.hs`, add after `ControlPlayerNextTurn` (order does not matter for `data`, but keep the block tidy):
 
 ```haskell
   | -- CR 701.7 / 700.4: destroy the slot's target permanent -- move it to its
@@ -319,11 +319,11 @@ In `source/library/Pawl/Type/Effect.hs`, add after `ControlPlayerNextTurn` (orde
 
 - [x] **Step 4: Add the `Destroy` classification arms**
 
-In `source/library/Pawl/Resolve.hs`, add an arm to each classification function. `slotsOf`: `Effect.Destroy slot -> Set.singleton slot`. `readsX`'s `effectReadsX`: `Effect.Destroy _ -> False`. `manaProduced`: `Effect.Destroy _ -> Nothing`. `searchesLibrary`: `Effect.Destroy _ -> False`. `rewriteEffect`: `Effect.Destroy _ -> effect` (no rewritable land-type word).
+In `source/library/Parun/Resolve.hs`, add an arm to each classification function. `slotsOf`: `Effect.Destroy slot -> Set.singleton slot`. `readsX`'s `effectReadsX`: `Effect.Destroy _ -> False`. `manaProduced`: `Effect.Destroy _ -> Nothing`. `searchesLibrary`: `Effect.Destroy _ -> False`. `rewriteEffect`: `Effect.Destroy _ -> effect` (no rewritable land-type word).
 
 - [x] **Step 5: Add the `Destroy` executor arm**
 
-In `source/library/Pawl/Resolve.hs`, add to `applyEffect` (the module already imports `Keyword`, `Projection`, `Event`, `Recipient`):
+In `source/library/Parun/Resolve.hs`, add to `applyEffect` (the module already imports `Keyword`, `Projection`, `Event`, `Recipient`):
 
 ```haskell
   Effect.Destroy slot ->
@@ -344,7 +344,7 @@ In `source/library/Pawl/Resolve.hs`, add to `applyEffect` (the module already im
 
 - [x] **Step 6: Add the `Destroy` codec arm**
 
-In `source/library/Pawl/Codec.hs`, `effectToJson`: `Effect.Destroy s -> Json.tagged (Text.pack "Destroy") (Just (slotNameToJson s))`. In `jsonToEffect`: `"Destroy" -> withValue mv (fmap Effect.Destroy . jsonToSlotName)`.
+In `source/library/Parun/Codec.hs`, `effectToJson`: `Effect.Destroy s -> Json.tagged (Text.pack "Destroy") (Just (slotNameToJson s))`. In `jsonToEffect`: `"Destroy" -> withValue mv (fmap Effect.Destroy . jsonToSlotName)`.
 
 - [x] **Step 7: Create and register Murder**
 
@@ -395,12 +395,12 @@ Claude-Session: https://claude.ai/code/session_01JrPQomB3CLM3ek2J4yVWFd"
 Delivers `Effect.MoveToZone SlotName Zone` and its executor, gated by Unsummon returning a creature to its owner's hand — the generalization proof (a non-graveyard destination through a targeted opcode).
 
 **Files:**
-- Modify: `source/library/Pawl/Type/Effect.hs`
-- Modify: `source/library/Pawl/Resolve.hs` (classification arms + `applyEffect`)
-- Modify: `source/library/Pawl/Codec.hs`
+- Modify: `source/library/Parun/Type/Effect.hs`
+- Modify: `source/library/Parun/Resolve.hs` (classification arms + `applyEffect`)
+- Modify: `source/library/Parun/Codec.hs`
 - Create: `data/cards/unsummon.json`
-- Modify: `source/test-suite/Pawl/Cards.hs`, `source/test-suite/Pawl/CardSpec.hs` (count → 34)
-- Test: `source/test-suite/Pawl/ResolveSpec.hs` (`zoneChangeTests`)
+- Modify: `source/test-suite/Parun/Cards.hs`, `source/test-suite/Parun/CardSpec.hs` (count → 34)
+- Test: `source/test-suite/Parun/ResolveSpec.hs` (`zoneChangeTests`)
 
 **Interfaces:**
 - Produces: `Effect.MoveToZone SlotName Zone`; `Cards.unsummonPrinting`. `Resolve.slotsOf (Effect.MoveToZone s _) == Set.singleton s`.
@@ -429,7 +429,7 @@ Expected: compile failure — `Cards.unsummonPrinting` / `Effect.MoveToZone` not
 
 - [x] **Step 3: Add the `MoveToZone` constructor**
 
-In `source/library/Pawl/Type/Effect.hs`:
+In `source/library/Parun/Type/Effect.hs`:
 
 ```haskell
   | -- CR 400.7: move the slot's target object to a zone through the changeZone
@@ -440,7 +440,7 @@ In `source/library/Pawl/Type/Effect.hs`:
     MoveToZone SlotName Zone
 ```
 
-Add `import Pawl.Type.Zone (Zone)` to `Pawl.Type.Effect` (alphabetical).
+Add `import Parun.Type.Zone (Zone)` to `Parun.Type.Effect` (alphabetical).
 
 - [x] **Step 4: Add the classification arms**
 
@@ -494,7 +494,7 @@ Bump count to 34. Add to `m4bCardTests`:
               HU.assertEqual "effect returns to hand" [Effect.MoveToZone (SlotName.MkSlotName (Text.pack "target")) Zone.Hand] (Card.Type.effects c),
 ```
 
-Add `import qualified Pawl.Type.Zone as Zone` to `CardSpec.hs` (alphabetical).
+Add `import qualified Parun.Type.Zone as Zone` to `CardSpec.hs` (alphabetical).
 
 - [x] **Step 9: Run tests to verify they pass**
 
@@ -518,12 +518,12 @@ Claude-Session: https://claude.ai/code/session_01JrPQomB3CLM3ek2J4yVWFd"
 Delivers the broadened target spec and Angelic Edict exiling a creature and (exercising the non-creature admission) an enchantment.
 
 **Files:**
-- Modify: `source/library/Pawl/Type/TargetSpec.hs`
-- Modify: `source/library/Pawl/Target.hs` (`legalRecipients`)
-- Modify: `source/library/Pawl/Codec.hs` (`targetSpecToJson`/`jsonToTargetSpec`)
+- Modify: `source/library/Parun/Type/TargetSpec.hs`
+- Modify: `source/library/Parun/Target.hs` (`legalRecipients`)
+- Modify: `source/library/Parun/Codec.hs` (`targetSpecToJson`/`jsonToTargetSpec`)
 - Create: `data/cards/angelic-edict.json`
-- Modify: `source/test-suite/Pawl/Cards.hs`, `source/test-suite/Pawl/CardSpec.hs` (count → 35)
-- Test: `source/test-suite/Pawl/ResolveSpec.hs` (`zoneChangeTests`)
+- Modify: `source/test-suite/Parun/Cards.hs`, `source/test-suite/Parun/CardSpec.hs` (count → 35)
+- Test: `source/test-suite/Parun/ResolveSpec.hs` (`zoneChangeTests`)
 
 **Interfaces:**
 - Consumes: `Projection.cardTypesOf`, `CardType.Enchantment` (existing).
@@ -563,7 +563,7 @@ Expected: compile failure — `Cards.angelicEdictPrinting` / `TargetSpec.Creatur
 
 - [x] **Step 3: Add the target spec**
 
-In `source/library/Pawl/Type/TargetSpec.hs`:
+In `source/library/Parun/Type/TargetSpec.hs`:
 
 ```haskell
   | -- CR 115: "target creature or enchantment" (Angelic Edict). The first spec
@@ -573,7 +573,7 @@ In `source/library/Pawl/Type/TargetSpec.hs`:
 
 - [x] **Step 4: Add the `legalRecipients` arm**
 
-In `source/library/Pawl/Target.hs`, add a case arm (the module imports `Projection`, `CardType`, `GameState`, `Recipient`, `Set`):
+In `source/library/Parun/Target.hs`, add a case arm (the module imports `Projection`, `CardType`, `GameState`, `Recipient`, `Set`):
 
 ```haskell
         TargetSpec.CreatureOrEnchantmentTarget ->
@@ -633,10 +633,10 @@ Claude-Session: https://claude.ai/code/session_01JrPQomB3CLM3ek2J4yVWFd"
 Behavior-preserving refactor: extract one `Event.drawCard` and route `Engine.drawFor` and `Setup.drawCard` through it. Prerequisite for the `Draw` opcode (Task 6). No new card, no rules change.
 
 **Files:**
-- Modify: `source/library/Pawl/Event.hs` (new `drawCard`)
-- Modify: `source/library/Pawl/Engine.hs:88-94` (`drawFor`)
-- Modify: `source/library/Pawl/Setup.hs:118-123` (`drawCard`)
-- Test: `source/test-suite/Pawl/ResolveSpec.hs` (unit test for `Event.drawCard`)
+- Modify: `source/library/Parun/Event.hs` (new `drawCard`)
+- Modify: `source/library/Parun/Engine.hs:88-94` (`drawFor`)
+- Modify: `source/library/Parun/Setup.hs:118-123` (`drawCard`)
+- Test: `source/test-suite/Parun/ResolveSpec.hs` (unit test for `Event.drawCard`)
 
 **Interfaces:**
 - Produces: `Event.drawCard :: PlayerId -> GameState -> GameState` — moves the top library card to hand (CR 121.2) or, on an empty library, records `drewFromEmpty` (CR 121.3 → 704.5b). `Engine.drawFor` and `Setup.drawCard` become thin wrappers.
@@ -672,7 +672,7 @@ Expected: compile failure — `Event.drawCard` not in scope (red).
 
 - [x] **Step 3: Add `Event.drawCard`**
 
-In `source/library/Pawl/Event.hs`, add (the module imports `Game`, `GameState`, `Zone`, `PlayerId`; add `import qualified Data.Set as Set` to its import group):
+In `source/library/Parun/Event.hs`, add (the module imports `Game`, `GameState`, `Zone`, `PlayerId`; add `import qualified Data.Set as Set` to its import group):
 
 ```haskell
 -- CR 121.2/121.3: the single-card draw. Move pid's top library card to their
@@ -687,7 +687,7 @@ drawCard pid gs = case Game.zoneMembers Zone.Library pid gs of
 
 - [x] **Step 4: Route the two existing draws through it**
 
-In `source/library/Pawl/Engine.hs`, replace `drawFor`:
+In `source/library/Parun/Engine.hs`, replace `drawFor`:
 
 ```haskell
 drawFor :: PlayerId -> Game ()
@@ -696,7 +696,7 @@ drawFor pid = State.modify' (Event.drawCard pid)
 
 (Remove any now-unused imports Engine used only for the old body — check `cabal build` warnings; `Set`/`Zone` may still be used elsewhere in Engine, so remove only what becomes unused.)
 
-In `source/library/Pawl/Setup.hs`, replace `drawCard`:
+In `source/library/Parun/Setup.hs`, replace `drawCard`:
 
 ```haskell
 drawCard :: PlayerId -> Game ()
@@ -727,12 +727,12 @@ Claude-Session: https://claude.ai/code/session_01JrPQomB3CLM3ek2J4yVWFd"
 Delivers `Effect.Draw Quantity`, gated by Divination drawing two, plus the draw-from-empty loss path through a spell.
 
 **Files:**
-- Modify: `source/library/Pawl/Type/Effect.hs`
-- Modify: `source/library/Pawl/Resolve.hs`
-- Modify: `source/library/Pawl/Codec.hs`
+- Modify: `source/library/Parun/Type/Effect.hs`
+- Modify: `source/library/Parun/Resolve.hs`
+- Modify: `source/library/Parun/Codec.hs`
 - Create: `data/cards/divination.json`
-- Modify: `source/test-suite/Pawl/Cards.hs`, `source/test-suite/Pawl/CardSpec.hs` (count → 36)
-- Test: `source/test-suite/Pawl/ResolveSpec.hs`
+- Modify: `source/test-suite/Parun/Cards.hs`, `source/test-suite/Parun/CardSpec.hs` (count → 36)
+- Test: `source/test-suite/Parun/ResolveSpec.hs`
 
 **Interfaces:**
 - Consumes: `Event.drawCard` (Task 5), `Quantity.evaluate` (existing).
@@ -769,7 +769,7 @@ Expected: compile failure — `Cards.divinationPrinting` / `Effect.Draw` not in 
 
 - [x] **Step 3: Add the `Draw` constructor**
 
-In `source/library/Pawl/Type/Effect.hs` (the module imports `Quantity`):
+In `source/library/Parun/Type/Effect.hs` (the module imports `Quantity`):
 
 ```haskell
   | -- CR 120: the controller draws this many cards. Targetless (a spell's
@@ -847,10 +847,10 @@ Claude-Session: https://claude.ai/code/session_01JrPQomB3CLM3ek2J4yVWFd"
 Delivers `Effect.Mill SlotName Quantity`, gated by Tome Scour milling five from a target player's library (and fewer from a short library, no loss).
 
 **Files:**
-- Modify: `source/library/Pawl/Type/Effect.hs`, `source/library/Pawl/Resolve.hs`, `source/library/Pawl/Codec.hs`
+- Modify: `source/library/Parun/Type/Effect.hs`, `source/library/Parun/Resolve.hs`, `source/library/Parun/Codec.hs`
 - Create: `data/cards/tome-scour.json`
-- Modify: `source/test-suite/Pawl/Cards.hs`, `source/test-suite/Pawl/CardSpec.hs` (count → 37)
-- Test: `source/test-suite/Pawl/ResolveSpec.hs`
+- Modify: `source/test-suite/Parun/Cards.hs`, `source/test-suite/Parun/CardSpec.hs` (count → 37)
+- Test: `source/test-suite/Parun/ResolveSpec.hs`
 
 **Interfaces:**
 - Produces: `Effect.Mill SlotName Quantity`; `Cards.tomeScourPrinting`. `Resolve.slotsOf (Effect.Mill s _) == Set.singleton s`.
@@ -986,10 +986,10 @@ Claude-Session: https://claude.ai/code/session_01JrPQomB3CLM3ek2J4yVWFd"
 Delivers `Effect.Discard SlotName Quantity`, reusing the existing `Prompt.ChooseDiscard`. Gated by Mind Rot: a real choice when the hand exceeds the count, and a forced full-hand discard that is *not* prompted.
 
 **Files:**
-- Modify: `source/library/Pawl/Type/Effect.hs`, `source/library/Pawl/Resolve.hs`, `source/library/Pawl/Codec.hs`
+- Modify: `source/library/Parun/Type/Effect.hs`, `source/library/Parun/Resolve.hs`, `source/library/Parun/Codec.hs`
 - Create: `data/cards/mind-rot.json`
-- Modify: `source/test-suite/Pawl/Cards.hs`, `source/test-suite/Pawl/CardSpec.hs` (count → 38)
-- Test: `source/test-suite/Pawl/ResolveSpec.hs`
+- Modify: `source/test-suite/Parun/Cards.hs`, `source/test-suite/Parun/CardSpec.hs` (count → 38)
+- Test: `source/test-suite/Parun/ResolveSpec.hs`
 
 **Interfaces:**
 - Consumes: `Prompt.ChooseDiscard`, `Decide.deciderFor` (existing).
@@ -999,7 +999,7 @@ Delivers `Effect.Discard SlotName Quantity`, reusing the existing `Prompt.Choose
 
 Mind Rot is `{2}{B}` and targets a player. To exercise the real choice, put extra cards in the target's hand; to exercise the forced elision, leave the hand equal to the count and answer `ChooseDiscard` with `[]` (so a *prompted* discard would discard nothing, distinguishing prompt from elision). A local helper puts `k` cards in a player's hand.
 
-First add `import qualified Pawl.Type.PlayerId as PlayerId` to `ResolveSpec.hs` (it is not currently imported; `handCards`'s signature needs it). `Data.List as List` was added in Task 7. `Object`, `Source`, `TapState`, `Sickness`, `Timestamp`, `Seq` are already imported.
+First add `import qualified Parun.Type.PlayerId as PlayerId` to `ResolveSpec.hs` (it is not currently imported; `handCards`'s signature needs it). `Data.List as List` was added in Task 7. `Object`, `Source`, `TapState`, `Sickness`, `Timestamp`, `Seq` are already imported.
 
 ```haskell
 -- Add k cards of a printing to pid's hand (each a fresh Hand-zone object).
@@ -1145,9 +1145,9 @@ Claude-Session: https://claude.ai/code/session_01JrPQomB3CLM3ek2J4yVWFd"
 Give the highest-value verbs random-play coverage before M4c: add Murder + Mind Rot to the black deck (Destroy + Discard) and a new blue deck + blue/black matchup (bounce + draw + mill). Every deck stays exactly 60 cards, so the property suite's 120-object conservation holds.
 
 **Files:**
-- Modify: `source/test-suite/Pawl/Cards.hs` (`blackDeck`, new `blueDeck`)
-- Modify: `source/test-suite/Pawl/Support.hs` (`blueBlack`, `matchups`)
-- Test: `source/test-suite/Pawl/PropertySpec.hs` (already iterates `S.matchups` — no edit, just re-run)
+- Modify: `source/test-suite/Parun/Cards.hs` (`blackDeck`, new `blueDeck`)
+- Modify: `source/test-suite/Parun/Support.hs` (`blueBlack`, `matchups`)
+- Test: `source/test-suite/Parun/PropertySpec.hs` (already iterates `S.matchups` — no edit, just re-run)
 
 **Interfaces:**
 - Consumes: the seven M4b card accessors, `Cards.islandPrinting`, `Cards.swampPrinting`, `Cards.typhoidRatsPrinting` (existing).
@@ -1155,7 +1155,7 @@ Give the highest-value verbs random-play coverage before M4c: add Murder + Mind 
 
 - [x] **Step 1: Write the failing test**
 
-Add to `source/test-suite/Pawl/Support.hs` the new matchup and extend `matchups` (this is the "test" — the property suite consumes `matchups`, so a not-yet-defined `blueBlack`/`blueDeck` is the red):
+Add to `source/test-suite/Parun/Support.hs` the new matchup and extend `matchups` (this is the "test" — the property suite consumes `matchups`, so a not-yet-defined `blueBlack`/`blueDeck` is the red):
 
 ```haskell
 blueBlack :: Cards.Cards -> NonEmpty.NonEmpty (PlayerId.PlayerId, Deck.Deck)
@@ -1172,7 +1172,7 @@ Expected: compile failure — `Cards.blueDeck` not in scope (red).
 
 - [x] **Step 3: Add the blue deck and extend the black deck**
 
-In `source/test-suite/Pawl/Cards.hs`, add `blueDeck` and rewrite `blackDeck` (each totals 60):
+In `source/test-suite/Parun/Cards.hs`, add `blueDeck` and rewrite `blackDeck` (each totals 60):
 
 ```haskell
 -- Blue, no creatures: Divination accelerates its own deck-out, Unsummon bounces

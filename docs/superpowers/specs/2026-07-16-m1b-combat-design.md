@@ -53,7 +53,7 @@ everywhere, no `Num` on `Quantity`, shape-now-cases-later). One addition:
 ## 1. Controller, and why `owner` still stands in for it
 
 M1a's self-review note 6 flagged that `Object.owner` stands in for controller
-throughout `Pawl.Mana`, and that it must become a real field before Mindslaver
+throughout `Parun.Mana`, and that it must become a real field before Mindslaver
 (M3). Combat is defined entirely in controller terms (CR 508.1a: attackers are
 declared from creatures *you control*), so M1b is the obvious place to pay that
 debt.
@@ -68,7 +68,7 @@ keep right.
 What M1b does instead is deny combat the ability to hard-code the assumption:
 
 ```hs
--- Pawl.Game
+-- Parun.Game
 -- Nothing when the object does not exist.
 --
 -- EXPIRES at M3 (Mindslaver): the moment anything can change control, this stops
@@ -85,7 +85,7 @@ the fix should be local when it comes.
 ### Marked damage is a count, and mana was not — deliberately
 
 ```hs
--- Pawl.Type.Object gains:
+-- Parun.Type.Object gains:
 damage :: Natural       -- CR 120.3e. Wears off at cleanup (CR 514.2).
 sickness :: Sickness    -- CR 302.6.
 ```
@@ -128,7 +128,7 @@ rather than being inherited as folklore.
 ### Summoning sickness
 
 ```hs
--- Pawl.Type.Sickness — CR 302.6. A sum type, not a Bool: no boolean blindness.
+-- Parun.Type.Sickness — CR 302.6. A sum type, not a Bool: no boolean blindness.
 data Sickness = Sick | Settled
 ```
 
@@ -146,11 +146,11 @@ keep compiling and quietly return wrong answers at M3. The flag breaks loudly.
 ### Combat
 
 ```hs
--- Pawl.Type.AttackTarget
+-- Parun.Type.AttackTarget
 -- Grows: OfPlaneswalker (CR 306), OfBattle (CR 310).
 newtype AttackTarget = OfPlayer PlayerId
 
--- Pawl.Type.Combat — CR 508/509. Cleared at end of combat (CR 511).
+-- Parun.Type.Combat — CR 508/509. Cleared at end of combat (CR 511).
 data Combat = MkCombat
   { attackers :: Map ObjectId AttackTarget,
     -- A Set, not a list: blockers are UNORDERED. See below.
@@ -216,7 +216,7 @@ fires only for two or more blockers. This is the mirror image of an elision: not
 rules leave nothing to ask.
 
 `Prompt` also gains `DeclareAttackers` and `DeclareBlockers`; `Response` gains
-their mirrors. `Pawl.Replay`'s `encode`/`decode`/`defaultAnswer` are exhaustive
+their mirrors. `Parun.Replay`'s `encode`/`decode`/`defaultAnswer` are exhaustive
 matches, so `-Weverything -Werror` forces all three through the replay layer.
 `defaultAnswer` must stay total.
 
@@ -306,14 +306,14 @@ derived as "has a non-empty blocker set" rather than stored as a status. This
 
 ## 5. State-based actions
 
-`Pawl.Sba` gains two creature checks, joining M0's 704.5a (life ≤ 0) and 704.5b
+`Parun.Sba` gains two creature checks, joining M0's 704.5a (life ≤ 0) and 704.5b
 (deck-out):
 
 - **CR 704.5f** — toughness 0 or less: put into owner's graveyard.
 - **CR 704.5g** — damage marked ≥ toughness (and toughness > 0): destroyed.
 
 Both must read a toughness, which makes them **the first real consumer of
-`Pawl.Quantity.evaluate`'s `Maybe`** — the shape M1a landed for `Star` and never
+`Parun.Quantity.evaluate`'s `Maybe`** — the shape M1a landed for `Star` and never
 exercised. A toughness that cannot be evaluated yields *no* state-based action,
 not a crash. In M1b every toughness is a `Literal` so the `Nothing` branch is
 unreachable; it is written because the function is total and because M3's layer

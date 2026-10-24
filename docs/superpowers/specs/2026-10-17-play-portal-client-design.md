@@ -3,8 +3,8 @@
 ## Intent
 
 Build something you can play before building out more of the card pool. The
-finish line is two people playing a whole game at one terminal through `pawl
-play`, and the saved game then replaying clean under `pawl scenario`. Any
+finish line is two people playing a whole game at one terminal through `parun
+play`, and the saved game then replaying clean under `parun scenario`. Any
 expressible deck counts: forty Grizzly Bears and twenty Forests is a win.
 Portal theme decks are a stretch goal. Playing finds what tests don't, starting
 with whether the prompts and per-player views give a human enough to decide.
@@ -14,12 +14,12 @@ answers are scripted and whose results are checked.
 
 ## Goals
 
-- `pawl play DECK DECK`, a hot-seat text client for plain two-player Magic.
+- `parun play DECK DECK`, a hot-seat text client for plain two-player Magic.
 - One driver with swappable deciders: scenario timeline, human, seeded random
   bot.
 - A line protocol (one JSON object per line) that is the only thing a client
   ever reads: the deciding player's redacted view, plus the pending prompt.
-- A played game saved as a scenario file that `pawl scenario` replays.
+- A played game saved as a scenario file that `parun scenario` replays.
 - Stretch: the Portal set expressible in the pool, and its theme decks as
   deck files. Missing capabilities are filed as ordinary issues and never
   block this one.
@@ -58,8 +58,8 @@ answers are scripted and whose results are checked.
 
 ## What already exists (derived 2026-10-17 at `origin/main` 09a11bb91)
 
-- `Pawl.Engine.Engine.runGameAsked` takes a callback, `forall r. Asked r -> m
-  r`. That callback is the decider seam. `Pawl.Scenario.run` already answers
+- `Parun.Engine.Engine.runGameAsked` takes a callback, `forall r. Asked r -> m
+  r`. That callback is the decider seam. `Parun.Scenario.run` already answers
   through it (`answerPrompt`), stepping `Engine.runStep` from a staged board.
 - `Engine.runMatch` and `playFrom` play a whole game from a matchup of
   `(PlayerId, Deck)` pairs. `Setup.newGame` builds libraries, shuffles and
@@ -80,8 +80,8 @@ answers are scripted and whose results are checked.
   vocabulary.
 - `Engine.Replay.record` and `replay` keep a positional `Response`
   transcript. There is no JSON codec for `Response`, `Prompt` or `Action`.
-- `Pawl.DeckList.parse` reads `N Name` deck text through a `Registry`.
-- `Pawl.Executable.main` dispatches `schema`, `deck`, `ingest`, `scenario`,
+- `Parun.DeckList.parse` reads `N Name` deck text through a `Registry`.
+- `Parun.Executable.main` dispatches `schema`, `deck`, `ingest`, `scenario`,
   `bench` and `test`.
 
 ## Decided
@@ -100,7 +100,7 @@ These are the owner's decisions, as made:
 - **No stops in the first version.** Every priority point is asked. Stops and
   auto-pass "when nothing interesting is offered" come later, as client-side
   answers.
-- **One process.** `pawl play` runs the engine and the text client together.
+- **One process.** `parun play` runs the engine and the text client together.
   The client reads only decoded protocol lines: each value is encoded to JSON
   and decoded back before the renderer sees it. A `--json` mode exposing the
   raw lines on stdin/stdout is wanted as good hygiene, though not strictly
@@ -165,8 +165,8 @@ These are the owner's decisions, as made:
 
 Each unit is one PR. This spec is committed with unit 1.
 
-1. **Driver, answerers, observers.** Split `Pawl.Scenario`'s loop so that the
-   timeline is one answerer among others (`Pawl.Types.Decider` already names
+1. **Driver, answerers, observers.** Split `Parun.Scenario`'s loop so that the
+   timeline is one answerer among others (`Parun.Types.Decider` already names
    CR 723.5's seat, so the type is `Answerer`). Every existing scenario passes
    unchanged. The timeline's checks stay inside its answerer: they share a
    moment's queue with its moves, and a check behind a refused move becomes
@@ -175,7 +175,7 @@ Each unit is one PR. This spec is committed with unit 1.
    visibility spec), JSON codecs for the view, the prompt and the answer, and
    the line framing. A test proves a hidden card's identity never appears in
    the other seat's lines.
-3. **`pawl play`.** Setup (seats, decks via `DeckList`, mode, starting
+3. **`parun play`.** Setup (seats, decks via `DeckList`, mode, starting
    player), the human decider, the renderer, hot-seat hiding and `--json`.
 4. **Seeded chance and the random bot.** SplitMix64, chance prompts answered
    from it, and the random decider for either seat. This is #10's slice A,
@@ -189,8 +189,8 @@ Each unit is one PR. This spec is committed with unit 1.
 7. **Stretch: Portal theme decks** as deck files, for whichever decks are
    fully expressible.
 
-Done when two humans finish a game through `pawl play`, with any expressible
-decks, and the saved game replays clean under `pawl scenario`. Units 6 and 7
+Done when two humans finish a game through `parun play`, with any expressible
+decks, and the saved game replays clean under `parun scenario`. Units 6 and 7
 don't gate it.
 
 ## Left to the builder

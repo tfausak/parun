@@ -1,0 +1,28 @@
+module Parun.Codec.ManaProduction where
+
+import qualified Parun.Codec.CouldProduce as CouldProduce
+import qualified Parun.Codec.ManaType as ManaType
+import qualified Parun.JsonCodec.Arm as Arm
+import qualified Parun.JsonCodec.Codec as Codec
+import qualified Parun.Types.ManaProduction as ManaProduction
+
+codec :: Codec.Codec ManaProduction.ManaProduction
+codec =
+  Arm.tagged
+    tagOf
+    [ Arm.payload "OfType" ManaType.codec ManaProduction.OfType (\x -> case x of ManaProduction.OfType y -> Just y; _ -> Nothing),
+      Arm.nullary "AnyColor" ManaProduction.AnyColor,
+      Arm.nullary "Chosen" ManaProduction.Chosen,
+      Arm.nullary "SnowSymbol" ManaProduction.SnowSymbol,
+      Arm.nullary "Noted" ManaProduction.Noted,
+      Arm.payload "CouldProduce" CouldProduce.codec ManaProduction.CouldProduce (\x -> case x of ManaProduction.CouldProduce y -> Just y; _ -> Nothing)
+    ]
+
+tagOf :: ManaProduction.ManaProduction -> String
+tagOf x = case x of
+  ManaProduction.OfType {} -> "OfType"
+  ManaProduction.AnyColor {} -> "AnyColor"
+  ManaProduction.Chosen {} -> "Chosen"
+  ManaProduction.SnowSymbol {} -> "SnowSymbol"
+  ManaProduction.Noted {} -> "Noted"
+  ManaProduction.CouldProduce {} -> "CouldProduce"

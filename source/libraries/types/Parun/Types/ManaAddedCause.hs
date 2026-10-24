@@ -1,0 +1,15 @@
+module Parun.Types.ManaAddedCause where
+
+-- | CR 605.5a: what added the mana Parun.Types.ManaAdded records. That rule is
+-- what makes the distinction load-bearing -- a triggered ability watching mana
+-- arrive is a mana ability only where an activated mana ability (CR 605.1a) put
+-- it there -- and Parun.Types.RevealCause is the same shape of fact one rule
+-- over.
+data ManaAddedCause
+  = -- | An activated mana ability, which is the road Parun.Engine.Cost.tapForManaWith
+    -- takes (CR 605.3b).
+    ManaAbility
+  | -- | A spell or an ability resolving in the ordinary way, which is the road
+    -- Parun.Engine.Resolve.Effect's AddMana arm takes (CR 608.2).
+    Resolution
+  deriving (Bounded, Enum, Eq, Ord, Show)

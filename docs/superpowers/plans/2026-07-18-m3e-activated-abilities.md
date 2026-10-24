@@ -13,15 +13,15 @@
 Copied from the spec and `CLAUDE.md`; every task implicitly includes these:
 
 - **Haskell 2010, no language extensions** beyond `GADTs`, `RankNTypes`, `NamedFieldPuns`. No `LambdaCase`, no `OverloadedStrings`, **no list comprehensions**.
-- **No explicit export lists** (`module Pawl.Foo where`).
-- **One type per module** under `Pawl.Type.<TypeName>` (type + instances only); logic in other `Pawl.*` modules. A module never imports its parents. Add a new `Pawl.Type.*` file and run `cabal-gild` (via `hooky fix`) — the `exposed-modules` field is `discover`-generated. A new `Pawl.*Spec` goes in the test-suite `other-modules` list.
+- **No explicit export lists** (`module Parun.Foo where`).
+- **One type per module** under `Parun.Type.<TypeName>` (type + instances only); logic in other `Parun.*` modules. A module never imports its parents. Add a new `Parun.Type.*` file and run `cabal-gild` (via `hooky fix`) — the `exposed-modules` field is `discover`-generated. A new `Parun.*Spec` goes in the test-suite `other-modules` list.
 - **Qualified imports, aliased to the last component** (`Data.List` → `List`); operators unqualified; one import group.
 - **No partial functions** — `Maybe`/`Either`, never `head`/`error`/non-exhaustive matches.
 - **`newtype`/record + `Mk`-prefixed, non-punning constructors**; build records with `do`/record syntax. Sum-type data constructors (like `TapSelf`, `AddMana`) take no `Mk` prefix.
 - **Prefer explicit:** `case` over point-free; `let` over `where`; `$` over parens, `.` over chained `$`; `Text` not `String`; arbitrary-precision numbers.
 - **No boolean blindness**; **derive at least `Eq` and `Show`** (and `Ord` on anything a `Card`/`Action`/`Source` transitively contains — those derive `Ord`).
 - **Warning-clean** under `-Weverything` minus the allow-list; the `pedantic` flag makes any warning a build failure (including `-Wincomplete-patterns` on a match missing a new constructor, and `-Wmissing-fields` on a record missing a new field). Build `all`: `cabal build all --enable-tests --enable-benchmarks`. When in doubt, `cabal clean` first — incremental builds hide warnings.
-- **The two invariants:** the rules core never `case`s on an effect's *identity*; `Pawl.Resolve` is the **sole** `case`-on-`Effect` home (`slotsOf`, `manaProduced`, `rewriteEffect`, `matchesCriterion`, `applyEffect`), `Pawl.Projection` the **sole** `case`-on-`Modification` home. Constructing a value is not casing on it. `Stack.resolveTop` dispatches on the `Source`/type-line *classification*, never a card's identity. The engine makes no player choice except where the rules leave one, eliding only indistinguishable options (with a documented expiry).
+- **The two invariants:** the rules core never `case`s on an effect's *identity*; `Parun.Resolve` is the **sole** `case`-on-`Effect` home (`slotsOf`, `manaProduced`, `rewriteEffect`, `matchesCriterion`, `applyEffect`), `Parun.Projection` the **sole** `case`-on-`Modification` home. Constructing a value is not casing on it. `Stack.resolveTop` dispatches on the `Source`/type-line *classification*, never a card's identity. The engine makes no player choice except where the rules leave one, eliding only indistinguishable options (with a documented expiry).
 - **Every rules claim cited** against `docs/rules.txt` in a code comment. Never trust recalled Magic rules. (Numbers verified for this plan: activation CR 602.2; mana-ability definition CR 605.1a; mana ability doesn't use the stack CR 605.3b; ability ceases to exist CR 608.2n; summoning sickness CR 302.6; Sacrifice CR 701.21; Search CR 701.23, fail-to-find 701.23b; basic land CR 205.4c.)
 - **After each task:** `cabal build all --enable-tests --enable-benchmarks` warning-free, `cabal test`, `git add -A` (stage explicit paths under a shared worktree) then `hooky fix` && `git add -A` && `hooky run`, HLint clean. Commit directly to `main`, one small complete commit per task.
 
@@ -45,20 +45,20 @@ Co-Authored-By: Claude Opus 4.8 (1M context) <noreply@anthropic.com>
 ### Task 1: Ability types, the `AddMana` opcode, and the CR 605 classifiers
 
 **Files:**
-- Create: `source/library/Pawl/Type/AdditionalCost.hs`
-- Create: `source/library/Pawl/Type/AbilityCost.hs`
-- Create: `source/library/Pawl/Type/ActivatedAbility.hs`
-- Modify: `source/library/Pawl/Type/Effect.hs` (add `AddMana`)
-- Modify: `source/library/Pawl/Resolve.hs` (`manaProduced`; `slotsOf`, `rewriteEffect`, `applyEffect` arms for `AddMana`)
-- Modify: `source/library/Pawl/Mana.hs` (`isManaAbility`)
-- Test: `source/test-suite/Pawl/ManaSpec.hs`, `source/test-suite/Pawl/ResolveSpec.hs`
+- Create: `source/library/Parun/Type/AdditionalCost.hs`
+- Create: `source/library/Parun/Type/AbilityCost.hs`
+- Create: `source/library/Parun/Type/ActivatedAbility.hs`
+- Modify: `source/library/Parun/Type/Effect.hs` (add `AddMana`)
+- Modify: `source/library/Parun/Resolve.hs` (`manaProduced`; `slotsOf`, `rewriteEffect`, `applyEffect` arms for `AddMana`)
+- Modify: `source/library/Parun/Mana.hs` (`isManaAbility`)
+- Test: `source/test-suite/Parun/ManaSpec.hs`, `source/test-suite/Parun/ResolveSpec.hs`
 
 **Interfaces:**
 - Produces: `AdditionalCost.AdditionalCost` = `TapSelf | SacrificeSelf`; `AbilityCost.MkAbilityCost { additional :: [AdditionalCost] }`; `ActivatedAbility.MkActivatedAbility { cost :: AbilityCost, effects :: [Effect], targetSpecs :: Map SlotName TargetSpec }`; `Effect.AddMana :: ManaType -> Effect`; `Resolve.manaProduced :: Effect -> Maybe ManaType`; `Mana.isManaAbility :: ActivatedAbility -> Bool`.
 
 - [x] **Step 1: Write the failing tests**
 
-Add to the `Mana` test group in `source/test-suite/Pawl/ManaSpec.hs` (add imports `qualified Pawl.Type.ActivatedAbility as ActivatedAbility`, `qualified Pawl.Type.AbilityCost as AbilityCost`, `qualified Pawl.Type.Effect as Effect`, `qualified Pawl.Type.ManaType as ManaType`, `qualified Pawl.Type.Color as Color`, `qualified Pawl.Type.TargetSpec as TargetSpec`, `qualified Pawl.Type.SlotName as SlotName`, `qualified Data.Map.Strict as Map`, `qualified Data.Text as Text` if absent):
+Add to the `Mana` test group in `source/test-suite/Parun/ManaSpec.hs` (add imports `qualified Parun.Type.ActivatedAbility as ActivatedAbility`, `qualified Parun.Type.AbilityCost as AbilityCost`, `qualified Parun.Type.Effect as Effect`, `qualified Parun.Type.ManaType as ManaType`, `qualified Parun.Type.Color as Color`, `qualified Parun.Type.TargetSpec as TargetSpec`, `qualified Parun.Type.SlotName as SlotName`, `qualified Data.Map.Strict as Map`, `qualified Data.Text as Text` if absent):
 
 ```haskell
       HU.testCase "CR 605.1a a {T}: Add {G} ability is a mana ability" $
@@ -87,9 +87,9 @@ Add to the `Mana` test group in `source/test-suite/Pawl/ManaSpec.hs` (add import
          in HU.assertBool "no mana produced -> not mana" (not (Mana.isManaAbility ab)),
 ```
 
-(Add `qualified Pawl.Type.Quantity as Quantity` if absent.)
+(Add `qualified Parun.Type.Quantity as Quantity` if absent.)
 
-Add to the `Resolve` test group in `source/test-suite/Pawl/ResolveSpec.hs`:
+Add to the `Resolve` test group in `source/test-suite/Parun/ResolveSpec.hs`:
 
 ```haskell
       HU.testCase "CR 605 manaProduced reads AddMana, nothing else" $ do
@@ -97,7 +97,7 @@ Add to the `Resolve` test group in `source/test-suite/Pawl/ResolveSpec.hs`:
         HU.assertEqual "damage produces no mana" Nothing (Resolve.manaProduced (Effect.DealDamage (SlotName.MkSlotName (Text.pack "x")) (Quantity.Literal 1))),
 ```
 
-(Add `qualified Pawl.Type.ManaType as ManaType`, `qualified Pawl.Type.Color as Color` to `ResolveSpec` if absent.)
+(Add `qualified Parun.Type.ManaType as ManaType`, `qualified Parun.Type.Color as Color` to `ResolveSpec` if absent.)
 
 - [x] **Step 2: Run tests to verify they fail**
 
@@ -106,10 +106,10 @@ Expected: FAIL to compile — `ActivatedAbility`, `AbilityCost`, `Effect.AddMana
 
 - [x] **Step 3: Create the three ability types**
 
-`source/library/Pawl/Type/AdditionalCost.hs`:
+`source/library/Parun/Type/AdditionalCost.hs`:
 
 ```haskell
-module Pawl.Type.AdditionalCost where
+module Parun.Type.AdditionalCost where
 
 -- A non-mana cost of an activated ability that names the source permanent.
 -- CR 602.1a: the {T} symbol taps it; CR 701.21: Sacrifice moves it to its
@@ -121,12 +121,12 @@ data AdditionalCost
   deriving (Eq, Ord, Show)
 ```
 
-`source/library/Pawl/Type/AbilityCost.hs`:
+`source/library/Parun/Type/AbilityCost.hs`:
 
 ```haskell
-module Pawl.Type.AbilityCost where
+module Parun.Type.AbilityCost where
 
-import Pawl.Type.AdditionalCost (AdditionalCost)
+import Parun.Type.AdditionalCost (AdditionalCost)
 
 -- The cost of an activated ability (CR 602.1). A `mana :: Maybe ManaCost` field
 -- is the named future addition (no M3e gate has a mana symbol in its ability
@@ -137,16 +137,16 @@ data AbilityCost = MkAbilityCost
   deriving (Eq, Ord, Show)
 ```
 
-`source/library/Pawl/Type/ActivatedAbility.hs`:
+`source/library/Parun/Type/ActivatedAbility.hs`:
 
 ```haskell
-module Pawl.Type.ActivatedAbility where
+module Parun.Type.ActivatedAbility where
 
 import Data.Map.Strict (Map)
-import Pawl.Type.AbilityCost (AbilityCost)
-import Pawl.Type.Effect (Effect)
-import Pawl.Type.SlotName (SlotName)
-import Pawl.Type.TargetSpec (TargetSpec)
+import Parun.Type.AbilityCost (AbilityCost)
+import Parun.Type.Effect (Effect)
+import Parun.Type.SlotName (SlotName)
+import Parun.Type.TargetSpec (TargetSpec)
 
 -- CR 602.1: "[cost]: [effect]". Reuses the Effect vocabulary and the slot/target
 -- machinery of a spell. An ability is VALUE-typed: two abilities with the same
@@ -162,7 +162,7 @@ data ActivatedAbility = MkActivatedAbility
 
 - [x] **Step 4: Add the `AddMana` opcode**
 
-In `source/library/Pawl/Type/Effect.hs`, add the import `import Pawl.Type.ManaType (ManaType)` and the constructor (extend the header comment):
+In `source/library/Parun/Type/Effect.hs`, add the import `import Parun.Type.ManaType (ManaType)` and the constructor (extend the header comment):
 
 ```haskell
   | -- CR 605: add one unit of this mana type. Executed by Mana.tapForMana at
@@ -173,7 +173,7 @@ In `source/library/Pawl/Type/Effect.hs`, add the import `import Pawl.Type.ManaTy
 
 - [x] **Step 5: Add the classifiers and the `AddMana` arms in `Resolve`**
 
-In `source/library/Pawl/Resolve.hs`, add `import Pawl.Type.ManaType (ManaType)`. Add the `slotsOf` arm:
+In `source/library/Parun/Resolve.hs`, add `import Parun.Type.ManaType (ManaType)`. Add the `slotsOf` arm:
 
 ```haskell
   Effect.AddMana _ -> Set.empty
@@ -210,7 +210,7 @@ Add the `applyEffect` arm (a documented no-op — Task 3 makes `applyEffect` mon
 
 - [x] **Step 6: Add `isManaAbility` in `Mana`**
 
-In `source/library/Pawl/Mana.hs`, add imports `import qualified Pawl.Resolve as Resolve`, `import qualified Pawl.Type.ActivatedAbility as ActivatedAbility`. Add:
+In `source/library/Parun/Mana.hs`, add imports `import qualified Parun.Resolve as Resolve`, `import qualified Parun.Type.ActivatedAbility as ActivatedAbility`. Add:
 
 ```haskell
 -- CR 605.1a: an activated ability is a mana ability if it could add mana AND
@@ -240,10 +240,10 @@ git commit -m "Add activated-ability types + AddMana + the CR 605 mana-ability c
 ### Task 2: `Card.activatedAbilities` + Prodigal Sorcerer & Llanowar Elves
 
 **Files:**
-- Modify: `source/library/Pawl/Type/Card.hs` (add `activatedAbilities`)
-- Modify: `source/library/Pawl/Card.hs` (seed `[]` at every printing; add the two printings; `allPrintings`)
+- Modify: `source/library/Parun/Type/Card.hs` (add `activatedAbilities`)
+- Modify: `source/library/Parun/Card.hs` (seed `[]` at every printing; add the two printings; `allPrintings`)
 - Modify: test/benchmark `Card.MkCard` sites that build a card by hand (the build enumerates them via `-Wmissing-fields`)
-- Test: `source/test-suite/Pawl/CardSpec.hs`
+- Test: `source/test-suite/Parun/CardSpec.hs`
 
 **Interfaces:**
 - Consumes: `ActivatedAbility` (Task 1).
@@ -251,7 +251,7 @@ git commit -m "Add activated-ability types + AddMana + the CR 605 mana-ability c
 
 - [x] **Step 1: Write the failing test**
 
-Add to `source/test-suite/Pawl/CardSpec.hs`. Assert the printings carry the abilities the classifier expects (add imports `qualified Pawl.Card as Card`, `qualified Pawl.Type.Printing as Printing`, `qualified Pawl.Type.Card as Card.Type`, `qualified Pawl.Mana as Mana` if absent):
+Add to `source/test-suite/Parun/CardSpec.hs`. Assert the printings carry the abilities the classifier expects (add imports `qualified Parun.Card as Card`, `qualified Parun.Type.Printing as Printing`, `qualified Parun.Type.Card as Card.Type`, `qualified Parun.Mana as Mana` if absent):
 
 ```haskell
       HU.testCase "Prodigal Sorcerer has one non-mana activated ability" $
@@ -271,23 +271,23 @@ Expected: FAIL to compile — `Card.Type.activatedAbilities`, `Card.prodigalSorc
 
 - [x] **Step 3: Add the field to `Card`**
 
-In `source/library/Pawl/Type/Card.hs`, add `import Pawl.Type.ActivatedAbility (ActivatedAbility)` and the field (after `effects`, before `targetSpecs`):
+In `source/library/Parun/Type/Card.hs`, add `import Parun.Type.ActivatedAbility (ActivatedAbility)` and the field (after `effects`, before `targetSpecs`):
 
 ```haskell
     -- CR 602: this card's printed activated abilities. Empty for all but the few
     -- printings that grant one. The closed half reads these through
-    -- Pawl.Projection.abilitiesOf (Task 9), never directly: layer 6 (Humility)
+    -- Parun.Projection.abilitiesOf (Task 9), never directly: layer 6 (Humility)
     -- removes abilities.
     activatedAbilities :: [ActivatedAbility],
 ```
 
 - [x] **Step 4: Seed `activatedAbilities = []` at every existing `MkCard`**
 
-Every `Card.MkCard { ... }` now needs `Card.activatedAbilities = []` (or `Card.Type.activatedAbilities = []` in tests). The build enumerates any missed one via `-Wmissing-fields` (a pedantic error). Add the line (next to `effects`) at each site. Known sites: every printing in `source/library/Pawl/Card.hs`; the hand-built `Card.Type.MkCard` in `source/test-suite/Pawl/ResolveSpec.hs` (the `textChangeSlots` test from M3d). Build after this step to let the compiler list any others.
+Every `Card.MkCard { ... }` now needs `Card.activatedAbilities = []` (or `Card.Type.activatedAbilities = []` in tests). The build enumerates any missed one via `-Wmissing-fields` (a pedantic error). Add the line (next to `effects`) at each site. Known sites: every printing in `source/library/Parun/Card.hs`; the hand-built `Card.Type.MkCard` in `source/test-suite/Parun/ResolveSpec.hs` (the `textChangeSlots` test from M3d). Build after this step to let the compiler list any others.
 
 - [x] **Step 5: Add the two printings and register them**
 
-In `source/library/Pawl/Card.hs` (imports for `ActivatedAbility`, `AbilityCost`, `AdditionalCost`, `Effect`, `TargetSpec`, `SlotName`, `Quantity` are needed — add any absent, mirroring existing qualified style):
+In `source/library/Parun/Card.hs` (imports for `ActivatedAbility`, `AbilityCost`, `AdditionalCost`, `Effect`, `TargetSpec`, `SlotName`, `Quantity` are needed — add any absent, mirroring existing qualified style):
 
 ```haskell
 -- Prodigal Sorcerer: {2}{U}, 1/1, "{T}: This creature deals 1 damage to any
@@ -383,10 +383,10 @@ git commit -m "Add the activatedAbilities field + Prodigal Sorcerer and Llanowar
 ### Task 3: Make resolution `Game`-monadic (no behavior change)
 
 **Files:**
-- Modify: `source/library/Pawl/Resolve.hs` (`applyEffect`, `resolveSpell` → `Game`)
-- Modify: `source/library/Pawl/Stack.hs` (`resolveTop` → `Game`)
-- Modify: `source/library/Pawl/Engine.hs` (`priorityLoop` resolution site)
-- Modify: `source/test-suite/Pawl/ResolveSpec.hs`, `source/test-suite/Pawl/StackSpec.hs`, `source/test-suite/Pawl/Support.hs` (call sites that ran `resolveSpell`/`resolveTop` purely)
+- Modify: `source/library/Parun/Resolve.hs` (`applyEffect`, `resolveSpell` → `Game`)
+- Modify: `source/library/Parun/Stack.hs` (`resolveTop` → `Game`)
+- Modify: `source/library/Parun/Engine.hs` (`priorityLoop` resolution site)
+- Modify: `source/test-suite/Parun/ResolveSpec.hs`, `source/test-suite/Parun/StackSpec.hs`, `source/test-suite/Parun/Support.hs` (call sites that ran `resolveSpell`/`resolveTop` purely)
 - Test: existing suite is the test — this is a behavior-preserving refactor.
 
 **Interfaces:**
@@ -398,7 +398,7 @@ Run: `cabal test` and record the passing count. This task must end at the same c
 
 - [x] **Step 2: Convert `applyEffect` to `Game ()`**
 
-In `source/library/Pawl/Resolve.hs`, add `import Pawl.Type.Game (Game)` and `import qualified Control.Monad.Trans.State.Strict as State`. Convert `applyEffect` to `Game ()`: each arm's existing `GameState`-producing body is wrapped in `State.modify' $ \gs -> ...` (the body already binds `gs` and returns a `GameState`, so wrapping is mechanical), and the `gs` function parameter is dropped. `AddMana` becomes `pure ()`. The full converted function (`recipientObject` is unchanged from M3d):
+In `source/library/Parun/Resolve.hs`, add `import Parun.Type.Game (Game)` and `import qualified Control.Monad.Trans.State.Strict as State`. Convert `applyEffect` to `Game ()`: each arm's existing `GameState`-producing body is wrapped in `State.modify' $ \gs -> ...` (the body already binds `gs` and returns a `GameState`, so wrapping is mechanical), and the `gs` function parameter is dropped. `AddMana` becomes `pure ()`. The full converted function (`recipientObject` is unchanged from M3d):
 
 ```haskell
 applyEffect :: ObjectId -> Map.Map SlotName (Subtype, Subtype) -> Map.Map SlotName Bool -> Map.Map SlotName Recipient -> Effect -> Game ()
@@ -484,7 +484,7 @@ resolveSpell oid = do
 
 - [x] **Step 4: Convert `Stack.resolveTop` to `Game ()`**
 
-In `source/library/Pawl/Stack.hs`, make `resolveTop` monadic (add `import Pawl.Type.Game (Game)`, `import qualified Control.Monad.Trans.State.Strict as State`):
+In `source/library/Parun/Stack.hs`, make `resolveTop` monadic (add `import Parun.Type.Game (Game)`, `import qualified Control.Monad.Trans.State.Strict as State`):
 
 ```haskell
 resolveTop :: Game ()
@@ -503,7 +503,7 @@ resolveTop = do
 
 - [x] **Step 5: Update the priority-loop resolution site**
 
-In `source/library/Pawl/Engine.hs`, `priorityLoop`'s full-round-of-passes branch currently does `let resolved = Sba.checkStateBasedActions (Stack.resolveTop gs)`. Replace with a monadic sequence:
+In `source/library/Parun/Engine.hs`, `priorityLoop`'s full-round-of-passes branch currently does `let resolved = Sba.checkStateBasedActions (Stack.resolveTop gs)`. Replace with a monadic sequence:
 
 ```haskell
                   else do
@@ -526,7 +526,7 @@ In `source/library/Pawl/Engine.hs`, `priorityLoop`'s full-round-of-passes branch
 
 - [x] **Step 6: Fix pure call sites in tests**
 
-Any test that wrote `Resolve.resolveSpell oid gs` or `Stack.resolveTop gs` now runs it through the interpreter. Replace with `snd (Engine.runGamePure S.identityAnswer gs (Resolve.resolveSpell oid))` (or `Stack.resolveTop`). Known sites: `source/test-suite/Pawl/ResolveSpec.hs` (Bolt resolution, Magical Hack resolution from M3d), `source/test-suite/Pawl/StackSpec.hs`, and any `Support` helper (e.g. a `resolveTop`-based fixture). The build's type errors list them exactly. Use `S.identityAnswer` unless the test needs a specific answer.
+Any test that wrote `Resolve.resolveSpell oid gs` or `Stack.resolveTop gs` now runs it through the interpreter. Replace with `snd (Engine.runGamePure S.identityAnswer gs (Resolve.resolveSpell oid))` (or `Stack.resolveTop`). Known sites: `source/test-suite/Parun/ResolveSpec.hs` (Bolt resolution, Magical Hack resolution from M3d), `source/test-suite/Parun/StackSpec.hs`, and any `Support` helper (e.g. a `resolveTop`-based fixture). The build's type errors list them exactly. Use `S.identityAnswer` unless the test needs a specific answer.
 
 - [x] **Step 7: Run the suite to verify no behavior changed**
 
@@ -545,12 +545,12 @@ git commit -m "Make spell/stack resolution Game-monadic (no behavior change; rea
 ### Task 4: `Source.OfAbility` + `resolveAbility` — an ability resolves and ceases
 
 **Files:**
-- Modify: `source/library/Pawl/Type/Source.hs` (add `OfAbility`)
-- Modify: `source/library/Pawl/Game.hs` (`cardOf` gains an `OfAbility` arm)
-- Modify: `source/library/Pawl/Resolve.hs` (`resolveAbility`)
-- Modify: `source/library/Pawl/Stack.hs` (`resolveTop` gains the `OfAbility` arm)
+- Modify: `source/library/Parun/Type/Source.hs` (add `OfAbility`)
+- Modify: `source/library/Parun/Game.hs` (`cardOf` gains an `OfAbility` arm)
+- Modify: `source/library/Parun/Resolve.hs` (`resolveAbility`)
+- Modify: `source/library/Parun/Stack.hs` (`resolveTop` gains the `OfAbility` arm)
 - Modify: any other exhaustive `case Object.source` (build enumerates them: `Action.hs`, `Support.hs`)
-- Test: `source/test-suite/Pawl/ResolveSpec.hs`
+- Test: `source/test-suite/Parun/ResolveSpec.hs`
 
 **Interfaces:**
 - Consumes: `ActivatedAbility` (Task 1), monadic resolution (Task 3).
@@ -558,7 +558,7 @@ git commit -m "Make spell/stack resolution Game-monadic (no behavior change; rea
 
 - [x] **Step 1: Write the failing test**
 
-Add to the `Resolve` group in `source/test-suite/Pawl/ResolveSpec.hs`. Hand-build an ability object on the stack whose source is a Prodigal Sorcerer, targeting bob, and resolve the top of the stack; assert 1 damage dealt and the ability object gone (add imports `qualified Pawl.Type.Source as Source`, `qualified Pawl.Type.ActivatedAbility as ActivatedAbility`, `qualified Pawl.Type.AbilityCost as AbilityCost`, `qualified Pawl.Type.Recipient as Recipient`, `qualified Pawl.Stack as Stack`, `qualified Pawl.Engine as Engine` if absent):
+Add to the `Resolve` group in `source/test-suite/Parun/ResolveSpec.hs`. Hand-build an ability object on the stack whose source is a Prodigal Sorcerer, targeting bob, and resolve the top of the stack; assert 1 damage dealt and the ability object gone (add imports `qualified Parun.Type.Source as Source`, `qualified Parun.Type.ActivatedAbility as ActivatedAbility`, `qualified Parun.Type.AbilityCost as AbilityCost`, `qualified Parun.Type.Recipient as Recipient`, `qualified Parun.Stack as Stack`, `qualified Parun.Engine as Engine` if absent):
 
 ```haskell
       HU.testCase "CR 608.2n a resolving ability deals its damage and ceases" $
@@ -602,7 +602,7 @@ Expected: FAIL to compile — `Source.OfAbility`, `Resolve.resolveAbility` not i
 
 - [x] **Step 3: Add the `OfAbility` source**
 
-In `source/library/Pawl/Type/Source.hs`, add imports `import Pawl.Type.ActivatedAbility (ActivatedAbility)`, `import Pawl.Type.ObjectId (ObjectId)`, and the constructor (it is now a `data`, not a `newtype`):
+In `source/library/Parun/Type/Source.hs`, add imports `import Parun.Type.ActivatedAbility (ActivatedAbility)`, `import Parun.Type.ObjectId (ObjectId)`, and the constructor (it is now a `data`, not a `newtype`):
 
 ```haskell
 data Source
@@ -616,19 +616,19 @@ data Source
 
 - [x] **Step 4: Handle `OfAbility` in `Game.cardOf` and other `Source` matches**
 
-In `source/library/Pawl/Game.hs`, `cardOf`'s `case Object.source obj of` gains:
+In `source/library/Parun/Game.hs`, `cardOf`'s `case Object.source obj of` gains:
 
 ```haskell
     Source.OfAbility _ _ -> Nothing
 ```
 
 The build enumerates every other exhaustive `case Object.source`. Add an `OfAbility` arm at each (all are "an ability is not a card", so the card-reading branch's default applies):
-- `source/library/Pawl/Action.hs`, `playableLands`' `isLandObject` — `Source.OfAbility _ _ -> False`.
-- `source/test-suite/Pawl/Support.hs`, `creaturesInPlay` and `countByName` — `Source.OfAbility _ _ -> False`.
+- `source/library/Parun/Action.hs`, `playableLands`' `isLandObject` — `Source.OfAbility _ _ -> False`.
+- `source/test-suite/Parun/Support.hs`, `creaturesInPlay` and `countByName` — `Source.OfAbility _ _ -> False`.
 
 - [x] **Step 5: Add `resolveAbility` and the `resolveTop` arm**
 
-In `source/library/Pawl/Resolve.hs`, add `import qualified Pawl.Type.ActivatedAbility as ActivatedAbility`. Add:
+In `source/library/Parun/Resolve.hs`, add `import qualified Parun.Type.ActivatedAbility as ActivatedAbility`. Add:
 
 ```haskell
 -- CR 608: resolve an activated ability. The effect SOURCE is the source permanent
@@ -663,7 +663,7 @@ cease abilId gs =
     }
 ```
 
-In `source/library/Pawl/Stack.hs`, add the `OfAbility` arm to `resolveTop`'s `case Object.source obj of`:
+In `source/library/Parun/Stack.hs`, add the `OfAbility` arm to `resolveTop`'s `case Object.source obj of`:
 
 ```haskell
         Source.OfAbility srcId ability -> Resolve.resolveAbility oid srcId ability
@@ -683,14 +683,14 @@ git commit -m "Resolve an ability on the stack: OfAbility + resolveAbility cease
 
 ---
 
-### Task 5: `Action.Activate` + `Pawl.Activate` — Prodigal Sorcerer end-to-end + sickness
+### Task 5: `Action.Activate` + `Parun.Activate` — Prodigal Sorcerer end-to-end + sickness
 
 **Files:**
-- Modify: `source/library/Pawl/Type/Action.hs` (add `Activate`)
-- Create: `source/library/Pawl/Activate.hs`
-- Modify: `source/library/Pawl/Action.hs` (`legalActions` offers activations)
-- Modify: `source/library/Pawl/Engine.hs` (`priorityLoop` `Activate` arm)
-- Test: `source/test-suite/Pawl/ActivateSpec.hs` (new — wire into `Main.hs` `testTree` and the test-suite `other-modules`)
+- Modify: `source/library/Parun/Type/Action.hs` (add `Activate`)
+- Create: `source/library/Parun/Activate.hs`
+- Modify: `source/library/Parun/Action.hs` (`legalActions` offers activations)
+- Modify: `source/library/Parun/Engine.hs` (`priorityLoop` `Activate` arm)
+- Test: `source/test-suite/Parun/ActivateSpec.hs` (new — wire into `Main.hs` `testTree` and the test-suite `other-modules`)
 
 **Interfaces:**
 - Consumes: `resolveAbility`/`OfAbility` (Task 4), `isManaAbility` (Task 1), the printings (Task 2).
@@ -698,31 +698,31 @@ git commit -m "Resolve an ability on the stack: OfAbility + resolveAbility cease
 
 - [x] **Step 1: Write the failing tests**
 
-Create `source/test-suite/Pawl/ActivateSpec.hs`:
+Create `source/test-suite/Parun/ActivateSpec.hs`:
 
 ```haskell
-module Pawl.ActivateSpec where
+module Parun.ActivateSpec where
 
 import qualified Data.Map.Strict as Map
 import qualified Data.Set as Set
 import qualified Data.Text as Text
-import qualified Pawl.Action as Action
-import qualified Pawl.Activate as Activate
-import qualified Pawl.Card as Card
-import qualified Pawl.Engine as Engine
-import qualified Pawl.Game as Game
-import qualified Pawl.Setup as Setup
-import qualified Pawl.Stack as Stack
-import qualified Pawl.Support as S
-import qualified Pawl.Type.AbilityCost as AbilityCost
-import qualified Pawl.Type.ActivatedAbility as ActivatedAbility
-import qualified Pawl.Type.Action as A
-import qualified Pawl.Type.Card as Card.Type
-import qualified Pawl.Type.GameState as GameState
-import qualified Pawl.Type.Object as Object
-import qualified Pawl.Type.Printing as Printing
-import qualified Pawl.Type.Sickness as Sickness
-import qualified Pawl.Type.TapState as TapState
+import qualified Parun.Action as Action
+import qualified Parun.Activate as Activate
+import qualified Parun.Card as Card
+import qualified Parun.Engine as Engine
+import qualified Parun.Game as Game
+import qualified Parun.Setup as Setup
+import qualified Parun.Stack as Stack
+import qualified Parun.Support as S
+import qualified Parun.Type.AbilityCost as AbilityCost
+import qualified Parun.Type.ActivatedAbility as ActivatedAbility
+import qualified Parun.Type.Action as A
+import qualified Parun.Type.Card as Card.Type
+import qualified Parun.Type.GameState as GameState
+import qualified Parun.Type.Object as Object
+import qualified Parun.Type.Printing as Printing
+import qualified Parun.Type.Sickness as Sickness
+import qualified Parun.Type.TapState as TapState
 import qualified Test.Tasty as Tasty
 import qualified Test.Tasty.HUnit as HU
 
@@ -737,7 +737,7 @@ theAbility p = case Card.Type.activatedAbilities (Printing.card p) of
 tests :: Tasty.TestTree
 tests =
   Tasty.testGroup
-    "Pawl.Activate"
+    "Parun.Activate"
     [ HU.testCase "CR 602 activating Prodigal Sorcerer's {T} puts an ability on the stack and taps it" $
         let (srcId, g0) = S.addCreature Card.prodigalSorcererPrinting S.alice (Setup.emptyGame S.bothPlayers)
             g1 = g0 {GameState.priority = Just S.alice}
@@ -769,16 +769,16 @@ isActivate a = case a of
   _ -> False
 ```
 
-(Wire `Pawl.ActivateSpec.tests` into `Main.hs`'s `testTree` and add `Pawl.ActivateSpec` to the test-suite `other-modules` list.)
+(Wire `Parun.ActivateSpec.tests` into `Main.hs`'s `testTree` and add `Parun.ActivateSpec` to the test-suite `other-modules` list.)
 
 - [x] **Step 2: Run tests to verify they fail**
 
 Run: `cabal test --test-options='-p "puts an ability on the stack"'`
-Expected: FAIL to compile — `Action.Activate`, `Pawl.Activate` not in scope.
+Expected: FAIL to compile — `Action.Activate`, `Parun.Activate` not in scope.
 
 - [x] **Step 3: Add the `Activate` action**
 
-In `source/library/Pawl/Type/Action.hs`, add `import Pawl.Type.ActivatedAbility (ActivatedAbility)` and the constructor (update the header comment):
+In `source/library/Parun/Type/Action.hs`, add `import Parun.Type.ActivatedAbility (ActivatedAbility)` and the constructor (update the header comment):
 
 ```haskell
   | -- CR 602: activate the source permanent's ability. Carries the ability VALUE
@@ -786,41 +786,41 @@ In `source/library/Pawl/Type/Action.hs`, add `import Pawl.Type.ActivatedAbility 
     Activate ObjectId ActivatedAbility
 ```
 
-- [x] **Step 4: Create `Pawl.Activate`**
+- [x] **Step 4: Create `Parun.Activate`**
 
-`source/library/Pawl/Activate.hs`:
+`source/library/Parun/Activate.hs`:
 
 ```haskell
-module Pawl.Activate where
+module Parun.Activate where
 
 import qualified Control.Monad.Trans.Class as Trans
 import qualified Control.Monad.Trans.State.Strict as State
 import qualified Data.List as List
 import qualified Data.Map.Strict as Map
 import qualified Data.Set as Set
-import qualified Pawl.Decide as Decide
-import qualified Pawl.Game as Game
-import qualified Pawl.Mana as Mana
-import qualified Pawl.Projection as Projection
-import qualified Pawl.Target as Target
-import qualified Pawl.Type.AbilityCost as AbilityCost
-import qualified Pawl.Type.ActivatedAbility as ActivatedAbility
-import qualified Pawl.Type.AdditionalCost as AdditionalCost
-import qualified Pawl.Type.Card as Card.Type
-import qualified Pawl.Type.CardType as CardType
-import Pawl.Type.Game (Game)
-import Pawl.Type.GameState (GameState)
-import qualified Pawl.Type.GameState as GameState
-import qualified Pawl.Type.Object as Object
-import Pawl.Type.ObjectId (ObjectId)
-import Pawl.Type.PlayerId (PlayerId)
-import qualified Pawl.Type.Program as Program
-import qualified Pawl.Type.Prompt as Prompt
-import qualified Pawl.Type.Sickness as Sickness
-import qualified Pawl.Type.Source as Source
-import qualified Pawl.Type.TapState as TapState
-import qualified Pawl.Type.Timestamp as Timestamp
-import qualified Pawl.Type.Zone as Zone
+import qualified Parun.Decide as Decide
+import qualified Parun.Game as Game
+import qualified Parun.Mana as Mana
+import qualified Parun.Projection as Projection
+import qualified Parun.Target as Target
+import qualified Parun.Type.AbilityCost as AbilityCost
+import qualified Parun.Type.ActivatedAbility as ActivatedAbility
+import qualified Parun.Type.AdditionalCost as AdditionalCost
+import qualified Parun.Type.Card as Card.Type
+import qualified Parun.Type.CardType as CardType
+import Parun.Type.Game (Game)
+import Parun.Type.GameState (GameState)
+import qualified Parun.Type.GameState as GameState
+import qualified Parun.Type.Object as Object
+import Parun.Type.ObjectId (ObjectId)
+import Parun.Type.PlayerId (PlayerId)
+import qualified Parun.Type.Program as Program
+import qualified Parun.Type.Prompt as Prompt
+import qualified Parun.Type.Sickness as Sickness
+import qualified Parun.Type.Source as Source
+import qualified Parun.Type.TapState as TapState
+import qualified Parun.Type.Timestamp as Timestamp
+import qualified Parun.Type.Zone as Zone
 
 -- CR 302.6: a creature's {T}-cost ability can't be activated while summoning
 -- sick. Reads projected creature-ness -- a land (Evolving Wilds) is never sick-
@@ -916,7 +916,7 @@ payAdditional srcId gs c = case c of
 
 - [x] **Step 5: Offer activations in `legalActions`**
 
-In `source/library/Pawl/Action.hs`, add `import qualified Pawl.Activate as Activate`. Extend `legalActions` to append an `Activate` per controlled permanent's activatable ability (reading `Activate.abilitiesFor`, which Task 9 flips to the projection):
+In `source/library/Parun/Action.hs`, add `import qualified Parun.Activate as Activate`. Extend `legalActions` to append an `Activate` per controlled permanent's activatable ability (reading `Activate.abilitiesFor`, which Task 9 flips to the projection):
 
 ```haskell
 legalActions :: PlayerId -> GameState -> [Action]
@@ -936,7 +936,7 @@ legalActions pid gs =
 
 - [x] **Step 6: Add the `Activate` arm to `priorityLoop`**
 
-In `source/library/Pawl/Engine.hs`, add `import qualified Pawl.Activate as Activate`. Add the arm beside `Cast` (CR 117.3c: activating keeps priority):
+In `source/library/Parun/Engine.hs`, add `import qualified Parun.Activate as Activate`. Add the arm beside `Cast` (CR 117.3c: activating keeps priority):
 
 ```haskell
               Action.Type.Activate oid ability -> do
@@ -954,7 +954,7 @@ Expected: PASS — activation puts an ability on the stack and taps the source; 
 
 ```bash
 git add -A && hooky fix && git add -A && hooky run
-git commit -m "Activate an ability onto the stack: Action.Activate + Pawl.Activate (CR 602)"
+git commit -m "Activate an ability onto the stack: Action.Activate + Parun.Activate (CR 602)"
 ```
 
 ---
@@ -962,8 +962,8 @@ git commit -m "Activate an ability onto the stack: Action.Activate + Pawl.Activa
 ### Task 6: The mana-ability true branch — Llanowar Elves taps, no stack
 
 **Files:**
-- Modify: `source/library/Pawl/Mana.hs` (`manaTypesOf` reads printed mana abilities; `manaSources` excludes sick creatures)
-- Test: `source/test-suite/Pawl/ManaSpec.hs`, `source/test-suite/Pawl/ActivateSpec.hs`
+- Modify: `source/library/Parun/Mana.hs` (`manaTypesOf` reads printed mana abilities; `manaSources` excludes sick creatures)
+- Test: `source/test-suite/Parun/ManaSpec.hs`, `source/test-suite/Parun/ActivateSpec.hs`
 
 **Interfaces:**
 - Consumes: `isManaAbility`/`manaProduced` (Task 1), the printings (Task 2), the sickness field.
@@ -971,7 +971,7 @@ git commit -m "Activate an ability onto the stack: Action.Activate + Pawl.Activa
 
 - [x] **Step 1: Write the failing tests**
 
-Add to `source/test-suite/Pawl/ManaSpec.hs`:
+Add to `source/test-suite/Parun/ManaSpec.hs`:
 
 ```haskell
       HU.testCase "CR 605 a settled Llanowar Elves is a green mana source" $
@@ -985,9 +985,9 @@ Add to `source/test-suite/Pawl/ManaSpec.hs`:
          in HU.assertBool "sick elf excluded" (notElem elfId (Mana.manaSources S.alice sick)),
 ```
 
-(Add `qualified Pawl.Setup as Setup`, `qualified Pawl.Type.GameState as GameState`, `qualified Pawl.Type.Object as Object`, `qualified Pawl.Type.Sickness as Sickness` to `ManaSpec` if absent.)
+(Add `qualified Parun.Setup as Setup`, `qualified Parun.Type.GameState as GameState`, `qualified Parun.Type.Object as Object`, `qualified Parun.Type.Sickness as Sickness` to `ManaSpec` if absent.)
 
-Add to `source/test-suite/Pawl/ActivateSpec.hs` — Llanowar Elves' ability must NOT be offered as a stack action:
+Add to `source/test-suite/Parun/ActivateSpec.hs` — Llanowar Elves' ability must NOT be offered as a stack action:
 
 ```haskell
       HU.testCase "CR 605.3b a mana ability is not offered as a stack activation" $
@@ -1003,7 +1003,7 @@ Expected: FAIL — `manaTypesOf` reads only the subtype (a creature has none), s
 
 - [x] **Step 3: Read printed mana abilities in `manaTypesOf`**
 
-In `source/library/Pawl/Mana.hs`, extend `manaTypesOf` to add the mana of printed abilities classified as mana abilities. Add `import qualified Pawl.Type.Card as Card.Type`:
+In `source/library/Parun/Mana.hs`, extend `manaTypesOf` to add the mana of printed abilities classified as mana abilities. Add `import qualified Parun.Type.Card as Card.Type`:
 
 ```haskell
 -- Every mana type an object could produce: its intrinsic subtype mana (CR 305.6)
@@ -1024,7 +1024,7 @@ manaTypesOf oid gs =
 
 - [x] **Step 4: Exclude summoning-sick creatures in `manaSources`**
 
-In `source/library/Pawl/Mana.hs`, extend `manaSources`' `isSource` so a summoning-sick creature is not a source (CR 302.6 — its mana ability needs `{T}`). Add `import qualified Pawl.Type.CardType as CardType`, `import qualified Pawl.Type.Sickness as Sickness`:
+In `source/library/Parun/Mana.hs`, extend `manaSources`' `isSource` so a summoning-sick creature is not a source (CR 302.6 — its mana ability needs `{T}`). Add `import qualified Parun.Type.CardType as CardType`, `import qualified Parun.Type.Sickness as Sickness`:
 
 ```haskell
 manaSources :: PlayerId -> GameState -> [ObjectId]
@@ -1060,12 +1060,12 @@ git commit -m "Read printed mana abilities as sources; exclude sick creatures (C
 ### Task 7: `Search` — the opcode, criterion, prompt, and executor
 
 **Files:**
-- Create: `source/library/Pawl/Type/CardCriterion.hs`
-- Modify: `source/library/Pawl/Type/Effect.hs` (add `Search`)
-- Modify: `source/library/Pawl/Type/Prompt.hs` (add `SearchLibrary`)
-- Modify: `source/library/Pawl/Resolve.hs` (`slotsOf`/`rewriteEffect`/`manaProduced` arms; `matchesCriterion`; the `Search` executor in `applyEffect`)
-- Modify: `source/test-suite/Pawl/Support.hs` + `source/benchmark/Main.hs` (answerers gain a `SearchLibrary` arm)
-- Test: `source/test-suite/Pawl/ResolveSpec.hs`
+- Create: `source/library/Parun/Type/CardCriterion.hs`
+- Modify: `source/library/Parun/Type/Effect.hs` (add `Search`)
+- Modify: `source/library/Parun/Type/Prompt.hs` (add `SearchLibrary`)
+- Modify: `source/library/Parun/Resolve.hs` (`slotsOf`/`rewriteEffect`/`manaProduced` arms; `matchesCriterion`; the `Search` executor in `applyEffect`)
+- Modify: `source/test-suite/Parun/Support.hs` + `source/benchmark/Main.hs` (answerers gain a `SearchLibrary` arm)
+- Test: `source/test-suite/Parun/ResolveSpec.hs`
 
 **Interfaces:**
 - Consumes: monadic `applyEffect` (Task 3).
@@ -1073,7 +1073,7 @@ git commit -m "Read printed mana abilities as sources; exclude sick creatures (C
 
 - [x] **Step 1: Write the failing test**
 
-Add to the `Resolve` group in `source/test-suite/Pawl/ResolveSpec.hs`. Build a state where alice has a Mountain in her library and resolve a bare `Search BasicLandCard` effect (via a hand-built ability object or directly through `applyEffect`); assert the Mountain is on the battlefield tapped and gone from the library. Use an answerer that finds the first match:
+Add to the `Resolve` group in `source/test-suite/Parun/ResolveSpec.hs`. Build a state where alice has a Mountain in her library and resolve a bare `Search BasicLandCard` effect (via a hand-built ability object or directly through `applyEffect`); assert the Mountain is on the battlefield tapped and gone from the library. Use an answerer that finds the first match:
 
 ```haskell
       HU.testCase "CR 701.23 Search fetches a basic land to the battlefield tapped" $
@@ -1108,7 +1108,7 @@ Add to the `Resolve` group in `source/test-suite/Pawl/ResolveSpec.hs`. Build a s
          in HU.assertEqual "nothing entered the battlefield" Set.empty (GameState.battlefield resolved),
 ```
 
-The `Object.MkObject` positional form matches the field order in `Pawl.Type.Object` (owner, source, zone, tapped, damage, sickness, targets, chosenSubtypes, timestamp). The `Source.OfAbility (ObjectId.MkObjectId 0) ability` source-permanent id is a throwaway: `Search` searches the *controller's* library (the ability object's owner, `S.alice`), never the source permanent — so a dead/placeholder source id is fine (this is exactly why Task 7 threads the controller rather than reading it off the source). Add the two local answerers:
+The `Object.MkObject` positional form matches the field order in `Parun.Type.Object` (owner, source, zone, tapped, damage, sickness, targets, chosenSubtypes, timestamp). The `Source.OfAbility (ObjectId.MkObjectId 0) ability` source-permanent id is a throwaway: `Search` searches the *controller's* library (the ability object's owner, `S.alice`), never the source permanent — so a dead/placeholder source id is fine (this is exactly why Task 7 threads the controller rather than reading it off the source). Add the two local answerers:
 
 ```haskell
 findFirst :: Prompt.Prompt r -> r
@@ -1124,7 +1124,7 @@ findNothing p = case p of
   _ -> S.identityAnswer p
 ```
 
-Add a `Support` helper (Step referenced): `addLibraryCard :: Printing -> PlayerId -> GameState -> (ObjectId, GameState)` puts one card into a player's library. Add it in `source/test-suite/Pawl/Support.hs`:
+Add a `Support` helper (Step referenced): `addLibraryCard :: Printing -> PlayerId -> GameState -> (ObjectId, GameState)` puts one card into a player's library. Add it in `source/test-suite/Parun/Support.hs`:
 
 ```haskell
 -- One card of a printing in pid's library.
@@ -1152,7 +1152,7 @@ addLibraryCard printing pid gs =
       )
 ```
 
-(Add imports to `ResolveSpec`: `qualified Pawl.Type.CardCriterion as CardCriterion`.)
+(Add imports to `ResolveSpec`: `qualified Parun.Type.CardCriterion as CardCriterion`.)
 
 - [x] **Step 2: Run tests to verify they fail**
 
@@ -1161,10 +1161,10 @@ Expected: FAIL to compile — `CardCriterion`, `Effect.Search`, `Prompt.SearchLi
 
 - [x] **Step 3: Add `CardCriterion` and the `Search` opcode**
 
-`source/library/Pawl/Type/CardCriterion.hs`:
+`source/library/Parun/Type/CardCriterion.hs`:
 
 ```haskell
-module Pawl.Type.CardCriterion where
+module Parun.Type.CardCriterion where
 
 -- A first-order, analyzable predicate over a card, as data (CR 701.23a). Its one
 -- inhabitant now is CR 205.4c's basic land. Grows: by color, by card type, by
@@ -1174,7 +1174,7 @@ data CardCriterion
   deriving (Eq, Ord, Show)
 ```
 
-In `source/library/Pawl/Type/Effect.hs`, add `import Pawl.Type.CardCriterion (CardCriterion)` and the constructor:
+In `source/library/Parun/Type/Effect.hs`, add `import Parun.Type.CardCriterion (CardCriterion)` and the constructor:
 
 ```haskell
   | -- CR 701.23: search the controller's library for a card matching the
@@ -1185,7 +1185,7 @@ In `source/library/Pawl/Type/Effect.hs`, add `import Pawl.Type.CardCriterion (Ca
 
 - [x] **Step 4: Add the `SearchLibrary` prompt**
 
-In `source/library/Pawl/Type/Prompt.hs`, add the constructor:
+In `source/library/Parun/Type/Prompt.hs`, add the constructor:
 
 ```haskell
   -- CR 701.23 / 701.23b: the [ObjectId] is the library cards MATCHING the
@@ -1196,7 +1196,7 @@ In `source/library/Pawl/Type/Prompt.hs`, add the constructor:
 
 - [x] **Step 5: Add the `Resolve` arms and the `Search` executor**
 
-In `source/library/Pawl/Resolve.hs`, add the `slotsOf` arm (`Search` names no slot):
+In `source/library/Parun/Resolve.hs`, add the `slotsOf` arm (`Search` names no slot):
 
 ```haskell
   Effect.Search _ -> Set.empty
@@ -1226,7 +1226,7 @@ matchesCriterion crit card = case crit of
       && Set.member Supertype.Basic (TypeLine.supertypes (Card.typeLine card))
 ```
 
-(Add imports `qualified Pawl.Type.CardCriterion as CardCriterion`, `qualified Pawl.Type.CardType as CardType`, `qualified Pawl.Type.Supertype as Supertype`, `qualified Pawl.Type.TypeLine as TypeLine`.)
+(Add imports `qualified Parun.Type.CardCriterion as CardCriterion`, `qualified Parun.Type.CardType as CardType`, `qualified Parun.Type.Supertype as Supertype`, `qualified Parun.Type.TypeLine as TypeLine`.)
 
 **Thread the controller into `applyEffect`.** `Search` searches the *controller's* library — the controller of the resolving spell/ability, which is NOT the effect's `source` (for an ability, `source` is the source permanent, which may already be sacrificed as a cost — Evolving Wilds). Add a `controller :: PlayerId` parameter to `applyEffect`, immediately after `source`:
 
@@ -1288,11 +1288,11 @@ reorderLibrary pid order gs =
   gs {GameState.library = Map.insert pid (Seq.fromList order) (GameState.library gs)}
 ```
 
-(Add imports `import Pawl.Type.PlayerId (PlayerId)`, `import qualified Data.Sequence as Seq`, `import qualified Pawl.Decide as Decide`, `import qualified Pawl.Type.Program as Program`, `import qualified Pawl.Type.Prompt as Prompt`, `import qualified Control.Monad.Trans.Class as Trans`, `import qualified Pawl.Type.TapState as TapState` to `Resolve`. `Zone`/`Object`/`GameState` are already imported.)
+(Add imports `import Parun.Type.PlayerId (PlayerId)`, `import qualified Data.Sequence as Seq`, `import qualified Parun.Decide as Decide`, `import qualified Parun.Type.Program as Program`, `import qualified Parun.Type.Prompt as Prompt`, `import qualified Control.Monad.Trans.Class as Trans`, `import qualified Parun.Type.TapState as TapState` to `Resolve`. `Zone`/`Object`/`GameState` are already imported.)
 
 - [x] **Step 6: Add the `SearchLibrary` arm to every answerer**
 
-`-Wincomplete-patterns` (pedantic) flags every `Prompt r -> r` matcher. In `source/test-suite/Pawl/Support.hs`, add to `identityAnswer`, `castAnswer`, `aggressiveAnswer`, `playLandAnswer` a canonical fail-to-find (finding nothing is always legal and never wedges a random game):
+`-Wincomplete-patterns` (pedantic) flags every `Prompt r -> r` matcher. In `source/test-suite/Parun/Support.hs`, add to `identityAnswer`, `castAnswer`, `aggressiveAnswer`, `playLandAnswer` a canonical fail-to-find (finding nothing is always legal and never wedges a random game):
 
 ```haskell
   Prompt.SearchLibrary {} -> Nothing
@@ -1323,8 +1323,8 @@ git commit -m "Add the Search opcode: tutor a basic land to the battlefield tapp
 ### Task 8: `SacrificeSelf` + Evolving Wilds end-to-end
 
 **Files:**
-- Modify: `source/library/Pawl/Card.hs` (add `evolvingWildsPrinting`; `allPrintings`)
-- Test: `source/test-suite/Pawl/ActivateSpec.hs`
+- Modify: `source/library/Parun/Card.hs` (add `evolvingWildsPrinting`; `allPrintings`)
+- Test: `source/test-suite/Parun/ActivateSpec.hs`
 
 **Interfaces:**
 - Consumes: `SacrificeSelf` payment (Task 5's `payAdditional`/`canPayAdditional`), the `Search` opcode (Task 7), activation (Task 5).
@@ -1332,7 +1332,7 @@ git commit -m "Add the Search opcode: tutor a basic land to the battlefield tapp
 
 - [x] **Step 1: Write the failing test**
 
-Add to `source/test-suite/Pawl/ActivateSpec.hs` (add imports `qualified Pawl.Mana as Mana`, `qualified Data.Set as Set`, `qualified Pawl.Type.Zone as Zone`, `qualified Pawl.Type.Prompt as Prompt` if absent), plus a local `findFirst` answerer at module top level:
+Add to `source/test-suite/Parun/ActivateSpec.hs` (add imports `qualified Parun.Mana as Mana`, `qualified Data.Set as Set`, `qualified Parun.Type.Zone as Zone`, `qualified Parun.Type.Prompt as Prompt` if absent), plus a local `findFirst` answerer at module top level:
 
 ```haskell
 findFirst :: Prompt.Prompt r -> r
@@ -1377,7 +1377,7 @@ Expected: FAIL to compile — `Card.evolvingWildsPrinting` not in scope.
 
 - [x] **Step 3: Add the Evolving Wilds printing**
 
-In `source/library/Pawl/Card.hs`:
+In `source/library/Parun/Card.hs`:
 
 ```haskell
 -- Evolving Wilds: Land, "{T}, Sacrifice this land: Search your library for a
@@ -1415,7 +1415,7 @@ evolvingWildsPrinting =
     }
 ```
 
-Add `import qualified Pawl.Type.CardCriterion as CardCriterion` to `Card.hs`, and register in `allPrintings`:
+Add `import qualified Parun.Type.CardCriterion as CardCriterion` to `Card.hs`, and register in `allPrintings`:
 
 ```haskell
     llanowarElvesPrinting,
@@ -1442,10 +1442,10 @@ git commit -m "Evolving Wilds: sacrifice cost + Search, end-to-end (CR 701.21/70
 ### Task 9: `abilitiesOf` — Humility strips activated abilities
 
 **Files:**
-- Modify: `source/library/Pawl/Type/ProjectedCharacteristics.hs` (add `activatedAbilities`)
-- Modify: `source/library/Pawl/Projection.hs` (`baseCharacteristics` seeds it; `applyModification` `LoseAllAbilities` strips it; `abilitiesOf`)
-- Modify: `source/library/Pawl/Mana.hs` (`manaTypesOf` reads `abilitiesOf` instead of the printed list)
-- Test: `source/test-suite/Pawl/ProjectionSpec.hs`, `source/test-suite/Pawl/ActivateSpec.hs`
+- Modify: `source/library/Parun/Type/ProjectedCharacteristics.hs` (add `activatedAbilities`)
+- Modify: `source/library/Parun/Projection.hs` (`baseCharacteristics` seeds it; `applyModification` `LoseAllAbilities` strips it; `abilitiesOf`)
+- Modify: `source/library/Parun/Mana.hs` (`manaTypesOf` reads `abilitiesOf` instead of the printed list)
+- Test: `source/test-suite/Parun/ProjectionSpec.hs`, `source/test-suite/Parun/ActivateSpec.hs`
 
 **Interfaces:**
 - Consumes: the printings, `LoseAllAbilities` (M3b), `activatable`/`manaTypesOf` (Tasks 5–6).
@@ -1453,7 +1453,7 @@ git commit -m "Evolving Wilds: sacrifice cost + Search, end-to-end (CR 701.21/70
 
 - [x] **Step 1: Write the failing tests**
 
-Add to `source/test-suite/Pawl/ProjectionSpec.hs` (Humility is `S.withHumility`; Prodigal Sorcerer is a creature, so `AllCreatures LoseAllAbilities` hits it):
+Add to `source/test-suite/Parun/ProjectionSpec.hs` (Humility is `S.withHumility`; Prodigal Sorcerer is a creature, so `AllCreatures LoseAllAbilities` hits it):
 
 ```haskell
       HU.testCase "CR 613 layer 6: Humility strips a creature's activated abilities" $
@@ -1465,7 +1465,7 @@ Add to `source/test-suite/Pawl/ProjectionSpec.hs` (Humility is `S.withHumility`;
          in HU.assertEqual "one ability" 1 (length (Projection.abilitiesOf sorcId gs)),
 ```
 
-Add to `source/test-suite/Pawl/ActivateSpec.hs` — a Humility'd Prodigal Sorcerer cannot be activated:
+Add to `source/test-suite/Parun/ActivateSpec.hs` — a Humility'd Prodigal Sorcerer cannot be activated:
 
 ```haskell
       HU.testCase "CR 613/602 a Humility'd Prodigal Sorcerer's ability is not offered" $
@@ -1481,7 +1481,7 @@ Expected: FAIL — `Projection.abilitiesOf` not in scope.
 
 - [x] **Step 3: Add `activatedAbilities` to `ProjectedCharacteristics`**
 
-In `source/library/Pawl/Type/ProjectedCharacteristics.hs`, add `import Pawl.Type.ActivatedAbility (ActivatedAbility)` and the field:
+In `source/library/Parun/Type/ProjectedCharacteristics.hs`, add `import Parun.Type.ActivatedAbility (ActivatedAbility)` and the field:
 
 ```haskell
     -- CR 602 / 613 layer 6: the object's activated abilities after the layer
@@ -1493,7 +1493,7 @@ Both `MkProjectedCharacteristics` sites in `Projection.baseCharacteristics` need
 
 - [x] **Step 4: Strip abilities in `LoseAllAbilities`, add `abilitiesOf`**
 
-In `source/library/Pawl/Projection.hs`, extend the `LoseAllAbilities` arm of `applyModification` to also clear abilities (CR 613 layer 6 removes ALL abilities — keywords, static, and activated):
+In `source/library/Parun/Projection.hs`, extend the `LoseAllAbilities` arm of `applyModification` to also clear abilities (CR 613 layer 6 removes ALL abilities — keywords, static, and activated):
 
 ```haskell
   Modification.LoseAllAbilities ->
@@ -1509,7 +1509,7 @@ abilitiesOf :: ObjectId -> GameState -> [ActivatedAbility.ActivatedAbility]
 abilitiesOf oid gs = PC.activatedAbilities (project oid gs)
 ```
 
-(Add `import qualified Pawl.Type.ActivatedAbility as ActivatedAbility` to `Projection`.)
+(Add `import qualified Parun.Type.ActivatedAbility as ActivatedAbility` to `Projection`.)
 
 Then flip `Activate.abilitiesFor` (Task 5) to read the projection — the single switch that makes `activatable` and `legalActions` respect Humility:
 
@@ -1518,11 +1518,11 @@ abilitiesFor :: ObjectId -> GameState -> [ActivatedAbility.ActivatedAbility]
 abilitiesFor srcId gs = Projection.abilitiesOf srcId gs
 ```
 
-(`Pawl.Projection` is already imported in `Activate`; the `Game.cardOf`/`Card.Type` reads in the old body may leave `Card.Type` unused — drop that import if the build warns.)
+(`Parun.Projection` is already imported in `Activate`; the `Game.cardOf`/`Card.Type` reads in the old body may leave `Card.Type` unused — drop that import if the build warns.)
 
 - [x] **Step 5: Switch `manaTypesOf` to the projection**
 
-In `source/library/Pawl/Mana.hs`, change `manaTypesOf`'s `fromAbilities` to read `Projection.abilitiesOf` instead of the printed `Card.Type.activatedAbilities`, so a Humility'd creature loses its mana ability too:
+In `source/library/Parun/Mana.hs`, change `manaTypesOf`'s `fromAbilities` to read `Projection.abilitiesOf` instead of the printed `Card.Type.activatedAbilities`, so a Humility'd creature loses its mana ability too:
 
 ```haskell
       fromAbilities =

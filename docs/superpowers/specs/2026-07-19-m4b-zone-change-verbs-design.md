@@ -134,7 +134,7 @@ alongside the existing choices.
 
 ## 1. New and grown types
 
-**`Pawl.Type.Effect`** grows five constructors. `Resolve` remains the sole module
+**`Parun.Type.Effect`** grows five constructors. `Resolve` remains the sole module
 that may `case` on `Effect`; each new arm is added to `slotsOf`, `readsX`,
 `manaProduced`, `searchesLibrary`, and `rewriteEffect` (§3, §5).
 
@@ -166,19 +166,19 @@ that may `case` on `Effect`; each new arm is added to `slotsOf`, `readsX`,
     Discard SlotName Quantity
 ```
 
-**`Pawl.Type.Keyword`** grows **`Indestructible`** (CR 702.12), inserted by rule
+**`Parun.Type.Keyword`** grows **`Indestructible`** (CR 702.12), inserted by rule
 number between `Haste` (702.10) and `Reach` (702.17) — the type stays diffable
 against rule 702. A keyword is a rulebook citation, so reading it in the closed
 half is legitimate (the M2a rule); it is read only through the projection
 (`Projection.hasKeyword` / `PC.keywords`), never `Card.keywords`, so Humility
 (layer 6) strips it for free.
 
-**`Pawl.Type.TargetSpec`** grows **`CreatureOrEnchantmentTarget`** (Angelic Edict,
+**`Parun.Type.TargetSpec`** grows **`CreatureOrEnchantmentTarget`** (Angelic Edict,
 CR 115): a permanent whose *projected* card types include Creature or Enchantment.
 The first spec that admits a non-creature permanent as a target — exercised by
 exiling an enchantment (Rest in Peace / Humility exist on the board at M4b).
 
-**`Pawl.Type.Prompt`** grows the discard choice:
+**`Parun.Type.Prompt`** grows the discard choice:
 
 ```haskell
   -- CR 701.8a: the discarding player chooses which cards leave their hand. The
@@ -190,7 +190,7 @@ exiling an enchantment (Rest in Peace / Humility exist on the board at M4b).
   ChooseDiscard :: Decider -> PlayerId -> [ObjectId] -> Natural -> Prompt [ObjectId]
 ```
 
-**`Pawl.Type.Response`** grows `ChoseDiscard [ObjectId]` for replay round-trip,
+**`Parun.Type.Response`** grows `ChoseDiscard [ObjectId]` for replay round-trip,
 mirroring `Searched` / `ChoseX`.
 
 No new `Zone` (all six destinations exist), no new `Recipient` (`ToCreature`,
@@ -371,7 +371,7 @@ reads equal its declared `targetSpecs`, Divination declares none, and no card
 reads `X` without an `{X}` cost (all M4b Literals). The M3.5 round-trip
 (`jsonToCard . cardToJson ≡ Right`) stays green over the grown pool — the five
 opcodes, the keyword, the target spec, and the prompt/response are all born
-serializable through `Pawl.Codec`.
+serializable through `Parun.Codec`.
 
 **Random-game coverage.** The gate and riders land as deterministic fixtures;
 following the M2d/M3 pattern, a black/blue random-game deck entry for the

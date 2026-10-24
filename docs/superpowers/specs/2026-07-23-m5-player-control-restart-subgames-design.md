@@ -29,7 +29,7 @@ retired now that the axes they sit on are complete (M4.5's hand-off):
   `Program Prompt` inside a `Program Prompt` — which is a function call." XMage
   lists Shahrazad unimplementable because its architecture can't nest a game in a
   game; mtg-pure's prompts are IO callbacks, so a game in flight can't be
-  snapshotted or resumed and Mindslaver is a `-- TODO`. pawl's
+  snapshotted or resumed and Mindslaver is a `-- TODO`. parun's
   `StateT GameState (Program Prompt)` makes a subgame a recursive call.
 - **727 sits between them** (design.md §3): "restart-in-place is tractable even
   in a mutable engine; nesting a subgame to completion and resuming the parent is
@@ -77,7 +77,7 @@ These outrank the phase plan (CLAUDE.md, "Executing a plan"):
    - 729's outcome plumbing stays generic: a `PlaySubgame` opcode binds the
      subgame's result to a named slot, and "the loser loses half their life" is
      **ordinary follow-on card data** (existing life-loss vocabulary reading the
-     slot). `Pawl.Resolve` never grows a `case … Shahrazad`.
+     slot). `Parun.Resolve` never grows a `case … Shahrazad`.
    - 727's restart is a routine keyed off a generic "restart the game" effect, not
      off Karn's identity.
 2. **The engine makes no choices.** Every subgame choice (down to "randomly
@@ -105,12 +105,12 @@ number drives code (CLAUDE.md: never trust recalled Magic rules).
 ### Notes the phase specs must not lose
 
 - **M5a is a close-out, not a new axis.** The map at this design pass confirms the
-  substrate is already built and wired: `Pawl.Type.Decider`
-  (`newtype Decider = MkDecider PlayerId`), `Pawl.Decide.deciderFor` (the single
+  substrate is already built and wired: `Parun.Type.Decider`
+  (`newtype Decider = MkDecider PlayerId`), `Parun.Decide.deciderFor` (the single
   "who actually chooses" indirection, consulted at every prompt site),
   `GameState.pendingControl :: Map PlayerId Decider` and
   `GameState.activeControl :: Maybe Decider`, `Effect.ControlPlayerNextTurn
-  SlotName` (Mindslaver's opcode, resolved in `Pawl.Resolve`), and the
+  SlotName` (Mindslaver's opcode, resolved in `Parun.Resolve`), and the
   promotion `pendingControl → activeControl` at `Engine.handoffTurn` (CR 723.1b:
   a pending effect waits for the player to *actually take* a turn). What M5a adds
   is proof and edges, not machinery:
@@ -173,7 +173,7 @@ number drives code (CLAUDE.md: never trust recalled Magic rules).
     needed; the call stack *is* the game stack.
   - **Subgame prompts are untagged** (owner decision, 2026-07-23; SUPERSEDED --
     #153 tagged them, without changing the `Prompt` GADT, by suspending on a
-    `Pawl.Types.Asked` that carries the asking game and the games enclosing it).
+    `Parun.Types.Asked` that carries the asking game and the games enclosing it).
     Pure and
     scripted test interpreters do not need to distinguish which game a prompt
     belongs to, so M5's gameplay tests work directly. A real client's need for
@@ -192,7 +192,7 @@ number drives code (CLAUDE.md: never trust recalled Magic rules).
     and binds its outcome (the loser, or the full `Result`) to a named slot; the
     remaining opcodes on Shahrazad's card are ordinary vocabulary that read the
     slot (life loss). The phase spec settles the exact bound value; note that
-    `Pawl.Type.Result` is today `Won PlayerId | Drawn`, from which a 2-player
+    `Parun.Type.Result` is today `Won PlayerId | Drawn`, from which a 2-player
     subgame's loser is derivable but which may need widening for "the loser."
   - **Teardown (CR 729.5):** at subgame end, each player takes all traditional
     cards they own anywhere in the subgame (library, hand, battlefield, graveyard,

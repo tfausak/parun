@@ -1,0 +1,85 @@
+module Parun.Codec.ReplacementEffect where
+
+import qualified Data.Typeable as Typeable
+import qualified Parun.Codec.AttachR as AttachR
+import qualified Parun.Codec.CounterR as CounterR
+import qualified Parun.Codec.DamageR as DamageR
+import qualified Parun.Codec.DestructionR as DestructionR
+import qualified Parun.Codec.DieRollR as DieRollR
+import qualified Parun.Codec.DrawCountR as DrawCountR
+import qualified Parun.Codec.DrawR as DrawR
+import qualified Parun.Codec.EntryR as EntryR
+import qualified Parun.Codec.Filter as Filter
+import qualified Parun.Codec.GameLossR as GameLossR
+import qualified Parun.Codec.InstructionR as InstructionR
+import qualified Parun.Codec.Keyword as Keyword
+import qualified Parun.Codec.LifeGainR as LifeGainR
+import qualified Parun.Codec.LifeLossR as LifeLossR
+import qualified Parun.Codec.PhasePattern as PhasePattern
+import qualified Parun.Codec.PlaneswalkR as PlaneswalkR
+import qualified Parun.Codec.TokenR as TokenR
+import qualified Parun.Codec.TurnUpR as TurnUpR
+import qualified Parun.Codec.UntapR as UntapR
+import qualified Parun.Codec.ZoneChangeR as ZoneChangeR
+import qualified Parun.JsonCodec.Arm as Arm
+import qualified Parun.JsonCodec.Codec as Codec
+import qualified Parun.Types.ReplacementEffect as ReplacementEffect
+
+-- | The wire format is unchanged by the conversion to a bundle; what it adds is
+-- the schema.
+--
+-- The effect codec is a PARAMETER rather than an import, for the reason
+-- Parun.Types.DamageR gives: the DamageR arm carries CR 615.5's riders and the
+-- EntryR arm CR 614.1c's as-enters effects. The card codec is one for
+-- Parun.Codec.Create's: the TokenR arm's appended token is card data.
+codec ::
+  (Typeable.Typeable card, Eq card, Typeable.Typeable ability, Eq ability, Typeable.Typeable effect, Eq effect) =>
+  Codec.Codec card ->
+  Codec.Codec ability ->
+  Codec.Codec effect ->
+  Codec.Codec (ReplacementEffect.ReplacementEffect card ability effect)
+codec cardCodec abilityCodec effectCodec =
+  Arm.tagged
+    tagOf
+    [ Arm.payload "ZoneChangeR" ZoneChangeR.codec ReplacementEffect.ZoneChangeR (\x -> case x of ReplacementEffect.ZoneChangeR y -> Just y; _ -> Nothing),
+      Arm.payload "EntryR" (EntryR.codec abilityCodec effectCodec) ReplacementEffect.EntryR (\x -> case x of ReplacementEffect.EntryR y -> Just y; _ -> Nothing),
+      Arm.payload "DamageR" (DamageR.codec effectCodec) ReplacementEffect.DamageR (\x -> case x of ReplacementEffect.DamageR y -> Just y; _ -> Nothing),
+      Arm.payload "DestructionR" DestructionR.codec ReplacementEffect.DestructionR (\x -> case x of ReplacementEffect.DestructionR y -> Just y; _ -> Nothing),
+      Arm.payload "CounterR" CounterR.codec ReplacementEffect.CounterR (\x -> case x of ReplacementEffect.CounterR y -> Just y; _ -> Nothing),
+      Arm.payload "TokenR" (TokenR.codec cardCodec) ReplacementEffect.TokenR (\x -> case x of ReplacementEffect.TokenR y -> Just y; _ -> Nothing),
+      Arm.payload "TurnUpR" (TurnUpR.codec abilityCodec effectCodec) ReplacementEffect.TurnUpR (\x -> case x of ReplacementEffect.TurnUpR y -> Just y; _ -> Nothing),
+      Arm.payload "AttachR" (AttachR.codec abilityCodec effectCodec) ReplacementEffect.AttachR (\x -> case x of ReplacementEffect.AttachR y -> Just y; _ -> Nothing),
+      Arm.payload "UntapR" UntapR.codec ReplacementEffect.UntapR (\x -> case x of ReplacementEffect.UntapR y -> Just y; _ -> Nothing),
+      Arm.payload "LifeLossR" LifeLossR.codec ReplacementEffect.LifeLossR (\x -> case x of ReplacementEffect.LifeLossR y -> Just y; _ -> Nothing),
+      Arm.payload "LifeGainR" LifeGainR.codec ReplacementEffect.LifeGainR (\x -> case x of ReplacementEffect.LifeGainR y -> Just y; _ -> Nothing),
+      Arm.payload "DrawR" DrawR.codec ReplacementEffect.DrawR (\x -> case x of ReplacementEffect.DrawR y -> Just y; _ -> Nothing),
+      Arm.payload "DrawCountR" DrawCountR.codec ReplacementEffect.DrawCountR (\x -> case x of ReplacementEffect.DrawCountR y -> Just y; _ -> Nothing),
+      Arm.payload "InstructionR" InstructionR.codec ReplacementEffect.InstructionR (\x -> case x of ReplacementEffect.InstructionR y -> Just y; _ -> Nothing),
+      Arm.payload "DieRollR" DieRollR.codec ReplacementEffect.DieRollR (\x -> case x of ReplacementEffect.DieRollR y -> Just y; _ -> Nothing),
+      Arm.payload "AssembleR" (Filter.codec Keyword.codec) ReplacementEffect.AssembleR (\x -> case x of ReplacementEffect.AssembleR y -> Just y; _ -> Nothing),
+      Arm.payload "GameLossR" (GameLossR.codec effectCodec) ReplacementEffect.GameLossR (\x -> case x of ReplacementEffect.GameLossR y -> Just y; _ -> Nothing),
+      Arm.payload "PlaneswalkR" (PlaneswalkR.codec effectCodec) ReplacementEffect.PlaneswalkR (\x -> case x of ReplacementEffect.PlaneswalkR y -> Just y; _ -> Nothing),
+      Arm.payload "PhaseR" PhasePattern.codec ReplacementEffect.PhaseR (\x -> case x of ReplacementEffect.PhaseR y -> Just y; _ -> Nothing)
+    ]
+
+tagOf :: ReplacementEffect.ReplacementEffect card ability effect -> String
+tagOf x = case x of
+  ReplacementEffect.ZoneChangeR {} -> "ZoneChangeR"
+  ReplacementEffect.EntryR {} -> "EntryR"
+  ReplacementEffect.DamageR {} -> "DamageR"
+  ReplacementEffect.DestructionR {} -> "DestructionR"
+  ReplacementEffect.CounterR {} -> "CounterR"
+  ReplacementEffect.TokenR {} -> "TokenR"
+  ReplacementEffect.TurnUpR {} -> "TurnUpR"
+  ReplacementEffect.AttachR {} -> "AttachR"
+  ReplacementEffect.UntapR {} -> "UntapR"
+  ReplacementEffect.LifeLossR {} -> "LifeLossR"
+  ReplacementEffect.LifeGainR {} -> "LifeGainR"
+  ReplacementEffect.DrawR {} -> "DrawR"
+  ReplacementEffect.GameLossR {} -> "GameLossR"
+  ReplacementEffect.PlaneswalkR {} -> "PlaneswalkR"
+  ReplacementEffect.DrawCountR {} -> "DrawCountR"
+  ReplacementEffect.InstructionR {} -> "InstructionR"
+  ReplacementEffect.DieRollR {} -> "DieRollR"
+  ReplacementEffect.AssembleR {} -> "AssembleR"
+  ReplacementEffect.PhaseR {} -> "PhaseR"

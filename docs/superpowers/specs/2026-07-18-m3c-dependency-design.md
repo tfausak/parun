@@ -6,7 +6,7 @@ go/no-go verdict for the whole continuous-effects approach, and the single
 hardest bet in the design. No studied prior-art engine actually built trial
 application: Argentum *documented* it in detail and shipped a hardcoded
 whitelist that could not even represent Blood Moon + Urborg (`docs/design.md`
-risk register; `prior-art-lessons.md` §Decisions, D2). M3c is where pawl finds
+risk register; `prior-art-lessons.md` §Decisions, D2). M3c is where parun finds
 out.
 
 Two card pairs are the gate, each Scryfall-verified (AllPrintings via
@@ -113,7 +113,7 @@ source-liveness in the projection path.
 
 ## 1. New and grown types
 
-**`Pawl.Type.Modification`** grows three layer-4 constructors — the open-half
+**`Parun.Type.Modification`** grows three layer-4 constructors — the open-half
 type-changing vocabulary, classified `Layer.Type` by `Projection.layer`:
 
 ```haskell
@@ -145,12 +145,12 @@ The three modes map exactly to CR 305.7's two clauses plus a card-type add:
   separate layer-4 operation. (Opalescence: "is a creature in addition to its
   other types.")
 
-**`Pawl.Type.Quantity`** grows `ManaValue` — evaluated against the *affected*
+**`Parun.Type.Quantity`** grows `ManaValue` — evaluated against the *affected*
 object's mana cost (CR 202.3). Opalescence's "base power and base toughness each
 equal to its mana value" is `SetBasePowerToughness ManaValue ManaValue`. One
 new `Quantity.evaluate` case; still a first-order quantity, no card identity.
 
-**`Pawl.Type.Affected`** grows the dynamic, projection-read sets the cards name:
+**`Parun.Type.Affected`** grows the dynamic, projection-read sets the cards name:
 
 ```haskell
 data Affected
@@ -169,7 +169,7 @@ layer-4 answer, not the printed one, which is what makes them layer-4-dependent
 excludes itself; it excludes Auras correctly today though no Aura exists to
 exercise that branch (an expiry, §6).
 
-**`Pawl.Type.ProjectedCharacteristics`** grows the projected type line:
+**`Parun.Type.ProjectedCharacteristics`** grows the projected type line:
 
 ```haskell
 data ProjectedCharacteristics = MkProjectedCharacteristics
@@ -187,7 +187,7 @@ supertypes; no M3c card changes a supertype), so "nonbasic" reads the printed
 `Basic` supertype. `baseCharacteristics` seeds `cardTypes`/`subtypes` from the
 printed type line.
 
-**`Pawl.Card`** gains three Scryfall-verified printings, each with
+**`Parun.Card`** gains three Scryfall-verified printings, each with
 `staticAbilities` and empty `targetSpecs` (none targets):
 
 - **Blood Moon** — `MkStaticAbility AllNonbasicLands (SetLandSubtype Mountain)`.
@@ -203,7 +203,7 @@ values are filled in as the cards require. Humility's M3b printing is unchanged.
 
 ## 2. The generalized projection
 
-`Pawl.Projection` keeps its `gather → order-within-layer → fold` shape and stays
+`Parun.Projection` keeps its `gather → order-within-layer → fold` shape and stays
 **the sole `case`-on-`Modification` home** — source-liveness included, because
 deciding whether a source's rules text is stripped reads a `Modification`
 (`SetLandSubtype`) through `applyModification`/`affects`, and confining that to
@@ -249,7 +249,7 @@ New projected reads join `keywordsOf`/`powerOf`/`toughnessOf`: `subtypesOf`,
 resolved *without* a topological trial-application reorder:
 
 - **Blood Moon + Urborg is an *existence* dependency** (CR 613.8a clause b, "the
-  existence of the first effect"). pawl resolves it with the substrate's own
+  existence of the first effect"). parun resolves it with the substrate's own
   edge: a static ability from source *Y* is gathered by `project` only if
   *projecting Y* shows its rules text is not stripped by a live `SetLandSubtype`
   (CR 305.7). This is a **memoized recursive-projection fixpoint**, and it is

@@ -6,16 +6,16 @@
 
 **Architecture:** A spell on the stack is an object (`Source.OfCard`); countering it (CR 701.6a) puts it into its owner's graveyard without resolving — mechanically a stack→graveyard `changeZone`, which already removes the id from `GameState.stack` and mints the graveyard incarnation (CR 400.7). Three small pieces layer onto that: a narrower `TargetSpec.SpellTarget` (stack spells only), a distinct `Effect.Counter SlotName` opcode (the M4b `Destroy` precedent — a rule-701 keyword action gets its own opcode), and an `Event.counter` funnel mirroring `Event.destroy`. The CR 608.2b fizzle and Rest in Peace composition come free from existing machinery.
 
-**Tech Stack:** Haskell 2010 (GHC 9.14.1), tasty/tasty-hunit, hand-rolled JSON codec (`Pawl.Codec`), cards as `data/cards/*.json` loaded by the test suite.
+**Tech Stack:** Haskell 2010 (GHC 9.14.1), tasty/tasty-hunit, hand-rolled JSON codec (`Parun.Codec`), cards as `data/cards/*.json` loaded by the test suite.
 
 ## Global Constraints
 
 Copied from the spec (`docs/superpowers/specs/2026-07-19-m4e-counter-spell-design.md`) and `CLAUDE.md`; every task's requirements include these:
 
 - **Warning-clean under `-Weverything` minus the allow-list, with `+pedantic` (`-Werror`).** Every constructor added to `Effect`, `TargetSpec` triggers non-exhaustive-match errors until every exhaustive `case` gains its arm — the compiler is the checklist. Build `all`: `cabal build all --enable-tests --enable-benchmarks`.
-- **`Pawl.Resolve` is the sole home of `case effect of`.** Its five classifiers (`slotsOf`, `readsX`, `manaProduced`, `searchesLibrary`, `rewriteEffect`) plus `applyEffect` each gain a `Counter` arm.
-- **`Pawl.Event` is the sole home of casing on replacement/trigger classifications** and the home of the change-and-emit funnels; `Event.counter` lives here beside `destroy`/`changeZone`.
-- **`Pawl.Target` is the sole home of targeting legality;** `Pawl.Codec` is the sole `Card ⇆ Json` authority.
+- **`Parun.Resolve` is the sole home of `case effect of`.** Its five classifiers (`slotsOf`, `readsX`, `manaProduced`, `searchesLibrary`, `rewriteEffect`) plus `applyEffect` each gain a `Counter` arm.
+- **`Parun.Event` is the sole home of casing on replacement/trigger classifications** and the home of the change-and-emit funnels; `Event.counter` lives here beside `destroy`/`changeZone`.
+- **`Parun.Target` is the sole home of targeting legality;** `Parun.Codec` is the sole `Card ⇆ Json` authority.
 - **The §1 invariant:** the rules core reads *classifications* (`Game.isSpell`, `SpellTarget` legality), never a card's identity. No `case card of`.
 - **No new `Prompt`/`Response` type.** Cancel targets through the existing `ChooseTargets`; countering is unprompted. `DecisionLog` replays deterministically.
 - **Cancel is covered by deterministic blue fixtures only — no random-game deck** (the M3d/M3f/M3g posture; do NOT add Cancel to `blueDeck`/any matchup). But Cancel **must** be added to `Cards.allPrintings` (the hygiene registry) so the honesty round-trip covers it.
@@ -27,41 +27,41 @@ Copied from the spec (`docs/superpowers/specs/2026-07-19-m4e-counter-spell-desig
 
 ## File Structure
 
-- `source/library/Pawl/Type/TargetSpec.hs` — add `SpellTarget`.
-- `source/library/Pawl/Type/Effect.hs` — add `Counter SlotName`.
-- `source/library/Pawl/Game.hs` — add `isSpell` (the "is this stack object a spell?" classification).
-- `source/library/Pawl/Target.hs` — `legalRecipients` arm for `SpellTarget`.
-- `source/library/Pawl/Event.hs` — `counter` funnel.
-- `source/library/Pawl/Resolve.hs` — five classifier arms + `applyEffect` `Counter` arm.
-- `source/library/Pawl/Codec.hs` — `SpellTarget` arm (both directions) + `Counter` effect arm (both directions).
+- `source/library/Parun/Type/TargetSpec.hs` — add `SpellTarget`.
+- `source/library/Parun/Type/Effect.hs` — add `Counter SlotName`.
+- `source/library/Parun/Game.hs` — add `isSpell` (the "is this stack object a spell?" classification).
+- `source/library/Parun/Target.hs` — `legalRecipients` arm for `SpellTarget`.
+- `source/library/Parun/Event.hs` — `counter` funnel.
+- `source/library/Parun/Resolve.hs` — five classifier arms + `applyEffect` `Counter` arm.
+- `source/library/Parun/Codec.hs` — `SpellTarget` arm (both directions) + `Counter` effect arm (both directions).
 - `data/cards/cancel.json` — the Cancel printing.
-- `source/test-suite/Pawl/Cards.hs` — `cancelPrinting` field, loader line, record line, `allPrintings` entry.
-- `source/test-suite/Pawl/Support.hs` — `spellOnStack` shared fixture.
-- `source/test-suite/Pawl/GameSpec.hs` — `isSpell` unit tests.
-- `source/test-suite/Pawl/ResolveSpec.hs` — `SpellTarget` legality test (targetTests) + `counterTests` group (gate + falsifier).
-- `source/test-suite/Pawl/EventSpec.hs` — `Event.counter` funnel + RiP composition tests.
-- `source/test-suite/Pawl/CodecSpec.hs` — a targeted decode assertion (the `allPrintings` round-trip covers Cancel automatically).
+- `source/test-suite/Parun/Cards.hs` — `cancelPrinting` field, loader line, record line, `allPrintings` entry.
+- `source/test-suite/Parun/Support.hs` — `spellOnStack` shared fixture.
+- `source/test-suite/Parun/GameSpec.hs` — `isSpell` unit tests.
+- `source/test-suite/Parun/ResolveSpec.hs` — `SpellTarget` legality test (targetTests) + `counterTests` group (gate + falsifier).
+- `source/test-suite/Parun/EventSpec.hs` — `Event.counter` funnel + RiP composition tests.
+- `source/test-suite/Parun/CodecSpec.hs` — a targeted decode assertion (the `allPrintings` round-trip covers Cancel automatically).
 
-No new library or test module, so **no `pawl.cabal` change** and no `other-modules` edit.
+No new library or test module, so **no `parun.cabal` change** and no `other-modules` edit.
 
 ---
 
 ## Task 1: Target the stack — `SpellTarget` + `Game.isSpell`
 
 **Files:**
-- Modify: `source/library/Pawl/Type/TargetSpec.hs`
-- Modify: `source/library/Pawl/Game.hs`
-- Modify: `source/library/Pawl/Target.hs`
-- Modify: `source/library/Pawl/Codec.hs:277-296`
-- Modify: `source/test-suite/Pawl/Support.hs`
-- Test: `source/test-suite/Pawl/GameSpec.hs` (objectFactTests), `source/test-suite/Pawl/ResolveSpec.hs` (targetTests)
+- Modify: `source/library/Parun/Type/TargetSpec.hs`
+- Modify: `source/library/Parun/Game.hs`
+- Modify: `source/library/Parun/Target.hs`
+- Modify: `source/library/Parun/Codec.hs:277-296`
+- Modify: `source/test-suite/Parun/Support.hs`
+- Test: `source/test-suite/Parun/GameSpec.hs` (objectFactTests), `source/test-suite/Parun/ResolveSpec.hs` (targetTests)
 
 **Interfaces:**
 - Produces: `TargetSpec.SpellTarget`; `Game.isSpell :: ObjectId -> GameState -> Bool`; `Target.legalRecipients` handles `SpellTarget` returning `Set (Recipient.ToObject oid)` for stack spells; `Support.spellOnStack :: Printing.Printing -> PlayerId.PlayerId -> GameState.GameState -> (ObjectId.ObjectId, GameState.GameState)`.
 
 - [x] **Step 1: Write the failing test (Game.isSpell in GameSpec)**
 
-Add to the `objectFactTests` list in `source/test-suite/Pawl/GameSpec.hs` (after the token test at line 68, before the Mountain test):
+Add to the `objectFactTests` list in `source/test-suite/Parun/GameSpec.hs` (after the token test at line 68, before the Mountain test):
 
 ```haskell
       HU.testCase "CR 112.1 isSpell is True for a spell on the stack, False off it" $
@@ -85,7 +85,7 @@ Expected: FAIL — `Variable not in scope: Game.isSpell`.
 
 - [x] **Step 3: Add `Game.isSpell`**
 
-In `source/library/Pawl/Game.hs`, after `controllerOf` (near line 90), add:
+In `source/library/Parun/Game.hs`, after `controllerOf` (near line 90), add:
 
 ```haskell
 -- CR 112.1: a spell is a card on the stack. This asks the object's zone AND its
@@ -113,7 +113,7 @@ Expected: PASS (1 test).
 
 - [x] **Step 5: Write the failing test (SpellTarget legality in ResolveSpec)**
 
-First add the shared fixture to `source/test-suite/Pawl/Support.hs` (near `handOne`), so both this test and later tasks can place a spell on the stack:
+First add the shared fixture to `source/test-suite/Parun/Support.hs` (near `handOne`), so both this test and later tasks can place a spell on the stack:
 
 ```haskell
 -- Put a fresh `printing` spell (owned by `pid`) onto the stack: a Stack-zone
@@ -144,7 +144,7 @@ spellOnStack printing pid gs =
 
 Thread `Game.freshTimestamp` (and use named-record syntax) exactly as every sibling helper (`addCreature`, `handOne`, `landsInPlay`) does — a hardcoded `Timestamp.MkTimestamp 0` would collide with objects the caller already placed and break the CR 613.7d layer-ordering invariant. (`Support.hs` already imports `Game`, `Object`, `Source`, `Zone`, `TapState`, `Sickness`, `Map`, `GameState`, `Printing`, `PlayerId`, `ObjectId` — verify and add any missing.)
 
-Then add to the `targetTests` list in `source/test-suite/Pawl/ResolveSpec.hs` (after the `SpellOrPermanentTarget` test at line 131):
+Then add to the `targetTests` list in `source/test-suite/Parun/ResolveSpec.hs` (after the `SpellOrPermanentTarget` test at line 131):
 
 ```haskell
       HU.testCase "CR 115 SpellTarget offers a stack spell but not a battlefield permanent" $
@@ -163,7 +163,7 @@ Expected: FAIL — `Not in scope: data constructor 'TargetSpec.SpellTarget'`.
 
 - [x] **Step 7: Add the `SpellTarget` constructor**
 
-In `source/library/Pawl/Type/TargetSpec.hs`, add before the closing `deriving`:
+In `source/library/Parun/Type/TargetSpec.hs`, add before the closing `deriving`:
 
 ```haskell
   | -- CR 115: "target spell" -- an object on the stack that is a spell (a card on
@@ -174,7 +174,7 @@ In `source/library/Pawl/Type/TargetSpec.hs`, add before the closing `deriving`:
 
 - [x] **Step 8: Add the `Target.legalRecipients` arm**
 
-In `source/library/Pawl/Target.hs`, add to the `case spec of` (after the `CreatureOrEnchantmentTarget` arm, ~line 51):
+In `source/library/Parun/Target.hs`, add to the `case spec of` (after the `CreatureOrEnchantmentTarget` arm, ~line 51):
 
 ```haskell
         TargetSpec.SpellTarget ->
@@ -185,7 +185,7 @@ In `source/library/Pawl/Target.hs`, add to the `case spec of` (after the `Creatu
 
 - [x] **Step 9: Add the `Codec` arms for `SpellTarget`**
 
-In `source/library/Pawl/Codec.hs`, add to `targetSpecToJson` (after line 284):
+In `source/library/Parun/Codec.hs`, add to `targetSpecToJson` (after line 284):
 
 ```haskell
   TargetSpec.SpellTarget -> "SpellTarget"
@@ -221,11 +221,11 @@ Co-Authored-By: Claude Opus 4.8 (1M context) <noreply@anthropic.com>"
 ## Task 2: The `Counter` opcode + `Event.counter` funnel
 
 **Files:**
-- Modify: `source/library/Pawl/Type/Effect.hs`
-- Modify: `source/library/Pawl/Event.hs`
-- Modify: `source/library/Pawl/Resolve.hs` (slotsOf, readsX, manaProduced, searchesLibrary, rewriteEffect, applyEffect)
-- Modify: `source/library/Pawl/Codec.hs:461-497`
-- Test: `source/test-suite/Pawl/EventSpec.hs`
+- Modify: `source/library/Parun/Type/Effect.hs`
+- Modify: `source/library/Parun/Event.hs`
+- Modify: `source/library/Parun/Resolve.hs` (slotsOf, readsX, manaProduced, searchesLibrary, rewriteEffect, applyEffect)
+- Modify: `source/library/Parun/Codec.hs:461-497`
+- Test: `source/test-suite/Parun/EventSpec.hs`
 
 **Interfaces:**
 - Consumes: `Support.spellOnStack` (Task 1).
@@ -233,7 +233,7 @@ Co-Authored-By: Claude Opus 4.8 (1M context) <noreply@anthropic.com>"
 
 - [x] **Step 1: Write the failing test (Event.counter funnel + RiP compose)**
 
-Add a new group to `source/test-suite/Pawl/EventSpec.hs`. First add the group's tests (place near the zone-change tests, e.g. after the `CR 608.2n ... resolving spell is exiled` test at line ~68):
+Add a new group to `source/test-suite/Parun/EventSpec.hs`. First add the group's tests (place near the zone-change tests, e.g. after the `CR 608.2n ... resolving spell is exiled` test at line ~68):
 
 ```haskell
       HU.testCase "CR 701.6a Event.counter puts a countered spell into its owner's graveyard" $
@@ -261,7 +261,7 @@ Expected: FAIL — `Variable not in scope: Event.counter`.
 
 - [x] **Step 3: Add `Event.counter`**
 
-In `source/library/Pawl/Event.hs`, after `destroy`/`regenerate` (near line 132), add:
+In `source/library/Parun/Event.hs`, after `destroy`/`regenerate` (near line 132), add:
 
 ```haskell
 -- The single counter funnel (CR 701.6). A countered spell is removed from the
@@ -285,7 +285,7 @@ Expected: PASS (2 tests).
 
 - [x] **Step 5: Write the failing test's next half — add the `Counter` opcode (compiler-driven)**
 
-There is no isolated unit test for the opcode plumbing (it is exercised end-to-end by the Task 4 gate); the compiler's exhaustiveness is the check. Add the constructor to `source/library/Pawl/Type/Effect.hs`, before the closing `deriving` (after `RegenerateSelf`, ~line 97):
+There is no isolated unit test for the opcode plumbing (it is exercised end-to-end by the Task 4 gate); the compiler's exhaustiveness is the check. Add the constructor to `source/library/Parun/Type/Effect.hs`, before the closing `deriving` (after `RegenerateSelf`, ~line 97):
 
 ```haskell
   | -- CR 701.6: counter the slot's target spell -- remove it from the stack and
@@ -303,7 +303,7 @@ Expected: FAIL — non-exhaustive-pattern errors in `Resolve.slotsOf`, `Resolve.
 
 - [x] **Step 7: Add the five `Resolve` classifier arms + `applyEffect` arm**
 
-In `source/library/Pawl/Resolve.hs`:
+In `source/library/Parun/Resolve.hs`:
 
 `slotsOf` (after the `RegenerateSelf` arm):
 ```haskell
@@ -348,7 +348,7 @@ In `source/library/Pawl/Resolve.hs`:
 
 - [x] **Step 8: Add the `Codec` effect arms for `Counter`**
 
-In `source/library/Pawl/Codec.hs`, add to `effectToJson` (after the `Destroy` arm, line 470):
+In `source/library/Parun/Codec.hs`, add to `effectToJson` (after the `Destroy` arm, line 470):
 ```haskell
   Effect.Counter s -> Json.tagged (Text.pack "Counter") (Just (slotNameToJson s))
 ```
@@ -378,8 +378,8 @@ Co-Authored-By: Claude Opus 4.8 (1M context) <noreply@anthropic.com>"
 
 **Files:**
 - Create: `data/cards/cancel.json`
-- Modify: `source/test-suite/Pawl/Cards.hs` (record field, loader line, record construction, `allPrintings`)
-- Test: `source/test-suite/Pawl/CodecSpec.hs`
+- Modify: `source/test-suite/Parun/Cards.hs` (record field, loader line, record construction, `allPrintings`)
+- Test: `source/test-suite/Parun/CodecSpec.hs`
 
 **Interfaces:**
 - Consumes: `Effect.Counter` (Task 2), `TargetSpec.SpellTarget` (Task 1).
@@ -387,7 +387,7 @@ Co-Authored-By: Claude Opus 4.8 (1M context) <noreply@anthropic.com>"
 
 - [x] **Step 1: Write the failing test (Cancel parses to the right opcode)**
 
-Add to `source/test-suite/Pawl/CodecSpec.hs` (in the appropriate `testGroup` list — match the file's existing structure; place beside other per-card assertions):
+Add to `source/test-suite/Parun/CodecSpec.hs` (in the appropriate `testGroup` list — match the file's existing structure; place beside other per-card assertions):
 
 ```haskell
       HU.testCase "M4e Cancel loads as a single Counter effect targeting a spell" $
@@ -403,7 +403,7 @@ Add to `source/test-suite/Pawl/CodecSpec.hs` (in the appropriate `testGroup` lis
                 (Card.targetSpecs card),
 ```
 
-Ensure `CodecSpec.hs` imports `Pawl.Type.Effect as Effect`, `Pawl.Type.SlotName as SlotName`, `Pawl.Type.TargetSpec as TargetSpec`, `Pawl.Type.Card as Card`, `Data.Map.Strict as Map`, `Data.Text as Text`, `Pawl.Type.Printing as Printing` — add any missing.
+Ensure `CodecSpec.hs` imports `Parun.Type.Effect as Effect`, `Parun.Type.SlotName as SlotName`, `Parun.Type.TargetSpec as TargetSpec`, `Parun.Type.Card as Card`, `Data.Map.Strict as Map`, `Data.Text as Text`, `Parun.Type.Printing as Printing` — add any missing.
 
 - [x] **Step 2: Run it to verify it fails**
 
@@ -420,7 +420,7 @@ Write this exact content to `data/cards/cancel.json` (Scryfall: `{1}{U}{U}` Inst
 
 - [x] **Step 4: Wire `cancelPrinting` into `Cards.hs`**
 
-In `source/test-suite/Pawl/Cards.hs`, make four edits:
+In `source/test-suite/Parun/Cards.hs`, make four edits:
 
 1. Add the record field (in the `Cards` record, after `drudgeSkeletonsPrinting`):
 ```haskell
@@ -469,7 +469,7 @@ Co-Authored-By: Claude Opus 4.8 (1M context) <noreply@anthropic.com>"
 ## Task 4: The gate + falsifier — cast Cancel counters; racing counters fizzle
 
 **Files:**
-- Modify: `source/test-suite/Pawl/ResolveSpec.hs` (add a `counterTests` group and wire it into the module's `tests`)
+- Modify: `source/test-suite/Parun/ResolveSpec.hs` (add a `counterTests` group and wire it into the module's `tests`)
 
 **Interfaces:**
 - Consumes: `Cards.cancelPrinting` (Task 3), `Support.spellOnStack` (Task 1), `Cast.castSpell`, `Stack.resolveTop`, `Engine.runGamePure`, `S.landsInPlay`, `S.handOne`, `Cards.islandPrinting`, `Cards.pikerPrinting`.
@@ -477,7 +477,7 @@ Co-Authored-By: Claude Opus 4.8 (1M context) <noreply@anthropic.com>"
 
 - [x] **Step 1: Write the failing gate test**
 
-Add a new `counterTests` group near `fizzleTests` in `source/test-suite/Pawl/ResolveSpec.hs`, with two local helpers and the gate case. First the helpers (top-level, near `twoBoltState`):
+Add a new `counterTests` group near `fizzleTests` in `source/test-suite/Parun/ResolveSpec.hs`, with two local helpers and the gate case. First the helpers (top-level, near `twoBoltState`):
 
 ```haskell
 -- alice has 3 Islands and Cancel in hand; a `victim` spell (bob's) sits on the
@@ -644,7 +644,7 @@ Add a bullet after the M4d entry, matching the house style (gate card, decision 
   `OfCard`; abilities and permanents excluded) -- a classification, not an identity
   case, like `Card.isPermanent`. Cancel is a blue deterministic fixture (no
   random-game deck, the M3d posture); `cancel.json` joins `allPrintings` for the
-  honesty round-trip. `Pawl.Resolve` stays the sole `case effect of` home; `Event`
+  honesty round-trip. `Parun.Resolve` stays the sole `case effect of` home; `Event`
   the sole funnel home. No new prompt/response. **Named elisions/expiries**:
   `Event.counter` is ungated -- "can't be countered" (CR 701.6), conditional
   counters ("counter unless pay", Mana Leak/Daze), a distinct "was countered" event

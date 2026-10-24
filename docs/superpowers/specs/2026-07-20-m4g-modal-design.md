@@ -66,7 +66,7 @@ Four moving parts, each on an existing seam:
 
 The §1 invariant holds throughout: `Mode`/`Modal`/`ModeSelection`/`ModeIndex` are
 first-order structural data (no functions, no control flow); the mode choice is a
-genuine player choice, prompted (never elided except where forced); `Pawl.Resolve`
+genuine player choice, prompted (never elided except where forced); `Parun.Resolve`
 stays the sole `case effect of` home; nothing cases on a card's identity. Chaos
 Charm is a printing whose `spell` is a three-mode `Modal`; the rules core learns
 only that it is modal and how many modes are legal, never that it is Chaos Charm.
@@ -113,10 +113,10 @@ Four new leaf modules, all parametric over `card` where they carry effects (the
 M4c posture — a concrete `Effect Card` would cycle with `Card`, which embeds the
 payload; `Card` ties the knot at `Modal Card`).
 
-**`Pawl.Type.ModeIndex`** — the reference to a mode:
+**`Parun.Type.ModeIndex`** — the reference to a mode:
 
 ```
-module Pawl.Type.ModeIndex where
+module Parun.Type.ModeIndex where
 
 import Numeric.Natural (Natural)
 
@@ -131,17 +131,17 @@ newtype ModeIndex = MkModeIndex Natural
   deriving (Eq, Ord, Show)
 ```
 
-**`Pawl.Type.Mode`** — one option's payload, the shape lifted verbatim from the
+**`Parun.Type.Mode`** — one option's payload, the shape lifted verbatim from the
 flat `Card`/`ActivatedAbility`/`TriggeredAbility` fields:
 
 ```
-module Pawl.Type.Mode where
+module Parun.Type.Mode where
 
 import Data.Map.Strict (Map)
 import Data.Sequence (Seq)
-import Pawl.Type.Effect (Effect)
-import Pawl.Type.SlotName (SlotName)
-import Pawl.Type.TargetSpec (TargetSpec)
+import Parun.Type.Effect (Effect)
+import Parun.Type.SlotName (SlotName)
+import Parun.Type.TargetSpec (TargetSpec)
 
 -- CR 700.2: one mode of a modal spell or ability -- its own effects and its own
 -- target namespace. `effects` is a Seq (ordered; CR 608.2c resolves in written
@@ -155,10 +155,10 @@ data Mode card = MkMode
   deriving (Eq, Ord, Show)
 ```
 
-**`Pawl.Type.ModeSelection`** — how many modes to choose:
+**`Parun.Type.ModeSelection`** — how many modes to choose:
 
 ```
-module Pawl.Type.ModeSelection where
+module Parun.Type.ModeSelection where
 
 import Numeric.Natural (Natural)
 
@@ -173,14 +173,14 @@ data ModeSelection
   deriving (Eq, Ord, Show)
 ```
 
-**`Pawl.Type.Modal`** — the payload as a whole:
+**`Parun.Type.Modal`** — the payload as a whole:
 
 ```
-module Pawl.Type.Modal where
+module Parun.Type.Modal where
 
 import Data.Sequence (Seq)
-import Pawl.Type.Mode (Mode)
-import Pawl.Type.ModeSelection (ModeSelection)
+import Parun.Type.Mode (Mode)
+import Parun.Type.ModeSelection (ModeSelection)
 
 -- CR 700.2: a spell's or ability's modal payload. `modes` is a Seq -- ordered
 -- (printed order, indexed by ModeIndex) and NON-EMPTY by invariant (a payload has
@@ -203,7 +203,7 @@ stroke).
 
 ## 2. The `Card` change
 
-`Pawl.Type.Card` drops `effects :: [Effect Card]` and `targetSpecs :: Map SlotName
+`Parun.Type.Card` drops `effects :: [Effect Card]` and `targetSpecs :: Map SlotName
 TargetSpec` and gains one field:
 
 ```
@@ -232,7 +232,7 @@ The mode choice is a spell-level cast choice, exactly like X: it belongs in
 `Object.bindings` under a reserved slot, per-incarnation (reset by `changeZone`, CR
 400.7 — the M3a/M4a posture) and replay-serialized.
 
-`Pawl.Type.Binding` gains one field (its own comment already anticipates "a mode"):
+`Parun.Type.Binding` gains one field (its own comment already anticipates "a mode"):
 
 ```
 -- CR 700.2 / 601.2b: the modes chosen for a modal spell, by index. A Set: no
@@ -247,7 +247,7 @@ modes :: Maybe (Set ModeIndex)
 `modes = Binding.modes a <|> Binding.modes b` arm (the reserved slot is disjoint
 from target slots, so the merge stays total and order-independent).
 
-`Pawl.Binding` (the logic module) gains, mirroring `variableX`/`amountOf`:
+`Parun.Binding` (the logic module) gains, mirroring `variableX`/`amountOf`:
 
 ```
 -- CR 700.2: the reserved slot under which a modal spell's chosen modes are stored.
@@ -267,7 +267,7 @@ alongside the existing X insert (both reserved-slot writes).
 
 ## 4. The prompt and response
 
-`Pawl.Type.Prompt` gains one constructor:
+`Parun.Type.Prompt` gains one constructor:
 
 ```
 -- CR 601.2b / 700.2a: choose the mode(s) while casting (the ObjectId is the spell).
@@ -280,7 +280,7 @@ alongside the existing X insert (both reserved-slot writes).
 ChooseModes :: Decider -> PlayerId -> ObjectId -> Set ModeIndex -> Natural -> Prompt (Set ModeIndex)
 ```
 
-`Pawl.Type.Response` gains `ChoseModes (Set ModeIndex)` (serialized as an array of
+`Parun.Type.Response` gains `ChoseModes (Set ModeIndex)` (serialized as an array of
 naturals, so a `DecisionLog` replays a modal cast deterministically — the `ChoseX`
 posture).
 
@@ -346,7 +346,7 @@ for the damage mode fizzles iff *its* creature target is gone, indifferent to th
 Wall or haste modes. `Target`'s legality helpers take the relevant `Map SlotName
 TargetSpec`; the caller (resolution) now sources it from the chosen modes.
 
-`Pawl.Resolve` remains the sole `case effect of` home. No `Effect` constructor is
+`Parun.Resolve` remains the sole `case effect of` home. No `Effect` constructor is
 added: modes reshape *which* effects run, not *what* an effect is.
 
 ## 8. Incidental machinery — the Wall mode
@@ -448,28 +448,28 @@ carry their CR numbers.
 
 ## 12. Module and dependency notes
 
-- New leaf modules: `Pawl.Type.ModeIndex` (imports `Natural` only),
-  `Pawl.Type.ModeSelection` (`Natural` only), `Pawl.Type.Mode` (imports `Effect`,
-  `SlotName`, `TargetSpec`, `Seq` — Card-free), `Pawl.Type.Modal` (imports `Mode`,
+- New leaf modules: `Parun.Type.ModeIndex` (imports `Natural` only),
+  `Parun.Type.ModeSelection` (`Natural` only), `Parun.Type.Mode` (imports `Effect`,
+  `SlotName`, `TargetSpec`, `Seq` — Card-free), `Parun.Type.Modal` (imports `Mode`,
   `ModeSelection`, `Seq`). No cycles: none imports `Card`; `Card` imports `Modal`
   and ties the knot at `Modal Card`.
-- `Pawl.Type.Binding` imports `ModeIndex` and `Set`; `Pawl.Binding` imports
+- `Parun.Type.Binding` imports `ModeIndex` and `Set`; `Parun.Binding` imports
   `ModeIndex`, `Set`, and gains `chosenModes`/`modesOf` and the `fromChoices`
   parameter.
-- `Pawl.Type.Prompt`/`Pawl.Type.Response` import `ModeIndex` and `Set`.
-- `Pawl.Cast` computes per-mode fillability (already imports `Target`, `Prompt`,
-  `Binding`) and prompts `ChooseModes`; `Pawl.Resolve.effectsOf` reads chosen modes
-  (imports `Binding`, `Modal`, `Mode`); `Pawl.Target`'s legality helpers are
+- `Parun.Type.Prompt`/`Parun.Type.Response` import `ModeIndex` and `Set`.
+- `Parun.Cast` computes per-mode fillability (already imports `Target`, `Prompt`,
+  `Binding`) and prompts `ChooseModes`; `Parun.Resolve.effectsOf` reads chosen modes
+  (imports `Binding`, `Modal`, `Mode`); `Parun.Target`'s legality helpers are
   unchanged in signature (they already take a `Map SlotName TargetSpec`; the caller
   sources it from the chosen modes).
-- `Pawl.Codec` gains arms for `Modal`, `Mode`, `ModeSelection` (all tagged, the
+- `Parun.Codec` gains arms for `Modal`, `Mode`, `ModeSelection` (all tagged, the
   §2.12 discipline; `ModeIndex` inside `Response.ChoseModes` serializes as a bare
   natural array), `TargetSpec.WallTarget`, and `Subtype.Wall`. `Object`/`Binding`
   are not serialized, so the chosen-mode `Set` needs no `Codec` arm beyond the
   `Response` one.
-- `Pawl.Resolve` stays the sole `case effect of` home; `Pawl.Projection` the sole
-  `case … Modification` home; `Pawl.Target` the sole targeting-legality home. The
-  new mode-selection casing (on `ModeSelection`) lives in `Pawl.Cast` — a
+- `Parun.Resolve` stays the sole `case effect of` home; `Parun.Projection` the sole
+  `case … Modification` home; `Parun.Target` the sole targeting-legality home. The
+  new mode-selection casing (on `ModeSelection`) lives in `Parun.Cast` — a
   cast-orchestration classification, not an effect identity.
 
 ## 13. Named deferred expiries and fast-follows
@@ -500,8 +500,8 @@ carry their CR numbers.
 
 - **Closed/open separation.** The rules core reads a *classification* of the payload
   — how many modes are legal, which effects the chosen modes carry — never a card's
-  identity. `Pawl.Cast` cases on `ModeSelection` (an orchestration tag, like it
-  already branches on timing); `Pawl.Resolve` stays the only module casing on
+  identity. `Parun.Cast` cases on `ModeSelection` (an orchestration tag, like it
+  already branches on timing); `Parun.Resolve` stays the only module casing on
   `Effect`. There is no `case card of ChaosCharm → …` anywhere. `Mode`/`Modal` are
   the same kind of first-order structural data as `Effect`.
 - **First-order, non-recursive DSL.** `Mode`, `Modal`, `ModeSelection`, `ModeIndex`

@@ -4,7 +4,7 @@ Design for milestone **M3d**, the fourth letter of M3 (see the split table in
 `docs/design.md`): **layer 3 — the rewritable effect AST**, gated by Magical
 Hack. This is the §5 *canary*: XMage lists text-changing effects as "very
 unlikely" and ships none of the named ones, because its rules live inside
-compiled Java and there is nothing there to rewrite. pawl's cards are a data AST
+compiled Java and there is nothing there to rewrite. parun's cards are a data AST
 loaded at runtime (`docs/design.md` §2.7, §5), so text-changing is a tree
 transformation on a value already in hand. **The go/no-go verdict for M3 arrives
 at the end of M3d** (`docs/design.md`, M3 ordering note): if the effect AST is
@@ -130,7 +130,7 @@ projected effects, and the cast-time land-type binding in the serialized path.
 
 ## 1. New and grown types
 
-**`Pawl.Type.Modification`** grows the first layer-3 constructor, classified
+**`Parun.Type.Modification`** grows the first layer-3 constructor, classified
 `Layer.Text` by `Projection.layer`:
 
 ```haskell
@@ -152,7 +152,7 @@ two are a player choice (§3), stored as `Literal`-style `Subtype` values in the
 modification (the binding is baked in, exactly as M3b bakes a `ModifyTarget`'s
 `Modification`).
 
-**`Pawl.Type.Effect`** grows the text-changing opcode:
+**`Parun.Type.Effect`** grows the text-changing opcode:
 
 ```haskell
 data Effect
@@ -169,7 +169,7 @@ one arm and `slotsOf` one case (its charter, the D4 dataflow lint). The Phase-4
 fixture spell reuses `ModifyTarget UntilEndOfTurn (SetLandSubtype Swamp)` — no
 new one-shot vocabulary.
 
-**`Pawl.Type.Duration`** grows `Indefinite`:
+**`Parun.Type.Duration`** grows `Indefinite`:
 
 ```haskell
 data Duration
@@ -185,7 +185,7 @@ its zone (CR 400.7) the id names nothing and the effect goes inert — it is nev
 folded again. It is not garbage-collected from `continuousEffects` (a hygiene
 expiry, §8; correctness is unaffected because it is inert).
 
-**`Pawl.Type.TargetSpec`** grows two specs:
+**`Parun.Type.TargetSpec`** grows two specs:
 
 ```haskell
 data TargetSpec
@@ -200,7 +200,7 @@ data TargetSpec
 stack, plus any permanent on the battlefield. `LandTarget` is a land on the
 battlefield (projected card-type `Land`), used only by the fixture.
 
-**`Pawl.Type.Recipient`** grows `ToObject`:
+**`Parun.Type.Recipient`** grows `ToObject`:
 
 ```haskell
 data Recipient
@@ -216,13 +216,13 @@ creature-only (M3b) and its arm pattern-matches `ToCreature`; a text-change does
 not care about creature-ness, so it uses `ToObject`. (A future unification of the
 object-naming recipients is possible but not forced here.)
 
-**`Pawl.Type.Object`** grows a cast-time value-binding store (§3): the chosen
+**`Parun.Type.Object`** grows a cast-time value-binding store (§3): the chosen
 `from`/`to` basic land types, keyed by the same `SlotName` the `ChangeText`
 effect references. Shape (a `Map SlotName (Subtype, Subtype)`, or a small
 `Binding` record) is a plan detail; the invariant is that it is bound at cast
 alongside `Object.targets` and read purely at resolution.
 
-**`Pawl.Type.Prompt`** grows the value choice:
+**`Parun.Type.Prompt`** grows the value choice:
 
 ```haskell
 ChooseBasicLandTypes :: Decider -> PlayerId -> ObjectId -> SlotName -> Prompt (Subtype, Subtype)
@@ -233,7 +233,7 @@ land types for the named slot. Always offered when a `ChangeText` slot exists �
 the legal set is the five basic land types, never empty, so unlike targeting it
 never gates castability. (See §3 for why cast-time is correct-by-elision.)
 
-**`Pawl.Card`** gains one printing: **Magical Hack** — `manaCost {U}`, type line
+**`Parun.Card`** gains one printing: **Magical Hack** — `manaCost {U}`, type line
 Instant, one `ChangeText` effect referencing one slot, that slot's `targetSpecs`
 entry `SpellOrPermanentTarget`, empty `staticAbilities`. Plus the **fixture**
 land-changer for Phase 4 (a labeled synthetic instant; §7, §8). Blood Moon and
@@ -241,7 +241,7 @@ Urborg are unchanged from M3c.
 
 ## 2. The projection: text-changing at three read-points
 
-`Pawl.Projection` keeps its `gather → order-within-layer → fold` shape and stays
+`Parun.Projection` keeps its `gather → order-within-layer → fold` shape and stays
 the sole `case`-on-`Modification` home. `ChangeSubtypeWord` classifies to
 `Layer.Text` (`layer`), which is *below* `Layer.Type` in the derived `Ord`, so it
 folds before layer 4 automatically.
@@ -350,7 +350,7 @@ already slot-bound (`Map SlotName Recipient`); values now bind the same way
 
 ## 4. Targeting and reaching the stack
 
-`Pawl.Target.legalRecipients` grows the two new specs; the *logic* is a straight
+`Parun.Target.legalRecipients` grows the two new specs; the *logic* is a straight
 extension of the existing battlefield-creature/player enumeration:
 
 - `SpellOrPermanentTarget` → `ToObject` for every object on the stack
@@ -376,7 +376,7 @@ are battlefield questions); the stack's text-change is observed through
 
 ## 5. The resolver reads projected effects
 
-`Pawl.Resolve` gains read-point 3 and the `ChangeText` executor. It stays the
+`Parun.Resolve` gains read-point 3 and the `ChangeText` executor. It stays the
 sole `case`-on-`Effect` home.
 
 - **`Resolve.rewriteEffect :: [(Subtype, Subtype)] -> Effect -> Effect`** — cases

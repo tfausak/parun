@@ -6,7 +6,7 @@
 out goes a `Request` (that seat's `PlayerView` plus a `Question`), back comes
 the answer, decoded through `Scenario.Reply.shapeOf`.
 
-**Architecture:** A new `play` library holds `Pawl.Play.Protocol`. It wraps
+**Architecture:** A new `play` library holds `Parun.Play.Protocol`. It wraps
 the seats' side of an `Answerer` so that each player prompt is rendered to a
 line, handed to a transport (`Text -> m Text`), and the reply line decoded.
 Chance and interpreter prompts (no seat) go to a fallback answerer. Objects
@@ -23,7 +23,7 @@ unit 2 (2a, the view, landed in #5224).
 ## Global Constraints
 
 - No new non-boot dependency.
-- One type per module under `Pawl.Types.<TypeName>`; `Mk` constructors;
+- One type per module under `Parun.Types.<TypeName>`; `Mk` constructors;
   one-line haddocks with their CR citation.
 - An exhaustive list exists once: the protocol's answer shapes ARE
   `Reply.shapeOf`, never a second per-prompt table beside it.
@@ -67,16 +67,16 @@ unit 2 (2a, the view, landed in #5224).
 ### Task 1: `Reply.indexed` and the list-offer arms
 
 **Files:**
-- Modify: `source/libraries/scenario/Pawl/Scenario/Reply.hs`
-- Create: `source/libraries/scenario/Pawl/Scenario/ReplySpec.hs`, wired into
-  `Pawl.Test`
+- Modify: `source/libraries/scenario/Parun/Scenario/Reply.hs`
+- Create: `source/libraries/scenario/Parun/Scenario/ReplySpec.hs`, wired into
+  `Parun.Test`
 
 **Interfaces (produced):**
 `indexed :: (Eq a) => [a] -> Shape a`: decodes a natural `i` to the `i`th
 element (0-based), failing with `"expected an index below N"`; encodes an
 element as its first position, or `R.Null` when absent.
 
-- [ ] **Step 1: Write `Pawl.Scenario.ReplySpec`**, `describe "Reply"`:
+- [ ] **Step 1: Write `Parun.Scenario.ReplySpec`**, `describe "Reply"`:
   - `ChooseAction` offering `[Pass, ActivateManaAbility 7]` decodes `1` to
     the second; encodes it back to `1`.
   - index `2` on that offer is `Failed`.
@@ -89,11 +89,11 @@ element as its first position, or `R.Null` when absent.
 ### Task 2: `Question` and `Request`
 
 **Files:**
-- Create: `source/libraries/types/Pawl/Types/Question.hs`,
-  `source/libraries/types/Pawl/Types/Request.hs`
-- Create: `source/libraries/codec/Pawl/Codec/Question.hs`,
-  `source/libraries/codec/Pawl/Codec/Request.hs` and their specs, wired into
-  `Pawl.Test`
+- Create: `source/libraries/types/Parun/Types/Question.hs`,
+  `source/libraries/types/Parun/Types/Request.hs`
+- Create: `source/libraries/codec/Parun/Codec/Question.hs`,
+  `source/libraries/codec/Parun/Codec/Request.hs` and their specs, wired into
+  `Parun.Test`
 
 **Interfaces (produced):**
 
@@ -113,14 +113,14 @@ Codecs are `Fields.object`, every key required; `offer` uses
 - [ ] **Step 4: Run `-p /Question/` and `-p /Request/`; expect green.**
 - [ ] **Step 5: Commit** `Add the protocol's question and request`.
 
-### Task 3: `Pawl.Play.Protocol`
+### Task 3: `Parun.Play.Protocol`
 
 **Files:**
-- Modify: `pawl.cabal` (a `library play` stanza after `library interpreter`,
+- Modify: `parun.cabal` (a `library play` stanza after `library interpreter`,
   depending on `codec`, `engine`, `json-codec`, `scenario`, `types`; `test`
   depends on it)
-- Create: `source/libraries/play/Pawl/Play/Protocol.hs`
-- Create: `source/libraries/test/Pawl/ProtocolSpec.hs`, wired into `Pawl.Test`
+- Create: `source/libraries/play/Parun/Play/Protocol.hs`
+- Create: `source/libraries/test/Parun/ProtocolSpec.hs`, wired into `Parun.Test`
 
 **Interfaces (produced, used by unit 3):**
 
@@ -154,7 +154,7 @@ Offers (`Reply.encode` under `namer` for every object and player):
   `{"source": obj}`.
 - Every other arm: `null`, with the elision comment.
 
-- [ ] **Step 1: Write `Pawl.ProtocolSpec`**, `describe "Protocol"`:
+- [ ] **Step 1: Write `Parun.ProtocolSpec`**, `describe "Protocol"`:
   - `round trip`: play red vs green with `Driver.match`, an answerer that
     takes `S.castAnswer`'s answer for each seated prompt and asserts
     `Replay.encode prompt (decodeAnswer prompt (encodeAnswer prompt a)) ==

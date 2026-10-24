@@ -1,3 +1,3 @@
-# Pawl
+# Parun
 
-Pawl is a Magic: The Gathering (MTG) rules engine written in Haskell.
+Parun is a Magic: The Gathering (MTG) rules engine written in Haskell.

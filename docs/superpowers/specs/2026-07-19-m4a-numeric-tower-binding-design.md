@@ -58,8 +58,8 @@ behavior isolated behind it):
 
 1. **The binding environment (Phase 1) — no behavior change.** Replace
    `Object.targets` and `Object.chosenSubtypes` with one
-   `Object.bindings :: Map SlotName Binding`. Migrate every reader (`Pawl.Cast`
-   writes it; `Pawl.Target`, `Pawl.Resolve`, `Pawl.Projection` read it) and every
+   `Object.bindings :: Map SlotName Binding`. Migrate every reader (`Parun.Cast`
+   writes it; `Parun.Target`, `Parun.Resolve`, `Parun.Projection` read it) and every
    `changeZone` reset. Every existing test passes unchanged — this is pure
    plumbing, and the M3a–M3g fixtures are the regression net. Exit: green suite,
    `Object.targets` / `Object.chosenSubtypes` gone.
@@ -130,7 +130,7 @@ alongside the existing target and land-type choices.
 
 ### Phase 1 — the binding environment
 
-**`Pawl.Type.Binding`** (new) — everything a caster chose for one slot, collected
+**`Parun.Type.Binding`** (new) — everything a caster chose for one slot, collected
 into a record so a single slot can carry multiple bindings (Magical Hack's
 `"target"` slot carries both a target *and* a word-swap):
 
@@ -154,7 +154,7 @@ data Binding = MkBinding
   deriving (Eq, Ord, Show)
 ```
 
-**`Pawl.Type.Object`** loses `targets` and `chosenSubtypes`, gains `bindings`:
+**`Parun.Type.Object`** loses `targets` and `chosenSubtypes`, gains `bindings`:
 
 ```haskell
   -- CR 601.2: the choices bound while casting, by slot name. Empty for everything
@@ -184,7 +184,7 @@ any named amount is the shape a *named* count would want — deferred to the fir
 
 ### Phase 2 — X
 
-**`Pawl.Type.Quantity`** grows the reserved variant its own comment names:
+**`Parun.Type.Quantity`** grows the reserved variant its own comment names:
 
 ```haskell
   | -- CR 601.2b: X -- a value the caster chose while casting, read from the
@@ -194,7 +194,7 @@ any named amount is the shape a *named* count would want — deferred to the fir
     X
 ```
 
-**`Pawl.Type.ManaSymbol`** grows the variable symbol its own comment names:
+**`Parun.Type.ManaSymbol`** grows the variable symbol its own comment names:
 
 ```haskell
   | -- CR 107.3 / 601.2b: the {X} symbol in a cost. Contributes the chosen value
@@ -202,7 +202,7 @@ any named amount is the shape a *named* count would want — deferred to the fir
     Variable
 ```
 
-**`Pawl.Type.Prompt`** grows the X choice:
+**`Parun.Type.Prompt`** grows the X choice:
 
 ```haskell
   -- CR 601.2b: choose the value of X while casting (the ObjectId is the spell).
@@ -213,10 +213,10 @@ any named amount is the shape a *named* count would want — deferred to the fir
   ChooseX :: Decider -> PlayerId -> ObjectId -> Prompt Natural
 ```
 
-**`Pawl.Type.Response`** grows the replay variant `ChoseX Natural`, mirroring
+**`Parun.Type.Response`** grows the replay variant `ChoseX Natural`, mirroring
 `Searched` / `ChoseBasicLandTypes`.
 
-**`Pawl.Card`** gains **Blaze** (`{X}{R}` = `[Variable, OfType Red]`; Sorcery;
+**`Parun.Card`** gains **Blaze** (`{X}{R}` = `[Variable, OfType Red]`; Sorcery;
 one effect `DealDamage "target" Quantity.X`; one slot `"target" ↦ AnyTarget`).
 Blaze joins `redDeck` for sorcery-speed X random-game coverage (the first M4 card
 to enter a random deck — burn with a variable cost stresses the payment path

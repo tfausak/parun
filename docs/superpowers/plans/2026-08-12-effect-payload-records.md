@@ -37,11 +37,11 @@ with a real type is a payload `Fields.object` can name.
 ## Naming
 
 The constructor's own name, per the guide's `C1 T1` convention --
-`Effect.MoveToZone` carries `Pawl.Types.MoveToZone`. Nothing is invented, the
+`Effect.MoveToZone` carries `Parun.Types.MoveToZone`. Nothing is invented, the
 verb-phrase arms (`PlayerSacrifices`, `DealDamage`) need no coined noun, and the
 mapping is mechanical rather than a matter of taste.
 
-NOT a `*Spec` suffix. `Pawl.Types.TargetSpec` is the outlier in the tree, not the
+NOT a `*Spec` suffix. `Parun.Types.TargetSpec` is the outlier in the tree, not the
 pattern; the established payload records are plain nouns (`EntryRiders`,
 `CastOffer`, `MillTally`, `ManaProduction`, `ExchangeSides`).
 
@@ -67,13 +67,13 @@ again be how a reader tells the constructors apart.
 
 Arm by arm, not in one bang. The constructor-match sites are spread over 18
 files but partition cleanly: `MoveToZone` alone is ~37 sites over 9 files, which
-is one ordinary PR. Heaviest matchers are `Pawl.CardSpec`, `Pawl.Engine.Resolve`
-and `Pawl.Engine.PlayerEffect`.
+is one ordinary PR. Heaviest matchers are `Parun.CardSpec`, `Parun.Engine.Resolve`
+and `Parun.Engine.PlayerEffect`.
 
 Two populations owe records, and the second is easy to miss:
 
 - Arms still writing a POSITIONAL ARRAY in a function-shaped module ---
-  `Pawl.Codec.Effect` holds most of them, with a few in `GameEvent` and
+  `Parun.Codec.Effect` holds most of them, with a few in `GameEvent` and
   `ProjectedCharacteristics`.
 - Arms already on `Common.tuple` inside converted bundles. A tuple is still a
   positional payload with the arity pinned; converting one to a record is the
@@ -98,7 +98,7 @@ Prerequisites, each its own unit, all now landed:
 The #1365 mechanism, which worked: retain the legacy decoder as a fallback behind
 the new one, rewrite `data/cards/*.json` through a throwaway executable that
 decodes and re-encodes, reformat with `script/format-json.sh fix`, then delete
-the fallback and the executable. `Pawl.CardsSpec` asserts every file re-encodes
+the fallback and the executable. `Parun.CardsSpec` asserts every file re-encodes
 to its own meaning, so a missed file fails loudly, and it having passed on the
 pre-migration corpus is what proves the decoder drops nothing.
 
@@ -120,7 +120,7 @@ more, rebuild the shim and re-run the migrator.
 
 ## Carried over
 
-`Pawl.Types.Effect`'s per-constructor documentation is extensive and is the real
+`Parun.Types.Effect`'s per-constructor documentation is extensive and is the real
 content of the change. It moves to the new record module, one type per module per
 CLAUDE.md, and the constructor keeps only what distinguishes it from its
 siblings. Re-check every CR citation as it moves.

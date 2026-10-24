@@ -4,9 +4,9 @@
 
 **Goal:** Split the printed `Duration` from the stored `Expiry`, give a duration a *beginning* (CR 611.2b) and two new shapes — a continuously re-checked condition and an expiry keyed to a future turn — and prove both with **Master Thief** and **Hag of Inner Weakness**.
 
-**Architecture:** `Pawl.Type.Duration` stays the card-data vocabulary and grows `ForAsLongAs StateCondition` and `UntilYourNextTurn`. A new runtime-only `Pawl.Type.Expiry` (`AtCleanup | Never | While PlayerId StateCondition | AtTurnOf PlayerId`) replaces the `duration` field on both carriers (`ContinuousEffect`, `ActiveReplacement`). A new `Pawl.Expiry` module is the **sole home of `case … Expiry`** and owns the whole life cycle: `arm` (printed → stored, CR 109.5's "you" baked in, `Nothing` when CR 611.2b's duration never starts), `dropAtCleanup` (CR 514.2, absorbing and deleting the two existing per-carrier sweeps), `dropAtHandoff` (CR 611.2a, at the turn handoff), and `sweepConditional` (CR 611.2b, first step of the settle loop — it **deletes**, never masks). `StateCondition` gains a third customer (`YouControlSource`) and `Pawl.Target` becomes source-relative so "an opponent controls" can be expressed.
+**Architecture:** `Parun.Type.Duration` stays the card-data vocabulary and grows `ForAsLongAs StateCondition` and `UntilYourNextTurn`. A new runtime-only `Parun.Type.Expiry` (`AtCleanup | Never | While PlayerId StateCondition | AtTurnOf PlayerId`) replaces the `duration` field on both carriers (`ContinuousEffect`, `ActiveReplacement`). A new `Parun.Expiry` module is the **sole home of `case … Expiry`** and owns the whole life cycle: `arm` (printed → stored, CR 109.5's "you" baked in, `Nothing` when CR 611.2b's duration never starts), `dropAtCleanup` (CR 514.2, absorbing and deleting the two existing per-carrier sweeps), `dropAtHandoff` (CR 611.2a, at the turn handoff), and `sweepConditional` (CR 611.2b, first step of the settle loop — it **deletes**, never masks). `StateCondition` gains a third customer (`YouControlSource`) and `Parun.Target` becomes source-relative so "an opponent controls" can be expressed.
 
-**Tech Stack:** Haskell 2010 (GHC 9.14.1 from the Nix flake), `tasty` + `tasty-hunit`, the hand-rolled `Pawl.Json`/`Pawl.Codec` card codec.
+**Tech Stack:** Haskell 2010 (GHC 9.14.1 from the Nix flake), `tasty` + `tasty-hunit`, the hand-rolled `Parun.Json`/`Parun.Codec` card codec.
 
 **Spec:** `docs/superpowers/specs/2026-07-22-p6-conditional-event-durations-design.md`. Read §2.1 and §2.3 before Task 1, §2.4's turn-handoff paragraph before Task 2, §2.2 before Task 3, §2.5 before Task 4, §5 before Tasks 5–6, §8–§10 before Task 7.
 
@@ -15,9 +15,9 @@
 Every task's requirements implicitly include all of these. They come from `CLAUDE.md` and are not negotiable.
 
 - **Haskell 2010, no language extensions** unless there is no alternative. `NamedFieldPuns` is permitted; `GADTs`/`RankNTypes` only in the suspension core and in test modules that already carry the pragma. A module that already carries a `{-# LANGUAGE … #-}` pragma keeps it.
-- **No explicit export lists.** `module Pawl.Foo where`.
-- **One type per module** under `Pawl.Type.<TypeName>` (type + instances only). A module never imports its parents; `A.B.C` must not import `A.B` or `A`.
-- **Qualified imports aliased to the last component** (`Data.Set` → `Set`, `Pawl.Type.Expiry` → `Expiry`). One import group, alphabetical. The one documented exception is `Pawl.Support` as `S` in the test suite. A module may import another module under an alias equal to its own last component (`Pawl.Mana` already imports `Pawl.Type.Mana` as `Mana`); `Pawl.Expiry` importing `Pawl.Type.Expiry` as `Expiry` is that same, established shape.
+- **No explicit export lists.** `module Parun.Foo where`.
+- **One type per module** under `Parun.Type.<TypeName>` (type + instances only). A module never imports its parents; `A.B.C` must not import `A.B` or `A`.
+- **Qualified imports aliased to the last component** (`Data.Set` → `Set`, `Parun.Type.Expiry` → `Expiry`). One import group, alphabetical. The one documented exception is `Parun.Support` as `S` in the test suite. A module may import another module under an alias equal to its own last component (`Parun.Mana` already imports `Parun.Type.Mana` as `Mana`); `Parun.Expiry` importing `Parun.Type.Expiry` as `Expiry` is that same, established shape.
 - **No partial functions**, written or used. No `head`, `error`, `undefined`, or non-exhaustive matches.
 - **`newtype` liberally, non-punning constructors** (`MkFoo`). Build records with `do`/`pure` + record syntax, not `<$>`/`<*>`.
 - **Prefer explicit:** `case` over point-free; one equation with a `case` over multiple clauses; `let` over `where`; `$` over parens, `.` over chained `$`. No list comprehensions. No backtick-infixed functions. Named local predicates over lambdas in `filter` (the `keep` idiom the deleted sweeps already used).
@@ -27,7 +27,7 @@ Every task's requirements implicitly include all of these. They come from `CLAUD
 - **No API stability obligations.** Rename, reshape, and delete freely; never add a compat shim or keep an old name.
 - **Every rules claim is checked against `docs/rules.txt`** and the rule number is cited in the code comment. Never trust recalled Magic rules — including the citations written in *this plan*. If `rules.txt` disagrees with a citation below, `rules.txt` wins: fix the citation and say so in the completion note.
 - **Build must be warning-clean.** `cabal build all --enable-tests --enable-benchmarks` with `flags: +pedantic` (which is `-Werror`). Incremental builds hide warnings from unchanged modules; `cabal clean` first when a definitive check is needed.
-- **Import lists are not spelled out** in every snippet below. When a step's code names `Monad.when`, `Set.*`, `Map.*`, `List.*` or a `Pawl.Type.*` module, add the qualified import (aliased to the last component, one alphabetical group). GHC names every missing one. Equally, when a step *deletes* the last use of an import, delete the import — `-Wunused-imports` is an error here.
+- **Import lists are not spelled out** in every snippet below. When a step's code names `Monad.when`, `Set.*`, `Map.*`, `List.*` or a `Parun.Type.*` module, add the qualified import (aliased to the last component, one alphabetical group). GHC names every missing one. Equally, when a step *deletes* the last use of an import, delete the import — `-Wunused-imports` is an error here.
 - **New library modules** go under `source/library/` and are picked up by the `-- cabal-gild: discover` directive — add the file and run `hooky fix`; never hand-edit `exposed-modules`. **New test modules** are discovered the same way into the test-suite `other-modules`, and must additionally be wired into `source/test-suite/Main.hs`'s `testTree`.
 - **Before every commit:** `git add <the paths this task names>`, then `hooky fix`, then `git add` again, then `hooky run`. `hooky` acts on **staged** files only; if you skip the `git add`, it reports "hooks skipped" and checks nothing.
 - **TDD is not optional.** Write the failing test and actually run it to watch it fail before implementing. For a task whose first test names a module or constructor that does not exist yet, "fails" means the **build** fails with a specific `Not in scope` / `Could not find module` error — record that as the observed failure, then implement.
@@ -52,14 +52,14 @@ Master Thief's three Gatherer rulings, verbatim (they *are* the specification of
 
 Hag of Inner Weakness has **no** Gatherer rulings (Scryfall returned an empty set); its tests derive from CR 611.2a and CR 514.2 directly.
 
-**Neither card is added to any deck in `Pawl.Cards`.** They are deterministic fixtures, like Clone and Tarmogoyf — adding them to a deck would perturb `PropertySpec`'s card-backed conservation counts for no gain. They *are* added to the `Cards` record, `loadCards` and `allPrintings`, which the `CardSpec` directory lint requires.
+**Neither card is added to any deck in `Parun.Cards`.** They are deterministic fixtures, like Clone and Tarmogoyf — adding them to a deck would perturb `PropertySpec`'s card-backed conservation counts for no gain. They *are* added to the `Cards` record, `loadCards` and `allPrintings`, which the `CardSpec` directory lint requires.
 
 ## Four deliberate departures from the spec
 
 State these in the completion note (Task 7). They are corrections and refinements, not drift.
 
-1. **`Expiry.arm` grows its parameters across Tasks 1–3 rather than arriving four-parameter in Task 1.** The spec's §2.3 gives the final signature `arm :: PlayerId -> ObjectId -> Duration -> GameState -> Maybe Expiry`. Introducing it in Task 1, where only `UntilEndOfTurn` and `Indefinite` exist, leaves three unused parameters and `-Weverything` + `-Werror` fails the build. So: Task 1 defines `arm :: Duration -> Maybe Expiry`, Task 2 widens it to `PlayerId -> Duration -> Maybe Expiry`, Task 3 widens it to the spec's final shape. Each widening touches the same three `Resolve` call sites, one line each. `Pawl.Type.Expiry` itself is defined **once**, in Task 1, with all four constructors — `dropAtCleanup` must case on all four to be exhaustive anyway, and `While`/`AtTurnOf` acquire their producers in Tasks 3 and 2.
-2. **`Target.legalSets` gains the source parameter too.** The spec's §2.5 names `legalRecipients` and `stillLegal` as "`Pawl.Target`'s two entry points". `legalSets` is a two-line wrapper over `legalRecipients` (test-only consumers today), so it takes the source and passes it through. `legalSetsExcluding` and `fillableModes` already have it.
+1. **`Expiry.arm` grows its parameters across Tasks 1–3 rather than arriving four-parameter in Task 1.** The spec's §2.3 gives the final signature `arm :: PlayerId -> ObjectId -> Duration -> GameState -> Maybe Expiry`. Introducing it in Task 1, where only `UntilEndOfTurn` and `Indefinite` exist, leaves three unused parameters and `-Weverything` + `-Werror` fails the build. So: Task 1 defines `arm :: Duration -> Maybe Expiry`, Task 2 widens it to `PlayerId -> Duration -> Maybe Expiry`, Task 3 widens it to the spec's final shape. Each widening touches the same three `Resolve` call sites, one line each. `Parun.Type.Expiry` itself is defined **once**, in Task 1, with all four constructors — `dropAtCleanup` must case on all four to be exhaustive anyway, and `While`/`AtTurnOf` acquire their producers in Tasks 3 and 2.
+2. **`Target.legalSets` gains the source parameter too.** The spec's §2.5 names `legalRecipients` and `stillLegal` as "`Parun.Target`'s two entry points". `legalSets` is a two-line wrapper over `legalRecipients` (test-only consumers today), so it takes the source and passes it through. `legalSetsExcluding` and `fillableModes` already have it.
 3. **A controller-relative spec whose source has left the battlefield yields an EMPTY legal set, which is a rules deviation.** `OpponentCreatureTarget` reads `Projection.controllerOf source`; when the source is gone that is `Nothing`, so CR 608.2b's re-check at resolution finds every target illegal and the ability wrongly fizzles. Real rules keep the target legal — the ability's controller is still known even when its source is not. The narrower fix (threading the ability's *controller* rather than its source) is out of scope: it changes a signature four call sites use for a case no card in the pool reaches (nothing in the pool kills a Hag in response to its own trigger). Task 7 files this as a `rules-correctness` issue and cites it at the arm.
 4. **Test 9 (codec) is distributed, not a task.** The spec's §5 lists codec round-trips as one numbered test. Under TDD each new codec arm's round-trip lands in the task that adds the arm (Tasks 2, 3, 4), and each card file's round-trip is already enforced for free by `CardsSpec.checkFile` over `Cards.allPrintings` (parse-equality **and** byte-stability) as soon as Tasks 5–6 register the printings. Task 7 verifies the coverage rather than re-adding it.
 
@@ -69,16 +69,16 @@ State these in the completion note (Task 7). They are corrections and refinement
 
 | Module | Responsibility |
 |---|---|
-| `source/library/Pawl/Type/Expiry.hs` | the stored, runtime-only expiry: `AtCleanup \| Never \| While PlayerId StateCondition \| AtTurnOf PlayerId` |
-| `source/library/Pawl/Expiry.hs` | **sole home of `case … Expiry`**: `arm`, `dropAtCleanup`, `dropAtHandoff`, `sweepConditional` |
+| `source/library/Parun/Type/Expiry.hs` | the stored, runtime-only expiry: `AtCleanup \| Never \| While PlayerId StateCondition \| AtTurnOf PlayerId` |
+| `source/library/Parun/Expiry.hs` | **sole home of `case … Expiry`**: `arm`, `dropAtCleanup`, `dropAtHandoff`, `sweepConditional` |
 
-**Deleted functions.** `Pawl.Projection.dropEndOfTurnEffects` and `Pawl.Event.dropEndOfTurnReplacements` (both Task 1, absorbed by `Expiry.dropAtCleanup`).
+**Deleted functions.** `Parun.Projection.dropEndOfTurnEffects` and `Parun.Event.dropEndOfTurnReplacements` (both Task 1, absorbed by `Expiry.dropAtCleanup`).
 
-**New test module.** `source/test-suite/Pawl/ExpirySpec.hs` (Task 1) — near-mirrors `Pawl.Expiry`; holds the sweep unit tests and both gate cards' gameplay-level tests (§5's tests 1–8).
+**New test module.** `source/test-suite/Parun/ExpirySpec.hs` (Task 1) — near-mirrors `Parun.Expiry`; holds the sweep unit tests and both gate cards' gameplay-level tests (§5's tests 1–8).
 
 **New card data.** `data/cards/master-thief.json` (Task 5), `data/cards/hag-of-inner-weakness.json` (Task 6).
 
-**Changed library modules.** `Pawl/Type/Duration.hs`, `Pawl/Type/StateCondition.hs`, `Pawl/Type/TargetSpec.hs`, `Pawl/Type/Subtype.hs`, `Pawl/Type/ContinuousEffect.hs`, `Pawl/Type/ActiveReplacement.hs`, `Pawl/Event.hs`, `Pawl/Projection.hs`, `Pawl/Stack.hs`, `Pawl/Target.hs`, `Pawl/Resolve.hs`, `Pawl/Engine.hs`, `Pawl/Codec.hs`.
+**Changed library modules.** `Parun/Type/Duration.hs`, `Parun/Type/StateCondition.hs`, `Parun/Type/TargetSpec.hs`, `Parun/Type/Subtype.hs`, `Parun/Type/ContinuousEffect.hs`, `Parun/Type/ActiveReplacement.hs`, `Parun/Event.hs`, `Parun/Projection.hs`, `Parun/Stack.hs`, `Parun/Target.hs`, `Parun/Resolve.hs`, `Parun/Engine.hs`, `Parun/Codec.hs`.
 
 ---
 
@@ -87,45 +87,45 @@ State these in the completion note (Task 7). They are corrections and refinement
 Behaviour-neutral by construction: every existing test must still pass unchanged in meaning. The two per-carrier cleanup sweeps become one.
 
 **Files:**
-- Create: `source/library/Pawl/Type/Expiry.hs`, `source/library/Pawl/Expiry.hs`
-- Create: `source/test-suite/Pawl/ExpirySpec.hs`
-- Modify: `source/library/Pawl/Type/ContinuousEffect.hs` (field `duration` → `expiry`), `source/library/Pawl/Type/ActiveReplacement.hs` (same)
-- Modify: `source/library/Pawl/Projection.hs:716-722` (delete `dropEndOfTurnEffects`), `source/library/Pawl/Event.hs:86-95` (delete `dropEndOfTurnReplacements`)
-- Modify: `source/library/Pawl/Resolve.hs:398`, `:423`, `:591`, `:637`
-- Modify: `source/library/Pawl/Engine.hs:174-181`
-- Modify: `source/library/Pawl/Type/GameState.hs:54`, `:58` (the two comments that say "duration")
+- Create: `source/library/Parun/Type/Expiry.hs`, `source/library/Parun/Expiry.hs`
+- Create: `source/test-suite/Parun/ExpirySpec.hs`
+- Modify: `source/library/Parun/Type/ContinuousEffect.hs` (field `duration` → `expiry`), `source/library/Parun/Type/ActiveReplacement.hs` (same)
+- Modify: `source/library/Parun/Projection.hs:716-722` (delete `dropEndOfTurnEffects`), `source/library/Parun/Event.hs:86-95` (delete `dropEndOfTurnReplacements`)
+- Modify: `source/library/Parun/Resolve.hs:398`, `:423`, `:591`, `:637`
+- Modify: `source/library/Parun/Engine.hs:174-181`
+- Modify: `source/library/Parun/Type/GameState.hs:54`, `:58` (the two comments that say "duration")
 - Modify: `source/test-suite/Main.hs` (wire `ExpirySpec`)
-- Test: `source/test-suite/Pawl/ExpirySpec.hs` (new), plus the mechanical rename in `Support.hs`, `DamageSpec.hs`, `EventSpec.hs`, `ProjectionSpec.hs`, `ReplacementSpec.hs`, `ResolveSpec.hs`, `CombatSpec.hs`
+- Test: `source/test-suite/Parun/ExpirySpec.hs` (new), plus the mechanical rename in `Support.hs`, `DamageSpec.hs`, `EventSpec.hs`, `ProjectionSpec.hs`, `ReplacementSpec.hs`, `ResolveSpec.hs`, `CombatSpec.hs`
 
 **Interfaces:**
-- Produces: `Expiry.Expiry = AtCleanup | Never | While PlayerId StateCondition | AtTurnOf PlayerId` deriving `(Eq, Ord, Show)`; `Pawl.Expiry.arm :: Duration -> Maybe Expiry`; `Pawl.Expiry.dropAtCleanup :: GameState -> GameState`; `ContinuousEffect.expiry :: Expiry`; `ActiveReplacement.expiry :: Expiry`.
+- Produces: `Expiry.Expiry = AtCleanup | Never | While PlayerId StateCondition | AtTurnOf PlayerId` deriving `(Eq, Ord, Show)`; `Parun.Expiry.arm :: Duration -> Maybe Expiry`; `Parun.Expiry.dropAtCleanup :: GameState -> GameState`; `ContinuousEffect.expiry :: Expiry`; `ActiveReplacement.expiry :: Expiry`.
 - Consumes: nothing from earlier tasks.
 
 - [x] **Step 1: Write the failing test**
 
-Create `source/test-suite/Pawl/ExpirySpec.hs`:
+Create `source/test-suite/Parun/ExpirySpec.hs`:
 
 ```haskell
--- Covers Pawl.Expiry and Pawl.Type.Expiry: the printed Duration -> stored Expiry
+-- Covers Parun.Expiry and Parun.Type.Expiry: the printed Duration -> stored Expiry
 -- arming (CR 611.2), the sweeps that end a duration (CR 514.2, 611.2a, 611.2b),
 -- and the two gate cards (Master Thief, Hag of Inner Weakness).
-module Pawl.ExpirySpec where
+module Parun.ExpirySpec where
 
 import qualified Data.Set as Set
-import qualified Pawl.Expiry as Expiry
-import qualified Pawl.Game as Game
-import qualified Pawl.Setup as Setup
-import qualified Pawl.Support as S
-import qualified Pawl.Cards as Cards
-import qualified Pawl.Type.ActiveReplacement as ActiveReplacement
-import qualified Pawl.Type.Affected as Affected
-import qualified Pawl.Type.ContinuousEffect as ContinuousEffect
-import qualified Pawl.Type.Duration as Duration
-import qualified Pawl.Type.Expiry as Expiry.Type
-import qualified Pawl.Type.GameState as GameState
-import qualified Pawl.Type.Keyword as Keyword
-import qualified Pawl.Type.Modification as Modification
-import qualified Pawl.Type.ObjectId as ObjectId
+import qualified Parun.Expiry as Expiry
+import qualified Parun.Game as Game
+import qualified Parun.Setup as Setup
+import qualified Parun.Support as S
+import qualified Parun.Cards as Cards
+import qualified Parun.Type.ActiveReplacement as ActiveReplacement
+import qualified Parun.Type.Affected as Affected
+import qualified Parun.Type.ContinuousEffect as ContinuousEffect
+import qualified Parun.Type.Duration as Duration
+import qualified Parun.Type.Expiry as Expiry.Type
+import qualified Parun.Type.GameState as GameState
+import qualified Parun.Type.Keyword as Keyword
+import qualified Parun.Type.Modification as Modification
+import qualified Parun.Type.ObjectId as ObjectId
 import qualified Test.Tasty as Tasty
 import qualified Test.Tasty.HUnit as HU
 
@@ -177,28 +177,28 @@ cleanupTests cards =
     ]
 
 tests :: Cards.Cards -> Tasty.TestTree
-tests cards = Tasty.testGroup "Pawl.ExpirySpec" [armTests, cleanupTests cards]
+tests cards = Tasty.testGroup "Parun.ExpirySpec" [armTests, cleanupTests cards]
 ```
 
-Wire it into `source/test-suite/Main.hs`: add `import qualified Pawl.ExpirySpec as ExpirySpec` in alphabetical position (after `EventSpec`), and `ExpirySpec.tests cards,` into `testTree` (after `EventSpec.tests cards,`).
+Wire it into `source/test-suite/Main.hs`: add `import qualified Parun.ExpirySpec as ExpirySpec` in alphabetical position (after `EventSpec`), and `ExpirySpec.tests cards,` into `testTree` (after `EventSpec.tests cards,`).
 
 - [x] **Step 2: Run the test to verify it fails**
 
 Run: `cabal build all --enable-tests --enable-benchmarks`
-Expected: FAIL — `Could not find module 'Pawl.Expiry'` (and `Pawl.Type.Expiry`).
+Expected: FAIL — `Could not find module 'Parun.Expiry'` (and `Parun.Type.Expiry`).
 
-- [x] **Step 3: Create `Pawl.Type.Expiry`**
+- [x] **Step 3: Create `Parun.Type.Expiry`**
 
-`source/library/Pawl/Type/Expiry.hs`:
+`source/library/Parun/Type/Expiry.hs`:
 
 ```haskell
-module Pawl.Type.Expiry where
+module Parun.Type.Expiry where
 
-import Pawl.Type.PlayerId (PlayerId)
-import Pawl.Type.StateCondition (StateCondition)
+import Parun.Type.PlayerId (PlayerId)
+import Parun.Type.StateCondition (StateCondition)
 
 -- CR 611.2: how long a STORED effect lasts, as the game remembers it. The
--- runtime counterpart of the printed Pawl.Type.Duration, the same way
+-- runtime counterpart of the printed Parun.Type.Duration, the same way
 -- ActiveReplacement is ReplacementEffect's and PendingTrigger is
 -- DelayedTrigger's: card data says "until your next turn", the game remembers
 -- WHOSE. Never appears in card JSON and has no codec.
@@ -206,7 +206,7 @@ import Pawl.Type.StateCondition (StateCondition)
 -- The split is what makes a card-only value in GameState unrepresentable. With
 -- one type carrying both, a printed arm that leaked into a stored effect would
 -- match no sweep and the effect would last forever -- silently. Only
--- Pawl.Expiry may case on this type.
+-- Parun.Expiry may case on this type.
 data Expiry
   = -- CR 514.2: "all 'until end of turn' and 'this turn' effects end" during
     -- the cleanup step.
@@ -214,7 +214,7 @@ data Expiry
   | -- CR 611.2a: "lasts until the end of the game". No sweep ends it.
     Never
   | -- CR 611.2b: "for as long as ...". The PlayerId is CR 109.5's "you", baked
-    -- in by Pawl.Expiry.arm at the moment the effect is stored -- derived from
+    -- in by Parun.Expiry.arm at the moment the effect is stored -- derived from
     -- the effect's controller, never chosen. The duration is ONE continuous
     -- period: once the condition stops holding the effect is DELETED, and a
     -- condition that becomes true again does not bring it back.
@@ -225,28 +225,28 @@ data Expiry
   deriving (Eq, Ord, Show)
 ```
 
-- [x] **Step 4: Create `Pawl.Expiry` with `arm` and `dropAtCleanup`**
+- [x] **Step 4: Create `Parun.Expiry` with `arm` and `dropAtCleanup`**
 
-`source/library/Pawl/Expiry.hs`:
+`source/library/Parun/Expiry.hs`:
 
 ```haskell
 -- CR 611.2: the life cycle of a stored effect's duration. This module is the
--- ONLY module that may case on Pawl.Type.Expiry -- the standing Pawl.Resolve
--- has over Effect, Pawl.Projection over Modification and Pawl.Event over
+-- ONLY module that may case on Parun.Type.Expiry -- the standing Parun.Resolve
+-- has over Effect, Parun.Projection over Modification and Parun.Event over
 -- TriggerCondition. It owns the transformation from the PRINTED Duration to the
 -- STORED Expiry (`arm`) and every sweep that ends one, over BOTH carriers:
 -- GameState.continuousEffects and GameState.replacements share one expiry
 -- vocabulary, so they share one sweep.
-module Pawl.Expiry where
+module Parun.Expiry where
 
-import qualified Pawl.Type.ActiveReplacement as ActiveReplacement
-import qualified Pawl.Type.ContinuousEffect as ContinuousEffect
-import Pawl.Type.Duration (Duration)
-import qualified Pawl.Type.Duration as Duration
-import Pawl.Type.Expiry (Expiry)
-import qualified Pawl.Type.Expiry as Expiry
-import Pawl.Type.GameState (GameState)
-import qualified Pawl.Type.GameState as GameState
+import qualified Parun.Type.ActiveReplacement as ActiveReplacement
+import qualified Parun.Type.ContinuousEffect as ContinuousEffect
+import Parun.Type.Duration (Duration)
+import qualified Parun.Type.Duration as Duration
+import Parun.Type.Expiry (Expiry)
+import qualified Parun.Type.Expiry as Expiry
+import Parun.Type.GameState (GameState)
+import qualified Parun.Type.GameState as GameState
 
 -- CR 611.2: the moment a duration BEGINS. Total for the two fixed points; the
 -- shapes that can fail to start (CR 611.2b) arrive with their own arms.
@@ -278,17 +278,17 @@ dropAtCleanup gs =
 
 - [x] **Step 5: Rename the field on both carriers**
 
-In `source/library/Pawl/Type/ContinuousEffect.hs`, replace the `duration :: Duration` field with `expiry :: Expiry` (import `Pawl.Type.Expiry`, drop `Pawl.Type.Duration`), and change the comment "`duration` decides when cleanup drops it (CR 514.2)" to "`expiry` decides when a sweep drops it (Pawl.Expiry; CR 514.2, 611.2a, 611.2b)".
+In `source/library/Parun/Type/ContinuousEffect.hs`, replace the `duration :: Duration` field with `expiry :: Expiry` (import `Parun.Type.Expiry`, drop `Parun.Type.Duration`), and change the comment "`duration` decides when cleanup drops it (CR 514.2)" to "`expiry` decides when a sweep drops it (Parun.Expiry; CR 514.2, 611.2a, 611.2b)".
 
-In `source/library/Pawl/Type/ActiveReplacement.hs`, same rename and same import swap; change "`duration` decides when cleanup drops it (CR 514.2)" to "`expiry` decides when a sweep drops it (Pawl.Expiry; CR 514.2)". Leave the rest of that module's long comment untouched.
+In `source/library/Parun/Type/ActiveReplacement.hs`, same rename and same import swap; change "`duration` decides when cleanup drops it (CR 514.2)" to "`expiry` decides when a sweep drops it (Parun.Expiry; CR 514.2)". Leave the rest of that module's long comment untouched.
 
 - [x] **Step 6: Delete the two old sweeps and route the three storing sites through `arm`**
 
-Delete `dropEndOfTurnEffects` from `source/library/Pawl/Projection.hs` (lines 716–722) and drop the now-unused `Pawl.Type.Duration` import.
+Delete `dropEndOfTurnEffects` from `source/library/Parun/Projection.hs` (lines 716–722) and drop the now-unused `Parun.Type.Duration` import.
 
-Delete `dropEndOfTurnReplacements` from `source/library/Pawl/Event.hs` (lines 86–95) and drop the now-unused `Pawl.Type.Duration` **and** `Pawl.Type.ActiveReplacement` imports (line 94 was their only use).
+Delete `dropEndOfTurnReplacements` from `source/library/Parun/Event.hs` (lines 86–95) and drop the now-unused `Parun.Type.Duration` **and** `Parun.Type.ActiveReplacement` imports (line 94 was their only use).
 
-In `source/library/Pawl/Resolve.hs`, the `ChangeText` arm at line 423 stores an indefinite effect directly — change `ContinuousEffect.duration = Duration.Indefinite` to `ContinuousEffect.expiry = Expiry.Never` (CR 611.2a; no arming decision to make).
+In `source/library/Parun/Resolve.hs`, the `ChangeText` arm at line 423 stores an indefinite effect directly — change `ContinuousEffect.duration = Duration.Indefinite` to `ContinuousEffect.expiry = Expiry.Never` (CR 611.2a; no arming decision to make).
 
 The three arms that carry a *printed* duration go through `arm`. `ModifyTarget` (around line 380) becomes:
 
@@ -382,18 +382,18 @@ The three arms that carry a *printed* duration go through `arm`. `ModifyTarget` 
 
 - [x] **Step 7: Collapse the cleanup step to one call**
 
-In `source/library/Pawl/Engine.hs`, the `Phase.Ending EndingStep.Cleanup` arm (lines 174–181) becomes:
+In `source/library/Parun/Engine.hs`, the `Phase.Ending EndingStep.Cleanup` arm (lines 174–181) becomes:
 
 ```haskell
     Phase.Ending EndingStep.Cleanup -> do
       discardToHandSize active
       -- CR 514.2: damage wears off AND until-end-of-turn effects end,
-      -- simultaneously. One sweep over both carriers (Pawl.Expiry).
+      -- simultaneously. One sweep over both carriers (Parun.Expiry).
       State.modify' Damage.removeAllDamage
       State.modify' Expiry.dropAtCleanup
 ```
 
-Add the `Pawl.Expiry` import; drop `Pawl.Projection` / `Pawl.Event` imports **only** if nothing else in the module uses them (both are used elsewhere — keep them).
+Add the `Parun.Expiry` import; drop `Parun.Projection` / `Parun.Event` imports **only** if nothing else in the module uses them (both are used elsewhere — keep them).
 
 - [x] **Step 8: Sweep every remaining `duration`/`dropEndOfTurn` reference**
 
@@ -403,34 +403,34 @@ Fix each hit mechanically:
 
 | File:line | Change |
 |---|---|
-| `source/test-suite/Pawl/Support.hs:338`, `:362`, `:759` | `ContinuousEffect.duration = Duration.UntilEndOfTurn` / `ActiveReplacement.duration = …` → `… .expiry = Expiry.AtCleanup` |
-| `source/test-suite/Pawl/DamageSpec.hs:165`, `:182`, `:443` | same field rename |
-| `source/test-suite/Pawl/DamageSpec.hs:185` | `Event.dropEndOfTurnReplacements` → `Expiry.dropAtCleanup` |
-| `source/test-suite/Pawl/EventSpec.hs:118` | `Event.dropEndOfTurnReplacements` → `Expiry.dropAtCleanup` |
-| `source/test-suite/Pawl/ProjectionSpec.hs:64`, `:423` | field rename |
-| `source/test-suite/Pawl/ReplacementSpec.hs:416` | field rename |
-| `source/test-suite/Pawl/ResolveSpec.hs:890`, `:973`, `:995` | `Projection.dropEndOfTurnEffects` → `Expiry.dropAtCleanup` |
-| `source/test-suite/Pawl/CombatSpec.hs:303` | field rename |
+| `source/test-suite/Parun/Support.hs:338`, `:362`, `:759` | `ContinuousEffect.duration = Duration.UntilEndOfTurn` / `ActiveReplacement.duration = …` → `… .expiry = Expiry.AtCleanup` |
+| `source/test-suite/Parun/DamageSpec.hs:165`, `:182`, `:443` | same field rename |
+| `source/test-suite/Parun/DamageSpec.hs:185` | `Event.dropEndOfTurnReplacements` → `Expiry.dropAtCleanup` |
+| `source/test-suite/Parun/EventSpec.hs:118` | `Event.dropEndOfTurnReplacements` → `Expiry.dropAtCleanup` |
+| `source/test-suite/Parun/ProjectionSpec.hs:64`, `:423` | field rename |
+| `source/test-suite/Parun/ReplacementSpec.hs:416` | field rename |
+| `source/test-suite/Parun/ResolveSpec.hs:890`, `:973`, `:995` | `Projection.dropEndOfTurnEffects` → `Expiry.dropAtCleanup` |
+| `source/test-suite/Parun/CombatSpec.hs:303` | field rename |
 
 `Duration.UntilEndOfTurn` appearing inside an `Effect.…` value (`ResolveSpec.hs:968`, `CombatSpec.hs:279`, `CodecSpec.hs:145`) is **printed card data and stays a `Duration`** — do not touch those.
 
-Also update the two comments in `source/library/Pawl/Type/GameState.hs` (lines 54 and 58) that say "each with a duration cleanup consults" to say "each with an expiry the Pawl.Expiry sweeps consult".
+Also update the two comments in `source/library/Parun/Type/GameState.hs` (lines 54 and 58) that say "each with a duration cleanup consults" to say "each with an expiry the Parun.Expiry sweeps consult".
 
 - [x] **Step 9: Run the tests to verify they pass**
 
 Run: `cabal build all --enable-tests --enable-benchmarks && cabal test`
-Expected: PASS — the new `Pawl.ExpirySpec` group green, and **every pre-existing test still green** (this task is behaviour-neutral).
+Expected: PASS — the new `Parun.ExpirySpec` group green, and **every pre-existing test still green** (this task is behaviour-neutral).
 
 - [x] **Step 10: Commit**
 
 ```bash
-git add source/library/Pawl/Type/Expiry.hs source/library/Pawl/Expiry.hs source/test-suite/Pawl/ExpirySpec.hs source/library/Pawl source/test-suite pawl.cabal
+git add source/library/Parun/Type/Expiry.hs source/library/Parun/Expiry.hs source/test-suite/Parun/ExpirySpec.hs source/library/Parun source/test-suite parun.cabal
 hooky fix
 git add -u
 hooky run
 git commit -m "refactor(m4.5-p6): split printed Duration from stored Expiry
 
-Pawl.Expiry is the sole home of case ... Expiry and owns one CR 514.2
+Parun.Expiry is the sole home of case ... Expiry and owns one CR 514.2
 cleanup sweep over both carriers, absorbing and deleting
 Projection.dropEndOfTurnEffects and Event.dropEndOfTurnReplacements.
 Behaviour-neutral.
@@ -443,12 +443,12 @@ Co-Authored-By: Claude Opus 4.8 (1M context) <noreply@anthropic.com>"
 ### Task 2: "Until your next turn" — `AtTurnOf`, and the turn handoff
 
 **Files:**
-- Modify: `source/library/Pawl/Type/Duration.hs` (add `UntilYourNextTurn`)
-- Modify: `source/library/Pawl/Expiry.hs` (`arm` widens; add `dropAtHandoff`)
-- Modify: `source/library/Pawl/Resolve.hs` (three `Expiry.arm` call sites)
-- Modify: `source/library/Pawl/Engine.hs:408-433` (`handoffTurn`)
-- Modify: `source/library/Pawl/Codec.hs:398-410` (`durationToJson`/`jsonToDuration`)
-- Test: `source/test-suite/Pawl/ExpirySpec.hs`, `source/test-suite/Pawl/CodecSpec.hs`
+- Modify: `source/library/Parun/Type/Duration.hs` (add `UntilYourNextTurn`)
+- Modify: `source/library/Parun/Expiry.hs` (`arm` widens; add `dropAtHandoff`)
+- Modify: `source/library/Parun/Resolve.hs` (three `Expiry.arm` call sites)
+- Modify: `source/library/Parun/Engine.hs:408-433` (`handoffTurn`)
+- Modify: `source/library/Parun/Codec.hs:398-410` (`durationToJson`/`jsonToDuration`)
+- Test: `source/test-suite/Parun/ExpirySpec.hs`, `source/test-suite/Parun/CodecSpec.hs`
 
 **Interfaces:**
 - Consumes: `Expiry.arm`, `Expiry.dropAtCleanup`, `ContinuousEffect.expiry`, `ActiveReplacement.expiry` (Task 1).
@@ -456,7 +456,7 @@ Co-Authored-By: Claude Opus 4.8 (1M context) <noreply@anthropic.com>"
 
 - [x] **Step 1: Write the failing tests**
 
-In `source/test-suite/Pawl/ExpirySpec.hs`, add to `armTests`:
+In `source/test-suite/Parun/ExpirySpec.hs`, add to `armTests`:
 
 ```haskell
       HU.testCase "CR 611.2a / 109.5 'until your next turn' bakes the controller" $
@@ -495,7 +495,7 @@ handoffTests =
     ]
 ```
 
-In `source/test-suite/Pawl/CodecSpec.hs`, beside the existing `Duration` round-trips, add:
+In `source/test-suite/Parun/CodecSpec.hs`, beside the existing `Duration` round-trips, add:
 
 ```haskell
       HU.testCase "Duration.UntilYourNextTurn round-trips" $
@@ -511,21 +511,21 @@ Expected: FAIL — `Data constructor not in scope: Duration.UntilYourNextTurn`, 
 
 - [x] **Step 3: Add the printed duration**
 
-In `source/library/Pawl/Type/Duration.hs`, add the constructor and rewrite the stale module comment:
+In `source/library/Parun/Type/Duration.hs`, add the constructor and rewrite the stale module comment:
 
 ```haskell
-module Pawl.Type.Duration where
+module Parun.Type.Duration where
 
 -- How long a stored continuous effect lasts, as the CARD says it (CR 611.2).
 -- PRINTED data: this is what appears in card JSON. The game stores
--- Pawl.Type.Expiry instead, and Pawl.Expiry.arm is the one-way door between
+-- Parun.Type.Expiry instead, and Parun.Expiry.arm is the one-way door between
 -- them. Static-ability effects carry no Duration -- they last while their
 -- source and ability do, which is "while re-derived from the battlefield".
 data Duration
   = UntilEndOfTurn -- CR 514.2
   | Indefinite -- CR 611.2a: "lasts until the end of the game" (Magical Hack)
   | -- CR 611.2a: "until your next turn" (Hag of Inner Weakness). "Your" is
-    -- resolved to a concrete player by Pawl.Expiry.arm (CR 109.5) -- it cannot
+    -- resolved to a concrete player by Parun.Expiry.arm (CR 109.5) -- it cannot
     -- be a PlayerId here, because a printed card does not know one.
     UntilYourNextTurn
   deriving (Eq, Ord, Show)
@@ -533,7 +533,7 @@ data Duration
 
 - [x] **Step 4: Widen `arm` and add `dropAtHandoff`**
 
-In `source/library/Pawl/Expiry.hs`:
+In `source/library/Parun/Expiry.hs`:
 
 ```haskell
 -- CR 611.2: the moment a duration BEGINS. `controller` is the effect's
@@ -571,11 +571,11 @@ dropAtHandoff gs =
         }
 ```
 
-Update the three `Expiry.arm duration` call sites in `source/library/Pawl/Resolve.hs` to `Expiry.arm controller duration` (`controller` is already bound in `applyEffect`'s scope at all three).
+Update the three `Expiry.arm duration` call sites in `source/library/Parun/Resolve.hs` to `Expiry.arm controller duration` (`controller` is already bound in `applyEffect`'s scope at all three).
 
 - [x] **Step 5: Wire the handoff**
 
-In `source/library/Pawl/Engine.hs`, wrap `handoffTurn`'s existing record update in `Expiry.dropAtHandoff`. **Nothing inside the braces changes** — all nine assignments (`activePlayer`, `turnNumber`, `events`, `scannedThrough`, `damageScannedThrough`, `phase`, `remaining`, `activeControl`, `pendingControl`) and their comments stay exactly as they are. Only the two lines around them are new:
+In `source/library/Parun/Engine.hs`, wrap `handoffTurn`'s existing record update in `Expiry.dropAtHandoff`. **Nothing inside the braces changes** — all nine assignments (`activePlayer`, `turnNumber`, `events`, `scannedThrough`, `damageScannedThrough`, `phase`, `remaining`, `activeControl`, `pendingControl`) and their comments stay exactly as they are. Only the two lines around them are new:
 
 ```haskell
 handoffTurn :: Game ()
@@ -583,7 +583,7 @@ handoffTurn = State.modify' $ \gs ->
   let newActive = nextInOrder (GameState.turnOrder gs) (GameState.activePlayer gs)
    in -- CR 611.2a: with activePlayer already advanced, drop every "until your
       -- next turn" effect belonging to the player whose turn just began. The
-      -- transition IS the event, known exactly here; see Pawl.Expiry.
+      -- transition IS the event, known exactly here; see Parun.Expiry.
       Expiry.dropAtHandoff $
         gs
           { GameState.activePlayer = newActive,
@@ -604,7 +604,7 @@ handoffTurn = State.modify' $ \gs ->
 
 - [x] **Step 6: Add the codec arm**
 
-In `source/library/Pawl/Codec.hs`, add `Duration.UntilYourNextTurn -> "UntilYourNextTurn"` to `durationToJson`'s case and `(Text.pack "UntilYourNextTurn", Duration.UntilYourNextTurn)` to `jsonToDuration`'s table.
+In `source/library/Parun/Codec.hs`, add `Duration.UntilYourNextTurn -> "UntilYourNextTurn"` to `durationToJson`'s case and `(Text.pack "UntilYourNextTurn", Duration.UntilYourNextTurn)` to `jsonToDuration`'s table.
 
 - [x] **Step 7: Run the tests to verify they pass**
 
@@ -614,7 +614,7 @@ Expected: PASS — `DropAtHandoff` green, `Arm` green, the codec round-trip gree
 - [x] **Step 8: Commit**
 
 ```bash
-git add source/library/Pawl source/test-suite
+git add source/library/Parun source/test-suite
 hooky fix
 git add -u
 hooky run
@@ -632,15 +632,15 @@ Co-Authored-By: Claude Opus 4.8 (1M context) <noreply@anthropic.com>"
 ### Task 3: "For as long as" — `YouControlSource`, the arming check, and the conditional sweep
 
 **Files:**
-- Modify: `source/library/Pawl/Type/StateCondition.hs` (add `YouControlSource`)
-- Modify: `source/library/Pawl/Type/Duration.hs` (add `ForAsLongAs StateCondition`)
-- Modify: `source/library/Pawl/Event.hs` (`stateHolds` gains an `ObjectId`; two internal call sites)
-- Modify: `source/library/Pawl/Stack.hs:67` (third `stateHolds` call site)
-- Modify: `source/library/Pawl/Expiry.hs` (`arm` widens again; add `sweepConditional`)
-- Modify: `source/library/Pawl/Resolve.hs` (three `Expiry.arm` call sites)
-- Modify: `source/library/Pawl/Engine.hs:336-351` (`settleForPriority`)
-- Modify: `source/library/Pawl/Codec.hs` (`stateConditionToJson`/`jsonToStateCondition`; restructure `durationToJson`/`jsonToDuration`)
-- Test: `source/test-suite/Pawl/ExpirySpec.hs`, `source/test-suite/Pawl/CodecSpec.hs`
+- Modify: `source/library/Parun/Type/StateCondition.hs` (add `YouControlSource`)
+- Modify: `source/library/Parun/Type/Duration.hs` (add `ForAsLongAs StateCondition`)
+- Modify: `source/library/Parun/Event.hs` (`stateHolds` gains an `ObjectId`; two internal call sites)
+- Modify: `source/library/Parun/Stack.hs:67` (third `stateHolds` call site)
+- Modify: `source/library/Parun/Expiry.hs` (`arm` widens again; add `sweepConditional`)
+- Modify: `source/library/Parun/Resolve.hs` (three `Expiry.arm` call sites)
+- Modify: `source/library/Parun/Engine.hs:336-351` (`settleForPriority`)
+- Modify: `source/library/Parun/Codec.hs` (`stateConditionToJson`/`jsonToStateCondition`; restructure `durationToJson`/`jsonToDuration`)
+- Test: `source/test-suite/Parun/ExpirySpec.hs`, `source/test-suite/Parun/CodecSpec.hs`
 
 **Interfaces:**
 - Consumes: `Expiry.arm :: PlayerId -> Duration -> Maybe Expiry`, `Expiry.dropAtHandoff` (Task 2).
@@ -648,7 +648,7 @@ Co-Authored-By: Claude Opus 4.8 (1M context) <noreply@anthropic.com>"
 
 - [x] **Step 1: Write the failing tests**
 
-In `source/test-suite/Pawl/ExpirySpec.hs`, add a group (and register it in `tests`):
+In `source/test-suite/Parun/ExpirySpec.hs`, add a group (and register it in `tests`):
 
 ```haskell
 -- A stored continuous effect whose expiry is a live condition over `src`,
@@ -721,7 +721,7 @@ conditionalTests cards =
         ]
 ```
 
-In `source/test-suite/Pawl/CodecSpec.hs`, add:
+In `source/test-suite/Parun/CodecSpec.hs`, add:
 
 ```haskell
       HU.testCase "StateCondition.YouControlSource round-trips" $
@@ -738,7 +738,7 @@ Expected: FAIL — `Data constructor not in scope: StateCondition.YouControlSour
 
 - [x] **Step 3: Add the condition and the duration**
 
-In `source/library/Pawl/Type/StateCondition.hs`, add the third arm (keep the existing module comment, but change "Two customers, one vocabulary" to "Three customers, one vocabulary" and name the third):
+In `source/library/Parun/Type/StateCondition.hs`, add the third arm (keep the existing module comment, but change "Two customers, one vocabulary" to "Three customers, one vocabulary" and name the third):
 
 ```haskell
   | -- CR 611.2b: Master Thief, "for as long as you control this creature". The
@@ -751,18 +751,18 @@ In `source/library/Pawl/Type/StateCondition.hs`, add the third arm (keep the exi
     YouControlSource
 ```
 
-In `source/library/Pawl/Type/Duration.hs`, add:
+In `source/library/Parun/Type/Duration.hs`, add:
 
 ```haskell
   | -- CR 611.2b: "for as long as ...". The duration has a BEGINNING as well as
     -- an end -- "if the 'for as long as' duration never starts, the effect does
-    -- nothing" -- which is why Pawl.Expiry.arm returns a Maybe.
+    -- nothing" -- which is why Parun.Expiry.arm returns a Maybe.
     ForAsLongAs StateCondition
 ```
 
 - [x] **Step 4: Give `stateHolds` its source**
 
-In `source/library/Pawl/Event.hs`:
+In `source/library/Parun/Event.hs`:
 
 ```haskell
 -- CR 603.8 / 603.4 / 611.2b: is this state condition currently true, for an
@@ -790,11 +790,11 @@ stateHolds you source cond gs =
 Update its three call sites, each of which already has the source in scope:
 - `Event.stateTriggers`'s `live` helper: `stateHolds ctrl cond gs` → `stateHolds ctrl oid cond gs`.
 - `Event.interveningHolds`: `stateHolds (PendingTrigger.controller pending) cond gs` → `stateHolds (PendingTrigger.controller pending) (PendingTrigger.source pending) cond gs`.
-- `Pawl.Stack.hs:67`: `Event.stateHolds (Object.owner obj) cond gs` → `Event.stateHolds (Object.owner obj) srcId cond gs` (`srcId` is bound by the enclosing `Source.OfTrigger srcId ability` pattern).
+- `Parun.Stack.hs:67`: `Event.stateHolds (Object.owner obj) cond gs` → `Event.stateHolds (Object.owner obj) srcId cond gs` (`srcId` is bound by the enclosing `Source.OfTrigger srcId ability` pattern).
 
 - [x] **Step 5: Widen `arm` and add `sweepConditional`**
 
-In `source/library/Pawl/Expiry.hs` (add the `Pawl.Event`, `Pawl.Type.Game`, `Control.Monad.Trans.State.Strict` and `Pawl.Type.ObjectId` imports):
+In `source/library/Parun/Expiry.hs` (add the `Parun.Event`, `Parun.Type.Game`, `Control.Monad.Trans.State.Strict` and `Parun.Type.ObjectId` imports):
 
 ```haskell
 -- CR 611.2: the moment a duration BEGINS. `controller` is the effect's
@@ -844,11 +844,11 @@ sweepConditional = do
   pure (keptEffects /= GameState.continuousEffects gs || keptReplacements /= GameState.replacements gs)
 ```
 
-Update the three `Expiry.arm controller duration` call sites in `source/library/Pawl/Resolve.hs` to `Expiry.arm controller source duration gs`. In the `ModifyTarget` and `GainControl` arms the surrounding `State.modify' $ \gs -> …` already binds `gs`; in the `Replace` arm it does too. `source` is `applyEffect`'s first parameter.
+Update the three `Expiry.arm controller duration` call sites in `source/library/Parun/Resolve.hs` to `Expiry.arm controller source duration gs`. In the `ModifyTarget` and `GainControl` arms the surrounding `State.modify' $ \gs -> …` already binds `gs`; in the `Replace` arm it does too. `source` is `applyEffect`'s first parameter.
 
 - [x] **Step 6: Put the sweep at the head of the settle loop**
 
-In `source/library/Pawl/Engine.hs`:
+In `source/library/Parun/Engine.hs`:
 
 ```haskell
 settleForPriority :: Game ()
@@ -863,7 +863,7 @@ Extend the existing comment above it: CR 611.2b's condition is checked continuou
 
 - [x] **Step 7: Add the codec arms**
 
-In `source/library/Pawl/Codec.hs`, `stateConditionToJson` gains `StateCondition.YouControlSource -> nullary (Text.pack "YouControlSource")` and `jsonToStateCondition` gains `("YouControlSource", _) -> Right StateCondition.YouControlSource`.
+In `source/library/Parun/Codec.hs`, `stateConditionToJson` gains `StateCondition.YouControlSource -> nullary (Text.pack "YouControlSource")` and `jsonToStateCondition` gains `("YouControlSource", _) -> Right StateCondition.YouControlSource`.
 
 `Duration` now has a payload-carrying arm, so its pair stops using `nullary . Text.pack $ case` / `decodeNullary`:
 
@@ -894,7 +894,7 @@ Expected: PASS — the `Conditional` group green, the two codec round-trips gree
 - [x] **Step 9: Commit**
 
 ```bash
-git add source/library/Pawl source/test-suite
+git add source/library/Parun source/test-suite
 hooky fix
 git add -u
 hooky run
@@ -914,12 +914,12 @@ Co-Authored-By: Claude Opus 4.8 (1M context) <noreply@anthropic.com>"
 ### Task 4: Targeting becomes source-relative — `ArtifactTarget` and `OpponentCreatureTarget`
 
 **Files:**
-- Modify: `source/library/Pawl/Type/TargetSpec.hs` (two new arms)
-- Modify: `source/library/Pawl/Target.hs` (`legalRecipients`, `stillLegal`, `legalSets`, `selfExcludes`, `legalSetsExcluding`)
-- Modify: `source/library/Pawl/Resolve.hs:285`, `:320` (two `stillLegal` call sites)
-- Modify: `source/library/Pawl/Codec.hs:585-612`
-- Modify: `source/test-suite/Pawl/Support.hs` (add `noSource`)
-- Test: `source/test-suite/Pawl/ResolveSpec.hs`, `source/test-suite/Pawl/ColorSpec.hs`, `source/test-suite/Pawl/ModalSpec.hs`, `source/test-suite/Pawl/CodecSpec.hs`
+- Modify: `source/library/Parun/Type/TargetSpec.hs` (two new arms)
+- Modify: `source/library/Parun/Target.hs` (`legalRecipients`, `stillLegal`, `legalSets`, `selfExcludes`, `legalSetsExcluding`)
+- Modify: `source/library/Parun/Resolve.hs:285`, `:320` (two `stillLegal` call sites)
+- Modify: `source/library/Parun/Codec.hs:585-612`
+- Modify: `source/test-suite/Parun/Support.hs` (add `noSource`)
+- Test: `source/test-suite/Parun/ResolveSpec.hs`, `source/test-suite/Parun/ColorSpec.hs`, `source/test-suite/Parun/ModalSpec.hs`, `source/test-suite/Parun/CodecSpec.hs`
 
 **Interfaces:**
 - Consumes: nothing from Tasks 1–3 (independent of all three).
@@ -927,7 +927,7 @@ Co-Authored-By: Claude Opus 4.8 (1M context) <noreply@anthropic.com>"
 
 - [x] **Step 1: Write the failing tests**
 
-In `source/test-suite/Pawl/ResolveSpec.hs`, inside `targetTests`, add:
+In `source/test-suite/Parun/ResolveSpec.hs`, inside `targetTests`, add:
 
 ```haskell
       HU.testCase "CR 115.1a ArtifactTarget is the battlefield's projected artifacts" $
@@ -967,7 +967,7 @@ In `source/test-suite/Pawl/ResolveSpec.hs`, inside `targetTests`, add:
 
 The third case reads control **twice**: `alsoTheirs` (Typhoid Rats, still bob's) is the only legal target for alice's source, and from bob's remaining source the two creatures alice now controls — her own Piker and the Mammoth she stole — are both legal. `OpponentCreatureTarget` does not self-exclude, but neither source is ever in its own legal set here, because a source is always controlled by its own controller.
 
-In `source/test-suite/Pawl/CodecSpec.hs`, add:
+In `source/test-suite/Parun/CodecSpec.hs`, add:
 
 ```haskell
       HU.testCase "TargetSpec.ArtifactTarget round-trips" $
@@ -983,7 +983,7 @@ Expected: FAIL — `Data constructor not in scope: TargetSpec.ArtifactTarget`, `
 
 - [x] **Step 3: Add the two specs**
 
-In `source/library/Pawl/Type/TargetSpec.hs`:
+In `source/library/Parun/Type/TargetSpec.hs`:
 
 ```haskell
   | -- CR 115.1a: "target artifact" -- a permanent on the battlefield whose
@@ -998,14 +998,14 @@ In `source/library/Pawl/Type/TargetSpec.hs`:
   | -- CR 115.1a with CR 109.5: "target creature an opponent controls" -- a
     -- creature on the battlefield whose PROJECTED controller (CR 613.1b) is not
     -- the targeting source's controller. The first spec whose legal set depends
-    -- on WHO IS CHOOSING, which is what makes Pawl.Target source-relative. Hag
+    -- on WHO IS CHOOSING, which is what makes Parun.Target source-relative. Hag
     -- of Inner Weakness's slot. Retired with the rest of the family (#40).
     OpponentCreatureTarget
 ```
 
-- [x] **Step 4: Make `Pawl.Target` source-relative**
+- [x] **Step 4: Make `Parun.Target` source-relative**
 
-In `source/library/Pawl/Target.hs`:
+In `source/library/Parun/Target.hs`:
 
 ```haskell
 -- CR 115.4: "any target" is a creature, player, planeswalker, or battle; the
@@ -1061,13 +1061,13 @@ legalSets source specs gs = Map.map (\spec -> legalRecipients source spec gs) sp
 
 Update `legalSetsExcluding`'s body to `legalRecipients source spec gs`, and add `TargetSpec.ArtifactTarget -> False` / `TargetSpec.OpponentCreatureTarget -> False` to `selfExcludes` (which stays untouched otherwise — folding self-exclusion into the now-source-aware `legalRecipients` is explicitly not part of this phase).
 
-Update `stillLegal`'s two call sites in `source/library/Pawl/Resolve.hs` (lines 285 and 320) to `Target.stillLegal source recipient spec gs` and `Target.stillLegal srcId recipient spec gs` respectively — check which identifier is in scope in each function (`resolveSpell`'s is the spell object; `resolveEffects`'s is `srcId`) and use it. CR 608.2b's re-check is now controller-relative: a creature that comes under your control in response is no longer a legal target.
+Update `stillLegal`'s two call sites in `source/library/Parun/Resolve.hs` (lines 285 and 320) to `Target.stillLegal source recipient spec gs` and `Target.stillLegal srcId recipient spec gs` respectively — check which identifier is in scope in each function (`resolveSpell`'s is the spell object; `resolveEffects`'s is `srcId`) and use it. CR 608.2b's re-check is now controller-relative: a creature that comes under your control in response is no longer a legal target.
 
 - [x] **Step 5: Add the codec arms and the test stand-in**
 
-In `source/library/Pawl/Codec.hs`, add `TargetSpec.ArtifactTarget -> "ArtifactTarget"` and `TargetSpec.OpponentCreatureTarget -> "OpponentCreatureTarget"` to `targetSpecToJson`, and the matching two entries to `jsonToTargetSpec`'s table.
+In `source/library/Parun/Codec.hs`, add `TargetSpec.ArtifactTarget -> "ArtifactTarget"` and `TargetSpec.OpponentCreatureTarget -> "OpponentCreatureTarget"` to `targetSpecToJson`, and the matching two entries to `jsonToTargetSpec`'s table.
 
-In `source/test-suite/Pawl/Support.hs`, add:
+In `source/test-suite/Parun/Support.hs`, add:
 
 ```haskell
 -- The source stand-in for a targeting call whose spec is source-blind (every
@@ -1091,7 +1091,7 @@ Expected: PASS — the three new targeting cases and the two codec round-trips g
 - [x] **Step 8: Commit**
 
 ```bash
-git add source/library/Pawl source/test-suite
+git add source/library/Parun source/test-suite
 hooky fix
 git add -u
 hooky run
@@ -1112,10 +1112,10 @@ Co-Authored-By: Claude Opus 4.8 (1M context) <noreply@anthropic.com>"
 The gate card for CR 611.2b, and CR 611.2b's own printed example (`rules.txt` line 2907). Its three Gatherer rulings are the specification of tests 2–4.
 
 **Files:**
-- Modify: `source/library/Pawl/Type/Subtype.hs` (add `Rogue`), `source/library/Pawl/Codec.hs` (its two arms)
+- Modify: `source/library/Parun/Type/Subtype.hs` (add `Rogue`), `source/library/Parun/Codec.hs` (its two arms)
 - Create: `data/cards/master-thief.json`
-- Modify: `source/test-suite/Pawl/Cards.hs` (record field, `loadCards`, `allPrintings`)
-- Test: `source/test-suite/Pawl/ExpirySpec.hs` (§5 tests 1–4), `source/test-suite/Pawl/CardSpec.hs` (card-shape assertion)
+- Modify: `source/test-suite/Parun/Cards.hs` (record field, `loadCards`, `allPrintings`)
+- Test: `source/test-suite/Parun/ExpirySpec.hs` (§5 tests 1–4), `source/test-suite/Parun/CardSpec.hs` (card-shape assertion)
 
 **Interfaces:**
 - Consumes: `Duration.ForAsLongAs`, `StateCondition.YouControlSource` (Task 3); `TargetSpec.ArtifactTarget` (Task 4); `Expiry.dropAtCleanup`, `Expiry.sweepConditional`.
@@ -1123,7 +1123,7 @@ The gate card for CR 611.2b, and CR 611.2b's own printed example (`rules.txt` li
 
 - [x] **Step 1: Write the failing tests**
 
-In `source/test-suite/Pawl/ExpirySpec.hs`, add a group (and register it in `tests`):
+In `source/test-suite/Parun/ExpirySpec.hs`, add a group (and register it in `tests`):
 
 ```haskell
 -- Master Thief {2}{U}{U} Creature -- Human Rogue 2/2: "When this creature
@@ -1192,7 +1192,7 @@ masterThiefTests cards =
         ]
 ```
 
-In `source/test-suite/Pawl/CardSpec.hs`, add a new group `m45p6CardTests` (registered in `tests`) with:
+In `source/test-suite/Parun/CardSpec.hs`, add a new group `m45p6CardTests` (registered in `tests`) with:
 
 ```haskell
       HU.testCase "Master Thief is a {2}{U}{U} 2/2 Human Rogue whose ETB steals an artifact" $
@@ -1221,7 +1221,7 @@ In `source/test-suite/Pawl/CardSpec.hs`, add a new group `m45p6CardTests` (regis
                 _ -> HU.assertFailure "expected exactly one triggered ability",
 ```
 
-Note the accessors: `CardSpec` imports **`Pawl.Type.Modal` as `Modal`** (the type, giving `Modal.modes`) and `Pawl.Type.Mode` as `Mode`, not `Pawl.Modal` — so `Mode.effects`/`Mode.targetSpecs` over the single mode is the reachable spelling here, not `Modal.allEffects`. Add the `Pawl.Type.Duration`, `Pawl.Type.StateCondition`, `Pawl.Type.TriggerCondition` and `Pawl.Type.TriggeredAbility` imports.
+Note the accessors: `CardSpec` imports **`Parun.Type.Modal` as `Modal`** (the type, giving `Modal.modes`) and `Parun.Type.Mode` as `Mode`, not `Parun.Modal` — so `Mode.effects`/`Mode.targetSpecs` over the single mode is the reachable spelling here, not `Modal.allEffects`. Add the `Parun.Type.Duration`, `Parun.Type.StateCondition`, `Parun.Type.TriggerCondition` and `Parun.Type.TriggeredAbility` imports.
 
 - [x] **Step 2: Run the tests to verify they fail**
 
@@ -1230,9 +1230,9 @@ Expected: FAIL — `Variable not in scope: Cards.masterThiefPrinting`, `Data con
 
 - [x] **Step 3: Add the subtype**
 
-In `source/library/Pawl/Type/Subtype.hs`, append `| Rogue -- CR 205.3m (a creature type; Master Thief's)` **at the end** of the constructor list. Order matters: the JSON renders subtype sets in `Set.toAscList` (declaration) order, so `Human` must precede `Rogue`.
+In `source/library/Parun/Type/Subtype.hs`, append `| Rogue -- CR 205.3m (a creature type; Master Thief's)` **at the end** of the constructor list. Order matters: the JSON renders subtype sets in `Set.toAscList` (declaration) order, so `Human` must precede `Rogue`.
 
-Add the matching arms to `subtypeToJson` and `jsonToSubtype` in `source/library/Pawl/Codec.hs`, in the same position.
+Add the matching arms to `subtypeToJson` and `jsonToSubtype` in `source/library/Parun/Codec.hs`, in the same position.
 
 - [x] **Step 4: Write the card file**
 
@@ -1245,9 +1245,9 @@ Create `data/cards/master-thief.json` with exactly this content, on one line, wi
 `CardsSpec.checkFile` asserts **byte-stability** — the committed file must equal `Json.render (Codec.printingToJson p) <> "\n"` exactly. If it reports a mismatch, the render is authoritative: canonicalize the file through the codec rather than weakening the assertion.
 
 ```bash
-cabal repl lib:pawl <<'HS'
-import qualified Pawl.Codec as Codec
-import qualified Pawl.Json as Json
+cabal repl lib:parun <<'HS'
+import qualified Parun.Codec as Codec
+import qualified Parun.Json as Json
 import qualified Data.Text as T
 import qualified Data.Text.IO as TIO
 :{
@@ -1265,7 +1265,7 @@ Expected: no output (the file parsed and was re-rendered in place).
 
 - [x] **Step 5: Register the printing**
 
-In `source/test-suite/Pawl/Cards.hs`, add `masterThiefPrinting :: Printing.Printing` to the `Cards` record (at the end, beside `doublingSeasonPrinting`), `masterThiefPrinting_ <- loadPrinting "master-thief"` to `loadCards`, the field to the returned `MkCards`, and `masterThiefPrinting cards,` to `allPrintings`. Do **not** add it to any deck — that would perturb `PropertySpec`'s card-backed conservation counts.
+In `source/test-suite/Parun/Cards.hs`, add `masterThiefPrinting :: Printing.Printing` to the `Cards` record (at the end, beside `doublingSeasonPrinting`), `masterThiefPrinting_ <- loadPrinting "master-thief"` to `loadCards`, the field to the returned `MkCards`, and `masterThiefPrinting cards,` to `allPrintings`. Do **not** add it to any deck — that would perturb `PropertySpec`'s card-backed conservation counts.
 
 - [x] **Step 6: Run the tests to verify they pass**
 
@@ -1277,7 +1277,7 @@ If the latch case fails with the Myr returning to alice after cleanup, the sweep
 - [x] **Step 7: Commit**
 
 ```bash
-git add source/library/Pawl data/cards/master-thief.json source/test-suite
+git add source/library/Parun data/cards/master-thief.json source/test-suite
 hooky fix
 git add -u
 hooky run
@@ -1298,10 +1298,10 @@ Co-Authored-By: Claude Opus 4.8 (1M context) <noreply@anthropic.com>"
 A digital-only card with real Oracle text, chosen deliberately: every one of the 66 paper "until your next turn" cards drags in machinery this phase does not own (flashback, reanimation, ward, player-scoped restrictions, sagas, loyalty). Recognizability is traded for a gate that tests the axis and not the collateral.
 
 **Files:**
-- Modify: `source/library/Pawl/Type/Subtype.hs` (add `Hag`, `Warlock`), `source/library/Pawl/Codec.hs` (their arms)
+- Modify: `source/library/Parun/Type/Subtype.hs` (add `Hag`, `Warlock`), `source/library/Parun/Codec.hs` (their arms)
 - Create: `data/cards/hag-of-inner-weakness.json`
-- Modify: `source/test-suite/Pawl/Cards.hs`
-- Test: `source/test-suite/Pawl/ExpirySpec.hs` (§5 tests 5–8), `source/test-suite/Pawl/CardSpec.hs`
+- Modify: `source/test-suite/Parun/Cards.hs`
+- Test: `source/test-suite/Parun/ExpirySpec.hs` (§5 tests 5–8), `source/test-suite/Parun/CardSpec.hs`
 
 **Interfaces:**
 - Consumes: `Duration.UntilYourNextTurn`, `Expiry.dropAtHandoff` (Task 2); `TargetSpec.OpponentCreatureTarget` (Task 4).
@@ -1309,7 +1309,7 @@ A digital-only card with real Oracle text, chosen deliberately: every one of the
 
 - [x] **Step 1: Write the failing tests**
 
-In `source/test-suite/Pawl/ExpirySpec.hs`, add a group (and register it in `tests`):
+In `source/test-suite/Parun/ExpirySpec.hs`, add a group (and register it in `tests`):
 
 ```haskell
 -- Hag of Inner Weakness {2}{B} Creature -- Hag Warlock 2/2: "At the beginning of
@@ -1363,7 +1363,7 @@ hagTests cards =
         ]
 ```
 
-In `source/test-suite/Pawl/CardSpec.hs`, add to `m45p6CardTests`:
+In `source/test-suite/Parun/CardSpec.hs`, add to `m45p6CardTests`:
 
 ```haskell
       HU.testCase "Hag of Inner Weakness is a {2}{B} 2/2 Hag Warlock with an upkeep -2/-1 trigger" $
@@ -1400,7 +1400,7 @@ Expected: FAIL — `Variable not in scope: Cards.hagOfInnerWeaknessPrinting`, `D
 
 - [x] **Step 3: Add the two subtypes**
 
-Append to `source/library/Pawl/Type/Subtype.hs`, in this order, **after** `Rogue`:
+Append to `source/library/Parun/Type/Subtype.hs`, in this order, **after** `Rogue`:
 
 ```haskell
   | Hag -- CR 205.3m (a creature type; Hag of Inner Weakness's)
@@ -1421,7 +1421,7 @@ Then canonicalize it exactly as in Task 5 Step 4 (`regen "data/cards/hag-of-inne
 
 - [x] **Step 5: Register the printing**
 
-In `source/test-suite/Pawl/Cards.hs`, add `hagOfInnerWeaknessPrinting` to the record, `loadCards` (`loadPrinting "hag-of-inner-weakness"`) and `allPrintings`. No deck.
+In `source/test-suite/Parun/Cards.hs`, add `hagOfInnerWeaknessPrinting` to the record, `loadCards` (`loadPrinting "hag-of-inner-weakness"`) and `allPrintings`. No deck.
 
 - [x] **Step 6: Run the tests to verify they pass**
 
@@ -1433,7 +1433,7 @@ If the "survives the opponent's turn" case fails with the creature back at 3/3 i
 - [x] **Step 7: Commit**
 
 ```bash
-git add source/library/Pawl data/cards/hag-of-inner-weakness.json source/test-suite
+git add source/library/Parun data/cards/hag-of-inner-weakness.json source/test-suite
 hooky fix
 git add -u
 hooky run
@@ -1454,7 +1454,7 @@ Every `(#N)` placeholder Task 4 left in the code is replaced here with a real is
 
 **Files:**
 - Modify: every source file carrying a `(#N)` placeholder
-- Modify: `source/library/Pawl/Type/ActiveReplacement.hs` (cite the new untested-path issue), `source/library/Pawl/Type/StateCondition.hs` (#38 already cited — confirm), `source/library/Pawl/Type/TargetSpec.hs` (#40 cited at both new arms — confirm)
+- Modify: `source/library/Parun/Type/ActiveReplacement.hs` (cite the new untested-path issue), `source/library/Parun/Type/StateCondition.hs` (#38 already cited — confirm), `source/library/Parun/Type/TargetSpec.hs` (#40 cited at both new arms — confirm)
 - Modify: `docs/progress.md`, `CLAUDE.md`, `docs/superpowers/specs/2026-07-20-m4.5-closed-half-gaps-design.md`
 
 - [x] **Step 1: File the two new issues**
@@ -1463,15 +1463,15 @@ Run each `gh issue create` and record the number it prints. Labels come from CLA
 
 | # | Title | Labels | Body must carry |
 |---|---|---|---|
-| A | `While` and `AtTurnOf` expiries on a floating replacement are representable but untested | `gap`, `expires:card-driven` | The `Expiry` vocabulary is shared with `ActiveReplacement` by construction, so `Pawl.Expiry`'s three sweeps handle a conditional or turn-relative floating replacement uniformly — but no card in the pool creates one and no test exercises the path. Expiry: the first card with "prevent … for as long as …" or "until your next turn, prevent …" (Morningtide's Light is one). |
+| A | `While` and `AtTurnOf` expiries on a floating replacement are representable but untested | `gap`, `expires:card-driven` | The `Expiry` vocabulary is shared with `ActiveReplacement` by construction, so `Parun.Expiry`'s three sweeps handle a conditional or turn-relative floating replacement uniformly — but no card in the pool creates one and no test exercises the path. Expiry: the first card with "prevent … for as long as …" or "until your next turn, prevent …" (Morningtide's Light is one). |
 | B | A controller-relative target spec whose source has left the battlefield yields an empty legal set | `rules-correctness`, `expires:card-driven` | `Target.legalRecipients`'s `OpponentCreatureTarget` arm reads `Projection.controllerOf source`; when the source is gone that is `Nothing`, so CR 608.2b's re-check at resolution finds every target illegal and the ability wrongly fizzles. CR 608.2h's last known information is not consulted. Unreached today — nothing in the pool kills a Hag of Inner Weakness in response to its own trigger. The fix is to thread the ability's controller rather than its source. |
 
 - [x] **Step 2: Sweep the `(#N)` placeholders and confirm the cited ones**
 
 Run: `grep -rn '(#N)' source/`
-Replace the one hit — `Pawl/Target.hs`'s `OpponentCreatureTarget` arm — with issue B's number.
+Replace the one hit — `Parun/Target.hs`'s `OpponentCreatureTarget` arm — with issue B's number.
 
-Add issue A's number to `Pawl/Type/ActiveReplacement.hs`'s comment on the `expiry` field: state only what is *not* exercised, plus `(#A)`. **No expiry trigger in the comment** — that lives in the issue.
+Add issue A's number to `Parun/Type/ActiveReplacement.hs`'s comment on the `expiry` field: state only what is *not* exercised, plus `(#A)`. **No expiry trigger in the comment** — that lives in the issue.
 
 Confirm (do not re-file): `#38` is cited on `StateCondition`'s module comment and covers the new `YouControlSource` arm; `#40` is cited on both `ArtifactTarget` and `OpponentCreatureTarget`, exactly as `NonblackCreatureTarget` already does.
 
@@ -1484,7 +1484,7 @@ Run each and confirm the expected result:
 
 ```bash
 grep -rn 'dropEndOfTurnEffects\|dropEndOfTurnReplacements\|ContinuousEffect\.duration\|ActiveReplacement\.duration' source/   # no output
-grep -rln 'Expiry\.\(AtCleanup\|Never\|While\|AtTurnOf\)' source/library/ | grep -v 'Pawl/Expiry.hs\|Pawl/Type/'              # no output
+grep -rln 'Expiry\.\(AtCleanup\|Never\|While\|AtTurnOf\)' source/library/ | grep -v 'Parun/Expiry.hs\|Parun/Type/'              # no output
 grep -rn 'Expiry' data/                                                                                                       # no output
 grep -c -- '- \[ \] \*\*Step' docs/superpowers/plans/2026-07-22-p6-conditional-event-durations.md                              # counts down to 0
 cabal clean && cabal build all --enable-tests --enable-benchmarks                                                             # warning-free
@@ -1493,14 +1493,14 @@ git add -A && hooky run                                                         
 cabal bench                                                                                                                   # three timings, no large regression
 ```
 
-The second grep is the **first invariant's audit**: `Pawl.Expiry` is the sole rules home of casing on `Expiry`, `Pawl.Type.*` modules only construct, and there is deliberately no `Expiry` codec. Anything else in the output is a widening of the casing surface and must be fixed, not excused. The third grep is the split's audit from the other side: no card data may name a stored expiry.
+The second grep is the **first invariant's audit**: `Parun.Expiry` is the sole rules home of casing on `Expiry`, `Parun.Type.*` modules only construct, and there is deliberately no `Expiry` codec. Anything else in the output is a widening of the casing surface and must be fixed, not excused. The third grep is the split's audit from the other side: no card data may name a stored expiry.
 
 - [x] **Step 4: Append the `docs/progress.md` completion entry**
 
 One entry, in the file's established voice, recording what P6 *established* — not what is left. It must state:
 
 - the gate cards and what each falsified — **Master Thief** (CR 611.2b's own printed example): the latch, which an implementation that filters the effect out of the projection instead of deleting it cannot pass, plus "the duration never starts" and "leaving the battlefield ends it", all three straight from Gatherer; **Hag of Inner Weakness**: survives CR 514.2 and the whole of the opponent's turn, which neither `UntilEndOfTurn` nor an event-log scan can produce;
-- what was added — `Pawl.Type.Expiry`, `Pawl.Expiry` (`arm`, `dropAtCleanup`, `dropAtHandoff`, `sweepConditional`), `Duration.ForAsLongAs`/`UntilYourNextTurn`, `StateCondition.YouControlSource`, `TargetSpec.ArtifactTarget`/`OpponentCreatureTarget`, `Subtype.Rogue`/`Hag`/`Warlock`, the two card files;
+- what was added — `Parun.Type.Expiry`, `Parun.Expiry` (`arm`, `dropAtCleanup`, `dropAtHandoff`, `sweepConditional`), `Duration.ForAsLongAs`/`UntilYourNextTurn`, `StateCondition.YouControlSource`, `TargetSpec.ArtifactTarget`/`OpponentCreatureTarget`, `Subtype.Rogue`/`Hag`/`Warlock`, the two card files;
 - what was deleted — `Projection.dropEndOfTurnEffects`, `Event.dropEndOfTurnReplacements`, and the `duration` field on both carriers;
 - **the design's one departure from the umbrella**: event-relative durations are decided at the turn handoff, not by reading P4's event log. The transition *is* the event, known exactly and for free at the one site that performs it, whereas reading `GameEvent.StepBegan` back out of a turn-scoped log needs a per-effect watermark to distinguish "your untap already happened this turn" from "your next turn began" — the exact trap Hag of Inner Weakness sets. Note the three rules that make dropping at the handoff observably identical to dropping "as the turn begins": CR 500.12, CR 502.4, CR 704.3. P6 still reads P4's work through `stateHolds`;
 - **the four departures from the spec** listed at the top of this plan, with their reasons;
@@ -1522,7 +1522,7 @@ One entry, in the file's established voice, recording what P6 *established* — 
 - [x] **Step 7: Commit**
 
 ```bash
-git add docs/progress.md CLAUDE.md docs/superpowers/specs/2026-07-20-m4.5-closed-half-gaps-design.md source/library/Pawl
+git add docs/progress.md CLAUDE.md docs/superpowers/specs/2026-07-20-m4.5-closed-half-gaps-design.md source/library/Parun
 hooky fix
 git add -u
 hooky run
@@ -1548,14 +1548,14 @@ Expected: `0`.
 |---|---|
 | §2.1 the `Duration` → `Expiry` split, both carriers renamed | Task 1 |
 | §2.2 `StateCondition`'s third customer, `stateHolds` gains a source | Task 3 |
-| §2.3 `Pawl.Expiry` as the sole casing home; `arm`, `dropAtCleanup` | Task 1 (plus the widenings in Tasks 2–3, departure 1) |
+| §2.3 `Parun.Expiry` as the sole casing home; `arm`, `dropAtCleanup` | Task 1 (plus the widenings in Tasks 2–3, departure 1) |
 | §2.3 `dropAtHandoff` | Task 2 |
 | §2.3 `sweepConditional` | Task 3 |
 | §2.4 arming at `Resolve.applyEffect`'s three storing arms | Task 1 (wired), Tasks 2–3 (each new arm) |
 | §2.4 cleanup collapses to one call in `Engine.runStep` | Task 1 |
 | §2.4 the sweep at the head of `settleForPriority` | Task 3 |
 | §2.4 `dropAtHandoff` in `Engine.handoffTurn`, and why it is complete | Task 2 |
-| §2.5 source-relative `Pawl.Target`; `ArtifactTarget`, `OpponentCreatureTarget` | Task 4 (plus departures 2 and 3) |
+| §2.5 source-relative `Parun.Target`; `ArtifactTarget`, `OpponentCreatureTarget` | Task 4 (plus departures 2 and 3) |
 | §2.6 codec: two `Duration` arms, one `StateCondition` arm, two `TargetSpec` arms; no `Expiry` codec | Tasks 2, 3, 4; audited in Task 7 Step 3 |
 | §3 the two invariants | Task 7 Step 3's second grep (casing surface); no prompt is added or elided anywhere, recorded in Task 7 Step 4 |
 | §5 tests 1–4 (Master Thief, with the rulings verbatim) | Task 5 |

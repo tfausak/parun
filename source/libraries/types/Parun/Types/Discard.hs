@@ -1,0 +1,34 @@
+module Parun.Types.Discard where
+
+import qualified Parun.Types.AnyNumberDiscard as AnyNumberDiscard
+import qualified Parun.Types.CountedDiscard as CountedDiscard
+import qualified Parun.Types.TheseDiscard as TheseDiscard
+
+-- | The payload of Parun.Types.Effect's Discard arm: WHICH cards CR 701.9a moves
+-- from their owner's hand to their graveyard.
+--
+-- Counted and These are two arms because CR 701.9b's default choice -- "effects that cause a player to
+-- discard a card allow the affected player to choose which card to discard" --
+-- only arises where the effect states a NUMBER and leaves the cards unsaid. A
+-- card that names the SET instead, Amnesia's "discards all nonland cards", has
+-- nothing left to choose, so the engine must not prompt there.
+--
+-- One Parun.Types.Effect arm over both, not two, for the reason #1743 declined a
+-- RevealAtRandom: one rule, one arm. Every consumer that CLASSIFIES an effect --
+-- Parun.Engine.EffectZone, Parun.Engine.ManaAbility, Parun.Engine.Projection's
+-- rewrite -- would otherwise have to learn rule 701.9 twice.
+data Discard
+  = -- | CR 701.9b: each player the reference names picks. CR 609.3 caps the
+    -- count at the hand's size, and a full hand is forced rather than asked.
+    Counted CountedDiscard.CountedDiscard
+  | -- | The card names the set, so the discarding player's CR 701.9b choice does
+    -- not arise; the ref may name it at random (Hymn to Tourach) or by another
+    -- player's choice (Duress), that rule's two exceptions. The discarding
+    -- player is per card: rule 701.9a moves each one from its OWNER's hand, and a
+    -- ref reaching several hands (Parun.Types.EachCardInHand) can name cards
+    -- belonging to several owners at once.
+    These TheseDiscard.TheseDiscard
+  | -- | CR 701.9b / 107.1c: the reference names the players, each of whom picks
+    -- any number of matching cards, none included.
+    AnyNumber AnyNumberDiscard.AnyNumberDiscard
+  deriving (Eq, Ord, Show)

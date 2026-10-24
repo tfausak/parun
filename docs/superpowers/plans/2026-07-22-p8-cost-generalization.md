@@ -2,11 +2,11 @@
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
-**Goal:** Close the *payment* half of GAP-Co — give pawl one `Cost` type for spells and activated abilities, a parameterized `CostComponent` vocabulary, the CR 118.6 unpayable/`{0}` distinction carried in the type, printed additional (CR 118.8) and alternative (CR 118.9) costs on `Card`, and one sole casing home — proved by three real gate cards: **Greed**, **Village Rites** and **Fireblast**.
+**Goal:** Close the *payment* half of GAP-Co — give parun one `Cost` type for spells and activated abilities, a parameterized `CostComponent` vocabulary, the CR 118.6 unpayable/`{0}` distinction carried in the type, printed additional (CR 118.8) and alternative (CR 118.9) costs on `Card`, and one sole casing home — proved by three real gate cards: **Greed**, **Village Rites** and **Fireblast**.
 
-**Architecture:** Two new leaf types, `Pawl.Type.Cost` (`{mana :: Maybe ManaCost, components :: [CostComponent]}`) and `Pawl.Type.CostComponent` (`TapThis | SacrificeThis | PayLife Natural | Sacrifice Natural PermanentCriterion`), replace the retired `Pawl.Type.AbilityCost`/`Pawl.Type.AdditionalCost`. `Pawl.Cost` grows from "one arithmetic step" into the axis's **sole casing home**: `costsFor` (the candidate costs of casting an object, printed first), `total` (CR 601.2f, now `Cost -> Cost`), `canPay`/`canPayComponent` (CR 118.3), `pay` (CR 601.2g/h, monadic, transactional), and the `requiresTapSymbol` classification. `Pawl.Cast` and `Pawl.Activate` become pure consumers — they ask "can this be paid" and "pay it" and learn nothing about which components exist. Two new prompts (`ChooseCost`, `ChooseSacrifices`) carry the two new decisions; `Card` gains `additionalCosts` and `alternativeCosts`.
+**Architecture:** Two new leaf types, `Parun.Type.Cost` (`{mana :: Maybe ManaCost, components :: [CostComponent]}`) and `Parun.Type.CostComponent` (`TapThis | SacrificeThis | PayLife Natural | Sacrifice Natural PermanentCriterion`), replace the retired `Parun.Type.AbilityCost`/`Parun.Type.AdditionalCost`. `Parun.Cost` grows from "one arithmetic step" into the axis's **sole casing home**: `costsFor` (the candidate costs of casting an object, printed first), `total` (CR 601.2f, now `Cost -> Cost`), `canPay`/`canPayComponent` (CR 118.3), `pay` (CR 601.2g/h, monadic, transactional), and the `requiresTapSymbol` classification. `Parun.Cast` and `Parun.Activate` become pure consumers — they ask "can this be paid" and "pay it" and learn nothing about which components exist. Two new prompts (`ChooseCost`, `ChooseSacrifices`) carry the two new decisions; `Card` gains `additionalCosts` and `alternativeCosts`.
 
-**Tech Stack:** Haskell 2010 (GHC 9.14.1 from the Nix flake), `tasty` + `tasty-hunit`, the hand-rolled `Pawl.Json`/`Pawl.Codec` card codec, `jq` for the card-corpus migration.
+**Tech Stack:** Haskell 2010 (GHC 9.14.1 from the Nix flake), `tasty` + `tasty-hunit`, the hand-rolled `Parun.Json`/`Parun.Codec` card codec, `jq` for the card-corpus migration.
 
 **Spec:** `docs/superpowers/specs/2026-07-22-p8-cost-generalization-design.md`. Read §0 (the five falsifiers) before anything; §2.1–§2.3 before Task 1, §2.5–§2.7 before Task 2, §2.2 and §5's Greed block before Task 3, §2.6–§2.8 and §5's Village Rites block before Task 4, §2.4 and §5's Fireblast block before Task 5, §5's cross-checks before Task 6, §8–§10 before Task 7.
 
@@ -15,26 +15,26 @@
 Every task's requirements implicitly include all of these. They come from `CLAUDE.md` and are not negotiable.
 
 - **Haskell 2010, no language extensions** unless there is no alternative. `NamedFieldPuns` is permitted; `GADTs`/`RankNTypes` only in the suspension core and in test/benchmark modules that already carry the pragma. A module that already carries a `{-# LANGUAGE … #-}` pragma keeps it.
-- **No explicit export lists.** `module Pawl.Foo where`.
-- **One type per module** under `Pawl.Type.<TypeName>` (type + instances only). A module never imports its parents; `A.B.C` must not import `A.B` or `A`. A sibling `Pawl.Type.*` import is fine.
-- **Qualified imports aliased to the last component** (`Data.Set` → `Set`, `Pawl.Type.CostComponent` → `CostComponent`). One import group, alphabetical. A logic module may import its same-named type module under that alias and *also* import the bare type name unqualified — `Pawl.Mana` already does exactly this (`import Pawl.Type.Mana (Mana)` plus `import qualified Pawl.Type.Mana as Mana`), and `Pawl.Cost` follows it. In `Pawl.Cast`, where `Pawl.Cost` takes the `Cost` alias, the type arrives as the unqualified `import Pawl.Type.Cost (Cost)`. In the **test suite**, where both must be imported at once, the type module takes the `X.Type` alias (`Pawl.Type.Cost as Cost.Type`); `Pawl.Support` is aliased `S`.
+- **No explicit export lists.** `module Parun.Foo where`.
+- **One type per module** under `Parun.Type.<TypeName>` (type + instances only). A module never imports its parents; `A.B.C` must not import `A.B` or `A`. A sibling `Parun.Type.*` import is fine.
+- **Qualified imports aliased to the last component** (`Data.Set` → `Set`, `Parun.Type.CostComponent` → `CostComponent`). One import group, alphabetical. A logic module may import its same-named type module under that alias and *also* import the bare type name unqualified — `Parun.Mana` already does exactly this (`import Parun.Type.Mana (Mana)` plus `import qualified Parun.Type.Mana as Mana`), and `Parun.Cost` follows it. In `Parun.Cast`, where `Parun.Cost` takes the `Cost` alias, the type arrives as the unqualified `import Parun.Type.Cost (Cost)`. In the **test suite**, where both must be imported at once, the type module takes the `X.Type` alias (`Parun.Type.Cost as Cost.Type`); `Parun.Support` is aliased `S`.
 - **No partial functions**, written or used. No `head`, `error`, `undefined`, or non-exhaustive matches. **`Natural` subtraction is partial** — it throws on underflow. Every `Natural` comparison in this plan that guards a subtraction stays.
 - **`newtype` liberally, non-punning constructors** (`MkFoo`). Build records with `do`/`pure` + record syntax, not `<$>`/`<*>`.
 - **Prefer explicit:** `case` over point-free; one equation with a `case` over multiple clauses; `let` over `where`; `$` over parens, `.` over chained `$`. No list comprehensions. No backtick-infixed functions. Named local predicates over lambdas in `filter`.
 - **`Text` not `String`.** Arbitrary-precision numbers (`Integer`, `Natural`).
-- **No boolean blindness** — a custom sum type beats a bare `Bool`. `Pawl.Type.Payment` is exactly this rule applied to the payment door. `canPay`/`canPayComponent`/`requiresTapSymbol` return `Bool` for the same documented reason `Cast.castable` and `Mana.canPay` already do: one yes/no question with no third state.
+- **No boolean blindness** — a custom sum type beats a bare `Bool`. `Parun.Type.Payment` is exactly this rule applied to the payment door. `canPay`/`canPayComponent`/`requiresTapSymbol` return `Bool` for the same documented reason `Cast.castable` and `Mana.canPay` already do: one yes/no question with no third state.
 - **Derive at least `Eq` and `Show`.** `Cost` and `CostComponent` also derive `Ord`, because `Card` derives `Ord` and will carry them.
 - **No API stability obligations.** Rename, reshape, and delete freely; never add a compat shim or keep an old name.
 - **Every rules claim is checked against `docs/rules.txt`** and the rule number is cited in the code comment. Never trust recalled Magic rules — **including the citations written in this plan**. If `rules.txt` disagrees with a citation below, `rules.txt` wins: fix the citation and say so in the completion note.
 - **Build must be warning-clean.** `cabal build all --enable-tests --enable-benchmarks` with `flags: +pedantic` (which is `-Werror`). Incremental builds hide warnings from unchanged modules; `cabal clean` first when a definitive check is needed.
-- **Import lists are not spelled out** in every snippet below. When a step's code names `Monad.when`, `Set.*`, `Map.*`, `List.*`, `Maybe.*` or a `Pawl.*` module, add the qualified import (aliased per the rule above, one alphabetical group). GHC names every missing one. Equally, when a step *deletes* the last use of an import, delete the import — `-Wunused-imports` is an error here.
+- **Import lists are not spelled out** in every snippet below. When a step's code names `Monad.when`, `Set.*`, `Map.*`, `List.*`, `Maybe.*` or a `Parun.*` module, add the qualified import (aliased per the rule above, one alphabetical group). GHC names every missing one. Equally, when a step *deletes* the last use of an import, delete the import — `-Wunused-imports` is an error here.
 - **New library modules** go under `source/library/` and are picked up by the `-- cabal-gild: discover` directive — add the file and run `hooky fix`; never hand-edit `exposed-modules`. **New test modules** are discovered the same way into the test-suite `other-modules`, and must additionally be wired into `source/test-suite/Main.hs`'s `testTree`.
 - **Before every commit:** `git add <the paths this task names>`, then `hooky fix`, then `git add -u`, then `hooky run`. `hooky` acts on **staged** files only; if you skip the `git add`, it reports "hooks skipped" and checks nothing.
 - **TDD is not optional.** Write the failing test and actually run it to watch it fail before implementing. For a task whose first test names a module or constructor that does not exist yet, "fails" means the **build** fails with a specific `Not in scope` / `Could not find module` error — record that as the observed failure, then implement.
 - **Never edit this plan, weaken an assertion, or delete a test to make a check pass.** If the plan looks wrong, stop and say so.
 - **One small complete commit per task, on `main`.** Commit messages end with the `Co-Authored-By: Claude Opus 4.8 (1M context) <noreply@anthropic.com>` trailer.
 - **Concurrent sessions share this checkout.** Stage the explicit paths each task names; do not blanket-stage foreign files that appear in `git status`.
-- **The card corpus is committed pretty-printed with `jq -S .`** and `Pawl.CardsSpec.checkFile` compares *up to key order*. `jq -S .` is byte-idempotent on every current file — verified while this plan was written — so a `jq -S` rewrite of a file changes only what the filter changed.
+- **The card corpus is committed pretty-printed with `jq -S .`** and `Parun.CardsSpec.checkFile` compares *up to key order*. `jq -S .` is byte-idempotent on every current file — verified while this plan was written — so a `jq -S` rewrite of a file changes only what the filter changed.
 
 ## Card verification (already done — do not re-fetch)
 
@@ -51,18 +51,18 @@ Gatherer rulings, verbatim. Scryfall returned **none** for Greed and **none** fo
 **Village Rites**
 > - *"You must sacrifice exactly one creature to cast this spell; you can't cast it without sacrificing a creature, and you can't sacrifice additional creatures."*
 
-**None of the three is added to any deck in `Pawl.Cards`.** They are deterministic fixtures, exactly as Master Thief, Thalia and Silence are — adding them to a deck would perturb `PropertySpec`'s card-backed conservation counts for no gain. They *are* added to the `Cards` record, `loadCards` and `allPrintings`, which `Pawl.CardSpec`'s directory-agreement test (`source/test-suite/Pawl/CardSpec.hs:198`, "the data/cards directory and Cards.allPrintings agree, by slug") requires.
+**None of the three is added to any deck in `Parun.Cards`.** They are deterministic fixtures, exactly as Master Thief, Thalia and Silence are — adding them to a deck would perturb `PropertySpec`'s card-backed conservation counts for no gain. They *are* added to the `Cards` record, `loadCards` and `allPrintings`, which `Parun.CardSpec`'s directory-agreement test (`source/test-suite/Parun/CardSpec.hs:198`, "the data/cards directory and Cards.allPrintings agree, by slug") requires.
 
 ## Six deliberate departures from the spec
 
 State these in the completion note (Task 7). Departure 1 is a **correction** — the spec is wrong there, and following it would ship a rules bug. The rest are refinements.
 
-1. **Activated-ability costs do NOT route through `Pawl.Cost.total`.** Spec §2.9 says they should, on the argument that "no P7 vocabulary taxes an activation today, so nothing changes observably". That argument is false, and the falsifier is already in the card pool. `PlayerEffect.costAdjustments` calls `PlayerEffect.matchesSpell`, which classifies an **object** — `SpellCriterion.NoncreatureSpell` is `not (Set.member CardType.Creature (Projection.cardTypesOf oid gs))`, with no check that the object is a spell. Mindslaver is a noncreature *permanent*, so with Thalia on the battlefield `Cost.total` would raise Mindslaver's activation cost from `{4}` to `{5}` — Thalia taxes noncreature **spells** (CR 613.11 via her own text), never abilities. Routing an ability cost through `total` is therefore a regression, not a no-op. `Pawl.Activate` calls `Cost.canPay`/`Cost.pay` on the ability's **printed** cost, `#90` stays open as *both* a door gap and a producer gap, and Task 2 adds the Thalia × Mindslaver regression test that pins it shut. Fixing this properly needs a spell-vs-ability discriminator on the criterion side, which is P7's surface, not P8's.
-2. **`Pawl.Cost.pay` is transactional.** Spec §2.8 says "in `Cast.castSpell` payment precedes the zone change, so rejection needs no restore". That is not enough: `pay` spends mana and pays earlier components *before* it reaches a `ChooseSacrifices` prompt, so a rejected answer would leave lands tapped and a creature sacrificed with no spell cast. `pay` captures the entry state and restores it itself on `Unpaid`, so `Unpaid` is always a complete no-op at both call sites. `Activate.activateAbility`'s existing `State.put gs` restore still runs on top of it (it also has to remove the ability object from the stack).
-3. **`Pawl.Cost` gains `substituteX`, `hasVariable`, `unpayable` and `firstOffered`**, which the spec does not name. `substituteX`/`hasVariable` lift `Mana.substituteX` and the `{X}` test to the whole `Cost`, so `Pawl.Cast` stops importing `ManaCost`/`ManaSymbol` and the CR 601.2b X=0 floor is stated once. `unpayable`/`firstOffered` give the nine `ChooseCost` fallback sites (Replay, five `Pawl.Support` answerers, three benchmark answerers) one total, documented answer instead of nine copies of the same `case`.
-4. **`PermanentCriterion` is matched at two sites**, not one: `Pawl.Cost.matchesCriterion` alongside the existing `Pawl.Replacement.matchesPermanent`. Reusing Replacement's would make `Pawl.Cost` import `Pawl.Replacement`, and issue **#72** (CR 614.12b — entry choices are not checked for payable combined costs) is a queued fix that makes `Pawl.Replacement` need `Pawl.Cost`: that is a module cycle waiting to happen. The duplication is a four-line `case` over a three-constructor type, the same shape `genericOf` already has in both `Pawl.Mana` and `Pawl.Cost`. Filed as an issue in Task 7; P9's filter language merges both.
-5. **`Pawl.Cost.costsFor` arrives in Task 2 and grows twice**, instead of `Cast.costOf` surviving as a `Maybe Cost` intermediate that Task 5 throws away. Task 2's version returns the printed cost alone; Task 4 appends `Card.additionalCosts`; Task 5 appends the alternatives. `Cast.costOf` is deleted in Task 2.
-6. **`Pawl.Cast.payableCost` is a named top-level predicate** rather than three copies of the same `canPay ∘ total ∘ substituteX 0` chain in `castable`, `castableWhileSearching` and `castSpell`.
+1. **Activated-ability costs do NOT route through `Parun.Cost.total`.** Spec §2.9 says they should, on the argument that "no P7 vocabulary taxes an activation today, so nothing changes observably". That argument is false, and the falsifier is already in the card pool. `PlayerEffect.costAdjustments` calls `PlayerEffect.matchesSpell`, which classifies an **object** — `SpellCriterion.NoncreatureSpell` is `not (Set.member CardType.Creature (Projection.cardTypesOf oid gs))`, with no check that the object is a spell. Mindslaver is a noncreature *permanent*, so with Thalia on the battlefield `Cost.total` would raise Mindslaver's activation cost from `{4}` to `{5}` — Thalia taxes noncreature **spells** (CR 613.11 via her own text), never abilities. Routing an ability cost through `total` is therefore a regression, not a no-op. `Parun.Activate` calls `Cost.canPay`/`Cost.pay` on the ability's **printed** cost, `#90` stays open as *both* a door gap and a producer gap, and Task 2 adds the Thalia × Mindslaver regression test that pins it shut. Fixing this properly needs a spell-vs-ability discriminator on the criterion side, which is P7's surface, not P8's.
+2. **`Parun.Cost.pay` is transactional.** Spec §2.8 says "in `Cast.castSpell` payment precedes the zone change, so rejection needs no restore". That is not enough: `pay` spends mana and pays earlier components *before* it reaches a `ChooseSacrifices` prompt, so a rejected answer would leave lands tapped and a creature sacrificed with no spell cast. `pay` captures the entry state and restores it itself on `Unpaid`, so `Unpaid` is always a complete no-op at both call sites. `Activate.activateAbility`'s existing `State.put gs` restore still runs on top of it (it also has to remove the ability object from the stack).
+3. **`Parun.Cost` gains `substituteX`, `hasVariable`, `unpayable` and `firstOffered`**, which the spec does not name. `substituteX`/`hasVariable` lift `Mana.substituteX` and the `{X}` test to the whole `Cost`, so `Parun.Cast` stops importing `ManaCost`/`ManaSymbol` and the CR 601.2b X=0 floor is stated once. `unpayable`/`firstOffered` give the nine `ChooseCost` fallback sites (Replay, five `Parun.Support` answerers, three benchmark answerers) one total, documented answer instead of nine copies of the same `case`.
+4. **`PermanentCriterion` is matched at two sites**, not one: `Parun.Cost.matchesCriterion` alongside the existing `Parun.Replacement.matchesPermanent`. Reusing Replacement's would make `Parun.Cost` import `Parun.Replacement`, and issue **#72** (CR 614.12b — entry choices are not checked for payable combined costs) is a queued fix that makes `Parun.Replacement` need `Parun.Cost`: that is a module cycle waiting to happen. The duplication is a four-line `case` over a three-constructor type, the same shape `genericOf` already has in both `Parun.Mana` and `Parun.Cost`. Filed as an issue in Task 7; P9's filter language merges both.
+5. **`Parun.Cost.costsFor` arrives in Task 2 and grows twice**, instead of `Cast.costOf` surviving as a `Maybe Cost` intermediate that Task 5 throws away. Task 2's version returns the printed cost alone; Task 4 appends `Card.additionalCosts`; Task 5 appends the alternatives. `Cast.costOf` is deleted in Task 2.
+6. **`Parun.Cast.payableCost` is a named top-level predicate** rather than three copies of the same `canPay ∘ total ∘ substituteX 0` chain in `castable`, `castableWhileSearching` and `castSpell`.
 
 ## File structure
 
@@ -70,21 +70,21 @@ State these in the completion note (Task 7). Departure 1 is a **correction** —
 
 | Module | Task | Responsibility |
 |---|---|---|
-| `source/library/Pawl/Type/CostComponent.hs` | 1 (grows in 3, 4) | the component vocabulary: `TapThis \| SacrificeThis \| PayLife \| Sacrifice` |
-| `source/library/Pawl/Type/Cost.hs` | 1 | the one cost shape: `{mana :: Maybe ManaCost, components :: [CostComponent]}` |
-| `source/library/Pawl/Type/Payment.hs` | 2 | the payment door's answer: `Paid \| Unpaid` |
+| `source/library/Parun/Type/CostComponent.hs` | 1 (grows in 3, 4) | the component vocabulary: `TapThis \| SacrificeThis \| PayLife \| Sacrifice` |
+| `source/library/Parun/Type/Cost.hs` | 1 | the one cost shape: `{mana :: Maybe ManaCost, components :: [CostComponent]}` |
+| `source/library/Parun/Type/Payment.hs` | 2 | the payment door's answer: `Paid \| Unpaid` |
 
-**Retired library modules.** `source/library/Pawl/Type/AbilityCost.hs`, `source/library/Pawl/Type/AdditionalCost.hs` (Task 1). Retired function: `Pawl.Cast.costOf` (Task 2). Retired functions: `Pawl.Activate.canPayAdditional`, `Pawl.Activate.payAdditional` (Task 2).
+**Retired library modules.** `source/library/Parun/Type/AbilityCost.hs`, `source/library/Parun/Type/AdditionalCost.hs` (Task 1). Retired function: `Parun.Cast.costOf` (Task 2). Retired functions: `Parun.Activate.canPayAdditional`, `Parun.Activate.payAdditional` (Task 2).
 
-**New test module.** `source/test-suite/Pawl/CostSpec.hs` (Task 2) — near-mirrors `Pawl.Cost` and the three types it cases on; holds every gate card's gameplay-level tests and the unit tests.
+**New test module.** `source/test-suite/Parun/CostSpec.hs` (Task 2) — near-mirrors `Parun.Cost` and the three types it cases on; holds every gate card's gameplay-level tests and the unit tests.
 
 **New card data.** `data/cards/greed.json` (3), `data/cards/village-rites.json` (4), `data/cards/fireblast.json` (5).
 
-**Changed library modules.** `Pawl/Type/ActivatedAbility.hs` (1), `Pawl/Type/Card.hs` (4, 5), `Pawl/Type/PermanentCriterion.hs` (4), `Pawl/Type/Prompt.hs` (4, 5), `Pawl/Type/Response.hs` (4, 5), `Pawl/Codec.hs` (1, 3, 4, 5), `Pawl/Cost.hs` (2, 3, 4, 5), `Pawl/Activate.hs` (1, 2), `Pawl/Cast.hs` (2, 5), `Pawl/Replacement.hs` (4), `Pawl/Replay.hs` (4, 5).
+**Changed library modules.** `Parun/Type/ActivatedAbility.hs` (1), `Parun/Type/Card.hs` (4, 5), `Parun/Type/PermanentCriterion.hs` (4), `Parun/Type/Prompt.hs` (4, 5), `Parun/Type/Response.hs` (4, 5), `Parun/Codec.hs` (1, 3, 4, 5), `Parun/Cost.hs` (2, 3, 4, 5), `Parun/Activate.hs` (1, 2), `Parun/Cast.hs` (2, 5), `Parun/Replacement.hs` (4), `Parun/Replay.hs` (4, 5).
 
-**Changed data and harness.** All seven ability-bearing card files (1); `source/test-suite/Pawl/Cards.hs` (3, 4, 5); `source/test-suite/Pawl/Support.hs` (4, 5); `source/benchmark/Main.hs` (4, 5); `source/test-suite/Main.hs` (2).
+**Changed data and harness.** All seven ability-bearing card files (1); `source/test-suite/Parun/Cards.hs` (3, 4, 5); `source/test-suite/Parun/Support.hs` (4, 5); `source/benchmark/Main.hs` (4, 5); `source/test-suite/Main.hs` (2).
 
-**Untouched, deliberately.** `Pawl/Projection.hs` (read from, never edited — a cost is not a characteristic), `Pawl/Mana.hs` (pools, production and spending unchanged), `Pawl/Sba.hs` (Greed's death-by-payment runs through the existing CR 704.5a check), `Pawl/PlayerEffect.hs` (P7's `applyAdjustments` and `costAdjustments` are untouched), `Pawl/Type/Layer.hs`, `Pawl/Type/Modification.hs`.
+**Untouched, deliberately.** `Parun/Projection.hs` (read from, never edited — a cost is not a characteristic), `Parun/Mana.hs` (pools, production and spending unchanged), `Parun/Sba.hs` (Greed's death-by-payment runs through the existing CR 704.5a check), `Parun/PlayerEffect.hs` (P7's `applyAdjustments` and `costAdjustments` are untouched), `Parun/Type/Layer.hs`, `Parun/Type/Modification.hs`.
 
 ---
 
@@ -95,11 +95,11 @@ Card data can *say* the new cost shape, and every existing ability is migrated o
 The load-bearing part of this task is §2.3 of the spec: `AbilityCost.mana`'s `Nothing` used to mean "no mana symbol in the cost" (i.e. `{0}`, payable), and `Cost.mana`'s `Nothing` means CR 118.6's **unpayable**. Every existing ability therefore migrates `Nothing → Just (MkManaCost [])`, in the card files and in the fixtures. Leave a file's `mana` absent and its ability silently becomes unactivatable once Task 2 lands.
 
 **Files:**
-- Create: `source/library/Pawl/Type/CostComponent.hs`, `source/library/Pawl/Type/Cost.hs`
-- Delete: `source/library/Pawl/Type/AbilityCost.hs`, `source/library/Pawl/Type/AdditionalCost.hs`
-- Modify: `source/library/Pawl/Type/ActivatedAbility.hs`, `source/library/Pawl/Codec.hs`, `source/library/Pawl/Activate.hs`
+- Create: `source/library/Parun/Type/CostComponent.hs`, `source/library/Parun/Type/Cost.hs`
+- Delete: `source/library/Parun/Type/AbilityCost.hs`, `source/library/Parun/Type/AdditionalCost.hs`
+- Modify: `source/library/Parun/Type/ActivatedAbility.hs`, `source/library/Parun/Codec.hs`, `source/library/Parun/Activate.hs`
 - Modify: `data/cards/drudge-skeletons.json`, `data/cards/evolving-wilds.json`, `data/cards/llanowar-elves.json`, `data/cards/mindslaver.json`, `data/cards/prodigal-sorcerer.json`, `data/cards/reliquary-tower.json`, `data/cards/synthetic-modal-activator.json`
-- Test: `source/test-suite/Pawl/CodecSpec.hs`, `source/test-suite/Pawl/CardSpec.hs`, `source/test-suite/Pawl/ActivateSpec.hs`, `source/test-suite/Pawl/ManaSpec.hs`, `source/test-suite/Pawl/ResolveSpec.hs`, `source/test-suite/Pawl/ReplacementSpec.hs`
+- Test: `source/test-suite/Parun/CodecSpec.hs`, `source/test-suite/Parun/CardSpec.hs`, `source/test-suite/Parun/ActivateSpec.hs`, `source/test-suite/Parun/ManaSpec.hs`, `source/test-suite/Parun/ResolveSpec.hs`, `source/test-suite/Parun/ReplacementSpec.hs`
 
 **Interfaces:**
 - Consumes: nothing from earlier tasks.
@@ -107,7 +107,7 @@ The load-bearing part of this task is §2.3 of the spec: `AbilityCost.mana`'s `N
 
 - [x] **Step 1: Write the failing codec tests**
 
-In `source/test-suite/Pawl/CodecSpec.hs`, **replace** the existing `AbilityCost` round-trip (currently at line ~230, reading `(AbilityCost.MkAbilityCost Nothing [AdditionalCost.TapSelf])`) with the group below, and swap the `Pawl.Type.AbilityCost as AbilityCost` / `Pawl.Type.AdditionalCost as AdditionalCost` imports for `Pawl.Type.Cost as Cost.Type` and `Pawl.Type.CostComponent as CostComponent`:
+In `source/test-suite/Parun/CodecSpec.hs`, **replace** the existing `AbilityCost` round-trip (currently at line ~230, reading `(AbilityCost.MkAbilityCost Nothing [AdditionalCost.TapSelf])`) with the group below, and swap the `Parun.Type.AbilityCost as AbilityCost` / `Parun.Type.AdditionalCost as AdditionalCost` imports for `Parun.Type.Cost as Cost.Type` and `Parun.Type.CostComponent as CostComponent`:
 
 ```haskell
       Tasty.testGroup
@@ -145,28 +145,28 @@ In `source/test-suite/Pawl/CodecSpec.hs`, **replace** the existing `AbilityCost`
         ],
 ```
 
-`Json.Object`/`Json.Array` are the `Pawl.Type.Json` constructors; `CodecSpec` already imports `Pawl.Json as J` and `Pawl.Type.Json` — use whichever alias the file already has for the `Value` constructors, adding the import if it has none.
+`Json.Object`/`Json.Array` are the `Parun.Type.Json` constructors; `CodecSpec` already imports `Parun.Json as J` and `Parun.Type.Json` — use whichever alias the file already has for the `Value` constructors, adding the import if it has none.
 
 - [x] **Step 2: Run the tests to verify they fail**
 
 Run: `cabal build all --enable-tests --enable-benchmarks`
-Expected: FAIL — `Could not find module 'Pawl.Type.Cost'` (and `Pawl.Type.CostComponent`).
+Expected: FAIL — `Could not find module 'Parun.Type.Cost'` (and `Parun.Type.CostComponent`).
 
 - [x] **Step 3: Create the two types and delete the two they replace**
 
-`source/library/Pawl/Type/CostComponent.hs`:
+`source/library/Parun/Type/CostComponent.hs`:
 
 ```haskell
-module Pawl.Type.CostComponent where
+module Parun.Type.CostComponent where
 
 -- CR 601.2f's list of what a cost's non-mana part can be: "paying mana, tapping
 -- permanents, sacrificing permanents, discarding cards, and so on." One
--- component of a Pawl.Type.Cost, alongside its mana part.
+-- component of a Parun.Type.Cost, alongside its mana part.
 --
--- The successor to Pawl.Type.AdditionalCost, whose two nullary inhabitants were
+-- The successor to Parun.Type.AdditionalCost, whose two nullary inhabitants were
 -- named relative to that type ("Self"); here the object a cost is on is "This".
 --
--- Open-half card data. Pawl.Cost is the ONLY module that may case on it: the
+-- Open-half card data. Parun.Cost is the ONLY module that may case on it: the
 -- rules core reads the classification (can this be paid? does it require the tap
 -- symbol?) and never the identity of a component.
 data CostComponent
@@ -184,13 +184,13 @@ data CostComponent
   deriving (Eq, Ord, Show)
 ```
 
-`source/library/Pawl/Type/Cost.hs`:
+`source/library/Parun/Type/Cost.hs`:
 
 ```haskell
-module Pawl.Type.Cost where
+module Parun.Type.Cost where
 
-import Pawl.Type.CostComponent (CostComponent)
-import Pawl.Type.ManaCost (ManaCost)
+import Parun.Type.CostComponent (CostComponent)
+import Parun.Type.ManaCost (ManaCost)
 
 -- CR 118.1: "a cost is an action or payment necessary to take another action".
 -- ONE type for both carriers -- a spell's cost (CR 601.2f) and an activated
@@ -205,7 +205,7 @@ import Pawl.Type.ManaCost (ManaCost)
 --                          attempting to pay an unpayable cost is an illegal
 --                          action." This is the same fact Card.manaCost's Maybe
 --                          already carries for CR 202.1 (a land), passed straight
---                          through by Pawl.Cost.costsFor.
+--                          through by Parun.Cost.costsFor.
 --   Just (MkManaCost []) = {0}, which is real and payable. CR 118.5: "the action
 --                          necessary for a player to pay such a cost is the
 --                          player's acknowledgment that they are paying it";
@@ -225,15 +225,15 @@ data Cost = MkCost
 Then delete both retired modules:
 
 ```bash
-git rm source/library/Pawl/Type/AbilityCost.hs source/library/Pawl/Type/AdditionalCost.hs
+git rm source/library/Parun/Type/AbilityCost.hs source/library/Parun/Type/AdditionalCost.hs
 ```
 
 - [x] **Step 4: Point `ActivatedAbility` at the new type**
 
-`source/library/Pawl/Type/ActivatedAbility.hs` — replace the `AbilityCost` import and field:
+`source/library/Parun/Type/ActivatedAbility.hs` — replace the `AbilityCost` import and field:
 
 ```haskell
-import Pawl.Type.Cost (Cost)
+import Parun.Type.Cost (Cost)
 ```
 
 ```haskell
@@ -244,11 +244,11 @@ data ActivatedAbility card = MkActivatedAbility
   deriving (Eq, Ord, Show)
 ```
 
-Keep the module's existing comment, striking the phrase that named `AbilityCost` and replacing it with: an activation cost is a `Pawl.Type.Cost`, the same type a spell's cost takes (CR 118.1).
+Keep the module's existing comment, striking the phrase that named `AbilityCost` and replacing it with: an activation cost is a `Parun.Type.Cost`, the same type a spell's cost takes (CR 118.1).
 
 - [x] **Step 5: Replace the codec pair**
 
-In `source/library/Pawl/Codec.hs`, delete `additionalCostToJson`/`jsonToAdditionalCost` (lines ~635–646) and `abilityCostToJson`/`jsonToAbilityCost` (lines ~1183–1195) together with the two now-unused imports, and add in their place:
+In `source/library/Parun/Codec.hs`, delete `additionalCostToJson`/`jsonToAdditionalCost` (lines ~635–646) and `abilityCostToJson`/`jsonToAbilityCost` (lines ~1183–1195) together with the two now-unused imports, and add in their place:
 
 ```haskell
 -- Tagged rather than bare-nullary from the start: this family grows
@@ -287,11 +287,11 @@ jsonToCost value = do
   pure Cost.MkCost {Cost.mana = m, Cost.components = cs}
 ```
 
-Import `Pawl.Type.Cost as Cost` and `Pawl.Type.CostComponent as CostComponent`. Update `activatedAbilityToJson`/`jsonToActivatedAbility` to call `costToJson`/`jsonToCost`.
+Import `Parun.Type.Cost as Cost` and `Parun.Type.CostComponent as CostComponent`. Update `activatedAbilityToJson`/`jsonToActivatedAbility` to call `costToJson`/`jsonToCost`.
 
-- [x] **Step 6: Update `Pawl.Activate` mechanically**
+- [x] **Step 6: Update `Parun.Activate` mechanically**
 
-This step is a rename only — `Pawl.Activate` keeps its own `canPayAdditional`/`payAdditional` and its `maybe True` mana reading until Task 2. In `source/library/Pawl/Activate.hs`, swap the two imports for `Pawl.Type.Cost as Cost` and `Pawl.Type.CostComponent as CostComponent`, then:
+This step is a rename only — `Parun.Activate` keeps its own `canPayAdditional`/`payAdditional` and its `maybe True` mana reading until Task 2. In `source/library/Parun/Activate.hs`, swap the two imports for `Parun.Type.Cost as Cost` and `Parun.Type.CostComponent as CostComponent`, then:
 
 - `tapSicknessOk`: `elem CostComponent.TapThis (Cost.components (ActivatedAbility.cost ability))`
 - `canPayAdditional`: retype to `ObjectId -> GameState -> CostComponent.CostComponent -> Bool`, with `CostComponent.TapThis` / `CostComponent.SacrificeThis` arms
@@ -315,9 +315,9 @@ Expected: exactly seven files changed, and `git diff data/cards/` shows only `ad
 
 - [x] **Step 8: Migrate the test fixtures**
 
-Every fixture that built an `AbilityCost` must now build a `Cost`, **and every `Nothing` mana becomes `Just (ManaCost.MkManaCost [])`** — that is the §2.3 migration, not a cosmetic change. Swap the `Pawl.Type.AbilityCost`/`Pawl.Type.AdditionalCost` imports for `Pawl.Type.Cost as Cost.Type` (plus `Pawl.Type.CostComponent as CostComponent` where a component is named) in each file, then:
+Every fixture that built an `AbilityCost` must now build a `Cost`, **and every `Nothing` mana becomes `Just (ManaCost.MkManaCost [])`** — that is the §2.3 migration, not a cosmetic change. Swap the `Parun.Type.AbilityCost`/`Parun.Type.AdditionalCost` imports for `Parun.Type.Cost as Cost.Type` (plus `Parun.Type.CostComponent as CostComponent` where a component is named) in each file, then:
 
-`source/test-suite/Pawl/ActivateSpec.hs` — three sites (lines ~61, ~130, ~181, ~217):
+`source/test-suite/Parun/ActivateSpec.hs` — three sites (lines ~61, ~130, ~181, ~217):
 
 ```haskell
 -- theAbility's unreachable fallback (line ~61)
@@ -342,13 +342,13 @@ Every fixture that built an `AbilityCost` must now build a `Cost`, **and every `
                 { ActivatedAbility.cost = Cost.Type.MkCost {Cost.Type.mana = Just (ManaCost.MkManaCost []), Cost.Type.components = []},
 ```
 
-`source/test-suite/Pawl/ManaSpec.hs` — three sites (lines ~155, ~162, ~172), each currently `AbilityCost.MkAbilityCost {AbilityCost.mana = Nothing, AbilityCost.additional = []}`:
+`source/test-suite/Parun/ManaSpec.hs` — three sites (lines ~155, ~162, ~172), each currently `AbilityCost.MkAbilityCost {AbilityCost.mana = Nothing, AbilityCost.additional = []}`:
 
 ```haskell
                 { ActivatedAbility.cost = Cost.Type.MkCost {Cost.Type.mana = Just (ManaCost.MkManaCost []), Cost.Type.components = []},
 ```
 
-`source/test-suite/Pawl/ResolveSpec.hs` — four sites (lines ~350, ~383, ~398, ~442):
+`source/test-suite/Parun/ResolveSpec.hs` — four sites (lines ~350, ~383, ~398, ~442):
 
 ```haskell
 -- lines ~350, ~383, ~398: the Nothing/[] shape
@@ -363,13 +363,13 @@ Every fixture that built an `AbilityCost` must now build a `Cost`, **and every `
                       }
 ```
 
-`source/test-suite/Pawl/ReplacementSpec.hs` — one site (line ~80):
+`source/test-suite/Parun/ReplacementSpec.hs` — one site (line ~80):
 
 ```haskell
   [] -> ActivatedAbility.MkActivatedAbility (Cost.Type.MkCost (Just (ManaCost.MkManaCost [])) []) (Modal.MkModal (Seq.singleton (Mode.MkMode Seq.empty Map.empty)) (ModeSelection.ChooseExactly 1))
 ```
 
-`source/test-suite/Pawl/CardSpec.hs` — the Llanowar Elves assertions (lines ~586–587), which are the §2.3 tripwire and must now assert the migrated values:
+`source/test-suite/Parun/CardSpec.hs` — the Llanowar Elves assertions (lines ~586–587), which are the §2.3 tripwire and must now assert the migrated values:
 
 ```haskell
                   HU.assertEqual "tap cost only" [CostComponent.TapThis] (Cost.Type.components (ActivatedAbility.cost ab))
@@ -379,18 +379,18 @@ Every fixture that built an `AbilityCost` must now build a `Cost`, **and every `
 - [x] **Step 9: Run the build and the whole suite**
 
 Run: `cabal build all --enable-tests --enable-benchmarks && cabal test`
-Expected: PASS, all green. `Pawl.CardsSpec`'s `checkFile` is the migration's assertion — it re-parses every committed file and compares it to the compiled card up to key order, so a mis-migrated file fails there.
+Expected: PASS, all green. `Parun.CardsSpec`'s `checkFile` is the migration's assertion — it re-parses every committed file and compares it to the compiled card up to key order, so a mis-migrated file fails there.
 
 - [x] **Step 10: Format, lint, and commit**
 
 ```bash
-git add source/library/Pawl source/test-suite/Pawl data/cards
+git add source/library/Parun source/test-suite/Parun data/cards
 hooky fix
 git add -u
 hooky run
 git commit -m "refactor(m4.5-p8): one Cost type for spells and abilities
 
-Pawl.Type.Cost and Pawl.Type.CostComponent replace AbilityCost and
+Parun.Type.Cost and Parun.Type.CostComponent replace AbilityCost and
 AdditionalCost, retired outright (no consumers, no shims). Cost.mana's
 Maybe now carries CR 118.6's unpayable/{0} distinction, so every
 existing ability migrates Nothing -> Just (MkManaCost []) in the seven
@@ -402,52 +402,52 @@ Co-Authored-By: Claude Opus 4.8 (1M context) <noreply@anthropic.com>"
 
 ---
 
-### Task 2: `Pawl.Cost` becomes the door — `costsFor`, `total`, `canPay`, `pay`
+### Task 2: `Parun.Cost` becomes the door — `costsFor`, `total`, `canPay`, `pay`
 
-`Pawl.Cost` stops being a module about one arithmetic step and becomes the axis's sole casing home. `Pawl.Activate` and `Pawl.Cast` both route through it. Still behaviour-identical: no card in the pool has a component beyond `TapThis`/`SacrificeThis`, and no spell has a non-mana cost at all.
+`Parun.Cost` stops being a module about one arithmetic step and becomes the axis's sole casing home. `Parun.Activate` and `Parun.Cast` both route through it. Still behaviour-identical: no card in the pool has a component beyond `TapThis`/`SacrificeThis`, and no spell has a non-mana cost at all.
 
 Read **departures 1 and 2** at the top of this plan before writing any code in this task.
 
 **Files:**
-- Create: `source/library/Pawl/Type/Payment.hs`, `source/test-suite/Pawl/CostSpec.hs`
-- Modify: `source/library/Pawl/Cost.hs`, `source/library/Pawl/Activate.hs`, `source/library/Pawl/Cast.hs`, `source/test-suite/Main.hs`
+- Create: `source/library/Parun/Type/Payment.hs`, `source/test-suite/Parun/CostSpec.hs`
+- Modify: `source/library/Parun/Cost.hs`, `source/library/Parun/Activate.hs`, `source/library/Parun/Cast.hs`, `source/test-suite/Main.hs`
 
 **Interfaces:**
 - Consumes: `Cost.MkCost {mana, components}`, `CostComponent.TapThis`/`SacrificeThis` (Task 1).
-- Produces: `Payment.Payment = Paid | Unpaid`; `Pawl.Cost.costsFor :: ObjectId -> GameState -> [Cost]`, `total :: PlayerId -> ObjectId -> Cost -> GameState -> Cost`, `canPay :: PlayerId -> ObjectId -> Cost -> GameState -> Bool`, `canPayComponent :: PlayerId -> ObjectId -> CostComponent -> GameState -> Bool`, `pay :: PlayerId -> ObjectId -> Cost -> Game Payment`, `payComponent`, `requiresTapSymbol :: Cost -> Bool`, `substituteX :: Natural -> Cost -> Cost`, `hasVariable :: Cost -> Bool`, `unpayable :: Cost`, `firstOffered :: [Cost] -> Cost`; `Pawl.Cast.payableCost :: PlayerId -> ObjectId -> GameState -> Cost -> Bool`.
+- Produces: `Payment.Payment = Paid | Unpaid`; `Parun.Cost.costsFor :: ObjectId -> GameState -> [Cost]`, `total :: PlayerId -> ObjectId -> Cost -> GameState -> Cost`, `canPay :: PlayerId -> ObjectId -> Cost -> GameState -> Bool`, `canPayComponent :: PlayerId -> ObjectId -> CostComponent -> GameState -> Bool`, `pay :: PlayerId -> ObjectId -> Cost -> Game Payment`, `payComponent`, `requiresTapSymbol :: Cost -> Bool`, `substituteX :: Natural -> Cost -> Cost`, `hasVariable :: Cost -> Bool`, `unpayable :: Cost`, `firstOffered :: [Cost] -> Cost`; `Parun.Cast.payableCost :: PlayerId -> ObjectId -> GameState -> Cost -> Bool`.
 
 - [x] **Step 1: Write the failing tests**
 
-Create `source/test-suite/Pawl/CostSpec.hs`:
+Create `source/test-suite/Parun/CostSpec.hs`:
 
 ```haskell
 {-# LANGUAGE GADTs #-}
 {-# LANGUAGE RankNTypes #-}
 
--- Covers Pawl.Cost and the three types it cases on (Pawl.Type.Cost,
--- Pawl.Type.CostComponent, Pawl.Type.Payment), plus the two prompts the axis
+-- Covers Parun.Cost and the three types it cases on (Parun.Type.Cost,
+-- Parun.Type.CostComponent, Parun.Type.Payment), plus the two prompts the axis
 -- adds. CR 118: what a cost IS, what it takes to pay one, and the alternative
 -- and additional costs that change the answer.
 --
 -- The three gate cards: Greed (an amount-bearing component), Village Rites (a
 -- mandatory spell-side additional cost) and Fireblast (an alternative cost with
 -- no mana in it at all).
-module Pawl.CostSpec where
+module Parun.CostSpec where
 
-import qualified Pawl.Activate as Activate
-import qualified Pawl.Cards as Cards
-import qualified Pawl.Cost as Cost
-import qualified Pawl.Setup as Setup
-import qualified Pawl.Support as S
-import qualified Pawl.Type.ActivatedAbility as ActivatedAbility
-import qualified Pawl.Type.Card as Card.Type
-import qualified Pawl.Type.Cost as Cost.Type
-import qualified Pawl.Type.CostComponent as CostComponent
-import qualified Pawl.Type.GameState as GameState
-import qualified Pawl.Type.ManaCost as ManaCost
-import qualified Pawl.Type.ManaSymbol as ManaSymbol
-import qualified Pawl.Type.Payment as Payment
-import qualified Pawl.Type.Printing as Printing
+import qualified Parun.Activate as Activate
+import qualified Parun.Cards as Cards
+import qualified Parun.Cost as Cost
+import qualified Parun.Setup as Setup
+import qualified Parun.Support as S
+import qualified Parun.Type.ActivatedAbility as ActivatedAbility
+import qualified Parun.Type.Card as Card.Type
+import qualified Parun.Type.Cost as Cost.Type
+import qualified Parun.Type.CostComponent as CostComponent
+import qualified Parun.Type.GameState as GameState
+import qualified Parun.Type.ManaCost as ManaCost
+import qualified Parun.Type.ManaSymbol as ManaSymbol
+import qualified Parun.Type.Payment as Payment
+import qualified Parun.Type.Printing as Printing
 import qualified Test.Tasty as Tasty
 import qualified Test.Tasty.HUnit as HU
 
@@ -503,14 +503,14 @@ doorTests cards =
               "still Nothing"
               Nothing
               (Cost.Type.mana (Cost.total S.alice bolt (Cost.Type.MkCost Nothing []) withBolt)),
-      -- The classification Pawl.Activate reads instead of matching a constructor.
+      -- The classification Parun.Activate reads instead of matching a constructor.
       HU.testCase "CR 302.6 requiresTapSymbol classifies a cost, and Greed's counterpart proves it" $
         let elves = ActivatedAbility.cost (theAbility (Cards.llanowarElvesPrinting cards))
             skeletons = ActivatedAbility.cost (theAbility (Cards.drudgeSkeletonsPrinting cards))
          in do
               HU.assertBool "Llanowar Elves' {T} cost requires the tap symbol" (Cost.requiresTapSymbol elves)
               HU.assertBool "Drudge Skeletons' {B} regenerate cost does not" (not (Cost.requiresTapSymbol skeletons)),
-      -- Departure 1: Pawl.Activate does NOT route an ability cost through
+      -- Departure 1: Parun.Activate does NOT route an ability cost through
       -- Cost.total. PlayerEffect.matchesSpell classifies an OBJECT, not a spell,
       -- so a noncreature PERMANENT matches SpellCriterion.NoncreatureSpell --
       -- and Thalia taxes noncreature SPELLS, never abilities. Four Mountains
@@ -533,32 +533,32 @@ doorTests cards =
     ]
 
 tests :: Cards.Cards -> Tasty.TestTree
-tests cards = Tasty.testGroup "Pawl.Cost" [doorTests cards]
+tests cards = Tasty.testGroup "Parun.Cost" [doorTests cards]
 ```
 
-This needs one new `Pawl.Support` helper — `runPure` keeps only the state, and this test asserts on the returned `Payment` too. Add it next to `runPure` in `source/test-suite/Pawl/Support.hs`:
+This needs one new `Parun.Support` helper — `runPure` keeps only the state, and this test asserts on the returned `Payment` too. Add it next to `runPure` in `source/test-suite/Parun/Support.hs`:
 
 ```haskell
 -- runPure, keeping the action's RESULT alongside the final state -- the shape a
--- test needs when the door under test answers with a value (Pawl.Cost.pay's
+-- test needs when the door under test answers with a value (Parun.Cost.pay's
 -- Payment) and not only with a board.
 runPureWith :: (forall r. Prompt.Prompt r -> r) -> GameState.GameState -> Game.Type.Game a -> (a, GameState.GameState)
 runPureWith answer gs game = Engine.runGamePure answer gs game
 ```
 
-Wire `CostSpec` into `source/test-suite/Main.hs`: add `import qualified Pawl.CostSpec as CostSpec` and `CostSpec.tests cards,` to `testTree` (immediately after `CastSpec.tests cards,`).
+Wire `CostSpec` into `source/test-suite/Main.hs`: add `import qualified Parun.CostSpec as CostSpec` and `CostSpec.tests cards,` to `testTree` (immediately after `CastSpec.tests cards,`).
 
 - [x] **Step 2: Run the tests to verify they fail**
 
 Run: `cabal build all --enable-tests --enable-benchmarks`
-Expected: FAIL — `Could not find module 'Pawl.Type.Payment'`, plus `Not in scope: Cost.canPayComponent`, `Cost.canPay`, `Cost.requiresTapSymbol`, `Cost.pay`, `S.runPureWith`.
+Expected: FAIL — `Could not find module 'Parun.Type.Payment'`, plus `Not in scope: Cost.canPayComponent`, `Cost.canPay`, `Cost.requiresTapSymbol`, `Cost.pay`, `S.runPureWith`.
 
-- [x] **Step 3: Create `Pawl.Type.Payment`**
+- [x] **Step 3: Create `Parun.Type.Payment`**
 
-`source/library/Pawl/Type/Payment.hs`:
+`source/library/Parun/Type/Payment.hs`:
 
 ```haskell
-module Pawl.Type.Payment where
+module Parun.Type.Payment where
 
 -- Whether a cost was paid. CR 601.2h: "Partial payments are not allowed.
 -- Unpayable costs can't be paid." -- so the answer is genuinely two-valued, and
@@ -566,7 +566,7 @@ module Pawl.Type.Payment where
 --
 -- Runtime-only: a Payment is never card data and never serialized.
 --
--- Unpaid is always a COMPLETE no-op: Pawl.Cost.pay restores the state it was
+-- Unpaid is always a COMPLETE no-op: Parun.Cost.pay restores the state it was
 -- entered with before returning it, so a caller never has to unwind a partial
 -- payment (mana spent, one component paid, the next one rejected).
 data Payment
@@ -575,20 +575,20 @@ data Payment
   deriving (Eq, Show)
 ```
 
-- [x] **Step 4: Rewrite `Pawl.Cost`**
+- [x] **Step 4: Rewrite `Parun.Cost`**
 
-Replace the whole of `source/library/Pawl/Cost.hs` above `applyAdjustments` — `applyAdjustments` itself is P7's and is **not touched**, comment included. The module header comment becomes:
+Replace the whole of `source/library/Parun/Cost.hs` above `applyAdjustments` — `applyAdjustments` itself is P7's and is **not touched**, comment included. The module header comment becomes:
 
 ```haskell
 -- CR 118: what a cost IS, and everything the closed half needs to do with one --
 -- what the candidates are (costsFor), what the total is (total, CR 601.2f),
 -- whether it can be paid (canPay, CR 118.3) and paying it (pay, CR 601.2g/h).
--- Pawl.Mana keeps pools, production and spending; this module keeps the cost.
+-- Parun.Mana keeps pools, production and spending; this module keeps the cost.
 --
--- The SOLE casing home for Pawl.Type.CostComponent. Pawl.Cast and Pawl.Activate
+-- The SOLE casing home for Parun.Type.CostComponent. Parun.Cast and Parun.Activate
 -- learn nothing about which components exist: they ask "can this be paid" and
 -- "pay it", and read one classification (requiresTapSymbol) for CR 302.6.
-module Pawl.Cost where
+module Parun.Cost where
 ```
 
 The new bodies:
@@ -660,7 +660,7 @@ hasVariable cost = case Cost.mana cost of
   Just (ManaCost.MkManaCost symbols) -> elem ManaSymbol.Variable symbols
 
 -- CR 302.6 / 107.5: does paying this cost require tapping the object it is on?
--- The CLASSIFICATION Pawl.Activate reads for the summoning-sickness gate, so
+-- The CLASSIFICATION Parun.Activate reads for the summoning-sickness gate, so
 -- that this module stays the only one matching a CostComponent constructor.
 requiresTapSymbol :: Cost -> Bool
 requiresTapSymbol cost = elem CostComponent.TapThis (Cost.components cost)
@@ -742,14 +742,14 @@ payComponent _ oid component = case component of
 
 `payComponent`'s first parameter is unused until Task 3 adds `PayLife`; name it `_` now and `pid` then.
 
-- [x] **Step 5: Route `Pawl.Activate` through the door**
+- [x] **Step 5: Route `Parun.Activate` through the door**
 
-In `source/library/Pawl/Activate.hs`, **delete** `canPayAdditional` and `payAdditional` outright, and:
+In `source/library/Parun/Activate.hs`, **delete** `canPayAdditional` and `payAdditional` outright, and:
 
 ```haskell
 -- CR 302.6: a creature's {T}-cost ability can't be activated while summoning
 -- sick. Reads projected creature-ness -- a land (Evolving Wilds) is never sick-
--- gated. Asks Pawl.Cost for the CLASSIFICATION rather than matching a component
+-- gated. Asks Parun.Cost for the CLASSIFICATION rather than matching a component
 -- constructor here.
 tapSicknessOk :: ObjectId -> ActivatedAbility.ActivatedAbility Card.Card -> GameState -> Bool
 tapSicknessOk srcId ability gs =
@@ -785,7 +785,7 @@ and replace `activateAbility`'s whole payment tail (the `let additional = …` b
 
 ```haskell
           State.modify' (\g -> g {GameState.objects = Map.adjust (\o -> o {Object.bindings = Binding.fromChoices chosen Map.empty Nothing chosenModes}) abilId (GameState.objects g)})
-          -- CR 601.2g/h via Pawl.Cost.pay: the mana window, then the components.
+          -- CR 601.2g/h via Parun.Cost.pay: the mana window, then the components.
           -- activatable pre-checks payability, so within the source elision (#12)
           -- Unpaid is unreachable; reject-not-repair restores the whole
           -- activation -- including the ability object this function put on the
@@ -796,11 +796,11 @@ and replace `activateAbility`'s whole payment tail (the `let additional = …` b
             Payment.Unpaid -> State.put gs
 ```
 
-Delete the now-unused `Pawl.Event`, `Pawl.Type.TapState` and `Control.Monad` imports if GHC reports them unused; keep everything still referenced.
+Delete the now-unused `Parun.Event`, `Parun.Type.TapState` and `Control.Monad` imports if GHC reports them unused; keep everything still referenced.
 
-- [x] **Step 6: Route `Pawl.Cast` through the door**
+- [x] **Step 6: Route `Parun.Cast` through the door**
 
-In `source/library/Pawl/Cast.hs`, **delete** `costOf`, add `import Pawl.Type.Cost (Cost)`, and:
+In `source/library/Parun/Cast.hs`, **delete** `costOf`, add `import Parun.Type.Cost (Cost)`, and:
 
 ```haskell
 -- CR 601.2b's X=0 floor measured at CR 601.2f's total: a candidate cost is
@@ -898,35 +898,35 @@ In `castSpell`, replace the opening `case costOf oid gs of … Just cost -> case
                             }
 ```
 
-Delete the now-unused `Pawl.Mana`, `Pawl.Type.ManaCost` and `Pawl.Type.ManaSymbol` imports if GHC reports them unused.
+Delete the now-unused `Parun.Mana`, `Parun.Type.ManaCost` and `Parun.Type.ManaSymbol` imports if GHC reports them unused.
 
 - [x] **Step 7: Run the tests to verify they pass**
 
 Run: `cabal build all --enable-tests --enable-benchmarks && cabal test`
-Expected: PASS. `Pawl.ActivateSpec`, `Pawl.ManaSpec`, `Pawl.CastSpec` and `Pawl.PlayerEffectSpec` are the behaviour-identity tripwires — every one of them exercises a path that now runs through `Pawl.Cost`.
+Expected: PASS. `Parun.ActivateSpec`, `Parun.ManaSpec`, `Parun.CastSpec` and `Parun.PlayerEffectSpec` are the behaviour-identity tripwires — every one of them exercises a path that now runs through `Parun.Cost`.
 
 - [x] **Step 8: Confirm the casing surface**
 
 Run:
 
 ```bash
-grep -rln 'CostComponent\.\(TapThis\|SacrificeThis\)' source/library/ | grep -v 'Pawl/Cost.hs\|Pawl/Codec.hs\|Pawl/Type/'
+grep -rln 'CostComponent\.\(TapThis\|SacrificeThis\)' source/library/ | grep -v 'Parun/Cost.hs\|Parun/Codec.hs\|Parun/Type/'
 ```
 
-Expected: no output. `Pawl.Activate` must no longer name a component constructor.
+Expected: no output. `Parun.Activate` must no longer name a component constructor.
 
 - [x] **Step 9: Format, lint, and commit**
 
 ```bash
-git add source/library/Pawl source/test-suite/Pawl source/test-suite/Main.hs
+git add source/library/Parun source/test-suite/Parun source/test-suite/Main.hs
 hooky fix
 git add -u
 hooky run
-git commit -m "feat(m4.5-p8): Pawl.Cost becomes the payment door
+git commit -m "feat(m4.5-p8): Parun.Cost becomes the payment door
 
 costsFor, total (now Cost -> Cost), canPay/canPayComponent, pay and the
-requiresTapSymbol classification, with Pawl.Type.Payment for the answer.
-Pawl.Activate and Pawl.Cast both route through it; Cast.costOf and
+requiresTapSymbol classification, with Parun.Type.Payment for the answer.
+Parun.Activate and Parun.Cast both route through it; Cast.costOf and
 Activate's two payment helpers are deleted.
 
 pay is transactional: CR 601.2h forbids partial payments, so an Unpaid
@@ -945,10 +945,10 @@ Co-Authored-By: Claude Opus 4.8 (1M context) <noreply@anthropic.com>"
 The first component that carries a number, and the first paid from something other than the board. Greed's falsifier is CR 118.3's own worked example: *"a player with only 1 life can't pay a cost of 2 life."*
 
 **Files:**
-- Modify: `source/library/Pawl/Type/CostComponent.hs`, `source/library/Pawl/Codec.hs`, `source/library/Pawl/Cost.hs`
+- Modify: `source/library/Parun/Type/CostComponent.hs`, `source/library/Parun/Codec.hs`, `source/library/Parun/Cost.hs`
 - Create: `data/cards/greed.json`
-- Modify: `source/test-suite/Pawl/Cards.hs`
-- Test: `source/test-suite/Pawl/CostSpec.hs`, `source/test-suite/Pawl/CodecSpec.hs`
+- Modify: `source/test-suite/Parun/Cards.hs`
+- Test: `source/test-suite/Parun/CostSpec.hs`, `source/test-suite/Parun/CodecSpec.hs`
 
 **Interfaces:**
 - Consumes: `Cost.canPayComponent`, `Cost.payComponent`, `Cost.canPay` (Task 2).
@@ -956,7 +956,7 @@ The first component that carries a number, and the first paid from something oth
 
 - [x] **Step 1: Write the failing tests**
 
-In `source/test-suite/Pawl/CostSpec.hs`, add the group below and register it in `tests` (`Tasty.testGroup "Pawl.Cost" [doorTests cards, greedTests cards]`):
+In `source/test-suite/Parun/CostSpec.hs`, add the group below and register it in `tests` (`Tasty.testGroup "Parun.Cost" [doorTests cards, greedTests cards]`):
 
 ```haskell
 -- Greed {3}{B} Enchantment: "{B}, Pay 2 life: Draw a card."
@@ -1033,9 +1033,9 @@ greedTests cards =
         ]
 ```
 
-New imports for `CostSpec`: `Pawl.Action as Action`, `Pawl.Stack as Stack`, `Pawl.Type.Action as Action.Type`, `Pawl.Type.Departure as Departure`, `Pawl.Type.Phase as Phase`, `Pawl.Type.Player as Player`, `Pawl.Type.Status as Status`, `Data.Map.Strict as Map`.
+New imports for `CostSpec`: `Parun.Action as Action`, `Parun.Stack as Stack`, `Parun.Type.Action as Action.Type`, `Parun.Type.Departure as Departure`, `Parun.Type.Phase as Phase`, `Parun.Type.Player as Player`, `Parun.Type.Status as Status`, `Data.Map.Strict as Map`.
 
-In `source/test-suite/Pawl/CodecSpec.hs`, extend the `"every CostComponent round-trips"` list with `CostComponent.PayLife 2`.
+In `source/test-suite/Parun/CodecSpec.hs`, extend the `"every CostComponent round-trips"` list with `CostComponent.PayLife 2`.
 
 - [x] **Step 2: Run the tests to verify they fail**
 
@@ -1044,7 +1044,7 @@ Expected: FAIL — `Not in scope: data constructor 'CostComponent.PayLife'`, and
 
 - [x] **Step 3: Add the constructor**
 
-In `source/library/Pawl/Type/CostComponent.hs`, after `SacrificeThis`:
+In `source/library/Parun/Type/CostComponent.hs`, after `SacrificeThis`:
 
 ```haskell
   | -- CR 119.4 / Greed: pay this much life. "If a cost or effect allows a player
@@ -1063,7 +1063,7 @@ Add `import Numeric.Natural (Natural)`.
 
 - [x] **Step 4: Add the codec arms**
 
-In `source/library/Pawl/Codec.hs`:
+In `source/library/Parun/Codec.hs`:
 
 ```haskell
   CostComponent.PayLife n -> Json.tagged (Text.pack "PayLife") (Just (natTo n))
@@ -1082,7 +1082,7 @@ jsonToCostComponent value = do
 
 - [x] **Step 5: Add the payability and payment arms**
 
-In `source/library/Pawl/Cost.hs`, `canPayComponent`:
+In `source/library/Parun/Cost.hs`, `canPayComponent`:
 
 ```haskell
   -- CR 119.4: payable only if the life total is at least the amount. CR 119.4b:
@@ -1098,7 +1098,7 @@ and `payComponent` (whose first parameter becomes `pid`):
 ```haskell
   -- CR 119.4: "the payment is subtracted from their life total; in other words,
   -- the player loses that much life." A direct subtraction, and the CR 704.5a
-  -- state-based action that may follow is the existing one in Pawl.Sba.
+  -- state-based action that may follow is the existing one in Parun.Sba.
   CostComponent.PayLife n -> do
     State.modify' (\gs -> gs {GameState.players = Map.adjust (\p -> p {Player.life = Player.life p - toInteger n}) pid (GameState.players gs)})
     pure Payment.Paid
@@ -1204,17 +1204,17 @@ and `payComponent` (whose first parameter becomes `pid`):
 
 - [x] **Step 7: Register the printing**
 
-In `source/test-suite/Pawl/Cards.hs`: add `greedPrinting :: Printing.Printing` to the `Cards` record (keeping the field order the file already uses — append after `silencePrinting`), `greedPrinting_ <- loadPrinting "greed"` to `loadCards`, `greedPrinting = greedPrinting_,` to the record it builds, and `greedPrinting cards,` to `allPrintings`. Do **not** add it to any deck.
+In `source/test-suite/Parun/Cards.hs`: add `greedPrinting :: Printing.Printing` to the `Cards` record (keeping the field order the file already uses — append after `silencePrinting`), `greedPrinting_ <- loadPrinting "greed"` to `loadCards`, `greedPrinting = greedPrinting_,` to the record it builds, and `greedPrinting cards,` to `allPrintings`. Do **not** add it to any deck.
 
 - [x] **Step 8: Run the tests to verify they pass**
 
 Run: `cabal build all --enable-tests --enable-benchmarks && cabal test`
-Expected: PASS. A missing `allPrintings` registration fails `Pawl.CardSpec`'s directory-agreement test, not the new group.
+Expected: PASS. A missing `allPrintings` registration fails `Parun.CardSpec`'s directory-agreement test, not the new group.
 
 - [x] **Step 9: Format, lint, and commit**
 
 ```bash
-git add source/library/Pawl source/test-suite/Pawl data/cards/greed.json
+git add source/library/Parun source/test-suite/Parun data/cards/greed.json
 hooky fix
 git add -u
 hooky run
@@ -1236,10 +1236,10 @@ Co-Authored-By: Claude Opus 4.8 (1M context) <noreply@anthropic.com>"
 The criterion-bearing component, the first cost prompt, and the first cost that reaches a **spell**. Village Rites' one ruling is the specification of two tests.
 
 **Files:**
-- Modify: `source/library/Pawl/Type/CostComponent.hs`, `source/library/Pawl/Type/PermanentCriterion.hs`, `source/library/Pawl/Type/Card.hs`, `source/library/Pawl/Type/Prompt.hs`, `source/library/Pawl/Type/Response.hs`, `source/library/Pawl/Codec.hs`, `source/library/Pawl/Cost.hs`, `source/library/Pawl/Replacement.hs`, `source/library/Pawl/Replay.hs`
+- Modify: `source/library/Parun/Type/CostComponent.hs`, `source/library/Parun/Type/PermanentCriterion.hs`, `source/library/Parun/Type/Card.hs`, `source/library/Parun/Type/Prompt.hs`, `source/library/Parun/Type/Response.hs`, `source/library/Parun/Codec.hs`, `source/library/Parun/Cost.hs`, `source/library/Parun/Replacement.hs`, `source/library/Parun/Replay.hs`
 - Create: `data/cards/village-rites.json`
-- Modify: `source/test-suite/Pawl/Cards.hs`, `source/test-suite/Pawl/Support.hs`, `source/benchmark/Main.hs`
-- Test: `source/test-suite/Pawl/CostSpec.hs`, `source/test-suite/Pawl/CodecSpec.hs`, `source/test-suite/Pawl/ReplaySpec.hs`
+- Modify: `source/test-suite/Parun/Cards.hs`, `source/test-suite/Parun/Support.hs`, `source/benchmark/Main.hs`
+- Test: `source/test-suite/Parun/CostSpec.hs`, `source/test-suite/Parun/CodecSpec.hs`, `source/test-suite/Parun/ReplaySpec.hs`
 
 **Interfaces:**
 - Consumes: `Cost.costsFor`, `Cost.canPayComponent`, `Cost.payComponent`, `Cast.payableCost` (Task 2).
@@ -1247,12 +1247,12 @@ The criterion-bearing component, the first cost prompt, and the first cost that 
 
 - [x] **Step 1: Write the failing tests**
 
-In `source/test-suite/Pawl/CostSpec.hs`, add the group below plus the two helpers, and register it in `tests`:
+In `source/test-suite/Parun/CostSpec.hs`, add the group below plus the two helpers, and register it in `tests`:
 
 ```haskell
 -- Every answer the engine asked for, in order -- so a test can assert that a
 -- prompt WAS raised (the engine did not decide) or was NOT (the choice was
--- forced and correctly elided). The Pawl.ReplacementSpec shape.
+-- forced and correctly elided). The Parun.ReplacementSpec shape.
 answersFor :: (forall r. Prompt.Prompt r -> r) -> GameState.GameState -> Game.Type.Game a -> [Response.Response]
 answersFor answer gs game = snd (Replay.record answer gs game)
 
@@ -1313,7 +1313,7 @@ villageRitesTests cards =
           -- The cost payment went through Event.sacrifice, the CR 701.21 funnel,
           -- so the turn history saw it. A direct zone poke passes both cases
           -- above and fails this one. The settle/resolve shape is
-          -- Pawl.TriggerSpec's historyTests, verbatim.
+          -- Parun.TriggerSpec's historyTests, verbatim.
           HU.testCase "CR 608.2i Khabál Ghoul counts a creature sacrificed to pay a cost" $
             let (rites, _, gs0) = board 1
                 (ghoul, gs1) = S.addCreature (Cards.khabalGhoulPrinting cards) S.alice gs0
@@ -1369,7 +1369,7 @@ Also add a unit case to `doorTests` for the criterion-bearing arm — this is wh
               HU.assertBool "and bob controls none of them" (not (Cost.canPayComponent S.bob S.noSource two gs)),
 ```
 
-In `source/test-suite/Pawl/CodecSpec.hs`: extend the `"every CostComponent round-trips"` list with `CostComponent.Sacrifice 2 (PermanentCriterion.PermanentOfSubtype Subtype.Mountain)`, extend the existing `PermanentCriterion` coverage with `PermanentCriterion.PermanentOfSubtype Subtype.Mountain`, and add:
+In `source/test-suite/Parun/CodecSpec.hs`: extend the `"every CostComponent round-trips"` list with `CostComponent.Sacrifice 2 (PermanentCriterion.PermanentOfSubtype Subtype.Mountain)`, extend the existing `PermanentCriterion` coverage with `PermanentCriterion.PermanentOfSubtype Subtype.Mountain`, and add:
 
 ```haskell
           HU.testCase "a Card carrying an additional cost round-trips" $
@@ -1388,7 +1388,7 @@ In `source/test-suite/Pawl/CodecSpec.hs`: extend the `"every CostComponent round
                     Right pairs -> HU.assertBool "key absent" (notElem (Text.pack "additionalCosts") (map fst pairs)),
 ```
 
-In `source/test-suite/Pawl/ReplaySpec.hs`, add to `combatReplayTests`:
+In `source/test-suite/Parun/ReplaySpec.hs`, add to `combatReplayTests`:
 
 ```haskell
           HU.testCase "ChooseSacrifices records and replays a Set ObjectId" $
@@ -1409,7 +1409,7 @@ Expected: FAIL — `Not in scope: data constructor 'CostComponent.Sacrifice'`, `
 
 - [x] **Step 3: Add the two constructors**
 
-In `source/library/Pawl/Type/CostComponent.hs`:
+In `source/library/Parun/Type/CostComponent.hs`:
 
 ```haskell
   | -- CR 701.21a / CR 601.2f's "sacrificing permanents": sacrifice this many
@@ -1423,9 +1423,9 @@ In `source/library/Pawl/Type/CostComponent.hs`:
     Sacrifice Natural PermanentCriterion
 ```
 
-with `import Pawl.Type.PermanentCriterion (PermanentCriterion)`.
+with `import Parun.Type.PermanentCriterion (PermanentCriterion)`.
 
-In `source/library/Pawl/Type/PermanentCriterion.hs`:
+In `source/library/Parun/Type/PermanentCriterion.hs`:
 
 ```haskell
   | -- CR 205.3: a permanent with this subtype (Fireblast's Mountains). Matched
@@ -1433,11 +1433,11 @@ In `source/library/Pawl/Type/PermanentCriterion.hs`:
     PermanentOfSubtype Subtype
 ```
 
-with `import Pawl.Type.Subtype (Subtype)`, and extend the module comment: the growth path it already describes, one constructor further along; P9 still merges it with `CardCriterion`.
+with `import Parun.Type.Subtype (Subtype)`, and extend the module comment: the growth path it already describes, one constructor further along; P9 still merges it with `CardCriterion`.
 
 - [x] **Step 4: Add the two prompt constructors and their transcript arms**
 
-`source/library/Pawl/Type/Prompt.hs`:
+`source/library/Parun/Type/Prompt.hs`:
 
 ```haskell
   -- CR 701.21a: which permanents to sacrifice to pay a cost. The ObjectId is the
@@ -1457,7 +1457,7 @@ with `import Pawl.Type.Subtype (Subtype)`, and extend the module comment: the gr
   ChooseSacrifices :: Decider -> PlayerId -> ObjectId -> [ObjectId] -> Natural -> Prompt (Set ObjectId)
 ```
 
-`source/library/Pawl/Type/Response.hs`:
+`source/library/Parun/Type/Response.hs`:
 
 ```haskell
   | -- CR 701.21a: the permanents a player chose to sacrifice to pay a cost,
@@ -1465,7 +1465,7 @@ with `import Pawl.Type.Subtype (Subtype)`, and extend the module comment: the gr
     ChoseSacrifices (Set ObjectId)
 ```
 
-`source/library/Pawl/Replay.hs` — one arm in each of the three functions:
+`source/library/Parun/Replay.hs` — one arm in each of the three functions:
 
 ```haskell
   Prompt.ChooseSacrifices {} -> Response.ChoseSacrifices answer
@@ -1486,7 +1486,7 @@ with `import Pawl.Type.Subtype (Subtype)`, and extend the module comment: the gr
 
 - [x] **Step 5: Answer the new prompt in all eight interpreters**
 
-Add the same arm to the five answerers in `source/test-suite/Pawl/Support.hs` (`identityAnswer`, `castAnswer`, `aggressiveAnswer`, `playLandAnswer`, and `randomAnswer` with `pure`) and the three in `source/benchmark/Main.hs` (`alwaysPass`, `castAnswer`, `fightAnswer`):
+Add the same arm to the five answerers in `source/test-suite/Parun/Support.hs` (`identityAnswer`, `castAnswer`, `aggressiveAnswer`, `playLandAnswer`, and `randomAnswer` with `pure`) and the three in `source/benchmark/Main.hs` (`alwaysPass`, `castAnswer`, `fightAnswer`):
 
 ```haskell
   Prompt.ChooseSacrifices _ _ _ candidates count -> Set.fromList (take (fromIntegral count) candidates)
@@ -1499,7 +1499,7 @@ Add the same arm to the five answerers in `source/test-suite/Pawl/Support.hs` (`
 
 - [x] **Step 6: Add `Card.additionalCosts` and its codec**
 
-`source/library/Pawl/Type/Card.hs`, after `castingPermissions`:
+`source/library/Parun/Type/Card.hs`, after `castingPermissions`:
 
 ```haskell
     -- CR 118.8: this card's printed additional costs -- "a cost listed in a
@@ -1516,9 +1516,9 @@ Add the same arm to the five answerers in `source/test-suite/Pawl/Support.hs` (`
     additionalCosts :: [CostComponent],
 ```
 
-with `import Pawl.Type.CostComponent (CostComponent)`.
+with `import Parun.Type.CostComponent (CostComponent)`.
 
-`source/library/Pawl/Codec.hs` — in `cardToJson`'s optional tail:
+`source/library/Parun/Codec.hs` — in `cardToJson`'s optional tail:
 
 ```haskell
         ++ ( if null (CardT.additionalCosts c)
@@ -1569,27 +1569,27 @@ and the `Sacrifice` arms to the component codec:
       pure (CostComponent.Sacrifice count criterion)
 ```
 
-- [x] **Step 7: Keep `Pawl.Replacement.matchesPermanent` total**
+- [x] **Step 7: Keep `Parun.Replacement.matchesPermanent` total**
 
-`source/library/Pawl/Replacement.hs`:
+`source/library/Parun/Replacement.hs`:
 
 ```haskell
   PermanentCriterion.PermanentOfSubtype s -> Set.member s (Projection.subtypesOf oid gs)
 ```
 
-Leave a comment at this site: `PermanentCriterion` is now matched here **and** in `Pawl.Cost.matchesCriterion`; the two are not shared because `Pawl.Cost` importing `Pawl.Replacement` would collide with #72's queued fix (which needs `Pawl.Replacement` to consult costs). Cite `(#N)` — Task 7 replaces it.
+Leave a comment at this site: `PermanentCriterion` is now matched here **and** in `Parun.Cost.matchesCriterion`; the two are not shared because `Parun.Cost` importing `Parun.Replacement` would collide with #72's queued fix (which needs `Parun.Replacement` to consult costs). Cite `(#N)` — Task 7 replaces it.
 
 - [x] **Step 8: Add the payability and payment arms, and the criterion matcher**
 
-`source/library/Pawl/Cost.hs`:
+`source/library/Parun/Cost.hs`:
 
 ```haskell
 -- Which permanents a criterion admits, matched through the PROJECTION and never
 -- against printed characteristics: a card type is CR 613.1d layer 4 and a
 -- subtype is layer 4 too, so Blood Moon changes the answer.
 --
--- The sibling of Pawl.Replacement.matchesPermanent, deliberately not shared with
--- it: Pawl.Cost importing Pawl.Replacement would become a module cycle the
+-- The sibling of Parun.Replacement.matchesPermanent, deliberately not shared with
+-- it: Parun.Cost importing Parun.Replacement would become a module cycle the
 -- moment CR 614.12b's payable-cost check lands there (#N). P9's filter language
 -- merges both.
 matchesCriterion :: GameState -> PermanentCriterion -> ObjectId -> Bool
@@ -1720,7 +1720,7 @@ Finally, teach `costsFor` about the new field:
 }
 ```
 
-Register `villageRitesPrinting` in `source/test-suite/Pawl/Cards.hs` exactly as Greed was registered (record field, `loadPrinting "village-rites"`, record build, `allPrintings`). No deck.
+Register `villageRitesPrinting` in `source/test-suite/Parun/Cards.hs` exactly as Greed was registered (record field, `loadPrinting "village-rites"`, record build, `allPrintings`). No deck.
 
 - [x] **Step 10: Run the tests to verify they pass**
 
@@ -1730,7 +1730,7 @@ Expected: PASS.
 - [x] **Step 11: Format, lint, and commit**
 
 ```bash
-git add source/library/Pawl source/test-suite/Pawl source/test-suite/Main.hs source/benchmark/Main.hs data/cards/village-rites.json
+git add source/library/Parun source/test-suite/Parun source/test-suite/Main.hs source/benchmark/Main.hs data/cards/village-rites.json
 hooky fix
 git add -u
 hooky run
@@ -1756,10 +1756,10 @@ Co-Authored-By: Claude Opus 4.8 (1M context) <noreply@anthropic.com>"
 The seam. An alternative cost is *not* a different mana cost: Fireblast's contains no mana at all, so the printed `{4}{R}{R}` is unaffordable while the spell is castable and deals 4.
 
 **Files:**
-- Modify: `source/library/Pawl/Type/Card.hs`, `source/library/Pawl/Type/Prompt.hs`, `source/library/Pawl/Type/Response.hs`, `source/library/Pawl/Codec.hs`, `source/library/Pawl/Cost.hs`, `source/library/Pawl/Cast.hs`, `source/library/Pawl/Replay.hs`
+- Modify: `source/library/Parun/Type/Card.hs`, `source/library/Parun/Type/Prompt.hs`, `source/library/Parun/Type/Response.hs`, `source/library/Parun/Codec.hs`, `source/library/Parun/Cost.hs`, `source/library/Parun/Cast.hs`, `source/library/Parun/Replay.hs`
 - Create: `data/cards/fireblast.json`
-- Modify: `source/test-suite/Pawl/Cards.hs`, `source/test-suite/Pawl/Support.hs`, `source/benchmark/Main.hs`
-- Test: `source/test-suite/Pawl/CostSpec.hs`, `source/test-suite/Pawl/CodecSpec.hs`, `source/test-suite/Pawl/ReplaySpec.hs`
+- Modify: `source/test-suite/Parun/Cards.hs`, `source/test-suite/Parun/Support.hs`, `source/benchmark/Main.hs`
+- Test: `source/test-suite/Parun/CostSpec.hs`, `source/test-suite/Parun/CodecSpec.hs`, `source/test-suite/Parun/ReplaySpec.hs`
 
 **Interfaces:**
 - Consumes: `Cost.costsFor`, `Cast.payableCost`, `Cost.firstOffered`, `Cost.unpayable` (Tasks 2 and 4).
@@ -1767,7 +1767,7 @@ The seam. An alternative cost is *not* a different mana cost: Fireblast's contai
 
 - [x] **Step 1: Write the failing tests**
 
-In `source/test-suite/Pawl/CostSpec.hs`, add the helper and the group, and register the group in `tests`:
+In `source/test-suite/Parun/CostSpec.hs`, add the helper and the group, and register the group in `tests`:
 
 ```haskell
 wasAskedToChooseCost :: [Response.Response] -> Bool
@@ -1848,7 +1848,7 @@ fireblastTests cards =
         ]
 ```
 
-In `source/test-suite/Pawl/CodecSpec.hs`:
+In `source/test-suite/Parun/CodecSpec.hs`:
 
 ```haskell
           HU.testCase "a Card carrying an alternative cost round-trips" $
@@ -1869,7 +1869,7 @@ In `source/test-suite/Pawl/CodecSpec.hs`:
                     Right pairs -> HU.assertBool "key absent" (notElem (Text.pack "alternativeCosts") (map fst pairs)),
 ```
 
-In `source/test-suite/Pawl/ReplaySpec.hs`, add to `combatReplayTests`:
+In `source/test-suite/Parun/ReplaySpec.hs`, add to `combatReplayTests`:
 
 ```haskell
           HU.testCase "ChooseCost records and replays a Cost" $
@@ -1893,7 +1893,7 @@ Expected: FAIL — `Not in scope: data constructor 'Prompt.ChooseCost'`, `'Respo
 
 - [x] **Step 3: Add `Card.alternativeCosts` and its codec**
 
-`source/library/Pawl/Type/Card.hs`, after `additionalCosts`:
+`source/library/Parun/Type/Card.hs`, after `additionalCosts`:
 
 ```haskell
     -- CR 118.9: this card's printed alternative costs -- "a cost listed in a
@@ -1903,7 +1903,7 @@ Expected: FAIL — `Not in scope: data constructor 'Prompt.ChooseCost'`, `'Respo
     -- A LIST because a card may print more than one, not because more than one
     -- may be paid: CR 118.9a says "only one alternative cost can be applied to
     -- any one spell as it's being cast", which is what makes
-    -- Pawl.Cost.costsFor's list a list of CANDIDATES the caster picks from.
+    -- Parun.Cost.costsFor's list a list of CANDIDATES the caster picks from.
     --
     -- Each carries its OWN mana part, which is how CR 118.6a's second sentence
     -- ("if an alternative cost is applied to an unpayable cost ... the
@@ -1919,9 +1919,9 @@ Expected: FAIL — `Not in scope: data constructor 'Prompt.ChooseCost'`, `'Respo
     alternativeCosts :: [Cost],
 ```
 
-with `import Pawl.Type.Cost (Cost)`.
+with `import Parun.Type.Cost (Cost)`.
 
-`source/library/Pawl/Codec.hs` — the optional tail of `cardToJson`:
+`source/library/Parun/Codec.hs` — the optional tail of `cardToJson`:
 
 ```haskell
         ++ ( if null (CardT.alternativeCosts c)
@@ -1942,14 +1942,14 @@ and in `jsonToCard`:
 
 - [x] **Step 4: Add the `ChooseCost` prompt and its transcript arms**
 
-`source/library/Pawl/Type/Prompt.hs`:
+`source/library/Parun/Type/Prompt.hs`:
 
 ```haskell
   -- CR 601.2b: "If the spell has alternative or additional costs that will be
   -- paid as it's being cast ... the player announces their intentions to pay any
   -- or all of those costs." Issued after the modes and before X and targets, at
   -- 601.2b's own position. The ObjectId is the spell; the [Cost] is the PAYABLE
-  -- candidates (the engine pre-filters: each candidate from Pawl.Cost.costsFor,
+  -- candidates (the engine pre-filters: each candidate from Parun.Cost.costsFor,
   -- run through total, then tested with canPay at the CR 601.2b X=0 floor).
   --
   -- CR 118.9b makes an alternative cost optional, so a player who can afford both
@@ -1958,9 +1958,9 @@ and in `jsonToCard`:
   ChooseCost :: Decider -> PlayerId -> ObjectId -> [Cost] -> Prompt Cost
 ```
 
-with `import Pawl.Type.Cost (Cost)`.
+with `import Parun.Type.Cost (Cost)`.
 
-`source/library/Pawl/Type/Response.hs`:
+`source/library/Parun/Type/Response.hs`:
 
 ```haskell
   | -- CR 601.2b: the cost a caster announced they would pay, serialized so a
@@ -1968,7 +1968,7 @@ with `import Pawl.Type.Cost (Cost)`.
     ChoseCost Cost
 ```
 
-`source/library/Pawl/Replay.hs`:
+`source/library/Parun/Replay.hs`:
 
 ```haskell
   Prompt.ChooseCost {} -> Response.ChoseCost answer
@@ -1981,18 +1981,18 @@ with `import Pawl.Type.Cost (Cost)`.
 ```
 
 ```haskell
-  -- The first offered candidate is the PRINTED cost (Pawl.Cost.costsFor puts it
+  -- The first offered candidate is the PRINTED cost (Parun.Cost.costsFor puts it
   -- first) -- the least eventful fallback when a transcript runs short, since it
   -- sacrifices nothing. Cost.firstOffered keeps this total for the empty list the
   -- engine never produces.
   Prompt.ChooseCost _ _ _ candidates -> Cost.firstOffered candidates
 ```
 
-with `import qualified Pawl.Cost as Cost` in `Pawl.Replay`.
+with `import qualified Parun.Cost as Cost` in `Parun.Replay`.
 
 - [x] **Step 5: Answer the new prompt in all eight interpreters**
 
-Add to the five answerers in `source/test-suite/Pawl/Support.hs` and the three in `source/benchmark/Main.hs` (importing `Pawl.Cost as Cost` in each file):
+Add to the five answerers in `source/test-suite/Parun/Support.hs` and the three in `source/benchmark/Main.hs` (importing `Parun.Cost as Cost` in each file):
 
 ```haskell
   Prompt.ChooseCost _ _ _ candidates -> Cost.firstOffered candidates
@@ -2005,7 +2005,7 @@ Add to the five answerers in `source/test-suite/Pawl/Support.hs` and the three i
 
 - [x] **Step 6: Teach `costsFor` about the alternatives**
 
-`source/library/Pawl/Cost.hs`:
+`source/library/Parun/Cost.hs`:
 
 ```haskell
     Source.OfCard printing ->
@@ -2015,7 +2015,7 @@ Add to the five answerers in `source/test-suite/Pawl/Support.hs` and the three i
           -- a spell, any additional costs, cost increases, and cost reductions
           -- that affect that spell are applied to that alternative cost." An
           -- alternative replaces only the MANA cost; every additional cost still
-          -- applies. The increases and reductions are Pawl.Cost.total's job,
+          -- applies. The increases and reductions are Parun.Cost.total's job,
           -- called on whichever candidate is chosen.
           withAdditional alternative =
             alternative {Cost.components = Cost.components alternative ++ Card.additionalCosts card}
@@ -2024,7 +2024,7 @@ Add to the five answerers in `source/test-suite/Pawl/Support.hs` and the three i
 
 - [x] **Step 7: Issue the prompt in `Cast.castSpell`**
 
-In `source/library/Pawl/Cast.hs`, replace Task 2's `case filter … of [] -> pure (); chosenCost : _ -> do` block opener with:
+In `source/library/Parun/Cast.hs`, replace Task 2's `case filter … of [] -> pure (); chosenCost : _ -> do` block opener with:
 
 ```haskell
           -- CR 601.2b: the cost to be paid is announced after the modes and
@@ -2143,7 +2143,7 @@ with the rest of the block (the `let sets = …` line onward) re-indented one le
 }
 ```
 
-Register `fireblastPrinting` in `source/test-suite/Pawl/Cards.hs` (record field, `loadPrinting "fireblast"`, record build, `allPrintings`). No deck.
+Register `fireblastPrinting` in `source/test-suite/Parun/Cards.hs` (record field, `loadPrinting "fireblast"`, record build, `allPrintings`). No deck.
 
 - [x] **Step 9: Run the tests to verify they pass**
 
@@ -2155,7 +2155,7 @@ If the headline case's life assertion disagrees, **do not weaken it** — read w
 - [x] **Step 10: Format, lint, and commit**
 
 ```bash
-git add source/library/Pawl source/test-suite/Pawl source/benchmark/Main.hs data/cards/fireblast.json
+git add source/library/Parun source/test-suite/Parun source/benchmark/Main.hs data/cards/fireblast.json
 hooky fix
 git add -u
 hooky run
@@ -2180,7 +2180,7 @@ Co-Authored-By: Claude Opus 4.8 (1M context) <noreply@anthropic.com>"
 Tests only. Both cross a P8 mechanism with an already-landed one: `PermanentOfSubtype` against the layer system (P3a/M3c's layer 4), and the alternative's `Just []` against P7's cost modification. If either fails, it is a bug in Tasks 4–5, not a plan bug — fix the engine, not the test.
 
 **Files:**
-- Test: `source/test-suite/Pawl/CostSpec.hs`
+- Test: `source/test-suite/Parun/CostSpec.hs`
 
 **Interfaces:**
 - Consumes: everything from Tasks 1–5. Produces nothing new.
@@ -2260,12 +2260,12 @@ crossCheckTests cards =
 - [x] **Step 2: Run the tests**
 
 Run: `cabal test`
-Expected: PASS, if Tasks 4 and 5 are correct. A failure here is an **engine** bug: fix `Pawl.Cost` (or whatever the failure names) and say so in the completion note; never adjust an assertion to match the code.
+Expected: PASS, if Tasks 4 and 5 are correct. A failure here is an **engine** bug: fix `Parun.Cost` (or whatever the failure names) and say so in the completion note; never adjust an assertion to match the code.
 
 - [x] **Step 3: Format, lint, and commit**
 
 ```bash
-git add source/test-suite/Pawl/CostSpec.hs
+git add source/test-suite/Parun/CostSpec.hs
 hooky fix
 git add -u
 hooky run
@@ -2298,17 +2298,17 @@ Run each `gh issue create` and record the number it prints. Labels come from CLA
 |---|---|---|---|
 | A | Flashback and casting from the graveyard have no carrier | `gap`, `expires:card-driven` | CR 702.34a is two static abilities, only one of which is a cost: it also needs a `CastFromGraveyard` permission and an "exile it instead of putting it anywhere else it would leave the stack" replacement on P5's machinery. `Card.alternativeCosts` covers only the cost half. Expires on a flashback card (Deep Analysis, Firebolt). |
 | B | Which cost was paid is not recorded | `gap`, `expires:card-driven` | Nothing downstream reads it — Fireblast's alternative has no payoff and no replacement — so `Cast.castSpell` discards the chosen `Cost` after paying it. Adjacent to #94. Expires on the same flashback card, which needs "if the flashback cost was paid". |
-| C | Optional additional costs and kicker (CR 118.8a–b) are unrepresentable | `gap`, `expires:card-driven` | CR 118.8a lets a controller announce "any or all" of a spell's additional costs; `Pawl.Cost.costsFor` announces one whole candidate cost, never a subset of optional components, and `CostComponent` has no optionality. Expires on a kicker or buyback card. |
+| C | Optional additional costs and kicker (CR 118.8a–b) are unrepresentable | `gap`, `expires:card-driven` | CR 118.8a lets a controller announce "any or all" of a spell's additional costs; `Parun.Cost.costsFor` announces one whole candidate cost, never a subset of optional components, and `CostComponent` has no optionality. Expires on a kicker or buyback card. |
 | D | Effect-granted alternative costs have no carrier | `gap`, `expires:card-driven` | `Card.alternativeCosts` is printed-only. "You may cast this without paying its mana cost" granted by another effect is a P7-shaped player permission with no producer. CR 118.6a's second sentence is the rule it would exercise. Expires on an Omniscience-adjacent card. |
-| E | CR 118.10: two components of one cost may count the same permanent | `rules-correctness`, `expires:card-driven` | "Each payment of a cost applies to only one spell, ability, or effect." `Pawl.Cost.canPay` checks each component's payability independently, so a cost with two `Sacrifice` components could count one permanent twice. No card in the pool has two object-consuming components. Expires on one that does. |
-| F | CR 601.2h's player-chosen payment order is elided | `elision`, `expires:card-driven` | `Pawl.Cost.pay` fixes the order as mana-then-printed-order. CR 601.2g puts the mana window first regardless, and no component in this vocabulary changes another's payability, so the order is unobservable. Expires on a component whose payability depends on another's completion (a `{T}` of another permanent). |
+| E | CR 118.10: two components of one cost may count the same permanent | `rules-correctness`, `expires:card-driven` | "Each payment of a cost applies to only one spell, ability, or effect." `Parun.Cost.canPay` checks each component's payability independently, so a cost with two `Sacrifice` components could count one permanent twice. No card in the pool has two object-consuming components. Expires on one that does. |
+| F | CR 601.2h's player-chosen payment order is elided | `elision`, `expires:card-driven` | `Parun.Cost.pay` fixes the order as mana-then-printed-order. CR 601.2g puts the mana window first regardless, and no component in this vocabulary changes another's payability, so the order is unobservable. Expires on a component whose payability depends on another's completion (a `{T}` of another permanent). |
 | G | CR 118.13 hybrid and Phyrexian symbol choices are unrepresentable | `gap`, `expires:card-driven` | `ManaSymbol` has three inhabitants and none is payable two ways, so CR 118.13a's announcement-time choice has nothing to choose. Expires on a hybrid or Phyrexian card. |
-| H | CR 118.12 costs paid during resolution have no seam | `gap`, `expires:card-driven` | "[Do something]. If [a player] [does/doesn't/can't], [effect]" makes the action a cost paid **when the spell resolves**, which is not an announcement cost and does not travel through `Pawl.Cost.pay`. Expires on an unless- or if-you-do card. |
+| H | CR 118.12 costs paid during resolution have no seam | `gap`, `expires:card-driven` | "[Do something]. If [a player] [does/doesn't/can't], [effect]" makes the action a cost paid **when the spell resolves**, which is not an announcement cost and does not travel through `Parun.Cost.pay`. Expires on an unless- or if-you-do card. |
 | I | Discard-as-cost and exile-from-zone components do not exist | `gap`, `expires:card-driven` | VOCAB on the axis P8 built: each is one `CostComponent` constructor, one `canPayComponent` arm and one `payComponent` arm. CR 601.2f names discarding cards explicitly. Expires on the card that prints one. |
 | J | A variable (`Quantity`) life payment is unrepresentable | `gap`, `expires:card-driven` | `CostComponent.PayLife` takes a `Natural`. A `Quantity` needs a binding environment, which CR 601.2f runs before. Expires on a "pay X life" card. |
 | K | CR 118.6a's alternative-cost-on-an-unpayable-cost path has no producer | `gap`, `expires:card-driven` | The mechanism is built — each alternative carries its own mana part, independent of the printed one — but no card in the pool has both no mana cost and an alternative cost. Expires on Ancestral Vision or Evermind. |
 | L | CR 118.8c's hidden-zone "if able" exception is not implemented | `gap`, `expires:card-driven` | No effect instructs a player to cast a spell "if able", so the exception for a mandatory additional cost involving cards of a stated quality in a hidden zone has nothing to except. Expires on such an effect. |
-| M | `PermanentCriterion` is matched at two sites | `elision`, `expires:milestone` | `Pawl.Cost.matchesCriterion` and `Pawl.Replacement.matchesPermanent` both case on the family. Sharing one would make `Pawl.Cost` import `Pawl.Replacement`, which becomes a module cycle the moment #72's CR 614.12b payable-cost check lands there. Four lines, the same shape `genericOf` already duplicates between `Pawl.Mana` and `Pawl.Cost`. Expires on **P9**, whose filter language merges `PermanentCriterion`, `CardCriterion` and `SpellCriterion` (siblings of #38/#39/#40). |
+| M | `PermanentCriterion` is matched at two sites | `elision`, `expires:milestone` | `Parun.Cost.matchesCriterion` and `Parun.Replacement.matchesPermanent` both case on the family. Sharing one would make `Parun.Cost` import `Parun.Replacement`, which becomes a module cycle the moment #72's CR 614.12b payable-cost check lands there. Four lines, the same shape `genericOf` already duplicates between `Parun.Mana` and `Parun.Cost`. Expires on **P9**, whose filter language merges `PermanentCriterion`, `CardCriterion` and `SpellCriterion` (siblings of #38/#39/#40). |
 | N | `Prompt.ChooseSacrifices` cannot express CR 118.10's per-component scoping | `gap`, `expires:card-driven` | The prompt offers the candidates for **one** component and is issued once per component, so two components of one cost each see the full candidate list. The payload would need to carry what an earlier component already consumed. The prompt-side face of E. Expires with E. |
 
 - [x] **Step 2: Comment on #90 rather than re-filing it**
@@ -2316,7 +2316,7 @@ Run each `gh issue create` and record the number it prints. Labels come from CLA
 Departure 1 changes what #90 says. Add a comment:
 
 ```bash
-gh issue comment 90 --body "P8 deliberately did NOT give this a door. Routing an activated ability's cost through Pawl.Cost.total would be a rules REGRESSION, not a no-op: PlayerEffect.matchesSpell classifies an OBJECT, not a spell (SpellCriterion.NoncreatureSpell is 'not a creature card type on the projection'), so a noncreature PERMANENT matches it -- and Thalia, Guardian of Thraben would tax Mindslaver's {4} activation to {5}. Thalia taxes noncreature SPELLS. Pawl.Activate therefore calls Cost.canPay/Cost.pay on the ability's PRINTED cost, and Pawl.CostSpec pins the regression with a Thalia x Mindslaver case. Fixing this needs a spell-vs-ability discriminator on the criterion side (P7's surface), not a call-site change."
+gh issue comment 90 --body "P8 deliberately did NOT give this a door. Routing an activated ability's cost through Parun.Cost.total would be a rules REGRESSION, not a no-op: PlayerEffect.matchesSpell classifies an OBJECT, not a spell (SpellCriterion.NoncreatureSpell is 'not a creature card type on the projection'), so a noncreature PERMANENT matches it -- and Thalia, Guardian of Thraben would tax Mindslaver's {4} activation to {5}. Thalia taxes noncreature SPELLS. Parun.Activate therefore calls Cost.canPay/Cost.pay on the ability's PRINTED cost, and Parun.CostSpec pins the regression with a Thalia x Mindslaver case. Fixing this needs a spell-vs-ability discriminator on the criterion side (P7's surface), not a call-site change."
 ```
 
 - [x] **Step 3: Sweep the `(#N)` placeholders**
@@ -2327,18 +2327,18 @@ Replace each hit with the matching issue number, keeping the comment to what is 
 
 | File | Placeholder | Issue |
 |---|---|---|
-| `Pawl/Cost.hs`, `pay`'s comment | the fixed payment order | F |
-| `Pawl/Cost.hs`, `canPayComponent`'s `Sacrifice` arm | CR 118.10 across two components | E |
-| `Pawl/Cost.hs`, `matchesCriterion`'s comment | the two matching sites | M |
-| `Pawl/Replacement.hs`, `matchesPermanent`'s new arm | the same, from the other side | M |
-| `Pawl/Type/CostComponent.hs`, on `PayLife` | the `Natural`, not a `Quantity` | J |
-| `Pawl/Type/Card.hs`, on `alternativeCosts` | printed-only, no granting effect | D |
+| `Parun/Cost.hs`, `pay`'s comment | the fixed payment order | F |
+| `Parun/Cost.hs`, `canPayComponent`'s `Sacrifice` arm | CR 118.10 across two components | E |
+| `Parun/Cost.hs`, `matchesCriterion`'s comment | the two matching sites | M |
+| `Parun/Replacement.hs`, `matchesPermanent`'s new arm | the same, from the other side | M |
+| `Parun/Type/CostComponent.hs`, on `PayLife` | the `Natural`, not a `Quantity` | J |
+| `Parun/Type/Card.hs`, on `alternativeCosts` | printed-only, no granting effect | D |
 
 Add citations at three more sites this plan does not pre-place — write them now:
 
-- `Pawl/Type/Prompt.hs`, on `ChooseSacrifices`: the prompt is per-component and cannot express what an earlier component consumed (N).
-- `Pawl/Cast.hs`, in `castSpell` where `chosenCost` is discarded after payment: which cost was paid is not recorded (B).
-- `Pawl/Type/CostComponent.hs`, on the type's own comment: discard- and exile-as-cost components do not exist (I).
+- `Parun/Type/Prompt.hs`, on `ChooseSacrifices`: the prompt is per-component and cannot express what an earlier component consumed (N).
+- `Parun/Cast.hs`, in `castSpell` where `chosenCost` is discarded after payment: which cost was paid is not recorded (B).
+- `Parun/Type/CostComponent.hs`, on the type's own comment: discard- and exile-as-cost components do not exist (I).
 
 Confirm (do not re-file): `#89` already covers the hand-projection reading in `castSpell` and its comment is still accurate; `#94`, `#91`, `#88`, `#56` and `#12` are untouched and still open; `#38`/`#39`/`#40` are cited by M and are **not** retired.
 
@@ -2350,19 +2350,19 @@ Expected: no output.
 Run each and confirm the expected result:
 
 ```bash
-# The FIRST INVARIANT's audit: Pawl.Cost is the sole rules home of casing on this
-# axis. Pawl.Type.* modules only declare, Pawl.Codec only encodes.
+# The FIRST INVARIANT's audit: Parun.Cost is the sole rules home of casing on this
+# axis. Parun.Type.* modules only declare, Parun.Codec only encodes.
 grep -rln 'CostComponent\.\(TapThis\|SacrificeThis\|PayLife\|Sacrifice\)' source/library/ \
-  | grep -v 'Pawl/Cost.hs\|Pawl/Codec.hs\|Pawl/Type/'                  # no output
+  | grep -v 'Parun/Cost.hs\|Parun/Codec.hs\|Parun/Type/'                  # no output
 
 # The projection is read from and never edited: a cost is not a characteristic.
 # HEAD~6 is the commit before Task 1 (six task commits are in at this point).
-git diff --stat HEAD~6 -- source/library/Pawl/Projection.hs source/library/Pawl/Type/Layer.hs \
-  source/library/Pawl/Type/Modification.hs source/library/Pawl/Sba.hs \
-  source/library/Pawl/PlayerEffect.hs                                   # no output
+git diff --stat HEAD~6 -- source/library/Parun/Projection.hs source/library/Parun/Type/Layer.hs \
+  source/library/Parun/Type/Modification.hs source/library/Parun/Sba.hs \
+  source/library/Parun/PlayerEffect.hs                                   # no output
 
-# Pawl.Mana keeps pools, production and spending: only its callers changed.
-git diff --stat HEAD~6 -- source/library/Pawl/Mana.hs                   # no output
+# Parun.Mana keeps pools, production and spending: only its callers changed.
+git diff --stat HEAD~6 -- source/library/Parun/Mana.hs                   # no output
 
 # The retired types are gone, name and all.
 grep -rn 'AbilityCost\|AdditionalCost\|TapSelf\|SacrificeSelf' source/ data/   # no output
@@ -2388,8 +2388,8 @@ One entry, in the file's established voice, recording what P8 *established* — 
 - **the three gate cards and what each falsified** — Greed: CR 118.3's own worked example, a payability check that ignores the amount passes at 20 life and fails at 1, and at 2 life the payment is legal and *loses the game* (CR 704.5a), which is what proves paying life is a real life-total change; Village Rites: CR 601.2f puts an additional cost **inside** the total cost, so with no creature the spell is not castable at all, and the payment runs through `Event.sacrifice` so Khabál Ghoul counts it; Fireblast: two **tapped** Mountains and an empty pool cast a `{4}{R}{R}` spell that deals 4 — "castability is mana affordability" and "an alternative cost is a different `ManaCost`" both die at once;
 - **the structural fact the phase rests on** — CR 118.6's unpayable/`{0}` distinction is carried in the type, and every existing ability migrated `Nothing → Just (MkManaCost [])` in the card files and in the fixtures. Name the two cross-checks that cash it: Blood Moon proves `PermanentOfSubtype` reads the projection, and Thalia proves the alternative's `Just []` is a real, taxable `{0}` (CR 118.9d);
 - **the correction to the spec** — §2.9's "ability costs route through `Cost.total` too, nothing changes observably" is false. `PlayerEffect.matchesSpell` classifies an object, so Thalia would tax Mindslaver's activation. Ability costs are paid at their printed value, #90 was commented rather than closed, and a regression test pins it;
-- **what was added** — `Pawl.Type.Cost`, `Pawl.Type.CostComponent`, `Pawl.Type.Payment`; `Pawl.Cost`'s `costsFor`, `total` (now `Cost -> Cost`), `canPay`, `canPayComponent`, `pay`, `payComponents`, `payComponent`, `requiresTapSymbol`, `substituteX`, `hasVariable`, `matchesCriterion`, `sacrificeCandidates`, `unpayable`, `firstOffered`; `Card.additionalCosts` and `Card.alternativeCosts`; `PermanentCriterion.PermanentOfSubtype`; `Prompt.ChooseCost`/`ChooseSacrifices` and their responses; `Pawl.Cast.payableCost`; three card files; `Pawl.CostSpec`;
-- **what was retired** — `Pawl.Type.AbilityCost`, `Pawl.Type.AdditionalCost`, `Pawl.Cast.costOf`, `Pawl.Activate.canPayAdditional`/`payAdditional`;
+- **what was added** — `Parun.Type.Cost`, `Parun.Type.CostComponent`, `Parun.Type.Payment`; `Parun.Cost`'s `costsFor`, `total` (now `Cost -> Cost`), `canPay`, `canPayComponent`, `pay`, `payComponents`, `payComponent`, `requiresTapSymbol`, `substituteX`, `hasVariable`, `matchesCriterion`, `sacrificeCandidates`, `unpayable`, `firstOffered`; `Card.additionalCosts` and `Card.alternativeCosts`; `PermanentCriterion.PermanentOfSubtype`; `Prompt.ChooseCost`/`ChooseSacrifices` and their responses; `Parun.Cast.payableCost`; three card files; `Parun.CostSpec`;
+- **what was retired** — `Parun.Type.AbilityCost`, `Parun.Type.AdditionalCost`, `Parun.Cast.costOf`, `Parun.Activate.canPayAdditional`/`payAdditional`;
 - **the six departures** listed at the top of this plan, with their reasons — especially that `Cost.pay` is transactional because a rejected `ChooseSacrifices` would otherwise leave mana spent and a creature dead;
 - **two prompts were added, each elided only when forced** — `ChooseCost` when one candidate is payable, `ChooseSacrifices` when the candidates exactly equal the count; three payable Mountains and a count of two is a real choice and is asked. The one genuine elision is CR 601.2h's payment order (issue F);
 - **tracking** — closes **#4** (M4.5 P8) and the *payment* half of GAP-Co, which P7's spec left explicitly open; #90 commented, not closed; #38/#39/#40 cited and not retired; fourteen new issues filed (A–N above) with their real numbers;
@@ -2410,7 +2410,7 @@ One entry, in the file's established voice, recording what P8 *established* — 
 - [x] **Step 8: Commit**
 
 ```bash
-git add docs/progress.md CLAUDE.md docs/superpowers/specs/2026-07-20-m4.5-closed-half-gaps-design.md source/library/Pawl
+git add docs/progress.md CLAUDE.md docs/superpowers/specs/2026-07-20-m4.5-closed-half-gaps-design.md source/library/Parun
 hooky fix
 git add -u
 hooky run

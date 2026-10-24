@@ -2,7 +2,7 @@
 
 ## The problem
 
-Nearly every Pawl type has an `encode`/`decode` pair in `pawl:codec` and no
+Nearly every Parun type has an `encode`/`decode` pair in `parun:codec` and no
 machine-readable description of what it reads. A card author has the Haskell or
 nothing. #1225 asks for a JSON schema alongside the pair, and for the three to
 travel together as one value:
@@ -15,7 +15,7 @@ data Codec a = MkCodec
   }
 ```
 
-That reshapes every module in `pawl:codec`. This design does seven of them and
+That reshapes every module in `parun:codec`. This design does seven of them and
 stops, so the shape is judged on real types before it is copied onto the rest.
 
 ## Scope
@@ -25,7 +25,7 @@ schema from a record's fields and a sum's arms, and seven converted modules
 covering every shape the rest will need -- scalar newtype, nullary enum, sum
 with payload arms, and a record with both a required and a defaulted field.
 
-Out: the rest of `pawl:codec`; schema validation in the test suite; any command
+Out: the rest of `parun:codec`; schema validation in the test suite; any command
 that emits a schema. Each gets an issue.
 
 The slice is deliberately non-recursive, so `define`'s cycle-breaking is built
@@ -46,32 +46,32 @@ spec
           codec    CardName, PhasePattern, ... and nothing else
 ```
 
-`pawl:json-schema` sits on `pawl:json-pointer` rather than beside it: a `$ref` is
+`parun:json-schema` sits on `parun:json-pointer` rather than beside it: a `$ref` is
 a pointer, and the library that already models one correctly is the one that
 should build it. Like its neighbour it is an RFC-adjacent format over
-`Pawl.Json.Value`, with no knowledge of Pawl's types or the codec's conventions.
+`Parun.Json.Value`, with no knowledge of Parun's types or the codec's conventions.
 
-`pawl:json-codec` holds the shape of a codec and the generic helpers.
-`pawl:codec` is left holding codecs for `pawl:types` types, one module each,
+`parun:json-codec` holds the shape of a codec and the generic helpers.
+`parun:codec` is left holding codecs for `parun:types` types, one module each,
 which is what its name has always claimed.
 
-Each stanza needs its scope comment in `pawl.cabal` and its row in
+Each stanza needs its scope comment in `parun.cabal` and its row in
 `CLAUDE.md`'s table.
 
-### `Pawl.Codec.Common` moves
+### `Parun.Codec.Common` moves
 
-`Pawl.JsonCodec.Common` is `Pawl.Codec.Common` moved verbatim. It has to move:
+`Parun.JsonCodec.Common` is `Parun.Codec.Common` moved verbatim. It has to move:
 `Fields.object` and `Arm.tagged` need `object`, `asObject`, `field`, `tagged`
 and `asTagged`, so the module cannot sit above `json-codec`. Its own header
-already says nothing in it names a `Pawl.Types` type, and its imports still bear
+already says nothing in it names a `Parun.Types` type, and its imports still bear
 that out, so the move is a rename with no body changes.
 
 253 files import it, every one as the identical line, and the alias stays
 `Common`:
 
 ``` hs
--import qualified Pawl.Codec.Common as Common
-+import qualified Pawl.JsonCodec.Common as Common
+-import qualified Parun.Codec.Common as Common
++import qualified Parun.JsonCodec.Common as Common
 ```
 
 The only other mentions are five lines, in `Common.hs`, `CommonSpec.hs` and the
@@ -82,15 +82,15 @@ scripted edit.
 ## The schema
 
 ``` hs
--- Pawl.JsonSchema.Schema
+-- Parun.JsonSchema.Schema
 newtype Schema = MkSchema { unwrap :: Value.Value }
 
--- Pawl.JsonSchema.Name
+-- Parun.JsonSchema.Name
 newtype Name = MkName { unwrap :: Text.Text }
 
 typeName :: (Typeable.Typeable a) => Proxy.Proxy a -> Name
 
--- Pawl.JsonSchema.Define
+-- Parun.JsonSchema.Define
 type SchemaM = State.State (Map.Map Name.Name (Maybe Schema.Schema))
 
 define :: Name.Name -> SchemaM Schema.Schema -> SchemaM Schema.Schema
@@ -115,7 +115,7 @@ and the newtype is what keeps it from being confused with an arbitrary value.
   "$defs": { "PhasePattern": {...}, "PhaseSelector": {...}, ... } }
 ```
 
-Every named `Pawl.Types` type gets a `$defs` entry, including scalars like
+Every named `Parun.Types` type gets a `$defs` entry, including scalars like
 `PlayerId`. That is the documentation payload: a reader who sees
 `{"$ref": "#/$defs/PlayerId"}` learns the name of the thing, which inlining
 `{"type": "integer"}` would throw away. Only structural wrappers -- `Maybe`,
@@ -124,7 +124,7 @@ arrays -- inline.
 ### Names are derived, not written
 
 A definition's name comes from `Typeable`, never from a string literal. GHC has
-auto-derived `Typeable` for every type since 7.10, so this costs `pawl:types`
+auto-derived `Typeable` for every type since 7.10, so this costs `parun:types`
 nothing -- no `deriving` clause, no edit.
 
 `typeName` `show`s the `TypeRep`. `show` writes an application with a space,
@@ -132,7 +132,7 @@ nothing -- no `deriving` clause, no edit.
 space is percent-encoded there. Substituting a legal character for the space
 instead would render `Face Bar` and `Face_Bar` as one name.
 
-Names are unqualified. `Pawl.Types` is one type per module with the module named
+Names are unqualified. `Parun.Types` is one type per module with the module named
 for the type, so base names are unique by construction, and qualification would
 lengthen every `$ref` in the document to buy nothing. `tyConModule` is there if
 that convention ever breaks.
@@ -146,9 +146,9 @@ which the slice does not reach.
 
 `tyConName` returns whatever the type constructor is called, verbatim. Haskell
 admits operator type constructors, so `(:~/)` is a nameable type and `":~/"` is a
-reachable definition name -- carrying both characters RFC 6901 reserves. Pawl
+reachable definition name -- carrying both characters RFC 6901 reserves. Parun
 defines no such type today and has no plans to, but `Name` is derived from the
-whole language, not from Pawl's habits.
+whole language, not from Parun's habits.
 
 So the two positions are written differently, and `Define` keeps them apart:
 
@@ -166,14 +166,14 @@ So the two positions are written differently, and `Define` keeps them apart:
   A `Token` stores unescaped text and `Pointer.encode` escapes on the way out,
   `~` before `/`, which is the ordering a hand-rolled escape gets wrong -- a `/`
   rewritten to `~1` otherwise has its own `~` rewritten again. That is already
-  written, documented and tested in `pawl:json-pointer`, and this is what that
+  written, documented and tested in `parun:json-pointer`, and this is what that
   library is for.
 
 `Face Card` reaches the same machinery: `typeName` shows the `TypeRep`, space and
 all, and the space is percent-encoded on the way into the fragment. Nothing
 substitutes a character for another, so two types cannot collide on one name.
 
-### The new `pawl:uri`
+### The new `parun:uri`
 
 RFC 6901 section 6 defines a second representation of a pointer -- the URI
 fragment identifier -- which prefixes `#` and percent-encodes what RFC 3986
@@ -182,27 +182,27 @@ Haskell operator character, plus the space in `Face Card`. `$ref` takes that
 form, not the plain one.
 
 The percent-encoding is URI work rather than JSON Pointer work, so it is
-`Pawl.Uri.Fragment.encode` in a `pawl:uri` of its own, over octets rather than
+`Parun.Uri.Fragment.encode` in a `parun:uri` of its own, over octets rather than
 over a `Pointer`. `Define` composes the two and writes the `#`. Neither escape
 undoes the other: `~` and `/` are both legal fragment octets, so `Pointer.encode`'s
 `~0` and `~1` pass through untouched.
 
-`Pawl.JsonSchema.Schema` exports generic constructors only: `string`, `integer`,
-`natural`, `object`, `oneOf`, `constant`, `nullable`, `withDefault`. Pawl's
+`Parun.JsonSchema.Schema` exports generic constructors only: `string`, `integer`,
+`natural`, `object`, `oneOf`, `constant`, `nullable`, `withDefault`. Parun's
 tagged-object convention is not a JSON Schema concept and is composed from these
 in `json-codec`, where it belongs.
 
 ## The bundle
 
 ``` hs
--- Pawl.JsonCodec.Codec
+-- Parun.JsonCodec.Codec
 data Codec a = MkCodec
   { encode :: a -> Value.Value,
     decode :: Value.Value -> Either Text.Text a,
     schema :: Define.SchemaM Schema.Schema
   }
 
--- Pawl.JsonCodec.Common
+-- Parun.JsonCodec.Common
 maybe :: Codec.Codec a -> Codec.Codec (Maybe a)
 ```
 
@@ -211,7 +211,7 @@ what a later change would be most expensive to alter, since every `codec` value
 in the tree is written against it, and recursion is the known reason the plain
 form fails.
 
-`Pawl.JsonCodec.Codec` holds the type and nothing else. Combinators of both
+`Parun.JsonCodec.Codec` holds the type and nothing else. Combinators of both
 shapes live in `Common`, which imports it: `Common.maybe` wraps the
 `encodeMaybe`/`decodeMaybe` pair rather than reimplementing it, and
 `assertCodec` needs the record to read `encode` and `decode` off. Siting the
@@ -228,7 +228,7 @@ finished.
 ## Records: derived, through `ApplicativeDo`
 
 ``` hs
--- Pawl.JsonCodec.Fields
+-- Parun.JsonCodec.Fields
 data Fields o a = MkFields
   { encodeFields :: o -> [Pair.Pair Value.Value],
     decodeFields :: [Pair.Pair Value.Value] -> Either Text.Text a,
@@ -252,7 +252,7 @@ a)` is contravariant in `o` and is a lawful monad -- the missing `a` is the
 actual obstruction, and it is load-bearing below.
 
 ``` hs
--- Pawl.Codec.PhasePattern
+-- Parun.Codec.PhasePattern
 codec :: Codec.Codec PhasePattern.PhasePattern
 codec = Fields.object $ do
   p <- Fields.required "whichPhase" PhaseSelector.codec PhasePattern.whichPhase
@@ -283,7 +283,7 @@ relies on is checked, not assumed.
 ## Sums: schema derived, `encode` written out
 
 ``` hs
--- Pawl.JsonCodec.Arm
+-- Parun.JsonCodec.Arm
 data Arm a where
   Nullary :: String -> a -> Arm a
   Payload :: String -> Codec.Codec b -> (b -> a) -> Arm a
@@ -295,7 +295,7 @@ tagged :: (Typeable.Typeable a) => (a -> Value.Value) -> [Arm a] -> Codec.Codec 
 hand-written total `case`, byte-identical to today's `toJson` body.
 
 That asymmetry is deliberate. Deriving `encode` too needs an `a -> Maybe b`
-projection per arm, and then a constructor added to `Pawl.Types.PhaseSelector`
+projection per arm, and then a constructor added to `Parun.Types.PhaseSelector`
 compiles clean and silently stops being encodable. Today's `case` is
 exhaustiveness-checked, and `-Wincomplete-patterns` catching a new constructor is
 worth more than collapsing a table that is already written twice. CLAUDE.md's
@@ -394,14 +394,14 @@ It asserts nothing about content, so editing a schema never edits a test.
 Schemas themselves are reviewed by eye from the PR body, which carries all
 seven rendered.
 
-`Pawl.JsonSchema.DefineSpec` is the one place a literal is cheap and stable: a
+`Parun.JsonSchema.DefineSpec` is the one place a literal is cheap and stable: a
 synthetic self-referential `define`, asserting the cycle breaks into a `$ref`
 instead of diverging. That tests the machinery, not any type's schema.
-`Pawl.JsonSchema.NameSpec` pins the rendering rule the same way: a bare type
+`Parun.JsonSchema.NameSpec` pins the rendering rule the same way: a bare type
 gives `PhasePattern`, an applied one `Face Card`, and a nested one parentheses.
-Escaping itself is `pawl:json-pointer`'s, already covered by `TokenSpec`, and is
-not re-tested here; percent-encoding is `pawl:uri`'s, covered by
-`Pawl.Uri.FragmentSpec`. What `DefineSpec` adds is that the two are composed correctly --
+Escaping itself is `parun:json-pointer`'s, already covered by `TokenSpec`, and is
+not re-tested here; percent-encoding is `parun:uri`'s, covered by
+`Parun.Uri.FragmentSpec`. What `DefineSpec` adds is that the two are composed correctly --
 a `MkName ":~/"` giving the `$defs` key `:~/` and the `$ref` `#/$defs/:~0~1`.
 That uses a hand-built `Name` rather than a real operator-named type: that a
 `TypeRep` renders its operator verbatim is GHC's contract, and asserting it would
@@ -420,7 +420,7 @@ rejected for now -- see *Alternatives rejected*.
   plus `Common.hs`, `CommonSpec.hs` and `Main.hs`.
 - `ormolu --mode check $(git ls-files '*.hs')` repo-wide, since `hooky fix` only
   reaches staged files.
-- `cabal-gild pawl.cabal` directly, since modules are added and moved.
+- `cabal-gild parun.cabal` directly, since modules are added and moved.
 - `-Werror` blind spots to grep and report on: the codec's `Common` fallthroughs
   and any `{}`/`_` pattern over `Value.Value` that a new schema constructor
   could slip past.
@@ -441,18 +441,18 @@ covers it.
 
 ## Deferred, each with an issue
 
-- The rest of `pawl:codec`, including the two risks above and the `Common`
+- The rest of `parun:codec`, including the two risks above and the `Common`
   drain.
 - Schema validation in the test suite -- ajv, or a Haskell validator over the
   keyword subset -- so a schema that disagrees with its encoder fails.
-- Emitting a schema: a `pawl` subcommand, a checked-in schema file, or both.
+- Emitting a schema: a `parun` subcommand, a checked-in schema file, or both.
   This is what #1225 is ultimately for; the slice only makes it possible.
 
 ## Alternatives rejected
 
 - **A `ToSchema` class derived through `GHC.Generics`**, as Scrod does. Neither
   `DeriveGeneric` nor `DataKinds` is on `.hlint.yaml`'s allowlist, and the whole
-  codec is hand-written per module by design. Pawl writes schemas the way it
+  codec is hand-written per module by design. Parun writes schemas the way it
   writes codecs.
 - **`schema :: Schema`, deferring `SchemaM`.** Smaller now; changes the field
   type of every codec in the tree later.
@@ -472,9 +472,9 @@ covers it.
   parameterised types with no answer. `Typeable` costs one extension and removes
   the argument entirely.
 - **Fully qualified names.** Collision-proof without leaning on one-type-per-
-  module, but `#/$defs/Pawl.Types.PhasePattern.PhasePattern` in every reference,
+  module, but `#/$defs/Parun.Types.PhasePattern.PhasePattern` in every reference,
   with the module name repeating the type name, for a collision the convention
   already prevents.
-- **Escaping `$ref` inside `json-schema`.** `pawl:json-pointer` was written
+- **Escaping `$ref` inside `json-schema`.** `parun:json-pointer` was written
   before the schema for this, and gets the `~`-before-`/` ordering right. A
   second implementation would be a second thing to get wrong.
