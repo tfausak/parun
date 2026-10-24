@@ -959,9 +959,10 @@ namedSubjects source name gs =
         Just affected
           | rowSource == source,
             RuleAbilities.Engine.nameOf restriction == Just name ->
-              filter
-                (\candidate -> Projection.affectsOnFramed (amountFrame gs row) pcs grants source candidate (if null changes then affected else Projection.rewriteAffected changes affected) gs)
-                candidates
+              let frame = amountFrame gs row
+               in filter
+                    (\candidate -> Projection.affectsOnFramed frame pcs grants source candidate (if null changes then affected else Projection.rewriteAffected changes affected) gs)
+                    candidates
         _ -> []
       -- CR 508.5a: a gate naming the defending player is read per seat, so a row
       -- restricts its subjects when it is in force at ANY defending seat -- some
