@@ -4,6 +4,7 @@ import qualified Data.Sequence as Seq
 import qualified Pawl.Types.LoopMembers as LoopMembers
 import qualified Pawl.Types.ObjectRef as ObjectRef
 import qualified Pawl.Types.PayGate as PayGate
+import qualified Pawl.Types.PlayerRef as PlayerRef
 import qualified Pawl.Types.SlotName as SlotName
 
 -- | CR 608.2f's per-object loop: the objects and players the ObjectRef names,
@@ -56,8 +57,9 @@ data ForEach effect = MkForEach
     --
     -- Rule 608.2f's own example is the True: Soulfire Eruption's player "can't
     -- exile the top card of their library multiple times at the same time".
-    -- Mutalith Vortex Beast is the other one in the pool, by CR 121.2 -- cards
-    -- are drawn one at a time.
+    -- Mutalith Vortex Beast is another, by CR 121.2 -- cards are drawn one at a
+    -- time -- and Thieves' Auction a third, each player choosing from what the
+    -- player before left.
     --
     -- Not implemented: rule 608.2f's unit is the ACTION, and CR 608.2e says the
     -- same for the order, so a body of two instructions owes an answer per
@@ -80,6 +82,11 @@ data ForEach effect = MkForEach
     -- offers are the choices and the body the action (CR 608.2e). Nothing is the
     -- ungated loop. PayGate.offeredAt is not read here: a loop offers its own.
     -- Proved by Pawl.ResolveSpec's "an offer per member" group (Cleansing).
-    payGate :: Maybe PayGate.PayGate
+    payGate :: Maybe PayGate.PayGate,
+    -- | The player the walk over the members starts with, then on in turn
+    -- order -- Thieves' Auction's "starting with you". Nothing is CR 101.4's
+    -- APNAP order. Proved by the scenario "Thieves' Auction's \"starting with
+    -- you\"" (thieves-auction-cast-by-a-nonactive-player-starts-with-its-caster).
+    startingWith :: Maybe PlayerRef.PlayerRef
   }
   deriving (Eq, Ord, Show)

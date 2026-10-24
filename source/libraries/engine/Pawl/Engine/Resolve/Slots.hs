@@ -121,6 +121,7 @@ import qualified Pawl.Types.Effect as Effect
 import qualified Pawl.Types.EntersWith as EntersWith
 import qualified Pawl.Types.EntryAttack as EntryAttack
 import qualified Pawl.Types.EntryBlock as EntryBlock
+import qualified Pawl.Types.EntryController as EntryController
 import qualified Pawl.Types.EntryPrice as EntryPrice
 import qualified Pawl.Types.EntryR as EntryR
 import qualified Pawl.Types.EntryRewrite as EntryRewrite
@@ -388,6 +389,12 @@ tokenBoxQuantities card =
 -- Foliage), a CreateCopy its copies (Mirror Match), and a MoveToZone the card it
 -- moved, from moveOne (Aetherplasm). What stays inert is the rider on a
 -- destination other than the battlefield, which Pawl.CardSpec lints.
+-- CR 110.2a's instructed player, the one reference an entry rider holds.
+riderPlayerRefs :: EntryRiders.EntryRiders count ability -> [PlayerRef]
+riderPlayerRefs riders = case EntryRiders.under riders of
+  EntryController.Instructed who -> [who]
+  EntryController.Owner -> []
+
 riderSlots :: EntryRiders.EntryRiders count ability -> Map.Map SlotName SlotArity
 riderSlots riders =
   let attacked = case EntryRiders.attacking riders of
@@ -918,7 +925,7 @@ effectObjectRefs effect = case effect of
   Effect.MakeForetold x -> [MakeForetold.cards x]
   Effect.MakeWarped ref -> [ref]
   -- CR 608.2f's set, swept once; the body's own refs are the caller's recursion.
-  Effect.ForEach (ForEach.MkForEach ref _ _ _ _ _) -> [ref]
+  Effect.ForEach (ForEach.MkForEach ref _ _ _ _ _ _) -> [ref]
   Effect.ForEachNumber {} -> []
   Effect.Repeat {} -> []
   Effect.RepeatIf {} -> []
@@ -974,9 +981,10 @@ effectPlayerRefs effect = case effect of
   Effect.AttachTargetToEach {} -> []
   Effect.AttachBound {} -> []
   Effect.AttachAll {} -> []
-  Effect.MoveToZone move -> case MoveToZone.placement move of
-    LibraryPlacement.ArrangedBy arrival -> [ArrangedArrival.chooser arrival]
-    _ -> []
+  Effect.MoveToZone move ->
+    riderPlayerRefs (MoveToZone.riders move) <> case MoveToZone.placement move of
+      LibraryPlacement.ArrangedBy arrival -> [ArrangedArrival.chooser arrival]
+      _ -> []
   Effect.Draw (Draw.MkDraw ref _ _) -> [ref]
   Effect.Mill (Mill.MkMill ref _ _ _) -> [ref]
   Effect.Reveal {} -> []
@@ -1151,7 +1159,7 @@ effectPlayerRefs effect = case effect of
   Effect.MakePlotted {} -> []
   Effect.MakeForetold {} -> []
   Effect.MakeWarped {} -> []
-  Effect.ForEach {} -> []
+  Effect.ForEach loop -> Maybe.maybeToList (ForEach.startingWith loop)
   Effect.ForEachNumber {} -> []
   Effect.Repeat (Repeat.MkRepeat chooser _ _) -> [chooser]
   Effect.RepeatIf {} -> []
@@ -1576,7 +1584,7 @@ slotsOf effect = joinTwo (joinTwo (joinSlots (fmap objectRefSlots (effectObjectR
   -- such reads would otherwise be judged inert before the loop has run
   -- (Pawl.Engine.Resolve.clauseIsInert, Bruna, Light of Alabaster's "you may
   -- attach to it any number of Auras").
-  Effect.ForEach (ForEach.MkForEach _ _ slot body _ gate) -> joinTwo (maybe Map.empty payGateSlots gate) (sequenceSlots (Set.singleton slot) (Foldable.toList body))
+  Effect.ForEach (ForEach.MkForEach _ _ slot body _ gate _) -> joinTwo (maybe Map.empty payGateSlots gate) (sequenceSlots (Set.singleton slot) (Foldable.toList body))
   Effect.ForEachNumber (ForEachNumber.MkForEachNumber upTo slot body) -> joinTwo (quantitySlots upTo) (sequenceSlots (Set.singleton slot) (Foldable.toList body))
   Effect.Repeat (Repeat.MkRepeat _ body gate) -> joinSlots (maybe Map.empty conditionSlots gate : fmap slotsOf (Foldable.toList body))
   -- What the process and the "if" read, and the condition itself: a read of
@@ -2317,7 +2325,7 @@ ownSlotsAreExhaustive effect = case effect of
   Effect.GrantPlayFromExile grant -> durationSlotsAreExhaustive (GrantPlayFromExile.duration grant) && all conditionSlotsAreExhaustive (GrantPlayFromExile.condition grant)
   -- PreventNextDamage's answer for the body, plus its own ref's: a PlayerRef
   -- nested in the DEPTH is one slotsOf cannot see.
-  Effect.ForEach (ForEach.MkForEach _ _ _ body _ gate) -> all slotsAreExhaustive body && all (all Quantity.slotsAreExhaustive . PayGate.perEach) gate
+  Effect.ForEach (ForEach.MkForEach _ _ _ body _ gate _) -> all slotsAreExhaustive body && all (all Quantity.slotsAreExhaustive . PayGate.perEach) gate
   Effect.ForEachNumber (ForEachNumber.MkForEachNumber upTo _ body) -> Quantity.slotsAreExhaustive upTo && all slotsAreExhaustive body
   Effect.Repeat (Repeat.MkRepeat _ body gate) -> all conditionSlotsAreExhaustive gate && all slotsAreExhaustive body
   Effect.RepeatIf (RepeatIf.MkRepeatIf process condition ifHolds) -> conditionSlotsAreExhaustive condition && all slotsAreExhaustive (process <> ifHolds)
@@ -2572,7 +2580,7 @@ readsX =
         Effect.OfferNotedCopy {} -> False
         Effect.GrantPlayFromExile {} -> False
         -- CR 608.2f's body is an effect list like any other, so an X inside it counts.
-        Effect.ForEach (ForEach.MkForEach _ _ _ body _ _) -> readsX (Foldable.toList body)
+        Effect.ForEach (ForEach.MkForEach _ _ _ body _ _ _) -> readsX (Foldable.toList body)
         Effect.ForEachNumber (ForEachNumber.MkForEachNumber upTo _ body) -> Quantity.readsX upTo || readsX (Foldable.toList body)
         Effect.Repeat (Repeat.MkRepeat _ body gate) -> any conditionReadsX gate || readsX (Foldable.toList body)
         Effect.RepeatIf (RepeatIf.MkRepeatIf process condition ifHolds) -> conditionReadsX condition || readsX (Foldable.toList (process <> ifHolds))
@@ -2837,7 +2845,7 @@ boundSlots effect = case effect of
   -- The loop's member slot, plus every name the BODY authors -- which the loop
   -- really does leave bound once it is over, to the union across its members
   -- (Pawl.Engine.Resolve.Effect's arm).
-  Effect.ForEach (ForEach.MkForEach _ _ slot body _ _) -> Set.insert slot (foldMap boundSlots body)
+  Effect.ForEach (ForEach.MkForEach _ _ slot body _ _ _) -> Set.insert slot (foldMap boundSlots body)
   Effect.ForEachNumber (ForEachNumber.MkForEachNumber _ slot body) -> Set.insert slot (foldMap boundSlots body)
   Effect.Repeat (Repeat.MkRepeat _ body _) -> foldMap boundSlots body
   Effect.RepeatIf (RepeatIf.MkRepeatIf process _ ifHolds) -> foldMap boundSlots (process <> ifHolds)

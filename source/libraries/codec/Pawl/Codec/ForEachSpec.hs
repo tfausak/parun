@@ -46,7 +46,8 @@ spec s = Spec.describe s "Pawl.Codec.ForEach" $ do
             -- CR 608.2f's second sentence, which that rule's Soulfire Eruption
             -- example states outright.
             ForEach.individually = True,
-            ForEach.payGate = Nothing
+            ForEach.payGate = Nothing,
+            ForEach.startingWith = Nothing
           }
       )
       " {\"ref\":{\"type\":\"InSlot\",\"value\":\"victims\"},\"slot\":\"victim\",\"body\":[\"first\",\"second\"],\"individually\":true} "
@@ -65,7 +66,8 @@ spec s = Spec.describe s "Pawl.Codec.ForEach" $ do
             -- The default CR 608.2f's "in most cases" gives, so the key is absent
             -- from the wire.
             ForEach.individually = False,
-            ForEach.payGate = Nothing
+            ForEach.payGate = Nothing,
+            ForEach.startingWith = Nothing
           }
       )
       " {\"ref\":{\"type\":\"EachPlayer\"},\"slot\":\"victim\",\"body\":[]} "
@@ -81,7 +83,8 @@ spec s = Spec.describe s "Pawl.Codec.ForEach" $ do
             ForEach.slot = SlotName.MkSlotName (Text.pack "opponent"),
             ForEach.body = Seq.singleton (Text.pack "mint"),
             ForEach.individually = False,
-            ForEach.payGate = Nothing
+            ForEach.payGate = Nothing,
+            ForEach.startingWith = Nothing
           }
       )
       " {\"ref\":{\"type\":\"EachOpponent\"},\"members\":{\"type\":\"AnyNumber\"},\"slot\":\"opponent\",\"body\":[\"mint\"]} "
@@ -107,8 +110,25 @@ spec s = Spec.describe s "Pawl.Codec.ForEach" $ do
                     PayGate.obligation = PayObligation.Optional,
                     PayGate.perEach = Nothing,
                     PayGate.offeredAt = Nothing
-                  }
+                  },
+            ForEach.startingWith = Nothing
           }
       )
       " {\"ref\":{\"type\":\"EachMatching\",\"value\":{\"type\":\"HasCardType\",\"value\":{\"type\":\"Land\"}}},\"slot\":\"land\",\"body\":[\"destroy\"],\"payGate\":{\"payer\":{\"type\":\"Relative\",\"value\":{\"type\":\"AnyPlayer\"}},\"cost\":{\"mana\":[],\"components\":[{\"type\":\"PayLife\",\"value\":{\"type\":\"Fixed\",\"value\":1}}]},\"branch\":{\"type\":\"IfNonePaid\"}}} "
+  -- Thieves' Auction's "starting with you".
+  Spec.it s "MkForEach starting with a player" $
+    Common.assertCodec
+      s
+      codec
+      ( ForEach.MkForEach
+          { ForEach.ref = ObjectRef.EachPlayer,
+            ForEach.members = LoopMembers.Every,
+            ForEach.slot = SlotName.MkSlotName (Text.pack "chooser"),
+            ForEach.body = Seq.singleton (Text.pack "choose"),
+            ForEach.individually = False,
+            ForEach.payGate = Nothing,
+            ForEach.startingWith = Just (PlayerRef.Relative PlayerRelation.You)
+          }
+      )
+      " {\"ref\":{\"type\":\"EachPlayer\"},\"slot\":\"chooser\",\"body\":[\"choose\"],\"startingWith\":{\"type\":\"Relative\",\"value\":{\"type\":\"You\"}}} "
   Spec.it s "has a schema" $ Common.assertHasSchema s codec

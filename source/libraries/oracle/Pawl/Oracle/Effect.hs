@@ -653,7 +653,7 @@ effect context e = case e of
     acted context (Text.pack "regenerate ") r
   -- "Regenerate enchanted creature": the same shield on the permanent a loop
   -- binds as the instruction resolves.
-  Effect.ForEach (ForEach.MkForEach r LoopMembers.Every slot body False Nothing)
+  Effect.ForEach (ForEach.MkForEach r LoopMembers.Every slot body False Nothing Nothing)
     | [Effect.Replace (Replace.MkReplace Duration.UntilEndOfTurn Uses.Once ReplacementOrigin.Other Nothing (ReplacementEffect.DestructionR (DestructionR.MkDestructionR (Just (Filter.Type.IsBound bound)) DestructionRewrite.Regenerate)))] <- Foldable.toList body,
       bound == slot ->
         acted context (Text.pack "regenerate ") r

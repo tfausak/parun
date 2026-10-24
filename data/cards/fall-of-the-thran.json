@@ -103,7 +103,9 @@
                             }
                           },
                           "riders": {
-                            "underOwner": true
+                            "under": {
+                              "type": "Owner"
+                            }
                           },
                           "zone": {
                             "type": "Battlefield"
@@ -161,7 +163,9 @@
                             }
                           },
                           "riders": {
-                            "underOwner": true
+                            "under": {
+                              "type": "Owner"
+                            }
                           },
                           "zone": {
                             "type": "Battlefield"
