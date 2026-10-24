@@ -38,7 +38,7 @@ data Chooser
     --
     -- WHO CONTROLS what arrives is not this type's question: CR 110.2a gives a
     -- battlefield arrival to the player the effect instructed, which for this
-    -- arm is the graveyard's own player, and Pawl.Types.EntryRiders' underOwner
+    -- arm is the graveyard's own player, and Pawl.Types.EntryRiders' `under` rider
     -- is what a card says to get that -- a graveyard is filed under the card's
     -- owner (CR 400.3), so the two name the same seat. Dredge the Mire's "each
     -- opponent chooses a creature card in their graveyard. Put those cards onto

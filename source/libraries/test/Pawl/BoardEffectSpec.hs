@@ -105,7 +105,7 @@ import qualified Pawl.Types.Zone as Zone
 -- their own graveyard alone, in APNAP order (CR 608.2e, CR 101.4). CR 110.2a then
 -- gives each arrival to the player who put it there, which is the graveyard's own
 -- player: a graveyard is filed under the card's owner (CR 400.3), so the card
--- writes EntryRiders' underOwner and every returning creature enters under its
+-- writes EntryRiders' `under` as Owner and every returning creature enters under its
 -- owner rather than under the caster's control. That is the whole difference from
 -- Rise of the Dark Realms' "under your control".
 --

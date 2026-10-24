@@ -1,0 +1,21 @@
+{
+  "description": "CR 303.4g / Thieves' Auction's 2005 ruling: an Aura chosen while there is nothing it can enchant stays exiled and can be chosen again, and the rounds go on until a round puts nothing onto the battlefield",
+  "note": "Alice chooses Holy Strength in each of the first two rounds, while Grizzly Bears is still exiled, and it stays; bob takes Forest and then the Bears. In the third round the Strength is the only card left and enters under alice attached to bob's Bears. A process that stopped after a round in which some choice failed would leave it exiled.",
+  "board": {"active": "alice", "step": "PrecombatMain", "seats": [
+    {"name": "alice", "manaPool": "RRRRRRR", "battlefield": [{"card": "Grizzly Bears", "label": "bears"}], "hand": [{"card": "Thieves' Auction", "label": "auction"}], "library": [{"card": "Swamp"}, {"card": "Swamp"}, {"card": "Swamp"}]},
+    {"name": "bob", "battlefield": [{"card": "Holy Strength", "label": "strength", "attached": "bears"}, {"card": "Forest", "label": "forest"}], "library": [{"card": "Swamp"}, {"card": "Swamp"}, {"card": "Swamp"}]}
+  ]},
+  "timeline": [
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "do": {"Cast": {"object": "$auction"}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "do": "Pass"},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "do": {"Answer": {"prompt": "ChooseCardFromAmong", "with": "Holy Strength"}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "bob", "do": {"Answer": {"prompt": "ChooseCardFromAmong", "with": "Forest"}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "do": {"Answer": {"prompt": "ChooseCardFromAmong", "with": "Holy Strength"}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "bob", "do": {"Answer": {"prompt": "ChooseCardFromAmong", "with": "Grizzly Bears"}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "check": {"Count": {"player": "alice", "zone": "Battlefield", "card": "Holy Strength", "count": 1}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "check": {"View": {"of": "AttachedTo", "object": "Holy Strength", "is": "Grizzly Bears"}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "check": {"Count": {"player": "bob", "zone": "Battlefield", "card": "Grizzly Bears", "count": 1}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "check": {"Count": {"player": "bob", "zone": "Battlefield", "card": "Forest", "count": 1}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "check": {"PowerToughness": {"object": "Grizzly Bears", "power": 3, "toughness": 4}}}
+  ]
+}

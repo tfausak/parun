@@ -421,6 +421,26 @@ Entries are ordered by the first rule each cites.
   conjures inside an ability that could add mana.
 - **Issue**: none.
 
+## When Thieves' Auction's repeated process ends
+
+- **Question**: Thieves' Auction repeats "until all cards exiled this way have
+  been chosen". Its 2005 ruling keeps a chosen Aura with nothing to enchant in
+  exile, choosable again, and has the rest stay exiled once only such Auras
+  are left; its 2004 ruling forbids choosing one at all. When does the
+  process stop?
+- **Rules**: CR 608.2c, 303.4g; CR of 2026-08-07.
+- **Decision**: After a round in which no card is put onto the battlefield.
+  Any Aura is offered, per the newer ruling.
+- **Rejected**: Repeating while any exiled card is still in exile, which never
+  ends once only Auras with nothing to enchant are left. Filtering those Auras
+  out of the choice, the 2004 ruling, which the 2005 one supersedes. The
+  reading taken ends early in one case: every player in a round choosing an
+  Aura with nothing to enchant while a card that could enter is left.
+- **Site**: `data/cards/thieves-auction.json`'s RepeatIf condition, proved by
+  the scenario "CR 303.4g / Thieves' Auction's 2005 ruling: an Aura chosen
+  while there is nothing it can enchant stays exiled".
+- **Issue**: none.
+
 ## Which board an entry inside a batch collects replacement effects from
 
 - **Question**: When an entry is contained in a CR 608.2f batch, does its CR

@@ -112,6 +112,7 @@ import qualified Pawl.Types.DungeonRoom as DungeonRoom
 import qualified Pawl.Types.Duration as Duration
 import qualified Pawl.Types.Earthbend as Earthbend
 import qualified Pawl.Types.Effect as Effect
+import qualified Pawl.Types.EntryController as EntryController
 import qualified Pawl.Types.EntryRiders as EntryRiders
 import qualified Pawl.Types.ExchangeCardZones as ExchangeCardZones
 import qualified Pawl.Types.ExchangeOwnership as ExchangeOwnership
@@ -1645,7 +1646,7 @@ effectObjectRefs effect =
         -- Word of Command's "choose a card from it", out of the hand it looked at.
         Effect.OfferCast offer -> [([CardFromAmong], OfferCast.ref offer)]
         Effect.GrantPlayFromExile grant -> read_ [GrantPlayFromExile.ref grant]
-        Effect.ForEach (ForEach.MkForEach ref _ _ _ _ _) -> read_ [ref]
+        Effect.ForEach (ForEach.MkForEach ref _ _ _ _ _ _) -> read_ [ref]
         Effect.ForEachNumber {} -> []
         Effect.Repeat {} -> []
         Effect.RepeatIf {} -> []
@@ -2953,7 +2954,7 @@ effectLintSpec s registry = Spec.describe s "Lint" $ do
   -- every other field, and ONE lint rather than a CreateCopy arm added to each
   -- above, so a card setting any of them would say something nothing performs.
   --
-  -- Why each is unread rather than merely unwired. `underOwner` is inert by CR
+  -- Why each is unread rather than merely unwired. `under` is inert by CR
   -- 111.2, which makes the creating player a token's owner anyway. `transformed`
   -- and `faceDown` are inert for the reason the two lints above give: a token is
   -- not a card (CR 111.1), and CR 707.8a decides a copy token's face by copy rules.
@@ -2977,6 +2978,16 @@ effectLintSpec s registry = Spec.describe s "Lint" $ do
     -- prints one.
     Spec.assertBool s (any (anyFace (any counters . cardResolutionEffects) . Printing.card) ps) "the pool has a card creating a copy token with counters on it"
     Spec.assertEqWith s "a copy token reads only counters, tapped, attacking and blocking" (fmap (S.nameOf . Printing.card) offenders) []
+  -- CR 111.2 / 110.2a: a token enters under the player who created it, whom
+  -- Effect.Create names in its own field, so its rider's instructed player is
+  -- read by nothing; only the MoveToZone arm resolves one.
+  Spec.it s "no Create names an instructed player in its entry rider" $ do
+    ps <- S.allPrintings s
+    let offends effect = case effect of
+          Effect.Create (Create.MkCreate _ _ riders _ _) -> EntryRiders.under riders /= EntryRiders.under EntryRiders.defaultValue && EntryRiders.under riders /= EntryController.Owner
+          _ -> False
+        offenders = filter (anyFace (any offends . cardResolutionEffects) . Printing.card) ps
+    Spec.assertEqWith s "a token's controller is its creator" (fmap (S.nameOf . Printing.card) offenders) []
   -- The lint this used to be held that no printing authored a WithCounters
   -- turn-up rewrite, which is what Pawl.Engine.Replacement.applies rested on when
   -- it gated that whole rewrite CLASS on CR 702.37b's "if its megamorph cost was
