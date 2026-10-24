@@ -70,6 +70,7 @@ import qualified Pawl.Types.AgainstExiledPile as AgainstExiledPile
 import qualified Pawl.Types.AgainstLastCardExiledWith as AgainstLastCardExiledWith
 import qualified Pawl.Types.AgainstSlot as AgainstSlot
 import qualified Pawl.Types.Aggregation as Aggregation
+import qualified Pawl.Types.AloneUnless as AloneUnless
 import qualified Pawl.Types.AlternativeCost as AlternativeCost
 import qualified Pawl.Types.Amass as Amass
 import qualified Pawl.Types.Ante as Ante
@@ -1737,7 +1738,9 @@ combatRestrictionCounts restriction = case restriction of
   CombatRestriction.CantBlockCreatures (CantBlockCreatures.MkCantBlockCreatures _ _ condition _) -> foldMap conditionCounts condition
   -- The PlayerScope and the CR 506.3 kinds beside the gate hold no Count either.
   CombatRestriction.CantAttackPlayer (CantAttackPlayer.MkCantAttackPlayer _ _ _ condition _) -> foldMap conditionCounts condition
-  CombatRestriction.CantAttackAlone (AffectedUnless.MkAffectedUnless _ condition _) -> foldMap conditionCounts condition
+  -- The companion Filter beside the gate holds no Count either.
+  CombatRestriction.CantAttackAlone (AloneUnless.MkAloneUnless _ _ condition _) -> foldMap conditionCounts condition
+  CombatRestriction.CantBlockAlone (AloneUnless.MkAloneUnless _ _ condition _) -> foldMap conditionCounts condition
   CombatRestriction.CantAttackMoreThan (AttackLimitUnless.MkAttackLimitUnless _ _ condition) -> foldMap conditionCounts condition
   CombatRestriction.CantBlockMoreThan (LimitUnless.MkLimitUnless _ _ condition) -> foldMap conditionCounts condition
 
@@ -5397,7 +5400,10 @@ combatRestrictionFilters restriction = case restriction of
   -- at those seats are CR 506.3 kinds, both card data with no Filter in them --
   -- so nothing stands in for either here, the size-bounding arms' posture.
   CombatRestriction.CantAttackPlayer (CantAttackPlayer.MkCantAttackPlayer affected _ _ condition _) -> affectedSet affected <> foldMap conditionFilters condition
-  CombatRestriction.CantAttackAlone (AffectedUnless.MkAffectedUnless affected condition _) -> affectedSet affected <> foldMap conditionFilters condition
+  -- Three on the "alone" arms: the creatures restricted, the company they
+  -- want, read pairwise in the restricted creature's context, and the gate.
+  CombatRestriction.CantAttackAlone (AloneUnless.MkAloneUnless affected alongside condition _) -> affectedSet affected <> unframed (Maybe.maybeToList alongside) <> foldMap conditionFilters condition
+  CombatRestriction.CantBlockAlone (AloneUnless.MkAloneUnless affected alongside condition _) -> affectedSet affected <> unframed (Maybe.maybeToList alongside) <> foldMap conditionFilters condition
   CombatRestriction.CantAttackMoreThan (AttackLimitUnless.MkAttackLimitUnless _ _ condition) -> foldMap conditionFilters condition
   -- The attackers a per-attacker bound counts against are an Affected.
   CombatRestriction.CantBlockMoreThan (LimitUnless.MkLimitUnless _ attackers condition) -> foldMap affectedSet attackers <> foldMap conditionFilters condition

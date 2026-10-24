@@ -1,0 +1,101 @@
+{
+  "faces": [
+    {
+      "combatRestrictions": [
+        {
+          "type": "CantAttackAlone",
+          "value": {
+            "affected": {
+              "type": "Matching",
+              "value": {
+                "type": "IsSource"
+              }
+            },
+            "alongside": {
+              "type": "Measures",
+              "value": {
+                "comparison": {
+                  "type": "GreaterThan"
+                },
+                "measure": {
+                  "type": "Power"
+                },
+                "operand": {
+                  "type": "OfSource",
+                  "value": {
+                    "type": "Power"
+                  }
+                }
+              }
+            }
+          }
+        },
+        {
+          "type": "CantBlockAlone",
+          "value": {
+            "affected": {
+              "type": "Matching",
+              "value": {
+                "type": "IsSource"
+              }
+            },
+            "alongside": {
+              "type": "Measures",
+              "value": {
+                "comparison": {
+                  "type": "GreaterThan"
+                },
+                "measure": {
+                  "type": "Power"
+                },
+                "operand": {
+                  "type": "OfSource",
+                  "value": {
+                    "type": "Power"
+                  }
+                }
+              }
+            }
+          }
+        }
+      ],
+      "manaCost": [
+        {
+          "type": "Generic",
+          "value": 1
+        },
+        {
+          "type": "OfType",
+          "value": {
+            "type": "Colored",
+            "value": {
+              "type": "Red"
+            }
+          }
+        }
+      ],
+      "name": "Okk",
+      "oracleText": "This creature can't attack unless a creature with greater power also attacks.\nThis creature can't block unless a creature with greater power also blocks.",
+      "power": {
+        "type": "Literal",
+        "value": 4
+      },
+      "toughness": {
+        "type": "Literal",
+        "value": 4
+      },
+      "typeLine": {
+        "subtypes": [
+          {
+            "type": "Goblin"
+          }
+        ],
+        "types": [
+          {
+            "type": "Creature"
+          }
+        ]
+      }
+    }
+  ]
+}

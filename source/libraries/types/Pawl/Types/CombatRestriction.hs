@@ -1,6 +1,7 @@
 module Pawl.Types.CombatRestriction where
 
 import qualified Pawl.Types.AffectedUnless as AffectedUnless
+import qualified Pawl.Types.AloneUnless as AloneUnless
 import qualified Pawl.Types.AttackLimitUnless as AttackLimitUnless
 import qualified Pawl.Types.CantAttackPlayer as CantAttackPlayer
 import qualified Pawl.Types.CantBeBlockedBy as CantBeBlockedBy
@@ -38,8 +39,8 @@ import qualified Pawl.Types.LimitUnless as LimitUnless
 -- The arms differ in SHAPE rather than in axis, and there are four shapes. The
 -- first two are answered about ONE CREATURE, so the reader may apply them to CR
 -- 508.1a's and CR 509.1a's candidate list and never look at a declaration.
--- CantAttackAlone cannot be: it is a fact about the whole set of creatures
--- declared as attackers, so it is answered against the finished declaration
+-- CantAttackAlone and CantBlockAlone cannot be: each is a fact about the whole
+-- set of creatures declared, so it is answered against the finished declaration
 -- instead. Both are restrictions of the rule they name all the same -- CR 508.1c's
 -- own Example is a "can't attack alone" board -- so they share the type rather
 -- than splitting into a second carrier.
@@ -47,7 +48,8 @@ import qualified Pawl.Types.LimitUnless as LimitUnless
 -- The THIRD shape bounds the SIZE of a declaration from above, which is Silent
 -- Arbiter's "no more than one creature can attack each combat". CantAttackAlone
 -- is not it turned around: it NAMES creatures and asks whether the declaration
--- holds one of them and nothing else, where a bound needs name no creature at
+-- holds one of them and no other creature of the kind it wants beside it, where
+-- a bound needs name no creature at
 -- all -- so those two arms carry a NUMBER where every other arm carries an
 -- Affected, and no Affected could have stood in for it. A blocking bound MAY
 -- name the attackers it is counted against (Charging Rhino), which scopes the
@@ -210,10 +212,11 @@ data CombatRestriction
     -- narrows which CREATURES a restriction reaches and says nothing about what
     -- they may be announced against.
     CantAttackPlayer CantAttackPlayer.CantAttackPlayer
-  | -- | CR 508.1c together with CR 506.5: these creatures can't be the ONLY
-    -- creature declared as an attacker, unless the gate holds. Bonded Construct
-    -- ("This creature can't attack alone") is the pool's printing, and CR
-    -- 508.1c's own Example is a board of two of them.
+  | -- | CR 508.1c together with CR 506.5: these creatures can't be declared as
+    -- attackers unless another creature matching `alongside` is too, unless the
+    -- gate holds. Bonded Construct ("This creature can't attack alone") writes
+    -- no `alongside`, and CR 508.1c's own Example is a board of two of them;
+    -- Okk's "unless a creature with greater power also attacks" writes one.
     --
     -- Not CantAttack with a Condition, and the difference is not expressible as
     -- one: CR 506.5's "alone" is a fact about the DECLARATION being written, and
@@ -224,7 +227,7 @@ data CombatRestriction
     --
     -- The gate beside it is the same "unless" every arm carries, and is about
     -- game state as usual: nothing in the pool prints a gated one.
-    CantAttackAlone AffectedUnless.AffectedUnless
+    CantAttackAlone AloneUnless.AloneUnless
   | -- | CR 508.1c: no more than this many creatures may be declared as
     -- attackers, unless the gate holds. Silent Arbiter's first sentence, and
     -- the board CR 508.1d's Example is written about.
@@ -251,6 +254,10 @@ data CombatRestriction
     -- rather than by pawl's omission, and a per-phase tally would have had to
     -- exclude it anyway.
     CantAttackMoreThan AttackLimitUnless.AttackLimitUnless
+  | -- | CR 509.1b together with CR 506.5: CantAttackAlone on the other
+    -- declaration. Mogg Flunkies' "can't attack or block alone" and Okk's "can't
+    -- block unless a creature with greater power also blocks".
+    CantBlockAlone AloneUnless.AloneUnless
   | -- | CR 509.1b, the same bound on the other declaration. Silent Arbiter's
     -- second sentence; scoped to attackers, the bound on the creatures blocking
     -- each of them (Charging Rhino). The arm above's reasoning holds unchanged: CR 506.1

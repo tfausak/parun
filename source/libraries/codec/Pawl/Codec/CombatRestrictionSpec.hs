@@ -8,6 +8,7 @@ import qualified Pawl.Spec as Spec
 import qualified Pawl.Types.Affected as Affected
 import qualified Pawl.Types.AffectedUnless as AffectedUnless
 import qualified Pawl.Types.Aggregation as Aggregation
+import qualified Pawl.Types.AloneUnless as AloneUnless
 import qualified Pawl.Types.AttackLimitUnless as AttackLimitUnless
 import qualified Pawl.Types.AttackTargetKind as AttackTargetKind
 import qualified Pawl.Types.CantAttackPlayer as CantAttackPlayer
@@ -82,8 +83,16 @@ spec s = Spec.describe s "Pawl.Codec.CombatRestriction" $ do
     Common.assertCodec
       s
       CombatRestriction.codec
-      (CombatRestriction.CantAttackAlone (AffectedUnless.MkAffectedUnless Affected.Attached Nothing Nothing))
+      (CombatRestriction.CantAttackAlone (AloneUnless.MkAloneUnless Affected.Attached Nothing Nothing Nothing))
       " {\"type\":\"CantAttackAlone\",\"value\":{\"affected\":{\"type\":\"Attached\"}}} "
+  -- CR 509.1b's twin of the arm above. A different Affected, so a codec that
+  -- crossed the two arms cannot pass both.
+  Spec.it s "CantBlockAlone carries its Affected" $
+    Common.assertCodec
+      s
+      CombatRestriction.codec
+      (CombatRestriction.CantBlockAlone (AloneUnless.MkAloneUnless (Affected.Matching Filter.IsSource) Nothing Nothing Nothing))
+      " {\"type\":\"CantBlockAlone\",\"value\":{\"affected\":{\"type\":\"Matching\",\"value\":{\"type\":\"IsSource\"}}}} "
   -- The SIZE-BOUNDING arms, whose payload spells "limit" where the three above
   -- spell "affected". They are here as much for the DECODER as for the shape:
   -- Pawl.Codec.CombatRestriction.fromJson dispatches on a string, so an arm
