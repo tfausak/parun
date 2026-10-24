@@ -7,6 +7,7 @@ import qualified Pawl.Codec.CardType as CardType
 import qualified Pawl.Codec.CastingPermission as CastingPermission
 import qualified Pawl.Codec.ChangeWord as ChangeWord
 import qualified Pawl.Codec.Color as Color
+import qualified Pawl.Codec.ColorMode as ColorMode
 import qualified Pawl.Codec.CombatDamageOption as CombatDamageOption
 import qualified Pawl.Codec.CostKeyword as CostKeyword
 import qualified Pawl.Codec.ExiledCardAbilities as ExiledCardAbilities
@@ -73,7 +74,7 @@ codec abilityCodec =
           Arm.nullary "SetControllerToSource" Modification.SetControllerToSource,
           Arm.payload "SetColor" colors Modification.SetColor (\x -> case x of Modification.SetColor y -> Just y; _ -> Nothing),
           Arm.payload "AddColor" colors Modification.AddColor (\x -> case x of Modification.AddColor y -> Just y; _ -> Nothing),
-          Arm.nullary "AddChosenColor" Modification.AddChosenColor,
+          Arm.payload "ChosenColor" ColorMode.codec Modification.ChosenColor (\x -> case x of Modification.ChosenColor y -> Just y; _ -> Nothing),
           Arm.nullary "ExchangeTextBoxes" Modification.ExchangeTextBoxes,
           Arm.payload "AddNamesMatching" (Filter.codec Keyword.codec) Modification.AddNamesMatching (\x -> case x of Modification.AddNamesMatching y -> Just y; _ -> Nothing),
           Arm.payload "HasFullText" (FullText.codec abilityCodec) Modification.HasFullText (\x -> case x of Modification.HasFullText y -> Just y; _ -> Nothing),
@@ -122,7 +123,7 @@ tagOf x = case x of
   Modification.SetControllerToSource {} -> "SetControllerToSource"
   Modification.SetColor {} -> "SetColor"
   Modification.AddColor {} -> "AddColor"
-  Modification.AddChosenColor {} -> "AddChosenColor"
+  Modification.ChosenColor {} -> "ChosenColor"
   Modification.ExchangeTextBoxes {} -> "ExchangeTextBoxes"
   Modification.AddNamesMatching {} -> "AddNamesMatching"
   Modification.HasFullText {} -> "HasFullText"

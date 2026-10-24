@@ -1000,7 +1000,7 @@ modificationCounts modification = case modification of
   Modification.SetControllerToSource -> []
   Modification.SetColor _ -> []
   Modification.AddColor _ -> []
-  Modification.AddChosenColor -> []
+  Modification.ChosenColor _ -> []
   Modification.SwitchPowerToughness -> []
   Modification.ExchangeTextBoxes -> []
   -- Its Filter's Counts are reached through modificationFilters, GainEnchant's
@@ -4441,7 +4441,7 @@ modificationFilters modification = case modification of
   Modification.SetControllerToSource -> []
   Modification.SetColor _ -> []
   Modification.AddColor _ -> []
-  Modification.AddChosenColor -> []
+  Modification.ChosenColor _ -> []
   Modification.SwitchPowerToughness -> []
   Modification.ExchangeTextBoxes -> []
   -- CR 612.7's filter is card text like GainEnchant's slot, and is swept.

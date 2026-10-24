@@ -1,0 +1,14 @@
+{
+  "description": "CR 105.3 / 613.1e / 614.1c whole card: Shifting Sky makes every nonland permanent the colour chosen as it enters, and only that colour",
+  "note": "Alice chooses white. Her red Hill Giant, bob's green Grizzly Bears and the blue Sky itself are white and nothing else; her Island, a land, stays colourless.",
+  "board": {"active": "alice", "step": "PrecombatMain", "seats": [{"name": "alice", "hand": [{"card": "Shifting Sky", "label": "sky"}], "battlefield": [{"card": "Hill Giant", "label": "giant"}, {"card": "Island", "label": "i1"}, {"card": "Island", "label": "i2"}, {"card": "Island", "label": "i3"}], "library": [{"card": "Island"}, {"card": "Island"}, {"card": "Island"}]}, {"name": "bob", "battlefield": [{"card": "Grizzly Bears", "label": "bears"}], "library": [{"card": "Island"}, {"card": "Island"}, {"card": "Island"}]}]},
+  "timeline": [
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "do": {"Cast": {"object": "$sky", "mana": ["$i1", "$i2", "$i3"]}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "do": "Pass"},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "do": {"Answer": {"prompt": "ChooseColor", "with": {"type": "White"}}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "check": {"View": {"of": "Colors", "object": "$giant", "is": ["White"]}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "check": {"View": {"of": "Colors", "object": "$bears", "is": ["White"]}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "check": {"View": {"of": "Colors", "object": "Shifting Sky", "is": ["White"]}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "check": {"View": {"of": "Colors", "object": "$i1", "is": []}}}
+  ]
+}

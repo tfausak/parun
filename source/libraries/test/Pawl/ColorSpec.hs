@@ -527,7 +527,7 @@ spec s registry = Spec.describe s "Pawl.Engine.Color" $ do
     --
     -- CAST rather than S.addPermanent, because the colour choice happens only on
     -- the entry path (Event.runEntry): a Servant placed straight onto the
-    -- battlefield has chosenColors = Set.empty and its AddChosenColor adds nothing.
+    -- battlefield has chosenColors = Set.empty and its ChosenColor adds nothing.
     mountain <- S.printingOf s registry "Mountain"
     paintersServant <- S.printingOf s registry "Painter's Servant"
     slaughterDrone <- S.printingOf s registry "Slaughter Drone"

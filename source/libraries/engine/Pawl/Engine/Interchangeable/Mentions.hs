@@ -2100,7 +2100,7 @@ modificationNames asking onAbility x = case x of
   Modification.SetControllerToSource -> mempty
   Modification.SetColor _color -> mempty
   Modification.AddColor _color -> mempty
-  Modification.AddChosenColor -> mempty
+  Modification.ChosenColor _ -> mempty
   Modification.SwitchPowerToughness -> mempty
   Modification.AssignCombatDamageWithToughness -> mempty
   Modification.MayAssignCombatDamage _option -> mempty

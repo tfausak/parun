@@ -7,6 +7,7 @@ import qualified Pawl.Types.CardType as CardType
 import qualified Pawl.Types.CastingPermission as CastingPermission
 import qualified Pawl.Types.ChangeWord as ChangeWord
 import qualified Pawl.Types.Color as Color
+import qualified Pawl.Types.ColorMode as ColorMode
 import qualified Pawl.Types.CombatDamageOption as CombatDamageOption
 import qualified Pawl.Types.CostKeyword as CostKeyword
 import qualified Pawl.Types.ExiledCardAbilities as ExiledCardAbilities
@@ -239,7 +240,7 @@ data Modification ability
     -- land is the chosen type"; Mystic Compass's, which a resolution bakes.
     --
     -- Payload-free because the subtype is DERIVED at projection time from the
-    -- source rather than baked into card data, the posture AddChosenColor takes
+    -- source rather than baked into card data, the posture ChosenColor takes
     -- toward Object.chosenColors: a static ability's modification is card data
     -- and cannot name a type a player will choose, which is why this is a second
     -- constructor rather than a field on SetLandSubtype above.
@@ -438,15 +439,16 @@ data Modification ability
     -- ADDITION to the ones it already has -- CR 105.3's parenthetical, so this
     -- unions where SetColor replaces. Indigo Faerie.
     AddColor (Set.Set Color.Color)
-  | -- | layer 5, CR 613.1e / 105.3: this object gains, IN ADDITION to its other
-    -- colours, the colour chosen for THIS effect's SOURCE as that source entered
-    -- (Object.chosenColors). Painter's Servant's "the chosen color".
+  | -- | layer 5, CR 613.1e / 105.3: this object becomes the colour chosen for
+    -- THIS effect's SOURCE (Object.chosenColors), replacing its colours or in
+    -- addition to them as the mode says. Shifting Sky's and Painter's Servant's
+    -- "the chosen color"; Distorting Lens's, which a resolution bakes.
     --
-    -- Payload-free because the colour is DERIVED at projection time from the
-    -- source rather than baked into card data: a static ability's modification
-    -- cannot name a colour a player will choose, which is why this is a
-    -- constructor beside AddColor rather than a value it could carry.
-    AddChosenColor
+    -- The colour is DERIVED at projection time from the source rather than
+    -- baked into card data: a static ability's modification cannot name a
+    -- colour a player will choose, which is why this is a constructor beside
+    -- SetColor and AddColor rather than a value they could carry.
+    ChosenColor ColorMode.ColorMode
   | -- | layer 7d, CR 613.4d: switch this object's power and toughness. It acts
     -- on whatever 7a, 7b and 7c already produced, not on the printed box.
     -- Carries no payload: two applications return the object to normal for free.
