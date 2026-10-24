@@ -67,6 +67,7 @@ import qualified Pawl.Codec.AimedAtSpec
 import qualified Pawl.Codec.AimedPlayersSpec
 import qualified Pawl.Codec.AlternativeActivationCostSpec
 import qualified Pawl.Codec.AlternativeCostSpec
+import qualified Pawl.Codec.AnchorSpec
 import qualified Pawl.Codec.AnswerSpec
 import qualified Pawl.Codec.AnyNumberDiscardSpec
 import qualified Pawl.Codec.AnyNumberMatchingSpec
@@ -960,6 +961,7 @@ spec s registry = do
   Pawl.Codec.AffectedPlayersSpec.spec s
   Pawl.Codec.AffectedSpec.spec s
   Pawl.Codec.AffectedUnlessSpec.spec s
+  Pawl.Codec.AnchorSpec.spec s
   Pawl.Codec.AffectPlayersSpec.spec s
   Pawl.Codec.AfterObjectTurnSpec.spec s
   Pawl.Codec.AfterTurnSpec.spec s

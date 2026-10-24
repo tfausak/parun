@@ -162,6 +162,8 @@ library codec
     Pawl.Codec.AlternativeCost
     Pawl.Codec.AlternativeCostSpec
     Pawl.Codec.Amass
+    Pawl.Codec.Anchor
+    Pawl.Codec.AnchorSpec
     Pawl.Codec.Answer
     Pawl.Codec.AnswerSpec
     Pawl.Codec.Ante
@@ -2276,6 +2278,7 @@ library types
     Pawl.Types.AlternativeActivationCost
     Pawl.Types.AlternativeCost
     Pawl.Types.Amass
+    Pawl.Types.Anchor
     Pawl.Types.Announcement
     Pawl.Types.Answer
     Pawl.Types.Answerer

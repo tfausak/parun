@@ -1725,19 +1725,20 @@ payGateBound modal =
     then Set.singleton Binding.sacrificedPermanent
     else Set.empty
 
--- Every Count reachable from a combat restriction: only CR 508.1c's / CR
--- 509.1b's "unless some condition is met" carries one, and the subject beside it
--- is an Affected, which holds a Filter but no Count.
+-- Every Count reachable from a combat restriction: CR 508.1c's / CR 509.1b's
+-- "unless some condition is met", and the amount an affected set compares
+-- against (Ensnaring Bridge); the subject is an Affected, which holds a Filter
+-- but no Count.
 combatRestrictionCounts :: CombatRestriction.CombatRestriction -> [Count.Type.Count Quantity.Type.Quantity]
 combatRestrictionCounts restriction = case restriction of
-  CombatRestriction.CantAttack (AffectedUnless.MkAffectedUnless _ condition _) -> foldMap conditionCounts condition
-  CombatRestriction.CantBlock (AffectedUnless.MkAffectedUnless _ condition _) -> foldMap conditionCounts condition
+  CombatRestriction.CantAttack (AffectedUnless.MkAffectedUnless _ condition _ amount) -> foldMap conditionCounts condition <> foldMap quantityCounts amount
+  CombatRestriction.CantBlock (AffectedUnless.MkAffectedUnless _ condition _ amount) -> foldMap conditionCounts condition <> foldMap quantityCounts amount
   -- The blocker Filter beside the gate holds no Count either.
   CombatRestriction.CantBeBlockedBy (CantBeBlockedBy.MkCantBeBlockedBy _ _ condition _) -> foldMap conditionCounts condition
   CombatRestriction.CantBlockCreatures (CantBlockCreatures.MkCantBlockCreatures _ _ condition _) -> foldMap conditionCounts condition
   -- The PlayerScope and the CR 506.3 kinds beside the gate hold no Count either.
   CombatRestriction.CantAttackPlayer (CantAttackPlayer.MkCantAttackPlayer _ _ _ condition _) -> foldMap conditionCounts condition
-  CombatRestriction.CantAttackAlone (AffectedUnless.MkAffectedUnless _ condition _) -> foldMap conditionCounts condition
+  CombatRestriction.CantAttackAlone (AffectedUnless.MkAffectedUnless _ condition _ amount) -> foldMap conditionCounts condition <> foldMap quantityCounts amount
   CombatRestriction.CantAttackMoreThan (AttackLimitUnless.MkAttackLimitUnless _ _ condition) -> foldMap conditionCounts condition
   CombatRestriction.CantBlockMoreThan (LimitUnless.MkLimitUnless _ _ condition) -> foldMap conditionCounts condition
 
@@ -5386,8 +5387,8 @@ attackRequirementFilters requirement =
 
 combatRestrictionFilters :: CombatRestriction.CombatRestriction -> [(Framing, Filter.Type.Filter Keyword.Keyword)]
 combatRestrictionFilters restriction = case restriction of
-  CombatRestriction.CantAttack (AffectedUnless.MkAffectedUnless affected condition _) -> affectedSet affected <> foldMap conditionFilters condition
-  CombatRestriction.CantBlock (AffectedUnless.MkAffectedUnless affected condition _) -> affectedSet affected <> foldMap conditionFilters condition
+  CombatRestriction.CantAttack (AffectedUnless.MkAffectedUnless affected condition _ amount) -> affectedSet affected <> foldMap conditionFilters condition <> foldMap quantityFilters amount
+  CombatRestriction.CantBlock (AffectedUnless.MkAffectedUnless affected condition _ amount) -> affectedSet affected <> foldMap conditionFilters condition <> foldMap quantityFilters amount
   -- Three positions on the PAIRWISE arm: the attackers restricted, the blockers
   -- barred from them, and the gate.
   CombatRestriction.CantBeBlockedBy (CantBeBlockedBy.MkCantBeBlockedBy affected blockers condition _) -> affectedSet affected <> unframed [blockers] <> foldMap conditionFilters condition
@@ -5397,7 +5398,7 @@ combatRestrictionFilters restriction = case restriction of
   -- at those seats are CR 506.3 kinds, both card data with no Filter in them --
   -- so nothing stands in for either here, the size-bounding arms' posture.
   CombatRestriction.CantAttackPlayer (CantAttackPlayer.MkCantAttackPlayer affected _ _ condition _) -> affectedSet affected <> foldMap conditionFilters condition
-  CombatRestriction.CantAttackAlone (AffectedUnless.MkAffectedUnless affected condition _) -> affectedSet affected <> foldMap conditionFilters condition
+  CombatRestriction.CantAttackAlone (AffectedUnless.MkAffectedUnless affected condition _ amount) -> affectedSet affected <> foldMap conditionFilters condition <> foldMap quantityFilters amount
   CombatRestriction.CantAttackMoreThan (AttackLimitUnless.MkAttackLimitUnless _ _ condition) -> foldMap conditionFilters condition
   -- The attackers a per-attacker bound counts against are an Affected.
   CombatRestriction.CantBlockMoreThan (LimitUnless.MkLimitUnless _ attackers condition) -> foldMap affectedSet attackers <> foldMap conditionFilters condition
@@ -5509,7 +5510,7 @@ blockPermissionFilters permission =
 --     does not keep.
 --   * ClauseGateFramed -- a mode clause's own "if" (Clause.condition), read by
 --     Pawl.Engine.Resolve.gateHolds through Resolve.Slots.effectContext, so
---     CR 205.3m's Filter.SharesCreatureTypeWithBound answers there (Mudbutton
+--     CR 205.3m's Filter.SharesCreatureTypeWith answers there (Mudbutton
 --     Clanger).
 --   * LifeLossAmountFramed -- CR 119.3's amount, which the Effect.LoseLife arm
 --     reads per recipient through Resolve.Slots.effectContext, so

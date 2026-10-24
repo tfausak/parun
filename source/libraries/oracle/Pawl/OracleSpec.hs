@@ -812,7 +812,7 @@ spec s = Spec.describe s "Pawl.Oracle" $ do
   -- CR 508.1c / 509.1b: rules permanents follow, its own or a description's;
   -- "can't attack" and "can't block" of one permanent are one ability.
   Spec.it s "render prints restrictions on attacking and blocking" $ do
-    let unless' a = AffectedUnless.MkAffectedUnless a Nothing Nothing
+    let unless' a = AffectedUnless.MkAffectedUnless a Nothing Nothing Nothing
         itself = Affected.Matching Filter.IsSource
         combat rs = withFace (\f -> f {Face.combatRestrictions = rs})
     Spec.assertEq s (Just (Text.pack "Spark can't block.")) (Oracle.render (combat [CombatRestriction.CantBlock (unless' itself)]))

@@ -40,14 +40,14 @@ spec s = Spec.describe s "Pawl.Codec.CombatRestriction" $ do
     Common.assertCodec
       s
       CombatRestriction.codec
-      (CombatRestriction.CantAttack (AffectedUnless.MkAffectedUnless Affected.Attached Nothing Nothing))
+      (CombatRestriction.CantAttack (AffectedUnless.MkAffectedUnless Affected.Attached Nothing Nothing Nothing))
       " {\"type\":\"CantAttack\",\"value\":{\"affected\":{\"type\":\"Attached\"}}} "
   -- CR 509.1b, the blocking counterpart.
   Spec.it s "CantBlock carries its Affected" $
     Common.assertCodec
       s
       CombatRestriction.codec
-      (CombatRestriction.CantBlock (AffectedUnless.MkAffectedUnless Affected.Attached Nothing Nothing))
+      (CombatRestriction.CantBlock (AffectedUnless.MkAffectedUnless Affected.Attached Nothing Nothing Nothing))
       " {\"type\":\"CantBlock\",\"value\":{\"affected\":{\"type\":\"Attached\"}}} "
   -- CR 509.1b's attacker-side PAIRWISE arm, whose payload has a second Filter
   -- position: "blockers" beside "affected", never a second "affected", since the
@@ -82,7 +82,7 @@ spec s = Spec.describe s "Pawl.Codec.CombatRestriction" $ do
     Common.assertCodec
       s
       CombatRestriction.codec
-      (CombatRestriction.CantAttackAlone (AffectedUnless.MkAffectedUnless Affected.Attached Nothing Nothing))
+      (CombatRestriction.CantAttackAlone (AffectedUnless.MkAffectedUnless Affected.Attached Nothing Nothing Nothing))
       " {\"type\":\"CantAttackAlone\",\"value\":{\"affected\":{\"type\":\"Attached\"}}} "
   -- The SIZE-BOUNDING arms, whose payload spells "limit" where the three above
   -- spell "affected". They are here as much for the DECODER as for the shape:
@@ -117,7 +117,7 @@ spec s = Spec.describe s "Pawl.Codec.CombatRestriction" $ do
     Common.assertCodec
       s
       CombatRestriction.codec
-      (CombatRestriction.CantAttack (AffectedUnless.MkAffectedUnless Affected.Attached (Just anotherGiant) Nothing))
+      (CombatRestriction.CantAttack (AffectedUnless.MkAffectedUnless Affected.Attached (Just anotherGiant) Nothing Nothing))
       ( "{\"type\":\"CantAttack\",\"value\":{\"affected\":{\"type\":\"Attached\"},\"unless\":"
           <> "{\"type\":\"Compares\",\"value\":"
           <> "{\"measured\":{\"type\":\"Count\",\"value\":{\"scope\":{\"type\":\"InZone\",\"value\":{\"zone\":{\"type\":\"Battlefield\"},\"player\":{\"type\":\"Relative\",\"value\":{\"type\":\"AnyPlayer\"}}}},"
@@ -131,8 +131,8 @@ spec s = Spec.describe s "Pawl.Codec.CombatRestriction" $ do
     Spec.assertEqWith
       s
       "preserved"
-      (Codec.decode CombatRestriction.codec (Codec.encode CombatRestriction.codec (CombatRestriction.CantBlock (AffectedUnless.MkAffectedUnless Affected.Attached (Just anotherGiant) Nothing))))
-      (Right (CombatRestriction.CantBlock (AffectedUnless.MkAffectedUnless Affected.Attached (Just anotherGiant) Nothing)))
+      (Codec.decode CombatRestriction.codec (Codec.encode CombatRestriction.codec (CombatRestriction.CantBlock (AffectedUnless.MkAffectedUnless Affected.Attached (Just anotherGiant) Nothing Nothing))))
+      (Right (CombatRestriction.CantBlock (AffectedUnless.MkAffectedUnless Affected.Attached (Just anotherGiant) Nothing Nothing)))
   Spec.it s "has a schema" $ Common.assertHasSchema s CombatRestriction.codec
 
 -- "you control a Giant", without the `Not IsSource` conjunct that would make it

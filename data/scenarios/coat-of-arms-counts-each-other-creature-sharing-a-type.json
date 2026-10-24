@@ -1,0 +1,35 @@
+{
+  "description": "CR 613.4c / 205.3m Coat of Arms pumps each creature once per OTHER creature sharing a creature type with it",
+  "note": "Goblin Piker (Goblin Warrior) shares with Elvish Warrior and Raging Goblin, Elvish Warrior with the Piker and Llanowar Elves; the Goblin and the Elves share with one creature each; the Bears and the Giant share with none. Creatures on both sides count. A count including the pumped creature itself would lift each by one more, Bears and Giant included; a count ignoring types would lift each by five.",
+  "board": {
+    "seats": [
+      {
+        "name": "alice",
+        "battlefield": [
+          { "card": "Coat of Arms", "label": "coat" },
+          { "card": "Goblin Piker", "label": "piker" },
+          { "card": "Elvish Warrior", "label": "warrior" },
+          { "card": "Hill Giant", "label": "giant" }
+        ]
+      },
+      {
+        "name": "bob",
+        "battlefield": [
+          { "card": "Raging Goblin", "label": "goblin" },
+          { "card": "Llanowar Elves", "label": "elves" },
+          { "card": "Grizzly Bears", "label": "bears" }
+        ]
+      }
+    ],
+    "active": "alice",
+    "step": "PrecombatMain"
+  },
+  "timeline": [
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "check": { "PowerToughness": { "object": "$piker", "power": 4, "toughness": 3 } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "check": { "PowerToughness": { "object": "$warrior", "power": 4, "toughness": 5 } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "check": { "PowerToughness": { "object": "$goblin", "power": 2, "toughness": 2 } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "check": { "PowerToughness": { "object": "$elves", "power": 2, "toughness": 2 } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "check": { "PowerToughness": { "object": "$bears", "power": 2, "toughness": 2 } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "check": { "PowerToughness": { "object": "$giant", "power": 3, "toughness": 3 } } }
+  ]
+}

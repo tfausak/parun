@@ -446,7 +446,7 @@ permanentRule face affected n
       "CantBlock" -> combat (CombatRestriction.CantBlock unless)
       _ -> Node.untranslated n
   where
-    unless = AffectedUnless.MkAffectedUnless {AffectedUnless.affected = affected, AffectedUnless.unless = Nothing, AffectedUnless.name = Nothing}
+    unless = AffectedUnless.MkAffectedUnless {AffectedUnless.affected = affected, AffectedUnless.unless = Nothing, AffectedUnless.name = Nothing, AffectedUnless.amount = Nothing}
     combat r = Right face {Face.combatRestrictions = Face.combatRestrictions face <> [r]}
 
 -- | A rule players follow: spells of a description cost more mana to cast

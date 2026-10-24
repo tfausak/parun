@@ -114,7 +114,7 @@ spec s = Spec.describe s "Pawl.Mtgish" $ do
   -- CR 508.1c / 509.1b: rules each permanent of a description follows.
   Spec.it s "reads rules on attacking and blocking" $ do
     Spec.assertEq s (Right ()) (accepts lightOfDay)
-    let black = AffectedUnless.MkAffectedUnless (Affected.Matching (Filter.And [Filter.HasColor Color.Black, Filter.HasCardType CardType.Creature])) Nothing Nothing
+    let black = AffectedUnless.MkAffectedUnless (Affected.Matching (Filter.And [Filter.HasColor Color.Black, Filter.HasCardType CardType.Creature])) Nothing Nothing Nothing
     Spec.assertEq s [CombatRestriction.CantAttack black, CombatRestriction.CantBlock black] (Face.combatRestrictions (translated lightOfDay))
 
   -- CR 303.4b: an Aura's instructions name the creature it enchants.

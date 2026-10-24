@@ -25,7 +25,8 @@ spec s = Spec.describe s "Pawl.Codec.AffectedUnless" $ do
       ( AffectedUnless.MkAffectedUnless
           { AffectedUnless.affected = Affected.Matching (Filter.HasCardType CardType.Creature),
             AffectedUnless.unless = Nothing,
-            AffectedUnless.name = Nothing
+            AffectedUnless.name = Nothing,
+            AffectedUnless.amount = Nothing
           }
       )
       " {\"affected\":{\"type\":\"Matching\",\"value\":{\"type\":\"HasCardType\",\"value\":{\"type\":\"Creature\"}}}} "
@@ -39,7 +40,8 @@ spec s = Spec.describe s "Pawl.Codec.AffectedUnless" $ do
               Just $
                 Condition.Compares
                   (Compares.MkCompares (Quantity.Literal 1) Comparison.AtLeast (Quantity.Literal 1)),
-            AffectedUnless.name = Nothing
+            AffectedUnless.name = Nothing,
+            AffectedUnless.amount = Nothing
           }
       )
       " {\"affected\":{\"type\":\"Attached\"},\"unless\":{\"type\":\"Compares\",\"value\":{\"measured\":{\"type\":\"Literal\",\"value\":1},\"comparison\":{\"type\":\"AtLeast\"},\"threshold\":{\"type\":\"Literal\",\"value\":1}}}} "
@@ -52,8 +54,22 @@ spec s = Spec.describe s "Pawl.Codec.AffectedUnless" $ do
       ( AffectedUnless.MkAffectedUnless
           { AffectedUnless.affected = Affected.Attached,
             AffectedUnless.unless = Nothing,
-            AffectedUnless.name = Just (AbilityName.MkAbilityName (Text.pack "this effect"))
+            AffectedUnless.name = Just (AbilityName.MkAbilityName (Text.pack "this effect")),
+            AffectedUnless.amount = Nothing
           }
       )
       " {\"affected\":{\"type\":\"Attached\"},\"name\":\"this effect\"} "
+  -- CR 508.1c: the number the affected set compares against (Ensnaring Bridge).
+  Spec.it s "MkAffectedUnless, amount written" $
+    Common.assertCodec
+      s
+      AffectedUnless.codec
+      ( AffectedUnless.MkAffectedUnless
+          { AffectedUnless.affected = Affected.Attached,
+            AffectedUnless.unless = Nothing,
+            AffectedUnless.name = Nothing,
+            AffectedUnless.amount = Just (Quantity.Literal 3)
+          }
+      )
+      " {\"affected\":{\"type\":\"Attached\"},\"amount\":{\"type\":\"Literal\",\"value\":3}} "
   Spec.it s "has a schema" $ Common.assertHasSchema s AffectedUnless.codec

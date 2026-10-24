@@ -1,0 +1,31 @@
+{
+  "description": "CR 508.1c Ensnaring Bridge stops creatures with power greater than its controller's hand size",
+  "note": "alice controls the Bridge and holds two cards; bob, the attacker, holds four, so the count is the Bridge controller's hand (CR 109.5) and not the attacking player's. bob's Hill Giant (power 3) cannot attack; his Grizzly Bears (power 2, equal to alice's hand) can, which pins the comparison as strictly greater.",
+  "board": {
+    "seats": [
+      {
+        "name": "alice",
+        "battlefield": [{ "card": "Ensnaring Bridge", "label": "bridge" }],
+        "hand": [{ "card": "Island" }, { "card": "Island" }],
+        "library": [{ "card": "Island" }, { "card": "Island" }]
+      },
+      {
+        "name": "bob",
+        "battlefield": [
+          { "card": "Hill Giant", "label": "giant", "ready": true },
+          { "card": "Grizzly Bears", "label": "bears", "ready": true }
+        ],
+        "hand": [{ "card": "Swamp" }, { "card": "Swamp" }, { "card": "Swamp" }, { "card": "Swamp" }],
+        "library": [{ "card": "Swamp" }, { "card": "Swamp" }]
+      }
+    ],
+    "active": "bob",
+    "step": "PrecombatMain"
+  },
+  "timeline": [
+    { "turn": 1, "step": "DeclareAttackers", "player": "bob", "refuse": { "Attack": ["$giant"] } },
+    { "turn": 1, "step": "DeclareAttackers", "player": "bob", "do": { "Attack": ["$bears"] } },
+    { "turn": 1, "step": "EndOfCombat", "player": "bob", "check": { "Attackers": { "attackers": { "$bears": "$alice" } } } },
+    { "turn": 1, "step": "EndOfCombat", "player": "bob", "check": { "Life": { "player": "alice", "life": 18 } } }
+  ]
+}

@@ -28,12 +28,12 @@ import qualified Pawl.Types.RuleAbilities as RuleAbilities
 -- Lost in Thought -- states a bound, so it carries no name either.
 nameOf :: CombatRestriction.CombatRestriction -> Maybe AbilityName.AbilityName
 nameOf cr = case cr of
-  CombatRestriction.CantAttack (AffectedUnless.MkAffectedUnless _ _ n) -> n
-  CombatRestriction.CantBlock (AffectedUnless.MkAffectedUnless _ _ n) -> n
+  CombatRestriction.CantAttack (AffectedUnless.MkAffectedUnless _ _ n _) -> n
+  CombatRestriction.CantBlock (AffectedUnless.MkAffectedUnless _ _ n _) -> n
   CombatRestriction.CantBeBlockedBy (CantBeBlockedBy.MkCantBeBlockedBy _ _ _ n) -> n
   CombatRestriction.CantBlockCreatures (CantBlockCreatures.MkCantBlockCreatures _ _ _ n) -> n
   CombatRestriction.CantAttackPlayer (CantAttackPlayer.MkCantAttackPlayer _ _ _ _ n) -> n
-  CombatRestriction.CantAttackAlone (AffectedUnless.MkAffectedUnless _ _ n) -> n
+  CombatRestriction.CantAttackAlone (AffectedUnless.MkAffectedUnless _ _ n _) -> n
   CombatRestriction.CantAttackMoreThan {} -> Nothing
   CombatRestriction.CantBlockMoreThan {} -> Nothing
 

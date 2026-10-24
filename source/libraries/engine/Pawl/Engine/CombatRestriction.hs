@@ -43,6 +43,7 @@ import qualified Pawl.Engine.PlayerEffect as PlayerEffect
 import qualified Pawl.Engine.Projection as Projection
 import qualified Pawl.Engine.Projection.Rewrite as Projection
 import qualified Pawl.Engine.Projection.View as Projection
+import qualified Pawl.Engine.Quantity as Quantity
 import qualified Pawl.Engine.RestrictedCreatures as RestrictedCreatures
 import qualified Pawl.Engine.RuleAbilities as RuleAbilities.Engine
 import qualified Pawl.Engine.Vanguard as Vanguard
@@ -75,6 +76,7 @@ import qualified Pawl.Types.PlayerChoice as PlayerChoice
 import Pawl.Types.PlayerId (PlayerId)
 import qualified Pawl.Types.PlayerScope as PlayerScope
 import qualified Pawl.Types.Prohibition as Prohibition
+import qualified Pawl.Types.Quantity as Quantity.Type
 import qualified Pawl.Types.RangeOfInfluence as RangeOfInfluence
 import qualified Pawl.Types.RuleAbilities as RuleAbilities
 import qualified Pawl.Types.StaticAbility as StaticAbility
@@ -385,7 +387,7 @@ blockedLimits defending attackers gs =
 -- it.
 attacking :: CombatRestriction.CombatRestriction -> Maybe Affected.Affected
 attacking cr = case cr of
-  CombatRestriction.CantAttack (AffectedUnless.MkAffectedUnless a _ _) -> Just a
+  CombatRestriction.CantAttack (AffectedUnless.MkAffectedUnless a _ _ _) -> Just a
   CombatRestriction.CantBlock {} -> Nothing
   CombatRestriction.CantBeBlockedBy {} -> Nothing
   CombatRestriction.CantBlockCreatures {} -> Nothing
@@ -397,7 +399,7 @@ attacking cr = case cr of
 blocking :: CombatRestriction.CombatRestriction -> Maybe Affected.Affected
 blocking cr = case cr of
   CombatRestriction.CantAttack {} -> Nothing
-  CombatRestriction.CantBlock (AffectedUnless.MkAffectedUnless a _ _) -> Just a
+  CombatRestriction.CantBlock (AffectedUnless.MkAffectedUnless a _ _ _) -> Just a
   -- The Affected here names ATTACKERS, never blockers, so this selector must not
   -- see it: answering Just would take the Ring-bearer off CR 509.1a's candidate
   -- list, which is the opposite of what CR 701.54c says.
@@ -415,7 +417,7 @@ attackingAlone cr = case cr of
   CombatRestriction.CantBeBlockedBy {} -> Nothing
   CombatRestriction.CantBlockCreatures {} -> Nothing
   CombatRestriction.CantAttackPlayer {} -> Nothing
-  CombatRestriction.CantAttackAlone (AffectedUnless.MkAffectedUnless a _ _) -> Just a
+  CombatRestriction.CantAttackAlone (AffectedUnless.MkAffectedUnless a _ _ _) -> Just a
   CombatRestriction.CantAttackMoreThan {} -> Nothing
   CombatRestriction.CantBlockMoreThan {} -> Nothing
 
@@ -501,14 +503,42 @@ blockingMoreThan cr = case cr of
 -- Nothing is the UNCONDITIONAL restriction (Pacifism), not a gate that fails.
 gate :: CombatRestriction.CombatRestriction -> Maybe Condition.Type.Condition
 gate cr = case cr of
-  CombatRestriction.CantAttack (AffectedUnless.MkAffectedUnless _ c _) -> c
-  CombatRestriction.CantBlock (AffectedUnless.MkAffectedUnless _ c _) -> c
+  CombatRestriction.CantAttack (AffectedUnless.MkAffectedUnless _ c _ _) -> c
+  CombatRestriction.CantBlock (AffectedUnless.MkAffectedUnless _ c _ _) -> c
   CombatRestriction.CantBeBlockedBy (CantBeBlockedBy.MkCantBeBlockedBy _ _ c _) -> c
   CombatRestriction.CantBlockCreatures (CantBlockCreatures.MkCantBlockCreatures _ _ c _) -> c
   CombatRestriction.CantAttackPlayer (CantAttackPlayer.MkCantAttackPlayer _ _ _ c _) -> c
-  CombatRestriction.CantAttackAlone (AffectedUnless.MkAffectedUnless _ c _) -> c
+  CombatRestriction.CantAttackAlone (AffectedUnless.MkAffectedUnless _ c _ _) -> c
   CombatRestriction.CantAttackMoreThan (AttackLimitUnless.MkAttackLimitUnless _ _ c) -> c
   CombatRestriction.CantBlockMoreThan (LimitUnless.MkLimitUnless _ _ c) -> c
+
+-- CR 508.1c with CR 109.5: the number a restriction's affected set compares
+-- against (Ensnaring Bridge's "the number of cards in your hand"), read off any
+-- arm carrying one -- the three that share Pawl.Types.AffectedUnless.
+amountOf :: CombatRestriction.CombatRestriction -> Maybe Quantity.Type.Quantity
+amountOf cr = case cr of
+  CombatRestriction.CantAttack x -> AffectedUnless.amount x
+  CombatRestriction.CantBlock x -> AffectedUnless.amount x
+  CombatRestriction.CantBeBlockedBy {} -> Nothing
+  CombatRestriction.CantBlockCreatures {} -> Nothing
+  CombatRestriction.CantAttackPlayer {} -> Nothing
+  CombatRestriction.CantAttackAlone x -> AffectedUnless.amount x
+  CombatRestriction.CantAttackMoreThan {} -> Nothing
+  CombatRestriction.CantBlockMoreThan {} -> Nothing
+
+-- The Context an affected set of one row is matched through, with that row's
+-- amount evaluated into Filter.slotAmount for the EnclosingAmount operand. Read
+-- for the SOURCE, whose controller is CR 109.5's "your", through the same
+-- CR 612.1 text change the affected set gets. Bind it once per row: the number
+-- is one thunk shared by every candidate, and a row no candidate reaches
+-- evaluates nothing.
+amountFrame :: GameState -> (ObjectId, [(TextWord.TextWord, TextWord.TextWord)], CombatRestriction.CombatRestriction) -> Filter.Context -> Filter.Context
+amountFrame gs (source, changes, restriction) = case amountOf restriction of
+  Nothing -> id
+  Just quantity ->
+    let rewritten = if null changes then quantity else Projection.rewriteQuantity changes quantity
+        amount = Quantity.evaluate (Projection.fullView gs) (Projection.sourceContext gs (Projection.controllerOf source gs) source) gs source rewritten
+     in \context -> context {Filter.slotAmount = amount}
 
 -- Every combat restriction some permanent on the battlefield -- or some object in
 -- the command zone, whose abilities CR 114.4 makes function there -- states right
@@ -653,7 +683,7 @@ gathered gs =
         Just obj
           | Set.member Designation.Suspected (Object.designations obj),
             not (removedAfter (Object.timestamp obj) source) ->
-              [(source, [], CombatRestriction.CantBlock (AffectedUnless.MkAffectedUnless (Affected.Matching Filter.Type.IsSource) Nothing Nothing))]
+              [(source, [], CombatRestriction.CantBlock (AffectedUnless.MkAffectedUnless (Affected.Matching Filter.Type.IsSource) Nothing Nothing Nothing))]
         _ -> []
       -- The two ability losses the printed rows below check for: CR 305.7's
       -- basic-land subtype set, and CR 604.2 against a CR 613.1f layer-6 removal.
@@ -814,8 +844,9 @@ restrictedIn rows select candidates gs =
       -- read against the FULL projection -- the opposite of
       -- Projection.affects's callers inside the layer fold, which read
       -- characteristics as of their own layer.
-      named source affected creature =
-        Projection.affectsOn
+      named frame source affected creature =
+        Projection.affectsOnFramed
+          frame
           pcs
           grants
           source
@@ -839,12 +870,13 @@ restrictedIn rows select candidates gs =
       -- Dropped HERE, at the walk every subject-carrying reader goes through, so
       -- one payment reaches CR 508.1a's and CR 509.1a's candidate lists and CR
       -- 506.5's "alone" question at once and no later gate can forget it.
-      fromRestriction (source, changes, restriction) = case select restriction of
+      fromRestriction row@(source, changes, restriction) = case select restriction of
         Nothing -> []
         Just affected ->
-          filter
-            (\creature -> named source (if null changes then affected else Projection.rewriteAffected changes affected) creature && not (IgnoredAbility.ignoredForSubject creature source (RuleAbilities.Engine.nameOf restriction) gs))
-            candidates
+          let frame = amountFrame gs row
+           in filter
+                (\creature -> named frame source (if null changes then affected else Projection.rewriteAffected changes affected) creature && not (IgnoredAbility.ignoredForSubject creature source (RuleAbilities.Engine.nameOf restriction) gs))
+                candidates
    in Set.fromList (concatMap fromRestriction rows)
 
 -- CR 116.2d's WHO on the object axis: the permanents that `source`'s ability
@@ -866,12 +898,12 @@ namedSubjects source name gs =
   let pcs = Projection.projectAll gs
       grants = Projection.controlGrants gs
       candidates = Set.toList (GameState.battlefield gs)
-      fromRestriction (rowSource, changes, restriction) = case subjectOf restriction of
+      fromRestriction row@(rowSource, changes, restriction) = case subjectOf restriction of
         Just affected
           | rowSource == source,
             RuleAbilities.Engine.nameOf restriction == Just name ->
               filter
-                (\candidate -> Projection.affectsOn pcs grants source candidate (if null changes then affected else Projection.rewriteAffected changes affected) gs)
+                (\candidate -> Projection.affectsOnFramed (amountFrame gs row) pcs grants source candidate (if null changes then affected else Projection.rewriteAffected changes affected) gs)
                 candidates
         _ -> []
       -- CR 508.5a: a gate naming the defending player is read per seat, so a row
@@ -891,12 +923,12 @@ namedSubjects source name gs =
 -- reach a creature through them.
 subjectOf :: CombatRestriction.CombatRestriction -> Maybe Affected.Affected
 subjectOf cr = case cr of
-  CombatRestriction.CantAttack (AffectedUnless.MkAffectedUnless a _ _) -> Just a
-  CombatRestriction.CantBlock (AffectedUnless.MkAffectedUnless a _ _) -> Just a
+  CombatRestriction.CantAttack (AffectedUnless.MkAffectedUnless a _ _ _) -> Just a
+  CombatRestriction.CantBlock (AffectedUnless.MkAffectedUnless a _ _ _) -> Just a
   CombatRestriction.CantBeBlockedBy (CantBeBlockedBy.MkCantBeBlockedBy a _ _ _) -> Just a
   CombatRestriction.CantBlockCreatures (CantBlockCreatures.MkCantBlockCreatures a _ _ _) -> Just a
   CombatRestriction.CantAttackPlayer (CantAttackPlayer.MkCantAttackPlayer a _ _ _ _) -> Just a
-  CombatRestriction.CantAttackAlone (AffectedUnless.MkAffectedUnless a _ _) -> Just a
+  CombatRestriction.CantAttackAlone (AffectedUnless.MkAffectedUnless a _ _ _) -> Just a
   CombatRestriction.CantAttackMoreThan {} -> Nothing
   CombatRestriction.CantBlockMoreThan {} -> Nothing
 
