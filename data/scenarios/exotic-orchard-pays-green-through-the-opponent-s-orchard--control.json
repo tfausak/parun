@@ -1,0 +1,10 @@
+{
+  "description": "CR 106.7 two Exotic Orchards and no other land produce no mana",
+  "note": "Control: the board above without alice's Forest. Each Orchard could produce only what the other could, which is nothing, so the cast is refused and the Elves stay in hand.",
+  "board": {"active": "alice", "step": "PrecombatMain", "seats": [{"name": "alice", "library": [{"card": "Island"}, {"card": "Island"}, {"card": "Island"}], "battlefield": [{"card": "Exotic Orchard", "label": "orchard"}], "hand": [{"card": "Llanowar Elves", "label": "elves"}]}, {"name": "bob", "library": [{"card": "Island"}, {"card": "Island"}, {"card": "Island"}], "battlefield": [{"card": "Exotic Orchard"}]}]},
+  "timeline": [
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "refuse": {"Cast": {"object": "$elves", "mana": ["$orchard"], "yields": [[{"manaType": {"type": "Colored", "value": {"type": "Green"}}, "tags": [], "retention": {"type": "Ordinary"}, "restriction": null, "rider": null, "sourceChoices": null}]]}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "check": {"Count": {"player": "alice", "zone": "Hand", "card": "Llanowar Elves", "count": 1}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "check": {"Tapped": {"object": "$orchard", "tapped": false}}}
+  ]
+}

@@ -53,6 +53,7 @@ import Pawl.Types.Cost (Cost)
 import qualified Pawl.Types.Cost as Cost
 import qualified Pawl.Types.CostAmount as CostAmount
 import qualified Pawl.Types.CostComponent as CostComponent
+import qualified Pawl.Types.CouldProduce as CouldProduce
 import qualified Pawl.Types.Decider as Decider
 import qualified Pawl.Types.Effect as Effect
 import qualified Pawl.Types.ExilePermanents as ExilePermanents
@@ -249,8 +250,18 @@ noActivations = Activations.MkActivations {Activations.times = 0, Activations.cl
 -- CR 607.2e's noted mana is the one SETTLED production of more than one unit:
 -- Ice Cauldron adds the run its linked ability noted for it
 -- (GameState.notedMana), types mixed, and none where nothing is noted.
+--
+-- CR 106.7's "could produce" asks manaTypesOf of every permanent the filter
+-- matches, from the source controller's seat, and offers the types its mana
+-- filter admits. `visited` is the sources whose answer is being worked out:
+-- one of them asked again contributes nothing, which is the rule's own
+-- example -- two Exotic Orchards and nothing else produce no mana, and a
+-- Forest beside either makes both produce {G}.
 produced :: ObjectId -> GameState -> ManaProduction -> Produced
-produced oid gs production = case production of
+produced = producedVisiting Set.empty
+
+producedVisiting :: Set.Set ObjectId -> ObjectId -> GameState -> ManaProduction -> Produced
+producedVisiting visited oid gs production = case production of
   ManaProduction.OfType manaType -> Settles [manaType]
   ManaProduction.AnyColor ->
     Offers
@@ -261,6 +272,14 @@ produced oid gs production = case production of
       settled -> Settles settled
   ManaProduction.SnowSymbol -> Settles [ManaType.Colorless]
   ManaProduction.Noted -> Settles (foldMap Foldable.toList (Map.lookup oid (GameState.notedMana gs)))
+  ManaProduction.CouldProduce could ->
+    let visiting = Set.insert oid visited
+        context = Projection.sourceContext gs (Projection.controllerOf oid gs) oid
+        asked other = Set.notMember other visiting && maybe False (\view -> Filter.matches context view (CouldProduce.among could)) (Projection.fullView gs other)
+        types = Set.filter (ManaFilter.matchesType (CouldProduce.types could)) (Set.fromList (concatMap (\other -> manaTypesVisiting visiting other gs) (filter asked (Set.toList (GameState.battlefield gs)))))
+     in case Set.toList types of
+          first : second : more -> Offers (first NonEmpty.:| (second : more))
+          settled -> Settles settled
 
 -- CR 106.3: what one AddMana instruction's production comes to on a board --
 -- a settled run of mana, possibly empty (CR 106.5's undefined type adds none),
@@ -606,7 +625,12 @@ manaOptionsOf = manaOptionsOfGiven Map.empty
 
 -- The same options against a pre-projected board (#200).
 manaOptionsOfGiven :: Map.Map ObjectId PC.ProjectedCharacteristics -> ObjectId -> GameState -> [ManaOption]
-manaOptionsOfGiven pcs oid gs = ListUtils.nubOrd (fmap fst (pricedOptionsGiven Map.empty pcs oid gs))
+manaOptionsOfGiven = manaOptionsVisiting Set.empty
+
+-- The same options, worked out while the sources in `visited` are being asked
+-- what they could produce (`produced`).
+manaOptionsVisiting :: Set.Set ObjectId -> Map.Map ObjectId PC.ProjectedCharacteristics -> ObjectId -> GameState -> [ManaOption]
+manaOptionsVisiting visited pcs oid gs = ListUtils.nubOrd (fmap fst (pricedOptionsVisiting visited Map.empty pcs oid gs))
 
 -- CR 601.2h / 608.2h: each option as OFFERED beside the same option priced with
 -- the slots its cost's payment bound -- Priest of Yawgmoth's "equal to the
@@ -617,12 +641,12 @@ manaOptionsOfGiven pcs oid gs = ListUtils.nubOrd (fmap fst (pricedOptionsGiven M
 -- sacrificed artifact is still the permanent CR 608.2h's last-known information
 -- describes. Pawl.Engine.Cost.tapForManaWith and manaSuppliesGiven read it.
 manaRepricingsGiven :: Map.Map SlotName.SlotName Binding.Type.Binding -> Map.Map ObjectId PC.ProjectedCharacteristics -> ObjectId -> GameState -> [(ManaOption, ManaOption)]
-manaRepricingsGiven paid pcs oid gs = ListUtils.nubOrd (pricedOptionsGiven paid pcs oid gs)
+manaRepricingsGiven paid pcs oid gs = ListUtils.nubOrd (pricedOptionsVisiting Set.empty paid pcs oid gs)
 
 -- Both prices off ONE traversal of the colour choices, so a pair's halves are
 -- the same choice. Unshared: manaOptionsOfGiven forces the offered half alone.
-pricedOptionsGiven :: Map.Map SlotName.SlotName Binding.Type.Binding -> Map.Map ObjectId PC.ProjectedCharacteristics -> ObjectId -> GameState -> [(ManaOption, ManaOption)]
-pricedOptionsGiven paid pcs oid gs =
+pricedOptionsVisiting :: Set.Set ObjectId -> Map.Map SlotName.SlotName Binding.Type.Binding -> Map.Map ObjectId PC.ProjectedCharacteristics -> ObjectId -> GameState -> [(ManaOption, ManaOption)]
+pricedOptionsVisiting visited paid pcs oid gs =
   let tags = productionTagsGiven pcs oid gs
       choices = sourceChoicesOf oid gs
       -- CR 106.6, stamped from the instruction that adds the unit: the
@@ -722,7 +746,7 @@ pricedOptionsGiven paid pcs oid gs =
       -- with none chosen -- adds no mana, and the activation is still one the
       -- player may make. Resolve.Effect's AddMana arm answers the same. A
       -- settled run is repeated whole by the count (CR 607.2e's noted mana).
-      additionRuns reader addition = case produced oid gs (ManaAddition.production addition) of
+      additionRuns reader addition = case producedVisiting visited oid gs (ManaAddition.production addition) of
         Settles run -> [fmap (unitFor reader addition) run]
         Offers types -> fmap (\manaType -> [unitFor reader addition manaType]) (NonEmpty.toList types)
    in concatMap expand (manaRoutesOfGiven pcs oid gs)
@@ -874,7 +898,12 @@ typesOf = fmap ManaUnit.manaType . unitsOf
 -- makes Sol Ring read as a choice between two singles, which Pawl.ManaSpec's
 -- solRingSpec is the standing proof against.
 manaTypesOf :: ObjectId -> GameState -> [ManaType]
-manaTypesOf oid gs = ListUtils.nubOrd (concatMap typesOf (manaYieldsOf oid gs))
+manaTypesOf = manaTypesVisiting Set.empty
+
+-- The same question asked while the sources in `visited` are being asked it
+-- (`produced`).
+manaTypesVisiting :: Set.Set ObjectId -> ObjectId -> GameState -> [ManaType]
+manaTypesVisiting visited oid gs = ListUtils.nubOrd (concatMap (typesOf . Mana.MkMana . yieldUnits) (manaOptionsVisiting visited Map.empty oid gs))
 
 setPool :: PlayerId -> Mana -> GameState -> GameState
 setPool pid pool gs = gs {GameState.manaPool = Map.insert pid pool (GameState.manaPool gs)}
