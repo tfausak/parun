@@ -1,0 +1,30 @@
+{
+  "description": "CR 502.3 / 101.2 Winter Orb lets alice untap one land and every creature",
+  "note": "Alice's two Islands and her Hill Giant start tapped. Winter Orb counts only lands, so her turn 2 untap step offers the two Islands and not the Giant, which untaps regardless. She picks the second Island, which is not the default.",
+  "board": {
+    "seats": [
+      {
+        "name": "alice",
+        "battlefield": [
+          { "card": "Winter Orb", "label": "orb" },
+          { "card": "Island", "label": "island-1", "tapped": true },
+          { "card": "Island", "label": "island-2", "tapped": true },
+          { "card": "Hill Giant", "label": "giant", "tapped": true, "ready": true }
+        ],
+        "library": [{ "card": "Island" }, { "card": "Island" }]
+      },
+      {
+        "name": "bob",
+        "library": [{ "card": "Mountain" }, { "card": "Mountain" }]
+      }
+    ],
+    "active": "bob",
+    "step": "EndStep"
+  },
+  "timeline": [
+    { "turn": 2, "step": "Untap", "player": "alice", "do": { "Answer": { "prompt": "ChooseAnyNumberToUntap", "with": ["$island-2"] } } },
+    { "turn": 2, "step": "Upkeep", "player": "alice", "check": { "Tapped": { "object": "$island-1", "tapped": true } } },
+    { "turn": 2, "step": "Upkeep", "player": "alice", "check": { "Tapped": { "object": "$island-2", "tapped": false } } },
+    { "turn": 2, "step": "Upkeep", "player": "alice", "check": { "Tapped": { "object": "$giant", "tapped": false } } }
+  ]
+}

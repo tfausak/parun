@@ -2111,6 +2111,9 @@ ruleAbilitiesCounts rules =
     -- threshold clause). Both of this requirement's axes are Affecteds, which
     -- hold a Filter but no Count.
     <> concatMap (concatMap conditionCounts . Maybe.maybeToList . BlockRequirement.while) (RuleAbilities.blockRequirements rules)
+    -- CR 502.3's restriction under its CR 611.3a "as long as" (Static Orb counts
+    -- itself untapped). The affected set holds a Filter but no Count.
+    <> concatMap (concatMap conditionCounts . Maybe.maybeToList . UntapRestriction.while) (RuleAbilities.untapRestrictions rules)
     -- CR 508.1h's counted share (Sphere of Safety's "the number of enchantments
     -- you control"), the one Count a cost to attack can hold: its subject is an
     -- Affected, which holds a Filter but no Count.
@@ -5366,6 +5369,14 @@ attachRestrictionFilters restriction =
   affectedFilters (AttachRestriction.affected restriction)
     <> [AttachRestriction.attachers restriction]
 
+-- CR 502.3's affected set, plus the CR 611.3a "as long as" it applies under
+-- (Static Orb's "as long as this artifact is untapped"), whose Count holds a
+-- Filter.
+untapRestrictionFilters :: UntapRestriction.UntapRestriction -> [(Framing, Filter.Type.Filter Keyword.Keyword)]
+untapRestrictionFilters restriction =
+  unframed (affectedFilters (UntapRestriction.affected restriction))
+    <> foldMap conditionFilters (UntapRestriction.while restriction)
+
 -- CR 508.1d's subject, plus the CR 604.2 clause the second reading of that rule
 -- rides on (Otarian Juggernaut's threshold), whose Count holds a Filter.
 attackRequirementFilters :: AttackRequirement.AttackRequirement -> [(Framing, Filter.Type.Filter Keyword.Keyword)]
@@ -6334,7 +6345,7 @@ ruleAbilitiesFilters rules =
         <> concatMap (unframed . Maybe.maybeToList . BlockCost.attackers) (RuleAbilities.blockCosts rules)
         <> concatMap (frame Unframed . combatRestrictionFilters) (RuleAbilities.combatRestrictions rules)
         <> concatMap (unframed . affectedFilters . SacrificeRestriction.affected) (RuleAbilities.sacrificeRestrictions rules)
-        <> concatMap (unframed . affectedFilters . UntapRestriction.affected) (RuleAbilities.untapRestrictions rules)
+        <> concatMap untapRestrictionFilters (RuleAbilities.untapRestrictions rules)
         <> concatMap (unframed . affectedFilters . CrewRestriction.affected) (RuleAbilities.crewRestrictions rules)
         <> concatMap (unframed . affectedFilters . TargetRestriction.affected) (RuleAbilities.targetRestrictions rules)
         <> concatMap (unframed . affectedFilters . AttackPermission.affected) (RuleAbilities.attackPermissions rules)

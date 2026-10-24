@@ -191,6 +191,34 @@ Entries are ordered by the first rule each cites.
   takes it at its cleanup".
 - **Issue**: #525.
 
+## An untap cap leaves tapped only what it must
+
+- **Question**: Static Orb says players "can't untap more than two
+  permanents during their untap steps". May the active player untap fewer
+  than the caps allow, and when several caps overlap (Smoke and Winter Orb
+  over an animated land), must they untap the most permanents possible? And
+  does a stunned permanent they choose count against a cap, though its stun
+  counter takes the untap?
+- **Rules**: CR 502.3, 101.2, 122.1d, 614.6; CR of 2026-08-07.
+- **Decision**: The answer must be maximal, not maximum. Every tapped
+  permanent the caps still allow, given the others chosen, untaps. A
+  permanent stays tapped only when an effect keeps it tapped, which CR
+  502.3 makes the default for the rest. A stunned permanent chosen to untap
+  counts against the cap. The cap limits CR 502.3's determination, and CR
+  122.1d's replacement applies to the untap that determination produces
+  (CR 614.6).
+- **Rejected**: Letting the player untap fewer, which would make a cap
+  read as "may untap up to two". Requiring the largest possible set, as
+  CR 508.1d does for attack requirements: Smoke's ruling lets an animated
+  land be the one creature and the one land that untaps, leaving a second
+  permanent tapped that a larger set would have untapped. Leaving a
+  stunned permanent out of the count, which would let the player untap
+  more than the cap names by choosing one.
+- **Site**: `Pawl.Engine.UntapRestriction.settle`, called from
+  `Pawl.Engine.Engine.untapAll`. The Static Orb and Winter Orb scenarios
+  under `data/scenarios/untap-restriction/` prove it.
+- **Issue**: #5531.
+
 ## Who may block a creature attacking nothing
 
 - **Question**: CR 506.4c's creature, its planeswalker or battle removed from

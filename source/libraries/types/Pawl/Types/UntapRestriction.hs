@@ -1,6 +1,7 @@
 module Pawl.Types.UntapRestriction where
 
 import qualified Pawl.Types.Affected as Affected
+import qualified Pawl.Types.Condition as Condition
 import qualified Pawl.Types.UntapHold as UntapHold
 
 -- | CR 502.3 / CR 101.2: one printed UNTAP PROHIBITION -- an effect saying a
@@ -8,7 +9,8 @@ import qualified Pawl.Types.UntapHold as UntapHold
 -- second sentence is one printing; `untapRestrictions` in data/cards is the rest.
 -- Amber Prison's "You may choose not to untap this artifact during your untap
 -- step" is the same restriction with the active player's choice holding it
--- (UntapHold.Elective).
+-- (UntapHold.Elective), and Static Orb's "players can't untap more than two
+-- permanents" the same restriction with a cap on how many (UntapHold.AtMost).
 --
 -- Pawl.Types.SacrificeRestriction's shape and its filing, one turn-based action
 -- over: CR 613.11 puts a continuous effect that "affects game rules rather than
@@ -25,9 +27,9 @@ import qualified Pawl.Types.UntapHold as UntapHold
 --
 -- A record rather than a sum, for SacrificeRestriction's reason: CR 502.3 is one
 -- action, and a restriction names a subject and what holds it back -- an
--- effect's "can't", or its controller's own choice (Pawl.Types.UntapHold). No
--- "unless" gate beside them -- the pool's printings state none, and CR 502.3
--- writes no clause into the rule the way CR 508.1c does.
+-- effect's "can't", a cap on how many, or its controller's own choice
+-- (Pawl.Types.UntapHold) -- and the "as long as" it applies under (CR 611.3a,
+-- Static Orb's "as long as this artifact is untapped").
 --
 -- Gathered LIVE from the battlefield at the untap step and never captured, the
 -- posture every sibling carrier takes: a Tsabo's Web that left lifts its
@@ -48,12 +50,17 @@ import qualified Pawl.Types.UntapHold as UntapHold
 -- Pawl.Engine.UntapRestriction is the only module that may read it, and it
 -- answers a set of ids.
 data UntapRestriction = MkUntapRestriction
-  { -- | Which permanents don't untap. An Affected, not a bare ObjectId, so the set
-    -- is re-derived every untap step -- CR 613.11 lets a rule-modifying continuous
-    -- effect reach objects that were not affected when it began, which is what
-    -- Tsabo's Web's set does as lands enter and leave.
+  { -- | Which permanents it holds back, or counts under a cap. An Affected, not
+    -- a bare ObjectId, so the set is re-derived every untap step -- CR 613.11
+    -- lets a rule-modifying continuous effect reach objects that were not
+    -- affected when it began, which is what Tsabo's Web's set does as lands
+    -- enter and leave.
     affected :: Affected.Affected,
-    -- | Whether an effect forbids the untap or leaves it to the active player.
-    hold :: UntapHold.UntapHold
+    -- | Whether an effect forbids the untap, caps it, or leaves it to the
+    -- active player.
+    hold :: UntapHold.UntapHold,
+    -- | CR 611.3a: the condition the restriction applies under, read at each
+    -- untap step; Nothing where it always does.
+    while :: Maybe Condition.Condition
   }
   deriving (Eq, Ord, Show)
