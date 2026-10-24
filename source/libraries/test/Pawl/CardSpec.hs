@@ -145,6 +145,7 @@ import qualified Pawl.Types.CostChoice as CostChoice
 import qualified Pawl.Types.CostComponent as CostComponent
 import qualified Pawl.Types.CostModifier as CostModifier
 import qualified Pawl.Types.CostReduction as CostReduction
+import qualified Pawl.Types.CouldProduce as CouldProduce
 import qualified Pawl.Types.Count as Count.Type
 import qualified Pawl.Types.CountedDiscard as CountedDiscard
 import qualified Pawl.Types.Counter as Counter
@@ -5917,11 +5918,22 @@ restrictionFilters restriction =
 manaRiderFilters :: ManaRider.ManaRider -> [Filter.Type.Filter Keyword.Keyword]
 manaRiderFilters rider = [ManaRider.condition rider]
 
--- AddMana's and Firebend's shared payload: CR 106.6's restriction, rider and
--- spend trigger.
+-- The predicate CR 106.7's "could produce" carries.
+manaProductionFilters :: ManaProduction.ManaProduction -> [Filter.Type.Filter Keyword.Keyword]
+manaProductionFilters production = case production of
+  ManaProduction.OfType _ -> []
+  ManaProduction.AnyColor -> []
+  ManaProduction.Chosen -> []
+  ManaProduction.SnowSymbol -> []
+  ManaProduction.Noted -> []
+  ManaProduction.CouldProduce could -> [CouldProduce.among could]
+
+-- AddMana's and Firebend's shared payload: CR 106.7's group, CR 106.6's
+-- restriction, rider and spend trigger.
 manaAdditionFilters :: ManaAddition.ManaAddition -> [(Framing, Filter.Type.Filter Keyword.Keyword)]
 manaAdditionFilters addition =
-  fmap ((,) ManaRestrictionFramed) (concatMap restrictionFilters (Maybe.maybeToList (ManaAddition.restriction addition)))
+  unframed (manaProductionFilters (ManaAddition.production addition))
+    <> fmap ((,) ManaRestrictionFramed) (concatMap restrictionFilters (Maybe.maybeToList (ManaAddition.restriction addition)))
     <> unframed (concatMap manaRiderFilters (Maybe.maybeToList (ManaAddition.rider addition)))
     <> unframed (fmap WhenSpent.casts (Maybe.maybeToList (ManaAddition.whenSpent addition)))
 

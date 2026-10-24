@@ -205,6 +205,7 @@ import qualified Pawl.Codec.CostReductionSpec
 import qualified Pawl.Codec.CostScaleSpec
 import qualified Pawl.Codec.CostSpec
 import qualified Pawl.Codec.CostSubjectSpec
+import qualified Pawl.Codec.CouldProduceSpec
 import qualified Pawl.Codec.CountIsSpec
 import qualified Pawl.Codec.CountSpec
 import qualified Pawl.Codec.CountedDiscardSpec
@@ -1111,6 +1112,7 @@ spec s registry = do
   Pawl.Codec.CostScaleSpec.spec s
   Pawl.Codec.CostSpec.spec s
   Pawl.Codec.CostSubjectSpec.spec s
+  Pawl.Codec.CouldProduceSpec.spec s
   Pawl.Codec.CountedDiscardSpec.spec s
   Pawl.Codec.CounterabilitySpec.spec s
   Pawl.Codec.CounterChangeSpec.spec s

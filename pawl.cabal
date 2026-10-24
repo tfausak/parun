@@ -455,6 +455,8 @@ library codec
     Pawl.Codec.CostSpec
     Pawl.Codec.CostSubject
     Pawl.Codec.CostSubjectSpec
+    Pawl.Codec.CouldProduce
+    Pawl.Codec.CouldProduceSpec
     Pawl.Codec.Count
     Pawl.Codec.CountedDiscard
     Pawl.Codec.CountedDiscardSpec
@@ -2454,6 +2456,7 @@ library types
     Pawl.Types.CostReduction
     Pawl.Types.CostScale
     Pawl.Types.CostSubject
+    Pawl.Types.CouldProduce
     Pawl.Types.Count
     Pawl.Types.CountedDiscard
     Pawl.Types.Counter

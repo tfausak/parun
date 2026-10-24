@@ -1,5 +1,6 @@
 module Pawl.Types.ManaProduction where
 
+import qualified Pawl.Types.CouldProduce as CouldProduce
 import qualified Pawl.Types.ManaType as ManaType
 
 -- | CR 106.3: how an AddMana effect decides WHICH mana it puts into the pool.
@@ -53,4 +54,6 @@ data ManaProduction
   | -- | CR 607.2e: the run of mana a linked ability noted for the source
     -- (GameState.notedMana), Ice Cauldron's; the count repeats the whole run.
     Noted
+  | -- | CR 106.7: a type other permanents could produce (Star Compass).
+    CouldProduce CouldProduce.CouldProduce
   deriving (Eq, Ord, Show)
