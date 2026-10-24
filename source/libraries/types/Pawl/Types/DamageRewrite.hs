@@ -103,7 +103,7 @@ data DamageRewrite effect
     PreventAllBut Natural.Natural
   | -- | CR 702.64a: a static prevention that stops this much of each applicable
     -- damage event and lets the rest through -- absorb N's "prevent N of that
-    -- damage".
+    -- damage", which Urza's Armor prints.
     --
     -- A CEILING on what is stopped, and thereby the arm above read from the other
     -- end: PreventAllBut names what survives, this one what does not happen, and

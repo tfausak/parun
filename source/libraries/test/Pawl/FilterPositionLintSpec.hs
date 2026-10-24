@@ -14,7 +14,7 @@ import qualified Data.Monoid as Monoid
 import qualified Data.Sequence as Seq
 import qualified Data.Set as Set
 import qualified Data.Text as Text
-import Pawl.CardSpec (Framing (ActivationCostFramed, AffectedSetFramed, AttachDestination, ClauseGateFramed, EntryAttachDestination, HandSweepFramed, InTargetSlot, KeywordFramed, LifeLossAmountFramed, ManaRestrictionFramed, MillTallyFramed, MintedTargetSlot, OutsideTheGameFramed, PlayerEffectFramed, ReplacementRowFramed, SearchFramed, SlotlessCostFramed, SourceHostFramed, StandingHostFramed, StoredClassFramed, StoredPlayerEffectFramed, TriggerConditionFramed, Unframed), anyFace, cardCounts, cardFilters, cardResolutionEffects, conditionFilters, counterKindFilters, durationFilters, effectFilters, entryRewriteFilters, filterSlotsReadSingly, framedSlotsReadSingly, keywordFilters, modalFilters, objectRefFilters, oneEffectTrigger, oneFaced, payGateFilters, quantityFilters, replacementEffectFilters, riderFilters, triggerConditionFilters, turnUpRewriteFilters)
+import Pawl.CardSpec (Framing (ActivationCostFramed, AffectedSetFramed, AttachDestination, ChosenSourceFramed, ClauseGateFramed, EntryAttachDestination, HandSweepFramed, InTargetSlot, KeywordFramed, LifeLossAmountFramed, ManaRestrictionFramed, MillTallyFramed, MintedTargetSlot, OutsideTheGameFramed, PlayerEffectFramed, ReplacementRowFramed, SearchFramed, SlotlessCostFramed, SourceHostFramed, StandingHostFramed, StoredClassFramed, StoredPlayerEffectFramed, TriggerConditionFramed, Unframed), anyFace, cardCounts, cardFilters, cardResolutionEffects, conditionFilters, counterKindFilters, durationFilters, effectFilters, entryRewriteFilters, filterSlotsReadSingly, framedSlotsReadSingly, keywordFilters, modalFilters, objectRefFilters, oneEffectTrigger, oneFaced, payGateFilters, quantityFilters, replacementEffectFilters, riderFilters, triggerConditionFilters, turnUpRewriteFilters)
 import qualified Pawl.Codec.Card as Card
 import qualified Pawl.Codec.Face as Face.Codec
 import qualified Pawl.Codec.Filter as Filter.Codec
@@ -393,6 +393,7 @@ sourceFramed framing = case framing of
   AffectedSetFramed -> True
   ActivationCostFramed -> True
   TriggerConditionFramed -> True
+  ChosenSourceFramed -> True
   AttachDestination -> True
   EntryAttachDestination -> True
   -- The stored CR 611.2c row's: a resolved spell has no permanent behind it to
@@ -800,11 +801,12 @@ hasChosenNameTag = Text.pack "HasChosenName"
 -- How many CR 201.4 chosen-name atoms this card carries inside one of the
 -- ADMITTED positions -- a CR 701.23 search's filter, a CR 701.17 mill's tally,
 -- an EFFECT's ObjectRef, a mode's target slot, a player effect's own Filter,
--- printed or stored, or a static ability's affected set (Projection.affectedContext)
--- -- and how many anywhere else. The second number is the offence; the first is
--- what Ancient Vendetta, Predict, Petra Sphinx, Conundrum Sphinx, Null Chamber,
--- Conjurer's Ban, Runed Halo, Declaration of Naught and Immediate Action
--- legitimately have.
+-- printed or stored, a static ability's affected set (Projection.affectedContext),
+-- or a mode clause's own "if", which Pawl.Engine.Resolve.gateHolds reads through
+-- Resolve.Slots.effectContext -- and how many anywhere else. The second number
+-- is the offence; the first is what Ancient Vendetta, Predict, Petra Sphinx,
+-- Conundrum Sphinx, Vexing Arcanix, Null Chamber, Conjurer's Ban, Runed Halo,
+-- Declaration of Naught and Immediate Action legitimately have.
 --
 -- SourceHostFramed and not `hostFramed`: since #3320 that tag means an effect's
 -- ObjectRef and nothing else, which is what makes it admissible here. The
@@ -820,7 +822,7 @@ hasChosenNameTag = Text.pack "HasChosenName"
 -- fact answer. Widen it when a card wants one of them.
 hasChosenNameCounts :: Face.Face Card.Type.Card -> (Int, Int)
 hasChosenNameCounts card =
-  let total wanted = sum (fmap (\(_, f) -> filterAtoms hasChosenNameTag f) (filter (\(framing, _) -> elem framing [SearchFramed, MillTallyFramed, SourceHostFramed, InTargetSlot, PlayerEffectFramed, StoredPlayerEffectFramed, AffectedSetFramed] == wanted) (cardFilters card)))
+  let total wanted = sum (fmap (\(_, f) -> filterAtoms hasChosenNameTag f) (filter (\(framing, _) -> elem framing [SearchFramed, MillTallyFramed, SourceHostFramed, InTargetSlot, PlayerEffectFramed, StoredPlayerEffectFramed, AffectedSetFramed, ClauseGateFramed] == wanted) (cardFilters card)))
    in (total True, total False)
 
 -- CR 201.4's chosen name is answerable only where Filter.Context.sourceChosenNames
@@ -1582,11 +1584,17 @@ filterPositionLintSpec s registry = Spec.describe s "Lint" $ do
       "Immediate Action's one atom is framed by its static ability's affected set"
       (hasChosenNameCounts (S.combinedFace action))
       (1, 0)
+    arcanix <- S.printingOf s registry "Vexing Arcanix"
     Spec.assertEqWith
       s
-      "and the eleven cards' atoms are the pool's only ones"
+      "Vexing Arcanix's three atoms are framed by its two moves' ObjectRefs and its damage clause's gate"
+      (hasChosenNameCounts (S.combinedFace arcanix))
+      (3, 0)
+    Spec.assertEqWith
+      s
+      "and the twelve cards' atoms are the pool's only ones"
       (sum (fmap (uncurry (+) . hasChosenNameCounts . S.combinedFace) ps))
-      13
+      16
   -- CR 702.16k's chosen player in the same frame one atom over: answerable only
   -- where a protection quality is read, and every one of those four positions
   -- takes its filter off a keyword. See ofChosenPlayerOffends for the two
@@ -2723,7 +2731,8 @@ filterPositionLintSpec s registry = Spec.describe s "Lint" $ do
         (ActivationCostFramed, [bound]),
         (ManaRestrictionFramed, [bound]),
         (TriggerConditionFramed, [bound]),
-        (StoredClassFramed, [bound])
+        (StoredClassFramed, [bound]),
+        (ChosenSourceFramed, [bound])
       ]
   -- A comparison against the SOURCE's measures, names (CR 702.60a's ripple) or
   -- colours (CR 702.78a's conspire) is answerable only where the CONTEXT
@@ -3514,7 +3523,8 @@ filterPositionLintSpec s registry = Spec.describe s "Lint" $ do
         ("Throne of Eldraine", hasChosenColorCounts, "a mana restriction", (1, 0)),
         ("Kindred Discovery", hasChosenSubtypeCounts, "two trigger conditions", (2, 0)),
         ("Brass Herald", hasChosenSubtypeCounts, "an affected set and a resolution's own filter", (2, 0)),
-        ("Persecute", hasChosenColorCounts, "a spell's own hand sweep after its own choice", (1, 0))
+        ("Persecute", hasChosenColorCounts, "a spell's own hand sweep after its own choice", (1, 0)),
+        ("Story Circle", hasChosenColorCounts, "an activated ability's chosen damage source", (1, 0))
       ]
       $ \(name, counts, position, expected) -> do
         printing <- S.printingOf s registry name
