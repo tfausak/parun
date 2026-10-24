@@ -7,34 +7,7 @@ line) and running `parun deck` on it: every unresolved name is reported.
 
 ## Expressible today
 
-These need no new capability, but `parun translate` does not translate them yet.
-Each names the mtgish node the translator stops at, or what its rendering gets
-wrong. No missing Ninth Edition card's whole text is keywords, so
-`script/ingest` adds none of them.
-
-- Marble Titan: `Permanents:PowerIs`
-- Mindslicer: `Action:DiscardHand`
-- Mortivore: `CardsInGraveyards:IsCardtype`
-- Overgrowth: `Trigger:WhenAPermanentIsTappedForMana`
-- Peace of Mind: `Cost:DiscardACard`
-- Rathi Dragon: `Action:MayCost`
-- Reminisce: `Action:ShuffleGraveyardIntoLibrary`
-- Rogue Kavu: `Trigger:WhenACreatureAttacksAlone`
-- Sage Aven: `Action:LookAtTheTopNumberCardsOfLibrary`
-- Sanctum Guardian: `Action:ChooseADamageSource`
-- Sea's Claim: `StaticLayerEffect:SetLandType`
-- Sengir Vampire: `Permanents:WasDealtDamageByPermanentThisTurn`
-- Shard Phoenix: `Rule:FromGraveyard`
-- Silklash Spider: `Cost:PayManaX`
-- Thran Golem: `Rule:If`
-- Threaten: `Action:GainControlOfPermanentUntil`
-- Traumatize: `GameNumber:HalfRoundedDown`
-- Treetop Bracers: `PermanentRule:CantBeBlockedExceptByDefenders`
-- Wanderguard Sentry: `Action:LookAtPlayersHand`
-- Weathered Wayfarer: `Condition:APlayerPassesFilter`
-- Weird Harvest: `Action:EachPlayerMayAction`
-- Yawgmoth Demon: `Condition:CostWasntPaid`
-- Zealous Inquisitor: `Action:CreateFutureReplaceWouldDealDamage`
+Every expressible Ninth Edition card has been added to `data/cards/`.
 
 ## Needs a capability
 

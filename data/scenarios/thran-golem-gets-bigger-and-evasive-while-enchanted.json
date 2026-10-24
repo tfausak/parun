@@ -1,0 +1,15 @@
+{
+  "description": "CR 303.4 / 613.4c whole card: Thran Golem gets +2/+2 and has flying, first strike and trample as long as it is enchanted",
+  "note": "Unenchanted it is a plain 3/3; with Holy Strength (+1/+2) on it, it is 6/7 with all three keywords.",
+  "board": {"active": "alice", "step": "PrecombatMain", "seats": [{"name": "alice", "manaPool": "W", "hand": [{"card": "Holy Strength", "label": "strength"}], "battlefield": [{"card": "Thran Golem", "label": "golem"}], "library": [{"card": "Island"}, {"card": "Island"}, {"card": "Island"}, {"card": "Island"}]}, {"name": "bob", "library": [{"card": "Island"}, {"card": "Island"}, {"card": "Island"}, {"card": "Island"}]}]},
+  "timeline": [
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "check": {"PowerToughness": {"object": "$golem", "power": 3, "toughness": 3}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "check": {"Keywords": {"object": "$golem", "keyword": {"type": "Flying"}, "count": 0}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "do": {"Cast": {"object": "$strength", "targets": ["$golem"]}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "do": "Pass"},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "check": {"PowerToughness": {"object": "$golem", "power": 6, "toughness": 7}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "check": {"Keywords": {"object": "$golem", "keyword": {"type": "Flying"}, "count": 1}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "check": {"Keywords": {"object": "$golem", "keyword": {"type": "FirstStrike"}, "count": 1}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "check": {"Keywords": {"object": "$golem", "keyword": {"type": "Trample"}, "count": 1}}}
+  ]
+}

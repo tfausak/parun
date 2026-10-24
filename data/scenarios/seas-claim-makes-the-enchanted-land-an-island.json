@@ -1,0 +1,11 @@
+{
+  "description": "CR 305.7 / 613.1d whole card: the land Sea's Claim enchants is an Island",
+  "note": "Bob's Mountain loses its own type and taps for blue; his other Mountain is still a Mountain.",
+  "board": {"active": "alice", "step": "PrecombatMain", "seats": [{"name": "alice", "manaPool": "U", "hand": [{"card": "Sea's Claim", "label": "claim"}], "library": [{"card": "Island"}, {"card": "Island"}, {"card": "Island"}, {"card": "Island"}]}, {"name": "bob", "battlefield": [{"card": "Mountain", "label": "mountain"}, {"card": "Mountain", "label": "other"}], "library": [{"card": "Island"}, {"card": "Island"}, {"card": "Island"}, {"card": "Island"}]}]},
+  "timeline": [
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "do": {"Cast": {"object": "$claim", "targets": ["$mountain"]}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "do": "Pass"},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "check": {"Subtypes": {"object": "$mountain", "subtypes": ["Island"]}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "check": {"Subtypes": {"object": "$other", "subtypes": ["Mountain"]}}}
+  ]
+}

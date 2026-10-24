@@ -1,0 +1,8 @@
+{
+  "description": "CR 604.3 / 208.2a whole card: Mortivore's power and toughness are each the number of creature cards in all graveyards",
+  "note": "Three creature cards across both graveyards make it 3/3; the Island and the Lightning Bolt beside them, and bob's Craw Wurm on the battlefield, do not count.",
+  "board": {"active": "alice", "step": "PrecombatMain", "seats": [{"name": "alice", "battlefield": [{"card": "Mortivore", "label": "mortivore"}], "graveyard": [{"card": "Grizzly Bears"}, {"card": "Island"}], "library": [{"card": "Island"}, {"card": "Island"}, {"card": "Island"}, {"card": "Island"}]}, {"name": "bob", "battlefield": [{"card": "Craw Wurm"}], "graveyard": [{"card": "Hill Giant"}, {"card": "Gray Ogre"}, {"card": "Lightning Bolt"}], "library": [{"card": "Island"}, {"card": "Island"}, {"card": "Island"}, {"card": "Island"}]}]},
+  "timeline": [
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "check": {"PowerToughness": {"object": "$mortivore", "power": 3, "toughness": 3}}}
+  ]
+}
