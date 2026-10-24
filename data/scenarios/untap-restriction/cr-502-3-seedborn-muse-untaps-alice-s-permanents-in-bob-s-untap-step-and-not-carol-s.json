@@ -1,0 +1,37 @@
+{
+  "description": "CR 502.3 Seedborn Muse untaps alice's permanents in bob's untap step and leaves carol's tapped",
+  "note": "Alice's Forest and Grizzly Bears start tapped. In bob's turn 2 untap step the Muse untaps them, and bob untaps his own Mountain as CR 502.3 has him do. Carol's Island is not alice's, so it stays tapped until carol's own untap step on turn 3.",
+  "board": {
+    "seats": [
+      {
+        "name": "alice",
+        "battlefield": [
+          { "card": "Seedborn Muse", "label": "muse" },
+          { "card": "Forest", "label": "forest", "tapped": true },
+          { "card": "Grizzly Bears", "label": "bears", "tapped": true }
+        ],
+        "library": [{ "card": "Forest" }, { "card": "Forest" }, { "card": "Forest" }]
+      },
+      {
+        "name": "bob",
+        "battlefield": [{ "card": "Mountain", "label": "mountain", "tapped": true }],
+        "library": [{ "card": "Mountain" }, { "card": "Mountain" }, { "card": "Mountain" }]
+      },
+      {
+        "name": "carol",
+        "battlefield": [{ "card": "Island", "label": "island", "tapped": true }],
+        "library": [{ "card": "Island" }, { "card": "Island" }, { "card": "Island" }]
+      }
+    ],
+    "active": "alice",
+    "step": "PrecombatMain"
+  },
+  "timeline": [
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "check": { "Tapped": { "object": "$forest", "tapped": true } } },
+    { "turn": 2, "step": "Upkeep", "player": "bob", "check": { "Tapped": { "object": "$forest", "tapped": false } } },
+    { "turn": 2, "step": "Upkeep", "player": "bob", "check": { "Tapped": { "object": "$bears", "tapped": false } } },
+    { "turn": 2, "step": "Upkeep", "player": "bob", "check": { "Tapped": { "object": "$mountain", "tapped": false } } },
+    { "turn": 2, "step": "Upkeep", "player": "bob", "check": { "Tapped": { "object": "$island", "tapped": true } } },
+    { "turn": 3, "step": "Upkeep", "player": "carol", "check": { "Tapped": { "object": "$island", "tapped": false } } }
+  ]
+}

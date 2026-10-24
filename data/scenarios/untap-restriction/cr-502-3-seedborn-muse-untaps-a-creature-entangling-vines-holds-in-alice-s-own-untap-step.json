@@ -1,0 +1,29 @@
+{
+  "description": "CR 502.3 / 101.2 Seedborn Muse untaps in bob's untap step a creature Entangling Vines holds tapped in alice's own",
+  "note": "Entangling Vines says its creature doesn't untap during its controller's untap step, so alice's Grizzly Bears stays tapped through her turn 2 untap step. Bob's turn 3 untap step is not hers, so the Vines does not reach the Muse's untap there and the Bears untaps.",
+  "board": {
+    "seats": [
+      {
+        "name": "alice",
+        "battlefield": [
+          { "card": "Seedborn Muse", "label": "muse" },
+          { "card": "Grizzly Bears", "label": "bears", "tapped": true },
+          { "card": "Entangling Vines", "label": "vines", "attached": "bears" }
+        ],
+        "library": [{ "card": "Forest" }, { "card": "Forest" }, { "card": "Forest" }]
+      },
+      {
+        "name": "bob",
+        "battlefield": [{ "card": "Mountain", "label": "mountain" }],
+        "library": [{ "card": "Mountain" }, { "card": "Mountain" }, { "card": "Mountain" }]
+      }
+    ],
+    "active": "bob",
+    "step": "PrecombatMain"
+  },
+  "timeline": [
+    { "turn": 2, "step": "Upkeep", "player": "alice", "check": { "Tapped": { "object": "$bears", "tapped": true } } },
+    { "turn": 2, "step": "DeclareAttackers", "player": "alice", "do": { "Attack": [] } },
+    { "turn": 3, "step": "Upkeep", "player": "bob", "check": { "Tapped": { "object": "$bears", "tapped": false } } }
+  ]
+}
