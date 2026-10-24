@@ -1,0 +1,298 @@
+{
+  "faces": [
+    {
+      "activatedAbilities": [
+        {
+          "cost": {
+            "components": [
+              {
+                "type": "TapThis"
+              }
+            ],
+            "mana": []
+          },
+          "modal": {
+            "modes": [
+              {
+                "clauses": [
+                  {
+                    "condition": {
+                      "type": "Any",
+                      "value": [
+                        {
+                          "type": "Compares",
+                          "value": {
+                            "comparison": {
+                              "type": "Exactly"
+                            },
+                            "measured": {
+                              "type": "Count",
+                              "value": {
+                                "aggregation": {
+                                  "type": "Members"
+                                },
+                                "filter": {
+                                  "type": "And",
+                                  "value": [
+                                    {
+                                      "type": "HasSubtype",
+                                      "value": {
+                                        "type": "Mine"
+                                      }
+                                    },
+                                    {
+                                      "type": "ControlledBy",
+                                      "value": {
+                                        "type": "You"
+                                      }
+                                    }
+                                  ]
+                                },
+                                "scope": {
+                                  "type": "InZone",
+                                  "value": {
+                                    "player": {
+                                      "type": "Relative",
+                                      "value": {
+                                        "type": "AnyPlayer"
+                                      }
+                                    },
+                                    "zone": {
+                                      "type": "Battlefield"
+                                    }
+                                  }
+                                }
+                              }
+                            },
+                            "threshold": {
+                              "type": "Literal",
+                              "value": 0
+                            }
+                          }
+                        },
+                        {
+                          "type": "Compares",
+                          "value": {
+                            "comparison": {
+                              "type": "Exactly"
+                            },
+                            "measured": {
+                              "type": "Count",
+                              "value": {
+                                "aggregation": {
+                                  "type": "Members"
+                                },
+                                "filter": {
+                                  "type": "And",
+                                  "value": [
+                                    {
+                                      "type": "HasSubtype",
+                                      "value": {
+                                        "type": "Tower"
+                                      }
+                                    },
+                                    {
+                                      "type": "ControlledBy",
+                                      "value": {
+                                        "type": "You"
+                                      }
+                                    }
+                                  ]
+                                },
+                                "scope": {
+                                  "type": "InZone",
+                                  "value": {
+                                    "player": {
+                                      "type": "Relative",
+                                      "value": {
+                                        "type": "AnyPlayer"
+                                      }
+                                    },
+                                    "zone": {
+                                      "type": "Battlefield"
+                                    }
+                                  }
+                                }
+                              }
+                            },
+                            "threshold": {
+                              "type": "Literal",
+                              "value": 0
+                            }
+                          }
+                        }
+                      ]
+                    },
+                    "effects": [
+                      {
+                        "type": "AddMana",
+                        "value": {
+                          "production": {
+                            "type": "OfType",
+                            "value": {
+                              "type": "Colorless"
+                            }
+                          }
+                        }
+                      }
+                    ]
+                  },
+                  {
+                    "condition": {
+                      "type": "All",
+                      "value": [
+                        {
+                          "type": "Compares",
+                          "value": {
+                            "comparison": {
+                              "type": "AtLeast"
+                            },
+                            "measured": {
+                              "type": "Count",
+                              "value": {
+                                "aggregation": {
+                                  "type": "Members"
+                                },
+                                "filter": {
+                                  "type": "And",
+                                  "value": [
+                                    {
+                                      "type": "HasSubtype",
+                                      "value": {
+                                        "type": "Mine"
+                                      }
+                                    },
+                                    {
+                                      "type": "ControlledBy",
+                                      "value": {
+                                        "type": "You"
+                                      }
+                                    }
+                                  ]
+                                },
+                                "scope": {
+                                  "type": "InZone",
+                                  "value": {
+                                    "player": {
+                                      "type": "Relative",
+                                      "value": {
+                                        "type": "AnyPlayer"
+                                      }
+                                    },
+                                    "zone": {
+                                      "type": "Battlefield"
+                                    }
+                                  }
+                                }
+                              }
+                            },
+                            "threshold": {
+                              "type": "Literal",
+                              "value": 1
+                            }
+                          }
+                        },
+                        {
+                          "type": "Compares",
+                          "value": {
+                            "comparison": {
+                              "type": "AtLeast"
+                            },
+                            "measured": {
+                              "type": "Count",
+                              "value": {
+                                "aggregation": {
+                                  "type": "Members"
+                                },
+                                "filter": {
+                                  "type": "And",
+                                  "value": [
+                                    {
+                                      "type": "HasSubtype",
+                                      "value": {
+                                        "type": "Tower"
+                                      }
+                                    },
+                                    {
+                                      "type": "ControlledBy",
+                                      "value": {
+                                        "type": "You"
+                                      }
+                                    }
+                                  ]
+                                },
+                                "scope": {
+                                  "type": "InZone",
+                                  "value": {
+                                    "player": {
+                                      "type": "Relative",
+                                      "value": {
+                                        "type": "AnyPlayer"
+                                      }
+                                    },
+                                    "zone": {
+                                      "type": "Battlefield"
+                                    }
+                                  }
+                                }
+                              }
+                            },
+                            "threshold": {
+                              "type": "Literal",
+                              "value": 1
+                            }
+                          }
+                        }
+                      ]
+                    },
+                    "effects": [
+                      {
+                        "type": "AddMana",
+                        "value": {
+                          "production": {
+                            "type": "OfType",
+                            "value": {
+                              "type": "Colorless"
+                            }
+                          }
+                        }
+                      },
+                      {
+                        "type": "AddMana",
+                        "value": {
+                          "production": {
+                            "type": "OfType",
+                            "value": {
+                              "type": "Colorless"
+                            }
+                          }
+                        }
+                      }
+                    ]
+                  }
+                ]
+              }
+            ]
+          }
+        }
+      ],
+      "name": "Urza's Power Plant",
+      "oracleText": "{T}: Add {C}. If you control an Urza's Mine and an Urza's Tower, add {C}{C} instead.",
+      "typeLine": {
+        "subtypes": [
+          {
+            "type": "PowerPlant"
+          },
+          {
+            "type": "Urzas"
+          }
+        ],
+        "types": [
+          {
+            "type": "Land"
+          }
+        ]
+      }
+    }
+  ]
+}

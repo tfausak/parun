@@ -19,7 +19,7 @@
 -- about the two CR 710.1c withholds.
 --
 -- Also CR 603.2's recipient half: Akki's trigger names an OPPONENT, which the
--- card spells as TriggerCondition.SelfDealsDamageToPlayer's Opponent relation.
+-- card spells as TriggerCondition.DealsDamageToPlayer's Opponent relation.
 -- CR 614.9's redirection is what tells that apart from "a player" -- see the
 -- Harm's Way pair at the end -- and the Soul's Fire pair beside it is CR 120.1's
 -- other half, noncombat damage from the same creature.

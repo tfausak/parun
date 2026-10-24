@@ -160,6 +160,7 @@ import qualified Pawl.Types.DamagePattern as DamagePattern
 import qualified Pawl.Types.DamageR as DamageR
 import qualified Pawl.Types.DamageRewrite as DamageRewrite
 import qualified Pawl.Types.DealDamage as DealDamage
+import qualified Pawl.Types.DealsDamageToPlayer as DealsDamageToPlayer
 import qualified Pawl.Types.DelayedTrigger as DelayedTrigger
 import qualified Pawl.Types.Designate as Designate
 import qualified Pawl.Types.Destroy as Destroy
@@ -2256,6 +2257,10 @@ permanentCandidateNames :: (Monoid r) => Asking r -> PermanentCandidate.Permanen
 permanentCandidateNames asking x = case x of
   PermanentCandidate.MkPermanentCandidate source _provenance effect _ordinal -> names asking (== source) <> replacementEffectNames asking (const mempty) (grantedAbilityNames asking (const mempty)) (effectNames asking (const mempty) (grantedAbilityNames asking (const mempty))) effect
 
+dealsDamageToPlayerNames :: (Monoid r) => Asking r -> DealsDamageToPlayer.DealsDamageToPlayer -> r
+dealsDamageToPlayerNames asking x = case x of
+  DealsDamageToPlayer.MkDealsDamageToPlayer actor _recipient -> actingPermanentNames asking actor
+
 permanentDealsCombatDamageToPlayerNames :: (Monoid r) => Asking r -> PermanentDealsCombatDamageToPlayer.PermanentDealsCombatDamageToPlayer -> r
 permanentDealsCombatDamageToPlayerNames asking x = case x of
   PermanentDealsCombatDamageToPlayer.MkPermanentDealsCombatDamageToPlayer filter_ _recipient -> filterNames asking filter_
@@ -2857,11 +2862,11 @@ triggerConditionNames asking x = case x of
   TriggerCondition.StateIs condition -> conditionNames asking condition
   TriggerCondition.SelfDealsCombatDamageToPlayer _playerRelation -> mempty
   TriggerCondition.SelfDealsCombatDamageToPlayerOrBattle -> mempty
-  TriggerCondition.SelfDealsCombatDamage -> mempty
-  TriggerCondition.SelfDealsDamageToPlayer _playerRelation -> mempty
+  TriggerCondition.DealsCombatDamage actingPermanent -> actingPermanentNames asking actingPermanent
+  TriggerCondition.DealsDamageToPlayer dealsDamageToPlayer -> dealsDamageToPlayerNames asking dealsDamageToPlayer
   TriggerCondition.SelfDealsDamageToCreature -> mempty
-  TriggerCondition.SelfDealsDamage -> mempty
-  TriggerCondition.SelfIsDealtDamage -> mempty
+  TriggerCondition.DealsDamage actingPermanent -> actingPermanentNames asking actingPermanent
+  TriggerCondition.IsDealtDamage actingPermanent -> actingPermanentNames asking actingPermanent
   TriggerCondition.PlayerIsDealtDamage _playerRelation -> mempty
   TriggerCondition.PermanentDealsCombatDamageToPlayer permanentDealsCombatDamageToPlayer -> permanentDealsCombatDamageToPlayerNames asking permanentDealsCombatDamageToPlayer
   TriggerCondition.PermanentsDealCombatDamageToPlayer permanentsDealCombatDamageToPlayer -> permanentsDealCombatDamageToPlayerNames asking permanentsDealCombatDamageToPlayer
@@ -2920,7 +2925,6 @@ triggerConditionNames asking x = case x of
   TriggerCondition.SelfLeavesGraveyard -> mempty
   TriggerCondition.AttachedCreatureDies -> mempty
   TriggerCondition.AttachedCreatureBecomesTapped -> mempty
-  TriggerCondition.AttachedCreatureDealsDamage -> mempty
   TriggerCondition.PermanentsBecomeTapped filter_ -> filterNames asking filter_
   TriggerCondition.PermanentBecomesTapped filter_ -> filterNames asking filter_
   TriggerCondition.SelfBecomesUntapped -> mempty

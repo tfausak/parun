@@ -169,6 +169,7 @@ import qualified Pawl.Types.DamagePattern as DamagePattern
 import qualified Pawl.Types.DamageR as DamageR
 import qualified Pawl.Types.DamageRewrite as DamageRewrite
 import qualified Pawl.Types.DealDamage as DealDamage
+import qualified Pawl.Types.DealsDamageToPlayer as DealsDamageToPlayer
 import qualified Pawl.Types.Defense as Defense
 import qualified Pawl.Types.Designate as Designate
 import qualified Pawl.Types.Destroy as Destroy
@@ -1060,7 +1061,6 @@ triggerConditionCounts triggerCondition = case triggerCondition of
   -- CR 700.4's is nullary as well, for the same reason.
   TriggerCondition.AttachedCreatureDies -> []
   TriggerCondition.AttachedCreatureBecomesTapped -> []
-  TriggerCondition.AttachedCreatureDealsDamage -> []
   TriggerCondition.PermanentsBecomeTapped _ -> []
   TriggerCondition.PermanentBecomesTapped _ -> []
   TriggerCondition.SelfBecomesUntapped -> []
@@ -1102,11 +1102,11 @@ triggerConditionCounts triggerCondition = case triggerCondition of
   TriggerCondition.StateIs condition -> conditionCounts condition
   TriggerCondition.SelfDealsCombatDamageToPlayer _ -> []
   TriggerCondition.SelfDealsCombatDamageToPlayerOrBattle -> []
-  TriggerCondition.SelfDealsCombatDamage -> []
-  TriggerCondition.SelfDealsDamageToPlayer _ -> []
+  TriggerCondition.DealsCombatDamage _ -> []
+  TriggerCondition.DealsDamageToPlayer _ -> []
   TriggerCondition.SelfDealsDamageToCreature -> []
-  TriggerCondition.SelfDealsDamage -> []
-  TriggerCondition.SelfIsDealtDamage -> []
+  TriggerCondition.DealsDamage _ -> []
+  TriggerCondition.IsDealtDamage _ -> []
   TriggerCondition.PlayerIsDealtDamage _ -> []
   -- Its watcher-scoped sibling carries a Filter, and a Filter holds no Count.
   TriggerCondition.PermanentDealsCombatDamageToPlayer _ -> []
@@ -4505,9 +4505,7 @@ triggerConditionFilters triggerCondition = case triggerCondition of
   -- A bystander's PermanentActs DOES carry one, a predicate over the actor --
   -- Wildgrowth Walker's "a creature you control" -- which the card lint must
   -- sweep. The self-scoped reading carries nothing.
-  TriggerCondition.PermanentActs acts -> case PermanentActed.permanent acts of
-    ActingPermanent.Self -> []
-    ActingPermanent.Matching f -> unframed [f]
+  TriggerCondition.PermanentActs acts -> actingFilters (PermanentActed.permanent acts)
   -- CR 702.134c's carries none either: "equipped creature" is CR 301.5f's one
   -- permanent rather than a class of them, and "a creature" narrows by nothing.
   TriggerCondition.AttachedCreatureMentors -> []
@@ -4515,7 +4513,6 @@ triggerConditionFilters triggerCondition = case triggerCondition of
   -- them too, so this condition carries no Filter either.
   TriggerCondition.AttachedCreatureDies -> []
   TriggerCondition.AttachedCreatureBecomesTapped -> []
-  TriggerCondition.AttachedCreatureDealsDamage -> []
   -- Deeproot Pilgrimage's "nontoken Merfolk you control" is card text, swept
   -- like PermanentsDie's.
   TriggerCondition.PermanentsBecomeTapped f -> unframed [f]
@@ -4574,15 +4571,17 @@ triggerConditionFilters triggerCondition = case triggerCondition of
   TriggerCondition.StepBegins {} -> []
   TriggerCondition.SelfDealsCombatDamageToPlayer _ -> []
   TriggerCondition.SelfDealsCombatDamageToPlayerOrBattle -> []
-  TriggerCondition.SelfDealsCombatDamage -> []
-  TriggerCondition.SelfDealsDamageToPlayer _ -> []
+  -- A bystander's damage conditions carry one over the watched permanent, swept
+  -- for PermanentActs' reason: Noble Purpose's "a creature you control", Death
+  -- Pits of Rath's "a creature", Spirit Link's and Curiosity's "enchanted
+  -- creature". The self-scoped readings carry nothing.
+  TriggerCondition.DealsCombatDamage watched -> actingFilters watched
+  TriggerCondition.DealsDamageToPlayer p -> actingFilters (DealsDamageToPlayer.actor p)
   -- Nullary as well: the printed form qualifies the damaged creature in no way,
   -- so a text change has nothing here to rewrite.
   TriggerCondition.SelfDealsDamageToCreature -> []
-  TriggerCondition.SelfDealsDamage -> []
-  -- Enrage's condition is nullary: rule 120.3 qualifies the damage in no way, so
-  -- there is nothing for a text change to rewrite.
-  TriggerCondition.SelfIsDealtDamage -> []
+  TriggerCondition.DealsDamage watched -> actingFilters watched
+  TriggerCondition.IsDealtDamage watched -> actingFilters watched
   TriggerCondition.PlayerIsDealtDamage _ -> []
   -- Its watcher-scoped sibling carries one -- Tovolar's "a Wolf or Werewolf you
   -- control", which the card lint must sweep.
@@ -4751,6 +4750,10 @@ triggerConditionFilters triggerCondition = case triggerCondition of
   -- other: Professor Hojo's "creatures you control".
   TriggerCondition.PermanentsBecomeTargeted payload -> unframed [PermanentsBecomeTargeted.filter payload]
   TriggerCondition.PermanentBecomesTargeted payload -> unframed [PermanentsBecomeTargeted.filter payload]
+  where
+    actingFilters watched = case watched of
+      ActingPermanent.Self -> []
+      ActingPermanent.Matching f -> unframed [f]
 
 -- Every SlotName a TriggerCondition names OUTRIGHT. Exhaustive with no
 -- fallthrough, triggerConditionCounts' shape and for its reason: a condition
@@ -4777,11 +4780,11 @@ triggerConditionSlots triggerCondition = case triggerCondition of
   TriggerCondition.StateIs _ -> []
   TriggerCondition.SelfDealsCombatDamageToPlayer _ -> []
   TriggerCondition.SelfDealsCombatDamageToPlayerOrBattle -> []
-  TriggerCondition.SelfDealsCombatDamage -> []
-  TriggerCondition.SelfDealsDamageToPlayer _ -> []
+  TriggerCondition.DealsCombatDamage _ -> []
+  TriggerCondition.DealsDamageToPlayer _ -> []
   TriggerCondition.SelfDealsDamageToCreature -> []
-  TriggerCondition.SelfDealsDamage -> []
-  TriggerCondition.SelfIsDealtDamage -> []
+  TriggerCondition.DealsDamage _ -> []
+  TriggerCondition.IsDealtDamage _ -> []
   TriggerCondition.PlayerIsDealtDamage _ -> []
   TriggerCondition.PermanentDealsCombatDamageToPlayer _ -> []
   TriggerCondition.PermanentsDealCombatDamageToPlayer _ -> []
@@ -4841,7 +4844,6 @@ triggerConditionSlots triggerCondition = case triggerCondition of
   TriggerCondition.SelfLeavesGraveyard -> []
   TriggerCondition.AttachedCreatureDies -> []
   TriggerCondition.AttachedCreatureBecomesTapped -> []
-  TriggerCondition.AttachedCreatureDealsDamage -> []
   TriggerCondition.PermanentsBecomeTapped _ -> []
   TriggerCondition.PermanentBecomesTapped _ -> []
   TriggerCondition.SelfBecomesUntapped -> []
@@ -5546,6 +5548,13 @@ blockPermissionFilters permission =
 --     Pawl.Engine.Resolve.Effect.storedClass and then matched through a bare
 --     Filter.contextFor. Unframed's answer for every atom but CR 110.2's
 --     Filter.SameControllerAsBound, which the bake writes in (Mark for Death).
+--   * ChosenSourceFramed -- CR 609.7a's chosen source on a prevention or
+--     redirection effect, matched against each candidate by
+--     Pawl.Engine.Resolve.Effect.damageSourceCandidates through
+--     Resolve.Slots.effectContext and rechecked at the damage event (CR 615.9)
+--     by Pawl.Engine.Replacement.matchesDamageSource in the row's
+--     candidateContext; both fill the source's CR 607.2d choices (Story
+--     Circle).
 --   * Unframed -- everything else.
 --
 -- CR 303.4a's enchant slot (Face.enchant) is Unframed rather than InTargetSlot,
@@ -5719,6 +5728,8 @@ data Framing
   | -- | A resolution's stored CR 611.2c combat restriction class. See the
     -- overview above.
     StoredClassFramed
+  | -- | CR 609.7a's chosen source. See the overview above.
+    ChosenSourceFramed
   -- Bounded and Enum so the framing coverage case below enumerates
   -- [minBound .. maxBound] rather than a hand-kept list: a constructor added
   -- here joins that case with no edit, which is the tripwire a hand-kept list
@@ -5801,6 +5812,9 @@ sweptForSingularSlots framing = case framing of
   TriggerConditionFramed -> True
   -- SWEPT, as it was while Unframed: the split is about CR 110.2's bake.
   StoredClassFramed -> True
+  -- SWEPT, as it was while Unframed: the split is about CR 607.2d's chosen
+  -- values, not about slots.
+  ChosenSourceFramed -> True
 
 -- filterSlotsReadSingly against a TAGGED position, and the one funnel every
 -- reader of that walk goes through, so two routes to the same keyword filter
@@ -6117,25 +6131,23 @@ effectFilters effect = case effect of
   -- landwalk's payload once, so a nested effect list is exactly what it must not
   -- stop at.
   --
-  -- CR 609.7a's chosen source is UNFRAMED: Pawl.Engine.Resolve evaluates it
-  -- against each candidate's own view (Projection.viewOfObject), the way
-  -- Replacement.matchesDamageSource evaluates the shield's rechecked half.
+  -- CR 609.7a's chosen source is ChosenSourceFramed (see the overview); the
+  -- recipient description is UNFRAMED: Pawl.Engine.Replacement evaluates it
+  -- against the damage's own recipient, not against this card's frame.
   Effect.PreventNextDamage (PreventNextDamage.MkPreventNextDamage duration _ ref whatRecipient _ chosenSource quantity rider) ->
-    frame Unframed (durationFilters duration) <> frame Unframed (quantityFilters quantity) <> unframed (Maybe.maybeToList chosenSource <> Maybe.maybeToList whatRecipient) <> frame SourceHostFramed (foldMap objectRefFilters ref) <> concatMap effectFilters rider
-  -- CR 609.7b's property-named source is UNFRAMED for the chosen source's
-  -- reason: Pawl.Engine.Replacement.matchesDamageSource evaluates it against the
-  -- damage's own source, not against this card's frame.
+    frame Unframed (durationFilters duration) <> frame Unframed (quantityFilters quantity) <> fmap ((,) ChosenSourceFramed) (Maybe.maybeToList chosenSource) <> unframed (Maybe.maybeToList whatRecipient) <> frame SourceHostFramed (foldMap objectRefFilters ref) <> concatMap effectFilters rider
+  -- CR 609.7b's property-named source is UNFRAMED: Pawl.Engine.Replacement.matchesDamageSource
+  -- evaluates it against the damage's own source, not against this card's frame.
   Effect.PreventAllDamage (PreventAllDamage.MkPreventAllDamage duration _ ref whatRecipient _ _ chosenSource whatSource rider) ->
-    frame Unframed (durationFilters duration) <> unframed (Maybe.maybeToList chosenSource <> Maybe.maybeToList whatRecipient <> [whatSource]) <> frame SourceHostFramed (foldMap objectRefFilters ref) <> concatMap effectFilters rider
-  -- The two arms above's reads over the fields CR 615.8's shield carries, and
-  -- CR 609.7a's chosen source is UNFRAMED there for their reason.
+    frame Unframed (durationFilters duration) <> fmap ((,) ChosenSourceFramed) (Maybe.maybeToList chosenSource) <> unframed (Maybe.maybeToList whatRecipient <> [whatSource]) <> frame SourceHostFramed (foldMap objectRefFilters ref) <> concatMap effectFilters rider
+  -- The two arms above's reads over the fields CR 615.8's shield carries.
   Effect.PreventNextDamageInstance (PreventNextDamageInstance.MkPreventNextDamageInstance duration ref chosenSource rider) ->
-    frame Unframed (durationFilters duration) <> unframed [chosenSource] <> frame SourceHostFramed (objectRefFilters ref) <> concatMap effectFilters rider
+    frame Unframed (durationFilters duration) <> [(ChosenSourceFramed, chosenSource)] <> frame SourceHostFramed (objectRefFilters ref) <> concatMap effectFilters rider
   -- BOTH refs, or a Filter inside a redirect's destination escapes this lint.
-  -- CR 609.7a's chosen source and the recipient description are UNFRAMED, for
-  -- the reason the two prevention arms above give.
+  -- The chosen source, the recipient description and the property-named source
+  -- are framed as the two prevention arms above frame them.
   Effect.RedirectDamage (RedirectDamage.MkRedirectDamage duration _ amount srcRef whatRecipient _ destRef chosenSource _ whatSource) ->
-    frame Unframed (durationFilters duration) <> frame Unframed (foldMap quantityFilters amount) <> unframed (Maybe.maybeToList chosenSource <> Maybe.maybeToList whatRecipient <> [whatSource]) <> frame SourceHostFramed (foldMap objectRefFilters srcRef <> objectRefFilters destRef)
+    frame Unframed (durationFilters duration) <> frame Unframed (foldMap quantityFilters amount) <> fmap ((,) ChosenSourceFramed) (Maybe.maybeToList chosenSource) <> unframed (Maybe.maybeToList whatRecipient <> [whatSource]) <> frame SourceHostFramed (foldMap objectRefFilters srcRef <> objectRefFilters destRef)
   -- CR 708.2's listed characteristics hold no Filter, but the ref does -- Ixidron's
   -- "all other nontoken creatures" is an ObjectRef Filter like Destroy's, so the
   -- lint reaches it.

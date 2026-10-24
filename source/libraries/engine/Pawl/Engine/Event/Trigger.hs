@@ -608,8 +608,6 @@ looksBack condition = case condition of
   -- battlefield, so the ordinary CR 603.10 reading -- the board as it is now --
   -- is the right one.
   TriggerCondition.AttachedCreatureBecomesTapped -> False
-  -- Nor is dealing damage: the host deals it from the battlefield.
-  TriggerCondition.AttachedCreatureDealsDamage -> False
   TriggerCondition.PermanentsBecomeTapped _ -> False
   TriggerCondition.PermanentBecomesTapped _ -> False
   -- Nor is becoming untapped: CR 701.26b leaves the permanent standing on
@@ -695,11 +693,11 @@ looksBack condition = case condition of
   TriggerCondition.StateIs _ -> False
   TriggerCondition.SelfDealsCombatDamageToPlayer _ -> False
   TriggerCondition.SelfDealsCombatDamageToPlayerOrBattle -> False
-  TriggerCondition.SelfDealsCombatDamage -> False
-  TriggerCondition.SelfDealsDamageToPlayer _ -> False
+  TriggerCondition.DealsCombatDamage _ -> False
+  TriggerCondition.DealsDamageToPlayer _ -> False
   TriggerCondition.SelfDealsDamageToCreature -> False
-  TriggerCondition.SelfDealsDamage -> False
-  TriggerCondition.SelfIsDealtDamage -> False
+  TriggerCondition.DealsDamage _ -> False
+  TriggerCondition.IsDealtDamage _ -> False
   TriggerCondition.PlayerIsDealtDamage _ -> False
   TriggerCondition.PermanentDealsCombatDamageToPlayer _ -> False
   TriggerCondition.PermanentsDealCombatDamageToPlayer _ -> False
@@ -892,9 +890,6 @@ batchScoped condition = case condition of
   -- CR 603.2e names the MOMENT the one enchanted permanent becomes tapped, so a
   -- batch holds at most one occurrence of it.
   TriggerCondition.AttachedCreatureBecomesTapped -> False
-  -- SelfDealsDamage's True, off the one host the attachment link names: a
-  -- batch holds that host's damage alone, so nothing needs partitioning.
-  TriggerCondition.AttachedCreatureDealsDamage -> True
   -- A True beside PermanentsDie: "one or more nontoken Merfolk
   -- you control become tapped" (Deeproot Pilgrimage) is one trigger event per
   -- tapping, however many it tapped -- a cost's taps, CR 508.1f's attackers, or
@@ -953,14 +948,19 @@ batchScoped condition = case condition of
   -- A True for the reason PermanentsDealCombatDamageToPlayer's below gives: CR
   -- 510.2 deals a step's combat damage as one event, so damage to two blockers,
   -- or to a blocker and a trampled-over player, is one trigger event, not two.
-  TriggerCondition.SelfDealsCombatDamage -> True
-  TriggerCondition.SelfDealsDamageToPlayer _ -> False
+  -- One per damager, split by batchPartition: Noble Purpose's two creatures
+  -- connecting are two.
+  TriggerCondition.DealsCombatDamage _ -> True
+  TriggerCondition.DealsDamageToPlayer _ -> False
   TriggerCondition.SelfDealsDamageToCreature -> False
-  -- SelfDealsCombatDamage's True without the combat narrowing: one damage
+  -- DealsCombatDamage's True without the combat narrowing: one damage
   -- event to several recipients -- a CR 510.2 step, or one CR 608.2f
   -- instruction -- is one trigger event, its amount summed by batchBindings.
-  TriggerCondition.SelfDealsDamage -> True
-  TriggerCondition.SelfIsDealtDamage -> False
+  TriggerCondition.DealsDamage _ -> True
+  -- Not implemented: one occurrence per damaged permanent when several
+  -- sources damage it at once, which Ripjaw Raptor's and Fungusaur's rulings
+  -- give; each source's event triggers it (#5554).
+  TriggerCondition.IsDealtDamage _ -> False
   -- CR 603.2c: simultaneous damage to the player is one event of their being
   -- dealt damage -- Lich's ruling sacrifices "for that damage simultaneously".
   -- Split per damaged player by batchPartition.
@@ -2633,7 +2633,6 @@ enchantedObjectLeaves condition = case condition of
   -- attachment link, but for an event that leaves the enchanted permanent right
   -- where it was, so CR 113.6m's Aura clause has nothing to exempt.
   TriggerCondition.AttachedCreatureBecomesTapped -> False
-  TriggerCondition.AttachedCreatureDealsDamage -> False
   -- Not an attachment condition at all -- it reads the bearer -- so the
   -- Aura clause is not in question.
   TriggerCondition.SelfBecomesUntapped -> False
@@ -2907,7 +2906,6 @@ zonesTriggeredFrom cond =
         -- permanent is itself a permanent on the battlefield, and CR 113.6k's exception
         -- is for a condition that cannot trigger from there at all.
         TriggerCondition.AttachedCreatureBecomesTapped -> battlefield
-        TriggerCondition.AttachedCreatureDealsDamage -> battlefield
         TriggerCondition.PermanentsBecomeTapped _ -> battlefield
         TriggerCondition.PermanentBecomesTapped _ -> battlefield
         -- CR 110.5 makes tapped a permanent's status, so only a permanent can
@@ -2947,22 +2945,24 @@ zonesTriggeredFrom cond =
         TriggerCondition.StateIs _ -> battlefield
         TriggerCondition.SelfDealsCombatDamageToPlayer _ -> battlefield
         TriggerCondition.SelfDealsCombatDamageToPlayerOrBattle -> battlefield
-        TriggerCondition.SelfDealsCombatDamage -> battlefield
-        -- CR 113.6's default once more, and for the arm above's reason: the bearer
-        -- is the damage's SOURCE, and a noncombat source on the stack or in a
-        -- graveyard is a different object from this permanent.
-        TriggerCondition.SelfDealsDamageToPlayer _ -> battlefield
-        -- CR 113.6's default once more, for the SelfDealsDamageToPlayer arm's
+        TriggerCondition.DealsCombatDamage _ -> battlefield
+        -- CR 113.6's default once more, and for the arm above's reason: a Self
+        -- bearer is the damage's SOURCE, and a noncombat source on the stack or in
+        -- a graveyard is a different object from this permanent. A bystander
+        -- (Curiosity) watches from the battlefield as every other does.
+        TriggerCondition.DealsDamageToPlayer _ -> battlefield
+        -- CR 113.6's default once more, for the DealsDamageToPlayer arm's
         -- reason: the bearer is the damage's SOURCE, and a source anywhere but the
         -- battlefield is a different object from this permanent.
         TriggerCondition.SelfDealsDamageToCreature -> battlefield
-        -- CR 113.6's default again, for the SelfDealsDamageToPlayer arm's reason.
-        TriggerCondition.SelfDealsDamage -> battlefield
-        -- CR 113.6's default again, and the match's own shape on top of it: this arm
-        -- compares the bearer against the event's RECIPIENT, and CR 120.3's recipient is
-        -- a player or a permanent -- so a bearer anywhere but the battlefield can never
-        -- be the one damaged.
-        TriggerCondition.SelfIsDealtDamage -> battlefield
+        -- CR 113.6's default again, for the DealsDamageToPlayer arm's reason.
+        TriggerCondition.DealsDamage _ -> battlefield
+        -- CR 113.6's default again, and the match's own shape on top of it: a Self
+        -- reading compares the bearer against the event's RECIPIENT, and CR 120.3's
+        -- recipient is a player or a permanent -- so a bearer anywhere but the
+        -- battlefield can never be the one damaged. A bystander (Death Pits of
+        -- Rath) watches from the battlefield as every other does.
+        TriggerCondition.IsDealtDamage _ -> battlefield
         TriggerCondition.PlayerIsDealtDamage _ -> battlefield
         TriggerCondition.PermanentDealsCombatDamageToPlayer _ -> battlefield
         -- The batch reading watches from the battlefield too, and for the arm above's
@@ -3314,11 +3314,11 @@ stateTriggersOn gs
             TriggerCondition.StepBegins {} -> False
             TriggerCondition.SelfDealsCombatDamageToPlayer _ -> False
             TriggerCondition.SelfDealsCombatDamageToPlayerOrBattle -> False
-            TriggerCondition.SelfDealsCombatDamage -> False
-            TriggerCondition.SelfDealsDamageToPlayer _ -> False
+            TriggerCondition.DealsCombatDamage _ -> False
+            TriggerCondition.DealsDamageToPlayer _ -> False
             TriggerCondition.SelfDealsDamageToCreature -> False
-            TriggerCondition.SelfDealsDamage -> False
-            TriggerCondition.SelfIsDealtDamage -> False
+            TriggerCondition.DealsDamage _ -> False
+            TriggerCondition.IsDealtDamage _ -> False
             TriggerCondition.PlayerIsDealtDamage _ -> False
             TriggerCondition.PermanentDealsCombatDamageToPlayer _ -> False
             TriggerCondition.PermanentsDealCombatDamageToPlayer _ -> False
@@ -3447,7 +3447,6 @@ stateTriggersOn gs
             -- False: CR 603.2e says a "becomes" condition does not retrigger
             -- while the state persists, and a state trigger would do nothing but.
             TriggerCondition.AttachedCreatureBecomesTapped -> False
-            TriggerCondition.AttachedCreatureDealsDamage -> False
             TriggerCondition.PermanentsBecomeTapped _ -> False
             TriggerCondition.PermanentBecomesTapped _ -> False
             -- CR 701.26b's untap is an EVENT for the identical reason,

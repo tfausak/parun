@@ -13,6 +13,7 @@ import qualified Pawl.Codec.ControllerBecomesTarget as ControllerBecomesTarget
 import qualified Pawl.Codec.CounterPlacement as CounterPlacement
 import qualified Pawl.Codec.CreatureBecomesBlockedByAtLeast as CreatureBecomesBlockedByAtLeast
 import qualified Pawl.Codec.CreatureExploits as CreatureExploits
+import qualified Pawl.Codec.DealsDamageToPlayer as DealsDamageToPlayer
 import qualified Pawl.Codec.DieResult as DieResult
 import qualified Pawl.Codec.Filter as Filter
 import qualified Pawl.Codec.Keyword as Keyword
@@ -63,11 +64,11 @@ codec =
           Arm.payload "StateIs" Condition.codec TriggerCondition.StateIs (\x -> case x of TriggerCondition.StateIs y -> Just y; _ -> Nothing),
           Arm.payload "SelfDealsCombatDamageToPlayer" PlayerRelation.codec TriggerCondition.SelfDealsCombatDamageToPlayer (\x -> case x of TriggerCondition.SelfDealsCombatDamageToPlayer y -> Just y; _ -> Nothing),
           Arm.nullary "SelfDealsCombatDamageToPlayerOrBattle" TriggerCondition.SelfDealsCombatDamageToPlayerOrBattle,
-          Arm.nullary "SelfDealsCombatDamage" TriggerCondition.SelfDealsCombatDamage,
-          Arm.payload "SelfDealsDamageToPlayer" PlayerRelation.codec TriggerCondition.SelfDealsDamageToPlayer (\x -> case x of TriggerCondition.SelfDealsDamageToPlayer y -> Just y; _ -> Nothing),
+          Arm.payload "DealsCombatDamage" ActingPermanent.codec TriggerCondition.DealsCombatDamage (\x -> case x of TriggerCondition.DealsCombatDamage y -> Just y; _ -> Nothing),
+          Arm.payload "DealsDamageToPlayer" DealsDamageToPlayer.codec TriggerCondition.DealsDamageToPlayer (\x -> case x of TriggerCondition.DealsDamageToPlayer y -> Just y; _ -> Nothing),
           Arm.nullary "SelfDealsDamageToCreature" TriggerCondition.SelfDealsDamageToCreature,
-          Arm.nullary "SelfDealsDamage" TriggerCondition.SelfDealsDamage,
-          Arm.nullary "SelfIsDealtDamage" TriggerCondition.SelfIsDealtDamage,
+          Arm.payload "DealsDamage" ActingPermanent.codec TriggerCondition.DealsDamage (\x -> case x of TriggerCondition.DealsDamage y -> Just y; _ -> Nothing),
+          Arm.payload "IsDealtDamage" ActingPermanent.codec TriggerCondition.IsDealtDamage (\x -> case x of TriggerCondition.IsDealtDamage y -> Just y; _ -> Nothing),
           Arm.payload "PlayerIsDealtDamage" PlayerRelation.codec TriggerCondition.PlayerIsDealtDamage (\x -> case x of TriggerCondition.PlayerIsDealtDamage y -> Just y; _ -> Nothing),
           Arm.payload "PermanentDealsCombatDamageToPlayer" PermanentDealsCombatDamageToPlayer.codec TriggerCondition.PermanentDealsCombatDamageToPlayer (\x -> case x of TriggerCondition.PermanentDealsCombatDamageToPlayer y -> Just y; _ -> Nothing),
           Arm.payload "PermanentsDealCombatDamageToPlayer" PermanentsDealCombatDamageToPlayer.codec TriggerCondition.PermanentsDealCombatDamageToPlayer (\x -> case x of TriggerCondition.PermanentsDealCombatDamageToPlayer y -> Just y; _ -> Nothing),
@@ -126,7 +127,6 @@ codec =
           Arm.payload "CardsPutIntoZone" CardsPutIntoZone.codec TriggerCondition.CardsPutIntoZone (\x -> case x of TriggerCondition.CardsPutIntoZone y -> Just y; _ -> Nothing),
           Arm.nullary "AttachedCreatureDies" TriggerCondition.AttachedCreatureDies,
           Arm.nullary "AttachedCreatureBecomesTapped" TriggerCondition.AttachedCreatureBecomesTapped,
-          Arm.nullary "AttachedCreatureDealsDamage" TriggerCondition.AttachedCreatureDealsDamage,
           Arm.payload "PermanentsBecomeTapped" filterCodec TriggerCondition.PermanentsBecomeTapped (\x -> case x of TriggerCondition.PermanentsBecomeTapped y -> Just y; _ -> Nothing),
           Arm.payload "PermanentBecomesTapped" filterCodec TriggerCondition.PermanentBecomesTapped (\x -> case x of TriggerCondition.PermanentBecomesTapped y -> Just y; _ -> Nothing),
           Arm.nullary "SelfBecomesUntapped" TriggerCondition.SelfBecomesUntapped,
@@ -212,11 +212,11 @@ tagOf x = case x of
   TriggerCondition.StateIs {} -> "StateIs"
   TriggerCondition.SelfDealsCombatDamageToPlayer {} -> "SelfDealsCombatDamageToPlayer"
   TriggerCondition.SelfDealsCombatDamageToPlayerOrBattle {} -> "SelfDealsCombatDamageToPlayerOrBattle"
-  TriggerCondition.SelfDealsCombatDamage {} -> "SelfDealsCombatDamage"
-  TriggerCondition.SelfDealsDamageToPlayer {} -> "SelfDealsDamageToPlayer"
+  TriggerCondition.DealsCombatDamage {} -> "DealsCombatDamage"
+  TriggerCondition.DealsDamageToPlayer {} -> "DealsDamageToPlayer"
   TriggerCondition.SelfDealsDamageToCreature {} -> "SelfDealsDamageToCreature"
-  TriggerCondition.SelfDealsDamage {} -> "SelfDealsDamage"
-  TriggerCondition.SelfIsDealtDamage {} -> "SelfIsDealtDamage"
+  TriggerCondition.DealsDamage {} -> "DealsDamage"
+  TriggerCondition.IsDealtDamage {} -> "IsDealtDamage"
   TriggerCondition.PlayerIsDealtDamage {} -> "PlayerIsDealtDamage"
   TriggerCondition.PermanentDealsCombatDamageToPlayer {} -> "PermanentDealsCombatDamageToPlayer"
   TriggerCondition.PermanentsDealCombatDamageToPlayer {} -> "PermanentsDealCombatDamageToPlayer"
@@ -275,7 +275,6 @@ tagOf x = case x of
   TriggerCondition.CardsPutIntoZone {} -> "CardsPutIntoZone"
   TriggerCondition.AttachedCreatureDies {} -> "AttachedCreatureDies"
   TriggerCondition.AttachedCreatureBecomesTapped {} -> "AttachedCreatureBecomesTapped"
-  TriggerCondition.AttachedCreatureDealsDamage {} -> "AttachedCreatureDealsDamage"
   TriggerCondition.PermanentsBecomeTapped {} -> "PermanentsBecomeTapped"
   TriggerCondition.PermanentBecomesTapped {} -> "PermanentBecomesTapped"
   TriggerCondition.SelfBecomesUntapped {} -> "SelfBecomesUntapped"

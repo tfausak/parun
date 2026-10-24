@@ -537,6 +537,8 @@ library codec
     Pawl.Codec.DaytimeSpec
     Pawl.Codec.DealDamage
     Pawl.Codec.DealDamageSpec
+    Pawl.Codec.DealsDamageToPlayer
+    Pawl.Codec.DealsDamageToPlayerSpec
     Pawl.Codec.DealtDamageTo
     Pawl.Codec.DealtDamageToSpec
     Pawl.Codec.Decider
@@ -2498,6 +2500,7 @@ library types
     Pawl.Types.DamageRewrite
     Pawl.Types.Daytime
     Pawl.Types.DealDamage
+    Pawl.Types.DealsDamageToPlayer
     Pawl.Types.DealtDamageTo
     Pawl.Types.Decider
     Pawl.Types.DecisionLog

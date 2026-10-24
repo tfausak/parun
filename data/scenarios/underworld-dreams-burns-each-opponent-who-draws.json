@@ -1,0 +1,75 @@
+{
+  "description": "CR 121.1 / 603.2 whole card: Underworld Dreams deals 1 damage to an opponent whenever they draw a card",
+  "note": "Bob's draw-step draw costs him 1 life; alice's own draw on her turn costs her nothing.",
+  "board": {
+    "active": "bob",
+    "turn": 2,
+    "step": "Upkeep",
+    "seats": [
+      {
+        "name": "bob",
+        "library": [
+          {
+            "card": "Island"
+          },
+          {
+            "card": "Island"
+          },
+          {
+            "card": "Island"
+          },
+          {
+            "card": "Island"
+          }
+        ]
+      },
+      {
+        "name": "alice",
+        "battlefield": [
+          {
+            "card": "Underworld Dreams",
+            "label": "dreams"
+          }
+        ],
+        "library": [
+          {
+            "card": "Island"
+          },
+          {
+            "card": "Island"
+          },
+          {
+            "card": "Island"
+          },
+          {
+            "card": "Island"
+          }
+        ]
+      }
+    ]
+  },
+  "timeline": [
+    {
+      "turn": 2,
+      "step": "PrecombatMain",
+      "player": "bob",
+      "check": {
+        "Life": {
+          "player": "bob",
+          "life": 19
+        }
+      }
+    },
+    {
+      "turn": 3,
+      "step": "PrecombatMain",
+      "player": "alice",
+      "check": {
+        "Life": {
+          "player": "alice",
+          "life": 20
+        }
+      }
+    }
+  ]
+}
