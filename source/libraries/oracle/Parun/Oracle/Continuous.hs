@@ -171,8 +171,8 @@ blockedBy context f = case f of
   _ -> fmap (Text.pack " by " <>) (creatures f)
   where
     creatures g = do
-      p <- Filter.phrase g (Target.keyword context)
-      Filter.describe Filter.Plural Target.permanent (Target.creature p)
+      p <- Filter.phrase g (Target.keyword context) >>= Target.creature
+      Filter.describe Filter.Plural Target.permanent p
 
 -- | The keyword the modification grants, or with False the one it takes away,
 -- or every keyword of a family it takes away (CR 613.1f).

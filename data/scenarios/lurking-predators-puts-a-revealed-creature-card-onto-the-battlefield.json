@@ -1,0 +1,11 @@
+{
+  "description": "CR 603.2 / 701.20a Lurking Predators reveals the top card of its controller's library when an opponent casts a spell, and a creature card enters the battlefield",
+  "note": "Paired with lurking-predators-may-put-a-revealed-noncreature-card-on-the-bottom; the boards differ only in alice's top card.",
+  "board": {"active": "bob", "step": "PrecombatMain", "seats": [{"name": "alice", "battlefield": [{"card": "Lurking Predators"}], "library": [{"card": "Grizzly Bears"}, {"card": "Forest"}, {"card": "Plains"}]}, {"name": "bob", "manaPool": "UUU", "hand": [{"card": "Divination", "label": "div"}], "library": [{"card": "Island"}, {"card": "Island"}, {"card": "Island"}]}]},
+  "timeline": [
+    {"turn": 1, "step": "PrecombatMain", "player": "bob", "do": {"Cast": {"object": "$div"}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "do": "Pass"},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "check": {"Count": {"player": "alice", "zone": "Battlefield", "card": "Grizzly Bears", "count": 1}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "check": {"View": {"of": "Zone", "player": "alice", "zone": "Library", "is": ["Forest", "Plains"]}}}
+  ]
+}

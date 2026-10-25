@@ -1,0 +1,16 @@
+{
+  "description": "CR 615.1a Magebane Armor gives its creature +2/+4, takes its flying, and prevents noncombat damage to it but not combat damage",
+  "note": "Alice's Lightning Bolt at her own Wind Drake is prevented; the Drake, flying no longer, is then blocked by bob's Hill Giant, whose combat damage is not.",
+  "board": {"active": "alice", "step": "PrecombatMain", "seats": [{"name": "alice", "manaPool": "R", "battlefield": [{"card": "Wind Drake", "label": "drake", "ready": true}, {"card": "Magebane Armor", "label": "armor", "attached": "drake"}], "hand": [{"card": "Lightning Bolt", "label": "bolt"}], "library": [{"card": "Island"}, {"card": "Island"}, {"card": "Island"}]}, {"name": "bob", "battlefield": [{"card": "Hill Giant", "label": "giant"}], "library": [{"card": "Island"}, {"card": "Island"}, {"card": "Island"}]}]},
+  "timeline": [
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "check": {"PowerToughness": {"object": "$drake", "power": 4, "toughness": 6}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "check": {"Keywords": {"object": "$drake", "keyword": {"type": "Flying"}, "count": 0}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "do": {"Cast": {"object": "$bolt", "targets": ["$drake"]}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "do": "Pass"},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "check": {"Damage": {"object": "$drake", "damage": 0}}},
+    {"turn": 1, "step": "DeclareAttackers", "player": "alice", "do": {"Attack": ["$drake"]}},
+    {"turn": 1, "step": "DeclareBlockers", "player": "bob", "do": {"Block": {"$giant": ["$drake"]}}},
+    {"turn": 1, "step": "EndOfCombat", "player": "alice", "check": {"Damage": {"object": "$drake", "damage": 3}}},
+    {"turn": 1, "step": "EndOfCombat", "player": "alice", "check": {"Count": {"player": "bob", "zone": "Graveyard", "card": "Hill Giant", "count": 1}}}
+  ]
+}

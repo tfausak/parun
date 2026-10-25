@@ -1,0 +1,12 @@
+{
+  "description": "CR 603.2 / 701.20a Lurking Predators reveals a noncreature card, which its controller may put on the bottom of their library",
+  "note": "Paired with lurking-predators-puts-a-revealed-creature-card-onto-the-battlefield. The Lightning Bolt, put on the bottom, goes to no other zone.",
+  "board": {"active": "bob", "step": "PrecombatMain", "seats": [{"name": "alice", "battlefield": [{"card": "Lurking Predators"}], "library": [{"card": "Lightning Bolt"}, {"card": "Forest"}, {"card": "Plains"}]}, {"name": "bob", "manaPool": "UUU", "hand": [{"card": "Divination", "label": "div"}], "library": [{"card": "Island"}, {"card": "Island"}, {"card": "Island"}]}]},
+  "timeline": [
+    {"turn": 1, "step": "PrecombatMain", "player": "bob", "do": {"Cast": {"object": "$div"}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "do": "Pass"},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "do": {"Answer": {"prompt": "ChooseOptional", "with": {"type": "Exercises"}}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "check": {"Count": {"player": "alice", "zone": "Graveyard", "card": "Lightning Bolt", "count": 0}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "check": {"View": {"of": "Zone", "player": "alice", "zone": "Library", "is": ["Forest", "Plains", "Lightning Bolt"]}}}
+  ]
+}
