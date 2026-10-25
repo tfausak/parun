@@ -277,6 +277,8 @@ filterAtomsOf leaf predicate = case predicate of
   -- PlayerRelation, which holds no Filter for a card author to reach.
   Filter.Type.OwnedBy _ -> leaf predicate
   Filter.Type.OwnedByRecipient -> leaf predicate
+  Filter.Type.OwnedByBound _ -> leaf predicate
+  Filter.Type.OwnedByPlayer _ -> leaf predicate
   Filter.Type.IsSource -> leaf predicate
   Filter.Type.IsObject _ -> leaf predicate
   Filter.Type.TargetsSource -> leaf predicate
@@ -2877,9 +2879,9 @@ filterPositionLintSpec s registry = Spec.describe s "Lint" $ do
   -- (#199). The UNBAKED atom beside it is card data and is not swept -- Trygon
   -- Predator writes it, and Parun.Engine.Resolve.Slots.modeSlots is what checks the slot
   -- it names is one the ability's condition binds.
-  Spec.it s "CR 603.2 no card writes ControlledByPlayer" $ do
+  Spec.it s "CR 603.2 no card writes ControlledByPlayer or OwnedByPlayer" $ do
     ps <- S.allPrintings s
-    let atoms c = jsonAtoms (Text.pack "ControlledByPlayer") (Codec.encode (Face.Codec.codec Card.codec) c)
+    let atoms c = sum (fmap (\atom -> jsonAtoms (Text.pack atom) (Codec.encode (Face.Codec.codec Card.codec) c)) ["ControlledByPlayer", "OwnedByPlayer"])
         offenders = filter (anyFace ((/= 0) . atoms) . Printing.card) ps
     Spec.assertEqWith s "the baked atom is the engine's alone" (fmap (S.nameOf . Printing.card) offenders) []
     -- Not vacuous, for the sibling sweep's reason: the same counter over a
@@ -2893,6 +2895,8 @@ filterPositionLintSpec s registry = Spec.describe s "Lint" $ do
                 Mint.oneModeTargeting (Map.singleton (SlotName.MkSlotName (Text.pack "target")) targetSlot) Seq.empty
             }
     Spec.assertEqWith s "a planted atom is seen" (atoms planted) 1
+    let owned = (S.combinedFace piker) {Face.spell = Mint.oneModeTargeting (Map.singleton (SlotName.MkSlotName (Text.pack "target")) (TargetSlot.required Pool.Creatures (Just (Filter.Type.OwnedByPlayer (PlayerId.MkPlayerId 1))))) Seq.empty}
+    Spec.assertEqWith s "and its owner twin" (atoms owned) 1
   -- CR 601.2c's baked "that player's graveyard", for ControlledByPlayer's reason:
   -- Parun.Engine.Target.bakePerPlayer writes it, and no card may name a seat.
   Spec.it s "CR 601.2c no card writes ZoneScope.BoundPlayer" $ do

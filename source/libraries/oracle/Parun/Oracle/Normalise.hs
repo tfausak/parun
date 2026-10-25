@@ -29,15 +29,18 @@ normalise name =
     . withoutReminders
 
 -- | Lowercase text with every way a card names itself written "~": its name,
--- the part of a legendary name before the comma (CR 201.5c), and "this
--- creature" and its siblings, which Oracle text uses for the same thing on
--- newer cards (CR 201.5).
+-- the part of a legendary name before the comma or, for a one-word name
+-- before " the ", that word (CR 201.5c: "Arcanis" for Arcanis the
+-- Omnipotent), and "this creature" and its siblings, which Oracle text uses
+-- for the same thing on newer cards (CR 201.5).
 selfReferences :: CardName.CardName -> Text.Text -> Text.Text
 selfReferences name text =
   let full = Text.toLower (CardName.unwrap name)
       short = Text.takeWhile (/= ',') full
+      (before, after) = Text.breakOn (Text.pack " the ") full
+      epithet = if Text.null after || Text.any (== ' ') before then Text.empty else before
       nouns = fmap (\noun -> Text.pack ("this " <> noun)) ["creature", "spell", "artifact", "enchantment", "land", "permanent", "card", "planeswalker", "aura", "equipment", "vehicle"]
-   in List.foldl' (\t needle -> replaceWord needle (Text.pack "~") t) text ([full, short] <> nouns)
+   in List.foldl' (\t needle -> replaceWord needle (Text.pack "~") t) text ([full, short, epithet] <> nouns)
 
 -- | Every occurrence of the needle standing as whole words replaced, so a card
 -- named Shock leaves "shockwave" alone.
