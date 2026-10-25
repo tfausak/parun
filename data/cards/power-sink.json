@@ -59,27 +59,29 @@
                         {
                           "type": "Tap",
                           "value": {
-                            "type": "EachMatching",
-                            "value": {
-                              "type": "And",
-                              "value": [
-                                {
-                                  "type": "HasCardType",
-                                  "value": {
-                                    "type": "Land"
+                            "ref": {
+                              "type": "EachMatching",
+                              "value": {
+                                "type": "And",
+                                "value": [
+                                  {
+                                    "type": "HasCardType",
+                                    "value": {
+                                      "type": "Land"
+                                    }
+                                  },
+                                  {
+                                    "type": "HasActivatedAbility",
+                                    "value": {
+                                      "type": "ManaAbility"
+                                    }
+                                  },
+                                  {
+                                    "type": "ControlledByBound",
+                                    "value": "player"
                                   }
-                                },
-                                {
-                                  "type": "HasActivatedAbility",
-                                  "value": {
-                                    "type": "ManaAbility"
-                                  }
-                                },
-                                {
-                                  "type": "ControlledByBound",
-                                  "value": "player"
-                                }
-                              ]
+                                ]
+                              }
                             }
                           }
                         },

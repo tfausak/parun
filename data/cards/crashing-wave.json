@@ -52,21 +52,16 @@
                   {
                     "type": "Tap",
                     "value": {
-                      "type": "InSlot",
-                      "value": "creatures"
+                      "ref": {
+                        "type": "InSlot",
+                        "value": "creatures"
+                      }
                     }
                   },
                   {
-                    "type": "DistributeCounters",
+                    "type": "Divide",
                     "value": {
-                      "kind": {
-                        "type": "Stun"
-                      },
-                      "quantity": {
-                        "type": "Literal",
-                        "value": 3
-                      },
-                      "ref": {
+                      "among": {
                         "type": "EachMatching",
                         "value": {
                           "type": "And",
@@ -88,6 +83,27 @@
                             }
                           ]
                         }
+                      },
+                      "quantity": {
+                        "type": "Literal",
+                        "value": 3
+                      },
+                      "slot": "stunned"
+                    }
+                  },
+                  {
+                    "type": "PutCounters",
+                    "value": {
+                      "kind": {
+                        "type": "Stun"
+                      },
+                      "quantity": {
+                        "type": "Share",
+                        "value": "stunned"
+                      },
+                      "ref": {
+                        "type": "InSlot",
+                        "value": "stunned"
                       }
                     }
                   }

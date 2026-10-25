@@ -79,9 +79,11 @@
                       {
                         "type": "Tap",
                         "value": {
-                          "type": "EachMatching",
-                          "value": {
-                            "type": "IsHostOfSource"
+                          "ref": {
+                            "type": "EachMatching",
+                            "value": {
+                              "type": "IsHostOfSource"
+                            }
                           }
                         }
                       },

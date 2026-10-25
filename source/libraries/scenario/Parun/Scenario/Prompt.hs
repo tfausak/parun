@@ -56,7 +56,7 @@ kindOf prompt = Text.pack $ case prompt of
   Prompt.ChooseCounterRemovalAmong {} -> "ChooseCounterRemovalAmong"
   Prompt.ChooseCounterRemovalAtLeast {} -> "ChooseCounterRemovalAtLeast"
   Prompt.ChooseCounterRemovalUpTo {} -> "ChooseCounterRemovalUpTo"
-  Prompt.ChooseCounterDistribution {} -> "ChooseCounterDistribution"
+  Prompt.ChooseDistribution {} -> "ChooseDistribution"
   Prompt.ChooseDivision {} -> "ChooseDivision"
   Prompt.ChooseMixedCounterRemoval {} -> "ChooseMixedCounterRemoval"
   Prompt.ChooseVote {} -> "ChooseVote"

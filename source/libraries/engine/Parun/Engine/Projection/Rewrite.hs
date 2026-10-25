@@ -112,6 +112,7 @@ import qualified Parun.Types.Destroy as Destroy
 import qualified Parun.Types.DestructionR as DestructionR
 import qualified Parun.Types.Devotion as Devotion
 import qualified Parun.Types.Discard as Discard
+import qualified Parun.Types.Divide as Divide
 import qualified Parun.Types.DoesNotUntapNext as DoesNotUntapNext
 import qualified Parun.Types.Draw as Draw
 import qualified Parun.Types.DrawR as DrawR
@@ -251,6 +252,7 @@ import qualified Parun.Types.SpendManaAsThough as SpendManaAsThough
 import qualified Parun.Types.StaticAbility as StaticAbility
 import qualified Parun.Types.Subtype as Subtype.Type
 import qualified Parun.Types.TakeExtraTurn as TakeExtraTurn
+import qualified Parun.Types.Tap as Tap
 import qualified Parun.Types.TapForMana as TapForMana
 import qualified Parun.Types.TargetRestriction as TargetRestriction
 import qualified Parun.Types.TargetSlot as TargetSlot
@@ -894,8 +896,8 @@ rewriteEffect pairs effect = case effect of
   -- Warding Sigil proves it.
   Effect.PutCounters (PutCounters.MkPutCounters kind quantity ref) ->
     Effect.PutCounters (PutCounters.MkPutCounters (Filter.rewriteCounterKind pairs kind) (rewriteQuantity pairs quantity) (rewriteObjectRef pairs ref))
-  Effect.DistributeCounters (PutCounters.MkPutCounters kind quantity ref) ->
-    Effect.DistributeCounters (PutCounters.MkPutCounters (Filter.rewriteCounterKind pairs kind) (rewriteQuantity pairs quantity) (rewriteObjectRef pairs ref))
+  Effect.Divide (Divide.MkDivide quantity among chooser slot) ->
+    Effect.Divide (Divide.MkDivide (rewriteQuantity pairs quantity) (rewriteObjectRef pairs among) chooser slot)
   -- The count and the kind both take the descent PutCounters' case above makes.
   -- Parun.CounterspellSpec's Synthetic Erode the Warding proves the kind's.
   Effect.RemoveCounters x ->
@@ -931,7 +933,7 @@ rewriteEffect pairs effect = case effect of
   Effect.RemovePlayerCounters x -> Effect.RemovePlayerCounters x {RemovePlayerCounters.quantity = rewriteQuantity pairs (RemovePlayerCounters.quantity x)}
   Effect.PayAnyEnergy _ -> effect
   Effect.ChooseNumber _ -> effect
-  Effect.Tap ref -> Effect.Tap (rewriteObjectRef pairs ref)
+  Effect.Tap (Tap.MkTap ref tapped) -> Effect.Tap (Tap.MkTap (rewriteObjectRef pairs ref) tapped)
   Effect.Untap ref -> Effect.Untap (rewriteObjectRef pairs ref)
   Effect.Unattach ref -> Effect.Unattach (rewriteObjectRef pairs ref)
   Effect.Detain ref -> Effect.Detain (rewriteObjectRef pairs ref)

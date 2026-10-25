@@ -27,8 +27,10 @@
                   {
                     "type": "Tap",
                     "value": {
-                      "type": "InSlot",
-                      "value": "creatures"
+                      "ref": {
+                        "type": "InSlot",
+                        "value": "creatures"
+                      }
                     }
                   }
                 ]

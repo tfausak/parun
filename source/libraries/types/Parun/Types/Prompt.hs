@@ -809,10 +809,10 @@ data Prompt r where
   -- | CR 608.2d: ChooseCounterRemovalAmong where the Natural is a cap, so none
   -- is an answer (Sensational Spider-Man). Never elided.
   ChooseCounterRemovalUpTo :: Decider.Decider -> PlayerId.PlayerId -> ObjectId.ObjectId -> Natural.Natural -> Map.Map ObjectId.ObjectId Natural.Natural -> Prompt (Map.Map ObjectId.ObjectId Natural.Natural)
-  -- | CR 608.2d: how many of the Natural's new counters each candidate gets,
-  -- the answer naming only candidates, each at least one, summing to it.
-  -- Elided at one candidate.
-  ChooseCounterDistribution :: Decider.Decider -> PlayerId.PlayerId -> ObjectId.ObjectId -> Natural.Natural -> NonEmpty.NonEmpty ObjectId.ObjectId -> Prompt (Map.Map ObjectId.ObjectId Natural.Natural)
+  -- | CR 608.2d: how much of the Natural each candidate gets -- new counters,
+  -- or a part of damage -- the answer naming only candidates, each at least
+  -- one, summing to it. Elided at one candidate.
+  ChooseDistribution :: Decider.Decider -> PlayerId.PlayerId -> ObjectId.ObjectId -> Natural.Natural -> NonEmpty.NonEmpty ObjectId.ObjectId -> Prompt (Map.Map ObjectId.ObjectId Natural.Natural)
   -- | CR 601.2d / 115.7f: what each of a slot's targets gets of the Dividing,
   -- the answer naming every one, each at least one. Elided where only one
   -- division exists.

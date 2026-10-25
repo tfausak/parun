@@ -213,6 +213,7 @@ import qualified Parun.Types.DiceReading as DiceReading
 import qualified Parun.Types.DieResult as DieResult
 import qualified Parun.Types.DifferentIn as DifferentIn
 import qualified Parun.Types.Discard as Discard
+import qualified Parun.Types.Divide as Divide
 import qualified Parun.Types.Dividing as Dividing
 import qualified Parun.Types.DoesNotUntapNext as DoesNotUntapNext
 import qualified Parun.Types.Draw as Draw
@@ -417,6 +418,7 @@ import qualified Parun.Types.StickerRef as StickerRef
 import qualified Parun.Types.StoredResult as StoredResult
 import qualified Parun.Types.Subtype as Subtype
 import qualified Parun.Types.TakeExtraTurn as TakeExtraTurn
+import qualified Parun.Types.Tap as Tap
 import qualified Parun.Types.TapState as TapState
 import qualified Parun.Types.TargetSlot as TargetSlot
 import qualified Parun.Types.Teams as Teams
@@ -659,6 +661,7 @@ choosesAnyNumber effect =
 choiceAhead :: Effect card ability -> Bool
 choiceAhead effect = case effect of
   Effect.ChoosePermanents {} -> True
+  Effect.Divide {} -> True
   _ -> False
 
 -- CR 603.12: record that an instruction did fewer than the number it named.
@@ -3635,7 +3638,7 @@ effectIsImpossible resolving source controller legal gs effect = case effect of
   Effect.RedirectDamage {} -> False
   Effect.Counter {} -> False
   Effect.PutCounters {} -> False
-  Effect.DistributeCounters {} -> False
+  Effect.Divide {} -> False
   -- CR 122.1 / 608.2d: a permanent bearing none of the kind has none of
   -- them to lose.
   Effect.RemoveCounters (RemoveCounters.MkRemoveCounters kind quantity slot _) -> case legalOne slot legal >>= Recipient.objectOf of
@@ -3668,7 +3671,7 @@ effectIsImpossible resolving source controller legal gs effect = case effect of
   -- CR 701.26a: "only untapped permanents can be tapped", which is what
   -- Parun.Engine.Event.tap enforces, so a sweep whose every permanent is already
   -- tapped taps nothing.
-  Effect.Tap ref -> noneNamedIs TapState.Untapped ref
+  Effect.Tap (Tap.MkTap ref _) -> noneNamedIs TapState.Untapped ref
   -- CR 701.26b, tap's mirror and Parun.Engine.Event.untap's own guard.
   Effect.Untap ref -> noneNamedIs TapState.Tapped ref
   Effect.Detain {} -> False
@@ -9257,59 +9260,70 @@ applyOneEffect runSubgame resolving source controller legal chosen effect = case
         -- CR 608.2c: the set is swept as this instruction is reached, and an
         -- illegal slot (CR 608.2b) or a player recipient answers with nobody.
         targets = objectRefObjects legal resolving controller source gs ref
-    case Quantity.evaluateFor viewOf context gs resolving source quantity of
-      Nothing -> pure () -- unevaluable quantity: no-op (the powerOf posture)
-      -- ONE evaluation for the whole set (CR 608.2f), then CR 122.6's funnel per
-      -- recipient, so CR 614's counter replacements apply against each placement.
-      --
-      -- ONE event for the PLACEMENTS too, which is the Event.simultaneously
-      -- bracket: CR 608.2f processes an action taken on multiple objects
-      -- simultaneously, and one written instruction is one such action however
-      -- many permanents the ref swept. CR 603.2c's batch conditions are what a
-      -- board can read that with -- TriggerCondition.PermanentsGetCounters fires
-      -- once for the sweep where its per-permanent twin fires once per recipient,
-      -- and Parun.Engine.Event.Trigger.batchScoped is that fork.
-      --
-      -- The per-recipient CR 122.6 funnel below is no argument for N groups: CR
-      -- 616.1g is where the rules say events nest at all -- a replacement may
-      -- apply to "an event contained within the first event" -- so CR 614's
-      -- per-placement replacement opportunity is not a second event. The swept
-      -- Effect.MoveToZone arm above runs the same shape, and Event.destroyIn a
-      -- whole CR 616.1 loop, inside one bracket.
-      --
-      -- Inside the `n > 0` guard rather than around it, so an instruction placing
-      -- no counters spends no group; and around the FOLD alone, the sweep above it
-      -- having taken no action for CR 608.2f to be read over.
-      Just n ->
-        Monad.when (n > 0) . Event.simultaneously . Monad.forM_ targets $ \target ->
-          Event.putCounters (CounterCause.ByEffect controller) target kind (Integer.toNaturalSaturating n)
-  Effect.DistributeCounters (PutCounters.MkPutCounters kind quantity ref) -> do
-    -- CR 608.2d: the resolving controller chooses which of the permanents the
-    -- ref names get counters and how many, each chosen one at least one, the
-    -- whole total placed. Untargeted, so the set is swept as this instruction is
-    -- reached (CR 608.2c) and a permanent an earlier instruction tapped is in it
-    -- (Crashing Wave). One candidate leaves one division, and is not asked.
+        -- HOW MANY, read per recipient against the one pre-effect state, so a
+        -- division's part (Quantity.Share, Effect.Divide's) is each member's
+        -- own: DealDamage's amountFor. Every other quantity reads the same for
+        -- every recipient, CR 608.2f's one evaluation for the whole set. An
+        -- unevaluable or zero amount places nothing on that recipient.
+        amountFor target =
+          let sharing = context {Filter.shares = Binding.sharesOf (Recipient.ToObject target) (slotBindings resolving gs)}
+           in Monad.mfilter (> 0) (Quantity.evaluateFor viewOf sharing gs resolving source quantity)
+        placements = Maybe.mapMaybe (\target -> fmap ((,) target . Integer.toNaturalSaturating) (amountFor target)) targets
+    -- CR 122.6's funnel per recipient, so CR 614's counter replacements apply
+    -- against each placement.
+    --
+    -- ONE event for the PLACEMENTS, which is the Event.simultaneously
+    -- bracket: CR 608.2f processes an action taken on multiple objects
+    -- simultaneously, and one written instruction is one such action however
+    -- many permanents the ref swept. CR 603.2c's batch conditions are what a
+    -- board can read that with -- TriggerCondition.PermanentsGetCounters fires
+    -- once for the sweep where its per-permanent twin fires once per recipient,
+    -- and Parun.Engine.Event.Trigger.batchScoped is that fork.
+    --
+    -- The per-recipient CR 122.6 funnel below is no argument for N groups: CR
+    -- 616.1g is where the rules say events nest at all -- a replacement may
+    -- apply to "an event contained within the first event" -- so CR 614's
+    -- per-placement replacement opportunity is not a second event. The swept
+    -- Effect.MoveToZone arm above runs the same shape, and Event.destroyIn a
+    -- whole CR 616.1 loop, inside one bracket.
+    --
+    -- Only where something is placed, so an instruction placing no counters
+    -- spends no group; and around the FOLD alone, the sweep above it having
+    -- taken no action for CR 608.2f to be read over.
+    Monad.unless (null placements) . Event.simultaneously . Monad.forM_ placements $ \(target, n) ->
+      Event.putCounters (CounterCause.ByEffect controller) target kind n
+  -- CR 608.2d: the chooser picks which of the objects the ref names get a
+  -- part and how much, each chosen one at least one, the whole amount handed
+  -- out. Untargeted, so the set is swept as this instruction is reached (CR
+  -- 608.2c) and a permanent an earlier instruction tapped is in it (Crashing
+  -- Wave). Bound as a group carrying its division, so a later instruction
+  -- reads each member's part as Quantity.Share. One candidate leaves one
+  -- division, and is not asked; a zero amount, no candidate or no seat divides
+  -- nothing and binds nothing.
+  Effect.Divide (Divide.MkDivide quantity among chooser slot) -> do
     gs <- State.get
     let viewOf = effectViewOf source legal gs
         context = effectContext gs resolving controller source legal (slotBindings resolving gs)
-        candidates = ListUtils.nubOrd (objectRefObjects legal resolving controller source gs ref)
+        candidates = ListUtils.nubOrd (objectRefObjects legal resolving controller source gs among)
     case (Quantity.evaluateFor viewOf context gs resolving source quantity, NonEmpty.nonEmpty candidates) of
       (Just n, Just offered) | n > 0 -> do
-        let total = Integer.toNaturalSaturating n
-            fallback = Map.singleton (NonEmpty.head offered) total
-        division <- case offered of
-          _ NonEmpty.:| [] -> pure fallback
-          _ -> do
-            answer <- Game.choose (Prompt.ChooseCounterDistribution (Decide.deciderFor controller gs) controller source total offered)
-            -- An answer that does not divide the total among offered
-            -- permanents takes the replay default rather than a repair. A
-            -- regression fence, not a proved behaviour: the scenario runner
-            -- refuses an unoffered answer before it reaches here.
-            pure (if distributes total offered answer then answer else fallback)
-        -- One action on several objects, so one placement event (CR 608.2f):
-        -- Effect.PutCounters' bracket.
-        Event.simultaneously . Monad.forM_ (Map.toList division) $ \(target, count) ->
-          Event.putCounters (CounterCause.ByEffect controller) target kind count
+        asked <- askedChooser resolving source controller legal chooser
+        Monad.forM_ asked $ \pid -> do
+          let total = Integer.toNaturalSaturating n
+              fallback = Map.singleton (NonEmpty.head offered) total
+          division <- case offered of
+            _ NonEmpty.:| [] -> pure fallback
+            _ -> do
+              now <- State.get
+              answer <- Game.choose (Prompt.ChooseDistribution (Decide.deciderFor pid now) pid source total offered)
+              -- An answer that does not divide the total among offered
+              -- objects takes the replay default rather than a repair. A
+              -- regression fence, not a proved behaviour: the scenario runner
+              -- refuses an unoffered answer before it reaches here.
+              pure (if distributes total offered answer then answer else fallback)
+          let members = filter (`Map.member` division) candidates
+              binding = (Binding.toObjects (Seq.fromList members)) {Binding.Type.division = Just (Map.mapKeys Recipient.ToObject division)}
+          State.modify' (overHolderBindings resolving (Map.insert slot binding))
       _ -> pure ()
   Effect.PutCountersFrom (PutCountersFrom.MkPutCountersFrom fromSlot kind ref) -> do
     gs <- State.get
@@ -10439,10 +10453,21 @@ applyOneEffect runSubgame resolving source controller legal chosen effect = case
   -- each one a becomes-tapped event. Rule 701.26a's "only untapped permanents can
   -- be tapped" lives in that funnel, and it earns its keep now that an event rides
   -- on the write: the assignment was idempotent and the event is not.
-  Effect.Tap ref -> do
+  --
+  -- The `tapped` slot binds what this turned sideways, in sweep order: a victim
+  -- that was untapped before and is tapped after, so one already tapped is not
+  -- "tapped this way". That exclusion is a regression fence, not a proved
+  -- behaviour: Master of the Wild Hunt's sweep names only untapped Wolves.
+  Effect.Tap (Tap.MkTap ref mTapped) -> do
     gs <- State.get
+    let victims = ListUtils.nubOrd (objectRefObjects legal resolving controller source gs ref)
+        tappedIn g oid = fmap Object.tapped (Game.lookupObject oid g) == Just TapState.Tapped
     -- One event group, CR 608.2f.
-    Event.simultaneously (Monad.forM_ (objectRefObjects legal resolving controller source gs ref) Event.tap)
+    Event.simultaneously (Monad.forM_ victims Event.tap)
+    after <- State.get
+    Monad.forM_ mTapped $ \slot -> do
+      let turned = filter (\oid -> not (tappedIn gs oid) && tappedIn after oid) victims
+      Monad.unless (null turned) (State.modify' (bindObjectsSlot resolving slot (Seq.fromList turned)))
   -- CR 701.26b: rotate each named permanent back upright. The victims are
   -- enumerated ONCE (CR 608.2f) and off the board as it stands before any of them
   -- is untapped, so an illegal slot (CR 608.2b), a player recipient and a set

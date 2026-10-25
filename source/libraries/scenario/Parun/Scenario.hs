@@ -994,7 +994,7 @@ withinOffer prompt chosen = case prompt of
   Prompt.Type.ChooseCounterRemovalAmong _ _ _ _ bearers -> Map.isSubmapOfBy (<=) chosen bearers
   Prompt.Type.ChooseCounterRemovalAtLeast _ _ _ _ bearers -> Map.isSubmapOfBy (<=) chosen bearers
   Prompt.Type.ChooseCounterRemovalUpTo _ _ _ _ bearers -> Map.isSubmapOfBy (<=) chosen bearers
-  Prompt.Type.ChooseCounterDistribution _ _ _ _ candidates -> all (`elem` candidates) (Map.keys chosen)
+  Prompt.Type.ChooseDistribution _ _ _ _ candidates -> all (`elem` candidates) (Map.keys chosen)
   Prompt.Type.ChooseDivision _ _ _ dividing targets -> Target.divides dividing targets chosen
   Prompt.Type.ChooseAttachment _ _ _ objects -> chosen `elem` objects
   Prompt.Type.ChoosePlayPermission _ _ _ permissions -> chosen `elem` permissions

@@ -99,8 +99,10 @@
                       {
                         "type": "Tap",
                         "value": {
-                          "type": "InSlot",
-                          "value": "targets"
+                          "ref": {
+                            "type": "InSlot",
+                            "value": "targets"
+                          }
                         }
                       }
                     ]

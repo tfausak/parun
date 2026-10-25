@@ -26,8 +26,10 @@
                   {
                     "type": "Tap",
                     "value": {
-                      "type": "InSlot",
-                      "value": "gauge"
+                      "ref": {
+                        "type": "InSlot",
+                        "value": "gauge"
+                      }
                     }
                   },
                   {

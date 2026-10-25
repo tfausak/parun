@@ -112,7 +112,7 @@ encode p answer = case p of
   Prompt.ChooseCounterRemovalAmong {} -> Response.ChoseCounterRemovalAmong answer
   Prompt.ChooseCounterRemovalAtLeast {} -> Response.ChoseCounterRemovalAtLeast answer
   Prompt.ChooseCounterRemovalUpTo {} -> Response.ChoseCounterRemovalUpTo answer
-  Prompt.ChooseCounterDistribution {} -> Response.ChoseCounterDistribution answer
+  Prompt.ChooseDistribution {} -> Response.ChoseDistribution answer
   Prompt.ChooseDivision {} -> Response.ChoseDivision answer
   Prompt.ChooseMixedCounterRemoval {} -> Response.ChoseMixedCounterRemoval answer
   Prompt.ChooseVote {} -> Response.ChoseVote answer
@@ -380,8 +380,8 @@ decode p response = case p of
   Prompt.ChooseCounterRemovalUpTo {} -> case response of
     Response.ChoseCounterRemovalUpTo division -> Just division
     _ -> Nothing
-  Prompt.ChooseCounterDistribution {} -> case response of
-    Response.ChoseCounterDistribution division -> Just division
+  Prompt.ChooseDistribution {} -> case response of
+    Response.ChoseDistribution division -> Just division
     _ -> Nothing
   Prompt.ChooseDivision {} -> case response of
     Response.ChoseDivision division -> Just division
@@ -928,7 +928,7 @@ defaultAnswer p = case p of
   -- Under a cap, removing nothing is an answer.
   Prompt.ChooseCounterRemovalUpTo {} -> Map.empty
   -- CR 608.2d: the whole total on the first candidate, a legal division.
-  Prompt.ChooseCounterDistribution _ _ _ total candidates -> Map.singleton (NonEmpty.head candidates) total
+  Prompt.ChooseDistribution _ _ _ total candidates -> Map.singleton (NonEmpty.head candidates) total
   -- CR 601.2d / 115.7f: Target.defaultDivision's, a legal division.
   Prompt.ChooseDivision _ _ _ dividing candidates -> Target.defaultDivision dividing candidates
   -- The same by permanent and kind, off the first permanent alone under a

@@ -99,7 +99,7 @@
       "player": "alice",
       "refuse": {
         "Answer": {
-          "prompt": "ChooseCounterDistribution",
+          "prompt": "ChooseDistribution",
           "with": [
             [
               "$hill-giant",
@@ -119,7 +119,7 @@
       "player": "alice",
       "refuse": {
         "Answer": {
-          "prompt": "ChooseCounterDistribution",
+          "prompt": "ChooseDistribution",
           "with": [
             [
               "$hill-giant",
@@ -139,7 +139,7 @@
       "player": "alice",
       "do": {
         "Answer": {
-          "prompt": "ChooseCounterDistribution",
+          "prompt": "ChooseDistribution",
           "with": [
             [
               "$hill-giant",
