@@ -1,0 +1,19 @@
+{
+  "description": "CR 614.1c Djinn of Wishes enters with three wish counters, and removing one reveals the top card, which its controller may play without paying its mana cost",
+  "note": "Paired with djinn-of-wishes-exiles-the-revealed-card-it-was-not-played; the runs differ only in the answer to the offer. The pool holds the Djinn's and the ability's mana only, so the Hill Giant is cast free.",
+  "board": {"active": "alice", "step": "PrecombatMain", "seats": [
+    {"name": "alice", "manaPool": "UUUUUUUUU", "hand": [{"card": "Djinn of Wishes", "label": "djinn"}], "library": [{"card": "Hill Giant"}, {"card": "Island"}, {"card": "Island"}]},
+    {"name": "bob", "library": [{"card": "Island"}, {"card": "Island"}]}]},
+  "timeline": [
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "do": {"Cast": {"object": "$djinn"}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "do": "Pass"},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "check": {"Counters": {"object": "Djinn of Wishes", "kind": {"type": "Named", "value": "wish"}, "count": 3}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "do": {"Activate": {"object": "Djinn of Wishes", "ability": 0}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "check": {"Counters": {"object": "Djinn of Wishes", "kind": {"type": "Named", "value": "wish"}, "count": 2}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "do": "Pass"},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "do": {"Answer": {"prompt": "OfferedCast", "with": {"type": "Exercises"}}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "do": "Pass"},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "check": {"Count": {"player": "alice", "zone": "Battlefield", "card": "Hill Giant", "count": 1}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "check": {"Count": {"player": "alice", "zone": "Exile", "card": "Hill Giant", "count": 0}}}
+  ]
+}

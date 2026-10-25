@@ -1,0 +1,183 @@
+{
+  "faces": [
+    {
+      "activatedAbilities": [
+        {
+          "cost": {
+            "components": [
+              {
+                "type": "TapThis"
+              }
+            ],
+            "mana": []
+          },
+          "modal": {
+            "modes": [
+              {
+                "clauses": [
+                  {
+                    "effects": [
+                      {
+                        "type": "AddMana",
+                        "value": {
+                          "count": {
+                            "type": "Count",
+                            "value": {
+                              "aggregation": {
+                                "type": "Members"
+                              },
+                              "filter": {
+                                "type": "And",
+                                "value": [
+                                  {
+                                    "type": "HasSubtype",
+                                    "value": {
+                                      "type": "Elf"
+                                    }
+                                  },
+                                  {
+                                    "type": "ControlledBy",
+                                    "value": {
+                                      "type": "You"
+                                    }
+                                  }
+                                ]
+                              },
+                              "scope": {
+                                "type": "InZone",
+                                "value": {
+                                  "player": {
+                                    "type": "Relative",
+                                    "value": {
+                                      "type": "AnyPlayer"
+                                    }
+                                  },
+                                  "zone": {
+                                    "type": "Battlefield"
+                                  }
+                                }
+                              }
+                            }
+                          },
+                          "production": {
+                            "type": "OfType",
+                            "value": {
+                              "type": "Colored",
+                              "value": {
+                                "type": "Green"
+                              }
+                            }
+                          }
+                        }
+                      }
+                    ]
+                  }
+                ]
+              }
+            ]
+          }
+        }
+      ],
+      "manaCost": [
+        {
+          "type": "Generic",
+          "value": 1
+        },
+        {
+          "type": "OfType",
+          "value": {
+            "type": "Colored",
+            "value": {
+              "type": "Green"
+            }
+          }
+        },
+        {
+          "type": "OfType",
+          "value": {
+            "type": "Colored",
+            "value": {
+              "type": "Green"
+            }
+          }
+        }
+      ],
+      "name": "Elvish Archdruid",
+      "oracleText": "Other Elf creatures you control get +1/+1.\n{T}: Add {G} for each Elf you control.",
+      "power": {
+        "type": "Literal",
+        "value": 2
+      },
+      "staticAbilities": [
+        {
+          "affected": {
+            "type": "Matching",
+            "value": {
+              "type": "And",
+              "value": [
+                {
+                  "type": "Not",
+                  "value": {
+                    "type": "IsSource"
+                  }
+                },
+                {
+                  "type": "HasSubtype",
+                  "value": {
+                    "type": "Elf"
+                  }
+                },
+                {
+                  "type": "HasCardType",
+                  "value": {
+                    "type": "Creature"
+                  }
+                },
+                {
+                  "type": "ControlledBy",
+                  "value": {
+                    "type": "You"
+                  }
+                }
+              ]
+            }
+          },
+          "modifications": [
+            {
+              "type": "ModifyPowerToughness",
+              "value": {
+                "power": {
+                  "type": "Literal",
+                  "value": 1
+                },
+                "toughness": {
+                  "type": "Literal",
+                  "value": 1
+                }
+              }
+            }
+          ]
+        }
+      ],
+      "toughness": {
+        "type": "Literal",
+        "value": 2
+      },
+      "typeLine": {
+        "subtypes": [
+          {
+            "type": "Druid"
+          },
+          {
+            "type": "Elf"
+          }
+        ],
+        "types": [
+          {
+            "type": "Creature"
+          }
+        ]
+      }
+    }
+  ]
+}

@@ -1,0 +1,104 @@
+{
+  "faces": [
+    {
+      "manaCost": [
+        {
+          "type": "Generic",
+          "value": 5
+        },
+        {
+          "type": "OfType",
+          "value": {
+            "type": "Colored",
+            "value": {
+              "type": "Blue"
+            }
+          }
+        }
+      ],
+      "name": "Hive Mind",
+      "oracleText": "Whenever a player casts an instant or sorcery spell, each other player copies that spell. Each of those players may choose new targets for their copy.",
+      "triggeredAbilities": [
+        {
+          "condition": {
+            "type": "SpellCast",
+            "value": {
+              "filter": {
+                "type": "Or",
+                "value": [
+                  {
+                    "type": "HasCardType",
+                    "value": {
+                      "type": "Instant"
+                    }
+                  },
+                  {
+                    "type": "HasCardType",
+                    "value": {
+                      "type": "Sorcery"
+                    }
+                  }
+                ]
+              },
+              "scope": {
+                "type": "EachTurn"
+              }
+            }
+          },
+          "modal": {
+            "modes": [
+              {
+                "clauses": [
+                  {
+                    "effects": [
+                      {
+                        "type": "ForEach",
+                        "value": {
+                          "body": [
+                            {
+                              "type": "CopyStackObject",
+                              "value": {
+                                "copier": {
+                                  "type": "InSlot",
+                                  "value": "player"
+                                },
+                                "ref": {
+                                  "type": "InSlot",
+                                  "value": "thatSpell"
+                                },
+                                "targets": {
+                                  "type": "ChosenByController"
+                                }
+                              }
+                            }
+                          ],
+                          "ref": {
+                            "type": "Players",
+                            "value": {
+                              "players": {
+                                "type": "EachPlayerExcept",
+                                "value": "thatPlayer"
+                              }
+                            }
+                          },
+                          "slot": "player"
+                        }
+                      }
+                    ]
+                  }
+                ]
+              }
+            ]
+          }
+        }
+      ],
+      "typeLine": {
+        "types": [
+          {
+            "type": "Enchantment"
+          }
+        ]
+      }
+    }
+  ]
+}

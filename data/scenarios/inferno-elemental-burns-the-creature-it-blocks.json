@@ -1,0 +1,14 @@
+{
+  "description": "CR 509.3b Inferno Elemental deals 3 damage to the creature it blocks, and none to itself",
+  "note": "Paired with inferno-elemental-burns-the-creature-blocking-it. The attacking Hill Giant dies in the declare blockers step, before combat damage, with the Elemental undamaged.",
+  "board": {"active": "bob", "step": "PrecombatMain", "seats": [
+    {"name": "alice", "battlefield": [{"card": "Inferno Elemental", "label": "elemental"}], "library": [{"card": "Island"}, {"card": "Island"}]},
+    {"name": "bob", "battlefield": [{"card": "Hill Giant", "label": "giant", "ready": true}], "library": [{"card": "Island"}, {"card": "Island"}]}]},
+  "timeline": [
+    {"turn": 1, "step": "DeclareAttackers", "player": "bob", "do": {"Attack": ["$giant"]}},
+    {"turn": 1, "step": "DeclareBlockers", "player": "alice", "do": {"Block": {"$elemental": ["$giant"]}}},
+    {"turn": 1, "step": "DeclareBlockers", "player": "bob", "do": "Pass"},
+    {"turn": 1, "step": "DeclareBlockers", "player": "bob", "check": {"Count": {"player": "bob", "zone": "Graveyard", "card": "Hill Giant", "count": 1}}},
+    {"turn": 1, "step": "DeclareBlockers", "player": "bob", "check": {"Damage": {"object": "$elemental", "damage": 0}}}
+  ]
+}

@@ -1,0 +1,13 @@
+{
+  "description": "CR 606.4 Chandra Nalaar's +1 deals 1 damage to target player and adds a loyalty counter",
+  "board": {"active": "alice", "step": "PrecombatMain", "seats": [
+    {"name": "alice", "battlefield": [{"card": "Chandra Nalaar", "label": "chandra", "counters": [{"key": {"type": "Loyalty"}, "value": 6}]}], "library": [{"card": "Island"}, {"card": "Island"}]},
+    {"name": "bob", "library": [{"card": "Island"}, {"card": "Island"}]}]},
+  "timeline": [
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "do": {"Activate": {"object": "$chandra", "ability": 0, "targets": ["$bob"]}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "check": {"Counters": {"object": "$chandra", "kind": {"type": "Loyalty"}, "count": 7}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "do": "Pass"},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "check": {"Life": {"player": "bob", "life": 19}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "check": {"Life": {"player": "alice", "life": 20}}}
+  ]
+}

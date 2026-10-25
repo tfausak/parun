@@ -1,0 +1,87 @@
+{
+  "faces": [
+    {
+      "keywords": [
+        {
+          "type": "FirstStrike"
+        },
+        {
+          "type": "Flying"
+        },
+        {
+          "type": "Lifelink"
+        },
+        {
+          "type": "Protection",
+          "value": {
+            "quality": {
+              "type": "HasSubtype",
+              "value": {
+                "type": "Demon"
+              }
+            },
+            "spares": null
+          }
+        },
+        {
+          "type": "Protection",
+          "value": {
+            "quality": {
+              "type": "HasSubtype",
+              "value": {
+                "type": "Dragon"
+              }
+            },
+            "spares": null
+          }
+        }
+      ],
+      "manaCost": [
+        {
+          "type": "Generic",
+          "value": 3
+        },
+        {
+          "type": "OfType",
+          "value": {
+            "type": "Colored",
+            "value": {
+              "type": "White"
+            }
+          }
+        },
+        {
+          "type": "OfType",
+          "value": {
+            "type": "Colored",
+            "value": {
+              "type": "White"
+            }
+          }
+        }
+      ],
+      "name": "Baneslayer Angel",
+      "oracleText": "Flying, first strike, lifelink, protection from Demons and from Dragons",
+      "power": {
+        "type": "Literal",
+        "value": 5
+      },
+      "toughness": {
+        "type": "Literal",
+        "value": 5
+      },
+      "typeLine": {
+        "subtypes": [
+          {
+            "type": "Angel"
+          }
+        ],
+        "types": [
+          {
+            "type": "Creature"
+          }
+        ]
+      }
+    }
+  ]
+}

@@ -1,0 +1,16 @@
+{
+  "description": "CR 120.3 Chandra Nalaar's -8 deals 10 damage to target player and each creature that player controls",
+  "note": "Bob's Hill Giant and Shivan Dragon die and bob goes to 10; alice's Bears are not bob's and survive.",
+  "board": {"active": "alice", "step": "PrecombatMain", "seats": [
+    {"name": "alice", "battlefield": [{"card": "Chandra Nalaar", "label": "chandra", "counters": [{"key": {"type": "Loyalty"}, "value": 9}]}, {"card": "Grizzly Bears", "label": "bears"}], "library": [{"card": "Island"}, {"card": "Island"}]},
+    {"name": "bob", "battlefield": [{"card": "Hill Giant"}, {"card": "Shivan Dragon"}], "library": [{"card": "Island"}, {"card": "Island"}]}]},
+  "timeline": [
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "do": {"Activate": {"object": "$chandra", "ability": 2, "targets": ["$bob"]}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "do": "Pass"},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "check": {"Life": {"player": "bob", "life": 10}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "check": {"Count": {"player": "bob", "zone": "Graveyard", "card": "Hill Giant", "count": 1}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "check": {"Count": {"player": "bob", "zone": "Graveyard", "card": "Shivan Dragon", "count": 1}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "check": {"Damage": {"object": "$bears", "damage": 0}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "check": {"Counters": {"object": "$chandra", "kind": {"type": "Loyalty"}, "count": 1}}}
+  ]
+}

@@ -1,0 +1,14 @@
+{
+  "description": "CR 107.3a Chandra Nalaar's -X removes X loyalty counters and deals X damage to target creature",
+  "note": "X is 3: the Hill Giant dies, Chandra drops from 6 to 3, and bob's Craw Wurm is untouched.",
+  "board": {"active": "alice", "step": "PrecombatMain", "seats": [
+    {"name": "alice", "battlefield": [{"card": "Chandra Nalaar", "label": "chandra", "counters": [{"key": {"type": "Loyalty"}, "value": 6}]}], "library": [{"card": "Island"}, {"card": "Island"}]},
+    {"name": "bob", "battlefield": [{"card": "Hill Giant", "label": "giant"}, {"card": "Craw Wurm", "label": "wurm"}], "library": [{"card": "Island"}, {"card": "Island"}]}]},
+  "timeline": [
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "do": {"Activate": {"object": "$chandra", "ability": 1, "x": 3, "targets": ["$giant"]}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "check": {"Counters": {"object": "$chandra", "kind": {"type": "Loyalty"}, "count": 3}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "do": "Pass"},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "check": {"Count": {"player": "bob", "zone": "Graveyard", "card": "Hill Giant", "count": 1}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "check": {"Damage": {"object": "$wurm", "damage": 0}}}
+  ]
+}

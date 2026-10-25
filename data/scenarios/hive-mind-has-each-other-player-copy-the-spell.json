@@ -1,0 +1,18 @@
+{
+  "description": "CR 707.10c Hive Mind has each player other than the caster copy an instant, each choosing new targets for their copy or not",
+  "note": "Bob controls Hive Mind and alice casts Shock at bob. Bob's copy turns on alice and carol's keeps bob, so alice ends at 18, bob at 16 and carol at 20: alice copying too would put bob at 14 or alice at 16.",
+  "board": {"active": "alice", "step": "PrecombatMain", "seats": [
+    {"name": "alice", "manaPool": "R", "hand": [{"card": "Shock", "label": "shock"}], "library": [{"card": "Island"}, {"card": "Island"}]},
+    {"name": "bob", "battlefield": [{"card": "Hive Mind"}], "library": [{"card": "Island"}, {"card": "Island"}]},
+    {"name": "carol", "library": [{"card": "Island"}, {"card": "Island"}]}]},
+  "timeline": [
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "do": {"Cast": {"object": "$shock", "targets": ["$bob"]}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "bob", "do": {"ChooseTargets": {"target": ["$alice"]}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "carol", "do": {"ChooseTargets": {"target": ["$bob"]}}}
+  ],
+  "final": [
+    {"Life": {"player": "alice", "life": 18}},
+    {"Life": {"player": "bob", "life": 16}},
+    {"Life": {"player": "carol", "life": 20}}
+  ]
+}

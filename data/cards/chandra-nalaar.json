@@ -1,0 +1,235 @@
+{
+  "faces": [
+    {
+      "activatedAbilities": [
+        {
+          "cost": {
+            "components": [
+              {
+                "type": "AddLoyaltyToThis",
+                "value": 1
+              }
+            ],
+            "mana": []
+          },
+          "modal": {
+            "modes": [
+              {
+                "clauses": [
+                  {
+                    "effects": [
+                      {
+                        "type": "DealDamage",
+                        "value": {
+                          "parts": [
+                            {
+                              "quantity": {
+                                "type": "Literal",
+                                "value": 1
+                              },
+                              "ref": {
+                                "type": "InSlot",
+                                "value": "target"
+                              }
+                            }
+                          ]
+                        }
+                      }
+                    ]
+                  }
+                ],
+                "targetSlots": {
+                  "target": {
+                    "pool": {
+                      "type": "PlayersAndPlaneswalkers"
+                    }
+                  }
+                }
+              }
+            ]
+          }
+        },
+        {
+          "cost": {
+            "components": [
+              {
+                "type": "RemoveLoyaltyFromThis",
+                "value": {
+                  "type": "Announced",
+                  "value": "X"
+                }
+              }
+            ],
+            "mana": []
+          },
+          "modal": {
+            "modes": [
+              {
+                "clauses": [
+                  {
+                    "effects": [
+                      {
+                        "type": "DealDamage",
+                        "value": {
+                          "parts": [
+                            {
+                              "quantity": {
+                                "type": "InSlot",
+                                "value": "X"
+                              },
+                              "ref": {
+                                "type": "InSlot",
+                                "value": "target"
+                              }
+                            }
+                          ]
+                        }
+                      }
+                    ]
+                  }
+                ],
+                "targetSlots": {
+                  "target": {
+                    "pool": {
+                      "type": "Creatures"
+                    }
+                  }
+                }
+              }
+            ]
+          }
+        },
+        {
+          "cost": {
+            "components": [
+              {
+                "type": "RemoveLoyaltyFromThis",
+                "value": {
+                  "type": "Fixed",
+                  "value": 8
+                }
+              }
+            ],
+            "mana": []
+          },
+          "modal": {
+            "modes": [
+              {
+                "clauses": [
+                  {
+                    "effects": [
+                      {
+                        "type": "DealDamage",
+                        "value": {
+                          "parts": [
+                            {
+                              "quantity": {
+                                "type": "Literal",
+                                "value": 10
+                              },
+                              "ref": {
+                                "type": "InSlot",
+                                "value": "target"
+                              }
+                            },
+                            {
+                              "quantity": {
+                                "type": "Literal",
+                                "value": 10
+                              },
+                              "ref": {
+                                "type": "EachMatching",
+                                "value": {
+                                  "type": "And",
+                                  "value": [
+                                    {
+                                      "type": "HasCardType",
+                                      "value": {
+                                        "type": "Creature"
+                                      }
+                                    },
+                                    {
+                                      "type": "Or",
+                                      "value": [
+                                        {
+                                          "type": "ControlledByBound",
+                                          "value": "target"
+                                        },
+                                        {
+                                          "type": "SameControllerAsBound",
+                                          "value": "target"
+                                        }
+                                      ]
+                                    }
+                                  ]
+                                }
+                              }
+                            }
+                          ]
+                        }
+                      }
+                    ]
+                  }
+                ],
+                "targetSlots": {
+                  "target": {
+                    "pool": {
+                      "type": "PlayersAndPlaneswalkers"
+                    }
+                  }
+                }
+              }
+            ]
+          }
+        }
+      ],
+      "loyalty": {
+        "type": "Literal",
+        "value": 6
+      },
+      "manaCost": [
+        {
+          "type": "Generic",
+          "value": 3
+        },
+        {
+          "type": "OfType",
+          "value": {
+            "type": "Colored",
+            "value": {
+              "type": "Red"
+            }
+          }
+        },
+        {
+          "type": "OfType",
+          "value": {
+            "type": "Colored",
+            "value": {
+              "type": "Red"
+            }
+          }
+        }
+      ],
+      "name": "Chandra Nalaar",
+      "oracleText": "[+1]: Chandra Nalaar deals 1 damage to target player or planeswalker.\n[−X]: Chandra Nalaar deals X damage to target creature.\n[−8]: Chandra Nalaar deals 10 damage to target player or planeswalker and each creature that player or that planeswalker's controller controls.",
+      "typeLine": {
+        "subtypes": [
+          {
+            "type": "Chandra"
+          }
+        ],
+        "supertypes": [
+          {
+            "type": "Legendary"
+          }
+        ],
+        "types": [
+          {
+            "type": "Planeswalker"
+          }
+        ]
+      }
+    }
+  ]
+}

@@ -1,0 +1,21 @@
+{
+  "description": "CR 611.2b Awakener Druid's Forest is a 4/5 green Treefolk creature land until the Druid leaves the battlefield",
+  "note": "Two Forests make the target a real choice. Bolting the Druid ends the duration, so the Forest is a land and nothing else again.",
+  "board": {"active": "alice", "step": "PrecombatMain", "seats": [
+    {"name": "alice", "manaPool": "GGG", "battlefield": [{"card": "Mountain", "label": "mountain"}, {"card": "Forest", "label": "forest"}, {"card": "Forest", "label": "other"}], "hand": [{"card": "Awakener Druid", "label": "druid"}, {"card": "Lightning Bolt", "label": "bolt"}], "library": [{"card": "Island"}, {"card": "Island"}]},
+    {"name": "bob", "library": [{"card": "Island"}, {"card": "Island"}]}]},
+  "timeline": [
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "do": {"Cast": {"object": "$druid", "mana": [null]}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "do": "Pass"},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "do": {"ChooseTargets": {"target": ["$forest"]}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "do": "Pass"},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "check": {"PowerToughness": {"object": "$forest", "power": 4, "toughness": 5}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "check": {"Types": {"object": "$forest", "types": ["Creature", "Land"]}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "check": {"Subtypes": {"object": "$forest", "subtypes": ["Forest", "Treefolk"]}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "check": {"View": {"of": "Colors", "object": "$forest", "is": ["Green"]}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "check": {"Types": {"object": "$other", "types": ["Land"]}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "do": {"Cast": {"object": "$bolt", "targets": ["Awakener Druid"], "mana": ["$mountain", null]}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "do": "Pass"},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "check": {"Types": {"object": "$forest", "types": ["Land"]}}}
+  ]
+}

@@ -1,0 +1,90 @@
+{
+  "faces": [
+    {
+      "keywords": [
+        {
+          "type": "Indestructible"
+        },
+        {
+          "type": "Trample"
+        }
+      ],
+      "manaCost": [
+        {
+          "type": "Generic",
+          "value": 11
+        }
+      ],
+      "name": "Darksteel Colossus",
+      "oracleText": "Trample (This creature can deal excess combat damage to the player or planeswalker it's attacking.)\nIndestructible (Damage and effects that say \"destroy\" don't destroy this creature.)\nIf Darksteel Colossus would be put into a graveyard from anywhere, reveal Darksteel Colossus and shuffle it into its owner's library instead.",
+      "power": {
+        "type": "Literal",
+        "value": 11
+      },
+      "replacementEffects": [
+        {
+          "effect": {
+            "type": "ZoneChangeR",
+            "value": {
+              "destination": {
+                "type": "Library"
+              },
+              "matching": {
+                "whatObject": {
+                  "type": "IsSource"
+                },
+                "whenDestination": {
+                  "type": "Graveyard"
+                }
+              },
+              "revealing": true,
+              "shuffling": true
+            }
+          },
+          "functionsFrom": [
+            {
+              "type": "Library"
+            },
+            {
+              "type": "Hand"
+            },
+            {
+              "type": "Graveyard"
+            },
+            {
+              "type": "Battlefield"
+            },
+            {
+              "type": "Stack"
+            },
+            {
+              "type": "Exile"
+            },
+            {
+              "type": "Command"
+            }
+          ]
+        }
+      ],
+      "toughness": {
+        "type": "Literal",
+        "value": 11
+      },
+      "typeLine": {
+        "subtypes": [
+          {
+            "type": "Golem"
+          }
+        ],
+        "types": [
+          {
+            "type": "Artifact"
+          },
+          {
+            "type": "Creature"
+          }
+        ]
+      }
+    }
+  ]
+}
