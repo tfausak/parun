@@ -1,0 +1,122 @@
+{
+  "description": "CR 111.1: Howl of the Night Pack creates a 2/2 green Wolf token for each Forest its caster controls",
+  "note": "Alice controls three Forests and Bob two: three Wolves, not five.",
+  "board": {
+    "active": "alice",
+    "step": "PrecombatMain",
+    "seats": [
+      {
+        "name": "alice",
+        "manaPool": "GGGGGGG",
+        "hand": [
+          {
+            "card": "Howl of the Night Pack",
+            "label": "howl"
+          }
+        ],
+        "battlefield": [
+          {
+            "card": "Forest",
+            "tapped": true
+          },
+          {
+            "card": "Forest",
+            "tapped": true
+          },
+          {
+            "card": "Forest",
+            "tapped": true
+          }
+        ],
+        "library": [
+          {
+            "card": "Island"
+          },
+          {
+            "card": "Island"
+          },
+          {
+            "card": "Island"
+          }
+        ]
+      },
+      {
+        "name": "bob",
+        "battlefield": [
+          {
+            "card": "Forest"
+          },
+          {
+            "card": "Forest"
+          }
+        ],
+        "library": [
+          {
+            "card": "Island"
+          },
+          {
+            "card": "Island"
+          },
+          {
+            "card": "Island"
+          }
+        ]
+      }
+    ]
+  },
+  "timeline": [
+    {
+      "turn": 1,
+      "step": "PrecombatMain",
+      "player": "alice",
+      "do": {
+        "Cast": {
+          "object": "$howl"
+        }
+      }
+    },
+    {
+      "turn": 1,
+      "step": "PrecombatMain",
+      "player": "alice",
+      "do": "Pass"
+    },
+    {
+      "turn": 1,
+      "step": "PrecombatMain",
+      "player": "alice",
+      "do": {
+        "OrderTimestamps": [
+          "Wolf Token",
+          "Wolf Token#2",
+          "Wolf Token#3"
+        ]
+      }
+    },
+    {
+      "turn": 1,
+      "step": "PrecombatMain",
+      "player": "alice",
+      "check": {
+        "Count": {
+          "player": "alice",
+          "zone": "Battlefield",
+          "card": "Wolf Token",
+          "count": 3
+        }
+      }
+    },
+    {
+      "turn": 1,
+      "step": "PrecombatMain",
+      "player": "alice",
+      "check": {
+        "PowerToughness": {
+          "object": "Wolf Token",
+          "power": 2,
+          "toughness": 2
+        }
+      }
+    }
+  ]
+}
