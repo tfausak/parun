@@ -192,9 +192,10 @@ restrictionMet pid srcId ability gs restriction = case restriction of
     Nothing -> False
     Just this -> case Game.lookupObject srcId gs of
       Nothing -> True
-      Just object -> unspent srcId this (Object.activatedOnce object) gs
+      Just object -> unspent 1 srcId this (Object.activatedOnce object) gs
   -- CR 602.5b's own example, the same question asked of THIS TURN: has this
-  -- ability of this object been activated since the turn began? The record is
+  -- ability of this object been activated fewer than `limit` times since the
+  -- turn began? The record is
   -- GameState.activatedThisTurn, which Engine.beginTurnOf clears -- so the reset
   -- is the turn handoff itself and nothing on the object survives it.
   --
@@ -203,9 +204,9 @@ restrictionMet pid srcId ability gs restriction = case restriction of
   -- source that has left keeps whatever it spent until the turn ends, and
   -- Activatable.activatable has already required the source of an OFFER to be
   -- somewhere it offers abilities from.
-  ActivationRestriction.OnlyOnceEachTurn -> case ability of
+  ActivationRestriction.TimesEachTurn limit -> case ability of
     Nothing -> False
-    Just this -> unspent srcId this (Map.findWithDefault Map.empty srcId (GameState.activatedThisTurn gs)) gs
+    Just this -> unspent limit srcId this (Map.findWithDefault Map.empty srcId (GameState.activatedThisTurn gs)) gs
   -- Goblin Bookie's "any time it makes sense", read as CR 706.2's modification
   -- step: open only while Parun.Engine.Resolve.Effect.throwDice is asking
   -- about a die, so never at priority (CR 117.1b).
@@ -237,15 +238,15 @@ atInstantSpeed restriction = case restriction of
   ActivationRestriction.BeforeStep _ -> restriction
   ActivationRestriction.OnlyIf _ -> restriction
   ActivationRestriction.OnlyOnce -> restriction
-  ActivationRestriction.OnlyOnceEachTurn -> restriction
+  ActivationRestriction.TimesEachTurn _ -> restriction
   ActivationRestriction.DuringDieRoll -> restriction
   ActivationRestriction.SpendOnly _ -> restriction
   ActivationRestriction.InstantSpeed -> restriction
 
--- CR 602.5b / 602.5c: does `srcId` bear a copy of `this` not yet spent? Each
--- identically worded copy (CR 113.2c) is its own ability to a restriction on
--- its use, so the counted spends are compared with the copies the source now
--- bears. At least one copy, so an ability no projection lists (a rule-702
+-- CR 602.5b / 602.5c: does `srcId` bear a copy of `this` activated fewer than
+-- `limit` times? Each identically worded copy (CR 113.2c) is its own ability to
+-- a restriction on its use, so the counted spends are compared with `limit`
+-- times the copies the source now bears. At least one copy, so an ability no projection lists (a rule-702
 -- minted one, off the battlefield) keeps the plain "not yet" reading. The
 -- projection is asked only once something is spent.
 --
@@ -259,10 +260,11 @@ atInstantSpeed restriction = case restriction of
 -- printing the rider reach it -- two Auras quoting one. No card in
 -- data/cards/ carries both an OnlyOnce rider and a GainAbility (grep,
 -- 2026-10-19).
-unspent :: ObjectId -> ActivatedAbility.ActivatedAbility Card.Card (GrantedAbility.GrantedAbility Card.Card) -> Map.Map (ActivatedAbility.ActivatedAbility Card.Card (GrantedAbility.GrantedAbility Card.Card)) Natural -> GameState -> Bool
-unspent srcId this spent gs = case Map.findWithDefault 0 this spent of
-  0 -> True
-  n -> n < max 1 (List.genericLength (filter (== this) (Projection.abilitiesOf srcId gs)))
+unspent :: Natural -> ObjectId -> ActivatedAbility.ActivatedAbility Card.Card (GrantedAbility.GrantedAbility Card.Card) -> Map.Map (ActivatedAbility.ActivatedAbility Card.Card (GrantedAbility.GrantedAbility Card.Card)) Natural -> GameState -> Bool
+unspent limit srcId this spent gs = case Map.findWithDefault 0 this spent of
+  n
+    | n < limit -> True
+    | otherwise -> n < limit * max 1 (List.genericLength (filter (== this) (Projection.abilitiesOf srcId gs)))
 
 -- CR 602.5b: record that THIS ability of this source has now been activated,
 -- for whichever counted rider it prints. The writer both readers above are
@@ -283,11 +285,14 @@ unspent srcId this spent gs = case Map.findWithDefault 0 this spent of
 recordActivation :: ObjectId -> ActivatedAbility.ActivatedAbility Card.Card (GrantedAbility.GrantedAbility Card.Card) -> GameState -> GameState
 recordActivation srcId ability gs =
   let prints restriction = elem restriction (Keyword.restrictionsOf ability)
+      perTurnLimited r = case r of
+        ActivationRestriction.TimesEachTurn _ -> True
+        _ -> False
       perGame g =
         g {GameState.objects = Map.adjust (\o -> o {Object.activatedOnce = Map.insertWith (+) ability 1 (Object.activatedOnce o)}) srcId (GameState.objects g)}
       perTurn g =
         g {GameState.activatedThisTurn = Map.insertWith (Map.unionWith (+)) srcId (Map.singleton ability 1) (GameState.activatedThisTurn g)}
-   in (if prints ActivationRestriction.OnlyOnceEachTurn then perTurn else id)
+   in (if any perTurnLimited (Keyword.restrictionsOf ability) then perTurn else id)
         ((if prints ActivationRestriction.OnlyOnce then perGame else id) gs)
 
 -- CR 602.2: log that `pid` began activating an ability of `srcId` aimed at
@@ -352,7 +357,7 @@ needsEmptyStack restriction = case restriction of
   ActivationRestriction.OnlyOnce -> False
   -- The same record, timed per turn, and the same argument: CR 601.2a's and CR
   -- 602.2a's move ends no turn and spends no activation.
-  ActivationRestriction.OnlyOnceEachTurn -> False
+  ActivationRestriction.TimesEachTurn _ -> False
   -- A die roll's modification step opens inside a resolution, never at a
   -- payment's gate, so no move between the two can close it.
   ActivationRestriction.DuringDieRoll -> False
@@ -381,7 +386,7 @@ refusedMidPayment restriction = case restriction of
   ActivationRestriction.BeforeStep _ -> False
   ActivationRestriction.OnlyIf _ -> False
   ActivationRestriction.OnlyOnce -> False
-  ActivationRestriction.OnlyOnceEachTurn -> False
+  ActivationRestriction.TimesEachTurn _ -> False
   ActivationRestriction.DuringDieRoll -> False
   ActivationRestriction.SpendOnly _ -> False
 

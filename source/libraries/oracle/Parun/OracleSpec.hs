@@ -809,11 +809,15 @@ spec s = Spec.describe s "Parun.Oracle" $ do
   Spec.it s "render prints the restrictions on activating an ability" $ do
     let restricted rs = withFace (\f -> f {Face.activatedAbilities = [(activated (mana [green]) (gainLife 1)) {ActivatedAbility.restrictions = rs}]})
         upkeep = ActivationRestriction.DuringPhase (DuringPhase.MkDuringPhase (PhaseSelector.Step (Phase.Beginning BeginningStep.Upkeep)) TurnScope.ControllersTurn)
-    Spec.assertEq s (Just (Text.pack "{G}: You gain 1 life. Activate only once each turn.")) (Oracle.render (restricted [ActivationRestriction.OnlyOnceEachTurn]))
+    Spec.assertEq s (Just (Text.pack "{G}: You gain 1 life. Activate only once each turn.")) (Oracle.render (restricted [ActivationRestriction.TimesEachTurn 1]))
     Spec.assertEq s (Just (Text.pack "{G}: You gain 1 life. Activate only as a sorcery.")) (Oracle.render (restricted [ActivationRestriction.SorcerySpeed]))
     Spec.assertEq s (Just (Text.pack "{G}: You gain 1 life. Activate only during your turn.")) (Oracle.render (restricted [ActivationRestriction.DuringTurn TurnScope.ControllersTurn]))
-    Spec.assertEq s (Just (Text.pack "{G}: You gain 1 life. Activate only during your upkeep and only once each turn.")) (Oracle.render (restricted [upkeep, ActivationRestriction.OnlyOnceEachTurn]))
+    Spec.assertEq s (Just (Text.pack "{G}: You gain 1 life. Activate only during your upkeep and only once each turn.")) (Oracle.render (restricted [upkeep, ActivationRestriction.TimesEachTurn 1]))
     Spec.assertEq s Nothing (Oracle.render (restricted [ActivationRestriction.DuringDieRoll]))
+    -- CR 602.5b counted past once is a sentence of its own (Vampire Bats).
+    Spec.assertEq s (Just (Text.pack "{G}: You gain 1 life. Activate no more than twice each turn.")) (Oracle.render (restricted [ActivationRestriction.TimesEachTurn 2]))
+    Spec.assertEq s (Just (Text.pack "{G}: You gain 1 life. Activate no more than three times each turn.")) (Oracle.render (restricted [ActivationRestriction.TimesEachTurn 3]))
+    Spec.assertEq s Nothing (Oracle.render (restricted [upkeep, ActivationRestriction.TimesEachTurn 2]))
 
   -- CR 508.1c / 509.1b: rules permanents follow, its own or a description's;
   -- "can't attack" and "can't block" of one permanent are one ability.

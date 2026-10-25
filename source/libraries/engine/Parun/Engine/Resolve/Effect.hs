@@ -226,6 +226,7 @@ import qualified Parun.Types.EndingStep as EndingStep
 import qualified Parun.Types.EntryAttack as EntryAttack
 import qualified Parun.Types.EntryBlock as EntryBlock
 import qualified Parun.Types.EntryController as EntryController
+import qualified Parun.Types.EntryHost as EntryHost
 import qualified Parun.Types.EntryRiders as EntryRiders
 import qualified Parun.Types.ExchangeBlocks as ExchangeBlocks
 import qualified Parun.Types.ExchangeCardZones as ExchangeCardZones
@@ -5572,7 +5573,11 @@ applyOneEffect runSubgame resolving source controller legal chosen effect = case
         -- watched the battlefield and could match a member of such a batch would
         -- separate them.
         moveOne mover mAttack mBlocked frozen before (sofar, acc) (target, (position, above)) = do
-          mNew <- Event.changeZoneEnteringIn (Just before) sofar source target zone position frozen (Just mover)
+          hosted <- chosenHost mover frozen sofar target
+          mNew <- case hosted of
+            -- CR 303.4g: nothing it may enchant, so the Aura stays where it is.
+            Nothing -> pure Seq.empty
+            Just seed -> Event.changeZoneEnteringIn (Just before) sofar seed source target zone position frozen (Just mover)
           -- CR 614.6: the move was cancelled, or the id was already gone (CR
           -- 603.7c). Nothing entered, so there is nothing to bind.
           Monad.forM_ mNew $ \newId -> do
@@ -5618,6 +5623,31 @@ applyOneEffect runSubgame resolving source controller legal chosen effect = case
               State.modify' (\g -> g {GameState.enteredWith = Map.insert newId source (GameState.enteredWith g)})
               State.modify' (linkCraftMaterials resolving newId)
           pure (foldr Set.insert sofar mNew, mNew : acc)
+        -- CR 303.4f's choice for an Aura the effect puts onto the battlefield
+        -- "attached to" a host it describes (EntryHost.Chosen, Nomad
+        -- Mythmaker's "a creature you control"): the rule's "any other
+        -- applicable effects", so the offer is the Aura's own entryHostsFor
+        -- narrowed by the effect's filter, made by the player it enters under.
+        -- Asked here rather than inside the funnel because the filter is card
+        -- text read in this resolution's context (docs/decisions.md, "When an
+        -- effect that narrows an Aura's host asks for it"). Answers the funnel's seed,
+        -- Nothing for CR 303.4g's "remains in its current zone", and Just
+        -- Nothing for every move the rider does not narrow, which the funnel
+        -- seats itself. MINUS `sofar`, the funnel's own CR 608.2f exclusion.
+        -- Players are never admitted: the filter describes objects.
+        chosenHost mover riders sofar target = do
+          now <- State.get
+          case EntryRiders.attachedTo riders of
+            Just (EntryHost.Chosen filter_)
+              | zone == Zone.Battlefield,
+                Maybe.isNothing (EntryRiders.faceDown riders),
+                Set.member Subtype.Aura (Projection.subtypesOf target now) -> do
+                  let offered = Attach.entryHostsFor mover target now
+                      admitted = Set.fromList (matchingFromAmong legal resolving controller source now filter_ (filter (`Set.notMember` sofar) (Maybe.mapMaybe Recipient.objectOf offered)))
+                      hosts = filter (maybe False (`Set.member` admitted) . Recipient.objectOf) offered
+                  chosenOne <- Attach.chooseEntryHost mover target hosts
+                  pure (fmap Just (chosenOne >>= \h -> Attach.entryAttachmentFor mover target h now))
+            _ -> pure (Just Nothing)
         -- The context a CHOICE's candidates are filtered in, off the board the
         -- choice is being made on: the resolution's own slots ride along, so a
         -- card offering "a permanent card from among them" (Midnight Tilling)
@@ -7434,9 +7464,13 @@ applyOneEffect runSubgame resolving source controller legal chosen effect = case
     -- 303.4i's undefined object (Preston Garvey, Minuteman at zero targets),
     -- several for Dunbarrow Revivalist's "one of them", whose CR 608.2d choice
     -- among the legal hosts Event.createTokens makes once the token exists.
+    --
+    -- EntryHost.Chosen is the MoveToZone's alone (moveOne), which
+    -- Parun.EffectLintSpec fences, so a Create reads it as naming no host.
     mAttached <- case EntryRiders.attachedTo entry of
       Nothing -> pure Nothing
-      Just slot -> Just . fmap Recipient.ToObject <$> fromAmongMembers legal resolving chosen slot
+      Just (EntryHost.Chosen _) -> pure Nothing
+      Just (EntryHost.Specified slot) -> Just . fmap Recipient.ToObject <$> fromAmongMembers legal resolving chosen slot
     -- CR 508.4's rider, read ONCE ahead of the minting loop for mBlocked's
     -- reason.
     let mAttack = entryAttack legal resolving entry gs

@@ -1,5 +1,6 @@
 module Parun.Types.ActivationRestriction where
 
+import Numeric.Natural (Natural)
 import qualified Parun.Types.Condition as Condition
 import qualified Parun.Types.DuringPhase as DuringPhase
 import qualified Parun.Types.ManaSpecification as ManaSpecification
@@ -163,11 +164,13 @@ data ActivationRestriction
     -- 605.3a's two windows read this arm through Parun.Types.ManaOption rather
     -- than through Parun.Engine.Activate.
     OnlyOnce
-  | -- | CR 602.5b's own example of a "restriction on its use": "Activate only
-    -- once each turn" (Locust Swarm). CR 702.142a's boast rewrites itself into
-    -- the same words, and CR 702.57b states them of every forecast ability.
+  | -- | CR 602.5b's own example of a "restriction on its use", counted: at most
+    -- this many activations each turn. "Activate only once each turn" (Locust
+    -- Swarm) is 1, and CR 702.142a's boast and CR 702.57b's forecast rewrite
+    -- themselves into it; Vampire Bats' "Activate no more than twice each turn"
+    -- is 2.
     --
-    -- ONCE PER TURN, so OnlyOnce above is not it: the two sentences differ only
+    -- PER TURN, so OnlyOnce above is not it: the two sentences differ only
     -- in the period, and this one resets at every turn handoff. Its memory is
     -- Parun.Types.GameState.activatedThisTurn rather than an object field for
     -- exactly that reason -- Parun.Engine.Engine.beginTurnOf clears it beside the
@@ -180,7 +183,7 @@ data ActivationRestriction
     -- abilities (Locust Swarm regenerates freely and untaps once). CR 400.7's
     -- forgetting is free, the returning permanent being a new object with a new
     -- id.
-    OnlyOnceEachTurn
+    TimesEachTurn Natural
   | -- | "Activate only any time it makes sense" (Goblin Bookie): activatable only
     -- inside CR 706.2's modification of a die roll, where the ability resolves
     -- at once. No rule grants that window (CR 117.1b); Parun.DiceSpec's Goblin

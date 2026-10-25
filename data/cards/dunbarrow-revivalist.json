@@ -139,7 +139,10 @@
                             "value": 1
                           },
                           "riders": {
-                            "attachedTo": "became"
+                            "attachedTo": {
+                              "type": "Specified",
+                              "value": "became"
+                            }
                           }
                         }
                       }

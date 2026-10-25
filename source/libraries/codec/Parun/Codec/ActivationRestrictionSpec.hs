@@ -143,12 +143,12 @@ spec s = Spec.describe s "Parun.Codec.ActivationRestriction" $ do
       " {\"type\":\"OnlyOnce\"} "
   -- CR 602.5b's own example, the same rider timed per turn: Locust Swarm's
   -- "Activate only once each turn".
-  Spec.it s "OnlyOnceEachTurn" $
+  Spec.it s "TimesEachTurn" $
     Common.assertCodec
       s
       ActivationRestriction.codec
-      ActivationRestriction.OnlyOnceEachTurn
-      " {\"type\":\"OnlyOnceEachTurn\"} "
+      (ActivationRestriction.TimesEachTurn 1)
+      " {\"type\":\"TimesEachTurn\",\"value\":1} "
   -- Goblin Bookie's "Activate only any time it makes sense".
   Spec.it s "DuringDieRoll" $
     Common.assertCodec

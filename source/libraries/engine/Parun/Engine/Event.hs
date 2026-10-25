@@ -6191,7 +6191,7 @@ changeZone oid requestedDest = Monad.void (changeZoneReturning oid requestedDest
 -- choose among, and running the entry loop first would fire CR 614.1c's
 -- as-enters abilities for a card that never enters.
 changeZoneEntering :: ObjectId -> Zone -> LibraryPosition.LibraryPosition -> EntryRiders.EntryRiders Natural (GrantedAbility.Type.GrantedAbility Card.Type.Card) -> Maybe PlayerId -> Game (Seq.Seq ObjectId)
-changeZoneEntering oid = changeZoneEnteringIn Nothing Set.empty oid oid
+changeZoneEntering oid = changeZoneEnteringIn Nothing Set.empty Nothing oid oid
 
 -- changeZoneEntering for ONE MEMBER of a CR 608.2f batch: `asOf` and `batch` are
 -- applyReplacementsIn's, and Parun.Engine.Resolve's Effect.MoveToZone arm is the
@@ -6200,8 +6200,10 @@ changeZoneEntering oid = changeZoneEnteringIn Nothing Set.empty oid oid
 -- lone moves have no batch to name. `source` is the instructing effect's, the
 -- source of the CR 611.2e effects the riders' `characteristics` create; the lone
 -- doors' riders are built by rules and carry none, so they pass the moving object.
-changeZoneEnteringIn :: Maybe GameState -> Set ObjectId -> ObjectId -> ObjectId -> Zone -> LibraryPosition.LibraryPosition -> EntryRiders.EntryRiders Natural (GrantedAbility.Type.GrantedAbility Card.Type.Card) -> Maybe PlayerId -> Game (Seq.Seq ObjectId)
-changeZoneEnteringIn asOf batch source oid requestedDest position riders under = do
+-- `seed` is changeZoneAttaching's, the host an Aura enters attached to where the
+-- MoveToZone arm already made CR 303.4f's choice (EntryHost.Chosen).
+changeZoneEnteringIn :: Maybe GameState -> Set ObjectId -> Maybe Recipient.Recipient -> ObjectId -> ObjectId -> Zone -> LibraryPosition.LibraryPosition -> EntryRiders.EntryRiders Natural (GrantedAbility.Type.GrantedAbility Card.Type.Card) -> Maybe PlayerId -> Game (Seq.Seq ObjectId)
+changeZoneEnteringIn asOf batch seed source oid requestedDest position riders under = do
   -- CR 614.12b: this member is moving now, so it no longer owes anything to an
   -- earlier member's choice (see amongPending).
   State.modify' (\g -> g {GameState.enteringPending = Map.delete oid (GameState.enteringPending g)})
@@ -6270,7 +6272,7 @@ changeZoneEnteringIn asOf batch source oid requestedDest position riders under =
   if refused
     then pure Seq.empty
     else do
-      entered <- changeZoneAttaching asOf batch oid requestedDest position Nothing (EntryRiders.tapped riders) (EntryRiders.counters riders) under2 shown facing (EntryRiders.exiledFaceDown riders) CarryOver.NotCarried False (fmap ((,) source) (EntryRiders.characteristics riders))
+      entered <- changeZoneAttaching asOf batch oid requestedDest position seed (EntryRiders.tapped riders) (EntryRiders.counters riders) under2 shown facing (EntryRiders.exiledFaceDown riders) CarryOver.NotCarried False (fmap ((,) source) (EntryRiders.characteristics riders))
       Monad.forM_ noted $ \printingId ->
         State.modify' $ \g -> g {GameState.notedCards = foldr (`Map.insert` printingId) (GameState.notedCards g) entered}
       pure entered
@@ -7258,8 +7260,10 @@ changeZoneWithCause discarded asOf batch oid requestedDest requestedPosition see
           -- enchant". That second clause IS `seed` being Nothing: a door supplies
           -- one exactly when the effect it carries named a destination -- CR
           -- 303.4a's target for Parun.Engine.Stack's Aura branch, which is also the
-          -- only door a resolving Aura spell takes, and the fixed host for
-          -- Parun.Engine.Resolve.Effect.putFound's search destination (Auratouched Mage).
+          -- only door a resolving Aura spell takes, the fixed host for
+          -- Parun.Engine.Resolve.Effect.putFound's search destination (Auratouched
+          -- Mage), and the host the MoveToZone arm chose among those its effect
+          -- describes (EntryHost.Chosen, Nomad Mythmaker).
           -- So the rule's own exclusion is carried without this funnel asking what
           -- kind of move it is.
           --
@@ -7289,8 +7293,9 @@ changeZoneWithCause discarded asOf batch oid requestedDest requestedPosition see
           --
           -- Filter.CanHostSubject ALONE, because CR 303.4f's "a legal object or
           -- player according to the Aura's enchant ability and any other applicable
-          -- effects" is the whole restriction -- there is no card text to intersect
-          -- it with, which is the difference from CR 303.4k's Attach.turnUpHosts.
+          -- effects" is the whole restriction -- the effect here describes no host,
+          -- since one that does (EntryHost.Chosen) arrives seeded, which is the
+          -- difference from CR 303.4k's Attach.turnUpHosts.
           -- A player is offered too (CR 702.5d); Parun.AuraSpec's returned Curse
           -- proves it.
           --

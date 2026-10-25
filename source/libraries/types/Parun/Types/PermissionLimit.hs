@@ -14,7 +14,7 @@ module Parun.Types.PermissionLimit where
 -- `limit`, Night Shift of the Living Dead's "Do this only once each turn"),
 -- spent in Parun.Types.GameState.rollModifiersUsedThisTurn.
 --
--- The CASTING-side twin of Parun.Types.ActivationRestriction's OnlyOnceEachTurn,
+-- The CASTING-side twin of Parun.Types.ActivationRestriction's TimesEachTurn,
 -- and deliberately a separate type rather than that one reused: CR 602.5b's
 -- rider is one clause of a list an activated ability prints about itself, while
 -- this is a field of a permission, and the two vocabularies share nothing else.
