@@ -1909,11 +1909,19 @@ filterPositionLintSpec s registry = Spec.describe s "Lint" $ do
       "Chandra Nalaar's is in its -8's damage's object"
       (controllerRelatesToBoundCounts (S.combinedFace chandra))
       (1, 0)
+    -- Necrotic Plague's "one of their opponents controls", relative to the
+    -- dead creature's controller, in its trigger's target slot.
+    plague <- S.printingOf s registry "Necrotic Plague"
     Spec.assertEqWith
       s
-      "and those seven are the pool's whole authorship of it"
+      "Necrotic Plague's is in its trigger's target slot"
+      (controllerRelatesToBoundCounts (S.combinedFace plague))
+      (1, 0)
+    Spec.assertEqWith
+      s
+      "and those eight are the pool's whole authorship of it"
       (sum (fmap (uncurry (+) . controllerRelatesToBoundCounts . S.combinedFace) ps))
-      7
+      8
     -- The REJECTING direction, hand-built for the reason every sibling lint's is:
     -- a card that offends must not be loadable, so no file can carry one. Buried
     -- under all three combinators, so an implementation reading only the top of a
