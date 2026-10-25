@@ -2203,6 +2203,13 @@ filterPositionLintSpec s registry = Spec.describe s "Lint" $ do
       "Firebreathing's pump is framed too"
       (hostOfSourceCounts (S.combinedFace firebreathing))
       (1, 0)
+    -- And Shiv's Embrace's, the same wording.
+    embrace <- S.printingOf s registry "Shiv's Embrace"
+    Spec.assertEqWith
+      s
+      "Shiv's Embrace's pump is framed too"
+      (hostOfSourceCounts (S.combinedFace embrace))
+      (1, 0)
     -- And Regeneration's loop over the creature it enchants, whose member its
     -- shield names.
     regeneration <- S.printingOf s registry "Regeneration"
@@ -2215,7 +2222,7 @@ filterPositionLintSpec s registry = Spec.describe s "Lint" $ do
       s
       "and they are the pool's only ones"
       (sum (fmap (uncurry (+) . hostOfSourceCounts . S.combinedFace) ps))
-      17
+      18
     -- The rejected side, which the sweep above cannot show while the pool has no
     -- offender: the same atom planted in a SPELL's target slot -- the position a
     -- card author would most plausibly reach for -- IS counted as elsewhere.
