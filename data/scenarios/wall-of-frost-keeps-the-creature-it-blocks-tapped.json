@@ -1,0 +1,12 @@
+{
+  "description": "CR 502.3 / 509.3c the creature Wall of Frost blocks doesn't untap during its controller's next untap step",
+  "note": "Bob's unblocked Grizzly Bears untaps on turn 3; the Hill Giant the Wall blocked does not.",
+  "board": {"active": "bob", "step": "PrecombatMain", "seats": [{"name": "alice", "battlefield": [{"card": "Wall of Frost", "label": "wall"}], "library": [{"card": "Island"}, {"card": "Island"}, {"card": "Island"}]}, {"name": "bob", "battlefield": [{"card": "Hill Giant", "label": "giant", "ready": true}, {"card": "Grizzly Bears", "label": "bears", "ready": true}], "library": [{"card": "Island"}, {"card": "Island"}, {"card": "Island"}]}]},
+  "timeline": [
+    {"turn": 1, "step": "DeclareAttackers", "player": "bob", "do": {"Attack": ["$giant", "$bears"]}},
+    {"turn": 1, "step": "DeclareBlockers", "player": "alice", "do": {"Block": {"$wall": ["$giant"]}}},
+    {"turn": 1, "step": "EndOfCombat", "player": "bob", "check": {"Life": {"player": "alice", "life": 18}}},
+    {"turn": 3, "step": "Upkeep", "player": "bob", "check": {"Tapped": {"object": "$giant", "tapped": true}}},
+    {"turn": 3, "step": "Upkeep", "player": "bob", "check": {"Tapped": {"object": "$bears", "tapped": false}}}
+  ]
+}

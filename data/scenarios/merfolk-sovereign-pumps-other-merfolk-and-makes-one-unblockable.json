@@ -1,0 +1,17 @@
+{
+  "description": "CR 509.1b Merfolk Sovereign gives its controller's other Merfolk +1/+1, and makes target Merfolk creature unblockable this turn",
+  "note": "Bob's Merfolk of the Pearl Trident is not alice's and stays 1/1; alice's Grizzly Bears is not a Merfolk, so it can't be targeted.",
+  "board": {"active": "alice", "step": "PrecombatMain", "seats": [{"name": "alice", "battlefield": [{"card": "Merfolk Sovereign", "label": "sovereign", "ready": true}, {"card": "Coral Merfolk", "label": "coral", "ready": true}, {"card": "Grizzly Bears", "label": "bears"}], "library": [{"card": "Island"}, {"card": "Island"}, {"card": "Island"}]}, {"name": "bob", "battlefield": [{"card": "Merfolk of the Pearl Trident", "label": "trident"}], "library": [{"card": "Island"}, {"card": "Island"}, {"card": "Island"}]}]},
+  "timeline": [
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "check": {"PowerToughness": {"object": "$coral", "power": 3, "toughness": 2}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "check": {"PowerToughness": {"object": "$sovereign", "power": 2, "toughness": 2}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "check": {"PowerToughness": {"object": "$trident", "power": 1, "toughness": 1}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "refuse": {"Activate": {"object": "$sovereign", "ability": 0, "targets": ["$bears"]}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "do": {"Activate": {"object": "$sovereign", "ability": 0, "targets": ["$coral"]}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "do": "Pass"},
+    {"turn": 1, "step": "DeclareAttackers", "player": "alice", "do": {"Attack": ["$coral"]}},
+    {"turn": 1, "step": "DeclareBlockers", "player": "bob", "refuse": {"Block": {"$trident": ["$coral"]}}},
+    {"turn": 1, "step": "DeclareBlockers", "player": "bob", "do": {"Block": {}}},
+    {"turn": 1, "step": "EndOfCombat", "player": "alice", "check": {"Life": {"player": "bob", "life": 17}}}
+  ]
+}

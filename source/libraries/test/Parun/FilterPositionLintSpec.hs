@@ -1608,11 +1608,17 @@ filterPositionLintSpec s registry = Spec.describe s "Lint" $ do
       "Pithing Needle's one atom is framed by its activation prohibition's affected set"
       (hasChosenNameCounts (S.combinedFace needle))
       (1, 0)
+    ambassador <- S.printingOf s registry "Sphinx Ambassador"
     Spec.assertEqWith
       s
-      "and the fourteen cards' atoms are the pool's only ones"
+      "Sphinx Ambassador's one atom is framed by its move clause's gate"
+      (hasChosenNameCounts (S.combinedFace ambassador))
+      (1, 0)
+    Spec.assertEqWith
+      s
+      "and the fifteen cards' atoms are the pool's only ones"
       (sum (fmap (uncurry (+) . hasChosenNameCounts . S.combinedFace) ps))
-      18
+      19
   -- CR 702.16k's chosen player in the same frame one atom over: answerable only
   -- where a protection quality is read, and every one of those four positions
   -- takes its filter off a keyword. See ofChosenPlayerOffends for the two
@@ -2781,7 +2787,9 @@ filterPositionLintSpec s registry = Spec.describe s "Lint" $ do
   -- in a bare Filter.contextFor -- so the atom in a card's affected set or static
   -- condition would be a silent False. Outside a face's own pairwise position
   -- (Spitfire Handler's, Ironclaw Curse's, Okk's company), a wish's filter (Synthetic Wishful
-  -- Djinn's) and a triggered ability's own condition (Kami of Mourning's), only
+  -- Djinn's), a triggered ability's own condition (Kami of Mourning's) and a
+  -- target slot's filter (Stone Giant's, which Parun.Engine.Target.slotContext
+  -- frames through Projection.framedWith), only
   -- Parun.Engine.Keyword's keywords and Parun.Engine.Ring's emblem write them, and
   -- this is what keeps that true.
   Spec.it s "CR 702.134a / 702.60a / 702.78a no card compares against the source outside the positions that fill it" $ do
@@ -2796,35 +2804,37 @@ filterPositionLintSpec s registry = Spec.describe s "Lint" $ do
           CombatRestriction.CantAttackAlone x -> Maybe.maybeToList (AloneUnless.alongside x)
           CombatRestriction.CantBlockAlone x -> Maybe.maybeToList (AloneUnless.alongside x)
           _ -> []
-        admitted needle c = (pairwise needle c, wishFilterAtoms needle (encoded c), triggerConditionAtoms needle (encoded c))
-        outside needle c = let (p, w, t) = admitted needle c in occurrences needle (encoded c) - p - w - t
+        inSlots needle c = sum [occurrences needle (atomJson f) | (InTargetSlot, f) <- cardFilters c]
+        admitted needle c = (pairwise needle c, wishFilterAtoms needle (encoded c), triggerConditionAtoms needle (encoded c), inSlots needle c)
+        outside needle c = let (p, w, t, i) = admitted needle c in occurrences needle (encoded c) - p - w - t - i
         offenders = [(needle, S.nameOf (Printing.card p)) | needle <- needles, p <- ps, anyFace (\c -> outside needle c /= 0) (Printing.card p)]
     Spec.assertEqWith s "the atoms are written only where the source is filled" offenders []
     -- NOT vacuous: each admitted position has its author, and each is accepted.
     djinn <- S.printingOf s registry "Synthetic Wishful Djinn"
     kami <- S.printingOf s registry "Kami of Mourning"
     spitfire <- S.printingOf s registry "Spitfire Handler"
+    giant <- S.printingOf s registry "Stone Giant"
     Spec.assertEqWith
       s
-      "the Djinn's is in a wish, the Kami's in a trigger condition, the Handler's pairwise"
-      (fmap (\p -> (admitted ofSource (S.combinedFace p), outside ofSource (S.combinedFace p))) [djinn, kami, spitfire])
-      [((0, 1, 0), 0), ((0, 0, 1), 0), ((1, 0, 0), 0)]
+      "the Djinn's is in a wish, the Kami's in a trigger condition, the Handler's pairwise, the Giant's in a target slot"
+      (fmap (\p -> (admitted ofSource (S.combinedFace p), outside ofSource (S.combinedFace p))) [djinn, kami, spitfire, giant])
+      [((0, 1, 0, 0), 0), ((0, 0, 1, 0), 0), ((1, 0, 0, 0), 0), ((0, 0, 0, 1), 0)]
     -- The resolved row's blocker filter is pairwise too, and Space Beleren's +1
     -- writes one there.
     beleren <- S.printingOf s registry "Space Beleren"
     let sameSector = atomJson (Filter.Type.SharesWithSource Trait.Sector)
-    Spec.assertEqWith s "Space Beleren's is in a resolved evasion's blocker filter" (admitted sameSector (S.combinedFace beleren), outside sameSector (S.combinedFace beleren)) ((1, 0, 0), 0)
+    Spec.assertEqWith s "Space Beleren's is in a resolved evasion's blocker filter" (admitted sameSector (S.combinedFace beleren), outside sameSector (S.combinedFace beleren)) ((1, 0, 0, 0), 0)
     -- NOT vacuous the other way either: the same counter over a hand-built face
-    -- that DOES carry each atom -- buried under all three combinators, in a
-    -- target slot, the one position a card author would reach for -- finds it.
+    -- that DOES carry each atom -- buried under all three combinators, in an
+    -- untargeted instruction's ObjectRef, which nothing frames -- finds it.
     piker <- S.printingOf s registry "Goblin Piker"
     let atoms = [Filter.Type.Measures (Measures.MkMeasures Measure.Power Comparison.LessThan (Operand.OfSource Measure.Power)), Filter.Type.SharesWithSource Trait.Name, Filter.Type.SharesWithSource Trait.Color, Filter.Type.SharesWithSource Trait.Sector]
         planted atom =
           (S.combinedFace piker)
             { Face.spell =
                 Mint.oneModeTargeting
-                  (Map.singleton (SlotName.MkSlotName (Text.pack "target")) (TargetSlot.required Pool.Creatures (Just (Filter.Type.And [Filter.Type.Or [Filter.Type.HasCardType CardType.Creature, Filter.Type.Not atom]]))))
-                  Seq.empty
+                  Map.empty
+                  (Seq.singleton (Effect.Untap (ObjectRef.EachMatching (Filter.Type.And [Filter.Type.Or [Filter.Type.HasCardType CardType.Creature, Filter.Type.Not atom]]))))
             }
     Spec.assertEqWith s "a planted atom is seen" (zipWith (\needle atom -> outside needle (planted atom)) needles atoms) [1, 1, 1, 1]
   -- CR 702.140a's comparison is the source-comparison atom's owner trait, and
