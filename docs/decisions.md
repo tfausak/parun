@@ -459,23 +459,30 @@ Entries are ordered by the first rule each cites.
 
 - **Question**: Sacred Ground, Spiritual Focus and Obstinate Baloth watch for
   "a spell or ability an opponent controls causes" a move or a discard. Does a
-  cost paid
-  for it count, a CR 118.12 cost paid as it resolves, or the state-based
-  action that follows its damage?
+  cost paid for it count, a CR 118.12 cost paid as it resolves (Professor
+  Onyx's "each opponent may discard a card. If they don't, ..."), or the
+  state-based action that follows its damage?
 - **Rules**: CR 609.1, 118.12, 601.2h, 602.2b, 704.3; CR of 2026-08-07.
 - **Decision**: Only an effect (CR 609.1) of a spell or ability counts, with
   that spell or ability's controller as the effect is performed. A cost,
   CR 118.12's included, a state-based action, a turn-based action and the
   cast itself cause nothing. Guerrilla Tactics' ruling says the cost half for
-  a discard: "Only discarding as an effect will trigger the ability."
+  a discard: "Only discarding as an effect will trigger the ability." Library
+  of Leng's says it of any cost: "costs aren't effects".
 - **Rejected**: Counting a cost paid for the spell or ability, which would
-  make a stolen land sacrificed to its controller's cost count; and crediting
+  make a stolen land sacrificed to its controller's cost count; crediting
   a state-based action to the spell whose damage led to it, which CR 704.3
-  performs on its own when a player would receive priority.
+  performs on its own when a player would receive priority; and counting
+  CR 118.12's resolution cost on the strength of Guerrilla Tactics' other
+  ruling, "The second ability will trigger even on an optional discard caused
+  by an opponent". An optional discard that is an effect satisfies that
+  ruling without the cost reading -- Flux's "discards any number of cards" has
+  no "if they do" clause -- and CR 118.12 names the action a cost outright.
 - **Site**: `Parun.Engine.Event.causedBy`, `Parun.Engine.Game.causeNow`,
   `Parun.Engine.Resolve.Effect.applyEffectWith` and
-  `Parun.Engine.Cost.payComponent`, proved by the `sacred-ground-*`,
-  `spiritual-focus-*` and `obstinate-baloth-*` scenarios.
+  `Parun.Engine.Cost.payComponent`, proved by the `sacred-ground-*` and
+  `spiritual-focus-*` scenarios. The `obstinate-baloth-*` scenarios prove
+  only whose spell or ability caused the discard.
 - **Issue**: #5530.
 
 ## Whether "if you can't" holds after doing part of an instruction
