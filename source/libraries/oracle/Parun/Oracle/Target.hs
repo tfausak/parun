@@ -427,10 +427,10 @@ described context slot =
         (Pool.Spells, _) -> filtered >>= both (noun "spell") . (\p -> Filter.merge p (Filter.MkPhrase [] [noun "spell"] []))
         _ -> []
 
--- | A description of creatures, which ends in "creature" unless a creature
--- type already names them: "target artifact creature". Free when a creature
--- type names them: "target attacking Goblin you control" (Boggart Prankster)
--- or "target Merfolk creature" (Merfolk Sovereign).
+-- | A description of creatures, ending in "creature": "target artifact
+-- creature". Free when a creature type names them: "target attacking Goblin
+-- you control" (Boggart Prankster) or "target Merfolk creature" (Merfolk
+-- Sovereign).
 creature :: Filter.Phrase -> [Filter.Phrase]
 creature p
   | any ((== Text.pack "creature") . Filter.singular) (Filter.nouns p) = [p]
