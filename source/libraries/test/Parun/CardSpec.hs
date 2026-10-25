@@ -4201,6 +4201,7 @@ objectRefFilters ref = case ref of
   -- Rhuk's "all Equipment attached to that creature".
   ObjectRef.AttachedToBound (AttachedToBound.MkAttachedToBound _ f) -> unframed [f]
   ObjectRef.FromAnywhere _ -> []
+  ObjectRef.AtRandom inner -> objectRefFilters inner
   ObjectRef.AllOf refs -> foldMap objectRefFilters refs
 
 -- The Filter a Count folds over (CR 608.2h). Delegated to the *Counts family
@@ -7588,11 +7589,14 @@ lintSpec s registry = Spec.describe s "Lint" $ do
   -- for a variable of its own name: a spell's cost declares it exactly where the
   -- face's own CR 601.2f reduction reads it, since nothing else binds the slot
   -- (Cast.castProposed's announcement). An activation cost declaring one would
-  -- never be asked for it, and so never be payable.
+  -- never be asked for it, and so never be payable. A slot the spell's own
+  -- modes target is CR 601.2c's, not a count: Fireball's "for each target
+  -- beyond the first".
   Spec.it s "CR 601.2b a count announced beside X is read by the spell's own reduction and declared nowhere else" $ do
     ps <- S.allPrintings s
     let declared f = Set.fromList (concatMap Cost.announcedCounts (spellCostsOf f))
-        read_ f = Set.delete Binding.variableX (foldMap (QuantitySlot.slots . CostReduction.perEach) (Face.costReductions f))
+        targeted f = foldMap (Map.keysSet . Mode.targetSlots) (Modal.modes (Face.spell f))
+        read_ f = Set.difference (Set.delete Binding.variableX (foldMap (QuantitySlot.slots . CostReduction.perEach) (Face.costReductions f))) (targeted f)
         activated f = concatMap (Cost.announcedCounts . ActivatedAbility.cost) (Face.activatedAbilities f)
         offends f = declared f /= read_ f || not (null (activated f))
         offenders = filter (anyFace offends . Printing.card) ps

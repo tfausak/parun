@@ -101,7 +101,7 @@ data Prompt r where
   RandomFirstPlayer :: NonEmpty.NonEmpty PlayerId.PlayerId -> Prompt PlayerId.PlayerId
   -- | Which object randomness named (Parun.Types.ObjectRef.RandomCardInHand,
   -- Parun.Types.ObjectRef.RandomCardInGraveyard,
-  -- Parun.Types.ObjectRef.RandomCardInLibrary).
+  -- Parun.Types.ObjectRef.RandomCardInLibrary, Parun.Types.ObjectRef.AtRandom).
   -- Neither Decider nor PlayerId: randomness is not a choice, and CR 701.24a
   -- makes who it is asked of unobservable; the caller filters the answer back.
   RandomObject :: NonEmpty.NonEmpty ObjectId.ObjectId -> Prompt ObjectId.ObjectId

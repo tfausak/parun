@@ -67,8 +67,12 @@
                         }
                       },
                       "quantity": {
-                        "type": "Halved",
+                        "type": "Quotient",
                         "value": {
+                          "divisor": {
+                            "type": "Literal",
+                            "value": 2
+                          },
                           "quantity": {
                             "type": "LifeTotal",
                             "value": {

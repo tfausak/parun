@@ -67,7 +67,7 @@ data Quantity
     -- beheld out of a hand at all (CR 400.2). The QUALITY is not re-checked
     -- either, the cost's own Filter having settled it at payment time.
     WasBound SlotName.SlotName
-  | -- | CR 608.2i: how many objects that slot of the surrounding
+  | -- | CR 608.2i: how many objects and players that slot of the surrounding
     -- announcement names, off the binding as WasBound reads it -- Screaming
     -- Swarm's "mills that many", over the attackers its trigger bound.
     BoundCount SlotName.SlotName

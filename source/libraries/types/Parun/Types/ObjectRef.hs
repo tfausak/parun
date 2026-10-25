@@ -158,6 +158,9 @@ data ObjectRef
     -- library the PlayerRef names, asked of the interpreter through
     -- Prompt.RandomObject -- no search, no reveal, no shuffle.
     RandomCardInLibrary RandomCardInLibrary.RandomCardInLibrary
+  | -- | CR 608.2b / Capricious Efreet: one object randomness names out of what the
+    -- inner ref names as the effect runs -- a target slot's still-legal members.
+    AtRandom ObjectRef
   | -- | CR 608.2d / 701.42a: the permanents on the battlefield -- or the objects
     -- in another shared zone, Mirror of Fate's exile -- matching the payload's
     -- Filter that its chooser picks as the effect runs, one or up to a ceiling

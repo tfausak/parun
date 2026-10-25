@@ -58,6 +58,7 @@ import qualified Parun.Engine.Players as Players
 import qualified Parun.Engine.Projection as Projection
 import qualified Parun.Engine.Projection.View as Projection
 import qualified Parun.Engine.Quantity as Quantity
+import qualified Parun.Engine.QuantitySlot as QuantitySlot
 import qualified Parun.Engine.Replacement as Replacement
 import qualified Parun.Engine.Reversal as Reversal
 import qualified Parun.Engine.SacrificeRestriction as SacrificeRestriction
@@ -1057,7 +1058,7 @@ candidateCostsGiven permitted pid name oid gs =
 -- additional cost is the cost reducer, so a re-read after CR 601.2h's sacrifice
 -- costs a mana more.
 total :: PlayerId -> ObjectId -> Cost Keyword.Type.Keyword -> GameState -> Cost Keyword.Type.Keyword
-total pid oid cost gs = totalWith (spellAdjustments Set.empty pid oid gs) cost
+total pid oid cost gs = totalWith (spellAdjustments Map.empty pid oid gs) cost
 
 -- CR 601.2f: the reductions a CANDIDATE COST brings with it
 -- (Parun.Types.CandidateCost's @reductions@) folded into the adjustments the board
@@ -1081,14 +1082,14 @@ plusReductions amounts adjustments =
 -- INCREASES rather than the printed mana cost, rule 903.8 wording it "plus {2}
 -- for each previous time", so a reduction still applies afterwards.
 --
--- `targets` is CR 601.2c's announcement, which the spell's own sentence may
--- read (selfReductions), and so may another object's per-target change
--- (PlayerEffect.perTargetCount); empty for a caller standing before CR 601.2c,
--- where neither applies.
-spellAdjustments :: Set.Set Recipient.Recipient -> PlayerId -> ObjectId -> GameState -> CostAdjustments.CostAdjustments
-spellAdjustments targets pid oid gs =
-  let adjustments = PlayerEffect.spellCostAdjustments targets pid oid gs
-      self = selfReductions (Set.fromList (Maybe.mapMaybe Recipient.objectOf (Set.toList targets))) pid oid gs
+-- `aiming` is CR 601.2c's announcement, slot by slot, which the spell's own
+-- sentence may read (selfReductions), and so may another object's per-target
+-- change (PlayerEffect.perTargetCount); empty for a caller standing before CR
+-- 601.2c, where neither applies.
+spellAdjustments :: Map.Map SlotName.SlotName (Set.Set Recipient.Recipient) -> PlayerId -> ObjectId -> GameState -> CostAdjustments.CostAdjustments
+spellAdjustments aiming pid oid gs =
+  let adjustments = PlayerEffect.spellCostAdjustments (Set.unions (Map.elems aiming)) pid oid gs
+      self = selfReductions aiming pid oid gs
       withSelf =
         adjustments
           { CostAdjustments.reductions =
@@ -1142,10 +1143,12 @@ raiseCandidate pid oid gs cost =
 -- Each comes back with its direction, a "costs more" sentence being the same
 -- shape (Dragon's Prey).
 --
--- CR 601.2c's announced `targets` answer a sentence's whichTargets: ANY object
+-- CR 601.2c's announced `aiming` answers a sentence's whichTargets: ANY object
 -- target matching, against its own view with the spell as the source and `pid`
 -- as the perspective. Parun.CostSpec's "a cost that reads the spell's targets"
--- group proves it.
+-- group proves it. Its slots frame the count too, so Fireball's "for each
+-- target beyond the first" is a BoundCount of its own slot less one --
+-- data/scenarios/divided-evenly proves it.
 --
 -- The PRINTED reductions come straight off the object rather than through a
 -- projection: it is the half Cast.asProposed already stamped (CR 709.3b), with
@@ -1158,12 +1161,13 @@ raiseCandidate pid oid gs cost =
 -- printed and granted alike (CR 702.41a, CR 702.125a), so a spell given
 -- affinity is reduced by it -- Parun.CostSpec's Mycosynth Golem group proves
 -- it.
-selfReductions :: Set.Set ObjectId -> PlayerId -> ObjectId -> GameState -> [(CostDirection.CostDirection, ManaCost.ManaCost)]
-selfReductions targets pid oid gs =
+selfReductions :: Map.Map SlotName.SlotName (Set.Set Recipient.Recipient) -> PlayerId -> ObjectId -> GameState -> [(CostDirection.CostDirection, ManaCost.ManaCost)]
+selfReductions aiming pid oid gs =
   let -- CR 109.5: the perspective is the would-be controller, `pid` -- not
       -- Projection.controllerOf, which answers Nothing for a card in a hand.
       -- The source is the spell itself, the reduction being printed on it.
-      context = Projection.sourceContext gs (Just pid) oid
+      context = Projection.framedBySlots gs aiming (Projection.sourceContext gs (Just pid) oid)
+      targets = Set.fromList (Maybe.mapMaybe Recipient.objectOf (Set.toList (Set.unions (Map.elems aiming))))
       -- CR 601.2f: a conditional reduction is asked here, as the total is
       -- determined, against the same perspective as its count.
       applies reduction =
@@ -1223,12 +1227,17 @@ asSpell pid oid gs
   | otherwise = gs
 
 -- Whether the spell's CR 601.2f adjustments read CR 601.2c's targets -- one of
--- its own cost sentences (Bury in Books), or another object's per-target change
+-- its own cost sentences, by a match (Bury in Books) or a count naming a slot
+-- (Fireball), or another object's per-target change
 -- (PlayerEffect.spellCostReadsTargets) -- so a gate measuring the cost before
 -- them has to search the aimings (Parun.Engine.Cast.payableCostAt).
+--
+-- The count is a REGRESSION FENCE: Fireball's only raises its cost, and its
+-- slot may take no target, so the empty aiming is its cheapest and measuring
+-- with nothing bound would answer alike.
 readsTargets :: PlayerId -> ObjectId -> GameState -> Bool
 readsTargets pid oid gs =
-  any (Maybe.isJust . CostReduction.whichTargets) (selfSentences pid oid gs)
+  any (\sentence -> Maybe.isJust (CostReduction.whichTargets sentence) || not (Set.null (QuantitySlot.slots (CostReduction.perEach sentence)))) (selfSentences pid oid gs)
     || PlayerEffect.spellCostReadsTargets pid oid gs
 
 -- CR 601.2f's adjustments for an ACTIVATION cost, which CR 602.2b routes
@@ -3630,7 +3639,7 @@ canPaySomeCompletionGiven slots subject spending sources pcs pid oid total_ subs
 -- negative life, half your life is zero".
 halfLifeOf :: Rounding.Rounding -> PlayerId -> GameState -> Natural
 halfLifeOf rounding pid gs =
-  maybe 0 (Integer.toNaturalSaturating . Quantity.halve rounding . Player.life) (Map.lookup pid (GameState.players gs))
+  maybe 0 (Integer.toNaturalSaturating . (\life -> Quantity.divide rounding life 2) . Player.life) (Map.lookup pid (GameState.players gs))
 
 -- CR 601.2f: a half-life cost is fixed to a number once, against the life total
 -- the payer has as the total cost is determined, so a CR 601.2g mana ability

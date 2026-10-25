@@ -442,6 +442,13 @@ spec s = Spec.describe s "Parun.Codec.ObjectRef" $ do
       ObjectRef.codec
       (ObjectRef.AllOf (ObjectRef.InSlot (SlotName.MkSlotName (Text.pack "target")) NonEmpty.:| [ObjectRef.EachCardInYourHand]))
       " {\"type\":\"AllOf\",\"value\":[{\"type\":\"InSlot\",\"value\":\"target\"},{\"type\":\"EachCardInYourHand\"}]} "
+  -- Capricious Efreet's "one of them at random": the inner ref under the tag.
+  Spec.it s "AtRandom" $
+    Common.assertCodec
+      s
+      ObjectRef.codec
+      (ObjectRef.AtRandom (ObjectRef.AllOf (ObjectRef.InSlot (SlotName.MkSlotName (Text.pack "yours")) NonEmpty.:| [ObjectRef.InSlot (SlotName.MkSlotName (Text.pack "theirs"))])))
+      " {\"type\":\"AtRandom\",\"value\":{\"type\":\"AllOf\",\"value\":[{\"type\":\"InSlot\",\"value\":\"yours\"},{\"type\":\"InSlot\",\"value\":\"theirs\"}]}} "
   -- Guards against a decoder that read every payload as one arm. The arms are
   -- all objects, so only the tag separates them, and a duplicated tag would
   -- collapse two of these. The two graveyard arms are the pair it really

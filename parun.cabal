@@ -786,8 +786,6 @@ library codec
     Parun.Codec.GraveyardOrderSpec
     Parun.Codec.HalfUnlocked
     Parun.Codec.HalfUnlockedSpec
-    Parun.Codec.Halved
-    Parun.Codec.HalvedSpec
     Parun.Codec.HandAction
     Parun.Codec.HandActionSpec
     Parun.Codec.HowMany
@@ -1198,6 +1196,8 @@ library codec
     Parun.Codec.QuantitySpec
     Parun.Codec.Question
     Parun.Codec.QuestionSpec
+    Parun.Codec.Quotient
+    Parun.Codec.QuotientSpec
     Parun.Codec.RandomCardInGraveyard
     Parun.Codec.RandomCardInHand
     Parun.Codec.RandomCardInLibrary
@@ -2662,7 +2662,6 @@ library types
     Parun.Types.GraveyardArrangement
     Parun.Types.GraveyardOrder
     Parun.Types.HalfUnlocked
-    Parun.Types.Halved
     Parun.Types.HandAction
     Parun.Types.HandActionIndex
     Parun.Types.HandActionPerformer
@@ -2907,6 +2906,7 @@ library types
     Parun.Types.PutSticker
     Parun.Types.Quantity
     Parun.Types.Question
+    Parun.Types.Quotient
     Parun.Types.RandomCardInGraveyard
     Parun.Types.RandomCardInHand
     Parun.Types.RandomCardInLibrary

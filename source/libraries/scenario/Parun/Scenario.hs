@@ -1718,7 +1718,10 @@ announceSlots :: When.When -> Move.Move -> Map.Map SlotName.SlotName (TargetCoun
 announceSlots key verb offered chosen =
   let refused :: Run b
       refused = failWith (Failure.MkActionNotOffered key verb (fmap SlotName.unwrap (Map.keys offered)))
-   in if Map.keysSet chosen /= Map.keysSet offered
+   in -- A superset: a fixed-count slot beside the announced ones is named by the
+      -- entry but announced by nobody (Capricious Efreet's "target ... you
+      -- control"); the ChooseTargets that follows holds the entry to every key.
+      if not (Map.keysSet offered `Set.isSubsetOf` Map.keysSet chosen)
         then refused
         else
           Map.traverseWithKey

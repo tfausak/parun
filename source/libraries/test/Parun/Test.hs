@@ -367,7 +367,6 @@ import qualified Parun.Codec.GrantPlayFromExileSpec
 import qualified Parun.Codec.GrantedAbilitySpec
 import qualified Parun.Codec.GraveyardOrderSpec
 import qualified Parun.Codec.HalfUnlockedSpec
-import qualified Parun.Codec.HalvedSpec
 import qualified Parun.Codec.HandActionSpec
 import qualified Parun.Codec.HybridSpec
 import qualified Parun.Codec.IfTakenSpec
@@ -567,6 +566,7 @@ import qualified Parun.Codec.PutCountersFromSpec
 import qualified Parun.Codec.PutCountersSpec
 import qualified Parun.Codec.QuantitySpec
 import qualified Parun.Codec.QuestionSpec
+import qualified Parun.Codec.QuotientSpec
 import qualified Parun.Codec.RangeOfInfluenceSpec
 import qualified Parun.Codec.ReadinessSpec
 import qualified Parun.Codec.RecipientSpec
@@ -1285,7 +1285,7 @@ spec s registry = do
   Parun.Codec.GrantPlayFromExileSpec.spec s
   Parun.Codec.GraveyardOrderSpec.spec s
   Parun.Codec.HalfUnlockedSpec.spec s
-  Parun.Codec.HalvedSpec.spec s
+  Parun.Codec.QuotientSpec.spec s
   Parun.Codec.HandActionSpec.spec s
   Parun.Codec.HybridSpec.spec s
   Parun.Codec.IfTakenSpec.spec s
