@@ -176,6 +176,7 @@ deciderOf prompt = case prompt of
   Prompt.ChooseUnleash decider _ _ -> Just (Decider.unwrap decider)
   Prompt.ChooseTribute decider _ _ _ -> Just (Decider.unwrap decider)
   Prompt.ChooseDredge decider _ _ _ -> Just (Decider.unwrap decider)
+  Prompt.ChooseLandOrNonland decider _ _ -> Just (Decider.unwrap decider)
   Prompt.ChooseRedirect decider _ _ _ -> Just (Decider.unwrap decider)
   Prompt.ChooseCombatDamageOption decider _ _ _ -> Just (Decider.unwrap decider)
   Prompt.ChooseSubstitute decider _ _ -> Just (Decider.unwrap decider)

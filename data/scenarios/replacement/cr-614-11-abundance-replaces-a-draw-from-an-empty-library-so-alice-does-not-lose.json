@@ -1,0 +1,18 @@
+{
+  "description": "CR 614.11 Abundance replaces alice's draw from an empty library, so she reveals nothing, gets nothing and does not lose by CR 704.5b",
+  "note": "Abundance's 2007-07-15 ruling. The board of the scenario where she declines differs only in that answer, and she loses there.",
+  "board": {
+    "active": "alice",
+    "turn": 2,
+    "step": "Upkeep",
+    "seats": [
+      { "name": "alice", "battlefield": [{ "card": "Abundance" }], "library": [] },
+      { "name": "bob", "library": [{ "card": "Plains" }] }
+    ]
+  },
+  "timeline": [
+    { "turn": 2, "step": "DrawStep", "player": "alice", "do": { "Answer": { "prompt": "ChooseLandOrNonland", "with": "Nonland" } } },
+    { "turn": 2, "step": "DrawStep", "player": "alice", "check": { "View": { "of": "Result", "is": null } } },
+    { "turn": 2, "step": "DrawStep", "player": "alice", "check": { "View": { "of": "Zone", "player": "alice", "zone": "Hand", "is": [] } } }
+  ]
+}

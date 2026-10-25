@@ -28,6 +28,7 @@ import qualified Parun.Types.HandActionIndex as HandActionIndex
 import qualified Parun.Types.HybridPayment as HybridPayment
 import qualified Parun.Types.Keyword as Keyword
 import qualified Parun.Types.KickerDecision as KickerDecision
+import qualified Parun.Types.LandOrNonland as LandOrNonland
 import qualified Parun.Types.LearnMode as LearnMode
 import qualified Parun.Types.LibraryPosition as LibraryPosition
 import qualified Parun.Types.ManaCost as ManaCost
@@ -490,6 +491,9 @@ data Response
     -- reason: a transcript that answered one "may" must not silently answer a
     -- different one.
     ChoseDredge OptionalDecision.OptionalDecision
+  | -- | CR 614.1a's answer to Prompt.ChooseLandOrNonland: the kind Abundance
+    -- reveals down to, or Nothing for the draw left standing.
+    ChoseLandOrNonland (Maybe LandOrNonland.LandOrNonland)
   | -- | CR 614.1a: whether an optional redirect applied (Exercises) or the move
     -- stood (Declines). Distinct from ChoseDredge for its reason.
     ChoseRedirect OptionalDecision.OptionalDecision

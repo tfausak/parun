@@ -1869,6 +1869,7 @@ drawRewriteReads rewrite = case rewrite of
   DrawRewrite.YouDraw -> ([], [])
   DrawRewrite.OthersMayPayLife _ -> ([], [])
   DrawRewrite.FromGraveyardOrLose -> ([], [])
+  DrawRewrite.RevealUntilChosenKind -> ([], [])
 
 -- replacementRowReads as a slot map. Arity One for every FILTER read, a
 -- Filter.IsBound being a membership test rather than a target slot; the QUANTITY

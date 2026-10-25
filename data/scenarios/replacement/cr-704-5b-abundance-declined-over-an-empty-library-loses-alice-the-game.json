@@ -1,0 +1,17 @@
+{
+  "description": "CR 704.5b Abundance's replacement declined over an empty library leaves the draw standing, and alice loses for drawing from it",
+  "note": "The pair of the scenario where she chooses nonland on the same board and stays in the game.",
+  "board": {
+    "active": "alice",
+    "turn": 2,
+    "step": "Upkeep",
+    "seats": [
+      { "name": "alice", "battlefield": [{ "card": "Abundance" }], "library": [] },
+      { "name": "bob", "library": [{ "card": "Plains" }] }
+    ]
+  },
+  "timeline": [
+    { "turn": 2, "step": "DrawStep", "player": "alice", "do": { "Answer": { "prompt": "ChooseLandOrNonland", "with": null } } }
+  ],
+  "final": [{ "View": { "of": "Result", "is": { "won": "bob" } } }]
+}

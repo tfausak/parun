@@ -59,4 +59,9 @@ data DrawRewrite
     OthersMayPayLife Natural.Natural
   | -- | CR 614.6 / 104.3e: Forbidden Crypt's graveyard card to hand, or the game lost.
     FromGraveyardOrLose
+  | -- | CR 614.1a / 701.20a: Abundance's "you may instead choose land or nonland
+    -- and reveal cards from the top of your library until you reveal a card of
+    -- the chosen kind", that card to hand and the rest to the bottom in any
+    -- order.
+    RevealUntilChosenKind
   deriving (Eq, Ord, Show)
