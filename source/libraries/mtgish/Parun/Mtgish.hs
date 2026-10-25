@@ -40,6 +40,7 @@ import qualified Parun.Types.AgainstSlot as AgainstSlot
 import qualified Parun.Types.Aggregation as Aggregation
 import qualified Parun.Types.Arithmetic as Arithmetic
 import qualified Parun.Types.BeginningStep as BeginningStep
+import qualified Parun.Types.CantBeBlockedBy as CantBeBlockedBy
 import qualified Parun.Types.Card as Card
 import qualified Parun.Types.CardCount as CardCount
 import qualified Parun.Types.CardName as CardName
@@ -132,6 +133,7 @@ import qualified Parun.Types.Regenerability as Regenerability
 import qualified Parun.Types.Replace as Replace
 import qualified Parun.Types.ReplacementEffect as ReplacementEffect
 import qualified Parun.Types.ReplacementOrigin as ReplacementOrigin
+import qualified Parun.Types.RuleAbilities as RuleAbilities
 import qualified Parun.Types.Sacrifice as Sacrifice
 import qualified Parun.Types.SacrificeEffect as SacrificeEffect
 import qualified Parun.Types.Sacrificer as Sacrificer
@@ -333,6 +335,17 @@ rule face n = case Node.tag n of
       [r] | Node.tag r == "EntersTapped", Maybe.isNothing (Node.args r) -> pure face {Face.replacementEffects = Face.replacementEffects face <> [entersTapped]}
       r : _ -> Node.untranslated r
       [] -> Node.untranslated n
+  -- "As long as [condition], [static ability]" (CR 611.3a): the static
+  -- abilities of the rules within, each applying while the condition holds.
+  -- Any other rule within is not read here.
+  "If" -> do
+    (conditionValue, rulesValue) <- pair n
+    gate <- Node.node conditionValue >>= intervening outermost
+    within <- Common.asArray rulesValue >>= traverse Node.node >>= Monad.foldM rule face {Face.staticAbilities = []}
+    Monad.unless (within {Face.staticAbilities = []} == face {Face.staticAbilities = []}) (Node.untranslated n)
+    case Face.staticAbilities within of
+      [] -> Node.untranslated n
+      as -> pure face {Face.staticAbilities = Face.staticAbilities face <> [a {StaticAbility.condition = Just gate} | a <- as]}
   "CDA_Power" -> defining n (\q pt -> pt {CharacteristicPT.power = q})
   "CDA_Toughness" -> defining n (\q pt -> pt {CharacteristicPT.toughness = q})
   "Equip" -> do
@@ -398,8 +411,9 @@ triggeredAbility condition m =
     }
 
 -- | The clauses of an activated ability's "Activate only ..." rider (CR
--- 602.5): its timing (CR 307.5, CR 602.5e), how often (CR 602.5b), or your
--- turn or upkeep (CR 102.1, CR 503).
+-- 602.5): its timing (CR 307.5, CR 602.5e), how often (CR 602.5b), your
+-- turn or upkeep (CR 102.1, CR 503), or before attackers are declared (CR
+-- 506.7a).
 activationRestrictions :: Node.Node -> Translated [ActivationRestriction.ActivationRestriction]
 activationRestrictions n = case Node.tag n of
   "And" -> fmap concat (Node.arguments n >>= traverse (Node.node Monad.>=> activationRestrictions))
@@ -407,17 +421,23 @@ activationRestrictions n = case Node.tag n of
   "ActivateOnlyAsAnInstant" -> Right [ActivationRestriction.InstantSpeed]
   "ActivateOnlyOnceEachTurn" -> Right [ActivationRestriction.OnlyOnceEachTurn]
   "ActivateOnlyOnce" -> Right [ActivationRestriction.OnlyOnce]
-  "ActivateOnlyIf" -> do
-    c <- Node.child n
-    (who, test) <- if Node.tag c == "PlayerPassesFilter" then pair c else Node.untranslated c
-    p <- Node.node who
-    Monad.unless (Node.tag p == "You") (Node.untranslated p)
-    t <- Node.node test
-    case Node.tag t of
-      "IsTheirTurn" -> Right [ActivationRestriction.DuringTurn TurnScope.ControllersTurn]
-      "IsTheirUpkeep" -> Right [ActivationRestriction.DuringPhase (DuringPhase.MkDuringPhase (PhaseSelector.Step (Phase.Beginning BeginningStep.Upkeep)) TurnScope.ControllersTurn)]
-      _ -> Node.untranslated t
+  "ActivateOnlyIf" -> Node.child n >>= onlyIf
   _ -> Node.untranslated n
+  where
+    onlyIf c = case Node.tag c of
+      "And" -> fmap concat (Node.arguments c >>= traverse (Node.node Monad.>=> onlyIf))
+      -- CR 506.7a.
+      "IsBeforeAttackersDeclared" | Maybe.isNothing (Node.args c) -> Right [ActivationRestriction.BeforeStep (Phase.Combat CombatStep.DeclareAttackers)]
+      "PlayerPassesFilter" -> do
+        (who, test) <- pair c
+        p <- Node.node who
+        Monad.unless (Node.tag p == "You") (Node.untranslated p)
+        t <- Node.node test
+        case Node.tag t of
+          "IsTheirTurn" -> Right [ActivationRestriction.DuringTurn TurnScope.ControllersTurn]
+          "IsTheirUpkeep" -> Right [ActivationRestriction.DuringPhase (DuringPhase.MkDuringPhase (PhaseSelector.Step (Phase.Beginning BeginningStep.Upkeep)) TurnScope.ControllersTurn)]
+          _ -> Node.untranslated t
+      _ -> Node.untranslated c
 
 staticAbility :: Affected.Affected -> NonEmpty.NonEmpty (Modification.Modification Ability) -> StaticAbility.StaticAbility Ability
 staticAbility affected modifications =
@@ -441,17 +461,31 @@ entersTapped =
     }
 
 -- | The face with one more rule its permanents follow: that they can't
--- attack (CR 508.1c) or block (CR 509.1b).
+-- attack (CR 508.1c) or block (CR 509.1b), or can't be blocked, by any
+-- creature, by creatures of a description, or except by them (CR 509.1b).
 permanentRule :: Face -> Affected.Affected -> Node.Node -> Translated Face
-permanentRule face affected n
-  | Maybe.isJust (Node.args n) = Node.untranslated n
-  | otherwise = case Node.tag n of
-      "CantAttack" -> combat (CombatRestriction.CantAttack unless)
-      "CantBlock" -> combat (CombatRestriction.CantBlock unless)
-      _ -> Node.untranslated n
+permanentRule face affected n = do
+  r <- combatRestriction affected n
+  Right face {Face.combatRestrictions = Face.combatRestrictions face <> [r]}
+
+-- | A rule on attacking or blocking the objects follow ('permanentRule').
+combatRestriction :: Affected.Affected -> Node.Node -> Translated CombatRestriction.CombatRestriction
+combatRestriction affected n = case (Node.tag n, Node.args n) of
+  ("CantAttack", Nothing) -> Right (CombatRestriction.CantAttack unless)
+  ("CantBlock", Nothing) -> Right (CombatRestriction.CantBlock unless)
+  ("CantBeBlocked", Nothing) -> Right (unblockable (Filter.And []))
+  -- The blockers are creatures (CR 509.1a), which the pool leaves unsaid.
+  ("CantBeBlockedByDefenders", Just v) -> do
+    f <- permanents outermost v
+    Right (unblockable (blockers f))
+  ("CantBeBlockedExceptByDefenders", Just v) -> do
+    f <- permanents outermost v
+    Right (unblockable (Filter.Not (blockers f)))
+  _ -> Node.untranslated n
   where
     unless = AffectedUnless.MkAffectedUnless {AffectedUnless.affected = affected, AffectedUnless.unless = Nothing, AffectedUnless.name = Nothing, AffectedUnless.amount = Nothing}
-    combat r = Right face {Face.combatRestrictions = Face.combatRestrictions face <> [r]}
+    blockers f = conjoined (filter (/= Filter.HasCardType CardType.Creature) (conjuncts f))
+    unblockable f = CombatRestriction.CantBeBlockedBy CantBeBlockedBy.MkCantBeBlockedBy {CantBeBlockedBy.affected = affected, CantBeBlockedBy.blockers = f, CantBeBlockedBy.unless = Nothing, CantBeBlockedBy.name = Nothing}
 
 -- | A rule players follow: spells of a description cost more mana to cast
 -- (CR 601.2f).
@@ -719,8 +753,11 @@ trigger n = case Node.tag n of
         _ -> Node.untranslated n
       Right (TriggerCondition.StepBegins (StepBegins.MkStepBegins phase Nothing scope), bound [("Trigger_ThatPlayer", Oracle.Trigger.thatPlayer)])
 
--- | An intervening "if" clause (CR 603.4): a count of cards in your hand,
--- of permanents you control, or of permanents on the battlefield.
+-- | A condition of the game's state: an intervening "if" clause's (CR
+-- 603.4) or a static ability's "as long as" (CR 611.3a). A count of cards in
+-- your hand or graveyard, of permanents you or an opponent control, or of
+-- permanents on the battlefield, the source's own status, or whether it is
+-- your turn.
 intervening :: Context -> Node.Node -> Translated Condition.Condition
 intervening context n = case Node.tag n of
   "NoPermanentsPassFilter" -> do
@@ -728,24 +765,57 @@ intervening context n = case Node.tag n of
     onBattlefield place
     f <- permanents context what
     Right (compares (battlefield f) Comparison.Exactly 0)
+  -- "this creature is attacking", as the pool writes it: the source among the
+  -- permanents of that status.
+  "PermanentPassesFilter" -> do
+    (who, what) <- pair n
+    p <- Node.node who
+    Monad.unless (Node.tag p == "ThisPermanent") (Node.untranslated p)
+    f <- permanents context what
+    Right (compares (battlefield (conjoined (Filter.IsSource : conjuncts f))) Comparison.AtLeast 1)
+  -- "it's your turn" (CR 102.1), as the pool writes it (Forge Anew).
+  "IsPlayersTurn" -> do
+    p <- Node.child n
+    Monad.unless (Node.tag p == "You") (Node.untranslated p)
+    Right (Condition.Compares (Compares.MkCompares (Quantity.IsActivePlayer (PlayerRef.Relative PlayerRelation.You)) Comparison.Exactly (Quantity.Literal 1)))
+  -- "an opponent controls an Island".
+  "APlayerPassesFilter" -> do
+    (who, test) <- pair n
+    relation <- players who
+    t <- Node.node test
+    case (relation, Node.tag t) of
+      (PlayerRelation.Opponent, "ControlsA") -> do
+        f <- Node.argument t >>= permanents context
+        Right (compares (battlefield (conjoined (conjuncts f <> [Filter.ControlledBy PlayerRelation.Opponent]))) Comparison.AtLeast 1)
+      _ -> Node.untranslated t
   "PlayerPassesFilter" -> do
     (who, test) <- pair n
     p <- Node.node who
     Monad.unless (Node.tag p == "You") (Node.untranslated p)
     t <- Node.node test
     case Node.tag t of
-      "NumCardsInHandIs" -> do
-        c <- Node.child t
-        comparison <- comparisonOf c
-        k <- Node.child c >>= integer
-        Right (compares (Count.MkCount (Scope.InZone (InZone.MkInZone Zone.Hand (PlayerRef.Relative PlayerRelation.You))) (Filter.And []) Aggregation.Members) comparison k)
+      "NumCardsInHandIs" -> inZone Zone.Hand t
+      "NumCardsInGraveyardIs" -> inZone Zone.Graveyard t
       "ControlsA" -> do
         f <- Node.argument t >>= permanents context
-        Right (compares (battlefield (conjoined (conjuncts f <> [Filter.ControlledBy PlayerRelation.You]))) Comparison.AtLeast 1)
+        Right (compares (battlefield (yours f)) Comparison.AtLeast 1)
+      "ControlsNum" -> do
+        (number', what) <- pair t
+        c <- Node.node number'
+        comparison <- comparisonOf c
+        k <- Node.child c >>= integer
+        f <- permanents context what
+        Right (compares (battlefield (yours f)) comparison k)
       _ -> Node.untranslated t
   _ -> Node.untranslated n
   where
     battlefield f = Count.MkCount (Scope.InZone (InZone.MkInZone Zone.Battlefield (PlayerRef.Relative PlayerRelation.AnyPlayer))) f Aggregation.Members
+    yours f = conjoined (conjuncts f <> [Filter.ControlledBy PlayerRelation.You])
+    inZone zone t = do
+      c <- Node.child t
+      comparison <- comparisonOf c
+      k <- Node.child c >>= integer
+      Right (compares (Count.MkCount (Scope.InZone (InZone.MkInZone zone (PlayerRef.Relative PlayerRelation.You))) (Filter.And []) Aggregation.Members) comparison k)
     compares c comparison k = Condition.Compares (Compares.MkCompares (Quantity.Count c) comparison (Quantity.Literal k))
     onBattlefield v = do
       place <- Node.node v
@@ -1018,6 +1088,14 @@ effects context n = case Node.tag n of
     (who, changes, until') <- triple n
     ref <- group context who
     modify ref changes until'
+  "CreatePermanentRuleEffectUntil" -> do
+    (who, rules, until') <- triple n
+    ref <- permanent context who
+    ruled ref rules until'
+  "CreateEachPermanentRuleEffectUntil" -> do
+    (who, rules, until') <- triple n
+    ref <- group context who
+    ruled ref rules until'
   "TapPermanent" -> fmap (pure . Effect.Tap) (Node.argument n >>= permanent context)
   "UntapPermanent" -> fmap (pure . Effect.Untap) (Node.argument n >>= permanent context)
   "TapEachPermanent" -> fmap (pure . Effect.Tap) (Node.argument n >>= group context)
@@ -1054,6 +1132,19 @@ effects context n = case Node.tag n of
       pure [Effect.DealDamage DealDamage.MkDealDamage {DealDamage.parts = Seq.fromList (fmap (\ref -> DamagePart.MkDamagePart ref q) refs), DealDamage.dealer = dealer, DealDamage.excess = Nothing, DealDamage.tally = Nothing}]
     destroy regenerability ref = pure [Effect.Destroy Destroy.MkDestroy {Destroy.ref = ref, Destroy.regenerability = regenerability, Destroy.slot = Nothing, Destroy.buried = Nothing, Destroy.permanents = Nothing}]
     move zone ref = pure [Effect.MoveToZone (moveTo zone ref)]
+    -- "Target creature can't be blocked this turn" (CR 509.1b): the rule
+    -- granted for a while. The pool writes "can't attack" or "can't block"
+    -- for a while as a prohibition instead (Panic Attack), which is not read
+    -- here.
+    ruled ref rules until' = do
+      duration <- Node.node until' >>= expiration
+      rs <- Common.asArray rules >>= traverse (Node.node Monad.>=> combatRestriction (Affected.Matching Filter.IsSource))
+      Monad.unless (all unblockable rs) (Node.untranslated n)
+      let rule' = GrantedAbility.Rules mempty {RuleAbilities.combatRestrictions = rs}
+      pure [Effect.ModifyTarget ModifyTarget.MkModifyTarget {ModifyTarget.duration = duration, ModifyTarget.modification = Modification.GainAbility rule', ModifyTarget.ref = ref, ModifyTarget.each = Nothing}]
+    unblockable r = case r of
+      CombatRestriction.CantBeBlockedBy _ -> True
+      _ -> False
     modify ref changes until' = do
       duration <- Node.node until' >>= expiration
       ms <- Common.asArray changes >>= traverse (Node.node Monad.>=> staticModification)
@@ -1084,6 +1175,10 @@ playerEffects context who n = case Node.tag n of
   "MillNumberCards" -> do
     q <- Node.argument n >>= quantity context
     pure [Effect.Mill Mill.MkMill {Mill.player = who, Mill.quantity = q, Mill.tally = Nothing, Mill.slot = Nothing}]
+  -- CR 701.22a.
+  "Scry" -> do
+    q <- Node.argument n >>= quantity context
+    pure [Effect.Scry (PlayerQuantity.MkPlayerQuantity who q)]
   "SearchLibrary" -> do
     steps <- Node.arguments n >>= traverse Node.node
     fmap pure (searchLibrary who steps)

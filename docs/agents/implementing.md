@@ -59,10 +59,14 @@ progress noise and still prints GHC's errors in full. One build at a time; no
 cold and then blows the suite's timeouts). Mutations are the exception, below.
 
 `--test-options` splits on spaces, so a `-p` pattern holding one (`'/CR
-729/'`) arrives mangled and tasty refuses it. Run the built binary instead ---
-`find dist-newstyle -name parun-test-suite -type f -perm -u+x` --- with
-`parun_datadir=$PWD/data` in its environment, or it cannot find the corpus and
-throws `MissingRoot`.
+729/'`) arrives mangled and tasty refuses it. Run the suite through the `parun`
+executable instead, which hands everything after `--` to tasty unsplit and
+finds the corpus without `parun_datadir`:
+
+    script/with-build-lock.sh cabal run -v0 parun -- test -p '/CR 729/' --hide-successes
+
+Never run a built test binary by hand, in a mutation loop or a script either:
+it bypasses the build lock.
 
 The timeout catches infinite loops; it is not an assertion about speed. The
 machine is shared, so a lone TIMEOUT is background noise --- re-run it unloaded
