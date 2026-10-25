@@ -58,8 +58,8 @@ sharesTurn gs one other =
 -- CR 102.1: does this turn belong to the scope? `active` is "the player whose
 -- turn it is", and `own` is the seat the relational arms are read against --
 -- the player Parun.Types.TurnScope deliberately names none of, since each
--- reader supplies its own: CR 109.5's "you" for a triggered ability (CR 603.3a), the CR 602.2
--- activator for an activated one.
+-- reader supplies its own: CR 109.5's "you" for a triggered ability (CR
+-- 603.3a), the CR 602.2 activator for an activated one.
 --
 -- ControllersTurn is sharesTurn, so under CR 805.4 the active team's turn is
 -- each of its members' turn. OpponentsTurn is CR 102.3's relation rather than an
