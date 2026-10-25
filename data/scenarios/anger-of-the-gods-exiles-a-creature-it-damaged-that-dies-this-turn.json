@@ -1,0 +1,21 @@
+{
+  "description": "CR 614.1a / 120.3 / 700.4: a creature Anger of the Gods dealt damage is exiled if it would die this turn; one whose damage was prevented is not",
+  "note": "Alice shields bob's Grizzly Bears with Healing Salve, so Anger of the Gods deals damage only to his Giant Spider (2/4) and Hill Giant (3/3). The Hill Giant dies to Anger and is exiled; the Spider survives it and is exiled when Shock finishes it later in the turn; the Bears, dealt nothing this way, go to the graveyard when Lightning Bolt kills them.",
+  "board": {"active": "alice", "step": "Upkeep", "seats": [{"name": "alice", "battlefield": [{"card": "Plains", "label": "plains"}, {"card": "Mountain", "label": "m1"}, {"card": "Mountain", "label": "m2"}, {"card": "Mountain", "label": "m3"}, {"card": "Mountain", "label": "m4"}, {"card": "Mountain", "label": "m5"}], "hand": [{"card": "Healing Salve", "label": "salve"}, {"card": "Anger of the Gods", "label": "anger"}, {"card": "Lightning Bolt", "label": "bolt"}, {"card": "Shock", "label": "shock"}], "library": [{"card": "Island"}, {"card": "Island"}, {"card": "Island"}]}, {"name": "bob", "battlefield": [{"card": "Grizzly Bears", "label": "bears"}, {"card": "Giant Spider", "label": "spider"}, {"card": "Hill Giant", "label": "giant"}], "library": [{"card": "Island"}, {"card": "Island"}, {"card": "Island"}]}]},
+  "timeline": [
+    {"turn": 1, "step": "Upkeep", "player": "alice", "do": {"Cast": {"object": "$salve", "targets": ["$bears"], "modes": [1], "mana": ["$plains", null]}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "do": {"Cast": {"object": "$anger", "mana": ["$m1", "$m2", "$m3", null]}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "do": "Pass"},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "check": {"Count": {"player": "bob", "zone": "Exile", "card": "Hill Giant", "count": 1}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "check": {"Count": {"player": "bob", "zone": "Graveyard", "card": "Hill Giant", "count": 0}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "check": {"Damage": {"object": "$bears", "damage": 0}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "check": {"Damage": {"object": "$spider", "damage": 3}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "do": {"Cast": {"object": "$shock", "targets": ["$spider"], "mana": ["$m4", null]}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "do": "Pass"},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "check": {"Count": {"player": "bob", "zone": "Exile", "card": "Giant Spider", "count": 1}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "check": {"Count": {"player": "bob", "zone": "Graveyard", "card": "Giant Spider", "count": 0}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "do": {"Cast": {"object": "$bolt", "targets": ["$bears"], "mana": ["$m5"]}}},
+    {"turn": 1, "step": "BeginningOfCombat", "player": "alice", "check": {"Count": {"player": "bob", "zone": "Graveyard", "card": "Grizzly Bears", "count": 1}}},
+    {"turn": 1, "step": "BeginningOfCombat", "player": "alice", "check": {"Count": {"player": "bob", "zone": "Exile", "card": "Grizzly Bears", "count": 0}}}
+  ]
+}
