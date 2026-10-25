@@ -1667,8 +1667,8 @@ permanentContext gs you slots source =
 -- answered once.
 --
 -- The Maybe ObjectId is what the criterion's `Not IsSource` means by "another"
--- -- the permanent whose cost is being paid, or whose as-enters ability is
--- asking. Gift of Doom is why it is here: its morph cost is "sacrifice ANOTHER
+-- -- the permanent whose cost is being paid, whose as-enters ability is
+-- asking, or whose resolving edict names it (Lord of the Pit). Gift of Doom is why it is here: its morph cost is "sacrifice ANOTHER
 -- creature", and CR 708.2a makes the face-down permanent paying that cost a
 -- creature itself, so without the frame it could pay by sacrificing itself.
 -- That is the same failure Parun.Engine.Cost.tapCandidates records for CR

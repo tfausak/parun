@@ -6406,8 +6406,11 @@ ruleAbilitiesFilters rules =
         <> concatMap (concatMap counterKindFilters . Maybe.maybeToList . CounterRestriction.kind) (RuleAbilities.counterRestrictions rules)
         -- CR 602.2's activation prohibition. Its own KIND beside the affected
         -- set is CR 605.1a's classification, which holds no Filter at all --
-        -- unlike the counter kind one line up.
-        <> concatMap (unframed . affectedFilters . ActivationProhibition.affected) (RuleAbilities.activationProhibitions rules)
+        -- unlike the counter kind one line up. The affected set is
+        -- AffectedSetFramed for combatRestrictionFilters' reason:
+        -- Parun.Engine.ActivationProhibition matches it through
+        -- Projection.affectsOn (Pithing Needle's chosen name).
+        <> concatMap (fmap ((,) AffectedSetFramed) . affectedFilters . ActivationProhibition.affected) (RuleAbilities.activationProhibitions rules)
     )
 
 -- The RULE kind of the same grant (CR 613.11), swept for the same reason.

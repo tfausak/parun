@@ -130,7 +130,16 @@ event context creature c = case c of
         let described' q = not (null (Filter.adjectives q) && null (Filter.qualifiers q))
         if not (any (null . Filter.nouns) ps) && any described' ps then Filter.disjunction (fmap (`Filter.merge` spell) ps) else fmap (`Filter.merge` spell) (Filter.phrase (Filter.Type.Or gs) (Target.keyword context))
       _ -> fmap (`Filter.merge` spell) (Filter.phrase (Filter.Type.And rest) (Target.keyword context))
-    one <- Filter.describe Filter.Singular Target.permanent p
+    plain <- Filter.describe Filter.Singular Target.permanent p
+    -- Free for a disjunction of colours: "a spell that's white, blue, black,
+    -- or red" (Quirion Dryad).
+    let coloured g = case g of
+          Filter.Type.HasColor _ -> True
+          _ -> False
+        thats = case rest of
+          [Filter.Type.Or gs] | all coloured gs -> [Text.pack "spell that's " <> adjectives | Just adjectives <- [Text.stripSuffix (Text.pack " spell") plain]]
+          _ -> []
+    one <- plain : thats
     opening' <- recurring
     [other (opening' <> " " <> who <> " " <> Text.unpack (Prose.article one) <> " " <> Text.unpack one) [(thatPlayer, "that player"), (castSpell, "it")]]
   _ -> []

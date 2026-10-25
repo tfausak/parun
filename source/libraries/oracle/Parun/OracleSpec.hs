@@ -895,7 +895,8 @@ spec s = Spec.describe s "Parun.Oracle" $ do
     let enchanted = Affected.Matching (Filter.And [Filter.HasCardType CardType.Creature, Filter.HasAttached Filter.IsSource])
         aura changes = withFace (\f -> (typed [CardType.Enchantment] [Subtype.Aura] f) {Face.enchant = [TargetSlot.required Pool.Creatures Nothing], Face.staticAbilities = [static enchanted changes], Face.combatRestrictions = [CombatRestriction.CantBeBlockedBy (CantBeBlockedBy.MkCantBeBlockedBy (Affected.Matching (Filter.HasAttached Filter.IsSource)) (Filter.Not (Filter.HasKeyword Keyword.Flying)) Nothing Nothing)]})
     Spec.assertEq s (Just (Text.pack "Enchant creature\nEnchanted creature gets +1/+1 and can't be blocked except by creatures with flying.")) (Oracle.render (aura [pt 1 1]))
-    Spec.assertEq s [[Text.pack "Enchant creature"], [Text.pack "Enchanted creature has shroud."], [Text.pack "Enchanted creature can't be blocked except by creatures with flying."]] (Oracle.abilities (aura [Modification.GainKeyword Keyword.Shroud]))
+    Spec.assertEq s [[Text.pack "Enchant creature"], [Text.pack "Enchanted creature can't be blocked except by creatures with flying and has shroud.", Text.pack "Enchanted creature has shroud and can't be blocked except by creatures with flying.", Text.pack "Enchanted creature has shroud.\nEnchanted creature can't be blocked except by creatures with flying."]] (Oracle.abilities (aura [Modification.GainKeyword Keyword.Shroud]))
+    Spec.assertBool s (Oracle.says (aura [Modification.GainKeyword Keyword.Shroud]) (CardName.MkCardName (Text.pack "Spark")) (Text.pack "Enchant creature\nEnchanted creature has shroud.\nEnchanted creature can't be blocked except by creatures with flying.")) "the two sentences apart still say it"
 
   -- CR 509.1b / 611.2a: a creature that can't be blocked for the rest of the
   -- turn, which Oracle text says "this turn".

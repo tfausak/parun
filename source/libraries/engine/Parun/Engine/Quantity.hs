@@ -1447,11 +1447,17 @@ bakeBound :: Map.Map SlotName PlayerId.PlayerId -> Map.Map SlotName ObjectId -> 
 bakeBound players objects =
   QuantitySlot.mapPlayerRefs
     (bakePlayerRef players objects)
-    -- Both halves: the Scope says whose zone or which players, and an
-    -- Aggregation.Greatest's per-member quantity may hide a reference of its own.
-    -- Terminating for evaluate's reason -- a Greatest's payload is a strictly
-    -- smaller subterm.
-    (\c -> (QuantitySlot.mapCount (bakeBound players objects) c) {Count.Type.scope = QuantitySlot.mapScope (bakePlayerRef players objects) (Count.Type.scope c)})
+    -- All three parts: the Scope says whose zone or which players, the Filter
+    -- may name a slot (Rootwater Matriarch's "that creature is enchanted",
+    -- Filter.bakeBound), and an Aggregation.Greatest's per-member quantity may
+    -- hide a reference of its own. Terminating for evaluate's reason -- a
+    -- Greatest's payload is a strictly smaller subterm.
+    ( \c ->
+        (QuantitySlot.mapCount (bakeBound players objects) c)
+          { Count.Type.scope = QuantitySlot.mapScope (bakePlayerRef players objects) (Count.Type.scope c),
+            Count.Type.filter = Filter.bakeBound players (fmap Set.singleton objects) Map.empty (Count.Type.filter c)
+          }
+    )
 
 -- The player a per-player instruction is CURRENTLY applying to, substituted for
 -- Parun.Types.PlayerRef.Candidate -- Shahrazad's "each player who doesn't win the
