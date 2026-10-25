@@ -494,6 +494,8 @@ filterNames asking criterion = case criterion of
   Filter.ControlledByRecipient -> mempty
   Filter.OwnedBy _relation -> mempty
   Filter.OwnedByRecipient -> mempty
+  Filter.OwnedByBound slot -> slotNames asking slot
+  Filter.OwnedByPlayer _player -> mempty
   Filter.IsSource -> mempty
   Filter.IsObject oid -> names asking (== oid)
   Filter.TargetsSource -> mempty

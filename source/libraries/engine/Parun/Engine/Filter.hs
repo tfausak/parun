@@ -1360,8 +1360,9 @@ data Context = MkContext
     -- whose "if" is its pattern; a floating row whose condition named a slot's
     -- player would need the half.
     --
-    -- NO atom in `matches` below reads it. It is a channel THROUGH this record to
-    -- Parun.Engine.Count.playersFor, which is handed CR 113.7's SOURCE and needs
+    -- `matches` below reads it for IsBound against a player view and for an
+    -- unbaked ControlledByBound or OwnedByBound. It is otherwise a channel
+    -- THROUGH this record to Parun.Engine.Count.playersFor, which is handed CR 113.7's SOURCE and needs
     -- the resolution's own slots instead: an ability's targets and its trigger's
     -- bindings are stamped on the ABILITY object on the stack, and a source is not
     -- its stack object, so a read off the source's bindings answers nothing for
@@ -1906,6 +1907,11 @@ matches context view predicate = case predicate of
   Filter.OwnedByRecipient -> case (owner view, recipient context) of
     (Just o, Just r) -> o == r
     _ -> False
+  -- ControlledByBound's reading against CR 108.3's owner, for its reasons.
+  Filter.OwnedByBound slot -> case fmap Set.toList (Map.lookup slot (slotPlayers context)) of
+    Just [pid] -> owner view == Just pid
+    _ -> False
+  Filter.OwnedByPlayer pid -> owner view == Just pid
   Filter.IsSource -> case (identity view, source context) of
     (Just oid, Just src) -> oid == src
     _ -> False
@@ -1958,16 +1964,21 @@ matches context view predicate = case predicate of
     Just p -> any (\r -> case r of Recipient.ToPlayer q -> PlayerRelation.holds (teams context) relation p q; _ -> False) (targets view)
     Nothing -> False
   -- IsSource one field over: the id the RESOLUTION bound rather than the id the
-  -- evaluation is sourced at. Vacuously False for a view with no object behind
-  -- it and for a slot naming nothing, which is the posture the atom above takes.
+  -- evaluation is sourced at. Vacuously False for a slot naming nothing, which
+  -- is the posture the atom above takes.
   --
   -- MEMBERSHIP, so a slot bound to a GROUP admits every one of its members: CR
   -- 701.17c's "from among them" is a question about the whole batch a mill,
   -- a look or a move named, and a slot naming one object is the singleton case
   -- of it rather than a different question.
-  Filter.IsBound slot -> case identity view of
-    Just oid -> Set.member oid (Map.findWithDefault Set.empty slot (slotObjects context))
-    Nothing -> False
+  --
+  -- A PLAYER view asks the slot's player half, so CR 115.3's "another target"
+  -- excludes a player an earlier slot named as it does an object (Cone of
+  -- Flame's three any-target slots).
+  Filter.IsBound slot -> case (identity view, playerIdentity view) of
+    (Just oid, _) -> Set.member oid (Map.findWithDefault Set.empty slot (slotObjects context))
+    (Nothing, Just pid) -> Set.member pid (Map.findWithDefault Set.empty slot (slotPlayers context))
+    (Nothing, Nothing) -> False
   -- IsBound over the announcement's every target at once (Binding.announcedTargets).
   Filter.IsTarget -> matches context view (Filter.IsBound Binding.announcedTargets)
   -- CR 709.4a at both ends: the candidate has the bound object's name if one of
@@ -2495,6 +2506,8 @@ rewrite pairs predicate = case predicate of
   -- this atom names a player relation rather than a subtype.
   Filter.OwnedBy _ -> predicate
   Filter.OwnedByRecipient -> predicate
+  Filter.OwnedByBound _ -> predicate
+  Filter.OwnedByPlayer _ -> predicate
   Filter.IsSource -> predicate
   Filter.IsObject _ -> predicate
   -- Untouched for IsSource's reason: a target relation is not a word CR 612.1
@@ -3184,8 +3197,9 @@ rewriteComponent pairs component = case component of
   CostComponent.Waterbend _ -> component
   CostComponent.WaterbendInstead _ -> component
 
--- CR 603.2: replace every ControlledByBound atom whose slot this environment
--- names with the baked ControlledByPlayer arm, every IsBound atom whose slot
+-- CR 603.2: replace every ControlledByBound and OwnedByBound atom whose slot
+-- this environment names with its baked ControlledByPlayer or OwnedByPlayer
+-- arm, every IsBound atom whose slot
 -- `objects` names with the objects it holds, and every SameControllerAsBound
 -- atom whose slot `controllers` names with those players. What makes "target
 -- creature THAT PLAYER controls" answerable at all -- the player is a fact about the EVENT that
@@ -3245,6 +3259,8 @@ bakeBound players objects controllers predicate = case predicate of
   Filter.ControlledByRole _ -> predicate
   Filter.OwnedBy _ -> predicate
   Filter.OwnedByRecipient -> predicate
+  Filter.OwnedByBound slot -> maybe predicate Filter.OwnedByPlayer (Map.lookup slot players)
+  Filter.OwnedByPlayer _ -> predicate
   Filter.IsSource -> predicate
   Filter.IsObject _ -> predicate
   -- Untouched for IsSource's reason: both read the Context, and neither names a
@@ -3433,6 +3449,8 @@ manaValueThresholds predicate = case predicate of
   Filter.ControlledByRecipient -> []
   Filter.OwnedBy _ -> []
   Filter.OwnedByRecipient -> []
+  Filter.OwnedByBound _ -> []
+  Filter.OwnedByPlayer _ -> []
   Filter.IsSource -> []
   Filter.IsObject _ -> []
   Filter.TargetsSource -> []
@@ -3594,6 +3612,8 @@ statesAQuality predicate = case predicate of
   Filter.ControlledByRecipient -> True
   Filter.OwnedBy _ -> True
   Filter.OwnedByRecipient -> True
+  Filter.OwnedByBound _ -> True
+  Filter.OwnedByPlayer _ -> True
   Filter.IsSource -> True
   Filter.IsObject _ -> True
   -- CR 701.23b for IsSource's reason, and unreachable from a search besides: a
@@ -3766,6 +3786,8 @@ readsSourceValues predicate = case predicate of
   Filter.ControlledByRecipient -> False
   Filter.OwnedBy _ -> False
   Filter.OwnedByRecipient -> False
+  Filter.OwnedByBound _ -> False
+  Filter.OwnedByPlayer _ -> False
   Filter.IsSource -> False
   Filter.IsObject _ -> False
   Filter.TargetsSource -> False
@@ -3916,6 +3938,8 @@ overBoundSlotsWith f predicate = case predicate of
   Filter.ControlledByRecipient -> pure predicate
   Filter.OwnedBy _ -> pure predicate
   Filter.OwnedByRecipient -> pure predicate
+  Filter.OwnedByBound slot -> fmap Filter.OwnedByBound (f SlotArity.One slot)
+  Filter.OwnedByPlayer _ -> pure predicate
   Filter.IsSource -> pure predicate
   Filter.IsObject _ -> pure predicate
   Filter.TargetsSource -> pure predicate

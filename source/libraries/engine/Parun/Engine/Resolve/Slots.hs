@@ -2398,7 +2398,9 @@ readsX =
         Effect.Firebend _ -> False
         Effect.ActivateManaAbilities _ -> False
         Effect.MoveMana _ -> False
-        Effect.Search (Search.MkSearch _ _ _ _ quantity _ _ _ _ _ _ _ _) -> any Quantity.readsX quantity
+        -- The filter too: Citanul Flute's "mana value X or less" compares against
+        -- X itself (Operand.AmountInSlot), which no Quantity holds.
+        Effect.Search (Search.MkSearch _ _ _ _ quantity filter_ _ _ _ _ _ _ _) -> any Quantity.readsX quantity || Set.member Binding.variableX (Filter.boundSlots filter_)
         Effect.ExileAllGraveyards -> False
         Effect.Proliferate -> False
         Effect.Reroll -> False

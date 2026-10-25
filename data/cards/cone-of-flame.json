@@ -1,0 +1,131 @@
+{
+  "faces": [
+    {
+      "manaCost": [
+        {
+          "type": "Generic",
+          "value": 3
+        },
+        {
+          "type": "OfType",
+          "value": {
+            "type": "Colored",
+            "value": {
+              "type": "Red"
+            }
+          }
+        },
+        {
+          "type": "OfType",
+          "value": {
+            "type": "Colored",
+            "value": {
+              "type": "Red"
+            }
+          }
+        }
+      ],
+      "name": "Cone of Flame",
+      "oracleText": "Cone of Flame deals 1 damage to any target, 2 damage to another target, and 3 damage to a third target.",
+      "spell": {
+        "modes": [
+          {
+            "clauses": [
+              {
+                "effects": [
+                  {
+                    "type": "DealDamage",
+                    "value": {
+                      "parts": [
+                        {
+                          "quantity": {
+                            "type": "Literal",
+                            "value": 1
+                          },
+                          "ref": {
+                            "type": "InSlot",
+                            "value": "first"
+                          }
+                        },
+                        {
+                          "quantity": {
+                            "type": "Literal",
+                            "value": 2
+                          },
+                          "ref": {
+                            "type": "InSlot",
+                            "value": "second"
+                          }
+                        },
+                        {
+                          "quantity": {
+                            "type": "Literal",
+                            "value": 3
+                          },
+                          "ref": {
+                            "type": "InSlot",
+                            "value": "third"
+                          }
+                        }
+                      ]
+                    }
+                  }
+                ]
+              }
+            ],
+            "targetSlots": {
+              "first": {
+                "pool": {
+                  "type": "AnyTarget"
+                }
+              },
+              "second": {
+                "filter": {
+                  "type": "Not",
+                  "value": {
+                    "type": "IsBound",
+                    "value": "first"
+                  }
+                },
+                "pool": {
+                  "type": "AnyTarget"
+                }
+              },
+              "third": {
+                "filter": {
+                  "type": "And",
+                  "value": [
+                    {
+                      "type": "Not",
+                      "value": {
+                        "type": "IsBound",
+                        "value": "first"
+                      }
+                    },
+                    {
+                      "type": "Not",
+                      "value": {
+                        "type": "IsBound",
+                        "value": "second"
+                      }
+                    }
+                  ]
+                },
+                "pool": {
+                  "type": "AnyTarget"
+                }
+              }
+            }
+          }
+        ]
+      },
+      "typeLine": {
+        "types": [
+          {
+            "type": "Sorcery"
+          }
+        ]
+      }
+    }
+  ]
+}
