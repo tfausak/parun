@@ -239,7 +239,6 @@ import qualified Parun.Types.GameLossR as GameLossR
 import qualified Parun.Types.GrantLookAtExiled as GrantLookAtExiled
 import qualified Parun.Types.GrantPlayFromExile as GrantPlayFromExile
 import qualified Parun.Types.GrantedAbility as GrantedAbility
-import qualified Parun.Types.Halved as Halved
 import qualified Parun.Types.HandAction as HandAction
 import qualified Parun.Types.HistoryRead as HistoryRead
 import qualified Parun.Types.HowMany as HowMany
@@ -337,6 +336,7 @@ import qualified Parun.Types.PutCounters as PutCounters
 import qualified Parun.Types.PutCountersFrom as PutCountersFrom
 import qualified Parun.Types.PutSticker as PutSticker
 import qualified Parun.Types.Quantity as Quantity
+import qualified Parun.Types.Quotient as Quotient
 import qualified Parun.Types.RandomCardInGraveyard as RandomCardInGraveyard
 import qualified Parun.Types.RandomCardInHand as RandomCardInHand
 import qualified Parun.Types.RandomCardInLibrary as RandomCardInLibrary
@@ -703,7 +703,7 @@ anyNumberMatchingNames asking x = case x of
 arithmeticNames :: (Monoid r) => Asking r -> (quantity -> r) -> Arithmetic.Arithmetic quantity -> r
 arithmeticNames asking onQuantity x = case x of
   Arithmetic.Plus plus -> plusNames asking onQuantity plus
-  Arithmetic.Halved halved -> halvedNames asking onQuantity halved
+  Arithmetic.Quotient quotient -> quotientNames asking onQuantity quotient
   Arithmetic.Times times -> timesNames asking onQuantity times
   Arithmetic.Negate quantity -> onQuantity quantity
 
@@ -1761,9 +1761,9 @@ grantedAbilityNames asking onCard x =
         GrantedAbility.SelfAlternativeCost alternativeCost -> alternativeCostNames own alternativeCost
         GrantedAbility.SelfSpendManaAsThough _spendManaAsThough -> mempty
 
-halvedNames :: Asking r -> (quantity -> r) -> Halved.Halved quantity -> r
-halvedNames _asking onQuantity x = case x of
-  Halved.MkHalved _rounding quantity -> onQuantity quantity
+quotientNames :: (Monoid r) => Asking r -> (quantity -> r) -> Quotient.Quotient quantity -> r
+quotientNames _asking onQuantity x = case x of
+  Quotient.MkQuotient _rounding quantity divisor -> onQuantity quantity <> onQuantity divisor
 
 handActionNames :: (Monoid r) => Asking r -> (card -> r) -> HandAction.HandAction card -> r
 handActionNames asking onCard x = case x of

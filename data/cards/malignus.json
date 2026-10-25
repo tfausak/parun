@@ -3,8 +3,12 @@
     {
       "characteristicPT": {
         "power": {
-          "type": "Halved",
+          "type": "Quotient",
           "value": {
+            "divisor": {
+              "type": "Literal",
+              "value": 2
+            },
             "quantity": {
               "type": "Count",
               "value": {
@@ -38,8 +42,12 @@
           }
         },
         "toughness": {
-          "type": "Halved",
+          "type": "Quotient",
           "value": {
+            "divisor": {
+              "type": "Literal",
+              "value": 2
+            },
             "quantity": {
               "type": "Count",
               "value": {

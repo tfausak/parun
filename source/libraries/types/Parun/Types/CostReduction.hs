@@ -49,7 +49,9 @@ data CostReduction = MkCostReduction
     -- exists: a fixed self-reduction is expressible as a Literal, and a scaling
     -- one is not expressible any other way. Evaluated at CR 601.2f, against the
     -- state as it stands there and never against an earlier snapshot -- see
-    -- Parun.Engine.Cost.selfReductions.
+    -- Parun.Engine.Cost.selfReductions. CR 601.2c's targets are announced by
+    -- then, so it may count them: Fireball's "for each target beyond the
+    -- first" is a BoundCount of its own slot less one.
     --
     -- Thrasta's "OTHER" needs no exclusion here and gets none: CR 601.2i is what
     -- makes a spell cast, and it comes after CR 601.2f, so the spell being
