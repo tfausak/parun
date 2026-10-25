@@ -31,12 +31,14 @@ import qualified Parun.Types.Activator as Activator
 import qualified Parun.Types.Card as Card
 import qualified Parun.Types.CardName as CardName
 import qualified Parun.Types.CardType as CardType
+import qualified Parun.Types.CombatStep as CombatStep
 import qualified Parun.Types.Cost as Cost.Type
 import qualified Parun.Types.CostComponent as CostComponent
 import qualified Parun.Types.DuringPhase as DuringPhase
 import qualified Parun.Types.Face as Face
 import qualified Parun.Types.Keyword as Keyword.Type
 import qualified Parun.Types.Layout as Layout
+import qualified Parun.Types.Phase as Phase
 import qualified Parun.Types.PhaseSelector as PhaseSelector
 import qualified Parun.Types.Pool as Pool
 import qualified Parun.Types.StepBegins as StepBegins
@@ -126,12 +128,14 @@ faceAbilities face =
       spell = [Effect.modal context {Target.breaks = [Text.pack " ", Text.pack "\n"]} (Face.spell face) | Face.spell face /= Face.defaultSpell]
       bestowed = any (\k -> case k of Keyword.Type.Bestow _ -> True; _ -> False) (Map.keys (Face.keywords face))
       attached = Continuous.attachedWord subtypes bestowed
+      (statics, combat, joint) = Continuous.evasive context attached (Face.enchant face) (Face.staticAbilities face) (Face.combatRestrictions face)
    in Keyword.abilities self (Face.keywords face)
         <> fmap (Continuous.enchant context) (Face.enchant face)
         <> fmap (Continuous.defining context (Face.power face) (Face.toughness face)) (Maybe.maybeToList (Face.characteristicPT face))
-        <> fmap (Continuous.static context attached (Face.enchant face)) (Face.staticAbilities face)
+        <> joint
+        <> fmap (Continuous.static context attached (Face.enchant face)) statics
         <> fmap (Continuous.replacement context) (Face.replacementEffects face)
-        <> Continuous.combatRestrictions context attached (Face.enchant face) (Face.combatRestrictions face)
+        <> Continuous.combatRestrictions context attached (Face.enchant face) combat
         <> fmap (Continuous.playerRule context) (Face.playerAbilities face)
         <> spell
         <> fmap (activated context) (Face.activatedAbilities face)
@@ -142,7 +146,7 @@ faceAbilities face =
 -- 603.1), the effect calling the source "it" once the event has named it
 -- (Fire Imp), and with an intervening "if" clause between them (CR 603.4).
 -- A limit, a name, or a trigger from another zone is not spelled out here.
-triggered :: (Eq ability) => Target.Context -> Bool -> TriggeredAbility.TriggeredAbility Card.Card ability -> [Text.Text]
+triggered :: Target.Context -> Bool -> TriggeredAbility.TriggeredAbility Card.Card Continuous.Ability -> [Text.Text]
 triggered context creature t
   | Maybe.isNothing (TriggeredAbility.name t),
     TriggeredAbility.limit t == TriggerLimit.Unlimited,
@@ -173,7 +177,7 @@ triggered context creature t
 -- ability whose cost sacrifices its source calls it "it" after that (Mogg
 -- Mob). Only an ability its controller activates renders yet: a condition, a
 -- named or keyword ability, or a bound on X is not spelled out here.
-activated :: (Eq ability) => Target.Context -> ActivatedAbility.ActivatedAbility Card.Card ability -> [Text.Text]
+activated :: Target.Context -> ActivatedAbility.ActivatedAbility Card.Card Continuous.Ability -> [Text.Text]
 activated context a
   | null (ActivatedAbility.maximumX a),
     ActivatedAbility.minimumX a == 0,
@@ -190,13 +194,26 @@ activated context a
         [] -> [Text.empty]
         rs -> do
           clauses <- traverse restriction rs
-          [Text.pack " Activate only " <> Text.intercalate (Text.pack " and only ") clauses <> Text.pack "."]
+          [Text.pack " Activate only " <> restrictions (zip rs clauses) <> Text.pack "."]
       [cost <> Text.pack ": " <> effect <> rider]
   | otherwise = []
 
+-- | The clauses of "Activate only ...", joined by "and only", except that a
+-- time before attackers are declared follows the turn it is in after a comma:
+-- "during your turn, before attackers are declared" (Zhuge Jin, Wu
+-- Strategist).
+restrictions :: [(ActivationRestriction.ActivationRestriction, Text.Text)] -> Text.Text
+restrictions rs = case rs of
+  (r@(ActivationRestriction.DuringTurn _), during) : (ActivationRestriction.BeforeStep (Phase.Combat CombatStep.DeclareAttackers), before) : rest ->
+    restrictions ((r, during <> Text.pack ", " <> before) : rest)
+  [(_, only)] -> only
+  (_, first) : rest -> first <> Text.pack " and only " <> restrictions rest
+  [] -> Text.empty
+
 -- | One clause of "Activate only ..." (CR 602.5): "as a sorcery" (CR 307.5),
 -- "as an instant" (CR 602.5e), "once each turn" (CR 602.5b), "during your
--- turn" (CR 102.1), "during your upkeep". Any other is not spelled out here.
+-- turn" (CR 102.1), "during your upkeep", "before attackers are declared"
+-- (CR 506.7a). Any other is not spelled out here.
 restriction :: ActivationRestriction.ActivationRestriction -> [Text.Text]
 restriction r = case r of
   ActivationRestriction.SorcerySpeed -> [Text.pack "as a sorcery"]
@@ -205,6 +222,7 @@ restriction r = case r of
   ActivationRestriction.OnlyOnce -> [Text.pack "once"]
   ActivationRestriction.DuringTurn TurnScope.ControllersTurn -> [Text.pack "during your turn"]
   ActivationRestriction.DuringTurn TurnScope.OpponentsTurn -> [Text.pack "during an opponent's turn"]
+  ActivationRestriction.BeforeStep (Phase.Combat CombatStep.DeclareAttackers) -> [Text.pack "before attackers are declared"]
   ActivationRestriction.DuringPhase (DuringPhase.MkDuringPhase (PhaseSelector.Step phase) scope) ->
     fmap (Text.pack . ("during " <>)) (Trigger.step (StepBegins.MkStepBegins phase Nothing scope))
   _ -> []

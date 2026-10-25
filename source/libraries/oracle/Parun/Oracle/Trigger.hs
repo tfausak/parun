@@ -72,9 +72,15 @@ event context creature c = case c of
     word <- ["it", that]
     subject <- also one
     -- Landfall is the ability word (CR 207.2c) Oracle text prints before
-    -- this event and no other (Sporemound).
-    let landfall = if one == "a land you control" then "Landfall \8212 " else ""
-    [other (landfall <> "Whenever " <> subject <> " enters") [(becameSlot, word)]]
+    -- this event and no other (Sporemound). Free for alliance: printed
+    -- (Rumor Gatherer) or not (Impassioned Orator). Free for constellation:
+    -- printed (Goldenhide Ox) or not (Rimefur Reindeer).
+    opening' <- case one of
+      "a land you control" -> ["Landfall \8212 "]
+      "another creature you control" -> ["", "Alliance \8212 "]
+      "an enchantment you control" -> ["", "Constellation \8212 "]
+      _ -> [""]
+    [other (opening' <> "Whenever " <> subject <> " enters") [(becameSlot, word)]]
   TriggerCondition.PermanentDies f -> do
     (one, that) <- described context f
     word <- ["it", that]
@@ -271,8 +277,8 @@ castSpell = SlotName.MkSlotName (Text.pack "thatSpell")
 -- | An intervening "if" clause's condition (CR 603.4): a count of cards in
 -- a hand ("you have no cards in hand"), of permanents ("you control no
 -- creatures", "there are no Zombies on the battlefield"), the source's own
--- status ("this artifact is untapped"), or a player's life, monarchy or
--- attack this turn. Any other condition is not spelled out here.
+-- status ("this artifact is untapped"), a player's life, monarchy or attack
+-- this turn, or whose turn it is. Any other condition is not spelled out here.
 condition :: Target.Context -> Condition.Condition -> [Text.Text]
 condition context c = case c of
   Condition.Compares (Compares.MkCompares measured comparison threshold) -> case (measured, threshold) of
@@ -287,6 +293,8 @@ condition context c = case c of
     (Quantity.IsMonarch who, Quantity.Literal 1) | comparison == Comparison.AtLeast -> do
       (subject, _) <- holder context who
       [subject <> (if subject == Text.pack "you" then Text.pack " are" else Text.pack " is") <> Text.pack " the monarch"]
+    -- CR 102.1, as the pool writes it (Forge Anew).
+    (Quantity.IsActivePlayer (PlayerRef.Relative PlayerRelation.You), Quantity.Literal 1) | comparison == Comparison.Exactly -> [Text.pack "it's your turn"]
     (Quantity.AttackersDeclaredThisTurn who, Quantity.Literal 1) | comparison == Comparison.AtLeast -> do
       (subject, _) <- holder context who
       [subject <> Text.pack " attacked this turn"]
@@ -296,9 +304,18 @@ condition context c = case c of
 -- | The ability word (CR 207.2c) Oracle text may print before an ability
 -- whose condition this is. Free for hellbent: printed (Slaughterhouse
 -- Bouncer) or not (Academy at Tolaria West). Free for raid: printed (Mardu
--- Skullhunter) or not (Trynn, Champion of Freedom).
+-- Skullhunter) or not (Trynn, Champion of Freedom). Free for threshold:
+-- printed (Excavating Anurid) or not (Illuminate History).
 abilityWord :: Text.Text -> [Text.Text]
-abilityWord words' = [Text.empty] <> [Text.pack "Hellbent \8212 " | words' == Text.pack "you have no cards in hand"] <> [Text.pack "Raid \8212 " | words' == Text.pack "you attacked this turn"]
+abilityWord words' = [Text.empty] <> [Text.pack "Hellbent \8212 " | words' == Text.pack "you have no cards in hand"] <> [Text.pack "Raid \8212 " | words' == Text.pack "you attacked this turn"] <> [Text.pack "Threshold \8212 " | words' == Text.pack "there are seven or more cards in your graveyard"]
+
+-- | Whether the condition is the source's own status ("this creature is
+-- attacking"), as 'counted' reads it, after which the source is "it".
+aboutSource :: Condition.Condition -> Bool
+aboutSource c = case c of
+  Condition.Compares (Compares.MkCompares (Quantity.Count n) _ _)
+    | Scope.InZone (InZone.MkInZone Zone.Battlefield _) <- Count.scope n -> elem Filter.Type.IsSource (case Count.filter n of Filter.Type.And fs -> fs; f -> [f])
+  _ -> False
 
 -- | A player as the subject of a condition, with the verb "have" agreeing:
 -- ("you", "have"), ("that player", "has").
@@ -321,11 +338,19 @@ quantifier comparison k = case comparison of
   Comparison.AtMost | k > 0 -> [(const (Prose.cardinal k <> Text.pack " or fewer"), Filter.Plural)]
   _ -> []
 
--- | A count of members of a zone compared with a number: cards in a hand,
--- permanents a player controls or on the battlefield, or the source alone,
--- whose status the condition is.
+-- | A count of members of a zone compared with a number: cards in a hand or
+-- in your graveyard, permanents a player controls or on the battlefield, or
+-- the source alone, whose status the condition is.
 counted :: Target.Context -> Count.Count Quantity.Quantity -> Comparison.Comparison -> Integer -> [Text.Text]
 counted context n comparison k = case Count.scope n of
+  -- "there are seven or more cards in your graveyard" (CR 404.1).
+  Scope.InZone (InZone.MkInZone Zone.Graveyard who@(PlayerRef.Relative PlayerRelation.You)) -> do
+    p <- Filter.phrase (Count.filter n) (Target.keyword context)
+    (before, number) <- quantifier comparison k
+    noun <- Filter.describe number Target.card (Filter.merge p (Filter.MkPhrase [] [Target.card] []))
+    place <- Target.zoneOf Zone.Graveyard who
+    let be = if number == Filter.Singular then Text.pack "is" else Text.pack "are"
+    [Text.pack "there " <> be <> Text.pack " " <> before noun <> Text.pack " " <> noun <> Text.pack " " <> place]
   Scope.InZone (InZone.MkInZone Zone.Hand who)
     | Count.filter n == Filter.Type.And [] -> do
         (subject, have) <- holder context who
@@ -349,6 +374,7 @@ counted context n comparison k = case Count.scope n of
       ([], _) -> do
         let controls f = case f of
               Filter.Type.ControlledBy PlayerRelation.You -> True
+              Filter.Type.ControlledBy PlayerRelation.Opponent -> True
               Filter.Type.ControlledByBound _ -> True
               _ -> False
             (controllers, rest) = (filter controls conjuncts, filter (not . controls) conjuncts)
@@ -358,12 +384,15 @@ counted context n comparison k = case Count.scope n of
         let some = maybe (before noun <> Text.pack " " <> noun) (Text.pack "another " <>) (Monad.guard (number == Filter.Singular) >> Text.stripPrefix (Text.pack "other ") noun)
         case controllers of
           [Filter.Type.ControlledBy PlayerRelation.You] -> [Text.pack "you control " <> some]
+          [Filter.Type.ControlledBy PlayerRelation.Opponent] -> [Text.pack "an opponent controls " <> some]
           [Filter.Type.ControlledByBound s] | Just word <- Map.lookup s (Target.bound context) -> [word <> Text.pack " controls " <> some]
           -- Free: "there are no Zombies on the battlefield" (Sarcomancy) or
-          -- "no creatures are on the battlefield" (Pestilence, Sixth Edition).
+          -- "no creatures are on the battlefield" (Pestilence, Sixth Edition),
+          -- and for one or more "any player controls a black permanent"
+          -- (Knight of Grace).
           [] ->
             let be = if number == Filter.Singular then Text.pack "is" else Text.pack "are"
-             in [Text.pack "there " <> be <> Text.pack " " <> some <> Text.pack " on the battlefield", some <> Text.pack " " <> be <> Text.pack " on the battlefield"]
+             in [Text.pack "there " <> be <> Text.pack " " <> some <> Text.pack " on the battlefield", some <> Text.pack " " <> be <> Text.pack " on the battlefield"] <> [Text.pack "any player controls " <> some | comparison == Comparison.AtLeast, k == 1]
           _ -> []
       _ -> []
   _ -> []

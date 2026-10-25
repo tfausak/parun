@@ -95,7 +95,9 @@ to agents as written. What it doesn't say:
   test'` --- it reaches other agents' worktrees; kill your own PID. Never pipe
   `cabal` into `head` or anything else that closes the pipe early: it
   deadlocks on SIGPIPE while holding a lock slot. Redirect to a file and read
-  the file.
+  the file. Every test run goes through cabal under the lock too, mutation
+  loops and ad hoc scripts included: `script/with-build-lock.sh cabal run -v0
+  parun -- test -p PATTERN`, never the built test binary.
 
 - Derive against `origin/main`, not the working checkout, which drifts:
   `git fetch`, then `git show origin/main:<path>` or a worktree cut from it.
