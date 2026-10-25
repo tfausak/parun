@@ -1570,7 +1570,7 @@ firstActivation pid source criterion granted wantedKind aimedAt gs scope =
           && maybe True (\g -> any (Keyword.designates g) (PastActivation.keyword past)) granted
           && maybe True (== PastActivation.kind past) wantedKind
           && maybe True (\f -> any (matchesSnapshot (Just (targetPerspective pid source gs)) f) (PastActivation.targets past)) aimedAt
-   in Turn.turnScopeAdmits gs scope (GameState.activePlayer gs) pid
+   in Turn.turnScopeAdmits (Count.scopePlayers (Projection.viewWithLastKnownAnywhere gs) (contextFor (Just pid) source gs) gs) gs scope (GameState.activePlayer gs) pid
         && not (any admits (GameState.activationsThisTurn gs))
 
 -- CR 118.9 through CR 602.2b: the costs `pid` may pay RATHER THAN the

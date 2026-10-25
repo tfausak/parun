@@ -28,6 +28,7 @@ import qualified Data.Sequence as Seq
 import qualified Data.Set as Set
 import Numeric.Natural (Natural)
 import qualified Parun.Engine.Condition as Condition
+import qualified Parun.Engine.Count as Count
 import qualified Parun.Engine.Game as Game
 import qualified Parun.Engine.Keyword as Keyword
 import qualified Parun.Engine.Projection as Projection
@@ -122,13 +123,13 @@ restrictionMet pid srcId ability gs restriction = case restriction of
   -- Mana Cache's "their turn" follows whoever activates it.
   ActivationRestriction.DuringPhase (DuringPhase.MkDuringPhase window scope) ->
     Turn.inWindow window (GameState.phase gs)
-      && Turn.turnScopeAdmits gs scope (GameState.activePlayer gs) pid
+      && Turn.turnScopeAdmits named gs scope (GameState.activePlayer gs) pid
   -- CR 102.1 alone, with no window beside it: the rider names a turn and every
   -- phase and step of that turn is inside it. The same second conjunct
   -- DuringPhase reads above, standing on its own -- so this is not DuringPhase
   -- with a wildcard window but the absence of that axis.
   ActivationRestriction.DuringTurn scope ->
-    Turn.turnScopeAdmits gs scope (GameState.activePlayer gs) pid
+    Turn.turnScopeAdmits named gs scope (GameState.activePlayer gs) pid
   -- CR 508.3b's question, asked of the ACTIVATING player, and the same reader the
   -- casting side's clause of this name uses -- see Turn.attackedThisStep for
   -- why it is the declaration record and not Combat.attacked.
@@ -221,6 +222,9 @@ restrictionMet pid srcId ability gs restriction = case restriction of
   -- route before asking (`refusedMidPayment`), since no board fact tells a
   -- payment in progress apart.
   ActivationRestriction.InstantSpeed -> True
+  where
+    -- CR 102.1: the seats a TurnScope.PlayersTurn names, read from the source.
+    named = Count.scopePlayers (Projection.viewWithLastKnownAnywhere gs) (Projection.sourceContext gs (Just pid) srcId) gs
 
 -- CR 602.5d under a permission to activate "any time you could cast an instant"
 -- (Leonin Shikari): the sorcery-speed rider reads as CR 602.5e's instant-speed

@@ -24,6 +24,7 @@ import qualified Parun.Types.Phase as Phase
 import Parun.Types.PhaseSelector (PhaseSelector)
 import qualified Parun.Types.PhaseSelector as PhaseSelector
 import Parun.Types.PlayerId (PlayerId)
+import qualified Parun.Types.PlayerRef as PlayerRef
 import qualified Parun.Types.StepBegan as StepBegan
 import qualified Parun.Types.Teams as Teams
 import qualified Parun.Types.Timestamp as Timestamp
@@ -55,10 +56,10 @@ sharesTurn gs one other =
         || (GameSettings.sharedTeamTurns settings && Teams.sameTeam (GameSettings.teams settings) one other)
 
 -- CR 102.1: does this turn belong to the scope? `active` is "the player whose
--- turn it is", and `own` is the seat the scope is read against -- the player
--- Parun.Types.TurnScope deliberately names none of, since each reader supplies
--- its own: CR 109.5's "you" for a triggered ability (CR 603.3a), the CR 602.2
--- activator for an activated one.
+-- turn it is", and `own` is the seat the relational arms are read against --
+-- the player Parun.Types.TurnScope deliberately names none of, since each
+-- reader supplies its own: CR 109.5's "you" for a triggered ability (CR
+-- 603.3a), the CR 602.2 activator for an activated one.
 --
 -- ControllersTurn is sharesTurn, so under CR 805.4 the active team's turn is
 -- each of its members' turn. OpponentsTurn is CR 102.3's relation rather than an
@@ -66,11 +67,17 @@ sharesTurn gs one other =
 -- (CR 102.2) and a Free-for-All (CR 806.1) is any other seat, and in a game
 -- between teams is a seat on another team. Teams.areOpponents is the one
 -- predicate.
-turnScopeAdmits :: GameState -> TurnScope.TurnScope -> PlayerId -> PlayerId -> Bool
-turnScopeAdmits gs scope active own = case scope of
+--
+-- PlayersTurn is ControllersTurn read against the seats `named` answers for
+-- its reference (Parun.Engine.Count.scopePlayers, from the reader's source), so
+-- under CR 805.4 the active team's turn is each named member's too. A
+-- reference no reader can answer admits no turn.
+turnScopeAdmits :: (PlayerRef.PlayerRef -> Maybe [PlayerId]) -> GameState -> TurnScope.TurnScope -> PlayerId -> PlayerId -> Bool
+turnScopeAdmits named gs scope active own = case scope of
   TurnScope.EachTurn -> True
   TurnScope.ControllersTurn -> sharesTurn gs active own
   TurnScope.OpponentsTurn -> Teams.areOpponents (GameSettings.teams (GameState.settings gs)) own active
+  TurnScope.PlayersTurn ref -> maybe False (any (sharesTurn gs active)) (named ref)
 
 -- | CR 805.4a / 805.9: is this player an active player -- the active player, or
 -- under the shared team turns option a member of the active team?

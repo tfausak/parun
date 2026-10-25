@@ -8541,9 +8541,10 @@ applyOneEffect runSubgame resolving source controller legal chosen effect = case
           -- at resolution (through playerRefPlayers' CR 608.2h last-known
           -- read), not baked to the object: only a CR 611.2b condition is
           -- re-checked later. A regression fence: no card in data/cards/ puts
-          -- either reference in a player effect.
+          -- any of these references in a player effect.
           atResolution ref = case ref of
             PlayerRef.ControllerOfBound _ -> seatNow ref
+            PlayerRef.ControllerOfHostOfBound _ -> seatNow ref
             PlayerRef.OwnerOfBound _ -> seatNow ref
             _ -> Quantity.bakePlayerRef (Binding.playersIn legal) Map.empty ref
           seatNow ref = case playerRefPlayers legal resolving source controller gs ref of

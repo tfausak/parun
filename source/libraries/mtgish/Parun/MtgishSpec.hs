@@ -20,6 +20,7 @@ import qualified Parun.Types.ActivationRestriction as ActivationRestriction
 import qualified Parun.Types.Affected as Affected
 import qualified Parun.Types.AffectedUnless as AffectedUnless
 import qualified Parun.Types.Aggregation as Aggregation
+import qualified Parun.Types.BeginningStep as BeginningStep
 import qualified Parun.Types.CantBeBlockedBy as CantBeBlockedBy
 import qualified Parun.Types.Card as Card
 import qualified Parun.Types.CardType as CardType
@@ -83,6 +84,7 @@ import qualified Parun.Types.SlotCount as SlotCount
 import qualified Parun.Types.SlotName as SlotName
 import qualified Parun.Types.SpellCast as SpellCast
 import qualified Parun.Types.StaticAbility as StaticAbility
+import qualified Parun.Types.StepBegins as StepBegins
 import qualified Parun.Types.Subtype as Subtype
 import qualified Parun.Types.TargetCount as TargetCount
 import qualified Parun.Types.TargetSlot as TargetSlot
@@ -233,6 +235,12 @@ spec s = Spec.describe s "Parun.Mtgish" $ do
   Spec.it s "reads an intervening if clause" $ do
     Spec.assertEq s (Right ()) (accepts sarcomancy)
     Spec.assertEq s [False, True] (fmap (Maybe.isJust . TriggeredAbility.intervening) (Face.triggeredAbilities (translated sarcomancy)))
+
+  -- CR 603.2b / 102.1: "the upkeep of enchanted creature's controller", a
+  -- named player's turn read off the source slot.
+  Spec.it s "reads a step trigger on enchanted creature's controller's turn" $ do
+    Spec.assertEq s (Right ()) (accepts soulBleed)
+    Spec.assertEq s [TriggerCondition.StepBegins (StepBegins.MkStepBegins (Phase.Beginning BeginningStep.Upkeep) Nothing (TurnScope.PlayersTurn (PlayerRef.ControllerOfHostOfBound (SlotName.MkSlotName (Text.pack "self")))))] (fmap TriggeredAbility.condition (Face.triggeredAbilities (translated soulBleed)))
 
   -- CR 611.3a: "as long as" as the condition of the static abilities within.
   Spec.it s "reads a static ability that applies as long as a condition holds" $ do
@@ -393,6 +401,13 @@ regeneration :: (String, String)
 regeneration =
   ( "{\"_OracleCard\":\"Card\",\"Name\":\"Regeneration\",\"Typeline\":{\"Supertypes\":[],\"Cardtypes\":[\"Enchantment\"],\"Subtypes\":[\"Aura\"]},\"ManaCost\":[{\"_ManaSymbol\":\"ManaCostGeneric\",\"args\":1},{\"_ManaSymbol\":\"ManaCostG\"}],\"Rules\":[{\"_Rule\":\"EnchantPermanent\",\"args\":{\"_Permanents\":\"IsCardtype\",\"args\":\"Creature\"}},{\"_Rule\":\"Activated\",\"args\":[{\"_Cost\":\"PayMana\",\"args\":[{\"_ManaSymbol\":\"ManaCostG\"}]},{\"_Actions\":\"ActionList\",\"args\":[{\"_Action\":\"RegeneratePermanent\",\"args\":{\"_Permanent\":\"HostPermanent\"}}]}]}]}",
     "Enchant creature (Target a creature as you cast this. This card enters attached to that creature.)\n{G}: Regenerate enchanted creature. (The next time that creature would be destroyed this turn, instead tap it, remove it from combat, and heal all damage on it.)"
+  )
+
+-- | Soul Bleed's AST, and its Oracle text.
+soulBleed :: (String, String)
+soulBleed =
+  ( "{\"_OracleCard\":\"Card\",\"Name\":\"Soul Bleed\",\"Typeline\":{\"Supertypes\":[],\"Cardtypes\":[\"Enchantment\"],\"Subtypes\":[\"Aura\"]},\"ManaCost\":[{\"_ManaSymbol\":\"ManaCostGeneric\",\"args\":2},{\"_ManaSymbol\":\"ManaCostB\"}],\"Rules\":[{\"_Rule\":\"EnchantPermanent\",\"args\":{\"_Permanents\":\"IsCardtype\",\"args\":\"Creature\"}},{\"_Rule\":\"TriggerA\",\"args\":[{\"_Trigger\":\"AtTheBeginningOfAPlayersUpkeep\",\"args\":{\"_Players\":\"SinglePlayer\",\"args\":{\"_Player\":\"HostController\"}}},{\"_Actions\":\"ActionList\",\"args\":[{\"_Action\":\"PlayerAction\",\"args\":[{\"_Player\":\"Trigger_ThatPlayer\"},{\"_Action\":\"LoseLife\",\"args\":{\"_GameNumber\":\"Integer\",\"args\":1}}]}]}]}]}",
+    "Enchant creature\nAt the beginning of the upkeep of enchanted creature's controller, that player loses 1 life."
   )
 
 -- | Sarcomancy's AST, and its Oracle text.

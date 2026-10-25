@@ -1135,22 +1135,22 @@ eventGroups = NonEmpty.groupBy (\a b -> LoggedEvent.group a == LoggedEvent.group
 --
 -- A partial case with a wildcard: this answers about one condition and one
 -- event shape, and every other pair keeps its single trigger.
-stepTriggerPlayers :: GameState -> PlayerId -> TriggerCondition -> GameEvent -> TriggeredAbility.TriggeredAbility Card (GrantedAbility.GrantedAbility Card) -> Maybe [PlayerId]
-stepTriggerPlayers gs you cond event ability = case (cond, event) of
+stepTriggerPlayers :: GameState -> ObjectId -> PlayerId -> TriggerCondition -> GameEvent -> TriggeredAbility.TriggeredAbility Card (GrantedAbility.GrantedAbility Card) -> Maybe [PlayerId]
+stepTriggerPlayers gs bearer you cond event ability = case (cond, event) of
   (TriggerCondition.StepBegins (StepBegins.MkStepBegins wanted _ scope), GameEvent.StepBegan (StepBegan.MkStepBegan began _))
-    | began == wanted && Map.member Binding.triggerPlayer (Slots.triggeredAbilitySlots ability) -> Just (filter (\player -> Game.wasInRangeOf you player gs) (stepPlayers gs scope you))
-  (TriggerCondition.AnyOf conditions, _) -> Maybe.listToMaybe (Maybe.mapMaybe (\c -> stepTriggerPlayers gs you c event ability) conditions)
-  (TriggerCondition.CausedBy narrowed, _) -> stepTriggerPlayers gs you (CausedBy.condition narrowed) event ability
+    | began == wanted && Map.member Binding.triggerPlayer (Slots.triggeredAbilitySlots ability) -> Just (filter (\player -> Game.wasInRangeOf you player gs) (stepPlayers gs bearer scope you))
+  (TriggerCondition.AnyOf conditions, _) -> Maybe.listToMaybe (Maybe.mapMaybe (\c -> stepTriggerPlayers gs bearer you c event ability) conditions)
+  (TriggerCondition.CausedBy narrowed, _) -> stepTriggerPlayers gs bearer you (CausedBy.condition narrowed) event ability
   _ -> Nothing
 
 -- CR 805.4d: the trigger once per player whose step this is, each naming its own
 -- "that player" (Binding.triggerPlayer), where stepTriggerPlayers says the
 -- ability reads that player; the trigger alone otherwise. Shared by
 -- eventTriggers and inherentTriggers.
-stepCopies :: GameState -> PlayerId -> TriggerCondition -> GameEvent -> TriggeredAbility.TriggeredAbility Card (GrantedAbility.GrantedAbility Card) -> PendingTrigger -> [PendingTrigger]
-stepCopies gs you cond event ability one =
+stepCopies :: GameState -> ObjectId -> PlayerId -> TriggerCondition -> GameEvent -> TriggeredAbility.TriggeredAbility Card (GrantedAbility.GrantedAbility Card) -> PendingTrigger -> [PendingTrigger]
+stepCopies gs bearer you cond event ability one =
   let for player = one {PendingTrigger.bindings = Binding.setTriggerPlayer player (PendingTrigger.bindings one)}
-   in maybe [one] (fmap for) (stepTriggerPlayers gs you cond event ability)
+   in maybe [one] (fmap for) (stepTriggerPlayers gs bearer you cond event ability)
 
 -- CR 603.2c's second sentence for a per-counter removal: "whenever a [kind]
 -- counter is removed from this" triggers once for each counter one removal took
@@ -2347,7 +2347,7 @@ eventTriggers events gs =
             pend (cond, ab) = PendingTrigger.MkPendingTrigger (TriggerSource.OfObject oid) ctrl ab (Map.union (Binding.paidCostRecord bindings) (eventBindingsOver board gs (Map.lookup oid becameInGraveyard) becameInGraveyard oid ctrl cond event)) Nothing (Just logged) (copiesIn (fmap snd abilities) ab) (delayedAsTriggered board oid gs)
             -- CR 805.4d: one trigger per player whose step this is (stepCopies).
             pends (cond, ab) =
-              let perPlayer = stepCopies gs ctrl cond event ab (pend (cond, ab))
+              let perPlayer = stepCopies gs oid ctrl cond event ab (pend (cond, ab))
                in maybe perPlayer (\n -> concat (List.genericReplicate n perPlayer)) (countersRemovedOccurrences oid cond event)
             -- CR 603.2c's key, for `oncePerBatch` below: which ability of which
             -- bearer this pending trigger came from, or Nothing when the condition
@@ -2487,7 +2487,7 @@ inherentTriggers held events gs =
               TriggerSource.Sourceless -> Map.empty
             pend logged = PendingTrigger.MkPendingTrigger source you ability (eventBindingsOver board gs Nothing Map.empty bearer you cond (LoggedEvent.event logged)) Nothing (Just logged) 1 frozen
             key trigger = if batchScoped cond then Just (batchPartition cond (PendingTrigger.bindings trigger)) else Nothing
-         in oncePerBatch [(key trigger, trigger) | logged <- NonEmpty.toList block, let event = LoggedEvent.event logged, fires event, trigger <- stepCopies gs you cond event ability (pend logged)]
+         in oncePerBatch [(key trigger, trigger) | logged <- NonEmpty.toList block, let event = LoggedEvent.event logged, fires event, trigger <- stepCopies gs bearer you cond event ability (pend logged)]
    in concatMap (filter (interveningHolds gs) . forHeld) held
 
 -- CR 113.6m, read off a TRIGGERED ability: "an ability whose cost or effect

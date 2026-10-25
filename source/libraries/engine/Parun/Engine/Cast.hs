@@ -15,6 +15,7 @@ import qualified Parun.Engine.Card as Card
 import qualified Parun.Engine.Commander as Commander
 import qualified Parun.Engine.Condition as Condition
 import qualified Parun.Engine.Cost as Cost
+import qualified Parun.Engine.Count as Count
 import qualified Parun.Engine.Decide as Decide
 import qualified Parun.Engine.Event as Event
 import qualified Parun.Engine.Exile as Exile
@@ -1735,7 +1736,7 @@ controlsLegendaryCreatureOrPlaneswalker pid gs =
 printedRestrictionsOk :: PlayerId -> ObjectId -> CardName.CardName -> GameState -> Bool
 printedRestrictionsOk pid oid name gs = case proposedFace oid name gs of
   Nothing -> False
-  Just face -> not (Card.isLand face) && all (restrictionMet pid gs) (Face.castingRestrictions face)
+  Just face -> not (Card.isLand face) && all (restrictionMet pid oid gs) (Face.castingRestrictions face)
 
 -- The colour a printed "Spend only [colour] mana on X" confines the spell's X
 -- to (CastingRestriction.SpendOnlyOnX), read off the card as
@@ -1746,8 +1747,8 @@ xConfinement oid gs = do
   Maybe.listToMaybe [color | CastingRestriction.SpendOnlyOnX color <- Face.castingRestrictions face]
 
 -- Does the game state satisfy this one printed clause?
-restrictionMet :: PlayerId -> GameState -> CastingRestriction.CastingRestriction -> Bool
-restrictionMet pid gs restriction = case restriction of
+restrictionMet :: PlayerId -> ObjectId -> GameState -> CastingRestriction.CastingRestriction -> Bool
+restrictionMet pid oid gs restriction = case restriction of
   -- CR 500.1's phases and steps: Turn.inWindow asks whether GameState.phase
   -- falls inside the window the rider names. CONTAINMENT rather than equality,
   -- since a rider may name a phase that has steps; Necrologia names one step of
@@ -1765,7 +1766,7 @@ restrictionMet pid gs restriction = case restriction of
   -- (CR 307.5).
   CastingRestriction.DuringPhase (DuringPhase.MkDuringPhase window scope) ->
     Turn.inWindow window (GameState.phase gs)
-      && Turn.turnScopeAdmits gs scope (GameState.activePlayer gs) pid
+      && Turn.turnScopeAdmits named gs scope (GameState.activePlayer gs) pid
   -- CR 508.3b's question, and it lives in Parun.Engine.Turn because the ability
   -- side's clause of the same name asks exactly it: one question about the combat
   -- record, two gates that differ in what ELSE they may read (CR 307.5).
@@ -1780,9 +1781,12 @@ restrictionMet pid gs restriction = case restriction of
   -- side's arm of this name by CR 506.7g, says why it reads the turn's log.
   CastingRestriction.BeforeStep target -> Turn.beforeStep target gs
   -- CR 102.1 alone: DuringPhase's second conjunct with no window.
-  CastingRestriction.DuringTurn scope -> Turn.turnScopeAdmits gs scope (GameState.activePlayer gs) pid
+  CastingRestriction.DuringTurn scope -> Turn.turnScopeAdmits named gs scope (GameState.activePlayer gs) pid
   -- A payment rule, not a gate: `xConfinement` hands it to Cost.confineX.
   CastingRestriction.SpendOnlyOnX _ -> True
+  where
+    -- CR 102.1: the seats a TurnScope.PlayersTurn names, read from the spell.
+    named = Count.scopePlayers (Projection.viewWithLastKnownAnywhere gs) (Projection.sourceContext gs (Just pid) oid) gs
 
 -- CR 709.3a / 715.3a: the half being cast, RECORDED ON THE OBJECT, so that every
 -- characteristic read of it resolves through Game.resolveFace to that half alone

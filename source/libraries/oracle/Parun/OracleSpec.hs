@@ -319,6 +319,10 @@ spec s = Spec.describe s "Parun.Oracle" $ do
     Spec.assertEq s (Just (Text.pack "At the beginning of combat on your turn, you gain 1 life.")) (Oracle.render (at (Phase.Combat CombatStep.BeginningOfCombat) TurnScope.ControllersTurn [gainLife 1]))
     Spec.assertEq s [[Text.pack "At the beginning of each end step, sacrifice Spark.", Text.pack "At the beginning of the end step, sacrifice Spark.", Text.pack "At the beginning of each player's end step, sacrifice Spark."]] (Oracle.abilities (at end TurnScope.EachTurn [sacrifice]))
     Spec.assertEq s (Just (Text.pack "At the beginning of each opponent's end step, Spark deals 1 damage to that player.")) (Oracle.render (at end TurnScope.OpponentsTurn [damage [(thatPlayer, 1)]]))
+    -- Soul Bleed's named player, read off the source slot.
+    let hostController = TurnScope.PlayersTurn (PlayerRef.ControllerOfHostOfBound (SlotName.MkSlotName (Text.pack "self")))
+    Spec.assertEq s (Just (Text.pack "At the beginning of the upkeep of enchanted creature's controller, that player draws a card.")) (Oracle.render (at upkeep hostController [draw (PlayerRef.InSlot thatPlayer) 1]))
+    Spec.assertEq s (Just (Text.pack "At the beginning of the end step of enchanted creature's controller, Spark deals 1 damage to that player.")) (Oracle.render (at end hostController [damage [(thatPlayer, 1)]]))
 
   -- CR 508.3a / 509.3a / 510.1: the source's combat events, which can recur
   -- and so open with "Whenever", or "When" on a source that destroys itself

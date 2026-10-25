@@ -78,7 +78,7 @@ holds viewOf context gs oid condition =
         -- perspective only a scope naming no player can hold.
         Condition.Type.During (DuringPhase.MkDuringPhase window scope) ->
           Turn.inWindow window (GameState.phase gs)
-            && maybe (scope == TurnScope.EachTurn) (Turn.turnScopeAdmits gs scope (GameState.activePlayer gs)) (Filter.perspective context)
+            && maybe (scope == TurnScope.EachTurn) (Turn.turnScopeAdmits (Count.scopePlayers viewOf context gs) gs scope (GameState.activePlayer gs)) (Filter.perspective context)
 
 -- CR 107.3m: the amounts a triggered ability's condition may read off the spell
 -- that became its source. Seeded into Filter.Context's boundAmounts by CR 603.4's

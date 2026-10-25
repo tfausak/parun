@@ -60,6 +60,12 @@ spec s = Spec.describe s "Parun.Codec.PlayerRef" $ do
       PlayerRef.codec
       PlayerRef.Candidate
       " {\"type\":\"Candidate\"} "
+  Spec.it s "ControllerOfHostOfBound" $
+    Common.assertCodec
+      s
+      PlayerRef.codec
+      (PlayerRef.ControllerOfHostOfBound (SlotName.MkSlotName (Text.pack "self")))
+      " {\"type\":\"ControllerOfHostOfBound\",\"value\":\"self\"} "
   Spec.it s "ControllerOfBound" $
     Common.assertCodec
       s
