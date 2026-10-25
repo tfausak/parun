@@ -86,7 +86,12 @@
                           "type": "IsToken"
                         },
                         {
-                          "type": "EnteredThisTurn"
+                          "type": "EnteredThisTurn",
+                          "value": {
+                            "to": {
+                              "type": "Battlefield"
+                            }
+                          }
                         }
                       ]
                     },

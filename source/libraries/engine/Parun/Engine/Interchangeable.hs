@@ -145,7 +145,7 @@ objects pcs gs a b =
           Filter.Engine.couldAttackThisTurn view,
           Filter.Engine.milledThisTurn view,
           Filter.Engine.dealtDamageThisTurn view,
-          Filter.Engine.enteredThisTurn view,
+          Filter.Engine.arrivalThisTurn view,
           Filter.Engine.crewedThisTurn view,
           Filter.Engine.convokedThisTurn view,
           Filter.Engine.saddledThisTurn view,

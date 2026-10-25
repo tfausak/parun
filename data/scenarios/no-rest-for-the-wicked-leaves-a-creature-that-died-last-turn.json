@@ -1,0 +1,18 @@
+{
+  "description": "CR 400.7 / 700.4: No Rest for the Wicked leaves a creature card that died on an earlier turn",
+  "note": "The Grizzly Bears die to Shock on alice's turn and the Llanowar Elves to another on bob's, and alice sacrifices No Rest for the Wicked in bob's upkeep: the Elves come back, proving it resolved, and the Bears, put there from the battlefield but not this turn, stay.",
+  "board": {"active": "alice", "step": "PrecombatMain", "seats": [{"name": "alice", "battlefield": [{"card": "No Rest for the Wicked", "label": "nr"}, {"card": "Grizzly Bears", "label": "bears"}, {"card": "Llanowar Elves", "label": "elves"}, {"card": "Mountain", "label": "m1"}, {"card": "Mountain", "label": "m2"}], "hand": [{"card": "Shock", "label": "shock1"}, {"card": "Shock", "label": "shock2"}], "library": [{"card": "Island"}, {"card": "Island"}, {"card": "Island"}]}, {"name": "bob", "library": [{"card": "Forest"}, {"card": "Forest"}, {"card": "Forest"}]}]},
+  "timeline": [
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "do": {"Cast": {"object": "$shock1", "targets": ["$bears"], "mana": ["$m1", null]}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "do": "Pass"},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "check": {"Count": {"player": "alice", "zone": "Graveyard", "card": "Grizzly Bears", "count": 1}}},
+    {"turn": 2, "step": "Upkeep", "player": "alice", "do": {"Cast": {"object": "$shock2", "targets": ["$elves"], "mana": ["$m2"]}}},
+    {"turn": 2, "step": "Upkeep", "player": "alice", "do": "Pass"},
+    {"turn": 2, "step": "Upkeep", "player": "alice", "check": {"Count": {"player": "alice", "zone": "Graveyard", "card": "Llanowar Elves", "count": 1}}},
+    {"turn": 2, "step": "Upkeep", "player": "alice", "do": {"Activate": {"object": "$nr", "ability": 0}}},
+    {"turn": 2, "step": "Upkeep", "player": "alice", "do": "Pass"},
+    {"turn": 2, "step": "Upkeep", "player": "alice", "check": {"Count": {"player": "alice", "zone": "Hand", "card": "Grizzly Bears", "count": 0}}},
+    {"turn": 2, "step": "Upkeep", "player": "alice", "check": {"Count": {"player": "alice", "zone": "Graveyard", "card": "Grizzly Bears", "count": 1}}},
+    {"turn": 2, "step": "Upkeep", "player": "alice", "check": {"Count": {"player": "alice", "zone": "Hand", "card": "Llanowar Elves", "count": 1}}}
+  ]
+}

@@ -294,6 +294,7 @@ import qualified Parun.Codec.EmergeSpec
 import qualified Parun.Codec.EmperorsSpec
 import qualified Parun.Codec.EndTurnSignalSpec
 import qualified Parun.Codec.EndingStepSpec
+import qualified Parun.Codec.EnteredZoneSpec
 import qualified Parun.Codec.EnteringTogetherSpec
 import qualified Parun.Codec.EntersWithSpec
 import qualified Parun.Codec.EntrantSpec
@@ -1197,6 +1198,7 @@ spec s registry = do
   Parun.Codec.DurationSpec.spec s
   Parun.Codec.DuringPhaseSpec.spec s
   Parun.Codec.EachCardFromAmongSpec.spec s
+  Parun.Codec.EnteredZoneSpec.spec s
   Parun.Codec.FromAnywhereSpec.spec s
   Parun.Codec.EachCardInGraveyardSpec.spec s
   Parun.Codec.EachCardInExiledPileSpec.spec s

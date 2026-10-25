@@ -934,6 +934,31 @@ spec s registry = Spec.describe s "Meld" $ do
         -- graveyard, so the Township really did split into two.
         Spec.assertEqWith s "setup: the Township and one Piker are three cards in the graveyard" (length (graveyardNames two)) 3
         Spec.assertEqWith s "setup: and with the second Piker, four" (length (graveyardNames three)) 4
+  -- CR 712.21 with CR 700.4: each card of a dead melded permanent was put into
+  -- the graveyard from the battlefield this turn, the arrival after the leading
+  -- one included (GameEvent.CardArrived). No Rest for the Wicked returns the
+  -- creature card, Hanweir Garrison, and leaves the land card, Hanweir
+  -- Battlements. CR 712.21a's arrangement [1, 0] is the discriminating one: it
+  -- puts the Battlements down first and leaves the Garrison trailing. [0, 1] is
+  -- the leading-card control beside it.
+  Spec.it s "CR 712.21 No Rest for the Wicked finds a melded permanent's creature card" $ do
+    battlements <- S.printingOf s registry "Hanweir Battlements"
+    garrison <- S.printingOf s registry "Hanweir Garrison"
+    mountain <- S.printingOf s registry "Mountain"
+    noRest <- S.printingOf s registry "No Rest for the Wicked"
+    let (noRestId, base) = S.addPermanent noRest S.alice (Setup.emptyGame S.bothPlayers)
+        (mMelded, board) = meldedThrough base battlements garrison mountain
+        handNames gs = Maybe.mapMaybe (\oid -> fmap S.nameOf (Game.cardOf oid gs)) (Game.zoneMembers Zone.Hand S.alice gs)
+    case (mMelded, Projection.abilitiesOf noRestId board) of
+      (Just meldedId, [ability]) -> do
+        let dead order = S.runPure (ordering order) board (Event.destroy Regenerability.Regenerable [meldedId])
+            after order = S.runPure S.identityAnswer (dead order) (do Activate.activateAbility S.alice noRestId ability; Stack.resolveTop)
+        Spec.assertEqWith s "CR 712.21 / 700.4 the trailing Garrison returns to alice's hand" (handNames (after [1, 0])) [S.printingName garrison]
+        Spec.assertEqWith s "and so does the leading one, on the other arrangement" (handNames (after [0, 1])) [S.printingName garrison]
+        Spec.assertEqWith s "and the Battlements, a land card, stay" (List.sort (graveyardNames (after [1, 0]))) (List.sort [S.printingName battlements, S.printingName noRest])
+        Spec.assertEqWith s "setup: both cards reached her graveyard" (List.sort (graveyardNames (dead [1, 0]))) (List.sort [S.printingName battlements, S.printingName garrison])
+      (Nothing, _) -> Spec.assertFailure s "expected the melding ability to put one permanent onto the battlefield"
+      (_, other) -> Spec.assertFailure s ("expected one ability on No Rest for the Wicked, got " <> show (length other))
   -- CR 712.21c: "If an effect can find the new object that a melded permanent
   -- becomes as it leaves the battlefield, it finds both cards. (See rule 400.7.)
   -- If that effect causes actions to be taken upon those cards, the same actions
