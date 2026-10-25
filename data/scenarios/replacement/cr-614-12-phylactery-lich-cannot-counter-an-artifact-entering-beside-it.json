@@ -1,0 +1,147 @@
+{
+  "description": "CR 614.12 an artifact entering beside the Lich can't take its phylactery counter, so the Lich is sacrificed",
+  "note": "Rise of the Dark Realms returns the Lich and Ornithopter in one event. Paired with the scenario where Ornithopter is already on the battlefield: the only difference is when Ornithopter arrived.",
+  "board": {
+    "seats": [
+      {
+        "name": "alice",
+        "battlefield": [
+          {
+            "card": "Swamp",
+            "label": "s1",
+            "ready": true
+          },
+          {
+            "card": "Swamp",
+            "label": "s2",
+            "ready": true
+          },
+          {
+            "card": "Swamp",
+            "label": "s3",
+            "ready": true
+          },
+          {
+            "card": "Swamp",
+            "label": "s4",
+            "ready": true
+          },
+          {
+            "card": "Swamp",
+            "label": "s5",
+            "ready": true
+          },
+          {
+            "card": "Swamp",
+            "label": "s6",
+            "ready": true
+          },
+          {
+            "card": "Swamp",
+            "label": "s7",
+            "ready": true
+          },
+          {
+            "card": "Swamp",
+            "label": "s8",
+            "ready": true
+          },
+          {
+            "card": "Swamp",
+            "label": "s9",
+            "ready": true
+          }
+        ],
+        "hand": [
+          {
+            "card": "Rise of the Dark Realms",
+            "label": "rise"
+          }
+        ],
+        "graveyard": [
+          {
+            "card": "Phylactery Lich"
+          },
+          {
+            "card": "Ornithopter"
+          }
+        ]
+      },
+      {
+        "name": "bob"
+      }
+    ],
+    "active": "alice",
+    "step": "PrecombatMain"
+  },
+  "timeline": [
+    {
+      "turn": 1,
+      "step": "PrecombatMain",
+      "player": "alice",
+      "do": {
+        "Cast": {
+          "object": "$rise",
+          "mana": [
+            "$s1",
+            "$s2",
+            "$s3",
+            "$s4",
+            "$s5",
+            "$s6",
+            "$s7",
+            "$s8",
+            "$s9"
+          ]
+        }
+      }
+    },
+    {
+      "turn": 1,
+      "step": "PrecombatMain",
+      "player": "alice",
+      "do": {
+        "OrderTimestamps": [
+          "Phylactery Lich",
+          "Ornithopter"
+        ]
+      }
+    }
+  ],
+  "final": [
+    {
+      "Counters": {
+        "object": "Ornithopter",
+        "kind": {
+          "type": "Named",
+          "value": "phylactery"
+        },
+        "count": 0
+      }
+    },
+    {
+      "Count": {
+        "player": "alice",
+        "zone": "Battlefield",
+        "card": "Ornithopter",
+        "count": 1
+      }
+    },
+    {
+      "Count": {
+        "player": "alice",
+        "zone": "Battlefield",
+        "card": "Phylactery Lich",
+        "count": 0
+      }
+    },
+    {
+      "Count": {
+        "player": "alice",
+        "zone": "Graveyard",
+        "card": "Phylactery Lich",
+        "count": 1
+      }
+    }
+  ]
+}
