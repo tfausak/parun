@@ -550,27 +550,46 @@ joined context predicates = case predicates of
           -- X defined once (Graveborn Muse's "you draw X cards and lose X life,
           -- where X is the number of Zombies you control").
           <> [ (Prose.sentence (clauseText p {verb = vp} <> Text.pack " and " <> vq <> Text.pack ", where X is " <> e) <> trailing q, allMentions p <> mentions q)
-             | Just (vp, e) <- [equalToX (verb p)],
-               Just (vq, e') <- [equalToX (verb q)],
-               e == e'
+             | (vp, vq, e) <- sharedX
              ]
     -- Free: two sentences (Afterlife Insurance) or "and" (Bad Deal).
-    | implied p || implied q -> apart <> together
+    | implied p || implied q -> apart <> together <> togetherX
     -- Free: "and" (Vampiric Feast) or two sentences (Soul Shred).
-    | otherwise -> together <> apart
+    | otherwise -> together <> apart <> togetherX
     where
       together = [(Prose.sentence (clauseText p <> Text.pack " and " <> clauseText q) <> trailing q, allMentions p <> allMentions q)]
       apart = [(text, allMentions p <> allMentions q) | text <- followedBy context (sentences p) (sentences q)]
+      -- Free for one count read by two subjects: "equal to" each time, above,
+      -- or one X defined once (Tendrils of Corruption's "deals X damage to
+      -- target creature and you gain X life, where X is the number of Swamps
+      -- you control").
+      togetherX =
+        [ (Prose.sentence (clauseText p {verb = vp} <> Text.pack " and " <> clauseText q {verb = vq} <> Text.pack ", where X is " <> e) <> trailing q, allMentions p <> allMentions q)
+        | (vp, vq, e) <- sharedX
+        ]
+      sharedX = ListUtils.nubOrd [(vp, vq, e) | (vp, e) <- equalToX (verb p), (vq, e') <- equalToX (verb q), e == e']
   _ -> []
 
 -- | A verb ending "NOUN equal to E" as "X NOUN" and E: "draw cards equal to
--- the number of ..." is "draw X cards" where X is that number (CR 107.3).
-equalToX :: Text.Text -> Maybe (Text.Text, Text.Text)
+-- the number of ..." is "draw X cards" where X is that number (CR 107.3). A
+-- verb "deals damage equal to E to R" is "deals X damage to R", for each way
+-- of reading the words after "equal to" as E and R.
+equalToX :: Text.Text -> [(Text.Text, Text.Text)]
 equalToX v =
   let (before, rest) = Text.breakOn (Text.pack " equal to ") v
    in case (Text.stripPrefix (Text.pack " equal to ") rest, reverse (Text.words before)) of
-        (Just e, noun : verbs@(_ : _)) | not (Text.null e) -> Just (Text.unwords (reverse verbs <> [Text.pack "X", noun]), e)
-        _ -> Nothing
+        (Just e, noun : verbs@(_ : _))
+          | not (Text.null e) ->
+              (Text.unwords (reverse verbs <> [Text.pack "X", noun]), e)
+                : [ (Text.unwords (reverse verbs <> [Text.pack "X", noun]) <> Text.pack " to " <> recipients, amount)
+                  | noun == Text.pack "damage",
+                    (amount, recipients) <- splits e,
+                    not (Text.null amount),
+                    not (Text.null recipients)
+                  ]
+        _ -> []
+  where
+    splits e = [(Text.intercalate (Text.pack " to ") a, Text.intercalate (Text.pack " to ") b) | let parts = Text.splitOn (Text.pack " to ") e, n <- [1 .. length parts - 1], let (a, b) = splitAt n parts]
 
 -- | Whether two predicates have one subject, so the second can drop it.
 sameSubject :: Predicate -> Predicate -> Bool

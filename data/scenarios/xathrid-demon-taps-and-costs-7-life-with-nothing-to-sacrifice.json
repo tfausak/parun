@@ -1,0 +1,12 @@
+{
+  "description": "CR 701.21a Xathrid Demon, with no other creature to sacrifice, taps and its controller loses 7 life",
+  "note": "Paired with xathrid-demon-drains-each-opponent-by-the-sacrificed-creature-s-power; alice's only other permanent is a land.",
+  "board": {"active": "carol", "step": "EndStep", "seats": [{"name": "alice", "battlefield": [{"card": "Xathrid Demon", "label": "demon"}, {"card": "Swamp"}], "library": [{"card": "Island"}, {"card": "Island"}, {"card": "Island"}]}, {"name": "bob", "life": 18, "library": [{"card": "Island"}, {"card": "Island"}, {"card": "Island"}]}, {"name": "carol", "life": 16, "library": [{"card": "Island"}, {"card": "Island"}, {"card": "Island"}]}]},
+  "timeline": [
+    {"turn": 2, "step": "Upkeep", "player": "alice", "do": "Pass"},
+    {"turn": 2, "step": "Upkeep", "player": "alice", "check": {"Life": {"player": "alice", "life": 13}}},
+    {"turn": 2, "step": "Upkeep", "player": "alice", "check": {"Tapped": {"object": "$demon", "tapped": true}}},
+    {"turn": 2, "step": "Upkeep", "player": "alice", "check": {"Life": {"player": "bob", "life": 18}}},
+    {"turn": 2, "step": "Upkeep", "player": "alice", "check": {"Count": {"player": "alice", "zone": "Battlefield", "card": "Xathrid Demon", "count": 1}}}
+  ]
+}

@@ -1,0 +1,15 @@
+{
+  "description": "CR 701.21a Xathrid Demon has its controller sacrifice another creature at upkeep, and each opponent loses life equal to its power",
+  "note": "Paired with xathrid-demon-taps-and-costs-7-life-with-nothing-to-sacrifice. The Demon is never offered; alice chooses the Hill Giant over the Grizzly Bears, so each opponent loses 3, not 2.",
+  "board": {"active": "carol", "step": "EndStep", "seats": [{"name": "alice", "battlefield": [{"card": "Xathrid Demon", "label": "demon"}, {"card": "Grizzly Bears", "label": "bears"}, {"card": "Hill Giant", "label": "giant"}], "library": [{"card": "Island"}, {"card": "Island"}, {"card": "Island"}]}, {"name": "bob", "life": 18, "library": [{"card": "Island"}, {"card": "Island"}, {"card": "Island"}]}, {"name": "carol", "life": 16, "library": [{"card": "Island"}, {"card": "Island"}, {"card": "Island"}]}]},
+  "timeline": [
+    {"turn": 2, "step": "Upkeep", "player": "alice", "do": "Pass"},
+    {"turn": 2, "step": "Upkeep", "player": "alice", "refuse": {"Answer": {"prompt": "ChooseSacrifices", "with": ["$demon"]}}},
+    {"turn": 2, "step": "Upkeep", "player": "alice", "do": {"Answer": {"prompt": "ChooseSacrifices", "with": ["$giant"]}}},
+    {"turn": 2, "step": "Upkeep", "player": "alice", "check": {"Life": {"player": "bob", "life": 15}}},
+    {"turn": 2, "step": "Upkeep", "player": "alice", "check": {"Life": {"player": "carol", "life": 13}}},
+    {"turn": 2, "step": "Upkeep", "player": "alice", "check": {"Life": {"player": "alice", "life": 20}}},
+    {"turn": 2, "step": "Upkeep", "player": "alice", "check": {"Tapped": {"object": "$demon", "tapped": false}}},
+    {"turn": 2, "step": "Upkeep", "player": "alice", "check": {"Count": {"player": "alice", "zone": "Battlefield", "card": "Grizzly Bears", "count": 1}}}
+  ]
+}
