@@ -5580,6 +5580,7 @@ finalityOf oid gs =
                   ZoneChangePattern.whoseObject = ControllerRelation.Related PlayerRelation.AnyPlayer,
                   ZoneChangePattern.whatObject = Filter.Type.IsSource,
                   ZoneChangePattern.whenDiscarded = Nothing,
+                  ZoneChangePattern.causedBy = Nothing,
                   ZoneChangePattern.duringResolution = False
                 }
               Zone.Exile

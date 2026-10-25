@@ -1,0 +1,11 @@
+{
+  "description": "CR 120.2a / 510.2: alice's Grizzly Bears' combat damage to bob does not pump her Chandra's Spitfire",
+  "note": "The twin of the board where alice's Shock hits bob, with combat damage in place of the Shock's: bob is still dealt damage, but not noncombat damage.",
+  "board": {"active": "alice", "step": "PrecombatMain", "seats": [{"name": "alice", "manaPool": "R", "library": [{"card": "Island"}, {"card": "Island"}, {"card": "Island"}], "battlefield": [{"card": "Chandra's Spitfire", "label": "spitfire", "ready": true}, {"card": "Grizzly Bears", "label": "bears", "ready": true}], "hand": [{"card": "Shock", "label": "shock"}]}, {"name": "bob", "library": [{"card": "Island"}, {"card": "Island"}, {"card": "Island"}]}]},
+  "timeline": [
+    {"turn": 1, "step": "DeclareAttackers", "player": "alice", "do": {"Attack": ["$bears"]}},
+    {"turn": 1, "step": "EndOfCombat", "player": "alice", "check": {"PowerToughness": {"object": "$spitfire", "power": 1, "toughness": 3}}},
+    {"turn": 1, "step": "EndOfCombat", "player": "alice", "check": {"View": {"of": "Stack", "is": []}}},
+    {"turn": 1, "step": "EndOfCombat", "player": "alice", "check": {"Life": {"player": "bob", "life": 18}}}
+  ]
+}

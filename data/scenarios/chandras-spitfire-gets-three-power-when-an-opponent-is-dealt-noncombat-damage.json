@@ -1,0 +1,14 @@
+{
+  "description": "CR 120.2b / 603.2c whole card: alice's Shock to bob pumps her Chandra's Spitfire to 4/3",
+  "note": "Shock deals 2 once, so the Spitfire triggers once and gets +3/+0, not +6/+0. The twins change only the damage: alice's Shock to her own face, and her Grizzly Bears' combat damage to bob.",
+  "board": {"active": "alice", "step": "PrecombatMain", "seats": [{"name": "alice", "manaPool": "R", "library": [{"card": "Island"}, {"card": "Island"}, {"card": "Island"}], "battlefield": [{"card": "Chandra's Spitfire", "label": "spitfire", "ready": true}, {"card": "Grizzly Bears", "label": "bears", "ready": true}], "hand": [{"card": "Shock", "label": "shock"}]}, {"name": "bob", "library": [{"card": "Island"}, {"card": "Island"}, {"card": "Island"}]}]},
+  "timeline": [
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "do": {"Cast": {"object": "$shock", "targets": ["$bob"]}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "do": "Pass"},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "check": {"View": {"of": "Stack", "is": ["trigger of $spitfire"]}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "do": "Pass"},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "check": {"PowerToughness": {"object": "$spitfire", "power": 4, "toughness": 3}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "check": {"View": {"of": "Stack", "is": []}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "check": {"Life": {"player": "bob", "life": 18}}}
+  ]
+}

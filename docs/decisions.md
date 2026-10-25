@@ -457,8 +457,9 @@ Entries are ordered by the first rule each cites.
 
 ## What a spell or ability causes
 
-- **Question**: Sacred Ground and Spiritual Focus watch for "a spell or
-  ability an opponent controls causes" a move or a discard. Does a cost paid
+- **Question**: Sacred Ground, Spiritual Focus and Obstinate Baloth watch for
+  "a spell or ability an opponent controls causes" a move or a discard. Does a
+  cost paid
   for it count, a CR 118.12 cost paid as it resolves, or the state-based
   action that follows its damage?
 - **Rules**: CR 609.1, 118.12, 601.2h, 602.2b, 704.3; CR of 2026-08-07.
@@ -471,10 +472,10 @@ Entries are ordered by the first rule each cites.
   make a stolen land sacrificed to its controller's cost count; and crediting
   a state-based action to the spell whose damage led to it, which CR 704.3
   performs on its own when a player would receive priority.
-- **Site**: `Parun.Engine.Event.causedBy` and `causeNow`,
+- **Site**: `Parun.Engine.Event.causedBy`, `Parun.Engine.Game.causeNow`,
   `Parun.Engine.Resolve.Effect.applyEffectWith` and
-  `Parun.Engine.Cost.payComponent`, proved by the `sacred-ground-*` and
-  `spiritual-focus-*` scenarios.
+  `Parun.Engine.Cost.payComponent`, proved by the `sacred-ground-*`,
+  `spiritual-focus-*` and `obstinate-baloth-*` scenarios.
 - **Issue**: #5530.
 
 ## Whether "if you can't" holds after doing part of an instruction

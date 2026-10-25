@@ -7882,7 +7882,7 @@ changeZoneWithCause discarded asOf batch oid requestedDest requestedPosition see
                   Monad.when (fromZone == Zone.Battlefield) $
                     Monad.forM_ (Object.attachedTo obj) (unattach oid)
                   seenArriving <- State.gets (Visibility.seenByEveryone newId)
-                  causer <- State.gets causeNow
+                  causer <- State.gets Game.causeNow
                   State.modify'
                     . recordEvent
                     . GameEvent.Moved
@@ -9096,7 +9096,7 @@ recordMintedEntry newId = do
   let snapshot = Projection.project newId placed
   -- Moved.revealed is read by no look-back here: none reaches a battlefield
   -- destination (Event.Trigger.looksBack), so the public origin answers.
-  State.modify' (recordEvent (GameEvent.Moved ((Moved.moved (ZoneChange.MkZoneChange newId newId Zone.Battlefield Zone.Battlefield) snapshot) {Moved.revealed = True, Moved.seenArriving = Visibility.seenByEveryone newId placed, Moved.causedBy = causeNow placed})))
+  State.modify' (recordEvent (GameEvent.Moved ((Moved.moved (ZoneChange.MkZoneChange newId newId Zone.Battlefield Zone.Battlefield) snapshot) {Moved.revealed = True, Moved.seenArriving = Visibility.seenByEveryone newId placed, Moved.causedBy = Game.causeNow placed})))
 
 -- CR 701.42a: meld these cards -- "put them onto the battlefield with their back
 -- faces up and combined. The resulting permanent is a single object represented by
@@ -9237,7 +9237,7 @@ meld controller victims resultCard = do
           -- Moved.revealed is read by no look-back here: none reaches a
           -- battlefield destination (Event.Trigger.looksBack), so the origin's
           -- zone answers.
-          entry = (Moved.moved (ZoneChange.MkZoneChange (fst (NonEmpty.head melding)) newId origin Zone.Battlefield) snapshot) {Moved.otherDepartures = Seq.fromList (fmap fst (NonEmpty.tail melding)), Moved.revealed = not (Game.isHiddenZone origin), Moved.seenArriving = Visibility.seenByEveryone newId placed, Moved.causedBy = causeNow placed}
+          entry = (Moved.moved (ZoneChange.MkZoneChange (fst (NonEmpty.head melding)) newId origin Zone.Battlefield) snapshot) {Moved.otherDepartures = Seq.fromList (fmap fst (NonEmpty.tail melding)), Moved.revealed = not (Game.isHiddenZone origin), Moved.seenArriving = Visibility.seenByEveryone newId placed, Moved.causedBy = Game.causeNow placed}
       State.modify' (recordEvent (GameEvent.Moved entry))
       pure (Just newId)
 
@@ -10054,15 +10054,6 @@ causedBy controller body = do
   State.modify' (\g -> g {GameState.causing = saved})
   pure result
 
--- CR 609.1: the cause a move or a discard made now records -- the controller
--- of the spell or ability whose effect is being performed, and Nothing for CR
--- 118.12's "[do something]", which is a cost and not an effect (Library of
--- Leng's ruling). See docs/decisions.md, "What a spell or ability causes".
-causeNow :: GameState -> Maybe PlayerId
-causeNow gs
-  | GameState.payingOnResolution gs = Nothing
-  | otherwise = GameState.causing gs
-
 -- Why a resolving instruction's discard happens: ByEffect (CR 609.1), unless
 -- it is CR 118.12's cost (payingOnResolution) -- Library of Leng's ruling,
 -- "costs aren't effects". Parun.ZoneChangeSpec's Tweeze case proves it.
@@ -10121,7 +10112,7 @@ discardReturning cause pid oid = do
   -- the sequence never holds two here.
   Monad.forM_ moved $ \newId -> do
     applied <- madnessChoice pid newId (madnessOf newId)
-    causer <- State.gets causeNow
+    causer <- State.gets Game.causeNow
     State.modify' (recordEvent (GameEvent.Discarded (Discarded.MkDiscarded pid newId cause applied causer)))
   pure moved
 

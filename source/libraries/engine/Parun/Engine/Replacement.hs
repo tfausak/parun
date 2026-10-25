@@ -760,10 +760,14 @@ matchesPrinted viewOf gs event candidate =
         -- "instead of putting it anywhere else"; the destinations are not
         -- enumerated, so this is a Maybe rather than a set of zones. A pattern
         -- naming a DISCARD cause admits only a CR 701.9a discard of that cause
-        -- (Library of Leng's "if an effect causes you to discard").
+        -- (Library of Leng's "if an effect causes you to discard"). A pattern
+        -- naming a CAUSE admits only a move made as CR 609.1's effect of a
+        -- spell or ability, its controller read live (Game.causeNow) since the
+        -- move has not happened yet -- the one Moved.causedBy will record.
         (ReplacementEffect.ZoneChangeR (ZoneChangeR.MkZoneChangeR pat _ _ _ _ _), ProposedEvent.WouldChangeZone zc discarded _ resolving) ->
           maybe True (== ZoneChange.to zc) (ZoneChangePattern.whenDestination pat)
             && maybe True ((== discarded) . Just) (ZoneChangePattern.whenDiscarded pat)
+            && all (\relation -> maybe False (PlayerRelation.holdsFor (Game.teams gs) relation (ReplacementCandidate.controller candidate) . Just) (Game.causeNow gs)) (ZoneChangePattern.causedBy pat)
             && (resolving || not (ZoneChangePattern.duringResolution pat))
             && matchesZoneOwner gs candidate (ZoneChangePattern.whoseObject pat) (ZoneChange.object zc)
             && matchesFiltered viewOf gs candidate (ZoneChangePattern.whatObject pat) (ZoneChange.object zc)
@@ -4347,6 +4351,7 @@ installSpellMoveRow destination shuffling spellId caster gs =
                         -- Filter.IsSource, and for its reason.
                         ZoneChangePattern.whatObject = Filter.Type.IsSource,
                         ZoneChangePattern.whenDiscarded = Nothing,
+                        ZoneChangePattern.causedBy = Nothing,
                         ZoneChangePattern.duringResolution = False
                       }
                     destination

@@ -1125,6 +1125,7 @@ library codec
     Parun.Codec.PlayerIdSpec
     Parun.Codec.PlayerInstruction
     Parun.Codec.PlayerInstructionSpec
+    Parun.Codec.PlayerIsDealtDamage
     Parun.Codec.PlayerMeasure
     Parun.Codec.PlayerQuantity
     Parun.Codec.PlayerQuantitySpec
@@ -2865,6 +2866,7 @@ library types
     Parun.Types.PlayerEffect
     Parun.Types.PlayerId
     Parun.Types.PlayerInstruction
+    Parun.Types.PlayerIsDealtDamage
     Parun.Types.PlayerMeasure
     Parun.Types.PlayerQuantity
     Parun.Types.PlayerRef

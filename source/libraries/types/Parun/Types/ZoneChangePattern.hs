@@ -4,6 +4,7 @@ import qualified Parun.Types.ControllerRelation as ControllerRelation
 import qualified Parun.Types.DiscardCause as DiscardCause
 import qualified Parun.Types.Filter as Filter
 import qualified Parun.Types.Keyword as Keyword
+import qualified Parun.Types.PlayerRelation as PlayerRelation
 import qualified Parun.Types.Zone as Zone
 
 -- | CR 614.1a: which zone changes a redirect intercepts. Rest in Peace is
@@ -58,6 +59,11 @@ data ZoneChangePattern = MkZoneChangePattern
     -- an effect causes you to discard a card" is ByEffect, which its ruling
     -- parts from a discard paid as a cost. Nothing admits any move.
     whenDiscarded :: Maybe DiscardCause.DiscardCause,
+    -- | CR 609.1: admit only a move a spell or ability's effect makes, its
+    -- controller in this relation to the candidate's "you" -- Obstinate
+    -- Baloth's "a spell or ability an opponent controls causes". Nothing admits
+    -- any move, caused or not.
+    causedBy :: Maybe PlayerRelation.PlayerRelation,
     -- | CR 608.2n: admit only a spell's move as the last step of its own
     -- resolution -- Rod of Absorption's "instead of putting it into a graveyard
     -- as it resolves", which a countered spell (CR 701.6a) and one that doesn't

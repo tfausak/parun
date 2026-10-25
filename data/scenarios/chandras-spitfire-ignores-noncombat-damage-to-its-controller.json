@@ -1,0 +1,11 @@
+{
+  "description": "CR 603.2 / 109.5: alice's Shock to her own face does not pump her Chandra's Spitfire",
+  "note": "The twin of the board where the Shock hits bob, with only the target changed: alice is no opponent of hers. The power is read at the beginning of combat, after any trigger would have resolved.",
+  "board": {"active": "alice", "step": "PrecombatMain", "seats": [{"name": "alice", "manaPool": "R", "library": [{"card": "Island"}, {"card": "Island"}, {"card": "Island"}], "battlefield": [{"card": "Chandra's Spitfire", "label": "spitfire", "ready": true}, {"card": "Grizzly Bears", "label": "bears", "ready": true}], "hand": [{"card": "Shock", "label": "shock"}]}, {"name": "bob", "library": [{"card": "Island"}, {"card": "Island"}, {"card": "Island"}]}]},
+  "timeline": [
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "do": {"Cast": {"object": "$shock", "targets": ["$alice"]}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "do": "Pass"},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "check": {"Life": {"player": "alice", "life": 18}}},
+    {"turn": 1, "step": "BeginningOfCombat", "player": "alice", "check": {"PowerToughness": {"object": "$spitfire", "power": 1, "toughness": 3}}}
+  ]
+}

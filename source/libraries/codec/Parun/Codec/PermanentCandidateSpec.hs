@@ -28,6 +28,7 @@ effect =
             ZoneChangePattern.whatObject = Filter.And [],
             ZoneChangePattern.whoseObject = ControllerRelation.Related PlayerRelation.AnyPlayer,
             ZoneChangePattern.whenDiscarded = Nothing,
+            ZoneChangePattern.causedBy = Nothing,
             ZoneChangePattern.duringResolution = False
           }
         Zone.Exile
