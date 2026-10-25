@@ -1,14 +1,16 @@
 module Parun.Types.ManaProduction where
 
 import qualified Parun.Types.CouldProduce as CouldProduce
+import qualified Parun.Types.ManaCount as ManaCount
 import qualified Parun.Types.ManaType as ManaType
 
 -- | CR 106.3: how an AddMana effect decides WHICH mana it puts into the pool.
 -- One fixed type -- Llanowar Elves' "Add {G}"; one mana of a colour the producing
 -- player chooses (Birds of Paradise), which CR 105.4 restricts to the five
 -- colours, never colourless; the colour an earlier linked ability chose
--- (Coldsteel Heart); the snow mana symbol CR 106.11 rewrites; or the mana an
--- earlier linked ability noted (Ice Cauldron).
+-- (Coldsteel Heart); the snow mana symbol CR 106.11 rewrites; the mana an
+-- earlier linked ability noted (Ice Cauldron); or as much again as a pool
+-- holds (Doubling Cube).
 --
 -- Data hanging off the one AddMana opcode rather than a second opcode: "add one
 -- mana" is a single instruction, and what varies is a payload saying how its type
@@ -56,4 +58,7 @@ data ManaProduction
     Noted
   | -- | CR 106.7: a type other permanents could produce (Star Compass).
     CouldProduce CouldProduce.CouldProduce
+  | -- | CR 701.10f: as much of each type as the counted pool holds, doubling
+    -- it (Doubling Cube).
+    Pooled ManaCount.ManaCount
   deriving (Eq, Ord, Show)

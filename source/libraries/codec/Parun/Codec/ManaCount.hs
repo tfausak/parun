@@ -10,7 +10,8 @@ import qualified Parun.Types.ManaCount as ManaCount
 
 -- | A BARE OBJECT keyed by the record's field names, the shape every
 -- single-constructor record in this codec writes. The tag that picks it is
--- written by Parun.Codec.Quantity's ManaCount arm, this codec's only caller.
+-- written by its callers, Parun.Codec.Quantity's ManaCount arm and
+-- Parun.Codec.ManaProduction's Pooled arm.
 codec :: Codec.Codec ManaCount.ManaCount
 codec = Fields.object $ do
   player <- Fields.required "player" PlayerRef.codec ManaCount.player

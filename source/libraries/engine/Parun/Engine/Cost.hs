@@ -6049,11 +6049,14 @@ tapForManaWith perform window inFlight refused activator oid = do
               -- among is a candidate, so a colour choice the offer collapsed is
               -- asked now -- Food Chain's colour (Parun.ManaSpec's Food Chain
               -- group) -- and a yield the slots leave unchanged asks nothing.
+              -- Its pools are read off gsPaid, the pool the payment LEFT, which
+              -- is what CR 701.10f's doubling reads: Doubling Cube's {3} paid
+              -- from the pool shrinks what it doubles.
               --
               -- Not implemented: the slots reaching CR 405.6c's other effects,
               -- which run with none of them -- see `perform` below (#4850).
               gsPaid <- State.get
-              let pricedAlike = [priced | (offered, priced) <- Mana.manaRepricingsGiven paid Map.empty oid gs, List.elem offered alike]
+              let pricedAlike = [priced | (offered, priced) <- Mana.manaRepricingsGiven paid gsPaid Map.empty oid gs, List.elem offered alike]
               pricedChosen <- case ListUtils.nubOrdOn ownPart pricedAlike of
                 route : routes -> chooseManaYield controller oid (route NonEmpty.:| routes) gsPaid
                 [] -> pure chosen

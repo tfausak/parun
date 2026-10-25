@@ -1,0 +1,9 @@
+{
+  "description": "CR 701.10f / 602.2b: Doubling Cube doubles the pool its own {3} left, not the pool it was activated from",
+  "note": "Alice's five red pay the {3} and the two left become four. Read before the cost, the pool would hold seven.",
+  "board": {"active": "alice", "step": "PrecombatMain", "seats": [{"name": "alice", "manaPool": "RRRRR", "battlefield": [{"card": "Doubling Cube", "label": "cube"}], "library": [{"card": "Island"}, {"card": "Island"}, {"card": "Island"}]}, {"name": "bob", "library": [{"card": "Island"}, {"card": "Island"}, {"card": "Island"}]}]},
+  "timeline": [
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "do": {"Take": {"action": "ActivateManaAbility $cube"}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "check": {"View": {"of": "ManaPool", "player": "alice", "is": [{"manaType": {"type": "Colored", "value": {"type": "Red"}}, "tags": [], "retention": {"type": "Ordinary"}, "restriction": null, "rider": null, "sourceChoices": null}, {"manaType": {"type": "Colored", "value": {"type": "Red"}}, "tags": [], "retention": {"type": "Ordinary"}, "restriction": null, "rider": null, "sourceChoices": null}, {"manaType": {"type": "Colored", "value": {"type": "Red"}}, "tags": [{"type": "Artifact"}], "retention": {"type": "Ordinary"}, "restriction": null, "rider": null, "sourceChoices": null}, {"manaType": {"type": "Colored", "value": {"type": "Red"}}, "tags": [{"type": "Artifact"}], "retention": {"type": "Ordinary"}, "restriction": null, "rider": null, "sourceChoices": null}]}}}
+  ]
+}
