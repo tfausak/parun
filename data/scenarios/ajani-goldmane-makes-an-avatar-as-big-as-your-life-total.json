@@ -1,0 +1,17 @@
+{
+  "description": "CR 604.3 Ajani Goldmane's -6 makes a white Avatar whose power and toughness are each its controller's life total",
+  "note": "Alice is at 13 and bob at 20, so the token reads its controller's life and not an opponent's; bolting alice to 10 shrinks it with her.",
+  "board": {"active": "alice", "step": "PrecombatMain", "seats": [
+    {"name": "alice", "life": 13, "manaPool": "R", "battlefield": [{"card": "Ajani Goldmane", "label": "ajani", "counters": [{"key": {"type": "Loyalty"}, "value": 7}]}], "hand": [{"card": "Lightning Bolt", "label": "bolt"}], "library": [{"card": "Island"}, {"card": "Island"}]},
+    {"name": "bob", "library": [{"card": "Island"}, {"card": "Island"}]}]},
+  "timeline": [
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "do": {"Activate": {"object": "$ajani", "ability": 2}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "do": "Pass"},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "check": {"Counters": {"object": "$ajani", "kind": {"type": "Loyalty"}, "count": 1}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "check": {"PowerToughness": {"object": "Avatar Token", "power": 13, "toughness": 13}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "check": {"View": {"of": "Colors", "object": "Avatar Token", "is": ["White"]}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "do": {"Cast": {"object": "$bolt", "targets": ["$alice"]}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "do": "Pass"},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "check": {"PowerToughness": {"object": "Avatar Token", "power": 10, "toughness": 10}}}
+  ]
+}

@@ -1,0 +1,20 @@
+{
+  "description": "CR 701.23b Haunting Echoes exiles a graveyard's nonbasic-land cards, then every card in that library sharing a name with one of them",
+  "note": "The graveyard's Forest is a basic land card and stays, so the library's Forest shares no exiled name and can't be found; nor can the Bears, whose name nothing exiled has.",
+  "board": {"active": "alice", "step": "PrecombatMain", "seats": [
+    {"name": "alice", "manaPool": "BBBBB", "hand": [{"card": "Haunting Echoes", "label": "echoes"}], "library": [{"card": "Island"}, {"card": "Island"}]},
+    {"name": "bob", "graveyard": [{"card": "Hill Giant"}, {"card": "Forest"}, {"card": "Lightning Bolt"}], "library": [{"card": "Hill Giant", "label": "lib-giant"}, {"card": "Lightning Bolt", "label": "lib-bolt"}, {"card": "Forest", "label": "lib-forest"}, {"card": "Grizzly Bears", "label": "lib-bears"}, {"card": "Island", "label": "lib-island"}]}]},
+  "timeline": [
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "do": {"Cast": {"object": "$echoes", "targets": ["$bob"]}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "do": "Pass"},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "refuse": {"Answer": {"prompt": "Search", "with": ["$lib-forest"]}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "refuse": {"Answer": {"prompt": "Search", "with": ["$lib-bears"]}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "do": {"Answer": {"prompt": "Search", "with": ["$lib-giant", "$lib-bolt"]}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "do": {"Answer": {"prompt": "Shuffle", "with": ["$lib-forest", "$lib-bears", "$lib-island"]}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "check": {"Count": {"player": "bob", "zone": "Exile", "card": "Hill Giant", "count": 2}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "check": {"Count": {"player": "bob", "zone": "Exile", "card": "Lightning Bolt", "count": 2}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "check": {"Count": {"player": "bob", "zone": "Graveyard", "card": "Forest", "count": 1}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "check": {"Count": {"player": "bob", "zone": "Library", "card": "Forest", "count": 1}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "check": {"Count": {"player": "bob", "zone": "Library", "card": "Grizzly Bears", "count": 1}}}
+  ]
+}

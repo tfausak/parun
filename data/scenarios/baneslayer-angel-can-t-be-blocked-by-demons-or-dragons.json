@@ -1,0 +1,15 @@
+{
+  "description": "CR 702.16b Baneslayer Angel can't be blocked by a Demon or a Dragon, and its lifelink gains its controller the damage it deals",
+  "note": "Lord of the Pit is a Demon and Shivan Dragon a Dragon, both fliers able to block a flier; Serra Angel is neither and may. Unblocked, the Angel deals 5 to bob and alice gains 5.",
+  "board": {"active": "alice", "step": "PrecombatMain", "seats": [
+    {"name": "alice", "battlefield": [{"card": "Baneslayer Angel", "label": "angel", "ready": true}], "library": [{"card": "Island"}, {"card": "Island"}]},
+    {"name": "bob", "battlefield": [{"card": "Lord of the Pit", "label": "demon", "ready": true}, {"card": "Shivan Dragon", "label": "dragon", "ready": true}, {"card": "Serra Angel", "label": "serra", "ready": true}], "library": [{"card": "Island"}, {"card": "Island"}]}]},
+  "timeline": [
+    {"turn": 1, "step": "DeclareAttackers", "player": "alice", "do": {"Attack": ["$angel"]}},
+    {"turn": 1, "step": "DeclareBlockers", "player": "bob", "refuse": {"Block": {"$demon": ["$angel"]}}},
+    {"turn": 1, "step": "DeclareBlockers", "player": "bob", "refuse": {"Block": {"$dragon": ["$angel"]}}},
+    {"turn": 1, "step": "DeclareBlockers", "player": "bob", "do": {"Block": {}}},
+    {"turn": 1, "step": "EndOfCombat", "player": "alice", "check": {"Life": {"player": "bob", "life": 15}}},
+    {"turn": 1, "step": "EndOfCombat", "player": "alice", "check": {"Life": {"player": "alice", "life": 25}}}
+  ]
+}

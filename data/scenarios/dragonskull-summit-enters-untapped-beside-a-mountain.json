@@ -1,0 +1,11 @@
+{
+  "description": "CR 614.1d Dragonskull Summit enters untapped while its controller controls a Mountain and no Swamp",
+  "note": "Paired with dragonskull-summit-enters-tapped-beside-only-a-forest; the boards differ only in the land alice controls. A Mountain alone proves the second disjunct of \"a Swamp or a Mountain\"; bob's Swamp is not alice's.",
+  "board": {"active": "alice", "step": "PrecombatMain", "seats": [
+    {"name": "alice", "battlefield": [{"card": "Mountain"}], "hand": [{"card": "Dragonskull Summit", "label": "summit"}], "library": [{"card": "Island"}, {"card": "Island"}]},
+    {"name": "bob", "battlefield": [{"card": "Swamp"}], "library": [{"card": "Island"}, {"card": "Island"}]}]},
+  "timeline": [
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "do": {"PlayLand": "$summit"}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "check": {"Tapped": {"object": "Dragonskull Summit", "tapped": false}}}
+  ]
+}

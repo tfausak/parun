@@ -1,0 +1,168 @@
+{
+  "faces": [
+    {
+      "activationProhibitions": [
+        {
+          "affected": {
+            "type": "Matching",
+            "value": {
+              "type": "And",
+              "value": [
+                {
+                  "type": "HasCardType",
+                  "value": {
+                    "type": "Creature"
+                  }
+                },
+                {
+                  "type": "HasAttached",
+                  "value": {
+                    "type": "IsSource"
+                  }
+                }
+              ]
+            }
+          }
+        }
+      ],
+      "combatRestrictions": [
+        {
+          "type": "CantAttack",
+          "value": {
+            "affected": {
+              "type": "Matching",
+              "value": {
+                "type": "And",
+                "value": [
+                  {
+                    "type": "HasCardType",
+                    "value": {
+                      "type": "Creature"
+                    }
+                  },
+                  {
+                    "type": "HasAttached",
+                    "value": {
+                      "type": "IsSource"
+                    }
+                  }
+                ]
+              }
+            }
+          }
+        },
+        {
+          "type": "CantBlock",
+          "value": {
+            "affected": {
+              "type": "Matching",
+              "value": {
+                "type": "And",
+                "value": [
+                  {
+                    "type": "HasCardType",
+                    "value": {
+                      "type": "Creature"
+                    }
+                  },
+                  {
+                    "type": "HasAttached",
+                    "value": {
+                      "type": "IsSource"
+                    }
+                  }
+                ]
+              }
+            }
+          }
+        }
+      ],
+      "enchant": [
+        {
+          "pool": {
+            "type": "Creatures"
+          }
+        }
+      ],
+      "manaCost": [
+        {
+          "type": "Generic",
+          "value": 1
+        },
+        {
+          "type": "OfType",
+          "value": {
+            "type": "Colored",
+            "value": {
+              "type": "Blue"
+            }
+          }
+        }
+      ],
+      "name": "Ice Cage",
+      "oracleText": "Enchant creature\nEnchanted creature can't attack or block, and its activated abilities can't be activated.\nWhen enchanted creature becomes the target of a spell or ability, destroy this Aura.",
+      "triggeredAbilities": [
+        {
+          "condition": {
+            "type": "PermanentBecomesTargeted",
+            "value": {
+              "filter": {
+                "type": "And",
+                "value": [
+                  {
+                    "type": "HasCardType",
+                    "value": {
+                      "type": "Creature"
+                    }
+                  },
+                  {
+                    "type": "HasAttached",
+                    "value": {
+                      "type": "IsSource"
+                    }
+                  }
+                ]
+              }
+            }
+          },
+          "modal": {
+            "modes": [
+              {
+                "clauses": [
+                  {
+                    "effects": [
+                      {
+                        "type": "Destroy",
+                        "value": {
+                          "ref": {
+                            "type": "InSlot",
+                            "value": "self"
+                          },
+                          "regenerability": {
+                            "type": "Regenerable"
+                          }
+                        }
+                      }
+                    ]
+                  }
+                ]
+              }
+            ]
+          }
+        }
+      ],
+      "typeLine": {
+        "subtypes": [
+          {
+            "type": "Aura"
+          }
+        ],
+        "types": [
+          {
+            "type": "Enchantment"
+          }
+        ]
+      }
+    }
+  ]
+}

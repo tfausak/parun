@@ -1,0 +1,18 @@
+{
+  "description": "CR 603.2 Ice Cage's creature can't attack or activate abilities, and the Aura is destroyed when the creature becomes a target",
+  "note": "Bob targets his own caged Prodigal Sorcerer with Giant Growth: the trigger destroys the Cage, so the Sorcerer pings alice afterwards. The uncaged Bears make the attack declaration a real prompt.",
+  "board": {"active": "bob", "step": "PrecombatMain", "seats": [
+    {"name": "alice", "battlefield": [{"card": "Ice Cage", "label": "cage", "attached": "tim"}], "library": [{"card": "Island"}, {"card": "Island"}]},
+    {"name": "bob", "battlefield": [{"card": "Prodigal Sorcerer", "label": "tim", "ready": true}, {"card": "Grizzly Bears", "ready": true}, {"card": "Forest", "label": "forest"}], "hand": [{"card": "Giant Growth", "label": "growth"}], "library": [{"card": "Island"}, {"card": "Island"}]}]},
+  "timeline": [
+    {"turn": 1, "step": "PrecombatMain", "player": "bob", "refuse": {"Activate": {"object": "$tim", "ability": 0, "targets": ["$alice"]}}},
+    {"turn": 1, "step": "DeclareAttackers", "player": "bob", "refuse": {"Attack": ["$tim"]}},
+    {"turn": 1, "step": "DeclareAttackers", "player": "bob", "do": {"Attack": []}},
+    {"turn": 1, "step": "EndStep", "player": "bob", "do": {"Cast": {"object": "$growth", "targets": ["$tim"], "mana": ["$forest"]}}},
+    {"turn": 1, "step": "EndStep", "player": "bob", "do": "Pass"},
+    {"turn": 1, "step": "EndStep", "player": "bob", "check": {"Count": {"player": "alice", "zone": "Graveyard", "card": "Ice Cage", "count": 1}}},
+    {"turn": 1, "step": "EndStep", "player": "bob", "do": {"Activate": {"object": "$tim", "ability": 0, "targets": ["$alice"]}}},
+    {"turn": 1, "step": "EndStep", "player": "bob", "do": "Pass"},
+    {"turn": 1, "step": "EndStep", "player": "bob", "check": {"Life": {"player": "alice", "life": 19}}}
+  ]
+}

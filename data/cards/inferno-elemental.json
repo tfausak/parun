@@ -1,0 +1,117 @@
+{
+  "faces": [
+    {
+      "manaCost": [
+        {
+          "type": "Generic",
+          "value": 4
+        },
+        {
+          "type": "OfType",
+          "value": {
+            "type": "Colored",
+            "value": {
+              "type": "Red"
+            }
+          }
+        },
+        {
+          "type": "OfType",
+          "value": {
+            "type": "Colored",
+            "value": {
+              "type": "Red"
+            }
+          }
+        }
+      ],
+      "name": "Inferno Elemental",
+      "oracleText": "Whenever this creature blocks or becomes blocked by a creature, this creature deals 3 damage to that creature.",
+      "power": {
+        "type": "Literal",
+        "value": 4
+      },
+      "toughness": {
+        "type": "Literal",
+        "value": 4
+      },
+      "triggeredAbilities": [
+        {
+          "condition": {
+            "type": "AnyOf",
+            "value": [
+              {
+                "type": "SelfBlocksCreature",
+                "value": {
+                  "type": "HasCardType",
+                  "value": {
+                    "type": "Creature"
+                  }
+                }
+              },
+              {
+                "type": "SelfBecomesBlockedBy",
+                "value": {
+                  "type": "HasCardType",
+                  "value": {
+                    "type": "Creature"
+                  }
+                }
+              }
+            ]
+          },
+          "modal": {
+            "modes": [
+              {
+                "clauses": [
+                  {
+                    "effects": [
+                      {
+                        "type": "DealDamage",
+                        "value": {
+                          "parts": [
+                            {
+                              "quantity": {
+                                "type": "Literal",
+                                "value": 3
+                              },
+                              "ref": {
+                                "type": "AllOf",
+                                "value": [
+                                  {
+                                    "type": "InSlot",
+                                    "value": "thatAttacker"
+                                  },
+                                  {
+                                    "type": "InSlot",
+                                    "value": "thatBlocker"
+                                  }
+                                ]
+                              }
+                            }
+                          ]
+                        }
+                      }
+                    ]
+                  }
+                ]
+              }
+            ]
+          }
+        }
+      ],
+      "typeLine": {
+        "subtypes": [
+          {
+            "type": "Elemental"
+          }
+        ],
+        "types": [
+          {
+            "type": "Creature"
+          }
+        ]
+      }
+    }
+  ]
+}

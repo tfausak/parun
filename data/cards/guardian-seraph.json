@@ -1,0 +1,81 @@
+{
+  "faces": [
+    {
+      "keywords": [
+        {
+          "type": "Flying"
+        }
+      ],
+      "manaCost": [
+        {
+          "type": "Generic",
+          "value": 2
+        },
+        {
+          "type": "OfType",
+          "value": {
+            "type": "Colored",
+            "value": {
+              "type": "White"
+            }
+          }
+        },
+        {
+          "type": "OfType",
+          "value": {
+            "type": "Colored",
+            "value": {
+              "type": "White"
+            }
+          }
+        }
+      ],
+      "name": "Guardian Seraph",
+      "oracleText": "Flying\nIf a source an opponent controls would deal damage to you, prevent 1 of that damage.",
+      "power": {
+        "type": "Literal",
+        "value": 3
+      },
+      "replacementEffects": [
+        {
+          "effect": {
+            "type": "DamageR",
+            "value": {
+              "matching": {
+                "whatSource": {
+                  "type": "ControlledBy",
+                  "value": {
+                    "type": "Opponent"
+                  }
+                },
+                "whoRecipient": {
+                  "type": "You"
+                }
+              },
+              "rewrite": {
+                "type": "PreventUpTo",
+                "value": 1
+              }
+            }
+          }
+        }
+      ],
+      "toughness": {
+        "type": "Literal",
+        "value": 4
+      },
+      "typeLine": {
+        "subtypes": [
+          {
+            "type": "Angel"
+          }
+        ],
+        "types": [
+          {
+            "type": "Creature"
+          }
+        ]
+      }
+    }
+  ]
+}

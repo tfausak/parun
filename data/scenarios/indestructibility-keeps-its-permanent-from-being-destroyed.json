@@ -1,0 +1,15 @@
+{
+  "description": "CR 702.12b Indestructibility gives the enchanted permanent indestructible, so a destroy effect leaves it on the battlefield",
+  "note": "Bob's Murder resolves against alice's enchanted Bears, which stay; the Keywords check counts the instance the Aura grants.",
+  "board": {"active": "alice", "step": "PrecombatMain", "seats": [
+    {"name": "alice", "battlefield": [{"card": "Grizzly Bears", "label": "bears"}, {"card": "Indestructibility", "attached": "bears"}], "library": [{"card": "Island"}, {"card": "Island"}]},
+    {"name": "bob", "manaPool": "BBB", "hand": [{"card": "Murder", "label": "murder"}], "library": [{"card": "Island"}, {"card": "Island"}]}]},
+  "timeline": [
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "check": {"Keywords": {"object": "$bears", "keyword": {"type": "Indestructible"}, "count": 1}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "do": "Pass"},
+    {"turn": 1, "step": "PrecombatMain", "player": "bob", "do": {"Cast": {"object": "$murder", "targets": ["$bears"]}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "bob", "do": "Pass"},
+    {"turn": 1, "step": "PrecombatMain", "player": "bob", "check": {"Count": {"player": "bob", "zone": "Graveyard", "card": "Murder", "count": 1}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "bob", "check": {"Count": {"player": "alice", "zone": "Battlefield", "card": "Grizzly Bears", "count": 1}}}
+  ]
+}
