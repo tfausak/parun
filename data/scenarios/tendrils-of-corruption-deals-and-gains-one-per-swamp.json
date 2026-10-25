@@ -1,5 +1,5 @@
 {
-  "description": "CR 107.3a Tendrils of Corruption deals X damage to target creature and its caster gains X life, X being the Swamps they control",
+  "description": "CR 107.3c Tendrils of Corruption deals X damage to target creature and its caster gains X life, X being the Swamps they control",
   "note": "Bob's two Swamps are not alice's four, which stay Swamps when tapped to pay.",
   "board": {"active": "alice", "step": "PrecombatMain", "seats": [{"name": "alice", "life": 13, "battlefield": [{"card": "Swamp", "label": "s1"}, {"card": "Swamp", "label": "s2"}, {"card": "Swamp", "label": "s3"}, {"card": "Swamp", "label": "s4"}], "hand": [{"card": "Tendrils of Corruption", "label": "tendrils"}], "library": [{"card": "Island"}, {"card": "Island"}, {"card": "Island"}]}, {"name": "bob", "battlefield": [{"card": "Shivan Dragon", "label": "dragon"}, {"card": "Swamp"}, {"card": "Swamp"}], "library": [{"card": "Island"}, {"card": "Island"}, {"card": "Island"}]}]},
   "timeline": [
