@@ -1,6 +1,6 @@
 {
   "description": "CR 602.2 / 608.2c: four Dragon Whelp activations stacked before any resolves each count all four, so each arms a sacrifice",
-  "note": "The count is of ACTIVATIONS as each resolves, the ones still on the stack included, so all four resolutions arm a delayed trigger; a count of resolutions would arm only the last. docs/decisions.md, \"When Dragon Whelp counts its activations\".",
+  "note": "The count is of ACTIVATIONS as each resolves, the ones still on the stack included, so all four resolutions arm a delayed trigger; a count of resolutions would arm only the last. The condition is read as the effect is applied (CR 608.2h).",
   "board": {
     "active": "alice",
     "step": "PrecombatMain",

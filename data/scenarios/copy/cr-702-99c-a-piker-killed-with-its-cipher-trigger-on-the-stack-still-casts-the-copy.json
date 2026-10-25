@@ -1,6 +1,6 @@
 {
   "description": "CR 702.99c a Piker killed with its cipher trigger on the stack still casts the copy",
-  "note": "docs/decisions.md, \"Whether a cipher trigger finds its card after the creature leaves\". The Piker carrying Last Thoughts connects, and bob Bolts it with the trigger on the stack, so CR 702.99c has ended the encoding before the trigger resolves. The trigger still finds the card in exile, so alice casts the copy and draws. A reading that dropped the card with the encoding offers nothing and the second draw never comes.",
+  "note": "The Piker carrying Last Thoughts connects, and bob Bolts it with the trigger on the stack, so CR 702.99c has ended the encoding before the trigger resolves. The trigger still finds the card in exile through the Piker as it last existed (CR 608.2h), so alice casts the copy and draws. A reading that dropped the card with the encoding offers nothing and the second draw never comes.",
   "board": {
     "seats": [
       {

@@ -1,6 +1,6 @@
 {
   "description": "CR 601.2f Jet Medallion's reduction comes off Consume Spirit's X, so less of it must be black",
-  "note": "X 2 under Jet Medallion totals {2}{B}. Taking the reduction off the X leaves one black mana owed on X, so two Swamps and a Mountain pay it; taking it off the {1} would owe three black and refuse the cast. Drain Life's ruling lets cost reducers reduce the X part (docs/decisions.md). Bob takes 2 and alice gains 2.",
+  "note": "X 2 under Jet Medallion totals {2}{B}. Taking the reduction off the X leaves one black mana owed on X, so two Swamps and a Mountain pay it; taking it off the {1} would owe three black and refuse the cast. Drain Life's ruling lets cost reducers reduce the X part. Bob takes 2 and alice gains 2.",
   "board": {
     "active": "alice",
     "step": "PrecombatMain",

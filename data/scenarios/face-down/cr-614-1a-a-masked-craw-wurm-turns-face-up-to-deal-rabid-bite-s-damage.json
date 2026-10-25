@@ -1,6 +1,6 @@
 {
   "description": "CR 614.1a a Craw Wurm Illusionary Mask cast face down turns face up to deal Rabid Bite's damage, still the 2 its face-down power fixed",
-  "note": "The Wurm is the only thing dealing damage, so only the deals-damage half of Illusionary Mask's replacement can turn it face up. Rabid Bite fixes the amount at the face-down 2/2's power as it resolves (CR 608.2h), and the replacement turns the Wurm face up and lets that same 2 be dealt (docs/decisions.md, 'How much damage a face-down creature Illusionary Mask cast deals as it turns face up'), so bob's 3/3 Hill Giant survives with 2 marked.",
+  "note": "The Wurm is the only thing dealing damage, so only the deals-damage half of Illusionary Mask's replacement can turn it face up. Rabid Bite fixes the amount at the face-down 2/2's power as it resolves (CR 608.2h), and the replacement turns the Wurm face up and lets that same 2 be dealt (CR 614.6), so bob's 3/3 Hill Giant survives with 2 marked.",
   "board": {
     "seats": [
       {

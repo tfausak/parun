@@ -131,7 +131,9 @@ gathered candidates gs =
 -- cut back (Game.pickCounted's truncation); then every offered permanent that
 -- is not `elective` and that the caps still allow, since CR 502.3 untaps all of
 -- a player's permanents but those an effect keeps tapped -- docs/decisions.md,
--- "An untap cap leaves tapped only what it must".
+-- "An untap cap leaves tapped only what it must". Maximal, not the largest
+-- set: Smoke's ruling lets an animated land be the one creature and the one
+-- land.
 settle :: [(Natural, Set ObjectId)] -> Set ObjectId -> [ObjectId] -> Set ObjectId -> Set ObjectId
 settle caps elective offered chosen =
   let fits taken oid = all (\(n, counted) -> not (Set.member oid counted) || Natural.length (Set.intersection counted taken) < n) caps

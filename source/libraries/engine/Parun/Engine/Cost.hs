@@ -1384,9 +1384,9 @@ totalManas adjustments =
 -- per mana. Only a TOTALLED cost is changed, so nothing upstream -- the mana
 -- value, a reduction, an added component -- reads the symbols.
 --
--- A reduction comes off the X first (docs/decisions.md, "Cost reductions on a
--- confined X"), since Drain Life's ruling lets it reduce the X part and every
--- payment the other split allows this one allows too. An increase is
+-- A reduction comes off the X first, since Drain Life's ruling lets it reduce
+-- the X part and every payment the other split allows this one allows too, so
+-- the payer is never asked (CR 601.2f). An increase is
 -- unconfined mana. data/scenarios/cost's "Jet Medallion's reduction comes off
 -- Consume Spirit's X" proves the split.
 confineX :: Maybe Color.Color -> Natural -> CostAdjustments.CostAdjustments -> ManaCost.ManaCost -> ManaCost.ManaCost -> ManaCost.ManaCost

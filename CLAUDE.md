@@ -219,9 +219,14 @@ to agents as written. What it doesn't say:
   Illegitimate when the absence is rules-*enforced*, because then the elision
   is provably sound --- close that issue as wontfix.
 
-- A reading neither the CR nor an official ruling forces gets an entry in
-  `docs/decisions.md`, in the same PR, and the code site cites the entry. Check there before deciding such
-  a question, so a settled one is not decided again differently.
+- A reading gets an entry in `docs/decisions.md`, in the same PR, only when
+  BOTH hold: it is observable, the readings giving different game states or
+  different legal choices on some legal board; and it is not forced, neither
+  the CR nor an official ruling picking one. The code site cites the entry. A
+  forced reading cites its rule or ruling at the code site instead; an
+  unobservable implementation choice gets at most a one-line code comment.
+  Check there before deciding such a question, so a settled one is not decided
+  again differently.
 
 - File the issue, cite it inline. An elision gets an issue carrying the status,
   rationale and expiry trigger, and a comment at the code site stating only

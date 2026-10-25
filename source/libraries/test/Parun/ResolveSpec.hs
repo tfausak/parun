@@ -2962,10 +2962,11 @@ truceSpec s registry =
         Spec.it s "CR 121.1 a card a seat chose but could not draw counts toward its life" $ do
           ((_, after), _) <- fmap resolved (board 1)
           Spec.assertEqWith s "carol chose two off a one-card library, drew one, and gains 2" (S.lifeOf S.carol after, S.handSize S.carol after) (Just 22, 1)
-        -- docs/decisions.md, "When each player choosing how many to draw
-        -- draws". bob's Darkblast (dredge 3) offers to replace the card he draws.
-        -- If the draws waited until every seat had chosen, that offer would come
-        -- after carol's and alice's numbers instead of between bob's and carol's.
+        -- Diminishing Returns' ruling (2016-06-08): each player chooses and
+        -- draws before the next. bob's Darkblast (dredge 3) offers to replace
+        -- the card he draws. If the draws waited until every seat had chosen,
+        -- that offer would come after carol's and alice's numbers instead of
+        -- between bob's and carol's.
         Spec.it s "CR 608.2f a seat's draw, dredge included, happens before the next seat chooses" $ do
           darkblast <- S.printingOf s registry "Darkblast"
           (truceId, gs) <- board 3

@@ -905,8 +905,9 @@ evaluateAgainst viewOf context gs announcedOn mOid mView quantity =
         -- ACTIVATED counts CR 602.2's log instead, GameState.activationsThisTurn,
         -- by the source object and the ability as activated: every activation of
         -- this ability of this object this turn, the one resolving and any still on
-        -- the stack included (docs/decisions.md, "When Dragon Whelp counts its
-        -- activations"). A triggered ability reads 0. data/scenarios'
+        -- the stack included, read as the effect is applied (CR 608.2h); a copy
+        -- reads its original's, having the same source (CR 707.10b). A
+        -- triggered ability reads 0. data/scenarios'
         -- dragon-whelp scenarios are what prove it.
         Quantity.TimesThisTurn act -> do
           oid <- mOid

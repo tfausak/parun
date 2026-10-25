@@ -6,10 +6,14 @@ Gatherer ruling or erratum settles. Each entry records the reading chosen so
 nobody re-derives it, possibly differently, and names the rules it rests on so
 a new CR can be checked against it.
 
-An entry is owed whenever a change picks such a reading. It lands in the same
-PR as the code, and the code site cites it by heading. Two things are not
-entries: a reading an official ruling settles, which the card's test pins, and
-an elision, which is a known gap with an issue rather than a settled answer.
+An entry is owed whenever a change picks such a reading, and only when both
+hold: the readings are observable, giving different game states or different
+legal choices on some legal board, and nothing official picks one. It lands in
+the same PR as the code, and the code site cites it by heading. Three things
+are not entries: a reading the CR or an official ruling forces, whose code site
+cites that rule or ruling; an implementation choice no legal board can tell
+apart from the alternative; and an elision, which is a known gap with an issue
+rather than a settled answer.
 
 When `docs/rules.txt` is updated, or a ruling lands on a question here,
 re-read each entry against the new text. An entry it decides is either
@@ -195,25 +199,19 @@ Entries are ordered by the first rule each cites.
 
 - **Question**: Static Orb says players "can't untap more than two
   permanents during their untap steps". May the active player untap fewer
-  than the caps allow, and when several caps overlap (Smoke and Winter Orb
-  over an animated land), must they untap the most permanents possible? And
-  does a stunned permanent they choose count against a cap, though its stun
-  counter takes the untap?
+  than the caps allow? And does a stunned permanent they choose count
+  against a cap, though its stun counter takes the untap?
 - **Rules**: CR 502.3, 101.2, 122.1d, 614.6; CR of 2026-08-07.
-- **Decision**: The answer must be maximal, not maximum. Every tapped
-  permanent the caps still allow, given the others chosen, untaps. A
-  permanent stays tapped only when an effect keeps it tapped, which CR
-  502.3 makes the default for the rest. A stunned permanent chosen to untap
-  counts against the cap. The cap limits CR 502.3's determination, and CR
-  122.1d's replacement applies to the untap that determination produces
-  (CR 614.6).
+- **Decision**: The answer must be maximal. Every tapped permanent the caps
+  still allow, given the others chosen, untaps. A permanent stays tapped
+  only when an effect keeps it tapped, which CR 502.3 makes the default for
+  the rest. A stunned permanent chosen to untap counts against the cap. The
+  cap limits CR 502.3's determination, and CR 122.1d's replacement applies to
+  the untap that determination produces (CR 614.6).
 - **Rejected**: Letting the player untap fewer, which would make a cap
-  read as "may untap up to two". Requiring the largest possible set, as
-  CR 508.1d does for attack requirements: Smoke's ruling lets an animated
-  land be the one creature and the one land that untaps, leaving a second
-  permanent tapped that a larger set would have untapped. Leaving a
-  stunned permanent out of the count, which would let the player untap
-  more than the cap names by choosing one.
+  read as "may untap up to two". Leaving a stunned permanent out of the
+  count, which would let the player untap more than the cap names by
+  choosing one.
 - **Site**: `Parun.Engine.UntapRestriction.settle`, called from
   `Parun.Engine.Engine.untapAll`. The Static Orb and Winter Orb scenarios
   under `data/scenarios/untap-restriction/` prove it.
@@ -299,23 +297,6 @@ Entries are ordered by the first rule each cites.
   halves are regression fences: no board drives either.
 - **Issue**: #5437.
 
-## Cost reductions on a confined X
-
-- **Question**: A spell says "Spend only black mana on X" (Consume Spirit) and
-  a generic cost reduction applies (Jet Medallion). How much of the reduced
-  generic mana must still be black?
-- **Rules**: CR 601.2f, 601.2h, 107.3a; CR of 2026-08-07. Drain Life's ruling
-  says cost reducers can reduce the X part.
-- **Decision**: The reduction comes off the X first. What stays confined is X
-  less the generic mana reduced; a cost increase is unconfined mana.
-- **Rejected**: Off the unconfined generic first: stricter, and it refuses
-  payments the ruling allows. Asking the payer: every payment the other
-  splits allow, this one allows too, so the answers are indistinguishable.
-- **Site**: `Parun.Engine.Cost.confineX`, proved by data/scenarios/cost's
-  "CR 601.2f Jet Medallion's reduction comes off Consume Spirit's X, so less of
-  it must be black".
-- **Issue**: #5565.
-
 ## Whether a cast redirected off the stack is still a cast
 
 - **Question**: A CR 614 replacement sends a card being cast somewhere other
@@ -333,31 +314,6 @@ Entries are ordered by the first rule each cites.
   off the stack is still a cast" and "CR 709.4 a cast redirected off the stack
   keeps both halves".
 - **Issue**: none; #781 settled the face ordering beside it.
-
-## When Dragon Whelp counts its activations
-
-- **Question**: Dragon Whelp's "If this ability has been activated four or
-  more times this turn" is read as the ability resolves. Its rulings speak of
-  "the fourth activation and each subsequent activation" arming the
-  sacrifice, which assumes each activation resolves before the next. Which
-  activations count when several are on the stack at once, and does a copy
-  of the ability read the original's count?
-- **Rules**: CR 602.2, 602.2a, 608.2c, 707.10, 707.10b; CR of 2026-08-07.
-- **Decision**: Every activation of this ability of this object this turn
-  counts as each one resolves, those still on the stack included, so four
-  stacked activations arm four sacrifices. A copy has the original's source
-  and ability (CR 707.10b) and reads the original's count.
-- **Rejected**: Counting only the activations that came before the one
-  resolving: the condition is checked as the instruction is followed (CR
-  608.2c), not as the ability was activated. Counting resolutions: that is
-  Ashling the Pilgrim's wording, not this one's. A copy reading zero because
-  it was not itself activated (CR 707.10): CR 707.10b makes it the same
-  ability for a count of its resolutions, and nothing makes its activations
-  a different question.
-- **Site**: `Parun.Engine.Quantity`'s `TimesThisTurn` arm, proved by
-  data/scenarios' `dragon-whelp-stacked-activations-each-arm-a-sacrifice`.
-  The copy reading is a regression fence: no scenario copies the ability.
-- **Issue**: #5599.
 
 ## Whether a trigger limit differs from a first-time-each-turn trigger
 
@@ -498,47 +454,6 @@ Entries are ordered by the first rule each cites.
   a Clone reanimated by a sweep collects its own copy effect from the live
   board".
 - **Issue**: none.
-
-## When each player choosing how many to draw draws
-
-- **Question**: "Each player may draw up to two cards" (Temporary Truce,
-  Truce): do all players choose their numbers first and then draw, or does
-  each player choose and draw before the next one chooses?
-- **Rules**: CR 608.2f, 101.4, 121.2, 608.2e; CR of 2026-08-07.
-- **Decision**: Each player in APNAP order chooses and then draws before the
-  next one chooses. Diminishing Returns' 2016-06-08 ruling on the same "each
-  player draws up to" sentence says exactly this. CR 121.2 says draws can't
-  happen at the same time, so CR 608.2f handles each player on their own, and
-  the ruling counts the choice as part of that player's turn at it. A discard
-  can happen all at once, so Mind Bomb's "each player may discard up to three
-  cards" keeps CR 101.4's order instead: every choice first, then one
-  simultaneous discard, which is Balance's 2016-06-08 ruling.
-- **Rejected**: Every player chooses first and then everyone draws, CR 101.4
-  read on its own. The only ruling on this sentence contradicts it.
-- **Site**: Temporary Truce and Truce in `data/cards/` (a `ForEach` over the
-  players whose body is `ChooseNumber` then `Draw`), proved by
-  `Parun.ResolveSpec`'s "CR 608.2f a seat's draw, dredge included, happens before
-  the next seat chooses".
-- **Issue**: #5239.
-
-## How much damage a face-down creature Illusionary Mask cast deals as it turns face up
-
-- **Question**: An effect has a face-down creature Illusionary Mask cast deal
-  damage equal to its power (Rabid Bite, a fight). The amount is read off the
-  2/2, then Mask's replacement turns it face up "and deals damage". Is the
-  amount the 2 already determined, or the face-up creature's power?
-- **Rules**: CR 608.2h, 614.1a, 614.5, 701.14a; CR of 2026-08-07.
-- **Decision**: The 2. CR 608.2h fixes the amount when the effect is applied,
-  and the replacement modifies the event that amount describes: the creature
-  turns face up and that same event happens.
-- **Rejected**: Re-reading the power after the turn: no rule re-derives an
-  event's amount, and the replacement's text keeps the event rather than
-  restating it.
-- **Site**: `Parun.Engine.Event`'s `DamageRewrite.TurnFaceUp` arm, proved by
-  data/scenarios/face-down's "CR 614.1a a Craw Wurm Illusionary Mask cast face
-  down turns face up to deal Rabid Bite's damage, still the 2 its face-down
-  power fixed".
-- **Issue**: #5440.
 
 ## What a spell or ability causes
 
@@ -718,23 +633,6 @@ Entries are ordered by the first rule each cites.
   "CR 702.26b a phased-out permanent a subgame takes leaves the main game and
   triggers nothing".
 - **Issue**: #2468.
-
-## Whether a cipher trigger finds its card after the creature leaves
-
-- **Question**: An encoded creature's trigger is on the stack, then the
-  creature leaves and CR 702.99c ends the encoding. Does "copy the encoded
-  card" still find the card?
-- **Rules**: CR 702.99c, 608.2h, 702.99a, 702.99b; CR of 2026-08-07.
-- **Decision**: Yes. The relation is keyed on the source's id alone, so the
-  trigger still finds the exiled card.
-- **Rejected**: Finding nothing, since CR 702.99c ends the encoding when the
-  creature leaves. CR 608.2h reads a departed source as it last existed, and
-  the card was encoded on it then.
-- **Site**: `Parun.Engine.Resolve.Slots.objectRefObjects`'s
-  `ObjectRef.EachCardEncodedOnSource` arm, proved by the scenario "CR 702.99c
-  a Piker killed with its cipher trigger on the stack still casts the
-  copy".
-- **Issue**: none.
 
 ## Which component of a merged permanent answers for day and night
 
@@ -956,43 +854,3 @@ Entries are ordered by the first rule each cites.
   scenario "CR 800.4a a departing player's shield is not a control effect, so
   it stays".
 - **Issue**: #592.
-
-## How many times two draw-time reveals reveal one card
-
-- **Question**: Two Rowens each say "reveal the first card you draw each
-  turn", and each has a trigger linked to its own reveal (CR 607.2h). Is the
-  card revealed once, firing both triggers, or once per ability, each firing
-  its own?
-- **Rules**: CR 603.11, 607.1, 607.2h; CR of 2026-08-07.
-- **Decision**: Once per ability, each reveal firing only the trigger linked to
-  the ability that made it. God-Eternal Kefnet's ruling (2019-05-03) says this
-  of its "may" twin: with two Kefnets you reveal for any number of their
-  abilities and each copies once. Rowen's reveal is the same ability with the
-  "may" taken out.
-- **Rejected**: One reveal answering every such ability: it gives each trigger
-  a reveal its own static ability did not take, which CR 607.1's "not by any
-  other ability" excludes.
-- **Site**: `Parun.Engine.Event.revealUnderStatics` and
-  `RevealCause.AsDrawnUnder`, proved by the scenario "CR 607.2h each of two
-  Rowens reveals the first draw and draws once for its own reveal".
-- **Issue**: none.
-
-## When an effect that narrows an Aura's host asks for it
-
-- **Question**: Nomad Mythmaker puts an Aura card onto the battlefield
-  "attached to a creature you control". CR 303.4f has the player choose the
-  host "as the Aura enters"; is that asked before or after the move's CR 616.1
-  zone-change replacements settle where the card goes?
-- **Rules**: CR 303.4f, 303.4g, 616.1; CR of 2026-08-07.
-- **Decision**: Before, when the instruction is carried out, off the board the
-  move begins on. The choice is the effect's narrowing of the host, read in the
-  resolution's context; a replacement that sends the card elsewhere discards
-  it unused. ExchangeCardZones already asks CR 303.4f's choice the same way.
-- **Rejected**: Asking inside the zone-change funnel after CR 616.1, which
-  would thread the effect's filter through every caller of that funnel for a
-  prompt that changes nothing when the card does not arrive.
-- **Site**: `Parun.Engine.Resolve.Effect`'s MoveToZone arm (`chosenHost`),
-  proved by the scenario "CR 303.4f whole card: Nomad Mythmaker puts an
-  opponent's Aura card onto the battlefield under its controller's control,
-  attached to a creature that player controls".
-- **Issue**: none.
