@@ -36,6 +36,8 @@ import qualified Parun.JsonCodec.Common as Common
 import qualified Parun.JsonCodec.Fields as Fields
 import qualified Parun.Types.ControlMargin as ControlMargin
 import qualified Parun.Types.Filter as Filter
+import qualified Parun.Types.PlayerRelation as PlayerRelation
+import qualified Parun.Types.SlotName as SlotName
 
 -- | Recursive, mirroring Quantity's toJson/fromJson: And/Or carry their
 -- operands as a JSON Array, Not as a single nested object, and each atom
@@ -99,7 +101,7 @@ codec keywordCodec =
       Arm.payload "IsBound" SlotName.codec Filter.IsBound (\x -> case x of Filter.IsBound y -> Just y; _ -> Nothing),
       Arm.nullary "IsTarget" Filter.IsTarget,
       Arm.payload "SameNameAsBound" SlotName.codec Filter.SameNameAsBound (\x -> case x of Filter.SameNameAsBound y -> Just y; _ -> Nothing),
-      Arm.payload "SameControllerAsBound" SlotName.codec Filter.SameControllerAsBound (\x -> case x of Filter.SameControllerAsBound y -> Just y; _ -> Nothing),
+      Arm.payload "ControllerRelatesToBound" relatesToBound (uncurry Filter.ControllerRelatesToBound) (\x -> case x of Filter.ControllerRelatesToBound r y -> Just (r, y); _ -> Nothing),
       Arm.payload "SameControllerAsHostOfBound" SlotName.codec Filter.SameControllerAsHostOfBound (\x -> case x of Filter.SameControllerAsHostOfBound y -> Just y; _ -> Nothing),
       Arm.payload "SharesCreatureTypeWith" Anchor.codec Filter.SharesCreatureTypeWith (\x -> case x of Filter.SharesCreatureTypeWith y -> Just y; _ -> Nothing),
       Arm.payload "HasChosenName" NameChooser.codec Filter.HasChosenName (\x -> case x of Filter.HasChosenName y -> Just y; _ -> Nothing),
@@ -190,6 +192,15 @@ controls keywordCodec =
       <$> Fields.required "margin" ControlMargin.codec fst
       <*> Fields.required "filter" (codec keywordCodec) snd
 
+-- | CR 110.2's comparison across two objects keyed by name: the relation, and
+-- the slot holding the object whose controller it is relative to.
+relatesToBound :: Codec.Codec (PlayerRelation.PlayerRelation, SlotName.SlotName)
+relatesToBound =
+  Fields.object $
+    (,)
+      <$> Fields.required "relation" PlayerRelation.codec fst
+      <*> Fields.required "slot" SlotName.codec snd
+
 tagOf :: Filter.Filter keyword -> String
 tagOf x = case x of
   Filter.HasCardType {} -> "HasCardType"
@@ -227,7 +238,7 @@ tagOf x = case x of
   Filter.IsBound {} -> "IsBound"
   Filter.IsTarget {} -> "IsTarget"
   Filter.SameNameAsBound {} -> "SameNameAsBound"
-  Filter.SameControllerAsBound {} -> "SameControllerAsBound"
+  Filter.ControllerRelatesToBound {} -> "ControllerRelatesToBound"
   Filter.SameControllerAsHostOfBound {} -> "SameControllerAsHostOfBound"
   Filter.SharesCreatureTypeWith {} -> "SharesCreatureTypeWith"
   Filter.HasChosenName {} -> "HasChosenName"

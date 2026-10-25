@@ -76,7 +76,7 @@ data Modification ability
     -- IsBound or SameNameAsBound is judged against exactly the context a PRINTED
     -- one is, and each of those two answers False where the announcement bound
     -- nothing. Which way an unfilled read answers is per ATOM rather than a
-    -- property of that context: CR 110.2's SameControllerAsBound widens instead,
+    -- property of that context: CR 110.2's ControllerRelatesToBound widens instead,
     -- and Parun.CardSpec's Framing keeps it out of this slot and the printed one
     -- alike. A "ControlledBy You" conjunct, the shape
     -- Old-Growth Troll prints, is answered honestly.

@@ -32,6 +32,7 @@ import qualified Data.Text as Text
 import Parun.CardSpec (Framing (SourceHostFramed), MintedKind (MintedEmblem), anyFace, cardAuthoredEffects, cardFilters, cardReplacementEffects, cardResolutionEffects, copyTargetsRefs, delayedDeclarations, durationConditions, effectFilters, effectMintedFaces, effectWithNested, enchantSlots, faceModals, frame, framedSlotsReadSingly, grantedActivatedAbilities, grantedModifications, grantedTriggeredAbilities, instantLine, mintedFaces, mintedFacesTagged, objectRefFilters, oneFaced, overFaces, replacementEffectRiders, restrictionFilters, spellLine, triggerConditionFilters, triggerConditionSlots, vanillaFace)
 import qualified Parun.Codec.Card as Card.Codec
 import qualified Parun.Codec.Face as Face.Codec
+import qualified Parun.Engine.Binding as Binding
 import qualified Parun.Engine.Card as Card
 import qualified Parun.Engine.Mint as Mint
 import qualified Parun.Engine.PlayerEffect as PlayerEffect.Engine
@@ -220,6 +221,7 @@ import qualified Parun.Types.SkipPhase as SkipPhase
 import qualified Parun.Types.SlotArity as SlotArity
 import qualified Parun.Types.SlotName as SlotName
 import qualified Parun.Types.SpeedDecrease as SpeedDecrease
+import qualified Parun.Types.Subtype as Subtype.Type
 import qualified Parun.Types.Superlative as Superlative
 import qualified Parun.Types.Supertype as Supertype
 import qualified Parun.Types.TakeExtraTurn as TakeExtraTurn
@@ -2894,10 +2896,10 @@ effectLintSpec s registry = Spec.describe s "Lint" $ do
   -- CR 303.4i's rider names what the entering permanent arrives attached to, and
   -- Parun.Engine.Resolve reads each arm on ONE opcode: the Create arm hands the
   -- host EntryHost.Specified names to Event.createTokens, and the MoveToZone arm
-  -- narrows CR 303.4f's choice by EntryHost.Chosen's filter (moveOne). Neither
-  -- reads the other's arm, so a Specified on a MoveToZone, a Chosen on a Create
-  -- or on a move anywhere but the battlefield, or either on a CreateCopy would
-  -- say something nothing performs.
+  -- narrows CR 303.4f's choice by EntryHost.Chosen's filter or to the objects
+  -- EntryHost.Specified names (moveOne). So a Chosen on a Create, either on a
+  -- move anywhere but the battlefield, or either on a CreateCopy would say
+  -- something nothing performs.
   --
   -- The CreateCopy half is the "no CreateCopy carries an entry rider but ..." lint
   -- below, which fences every field this one does not.
@@ -2910,7 +2912,7 @@ effectLintSpec s registry = Spec.describe s "Lint" $ do
           Just (EntryHost.Chosen _) -> True
           _ -> False
         offends effect = case effect of
-          Effect.MoveToZone (MoveToZone.MkMoveToZone _ zone riders _ _ _ _) -> specified riders || (chosenAmong riders && zone /= Zone.Battlefield)
+          Effect.MoveToZone (MoveToZone.MkMoveToZone _ zone riders _ _ _ _) -> (specified riders || chosenAmong riders) && zone /= Zone.Battlefield
           Effect.Create (Create.MkCreate _ _ riders _ _) -> chosenAmong riders
           _ -> False
         creates effect = case effect of
@@ -2919,12 +2921,28 @@ effectLintSpec s registry = Spec.describe s "Lint" $ do
         moves effect = case effect of
           Effect.MoveToZone (MoveToZone.MkMoveToZone _ _ riders _ _ _ _) -> chosenAmong riders
           _ -> False
-        offenders = filter (anyFace (any offends . cardResolutionEffects) . Printing.card) ps
+        -- moveOne narrows only an Aura's host to OBJECTS the slot names, so a
+        -- Specified move is performed only for an Aura moving itself that
+        -- enchants no player: an Equipment (CR 303.4h) or a player host would
+        -- enter unattached or stay put.
+        selfAuraMove face effect = case effect of
+          Effect.MoveToZone (MoveToZone.MkMoveToZone ref _ riders _ _ _ _)
+            | specified riders ->
+                not
+                  ( ref == ObjectRef.InSlot Binding.became
+                      && Set.member Subtype.Type.Aura (TypeLine.subtypes (Face.typeLine face))
+                      && all ((/= Pool.Players) . TargetSlot.pool) (Face.enchant face)
+                  )
+          _ -> False
+        offendsOn face = any (\effect -> offends effect || selfAuraMove face effect) (cardResolutionEffects face)
+        offenders = filter (anyFace offendsOn . Printing.card) ps
     -- Guards against a vacuous sweep, one per arm: Preston Garvey, Minuteman
-    -- creates a token attached to a target, and Nomad Mythmaker moves an Aura
-    -- card attached to a creature its controller controls.
+    -- creates a token attached to a target, Nomad Mythmaker moves an Aura card
+    -- attached to a creature its controller controls, and Necrotic Plague
+    -- returns itself attached to a target.
     Spec.assertBool s (any (anyFace (any creates . cardResolutionEffects) . Printing.card) ps) "the pool has a card creating a token attached to something"
     Spec.assertBool s (any (anyFace (any moves . cardResolutionEffects) . Printing.card) ps) "the pool has a card moving an Aura attached to a host it describes"
+    Spec.assertBool s (any (anyFace (any (\effect -> case effect of Effect.MoveToZone m -> specified (MoveToZone.riders m); _ -> False) . cardResolutionEffects) . Printing.card) ps) "the pool has a card moving an Aura attached to a host a slot names"
     Spec.assertEqWith s "each attachment rider is on the opcode that reads it (CR 303.4f, 303.4i)" (fmap (S.nameOf . Printing.card) offenders) []
   -- The sibling lint for the OTHER face-down rider, one field over and pointed
   -- at the opposite zone: CR 708.3 is a rule about entering the BATTLEFIELD, so

@@ -1,6 +1,6 @@
 {
   "description": "CR 608.2h / 611.2c Mark for Death: the target untaps and must block, that player's other creatures can't block, and another player's creatures still can",
-  "note": "Three seats, because the stored class names the target's controller: an unbaked SameControllerAsBound admits every creature, so carol's Bears blocking is the case that fails. Bob's refused declaration includes the Giant, so the requirement is met and only the prohibition refuses it.",
+  "note": "Three seats, because the stored class names the target's controller: an unbaked ControllerRelatesToBound admits every creature, so carol's Bears blocking is the case that fails. Bob's refused declaration includes the Giant, so the requirement is met and only the prohibition refuses it.",
   "board": {
     "seats": [
       {

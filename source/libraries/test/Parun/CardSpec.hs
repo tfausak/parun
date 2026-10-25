@@ -5482,14 +5482,14 @@ blockPermissionFilters permission =
 --   * InTargetSlot -- a MODE's target slot filter, the one position matched by
 --     Parun.Engine.Target.admittedGiven, one of the two sites that fill
 --     Filter.Context.slotControllers and one of the callers that fill
---     Filter.Context.slotNames. CR 110.2's Filter.SameControllerAsBound belongs
+--     Filter.Context.slotNames. CR 110.2's Filter.ControllerRelatesToBound belongs
 --     here, in AttachDestination, the other, and in SourceHostFramed (Flame
 --     Wave); CR 709.4a's Filter.SameNameAsBound belongs here and
 --     in SearchFramed, HandSweepFramed and LifeLossAmountFramed below, the
 --     other positions slotNames is filled at and a card writes it in. Their
 --     vacuous directions differ: an unfilled slotNames answers False, an
 --     unfilled slotControllers answers True. So a misplaced SameNameAsBound
---     admits nothing and a misplaced SameControllerAsBound admits everything,
+--     admits nothing and a misplaced ControllerRelatesToBound admits everything,
 --     so this tag carries more for the second than for the first.
 --   * SourceHostFramed -- an EFFECT's Parun.Types.ObjectRef
 --     (Parun.Engine.Resolve.Slots.objectRefObjects), which fills
@@ -5570,7 +5570,7 @@ blockPermissionFilters permission =
 --     (RestrictedCreatures.Matching, ForbidBeingBlocked's pair), baked by
 --     Parun.Engine.Resolve.Effect.storedClass and then matched through a bare
 --     Filter.contextFor. Unframed's answer for every atom but CR 110.2's
---     Filter.SameControllerAsBound, which the bake writes in (Mark for Death).
+--     Filter.ControllerRelatesToBound, which the bake writes in (Mark for Death).
 --   * ChosenSourceFramed -- CR 609.7a's chosen source on a prevention or
 --     redirection effect, matched against each candidate by
 --     Parun.Engine.Resolve.Effect.damageSourceCandidates through
@@ -5586,7 +5586,7 @@ blockPermissionFilters permission =
 -- slotControllers are both empty there -- Parun.Engine.Attach.attachmentFor's CR
 -- 303.4j move and Parun.Engine.Sba.stillLegalEnchant's CR 303.4c check. A
 -- SameNameAsBound written into an enchant ability would answer one way at CR
--- 601.2c and another way at every later reading; a SameControllerAsBound would do
+-- 601.2c and another way at every later reading; a ControllerRelatesToBound would do
 -- the same in the widening direction, admitting every host at those later
 -- readings, so this tag is what refuses the atom rather than merely narrowing it.
 -- Modification.GainEnchant's granted slot lands Unframed the same way, through
@@ -6637,7 +6637,7 @@ activatedAbilityFilters ability =
     -- sourceMeasures, slotObjects, slotNames and slotControllers are empty. The tag is
     -- what FENCES the atoms that would read those rather than leaving them
     -- silent -- CR 709.4a's SameNameAsBound and CR 110.2's
-    -- SameControllerAsBound, which belong to InTargetSlot and whose vacuous
+    -- ControllerRelatesToBound, which belong to InTargetSlot and whose vacuous
     -- directions differ (see the Framing haddock). The two source-power
     -- comparisons have no tag of their own and are fenced corpus-wide instead, by
     -- Parun.FilterPositionLintSpec's CR 702.134a / CR 702.149a case, which

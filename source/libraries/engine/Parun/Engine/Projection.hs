@@ -1243,7 +1243,7 @@ viewWithLastKnownAnywhere gs = Count.orLastKnown (fullView gs) gs
 --
 -- A key for every slot the map names, so a slot holding only a player, one
 -- answered with no target (CR 601.2c's "up to"), or one CR 608.2b emptied
--- answers an EMPTY set and SameControllerAsBound and
+-- answers an EMPTY set and ControllerRelatesToBound and
 -- SharesCreatureTypeWith refuse there; only a slot nobody has answered yet
 -- is absent, where they widen. slotObjects keeps only the slots naming an
 -- object, its own doctrine. Measures only for a slot naming exactly ONE
@@ -3744,7 +3744,7 @@ filterReads f = case f of
   Filter.Type.SameNameAsBound _ -> Set.empty
   -- Reads the CANDIDATE's controller, where its sibling above reads names: the
   -- bound object's controller arrives on the Context, already projected.
-  Filter.Type.SameControllerAsBound _ -> Set.singleton Controller
+  Filter.Type.ControllerRelatesToBound _ _ -> Set.singleton Controller
   -- Reads the CANDIDATE's controller too, the atom above one link along: the
   -- bound object's HOST's controller arrives on the Context, already projected.
   Filter.Type.SameControllerAsHostOfBound _ -> Set.singleton Controller
@@ -3763,7 +3763,7 @@ filterReads f = case f of
   Filter.Type.HasChosenSubtype -> Set.singleton Subtypes
   Filter.Type.IsExiledWithSource _ -> Set.empty
   Filter.Type.IsLastExiledWithSource -> Set.empty
-  -- Reads the candidate's CONTROLLER, SameControllerAsBound's answer above: rule
+  -- Reads the candidate's CONTROLLER, ControllerRelatesToBound's answer above: rule
   -- 702.16k's other half is an owner, which CR 108.3 never projects.
   Filter.Type.OfChosenPlayer -> Set.singleton Controller
   Filter.Type.OfRelatedPlayer _ -> Set.singleton Controller
@@ -4075,7 +4075,7 @@ filterReadsPeers f = case f of
   Filter.Type.SameNameAsBound _ -> False
   -- The bound object's controller arrives on the Context, filled by
   -- Parun.Engine.Target.slotContext -- no peer projection is read here.
-  Filter.Type.SameControllerAsBound _ -> False
+  Filter.Type.ControllerRelatesToBound _ _ -> False
   -- The bound object's HOST's controller arrives on the Context too, filled by
   -- Parun.Engine.Resolve.Slots.effectContext -- the host is reached there rather
   -- than through the candidate's `peers` view.

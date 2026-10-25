@@ -252,7 +252,7 @@ For each opcode the producer needs:
   there is no rule the record imposes. `Filter.IsBound`, `SameNameAsBound`,
   `IsHostOfSource` and `ControlledByRecipient` answer False rather than raising;
   `Quantity.AgainstSlot` answers unanswered. Neither is distinguishable from a
-  rule that does not apply. `SameControllerAsBound` answers TRUE instead, so its
+  rule that does not apply. `ControllerRelatesToBound` answers TRUE instead, so its
   vacuous read WIDENS the offer rather than emptying it, and only
   `Parun.CardSpec`'s position lint keeps a card out of the positions that leave
   `slotControllers` empty.
