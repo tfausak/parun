@@ -1143,7 +1143,7 @@ boastBoard duskwielder swamp sorcerer =
 -- the keyword adds rule 702.142a's two riders (Keyword.printedRiders): an
 -- ActivationRestriction.OnlyIf counting the source under Filter.AttackedThisTurn
 -- (CR 608.2i's look-back, which outlives CR 511.3's wipe of Combat.attackers),
--- and ActivationRestriction.OnlyOnceEachTurn. The card file states neither, so
+-- and ActivationRestriction.TimesEachTurn. The card file states neither, so
 -- both cases below are the keyword's.
 --
 -- Duskwielder (Kaldheim) is the producer: a {B} 1\/2 Elf Berserker, "Boast --
@@ -4333,7 +4333,7 @@ locustBoard swarm forest =
 -- face.
 isOnlyOnceEachTurn :: A.Action -> Bool
 isOnlyOnceEachTurn a = case a of
-  A.Activate _ ability -> elem ActivationRestriction.OnlyOnceEachTurn (ActivatedAbility.restrictions ability)
+  A.Activate _ ability -> elem (ActivationRestriction.TimesEachTurn 1) (ActivatedAbility.restrictions ability)
   _ -> False
 
 -- Takes the once-each-turn activation whenever the engine offers it and passes

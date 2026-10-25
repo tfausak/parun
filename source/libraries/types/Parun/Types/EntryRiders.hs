@@ -6,12 +6,12 @@ import qualified Parun.Types.CounterKind as CounterKind
 import qualified Parun.Types.EntryAttack as EntryAttack
 import qualified Parun.Types.EntryBlock as EntryBlock
 import qualified Parun.Types.EntryController as EntryController
+import qualified Parun.Types.EntryHost as EntryHost
 import qualified Parun.Types.FaceDownState as FaceDownState
 import qualified Parun.Types.Keyword as Keyword
 import qualified Parun.Types.Modification as Modification
 import qualified Parun.Types.PlayerRef as PlayerRef
 import qualified Parun.Types.PlayerRelation as PlayerRelation
-import qualified Parun.Types.SlotName as SlotName
 import qualified Parun.Types.TapState as TapState
 
 -- | What an effect says about an object AS IT ARRIVES in a zone, beyond the
@@ -202,17 +202,20 @@ import qualified Parun.Types.TapState as TapState
 -- producer, and its "up to one" is why the rule's undefined case is reachable at
 -- all: a seat that announces zero targets leaves the slot naming nothing.
 --
--- A SLOT NAME, EntryBlock.Specified's shape: a targeted slot (Preston Garvey)
--- CR 608.2b has already judged, so the effect has answered the question and the
--- engine never asks -- which is the difference from CR 303.4f, whose whole
--- content is that the effect did NOT name one. A slot naming several is
--- Dunbarrow Revivalist's "attached to one of them", where the effect names the
--- group and CR 608.2d has its controller pick one.
+-- EntryHost.Specified is a SLOT NAME, EntryBlock.Specified's shape: a targeted
+-- slot (Preston Garvey) CR 608.2b has already judged, so the effect has answered
+-- the question and the engine never asks -- which is the difference from CR
+-- 303.4f, whose whole content is that the effect did NOT name one. A slot naming
+-- several is Dunbarrow Revivalist's "attached to one of them", where the effect
+-- names the group and CR 608.2d has its controller pick one. Read by the CREATE
+-- alone (Parun.Engine.Resolve's Create arm and Event.createTokens).
 --
--- Read by the CREATE alone (Parun.Engine.Resolve's Create arm and
--- Event.createTokens), which Parun.EffectLintSpec fences: no MoveToZone in the
--- pool names an attachment, and putFound carries CR 303.4a's fixed host down its
--- own road instead.
+-- EntryHost.Chosen is CR 303.4f's choice still made by the controller, but among
+-- the hosts the effect's filter admits as well as the Aura's enchant ability --
+-- the rule's "and any other applicable effects": Nomad Mythmaker's "attached to
+-- a creature you control". Read by the MOVETOZONE alone
+-- (Parun.Engine.Resolve.Effect's moveOne). Parun.EffectLintSpec fences both
+-- halves; putFound carries CR 303.4a's fixed host down its own road instead.
 --
 -- NOT the road CR 701.58a's cloak takes, though the pairing it needs -- the 2/2
 -- with ward {2} FaceDownCharacteristics.disguisedValue is, under
@@ -228,7 +231,7 @@ data EntryRiders count ability = MkEntryRiders
     counters :: Map.Map (CounterKind.CounterKind Keyword.Keyword) count,
     under :: EntryController.EntryController,
     exiledFaceDown :: Bool,
-    attachedTo :: Maybe SlotName.SlotName,
+    attachedTo :: Maybe EntryHost.EntryHost,
     faceDown :: Maybe (FaceDownState.FaceDownState ability),
     -- | CR 707.14: note the card being moved, for a later "copy of the card
     -- with the noted name" (GameState.notedCards).

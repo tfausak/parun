@@ -16,6 +16,7 @@ import qualified Data.Map.Strict as Map
 import qualified Data.Maybe as Maybe
 import qualified Data.Set as Set
 import qualified Data.Text as Text
+import Numeric.Natural (Natural)
 import qualified Parun.Oracle.Continuous as Continuous
 import qualified Parun.Oracle.Cost as Cost
 import qualified Parun.Oracle.Effect as Effect
@@ -192,6 +193,8 @@ activated context a
       effect <- Effect.modal after (ActivatedAbility.modal a)
       rider <- case ActivatedAbility.restrictions a of
         [] -> [Text.empty]
+        -- CR 602.5b counted past once is its own sentence (Vampire Bats).
+        [ActivationRestriction.TimesEachTurn n] | n > 1 -> [Text.pack " Activate no more than " <> times n <> Text.pack " each turn."]
         rs -> do
           clauses <- traverse restriction rs
           [Text.pack " Activate only " <> restrictions (zip rs clauses) <> Text.pack "."]
@@ -210,6 +213,13 @@ restrictions rs = case rs of
   (_, first) : rest -> first <> Text.pack " and only " <> restrictions rest
   [] -> Text.empty
 
+-- | How many times: "once", "twice", "three times".
+times :: Natural -> Text.Text
+times n = case n of
+  1 -> Text.pack "once"
+  2 -> Text.pack "twice"
+  _ -> Prose.cardinal (toInteger n) <> Text.pack " times"
+
 -- | One clause of "Activate only ..." (CR 602.5): "as a sorcery" (CR 307.5),
 -- "as an instant" (CR 602.5e), "once each turn" (CR 602.5b), "during your
 -- turn" (CR 102.1), "during your upkeep", "before attackers are declared"
@@ -218,7 +228,7 @@ restriction :: ActivationRestriction.ActivationRestriction -> [Text.Text]
 restriction r = case r of
   ActivationRestriction.SorcerySpeed -> [Text.pack "as a sorcery"]
   ActivationRestriction.InstantSpeed -> [Text.pack "as an instant"]
-  ActivationRestriction.OnlyOnceEachTurn -> [Text.pack "once each turn"]
+  ActivationRestriction.TimesEachTurn 1 -> [Text.pack "once each turn"]
   ActivationRestriction.OnlyOnce -> [Text.pack "once"]
   ActivationRestriction.DuringTurn TurnScope.ControllersTurn -> [Text.pack "during your turn"]
   ActivationRestriction.DuringTurn TurnScope.OpponentsTurn -> [Text.pack "during an opponent's turn"]

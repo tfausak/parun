@@ -7,11 +7,11 @@ import qualified Parun.Codec.CounterKind as CounterKind
 import qualified Parun.Codec.EntryAttack as EntryAttack
 import qualified Parun.Codec.EntryBlock as EntryBlock
 import qualified Parun.Codec.EntryController as EntryController
+import qualified Parun.Codec.EntryHost as EntryHost
 import qualified Parun.Codec.FaceDownState as FaceDownState
 import qualified Parun.Codec.Keyword as Keyword
 import qualified Parun.Codec.Modification as Modification
 import qualified Parun.Codec.Quantity as Quantity
-import qualified Parun.Codec.SlotName as SlotName
 import qualified Parun.Codec.TapState as TapState
 import qualified Parun.JsonCodec.Codec as Codec
 import qualified Parun.JsonCodec.Common as Common
@@ -45,7 +45,7 @@ codec abilityCodec = Fields.object $ do
   counters <- Fields.defaulted "counters" (EntryRiders.counters EntryRiders.defaultValue) (Common.keyedList counter) EntryRiders.counters
   under <- Fields.defaulted "under" (EntryRiders.under EntryRiders.defaultValue) EntryController.codec EntryRiders.under
   exiledFaceDown <- Fields.defaulted "exiledFaceDown" (EntryRiders.exiledFaceDown EntryRiders.defaultValue) Common.boolean EntryRiders.exiledFaceDown
-  attachedTo <- Fields.defaulted "attachedTo" (EntryRiders.attachedTo EntryRiders.defaultValue) (Common.maybe SlotName.codec) EntryRiders.attachedTo
+  attachedTo <- Fields.defaulted "attachedTo" (EntryRiders.attachedTo EntryRiders.defaultValue) (Common.maybe EntryHost.codec) EntryRiders.attachedTo
   faceDown <- Fields.defaulted "faceDown" (EntryRiders.faceDown EntryRiders.defaultValue) (Common.maybe (FaceDownState.codec abilityCodec)) EntryRiders.faceDown
   noted <- Fields.defaulted "noted" (EntryRiders.noted EntryRiders.defaultValue) Common.boolean EntryRiders.noted
   characteristics <- Fields.defaulted "characteristics" (EntryRiders.characteristics EntryRiders.defaultValue) (Common.seq (Modification.codec abilityCodec)) EntryRiders.characteristics

@@ -951,3 +951,23 @@ Entries are ordered by the first rule each cites.
   `RevealCause.AsDrawnUnder`, proved by the scenario "CR 607.2h each of two
   Rowens reveals the first draw and draws once for its own reveal".
 - **Issue**: none.
+
+## When an effect that narrows an Aura's host asks for it
+
+- **Question**: Nomad Mythmaker puts an Aura card onto the battlefield
+  "attached to a creature you control". CR 303.4f has the player choose the
+  host "as the Aura enters"; is that asked before or after the move's CR 616.1
+  zone-change replacements settle where the card goes?
+- **Rules**: CR 303.4f, 303.4g, 616.1; CR of 2026-08-07.
+- **Decision**: Before, when the instruction is carried out, off the board the
+  move begins on. The choice is the effect's narrowing of the host, read in the
+  resolution's context; a replacement that sends the card elsewhere discards
+  it unused. ExchangeCardZones already asks CR 303.4f's choice the same way.
+- **Rejected**: Asking inside the zone-change funnel after CR 616.1, which
+  would thread the effect's filter through every caller of that funnel for a
+  prompt that changes nothing when the card does not arrive.
+- **Site**: `Parun.Engine.Resolve.Effect`'s MoveToZone arm (`chosenHost`),
+  proved by the scenario "CR 303.4f whole card: Nomad Mythmaker puts an
+  opponent's Aura card onto the battlefield under its controller's control,
+  attached to a creature that player controls".
+- **Issue**: none.

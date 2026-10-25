@@ -117,8 +117,10 @@ spec s = Spec.describe s "Parun.Mtgish" $ do
   -- CR 602.5: "Activate only ..." as the ability's restrictions.
   Spec.it s "reads the restrictions on activating an ability" $ do
     Spec.assertEq s (Right ()) (accepts spittingDrake)
+    Spec.assertEq s (Right ()) (accepts vampireBats)
     Spec.assertEq s (Right ()) (accepts disruptingScepter)
-    Spec.assertEq s [[ActivationRestriction.OnlyOnceEachTurn]] (fmap ActivatedAbility.restrictions (Face.activatedAbilities (translated spittingDrake)))
+    Spec.assertEq s [[ActivationRestriction.TimesEachTurn 1]] (fmap ActivatedAbility.restrictions (Face.activatedAbilities (translated spittingDrake)))
+    Spec.assertEq s [[ActivationRestriction.TimesEachTurn 2]] (fmap ActivatedAbility.restrictions (Face.activatedAbilities (translated vampireBats)))
     Spec.assertEq s [[ActivationRestriction.DuringTurn TurnScope.ControllersTurn]] (fmap ActivatedAbility.restrictions (Face.activatedAbilities (translated disruptingScepter)))
 
   -- CR 701.23a: a search for a card of a description, revealed and put on
@@ -449,6 +451,12 @@ charcoalDiamond =
   )
 
 -- | Spitting Drake's AST, and its Oracle text.
+vampireBats :: (String, String)
+vampireBats =
+  ( "{\"_OracleCard\":\"Card\",\"Name\":\"Vampire Bats\",\"Typeline\":{\"Supertypes\":[],\"Cardtypes\":[\"Creature\"],\"Subtypes\":[\"Bat\"]},\"ManaCost\":[{\"_ManaSymbol\":\"ManaCostB\"}],\"Rules\":[{\"_Rule\":\"Flying\"},{\"_Rule\":\"ActivatedWithModifiers\",\"args\":[{\"_Cost\":\"PayMana\",\"args\":[{\"_ManaSymbol\":\"ManaCostB\"}]},{\"_Actions\":\"ActionList\",\"args\":[{\"_Action\":\"CreatePermanentLayerEffectUntil\",\"args\":[{\"_Permanent\":\"ThisPermanent\"},[{\"_LayerEffect\":\"AdjustPT\",\"args\":[1,0]}],{\"_Expiration\":\"UntilEndOfTurn\"}]}]},{\"_ActivateModifier\":\"ActivateNoMoreThanNumberTimesEachTurn\",\"args\":{\"_GameNumber\":\"Integer\",\"args\":2}}]}],\"CardPT\":{\"Power\":0,\"Toughness\":1}}",
+    "Flying\n{B}: This creature gets +1/+0 until end of turn. Activate no more than twice each turn."
+  )
+
 spittingDrake :: (String, String)
 spittingDrake =
   ( "{\"_OracleCard\":\"Card\",\"Name\":\"Spitting Drake\",\"Typeline\":{\"Supertypes\":[],\"Cardtypes\":[\"Creature\"],\"Subtypes\":[\"Drake\"]},\"ManaCost\":[{\"_ManaSymbol\":\"ManaCostGeneric\",\"args\":3},{\"_ManaSymbol\":\"ManaCostR\"}],\"Rules\":[{\"_Rule\":\"Flying\"},{\"_Rule\":\"ActivatedWithModifiers\",\"args\":[{\"_Cost\":\"PayMana\",\"args\":[{\"_ManaSymbol\":\"ManaCostR\"}]},{\"_Actions\":\"ActionList\",\"args\":[{\"_Action\":\"CreatePermanentLayerEffectUntil\",\"args\":[{\"_Permanent\":\"ThisPermanent\"},[{\"_LayerEffect\":\"AdjustPT\",\"args\":[1,0]}],{\"_Expiration\":\"UntilEndOfTurn\"}]}]},{\"_ActivateModifier\":\"ActivateOnlyOnceEachTurn\"}]}],\"CardPT\":{\"Power\":2,\"Toughness\":2}}",

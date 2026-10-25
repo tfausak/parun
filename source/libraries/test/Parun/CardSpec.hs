@@ -195,6 +195,7 @@ import qualified Parun.Types.Emerge as Emerge
 import qualified Parun.Types.EntersWith as EntersWith
 import qualified Parun.Types.EntryController as EntryController
 import qualified Parun.Types.EntryFlip as EntryFlip
+import qualified Parun.Types.EntryHost as EntryHost
 import qualified Parun.Types.EntryOption as EntryOption
 import qualified Parun.Types.EntryPrice as EntryPrice
 import qualified Parun.Types.EntryR as EntryR
@@ -881,7 +882,7 @@ restrictionConditions restriction = case restriction of
   ActivationRestriction.BeforeStep _ -> []
   ActivationRestriction.OnlyIf condition -> [condition]
   ActivationRestriction.OnlyOnce -> []
-  ActivationRestriction.OnlyOnceEachTurn -> []
+  ActivationRestriction.TimesEachTurn _ -> []
   ActivationRestriction.DuringDieRoll -> []
   ActivationRestriction.InstantSpeed -> []
   ActivationRestriction.SpendOnly _ -> []
@@ -3348,7 +3349,8 @@ protectionOffences face =
 -- added here by hand.
 -- The Filter positions an entry rider has: the counter KINDS it is keyed by (CR
 -- 122.1b's keyword counter carries a whole Keyword) and the COUNTS it holds (CR
--- 122.6, each a Quantity, which may carry a Count whose Filter is card text).
+-- 122.6, each a Quantity, which may carry a Count whose Filter is card text),
+-- and the host filter CR 303.4f's choice is narrowed by.
 -- One function so the three effect arms that carry a rider cannot sweep
 -- different halves of it.
 riderFilters :: EntryRiders.EntryRiders Quantity.Type.Quantity (GrantedAbility.GrantedAbility Card.Type.Card) -> [(Framing, Filter.Type.Filter Keyword.Keyword)]
@@ -3357,6 +3359,12 @@ riderFilters riders =
     <> concatMap quantityFilters (Map.elems (EntryRiders.counters riders))
     -- CR 611.2e's effects, ModifyTarget's modification read.
     <> foldMap modificationFilters (EntryRiders.characteristics riders)
+    -- CR 303.4f's narrowing of the host choice (EntryHost.Chosen).
+    <> foldMap hostFilters (EntryRiders.attachedTo riders)
+  where
+    hostFilters host = case host of
+      EntryHost.Specified _ -> []
+      EntryHost.Chosen f -> [(Unframed, f)]
 
 -- Both Filter positions a CR 614.1c counter row has: the KINDS it is keyed by
 -- (CR 122.1b's keyword counter carries a whole Keyword) and the COUNTS it holds

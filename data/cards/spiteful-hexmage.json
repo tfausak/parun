@@ -109,7 +109,10 @@
                             "value": 1
                           },
                           "riders": {
-                            "attachedTo": "target"
+                            "attachedTo": {
+                              "type": "Specified",
+                              "value": "target"
+                            }
                           }
                         }
                       }

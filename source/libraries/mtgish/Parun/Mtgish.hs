@@ -419,7 +419,10 @@ activationRestrictions n = case Node.tag n of
   "And" -> fmap concat (Node.arguments n >>= traverse (Node.node Monad.>=> activationRestrictions))
   "ActivateOnlyAsASorcery" -> Right [ActivationRestriction.SorcerySpeed]
   "ActivateOnlyAsAnInstant" -> Right [ActivationRestriction.InstantSpeed]
-  "ActivateOnlyOnceEachTurn" -> Right [ActivationRestriction.OnlyOnceEachTurn]
+  "ActivateOnlyOnceEachTurn" -> Right [ActivationRestriction.TimesEachTurn 1]
+  "ActivateNoMoreThanNumberTimesEachTurn" -> do
+    k <- Node.child n >>= integer >>= natural n
+    if k == 0 then Node.untranslated n else Right [ActivationRestriction.TimesEachTurn k]
   "ActivateOnlyOnce" -> Right [ActivationRestriction.OnlyOnce]
   "ActivateOnlyIf" -> Node.child n >>= onlyIf
   _ -> Node.untranslated n

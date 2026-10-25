@@ -1,0 +1,105 @@
+{
+  "description": "CR 303.4g whole card: Nomad Mythmaker's Aura stays in the graveyard when it can enchant no creature its controller controls",
+  "note": "Wild Growth enchants a land. Alice's Plains is one, so without the narrowing it would enter there, but the effect's 'a creature you control' admits only creatures, so nothing is legal and the Aura remains where it is.",
+  "board": {
+    "active": "alice",
+    "step": "PrecombatMain",
+    "seats": [
+      {
+        "name": "alice",
+        "battlefield": [
+          {
+            "card": "Nomad Mythmaker",
+            "label": "mythmaker",
+            "ready": true
+          },
+          {
+            "card": "Plains",
+            "label": "plains"
+          }
+        ],
+        "library": [
+          {
+            "card": "Island"
+          },
+          {
+            "card": "Island"
+          },
+          {
+            "card": "Island"
+          }
+        ]
+      },
+      {
+        "name": "bob",
+        "graveyard": [
+          {
+            "card": "Wild Growth",
+            "label": "aura"
+          }
+        ],
+        "library": [
+          {
+            "card": "Island"
+          },
+          {
+            "card": "Island"
+          },
+          {
+            "card": "Island"
+          }
+        ]
+      }
+    ]
+  },
+  "timeline": [
+    {
+      "turn": 1,
+      "step": "PrecombatMain",
+      "player": "alice",
+      "do": {
+        "Activate": {
+          "object": "$mythmaker",
+          "targets": [
+            "$aura"
+          ],
+          "mana": [
+            "$plains"
+          ]
+        }
+      }
+    },
+    {
+      "turn": 1,
+      "step": "PrecombatMain",
+      "player": "alice",
+      "do": "Pass"
+    },
+    {
+      "turn": 1,
+      "step": "PrecombatMain",
+      "player": "alice",
+      "check": {
+        "Count": {
+          "player": "bob",
+          "zone": "Graveyard",
+          "card": "Wild Growth",
+          "count": 1
+        }
+      }
+    },
+    {
+      "turn": 1,
+      "step": "PrecombatMain",
+      "player": "alice",
+      "check": {
+        "Count": {
+          "player": "alice",
+          "zone": "Battlefield",
+          "card": "Wild Growth",
+          "count": 0
+        }
+      }
+    }
+  ]
+}
