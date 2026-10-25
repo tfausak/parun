@@ -1362,8 +1362,8 @@ data Context = MkContext
     --
     -- `matches` below reads it for IsBound against a player view and for an
     -- unbaked ControlledByBound or OwnedByBound. It is otherwise a channel
-    -- THROUGH this record to Parun.Engine.Count.playersFor, which is handed CR 113.7's SOURCE and needs
-    -- the resolution's own slots instead: an ability's targets and its trigger's
+    -- THROUGH this record to Parun.Engine.Count.playersFor, which is handed CR
+    -- 113.7's SOURCE and needs the resolution's own slots instead: an ability's targets and its trigger's
     -- bindings are stamped on the ABILITY object on the stack, and a source is not
     -- its stack object, so a read off the source's bindings answers nothing for
     -- every ability (see #1783). A spell is the one object for which the two agree.

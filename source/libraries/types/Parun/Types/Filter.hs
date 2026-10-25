@@ -168,11 +168,11 @@ data Filter keyword
     -- perspective among its targets, a ToPlayer alone counting (Shell of the
     -- Last Kappa's "spell that targets you").
     TargetsPlayer PlayerRelation.PlayerRelation
-  | -- | The candidate IS an object or player the resolution bound in this slot
-    -- -- Into the Wilds' "if it's a land card", where the clause before it
-    -- looked at the top card of the library. Membership where CR 115.10a's
-    -- group binding names several, and vacuously False where the slot names
-    -- neither.
+  | -- | The candidate IS an object or player the resolution bound in this
+    -- slot: Into the Wilds' "if it's a land card", where the clause before it
+    -- looked at the top card of the library, and Cone of Flame's "another
+    -- target". Membership where CR 115.10a's group binding names several, and
+    -- vacuously False where the slot names neither.
     IsBound SlotName.SlotName
   | -- | CR 115.1 / 601.2c: the candidate is a target of the spell or ability
     -- whose cost is being paid -- "a creature that isn't a target of that
