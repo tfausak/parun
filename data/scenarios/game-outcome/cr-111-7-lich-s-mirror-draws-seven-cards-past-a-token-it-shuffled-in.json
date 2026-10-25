@@ -1,0 +1,36 @@
+{
+  "description": "CR 111.7 / 121.1: Lich's Mirror's reset shuffles a token alice owns into her library, and her seven draws pass over it, a token being no card",
+  "note": "Lich's Mirror's reset board with a Goblin Piker token added, which the shuffle leaves on top of alice's library until CR 704.5d removes it. She still draws seven cards: three Plains and all four Islands. A draw that took the top object would find the token, move nothing (CR 111.8) and leave an Island behind.",
+  "board": {
+    "active": "alice",
+    "step": "PrecombatMain",
+    "seats": [
+      {
+        "name": "alice",
+        "life": 3,
+        "battlefield": [
+          { "card": "Lich's Mirror" },
+          { "card": "Mountain", "label": "m" },
+          { "card": "Swamp" },
+          { "card": "Goblin Piker", "token": true }
+        ],
+        "hand": [{ "card": "Lightning Bolt", "label": "bolt" }, { "card": "Plains" }, { "card": "Plains" }],
+        "graveyard": [{ "card": "Plains" }],
+        "library": [{ "card": "Island" }, { "card": "Island" }, { "card": "Island" }, { "card": "Island" }]
+      },
+      {
+        "name": "bob",
+        "library": [{ "card": "Forest" }, { "card": "Forest" }]
+      }
+    ]
+  },
+  "timeline": [
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "do": { "Cast": { "object": "$bolt", "targets": ["$alice"], "mana": ["$m", null] } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "do": "Pass" },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "do": { "Answer": { "prompt": "Shuffle", "with": ["Goblin Piker", "Plains", "Plains#2", "Plains#3", "Island", "Island#2", "Island#3", "Island#4", "Lich's Mirror", "Mountain", "Swamp", "Lightning Bolt"] } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "check": { "Count": { "player": "alice", "zone": "Hand", "card": "Island", "count": 4 } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "check": { "Count": { "player": "alice", "zone": "Hand", "card": "Plains", "count": 3 } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "check": { "View": { "of": "Zone", "player": "alice", "zone": "Library", "is": ["Lich's Mirror", "Mountain", "Swamp", "Lightning Bolt"] } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "check": { "Life": { "player": "alice", "life": 20 } } }
+  ]
+}

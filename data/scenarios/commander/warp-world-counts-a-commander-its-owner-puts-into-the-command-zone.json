@@ -1,0 +1,20 @@
+{
+  "description": "CR 903.9b / Warp World's 2019-05-03 ruling: a commander its owner puts into the command zone instead of shuffling it in still counts towards how many cards that player reveals",
+  "note": "Alice owns Grizzly Bears and her commander Hill Giant, over a Forest in her library. She sends the Giant to the command zone, so her library holds the Bears and the Forest, and she reveals two cards: both. Counting only what reached the library would reveal one and leave the Forest, which the shuffle puts second.",
+  "board": {"active": "alice", "step": "PrecombatMain", "seats": [
+    {"name": "alice", "manaPool": "RRRRRRRR", "hand": [{"card": "Warp World", "label": "warp"}], "battlefield": [{"card": "Grizzly Bears"}, {"card": "Hill Giant", "commander": true}], "library": [{"card": "Forest"}]},
+    {"name": "bob", "library": [{"card": "Island"}]}
+  ]},
+  "timeline": [
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "do": {"Cast": {"object": "$warp"}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "do": "Pass"},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "do": {"Answer": {"prompt": "ReturnCommander", "with": "Returns"}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "do": {"Answer": {"prompt": "Shuffle", "with": ["Grizzly Bears", "Forest"]}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "do": {"Answer": {"prompt": "Shuffle", "with": ["Island"]}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "do": {"OrderTimestamps": ["Grizzly Bears", "Forest"]}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "check": {"Count": {"player": "alice", "zone": "Battlefield", "card": "Forest", "count": 1}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "check": {"Count": {"player": "alice", "zone": "Battlefield", "card": "Grizzly Bears", "count": 1}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "check": {"Count": {"player": "alice", "zone": "Command", "card": "Hill Giant", "count": 1}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "check": {"Count": {"player": "bob", "zone": "Library", "card": "Island", "count": 1}}}
+  ]
+}
