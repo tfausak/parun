@@ -8536,6 +8536,7 @@ applyOneEffect runSubgame resolving source controller legal chosen effect = case
           -- either reference in a player effect.
           atResolution ref = case ref of
             PlayerRef.ControllerOfBound _ -> seatNow ref
+            PlayerRef.ControllerOfHostOfBound _ -> seatNow ref
             PlayerRef.OwnerOfBound _ -> seatNow ref
             _ -> Quantity.bakePlayerRef (Binding.playersIn legal) Map.empty ref
           seatNow ref = case playerRefPlayers legal resolving source controller gs ref of

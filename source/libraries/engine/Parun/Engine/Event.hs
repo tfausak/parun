@@ -10369,6 +10369,9 @@ controllerTurnScoped cond = case cond of
   -- cannot reach this arm; answering it any other way would make the
   -- classification wrong for the sake of an unreachable case.
   TriggerCondition.StepBegins (StepBegins.MkStepBegins _ _ TurnScope.OpponentsTurn) -> False
+  -- A named player's step is not the controller's as such: Soul Bleed on an
+  -- opponent's creature fires on that opponent's upkeep.
+  TriggerCondition.StepBegins (StepBegins.MkStepBegins _ _ (TurnScope.PlayersTurn _)) -> False
   -- CR 702.179d's "during YOUR turn" is the same restriction StepBegins spells
   -- with a TurnScope, written into the condition itself because rule 702.179d
   -- states it there. No card bears this condition, so the lint this feeds cannot
@@ -10541,11 +10544,14 @@ controllerTurnScoped cond = case cond of
   -- unreachable from card data; answering True would make the classification wrong
   -- for the sake of that unreachable case.
   TriggerCondition.CardLeavesZone (CardLeavesZone.MkCardLeavesZone _ TurnScope.OpponentsTurn _ _ _) -> False
+  -- StepBegins' PlayersTurn answer, and for its reason.
+  TriggerCondition.CardLeavesZone (CardLeavesZone.MkCardLeavesZone _ (TurnScope.PlayersTurn _) _ _ _) -> False
   -- The batch reading of the same family, classified off the same field for the
   -- same reason: Spirit Mascot prints no turn clause where Kishla Skimmer does.
   TriggerCondition.CardsLeaveZone (CardLeavesZone.MkCardLeavesZone _ TurnScope.ControllersTurn _ _ _) -> True
   TriggerCondition.CardsLeaveZone (CardLeavesZone.MkCardLeavesZone _ TurnScope.EachTurn _ _ _) -> False
   TriggerCondition.CardsLeaveZone (CardLeavesZone.MkCardLeavesZone _ TurnScope.OpponentsTurn _ _ _) -> False
+  TriggerCondition.CardsLeaveZone (CardLeavesZone.MkCardLeavesZone _ (TurnScope.PlayersTurn _) _ _ _) -> False
   -- Dutiful Knowledge Seeker's arrival names no turn.
   TriggerCondition.CardsPutIntoZone {} -> False
   TriggerCondition.SelfLeavesGraveyard -> False
@@ -10589,6 +10595,7 @@ controllerTurnScoped cond = case cond of
   TriggerCondition.SpellCast (SpellCast.MkSpellCast _ TurnScope.ControllersTurn _ _ _ _) -> True
   TriggerCondition.SpellCast (SpellCast.MkSpellCast _ TurnScope.EachTurn _ _ _ _) -> False
   TriggerCondition.SpellCast (SpellCast.MkSpellCast _ TurnScope.OpponentsTurn _ _ _ _) -> False
+  TriggerCondition.SpellCast (SpellCast.MkSpellCast _ (TurnScope.PlayersTurn _) _ _ _ _) -> False
   -- The same rule with no TurnScope to read: a spell can be cast on anybody's
   -- turn, so its own cast trigger is not the controller's-turn kind either.
   TriggerCondition.SelfCast -> False

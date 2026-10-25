@@ -258,16 +258,26 @@ step s = case (StepBegins.phase s, StepBegins.ordinal s, StepBegins.scope s) of
       -- of the Earth).
       TurnScope.EachTurn -> ["each player's " <> name] <> ["each " <> name | b == BeginningStep.Upkeep]
       TurnScope.OpponentsTurn -> ["each opponent's " <> name]
+      TurnScope.PlayersTurn ref -> namedPlayers name ref
   (Phase.Combat CombatStep.BeginningOfCombat, Nothing, scope) -> case scope of
     TurnScope.ControllersTurn -> ["combat on your turn"]
     TurnScope.EachTurn -> ["each combat"]
     TurnScope.OpponentsTurn -> ["combat on each opponent's turn"]
+    TurnScope.PlayersTurn _ -> []
   (Phase.Ending EndingStep.EndStep, Nothing, scope) -> case scope of
     TurnScope.ControllersTurn -> ["your end step"]
     TurnScope.EachTurn -> ["each end step", "the end step", "each player's end step"]
     TurnScope.OpponentsTurn -> ["each opponent's end step"]
+    TurnScope.PlayersTurn ref -> namedPlayers "end step" ref
   (Phase.PostcombatMain, Just 2, TurnScope.ControllersTurn) -> ["your second main phase"]
   (Phase.PostcombatMain, Nothing, TurnScope.ControllersTurn) -> ["each of your postcombat main phases"]
+  _ -> []
+
+-- | A step of a named player's turn: Soul Bleed's "the upkeep of enchanted
+-- creature's controller", over the source slot.
+namedPlayers :: String -> PlayerRef.PlayerRef -> [String]
+namedPlayers name ref = case ref of
+  PlayerRef.ControllerOfHostOfBound slot | slot == Target.selfSlot -> ["the " <> name <> " of enchanted creature's controller"]
   _ -> []
 
 -- | The slots Parun.Engine.Binding binds a trigger event's objects and players

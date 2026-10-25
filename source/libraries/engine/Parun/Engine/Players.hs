@@ -226,6 +226,9 @@ namedUncut given gs ref =
         -- -> 19" (Vapor Snag) proves the resolution's last-known road, and
         -- Flunk's "that creature's controller's hand" (Parun.CountSpec) a count's.
         PlayerRef.ControllerOfBound slot -> fmap pure (slotObject given slot >>= controllerOf given)
+        -- CR 303.4b: the same read of the permanent that object is attached
+        -- to, its host as it stood if the object has left (CR 608.2h).
+        PlayerRef.ControllerOfHostOfBound slot -> fmap pure (slotObject given slot >>= (`Game.hostWithLastKnown` gs) >>= controllerOf given)
         -- CR 108.3's owner, one field over. The Deck of Many Things' 20 band is
         -- the producer (Parun.CardSpec): reanimating an opponent's creature and
         -- having that opponent lose the game is where owner and controller part.

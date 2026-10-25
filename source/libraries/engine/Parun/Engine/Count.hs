@@ -627,6 +627,16 @@ playersFor viewOf context gs =
       }
     gs
 
+-- CR 102.1: the players a TurnScope.PlayersTurn reference names, which is
+-- playersFor with CR 113.7's source slot naming the context's source where
+-- nothing bound it already -- a step trigger is matched before its bindings
+-- exist, and Soul Bleed's "enchanted creature's controller" reads the host of
+-- the Aura through that slot. Turn.turnScopeAdmits takes this as its reader.
+scopePlayers :: ViewOf -> Filter.Context -> GameState -> PlayerRef.PlayerRef -> Maybe [PlayerId]
+scopePlayers viewOf context =
+  let withSource source = context {Filter.slotObjects = Map.insertWith (\_ bound -> bound) Binding.triggerSource (Set.singleton source) (Filter.slotObjects context)}
+   in playersFor viewOf (maybe context withSource (Filter.source context))
+
 -- CR 601.2c: the players one slot names at this position, or Nothing where no
 -- slot of that name is bound here -- which every arm above reads as
 -- "unanswerable" rather than as an empty fold.

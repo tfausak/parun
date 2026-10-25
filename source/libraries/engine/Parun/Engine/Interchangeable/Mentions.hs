@@ -180,6 +180,7 @@ import qualified Parun.Types.DrawRewrite as DrawRewrite
 import qualified Parun.Types.DungeonRoom as DungeonRoom
 import qualified Parun.Types.Duration as Duration
 import qualified Parun.Types.DurationEvent as DurationEvent
+import qualified Parun.Types.DuringPhase as DuringPhase
 import qualified Parun.Types.EachCardFromAmong as EachCardFromAmong
 import qualified Parun.Types.EachCardInExiledPile as EachCardInExiledPile
 import qualified Parun.Types.EachCardInGraveyard as EachCardInGraveyard
@@ -406,6 +407,7 @@ import qualified Parun.Types.TriggerFrequency as TriggerFrequency
 import qualified Parun.Types.TriggerLimit as TriggerLimit
 import qualified Parun.Types.TriggeredAbility as TriggeredAbility
 import qualified Parun.Types.TurnFaceDown as TurnFaceDown
+import qualified Parun.Types.TurnScope as TurnScope
 import qualified Parun.Types.TurnUpR as TurnUpR
 import qualified Parun.Types.TurnUpRewrite as TurnUpRewrite
 import qualified Parun.Types.UntapR as UntapR
@@ -608,8 +610,8 @@ activationProhibitionNames asking x = case x of
 activationRestrictionNames :: (Monoid r) => Asking r -> ActivationRestriction.ActivationRestriction -> r
 activationRestrictionNames asking x = case x of
   ActivationRestriction.SorcerySpeed -> mempty
-  ActivationRestriction.DuringPhase _duringPhase -> mempty
-  ActivationRestriction.DuringTurn _turnScope -> mempty
+  ActivationRestriction.DuringPhase duringPhase -> duringPhaseNames asking duringPhase
+  ActivationRestriction.DuringTurn turnScope -> turnScopeNames asking turnScope
   ActivationRestriction.AttackedThisStep -> mempty
   ActivationRestriction.AfterBlockersDeclared -> mempty
   ActivationRestriction.BeforeCombatDamage -> mempty
@@ -682,7 +684,7 @@ aimedPlayersNames asking x = case x of
 
 alternativeActivationCostNames :: (Monoid r) => Asking r -> AlternativeActivationCost.AlternativeActivationCost -> r
 alternativeActivationCostNames asking x = case x of
-  AlternativeActivationCost.MkAlternativeActivationCost grantedBy onlyFirst _cost -> keywordDesignatorNames asking grantedBy <> foldMap (const (history asking HistoryRead.Activations)) onlyFirst
+  AlternativeActivationCost.MkAlternativeActivationCost grantedBy onlyFirst _cost -> keywordDesignatorNames asking grantedBy <> foldMap (\scope -> history asking HistoryRead.Activations <> turnScopeNames asking scope) onlyFirst
 
 alternativeCostNames :: (Monoid r) => Asking r -> AlternativeCost.AlternativeCost -> r
 alternativeCostNames asking x = case x of
@@ -826,7 +828,7 @@ cardNames asking x = case x of
 
 cardLeavesZoneNames :: (Monoid r) => Asking r -> CardLeavesZone.CardLeavesZone -> r
 cardLeavesZoneNames asking x = case x of
-  CardLeavesZone.MkCardLeavesZone filter_ _scope _from _to _whose -> filterNames asking filter_
+  CardLeavesZone.MkCardLeavesZone filter_ scope _from _to _whose -> filterNames asking filter_ <> turnScopeNames asking scope
 
 cardPutIntoGraveyardNames :: (Monoid r) => Asking r -> CardPutIntoGraveyard.CardPutIntoGraveyard -> r
 cardPutIntoGraveyardNames asking x = case x of
@@ -834,7 +836,7 @@ cardPutIntoGraveyardNames asking x = case x of
 
 cardsPutIntoZoneNames :: (Monoid r) => Asking r -> CardsPutIntoZone.CardsPutIntoZone -> r
 cardsPutIntoZoneNames asking x = case x of
-  CardsPutIntoZone.MkCardsPutIntoZone filter_ _scope _from _to -> filterNames asking filter_
+  CardsPutIntoZone.MkCardsPutIntoZone filter_ scope _from _to -> filterNames asking filter_ <> turnScopeNames asking scope
 
 castFromNames :: (Monoid r) => Asking r -> CastFrom.CastFrom -> r
 castFromNames asking x = case x of
@@ -856,11 +858,11 @@ castRepetitionNames asking x = case x of
 
 castingRestrictionNames :: (Monoid r) => Asking r -> CastingRestriction.CastingRestriction -> r
 castingRestrictionNames asking x = case x of
-  CastingRestriction.DuringPhase _duringPhase -> mempty
+  CastingRestriction.DuringPhase duringPhase -> duringPhaseNames asking duringPhase
   CastingRestriction.AttackedThisStep -> mempty
   CastingRestriction.AfterBlockersDeclared -> mempty
   CastingRestriction.BeforeStep _phase -> history asking HistoryRead.StepBegins
-  CastingRestriction.DuringTurn _turnScope -> mempty
+  CastingRestriction.DuringTurn turnScope -> turnScopeNames asking turnScope
   CastingRestriction.SpendOnlyOnX _color -> mempty
 
 changeTextNames :: (Monoid r) => Asking r -> ChangeText.ChangeText -> r
@@ -942,7 +944,7 @@ conditionNames asking x = case x of
   Condition.Compares compares -> comparesNames asking compares
   Condition.Any items -> foldMap (conditionNames asking) items
   Condition.All items -> foldMap (conditionNames asking) items
-  Condition.During _duringPhase -> mempty
+  Condition.During duringPhase -> duringPhaseNames asking duringPhase
 
 conjureNames :: (Monoid r) => Asking r -> (card -> r) -> Conjure.Conjure card -> r
 conjureNames asking onCard x = case x of
@@ -2339,7 +2341,7 @@ costChangeNames asking x = case x of
 
 costModifierNames :: (Monoid r) => Asking r -> CostModifier.CostModifier -> r
 costModifierNames asking x = case x of
-  CostModifier.MkCostModifier subject matching whichTargets perTarget perEach onlyFirst change -> foldMap (const (history asking HistoryRead.Activations)) onlyFirst <> costSubjectNames asking subject <> filterNames asking matching <> foldMap (filterNames asking) whichTargets <> foldMap (filterNames asking) perTarget <> foldMap (quantityNames asking) perEach <> costChangeNames asking change
+  CostModifier.MkCostModifier subject matching whichTargets perTarget perEach onlyFirst change -> foldMap (\scope -> history asking HistoryRead.Activations <> turnScopeNames asking scope) onlyFirst <> costSubjectNames asking subject <> filterNames asking matching <> foldMap (filterNames asking) whichTargets <> foldMap (filterNames asking) perTarget <> foldMap (quantityNames asking) perEach <> costChangeNames asking change
 
 costSubjectNames :: (Monoid r) => Asking r -> CostSubject.CostSubject -> r
 costSubjectNames asking x = case x of
@@ -2420,6 +2422,7 @@ playerRefNames asking x = case x of
   PlayerRef.Specific _playerId -> mempty
   PlayerRef.Candidate -> mempty
   PlayerRef.ControllerOfBound slotName -> slotNames asking slotName
+  PlayerRef.ControllerOfHostOfBound slotName -> slotNames asking slotName
   PlayerRef.OwnerOfBound slotName -> slotNames asking slotName
   PlayerRef.ControllerOfObject objectId -> names asking (== objectId)
   PlayerRef.OwnerOfObject objectId -> names asking (== objectId)
@@ -2803,7 +2806,7 @@ speedDecreaseNames asking x = case x of
 
 spellCastNames :: (Monoid r) => Asking r -> SpellCast.SpellCast -> r
 spellCastNames asking x = case x of
-  SpellCast.MkSpellCast filter_ _scope _zone ordinal _phase _copies -> filterNames asking filter_ <> foldMap (const (history asking HistoryRead.Casts)) ordinal
+  SpellCast.MkSpellCast filter_ scope _zone ordinal _phase _copies -> filterNames asking filter_ <> turnScopeNames asking scope <> foldMap (const (history asking HistoryRead.Casts)) ordinal
 
 spliceNames :: (Monoid r) => Asking r -> (keyword -> r) -> Splice.Splice keyword -> r
 spliceNames asking onKeyword x = case x of
@@ -2815,7 +2818,19 @@ statedFlipNames asking x = case x of
 
 stepBeginsNames :: (Monoid r) => Asking r -> StepBegins.StepBegins -> r
 stepBeginsNames asking x = case x of
-  StepBegins.MkStepBegins _phase ordinal _scope -> foldMap (const (history asking HistoryRead.StepBegins)) ordinal
+  StepBegins.MkStepBegins _phase ordinal scope -> foldMap (const (history asking HistoryRead.StepBegins)) ordinal <> turnScopeNames asking scope
+
+-- CR 102.1: a named player's turn reads whatever its reference reads.
+turnScopeNames :: (Monoid r) => Asking r -> TurnScope.TurnScope -> r
+turnScopeNames asking x = case x of
+  TurnScope.EachTurn -> mempty
+  TurnScope.ControllersTurn -> mempty
+  TurnScope.OpponentsTurn -> mempty
+  TurnScope.PlayersTurn playerRef -> playerRefNames asking playerRef
+
+duringPhaseNames :: (Monoid r) => Asking r -> DuringPhase.DuringPhase -> r
+duringPhaseNames asking x = case x of
+  DuringPhase.MkDuringPhase _window scope -> turnScopeNames asking scope
 
 staticAbilityNames :: (Monoid r) => Asking r -> (ability -> r) -> StaticAbility.StaticAbility ability -> r
 staticAbilityNames asking onAbility x = case x of

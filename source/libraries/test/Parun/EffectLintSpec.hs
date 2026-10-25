@@ -2150,7 +2150,9 @@ effectLintSpec s registry = Spec.describe s "Lint" $ do
           PlayerRef.Candidate -> True
           -- One seat -- InSlot's answer, one indirection out.
           PlayerRef.ControllerOfBound _ -> True
-          -- One seat -- the arm above's answer, one word over.
+          -- One seat -- the arm above's answer, one attachment further out.
+          PlayerRef.ControllerOfHostOfBound _ -> True
+          -- One seat -- the ControllerOfBound answer, one word over.
           PlayerRef.OwnerOfBound _ -> True
           -- One seat each -- the two arms above, baked; unreachable from card
           -- data, Specific's answer.

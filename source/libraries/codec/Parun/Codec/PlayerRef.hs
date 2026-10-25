@@ -39,6 +39,9 @@ codec =
       -- CR 608.2h's reference, which a card writes: Spikeshell Harrier names the
       -- controller of the permanent its trigger targeted.
       Arm.payload "ControllerOfBound" SlotName.codec PlayerRef.ControllerOfBound (\x -> case x of PlayerRef.ControllerOfBound y -> Just y; _ -> Nothing),
+      -- CR 303.4b's host's controller, which a card writes: Soul Bleed names
+      -- "enchanted creature's controller" over the source slot.
+      Arm.payload "ControllerOfHostOfBound" SlotName.codec PlayerRef.ControllerOfHostOfBound (\x -> case x of PlayerRef.ControllerOfHostOfBound y -> Just y; _ -> Nothing),
       -- CR 108.3's owner, ControllerOfBound's twin, which a card writes: The
       -- Deck of Many Things names the owner of a creature its 20 band
       -- reanimated.
@@ -69,6 +72,7 @@ tagOf x = case x of
   PlayerRef.Specific {} -> "Specific"
   PlayerRef.Candidate {} -> "Candidate"
   PlayerRef.ControllerOfBound {} -> "ControllerOfBound"
+  PlayerRef.ControllerOfHostOfBound {} -> "ControllerOfHostOfBound"
   PlayerRef.OwnerOfBound {} -> "OwnerOfBound"
   PlayerRef.ControllerOfObject {} -> "ControllerOfObject"
   PlayerRef.OwnerOfObject {} -> "OwnerOfObject"
