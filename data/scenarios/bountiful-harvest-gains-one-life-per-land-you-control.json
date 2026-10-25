@@ -1,0 +1,99 @@
+{
+  "description": "CR 119.3: Bountiful Harvest gains 1 life for each land its caster controls",
+  "note": "Alice controls three Forests and a Grizzly Bears, Bob two Islands: Alice gains 3, not 4 or 5.",
+  "board": {
+    "active": "alice",
+    "step": "PrecombatMain",
+    "seats": [
+      {
+        "name": "alice",
+        "manaPool": "GGGGG",
+        "hand": [
+          {
+            "card": "Bountiful Harvest",
+            "label": "harvest"
+          }
+        ],
+        "battlefield": [
+          {
+            "card": "Forest",
+            "tapped": true
+          },
+          {
+            "card": "Forest",
+            "tapped": true
+          },
+          {
+            "card": "Forest",
+            "tapped": true
+          },
+          {
+            "card": "Grizzly Bears"
+          }
+        ],
+        "library": [
+          {
+            "card": "Island"
+          },
+          {
+            "card": "Island"
+          },
+          {
+            "card": "Island"
+          }
+        ]
+      },
+      {
+        "name": "bob",
+        "battlefield": [
+          {
+            "card": "Island"
+          },
+          {
+            "card": "Island"
+          }
+        ],
+        "library": [
+          {
+            "card": "Island"
+          },
+          {
+            "card": "Island"
+          },
+          {
+            "card": "Island"
+          }
+        ]
+      }
+    ]
+  },
+  "timeline": [
+    {
+      "turn": 1,
+      "step": "PrecombatMain",
+      "player": "alice",
+      "do": {
+        "Cast": {
+          "object": "$harvest"
+        }
+      }
+    },
+    {
+      "turn": 1,
+      "step": "PrecombatMain",
+      "player": "alice",
+      "do": "Pass"
+    },
+    {
+      "turn": 1,
+      "step": "PrecombatMain",
+      "player": "alice",
+      "check": {
+        "Life": {
+          "player": "alice",
+          "life": 23
+        }
+      }
+    }
+  ]
+}
