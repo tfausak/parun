@@ -9853,7 +9853,10 @@ drawCardReturning pid = do
 performDraw :: PlayerId -> Game (Maybe ObjectId)
 performDraw pid = do
   gs <- State.get
-  case Game.zoneMembers Zone.Library pid gs of
+  -- The top CARD (CR 121.1): a token shuffled in waits there for CR 704.5d (CR
+  -- 111.7) and is no card. Proved by
+  -- data/scenarios/game-outcome/cr-111-7-lich-s-mirror-draws-seven-cards-past-a-token-it-shuffled-in.json.
+  case filter (`Game.isCardObject` gs) (Game.zoneMembers Zone.Library pid gs) of
     [] -> do
       State.put gs {GameState.drewFromEmpty = Set.insert pid (GameState.drewFromEmpty gs)}
       pure Nothing
