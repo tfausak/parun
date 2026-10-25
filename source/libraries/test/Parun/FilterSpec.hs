@@ -591,6 +591,34 @@ spec s = Spec.describe s "Parun.Engine.Filter" $ do
       Spec.assertBool s (not (Filter.matches self blackCreature baked)) "player 0's creature is not that player's"
       Spec.assertBool s (Filter.matches self blackCreature atom) "where the unbaked atom admitted it"
       Spec.assertEqWith s "and left standing when the slot is unnamed" (Filter.bakeBound Map.empty Map.empty Map.empty atom) atom
+  -- CR 108.3's owner twin of the pair above: blackCreature is owned by player
+  -- 1 and controlled by player 0, so reading the controller disagrees.
+  Spec.describe s "OwnedByBound and OwnedByPlayer" $ do
+    let slot = SlotName.MkSlotName (Text.pack "target")
+        player = PlayerId.MkPlayerId
+    Spec.it s "the baked atom compares the candidate's owner" $ do
+      Spec.assertBool s (Filter.matches noPerspective blackCreature (Filter.Type.OwnedByPlayer (player 1))) "owner is player 1"
+      Spec.assertBool s (not (Filter.matches self blackCreature (Filter.Type.OwnedByPlayer (player 0)))) "the controller is not the owner"
+      Spec.assertBool s (not (Filter.matches self aPlayer (Filter.Type.OwnedByPlayer (player 0)))) "player"
+
+    Spec.it s "the unbaked atom reads the slot's one player" $ do
+      let players pids = self {Filter.slotPlayers = Map.singleton slot (Set.fromList (fmap player pids))}
+      Spec.assertBool s (Filter.matches (players [1]) blackCreature (Filter.Type.OwnedByBound slot)) "the owner is bound"
+      Spec.assertBool s (not (Filter.matches (players [0]) blackCreature (Filter.Type.OwnedByBound slot))) "the controller is bound"
+      Spec.assertBool s (not (Filter.matches self blackCreature (Filter.Type.OwnedByBound slot))) "nothing bound"
+
+    Spec.it s "bakeBound substitutes the bound player" $ do
+      let buried f = Filter.Type.And [Filter.Type.Or [Filter.Type.HasCardType CardType.Creature, Filter.Type.Not f]]
+      Spec.assertEqWith
+        s
+        "the atom is replaced in place"
+        (Filter.bakeBound (Map.singleton slot (player 1)) Map.empty Map.empty (buried (Filter.Type.OwnedByBound slot)))
+        (buried (Filter.Type.OwnedByPlayer (player 1)))
+      Spec.assertEqWith
+        s
+        "and left standing when the slot names nobody"
+        (Filter.bakeBound Map.empty Map.empty Map.empty (Filter.Type.OwnedByBound slot))
+        (Filter.Type.OwnedByBound slot)
   -- CR 702.60a's "with the same name as this spell", the Measures atom's OfSource
   -- shape over a SET of NAMES: CR 201.2 makes the comparison an intersection, so an
   -- object showing two names (CR 709.4a's split card) has the source's name if it
@@ -897,6 +925,14 @@ spec s = Spec.describe s "Parun.Engine.Filter" $ do
 
     Spec.it s "a slot naming nothing is vacuously false" $ do
       Spec.assertBool s (not (Filter.matches (bound []) blackCreature (Filter.Type.IsBound slot))) "nothing bound"
+
+    -- CR 115.3's "another target" over a player: the slot's player half, so a
+    -- player an earlier slot named is excluded and any other player is not.
+    Spec.it s "matches a player the slot names, and no other" $ do
+      let players pids = (bound []) {Filter.slotPlayers = Map.singleton slot (Set.fromList (fmap PlayerId.MkPlayerId pids))}
+      Spec.assertBool s (Filter.matches (players [0]) aPlayer (Filter.Type.IsBound slot)) "the bound player"
+      Spec.assertBool s (not (Filter.matches (players [1]) aPlayer (Filter.Type.IsBound slot))) "another player"
+      Spec.assertBool s (not (Filter.matches (players [0]) blackCreature (Filter.Type.IsBound slot))) "an object is not the bound player"
 
     -- The other half of the same map, and the reason it is a set: a reader that
     -- can point at one object and no more declines a group rather than taking

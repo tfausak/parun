@@ -76,6 +76,8 @@ codec keywordCodec =
       Arm.payload "ControlledBy" PlayerRelation.codec Filter.ControlledBy (\x -> case x of Filter.ControlledBy y -> Just y; _ -> Nothing),
       Arm.payload "OwnedBy" PlayerRelation.codec Filter.OwnedBy (\x -> case x of Filter.OwnedBy y -> Just y; _ -> Nothing),
       Arm.nullary "OwnedByRecipient" Filter.OwnedByRecipient,
+      Arm.payload "OwnedByBound" SlotName.codec Filter.OwnedByBound (\x -> case x of Filter.OwnedByBound y -> Just y; _ -> Nothing),
+      Arm.payload "OwnedByPlayer" PlayerId.codec Filter.OwnedByPlayer (\x -> case x of Filter.OwnedByPlayer y -> Just y; _ -> Nothing),
       Arm.payload "IsPlayer" PlayerRelation.codec Filter.IsPlayer (\x -> case x of Filter.IsPlayer y -> Just y; _ -> Nothing),
       Arm.payload "IsControllerOfBound" SlotName.codec Filter.IsControllerOfBound (\x -> case x of Filter.IsControllerOfBound y -> Just y; _ -> Nothing),
       Arm.payload "Controls" (controls keywordCodec) (uncurry Filter.Controls) (\x -> case x of Filter.Controls n y -> Just (n, y); _ -> Nothing),
@@ -207,6 +209,8 @@ tagOf x = case x of
   Filter.ControlledBy {} -> "ControlledBy"
   Filter.OwnedBy {} -> "OwnedBy"
   Filter.OwnedByRecipient {} -> "OwnedByRecipient"
+  Filter.OwnedByBound {} -> "OwnedByBound"
+  Filter.OwnedByPlayer {} -> "OwnedByPlayer"
   Filter.IsPlayer {} -> "IsPlayer"
   Filter.IsControllerOfBound {} -> "IsControllerOfBound"
   Filter.Controls {} -> "Controls"

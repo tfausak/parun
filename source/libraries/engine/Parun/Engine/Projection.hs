@@ -3722,6 +3722,8 @@ filterReads f = case f of
   -- rule change an owner, so no Modification writes Object.owner.
   Filter.Type.OwnedBy _ -> Set.empty
   Filter.Type.OwnedByRecipient -> Set.empty
+  Filter.Type.OwnedByBound _ -> Set.empty
+  Filter.Type.OwnedByPlayer _ -> Set.empty
   Filter.Type.IsSource -> Set.empty
   -- Reads an IDENTITY, IsBound's answer below.
   Filter.Type.IsObject _ -> Set.empty
@@ -4061,6 +4063,8 @@ filterReadsPeers f = case f of
   Filter.Type.ControlledByRecipient -> False
   Filter.Type.OwnedBy _ -> False
   Filter.Type.OwnedByRecipient -> False
+  Filter.Type.OwnedByBound _ -> False
+  Filter.Type.OwnedByPlayer _ -> False
   Filter.Type.IsSource -> False
   Filter.Type.IsObject _ -> False
   Filter.Type.TargetsSource -> False

@@ -7537,8 +7537,10 @@ lintSpec s registry = Spec.describe s "Lint" $ do
             || selfReductionReadsX c
             || filterReadsX c
         -- A Filter comparing against X itself (Operand.AmountInSlot), which no
-        -- Quantity holds: Punishment's "with mana value X".
-        filterReadsX c = any (Set.member Binding.variableX . Filter.boundSlots . snd) (cardFilters c)
+        -- Quantity holds: Punishment's "with mana value X". The spell's own
+        -- filters only: an activated ability's X is its own cost's (Citanul
+        -- Flute), the CR 602.2b lint below.
+        filterReadsX c = any (Set.member Binding.variableX . Filter.boundSlots . snd) (modalFilters (Face.spell c))
         -- CR 601.2f's reader: the spell's own reduction counting the X its
         -- additional cost announced (Torgaar, Famine Incarnate's "for each
         -- creature sacrificed this way").

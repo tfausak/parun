@@ -119,6 +119,13 @@ data Filter keyword
     -- effect is currently being applied to -- ControlledByRecipient's owner
     -- twin, Flux's "discards any number of cards, then draws THAT MANY".
     OwnedByRecipient
+  | -- | CR 108.3: the candidate's OWNER is the player bound at this slot --
+    -- Hurkyl's Recall's "artifacts target player owns". ControlledByBound's owner
+    -- twin, answered and baked the same way.
+    OwnedByBound SlotName.SlotName
+  | -- | The atom above with its player resolved. Runtime-only, ControlledByPlayer's
+    -- posture.
+    OwnedByPlayer PlayerId.PlayerId
   | -- | The candidate IS the evaluation's source object. @Not IsSource@ is how CR
     -- 601.2c's "another" and a continuous effect's own "each other" card text are
     -- both written -- one relation, one spelling (#163).
@@ -161,10 +168,11 @@ data Filter keyword
     -- perspective among its targets, a ToPlayer alone counting (Shell of the
     -- Last Kappa's "spell that targets you").
     TargetsPlayer PlayerRelation.PlayerRelation
-  | -- | The candidate IS an object the resolution bound in this slot -- Into the
-    -- Wilds' "if it's a land card", where the clause before it looked at the top
-    -- card of the library. Membership where CR 115.10a's group binding names
-    -- several, and vacuously False where the slot names no object.
+  | -- | The candidate IS an object or player the resolution bound in this
+    -- slot: Into the Wilds' "if it's a land card", where the clause before it
+    -- looked at the top card of the library, and Cone of Flame's "another
+    -- target". Membership where CR 115.10a's group binding names several, and
+    -- vacuously False where the slot names neither.
     IsBound SlotName.SlotName
   | -- | CR 115.1 / 601.2c: the candidate is a target of the spell or ability
     -- whose cost is being paid -- "a creature that isn't a target of that
