@@ -1,0 +1,101 @@
+{
+  "description": "CR 602.2 / 115.1: Sky Weaver's ability reaches only a white or black creature",
+  "note": "The Grizzly Bears can't be targeted; the Drudge Skeletons is.",
+  "board": {
+    "active": "alice",
+    "step": "PrecombatMain",
+    "seats": [
+      {
+        "name": "alice",
+        "manaPool": "CC",
+        "battlefield": [
+          {
+            "card": "Sky Weaver",
+            "label": "weaver"
+          },
+          {
+            "card": "Drudge Skeletons",
+            "label": "skeletons"
+          },
+          {
+            "card": "Grizzly Bears",
+            "label": "bears"
+          }
+        ],
+        "library": [
+          {
+            "card": "Island"
+          },
+          {
+            "card": "Island"
+          },
+          {
+            "card": "Island"
+          }
+        ]
+      },
+      {
+        "name": "bob",
+        "library": [
+          {
+            "card": "Island"
+          },
+          {
+            "card": "Island"
+          },
+          {
+            "card": "Island"
+          }
+        ]
+      }
+    ]
+  },
+  "timeline": [
+    {
+      "turn": 1,
+      "step": "PrecombatMain",
+      "player": "alice",
+      "refuse": {
+        "Activate": {
+          "object": "$weaver",
+          "targets": [
+            "$bears"
+          ]
+        }
+      }
+    },
+    {
+      "turn": 1,
+      "step": "PrecombatMain",
+      "player": "alice",
+      "do": {
+        "Activate": {
+          "object": "$weaver",
+          "targets": [
+            "$skeletons"
+          ]
+        }
+      }
+    },
+    {
+      "turn": 1,
+      "step": "PrecombatMain",
+      "player": "alice",
+      "do": "Pass"
+    },
+    {
+      "turn": 1,
+      "step": "PrecombatMain",
+      "player": "alice",
+      "check": {
+        "Keywords": {
+          "object": "$skeletons",
+          "keyword": {
+            "type": "Flying"
+          },
+          "count": 1
+        }
+      }
+    }
+  ]
+}
