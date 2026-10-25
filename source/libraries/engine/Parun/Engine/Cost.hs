@@ -6210,7 +6210,7 @@ tapForManaWith perform window inFlight refused activator oid = do
               -- a Treasure its own cost sacrificed is still logged as what it was.
               -- The intrinsic route is logged too; CR 305.6 makes it an activated
               -- ability all the same.
-              State.modify' (ActivationRestriction.logActivation gs controller oid (ActivatedAbility.keyword =<< ManaOption.ability chosen) AbilityKind.ManaAbility Set.empty)
+              State.modify' (ActivationRestriction.logActivation gs controller oid (ManaOption.ability chosen) AbilityKind.ManaAbility Set.empty)
               -- CR 106.12: this activation "tapped [the permanent] for mana"
               -- exactly when {T} was in its cost and it produced mana, which is
               -- what CR 106.12a's condition watches. Recorded LAST, after CR

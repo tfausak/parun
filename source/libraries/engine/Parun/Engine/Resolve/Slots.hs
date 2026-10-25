@@ -1572,7 +1572,7 @@ slotsOf effect = joinTwo (joinTwo (joinSlots (fmap objectRefSlots (effectObjectR
   Effect.ChoosePlayerAtRandom _ -> Map.empty
   -- The slot is a DEFINITION; the reads are the ceiling's and the Filter's, and
   -- the chooser is a PlayerRef, reported at the head with every other one.
-  Effect.ChoosePermanents (ChoosePermanents.MkChoosePermanents (ChosenPermanents.MkChosenPermanents filter_ _ count) _ _) ->
+  Effect.ChoosePermanents (ChoosePermanents.MkChoosePermanents (ChosenPermanents.MkChosenPermanents filter_ _ count _) _ _) ->
     joinTwo (maybe Map.empty quantitySlots (HowMany.quantity count)) (filterSlotsOf filter_)
   -- A DEFINITION for the result slot (boundSlots below), but CR 706.2's modifier
   -- is a READ: the instruction's own Quantity may name a slot an earlier effect
@@ -2915,9 +2915,24 @@ resolutionReads :: Map.Map SlotName (Set Recipient) -> ObjectId -> ObjectId -> P
 resolutionReads legal resolving source controller gs =
   Players.resolution (`Projection.controllerWithLastKnown` gs) (`Game.ownerWithLastKnown` gs) (Game.readingAcquisition resolving source gs) legal (Plane.rangePerspective source controller gs) controller gs
 
+-- CR 608.2d: the CANDIDATES an ObjectRef.ChosenPermanents offers, out of its
+-- zone. The battlefield's are battlefieldMatching's below; any other zone's are
+-- its objects the Filter matches, in APNAP order of owner and then ascending
+-- ObjectId, matched in this effect's context with its player slots baked as
+-- battlefieldMatching bakes them -- Mirror of Fate's "face-up exiled cards you
+-- own", CR 109.5's "you" being the resolving controller.
+chosenCandidates :: Map.Map SlotName (Set Recipient) -> ObjectId -> PlayerId -> ObjectId -> GameState -> ChosenPermanents.ChosenPermanents -> [ObjectId]
+chosenCandidates legal resolving controller source gs choice = case ChosenPermanents.zone choice of
+  Zone.Battlefield -> battlefieldMatching legal resolving controller source gs (ChosenPermanents.filter choice)
+  zone ->
+    let context = effectContext gs resolving controller source legal (slotBindings resolving gs)
+        viewOf = Projection.viewsOf gs
+        baked = Filter.bakeBound (Binding.playerSlots (slotBindings resolving gs)) Map.empty Map.empty (ChosenPermanents.filter choice)
+     in concatMap (\pid -> List.sort (filter (\oid -> Filter.matches context (viewOf oid) baked) (Game.zoneMembers zone pid gs))) (Game.apnapOrder gs)
+
 -- CR 109.2's battlefield, narrowed by an effect-borne Filter and sorted into CR
 -- 608.2f's APNAP order. ObjectRef.EachMatching's whole answer, and the
--- CANDIDATES ObjectRef.ChosenPermanents offers -- shared so a card cannot find
+-- battlefield CANDIDATES chosenCandidates offers -- shared so a card cannot find
 -- the sweep and the offer disagreeing about what matches.
 --
 -- CR 303.4b's host is supplied here and for EachCardInGraveyard below. Read

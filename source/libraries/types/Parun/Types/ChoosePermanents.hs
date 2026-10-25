@@ -4,9 +4,10 @@ import qualified Parun.Types.ChosenPermanents as ChosenPermanents
 import qualified Parun.Types.PlayerRef as PlayerRef
 import qualified Parun.Types.SlotName as SlotName
 
--- | CR 608.2d's battlefield choice bound for a later instruction to act on --
--- Archfiend of Depravity's "that player chooses up to two creatures they
--- control, then sacrifices the rest".
+-- | CR 608.2d's choice in a shared zone, bound for a later instruction to act
+-- on: Archfiend of Depravity's "that player chooses up to two creatures they
+-- control, then sacrifices the rest", Mirror of Fate's "choose up to seven
+-- face-up exiled cards you own".
 data ChoosePermanents = MkChoosePermanents
   { permanents :: ChosenPermanents.ChosenPermanents,
     -- | Where the chosen permanents are bound, as a group; nothing is bound when

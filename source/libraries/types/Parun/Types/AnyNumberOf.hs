@@ -3,9 +3,9 @@ module Parun.Types.AnyNumberOf where
 -- | What a Parun.Types.Prompt.ChooseAnyNumber answer is for: which objects were
 -- offered and what is done to the ones named.
 data AnyNumberOf
-  = -- | CR 608.2d: the matching permanents a resolving effect acts on or binds
-    -- (Parun.Types.ChosenPermanents at HowMany.UpTo). Not targets (CR 115.1, CR
-    -- 115.10a).
+  = -- | CR 608.2d: the matching permanents, or exiled cards, a resolving effect
+    -- acts on or binds (Parun.Types.ChosenPermanents at HowMany.UpTo). Not
+    -- targets (CR 115.1, CR 115.10a).
     Permanents
   | -- | CR 608.2d: the cards of a bound group an "up to" ChosenCardFromAmong
     -- takes.

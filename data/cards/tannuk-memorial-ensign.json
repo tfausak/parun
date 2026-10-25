@@ -92,7 +92,10 @@
                           "type": "AgainstSlot",
                           "value": {
                             "quantity": {
-                              "type": "TimesResolvedThisTurn"
+                              "type": "TimesThisTurn",
+                              "value": {
+                                "type": "Resolved"
+                              }
                             },
                             "slot": "thisAbility"
                           }

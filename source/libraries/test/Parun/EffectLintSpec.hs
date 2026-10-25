@@ -538,7 +538,7 @@ printedBoxQuantity quantity = case quantity of
   Quantity.Type.DamageDealtToPlayersThisTurn {} -> False
   Quantity.Type.SpellsCastLastTurn {} -> False
   Quantity.Type.SpellsCastThisTurn {} -> False
-  Quantity.Type.TimesResolvedThisTurn -> False
+  Quantity.Type.TimesThisTurn _ -> False
   Quantity.Type.SpellsCastBefore -> False
   Quantity.Type.PermanentsDiedThisTurn -> False
   Quantity.Type.SpellsCastUsingThisTurn {} -> False
@@ -2092,7 +2092,7 @@ effectLintSpec s registry = Spec.describe s "Lint" $ do
           -- TRUE for one permanent however many match, and for a printed ceiling
           -- of one, TopOfLibrary's answer; FALSE, EachCardFromAmong's answer
           -- over the battlefield, where "any number" states no bound.
-          ObjectRef.ChosenPermanents (ChosenPermanents.MkChosenPermanents _ _ count) -> atMostOne count
+          ObjectRef.ChosenPermanents (ChosenPermanents.MkChosenPermanents _ _ count _) -> atMostOne count
           -- FALSE: every attachment to a host moves, however many there are.
           ObjectRef.AttachedToBound _ -> False
           -- TRUE, InSlot's answer: the slot's object, followed.
@@ -2684,8 +2684,8 @@ effectLintSpec s registry = Spec.describe s "Lint" $ do
         atRandom = ObjectRef.RandomCardInHand (RandomCardInHand.MkRandomCardInHand (PlayerRef.Relative PlayerRelation.You) anyCard (Quantity.Type.Literal 1))
         atRandomInGraveyard = ObjectRef.RandomCardInGraveyard (RandomCardInGraveyard.MkRandomCardInGraveyard (ZoneScope.Scoped (PlayerScope.Related PlayerRelation.You)) anyCard (Quantity.Type.Literal 1))
         sought = ObjectRef.RandomCardInLibrary (RandomCardInLibrary.MkRandomCardInLibrary (PlayerRef.Relative PlayerRelation.You) anyCard (Quantity.Type.Literal 1))
-        anyNumber = ObjectRef.ChosenPermanents (ChosenPermanents.MkChosenPermanents anyCard (PlayerRef.Relative PlayerRelation.You) (HowMany.UpTo Nothing))
-        onePermanent = ObjectRef.ChosenPermanents (ChosenPermanents.MkChosenPermanents anyCard (PlayerRef.Relative PlayerRelation.You) HowMany.one)
+        anyNumber = ObjectRef.ChosenPermanents (ChosenPermanents.MkChosenPermanents anyCard (PlayerRef.Relative PlayerRelation.You) (HowMany.UpTo Nothing) Zone.Battlefield)
+        onePermanent = ObjectRef.ChosenPermanents (ChosenPermanents.MkChosenPermanents anyCard (PlayerRef.Relative PlayerRelation.You) HowMany.one Zone.Battlefield)
         sourceAndOne = ObjectRef.AllOf (onePermanent NonEmpty.:| [ObjectRef.EachMatching Filter.Type.IsSource])
         moves ref = Effect.MoveToZone (MoveToZone.MkMoveToZone ref Zone.Battlefield EntryRiders.defaultValue Nothing Nothing LibraryPlacement.defaultValue Nothing)
         reveals ref = Effect.Reveal (Reveal.MkReveal ref Nothing)
@@ -2736,7 +2736,7 @@ effectLintSpec s registry = Spec.describe s "Lint" $ do
     let anyFromAmong = ObjectRef.ChosenCardFromAmong (ChosenCardFromAmong.MkChosenCardFromAmong group anyCard (HowMany.UpTo Nothing) (PlayerRef.Relative PlayerRelation.You))
     Spec.assertEqWith s "any number from among them is allowed by a reveal and a move alone" (inert [reveals anyFromAmong, moves anyFromAmong, discardsThese anyFromAmong]) [False, False, True]
     -- An exact count other than one has no gameplay test, so no site allows it.
-    let exactlyTwo = ObjectRef.ChosenPermanents (ChosenPermanents.MkChosenPermanents anyCard (PlayerRef.Relative PlayerRelation.You) (HowMany.Exactly (Quantity.Type.Literal 2)))
+    let exactlyTwo = ObjectRef.ChosenPermanents (ChosenPermanents.MkChosenPermanents anyCard (PlayerRef.Relative PlayerRelation.You) (HowMany.Exactly (Quantity.Type.Literal 2)) Zone.Battlefield)
     Spec.assertEqWith s "two exactly chosen permanents are allowed nowhere" (inert [moves exactlyTwo, Effect.Transform exactlyTwo, Effect.Untap exactlyTwo]) [True, True, True]
     -- Hanweir Battlements' "exile them": the source beside one chosen
     -- permanent, fenced by its member's question, and refused outside a move, a

@@ -161,10 +161,11 @@ data ObjectRef
   | -- | CR 608.2b / Capricious Efreet: one object randomness names out of what the
     -- inner ref names as the effect runs -- a target slot's still-legal members.
     AtRandom ObjectRef
-  | -- | CR 608.2d / 701.42a: the permanents on the battlefield matching the
-    -- payload's Filter that its chooser picks as the effect runs, one or up to a
-    -- ceiling (Hanweir Battlements, Wormfang Crab; Tovolar, Dire Overlord, Teferi,
-    -- Hero of Dominaria). Parun.Engine.Resolve.Effect.chosenPermanents asks it.
+  | -- | CR 608.2d / 701.42a: the permanents on the battlefield -- or the objects
+    -- in another shared zone, Mirror of Fate's exile -- matching the payload's
+    -- Filter that its chooser picks as the effect runs, one or up to a ceiling
+    -- (Hanweir Battlements, Wormfang Crab; Tovolar, Dire Overlord, Teferi, Hero
+    -- of Dominaria). Parun.Engine.Resolve.Effect.chosenPermanents asks it.
     ChosenPermanents ChosenPermanents.ChosenPermanents
   | -- | CR 303.4b / 301.5a / 608.2h: the permanents attached to the object a slot holds,
     -- or attached as it left (Rhuk, Hexgold Nabber; Fumble).

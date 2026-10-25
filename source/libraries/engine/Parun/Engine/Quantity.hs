@@ -18,6 +18,8 @@ import qualified Parun.Engine.NameWords as NameWords
 import qualified Parun.Engine.QuantitySlot as QuantitySlot
 import qualified Parun.Engine.Subtype as Subtype.Engine
 import qualified Parun.Engine.Turn as Turn
+import qualified Parun.Types.AbilityAct as AbilityAct
+import qualified Parun.Types.ActivatedAbilitySource as ActivatedAbilitySource
 import qualified Parun.Types.AgainstExiledPile as AgainstExiledPile
 import qualified Parun.Types.AgainstLastCardExiledWith as AgainstLastCardExiledWith
 import qualified Parun.Types.AgainstSlot as AgainstSlot
@@ -51,6 +53,8 @@ import qualified Parun.Types.ManaType as ManaType
 import qualified Parun.Types.Moved as Moved
 import qualified Parun.Types.Object as Object
 import Parun.Types.ObjectId (ObjectId)
+import qualified Parun.Types.ObjectSnapshot as ObjectSnapshot
+import qualified Parun.Types.PastActivation as PastActivation
 import qualified Parun.Types.Player as Player
 import qualified Parun.Types.PlayerCounterTally as PlayerCounterTally
 import qualified Parun.Types.PlayerDesignationTally as PlayerDesignationTally
@@ -64,6 +68,7 @@ import qualified Parun.Types.Quantity as Quantity
 import qualified Parun.Types.Quotient as Quotient
 import qualified Parun.Types.Rounding as Rounding
 import Parun.Types.SlotName (SlotName)
+import qualified Parun.Types.Source as Source
 import qualified Parun.Types.SpellWasCast as SpellWasCast
 import qualified Parun.Types.StickerContent as StickerContent
 import qualified Parun.Types.StoredResult as StoredResult
@@ -896,11 +901,26 @@ evaluateAgainst viewOf context gs announcedOn mOid mView quantity =
         -- 602.2a's thisAbility slot, so the read still lands on an object once the
         -- original has been countered out from under it. Parun.CopySpec's Stifle case over
         -- Ashling the Pilgrim is what proves that.
-        Quantity.TimesResolvedThisTurn -> do
+        --
+        -- ACTIVATED counts CR 602.2's log instead, GameState.activationsThisTurn,
+        -- by the source object and the ability as activated: every activation of
+        -- this ability of this object this turn, the one resolving and any still on
+        -- the stack included (docs/decisions.md, "When Dragon Whelp counts its
+        -- activations"). A triggered ability reads 0. data/scenarios'
+        -- dragon-whelp scenarios are what prove it.
+        Quantity.TimesThisTurn act -> do
           oid <- mOid
           obj <- Game.lookupObject oid gs <|> Map.lookup oid (GameState.stackArchive gs)
-          let resolved = Maybe.mapMaybe (Game.abilityResolved . LoggedEvent.event) (Foldable.toList (GameState.events gs))
-          pure (toInteger (length (filter (== Object.source obj) resolved)))
+          pure . toInteger $ case act of
+            AbilityAct.Resolved ->
+              length (filter (== Object.source obj) (Maybe.mapMaybe (Game.abilityResolved . LoggedEvent.event) (Foldable.toList (GameState.events gs))))
+            AbilityAct.Activated -> case Object.source obj of
+              Source.OfAbility activated ->
+                let this past =
+                      ObjectSnapshot.object (PastActivation.source past) == ActivatedAbilitySource.source activated
+                        && PastActivation.ability past == Just (ActivatedAbilitySource.ability activated)
+                 in length (filter this (Foldable.toList (GameState.activationsThisTurn gs)))
+              _ -> 0
         -- CR 702.40a: how many spells were cast this turn before the object this
         -- evaluation is aimed at. Keyed on that object's OWN cast in the log, so a
         -- spell cast after it -- in response to the storm trigger -- is not
@@ -1365,7 +1385,7 @@ objectSlots quantity = case quantity of
   Quantity.DamageDealtToPlayersThisTurn _ -> Set.empty
   Quantity.SpellsCastLastTurn _ -> Set.empty
   Quantity.SpellsCastThisTurn _ -> Set.empty
-  Quantity.TimesResolvedThisTurn -> Set.empty
+  Quantity.TimesThisTurn _ -> Set.empty
   Quantity.SpellsCastBefore -> Set.empty
   Quantity.PermanentsDiedThisTurn -> Set.empty
   Quantity.SpellsCastUsingThisTurn _ -> Set.empty
@@ -1656,7 +1676,7 @@ readsX quantity = case quantity of
   Quantity.DamageDealtToPlayersThisTurn _ -> False
   Quantity.SpellsCastLastTurn _ -> False
   Quantity.SpellsCastThisTurn _ -> False
-  Quantity.TimesResolvedThisTurn -> False
+  Quantity.TimesThisTurn _ -> False
   Quantity.SpellsCastBefore -> False
   Quantity.PermanentsDiedThisTurn -> False
   Quantity.SpellsCastUsingThisTurn _ -> False

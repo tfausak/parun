@@ -18,7 +18,7 @@ codec =
       Arm.payload "InHistory" EventShape.codec Scope.InHistory (\x -> case x of Scope.InHistory y -> Just y; _ -> Nothing),
       Arm.payload "OverPlayers" PlayerRef.codec Scope.OverPlayers (\x -> case x of Scope.OverPlayers y -> Just y; _ -> Nothing),
       Arm.payload "OverBound" SlotName.codec Scope.OverBound (\x -> case x of Scope.OverBound y -> Just y; _ -> Nothing),
-      Arm.payload "TopOfGraveyard" PlayerRef.codec Scope.TopOfGraveyard (\x -> case x of Scope.TopOfGraveyard y -> Just y; _ -> Nothing)
+      Arm.payload "TopOf" InZone.codec Scope.TopOf (\x -> case x of Scope.TopOf y -> Just y; _ -> Nothing)
     ]
 
 tagOf :: Scope.Scope -> String
@@ -27,4 +27,4 @@ tagOf x = case x of
   Scope.InHistory {} -> "InHistory"
   Scope.OverPlayers {} -> "OverPlayers"
   Scope.OverBound {} -> "OverBound"
-  Scope.TopOfGraveyard {} -> "TopOfGraveyard"
+  Scope.TopOf {} -> "TopOf"

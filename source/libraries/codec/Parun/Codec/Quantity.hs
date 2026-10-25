@@ -1,5 +1,6 @@
 module Parun.Codec.Quantity where
 
+import qualified Parun.Codec.AbilityAct as AbilityAct
 import qualified Parun.Codec.AgainstExiledPile as AgainstExiledPile
 import qualified Parun.Codec.AgainstLastCardExiledWith as AgainstLastCardExiledWith
 import qualified Parun.Codec.AgainstSlot as AgainstSlot
@@ -183,12 +184,12 @@ codec =
       -- "a player cast two or more" are the Comparison's, not this arm's.
       Arm.payload "SpellsCastLastTurn" PlayerRef.codec Quantity.SpellsCastLastTurn (\x -> case x of Quantity.SpellsCastLastTurn y -> Just y; _ -> Nothing),
       Arm.payload "SpellsCastThisTurn" PlayerRef.codec Quantity.SpellsCastThisTurn (\x -> case x of Quantity.SpellsCastThisTurn y -> Just y; _ -> Nothing),
-      -- CR 608.2n with nothing on the wire: the ability is the one the quantity
-      -- is evaluated against, which a card names through AgainstSlot over CR
-      -- 602.2a's reserved "thisAbility" slot, and "this turn" is the event log's
-      -- own extent. The threshold that turns the count into "the third time" is
-      -- the Comparison's.
-      Arm.nullary "TimesResolvedThisTurn" Quantity.TimesResolvedThisTurn,
+      -- CR 608.2n / 602.2 with only the act on the wire: the ability is the one
+      -- the quantity is evaluated against, which a card names through AgainstSlot
+      -- over CR 602.2a's reserved "thisAbility" slot, and "this turn" is the
+      -- log's own extent. The threshold that turns the count into "the third
+      -- time" is the Comparison's.
+      Arm.payload "TimesThisTurn" AbilityAct.codec Quantity.TimesThisTurn (\x -> case x of Quantity.TimesThisTurn y -> Just y; _ -> Nothing),
       Arm.nullary "SpellsCastBefore" Quantity.SpellsCastBefore,
       Arm.nullary "PermanentsDiedThisTurn" Quantity.PermanentsDiedThisTurn,
       Arm.payload "SpellsCastUsingThisTurn" KeywordFamily.codec Quantity.SpellsCastUsingThisTurn (\x -> case x of Quantity.SpellsCastUsingThisTurn y -> Just y; _ -> Nothing),
@@ -299,7 +300,7 @@ tagOf x = case x of
   Quantity.DamageDealtToThisTurn {} -> "DamageDealtToThisTurn"
   Quantity.SpellsCastLastTurn {} -> "SpellsCastLastTurn"
   Quantity.SpellsCastThisTurn {} -> "SpellsCastThisTurn"
-  Quantity.TimesResolvedThisTurn {} -> "TimesResolvedThisTurn"
+  Quantity.TimesThisTurn {} -> "TimesThisTurn"
   Quantity.SpellsCastBefore {} -> "SpellsCastBefore"
   Quantity.PermanentsDiedThisTurn {} -> "PermanentsDiedThisTurn"
   Quantity.SpellsCastUsingThisTurn {} -> "SpellsCastUsingThisTurn"

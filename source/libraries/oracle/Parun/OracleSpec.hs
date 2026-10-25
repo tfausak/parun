@@ -574,7 +574,7 @@ spec s = Spec.describe s "Parun.Oracle" $ do
   Spec.it s "render taps and untaps" $ do
     Spec.assertEq s (Just (Text.pack "Tap another target creature.")) (Oracle.render (spell [clause [Effect.Tap (Tap.plain (ObjectRef.InSlot target))]] [(target, TargetSlot.required Pool.Creatures (Just (Filter.Not Filter.IsSource)))]))
     Spec.assertEq s (Just (Text.pack "Untap all creatures you control.")) (Oracle.render (spell [clause [Effect.Untap (ObjectRef.EachMatching (Filter.And [Filter.HasCardType CardType.Creature, Filter.ControlledBy PlayerRelation.You]))]] []))
-    let lands = ObjectRef.ChosenPermanents (ChosenPermanents.MkChosenPermanents (Filter.HasCardType CardType.Land) (PlayerRef.Relative PlayerRelation.You) (HowMany.UpTo (Just (Quantity.Literal 4))))
+    let lands = ObjectRef.ChosenPermanents (ChosenPermanents.MkChosenPermanents (Filter.HasCardType CardType.Land) (PlayerRef.Relative PlayerRelation.You) (HowMany.UpTo (Just (Quantity.Literal 4))) Zone.Battlefield)
     Spec.assertEq s (Just (Text.pack "Untap up to four lands.")) (Oracle.render (spell [clause [Effect.Untap lands]] []))
 
   -- CR 701.9: a player discards cards of their choice or at random; "you"
@@ -744,7 +744,7 @@ spec s = Spec.describe s "Parun.Oracle" $ do
   -- toughness reaches again get "an additional" one (Wild Might, Rhystic
   -- Shield).
   Spec.it s "render strings three instructions and names an object again" $ do
-    let lands = ObjectRef.ChosenPermanents (ChosenPermanents.MkChosenPermanents (Filter.HasCardType CardType.Land) (PlayerRef.Relative PlayerRelation.You) (HowMany.UpTo (Just (Quantity.Literal 3))))
+    let lands = ObjectRef.ChosenPermanents (ChosenPermanents.MkChosenPermanents (Filter.HasCardType CardType.Land) (PlayerRef.Relative PlayerRelation.You) (HowMany.UpTo (Just (Quantity.Literal 3))) Zone.Battlefield)
         search = spell [clause [draw (PlayerRef.Relative PlayerRelation.You) 2, discard (PlayerRef.Relative PlayerRelation.You) 2, Effect.Untap lands]] []
     Spec.assertBool s (Oracle.says search spark (Text.pack "Draw two cards, then discard two cards. Untap up to three lands.")) "Frantic Search's wording unsaid"
     let creature = [(target, TargetSlot.required Pool.Creatures Nothing)]

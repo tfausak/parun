@@ -334,6 +334,31 @@ Entries are ordered by the first rule each cites.
   keeps both halves".
 - **Issue**: none; #781 settled the face ordering beside it.
 
+## When Dragon Whelp counts its activations
+
+- **Question**: Dragon Whelp's "If this ability has been activated four or
+  more times this turn" is read as the ability resolves. Its rulings speak of
+  "the fourth activation and each subsequent activation" arming the
+  sacrifice, which assumes each activation resolves before the next. Which
+  activations count when several are on the stack at once, and does a copy
+  of the ability read the original's count?
+- **Rules**: CR 602.2, 602.2a, 608.2c, 707.10, 707.10b; CR of 2026-08-07.
+- **Decision**: Every activation of this ability of this object this turn
+  counts as each one resolves, those still on the stack included, so four
+  stacked activations arm four sacrifices. A copy has the original's source
+  and ability (CR 707.10b) and reads the original's count.
+- **Rejected**: Counting only the activations that came before the one
+  resolving: the condition is checked as the instruction is followed (CR
+  608.2c), not as the ability was activated. Counting resolutions: that is
+  Ashling the Pilgrim's wording, not this one's. A copy reading zero because
+  it was not itself activated (CR 707.10): CR 707.10b makes it the same
+  ability for a count of its resolutions, and nothing makes its activations
+  a different question.
+- **Site**: `Parun.Engine.Quantity`'s `TimesThisTurn` arm, proved by
+  data/scenarios' `dragon-whelp-stacked-activations-each-arm-a-sacrifice`.
+  The copy reading is a regression fence: no scenario copies the ability.
+- **Issue**: #5599.
+
 ## Whether a trigger limit differs from a first-time-each-turn trigger
 
 - **Question**: Neither "this ability triggers only once each turn" nor "for

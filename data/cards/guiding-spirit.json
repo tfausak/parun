@@ -35,10 +35,15 @@
                               }
                             },
                             "scope": {
-                              "type": "TopOfGraveyard",
+                              "type": "TopOf",
                               "value": {
-                                "type": "InSlot",
-                                "value": "player"
+                                "player": {
+                                  "type": "InSlot",
+                                  "value": "player"
+                                },
+                                "zone": {
+                                  "type": "Graveyard"
+                                }
                               }
                             }
                           }

@@ -1,0 +1,38 @@
+{
+  "description": "CR 608.2c / 608.2d / 401.4: Mirror of Fate's controller chooses up to seven face-up exiled cards they own, exiles their library, then puts the chosen cards on top of it in an order they choose",
+  "note": "Alice chooses two of her three exiled cards; Bob's exiled Shock is not offered, since she does not own it. Her library's cards are exiled after the choice, and the chosen two arrive in the reverse of the order offered, so leaving the arrival unordered reads differently.",
+  "board": {
+    "active": "alice",
+    "step": "PrecombatMain",
+    "seats": [
+      {
+        "name": "alice",
+        "battlefield": [{ "card": "Mirror of Fate", "label": "mirror", "ready": true }],
+        "exile": [
+          { "card": "Hill Giant", "label": "giant" },
+          { "card": "Grizzly Bears", "label": "bears" },
+          { "card": "Lightning Bolt", "label": "bolt" }
+        ],
+        "library": [{ "card": "Forest" }, { "card": "Island" }]
+      },
+      {
+        "name": "bob",
+        "exile": [{ "card": "Shock", "label": "bobs" }],
+        "library": [{ "card": "Island" }, { "card": "Island" }, { "card": "Island" }]
+      }
+    ]
+  },
+  "timeline": [
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "refuse": { "Answer": { "prompt": "ChooseAnyNumberOfPermanents", "with": ["$bobs"] } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "do": { "Answer": { "prompt": "ChooseAnyNumberOfPermanents", "with": ["$giant", "$bolt"] } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "do": { "Answer": { "prompt": "ArrangeLibraryArrivals", "with": [1, 0] } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "do": { "Activate": { "object": "$mirror", "costOrder": [0, 1] } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "do": "Pass" },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "check": { "View": { "of": "Zone", "player": "alice", "zone": "Library", "is": ["Lightning Bolt", "Hill Giant"] } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "check": { "Count": { "player": "alice", "zone": "Exile", "card": "Grizzly Bears", "count": 1 } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "check": { "Count": { "player": "alice", "zone": "Exile", "card": "Forest", "count": 1 } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "check": { "Count": { "player": "alice", "zone": "Exile", "card": "Island", "count": 1 } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "check": { "Count": { "player": "bob", "zone": "Exile", "card": "Shock", "count": 1 } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "check": { "Count": { "player": "alice", "zone": "Graveyard", "card": "Mirror of Fate", "count": 1 } } }
+  ]
+}

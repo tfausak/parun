@@ -793,7 +793,7 @@ playerRefPositions =
         ("divide", Effect.Divide (Divide.MkDivide one (plantedRef "dv") (plantedPlayer "dv") (SlotName.MkSlotName (Text.pack "split"))), [plantedPlayer "dv"]),
         ("cloak", Effect.Cloak (plantedPlayer "ck"), [plantedPlayer "ck"]),
         ("manifestDread", Effect.ManifestDread (plantedPlayer "md"), [plantedPlayer "md"]),
-        ("choose-permanents", Effect.ChoosePermanents (ChoosePermanents.MkChoosePermanents (ChosenPermanents.MkChosenPermanents (Filter.Type.And []) (plantedPlayer "cp") (HowMany.UpTo Nothing)) (SlotName.MkSlotName (Text.pack "cp")) (Just (plantedPlayer "cp-piles"))), [plantedPlayer "cp", plantedPlayer "cp-piles"]),
+        ("choose-permanents", Effect.ChoosePermanents (ChoosePermanents.MkChoosePermanents (ChosenPermanents.MkChosenPermanents (Filter.Type.And []) (plantedPlayer "cp") (HowMany.UpTo Nothing) Zone.Battlefield) (SlotName.MkSlotName (Text.pack "cp")) (Just (plantedPlayer "cp-piles"))), [plantedPlayer "cp", plantedPlayer "cp-piles"]),
         ("discard-counted", Effect.Discard (Discard.Counted (CountedDiscard.MkCountedDiscard (plantedPlayer "dc") one Nothing)), [plantedPlayer "dc"]),
         ("discard-any-number", Effect.Discard (Discard.AnyNumber (AnyNumberDiscard.MkAnyNumberDiscard (plantedPlayer "da") (AnyNumberMatching.MkAnyNumberMatching (Filter.Type.And []) Nothing) Nothing)), [plantedPlayer "da"]),
         ("player-sacrifices", Effect.PlayerSacrifices (PlayerSacrifices.MkPlayerSacrifices (plantedPlayer "ps") (Filter.Type.And []) one), [plantedPlayer "ps"]),
@@ -838,7 +838,7 @@ objectRefPlayerRefPositions =
     -- And the two CHOOSERS, which name a seat without counting per seat --
     -- Animal Magnetism's and Wormfang Crab's opponent.
     ("chosen-card-from-among", ObjectRef.ChosenCardFromAmong (ChosenCardFromAmong.MkChosenCardFromAmong (SlotName.MkSlotName (Text.pack "group")) (Filter.Type.And []) HowMany.one (plantedPlayer "cfa")), [plantedPlayer "cfa"]),
-    ("chosen-permanents", ObjectRef.ChosenPermanents (ChosenPermanents.MkChosenPermanents (Filter.Type.And []) (plantedPlayer "cp") HowMany.one), [plantedPlayer "cp"])
+    ("chosen-permanents", ObjectRef.ChosenPermanents (ChosenPermanents.MkChosenPermanents (Filter.Type.And []) (plantedPlayer "cp") HowMany.one Zone.Battlefield), [plantedPlayer "cp"])
   ]
 
 -- plantedRef's player half, named for its position for that function's reason.
@@ -4197,7 +4197,7 @@ objectRefFilters ref = case ref of
   -- so it is framed the same way. The ownership and control the card prints are
   -- conjuncts of that Filter, which is what this traversal hands to the Filter
   -- lints; the ceiling is reached through refFilters beside it.
-  ObjectRef.ChosenPermanents (ChosenPermanents.MkChosenPermanents f _ _) -> unframed [f] <> refFilters ref
+  ObjectRef.ChosenPermanents (ChosenPermanents.MkChosenPermanents f _ _ _) -> unframed [f] <> refFilters ref
   -- Rhuk's "all Equipment attached to that creature".
   ObjectRef.AttachedToBound (AttachedToBound.MkAttachedToBound _ f) -> unframed [f]
   ObjectRef.FromAnywhere _ -> []
@@ -4309,7 +4309,7 @@ quantityKindFilters quantity = case quantity of
   Quantity.Type.DamageDealtToPlayersThisTurn _ -> []
   Quantity.Type.SpellsCastLastTurn _ -> []
   Quantity.Type.SpellsCastThisTurn _ -> []
-  Quantity.Type.TimesResolvedThisTurn -> []
+  Quantity.Type.TimesThisTurn _ -> []
   Quantity.Type.SpellsCastBefore -> []
   Quantity.Type.PermanentsDiedThisTurn -> []
   Quantity.Type.SpellsCastUsingThisTurn {} -> []
@@ -6285,7 +6285,7 @@ effectFilters effect = case effect of
   Effect.ChoosePlayer _ -> []
   Effect.ChoosePlayerAtRandom _ -> []
   Effect.ChooseSector _ -> []
-  Effect.ChoosePermanents (ChoosePermanents.MkChoosePermanents (ChosenPermanents.MkChosenPermanents f _ count) _ _) -> unframed [f] <> frame Unframed (foldMap quantityFilters (HowMany.quantity count))
+  Effect.ChoosePermanents (ChoosePermanents.MkChoosePermanents (ChosenPermanents.MkChosenPermanents f _ count _) _ _) -> unframed [f] <> frame Unframed (foldMap quantityFilters (HowMany.quantity count))
   -- CR 706.2's modifier is a Quantity, so its filters are reachable here.
   Effect.RollDie rollDie -> frame Unframed (quantityFilters (RollDie.count rollDie) <> foldMap quantityFilters (RollDie.modifier rollDie))
   -- CR 705.1's number of coins is a Quantity, so its filters are reachable here.

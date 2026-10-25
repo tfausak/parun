@@ -922,7 +922,7 @@ resolveModesWith runSubgame stackId srcId modes = do
 
 -- CR 608.2n / 608.2i: file this resolution against the ability that is
 -- resolving, so a clause of that very ability can ask how many times it has
--- resolved this turn (Quantity.TimesResolvedThisTurn). Ashling the Pilgrim's
+-- resolved this turn (Quantity.TimesThisTurn). Ashling the Pilgrim's
 -- "if this is the third time this ability has resolved this turn" is the read.
 --
 -- BEFORE the clauses run and AFTER CR 608.2b's fizzle, which is what makes the

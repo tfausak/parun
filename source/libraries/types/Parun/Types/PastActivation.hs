@@ -1,7 +1,9 @@
 module Parun.Types.PastActivation where
 
 import qualified Parun.Types.AbilityKind as AbilityKind
-import qualified Parun.Types.Keyword as Keyword
+import qualified Parun.Types.ActivatedAbility as ActivatedAbility
+import qualified Parun.Types.Card as Card
+import qualified Parun.Types.GrantedAbility as GrantedAbility
 import qualified Parun.Types.ObjectSnapshot as ObjectSnapshot
 import qualified Parun.Types.PlayerId as PlayerId
 
@@ -17,9 +19,11 @@ data PastActivation = MkPastActivation
     activator :: PlayerId.PlayerId,
     -- | The ability's source as the activation began.
     source :: ObjectSnapshot.ObjectSnapshot,
-    -- | The rule 702 keyword the ability is under
-    -- (Parun.Types.ActivatedAbility.keyword), for ActivationCriteria.grantedBy.
-    keyword :: Maybe Keyword.Keyword,
+    -- | The ability activated, as announced; Nothing only for CR 305.6's
+    -- intrinsic mana route, which is no printed ability. Its rule 702 keyword
+    -- answers ActivationCriteria.grantedBy, and the ability itself
+    -- Quantity.TimesThisTurn's Activated count (Dragon Whelp).
+    ability :: Maybe (ActivatedAbility.ActivatedAbility Card.Card (GrantedAbility.GrantedAbility Card.Card)),
     -- | CR 605.1a's side of the ability, for ActivationCriteria.whichKind.
     kind :: AbilityKind.AbilityKind,
     -- | CR 601.2c's object targets, as they stood when announced.

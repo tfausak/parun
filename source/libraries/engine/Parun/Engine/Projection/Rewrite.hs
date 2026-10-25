@@ -1269,8 +1269,8 @@ rewriteObjectRef pairs ref = case ref of
 -- CR 612.1 through a battlefield choice: its Filter and its count are card
 -- text, and its chooser names a seat, never a subtype.
 rewriteChosenPermanents :: [(TextWord.TextWord, TextWord.TextWord)] -> ChosenPermanents.ChosenPermanents -> ChosenPermanents.ChosenPermanents
-rewriteChosenPermanents pairs (ChosenPermanents.MkChosenPermanents f chooser count) =
-  ChosenPermanents.MkChosenPermanents (Filter.rewrite pairs f) chooser (rewriteHowMany pairs count)
+rewriteChosenPermanents pairs (ChosenPermanents.MkChosenPermanents f chooser count zone) =
+  ChosenPermanents.MkChosenPermanents (Filter.rewrite pairs f) chooser (rewriteHowMany pairs count) zone
 
 rewriteHowMany :: [(TextWord.TextWord, TextWord.TextWord)] -> HowMany.HowMany -> HowMany.HowMany
 rewriteHowMany pairs count = case count of
@@ -2394,7 +2394,7 @@ rewriteQuantity pairs quantity = case quantity of
   Quantity.Type.DamageDealtToPlayersThisTurn _ -> quantity
   Quantity.Type.SpellsCastLastTurn _ -> quantity
   Quantity.Type.SpellsCastThisTurn _ -> quantity
-  Quantity.Type.TimesResolvedThisTurn -> quantity
+  Quantity.Type.TimesThisTurn _ -> quantity
   Quantity.Type.SpellsCastBefore -> quantity
   Quantity.Type.PermanentsDiedThisTurn -> quantity
   Quantity.Type.SpellsCastUsingThisTurn _ -> quantity

@@ -196,7 +196,7 @@ overSlots f quantity =
         -- beside its PlayerRef either.
         Quantity.SpellsCastLastTurn _ -> pure quantity
         Quantity.SpellsCastThisTurn _ -> pure quantity
-        Quantity.TimesResolvedThisTurn -> pure quantity
+        Quantity.TimesThisTurn _ -> pure quantity
         Quantity.SpellsCastBefore -> pure quantity
         Quantity.PermanentsDiedThisTurn -> pure quantity
         Quantity.SpellsCastUsingThisTurn _ -> pure quantity
@@ -373,7 +373,7 @@ nestedRefs quantity = case quantity of
   Quantity.DamageDealtToPlayersThisTurn ref -> Set.singleton (Left ref)
   Quantity.SpellsCastLastTurn ref -> Set.singleton (Left ref)
   Quantity.SpellsCastThisTurn ref -> Set.singleton (Left ref)
-  Quantity.TimesResolvedThisTurn -> Set.empty
+  Quantity.TimesThisTurn _ -> Set.empty
   Quantity.SpellsCastBefore -> Set.empty
   Quantity.PermanentsDiedThisTurn -> Set.empty
   Quantity.SpellsCastUsingThisTurn _ -> Set.empty
@@ -496,7 +496,7 @@ nestedCounts quantity = case quantity of
   Quantity.DamageDealtToPlayersThisTurn _ -> []
   Quantity.SpellsCastLastTurn _ -> []
   Quantity.SpellsCastThisTurn _ -> []
-  Quantity.TimesResolvedThisTurn -> []
+  Quantity.TimesThisTurn _ -> []
   Quantity.SpellsCastBefore -> []
   Quantity.PermanentsDiedThisTurn -> []
   Quantity.SpellsCastUsingThisTurn {} -> []
@@ -535,7 +535,7 @@ scopeRefs scope = case scope of
   Scope.InHistory _ -> Set.empty
   Scope.OverPlayers ref -> Set.singleton (Left ref)
   Scope.OverBound slot -> Set.singleton (Right slot)
-  Scope.TopOfGraveyard ref -> Set.singleton (Left ref)
+  Scope.TopOf (InZone.MkInZone _ ref) -> Set.singleton (Left ref)
 
 -- Every slot NAME renameSlots above would rewrite, as a set: `slots`' amount half
 -- plus the target slots the nested references name. The READING partner of that
@@ -607,7 +607,7 @@ renameScope rename scope = case scope of
   Scope.InZone _ -> scope
   Scope.OverPlayers _ -> scope
   Scope.InHistory _ -> scope
-  Scope.TopOfGraveyard _ -> scope
+  Scope.TopOf _ -> scope
 
 -- Every PlayerRef this quantity names, rewritten -- the traversal bakeBound and
 -- forCandidate share, so the arm list is written once and a new arm carrying a
@@ -651,7 +651,7 @@ mapPlayerRefs f intoCount quantity =
         Quantity.DamageDealtToPlayersThisTurn ref -> Quantity.DamageDealtToPlayersThisTurn (f ref)
         Quantity.SpellsCastLastTurn ref -> Quantity.SpellsCastLastTurn (f ref)
         Quantity.SpellsCastThisTurn ref -> Quantity.SpellsCastThisTurn (f ref)
-        Quantity.TimesResolvedThisTurn -> quantity
+        Quantity.TimesThisTurn _ -> quantity
         Quantity.SpellsCastBefore -> quantity
         Quantity.PermanentsDiedThisTurn -> quantity
         Quantity.SpellsCastUsingThisTurn _ -> quantity
@@ -726,4 +726,4 @@ mapScope f scope = case scope of
   -- CR 400.7j's fold names a SLOT rather than a player reference, so there is
   -- nothing here for either baking to rewrite.
   Scope.OverBound _ -> scope
-  Scope.TopOfGraveyard ref -> Scope.TopOfGraveyard (f ref)
+  Scope.TopOf (InZone.MkInZone zone ref) -> Scope.TopOf (InZone.MkInZone zone (f ref))

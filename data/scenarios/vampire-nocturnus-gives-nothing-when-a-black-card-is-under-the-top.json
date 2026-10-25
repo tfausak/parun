@@ -1,0 +1,29 @@
+{
+  "description": "CR 611.3a / 401.2: Vampire Nocturnus reads only the TOP card of its controller's library, so a black card beneath a nonblack top card gives no bonus",
+  "note": "The board of the scenario where the bonus applies, with Alice's two library cards swapped: a count over her whole library would still find the black card.",
+  "board": {
+    "active": "alice",
+    "step": "PrecombatMain",
+    "seats": [
+      {
+        "name": "alice",
+        "battlefield": [
+          { "card": "Vampire Nocturnus", "label": "nocturnus" },
+          { "card": "Vampire Noble", "label": "noble" },
+          { "card": "Hill Giant", "label": "giant" }
+        ],
+        "library": [{ "card": "Island" }, { "card": "Vampire Bats" }]
+      },
+      {
+        "name": "bob",
+        "battlefield": [{ "card": "Vampire Noble", "label": "bobs" }],
+        "library": [{ "card": "Vampire Bats" }, { "card": "Island" }]
+      }
+    ]
+  },
+  "timeline": [
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "check": { "PowerToughness": { "object": "$nocturnus", "power": 3, "toughness": 3 } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "check": { "Keywords": { "object": "$nocturnus", "keyword": { "type": "Flying" }, "count": 0 } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "check": { "PowerToughness": { "object": "$noble", "power": 3, "toughness": 2 } } }
+  ]
+}
