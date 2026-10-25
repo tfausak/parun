@@ -1,5 +1,5 @@
 {
-  "description": "CR 614.1c / 110.5b whole card: artifacts and lands enter tapped while Root Maze is on the battlefield",
+  "description": "CR 614.1d / 110.5b whole card: artifacts and lands enter tapped while Root Maze is on the battlefield",
   "note": "Alice's Forest and Ornithopter enter tapped; her Grizzly Bears, a creature only, enter untapped.",
   "board": {
     "active": "alice",
