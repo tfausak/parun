@@ -133,6 +133,7 @@ import qualified Parun.Types.PaymentDecision as PaymentDecision
 import qualified Parun.Types.Phase as Phase
 import qualified Parun.Types.PlayerChoice as PlayerChoice
 import qualified Parun.Types.PlayerId as PlayerId
+import qualified Parun.Types.PlayerRelation as PlayerRelation
 import qualified Parun.Types.Printing as Printing
 import qualified Parun.Types.Prompt as Prompt
 import qualified Parun.Types.Quantity as Quantity.Type
@@ -526,19 +527,19 @@ spec s registry = Spec.describe s "Parun.Engine.Target" $ do
   unburySpec s registry
   pentarchPaladinSpec s registry
   fromTheRubbleSpec s registry
-  -- CR 110.2 / 601.2c: SameControllerAsBound against a sibling slot. A slot
+  -- CR 110.2 / 601.2c: ControllerRelatesToBound against a sibling slot. A slot
   -- answered with a PLAYER names no object and so no controller, and the atom
   -- refuses; so does an "up to one" slot answered with none. Only a slot nobody
   -- has answered yet is absent, where it widens. Binding.recipientsBySlot keys
   -- every slot the announcement bound to tell them apart. No card in
   -- data/cards/ aims the atom at a slot that can hold a player or be answered
   -- empty, so this reads the target-slot context directly.
-  Spec.it s "CR 110.2 SameControllerAsBound refuses a slot answered with a player and widens on an unanswered one" $ do
+  Spec.it s "CR 110.2 ControllerRelatesToBound refuses a slot answered with a player and widens on an unanswered one" $ do
     piker <- S.printingOf s registry "Goblin Piker"
     let (pikerId, gs) = S.addPermanent piker S.bob (Setup.emptyGame S.bothPlayers)
         slot = SlotName.MkSlotName (Text.pack "who")
         context bindings = Target.slotContext Nothing (Just S.alice) False bindings Acquisition.Own S.noSource Nothing gs
-        admits bindings = Filter.matches (context bindings) (Projection.viewOfObject pikerId gs) (Filter.Type.SameControllerAsBound slot)
+        admits bindings = Filter.matches (context bindings) (Projection.viewOfObject pikerId gs) (Filter.Type.ControllerRelatesToBound PlayerRelation.You slot)
     Spec.assertEqWith
       s
       "a slot holding bob refuses bob's Piker, so does a slot answered with none, and an unanswered slot admits it"
@@ -547,11 +548,11 @@ spec s registry = Spec.describe s "Parun.Engine.Target" $ do
   -- The same keying for a COST's candidate pool, which reads the recipient map
   -- Parun.Engine.Cost carries (Projection.contextWithSlots): a slot the
   -- announcement answered with a player refuses there too.
-  Spec.it s "CR 110.2 a cost pool's SameControllerAsBound refuses a slot holding a player" $ do
+  Spec.it s "CR 110.2 a cost pool's ControllerRelatesToBound refuses a slot holding a player" $ do
     piker <- S.printingOf s registry "Goblin Piker"
     let (pikerId, gs) = S.addPermanent piker S.bob (Setup.emptyGame S.bothPlayers)
         slot = SlotName.MkSlotName (Text.pack "who")
-        admits slots = Filter.matches (Projection.contextWithSlots gs (Just S.alice) Nothing slots) (Projection.viewOfObject pikerId gs) (Filter.Type.SameControllerAsBound slot)
+        admits slots = Filter.matches (Projection.contextWithSlots gs (Just S.alice) Nothing slots) (Projection.viewOfObject pikerId gs) (Filter.Type.ControllerRelatesToBound PlayerRelation.You slot)
     Spec.assertEqWith
       s
       "a pool whose slot holds bob refuses bob's Piker, and one with no such slot admits it"
@@ -2228,7 +2229,7 @@ spec s registry = Spec.describe s "Parun.Engine.Target" $ do
   --   Move any number of +1/+1 counters from target creature onto another target
   --   creature with the same controller.
   --
-  -- Its `to` slot is And [Not (IsBound "from"), SameControllerAsBound "from"], and
+  -- Its `to` slot is And [Not (IsBound "from"), ControllerRelatesToBound "from"], and
   -- the second atom is the one this case exists for: written without it the card
   -- would be WEAKER than printed in the caster's favour, letting counters cross
   -- between two players' creatures.

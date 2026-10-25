@@ -1216,7 +1216,7 @@ data Context = MkContext
     -- nothing mints an object until Parun.Engine.Event.bringInto does --
     -- so IsBound is False for every candidate there whatever this map holds. The
     -- other readers cannot reach it either: SameNameAsBound reads slotNames
-    -- rather than this map and carries its own lint, SameControllerAsBound reads
+    -- rather than this map and carries its own lint, ControllerRelatesToBound reads
     -- slotControllers and carries one that matters MORE, its vacuous direction
     -- being True, SameControllerAsHostOfBound reads slotHostControllers and
     -- refuses on an absent key, IsControllerOfBound is False wherever `matches`
@@ -1262,7 +1262,7 @@ data Context = MkContext
     -- framedBySlots does not frame. Which
     -- direction an unfilled read takes is the ATOM's choice rather than a rule
     -- this record imposes: the arm in `matches` below decides it, and
-    -- slotControllers' SameControllerAsBound chooses True where this one chooses
+    -- slotControllers' ControllerRelatesToBound chooses True where this one chooses
     -- False.
     --
     -- What keeps a card out of those positions is Parun.FilterPositionLintSpec's
@@ -1271,7 +1271,7 @@ data Context = MkContext
     slotNames :: Map.Map SlotName.SlotName (Set.Set CardName.CardName),
     -- CR 110.2: the CONTROLLERS of the objects the surrounding announcement's
     -- slots hold, for the one atom that compares a candidate's against them
-    -- (SameControllerAsBound, Bioshift). `slotNames` above in every respect --
+    -- (ControllerRelatesToBound, Bioshift). `slotNames` above in every respect --
     -- filled by Parun.Engine.Projection.framedBySlots for a target slot's Filter
     -- and a resolution's positions (Glamer Spinners' attach destination),
     -- separate from `slotObjects` because an id
@@ -1280,7 +1280,7 @@ data Context = MkContext
     -- last-known reader so a bound object that has left is still answerable.
     --
     -- What keeps a card out of the positions this is empty in is Parun.FilterPositionLintSpec's
-    -- "CR 110.2 no card asks SameControllerAsBound outside a mode's target slot, an attach destination, a stored class or an effect's object",
+    -- "CR 110.2 no card asks ControllerRelatesToBound outside a mode's target slot, an attach destination, a stored class or an effect's object",
     -- slotNames' sweep with more riding on it: that atom is a silent False
     -- elsewhere and this one a silent True.
     --
@@ -1682,7 +1682,7 @@ data Context = MkContext
 -- arm in `matches` reads a slot with no key as a relation with only one party and
 -- ADMITS every candidate. Nothing narrows an offer written against that empty
 -- map; what keeps a card out of the positions it is empty in is Parun.FilterPositionLintSpec's
--- "CR 110.2 no card asks SameControllerAsBound outside a mode's target slot, an attach destination, a stored class or an effect's object"
+-- "CR 110.2 no card asks ControllerRelatesToBound outside a mode's target slot, an attach destination, a stored class or an effect's object"
 -- alone, Parun.Engine.Target.slotContext and Parun.Engine.Resolve.Slots.effectContext
 -- being the only fillers.
 --
@@ -2006,9 +2006,9 @@ matches context view predicate = case predicate of
   -- union and selectionLegal's joint check is what narrows. A key that is present
   -- and EMPTY is the other case: a bound object with no controller (CR 108.4), and
   -- nothing shares a controller with it.
-  Filter.SameControllerAsBound slot -> case Map.lookup slot (slotControllers context) of
+  Filter.ControllerRelatesToBound relation slot -> case Map.lookup slot (slotControllers context) of
     Nothing -> True
-    Just pids -> maybe False (`Set.member` pids) (controller view)
+    Just pids -> maybe False (\c -> any (\p -> PlayerRelation.holds (teams context) relation p c) pids) (controller view)
   -- CR 110.2 asked of the bound object's HOST (CR 303.4b), the atom above's
   -- comparison one link along and with the opposite vacuous direction: an
   -- absent key answers False, since an attach destination has no joint check
@@ -2019,7 +2019,7 @@ matches context view predicate = case predicate of
   -- CR 205.3m at both ends, SameNameAsBound's intersection: the context holds
   -- only the bound objects' creature types, so a shared land type (Dryad Arbor's
   -- Forest) is not a match. VACUOUSLY TRUE where the slot is unbound,
-  -- SameControllerAsBound's posture and for its reason: CR 601.2c's offer is
+  -- ControllerRelatesToBound's posture and for its reason: CR 601.2c's offer is
   -- made before the sibling target is chosen, and
   -- Parun.Engine.Target.selectionLegal's joint check narrows it (Unbury's "two
   -- target creature cards that share a creature type").
@@ -2541,7 +2541,7 @@ rewrite pairs predicate = case predicate of
   Filter.IsBound _ -> predicate
   Filter.IsTarget -> predicate
   Filter.SameNameAsBound _ -> predicate
-  Filter.SameControllerAsBound _ -> predicate
+  Filter.ControllerRelatesToBound _ _ -> predicate
   Filter.SameControllerAsHostOfBound _ -> predicate
   Filter.SharesCreatureTypeWith _ -> predicate
   Filter.HasChosenName {} -> predicate
@@ -3218,8 +3218,8 @@ rewriteComponent pairs component = case component of
 -- CR 603.2: replace every ControlledByBound and OwnedByBound atom whose slot
 -- this environment names with its baked ControlledByPlayer or OwnedByPlayer
 -- arm, every IsBound atom whose slot
--- `objects` names with the objects it holds, and every SameControllerAsBound
--- atom whose slot `controllers` names with those players. What makes "target
+-- `objects` names with the objects it holds, and every ControllerRelatesToBound
+-- atom whose slot `controllers` names with the players its relation admits. What makes "target
 -- creature THAT PLAYER controls" answerable at all -- the player is a fact about the EVENT that
 -- fired the trigger, and the two sites that judge a target slot
 -- (Parun.Engine.Engine.placeBorne at CR 603.3d, Parun.Engine.Resolve.resolveModes
@@ -3242,7 +3242,7 @@ rewriteComponent pairs component = case component of
 -- Exhaustive rather than a catch-all, `rewrite`'s posture: a later atom that can
 -- carry a Filter must fail to compile here instead of silently keeping an
 -- unbaked one.
-bakeBound :: Map.Map SlotName.SlotName PlayerId.PlayerId -> Map.Map SlotName.SlotName (Set.Set ObjectId.ObjectId) -> Map.Map SlotName.SlotName (Set.Set PlayerId.PlayerId) -> Filter.Filter Keyword.Type.Keyword -> Filter.Filter Keyword.Type.Keyword
+bakeBound :: Map.Map SlotName.SlotName PlayerId.PlayerId -> Map.Map SlotName.SlotName (Set.Set ObjectId.ObjectId) -> Map.Map SlotName.SlotName (PlayerRelation.PlayerRelation -> Set.Set PlayerId.PlayerId) -> Filter.Filter Keyword.Type.Keyword -> Filter.Filter Keyword.Type.Keyword
 bakeBound players objects controllers predicate = case predicate of
   Filter.ControlledByBound slot -> maybe predicate Filter.ControlledByPlayer (Map.lookup slot players)
   Filter.And fs -> Filter.And (fmap (bakeBound players objects controllers) fs)
@@ -3297,11 +3297,12 @@ bakeBound players objects controllers predicate = case predicate of
   Filter.IsBound slot -> maybe predicate (Filter.Or . fmap Filter.IsObject . Set.toList) (Map.lookup slot objects)
   Filter.IsTarget -> predicate
   Filter.SameNameAsBound _ -> predicate
-  -- CR 608.2h: the controllers the slot's objects had as the resolution read
-  -- them, named outright for IsBound's reason -- Mark for Death's "other
-  -- creatures that player controls". Left standing where the map has no key,
-  -- which is CR 601.2c's offer before the sibling target is chosen.
-  Filter.SameControllerAsBound slot -> maybe predicate (Filter.Or . fmap Filter.ControlledByPlayer . Set.toList) (Map.lookup slot controllers)
+  -- CR 608.2h: the players standing in the relation to the controllers the
+  -- slot's objects had as the resolution read them, named outright for
+  -- IsBound's reason -- Mark for Death's "other creatures that player
+  -- controls". Left standing where the map has no key, which is CR 601.2c's
+  -- offer before the sibling target is chosen.
+  Filter.ControllerRelatesToBound relation slot -> maybe predicate (\related -> Filter.Or (fmap Filter.ControlledByPlayer (Set.toList (related relation)))) (Map.lookup slot controllers)
   Filter.SameControllerAsHostOfBound _ -> predicate
   Filter.SharesCreatureTypeWith _ -> predicate
   Filter.HasChosenName {} -> predicate
@@ -3481,7 +3482,7 @@ manaValueThresholds predicate = case predicate of
   Filter.IsBound _ -> []
   Filter.IsTarget -> []
   Filter.SameNameAsBound _ -> []
-  Filter.SameControllerAsBound _ -> []
+  Filter.ControllerRelatesToBound _ _ -> []
   Filter.SameControllerAsHostOfBound _ -> []
   Filter.SharesCreatureTypeWith _ -> []
   Filter.HasChosenName {} -> []
@@ -3644,7 +3645,7 @@ statesAQuality predicate = case predicate of
   Filter.IsBound _ -> True
   Filter.IsTarget -> True
   Filter.SameNameAsBound _ -> True
-  Filter.SameControllerAsBound _ -> True
+  Filter.ControllerRelatesToBound _ _ -> True
   Filter.SameControllerAsHostOfBound _ -> True
   Filter.SharesCreatureTypeWith _ -> True
   -- CR 701.23b's "stated quality" for HasName's reason, one indirection along: the
@@ -3816,7 +3817,7 @@ readsSourceValues predicate = case predicate of
   Filter.IsBound _ -> False
   Filter.IsTarget -> False
   Filter.SameNameAsBound _ -> False
-  Filter.SameControllerAsBound _ -> False
+  Filter.ControllerRelatesToBound _ _ -> False
   Filter.SameControllerAsHostOfBound _ -> False
   Filter.SharesCreatureTypeWith _ -> False
   Filter.HasChosenName {} -> True
@@ -3906,7 +3907,7 @@ boundSlots = Const.getConst . overBoundSlots (Const.Const . Set.singleton)
 -- Parun.Engine.Resolve.Slots.replacementRowReads decides which of the installing
 -- resolution's bindings a waiting replacement CAPTURES through here, and
 -- Parun.Engine.Target.jointlyJudged fires CR 601.2c's joint check on
--- boundSlots, which is the whole of what enforces SameControllerAsBound and
+-- boundSlots, which is the whole of what enforces ControllerRelatesToBound and
 -- SharesCreatureTypeWith (the offer widens for them).
 --
 -- The same descent `bakeBound` makes: a position that function does not bake is
@@ -3976,7 +3977,7 @@ overBoundSlotsWith f predicate = case predicate of
   -- Names no slot at all: CR 702.60a's comparison is against the SOURCE, whose
   -- names arrive on Filter.Context.
   -- Reads the whole set too, one field further over.
-  Filter.SameControllerAsBound slot -> fmap Filter.SameControllerAsBound (f SlotArity.Many slot)
+  Filter.ControllerRelatesToBound relation slot -> fmap (Filter.ControllerRelatesToBound relation) (f SlotArity.Many slot)
   -- Reads the whole set too, off its own field: a slot naming a group answers
   -- with every member's host's controller.
   Filter.SameControllerAsHostOfBound slot -> fmap Filter.SameControllerAsHostOfBound (f SlotArity.Many slot)

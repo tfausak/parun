@@ -2894,10 +2894,10 @@ effectLintSpec s registry = Spec.describe s "Lint" $ do
   -- CR 303.4i's rider names what the entering permanent arrives attached to, and
   -- Parun.Engine.Resolve reads each arm on ONE opcode: the Create arm hands the
   -- host EntryHost.Specified names to Event.createTokens, and the MoveToZone arm
-  -- narrows CR 303.4f's choice by EntryHost.Chosen's filter (moveOne). Neither
-  -- reads the other's arm, so a Specified on a MoveToZone, a Chosen on a Create
-  -- or on a move anywhere but the battlefield, or either on a CreateCopy would
-  -- say something nothing performs.
+  -- narrows CR 303.4f's choice by EntryHost.Chosen's filter or to the objects
+  -- EntryHost.Specified names (moveOne). So a Chosen on a Create, either on a
+  -- move anywhere but the battlefield, or either on a CreateCopy would say
+  -- something nothing performs.
   --
   -- The CreateCopy half is the "no CreateCopy carries an entry rider but ..." lint
   -- below, which fences every field this one does not.
@@ -2910,7 +2910,7 @@ effectLintSpec s registry = Spec.describe s "Lint" $ do
           Just (EntryHost.Chosen _) -> True
           _ -> False
         offends effect = case effect of
-          Effect.MoveToZone (MoveToZone.MkMoveToZone _ zone riders _ _ _ _) -> specified riders || (chosenAmong riders && zone /= Zone.Battlefield)
+          Effect.MoveToZone (MoveToZone.MkMoveToZone _ zone riders _ _ _ _) -> (specified riders || chosenAmong riders) && zone /= Zone.Battlefield
           Effect.Create (Create.MkCreate _ _ riders _ _) -> chosenAmong riders
           _ -> False
         creates effect = case effect of

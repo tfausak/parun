@@ -1,0 +1,38 @@
+{
+  "description": "CR 115.1 / 603.3d / 608.2h Necrotic Plague: the dead creature's controller chooses a creature one of their opponents controls, and the Plague returns under its own controller's control attached to it",
+  "note": "Alice's Plague enchants bob's Bears, so the granted trigger sacrifices them on bob's upkeep. Bob, the Bears' controller by last-known information, announces the target of alice's trigger: an engine asking alice raises an unscheduled prompt. His own Piker is refused, as it would be offered were the opponents alice's; alice's Giant and carol's Ogre are both offered, and he takes carol's. The Plague comes back under alice, not bob, attached to the Ogre.",
+  "board": {
+    "active": "bob",
+    "step": "Untap",
+    "seats": [
+      {
+        "name": "alice",
+        "battlefield": [
+          { "card": "Necrotic Plague", "label": "plague", "attached": "bears" },
+          { "card": "Hill Giant", "label": "giant" }
+        ]
+      },
+      {
+        "name": "bob",
+        "battlefield": [
+          { "card": "Grizzly Bears", "label": "bears" },
+          { "card": "Goblin Piker", "label": "piker" }
+        ],
+        "library": [{ "card": "Island" }, { "card": "Island" }]
+      },
+      {
+        "name": "carol",
+        "battlefield": [{ "card": "Gray Ogre", "label": "ogre" }]
+      }
+    ]
+  },
+  "timeline": [
+    { "turn": 1, "step": "Upkeep", "player": "bob", "do": "Pass" },
+    { "turn": 1, "step": "Upkeep", "player": "bob", "refuse": { "ChooseTargets": { "target": ["$piker"] } } },
+    { "turn": 1, "step": "Upkeep", "player": "bob", "do": { "ChooseTargets": { "target": ["$ogre"] } } },
+    { "turn": 1, "step": "Upkeep", "player": "bob", "check": { "Count": { "player": "bob", "zone": "Graveyard", "card": "Grizzly Bears", "count": 1 } } },
+    { "turn": 1, "step": "Upkeep", "player": "bob", "do": "Pass" },
+    { "turn": 1, "step": "Upkeep", "player": "bob", "check": { "View": { "of": "AttachedTo", "object": "Necrotic Plague", "is": "$ogre" } } },
+    { "turn": 1, "step": "Upkeep", "player": "bob", "check": { "View": { "of": "Controller", "object": "Necrotic Plague", "is": "alice" } } }
+  ]
+}

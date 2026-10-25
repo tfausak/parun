@@ -68,8 +68,13 @@
                       }
                     },
                     {
-                      "type": "SameControllerAsBound",
-                      "value": "from"
+                      "type": "ControllerRelatesToBound",
+                      "value": {
+                        "relation": {
+                          "type": "You"
+                        },
+                        "slot": "from"
+                      }
                     }
                   ]
                 },

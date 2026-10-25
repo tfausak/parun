@@ -85,7 +85,7 @@ import qualified Parun.Types.Quantity as Quantity
 -- "any number of +1\/+1 counters" -- Scrounging Bandar, Bioshift, Aetherborn
 -- Marauder and Forgotten Ancient, every one of them 'AnyNumberOfKind'. Scrounging
 -- Bandar, Bioshift and Forgotten Ancient are written today -- Bioshift's "another
--- target creature with the same controller" being Filter.SameControllerAsBound
+-- target creature with the same controller" being Filter.ControllerRelatesToBound
 -- over its first slot, and Forgotten Ancient's "onto other creatures" a group on
 -- the SECOND side, which Parun.Types.MoveCounters' `to` says as an
 -- ObjectRef.EachMatching; Aetherborn Marauder's "from other permanents you

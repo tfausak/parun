@@ -1739,8 +1739,10 @@ chooseTargets reader pid oid source seed x slots sets = do
 --
 -- A SLOT names its seat outright, off `seed` -- the bindings the announcement
 -- already holds, which for a triggered ability are CR 603.2's event bindings
--- (Curse of Inertia's "that attacking player"). Nobody is asked which seat: the
--- card has said. A slot naming no player, or a seat no longer reachable, leaves
+-- (Curse of Inertia's "that attacking player"), or the controller of the object
+-- one holds, by CR 608.2h's last-known information (Necrotic Plague's creature
+-- that died). Nobody is asked which seat: the card has said. A slot naming no
+-- player, or no object with a controller, or a seat no longer reachable, leaves
 -- the slots unanswered as an empty relation does.
 --
 -- The relation's offer is Players.chooserOffer and the ask Players.chooseOne,
@@ -1756,6 +1758,9 @@ chooserOf controller oid source seed chooser = case chooser of
   Just (TargetChooser.InSlot slot) -> do
     gs <- State.get
     pure (List.find (`List.elem` Players.table (Plane.rangePerspective source controller gs) gs) (Map.lookup slot (Binding.playerSlots seed)))
+  Just (TargetChooser.ControllerOfBound slot) -> do
+    gs <- State.get
+    pure (List.find (`List.elem` Players.table (Plane.rangePerspective source controller gs) gs) (Map.lookup slot (Binding.objectSlots seed) >>= (`Projection.controllerWithLastKnown` gs)))
   Just (TargetChooser.Relative r) -> do
     gs <- State.get
     Players.chooseOne controller oid Nothing (Players.chooserOffer controller gs r)
