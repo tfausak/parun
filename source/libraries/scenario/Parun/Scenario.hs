@@ -1060,6 +1060,7 @@ withinOffer prompt chosen = case prompt of
   Prompt.Type.ChooseExert {} -> True
   Prompt.Type.ChooseExplore {} -> True
   Prompt.Type.ChooseDredge {} -> True
+  Prompt.Type.ChooseLandOrNonland {} -> True
   Prompt.Type.ChooseRiot {} -> True
   Prompt.Type.ChooseUnleash {} -> True
   Prompt.Type.ChooseTribute {} -> True

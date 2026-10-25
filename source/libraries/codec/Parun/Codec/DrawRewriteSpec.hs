@@ -61,4 +61,11 @@ spec s = Spec.describe s "Parun.Codec.DrawRewrite" $ do
       DrawRewrite.codec
       DrawRewrite.FromGraveyardOrLose
       " {\"type\":\"FromGraveyardOrLose\"} "
+  -- CR 614.1a / 701.20a: Abundance.
+  Spec.it s "RevealUntilChosenKind" $
+    Common.assertCodec
+      s
+      DrawRewrite.codec
+      DrawRewrite.RevealUntilChosenKind
+      " {\"type\":\"RevealUntilChosenKind\"} "
   Spec.it s "has a schema" $ Common.assertHasSchema s DrawRewrite.codec

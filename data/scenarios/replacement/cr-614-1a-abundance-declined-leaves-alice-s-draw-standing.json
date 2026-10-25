@@ -1,0 +1,23 @@
+{
+  "description": "CR 614.1a Abundance's replacement declined leaves alice's draw standing: she draws the Forest on top and reveals nothing",
+  "note": "The Forest is a land, so a replacement that went ahead choosing nonland would have taken the Grizzly Bears beneath it instead.",
+  "board": {
+    "active": "alice",
+    "turn": 2,
+    "step": "Upkeep",
+    "seats": [
+      {
+        "name": "alice",
+        "battlefield": [{ "card": "Abundance" }],
+        "library": [{ "card": "Forest" }, { "card": "Grizzly Bears" }, { "card": "Mountain" }]
+      },
+      { "name": "bob", "library": [{ "card": "Plains" }] }
+    ]
+  },
+  "timeline": [
+    { "turn": 2, "step": "DrawStep", "player": "alice", "do": { "Answer": { "prompt": "ChooseLandOrNonland", "with": null } } },
+    { "turn": 2, "step": "DrawStep", "player": "alice", "check": { "Count": { "player": "alice", "zone": "Hand", "card": "Forest", "count": 1 } } },
+    { "turn": 2, "step": "DrawStep", "player": "alice", "check": { "View": { "of": "Zone", "player": "alice", "zone": "Library", "is": ["Grizzly Bears", "Mountain"] } } },
+    { "turn": 2, "step": "DrawStep", "player": "alice", "check": { "View": { "of": "Witnessed", "player": "bob", "is": [] } } }
+  ]
+}

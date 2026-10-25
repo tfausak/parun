@@ -1081,6 +1081,7 @@ stocked gs rewrite pid = case rewrite of
   DrawRewrite.YouDraw -> True
   DrawRewrite.OthersMayPayLife _ -> True
   DrawRewrite.FromGraveyardOrLose -> True
+  DrawRewrite.RevealUntilChosenKind -> True
 
 breaches :: GameState -> Maybe PlayerId -> LifeLossRewrite.LifeLossRewrite -> PlayerId -> Natural -> Bool
 breaches gs you rewrite pid n = case rewrite of
@@ -2292,6 +2293,9 @@ readsApplier re = case re of
   -- The graveyard searched and the player who loses are both the drawer the
   -- EVENT named. GainLife's answer, and for its reason.
   ReplacementEffect.DrawR (DrawR.MkDrawR _ DrawRewrite.FromGraveyardOrLose) -> False
+  -- The library walked, the hand reached and the player asked are all the
+  -- drawer the EVENT named. GainLife's answer, and for its reason.
+  ReplacementEffect.DrawR (DrawR.MkDrawR _ DrawRewrite.RevealUntilChosenKind) -> False
   -- CR 121.2a: "you and that player each draw a card" -- the "you" is the row's
   -- own controller, so two rows alike in `effect` and unlike in `you` hand the
   -- extra card to different seats. LifeLossRewrite.ExileFromTopOfYourLibrary's
@@ -2394,6 +2398,9 @@ readsSource effect = case effect of
   -- The source only names the prompt and the queued loss; which cards are offered
   -- and who loses do not depend on it.
   ReplacementEffect.DrawR (DrawR.MkDrawR _ DrawRewrite.FromGraveyardOrLose) -> False
+  -- The source only names the prompt; what is revealed and where it goes do
+  -- not depend on it.
+  ReplacementEffect.DrawR (DrawR.MkDrawR _ DrawRewrite.RevealUntilChosenKind) -> False
   -- CR 616.1: Event.eligible scans the pool under Projection.sourceContext
   -- framed by this candidate's source, so a filter naming any of the source's
   -- characteristics or choices (Filter.readsSourceValues) can offer different

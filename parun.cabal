@@ -2676,6 +2676,7 @@ library types
     Parun.Types.KickerDecision
     Parun.Types.Label
     Parun.Types.LandAllowance
+    Parun.Types.LandOrNonland
     Parun.Types.LandPlayed
     Parun.Types.LastKnown
     Parun.Types.Layer

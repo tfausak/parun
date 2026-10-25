@@ -179,6 +179,7 @@ import qualified Parun.Types.InstructionR as InstructionR
 import qualified Parun.Types.InstructionRewrite as InstructionRewrite
 import qualified Parun.Types.Keyword as Keyword.Type
 import qualified Parun.Types.KeywordInstance as KeywordInstance
+import qualified Parun.Types.LandOrNonland as LandOrNonland
 import qualified Parun.Types.LastKnown as LastKnown
 import qualified Parun.Types.Layout as Layout
 import qualified Parun.Types.LibraryPosition as LibraryPosition
@@ -4321,6 +4322,50 @@ apply batch candidate event =
             queue g = g {GameState.pendingReplacementEffects = GameState.pendingReplacementEffects g Seq.|> loss}
         Monad.unless (any (`elem` Game.zoneMembers Zone.Hand pid after) arrived) (State.modify' queue)
         pure Nothing
+      -- CR 614.1a / 701.20a: Abundance's "you may instead choose land or
+      -- nonland and reveal cards from the top of your library until you reveal
+      -- a card of the chosen kind. Put that card into your hand and put all
+      -- other cards revealed this way on the bottom of your library in any
+      -- order."
+      --
+      -- The "may" and the choice are one question, never elided: declining
+      -- leaves the event STANDING, Dredge's declining arm and for its reason.
+      -- Asked over an empty library too, where declining loses the game by CR
+      -- 704.5b and choosing does not (CR 614.11).
+      --
+      -- Each card is matched on its own CR 613 projection, exploreOne's read in
+      -- Parun.Engine.Resolve.Effect. A library with no card of the kind is
+      -- revealed whole and nothing reaches the hand (the card's ruling).
+      --
+      -- The rest go to the bottom in an order the drawer states, asked at two
+      -- or more (CR 401.4's count) and answered from the bottom inward, then
+      -- moved in reverse, Resolve.Effect.settleArrivals' order. The whole
+      -- rewrite runs before this call returns, which is CR 614.11a for a
+      -- sequence of draws.
+      DrawRewrite.RevealUntilChosenKind -> do
+        gs <- State.get
+        answer <- Game.choose (Prompt.ChooseLandOrNonland (Decide.deciderFor pid gs) pid (ReplacementCandidate.source candidate))
+        case answer of
+          Nothing -> pure (Just event)
+          Just kind -> do
+            Replacement.consume (ReplacementCandidate.identity candidate)
+            let isLand oid = Set.member CardType.Land (Filter.cardTypes (Projection.viewOfObject oid gs))
+                wanted oid = case kind of
+                  LandOrNonland.Land -> isLand oid
+                  LandOrNonland.Nonland -> not (isLand oid)
+                (passed, rest) = List.break wanted (Game.zoneMembers Zone.Library pid gs)
+                found = Maybe.listToMaybe rest
+            Monad.mapM_ (reveal RevealCause.Ordinary pid) (passed <> Maybe.maybeToList found)
+            Monad.forM_ found (`changeZone` Zone.Hand)
+            ordered <- case passed of
+              _ : _ : _ -> do
+                asked <- State.get
+                order <- Game.choose (Prompt.ArrangeLibraryArrivals (Decide.deciderFor pid asked) pid LibraryPosition.Bottom passed)
+                pure (Game.permute passed order)
+              _ -> pure passed
+            Monad.forM_ (reverse ordered) $ \oid ->
+              changeZoneAttaching Nothing Set.empty oid Zone.Library LibraryPosition.Bottom Nothing TapState.Untapped Map.empty Nothing Nothing Facing.FaceUp False CarryOver.NotCarried False Seq.empty
+            pure Nothing
     -- Unreachable: `applies` admits DrawR only against WouldDraw.
     (ReplacementEffect.DrawR {}, _) -> pure (Just event)
     -- CR 121.2a with CR 614.6: Alms Collector's "if an opponent would draw two or

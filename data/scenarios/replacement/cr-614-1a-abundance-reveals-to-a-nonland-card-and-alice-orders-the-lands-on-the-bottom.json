@@ -1,0 +1,24 @@
+{
+  "description": "CR 614.1a Abundance replaces alice's draw: she chooses nonland, reveals Forest, Island and Swamp down to Grizzly Bears, takes the Bears and puts the three lands on the bottom in the order she picks",
+  "note": "The order she answers is neither the order revealed nor its reverse, so leaving the lands where a one-at-a-time move would put them reads differently. Bob is shown each revealed card (CR 701.20a); the Mountain no one revealed stays on top.",
+  "board": {
+    "active": "alice",
+    "turn": 2,
+    "step": "Upkeep",
+    "seats": [
+      {
+        "name": "alice",
+        "battlefield": [{ "card": "Abundance" }],
+        "library": [{ "card": "Forest" }, { "card": "Island" }, { "card": "Swamp" }, { "card": "Grizzly Bears" }, { "card": "Mountain" }]
+      },
+      { "name": "bob", "library": [{ "card": "Plains" }] }
+    ]
+  },
+  "timeline": [
+    { "turn": 2, "step": "DrawStep", "player": "alice", "do": { "Answer": { "prompt": "ChooseLandOrNonland", "with": "Nonland" } } },
+    { "turn": 2, "step": "DrawStep", "player": "alice", "do": { "Answer": { "prompt": "ArrangeLibraryArrivals", "with": [1, 0, 2] } } },
+    { "turn": 2, "step": "DrawStep", "player": "alice", "check": { "Count": { "player": "alice", "zone": "Hand", "card": "Grizzly Bears", "count": 1 } } },
+    { "turn": 2, "step": "DrawStep", "player": "alice", "check": { "View": { "of": "Zone", "player": "alice", "zone": "Library", "is": ["Mountain", "Swamp", "Forest", "Island"] } } },
+    { "turn": 2, "step": "DrawStep", "player": "alice", "check": { "View": { "of": "Witnessed", "player": "bob", "is": ["Forest", "Island", "Swamp", "Grizzly Bears"] } } }
+  ]
+}
