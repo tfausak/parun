@@ -421,19 +421,23 @@ described context slot =
           both card (Filter.merge p (Filter.MkPhrase [] [card] [from]))
         _ | Maybe.isJust (TargetSlot.together slot) -> []
         (Pool.AnyTarget, Just _) -> filtered >>= both (Filter.MkNoun Text.empty Nothing)
-        (Pool.Creatures, _) -> filtered >>= both (noun "creature") . creature
+        (Pool.Creatures, _) -> filtered >>= creature >>= both (noun "creature")
         (Pool.Players, _) -> filtered >>= both (noun "player")
         (Pool.Permanents, _) -> filtered >>= both (noun "permanent")
         (Pool.Spells, _) -> filtered >>= both (noun "spell") . (\p -> Filter.merge p (Filter.MkPhrase [] [noun "spell"] []))
         _ -> []
 
--- | A description of creatures, which ends in "creature" unless a creature
--- type already names them: "target attacking Goblin you control" (Boggart
--- Prankster), "target artifact creature".
-creature :: Filter.Phrase -> Filter.Phrase
-creature p =
-  let named = any (\n -> not (Filter.kind n) || Filter.singular n == Text.pack "creature") (Filter.nouns p)
-   in if named then p else Filter.merge p (Filter.MkPhrase [] [Filter.MkNoun (Text.pack "creature") (Just (Text.pack "creatures"))] [])
+-- | A description of creatures, ending in "creature": "target artifact
+-- creature". Free when a creature type names them: "target attacking Goblin
+-- you control" (Boggart Prankster) or "target Merfolk creature" (Merfolk
+-- Sovereign).
+creature :: Filter.Phrase -> [Filter.Phrase]
+creature p
+  | any ((== Text.pack "creature") . Filter.singular) (Filter.nouns p) = [p]
+  | not (all Filter.kind (Filter.nouns p)) = [p, withCreature]
+  | otherwise = [withCreature]
+  where
+    withCreature = Filter.merge p (Filter.MkPhrase [] [Filter.MkNoun (Text.pack "creature") (Just (Text.pack "creatures"))] [])
 
 -- | A slot's count before its head: one target reads singular, a fixed number
 -- or a range plural ("up to three target creatures", "one or two target

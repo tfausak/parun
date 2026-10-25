@@ -1,0 +1,18 @@
+{
+  "description": "CR 502.3 Sleep taps all creatures target player controls, and they don't untap during that player's next untap step",
+  "note": "Bob's Mountain starts tapped and untaps on turn 2, which shows the untap step happened; his creatures untap a turn later. Alice's creature is not his and stays untapped.",
+  "board": {"active": "alice", "step": "PrecombatMain", "seats": [{"name": "alice", "manaPool": "UUUU", "hand": [{"card": "Sleep", "label": "sleep"}], "battlefield": [{"card": "Coral Merfolk", "label": "merfolk"}], "library": [{"card": "Island"}, {"card": "Island"}, {"card": "Island"}]}, {"name": "bob", "battlefield": [{"card": "Grizzly Bears", "label": "bears"}, {"card": "Hill Giant", "label": "giant"}, {"card": "Mountain", "label": "mountain", "tapped": true}], "library": [{"card": "Island"}, {"card": "Island"}, {"card": "Island"}]}]},
+  "timeline": [
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "do": {"Cast": {"object": "$sleep", "targets": ["$bob"]}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "do": "Pass"},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "check": {"Tapped": {"object": "$bears", "tapped": true}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "check": {"Tapped": {"object": "$giant", "tapped": true}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "check": {"Tapped": {"object": "$merfolk", "tapped": false}}},
+    {"turn": 2, "step": "Upkeep", "player": "bob", "check": {"Tapped": {"object": "$mountain", "tapped": false}}},
+    {"turn": 2, "step": "Upkeep", "player": "bob", "check": {"Tapped": {"object": "$bears", "tapped": true}}},
+    {"turn": 2, "step": "Upkeep", "player": "bob", "check": {"Tapped": {"object": "$giant", "tapped": true}}},
+    {"turn": 3, "step": "DeclareAttackers", "player": "alice", "do": {"Attack": []}},
+    {"turn": 4, "step": "Upkeep", "player": "bob", "check": {"Tapped": {"object": "$bears", "tapped": false}}},
+    {"turn": 4, "step": "Upkeep", "player": "bob", "check": {"Tapped": {"object": "$giant", "tapped": false}}}
+  ]
+}

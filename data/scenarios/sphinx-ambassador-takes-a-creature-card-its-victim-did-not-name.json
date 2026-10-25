@@ -1,0 +1,17 @@
+{
+  "description": "CR 201.4 / 701.23a Sphinx Ambassador searches the library of the player it hit, and takes the creature card found when that player names another card",
+  "note": "Paired with sphinx-ambassador-leaves-a-creature-card-its-victim-named; the runs differ only in the name bob chooses.",
+  "board": {"active": "alice", "step": "BeginningOfCombat", "seats": [{"name": "alice", "battlefield": [{"card": "Sphinx Ambassador", "label": "sphinx", "ready": true}], "library": [{"card": "Island"}, {"card": "Island"}, {"card": "Island"}]}, {"name": "bob", "library": [{"card": "Island", "label": "lib-island"}, {"card": "Hill Giant", "label": "lib-giant"}, {"card": "Forest", "label": "lib-forest"}]}]},
+  "timeline": [
+    {"turn": 1, "step": "DeclareAttackers", "player": "alice", "do": {"Attack": ["$sphinx"]}},
+    {"turn": 1, "step": "CombatDamage", "player": "alice", "do": {"Answer": {"prompt": "Search", "with": ["$lib-giant"]}}},
+    {"turn": 1, "step": "CombatDamage", "player": "bob", "do": {"Answer": {"prompt": "ChooseCardName", "with": "Grizzly Bears"}}},
+    {"turn": 1, "step": "CombatDamage", "player": "alice", "do": {"Answer": {"prompt": "ChooseOptional", "with": {"type": "Exercises"}}}},
+    {"turn": 1, "step": "CombatDamage", "player": "alice", "do": {"Answer": {"prompt": "Shuffle", "with": ["$lib-island", "$lib-forest"]}}}
+  ],
+  "final": [
+    {"Count": {"player": "alice", "zone": "Battlefield", "card": "Hill Giant", "count": 1}},
+    {"Count": {"player": "bob", "zone": "Library", "card": "Hill Giant", "count": 0}},
+    {"Life": {"player": "bob", "life": 15}}
+  ]
+}

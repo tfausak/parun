@@ -1,0 +1,8 @@
+{
+  "description": "CR 604.3 / 613.4a Serpent of the Endless Sea's power and toughness are each the number of Islands its controller controls",
+  "note": "Bob's two Islands are not alice's, and alice's Forest is not an Island.",
+  "board": {"active": "alice", "step": "PrecombatMain", "seats": [{"name": "alice", "battlefield": [{"card": "Serpent of the Endless Sea", "label": "serpent"}, {"card": "Island"}, {"card": "Island"}, {"card": "Island"}, {"card": "Forest"}], "library": [{"card": "Island"}, {"card": "Island"}, {"card": "Island"}]}, {"name": "bob", "battlefield": [{"card": "Island"}, {"card": "Island"}], "library": [{"card": "Island"}, {"card": "Island"}, {"card": "Island"}]}]},
+  "timeline": [
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "check": {"PowerToughness": {"object": "$serpent", "power": 3, "toughness": 3}}}
+  ]
+}

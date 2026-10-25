@@ -1,0 +1,19 @@
+{
+  "description": "CR 510.3a / 603.2 Lightwielder Paladin's combat damage to a player lets its controller exile target black or red permanent that player controls",
+  "note": "Bob's green Bears is the wrong colour and alice's black Knight is the wrong player's, so neither is a legal target; bob's red Raging Goblin is.",
+  "board": {"active": "alice", "step": "BeginningOfCombat", "seats": [{"name": "alice", "battlefield": [{"card": "Lightwielder Paladin", "label": "paladin", "ready": true}, {"card": "Black Knight", "label": "knight"}], "library": [{"card": "Island"}, {"card": "Island"}, {"card": "Island"}]}, {"name": "bob", "battlefield": [{"card": "Raging Goblin", "label": "goblin"}, {"card": "Grizzly Bears", "label": "bears"}], "library": [{"card": "Island"}, {"card": "Island"}, {"card": "Island"}]}]},
+  "timeline": [
+    {"turn": 1, "step": "DeclareAttackers", "player": "alice", "do": {"Attack": ["$paladin"]}},
+    {"turn": 1, "step": "DeclareBlockers", "player": "bob", "do": {"Block": {}}},
+    {"turn": 1, "step": "CombatDamage", "player": "alice", "refuse": {"Answer": {"prompt": "ChooseTargets", "with": [["target", [["Object", "$knight"]]]]}}},
+    {"turn": 1, "step": "CombatDamage", "player": "alice", "refuse": {"Answer": {"prompt": "ChooseTargets", "with": [["target", [["Object", "$bears"]]]]}}},
+    {"turn": 1, "step": "CombatDamage", "player": "alice", "do": {"Answer": {"prompt": "ChooseTargets", "with": [["target", [["Object", "$goblin"]]]]}}},
+    {"turn": 1, "step": "CombatDamage", "player": "alice", "do": {"Answer": {"prompt": "ChooseOptional", "with": {"type": "Exercises"}}}}
+  ],
+  "final": [
+    {"Count": {"player": "bob", "zone": "Exile", "card": "Raging Goblin", "count": 1}},
+    {"Count": {"player": "bob", "zone": "Battlefield", "card": "Grizzly Bears", "count": 1}},
+    {"Count": {"player": "alice", "zone": "Battlefield", "card": "Black Knight", "count": 1}},
+    {"Life": {"player": "bob", "life": 16}}
+  ]
+}
