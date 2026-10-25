@@ -5653,7 +5653,7 @@ applyOneEffect runSubgame resolving source controller legal chosen effect = case
         -- CR 303.4i's EntryHost.Specified narrows the same offer to the objects
         -- the slot names instead (Necrotic Plague's "attached to that
         -- creature"), so a named host the Aura could not enchant leaves it where
-        -- it is (CR 303.4i) rather than letting its controller pick another.
+        -- it is rather than letting its controller pick another.
         chosenHost mover riders sofar target = do
           now <- State.get
           let narrowed admits
