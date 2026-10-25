@@ -35,6 +35,7 @@ import qualified Parun.Types.DealDamage as DealDamage
 import qualified Parun.Types.Designate as Designate
 import qualified Parun.Types.Destroy as Destroy
 import qualified Parun.Types.Discard as Discard
+import qualified Parun.Types.Divide as Divide
 import qualified Parun.Types.DoesNotUntapNext as DoesNotUntapNext
 import qualified Parun.Types.Draw as Draw
 import qualified Parun.Types.Earthbend as Earthbend
@@ -105,6 +106,7 @@ import qualified Parun.Types.SlotName as SlotName
 import qualified Parun.Types.SpeedDecrease as SpeedDecrease
 import qualified Parun.Types.Subtype as Subtype
 import qualified Parun.Types.TakeExtraTurn as TakeExtraTurn
+import qualified Parun.Types.Tap as Tap
 import qualified Parun.Types.TurnFaceDown as TurnFaceDown
 import qualified Parun.Types.Vote as Vote
 
@@ -406,10 +408,9 @@ data Effect card ability
     -- ObjectRef names, one call to Event.putCounters apiece since CR 614.16
     -- replaces one placement at a time.
     PutCounters PutCounters.PutCounters
-  | -- | CR 608.2d: distribute this many counters of this kind among any number
-    -- of the permanents the ObjectRef names, the resolving controller choosing
-    -- them and the division, each chosen one getting at least one.
-    DistributeCounters PutCounters.PutCounters
+  | -- | CR 608.2d: divide an amount among any number of the objects a ref
+    -- names, as a player chooses, bound for a later instruction to read.
+    Divide Divide.Divide
   | -- | CR 122: remove this many counters of this kind from the slot's target
     -- permanent; asking for more than are present removes what is there.
     RemoveCounters RemoveCounters.RemoveCounters
@@ -444,7 +445,7 @@ data Effect card ability
     ChooseNumber ChooseNumber.ChooseNumber
   | -- | CR 701.26a: tap the permanents the ObjectRef names, leaving an already
     -- tapped one alone.
-    Tap ObjectRef.ObjectRef
+    Tap Tap.Tap
   | -- | CR 701.26b: untap the permanents the ObjectRef names.
     Untap ObjectRef.ObjectRef
   | -- | CR 701.35a: detain the permanents the ObjectRef names, that rule fixing

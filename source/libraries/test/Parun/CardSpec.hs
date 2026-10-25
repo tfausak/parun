@@ -178,6 +178,7 @@ import qualified Parun.Types.Devour as Devour
 import qualified Parun.Types.DiceReading as DiceReading
 import qualified Parun.Types.Discard as Discard
 import qualified Parun.Types.DiscardCards as DiscardCards
+import qualified Parun.Types.Divide as Divide
 import qualified Parun.Types.DoesNotUntapNext as DoesNotUntapNext
 import qualified Parun.Types.Draw as Draw
 import qualified Parun.Types.DrawR as DrawR
@@ -379,6 +380,7 @@ import qualified Parun.Types.Supertype as Supertype
 import qualified Parun.Types.Suspend as Suspend
 import qualified Parun.Types.SuspendCounters as SuspendCounters
 import qualified Parun.Types.TakeExtraTurn as TakeExtraTurn
+import qualified Parun.Types.Tap as Tap
 import qualified Parun.Types.TapForMana as TapForMana
 import qualified Parun.Types.TapForTotalPower as TapForTotalPower
 import qualified Parun.Types.TapPermanents as TapPermanents
@@ -695,10 +697,10 @@ objectRefPositions =
         ("redirect-damage", Effect.RedirectDamage (RedirectDamage.MkRedirectDamage Duration.UntilEndOfTurn Nothing Nothing (Just (plantedRef "rd-from")) Nothing Nothing (plantedRef "rd-to") Nothing Uses.Unlimited (Filter.Type.And [])), [plantedRef "rd-from", plantedRef "rd-to"]),
         ("counter", Effect.Counter (Counter.MkCounter (plantedRef "co") Nothing Nothing Nothing), [plantedRef "co"]),
         ("put-counters", Effect.PutCounters (PutCounters.MkPutCounters CounterKind.PlusOnePlusOne (Quantity.Type.Literal 1) (plantedRef "pc")), [plantedRef "pc"]),
-        ("distribute-counters", Effect.DistributeCounters (PutCounters.MkPutCounters CounterKind.Stun (Quantity.Type.Literal 3) (plantedRef "dc")), [plantedRef "dc"]),
+        ("divide", Effect.Divide (Divide.MkDivide (Quantity.Type.Literal 3) (plantedRef "dv") (PlayerRef.Relative PlayerRelation.You) (SlotName.MkSlotName (Text.pack "split"))), [plantedRef "dv"]),
         ("move-counters", Effect.MoveCounters (MoveCounters.MkMoveCounters (plantedRef "mc-from") MovedKinds.Every Nothing (plantedRef "mc-to")), [plantedRef "mc-from", plantedRef "mc-to"]),
         ("put-counters-from", Effect.PutCountersFrom (PutCountersFrom.MkPutCountersFrom (SlotName.MkSlotName (Text.pack "giver")) Nothing (plantedRef "pf")), [plantedRef "pf"]),
-        ("tap", Effect.Tap (plantedRef "ta"), [plantedRef "ta"]),
+        ("tap", Effect.Tap (Tap.plain (plantedRef "ta")), [plantedRef "ta"]),
         ("untap", Effect.Untap (plantedRef "un"), [plantedRef "un"]),
         ("unattach", Effect.Unattach (plantedRef "ua"), [plantedRef "ua"]),
         ("detain", Effect.Detain (plantedRef "dt"), [plantedRef "dt"]),
@@ -788,6 +790,7 @@ playerRefPositions =
         ("put-sticker", Effect.PutSticker (PutSticker.MkPutSticker (plantedPlayer "pp") (plantedRef "pp") (Set.singleton StickerKind.Art) Nothing False Nothing), [plantedPlayer "pp"]),
         ("set-owner", Effect.SetOwner (SetOwner.MkSetOwner (plantedPlayer "sp") (plantedRef "sp")), [plantedPlayer "sp"]),
         ("shuffle", Effect.Shuffle (plantedPlayer "sh"), [plantedPlayer "sh"]),
+        ("divide", Effect.Divide (Divide.MkDivide one (plantedRef "dv") (plantedPlayer "dv") (SlotName.MkSlotName (Text.pack "split"))), [plantedPlayer "dv"]),
         ("cloak", Effect.Cloak (plantedPlayer "ck"), [plantedPlayer "ck"]),
         ("manifestDread", Effect.ManifestDread (plantedPlayer "md"), [plantedPlayer "md"]),
         ("choose-permanents", Effect.ChoosePermanents (ChoosePermanents.MkChoosePermanents (ChosenPermanents.MkChosenPermanents (Filter.Type.And []) (plantedPlayer "cp") (HowMany.UpTo Nothing)) (SlotName.MkSlotName (Text.pack "cp")) (Just (plantedPlayer "cp-piles"))), [plantedPlayer "cp", plantedPlayer "cp-piles"]),
@@ -1409,7 +1412,7 @@ ownCounts effect = case effect of
   Effect.ExchangeBlocks _ -> []
   Effect.Counter {} -> []
   Effect.PutCounters (PutCounters.MkPutCounters _ quantity _) -> quantityCounts quantity
-  Effect.DistributeCounters (PutCounters.MkPutCounters _ quantity _) -> quantityCounts quantity
+  Effect.Divide divide -> quantityCounts (Divide.quantity divide)
   Effect.PutCountersFrom {} -> []
   -- The count the moved kinds may write. CR 122.5's GIVER carries the other one,
   -- through the ObjectRef it became when the first side was widened to a group,
@@ -1913,7 +1916,7 @@ effectNestedEffects effect = case effect of
   Effect.ExchangeBlocks {} -> []
   Effect.Counter {} -> []
   Effect.PutCounters {} -> []
-  Effect.DistributeCounters {} -> []
+  Effect.Divide {} -> []
   Effect.PutCountersFrom {} -> []
   Effect.MoveCounters {} -> []
   Effect.RemoveCounters {} -> []
@@ -2471,7 +2474,7 @@ effectReplacements effect = case effect of
   Effect.ExchangeBlocks _ -> []
   Effect.Counter {} -> []
   Effect.PutCounters {} -> []
-  Effect.DistributeCounters {} -> []
+  Effect.Divide {} -> []
   Effect.PutCountersFrom {} -> []
   Effect.MoveCounters {} -> []
   Effect.RemoveCounters {} -> []
@@ -2597,10 +2600,12 @@ modeBranchesOffend mode =
             || fmap Clause.orElse (Map.lookup (OrElse.sibling orElse) byIndex) /= names cIdx (OrElse.chooser orElse) (OrElse.villainous orElse)
    in any offends indexed
 
--- CR 601.2d: does a divided slot go unread, or a Quantity.Share read anything
--- but its own slot's targets? A division is read as the part a DealDamage
--- clause deals, or a PreventNextDamage shield prevents, for the divided slot's
--- own targets, `{ref: InSlot s, quantity: Share s}`; a divided slot nothing
+-- CR 601.2d / 608.2d: does a divided slot go unread, or a Quantity.Share read
+-- anything but its own slot's members? A division -- of a target slot, or the
+-- one an Effect.Divide binds -- is read as the part a DealDamage clause deals,
+-- a PreventNextDamage shield prevents or a PutCounters places, for the divided
+-- slot's own members,
+-- `{ref: InSlot s, quantity: Share s}`; a divided slot nothing
 -- reads that way does nothing, and a Share anywhere else answers Nothing --
 -- silently, which is why this is a lint.
 cardDivisionsDangle :: Face.Face Card.Type.Card -> Bool
@@ -2609,15 +2614,18 @@ cardDivisionsDangle = any (any modeDivisionDangles . Modal.modes) . faceModals
 -- One mode's half of that lint.
 modeDivisionDangles :: Mode.Mode Card.Type.Card (GrantedAbility.GrantedAbility Card.Type.Card) -> Bool
 modeDivisionDangles mode =
-  let divided = Map.keysSet (Map.filter (Maybe.isJust . TargetSlot.divided) (Mode.targetSlots mode))
+  let divided =
+        Map.keysSet (Map.filter (Maybe.isJust . TargetSlot.divided) (Mode.targetSlots mode))
+          <> Set.fromList [Divide.slot divide | clause <- Foldable.toList (Mode.clauses mode), Effect.Divide divide <- Foldable.toList (Clause.effects clause)]
       -- Each (ref, amount) pair whose amount is read per recipient: a damage
-      -- clause, and a named prevention shield (CR 615.7).
+      -- clause, a named prevention shield (CR 615.7) and a counter placement.
       amounts = do
         clause <- Foldable.toList (Mode.clauses mode)
         effect <- Foldable.toList (Clause.effects clause)
         case effect of
           Effect.DealDamage dealt -> fmap (\part -> (Just (DamagePart.ref part), DamagePart.quantity part)) (Foldable.toList (DealDamage.parts dealt))
           Effect.PreventNextDamage shield -> [(PreventNextDamage.ref shield, PreventNextDamage.quantity shield)]
+          Effect.PutCounters put -> [(Just (PutCounters.ref put), PutCounters.quantity put)]
           _ -> []
       sharing = [(slot, ref) | (Just ref, Quantity.Type.Share slot) <- amounts]
       reads_ = Set.fromList [slot | (slot, ObjectRef.InSlot named) <- sharing, slot == named]
@@ -3028,7 +3036,7 @@ effectMintedFaces effect = case effect of
   Effect.ExchangeBlocks _ -> []
   Effect.Counter {} -> []
   Effect.PutCounters {} -> []
-  Effect.DistributeCounters {} -> []
+  Effect.Divide {} -> []
   Effect.PutCountersFrom {} -> []
   Effect.MoveCounters {} -> []
   Effect.RemoveCounters {} -> []
@@ -6184,7 +6192,7 @@ effectFilters effect = case effect of
   -- otherwise escape the lint; the count is a Quantity like any other; and CR
   -- 122.1b's kind may be a whole Keyword with a Filter under it; see #2728.
   Effect.PutCounters (PutCounters.MkPutCounters kind quantity ref) -> frame Unframed (counterKindFilters kind <> quantityFilters quantity) <> frame SourceHostFramed (objectRefFilters ref)
-  Effect.DistributeCounters (PutCounters.MkPutCounters kind quantity ref) -> frame Unframed (counterKindFilters kind <> quantityFilters quantity) <> frame SourceHostFramed (objectRefFilters ref)
+  Effect.Divide (Divide.MkDivide quantity among _ _) -> frame Unframed (quantityFilters quantity) <> frame SourceHostFramed (objectRefFilters among)
   -- The destination and CR 122.1b's kind, PutCounters' framing: `from` is a bare
   -- SlotName and carries no Filter, and the kind is the one rule 122.8's second
   -- sentence lets a card name, which may be a whole Keyword with a Filter under
@@ -6206,7 +6214,7 @@ effectFilters effect = case effect of
   Effect.RemovePlayerCounters removal -> frame Unframed (quantityFilters (RemovePlayerCounters.quantity removal))
   Effect.PayAnyEnergy _ -> []
   Effect.ChooseNumber _ -> []
-  Effect.Tap ref -> frame SourceHostFramed (objectRefFilters ref)
+  Effect.Tap tap -> frame SourceHostFramed (objectRefFilters (Tap.ref tap))
   Effect.Untap ref -> frame SourceHostFramed (objectRefFilters ref)
   Effect.Unattach ref -> frame SourceHostFramed (objectRefFilters ref)
   Effect.Detain ref -> frame SourceHostFramed (objectRefFilters ref)
@@ -6912,7 +6920,7 @@ lintSpec s registry = Spec.describe s "Lint" $ do
         sweeps = anyFaceOrMinted cardOffends
         offenders = filter (sweeps . Printing.card) ps
         slot = SlotName.MkSlotName (Text.pack "creature")
-        conjuredReading declared = (vanillaFace "Conjured" instantLine) {Face.spell = lintModal [Effect.Tap (ObjectRef.InSlot slot)] declared}
+        conjuredReading declared = (vanillaFace "Conjured" instantLine) {Face.spell = lintModal [Effect.Tap (Tap.plain (ObjectRef.InSlot slot))] declared}
     Spec.assertEqWith s "no dangling or unused slots" (fmap (S.nameOf . Printing.card) offenders) []
     -- The rejecting direction through the descent, which the corpus never
     -- exercises: the pair differs in the conjured spell declaring its slot.
@@ -7157,7 +7165,7 @@ lintSpec s registry = Spec.describe s "Lint" $ do
     dreamsGrip <- S.printingOf s registry "Dream's Grip"
     let creature = SlotName.MkSlotName (Text.pack "creature")
         victim = SlotName.MkSlotName (Text.pack "victim")
-        tap slot = Effect.Tap (ObjectRef.InSlot slot)
+        tap slot = Effect.Tap (Tap.plain (ObjectRef.InSlot slot))
         shared = modalActivated [lintMode [tap creature] [creature], lintMode [tap creature] [creature]]
         distinct = modalActivated [lintMode [tap creature] [creature], lintMode [tap victim] [victim]]
         collides = anyFace cardSlotNamesCollide . Printing.card

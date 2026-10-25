@@ -61,8 +61,10 @@
                   {
                     "type": "Tap",
                     "value": {
-                      "type": "InSlot",
-                      "value": "chosen"
+                      "ref": {
+                        "type": "InSlot",
+                        "value": "chosen"
+                      }
                     }
                   },
                   {

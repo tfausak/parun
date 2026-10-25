@@ -93,6 +93,7 @@ import qualified Parun.Types.Search as Search
 import qualified Parun.Types.SearchDestination as SearchDestination
 import qualified Parun.Types.SlotCount as SlotCount
 import qualified Parun.Types.SlotName as SlotName
+import qualified Parun.Types.Tap as Tap
 import qualified Parun.Types.TapState as TapState
 import qualified Parun.Types.TargetCount as TargetCount
 import qualified Parun.Types.TargetSlot as TargetSlot
@@ -409,7 +410,7 @@ objectsOf e = case e of
   Effect.Counter c -> [Counter.ref c]
   Effect.MoveToZone m -> [MoveToZone.ref m]
   Effect.PutCounters p -> [PutCounters.ref p]
-  Effect.Tap r -> [r]
+  Effect.Tap t -> [Tap.ref t]
   Effect.Untap r -> [r]
   Effect.Sacrifice s -> [SacrificeEffect.ref s]
   Effect.DealDamage d -> fmap ObjectRef.InSlot (Maybe.maybeToList (DealDamage.dealer d)) <> fmap DamagePart.ref (Foldable.toList (DealDamage.parts d))
@@ -672,7 +673,7 @@ effect context e = case e of
       Target.ForEach n each' -> fmap (\put -> Text.pack "put " <> put <> on <> Text.pack " for each " <> each') (counters (Target.keyword context) (PutCounters.kind p) (Quantity.Literal n))
       Target.EqualTo equal -> fmap (\word -> Text.pack "put a number of " <> word <> Text.pack " counters" <> on <> Text.pack " equal to " <> equal) (counterWord (Target.keyword context) (PutCounters.kind p))
     MkPredicate Nothing phrase [] (Target.mentions ref <> Target.names a) Nothing False : supported context p
-  Effect.Tap r -> acted context (Text.pack "tap ") r
+  Effect.Tap (Tap.MkTap r Nothing) -> acted context (Text.pack "tap ") r
   -- "Sacrifice this creature" (CR 701.21a): one object, which the
   -- instruction's controller sacrifices. A sweep is not spelled out here.
   Effect.Sacrifice (SacrificeEffect.MkSacrificeEffect r@(ObjectRef.InSlot _) Sacrificer.EffectController Nothing) -> acted context (Text.pack "sacrifice ") r

@@ -105,6 +105,7 @@ import qualified Parun.Types.Destroy as Destroy
 import qualified Parun.Types.DestructionR as DestructionR
 import qualified Parun.Types.DestructionRewrite as DestructionRewrite
 import qualified Parun.Types.Discard as Discard
+import qualified Parun.Types.Divide as Divide
 import qualified Parun.Types.DoesNotUntapNext as DoesNotUntapNext
 import qualified Parun.Types.Draw as Draw
 import qualified Parun.Types.DrawR as DrawR
@@ -222,6 +223,7 @@ import qualified Parun.Types.SpeedDecrease as SpeedDecrease
 import qualified Parun.Types.Superlative as Superlative
 import qualified Parun.Types.Supertype as Supertype
 import qualified Parun.Types.TakeExtraTurn as TakeExtraTurn
+import qualified Parun.Types.Tap as Tap
 import qualified Parun.Types.TargetSlot as TargetSlot
 import qualified Parun.Types.TheseDiscard as TheseDiscard
 import qualified Parun.Types.TokenR as TokenR
@@ -374,7 +376,7 @@ ownQuantities effect = case effect of
   Effect.ExchangeBlocks _ -> []
   Effect.Counter {} -> []
   Effect.PutCounters (PutCounters.MkPutCounters _ quantity _) -> [quantity]
-  Effect.DistributeCounters (PutCounters.MkPutCounters _ quantity _) -> [quantity]
+  Effect.Divide divide -> [Divide.quantity divide]
   Effect.PutCountersFrom {} -> []
   Effect.MoveCounters (MoveCounters.MkMoveCounters _ kinds _ _) -> Maybe.maybeToList (MovedKinds.quantityOf kinds)
   Effect.RemoveCounters (RemoveCounters.MkRemoveCounters _ quantity _ _) -> [quantity]
@@ -1555,9 +1557,9 @@ effectObjectRefs effect =
         Effect.ExchangeBlocks {} -> []
         Effect.Counter (Counter.MkCounter ref _ _ _) -> read_ [ref]
         Effect.PutCounters (PutCounters.MkPutCounters _ _ ref) -> read_ [ref]
-        -- A READ: which of the swept permanents get counters is asked of the
-        -- answer (Prompt.ChooseCounterDistribution), not of the ref.
-        Effect.DistributeCounters (PutCounters.MkPutCounters _ _ ref) -> read_ [ref]
+        -- A READ: which of the swept objects get a part is asked of the
+        -- answer (Prompt.ChooseDistribution), not of the ref.
+        Effect.Divide divide -> read_ [Divide.among divide]
         Effect.PutCountersFrom (PutCountersFrom.MkPutCountersFrom _ _ ref) -> read_ [ref]
         -- BOTH sides, each a READ -- CR 122.5 takes no choice of WHICH objects the
         -- counters leave or land on, so this arm goes through the pure objectRefObjects
@@ -1571,7 +1573,7 @@ effectObjectRefs effect =
         Effect.RemovePlayerCounters {} -> []
         Effect.PayAnyEnergy {} -> []
         Effect.ChooseNumber {} -> []
-        Effect.Tap ref -> read_ [ref]
+        Effect.Tap tap -> read_ [Tap.ref tap]
         Effect.Untap ref -> [(permanentQuestions, ref)]
         Effect.Unattach ref -> [(permanentQuestions, ref)]
         Effect.Detain ref -> read_ [ref]
@@ -2211,6 +2213,10 @@ effectLintSpec s registry = Spec.describe s "Lint" $ do
           Effect.Create (Create.MkCreate _ _ _ mSlot _) -> Maybe.maybeToList mSlot
           -- Create's arm and Create's test: Resolve.bindObjects binds both.
           Effect.CreateCopy (CreateCopy.MkCreateCopy _ _ _ mSlot _) -> Maybe.maybeToList mSlot
+          -- The destruction's shape: Resolve's Tap and Divide arms bind the
+          -- group however few objects it holds.
+          Effect.Tap (Tap.MkTap _ mTapped) -> Maybe.maybeToList mTapped
+          Effect.Divide divide -> [Divide.slot divide]
           _ -> []
         takesAtMostOne player quantity = case quantity of
           Quantity.Type.Literal n -> n <= 1 && namesOneSeat player
@@ -2393,7 +2399,7 @@ effectLintSpec s registry = Spec.describe s "Lint" $ do
         -- (its Tap arm is `frame SourceHostFramed (objectRefFilters ref)`).
         -- Nothing about the opcode matters here: what is on trial is the atom
         -- inside the predicate.
-        tapping f = Effect.Tap (ObjectRef.EachMatching f)
+        tapping f = Effect.Tap (Tap.plain (ObjectRef.EachMatching f))
         -- An opcode holding a PlayerRef in a field of its own, Marchesa's Decree
         -- shape. Nothing about the opcode matters here either: what is on trial
         -- is the ARM of the reference.
@@ -2701,7 +2707,7 @@ effectLintSpec s registry = Spec.describe s "Lint" $ do
     Spec.assertEqWith
       s
       "the battlefield subset is allowed by transform, move and untap and by neither other site"
-      (inert [Effect.Transform anyNumber, moves anyNumber, Effect.Untap anyNumber, reveals anyNumber, Effect.Tap anyNumber])
+      (inert [Effect.Transform anyNumber, moves anyNumber, Effect.Untap anyNumber, reveals anyNumber, Effect.Tap (Tap.plain anyNumber)])
       [False, False, False, True, True]
     -- The singular of the arm above -- Hanweir Battlements' "exile them, then
     -- meld them" -- at the same sites, plus Pair, which allows ONLY the singular
@@ -2709,7 +2715,7 @@ effectLintSpec s registry = Spec.describe s "Lint" $ do
     Spec.assertEqWith
       s
       "one chosen permanent is allowed by transform, move and pair and by neither other site"
-      (inert [Effect.Transform onePermanent, moves onePermanent, Effect.Pair onePermanent, reveals onePermanent, Effect.Tap onePermanent])
+      (inert [Effect.Transform onePermanent, moves onePermanent, Effect.Pair onePermanent, reveals onePermanent, Effect.Tap (Tap.plain onePermanent)])
       [False, False, False, True, True]
     Spec.assertBool s (not (null (inertChoosers (Effect.Pair anyNumber)))) "a pair allows no plural choice"
     -- "Any number from among them" is tested under a reveal and a move.
@@ -2724,12 +2730,12 @@ effectLintSpec s registry = Spec.describe s "Lint" $ do
     Spec.assertEqWith
       s
       "the source with one chosen permanent is allowed where one chosen permanent is"
-      (inert [Effect.Transform sourceAndOne, moves sourceAndOne, reveals sourceAndOne, Effect.Tap sourceAndOne])
+      (inert [Effect.Transform sourceAndOne, moves sourceAndOne, reveals sourceAndOne, Effect.Tap (Tap.plain sourceAndOne)])
       [False, False, True, True]
     Spec.assertEqWith
       s
       "AllOf is refused outside a move, a play grant or a loop"
-      (fmap strayAllOf [moves sourceAndOne, Effect.Transform sourceAndOne, Effect.Tap (ObjectRef.AllOf (ObjectRef.EachMatching anyCard NonEmpty.:| []))])
+      (fmap strayAllOf [moves sourceAndOne, Effect.Transform sourceAndOne, Effect.Tap (Tap.plain (ObjectRef.AllOf (ObjectRef.EachMatching anyCard NonEmpty.:| [])))])
       [False, True, True]
     -- The at-random arm one zone over, allowed by a move alone -- Ghoulraiser's
     -- "return a Zombie card at random from your graveyard to your hand".
@@ -2738,7 +2744,7 @@ effectLintSpec s registry = Spec.describe s "Lint" $ do
     Spec.assertEqWith
       s
       "a random graveyard card is allowed by a move alone"
-      (inert [moves atRandomInGraveyard, reveals atRandomInGraveyard, discardsThese atRandomInGraveyard, Effect.Tap atRandomInGraveyard])
+      (inert [moves atRandomInGraveyard, reveals atRandomInGraveyard, discardsThese atRandomInGraveyard, Effect.Tap (Tap.plain atRandomInGraveyard)])
       [False, True, True, True]
     -- The at-random arm over a LIBRARY, the Gates' seek, and the same row for
     -- the same reasons: seek reveals nothing, and CR 701.9a discards out of a
@@ -2746,7 +2752,7 @@ effectLintSpec s registry = Spec.describe s "Lint" $ do
     Spec.assertEqWith
       s
       "a sought card is allowed by a move alone"
-      (inert [moves sought, reveals sought, discardsThese sought, Effect.Tap sought])
+      (inert [moves sought, reveals sought, discardsThese sought, Effect.Tap (Tap.plain sought)])
       [False, True, True, True]
     -- CR 701.28a's convert, classified with Transform because it IS Transform
     -- (Parun.Engine.Resolve.Effect.turnPermanentsOver).

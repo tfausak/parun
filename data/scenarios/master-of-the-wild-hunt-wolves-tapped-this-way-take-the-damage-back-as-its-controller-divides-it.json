@@ -1,0 +1,49 @@
+{
+  "description": "CR 608.2d Master of the Wild Hunt's Wolves tapped this way each deal their power to the target, and its controller divides its power among any number of them",
+  "board": {
+    "seats": [
+      {
+        "name": "alice",
+        "library": [{"card": "Forest"}, {"card": "Forest"}, {"card": "Forest"}],
+        "battlefield": [
+          {"card": "Master of the Wild Hunt", "label": "master", "ready": true},
+          {"card": "Watchwolf", "label": "watchwolf", "ready": true},
+          {"card": "Sacred Wolf", "label": "sacred-wolf", "ready": true},
+          {"card": "Wyluli Wolf", "label": "wyluli-wolf", "ready": true},
+          {"card": "Goblin Piker", "label": "alice-piker", "ready": true}
+        ]
+      },
+      {
+        "name": "bob",
+        "library": [{"card": "Forest"}, {"card": "Forest"}, {"card": "Forest"}],
+        "battlefield": [
+          {"card": "Indomitable Ancients", "label": "ancients"}
+        ]
+      }
+    ],
+    "active": "alice",
+    "step": "Untap"
+  },
+  "timeline": [
+    {"turn": 1, "step": "Upkeep", "player": "alice", "do": "Pass"},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "check": {"Count": {"player": "alice", "zone": "Battlefield", "card": "Wolf Token", "count": 1}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "do": {"Activate": {"object": "$wyluli-wolf", "targets": ["$alice-piker"]}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "do": "Pass"},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "check": {"Tapped": {"object": "$wyluli-wolf", "tapped": true}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "do": {"Activate": {"object": "$master", "targets": ["$ancients"]}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "do": "Pass"},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "do": {"Answer": {"prompt": "OrderForEach", "with": [0, 1, 2]}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "bob", "refuse": {"Answer": {"prompt": "ChooseDistribution", "with": [["$wyluli-wolf", 1], ["$sacred-wolf", 1]]}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "bob", "refuse": {"Answer": {"prompt": "ChooseDistribution", "with": [["$alice-piker", 1], ["$sacred-wolf", 1]]}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "bob", "do": {"Answer": {"prompt": "ChooseDistribution", "with": [["$sacred-wolf", 1], ["Wolf Token", 1]]}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "check": {"Damage": {"object": "$ancients", "damage": 8}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "check": {"Count": {"player": "alice", "zone": "Graveyard", "card": "Sacred Wolf", "count": 1}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "check": {"Damage": {"object": "Wolf Token", "damage": 1}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "check": {"Damage": {"object": "$watchwolf", "damage": 0}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "check": {"Damage": {"object": "$wyluli-wolf", "damage": 0}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "check": {"Tapped": {"object": "$watchwolf", "tapped": true}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "check": {"Tapped": {"object": "Wolf Token", "tapped": true}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "check": {"Tapped": {"object": "$alice-piker", "tapped": false}}}
+  ],
+  "note": "The upkeep trigger mints a 2/2 Wolf, so three Wolves are untapped when the ability resolves: Watchwolf 3, Sacred Wolf 3 and the token 2 deal 8 to the 2/10 Ancients, which survives to show the sum. The Wyluli Wolf was already tapped, for its own ability, and the Goblin Piker is no Wolf, so neither is tapped this way, deals damage or is offered: an answer naming either is refused as unoffered. Bob, the Ancients' controller and not the ability's, is asked; his answer splits its 2 power onto Sacred Wolf, which dies, and the token, leaving Watchwolf undamaged where the fallback would put the whole 2 on one Wolf."
+}

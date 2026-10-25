@@ -104,6 +104,7 @@ import qualified Parun.Types.Destroy as Destroy
 import qualified Parun.Types.DestructionR as DestructionR
 import qualified Parun.Types.DieRollR as DieRollR
 import qualified Parun.Types.Discard as Discard
+import qualified Parun.Types.Divide as Divide
 import qualified Parun.Types.DoesNotUntapNext as DoesNotUntapNext
 import qualified Parun.Types.Draw as Draw
 import qualified Parun.Types.DrawCountR as DrawCountR
@@ -246,6 +247,7 @@ import qualified Parun.Types.Source as Source
 import qualified Parun.Types.SpeedDecrease as SpeedDecrease
 import qualified Parun.Types.StackObjectKind as StackObjectKind
 import qualified Parun.Types.TakeExtraTurn as TakeExtraTurn
+import qualified Parun.Types.Tap as Tap
 import qualified Parun.Types.TargetChooser as TargetChooser
 import qualified Parun.Types.TargetSlot as TargetSlot
 import qualified Parun.Types.TheseDiscard as TheseDiscard
@@ -809,7 +811,7 @@ effectObjectRefs effect = case effect of
   Effect.RedirectDamage (RedirectDamage.MkRedirectDamage _ _ _ from _ _ to _ _ _) -> Maybe.maybeToList from <> [to]
   Effect.Counter (Counter.MkCounter ref _ _ _) -> [ref]
   Effect.PutCounters (PutCounters.MkPutCounters _ _ ref) -> [ref]
-  Effect.DistributeCounters (PutCounters.MkPutCounters _ _ ref) -> [ref]
+  Effect.Divide divide -> [Divide.among divide]
   Effect.RemoveCounters {} -> []
   Effect.RemoveCountersAmong (RemoveCountersAmong.MkRemoveCountersAmong _ from _ _) -> [from]
   -- CR 122.5's two sides, either of which may name a group.
@@ -820,7 +822,7 @@ effectObjectRefs effect = case effect of
   Effect.RemovePlayerCounters {} -> []
   Effect.PayAnyEnergy {} -> []
   Effect.ChooseNumber {} -> []
-  Effect.Tap ref -> [ref]
+  Effect.Tap tap -> [Tap.ref tap]
   Effect.Untap ref -> [ref]
   Effect.Unattach ref -> [ref]
   Effect.Detain ref -> [ref]
@@ -1038,7 +1040,7 @@ effectPlayerRefs effect = case effect of
   Effect.RedirectDamage x -> durationPlayerRefs (RedirectDamage.duration x)
   Effect.Counter {} -> []
   Effect.PutCounters {} -> []
-  Effect.DistributeCounters {} -> []
+  Effect.Divide divide -> [Divide.chooser divide]
   Effect.RemoveCounters {} -> []
   Effect.RemoveCountersAmong {} -> []
   Effect.MoveCounters {} -> []
@@ -1451,7 +1453,7 @@ slotsOf effect = joinTwo (joinTwo (joinSlots (fmap objectRefSlots (effectObjectR
   -- The bound slot is a DEFINITION, not a read: see boundSlots below.
   Effect.Counter {} -> Map.empty
   Effect.PutCounters (PutCounters.MkPutCounters _ quantity _) -> quantitySlots quantity
-  Effect.DistributeCounters (PutCounters.MkPutCounters _ quantity _) -> quantitySlots quantity
+  Effect.Divide divide -> quantitySlots (Divide.quantity divide)
   -- CR 122.8 reads its tally off ONE object, so `from` is read singly, where the
   -- destination is an ObjectRef and may sweep.
   Effect.PutCountersFrom (PutCountersFrom.MkPutCountersFrom from _ _) -> oneSlot from
@@ -2242,7 +2244,7 @@ ownSlotsAreExhaustive effect = case effect of
   Effect.RedirectDamage (RedirectDamage.MkRedirectDamage duration _ amount _ _ _ _ _ _ _) -> durationSlotsAreExhaustive duration && all Quantity.slotsAreExhaustive amount
   Effect.Counter {} -> True
   Effect.PutCounters (PutCounters.MkPutCounters _ quantity _) -> Quantity.slotsAreExhaustive quantity
-  Effect.DistributeCounters (PutCounters.MkPutCounters _ quantity _) -> Quantity.slotsAreExhaustive quantity
+  Effect.Divide divide -> Quantity.slotsAreExhaustive (Divide.quantity divide)
   -- No Quantity at all: CR 122.8 names neither a kind nor a count.
   Effect.PutCountersFrom {} -> True
   Effect.RemoveCounters (RemoveCounters.MkRemoveCounters _ quantity _ _) -> Quantity.slotsAreExhaustive quantity
@@ -2515,7 +2517,7 @@ readsX =
         Effect.RedirectDamage (RedirectDamage.MkRedirectDamage _ _ amount _ _ _ _ _ _ _) -> any Quantity.readsX amount
         Effect.Counter {} -> False
         Effect.PutCounters (PutCounters.MkPutCounters _ quantity _) -> Quantity.readsX quantity
-        Effect.DistributeCounters (PutCounters.MkPutCounters _ quantity _) -> Quantity.readsX quantity
+        Effect.Divide divide -> Quantity.readsX (Divide.quantity divide)
         Effect.PutCountersFrom {} -> False
         Effect.RemoveCounters (RemoveCounters.MkRemoveCounters _ quantity _ _) -> Quantity.readsX quantity
         Effect.RemoveCountersAmong (RemoveCountersAmong.MkRemoveCountersAmong count _ _ _) -> any Quantity.readsX (RemovalCount.quantityOf count)
@@ -2795,7 +2797,7 @@ boundSlots effect = case effect of
   -- countered this way", and the permanents whose abilities were (CR 113.7).
   Effect.Counter (Counter.MkCounter _ mSlot mSources mInstead) -> foldMap Set.singleton mSlot <> foldMap Set.singleton mSources <> foldMap (foldMap Set.singleton . CounterDestination.slot) mInstead
   Effect.PutCounters {} -> Set.empty
-  Effect.DistributeCounters {} -> Set.empty
+  Effect.Divide divide -> Set.singleton (Divide.slot divide)
   Effect.PutCountersFrom {} -> Set.empty
   -- CR 122.1: how many counters the removal actually took off, where the card
   -- reads it back -- Destroy's count slot one opcode over.
@@ -2809,7 +2811,7 @@ boundSlots effect = case effect of
   -- resolution to read as Quantity.InSlot.
   Effect.PayAnyEnergy slot -> Set.singleton slot
   Effect.ChooseNumber (ChooseNumber.MkChooseNumber slot _ _) -> Set.singleton slot
-  Effect.Tap _ -> Set.empty
+  Effect.Tap tap -> foldMap Set.singleton (Tap.tapped tap)
   Effect.Untap _ -> Set.empty
   Effect.Unattach _ -> Set.empty
   Effect.Detain _ -> Set.empty

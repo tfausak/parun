@@ -162,6 +162,7 @@ import qualified Parun.Types.SpecialAction as SpecialAction
 import qualified Parun.Types.StaticAbility as StaticAbility
 import qualified Parun.Types.Subtype as Subtype
 import qualified Parun.Types.Supertype as Supertype
+import qualified Parun.Types.Tap as Tap
 import qualified Parun.Types.TargetSlot as TargetSlot
 import qualified Parun.Types.TopOfLibrary as TopOfLibrary
 import qualified Parun.Types.TopOfLibraryUntil as TopOfLibraryUntil
@@ -2630,7 +2631,7 @@ filterPositionLintSpec s registry = Spec.describe s "Lint" $ do
             -- position rather than only the leaf.
             ("CR 603.8's state trigger", holds (triggerConditionFilters (TriggerCondition.StateIs counting))),
             ("a stored duration's clause", holds (effectFilters (Effect.GainControl (GainControl.MkGainControl (Duration.ForAsLongAs counting) anywhere (PlayerRef.Relative PlayerRelation.You))))),
-            ("a depth under an opcode", holds (effectFilters (Effect.Tap topDepth)))
+            ("a depth under an opcode", holds (effectFilters (Effect.Tap (Tap.plain topDepth))))
           ]
     -- Ordered FIRST, and the assertion this case exists for: every position digs
     -- the keyword's Filter out. A dropped arm reddens under its own label.
@@ -2725,7 +2726,7 @@ filterPositionLintSpec s registry = Spec.describe s "Lint" $ do
     Spec.assertEqWith
       s
       "the same atom outside a keyword is read singly"
-      (concatMap framedSlotsReadSingly (effectFilters (Effect.Tap (ObjectRef.EachMatching atom))))
+      (concatMap framedSlotsReadSingly (effectFilters (Effect.Tap (Tap.plain (ObjectRef.EachMatching atom)))))
       [bound]
     -- One row per Framing constructor, off [minBound .. maxBound] rather than a
     -- hand-kept list: a constructor added to that type lengthens the left side and

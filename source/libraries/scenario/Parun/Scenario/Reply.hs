@@ -452,7 +452,7 @@ shapeOf prompt = case prompt of
   Prompt.ChooseCounterRemovalAmong {} -> mapOf object natural
   Prompt.ChooseCounterRemovalAtLeast {} -> mapOf object natural
   Prompt.ChooseCounterRemovalUpTo {} -> mapOf object natural
-  Prompt.ChooseCounterDistribution {} -> mapOf object natural
+  Prompt.ChooseDistribution {} -> mapOf object natural
   Prompt.ChooseDivision {} -> mapOf recipient natural
   Prompt.ChooseMixedCounterRemoval {} -> mapOf object (mapOf counterKind natural)
   Prompt.ChooseAttachment {} -> object

@@ -1781,10 +1781,10 @@ combatReplaySpec s =
           -- Discriminating: fails if the division prompts share a response.
           Spec.assertEqWith s "and a floored division transcript does not decode as one" (Replay.decode p (Response.ChoseCounterRemovalAtLeast most)) Nothing
         -- CR 608.2d, dividing new counters among chosen permanents.
-        Spec.it s "ChooseCounterDistribution round-trips through the transcript" $ do
+        Spec.it s "ChooseDistribution round-trips through the transcript" $ do
           let a = ObjectId.MkObjectId 11
               b = ObjectId.MkObjectId 13
-              p = Prompt.ChooseCounterDistribution decider S.alice oid 3 (a NonEmpty.:| [b])
+              p = Prompt.ChooseDistribution decider S.alice oid 3 (a NonEmpty.:| [b])
               split = Map.fromList [(a, 2 :: Natural.Natural), (b, 1)]
           Spec.assertEqWith s "a split round trips" (Replay.decode p (Replay.encode p split)) (Just split)
           -- Discriminating: fails if it shares a removal prompt's response.
