@@ -404,7 +404,7 @@ bakePerspective viewOf context gs candidate predicate =
         Filter.Type.CantCrewVehicles -> predicate
         Filter.Type.DealtDamageThisTurn -> predicate
         Filter.Type.DealtDamageToThisTurn _ -> predicate
-        Filter.Type.EnteredThisTurn -> predicate
+        Filter.Type.EnteredThisTurn _ -> predicate
         Filter.Type.CrewedSourceThisTurn -> predicate
         Filter.Type.ConvokedSourceThisTurn -> predicate
         Filter.Type.SaddledSourceThisTurn -> predicate
@@ -969,7 +969,7 @@ lastKnownView peers oid gs lastKnown =
           Filter.declaredBlockerThisCombat = declaredBlockerThisCombat oid gs,
           Filter.milledThisTurn = milledThisTurn oid gs,
           Filter.dealtDamageThisTurn = dealtDamageThisTurn oid gs,
-          Filter.enteredThisTurn = Game.enteredThisTurn oid gs,
+          Filter.arrivalThisTurn = Game.arrivalThisTurn oid gs,
           Filter.crewedThisTurn = crewedThisTurn oid gs,
           Filter.convokedThisTurn = convokedThisTurn oid gs,
           Filter.saddledThisTurn = saddledThisTurn oid gs,
@@ -1232,7 +1232,7 @@ viewOfSnapshot deploy mController mOwner isToken counters zone home lapsed snaps
       Filter.dealtDamageThisTurn = False,
       -- CR 400.7 enters an OBJECT, and this view describes a snapshot rather
       -- than one -- `milledThisTurn` above's reason again.
-      Filter.enteredThisTurn = False,
+      Filter.arrivalThisTurn = Nothing,
       -- CR 702.122c relates two OBJECTS, and this view describes a snapshot
       -- rather than one -- `milledThisTurn` above's reason again.
       Filter.crewedThisTurn = Set.empty,

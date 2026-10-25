@@ -74,6 +74,7 @@ import qualified Parun.Types.CostModifier as CostModifier
 import qualified Parun.Types.CostSubject as CostSubject
 import qualified Parun.Types.DamagePattern as DamagePattern
 import qualified Parun.Types.DrawReveal as DrawReveal
+import qualified Parun.Types.EnteredZone as EnteredZone
 import qualified Parun.Types.ExtraVotes as ExtraVotes
 import qualified Parun.Types.Face as Face
 import Parun.Types.Filter (Filter)
@@ -1668,7 +1669,7 @@ activationCostAdjustmentsGiven effects pid targets stamp kind loyalty srcId gs =
       -- reduces by the mana cost it copied (CR 707.2); CR 107.3g's {X} is 0.
       -- Parun.ActivateSpec's "Power-up (CR 702.193)" group proves it.
       ruleReduction
-        | any Keyword.reducesByManaCostOnEntry stamp && matchesObjectFrom (liveSource (Just srcId)) Filter.Type.EnteredThisTurn srcId gs =
+        | any Keyword.reducesByManaCostOnEntry stamp && matchesObjectFrom (liveSource (Just srcId)) (Filter.Type.EnteredThisTurn EnteredZone.MkEnteredZone {EnteredZone.to = Zone.Battlefield, EnteredZone.from = Set.empty}) srcId gs =
             [ AppliedReduction.MkAppliedReduction (ManaCost.MkManaCost (filter (/= ManaSymbol.Variable) (ManaCost.unwrap manaCost))) 0 False
             | manaCost <- Maybe.maybeToList (PC.manaCost (Projection.project srcId gs))
             ]

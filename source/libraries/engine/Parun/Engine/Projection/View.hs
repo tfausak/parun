@@ -197,7 +197,7 @@ viewOfCardLapsed lapsed face =
           Filter.dealtDamageThisTurn = False,
           -- CR 400.7 enters an OBJECT; this builder describes a printed FACE --
           -- `milledThisTurn` above's reason.
-          Filter.enteredThisTurn = False,
+          Filter.arrivalThisTurn = Nothing,
           -- CR 702.122c relates a creature to a Vehicle it crewed, and this
           -- builder describes a printed FACE rather than either --
           -- `milledThisTurn` above's reason.
@@ -639,7 +639,7 @@ viewOfCharacteristics peers oid pc controller counters gs =
       Filter.declaredBlockerThisCombat = Count.declaredBlockerThisCombat oid gs,
       Filter.milledThisTurn = Count.milledThisTurn oid gs,
       Filter.dealtDamageThisTurn = Count.dealtDamageThisTurn oid gs,
-      Filter.enteredThisTurn = Game.enteredThisTurn oid gs,
+      Filter.arrivalThisTurn = Game.arrivalThisTurn oid gs,
       Filter.crewedThisTurn = Count.crewedThisTurn oid gs,
       Filter.convokedThisTurn = Count.convokedThisTurn oid gs,
       Filter.saddledThisTurn = Count.saddledThisTurn oid gs,

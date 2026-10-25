@@ -11,6 +11,7 @@ import qualified Parun.Types.ControlMargin as ControlMargin
 import qualified Parun.Types.CounterKind as CounterKind
 import qualified Parun.Types.DealtDamageTo as DealtDamageTo
 import qualified Parun.Types.Designation as Designation
+import qualified Parun.Types.EnteredZone as EnteredZone
 import qualified Parun.Types.ExiledPile as ExiledPile
 import qualified Parun.Types.Expansion as Expansion
 import qualified Parun.Types.KeywordDesignator as KeywordDesignator
@@ -374,11 +375,13 @@ data Filter keyword
   | -- | CR 120.1 / 608.2i: the candidate DEALT damage to this party earlier this
     -- turn -- Brine Hag's "each creature that dealt damage to it this turn".
     DealtDamageToThisTurn DealtDamageTo.DealtDamageTo
-  | -- | CR 400.7 / 608.2i: the candidate ENTERED THE BATTLEFIELD earlier this
-    -- turn, as the object it is now -- Octomancer's "target creature token that
-    -- entered the battlefield this turn". Read off the log's zone changes, so
-    -- phasing in (CR 702.26d) and turning face up (CR 708.8) never count.
-    EnteredThisTurn
+  | -- | CR 400.7 / 608.2i: the candidate ENTERED this zone, from one of these
+    -- zones, earlier this turn, as the object it is now -- Octomancer's "target
+    -- creature token that entered the battlefield this turn", No Rest for the
+    -- Wicked's "creature cards in your graveyard that were put there from the
+    -- battlefield this turn". Read off the log's zone changes, so phasing in (CR
+    -- 702.26d) and turning face up (CR 708.8) never count.
+    EnteredThisTurn EnteredZone.EnteredZone
   | -- | CR 302.6: the candidate's CONTROLLER has controlled it continuously since
     -- their most recent turn began -- Total War's "creatures the player hasn't
     -- controlled continuously since the beginning of the turn", negated. Reads

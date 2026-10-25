@@ -70,6 +70,7 @@ import qualified Parun.Types.Mode as Mode
 import qualified Parun.Types.ModeIndex as ModeIndex
 import qualified Parun.Types.ModeInstance as ModeInstance
 import qualified Parun.Types.Moved as Moved
+import qualified Parun.Types.MovedBetween as MovedBetween
 import Parun.Types.Object (Object)
 import qualified Parun.Types.Object as Object
 import Parun.Types.ObjectId (ObjectId)
@@ -3310,12 +3311,24 @@ discardOf event = case event of
 enteredBattlefield :: GameEvent -> Maybe ObjectId
 enteredBattlefield = fmap ZoneChange.object . enteredBattlefieldChange
 
--- CR 400.7 / 608.2i: did this object enter the battlefield this turn? Keyed on
--- the ARRIVAL's id, enteredBattlefield's. The one reader of the question:
--- Filter.EnteredThisTurn's view field, Parun.Engine.Quantity's EnteredThisTurn
--- and Parun.Engine.Saga's read ahead all ask here.
+-- CR 400.7 / 608.2i: did this object enter the battlefield this turn?
+-- arrivalThisTurn below, asked of the battlefield. Parun.Engine.Quantity's
+-- EnteredThisTurn and Parun.Engine.Saga's read ahead ask here.
 enteredThisTurn :: ObjectId -> GameState -> Bool
-enteredThisTurn oid gs = any ((== Just oid) . enteredBattlefield . LoggedEvent.event) (GameState.events gs)
+enteredThisTurn oid gs = fmap MovedBetween.to (arrivalThisTurn oid gs) == Just Zone.Battlefield
+
+-- CR 400.7 / 608.2i: the zone change this turn that made this object the object
+-- it is now, keyed on the ARRIVAL's id. Every arrival counts: a move's leading
+-- one, and each further card a melded permanent's departure put into a zone (CR
+-- 712.21), which GameEvent.CardArrived names. Filter.EnteredThisTurn's view
+-- field reads it.
+arrivalThisTurn :: ObjectId -> GameState -> Maybe MovedBetween.MovedBetween
+arrivalThisTurn oid gs =
+  let arrival event = case event of
+        GameEvent.CardArrived change -> Just change
+        _ -> movedChange event
+      mine = filter ((== oid) . ZoneChange.object) (Maybe.mapMaybe (arrival . LoggedEvent.event) (Foldable.toList (GameState.events gs)))
+   in fmap (\change -> MovedBetween.MkMovedBetween {MovedBetween.from = ZoneChange.from change, MovedBetween.to = ZoneChange.to change}) (Maybe.listToMaybe (reverse mine))
 
 -- The same entry, kept WHOLE: CR 400.7's `from` is what a reader asking where the
 -- entrant came from needs, and ZoneChange.departed is the id the spell had if it

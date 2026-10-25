@@ -11,6 +11,7 @@ import qualified Parun.Codec.ControlMargin as ControlMargin
 import qualified Parun.Codec.CounterKind as CounterKind
 import qualified Parun.Codec.DealtDamageTo as DealtDamageTo
 import qualified Parun.Codec.Designation as Designation
+import qualified Parun.Codec.EnteredZone as EnteredZone
 import qualified Parun.Codec.ExiledPile as ExiledPile
 import qualified Parun.Codec.Expansion as Expansion
 import qualified Parun.Codec.KeywordDesignator as KeywordDesignator
@@ -125,7 +126,7 @@ codec keywordCodec =
       Arm.nullary "CantCrewVehicles" Filter.CantCrewVehicles,
       Arm.nullary "DealtDamageThisTurn" Filter.DealtDamageThisTurn,
       Arm.payload "DealtDamageToThisTurn" DealtDamageTo.codec Filter.DealtDamageToThisTurn (\x -> case x of Filter.DealtDamageToThisTurn y -> Just y; _ -> Nothing),
-      Arm.nullary "EnteredThisTurn" Filter.EnteredThisTurn,
+      Arm.payload "EnteredThisTurn" EnteredZone.codec Filter.EnteredThisTurn (\x -> case x of Filter.EnteredThisTurn y -> Just y; _ -> Nothing),
       Arm.nullary "ControlledSinceTurnBegan" Filter.ControlledSinceTurnBegan,
       -- Recursive for Controls' reason: the payload describes the
       -- HOST, and a card author writes it exactly as they write any other filter.
