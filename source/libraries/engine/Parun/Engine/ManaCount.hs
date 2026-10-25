@@ -17,6 +17,7 @@ import qualified Parun.Engine.ManaFilter as ManaFilter
 import Parun.Types.GameState (GameState)
 import qualified Parun.Types.Mana as Mana
 import qualified Parun.Types.ManaCount as ManaCount
+import Parun.Types.ManaUnit (ManaUnit)
 
 -- Nothing when the count cannot be determined -- an unresolvable PlayerRef,
 -- which is the only way this fold can fail. It propagates, the posture
@@ -27,13 +28,18 @@ import qualified Parun.Types.ManaCount as ManaCount
 -- whenever they have priority and CR 605.3b has it resolve immediately without
 -- the stack, so the pool moves with no state-based action (CR 704.3) and no
 -- priority pass in between.
+--
+-- CR 106.4's pool is a multiset of UNITS (Parun.Types.Mana), so counting the
+-- survivors is counting mana: one unit is one mana, whatever its type.
 evaluate :: Count.ViewOf -> Filter.Context -> GameState -> ManaCount.ManaCount -> Maybe Integer
-evaluate viewOf context gs count = do
+evaluate viewOf context gs count = fmap (toInteger . length) (units viewOf context gs count)
+
+-- | The surviving units themselves, in pool order: what evaluate counts, and
+-- what Parun.Types.ManaProduction.Pooled copies the types of (CR 701.10f).
+units :: Count.ViewOf -> Filter.Context -> GameState -> ManaCount.ManaCount -> Maybe [ManaUnit]
+units viewOf context gs count = do
   -- CR 106.4 attaches a pool to a player, so the same PlayerRef reading a
   -- Scope.InZone uses answers WHOSE pool -- one resolution of the reference for
   -- both, which is what keeps the two from disagreeing.
   pids <- Count.playersFor viewOf context gs (ManaCount.player count)
-  let units = concatMap (\pid -> Mana.unwrap (Game.poolOf pid gs)) pids
-  -- CR 106.4's pool is a multiset of UNITS (Parun.Types.Mana), so counting the
-  -- survivors is counting mana: one unit is one mana, whatever its type.
-  pure (toInteger (length (filter (ManaFilter.matches (ManaCount.filter count)) units)))
+  pure (concatMap (filter (ManaFilter.matches (ManaCount.filter count)) . Mana.unwrap . (`Game.poolOf` gs)) pids)

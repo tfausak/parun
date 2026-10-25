@@ -4285,9 +4285,10 @@ applyOneEffect runSubgame resolving source controller legal chosen effect = case
       -- A settled run needs no question; the COUNT is how many times this one
       -- instruction adds it, and a clause adding mana of two DIFFERENT types
       -- writes two effects, run in printed order (CR 608.2c) -- except CR
-      -- 607.2e's noted run, which is one instruction of mixed types (Ice
-      -- Cauldron). An empty run is CR 607.2d's "the chosen color" with nothing
-      -- chosen, or nothing noted: adding nothing is the honest answer.
+      -- 607.2e's noted run and CR 701.10f's doubled pool, each one instruction
+      -- of mixed types (Ice Cauldron, Doubling Cube). An empty run is CR
+      -- 607.2d's "the chosen color" with nothing chosen, nothing noted or an
+      -- empty pool: adding nothing is the honest answer.
       Mana.Settles run ->
         let units = concat (replicate howMany (fmap unitOf run))
             recipients = playerRefPlayers legal resolving source controller gs0 ref

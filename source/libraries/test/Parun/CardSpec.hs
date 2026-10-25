@@ -253,6 +253,8 @@ import qualified Parun.Types.MadnessCost as MadnessCost
 import qualified Parun.Types.MakeForetold as MakeForetold
 import qualified Parun.Types.ManaAddition as ManaAddition
 import qualified Parun.Types.ManaCost as ManaCost
+import qualified Parun.Types.ManaCount as ManaCount
+import qualified Parun.Types.ManaFilter as ManaFilter
 import qualified Parun.Types.ManaProduction as ManaProduction
 import qualified Parun.Types.ManaRestriction as ManaRestriction
 import qualified Parun.Types.ManaRetention as ManaRetention
@@ -752,6 +754,7 @@ playerRefPositions =
       playerQuantity stem = PlayerQuantity.MkPlayerQuantity (plantedPlayer stem) one
       affecting effect = Effect.AffectPlayers (AffectPlayers.MkAffectPlayers Duration.UntilEndOfTurn (AffectedPlayers.Scoped (PlayerScope.Related PlayerRelation.You)) effect)
    in [ ("add-mana", Effect.AddMana (ManaAddition.MkManaAddition (plantedPlayer "am") ManaProduction.AnyColor (Quantity.Type.Literal 1) ManaRetention.Ordinary Nothing Nothing Nothing), [plantedPlayer "am"]),
+        ("add-mana-pooled", Effect.AddMana (ManaAddition.MkManaAddition (plantedPlayer "amp") (ManaProduction.Pooled (ManaCount.MkManaCount (plantedPlayer "amp-pool") ManaFilter.Any)) (Quantity.Type.Literal 1) ManaRetention.Ordinary Nothing Nothing Nothing), [plantedPlayer "amp", plantedPlayer "amp-pool"]),
         ("firebend", Effect.Firebend (ManaAddition.MkManaAddition (plantedPlayer "fb") ManaProduction.AnyColor (Quantity.Type.Literal 1) ManaRetention.Ordinary Nothing Nothing Nothing), [plantedPlayer "fb"]),
         ("search", Effect.Search (Search.MkSearch (plantedPlayer "se-searcher") (plantedPlayer "se-owner") Set.empty False Nothing (Filter.Type.And []) False SearchDestination.Battlefield Nothing Nothing Set.empty False False), [plantedPlayer "se-searcher", plantedPlayer "se-owner"]),
         ("draw", Effect.Draw (Draw.MkDraw (plantedPlayer "dr") one Nothing), [plantedPlayer "dr"]),
@@ -5930,6 +5933,7 @@ manaProductionFilters production = case production of
   ManaProduction.SnowSymbol -> []
   ManaProduction.Noted -> []
   ManaProduction.CouldProduce could -> [CouldProduce.among could]
+  ManaProduction.Pooled _ -> []
 
 -- AddMana's and Firebend's shared payload: CR 106.7's group, CR 106.6's
 -- restriction, rider and spend trigger.

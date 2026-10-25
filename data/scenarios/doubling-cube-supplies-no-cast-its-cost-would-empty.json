@@ -1,0 +1,8 @@
+{
+  "description": "CR 601.2g / 701.10f: five red and a Doubling Cube cannot cast a seven-mana spell, so none is offered",
+  "note": "Paying the Cube's {3} from the pool leaves two red to double, four in all. Counting the Cube as supplying the five it was offered beside would make seven and offer Platinum Angel.",
+  "board": {"active": "alice", "step": "PrecombatMain", "seats": [{"name": "alice", "manaPool": "RRRRR", "battlefield": [{"card": "Doubling Cube", "label": "cube"}], "hand": [{"card": "Platinum Angel", "label": "angel"}], "library": [{"card": "Island"}, {"card": "Island"}, {"card": "Island"}]}, {"name": "bob", "library": [{"card": "Island"}, {"card": "Island"}, {"card": "Island"}]}]},
+  "timeline": [
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "check": {"View": {"of": "Offered", "player": "alice", "is": ["Pass", "ActivateManaAbility $cube"]}}}
+  ]
+}
