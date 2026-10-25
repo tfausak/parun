@@ -60,6 +60,7 @@ import qualified Parun.Types.HybridPayment as HybridPayment
 import qualified Parun.Types.Keyword as Keyword
 import qualified Parun.Types.KickerDecision as KickerDecision
 import qualified Parun.Types.Label as Label
+import qualified Parun.Types.LandOrNonland as LandOrNonland
 import qualified Parun.Types.ModeIndex as ModeIndex
 import qualified Parun.Types.MulliganDecision as MulliganDecision
 import qualified Parun.Types.MutateSide as MutateSide
@@ -434,6 +435,7 @@ shapeOf prompt = case prompt of
   Prompt.AllocateDamage {} -> list natural
   Prompt.ChooseReplacement {} -> natural
   Prompt.ChooseDredge {} -> viaCodec Codec.OptionalDecision.codec
+  Prompt.ChooseLandOrNonland {} -> maybeOf (named [LandOrNonland.Land, LandOrNonland.Nonland])
   Prompt.ChooseRedirect {} -> viaCodec Codec.OptionalDecision.codec
   Prompt.ChooseCombatDamageOption {} -> viaCodec Codec.OptionalDecision.codec
   Prompt.ChooseSubstitute {} -> viaCodec Codec.OptionalDecision.codec

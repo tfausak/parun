@@ -44,6 +44,7 @@ import qualified Parun.Types.HybridPayment as HybridPayment
 import qualified Parun.Types.Keyword as Keyword
 import qualified Parun.Types.KeywordInstance as KeywordInstance
 import qualified Parun.Types.KickerDecision as KickerDecision
+import qualified Parun.Types.LandOrNonland as LandOrNonland
 import qualified Parun.Types.LearnMode as LearnMode
 import qualified Parun.Types.LibraryPosition as LibraryPosition
 import qualified Parun.Types.ManaCost as ManaCost
@@ -713,6 +714,10 @@ data Prompt r where
   -- answers' reason. Never elided: rule 702.52a's "you may" is a real choice
   -- wherever Parun.Engine.Replacement.applies offers the row.
   ChooseDredge :: Decider.Decider -> PlayerId.PlayerId -> ObjectId.ObjectId -> Natural.Natural -> Prompt OptionalDecision.OptionalDecision
+  -- | CR 614.1a: whether a draw is replaced by Abundance's reveal, whose source
+  -- the ObjectId names, and which kind it reveals down to; Nothing leaves the
+  -- draw standing. Never elided, ChooseDredge's reason.
+  ChooseLandOrNonland :: Decider.Decider -> PlayerId.PlayerId -> ObjectId.ObjectId -> Prompt (Maybe LandOrNonland.LandOrNonland)
   -- | CR 614.1a: whether an optional redirect ("you may put it on top of your
   -- library instead", Library of Leng) whose source is the first ObjectId
   -- applies to the moving card the second names. Never elided, ChooseDredge's

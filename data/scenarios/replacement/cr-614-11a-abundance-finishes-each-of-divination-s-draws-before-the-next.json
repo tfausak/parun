@@ -1,0 +1,31 @@
+{
+  "description": "CR 614.11a Abundance replaces each of Divination's two draws in turn: nonland takes the Grizzly Bears and bottoms the Forest, then land walks past Hill Giant to the Island",
+  "note": "The second walk starts from the library the first one left, so it reveals Hill Giant rather than the Forest, which is already on the bottom. One card passed over per walk is one order, so neither asks for an arrangement.",
+  "board": {
+    "active": "alice",
+    "step": "PrecombatMain",
+    "seats": [
+      {
+        "name": "alice",
+        "battlefield": [
+          { "card": "Abundance" },
+          { "card": "Island", "label": "i1" },
+          { "card": "Island", "label": "i2" },
+          { "card": "Island", "label": "i3" }
+        ],
+        "hand": [{ "card": "Divination", "label": "divination" }],
+        "library": [{ "card": "Forest" }, { "card": "Grizzly Bears" }, { "card": "Hill Giant" }, { "card": "Island" }, { "card": "Mountain" }]
+      },
+      { "name": "bob", "library": [{ "card": "Plains" }] }
+    ]
+  },
+  "timeline": [
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "do": { "Answer": { "prompt": "ChooseLandOrNonland", "with": "Nonland" } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "do": { "Answer": { "prompt": "ChooseLandOrNonland", "with": "Land" } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "do": { "Cast": { "object": "$divination", "mana": ["$i1", "$i2", "$i3"] } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "do": "Pass" },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "check": { "Count": { "player": "alice", "zone": "Hand", "card": "Grizzly Bears", "count": 1 } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "check": { "Count": { "player": "alice", "zone": "Hand", "card": "Island", "count": 1 } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "check": { "View": { "of": "Zone", "player": "alice", "zone": "Library", "is": ["Mountain", "Forest", "Hill Giant"] } } }
+  ]
+}

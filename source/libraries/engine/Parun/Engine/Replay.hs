@@ -178,6 +178,7 @@ encode p answer = case p of
   Prompt.ChooseUnleash {} -> Response.ChoseUnleash answer
   Prompt.ChooseTribute {} -> Response.ChoseTribute answer
   Prompt.ChooseDredge {} -> Response.ChoseDredge answer
+  Prompt.ChooseLandOrNonland {} -> Response.ChoseLandOrNonland answer
   Prompt.ChooseRedirect {} -> Response.ChoseRedirect answer
   Prompt.ChooseCombatDamageOption {} -> Response.ChoseCombatDamageOption answer
   Prompt.ChooseSubstitute {} -> Response.ChoseSubstitute answer
@@ -525,6 +526,9 @@ decode p response = case p of
     _ -> Nothing
   Prompt.ChooseDredge {} -> case response of
     Response.ChoseDredge d -> Just d
+    _ -> Nothing
+  Prompt.ChooseLandOrNonland {} -> case response of
+    Response.ChoseLandOrNonland kind -> Just kind
     _ -> Nothing
   Prompt.ChooseRedirect {} -> case response of
     Response.ChoseRedirect d -> Just d
@@ -1117,6 +1121,9 @@ defaultAnswer p = case p of
   -- CR 702.52a: declining, for ChooseRiot's reason -- it is the half that moves
   -- nothing, so a transcript that ran out mills nobody's library.
   Prompt.ChooseDredge {} -> OptionalDecision.Declines
+  -- CR 614.1a: declining, ChooseDredge's answer for its reason -- the draw
+  -- stands and nothing is revealed.
+  Prompt.ChooseLandOrNonland {} -> Nothing
   -- CR 614.1a: declining, for ChooseRiot's reason -- the move the effect
   -- proposed stands.
   Prompt.ChooseRedirect {} -> OptionalDecision.Declines

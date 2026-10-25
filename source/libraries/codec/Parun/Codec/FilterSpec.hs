@@ -157,6 +157,20 @@ spec s = Spec.describe s "Parun.Codec.Filter" $ do
       codec
       Filter.OwnedByRecipient
       " {\"type\":\"OwnedByRecipient\"} "
+  Spec.it s "OwnedByBound" $
+    Common.assertCodec
+      s
+      codec
+      (Filter.OwnedByBound (SlotName.MkSlotName (Text.pack "target")))
+      " {\"type\":\"OwnedByBound\",\"value\":\"target\"} "
+  -- Runtime-only for ControlledByPlayer's reason, and round-tripped here for
+  -- its reason.
+  Spec.it s "OwnedByPlayer" $
+    Common.assertCodec
+      s
+      codec
+      (Filter.OwnedByPlayer (PlayerId.MkPlayerId 1))
+      " {\"type\":\"OwnedByPlayer\",\"value\":1} "
   Spec.it s "ManaValueIsEven" $
     Common.assertCodec
       s
