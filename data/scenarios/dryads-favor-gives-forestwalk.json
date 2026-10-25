@@ -1,5 +1,5 @@
 {
-  "description": "CR 702.14c / 303.4a: the creature Dryad's Favor enchants has forestwalk",
+  "description": "CR 702.14c / 613.1f: the creature Dryad's Favor enchants has forestwalk",
   "note": "Bob controls a Forest, so his Grizzly Bears can't block the enchanted Hill Giant, which deals 3 to him.",
   "board": {
     "active": "alice",
