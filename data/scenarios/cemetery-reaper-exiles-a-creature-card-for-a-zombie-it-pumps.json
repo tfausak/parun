@@ -1,0 +1,17 @@
+{
+  "description": "CR 613.4c Cemetery Reaper pumps its controller's other Zombies, and exiles a creature card from a graveyard to make one",
+  "note": "Alice's Gravedigger is a Zombie she controls and is 3/3; bob's is not hers and stays 2/2; the Reaper is not \"other\" and stays 2/2. Bob's graveyard holds a creature card and a Lightning Bolt, so the target is a real choice; the token enters 2/2 and is pumped to 3/3.",
+  "board": {"active": "alice", "step": "PrecombatMain", "seats": [
+    {"name": "alice", "manaPool": "BBB", "battlefield": [{"card": "Cemetery Reaper", "label": "reaper", "ready": true}, {"card": "Gravedigger", "label": "own-digger"}], "library": [{"card": "Island"}, {"card": "Island"}]},
+    {"name": "bob", "battlefield": [{"card": "Gravedigger", "label": "digger"}], "graveyard": [{"card": "Grizzly Bears", "label": "bears"}, {"card": "Lightning Bolt"}], "library": [{"card": "Island"}, {"card": "Island"}]}]},
+  "timeline": [
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "check": {"PowerToughness": {"object": "$own-digger", "power": 3, "toughness": 3}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "check": {"PowerToughness": {"object": "$reaper", "power": 2, "toughness": 2}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "check": {"PowerToughness": {"object": "$digger", "power": 2, "toughness": 2}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "do": {"Activate": {"object": "$reaper", "ability": 0, "targets": ["$bears"]}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "do": "Pass"},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "check": {"Count": {"player": "bob", "zone": "Exile", "card": "Grizzly Bears", "count": 1}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "check": {"Count": {"player": "bob", "zone": "Graveyard", "card": "Lightning Bolt", "count": 1}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "check": {"PowerToughness": {"object": "Zombie Token", "power": 3, "toughness": 3}}}
+  ]
+}

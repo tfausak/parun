@@ -1,0 +1,119 @@
+{
+  "faces": [
+    {
+      "manaCost": [
+        {
+          "type": "Generic",
+          "value": 3
+        },
+        {
+          "type": "OfType",
+          "value": {
+            "type": "Colored",
+            "value": {
+              "type": "Black"
+            }
+          }
+        },
+        {
+          "type": "OfType",
+          "value": {
+            "type": "Colored",
+            "value": {
+              "type": "Black"
+            }
+          }
+        }
+      ],
+      "name": "Haunting Echoes",
+      "oracleText": "Exile all cards from target player's graveyard other than basic land cards. For each card exiled this way, search that player's library for all cards with the same name as that card and exile them. Then that player shuffles.",
+      "spell": {
+        "modes": [
+          {
+            "clauses": [
+              {
+                "effects": [
+                  {
+                    "type": "MoveToZone",
+                    "value": {
+                      "ref": {
+                        "type": "EachCardInGraveyard",
+                        "value": {
+                          "filter": {
+                            "type": "Not",
+                            "value": {
+                              "type": "And",
+                              "value": [
+                                {
+                                  "type": "HasCardType",
+                                  "value": {
+                                    "type": "Land"
+                                  }
+                                },
+                                {
+                                  "type": "HasSupertype",
+                                  "value": {
+                                    "type": "Basic"
+                                  }
+                                }
+                              ]
+                            }
+                          },
+                          "graveyards": {
+                            "type": "InSlot",
+                            "value": "target"
+                          }
+                        }
+                      },
+                      "slot": "exiled",
+                      "zone": {
+                        "type": "Exile"
+                      }
+                    }
+                  },
+                  {
+                    "type": "Search",
+                    "value": {
+                      "destination": {
+                        "type": "Exile"
+                      },
+                      "filter": {
+                        "type": "SameNameAsBound",
+                        "value": "exiled"
+                      },
+                      "owner": {
+                        "type": "InSlot",
+                        "value": "target"
+                      },
+                      "quantity": null,
+                      "searcher": {
+                        "type": "Relative",
+                        "value": {
+                          "type": "You"
+                        }
+                      }
+                    }
+                  }
+                ]
+              }
+            ],
+            "targetSlots": {
+              "target": {
+                "pool": {
+                  "type": "Players"
+                }
+              }
+            }
+          }
+        ]
+      },
+      "typeLine": {
+        "types": [
+          {
+            "type": "Sorcery"
+          }
+        ]
+      }
+    }
+  ]
+}

@@ -1,0 +1,17 @@
+{
+  "description": "CR 608.2c Djinn of Wishes exiles the revealed card when its controller doesn't play it",
+  "note": "Paired with djinn-of-wishes-plays-the-revealed-card-free; the runs differ only in the answer to the offer.",
+  "board": {"active": "alice", "step": "PrecombatMain", "seats": [
+    {"name": "alice", "manaPool": "UUUUUUUUU", "hand": [{"card": "Djinn of Wishes", "label": "djinn"}], "library": [{"card": "Hill Giant"}, {"card": "Island"}, {"card": "Island"}]},
+    {"name": "bob", "library": [{"card": "Island"}, {"card": "Island"}]}]},
+  "timeline": [
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "do": {"Cast": {"object": "$djinn"}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "do": "Pass"},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "do": {"Activate": {"object": "Djinn of Wishes", "ability": 0}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "do": "Pass"},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "do": {"Answer": {"prompt": "OfferedCast", "with": {"type": "Declines"}}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "check": {"Count": {"player": "alice", "zone": "Exile", "card": "Hill Giant", "count": 1}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "check": {"Count": {"player": "alice", "zone": "Library", "card": "Hill Giant", "count": 0}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "check": {"Count": {"player": "alice", "zone": "Battlefield", "card": "Hill Giant", "count": 0}}}
+  ]
+}

@@ -1,0 +1,18 @@
+{
+  "description": "CR 106.4 Elvish Archdruid adds {G} for each Elf its controller controls, and pumps its controller's other Elves",
+  "note": "Alice controls the Archdruid and two Llanowar Elves; bob's Llanowar Elves is not hers, so the pool holds three green and not four. The Archdruid is not \"other\" and stays 2/2.",
+  "board": {"active": "alice", "step": "PrecombatMain", "seats": [
+    {"name": "alice", "battlefield": [{"card": "Elvish Archdruid", "label": "druid", "ready": true}, {"card": "Llanowar Elves", "label": "elves"}, {"card": "Llanowar Elves"}, {"card": "Grizzly Bears", "label": "bears"}], "library": [{"card": "Island"}, {"card": "Island"}]},
+    {"name": "bob", "battlefield": [{"card": "Llanowar Elves", "label": "bobs"}], "library": [{"card": "Island"}, {"card": "Island"}]}]},
+  "timeline": [
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "check": {"PowerToughness": {"object": "$elves", "power": 2, "toughness": 2}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "check": {"PowerToughness": {"object": "$druid", "power": 2, "toughness": 2}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "check": {"PowerToughness": {"object": "$bobs", "power": 1, "toughness": 1}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "check": {"PowerToughness": {"object": "$bears", "power": 2, "toughness": 2}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "do": {"Take": {"action": "ActivateManaAbility $druid"}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "check": {"View": {"of": "ManaPool", "player": "alice", "is": [
+      {"manaType": {"type": "Colored", "value": {"type": "Green"}}, "tags": [], "retention": {"type": "Ordinary"}, "restriction": null, "rider": null, "sourceChoices": null},
+      {"manaType": {"type": "Colored", "value": {"type": "Green"}}, "tags": [], "retention": {"type": "Ordinary"}, "restriction": null, "rider": null, "sourceChoices": null},
+      {"manaType": {"type": "Colored", "value": {"type": "Green"}}, "tags": [], "retention": {"type": "Ordinary"}, "restriction": null, "rider": null, "sourceChoices": null}]}}}
+  ]
+}

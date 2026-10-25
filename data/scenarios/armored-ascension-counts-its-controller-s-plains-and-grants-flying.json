@@ -1,0 +1,14 @@
+{
+  "description": "CR 613.4c Armored Ascension gives its host +1/+1 for each Plains its controller controls, and flying",
+  "note": "Alice controls two Plains and a Forest; bob's Plains is not hers, so the Bears are 4/4 and not 5/5 or 3/3.",
+  "board": {"active": "alice", "step": "PrecombatMain", "seats": [
+    {"name": "alice", "manaPool": "WWWW", "battlefield": [{"card": "Grizzly Bears", "label": "bears"}, {"card": "Plains"}, {"card": "Plains"}, {"card": "Forest"}], "hand": [{"card": "Armored Ascension", "label": "ascension"}], "library": [{"card": "Island"}, {"card": "Island"}]},
+    {"name": "bob", "battlefield": [{"card": "Plains"}], "library": [{"card": "Island"}, {"card": "Island"}]}]},
+  "timeline": [
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "check": {"Keywords": {"object": "$bears", "keyword": {"type": "Flying"}, "count": 0}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "do": {"Cast": {"object": "$ascension", "targets": ["$bears"], "mana": [null]}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "do": "Pass"},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "check": {"PowerToughness": {"object": "$bears", "power": 4, "toughness": 4}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "check": {"Keywords": {"object": "$bears", "keyword": {"type": "Flying"}, "count": 1}}}
+  ]
+}

@@ -1,0 +1,15 @@
+{
+  "description": "CR 615.1a Guardian Seraph prevents 1 of the damage a source an opponent controls would deal its controller, and none of her own",
+  "note": "Bob's Shock takes alice from 20 to 19; her own Shock, a source she controls, then takes her to 17.",
+  "board": {"active": "bob", "step": "PrecombatMain", "seats": [
+    {"name": "alice", "battlefield": [{"card": "Mountain", "label": "mountain"}, {"card": "Guardian Seraph", "label": "seraph"}], "hand": [{"card": "Shock", "label": "own"}], "library": [{"card": "Island"}, {"card": "Island"}]},
+    {"name": "bob", "manaPool": "R", "hand": [{"card": "Shock", "label": "theirs"}], "library": [{"card": "Island"}, {"card": "Island"}]}]},
+  "timeline": [
+    {"turn": 1, "step": "PrecombatMain", "player": "bob", "do": {"Cast": {"object": "$theirs", "targets": ["$alice"]}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "bob", "do": "Pass"},
+    {"turn": 1, "step": "PrecombatMain", "player": "bob", "check": {"Life": {"player": "alice", "life": 19}}},
+    {"turn": 1, "step": "EndStep", "player": "alice", "do": {"Cast": {"object": "$own", "targets": ["$alice"], "mana": ["$mountain"]}}},
+    {"turn": 1, "step": "EndStep", "player": "alice", "do": "Pass"},
+    {"turn": 1, "step": "EndStep", "player": "alice", "check": {"Life": {"player": "alice", "life": 17}}}
+  ]
+}

@@ -1,0 +1,307 @@
+{
+  "faces": [
+    {
+      "manaCost": [
+        {
+          "type": "Generic",
+          "value": 2
+        },
+        {
+          "type": "OfType",
+          "value": {
+            "type": "Colored",
+            "value": {
+              "type": "Green"
+            }
+          }
+        }
+      ],
+      "name": "Awakener Druid",
+      "oracleText": "When this creature enters, target Forest becomes a 4/5 green Treefolk creature for as long as this creature remains on the battlefield. It's still a land.",
+      "power": {
+        "type": "Literal",
+        "value": 1
+      },
+      "toughness": {
+        "type": "Literal",
+        "value": 1
+      },
+      "triggeredAbilities": [
+        {
+          "condition": {
+            "type": "SelfEnters"
+          },
+          "modal": {
+            "modes": [
+              {
+                "clauses": [
+                  {
+                    "effects": [
+                      {
+                        "type": "ModifyTarget",
+                        "value": {
+                          "duration": {
+                            "type": "ForAsLongAs",
+                            "value": {
+                              "type": "Compares",
+                              "value": {
+                                "comparison": {
+                                  "type": "Exactly"
+                                },
+                                "measured": {
+                                  "type": "Count",
+                                  "value": {
+                                    "aggregation": {
+                                      "type": "Members"
+                                    },
+                                    "filter": {
+                                      "type": "IsSource"
+                                    },
+                                    "scope": {
+                                      "type": "InZone",
+                                      "value": {
+                                        "player": {
+                                          "type": "Relative",
+                                          "value": {
+                                            "type": "AnyPlayer"
+                                          }
+                                        },
+                                        "zone": {
+                                          "type": "Battlefield"
+                                        }
+                                      }
+                                    }
+                                  }
+                                },
+                                "threshold": {
+                                  "type": "Literal",
+                                  "value": 1
+                                }
+                              }
+                            }
+                          },
+                          "modification": {
+                            "type": "AddCardType",
+                            "value": {
+                              "type": "Creature"
+                            }
+                          },
+                          "ref": {
+                            "type": "InSlot",
+                            "value": "target"
+                          }
+                        }
+                      },
+                      {
+                        "type": "ModifyTarget",
+                        "value": {
+                          "duration": {
+                            "type": "ForAsLongAs",
+                            "value": {
+                              "type": "Compares",
+                              "value": {
+                                "comparison": {
+                                  "type": "Exactly"
+                                },
+                                "measured": {
+                                  "type": "Count",
+                                  "value": {
+                                    "aggregation": {
+                                      "type": "Members"
+                                    },
+                                    "filter": {
+                                      "type": "IsSource"
+                                    },
+                                    "scope": {
+                                      "type": "InZone",
+                                      "value": {
+                                        "player": {
+                                          "type": "Relative",
+                                          "value": {
+                                            "type": "AnyPlayer"
+                                          }
+                                        },
+                                        "zone": {
+                                          "type": "Battlefield"
+                                        }
+                                      }
+                                    }
+                                  }
+                                },
+                                "threshold": {
+                                  "type": "Literal",
+                                  "value": 1
+                                }
+                              }
+                            }
+                          },
+                          "modification": {
+                            "type": "AddCreatureSubtype",
+                            "value": {
+                              "type": "Treefolk"
+                            }
+                          },
+                          "ref": {
+                            "type": "InSlot",
+                            "value": "target"
+                          }
+                        }
+                      },
+                      {
+                        "type": "ModifyTarget",
+                        "value": {
+                          "duration": {
+                            "type": "ForAsLongAs",
+                            "value": {
+                              "type": "Compares",
+                              "value": {
+                                "comparison": {
+                                  "type": "Exactly"
+                                },
+                                "measured": {
+                                  "type": "Count",
+                                  "value": {
+                                    "aggregation": {
+                                      "type": "Members"
+                                    },
+                                    "filter": {
+                                      "type": "IsSource"
+                                    },
+                                    "scope": {
+                                      "type": "InZone",
+                                      "value": {
+                                        "player": {
+                                          "type": "Relative",
+                                          "value": {
+                                            "type": "AnyPlayer"
+                                          }
+                                        },
+                                        "zone": {
+                                          "type": "Battlefield"
+                                        }
+                                      }
+                                    }
+                                  }
+                                },
+                                "threshold": {
+                                  "type": "Literal",
+                                  "value": 1
+                                }
+                              }
+                            }
+                          },
+                          "modification": {
+                            "type": "SetColor",
+                            "value": [
+                              {
+                                "type": "Green"
+                              }
+                            ]
+                          },
+                          "ref": {
+                            "type": "InSlot",
+                            "value": "target"
+                          }
+                        }
+                      },
+                      {
+                        "type": "ModifyTarget",
+                        "value": {
+                          "duration": {
+                            "type": "ForAsLongAs",
+                            "value": {
+                              "type": "Compares",
+                              "value": {
+                                "comparison": {
+                                  "type": "Exactly"
+                                },
+                                "measured": {
+                                  "type": "Count",
+                                  "value": {
+                                    "aggregation": {
+                                      "type": "Members"
+                                    },
+                                    "filter": {
+                                      "type": "IsSource"
+                                    },
+                                    "scope": {
+                                      "type": "InZone",
+                                      "value": {
+                                        "player": {
+                                          "type": "Relative",
+                                          "value": {
+                                            "type": "AnyPlayer"
+                                          }
+                                        },
+                                        "zone": {
+                                          "type": "Battlefield"
+                                        }
+                                      }
+                                    }
+                                  }
+                                },
+                                "threshold": {
+                                  "type": "Literal",
+                                  "value": 1
+                                }
+                              }
+                            }
+                          },
+                          "modification": {
+                            "type": "SetBasePowerToughness",
+                            "value": {
+                              "power": {
+                                "type": "Literal",
+                                "value": 4
+                              },
+                              "toughness": {
+                                "type": "Literal",
+                                "value": 5
+                              }
+                            }
+                          },
+                          "ref": {
+                            "type": "InSlot",
+                            "value": "target"
+                          }
+                        }
+                      }
+                    ]
+                  }
+                ],
+                "targetSlots": {
+                  "target": {
+                    "filter": {
+                      "type": "HasSubtype",
+                      "value": {
+                        "type": "Forest"
+                      }
+                    },
+                    "pool": {
+                      "type": "Permanents"
+                    }
+                  }
+                }
+              }
+            ]
+          }
+        }
+      ],
+      "typeLine": {
+        "subtypes": [
+          {
+            "type": "Druid"
+          },
+          {
+            "type": "Human"
+          }
+        ],
+        "types": [
+          {
+            "type": "Creature"
+          }
+        ]
+      }
+    }
+  ]
+}
