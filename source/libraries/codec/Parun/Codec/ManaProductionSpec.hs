@@ -7,9 +7,12 @@ import qualified Parun.Types.CardType as CardType
 import qualified Parun.Types.Color as Color
 import qualified Parun.Types.CouldProduce as CouldProduce
 import qualified Parun.Types.Filter as Filter
+import qualified Parun.Types.ManaCount as ManaCount
 import qualified Parun.Types.ManaFilter as ManaFilter
 import qualified Parun.Types.ManaProduction as ManaProduction
 import qualified Parun.Types.ManaType as ManaType
+import qualified Parun.Types.PlayerRef as PlayerRef
+import qualified Parun.Types.PlayerRelation as PlayerRelation
 
 spec :: (Monad m, Monad n) => Spec.Spec m n -> n ()
 spec s = Spec.describe s "Parun.Codec.ManaProduction" $ do
@@ -49,5 +52,11 @@ spec s = Spec.describe s "Parun.Codec.ManaProduction" $ do
       ManaProduction.codec
       (ManaProduction.CouldProduce (CouldProduce.MkCouldProduce (Filter.HasCardType CardType.Land) ManaFilter.Any))
       " {\"type\":\"CouldProduce\",\"value\":{\"among\":{\"type\":\"HasCardType\",\"value\":{\"type\":\"Land\"}},\"types\":{\"type\":\"Any\"}}} "
+  Spec.it s "Pooled" $
+    Common.assertCodec
+      s
+      ManaProduction.codec
+      (ManaProduction.Pooled (ManaCount.MkManaCount (PlayerRef.Relative PlayerRelation.You) ManaFilter.Any))
+      " {\"type\":\"Pooled\",\"value\":{\"filter\":{\"type\":\"Any\"},\"player\":{\"type\":\"Relative\",\"value\":{\"type\":\"You\"}}}} "
   Spec.it s "has a schema" $
     Common.assertHasSchema s ManaProduction.codec

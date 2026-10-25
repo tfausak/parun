@@ -24,6 +24,7 @@ import qualified Parun.Engine.Filter as Filter
 import qualified Parun.Engine.Game as Game
 import qualified Parun.Engine.Keyword as Keyword.Engine
 import qualified Parun.Engine.ManaAbility as ManaAbility
+import qualified Parun.Engine.ManaCount as ManaCount
 import qualified Parun.Engine.ManaFilter as ManaFilter
 import qualified Parun.Engine.Modal as Modal
 import qualified Parun.Engine.PlayerEffect as PlayerEffect
@@ -247,9 +248,9 @@ noActivations = Activations.MkActivations {Activations.times = 0, Activations.cl
 -- Coldsteel Heart cannot happen on a permanent that entered (CR 614.1c) and is
 -- not a colour for the engine to invent when it does.
 --
--- CR 607.2e's noted mana is the one SETTLED production of more than one unit:
--- Ice Cauldron adds the run its linked ability noted for it
--- (GameState.notedMana), types mixed, and none where nothing is noted.
+-- CR 607.2e's noted mana is a SETTLED production of more than one unit: Ice
+-- Cauldron adds the run its linked ability noted for it (GameState.notedMana),
+-- types mixed, and none where nothing is noted.
 --
 -- CR 106.7's "could produce" asks manaTypesOf of every permanent the filter
 -- matches, from the source controller's seat, and offers the types its mana
@@ -257,11 +258,17 @@ noActivations = Activations.MkActivations {Activations.times = 0, Activations.cl
 -- one of them asked again contributes nothing, which is the rule's own
 -- example -- two Exotic Orchards and nothing else produce no mana, and a
 -- Forest beside either makes both produce {G}.
+--
+-- CR 701.10f's doubling settles a run of one type per unit the counted pool
+-- holds, read off `poolBoard`: the board the pool stands on when the mana is
+-- added, which for an activation is AFTER its cost is paid (CR 602.2b / 605.3b)
+-- -- Doubling Cube's {3} leaves the pool it then doubles. Every other read is
+-- off `gs`.
 produced :: ObjectId -> GameState -> ManaProduction -> Produced
-produced = producedVisiting Set.empty
+produced oid gs = producedVisiting Set.empty oid gs gs
 
-producedVisiting :: Set.Set ObjectId -> ObjectId -> GameState -> ManaProduction -> Produced
-producedVisiting visited oid gs production = case production of
+producedVisiting :: Set.Set ObjectId -> ObjectId -> GameState -> GameState -> ManaProduction -> Produced
+producedVisiting visited oid gs poolBoard production = case production of
   ManaProduction.OfType manaType -> Settles [manaType]
   ManaProduction.AnyColor ->
     Offers
@@ -280,6 +287,9 @@ producedVisiting visited oid gs production = case production of
      in case Set.toList types of
           first : second : more -> Offers (first NonEmpty.:| (second : more))
           settled -> Settles settled
+  ManaProduction.Pooled counted ->
+    let context = Projection.sourceContext poolBoard (Projection.controllerOf oid gs) oid
+     in Settles (foldMap (fmap ManaUnit.manaType) (ManaCount.units (Projection.fullView poolBoard) context poolBoard counted))
 
 -- CR 106.3: what one AddMana instruction's production comes to on a board --
 -- a settled run of mana, possibly empty (CR 106.5's undefined type adds none),
@@ -535,7 +545,13 @@ manaSuppliesGiven capacity pcs pid borrowed oid gs =
         -- payer activates it and may choose themself -- Spectral
         -- Searchlight's ruling, "You may choose yourself". Parun.ManaSpec's
         -- Spectral Searchlight group casts off that supply.
-        Mana.MkMana (concatMap (\(ref, mana) -> if List.elem pid (recipientsOf pid (choosable option) gs ref) then unitsOf mana else []) (Map.toList (ManaOption.yield option)))
+        --
+        -- Not implemented: a yield doubling a pool (CR 701.10f) supplies
+        -- nothing, since what it adds turns on the pool the walk's own order of
+        -- activations and payments leaves (#5585).
+        if any readsPool (ManaOption.steps option)
+          then Mana.MkMana []
+          else Mana.MkMana (concatMap (\(ref, mana) -> if List.elem pid (recipientsOf pid (choosable option) gs ref) then unitsOf mana else []) (Map.toList (ManaOption.yield option)))
       -- CR 601.2h / 608.2h on the supply side: a yield reading the permanent
       -- its cost sacrifices or exiles -- Priest of Yawgmoth's "equal to the
       -- sacrificed artifact's mana value", Food Chain's "1 plus the exiled
@@ -560,7 +576,7 @@ manaSuppliesGiven capacity pcs pid borrowed oid gs =
          in case (Maybe.mapMaybe removalSlot (Cost.components (ManaOption.cost option)), onBattlefield) of
               ([slot], [claim])
                 | readsSlot slot && Claim.Type.count claim == 1 && Maybe.isNothing (Claim.Type.threshold claim) ->
-                    let pricedFor candidate = [payerShare priced | (offered, priced) <- manaRepricingsGiven (Binding.paidObjects slot (Set.singleton (Recipient.ToObject candidate))) pcs oid gs, offered == option]
+                    let pricedFor candidate = [payerShare priced | (offered, priced) <- manaRepricingsGiven (Binding.paidObjects slot (Set.singleton (Recipient.ToObject candidate))) gs pcs oid gs, offered == option]
                         byYield = Map.fromListWith Set.union [(yield, Set.singleton candidate) | candidate <- Set.toList (Claim.Type.pool claim), yield <- pricedFor candidate]
                         narrowed candidates = activations {Activations.claims = fmap (\other -> if other == claim then other {Claim.Type.pool = candidates} else other) (Activations.claims activations)}
                      in [(activations, yield, manaCost, narrowed candidates) | (yield, candidates) <- Map.toList byYield, not (null (unitsOf yield))]
@@ -589,6 +605,20 @@ manaSuppliesGiven capacity pcs pid borrowed oid gs =
    in fmap
         (\yield -> List.maximumBy (Ord.comparing rankOf) (filter ((==) yield . yieldOf) available))
         (ListUtils.nubOrd (fmap yieldOf available))
+
+-- Whether one clause of a mana option adds mana by CR 701.10f's doubling
+-- (ManaProduction.Pooled), whose yield is the pool it is added to.
+readsPool :: (Clause.Clause Card.Type.Card (GrantedAbility.GrantedAbility Card.Type.Card), a) -> Bool
+readsPool (clause, _) = any (poolProduction . ManaAddition.production) (Maybe.mapMaybe ManaAbility.manaProduced (Foldable.toList (Clause.effects clause)))
+  where
+    poolProduction production = case production of
+      ManaProduction.OfType _ -> False
+      ManaProduction.AnyColor -> False
+      ManaProduction.Chosen -> False
+      ManaProduction.SnowSymbol -> False
+      ManaProduction.Noted -> False
+      ManaProduction.CouldProduce _ -> False
+      ManaProduction.Pooled _ -> True
 
 -- CR 603.7a / 106.6a: the delayed ability a Parun.Types.WhenSpent creates as
 -- one mana is produced, its text read off the source's rules text now (CR
@@ -630,7 +660,7 @@ manaOptionsOfGiven = manaOptionsVisiting Set.empty
 -- The same options, worked out while the sources in `visited` are being asked
 -- what they could produce (`produced`).
 manaOptionsVisiting :: Set.Set ObjectId -> Map.Map ObjectId PC.ProjectedCharacteristics -> ObjectId -> GameState -> [ManaOption]
-manaOptionsVisiting visited pcs oid gs = ListUtils.nubOrd (fmap fst (pricedOptionsVisiting visited Map.empty pcs oid gs))
+manaOptionsVisiting visited pcs oid gs = ListUtils.nubOrd (fmap fst (pricedOptionsVisiting visited Map.empty gs pcs oid gs))
 
 -- CR 601.2h / 608.2h: each option as OFFERED beside the same option priced with
 -- the slots its cost's payment bound -- Priest of Yawgmoth's "equal to the
@@ -640,13 +670,18 @@ manaOptionsVisiting visited pcs oid gs = ListUtils.nubOrd (fmap fst (pricedOptio
 -- choice it now stands for. Read on the board the activation BEGAN on, where the
 -- sacrificed artifact is still the permanent CR 608.2h's last-known information
 -- describes. Parun.Engine.Cost.tapForManaWith and manaSuppliesGiven read it.
-manaRepricingsGiven :: Map.Map SlotName.SlotName Binding.Type.Binding -> Map.Map ObjectId PC.ProjectedCharacteristics -> ObjectId -> GameState -> [(ManaOption, ManaOption)]
-manaRepricingsGiven paid pcs oid gs = ListUtils.nubOrd (pricedOptionsVisiting Set.empty paid pcs oid gs)
+--
+-- The PRICED half reads its pools off `poolBoard` instead (produced's CR
+-- 701.10f read): the payment, not the board it began on, is what left the pool
+-- a doubling adds to, which this scenario proves:
+-- data/scenarios/doubling-cube-doubles-what-its-own-cost-leaves.json.
+manaRepricingsGiven :: Map.Map SlotName.SlotName Binding.Type.Binding -> GameState -> Map.Map ObjectId PC.ProjectedCharacteristics -> ObjectId -> GameState -> [(ManaOption, ManaOption)]
+manaRepricingsGiven paid poolBoard pcs oid gs = ListUtils.nubOrd (pricedOptionsVisiting Set.empty paid poolBoard pcs oid gs)
 
 -- Both prices off ONE traversal of the colour choices, so a pair's halves are
 -- the same choice. Unshared: manaOptionsOfGiven forces the offered half alone.
-pricedOptionsVisiting :: Set.Set ObjectId -> Map.Map SlotName.SlotName Binding.Type.Binding -> Map.Map ObjectId PC.ProjectedCharacteristics -> ObjectId -> GameState -> [(ManaOption, ManaOption)]
-pricedOptionsVisiting visited paid pcs oid gs =
+pricedOptionsVisiting :: Set.Set ObjectId -> Map.Map SlotName.SlotName Binding.Type.Binding -> GameState -> Map.Map ObjectId PC.ProjectedCharacteristics -> ObjectId -> GameState -> [(ManaOption, ManaOption)]
+pricedOptionsVisiting visited paid poolBoard pcs oid gs =
   let tags = productionTagsGiven pcs oid gs
       choices = sourceChoicesOf oid gs
       -- CR 106.6, stamped from the instruction that adds the unit: the
@@ -730,8 +765,8 @@ pricedOptionsVisiting visited paid pcs oid gs =
       pooled = List.foldl' (\acc (ref, units) -> Map.insertWith (\new old -> Mana.MkMana (unitsOf old <> unitsOf new)) ref (Mana.MkMana units) acc) Map.empty
       expand (cost, restrictions, ability, clauses) =
         let indexed = zip [0 :: Int ..] clauses
-            build howMany picks =
-              let parts = fmap (\(i, (addition, run)) -> (i, (ManaAddition.player addition, concat (replicate (howMany addition) run)))) picks
+            build howMany half picks =
+              let parts = fmap (\(i, (addition, runs)) -> (i, (ManaAddition.player addition, concat (replicate (howMany addition) (half runs))))) picks
                in ManaOption.MkManaOption
                     { ManaOption.cost = cost,
                       ManaOption.restrictions = restrictions,
@@ -740,15 +775,21 @@ pricedOptionsVisiting visited paid pcs oid gs =
                       ManaOption.steps = fmap (\(i, (clause, _)) -> (clause, pooled [part | (j, part) <- parts, j == i])) indexed
                     }
          in fmap
-              (\picks -> (build (howManyIn countContext) picks, build (howManyIn pricedContext) picks))
+              (\picks -> (build (howManyIn countContext) fst picks, build (howManyIn pricedContext) snd picks))
               (traverse (\(i, addition) -> fmap ((,) i . (,) addition) (additionRuns (ActivatedAbility.name =<< ability) addition)) [(i, addition) | (i, (_, additions)) <- indexed, addition <- additions])
       -- CR 106.5: an addition of an undefined type -- CR 607.2d's chosen colour
       -- with none chosen -- adds no mana, and the activation is still one the
       -- player may make. Resolve.Effect's AddMana arm answers the same. A
       -- settled run is repeated whole by the count (CR 607.2e's noted mana).
-      additionRuns reader addition = case producedVisiting visited oid gs (ManaAddition.production addition) of
-        Settles run -> [fmap (unitFor reader addition) run]
-        Offers types -> fmap (\manaType -> [unitFor reader addition manaType]) (NonEmpty.toList types)
+      --
+      -- Each alternative as offered beside the same one priced, the two halves
+      -- differing only in the pools they read (produced's `poolBoard`), so every
+      -- other production gives one list twice and the pairs line up.
+      additionRuns reader addition =
+        let runsOn board = case producedVisiting visited oid gs board (ManaAddition.production addition) of
+              Settles run -> [fmap (unitFor reader addition) run]
+              Offers types -> fmap (\manaType -> [unitFor reader addition manaType]) (NonEmpty.toList types)
+         in zip (runsOn gs) (runsOn poolBoard)
    in concatMap expand (manaRoutesOfGiven pcs oid gs)
 
 -- Every unit one option adds, whoever gets it, in printed order within each

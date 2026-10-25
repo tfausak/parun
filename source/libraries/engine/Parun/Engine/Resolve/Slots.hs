@@ -166,6 +166,8 @@ import qualified Parun.Types.LifeLossR as LifeLossR
 import qualified Parun.Types.LookAt as LookAt
 import qualified Parun.Types.MakeForetold as MakeForetold
 import qualified Parun.Types.ManaAddition as ManaAddition
+import qualified Parun.Types.ManaCount as ManaCount
+import qualified Parun.Types.ManaProduction as ManaProduction
 import qualified Parun.Types.Meld as Meld
 import qualified Parun.Types.Mill as Mill
 import qualified Parun.Types.MillTally as MillTally
@@ -964,8 +966,8 @@ effectPlayerRefs effect = case effect of
   Effect.Fight {} -> []
   Effect.ModifyTarget x -> durationPlayerRefs (ModifyTarget.duration x)
   Effect.ChangeText x -> durationPlayerRefs (ChangeText.duration x)
-  Effect.AddMana (ManaAddition.MkManaAddition ref _ _ _ _ _ _) -> [ref]
-  Effect.Firebend (ManaAddition.MkManaAddition ref _ _ _ _ _ _) -> [ref]
+  Effect.AddMana (ManaAddition.MkManaAddition ref production _ _ _ _ _) -> ref : productionPlayerRefs production
+  Effect.Firebend (ManaAddition.MkManaAddition ref production _ _ _ _ _) -> ref : productionPlayerRefs production
   Effect.ActivateManaAbilities (ActivateManaAbilities.MkActivateManaAbilities ref _) -> [ref]
   Effect.MoveMana (MoveMana.MkMoveMana from to) -> from : Maybe.maybeToList to
   Effect.Search (Search.MkSearch searcher owner _ _ _ _ _ _ _ _ _ _ _) -> [searcher, owner]
@@ -1166,6 +1168,17 @@ effectPlayerRefs effect = case effect of
   Effect.Heal {} -> []
   Effect.ChooseNewTargets {} -> []
   Effect.ChangeTargets {} -> []
+
+-- CR 701.10f: whose pool a production doubles (ManaProduction.Pooled).
+productionPlayerRefs :: ManaProduction.ManaProduction -> [PlayerRef]
+productionPlayerRefs production = case production of
+  ManaProduction.OfType _ -> []
+  ManaProduction.AnyColor -> []
+  ManaProduction.Chosen -> []
+  ManaProduction.SnowSymbol -> []
+  ManaProduction.Noted -> []
+  ManaProduction.CouldProduce _ -> []
+  ManaProduction.Pooled counted -> [ManaCount.player counted]
 
 -- The slots a MonarchTarget reads: only the targeted arm names one.
 monarchTargetSlots :: MonarchTarget.MonarchTarget -> Map.Map SlotName SlotArity
