@@ -31,12 +31,13 @@ spec s = Spec.describe s "Parun.Codec.DealDamage" $ do
                   },
             DealDamage.dealer = Nothing,
             DealDamage.excess = Nothing,
-            DealDamage.tally = Nothing
+            DealDamage.tally = Nothing,
+            DealDamage.damaged = Nothing
           }
       )
       " {\"parts\":[{\"ref\":{\"type\":\"InSlot\",\"value\":\"target\"},\"quantity\":{\"type\":\"Literal\",\"value\":3}}]} "
-  -- CR 120.2b's dealer, CR 120.4a's excess destination and the tally of what was
-  -- dealt, the keys a card writes only when its sentence says them -- over the
+  -- CR 120.2b's dealer, CR 120.4a's excess destination, the tally of what was
+  -- dealt and the objects it reached, the keys a card writes only when its sentence says them -- over the
   -- SEVERAL clauses one instruction may name, which CR 608.2f deals as one
   -- batch, and whose amounts may differ (Char).
   Spec.it s "MkDealDamage, two clauses at different amounts plus every optional key" $
@@ -57,8 +58,9 @@ spec s = Spec.describe s "Parun.Codec.DealDamage" $ do
                 ],
             DealDamage.dealer = Just (SlotName.MkSlotName (Text.pack "dealer")),
             DealDamage.excess = Just ExcessDestination.ToRecipientController,
-            DealDamage.tally = Just (SlotName.MkSlotName (Text.pack "dealt"))
+            DealDamage.tally = Just (SlotName.MkSlotName (Text.pack "dealt")),
+            DealDamage.damaged = Just (SlotName.MkSlotName (Text.pack "hit"))
           }
       )
-      " {\"parts\":[{\"ref\":{\"type\":\"EachMatching\",\"value\":{\"type\":\"HasKeyword\",\"value\":{\"type\":\"Flying\"}}},\"quantity\":{\"type\":\"Literal\",\"value\":3}},{\"ref\":{\"type\":\"EachPlayer\"},\"quantity\":{\"type\":\"Literal\",\"value\":2}}],\"dealer\":\"dealer\",\"excess\":{\"type\":\"ToRecipientController\"},\"tally\":\"dealt\"} "
+      " {\"parts\":[{\"ref\":{\"type\":\"EachMatching\",\"value\":{\"type\":\"HasKeyword\",\"value\":{\"type\":\"Flying\"}}},\"quantity\":{\"type\":\"Literal\",\"value\":3}},{\"ref\":{\"type\":\"EachPlayer\"},\"quantity\":{\"type\":\"Literal\",\"value\":2}}],\"dealer\":\"dealer\",\"excess\":{\"type\":\"ToRecipientController\"},\"tally\":\"dealt\",\"damaged\":\"hit\"} "
   Spec.it s "has a schema" $ Common.assertHasSchema s DealDamage.codec

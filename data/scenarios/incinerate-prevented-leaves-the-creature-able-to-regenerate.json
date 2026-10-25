@@ -1,0 +1,17 @@
+{
+  "description": "CR 615.1 / 120.3: a creature whose Incinerate damage was all prevented was not dealt damage this way, so it may still regenerate",
+  "note": "Alice's Healing Salve absorbs all 3 of Incinerate's damage to bob's shielded Uthden Troll; her Lightning Bolt then deals it lethal damage and the shield regenerates it. Reading the damage Incinerate aimed rather than the damage it dealt would forbid the regeneration and the Troll would die.",
+  "board": {"active": "alice", "step": "Upkeep", "seats": [{"name": "alice", "battlefield": [{"card": "Plains", "label": "plains"}, {"card": "Mountain", "label": "m1"}, {"card": "Mountain", "label": "m2"}, {"card": "Mountain", "label": "m3"}], "hand": [{"card": "Healing Salve", "label": "salve"}, {"card": "Incinerate", "label": "incinerate"}, {"card": "Lightning Bolt", "label": "bolt"}], "library": [{"card": "Island"}, {"card": "Island"}, {"card": "Island"}]}, {"name": "bob", "battlefield": [{"card": "Uthden Troll", "label": "troll"}, {"card": "Mountain", "label": "b-mountain"}], "library": [{"card": "Island"}, {"card": "Island"}, {"card": "Island"}]}]},
+  "timeline": [
+    {"turn": 1, "step": "Upkeep", "player": "alice", "do": {"Cast": {"object": "$salve", "targets": ["$troll"], "modes": [1], "mana": ["$plains", null]}}},
+    {"turn": 1, "step": "Upkeep", "player": "alice", "do": "Pass"},
+    {"turn": 1, "step": "Upkeep", "player": "bob", "do": {"Activate": {"object": "$troll", "mana": ["$b-mountain"]}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "do": {"Cast": {"object": "$incinerate", "targets": ["$troll"], "mana": ["$m1", "$m2", null]}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "do": "Pass"},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "check": {"Damage": {"object": "$troll", "damage": 0}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "do": {"Cast": {"object": "$bolt", "targets": ["$troll"], "mana": ["$m3"]}}},
+    {"turn": 1, "step": "BeginningOfCombat", "player": "alice", "check": {"Count": {"player": "bob", "zone": "Battlefield", "card": "Uthden Troll", "count": 1}}},
+    {"turn": 1, "step": "BeginningOfCombat", "player": "alice", "check": {"Count": {"player": "bob", "zone": "Graveyard", "card": "Uthden Troll", "count": 0}}},
+    {"turn": 1, "step": "BeginningOfCombat", "player": "alice", "check": {"Tapped": {"object": "$troll", "tapped": true}}}
+  ]
+}

@@ -253,19 +253,19 @@ spec s = Spec.describe s "Parun.Codec.Effect" $ do
       s
       toJson
       fromJson
-      (Effect.DealDamage (DealDamage.MkDealDamage (Seq.singleton (DamagePart.MkDamagePart (ObjectRef.InSlot (SlotName.MkSlotName (Text.pack "target"))) (Quantity.Literal 3))) Nothing Nothing Nothing))
+      (Effect.DealDamage (DealDamage.MkDealDamage (Seq.singleton (DamagePart.MkDamagePart (ObjectRef.InSlot (SlotName.MkSlotName (Text.pack "target"))) (Quantity.Literal 3))) Nothing Nothing Nothing Nothing))
       " {\"type\":\"DealDamage\",\"value\":{\"parts\":[{\"ref\":{\"type\":\"InSlot\",\"value\":\"target\"},\"quantity\":{\"type\":\"Literal\",\"value\":3}}]}} "
     Common.assertJsonCodec
       s
       toJson
       fromJson
-      (Effect.DealDamage (DealDamage.MkDealDamage (Seq.singleton (DamagePart.MkDamagePart (ObjectRef.EachMatching (Filter.HasKeyword Keyword.Flying)) (Quantity.Literal 1))) Nothing Nothing Nothing))
+      (Effect.DealDamage (DealDamage.MkDealDamage (Seq.singleton (DamagePart.MkDamagePart (ObjectRef.EachMatching (Filter.HasKeyword Keyword.Flying)) (Quantity.Literal 1))) Nothing Nothing Nothing Nothing))
       " {\"type\":\"DealDamage\",\"value\":{\"parts\":[{\"ref\":{\"type\":\"EachMatching\",\"value\":{\"type\":\"HasKeyword\",\"value\":{\"type\":\"Flying\"}}},\"quantity\":{\"type\":\"Literal\",\"value\":1}}]}} "
     Common.assertJsonCodec
       s
       toJson
       fromJson
-      (Effect.DealDamage (DealDamage.MkDealDamage (Seq.singleton (DamagePart.MkDamagePart ObjectRef.EachPlayer (Quantity.Literal 2))) Nothing Nothing Nothing))
+      (Effect.DealDamage (DealDamage.MkDealDamage (Seq.singleton (DamagePart.MkDamagePart ObjectRef.EachPlayer (Quantity.Literal 2))) Nothing Nothing Nothing Nothing))
       " {\"type\":\"DealDamage\",\"value\":{\"parts\":[{\"ref\":{\"type\":\"EachPlayer\"},\"quantity\":{\"type\":\"Literal\",\"value\":2}}]}} "
   -- Both ObjectRef arms have to survive the trip through the payload.
   Spec.it s "ModifyTarget round-trips both ObjectRef arms" $ do
@@ -1070,7 +1070,7 @@ spec s = Spec.describe s "Parun.Codec.Effect" $ do
               ForEach.members = LoopMembers.Every,
               ForEach.slot = SlotName.MkSlotName (Text.pack "victim"),
               ForEach.body =
-                Seq.singleton (Effect.DealDamage (DealDamage.MkDealDamage (Seq.singleton (DamagePart.MkDamagePart (ObjectRef.InSlot (SlotName.MkSlotName (Text.pack "victim"))) (Quantity.AgainstSlot (AgainstSlot.MkAgainstSlot (SlotName.MkSlotName (Text.pack "exiled")) (Quantity.Measure Measure.ManaValue))))) Nothing Nothing Nothing)),
+                Seq.singleton (Effect.DealDamage (DealDamage.MkDealDamage (Seq.singleton (DamagePart.MkDamagePart (ObjectRef.InSlot (SlotName.MkSlotName (Text.pack "victim"))) (Quantity.AgainstSlot (AgainstSlot.MkAgainstSlot (SlotName.MkSlotName (Text.pack "exiled")) (Quantity.Measure Measure.ManaValue))))) Nothing Nothing Nothing Nothing)),
               -- CR 608.2f's second sentence, which that rule's own Soulfire
               -- Eruption example states: the library cannot be exiled from twice
               -- at the same time.

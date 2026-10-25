@@ -1191,7 +1191,7 @@ damageRewriteNames asking onEffect x = case x of
 
 dealDamageNames :: (Monoid r) => Asking r -> DealDamage.DealDamage -> r
 dealDamageNames asking x = case x of
-  DealDamage.MkDealDamage parts dealer _excess tally -> foldMap (damagePartNames asking) parts <> foldMap (slotNames asking) dealer <> foldMap (slotNames asking) tally
+  DealDamage.MkDealDamage parts dealer _excess tally damaged -> foldMap (damagePartNames asking) parts <> foldMap (slotNames asking) dealer <> foldMap (slotNames asking) tally <> foldMap (slotNames asking) damaged
 
 delayedTriggerNames :: (Monoid r) => Asking r -> DelayedTrigger.DelayedTrigger -> r
 delayedTriggerNames asking x = case x of
