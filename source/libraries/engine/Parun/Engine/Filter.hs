@@ -39,6 +39,7 @@ import qualified Parun.Types.Designation as Designation
 import qualified Parun.Types.Devour as Devour
 import qualified Parun.Types.DiscardCards as DiscardCards
 import qualified Parun.Types.Emerge as Emerge
+import qualified Parun.Types.EnteredZone as EnteredZone
 import qualified Parun.Types.Equip as Equip
 import qualified Parun.Types.ExileCardsFromGraveyard as ExileCardsFromGraveyard
 import qualified Parun.Types.ExileCardsFromHand as ExileCardsFromHand
@@ -61,6 +62,7 @@ import qualified Parun.Types.ManaCost as ManaCost
 import qualified Parun.Types.Measure as Measure
 import qualified Parun.Types.Measures as Measures
 import qualified Parun.Types.Morph as Morph
+import qualified Parun.Types.MovedBetween as MovedBetween
 import qualified Parun.Types.NameChooser as NameChooser
 import qualified Parun.Types.Ninjutsu as Ninjutsu
 import qualified Parun.Types.ObjectId as ObjectId
@@ -359,10 +361,11 @@ data View = MkView
     -- all for a wither or infect source, so the marks are a strict subset of
     -- what was dealt.
     dealtDamageThisTurn :: Bool,
-    -- CR 400.7 / 608.2i: did this candidate, as the object it is now, enter the
-    -- battlefield earlier this turn? The same log again, and LAZY for its reason
-    -- -- nothing forces it unless a Filter contains EnteredThisTurn.
-    enteredThisTurn :: Bool,
+    -- CR 400.7 / 608.2i: the zone change earlier this turn that made this
+    -- candidate the object it is now, if there was one (Game.arrivalThisTurn).
+    -- The same log again, and LAZY for its reason -- nothing forces it unless a
+    -- Filter contains EnteredThisTurn.
+    arrivalThisTurn :: Maybe MovedBetween.MovedBetween,
     -- CR 702.122c: which objects did this candidate crew earlier this turn? The
     -- same log the three fields above read, and LAZY for their reason -- nothing
     -- forces it unless a Filter contains CrewedSourceThisTurn.
@@ -923,8 +926,8 @@ playerView pid =
       -- Parun.Engine.Target.admittedGiven's Recipient.ToPlayer arm -- build the
       -- view through it. Parun.DamageSpec's Needle Drop case is what proves it.
       dealtDamageThisTurn = False,
-      -- CR 110.1: only a permanent is on the battlefield, and a player is not one.
-      enteredThisTurn = False,
+      -- CR 400.7 moves an OBJECT between zones, and a player is not one.
+      arrivalThisTurn = Nothing,
       -- CR 702.122b crews with a CREATURE, and a player is not one -- CR 506.3
       -- rules the combat fields above out for the same kind of reason.
       crewedThisTurn = Set.empty,
@@ -2209,10 +2212,13 @@ matches context view predicate = case predicate of
             Nothing -> False
         hit (damaged, dealtKind) = toParty damaged && all (== dealtKind) wanted
      in any hit (dealtDamageTo view)
-  -- CR 400.7 / 608.2i: the same look-back over the entries. A permanent that
-  -- left and came back is a new object whose entry this is; one that phased in
-  -- or turned face up made no entry at all (CR 702.26d, CR 708.8).
-  Filter.EnteredThisTurn -> enteredThisTurn view
+  -- CR 400.7 / 608.2i: the same look-back over the zone changes. A permanent
+  -- that left and came back is a new object whose entry this is; one that phased
+  -- in or turned face up made no entry at all (CR 702.26d, CR 708.8). A card that
+  -- died, came back and died again is the second death's arrival.
+  Filter.EnteredThisTurn (EnteredZone.MkEnteredZone to from) -> case arrivalThisTurn view of
+    Just arrival -> MovedBetween.to arrival == to && (Set.null from || Set.member (MovedBetween.from arrival) from)
+    Nothing -> False
   -- CR 702.122c: the same look-back asked of a RELATION rather than of one
   -- subject -- the candidate's own field says which Vehicles it crewed, and the
   -- SOURCE on the context says which one the card's "it" names. Vacuously False
@@ -2556,7 +2562,7 @@ rewrite pairs predicate = case predicate of
   Filter.CantCrewVehicles -> predicate
   Filter.DealtDamageThisTurn -> predicate
   Filter.DealtDamageToThisTurn _ -> predicate
-  Filter.EnteredThisTurn -> predicate
+  Filter.EnteredThisTurn _ -> predicate
   Filter.CrewedSourceThisTurn -> predicate
   Filter.ConvokedSourceThisTurn -> predicate
   Filter.SaddledSourceThisTurn -> predicate
@@ -3316,7 +3322,7 @@ bakeBound players objects controllers predicate = case predicate of
   Filter.CantCrewVehicles -> predicate
   Filter.DealtDamageThisTurn -> predicate
   Filter.DealtDamageToThisTurn _ -> predicate
-  Filter.EnteredThisTurn -> predicate
+  Filter.EnteredThisTurn _ -> predicate
   Filter.CrewedSourceThisTurn -> predicate
   Filter.ConvokedSourceThisTurn -> predicate
   Filter.SaddledSourceThisTurn -> predicate
@@ -3493,7 +3499,7 @@ manaValueThresholds predicate = case predicate of
   Filter.CantCrewVehicles -> []
   Filter.DealtDamageThisTurn -> []
   Filter.DealtDamageToThisTurn _ -> []
-  Filter.EnteredThisTurn -> []
+  Filter.EnteredThisTurn _ -> []
   Filter.CrewedSourceThisTurn -> []
   Filter.ConvokedSourceThisTurn -> []
   Filter.SaddledSourceThisTurn -> []
@@ -3667,7 +3673,7 @@ statesAQuality predicate = case predicate of
   Filter.CantCrewVehicles -> True
   Filter.DealtDamageThisTurn -> True
   Filter.DealtDamageToThisTurn _ -> True
-  Filter.EnteredThisTurn -> True
+  Filter.EnteredThisTurn _ -> True
   Filter.CrewedSourceThisTurn -> True
   Filter.ConvokedSourceThisTurn -> True
   Filter.SaddledSourceThisTurn -> True
@@ -3826,7 +3832,7 @@ readsSourceValues predicate = case predicate of
   Filter.CantCrewVehicles -> False
   Filter.DealtDamageThisTurn -> False
   Filter.DealtDamageToThisTurn _ -> False
-  Filter.EnteredThisTurn -> False
+  Filter.EnteredThisTurn _ -> False
   Filter.CrewedSourceThisTurn -> False
   Filter.ConvokedSourceThisTurn -> False
   Filter.SaddledSourceThisTurn -> False
@@ -4002,7 +4008,7 @@ overBoundSlotsWith f predicate = case predicate of
     DamagedParty.InSlot slot -> fmap (\renamed -> Filter.DealtDamageToThisTurn asked {DealtDamageTo.party = DamagedParty.InSlot renamed}) (f SlotArity.Many slot)
     DamagedParty.Source -> pure predicate
     DamagedParty.Related _ -> pure predicate
-  Filter.EnteredThisTurn -> pure predicate
+  Filter.EnteredThisTurn _ -> pure predicate
   Filter.CrewedSourceThisTurn -> pure predicate
   Filter.ConvokedSourceThisTurn -> pure predicate
   Filter.SaddledSourceThisTurn -> pure predicate

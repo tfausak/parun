@@ -3831,7 +3831,7 @@ filterReads f = case f of
   Filter.Type.CantCrewVehicles -> Set.empty
   Filter.Type.DealtDamageThisTurn -> Set.empty
   Filter.Type.DealtDamageToThisTurn _ -> Set.empty
-  Filter.Type.EnteredThisTurn -> Set.empty
+  Filter.Type.EnteredThisTurn _ -> Set.empty
   Filter.Type.CrewedSourceThisTurn -> Set.empty
   Filter.Type.ConvokedSourceThisTurn -> Set.empty
   Filter.Type.SaddledSourceThisTurn -> Set.empty
@@ -4114,7 +4114,7 @@ filterReadsPeers f = case f of
   Filter.Type.CantCrewVehicles -> False
   Filter.Type.DealtDamageThisTurn -> False
   Filter.Type.DealtDamageToThisTurn _ -> False
-  Filter.Type.EnteredThisTurn -> False
+  Filter.Type.EnteredThisTurn _ -> False
   Filter.Type.CrewedSourceThisTurn -> False
   Filter.Type.ConvokedSourceThisTurn -> False
   Filter.Type.SaddledSourceThisTurn -> False

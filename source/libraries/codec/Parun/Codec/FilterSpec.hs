@@ -1,5 +1,6 @@
 module Parun.Codec.FilterSpec where
 
+import qualified Data.Set as Set
 import qualified Data.Text as Text
 import qualified Parun.Codec.Filter as Filter
 import qualified Parun.Codec.Keyword as Keyword
@@ -19,6 +20,7 @@ import qualified Parun.Types.CounterKind as CounterKind
 import qualified Parun.Types.DamagedParty as DamagedParty
 import qualified Parun.Types.DealtDamageTo as DealtDamageTo
 import qualified Parun.Types.Designation as Designation
+import qualified Parun.Types.EnteredZone as EnteredZone
 import qualified Parun.Types.ExiledPile as ExiledPile
 import qualified Parun.Types.Expansion as Expansion
 import qualified Parun.Types.Filter as Filter
@@ -451,8 +453,8 @@ spec s = Spec.describe s "Parun.Codec.Filter" $ do
     Common.assertCodec
       s
       codec
-      Filter.EnteredThisTurn
-      " {\"type\":\"EnteredThisTurn\"} "
+      (Filter.EnteredThisTurn EnteredZone.MkEnteredZone {EnteredZone.to = Zone.Graveyard, EnteredZone.from = Set.singleton Zone.Battlefield})
+      " {\"type\":\"EnteredThisTurn\",\"value\":{\"from\":[{\"type\":\"Battlefield\"}],\"to\":{\"type\":\"Graveyard\"}}} "
   Spec.it s "ControlledSinceTurnBegan" $
     Common.assertCodec
       s

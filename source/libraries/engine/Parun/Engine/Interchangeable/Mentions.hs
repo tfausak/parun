@@ -186,6 +186,7 @@ import qualified Parun.Types.EachCardInHand as EachCardInHand
 import qualified Parun.Types.Earthbend as Earthbend
 import qualified Parun.Types.Effect as Effect
 import qualified Parun.Types.Emerge as Emerge
+import qualified Parun.Types.EnteredZone as EnteredZone
 import qualified Parun.Types.EntersWith as EntersWith
 import qualified Parun.Types.EntryAttack as EntryAttack
 import qualified Parun.Types.EntryBlock as EntryBlock
@@ -416,6 +417,7 @@ import qualified Parun.Types.WhenSpent as WhenSpent
 import qualified Parun.Types.WhichCounters as WhichCounters
 import qualified Parun.Types.While as While
 import qualified Parun.Types.WithCounters as WithCounters
+import qualified Parun.Types.Zone as Zone
 import qualified Parun.Types.ZoneChangePattern as ZoneChangePattern
 import qualified Parun.Types.ZoneChangeR as ZoneChangeR
 import qualified Parun.Types.ZoneScope as ZoneScope
@@ -539,7 +541,7 @@ filterNames asking criterion = case criterion of
   Filter.SaddledSourceThisTurn -> keyed asking <> history asking HistoryRead.Saddles
   Filter.DealtDamageThisTurn -> keyed asking <> history asking HistoryRead.Damage
   Filter.DealtDamageToThisTurn _ -> keyed asking <> history asking HistoryRead.Damage
-  Filter.EnteredThisTurn -> keyed asking <> history asking HistoryRead.Entries
+  Filter.EnteredThisTurn (EnteredZone.MkEnteredZone to _from) -> keyed asking <> history asking (if to == Zone.Battlefield then HistoryRead.Entries else HistoryRead.Moves)
   Filter.ControlledSinceTurnBegan -> mempty
   Filter.AttachedTo nested -> filterNames asking nested
   Filter.HasAttached nested -> filterNames asking nested
