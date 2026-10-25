@@ -5630,10 +5630,10 @@ applyOneEffect runSubgame resolving source controller legal chosen effect = case
         -- narrowed by the effect's filter, made by the player it enters under.
         -- Asked here rather than inside the funnel because the filter is card
         -- text read in this resolution's context (docs/decisions.md, "When an
-        -- effect that narrows an Aura's host asks for it"). Answers the funnel's seed,
-        -- Nothing for CR 303.4g's "remains in its current zone", and Just
-        -- Nothing for every move the rider does not narrow, which the funnel
-        -- seats itself. MINUS `sofar`, the funnel's own CR 608.2f exclusion.
+        -- effect that narrows an Aura's host asks for it"). Answers the
+        -- funnel's seed, Nothing for CR 303.4g's "remains in its current zone",
+        -- and Just Nothing for every move the rider does not narrow, which the
+        -- funnel seats itself. MINUS `sofar`, the funnel's own CR 608.2f exclusion.
         -- Players are never admitted: the filter describes objects.
         chosenHost mover riders sofar target = do
           now <- State.get

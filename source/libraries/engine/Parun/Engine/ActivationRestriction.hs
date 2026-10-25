@@ -195,9 +195,9 @@ restrictionMet pid srcId ability gs restriction = case restriction of
       Just object -> unspent 1 srcId this (Object.activatedOnce object) gs
   -- CR 602.5b's own example, the same question asked of THIS TURN: has this
   -- ability of this object been activated fewer than `limit` times since the
-  -- turn began? The record is
-  -- GameState.activatedThisTurn, which Engine.beginTurnOf clears -- so the reset
-  -- is the turn handoff itself and nothing on the object survives it.
+  -- turn began? The record is GameState.activatedThisTurn, which
+  -- Engine.beginTurnOf clears -- so the reset is the turn handoff itself and
+  -- nothing on the object survives it.
   --
   -- Nothing is CR 305.6's intrinsic route, which prints no rider, exactly as
   -- OnlyOnce above. No object is looked up: the record is keyed by the id, so a
@@ -246,9 +246,10 @@ atInstantSpeed restriction = case restriction of
 -- CR 602.5b / 602.5c: does `srcId` bear a copy of `this` activated fewer than
 -- `limit` times? Each identically worded copy (CR 113.2c) is its own ability to
 -- a restriction on its use, so the counted spends are compared with `limit`
--- times the copies the source now bears. At least one copy, so an ability no projection lists (a rule-702
--- minted one, off the battlefield) keeps the plain "not yet" reading. The
--- projection is asked only once something is spent.
+-- times the copies the source now bears. At least one copy, so an ability no
+-- projection lists (a rule-702 minted one, off the battlefield) keeps the plain
+-- "fewer than `limit`" reading. The projection is asked only once `limit` is
+-- spent.
 --
 -- Not implemented: the count cannot say WHICH copy spent, so when the spent
 -- copy's grant goes and an unspent twin stays, the twin reads as spent (#4627).
