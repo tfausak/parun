@@ -8,7 +8,7 @@ import qualified Parun.JsonCodec.Common as Common
 import qualified Parun.JsonCodec.Fields as Fields
 import qualified Parun.Types.Times as Times
 
--- | A bare object keyed by the record's field names, Parun.Codec.Halved's shape.
+-- | A bare object keyed by the record's field names, Parun.Codec.Divided's shape.
 --
 -- The quantity codec is a PARAMETER rather than an import, for the reason
 -- Parun.Types.Times gives: the record is parametric in the quantity so that

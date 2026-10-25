@@ -471,7 +471,7 @@ printedBoxQuantity quantity = case quantity of
   -- 1 + "the number of creatures you control" is not.
   Quantity.Type.Arithmetic arithmetic -> case arithmetic of
     Arithmetic.Plus (Plus.MkPlus left right) -> printedBoxQuantity left && printedBoxQuantity right
-    Arithmetic.Halved {} -> False
+    Arithmetic.Divided {} -> False
     Arithmetic.Times {} -> False
     Arithmetic.Negate {} -> False
   Quantity.Type.Measure _ -> False

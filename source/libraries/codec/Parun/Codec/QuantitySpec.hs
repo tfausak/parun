@@ -22,9 +22,9 @@ import qualified Parun.Types.DamageKind as DamageKind
 import qualified Parun.Types.Designation as Designation
 import qualified Parun.Types.Devotion as Devotion
 import qualified Parun.Types.DistinctOf as DistinctOf
+import qualified Parun.Types.Divided as Divided
 import qualified Parun.Types.ExiledPile as ExiledPile
 import qualified Parun.Types.Filter as Filter
-import qualified Parun.Types.Halved as Halved
 import qualified Parun.Types.InZone as InZone
 import qualified Parun.Types.Keyword as Keyword
 import qualified Parun.Types.KeywordDesignator as KeywordDesignator
@@ -825,19 +825,19 @@ spec s = Spec.describe s "Parun.Codec.Quantity" $ do
   -- CR 107.1a's direction and the value it applies to, in that order. Nested
   -- once for AgainstSlot's reason -- a recursive decoder is where a payload gets
   -- lost -- and over a Count, which is the shape both producers print.
-  Spec.it s "Halved, both directions" $ do
+  Spec.it s "Divided, both directions" $ do
     Common.assertCodec
       s
       Quantity.codec
-      (Quantity.Arithmetic (Arithmetic.Halved (Halved.MkHalved Rounding.Down (Quantity.Literal 5))))
-      " {\"type\":\"Halved\",\"value\":{\"rounding\":{\"type\":\"Down\"},\"quantity\":{\"type\":\"Literal\",\"value\":5}}} "
+      (Quantity.Arithmetic (Arithmetic.Divided (Divided.MkDivided Rounding.Down (Quantity.Literal 5) (Quantity.Literal 2))))
+      " {\"type\":\"Divided\",\"value\":{\"rounding\":{\"type\":\"Down\"},\"quantity\":{\"type\":\"Literal\",\"value\":5},\"divisor\":{\"type\":\"Literal\",\"value\":2}}} "
     Common.assertCodec
       s
       Quantity.codec
-      (Quantity.Arithmetic (Arithmetic.Halved (Halved.MkHalved Rounding.Up (Quantity.LifeTotal PlayerRef.Candidate))))
-      " {\"type\":\"Halved\",\"value\":{\"rounding\":{\"type\":\"Up\"},\"quantity\":{\"type\":\"LifeTotal\",\"value\":{\"type\":\"Candidate\"}}}} "
+      (Quantity.Arithmetic (Arithmetic.Divided (Divided.MkDivided Rounding.Up (Quantity.LifeTotal PlayerRef.Candidate) (Quantity.Literal 2))))
+      " {\"type\":\"Divided\",\"value\":{\"rounding\":{\"type\":\"Up\"},\"quantity\":{\"type\":\"LifeTotal\",\"value\":{\"type\":\"Candidate\"}},\"divisor\":{\"type\":\"Literal\",\"value\":2}}} "
   -- CR 107.1's factor and the value it multiplies, over the Count that Blessed
-  -- Reversal prints -- Halved's reason for nesting, one arm over.
+  -- Reversal prints -- Divided's reason for nesting, one arm over.
   Spec.it s "Times, over a count" $
     Common.assertCodec
       s
@@ -846,7 +846,7 @@ spec s = Spec.describe s "Parun.Codec.Quantity" $ do
       " {\"type\":\"Times\",\"value\":{\"factor\":3,\"quantity\":{\"type\":\"LifeTotal\",\"value\":{\"type\":\"Candidate\"}}}} "
   -- Forcing the schema is what proves the RECURSIVE definition terminates, and
   -- it proves more of that now than it used to: Negate names `codec` itself
-  -- while Plus, Halved, Times, AgainstSlot and Count each hand it to a payload
+  -- while Plus, Divided, Times, AgainstSlot and Count each hand it to a payload
   -- codec in another module, so the loop runs through five siblings. assertHasSchema
   -- renders the whole tree rather than just its outer tag, so a definition that
   -- failed to emit a $ref on re-entry would hang here rather than pass.

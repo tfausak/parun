@@ -171,6 +171,7 @@ import qualified Parun.Types.DieResult as DieResult
 import qualified Parun.Types.DieRollR as DieRollR
 import qualified Parun.Types.Discard as Discard
 import qualified Parun.Types.DiscardCards as DiscardCards
+import qualified Parun.Types.Divided as Divided
 import qualified Parun.Types.DoesNotUntapNext as DoesNotUntapNext
 import qualified Parun.Types.Draw as Draw
 import qualified Parun.Types.DrawCountR as DrawCountR
@@ -238,7 +239,6 @@ import qualified Parun.Types.GameLossR as GameLossR
 import qualified Parun.Types.GrantLookAtExiled as GrantLookAtExiled
 import qualified Parun.Types.GrantPlayFromExile as GrantPlayFromExile
 import qualified Parun.Types.GrantedAbility as GrantedAbility
-import qualified Parun.Types.Halved as Halved
 import qualified Parun.Types.HandAction as HandAction
 import qualified Parun.Types.HistoryRead as HistoryRead
 import qualified Parun.Types.HowMany as HowMany
@@ -701,7 +701,7 @@ anyNumberMatchingNames asking x = case x of
 arithmeticNames :: (Monoid r) => Asking r -> (quantity -> r) -> Arithmetic.Arithmetic quantity -> r
 arithmeticNames asking onQuantity x = case x of
   Arithmetic.Plus plus -> plusNames asking onQuantity plus
-  Arithmetic.Halved halved -> halvedNames asking onQuantity halved
+  Arithmetic.Divided divided -> dividedNames asking onQuantity divided
   Arithmetic.Times times -> timesNames asking onQuantity times
   Arithmetic.Negate quantity -> onQuantity quantity
 
@@ -1755,9 +1755,9 @@ grantedAbilityNames asking onCard x =
         GrantedAbility.SelfAlternativeCost alternativeCost -> alternativeCostNames own alternativeCost
         GrantedAbility.SelfSpendManaAsThough _spendManaAsThough -> mempty
 
-halvedNames :: Asking r -> (quantity -> r) -> Halved.Halved quantity -> r
-halvedNames _asking onQuantity x = case x of
-  Halved.MkHalved _rounding quantity -> onQuantity quantity
+dividedNames :: (Monoid r) => Asking r -> (quantity -> r) -> Divided.Divided quantity -> r
+dividedNames _asking onQuantity x = case x of
+  Divided.MkDivided _rounding quantity divisor -> onQuantity quantity <> onQuantity divisor
 
 handActionNames :: (Monoid r) => Asking r -> (card -> r) -> HandAction.HandAction card -> r
 handActionNames asking onCard x = case x of

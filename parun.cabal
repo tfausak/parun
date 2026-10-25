@@ -590,6 +590,8 @@ library codec
     Parun.Codec.DiscardSpec
     Parun.Codec.DistinctOf
     Parun.Codec.DistinctOfSpec
+    Parun.Codec.Divided
+    Parun.Codec.DividedSpec
     Parun.Codec.DoesNotUntapNext
     Parun.Codec.DoesNotUntapNextSpec
     Parun.Codec.Draw
@@ -782,8 +784,6 @@ library codec
     Parun.Codec.GraveyardOrderSpec
     Parun.Codec.HalfUnlocked
     Parun.Codec.HalfUnlockedSpec
-    Parun.Codec.Halved
-    Parun.Codec.HalvedSpec
     Parun.Codec.HandAction
     Parun.Codec.HandActionSpec
     Parun.Codec.HowMany
@@ -2549,6 +2549,7 @@ library types
     Parun.Types.DiscardCause
     Parun.Types.Discarded
     Parun.Types.DistinctOf
+    Parun.Types.Divided
     Parun.Types.Dividing
     Parun.Types.DoesNotUntapNext
     Parun.Types.Draw
@@ -2654,7 +2655,6 @@ library types
     Parun.Types.GraveyardArrangement
     Parun.Types.GraveyardOrder
     Parun.Types.HalfUnlocked
-    Parun.Types.Halved
     Parun.Types.HandAction
     Parun.Types.HandActionIndex
     Parun.Types.HandActionPerformer

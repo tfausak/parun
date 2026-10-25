@@ -33,13 +33,13 @@ import qualified Parun.Types.CompletedDungeon as CompletedDungeon
 import qualified Parun.Types.ControlClock as ControlClock
 import qualified Parun.Types.Count as Count.Type
 import qualified Parun.Types.Devotion as Devotion
+import qualified Parun.Types.Divided as Divided
 import qualified Parun.Types.ExiledPile as ExiledPile
 import qualified Parun.Types.Face as Face
 import qualified Parun.Types.Filter as Filter.Type
 import qualified Parun.Types.GameEvent as GameEvent
 import Parun.Types.GameState (GameState)
 import qualified Parun.Types.GameState as GameState
-import qualified Parun.Types.Halved as Halved
 import qualified Parun.Types.Hybrid as Hybrid
 import qualified Parun.Types.HybridPhyrexian as HybridPhyrexian
 import qualified Parun.Types.InZone as InZone
@@ -275,9 +275,11 @@ evaluateAgainst viewOf context gs announcedOn mOid mView quantity =
           Just (if Set.null (Map.findWithDefault Set.empty slot (Filter.slotObjects context)) && Map.notMember slot (Filter.boundAmounts context) then 0 else 1)
         -- WasBound's count rather than its yes-or-no, off the binding for the
         -- same reason: an attacker that has since left the battlefield still
-        -- counts toward Screaming Swarm's "that many" (CR 608.2i).
+        -- counts toward Screaming Swarm's "that many" (CR 608.2i). Players
+        -- count beside objects: Fireball's "among any number of targets" counts
+        -- a targeted player, and data/scenarios/divided-evenly proves it.
         Quantity.BoundCount slot ->
-          Just (toInteger (Set.size (Map.findWithDefault Set.empty slot (Filter.slotObjects context))))
+          Just (toInteger (Set.size (Map.findWithDefault Set.empty slot (Filter.slotObjects context)) + Set.size (Map.findWithDefault Set.empty slot (Filter.slotPlayers context))))
         -- CR 123.6e's "that sticker", off the binding, WasBound's posture: an
         -- unplaced sticker is an honest 0.
         Quantity.UniqueVowelsOnSticker slot -> case Map.lookup slot (Filter.slotStickers context) of
@@ -1178,14 +1180,20 @@ attackedOpponent teams pid target = case target of
   AttackTarget.OfPlaneswalker _ -> False
   AttackTarget.OfBattle _ -> False
 
--- CR 107.1 / 107.1a: half of a number, as an integer, rounded the way the card
--- says. `div` floors and `negate . div (negate x)` is its ceiling, so both
--- directions mean the neighbouring integer rather than "away from zero" -- see
--- Parun.Types.Rounding, which is where that reading is argued.
-halve :: Rounding.Rounding -> Integer -> Integer
-halve rounding n = case rounding of
-  Rounding.Down -> div n 2
-  Rounding.Up -> negate (div (negate n) 2)
+-- CR 107.1 / 107.1a: one number divided by another, as an integer, rounded the
+-- way the card says. `div` floors and `negate . div (negate x)` is its ceiling,
+-- so both directions mean the neighbouring integer rather than "away from zero"
+-- -- see Parun.Types.Rounding, which is where that reading is argued.
+--
+-- A divisor of 0 or less answers 0. The one that reaches it is Fireball's count
+-- of the targets still legal as it resolves, and with none there is no
+-- recipient to read the share (Fireball's ruling: no damage is dealt).
+divide :: Rounding.Rounding -> Integer -> Integer -> Integer
+divide rounding n d
+  | d <= 0 = 0
+  | otherwise = case rounding of
+      Rounding.Down -> div n d
+      Rounding.Up -> negate (div (negate n) d)
 
 -- CR 107.1: a calculation over its operands' values. Times is integral on both
 -- sides, so nothing rounds; Negate has no floor here, CR 107.1b's "zero is used
@@ -1193,7 +1201,7 @@ halve rounding n = case rounding of
 calculate :: Arithmetic.Arithmetic Integer -> Integer
 calculate arithmetic = case arithmetic of
   Arithmetic.Plus (Plus.MkPlus a b) -> a + b
-  Arithmetic.Halved (Halved.MkHalved rounding a) -> halve rounding a
+  Arithmetic.Divided (Divided.MkDivided rounding a d) -> divide rounding a d
   Arithmetic.Times (Times.MkTimes factor a) -> toInteger factor * a
   Arithmetic.Negate a -> negate a
 
@@ -1206,7 +1214,7 @@ calculate arithmetic = case arithmetic of
 -- not the sum. Every Parun.Types.Arithmetic calculation descends for that one
 -- reason -- but only Plus's descent changes an answer on its own. Half of CR
 -- 208.2a's substituted 0 is 0 whichever way it rounds, so Malignus, whose whole
--- CDA is a Halved, reads 0 with no opponents either way; a multiple of that 0 is
+-- CDA is a Divided, reads 0 with no opponents either way; a multiple of that 0 is
 -- 0 as well, and no printed characteristic-defining P/T contains a Negate at
 -- all. Those three descents are consistency rather than a card's behaviour -- a
 -- Times wrapping a Plus would differ, and no printed box holds one.

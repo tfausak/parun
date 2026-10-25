@@ -151,8 +151,12 @@
                         }
                       },
                       "quantity": {
-                        "type": "Halved",
+                        "type": "Divided",
                         "value": {
+                          "divisor": {
+                            "type": "Literal",
+                            "value": 2
+                          },
                           "quantity": {
                             "type": "LifeTotal",
                             "value": {

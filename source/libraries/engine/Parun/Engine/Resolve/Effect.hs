@@ -1816,7 +1816,7 @@ offerCastOnce runSubgame context named caster optionality verb retake offer = do
                 -- Cost.plusComponents, the funnel Cast.payableCostAt measures
                 -- through. Parun.InvestigateSpec's "CR 118.8c an additional cost
                 -- another effect applies excuses the cast too" proves it.
-                let excused = any (Cost.statesHiddenQuality . Cost.plusComponents (Cost.spellAdjustments Set.empty caster oid proposed) . CandidateCost.cost) candidates
+                let excused = any (Cost.statesHiddenQuality . Cost.plusComponents (Cost.spellAdjustments Map.empty caster oid proposed) . CandidateCost.cost) candidates
                  in Just (oid, name, announced, excused)
               else Nothing
       -- EVERY object the reference names, each contributing one entry per
