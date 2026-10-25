@@ -1,0 +1,214 @@
+{
+  "description": "CR 101.2 / 702.10a: Gaea's Revenge can't be countered, has haste, and can't be the target of nongreen spells or abilities from nongreen sources",
+  "note": "Bob's Counterspell counters nothing. In combat his Unsummon and his Ember Hauler's ability can't aim at it; his green Giant Growth can, and the 11/8 deals him 11.",
+  "board": {
+    "active": "alice",
+    "step": "PrecombatMain",
+    "seats": [
+      {
+        "name": "alice",
+        "manaPool": "GGGGGGG",
+        "hand": [
+          {
+            "card": "Gaea's Revenge",
+            "label": "revenge"
+          }
+        ],
+        "library": [
+          {
+            "card": "Island"
+          },
+          {
+            "card": "Island"
+          },
+          {
+            "card": "Island"
+          },
+          {
+            "card": "Island"
+          }
+        ]
+      },
+      {
+        "name": "bob",
+        "manaPool": "UU",
+        "hand": [
+          {
+            "card": "Counterspell",
+            "label": "counterspell"
+          },
+          {
+            "card": "Unsummon",
+            "label": "unsummon"
+          },
+          {
+            "card": "Giant Growth",
+            "label": "growth"
+          }
+        ],
+        "battlefield": [
+          {
+            "card": "Island",
+            "label": "i1"
+          },
+          {
+            "card": "Island",
+            "label": "i2"
+          },
+          {
+            "card": "Forest",
+            "label": "forest"
+          },
+          {
+            "card": "Ember Hauler",
+            "label": "hauler",
+            "tapped": true
+          }
+        ],
+        "library": [
+          {
+            "card": "Island"
+          },
+          {
+            "card": "Island"
+          },
+          {
+            "card": "Island"
+          },
+          {
+            "card": "Island"
+          }
+        ]
+      }
+    ]
+  },
+  "timeline": [
+    {
+      "turn": 1,
+      "step": "PrecombatMain",
+      "player": "alice",
+      "do": {
+        "Cast": {
+          "object": "$revenge"
+        }
+      }
+    },
+    {
+      "turn": 1,
+      "step": "PrecombatMain",
+      "player": "alice",
+      "do": "Pass"
+    },
+    {
+      "turn": 1,
+      "step": "PrecombatMain",
+      "player": "bob",
+      "do": {
+        "Cast": {
+          "object": "$counterspell",
+          "targets": [
+            "Gaea's Revenge"
+          ],
+          "mana": [
+            null
+          ]
+        }
+      }
+    },
+    {
+      "turn": 1,
+      "step": "PrecombatMain",
+      "player": "alice",
+      "do": "Pass"
+    },
+    {
+      "turn": 1,
+      "step": "PrecombatMain",
+      "player": "alice",
+      "do": "Pass"
+    },
+    {
+      "turn": 1,
+      "step": "PrecombatMain",
+      "player": "alice",
+      "check": {
+        "Count": {
+          "player": "alice",
+          "zone": "Battlefield",
+          "card": "Gaea's Revenge",
+          "count": 1
+        }
+      }
+    },
+    {
+      "turn": 1,
+      "step": "DeclareAttackers",
+      "player": "alice",
+      "do": {
+        "Attack": [
+          "Gaea's Revenge"
+        ]
+      }
+    },
+    {
+      "turn": 1,
+      "step": "DeclareAttackers",
+      "player": "bob",
+      "refuse": {
+        "Cast": {
+          "object": "$unsummon",
+          "targets": [
+            "Gaea's Revenge"
+          ],
+          "mana": [
+            "$i1"
+          ]
+        }
+      }
+    },
+    {
+      "turn": 1,
+      "step": "DeclareAttackers",
+      "player": "bob",
+      "refuse": {
+        "Activate": {
+          "object": "$hauler",
+          "targets": [
+            "Gaea's Revenge"
+          ],
+          "mana": [
+            "$i2"
+          ]
+        }
+      }
+    },
+    {
+      "turn": 1,
+      "step": "DeclareAttackers",
+      "player": "bob",
+      "do": {
+        "Cast": {
+          "object": "$growth",
+          "targets": [
+            "Gaea's Revenge"
+          ],
+          "mana": [
+            "$forest",
+            null
+          ]
+        }
+      }
+    },
+    {
+      "turn": 1,
+      "step": "EndOfCombat",
+      "player": "alice",
+      "check": {
+        "Life": {
+          "player": "bob",
+          "life": 9
+        }
+      }
+    }
+  ]
+}

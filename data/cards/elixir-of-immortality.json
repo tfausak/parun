@@ -1,0 +1,91 @@
+{
+  "faces": [
+    {
+      "activatedAbilities": [
+        {
+          "cost": {
+            "components": [
+              {
+                "type": "TapThis"
+              }
+            ],
+            "mana": [
+              {
+                "type": "Generic",
+                "value": 2
+              }
+            ]
+          },
+          "modal": {
+            "modes": [
+              {
+                "clauses": [
+                  {
+                    "effects": [
+                      {
+                        "type": "GainLife",
+                        "value": {
+                          "player": {
+                            "type": "Relative",
+                            "value": {
+                              "type": "You"
+                            }
+                          },
+                          "quantity": {
+                            "type": "Literal",
+                            "value": 5
+                          }
+                        }
+                      },
+                      {
+                        "type": "ShuffleIntoLibrary",
+                        "value": {
+                          "refs": [
+                            {
+                              "type": "InSlot",
+                              "value": "self"
+                            },
+                            {
+                              "type": "EachCardInGraveyard",
+                              "value": {
+                                "filter": {
+                                  "type": "And",
+                                  "value": []
+                                },
+                                "graveyards": {
+                                  "type": "Scoped",
+                                  "value": {
+                                    "type": "You"
+                                  }
+                                }
+                              }
+                            }
+                          ]
+                        }
+                      }
+                    ]
+                  }
+                ]
+              }
+            ]
+          }
+        }
+      ],
+      "manaCost": [
+        {
+          "type": "Generic",
+          "value": 1
+        }
+      ],
+      "name": "Elixir of Immortality",
+      "oracleText": "{2}, {T}: You gain 5 life. Shuffle this artifact and your graveyard into their owner's library.",
+      "typeLine": {
+        "types": [
+          {
+            "type": "Artifact"
+          }
+        ]
+      }
+    }
+  ]
+}

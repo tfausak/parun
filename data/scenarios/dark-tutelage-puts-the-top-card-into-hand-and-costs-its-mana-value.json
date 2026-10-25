@@ -1,0 +1,102 @@
+{
+  "description": "CR 503.1a / 202.3: at the beginning of its controller's upkeep, Dark Tutelage reveals the top card, puts it into hand, and its controller loses life equal to its mana value",
+  "note": "Alice takes her Hill Giant and goes to 16; the starting player skips her first draw. Bob's upkeep does not trigger it, so the Grizzly Bears now on top of her library stays there.",
+  "board": {
+    "active": "alice",
+    "step": "Untap",
+    "seats": [
+      {
+        "name": "alice",
+        "battlefield": [
+          {
+            "card": "Dark Tutelage"
+          }
+        ],
+        "library": [
+          {
+            "card": "Hill Giant"
+          },
+          {
+            "card": "Grizzly Bears"
+          },
+          {
+            "card": "Island"
+          },
+          {
+            "card": "Island"
+          },
+          {
+            "card": "Island"
+          }
+        ]
+      },
+      {
+        "name": "bob",
+        "library": [
+          {
+            "card": "Island"
+          },
+          {
+            "card": "Island"
+          },
+          {
+            "card": "Island"
+          },
+          {
+            "card": "Island"
+          }
+        ]
+      }
+    ]
+  },
+  "timeline": [
+    {
+      "turn": 1,
+      "step": "DrawStep",
+      "player": "alice",
+      "check": {
+        "Life": {
+          "player": "alice",
+          "life": 16
+        }
+      }
+    },
+    {
+      "turn": 1,
+      "step": "DrawStep",
+      "player": "alice",
+      "check": {
+        "Count": {
+          "player": "alice",
+          "zone": "Hand",
+          "card": "Hill Giant",
+          "count": 1
+        }
+      }
+    },
+    {
+      "turn": 2,
+      "step": "DrawStep",
+      "player": "bob",
+      "check": {
+        "Life": {
+          "player": "alice",
+          "life": 16
+        }
+      }
+    },
+    {
+      "turn": 2,
+      "step": "DrawStep",
+      "player": "bob",
+      "check": {
+        "Count": {
+          "player": "alice",
+          "zone": "Library",
+          "card": "Grizzly Bears",
+          "count": 1
+        }
+      }
+    }
+  ]
+}
