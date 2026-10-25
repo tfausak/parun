@@ -516,7 +516,7 @@ filterNames asking criterion = case criterion of
   Filter.IsBound slot -> slotNames asking slot
   Filter.IsTarget -> slotNames asking Binding.Engine.announcedTargets
   Filter.SameNameAsBound slot -> slotNames asking slot
-  Filter.SameControllerAsBound slot -> slotNames asking slot
+  Filter.ControllerRelatesToBound _playerRelation slot -> slotNames asking slot
   Filter.SameControllerAsHostOfBound slot -> slotNames asking slot
   Filter.SharesCreatureTypeWith (Anchor.Bound slot) -> slotNames asking slot
   Filter.SharesCreatureTypeWith Anchor.Evaluated -> mempty
@@ -2870,6 +2870,7 @@ targetChooserNames :: (Monoid r) => Asking r -> TargetChooser.TargetChooser -> r
 targetChooserNames asking x = case x of
   TargetChooser.Relative _playerRelation -> mempty
   TargetChooser.InSlot slotName -> slotNames asking slotName
+  TargetChooser.ControllerOfBound slotName -> slotNames asking slotName
 
 targetSlotNames :: (Monoid r) => Asking r -> TargetSlot.TargetSlot -> r
 targetSlotNames asking x = case x of

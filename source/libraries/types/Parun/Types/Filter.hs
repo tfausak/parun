@@ -186,18 +186,20 @@ data Filter keyword
     -- has the same name as one showing either; vacuously False where the slot
     -- names no object or the bound object has no name (CR 708.2a).
     SameNameAsBound SlotName.SlotName
-  | -- | CR 110.2 asked of TWO objects: the candidate has the same controller as
-    -- the object this slot holds -- Bioshift's "another target creature with the
-    -- same controller".
+  | -- | CR 110.2 asked of TWO objects: the candidate's controller stands in this
+    -- relation (CR 102.2 / 102.3) to the controller of the object this slot
+    -- holds, that controller taking the relation's "you" -- Bioshift's "another
+    -- target creature with the same controller" is You, Necrotic Plague's
+    -- "target creature one of their opponents controls" Opponent.
     --
     -- VACUOUSLY TRUE where the slot names no object, alone among these atoms: CR
     -- 601.2c's offer is made before either target is chosen, so
     -- Parun.Engine.Target.legalSetsGiven widens and selectionLegal's joint check
     -- narrows, exactly as CR 608.2b will at resolution. Parun.FilterPositionLintSpec's
-    -- "CR 110.2 no card asks SameControllerAsBound outside a mode's target slot,
+    -- "CR 110.2 no card asks ControllerRelatesToBound outside a mode's target slot,
     -- an attach destination, a stored class or an effect's object" keeps the
     -- atom to the positions that fill it.
-    SameControllerAsBound SlotName.SlotName
+    ControllerRelatesToBound PlayerRelation.PlayerRelation SlotName.SlotName
   | -- | CR 110.2 with CR 303.4b: the candidate has the same controller as the
     -- permanent the object this slot holds is ATTACHED TO -- Simic Guildmage's
     -- "another permanent with the same controller", whose 2006-05-01 ruling
@@ -205,7 +207,7 @@ data Filter keyword
     --
     -- VACUOUSLY FALSE where the slot names no object, or names one attached to
     -- nothing, to a player (CR 303.4b's other destination) or to a host that is
-    -- no longer on the battlefield -- SameControllerAsBound's opposite. That
+    -- no longer on the battlefield -- ControllerRelatesToBound's opposite. That
     -- atom widens only because Parun.Engine.Target.selectionLegal's joint check
     -- narrows afterwards, and no such check stands behind an attach
     -- destination.

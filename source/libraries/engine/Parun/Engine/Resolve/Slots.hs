@@ -3555,9 +3555,11 @@ targetSlotSlots slot =
         -- CR 601.2d's divided total names slots the same way (Rolling Thunder's X).
         maybe Map.empty quantitySlots (TargetSlot.divided slot),
         -- And the seat a CR 115.1 chooser names through a binding -- Curse of
-        -- Inertia's "that attacking player", which its condition must supply.
+        -- Inertia's "that attacking player", Necrotic Plague's "its controller"
+        -- -- which its condition must supply.
         case TargetSlot.chooser slot of
           Just (TargetChooser.InSlot named) -> oneSlot named
+          Just (TargetChooser.ControllerOfBound named) -> oneSlot named
           Just (TargetChooser.Relative _) -> Map.empty
           Nothing -> Map.empty
       ]

@@ -15,4 +15,8 @@ data TargetChooser
     -- Inertia's "that attacking player ... target permanent of their choice",
     -- the trigger event's player bound before CR 603.3d's announcement.
     InSlot SlotName.SlotName
+  | -- | CR 110.2 / 608.2h: the controller of the object a binding names, read
+    -- through last-known information -- Necrotic Plague's "its controller
+    -- chooses", the creature that died.
+    ControllerOfBound SlotName.SlotName
   deriving (Eq, Ord, Show)

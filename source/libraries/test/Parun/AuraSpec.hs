@@ -3571,7 +3571,7 @@ animateDeadSpec s registry = Spec.describe s "Animate Dead" $ do
 --
 -- THE BOARD, in ObjectId order, since the offer is ascending and the answerer
 -- takes it by index. Alice's Goblin Piker first: an unfilled
--- Filter.Context.slotControllers makes Filter.SameControllerAsBound vacuously
+-- Filter.Context.slotControllers makes Filter.ControllerRelatesToBound vacuously
 -- TRUE and would offer it. Bob's Island next, which no Aura here can enchant.
 -- Then bob's Apostle of Purifying Light, protection from black (CR 702.16c): it
 -- could host Pacifism but not Unholy Strength, so a per-Aura reading of the

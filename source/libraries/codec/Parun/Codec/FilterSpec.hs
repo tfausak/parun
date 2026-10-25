@@ -275,19 +275,19 @@ spec s = Spec.describe s "Parun.Codec.Filter" $ do
       codec
       (Filter.SameNameAsBound (SlotName.MkSlotName (Text.pack "castSpell")))
       " {\"type\":\"SameNameAsBound\",\"value\":\"castSpell\"} "
-  Spec.it s "SameControllerAsBound" $
+  Spec.it s "ControllerRelatesToBound" $
     Common.assertCodec
       s
       codec
-      (Filter.SameControllerAsBound (SlotName.MkSlotName (Text.pack "from")))
-      " {\"type\":\"SameControllerAsBound\",\"value\":\"from\"} "
+      (Filter.ControllerRelatesToBound PlayerRelation.You (SlotName.MkSlotName (Text.pack "from")))
+      " {\"type\":\"ControllerRelatesToBound\",\"value\":{\"relation\":{\"type\":\"You\"},\"slot\":\"from\"}} "
   Spec.it s "SameControllerAsHostOfBound" $ do
     Common.assertCodec
       s
       codec
       (Filter.SameControllerAsHostOfBound (SlotName.MkSlotName (Text.pack "target")))
       " {\"type\":\"SameControllerAsHostOfBound\",\"value\":\"target\"} "
-    Spec.assertNeWith s "CR 303.4b's host is not the bound object itself" (Codec.encode codec (Filter.SameControllerAsHostOfBound (SlotName.MkSlotName (Text.pack "target")))) (Codec.encode codec (Filter.SameControllerAsBound (SlotName.MkSlotName (Text.pack "target"))))
+    Spec.assertNeWith s "CR 303.4b's host is not the bound object itself" (Codec.encode codec (Filter.SameControllerAsHostOfBound (SlotName.MkSlotName (Text.pack "target")))) (Codec.encode codec (Filter.ControllerRelatesToBound PlayerRelation.You (SlotName.MkSlotName (Text.pack "target"))))
   Spec.it s "SharesCreatureTypeWith" $
     Common.assertCodec
       s
