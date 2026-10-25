@@ -2107,17 +2107,18 @@ bakeRelation players rel = case rel of
 
 -- CR 611.2c: a combat restriction's stored class, every slot it names baked
 -- (Parun.Engine.Filter.bakeBound) since the slots die with this resolution: its
--- players, its objects, and its objects' controllers through the resolution's
--- own CR 608.2h reader (effectContext). Read live afterwards, so a permanent
+-- players, its objects, and the players related to its objects' controllers
+-- through the resolution's own CR 608.2h reader (effectContext). Read live afterwards, so a permanent
 -- arriving later is in the class.
 storedClass :: Map.Map SlotName (Set Recipient) -> ObjectId -> PlayerId -> ObjectId -> GameState -> Filter.Type.Filter Keyword.Type.Keyword -> Filter.Type.Filter Keyword.Type.Keyword
 storedClass legal resolving controller source gs =
   Filter.bakeBound
     (Map.union (Binding.playersIn legal) (Binding.playerSlots bindings))
     (Binding.objectsBySlot legal bindings)
-    (Filter.slotControllers (effectContext gs resolving controller source legal bindings))
+    (fmap related (Filter.slotControllers (effectContext gs resolving controller source legal bindings)))
   where
     bindings = slotBindings resolving gs
+    related pids relation = Set.fromList [q | q <- Game.stillPlaying gs, any (\p -> PlayerRelation.holds (Game.teams gs) relation p q) pids]
 
 -- CR 601.2c / 615.12: the same bake one carrier over. A stored CR 615.12 or CR
 -- 614.9 prohibition narrows the damage event by a DamagePattern too, and a card
@@ -5648,19 +5649,27 @@ applyOneEffect runSubgame resolving source controller legal chosen effect = case
         -- and Just Nothing for every move the rider does not narrow, which the
         -- funnel seats itself. MINUS `sofar`, the funnel's own CR 608.2f exclusion.
         -- Players are never admitted: the filter describes objects.
+        --
+        -- CR 303.4i's EntryHost.Specified narrows the same offer to the objects
+        -- the slot names instead (Necrotic Plague's "attached to that
+        -- creature"), so a named host the Aura could not enchant leaves it where
+        -- it is rather than letting its controller pick another.
         chosenHost mover riders sofar target = do
           now <- State.get
+          let narrowed admits
+                | zone == Zone.Battlefield,
+                  Maybe.isNothing (EntryRiders.faceDown riders),
+                  Set.member Subtype.Aura (Projection.subtypesOf target now) = do
+                    let offered = Attach.entryHostsFor mover target now
+                    admitted <- admits (filter (`Set.notMember` sofar) (Maybe.mapMaybe Recipient.objectOf offered))
+                    let hosts = filter (maybe False (`Set.member` admitted) . Recipient.objectOf) offered
+                    chosenOne <- Attach.chooseEntryHost mover target hosts
+                    pure (fmap Just (chosenOne >>= \h -> Attach.entryAttachmentFor mover target h now))
+                | otherwise = pure (Just Nothing)
           case EntryRiders.attachedTo riders of
-            Just (EntryHost.Chosen filter_)
-              | zone == Zone.Battlefield,
-                Maybe.isNothing (EntryRiders.faceDown riders),
-                Set.member Subtype.Aura (Projection.subtypesOf target now) -> do
-                  let offered = Attach.entryHostsFor mover target now
-                      admitted = Set.fromList (matchingFromAmong legal resolving controller source now filter_ (filter (`Set.notMember` sofar) (Maybe.mapMaybe Recipient.objectOf offered)))
-                      hosts = filter (maybe False (`Set.member` admitted) . Recipient.objectOf) offered
-                  chosenOne <- Attach.chooseEntryHost mover target hosts
-                  pure (fmap Just (chosenOne >>= \h -> Attach.entryAttachmentFor mover target h now))
-            _ -> pure (Just Nothing)
+            Just (EntryHost.Chosen filter_) -> narrowed (pure . Set.fromList . matchingFromAmong legal resolving controller source now filter_)
+            Just (EntryHost.Specified slot) -> narrowed (\candidates -> fmap (Set.intersection (Set.fromList candidates) . Set.fromList) (fromAmongMembers legal resolving chosen slot))
+            Nothing -> pure (Just Nothing)
         -- The context a CHOICE's candidates are filtered in, off the board the
         -- choice is being made on: the resolution's own slots ride along, so a
         -- card offering "a permanent card from among them" (Midnight Tilling)

@@ -22,5 +22,11 @@ spec s = Spec.describe s "Parun.Codec.TargetChooser" $ do
       TargetChooser.codec
       (TargetChooser.InSlot (SlotName.MkSlotName (Text.pack "thatAttackingPlayer")))
       " {\"type\":\"InSlot\",\"value\":\"thatAttackingPlayer\"} "
+  Spec.it s "ControllerOfBound" $
+    Common.assertCodec
+      s
+      TargetChooser.codec
+      (TargetChooser.ControllerOfBound (SlotName.MkSlotName (Text.pack "thatDepartedPermanent")))
+      " {\"type\":\"ControllerOfBound\",\"value\":\"thatDepartedPermanent\"} "
   Spec.it s "has a schema" $
     Common.assertHasSchema s TargetChooser.codec

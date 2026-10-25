@@ -295,7 +295,7 @@ filterAtomsOf leaf predicate = case predicate of
   Filter.Type.IsBound _ -> leaf predicate
   Filter.Type.IsTarget -> leaf predicate
   Filter.Type.SameNameAsBound _ -> leaf predicate
-  Filter.Type.SameControllerAsBound _ -> leaf predicate
+  Filter.Type.ControllerRelatesToBound _ _ -> leaf predicate
   Filter.Type.SameControllerAsHostOfBound _ -> leaf predicate
   Filter.Type.SharesCreatureTypeWith _ -> leaf predicate
   Filter.Type.HasChosenName {} -> leaf predicate
@@ -1115,17 +1115,17 @@ sameControllerAsHostOfBoundOffends card =
    in elsewhere /= 0 || framed + elsewhere /= jsonAtoms sameControllerAsHostOfBoundTag (Codec.encode (Face.Codec.codec Card.codec) card)
 
 -- The CR 110.2 tag, spelled once.
-sameControllerAsBoundTag :: Text.Text
-sameControllerAsBoundTag = Text.pack "SameControllerAsBound"
+controllerRelatesToBoundTag :: Text.Text
+controllerRelatesToBoundTag = Text.pack "ControllerRelatesToBound"
 
 -- How many CR 110.2 shared-controller atoms this card carries inside a MODE's
 -- target slot filter, an attach effect's destination, a stored combat
 -- restriction class or an effect's ObjectRef, and how many anywhere else. The
 -- second number is the offence; the first is what Bioshift and Glamer Spinners
 -- legitimately have one of.
-sameControllerAsBoundCounts :: Face.Face Card.Type.Card -> (Int, Int)
-sameControllerAsBoundCounts card =
-  let total wanted = sum (fmap (\(_, f) -> filterAtoms sameControllerAsBoundTag f) (filter (\(framing, _) -> elem framing [InTargetSlot, AttachDestination, StoredClassFramed, SourceHostFramed] == wanted) (cardFilters card)))
+controllerRelatesToBoundCounts :: Face.Face Card.Type.Card -> (Int, Int)
+controllerRelatesToBoundCounts card =
+  let total wanted = sum (fmap (\(_, f) -> filterAtoms controllerRelatesToBoundTag f) (filter (\(framing, _) -> elem framing [InTargetSlot, AttachDestination, StoredClassFramed, SourceHostFramed] == wanted) (cardFilters card)))
    in (total True, total False)
 
 -- CR 110.2's shared-controller comparison is answerable only where
@@ -1143,10 +1143,10 @@ sameControllerAsBoundCounts card =
 -- the atom outside a target slot, or the traversal and the codec disagree about
 -- how many the card holds. The second disjunct is a REGRESSION FENCE for that
 -- function's reason.
-sameControllerAsBoundOffends :: Face.Face Card.Type.Card -> Bool
-sameControllerAsBoundOffends card =
-  let (slotted, elsewhere) = sameControllerAsBoundCounts card
-   in elsewhere /= 0 || slotted + elsewhere /= jsonAtoms sameControllerAsBoundTag (Codec.encode (Face.Codec.codec Card.codec) card)
+controllerRelatesToBoundOffends :: Face.Face Card.Type.Card -> Bool
+controllerRelatesToBoundOffends card =
+  let (slotted, elsewhere) = controllerRelatesToBoundCounts card
+   in elsewhere /= 0 || slotted + elsewhere /= jsonAtoms controllerRelatesToBoundTag (Codec.encode (Face.Codec.codec Card.codec) card)
 
 -- The CR 303.4b tag, spelled once.
 hostOfSourceTag :: Text.Text
@@ -1845,14 +1845,14 @@ filterPositionLintSpec s registry = Spec.describe s "Lint" $ do
     -- a static restriction's affected set, read through a bare contextFor.
     Spec.assertBool s (hostOfSubjectCardTypeOffends restricted) "the atom in an affected set offends"
     Spec.assertEqWith s "counted outside the admitted positions" (hostOfSubjectCardTypeCounts restricted) (2, 1)
-  -- CR 110.2's Filter.SameControllerAsBound is CR 709.4a's atom one characteristic
+  -- CR 110.2's Filter.ControllerRelatesToBound is CR 709.4a's atom one characteristic
   -- over, in the same position and with the STAKES reversed: it is vacuously TRUE
   -- where Filter.Context.slotControllers has no key for its slot, so an atom
   -- outside the positions filling it admits every candidate the card meant to
-  -- exclude rather than none. See sameControllerAsBoundOffends.
-  Spec.it s "CR 110.2 no card asks SameControllerAsBound outside a mode's target slot, an attach destination, a stored class or an effect's object" $ do
+  -- exclude rather than none. See controllerRelatesToBoundOffends.
+  Spec.it s "CR 110.2 no card asks ControllerRelatesToBound outside a mode's target slot, an attach destination, a stored class or an effect's object" $ do
     ps <- S.allPrintings s
-    let offenders = filter (anyFace sameControllerAsBoundOffends . Printing.card) ps
+    let offenders = filter (anyFace controllerRelatesToBoundOffends . Printing.card) ps
     Spec.assertEqWith s "the atom sits only in a target slot's filter" (fmap (S.nameOf . Printing.card) offenders) []
     -- NOT vacuous: the pool authors the atom, and the card that does is ACCEPTED
     -- here rather than skipped.
@@ -1860,7 +1860,7 @@ filterPositionLintSpec s registry = Spec.describe s "Lint" $ do
     Spec.assertEqWith
       s
       "Bioshift's one atom is in its second target slot"
-      (sameControllerAsBoundCounts (S.combinedFace bioshift))
+      (controllerRelatesToBoundCounts (S.combinedFace bioshift))
       (1, 0)
     -- Simic Guildmage's FIRST ability is the same sentence as Bioshift's, and
     -- its atom sits in the same position.
@@ -1868,7 +1868,7 @@ filterPositionLintSpec s registry = Spec.describe s "Lint" $ do
     Spec.assertEqWith
       s
       "Simic Guildmage's is in its first ability's second target slot"
-      (sameControllerAsBoundCounts (S.combinedFace guildmageAtom))
+      (controllerRelatesToBoundCounts (S.combinedFace guildmageAtom))
       (1, 0)
     -- The attach destination's accepting read: Glamer Spinners' "another
     -- permanent with the same controller" as its target.
@@ -1876,7 +1876,7 @@ filterPositionLintSpec s registry = Spec.describe s "Lint" $ do
     Spec.assertEqWith
       s
       "Glamer Spinners' is in its attach destination"
-      (sameControllerAsBoundCounts (S.combinedFace spinners))
+      (controllerRelatesToBoundCounts (S.combinedFace spinners))
       (1, 0)
     -- Sorrow's Path's "controlled by the same opponent", in its second
     -- target slot.
@@ -1884,7 +1884,7 @@ filterPositionLintSpec s registry = Spec.describe s "Lint" $ do
     Spec.assertEqWith
       s
       "Sorrow's Path's is in its second target slot"
-      (sameControllerAsBoundCounts (S.combinedFace path))
+      (controllerRelatesToBoundCounts (S.combinedFace path))
       (1, 0)
     -- The stored class's accepting read: Mark for Death's "other creatures that
     -- player controls", baked by Parun.Engine.Resolve.Effect.storedClass.
@@ -1892,7 +1892,7 @@ filterPositionLintSpec s registry = Spec.describe s "Lint" $ do
     Spec.assertEqWith
       s
       "Mark for Death's is in its stored class"
-      (sameControllerAsBoundCounts (S.combinedFace mark))
+      (controllerRelatesToBoundCounts (S.combinedFace mark))
       (1, 0)
     -- The effect ObjectRef's accepting read: Flame Wave's "each creature
     -- that player or that planeswalker's controller controls".
@@ -1900,26 +1900,34 @@ filterPositionLintSpec s registry = Spec.describe s "Lint" $ do
     Spec.assertEqWith
       s
       "Flame Wave's is in its damage's object"
-      (sameControllerAsBoundCounts (S.combinedFace wave))
+      (controllerRelatesToBoundCounts (S.combinedFace wave))
       (1, 0)
     -- Chandra Nalaar's -8 prints Flame Wave's sentence.
     chandra <- S.printingOf s registry "Chandra Nalaar"
     Spec.assertEqWith
       s
       "Chandra Nalaar's is in its -8's damage's object"
-      (sameControllerAsBoundCounts (S.combinedFace chandra))
+      (controllerRelatesToBoundCounts (S.combinedFace chandra))
+      (1, 0)
+    -- Necrotic Plague's "one of their opponents controls", relative to the
+    -- dead creature's controller, in its trigger's target slot.
+    plague <- S.printingOf s registry "Necrotic Plague"
+    Spec.assertEqWith
+      s
+      "Necrotic Plague's is in its trigger's target slot"
+      (controllerRelatesToBoundCounts (S.combinedFace plague))
       (1, 0)
     Spec.assertEqWith
       s
-      "and those seven are the pool's whole authorship of it"
-      (sum (fmap (uncurry (+) . sameControllerAsBoundCounts . S.combinedFace) ps))
-      7
+      "and those eight are the pool's whole authorship of it"
+      (sum (fmap (uncurry (+) . controllerRelatesToBoundCounts . S.combinedFace) ps))
+      8
     -- The REJECTING direction, hand-built for the reason every sibling lint's is:
     -- a card that offends must not be loadable, so no file can carry one. Buried
     -- under all three combinators, so an implementation reading only the top of a
     -- Filter would accept it.
     piker <- S.printingOf s registry "Goblin Piker"
-    let atom = Filter.Type.SameControllerAsBound (SlotName.MkSlotName (Text.pack "from"))
+    let atom = Filter.Type.ControllerRelatesToBound PlayerRelation.You (SlotName.MkSlotName (Text.pack "from"))
         buried = Filter.Type.And [Filter.Type.Or [Filter.Type.HasCardType CardType.Creature, Filter.Type.Not atom]]
         planted =
           (S.combinedFace piker)
@@ -1933,9 +1941,9 @@ filterPositionLintSpec s registry = Spec.describe s "Lint" $ do
                     (NonEmpty.singleton Modification.LoseAllAbilities)
                 ]
             }
-    Spec.assertEqWith s "the same atom in a static ability's affected set is an offence" (sameControllerAsBoundCounts planted) (0, 1)
-    Spec.assertBool s (sameControllerAsBoundOffends planted) "and the lint says so"
-    Spec.assertBool s (not (sameControllerAsBoundOffends (S.combinedFace piker))) "where the ungrafted card is accepted"
+    Spec.assertEqWith s "the same atom in a static ability's affected set is an offence" (controllerRelatesToBoundCounts planted) (0, 1)
+    Spec.assertBool s (controllerRelatesToBoundOffends planted) "and the lint says so"
+    Spec.assertBool s (not (controllerRelatesToBoundOffends (S.combinedFace piker))) "where the ungrafted card is accepted"
   -- CR 601.3a's lookahead (Parun.Engine.Filter.manaValueThresholds) bounds its
   -- sample by the mana value LITERALS a prohibition compares against, so a
   -- player effect comparing a mana value against any other operand would leave

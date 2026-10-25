@@ -89,8 +89,13 @@
                                       "value": "target"
                                     },
                                     {
-                                      "type": "SameControllerAsBound",
-                                      "value": "target"
+                                      "type": "ControllerRelatesToBound",
+                                      "value": {
+                                        "relation": {
+                                          "type": "You"
+                                        },
+                                        "slot": "target"
+                                      }
                                     }
                                   ]
                                 }

@@ -587,8 +587,8 @@ spec s = Spec.describe s "Parun.Engine.Filter" $ do
     -- slot is gone (Mark for Death). Unbaked, the atom is vacuously True.
     Spec.it s "bakeBound substitutes a bound object's controller" $ do
       let object = SlotName.MkSlotName (Text.pack "target")
-          atom = Filter.Type.SameControllerAsBound object
-          baked = Filter.bakeBound Map.empty Map.empty (Map.singleton object (Set.singleton (player 1))) atom
+          atom = Filter.Type.ControllerRelatesToBound PlayerRelation.You object
+          baked = Filter.bakeBound Map.empty Map.empty (Map.singleton object (const (Set.singleton (player 1)))) atom
       Spec.assertEqWith s "the atom names the controller" baked (Filter.Type.Or [Filter.Type.ControlledByPlayer (player 1)])
       Spec.assertBool s (not (Filter.matches self blackCreature baked)) "player 0's creature is not that player's"
       Spec.assertBool s (Filter.matches self blackCreature atom) "where the unbaked atom admitted it"
@@ -946,15 +946,21 @@ spec s = Spec.describe s "Parun.Engine.Filter" $ do
   -- CR 110.2 across two of one announcement's targets. blackCreature is
   -- controlled by player 0 and owned by player 1, so a reading off the wrong field
   -- disagrees with every arm below.
-  Spec.describe s "SameControllerAsBound" $ do
+  Spec.describe s "ControllerRelatesToBound" $ do
     let slot = SlotName.MkSlotName (Text.pack "from")
         player = PlayerId.MkPlayerId
         controlledBy pids = self {Filter.slotControllers = Map.singleton slot (Set.fromList (fmap player pids))}
     Spec.it s "matches a candidate the bound object's controller controls" $
-      Spec.assertBool s (Filter.matches (controlledBy [0]) blackCreature (Filter.Type.SameControllerAsBound slot)) "the same controller"
+      Spec.assertBool s (Filter.matches (controlledBy [0]) blackCreature (Filter.Type.ControllerRelatesToBound PlayerRelation.You slot)) "the same controller"
 
     Spec.it s "does not match a candidate under another player" $
-      Spec.assertBool s (not (Filter.matches (controlledBy [1]) blackCreature (Filter.Type.SameControllerAsBound slot))) "the owner is not the controller"
+      Spec.assertBool s (not (Filter.matches (controlledBy [1]) blackCreature (Filter.Type.ControllerRelatesToBound PlayerRelation.You slot))) "the owner is not the controller"
+
+    -- CR 102.2 relative to the bound object's controller rather than the
+    -- perspective, which is player 0 here as well as the candidate's controller.
+    Spec.it s "CR 102.2 an Opponent relation is relative to the bound object's controller" $ do
+      Spec.assertBool s (Filter.matches (controlledBy [1]) blackCreature (Filter.Type.ControllerRelatesToBound PlayerRelation.Opponent slot)) "an opponent of player 1"
+      Spec.assertBool s (not (Filter.matches (controlledBy [0]) blackCreature (Filter.Type.ControllerRelatesToBound PlayerRelation.Opponent slot))) "not an opponent of player 0"
 
     -- The one atom here that widens rather than answering False, and the two cases
     -- that keep the departure narrow: a slot with NO KEY is one CR 601.2c has not
@@ -962,11 +968,11 @@ spec s = Spec.describe s "Parun.Engine.Filter" $ do
     -- none (CR 108.4) and shares one with nobody. Parun.TargetSpec's Bioshift case
     -- is what proves the first at gameplay level.
     Spec.it s "CR 601.2c a slot the announcement has not answered constrains nothing" $ do
-      Spec.assertBool s (Filter.matches self blackCreature (Filter.Type.SameControllerAsBound slot)) "no key at all"
-      Spec.assertBool s (Filter.matches noPerspective blackCreature (Filter.Type.SameControllerAsBound slot)) "and no perspective is needed"
+      Spec.assertBool s (Filter.matches self blackCreature (Filter.Type.ControllerRelatesToBound PlayerRelation.You slot)) "no key at all"
+      Spec.assertBool s (Filter.matches noPerspective blackCreature (Filter.Type.ControllerRelatesToBound PlayerRelation.You slot)) "and no perspective is needed"
 
     Spec.it s "CR 108.4 a bound object with no controller matches nothing" $
-      Spec.assertBool s (not (Filter.matches (controlledBy []) blackCreature (Filter.Type.SameControllerAsBound slot))) "a bound key naming no controller"
+      Spec.assertBool s (not (Filter.matches (controlledBy []) blackCreature (Filter.Type.ControllerRelatesToBound PlayerRelation.You slot))) "a bound key naming no controller"
 
     -- The slot is REPORTED as read, which is what makes
     -- Parun.Engine.Target.jointlyJudged fire on a slot whose only sibling read is
@@ -976,8 +982,8 @@ spec s = Spec.describe s "Parun.Engine.Filter" $ do
     -- own, so a card writing this atom alone is what the arm is a fence for.
     Spec.it s "CR 601.2c the atom reports its slot as one the filter reads" $ do
       let buried f = Filter.Type.And [Filter.Type.Or [Filter.Type.HasCardType CardType.Creature, Filter.Type.Not f]]
-      Spec.assertEqWith s "at the top" (Filter.boundSlots (Filter.Type.SameControllerAsBound slot)) (Set.singleton slot)
-      Spec.assertEqWith s "and buried under every combinator" (Filter.boundSlots (buried (Filter.Type.SameControllerAsBound slot))) (Set.singleton slot)
+      Spec.assertEqWith s "at the top" (Filter.boundSlots (Filter.Type.ControllerRelatesToBound PlayerRelation.You slot)) (Set.singleton slot)
+      Spec.assertEqWith s "and buried under every combinator" (Filter.boundSlots (buried (Filter.Type.ControllerRelatesToBound PlayerRelation.You slot))) (Set.singleton slot)
 
     -- Vacuously False off a candidate with no controller, whichever way the slot
     -- is filled: CR 109.1's list of what an object is has no player in it, so a
@@ -985,8 +991,8 @@ spec s = Spec.describe s "Parun.Engine.Filter" $ do
     -- library (CR 108.4).
     Spec.it s "a candidate with no controller matches nothing" $ do
       let noController = blackCreature {Filter.controller = Nothing}
-      Spec.assertBool s (not (Filter.matches (controlledBy [0]) noController (Filter.Type.SameControllerAsBound slot))) "no candidate controller"
-      Spec.assertBool s (not (Filter.matches (controlledBy [0]) aPlayer (Filter.Type.SameControllerAsBound slot))) "player"
+      Spec.assertBool s (not (Filter.matches (controlledBy [0]) noController (Filter.Type.ControllerRelatesToBound PlayerRelation.You slot))) "no candidate controller"
+      Spec.assertBool s (not (Filter.matches (controlledBy [0]) aPlayer (Filter.Type.ControllerRelatesToBound PlayerRelation.You slot))) "player"
 
   -- CR 110.2 asked of the bound object's HOST (CR 303.4b). The atom above's
   -- board with the comparison one link along, and the DIRECTION reversed: an
@@ -1003,14 +1009,14 @@ spec s = Spec.describe s "Parun.Engine.Filter" $ do
     Spec.it s "does not match a candidate under another player" $
       Spec.assertBool s (not (Filter.matches (hostControlledBy [1]) blackCreature atom)) "another player's"
 
-    -- The pair that separates this atom from SameControllerAsBound above: the
+    -- The pair that separates this atom from ControllerRelatesToBound above: the
     -- same two contexts, and both refuse. A key that is present and EMPTY is a
     -- bound object attached to nothing, to a player (CR 303.4b) or to a host
     -- that has left the battlefield.
     Spec.it s "CR 608.2d an unanswered slot admits nothing rather than everything" $ do
       Spec.assertBool s (not (Filter.matches self blackCreature atom)) "no key at all"
       Spec.assertBool s (not (Filter.matches (hostControlledBy []) blackCreature atom)) "a bound key naming no host controller"
-      Spec.assertBool s (Filter.matches self blackCreature (Filter.Type.SameControllerAsBound slot)) "where its sibling widens on the same context"
+      Spec.assertBool s (Filter.matches self blackCreature (Filter.Type.ControllerRelatesToBound PlayerRelation.You slot)) "where its sibling widens on the same context"
 
     Spec.it s "a candidate with no controller matches nothing" $ do
       let noController = blackCreature {Filter.controller = Nothing}
@@ -1094,8 +1100,8 @@ spec s = Spec.describe s "Parun.Engine.Filter" $ do
     -- This atom's vacuous direction, and the reason the position lint exists:
     -- outside the one context that fills the field this is False rather than an
     -- error. Not a rule every context-relative atom follows -- CR 110.2's
-    -- SameControllerAsBound answers True on its unfilled read, which the
-    -- SameControllerAsBound group above asserts.
+    -- ControllerRelatesToBound answers True on its unfilled read, which the
+    -- ControllerRelatesToBound group above asserts.
     Spec.it s "a source that chose nothing is vacuously false" $ do
       Spec.assertBool s (not (Filter.matches self (called ["Chromatic Star"]) anyone)) "contextFor leaves it empty"
 
