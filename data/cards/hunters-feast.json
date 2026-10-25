@@ -1,0 +1,68 @@
+{
+  "faces": [
+    {
+      "manaCost": [
+        {
+          "type": "Generic",
+          "value": 3
+        },
+        {
+          "type": "OfType",
+          "value": {
+            "type": "Colored",
+            "value": {
+              "type": "Green"
+            }
+          }
+        }
+      ],
+      "name": "Hunters' Feast",
+      "oracleText": "Any number of target players each gain 6 life.",
+      "spell": {
+        "modes": [
+          {
+            "clauses": [
+              {
+                "effects": [
+                  {
+                    "type": "GainLife",
+                    "value": {
+                      "player": {
+                        "type": "EachInSlot",
+                        "value": "targets"
+                      },
+                      "quantity": {
+                        "type": "Literal",
+                        "value": 6
+                      }
+                    }
+                  }
+                ]
+              }
+            ],
+            "targetSlots": {
+              "targets": {
+                "count": {
+                  "type": "Printed",
+                  "value": {
+                    "least": 0
+                  }
+                },
+                "pool": {
+                  "type": "Players"
+                }
+              }
+            }
+          }
+        ]
+      },
+      "typeLine": {
+        "types": [
+          {
+            "type": "Sorcery"
+          }
+        ]
+      }
+    }
+  ]
+}

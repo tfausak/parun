@@ -852,7 +852,7 @@ auriokReplicaSpec s registry = Spec.describe s "Auriok Replica (CR 609.7a)" $ do
   -- "even if that object is no longer in the zone it used to be in" and so is not
   -- filtered out anywhere downstream.
   --
-  -- Grist, the Hunger Tide's -2 is the pool's only activated ability that arms a
+  -- Grist, the Hunger Tide's -2 is an activated ability that arms a
   -- delayed trigger ("You may sacrifice a creature. When you do, destroy target
   -- creature or planeswalker"), and the entry is still armed once the -2 has
   -- resolved -- the reflexive ability is placed at the next gather, which this
