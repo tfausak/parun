@@ -13,6 +13,7 @@ import qualified Parun.Types.PlayerRef as PlayerRef
 import qualified Parun.Types.PlayerRelation as PlayerRelation
 import qualified Parun.Types.Quantity as Quantity
 import qualified Parun.Types.SlotName as SlotName
+import qualified Parun.Types.Zone as Zone
 
 spec :: (Monad m, Monad n) => Spec.Spec m n -> n ()
 spec s = Spec.describe s "Parun.Codec.ChoosePermanents" $ do
@@ -21,7 +22,7 @@ spec s = Spec.describe s "Parun.Codec.ChoosePermanents" $ do
       s
       ChoosePermanents.codec
       ( ChoosePermanents.MkChoosePermanents
-          { ChoosePermanents.permanents = ChosenPermanents.MkChosenPermanents (Filter.HasCardType CardType.Creature) (PlayerRef.Relative PlayerRelation.You) (HowMany.UpTo Nothing),
+          { ChoosePermanents.permanents = ChosenPermanents.MkChosenPermanents (Filter.HasCardType CardType.Creature) (PlayerRef.Relative PlayerRelation.You) (HowMany.UpTo Nothing) Zone.Battlefield,
             ChoosePermanents.slot = SlotName.MkSlotName (Text.pack "chosen"),
             ChoosePermanents.pileChooser = Nothing
           }
@@ -32,7 +33,7 @@ spec s = Spec.describe s "Parun.Codec.ChoosePermanents" $ do
       s
       ChoosePermanents.codec
       ( ChoosePermanents.MkChoosePermanents
-          { ChoosePermanents.permanents = ChosenPermanents.MkChosenPermanents (Filter.HasCardType CardType.Creature) (PlayerRef.InSlot (SlotName.MkSlotName (Text.pack "thatPlayer"))) (HowMany.UpTo (Just (Quantity.Literal 2))),
+          { ChoosePermanents.permanents = ChosenPermanents.MkChosenPermanents (Filter.HasCardType CardType.Creature) (PlayerRef.InSlot (SlotName.MkSlotName (Text.pack "thatPlayer"))) (HowMany.UpTo (Just (Quantity.Literal 2))) Zone.Battlefield,
             ChoosePermanents.slot = SlotName.MkSlotName (Text.pack "chosen"),
             ChoosePermanents.pileChooser = Nothing
           }
@@ -43,7 +44,7 @@ spec s = Spec.describe s "Parun.Codec.ChoosePermanents" $ do
       s
       ChoosePermanents.codec
       ( ChoosePermanents.MkChoosePermanents
-          { ChoosePermanents.permanents = ChosenPermanents.MkChosenPermanents (Filter.HasCardType CardType.Creature) (PlayerRef.Relative PlayerRelation.You) (HowMany.UpTo Nothing),
+          { ChoosePermanents.permanents = ChosenPermanents.MkChosenPermanents (Filter.HasCardType CardType.Creature) (PlayerRef.Relative PlayerRelation.You) (HowMany.UpTo Nothing) Zone.Battlefield,
             ChoosePermanents.slot = SlotName.MkSlotName (Text.pack "chosen"),
             ChoosePermanents.pileChooser = Just (PlayerRef.InSlot (SlotName.MkSlotName (Text.pack "defender")))
           }

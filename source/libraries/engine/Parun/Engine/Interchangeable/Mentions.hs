@@ -28,6 +28,7 @@ module Parun.Engine.Interchangeable.Mentions where
 
 import qualified Data.Map.Strict as Map
 import qualified Parun.Engine.Binding as Binding.Engine
+import qualified Parun.Types.AbilityAct as AbilityAct
 import qualified Parun.Types.AbilityAddsMana as AbilityAddsMana
 import qualified Parun.Types.ActingPermanent as ActingPermanent
 import qualified Parun.Types.ActivateManaAbilities as ActivateManaAbilities
@@ -911,7 +912,7 @@ chosenCardInHandNames asking x = case x of
 
 chosenPermanentsNames :: (Monoid r) => Asking r -> ChosenPermanents.ChosenPermanents -> r
 chosenPermanentsNames asking x = case x of
-  ChosenPermanents.MkChosenPermanents filter_ chooser count -> filterNames asking filter_ <> playerRefNames asking chooser <> foldMap (quantityNames asking) (HowMany.quantity count)
+  ChosenPermanents.MkChosenPermanents filter_ chooser count _zone -> filterNames asking filter_ <> playerRefNames asking chooser <> foldMap (quantityNames asking) (HowMany.quantity count)
 
 clauseNames :: (Monoid r) => Asking r -> (card -> r) -> (ability -> r) -> Clause.Clause card ability -> r
 clauseNames asking onCard onAbility x = case x of
@@ -2575,7 +2576,9 @@ quantityNames asking x = case x of
   Quantity.DamageDealtToThisTurn -> history asking HistoryRead.Damage
   Quantity.SpellsCastLastTurn playerRef -> playerRefNames asking playerRef
   Quantity.SpellsCastThisTurn playerRef -> history asking HistoryRead.Casts <> playerRefNames asking playerRef
-  Quantity.TimesResolvedThisTurn -> history asking HistoryRead.Resolutions
+  Quantity.TimesThisTurn act -> history asking $ case act of
+    AbilityAct.Activated -> HistoryRead.Activations
+    AbilityAct.Resolved -> HistoryRead.Resolutions
   Quantity.SpellsCastBefore -> history asking HistoryRead.Casts
   Quantity.PermanentsDiedThisTurn -> history asking HistoryRead.Deaths
   Quantity.SpellsCastUsingThisTurn _keywordFamily -> history asking HistoryRead.Casts
@@ -2739,7 +2742,7 @@ scopeNames asking x = case x of
   Scope.InHistory eventShape -> eventShapeNames asking eventShape
   Scope.OverPlayers playerRef -> playerRefNames asking playerRef
   Scope.OverBound slotName -> slotNames asking slotName
-  Scope.TopOfGraveyard playerRef -> playerRefNames asking playerRef
+  Scope.TopOf inZone -> inZoneNames asking inZone
 
 searchNames :: (Monoid r) => Asking r -> Search.Search -> r
 searchNames asking x = case x of

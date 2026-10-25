@@ -586,7 +586,7 @@ triggeredNames oid entry = case entry of
 -- among its targets. Positional for phasedOutNames' reason.
 activationNames :: ObjectId -> PastActivation.PastActivation -> Bool
 activationNames oid entry = case entry of
-  PastActivation.MkPastActivation _activator source _keyword _kind targets ->
+  PastActivation.MkPastActivation _activator source _ability _kind targets ->
     any (\snapshot -> ObjectSnapshot.object snapshot == oid) (source : targets)
 
 -- Whether an attack declared in its player's last turn (CR 508.1a) names this

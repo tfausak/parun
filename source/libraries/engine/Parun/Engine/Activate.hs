@@ -433,7 +433,7 @@ activateAbilityWith refused runSubgame pid srcId ability = Event.announcing $ do
               -- board, before a cost can sacrifice the source. A payment that
               -- reverses restores `before`, and CR 733.1's partial reversal
               -- drops the announcement's segment (Parun.Engine.Reversal).
-              State.modify' (ActivationRestriction.logActivation announced pid srcId stamp AbilityKind.NonManaAbility aimedAt)
+              State.modify' (ActivationRestriction.logActivation announced pid srcId (Just ability) AbilityKind.NonManaAbility aimedAt)
               -- CR 601.2g/h via Parun.Engine.Cost.pay: the mana window, then the
               -- components. The gates above prove SOME sequence of choices pays for
               -- this ability -- but Unpaid is reachable all the same, because the

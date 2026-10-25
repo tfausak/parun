@@ -174,10 +174,8 @@ scopeOffends scope = case scope of
   -- wherever they are, so there is no per-player copy of a zone for the pairing
   -- the lint rejects to arise in.
   Scope.OverBound _ -> False
-  -- CR 404.1's graveyard is per-player, so its reference is exactly the one the
-  -- InZone arm above pairs with Zone.Graveyard and the shared-zone pairing
-  -- cannot arise.
-  Scope.TopOfGraveyard _ -> False
+  -- The InZone arm's pairing, asked of a zone's top card.
+  Scope.TopOf inZone -> scopeOffends (Scope.InZone inZone)
 
 cardOffendsSharedZoneScope :: Face.Face Card.Type.Card -> Bool
 cardOffendsSharedZoneScope card =

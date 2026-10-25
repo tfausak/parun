@@ -4,8 +4,10 @@ import qualified Parun.Types.Filter as Filter
 import qualified Parun.Types.HowMany as HowMany
 import qualified Parun.Types.Keyword as Keyword
 import qualified Parun.Types.PlayerRef as PlayerRef
+import qualified Parun.Types.Zone as Zone
 
--- | CR 608.2d's battlefield choice: what may be picked, WHO picks, and how many.
+-- | CR 608.2d's choice in a shared zone: what may be picked, WHO picks, how
+-- many, and where.
 --
 -- The Filter is read from the ABILITY's perspective whoever chooses -- CR 109.5's
 -- "you" is the ability's controller, and Wormfang Crab's "a permanent you control"
@@ -32,6 +34,9 @@ import qualified Parun.Types.PlayerRef as PlayerRef
 data ChosenPermanents = MkChosenPermanents
   { filter :: Filter.Filter Keyword.Keyword,
     chooser :: PlayerRef.PlayerRef,
-    count :: HowMany.HowMany
+    count :: HowMany.HowMany,
+    -- | CR 400.1: the shared zone the candidates are in -- the battlefield, or
+    -- Mirror of Fate's exile. Parun.Codec.ChosenPermanents refuses any other.
+    zone :: Zone.Zone
   }
   deriving (Eq, Ord, Show)

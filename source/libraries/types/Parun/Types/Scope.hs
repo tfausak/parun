@@ -75,6 +75,7 @@ data Scope
     -- where the object landed either way; what the fold then reads for a
     -- departure is CR 608.2h's last known information.
     OverBound SlotName.SlotName
-  | -- | CR 404.1 / Guiding Spirit: the top card of each graveyard the PlayerRef names.
-    TopOfGraveyard PlayerRef.PlayerRef
+  | -- | CR 401.2 / 404.1: the top card of each library or graveyard the InZone
+    -- names (Vampire Nocturnus, Guiding Spirit); no candidate in an unordered zone.
+    TopOf InZone.InZone
   deriving (Eq, Ord, Show)

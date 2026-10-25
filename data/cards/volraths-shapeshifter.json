@@ -100,11 +100,16 @@
                     }
                   },
                   "scope": {
-                    "type": "TopOfGraveyard",
+                    "type": "TopOf",
                     "value": {
-                      "type": "Relative",
-                      "value": {
-                        "type": "You"
+                      "player": {
+                        "type": "Relative",
+                        "value": {
+                          "type": "You"
+                        }
+                      },
+                      "zone": {
+                        "type": "Graveyard"
                       }
                     }
                   }

@@ -5,6 +5,7 @@ import qualified Data.Text as Text
 import qualified Parun.Codec.Quantity as Quantity
 import qualified Parun.JsonCodec.Common as Common
 import qualified Parun.Spec as Spec
+import qualified Parun.Types.AbilityAct as AbilityAct
 import qualified Parun.Types.AgainstExiledPile as AgainstExiledPile
 import qualified Parun.Types.AgainstLastCardExiledWith as AgainstLastCardExiledWith
 import qualified Parun.Types.AgainstSlot as AgainstSlot
@@ -666,15 +667,15 @@ spec s = Spec.describe s "Parun.Codec.Quantity" $ do
       Quantity.codec
       (Quantity.SpellsCastThisTurn PlayerRef.Candidate)
       " {\"type\":\"SpellsCastThisTurn\",\"value\":{\"type\":\"Candidate\"}} "
-  -- CR 608.2n with nothing on the wire either: the ability is the one the
+  -- CR 608.2n / 602.2 with only the act on the wire: the ability is the one the
   -- quantity is evaluated against, reached through AgainstSlot over CR 602.2a's
-  -- "thisAbility", and "this turn" is the event log's own extent.
-  Spec.it s "TimesResolvedThisTurn is nullary" $
+  -- "thisAbility", and "this turn" is the log's own extent.
+  Spec.it s "TimesThisTurn" $
     Common.assertCodec
       s
       Quantity.codec
-      Quantity.TimesResolvedThisTurn
-      " {\"type\":\"TimesResolvedThisTurn\"} "
+      (Quantity.TimesThisTurn AbilityAct.Resolved)
+      " {\"type\":\"TimesThisTurn\",\"value\":{\"type\":\"Resolved\"}} "
   -- CR 702.40a with nothing on the wire: the spell is the one the quantity is
   -- evaluated against, and "this turn" is the event log's own extent.
   Spec.it s "SpellsCastBefore is nullary" $

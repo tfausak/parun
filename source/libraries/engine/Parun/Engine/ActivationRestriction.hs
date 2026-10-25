@@ -41,7 +41,6 @@ import qualified Parun.Types.DuringPhase as DuringPhase
 import Parun.Types.GameState (GameState)
 import qualified Parun.Types.GameState as GameState
 import qualified Parun.Types.GrantedAbility as GrantedAbility
-import qualified Parun.Types.Keyword as Keyword.Type
 import qualified Parun.Types.ManaSpecification as ManaSpecification
 import qualified Parun.Types.ManaType as ManaType
 import qualified Parun.Types.Object as Object
@@ -297,8 +296,9 @@ recordActivation srcId ability gs =
         ((if prints ActivationRestriction.OnlyOnce then perGame else id) gs)
 
 -- CR 602.2: log that `pid` began activating an ability of `srcId` aimed at
--- `targets`, for Parun.Types.CostModifier.onlyFirst to count. The source
--- and targets are snapshotted off `asOf`, the board the activation began on, so
+-- `targets`, for Parun.Types.CostModifier.onlyFirst and
+-- Parun.Types.Quantity.TimesThisTurn to count. The source and targets are
+-- snapshotted off `asOf`, the board the activation began on, so
 -- a cost that sacrificed the source still leaves it recorded as it was.
 --
 -- Every activation, of every kind, from all three roads: Parun.Engine.Activate's
@@ -306,13 +306,13 @@ recordActivation srcId ability gs =
 -- mid-roll one. The latter two are a regression fence: Professor Hojo, the one
 -- first-limited reducer in data/cards/, names a target, which neither road's
 -- abilities have. Tezzeret, Betrayer of Flesh would observe the mana road.
-logActivation :: GameState -> PlayerId -> ObjectId -> Maybe Keyword.Type.Keyword -> AbilityKind.AbilityKind -> Set.Set ObjectId -> GameState -> GameState
-logActivation asOf pid srcId stamp kind targets gs =
+logActivation :: GameState -> PlayerId -> ObjectId -> Maybe (ActivatedAbility.ActivatedAbility Card.Card (GrantedAbility.GrantedAbility Card.Card)) -> AbilityKind.AbilityKind -> Set.Set ObjectId -> GameState -> GameState
+logActivation asOf pid srcId ability kind targets gs =
   let logged source =
         PastActivation.MkPastActivation
           { PastActivation.activator = pid,
             PastActivation.source = source,
-            PastActivation.keyword = stamp,
+            PastActivation.ability = ability,
             PastActivation.kind = kind,
             PastActivation.targets = Maybe.mapMaybe (\oid -> Projection.objectSnapshot oid asOf) (Set.toList targets)
           }

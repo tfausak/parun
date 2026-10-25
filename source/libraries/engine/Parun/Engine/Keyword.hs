@@ -6467,7 +6467,7 @@ soulbondSelfEnters :: TriggeredAbility Card (GrantedAbility.GrantedAbility Card)
 soulbondSelfEnters =
   let clause =
         Mint.youMay
-          (Seq.singleton (Effect.Pair (ObjectRef.ChosenPermanents (ChosenPermanents.MkChosenPermanents unpairedOther (PlayerRef.Relative PlayerRelation.You) HowMany.one))))
+          (Seq.singleton (Effect.Pair (ObjectRef.ChosenPermanents (ChosenPermanents.MkChosenPermanents unpairedOther (PlayerRef.Relative PlayerRelation.You) HowMany.one Zone.Battlefield))))
    in Mint.triggerOf
         TriggerCondition.SelfEnters
         ( Just
@@ -9403,7 +9403,7 @@ championEnters quality =
           ( Seq.singleton
               ( Effect.MoveToZone
                   ( MoveToZone.MkMoveToZone
-                      (ObjectRef.ChosenPermanents (ChosenPermanents.MkChosenPermanents another (PlayerRef.Relative PlayerRelation.You) HowMany.one))
+                      (ObjectRef.ChosenPermanents (ChosenPermanents.MkChosenPermanents another (PlayerRef.Relative PlayerRelation.You) HowMany.one Zone.Battlefield))
                       Zone.Exile
                       championRiders
                       Nothing

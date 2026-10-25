@@ -78,7 +78,7 @@ import qualified Parun.Engine.Quantity as Quantity
 import qualified Parun.Engine.Recruit as Recruit
 import qualified Parun.Engine.Replacement as Replacement
 import qualified Parun.Engine.Replay as Replay
-import Parun.Engine.Resolve.Slots (battlefieldMatching, boundSlots, conditionSlots, effectContext, effectContextNaming, effectObjectRefs, effectPlayerRefs, effectViewOf, graveyardCardsOf, handCardsOf, legalMany, legalOne, libraryCardsOf, matchingFromAmong, objectRefObjects, overRelations, playerRefPlayers, playerRefSlots, replacementRowSlots, resolutionReads, resolvingAbilityName, resolvingKind, slotBindings, slotGroup)
+import Parun.Engine.Resolve.Slots (battlefieldMatching, boundSlots, chosenCandidates, conditionSlots, effectContext, effectContextNaming, effectObjectRefs, effectPlayerRefs, effectViewOf, graveyardCardsOf, handCardsOf, legalMany, legalOne, libraryCardsOf, matchingFromAmong, objectRefObjects, overRelations, playerRefPlayers, playerRefSlots, replacementRowSlots, resolutionReads, resolvingAbilityName, resolvingKind, slotBindings, slotGroup)
 import qualified Parun.Engine.Restamp as Restamp
 import qualified Parun.Engine.Ring as Ring
 import qualified Parun.Engine.Room as Room
@@ -821,9 +821,9 @@ oneSeat legal resolving source controller gs ref = case playerRefPlayers legal r
 -- Game.stillPlaying and so has already dropped a departed seat rather than
 -- reassigning its answer.
 
--- CR 608.2d's battlefield choice, hoisted so that every opcode making one asks
--- it the same way: the candidates are the ability's own reading of the Filter
--- whoever chooses (CR 109.5), battlefieldMatching's sweep read live off the
+-- CR 608.2d's choice in a shared zone, hoisted so that every opcode making one
+-- asks it the same way: the candidates are the ability's own reading of the
+-- Filter whoever chooses (CR 109.5), chosenCandidates' sweep read live off the
 -- board before the instruction acts (CR 608.2c), and the chooser is reached
 -- through askedChooser, CR 800.4g included. The chooser is named only where the
 -- count leaves a real choice, so CR 800.4g's reassignment is never asked for a
@@ -832,9 +832,11 @@ oneSeat legal resolving source controller gs ref = case playerRefPlayers legal r
 -- The count is pickCounted's, read here -- Teferi, Hero of Dominaria's "up to
 -- two lands".
 chosenPermanents :: AnyNumberOf.AnyNumberOf -> Map.Map SlotName (Set Recipient) -> ObjectId -> PlayerId -> ObjectId -> ChosenPermanents.ChosenPermanents -> Game [ObjectId]
-chosenPermanents purpose legal resolving controller source (ChosenPermanents.MkChosenPermanents filter_ chooser count) = do
+chosenPermanents purpose legal resolving controller source choice = do
   gs <- State.get
-  let candidates = battlefieldMatching legal resolving controller source gs filter_
+  let candidates = chosenCandidates legal resolving controller source gs choice
+      chooser = ChosenPermanents.chooser choice
+      count = ChosenPermanents.count choice
       context = effectContext gs resolving controller source legal (slotBindings resolving gs)
       amount = maybe 0 Integer.toNaturalSaturating . Quantity.evaluateFor (effectViewOf source legal gs) context gs resolving source
   pickByChooser
@@ -3825,7 +3827,7 @@ effectIsImpossible resolving source controller legal gs effect = case effect of
   Effect.PutSticker (PutSticker.MkPutSticker player ref kinds cap free _) ->
     let placers = playerRefPlayers legal resolving source controller gs player
         named = case ref of
-          ObjectRef.ChosenPermanents choice -> battlefieldMatching legal resolving controller source gs (ChosenPermanents.filter choice)
+          ObjectRef.ChosenPermanents choice -> chosenCandidates legal resolving controller source gs choice
           ObjectRef.ChosenCardInGraveyard (ChosenCardInGraveyard.MkChosenCardInGraveyard chooser scope filter_ _) -> case chooser of
             Chooser.BoundInSlot slot -> case playerRefPlayers legal resolving source controller gs (PlayerRef.InSlot slot) of
               [pid] | List.elem pid (Target.zoneScopePlayers (Plane.rangePerspective source controller gs) (Just controller) legal scope gs) -> graveyardCardsOf context gs pid filter_
@@ -3892,7 +3894,7 @@ effectIsImpossible resolving source controller legal gs effect = case effect of
           Chooser.BoundInSlot _ -> False
       ObjectRef.ChosenCardFromAmong (ChosenCardFromAmong.MkChosenCardFromAmong slot filter_ count _) ->
         mustPick count && maybe False (null . matchingFromAmong legal resolving controller source gs filter_) (fromAmongBound slot)
-      ObjectRef.ChosenPermanents (ChosenPermanents.MkChosenPermanents filter_ _ count) -> mustPick count && null (battlefieldMatching legal resolving controller source gs filter_)
+      ObjectRef.ChosenPermanents choice -> mustPick (ChosenPermanents.count choice) && null (chosenCandidates legal resolving controller source gs choice)
       -- Only when no member names anything: a read always might.
       ObjectRef.AllOf refs -> all choosesFromNothing refs
       _ -> False
@@ -4953,7 +4955,7 @@ applyOneEffect runSubgame resolving source controller legal chosen effect = case
       Nothing -> chosenPermanents AnyNumberOf.Permanents legal resolving controller source choice
       Just chooserRef -> do
         gs <- State.get
-        let matching = battlefieldMatching legal resolving controller source gs (ChosenPermanents.filter choice)
+        let matching = chosenCandidates legal resolving controller source gs choice
         split <- case matching of
           [_] -> pure matching
           _ -> chosenPermanents AnyNumberOf.IntoPile legal resolving controller source choice
@@ -11730,7 +11732,7 @@ activateWhileRolling runSubgame pid oid ability = do
     Payment.Unpaid -> pure False
     Payment.Paid _ -> do
       State.modify' (ActivationRestriction.recordActivation oid ability)
-      State.modify' (ActivationRestriction.logActivation before pid oid stamp AbilityKind.NonManaAbility Set.empty)
+      State.modify' (ActivationRestriction.logActivation before pid oid (Just ability) AbilityKind.NonManaAbility Set.empty)
       let modal = ActivatedAbility.modal ability
           every = Set.fromList (fmap fst (zip (fmap ModeIndex.MkModeIndex [0 ..]) (Modal.modeEffects modal)))
           bound =

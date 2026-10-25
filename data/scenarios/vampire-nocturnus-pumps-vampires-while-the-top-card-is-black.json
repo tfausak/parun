@@ -1,0 +1,33 @@
+{
+  "description": "CR 611.3a / 401.2: while the top card of Vampire Nocturnus' controller's library is black, it and the other Vampire creatures that player controls get +2/+1 and have flying",
+  "note": "Alice's other Vampire gets the bonus and her Hill Giant does not; Bob's Vampire Noble does not either, so the bonus is neither every Vampire's nor every creature of hers. The companion scenario differs only in the order of Alice's library.",
+  "board": {
+    "active": "alice",
+    "step": "PrecombatMain",
+    "seats": [
+      {
+        "name": "alice",
+        "battlefield": [
+          { "card": "Vampire Nocturnus", "label": "nocturnus" },
+          { "card": "Vampire Noble", "label": "noble" },
+          { "card": "Hill Giant", "label": "giant" }
+        ],
+        "library": [{ "card": "Vampire Bats" }, { "card": "Island" }]
+      },
+      {
+        "name": "bob",
+        "battlefield": [{ "card": "Vampire Noble", "label": "bobs" }],
+        "library": [{ "card": "Vampire Bats" }, { "card": "Island" }]
+      }
+    ]
+  },
+  "timeline": [
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "check": { "PowerToughness": { "object": "$nocturnus", "power": 5, "toughness": 4 } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "check": { "Keywords": { "object": "$nocturnus", "keyword": { "type": "Flying" }, "count": 1 } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "check": { "PowerToughness": { "object": "$noble", "power": 5, "toughness": 3 } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "check": { "Keywords": { "object": "$noble", "keyword": { "type": "Flying" }, "count": 1 } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "check": { "PowerToughness": { "object": "$giant", "power": 3, "toughness": 3 } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "check": { "PowerToughness": { "object": "$bobs", "power": 3, "toughness": 2 } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "check": { "Keywords": { "object": "$bobs", "keyword": { "type": "Flying" }, "count": 0 } } }
+  ]
+}

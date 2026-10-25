@@ -4,7 +4,7 @@
 -- Covers Parun.Engine.Condition, Parun.Types.Condition and Parun.Types.Comparison,
 -- including what Condition.holds makes of Parun.Engine.Quantity's IsMonarch,
 -- EnteredThisTurn, EnteredFrom, WasCastFrom, WasToken, WasBlocking,
--- DamageDealtToThisTurn, WasBlockedThisTurn and TimesResolvedThisTurn.
+-- DamageDealtToThisTurn, WasBlockedThisTurn and TimesThisTurn.
 module Parun.ConditionSpec where
 
 import qualified Data.Foldable as Foldable
@@ -569,7 +569,7 @@ spec s registry = Spec.describe s "Parun.Engine.Condition" $ do
   guidingSpiritSpec s registry
 
 -- CR 608.2n / 608.2i: how many times an ACTIVATED ability has resolved this
--- turn, which Quantity.TimesResolvedThisTurn folds off
+-- turn, which Quantity.TimesThisTurn folds off
 -- GameEvent.ActivatedAbilityResolved.
 --
 -- Ashling the Pilgrim ({1}{R} Legendary Creature -- Elemental Shaman 1/1,
@@ -739,7 +739,7 @@ enterFromHand oid gs =
 scriesBy :: PlayerId.PlayerId -> GameState.GameState -> Int
 scriesBy pid gs = length [() | GameEvent.PlayerActed (PlayerActed.MkPlayerActed PlayerAction.Scry p) <- fmap LoggedEvent.event (Foldable.toList (GameState.events gs)), p == pid]
 
--- CR 404.1 read from inside a CONDITION: Scope.TopOfGraveyard, which names ONE
+-- CR 404.1 read from inside a CONDITION: Scope.TopOf, which names ONE
 -- position in a graveyard so that a Filter over it TESTS that card rather than
 -- sweeping the pile.
 --

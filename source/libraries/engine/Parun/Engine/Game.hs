@@ -631,10 +631,24 @@ zoneMembers zone pid gs =
 
 -- CR 404.1: the top card of a player's graveyard, its NEWEST arrival and so its
 -- LAST member (insertIntoZone appends one). The one reader both
--- Parun.Types.ObjectRef.TopOfGraveyard and Parun.Types.Scope.TopOfGraveyard go
+-- Parun.Types.ObjectRef.TopOfGraveyard and Parun.Types.Scope.TopOf go
 -- through, so the card a Condition tests is the card the effect then moves.
 topOfGraveyard :: PlayerId -> GameState -> Maybe ObjectId
 topOfGraveyard pid gs = Maybe.listToMaybe (reverse (zoneMembers Zone.Graveyard pid gs))
+
+-- CR 401.2 / 404.1: the top card of a player's library, its FIRST member, or of
+-- their graveyard (topOfGraveyard). Nothing for every other zone: no rule orders
+-- a hand or a shared zone's cards by player.
+topOf :: Zone.Zone -> PlayerId -> GameState -> Maybe ObjectId
+topOf zone pid gs = case zone of
+  Zone.Library -> Maybe.listToMaybe (zoneMembers Zone.Library pid gs)
+  Zone.Graveyard -> topOfGraveyard pid gs
+  Zone.Hand -> Nothing
+  Zone.Battlefield -> Nothing
+  Zone.Stack -> Nothing
+  Zone.Exile -> Nothing
+  Zone.Command -> Nothing
+  Zone.Ante -> Nothing
 
 -- CR 404.3: set a player's standing graveyard-order setting
 -- (Parun.Types.GraveyardOrder). The player's to change, not the rules': a client
@@ -3134,7 +3148,7 @@ castsInLog gs = Seq.fromList (Maybe.mapMaybe (castOf . LoggedEvent.event) (Folda
 -- CR 608.2n: the ABILITY an event describes RESOLVING, if it describes one, as
 -- the Source its object on the stack carried -- the source object and the
 -- ability, which is the pair CR 707.10b counts by. castOf above's shape and
--- placement, and its fold's twin: Parun.Engine.Quantity's TimesResolvedThisTurn
+-- placement, and its fold's twin: Parun.Engine.Quantity's TimesThisTurn
 -- arm counts the entries this returns against the Source of the ability being
 -- asked about.
 abilityResolved :: GameEvent -> Maybe Source.Source

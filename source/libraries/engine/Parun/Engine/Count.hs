@@ -169,12 +169,14 @@ evaluate viewOf quantityOf context gs count =
           let ids = Set.toList (Map.findWithDefault Set.empty slot (Filter.slotObjects context))
               kept = Maybe.mapMaybe (\oid -> if findableAfterMove gs oid then fmap ((,) (Just oid)) (keep predicate context (viewOf oid)) else Nothing) ids
            in aggregate quantityOf aggregation kept
-        -- CR 404.1: one card per named graveyard, narrowed by POSITION before the
-        -- Filter is asked -- the zone arm above answers "any matching card"
-        -- instead. Order-insensitive like every Aggregation, so no APNAP walk.
-        Scope.TopOfGraveyard ref -> do
+        -- CR 401.2 / 404.1: one card per named library or graveyard, narrowed by
+        -- POSITION before the Filter is asked -- the zone arm above answers "any
+        -- matching card" instead. Order-insensitive like every Aggregation, so no
+        -- APNAP walk. An empty library has no top card, so Vampire Nocturnus'
+        -- "is black" counts nothing.
+        Scope.TopOf (InZone.MkInZone zone ref) -> do
           pids <- playersFor viewOf context gs ref
-          let ids = Maybe.mapMaybe (`Game.topOfGraveyard` gs) pids
+          let ids = Maybe.mapMaybe (\pid -> Game.topOf zone pid gs) pids
               kept = Maybe.mapMaybe (\oid -> fmap ((,) (Just oid)) (keep predicate context (viewOf oid))) ids
           aggregate quantityOf aggregation kept
 

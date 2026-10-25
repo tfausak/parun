@@ -87,6 +87,8 @@ library codec
   hs-source-dirs: source/libraries/codec
   -- cabal-gild: discover source/libraries/codec
   exposed-modules:
+    Parun.Codec.AbilityAct
+    Parun.Codec.AbilityActSpec
     Parun.Codec.AbilityAddsMana
     Parun.Codec.AbilityAddsManaSpec
     Parun.Codec.AbilityKind
@@ -2267,6 +2269,7 @@ library types
   hs-source-dirs: source/libraries/types
   -- cabal-gild: discover source/libraries/types
   exposed-modules:
+    Parun.Types.AbilityAct
     Parun.Types.AbilityAddsMana
     Parun.Types.AbilityKind
     Parun.Types.AbilityName

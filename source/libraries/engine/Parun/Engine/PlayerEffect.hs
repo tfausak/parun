@@ -57,6 +57,7 @@ import qualified Parun.Extra.Integer as Integer
 import qualified Parun.Extra.Natural as Natural
 import qualified Parun.Types.AbilityKind as AbilityKind
 import qualified Parun.Types.AbilityName as AbilityName
+import qualified Parun.Types.ActivatedAbility as ActivatedAbility
 import qualified Parun.Types.ActivationCriteria as ActivationCriteria
 import qualified Parun.Types.ActivePlayerEffect as ActivePlayerEffect
 import qualified Parun.Types.AffectedPlayers as AffectedPlayers
@@ -1567,7 +1568,7 @@ firstActivation pid source criterion granted wantedKind aimedAt gs scope =
       admits past =
         PastActivation.activator past == pid
           && matchesSnapshot (ObjectSnapshot.controller (PastActivation.source past)) criterion (PastActivation.source past)
-          && maybe True (\g -> any (Keyword.designates g) (PastActivation.keyword past)) granted
+          && maybe True (\g -> any (Keyword.designates g) (ActivatedAbility.keyword =<< PastActivation.ability past)) granted
           && maybe True (== PastActivation.kind past) wantedKind
           && maybe True (\f -> any (matchesSnapshot (Just (targetPerspective pid source gs)) f) (PastActivation.targets past)) aimedAt
    in Turn.turnScopeAdmits gs scope (GameState.activePlayer gs) pid

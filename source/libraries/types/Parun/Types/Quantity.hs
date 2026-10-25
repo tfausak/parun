@@ -2,6 +2,7 @@ module Parun.Types.Quantity where
 
 import qualified Data.Text as Text
 import qualified Numeric.Natural as Natural
+import qualified Parun.Types.AbilityAct as AbilityAct
 import qualified Parun.Types.AgainstExiledPile as AgainstExiledPile
 import qualified Parun.Types.AgainstLastCardExiledWith as AgainstLastCardExiledWith
 import qualified Parun.Types.AgainstSlot as AgainstSlot
@@ -284,7 +285,10 @@ data Quantity
   | -- | CR 608.2n \/ 608.2i: how many times the ABILITY this quantity is
     -- evaluated against has resolved this turn, folded from the turn-scoped
     -- GameEvent.ActivatedAbilityResolved and TriggeredAbilityResolved log and
-    -- counting the resolution asking.
+    -- counting the resolution asking -- or, at AbilityAct.Activated, how many
+    -- times it has been activated this turn (CR 602.2), off
+    -- GameState.activationsThisTurn, counting the activation resolving and any
+    -- still on the stack (Dragon Whelp).
     --
     -- Aimed at the ability's own object on the stack, which a card reaches
     -- through AgainstSlot over the reserved "thisAbility" slot -- Ashling the
@@ -296,7 +300,7 @@ data Quantity
     -- what prove the count, and Parun.CopySpec's what proves rule 707.10b's third
     -- sentence here: a copy of the ability counts toward the same total, the copy
     -- keeping the original's Source.
-    TimesResolvedThisTurn
+    TimesThisTurn AbilityAct.AbilityAct
   | -- | CR 702.40a: how many spells, by any player, were cast this turn before the
     -- object this quantity is evaluated against -- storm's count.
     SpellsCastBefore
