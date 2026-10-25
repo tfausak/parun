@@ -82,9 +82,10 @@ data Reference = MkReference
 -- | Whether a description of many objects reads "each" or "all": damage is
 -- dealt to "each creature" and destruction is of "all creatures". A
 -- continuous effect's objects read "all" only when described by their noun
--- alone: "All creatures get -1/-1" (Night of Souls' Betrayal), "All Sliver
--- creatures have frenzy 1", but "Black creatures get +1/+1" (Bad Moon) and
--- "Creatures you control get +1/+1" (Glorious Anthem).
+-- alone, and may drop it then: "All creatures get -1/-1" (Night of Souls'
+-- Betrayal), "Soldier creatures have vigilance" (Mobilization), but "Black
+-- creatures get +1/+1" (Bad Moon) and "Creatures you control get +1/+1"
+-- (Glorious Anthem).
 data Determiner
   = Each
   | All
@@ -300,7 +301,7 @@ object context determiner ref = case ref of
       Affected -> do
         text <- Filter.describe Filter.Plural permanent p
         let bare = null (Filter.adjectives p) && null (Filter.qualifiers p)
-        [MkReference (if bare then Text.pack "all " <> text else text) [] Filter.Plural]
+        [MkReference w [] Filter.Plural | w <- if bare then [Text.pack "all " <> text, text] else [text]]
   ObjectRef.EachCardInGraveyard e
     | determiner == All -> do
         p <- Filter.phrase (EachCardInGraveyard.filter e) (keyword context)

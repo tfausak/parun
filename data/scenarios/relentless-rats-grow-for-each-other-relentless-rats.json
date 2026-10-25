@@ -1,0 +1,83 @@
+{
+  "description": "CR 613.4c / 201.2 Relentless Rats: it gets +1/+1 for each other creature on the battlefield named Relentless Rats",
+  "note": "Alice has two Rats and bob one: each Rats sees two others and is 4/4. The Grizzly Bears are not counted.",
+  "board": {
+    "active": "alice",
+    "step": "PrecombatMain",
+    "seats": [
+      {
+        "name": "alice",
+        "battlefield": [
+          {
+            "card": "Relentless Rats",
+            "label": "r1"
+          },
+          {
+            "card": "Relentless Rats",
+            "label": "r2"
+          },
+          {
+            "card": "Grizzly Bears"
+          }
+        ],
+        "library": [
+          {
+            "card": "Island"
+          },
+          {
+            "card": "Island"
+          },
+          {
+            "card": "Island"
+          }
+        ]
+      },
+      {
+        "name": "bob",
+        "battlefield": [
+          {
+            "card": "Relentless Rats",
+            "label": "r3"
+          }
+        ],
+        "library": [
+          {
+            "card": "Island"
+          },
+          {
+            "card": "Island"
+          },
+          {
+            "card": "Island"
+          }
+        ]
+      }
+    ]
+  },
+  "timeline": [
+    {
+      "turn": 1,
+      "step": "PrecombatMain",
+      "player": "alice",
+      "check": {
+        "PowerToughness": {
+          "object": "$r1",
+          "power": 4,
+          "toughness": 4
+        }
+      }
+    },
+    {
+      "turn": 1,
+      "step": "PrecombatMain",
+      "player": "alice",
+      "check": {
+        "PowerToughness": {
+          "object": "$r3",
+          "power": 4,
+          "toughness": 4
+        }
+      }
+    }
+  ]
+}

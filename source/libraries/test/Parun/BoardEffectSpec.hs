@@ -1244,6 +1244,7 @@ communeWithLavaSpec s registry =
                       Nothing
                       Nothing
                       Nothing
+                      Nothing
                   )
           Spec.assertEqWith
             s

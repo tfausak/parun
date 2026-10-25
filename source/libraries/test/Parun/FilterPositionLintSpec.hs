@@ -1602,11 +1602,17 @@ filterPositionLintSpec s registry = Spec.describe s "Lint" $ do
       "Booby Trap's one atom is framed by its trigger condition"
       (hasChosenNameCounts (S.combinedFace trap))
       (1, 0)
+    needle <- S.printingOf s registry "Pithing Needle"
     Spec.assertEqWith
       s
-      "and the thirteen cards' atoms are the pool's only ones"
+      "Pithing Needle's one atom is framed by its activation prohibition's affected set"
+      (hasChosenNameCounts (S.combinedFace needle))
+      (1, 0)
+    Spec.assertEqWith
+      s
+      "and the fourteen cards' atoms are the pool's only ones"
       (sum (fmap (uncurry (+) . hasChosenNameCounts . S.combinedFace) ps))
-      17
+      18
   -- CR 702.16k's chosen player in the same frame one atom over: answerable only
   -- where a protection quality is read, and every one of those four positions
   -- takes its filter off a keyword. See ofChosenPlayerOffends for the two

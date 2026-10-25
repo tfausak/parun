@@ -1,0 +1,140 @@
+{
+  "faces": [
+    {
+      "keywords": [
+        {
+          "type": "Flying"
+        }
+      ],
+      "manaCost": [
+        {
+          "type": "Generic",
+          "value": 4
+        },
+        {
+          "type": "OfType",
+          "value": {
+            "type": "Colored",
+            "value": {
+              "type": "Blue"
+            }
+          }
+        }
+      ],
+      "name": "Scalpelexis",
+      "oracleText": "Flying (This creature can't be blocked except by creatures with flying or reach.)\nWhenever this creature deals combat damage to a player, that player exiles the top four cards of their library. If two or more of those cards have the same name, repeat this process.",
+      "power": {
+        "type": "Literal",
+        "value": 1
+      },
+      "toughness": {
+        "type": "Literal",
+        "value": 5
+      },
+      "triggeredAbilities": [
+        {
+          "condition": {
+            "type": "SelfDealsCombatDamageToPlayer",
+            "value": {
+              "type": "AnyPlayer"
+            }
+          },
+          "modal": {
+            "modes": [
+              {
+                "clauses": [
+                  {
+                    "effects": [
+                      {
+                        "type": "RepeatIf",
+                        "value": {
+                          "condition": {
+                            "type": "Compares",
+                            "value": {
+                              "comparison": {
+                                "type": "LessThan"
+                              },
+                              "measured": {
+                                "type": "Count",
+                                "value": {
+                                  "aggregation": {
+                                    "type": "DistinctNames"
+                                  },
+                                  "filter": {
+                                    "type": "And",
+                                    "value": []
+                                  },
+                                  "scope": {
+                                    "type": "OverBound",
+                                    "value": "exiled"
+                                  }
+                                }
+                              },
+                              "threshold": {
+                                "type": "Count",
+                                "value": {
+                                  "aggregation": {
+                                    "type": "Members"
+                                  },
+                                  "filter": {
+                                    "type": "And",
+                                    "value": []
+                                  },
+                                  "scope": {
+                                    "type": "OverBound",
+                                    "value": "exiled"
+                                  }
+                                }
+                              }
+                            }
+                          },
+                          "ifHolds": [],
+                          "process": [
+                            {
+                              "type": "MoveToZone",
+                              "value": {
+                                "ref": {
+                                  "type": "TopOfLibrary",
+                                  "value": {
+                                    "count": {
+                                      "type": "Literal",
+                                      "value": 4
+                                    },
+                                    "player": {
+                                      "type": "InSlot",
+                                      "value": "thatPlayer"
+                                    }
+                                  }
+                                },
+                                "slot": "exiled",
+                                "zone": {
+                                  "type": "Exile"
+                                }
+                              }
+                            }
+                          ]
+                        }
+                      }
+                    ]
+                  }
+                ]
+              }
+            ]
+          }
+        }
+      ],
+      "typeLine": {
+        "subtypes": [
+          {
+            "type": "Beast"
+          }
+        ],
+        "types": [
+          {
+            "type": "Creature"
+          }
+        ]
+      }
+    }
+  ]
+}

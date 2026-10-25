@@ -207,7 +207,7 @@ spec s = Spec.describe s "Parun.Oracle" $ do
   -- CR 601.2d: damage divided among a slot's targets.
   Spec.it s "render prints damage divided among targets" $ do
     let slot = (TargetSlot.required Pool.AnyTarget Nothing) {TargetSlot.count = SlotCount.Printed (TargetCount.MkTargetCount 1 (Just 3)), TargetSlot.divided = Just (Quantity.Literal 3)}
-        arc = spell [clause [Effect.DealDamage (DealDamage.MkDealDamage (Seq.singleton (DamagePart.MkDamagePart (ObjectRef.InSlot target) (Quantity.Share target))) Nothing Nothing Nothing)]] [(target, slot)]
+        arc = spell [clause [Effect.DealDamage (DealDamage.MkDealDamage (Seq.singleton (DamagePart.MkDamagePart (ObjectRef.InSlot target) (Quantity.Share target))) Nothing Nothing Nothing Nothing)]] [(target, slot)]
     Spec.assertEq s (Just (Text.pack "Spark deals 3 damage divided as you choose among one, two, or three targets.")) (Oracle.render arc)
 
   -- CR 701.8 / 608.2c: "destroy", and "can't be regenerated" after it; the
@@ -284,7 +284,7 @@ spec s = Spec.describe s "Parun.Oracle" $ do
     Spec.assertEq s [[Text.pack "Spark deals 1 damage to any target and 1 damage to you."]] (Oracle.abilities brothers)
     let tomb = ring {ActivatedAbility.modal = payload [clause [addMana 1, damage [(you, 2)]]] []}
     Spec.assertEq s [[Text.pack "{T}: Add {G}. Spark deals 2 damage to you.", Text.pack "{T}: Add {G}. Then Spark deals 2 damage to you."]] (Oracle.abilities (withFace (\f -> f {Face.activatedAbilities = [tomb]})))
-    let earthquake = spell [clause [Effect.DealDamage (DealDamage.MkDealDamage (Seq.fromList [DamagePart.MkDamagePart (ObjectRef.EachMatching (Filter.HasCardType CardType.Creature)) (Quantity.Literal 2), DamagePart.MkDamagePart ObjectRef.EachPlayer (Quantity.Literal 2)]) Nothing Nothing Nothing)]] []
+    let earthquake = spell [clause [Effect.DealDamage (DealDamage.MkDealDamage (Seq.fromList [DamagePart.MkDamagePart (ObjectRef.EachMatching (Filter.HasCardType CardType.Creature)) (Quantity.Literal 2), DamagePart.MkDamagePart ObjectRef.EachPlayer (Quantity.Literal 2)]) Nothing Nothing Nothing Nothing)]] []
     Spec.assertEq s [[Text.pack "Spark deals 2 damage to each creature and each player."]] (Oracle.abilities earthquake)
     let jagged = spell [clause [damage [(target, 3)]]] [(target, (TargetSlot.required Pool.Creatures Nothing) {TargetSlot.count = SlotCount.Printed (TargetCount.MkTargetCount 2 (Just 2))})]
     Spec.assertEq s (Just (Text.pack "Spark deals 3 damage to each of two target creatures.")) (Oracle.render jagged)
@@ -618,7 +618,7 @@ spec s = Spec.describe s "Parun.Oracle" $ do
     let theirs = countOf (Filter.And [Filter.HasCardType CardType.Land, Filter.ControlledByRecipient]) (onBattlefield (PlayerRef.Relative PlayerRelation.AnyPlayer))
     Spec.assertEq s (Just (Text.pack "Spark deals damage to each player equal to the number of lands they control.")) (Oracle.render (spell [clause [damageBy [(ObjectRef.EachPlayer, theirs)]]] []))
     let dealer = SlotName.MkSlotName (Text.pack "dealer")
-        fire = Effect.DealDamage (DealDamage.MkDealDamage (Seq.singleton (DamagePart.MkDamagePart (ObjectRef.InSlot target) (powerOf dealer))) (Just dealer) Nothing Nothing)
+        fire = Effect.DealDamage (DealDamage.MkDealDamage (Seq.singleton (DamagePart.MkDamagePart (ObjectRef.InSlot target) (powerOf dealer))) (Just dealer) Nothing Nothing Nothing)
         slots = [(dealer, TargetSlot.required Pool.Creatures (Just (Filter.ControlledBy PlayerRelation.You))), (target, TargetSlot.required Pool.AnyTarget Nothing)]
     Spec.assertEq s [[Text.pack "Target creature you control deals damage equal to its power to any target.", Text.pack "Target creature you control deals damage to any target equal to its power."]] (Oracle.abilities (spell [clause [fire]] slots))
     let victim f = [(dealer, TargetSlot.required Pool.Creatures (Just (Filter.ControlledBy PlayerRelation.You))), (target, TargetSlot.required Pool.Creatures (Just f))]
@@ -891,7 +891,8 @@ spec s = Spec.describe s "Parun.Oracle" $ do
     let enchanted = Affected.Matching (Filter.And [Filter.HasCardType CardType.Creature, Filter.HasAttached Filter.IsSource])
         aura changes = withFace (\f -> (typed [CardType.Enchantment] [Subtype.Aura] f) {Face.enchant = [TargetSlot.required Pool.Creatures Nothing], Face.staticAbilities = [static enchanted changes], Face.combatRestrictions = [CombatRestriction.CantBeBlockedBy (CantBeBlockedBy.MkCantBeBlockedBy (Affected.Matching (Filter.HasAttached Filter.IsSource)) (Filter.Not (Filter.HasKeyword Keyword.Flying)) Nothing Nothing)]})
     Spec.assertEq s (Just (Text.pack "Enchant creature\nEnchanted creature gets +1/+1 and can't be blocked except by creatures with flying.")) (Oracle.render (aura [pt 1 1]))
-    Spec.assertEq s [[Text.pack "Enchant creature"], [Text.pack "Enchanted creature has shroud."], [Text.pack "Enchanted creature can't be blocked except by creatures with flying."]] (Oracle.abilities (aura [Modification.GainKeyword Keyword.Shroud]))
+    Spec.assertEq s [[Text.pack "Enchant creature"], [Text.pack "Enchanted creature can't be blocked except by creatures with flying and has shroud.", Text.pack "Enchanted creature has shroud and can't be blocked except by creatures with flying.", Text.pack "Enchanted creature has shroud.\nEnchanted creature can't be blocked except by creatures with flying."]] (Oracle.abilities (aura [Modification.GainKeyword Keyword.Shroud]))
+    Spec.assertBool s (Oracle.says (aura [Modification.GainKeyword Keyword.Shroud]) (CardName.MkCardName (Text.pack "Spark")) (Text.pack "Enchant creature\nEnchanted creature has shroud.\nEnchanted creature can't be blocked except by creatures with flying.")) "the two sentences apart still say it"
 
   -- CR 509.1b / 611.2a: a creature that can't be blocked for the rest of the
   -- turn, which Oracle text says "this turn".
@@ -937,7 +938,7 @@ powerOf slot = Quantity.AgainstSlot (AgainstSlot.MkAgainstSlot slot (Quantity.Me
 
 -- Damage of these amounts to these objects.
 damageBy :: [(ObjectRef.ObjectRef, Quantity.Quantity)] -> Effect.Effect Card.Card (GrantedAbility.GrantedAbility Card.Card)
-damageBy parts = Effect.DealDamage (DealDamage.MkDealDamage (Seq.fromList (fmap (uncurry DamagePart.MkDamagePart) parts)) Nothing Nothing Nothing)
+damageBy parts = Effect.DealDamage (DealDamage.MkDealDamage (Seq.fromList (fmap (uncurry DamagePart.MkDamagePart) parts)) Nothing Nothing Nothing Nothing)
 
 -- You gain this much life.
 gainLifeBy :: Quantity.Quantity -> Effect.Effect Card.Card (GrantedAbility.GrantedAbility Card.Card)
@@ -1019,7 +1020,7 @@ addMana :: Integer -> Effect.Effect Card.Card (GrantedAbility.GrantedAbility Car
 addMana n = Effect.AddMana (ManaAddition.MkManaAddition (PlayerRef.Relative PlayerRelation.You) (ManaProduction.OfType (ManaType.Colored Color.Green)) (Quantity.Literal n) ManaRetention.Ordinary Nothing Nothing Nothing)
 
 damage :: [(SlotName.SlotName, Integer)] -> Effect.Effect Card.Card (GrantedAbility.GrantedAbility Card.Card)
-damage parts = Effect.DealDamage (DealDamage.MkDealDamage (Seq.fromList (fmap (\(slot, n) -> DamagePart.MkDamagePart (ObjectRef.InSlot slot) (Quantity.Literal n)) parts)) Nothing Nothing Nothing)
+damage parts = Effect.DealDamage (DealDamage.MkDealDamage (Seq.fromList (fmap (\(slot, n) -> DamagePart.MkDamagePart (ObjectRef.InSlot slot) (Quantity.Literal n)) parts)) Nothing Nothing Nothing Nothing)
 
 destroy :: ObjectRef.ObjectRef -> Regenerability.Regenerability -> Effect.Effect Card.Card (GrantedAbility.GrantedAbility Card.Card)
 destroy ref regenerability = Effect.Destroy (Destroy.MkDestroy ref regenerability Nothing Nothing Nothing)
