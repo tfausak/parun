@@ -1,0 +1,11 @@
+{
+  "description": "CR 701.19c / 120.3: a creature Incinerate dealt damage can't be regenerated this turn, so its shield does not save it",
+  "note": "Bob shields his Uthden Troll in alice's upkeep; her Incinerate then deals it lethal damage and CR 704.5g's destruction is not regenerated. The prevention file is the same shield where Healing Salve absorbs Incinerate, and the Troll regenerates from a later Lightning Bolt.",
+  "board": {"active": "alice", "step": "Upkeep", "seats": [{"name": "alice", "battlefield": [{"card": "Mountain", "label": "m1"}, {"card": "Mountain", "label": "m2"}], "hand": [{"card": "Incinerate", "label": "incinerate"}], "library": [{"card": "Island"}, {"card": "Island"}, {"card": "Island"}]}, {"name": "bob", "battlefield": [{"card": "Uthden Troll", "label": "troll"}, {"card": "Mountain", "label": "b-mountain"}], "library": [{"card": "Island"}, {"card": "Island"}, {"card": "Island"}]}]},
+  "timeline": [
+    {"turn": 1, "step": "Upkeep", "player": "bob", "do": {"Activate": {"object": "$troll", "mana": ["$b-mountain"]}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "do": {"Cast": {"object": "$incinerate", "targets": ["$troll"], "mana": ["$m1", "$m2"]}}},
+    {"turn": 1, "step": "BeginningOfCombat", "player": "alice", "check": {"Count": {"player": "bob", "zone": "Graveyard", "card": "Uthden Troll", "count": 1}}},
+    {"turn": 1, "step": "BeginningOfCombat", "player": "alice", "check": {"Count": {"player": "bob", "zone": "Battlefield", "card": "Uthden Troll", "count": 0}}}
+  ]
+}

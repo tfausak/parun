@@ -1651,7 +1651,7 @@ suspendAggressionSpec s registry = Spec.describe s "SuspendAggression" $ do
   -- Stonebinder's Familiar triggers once each turn, Rakshasa Vizier watches
   -- only a graveyard, and Ketramose, the New Dawn counts the permanent alone,
   -- a library being neither of its origins (pool grep for "one or more cards
-  -- are put into exile", 2026-10-18). The War Doctor would; see #5189 and #5190.
+  -- are put into exile", 2026-10-18). The War Doctor would; see #5189.
   Spec.it s "CR 608.2f the permanent and the library card are exiled in one event" $ do
     (pikerId, mineId, resolved) <- suspendAggressionBoard s registry
     let logged = Foldable.toList (GameState.events resolved)
