@@ -926,7 +926,7 @@ playerView pid =
       -- Parun.Engine.Target.admittedGiven's Recipient.ToPlayer arm -- build the
       -- view through it. Parun.DamageSpec's Needle Drop case is what proves it.
       dealtDamageThisTurn = False,
-      -- CR 110.1: only a permanent is on the battlefield, and a player is not one.
+      -- CR 400.7 moves an OBJECT between zones, and a player is not one.
       arrivalThisTurn = Nothing,
       -- CR 702.122b crews with a CREATURE, and a player is not one -- CR 506.3
       -- rules the combat fields above out for the same kind of reason.
