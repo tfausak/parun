@@ -11,12 +11,15 @@
 module Parun.Engine.TargetRestriction where
 
 import Data.Map.Strict (Map)
+import qualified Parun.Engine.Filter as Filter
 import qualified Parun.Engine.Projection as Projection
 import qualified Parun.Engine.Projection.Rewrite as Projection
 import qualified Parun.Engine.Projection.View as Projection
 import qualified Parun.Types.Affected as Affected
+import qualified Parun.Types.Filter as Filter.Type
 import Parun.Types.GameState (GameState)
 import qualified Parun.Types.GameState as GameState
+import qualified Parun.Types.Keyword as Keyword
 import Parun.Types.ObjectId (ObjectId)
 import Parun.Types.ProjectedCharacteristics (ProjectedCharacteristics)
 import qualified Parun.Types.RuleAbilities as RuleAbilities
@@ -24,11 +27,13 @@ import qualified Parun.Types.StackObjectKind as StackObjectKind
 import qualified Parun.Types.TargetRestriction as TargetRestriction
 
 -- One prohibition in force: the permanent whose ability states it, the kind of
--- spell or ability it stops, and its affected set after CR 612.1's word swap.
+-- spell or ability it stops, and its affected set and aimers after CR 612.1's
+-- word swap.
 data Row = MkRow
   { source :: ObjectId,
     kind :: StackObjectKind.StackObjectKind,
-    affected :: Affected.Affected
+    affected :: Affected.Affected,
+    aimers :: Filter.Type.Filter Keyword.Keyword
   }
 
 -- Every prohibition in force right now, gathered off the battlefield with
@@ -44,10 +49,12 @@ rows gs =
       grantedRules = Projection.grantedRuleAbilities gs
       row src changes restriction =
         let printed = TargetRestriction.affected restriction
+            printedAimers = TargetRestriction.aimers restriction
          in MkRow
               { source = src,
                 kind = TargetRestriction.kind restriction,
-                affected = if null changes then printed else Projection.rewriteAffected changes printed
+                affected = if null changes then printed else Projection.rewriteAffected changes printed,
+                aimers = if null changes then printedAimers else Filter.rewrite changes printedAimers
               }
       fromGrant src = fmap (row src []) (RuleAbilities.targetRestrictions (grantedRules src))
       fromPermanent src = case RuleAbilities.targetRestrictions (Projection.ruleAbilitiesOf src gs) of
@@ -60,9 +67,16 @@ rows gs =
             else []
    in concatMap (\src -> fromPermanent src <> fromGrant src) (GameState.battlefield gs)
 
--- CR 115 with CR 101.2: may a spell or ability of this kind NOT target the
--- candidate? Asked against the caller's whole-board projection and control
--- grants, for CR 613.11's reason: the affected set is read after every layer.
-stops :: Map ObjectId ProjectedCharacteristics -> [Projection.ControlGrant] -> [Row] -> StackObjectKind.StackObjectKind -> ObjectId -> GameState -> Bool
-stops pcs grants rowsInForce aimer candidate gs =
-  any (\r -> kind r == aimer && Projection.affectsOn pcs grants (source r) candidate (affected r) gs) rowsInForce
+-- CR 115 with CR 101.2: may a spell or ability of this kind, whose projection
+-- is `aimerView`, NOT target the candidate? Asked against the caller's
+-- whole-board projection and control grants, for CR 613.11's reason: the
+-- affected set is read after every layer.
+stops :: Map ObjectId ProjectedCharacteristics -> [Projection.ControlGrant] -> [Row] -> StackObjectKind.StackObjectKind -> Filter.View -> ObjectId -> GameState -> Bool
+stops pcs grants rowsInForce aimer aimerView candidate gs =
+  any
+    ( \r ->
+        kind r == aimer
+          && Projection.affectsOn pcs grants (source r) candidate (affected r) gs
+          && Filter.matches (Projection.sourceContext gs (Projection.controllerOf (source r) gs) (source r)) aimerView (aimers r)
+    )
+    rowsInForce

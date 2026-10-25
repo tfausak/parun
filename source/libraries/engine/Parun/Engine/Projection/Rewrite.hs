@@ -1382,7 +1382,7 @@ rewriteRuleAbilities pairs abilities =
           RuleAbilities.crewRestrictions = fmap (\x -> x {CrewRestriction.affected = affected (CrewRestriction.affected x)}) (RuleAbilities.crewRestrictions abilities),
           RuleAbilities.entryRestrictions = fmap (\x -> x {EntryRestriction.affected = affected (EntryRestriction.affected x)}) (RuleAbilities.entryRestrictions abilities),
           RuleAbilities.sacrificeRestrictions = fmap (\x -> x {SacrificeRestriction.affected = affected (SacrificeRestriction.affected x)}) (RuleAbilities.sacrificeRestrictions abilities),
-          RuleAbilities.targetRestrictions = fmap (\x -> x {TargetRestriction.affected = affected (TargetRestriction.affected x)}) (RuleAbilities.targetRestrictions abilities),
+          RuleAbilities.targetRestrictions = fmap (\x -> x {TargetRestriction.affected = affected (TargetRestriction.affected x), TargetRestriction.aimers = Filter.rewrite pairs (TargetRestriction.aimers x)}) (RuleAbilities.targetRestrictions abilities),
           RuleAbilities.untapRestrictions = fmap (\x -> x {UntapRestriction.affected = affected (UntapRestriction.affected x), UntapRestriction.while = condition (UntapRestriction.while x)}) (RuleAbilities.untapRestrictions abilities)
         }
 
@@ -2049,7 +2049,7 @@ rewriteTriggerCondition pairs condition = case condition of
   TriggerCondition.SelfDealsCombatDamageToPlayerOrBattle -> condition
   TriggerCondition.DealsCombatDamage watched -> TriggerCondition.DealsCombatDamage (acting watched)
   TriggerCondition.DealsDamageToPlayer p -> TriggerCondition.DealsDamageToPlayer p {DealsDamageToPlayer.actor = acting (DealsDamageToPlayer.actor p)}
-  TriggerCondition.SelfDealsDamageToCreature -> condition
+  TriggerCondition.SelfDealsDamageToCreature _ -> condition
   TriggerCondition.DealsDamage watched -> TriggerCondition.DealsDamage (acting watched)
   TriggerCondition.IsDealtDamage watched -> TriggerCondition.IsDealtDamage (acting watched)
   TriggerCondition.PlayerIsDealtDamage _ -> condition

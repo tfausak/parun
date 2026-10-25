@@ -1394,7 +1394,7 @@ exchangeLifeTotalsSpec s registry = Spec.describe s "ExchangeLifeTotals" $ do
 exchangeValuesSpec :: (Monad m) => Spec.Spec m n -> Registry.Registry m -> n ()
 exchangeValuesSpec s registry = Spec.describe s "ExchangeValues" $ do
   -- Serene Master, a 0/2, blocks alice's Hill Giant, a 3/3, and its trigger
-  -- targets the Giant (CR 509.1g's IsBlockedBySource): the powers swap until
+  -- targets the Giant (CR 509.1g's BlockPartnerOfSource): the powers swap until
   -- end of combat (CR 511.2), so the Master deals 3 and takes 0.
   Spec.it s "CR 701.12g Serene Master swaps powers with the creature it blocks until end of combat" $ do
     master <- S.printingOf s registry "Serene Master"

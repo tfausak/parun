@@ -65,7 +65,10 @@
                 "targetSlots": {
                   "target": {
                     "filter": {
-                      "type": "IsBlockedBySource"
+                      "type": "BlockPartnerOfSource",
+                      "value": {
+                        "type": "Attacker"
+                      }
                     },
                     "pool": {
                       "type": "Creatures"

@@ -1,0 +1,13 @@
+{
+  "description": "CR 104.3e / 510.2 Phage the Untouchable: whenever Phage deals combat damage to a player, that player loses the game",
+  "note": "Phage attacks bob unblocked and deals him 4; bob, at 20 life, loses the game to the trigger rather than to his life total.",
+  "board": {"active": "alice", "step": "BeginningOfCombat", "seats": [{"name": "alice", "battlefield": [{"card": "Phage the Untouchable", "label": "phage", "ready": true}], "library": [{"card": "Island"}, {"card": "Island"}, {"card": "Island"}]}, {"name": "bob", "library": [{"card": "Island"}, {"card": "Island"}, {"card": "Island"}]}]},
+  "timeline": [
+    {"turn": 1, "step": "DeclareAttackers", "player": "alice", "do": {"Attack": ["$phage"]}},
+    {"turn": 1, "step": "CombatDamage", "player": "alice", "check": {"Life": {"player": "bob", "life": 16}}},
+    {"turn": 1, "step": "CombatDamage", "player": "alice", "check": {"View": {"of": "Result", "is": null}}}
+  ],
+  "final": [
+    {"View": {"of": "Result", "is": {"won": "alice"}}}
+  ]
+}

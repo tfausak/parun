@@ -46,7 +46,6 @@ import qualified Parun.Types.Action as A
 import qualified Parun.Types.BeginningStep as BeginningStep
 import qualified Parun.Types.BuybackDecision as BuybackDecision
 import qualified Parun.Types.CandidateCost as CandidateCost
-import qualified Parun.Types.CardCount as CardCount
 import qualified Parun.Types.CardIdentity as CardIdentity
 import qualified Parun.Types.CardName as CardName
 import qualified Parun.Types.CardType as CardType
@@ -79,6 +78,7 @@ import qualified Parun.Types.ManaUnit as ManaUnit
 import qualified Parun.Types.ModeIndex as ModeIndex
 import qualified Parun.Types.Modification as Modification
 import qualified Parun.Types.Object as Object
+import qualified Parun.Types.ObjectCount as ObjectCount
 import qualified Parun.Types.ObjectId as ObjectId
 import qualified Parun.Types.OptionalDecision as OptionalDecision
 import qualified Parun.Types.PaymentDecision as PaymentDecision
@@ -3226,7 +3226,7 @@ emergeSpec s registry = Spec.describe s "Emerge" $ do
           let answer :: Prompt.Prompt r -> State.State Bool r
               answer prompt = case prompt of
                 Prompt.ChooseCost _ _ _ payable ->
-                  let names cost = elem (CostComponent.Sacrifice (Sacrifice.MkSacrifice (CostAmount.Fixed 1) (Filter.IsObject victim))) (Cost.Type.components (CandidateCost.cost cost))
+                  let names cost = elem (CostComponent.Sacrifice (Sacrifice.MkSacrifice (ObjectCount.Exactly (CostAmount.Fixed 1)) (Filter.IsObject victim))) (Cost.Type.components (CandidateCost.cost cost))
                    in pure (case filter names payable of chosen : _ -> chosen; [] -> S.identityAnswer prompt)
                 Prompt.ChooseManaSource _ _ _ candidates -> do
                   eaten <- State.get
@@ -4417,7 +4417,7 @@ jumpStartSpec s registry = Spec.describe s "JumpStart" $ do
       s
       "from the graveyard, the same {1}{R}{R} plus one discard"
       (costsOf fromGraveyard graveyardBoard)
-      [(printed, [CostComponent.DiscardCards (DiscardCards.MkDiscardCards (CardCount.Exactly 1) (Filter.And []))])]
+      [(printed, [CostComponent.DiscardCards (DiscardCards.MkDiscardCards (ObjectCount.Exactly (CostAmount.Fixed 1)) (Filter.And []))])]
   -- Rule 702.133a's "if the resulting spell is an instant or sorcery spell",
   -- flashback's clause word for word. No printing can reach the failing side --
   -- jump-start appears only on instants and sorceries -- so this is asserted at
@@ -4481,7 +4481,7 @@ retraceSpec s registry = Spec.describe s "Retrace" $ do
       s
       "from the graveyard, the same {R} plus one land discard"
       (costsOf fromGraveyard graveyardBoard)
-      [(printed, [CostComponent.DiscardCards (DiscardCards.MkDiscardCards (CardCount.Exactly 1) (Filter.HasCardType CardType.Land))])]
+      [(printed, [CostComponent.DiscardCards (DiscardCards.MkDiscardCards (ObjectCount.Exactly (CostAmount.Fixed 1)) (Filter.HasCardType CardType.Land))])]
 
 -- CR 702.187b's one static ability, on Electro's Bolt {2}{R} Sorcery, "Electro's
 -- Bolt deals 4 damage to target creature." plus mayhem {1}{R}.

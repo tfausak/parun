@@ -59,7 +59,7 @@ testRuleAbilities =
       RuleAbilities.crewRestrictions = [CrewRestriction.MkCrewRestriction Affected.Attached],
       RuleAbilities.entryRestrictions = [EntryRestriction.MkEntryRestriction Affected.Attached (Set.singleton Zone.Graveyard)],
       RuleAbilities.sacrificeRestrictions = [SacrificeRestriction.MkSacrificeRestriction Affected.Attached],
-      RuleAbilities.targetRestrictions = [TargetRestriction.MkTargetRestriction Affected.Attached StackObjectKind.Spell],
+      RuleAbilities.targetRestrictions = [TargetRestriction.MkTargetRestriction Affected.Attached StackObjectKind.Spell (Filter.And [])],
       RuleAbilities.untapRestrictions = [UntapRestriction.MkUntapRestriction Affected.Attached UntapHold.Forbidden Nothing]
     }
 

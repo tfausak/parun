@@ -9,6 +9,7 @@ import qualified Parun.JsonCodec.Common as Common
 import qualified Parun.Spec as Spec
 import qualified Parun.Types.AbilityKind as AbilityKind
 import qualified Parun.Types.Anchor as Anchor
+import qualified Parun.Types.BlockRole as BlockRole
 import qualified Parun.Types.BlockStatus as BlockStatus
 import qualified Parun.Types.BoundMeasure as BoundMeasure
 import qualified Parun.Types.CardName as CardName
@@ -640,12 +641,12 @@ spec s = Spec.describe s "Parun.Codec.Filter" $ do
       Filter.IsPairedWithSource
       " {\"type\":\"IsPairedWithSource\"} "
     Spec.assertBool s (Codec.encode codec Filter.IsPairedWithSource /= Codec.encode codec Filter.IsPaired) "IsPairedWithSource and IsPaired encode differently"
-  Spec.it s "IsBlockedBySource" $
+  Spec.it s "BlockPartnerOfSource" $
     Common.assertCodec
       s
       codec
-      Filter.IsBlockedBySource
-      " {\"type\":\"IsBlockedBySource\"} "
+      (Filter.BlockPartnerOfSource BlockRole.Blocker)
+      " {\"type\":\"BlockPartnerOfSource\",\"value\":{\"type\":\"Blocker\"}} "
   Spec.it s "HasActivatedAbility" $
     Common.assertCodec
       s

@@ -112,6 +112,7 @@ import qualified Parun.Codec.BlockCostSpec
 import qualified Parun.Codec.BlockPermissionSpec
 import qualified Parun.Codec.BlockProducerSpec
 import qualified Parun.Codec.BlockRequirementSpec
+import qualified Parun.Codec.BlockRoleSpec
 import qualified Parun.Codec.BlockStatusSpec
 import qualified Parun.Codec.BlockersAreSpec
 import qualified Parun.Codec.BlocksDeclaredSpec
@@ -123,7 +124,6 @@ import qualified Parun.Codec.CantBeBlockedBySpec
 import qualified Parun.Codec.CantBlockCreaturesSpec
 import qualified Parun.Codec.CantSearchLibrariesSpec
 import qualified Parun.Codec.CardArrivedInSpec
-import qualified Parun.Codec.CardCountSpec
 import qualified Parun.Codec.CardIdentitySpec
 import qualified Parun.Codec.CardLeavesZoneSpec
 import qualified Parun.Codec.CardNameSpec
@@ -463,6 +463,7 @@ import qualified Parun.Codec.NameChooserSpec
 import qualified Parun.Codec.NamesAreSpec
 import qualified Parun.Codec.NinjutsuSpec
 import qualified Parun.Codec.NinjutsuVariantSpec
+import qualified Parun.Codec.ObjectCountSpec
 import qualified Parun.Codec.ObjectIdSpec
 import qualified Parun.Codec.ObjectRefSpec
 import qualified Parun.Codec.ObjectSnapshotSpec
@@ -1028,6 +1029,7 @@ spec s registry = do
   Parun.Codec.BlockProducerSpec.spec s
   Parun.Codec.BlockRequirementSpec.spec s
   Parun.Codec.BlocksDeclaredSpec.spec s
+  Parun.Codec.BlockRoleSpec.spec s
   Parun.Codec.BlockStatusSpec.spec s
   Parun.Codec.BoardSpec.spec s
   Parun.Codec.BoundMeasureSpec.spec s
@@ -1037,7 +1039,7 @@ spec s registry = do
   Parun.Codec.CantBlockCreaturesSpec.spec s
   Parun.Codec.CantSearchLibrariesSpec.spec s
   Parun.Codec.CardArrivedInSpec.spec s
-  Parun.Codec.CardCountSpec.spec s
+  Parun.Codec.ObjectCountSpec.spec s
   Parun.Codec.CardIdentitySpec.spec s
   Parun.Codec.CardLeavesZoneSpec.spec s
   Parun.Codec.CardNameSpec.spec s

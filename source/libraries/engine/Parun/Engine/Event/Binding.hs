@@ -179,7 +179,7 @@ eventBindingsOver board gs bearerBecame becameInGraveyard bearer you cond event 
   -- under `became`, the object the event names: Bellowing Fiend's "that
   -- creature's controller". Both are unconditional given a match, which admits
   -- only an object recipient.
-  (TriggerCondition.SelfDealsDamageToCreature, GameEvent.DamageDealt ev) ->
+  (TriggerCondition.SelfDealsDamageToCreature _, GameEvent.DamageDealt ev) ->
     maybe id Binding.setBecame (Recipient.objectOf (DamageEvent.target ev)) (Binding.setEventAmount (DamageEvent.amount ev) Map.empty)
   -- Horned Cheetah's and Spirit Link's "that much" for the any-recipient arm,
   -- which batchBindings sums across one damage event, and the damager, which
@@ -1478,7 +1478,7 @@ eventBindingSlots cond = case cond of
   TriggerCondition.DealsDamageToPlayer _ -> Set.fromList [Binding.eventAmount, Binding.triggerPlayer]
   -- The amount and the damaged creature for the arm one recipient over, both
   -- guaranteed given a match.
-  TriggerCondition.SelfDealsDamageToCreature -> Set.fromList [Binding.eventAmount, Binding.became]
+  TriggerCondition.SelfDealsDamageToCreature _ -> Set.fromList [Binding.eventAmount, Binding.became]
   TriggerCondition.DealsDamage _ -> Set.fromList [Binding.combatDamager, Binding.eventAmount]
   -- CR 120.3's amount for enrage, which Coalhauler Swine's "it deals that much
   -- damage to each player" reads: the same slot CR 615.13's prevention and CR

@@ -15,6 +15,7 @@ import qualified Parun.Types.Filter as Filter
 import qualified Parun.Types.ManaCost as ManaCost
 import qualified Parun.Types.ManaSymbol as ManaSymbol
 import qualified Parun.Types.ManaType as ManaType
+import qualified Parun.Types.ObjectCount as ObjectCount
 import qualified Parun.Types.Sacrifice as Sacrifice
 
 spec :: (Monad m, Monad n) => Spec.Spec m n -> n ()
@@ -55,7 +56,7 @@ spec s = Spec.describe s "Parun.Codec.CostChange" $ do
     Common.assertCodec
       s
       CostChange.codec
-      (CostChange.Type.Add (CostAddition.MkCostAddition [CostComponent.Sacrifice (Sacrifice.MkSacrifice (CostAmount.Fixed 1) (Filter.HasCardType CardType.Land))] CostScale.Once))
+      (CostChange.Type.Add (CostAddition.MkCostAddition [CostComponent.Sacrifice (Sacrifice.MkSacrifice (ObjectCount.Exactly (CostAmount.Fixed 1)) (Filter.HasCardType CardType.Land))] CostScale.Once))
       " {\"type\":\"Add\",\"value\":{\"components\":[{\"type\":\"Sacrifice\",\"value\":{\"count\":{\"type\":\"Fixed\",\"value\":1},\"whichPermanents\":{\"type\":\"HasCardType\",\"value\":{\"type\":\"Land\"}}}}]}} "
   Spec.it s "Add, Drought's scale" $
     Common.assertCodec

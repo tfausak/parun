@@ -240,7 +240,7 @@ legalRecipientsGiven kind reader pools perspective unannounced bindings acquisit
       -- CR 101.2's printed prohibitions (Parun.Engine.TargetRestriction), asked
       -- of `kind` rather than of `source`: Dense Foliage stops a spell and not
       -- a triggered ability whose source is that spell.
-      stopped oid = TargetRestriction.stops pcs grants (targetRestrictionRows pools) kind oid gs
+      stopped oid = TargetRestriction.stops pcs grants (targetRestrictionRows pools) kind sourceView oid gs
    in Set.filter keep (admittedGiven reader pools perspective unannounced bindings acquisition source slot gs)
 
 -- CR 801.5a: the recipients @chooser@ may name for an ability of @source@ --

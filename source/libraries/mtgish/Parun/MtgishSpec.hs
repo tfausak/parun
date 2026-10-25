@@ -58,6 +58,7 @@ import qualified Parun.Types.Modal as Modal
 import qualified Parun.Types.Mode as Mode
 import qualified Parun.Types.Modification as Modification
 import qualified Parun.Types.ModifyTarget as ModifyTarget
+import qualified Parun.Types.ObjectCount as ObjectCount
 import qualified Parun.Types.ObjectRef as ObjectRef
 import qualified Parun.Types.PayBranch as PayBranch
 import qualified Parun.Types.PayGate as PayGate
@@ -174,7 +175,7 @@ spec s = Spec.describe s "Parun.Mtgish" $ do
   -- CR 602.1a / 701.21a: "Sacrifice a creature" as a cost.
   Spec.it s "reads sacrificing a permanent of a description as a cost" $ do
     Spec.assertEq s (Right ()) (accepts fallenAngel)
-    Spec.assertEq s [[CostComponent.Sacrifice (Sacrifice.MkSacrifice (CostAmount.Fixed 1) (Filter.HasCardType CardType.Creature))]] (fmap (Cost.components . ActivatedAbility.cost) (Face.activatedAbilities (translated fallenAngel)))
+    Spec.assertEq s [[CostComponent.Sacrifice (Sacrifice.MkSacrifice (ObjectCount.Exactly (CostAmount.Fixed 1)) (Filter.HasCardType CardType.Creature))]] (fmap (Cost.components . ActivatedAbility.cost) (Face.activatedAbilities (translated fallenAngel)))
 
   -- CR 106.1: "Add {W} or {U}" is one mode for each kind of mana, the rest
   -- of the instructions in each.

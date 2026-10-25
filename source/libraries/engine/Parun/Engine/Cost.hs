@@ -75,7 +75,6 @@ import qualified Parun.Types.Behold as Behold
 import qualified Parun.Types.Binding as Binding.Type
 import qualified Parun.Types.CandidateCost as CandidateCost
 import qualified Parun.Types.Card as Card.Type
-import qualified Parun.Types.CardCount as CardCount
 import qualified Parun.Types.CardName as CardName
 import qualified Parun.Types.CardType as CardType
 import qualified Parun.Types.CastingPermission as CastingPermission
@@ -141,6 +140,7 @@ import qualified Parun.Types.ManaUnit as ManaUnit
 import qualified Parun.Types.ManaWindow as ManaWindow
 import qualified Parun.Types.Milled as Milled
 import qualified Parun.Types.Object as Object
+import qualified Parun.Types.ObjectCount as ObjectCount
 import Parun.Types.ObjectId (ObjectId)
 import qualified Parun.Types.OptionalDecision as OptionalDecision
 import qualified Parun.Types.Payment as Payment
@@ -429,7 +429,7 @@ withOffering :: PlayerId -> ObjectId -> GameState -> CandidateCost.CandidateCost
 withOffering pid oid gs candidate =
   candidate
     : [ candidate
-          { CandidateCost.cost = (CandidateCost.cost candidate) {Cost.components = Cost.components (CandidateCost.cost candidate) <> [CostComponent.Sacrifice (Sacrifice.MkSacrifice (CostAmount.Fixed 1) (Filter.Type.IsObject vid))]},
+          { CandidateCost.cost = (CandidateCost.cost candidate) {Cost.components = Cost.components (CandidateCost.cost candidate) <> [CostComponent.Sacrifice (Sacrifice.MkSacrifice (ObjectCount.Exactly (CostAmount.Fixed 1)) (Filter.Type.IsObject vid))]},
             CandidateCost.reductions = CandidateCost.reductions candidate <> [Maybe.fromMaybe (ManaCost.MkManaCost []) (Filter.manaCost (Projection.viewOfObject vid gs))],
             CandidateCost.instantSpeed = True
           }
@@ -656,7 +656,7 @@ candidateCostsGiven permitted pid name oid gs =
                     offer emerge (vid, n) =
                       CandidateCost.MkCandidateCost
                         (Just (Keyword.Type.Emerge emerge))
-                        (withAdditional (Emerge.cost emerge) {Cost.components = Cost.components (Emerge.cost emerge) <> [CostComponent.Sacrifice (Sacrifice.MkSacrifice (CostAmount.Fixed 1) (Filter.Type.IsObject vid))]})
+                        (withAdditional (Emerge.cost emerge) {Cost.components = Cost.components (Emerge.cost emerge) <> [CostComponent.Sacrifice (Sacrifice.MkSacrifice (ObjectCount.Exactly (CostAmount.Fixed 1)) (Filter.Type.IsObject vid))]})
                         [ManaCost.MkManaCost [ManaSymbol.Generic (Integer.toNaturalSaturating n)]]
                         False
                  in concatMap
@@ -930,7 +930,7 @@ candidateCostsGiven permitted pid name oid gs =
                                      -- CR 702.81a ADDS to the printed cost rather than
                                      -- replacing it, jump-start's shape below, and
                                      -- names a QUALITY where rule 702.133a names none.
-                                     printed {Cost.components = Cost.components printed <> [CostComponent.DiscardCards (DiscardCards.MkDiscardCards (CardCount.Exactly 1) (Filter.Type.HasCardType CardType.Land))]}
+                                     printed {Cost.components = Cost.components printed <> [CostComponent.DiscardCards (DiscardCards.MkDiscardCards (ObjectCount.Exactly (CostAmount.Fixed 1)) (Filter.Type.HasCardType CardType.Land))]}
                                  ]
                                else []
                            )
@@ -941,7 +941,7 @@ candidateCostsGiven permitted pid name oid gs =
                                      (Just Keyword.Type.JumpStart)
                                      -- CR 702.133a's cost names no quality -- "discard a
                                      -- card" -- so the criterion admits everything.
-                                     printed {Cost.components = Cost.components printed <> [CostComponent.DiscardCards (DiscardCards.MkDiscardCards (CardCount.Exactly 1) (Filter.Type.And []))]}
+                                     printed {Cost.components = Cost.components printed <> [CostComponent.DiscardCards (DiscardCards.MkDiscardCards (ObjectCount.Exactly (CostAmount.Fixed 1)) (Filter.Type.And []))]}
                                  ]
                                else []
                            )
@@ -1685,7 +1685,7 @@ traverseAmount f component = case component of
   -- The announcement fixes CR 701.67b's ceiling exactly as it fixes the {X}
   -- that licence scopes.
   CostComponent.Waterbend amount -> CostComponent.Waterbend <$> f amount
-  CostComponent.Sacrifice sacrifice -> (\amount -> CostComponent.Sacrifice sacrifice {Sacrifice.count = amount}) <$> f (Sacrifice.count sacrifice)
+  CostComponent.Sacrifice sacrifice -> (\count -> CostComponent.Sacrifice sacrifice {Sacrifice.count = count}) <$> traverseCount f (Sacrifice.count sacrifice)
   CostComponent.RemoveCounters remove -> (\amount -> CostComponent.RemoveCounters remove {CountersFromPermanents.count = amount}) <$> f (CountersFromPermanents.count remove)
   CostComponent.PayHalfLife _ -> pure component
   CostComponent.TapThis -> pure component
@@ -1696,7 +1696,7 @@ traverseAmount f component = case component of
   CostComponent.TapPermanents tap -> (\amount -> CostComponent.TapPermanents tap {TapPermanents.count = amount}) <$> f (TapPermanents.count tap)
   CostComponent.ReturnPermanents {} -> pure component
   CostComponent.ExilePermanents {} -> pure component
-  CostComponent.DiscardCards {} -> pure component
+  CostComponent.DiscardCards discard -> (\count -> CostComponent.DiscardCards discard {DiscardCards.count = count}) <$> traverseCount f (DiscardCards.count discard)
   CostComponent.DiscardThis _ -> pure component
   CostComponent.PutCardFromHandOntoBattlefield _ -> pure component
   CostComponent.AddLoyaltyToThis _ -> pure component
@@ -1745,6 +1745,12 @@ manaHasVariable :: Cost Keyword.Type.Keyword -> Bool
 manaHasVariable cost = case Cost.mana cost of
   Nothing -> False
   Just (ManaCost.MkManaCost symbols) -> elem ManaSymbol.Variable symbols
+
+-- `traverseAmount` into an ObjectCount: Every names no amount to announce.
+traverseCount :: (Applicative f) => (CostAmount.CostAmount -> f CostAmount.CostAmount) -> ObjectCount.ObjectCount -> f ObjectCount.ObjectCount
+traverseCount f count = case count of
+  ObjectCount.Exactly amount -> ObjectCount.Exactly <$> f amount
+  ObjectCount.Every -> pure ObjectCount.Every
 
 -- `substituteX`'s predicate half, read off the same traversal: a component this
 -- answers False for is one no announcement will ever substitute.
@@ -1827,13 +1833,14 @@ componentDemandGrowsWith slot component = case component of
   CostComponent.ReturnThis -> False
   -- CR 701.21a: one permanent per sacrifice, so an X past the matching
   -- permanents the payer controls refuses.
-  CostComponent.Sacrifice sacrifice -> Sacrifice.count sacrifice == announced
+  CostComponent.Sacrifice sacrifice -> Sacrifice.count sacrifice == ObjectCount.Exactly announced
   CostComponent.TapForTotalPower {} -> False
   -- One permanent per tap, Sacrifice's reason.
   CostComponent.TapPermanents tap -> TapPermanents.count tap == announced
   CostComponent.ReturnPermanents {} -> False
   CostComponent.ExilePermanents {} -> False
-  CostComponent.DiscardCards {} -> False
+  -- One card per discard out of a finite hand, Sacrifice's reason.
+  CostComponent.DiscardCards discard -> DiscardCards.count discard == ObjectCount.Exactly announced
   CostComponent.DiscardThis _ -> False
   CostComponent.PutCardFromHandOntoBattlefield _ -> False
   CostComponent.AddLoyaltyToThis _ -> False
@@ -2749,10 +2756,15 @@ claimOf slots pid oid component gs =
       itself = if canPayComponent slots pid oid component gs then Set.singleton oid else Set.empty
    in case component of
         -- CR 701.21a: the permanents this player controls that match the criterion.
-        CostComponent.Sacrifice (Sacrifice.MkSacrifice (CostAmount.Fixed n) criterion) ->
+        CostComponent.Sacrifice (Sacrifice.MkSacrifice (ObjectCount.Exactly (CostAmount.Fixed n)) criterion) ->
           claim (ClaimAxis.Removal Zone.Battlefield) (Set.fromList (Replacement.sacrificeCandidates (Just pid) slots pid (Just oid) criterion gs)) n
         -- Nothing until CR 601.2b fixes the count.
-        CostComponent.Sacrifice (Sacrifice.MkSacrifice (CostAmount.Announced _) _) -> Nothing
+        CostComponent.Sacrifice (Sacrifice.MkSacrifice (ObjectCount.Exactly (CostAmount.Announced _)) _) -> Nothing
+        -- Nothing, the whole-hand discard's reason below: every matching
+        -- permanent, none included, so it spends nothing another component
+        -- could run short of. A FENCE: Soulblast states no other component
+        -- drawing on the battlefield.
+        CostComponent.Sacrifice (Sacrifice.MkSacrifice ObjectCount.Every _) -> Nothing
         CostComponent.SacrificeThis -> claim (ClaimAxis.Removal Zone.Battlefield) itself 1
         -- The same battlefield pool SacrificeThis draws on -- a permanent returned to
         -- hand is as gone from the battlefield as one sacrificed.
@@ -2770,13 +2782,15 @@ claimOf slots pid oid component gs =
         -- states a non-empty mana part, so `repeatsOf` settles at 1 before any axis
         -- matters.
         CostComponent.ExileThis -> claim (ClaimAxis.Removal Zone.Battlefield) itself 1
-        CostComponent.DiscardCards (DiscardCards.MkDiscardCards (CardCount.Exactly n) criterion) ->
+        CostComponent.DiscardCards (DiscardCards.MkDiscardCards (ObjectCount.Exactly (CostAmount.Fixed n)) criterion) ->
           claim (ClaimAxis.Removal Zone.Hand) (Set.fromList (discardCandidates slots pid oid criterion gs)) n
+        -- Nothing until CR 601.2b fixes the count, Sacrifice's posture.
+        CostComponent.DiscardCards (DiscardCards.MkDiscardCards (ObjectCount.Exactly (CostAmount.Announced _)) _) -> Nothing
         -- Nothing: CR 701.9a's whole-hand discard is paid by whatever the hand
         -- holds, an empty one included, so it spends nothing another component
         -- could run short of. A FENCE: Slate of Ancestry states no other
         -- component drawing on the hand.
-        CostComponent.DiscardCards (DiscardCards.MkDiscardCards CardCount.Every _) -> Nothing
+        CostComponent.DiscardCards (DiscardCards.MkDiscardCards ObjectCount.Every _) -> Nothing
         CostComponent.DiscardThis _ -> claim (ClaimAxis.Removal Zone.Hand) itself 1
         -- The same hand pool the two arms above claim, and on the same axis: what the
         -- payment spends is a card leaving the hand, and the battlefield end adds a
@@ -3910,8 +3924,14 @@ canPayComponent slots pid oid component gs = case component of
   -- CR 701.21a: this player must control at least `n` matching permanents. This
   -- component ALONE, PayLife's caveat -- two Sacrifice components of one cost can
   -- each find the same permanent here, and `jointlyPayable` asks them together.
-  CostComponent.Sacrifice (Sacrifice.MkSacrifice amount criterion) -> payableAnnounced amount $ \n ->
-    Natural.length (Replacement.sacrificeCandidates (Just pid) slots pid (Just oid) criterion gs) >= n
+  --
+  -- Every matching permanent, Soulblast's "sacrifice all creatures you
+  -- control", is paid by however many there are, none included: the
+  -- whole-hand discard's reading below.
+  CostComponent.Sacrifice (Sacrifice.MkSacrifice count criterion) -> case count of
+    ObjectCount.Exactly amount -> payableAnnounced amount $ \n ->
+      Natural.length (Replacement.sacrificeCandidates (Just pid) slots pid (Just oid) criterion gs) >= n
+    ObjectCount.Every -> True
   -- CR 702.122a: payable iff SOME subset of the candidates reaches the
   -- threshold, decided without enumerating one -- the greatest total any subset
   -- can reach is the sum of the candidates' POSITIVE powers, since adding one of
@@ -3954,12 +3974,12 @@ canPayComponent slots pid oid component gs = case component of
   -- additional cost. Load-bearing for the OFFER, which Cast.castable measures
   -- while the card is still in hand -- without it a hand of "Cathartic Reunion
   -- plus one other card" would offer the Reunion on the strength of itself.
-  CostComponent.DiscardCards (DiscardCards.MkDiscardCards (CardCount.Exactly n) criterion) ->
+  CostComponent.DiscardCards (DiscardCards.MkDiscardCards (ObjectCount.Exactly amount) criterion) -> payableAnnounced amount $ \n ->
     Natural.length (discardCandidates slots pid oid criterion gs) >= n
   -- "Discard your hand" discards every card there is, so an empty hand pays it
   -- (CR 118.3 asks for no resource it lacks). data/scenarios/cost's "Slate of
   -- Ancestry's discard-your-hand cost is paid with an empty hand" proves it.
-  CostComponent.DiscardCards (DiscardCards.MkDiscardCards CardCount.Every _) -> True
+  CostComponent.DiscardCards (DiscardCards.MkDiscardCards ObjectCount.Every _) -> True
   -- CR 118.3: payable only if the hand holds a card the criterion admits. This
   -- is what keeps Hakbal of the Surging Soul's landless controller from being
   -- offered a cost they cannot pay -- CR 118.12's offer is gated on
@@ -4149,6 +4169,13 @@ paidAnnounced :: CostAmount.CostAmount -> (Natural -> Game Payment.Payment) -> G
 paidAnnounced amount pay' = case amount of
   CostAmount.Fixed n -> pay' n
   CostAmount.Announced _ -> pure Payment.Unpaid
+
+-- `paidAnnounced` over an ObjectCount: Every pays for `every`, the number of
+-- matching objects there are.
+paidCount :: ObjectCount.ObjectCount -> Natural -> (Natural -> Game Payment.Payment) -> Game Payment.Payment
+paidCount count every pay' = case count of
+  ObjectCount.Exactly amount -> paidAnnounced amount pay'
+  ObjectCount.Every -> pay' every
 
 -- CR 601.2c / 602.2b: what the announcement had bound by the time CR 601.2h pays
 -- -- the targets, and CR 601.2b's X -- read off the stack object `pay` is handed
@@ -6478,28 +6505,33 @@ payPayable perform moment paidFor slots pid oid component = case component of
   -- ExileCardsFromGraveyard's reason below. Parun.CostSpec's "CR 601.2h Phyrexian
   -- Tribute's two sacrifices grow Vengeful Townsfolk once" proves the event, and
   -- its Anafenza case the board.
-  CostComponent.Sacrifice (Sacrifice.MkSacrifice amount criterion) -> paidAnnounced amount $ \n -> do
-    gs <- State.get
-    let candidates = Replacement.sacrificeCandidates (Just pid) slots pid (Just oid) criterion gs
-        decider = Decide.deciderFor pid gs
-    chosen <-
-      if n == 0 || Natural.length candidates <= n
-        then pure (Set.fromList (List.genericTake n candidates))
-        else Game.choose (Prompt.ChooseSacrifices decider pid oid candidates n Seq.empty)
-    if Set.isSubsetOf chosen (Set.fromList candidates) && Natural.length chosen == n
-      then do
-        Event.sacrificeAll (fmap ((,) pid) (Set.toAscList chosen))
-        -- CR 608.2h: the permanents are gone by the time anything this cost paid
-        -- for resolves, so an effect that reads one ("the sacrificed creature's
-        -- power") needs a name for it. One of the components that bind a slot
-        -- -- TapPermanents and TapForTotalPower below, and the two exiling
-        -- components through `bindExiled`; every other returns bindsNothing.
-        --
-        -- Bound under the id it had on the battlefield, which is the id
-        -- Event.changeZone files its last known information under -- the graveyard
-        -- incarnation is a different object (CR 400.7) and carries none of it.
-        pure (Payment.Paid (Binding.paidObjects Binding.sacrificedPermanent (Set.map Recipient.ToObject chosen)))
-      else pure Payment.Unpaid
+  --
+  -- Every matching permanent counts the candidates there are, so the elision
+  -- above takes them all and asks nothing: CR 701.21a leaves no choice.
+  CostComponent.Sacrifice (Sacrifice.MkSacrifice count criterion) -> do
+    every <- State.gets (Natural.length . Replacement.sacrificeCandidates (Just pid) slots pid (Just oid) criterion)
+    paidCount count every $ \n -> do
+      gs <- State.get
+      let candidates = Replacement.sacrificeCandidates (Just pid) slots pid (Just oid) criterion gs
+          decider = Decide.deciderFor pid gs
+      chosen <-
+        if n == 0 || Natural.length candidates <= n
+          then pure (Set.fromList (List.genericTake n candidates))
+          else Game.choose (Prompt.ChooseSacrifices decider pid oid candidates n Seq.empty)
+      if Set.isSubsetOf chosen (Set.fromList candidates) && Natural.length chosen == n
+        then do
+          Event.sacrificeAll (fmap ((,) pid) (Set.toAscList chosen))
+          -- CR 608.2h: the permanents are gone by the time anything this cost paid
+          -- for resolves, so an effect that reads one ("the sacrificed creature's
+          -- power") needs a name for it. One of the components that bind a slot
+          -- -- TapPermanents and TapForTotalPower below, and the two exiling
+          -- components through `bindExiled`; every other returns bindsNothing.
+          --
+          -- Bound under the id it had on the battlefield, which is the id
+          -- Event.changeZone files its last known information under -- the graveyard
+          -- incarnation is a different object (CR 400.7) and carries none of it.
+          pure (Payment.Paid (Binding.paidObjects Binding.sacrificedPermanent (Set.map Recipient.ToObject chosen)))
+        else pure Payment.Unpaid
   -- CR 702.122a: the payer chooses WHICH permanents to tap and HOW MANY, so this
   -- is a prompt, and unlike Sacrifice above it is NEVER elided -- whether the
   -- answer is forced is a question about subsets rather than a count, and getting
@@ -6633,7 +6665,7 @@ payPayable perform moment paidFor slots pid oid component = case component of
   -- The discards are ONE event group, Sacrifice's reason; Parun.CostSpec's "CR
   -- 601.2h Cathartic Reunion's two discards fire Magmakin Artillerist once, for 2"
   -- proves it.
-  CostComponent.DiscardCards (DiscardCards.MkDiscardCards (CardCount.Exactly n) criterion) -> do
+  CostComponent.DiscardCards (DiscardCards.MkDiscardCards (ObjectCount.Exactly amount) criterion) -> paidAnnounced amount $ \n -> do
     gs <- State.get
     let held = discardCandidates slots pid oid criterion gs
         decider = Decide.deciderFor pid gs
@@ -6650,7 +6682,7 @@ payPayable perform moment paidFor slots pid oid component = case component of
   -- Every matching card, Slate of Ancestry's "Discard your hand": nothing is
   -- chosen, so nothing is asked (CR 701.9b's choice has one answer), and the
   -- cards go as ONE event group, the arm above's reason.
-  CostComponent.DiscardCards (DiscardCards.MkDiscardCards CardCount.Every criterion) -> do
+  CostComponent.DiscardCards (DiscardCards.MkDiscardCards ObjectCount.Every criterion) -> do
     gs <- State.get
     Event.simultaneously (Monad.mapM_ (Event.discard DiscardCause.Ordinary pid) (discardCandidates slots pid oid criterion gs))
     pure bindsNothing

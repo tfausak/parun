@@ -13,6 +13,7 @@ import qualified Parun.Codec.ControllerBecomesTarget as ControllerBecomesTarget
 import qualified Parun.Codec.CounterPlacement as CounterPlacement
 import qualified Parun.Codec.CreatureBecomesBlockedByAtLeast as CreatureBecomesBlockedByAtLeast
 import qualified Parun.Codec.CreatureExploits as CreatureExploits
+import qualified Parun.Codec.DamageKind as DamageKind
 import qualified Parun.Codec.DealsDamageToPlayer as DealsDamageToPlayer
 import qualified Parun.Codec.DieResult as DieResult
 import qualified Parun.Codec.Filter as Filter
@@ -67,7 +68,7 @@ codec =
           Arm.nullary "SelfDealsCombatDamageToPlayerOrBattle" TriggerCondition.SelfDealsCombatDamageToPlayerOrBattle,
           Arm.payload "DealsCombatDamage" ActingPermanent.codec TriggerCondition.DealsCombatDamage (\x -> case x of TriggerCondition.DealsCombatDamage y -> Just y; _ -> Nothing),
           Arm.payload "DealsDamageToPlayer" DealsDamageToPlayer.codec TriggerCondition.DealsDamageToPlayer (\x -> case x of TriggerCondition.DealsDamageToPlayer y -> Just y; _ -> Nothing),
-          Arm.nullary "SelfDealsDamageToCreature" TriggerCondition.SelfDealsDamageToCreature,
+          Arm.optionalPayload "SelfDealsDamageToCreature" DamageKind.codec TriggerCondition.SelfDealsDamageToCreature (\x -> case x of TriggerCondition.SelfDealsDamageToCreature y -> Just y; _ -> Nothing),
           Arm.payload "DealsDamage" ActingPermanent.codec TriggerCondition.DealsDamage (\x -> case x of TriggerCondition.DealsDamage y -> Just y; _ -> Nothing),
           Arm.payload "IsDealtDamage" ActingPermanent.codec TriggerCondition.IsDealtDamage (\x -> case x of TriggerCondition.IsDealtDamage y -> Just y; _ -> Nothing),
           Arm.payload "PlayerIsDealtDamage" PlayerRelation.codec TriggerCondition.PlayerIsDealtDamage (\x -> case x of TriggerCondition.PlayerIsDealtDamage y -> Just y; _ -> Nothing),

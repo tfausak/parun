@@ -1,0 +1,11 @@
+{
+  "description": "CR 603.4 / 104.3e Phage the Untouchable: when Phage enters, if you didn't cast it from your hand, you lose the game",
+  "note": "Alice's Zombify returns Phage from her graveyard to the battlefield, which is not casting it from her hand, so its trigger makes her lose. The companion scenario casts Phage from hand and nothing triggers.",
+  "board": {"active": "alice", "step": "PrecombatMain", "seats": [{"name": "alice", "battlefield": [{"card": "Swamp", "label": "s1"}, {"card": "Swamp", "label": "s2"}, {"card": "Swamp", "label": "s3"}, {"card": "Swamp", "label": "s4"}], "hand": [{"card": "Zombify", "label": "zombify"}], "graveyard": [{"card": "Phage the Untouchable", "label": "phage"}], "library": [{"card": "Island"}, {"card": "Island"}, {"card": "Island"}]}, {"name": "bob", "library": [{"card": "Island"}, {"card": "Island"}, {"card": "Island"}]}]},
+  "timeline": [
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "do": {"Cast": {"object": "$zombify", "targets": ["$phage"], "mana": ["$s1", "$s2", "$s3", "$s4"]}}}
+  ],
+  "final": [
+    {"View": {"of": "Result", "is": {"won": "bob"}}}
+  ]
+}

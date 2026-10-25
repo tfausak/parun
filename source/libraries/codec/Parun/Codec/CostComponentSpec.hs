@@ -7,7 +7,6 @@ import qualified Parun.JsonCodec.Codec as Codec
 import qualified Parun.JsonCodec.Common as Common
 import qualified Parun.Spec as Spec
 import qualified Parun.Types.Behold as Behold
-import qualified Parun.Types.CardCount as CardCount
 import qualified Parun.Types.CardType as CardType
 import qualified Parun.Types.CostAmount as CostAmount
 import qualified Parun.Types.CostComponent as CostComponent
@@ -24,6 +23,7 @@ import qualified Parun.Types.ExilePermanents as ExilePermanents
 import qualified Parun.Types.Filter as Filter
 import qualified Parun.Types.Gift as Gift
 import qualified Parun.Types.Keyword as Keyword
+import qualified Parun.Types.ObjectCount as ObjectCount
 import qualified Parun.Types.ReturnPermanents as ReturnPermanents
 import qualified Parun.Types.Rounding as Rounding
 import qualified Parun.Types.Sacrifice as Sacrifice
@@ -88,7 +88,7 @@ spec s = Spec.describe s "Parun.Codec.CostComponent" $ do
     Common.assertCodec
       s
       codec
-      (CostComponent.Sacrifice (Sacrifice.MkSacrifice (CostAmount.Fixed 2) (Filter.HasSubtype Subtype.Mountain)))
+      (CostComponent.Sacrifice (Sacrifice.MkSacrifice (ObjectCount.Exactly (CostAmount.Fixed 2)) (Filter.HasSubtype Subtype.Mountain)))
       " {\"type\":\"Sacrifice\",\"value\":{\"count\":{\"type\":\"Fixed\",\"value\":2},\"whichPermanents\":{\"type\":\"HasSubtype\",\"value\":{\"type\":\"Mountain\"}}}} "
   -- The THRESHOLD and the Filter ride the payload positionally, Sacrifice's
   -- shape -- but the Natural means something else here (CR 702.122a's total
@@ -126,8 +126,8 @@ spec s = Spec.describe s "Parun.Codec.CostComponent" $ do
     Common.assertCodec
       s
       codec
-      (CostComponent.DiscardCards (DiscardCards.MkDiscardCards (CardCount.Exactly 2) (Filter.And [])))
-      " {\"type\":\"DiscardCards\",\"value\":{\"count\":{\"type\":\"Exactly\",\"value\":2},\"whichCards\":{\"type\":\"And\",\"value\":[]}}} "
+      (CostComponent.DiscardCards (DiscardCards.MkDiscardCards (ObjectCount.Exactly (CostAmount.Fixed 2)) (Filter.And [])))
+      " {\"type\":\"DiscardCards\",\"value\":{\"count\":{\"type\":\"Fixed\",\"value\":2},\"whichCards\":{\"type\":\"And\",\"value\":[]}}} "
   Spec.it s "DiscardThis" $
     Common.assertCodec
       s
@@ -193,7 +193,7 @@ spec s = Spec.describe s "Parun.Codec.CostComponent" $ do
     Common.assertCodec
       s
       codec
-      (CostComponent.Sacrifice (Sacrifice.MkSacrifice (CostAmount.Announced (SlotName.MkSlotName (Text.pack "X"))) (Filter.HasCardType CardType.Creature)))
+      (CostComponent.Sacrifice (Sacrifice.MkSacrifice (ObjectCount.Exactly (CostAmount.Announced (SlotName.MkSlotName (Text.pack "X")))) (Filter.HasCardType CardType.Creature)))
       " {\"type\":\"Sacrifice\",\"value\":{\"count\":{\"type\":\"Announced\",\"value\":\"X\"},\"whichPermanents\":{\"type\":\"HasCardType\",\"value\":{\"type\":\"Creature\"}}}} "
   -- CR 118.12's counter-placing cost, CR 701.63a's endure.
   Spec.it s "PutPlusOneCountersOnThis" $

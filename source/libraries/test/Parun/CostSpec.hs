@@ -97,6 +97,7 @@ import qualified Parun.Types.ManaUnit as ManaUnit
 import qualified Parun.Types.ModeIndex as ModeIndex
 import qualified Parun.Types.Move as Move
 import qualified Parun.Types.Object as Object
+import qualified Parun.Types.ObjectCount as ObjectCount
 import qualified Parun.Types.ObjectId as ObjectId
 import qualified Parun.Types.OptionalDecision as OptionalDecision
 import qualified Parun.Types.Payment as Payment
@@ -316,9 +317,9 @@ doorSpec s registry =
     Spec.it s "CR 118.3 a Sacrifice component counts matching permanents this player controls" $ do
       mountain <- S.printingOf s registry "Mountain"
       let gs = S.landsInPlay mountain 2
-          two = CostComponent.Sacrifice (Sacrifice.MkSacrifice (CostAmount.Fixed 2) (Filter.Type.HasSubtype Subtype.Mountain))
-          three = CostComponent.Sacrifice (Sacrifice.MkSacrifice (CostAmount.Fixed 3) (Filter.Type.HasSubtype Subtype.Mountain))
-          islands = CostComponent.Sacrifice (Sacrifice.MkSacrifice (CostAmount.Fixed 1) (Filter.Type.HasSubtype Subtype.Island))
+          two = CostComponent.Sacrifice (Sacrifice.MkSacrifice (ObjectCount.Exactly (CostAmount.Fixed 2)) (Filter.Type.HasSubtype Subtype.Mountain))
+          three = CostComponent.Sacrifice (Sacrifice.MkSacrifice (ObjectCount.Exactly (CostAmount.Fixed 3)) (Filter.Type.HasSubtype Subtype.Mountain))
+          islands = CostComponent.Sacrifice (Sacrifice.MkSacrifice (ObjectCount.Exactly (CostAmount.Fixed 1)) (Filter.Type.HasSubtype Subtype.Island))
       Spec.assertBool s (Cost.canPayComponent Map.empty S.alice S.noSource two gs) "two Mountains pay for two"
       Spec.assertBool s (not (Cost.canPayComponent Map.empty S.alice S.noSource three gs)) "but not for three"
       Spec.assertBool s (not (Cost.canPayComponent Map.empty S.alice S.noSource islands gs)) "and not for an Island"
@@ -1286,7 +1287,7 @@ asmorFoodSpec s registry =
       let (asmorThree, _, _, three) = asmorFoodBoard asmorPrinting goldenEgg sphere childOfNight 3 0
           (asmorOne, _, _, one) = asmorFoodBoard asmorPrinting goldenEgg sphere childOfNight 1 2
           ability = theAbility asmorPrinting
-          component = CostComponent.Sacrifice (Sacrifice.MkSacrifice (CostAmount.Fixed 2) (Filter.Type.HasSubtype Subtype.Food))
+          component = CostComponent.Sacrifice (Sacrifice.MkSacrifice (ObjectCount.Exactly (CostAmount.Fixed 2)) (Filter.Type.HasSubtype Subtype.Food))
       Spec.assertEqWith s "the cost is two Foods and no mana at all" (ActivatedAbility.cost ability) (Cost.Type.MkCost (Just (ManaCost.MkManaCost [])) [component])
       Spec.assertEqWith s "both boards have an empty stack" (GameState.stack three, GameState.stack one) ([], [])
       Spec.assertEqWith s "and alice has priority on both" (GameState.priority three, GameState.priority one) (Just S.alice, Just S.alice)

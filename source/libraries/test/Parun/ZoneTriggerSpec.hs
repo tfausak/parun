@@ -52,7 +52,6 @@ import qualified Parun.Types.BlockProducer as BlockProducer
 import qualified Parun.Types.BlocksDeclared as BlocksDeclared
 import qualified Parun.Types.CandidateId as CandidateId
 import qualified Parun.Types.Card as Card
-import qualified Parun.Types.CardCount as CardCount
 import qualified Parun.Types.CardLeavesZone as CardLeavesZone
 import qualified Parun.Types.CardName as CardName
 import qualified Parun.Types.CardPutIntoGraveyard as CardPutIntoGraveyard
@@ -69,6 +68,7 @@ import qualified Parun.Types.Condition as Condition.Type
 import qualified Parun.Types.ControlChanged as ControlChanged
 import qualified Parun.Types.ControllerBecomesTarget as ControllerBecomesTarget
 import qualified Parun.Types.Cost as Cost.Type
+import qualified Parun.Types.CostAmount as CostAmount
 import qualified Parun.Types.CostComponent as CostComponent
 import qualified Parun.Types.CounterChange as CounterChange
 import qualified Parun.Types.CounterKind as CounterKind
@@ -113,6 +113,7 @@ import qualified Parun.Types.ManifestedDread as ManifestedDread
 import qualified Parun.Types.Mentored as Mentored
 import qualified Parun.Types.Moved as Moved
 import qualified Parun.Types.Object as Object
+import qualified Parun.Types.ObjectCount as ObjectCount
 import qualified Parun.Types.ObjectId as ObjectId
 import qualified Parun.Types.OptionalDecision as OptionalDecision
 import qualified Parun.Types.OwnedZone as OwnedZone
@@ -209,7 +210,7 @@ cyclingTriggerSpec s registry =
           gs = g1 {GameState.priority = Just S.alice}
           -- The same card, the same graveyard, one component over: a cost that
           -- discards a card of the player's choice rather than this one.
-          discarded = S.runPure S.identityAnswer gs (Cost.payComponent S.manaPerformer PaymentMoment.OutsideResolution Nothing Map.empty S.alice S.noSource (CostComponent.DiscardCards (DiscardCards.MkDiscardCards (CardCount.Exactly 1) (Filter.Type.And []))))
+          discarded = S.runPure S.identityAnswer gs (Cost.payComponent S.manaPerformer PaymentMoment.OutsideResolution Nothing Map.empty S.alice S.noSource (CostComponent.DiscardCards (DiscardCards.MkDiscardCards (ObjectCount.Exactly (CostAmount.Fixed 1)) (Filter.Type.And []))))
           after = S.runPure S.identityAnswer discarded Engine.settleForPriority
       Spec.assertEqWith s "the Aven really did reach the graveyard" (length (Game.zoneMembers Zone.Graveyard S.alice discarded)) 1
       Spec.assertEqWith s "nothing was put on the stack" (GameState.stack after) []
@@ -1834,8 +1835,9 @@ representativeEvents cond =
           noTable combatDamage
             NonEmpty.:| [noTable (GameEvent.DamageDealt (DamageEvent.MkDamageEvent departed (Recipient.ToPlayer S.bob) 3 False False False 0 Nothing Nothing mempty False DamageKind.Noncombat))]
         -- CR 120.3's other recipient, the bearer still the SOURCE. TWO of them for
-        -- the arm above's reason: this condition admits both damage kinds.
-        TriggerCondition.SelfDealsDamageToCreature ->
+        -- the arm above's reason: with no kind named this condition admits both
+        -- damage kinds, and the combat one is among them for the arm naming it.
+        TriggerCondition.SelfDealsDamageToCreature _ ->
           noTable (GameEvent.DamageDealt (DamageEvent.MkDamageEvent departed (Recipient.ToCreature arrived) 4 False False False 0 Nothing Nothing mempty False DamageKind.Noncombat))
             NonEmpty.:| [noTable (GameEvent.DamageDealt (DamageEvent.MkDamageEvent departed (Recipient.ToCreature arrived) 5 False False False 0 Nothing Nothing mempty False DamageKind.Combat))]
         -- TWO again, a creature and a player, one of each kind: this arm admits
@@ -2408,7 +2410,8 @@ everyTriggerCondition =
     TriggerCondition.DealsCombatDamage (ActingPermanent.Matching (Filter.Type.And [])),
     TriggerCondition.DealsDamageToPlayer (DealsDamageToPlayer.MkDealsDamageToPlayer ActingPermanent.Self PlayerRelation.AnyPlayer),
     TriggerCondition.DealsDamageToPlayer (DealsDamageToPlayer.MkDealsDamageToPlayer (ActingPermanent.Matching (Filter.Type.And [])) PlayerRelation.Opponent),
-    TriggerCondition.SelfDealsDamageToCreature,
+    TriggerCondition.SelfDealsDamageToCreature Nothing,
+    TriggerCondition.SelfDealsDamageToCreature (Just DamageKind.Combat),
     TriggerCondition.DealsDamage ActingPermanent.Self,
     TriggerCondition.DealsDamage (ActingPermanent.Matching (Filter.Type.HasAttached Filter.Type.IsSource)),
     TriggerCondition.IsDealtDamage ActingPermanent.Self,

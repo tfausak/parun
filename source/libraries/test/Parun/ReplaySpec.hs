@@ -75,6 +75,7 @@ import qualified Parun.Types.ModeSelection as ModeSelection
 import qualified Parun.Types.MoveSpread as MoveSpread
 import qualified Parun.Types.MulliganDecision as MulliganDecision
 import qualified Parun.Types.MulliganOffer as MulliganOffer
+import qualified Parun.Types.ObjectCount as ObjectCount
 import qualified Parun.Types.ObjectId as ObjectId
 import qualified Parun.Types.OptionalDecision as OptionalDecision
 import qualified Parun.Types.OutsideCard as OutsideCard
@@ -156,8 +157,8 @@ combatReplaySpec s =
       -- CR 601.2h: Jarad, Golgari Lich Lord's two halves, the printed cost whose
       -- payment order is the payer's.
       orderComponents =
-        [ CostComponent.Sacrifice (Sacrifice.MkSacrifice (CostAmount.Fixed 1) (Filter.Type.HasSubtype Subtype.Swamp)),
-          CostComponent.Sacrifice (Sacrifice.MkSacrifice (CostAmount.Fixed 1) (Filter.Type.HasSubtype Subtype.Forest))
+        [ CostComponent.Sacrifice (Sacrifice.MkSacrifice (ObjectCount.Exactly (CostAmount.Fixed 1)) (Filter.Type.HasSubtype Subtype.Swamp)),
+          CostComponent.Sacrifice (Sacrifice.MkSacrifice (ObjectCount.Exactly (CostAmount.Fixed 1)) (Filter.Type.HasSubtype Subtype.Forest))
         ]
    in Spec.describe s "CombatReplay" $ do
         Spec.it s "attackers round-trip through the transcript" $

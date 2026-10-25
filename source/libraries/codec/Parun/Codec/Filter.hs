@@ -3,6 +3,7 @@ module Parun.Codec.Filter where
 import qualified Data.Typeable as Typeable
 import qualified Parun.Codec.AbilityKind as AbilityKind
 import qualified Parun.Codec.Anchor as Anchor
+import qualified Parun.Codec.BlockRole as BlockRole
 import qualified Parun.Codec.BlockStatus as BlockStatus
 import qualified Parun.Codec.CardName as CardName
 import qualified Parun.Codec.CardType as CardType
@@ -161,7 +162,7 @@ codec keywordCodec =
       Arm.nullary "IsRingBearer" Filter.IsRingBearer,
       Arm.nullary "IsPaired" Filter.IsPaired,
       Arm.nullary "IsPairedWithSource" Filter.IsPairedWithSource,
-      Arm.nullary "IsBlockedBySource" Filter.IsBlockedBySource,
+      Arm.payload "BlockPartnerOfSource" BlockRole.codec Filter.BlockPartnerOfSource (\x -> case x of Filter.BlockPartnerOfSource y -> Just y; _ -> Nothing),
       Arm.payload "HasDesignation" Designation.codec Filter.HasDesignation (\x -> case x of Filter.HasDesignation y -> Just y; _ -> Nothing),
       Arm.payload "HasCounters" (CounterKind.codec keywordCodec) Filter.HasCounters (\x -> case x of Filter.HasCounters y -> Just y; _ -> Nothing),
       Arm.nullary "HasCountersOfAnyKind" Filter.HasCountersOfAnyKind,
@@ -281,7 +282,7 @@ tagOf x = case x of
   Filter.IsRingBearer {} -> "IsRingBearer"
   Filter.IsPaired {} -> "IsPaired"
   Filter.IsPairedWithSource {} -> "IsPairedWithSource"
-  Filter.IsBlockedBySource {} -> "IsBlockedBySource"
+  Filter.BlockPartnerOfSource {} -> "BlockPartnerOfSource"
   Filter.HasDesignation {} -> "HasDesignation"
   Filter.HasCounters {} -> "HasCounters"
   Filter.HasCountersOfAnyKind {} -> "HasCountersOfAnyKind"

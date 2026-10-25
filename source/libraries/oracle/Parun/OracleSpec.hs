@@ -25,7 +25,6 @@ import qualified Parun.Types.Arithmetic as Arithmetic
 import qualified Parun.Types.BeginningStep as BeginningStep
 import qualified Parun.Types.CantBeBlockedBy as CantBeBlockedBy
 import qualified Parun.Types.Card as Card
-import qualified Parun.Types.CardCount as CardCount
 import qualified Parun.Types.CardName as CardName
 import qualified Parun.Types.CardType as CardType
 import qualified Parun.Types.CharacteristicPT as CharacteristicPT
@@ -96,6 +95,7 @@ import qualified Parun.Types.Modification as Modification
 import qualified Parun.Types.ModifyPowerToughness as ModifyPowerToughness
 import qualified Parun.Types.ModifyTarget as ModifyTarget
 import qualified Parun.Types.MoveToZone as MoveToZone
+import qualified Parun.Types.ObjectCount as ObjectCount
 import qualified Parun.Types.ObjectRef as ObjectRef
 import qualified Parun.Types.Optionality as Optionality
 import qualified Parun.Types.OrElse as OrElse
@@ -686,7 +686,7 @@ spec s = Spec.describe s "Parun.Oracle" $ do
     Spec.assertEq s (Just (Text.pack "Counter target spell unless its controller pays {1} for each card in your graveyard.")) (Oracle.render disdain)
     let seer = triggered TriggerCondition.SelfDies [(clause [draw (PlayerRef.Relative PlayerRelation.You) 1]) {Clause.payGate = Just (gate PayBranch.IfPaid (PlayerRef.InSlot you) (mana [ManaSymbol.Generic 1, ManaSymbol.OfType (ManaType.Colored Color.Blue)]))}] []
     Spec.assertEq s [[Text.pack "When Spark dies, you may pay {1}{U}. If you do, draw a card."]] (Oracle.abilities (withFace (\f -> (typed [CardType.Creature] [] f) {Face.triggeredAbilities = [seer]})))
-    let mountain = Cost.MkCost (Just (ManaCost.MkManaCost [])) [CostComponent.Sacrifice (Sacrifice.MkSacrifice (CostAmount.Fixed 1) (Filter.HasSubtype Subtype.Mountain))]
+    let mountain = Cost.MkCost (Just (ManaCost.MkManaCost [])) [CostComponent.Sacrifice (Sacrifice.MkSacrifice (ObjectCount.Exactly (CostAmount.Fixed 1)) (Filter.HasSubtype Subtype.Mountain))]
         upkeep = TriggerCondition.StepBegins (StepBegins.MkStepBegins (Phase.Beginning BeginningStep.Upkeep) Nothing TurnScope.ControllersTurn)
         lithophage = triggered upkeep [(clause [sacrifice]) {Clause.payGate = Just (gate PayBranch.IfNotPaid (PlayerRef.InSlot you) mountain)}] []
     Spec.assertEq s (Just (Text.pack "At the beginning of your upkeep, sacrifice Spark unless you sacrifice a Mountain.")) (Oracle.render (withFace (\f -> f {Face.triggeredAbilities = [lithophage]})))
@@ -695,9 +695,9 @@ spec s = Spec.describe s "Parun.Oracle" $ do
     Spec.assertEq s (Just (Text.pack "{B}: Spark gets +1/+1 until end of turn unless any player pays {2}.")) (Oracle.render (withFace (\f -> f {Face.activatedAbilities = [unlessAny]})))
     let blight = triggered TriggerCondition.SelfEnters [(clause [draw (PlayerRef.Relative PlayerRelation.You) 1]) {Clause.payGate = Just (gate PayBranch.IfPaid (PlayerRef.InSlot you) (Cost.MkCost (Just (ManaCost.MkManaCost [])) [CostComponent.Blight (CostAmount.Fixed 1)]))}] []
     Spec.assertEq s (Just (Text.pack "When Spark enters, you may blight 1. If you do, draw a card.")) (Oracle.render (withFace (\f -> (typed [CardType.Enchantment] [] f) {Face.triggeredAbilities = [blight]})))
-    let goblin = activated (Cost.MkCost (Just (ManaCost.MkManaCost [])) [CostComponent.DiscardCards (DiscardCards.MkDiscardCards (CardCount.Exactly 2) (Filter.HasCardType CardType.Creature))]) (draw (PlayerRef.Relative PlayerRelation.You) 1)
+    let goblin = activated (Cost.MkCost (Just (ManaCost.MkManaCost [])) [CostComponent.DiscardCards (DiscardCards.MkDiscardCards (ObjectCount.Exactly (CostAmount.Fixed 2)) (Filter.HasCardType CardType.Creature))]) (draw (PlayerRef.Relative PlayerRelation.You) 1)
     Spec.assertEq s (Just (Text.pack "Discard two creature cards: Draw a card.")) (Oracle.render (withFace (\f -> f {Face.activatedAbilities = [goblin]})))
-    let slate = activated (Cost.MkCost (Just (ManaCost.MkManaCost [])) [CostComponent.DiscardCards (DiscardCards.MkDiscardCards CardCount.Every (Filter.And []))]) (draw (PlayerRef.Relative PlayerRelation.You) 1)
+    let slate = activated (Cost.MkCost (Just (ManaCost.MkManaCost [])) [CostComponent.DiscardCards (DiscardCards.MkDiscardCards ObjectCount.Every (Filter.And []))]) (draw (PlayerRef.Relative PlayerRelation.You) 1)
     Spec.assertEq s (Just (Text.pack "Discard your hand: Draw a card.")) (Oracle.render (withFace (\f -> f {Face.activatedAbilities = [slate]})))
 
   -- CR 608.2c / 608.2d: a clause hanging off the one before it reads with
@@ -748,7 +748,7 @@ spec s = Spec.describe s "Parun.Oracle" $ do
     let cloak = spell [clause [modify (ObjectRef.InSlot target) Duration.UntilEndOfTurn (pt 2 0)], clause [damage [(target, 2)]]] creature
     Spec.assertEq s (Just (Text.pack "Target creature gets +2/+0 until end of turn. Spark deals 2 damage to it.")) (Oracle.render cloak)
     Spec.assertBool s (Oracle.says cloak spark (Text.pack "Target creature gets +2/+0 until end of turn. Spark deals 2 damage to that creature.")) "that creature unsaid"
-    let silvar = activated (Cost.MkCost (Just (ManaCost.MkManaCost [])) [CostComponent.Sacrifice (Sacrifice.MkSacrifice (CostAmount.Fixed 1) (Filter.HasSubtype Subtype.Human))]) (counters CounterKind.PlusOnePlusOne 1 (ObjectRef.InSlot self))
+    let silvar = activated (Cost.MkCost (Just (ManaCost.MkManaCost [])) [CostComponent.Sacrifice (Sacrifice.MkSacrifice (ObjectCount.Exactly (CostAmount.Fixed 1)) (Filter.HasSubtype Subtype.Human))]) (counters CounterKind.PlusOnePlusOne 1 (ObjectRef.InSlot self))
         indestructible = silvar {ActivatedAbility.modal = payload [clause [counters CounterKind.PlusOnePlusOne 1 (ObjectRef.InSlot self)], clause [modify (ObjectRef.InSlot self) Duration.UntilEndOfTurn (Modification.GainKeyword Keyword.Indestructible)]] []}
     Spec.assertEq s (Just (Text.pack "Sacrifice a Human: Put a +1/+1 counter on Spark. It gains indestructible until end of turn.")) (Oracle.render (withFace (\f -> f {Face.activatedAbilities = [indestructible]})))
     let mine = ObjectRef.EachMatching (Filter.And [Filter.HasCardType CardType.Creature, Filter.ControlledBy PlayerRelation.You])
