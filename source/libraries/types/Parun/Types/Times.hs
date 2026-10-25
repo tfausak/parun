@@ -5,9 +5,9 @@ import qualified Numeric.Natural as Natural
 -- | The payload of Parun.Types.Arithmetic's Times arm: a printed literal times a
 -- quantity, which is how "you gain 3 life for each creature attacking you"
 -- reads. CR 107.1 is why no rounding word rides here as it does on
--- Parun.Types.Divided: a whole number of a whole number is a whole number.
+-- Parun.Types.Quotient: a whole number of a whole number is a whole number.
 --
--- PARAMETRIC in the quantity for Parun.Types.Divided's reason: the inner value is
+-- PARAMETRIC in the quantity for Parun.Types.Quotient's reason: the inner value is
 -- a whole Quantity and Quantity names this record.
 --
 -- The factor is a Natural and never an Integer, because the minus sign a card

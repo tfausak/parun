@@ -52,7 +52,7 @@
               "type": "ModifyPowerToughness",
               "value": {
                 "power": {
-                  "type": "Divided",
+                  "type": "Quotient",
                   "value": {
                     "divisor": {
                       "type": "Literal",
@@ -103,7 +103,7 @@
                   }
                 },
                 "toughness": {
-                  "type": "Divided",
+                  "type": "Quotient",
                   "value": {
                     "divisor": {
                       "type": "Literal",

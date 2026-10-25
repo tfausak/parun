@@ -65,8 +65,10 @@
                     {
                       "type": "Tap",
                       "value": {
-                        "type": "InSlot",
-                        "value": "thatCopiedObject"
+                        "ref": {
+                          "type": "InSlot",
+                          "value": "thatCopiedObject"
+                        }
                       }
                     },
                     {

@@ -93,8 +93,10 @@
                       {
                         "type": "Tap",
                         "value": {
-                          "type": "InSlot",
-                          "value": "thatHost"
+                          "ref": {
+                            "type": "InSlot",
+                            "value": "thatHost"
+                          }
                         }
                       }
                     ]

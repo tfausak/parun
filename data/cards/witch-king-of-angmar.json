@@ -48,8 +48,10 @@
                       {
                         "type": "Tap",
                         "value": {
-                          "type": "InSlot",
-                          "value": "self"
+                          "ref": {
+                            "type": "InSlot",
+                            "value": "self"
+                          }
                         }
                       }
                     ]

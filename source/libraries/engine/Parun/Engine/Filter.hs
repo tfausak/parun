@@ -1159,7 +1159,7 @@ data Context = MkContext
     --
     -- Nothing wherever the atom cannot appear, which is everywhere else.
     recipient :: Maybe PlayerId.PlayerId,
-    -- CR 601.2d: what each divided slot's announced division gave the
+    -- CR 601.2d / 608.2d: what each divided slot's division gave the
     -- recipient the surrounding effect is CURRENTLY BEING APPLIED TO, for
     -- Quantity.Share -- Forked Lightning's part of its 4 damage for each target.
     -- Filled by Parun.Engine.Resolve.Effect's DealDamage and PreventNextDamage

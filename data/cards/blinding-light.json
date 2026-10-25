@@ -27,26 +27,28 @@
                   {
                     "type": "Tap",
                     "value": {
-                      "type": "EachMatching",
-                      "value": {
-                        "type": "And",
-                        "value": [
-                          {
-                            "type": "HasCardType",
-                            "value": {
-                              "type": "Creature"
-                            }
-                          },
-                          {
-                            "type": "Not",
-                            "value": {
-                              "type": "HasColor",
+                      "ref": {
+                        "type": "EachMatching",
+                        "value": {
+                          "type": "And",
+                          "value": [
+                            {
+                              "type": "HasCardType",
                               "value": {
-                                "type": "White"
+                                "type": "Creature"
+                              }
+                            },
+                            {
+                              "type": "Not",
+                              "value": {
+                                "type": "HasColor",
+                                "value": {
+                                  "type": "White"
+                                }
                               }
                             }
-                          }
-                        ]
+                          ]
+                        }
                       }
                     }
                   }

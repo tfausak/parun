@@ -9,7 +9,7 @@ import qualified Parun.JsonCodec.Fields as Fields
 import qualified Parun.Types.BattlefieldCandidate as BattlefieldCandidate
 
 -- | The codec for what rides beside the controller is a PARAMETER, since the
--- type is parametric in it -- the same shape Parun.Codec.Divided uses for its
+-- type is parametric in it -- the same shape Parun.Codec.Quotient uses for its
 -- quantity.
 codec :: (Typeable.Typeable a) => Codec.Codec a -> Codec.Codec (BattlefieldCandidate.BattlefieldCandidate a)
 codec inner = Fields.object $ do

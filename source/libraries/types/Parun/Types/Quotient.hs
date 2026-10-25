@@ -1,8 +1,8 @@
-module Parun.Types.Divided where
+module Parun.Types.Quotient where
 
 import qualified Parun.Types.Rounding as Rounding
 
--- | The payload of Parun.Types.Arithmetic's Divided arm: CR 107.1a's quotient,
+-- | The payload of Parun.Types.Arithmetic's Quotient arm: CR 107.1a's quotient,
 -- rounded the way the card prints -- a half is a divisor of 2 (Malignus), and
 -- Fireball's "X damage divided evenly, rounded down, among any number of
 -- targets" divides by a count of them.
@@ -13,7 +13,7 @@ import qualified Parun.Types.Rounding as Rounding
 -- The rounding is the CARD's word and never an engine rule -- Aspect of Wolf
 -- prints both directions in one sentence -- which is why it rides the payload.
 -- See Parun.Types.Rounding.
-data Divided quantity = MkDivided
+data Quotient quantity = MkQuotient
   { rounding :: Rounding.Rounding,
     -- | The dividend.
     quantity :: quantity,

@@ -14,7 +14,7 @@ import qualified Parun.JsonCodec.Fields as Fields
 import qualified Parun.Types.ContinuousEffect as ContinuousEffect
 
 -- | The card codec is a PARAMETER, the shape Parun.Codec.Face and
--- Parun.Codec.Divided take, because the type is parametric in the card for
+-- Parun.Codec.Quotient take, because the type is parametric in the card for
 -- Parun.Types.StaticAbility's reason. The modification is instantiated at a
 -- GRANTED ability, the wider of the two widths, since StaticAbility.lingers hands
 -- a static ability's own modification over here.

@@ -80,6 +80,7 @@ import qualified Parun.Types.DestructionR as DestructionR
 import qualified Parun.Types.DestructionRewrite as DestructionRewrite
 import qualified Parun.Types.DiceReading as DiceReading
 import qualified Parun.Types.Discard as Discard
+import qualified Parun.Types.Divide as Divide
 import qualified Parun.Types.DoesNotUntapNext as DoesNotUntapNext
 import qualified Parun.Types.Draw as Draw
 import qualified Parun.Types.Duration as Duration
@@ -199,6 +200,7 @@ import qualified Parun.Types.SpeedDecrease as SpeedDecrease
 import qualified Parun.Types.StickerKind as StickerKind
 import qualified Parun.Types.Subtype as Subtype
 import qualified Parun.Types.TakeExtraTurn as TakeExtraTurn
+import qualified Parun.Types.Tap as Tap
 import qualified Parun.Types.TapState as TapState
 import qualified Parun.Types.TextWord as TextWord
 import qualified Parun.Types.TopOfLibrary as TopOfLibrary
@@ -1375,14 +1377,14 @@ spec s = Spec.describe s "Parun.Codec.Effect" $ do
       fromJson
       (Effect.PutCounters (PutCounters.MkPutCounters CounterKind.PlusOnePlusOne (Quantity.Literal 1) (ObjectRef.EachMatching (Filter.HasDesignation Designation.Renowned))))
       " {\"type\":\"PutCounters\",\"value\":{\"kind\":{\"type\":\"PlusOnePlusOne\"},\"quantity\":{\"type\":\"Literal\",\"value\":1},\"ref\":{\"type\":\"EachMatching\",\"value\":{\"type\":\"HasDesignation\",\"value\":{\"type\":\"Renowned\"}}}}} "
-  -- CR 608.2d: PutCounters' payload under its own tag, the total divided.
-  Spec.it s "DistributeCounters" $
+  -- CR 608.2d: a division bound for a later instruction, under its own tag.
+  Spec.it s "Divide" $
     Common.assertJsonCodec
       s
       toJson
       fromJson
-      (Effect.DistributeCounters (PutCounters.MkPutCounters CounterKind.Stun (Quantity.Literal 3) (ObjectRef.EachMatching Filter.IsTapped)))
-      " {\"type\":\"DistributeCounters\",\"value\":{\"kind\":{\"type\":\"Stun\"},\"quantity\":{\"type\":\"Literal\",\"value\":3},\"ref\":{\"type\":\"EachMatching\",\"value\":{\"type\":\"IsTapped\"}}}} "
+      (Effect.Divide (Divide.MkDivide (Quantity.Literal 3) (ObjectRef.InSlot (SlotName.MkSlotName (Text.pack "wolves"))) (PlayerRef.Relative PlayerRelation.You) (SlotName.MkSlotName (Text.pack "split"))))
+      " {\"type\":\"Divide\",\"value\":{\"quantity\":{\"type\":\"Literal\",\"value\":3},\"among\":{\"type\":\"InSlot\",\"value\":\"wolves\"},\"slot\":\"split\"}} "
   -- CR 122.5: a third tag, not the other two in sequence -- the move is atomic
   -- where the pair is not, so a card file must be able to say which it printed.
   Spec.it s "MoveCounters" $
@@ -1470,11 +1472,11 @@ spec s = Spec.describe s "Parun.Codec.Effect" $ do
       s
       toJson
       fromJson
-      (Effect.Tap (ObjectRef.InSlot (SlotName.MkSlotName (Text.pack "target"))))
-      " {\"type\":\"Tap\",\"value\":{\"type\":\"InSlot\",\"value\":\"target\"}} "
+      (Effect.Tap (Tap.plain (ObjectRef.InSlot (SlotName.MkSlotName (Text.pack "target")))))
+      " {\"type\":\"Tap\",\"value\":{\"ref\":{\"type\":\"InSlot\",\"value\":\"target\"}}} "
     Spec.assertBool
       s
-      ( toJson (Effect.Tap (ObjectRef.InSlot (SlotName.MkSlotName (Text.pack "target"))))
+      ( toJson (Effect.Tap (Tap.plain (ObjectRef.InSlot (SlotName.MkSlotName (Text.pack "target")))))
           /= toJson (Effect.Untap (ObjectRef.InSlot (SlotName.MkSlotName (Text.pack "target"))))
       )
       "Tap and Untap of the same slot encode differently"
@@ -1512,7 +1514,7 @@ spec s = Spec.describe s "Parun.Codec.Effect" $ do
     Spec.assertBool
       s
       ( toJson (Effect.Detain (ObjectRef.InSlot (SlotName.MkSlotName (Text.pack "target"))))
-          /= toJson (Effect.Tap (ObjectRef.InSlot (SlotName.MkSlotName (Text.pack "target"))))
+          /= toJson (Effect.Tap (Tap.plain (ObjectRef.InSlot (SlotName.MkSlotName (Text.pack "target")))))
       )
       "Detain and Tap of the same slot encode differently"
   -- CR 701.66a, the one rule 701 arm carrying an ObjectRef: the count rides
@@ -1620,7 +1622,7 @@ spec s = Spec.describe s "Parun.Codec.Effect" $ do
     Spec.assertBool
       s
       ( toJson (Effect.DoesNotUntapNext (DoesNotUntapNext.MkDoesNotUntapNext (ObjectRef.InSlot (SlotName.MkSlotName (Text.pack "target"))) 1))
-          /= toJson (Effect.Tap (ObjectRef.InSlot (SlotName.MkSlotName (Text.pack "target"))))
+          /= toJson (Effect.Tap (Tap.plain (ObjectRef.InSlot (SlotName.MkSlotName (Text.pack "target")))))
       )
       "DoesNotUntapNext and Tap of the same slot encode differently"
   -- CR 701.27a. Both ObjectRef arms, since the pool prints one of each shape's

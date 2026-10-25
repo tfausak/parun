@@ -272,7 +272,7 @@ import qualified Parun.Codec.DiscardCauseSpec
 import qualified Parun.Codec.DiscardSpec
 import qualified Parun.Codec.DiscardedSpec
 import qualified Parun.Codec.DistinctOfSpec
-import qualified Parun.Codec.DividedSpec
+import qualified Parun.Codec.DivideSpec
 import qualified Parun.Codec.DoesNotUntapNextSpec
 import qualified Parun.Codec.DrawCountRSpec
 import qualified Parun.Codec.DrawCountRewriteSpec
@@ -565,6 +565,7 @@ import qualified Parun.Codec.PutCountersFromSpec
 import qualified Parun.Codec.PutCountersSpec
 import qualified Parun.Codec.QuantitySpec
 import qualified Parun.Codec.QuestionSpec
+import qualified Parun.Codec.QuotientSpec
 import qualified Parun.Codec.RangeOfInfluenceSpec
 import qualified Parun.Codec.ReadinessSpec
 import qualified Parun.Codec.RecipientSpec
@@ -664,6 +665,7 @@ import qualified Parun.Codec.TakingSpec
 import qualified Parun.Codec.TapForManaSpec
 import qualified Parun.Codec.TapForTotalPowerSpec
 import qualified Parun.Codec.TapPermanentsSpec
+import qualified Parun.Codec.TapSpec
 import qualified Parun.Codec.TapStateSpec
 import qualified Parun.Codec.TappedForManaSpec
 import qualified Parun.Codec.TappedIsSpec
@@ -1175,6 +1177,7 @@ spec s registry = do
   Parun.Codec.DesignateSpec.spec s
   Parun.Codec.DesignationSpec.spec s
   Parun.Codec.DestroySpec.spec s
+  Parun.Codec.DivideSpec.spec s
   Parun.Codec.DestructionRewriteSpec.spec s
   Parun.Codec.DestructionRSpec.spec s
   Parun.Codec.DevotionSpec.spec s
@@ -1280,7 +1283,7 @@ spec s registry = do
   Parun.Codec.GrantPlayFromExileSpec.spec s
   Parun.Codec.GraveyardOrderSpec.spec s
   Parun.Codec.HalfUnlockedSpec.spec s
-  Parun.Codec.DividedSpec.spec s
+  Parun.Codec.QuotientSpec.spec s
   Parun.Codec.HandActionSpec.spec s
   Parun.Codec.HybridSpec.spec s
   Parun.Codec.IfTakenSpec.spec s
@@ -1583,6 +1586,7 @@ spec s registry = do
   Parun.Codec.SuspendSpec.spec s
   Parun.Codec.TakeExtraTurnSpec.spec s
   Parun.Codec.TakingSpec.spec s
+  Parun.Codec.TapSpec.spec s
   Parun.Codec.TapForManaSpec.spec s
   Parun.Codec.TapForTotalPowerSpec.spec s
   Parun.Codec.TappedForManaSpec.spec s

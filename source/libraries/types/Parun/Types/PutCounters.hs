@@ -5,9 +5,10 @@ import qualified Parun.Types.Keyword as Keyword
 import qualified Parun.Types.ObjectRef as ObjectRef
 import qualified Parun.Types.Quantity as Quantity
 
--- | The payload of Parun.Types.Effect's PutCounters arm (#1305), and of its
--- DistributeCounters arm, where `quantity` is the total divided among the
--- permanents `ref` names rather than the count each one gets (CR 608.2d).
+-- | The payload of Parun.Types.Effect's PutCounters arm (#1305). The
+-- `quantity` is read per permanent, so a division's part (Quantity.Share) is
+-- each one's own: Crashing Wave's "distribute three stun counters" is an
+-- Effect.Divide and then this (CR 608.2d).
 --
 -- An ObjectRef rather than a bare slot, so that Renegade Krasis' "each other
 -- creature you control with a +1/+1 counter on it" can be written: CR 115.10a

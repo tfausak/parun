@@ -171,7 +171,7 @@ import qualified Parun.Types.DieResult as DieResult
 import qualified Parun.Types.DieRollR as DieRollR
 import qualified Parun.Types.Discard as Discard
 import qualified Parun.Types.DiscardCards as DiscardCards
-import qualified Parun.Types.Divided as Divided
+import qualified Parun.Types.Divide as Divide
 import qualified Parun.Types.DoesNotUntapNext as DoesNotUntapNext
 import qualified Parun.Types.Draw as Draw
 import qualified Parun.Types.DrawCountR as DrawCountR
@@ -336,6 +336,7 @@ import qualified Parun.Types.PutCounters as PutCounters
 import qualified Parun.Types.PutCountersFrom as PutCountersFrom
 import qualified Parun.Types.PutSticker as PutSticker
 import qualified Parun.Types.Quantity as Quantity
+import qualified Parun.Types.Quotient as Quotient
 import qualified Parun.Types.RandomCardInGraveyard as RandomCardInGraveyard
 import qualified Parun.Types.RandomCardInHand as RandomCardInHand
 import qualified Parun.Types.RandomCardInLibrary as RandomCardInLibrary
@@ -385,6 +386,7 @@ import qualified Parun.Types.StaticAbility as StaticAbility
 import qualified Parun.Types.StepBegins as StepBegins
 import qualified Parun.Types.Suspend as Suspend
 import qualified Parun.Types.TakeExtraTurn as TakeExtraTurn
+import qualified Parun.Types.Tap as Tap
 import qualified Parun.Types.TapForMana as TapForMana
 import qualified Parun.Types.TapForTotalPower as TapForTotalPower
 import qualified Parun.Types.TapPermanents as TapPermanents
@@ -701,7 +703,7 @@ anyNumberMatchingNames asking x = case x of
 arithmeticNames :: (Monoid r) => Asking r -> (quantity -> r) -> Arithmetic.Arithmetic quantity -> r
 arithmeticNames asking onQuantity x = case x of
   Arithmetic.Plus plus -> plusNames asking onQuantity plus
-  Arithmetic.Divided divided -> dividedNames asking onQuantity divided
+  Arithmetic.Quotient quotient -> quotientNames asking onQuantity quotient
   Arithmetic.Times times -> timesNames asking onQuantity times
   Arithmetic.Negate quantity -> onQuantity quantity
 
@@ -1249,6 +1251,10 @@ discardNames asking x = case x of
   Discard.These theseDiscard -> theseDiscardNames asking theseDiscard
   Discard.AnyNumber anyNumberDiscard -> anyNumberDiscardNames asking anyNumberDiscard
 
+divideNames :: (Monoid r) => Asking r -> Divide.Divide -> r
+divideNames asking x = case x of
+  Divide.MkDivide quantity among chooser slot -> quantityNames asking quantity <> objectRefNames asking among <> playerRefNames asking chooser <> slotNames asking slot
+
 discardCardsNames :: (Monoid r) => Asking r -> DiscardCards.DiscardCards keyword -> r
 discardCardsNames asking x = case x of
   DiscardCards.MkDiscardCards _count whichCards -> filterNames asking whichCards
@@ -1395,7 +1401,7 @@ effectNames asking onCard onAbility x = case x of
   Effect.RedirectDamage redirectDamage -> redirectDamageNames asking redirectDamage
   Effect.Counter counter -> counterNames asking counter
   Effect.PutCounters putCounters -> putCountersNames asking putCounters
-  Effect.DistributeCounters putCounters -> putCountersNames asking putCounters
+  Effect.Divide divide -> divideNames asking divide
   Effect.RemoveCounters removeCounters -> removeCountersNames asking removeCounters
   Effect.RemoveCountersAmong removeCountersAmong -> removeCountersAmongNames asking removeCountersAmong
   Effect.MoveCounters moveCounters -> moveCountersNames asking moveCounters
@@ -1404,7 +1410,7 @@ effectNames asking onCard onAbility x = case x of
   Effect.RemovePlayerCounters removal -> removePlayerCountersNames asking removal
   Effect.PayAnyEnergy slotName -> slotNames asking slotName
   Effect.ChooseNumber chooseNumber -> chooseNumberNames asking chooseNumber
-  Effect.Tap objectRef -> objectRefNames asking objectRef
+  Effect.Tap tap -> tapNames asking tap
   Effect.Untap objectRef -> objectRefNames asking objectRef
   Effect.Detain objectRef -> objectRefNames asking objectRef
   Effect.Goad objectRef -> objectRefNames asking objectRef
@@ -1755,9 +1761,9 @@ grantedAbilityNames asking onCard x =
         GrantedAbility.SelfAlternativeCost alternativeCost -> alternativeCostNames own alternativeCost
         GrantedAbility.SelfSpendManaAsThough _spendManaAsThough -> mempty
 
-dividedNames :: (Monoid r) => Asking r -> (quantity -> r) -> Divided.Divided quantity -> r
-dividedNames _asking onQuantity x = case x of
-  Divided.MkDivided _rounding quantity divisor -> onQuantity quantity <> onQuantity divisor
+quotientNames :: (Monoid r) => Asking r -> (quantity -> r) -> Quotient.Quotient quantity -> r
+quotientNames _asking onQuantity x = case x of
+  Quotient.MkQuotient _rounding quantity divisor -> onQuantity quantity <> onQuantity divisor
 
 handActionNames :: (Monoid r) => Asking r -> (card -> r) -> HandAction.HandAction card -> r
 handActionNames asking onCard x = case x of
@@ -2822,6 +2828,10 @@ suspendNames asking onKeyword x = case x of
 takeExtraTurnNames :: (Monoid r) => Asking r -> TakeExtraTurn.TakeExtraTurn -> r
 takeExtraTurnNames asking x = case x of
   TakeExtraTurn.MkTakeExtraTurn player _skips count -> playerRefNames asking player <> quantityNames asking count
+
+tapNames :: (Monoid r) => Asking r -> Tap.Tap -> r
+tapNames asking x = case x of
+  Tap.MkTap ref tapped -> objectRefNames asking ref <> foldMap (slotNames asking) tapped
 
 tapForTotalPowerNames :: (Monoid r) => Asking r -> TapForTotalPower.TapForTotalPower keyword -> r
 tapForTotalPowerNames asking x = case x of

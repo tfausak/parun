@@ -33,7 +33,6 @@ import qualified Parun.Types.CompletedDungeon as CompletedDungeon
 import qualified Parun.Types.ControlClock as ControlClock
 import qualified Parun.Types.Count as Count.Type
 import qualified Parun.Types.Devotion as Devotion
-import qualified Parun.Types.Divided as Divided
 import qualified Parun.Types.ExiledPile as ExiledPile
 import qualified Parun.Types.Face as Face
 import qualified Parun.Types.Filter as Filter.Type
@@ -62,6 +61,7 @@ import qualified Parun.Types.Plus as Plus
 import qualified Parun.Types.PowerToughnessSticker as PowerToughnessSticker
 import Parun.Types.Quantity (Quantity)
 import qualified Parun.Types.Quantity as Quantity
+import qualified Parun.Types.Quotient as Quotient
 import qualified Parun.Types.Rounding as Rounding
 import Parun.Types.SlotName (SlotName)
 import qualified Parun.Types.SpellWasCast as SpellWasCast
@@ -1201,7 +1201,7 @@ divide rounding n d
 calculate :: Arithmetic.Arithmetic Integer -> Integer
 calculate arithmetic = case arithmetic of
   Arithmetic.Plus (Plus.MkPlus a b) -> a + b
-  Arithmetic.Divided (Divided.MkDivided rounding a d) -> divide rounding a d
+  Arithmetic.Quotient (Quotient.MkQuotient rounding a d) -> divide rounding a d
   Arithmetic.Times (Times.MkTimes factor a) -> toInteger factor * a
   Arithmetic.Negate a -> negate a
 
@@ -1214,7 +1214,7 @@ calculate arithmetic = case arithmetic of
 -- not the sum. Every Parun.Types.Arithmetic calculation descends for that one
 -- reason -- but only Plus's descent changes an answer on its own. Half of CR
 -- 208.2a's substituted 0 is 0 whichever way it rounds, so Malignus, whose whole
--- CDA is a Divided, reads 0 with no opponents either way; a multiple of that 0 is
+-- CDA is a Quotient, reads 0 with no opponents either way; a multiple of that 0 is
 -- 0 as well, and no printed characteristic-defining P/T contains a Negate at
 -- all. Those three descents are consistency rather than a card's behaviour -- a
 -- Times wrapping a Plus would differ, and no printed box holds one.

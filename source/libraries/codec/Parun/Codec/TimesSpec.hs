@@ -9,7 +9,7 @@ import qualified Parun.Types.Measure as Measure
 import qualified Parun.Types.Quantity as Quantity
 import qualified Parun.Types.Times as Times
 
--- | Instantiated at 'Quantity.Quantity', Parun.Codec.DividedSpec's shape and for
+-- | Instantiated at 'Quantity.Quantity', Parun.Codec.QuotientSpec's shape and for
 -- its reason: 'Parun.Codec.Quantity' passes its own recursive codec in.
 codec :: Codec.Codec (Times.Times Quantity.Quantity)
 codec = Times.codec Quantity.codec

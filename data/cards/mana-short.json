@@ -27,21 +27,23 @@
                   {
                     "type": "Tap",
                     "value": {
-                      "type": "EachMatching",
-                      "value": {
-                        "type": "And",
-                        "value": [
-                          {
-                            "type": "HasCardType",
-                            "value": {
-                              "type": "Land"
+                      "ref": {
+                        "type": "EachMatching",
+                        "value": {
+                          "type": "And",
+                          "value": [
+                            {
+                              "type": "HasCardType",
+                              "value": {
+                                "type": "Land"
+                              }
+                            },
+                            {
+                              "type": "ControlledByBound",
+                              "value": "target"
                             }
-                          },
-                          {
-                            "type": "ControlledByBound",
-                            "value": "target"
-                          }
-                        ]
+                          ]
+                        }
                       }
                     }
                   },

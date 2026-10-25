@@ -86,8 +86,9 @@ data Binding = MkBinding
     -- (Parun.Types.VotePlayers). Nothing for every other slot.
     votes :: Maybe (Map.Map PlayerId.PlayerId Natural.Natural),
     -- | CR 601.2d: the division announced among this target slot's targets,
-    -- each at least one; CR 115.7f keeps it through a change of targets.
-    -- Nothing for an undivided slot.
+    -- each at least one; CR 115.7f keeps it through a change of targets. Also
+    -- CR 608.2d's, among the `objects` an Effect.Divide chose. Nothing for an
+    -- undivided slot.
     division :: Maybe (Map.Map Recipient.Recipient Natural.Natural)
   }
   deriving (Eq, Ord, Show)

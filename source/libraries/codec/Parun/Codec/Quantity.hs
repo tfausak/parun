@@ -9,7 +9,6 @@ import qualified Parun.Codec.Count as Count
 import qualified Parun.Codec.CounterKind as CounterKind
 import qualified Parun.Codec.Designation as Designation
 import qualified Parun.Codec.Devotion as Devotion
-import qualified Parun.Codec.Divided as Divided
 import qualified Parun.Codec.InZone as InZone
 import qualified Parun.Codec.Keyword as Keyword
 import qualified Parun.Codec.KeywordDesignator as KeywordDesignator
@@ -22,6 +21,7 @@ import qualified Parun.Codec.PlayerRef as PlayerRef
 import qualified Parun.Codec.PlayersDealtDamage as PlayersDealtDamage
 import qualified Parun.Codec.Plus as Plus
 import qualified Parun.Codec.ProductionTag as ProductionTag
+import qualified Parun.Codec.Quotient as Quotient
 import qualified Parun.Codec.SlotName as SlotName
 import qualified Parun.Codec.Times as Times
 import qualified Parun.Codec.VotesReceived as VotesReceived
@@ -36,7 +36,7 @@ import qualified Parun.Types.Quantity as Quantity
 -- dispatching type, which is this one.
 --
 -- RECURSIVE, and directly so: @Negate@ names
--- 'codec' itself, and @Plus@, @Divided@, @AgainstSlot@, @AgainstExiledPile@ and @Count@ each pass it to a payload codec that is
+-- 'codec' itself, and @Plus@, @Quotient@, @AgainstSlot@, @AgainstExiledPile@ and @Count@ each pass it to a payload codec that is
 -- parametric in the quantity for exactly that reason. That ties the same knot
 -- Parun.Codec.Filter already ties at the value level, and
 -- Parun.JsonSchema.Define.define breaks it at the schema level by registering the
@@ -67,7 +67,7 @@ codec =
       Arm.payload "Plus" (Plus.codec codec) (Quantity.Arithmetic . Arithmetic.Plus) (\x -> case x of Quantity.Arithmetic (Arithmetic.Plus y) -> Just y; _ -> Nothing),
       -- CR 107.1a's rounding, the dividend and the divisor: the direction is the
       -- card's word and the operands are the values it applies to.
-      Arm.payload "Divided" (Divided.codec codec) (Quantity.Arithmetic . Arithmetic.Divided) (\x -> case x of Quantity.Arithmetic (Arithmetic.Divided y) -> Just y; _ -> Nothing),
+      Arm.payload "Quotient" (Quotient.codec codec) (Quantity.Arithmetic . Arithmetic.Quotient) (\x -> case x of Quantity.Arithmetic (Arithmetic.Quotient y) -> Just y; _ -> Nothing),
       -- CR 107.1: the factor first, then what it multiplies.
       Arm.payload "Times" (Times.codec codec) (Quantity.Arithmetic . Arithmetic.Times) (\x -> case x of Quantity.Arithmetic (Arithmetic.Times y) -> Just y; _ -> Nothing),
       -- CR 107.1b's negative game value: one whole Quantity on the wire, since a
@@ -250,7 +250,7 @@ tagOf x = case x of
   Quantity.Star {} -> "Star"
   Quantity.Arithmetic a -> case a of
     Arithmetic.Plus {} -> "Plus"
-    Arithmetic.Divided {} -> "Divided"
+    Arithmetic.Quotient {} -> "Quotient"
     Arithmetic.Times {} -> "Times"
     Arithmetic.Negate {} -> "Negate"
   Quantity.Count {} -> "Count"

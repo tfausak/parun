@@ -65,7 +65,7 @@
                         }
                       },
                       "quantity": {
-                        "type": "Divided",
+                        "type": "Quotient",
                         "value": {
                           "divisor": {
                             "type": "Literal",
