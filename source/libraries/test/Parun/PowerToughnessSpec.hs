@@ -66,7 +66,6 @@ import qualified Parun.Types.Face as Face
 import qualified Parun.Types.Filter as Filter.Type
 import qualified Parun.Types.GameEvent as GameEvent
 import qualified Parun.Types.GameState as GameState
-import qualified Parun.Types.Halved as Halved
 import qualified Parun.Types.InZone as InZone
 import qualified Parun.Types.Keyword as Keyword
 import qualified Parun.Types.LifeChange as LifeChange
@@ -86,6 +85,7 @@ import qualified Parun.Types.Printing as Printing
 import qualified Parun.Types.ProjectedCharacteristics as PC
 import qualified Parun.Types.Prompt as Prompt
 import qualified Parun.Types.Quantity as Quantity.Type
+import qualified Parun.Types.Quotient as Quotient
 import qualified Parun.Types.Recipient as Recipient
 import qualified Parun.Types.Rounding as Rounding
 import qualified Parun.Types.Scope as Scope
@@ -1193,8 +1193,8 @@ malignusSpec s registry = Spec.describe s "Malignus" $ do
     let (malignusId, gs) = malignusBoard malignus
         halfTheHighest =
           Quantity.Type.Arithmetic
-            ( Arithmetic.Halved
-                ( Halved.MkHalved
+            ( Arithmetic.Quotient
+                ( Quotient.MkQuotient
                     Rounding.Up
                     ( Quantity.Type.Count
                         ( Count.Type.MkCount
@@ -1203,6 +1203,7 @@ malignusSpec s registry = Spec.describe s "Malignus" $ do
                             (Aggregation.Greatest (Quantity.Type.LifeTotal PlayerRef.Candidate))
                         )
                     )
+                    (Quantity.Type.Literal 2)
                 )
             )
     Spec.assertEqWith s "both boxes are the same quantity" (PC.characteristicPT (Projection.baseCharacteristics malignusId gs)) (Just (CharacteristicPT.MkCharacteristicPT halfTheHighest halfTheHighest))

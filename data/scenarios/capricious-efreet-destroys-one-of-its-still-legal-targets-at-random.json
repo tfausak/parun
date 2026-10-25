@@ -1,0 +1,41 @@
+{
+  "description": "CR 608.2b whole card: Capricious Efreet destroys one of its targets at random, drawn only from those still legal",
+  "note": "Alice targets her Grizzly Bears and bob's Barkhide Troll and Serra Angel. Bob answers with the Troll's hexproof, so the draw is between the Bears and the Angel: naming the Troll is refused, and the Angel, not the head of the offer, is destroyed. Bob's Craw Wurm is not a target. The control scenario draws the Troll when it stays legal.",
+  "board": {
+    "active": "alice",
+    "step": "Untap",
+    "seats": [
+      {
+        "name": "alice",
+        "library": [{ "card": "Island" }, { "card": "Island" }],
+        "battlefield": [
+          { "card": "Capricious Efreet", "label": "efreet" },
+          { "card": "Grizzly Bears", "label": "a-bears" }
+        ]
+      },
+      {
+        "name": "bob",
+        "library": [{ "card": "Island" }, { "card": "Island" }],
+        "battlefield": [
+          { "card": "Forest", "label": "forest" },
+          { "card": "Barkhide Troll", "label": "troll", "counters": [{ "key": { "type": "PlusOnePlusOne" }, "value": 1 }] },
+          { "card": "Serra Angel", "label": "b-angel" },
+          { "card": "Craw Wurm", "label": "b-wurm" }
+        ]
+      }
+    ]
+  },
+  "timeline": [
+    { "turn": 1, "step": "Upkeep", "player": "alice", "do": { "ChooseTargets": { "theirs": ["$troll", "$b-angel"], "yours": ["$a-bears"] } } },
+    { "turn": 1, "step": "Upkeep", "player": "alice", "do": "Pass" },
+    { "turn": 1, "step": "Upkeep", "player": "bob", "do": { "Activate": { "object": "$troll", "ability": 0, "mana": ["$forest"] } } },
+    { "turn": 1, "step": "Upkeep", "player": "alice", "do": "Pass" },
+    { "turn": 1, "step": "Upkeep", "player": "alice", "do": "Pass" },
+    { "turn": 1, "step": "Upkeep", "player": "alice", "refuse": { "Answer": { "prompt": "RandomObject", "with": "$troll" } } },
+    { "turn": 1, "step": "Upkeep", "player": "alice", "do": { "Answer": { "prompt": "RandomObject", "with": "$b-angel" } } },
+    { "turn": 1, "step": "DrawStep", "player": "alice", "check": { "Count": { "player": "bob", "zone": "Graveyard", "card": "Serra Angel", "count": 1 } } },
+    { "turn": 1, "step": "DrawStep", "player": "alice", "check": { "Count": { "player": "bob", "zone": "Battlefield", "card": "Barkhide Troll", "count": 1 } } },
+    { "turn": 1, "step": "DrawStep", "player": "alice", "check": { "Count": { "player": "alice", "zone": "Battlefield", "card": "Grizzly Bears", "count": 1 } } },
+    { "turn": 1, "step": "DrawStep", "player": "alice", "check": { "Count": { "player": "bob", "zone": "Battlefield", "card": "Craw Wurm", "count": 1 } } }
+  ]
+}

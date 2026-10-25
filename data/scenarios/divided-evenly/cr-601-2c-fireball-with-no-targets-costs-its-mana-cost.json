@@ -1,0 +1,42 @@
+{
+  "description": "CR 601.2c Fireball may be cast with no targets, costing its mana cost and dealing nothing",
+  "note": "Fireball's ruling: zero targets is legal whatever X is. There is no target beyond the first, so X=2 costs {2}{R}, alice's three Mountains with nothing left floating, and nothing is dealt.",
+  "board": {
+    "active": "alice",
+    "step": "PrecombatMain",
+    "seats": [
+      {
+        "name": "alice",
+        "battlefield": [
+          { "card": "Mountain", "label": "m1" },
+          { "card": "Mountain", "label": "m2" },
+          { "card": "Mountain", "label": "m3" }
+        ],
+        "hand": [{ "card": "Fireball", "label": "fireball" }]
+      },
+      { "name": "bob" }
+    ]
+  },
+  "timeline": [
+    {
+      "turn": 1,
+      "step": "PrecombatMain",
+      "player": "alice",
+      "do": {
+        "Cast": {
+          "object": "$fireball",
+          "targets": [],
+          "x": 2,
+          "mana": ["$m1", "$m2", "$m3"]
+        }
+      }
+    },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "check": { "View": { "of": "ManaPool", "player": "alice", "is": [] } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "do": "Pass" },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "check": { "Life": { "player": "bob", "life": 20 } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "check": { "Life": { "player": "alice", "life": 20 } } }
+  ],
+  "final": [
+    { "Tapped": { "object": "$m3", "tapped": true } }
+  ]
+}

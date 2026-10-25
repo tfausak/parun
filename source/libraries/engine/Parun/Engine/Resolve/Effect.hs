@@ -951,6 +951,12 @@ askingObjects resolving source controller legal chosen ref = case ref of
   ObjectRef.RandomCardInHand random -> randomCardsInHand resolving source controller legal random
   ObjectRef.RandomCardInGraveyard random -> randomCardsInGraveyard resolving source controller legal random
   ObjectRef.RandomCardInLibrary random -> randomCardsInLibrary resolving source controller legal random
+  -- Capricious Efreet's "one of them": the pool read or asked first, then one
+  -- drawn from it. The pool's InSlot reads `legal`, so a target CR 608.2b made
+  -- illegal is not among them.
+  ObjectRef.AtRandom inner -> do
+    pool <- askingObjects resolving source controller legal chosen inner
+    Maybe.maybeToList <$> Game.drawAmong Prompt.RandomObject pool
   -- Tovolar's "any number of Human Werewolves you control", read off a board CR
   -- 702.145c has already turned him over on.
   ObjectRef.ChosenPermanents choice -> chosenPermanents AnyNumberOf.Permanents legal resolving controller source choice
@@ -1340,6 +1346,7 @@ objectRefRecipients legal resolving controller source gs ref = case ref of
   ObjectRef.RandomCardInHand _ -> []
   ObjectRef.RandomCardInGraveyard _ -> []
   ObjectRef.RandomCardInLibrary _ -> []
+  ObjectRef.AtRandom _ -> []
   ObjectRef.ChosenPermanents _ -> []
   -- A read, so the sweep answers it.
   ObjectRef.AttachedToBound _ -> fmap Recipient.ToObject (objectRefObjects legal resolving controller source gs ref)
@@ -1819,7 +1826,7 @@ offerCastOnce runSubgame context named caster optionality verb retake offer = do
                 -- Cost.plusComponents, the funnel Cast.payableCostAt measures
                 -- through. Parun.InvestigateSpec's "CR 118.8c an additional cost
                 -- another effect applies excuses the cast too" proves it.
-                let excused = any (Cost.statesHiddenQuality . Cost.plusComponents (Cost.spellAdjustments Set.empty caster oid proposed) . CandidateCost.cost) candidates
+                let excused = any (Cost.statesHiddenQuality . Cost.plusComponents (Cost.spellAdjustments Map.empty caster oid proposed) . CandidateCost.cost) candidates
                  in Just (oid, name, announced, excused)
               else Nothing
       -- EVERY object the reference names, each contributing one entry per
@@ -5313,13 +5320,14 @@ applyOneEffect runSubgame resolving source controller legal chosen effect = case
         -- Not a player recipient or an illegal slot (CR 608.2b): no-op.
         _ -> gs
   Effect.Destroy (Destroy.MkDestroy ref regenerability mSlot mBuried mPermanents) -> do
-    gs <- State.get
     -- CR 701.8: destroy them through the single funnel -- indestructible (CR
     -- 702.12b) and regeneration (CR 701.19a) are Event.destroy's to decide, and
     -- the card's own CR 701.19c rider rides along. ONE batch, not one call per
     -- victim (CR 608.2f). An illegal slot (CR 608.2b), a non-object recipient, or
-    -- a set that matched nothing all arrive here as the empty list.
-    destroyed <- Event.destroyReturning regenerability (objectRefObjects legal resolving controller source gs ref)
+    -- a set that matched nothing all arrive here as the empty list. Through
+    -- askingObjects, so Capricious Efreet's "one of them at random" is drawn.
+    victims <- askingObjects resolving source controller legal chosen ref
+    destroyed <- Event.destroyReturning regenerability victims
     -- CR 701.8b: "destroyed this way" is what the funnel DESTROYED, never what
     -- the sweep named. Bound onto this effect's SOURCE so a later effect of the
     -- same resolution reads it as Quantity.InSlot, through live GameState rather

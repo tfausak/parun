@@ -574,6 +574,8 @@ objectRefSlots ref = joinTwo (joinSlots (fmap playerRefSlots (objectRefPlayerRef
   -- RandomCardInHand's read one hidden zone over: the seat is reported where
   -- that arm's is, and the COUNT is TopOfLibrary's read.
   ObjectRef.RandomCardInLibrary (RandomCardInLibrary.MkRandomCardInLibrary _ _ count) -> quantitySlots count
+  -- The pool's own reads.
+  ObjectRef.AtRandom inner -> objectRefSlots inner
   -- EachMatching's answer: the candidates come off the battlefield, so only the
   -- Filter reads a slot of its own. The CHOOSER's slots are the generic
   -- playerRefSlots fold this case is joined into, ChosenCardFromAmong's route
@@ -640,6 +642,7 @@ objectRefQuantities ref = case ref of
   -- How many cards a seek names -- the Gates' printed one. The arm above's
   -- regression fence, for its reason.
   ObjectRef.RandomCardInLibrary (RandomCardInLibrary.MkRandomCardInLibrary _ _ count) -> [count]
+  ObjectRef.AtRandom inner -> objectRefQuantities inner
   -- At most how many permanents are chosen -- Teferi, Hero of Dominaria's
   -- printed two.
   ObjectRef.ChosenPermanents choice -> Foldable.toList (HowMany.quantity (ChosenPermanents.count choice))
@@ -693,6 +696,7 @@ objectRefPlayerRefs ref = case ref of
   ObjectRef.RandomCardInGraveyard (RandomCardInGraveyard.MkRandomCardInGraveyard _ _ _) -> []
   -- RandomCardInHand's answer: the one seat whose library is reached.
   ObjectRef.RandomCardInLibrary (RandomCardInLibrary.MkRandomCardInLibrary player _ _) -> [player]
+  ObjectRef.AtRandom inner -> objectRefPlayerRefs inner
   -- The seat that picks off the battlefield -- Wormfang Crab's opponent, and
   -- by default CR 608.2c's resolving controller. Pinned as the arm above is.
   ObjectRef.ChosenPermanents choice -> [ChosenPermanents.chooser choice]
@@ -3267,6 +3271,7 @@ objectRefObjects legal resolving controller source gs ref = case ref of
   ObjectRef.RandomCardInHand _ -> []
   ObjectRef.RandomCardInGraveyard _ -> []
   ObjectRef.RandomCardInLibrary _ -> []
+  ObjectRef.AtRandom _ -> []
 
 -- The CARDS in one player's library, top first (CR 401.2): a token shuffled in
 -- is there until CR 704.5d removes it (CR 111.7), and is not a card.

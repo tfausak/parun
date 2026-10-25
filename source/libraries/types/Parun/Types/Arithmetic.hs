@@ -1,8 +1,8 @@
 module Parun.Types.Arithmetic where
 
 import qualified Data.Traversable as Traversable
-import qualified Parun.Types.Halved as Halved
 import qualified Parun.Types.Plus as Plus
+import qualified Parun.Types.Quotient as Quotient
 import qualified Parun.Types.Times as Times
 
 -- | CR 107.1's calculations over a number, parametric in it for
@@ -12,9 +12,9 @@ import qualified Parun.Types.Times as Times
 data Arithmetic quantity
   = -- | CR 208.2: composition, so a printed 1+* needs no constructor of its own.
     Plus (Plus.Plus quantity)
-  | -- | CR 107.1a: half the inner quantity, rounded the way the card prints
-    -- (Parun.Types.Rounding).
-    Halved (Halved.Halved quantity)
+  | -- | CR 107.1a: one quantity divided by another, rounded the way the card
+    -- prints; see Parun.Types.Quotient.
+    Quotient (Quotient.Quotient quantity)
   | -- | CR 107.1: the payload's factor times the inner quantity, which is the
     -- "N for each" a card prints; see Parun.Types.Times.
     Times (Times.Times quantity)
@@ -33,6 +33,6 @@ instance Foldable Arithmetic where
 instance Traversable Arithmetic where
   traverse f arithmetic = case arithmetic of
     Plus (Plus.MkPlus left right) -> fmap Plus (Plus.MkPlus <$> f left <*> f right)
-    Halved (Halved.MkHalved rounding inner) -> fmap (Halved . Halved.MkHalved rounding) (f inner)
+    Quotient (Quotient.MkQuotient rounding inner divisor) -> fmap Quotient (Quotient.MkQuotient rounding <$> f inner <*> f divisor)
     Times (Times.MkTimes factor inner) -> fmap (Times . Times.MkTimes factor) (f inner)
     Negate inner -> fmap Negate (f inner)

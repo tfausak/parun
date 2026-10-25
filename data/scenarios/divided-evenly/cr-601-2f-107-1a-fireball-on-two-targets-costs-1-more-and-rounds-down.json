@@ -1,0 +1,51 @@
+{
+  "description": "CR 601.2f / 107.1a Fireball at X=7 on two targets costs {1} more and deals each 3",
+  "note": "Two targets cost one generic more than the mana cost, so alice's nine Mountains pay {7}{R} plus {1} and leave nothing floating. Seven divided evenly between two is 3.5, rounded down to 3: the Wurm (toughness 4) survives with 3 damage, where rounding up would have killed it.",
+  "board": {
+    "active": "alice",
+    "step": "PrecombatMain",
+    "seats": [
+      {
+        "name": "alice",
+        "battlefield": [
+          { "card": "Mountain", "label": "m1" },
+          { "card": "Mountain", "label": "m2" },
+          { "card": "Mountain", "label": "m3" },
+          { "card": "Mountain", "label": "m4" },
+          { "card": "Mountain", "label": "m5" },
+          { "card": "Mountain", "label": "m6" },
+          { "card": "Mountain", "label": "m7" },
+          { "card": "Mountain", "label": "m8" },
+          { "card": "Mountain", "label": "m9" }
+        ],
+        "hand": [{ "card": "Fireball", "label": "fireball" }]
+      },
+      {
+        "name": "bob",
+        "battlefield": [{ "card": "Craw Wurm", "label": "wurm" }]
+      }
+    ]
+  },
+  "timeline": [
+    {
+      "turn": 1,
+      "step": "PrecombatMain",
+      "player": "alice",
+      "do": {
+        "Cast": {
+          "object": "$fireball",
+          "targets": ["$bob", "$wurm"],
+          "x": 7,
+          "mana": ["$m1", "$m2", "$m3", "$m4", "$m5", "$m6", "$m7", "$m8", "$m9"]
+        }
+      }
+    },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "check": { "View": { "of": "ManaPool", "player": "alice", "is": [] } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "do": "Pass" },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "check": { "Life": { "player": "bob", "life": 17 } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "check": { "Damage": { "object": "$wurm", "damage": 3 } } }
+  ],
+  "final": [
+    { "Tapped": { "object": "$m9", "tapped": true } }
+  ]
+}
