@@ -1,0 +1,18 @@
+{
+  "description": "CR 303.4f / 608.2c: Warp World puts every player's artifacts, creatures and lands onto the battlefield before any player's enchantments, so the active player's Aura can enchant a creature another player just put onto the battlefield",
+  "note": "Alice owns only Pacifism, on bob's Hill Giant; bob owns only the Giant. Both libraries start empty, so each player reveals exactly what they shuffled in. Alice is the active player: a per-player order would put her Pacifism onto the battlefield before bob's Giant arrives, and one move for creatures and enchantments together would give it no host (CR 608.2f), so in either reading it would go to the bottom of her library.",
+  "board": {"active": "alice", "step": "PrecombatMain", "seats": [
+    {"name": "alice", "manaPool": "RRRRRRRR", "hand": [{"card": "Warp World", "label": "warp"}], "battlefield": [{"card": "Pacifism", "label": "pacifism", "attached": "giant"}]},
+    {"name": "bob", "battlefield": [{"card": "Hill Giant", "label": "giant"}]}
+  ]},
+  "timeline": [
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "do": {"Cast": {"object": "$warp"}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "do": "Pass"},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "do": {"Answer": {"prompt": "Shuffle", "with": ["Pacifism"]}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "do": {"Answer": {"prompt": "Shuffle", "with": ["Hill Giant"]}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "check": {"View": {"of": "AttachedTo", "object": "Pacifism", "is": "Hill Giant"}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "check": {"Count": {"player": "alice", "zone": "Battlefield", "card": "Pacifism", "count": 1}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "check": {"Count": {"player": "bob", "zone": "Battlefield", "card": "Hill Giant", "count": 1}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "check": {"Count": {"player": "alice", "zone": "Library", "card": "Pacifism", "count": 0}}}
+  ]
+}

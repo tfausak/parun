@@ -1,0 +1,21 @@
+{
+  "description": "Warp World's 2009-10-01 rulings: a token counts towards the permanents a player shuffled in but is passed over when that player reveals cards, each player reveals their own count, and a revealed card not put onto the battlefield goes to the bottom",
+  "note": "Alice shuffles Grizzly Bears, Forest and a Goblin Piker token over the Hill Giant in her library, and the shuffle leaves the token second from the top. She reveals three cards: Bears, Forest and the Giant. Counting only cards would reveal two and leave the Giant behind, and revealing the token as one of the three would too. Bob shuffles his one Mountain in under a Lightning Bolt and reveals only the Bolt, which goes to the bottom of his library; a shared count would put the Mountain and Swamp onto the battlefield too.",
+  "board": {"active": "alice", "step": "PrecombatMain", "seats": [
+    {"name": "alice", "manaPool": "RRRRRRRR", "hand": [{"card": "Warp World", "label": "warp"}], "battlefield": [{"card": "Grizzly Bears"}, {"card": "Forest"}, {"card": "Goblin Piker", "token": true}], "library": [{"card": "Hill Giant"}]},
+    {"name": "bob", "battlefield": [{"card": "Mountain"}], "library": [{"card": "Lightning Bolt"}, {"card": "Swamp"}]}
+  ]},
+  "timeline": [
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "do": {"Cast": {"object": "$warp", "mana": [null]}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "do": "Pass"},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "do": {"Answer": {"prompt": "Shuffle", "with": ["Grizzly Bears", "Goblin Piker", "Forest", "Hill Giant"]}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "do": {"Answer": {"prompt": "Shuffle", "with": ["Lightning Bolt", "Mountain", "Swamp"]}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "do": {"OrderTimestamps": ["Grizzly Bears", "Forest", "Hill Giant"]}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "check": {"Count": {"player": "alice", "zone": "Battlefield", "card": "Hill Giant", "count": 1}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "check": {"Count": {"player": "alice", "zone": "Battlefield", "card": "Grizzly Bears", "count": 1}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "check": {"Count": {"player": "alice", "zone": "Battlefield", "card": "Forest", "count": 1}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "check": {"Count": {"player": "alice", "zone": "Battlefield", "card": "Goblin Piker", "count": 0}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "check": {"View": {"of": "Zone", "player": "bob", "zone": "Library", "is": ["Mountain", "Swamp", "Lightning Bolt"]}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "check": {"Count": {"player": "bob", "zone": "Battlefield", "card": "Mountain", "count": 0}}}
+  ]
+}

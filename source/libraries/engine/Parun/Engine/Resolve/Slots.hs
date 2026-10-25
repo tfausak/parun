@@ -3157,17 +3157,22 @@ objectRefObjects legal resolving controller source gs ref = case ref of
   --
   -- The depth is a Quantity evaluated HERE (CR 608.2c), off the announcement CR
   -- 601.2b left on the resolving object -- which is why `resolving` rather than
-  -- `source` is the announcedOn id -- and ONCE for the whole ref, no printing
-  -- writing a per-library depth. A depth that will not evaluate, or evaluates
-  -- negative, is ZERO cards (CR 107.1b): a REGRESSION FENCE, since making the
-  -- fallback 5 leaves the suite green.
+  -- `source` is the announcedOn id -- and once PER LIBRARY, with that library's
+  -- player as the recipient: Warp World's "each player ... reveals that many
+  -- cards" is each player's own count. A depth that will not evaluate, or
+  -- evaluates negative, is ZERO cards (CR 107.1b): a REGRESSION FENCE, since
+  -- making the fallback 5 leaves the suite green.
+  --
+  -- CARDS, so a token waiting in the library for CR 704.5d (CR 111.7) is passed
+  -- over rather than counted towards the depth -- Warp World's 2009-10-01 ruling.
+  -- Proved by data/scenarios/warp-world-counts-a-token-but-reveals-only-cards.json.
   ObjectRef.TopOfLibrary (TopOfLibrary.MkTopOfLibrary player count) ->
     let named = playerRefPlayers legal resolving source controller gs player
         viewOf = effectViewOf source legal gs
         context = effectContext gs resolving controller source legal (slotBindings resolving gs)
-        depth = maybe 0 Integer.toNaturalSaturating (Quantity.evaluateFor viewOf context gs resolving source count)
+        depth pid = maybe 0 Integer.toNaturalSaturating (Quantity.evaluateFor viewOf (context {Filter.recipient = Just pid}) gs resolving source (Quantity.forCandidate pid count))
      in concatMap
-          (\pid -> List.genericTake depth (Game.zoneMembers Zone.Library pid gs))
+          (\pid -> List.genericTake (depth pid) (libraryCards pid gs))
           (filter (`elem` named) (Game.apnapOrder gs))
   -- The arm above's walk with its Quantity counting MATCHES rather than cards:
   -- the same prefix of CR 401.2's ordered pile taken from its head (CR 121.1),
@@ -3186,7 +3191,7 @@ objectRefObjects legal resolving controller source gs ref = case ref of
   -- player's" walks each pile separately rather than one across the table. The
   -- Filter is matched against each card's own projection as the walk reaches it
   -- (CR 608.2c) -- the context is this resolution's, so a filter reading a slot
-  -- this resolution bound sees it.
+  -- this resolution bound sees it. Cards only, the arm above's reason.
   ObjectRef.TopOfLibraryUntil (TopOfLibraryUntil.MkTopOfLibraryUntil player filter_ count) ->
     let named = playerRefPlayers legal resolving source controller gs player
         viewOf = effectViewOf source legal gs
@@ -3200,7 +3205,7 @@ objectRefObjects legal resolving controller source gs ref = case ref of
             else case oids of
               [] -> []
               oid : rest -> oid : walkDown (if matches oid then remaining - 1 else remaining) rest
-        walk pid = walkDown wanted (Game.zoneMembers Zone.Library pid gs)
+        walk pid = walkDown wanted (libraryCards pid gs)
      in concatMap walk (filter (`elem` named) (Game.apnapOrder gs))
   -- CR 404.1's ordered pile, whose top is the NEWEST arrival -- the LAST member,
   -- the opposite end from the two library walks above, because
@@ -3235,6 +3240,11 @@ objectRefObjects legal resolving controller source gs ref = case ref of
   ObjectRef.RandomCardInHand _ -> []
   ObjectRef.RandomCardInGraveyard _ -> []
   ObjectRef.RandomCardInLibrary _ -> []
+
+-- The CARDS in one player's library, top first (CR 401.2): a token shuffled in
+-- is there until CR 704.5d removes it (CR 111.7), and is not a card.
+libraryCards :: PlayerId -> GameState -> [ObjectId]
+libraryCards pid gs = filter (`Game.isCardObject` gs) (Game.zoneMembers Zone.Library pid gs)
 
 -- The cards in ONE player's graveyard matching the filter, in ascending
 -- ObjectId. The filter is matched in THIS EFFECT's context -- the caller's, so
