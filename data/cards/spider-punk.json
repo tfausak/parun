@@ -28,8 +28,10 @@
           "effect": {
             "type": "CantBeCountered",
             "value": {
-              "type": "And",
-              "value": []
+              "countered": {
+                "type": "And",
+                "value": []
+              }
             }
           },
           "scope": {

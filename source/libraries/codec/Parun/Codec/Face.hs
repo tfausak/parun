@@ -19,6 +19,7 @@ import qualified Data.Text as Text
 import qualified Data.Typeable as Typeable
 import qualified Parun.Codec.ActivatedAbility as ActivatedAbility
 import qualified Parun.Codec.ActivationProhibition as ActivationProhibition
+import qualified Parun.Codec.Affected as Affected
 import qualified Parun.Codec.AlternativeCost as AlternativeCost
 import qualified Parun.Codec.AttachRestriction as AttachRestriction
 import qualified Parun.Codec.AttackCost as AttackCost
@@ -150,7 +151,7 @@ codec cardCodec = Fields.objectWith (modeCostsInRange Monad.>=> chooserHasModes)
   sacrificeRestrictions <- Fields.defaulted "sacrificeRestrictions" [] (Common.list SacrificeRestriction.codec) Face.sacrificeRestrictions
   untapRestrictions <- Fields.defaulted "untapRestrictions" [] (Common.list UntapRestriction.codec) Face.untapRestrictions
   crewRestrictions <- Fields.defaulted "crewRestrictions" [] (Common.list CrewRestriction.codec) Face.crewRestrictions
-  targetRestrictions <- Fields.defaulted "targetRestrictions" [] (Common.list TargetRestriction.codec) Face.targetRestrictions
+  targetRestrictions <- Fields.defaulted "targetRestrictions" [] (Common.list (TargetRestriction.codec Affected.codec)) Face.targetRestrictions
   attackPermissions <- Fields.defaulted "attackPermissions" [] (Common.list AttackPermission.codec) Face.attackPermissions
   attachRestrictions <- Fields.defaulted "attachRestrictions" [] (Common.list AttachRestriction.codec) Face.attachRestrictions
   counterRestrictions <- Fields.defaulted "counterRestrictions" [] (Common.list CounterRestriction.codec) Face.counterRestrictions

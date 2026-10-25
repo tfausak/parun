@@ -4,6 +4,7 @@ import qualified Parun.Codec.AlternativeActivationCost as AlternativeActivationC
 import qualified Parun.Codec.CantSearchLibraries as CantSearchLibraries
 import qualified Parun.Codec.CastFromZone as CastFromZone
 import qualified Parun.Codec.CostModifier as CostModifier
+import qualified Parun.Codec.CounterProhibition as CounterProhibition
 import qualified Parun.Codec.DamagePattern as DamagePattern
 import qualified Parun.Codec.DrawReveal as DrawReveal
 import qualified Parun.Codec.ExtraVotes as ExtraVotes
@@ -22,6 +23,7 @@ import qualified Parun.Codec.Shows as Shows
 import qualified Parun.Codec.SpendManaAsThough as SpendManaAsThough
 import qualified Parun.Codec.StatedFlip as StatedFlip
 import qualified Parun.Codec.TapForMana as TapForMana
+import qualified Parun.Codec.TargetRestriction as TargetRestriction
 import qualified Parun.JsonCodec.Arm as Arm
 import qualified Parun.JsonCodec.Codec as Codec
 import qualified Parun.JsonCodec.Common as Common
@@ -53,7 +55,8 @@ codec =
           Arm.payload "ActivateKeywordAtInstantSpeed" (KeywordDesignator.codec Keyword.codec) PlayerEffect.ActivateKeywordAtInstantSpeed (\x -> case x of PlayerEffect.ActivateKeywordAtInstantSpeed y -> Just y; _ -> Nothing),
           Arm.payload "ActivateLoyaltyAtInstantSpeed" filterCodec PlayerEffect.ActivateLoyaltyAtInstantSpeed (\x -> case x of PlayerEffect.ActivateLoyaltyAtInstantSpeed y -> Just y; _ -> Nothing),
           Arm.payload "MayTapForMana" TapForMana.codec PlayerEffect.MayTapForMana (\x -> case x of PlayerEffect.MayTapForMana y -> Just y; _ -> Nothing),
-          Arm.payload "CantBeCountered" filterCodec PlayerEffect.CantBeCountered (\x -> case x of PlayerEffect.CantBeCountered y -> Just y; _ -> Nothing),
+          Arm.payload "CantBeCountered" CounterProhibition.codec PlayerEffect.CantBeCountered (\x -> case x of PlayerEffect.CantBeCountered y -> Just y; _ -> Nothing),
+          Arm.payload "RestrictTargeting" (TargetRestriction.codec filterCodec) PlayerEffect.RestrictTargeting (\x -> case x of PlayerEffect.RestrictTargeting y -> Just y; _ -> Nothing),
           Arm.payload "DamageCantBePrevented" DamagePattern.codec PlayerEffect.DamageCantBePrevented (\x -> case x of PlayerEffect.DamageCantBePrevented y -> Just y; _ -> Nothing),
           Arm.payload "DamageCantBeRedirected" DamagePattern.codec PlayerEffect.DamageCantBeRedirected (\x -> case x of PlayerEffect.DamageCantBeRedirected y -> Just y; _ -> Nothing),
           Arm.payload "CantSearchLibraries" CantSearchLibraries.codec PlayerEffect.CantSearchLibraries (\x -> case x of PlayerEffect.CantSearchLibraries y -> Just y; _ -> Nothing),
@@ -105,6 +108,7 @@ tagOf x = case x of
   PlayerEffect.ActivateLoyaltyAtInstantSpeed {} -> "ActivateLoyaltyAtInstantSpeed"
   PlayerEffect.MayTapForMana {} -> "MayTapForMana"
   PlayerEffect.CantBeCountered {} -> "CantBeCountered"
+  PlayerEffect.RestrictTargeting {} -> "RestrictTargeting"
   PlayerEffect.DamageCantBePrevented {} -> "DamageCantBePrevented"
   PlayerEffect.DamageCantBeRedirected {} -> "DamageCantBeRedirected"
   PlayerEffect.CantSearchLibraries {} -> "CantSearchLibraries"

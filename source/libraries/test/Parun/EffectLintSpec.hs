@@ -1171,6 +1171,7 @@ unpreventableScopeOffends scope playerEffect = case playerEffect of
   PlayerEffect.ActivateLoyaltyAtInstantSpeed _ -> False
   PlayerEffect.MayTapForMana _ -> False
   PlayerEffect.CantBeCountered _ -> False
+  PlayerEffect.RestrictTargeting _ -> False
   PlayerEffect.CantCastMatching _ -> False
   PlayerEffect.PutTappedAsYouCascade _ -> False
   PlayerEffect.CastOnlyAtSorcerySpeed -> False
@@ -1244,6 +1245,7 @@ unpreventablePatternOffends playerEffect = case playerEffect of
   PlayerEffect.ActivateLoyaltyAtInstantSpeed _ -> False
   PlayerEffect.MayTapForMana _ -> False
   PlayerEffect.CantBeCountered _ -> False
+  PlayerEffect.RestrictTargeting _ -> False
   PlayerEffect.CantCastMatching _ -> False
   PlayerEffect.PutTappedAsYouCascade _ -> False
   PlayerEffect.CastOnlyAtSorcerySpeed -> False
@@ -1562,7 +1564,8 @@ effectObjectRefs effect =
         Effect.SwitchBlockers {} -> []
         Effect.ExchangeBlocks {} -> []
         Effect.Counter (Counter.MkCounter ref _ _ _) -> read_ [ref]
-        Effect.PutCounters (PutCounters.MkPutCounters _ _ ref) -> read_ [ref]
+        -- Only the one permanent Phylactery Lich chooses: no test reaches "up to".
+        Effect.PutCounters (PutCounters.MkPutCounters _ _ ref) -> [([OnePermanent], ref)]
         -- A READ: which of the swept objects get a part is asked of the
         -- answer (Prompt.ChooseDistribution), not of the ref.
         Effect.Divide divide -> read_ [Divide.among divide]

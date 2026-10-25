@@ -218,6 +218,7 @@ import qualified Parun.Codec.CounterKindSpec
 import qualified Parun.Codec.CounterNameSpec
 import qualified Parun.Codec.CounterPatternSpec
 import qualified Parun.Codec.CounterPlacementSpec
+import qualified Parun.Codec.CounterProhibitionSpec
 import qualified Parun.Codec.CounterRSpec
 import qualified Parun.Codec.CounterRestrictionSpec
 import qualified Parun.Codec.CounterSpec
@@ -1139,6 +1140,7 @@ spec s registry = do
   Parun.Codec.CounterNameSpec.spec s
   Parun.Codec.CounterPatternSpec.spec s
   Parun.Codec.CounterPlacementSpec.spec s
+  Parun.Codec.CounterProhibitionSpec.spec s
   Parun.Codec.CounterRestrictionSpec.spec s
   Parun.Codec.CounterRSpec.spec s
   Parun.Codec.CountersAreSpec.spec s

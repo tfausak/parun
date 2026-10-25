@@ -35,9 +35,11 @@
           "effect": {
             "type": "CantBeCountered",
             "value": {
-              "type": "HasCardType",
-              "value": {
-                "type": "Creature"
+              "countered": {
+                "type": "HasCardType",
+                "value": {
+                  "type": "Creature"
+                }
               }
             }
           },

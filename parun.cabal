@@ -485,6 +485,8 @@ library codec
     Parun.Codec.CounterPatternSpec
     Parun.Codec.CounterPlacement
     Parun.Codec.CounterPlacementSpec
+    Parun.Codec.CounterProhibition
+    Parun.Codec.CounterProhibitionSpec
     Parun.Codec.CounterR
     Parun.Codec.CounterRestriction
     Parun.Codec.CounterRestrictionSpec
@@ -2500,6 +2502,7 @@ library types
     Parun.Types.CounterName
     Parun.Types.CounterPattern
     Parun.Types.CounterPlacement
+    Parun.Types.CounterProhibition
     Parun.Types.CounterR
     Parun.Types.CounterRestriction
     Parun.Types.CountersAre

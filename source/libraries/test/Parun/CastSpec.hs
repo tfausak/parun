@@ -2643,8 +2643,8 @@ lierSpec s registry = Spec.describe s "Lier" $ do
     (without, _) <- lierBoard s registry False
     let (bobs, protected) = S.addHandCard bolt S.bob withLier
         (bobs2, unprotected) = S.addHandCard bolt S.bob without
-    Spec.assertBool s (PlayerEffect.cantBeCountered S.bob bobs protected) "an opponent's spell is uncounterable while Lier is out"
-    Spec.assertBool s (not (PlayerEffect.cantBeCountered S.bob bobs2 unprotected)) "and counterable without it"
+    Spec.assertBool s (PlayerEffect.cantBeCountered S.bob S.noSource bobs protected) "an opponent's spell is uncounterable while Lier is out"
+    Spec.assertBool s (not (PlayerEffect.cantBeCountered S.bob S.noSource bobs2 unprotected)) "and counterable without it"
 
 -- Synthetic Mirror of the Fallen {U}{U} Sorcery
 -- (data/cards/synthetic-mirror-of-the-fallen.json): "Target card in your

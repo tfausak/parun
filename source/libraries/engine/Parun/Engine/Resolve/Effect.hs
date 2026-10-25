@@ -9240,7 +9240,7 @@ applyOneEffect runSubgame resolving source controller legal chosen effect = case
                   pure (Zone.Library, position)
               | otherwise -> pure (CounterDestination.zone destination, LibraryPosition.defaultValue)
           _ -> pure (Zone.Graveyard, LibraryPosition.defaultValue)
-    moved <- Event.counterReturning destinationOf source controller named
+    moved <- Event.counterReturning destinationOf resolving source controller named
     let countered = fmap fst moved
     -- CR 701.6a's "countered this way" is what the funnel COUNTERED, never what
     -- the sweep named. Bound onto this effect's SOURCE, and bound even at zero.
@@ -9274,12 +9274,14 @@ applyOneEffect runSubgame resolving source controller legal chosen effect = case
       let permanents = Set.toList (Set.fromList (filter (\src -> Set.member src (GameState.battlefield after)) (Maybe.mapMaybe (\oid -> Map.lookup oid sourceOf) countered)))
       Monad.unless (null permanents) (State.modify' (bindObjectsSlot resolving slot (Seq.fromList permanents)))
   Effect.PutCounters (PutCounters.MkPutCounters kind quantity ref) -> do
+    -- CR 608.2c: the set is swept as this instruction is reached, and an
+    -- illegal slot (CR 608.2b) or a player recipient answers with nobody. A
+    -- CR 608.2d choice is asked through askingObjects, ModifyTarget's reason:
+    -- Phylactery Lich's "put a phylactery counter on an artifact you control".
+    targets <- askingObjects resolving source controller legal chosen ref
     gs <- State.get
     let viewOf = effectViewOf source legal gs
         context = effectContext gs resolving controller source legal (slotBindings resolving gs)
-        -- CR 608.2c: the set is swept as this instruction is reached, and an
-        -- illegal slot (CR 608.2b) or a player recipient answers with nobody.
-        targets = objectRefObjects legal resolving controller source gs ref
         -- HOW MANY, read per recipient against the one pre-effect state, so a
         -- division's part (Quantity.Share, Effect.Divide's) is each member's
         -- own: DealDamage's amountFor. Every other quantity reads the same for
