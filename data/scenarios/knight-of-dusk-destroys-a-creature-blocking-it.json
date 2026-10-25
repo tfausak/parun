@@ -1,0 +1,14 @@
+{
+  "description": "CR 509.1g / 115.1 Knight of Dusk: {B}{B}: destroy target creature blocking this creature",
+  "note": "Bob blocks the Knight with his Bears and alice's own Bears with his Hill Giant. The Giant is blocking, but not the Knight, so the ability can't target it; it can target the Bears blocking the Knight, and destroys them.",
+  "board": {"active": "alice", "step": "BeginningOfCombat", "seats": [{"name": "alice", "battlefield": [{"card": "Knight of Dusk", "label": "knight", "ready": true}, {"card": "Grizzly Bears", "label": "cub", "ready": true}, {"card": "Swamp", "label": "s1"}, {"card": "Swamp", "label": "s2"}, {"card": "Swamp", "label": "s3"}, {"card": "Swamp", "label": "s4"}], "library": [{"card": "Island"}, {"card": "Island"}, {"card": "Island"}]}, {"name": "bob", "battlefield": [{"card": "Grizzly Bears", "label": "bears", "ready": true}, {"card": "Hill Giant", "label": "giant", "ready": true}], "library": [{"card": "Island"}, {"card": "Island"}, {"card": "Island"}]}]},
+  "timeline": [
+    {"turn": 1, "step": "DeclareAttackers", "player": "alice", "do": {"Attack": ["$knight", "$cub"]}},
+    {"turn": 1, "step": "DeclareBlockers", "player": "bob", "do": {"Block": {"$bears": ["$knight"], "$giant": ["$cub"]}}},
+    {"turn": 1, "step": "DeclareBlockers", "player": "alice", "refuse": {"Activate": {"object": "$knight", "targets": ["$giant"], "mana": ["$s1", "$s2", null]}}},
+    {"turn": 1, "step": "DeclareBlockers", "player": "alice", "do": {"Activate": {"object": "$knight", "targets": ["$bears"], "mana": ["$s1", "$s2", null]}}},
+    {"turn": 1, "step": "DeclareBlockers", "player": "alice", "do": "Pass"},
+    {"turn": 1, "step": "DeclareBlockers", "player": "alice", "check": {"Count": {"player": "bob", "zone": "Graveyard", "card": "Grizzly Bears", "count": 1}}},
+    {"turn": 1, "step": "DeclareBlockers", "player": "alice", "check": {"Count": {"player": "bob", "zone": "Battlefield", "card": "Hill Giant", "count": 1}}}
+  ]
+}

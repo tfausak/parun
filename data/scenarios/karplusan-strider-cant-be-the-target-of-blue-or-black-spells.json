@@ -1,0 +1,22 @@
+{
+  "description": "CR 101.2 / 115.1 Karplusan Strider: this creature can't be the target of blue or black spells",
+  "note": "Alice's own blue Unsummon can't target her Strider, where hexproof from blue would let it through (CR 702.11d), and goes at bob's Hill Giant instead; her green Giant Growth can target the Strider. Bob's black Terror can't target it and kills alice's Bears instead, and his Prodigal Sorcerer's ability can target it, since the prohibition names spells only. Each refused cast is paired with the same spell cast on the same mana at another target.",
+  "board": {"active": "alice", "step": "PrecombatMain", "seats": [{"name": "alice", "battlefield": [{"card": "Karplusan Strider", "label": "strider", "ready": true}, {"card": "Grizzly Bears", "label": "bears", "ready": true}, {"card": "Island", "label": "island"}, {"card": "Forest", "label": "forest"}], "hand": [{"card": "Unsummon", "label": "unsummon"}, {"card": "Giant Growth", "label": "growth"}], "library": [{"card": "Island"}, {"card": "Island"}, {"card": "Island"}]}, {"name": "bob", "battlefield": [{"card": "Prodigal Sorcerer", "label": "sorcerer", "ready": true}, {"card": "Hill Giant", "label": "giant", "ready": true}, {"card": "Swamp", "label": "s1"}, {"card": "Swamp", "label": "s2"}], "hand": [{"card": "Terror", "label": "terror"}], "library": [{"card": "Island"}, {"card": "Island"}, {"card": "Island"}]}]},
+  "timeline": [
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "refuse": {"Cast": {"object": "$unsummon", "targets": ["$strider"], "mana": ["$island", null]}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "do": {"Cast": {"object": "$unsummon", "targets": ["$giant"], "mana": ["$island", null]}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "do": {"Cast": {"object": "$growth", "targets": ["$strider"], "mana": ["$forest"]}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "do": "Pass"},
+    {"turn": 1, "step": "PrecombatMain", "player": "bob", "refuse": {"Cast": {"object": "$terror", "targets": ["$strider"], "mana": ["$s1", "$s2"]}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "bob", "do": {"Cast": {"object": "$terror", "targets": ["$bears"], "mana": ["$s1", "$s2"]}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "bob", "do": {"Activate": {"object": "$sorcerer", "targets": ["$strider"]}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "do": "Pass"},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "do": "Pass"},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "do": "Pass"},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "do": "Pass"},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "check": {"Damage": {"object": "$strider", "damage": 1}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "check": {"PowerToughness": {"object": "$strider", "power": 6, "toughness": 7}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "check": {"Count": {"player": "alice", "zone": "Graveyard", "card": "Grizzly Bears", "count": 1}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "check": {"Count": {"player": "bob", "zone": "Hand", "card": "Hill Giant", "count": 1}}}
+  ]
+}

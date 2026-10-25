@@ -24,6 +24,7 @@ import qualified Parun.Types.CounterKind as CounterKind
 import qualified Parun.Types.CounterPlacement as CounterPlacement
 import qualified Parun.Types.CreatureBecomesBlockedByAtLeast as CreatureBecomesBlockedByAtLeast
 import qualified Parun.Types.CreatureExploits as CreatureExploits
+import qualified Parun.Types.DamageKind as DamageKind
 import qualified Parun.Types.DealsDamageToPlayer as DealsDamageToPlayer
 import qualified Parun.Types.Designation as Designation
 import qualified Parun.Types.DieResult as DieResult
@@ -152,14 +153,19 @@ spec s = Spec.describe s "Parun.Codec.TriggerCondition" $ do
       TriggerCondition.codec
       (TriggerCondition.DealsDamageToPlayer (DealsDamageToPlayer.MkDealsDamageToPlayer ActingPermanent.Self PlayerRelation.Opponent))
       " {\"type\":\"DealsDamageToPlayer\",\"value\":{\"actor\":{\"type\":\"Self\"},\"recipient\":{\"type\":\"Opponent\"}}} "
-  -- CR 120.3's other recipient, nullary for the reason the constructor's haddock
-  -- gives: nothing qualifies the creature it was dealt to.
-  Spec.it s "SelfDealsDamageToCreature" $
+  -- CR 120.3's other recipient: a bare tag for damage of any kind, the kind as
+  -- the value otherwise.
+  Spec.it s "SelfDealsDamageToCreature" $ do
     Common.assertCodec
       s
       TriggerCondition.codec
-      TriggerCondition.SelfDealsDamageToCreature
+      (TriggerCondition.SelfDealsDamageToCreature Nothing)
       " {\"type\":\"SelfDealsDamageToCreature\"} "
+    Common.assertCodec
+      s
+      TriggerCondition.codec
+      (TriggerCondition.SelfDealsDamageToCreature (Just DamageKind.Combat))
+      " {\"type\":\"SelfDealsDamageToCreature\",\"value\":{\"type\":\"Combat\"}} "
   Spec.it s "DealsDamage round-trips both actors" $ do
     Common.assertCodec
       s

@@ -1,0 +1,12 @@
+{
+  "description": "CR 120.3 / 603.2 Phage the Untouchable: its combat-damage trigger does not see the damage it deals a creature in a fight",
+  "note": "Alice's Prey Upon has Phage fight bob's Wall of Stone, a 0/8: Phage deals it 4 noncombat damage, which the trigger's combat narrowing ignores, so the Wall survives with the damage marked.",
+  "board": {"active": "alice", "step": "PrecombatMain", "seats": [{"name": "alice", "battlefield": [{"card": "Phage the Untouchable", "label": "phage", "ready": true}, {"card": "Forest", "label": "forest"}], "hand": [{"card": "Prey Upon", "label": "prey"}], "library": [{"card": "Island"}, {"card": "Island"}, {"card": "Island"}]}, {"name": "bob", "battlefield": [{"card": "Wall of Stone", "label": "wall", "ready": true}], "library": [{"card": "Island"}, {"card": "Island"}, {"card": "Island"}]}]},
+  "timeline": [
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "do": {"Cast": {"object": "$prey", "targetsBySlot": {"mine": ["$phage"], "theirs": ["$wall"]}, "mana": ["$forest"]}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "do": "Pass"},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "check": {"Damage": {"object": "$wall", "damage": 4}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "check": {"View": {"of": "Stack", "is": []}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "check": {"Count": {"player": "bob", "zone": "Battlefield", "card": "Wall of Stone", "count": 1}}}
+  ]
+}

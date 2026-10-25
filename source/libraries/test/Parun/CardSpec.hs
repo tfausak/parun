@@ -1108,7 +1108,7 @@ triggerConditionCounts triggerCondition = case triggerCondition of
   TriggerCondition.SelfDealsCombatDamageToPlayerOrBattle -> []
   TriggerCondition.DealsCombatDamage _ -> []
   TriggerCondition.DealsDamageToPlayer _ -> []
-  TriggerCondition.SelfDealsDamageToCreature -> []
+  TriggerCondition.SelfDealsDamageToCreature _ -> []
   TriggerCondition.DealsDamage _ -> []
   TriggerCondition.IsDealtDamage _ -> []
   TriggerCondition.PlayerIsDealtDamage _ -> []
@@ -4583,7 +4583,7 @@ triggerConditionFilters triggerCondition = case triggerCondition of
   TriggerCondition.DealsDamageToPlayer p -> actingFilters (DealsDamageToPlayer.actor p)
   -- Nullary as well: the printed form qualifies the damaged creature in no way,
   -- so a text change has nothing here to rewrite.
-  TriggerCondition.SelfDealsDamageToCreature -> []
+  TriggerCondition.SelfDealsDamageToCreature _ -> []
   TriggerCondition.DealsDamage watched -> actingFilters watched
   TriggerCondition.IsDealtDamage watched -> actingFilters watched
   TriggerCondition.PlayerIsDealtDamage _ -> []
@@ -4786,7 +4786,7 @@ triggerConditionSlots triggerCondition = case triggerCondition of
   TriggerCondition.SelfDealsCombatDamageToPlayerOrBattle -> []
   TriggerCondition.DealsCombatDamage _ -> []
   TriggerCondition.DealsDamageToPlayer _ -> []
-  TriggerCondition.SelfDealsDamageToCreature -> []
+  TriggerCondition.SelfDealsDamageToCreature _ -> []
   TriggerCondition.DealsDamage _ -> []
   TriggerCondition.IsDealtDamage _ -> []
   TriggerCondition.PlayerIsDealtDamage _ -> []
@@ -6388,6 +6388,7 @@ ruleAbilitiesFilters rules =
         <> concatMap untapRestrictionFilters (RuleAbilities.untapRestrictions rules)
         <> concatMap (unframed . affectedFilters . CrewRestriction.affected) (RuleAbilities.crewRestrictions rules)
         <> concatMap (unframed . affectedFilters . TargetRestriction.affected) (RuleAbilities.targetRestrictions rules)
+        <> concatMap (unframed . pure . TargetRestriction.aimers) (RuleAbilities.targetRestrictions rules)
         <> concatMap (unframed . affectedFilters . AttackPermission.affected) (RuleAbilities.attackPermissions rules)
         <> concatMap (unframed . attachRestrictionFilters) (RuleAbilities.attachRestrictions rules)
         <> concatMap (unframed . affectedFilters . EntryRestriction.affected) (RuleAbilities.entryRestrictions rules)

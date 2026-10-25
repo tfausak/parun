@@ -23,6 +23,7 @@ import qualified Parun.Types.Filter as Filter
 import qualified Parun.Types.InZone as InZone
 import qualified Parun.Types.ManaCost as ManaCost
 import qualified Parun.Types.ManaSymbol as ManaSymbol
+import qualified Parun.Types.ObjectCount as ObjectCount
 import qualified Parun.Types.PerCreature as PerCreature
 import qualified Parun.Types.PlayerRef as PlayerRef
 import qualified Parun.Types.PlayerRelation as PlayerRelation
@@ -76,7 +77,7 @@ spec s = Spec.describe s "Parun.Codec.AttackCost" $ do
           ( PerCreature.Fixed
               ( Cost.MkCost
                   (Just (ManaCost.MkManaCost []))
-                  [CostComponent.Sacrifice (Sacrifice.MkSacrifice (CostAmount.Fixed 1) (Filter.HasCardType CardType.Land))]
+                  [CostComponent.Sacrifice (Sacrifice.MkSacrifice (ObjectCount.Exactly (CostAmount.Fixed 1)) (Filter.HasCardType CardType.Land))]
               )
           )
           AttackCostScope.EveryAttack

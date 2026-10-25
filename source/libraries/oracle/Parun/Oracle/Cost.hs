@@ -7,7 +7,6 @@ import qualified Data.Char as Char
 import qualified Data.Text as Text
 import qualified Parun.Oracle.Filter as Filter
 import qualified Parun.Oracle.Prose as Prose
-import qualified Parun.Types.CardCount as CardCount
 import qualified Parun.Types.Color as Color
 import qualified Parun.Types.Cost as Cost
 import qualified Parun.Types.CostAmount as CostAmount
@@ -19,6 +18,7 @@ import qualified Parun.Types.HybridPhyrexian as HybridPhyrexian
 import qualified Parun.Types.ManaCost as ManaCost
 import qualified Parun.Types.ManaSymbol as ManaSymbol
 import qualified Parun.Types.ManaType as ManaType
+import qualified Parun.Types.ObjectCount as ObjectCount
 import qualified Parun.Types.Sacrifice as Sacrifice
 
 -- | A mana symbol in braces (CR 107.4).
@@ -78,11 +78,14 @@ component self named c = case c of
   CostComponent.SacrificeThis -> [Text.pack "Sacrifice " <> self]
   CostComponent.PayLife (CostAmount.Fixed n) -> [Text.pack ("Pay " <> show n <> " life")]
   CostComponent.PayLife (CostAmount.Announced _) -> [Text.pack "Pay X life"]
-  CostComponent.Sacrifice (Sacrifice.MkSacrifice (CostAmount.Fixed n) f) -> do
+  CostComponent.Sacrifice (Sacrifice.MkSacrifice (ObjectCount.Exactly (CostAmount.Fixed n)) f) -> do
     p <- Filter.phrase f named
     fmap (Text.pack "Sacrifice " <>) (some (toInteger n) (Filter.MkNoun (Text.pack "permanent") (Just (Text.pack "permanents"))) p)
-  CostComponent.DiscardCards (DiscardCards.MkDiscardCards CardCount.Every (Filter.Type.And [])) -> [Text.pack "Discard your hand"]
-  CostComponent.DiscardCards (DiscardCards.MkDiscardCards (CardCount.Exactly n) f) -> do
+  CostComponent.Sacrifice (Sacrifice.MkSacrifice ObjectCount.Every f) -> do
+    p <- Filter.phrase f named
+    fmap (Text.pack "Sacrifice all " <>) (Filter.describe Filter.Plural (Filter.MkNoun (Text.pack "permanent") (Just (Text.pack "permanents"))) p)
+  CostComponent.DiscardCards (DiscardCards.MkDiscardCards ObjectCount.Every (Filter.Type.And [])) -> [Text.pack "Discard your hand"]
+  CostComponent.DiscardCards (DiscardCards.MkDiscardCards (ObjectCount.Exactly (CostAmount.Fixed n)) f) -> do
     p <- Filter.phrase f named
     let card = Filter.MkNoun (Text.pack "card") (Just (Text.pack "cards"))
     fmap (Text.pack "Discard " <>) (some (toInteger n) card (Filter.merge p (Filter.MkPhrase [] [card] [])))

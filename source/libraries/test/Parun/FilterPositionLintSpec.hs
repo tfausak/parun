@@ -118,6 +118,7 @@ import qualified Parun.Types.ModifyPowerToughness as ModifyPowerToughness
 import qualified Parun.Types.MoveCounters as MoveCounters
 import qualified Parun.Types.MovedKinds as MovedKinds
 import qualified Parun.Types.NameChooser as NameChooser
+import qualified Parun.Types.ObjectCount as ObjectCount
 import qualified Parun.Types.ObjectId as ObjectId
 import qualified Parun.Types.ObjectRef as ObjectRef
 import qualified Parun.Types.Operand as Operand
@@ -373,7 +374,7 @@ filterAtomsOf leaf predicate = case predicate of
   Filter.Type.IsRingBearer -> leaf predicate
   Filter.Type.IsPaired -> leaf predicate
   Filter.Type.IsPairedWithSource -> leaf predicate
-  Filter.Type.IsBlockedBySource -> leaf predicate
+  Filter.Type.BlockPartnerOfSource _ -> leaf predicate
   Filter.Type.HasDesignation _ -> leaf predicate
 
 -- Does this position's evaluator frame its context by the SOURCE, through
@@ -2370,7 +2371,7 @@ filterPositionLintSpec s registry = Spec.describe s "Lint" $ do
                           ( Just
                               PayGate.MkPayGate
                                 { PayGate.payer = PlayerRef.Relative PlayerRelation.You,
-                                  PayGate.cost = CostChoice.MkCostChoice (Cost.Type.MkCost (Just (ManaCost.MkManaCost [])) [CostComponent.Sacrifice (Sacrifice.MkSacrifice (CostAmount.Fixed 1) buried)] NonEmpty.:| []),
+                                  PayGate.cost = CostChoice.MkCostChoice (Cost.Type.MkCost (Just (ManaCost.MkManaCost [])) [CostComponent.Sacrifice (Sacrifice.MkSacrifice (ObjectCount.Exactly (CostAmount.Fixed 1)) buried)] NonEmpty.:| []),
                                   PayGate.basis = Nothing,
                                   PayGate.branch = PayBranch.IfNotPaid,
                                   PayGate.obligation = PayObligation.Optional,
@@ -2389,7 +2390,7 @@ filterPositionLintSpec s registry = Spec.describe s "Lint" $ do
     -- Built over the SAME `base` face and the SAME `buried` filter as every leg
     -- above, so they differ from the accepted leg in position and in nothing
     -- else.
-    let sacrificing = [CostComponent.Sacrifice (Sacrifice.MkSacrifice (CostAmount.Fixed 1) buried)]
+    let sacrificing = [CostComponent.Sacrifice (Sacrifice.MkSacrifice (ObjectCount.Exactly (CostAmount.Fixed 1)) buried)]
         sacrificeCost = Cost.Type.MkCost (Just (ManaCost.MkManaCost [])) sacrificing
         -- CR 601.2f, paid as the cast is announced -- after CR 601.2c.
         added = base {Face.additionalCosts = sacrificing}
@@ -3042,7 +3043,7 @@ filterPositionLintSpec s registry = Spec.describe s "Lint" $ do
               (S.combinedFace sorcerer)
                 { Face.activatedAbilities =
                     fmap
-                      (\a -> a {ActivatedAbility.cost = (ActivatedAbility.cost a) {Cost.Type.components = [CostComponent.Sacrifice (Sacrifice.MkSacrifice (CostAmount.Fixed 1) buried)]}})
+                      (\a -> a {ActivatedAbility.cost = (ActivatedAbility.cost a) {Cost.Type.components = [CostComponent.Sacrifice (Sacrifice.MkSacrifice (ObjectCount.Exactly (CostAmount.Fixed 1)) buried)]}})
                       (Face.activatedAbilities (S.combinedFace sorcerer))
                 }
             ),
@@ -3275,7 +3276,7 @@ filterPositionLintSpec s registry = Spec.describe s "Lint" $ do
               (S.combinedFace sorcerer)
                 { Face.activatedAbilities =
                     fmap
-                      (\a -> a {ActivatedAbility.cost = (ActivatedAbility.cost a) {Cost.Type.components = [CostComponent.Sacrifice (Sacrifice.MkSacrifice (CostAmount.Fixed 1) buried)]}})
+                      (\a -> a {ActivatedAbility.cost = (ActivatedAbility.cost a) {Cost.Type.components = [CostComponent.Sacrifice (Sacrifice.MkSacrifice (ObjectCount.Exactly (CostAmount.Fixed 1)) buried)]}})
                       (Face.activatedAbilities (S.combinedFace sorcerer))
                 }
             ),
@@ -3424,7 +3425,7 @@ filterPositionLintSpec s registry = Spec.describe s "Lint" $ do
               (S.combinedFace sorcerer)
                 { Face.activatedAbilities =
                     fmap
-                      (\a -> a {ActivatedAbility.cost = (ActivatedAbility.cost a) {Cost.Type.components = [CostComponent.Sacrifice (Sacrifice.MkSacrifice (CostAmount.Fixed 1) buried)]}})
+                      (\a -> a {ActivatedAbility.cost = (ActivatedAbility.cost a) {Cost.Type.components = [CostComponent.Sacrifice (Sacrifice.MkSacrifice (ObjectCount.Exactly (CostAmount.Fixed 1)) buried)]}})
                       (Face.activatedAbilities (S.combinedFace sorcerer))
                 }
             ),
@@ -3589,7 +3590,7 @@ filterPositionLintSpec s registry = Spec.describe s "Lint" $ do
           [ ("a static ability's affected set", affecting f),
             ("a spell's own filter after its own choice", base {Face.spell = spellOf [Effect.ChooseQuality quality, Effect.Destroy (Destroy.MkDestroy (ObjectRef.EachMatching f) Regenerability.Regenerable Nothing Nothing Nothing)] Map.empty}),
             ("an activated ability's target slot", withAbility (\a -> a {ActivatedAbility.modal = spellOf [] (aimed f)})),
-            ("an activated ability's sacrifice cost", withAbility (\a -> a {ActivatedAbility.cost = (ActivatedAbility.cost a) {Cost.Type.components = [CostComponent.Sacrifice (Sacrifice.MkSacrifice (CostAmount.Fixed 1) f)]}})),
+            ("an activated ability's sacrifice cost", withAbility (\a -> a {ActivatedAbility.cost = (ActivatedAbility.cost a) {Cost.Type.components = [CostComponent.Sacrifice (Sacrifice.MkSacrifice (ObjectCount.Exactly (CostAmount.Fixed 1)) f)]}})),
             ("CR 603.6a's trigger condition", base {Face.triggeredAbilities = [oneEffectTrigger (TriggerCondition.PermanentEnters f) draw]}),
             ("a triggered ability's own filter", base {Face.triggeredAbilities = [oneEffectTrigger TriggerCondition.SelfEnters (Effect.Destroy (Destroy.MkDestroy (ObjectRef.EachMatching f) Regenerability.Regenerable Nothing Nothing Nothing))]}),
             ( "CR 603.4's intervening clause",

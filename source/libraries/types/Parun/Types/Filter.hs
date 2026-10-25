@@ -3,6 +3,7 @@ module Parun.Types.Filter where
 import qualified Numeric.Natural as Natural
 import qualified Parun.Types.AbilityKind as AbilityKind
 import qualified Parun.Types.Anchor as Anchor
+import qualified Parun.Types.BlockRole as BlockRole
 import qualified Parun.Types.BlockStatus as BlockStatus
 import qualified Parun.Types.CardName as CardName
 import qualified Parun.Types.CardType as CardType
@@ -560,9 +561,11 @@ data Filter keyword
     -- one relation over. Vacuously False where the candidate is unpaired or where
     -- no source frames the match.
     IsPairedWithSource
-  | -- | CR 509.1g: the candidate is an attacking creature the evaluation's SOURCE
-    -- is blocking (Serene Master's "target creature it's blocking").
-    IsBlockedBySource
+  | -- | CR 509.1g: the candidate and the evaluation's SOURCE are in one blocking
+    -- relation, the candidate on this side of it: Serene Master's "target
+    -- creature it's blocking" (Attacker), Knight of Dusk's "target creature
+    -- blocking this creature" (Blocker).
+    BlockPartnerOfSource BlockRole.BlockRole
   | -- | Does the CANDIDATE have this designation? Aragorn, Hornburg Hero's
     -- "renowned creature you control" and Rune-Brand Juggler's "suspected
     -- creature". Not Parun.Types.Quantity.HasDesignation, which asks the same

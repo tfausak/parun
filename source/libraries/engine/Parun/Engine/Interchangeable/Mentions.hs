@@ -281,6 +281,7 @@ import qualified Parun.Types.MoveMana as MoveMana
 import qualified Parun.Types.MoveToZone as MoveToZone
 import qualified Parun.Types.MovedKinds as MovedKinds
 import qualified Parun.Types.Ninjutsu as Ninjutsu
+import qualified Parun.Types.ObjectCount as ObjectCount
 import Parun.Types.ObjectId (ObjectId)
 import qualified Parun.Types.ObjectRef as ObjectRef
 import qualified Parun.Types.OfferCast as OfferCast
@@ -568,7 +569,7 @@ filterNames asking criterion = case criterion of
   Filter.IsRingBearer -> mempty
   Filter.IsPaired -> mempty
   Filter.IsPairedWithSource -> mempty
-  Filter.IsBlockedBySource -> mempty
+  Filter.BlockPartnerOfSource _ -> mempty
   Filter.HasDesignation _designation -> mempty
   Filter.HasCounters _kind -> mempty
   Filter.HasCountersOfAnyKind -> mempty
@@ -1062,6 +1063,11 @@ costComponentNames asking onKeyword x = case x of
   CostComponent.Waterbend amount -> costAmountNames asking amount
   CostComponent.WaterbendInstead _natural -> mempty
 
+objectCountNames :: (Monoid r) => Asking r -> ObjectCount.ObjectCount -> r
+objectCountNames asking x = case x of
+  ObjectCount.Exactly amount -> costAmountNames asking amount
+  ObjectCount.Every -> mempty
+
 costAmountNames :: (Monoid r) => Asking r -> CostAmount.CostAmount -> r
 costAmountNames asking x = case x of
   CostAmount.Fixed _natural -> mempty
@@ -1158,7 +1164,7 @@ crewRestrictionNames asking x = case x of
 
 targetRestrictionNames :: (Monoid r) => Asking r -> TargetRestriction.TargetRestriction -> r
 targetRestrictionNames asking x = case x of
-  TargetRestriction.MkTargetRestriction affected _kind -> affectedNames asking affected
+  TargetRestriction.MkTargetRestriction affected _kind aimers -> affectedNames asking affected <> filterNames asking aimers
 
 cyclingNames :: (Monoid r) => Asking r -> (keyword -> r) -> Cycling.Cycling keyword -> r
 cyclingNames asking onKeyword x = case x of
@@ -2693,7 +2699,7 @@ ruleAbilitiesNames asking x = case x of
 
 sacrificeNames :: (Monoid r) => Asking r -> Sacrifice.Sacrifice keyword -> r
 sacrificeNames asking x = case x of
-  Sacrifice.MkSacrifice count whichPermanents -> costAmountNames asking count <> filterNames asking whichPermanents
+  Sacrifice.MkSacrifice count whichPermanents -> objectCountNames asking count <> filterNames asking whichPermanents
 
 exileFromGraveyardNames :: (Monoid r) => Asking r -> ExileFromGraveyard.ExileFromGraveyard -> r
 exileFromGraveyardNames asking x = case x of
@@ -2872,7 +2878,7 @@ triggerConditionNames asking x = case x of
   TriggerCondition.SelfDealsCombatDamageToPlayerOrBattle -> mempty
   TriggerCondition.DealsCombatDamage actingPermanent -> actingPermanentNames asking actingPermanent
   TriggerCondition.DealsDamageToPlayer dealsDamageToPlayer -> dealsDamageToPlayerNames asking dealsDamageToPlayer
-  TriggerCondition.SelfDealsDamageToCreature -> mempty
+  TriggerCondition.SelfDealsDamageToCreature _ -> mempty
   TriggerCondition.DealsDamage actingPermanent -> actingPermanentNames asking actingPermanent
   TriggerCondition.IsDealtDamage actingPermanent -> actingPermanentNames asking actingPermanent
   TriggerCondition.PlayerIsDealtDamage _playerRelation -> mempty

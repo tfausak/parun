@@ -120,7 +120,7 @@
                             "type": "DiscardCards",
                             "value": {
                               "count": {
-                                "type": "Exactly",
+                                "type": "Fixed",
                                 "value": 1
                               },
                               "whichCards": {

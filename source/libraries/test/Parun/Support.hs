@@ -1928,6 +1928,7 @@ stubView table oid =
                 Filter.blocking = False,
                 Filter.blockStatus = Nothing,
                 Filter.blockers = Set.empty,
+                Filter.blocked = Set.empty,
                 Filter.attackedThisTurn = False,
                 Filter.couldAttackThisTurn = False,
                 Filter.declaredAttackerThisCombat = False,

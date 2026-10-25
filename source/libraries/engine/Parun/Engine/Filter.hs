@@ -19,6 +19,7 @@ import qualified Parun.Types.AbilityKind as AbilityKind
 import qualified Parun.Types.AbilityName as AbilityName
 import qualified Parun.Types.Anchor as Anchor
 import qualified Parun.Types.Behold as Behold
+import qualified Parun.Types.BlockRole as BlockRole
 import qualified Parun.Types.BlockStatus as BlockStatus
 import qualified Parun.Types.BoundMeasure as BoundMeasure
 import qualified Parun.Types.CardName as CardName
@@ -325,6 +326,13 @@ data View = MkView
     -- Combat.blockers keeps under its key. Empty wherever `blockStatus` is not
     -- Just Blocked.
     blockers :: Set.Set ObjectId.ObjectId,
+    -- CR 509.1g: the attacking creatures this candidate is blocking right now,
+    -- `blockers` read from the other side: the keys of Combat.blockers whose
+    -- member set holds it. Empty for a creature blocking nothing, and for one
+    -- whose every attacker has left combat (Combat.blockingNothing), which
+    -- `blocking` still counts. Empty from Count.lastKnownView too, as
+    -- `blockers` is: CR 506.4 takes a departed creature out of combat.
+    blocked :: Set.Set ObjectId.ObjectId,
     -- CR 608.2i: was this candidate declared as an attacker earlier this turn?
     -- Unlike `attacking` not even a present state: it is a look-back read of the
     -- turn-scoped GameEvent log.
@@ -907,6 +915,7 @@ playerView pid =
       -- 506.3 a player never is one.
       blockStatus = Nothing,
       blockers = Set.empty,
+      blocked = Set.empty,
       -- CR 506.3 again: a player was never declared as an attacker either.
       attackedThisTurn = False,
       couldAttackThisTurn = False,
@@ -2391,9 +2400,12 @@ matches context view predicate = case predicate of
   Filter.IsPairedWithSource -> case (paired view, source context) of
     (Just pairing, Just src) -> Pairing.partner pairing == src
     _ -> False
-  -- CR 509.1g: the source is among the candidate's blockers. Vacuously False
-  -- where no source frames the match.
-  Filter.IsBlockedBySource -> maybe False (`Set.member` blockers view) (source context)
+  -- CR 509.1g: the source is among the candidate's blockers (Attacker), or
+  -- among the attackers the candidate blocks (Blocker). Vacuously False where
+  -- no source frames the match.
+  Filter.BlockPartnerOfSource role -> case role of
+    BlockRole.Attacker -> maybe False (`Set.member` blockers view) (source context)
+    BlockRole.Blocker -> maybe False (`Set.member` blocked view) (source context)
   -- The designation, asked of the CANDIDATE. A live read of Object.designations,
   -- never a stamp on the candidate: every rule here ends its designation when the
   -- permanent leaves the battlefield, and CR 400.7's new incarnation simply arrives
@@ -2604,7 +2616,7 @@ rewrite pairs predicate = case predicate of
   Filter.IsRingBearer -> predicate
   Filter.IsPaired -> predicate
   Filter.IsPairedWithSource -> predicate
-  Filter.IsBlockedBySource -> predicate
+  Filter.BlockPartnerOfSource _ -> predicate
   Filter.HasDesignation _ -> predicate
   -- Untouched: CR 612.1 swaps a subtype, a colour or a card type word, and this
   -- atom names none -- "an activated ability that isn't a mana ability" has no
@@ -3366,7 +3378,7 @@ bakeBound players objects controllers predicate = case predicate of
   Filter.IsRingBearer -> predicate
   Filter.IsPaired -> predicate
   Filter.IsPairedWithSource -> predicate
-  Filter.IsBlockedBySource -> predicate
+  Filter.BlockPartnerOfSource _ -> predicate
   Filter.HasDesignation _ -> predicate
   Filter.HasCounters _ -> predicate
   Filter.HasCountersOfAnyKind -> predicate
@@ -3538,7 +3550,7 @@ manaValueThresholds predicate = case predicate of
   Filter.IsRingBearer -> []
   Filter.IsPaired -> []
   Filter.IsPairedWithSource -> []
-  Filter.IsBlockedBySource -> []
+  Filter.BlockPartnerOfSource _ -> []
   Filter.HasDesignation _ -> []
   Filter.HasCounters _ -> []
   Filter.HasCountersOfAnyKind -> []
@@ -3716,7 +3728,7 @@ statesAQuality predicate = case predicate of
   Filter.IsRingBearer -> True
   Filter.IsPaired -> True
   Filter.IsPairedWithSource -> True
-  Filter.IsBlockedBySource -> True
+  Filter.BlockPartnerOfSource _ -> True
   Filter.HasDesignation _ -> True
   Filter.HasCounters _ -> True
   Filter.HasCountersOfAnyKind -> True
@@ -3862,7 +3874,7 @@ readsSourceValues predicate = case predicate of
   Filter.IsRingBearer -> False
   Filter.IsPaired -> False
   Filter.IsPairedWithSource -> False
-  Filter.IsBlockedBySource -> False
+  Filter.BlockPartnerOfSource _ -> False
   Filter.HasDesignation _ -> False
   Filter.HasCounters _ -> False
   Filter.HasCountersOfAnyKind -> False
@@ -4042,7 +4054,7 @@ overBoundSlotsWith f predicate = case predicate of
   Filter.IsRingBearer -> pure predicate
   Filter.IsPaired -> pure predicate
   Filter.IsPairedWithSource -> pure predicate
-  Filter.IsBlockedBySource -> pure predicate
+  Filter.BlockPartnerOfSource _ -> pure predicate
   Filter.HasDesignation _ -> pure predicate
   -- The kind may be a whole Keyword hiding a Filter, left alone for the reason
   -- the keyword atom above is.

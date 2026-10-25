@@ -868,8 +868,8 @@ matchesTriggerGiven bindings board gs bearer you cond event = case cond of
     GameEvent.CardArrived _ -> False
   -- CR 603.2 / 120.3: the same arm with rule 120.3's other recipient -- a CREATURE
   -- rather than a player. Strax, Sontaran Nurse's "Glory of Battle" is a reader,
-  -- and its own "Grenades!" fight is a noncombat source, so no CR 510.1 narrowing
-  -- here either.
+  -- and its own "Grenades!" fight is a noncombat source, so it names no kind;
+  -- Phage the Untouchable's "combat damage" names CR 510.2's.
   --
   -- Projection.damagedCardTypes rather than a Recipient.ToCreature test, the same
   -- reading CR 120.3's own results take: the TAG is the classification made
@@ -878,9 +878,10 @@ matchesTriggerGiven bindings board gs bearer you cond event = case cond of
   -- dealt damage to a creature. The tag is unioned in rather than replaced,
   -- which is CR 608.2h's last known information for a recipient the damage has
   -- already killed.
-  TriggerCondition.SelfDealsDamageToCreature -> case event of
+  TriggerCondition.SelfDealsDamageToCreature kind -> case event of
     GameEvent.DamageDealt ev ->
       DamageEvent.source ev == bearer
+        && all (== DamageEvent.kind ev) kind
         && Set.member CardType.Creature (Projection.damagedCardTypes gs (DamageEvent.target ev))
     GameEvent.Moved {} -> False
     GameEvent.StepBegan {} -> False

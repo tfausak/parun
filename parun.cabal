@@ -265,6 +265,8 @@ library codec
     Parun.Codec.BlockProducerSpec
     Parun.Codec.BlockRequirement
     Parun.Codec.BlockRequirementSpec
+    Parun.Codec.BlockRole
+    Parun.Codec.BlockRoleSpec
     Parun.Codec.BlocksDeclared
     Parun.Codec.BlocksDeclaredSpec
     Parun.Codec.BlockStatus
@@ -286,8 +288,6 @@ library codec
     Parun.Codec.Card
     Parun.Codec.CardArrivedIn
     Parun.Codec.CardArrivedInSpec
-    Parun.Codec.CardCount
-    Parun.Codec.CardCountSpec
     Parun.Codec.CardIdentity
     Parun.Codec.CardIdentitySpec
     Parun.Codec.CardLeavesZone
@@ -981,6 +981,8 @@ library codec
     Parun.Codec.NinjutsuVariant
     Parun.Codec.NinjutsuVariantSpec
     Parun.Codec.Object
+    Parun.Codec.ObjectCount
+    Parun.Codec.ObjectCountSpec
     Parun.Codec.ObjectId
     Parun.Codec.ObjectIdSpec
     Parun.Codec.ObjectRef
@@ -2362,6 +2364,7 @@ library types
     Parun.Types.BlockPermission
     Parun.Types.BlockProducer
     Parun.Types.BlockRequirement
+    Parun.Types.BlockRole
     Parun.Types.BlocksDeclared
     Parun.Types.BlockStatus
     Parun.Types.Board
@@ -2375,7 +2378,6 @@ library types
     Parun.Types.CantSearchLibraries
     Parun.Types.Card
     Parun.Types.CardArrivedIn
-    Parun.Types.CardCount
     Parun.Types.CardIdentity
     Parun.Types.CardLeavesZone
     Parun.Types.CardName
@@ -2773,6 +2775,7 @@ library types
     Parun.Types.Ninjutsu
     Parun.Types.NinjutsuVariant
     Parun.Types.Object
+    Parun.Types.ObjectCount
     Parun.Types.ObjectId
     Parun.Types.ObjectRef
     Parun.Types.ObjectSnapshot

@@ -1,6 +1,8 @@
 module Parun.Types.TargetRestriction where
 
 import qualified Parun.Types.Affected as Affected
+import qualified Parun.Types.Filter as Filter
+import qualified Parun.Types.Keyword as Keyword
 import qualified Parun.Types.StackObjectKind as StackObjectKind
 
 -- | CR 115 / CR 101.2: one printed TARGETING PROHIBITION that is not a keyword
@@ -23,6 +25,13 @@ data TargetRestriction = MkTargetRestriction
     affected :: Affected.Affected,
     -- | CR 115.1's kind of spell or ability the prohibition stops. "Spells or
     -- abilities" is one row per kind.
-    kind :: StackObjectKind.StackObjectKind
+    kind :: StackObjectKind.StackObjectKind,
+    -- | Which of those spells or abilities it stops: Karplusan Strider's "blue
+    -- or black spells", @And []@ for Dense Foliage's every spell. Matched
+    -- against the aiming object's projection with the RESTRICTING permanent as
+    -- the filter's source, Parun.Types.AttachRestriction's `attachers` framing.
+    -- Unlike CR 702.11d's hexproof from a quality it names no controller, so
+    -- the Strider's own controller's blue spell is stopped too.
+    aimers :: Filter.Filter Keyword.Keyword
   }
   deriving (Eq, Ord, Show)

@@ -1,0 +1,12 @@
+{
+  "description": "CR 603.4 Phage the Untouchable cast from its controller's hand: the intervening if is false, so its enters trigger does not trigger",
+  "note": "The companion of the Zombify scenario, on the same seats: alice casts Phage from her hand, it enters with nothing on the stack after it, and the game goes on.",
+  "board": {"active": "alice", "step": "PrecombatMain", "seats": [{"name": "alice", "battlefield": [{"card": "Swamp", "label": "s1"}, {"card": "Swamp", "label": "s2"}, {"card": "Swamp", "label": "s3"}, {"card": "Swamp", "label": "s4"}, {"card": "Swamp", "label": "s5"}, {"card": "Swamp", "label": "s6"}, {"card": "Swamp", "label": "s7"}], "hand": [{"card": "Phage the Untouchable", "label": "phage"}], "library": [{"card": "Island"}, {"card": "Island"}, {"card": "Island"}]}, {"name": "bob", "library": [{"card": "Island"}, {"card": "Island"}, {"card": "Island"}]}]},
+  "timeline": [
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "do": {"Cast": {"object": "$phage", "mana": ["$s1", "$s2", "$s3", "$s4", "$s5", "$s6", "$s7"]}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "do": "Pass"},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "check": {"View": {"of": "Stack", "is": []}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "check": {"Count": {"player": "alice", "zone": "Battlefield", "card": "Phage the Untouchable", "count": 1}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "check": {"View": {"of": "Result", "is": null}}}
+  ]
+}

@@ -88,6 +88,7 @@ import Parun.Types.ManaType (ManaType)
 import qualified Parun.Types.ManaType as ManaType
 import Parun.Types.ManaUnit (ManaUnit)
 import qualified Parun.Types.ManaUnit as ManaUnit
+import qualified Parun.Types.ObjectCount as ObjectCount
 import Parun.Types.ObjectId (ObjectId)
 import qualified Parun.Types.Optionality as Optionality
 import qualified Parun.Types.PaymentSubject as PaymentSubject
@@ -569,7 +570,7 @@ manaSuppliesGiven capacity pcs pid borrowed oid gs =
             -- The slot each one-object removal of the cost binds its object
             -- under (Parun.Engine.Cost.payComponent's arms).
             removalSlot component = case component of
-              CostComponent.Sacrifice sacrifice | Sacrifice.count sacrifice == CostAmount.Fixed 1 -> Just Binding.sacrificedPermanent
+              CostComponent.Sacrifice sacrifice | Sacrifice.count sacrifice == ObjectCount.Exactly (CostAmount.Fixed 1) -> Just Binding.sacrificedPermanent
               CostComponent.ExilePermanents exiled | ExilePermanents.count exiled == 1 -> Just Binding.exiledPermanent
               _ -> Nothing
             onBattlefield = filter ((==) (ClaimAxis.Removal Zone.Battlefield) . Claim.Type.axis) (Activations.claims activations)

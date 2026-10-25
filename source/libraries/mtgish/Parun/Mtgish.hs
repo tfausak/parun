@@ -42,7 +42,6 @@ import qualified Parun.Types.Arithmetic as Arithmetic
 import qualified Parun.Types.BeginningStep as BeginningStep
 import qualified Parun.Types.CantBeBlockedBy as CantBeBlockedBy
 import qualified Parun.Types.Card as Card
-import qualified Parun.Types.CardCount as CardCount
 import qualified Parun.Types.CardName as CardName
 import qualified Parun.Types.CardType as CardType
 import qualified Parun.Types.CharacteristicPT as CharacteristicPT
@@ -109,6 +108,7 @@ import qualified Parun.Types.Modification as Modification
 import qualified Parun.Types.ModifyPowerToughness as ModifyPowerToughness
 import qualified Parun.Types.ModifyTarget as ModifyTarget
 import qualified Parun.Types.MoveToZone as MoveToZone
+import qualified Parun.Types.ObjectCount as ObjectCount
 import qualified Parun.Types.ObjectRef as ObjectRef
 import qualified Parun.Types.Optionality as Optionality
 import qualified Parun.Types.PayBranch as PayBranch
@@ -656,12 +656,12 @@ costPart n = case Node.tag n of
   "SacrificePermanent" -> itself CostComponent.SacrificeThis
   "SacrificeAPermanent" -> do
     f <- Node.argument n >>= permanents outermost
-    Right (Right (CostComponent.Sacrifice Sacrifice.MkSacrifice {Sacrifice.count = CostAmount.Fixed 1, Sacrifice.whichPermanents = f}))
+    Right (Right (CostComponent.Sacrifice Sacrifice.MkSacrifice {Sacrifice.count = ObjectCount.Exactly (CostAmount.Fixed 1), Sacrifice.whichPermanents = f}))
   "PayLife" -> do
     k <- Node.child n >>= integer
     m <- natural n k
     Right (Right (CostComponent.PayLife (CostAmount.Fixed m)))
-  "DiscardHand" -> Right (Right (CostComponent.DiscardCards DiscardCards.MkDiscardCards {DiscardCards.count = CardCount.Every, DiscardCards.whichCards = Filter.And []}))
+  "DiscardHand" -> Right (Right (CostComponent.DiscardCards DiscardCards.MkDiscardCards {DiscardCards.count = ObjectCount.Every, DiscardCards.whichCards = Filter.And []}))
   _ -> Node.untranslated n
   where
     itself c = do

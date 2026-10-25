@@ -1,0 +1,13 @@
+{
+  "description": "CR 601.2h / 701.21a / 608.2h Soulblast: as an additional cost, sacrifice all creatures you control; it deals damage to any target equal to their total power",
+  "note": "Alice's Grizzly Bears, Hill Giant and Serra Angel token, powers 2, 3 and 4, all go as the cost with nothing asked, and bob takes their total, 9, read from last known information after the token has ceased to exist (CR 111.7). Bob's own Bears are not alice's to sacrifice.",
+  "board": {"active": "alice", "step": "PrecombatMain", "seats": [{"name": "alice", "battlefield": [{"card": "Grizzly Bears", "label": "bears", "ready": true}, {"card": "Hill Giant", "label": "giant", "ready": true}, {"card": "Serra Angel", "label": "angel", "token": true, "ready": true}, {"card": "Mountain", "label": "m1"}, {"card": "Mountain", "label": "m2"}, {"card": "Mountain", "label": "m3"}, {"card": "Mountain", "label": "m4"}, {"card": "Mountain", "label": "m5"}, {"card": "Mountain", "label": "m6"}], "hand": [{"card": "Soulblast", "label": "soulblast"}], "library": [{"card": "Island"}, {"card": "Island"}, {"card": "Island"}]}, {"name": "bob", "battlefield": [{"card": "Grizzly Bears", "label": "theirs", "ready": true}], "library": [{"card": "Island"}, {"card": "Island"}, {"card": "Island"}]}]},
+  "timeline": [
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "do": {"Cast": {"object": "$soulblast", "targets": ["$bob"], "mana": ["$m1", "$m2", "$m3", "$m4", "$m5", "$m6"]}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "check": {"Count": {"player": "alice", "zone": "Battlefield", "card": "Hill Giant", "count": 0}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "do": "Pass"},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "check": {"Life": {"player": "bob", "life": 11}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "check": {"Count": {"player": "alice", "zone": "Graveyard", "card": "Grizzly Bears", "count": 1}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "check": {"Count": {"player": "bob", "zone": "Battlefield", "card": "Grizzly Bears", "count": 1}}}
+  ]
+}

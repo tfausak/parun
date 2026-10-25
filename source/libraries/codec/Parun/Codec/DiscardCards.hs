@@ -3,8 +3,8 @@
 module Parun.Codec.DiscardCards where
 
 import qualified Data.Typeable as Typeable
-import qualified Parun.Codec.CardCount as CardCount
 import qualified Parun.Codec.Filter as Filter
+import qualified Parun.Codec.ObjectCount as ObjectCount
 import qualified Parun.JsonCodec.Codec as Codec
 import qualified Parun.JsonCodec.Fields as Fields
 import qualified Parun.Types.DiscardCards as DiscardCards
@@ -13,6 +13,6 @@ import qualified Parun.Types.DiscardCards as DiscardCards
 -- shape. The keyword codec is a PARAMETER; see Parun.Codec.Filter's header.
 codec :: (Typeable.Typeable keyword, Eq keyword) => Codec.Codec keyword -> Codec.Codec (DiscardCards.DiscardCards keyword)
 codec keywordCodec = Fields.object $ do
-  count <- Fields.required "count" CardCount.codec DiscardCards.count
+  count <- Fields.required "count" ObjectCount.codec DiscardCards.count
   whichCards <- Fields.required "whichCards" (Filter.codec keywordCodec) DiscardCards.whichCards
   pure DiscardCards.MkDiscardCards {DiscardCards.count = count, DiscardCards.whichCards = whichCards}

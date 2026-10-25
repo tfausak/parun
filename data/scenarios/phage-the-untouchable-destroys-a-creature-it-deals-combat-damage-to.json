@@ -1,0 +1,12 @@
+{
+  "description": "CR 510.2 / 603.2 / 701.19c Phage the Untouchable: whenever Phage deals combat damage to a creature, destroy that creature; it can't be regenerated",
+  "note": "Bob's Wall of Stone, a 0/8, blocks Phage and survives its 4 damage, so only the trigger can kill it. Bob regenerates the Wall first; the shield is still up when the trigger resolves, and the destruction ignores it.",
+  "board": {"active": "alice", "step": "BeginningOfCombat", "seats": [{"name": "alice", "battlefield": [{"card": "Phage the Untouchable", "label": "phage", "ready": true}], "library": [{"card": "Island"}, {"card": "Island"}, {"card": "Island"}]}, {"name": "bob", "battlefield": [{"card": "Wall of Stone", "label": "wall", "ready": true}, {"card": "Forest", "label": "f1"}, {"card": "Forest", "label": "f2"}], "hand": [{"card": "Regenerate", "label": "regenerate"}], "library": [{"card": "Island"}, {"card": "Island"}, {"card": "Island"}]}]},
+  "timeline": [
+    {"turn": 1, "step": "DeclareAttackers", "player": "alice", "do": {"Attack": ["$phage"]}},
+    {"turn": 1, "step": "DeclareBlockers", "player": "bob", "do": {"Block": {"$wall": ["$phage"]}}},
+    {"turn": 1, "step": "DeclareBlockers", "player": "bob", "do": {"Cast": {"object": "$regenerate", "targets": ["$wall"], "mana": ["$f1", "$f2"]}}},
+    {"turn": 1, "step": "EndOfCombat", "player": "alice", "check": {"Count": {"player": "bob", "zone": "Graveyard", "card": "Wall of Stone", "count": 1}}},
+    {"turn": 1, "step": "EndOfCombat", "player": "alice", "check": {"Life": {"player": "bob", "life": 20}}}
+  ]
+}

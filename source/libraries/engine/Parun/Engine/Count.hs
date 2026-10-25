@@ -196,8 +196,11 @@ evaluate viewOf quantityOf context gs count =
 -- player's library, so the spell returns in both; under Library of Leng it goes
 -- to the top of that library unrevealed, and the spell does not.
 --
--- False for an id with no object, which is one that has ceased to exist since
--- the binding was written -- CR 111.7's token, whose exile leaves nothing.
+-- A departed token that went to a public zone and then ceased to exist there
+-- (CR 111.7) is findable too, CR 608.2h answering from its last known
+-- information: Soulblast's sacrificed token still counts towards "the total
+-- power of the sacrificed creatures", data/scenarios'
+-- soulblast-sacrifices-every-creature-and-deals-their-total-power the proof.
 findableAfterMove :: GameState -> ObjectId -> Bool
 findableAfterMove gs oid = case Game.lookupObject oid gs of
   -- The id is the one that DEPARTED, which is the shape a slot bound before the
@@ -215,10 +218,22 @@ findableAfterMove gs oid = case Game.lookupObject oid gs of
   -- the pool reading a slot whose object this resolution put into a hand, Ad
   -- Nauseam, reveals it first (CR 701.20a).
   --
-  -- Nothing when nothing arrived: CR 111.7's token, whose exile leaves nothing
-  -- for this to find, keeps the False it had.
-  Nothing -> any (arrivedFindable gs) (Game.arrivalsOf oid gs)
+  -- A token that has ceased since it landed leaves no arrival to ask, so the
+  -- zone the move named answers instead.
+  Nothing -> any (arrivedFindable gs) (Game.arrivalsOf oid gs) || ceasedInPublic gs oid
   Just _ -> arrivedFindable gs oid
+
+-- CR 111.7: did this departed object move into a public zone and every
+-- incarnation it arrived as cease to exist there?
+ceasedInPublic :: GameState -> ObjectId -> Bool
+ceasedInPublic gs oid =
+  let ceased event = case event of
+        GameEvent.Moved m ->
+          ZoneChange.departed (Moved.change m) == oid
+            && not (Game.isHiddenZone (ZoneChange.to (Moved.change m)))
+            && all (Maybe.isNothing . (`Game.lookupObject` gs)) (Moved.arrivals m)
+        _ -> False
+   in any (ceased . LoggedEvent.event) (GameState.events gs)
 
 -- The arm above's public-zone question about an id that IS live, asked directly
 -- of a binding that holds the arrival and through Game.arrivalsOf of one that holds
@@ -455,7 +470,7 @@ bakePerspective viewOf context gs candidate predicate =
         Filter.Type.IsRingBearer -> predicate
         Filter.Type.IsPaired -> predicate
         Filter.Type.IsPairedWithSource -> predicate
-        Filter.Type.IsBlockedBySource -> predicate
+        Filter.Type.BlockPartnerOfSource _ -> predicate
         Filter.Type.HasDesignation _ -> predicate
         Filter.Type.HasCounters _ -> predicate
         Filter.Type.HasCountersOfAnyKind -> predicate
@@ -1216,6 +1231,7 @@ viewOfSnapshot deploy mController mOwner isToken counters zone home lapsed snaps
       Filter.blocking = False,
       Filter.blockStatus = Nothing,
       Filter.blockers = Set.empty,
+      Filter.blocked = Set.empty,
       Filter.attackedThisTurn = False,
       Filter.couldAttackThisTurn = False,
       -- CR 508.1a / 509.1a: a snapshot is CR 608.2h's record of an object, and
