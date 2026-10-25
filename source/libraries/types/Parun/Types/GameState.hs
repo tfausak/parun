@@ -384,7 +384,7 @@ data GameState = MkGameState
     -- turn handoff. Filter.CouldAttackThisTurn reads it.
     couldAttackThisTurn :: Set.Set ObjectId.ObjectId,
     -- | CR 602.5b: which abilities of which objects have been activated this
-    -- turn, read by ActivationRestriction.OnlyOnceEachTurn alone; cleared at turn
+    -- turn, read by ActivationRestriction.TimesEachTurn alone; cleared at turn
     -- handoff, which is the whole of "each turn". Keyed by the SOURCE object and
     -- then by the ability, since a permanent may print the rider on one of two
     -- abilities (Locust Swarm). The ability BY VALUE and counted, for CR

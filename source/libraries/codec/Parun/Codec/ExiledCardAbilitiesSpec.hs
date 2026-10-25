@@ -14,8 +14,8 @@ spec s = Spec.describe s "Parun.Codec.ExiledCardAbilities" $ do
     Common.assertCodec
       s
       ExiledCardAbilities.codec
-      ExiledCardAbilities.MkExiledCardAbilities {ExiledCardAbilities.cards = Filter.IsExiledWithSource ExiledPile.CraftMaterials, ExiledCardAbilities.restrictions = [ActivationRestriction.OnlyOnceEachTurn]}
-      " {\"cards\":{\"type\":\"IsExiledWithSource\",\"value\":{\"type\":\"CraftMaterials\"}},\"restrictions\":[{\"type\":\"OnlyOnceEachTurn\"}]} "
+      ExiledCardAbilities.MkExiledCardAbilities {ExiledCardAbilities.cards = Filter.IsExiledWithSource ExiledPile.CraftMaterials, ExiledCardAbilities.restrictions = [ActivationRestriction.TimesEachTurn 1]}
+      " {\"cards\":{\"type\":\"IsExiledWithSource\",\"value\":{\"type\":\"CraftMaterials\"}},\"restrictions\":[{\"type\":\"TimesEachTurn\",\"value\":1}]} "
   Spec.it s "restrictions default to none" $
     Common.assertCodec
       s

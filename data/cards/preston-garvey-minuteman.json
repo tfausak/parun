@@ -173,7 +173,10 @@
                             "value": 1
                           },
                           "riders": {
-                            "attachedTo": "land"
+                            "attachedTo": {
+                              "type": "Specified",
+                              "value": "land"
+                            }
                           }
                         }
                       }

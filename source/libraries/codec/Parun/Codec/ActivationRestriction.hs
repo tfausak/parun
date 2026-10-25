@@ -7,11 +7,13 @@ import qualified Parun.Codec.Phase as Phase
 import qualified Parun.Codec.TurnScope as TurnScope
 import qualified Parun.JsonCodec.Arm as Arm
 import qualified Parun.JsonCodec.Codec as Codec
+import qualified Parun.JsonCodec.Common as Common
 import qualified Parun.Types.ActivationRestriction as ActivationRestriction
 
 -- | Tagged rather than bare-nullary since CR 500.1's DuringPhase carries a
--- window, CR 102.1's DuringTurn a scope, CR 506.7a's BeforeStep a step and CR
--- 602.5's OnlyIf a condition; the other arms still render as bare tags.
+-- window, CR 102.1's DuringTurn a scope, CR 506.7a's BeforeStep a step, CR
+-- 602.5's OnlyIf a condition and CR 602.5b's TimesEachTurn a count; the other
+-- arms still render as bare tags.
 --
 -- There is no tag for "no rider": CR 602.2's default is the EMPTY LIST on the
 -- ability, which Parun.Codec.ActivatedAbility writes by omitting the key.
@@ -28,7 +30,7 @@ codec =
       Arm.payload "BeforeStep" Phase.codec ActivationRestriction.BeforeStep (\x -> case x of ActivationRestriction.BeforeStep y -> Just y; _ -> Nothing),
       Arm.payload "OnlyIf" Condition.codec ActivationRestriction.OnlyIf (\x -> case x of ActivationRestriction.OnlyIf y -> Just y; _ -> Nothing),
       Arm.nullary "OnlyOnce" ActivationRestriction.OnlyOnce,
-      Arm.nullary "OnlyOnceEachTurn" ActivationRestriction.OnlyOnceEachTurn,
+      Arm.payload "TimesEachTurn" Common.natural ActivationRestriction.TimesEachTurn (\x -> case x of ActivationRestriction.TimesEachTurn y -> Just y; _ -> Nothing),
       Arm.nullary "DuringDieRoll" ActivationRestriction.DuringDieRoll,
       Arm.nullary "InstantSpeed" ActivationRestriction.InstantSpeed,
       Arm.payload "SpendOnly" ManaSpecification.codec ActivationRestriction.SpendOnly (\x -> case x of ActivationRestriction.SpendOnly y -> Just y; _ -> Nothing)
@@ -45,7 +47,7 @@ tagOf x = case x of
   ActivationRestriction.BeforeStep {} -> "BeforeStep"
   ActivationRestriction.OnlyIf {} -> "OnlyIf"
   ActivationRestriction.OnlyOnce {} -> "OnlyOnce"
-  ActivationRestriction.OnlyOnceEachTurn {} -> "OnlyOnceEachTurn"
+  ActivationRestriction.TimesEachTurn {} -> "TimesEachTurn"
   ActivationRestriction.DuringDieRoll {} -> "DuringDieRoll"
   ActivationRestriction.InstantSpeed {} -> "InstantSpeed"
   ActivationRestriction.SpendOnly {} -> "SpendOnly"

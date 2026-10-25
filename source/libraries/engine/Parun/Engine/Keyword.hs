@@ -5470,7 +5470,7 @@ printedRiders :: Keyword -> [ActivationRestriction.ActivationRestriction]
 printedRiders keyword = case keyword of
   Keyword.Forecast ->
     [ ActivationRestriction.DuringPhase (DuringPhase.MkDuringPhase (PhaseSelector.Step (Phase.Beginning BeginningStep.Upkeep)) TurnScope.ControllersTurn),
-      ActivationRestriction.OnlyOnceEachTurn
+      ActivationRestriction.TimesEachTurn 1
     ]
   Keyword.Exhaust -> [ActivationRestriction.OnlyOnce]
   Keyword.PowerUp -> [ActivationRestriction.OnlyOnce]
@@ -5503,7 +5503,7 @@ printedRiders keyword = case keyword of
                 (Quantity.Literal 1)
             )
         ),
-      ActivationRestriction.OnlyOnceEachTurn
+      ActivationRestriction.TimesEachTurn 1
     ]
   _ -> []
 

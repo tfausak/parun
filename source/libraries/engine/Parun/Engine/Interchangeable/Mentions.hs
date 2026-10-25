@@ -192,6 +192,7 @@ import qualified Parun.Types.EntryAttack as EntryAttack
 import qualified Parun.Types.EntryBlock as EntryBlock
 import qualified Parun.Types.EntryController as EntryController
 import qualified Parun.Types.EntryFlip as EntryFlip
+import qualified Parun.Types.EntryHost as EntryHost
 import qualified Parun.Types.EntryOption as EntryOption
 import qualified Parun.Types.EntryPrice as EntryPrice
 import qualified Parun.Types.EntryR as EntryR
@@ -613,7 +614,7 @@ activationRestrictionNames asking x = case x of
   ActivationRestriction.BeforeStep _phase -> history asking HistoryRead.StepBegins
   ActivationRestriction.OnlyIf condition -> conditionNames asking condition
   ActivationRestriction.OnlyOnce -> mempty
-  ActivationRestriction.OnlyOnceEachTurn -> mempty
+  ActivationRestriction.TimesEachTurn _ -> mempty
   ActivationRestriction.DuringDieRoll -> mempty
   ActivationRestriction.InstantSpeed -> mempty
   ActivationRestriction.SpendOnly _ -> mempty
@@ -1525,6 +1526,11 @@ entryBlockNames asking x = case x of
   EntryBlock.Chosen -> mempty
   EntryBlock.Specified slotName -> slotNames asking slotName
 
+entryHostNames :: (Monoid r) => Asking r -> EntryHost.EntryHost -> r
+entryHostNames asking x = case x of
+  EntryHost.Specified slotName -> slotNames asking slotName
+  EntryHost.Chosen filter_ -> filterNames asking filter_
+
 entryFlipNames :: (Monoid r) => Asking r -> EntryFlip.EntryFlip -> r
 entryFlipNames asking x = case x of
   EntryFlip.MkEntryFlip heads tails -> entryOptionNames asking heads <> entryOptionNames asking tails
@@ -1580,7 +1586,7 @@ entryRewriteNames asking onAbility onEffect x = case x of
 
 entryRidersNames :: (Monoid r) => Asking r -> (count -> r) -> (ability -> r) -> EntryRiders.EntryRiders count ability -> r
 entryRidersNames asking onCount onAbility x = case x of
-  EntryRiders.MkEntryRiders _tapped attacking blocking _transformed counters under _exiledFaceDown attachedTo faceDown _noted characteristics -> entryControllerNames asking under <> foldMap (entryAttackNames asking) attacking <> foldMap (entryBlockNames asking) blocking <> foldMap (counterKindNames asking (keywordNames asking)) (Map.keys counters) <> foldMap onCount counters <> foldMap (slotNames asking) attachedTo <> foldMap (faceDownStateNames asking onAbility) faceDown <> foldMap (modificationNames asking onAbility) characteristics
+  EntryRiders.MkEntryRiders _tapped attacking blocking _transformed counters under _exiledFaceDown attachedTo faceDown _noted characteristics -> entryControllerNames asking under <> foldMap (entryAttackNames asking) attacking <> foldMap (entryBlockNames asking) blocking <> foldMap (counterKindNames asking (keywordNames asking)) (Map.keys counters) <> foldMap onCount counters <> foldMap (entryHostNames asking) attachedTo <> foldMap (faceDownStateNames asking onAbility) faceDown <> foldMap (modificationNames asking onAbility) characteristics
 
 entryControllerNames :: (Monoid r) => Asking r -> EntryController.EntryController -> r
 entryControllerNames asking x = case x of

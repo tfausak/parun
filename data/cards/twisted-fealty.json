@@ -175,7 +175,10 @@
                         "value": 1
                       },
                       "riders": {
-                        "attachedTo": "creature"
+                        "attachedTo": {
+                          "type": "Specified",
+                          "value": "creature"
+                        }
                       }
                     }
                   }

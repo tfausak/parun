@@ -113,6 +113,7 @@ import qualified Parun.Types.Duration as Duration
 import qualified Parun.Types.Earthbend as Earthbend
 import qualified Parun.Types.Effect as Effect
 import qualified Parun.Types.EntryController as EntryController
+import qualified Parun.Types.EntryHost as EntryHost
 import qualified Parun.Types.EntryRiders as EntryRiders
 import qualified Parun.Types.ExchangeCardZones as ExchangeCardZones
 import qualified Parun.Types.ExchangeOwnership as ExchangeOwnership
@@ -2871,28 +2872,40 @@ effectLintSpec s registry = Spec.describe s "Lint" $ do
     Spec.assertBool s (any (anyFace (any moves . cardResolutionEffects) . Printing.card) ps) "the pool has a card moving a card onto the battlefield blocking"
     Spec.assertEqWith s "only the battlefield can be entered blocking (CR 509.4)" (fmap (S.nameOf . Printing.card) offenders) []
   -- CR 303.4i's rider names what the entering permanent arrives attached to, and
-  -- Parun.Engine.Resolve reads it on the CREATE alone: the Create arm hands the
-  -- host it names to Event.createTokens, while changeZoneEntering seeds its own
-  -- funnel from the effect's destination (CR 303.4a's target for a resolving Aura
-  -- spell, putFound's fixed host for a search) and never looks at this field. So a
-  -- MoveToZone or a CreateCopy naming one would say something nothing performs.
+  -- Parun.Engine.Resolve reads each arm on ONE opcode: the Create arm hands the
+  -- host EntryHost.Specified names to Event.createTokens, and the MoveToZone arm
+  -- narrows CR 303.4f's choice by EntryHost.Chosen's filter (moveOne). Neither
+  -- reads the other's arm, so a Specified on a MoveToZone, a Chosen on a Create
+  -- or on a move anywhere but the battlefield, or either on a CreateCopy would
+  -- say something nothing performs.
   --
   -- The CreateCopy half is the "no CreateCopy carries an entry rider but ..." lint
   -- below, which fences every field this one does not.
-  Spec.it s "no effect names an attachment but a Create" $ do
+  Spec.it s "each attachment rider is on the opcode that reads it" $ do
     ps <- S.allPrintings s
-    let offends effect = case effect of
-          Effect.MoveToZone (MoveToZone.MkMoveToZone _ _ riders _ _ _ _) -> Maybe.isJust (EntryRiders.attachedTo riders)
+    let specified riders = case EntryRiders.attachedTo riders of
+          Just (EntryHost.Specified _) -> True
+          _ -> False
+        chosenAmong riders = case EntryRiders.attachedTo riders of
+          Just (EntryHost.Chosen _) -> True
+          _ -> False
+        offends effect = case effect of
+          Effect.MoveToZone (MoveToZone.MkMoveToZone _ zone riders _ _ _ _) -> specified riders || (chosenAmong riders && zone /= Zone.Battlefield)
+          Effect.Create (Create.MkCreate _ _ riders _ _) -> chosenAmong riders
           _ -> False
         creates effect = case effect of
-          Effect.Create (Create.MkCreate _ _ riders _ _) -> Maybe.isJust (EntryRiders.attachedTo riders)
+          Effect.Create (Create.MkCreate _ _ riders _ _) -> specified riders
+          _ -> False
+        moves effect = case effect of
+          Effect.MoveToZone (MoveToZone.MkMoveToZone _ _ riders _ _ _ _) -> chosenAmong riders
           _ -> False
         offenders = filter (anyFace (any offends . cardResolutionEffects) . Printing.card) ps
-    -- Guards against a vacuous sweep: with no attachment named in the pool at all
-    -- this would pass whatever a card said. Preston Garvey, Minuteman is the card
-    -- that names one.
+    -- Guards against a vacuous sweep, one per arm: Preston Garvey, Minuteman
+    -- creates a token attached to a target, and Nomad Mythmaker moves an Aura
+    -- card attached to a creature its controller controls.
     Spec.assertBool s (any (anyFace (any creates . cardResolutionEffects) . Printing.card) ps) "the pool has a card creating a token attached to something"
-    Spec.assertEqWith s "only a Create names what a permanent enters attached to (CR 303.4i)" (fmap (S.nameOf . Printing.card) offenders) []
+    Spec.assertBool s (any (anyFace (any moves . cardResolutionEffects) . Printing.card) ps) "the pool has a card moving an Aura attached to a host it describes"
+    Spec.assertEqWith s "each attachment rider is on the opcode that reads it (CR 303.4f, 303.4i)" (fmap (S.nameOf . Printing.card) offenders) []
   -- The sibling lint for the OTHER face-down rider, one field over and pointed
   -- at the opposite zone: CR 708.3 is a rule about entering the BATTLEFIELD, so
   -- on any other destination it is inert card data. Inert on a Create outright,

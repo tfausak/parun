@@ -122,6 +122,7 @@ import qualified Parun.Types.EntersWith as EntersWith
 import qualified Parun.Types.EntryAttack as EntryAttack
 import qualified Parun.Types.EntryBlock as EntryBlock
 import qualified Parun.Types.EntryController as EntryController
+import qualified Parun.Types.EntryHost as EntryHost
 import qualified Parun.Types.EntryPrice as EntryPrice
 import qualified Parun.Types.EntryR as EntryR
 import qualified Parun.Types.EntryRewrite as EntryRewrite
@@ -410,7 +411,11 @@ riderSlots riders =
         Just (EntryBlock.Specified slot) -> oneSlot slot
         Just EntryBlock.Chosen -> Map.empty
         Nothing -> Map.empty
-   in joinSlots [attacked, blocked, maybe Map.empty oneSlot (EntryRiders.attachedTo riders)]
+      hosted = case EntryRiders.attachedTo riders of
+        Just (EntryHost.Specified slot) -> oneSlot slot
+        Just (EntryHost.Chosen filter_) -> filterSlotsOf filter_
+        Nothing -> Map.empty
+   in joinSlots [attacked, blocked, hosted]
 
 -- The slots a PlayerRef reads. InSlot, ControllerOfBound, OwnerOfBound,
 -- ChosenPlayerOfBound and Attacking name one at arity One, and EachInSlot,

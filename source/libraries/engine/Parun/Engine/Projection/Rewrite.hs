@@ -126,6 +126,7 @@ import qualified Parun.Types.Earthbend as Earthbend
 import qualified Parun.Types.Effect as Effect
 import qualified Parun.Types.EntersWith as EntersWith
 import qualified Parun.Types.EntryFlip as EntryFlip
+import qualified Parun.Types.EntryHost as EntryHost
 import qualified Parun.Types.EntryOption as EntryOption
 import qualified Parun.Types.EntryPrice as EntryPrice
 import qualified Parun.Types.EntryR as EntryR
@@ -2224,7 +2225,7 @@ rewriteRestriction pairs restriction = case restriction of
   ActivationRestriction.BeforeCombatDamage -> restriction
   ActivationRestriction.BeforeStep _ -> restriction
   ActivationRestriction.OnlyOnce -> restriction
-  ActivationRestriction.OnlyOnceEachTurn -> restriction
+  ActivationRestriction.TimesEachTurn _ -> restriction
   ActivationRestriction.DuringDieRoll -> restriction
   ActivationRestriction.InstantSpeed -> restriction
   ActivationRestriction.SpendOnly specified -> ActivationRestriction.SpendOnly (rewriteManaSpecification pairs specified)
@@ -2440,9 +2441,15 @@ rewriteEntryRiders pairs riders =
           . fmap (rewriteQuantity pairs)
           $ EntryRiders.counters riders,
       EntryRiders.faceDown = fmap (\state -> state {FaceDownState.listed = rewriteListing pairs (FaceDownState.listed state)}) (EntryRiders.faceDown riders),
+      -- CR 612.1 over CR 303.4f's narrowing filter, EntersAttachedTo's rewrite.
+      EntryRiders.attachedTo = fmap rewriteHost (EntryRiders.attachedTo riders),
       -- CR 612.1 over CR 611.2e's effects, ModifyTarget's modification rewrite.
       EntryRiders.characteristics = fmap (rewriteModification pairs) (EntryRiders.characteristics riders)
     }
+  where
+    rewriteHost host = case host of
+      EntryHost.Specified _ -> host
+      EntryHost.Chosen f -> EntryHost.Chosen (Filter.rewrite pairs f)
 
 -- CR 612.1 over a CR 708.2 listing's quoted abilities, which are printed on the
 -- card whose effect lists them.

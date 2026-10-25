@@ -652,6 +652,8 @@ library codec
     Parun.Codec.EntryControllerSpec
     Parun.Codec.EntryFlip
     Parun.Codec.EntryFlipSpec
+    Parun.Codec.EntryHost
+    Parun.Codec.EntryHostSpec
     Parun.Codec.EntryOption
     Parun.Codec.EntryOptionSpec
     Parun.Codec.EntryPrice
@@ -2580,6 +2582,7 @@ library types
     Parun.Types.EntryBlock
     Parun.Types.EntryController
     Parun.Types.EntryFlip
+    Parun.Types.EntryHost
     Parun.Types.EntryOption
     Parun.Types.EntryPrice
     Parun.Types.EntryR

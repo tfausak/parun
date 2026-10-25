@@ -86,7 +86,8 @@
           },
           "restrictions": [
             {
-              "type": "OnlyOnceEachTurn"
+              "type": "TimesEachTurn",
+              "value": 1
             }
           ]
         }

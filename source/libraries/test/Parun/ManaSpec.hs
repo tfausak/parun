@@ -1107,7 +1107,7 @@ priorityWindowBoard omnath forest =
 -- gates these same two windows, but through CR 102.1's turn axis alone
 -- (laviniaTurnRiderSpec below), so she leaves the phase axis unexercised. Vivi
 -- Ornitier and every other hit ride on "only once each turn" -- which is
--- ActivationRestriction.OnlyOnceEachTurn and names no window either
+-- ActivationRestriction.TimesEachTurn and names no window either
 -- (data/scenarios/mana is where that arm is exercised on this road) -- or on
 -- "only if <condition>", which is its OnlyIf arm and names no window either
 -- (nimbusMazeSpec below is where that arm is exercised on this road), so neither
