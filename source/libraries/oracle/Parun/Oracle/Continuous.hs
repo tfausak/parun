@@ -247,10 +247,9 @@ static context attached enchants a
 -- change to power and toughness and a "can't be blocked" of the objects it
 -- affects read as one ability: "Enchanted creature gets +1/+1 and can't be
 -- blocked except by creatures with flying." (Treetop Bracers). The rest, and
--- the wordings of the one read together. One granting keywords is not read
--- with the restriction here: Oracle text puts the keyword after it
--- (Whispersilk Cloak) or before it (Cloak of Invisibility), and the pool
--- prints neither.
+-- the wordings of the one read together. One granting keywords reads either
+-- way, or as two sentences: Oracle text puts the keyword after the
+-- restriction (Whispersilk Cloak) or before it (Cloak of Invisibility).
 evasive :: Target.Context -> Maybe Text.Text -> [TargetSlot.TargetSlot] -> [StaticAbility.StaticAbility Ability] -> [CombatRestriction.CombatRestriction] -> ([StaticAbility.StaticAbility Ability], [CombatRestriction.CombatRestriction], [[Text.Text]])
 evasive context attached enchants statics rs =
   case [(s, r, ws) | s <- statics, r@(CombatRestriction.CantBeBlockedBy (CantBeBlockedBy.MkCantBeBlockedBy a b Nothing Nothing)) <- rs, let ws = together s a b, not (null ws)] of
@@ -263,9 +262,12 @@ evasive context attached enchants statics rs =
       other <- ruled context attached enchants a
       Monad.guard (Target.wording subject == Target.wording other)
       (verb, defined) <- modifications Static (Target.number subject) False context (Foldable.toList (StaticAbility.modifications s))
-      Monad.guard (Text.null defined && not (any (Maybe.isJust . keywordOf) (StaticAbility.modifications s)))
+      Monad.guard (Text.null defined)
       by <- blockedBy context b
-      [Prose.sentence (Target.wording subject <> Text.pack " " <> verb <> Text.pack " and can't be blocked" <> by)]
+      let before = Prose.sentence (Target.wording subject <> Text.pack " " <> verb <> Text.pack " and can't be blocked" <> by)
+          after = Prose.sentence (Target.wording subject <> Text.pack " can't be blocked" <> by <> Text.pack " and " <> verb)
+          apart = Prose.sentence (Target.wording subject <> Text.pack " " <> verb) <> Text.pack "\n" <> Prose.sentence (Target.wording subject <> Text.pack " can't be blocked" <> by)
+      if any (Maybe.isJust . keywordOf) (StaticAbility.modifications s) then [after, before, apart] else [before]
 
 -- | A characteristic-defining ability (CR 604.3) giving the power or
 -- toughness the face prints as a star (CR 208.2): "Nightmare's power and
