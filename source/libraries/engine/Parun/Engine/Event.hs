@@ -3935,8 +3935,8 @@ apply batch candidate event =
       -- event goes on unchanged: the loop's next pass re-collects against a
       -- board where it has its abilities back, so a prevention the face-up
       -- creature prints can still meet the same damage. Unchanged includes its
-      -- amount, fixed off the face-down 2/2 (docs/decisions.md, "How much damage
-      -- a face-down creature Illusionary Mask cast deals as it turns face up").
+      -- amount, fixed off the face-down 2/2 as the effect was applied (CR
+      -- 608.2h), which the modified event keeps (CR 614.6).
       --
       -- Through turnFaceUpByEffect's guard, so a batch that collected the row
       -- for two events turns the permanent up once. `consume` is skipped for the
@@ -9938,10 +9938,9 @@ offerDrawReveals pid drawn nth timing = do
 
 -- CR 603.11's static half: Rowen's "reveal the first card you draw each turn"
 -- and God-Eternal Kefnet's "you may reveal ... as you draw it", one reveal per
--- ability (Kefnet's ruling, 2019-05-03; docs/decisions.md, "How many times two
--- draw-time reveals reveal one card"), each under the object whose ability it
--- is, so only that object's linked trigger fires (CR 607.2h). A "may" is asked
--- through Prompt.OfferedExtra, after CR 121.9's look.
+-- ability (Kefnet's ruling, 2019-05-03; CR 607.1), each under the object whose
+-- ability it is, so only that object's linked trigger fires (CR 607.2h). A
+-- "may" is asked through Prompt.OfferedExtra, after CR 121.9's look.
 --
 -- CR 701.20a's window is miracle's: until a player would next receive priority,
 -- then until a trigger the reveal caused leaves the stack (Engine.placeBorne).

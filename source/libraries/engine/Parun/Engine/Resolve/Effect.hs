@@ -5642,8 +5642,8 @@ applyOneEffect runSubgame resolving source controller legal chosen effect = case
         -- applicable effects", so the offer is the Aura's own entryHostsFor
         -- narrowed by the effect's filter, made by the player it enters under.
         -- Asked here rather than inside the funnel because the filter is card
-        -- text read in this resolution's context (docs/decisions.md, "When an
-        -- effect that narrows an Aura's host asks for it"). Answers the
+        -- text read in this resolution's context; a replacement that sends the
+        -- card elsewhere discards the answer unused. Answers the
         -- funnel's seed, Nothing for CR 303.4g's "remains in its current zone",
         -- and Just Nothing for every move the rider does not narrow, which the
         -- funnel seats itself. MINUS `sofar`, the funnel's own CR 608.2f exclusion.
