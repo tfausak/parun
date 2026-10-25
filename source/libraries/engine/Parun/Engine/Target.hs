@@ -86,8 +86,9 @@ import qualified Parun.Types.ZoneScope as ZoneScope
 -- CR 115: a target slot's legal recipients -- the set the slot itself admits
 -- (admittedRecipients below), less every candidate rule 702 forbids TARGETING
 -- (targetable below, where shroud, hexproof and the restrictions after them
--- live), less every candidate a printed CR 101.2 prohibition forbids to `kind`
--- (Parun.Engine.TargetRestriction, Dense Foliage's "spells"), less CR 115.5's
+-- live), less every candidate a CR 101.2 prohibition forbids to `kind`
+-- (Parun.Engine.TargetRestriction, Dense Foliage's "spells"; resolved onto a
+-- player, Autumn's Veil's), less CR 115.5's
 -- one candidate, a spell or ability on the stack being an illegal target for
 -- itself, and less every candidate outside the perspective's range of influence
 -- (CR 801.4, inRangeGiven below).
@@ -240,7 +241,19 @@ legalRecipientsGiven kind reader pools perspective unannounced bindings acquisit
       -- CR 101.2's printed prohibitions (Parun.Engine.TargetRestriction), asked
       -- of `kind` rather than of `source`: Dense Foliage stops a spell and not
       -- a triggered ability whose source is that spell.
-      stopped oid = TargetRestriction.stops pcs grants (targetRestrictionRows pools) kind sourceView oid gs
+      stopped oid =
+        TargetRestriction.stops pcs grants (targetRestrictionRows pools) kind sourceView oid gs
+          || bannedByPlayer oid
+      -- The same prohibition resolved onto a player rather than printed on a
+      -- permanent (Autumn's Veil): the candidate's controller's rows, read
+      -- live, so a creature they gained control of later is covered. Hoisted,
+      -- and empty on almost every board, so no candidate's controller is read.
+      playerBans = filter (not . null . snd) (fmap (\pid -> (pid, PlayerEffect.targetingRestrictions (rowsOf pid))) (Game.stillPlaying gs))
+      bannedByPlayer oid =
+        not (null playerBans)
+          && any
+            (\pid -> any (\bans -> PlayerEffect.forbidsTargeting bans pid kind sourceView oid gs) (lookup pid playerBans))
+            (Projection.controllerOfGiven grants oid gs)
    in Set.filter keep (admittedGiven reader pools perspective unannounced bindings acquisition source slot gs)
 
 -- CR 801.5a: the recipients @chooser@ may name for an ability of @source@ --

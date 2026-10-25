@@ -153,6 +153,7 @@ import qualified Parun.Types.CounterDestination as CounterDestination
 import qualified Parun.Types.CounterKind as CounterKind
 import qualified Parun.Types.CounterPattern as CounterPattern
 import qualified Parun.Types.CounterPlacement as CounterPlacement
+import qualified Parun.Types.CounterProhibition as CounterProhibition
 import qualified Parun.Types.CounterR as CounterR
 import qualified Parun.Types.CounterRestriction as CounterRestriction
 import qualified Parun.Types.Counterability as Counterability
@@ -5043,8 +5044,11 @@ playerEffectFilters playerEffect = case playerEffect of
   PlayerEffect.MayTapForMana grant -> TapForMana.permanents grant : concatMap restrictionFilters (Maybe.maybeToList (TapForMana.restriction grant))
   -- CR 701.6a's "a spell or ability", narrowed by the victim's own qualities
   -- exactly as a cost modifier's is (Spider-Punk's is `And []`, Prowling
-  -- Serpopard's is HasCardType Creature).
-  PlayerEffect.CantBeCountered f -> [f]
+  -- Serpopard's is HasCardType Creature), and by the countering object's
+  -- (Autumn's Veil's "blue or black spells").
+  PlayerEffect.CantBeCountered p -> [CounterProhibition.countered p, CounterProhibition.counterers p]
+  -- CR 115's protected permanents and its aiming spells (Autumn's Veil).
+  PlayerEffect.RestrictTargeting r -> [TargetRestriction.affected r, TargetRestriction.aimers r]
   -- CR 615.12 narrows by a DamagePattern, two of whose axes are Filters over an
   -- object: the damage's SOURCE (Excruciator's "by this creature", `IsSource`)
   -- and its printed RECIPIENT (Lava Burst's "to a creature"). The kind, the

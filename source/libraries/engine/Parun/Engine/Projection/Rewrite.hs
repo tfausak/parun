@@ -95,6 +95,7 @@ import qualified Parun.Types.Counter as Counter
 import qualified Parun.Types.CounterDestination as CounterDestination
 import qualified Parun.Types.CounterPattern as CounterPattern
 import qualified Parun.Types.CounterPlacement as CounterPlacement
+import qualified Parun.Types.CounterProhibition as CounterProhibition
 import qualified Parun.Types.CounterR as CounterR
 import qualified Parun.Types.CounterRestriction as CounterRestriction
 import qualified Parun.Types.Create as Create
@@ -517,7 +518,10 @@ rewritePlayerEffect pairs effect = case effect of
   PlayerEffect.ActivateKeywordAtInstantSpeed _ -> effect
   PlayerEffect.ActivateLoyaltyAtInstantSpeed f -> PlayerEffect.ActivateLoyaltyAtInstantSpeed (Filter.rewrite pairs f)
   PlayerEffect.MayTapForMana grant -> PlayerEffect.MayTapForMana (TapForMana.MkTapForMana (Filter.rewrite pairs (TapForMana.permanents grant)) (fmap (rewriteManaRestriction pairs) (TapForMana.restriction grant)))
-  PlayerEffect.CantBeCountered f -> PlayerEffect.CantBeCountered (Filter.rewrite pairs f)
+  PlayerEffect.CantBeCountered (CounterProhibition.MkCounterProhibition countered counterers) -> PlayerEffect.CantBeCountered (CounterProhibition.MkCounterProhibition (Filter.rewrite pairs countered) (Filter.rewrite pairs counterers))
+  -- CR 612.2's colour word in Autumn's Veil's "blue or black spells", and the
+  -- word naming what is protected.
+  PlayerEffect.RestrictTargeting r -> PlayerEffect.RestrictTargeting r {TargetRestriction.affected = Filter.rewrite pairs (TargetRestriction.affected r), TargetRestriction.aimers = Filter.rewrite pairs (TargetRestriction.aimers r)}
   PlayerEffect.CantCastMatching f -> PlayerEffect.CantCastMatching (Filter.rewrite pairs f)
   PlayerEffect.PutTappedAsYouCascade f -> PlayerEffect.PutTappedAsYouCascade (Filter.rewrite pairs f)
   -- CR 305.1's play-side prohibition, narrowed by the same kind of Filter.

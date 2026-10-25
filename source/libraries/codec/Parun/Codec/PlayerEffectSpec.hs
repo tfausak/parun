@@ -15,6 +15,7 @@ import qualified Parun.Types.Color as Color
 import qualified Parun.Types.CostChange as CostChange
 import qualified Parun.Types.CostModifier as CostModifier
 import qualified Parun.Types.CostSubject as CostSubject
+import qualified Parun.Types.CounterProhibition as CounterProhibition
 import qualified Parun.Types.DamagePattern as DamagePattern
 import qualified Parun.Types.DrawReveal as DrawReveal
 import qualified Parun.Types.ExtraVotes as ExtraVotes
@@ -45,8 +46,10 @@ import qualified Parun.Types.ShownCards as ShownCards
 import qualified Parun.Types.Shows as Shows
 import qualified Parun.Types.SlotName as SlotName
 import qualified Parun.Types.SpendManaAsThough as SpendManaAsThough
+import qualified Parun.Types.StackObjectKind as StackObjectKind
 import qualified Parun.Types.StatedFlip as StatedFlip
 import qualified Parun.Types.TapForMana as TapForMana
+import qualified Parun.Types.TargetRestriction as TargetRestriction
 import qualified Parun.Types.Zone as Zone
 
 spec :: (Monad m, Monad n) => Spec.Spec m n -> n ()
@@ -261,14 +264,29 @@ spec s = Spec.describe s "Parun.Codec.PlayerEffect" $ do
     Common.assertCodec
       s
       PlayerEffect.codec
-      (PlayerEffect.CantBeCountered (Filter.And []))
-      " {\"type\":\"CantBeCountered\",\"value\":{\"type\":\"And\",\"value\":[]}} "
+      (PlayerEffect.CantBeCountered (CounterProhibition.MkCounterProhibition (Filter.And []) (Filter.And [])))
+      " {\"type\":\"CantBeCountered\",\"value\":{\"countered\":{\"type\":\"And\",\"value\":[]}}} "
   Spec.it s "CantBeCountered, a filter that names qualities" $
     Common.assertCodec
       s
       PlayerEffect.codec
-      (PlayerEffect.CantBeCountered (Filter.HasCardType CardType.Creature))
-      " {\"type\":\"CantBeCountered\",\"value\":{\"type\":\"HasCardType\",\"value\":{\"type\":\"Creature\"}}} "
+      (PlayerEffect.CantBeCountered (CounterProhibition.MkCounterProhibition (Filter.HasCardType CardType.Creature) (Filter.And [])))
+      " {\"type\":\"CantBeCountered\",\"value\":{\"countered\":{\"type\":\"HasCardType\",\"value\":{\"type\":\"Creature\"}}}} "
+  -- Autumn's Veil's "by blue or black spells": the counterers' key.
+  Spec.it s "CantBeCountered, counterers that name qualities" $
+    Common.assertCodec
+      s
+      PlayerEffect.codec
+      (PlayerEffect.CantBeCountered (CounterProhibition.MkCounterProhibition (Filter.Not Filter.IsAbility) (Filter.HasColor Color.Blue)))
+      " {\"type\":\"CantBeCountered\",\"value\":{\"countered\":{\"type\":\"Not\",\"value\":{\"type\":\"IsAbility\"}},\"counterers\":{\"type\":\"HasColor\",\"value\":{\"type\":\"Blue\"}}}} "
+  -- CR 115 / 101.2 / Autumn's Veil: a targeting restriction whose affected set
+  -- is a Filter.
+  Spec.it s "RestrictTargeting" $
+    Common.assertCodec
+      s
+      PlayerEffect.codec
+      (PlayerEffect.RestrictTargeting (TargetRestriction.MkTargetRestriction (Filter.HasCardType CardType.Creature) StackObjectKind.Spell (Filter.HasColor Color.Black)))
+      " {\"type\":\"RestrictTargeting\",\"value\":{\"affected\":{\"type\":\"HasCardType\",\"value\":{\"type\":\"Creature\"}},\"aimers\":{\"type\":\"HasColor\",\"value\":{\"type\":\"Black\"}},\"kind\":{\"type\":\"Spell\"}}} "
   -- CR 615.12 / Spider-Punk, whose sentence names no quality of the damage: the
   -- pattern that admits everything, whose every field is its default, so the
   -- payload is an empty object rather than absent. WHOSE damage is the carrier's

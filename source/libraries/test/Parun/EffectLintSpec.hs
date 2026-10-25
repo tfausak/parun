@@ -1169,6 +1169,7 @@ unpreventableScopeOffends scope playerEffect = case playerEffect of
   PlayerEffect.ActivateLoyaltyAtInstantSpeed _ -> False
   PlayerEffect.MayTapForMana _ -> False
   PlayerEffect.CantBeCountered _ -> False
+  PlayerEffect.RestrictTargeting _ -> False
   PlayerEffect.CantCastMatching _ -> False
   PlayerEffect.PutTappedAsYouCascade _ -> False
   PlayerEffect.CastOnlyAtSorcerySpeed -> False
@@ -1242,6 +1243,7 @@ unpreventablePatternOffends playerEffect = case playerEffect of
   PlayerEffect.ActivateLoyaltyAtInstantSpeed _ -> False
   PlayerEffect.MayTapForMana _ -> False
   PlayerEffect.CantBeCountered _ -> False
+  PlayerEffect.RestrictTargeting _ -> False
   PlayerEffect.CantCastMatching _ -> False
   PlayerEffect.PutTappedAsYouCascade _ -> False
   PlayerEffect.CastOnlyAtSorcerySpeed -> False

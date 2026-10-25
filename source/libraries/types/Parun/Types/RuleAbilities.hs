@@ -1,6 +1,7 @@
 module Parun.Types.RuleAbilities where
 
 import qualified Parun.Types.ActivationProhibition as ActivationProhibition
+import qualified Parun.Types.Affected as Affected
 import qualified Parun.Types.AttachRestriction as AttachRestriction
 import qualified Parun.Types.AttackCost as AttackCost
 import qualified Parun.Types.AttackPermission as AttackPermission
@@ -64,7 +65,7 @@ data RuleAbilities = MkRuleAbilities
     sacrificeRestrictions :: [SacrificeRestriction.SacrificeRestriction],
     -- | CR 115 / 101.2: "creatures can't be the targets of spells" (Dense
     -- Foliage).
-    targetRestrictions :: [TargetRestriction.TargetRestriction],
+    targetRestrictions :: [TargetRestriction.TargetRestriction Affected.Affected],
     -- | CR 502.3: "each land with an activated ability that isn't a mana ability
     -- doesn't untap during its controller's untap step" (Tsabo's Web), and "you
     -- may choose not to untap this artifact during your untap step" (Amber

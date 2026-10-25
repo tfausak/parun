@@ -8424,7 +8424,7 @@ destructionsStanding asOf cause regenerability oids = do
 -- 117.5 scan reads this event the controller can no longer be asked for exactly
 -- (see Parun.Types.Countering).
 counter :: ObjectId -> PlayerId -> ObjectId -> Game ()
-counter source controller oid = Monad.void (counterOne (pure (Zone.Graveyard, LibraryPosition.defaultValue)) source controller oid)
+counter source controller oid = Monad.void (counterOne (pure (Zone.Graveyard, LibraryPosition.defaultValue)) source source controller oid)
 
 -- counter over a whole batch, answering with the objects it ACTUALLY countered
 -- (CR 701.6a) -- which is emphatically not the batch it was handed: an id naming
@@ -8449,9 +8449,9 @@ counter source controller oid = Monad.void (counterOne (pure (Zone.Graveyard, Li
 --
 -- A second door rather than a return type on `counter`, the destroyReturning
 -- posture: only the Counter opcode's bound slots use the answer.
-counterReturning :: (ObjectId -> Game (Zone.Zone, LibraryPosition.LibraryPosition)) -> ObjectId -> PlayerId -> [ObjectId] -> Game [(ObjectId, Seq.Seq ObjectId)]
-counterReturning destinationOf source controller =
-  fmap Maybe.catMaybes . traverse (\oid -> fmap (fmap ((,) oid)) (counterOne (destinationOf oid) source controller oid))
+counterReturning :: (ObjectId -> Game (Zone.Zone, LibraryPosition.LibraryPosition)) -> ObjectId -> ObjectId -> PlayerId -> [ObjectId] -> Game [(ObjectId, Seq.Seq ObjectId)]
+counterReturning destinationOf counterer source controller =
+  fmap Maybe.catMaybes . traverse (\oid -> fmap (fmap ((,) oid)) (counterOne (destinationOf oid) counterer source controller oid))
 
 -- The shared body of both doors: counter ONE object, answering Nothing when it
 -- was not countered and the incarnations its move minted when it was.
@@ -8459,14 +8459,20 @@ counterReturning destinationOf source controller =
 -- A spell whose entry CR 101.2 refuses is still countered: the funnel's CR
 -- 608.3e-shaped arm puts it into its owner's graveyard and answers that
 -- incarnation, which is CR 701.6a's own ending.
-counterOne :: Game (Zone.Zone, LibraryPosition.LibraryPosition) -> ObjectId -> PlayerId -> ObjectId -> Game (Maybe (Seq.Seq ObjectId))
-counterOne destination source controller oid = do
+--
+-- `counterer` is the countering spell or ability OBJECT on the stack, where
+-- `source` is CR 113.7's source for an ability: Autumn's Veil's "by blue or
+-- black spells" is read off the first, so an ability from a blue permanent
+-- still counters (its ruling). `counter`, which counters as a spell does,
+-- passes one id for both.
+counterOne :: Game (Zone.Zone, LibraryPosition.LibraryPosition) -> ObjectId -> ObjectId -> PlayerId -> ObjectId -> Game (Maybe (Seq.Seq ObjectId))
+counterOne destination counterer source controller oid = do
   gs <- State.get
   case Game.lookupObject oid gs of
     Nothing -> pure Nothing
     -- CR 613.11's gate first, ahead of the branch split, because it is the one
     -- that reaches both of CR 701.6a's subjects.
-    Just _ | protectedFromCountering oid gs -> pure Nothing
+    Just _ | protectedFromCountering counterer oid gs -> pure Nothing
     -- CR 106.6 through CR 101.2, and ahead of the branch split for CR 613.11's
     -- reason: rule 106.6 says an additional effect "affects the spell or
     -- ability that mana is spent on", so both of CR 701.6a's subjects are in
@@ -8707,9 +8713,9 @@ detach subject = do
 -- SPELL that is a re-derivation rather than the stored fact CR 405.4 describes,
 -- and it falls back to the owner (#83); a spell cast from a zone its owner does
 -- not hold would therefore be read against the wrong player here.
-protectedFromCountering :: ObjectId -> GameState -> Bool
-protectedFromCountering oid gs =
-  maybe False (\pid -> PlayerEffect.cantBeCountered pid oid gs) (Projection.controllerOf oid gs)
+protectedFromCountering :: ObjectId -> ObjectId -> GameState -> Bool
+protectedFromCountering counterer oid gs =
+  maybe False (\pid -> PlayerEffect.cantBeCountered pid counterer oid gs) (Projection.controllerOf oid gs)
 
 -- CR 701.21/701.21a: the single sacrifice funnel, one permanent. The permanent
 -- goes to its OWNER's graveyard through changeZone, and -- unlike destroy --
