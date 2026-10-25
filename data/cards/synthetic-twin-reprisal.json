@@ -46,8 +46,10 @@
                       {
                         "type": "Tap",
                         "value": {
-                          "type": "InSlot",
-                          "value": "yours"
+                          "ref": {
+                            "type": "InSlot",
+                            "value": "yours"
+                          }
                         }
                       }
                     ]
@@ -74,8 +76,10 @@
                       {
                         "type": "Tap",
                         "value": {
-                          "type": "InSlot",
-                          "value": "theirs"
+                          "ref": {
+                            "type": "InSlot",
+                            "value": "theirs"
+                          }
                         }
                       }
                     ]

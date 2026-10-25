@@ -147,9 +147,11 @@
                       {
                         "type": "Tap",
                         "value": {
-                          "type": "EachMatching",
-                          "value": {
-                            "type": "IsSource"
+                          "ref": {
+                            "type": "EachMatching",
+                            "value": {
+                              "type": "IsSource"
+                            }
                           }
                         }
                       },

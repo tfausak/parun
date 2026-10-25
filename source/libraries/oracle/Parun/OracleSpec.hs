@@ -137,6 +137,7 @@ import qualified Parun.Types.StaticAbility as StaticAbility
 import qualified Parun.Types.StepBegins as StepBegins
 import qualified Parun.Types.Subtype as Subtype
 import qualified Parun.Types.Supertype as Supertype
+import qualified Parun.Types.Tap as Tap
 import qualified Parun.Types.TapState as TapState
 import qualified Parun.Types.TargetCount as TargetCount
 import qualified Parun.Types.TargetSlot as TargetSlot
@@ -567,7 +568,7 @@ spec s = Spec.describe s "Parun.Oracle" $ do
 
   -- CR 701.26a: tapping and untapping; "another target" for one other object.
   Spec.it s "render taps and untaps" $ do
-    Spec.assertEq s (Just (Text.pack "Tap another target creature.")) (Oracle.render (spell [clause [Effect.Tap (ObjectRef.InSlot target)]] [(target, TargetSlot.required Pool.Creatures (Just (Filter.Not Filter.IsSource)))]))
+    Spec.assertEq s (Just (Text.pack "Tap another target creature.")) (Oracle.render (spell [clause [Effect.Tap (Tap.plain (ObjectRef.InSlot target))]] [(target, TargetSlot.required Pool.Creatures (Just (Filter.Not Filter.IsSource)))]))
     Spec.assertEq s (Just (Text.pack "Untap all creatures you control.")) (Oracle.render (spell [clause [Effect.Untap (ObjectRef.EachMatching (Filter.And [Filter.HasCardType CardType.Creature, Filter.ControlledBy PlayerRelation.You]))]] []))
     let lands = ObjectRef.ChosenPermanents (ChosenPermanents.MkChosenPermanents (Filter.HasCardType CardType.Land) (PlayerRef.Relative PlayerRelation.You) (HowMany.UpTo (Just (Quantity.Literal 4))))
     Spec.assertEq s (Just (Text.pack "Untap up to four lands.")) (Oracle.render (spell [clause [Effect.Untap lands]] []))
@@ -712,7 +713,7 @@ spec s = Spec.describe s "Parun.Oracle" $ do
         horde = triggered TriggerCondition.SelfEnters [mayDiscard, notDone] []
     Spec.assertEq s [[Text.pack "When Spark enters, sacrifice it unless you discard a card.", Text.pack "When Spark enters, sacrifice Spark unless you discard a card."]] (Oracle.abilities (withFace (\f -> (typed [CardType.Creature] [] f) {Face.triggeredAbilities = [horde]})))
     let either' i c = (clause [c]) {Clause.optionality = Optionality.Optional (PlayerRef.Relative PlayerRelation.You), Clause.orElse = Just (OrElse.MkOrElse (ClauseIndex.MkClauseIndex i) (PlayerRef.Relative PlayerRelation.You) False)}
-        twiddle = spell [either' 1 (Effect.Tap (ObjectRef.InSlot target)), either' 0 (Effect.Untap (ObjectRef.InSlot target))] [(target, TargetSlot.required Pool.Permanents Nothing)]
+        twiddle = spell [either' 1 (Effect.Tap (Tap.plain (ObjectRef.InSlot target))), either' 0 (Effect.Untap (ObjectRef.InSlot target))] [(target, TargetSlot.required Pool.Permanents Nothing)]
     Spec.assertEq s (Just (Text.pack "You may tap or untap target permanent.")) (Oracle.render twiddle)
 
   -- CR 700.2: modes as a bulleted list after the instruction to choose, each
@@ -743,7 +744,7 @@ spec s = Spec.describe s "Parun.Oracle" $ do
         search = spell [clause [draw (PlayerRef.Relative PlayerRelation.You) 2, discard (PlayerRef.Relative PlayerRelation.You) 2, Effect.Untap lands]] []
     Spec.assertBool s (Oracle.says search spark (Text.pack "Draw two cards, then discard two cards. Untap up to three lands.")) "Frantic Search's wording unsaid"
     let creature = [(target, TargetSlot.required Pool.Creatures Nothing)]
-        stasis = spell [clause [Effect.Tap (ObjectRef.InSlot target), counters CounterKind.Stun 1 (ObjectRef.InSlot target)]] creature
+        stasis = spell [clause [Effect.Tap (Tap.plain (ObjectRef.InSlot target)), counters CounterKind.Stun 1 (ObjectRef.InSlot target)]] creature
     Spec.assertEq s (Just (Text.pack "Tap target creature and put a stun counter on it.")) (Oracle.render stasis)
     let cloak = spell [clause [modify (ObjectRef.InSlot target) Duration.UntilEndOfTurn (pt 2 0)], clause [damage [(target, 2)]]] creature
     Spec.assertEq s (Just (Text.pack "Target creature gets +2/+0 until end of turn. Spark deals 2 damage to it.")) (Oracle.render cloak)

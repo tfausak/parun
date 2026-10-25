@@ -131,6 +131,7 @@ import qualified Parun.Types.SlotName as SlotName
 import qualified Parun.Types.SpecialAction as SpecialAction
 import qualified Parun.Types.StaticAbility as StaticAbility
 import qualified Parun.Types.StepBegins as StepBegins
+import qualified Parun.Types.Tap as Tap
 import qualified Parun.Types.TargetChooser as TargetChooser
 import qualified Parun.Types.TargetSlot as TargetSlot
 import qualified Parun.Types.TopOfLibrary as TopOfLibrary
@@ -789,7 +790,7 @@ abilitySlotLintSpec s registry = Spec.describe s "Lint" $ do
         strangerSlot = SlotName.MkSlotName (Text.pack "elsewhere")
         tokenTapping slot =
           (vanillaFace "Token" instantLine)
-            { Face.delayedAbilities = Map.singleton (AbilityName.MkAbilityName (Text.pack "later")) (modalTrigger TriggerCondition.SelfDies [lintMode [Effect.Tap (ObjectRef.InSlot slot)] []])
+            { Face.delayedAbilities = Map.singleton (AbilityName.MkAbilityName (Text.pack "later")) (modalTrigger TriggerCondition.SelfDies [lintMode [Effect.Tap (Tap.plain (ObjectRef.InSlot slot))] []])
             }
     Spec.assertBool s (sweeps (mintingSpell createToken (tokenTapping strangerSlot))) "a token's delayed ability reading a slot the token never binds is caught"
     Spec.assertBool s (not (sweeps (mintingSpell createToken (tokenTapping Binding.triggerSource)))) "and one reading its own source is accepted"
@@ -958,7 +959,7 @@ abilitySlotLintSpec s registry = Spec.describe s "Lint" $ do
     let target = SlotName.MkSlotName (Text.pack "target")
         narrowed =
           Mode.MkMode
-            (Seq.singleton (Mint.mandatory (Seq.singleton (Effect.Tap (ObjectRef.InSlot target)))))
+            (Seq.singleton (Mint.mandatory (Seq.singleton (Effect.Tap (Tap.plain (ObjectRef.InSlot target))))))
             (Map.singleton target (TargetSlot.required Pool.Permanents (Just (Filter.Type.ControlledByBound Binding.triggerPlayer))))
     Spec.assertBool
       s
@@ -986,7 +987,7 @@ abilitySlotLintSpec s registry = Spec.describe s "Lint" $ do
         -- the caster's life gain, this reads the trigger's player.
         bounded amount =
           Mode.MkMode
-            (Seq.singleton (Mint.mandatory (Seq.singleton (Effect.Tap (ObjectRef.InSlot target)))))
+            (Seq.singleton (Mint.mandatory (Seq.singleton (Effect.Tap (Tap.plain (ObjectRef.InSlot target))))))
             (Map.singleton target (TargetSlot.withAmount amount (TargetSlot.required Pool.Permanents (Just (Filter.Type.Measures (Measures.MkMeasures Measure.ManaValue Comparison.AtMost Operand.EnclosingAmount))))))
         thatPlayer = Quantity.Type.LifeGainedThisTurn (PlayerRef.InSlot Binding.triggerPlayer)
         you = Quantity.Type.LifeGainedThisTurn (PlayerRef.Relative PlayerRelation.You)
@@ -1030,7 +1031,7 @@ abilitySlotLintSpec s registry = Spec.describe s "Lint" $ do
     let target = SlotName.MkSlotName (Text.pack "target")
         chosen =
           Mode.MkMode
-            (Seq.singleton (Mint.mandatory (Seq.singleton (Effect.Tap (ObjectRef.InSlot target)))))
+            (Seq.singleton (Mint.mandatory (Seq.singleton (Effect.Tap (Tap.plain (ObjectRef.InSlot target))))))
             (Map.singleton target (TargetSlot.chosenBy (TargetChooser.InSlot Binding.triggerPlayer) (TargetSlot.required Pool.Permanents Nothing)))
     Spec.assertBool
       s
@@ -1275,7 +1276,7 @@ abilitySlotLintSpec s registry = Spec.describe s "Lint" $ do
       "a two-target slot read as one object offends"
     Spec.assertBool
       s
-      (not (modalCountsOffend (modeWith two (Effect.Tap (ObjectRef.InSlot slot)))))
+      (not (modalCountsOffend (modeWith two (Effect.Tap (Tap.plain (ObjectRef.InSlot slot))))))
       "and the same slot read through an ObjectRef does not"
     Spec.assertBool
       s
@@ -1362,9 +1363,9 @@ abilitySlotLintSpec s registry = Spec.describe s "Lint" $ do
         returnIt = Effect.MoveToZone (MoveToZone.MkMoveToZone (ObjectRef.InSlot Binding.became) Zone.Hand EntryRiders.defaultValue Nothing Nothing LibraryPlacement.defaultValue Nothing)
         thatPlayerDraws = Effect.Draw (Draw.MkDraw (PlayerRef.InSlot Binding.triggerPlayer) (Quantity.Type.Literal 1) Nothing)
         -- CR 113.7's source slot, which every activation DOES bind.
-        tapSelf = Effect.Tap (ObjectRef.InSlot Binding.triggerSource)
+        tapSelf = Effect.Tap (Tap.plain (ObjectRef.InSlot Binding.triggerSource))
         -- An ordinary slot this ability neither declares nor mints.
-        tapGhost = Effect.Tap (ObjectRef.InSlot (SlotName.MkSlotName (Text.pack "ghost")))
+        tapGhost = Effect.Tap (Tap.plain (ObjectRef.InSlot (SlotName.MkSlotName (Text.pack "ghost"))))
         -- CR 601.2b's announced value, read as a slot rather than as Quantity.X.
         drawX = Effect.Draw (Draw.MkDraw (PlayerRef.Relative PlayerRelation.You) (Quantity.Type.InSlot Binding.variableX) Nothing)
     Spec.assertBool
@@ -1427,7 +1428,7 @@ abilitySlotLintSpec s registry = Spec.describe s "Lint" $ do
     let creature = SlotName.MkSlotName (Text.pack "creature")
         victim = SlotName.MkSlotName (Text.pack "victim")
         exiled = SlotName.MkSlotName (Text.pack "exiled")
-        tap slot = Effect.Tap (ObjectRef.InSlot slot)
+        tap slot = Effect.Tap (Tap.plain (ObjectRef.InSlot slot))
         -- Mode 0 declares `creature` and reads it; mode 1 reads it and declares
         -- nothing. Under ChooseExactly 1, choosing mode 1 alone stamps mode 1's
         -- target slots -- which is nothing -- so the read is unbound at runtime.
@@ -1474,7 +1475,7 @@ abilitySlotLintSpec s registry = Spec.describe s "Lint" $ do
     denethor <- S.printingOf s registry "Denethor, Stone Seer"
     let creature = SlotName.MkSlotName (Text.pack "creature")
         victim = SlotName.MkSlotName (Text.pack "victim")
-        tap slot = Effect.Tap (ObjectRef.InSlot slot)
+        tap slot = Effect.Tap (Tap.plain (ObjectRef.InSlot slot))
         -- One mode declaring two slots and reading only one of them: Denethor's
         -- exact shape under a slotsOf arm that forgot a read.
         unread = [lintMode [tap creature] [creature, victim]]

@@ -68,8 +68,10 @@
                       {
                         "type": "Tap",
                         "value": {
-                          "type": "InSlot",
-                          "value": "permanents"
+                          "ref": {
+                            "type": "InSlot",
+                            "value": "permanents"
+                          }
                         }
                       }
                     ]

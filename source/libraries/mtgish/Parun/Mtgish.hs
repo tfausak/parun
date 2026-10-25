@@ -146,6 +146,7 @@ import qualified Parun.Types.SpellCast as SpellCast
 import qualified Parun.Types.StaticAbility as StaticAbility
 import qualified Parun.Types.StepBegins as StepBegins
 import qualified Parun.Types.Subtype as Subtype
+import qualified Parun.Types.Tap as Tap
 import qualified Parun.Types.TargetCount as TargetCount
 import qualified Parun.Types.TargetSlot as TargetSlot
 import qualified Parun.Types.TheseDiscard as TheseDiscard
@@ -1099,9 +1100,9 @@ effects context n = case Node.tag n of
     (who, rules, until') <- triple n
     ref <- group context who
     ruled ref rules until'
-  "TapPermanent" -> fmap (pure . Effect.Tap) (Node.argument n >>= permanent context)
+  "TapPermanent" -> fmap (pure . Effect.Tap . Tap.plain) (Node.argument n >>= permanent context)
   "UntapPermanent" -> fmap (pure . Effect.Untap) (Node.argument n >>= permanent context)
-  "TapEachPermanent" -> fmap (pure . Effect.Tap) (Node.argument n >>= group context)
+  "TapEachPermanent" -> fmap (pure . Effect.Tap . Tap.plain) (Node.argument n >>= group context)
   "UntapEachPermanent" -> fmap (pure . Effect.Untap) (Node.argument n >>= group context)
   "SacrificePermanent" -> do
     ref <- Node.argument n >>= permanent context

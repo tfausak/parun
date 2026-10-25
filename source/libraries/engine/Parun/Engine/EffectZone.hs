@@ -253,7 +253,7 @@ zonesFunctionedAgainst itself delayed effect = case effect of
   Effect.RedirectDamage {} -> Set.empty
   Effect.Counter {} -> Set.empty
   Effect.PutCounters {} -> Set.empty
-  Effect.DistributeCounters {} -> Set.empty
+  Effect.Divide {} -> Set.empty
   Effect.PutCountersFrom {} -> Set.empty
   Effect.RemoveCounters {} -> Set.empty
   Effect.RemoveCountersAmong {} -> Set.empty

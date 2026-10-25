@@ -47,6 +47,7 @@ import qualified Parun.Codec.DealDamage as DealDamage
 import qualified Parun.Codec.Designate as Designate
 import qualified Parun.Codec.Destroy as Destroy
 import qualified Parun.Codec.Discard as Discard
+import qualified Parun.Codec.Divide as Divide
 import qualified Parun.Codec.DoesNotUntapNext as DoesNotUntapNext
 import qualified Parun.Codec.Draw as Draw
 import qualified Parun.Codec.Earthbend as Earthbend
@@ -117,6 +118,7 @@ import qualified Parun.Codec.SlotName as SlotName
 import qualified Parun.Codec.SpeedDecrease as SpeedDecrease
 import qualified Parun.Codec.Subtype as Subtype
 import qualified Parun.Codec.TakeExtraTurn as TakeExtraTurn
+import qualified Parun.Codec.Tap as Tap
 import qualified Parun.Codec.TurnFaceDown as TurnFaceDown
 import qualified Parun.Codec.Vote as Vote
 import qualified Parun.JsonCodec.Arm as Arm
@@ -229,7 +231,7 @@ codec cardCodec abilityCodec =
           Arm.payload "PreventNextDamageInstance" preventInstanceCodec Effect.PreventNextDamageInstance (\x -> case x of Effect.PreventNextDamageInstance y -> Just y; _ -> Nothing),
           Arm.payload "RedirectDamage" RedirectDamage.codec Effect.RedirectDamage (\x -> case x of Effect.RedirectDamage y -> Just y; _ -> Nothing),
           Arm.payload "PutCounters" PutCounters.codec Effect.PutCounters (\x -> case x of Effect.PutCounters y -> Just y; _ -> Nothing),
-          Arm.payload "DistributeCounters" PutCounters.codec Effect.DistributeCounters (\x -> case x of Effect.DistributeCounters y -> Just y; _ -> Nothing),
+          Arm.payload "Divide" Divide.codec Effect.Divide (\x -> case x of Effect.Divide y -> Just y; _ -> Nothing),
           Arm.payload "MoveCounters" MoveCounters.codec Effect.MoveCounters (\x -> case x of Effect.MoveCounters y -> Just y; _ -> Nothing),
           Arm.payload "PutCountersFrom" PutCountersFrom.codec Effect.PutCountersFrom (\x -> case x of Effect.PutCountersFrom y -> Just y; _ -> Nothing),
           Arm.payload "RemoveCounters" RemoveCounters.codec Effect.RemoveCounters (\x -> case x of Effect.RemoveCounters y -> Just y; _ -> Nothing),
@@ -238,7 +240,7 @@ codec cardCodec abilityCodec =
           Arm.payload "RemovePlayerCounters" RemovePlayerCounters.codec Effect.RemovePlayerCounters (\x -> case x of Effect.RemovePlayerCounters y -> Just y; _ -> Nothing),
           Arm.payload "PayAnyEnergy" SlotName.codec Effect.PayAnyEnergy (\x -> case x of Effect.PayAnyEnergy y -> Just y; _ -> Nothing),
           Arm.payload "ChooseNumber" ChooseNumber.codec Effect.ChooseNumber (\x -> case x of Effect.ChooseNumber y -> Just y; _ -> Nothing),
-          Arm.payload "Tap" ObjectRef.codec Effect.Tap (\x -> case x of Effect.Tap y -> Just y; _ -> Nothing),
+          Arm.payload "Tap" Tap.codec Effect.Tap (\x -> case x of Effect.Tap y -> Just y; _ -> Nothing),
           Arm.payload "Untap" ObjectRef.codec Effect.Untap (\x -> case x of Effect.Untap y -> Just y; _ -> Nothing),
           Arm.payload "Unattach" ObjectRef.codec Effect.Unattach (\x -> case x of Effect.Unattach y -> Just y; _ -> Nothing),
           Arm.payload "Detain" ObjectRef.codec Effect.Detain (\x -> case x of Effect.Detain y -> Just y; _ -> Nothing),
@@ -408,7 +410,7 @@ tagOf x = case x of
   Effect.PreventNextDamageInstance {} -> "PreventNextDamageInstance"
   Effect.RedirectDamage {} -> "RedirectDamage"
   Effect.PutCounters {} -> "PutCounters"
-  Effect.DistributeCounters {} -> "DistributeCounters"
+  Effect.Divide {} -> "Divide"
   Effect.MoveCounters {} -> "MoveCounters"
   Effect.PutCountersFrom {} -> "PutCountersFrom"
   Effect.RemoveCounters {} -> "RemoveCounters"

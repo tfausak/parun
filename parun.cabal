@@ -590,6 +590,8 @@ library codec
     Parun.Codec.DiscardSpec
     Parun.Codec.DistinctOf
     Parun.Codec.DistinctOfSpec
+    Parun.Codec.Divide
+    Parun.Codec.DivideSpec
     Parun.Codec.DoesNotUntapNext
     Parun.Codec.DoesNotUntapNextSpec
     Parun.Codec.Draw
@@ -1396,6 +1398,7 @@ library codec
     Parun.Codec.TakeExtraTurnSpec
     Parun.Codec.Taking
     Parun.Codec.TakingSpec
+    Parun.Codec.Tap
     Parun.Codec.TapForMana
     Parun.Codec.TapForManaSpec
     Parun.Codec.TapForTotalPower
@@ -1406,6 +1409,7 @@ library codec
     Parun.Codec.TappedIsSpec
     Parun.Codec.TapPermanents
     Parun.Codec.TapPermanentsSpec
+    Parun.Codec.TapSpec
     Parun.Codec.TapState
     Parun.Codec.TapStateSpec
     Parun.Codec.TargetChooser
@@ -2549,6 +2553,7 @@ library types
     Parun.Types.DiscardCause
     Parun.Types.Discarded
     Parun.Types.DistinctOf
+    Parun.Types.Divide
     Parun.Types.Dividing
     Parun.Types.DoesNotUntapNext
     Parun.Types.Draw
@@ -3019,6 +3024,7 @@ library types
     Parun.Types.SuspendCounters
     Parun.Types.TakeExtraTurn
     Parun.Types.Taking
+    Parun.Types.Tap
     Parun.Types.TapForMana
     Parun.Types.TapForTotalPower
     Parun.Types.TappedForMana

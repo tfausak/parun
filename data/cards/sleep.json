@@ -36,21 +36,23 @@
                   {
                     "type": "Tap",
                     "value": {
-                      "type": "EachMatching",
-                      "value": {
-                        "type": "And",
-                        "value": [
-                          {
-                            "type": "HasCardType",
-                            "value": {
-                              "type": "Creature"
+                      "ref": {
+                        "type": "EachMatching",
+                        "value": {
+                          "type": "And",
+                          "value": [
+                            {
+                              "type": "HasCardType",
+                              "value": {
+                                "type": "Creature"
+                              }
+                            },
+                            {
+                              "type": "ControlledByBound",
+                              "value": "target"
                             }
-                          },
-                          {
-                            "type": "ControlledByBound",
-                            "value": "target"
-                          }
-                        ]
+                          ]
+                        }
                       }
                     }
                   },
