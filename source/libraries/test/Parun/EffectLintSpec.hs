@@ -1665,14 +1665,19 @@ inertChoosers :: Effect.Effect Card.Type.Card (GrantedAbility.GrantedAbility Car
 inertChoosers effect =
   [ref | (allowed, ref) <- effectObjectRefs effect, Just question <- [questionOf ref], question `notElem` allowed]
 
--- An ObjectRef.AllOf written anywhere but a move's ref, a play grant's or a
--- loop's. MoveToZone gathers it member by member (Parun.Engine.Resolve.Effect's
--- gather), and GrantPlayFromExile reads its ref through
+-- An ObjectRef.AllOf written anywhere but a move's ref, a play grant's, a
+-- loop's or a damage instruction's. MoveToZone gathers it member by member
+-- (Parun.Engine.Resolve.Effect's gather), and GrantPlayFromExile reads its ref
+-- through
 -- Resolve.Slots.objectRefObjects, whose AllOf arm is the union -- the scenario
 -- cr-601-3-flameskull-played-land-closes-flameskull-s-own-cast proves it.
 -- ForEach sweeps its members through Resolve.Effect.objectRefRecipients, whose
 -- AllOf arm is the union too -- Juxtapose's "you and target player", proved by
 -- the board-effect scenario cr-608-2d-juxtapose-exchanges-each-player-s-greatest-mana-value-creature-then-artifact.
+-- DealDamage reads each part's recipients through objectRefRecipients too --
+-- Inferno Elemental's "that creature", whichever of its two block slots is
+-- bound, proved by the scenarios inferno-elemental-burns-the-creature-it-blocks
+-- and inferno-elemental-burns-the-creature-blocking-it.
 -- The other opcodes' one-ref reads (a sticker's candidates, a copy's archived
 -- source, a reveal's shower) would read the union as a single arm.
 strayAllOf :: Effect.Effect Card.Type.Card (GrantedAbility.GrantedAbility Card.Type.Card) -> Bool
@@ -1680,6 +1685,7 @@ strayAllOf effect = case effect of
   Effect.MoveToZone {} -> False
   Effect.GrantPlayFromExile {} -> False
   Effect.ForEach {} -> False
+  Effect.DealDamage {} -> False
   _ -> any (holdsAllOf . snd) (effectObjectRefs effect)
   where
     holdsAllOf ref = case ref of
@@ -2632,7 +2638,7 @@ effectLintSpec s registry = Spec.describe s "Lint" $ do
     -- Exhume, Elvish Piper, Commune with the Gods and Merfolk Spy print them.
     Spec.assertBool s asks "the pool has a card asking a player to pick a card"
     Spec.assertEqWith s "a chosen card under an opcode that cannot ask (CR 608.2d)" (fmap (S.nameOf . Printing.card) offenders) []
-  Spec.it s "no AllOf outside a move, a play grant or a loop" $ do
+  Spec.it s "no AllOf outside a move, a play grant, a loop or a damage instruction" $ do
     ps <- S.allPrintings s
     let offenders = filter (anyFace (any strayAllOf . cardAuthoredEffects) . Printing.card) ps
         moved = any (anyFace (any (any (isAllOf . snd) . effectObjectRefs) . cardAuthoredEffects) . Printing.card) ps

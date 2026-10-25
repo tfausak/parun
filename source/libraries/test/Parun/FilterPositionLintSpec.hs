@@ -1740,11 +1740,17 @@ filterPositionLintSpec s registry = Spec.describe s "Lint" $ do
       "Grim Reminder's one atom is in its life loss amount's Count filter"
       (sameNameAsBoundCounts (S.combinedFace reminder))
       (1, 0)
+    echoes <- S.printingOf s registry "Haunting Echoes"
+    Spec.assertEqWith
+      s
+      "Haunting Echoes' one atom is in its search's filter"
+      (sameNameAsBoundCounts (S.combinedFace echoes))
+      (1, 0)
     Spec.assertEqWith
       s
       "and they are the pool's only ones"
       (sum (fmap (uncurry (+) . sameNameAsBoundCounts . S.combinedFace) ps))
-      5
+      6
     -- Both sides of the split, with room to spare under the pool's real figures:
     -- a traversal that had stopped walking, or a Framing that had stopped marking
     -- target slots, would fail here rather than pass the sweep above by iterating
@@ -1889,11 +1895,18 @@ filterPositionLintSpec s registry = Spec.describe s "Lint" $ do
       "Flame Wave's is in its damage's object"
       (sameControllerAsBoundCounts (S.combinedFace wave))
       (1, 0)
+    -- Chandra Nalaar's -8 prints Flame Wave's sentence.
+    chandra <- S.printingOf s registry "Chandra Nalaar"
     Spec.assertEqWith
       s
-      "and those six are the pool's whole authorship of it"
+      "Chandra Nalaar's is in its -8's damage's object"
+      (sameControllerAsBoundCounts (S.combinedFace chandra))
+      (1, 0)
+    Spec.assertEqWith
+      s
+      "and those seven are the pool's whole authorship of it"
       (sum (fmap (uncurry (+) . sameControllerAsBoundCounts . S.combinedFace) ps))
-      6
+      7
     -- The REJECTING direction, hand-built for the reason every sibling lint's is:
     -- a card that offends must not be loadable, so no file can carry one. Buried
     -- under all three combinators, so an implementation reading only the top of a
