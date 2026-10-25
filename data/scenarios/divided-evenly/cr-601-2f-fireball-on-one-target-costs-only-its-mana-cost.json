@@ -1,0 +1,42 @@
+{
+  "description": "CR 601.2f Fireball on one target costs only its mana cost",
+  "note": "The first target is free: X=3 on bob costs {3}{R}, so alice's four Mountains pay it and leave nothing floating.",
+  "board": {
+    "active": "alice",
+    "step": "PrecombatMain",
+    "seats": [
+      {
+        "name": "alice",
+        "battlefield": [
+          { "card": "Mountain", "label": "m1" },
+          { "card": "Mountain", "label": "m2" },
+          { "card": "Mountain", "label": "m3" },
+          { "card": "Mountain", "label": "m4" }
+        ],
+        "hand": [{ "card": "Fireball", "label": "fireball" }]
+      },
+      { "name": "bob" }
+    ]
+  },
+  "timeline": [
+    {
+      "turn": 1,
+      "step": "PrecombatMain",
+      "player": "alice",
+      "do": {
+        "Cast": {
+          "object": "$fireball",
+          "targets": ["$bob"],
+          "x": 3,
+          "mana": ["$m1", "$m2", "$m3", "$m4"]
+        }
+      }
+    },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "check": { "View": { "of": "ManaPool", "player": "alice", "is": [] } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "do": "Pass" },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "check": { "Life": { "player": "bob", "life": 17 } } }
+  ],
+  "final": [
+    { "Tapped": { "object": "$m4", "tapped": true } }
+  ]
+}

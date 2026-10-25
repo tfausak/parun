@@ -41,8 +41,12 @@
                         "value": "target"
                       },
                       "quantity": {
-                        "type": "Halved",
+                        "type": "Quotient",
                         "value": {
+                          "divisor": {
+                            "type": "Literal",
+                            "value": 2
+                          },
                           "quantity": {
                             "type": "Count",
                             "value": {
