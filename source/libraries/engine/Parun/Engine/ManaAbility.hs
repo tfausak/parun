@@ -1040,6 +1040,8 @@ refReachesLibrary ref = case ref of
   -- fence: no seek in the pool could add mana, so CR 605.1a's second clause
   -- already answers for it.
   ObjectRef.RandomCardInLibrary _ -> True
+  -- Whatever the pool it draws from reaches.
+  ObjectRef.AtRandom inner -> refReachesLibrary inner
   -- The battlefield, the arm this one offers a subset of: EachMatching's
   -- answer, unchanged by a chooser standing between the sweep and the set.
   ObjectRef.ChosenPermanents _ -> False

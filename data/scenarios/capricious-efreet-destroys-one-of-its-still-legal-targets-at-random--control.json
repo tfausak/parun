@@ -1,0 +1,36 @@
+{
+  "description": "CR 608.2b control: Capricious Efreet's draw includes a target that stayed legal",
+  "note": "The scenario above with no hexproof: bob's Troll stays a legal target, so the draw may name it, and it is the one destroyed.",
+  "board": {
+    "active": "alice",
+    "step": "Untap",
+    "seats": [
+      {
+        "name": "alice",
+        "library": [{ "card": "Island" }, { "card": "Island" }],
+        "battlefield": [
+          { "card": "Capricious Efreet", "label": "efreet" },
+          { "card": "Grizzly Bears", "label": "a-bears" }
+        ]
+      },
+      {
+        "name": "bob",
+        "library": [{ "card": "Island" }, { "card": "Island" }],
+        "battlefield": [
+          { "card": "Forest", "label": "forest" },
+          { "card": "Barkhide Troll", "label": "troll", "counters": [{ "key": { "type": "PlusOnePlusOne" }, "value": 1 }] },
+          { "card": "Serra Angel", "label": "b-angel" },
+          { "card": "Craw Wurm", "label": "b-wurm" }
+        ]
+      }
+    ]
+  },
+  "timeline": [
+    { "turn": 1, "step": "Upkeep", "player": "alice", "do": { "ChooseTargets": { "theirs": ["$troll", "$b-angel"], "yours": ["$a-bears"] } } },
+    { "turn": 1, "step": "Upkeep", "player": "alice", "do": { "Answer": { "prompt": "RandomObject", "with": "$troll" } } },
+    { "turn": 1, "step": "DrawStep", "player": "alice", "check": { "Count": { "player": "bob", "zone": "Graveyard", "card": "Barkhide Troll", "count": 1 } } },
+    { "turn": 1, "step": "DrawStep", "player": "alice", "check": { "Count": { "player": "bob", "zone": "Battlefield", "card": "Serra Angel", "count": 1 } } },
+    { "turn": 1, "step": "DrawStep", "player": "alice", "check": { "Count": { "player": "alice", "zone": "Battlefield", "card": "Grizzly Bears", "count": 1 } } },
+    { "turn": 1, "step": "DrawStep", "player": "alice", "check": { "Count": { "player": "bob", "zone": "Battlefield", "card": "Craw Wurm", "count": 1 } } }
+  ]
+}

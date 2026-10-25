@@ -2224,6 +2224,7 @@ objectRefNames asking x = case x of
   ObjectRef.RandomCardInHand randomCardInHand -> randomCardInHandNames asking randomCardInHand
   ObjectRef.RandomCardInGraveyard randomCardInGraveyard -> randomCardInGraveyardNames asking randomCardInGraveyard
   ObjectRef.RandomCardInLibrary randomCardInLibrary -> randomCardInLibraryNames asking randomCardInLibrary
+  ObjectRef.AtRandom inner -> objectRefNames asking inner
   ObjectRef.ChosenPermanents chosenPermanents -> chosenPermanentsNames asking chosenPermanents
   ObjectRef.AttachedToBound attachedToBound -> attachedToBoundNames asking attachedToBound
   ObjectRef.FromAnywhere fromAnywhere -> history asking HistoryRead.Moves <> fromAnywhereNames asking fromAnywhere
