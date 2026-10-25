@@ -534,6 +534,14 @@ joined context predicates = case predicates of
         [(Prose.sentence (clauseText p <> Text.pack " and " <> clauseText q) <> trailing q, allMentions p <> allMentions q) | fmap Target.wording (subject q) == Just (Text.pack "you")]
           <> [(Prose.sentence (clauseText p <> Text.pack " and " <> verb q) <> trailing q, allMentions p <> mentions q)]
           <> [(Prose.sentence ((if implied p then verb p else clauseText p) <> Text.pack ", then " <> verb q) <> trailing q, allMentions p <> mentions q)]
+          -- Free for one count read twice: "equal to" each time, above, or one
+          -- X defined once (Graveborn Muse's "you draw X cards and lose X life,
+          -- where X is the number of Zombies you control").
+          <> [ (Prose.sentence (clauseText p {verb = vp} <> Text.pack " and " <> vq <> Text.pack ", where X is " <> e) <> trailing q, allMentions p <> mentions q)
+             | Just (vp, e) <- [equalToX (verb p)],
+               Just (vq, e') <- [equalToX (verb q)],
+               e == e'
+             ]
     -- Free: two sentences (Afterlife Insurance) or "and" (Bad Deal).
     | implied p || implied q -> apart <> together
     -- Free: "and" (Vampiric Feast) or two sentences (Soul Shred).
@@ -542,6 +550,15 @@ joined context predicates = case predicates of
       together = [(Prose.sentence (clauseText p <> Text.pack " and " <> clauseText q) <> trailing q, allMentions p <> allMentions q)]
       apart = [(text, allMentions p <> allMentions q) | text <- followedBy context (sentences p) (sentences q)]
   _ -> []
+
+-- | A verb ending "NOUN equal to E" as "X NOUN" and E: "draw cards equal to
+-- the number of ..." is "draw X cards" where X is that number (CR 107.3).
+equalToX :: Text.Text -> Maybe (Text.Text, Text.Text)
+equalToX v =
+  let (before, rest) = Text.breakOn (Text.pack " equal to ") v
+   in case (Text.stripPrefix (Text.pack " equal to ") rest, reverse (Text.words before)) of
+        (Just e, noun : verbs@(_ : _)) | not (Text.null e) -> Just (Text.unwords (reverse verbs <> [Text.pack "X", noun]), e)
+        _ -> Nothing
 
 -- | Whether two predicates have one subject, so the second can drop it.
 sameSubject :: Predicate -> Predicate -> Bool

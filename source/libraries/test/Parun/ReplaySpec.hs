@@ -59,6 +59,7 @@ import qualified Parun.Types.HybridPayment as HybridPayment
 import qualified Parun.Types.InZone as InZone
 import qualified Parun.Types.Keyword as Keyword
 import qualified Parun.Types.KickerDecision as KickerDecision
+import qualified Parun.Types.LandOrNonland as LandOrNonland
 import qualified Parun.Types.LearnMode as LearnMode
 import qualified Parun.Types.LibraryPosition as LibraryPosition
 import qualified Parun.Types.LifeChange as LifeChange
@@ -1824,6 +1825,15 @@ combatReplaySpec s =
           -- short transcript's decline would pass one leg by accident.
           Spec.assertEqWith s "discarding and drawing round trips" (Replay.decode p (Replay.encode p (Just LearnMode.DiscardAndDraw))) (Just (Just LearnMode.DiscardAndDraw))
           Spec.assertEqWith s "and so does declining both" (Replay.decode p (Replay.encode p Nothing)) (Just Nothing)
+        -- CR 614.1a: so is which kind Abundance reveals down to, declining
+        -- included.
+        Spec.it s "ChooseLandOrNonland round-trips through the transcript" $ do
+          let p = Prompt.ChooseLandOrNonland decider S.alice oid
+          Spec.assertEqWith s "choosing land round trips" (Replay.decode p (Replay.encode p (Just LandOrNonland.Land))) (Just (Just LandOrNonland.Land))
+          -- Discriminating: a decode that ignored the response and answered one
+          -- kind would pass one leg by accident.
+          Spec.assertEqWith s "choosing nonland round trips" (Replay.decode p (Replay.encode p (Just LandOrNonland.Nonland))) (Just (Just LandOrNonland.Nonland))
+          Spec.assertEqWith s "and so does declining" (Replay.decode p (Replay.encode p Nothing)) (Just Nothing)
         -- CR 701.30c: so is which end of their library a clashing player put the
         -- card they revealed on.
         Spec.it s "ChooseClash round-trips through the transcript" $ do
