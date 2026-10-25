@@ -5,7 +5,8 @@ import qualified Parun.Types.PlayerRef as PlayerRef
 
 -- | A number derived from a mana pool: whose pool to look in, and which of the
 -- units in it to keep. Omnath, Locus of Mana's "for each unspent green mana you
--- have".
+-- have". The same pair names the mana Parun.Types.ManaProduction.Pooled
+-- doubles (Doubling Cube's "each type of unspent mana you have").
 --
 -- A PARALLEL AXIS to Parun.Types.Count, not a third Scope constructor. Two things
 -- stop the pool joining Count's fold: the pool is not one of CR 400.1's zones,

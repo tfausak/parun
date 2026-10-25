@@ -1,6 +1,7 @@
 module Parun.Codec.ManaProduction where
 
 import qualified Parun.Codec.CouldProduce as CouldProduce
+import qualified Parun.Codec.ManaCount as ManaCount
 import qualified Parun.Codec.ManaType as ManaType
 import qualified Parun.JsonCodec.Arm as Arm
 import qualified Parun.JsonCodec.Codec as Codec
@@ -15,7 +16,8 @@ codec =
       Arm.nullary "Chosen" ManaProduction.Chosen,
       Arm.nullary "SnowSymbol" ManaProduction.SnowSymbol,
       Arm.nullary "Noted" ManaProduction.Noted,
-      Arm.payload "CouldProduce" CouldProduce.codec ManaProduction.CouldProduce (\x -> case x of ManaProduction.CouldProduce y -> Just y; _ -> Nothing)
+      Arm.payload "CouldProduce" CouldProduce.codec ManaProduction.CouldProduce (\x -> case x of ManaProduction.CouldProduce y -> Just y; _ -> Nothing),
+      Arm.payload "Pooled" ManaCount.codec ManaProduction.Pooled (\x -> case x of ManaProduction.Pooled y -> Just y; _ -> Nothing)
     ]
 
 tagOf :: ManaProduction.ManaProduction -> String
@@ -26,3 +28,4 @@ tagOf x = case x of
   ManaProduction.SnowSymbol {} -> "SnowSymbol"
   ManaProduction.Noted {} -> "Noted"
   ManaProduction.CouldProduce {} -> "CouldProduce"
+  ManaProduction.Pooled {} -> "Pooled"

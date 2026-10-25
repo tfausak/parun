@@ -49,11 +49,6 @@ import qualified Parun.Types.WhenSpent as WhenSpent
 -- about a player's whole pool, and this sentence says different things about two
 -- manas of one pool -- the criterion Parun.Types.SpendManaAsThough's haddock
 -- states for the same split.
---
--- ONE production per instruction, so CR 701.10f's doubling reaches a NAMED type
--- (the count being a Quantity.ManaCount of that type) but not a card's "each
--- type of unspent mana" (Doubling Cube), which has no quantifier over the types
--- a pool happens to hold (gap #3914).
 data ManaAddition = MkManaAddition
   { player :: PlayerRef.PlayerRef,
     production :: ManaProduction.ManaProduction,

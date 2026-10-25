@@ -2035,6 +2035,7 @@ manaProductionNames asking x = case x of
   ManaProduction.SnowSymbol -> mempty
   ManaProduction.Noted -> mempty
   ManaProduction.CouldProduce (CouldProduce.MkCouldProduce among _types) -> filterNames asking among
+  ManaProduction.Pooled manaCount -> manaCountNames asking manaCount
 
 manaCountNames :: (Monoid r) => Asking r -> ManaCount.ManaCount -> r
 manaCountNames asking x = case x of
