@@ -9240,7 +9240,7 @@ applyOneEffect runSubgame resolving source controller legal chosen effect = case
                   pure (Zone.Library, position)
               | otherwise -> pure (CounterDestination.zone destination, LibraryPosition.defaultValue)
           _ -> pure (Zone.Graveyard, LibraryPosition.defaultValue)
-    moved <- Event.counterReturning destinationOf source controller named
+    moved <- Event.counterReturning destinationOf resolving source controller named
     let countered = fmap fst moved
     -- CR 701.6a's "countered this way" is what the funnel COUNTERED, never what
     -- the sweep named. Bound onto this effect's SOURCE, and bound even at zero.

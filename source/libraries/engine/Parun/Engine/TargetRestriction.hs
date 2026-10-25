@@ -5,9 +5,10 @@
 -- modules on the axis CR 613.11 reaches past the layer system, alongside
 -- Parun.Engine.CrewRestriction and its siblings.
 --
--- The only reader of Parun.Types.TargetRestriction. Its caller asks whether one
--- object is stopped for one kind of spell or ability, and never learns which
--- card stopped it.
+-- The reader of a PRINTED Parun.Types.TargetRestriction; a resolved one riding a
+-- player effect (Autumn's Veil) is Parun.Engine.PlayerEffect.forbidsTargeting's.
+-- Its caller asks whether one object is stopped for one kind of spell or
+-- ability, and never learns which card stopped it.
 module Parun.Engine.TargetRestriction where
 
 import Data.Map.Strict (Map)

@@ -5,6 +5,7 @@ import qualified Parun.Types.AlternativeActivationCost as AlternativeActivationC
 import qualified Parun.Types.CantSearchLibraries as CantSearchLibraries
 import qualified Parun.Types.CastFromZone as CastFromZone
 import qualified Parun.Types.CostModifier as CostModifier
+import qualified Parun.Types.CounterProhibition as CounterProhibition
 import qualified Parun.Types.DamagePattern as DamagePattern
 import qualified Parun.Types.DrawReveal as DrawReveal
 import qualified Parun.Types.ExtraVotes as ExtraVotes
@@ -23,6 +24,7 @@ import qualified Parun.Types.Shows as Shows
 import qualified Parun.Types.SpendManaAsThough as SpendManaAsThough
 import qualified Parun.Types.StatedFlip as StatedFlip
 import qualified Parun.Types.TapForMana as TapForMana
+import qualified Parun.Types.TargetRestriction as TargetRestriction
 
 -- | CR 611.1's third clause: a continuous effect affecting players or the rules
 -- of the game rather than the characteristics of an object. The player analogue
@@ -114,10 +116,14 @@ data PlayerEffect
   | -- | CR 602.2 / 106.12 / Piracy: this player may tap matching permanents
     -- they don't control for mana.
     MayTapForMana TapForMana.TapForMana
-  | -- | CR 701.6a / 613.11 / Spider-Punk: the matching spells and abilities on the
-    -- stack controlled by the players this effect's scope names can't be
-    -- countered.
-    CantBeCountered (Filter.Filter Keyword.Keyword)
+  | -- | CR 701.6a / 613.11 / Spider-Punk, Autumn's Veil: the matching spells and
+    -- abilities on the stack controlled by the players this effect's scope names
+    -- can't be countered by the matching counterers.
+    CantBeCountered CounterProhibition.CounterProhibition
+  | -- | CR 115 / 101.2 / 613.11 / Autumn's Veil: the matching permanents the
+    -- players this effect's scope names control can't be the targets of the
+    -- restriction's kind of spell or ability.
+    RestrictTargeting (TargetRestriction.TargetRestriction (Filter.Filter Keyword.Keyword))
   | -- | CR 615.12 / 613.11 / Spider-Punk: damage matching the pattern can't be
     -- prevented. Parun.ReplacementSpec's questingBeastSpec proves the pattern's
     -- source and kind limbs against each other. Parun.CardSpec lints the pool

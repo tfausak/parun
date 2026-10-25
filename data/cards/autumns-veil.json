@@ -1,0 +1,147 @@
+{
+  "faces": [
+    {
+      "manaCost": [
+        {
+          "type": "OfType",
+          "value": {
+            "type": "Colored",
+            "value": {
+              "type": "Green"
+            }
+          }
+        }
+      ],
+      "name": "Autumn's Veil",
+      "oracleText": "Spells you control can't be countered by blue or black spells this turn, and creatures you control can't be the targets of blue or black spells this turn.",
+      "spell": {
+        "modes": [
+          {
+            "clauses": [
+              {
+                "effects": [
+                  {
+                    "type": "AffectPlayers",
+                    "value": {
+                      "duration": {
+                        "type": "UntilEndOfTurn"
+                      },
+                      "effect": {
+                        "type": "CantBeCountered",
+                        "value": {
+                          "countered": {
+                            "type": "Not",
+                            "value": {
+                              "type": "IsAbility"
+                            }
+                          },
+                          "counterers": {
+                            "type": "And",
+                            "value": [
+                              {
+                                "type": "Not",
+                                "value": {
+                                  "type": "IsAbility"
+                                }
+                              },
+                              {
+                                "type": "Or",
+                                "value": [
+                                  {
+                                    "type": "HasColor",
+                                    "value": {
+                                      "type": "Blue"
+                                    }
+                                  },
+                                  {
+                                    "type": "HasColor",
+                                    "value": {
+                                      "type": "Black"
+                                    }
+                                  }
+                                ]
+                              }
+                            ]
+                          }
+                        }
+                      },
+                      "players": {
+                        "type": "Scoped",
+                        "value": {
+                          "type": "You"
+                        }
+                      }
+                    }
+                  },
+                  {
+                    "type": "AffectPlayers",
+                    "value": {
+                      "duration": {
+                        "type": "UntilEndOfTurn"
+                      },
+                      "effect": {
+                        "type": "RestrictTargeting",
+                        "value": {
+                          "affected": {
+                            "type": "And",
+                            "value": [
+                              {
+                                "type": "HasCardType",
+                                "value": {
+                                  "type": "Creature"
+                                }
+                              },
+                              {
+                                "type": "IsInZone",
+                                "value": {
+                                  "type": "Battlefield"
+                                }
+                              }
+                            ]
+                          },
+                          "aimers": {
+                            "type": "Or",
+                            "value": [
+                              {
+                                "type": "HasColor",
+                                "value": {
+                                  "type": "Blue"
+                                }
+                              },
+                              {
+                                "type": "HasColor",
+                                "value": {
+                                  "type": "Black"
+                                }
+                              }
+                            ]
+                          },
+                          "kind": {
+                            "type": "Spell"
+                          }
+                        }
+                      },
+                      "players": {
+                        "type": "Scoped",
+                        "value": {
+                          "type": "You"
+                        }
+                      }
+                    }
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      },
+      "typeLine": {
+        "types": [
+          {
+            "type": "Instant"
+          }
+        ]
+      }
+    }
+  ]
+}

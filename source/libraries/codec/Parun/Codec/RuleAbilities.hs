@@ -3,6 +3,7 @@
 module Parun.Codec.RuleAbilities where
 
 import qualified Parun.Codec.ActivationProhibition as ActivationProhibition
+import qualified Parun.Codec.Affected as Affected
 import qualified Parun.Codec.AttachRestriction as AttachRestriction
 import qualified Parun.Codec.AttackCost as AttackCost
 import qualified Parun.Codec.AttackPermission as AttackPermission
@@ -39,7 +40,7 @@ codec = Fields.object $ do
   crewRestrictions <- Fields.defaulted "crewRestrictions" [] (Common.list CrewRestriction.codec) RuleAbilities.crewRestrictions
   entryRestrictions <- Fields.defaulted "entryRestrictions" [] (Common.list EntryRestriction.codec) RuleAbilities.entryRestrictions
   sacrificeRestrictions <- Fields.defaulted "sacrificeRestrictions" [] (Common.list SacrificeRestriction.codec) RuleAbilities.sacrificeRestrictions
-  targetRestrictions <- Fields.defaulted "targetRestrictions" [] (Common.list TargetRestriction.codec) RuleAbilities.targetRestrictions
+  targetRestrictions <- Fields.defaulted "targetRestrictions" [] (Common.list (TargetRestriction.codec Affected.codec)) RuleAbilities.targetRestrictions
   untapRestrictions <- Fields.defaulted "untapRestrictions" [] (Common.list UntapRestriction.codec) RuleAbilities.untapRestrictions
   pure
     RuleAbilities.MkRuleAbilities

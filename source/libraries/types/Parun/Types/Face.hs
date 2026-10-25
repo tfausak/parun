@@ -19,6 +19,7 @@ import qualified Numeric.Natural as Natural
 import qualified Parun.Types.AbilityName as AbilityName
 import qualified Parun.Types.ActivatedAbility as ActivatedAbility
 import qualified Parun.Types.ActivationProhibition as ActivationProhibition
+import qualified Parun.Types.Affected as Affected
 import qualified Parun.Types.AlternativeCost as AlternativeCost
 import qualified Parun.Types.AttachRestriction as AttachRestriction
 import qualified Parun.Types.AttackCost as AttackCost
@@ -551,7 +552,7 @@ data Face card = MkFace
     -- PROHIBITIONS that are not keywords -- "creatures can't be the targets of
     -- spells" (Dense Foliage); read by Parun.Engine.TargetRestriction, rewritten
     -- by no layer, for blockRequirements' CR 613.11 reason.
-    targetRestrictions :: [TargetRestriction.TargetRestriction],
+    targetRestrictions :: [TargetRestriction.TargetRestriction Affected.Affected],
     -- | CR 604.1/604.2 / 702.3b: this face's printed ATTACKING PERMISSIONS --
     -- "can attack as though it didn't have defender"; read by
     -- Parun.Engine.AttackPermission, rewritten by no layer, for

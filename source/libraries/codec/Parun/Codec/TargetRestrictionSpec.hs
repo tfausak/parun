@@ -1,5 +1,6 @@
 module Parun.Codec.TargetRestrictionSpec where
 
+import qualified Parun.Codec.Affected as Affected
 import qualified Parun.Codec.TargetRestriction as TargetRestriction
 import qualified Parun.JsonCodec.Common as Common
 import qualified Parun.Spec as Spec
@@ -16,7 +17,7 @@ spec s = Spec.describe s "Parun.Codec.TargetRestriction" $ do
   Spec.it s "MkTargetRestriction" $
     Common.assertCodec
       s
-      TargetRestriction.codec
+      (TargetRestriction.codec Affected.codec)
       ( TargetRestriction.MkTargetRestriction
           { TargetRestriction.affected = Affected.Matching (Filter.HasCardType CardType.Creature),
             TargetRestriction.kind = StackObjectKind.Spell,
@@ -29,7 +30,7 @@ spec s = Spec.describe s "Parun.Codec.TargetRestriction" $ do
   Spec.it s "aimers" $
     Common.assertCodec
       s
-      TargetRestriction.codec
+      (TargetRestriction.codec Affected.codec)
       ( TargetRestriction.MkTargetRestriction
           { TargetRestriction.affected = Affected.Matching Filter.IsSource,
             TargetRestriction.kind = StackObjectKind.Spell,
@@ -37,4 +38,4 @@ spec s = Spec.describe s "Parun.Codec.TargetRestriction" $ do
           }
       )
       " {\"affected\":{\"type\":\"Matching\",\"value\":{\"type\":\"IsSource\"}},\"aimers\":{\"type\":\"Or\",\"value\":[{\"type\":\"HasColor\",\"value\":{\"type\":\"Blue\"}},{\"type\":\"HasColor\",\"value\":{\"type\":\"Black\"}}]},\"kind\":{\"type\":\"Spell\"}} "
-  Spec.it s "has a schema" $ Common.assertHasSchema s TargetRestriction.codec
+  Spec.it s "has a schema" $ Common.assertHasSchema s (TargetRestriction.codec Affected.codec)

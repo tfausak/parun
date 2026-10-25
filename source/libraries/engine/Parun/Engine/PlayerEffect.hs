@@ -73,6 +73,7 @@ import qualified Parun.Types.CostChange as CostChange
 import qualified Parun.Types.CostComponent as CostComponent
 import qualified Parun.Types.CostModifier as CostModifier
 import qualified Parun.Types.CostSubject as CostSubject
+import qualified Parun.Types.CounterProhibition as CounterProhibition
 import qualified Parun.Types.DamagePattern as DamagePattern
 import qualified Parun.Types.DrawReveal as DrawReveal
 import qualified Parun.Types.EnteredZone as EnteredZone
@@ -122,9 +123,11 @@ import qualified Parun.Types.Shows as Shows
 import qualified Parun.Types.SlotName as SlotName
 import qualified Parun.Types.SourceChoices as SourceChoices
 import qualified Parun.Types.SpendManaAsThough as SpendManaAsThough
+import qualified Parun.Types.StackObjectKind as StackObjectKind
 import qualified Parun.Types.StatedFlip as StatedFlip
 import qualified Parun.Types.Superlative as Superlative
 import qualified Parun.Types.TapForMana as TapForMana
+import qualified Parun.Types.TargetRestriction as TargetRestriction
 import qualified Parun.Types.Teams as Teams
 import Parun.Types.Timestamp (Timestamp)
 import qualified Parun.Types.TurnScope as TurnScope
@@ -632,6 +635,7 @@ prohibitsCasting pid oid variable gs =
         -- 601.3 is about beginning to cast one: an uncounterable spell is not a
         -- spell anyone is more or less allowed to cast.
         PlayerEffect.CantBeCountered _ -> False
+        PlayerEffect.RestrictTargeting _ -> False
         -- CR 615.12 edits what CR 615.1's shields do to a damage event, and CR
         -- 614.9's redirections likewise. Nobody is more or less allowed to cast
         -- a spell for either.
@@ -808,6 +812,7 @@ prohibitsPlayingLand pid oid gs =
         -- CR 305.1 again: a land is never put on the stack, so nothing about
         -- countering reaches a land play.
         PlayerEffect.CantBeCountered _ -> False
+        PlayerEffect.RestrictTargeting _ -> False
         PlayerEffect.DamageCantBePrevented _ -> False
         PlayerEffect.DamageCantBeRedirected _ -> False
         PlayerEffect.CantSearchLibraries _ -> False
@@ -893,6 +898,7 @@ prohibitsSearching pid owner causeController gs =
         PlayerEffect.ActivateLoyaltyAtInstantSpeed _ -> False
         PlayerEffect.MayTapForMana _ -> False
         PlayerEffect.CantBeCountered _ -> False
+        PlayerEffect.RestrictTargeting _ -> False
         PlayerEffect.DamageCantBePrevented _ -> False
         PlayerEffect.DamageCantBeRedirected _ -> False
         PlayerEffect.CantBecomeMonarch -> False
@@ -979,6 +985,7 @@ prohibitsCounters pid kind gs =
         PlayerEffect.ActivateLoyaltyAtInstantSpeed _ -> False
         PlayerEffect.MayTapForMana _ -> False
         PlayerEffect.CantBeCountered _ -> False
+        PlayerEffect.RestrictTargeting _ -> False
         PlayerEffect.DamageCantBePrevented _ -> False
         PlayerEffect.DamageCantBeRedirected _ -> False
         PlayerEffect.CantBecomeMonarch -> False
@@ -1058,6 +1065,7 @@ prohibitsBecomingMonarch pid gs =
         PlayerEffect.ActivateLoyaltyAtInstantSpeed _ -> False
         PlayerEffect.MayTapForMana _ -> False
         PlayerEffect.CantBeCountered _ -> False
+        PlayerEffect.RestrictTargeting _ -> False
         PlayerEffect.DamageCantBePrevented _ -> False
         PlayerEffect.DamageCantBeRedirected _ -> False
         PlayerEffect.CantSearchLibraries _ -> False
@@ -1114,6 +1122,7 @@ schemesCantBeSetInMotion gs =
         PlayerEffect.ActivateLoyaltyAtInstantSpeed _ -> False
         PlayerEffect.MayTapForMana _ -> False
         PlayerEffect.CantBeCountered _ -> False
+        PlayerEffect.RestrictTargeting _ -> False
         PlayerEffect.DamageCantBePrevented _ -> False
         PlayerEffect.DamageCantBeRedirected _ -> False
         PlayerEffect.CantSearchLibraries _ -> False
@@ -1170,6 +1179,7 @@ prohibitsAttackingWithCreatures pid gs =
         PlayerEffect.ActivateLoyaltyAtInstantSpeed _ -> False
         PlayerEffect.MayTapForMana _ -> False
         PlayerEffect.CantBeCountered _ -> False
+        PlayerEffect.RestrictTargeting _ -> False
         PlayerEffect.DamageCantBePrevented _ -> False
         PlayerEffect.DamageCantBeRedirected _ -> False
         PlayerEffect.CantSearchLibraries _ -> False
@@ -1794,6 +1804,7 @@ landPlayFlashGrant effect = case effect of
   PlayerEffect.SpendManaAsThough _ -> Nothing
   PlayerEffect.CantBeTargetedBy _ -> Nothing
   PlayerEffect.CantBeCountered _ -> Nothing
+  PlayerEffect.RestrictTargeting _ -> Nothing
   PlayerEffect.DamageCantBePrevented _ -> Nothing
   PlayerEffect.DamageCantBeRedirected _ -> Nothing
   PlayerEffect.CantSearchLibraries _ -> Nothing
@@ -2041,6 +2052,7 @@ castPermissionsFrom pid zone oid gs =
         PlayerEffect.SpendManaAsThough _ -> False
         PlayerEffect.CantBeTargetedBy _ -> False
         PlayerEffect.CantBeCountered _ -> False
+        PlayerEffect.RestrictTargeting _ -> False
         PlayerEffect.DamageCantBePrevented _ -> False
         PlayerEffect.DamageCantBeRedirected _ -> False
         PlayerEffect.CantSearchLibraries _ -> False
@@ -2337,6 +2349,7 @@ mayCastFromHandWithoutPayingManaCost pid oid gs =
         PlayerEffect.SpendManaAsThough _ -> False
         PlayerEffect.CantBeTargetedBy _ -> False
         PlayerEffect.CantBeCountered _ -> False
+        PlayerEffect.RestrictTargeting _ -> False
         PlayerEffect.DamageCantBePrevented _ -> False
         PlayerEffect.DamageCantBeRedirected _ -> False
         PlayerEffect.CantSearchLibraries _ -> False
@@ -2410,6 +2423,7 @@ playLandPiles pid gs =
         PlayerEffect.SpendManaAsThough _ -> []
         PlayerEffect.CantBeTargetedBy _ -> []
         PlayerEffect.CantBeCountered _ -> []
+        PlayerEffect.RestrictTargeting _ -> []
         PlayerEffect.DamageCantBePrevented _ -> []
         PlayerEffect.DamageCantBeRedirected _ -> []
         PlayerEffect.CantSearchLibraries _ -> []
@@ -2508,6 +2522,7 @@ protectedFromTargeting rows caster pid gs =
         -- says the same about CR 113.6g, and a Cancel at a spell Spider-Punk
         -- protects still targets it legally and still resolves.
         PlayerEffect.CantBeCountered _ -> False
+        PlayerEffect.RestrictTargeting _ -> False
         PlayerEffect.DamageCantBePrevented _ -> False
         PlayerEffect.DamageCantBeRedirected _ -> False
         PlayerEffect.CantSearchLibraries _ -> False
@@ -2612,6 +2627,7 @@ protectedFromGiven rows aimer oid gs =
         PlayerEffect.ActivateLoyaltyAtInstantSpeed _ -> False
         PlayerEffect.MayTapForMana _ -> False
         PlayerEffect.CantBeCountered _ -> False
+        PlayerEffect.RestrictTargeting _ -> False
         PlayerEffect.DamageCantBePrevented _ -> False
         PlayerEffect.DamageCantBeRedirected _ -> False
         PlayerEffect.CantBecomeMonarch -> False
@@ -2700,6 +2716,7 @@ protectionCarriers gs =
         PlayerEffect.ActivateLoyaltyAtInstantSpeed _ -> Nothing
         PlayerEffect.MayTapForMana _ -> Nothing
         PlayerEffect.CantBeCountered _ -> Nothing
+        PlayerEffect.RestrictTargeting _ -> Nothing
         PlayerEffect.DamageCantBePrevented _ -> Nothing
         PlayerEffect.DamageCantBeRedirected _ -> Nothing
         PlayerEffect.CantBecomeMonarch -> Nothing
@@ -2779,6 +2796,7 @@ landPlaysAllowed pid gs =
         PlayerEffect.SpendManaAsThough _ -> Nothing
         PlayerEffect.CantBeTargetedBy _ -> Nothing
         PlayerEffect.CantBeCountered _ -> Nothing
+        PlayerEffect.RestrictTargeting _ -> Nothing
         PlayerEffect.DamageCantBePrevented _ -> Nothing
         PlayerEffect.DamageCantBeRedirected _ -> Nothing
         PlayerEffect.CantSearchLibraries _ -> Nothing
@@ -2853,6 +2871,7 @@ votesAllowed pid gs =
         PlayerEffect.ActivateLoyaltyAtInstantSpeed {} -> Nothing
         PlayerEffect.MayTapForMana {} -> Nothing
         PlayerEffect.CantBeCountered {} -> Nothing
+        PlayerEffect.RestrictTargeting {} -> Nothing
         PlayerEffect.DamageCantBePrevented {} -> Nothing
         PlayerEffect.DamageCantBeRedirected {} -> Nothing
         PlayerEffect.CantSearchLibraries {} -> Nothing
@@ -2912,6 +2931,7 @@ offeredExtras pid gs =
         PlayerEffect.ActivateLoyaltyAtInstantSpeed {} -> False
         PlayerEffect.MayTapForMana {} -> False
         PlayerEffect.CantBeCountered {} -> False
+        PlayerEffect.RestrictTargeting {} -> False
         PlayerEffect.DamageCantBePrevented {} -> False
         PlayerEffect.DamageCantBeRedirected {} -> False
         PlayerEffect.CantSearchLibraries {} -> False
@@ -2972,6 +2992,7 @@ cascadeActions pid gs =
         PlayerEffect.ActivateLoyaltyAtInstantSpeed {} -> Nothing
         PlayerEffect.MayTapForMana {} -> Nothing
         PlayerEffect.CantBeCountered {} -> Nothing
+        PlayerEffect.RestrictTargeting {} -> Nothing
         PlayerEffect.DamageCantBePrevented {} -> Nothing
         PlayerEffect.DamageCantBeRedirected {} -> Nothing
         PlayerEffect.CantSearchLibraries {} -> Nothing
@@ -3031,6 +3052,7 @@ drawReveals pid nth gs =
         PlayerEffect.ActivateLoyaltyAtInstantSpeed {} -> Nothing
         PlayerEffect.MayTapForMana {} -> Nothing
         PlayerEffect.CantBeCountered {} -> Nothing
+        PlayerEffect.RestrictTargeting {} -> Nothing
         PlayerEffect.DamageCantBePrevented {} -> Nothing
         PlayerEffect.DamageCantBeRedirected {} -> Nothing
         PlayerEffect.CantSearchLibraries {} -> Nothing
@@ -3089,6 +3111,7 @@ shownGrants pid gs =
         PlayerEffect.ActivateLoyaltyAtInstantSpeed {} -> Nothing
         PlayerEffect.MayTapForMana {} -> Nothing
         PlayerEffect.CantBeCountered {} -> Nothing
+        PlayerEffect.RestrictTargeting {} -> Nothing
         PlayerEffect.DamageCantBePrevented {} -> Nothing
         PlayerEffect.DamageCantBeRedirected {} -> Nothing
         PlayerEffect.CantSearchLibraries {} -> Nothing
@@ -3181,6 +3204,7 @@ maximumHandSize pid gs =
         PlayerEffect.ActivateLoyaltyAtInstantSpeed _ -> current
         PlayerEffect.MayTapForMana _ -> current
         PlayerEffect.CantBeCountered _ -> current
+        PlayerEffect.RestrictTargeting _ -> current
         PlayerEffect.DamageCantBePrevented _ -> current
         PlayerEffect.DamageCantBeRedirected _ -> current
         PlayerEffect.CantSearchLibraries _ -> current
@@ -3259,6 +3283,7 @@ keepsUnspentMana pid gs =
         PlayerEffect.ActivateLoyaltyAtInstantSpeed _ -> Nothing
         PlayerEffect.MayTapForMana _ -> Nothing
         PlayerEffect.CantBeCountered _ -> Nothing
+        PlayerEffect.RestrictTargeting _ -> Nothing
         PlayerEffect.DamageCantBePrevented _ -> Nothing
         PlayerEffect.DamageCantBeRedirected _ -> Nothing
         PlayerEffect.CantSearchLibraries _ -> Nothing
@@ -3329,6 +3354,7 @@ losesLifeForUnspentMana pid gs =
         PlayerEffect.ActivateLoyaltyAtInstantSpeed _ -> False
         PlayerEffect.MayTapForMana _ -> False
         PlayerEffect.CantBeCountered _ -> False
+        PlayerEffect.RestrictTargeting _ -> False
         PlayerEffect.DamageCantBePrevented _ -> False
         PlayerEffect.DamageCantBeRedirected _ -> False
         PlayerEffect.CantSearchLibraries _ -> False
@@ -3403,6 +3429,7 @@ prohibitsGainingLife pid gs =
         PlayerEffect.ActivateLoyaltyAtInstantSpeed _ -> False
         PlayerEffect.MayTapForMana _ -> False
         PlayerEffect.CantBeCountered _ -> False
+        PlayerEffect.RestrictTargeting _ -> False
         PlayerEffect.DamageCantBePrevented _ -> False
         PlayerEffect.DamageCantBeRedirected _ -> False
         PlayerEffect.CantSearchLibraries _ -> False
@@ -3473,6 +3500,7 @@ prohibitsLosingLife pid gs =
         PlayerEffect.ActivateLoyaltyAtInstantSpeed _ -> False
         PlayerEffect.MayTapForMana _ -> False
         PlayerEffect.CantBeCountered _ -> False
+        PlayerEffect.RestrictTargeting _ -> False
         PlayerEffect.DamageCantBePrevented _ -> False
         PlayerEffect.DamageCantBeRedirected _ -> False
         PlayerEffect.CantSearchLibraries _ -> False
@@ -3542,6 +3570,7 @@ precludes outcome pid gs =
         PlayerEffect.ActivateLoyaltyAtInstantSpeed _ -> False
         PlayerEffect.MayTapForMana _ -> False
         PlayerEffect.CantBeCountered _ -> False
+        PlayerEffect.RestrictTargeting _ -> False
         PlayerEffect.DamageCantBePrevented _ -> False
         PlayerEffect.DamageCantBeRedirected _ -> False
         PlayerEffect.CantSearchLibraries _ -> False
@@ -3609,6 +3638,7 @@ spendManaAsThough pid gs =
         PlayerEffect.ActivateLoyaltyAtInstantSpeed _ -> Nothing
         PlayerEffect.MayTapForMana _ -> Nothing
         PlayerEffect.CantBeCountered _ -> Nothing
+        PlayerEffect.RestrictTargeting _ -> Nothing
         PlayerEffect.DamageCantBePrevented _ -> Nothing
         PlayerEffect.DamageCantBeRedirected _ -> Nothing
         PlayerEffect.CantSearchLibraries _ -> Nothing
@@ -3684,12 +3714,20 @@ spendManaAsThoughFor pid subject gs =
 -- timestamp order has nothing to order, since no answer depends on which ran
 -- first.
 --
+-- Takes the COUNTERER too, the spell or ability object on the stack doing the
+-- countering and never its source: Autumn's Veil's "by blue or black spells"
+-- leaves an ability from a blue permanent free to counter (its ruling), and
+-- that ability's own view has no colour. Its "you" is the victim's controller,
+-- the player the row protects.
+--
 -- Read LIVE through `applying`, like every other question in this module, so a
 -- Spider-Punk destroyed earlier in the turn is simply not found (CR 604.2).
-cantBeCountered :: PlayerId -> ObjectId -> GameState -> Bool
-cantBeCountered pid oid gs =
+cantBeCountered :: PlayerId -> ObjectId -> ObjectId -> GameState -> Bool
+cantBeCountered pid counterer oid gs =
   let stops (source, effect) = case effect of
-        PlayerEffect.CantBeCountered criterion -> matchesObjectFrom source criterion oid gs
+        PlayerEffect.CantBeCountered prohibition ->
+          matchesObjectFrom source (CounterProhibition.countered prohibition) oid gs
+            && matchesObjectFor pid source (CounterProhibition.counterers prohibition) counterer gs
         PlayerEffect.CantCastSpells -> False
         PlayerEffect.CantActivateAbilities _ -> False
         PlayerEffect.CantCastMoreThan _ -> False
@@ -3709,6 +3747,8 @@ cantBeCountered pid oid gs =
         PlayerEffect.ActivateKeywordAtInstantSpeed _ -> False
         PlayerEffect.ActivateLoyaltyAtInstantSpeed _ -> False
         PlayerEffect.MayTapForMana _ -> False
+        -- Autumn's Veil's OTHER clause, which CR 115 reads at targeting.
+        PlayerEffect.RestrictTargeting _ -> False
         -- Spider-Punk's OTHER sentence, and no part of this answer: CR 615.12
         -- and CR 614.9 are about a damage event and CR 701.6a about an object on
         -- the stack. The two travel together on one card and share nothing.
@@ -3740,6 +3780,83 @@ cantBeCountered pid oid gs =
         PlayerEffect.Precluded _ -> False
         PlayerEffect.Shows _ -> False
    in any stops (applying pid gs)
+
+-- CR 115 / 101.2 / 613.11: the targeting restrictions among one player's rows
+-- (Autumn's Veil), each with its row's source -- the permanents that player
+-- controls which the restriction names can't be targeted. Parun.Engine.Target
+-- gathers them once per slot and hands them to `forbidsTargeting`, so that
+-- module never sees a PlayerEffect constructor.
+targetingRestrictions :: [(RowSource, PlayerEffect)] -> [(RowSource, TargetRestriction.TargetRestriction (Filter Keyword))]
+targetingRestrictions =
+  let restriction (source, effect) = fmap ((,) source) $ case effect of
+        PlayerEffect.RestrictTargeting r -> Just r
+        PlayerEffect.CantCastSpells -> Nothing
+        PlayerEffect.CantActivateAbilities _ -> Nothing
+        PlayerEffect.CantCastMoreThan _ -> Nothing
+        PlayerEffect.ModifyCost {} -> Nothing
+        PlayerEffect.AlternativeActivationCost {} -> Nothing
+        PlayerEffect.PlayAdditionalLands _ -> Nothing
+        PlayerEffect.NoMaximumHandSize -> Nothing
+        PlayerEffect.SetMaximumHandSize _ -> Nothing
+        PlayerEffect.IncreaseMaximumHandSize _ -> Nothing
+        PlayerEffect.ReduceMaximumHandSize _ -> Nothing
+        PlayerEffect.DontLoseUnspentMana _ -> Nothing
+        PlayerEffect.LoseLifeForUnspentMana -> Nothing
+        PlayerEffect.SpendManaAsThough _ -> Nothing
+        PlayerEffect.CantBeTargetedBy _ -> Nothing
+        PlayerEffect.CastAsThoughItHadFlash _ -> Nothing
+        PlayerEffect.MayPlayAsThoughItHadFlash _ -> Nothing
+        PlayerEffect.ActivateKeywordAtInstantSpeed _ -> Nothing
+        PlayerEffect.ActivateLoyaltyAtInstantSpeed _ -> Nothing
+        PlayerEffect.MayTapForMana _ -> Nothing
+        PlayerEffect.DamageCantBePrevented _ -> Nothing
+        PlayerEffect.DamageCantBeRedirected _ -> Nothing
+        PlayerEffect.CantSearchLibraries _ -> Nothing
+        PlayerEffect.HasProtectionFrom _ -> Nothing
+        PlayerEffect.CantBecomeMonarch -> Nothing
+        PlayerEffect.CantSetSchemesInMotion -> Nothing
+        PlayerEffect.ControlledWhileSearching -> Nothing
+        PlayerEffect.ExilesFoundWhileSearching -> Nothing
+        PlayerEffect.CantAttackWithCreatures -> Nothing
+        PlayerEffect.CantCastMatching _ -> Nothing
+        PlayerEffect.PutTappedAsYouCascade _ -> Nothing
+        PlayerEffect.CastOnlyAtSorcerySpeed -> Nothing
+        PlayerEffect.CantPlayLands _ -> Nothing
+        PlayerEffect.CastFrom _ -> Nothing
+        PlayerEffect.PlayLandsFrom _ -> Nothing
+        PlayerEffect.PlotFrom _ -> Nothing
+        PlayerEffect.CastFromHandWithoutPayingManaCost _ -> Nothing
+        PlayerEffect.CantGetCounters _ -> Nothing
+        PlayerEffect.StateCoinFlip _ -> Nothing
+        PlayerEffect.ModifyDieRoll _ -> Nothing
+        PlayerEffect.AdditionalVotes _ -> Nothing
+        PlayerEffect.AdditionalSurveilCards _ -> Nothing
+        PlayerEffect.CantGainLife -> Nothing
+        PlayerEffect.CantLoseLife -> Nothing
+        PlayerEffect.RevealsDraw _ -> Nothing
+        PlayerEffect.Precluded _ -> Nothing
+        PlayerEffect.Shows _ -> Nothing
+        PlayerEffect.CantBeCountered _ -> Nothing
+   in Maybe.mapMaybe restriction
+
+-- CR 115 / 101.2: may a spell or ability of `kind`, whose projection is
+-- `aimerView`, NOT target `candidate`, which `pid` controls, under `pid`'s
+-- targetingRestrictions? The aimers are matched against the aiming object's
+-- view as Parun.Engine.TargetRestriction.stops matches Karplusan Strider's, and
+-- both filters' "you" is `pid`.
+--
+-- Read live at every target choice and every CR 608.2b recheck, so a creature
+-- `pid` gains control of after Autumn's Veil resolved is covered (CR 611.2c:
+-- the effect changes the rules, not the creatures).
+forbidsTargeting :: [(RowSource, TargetRestriction.TargetRestriction (Filter Keyword))] -> PlayerId -> StackObjectKind.StackObjectKind -> Filter.View -> ObjectId -> GameState -> Bool
+forbidsTargeting restrictions pid kind aimerView candidate gs =
+  any
+    ( \(source, r) ->
+        TargetRestriction.kind r == kind
+          && matchesObjectFor pid source (TargetRestriction.affected r) candidate gs
+          && Filter.matches (contextFor (Just pid) source gs) aimerView (TargetRestriction.aimers r)
+    )
+    restrictions
 
 -- CR 615.12 / 613.11: every "damage can't be prevented" effect standing right
 -- now (Spider-Punk, Excruciator), each paired with the SOURCE of the ability
@@ -3814,6 +3931,7 @@ unpreventable gs =
         PlayerEffect.Precluded _ -> Nothing
         PlayerEffect.Shows _ -> Nothing
         PlayerEffect.CantBeCountered _ -> Nothing
+        PlayerEffect.RestrictTargeting _ -> Nothing
         PlayerEffect.CantCastSpells -> Nothing
         PlayerEffect.CantActivateAbilities _ -> Nothing
         PlayerEffect.CantCastMoreThan _ -> Nothing
@@ -3890,6 +4008,7 @@ unredirectable gs =
         PlayerEffect.Precluded _ -> Nothing
         PlayerEffect.Shows _ -> Nothing
         PlayerEffect.CantBeCountered _ -> Nothing
+        PlayerEffect.RestrictTargeting _ -> Nothing
         PlayerEffect.CantCastSpells -> Nothing
         PlayerEffect.CantActivateAbilities _ -> Nothing
         PlayerEffect.CantCastMoreThan _ -> Nothing
@@ -3964,6 +4083,7 @@ statedFlips pid gs =
         PlayerEffect.ActivateLoyaltyAtInstantSpeed _ -> Nothing
         PlayerEffect.MayTapForMana _ -> Nothing
         PlayerEffect.CantBeCountered _ -> Nothing
+        PlayerEffect.RestrictTargeting _ -> Nothing
         PlayerEffect.DamageCantBePrevented _ -> Nothing
         PlayerEffect.DamageCantBeRedirected _ -> Nothing
         PlayerEffect.CantSearchLibraries _ -> Nothing
@@ -4036,6 +4156,7 @@ rollModifiers pid gs =
         PlayerEffect.ActivateLoyaltyAtInstantSpeed _ -> Nothing
         PlayerEffect.MayTapForMana _ -> Nothing
         PlayerEffect.CantBeCountered _ -> Nothing
+        PlayerEffect.RestrictTargeting _ -> Nothing
         PlayerEffect.DamageCantBePrevented _ -> Nothing
         PlayerEffect.DamageCantBeRedirected _ -> Nothing
         PlayerEffect.CantSearchLibraries _ -> Nothing
@@ -4144,6 +4265,7 @@ overPlayerRefs f effect = case effect of
   PlayerEffect.ActivateLoyaltyAtInstantSpeed _ -> pure effect
   PlayerEffect.MayTapForMana _ -> pure effect
   PlayerEffect.CantBeCountered _ -> pure effect
+  PlayerEffect.RestrictTargeting _ -> pure effect
   PlayerEffect.DamageCantBePrevented _ -> pure effect
   PlayerEffect.DamageCantBeRedirected _ -> pure effect
   PlayerEffect.CantSearchLibraries _ -> pure effect
@@ -4218,6 +4340,7 @@ overDamagePatterns f effect = case effect of
   PlayerEffect.ActivateLoyaltyAtInstantSpeed _ -> pure effect
   PlayerEffect.MayTapForMana _ -> pure effect
   PlayerEffect.CantBeCountered _ -> pure effect
+  PlayerEffect.RestrictTargeting _ -> pure effect
   PlayerEffect.DamageCantBePrevented pattern_ -> fmap PlayerEffect.DamageCantBePrevented (f pattern_)
   PlayerEffect.DamageCantBeRedirected pattern_ -> fmap PlayerEffect.DamageCantBeRedirected (f pattern_)
   PlayerEffect.CantSearchLibraries _ -> pure effect

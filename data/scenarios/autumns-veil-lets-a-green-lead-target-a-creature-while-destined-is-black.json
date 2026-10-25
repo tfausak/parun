@@ -1,0 +1,15 @@
+{
+  "description": "CR 709.3a / 115.1 Autumn's Veil judges a split card's spell by the half being cast: green Lead may target alice's creature though its black half Destined could not",
+  "note": "In the graveyard Destined // Lead is black and green (CR 709.4), but a cast of Lead is a green spell only (CR 709.3a), so the Veil's ban on blue or black spells does not reach it. Alice's Grizzly Bears is the only creature, so Lead has no other target to be offered for.",
+  "board": {"active": "alice", "step": "PrecombatMain", "seats": [
+    {"name": "alice", "battlefield": [{"card": "Forest", "label": "f1"}, {"card": "Forest", "label": "f2"}, {"card": "Forest", "label": "f3"}, {"card": "Forest", "label": "f4"}, {"card": "Forest", "label": "f5"}, {"card": "Grizzly Bears", "label": "bears", "ready": true}], "hand": [{"card": "Autumn's Veil", "label": "veil"}], "graveyard": [{"card": "Destined", "label": "lead"}], "library": [{"card": "Island"}, {"card": "Island"}, {"card": "Island"}]},
+    {"name": "bob", "library": [{"card": "Island"}, {"card": "Island"}, {"card": "Island"}]}
+  ]},
+  "timeline": [
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "do": {"Cast": {"object": "$veil", "mana": ["$f1", null]}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "do": "Pass"},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "do": {"Cast": {"object": "$lead", "targets": ["$bears"], "mana": ["$f2", "$f3", "$f4", "$f5"]}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "do": "Pass"},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "check": {"Count": {"player": "alice", "zone": "Exile", "card": "Destined", "count": 1}}}
+  ]
+}
