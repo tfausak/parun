@@ -1,0 +1,122 @@
+{
+  "faces": [
+    {
+      "counterability": {
+        "type": "CantBeCountered"
+      },
+      "keywords": [
+        {
+          "type": "Haste"
+        }
+      ],
+      "manaCost": [
+        {
+          "type": "Generic",
+          "value": 5
+        },
+        {
+          "type": "OfType",
+          "value": {
+            "type": "Colored",
+            "value": {
+              "type": "Green"
+            }
+          }
+        },
+        {
+          "type": "OfType",
+          "value": {
+            "type": "Colored",
+            "value": {
+              "type": "Green"
+            }
+          }
+        }
+      ],
+      "name": "Gaea's Revenge",
+      "oracleText": "This spell can't be countered.\nHaste\nThis creature can't be the target of nongreen spells or abilities from nongreen sources.",
+      "power": {
+        "type": "Literal",
+        "value": 8
+      },
+      "targetRestrictions": [
+        {
+          "affected": {
+            "type": "Matching",
+            "value": {
+              "type": "IsSource"
+            }
+          },
+          "aimers": {
+            "type": "Not",
+            "value": {
+              "type": "HasColor",
+              "value": {
+                "type": "Green"
+              }
+            }
+          },
+          "kind": {
+            "type": "Spell"
+          }
+        },
+        {
+          "affected": {
+            "type": "Matching",
+            "value": {
+              "type": "IsSource"
+            }
+          },
+          "aimers": {
+            "type": "Not",
+            "value": {
+              "type": "HasColor",
+              "value": {
+                "type": "Green"
+              }
+            }
+          },
+          "kind": {
+            "type": "ActivatedAbility"
+          }
+        },
+        {
+          "affected": {
+            "type": "Matching",
+            "value": {
+              "type": "IsSource"
+            }
+          },
+          "aimers": {
+            "type": "Not",
+            "value": {
+              "type": "HasColor",
+              "value": {
+                "type": "Green"
+              }
+            }
+          },
+          "kind": {
+            "type": "TriggeredAbility"
+          }
+        }
+      ],
+      "toughness": {
+        "type": "Literal",
+        "value": 5
+      },
+      "typeLine": {
+        "subtypes": [
+          {
+            "type": "Elemental"
+          }
+        ],
+        "types": [
+          {
+            "type": "Creature"
+          }
+        ]
+      }
+    }
+  ]
+}
