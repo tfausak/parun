@@ -749,12 +749,16 @@ trigger n = case Node.tag n of
       relation <- players whom
       Right (condition relation, bound [("Trigger_ThatCreature", Oracle.Target.selfSlot), ("Trigger_ThatPlayer", Oracle.Trigger.thatPlayer)])
     step phase = do
-      whose <- Node.argument n >>= players
-      scope <- case whose of
-        PlayerRelation.You -> Right TurnScope.ControllersTurn
-        PlayerRelation.AnyPlayer -> Right TurnScope.EachTurn
-        PlayerRelation.Opponent -> Right TurnScope.OpponentsTurn
-        _ -> Node.untranslated n
+      whose <- Node.argument n
+      scope <- case singlePlayer whose of
+        -- Soul Bleed's "enchanted creature's controller", off the source slot.
+        Just "HostController" -> Right (TurnScope.PlayersTurn (PlayerRef.ControllerOfHostOfBound Oracle.Target.selfSlot))
+        _ ->
+          players whose >>= \relation -> case relation of
+            PlayerRelation.You -> Right TurnScope.ControllersTurn
+            PlayerRelation.AnyPlayer -> Right TurnScope.EachTurn
+            PlayerRelation.Opponent -> Right TurnScope.OpponentsTurn
+            _ -> Node.untranslated n
       Right (TriggerCondition.StepBegins (StepBegins.MkStepBegins phase Nothing scope), bound [("Trigger_ThatPlayer", Oracle.Trigger.thatPlayer)])
 
 -- | A condition of the game's state: an intervening "if" clause's (CR
@@ -851,6 +855,13 @@ conjoined fs = case fs of
 single :: Value.Value -> Maybe String
 single value = case Node.node value of
   Right n | Node.tag n == "SinglePermanent", Right p <- Node.child n -> Just (Node.tag p)
+  _ -> Nothing
+
+-- | The one player a description of players names, by its tag: 'single' for
+-- a SinglePlayer.
+singlePlayer :: Value.Value -> Maybe String
+singlePlayer value = case Node.node value of
+  Right n | Node.tag n == "SinglePlayer", Right p <- Node.child n -> Just (Node.tag p)
   _ -> Nothing
 
 -- Instructions ----------------------------------------------------------------

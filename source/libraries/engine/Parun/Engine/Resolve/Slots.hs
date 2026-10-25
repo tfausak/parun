@@ -442,6 +442,9 @@ playerRefSlots ref = case ref of
   -- Read at arity one: a slot naming several objects names no one controller.
   PlayerRef.ControllerOfBound slot -> Map.singleton slot SlotArity.One
   -- Read at arity one for the arm above's reason: a slot naming several objects
+  -- names no one host.
+  PlayerRef.ControllerOfHostOfBound slot -> Map.singleton slot SlotArity.One
+  -- Read at arity one for the arm above's reason: a slot naming several objects
   -- names no one owner.
   PlayerRef.OwnerOfBound slot -> Map.singleton slot SlotArity.One
   -- Read at arity one for that arm's reason: a slot naming several objects names

@@ -152,6 +152,9 @@ data PlayerRef
     -- slot naming no object, naming several, or naming one the projection cannot
     -- describe leaves the count unanswered rather than aimed at some other seat.
     ControllerOfBound SlotName.SlotName
+  | -- | CR 303.4b / 110.2: the controller of the permanent the object a slot
+    -- names is attached to -- Soul Bleed's "enchanted creature's controller".
+    ControllerOfHostOfBound SlotName.SlotName
   | -- | ControllerOfBound's BAKED half, and runtime-only: the controller of one
     -- particular object, read at each check (CR 611.2b, 108.4). Written by
     -- Parun.Engine.Quantity.bakePlayerRef; no card may write it.

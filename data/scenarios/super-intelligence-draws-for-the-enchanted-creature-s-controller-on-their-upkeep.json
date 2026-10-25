@@ -1,0 +1,80 @@
+{
+  "description": "CR 603.2b / 121.1: Super Intelligence has enchanted creature's controller draw a card at that player's upkeep",
+  "note": "Alice's Super Intelligence enchants bob's Grizzly Bears. Bob's library holds a Mountain above a Swamp, so holding both by his draw step means the upkeep trigger drew one; his turn's draw alone would leave the Swamp in the library.",
+  "board": {
+    "active": "alice",
+    "step": "Untap",
+    "seats": [
+      {
+        "name": "alice",
+        "battlefield": [
+          {
+            "card": "Super Intelligence",
+            "label": "intelligence",
+            "attached": "bears"
+          }
+        ],
+        "library": [
+          {
+            "card": "Island"
+          },
+          {
+            "card": "Island"
+          },
+          {
+            "card": "Island"
+          }
+        ]
+      },
+      {
+        "name": "bob",
+        "battlefield": [
+          {
+            "card": "Grizzly Bears",
+            "label": "bears",
+            "ready": true
+          }
+        ],
+        "library": [
+          {
+            "card": "Mountain"
+          },
+          {
+            "card": "Swamp"
+          },
+          {
+            "card": "Island"
+          }
+        ]
+      }
+    ]
+  },
+  "timeline": [
+    {
+      "turn": 2,
+      "step": "DrawStep",
+      "player": "bob",
+      "check": {
+        "Count": {
+          "player": "bob",
+          "zone": "Hand",
+          "card": "Swamp",
+          "count": 1
+        }
+      }
+    },
+    {
+      "turn": 2,
+      "step": "DrawStep",
+      "player": "bob",
+      "check": {
+        "Count": {
+          "player": "bob",
+          "zone": "Hand",
+          "card": "Mountain",
+          "count": 1
+        }
+      }
+    }
+  ]
+}

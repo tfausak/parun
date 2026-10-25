@@ -1,0 +1,88 @@
+{
+  "description": "CR 603.2b / 120.3a: Wanderlust deals 1 damage to enchanted creature's controller at that player's upkeep",
+  "note": "Alice enchants her own Wall of Granite, so her upkeep is the one that triggers it; bob's does not.",
+  "board": {
+    "active": "alice",
+    "step": "Untap",
+    "seats": [
+      {
+        "name": "alice",
+        "battlefield": [
+          {
+            "card": "Wall of Granite",
+            "label": "wall",
+            "ready": true
+          },
+          {
+            "card": "Wanderlust",
+            "label": "wanderlust",
+            "attached": "wall"
+          }
+        ],
+        "library": [
+          {
+            "card": "Island"
+          },
+          {
+            "card": "Island"
+          },
+          {
+            "card": "Island"
+          }
+        ]
+      },
+      {
+        "name": "bob",
+        "library": [
+          {
+            "card": "Island"
+          },
+          {
+            "card": "Island"
+          },
+          {
+            "card": "Island"
+          }
+        ]
+      }
+    ]
+  },
+  "timeline": [
+    {
+      "turn": 1,
+      "step": "DrawStep",
+      "player": "alice",
+      "check": {
+        "Life": {
+          "player": "alice",
+          "life": 19
+        }
+      }
+    },
+    {
+      "turn": 2,
+      "step": "DrawStep",
+      "player": "bob",
+      "check": {
+        "Life": {
+          "player": "bob",
+          "life": 20
+        }
+      }
+    }
+  ],
+  "final": [
+    {
+      "Life": {
+        "player": "alice",
+        "life": 19
+      }
+    },
+    {
+      "Life": {
+        "player": "bob",
+        "life": 20
+      }
+    }
+  ]
+}

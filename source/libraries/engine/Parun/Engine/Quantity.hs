@@ -1440,6 +1440,7 @@ playerRefIsSlotless ref = case ref of
   -- InSlot's answer, and for its reason: the slot is a TARGET slot, which
   -- Resolve.Slots.quantitySlots reports by folding nestedRefs.
   PlayerRef.ControllerOfBound _ -> False
+  PlayerRef.ControllerOfHostOfBound _ -> False
   -- The arm above's answer, one field over: the object is named by a slot.
   PlayerRef.OwnerOfBound _ -> False
   -- Specific's answer: the baked halves name their object outright.
@@ -1523,6 +1524,7 @@ forCandidate pid =
         PlayerRef.EachInSlot _ -> ref
         PlayerRef.Specific _ -> ref
         PlayerRef.ControllerOfBound _ -> ref
+        PlayerRef.ControllerOfHostOfBound _ -> ref
         PlayerRef.OwnerOfBound _ -> ref
         PlayerRef.ControllerOfObject _ -> ref
         PlayerRef.OwnerOfObject _ -> ref
@@ -1564,6 +1566,10 @@ bakePlayerRef players objects ref = case ref of
   PlayerRef.ControllerOfBound slot -> maybe ref PlayerRef.ControllerOfObject (Map.lookup slot objects)
   -- CR 108.3's owner, the arm above's bake one word over.
   PlayerRef.OwnerOfBound slot -> maybe ref PlayerRef.OwnerOfObject (Map.lookup slot objects)
+  -- LEFT STANDING: the host is a board read, and this bake has no board, so a
+  -- stored reference names nobody. Scryfall o:"enchanted creature's
+  -- controller's", 2026-10-25, no hit: no printing yet counts through it.
+  PlayerRef.ControllerOfHostOfBound _ -> ref
   PlayerRef.ControllerOfObject _ -> ref
   PlayerRef.OwnerOfObject _ -> ref
   -- LEFT STANDING: not implemented, a stored condition reading the player an

@@ -214,15 +214,17 @@ castOrdinal context predicate fromZone spell gs =
 
 -- CR 805.4d: the players whose step this is, among those the scope names, read
 -- against `own` as turnScopeAdmits reads it. Every active player for "each
--- player's", each active opponent for "each opponent's", and `own` alone for
--- "your" -- one seat outside the shared team turns option, where
--- Turn.activePlayers is the active player alone.
-stepPlayers :: GameState -> TurnScope.TurnScope -> PlayerId -> [PlayerId]
-stepPlayers gs scope own =
+-- player's", each active opponent for "each opponent's", `own` alone for
+-- "your", and the active players a PlayersTurn reference names off `bearer` --
+-- one seat outside the shared team turns option, where Turn.activePlayers is
+-- the active player alone.
+stepPlayers :: GameState -> ObjectId -> TurnScope.TurnScope -> PlayerId -> [PlayerId]
+stepPlayers gs bearer scope own =
   let admits player = case scope of
         TurnScope.EachTurn -> True
         TurnScope.ControllersTurn -> player == own
         TurnScope.OpponentsTurn -> Teams.areOpponents (Game.teams gs) own player
+        TurnScope.PlayersTurn ref -> maybe False (elem player) (Count.scopePlayers (Projection.viewWithLastKnownAnywhere gs) (Projection.sourceContext gs (Just own) bearer) gs ref)
    in filter admits (Turn.activePlayers gs)
 
 -- CR 505.1b: how many main phases have begun this turn, counting the one whose
@@ -469,7 +471,7 @@ matchesTriggerGiven bindings board gs bearer you cond event = case cond of
     GameEvent.StepBegan (StepBegan.MkStepBegan began active) ->
       began == wanted
         && Maybe.maybe True (== mainPhasesBegun gs) ordinal
-        && Turn.turnScopeAdmits gs scope active you
+        && Turn.turnScopeAdmits scopeNamed gs scope active you
     GameEvent.Moved {} -> False
     GameEvent.DamageDealt _ -> False
     GameEvent.SpellCast {} -> False
@@ -6184,14 +6186,14 @@ matchesTriggerGiven bindings board gs bearer you cond event = case cond of
             | ZoneChange.from (Moved.change m) == CardLeavesZone.from p,
               Game.leftOrigin (Moved.change m),
               maybe True (== ZoneChange.to (Moved.change m)) (CardLeavesZone.to p) ->
-                Turn.turnScopeAdmits gs (CardLeavesZone.scope p) (GameState.activePlayer gs) you
+                Turn.turnScopeAdmits scopeNamed gs (CardLeavesZone.scope p) (GameState.activePlayer gs) you
                   && (Map.member bearer board || Moved.revealed m)
                   && not (Seq.null (admitted m))
           GameEvent.Moved {} -> False
           GameEvent.LeftTheGame l
             | LeftTheGame.from l == CardLeavesZone.from p,
               Maybe.isNothing (CardLeavesZone.to p) ->
-                Turn.turnScopeAdmits gs (CardLeavesZone.scope p) (GameState.activePlayer gs) you
+                Turn.turnScopeAdmits scopeNamed gs (CardLeavesZone.scope p) (GameState.activePlayer gs) you
                   && admitsDeparture gs bearer you p (LeftTheGame.object l)
           GameEvent.LeftTheGame _ -> False
           GameEvent.Milled {} -> False
@@ -6292,7 +6294,7 @@ matchesTriggerGiven bindings board gs bearer you cond event = case cond of
   TriggerCondition.CardsPutIntoZone (CardsPutIntoZone.MkCardsPutIntoZone f scope origins destination) ->
     let admits revealed zc =
           ZoneChange.to zc == destination
-            && Turn.turnScopeAdmits gs scope (GameState.activePlayer gs) you
+            && Turn.turnScopeAdmits scopeNamed gs scope (GameState.activePlayer gs) you
             && (Set.null origins || Set.member (ZoneChange.from zc) origins)
             && (Map.member bearer board || revealed)
             && let arrived = ZoneChange.object zc
@@ -7273,7 +7275,7 @@ matchesTriggerGiven bindings board gs bearer you cond event = case cond of
     let -- What a cast and a copy are both asked: whose turn, which phase, and
         -- the Filter over the spell as its controller sees it.
         admits controller spell =
-          Turn.turnScopeAdmits gs scope (GameState.activePlayer gs) you
+          Turn.turnScopeAdmits scopeNamed gs scope (GameState.activePlayer gs) you
             -- "During combat" off the GAME STATE, the TurnScope's reason: the
             -- event happened in this same settle, so the phase standing now is
             -- its phase.
@@ -10670,6 +10672,8 @@ matchesTriggerGiven bindings board gs bearer you cond event = case cond of
     -- 603.10a's look back. Parun.ZoneTriggerSpec's "CR 113.6m a Kami of
     -- Mourning grant returns the card when a greater creature dies" proves it.
     bearerContext = Projection.framedByBindings gs bindings (Projection.sourceContext gs (Just you) bearer)
+    -- CR 102.1: the seats a TurnScope.PlayersTurn names, read from the bearer.
+    scopeNamed = Count.scopePlayers (Projection.viewWithLastKnownAnywhere gs) bearerContext gs
     -- A damage condition's watched permanent, the damage's source or recipient:
     -- the bearer by id, or a permanent the Filter admits. The Filter reads it
     -- through `board`, CR 603.10's battlefield immediately after the damage, as
