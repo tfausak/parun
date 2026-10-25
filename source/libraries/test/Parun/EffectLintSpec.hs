@@ -1326,6 +1326,7 @@ data Question
   | RandomInHand
   | RandomInGraveyard
   | RandomInLibrary
+  | RandomAmong
   | OnePermanent
   | SeveralPermanents
   | PermanentsUpTo
@@ -1371,6 +1372,7 @@ questionOf ref = case ref of
   ObjectRef.RandomCardInHand {} -> Just RandomInHand
   ObjectRef.RandomCardInGraveyard {} -> Just RandomInGraveyard
   ObjectRef.RandomCardInLibrary {} -> Just RandomInLibrary
+  ObjectRef.AtRandom {} -> Just RandomAmong
   ObjectRef.ChosenPermanents choice -> case ChosenPermanents.count choice of
     HowMany.Exactly (Quantity.Type.Literal 1) -> Just OnePermanent
     HowMany.Exactly _ -> Just SeveralPermanents
@@ -1389,11 +1391,11 @@ chooserRef = Maybe.isJust . questionOf
 -- reached, so this is the fence that keeps a card from loading a combination no
 -- test reaches. A position read through the pure objectRefObjects allows none.
 --
--- A move's: every question but SeveralPermanents. The scenario
+-- A move's: every question but SeveralPermanents and RandomAmong. The scenario
 -- ransack-sends-the-chosen-to-the-bottom-and-orders-the-rest reaches
 -- AnyCardsFromAmong.
 movedQuestions :: [Question]
-movedQuestions = filter (/= SeveralPermanents) [minBound .. maxBound]
+movedQuestions = filter (`notElem` [SeveralPermanents, RandomAmong]) [minBound .. maxBound]
 
 -- The battlefield questions, for the opcodes that act on PERMANENTS -- Tovolar,
 -- Dire Overlord's transform, Teferi, Hero of Dominaria's untap, God-Eternal
@@ -1484,7 +1486,9 @@ effectObjectRefs effect =
         Effect.RestartGame mRef -> read_ (Maybe.maybeToList mRef)
         Effect.ControlPlayerNextTurn {} -> []
         Effect.ControlPlayerThisResolution {} -> []
-        Effect.Destroy (Destroy.MkDestroy ref _ _ _ _) -> read_ [ref]
+        -- The scenario capricious-efreet-destroys-one-of-its-still-legal-targets-at-random
+        -- reaches RandomAmong.
+        Effect.Destroy (Destroy.MkDestroy ref _ _ _ _) -> [([RandomAmong], ref)]
         Effect.Sacrifice (SacrificeEffect.MkSacrificeEffect ref _ _) -> [(permanentQuestions, ref)]
         -- Exhume, Elvish Piper, Commune with the Gods, Elkin Lair, Ghoulraiser,
         -- the Gates' seek, Glorious Protector and Hanweir Battlements ask here.
@@ -2093,6 +2097,8 @@ effectLintSpec s registry = Spec.describe s "Lint" $ do
           ObjectRef.AttachedToBound _ -> False
           -- TRUE, InSlot's answer: the slot's object, followed.
           ObjectRef.FromAnywhere _ -> True
+          -- TRUE: one draw names one object, however many the pool holds.
+          ObjectRef.AtRandom _ -> True
           -- FALSE: several refs together name several objects.
           ObjectRef.AllOf _ -> False
         -- Does a choice's count name at most one? A COMPUTED count is plural
