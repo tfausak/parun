@@ -19,17 +19,24 @@ import qualified Parun.Types.ActivatedAbility as ActivatedAbility
 import qualified Parun.Types.ActivationRestriction as ActivationRestriction
 import qualified Parun.Types.Affected as Affected
 import qualified Parun.Types.AffectedUnless as AffectedUnless
+import qualified Parun.Types.Aggregation as Aggregation
+import qualified Parun.Types.CantBeBlockedBy as CantBeBlockedBy
 import qualified Parun.Types.Card as Card
 import qualified Parun.Types.CardType as CardType
 import qualified Parun.Types.CharacteristicPT as CharacteristicPT
 import qualified Parun.Types.Clause as Clause
 import qualified Parun.Types.Color as Color
 import qualified Parun.Types.CombatRestriction as CombatRestriction
+import qualified Parun.Types.CombatStep as CombatStep
+import qualified Parun.Types.Compares as Compares
+import qualified Parun.Types.Comparison as Comparison
+import qualified Parun.Types.Condition as Condition
 import qualified Parun.Types.Cost as Cost
 import qualified Parun.Types.CostAmount as CostAmount
 import qualified Parun.Types.CostChange as CostChange
 import qualified Parun.Types.CostComponent as CostComponent
 import qualified Parun.Types.CostModifier as CostModifier
+import qualified Parun.Types.Count as Count
 import qualified Parun.Types.DestructionR as DestructionR
 import qualified Parun.Types.DestructionRewrite as DestructionRewrite
 import qualified Parun.Types.Duration as Duration
@@ -41,6 +48,7 @@ import qualified Parun.Types.Filter as Filter
 import qualified Parun.Types.ForEach as ForEach
 import qualified Parun.Types.GrantedAbility as GrantedAbility
 import qualified Parun.Types.Hybrid as Hybrid
+import qualified Parun.Types.InZone as InZone
 import qualified Parun.Types.Keyword as Keyword
 import qualified Parun.Types.ManaCost as ManaCost
 import qualified Parun.Types.ManaSymbol as ManaSymbol
@@ -48,11 +56,15 @@ import qualified Parun.Types.ManaType as ManaType
 import qualified Parun.Types.Mill as Mill
 import qualified Parun.Types.Modal as Modal
 import qualified Parun.Types.Mode as Mode
+import qualified Parun.Types.Modification as Modification
 import qualified Parun.Types.ModifyTarget as ModifyTarget
 import qualified Parun.Types.ObjectRef as ObjectRef
 import qualified Parun.Types.PayBranch as PayBranch
 import qualified Parun.Types.PayGate as PayGate
+import qualified Parun.Types.Phase as Phase
 import qualified Parun.Types.PlayerEffect as PlayerEffect
+import qualified Parun.Types.PlayerQuantity as PlayerQuantity
+import qualified Parun.Types.PlayerRef as PlayerRef
 import qualified Parun.Types.PlayerRelation as PlayerRelation
 import qualified Parun.Types.PlayerScope as PlayerScope
 import qualified Parun.Types.PlayerStaticAbility as PlayerStaticAbility
@@ -61,19 +73,23 @@ import qualified Parun.Types.PrintedReplacement as PrintedReplacement
 import qualified Parun.Types.Quantity as Quantity
 import qualified Parun.Types.Replace as Replace
 import qualified Parun.Types.ReplacementEffect as ReplacementEffect
+import qualified Parun.Types.RuleAbilities as RuleAbilities
 import qualified Parun.Types.Sacrifice as Sacrifice
+import qualified Parun.Types.Scope as Scope
 import qualified Parun.Types.Search as Search
 import qualified Parun.Types.SearchDestination as SearchDestination
 import qualified Parun.Types.SlotCount as SlotCount
 import qualified Parun.Types.SlotName as SlotName
 import qualified Parun.Types.SpellCast as SpellCast
 import qualified Parun.Types.StaticAbility as StaticAbility
+import qualified Parun.Types.Subtype as Subtype
 import qualified Parun.Types.TargetCount as TargetCount
 import qualified Parun.Types.TargetSlot as TargetSlot
 import qualified Parun.Types.TriggerCondition as TriggerCondition
 import qualified Parun.Types.TriggeredAbility as TriggeredAbility
 import qualified Parun.Types.TurnScope as TurnScope
 import qualified Parun.Types.Uses as Uses
+import qualified Parun.Types.Zone as Zone
 
 spec :: (Monad m, Monad n) => Spec.Spec m n -> n ()
 spec s = Spec.describe s "Parun.Mtgish" $ do
@@ -214,6 +230,48 @@ spec s = Spec.describe s "Parun.Mtgish" $ do
   Spec.it s "reads an intervening if clause" $ do
     Spec.assertEq s (Right ()) (accepts sarcomancy)
     Spec.assertEq s [False, True] (fmap (Maybe.isJust . TriggeredAbility.intervening) (Face.triggeredAbilities (translated sarcomancy)))
+
+  -- CR 611.3a: "as long as" as the condition of the static abilities within.
+  Spec.it s "reads a static ability that applies as long as a condition holds" $ do
+    Spec.assertEq s (Right ()) (accepts kirdApe)
+    Spec.assertEq s (Right ()) (accepts wuAdmiral)
+    Spec.assertEq s (Right ()) (accepts castleRaptors)
+    let battlefield f = Quantity.Count (Count.MkCount (Scope.InZone (InZone.MkInZone Zone.Battlefield (PlayerRef.Relative PlayerRelation.AnyPlayer))) f Aggregation.Members)
+        atLeastOne f = Just (Condition.Compares (Compares.MkCompares (battlefield f) Comparison.AtLeast (Quantity.Literal 1)))
+    Spec.assertEq s [atLeastOne (Filter.And [Filter.HasSubtype Subtype.Forest, Filter.ControlledBy PlayerRelation.You])] (fmap StaticAbility.condition (Face.staticAbilities (translated kirdApe)))
+    Spec.assertEq s [atLeastOne (Filter.And [Filter.HasSubtype Subtype.Island, Filter.ControlledBy PlayerRelation.Opponent])] (fmap StaticAbility.condition (Face.staticAbilities (translated wuAdmiral)))
+    Spec.assertEq s [atLeastOne (Filter.And [Filter.IsSource, Filter.Not Filter.IsTapped])] (fmap StaticAbility.condition (Face.staticAbilities (translated castleRaptors)))
+    Spec.assertEq s (Right ()) (accepts gaelicat)
+    Spec.assertEq s (Right ()) (accepts anuridBarkripper)
+    let atLeast q k = Just (Condition.Compares (Compares.MkCompares q Comparison.AtLeast (Quantity.Literal k)))
+    Spec.assertEq s [atLeast (battlefield (Filter.And [Filter.HasCardType CardType.Artifact, Filter.ControlledBy PlayerRelation.You])) 2] (fmap StaticAbility.condition (Face.staticAbilities (translated gaelicat)))
+    Spec.assertEq s [atLeast (Quantity.Count (Count.MkCount (Scope.InZone (InZone.MkInZone Zone.Graveyard (PlayerRef.Relative PlayerRelation.You))) (Filter.And []) Aggregation.Members)) 7] (fmap StaticAbility.condition (Face.staticAbilities (translated anuridBarkripper)))
+    Spec.assertEq s (Right ()) (accepts bloodBurglar)
+    Spec.assertEq s [Just (Condition.Compares (Compares.MkCompares (Quantity.IsActivePlayer (PlayerRef.Relative PlayerRelation.You)) Comparison.Exactly (Quantity.Literal 1)))] (fmap StaticAbility.condition (Face.staticAbilities (translated bloodBurglar)))
+
+  -- CR 701.22a: "Scry 2."
+  Spec.it s "reads scrying" $ do
+    Spec.assertEq s (Right ()) (accepts crystalBall)
+    Spec.assertEq s [PlayerQuantity.MkPlayerQuantity (PlayerRef.Relative PlayerRelation.You) (Quantity.Literal 2)] [q | Effect.Scry q <- activatedEffects (translated crystalBall)]
+
+  -- CR 509.1b: can't be blocked, by creatures of a description, or except
+  -- by them.
+  Spec.it s "reads a creature that can't be blocked" $ do
+    Spec.assertEq s (Right ()) (accepts phantomWarrior)
+    Spec.assertEq s (Right ()) (accepts bogRats)
+    Spec.assertEq s (Right ()) (accepts invisibility)
+    let blockers face = [CantBeBlockedBy.blockers b | CombatRestriction.CantBeBlockedBy b <- Face.combatRestrictions face]
+    Spec.assertEq s [Filter.And []] (blockers (translated phantomWarrior))
+    Spec.assertEq s [Filter.HasSubtype Subtype.Wall] (blockers (translated bogRats))
+    Spec.assertEq s [Filter.Not (Filter.HasSubtype Subtype.Wall)] (blockers (translated invisibility))
+
+  -- CR 509.1b / 506.7a: a creature that can't be blocked this turn, by an
+  -- ability activated only during your turn, before attackers are declared.
+  Spec.it s "reads a creature that can't be blocked this turn" $ do
+    Spec.assertEq s (Right ()) (accepts zhugeJin)
+    Spec.assertEq s [[ActivationRestriction.DuringTurn TurnScope.ControllersTurn, ActivationRestriction.BeforeStep (Phase.Combat CombatStep.DeclareAttackers)]] (fmap ActivatedAbility.restrictions (Face.activatedAbilities (translated zhugeJin)))
+    let unblocked = GrantedAbility.Rules mempty {RuleAbilities.combatRestrictions = [CombatRestriction.CantBeBlockedBy (CantBeBlockedBy.MkCantBeBlockedBy (Affected.Matching Filter.IsSource) (Filter.And []) Nothing Nothing)]}
+    Spec.assertEq s [(Duration.UntilEndOfTurn, Modification.GainAbility unblocked)] [(ModifyTarget.duration m, ModifyTarget.modification m) | Effect.ModifyTarget m <- activatedEffects (translated zhugeJin)]
 
   -- Every keyword that stands alone, as the rule naming it, round-trips to
   -- its own printed name: the round trip over the whole of that table.
@@ -437,4 +495,81 @@ index :: (String, String)
 index =
   ( "{\"_OracleCard\":\"Card\",\"Name\":\"Index\",\"Typeline\":{\"Supertypes\":[],\"Cardtypes\":[\"Sorcery\"],\"Subtypes\":[]},\"ManaCost\":[{\"_ManaSymbol\":\"ManaCostU\"}],\"Rules\":[{\"_Rule\":\"SpellActions\",\"args\":{\"_Actions\":\"ActionList\",\"args\":[{\"_Action\":\"LookAtTheTopNumberCardsOfLibrary\",\"args\":[{\"_GameNumber\":\"Integer\",\"args\":5},[{\"_LookAtTopOfLibraryAction\":\"PutTheRemainingCardsOnTopOfLibraryInAnyOrder\"}]]}]}}]}",
     "Look at the top five cards of your library, then put them back in any order."
+  )
+
+-- | Kird Ape's AST, and its Oracle text.
+kirdApe :: (String, String)
+kirdApe =
+  ( "{\"_OracleCard\":\"Card\",\"Name\":\"Kird Ape\",\"Typeline\":{\"Supertypes\":[],\"Cardtypes\":[\"Creature\"],\"Subtypes\":[\"Ape\"]},\"ManaCost\":[{\"_ManaSymbol\":\"ManaCostR\"}],\"Rules\":[{\"_Rule\":\"If\",\"args\":[{\"_Condition\":\"PlayerPassesFilter\",\"args\":[{\"_Player\":\"You\"},{\"_Players\":\"ControlsA\",\"args\":{\"_Permanents\":\"IsLandType\",\"args\":\"Forest\"}}]},[{\"_Rule\":\"PermanentLayerEffect\",\"args\":[{\"_Permanent\":\"ThisPermanent\"},[{\"_StaticLayerEffect\":\"AdjustPT\",\"args\":[1,2]}]]}]]}],\"CardPT\":{\"Power\":1,\"Toughness\":1}}",
+    "This creature gets +1/+2 as long as you control a Forest."
+  )
+
+-- | Wu Admiral's AST, and its Oracle text.
+wuAdmiral :: (String, String)
+wuAdmiral =
+  ( "{\"_OracleCard\":\"Card\",\"Name\":\"Wu Admiral\",\"Typeline\":{\"Supertypes\":[],\"Cardtypes\":[\"Creature\"],\"Subtypes\":[\"Human\",\"Soldier\"]},\"ManaCost\":[{\"_ManaSymbol\":\"ManaCostGeneric\",\"args\":4},{\"_ManaSymbol\":\"ManaCostU\"}],\"Rules\":[{\"_Rule\":\"If\",\"args\":[{\"_Condition\":\"APlayerPassesFilter\",\"args\":[{\"_Players\":\"Opponent\"},{\"_Players\":\"ControlsA\",\"args\":{\"_Permanents\":\"IsLandType\",\"args\":\"Island\"}}]},[{\"_Rule\":\"PermanentLayerEffect\",\"args\":[{\"_Permanent\":\"ThisPermanent\"},[{\"_StaticLayerEffect\":\"AdjustPT\",\"args\":[1,1]}]]}]]}],\"CardPT\":{\"Power\":3,\"Toughness\":3}}",
+    "This creature gets +1/+1 as long as an opponent controls an Island."
+  )
+
+-- | Castle Raptors's AST, and its Oracle text.
+castleRaptors :: (String, String)
+castleRaptors =
+  ( "{\"_OracleCard\":\"Card\",\"Name\":\"Castle Raptors\",\"Typeline\":{\"Supertypes\":[],\"Cardtypes\":[\"Creature\"],\"Subtypes\":[\"Bird\",\"Soldier\"]},\"ManaCost\":[{\"_ManaSymbol\":\"ManaCostGeneric\",\"args\":4},{\"_ManaSymbol\":\"ManaCostW\"}],\"Rules\":[{\"_Rule\":\"Flying\"},{\"_Rule\":\"If\",\"args\":[{\"_Condition\":\"PermanentPassesFilter\",\"args\":[{\"_Permanent\":\"ThisPermanent\"},{\"_Permanents\":\"IsUntapped\"}]},[{\"_Rule\":\"PermanentLayerEffect\",\"args\":[{\"_Permanent\":\"ThisPermanent\"},[{\"_StaticLayerEffect\":\"AdjustPT\",\"args\":[0,2]}]]}]]}],\"CardPT\":{\"Power\":3,\"Toughness\":3}}",
+    "Flying\nAs long as this creature is untapped, it gets +0/+2."
+  )
+
+-- | Crystal Ball's AST, and its Oracle text.
+crystalBall :: (String, String)
+crystalBall =
+  ( "{\"_OracleCard\":\"Card\",\"Name\":\"Crystal Ball\",\"Typeline\":{\"Supertypes\":[],\"Cardtypes\":[\"Artifact\"],\"Subtypes\":[]},\"ManaCost\":[{\"_ManaSymbol\":\"ManaCostGeneric\",\"args\":3}],\"Rules\":[{\"_Rule\":\"Activated\",\"args\":[{\"_Cost\":\"And\",\"args\":[{\"_Cost\":\"PayMana\",\"args\":[{\"_ManaSymbol\":\"ManaCostGeneric\",\"args\":1}]},{\"_Cost\":\"TapPermanent\",\"args\":{\"_Permanent\":\"ThisPermanent\"}}]},{\"_Actions\":\"ActionList\",\"args\":[{\"_Action\":\"Scry\",\"args\":{\"_GameNumber\":\"Integer\",\"args\":2}}]}]}]}",
+    "{1}, {T}: Scry 2. (Look at the top two cards of your library, then put any number of them on the bottom and the rest on top in any order.)"
+  )
+
+-- | Phantom Warrior's AST, and its Oracle text.
+phantomWarrior :: (String, String)
+phantomWarrior =
+  ( "{\"_OracleCard\":\"Card\",\"Name\":\"Phantom Warrior\",\"Typeline\":{\"Supertypes\":[],\"Cardtypes\":[\"Creature\"],\"Subtypes\":[\"Illusion\",\"Warrior\"]},\"ManaCost\":[{\"_ManaSymbol\":\"ManaCostGeneric\",\"args\":1},{\"_ManaSymbol\":\"ManaCostU\"},{\"_ManaSymbol\":\"ManaCostU\"}],\"Rules\":[{\"_Rule\":\"PermanentRuleEffect\",\"args\":[{\"_Permanent\":\"ThisPermanent\"},[{\"_PermanentRule\":\"CantBeBlocked\"}]]}],\"CardPT\":{\"Power\":2,\"Toughness\":2}}",
+    "This creature can't be blocked."
+  )
+
+-- | Bog Rats's AST, and its Oracle text.
+bogRats :: (String, String)
+bogRats =
+  ( "{\"_OracleCard\":\"Card\",\"Name\":\"Bog Rats\",\"Typeline\":{\"Supertypes\":[],\"Cardtypes\":[\"Creature\"],\"Subtypes\":[\"Rat\"]},\"ManaCost\":[{\"_ManaSymbol\":\"ManaCostB\"}],\"Rules\":[{\"_Rule\":\"PermanentRuleEffect\",\"args\":[{\"_Permanent\":\"ThisPermanent\"},[{\"_PermanentRule\":\"CantBeBlockedByDefenders\",\"args\":{\"_Permanents\":\"IsCreatureType\",\"args\":\"Wall\"}}]]}],\"CardPT\":{\"Power\":1,\"Toughness\":1}}",
+    "This creature can't be blocked by Walls."
+  )
+
+-- | Invisibility's AST, and its Oracle text.
+invisibility :: (String, String)
+invisibility =
+  ( "{\"_OracleCard\":\"Card\",\"Name\":\"Invisibility\",\"Typeline\":{\"Supertypes\":[],\"Cardtypes\":[\"Enchantment\"],\"Subtypes\":[\"Aura\"]},\"ManaCost\":[{\"_ManaSymbol\":\"ManaCostU\"},{\"_ManaSymbol\":\"ManaCostU\"}],\"Rules\":[{\"_Rule\":\"EnchantPermanent\",\"args\":{\"_Permanents\":\"IsCardtype\",\"args\":\"Creature\"}},{\"_Rule\":\"PermanentRuleEffect\",\"args\":[{\"_Permanent\":\"HostPermanent\"},[{\"_PermanentRule\":\"CantBeBlockedExceptByDefenders\",\"args\":{\"_Permanents\":\"IsCreatureType\",\"args\":\"Wall\"}}]]}]}",
+    "Enchant creature\nEnchanted creature can't be blocked except by Walls."
+  )
+
+-- | Zhuge Jin, Wu Strategist's AST, and its Oracle text.
+zhugeJin :: (String, String)
+zhugeJin =
+  ( "{\"_OracleCard\":\"Card\",\"Name\":\"Zhuge Jin, Wu Strategist\",\"Typeline\":{\"Supertypes\":[\"Legendary\"],\"Cardtypes\":[\"Creature\"],\"Subtypes\":[\"Human\",\"Advisor\"]},\"ManaCost\":[{\"_ManaSymbol\":\"ManaCostGeneric\",\"args\":1},{\"_ManaSymbol\":\"ManaCostU\"},{\"_ManaSymbol\":\"ManaCostU\"}],\"Rules\":[{\"_Rule\":\"ActivatedWithModifiers\",\"args\":[{\"_Cost\":\"TapPermanent\",\"args\":{\"_Permanent\":\"ThisPermanent\"}},{\"_Actions\":\"Targeted\",\"args\":[[{\"_Target\":\"TargetPermanent\",\"args\":{\"_Permanents\":\"IsCardtype\",\"args\":\"Creature\"}}],{\"_Actions\":\"ActionList\",\"args\":[{\"_Action\":\"CreatePermanentRuleEffectUntil\",\"args\":[{\"_Permanent\":\"Ref_TargetPermanent\"},[{\"_PermanentRule\":\"CantBeBlocked\"}],{\"_Expiration\":\"UntilEndOfTurn\"}]}]}]},{\"_ActivateModifier\":\"ActivateOnlyIf\",\"args\":{\"_Condition\":\"And\",\"args\":[{\"_Condition\":\"PlayerPassesFilter\",\"args\":[{\"_Player\":\"You\"},{\"_Players\":\"IsTheirTurn\"}]},{\"_Condition\":\"IsBeforeAttackersDeclared\"}]}}]}],\"CardPT\":{\"Power\":1,\"Toughness\":1}}",
+    "{T}: Target creature can't be blocked this turn. Activate only during your turn, before attackers are declared."
+  )
+
+-- | Gaelicat's AST, and its Oracle text.
+gaelicat :: (String, String)
+gaelicat =
+  ( "{\"_OracleCard\":\"Card\",\"Name\":\"Gaelicat\",\"Typeline\":{\"Supertypes\":[],\"Cardtypes\":[\"Creature\"],\"Subtypes\":[\"Cat\"]},\"ManaCost\":[{\"_ManaSymbol\":\"ManaCostGeneric\",\"args\":2},{\"_ManaSymbol\":\"ManaCostW\"}],\"Rules\":[{\"_Rule\":\"Flying\"},{\"_Rule\":\"Vigilance\"},{\"_Rule\":\"If\",\"args\":[{\"_Condition\":\"PlayerPassesFilter\",\"args\":[{\"_Player\":\"You\"},{\"_Players\":\"ControlsNum\",\"args\":[{\"_Comparison\":\"GreaterThanOrEqualTo\",\"args\":{\"_GameNumber\":\"Integer\",\"args\":2}},{\"_Permanents\":\"IsCardtype\",\"args\":\"Artifact\"}]}]},[{\"_Rule\":\"PermanentLayerEffect\",\"args\":[{\"_Permanent\":\"ThisPermanent\"},[{\"_StaticLayerEffect\":\"AdjustPT\",\"args\":[2,0]}]]}]]}],\"CardPT\":{\"Power\":1,\"Toughness\":3}}",
+    "Flying, vigilance\nAs long as you control two or more artifacts, this creature gets +2/+0."
+  )
+
+-- | Anurid Barkripper's AST, and its Oracle text.
+anuridBarkripper :: (String, String)
+anuridBarkripper =
+  ( "{\"_OracleCard\":\"Card\",\"Name\":\"Anurid Barkripper\",\"Typeline\":{\"Supertypes\":[],\"Cardtypes\":[\"Creature\"],\"Subtypes\":[\"Frog\",\"Beast\"]},\"ManaCost\":[{\"_ManaSymbol\":\"ManaCostGeneric\",\"args\":1},{\"_ManaSymbol\":\"ManaCostG\"},{\"_ManaSymbol\":\"ManaCostG\"}],\"Rules\":[{\"_Rule\":\"If\",\"args\":[{\"_Condition\":\"PlayerPassesFilter\",\"args\":[{\"_Player\":\"You\"},{\"_Players\":\"NumCardsInGraveyardIs\",\"args\":{\"_Comparison\":\"GreaterThanOrEqualTo\",\"args\":{\"_GameNumber\":\"Integer\",\"args\":7}}}]},[{\"_Rule\":\"PermanentLayerEffect\",\"args\":[{\"_Permanent\":\"ThisPermanent\"},[{\"_StaticLayerEffect\":\"AdjustPT\",\"args\":[2,2]}]]}]]}],\"CardPT\":{\"Power\":2,\"Toughness\":2}}",
+    "Threshold \8212 This creature gets +2/+2 as long as there are seven or more cards in your graveyard."
+  )
+
+-- | Blood Burglar's AST, and its Oracle text.
+bloodBurglar :: (String, String)
+bloodBurglar =
+  ( "{\"_OracleCard\":\"Card\",\"Name\":\"Blood Burglar\",\"Typeline\":{\"Supertypes\":[],\"Cardtypes\":[\"Creature\"],\"Subtypes\":[\"Vampire\",\"Rogue\"]},\"ManaCost\":[{\"_ManaSymbol\":\"ManaCostGeneric\",\"args\":1},{\"_ManaSymbol\":\"ManaCostB\"}],\"Rules\":[{\"_Rule\":\"If\",\"args\":[{\"_Condition\":\"IsPlayersTurn\",\"args\":{\"_Player\":\"You\"}},[{\"_Rule\":\"PermanentLayerEffect\",\"args\":[{\"_Permanent\":\"ThisPermanent\"},[{\"_StaticLayerEffect\":\"AddAbility\",\"args\":[{\"_Rule\":\"Lifelink\"}]}]]}]]}],\"CardPT\":{\"Power\":2,\"Toughness\":2}}",
+    "During your turn, this creature has lifelink.(Damage dealt by this creature also causes you to gain that much life.)"
   )

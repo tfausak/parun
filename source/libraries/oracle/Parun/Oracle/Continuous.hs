@@ -15,9 +15,12 @@ import qualified Parun.Oracle.Filter as Filter
 import qualified Parun.Oracle.Keyword as Keyword.Oracle
 import qualified Parun.Oracle.Prose as Prose
 import qualified Parun.Oracle.Target as Target
+import qualified Parun.Oracle.Trigger as Trigger
 import qualified Parun.Types.Affected as Affected
 import qualified Parun.Types.AffectedUnless as AffectedUnless
 import qualified Parun.Types.Arithmetic as Arithmetic
+import qualified Parun.Types.CantBeBlockedBy as CantBeBlockedBy
+import qualified Parun.Types.Card as Card
 import qualified Parun.Types.CharacteristicPT as CharacteristicPT
 import qualified Parun.Types.CombatRestriction as CombatRestriction
 import qualified Parun.Types.CostChange as CostChange
@@ -27,6 +30,7 @@ import qualified Parun.Types.Duration as Duration
 import qualified Parun.Types.EntryR as EntryR
 import qualified Parun.Types.EntryRewrite as EntryRewrite
 import qualified Parun.Types.Filter as Filter.Type
+import qualified Parun.Types.GrantedAbility as GrantedAbility
 import qualified Parun.Types.Keyword as Keyword
 import qualified Parun.Types.KeywordFamily as KeywordFamily
 import qualified Parun.Types.ManaCost as ManaCost
@@ -42,11 +46,16 @@ import qualified Parun.Types.Power as Power
 import qualified Parun.Types.PrintedReplacement as PrintedReplacement
 import qualified Parun.Types.Quantity as Quantity
 import qualified Parun.Types.ReplacementEffect as ReplacementEffect
+import qualified Parun.Types.RuleAbilities as RuleAbilities
 import qualified Parun.Types.StaticAbility as StaticAbility
 import qualified Parun.Types.Subtype as Subtype
 import qualified Parun.Types.TargetSlot as TargetSlot
 import qualified Parun.Types.Times as Times
 import qualified Parun.Types.Toughness as Toughness
+
+-- | The abilities a card's effects grant (CR 113.3), which a change is read
+-- into where it grants a rule ("can't be blocked").
+type Ability = GrantedAbility.GrantedAbility Card.Card
 
 -- | Who the effect comes from, which picks the verb a keyword takes: an
 -- effect a spell or ability creates "gains" it (CR 611.2), a static ability's
@@ -62,7 +71,7 @@ data Origin
 -- Several targets "each get" a change to power and toughness (Hearts on
 -- Fire), so the change is to each of them. Only power and toughness and
 -- keywords are spelled out here.
-modifications :: Origin -> Filter.Number -> Bool -> Target.Context -> [Modification.Modification ability] -> [(Text.Text, Text.Text)]
+modifications :: Origin -> Filter.Number -> Bool -> Target.Context -> [Modification.Modification Ability] -> [(Text.Text, Text.Text)]
 modifications origin number each context ms = do
   parts <- traverse part (List.groupBy (\a b -> Maybe.isJust (keywordOf a) && fmap fst (keywordOf a) == fmap fst (keywordOf b)) ms)
   case parts of
@@ -76,6 +85,9 @@ modifications origin number each context ms = do
       [Modification.ModifyPowerToughness pt] -> do
         (change, trailing) <- powerToughness context (ModifyPowerToughness.power pt) (ModifyPowerToughness.toughness pt)
         [(verb "gets " (if each then "each get " else "get ") <> change, trailing)]
+      [Modification.GainAbility a] | Just blockers <- unblockable a -> do
+        by <- blockedBy context blockers
+        [(Text.pack "can't be blocked" <> by, MkTrailing Text.empty Text.empty)]
       m : _ | Just (gained, _) <- keywordOf m -> do
         keywords <- traverse (foldMap (either (Target.keyword context) Keyword.Oracle.family . snd) . keywordOf) group
         let change = case (gained, origin) of
@@ -137,6 +149,31 @@ powerToughness context power toughness =
       Quantity.Arithmetic (Arithmetic.Negate inner) -> fmap (Bifunctor.first negate) (unit inner)
       _ -> Nothing
 
+-- | The blockers a granted rule says the object can't be blocked by (CR
+-- 509.1b), when that rule is all the ability is.
+unblockable :: Ability -> Maybe (Filter.Type.Filter Keyword.Keyword)
+unblockable a = case a of
+  GrantedAbility.Rules rules
+    | [CombatRestriction.CantBeBlockedBy (CantBeBlockedBy.MkCantBeBlockedBy (Affected.Matching Filter.Type.IsSource) blockers Nothing Nothing)] <- RuleAbilities.combatRestrictions rules,
+      rules == mempty {RuleAbilities.combatRestrictions = RuleAbilities.combatRestrictions rules} ->
+        Just blockers
+  _ -> Nothing
+
+-- | The creatures something can't be blocked by, after "can't be blocked":
+-- none for any creature, " by Walls", " by creatures with horsemanship", and
+-- for all but those of a description " except by Walls".
+blockedBy :: Target.Context -> Filter.Type.Filter Keyword.Keyword -> [Text.Text]
+blockedBy context f = case f of
+  Filter.Type.And [] -> [Text.empty]
+  -- "by non-Wall creatures" (Flow of Maggots) is not spelled out here: no
+  -- pool card prints it beside "except by Walls" (Invisibility).
+  Filter.Type.Not g -> fmap (Text.pack " except by " <>) (creatures g)
+  _ -> fmap (Text.pack " by " <>) (creatures f)
+  where
+    creatures g = do
+      p <- Filter.phrase g (Target.keyword context)
+      Filter.describe Filter.Plural Target.permanent (Target.creature p)
+
 -- | The keyword the modification grants, or with False the one it takes away,
 -- or every keyword of a family it takes away (CR 613.1f).
 keywordOf :: Modification.Modification ability -> Maybe (Bool, Either Keyword.Keyword KeywordFamily.KeywordFamily)
@@ -170,18 +207,65 @@ duration d = case d of
 
 -- | A static ability whose effect is one of the above on the objects it
 -- affects (CR 604.1): "Creatures you control get +1/+1.", "Enchanted creature
--- gets +2/+2 and has trample." A condition, a zone it functions from, a
--- lingering duration or a name is not spelled out here.
-static :: Target.Context -> Maybe Text.Text -> [TargetSlot.TargetSlot] -> StaticAbility.StaticAbility ability -> [Text.Text]
+-- gets +2/+2 and has trample.", and one applying only while a condition holds
+-- (CR 611.3a): "As long as you control a Forest, this creature gets +1/+2."
+-- A zone it functions from, a lingering duration or a name is not spelled out
+-- here.
+static :: Target.Context -> Maybe Text.Text -> [TargetSlot.TargetSlot] -> StaticAbility.StaticAbility Ability -> [Text.Text]
 static context attached enchants a
-  | Maybe.isNothing (StaticAbility.condition a),
-    Set.null (StaticAbility.functionsFrom a),
+  | Set.null (StaticAbility.functionsFrom a),
     Maybe.isNothing (StaticAbility.lingers a),
-    Maybe.isNothing (StaticAbility.name a) = do
-      subject <- affected context attached enchants (StaticAbility.affected a)
-      (verb, defined) <- modifications Static (Target.number subject) False context (Foldable.toList (StaticAbility.modifications a))
-      [Prose.sentence (Target.wording subject <> Text.pack " " <> verb <> defined)]
+    Maybe.isNothing (StaticAbility.name a) =
+      let body context' = do
+            subject <- affected context' attached enchants (StaticAbility.affected a)
+            (verb, defined) <- modifications Static (Target.number subject) False context' (Foldable.toList (StaticAbility.modifications a))
+            [Target.wording subject <> Text.pack " " <> verb <> defined]
+       in case StaticAbility.condition a of
+            Nothing -> fmap Prose.sentence (body context)
+            Just c -> do
+              words' <- Trigger.condition context c
+              word <- Trigger.abilityWord words'
+              -- A condition on the source's own status names it first, and
+              -- what follows calls it "it": "As long as this creature is
+              -- attacking, it gets +2/+0", "This creature gets +2/+0 as long
+              -- as it's attacking".
+              let itself = Trigger.aboutSource c
+                  it = context {Target.self = Text.pack "it"}
+              stated <- body (if itself then it else context)
+              full <- body context
+              after <- if itself then fmap (\w -> maybe w (Text.pack "it's " <>) (Text.stripPrefix (Text.pack "it is ") w)) (Trigger.condition it c) else [words']
+              let opened = if Text.isPrefixOf (Target.self context) stated then stated else Prose.decapitalise stated
+              -- Free: the condition opens the sentence (Excavating Anurid) or
+              -- closes it (Kird Ape), and your turn opens it "During your
+              -- turn" (Forge Anew) or "As long as it's your turn" (Faithful
+              -- Pikemaster, not in the pool).
+              let openings = [Text.pack "As long as " <> words' <> Text.pack ", "] <> [Text.pack "During your turn, " | words' == Text.pack "it's your turn"]
+              [word <> opening <> opened <> Text.pack "." | opening <- openings] <> [word <> Prose.sentence (full <> Text.pack " as long as " <> after)]
   | otherwise = []
+
+-- | A face's static abilities and combat restrictions, an unconditional
+-- change to power and toughness and a "can't be blocked" of the objects it
+-- affects read as one ability: "Enchanted creature gets +1/+1 and can't be
+-- blocked except by creatures with flying." (Treetop Bracers). The rest, and
+-- the wordings of the one read together. One granting keywords is not read
+-- with the restriction here: Oracle text puts the keyword after it
+-- (Whispersilk Cloak) or before it (Cloak of Invisibility), and the pool
+-- prints neither.
+evasive :: Target.Context -> Maybe Text.Text -> [TargetSlot.TargetSlot] -> [StaticAbility.StaticAbility Ability] -> [CombatRestriction.CombatRestriction] -> ([StaticAbility.StaticAbility Ability], [CombatRestriction.CombatRestriction], [[Text.Text]])
+evasive context attached enchants statics rs =
+  case [(s, r, ws) | s <- statics, r@(CombatRestriction.CantBeBlockedBy (CantBeBlockedBy.MkCantBeBlockedBy a b Nothing Nothing)) <- rs, let ws = together s a b, not (null ws)] of
+    (s, r, ws) : _ -> (List.delete s statics, List.delete r rs, [ws])
+    [] -> (statics, rs, [])
+  where
+    together s a b = do
+      Monad.guard (s == s {StaticAbility.condition = Nothing, StaticAbility.functionsFrom = Set.empty, StaticAbility.lingers = Nothing, StaticAbility.name = Nothing})
+      subject <- affected context attached enchants (StaticAbility.affected s)
+      other <- ruled context attached enchants a
+      Monad.guard (Target.wording subject == Target.wording other)
+      (verb, defined) <- modifications Static (Target.number subject) False context (Foldable.toList (StaticAbility.modifications s))
+      Monad.guard (Text.null defined && not (any (Maybe.isJust . keywordOf) (StaticAbility.modifications s)))
+      by <- blockedBy context b
+      [Prose.sentence (Target.wording subject <> Text.pack " " <> verb <> Text.pack " and can't be blocked" <> by)]
 
 -- | A characteristic-defining ability (CR 604.3) giving the power or
 -- toughness the face prints as a star (CR 208.2): "Nightmare's power and
@@ -201,8 +285,10 @@ defining context power toughness pt = do
 
 -- | Static abilities restricting how permanents attack and block (CR
 -- 508.1c, CR 509.1b): "This creature can't block.", "Creatures can't
--- attack.", one ability each, except that a permanent's "can't attack" and
--- "can't block" are one ability, "can't attack or block" (Pacifism). A
+-- attack.", "This creature can't be blocked by Walls.", one ability each,
+-- except that a permanent's "can't attack" and "can't block" are one ability,
+-- "can't attack or block" (Pacifism), as are its "can't block" and "can't be
+-- blocked" (Tormented Soul). A
 -- restriction with an "unless" or a name, or any other restriction, is not
 -- spelled out here.
 combatRestrictions :: Target.Context -> Maybe Text.Text -> [TargetSlot.TargetSlot] -> [CombatRestriction.CombatRestriction] -> [[Text.Text]]
@@ -210,11 +296,17 @@ combatRestrictions context attached enchants rs = case rs of
   [] -> []
   CombatRestriction.CantAttack a : CombatRestriction.CantBlock b : rest
     | a == b -> restricted a (Text.pack "can't attack or block") : combatRestrictions context attached enchants rest
+  CombatRestriction.CantBlock a@(AffectedUnless.MkAffectedUnless affected' Nothing Nothing Nothing) : CombatRestriction.CantBeBlockedBy (CantBeBlockedBy.MkCantBeBlockedBy affected'' (Filter.Type.And []) Nothing Nothing) : rest
+    | affected' == affected'' -> restricted a (Text.pack "can't block and can't be blocked") : combatRestrictions context attached enchants rest
   r : rest -> one r : combatRestrictions context attached enchants rest
   where
     one r = case r of
       CombatRestriction.CantAttack a -> restricted a (Text.pack "can't attack")
       CombatRestriction.CantBlock a -> restricted a (Text.pack "can't block")
+      CombatRestriction.CantBeBlockedBy (CantBeBlockedBy.MkCantBeBlockedBy affected' blockers Nothing Nothing) -> do
+        subject <- ruled context attached enchants affected'
+        by <- blockedBy context blockers
+        [Prose.sentence (Target.wording subject <> Text.pack " can't be blocked" <> by)]
       _ -> []
     restricted a verb = case a of
       AffectedUnless.MkAffectedUnless affected' Nothing Nothing Nothing -> do
@@ -273,8 +365,16 @@ affected context attached enchants a = case a of
   Affected.Matching f
     | elem attachedToSource (conjuncts f) -> do
         word <- Maybe.maybeToList attached
-        p <- Filter.phrase (Filter.Type.And (filter (/= attachedToSource) (conjuncts f))) (Target.keyword context)
-        one <- Filter.describe Filter.Singular Target.permanent p
+        -- Described by nothing else, the object is a creature when that is
+        -- all the source attaches to: an Aura enchanting creatures
+        -- (Invisibility), or an Equipment (CR 301.5). Otherwise it is a
+        -- permanent (Teferi's Curse).
+        one <- case (filter (/= attachedToSource) (conjuncts f), fmap TargetSlot.pool enchants) of
+          ([], [Pool.Creatures]) -> [Text.pack "creature"]
+          ([], []) -> [Text.pack "creature"]
+          (rest, _) -> do
+            p <- Filter.phrase (Filter.Type.And rest) (Target.keyword context)
+            Filter.describe Filter.Singular Target.permanent p
         [Target.MkReference (word <> Text.pack " " <> one) [] Filter.Singular]
     | otherwise -> Target.object context Target.Affected (ObjectRef.EachMatching f)
   _ -> []

@@ -131,7 +131,7 @@ data Mana
 -- Elf), and modes that each add mana and then do the same thing read as that
 -- choice and then the rest: "Add {W} or {U}. This land deals 1 damage to
 -- you." (Adarkar Wastes).
-modal :: (Eq ability) => Target.Context -> Modal.Modal Card.Card ability -> [Text.Text]
+modal :: Target.Context -> Modal.Modal Card.Card Continuous.Ability -> [Text.Text]
 modal context m = case (Foldable.toList (Modal.modes m), Modal.selection m) of
   ([only], ModeSelection.ChooseExactly 1) -> mode context only
   (modes@(_ : _ : _), selection)
@@ -163,7 +163,7 @@ choose selection count = case selection of
 
 -- | The symbols a mode adds, when adding mana is all it does and it names no
 -- target.
-manaMode :: (Eq ability) => Mode.Mode Card.Card ability -> Maybe Text.Text
+manaMode :: Mode.Mode Card.Card Continuous.Ability -> Maybe Text.Text
 manaMode m = case (Foldable.toList (Mode.clauses m), Map.null (Mode.targetSlots m)) of
   ([c], True)
     | c == (unridden c) {Clause.effects = Clause.effects c},
@@ -185,7 +185,7 @@ manaMode m = case (Foldable.toList (Mode.clauses m), Map.null (Mode.targetSlots 
 
 -- | A mode whose first instruction adds mana and which does more after it,
 -- split there: the symbols that instruction adds, and the mode without it.
-manaThen :: (Eq ability) => Mode.Mode Card.Card ability -> Maybe (Text.Text, Mode.Mode Card.Card ability)
+manaThen :: Mode.Mode Card.Card Continuous.Ability -> Maybe (Text.Text, Mode.Mode Card.Card Continuous.Ability)
 manaThen m = case Seq.viewl (Mode.clauses m) of
   c Seq.:< cs
     | e Seq.:< es <- Seq.viewl (Clause.effects c),
@@ -201,7 +201,7 @@ unridden c = c {Clause.ifTaken = Nothing, Clause.condition = Nothing, Clause.orE
 -- | A mode's sentences, each of its target slots named exactly once (CR
 -- 601.2c): a slot named twice, or never, means the text is not the mode's.
 -- A spell's sentences are separated as the context's breaks allow.
-mode :: (Eq ability) => Target.Context -> Mode.Mode Card.Card ability -> [Text.Text]
+mode :: Target.Context -> Mode.Mode Card.Card Continuous.Ability -> [Text.Text]
 mode context m = do
   let inner = context {Target.slots = Mode.targetSlots m}
   rendered <- steps inner (zip (fmap ClauseIndex.MkClauseIndex [0 ..]) (Foldable.toList (Mode.clauses m)))
@@ -217,7 +217,7 @@ mode context m = do
 -- unless you discard a card at random" (Pillaging Horde), and a pair of which
 -- you choose one (CR 608.2d) as "You may tap or untap target permanent."
 -- (Twiddle).
-steps :: (Eq ability) => Target.Context -> [(ClauseIndex.ClauseIndex, Clause.Clause Card.Card ability)] -> [[(Text.Text, [SlotName.SlotName])]]
+steps :: Target.Context -> [(ClauseIndex.ClauseIndex, Clause.Clause Card.Card Continuous.Ability)] -> [[(Text.Text, [SlotName.SlotName])]]
 steps context cs = case cs of
   [] -> [[]]
   (i, c) : (j, d) : rest
@@ -264,7 +264,7 @@ noted :: Target.Context -> [Clause.Clause card ability] -> Target.Context
 noted context = noting context . concatMap (Foldable.toList . Clause.effects)
 
 -- | A clause's one instruction, its riders aside.
-predicate :: (Eq ability) => Target.Context -> Clause.Clause Card.Card ability -> [Predicate]
+predicate :: Target.Context -> Clause.Clause Card.Card Continuous.Ability -> [Predicate]
 predicate context c = do
   predicates <- instructions context (Foldable.toList (Clause.effects c))
   case List.foldr addedTogether [] predicates of
@@ -284,7 +284,7 @@ lowered context text
 -- (CR 608.2c). A clause gated by an "if you do" reads with its neighbour
 -- ('steps'), and a "may" another player decides or one over more than one
 -- instruction is not spelled out here.
-clause :: (Eq ability) => Target.Context -> Clause.Clause Card.Card ability -> [(Text.Text, [SlotName.SlotName])]
+clause :: Target.Context -> Clause.Clause Card.Card Continuous.Ability -> [(Text.Text, [SlotName.SlotName])]
 clause context c
   | Maybe.isJust (Clause.ifTaken c) || Maybe.isJust (Clause.orElse c) = []
   | Just gate <- Clause.condition c = do
@@ -371,7 +371,7 @@ paid context g predicates
 -- | A clause's instructions as predicates, consecutive changes to the same
 -- objects for the same duration as one: "gets +2/+2 and gains flying until
 -- end of turn".
-instructions :: (Eq ability) => Target.Context -> [Effect.Effect Card.Card ability] -> [[Predicate]]
+instructions :: Target.Context -> [Effect.Effect Card.Card Continuous.Ability] -> [[Predicate]]
 instructions context es = case es of
   [] -> [[]]
   e@(Effect.ModifyTarget m) : rest
@@ -465,7 +465,7 @@ modifyTarget e = case e of
 -- | "[Objects] get(s) [change] [duration]": the change an instruction makes to
 -- objects for a while (CR 611.2a), and the ones following it to the same
 -- objects for the same while.
-modified :: Target.Context -> ModifyTarget.ModifyTarget ability -> [Modification.Modification ability] -> [Predicate]
+modified :: Target.Context -> ModifyTarget.ModifyTarget Continuous.Ability -> [Modification.Modification Continuous.Ability] -> [Predicate]
 modified context m more = do
   -- Free for a description: the objects together (Trumpet Blast's
   -- "attacking creatures get") or each of them (Zhang He, Wei General's
@@ -483,8 +483,19 @@ modified context m more = do
         Modification.ModifyPowerToughness _ -> elem (ModifyTarget.ref m) (Target.pumped context)
         _ -> False
       change = if again then (\(v, rest) -> v <> Text.pack " an additional" <> rest) (Text.breakOn (Text.pack " ") change') else change'
-  lasting <- Continuous.duration (ModifyTarget.duration m)
+  -- A rule granted until end of turn lasts "this turn": "can't be blocked
+  -- this turn" (Zhuge Jin, Wu Strategist). Beside a change to the object's
+  -- characteristics it is not spelled out here.
+  let ruled = fmap (Maybe.isJust . granted) (ModifyTarget.modification m : more)
+      granted n = case n of
+        Modification.GainAbility a -> Continuous.unblockable a
+        _ -> Nothing
+  lasting <- case (and ruled, or ruled, ModifyTarget.duration m) of
+    (True, _, Duration.UntilEndOfTurn) -> [Nothing]
+    (False, False, d) -> Continuous.duration d
+    _ -> []
   case lasting of
+    Nothing | and ruled -> [MkPredicate (Just who) (change <> Text.pack " this turn" <> defined) [] [] Nothing False]
     Nothing -> [MkPredicate (Just who) (change <> defined) [] [] Nothing False]
     -- Free: the duration ends the sentence (Giant Growth) or opens it
     -- (Aspirant's Ascent).
@@ -587,7 +598,7 @@ allMentions p = foldMap Target.mentions (subject p) <> mentions p
 
 -- | One instruction's predicate; none for an instruction not spelled out here
 -- yet.
-effect :: (Eq ability) => Target.Context -> Effect.Effect Card.Card ability -> [Predicate]
+effect :: Target.Context -> Effect.Effect Card.Card Continuous.Ability -> [Predicate]
 effect context e = case e of
   Effect.DealDamage d -> dealDamage context d
   Effect.Draw d
@@ -689,6 +700,10 @@ effect context e = case e of
       Maybe.isNothing (Mill.slot m) -> do
         n <- Target.cards (Mill.quantity m)
         imperative context (Mill.player m) (Text.pack "mill " <> n) (Text.pack "mills " <> n)
+  -- "Scry 2" (CR 701.22a).
+  Effect.Scry (PlayerQuantity.MkPlayerQuantity who q) -> do
+    n <- Target.amount q
+    imperative context who (Text.pack "scry " <> n) (Text.pack "scries " <> n)
   Effect.PreventNextDamage p
     | PreventNextDamage.duration p == Duration.UntilEndOfTurn,
       Maybe.isNothing (PreventNextDamage.whatRecipient p),
@@ -711,7 +726,7 @@ effect context e = case e of
 -- "put", and exiling is its own verb (CR 701.13a). A move with riders other
 -- than entering tapped, a move "until" something happens (CR 610.3), or a
 -- move onto the battlefield from anywhere else is not spelled out here.
-moved :: (Eq ability) => Target.Context -> MoveToZone.MoveToZone ability -> [Predicate]
+moved :: Target.Context -> MoveToZone.MoveToZone Continuous.Ability -> [Predicate]
 moved context m
   | Maybe.isJust (MoveToZone.duration m) = []
   | otherwise = do
