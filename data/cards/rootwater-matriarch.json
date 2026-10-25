@@ -1,0 +1,147 @@
+{
+  "faces": [
+    {
+      "activatedAbilities": [
+        {
+          "cost": {
+            "components": [
+              {
+                "type": "TapThis"
+              }
+            ],
+            "mana": []
+          },
+          "modal": {
+            "modes": [
+              {
+                "clauses": [
+                  {
+                    "effects": [
+                      {
+                        "type": "GainControl",
+                        "value": {
+                          "duration": {
+                            "type": "ForAsLongAs",
+                            "value": {
+                              "type": "Compares",
+                              "value": {
+                                "comparison": {
+                                  "type": "AtLeast"
+                                },
+                                "measured": {
+                                  "type": "Count",
+                                  "value": {
+                                    "aggregation": {
+                                      "type": "Members"
+                                    },
+                                    "filter": {
+                                      "type": "And",
+                                      "value": [
+                                        {
+                                          "type": "IsBound",
+                                          "value": "target"
+                                        },
+                                        {
+                                          "type": "HasAttached",
+                                          "value": {
+                                            "type": "HasSubtype",
+                                            "value": {
+                                              "type": "Aura"
+                                            }
+                                          }
+                                        }
+                                      ]
+                                    },
+                                    "scope": {
+                                      "type": "InZone",
+                                      "value": {
+                                        "player": {
+                                          "type": "Relative",
+                                          "value": {
+                                            "type": "AnyPlayer"
+                                          }
+                                        },
+                                        "zone": {
+                                          "type": "Battlefield"
+                                        }
+                                      }
+                                    }
+                                  }
+                                },
+                                "threshold": {
+                                  "type": "Literal",
+                                  "value": 1
+                                }
+                              }
+                            }
+                          },
+                          "ref": {
+                            "type": "InSlot",
+                            "value": "target"
+                          }
+                        }
+                      }
+                    ]
+                  }
+                ],
+                "targetSlots": {
+                  "target": {
+                    "pool": {
+                      "type": "Creatures"
+                    }
+                  }
+                }
+              }
+            ]
+          }
+        }
+      ],
+      "manaCost": [
+        {
+          "type": "Generic",
+          "value": 2
+        },
+        {
+          "type": "OfType",
+          "value": {
+            "type": "Colored",
+            "value": {
+              "type": "Blue"
+            }
+          }
+        },
+        {
+          "type": "OfType",
+          "value": {
+            "type": "Colored",
+            "value": {
+              "type": "Blue"
+            }
+          }
+        }
+      ],
+      "name": "Rootwater Matriarch",
+      "oracleText": "{T}: Gain control of target creature for as long as that creature is enchanted.",
+      "power": {
+        "type": "Literal",
+        "value": 2
+      },
+      "toughness": {
+        "type": "Literal",
+        "value": 3
+      },
+      "typeLine": {
+        "subtypes": [
+          {
+            "type": "Merfolk"
+          }
+        ],
+        "types": [
+          {
+            "type": "Creature"
+          }
+        ]
+      }
+    }
+  ]
+}

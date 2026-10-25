@@ -1,0 +1,197 @@
+{
+  "description": "CR 613.1d / 702.19b whole card: Treetop Village enters tapped, taps for {G}, and {1}{G} makes it a 3/3 green Ape creature land with trample until end of turn",
+  "note": "Alice animates the Village and attacks; bob's 0/2 Ornithopter blocks and 1 of its 3 damage tramples over. A second Village played from hand enters tapped.",
+  "board": {
+    "active": "alice",
+    "step": "PrecombatMain",
+    "seats": [
+      {
+        "name": "alice",
+        "manaPool": "GG",
+        "battlefield": [
+          {
+            "card": "Treetop Village",
+            "label": "village",
+            "ready": true
+          }
+        ],
+        "hand": [
+          {
+            "card": "Treetop Village",
+            "label": "second"
+          }
+        ],
+        "library": [
+          {
+            "card": "Island"
+          },
+          {
+            "card": "Island"
+          },
+          {
+            "card": "Island"
+          }
+        ]
+      },
+      {
+        "name": "bob",
+        "battlefield": [
+          {
+            "card": "Ornithopter",
+            "label": "thopter"
+          }
+        ],
+        "library": [
+          {
+            "card": "Island"
+          },
+          {
+            "card": "Island"
+          },
+          {
+            "card": "Island"
+          }
+        ]
+      }
+    ]
+  },
+  "timeline": [
+    {
+      "turn": 1,
+      "step": "PrecombatMain",
+      "player": "alice",
+      "do": {
+        "Activate": {
+          "object": "$village",
+          "ability": 1,
+          "mana": [
+            null
+          ]
+        }
+      }
+    },
+    {
+      "turn": 1,
+      "step": "PrecombatMain",
+      "player": "alice",
+      "do": "Pass"
+    },
+    {
+      "turn": 1,
+      "step": "PrecombatMain",
+      "player": "alice",
+      "check": {
+        "PowerToughness": {
+          "object": "$village",
+          "power": 3,
+          "toughness": 3
+        }
+      }
+    },
+    {
+      "turn": 1,
+      "step": "PrecombatMain",
+      "player": "alice",
+      "check": {
+        "Subtypes": {
+          "object": "$village",
+          "subtypes": [
+            "Ape"
+          ]
+        }
+      }
+    },
+    {
+      "turn": 1,
+      "step": "PrecombatMain",
+      "player": "alice",
+      "check": {
+        "View": {
+          "of": "Colors",
+          "object": "$village",
+          "is": [
+            "Green"
+          ]
+        }
+      }
+    },
+    {
+      "turn": 1,
+      "step": "PrecombatMain",
+      "player": "alice",
+      "check": {
+        "Keywords": {
+          "object": "$village",
+          "keyword": {
+            "type": "Trample"
+          },
+          "count": 1
+        }
+      }
+    },
+    {
+      "turn": 1,
+      "step": "PrecombatMain",
+      "player": "alice",
+      "do": {
+        "PlayLand": "$second"
+      }
+    },
+    {
+      "turn": 1,
+      "step": "PrecombatMain",
+      "player": "alice",
+      "check": {
+        "Tapped": {
+          "object": "Treetop Village#2",
+          "tapped": true
+        }
+      }
+    },
+    {
+      "turn": 1,
+      "step": "DeclareAttackers",
+      "player": "alice",
+      "do": {
+        "Attack": [
+          "$village"
+        ]
+      }
+    },
+    {
+      "turn": 1,
+      "step": "DeclareBlockers",
+      "player": "bob",
+      "do": {
+        "Block": {
+          "$thopter": [
+            "$village"
+          ]
+        }
+      }
+    },
+    {
+      "turn": 1,
+      "step": "CombatDamage",
+      "player": "alice",
+      "do": {
+        "AssignDamage": {
+          "$thopter": 2,
+          "$bob": 1
+        }
+      },
+      "source": "$village"
+    },
+    {
+      "turn": 1,
+      "step": "EndOfCombat",
+      "player": "alice",
+      "check": {
+        "Life": {
+          "player": "bob",
+          "life": 19
+        }
+      }
+    }
+  ]
+}

@@ -3793,7 +3793,7 @@ effectIsImpossible resolving source controller legal gs effect = case effect of
   Effect.PlayerSacrifices (PlayerSacrifices.MkPlayerSacrifices players filter_ quantity) ->
     let victims = playerRefPlayers legal resolving source controller gs players
         tooFewToGive victim = case evaluateForRecipient viewOf context gs resolving source victim quantity of
-          Just n | n > 0 -> n > List.genericLength (Replacement.sacrificeCandidates (Filter.perspective context) (Binding.recipientsBySlot legal (slotBindings resolving gs)) victim Nothing filter_ gs)
+          Just n | n > 0 -> n > List.genericLength (Replacement.sacrificeCandidates (Filter.perspective context) (Binding.recipientsBySlot legal (slotBindings resolving gs)) victim (Just source) filter_ gs)
           _ -> False
      in not (null victims) && all tooFewToGive victims
   -- CR 701.38b lists the choices, and an object vote's empty list is the
@@ -7219,8 +7219,10 @@ applyOneEffect runSubgame resolving source controller legal chosen effect = case
                   -- elision and a short transcript are deterministic. Through
                   -- Replacement.sacrificeCandidates, which is what puts CR 101.2's
                   -- "can't be sacrificed" on this path: a prohibited permanent is
-                  -- never the pick that satisfies the edict.
-                  let candidates = Replacement.sacrificeCandidates (Filter.perspective context) (Binding.recipientsBySlot legal (slotBindings resolving gs)) victim Nothing filter_ gs
+                  -- never the pick that satisfies the edict. Framed by `source`,
+                  -- so Lord of the Pit's "a creature other than this creature"
+                  -- never offers the Lord itself.
+                  let candidates = Replacement.sacrificeCandidates (Filter.perspective context) (Binding.recipientsBySlot legal (slotBindings resolving gs)) victim (Just source) filter_ gs
                       decider = Decide.deciderFor victim gs
                       -- `n > 0` above, so the clamp never decides anything here.
                       count = Integer.toNaturalSaturating n

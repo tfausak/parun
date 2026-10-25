@@ -1,0 +1,118 @@
+{
+  "description": "CR 602.5 / 702.29a Pithing Needle: a source with the chosen name is stopped in any zone, so a named card in hand can't be cycled",
+  "note": "Alice names Barkhide Mauler; on his turn bob has the mana to cycle the Mauler in his hand but can't.",
+  "board": {
+    "active": "alice",
+    "step": "PrecombatMain",
+    "seats": [
+      {
+        "name": "alice",
+        "manaPool": "C",
+        "hand": [
+          {
+            "card": "Pithing Needle",
+            "label": "needle"
+          }
+        ],
+        "library": [
+          {
+            "card": "Island"
+          },
+          {
+            "card": "Island"
+          },
+          {
+            "card": "Island"
+          }
+        ]
+      },
+      {
+        "name": "bob",
+        "battlefield": [
+          {
+            "card": "Island",
+            "label": "i1"
+          },
+          {
+            "card": "Island",
+            "label": "i2"
+          }
+        ],
+        "hand": [
+          {
+            "card": "Barkhide Mauler",
+            "label": "mauler"
+          }
+        ],
+        "library": [
+          {
+            "card": "Island"
+          },
+          {
+            "card": "Island"
+          },
+          {
+            "card": "Island"
+          }
+        ]
+      }
+    ]
+  },
+  "timeline": [
+    {
+      "turn": 1,
+      "step": "PrecombatMain",
+      "player": "alice",
+      "do": {
+        "Cast": {
+          "object": "$needle"
+        }
+      }
+    },
+    {
+      "turn": 1,
+      "step": "PrecombatMain",
+      "player": "alice",
+      "do": "Pass"
+    },
+    {
+      "turn": 1,
+      "step": "PrecombatMain",
+      "player": "alice",
+      "do": {
+        "Answer": {
+          "prompt": "ChooseCardName",
+          "with": "Barkhide Mauler"
+        }
+      }
+    },
+    {
+      "turn": 2,
+      "step": "PrecombatMain",
+      "player": "bob",
+      "refuse": {
+        "Activate": {
+          "object": "$mauler",
+          "ability": 0,
+          "mana": [
+            "$i1",
+            "$i2"
+          ]
+        }
+      }
+    },
+    {
+      "turn": 2,
+      "step": "PrecombatMain",
+      "player": "bob",
+      "check": {
+        "Count": {
+          "player": "bob",
+          "zone": "Hand",
+          "card": "Barkhide Mauler",
+          "count": 1
+        }
+      }
+    }
+  ]
+}

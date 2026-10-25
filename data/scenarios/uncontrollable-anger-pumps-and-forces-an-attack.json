@@ -1,0 +1,117 @@
+{
+  "description": "CR 702.8a / 613.4c / 508.1d whole card: Uncontrollable Anger, with flash, gives the enchanted creature +2/+2, and it attacks each combat if able",
+  "note": "Alice casts the Anger on bob's Grizzly Bears in her own turn (flash); on bob's turn the 4/4 Bears must attack, so an empty attack is refused.",
+  "board": {
+    "active": "alice",
+    "step": "EndStep",
+    "seats": [
+      {
+        "name": "alice",
+        "manaPool": "RRRR",
+        "hand": [
+          {
+            "card": "Uncontrollable Anger",
+            "label": "anger"
+          }
+        ],
+        "library": [
+          {
+            "card": "Island"
+          },
+          {
+            "card": "Island"
+          },
+          {
+            "card": "Island"
+          }
+        ]
+      },
+      {
+        "name": "bob",
+        "battlefield": [
+          {
+            "card": "Grizzly Bears",
+            "label": "bears",
+            "ready": true
+          }
+        ],
+        "library": [
+          {
+            "card": "Island"
+          },
+          {
+            "card": "Island"
+          },
+          {
+            "card": "Island"
+          },
+          {
+            "card": "Island"
+          }
+        ]
+      }
+    ]
+  },
+  "timeline": [
+    {
+      "turn": 1,
+      "step": "EndStep",
+      "player": "alice",
+      "do": {
+        "Cast": {
+          "object": "$anger",
+          "targets": [
+            "$bears"
+          ]
+        }
+      }
+    },
+    {
+      "turn": 1,
+      "step": "EndStep",
+      "player": "alice",
+      "do": "Pass"
+    },
+    {
+      "turn": 1,
+      "step": "EndStep",
+      "player": "alice",
+      "check": {
+        "PowerToughness": {
+          "object": "$bears",
+          "power": 4,
+          "toughness": 4
+        }
+      }
+    },
+    {
+      "turn": 2,
+      "step": "DeclareAttackers",
+      "player": "bob",
+      "refuse": {
+        "Attack": []
+      }
+    },
+    {
+      "turn": 2,
+      "step": "DeclareAttackers",
+      "player": "bob",
+      "do": {
+        "Attack": [
+          "$bears"
+        ]
+      }
+    },
+    {
+      "turn": 2,
+      "step": "EndOfCombat",
+      "player": "bob",
+      "check": {
+        "Life": {
+          "player": "alice",
+          "life": 16
+        }
+      }
+    }
+  ]
+}

@@ -1,0 +1,128 @@
+{
+  "description": "CR 608.2c / 510.2 whole card: whenever Scalpelexis deals combat damage to a player, that player exiles the top four cards of their library, repeating while two or more of those four share a name",
+  "note": "Bob's top four hold two Islands, so he exiles four more; those four all differ, so the process stops with his last two cards still in the library.",
+  "board": {
+    "active": "alice",
+    "step": "BeginningOfCombat",
+    "seats": [
+      {
+        "name": "alice",
+        "battlefield": [
+          {
+            "card": "Scalpelexis",
+            "label": "scalpelexis",
+            "ready": true
+          }
+        ],
+        "library": [
+          {
+            "card": "Island"
+          },
+          {
+            "card": "Island"
+          },
+          {
+            "card": "Island"
+          }
+        ]
+      },
+      {
+        "name": "bob",
+        "library": [
+          {
+            "card": "Island"
+          },
+          {
+            "card": "Forest"
+          },
+          {
+            "card": "Island"
+          },
+          {
+            "card": "Mountain"
+          },
+          {
+            "card": "Plains"
+          },
+          {
+            "card": "Swamp"
+          },
+          {
+            "card": "Hill Giant"
+          },
+          {
+            "card": "Shock"
+          },
+          {
+            "card": "Grizzly Bears"
+          },
+          {
+            "card": "Ornithopter"
+          }
+        ]
+      }
+    ]
+  },
+  "timeline": [
+    {
+      "turn": 1,
+      "step": "DeclareAttackers",
+      "player": "alice",
+      "do": {
+        "Attack": [
+          "$scalpelexis"
+        ]
+      }
+    },
+    {
+      "turn": 1,
+      "step": "EndOfCombat",
+      "player": "alice",
+      "check": {
+        "Life": {
+          "player": "bob",
+          "life": 19
+        }
+      }
+    },
+    {
+      "turn": 1,
+      "step": "EndOfCombat",
+      "player": "alice",
+      "check": {
+        "Count": {
+          "player": "bob",
+          "zone": "Exile",
+          "card": "Shock",
+          "count": 1
+        }
+      }
+    },
+    {
+      "turn": 1,
+      "step": "EndOfCombat",
+      "player": "alice",
+      "check": {
+        "Count": {
+          "player": "bob",
+          "zone": "Library",
+          "card": "Grizzly Bears",
+          "count": 1
+        }
+      }
+    },
+    {
+      "turn": 1,
+      "step": "EndOfCombat",
+      "player": "alice",
+      "check": {
+        "Count": {
+          "player": "bob",
+          "zone": "Library",
+          "card": "Ornithopter",
+          "count": 1
+        }
+      }
+    }
+  ]
+}
