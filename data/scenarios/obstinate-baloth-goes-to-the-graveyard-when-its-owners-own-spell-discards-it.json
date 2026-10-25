@@ -1,0 +1,17 @@
+{
+  "description": "CR 609.1 / 109.5: alice's own Mind Rot sends her discarded Obstinate Baloth to her graveyard",
+  "note": "The twin of the board where bob casts the Mind Rot, with only the caster changed: the effect is alice's, and \"an opponent controls\" refuses it. Bob's Megrim still deals alice 2 for each discard.",
+  "board": {"active": "alice", "step": "PrecombatMain", "seats": [{"name": "alice", "manaPool": "BBB", "library": [{"card": "Plains"}, {"card": "Plains"}, {"card": "Plains"}], "hand": [{"card": "Mind Rot", "label": "rot"}, {"card": "Obstinate Baloth", "label": "baloth"}, {"card": "Hill Giant", "label": "giant"}, {"card": "Island", "label": "island"}]}, {"name": "bob", "library": [{"card": "Island"}, {"card": "Island"}, {"card": "Island"}], "battlefield": [{"card": "Megrim", "label": "megrim"}]}]},
+  "timeline": [
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "do": {"Cast": {"object": "$rot", "targets": ["$alice"]}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "do": "Pass"},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "do": {"Answer": {"prompt": "ChooseDiscard", "with": ["$baloth", "$giant"]}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "bob", "do": {"OrderTriggers": ["$megrim", "$megrim"]}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "check": {"Count": {"player": "alice", "zone": "Graveyard", "card": "Obstinate Baloth", "count": 1}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "check": {"Count": {"player": "alice", "zone": "Battlefield", "card": "Obstinate Baloth", "count": 0}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "do": "Pass"},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "do": "Pass"},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "check": {"View": {"of": "Stack", "is": []}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "check": {"Life": {"player": "alice", "life": 16}}}
+  ]
+}

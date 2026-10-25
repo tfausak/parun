@@ -6,6 +6,7 @@ import qualified Parun.Codec.ControllerRelation as ControllerRelation
 import qualified Parun.Codec.DiscardCause as DiscardCause
 import qualified Parun.Codec.Filter as Filter
 import qualified Parun.Codec.Keyword as Keyword
+import qualified Parun.Codec.PlayerRelation as PlayerRelation
 import qualified Parun.Codec.Zone as Zone
 import qualified Parun.JsonCodec.Codec as Codec
 import qualified Parun.JsonCodec.Common as Common
@@ -47,6 +48,7 @@ codec = Fields.object $ do
   whoseObject <- Fields.defaulted "whoseObject" defaultWhoseObject ControllerRelation.codec ZoneChangePattern.whoseObject
   whatObject <- Fields.defaulted "whatObject" defaultWhatObject (Filter.codec Keyword.codec) ZoneChangePattern.whatObject
   whenDiscarded <- Fields.defaulted "whenDiscarded" defaultWhenDiscarded (Common.maybe DiscardCause.codec) ZoneChangePattern.whenDiscarded
+  causedBy <- Fields.defaulted "causedBy" Nothing (Common.maybe PlayerRelation.codec) ZoneChangePattern.causedBy
   duringResolution <- Fields.defaulted "duringResolution" False Common.boolean ZoneChangePattern.duringResolution
   pure
     ZoneChangePattern.MkZoneChangePattern
@@ -54,5 +56,6 @@ codec = Fields.object $ do
         ZoneChangePattern.whoseObject = whoseObject,
         ZoneChangePattern.whatObject = whatObject,
         ZoneChangePattern.whenDiscarded = whenDiscarded,
+        ZoneChangePattern.causedBy = causedBy,
         ZoneChangePattern.duringResolution = duringResolution
       }

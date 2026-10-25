@@ -5,6 +5,7 @@ import qualified Parun.JsonCodec.Common as Common
 import qualified Parun.Spec as Spec
 import qualified Parun.Types.CardType as CardType
 import qualified Parun.Types.ControllerRelation as ControllerRelation
+import qualified Parun.Types.DiscardCause as DiscardCause
 import qualified Parun.Types.Filter as Filter
 import qualified Parun.Types.PlayerRelation as PlayerRelation
 import qualified Parun.Types.Zone as Zone
@@ -24,6 +25,7 @@ spec s = Spec.describe s "Parun.Codec.ZoneChangePattern" $ do
           ZoneChangePattern.whatObject = Filter.And [],
           ZoneChangePattern.whoseObject = ControllerRelation.Related PlayerRelation.AnyPlayer,
           ZoneChangePattern.whenDiscarded = Nothing,
+          ZoneChangePattern.causedBy = Nothing,
           ZoneChangePattern.duringResolution = False
         }
       " {\"whenDestination\":{\"type\":\"Graveyard\"}} "
@@ -39,6 +41,7 @@ spec s = Spec.describe s "Parun.Codec.ZoneChangePattern" $ do
           ZoneChangePattern.whatObject = Filter.And [Filter.HasCardType CardType.Creature, Filter.Not Filter.IsToken],
           ZoneChangePattern.whoseObject = ControllerRelation.Related PlayerRelation.Opponent,
           ZoneChangePattern.whenDiscarded = Nothing,
+          ZoneChangePattern.causedBy = Nothing,
           ZoneChangePattern.duringResolution = False
         }
       " {\"whatObject\":{\"type\":\"And\",\"value\":[{\"type\":\"HasCardType\",\"value\":{\"type\":\"Creature\"}},{\"type\":\"Not\",\"value\":{\"type\":\"IsToken\"}}]},\"whenDestination\":{\"type\":\"Graveyard\"},\"whoseObject\":{\"type\":\"Opponent\"}} "
@@ -53,6 +56,7 @@ spec s = Spec.describe s "Parun.Codec.ZoneChangePattern" $ do
           ZoneChangePattern.whatObject = Filter.IsSource,
           ZoneChangePattern.whoseObject = ControllerRelation.Related PlayerRelation.AnyPlayer,
           ZoneChangePattern.whenDiscarded = Nothing,
+          ZoneChangePattern.causedBy = Nothing,
           ZoneChangePattern.duringResolution = False
         }
       " {\"whatObject\":{\"type\":\"IsSource\"}} "
@@ -66,7 +70,23 @@ spec s = Spec.describe s "Parun.Codec.ZoneChangePattern" $ do
           ZoneChangePattern.whatObject = Filter.IsSource,
           ZoneChangePattern.whoseObject = ControllerRelation.Related PlayerRelation.AnyPlayer,
           ZoneChangePattern.whenDiscarded = Nothing,
+          ZoneChangePattern.causedBy = Nothing,
           ZoneChangePattern.duringResolution = True
         }
       " {\"duringResolution\":true,\"whatObject\":{\"type\":\"IsSource\"},\"whenDestination\":{\"type\":\"Graveyard\"}} "
+  -- CR 609.1: Obstinate Baloth's "a spell or ability an opponent controls
+  -- causes you to discard this card".
+  Spec.it s "MkZoneChangePattern (Obstinate Baloth, caused by an opponent)" $
+    Common.assertCodec
+      s
+      ZoneChangePattern.codec
+      ZoneChangePattern.MkZoneChangePattern
+        { ZoneChangePattern.whenDestination = Just Zone.Graveyard,
+          ZoneChangePattern.whatObject = Filter.IsSource,
+          ZoneChangePattern.whoseObject = ControllerRelation.Related PlayerRelation.AnyPlayer,
+          ZoneChangePattern.whenDiscarded = Just DiscardCause.ByEffect,
+          ZoneChangePattern.causedBy = Just PlayerRelation.Opponent,
+          ZoneChangePattern.duringResolution = False
+        }
+      " {\"causedBy\":{\"type\":\"Opponent\"},\"whatObject\":{\"type\":\"IsSource\"},\"whenDestination\":{\"type\":\"Graveyard\"},\"whenDiscarded\":{\"type\":\"ByEffect\"}} "
   Spec.it s "has a schema" $ Common.assertHasSchema s ZoneChangePattern.codec

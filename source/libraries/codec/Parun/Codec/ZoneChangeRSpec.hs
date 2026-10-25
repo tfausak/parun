@@ -26,6 +26,7 @@ spec s = Spec.describe s "Parun.Codec.ZoneChangeR" $ do
                   ZoneChangePattern.whatObject = Filter.And [],
                   ZoneChangePattern.whoseObject = ControllerRelation.Related PlayerRelation.AnyPlayer,
                   ZoneChangePattern.whenDiscarded = Nothing,
+                  ZoneChangePattern.causedBy = Nothing,
                   ZoneChangePattern.duringResolution = False
                 },
             ZoneChangeR.destination = Zone.Exile,
@@ -49,6 +50,7 @@ spec s = Spec.describe s "Parun.Codec.ZoneChangeR" $ do
                   ZoneChangePattern.whatObject = Filter.IsSource,
                   ZoneChangePattern.whoseObject = ControllerRelation.Related PlayerRelation.AnyPlayer,
                   ZoneChangePattern.whenDiscarded = Nothing,
+                  ZoneChangePattern.causedBy = Nothing,
                   ZoneChangePattern.duringResolution = False
                 },
             ZoneChangeR.destination = Zone.Library,
@@ -72,6 +74,7 @@ spec s = Spec.describe s "Parun.Codec.ZoneChangeR" $ do
                   ZoneChangePattern.whatObject = Filter.And [],
                   ZoneChangePattern.whoseObject = ControllerRelation.Related PlayerRelation.You,
                   ZoneChangePattern.whenDiscarded = Just DiscardCause.ByEffect,
+                  ZoneChangePattern.causedBy = Nothing,
                   ZoneChangePattern.duringResolution = False
                 },
             ZoneChangeR.destination = Zone.Library,

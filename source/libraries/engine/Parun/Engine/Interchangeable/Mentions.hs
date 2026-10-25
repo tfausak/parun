@@ -2923,7 +2923,7 @@ triggerConditionNames asking x = case x of
   TriggerCondition.SelfDealsDamageToCreature _ -> mempty
   TriggerCondition.DealsDamage actingPermanent -> actingPermanentNames asking actingPermanent
   TriggerCondition.IsDealtDamage actingPermanent -> actingPermanentNames asking actingPermanent
-  TriggerCondition.PlayerIsDealtDamage _playerRelation -> mempty
+  TriggerCondition.PlayerIsDealtDamage _playerIsDealtDamage -> mempty
   TriggerCondition.PermanentDealsCombatDamageToPlayer permanentDealsCombatDamageToPlayer -> permanentDealsCombatDamageToPlayerNames asking permanentDealsCombatDamageToPlayer
   TriggerCondition.PermanentsDealCombatDamageToPlayer permanentsDealCombatDamageToPlayer -> permanentsDealCombatDamageToPlayerNames asking permanentsDealCombatDamageToPlayer
   TriggerCondition.CreatureDealtCombatDamageToMonarch -> mempty
@@ -3147,7 +3147,7 @@ withCountersNames asking x = case x of
 
 zoneChangePatternNames :: (Monoid r) => Asking r -> ZoneChangePattern.ZoneChangePattern -> r
 zoneChangePatternNames asking x = case x of
-  ZoneChangePattern.MkZoneChangePattern _whenDestination whoseObject whatObject _whenDiscarded _duringResolution -> controllerRelationNames asking whoseObject <> filterNames asking whatObject
+  ZoneChangePattern.MkZoneChangePattern _whenDestination whoseObject whatObject _whenDiscarded _causedBy _duringResolution -> controllerRelationNames asking whoseObject <> filterNames asking whatObject
 
 zoneChangeRNames :: (Monoid r) => Asking r -> ZoneChangeR.ZoneChangeR -> r
 zoneChangeRNames asking x = case x of

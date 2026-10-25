@@ -51,6 +51,7 @@ import qualified Parun.Types.PlayerAction as PlayerAction
 import qualified Parun.Types.PlayerAttacksPlayer as PlayerAttacksPlayer
 import qualified Parun.Types.PlayerAttacksWith as PlayerAttacksWith
 import qualified Parun.Types.PlayerDrawsNthCard as PlayerDrawsNthCard
+import qualified Parun.Types.PlayerIsDealtDamage as PlayerIsDealtDamage
 import qualified Parun.Types.PlayerRelation as PlayerRelation
 import qualified Parun.Types.PlaysLand as PlaysLand
 import qualified Parun.Types.Quantity as Quantity
@@ -190,12 +191,19 @@ spec s = Spec.describe s "Parun.Codec.TriggerCondition" $ do
       TriggerCondition.codec
       (TriggerCondition.IsDealtDamage (ActingPermanent.Matching (Filter.HasCardType CardType.Creature)))
       " {\"type\":\"IsDealtDamage\",\"value\":{\"type\":\"Matching\",\"value\":{\"type\":\"HasCardType\",\"value\":{\"type\":\"Creature\"}}}} "
-  Spec.it s "PlayerIsDealtDamage" $
+  -- Lich's any damage, and Chandra's Spitfire's noncombat damage to an
+  -- opponent.
+  Spec.it s "PlayerIsDealtDamage round-trips both kinds" $ do
     Common.assertCodec
       s
       TriggerCondition.codec
-      (TriggerCondition.PlayerIsDealtDamage PlayerRelation.You)
-      " {\"type\":\"PlayerIsDealtDamage\",\"value\":{\"type\":\"You\"}} "
+      (TriggerCondition.PlayerIsDealtDamage (PlayerIsDealtDamage.MkPlayerIsDealtDamage PlayerRelation.You Nothing))
+      " {\"type\":\"PlayerIsDealtDamage\",\"value\":{\"player\":{\"type\":\"You\"}}} "
+    Common.assertCodec
+      s
+      TriggerCondition.codec
+      (TriggerCondition.PlayerIsDealtDamage (PlayerIsDealtDamage.MkPlayerIsDealtDamage PlayerRelation.Opponent (Just DamageKind.Noncombat)))
+      " {\"type\":\"PlayerIsDealtDamage\",\"value\":{\"player\":{\"type\":\"Opponent\"},\"kind\":{\"type\":\"Noncombat\"}}} "
   -- The same event read by a bystander, carrying Tovolar's "you control" and
   -- Teysa's "to you": two relations, so a crossed codec would not round-trip.
   Spec.it s "PermanentDealsCombatDamageToPlayer round-trips with its Filter and recipient" $

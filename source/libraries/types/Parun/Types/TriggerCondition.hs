@@ -32,6 +32,7 @@ import qualified Parun.Types.PlayerActed as PlayerActed
 import qualified Parun.Types.PlayerAttacksPlayer as PlayerAttacksPlayer
 import qualified Parun.Types.PlayerAttacksWith as PlayerAttacksWith
 import qualified Parun.Types.PlayerDrawsNthCard as PlayerDrawsNthCard
+import qualified Parun.Types.PlayerIsDealtDamage as PlayerIsDealtDamage
 import qualified Parun.Types.PlayerRelation as PlayerRelation
 import qualified Parun.Types.PlaysLand as PlaysLand
 import qualified Parun.Types.RevealedThisWay as RevealedThisWay
@@ -100,9 +101,10 @@ data TriggerCondition
   | -- | CR 120.3: a permanent was dealt damage (Ripjaw Raptor, Death Pits of
     -- Rath).
     IsDealtDamage ActingPermanent.ActingPermanent
-  | -- | CR 120.3 / 603.2c: a player the relation admits was dealt damage, once
-    -- per simultaneous batch and damaged player (Lich).
-    PlayerIsDealtDamage PlayerRelation.PlayerRelation
+  | -- | CR 120.3 / 603.2c: a player the relation admits was dealt damage of
+    -- the kind, once per simultaneous batch and damaged player (Lich, Chandra's
+    -- Spitfire).
+    PlayerIsDealtDamage PlayerIsDealtDamage.PlayerIsDealtDamage
   | -- | CR 603.2 / 509-510 read by a bystander: a permanent the Filter admits
     -- dealt combat damage to a player the relation admits (Tovolar, Dire
     -- Overlord; Teysa, Envoy of Ghosts).

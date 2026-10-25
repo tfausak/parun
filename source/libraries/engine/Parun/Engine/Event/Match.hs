@@ -113,6 +113,7 @@ import qualified Parun.Types.PlayerAttacksPlayer as PlayerAttacksPlayer
 import qualified Parun.Types.PlayerAttacksWith as PlayerAttacksWith
 import qualified Parun.Types.PlayerDrawsNthCard as PlayerDrawsNthCard
 import Parun.Types.PlayerId (PlayerId)
+import qualified Parun.Types.PlayerIsDealtDamage as PlayerIsDealtDamage
 import qualified Parun.Types.PlayerRelation as PlayerRelation
 import qualified Parun.Types.PlaysLand as PlaysLand
 import qualified Parun.Types.ProjectedCharacteristics as PC
@@ -1109,10 +1110,13 @@ matchesTriggerGiven bindings board gs bearer you cond event = case cond of
     GameEvent.TriggeredAbilityResolved _ -> False
     GameEvent.CardArrived _ -> False
   -- CR 120.3: a player the relation admits was DEALT damage, by any source and
-  -- of any kind -- the arm above with the recipient a player rather than the
-  -- bearer.
-  TriggerCondition.PlayerIsDealtDamage relation -> case event of
-    GameEvent.DamageDealt ev -> maybe False (PlayerRelation.holds (Game.teams gs) relation you) (Recipient.playerOf (DamageEvent.target ev))
+  -- of the kind asked for -- the arm above with the recipient a player rather
+  -- than the bearer. CR 120.2b's noncombat damage is every damage event that is
+  -- not CR 510.2's, which DamageEvent.kind already records.
+  TriggerCondition.PlayerIsDealtDamage dealt -> case event of
+    GameEvent.DamageDealt ev ->
+      all (== DamageEvent.kind ev) (PlayerIsDealtDamage.kind dealt)
+        && maybe False (PlayerRelation.holds (Game.teams gs) (PlayerIsDealtDamage.player dealt) you) (Recipient.playerOf (DamageEvent.target ev))
     GameEvent.Moved {} -> False
     GameEvent.StepBegan {} -> False
     GameEvent.SpellCast {} -> False

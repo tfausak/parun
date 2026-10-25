@@ -109,7 +109,9 @@
           "condition": {
             "type": "PlayerIsDealtDamage",
             "value": {
-              "type": "You"
+              "player": {
+                "type": "You"
+              }
             }
           },
           "modal": {
