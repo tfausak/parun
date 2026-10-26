@@ -42,8 +42,8 @@ import qualified Parun.Types.ActivatedAbility as ActivatedAbility
 import qualified Parun.Types.Activator as Activator
 import qualified Parun.Types.Card as Card.Type
 import qualified Parun.Types.CardName as CardName
+import qualified Parun.Types.ChangeMode as ChangeMode
 import qualified Parun.Types.Color as Color
-import qualified Parun.Types.ColorMode as ColorMode
 import qualified Parun.Types.Cost as Cost.Type
 import qualified Parun.Types.CounterKind as CounterKind
 import qualified Parun.Types.EndingStep as EndingStep
@@ -226,7 +226,7 @@ spec s registry = Spec.describe s "Parun.Engine.Color" $ do
     typhoidRats <- S.printingOf s registry "Typhoid Rats"
     let gs0 = Setup.emptyGame S.bothPlayers
         (ratsId, board) = S.addPermanent typhoidRats S.alice gs0
-        gs = S.withEffect ratsId (Modification.Colors ColorMode.Replace (Set.singleton Color.Red)) board
+        gs = S.withEffect ratsId (Modification.Colors ChangeMode.Replace (Set.singleton Color.Red)) board
     Spec.assertEq s (Projection.colorsOf ratsId gs) $ Set.singleton Color.Red
 
   Spec.it s "CR 613.3 within layer 5 the CR 702.114a devoid CDA applies first, then the timestamped colour change" $ do
@@ -237,7 +237,7 @@ spec s registry = Spec.describe s "Parun.Engine.Color" $ do
     slaughterDrone <- S.printingOf s registry "Slaughter Drone"
     let gs0 = Setup.emptyGame S.bothPlayers
         (droneId, board) = S.addPermanent slaughterDrone S.alice gs0
-        gs = S.withEffect droneId (Modification.Colors ColorMode.Replace (Set.singleton Color.Black)) board
+        gs = S.withEffect droneId (Modification.Colors ChangeMode.Replace (Set.singleton Color.Black)) board
     Spec.assertEq s (Projection.colorsOf droneId gs) $ Set.singleton Color.Black
 
   Spec.it s "Bad Moon pumps a black creature but not a red one" $ do
@@ -307,7 +307,7 @@ spec s registry = Spec.describe s "Parun.Engine.Color" $ do
     let gs0 = Setup.emptyGame S.bothPlayers
         (_, withMoon) = S.addPermanent badMoon S.alice gs0
         (pikerId, board) = S.addPermanent piker S.alice withMoon
-        gs = S.withEffect pikerId (Modification.Colors ColorMode.Replace (Set.singleton Color.Black)) board
+        gs = S.withEffect pikerId (Modification.Colors ChangeMode.Replace (Set.singleton Color.Black)) board
     Spec.assertEqWith s "the now-black Piker is 3/2" (Projection.powerOf pikerId gs) $ Just 3
 
   Spec.it s "CR 115.1a a black creature is not a legal 'target nonblack creature'" $ do
@@ -340,8 +340,8 @@ spec s registry = Spec.describe s "Parun.Engine.Color" $ do
     typhoidRats <- S.printingOf s registry "Typhoid Rats"
     let gs0 = Setup.emptyGame S.bothPlayers
         (ratsId, board) = S.addPermanent typhoidRats S.alice gs0
-        multi = S.withEffect ratsId (Modification.Colors ColorMode.Replace (Set.fromList [Color.Blue, Color.Black])) board
-        gs = S.withEffect ratsId (Modification.Colors ColorMode.Replace (Set.singleton Color.Red)) multi
+        multi = S.withEffect ratsId (Modification.Colors ChangeMode.Replace (Set.fromList [Color.Blue, Color.Black])) board
+        gs = S.withEffect ratsId (Modification.Colors ChangeMode.Replace (Set.singleton Color.Red)) multi
     Spec.assertEqWith s "red only, no residue of blue or black" (Projection.colorsOf ratsId gs) $ Set.singleton Color.Red
 
   Spec.it s "CR 105.3 an 'in addition' colour effect ADDS rather than replaces" $ do
@@ -350,7 +350,7 @@ spec s registry = Spec.describe s "Parun.Engine.Color" $ do
     typhoidRats <- S.printingOf s registry "Typhoid Rats"
     let gs0 = Setup.emptyGame S.bothPlayers
         (ratsId, board) = S.addPermanent typhoidRats S.alice gs0
-        gs = S.withEffect ratsId (Modification.Colors ColorMode.InAddition (Set.singleton Color.Blue)) board
+        gs = S.withEffect ratsId (Modification.Colors ChangeMode.InAddition (Set.singleton Color.Blue)) board
     Spec.assertEq s (Projection.colorsOf ratsId gs) $ Set.fromList [Color.Black, Color.Blue]
 
   Spec.it s "CR 613.1c/613.1e 2008-05-01 changing a permanent's colour doesn't change its text" $ do
@@ -370,7 +370,7 @@ spec s registry = Spec.describe s "Parun.Engine.Color" $ do
     let gs0 = Setup.emptyGame S.bothPlayers
         (moonId, withMoon) = S.addPermanent badMoon S.alice gs0
         (ratsId, board) = S.addPermanent typhoidRats S.alice withMoon
-        gs = S.withEffect moonId (Modification.Colors ColorMode.Replace (Set.singleton Color.Red)) board
+        gs = S.withEffect moonId (Modification.Colors ChangeMode.Replace (Set.singleton Color.Red)) board
     Spec.assertEqWith s "Bad Moon itself is now red" (Projection.colorsOf moonId gs) $ Set.singleton Color.Red
     Spec.assertEqWith s "the black Rats are still pumped to 2 power" (Projection.powerOf ratsId gs) $ Just 2
     Spec.assertEqWith s "the black Rats are still pumped to 2 toughness" (Projection.toughnessOf ratsId gs) $ Just 2

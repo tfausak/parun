@@ -992,11 +992,9 @@ modificationCounts modification = case modification of
   Modification.SetBasePowerToughness (SetBasePowerToughness.MkSetBasePowerToughness p t) -> foldMap quantityCounts p <> foldMap quantityCounts t
   Modification.ModifyPowerToughness (ModifyPowerToughness.MkModifyPowerToughness p t) -> quantityCounts p <> quantityCounts t
   Modification.Intensify n -> quantityCounts n
-  Modification.SetLandSubtype _ -> []
+  Modification.LandSubtype {} -> []
   Modification.SetLandSubtypeToChosen -> []
-  Modification.AddLandSubtype _ -> []
-  Modification.SetCreatureSubtype _ -> []
-  Modification.AddCreatureSubtype _ -> []
+  Modification.CreatureSubtype {} -> []
   Modification.AddEveryCreatureSubtype -> []
   Modification.LoseEveryCreatureSubtype -> []
   Modification.SetCreatureSubtypesOfLastCardExiledWith _ -> []
@@ -4442,11 +4440,9 @@ modificationFilters modification = case modification of
   -- carries no Filter at all -- Hammerheim's "all landwalk abilities" names no
   -- land type for this sweep to reach.
   Modification.LoseKeywordFamily _ -> []
-  Modification.SetLandSubtype _ -> []
+  Modification.LandSubtype {} -> []
   Modification.SetLandSubtypeToChosen -> []
-  Modification.AddLandSubtype _ -> []
-  Modification.SetCreatureSubtype _ -> []
-  Modification.AddCreatureSubtype _ -> []
+  Modification.CreatureSubtype {} -> []
   Modification.AddEveryCreatureSubtype -> []
   Modification.LoseEveryCreatureSubtype -> []
   -- Its Filter picks the card it reads, which is card text like any other.

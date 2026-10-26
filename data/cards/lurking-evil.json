@@ -45,9 +45,14 @@
                             "type": "Indefinite"
                           },
                           "modification": {
-                            "type": "AddCreatureSubtype",
+                            "type": "CreatureSubtype",
                             "value": {
-                              "type": "Phyrexian"
+                              "mode": {
+                                "type": "InAddition"
+                              },
+                              "subtype": {
+                                "type": "Phyrexian"
+                              }
                             }
                           },
                           "ref": {
@@ -63,9 +68,14 @@
                             "type": "Indefinite"
                           },
                           "modification": {
-                            "type": "AddCreatureSubtype",
+                            "type": "CreatureSubtype",
                             "value": {
-                              "type": "Horror"
+                              "mode": {
+                                "type": "InAddition"
+                              },
+                              "subtype": {
+                                "type": "Horror"
+                              }
                             }
                           },
                           "ref": {

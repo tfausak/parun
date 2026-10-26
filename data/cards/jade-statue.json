@@ -42,9 +42,14 @@
                             "type": "UntilEndOfCombat"
                           },
                           "modification": {
-                            "type": "SetCreatureSubtype",
+                            "type": "CreatureSubtype",
                             "value": {
-                              "type": "Golem"
+                              "mode": {
+                                "type": "Replace"
+                              },
+                              "subtype": {
+                                "type": "Golem"
+                              }
                             }
                           },
                           "ref": {

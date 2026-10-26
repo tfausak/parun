@@ -45,9 +45,14 @@
           },
           "modifications": [
             {
-              "type": "AddCreatureSubtype",
+              "type": "CreatureSubtype",
               "value": {
-                "type": "Giant"
+                "mode": {
+                  "type": "InAddition"
+                },
+                "subtype": {
+                  "type": "Giant"
+                }
               }
             },
             {

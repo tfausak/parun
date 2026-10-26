@@ -65,9 +65,14 @@
               }
             },
             {
-              "type": "AddCreatureSubtype",
+              "type": "CreatureSubtype",
               "value": {
-                "type": "Monk"
+                "mode": {
+                  "type": "InAddition"
+                },
+                "subtype": {
+                  "type": "Monk"
+                }
               }
             }
           ]

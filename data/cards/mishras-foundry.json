@@ -93,9 +93,14 @@
                             "type": "UntilEndOfTurn"
                           },
                           "modification": {
-                            "type": "AddCreatureSubtype",
+                            "type": "CreatureSubtype",
                             "value": {
-                              "type": "AssemblyWorker"
+                              "mode": {
+                                "type": "InAddition"
+                              },
+                              "subtype": {
+                                "type": "AssemblyWorker"
+                              }
                             }
                           },
                           "ref": {

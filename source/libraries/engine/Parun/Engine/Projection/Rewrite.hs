@@ -303,11 +303,9 @@ rewriteModification pairs m =
               _ -> s
             colors = Set.map (TextWord.Engine.colorAfter [(from, to)])
          in case acc of
-              Modification.SetLandSubtype s -> Modification.SetLandSubtype (swap Subtype.isLandType s)
-              Modification.AddLandSubtype s -> Modification.AddLandSubtype (swap Subtype.isLandType s)
+              Modification.LandSubtype mode s -> Modification.LandSubtype mode (swap Subtype.isLandType s)
               -- CR 612.2's other named example: a Turn to Frog's Frog on the stack.
-              Modification.SetCreatureSubtype s -> Modification.SetCreatureSubtype (swap Subtype.isCreatureType s)
-              Modification.AddCreatureSubtype s -> Modification.AddCreatureSubtype (swap Subtype.isCreatureType s)
+              Modification.CreatureSubtype mode s -> Modification.CreatureSubtype mode (swap Subtype.isCreatureType s)
               -- Holds no word to swap: it names CR 205.3m's list, not a member of it.
               Modification.AddEveryCreatureSubtype -> acc
               -- The removal over that same list, and no word to swap for the same reason.
@@ -316,7 +314,7 @@ rewriteModification pairs m =
               Modification.SetCreatureSubtypesOfLastCardExiledWith f -> Modification.SetCreatureSubtypesOfLastCardExiledWith (Filter.rewrite [(from, to)] f)
               -- Deliberately unrewritten. CR 612.2 changes only a word used in the
               -- correct way, and this arm carries no family to check the word against;
-              -- the two family-tagged adds above are where a land-type or creature-type
+              -- the two family-tagged arms above are where a land-type or creature-type
               -- word rides, and Parun.CardSpec keeps those words out of this one.
               Modification.AddSubtype _ -> acc
               -- CR 702.14a: "[type]walk" holds a land-type word, so a hacked Lord of

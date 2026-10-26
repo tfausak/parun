@@ -262,7 +262,7 @@ playerAbilitiesOf carrier gs =
 printedRows :: GameState -> [(Timestamp, Maybe ObjectId, Maybe AbilityName.AbilityName, PlayerId -> Bool, PlayerEffect)]
 printedRows gs =
   let -- Hoisted out of the walk exactly as Projection.gather hoists it: an
-      -- inlined call would recompute the whole game's SetLandSubtype list once
+      -- inlined call would recompute the whole game's LandSubtype Replace list once
       -- per permanent.
       setEffs = Projection.setLandSubtypeEffects gs
       -- Hoisted for the same reason, and a thunk until a permanent that actually

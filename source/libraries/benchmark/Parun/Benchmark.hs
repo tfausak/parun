@@ -200,7 +200,7 @@ loadNoAuraDeck registry = do
 --
 -- Ashaya -> Bell is NOT a dependency, and reaching that answer is the other half
 -- of what the scenario exercises. Kormus Bell's set reads a subtype and Ashaya
--- writes one (AddLandSubtype Forest), so the aspect screen clears here too and
+-- writes one (LandSubtype InAddition Forest), so the aspect screen clears here too and
 -- the confirmation runs -- but Ashaya ADDS Forest rather than setting a subtype,
 -- and CR 305.7 keeps a land's existing land types when it gains one in addition,
 -- so applying Ashaya moves no object into or out of `HasSubtype Swamp` and the

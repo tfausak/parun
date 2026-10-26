@@ -68,9 +68,14 @@
               }
             },
             {
-              "type": "AddCreatureSubtype",
+              "type": "CreatureSubtype",
               "value": {
-                "type": "Saproling"
+                "mode": {
+                  "type": "InAddition"
+                },
+                "subtype": {
+                  "type": "Saproling"
+                }
               }
             },
             {
@@ -80,9 +85,14 @@
               }
             },
             {
-              "type": "AddLandSubtype",
+              "type": "LandSubtype",
               "value": {
-                "type": "Forest"
+                "mode": {
+                  "type": "InAddition"
+                },
+                "subtype": {
+                  "type": "Forest"
+                }
               }
             },
             {

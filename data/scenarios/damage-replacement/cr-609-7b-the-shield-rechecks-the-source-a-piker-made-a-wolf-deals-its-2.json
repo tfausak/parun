@@ -1,6 +1,6 @@
 {
   "description": "CR 609.7b the shield rechecks the source: a Piker made a Wolf deals its 2",
-  "note": "Alice casts Moonmist in bob's upkeep; bob then casts Maskwood Nexus, making his Goblin Piker every creature type (a Wolf among them) after the shield exists, and the Piker's combat 2 lands. The Nexus stands in for the test's hand-built AddCreatureSubtype Wolf: no card in the pool adds exactly Wolf. The --control file casts no Nexus and the Goblin Warrior's 2 is prevented.",
+  "note": "Alice casts Moonmist in bob's upkeep; bob then casts Maskwood Nexus, making his Goblin Piker every creature type (a Wolf among them) after the shield exists, and the Piker's combat 2 lands. The Nexus stands in for the test's hand-built CreatureSubtype InAddition Wolf: no card in the pool adds exactly Wolf. The --control file casts no Nexus and the Goblin Warrior's 2 is prevented.",
   "board": {
     "seats": [
       {

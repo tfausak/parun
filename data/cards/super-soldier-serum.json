@@ -63,9 +63,14 @@
               }
             },
             {
-              "type": "AddCreatureSubtype",
+              "type": "CreatureSubtype",
               "value": {
-                "type": "Soldier"
+                "mode": {
+                  "type": "InAddition"
+                },
+                "subtype": {
+                  "type": "Soldier"
+                }
               }
             }
           ]

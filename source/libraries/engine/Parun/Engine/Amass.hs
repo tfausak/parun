@@ -27,6 +27,7 @@ import qualified Parun.Types.Affected as Affected
 import qualified Parun.Types.Card as Card
 import qualified Parun.Types.CardName as CardName
 import qualified Parun.Types.CardType as CardType
+import qualified Parun.Types.ChangeMode as ChangeMode
 import qualified Parun.Types.Color as Color
 import qualified Parun.Types.ContinuousEffect as ContinuousEffect
 import qualified Parun.Types.CounterCause as CounterCause
@@ -206,7 +207,7 @@ amass pid source resolving subtype n = do
                 { ContinuousEffect.source = source,
                   ContinuousEffect.timestamp = ts,
                   ContinuousEffect.expiry = Expiry.Never,
-                  ContinuousEffect.modification = Modification.AddCreatureSubtype subtype,
+                  ContinuousEffect.modification = Modification.CreatureSubtype ChangeMode.InAddition subtype,
                   ContinuousEffect.affected = Affected.TheseObjects (Set.singleton chosen)
                 }
         State.put gs3 {GameState.continuousEffects = effect : GameState.continuousEffects gs3}
