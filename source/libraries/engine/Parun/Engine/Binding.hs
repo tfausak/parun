@@ -29,6 +29,7 @@ import qualified Parun.Types.Recipient as Recipient
 import Parun.Types.SlotName (SlotName)
 import qualified Parun.Types.SlotName as SlotName
 import qualified Parun.Types.StickerRef as StickerRef
+import qualified Parun.Types.TapState as TapState
 
 -- CR 601.2b: the reserved slot under which a spell's single chosen X is stored.
 -- No card's targetSlots may name it (lint-enforced): X is not a target, so it
@@ -665,6 +666,18 @@ discardedCard = SlotName.MkSlotName (Text.pack "thatDiscardedCard")
 -- card's targetSlots may name it" sweep as sacrificedPermanent above.
 tappedPermanent :: SlotName
 tappedPermanent = SlotName.MkSlotName (Text.pack "thatTappedPermanent")
+
+-- CR 701.26b: the permanent that became untapped, stamped for a
+-- TriggerCondition.BecomesTapState watching that direction -- Mesmeric Orb's
+-- "that permanent's controller". tappedPermanent's posture.
+untappedPermanent :: SlotName
+untappedPermanent = SlotName.MkSlotName (Text.pack "thatUntappedPermanent")
+
+-- The slot naming the permanent that became tapped or untapped (CR 701.26).
+tapStatePermanent :: TapState.TapState -> SlotName
+tapStatePermanent status = case status of
+  TapState.Tapped -> tappedPermanent
+  TapState.Untapped -> untappedPermanent
 
 -- CR 707.9g: the object a CR 707.5 entry copied, bound for the triggered ability
 -- linked to that replacement -- Wall of Stolen Identity's "the copied
@@ -1386,9 +1399,9 @@ setPreventedDamageSources oids = Map.insert preventedDamageSource (toRecipients 
 setBecameGroup :: Seq ObjectId -> Map SlotName Binding -> Map SlotName Binding
 setBecameGroup oids = Map.insert became (toObjects oids)
 
--- Bind an object under the reserved tappedPermanent slot (CR 701.26a).
-setTappedPermanent :: ObjectId -> Map SlotName Binding -> Map SlotName Binding
-setTappedPermanent oid = Map.insert tappedPermanent (toObject oid)
+-- Bind an object under the reserved slot for the status it became (CR 701.26).
+setTapStatePermanent :: TapState.TapState -> ObjectId -> Map SlotName Binding -> Map SlotName Binding
+setTapStatePermanent status oid = Map.insert (tapStatePermanent status) (toObject oid)
 
 -- Bind an object under the reserved manaSource slot (CR 106.12a).
 setManaSource :: ObjectId -> Map SlotName Binding -> Map SlotName Binding

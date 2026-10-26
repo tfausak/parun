@@ -1,0 +1,33 @@
+{
+  "description": "CR 502.3 / 701.26b whole card: Wake Thrasher gets +1/+1 until end of turn for each permanent its controller controls that becomes untapped",
+  "note": "Bob's untap step untaps bob's tapped Swamp, which is not alice's, so the Thrasher is still 1/1 in bob's main phase. Alice's untap step untaps the Thrasher itself and her Island: two triggers, 3/3.",
+  "board": {
+    "active": "alice",
+    "step": "EndStep",
+    "seats": [
+      {
+        "name": "alice",
+        "battlefield": [
+          {"card": "Wake Thrasher", "label": "thrasher", "tapped": true},
+          {"card": "Island", "label": "i1", "tapped": true}
+        ],
+        "library": [{"card": "Island"}, {"card": "Island"}, {"card": "Island"}]
+      },
+      {
+        "name": "bob",
+        "battlefield": [
+          {"card": "Swamp", "label": "s1", "tapped": true}
+        ],
+        "library": [{"card": "Swamp"}, {"card": "Swamp"}, {"card": "Swamp"}]
+      }
+    ]
+  },
+  "timeline": [
+    {"turn": 2, "step": "Upkeep", "player": "bob", "check": {"Tapped": {"object": "$s1", "tapped": false}}},
+    {"turn": 2, "step": "PrecombatMain", "player": "bob", "check": {"PowerToughness": {"object": "$thrasher", "power": 1, "toughness": 1}}},
+    {"turn": 3, "step": "Upkeep", "player": "alice", "do": {"OrderTriggers": ["$thrasher", "$thrasher"]}},
+    {"turn": 3, "step": "Upkeep", "player": "alice", "do": "Pass"},
+    {"turn": 3, "step": "Upkeep", "player": "alice", "do": "Pass"},
+    {"turn": 3, "step": "Upkeep", "player": "alice", "check": {"PowerToughness": {"object": "$thrasher", "power": 3, "toughness": 3}}}
+  ]
+}

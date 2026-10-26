@@ -249,6 +249,8 @@ library codec
     Parun.Codec.BecameUnattached
     Parun.Codec.BecomeCopy
     Parun.Codec.BecomeCopySpec
+    Parun.Codec.BecomesTapState
+    Parun.Codec.BecomesTapStateSpec
     Parun.Codec.BeginningStep
     Parun.Codec.BeginningStepSpec
     Parun.Codec.Behold
@@ -2368,6 +2370,7 @@ library types
     Parun.Types.BecameTarget
     Parun.Types.BecameUnattached
     Parun.Types.BecomeCopy
+    Parun.Types.BecomesTapState
     Parun.Types.BeginningStep
     Parun.Types.Behold
     Parun.Types.Bid

@@ -1,0 +1,25 @@
+{
+  "description": "CR 701.26a / 701.26b: Oreskos Sun Guide's \"becomes untapped\" does not trigger when attacking taps it",
+  "note": "The Guide attacks unblocked: it is tapped, bob takes 2, and alice is still at 20 at end of combat, after any trigger would have resolved.",
+  "board": {
+    "active": "alice",
+    "step": "BeginningOfCombat",
+    "seats": [
+      {
+        "name": "alice",
+        "battlefield": [{"card": "Oreskos Sun Guide", "label": "guide", "ready": true}],
+        "library": [{"card": "Island"}, {"card": "Island"}, {"card": "Island"}]
+      },
+      {
+        "name": "bob",
+        "library": [{"card": "Island"}, {"card": "Island"}, {"card": "Island"}]
+      }
+    ]
+  },
+  "timeline": [
+    {"turn": 1, "step": "DeclareAttackers", "player": "alice", "do": {"Attack": ["$guide"]}},
+    {"turn": 1, "step": "EndOfCombat", "player": "alice", "check": {"Tapped": {"object": "$guide", "tapped": true}}},
+    {"turn": 1, "step": "EndOfCombat", "player": "alice", "check": {"Life": {"player": "bob", "life": 18}}},
+    {"turn": 1, "step": "EndOfCombat", "player": "alice", "check": {"Life": {"player": "alice", "life": 20}}}
+  ]
+}

@@ -606,12 +606,9 @@ looksBack condition = case condition of
   -- abilities, sacrifices, cards leaving a graveyard and objects put into a hand
   -- or library, and a permanent becoming tapped is none of them. It stays on the
   -- battlefield, so the ordinary CR 603.10 reading -- the board as it is now --
-  -- is the right one.
-  TriggerCondition.BecomesTapped _ -> False
+  -- is the right one. Becoming untapped (CR 701.26b) leaves it standing too.
+  TriggerCondition.BecomesTapState _ -> False
   TriggerCondition.PermanentsBecomeTapped _ -> False
-  -- Nor is becoming untapped: CR 701.26b leaves the permanent standing on
-  -- the battlefield too, so the same live read is the right one.
-  TriggerCondition.SelfBecomesUntapped -> False
   -- Not on CR 603.10a's list either, the arm above's reason: the permanent
   -- tapped for mana is standing on the battlefield when the ability is
   -- gathered.
@@ -887,17 +884,15 @@ batchScoped condition = case condition of
   TriggerCondition.SelfLeavesGraveyard -> False
   TriggerCondition.AttachedCreatureDies -> False
   -- Thoughtleech's "whenever an Island ... becomes tapped" has no "one or
-  -- more", so each permanent a tapping event taps is its own occurrence.
-  TriggerCondition.BecomesTapped _ -> False
+  -- more", so each permanent a tapping event taps is its own occurrence. The
+  -- untap direction the same way, CR 502.3's simultaneous batch included:
+  -- Mesmeric Orb triggers once per permanent the step untaps.
+  TriggerCondition.BecomesTapState _ -> False
   -- A True beside PermanentsDie: "one or more nontoken Merfolk
   -- you control become tapped" (Deeproot Pilgrimage) is one trigger event per
   -- tapping, however many it tapped -- a cost's taps, CR 508.1f's attackers, or
   -- one Effect.Tap -- so long as each of those sites brackets its loop.
   TriggerCondition.PermanentsBecomeTapped _ -> True
-  -- The untap direction the same way, CR 502.3's simultaneous batch
-  -- included: the condition is about the BEARER, so a batch that untaps a
-  -- whole board still holds one occurrence of it.
-  TriggerCondition.SelfBecomesUntapped -> False
   -- CR 106.12a names one resolution of one mana ability, so one occurrence;
   -- no printing of it says "one or more".
   TriggerCondition.AttachedPermanentTappedForMana -> False
@@ -2628,10 +2623,7 @@ enchantedObjectLeaves condition = case condition of
   -- False, stated rather than left to the wildcard: this watches the SAME
   -- attachment link, but for an event that leaves the enchanted permanent right
   -- where it was, so CR 113.6m's Aura clause has nothing to exempt.
-  TriggerCondition.BecomesTapped _ -> False
-  -- Not an attachment condition at all -- it reads the bearer -- so the
-  -- Aura clause is not in question.
-  TriggerCondition.SelfBecomesUntapped -> False
+  TriggerCondition.BecomesTapState _ -> False
   -- False for the arm above's reason: the enchanted permanent stays exactly
   -- where it was, so CR 113.6m's Aura clause has nothing to exempt.
   TriggerCondition.AttachedPermanentTappedForMana -> False
@@ -2901,11 +2893,8 @@ zonesTriggeredFrom cond =
         -- The same default for the same reason, and more plainly: an Aura enchanting a
         -- permanent is itself a permanent on the battlefield, and CR 113.6k's exception
         -- is for a condition that cannot trigger from there at all.
-        TriggerCondition.BecomesTapped _ -> battlefield
+        TriggerCondition.BecomesTapState _ -> battlefield
         TriggerCondition.PermanentsBecomeTapped _ -> battlefield
-        -- CR 110.5 makes tapped a permanent's status, so only a permanent can
-        -- become untapped and only the battlefield can hold one.
-        TriggerCondition.SelfBecomesUntapped -> battlefield
         -- The same default and the same reason, one event over.
         TriggerCondition.AttachedPermanentTappedForMana -> battlefield
         -- CR 113.6's default once more: Autumn Willow, Harmony is a creature watching
@@ -3441,11 +3430,9 @@ stateTriggersOn gs
             -- a state the board can read, which is exactly why this must be
             -- False: CR 603.2e says a "becomes" condition does not retrigger
             -- while the state persists, and a state trigger would do nothing but.
-            TriggerCondition.BecomesTapped _ -> False
+            -- CR 701.26b's untap is an EVENT for the identical reason.
+            TriggerCondition.BecomesTapState _ -> False
             TriggerCondition.PermanentsBecomeTapped _ -> False
-            -- CR 701.26b's untap is an EVENT for the identical reason,
-            -- read off the bearer instead of its host.
-            TriggerCondition.SelfBecomesUntapped -> False
             -- CR 106.12a is an EVENT too, and more plainly than the arm
             -- above: a mana ability having resolved is nothing a later
             -- board read can recover.

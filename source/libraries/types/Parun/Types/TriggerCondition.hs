@@ -3,6 +3,7 @@ module Parun.Types.TriggerCondition where
 import qualified Numeric.Natural as Natural
 import qualified Parun.Types.AbilityAddsMana as AbilityAddsMana
 import qualified Parun.Types.ActingPermanent as ActingPermanent
+import qualified Parun.Types.BecomesTapState as BecomesTapState
 import qualified Parun.Types.CardLeavesZone as CardLeavesZone
 import qualified Parun.Types.CardName as CardName
 import qualified Parun.Types.CardPutIntoGraveyard as CardPutIntoGraveyard
@@ -350,16 +351,13 @@ data TriggerCondition
   | -- | CR 700.4's "dies" read off the permanent the bearer is attached to
     -- (Screams from Within); the one condition CR 113.6m's Aura clause names.
     AttachedCreatureDies
-  | -- | CR 701.26a: a permanent became tapped, once per permanent (City of
-    -- Brass, Betrayal, Thoughtleech).
-    BecomesTapped ActingPermanent.ActingPermanent
+  | -- | CR 701.26a / 701.26b: a permanent became tapped or untapped, once per
+    -- permanent (City of Brass, Oreskos Sun Guide, Mesmeric Orb).
+    BecomesTapState BecomesTapState.BecomesTapState
   | -- | CR 701.26a's batch reading, by a bystander: "whenever one or more
     -- nontoken Merfolk you control become tapped" (Deeproot Pilgrimage), once
     -- per tapping event (CR 603.2c).
     PermanentsBecomeTapped (Filter.Filter Keyword.Keyword)
-  | -- | CR 701.26b's "becomes untapped" read off the bearer itself (Oreskos Sun
-    -- Guide), the other direction of the status BecomesTapped watches.
-    SelfBecomesUntapped
   | -- | CR 106.12a's "is tapped for mana" read off the permanent the bearer is
     -- attached to (Wild Growth), live rather than through last known
     -- information.

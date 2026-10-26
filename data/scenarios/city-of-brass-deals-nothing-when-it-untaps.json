@@ -1,0 +1,23 @@
+{
+  "description": "CR 701.26a / 701.26b: City of Brass's \"becomes tapped\" does not trigger when the untap step untaps it",
+  "note": "The City starts tapped; alice's untap step untaps it, and she is still at 20 in her main phase, after any trigger would have resolved.",
+  "board": {
+    "active": "bob",
+    "step": "EndStep",
+    "seats": [
+      {
+        "name": "alice",
+        "battlefield": [{"card": "City of Brass", "label": "city", "tapped": true}],
+        "library": [{"card": "Island"}, {"card": "Island"}, {"card": "Island"}]
+      },
+      {
+        "name": "bob",
+        "library": [{"card": "Island"}, {"card": "Island"}, {"card": "Island"}]
+      }
+    ]
+  },
+  "timeline": [
+    {"turn": 2, "step": "PrecombatMain", "player": "alice", "check": {"Tapped": {"object": "$city", "tapped": false}}},
+    {"turn": 2, "step": "PrecombatMain", "player": "alice", "check": {"Life": {"player": "alice", "life": 20}}}
+  ]
+}

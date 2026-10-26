@@ -76,6 +76,7 @@ import qualified Parun.Types.AttackTargetRef as AttackTargetRef
 import qualified Parun.Types.AttackingPlayers as AttackingPlayers
 import qualified Parun.Types.Backup as Backup
 import qualified Parun.Types.BecomeCopy as BecomeCopy
+import qualified Parun.Types.BecomesTapState as BecomesTapState
 import qualified Parun.Types.Behold as Behold
 import qualified Parun.Types.Bid as Bid
 import qualified Parun.Types.Binding as Binding
@@ -2957,9 +2958,8 @@ triggerConditionNames asking x = case x of
   TriggerCondition.CardsPutIntoZone cardsPutIntoZone -> cardsPutIntoZoneNames asking cardsPutIntoZone
   TriggerCondition.SelfLeavesGraveyard -> mempty
   TriggerCondition.AttachedCreatureDies -> mempty
-  TriggerCondition.BecomesTapped actingPermanent -> actingPermanentNames asking actingPermanent
+  TriggerCondition.BecomesTapState becomesTapState -> actingPermanentNames asking (BecomesTapState.actor becomesTapState)
   TriggerCondition.PermanentsBecomeTapped filter_ -> filterNames asking filter_
-  TriggerCondition.SelfBecomesUntapped -> mempty
   TriggerCondition.AttachedPermanentTappedForMana -> mempty
   TriggerCondition.PermanentTappedForMana permanentTappedForMana -> permanentTappedForManaNames asking permanentTappedForMana
   TriggerCondition.AbilityAddsMana abilityAddsMana -> abilityAddsManaNames asking abilityAddsMana

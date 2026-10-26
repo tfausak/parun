@@ -93,6 +93,7 @@ import qualified Parun.Types.AttackRequirement as AttackRequirement
 import qualified Parun.Types.AttackTargetRef as AttackTargetRef
 import qualified Parun.Types.Backup as Backup
 import qualified Parun.Types.BecomeCopy as BecomeCopy
+import qualified Parun.Types.BecomesTapState as BecomesTapState
 import qualified Parun.Types.Behold as Behold
 import qualified Parun.Types.Bid as Bid
 import qualified Parun.Types.Blight as Blight
@@ -1067,9 +1068,8 @@ triggerConditionCounts triggerCondition = case triggerCondition of
   TriggerCondition.AttachedCreatureMentors -> []
   -- CR 700.4's is nullary as well, for the same reason.
   TriggerCondition.AttachedCreatureDies -> []
-  TriggerCondition.BecomesTapped _ -> []
+  TriggerCondition.BecomesTapState _ -> []
   TriggerCondition.PermanentsBecomeTapped _ -> []
-  TriggerCondition.SelfBecomesUntapped -> []
   TriggerCondition.AttachedPermanentTappedForMana -> []
   -- CR 106.12a's bystander reading carries a PlayerRelation and a Filter,
   -- neither of which holds a Count.
@@ -2828,6 +2828,7 @@ reservedSlots =
       Binding.craftMaterials,
       Binding.discardedCard,
       Binding.tappedPermanent,
+      Binding.untappedPermanent,
       Binding.copiedObject,
       Binding.tappedForTotalPower,
       Binding.revealedCard,
@@ -4530,9 +4531,8 @@ triggerConditionFilters triggerCondition = case triggerCondition of
   TriggerCondition.AttachedCreatureDies -> []
   -- Thoughtleech's "an Island an opponent controls" and Deeproot Pilgrimage's
   -- "nontoken Merfolk you control" are card text, swept like PermanentsDie's.
-  TriggerCondition.BecomesTapped watched -> actingFilters watched
+  TriggerCondition.BecomesTapState watched -> actingFilters (BecomesTapState.actor watched)
   TriggerCondition.PermanentsBecomeTapped f -> unframed [f]
-  TriggerCondition.SelfBecomesUntapped -> []
   TriggerCondition.AttachedPermanentTappedForMana -> []
   TriggerCondition.SelfExploits -> []
   -- Skull Skaab's two, both card text.
@@ -4858,9 +4858,8 @@ triggerConditionSlots triggerCondition = case triggerCondition of
   TriggerCondition.CardsPutIntoZone {} -> []
   TriggerCondition.SelfLeavesGraveyard -> []
   TriggerCondition.AttachedCreatureDies -> []
-  TriggerCondition.BecomesTapped _ -> []
+  TriggerCondition.BecomesTapState _ -> []
   TriggerCondition.PermanentsBecomeTapped _ -> []
-  TriggerCondition.SelfBecomesUntapped -> []
   TriggerCondition.AttachedPermanentTappedForMana -> []
   TriggerCondition.PermanentTappedForMana {} -> []
   TriggerCondition.AbilityAddsMana {} -> []
