@@ -15,9 +15,14 @@
           },
           "modifications": [
             {
-              "type": "SetLandSubtype",
+              "type": "LandSubtype",
               "value": {
-                "type": "Island"
+                "mode": {
+                  "type": "Replace"
+                },
+                "subtype": {
+                  "type": "Island"
+                }
               }
             }
           ]

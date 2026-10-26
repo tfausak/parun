@@ -6,8 +6,8 @@
 -- overrides it. Mostly directly-constructed continuous effects, so the engine is
 -- proven independently of any card wiring; the card-level proofs live alongside.
 -- Also Parun.Engine.Subtype, the CR 205.3i land-type and CR 205.3m creature-type
--- classifications the layer-4 SetLandSubtype, SetCreatureSubtype,
--- AddCreatureSubtype, AddEveryCreatureSubtype and LoseEveryCreatureSubtype arms
+-- classifications the layer-4 LandSubtype, CreatureSubtype,
+-- AddEveryCreatureSubtype and LoseEveryCreatureSubtype arms
 -- fold with, and the untagged AddSubtype beside them.
 module Parun.ProjectionSpec where
 
@@ -54,6 +54,7 @@ import qualified Parun.Types.Affected as Affected
 import qualified Parun.Types.Card as Card
 import qualified Parun.Types.CardName as CardName
 import qualified Parun.Types.CardType as CardType
+import qualified Parun.Types.ChangeMode as ChangeMode
 import qualified Parun.Types.ChangeWord as ChangeWord
 import qualified Parun.Types.Color as Color
 import qualified Parun.Types.CombatStep as CombatStep
@@ -1278,9 +1279,9 @@ spec s registry = Spec.describe s "Parun.Engine.Projection" $ do
     Spec.assertEqWith s "subtypes" (Projection.subtypesOf landId gs) (Set.singleton Subtype.Type.Mountain)
 
   Spec.it s "CR 613.1d layer 4: the four type-changing modifications are Type" $ do
-    Spec.assertEqWith s "set land subtype" (Projection.layer (Modification.SetLandSubtype Subtype.Type.Mountain)) Layer.Type
-    Spec.assertEqWith s "add land subtype" (Projection.layer (Modification.AddLandSubtype Subtype.Type.Swamp)) Layer.Type
-    Spec.assertEqWith s "set creature subtype" (Projection.layer (Modification.SetCreatureSubtype Subtype.Type.Frog)) Layer.Type
+    Spec.assertEqWith s "set land subtype" (Projection.layer (Modification.LandSubtype ChangeMode.Replace Subtype.Type.Mountain)) Layer.Type
+    Spec.assertEqWith s "add land subtype" (Projection.layer (Modification.LandSubtype ChangeMode.InAddition Subtype.Type.Swamp)) Layer.Type
+    Spec.assertEqWith s "set creature subtype" (Projection.layer (Modification.CreatureSubtype ChangeMode.Replace Subtype.Type.Frog)) Layer.Type
     Spec.assertEqWith s "add card type" (Projection.layer (Modification.AddCardType CardType.Creature)) Layer.Type
 
   Spec.it s "CR 613.1c layer 3: ChangeWord is Text" $
@@ -1376,7 +1377,7 @@ spec s registry = Spec.describe s "Parun.Engine.Projection" $ do
   -- Tidal Warrior {U} Creature -- Merfolk Warrior, "{T}: Target land becomes an
   -- Island until end of turn." (checked against Scryfall) is the card: a vanilla
   -- 1/1 body carrying exactly one activated ability whose effect is
-  -- ModifyTarget UntilEndOfTurn (SetLandSubtype Island).
+  -- ModifyTarget UntilEndOfTurn (LandSubtype Replace Island).
   --
   -- Read off the PROJECTION rather than at resolution, because CR 113.7a makes
   -- an activated ability on the stack an object independent of its source -- its
@@ -1392,7 +1393,7 @@ spec s registry = Spec.describe s "Parun.Engine.Projection" $ do
           ability : _ -> concatMap (Maybe.mapMaybe landTypeSet . Foldable.toList . Mode.allEffects) (Modal.modes (ActivatedAbility.modal ability))
           [] -> []
         landTypeSet effect = case effect of
-          Effect.ModifyTarget (ModifyTarget.MkModifyTarget _ (Modification.SetLandSubtype st) _ _) -> Just st
+          Effect.ModifyTarget (ModifyTarget.MkModifyTarget _ (Modification.LandSubtype ChangeMode.Replace st) _ _) -> Just st
           _ -> Nothing
     -- The control: unhacked, the printed word stands.
     Spec.assertEqWith s "unhacked, the ability sets Island" (setsTo plain) [Subtype.Type.Island]
@@ -1504,9 +1505,9 @@ spec s registry = Spec.describe s "Parun.Engine.Projection" $ do
 
   -- CR 612.2 at the OTHER site a pair meets a word: a Modification's own subtype
   -- word, where the family is fixed by the CONSTRUCTOR rather than by the word.
-  -- Magical Hack rewrites a SetLandSubtype (Tidal Warrior's Island, proved end
+  -- Magical Hack rewrites a LandSubtype Replace (Tidal Warrior's Island, proved end
   -- to end by Parun.ActivateSpec); Artificial Evolution rewrites a
-  -- SetCreatureSubtype (Turn to Frog's Frog, proved end to end by
+  -- CreatureSubtype Replace (Turn to Frog's Frog, proved end to end by
   -- Parun.ResolveSpec's ArtificialEvolution group); and a pair of the WRONG
   -- family reaches neither.
   --
@@ -1521,31 +1522,31 @@ spec s registry = Spec.describe s "Parun.Engine.Projection" $ do
     Spec.assertEqWith
       s
       "a creature pair rewrites a creature-type word"
-      (rewrite Subtype.Type.Frog Subtype.Type.Elf (Modification.SetCreatureSubtype Subtype.Type.Frog))
-      (Modification.SetCreatureSubtype Subtype.Type.Elf)
+      (rewrite Subtype.Type.Frog Subtype.Type.Elf (Modification.CreatureSubtype ChangeMode.Replace Subtype.Type.Frog))
+      (Modification.CreatureSubtype ChangeMode.Replace Subtype.Type.Elf)
     Spec.assertEqWith
       s
       "a land pair rewrites a land-type word"
-      (rewrite Subtype.Type.Island Subtype.Type.Swamp (Modification.SetLandSubtype Subtype.Type.Island))
-      (Modification.SetLandSubtype Subtype.Type.Swamp)
+      (rewrite Subtype.Type.Island Subtype.Type.Swamp (Modification.LandSubtype ChangeMode.Replace Subtype.Type.Island))
+      (Modification.LandSubtype ChangeMode.Replace Subtype.Type.Swamp)
     Spec.assertEqWith
       s
       "and the added land type too"
-      (rewrite Subtype.Type.Island Subtype.Type.Swamp (Modification.AddLandSubtype Subtype.Type.Island))
-      (Modification.AddLandSubtype Subtype.Type.Swamp)
+      (rewrite Subtype.Type.Island Subtype.Type.Swamp (Modification.LandSubtype ChangeMode.InAddition Subtype.Type.Island))
+      (Modification.LandSubtype ChangeMode.InAddition Subtype.Type.Swamp)
     Spec.assertEqWith
       s
       "a creature pair leaves a land-type position alone"
-      (rewrite Subtype.Type.Frog Subtype.Type.Elf (Modification.SetLandSubtype Subtype.Type.Frog))
-      (Modification.SetLandSubtype Subtype.Type.Frog)
+      (rewrite Subtype.Type.Frog Subtype.Type.Elf (Modification.LandSubtype ChangeMode.Replace Subtype.Type.Frog))
+      (Modification.LandSubtype ChangeMode.Replace Subtype.Type.Frog)
     Spec.assertEqWith
       s
       "and a land pair leaves a creature-type position alone"
-      (rewrite Subtype.Type.Island Subtype.Type.Swamp (Modification.SetCreatureSubtype Subtype.Type.Island))
-      (Modification.SetCreatureSubtype Subtype.Type.Island)
+      (rewrite Subtype.Type.Island Subtype.Type.Swamp (Modification.CreatureSubtype ChangeMode.Replace Subtype.Type.Island))
+      (Modification.CreatureSubtype ChangeMode.Replace Subtype.Type.Island)
 
   -- CR 613.8a: Kormus Bell's affected set READS subtypes at layer 4, and
-  -- Urborg's AddLandSubtype WRITES them at layer 4 -- so the two are dependent
+  -- Urborg's LandSubtype InAddition WRITES them at layer 4 -- so the two are dependent
   -- and Urborg must apply first, which is the classic pairing. It is what makes
   -- every land a 1/1: Urborg makes them all Swamps, and the Bell then animates
   -- what Urborg produced rather than what the printed type lines said.
@@ -1569,22 +1570,22 @@ spec s registry = Spec.describe s "Parun.Engine.Projection" $ do
     Spec.assertBool s (Projection.isCreatureOf forestId withUrborg) "so the Bell animates it"
     Spec.assertEqWith s "as a 1/1" (Projection.powerOf forestId withUrborg) (Just 1)
 
-  Spec.it s "CR 613.1d AddLandSubtype gives a Forest the Swamp subtype" $ do
+  Spec.it s "CR 613.1d LandSubtype InAddition gives a Forest the Swamp subtype" $ do
     forest <- S.printingOf s registry "Forest"
     let gs0 = S.landsInPlay forest 1
         landId = case Game.zoneMembers Zone.Battlefield S.alice gs0 of
           i : _ -> i
           [] -> ObjectId.MkObjectId 999
-        gs = S.withEffectAt landId (Timestamp.MkTimestamp 100) (Modification.AddLandSubtype Subtype.Type.Swamp) gs0
+        gs = S.withEffectAt landId (Timestamp.MkTimestamp 100) (Modification.LandSubtype ChangeMode.InAddition Subtype.Type.Swamp) gs0
     Spec.assertEqWith s "Forest and Swamp" (Projection.subtypesOf landId gs) (Set.fromList [Subtype.Type.Forest, Subtype.Type.Swamp])
 
-  Spec.it s "CR 305.7 SetLandSubtype sets a Forest to only Mountain" $ do
+  Spec.it s "CR 305.7 LandSubtype Replace sets a Forest to only Mountain" $ do
     forest <- S.printingOf s registry "Forest"
     let gs0 = S.landsInPlay forest 1
         landId = case Game.zoneMembers Zone.Battlefield S.alice gs0 of
           i : _ -> i
           [] -> ObjectId.MkObjectId 999
-        gs = S.withEffectAt landId (Timestamp.MkTimestamp 100) (Modification.SetLandSubtype Subtype.Type.Mountain) gs0
+        gs = S.withEffectAt landId (Timestamp.MkTimestamp 100) (Modification.LandSubtype ChangeMode.Replace Subtype.Type.Mountain) gs0
     Spec.assertEqWith s "only Mountain" (Projection.subtypesOf landId gs) (Set.singleton Subtype.Type.Mountain)
 
   -- CR 305.7's set, with the type read off the effect's SOURCE rather than
@@ -2060,7 +2061,7 @@ spec s registry = Spec.describe s "Parun.Engine.Projection" $ do
   --
   -- The subtype assertion is CR 205.1a's third clause and not decoration: Goblin
   -- and Warrior correlate with the Creature type alone (CR 205.3m), so they go
-  -- when it does, while the Forest the same Aura's SetLandSubtype grants survives
+  -- when it does, while the Forest the same Aura's LandSubtype Replace grants survives
   -- because it correlates with the type the Aura just gave. A set that wrote
   -- PC.cardTypes and left PC.subtypes alone leaves a Goblin Forest land.
   Spec.it s "CR 205.1a Song of the Dryads REPLACES the enchanted creature's card type" $ do
@@ -2112,7 +2113,7 @@ spec s registry = Spec.describe s "Parun.Engine.Projection" $ do
   -- the Dryads' one static ability makes the enchanted permanent a Forest land,
   -- and CR 613.7 orders effects rather than the parts of one. The card is
   -- transcribed in printed order -- "a colorless Forest land", so the
-  -- SetLandSubtype precedes the SetCardType -- and a check reading either the
+  -- LandSubtype Replace precedes the SetCardType -- and a check reading either the
   -- object's base card types or the ones the fold had reached would refuse the
   -- Forest and leave a colourless land that taps for nothing.
   --
@@ -2155,7 +2156,7 @@ spec s registry = Spec.describe s "Parun.Engine.Projection" $ do
     let base = Setup.emptyGame S.bothPlayers
         (seerId, g1) = S.addPermanent seer S.alice base
         (lordId, g2) = S.addPermanent lord S.alice g1
-        nonland = S.withEffectAt lordId (Timestamp.MkTimestamp 10) (Modification.SetLandSubtype Subtype.Type.Mountain) g2
+        nonland = S.withEffectAt lordId (Timestamp.MkTimestamp 10) (Modification.LandSubtype ChangeMode.Replace Subtype.Type.Mountain) g2
         land = S.withEffectAt lordId (Timestamp.MkTimestamp 5) (Modification.AddCardType CardType.Land) nonland
         red = ManaCost.MkManaCost [ManaSymbol.OfType (ManaType.Colored Color.Red)]
     Spec.assertBool s (not (Mana.canPay Cost.manaActivations S.alice red nonland)) "the Lord gained no Mountain, so nothing of alice's pays {R}"
@@ -2589,7 +2590,7 @@ spec s registry = Spec.describe s "Parun.Engine.Projection" $ do
     Spec.assertEqWith s "the Giant is its printed 3/3" (Projection.powerOf giantId gs) (Just 3)
     Spec.assertEqWith s "the Giant is its printed 3/3" (Projection.toughnessOf giantId gs) (Just 3)
 
-  -- The card-level proof of the layer-4 AddCreatureSubtype arm: Life and Limb
+  -- The card-level proof of the layer-4 CreatureSubtype InAddition arm: Life and Limb
   -- makes a basic Forest a 1/1 green Saproling creature land, and the Saproling
   -- is the type this arm adds. CR 205.1b's add keeps the types already there,
   -- which the Forest land type surviving alongside it shows.
@@ -2603,6 +2604,17 @@ spec s registry = Spec.describe s "Parun.Engine.Projection" $ do
     Spec.assertBool s (Set.member Subtype.Type.Forest (Projection.subtypesOf forestId gs)) "and still a Forest (CR 205.1b: the add keeps the rest)"
     Spec.assertBool s (Projection.isCreatureOf forestId gs) "and a creature"
     Spec.assertBool s (Set.member CardType.Land (Projection.cardTypesOf forestId gs)) "and still a land"
+
+  -- The same add against a creature type already there, which the basic Forest
+  -- above lacks: CR 205.1a's replace would take the Dryad, CR 205.1b's add keeps
+  -- it. Dryad Arbor is a Forest, so Life and Limb reaches it.
+  Spec.it s "CR 205.1b Life and Limb makes Dryad Arbor a Saproling without replacing its Dryad" $ do
+    arbor <- S.printingOf s registry "Dryad Arbor"
+    limb <- S.printingOf s registry "Life and Limb"
+    let base = Setup.emptyGame S.bothPlayers
+        (arborId, g1) = S.addPermanent arbor S.alice base
+        (_, gs) = S.addPermanent limb S.alice g1
+    Spec.assertEqWith s "the Arbor is a Forest Dryad Saproling" (Projection.subtypesOf arborId gs) (Set.fromList [Subtype.Type.Forest, Subtype.Type.Dryad, Subtype.Type.Saproling])
 
   -- CR 613.7 orders effects within a layer and nothing orders one effect's own
   -- parts against each other, so a card naming the subtype ahead of the card type
@@ -2925,7 +2937,7 @@ spec s registry = Spec.describe s "Parun.Engine.Projection" $ do
     Spec.assertEqWith s "Forest, Mountain and Desert in, Goblin and Wall out" (fmap Subtype.isLandType [Subtype.Type.Forest, Subtype.Type.Mountain, Subtype.Type.Desert, Subtype.Type.Goblin, Subtype.Type.Wall]) [True, True, True, False, False]
 
   -- CR 205.3m's list, the other half of the pair, and the classification the
-  -- layer-4 SetCreatureSubtype arm folds with. The two are complements, not
+  -- layer-4 CreatureSubtype Replace arm folds with. The two are complements, not
   -- independent judgements, because CR 205.3c/205.3d make the families disjoint
   -- -- so the interesting arms are the ones in NEITHER: Aura is an enchantment
   -- type (CR 205.3h), Equipment an artifact type (CR 205.3g), Jace a
@@ -3316,7 +3328,7 @@ spec s registry = Spec.describe s "Parun.Engine.Projection" $ do
 
   -- CR 613.8b: "An effect dependent on one or more other effects waits to
   -- apply until just after all of those effects have been applied." A Piker
-  -- made a Land by B (layer 4, TheseObjects), and A = AddLandSubtype Swamp
+  -- made a Land by B (layer 4, TheseObjects), and A = LandSubtype InAddition Swamp
   -- over Matching (HasCardType Land), also layer 4, with A OLDER than B.
   --
   -- A depends on B by CR 613.8a clause (b): applying B changes what A applies
@@ -3328,7 +3340,7 @@ spec s registry = Spec.describe s "Parun.Engine.Projection" $ do
     piker <- S.printingOf s registry "Goblin Piker"
     mountain <- S.printingOf s registry "Mountain"
     let (pikerId, gs0) = S.addPermanent piker S.bob (S.landsInPlay mountain 1)
-        gsA = withDynamicEffect (Affected.Matching (Filter.Type.HasCardType CardType.Land)) (Timestamp.MkTimestamp 10) (Modification.AddLandSubtype Subtype.Type.Swamp) gs0
+        gsA = withDynamicEffect (Affected.Matching (Filter.Type.HasCardType CardType.Land)) (Timestamp.MkTimestamp 10) (Modification.LandSubtype ChangeMode.InAddition Subtype.Type.Swamp) gs0
         gs = S.withEffectAt pikerId (Timestamp.MkTimestamp 20) (Modification.AddCardType CardType.Land) gsA
     Spec.assertBool s (Set.member Subtype.Type.Swamp (Projection.subtypesOf pikerId gs)) "the newer land-maker applied first, so the Swamp lands"
 
@@ -3339,7 +3351,7 @@ spec s registry = Spec.describe s "Parun.Engine.Projection" $ do
   -- object id, so applying B cannot change it, so A does not depend on B and
   -- nothing is reordered.
   --
-  -- Each SetLandSubtype retires the LAND type its predecessor left and no
+  -- Each LandSubtype Replace retires the LAND type its predecessor left and no
   -- more (CR 305.7), so the Piker's printed creature types ride through both
   -- and the Swamp/Forest pair alone carries the ordering claim.
   --
@@ -3352,9 +3364,9 @@ spec s registry = Spec.describe s "Parun.Engine.Projection" $ do
     mountain <- S.printingOf s registry "Mountain"
     let (pikerId, gs0) = S.addPermanent piker S.bob (S.landsInPlay mountain 1)
         animated = S.withEffectAt pikerId (Timestamp.MkTimestamp 5) (Modification.AddCardType CardType.Land) gs0
-        gsA = S.withEffectAt pikerId (Timestamp.MkTimestamp 10) (Modification.SetLandSubtype Subtype.Type.Swamp) animated
-        gs = S.withEffectAt pikerId (Timestamp.MkTimestamp 20) (Modification.SetLandSubtype Subtype.Type.Forest) gsA
-    Spec.assertEqWith s "the later SetLandSubtype wins, and only the land types moved" (Projection.subtypesOf pikerId gs) (Set.fromList [Subtype.Type.Forest, Subtype.Type.Goblin, Subtype.Type.Warrior])
+        gsA = S.withEffectAt pikerId (Timestamp.MkTimestamp 10) (Modification.LandSubtype ChangeMode.Replace Subtype.Type.Swamp) animated
+        gs = S.withEffectAt pikerId (Timestamp.MkTimestamp 20) (Modification.LandSubtype ChangeMode.Replace Subtype.Type.Forest) gsA
+    Spec.assertEqWith s "the later LandSubtype Replace wins, and only the land types moved" (Projection.subtypesOf pikerId gs) (Set.fromList [Subtype.Type.Forest, Subtype.Type.Goblin, Subtype.Type.Warrior])
 
   -- CR 613.8b's last sentence: "If several dependent effects form a dependency
   -- loop, then this rule is ignored and the effects IN THE DEPENDENCY LOOP are
@@ -3380,8 +3392,8 @@ spec s registry = Spec.describe s "Parun.Engine.Projection" $ do
         landId = case Game.zoneMembers Zone.Battlefield S.alice gs0 of
           i : _ -> i
           [] -> ObjectId.MkObjectId 999
-        withC = withDynamicEffect (Affected.Matching (Filter.Type.HasSubtype Subtype.Type.Swamp)) (Timestamp.MkTimestamp 10) (Modification.AddLandSubtype Subtype.Type.Mountain) gs0
-        withA = withDynamicEffect (Affected.Matching (Filter.Type.Not (Filter.Type.HasCardType CardType.Creature))) (Timestamp.MkTimestamp 20) (Modification.AddLandSubtype Subtype.Type.Swamp) withC
+        withC = withDynamicEffect (Affected.Matching (Filter.Type.HasSubtype Subtype.Type.Swamp)) (Timestamp.MkTimestamp 10) (Modification.LandSubtype ChangeMode.InAddition Subtype.Type.Mountain) gs0
+        withA = withDynamicEffect (Affected.Matching (Filter.Type.Not (Filter.Type.HasCardType CardType.Creature))) (Timestamp.MkTimestamp 20) (Modification.LandSubtype ChangeMode.InAddition Subtype.Type.Swamp) withC
         gs = withDynamicEffect (Affected.Matching (Filter.Type.Not (Filter.Type.HasSubtype Subtype.Type.Swamp))) (Timestamp.MkTimestamp 30) (Modification.AddCardType CardType.Creature) withA
         subtypes = Projection.subtypesOf landId gs
     Spec.assertBool s (Set.member Subtype.Type.Swamp subtypes) "A applied: the Forest is a Swamp"
@@ -5242,7 +5254,7 @@ hiddenZoneStaticSpec s registry = Spec.describe s "HiddenZoneStatics" $ do
       (Activatable.activatable S.alice gristEntomber ability gristBoard, Activatable.activatable S.alice jaceEntomber ability jaceBoard)
       (True, False)
     -- CR 205.1b/205.3d on the same ability, and the reason Grist is transcribed
-    -- in printed order ("a 1/1 Insect creature"): the AddCreatureSubtype comes
+    -- in printed order ("a 1/1 Insect creature"): the CreatureSubtype InAddition comes
     -- before the AddCardType that licenses it, so the Insect sticks only because
     -- correspondsTo asks what the whole effect gives.
     Spec.assertEqWith

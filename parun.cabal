@@ -321,6 +321,8 @@ library codec
     Parun.Codec.CastRepetition
     Parun.Codec.CastRepetitionSpec
     Parun.Codec.CausedBy
+    Parun.Codec.ChangeMode
+    Parun.Codec.ChangeModeSpec
     Parun.Codec.ChangeText
     Parun.Codec.ChangeTextSpec
     Parun.Codec.ChangeWord
@@ -368,8 +370,6 @@ library codec
     Parun.Codec.CoinReading
     Parun.Codec.CoinReadingSpec
     Parun.Codec.Color
-    Parun.Codec.ColorMode
-    Parun.Codec.ColorModeSpec
     Parun.Codec.ColorSpec
     Parun.Codec.Combat
     Parun.Codec.CombatDamageOption
@@ -2408,6 +2408,7 @@ library types
     Parun.Types.CastOffer
     Parun.Types.CastRepetition
     Parun.Types.CausedBy
+    Parun.Types.ChangeMode
     Parun.Types.ChangeText
     Parun.Types.ChangeWord
     Parun.Types.CharacteristicPT
@@ -2436,7 +2437,6 @@ library types
     Parun.Types.CoinFlipped
     Parun.Types.CoinReading
     Parun.Types.Color
-    Parun.Types.ColorMode
     Parun.Types.Combat
     Parun.Types.CombatDamageOption
     Parun.Types.CombatRestriction

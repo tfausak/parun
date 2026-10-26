@@ -51,9 +51,9 @@ import qualified Parun.Types.BeginningStep as BeginningStep
 import qualified Parun.Types.BlocksDeclared as BlocksDeclared
 import qualified Parun.Types.CardName as CardName
 import qualified Parun.Types.CardType as CardType
+import qualified Parun.Types.ChangeMode as ChangeMode
 import qualified Parun.Types.Choices as Choices
 import qualified Parun.Types.Color as Color
-import qualified Parun.Types.ColorMode as ColorMode
 import qualified Parun.Types.Combat as Combat.Type
 import qualified Parun.Types.CombatStep as CombatStep
 import qualified Parun.Types.ContinuousEffect as ContinuousEffect
@@ -647,7 +647,7 @@ evasionSpec s registry = Spec.describe s "Evasion" $ do
     let (gs0, mine, theirs) = attacking [highbornGhoul] [typhoidRats, darksteelMyr]
     case (mine, theirs) of
       (a : _, black : artifact : _) ->
-        let gs = S.withEffect a (Modification.Colors ColorMode.Replace Set.empty) gs0
+        let gs = S.withEffect a (Modification.Colors ChangeMode.Replace Set.empty) gs0
          in do
               Spec.assertBool s (Set.null (Projection.colorsOf a gs)) "the attacker is colourless"
               Spec.assertBool s (not (Combat.legalBlockDeclaration S.bob (Map.singleton black (Set.singleton a)) gs)) "the black creature may not block"

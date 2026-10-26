@@ -48,9 +48,14 @@
               }
             },
             {
-              "type": "AddCreatureSubtype",
+              "type": "CreatureSubtype",
               "value": {
-                "type": "Gorgon"
+                "mode": {
+                  "type": "InAddition"
+                },
+                "subtype": {
+                  "type": "Gorgon"
+                }
               }
             },
             {

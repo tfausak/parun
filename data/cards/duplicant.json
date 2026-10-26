@@ -98,9 +98,14 @@
               }
             },
             {
-              "type": "AddCreatureSubtype",
+              "type": "CreatureSubtype",
               "value": {
-                "type": "Shapeshifter"
+                "mode": {
+                  "type": "InAddition"
+                },
+                "subtype": {
+                  "type": "Shapeshifter"
+                }
               }
             }
           ]

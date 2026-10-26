@@ -456,7 +456,7 @@ auditBoard audit paladinClass piker level =
 -- without a second effect, so this is the board on which a Class stops being one.
 --
 -- The retention is observable across the ROUND TRIP rather than during it, and
--- that is a rules fact rather than a shortcut: the same Aura's SetLandSubtype
+-- that is a rules fact rather than a shortcut: the same Aura's LandSubtype Replace
 -- fires CR 305.7, which strips the permanent's abilities, so while the Song is on
 -- it the level-2 section is off no matter what the level says, and no Class in
 -- data/cards/ measures a level except through its own sections (grep ClassLevel

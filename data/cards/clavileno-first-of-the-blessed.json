@@ -56,9 +56,14 @@
                             "type": "Indefinite"
                           },
                           "modification": {
-                            "type": "AddCreatureSubtype",
+                            "type": "CreatureSubtype",
                             "value": {
-                              "type": "Demon"
+                              "mode": {
+                                "type": "InAddition"
+                              },
+                              "subtype": {
+                                "type": "Demon"
+                              }
                             }
                           },
                           "ref": {

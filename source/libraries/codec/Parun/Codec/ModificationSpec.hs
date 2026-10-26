@@ -16,9 +16,9 @@ import qualified Parun.Types.Activator as Activator
 import qualified Parun.Types.CardName as CardName
 import qualified Parun.Types.CardType as CardType
 import qualified Parun.Types.CastingPermission as CastingPermission
+import qualified Parun.Types.ChangeMode as ChangeMode
 import qualified Parun.Types.ChangeWord as ChangeWord
 import qualified Parun.Types.Color as Color
-import qualified Parun.Types.ColorMode as ColorMode
 import qualified Parun.Types.CombatDamageOption as CombatDamageOption
 import qualified Parun.Types.Cost as Cost
 import qualified Parun.Types.CostComponent as CostComponent
@@ -148,12 +148,12 @@ spec s = Spec.describe s "Parun.Codec.Modification" $ do
       (Modification.ModifyPowerToughness (ModifyPowerToughness.MkModifyPowerToughness (Quantity.Literal 3) (Quantity.Literal 3)))
       " {\"type\":\"ModifyPowerToughness\",\"value\":{\"power\":{\"type\":\"Literal\",\"value\":3},\"toughness\":{\"type\":\"Literal\",\"value\":3}}} "
   -- layer 4, CR 305.7 set (Blood Moon -> Mountain).
-  Spec.it s "SetLandSubtype" $
+  Spec.it s "LandSubtype Replace" $
     Common.assertCodec
       s
       codec
-      (Modification.SetLandSubtype Subtype.Mountain)
-      " {\"type\":\"SetLandSubtype\",\"value\":{\"type\":\"Mountain\"}} "
+      (Modification.LandSubtype ChangeMode.Replace Subtype.Mountain)
+      " {\"type\":\"LandSubtype\",\"value\":{\"mode\":{\"type\":\"Replace\"},\"subtype\":{\"type\":\"Mountain\"}}} "
   -- Nullary: the subtype is read from the effect's source at projection time,
   -- so there is nothing on the wire.
   Spec.it s "SetLandSubtypeToChosen" $
@@ -163,26 +163,26 @@ spec s = Spec.describe s "Parun.Codec.Modification" $ do
       Modification.SetLandSubtypeToChosen
       " {\"type\":\"SetLandSubtypeToChosen\"} "
   -- layer 4, CR 305.7 add (Urborg -> Swamp).
-  Spec.it s "AddLandSubtype" $
+  Spec.it s "LandSubtype InAddition" $
     Common.assertCodec
       s
       codec
-      (Modification.AddLandSubtype Subtype.Swamp)
-      " {\"type\":\"AddLandSubtype\",\"value\":{\"type\":\"Swamp\"}} "
+      (Modification.LandSubtype ChangeMode.InAddition Subtype.Swamp)
+      " {\"type\":\"LandSubtype\",\"value\":{\"mode\":{\"type\":\"InAddition\"},\"subtype\":{\"type\":\"Swamp\"}}} "
   -- layer 4, CR 205.1a set (Turn to Frog -> Frog).
-  Spec.it s "SetCreatureSubtype" $
+  Spec.it s "CreatureSubtype Replace" $
     Common.assertCodec
       s
       codec
-      (Modification.SetCreatureSubtype Subtype.Frog)
-      " {\"type\":\"SetCreatureSubtype\",\"value\":{\"type\":\"Frog\"}} "
+      (Modification.CreatureSubtype ChangeMode.Replace Subtype.Frog)
+      " {\"type\":\"CreatureSubtype\",\"value\":{\"mode\":{\"type\":\"Replace\"},\"subtype\":{\"type\":\"Frog\"}}} "
   -- layer 4, CR 205.1b add (Life and Limb -> Saproling).
-  Spec.it s "AddCreatureSubtype" $
+  Spec.it s "CreatureSubtype InAddition" $
     Common.assertCodec
       s
       codec
-      (Modification.AddCreatureSubtype Subtype.Saproling)
-      " {\"type\":\"AddCreatureSubtype\",\"value\":{\"type\":\"Saproling\"}} "
+      (Modification.CreatureSubtype ChangeMode.InAddition Subtype.Saproling)
+      " {\"type\":\"CreatureSubtype\",\"value\":{\"mode\":{\"type\":\"InAddition\"},\"subtype\":{\"type\":\"Saproling\"}}} "
   -- layer 4, CR 205.1b add over the whole of CR 205.3m (Wings of Velis Vel).
   Spec.it s "AddEveryCreatureSubtype" $
     Common.assertCodec
@@ -278,14 +278,14 @@ spec s = Spec.describe s "Parun.Codec.Modification" $ do
     Common.assertCodec
       s
       codec
-      (Modification.Colors ColorMode.Replace (Set.singleton Color.Blue))
+      (Modification.Colors ChangeMode.Replace (Set.singleton Color.Blue))
       " {\"type\":\"Colors\",\"value\":{\"mode\":{\"type\":\"Replace\"},\"colors\":[{\"type\":\"Blue\"}]}} "
   -- layer 5, CR 613.1e / 105.3: an ADD, not a set.
   Spec.it s "Colors InAddition" $
     Common.assertCodec
       s
       codec
-      (Modification.Colors ColorMode.InAddition (Set.singleton Color.Blue))
+      (Modification.Colors ChangeMode.InAddition (Set.singleton Color.Blue))
       " {\"type\":\"Colors\",\"value\":{\"mode\":{\"type\":\"InAddition\"},\"colors\":[{\"type\":\"Blue\"}]}} "
   -- layer 5, CR 613.1e / 105.3: the colour is read at projection time off the
   -- effect's source, so the arm carries only whether it replaces or adds.
@@ -293,7 +293,7 @@ spec s = Spec.describe s "Parun.Codec.Modification" $ do
     Common.assertCodec
       s
       codec
-      (Modification.ChosenColor ColorMode.Replace)
+      (Modification.ChosenColor ChangeMode.Replace)
       " {\"type\":\"ChosenColor\",\"value\":{\"type\":\"Replace\"}} "
   -- layer 6, CR 702.165a: the abilities come off the effect's SOURCE, so the arm
   -- carries only the keywords printed above the backup line.

@@ -2111,11 +2111,9 @@ modificationNames asking onAbility x = case x of
   Modification.LoseKeywordFamily _keywordFamily -> mempty
   Modification.SetBasePowerToughness setBasePowerToughness -> setBasePowerToughnessNames asking setBasePowerToughness
   Modification.ModifyPowerToughness modifyPowerToughness -> modifyPowerToughnessNames asking modifyPowerToughness
-  Modification.SetLandSubtype _subtype -> mempty
+  Modification.LandSubtype _changeMode _subtype -> mempty
   Modification.SetLandSubtypeToChosen -> mempty
-  Modification.AddLandSubtype _subtype -> mempty
-  Modification.SetCreatureSubtype _subtype -> mempty
-  Modification.AddCreatureSubtype _subtype -> mempty
+  Modification.CreatureSubtype _changeMode _subtype -> mempty
   Modification.AddEveryCreatureSubtype -> mempty
   Modification.LoseEveryCreatureSubtype -> mempty
   Modification.SetCreatureSubtypesOfLastCardExiledWith filter_ -> filterNames asking filter_

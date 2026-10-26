@@ -49,9 +49,14 @@
                         "type": "UntilEndOfTurn"
                       },
                       "modification": {
-                        "type": "AddCreatureSubtype",
+                        "type": "CreatureSubtype",
                         "value": {
-                          "type": "Elemental"
+                          "mode": {
+                            "type": "InAddition"
+                          },
+                          "subtype": {
+                            "type": "Elemental"
+                          }
                         }
                       },
                       "ref": {

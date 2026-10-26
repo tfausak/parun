@@ -151,9 +151,14 @@
                         "type": "Indefinite"
                       },
                       "modification": {
-                        "type": "SetCreatureSubtype",
+                        "type": "CreatureSubtype",
                         "value": {
-                          "type": "Elemental"
+                          "mode": {
+                            "type": "Replace"
+                          },
+                          "subtype": {
+                            "type": "Elemental"
+                          }
                         }
                       },
                       "ref": {

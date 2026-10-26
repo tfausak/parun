@@ -140,6 +140,7 @@ import qualified Parun.Codec.CastRepetitionSpec
 import qualified Parun.Codec.CastingPermissionSpec
 import qualified Parun.Codec.CastingRestrictionSpec
 import qualified Parun.Codec.CastingSpec
+import qualified Parun.Codec.ChangeModeSpec
 import qualified Parun.Codec.ChangeTextSpec
 import qualified Parun.Codec.ChangeWordSpec
 import qualified Parun.Codec.CharacteristicPTSpec
@@ -162,7 +163,6 @@ import qualified Parun.Codec.ClauseSpec
 import qualified Parun.Codec.CoinFaceSpec
 import qualified Parun.Codec.CoinFlippedSpec
 import qualified Parun.Codec.CoinReadingSpec
-import qualified Parun.Codec.ColorModeSpec
 import qualified Parun.Codec.ColorSpec
 import qualified Parun.Codec.CombatDamageOptionSpec
 import qualified Parun.Codec.CombatRestrictionSpec
@@ -1083,7 +1083,7 @@ spec s registry = do
   Parun.Codec.CoinFaceSpec.spec s
   Parun.Codec.CoinFlippedSpec.spec s
   Parun.Codec.CoinReadingSpec.spec s
-  Parun.Codec.ColorModeSpec.spec s
+  Parun.Codec.ChangeModeSpec.spec s
   Parun.Codec.ColorSpec.spec s
   Parun.Codec.CombatRestrictionSpec.spec s
   Parun.Codec.CombatSpec.spec s

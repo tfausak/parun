@@ -15,9 +15,14 @@
           },
           "modifications": [
             {
-              "type": "SetLandSubtype",
+              "type": "LandSubtype",
               "value": {
-                "type": "Swamp"
+                "mode": {
+                  "type": "Replace"
+                },
+                "subtype": {
+                  "type": "Swamp"
+                }
               }
             }
           ]

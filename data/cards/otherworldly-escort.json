@@ -147,15 +147,25 @@
                           "riders": {
                             "characteristics": [
                               {
-                                "type": "SetCreatureSubtype",
+                                "type": "CreatureSubtype",
                                 "value": {
-                                  "type": "Spirit"
+                                  "mode": {
+                                    "type": "Replace"
+                                  },
+                                  "subtype": {
+                                    "type": "Spirit"
+                                  }
                                 }
                               },
                               {
-                                "type": "AddCreatureSubtype",
+                                "type": "CreatureSubtype",
                                 "value": {
-                                  "type": "Detective"
+                                  "mode": {
+                                    "type": "InAddition"
+                                  },
+                                  "subtype": {
+                                    "type": "Detective"
+                                  }
                                 }
                               }
                             ],

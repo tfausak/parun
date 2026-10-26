@@ -70,9 +70,14 @@
                             "type": "Indefinite"
                           },
                           "modification": {
-                            "type": "AddCreatureSubtype",
+                            "type": "CreatureSubtype",
                             "value": {
-                              "type": "Vampire"
+                              "mode": {
+                                "type": "InAddition"
+                              },
+                              "subtype": {
+                                "type": "Vampire"
+                              }
                             }
                           },
                           "ref": {

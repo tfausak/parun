@@ -594,7 +594,7 @@ resolveSpec s registry = Spec.describe s "Resolve" $ do
     --
     -- The Filter half of read-point 3 (Resolve.modesOf) rests on this case
     -- alone: no real instant or sorcery SETS a land's subtype. The Modification
-    -- half of the same read-point is Turn to Frog's SetCreatureSubtype under an
+    -- half of the same read-point is Turn to Frog's CreatureSubtype Replace under an
     -- Artificial Evolution (Parun.CounterspellSpec's ArtificialEvolution group), and
     -- Parun.ActivateSpec's Tidal Warrior chain reaches the same
     -- Projection.rewriteEffect ModifyTarget arm through an ACTIVATED ability.

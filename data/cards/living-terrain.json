@@ -70,9 +70,14 @@
               }
             },
             {
-              "type": "AddCreatureSubtype",
+              "type": "CreatureSubtype",
               "value": {
-                "type": "Treefolk"
+                "mode": {
+                  "type": "InAddition"
+                },
+                "subtype": {
+                  "type": "Treefolk"
+                }
               }
             },
             {

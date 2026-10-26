@@ -51,6 +51,7 @@ import qualified Parun.Types.BeginningStep as BeginningStep
 import qualified Parun.Types.Card as Card.Type
 import qualified Parun.Types.CardName as CardName
 import qualified Parun.Types.CardType as CardType
+import qualified Parun.Types.ChangeMode as ChangeMode
 import qualified Parun.Types.Color as Color
 import qualified Parun.Types.CombatStep as CombatStep
 import qualified Parun.Types.CounterKind as CounterKind
@@ -772,7 +773,7 @@ stateTriggerSpec s registry =
         -- M-4 (review): the state trigger's Condition.holds reads the PROJECTION
         -- -- CR 613 layer 4 for a subtype -- not Face.typeLine. Pin it with no real Swamp card
         -- anywhere: alice controls only a Mountain, so the Outcast triggers;
-        -- adding an AddLandSubtype Swamp modification (the Urborg shape) to
+        -- adding a LandSubtype InAddition Swamp modification (the Urborg shape) to
         -- that same Mountain must turn the trigger off.
         Spec.it s "CR 613 layer 4: an added Swamp subtype (no real Swamp card) suppresses the trigger" $ do
           mountain <- S.printingOf s registry "Mountain"
@@ -783,7 +784,7 @@ stateTriggerSpec s registry =
                 [] -> ObjectId.MkObjectId 999
               (_, gs1) = S.addPermanent barbarianOutcast S.alice gs0
               before = settle gs1
-              withUrborg = S.withEffect mountainId (Modification.AddLandSubtype Subtype.Swamp) gs1
+              withUrborg = S.withEffect mountainId (Modification.LandSubtype ChangeMode.InAddition Subtype.Swamp) gs1
               after = settle withUrborg
           Spec.assertEqWith s "no real Swamp yet: triggers" (length (triggerIds before)) 1
           Spec.assertEqWith s "projected Swamp subtype (still a Mountain card): stops triggering" (length (triggerIds after)) 0

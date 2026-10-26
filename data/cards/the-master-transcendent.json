@@ -40,9 +40,14 @@
                                 }
                               },
                               {
-                                "type": "SetCreatureSubtype",
+                                "type": "CreatureSubtype",
                                 "value": {
-                                  "type": "Mutant"
+                                  "mode": {
+                                    "type": "Replace"
+                                  },
+                                  "subtype": {
+                                    "type": "Mutant"
+                                  }
                                 }
                               },
                               {

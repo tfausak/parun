@@ -187,9 +187,14 @@
           },
           "modifications": [
             {
-              "type": "AddCreatureSubtype",
+              "type": "CreatureSubtype",
               "value": {
-                "type": "Sliver"
+                "mode": {
+                  "type": "InAddition"
+                },
+                "subtype": {
+                  "type": "Sliver"
+                }
               }
             }
           ]

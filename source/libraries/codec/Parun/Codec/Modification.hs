@@ -5,9 +5,9 @@ import qualified Parun.Codec.AbilityName as AbilityName
 import qualified Parun.Codec.CardName as CardName
 import qualified Parun.Codec.CardType as CardType
 import qualified Parun.Codec.CastingPermission as CastingPermission
+import qualified Parun.Codec.ChangeMode as ChangeMode
 import qualified Parun.Codec.ChangeWord as ChangeWord
 import qualified Parun.Codec.Color as Color
-import qualified Parun.Codec.ColorMode as ColorMode
 import qualified Parun.Codec.CombatDamageOption as CombatDamageOption
 import qualified Parun.Codec.CostKeyword as CostKeyword
 import qualified Parun.Codec.ExiledCardAbilities as ExiledCardAbilities
@@ -41,8 +41,13 @@ codec abilityCodec =
   let colors =
         Fields.object $
           (,)
-            <$> Fields.required "mode" ColorMode.codec fst
+            <$> Fields.required "mode" ChangeMode.codec fst
             <*> Fields.required "colors" (Common.set Color.codec) snd
+      subtype =
+        Fields.object $
+          (,)
+            <$> Fields.required "mode" ChangeMode.codec fst
+            <*> Fields.required "subtype" Subtype.codec snd
    in Arm.tagged
         tagOf
         [ Arm.payload "GainAbility" abilityCodec Modification.GainAbility (\x -> case x of Modification.GainAbility y -> Just y; _ -> Nothing),
@@ -60,11 +65,9 @@ codec abilityCodec =
           Arm.payload "LoseKeywordFamily" KeywordFamily.codec Modification.LoseKeywordFamily (\x -> case x of Modification.LoseKeywordFamily y -> Just y; _ -> Nothing),
           Arm.payload "SetBasePowerToughness" SetBasePowerToughness.codec Modification.SetBasePowerToughness (\x -> case x of Modification.SetBasePowerToughness y -> Just y; _ -> Nothing),
           Arm.payload "ModifyPowerToughness" ModifyPowerToughness.codec Modification.ModifyPowerToughness (\x -> case x of Modification.ModifyPowerToughness y -> Just y; _ -> Nothing),
-          Arm.payload "SetLandSubtype" Subtype.codec Modification.SetLandSubtype (\x -> case x of Modification.SetLandSubtype y -> Just y; _ -> Nothing),
+          Arm.payload "LandSubtype" subtype (uncurry Modification.LandSubtype) (\x -> case x of Modification.LandSubtype mode y -> Just (mode, y); _ -> Nothing),
           Arm.nullary "SetLandSubtypeToChosen" Modification.SetLandSubtypeToChosen,
-          Arm.payload "AddLandSubtype" Subtype.codec Modification.AddLandSubtype (\x -> case x of Modification.AddLandSubtype y -> Just y; _ -> Nothing),
-          Arm.payload "SetCreatureSubtype" Subtype.codec Modification.SetCreatureSubtype (\x -> case x of Modification.SetCreatureSubtype y -> Just y; _ -> Nothing),
-          Arm.payload "AddCreatureSubtype" Subtype.codec Modification.AddCreatureSubtype (\x -> case x of Modification.AddCreatureSubtype y -> Just y; _ -> Nothing),
+          Arm.payload "CreatureSubtype" subtype (uncurry Modification.CreatureSubtype) (\x -> case x of Modification.CreatureSubtype mode y -> Just (mode, y); _ -> Nothing),
           Arm.nullary "AddEveryCreatureSubtype" Modification.AddEveryCreatureSubtype,
           Arm.nullary "LoseEveryCreatureSubtype" Modification.LoseEveryCreatureSubtype,
           Arm.payload "SetCreatureSubtypesOfLastCardExiledWith" (Filter.codec Keyword.codec) Modification.SetCreatureSubtypesOfLastCardExiledWith (\x -> case x of Modification.SetCreatureSubtypesOfLastCardExiledWith y -> Just y; _ -> Nothing),
@@ -78,7 +81,7 @@ codec abilityCodec =
           Arm.payload "SetController" PlayerId.codec Modification.SetController (\x -> case x of Modification.SetController y -> Just y; _ -> Nothing),
           Arm.nullary "SetControllerToSource" Modification.SetControllerToSource,
           Arm.payload "Colors" colors (uncurry Modification.Colors) (\x -> case x of Modification.Colors mode cs -> Just (mode, cs); _ -> Nothing),
-          Arm.payload "ChosenColor" ColorMode.codec Modification.ChosenColor (\x -> case x of Modification.ChosenColor y -> Just y; _ -> Nothing),
+          Arm.payload "ChosenColor" ChangeMode.codec Modification.ChosenColor (\x -> case x of Modification.ChosenColor y -> Just y; _ -> Nothing),
           Arm.nullary "ExchangeTextBoxes" Modification.ExchangeTextBoxes,
           Arm.payload "AddNamesMatching" (Filter.codec Keyword.codec) Modification.AddNamesMatching (\x -> case x of Modification.AddNamesMatching y -> Just y; _ -> Nothing),
           Arm.payload "HasFullText" (FullText.codec abilityCodec) Modification.HasFullText (\x -> case x of Modification.HasFullText y -> Just y; _ -> Nothing),
@@ -108,11 +111,9 @@ tagOf x = case x of
   Modification.LoseKeywordFamily {} -> "LoseKeywordFamily"
   Modification.SetBasePowerToughness {} -> "SetBasePowerToughness"
   Modification.ModifyPowerToughness {} -> "ModifyPowerToughness"
-  Modification.SetLandSubtype {} -> "SetLandSubtype"
+  Modification.LandSubtype {} -> "LandSubtype"
   Modification.SetLandSubtypeToChosen {} -> "SetLandSubtypeToChosen"
-  Modification.AddLandSubtype {} -> "AddLandSubtype"
-  Modification.SetCreatureSubtype {} -> "SetCreatureSubtype"
-  Modification.AddCreatureSubtype {} -> "AddCreatureSubtype"
+  Modification.CreatureSubtype {} -> "CreatureSubtype"
   Modification.AddEveryCreatureSubtype {} -> "AddEveryCreatureSubtype"
   Modification.LoseEveryCreatureSubtype {} -> "LoseEveryCreatureSubtype"
   Modification.SetCreatureSubtypesOfLastCardExiledWith {} -> "SetCreatureSubtypesOfLastCardExiledWith"

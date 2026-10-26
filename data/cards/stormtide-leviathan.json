@@ -109,9 +109,14 @@
           },
           "modifications": [
             {
-              "type": "AddLandSubtype",
+              "type": "LandSubtype",
               "value": {
-                "type": "Island"
+                "mode": {
+                  "type": "InAddition"
+                },
+                "subtype": {
+                  "type": "Island"
+                }
               }
             }
           ]

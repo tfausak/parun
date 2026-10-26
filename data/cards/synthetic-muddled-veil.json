@@ -31,9 +31,14 @@
           },
           "modifications": [
             {
-              "type": "SetLandSubtype",
+              "type": "LandSubtype",
               "value": {
-                "type": "Mountain"
+                "mode": {
+                  "type": "Replace"
+                },
+                "subtype": {
+                  "type": "Mountain"
+                }
               }
             }
           ]

@@ -5,9 +5,9 @@ import qualified Parun.Types.AbilityName as AbilityName
 import qualified Parun.Types.CardName as CardName
 import qualified Parun.Types.CardType as CardType
 import qualified Parun.Types.CastingPermission as CastingPermission
+import qualified Parun.Types.ChangeMode as ChangeMode
 import qualified Parun.Types.ChangeWord as ChangeWord
 import qualified Parun.Types.Color as Color
-import qualified Parun.Types.ColorMode as ColorMode
 import qualified Parun.Types.CombatDamageOption as CombatDamageOption
 import qualified Parun.Types.CostKeyword as CostKeyword
 import qualified Parun.Types.ExiledCardAbilities as ExiledCardAbilities
@@ -233,7 +233,10 @@ data Modification ability
     LoseKeywordFamily KeywordFamily.KeywordFamily
   | SetBasePowerToughness SetBasePowerToughness.SetBasePowerToughness -- layer 7b (Humility 1/1; Opalescence mana value)
   | ModifyPowerToughness ModifyPowerToughness.ModifyPowerToughness -- layer 7c (Giant Growth +3/+3)
-  | SetLandSubtype Subtype.Subtype -- layer 4, CR 305.7 set (Blood Moon -> Mountain)
+  | -- | layer 4, CR 305.7: this object's land subtype becomes this one, or gains
+    -- it in addition to its others, as the mode says (Blood Moon -> Mountain,
+    -- Urborg -> Swamp). CR 305.7's ability strip is the Replace mode's alone.
+    LandSubtype ChangeMode.ChangeMode Subtype.Subtype
   | -- | layer 4, CR 613.1d / 305.7: set this object's land subtype to the basic
     -- land type chosen for THIS effect's SOURCE (Object.chosenSubtype), as it
     -- entered or by Effect.ChooseQuality. Convincing Mirage's "enchanted
@@ -243,37 +246,24 @@ data Modification ability
     -- source rather than baked into card data, the posture ChosenColor takes
     -- toward Object.chosenColors: a static ability's modification is card data
     -- and cannot name a type a player will choose, which is why this is a second
-    -- constructor rather than a field on SetLandSubtype above.
+    -- constructor rather than a field on LandSubtype above.
     --
-    -- Carries CR 305.7's ability strip in full, exactly as SetLandSubtype does:
+    -- Carries CR 305.7's ability strip in full, exactly as LandSubtype Replace does:
     -- Parun.Engine.Projection routes both through setLandSubtypeTo, and its
     -- setLandSubtypeEffects answers True for both, so the fold half and the
     -- candidate-list-gate half of that rule cannot drift apart.
     SetLandSubtypeToChosen
-  | AddLandSubtype Subtype.Subtype -- layer 4, CR 305.7 add (Urborg -> Swamp)
-  | -- | layer 4, CR 205.1a set (Turn to Frog -> Frog). A SET over the CREATURE
-    -- types only, which is narrower than either land arm above: CR 205.1a
-    -- replaces the object's existing subtypes from that one family and leaves
-    -- its card types alone. CR 205.3m is the list of what that reaches.
-    --
-    -- AddCreatureSubtype sits beside it, the in-addition twin. CR 205.1a allows
-    -- several creature types and this carries exactly one, the same narrowing
-    -- SetLandSubtype takes. A card setting two (Otherworldly Escort's "It's a
-    -- Spirit Detective") lists this, then AddCreatureSubtype, in one effect.
-    SetCreatureSubtype Subtype.Subtype
-  | -- | layer 4, CR 205.1b add (Life and Limb -> Saproling). The ADD beside the
-    -- SET above, standing to it as AddLandSubtype stands to SetLandSubtype: the
-    -- object keeps every creature type it had and gains this one.
-    --
-    -- No ability clause on this arm or on the set above. CR 305.7's strip is the
-    -- land arms' alone, which is why neither creature-type arm routes through
-    -- setLandSubtypeTo.
-    AddCreatureSubtype Subtype.Subtype
+  | -- | layer 4, CR 205.1a / 205.1b: this object's creature types become this
+    -- one, or it gains it in addition to them, as the mode says (Turn to Frog ->
+    -- Frog, Life and Limb -> Saproling). Strips no ability and touches no card
+    -- type. A card setting two (Otherworldly Escort's "It's a Spirit Detective")
+    -- lists a Replace, then an InAddition, in one effect.
+    CreatureSubtype ChangeMode.ChangeMode Subtype.Subtype
   | -- | layer 4, CR 205.1b add over the WHOLE of CR 205.3m: this object gains
     -- every creature type. "Gains all creature types" (Wings of Velis Vel) and
     -- "is every creature type" (Maskwood Nexus) are the two printed wordings.
     --
-    -- NULLARY, where AddCreatureSubtype above carries one type: rule 205.3m's
+    -- NULLARY, where CreatureSubtype above carries one type: rule 205.3m's
     -- list is the payload, it grows with every set, and no card enumerates it.
     -- A card that could would be authoring the rulebook.
     --
@@ -290,7 +280,7 @@ data Modification ability
     -- NULLARY, the mirror of AddEveryCreatureSubtype above and for its reason:
     -- rule 205.3m's list is the payload and no card enumerates it.
     --
-    -- A REMOVAL rather than SetCreatureSubtype over an empty set, which is
+    -- A REMOVAL rather than a CreatureSubtype Replace over an empty set, which is
     -- LoseAllAbilities' shape: CR 205.1a's last sentence -- "removing an
     -- object's subtype doesn't affect its card types at all" -- is a statement
     -- about removal, and it is what keeps a stripped artifact creature an
@@ -302,13 +292,13 @@ data Modification ability
     -- (CR 607.2a, 613.7d) -- Duplicant. No such card leaves them alone.
     SetCreatureSubtypesOfLastCardExiledWith (Filter.Filter Keyword.Keyword)
   | -- | layer 4, CR 613.1d / CR 205.1b add, over the subtype families the two
-    -- family-tagged adds above cannot reach: CR 205.3g's artifact types (Ygra,
+    -- family-tagged arms above cannot reach: CR 205.3g's artifact types (Ygra,
     -- Eater of All's "other creatures are Food artifacts in addition to their
     -- other types") and CR 205.3h's enchantment types (a permanent that becomes
     -- an Aura). CR 205.3d still refuses a type that corresponds to no card type
     -- the object has, so a card granting one authors the card type first.
     --
-    -- UNTAGGED where AddLandSubtype and AddCreatureSubtype carry their family
+    -- UNTAGGED where LandSubtype and CreatureSubtype carry their family
     -- implicitly, and that is the whole reason those two are not generalised into
     -- this: their constructor IS CR 612.2's gate in
     -- Parun.Engine.Projection.rewriteModificationWith, which asks whether the word
@@ -322,8 +312,8 @@ data Modification ability
     AddSubtype Subtype.Subtype
   | AddCardType CardType.CardType -- layer 4 (Opalescence -> Creature)
   | -- | layer 4, CR 613.1d / 205.1a set (Song of the Dryads -> land). The SET
-    -- beside the add above, standing to it as SetLandSubtype stands to
-    -- AddLandSubtype: the new card type REPLACES the ones the object had.
+    -- beside the add above, standing to it as LandSubtype's Replace mode stands
+    -- to its InAddition: the new card type REPLACES the ones the object had.
     --
     -- CR 205.1a keeps instant and sorcery through the replacement by name, and
     -- carries the consequence for subtypes: a subtype whose family correlates
@@ -359,10 +349,10 @@ data Modification ability
     -- Singularity's "All nonland permanents are legendary"). An ADD and never a
     -- set, because CR 205.4b says so outright -- "when an object gains or loses a
     -- supertype, it retains any other supertypes it had" -- so no supertype arm
-    -- has the SetLandSubtype/AddLandSubtype pairing the subtypes need.
+    -- has the ChangeMode the subtypes need.
     --
-    -- Carries one Supertype rather than a set, the narrowing SetLandSubtype and
-    -- SetCreatureSubtype already take: no printing grants two at once, and a card
+    -- Carries one Supertype rather than a set, the narrowing LandSubtype and
+    -- CreatureSubtype already take: no printing grants two at once, and a card
     -- that did would author two modifications.
     AddSupertype Supertype.Supertype
   | -- | layer 4, CR 613.1d / 205.4b: this object loses a supertype (Arcum's
@@ -432,7 +422,7 @@ data Modification ability
   | -- | layer 5, CR 613.1e / 105.3: this object becomes these colours, replacing
     -- its colours or in addition to them as the mode says. An empty set under
     -- Replace is "becomes colourless" (CR 105.2c).
-    Colors ColorMode.ColorMode (Set.Set Color.Color)
+    Colors ChangeMode.ChangeMode (Set.Set Color.Color)
   | -- | layer 5, CR 613.1e / 105.3: this object becomes the colour chosen for
     -- THIS effect's SOURCE (Object.chosenColors), replacing its colours or in
     -- addition to them as the mode says. Shifting Sky's and Painter's Servant's
@@ -442,7 +432,7 @@ data Modification ability
     -- baked into card data: a static ability's modification cannot name a
     -- colour a player will choose, which is why this is a constructor beside
     -- Colors rather than a value it could carry.
-    ChosenColor ColorMode.ColorMode
+    ChosenColor ChangeMode.ChangeMode
   | -- | layer 7d, CR 613.4d: switch this object's power and toughness. It acts
     -- on whatever 7a, 7b and 7c already produced, not on the printed box.
     -- Carries no payload: two applications return the object to normal for free.

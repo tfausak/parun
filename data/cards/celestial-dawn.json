@@ -135,9 +135,14 @@
           },
           "modifications": [
             {
-              "type": "SetLandSubtype",
+              "type": "LandSubtype",
               "value": {
-                "type": "Plains"
+                "mode": {
+                  "type": "Replace"
+                },
+                "subtype": {
+                  "type": "Plains"
+                }
               }
             }
           ]
