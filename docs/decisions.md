@@ -595,11 +595,11 @@ Entries are ordered by the first rule each cites.
   of 2026-08-07.
 - **Decision**: Only a word the keyword is WRITTEN with: a payload rule 702
   states as a variable, such as landwalk's "[type]", cycling's "[type]",
-  protection's and hexproof's quality, champion's object. Those are rewritten
-  at layer 3 in the keyword itself, except gift's creature type ("Gift a
-  tapped Fish"), which the keyword cannot yet hold (gap #5457). What the rule writes for itself is
-  untouched, so an evolved Ministrant of Obligation still leaves Spirits and a
-  Sleighted Dalkovan Packbeasts still makes red Warriors.
+  protection's and hexproof's quality, champion's object, gift's creature type
+  ("Gift a tapped Fish"). Those are rewritten at layer 3 in the keyword
+  itself. What the rule writes for itself is untouched, so an evolved
+  Ministrant of Obligation still leaves Spirits and a Sleighted Dalkovan
+  Packbeasts still makes red Warriors.
 - **Rejected**: Rewriting the whole ability as it is minted, the earlier
   reading: CR 612.1 reaches "words or symbols printed on that object", and
   CR 207.2 gives reminder text no game function, so the rule's own words are
@@ -608,8 +608,11 @@ Entries are ordered by the first rule each cites.
   `Parun.Engine.Count.abilitiesOf`, which mint without a swap; proved by the
   scenarios "CR 207.2a / 612.2 a Sleight of Mind on Dalkovan Packbeasts
   leaves its mobilized Warriors red" and "CR 207.2a / 612.2 an evolved
-  Ministrant of Obligation still leaves Spirits".
-- **Issue**: #4819.
+  Ministrant of Obligation still leaves Spirits". Gift's word is
+  `Parun.Engine.Filter.rewriteKeyword`'s, proved by `Parun.CounterspellSpec`'s
+  "CR 612.2a an Evolution swapping Fish for Elf on a promised Into the Flood
+  Maw gives bob a tapped 1/1 blue Elf Token".
+- **Issue**: #4819, #5457.
 
 ## Which timestamp the suspected designation's abilities have
 

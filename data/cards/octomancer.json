@@ -5,7 +5,10 @@
         {
           "type": "Gift",
           "value": {
-            "type": "Octopus"
+            "type": "Octopus",
+            "value": {
+              "type": "Octopus"
+            }
           }
         }
       ],
