@@ -59,6 +59,7 @@ import qualified Parun.Types.PileDraw as PileDraw
 import qualified Parun.Types.PlayerChoice as PlayerChoice
 import Parun.Types.PlayerEffect (PlayerEffect)
 import Parun.Types.PlayerId (PlayerId)
+import qualified Parun.Types.PlayerRef as PlayerRef
 import qualified Parun.Types.PlayerRelation as PlayerRelation
 import qualified Parun.Types.Pool as Pool
 import qualified Parun.Types.ProjectedCharacteristics as PC
@@ -74,7 +75,6 @@ import Parun.Types.SlotName (SlotName)
 import qualified Parun.Types.SlotName as SlotName
 import qualified Parun.Types.SlotPerPlayer as SlotPerPlayer
 import qualified Parun.Types.StackObjectKind as StackObjectKind
-import qualified Parun.Types.TargetChooser as TargetChooser
 import qualified Parun.Types.TargetCount as TargetCount
 import Parun.Types.TargetSlot (TargetSlot)
 import qualified Parun.Types.TargetSlot as TargetSlot
@@ -1745,38 +1745,30 @@ chooseTargets reader pid oid source seed x slots sets = do
 -- CR 115.1 with CR 601.2c: which seat announces the slots a chooser names.
 --
 -- Nothing on the slot is the rule's default and asks nobody -- the controller
--- announces. A relation admitting SEVERAL seats is a choice the CONTROLLER makes,
--- CR 801.5a's example being the rule text that says so ("choosing Rob as the
--- opponent who picks the other target"); one seat is elided, and none leaves the
--- slots unanswered.
+-- announces. Any other PlayerRef is read by Players.named, off `seed` -- the
+-- bindings the announcement already holds, which for a triggered ability are
+-- CR 603.2's event bindings (Curse of Inertia's "that attacking player") -- with
+-- CR 608.2h's last-known controller (Necrotic Plague's "its controller", the
+-- creature that died). SEVERAL seats are a choice the CONTROLLER makes, CR
+-- 801.5a's example being the rule text that says so ("choosing Rob as the
+-- opponent who picks the other target"); one seat is elided, and none leaves
+-- the slots unanswered.
 --
--- A SLOT names its seat outright, off `seed` -- the bindings the announcement
--- already holds, which for a triggered ability are CR 603.2's event bindings
--- (Curse of Inertia's "that attacking player"), or the controller of the object
--- one holds, by CR 608.2h's last-known information (Necrotic Plague's creature
--- that died). Nobody is asked which seat: the card has said. A slot naming no
--- player, or no object with a controller, or a seat no longer reachable, leaves
--- the slots unanswered as an empty relation does.
---
--- The relation's offer is Players.chooserOffer and the ask Players.chooseOne,
--- so a seat that has left (CR 104.3a) neither chooses nor is counted towards
--- eliding the question, and one outside the controller's range (CR 801.5a)
--- chooses only where nobody in the relation is in range (CR 801.5c). A slot's
--- seat is cut by Plane.rangePerspective of `source` (CR 113.7's, not the stack
--- object `oid`), so a planar source's reaches the whole table (CR 801.18);
--- unobserved until Grand Ossuary is in the pool (see #5201).
-chooserOf :: PlayerId -> ObjectId -> ObjectId -> Map SlotName Binding.Type.Binding -> Maybe TargetChooser.TargetChooser -> Game (Maybe PlayerId)
-chooserOf controller oid source seed chooser = case chooser of
-  Nothing -> pure (Just controller)
-  Just (TargetChooser.InSlot slot) -> do
-    gs <- State.get
-    pure (List.find (`List.elem` Players.table (Plane.rangePerspective source controller gs) gs) (Map.lookup slot (Binding.playerSlots seed)))
-  Just (TargetChooser.ControllerOfBound slot) -> do
-    gs <- State.get
-    pure (List.find (`List.elem` Players.table (Plane.rangePerspective source controller gs) gs) (Map.lookup slot (Binding.objectSlots seed) >>= (`Projection.controllerWithLastKnown` gs)))
-  Just (TargetChooser.Relative r) -> do
-    gs <- State.get
-    Players.chooseOne controller oid Nothing (Players.chooserOffer controller gs r)
+-- A relation's offer is Players.chooserOffer rather than Players.named, for CR
+-- 801.5c alone: a seat outside the controller's range (CR 801.5a) chooses only
+-- where nobody in the relation is in range. Either way a seat that has left (CR
+-- 104.3a) neither chooses nor is counted towards eliding the question. The
+-- range is Plane.rangePerspective of `source` (CR 113.7's, not the stack object
+-- `oid`), so a planar source's reaches the whole table (CR 801.18); unobserved
+-- until Grand Ossuary is in the pool (see #5201).
+chooserOf :: PlayerId -> ObjectId -> ObjectId -> Map SlotName Binding.Type.Binding -> Maybe PlayerRef.PlayerRef -> Game (Maybe PlayerId)
+chooserOf controller oid source seed chooser = do
+  gs <- State.get
+  let given = Players.resolution (`Projection.controllerWithLastKnown` gs) (`Game.ownerWithLastKnown` gs) (`Game.acquisitionOf` gs) (Binding.targetsOf seed) (Plane.rangePerspective source controller gs) controller gs
+  case chooser of
+    Nothing -> pure (Just controller)
+    Just (PlayerRef.Relative r) -> Players.chooseOne controller oid Nothing (Players.chooserOffer controller gs r)
+    Just ref -> Players.chooseOne controller oid Nothing (Maybe.fromMaybe [] (Players.named given gs ref))
 
 -- CR 601.2c's two announcements over ONE chooser's slots, in the rule's own
 -- order: how many targets each variable slot gets, then the targets themselves.

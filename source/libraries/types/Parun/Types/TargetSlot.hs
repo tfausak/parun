@@ -3,13 +3,13 @@ module Parun.Types.TargetSlot where
 import qualified Numeric.Natural as Natural
 import qualified Parun.Types.Filter as Filter
 import qualified Parun.Types.Keyword as Keyword
+import qualified Parun.Types.PlayerRef as PlayerRef
 import qualified Parun.Types.PlayerRelation as PlayerRelation
 import qualified Parun.Types.Pool as Pool
 import qualified Parun.Types.Quantity as Quantity
 import qualified Parun.Types.SlotCount as SlotCount
 import qualified Parun.Types.SlotName as SlotName
 import qualified Parun.Types.SlotPerPlayer as SlotPerPlayer
-import qualified Parun.Types.TargetChooser as TargetChooser
 import qualified Parun.Types.TargetCount as TargetCount
 import qualified Parun.Types.Together as Together
 
@@ -106,7 +106,7 @@ data TargetSlot = MkTargetSlot
     -- Whose choice it is does NOT move CR 109.5's "you". Legality is still judged
     -- from the ability's controller -- hexproof asks who controls the ability (CR
     -- 702.11b), not who points it -- so only the prompt's seat changes.
-    chooser :: Maybe TargetChooser.TargetChooser,
+    chooser :: Maybe PlayerRef.PlayerRef,
     -- | CR 601.2c: "for each opponent, ... target ... that player controls" --
     -- the slot announced once per player, each copy with its own "that player"
     -- (Parun.Engine.Target.announcedSlots). Nothing is one ordinary slot.
@@ -154,7 +154,7 @@ withAmount q slot = slot {amount = Just q}
 -- the ability's controller. Separate from the four builders above so that the
 -- slots the controller chooses, which is almost every slot, stay spelled as they
 -- were.
-chosenBy :: TargetChooser.TargetChooser -> TargetSlot -> TargetSlot
+chosenBy :: PlayerRef.PlayerRef -> TargetSlot -> TargetSlot
 chosenBy who slot = slot {chooser = Just who}
 
 -- CR 601.2c's "for each opponent": the same slot announced once per player the

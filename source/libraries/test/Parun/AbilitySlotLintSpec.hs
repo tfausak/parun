@@ -132,7 +132,6 @@ import qualified Parun.Types.SpecialAction as SpecialAction
 import qualified Parun.Types.StaticAbility as StaticAbility
 import qualified Parun.Types.StepBegins as StepBegins
 import qualified Parun.Types.Tap as Tap
-import qualified Parun.Types.TargetChooser as TargetChooser
 import qualified Parun.Types.TargetSlot as TargetSlot
 import qualified Parun.Types.TopOfLibrary as TopOfLibrary
 import qualified Parun.Types.TriggerCondition as TriggerCondition
@@ -1030,7 +1029,7 @@ abilitySlotLintSpec s registry = Spec.describe s "Lint" $ do
         chosen =
           Mode.MkMode
             (Seq.singleton (Mint.mandatory (Seq.singleton (Effect.Tap (Tap.plain (ObjectRef.InSlot target))))))
-            (Map.singleton target (TargetSlot.chosenBy (TargetChooser.InSlot Binding.triggerPlayer) (TargetSlot.required Pool.Permanents Nothing)))
+            (Map.singleton target (TargetSlot.chosenBy (PlayerRef.InSlot Binding.triggerPlayer) (TargetSlot.required Pool.Permanents Nothing)))
     Spec.assertBool
       s
       (triggeredAbilityOffends (modalTrigger TriggerCondition.SelfEnters [chosen]))
