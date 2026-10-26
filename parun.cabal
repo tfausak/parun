@@ -3137,12 +3137,16 @@ library uri
 executable parun
   import: executable
   build-depends: parun:executable
+  -- -N lets tasty run `parun test` on every core; the benchmark keeps the RTS
+  -- defaults, since tasty-bench must not run concurrently.
+  ghc-options: "-with-rtsopts=-N -A64m"
   hs-source-dirs: source/executable
   main-is: Main.hs
 
 test-suite parun-test-suite
   import: executable
   build-depends: parun:test
+  ghc-options: "-with-rtsopts=-N -A64m"
   hs-source-dirs: source/test-suite
   main-is: Main.hs
   type: exitcode-stdio-1.0
