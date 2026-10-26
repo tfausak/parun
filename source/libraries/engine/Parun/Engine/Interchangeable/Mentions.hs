@@ -163,6 +163,7 @@ import qualified Parun.Types.DamageR as DamageR
 import qualified Parun.Types.DamageRewrite as DamageRewrite
 import qualified Parun.Types.DealDamage as DealDamage
 import qualified Parun.Types.DealsDamageToPlayer as DealsDamageToPlayer
+import qualified Parun.Types.DealtDamage as DealtDamage
 import qualified Parun.Types.DelayedTrigger as DelayedTrigger
 import qualified Parun.Types.Designate as Designate
 import qualified Parun.Types.Destroy as Destroy
@@ -319,7 +320,6 @@ import qualified Parun.Types.PlayerQuantity as PlayerQuantity
 import qualified Parun.Types.PlayerRef as PlayerRef
 import qualified Parun.Types.PlayerSacrifices as PlayerSacrifices
 import qualified Parun.Types.PlayerStaticAbility as PlayerStaticAbility
-import qualified Parun.Types.PlayersDealtDamage as PlayersDealtDamage
 import qualified Parun.Types.PlayersWho as PlayersWho
 import qualified Parun.Types.PlaysLand as PlaysLand
 import qualified Parun.Types.PlotFromZone as PlotFromZone
@@ -2577,7 +2577,7 @@ quantityNames asking x = case x of
   Quantity.CardsDrawnThisTurn playerRef -> playerRefNames asking playerRef
   Quantity.BendingsThisTurn playerRef -> history asking HistoryRead.Bendings <> playerRefNames asking playerRef
   Quantity.LifeGainedThisTurn playerRef -> history asking HistoryRead.LifeGains <> playerRefNames asking playerRef
-  Quantity.PlayersDealtDamageThisTurn tally -> history asking HistoryRead.Damage <> playerRefNames asking (PlayersDealtDamage.player tally)
+  Quantity.PlayersDealtDamageThisTurn tally -> history asking HistoryRead.Damage <> playerRefNames asking (DealtDamage.player tally)
   Quantity.DamageDealtToPlayersThisTurn playerRef -> history asking HistoryRead.Damage <> playerRefNames asking playerRef
   Quantity.DamageDealtToThisTurn -> history asking HistoryRead.Damage
   Quantity.SpellsCastLastTurn playerRef -> playerRefNames asking playerRef

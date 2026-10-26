@@ -251,6 +251,7 @@ import qualified Parun.Codec.DamagedPartySpec
 import qualified Parun.Codec.DaytimeSpec
 import qualified Parun.Codec.DealDamageSpec
 import qualified Parun.Codec.DealsDamageToPlayerSpec
+import qualified Parun.Codec.DealtDamageSpec
 import qualified Parun.Codec.DealtDamageToSpec
 import qualified Parun.Codec.DeciderSpec
 import qualified Parun.Codec.DefendersAreSpec
@@ -543,7 +544,6 @@ import qualified Parun.Codec.PlayerScopeSpec
 import qualified Parun.Codec.PlayerSpec
 import qualified Parun.Codec.PlayerStaticAbilitySpec
 import qualified Parun.Codec.PlayerViewSpec
-import qualified Parun.Codec.PlayersDealtDamageSpec
 import qualified Parun.Codec.PlayersWhoSpec
 import qualified Parun.Codec.PlaysLandSpec
 import qualified Parun.Codec.PlotFromZoneSpec
@@ -1451,7 +1451,7 @@ spec s registry = do
   Parun.Codec.PlayerCountersAreSpec.spec s
   Parun.Codec.PlayerCountersSpec.spec s
   Parun.Codec.PlayerCounterTallySpec.spec s
-  Parun.Codec.PlayersDealtDamageSpec.spec s
+  Parun.Codec.DealtDamageSpec.spec s
   Parun.Codec.PlayersWhoSpec.spec s
   Parun.Codec.SuperlativeSpec.spec s
   Parun.Codec.PlayerDesignationSpec.spec s

@@ -8,6 +8,7 @@ import qualified Parun.Codec.CastFrom as CastFrom
 import qualified Parun.Codec.CompletedDungeon as CompletedDungeon
 import qualified Parun.Codec.Count as Count
 import qualified Parun.Codec.CounterKind as CounterKind
+import qualified Parun.Codec.DealtDamage as DealtDamage
 import qualified Parun.Codec.Designation as Designation
 import qualified Parun.Codec.Devotion as Devotion
 import qualified Parun.Codec.InZone as InZone
@@ -19,7 +20,6 @@ import qualified Parun.Codec.Measure as Measure
 import qualified Parun.Codec.PlayerCounterTally as PlayerCounterTally
 import qualified Parun.Codec.PlayerDesignationTally as PlayerDesignationTally
 import qualified Parun.Codec.PlayerRef as PlayerRef
-import qualified Parun.Codec.PlayersDealtDamage as PlayersDealtDamage
 import qualified Parun.Codec.Plus as Plus
 import qualified Parun.Codec.ProductionTag as ProductionTag
 import qualified Parun.Codec.Quotient as Quotient
@@ -168,7 +168,7 @@ codec =
       -- CR 120.1's damage: a PlayerRef and, for CR 510.2's combat damage alone,
       -- a kind. The threshold that turns the count into "an opponent was dealt
       -- damage" is the Comparison's, not this arm's.
-      Arm.payload "PlayersDealtDamageThisTurn" PlayersDealtDamage.codec Quantity.PlayersDealtDamageThisTurn (\x -> case x of Quantity.PlayersDealtDamageThisTurn y -> Just y; _ -> Nothing),
+      Arm.payload "PlayersDealtDamageThisTurn" (DealtDamage.codec PlayerRef.codec) Quantity.PlayersDealtDamageThisTurn (\x -> case x of Quantity.PlayersDealtDamageThisTurn y -> Just y; _ -> Nothing),
       -- CR 120.1's damage as a TOTAL: the reference is all this arm carries, and
       -- rule 702.54b's "your
       -- opponents" is that reference rather than anything here.

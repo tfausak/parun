@@ -65,6 +65,7 @@ import qualified Parun.Types.DamageEvent as DamageEvent
 import qualified Parun.Types.DamageKind as DamageKind
 import qualified Parun.Types.DamagePrevented as DamagePrevented
 import qualified Parun.Types.DealsDamageToPlayer as DealsDamageToPlayer
+import qualified Parun.Types.DealtDamage as DealtDamage
 import qualified Parun.Types.Designation as Designation
 import qualified Parun.Types.DieResult as DieResult
 import qualified Parun.Types.DiscardCause as DiscardCause
@@ -113,7 +114,6 @@ import qualified Parun.Types.PlayerAttacksPlayer as PlayerAttacksPlayer
 import qualified Parun.Types.PlayerAttacksWith as PlayerAttacksWith
 import qualified Parun.Types.PlayerDrawsNthCard as PlayerDrawsNthCard
 import Parun.Types.PlayerId (PlayerId)
-import qualified Parun.Types.PlayerIsDealtDamage as PlayerIsDealtDamage
 import qualified Parun.Types.PlayerRelation as PlayerRelation
 import qualified Parun.Types.PlaysLand as PlaysLand
 import qualified Parun.Types.ProjectedCharacteristics as PC
@@ -1115,8 +1115,8 @@ matchesTriggerGiven bindings board gs bearer you cond event = case cond of
   -- not CR 510.2's, which DamageEvent.kind already records.
   TriggerCondition.PlayerIsDealtDamage dealt -> case event of
     GameEvent.DamageDealt ev ->
-      all (== DamageEvent.kind ev) (PlayerIsDealtDamage.kind dealt)
-        && maybe False (PlayerRelation.holds (Game.teams gs) (PlayerIsDealtDamage.player dealt) you) (Recipient.playerOf (DamageEvent.target ev))
+      all (== DamageEvent.kind ev) (DealtDamage.kind dealt)
+        && maybe False (PlayerRelation.holds (Game.teams gs) (DealtDamage.player dealt) you) (Recipient.playerOf (DamageEvent.target ev))
     GameEvent.Moved {} -> False
     GameEvent.StepBegan {} -> False
     GameEvent.SpellCast {} -> False
