@@ -1,0 +1,28 @@
+{
+  "description": "CR 702.113a / 205.1b Part the Waterveil awakens Dryad Arbor, which stays a Forest Dryad as it becomes an Elemental",
+  "note": "\"It's still a land\" retains every prior subtype (CR 205.1b), so the Arbor keeps its Dryad creature type beside Elemental; setting the creature type instead would leave a Forest Elemental.",
+  "board": {
+    "seats": [
+      {
+        "name": "alice",
+        "manaPool": "UUUUUUUUU",
+        "battlefield": [{ "card": "Dryad Arbor", "label": "arbor" }],
+        "hand": [{ "card": "Part the Waterveil", "label": "waterveil" }],
+        "library": [{ "card": "Island" }, { "card": "Island" }, { "card": "Island" }]
+      },
+      {
+        "name": "bob",
+        "library": [{ "card": "Island" }, { "card": "Island" }, { "card": "Island" }]
+      }
+    ],
+    "active": "alice",
+    "step": "PrecombatMain"
+  },
+  "timeline": [
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "do": { "Cast": { "object": "$waterveil", "targets": ["$arbor"], "cost": [{ "type": "Generic", "value": 6 }, { "type": "OfType", "value": { "type": "Colored", "value": { "type": "Blue" } } }, { "type": "OfType", "value": { "type": "Colored", "value": { "type": "Blue" } } }, { "type": "OfType", "value": { "type": "Colored", "value": { "type": "Blue" } } }] } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "do": "Pass" },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "check": { "Subtypes": { "object": "$arbor", "subtypes": ["Forest", "Dryad", "Elemental"] } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "check": { "Types": { "object": "$arbor", "types": ["Creature", "Land"] } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "check": { "PowerToughness": { "object": "$arbor", "power": 6, "toughness": 6 } } }
+  ]
+}
