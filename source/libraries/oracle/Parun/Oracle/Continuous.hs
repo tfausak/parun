@@ -170,8 +170,10 @@ blockedBy context f = case f of
   Filter.Type.Not g -> fmap (Text.pack " except by " <>) (creatures g)
   _ -> fmap (Text.pack " by " <>) (creatures f)
   where
+    -- A creature type names them alone, "by Walls", the first of
+    -- 'Target.creature''s forms.
     creatures g = do
-      p <- Filter.phrase g (Target.keyword context) >>= Target.creature
+      p <- Filter.phrase g (Target.keyword context) >>= take 1 . Target.creature
       Filter.describe Filter.Plural Target.permanent p
 
 -- | The keyword the modification grants, or with False the one it takes away,
@@ -237,8 +239,8 @@ static context attached enchants a
               let opened = if Text.isPrefixOf (Target.self context) stated then stated else Prose.decapitalise stated
               -- Free: the condition opens the sentence (Excavating Anurid) or
               -- closes it (Kird Ape), and your turn opens it "During your
-              -- turn" (Forge Anew) or "As long as it's your turn" (Faithful
-              -- Pikemaster, not in the pool).
+              -- turn" (Blood Burglar) or "As long as it's your turn" (Faithful
+              -- Pikemaster).
               let openings = [Text.pack "As long as " <> words' <> Text.pack ", "] <> [Text.pack "During your turn, " | words' == Text.pack "it's your turn"]
               [word <> opening <> opened <> Text.pack "." | opening <- openings] <> [word <> Prose.sentence (full <> Text.pack " as long as " <> after)]
   | otherwise = []
@@ -247,9 +249,8 @@ static context attached enchants a
 -- change to power and toughness and a "can't be blocked" of the objects it
 -- affects read as one ability: "Enchanted creature gets +1/+1 and can't be
 -- blocked except by creatures with flying." (Treetop Bracers). The rest, and
--- the wordings of the one read together. One granting keywords reads either
--- way, or as two sentences: Oracle text puts the keyword after the
--- restriction (Whispersilk Cloak) or before it (Cloak of Invisibility).
+-- the wordings of the one read together. One granting keywords puts them
+-- after the restriction (Whispersilk Cloak).
 evasive :: Target.Context -> Maybe Text.Text -> [TargetSlot.TargetSlot] -> [StaticAbility.StaticAbility Ability] -> [CombatRestriction.CombatRestriction] -> ([StaticAbility.StaticAbility Ability], [CombatRestriction.CombatRestriction], [[Text.Text]])
 evasive context attached enchants statics rs =
   case [(s, r, ws) | s <- statics, r@(CombatRestriction.CantBeBlockedBy (CantBeBlockedBy.MkCantBeBlockedBy a b Nothing Nothing)) <- rs, let ws = together s a b, not (null ws)] of
@@ -266,8 +267,7 @@ evasive context attached enchants statics rs =
       by <- blockedBy context b
       let before = Prose.sentence (Target.wording subject <> Text.pack " " <> verb <> Text.pack " and can't be blocked" <> by)
           after = Prose.sentence (Target.wording subject <> Text.pack " can't be blocked" <> by <> Text.pack " and " <> verb)
-          apart = Prose.sentence (Target.wording subject <> Text.pack " " <> verb) <> Text.pack "\n" <> Prose.sentence (Target.wording subject <> Text.pack " can't be blocked" <> by)
-      if any (Maybe.isJust . keywordOf) (StaticAbility.modifications s) then [after, before, apart] else [before]
+      if any (Maybe.isJust . keywordOf) (StaticAbility.modifications s) then [after] else [before]
 
 -- | A characteristic-defining ability (CR 604.3) giving the power or
 -- toughness the face prints as a star (CR 208.2): "Nightmare's power and
