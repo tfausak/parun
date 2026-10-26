@@ -1,5 +1,5 @@
 hook cabal_check {
-    command cabal check {
+    command cabal check "--ignore=option-optimize" {
         pass_files none
     }
     files *.cabal

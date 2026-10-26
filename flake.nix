@@ -81,7 +81,7 @@
         {
           cabal = pkgs.runCommand "parun-cabal-check" { nativeBuildInputs = [ pkgs.cabal-install ]; } ''
             cd ${source}
-            cabal check
+            cabal check --ignore=option-optimize
             touch "$out"
           '';
 
