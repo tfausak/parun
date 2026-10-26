@@ -976,11 +976,14 @@ announceOptionalCosts modes spending pid sid candidates offers gs =
 -- A write of a field no layer computes, and one direction only: rule 702.33d gives
 -- no way to unkick a spell, and CR 400.7 ends the designation with the incarnation
 -- (Object.newIncarnation), so nothing has to clear it.
+--
+-- Filed under Keyword.paymentKey, so a later CR 612 text change of the keyword's
+-- word does not lose the payment.
 stampPaidCosts :: Map.Map Keyword (Map.Map KeywordInstance.KeywordInstance Natural) -> ObjectId -> GameState -> GameState
 stampPaidCosts paid sid gs =
   gs
     { GameState.objects =
-        Map.adjust (\o -> o {Object.paidCosts = paid}) sid (GameState.objects gs)
+        Map.adjust (\o -> o {Object.paidCosts = Map.mapKeysWith Map.union Keyword.paymentKey paid}) sid (GameState.objects gs)
     }
 
 -- CR 702.47c: the printings whose rules text the spell gains, in the order CR

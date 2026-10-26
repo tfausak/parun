@@ -53,6 +53,7 @@ import qualified Parun.Types.ForetellCost as ForetellCost
 import qualified Parun.Types.GameSettings as GameSettings
 import Parun.Types.GameState (GameState)
 import qualified Parun.Types.GameState as GameState
+import qualified Parun.Types.Gift as Gift
 import qualified Parun.Types.Holder as Holder
 import qualified Parun.Types.Impending as Impending
 import qualified Parun.Types.Keyword as Keyword.Type
@@ -3022,10 +3023,13 @@ rewriteKeyword pairs keyword = case keyword of
   Keyword.Type.Ravenous -> keyword
   Keyword.Type.Squad cost -> Keyword.Type.Squad (rewriteCost pairs cost)
   Keyword.Type.Offspring cost -> Keyword.Type.Offspring (rewriteCost pairs cost)
-  -- Not implemented: "a tapped Fish" and "an Octopus" print a creature type a
-  -- CR 612.2 text change should swap, and Gift.Gift has nowhere to hold the new
-  -- word (#5457).
-  Keyword.Type.Gift _ -> keyword
+  -- CR 612.2a: "a tapped Fish" and "an Octopus" print a creature type that names
+  -- the token the gift makes, so the swap reaches it.
+  Keyword.Type.Gift (Gift.TappedFish subtype) -> Keyword.Type.Gift (Gift.TappedFish (TextWord.subtypeAfter pairs subtype))
+  Keyword.Type.Gift (Gift.Octopus subtype) -> Keyword.Type.Gift (Gift.Octopus (TextWord.subtypeAfter pairs subtype))
+  Keyword.Type.Gift Gift.Card -> keyword
+  Keyword.Type.Gift Gift.Food -> keyword
+  Keyword.Type.Gift Gift.Treasure -> keyword
   -- CR 702.143a states a cost too, so it is reached the same way. A cost read
   -- off the card's own mana cost prints no word to swap.
   Keyword.Type.Foretell (ForetellCost.Stated cost) -> Keyword.Type.Foretell (ForetellCost.Stated (rewriteCost pairs cost))

@@ -14,6 +14,7 @@ import qualified Parun.Engine.Binding as Binding
 import qualified Parun.Engine.Deploy as Deploy
 import qualified Parun.Engine.Earthbend as Earthbend
 import qualified Parun.Engine.Mint as Mint
+import qualified Parun.Engine.Subtype as Subtype.Engine
 import qualified Parun.Extra.Natural as Natural
 import Parun.Types.AbilityName (AbilityName)
 import qualified Parun.Types.AbilityName as AbilityName
@@ -5778,7 +5779,7 @@ functionsOnBattlefield keyword = case keyword of
 designates :: KeywordDesignator.KeywordDesignator Keyword -> Keyword -> Bool
 designates designator keyword = case designator of
   KeywordDesignator.OfFamily family -> familyOf keyword == Just family
-  KeywordDesignator.OfKeyword whole -> whole == keyword
+  KeywordDesignator.OfKeyword whole -> paymentKey whole == paymentKey keyword
   -- The family, less the sticker kicker the Kicker family holds but CR 702.33e
   -- does not link (CR 702.33h, Wicker Picker's ruling); Parun.StickerSpec's
   -- Faerie Squadron case proves it. Which instances are the object's own is
@@ -5786,7 +5787,7 @@ designates designator keyword = case designator of
   KeywordDesignator.Printed family -> case keyword of
     Keyword.StickerKicker _ -> False
     _ -> familyOf keyword == Just family
-  KeywordDesignator.OfInstance whole _ -> whole == keyword
+  KeywordDesignator.OfInstance whole _ -> paymentKey whole == paymentKey keyword
 
 -- | CR 601.2b: how many times the costs of the keywords a designator names were
 -- declared, summed over a paidCosts record -- Quantity.TimesPaid's count, and
@@ -5799,7 +5800,7 @@ designates designator keyword = case designator of
 timesPaid :: KeywordDesignator.KeywordDesignator Keyword -> Map Keyword (Map KeywordInstance.KeywordInstance Natural) -> Natural
 timesPaid designator paid = case designator of
   KeywordDesignator.OfInstance keyword ordinal ->
-    Maybe.fromMaybe 0 (Seq.lookup (Natural.toIntSaturating ordinal - 1) . Seq.fromList . Map.elems =<< Map.lookup keyword paid)
+    Maybe.fromMaybe 0 (Seq.lookup (Natural.toIntSaturating ordinal - 1) . Seq.fromList . Map.elems =<< Map.lookup (paymentKey keyword) paid)
   KeywordDesignator.Printed _ -> sum (fmap (sum . Map.filterWithKey (\which _ -> isOwn which)) (named paid))
   _ -> sum (fmap sum (named paid))
   where
@@ -7303,11 +7304,11 @@ gift something ordinal =
 -- player" reads (PlayerChoice.Promised).
 giftEffect :: Gift.Gift -> KeywordInstance.KeywordInstance -> Effect.Effect Card (GrantedAbility.GrantedAbility Card)
 giftEffect something instance_ =
-  let chosen = PlayerRef.ChosenPlayerOfBound Binding.triggerSource (PlayerChoice.Promised something instance_)
+  let chosen = PlayerRef.ChosenPlayerOfBound Binding.triggerSource (PlayerChoice.Promised (printedGift something) instance_)
    in case something of
         Gift.Card -> Effect.Draw Draw.MkDraw {Draw.player = chosen, Draw.quantity = Quantity.Literal 1, Draw.slot = Nothing}
-        Gift.TappedFish -> giftToken chosen TapState.Tapped fishToken
-        Gift.Octopus -> giftToken chosen TapState.Untapped octopusToken
+        Gift.TappedFish subtype -> giftToken chosen TapState.Tapped (blueCreatureToken subtype 1 1)
+        Gift.Octopus subtype -> giftToken chosen TapState.Untapped (blueCreatureToken subtype 8 8)
         Gift.Food -> giftToken chosen TapState.Untapped foodToken
         Gift.Treasure -> giftToken chosen TapState.Untapped treasureToken
 
@@ -7328,14 +7329,35 @@ giftToken chosen tapped token =
         Create.creator = chosen
       }
 
--- | CR 702.174f's token: 1\/1 blue Fish creature. Rule 702.174f's "tapped" is a
--- rider on the CREATION and not text on the token, so it rides EntryRiders.
-fishToken :: Card
-fishToken = creatureToken (Text.pack "Fish Token") (Set.singleton Subtype.Fish) (Set.singleton Color.Blue) 1 1
+-- | CR 702.174f's 1\/1 and CR 702.174i's 8\/8 blue creature token of this type,
+-- named for it (CR 111.4), which is what a CR 612.2a text change of the gift's
+-- word reaches. Rule 702.174f's "tapped" is a rider on the CREATION and not text
+-- on the token, so it rides EntryRiders.
+blueCreatureToken :: Subtype.Subtype -> Integer -> Integer -> Card
+blueCreatureToken subtype =
+  let name = Text.unwords (Maybe.maybeToList (Subtype.Engine.creatureTypeWord subtype) <> [Text.pack "Token"])
+   in creatureToken name (Set.singleton subtype) (Set.singleton Color.Blue)
 
--- | CR 702.174i's token: 8\/8 blue Octopus creature.
-octopusToken :: Card
-octopusToken = creatureToken (Text.pack "Octopus Token") (Set.singleton Subtype.Octopus) (Set.singleton Color.Blue) 8 8
+-- | CR 702.174f and 702.174i as printed: the gift with the creature type its
+-- rule names, whatever CR 612.2a text change has since replaced it. A text
+-- change leaves the gift the SAME ability (CR 612.1), so this is the key its
+-- payment (Object.paidCosts) and its promise (PlayerChoice.Promised) are filed
+-- and read under; paymentKey below is the same erasure over a whole keyword.
+printedGift :: Gift.Gift -> Gift.Gift
+printedGift something = case something of
+  Gift.TappedFish _ -> Gift.TappedFish Subtype.Fish
+  Gift.Octopus _ -> Gift.Octopus Subtype.Octopus
+  Gift.Card -> something
+  Gift.Food -> something
+  Gift.Treasure -> something
+
+-- | The key a keyword's CR 601.2b payment is filed under in Object.paidCosts:
+-- the keyword with any word a CR 612 text change can swap put back as printed,
+-- so a spell whose text changed after its costs were paid still finds them.
+paymentKey :: Keyword -> Keyword
+paymentKey keyword = case keyword of
+  Keyword.Gift something -> Keyword.Gift (printedGift something)
+  _ -> keyword
 
 -- The ability CR 702.157a and CR 702.175a share: when this enters, if the
 -- additional cost that keyword offers was paid (CR 601.2b), create `quantity`

@@ -6382,10 +6382,12 @@ chooseManaYield pid oid candidates gs = case candidates of
 -- payment (a CR 601.2g mana ability sacrificing it) moves no other instance's
 -- payment; the scenario
 -- cr-601-2f-the-altar-eats-the-first-host-mid-payment-and-carol-still-gets-the-second-s-gift
--- proves it.
+-- proves it. The gift is put back as printed (Keyword.printedGift), the key
+-- Parun.Engine.Cast files the payment under.
 nextPromise :: ObjectId -> Gift.Gift -> GameState -> PlayerChoice.PlayerChoice
-nextPromise oid gift gs =
-  let keyword = Keyword.Type.Gift gift
+nextPromise oid printed gs =
+  let gift = Keyword.printedGift printed
+      keyword = Keyword.Type.Gift gift
       promised = foldMap Map.keys (Game.currentChoice Chosen.Players oid gs)
       paid = foldMap (Map.findWithDefault Map.empty keyword . Object.paidCosts) (Game.lookupObject oid gs)
       owed = [PlayerChoice.Promised gift which | (which, times) <- Map.toAscList paid, times > 0]

@@ -53,6 +53,7 @@ import qualified Parun.Types.GameEvent as GameEvent
 import qualified Parun.Types.GameState as GameState
 import qualified Parun.Types.GrantedAbility as GrantedAbility
 import qualified Parun.Types.Keyword as Keyword
+import qualified Parun.Types.KickerDecision as KickerDecision
 import qualified Parun.Types.Mode as Mode
 import qualified Parun.Types.ModeIndex as ModeIndex
 import qualified Parun.Types.ModeInstance as ModeInstance
@@ -1036,6 +1037,37 @@ recordingForbidden oid p = case p of
   Prompt.ChooseTargets _ _ _ sets -> pure (fmap (const (Set.singleton (Recipient.ToObject oid))) sets)
   _ -> pure (S.identityAnswer p)
 
+-- Into the Flood Maw cast by alice with its gift promised to bob and aimed at
+-- bob's Sol Ring; optionally an Artificial Evolution at the spell swapping the
+-- named creature types; then the Maw resolves. Returns the tokens and the final
+-- state.
+floodMawChain :: (Monad m) => Spec.Spec m n -> Registry.Registry m -> Maybe (Subtype.Subtype, Subtype.Subtype) -> m ([ObjectId.ObjectId], GameState.GameState)
+floodMawChain s registry swap = do
+  island <- S.printingOf s registry "Island"
+  maw <- S.printingOf s registry "Into the Flood Maw"
+  solRing <- S.printingOf s registry "Sol Ring"
+  artificialEvolution <- S.printingOf s registry "Artificial Evolution"
+  let (ringId, g1) = S.addPermanent solRing S.bob (S.landsInPlay island 2)
+      (mawId, g2) = S.addHandCard maw S.alice g1
+      (evolutionId, g3) = S.addHandCard artificialEvolution S.alice g2
+      promising :: Prompt.Prompt r -> r
+      promising p = case p of
+        Prompt.ChooseKicker {} -> KickerDecision.MkKickerDecision 1
+        Prompt.ChooseTargets _ _ _ sets -> Map.map (Set.filter (`elem` [Recipient.ToCreature ringId, Recipient.ToObject ringId]) . snd) sets
+        _ -> S.identityAnswer p
+      onStack = S.runPure promising g3 (S.cast S.alice mawId)
+      spellId = case GameState.stack onStack of
+        top : _ -> top
+        [] -> ObjectId.MkObjectId 999
+      evolved = case swap of
+        Nothing -> onStack
+        Just (from, to) ->
+          S.runPure (evolveAt spellId from to) onStack $ do
+            S.cast S.alice evolutionId
+            Stack.resolveTop
+      after = S.runPure S.identityAnswer evolved Stack.resolveTop
+  pure (S.tokensOf after, after)
+
 -- The same shape as dragonFodderChain for a synthetic token-minting sorcery
 -- named by `cardName`: cast it, optionally resolve an Artificial Evolution at it
 -- on the stack, then resolve it. Returns the tokens and the final state.
@@ -1538,6 +1570,30 @@ artificialEvolutionSpec s registry = Spec.describe s "ArtificialEvolution" $ do
     Spec.assertEqWith s "one token" (length tokens) 1
     mapM_ (\oid -> Spec.assertEqWith s "named Time Lord Token" (Projection.namesOf oid after) (Set.singleton (CardName.MkCardName (Text.pack "Time Lord Token")))) tokens
     mapM_ (\oid -> Spec.assertEqWith s "Creature -- Time Lord" (Projection.subtypesOf oid after) (Set.singleton Subtype.TimeLord)) tokens
+
+  -- CR 612.2a through a keyword's own word: Into the Flood Maw ({U} Instant,
+  -- "Gift a tapped Fish ... Return target creature an opponent controls to its
+  -- owner's hand. If the gift was promised, instead return target nonland
+  -- permanent an opponent controls to its owner's hand", Scryfall 2026-10-22)
+  -- prints the gift's creature type, so an Evolution at the spell after the
+  -- promise turns bob's Fish into an Elf. The promise and the payment were filed
+  -- under the printed gift (Keyword.paymentKey), so the evolved spell still
+  -- finds them and the gift is still given.
+  --
+  -- The control first, so the pair cannot pass on a chain that minted nothing.
+  Spec.it s "CR 702.174f an unevolved promised Into the Flood Maw gives bob a tapped Fish Token" $ do
+    (tokens, after) <- floodMawChain s registry Nothing
+    Spec.assertEqWith s "one token, bob's" (fmap (`Projection.controllerOf` after) tokens) [Just S.bob]
+    mapM_ (\oid -> Spec.assertEqWith s "Creature -- Fish" (Projection.subtypesOf oid after) (Set.singleton Subtype.Fish)) tokens
+    mapM_ (\oid -> Spec.assertEqWith s "named Fish Token" (Projection.namesOf oid after) (Set.singleton (CardName.MkCardName (Text.pack "Fish Token")))) tokens
+  Spec.it s "CR 612.2a an Evolution swapping Fish for Elf on a promised Into the Flood Maw gives bob a tapped 1/1 blue Elf Token" $ do
+    (tokens, after) <- floodMawChain s registry (Just (Subtype.Fish, Subtype.Elf))
+    Spec.assertEqWith s "one token, bob's" (fmap (`Projection.controllerOf` after) tokens) [Just S.bob]
+    mapM_ (\oid -> Spec.assertEqWith s "Creature -- Elf" (Projection.subtypesOf oid after) (Set.singleton Subtype.Elf)) tokens
+    mapM_ (\oid -> Spec.assertEqWith s "named Elf Token" (Projection.namesOf oid after) (Set.singleton (CardName.MkCardName (Text.pack "Elf Token")))) tokens
+    mapM_ (\oid -> Spec.assertEqWith s "tapped" (fmap Object.tapped (Game.lookupObject oid after)) (Just TapState.Tapped)) tokens
+    mapM_ (\oid -> Spec.assertEqWith s "blue" (Projection.colorsOf oid after) (Set.singleton Color.Blue)) tokens
+    mapM_ (\oid -> Spec.assertEqWith s "1/1" (Projection.powerOf oid after, Projection.toughnessOf oid after) (Just 1, Just 1)) tokens
 
   -- CR 612.3's boundary on afterlife: "any abilities that are granted to an
   -- object can't be modified by text-changing effects that affect that object".

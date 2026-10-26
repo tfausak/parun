@@ -511,7 +511,7 @@ giftOnSpellResolution runSubgame oid controller = do
   let object = Game.lookupObject oid gs
       promised = Maybe.fromMaybe Map.empty (Game.currentChoice Chosen.Players oid gs)
       slots = maybe Map.empty (Binding.targetsOf . Object.bindings) object
-      gifts = [(something, which) | Keyword.Gift something <- Map.keys (Projection.keywordsOf oid gs), which <- Projection.keywordInstances (Keyword.Gift something) oid gs, Map.member (PlayerChoice.Promised something which) promised]
+      gifts = [(something, which) | Keyword.Gift something <- Map.keys (Projection.keywordsOf oid gs), which <- Projection.keywordInstances (Keyword.Gift something) oid gs, Map.member (PlayerChoice.Promised (Keyword.Engine.printedGift something) which) promised]
       give (something, which) = applyEffectWith runSubgame oid oid controller slots slots (Keyword.Engine.giftEffect something which)
   Monad.when (Keyword.Engine.isSpellCard (Projection.cardTypesOf oid gs) && not (null gifts)) $ do
     Monad.forM_ gifts give
