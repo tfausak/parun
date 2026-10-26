@@ -50,8 +50,16 @@
                         "type": "AddMana",
                         "value": {
                           "player": {
-                            "type": "ControllerOfBound",
-                            "value": "thatManaSource"
+                            "type": "HolderOfBound",
+                            "value": {
+                              "holder": {
+                                "type": "Controller"
+                              },
+                              "hop": {
+                                "type": "Itself"
+                              },
+                              "slot": "thatManaSource"
+                            }
                           },
                           "production": {
                             "type": "OfType",
@@ -68,8 +76,16 @@
                         "type": "Draw",
                         "value": {
                           "player": {
-                            "type": "ControllerOfBound",
-                            "value": "thatManaSource"
+                            "type": "HolderOfBound",
+                            "value": {
+                              "holder": {
+                                "type": "Controller"
+                              },
+                              "hop": {
+                                "type": "Itself"
+                              },
+                              "slot": "thatManaSource"
+                            }
                           },
                           "quantity": {
                             "type": "Literal",

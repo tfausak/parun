@@ -64,8 +64,16 @@
                                 "type": "Players",
                                 "value": {
                                   "players": {
-                                    "type": "ControllerOfBound",
-                                    "value": "thatTappedPermanent"
+                                    "type": "HolderOfBound",
+                                    "value": {
+                                      "holder": {
+                                        "type": "Controller"
+                                      },
+                                      "hop": {
+                                        "type": "Itself"
+                                      },
+                                      "slot": "thatTappedPermanent"
+                                    }
                                   }
                                 }
                               }

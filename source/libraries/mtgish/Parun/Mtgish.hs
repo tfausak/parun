@@ -87,6 +87,7 @@ import qualified Parun.Types.Filter as Filter
 import qualified Parun.Types.ForEach as ForEach
 import qualified Parun.Types.GrantedAbility as GrantedAbility
 import qualified Parun.Types.Holder as Holder
+import qualified Parun.Types.Hop as Hop
 import qualified Parun.Types.InZone as InZone
 import qualified Parun.Types.Keyword as Keyword
 import qualified Parun.Types.Layout as Layout
@@ -753,7 +754,7 @@ trigger n = case Node.tag n of
       whose <- Node.argument n
       scope <- case singlePlayer whose of
         -- Soul Bleed's "enchanted creature's controller", off the source slot.
-        Just "HostController" -> Right (TurnScope.PlayersTurn (PlayerRef.ControllerOfHostOfBound Oracle.Target.selfSlot))
+        Just "HostController" -> Right (TurnScope.PlayersTurn (PlayerRef.HolderOfBound Holder.Controller Hop.Host Oracle.Target.selfSlot))
         _ ->
           players whose >>= \relation -> case relation of
             PlayerRelation.You -> Right TurnScope.ControllersTurn
@@ -1417,7 +1418,7 @@ player context value = do
     "ControllerOfPermanent" -> do
       ref <- Node.argument n >>= permanent context
       case ref of
-        ObjectRef.InSlot s | s /= Oracle.Target.selfSlot -> Right (PlayerRef.ControllerOfBound s)
+        ObjectRef.InSlot s | s /= Oracle.Target.selfSlot -> Right (PlayerRef.HolderOfBound Holder.Controller Hop.Itself s)
         _ -> Node.untranslated n
     t
       | Just s <- Map.lookup t (references context) -> Right (PlayerRef.InSlot s)

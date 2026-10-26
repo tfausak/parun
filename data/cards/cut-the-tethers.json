@@ -63,8 +63,16 @@
                           ]
                         },
                         "payer": {
-                          "type": "OwnerOfBound",
-                          "value": "spirit"
+                          "type": "HolderOfBound",
+                          "value": {
+                            "holder": {
+                              "type": "Owner"
+                            },
+                            "hop": {
+                              "type": "Itself"
+                            },
+                            "slot": "spirit"
+                          }
                         }
                       },
                       "ref": {

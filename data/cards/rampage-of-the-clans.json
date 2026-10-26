@@ -93,8 +93,16 @@
                               ]
                             },
                             "creator": {
-                              "type": "ControllerOfBound",
-                              "value": "victim"
+                              "type": "HolderOfBound",
+                              "value": {
+                                "holder": {
+                                  "type": "Controller"
+                                },
+                                "hop": {
+                                  "type": "Itself"
+                                },
+                                "slot": "victim"
+                              }
                             },
                             "quantity": {
                               "type": "Literal",

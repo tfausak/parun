@@ -53,8 +53,16 @@
                             }
                           },
                           "player": {
-                            "type": "ControllerOfBound",
-                            "value": "target"
+                            "type": "HolderOfBound",
+                            "value": {
+                              "holder": {
+                                "type": "Controller"
+                              },
+                              "hop": {
+                                "type": "Itself"
+                              },
+                              "slot": "target"
+                            }
                           }
                         }
                       },
@@ -97,8 +105,16 @@
                   {
                     "type": "Shuffle",
                     "value": {
-                      "type": "ControllerOfBound",
-                      "value": "target"
+                      "type": "HolderOfBound",
+                      "value": {
+                        "holder": {
+                          "type": "Controller"
+                        },
+                        "hop": {
+                          "type": "Itself"
+                        },
+                        "slot": "target"
+                      }
                     }
                   }
                 ]

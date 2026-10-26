@@ -40,8 +40,16 @@
                     "type": "GainLife",
                     "value": {
                       "player": {
-                        "type": "OwnerOfBound",
-                        "value": "creature"
+                        "type": "HolderOfBound",
+                        "value": {
+                          "holder": {
+                            "type": "Owner"
+                          },
+                          "hop": {
+                            "type": "Itself"
+                          },
+                          "slot": "creature"
+                        }
                       },
                       "quantity": {
                         "type": "Literal",

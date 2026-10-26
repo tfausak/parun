@@ -53,8 +53,16 @@
                                   "type": "Players",
                                   "value": {
                                     "players": {
-                                      "type": "ControllerOfBound",
-                                      "value": "thatDamageSource"
+                                      "type": "HolderOfBound",
+                                      "value": {
+                                        "holder": {
+                                          "type": "Controller"
+                                        },
+                                        "hop": {
+                                          "type": "Itself"
+                                        },
+                                        "slot": "thatDamageSource"
+                                      }
                                     }
                                   }
                                 }

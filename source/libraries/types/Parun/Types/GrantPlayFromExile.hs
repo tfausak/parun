@@ -32,7 +32,7 @@ import qualified Parun.Types.TapState as TapState
 -- one opcode over, and takes the same default: CR 109.5's "you", the resolving
 -- controller. Suspend Aggression's "its owner" is the third spelling, and the
 -- one that needs no "you" at all -- CR 108.4a answers the controller of a card
--- already in exile with its owner, so PlayerRef.ControllerOfBound says it.
+-- already in exile with its owner, so PlayerRef.HolderOfBound says it.
 --
 -- ONE seat, since Parun.Types.ExilePlayPermission holds one (CR 715.3d: "that
 -- card ... that player"). So Parun.Engine.Resolve.Effect's arm grants nothing for

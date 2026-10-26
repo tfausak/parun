@@ -101,8 +101,16 @@
                         "type": "AddMana",
                         "value": {
                           "player": {
-                            "type": "ControllerOfBound",
-                            "value": "thatManaSource"
+                            "type": "HolderOfBound",
+                            "value": {
+                              "holder": {
+                                "type": "Controller"
+                              },
+                              "hop": {
+                                "type": "Itself"
+                              },
+                              "slot": "thatManaSource"
+                            }
                           },
                           "production": {
                             "type": "Chosen"

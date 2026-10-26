@@ -830,8 +830,8 @@ yieldUnits option = concatMap unitsOf (Map.elems (ManaOption.yield option))
 --
 -- The context carries NO SOURCE, so a reference reading a slot off the source
 -- object -- EachPlayerExcept, EachOpponentExcept -- names nobody here, and so do
--- the ones naming an OBJECT slot (ControllerOfBound, OwnerOfBound,
--- ChosenPlayerOfBound, Attacking), the injected view being Nothing. CR 605.1a
+-- the ones naming an OBJECT slot (HolderOfBound, ChosenPlayerOfBound, Attacking),
+-- the injected view being Nothing. CR 605.1a
 -- leaves a mana ability no target to have bound one. MTGJSON's dump of
 -- 2026-08-23, activated lines matching "(controller|owner|player|opponent|they)
 -- adds": the mana abilities among them are Spectral Searchlight and Valleymaker

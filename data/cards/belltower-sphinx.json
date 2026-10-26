@@ -49,8 +49,16 @@
                         "type": "Mill",
                         "value": {
                           "player": {
-                            "type": "ControllerOfBound",
-                            "value": "thatDamager"
+                            "type": "HolderOfBound",
+                            "value": {
+                              "holder": {
+                                "type": "Controller"
+                              },
+                              "hop": {
+                                "type": "Itself"
+                              },
+                              "slot": "thatDamager"
+                            }
                           },
                           "quantity": {
                             "type": "InSlot",

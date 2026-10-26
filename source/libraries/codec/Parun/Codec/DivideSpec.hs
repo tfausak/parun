@@ -5,6 +5,8 @@ import qualified Parun.Codec.Divide as Divide
 import qualified Parun.JsonCodec.Common as Common
 import qualified Parun.Spec as Spec
 import qualified Parun.Types.Divide as Divide
+import qualified Parun.Types.Holder as Holder
+import qualified Parun.Types.Hop as Hop
 import qualified Parun.Types.ObjectRef as ObjectRef
 import qualified Parun.Types.PlayerRef as PlayerRef
 import qualified Parun.Types.PlayerRelation as PlayerRelation
@@ -24,6 +26,6 @@ spec s = Spec.describe s "Parun.Codec.Divide" $ do
     Common.assertCodec
       s
       Divide.codec
-      (Divide.MkDivide (Quantity.Literal 3) (ObjectRef.InSlot (slot "wolves")) (PlayerRef.ControllerOfBound (slot "target")) (slot "split"))
-      " {\"quantity\":{\"type\":\"Literal\",\"value\":3},\"among\":{\"type\":\"InSlot\",\"value\":\"wolves\"},\"chooser\":{\"type\":\"ControllerOfBound\",\"value\":\"target\"},\"slot\":\"split\"} "
+      (Divide.MkDivide (Quantity.Literal 3) (ObjectRef.InSlot (slot "wolves")) (PlayerRef.HolderOfBound Holder.Controller Hop.Itself (slot "target")) (slot "split"))
+      " {\"quantity\":{\"type\":\"Literal\",\"value\":3},\"among\":{\"type\":\"InSlot\",\"value\":\"wolves\"},\"chooser\":{\"type\":\"HolderOfBound\",\"value\":{\"holder\":{\"type\":\"Controller\"},\"hop\":{\"type\":\"Itself\"},\"slot\":\"target\"}},\"slot\":\"split\"} "
   Spec.it s "has a schema" $ Common.assertHasSchema s Divide.codec

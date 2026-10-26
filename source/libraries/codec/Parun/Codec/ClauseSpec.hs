@@ -18,6 +18,8 @@ import qualified Parun.Types.CostChoice as CostChoice
 import qualified Parun.Types.Counter as Counter
 import qualified Parun.Types.CounterKind as CounterKind
 import qualified Parun.Types.Effect as Effect
+import qualified Parun.Types.Holder as Holder
+import qualified Parun.Types.Hop as Hop
 import qualified Parun.Types.IfTaken as IfTaken
 import qualified Parun.Types.ManaCost as ManaCost
 import qualified Parun.Types.ManaSymbol as ManaSymbol
@@ -120,7 +122,7 @@ spec s = Spec.describe s "Parun.Codec.Clause" $ do
           Optionality.Mandatory
           ( Just
               PayGate.MkPayGate
-                { PayGate.payer = PlayerRef.ControllerOfBound (SlotName.MkSlotName (Text.pack "spell")),
+                { PayGate.payer = PlayerRef.HolderOfBound Holder.Controller Hop.Itself (SlotName.MkSlotName (Text.pack "spell")),
                   PayGate.cost = CostChoice.MkCostChoice (Cost.MkCost {Cost.mana = Just (ManaCost.MkManaCost [ManaSymbol.Generic 3]), Cost.components = []} NonEmpty.:| []),
                   PayGate.basis = Nothing,
                   PayGate.branch = PayBranch.IfNotPaid,
@@ -131,7 +133,7 @@ spec s = Spec.describe s "Parun.Codec.Clause" $ do
           )
           (Seq.singleton (Effect.Counter (Counter.MkCounter (ObjectRef.InSlot (SlotName.MkSlotName (Text.pack "spell"))) Nothing Nothing Nothing)))
       )
-      " {\"effects\":[{\"type\":\"Counter\",\"value\":{\"ref\":{\"type\":\"InSlot\",\"value\":\"spell\"}}}],\"payGate\":{\"payer\":{\"type\":\"ControllerOfBound\",\"value\":\"spell\"},\"cost\":{\"mana\":[{\"type\":\"Generic\",\"value\":3}]},\"branch\":{\"type\":\"IfNotPaid\"}}} "
+      " {\"effects\":[{\"type\":\"Counter\",\"value\":{\"ref\":{\"type\":\"InSlot\",\"value\":\"spell\"}}}],\"payGate\":{\"payer\":{\"type\":\"HolderOfBound\",\"value\":{\"holder\":{\"type\":\"Controller\"},\"hop\":{\"type\":\"Itself\"},\"slot\":\"spell\"}},\"cost\":{\"mana\":[{\"type\":\"Generic\",\"value\":3}]},\"branch\":{\"type\":\"IfNotPaid\"}}} "
   -- CR 701.46a: adapt's "if this permanent has no +1/+1 counters on it".
   Spec.it s "a clause carrying a condition writes the key" $
     Common.assertJsonCodec

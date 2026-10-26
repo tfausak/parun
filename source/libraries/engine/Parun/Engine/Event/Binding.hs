@@ -381,7 +381,7 @@ eventBindingsOver board gs bearerBecame becameInGraveyard bearer you cond event 
   -- The arm above with the destination pinned to a hand, which CR 400.3 makes
   -- the OWNER's: Warped Devotion's "whenever a permanent is returned to a
   -- player's hand, THAT PLAYER discards a card" names the owner, and
-  -- PlayerRef.ControllerOfBound would name the wrong seat for a stolen permanent.
+  -- PlayerRef.HolderOfBound would name the wrong seat for a stolen permanent.
   --
   -- Read off CR 608.2h's record of the DEPARTED id, not off the arrival, and CR
   -- 108.3 makes the two the same answer: a zone change carries the owner across,
@@ -925,7 +925,7 @@ eventBindingsOver board gs bearerBecame becameInGraveyard bearer you cond event 
   -- Parun.Engine.Resolve.Slots.effectViewOf is what answers the toughness, looking
   -- back for this slot's object as for every slot's;
   -- Parun.Engine.Projection.controllerWithLastKnown answers the controller for any
-  -- slot PlayerRef.ControllerOfBound names.
+  -- slot PlayerRef.HolderOfBound names.
   --
   -- ZoneChange.departed, not the arrival: the id the card says "that creature"
   -- about is the permanent as it last existed on the battlefield, which is the
@@ -956,7 +956,7 @@ eventBindingsOver board gs bearerBecame becameInGraveyard bearer you cond event 
   (TriggerCondition.SelfBecomesUntapped, _) -> Map.empty
   -- CR 106.12a's permanent, bound for the BecomesTapped arm's reason: Wild
   -- Growth's "its controller" is the enchanted land's controller, and
-  -- PlayerRef.ControllerOfBound is how a card names it -- CR 109.5's "you" would
+  -- PlayerRef.HolderOfBound is how a card names it -- CR 109.5's "you" would
   -- answer the Aura's controller instead, which an Aura on an opponent's
   -- land makes a different seat.
   --
@@ -968,7 +968,7 @@ eventBindingsOver board gs bearerBecame becameInGraveyard bearer you cond event 
   -- The same slot for the bystander reading: Autumn Willow, Harmony's "add an
   -- additional {G}" goes to CR 109.5's "you", and a printing of this shape
   -- whose recipient is the permanent's controller reads it through
-  -- PlayerRef.ControllerOfBound. That is not the tapping player where an
+  -- PlayerRef.HolderOfBound. That is not the tapping player where an
   -- effect lets another player tap it (Piracy), which this slot does not name.
   --
   -- Unconditional given a match, the arm above's reason: matchesTrigger accepts
@@ -1084,7 +1084,7 @@ eventBindingsOver board gs bearerBecame becameInGraveyard bearer you cond event 
   -- The DAMAGER takes Binding.combatDamager beside it, which is CR 120.1's "an
   -- object that deals damage is the source of that damage" -- Belltower Sphinx's
   -- "that source's controller mills that many cards", read through
-  -- PlayerRef.ControllerOfBound. Also unconditional given a match:
+  -- PlayerRef.HolderOfBound. Also unconditional given a match:
   -- DamageEvent.source is an ObjectId outright, so there is nothing to fail.
   --
   -- The slot is not combat-scoped here even though its name is: CR 120.1 makes
@@ -1962,7 +1962,7 @@ eventBindingSlots cond = case cond of
   -- permanent that untapped is the bearer.
   TriggerCondition.SelfBecomesUntapped -> Set.empty
   -- The permanent tapped for mana, which the arm above stamps for every
-  -- match: Wild Growth reads it through PlayerRef.ControllerOfBound.
+  -- match: Wild Growth reads it through PlayerRef.HolderOfBound.
   TriggerCondition.AttachedPermanentTappedForMana -> Set.singleton Binding.manaSource
   -- The same slot for the bystander reading, stamped by the arm above for every
   -- match.

@@ -66,7 +66,7 @@
 -- CR 702.26f, one of the two continuous-effect consequences of being gone, needs
 -- nothing here. A "for as long as" duration (CR 611.2b) counting the
 -- battlefield ends by phaseOut's Set.delete below; one reading a baked object's
--- controller or owner (PlayerRef.ControllerOfObject / OwnerOfObject) ends
+-- controller or owner (PlayerRef.HolderOfObject) ends
 -- because Parun.Engine.Count.playersFor answers nothing for a phased-out object,
 -- which puts that reader on the far side of the "except" too.
 -- Parun.Engine.Expiry.sweepConditional DELETES rather than suspends, which is

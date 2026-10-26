@@ -10,6 +10,8 @@ import qualified Parun.Types.CopyException as CopyException
 import qualified Parun.Types.CopyStackObject as CopyStackObject
 import qualified Parun.Types.CopyTargets as CopyTargets
 import qualified Parun.Types.Filter as Filter
+import qualified Parun.Types.Holder as Holder
+import qualified Parun.Types.Hop as Hop
 import qualified Parun.Types.ObjectRef as ObjectRef
 import qualified Parun.Types.PlayerRef as PlayerRef
 import qualified Parun.Types.PlayerRelation as PlayerRelation
@@ -53,8 +55,8 @@ spec s = Spec.describe s "Parun.Codec.CopyStackObject" $ do
     Common.assertCodec
       s
       (CopyStackObject.codec Common.text)
-      (CopyStackObject.MkCopyStackObject (ObjectRef.InSlot (SlotName.MkSlotName (Text.pack "spell"))) CopyTargets.ChosenByController CopyStackObject.defaultQuantity (PlayerRef.ControllerOfBound (SlotName.MkSlotName (Text.pack "spell"))) [])
-      " {\"ref\":{\"type\":\"InSlot\",\"value\":\"spell\"},\"targets\":{\"type\":\"ChosenByController\"},\"copier\":{\"type\":\"ControllerOfBound\",\"value\":\"spell\"}} "
+      (CopyStackObject.MkCopyStackObject (ObjectRef.InSlot (SlotName.MkSlotName (Text.pack "spell"))) CopyTargets.ChosenByController CopyStackObject.defaultQuantity (PlayerRef.HolderOfBound Holder.Controller Hop.Itself (SlotName.MkSlotName (Text.pack "spell"))) [])
+      " {\"ref\":{\"type\":\"InSlot\",\"value\":\"spell\"},\"targets\":{\"type\":\"ChosenByController\"},\"copier\":{\"type\":\"HolderOfBound\",\"value\":{\"holder\":{\"type\":\"Controller\"},\"hop\":{\"type\":\"Itself\"},\"slot\":\"spell\"}}} "
   -- CR 707.9b, Double Major's "except it isn't legendary".
   Spec.it s "MkCopyStackObject, an exception: it is written" $
     Common.assertCodec

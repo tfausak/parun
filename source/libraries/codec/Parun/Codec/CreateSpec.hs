@@ -8,6 +8,8 @@ import qualified Parun.Spec as Spec
 import qualified Parun.Types.Create as Create
 import qualified Parun.Types.EntryAttack as EntryAttack
 import qualified Parun.Types.EntryRiders as EntryRiders
+import qualified Parun.Types.Holder as Holder
+import qualified Parun.Types.Hop as Hop
 import qualified Parun.Types.PlayerRef as PlayerRef
 import qualified Parun.Types.PlayerRelation as PlayerRelation
 import qualified Parun.Types.Quantity as Quantity
@@ -86,8 +88,8 @@ spec s = Spec.describe s "Parun.Codec.Create" $ do
             Create.card = Text.pack "Centaur Token",
             Create.riders = plain,
             Create.slot = Nothing,
-            Create.creator = PlayerRef.ControllerOfBound (SlotName.MkSlotName (Text.pack "victim"))
+            Create.creator = PlayerRef.HolderOfBound Holder.Controller Hop.Itself (SlotName.MkSlotName (Text.pack "victim"))
           }
       )
-      " {\"quantity\":{\"type\":\"Literal\",\"value\":1},\"card\":\"Centaur Token\",\"creator\":{\"type\":\"ControllerOfBound\",\"value\":\"victim\"}} "
+      " {\"quantity\":{\"type\":\"Literal\",\"value\":1},\"card\":\"Centaur Token\",\"creator\":{\"type\":\"HolderOfBound\",\"value\":{\"holder\":{\"type\":\"Controller\"},\"hop\":{\"type\":\"Itself\"},\"slot\":\"victim\"}}} "
   Spec.it s "has a schema" $ Common.assertHasSchema s codec

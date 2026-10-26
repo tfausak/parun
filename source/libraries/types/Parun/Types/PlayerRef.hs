@@ -1,6 +1,8 @@
 module Parun.Types.PlayerRef where
 
 import qualified Parun.Types.AttackingPlayers as AttackingPlayers
+import qualified Parun.Types.Holder as Holder
+import qualified Parun.Types.Hop as Hop
 import qualified Parun.Types.ObjectId as ObjectId
 import qualified Parun.Types.PlayerChoice as PlayerChoice
 import qualified Parun.Types.PlayerId as PlayerId
@@ -126,16 +128,18 @@ data PlayerRef
     -- does nothing. That is the honest answer rather than a silent substitution
     -- of "you".
     Candidate
-  | -- | CR 108.4 / 110.2: the CONTROLLER of the object a slot names --
-    -- Spikeshell Harrier's "return target creature or Vehicle an opponent
-    -- controls to its owner's hand. If THAT OPPONENT's speed ...", where the
-    -- player is identified by the permanent the ability targeted.
+  | -- | CR 108.3 / 108.4 / 110.2: the controller or owner of the object a slot
+    -- names, or of the permanent that object is attached to (CR 303.4b) --
+    -- Spikeshell Harrier's "that opponent", The Deck of Many Things' "its
+    -- owner", Soul Bleed's "enchanted creature's controller".
     --
     -- InSlot's twin one indirection out. That arm reads a slot whose recipient IS
     -- a player (CR 115.1); this one reads a slot whose recipient is an OBJECT and
-    -- asks who controls it, which is the only spelling a card has for a player it
+    -- asks who holds it, which is the only spelling a card has for a player it
     -- never targeted. Neither is derivable from the other: a slot holds one kind
-    -- of recipient or the other.
+    -- of recipient or the other. Owner and controller come apart under a stolen
+    -- or borrowed permanent, which is exactly the case a printed "its owner" is
+    -- written to reach past.
     --
     -- CR 608.2h is load-bearing rather than incidental. The sentence that names
     -- the player generally MOVES the object first -- Spikeshell Harrier's does,
@@ -151,32 +155,16 @@ data PlayerRef
     -- Undeterminable where no view can answer, which is Candidate's posture: a
     -- slot naming no object, naming several, or naming one the projection cannot
     -- describe leaves the count unanswered rather than aimed at some other seat.
-    ControllerOfBound SlotName.SlotName
-  | -- | CR 303.4b / 110.2: the controller of the permanent the object a slot
-    -- names is attached to -- Soul Bleed's "enchanted creature's controller".
-    ControllerOfHostOfBound SlotName.SlotName
-  | -- | ControllerOfBound's BAKED half, and runtime-only: the controller of one
-    -- particular object, read at each check (CR 611.2b, 108.4). Written by
+    HolderOfBound Holder.Holder Hop.Hop SlotName.SlotName
+  | -- | HolderOfBound's BAKED half, and runtime-only: the controller or owner of one
+    -- particular object, read at each check (CR 611.2b, 108.3, 108.4). Written by
     -- Parun.Engine.Quantity.bakePlayerRef; no card may write it.
-    ControllerOfObject ObjectId.ObjectId
-  | -- | CR 108.3: the OWNER of the object a slot names -- The Deck of Many
-    -- Things' 20 band, "its owner loses the game", where the slot holds the
-    -- reanimated creature.
-    --
-    -- ControllerOfBound's shape one word over, and separate for the same
-    -- reason InSlot and ControllerOfBound are separate: an owner need not be
-    -- the controller (CR 108.3 vs. 108.4), and the two seats come apart under
-    -- a stolen or borrowed permanent, which is exactly the case a printed
-    -- "its owner" is written to reach past.
-    OwnerOfBound SlotName.SlotName
-  | -- | OwnerOfBound's BAKED half, and runtime-only: the owner of one particular
-    -- object (CR 611.2b, 108.3). ControllerOfObject's posture; no card may write it.
-    OwnerOfObject ObjectId.ObjectId
+    HolderOfObject Holder.Holder ObjectId.ObjectId
   | -- | CR 614.1c / CR 702.174b: the player the object a slot names CHOSE, by
     -- which choice -- "the chosen player" of the gift ability Parun.Engine.Keyword
     -- mints per instance, read off the object CR 113.7a's source slot holds.
     --
-    -- ControllerOfBound's shape one field over, and a separate arm for the reason
+    -- HolderOfBound's shape one field over, and a separate arm for the reason
     -- that one is separate from InSlot: the slot holds an OBJECT, and what is
     -- asked of it is a record rather than a characteristic. Parun.Types.ObjectRef's
     -- ChosenPlayer is the same read from the other type, for a clause whose

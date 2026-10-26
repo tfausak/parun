@@ -2424,11 +2424,8 @@ playerRefNames asking x = case x of
   PlayerRef.EachInSlot slotName -> slotNames asking slotName
   PlayerRef.Specific _playerId -> mempty
   PlayerRef.Candidate -> mempty
-  PlayerRef.ControllerOfBound slotName -> slotNames asking slotName
-  PlayerRef.ControllerOfHostOfBound slotName -> slotNames asking slotName
-  PlayerRef.OwnerOfBound slotName -> slotNames asking slotName
-  PlayerRef.ControllerOfObject objectId -> names asking (== objectId)
-  PlayerRef.OwnerOfObject objectId -> names asking (== objectId)
+  PlayerRef.HolderOfBound _holder _hop slotName -> slotNames asking slotName
+  PlayerRef.HolderOfObject _holder objectId -> names asking (== objectId)
   PlayerRef.ChosenPlayerOfBound slotName choice -> slotNames asking slotName <> playerChoiceNames asking choice
   PlayerRef.Attacking attackingPlayers -> attackingPlayersNames asking attackingPlayers
   PlayerRef.Superlative _ -> mempty

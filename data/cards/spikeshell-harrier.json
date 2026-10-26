@@ -61,8 +61,16 @@
                         "measured": {
                           "type": "Speed",
                           "value": {
-                            "type": "ControllerOfBound",
-                            "value": "permanent"
+                            "type": "HolderOfBound",
+                            "value": {
+                              "holder": {
+                                "type": "Controller"
+                              },
+                              "hop": {
+                                "type": "Itself"
+                              },
+                              "slot": "permanent"
+                            }
                           }
                         },
                         "threshold": {
@@ -112,8 +120,16 @@
                         "value": {
                           "floor": 1,
                           "player": {
-                            "type": "ControllerOfBound",
-                            "value": "permanent"
+                            "type": "HolderOfBound",
+                            "value": {
+                              "holder": {
+                                "type": "Controller"
+                              },
+                              "hop": {
+                                "type": "Itself"
+                              },
+                              "slot": "permanent"
+                            }
                           },
                           "quantity": {
                             "type": "Literal",

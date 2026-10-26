@@ -57,8 +57,16 @@
                           "mana": []
                         },
                         "payer": {
-                          "type": "ControllerOfBound",
-                          "value": "creature"
+                          "type": "HolderOfBound",
+                          "value": {
+                            "holder": {
+                              "type": "Controller"
+                            },
+                            "hop": {
+                              "type": "Itself"
+                            },
+                            "slot": "creature"
+                          }
                         }
                       },
                       "ref": {

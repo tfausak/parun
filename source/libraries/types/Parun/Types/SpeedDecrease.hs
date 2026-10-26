@@ -13,7 +13,7 @@ import qualified Parun.Types.Quantity as Quantity
 -- bolting a nullable one on would make a field's absence the tag again.
 -- Parun.Types.Mill is the precedent for spinning out instead.
 data SpeedDecrease = MkSpeedDecrease
-  { -- | Whose speed drops. PlayerRef.ControllerOfBound is what the one producer
+  { -- | Whose speed drops. PlayerRef.HolderOfBound is what the one producer
     -- writes -- "that opponent" is the player whose permanent the ability
     -- targeted, and CR 608.2h is what still answers once the same ability has
     -- bounced it.

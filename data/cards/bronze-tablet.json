@@ -81,8 +81,16 @@
                         "mana": []
                       },
                       "payer": {
-                        "type": "OwnerOfBound",
-                        "value": "target"
+                        "type": "HolderOfBound",
+                        "value": {
+                          "holder": {
+                            "type": "Owner"
+                          },
+                          "hop": {
+                            "type": "Itself"
+                          },
+                          "slot": "target"
+                        }
                       }
                     }
                   },
@@ -92,8 +100,16 @@
                         "type": "SetOwner",
                         "value": {
                           "player": {
-                            "type": "OwnerOfBound",
-                            "value": "target"
+                            "type": "HolderOfBound",
+                            "value": {
+                              "holder": {
+                                "type": "Owner"
+                              },
+                              "hop": {
+                                "type": "Itself"
+                              },
+                              "slot": "target"
+                            }
                           },
                           "ref": {
                             "type": "FromAnywhere",
@@ -141,8 +157,16 @@
                       },
                       "offeredAt": 1,
                       "payer": {
-                        "type": "OwnerOfBound",
-                        "value": "target"
+                        "type": "HolderOfBound",
+                        "value": {
+                          "holder": {
+                            "type": "Owner"
+                          },
+                          "hop": {
+                            "type": "Itself"
+                          },
+                          "slot": "target"
+                        }
                       }
                     }
                   }

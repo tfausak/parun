@@ -36,7 +36,7 @@ data Expiry
     --
     -- The CONDITION is baked at the same moment (Parun.Engine.Condition.bakeBound):
     -- a PlayerRef naming one of the resolution's slots becomes PlayerRef.Specific,
-    -- or ControllerOfObject / OwnerOfObject for a slot holding an object, since
+    -- or HolderOfObject for a slot holding an object, since
     -- the sweep that re-reads this has no resolution to read a slot off.
     While While.While
   | -- | CR 611.2a: "until your next turn", as a concrete player. Ends as that

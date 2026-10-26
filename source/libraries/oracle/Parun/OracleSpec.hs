@@ -70,6 +70,7 @@ import qualified Parun.Types.Face as Face
 import qualified Parun.Types.Filter as Filter
 import qualified Parun.Types.GrantedAbility as GrantedAbility
 import qualified Parun.Types.Holder as Holder
+import qualified Parun.Types.Hop as Hop
 import qualified Parun.Types.HowMany as HowMany
 import qualified Parun.Types.IfTaken as IfTaken
 import qualified Parun.Types.InZone as InZone
@@ -321,7 +322,7 @@ spec s = Spec.describe s "Parun.Oracle" $ do
     Spec.assertEq s [[Text.pack "At the beginning of each end step, sacrifice Spark.", Text.pack "At the beginning of the end step, sacrifice Spark.", Text.pack "At the beginning of each player's end step, sacrifice Spark."]] (Oracle.abilities (at end TurnScope.EachTurn [sacrifice]))
     Spec.assertEq s (Just (Text.pack "At the beginning of each opponent's end step, Spark deals 1 damage to that player.")) (Oracle.render (at end TurnScope.OpponentsTurn [damage [(thatPlayer, 1)]]))
     -- Soul Bleed's named player, read off the source slot.
-    let hostController = TurnScope.PlayersTurn (PlayerRef.ControllerOfHostOfBound (SlotName.MkSlotName (Text.pack "self")))
+    let hostController = TurnScope.PlayersTurn (PlayerRef.HolderOfBound Holder.Controller Hop.Host (SlotName.MkSlotName (Text.pack "self")))
     Spec.assertEq s (Just (Text.pack "At the beginning of the upkeep of enchanted creature's controller, that player draws a card.")) (Oracle.render (at upkeep hostController [draw (PlayerRef.InSlot thatPlayer) 1]))
     Spec.assertEq s (Just (Text.pack "At the beginning of the end step of enchanted creature's controller, Spark deals 1 damage to that player.")) (Oracle.render (at end hostController [damage [(thatPlayer, 1)]]))
 
@@ -643,7 +644,7 @@ spec s = Spec.describe s "Parun.Oracle" $ do
     let mine = [(target, TargetSlot.required Pool.Creatures (Just (Filter.ControlledBy PlayerRelation.You)))]
         majesty = spell [clause [Effect.Draw (Draw.MkDraw (PlayerRef.Relative PlayerRelation.You) (powerOf target) Nothing)]] mine
     Spec.assertEq s [[Text.pack "Draw cards equal to the power of target creature you control."]] (Oracle.abilities majesty)
-    let plowshares = spell [clause [Effect.MoveToZone (move (ObjectRef.InSlot target) Zone.Exile), Effect.GainLife (PlayerQuantity.MkPlayerQuantity (PlayerRef.ControllerOfBound target) (powerOf target))]] [(target, TargetSlot.required Pool.Creatures Nothing)]
+    let plowshares = spell [clause [Effect.MoveToZone (move (ObjectRef.InSlot target) Zone.Exile), Effect.GainLife (PlayerQuantity.MkPlayerQuantity (PlayerRef.HolderOfBound Holder.Controller Hop.Itself target) (powerOf target))]] [(target, TargetSlot.required Pool.Creatures Nothing)]
     Spec.assertBool s (elem (Text.pack "Exile target creature. Its controller gains life equal to its power.") (concat (Oracle.abilities plowshares))) "no \"its power\""
 
   -- CR 107.3: a change that counts reads "for each" (Empyrial Armor) or "+X"
@@ -688,10 +689,10 @@ spec s = Spec.describe s "Parun.Oracle" $ do
   Spec.it s "render prints a cost paid on resolution" $ do
     let spellSlot = [(target, TargetSlot.required Pool.Spells Nothing)]
         counter = Effect.Counter (Counter.MkCounter (ObjectRef.InSlot target) Nothing Nothing Nothing)
-        leak = spell [(clause [counter]) {Clause.payGate = Just (gate PayBranch.IfNotPaid (PlayerRef.ControllerOfBound target) (mana [ManaSymbol.Generic 3]))}] spellSlot
+        leak = spell [(clause [counter]) {Clause.payGate = Just (gate PayBranch.IfNotPaid (PlayerRef.HolderOfBound Holder.Controller Hop.Itself target) (mana [ManaSymbol.Generic 3]))}] spellSlot
     Spec.assertEq s (Just (Text.pack "Counter target spell unless its controller pays {3}.")) (Oracle.render leak)
     let graveyardCards = countOf (Filter.And []) (InZone.MkInZone Zone.Graveyard (PlayerRef.Relative PlayerRelation.You))
-        disdain = spell [(clause [counter]) {Clause.payGate = Just ((gate PayBranch.IfNotPaid (PlayerRef.ControllerOfBound target) (mana [ManaSymbol.Generic 1])) {PayGate.perEach = Just graveyardCards})}] spellSlot
+        disdain = spell [(clause [counter]) {Clause.payGate = Just ((gate PayBranch.IfNotPaid (PlayerRef.HolderOfBound Holder.Controller Hop.Itself target) (mana [ManaSymbol.Generic 1])) {PayGate.perEach = Just graveyardCards})}] spellSlot
     Spec.assertEq s (Just (Text.pack "Counter target spell unless its controller pays {1} for each card in your graveyard.")) (Oracle.render disdain)
     let seer = triggered TriggerCondition.SelfDies [(clause [draw (PlayerRef.Relative PlayerRelation.You) 1]) {Clause.payGate = Just (gate PayBranch.IfPaid (PlayerRef.InSlot you) (mana [ManaSymbol.Generic 1, ManaSymbol.OfType (ManaType.Colored Color.Blue)]))}] []
     Spec.assertEq s [[Text.pack "When Spark dies, you may pay {1}{U}. If you do, draw a card."]] (Oracle.abilities (withFace (\f -> (typed [CardType.Creature] [] f) {Face.triggeredAbilities = [seer]})))

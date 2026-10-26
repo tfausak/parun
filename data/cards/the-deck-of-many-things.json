@@ -283,8 +283,16 @@
                       {
                         "type": "LoseGame",
                         "value": {
-                          "type": "OwnerOfBound",
-                          "value": "reanimated"
+                          "type": "HolderOfBound",
+                          "value": {
+                            "holder": {
+                              "type": "Owner"
+                            },
+                            "hop": {
+                              "type": "Itself"
+                            },
+                            "slot": "reanimated"
+                          }
                         }
                       }
                     ]

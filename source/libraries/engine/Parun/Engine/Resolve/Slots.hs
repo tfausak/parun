@@ -418,8 +418,7 @@ riderSlots riders =
         Nothing -> Map.empty
    in joinSlots [attacked, blocked, hosted]
 
--- The slots a PlayerRef reads. InSlot, ControllerOfBound, OwnerOfBound,
--- ChosenPlayerOfBound and Attacking name one at arity One, and EachInSlot,
+-- The slots a PlayerRef reads. InSlot, HolderOfBound, ChosenPlayerOfBound and Attacking name one at arity One, and EachInSlot,
 -- EachPlayerExcept and EachOpponentExcept one at arity Many; the rest name none, and
 -- the arms below carry the reason for each arity that is not self-evident.
 playerRefSlots :: PlayerRef -> Map.Map SlotName SlotArity
@@ -435,17 +434,11 @@ playerRefSlots ref = case ref of
   PlayerRef.EachInSlot slot -> Map.singleton slot SlotArity.Many
   PlayerRef.Specific _ -> Map.empty
   -- Specific's answer: the baked object is named outright.
-  PlayerRef.ControllerOfObject _ -> Map.empty
-  PlayerRef.OwnerOfObject _ -> Map.empty
+  PlayerRef.HolderOfObject _ _ -> Map.empty
   PlayerRef.Candidate -> Map.empty
-  -- Read at arity one: a slot naming several objects names no one controller.
-  PlayerRef.ControllerOfBound slot -> Map.singleton slot SlotArity.One
-  -- Read at arity one for the arm above's reason: a slot naming several objects
-  -- names no one host.
-  PlayerRef.ControllerOfHostOfBound slot -> Map.singleton slot SlotArity.One
-  -- Read at arity one for the arm above's reason: a slot naming several objects
-  -- names no one owner.
-  PlayerRef.OwnerOfBound slot -> Map.singleton slot SlotArity.One
+  -- Read at arity one: a slot naming several objects names no one controller,
+  -- owner or host.
+  PlayerRef.HolderOfBound _ _ slot -> Map.singleton slot SlotArity.One
   -- Read at arity one for that arm's reason: a slot naming several objects names
   -- no one chooser.
   PlayerRef.ChosenPlayerOfBound slot _ -> Map.singleton slot SlotArity.One
@@ -477,7 +470,7 @@ zoneScopeSlots scope = case scope of
   ZoneScope.InSlot slot -> Map.singleton slot SlotArity.Many
   -- Arity ONE, where the arm above is Many: Hour of Glory's "its controller"
   -- names the controller of the ONE object the slot holds, so a plural slot
-  -- aimed here would have no singular answer -- PlayerRef.ControllerOfBound's
+  -- aimed here would have no singular answer -- PlayerRef.HolderOfBound's
   -- reading, one type over.
   ZoneScope.ControllerOfBound slot -> Map.singleton slot SlotArity.One
   -- Already resolved: names no slot.
@@ -529,7 +522,7 @@ objectRefSlots ref = joinTwo (joinSlots (fmap playerRefSlots (objectRefPlayerRef
   -- The seat comes from the source's own entry choice (CR 614.12a), not a slot.
   ObjectRef.ChosenPlayer -> Map.empty
   -- The seat is objectRefPlayerRefs' half, joined at the head (Deflecting
-  -- Palm's ControllerOfBound); the narrowing Filter is a read like a sweep's.
+  -- Palm's HolderOfBound); the narrowing Filter is a read like a sweep's.
   ObjectRef.Players (PlayersWho.MkPlayersWho _ who) -> foldMap filterSlotsOf who
   ObjectRef.TopOfLibrary (TopOfLibrary.MkTopOfLibrary _ count) -> quantitySlots count
   -- The arm above's count, and no more: the SEAT is objectRefPlayerRefs' half.

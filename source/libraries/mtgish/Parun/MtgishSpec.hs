@@ -48,6 +48,8 @@ import qualified Parun.Types.Face as Face
 import qualified Parun.Types.Filter as Filter
 import qualified Parun.Types.ForEach as ForEach
 import qualified Parun.Types.GrantedAbility as GrantedAbility
+import qualified Parun.Types.Holder as Holder
+import qualified Parun.Types.Hop as Hop
 import qualified Parun.Types.Hybrid as Hybrid
 import qualified Parun.Types.InZone as InZone
 import qualified Parun.Types.Keyword as Keyword
@@ -240,7 +242,7 @@ spec s = Spec.describe s "Parun.Mtgish" $ do
   -- named player's turn read off the source slot.
   Spec.it s "reads a step trigger on enchanted creature's controller's turn" $ do
     Spec.assertEq s (Right ()) (accepts soulBleed)
-    Spec.assertEq s [TriggerCondition.StepBegins (StepBegins.MkStepBegins (Phase.Beginning BeginningStep.Upkeep) Nothing (TurnScope.PlayersTurn (PlayerRef.ControllerOfHostOfBound (SlotName.MkSlotName (Text.pack "self")))))] (fmap TriggeredAbility.condition (Face.triggeredAbilities (translated soulBleed)))
+    Spec.assertEq s [TriggerCondition.StepBegins (StepBegins.MkStepBegins (Phase.Beginning BeginningStep.Upkeep) Nothing (TurnScope.PlayersTurn (PlayerRef.HolderOfBound Holder.Controller Hop.Host (SlotName.MkSlotName (Text.pack "self")))))] (fmap TriggeredAbility.condition (Face.triggeredAbilities (translated soulBleed)))
 
   -- CR 611.3a: "as long as" as the condition of the static abilities within.
   Spec.it s "reads a static ability that applies as long as a condition holds" $ do

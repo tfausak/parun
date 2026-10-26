@@ -124,8 +124,16 @@
                         "type": "CopyStackObject",
                         "value": {
                           "copier": {
-                            "type": "ControllerOfBound",
-                            "value": "thatSpell"
+                            "type": "HolderOfBound",
+                            "value": {
+                              "holder": {
+                                "type": "Controller"
+                              },
+                              "hop": {
+                                "type": "Itself"
+                              },
+                              "slot": "thatSpell"
+                            }
                           },
                           "ref": {
                             "type": "InSlot",

@@ -41,7 +41,7 @@ data ZoneScope
     -- creature the spell targeted rather than a player. Read through last known
     -- information, since the clause naming the player generally moved the object
     -- first and CR 108.4 leaves a card that is neither permanent nor spell with
-    -- no controller at all; Parun.Types.PlayerRef.ControllerOfBound is the same
+    -- no controller at all; Parun.Types.PlayerRef.HolderOfBound is the same
     -- read one type over.
     ControllerOfBound SlotName.SlotName
   | -- | CR 601.2c: InSlot with its player resolved -- one copy of a "for each

@@ -116,6 +116,7 @@ import qualified Parun.Types.Gift as Gift
 import qualified Parun.Types.GrantLookAtExiled as GrantLookAtExiled
 import qualified Parun.Types.GrantedAbility as GrantedAbility
 import qualified Parun.Types.Holder as Holder
+import qualified Parun.Types.Hop as Hop
 import qualified Parun.Types.HowMany as HowMany
 import qualified Parun.Types.Hybrid as Hybrid
 import qualified Parun.Types.IfTaken as IfTaken
@@ -6936,7 +6937,7 @@ ward w =
       -- player pays" is CR 118.12a's "may", and one clause makes its own offer.
       gate =
         PayGate.MkPayGate
-          { PayGate.payer = PlayerRef.ControllerOfBound Binding.targetingObject,
+          { PayGate.payer = PlayerRef.HolderOfBound Holder.Controller Hop.Itself Binding.targetingObject,
             PayGate.cost = CostChoice.MkCostChoice (Ward.cost w NonEmpty.:| []),
             PayGate.basis = Nothing,
             PayGate.branch = PayBranch.IfNotPaid,

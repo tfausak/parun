@@ -4,6 +4,8 @@ import qualified Data.Text as Text
 import qualified Parun.Codec.SpeedDecrease as SpeedDecrease
 import qualified Parun.JsonCodec.Common as Common
 import qualified Parun.Spec as Spec
+import qualified Parun.Types.Holder as Holder
+import qualified Parun.Types.Hop as Hop
 import qualified Parun.Types.PlayerRef as PlayerRef
 import qualified Parun.Types.PlayerRelation as PlayerRelation
 import qualified Parun.Types.Quantity as Quantity
@@ -18,8 +20,8 @@ spec s = Spec.describe s "Parun.Codec.SpeedDecrease" $ do
     Common.assertCodec
       s
       SpeedDecrease.codec
-      (SpeedDecrease.MkSpeedDecrease (PlayerRef.ControllerOfBound (SlotName.MkSlotName (Text.pack "permanent"))) (Quantity.Literal 1) 1)
-      " {\"player\":{\"type\":\"ControllerOfBound\",\"value\":\"permanent\"},\"quantity\":{\"type\":\"Literal\",\"value\":1},\"floor\":1} "
+      (SpeedDecrease.MkSpeedDecrease (PlayerRef.HolderOfBound Holder.Controller Hop.Itself (SlotName.MkSlotName (Text.pack "permanent"))) (Quantity.Literal 1) 1)
+      " {\"player\":{\"type\":\"HolderOfBound\",\"value\":{\"holder\":{\"type\":\"Controller\"},\"hop\":{\"type\":\"Itself\"},\"slot\":\"permanent\"}},\"quantity\":{\"type\":\"Literal\",\"value\":1},\"floor\":1} "
   -- A card printing no floor sentence writes none, and 0 is what that means.
   Spec.it s "MkSpeedDecrease, no floor: the key is omitted" $
     Common.assertCodec

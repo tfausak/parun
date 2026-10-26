@@ -58,8 +58,16 @@
                                         "type": "InZone",
                                         "value": {
                                           "player": {
-                                            "type": "ControllerOfBound",
-                                            "value": "target"
+                                            "type": "HolderOfBound",
+                                            "value": {
+                                              "holder": {
+                                                "type": "Controller"
+                                              },
+                                              "hop": {
+                                                "type": "Itself"
+                                              },
+                                              "slot": "target"
+                                            }
                                           },
                                           "zone": {
                                             "type": "Hand"
@@ -97,8 +105,16 @@
                                         "type": "InZone",
                                         "value": {
                                           "player": {
-                                            "type": "ControllerOfBound",
-                                            "value": "target"
+                                            "type": "HolderOfBound",
+                                            "value": {
+                                              "holder": {
+                                                "type": "Controller"
+                                              },
+                                              "hop": {
+                                                "type": "Itself"
+                                              },
+                                              "slot": "target"
+                                            }
                                           },
                                           "zone": {
                                             "type": "Hand"

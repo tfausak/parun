@@ -43,8 +43,16 @@
                     ]
                   },
                   "payer": {
-                    "type": "ControllerOfBound",
-                    "value": "spell"
+                    "type": "HolderOfBound",
+                    "value": {
+                      "holder": {
+                        "type": "Controller"
+                      },
+                      "hop": {
+                        "type": "Itself"
+                      },
+                      "slot": "spell"
+                    }
                   }
                 }
               }

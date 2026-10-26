@@ -470,7 +470,7 @@ auntieOolSpec s registry =
         -- 1/0 and CR 704.5f puts it in bob's graveyard at the very CR 117.5 scan
         -- that places the trigger. `became` names a dead id there, and the card
         -- still has to find bob -- which is CR 608.2h's last known information,
-        -- reached through Parun.Engine.Resolve's PlayerRef.ControllerOfBound.
+        -- reached through Parun.Engine.Resolve's PlayerRef.HolderOfBound Controller.
         --
         -- The case above cannot show this: every subject there survives, so a
         -- reader that answered nothing for a dead id would pass it.
