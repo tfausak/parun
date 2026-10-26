@@ -81,9 +81,6 @@ component self named c = case c of
   CostComponent.Sacrifice (Sacrifice.MkSacrifice (ObjectCount.Exactly (CostAmount.Fixed n)) f) -> do
     p <- Filter.phrase f named
     fmap (Text.pack "Sacrifice " <>) (some (toInteger n) (Filter.MkNoun (Text.pack "permanent") (Just (Text.pack "permanents"))) p)
-  CostComponent.Sacrifice (Sacrifice.MkSacrifice ObjectCount.Every f) -> do
-    p <- Filter.phrase f named
-    fmap (Text.pack "Sacrifice all " <>) (Filter.describe Filter.Plural (Filter.MkNoun (Text.pack "permanent") (Just (Text.pack "permanents"))) p)
   CostComponent.DiscardCards (DiscardCards.MkDiscardCards ObjectCount.Every (Filter.Type.And [])) -> [Text.pack "Discard your hand"]
   CostComponent.DiscardCards (DiscardCards.MkDiscardCards (ObjectCount.Exactly (CostAmount.Fixed n)) f) -> do
     p <- Filter.phrase f named
