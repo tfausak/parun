@@ -250,7 +250,7 @@ For each opcode the producer needs:
   `Filter.contextFor`; its header says which positions that is honest for.
 - Ask what the atom answers against an empty field, and ask it per ATOM ---
   there is no rule the record imposes. `Filter.IsBound`, `SameNameAsBound`,
-  `IsHostOfSource` and `ControlledByRecipient` answer False rather than raising;
+  `IsHostOfSource` and `HeldByRecipient` answer False rather than raising;
   `Quantity.AgainstSlot` answers unanswered. Neither is distinguishable from a
   rule that does not apply. `ControllerRelatesToBound` answers TRUE instead, so its
   vacuous read WIDENS the offer rather than emptying it, and only

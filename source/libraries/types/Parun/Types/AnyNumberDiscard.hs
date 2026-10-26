@@ -17,7 +17,7 @@ data AnyNumberDiscard = MkAnyNumberDiscard
     -- | Where the cards this discard moved are written, CountedDiscard's
     -- `discarded` -- Borborygmos and Fblthp's "twice that much", Nantuko
     -- Cultivator's "that many". The UNION across every discarder, so Flux's
-    -- per-player "that many" narrows it by Filter.OwnedByRecipient.
+    -- per-player "that many" narrows it by Filter.HeldByRecipient Owner.
     discarded :: Maybe SlotName.SlotName
   }
   deriving (Eq, Ord, Show)

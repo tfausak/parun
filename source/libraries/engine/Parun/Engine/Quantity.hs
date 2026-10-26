@@ -1512,7 +1512,7 @@ bakeBound players objects =
 --
 -- Control is the question this reference cannot ask: the battlefield is shared
 -- (CR 400.1) and Game.zoneMembers slices it by OWNER (see #161), so "each creature
--- THEY CONTROL" is Filter.ControlledByRecipient off Filter.Context's recipient
+-- THEY CONTROL" is Filter.HeldByRecipient off Filter.Context's recipient
 -- instead. Parun.Engine.Resolve.Effect.evaluateForRecipient supplies both.
 forCandidate :: PlayerId.PlayerId -> Quantity -> Quantity
 forCandidate pid =

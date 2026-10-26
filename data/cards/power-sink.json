@@ -77,8 +77,13 @@
                                     }
                                   },
                                   {
-                                    "type": "ControlledByBound",
-                                    "value": "player"
+                                    "type": "HeldByBound",
+                                    "value": {
+                                      "holder": {
+                                        "type": "Controller"
+                                      },
+                                      "slot": "player"
+                                    }
                                   }
                                 ]
                               }

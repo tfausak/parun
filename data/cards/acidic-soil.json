@@ -45,7 +45,10 @@
                                     }
                                   },
                                   {
-                                    "type": "ControlledByRecipient"
+                                    "type": "HeldByRecipient",
+                                    "value": {
+                                      "type": "Controller"
+                                    }
                                   }
                                 ]
                               },

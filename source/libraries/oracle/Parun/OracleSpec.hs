@@ -69,6 +69,7 @@ import qualified Parun.Types.EntryRiders as EntryRiders
 import qualified Parun.Types.Face as Face
 import qualified Parun.Types.Filter as Filter
 import qualified Parun.Types.GrantedAbility as GrantedAbility
+import qualified Parun.Types.Holder as Holder
 import qualified Parun.Types.HowMany as HowMany
 import qualified Parun.Types.IfTaken as IfTaken
 import qualified Parun.Types.InZone as InZone
@@ -606,7 +607,7 @@ spec s = Spec.describe s "Parun.Oracle" $ do
     Spec.assertEq s [[Text.pack "You gain 1 life for each Forest on the battlefield.", Text.pack "You gain life equal to the number of Forests on the battlefield."]] (Oracle.abilities (spell [clause [gainLifeBy forests]] []))
     let hand = countOf (Filter.And []) (InZone.MkInZone Zone.Hand (PlayerRef.Relative PlayerRelation.You))
     Spec.assertEq s [[Text.pack "You gain 2 life for each card in your hand."]] (Oracle.abilities (spell [clause [gainLifeBy (Quantity.Arithmetic (Arithmetic.Times (Times.MkTimes 2 hand)))]] []))
-    let tapped = countOf (Filter.And [Filter.HasCardType CardType.Creature, Filter.IsTapped, Filter.ControlledByBound target]) (onBattlefield (PlayerRef.Relative PlayerRelation.AnyPlayer))
+    let tapped = countOf (Filter.And [Filter.HasCardType CardType.Creature, Filter.IsTapped, Filter.HeldByBound Holder.Controller target]) (onBattlefield (PlayerRef.Relative PlayerRelation.AnyPlayer))
         opponent = [(target, TargetSlot.required Pool.Players (Just (Filter.IsPlayer PlayerRelation.Opponent)))]
     Spec.assertEq s [[Text.pack "Draw a card for each tapped creature target opponent controls.", Text.pack "Draw cards equal to the number of tapped creatures target opponent controls."]] (Oracle.abilities (spell [clause [Effect.Draw (Draw.MkDraw (PlayerRef.Relative PlayerRelation.You) tapped Nothing)]] opponent))
     let swamps = countOf (Filter.And [Filter.HasSubtype Subtype.Swamp, Filter.ControlledBy PlayerRelation.You]) (onBattlefield (PlayerRef.Relative PlayerRelation.AnyPlayer))
@@ -623,7 +624,7 @@ spec s = Spec.describe s "Parun.Oracle" $ do
     let mountains = countOf (Filter.And [Filter.HasSubtype Subtype.Mountain, Filter.ControlledBy PlayerRelation.You]) (onBattlefield (PlayerRef.Relative PlayerRelation.AnyPlayer))
         ambush = spell [clause [damageBy [(ObjectRef.InSlot target, mountains)]]] [(target, TargetSlot.required Pool.Creatures Nothing)]
     Spec.assertEq s [[Text.pack "Spark deals damage to target creature equal to the number of Mountains you control.", Text.pack "Spark deals damage equal to the number of Mountains you control to target creature."]] (Oracle.abilities ambush)
-    let theirs = countOf (Filter.And [Filter.HasCardType CardType.Land, Filter.ControlledByRecipient]) (onBattlefield (PlayerRef.Relative PlayerRelation.AnyPlayer))
+    let theirs = countOf (Filter.And [Filter.HasCardType CardType.Land, Filter.HeldByRecipient Holder.Controller]) (onBattlefield (PlayerRef.Relative PlayerRelation.AnyPlayer))
     Spec.assertEq s (Just (Text.pack "Spark deals damage to each player equal to the number of lands they control.")) (Oracle.render (spell [clause [damageBy [(ObjectRef.EachPlayer, theirs)]]] []))
     let dealer = SlotName.MkSlotName (Text.pack "dealer")
         fire = Effect.DealDamage (DealDamage.MkDealDamage (Seq.singleton (DamagePart.MkDamagePart (ObjectRef.InSlot target) (powerOf dealer))) (Just dealer) Nothing Nothing Nothing)

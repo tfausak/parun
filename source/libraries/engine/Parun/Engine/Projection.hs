@@ -84,6 +84,7 @@ import qualified Parun.Types.FullText as FullText
 import Parun.Types.GameState (GameState)
 import qualified Parun.Types.GameState as GameState
 import qualified Parun.Types.GrantedAbility as GrantedAbility
+import qualified Parun.Types.Holder as Holder
 import Parun.Types.Keyword (Keyword)
 import qualified Parun.Types.Keyword as Keyword.Type
 import qualified Parun.Types.KeywordInstance as KeywordInstance
@@ -3653,6 +3654,13 @@ data Aspect
 everyAspect :: Set Aspect
 everyAspect = Set.fromList [minBound .. maxBound]
 
+-- The candidate's controller, or nothing for its owner: CR 108.3 lets no rule
+-- change an owner, so no Modification writes Object.owner.
+holderReads :: Holder.Holder -> Set Aspect
+holderReads holder = case holder of
+  Holder.Controller -> Set.singleton Controller
+  Holder.Owner -> Set.empty
+
 -- CR 208.1 / 613.4: power and toughness are layer 7's, and CR 105.2's colours
 -- layer 5's (CR 613.1e); CR 202.3 reads the printed mana cost, which no
 -- Modification writes.
@@ -3715,15 +3723,11 @@ filterReads f = case f of
   Filter.Type.ControlledBy _ -> Set.singleton Controller
   -- The candidate's controller; who defends is a combat-record fact.
   Filter.Type.ControlledByRole _ -> Set.singleton Controller
-  Filter.Type.ControlledByBound _ -> Set.singleton Controller
-  Filter.Type.ControlledByPlayer _ -> Set.singleton Controller
-  Filter.Type.ControlledByRecipient -> Set.singleton Controller
-  -- Reads nothing, where its sibling above reads Controller: CR 108.3 lets no
-  -- rule change an owner, so no Modification writes Object.owner.
+  Filter.Type.HeldByBound holder _ -> holderReads holder
+  Filter.Type.HeldByPlayer holder _ -> holderReads holder
+  Filter.Type.HeldByRecipient holder -> holderReads holder
+  -- Reads nothing, where its sibling above reads Controller: holderReads' reason.
   Filter.Type.OwnedBy _ -> Set.empty
-  Filter.Type.OwnedByRecipient -> Set.empty
-  Filter.Type.OwnedByBound _ -> Set.empty
-  Filter.Type.OwnedByPlayer _ -> Set.empty
   Filter.Type.IsSource -> Set.empty
   -- Reads an IDENTITY, IsBound's answer below.
   Filter.Type.IsObject _ -> Set.empty
@@ -4058,13 +4062,10 @@ filterReadsPeers f = case f of
     Operand.EnclosingAmount -> False
   Filter.Type.ControlledBy _ -> False
   Filter.Type.ControlledByRole _ -> False
-  Filter.Type.ControlledByBound _ -> False
-  Filter.Type.ControlledByPlayer _ -> False
-  Filter.Type.ControlledByRecipient -> False
+  Filter.Type.HeldByBound _ _ -> False
+  Filter.Type.HeldByPlayer _ _ -> False
+  Filter.Type.HeldByRecipient _ -> False
   Filter.Type.OwnedBy _ -> False
-  Filter.Type.OwnedByRecipient -> False
-  Filter.Type.OwnedByBound _ -> False
-  Filter.Type.OwnedByPlayer _ -> False
   Filter.Type.IsSource -> False
   Filter.Type.IsObject _ -> False
   Filter.Type.TargetsSource -> False

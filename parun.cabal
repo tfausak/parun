@@ -793,6 +793,8 @@ library codec
     Parun.Codec.HalfUnlockedSpec
     Parun.Codec.HandAction
     Parun.Codec.HandActionSpec
+    Parun.Codec.Holder
+    Parun.Codec.HolderSpec
     Parun.Codec.HowMany
     Parun.Codec.Hybrid
     Parun.Codec.HybridPhyrexian
@@ -2670,6 +2672,7 @@ library types
     Parun.Types.HandActionPerformer
     Parun.Types.HandWindowCap
     Parun.Types.HistoryRead
+    Parun.Types.Holder
     Parun.Types.Hotseat
     Parun.Types.HowMany
     Parun.Types.Hybrid

@@ -2339,7 +2339,7 @@ bakeSlots players = fmap (bakeSlot players)
 -- The slot's `amount` is baked beside its Filter, and by the matching function:
 -- CR 202.3's computed bound is a Quantity, and a Quantity names CR 603.2's
 -- bindings through PlayerRef.InSlot exactly as a Filter names them through
--- ControlledByBound. An unbaked one would be unanswerable where the filter beside
+-- HeldByBound. An unbaked one would be unanswerable where the filter beside
 -- it is answerable. A REGRESSION FENCE rather than a proved behaviour: no
 -- committed bound holds a PlayerRef.InSlot -- the pool's bounds name either
 -- Quantity.LifeGainedThisTurn against a PlayerRef.Relative, which baking leaves

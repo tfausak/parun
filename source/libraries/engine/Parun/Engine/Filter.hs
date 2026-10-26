@@ -53,6 +53,7 @@ import qualified Parun.Types.ForetellCost as ForetellCost
 import qualified Parun.Types.GameSettings as GameSettings
 import Parun.Types.GameState (GameState)
 import qualified Parun.Types.GameState as GameState
+import qualified Parun.Types.Holder as Holder
 import qualified Parun.Types.Impending as Impending
 import qualified Parun.Types.Keyword as Keyword.Type
 import qualified Parun.Types.KeywordCount as KeywordCount
@@ -1143,7 +1144,7 @@ data Context = MkContext
     -- Filled by contextIn from the game it reads (Turn.activePlayers).
     activePlayers :: [PlayerId.PlayerId],
     -- The player the surrounding effect is CURRENTLY BEING APPLIED TO, for the
-    -- two atoms that ask (ControlledByRecipient, OwnedByRecipient) --
+    -- atom that asks (HeldByRecipient) --
     -- Biorhythm's "the number of creatures they control", Stronghold Discipline's "1 life for each creature
     -- they control". Supplied by the caller for defendingPlayer's reason, and by
     -- two callers: Parun.Engine.Resolve's evaluateForRecipient, which every
@@ -1220,8 +1221,8 @@ data Context = MkContext
     -- slotControllers and carries one that matters MORE, its vacuous direction
     -- being True, SameControllerAsHostOfBound reads slotHostControllers and
     -- refuses on an absent key, IsControllerOfBound is False wherever `matches`
-    -- reaches it, ControlledByBound is False for a card with no controller (CR
-    -- 108.4), and no Filter atom carries a Quantity.
+    -- reaches it, HeldByBound Controller is False for a card with no controller
+    -- (CR 108.4), and no Filter atom carries a Quantity.
     -- Parun.CardSpec's "CR 400.11c no card asks IsBound
     -- in a wish's filter" is what keeps a card out of that position, and
     -- Parun.OutsideTheGameSpec proves the atom answers nothing there.
@@ -1373,7 +1374,7 @@ data Context = MkContext
     -- player would need the half.
     --
     -- `matches` below reads it for IsBound against a player view and for an
-    -- unbaked ControlledByBound or OwnedByBound. It is otherwise a channel
+    -- unbaked HeldByBound. It is otherwise a channel
     -- THROUGH this record to Parun.Engine.Count.playersFor, which is handed CR
     -- 113.7's SOURCE and needs the resolution's own slots instead: an ability's targets and its trigger's
     -- bindings are stamped on the ABILITY object on the stack, and a source is not
@@ -1768,6 +1769,14 @@ compares comparison n t = case comparison of
   Comparison.LessThan -> n < t
   Comparison.GreaterThan -> n > t
 
+-- The player a holder atom reads off the candidate: its controller (CR 110.2),
+-- Nothing for a player view and for a card in a hidden zone (CR 108.4), or its
+-- owner (CR 108.3), Nothing off an object.
+heldBy :: Holder.Holder -> View -> Maybe PlayerId.PlayerId
+heldBy holder view = case holder of
+  Holder.Controller -> controller view
+  Holder.Owner -> owner view
+
 -- The one generic matcher. A pure fold over the Filter tree; it never inspects
 -- which effect produced the Filter. Identity checks like IsSource consult the
 -- supplied Context, not information baked into the predicate.
@@ -1884,26 +1893,25 @@ matches context view predicate = case predicate of
             TurnRole.Defending -> defendingPlayers context
         )
     Nothing -> False
-  -- CR 603.2's "that player controls". `bakeBound` below replaces the atom before
-  -- either of CR 115's moments judges the slot; a COUNT is matched unbaked, so the
-  -- atom reads the Context's slotPlayers there -- Mana Cache's "for each untapped
-  -- land that player controls" (Parun.ManaSpec's Mana Cache group). False unless the
-  -- slot names exactly one player, bakeBound's own posture and the vacuous one
-  -- every player-referencing atom takes.
-  Filter.ControlledByBound slot -> case fmap Set.toList (Map.lookup slot (slotPlayers context)) of
-    Just [pid] -> controller view == Just pid
+  -- CR 603.2's "that player controls" and "target player owns". `bakeBound`
+  -- below replaces the atom before either of CR 115's moments judges the slot; a
+  -- COUNT is matched unbaked, so the atom reads the Context's slotPlayers there --
+  -- Mana Cache's "for each untapped land that player controls" (Parun.ManaSpec's
+  -- Mana Cache group). False unless the slot names exactly one player, bakeBound's
+  -- own posture and the vacuous one every player-referencing atom takes.
+  Filter.HeldByBound holder slot -> case fmap Set.toList (Map.lookup slot (slotPlayers context)) of
+    Just [pid] -> heldBy holder view == Just pid
     _ -> False
-  -- The baked half: the candidate's controller IS this player, with no perspective
-  -- to relate it to. Vacuously False off an object, `controller` being Nothing for a
-  -- player view and for a card in a hidden zone (CR 108.4).
-  Filter.ControlledByPlayer pid -> controller view == Just pid
-  -- The candidate's controller IS the recipient the effect has currently reached,
+  -- The baked half: the candidate's holder IS this player, with no perspective
+  -- to relate it to. Vacuously False where `heldBy` reads Nothing.
+  Filter.HeldByPlayer holder pid -> heldBy holder view == Just pid
+  -- The candidate's holder IS the recipient the effect has currently reached,
   -- which the Context supplies because it is a fact about how far the surrounding
   -- effect has got rather than about the candidate. False unless both are
-  -- readable, ControlledByRole's posture: a candidate with no
-  -- controller has nothing to compare, and no recipient at all is every position
-  -- but a per-recipient effect's quantity.
-  Filter.ControlledByRecipient -> case (controller view, recipient context) of
+  -- readable, ControlledByRole's posture: a candidate with no such player has
+  -- nothing to compare, and no recipient at all is every position but a
+  -- per-recipient effect's quantity.
+  Filter.HeldByRecipient holder -> case (heldBy holder view, recipient context) of
     (Just c, Just r) -> c == r
     _ -> False
   -- CR 108.3 / 110.2: the same comparison ControlledBy makes, against the other
@@ -1914,16 +1922,6 @@ matches context view predicate = case predicate of
   Filter.OwnedBy relation -> case (owner view, perspective context) of
     (Just o, Just p) -> PlayerRelation.holds (teams context) relation p o
     _ -> False
-  -- ControlledByRecipient's comparison against CR 108.3's owner, for its
-  -- reasons: False unless both are readable.
-  Filter.OwnedByRecipient -> case (owner view, recipient context) of
-    (Just o, Just r) -> o == r
-    _ -> False
-  -- ControlledByBound's reading against CR 108.3's owner, for its reasons.
-  Filter.OwnedByBound slot -> case fmap Set.toList (Map.lookup slot (slotPlayers context)) of
-    Just [pid] -> owner view == Just pid
-    _ -> False
-  Filter.OwnedByPlayer pid -> owner view == Just pid
   Filter.IsSource -> case (identity view, source context) of
     (Just oid, Just src) -> oid == src
     _ -> False
@@ -2516,16 +2514,13 @@ rewrite pairs predicate = case predicate of
   Filter.ControlledByRole _ -> predicate
   -- Untouched for the same reason twice over: neither a slot name nor a player id
   -- is a word CR 612.1's swap can find in the text.
-  Filter.ControlledByBound _ -> predicate
-  Filter.ControlledByPlayer _ -> predicate
+  Filter.HeldByBound _ _ -> predicate
+  Filter.HeldByPlayer _ _ -> predicate
   -- Untouched for ControlledBy's reason.
-  Filter.ControlledByRecipient -> predicate
+  Filter.HeldByRecipient _ -> predicate
   -- Untouched for ControlledBy's reason: CR 612.1 swaps a WORD in the text, and
   -- this atom names a player relation rather than a subtype.
   Filter.OwnedBy _ -> predicate
-  Filter.OwnedByRecipient -> predicate
-  Filter.OwnedByBound _ -> predicate
-  Filter.OwnedByPlayer _ -> predicate
   Filter.IsSource -> predicate
   Filter.IsObject _ -> predicate
   -- Untouched for IsSource's reason: a target relation is not a word CR 612.1
@@ -3215,9 +3210,8 @@ rewriteComponent pairs component = case component of
   CostComponent.Waterbend _ -> component
   CostComponent.WaterbendInstead _ -> component
 
--- CR 603.2: replace every ControlledByBound and OwnedByBound atom whose slot
--- this environment names with its baked ControlledByPlayer or OwnedByPlayer
--- arm, every IsBound atom whose slot
+-- CR 603.2: replace every HeldByBound atom whose slot this environment names
+-- with its baked HeldByPlayer, every IsBound atom whose slot
 -- `objects` names with the objects it holds, and every ControllerRelatesToBound
 -- atom whose slot `controllers` names with the players its relation admits. What makes "target
 -- creature THAT PLAYER controls" answerable at all -- the player is a fact about the EVENT that
@@ -3244,7 +3238,7 @@ rewriteComponent pairs component = case component of
 -- unbaked one.
 bakeBound :: Map.Map SlotName.SlotName PlayerId.PlayerId -> Map.Map SlotName.SlotName (Set.Set ObjectId.ObjectId) -> Map.Map SlotName.SlotName (PlayerRelation.PlayerRelation -> Set.Set PlayerId.PlayerId) -> Filter.Filter Keyword.Type.Keyword -> Filter.Filter Keyword.Type.Keyword
 bakeBound players objects controllers predicate = case predicate of
-  Filter.ControlledByBound slot -> maybe predicate Filter.ControlledByPlayer (Map.lookup slot players)
+  Filter.HeldByBound holder slot -> maybe predicate (Filter.HeldByPlayer holder) (Map.lookup slot players)
   Filter.And fs -> Filter.And (fmap (bakeBound players objects controllers) fs)
   Filter.Or fs -> Filter.Or (fmap (bakeBound players objects controllers) fs)
   Filter.Not f -> Filter.Not (bakeBound players objects controllers f)
@@ -3253,10 +3247,10 @@ bakeBound players objects controllers predicate = case predicate of
   -- filter like any other, and a slot named inside it must be baked before the
   -- match or it can never be answered.
   Filter.Controls n f -> Filter.Controls n (bakeBound players objects controllers f)
-  Filter.ControlledByPlayer _ -> predicate
+  Filter.HeldByPlayer _ _ -> predicate
   -- Untouched: CR 603.2's slot is not the recipient an effect has reached, and no
   -- binding could answer this atom -- Parun.Engine.Filter.Context carries it.
-  Filter.ControlledByRecipient -> predicate
+  Filter.HeldByRecipient _ -> predicate
   Filter.HasCardType _ -> predicate
   Filter.HasSupertype _ -> predicate
   Filter.HasColor _ -> predicate
@@ -3276,9 +3270,6 @@ bakeBound players objects controllers predicate = case predicate of
   Filter.ControlledBy _ -> predicate
   Filter.ControlledByRole _ -> predicate
   Filter.OwnedBy _ -> predicate
-  Filter.OwnedByRecipient -> predicate
-  Filter.OwnedByBound slot -> maybe predicate Filter.OwnedByPlayer (Map.lookup slot players)
-  Filter.OwnedByPlayer _ -> predicate
   Filter.IsSource -> predicate
   Filter.IsObject _ -> predicate
   -- Untouched for IsSource's reason: both read the Context, and neither names a
@@ -3302,7 +3293,7 @@ bakeBound players objects controllers predicate = case predicate of
   -- IsBound's reason -- Mark for Death's "other creatures that player
   -- controls". Left standing where the map has no key, which is CR 601.2c's
   -- offer before the sibling target is chosen.
-  Filter.ControllerRelatesToBound relation slot -> maybe predicate (\related -> Filter.Or (fmap Filter.ControlledByPlayer (Set.toList (related relation)))) (Map.lookup slot controllers)
+  Filter.ControllerRelatesToBound relation slot -> maybe predicate (\related -> Filter.Or (fmap (Filter.HeldByPlayer Holder.Controller) (Set.toList (related relation)))) (Map.lookup slot controllers)
   Filter.SameControllerAsHostOfBound _ -> predicate
   Filter.SharesCreatureTypeWith _ -> predicate
   Filter.HasChosenName {} -> predicate
@@ -3341,16 +3332,16 @@ bakeBound players objects controllers predicate = case predicate of
   Filter.SaddledSourceThisTurn -> predicate
   -- Untouched: the atom names no slot for CR 603.2's map to substitute into.
   Filter.ControlledSinceTurnBegan -> predicate
-  -- DESCENT, for Controls' reason above: a ControlledByBound written
+  -- DESCENT, for Controls' reason above: a HeldByBound written
   -- into the HOST's description is baked exactly as the same atom written at the
   -- top level would be. Parun.Engine.Filter.boundSlots descends to match, which is
   -- the pairing that function's comment insists on.
   Filter.AttachedTo f -> Filter.AttachedTo (bakeBound players objects controllers f)
-  -- DESCENT, for the atom above's reason: a ControlledByBound written into the
+  -- DESCENT, for the atom above's reason: a HeldByBound written into the
   -- represented card's description is baked exactly as the same atom at the top
   -- level would be, and Parun.Engine.Filter.boundSlots descends to match.
   Filter.RepresentedByCard f -> Filter.RepresentedByCard (bakeBound players objects controllers f)
-  -- DESCENT, for the atom above's reason: a ControlledByBound written into the
+  -- DESCENT, for the atom above's reason: a HeldByBound written into the
   -- ATTACHER's description is baked exactly as the same atom at the top level
   -- would be, and Parun.Engine.Filter.boundSlots descends to match.
   Filter.HasAttached f -> Filter.HasAttached (bakeBound players objects controllers f)
@@ -3463,13 +3454,10 @@ manaValueThresholds predicate = case predicate of
   Filter.HasKeywordFamily _ -> []
   Filter.ControlledBy _ -> []
   Filter.ControlledByRole _ -> []
-  Filter.ControlledByBound _ -> []
-  Filter.ControlledByPlayer _ -> []
-  Filter.ControlledByRecipient -> []
+  Filter.HeldByBound _ _ -> []
+  Filter.HeldByPlayer _ _ -> []
+  Filter.HeldByRecipient _ -> []
   Filter.OwnedBy _ -> []
-  Filter.OwnedByRecipient -> []
-  Filter.OwnedByBound _ -> []
-  Filter.OwnedByPlayer _ -> []
   Filter.IsSource -> []
   Filter.IsObject _ -> []
   Filter.TargetsSource -> []
@@ -3626,13 +3614,10 @@ statesAQuality predicate = case predicate of
   Filter.HasKeywordFamily _ -> True
   Filter.ControlledBy _ -> True
   Filter.ControlledByRole _ -> True
-  Filter.ControlledByBound _ -> True
-  Filter.ControlledByPlayer _ -> True
-  Filter.ControlledByRecipient -> True
+  Filter.HeldByBound _ _ -> True
+  Filter.HeldByPlayer _ _ -> True
+  Filter.HeldByRecipient _ -> True
   Filter.OwnedBy _ -> True
-  Filter.OwnedByRecipient -> True
-  Filter.OwnedByBound _ -> True
-  Filter.OwnedByPlayer _ -> True
   Filter.IsSource -> True
   Filter.IsObject _ -> True
   -- CR 701.23b for IsSource's reason, and unreachable from a search besides: a
@@ -3800,13 +3785,10 @@ readsSourceValues predicate = case predicate of
   Filter.HasKeywordFamily _ -> False
   Filter.ControlledBy _ -> False
   Filter.ControlledByRole _ -> False
-  Filter.ControlledByBound _ -> False
-  Filter.ControlledByPlayer _ -> False
-  Filter.ControlledByRecipient -> False
+  Filter.HeldByBound _ _ -> False
+  Filter.HeldByPlayer _ _ -> False
+  Filter.HeldByRecipient _ -> False
   Filter.OwnedBy _ -> False
-  Filter.OwnedByRecipient -> False
-  Filter.OwnedByBound _ -> False
-  Filter.OwnedByPlayer _ -> False
   Filter.IsSource -> False
   Filter.IsObject _ -> False
   Filter.TargetsSource -> False
@@ -3952,13 +3934,10 @@ overBoundSlotsWith f predicate = case predicate of
   -- A PLAYER slot, read singly all the same: `matches` answers it off a slot
   -- naming exactly one player, and bakeBound off Binding.playerSlots, which is
   -- Binding.onlyOne.
-  Filter.ControlledByBound slot -> fmap Filter.ControlledByBound (f SlotArity.One slot)
-  Filter.ControlledByPlayer _ -> pure predicate
-  Filter.ControlledByRecipient -> pure predicate
+  Filter.HeldByBound holder slot -> fmap (Filter.HeldByBound holder) (f SlotArity.One slot)
+  Filter.HeldByPlayer _ _ -> pure predicate
+  Filter.HeldByRecipient _ -> pure predicate
   Filter.OwnedBy _ -> pure predicate
-  Filter.OwnedByRecipient -> pure predicate
-  Filter.OwnedByBound slot -> fmap Filter.OwnedByBound (f SlotArity.One slot)
-  Filter.OwnedByPlayer _ -> pure predicate
   Filter.IsSource -> pure predicate
   Filter.IsObject _ -> pure predicate
   Filter.TargetsSource -> pure predicate

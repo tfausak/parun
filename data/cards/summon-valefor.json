@@ -70,8 +70,13 @@
                                         }
                                       },
                                       {
-                                        "type": "ControlledByBound",
-                                        "value": "opponent"
+                                        "type": "HeldByBound",
+                                        "value": {
+                                          "holder": {
+                                            "type": "Controller"
+                                          },
+                                          "slot": "opponent"
+                                        }
                                       },
                                       {
                                         "type": "Measures",

@@ -15,6 +15,7 @@ import qualified Parun.Types.Designation as Designation
 import qualified Parun.Types.EnteredZone as EnteredZone
 import qualified Parun.Types.ExiledPile as ExiledPile
 import qualified Parun.Types.Expansion as Expansion
+import qualified Parun.Types.Holder as Holder
 import qualified Parun.Types.KeywordDesignator as KeywordDesignator
 import qualified Parun.Types.KeywordFamily as KeywordFamily
 import qualified Parun.Types.Measures as Measures
@@ -97,43 +98,34 @@ data Filter keyword
     -- source with no attack (CR 802.2a, Yare). Vacuously False where the Context
     -- holds no such player.
     ControlledByRole TurnRole.TurnRole
-  | -- | CR 603.2: the candidate's controller is the PLAYER BOUND at this slot --
-    -- Trygon Predator's "that player", the one the trigger's own event named.
-    -- Answered by rewriting (Parun.Engine.Filter.bakeBound), and vacuously False
-    -- if it survives to a match.
-    ControlledByBound SlotName.SlotName
-  | -- | The atom above with its player resolved: the candidate's controller IS
-    -- this player. Runtime-only -- Parun.CardSpec lints the pool against a card
+  | -- | CR 603.2 / 115.1: the candidate's holder is the PLAYER BOUND at this
+    -- slot -- Trygon Predator's "that player controls", Hurkyl's Recall's
+    -- "artifacts target player owns". Answered by rewriting
+    -- (Parun.Engine.Filter.bakeBound), and vacuously False if it survives to a
+    -- match.
+    HeldByBound Holder.Holder SlotName.SlotName
+  | -- | The atom above with its player resolved: the candidate's holder IS this
+    -- player. Runtime-only -- Parun.CardSpec lints the pool against a card
     -- authoring one, a baked player in printed text being meaningless (#199).
-    ControlledByPlayer PlayerId.PlayerId
-  | -- | The candidate's controller is the player the surrounding effect is
+    HeldByPlayer Holder.Holder PlayerId.PlayerId
+  | -- | The candidate's holder is the player the surrounding effect is
     -- CURRENTLY BEING APPLIED TO -- Biorhythm's "the number of creatures THEY
-    -- control". Not CR 109.5's "you", which is the spell's controller, and
-    -- vacuously False outside a per-recipient effect's quantity.
-    ControlledByRecipient
+    -- control", Flux's "discards any number of cards, then draws THAT MANY". Not
+    -- CR 109.5's "you", which is the spell's controller, and vacuously False
+    -- outside a per-recipient effect's quantity.
+    HeldByRecipient Holder.Holder
   | -- | CR 108.3 / 110.2: the candidate's OWNER relates thus to the perspective.
     -- A sibling of ControlledBy above and never derivable from it, and answerable
     -- in every zone where that atom is not: an owner changes only by CR 407.3's
     -- ante cards, while CR 108.4 gives a card outside the battlefield and the
     -- stack no controller. False off an object, a printed card being none (CR 109.1).
     OwnedBy PlayerRelation.PlayerRelation
-  | -- | CR 108.3 / 701.9a: the candidate's OWNER is the player the surrounding
-    -- effect is currently being applied to -- ControlledByRecipient's owner
-    -- twin, Flux's "discards any number of cards, then draws THAT MANY".
-    OwnedByRecipient
-  | -- | CR 108.3: the candidate's OWNER is the player bound at this slot --
-    -- Hurkyl's Recall's "artifacts target player owns". ControlledByBound's owner
-    -- twin, answered and baked the same way.
-    OwnedByBound SlotName.SlotName
-  | -- | The atom above with its player resolved. Runtime-only, ControlledByPlayer's
-    -- posture.
-    OwnedByPlayer PlayerId.PlayerId
   | -- | The candidate IS the evaluation's source object. @Not IsSource@ is how CR
     -- 601.2c's "another" and a continuous effect's own "each other" card text are
     -- both written -- one relation, one spelling (#163).
     IsSource
   | -- | The candidate IS this object, named outright rather than related to the
-    -- evaluation's source. Runtime-only, ControlledByPlayer's posture --
+    -- evaluation's source. Runtime-only, HeldByPlayer's posture --
     -- Parun.Engine.Cost.candidateCostsGiven bakes CR 702.119c's chosen victim into
     -- the emerge candidate's sacrifice criterion, and Parun.FilterPositionLintSpec
     -- lints the pool against a card authoring one, a baked object in printed text

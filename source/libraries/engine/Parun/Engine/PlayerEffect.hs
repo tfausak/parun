@@ -294,7 +294,7 @@ printedRows gs =
             -- turn" asks each opponent about themselves. The same player
             -- is the Context's recipient, so Ethersworn Canonist's "each
             -- player who has cast a nonartifact spell" counts their own
-            -- casts through Filter.ControlledByRecipient.
+            -- casts through Filter.HeldByRecipient.
             --
             -- The clause takes the same CR 612.1 word swap the effect
             -- beside it does, since one ability's two halves cannot

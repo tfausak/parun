@@ -46,8 +46,13 @@
                                     }
                                   },
                                   {
-                                    "type": "ControlledByBound",
-                                    "value": "chooser"
+                                    "type": "HeldByBound",
+                                    "value": {
+                                      "holder": {
+                                        "type": "Controller"
+                                      },
+                                      "slot": "chooser"
+                                    }
                                   },
                                   {
                                     "type": "Measures",
@@ -125,8 +130,13 @@
                                     }
                                   },
                                   {
-                                    "type": "ControlledByBound",
-                                    "value": "chooser"
+                                    "type": "HeldByBound",
+                                    "value": {
+                                      "holder": {
+                                        "type": "Controller"
+                                      },
+                                      "slot": "chooser"
+                                    }
                                   },
                                   {
                                     "type": "Measures",

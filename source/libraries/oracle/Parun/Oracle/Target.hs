@@ -17,6 +17,7 @@ import qualified Parun.Types.ChosenPermanents as ChosenPermanents
 import qualified Parun.Types.Count as Count
 import qualified Parun.Types.EachCardInGraveyard as EachCardInGraveyard
 import qualified Parun.Types.Filter as Filter.Type
+import qualified Parun.Types.Holder as Holder
 import qualified Parun.Types.HowMany as HowMany
 import qualified Parun.Types.InZone as InZone
 import qualified Parun.Types.Keyword as Keyword
@@ -207,8 +208,8 @@ counting context c = case (Count.aggregation c, Count.scope c) of
           Filter.Type.And fs -> fs
           f -> [f]
         controls f = case f of
-          Filter.Type.ControlledByBound _ -> True
-          Filter.Type.ControlledByRecipient -> True
+          Filter.Type.HeldByBound Holder.Controller _ -> True
+          Filter.Type.HeldByRecipient Holder.Controller -> True
           _ -> False
         (controllers, rest) = (filter controls conjuncts, filter (not . controls) conjuncts)
     p <- Filter.phrase (Filter.Type.And rest) (keyword context)
@@ -233,8 +234,8 @@ counting context c = case (Count.aggregation c, Count.scope c) of
     -- A player a slot names is named there (Theft of Dreams) or, named
     -- already, "that player"; the mode keeps the one naming it once.
     controllerOf f = case f of
-      Filter.Type.ControlledByBound s -> [(Text.pack "that player controls", [])] <> fmap (\r -> (wording r <> Text.pack " controls", mentions r)) (target context s)
-      Filter.Type.ControlledByRecipient -> [(Text.pack "they control", [])]
+      Filter.Type.HeldByBound Holder.Controller s -> [(Text.pack "that player controls", [])] <> fmap (\r -> (wording r <> Text.pack " controls", mentions r)) (target context s)
+      Filter.Type.HeldByRecipient Holder.Controller -> [(Text.pack "they control", [])]
       _ -> []
 
 -- | A zone of a player's that cards are counted in: "in your hand", "in their

@@ -36,7 +36,10 @@
                     "type": "And",
                     "value": [
                       {
-                        "type": "ControlledByRecipient"
+                        "type": "HeldByRecipient",
+                        "value": {
+                          "type": "Controller"
+                        }
                       },
                       {
                         "type": "Not",

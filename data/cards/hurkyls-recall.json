@@ -39,8 +39,13 @@
                               }
                             },
                             {
-                              "type": "OwnedByBound",
-                              "value": "target"
+                              "type": "HeldByBound",
+                              "value": {
+                                "holder": {
+                                  "type": "Owner"
+                                },
+                                "slot": "target"
+                              }
                             }
                           ]
                         }
