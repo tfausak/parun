@@ -2140,8 +2140,7 @@ modificationNames asking onAbility x = case x of
   Modification.HasFullText fullText -> fullTextNames asking onAbility fullText
   Modification.SetController _playerId -> mempty
   Modification.SetControllerToSource -> mempty
-  Modification.SetColor _color -> mempty
-  Modification.AddColor _color -> mempty
+  Modification.Colors _colorMode _colors -> mempty
   Modification.ChosenColor _ -> mempty
   Modification.SwitchPowerToughness -> mempty
   Modification.AssignCombatDamageWithToughness -> mempty

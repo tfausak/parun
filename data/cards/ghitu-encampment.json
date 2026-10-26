@@ -105,12 +105,17 @@
                             "type": "UntilEndOfTurn"
                           },
                           "modification": {
-                            "type": "SetColor",
-                            "value": [
-                              {
-                                "type": "Red"
+                            "type": "Colors",
+                            "value": {
+                              "colors": [
+                                {
+                                  "type": "Red"
+                                }
+                              ],
+                              "mode": {
+                                "type": "Replace"
                               }
-                            ]
+                            }
                           },
                           "ref": {
                             "type": "InSlot",

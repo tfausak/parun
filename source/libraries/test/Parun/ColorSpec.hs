@@ -43,6 +43,7 @@ import qualified Parun.Types.Activator as Activator
 import qualified Parun.Types.Card as Card.Type
 import qualified Parun.Types.CardName as CardName
 import qualified Parun.Types.Color as Color
+import qualified Parun.Types.ColorMode as ColorMode
 import qualified Parun.Types.Cost as Cost.Type
 import qualified Parun.Types.CounterKind as CounterKind
 import qualified Parun.Types.EndingStep as EndingStep
@@ -225,18 +226,18 @@ spec s registry = Spec.describe s "Parun.Engine.Color" $ do
     typhoidRats <- S.printingOf s registry "Typhoid Rats"
     let gs0 = Setup.emptyGame S.bothPlayers
         (ratsId, board) = S.addPermanent typhoidRats S.alice gs0
-        gs = S.withEffect ratsId (Modification.SetColor (Set.singleton Color.Red)) board
+        gs = S.withEffect ratsId (Modification.Colors ColorMode.Replace (Set.singleton Color.Red)) board
     Spec.assertEq s (Projection.colorsOf ratsId gs) $ Set.singleton Color.Red
 
   Spec.it s "CR 613.3 within layer 5 the CR 702.114a devoid CDA applies first, then the timestamped colour change" $ do
     -- Both live in layer 5 (CR 613.1e). CR 613.3 orders them: devoid, the
     -- characteristic-defining ability, clears the colours at the start of the
-    -- layer, and the stored SetColor then applies in timestamp order on top --
+    -- layer, and the stored Colors Replace then applies in timestamp order on top --
     -- so the drone ends up black, not colourless.
     slaughterDrone <- S.printingOf s registry "Slaughter Drone"
     let gs0 = Setup.emptyGame S.bothPlayers
         (droneId, board) = S.addPermanent slaughterDrone S.alice gs0
-        gs = S.withEffect droneId (Modification.SetColor (Set.singleton Color.Black)) board
+        gs = S.withEffect droneId (Modification.Colors ColorMode.Replace (Set.singleton Color.Black)) board
     Spec.assertEq s (Projection.colorsOf droneId gs) $ Set.singleton Color.Black
 
   Spec.it s "Bad Moon pumps a black creature but not a red one" $ do
@@ -306,7 +307,7 @@ spec s registry = Spec.describe s "Parun.Engine.Color" $ do
     let gs0 = Setup.emptyGame S.bothPlayers
         (_, withMoon) = S.addPermanent badMoon S.alice gs0
         (pikerId, board) = S.addPermanent piker S.alice withMoon
-        gs = S.withEffect pikerId (Modification.SetColor (Set.singleton Color.Black)) board
+        gs = S.withEffect pikerId (Modification.Colors ColorMode.Replace (Set.singleton Color.Black)) board
     Spec.assertEqWith s "the now-black Piker is 3/2" (Projection.powerOf pikerId gs) $ Just 3
 
   Spec.it s "CR 115.1a a black creature is not a legal 'target nonblack creature'" $ do
@@ -333,23 +334,23 @@ spec s registry = Spec.describe s "Parun.Engine.Color" $ do
     -- colors unless it specifically says 'in addition to its other
     -- colors.' ... It doesn't matter what colors it used to be (even if,
     -- for example, it used to be blue and black)." Transcribed with two
-    -- stacked SetColor effects rather than a card, since no card in the
+    -- stacked Colors Replace effects rather than a card, since no card in the
     -- pool is printed multicoloured: the later effect leaves no residue
     -- of either colour the earlier one set, not just the printed colour.
     typhoidRats <- S.printingOf s registry "Typhoid Rats"
     let gs0 = Setup.emptyGame S.bothPlayers
         (ratsId, board) = S.addPermanent typhoidRats S.alice gs0
-        multi = S.withEffect ratsId (Modification.SetColor (Set.fromList [Color.Blue, Color.Black])) board
-        gs = S.withEffect ratsId (Modification.SetColor (Set.singleton Color.Red)) multi
+        multi = S.withEffect ratsId (Modification.Colors ColorMode.Replace (Set.fromList [Color.Blue, Color.Black])) board
+        gs = S.withEffect ratsId (Modification.Colors ColorMode.Replace (Set.singleton Color.Red)) multi
     Spec.assertEqWith s "red only, no residue of blue or black" (Projection.colorsOf ratsId gs) $ Set.singleton Color.Red
 
   Spec.it s "CR 105.3 an 'in addition' colour effect ADDS rather than replaces" $ do
     -- The falsifier for implementing every colour change as a replacement: the
-    -- Rats are black, and after an AddColor they are black AND blue.
+    -- Rats are black, and after a Colors InAddition they are black AND blue.
     typhoidRats <- S.printingOf s registry "Typhoid Rats"
     let gs0 = Setup.emptyGame S.bothPlayers
         (ratsId, board) = S.addPermanent typhoidRats S.alice gs0
-        gs = S.withEffect ratsId (Modification.AddColor (Set.singleton Color.Blue)) board
+        gs = S.withEffect ratsId (Modification.Colors ColorMode.InAddition (Set.singleton Color.Blue)) board
     Spec.assertEq s (Projection.colorsOf ratsId gs) $ Set.fromList [Color.Black, Color.Blue]
 
   Spec.it s "CR 613.1c/613.1e 2008-05-01 changing a permanent's colour doesn't change its text" $ do
@@ -358,7 +359,7 @@ spec s registry = Spec.describe s "Parun.Engine.Color" $ do
     -- Wilt-Leaf Liege blue, it will still affect green creatures and
     -- white creatures." Transcribed with Bad Moon, whose own text
     -- ("Black creatures get +1/+1") is keyed to its OWN printed colour:
-    -- turn Bad Moon itself red with a stored SetColor effect (S.withEffect
+    -- turn Bad Moon itself red with a stored Colors Replace effect (S.withEffect
     -- reaches non-creature permanents, which no card in the pool
     -- targets) and its ability still reads Typhoid Rats as black. This
     -- guards CR 613.1e/613.1c's layer separation -- colour is layer 5,
@@ -369,7 +370,7 @@ spec s registry = Spec.describe s "Parun.Engine.Color" $ do
     let gs0 = Setup.emptyGame S.bothPlayers
         (moonId, withMoon) = S.addPermanent badMoon S.alice gs0
         (ratsId, board) = S.addPermanent typhoidRats S.alice withMoon
-        gs = S.withEffect moonId (Modification.SetColor (Set.singleton Color.Red)) board
+        gs = S.withEffect moonId (Modification.Colors ColorMode.Replace (Set.singleton Color.Red)) board
     Spec.assertEqWith s "Bad Moon itself is now red" (Projection.colorsOf moonId gs) $ Set.singleton Color.Red
     Spec.assertEqWith s "the black Rats are still pumped to 2 power" (Projection.powerOf ratsId gs) $ Just 2
     Spec.assertEqWith s "the black Rats are still pumped to 2 toughness" (Projection.toughnessOf ratsId gs) $ Just 2

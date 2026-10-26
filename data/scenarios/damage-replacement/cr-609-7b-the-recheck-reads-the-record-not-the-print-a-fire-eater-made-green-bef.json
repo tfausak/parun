@@ -1,6 +1,6 @@
 {
   "description": "CR 609.7b the recheck reads the RECORD, not the print: a Fire-Eater made green before it left deals its 2",
-  "note": "Alice casts Luminesce, then Moonlace on her red Ghitu Fire-Eater, then sacrifices the Fire-Eater to its own ability aimed at bob: the departed source's record is colourless, so bob takes its 2. Moonlace (colourless) stands in for the test's hand-built SetColor Green: no card in the pool makes a creature exactly green, and colourless matches neither of Luminesce's disjuncts just as green does. Without the Moonlace bob takes nothing.",
+  "note": "Alice casts Luminesce, then Moonlace on her red Ghitu Fire-Eater, then sacrifices the Fire-Eater to its own ability aimed at bob: the departed source's record is colourless, so bob takes its 2. Moonlace (colourless) stands in for the test's hand-built Colors Replace Green: no card in the pool makes a creature exactly green, and colourless matches neither of Luminesce's disjuncts just as green does. Without the Moonlace bob takes nothing.",
   "board": {
     "seats": [
       {

@@ -427,8 +427,7 @@ rewriteModification pairs m =
               Modification.ChangeWord {} -> acc
               -- CR 612.2's colour word used as a colour word: "is black", printed on
               -- the setter. A chosen colour is no word on the card.
-              Modification.SetColor cs -> Modification.SetColor (colors cs)
-              Modification.AddColor cs -> Modification.AddColor (colors cs)
+              Modification.Colors mode cs -> Modification.Colors mode (colors cs)
               Modification.ChosenColor _ -> acc
    in List.foldl' apply1 m pairs
 

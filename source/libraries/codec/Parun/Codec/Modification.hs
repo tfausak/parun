@@ -26,6 +26,7 @@ import qualified Parun.Codec.TargetSlot as TargetSlot
 import qualified Parun.JsonCodec.Arm as Arm
 import qualified Parun.JsonCodec.Codec as Codec
 import qualified Parun.JsonCodec.Common as Common
+import qualified Parun.JsonCodec.Fields as Fields
 import qualified Parun.Types.Modification as Modification
 
 -- | The wire format is unchanged by the conversion to a bundle; what it adds is
@@ -37,7 +38,11 @@ import qualified Parun.Types.Modification as Modification
 -- own parameter opens.
 codec :: (Typeable.Typeable ability, Eq ability) => Codec.Codec ability -> Codec.Codec (Modification.Modification ability)
 codec abilityCodec =
-  let colors = Common.set Color.codec
+  let colors =
+        Fields.object $
+          (,)
+            <$> Fields.required "mode" ColorMode.codec fst
+            <*> Fields.required "colors" (Common.set Color.codec) snd
    in Arm.tagged
         tagOf
         [ Arm.payload "GainAbility" abilityCodec Modification.GainAbility (\x -> case x of Modification.GainAbility y -> Just y; _ -> Nothing),
@@ -72,8 +77,7 @@ codec abilityCodec =
           Arm.payload "ChangeWord" ChangeWord.codec Modification.ChangeWord (\x -> case x of Modification.ChangeWord y -> Just y; _ -> Nothing),
           Arm.payload "SetController" PlayerId.codec Modification.SetController (\x -> case x of Modification.SetController y -> Just y; _ -> Nothing),
           Arm.nullary "SetControllerToSource" Modification.SetControllerToSource,
-          Arm.payload "SetColor" colors Modification.SetColor (\x -> case x of Modification.SetColor y -> Just y; _ -> Nothing),
-          Arm.payload "AddColor" colors Modification.AddColor (\x -> case x of Modification.AddColor y -> Just y; _ -> Nothing),
+          Arm.payload "Colors" colors (uncurry Modification.Colors) (\x -> case x of Modification.Colors mode cs -> Just (mode, cs); _ -> Nothing),
           Arm.payload "ChosenColor" ColorMode.codec Modification.ChosenColor (\x -> case x of Modification.ChosenColor y -> Just y; _ -> Nothing),
           Arm.nullary "ExchangeTextBoxes" Modification.ExchangeTextBoxes,
           Arm.payload "AddNamesMatching" (Filter.codec Keyword.codec) Modification.AddNamesMatching (\x -> case x of Modification.AddNamesMatching y -> Just y; _ -> Nothing),
@@ -121,8 +125,7 @@ tagOf x = case x of
   Modification.ChangeWord {} -> "ChangeWord"
   Modification.SetController {} -> "SetController"
   Modification.SetControllerToSource {} -> "SetControllerToSource"
-  Modification.SetColor {} -> "SetColor"
-  Modification.AddColor {} -> "AddColor"
+  Modification.Colors {} -> "Colors"
   Modification.ChosenColor {} -> "ChosenColor"
   Modification.ExchangeTextBoxes {} -> "ExchangeTextBoxes"
   Modification.AddNamesMatching {} -> "AddNamesMatching"

@@ -28,12 +28,17 @@
               }
             },
             {
-              "type": "SetColor",
-              "value": [
-                {
-                  "type": "Black"
+              "type": "Colors",
+              "value": {
+                "colors": [
+                  {
+                    "type": "Black"
+                  }
+                ],
+                "mode": {
+                  "type": "Replace"
                 }
-              ]
+              }
             },
             {
               "type": "SetBasePowerToughness",

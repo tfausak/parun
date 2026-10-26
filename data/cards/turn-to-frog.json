@@ -46,12 +46,17 @@
                         "type": "UntilEndOfTurn"
                       },
                       "modification": {
-                        "type": "SetColor",
-                        "value": [
-                          {
-                            "type": "Blue"
+                        "type": "Colors",
+                        "value": {
+                          "colors": [
+                            {
+                              "type": "Blue"
+                            }
+                          ],
+                          "mode": {
+                            "type": "Replace"
                           }
-                        ]
+                        }
                       },
                       "ref": {
                         "type": "InSlot",
