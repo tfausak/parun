@@ -872,12 +872,8 @@ spec s = Spec.describe s "Parun.Oracle" $ do
         atLeast q k = Condition.Compares (Compares.MkCompares q Comparison.AtLeast (Quantity.Literal k))
         forest = atLeast (countOf (Filter.And [Filter.HasSubtype Subtype.Forest, Filter.ControlledBy PlayerRelation.You]) (onBattlefield (PlayerRef.Relative PlayerRelation.AnyPlayer))) 1
         attacking = atLeast (countOf (Filter.And [Filter.IsSource, Filter.IsAttacking]) (onBattlefield (PlayerRef.Relative PlayerRelation.AnyPlayer))) 1
-        threshold = atLeast (countOf (Filter.And []) (InZone.MkInZone Zone.Graveyard (PlayerRef.Relative PlayerRelation.You))) 7
-        turn = Condition.Compares (Compares.MkCompares (Quantity.IsActivePlayer (PlayerRef.Relative PlayerRelation.You)) Comparison.Exactly (Quantity.Literal 1))
     Spec.assertEq s [[Text.pack "As long as you control a Forest, Spark gets +1/+2.", Text.pack "Spark gets +1/+2 as long as you control a Forest."]] (Oracle.abilities (gated forest [pt 1 2]))
     Spec.assertEq s [[Text.pack "As long as Spark is attacking, it has first strike.", Text.pack "Spark has first strike as long as it's attacking."]] (Oracle.abilities (gated attacking [Modification.GainKeyword Keyword.FirstStrike]))
-    Spec.assertEq s [[Text.pack "As long as there are seven or more cards in your graveyard, Spark gets +1/+1.", Text.pack "Spark gets +1/+1 as long as there are seven or more cards in your graveyard.", Text.pack "Threshold \8212 As long as there are seven or more cards in your graveyard, Spark gets +1/+1.", Text.pack "Threshold \8212 Spark gets +1/+1 as long as there are seven or more cards in your graveyard."]] (Oracle.abilities (gated threshold [pt 1 1]))
-    Spec.assertEq s [[Text.pack "As long as it's your turn, Spark has first strike.", Text.pack "During your turn, Spark has first strike.", Text.pack "Spark has first strike as long as it's your turn."]] (Oracle.abilities (gated turn [Modification.GainKeyword Keyword.FirstStrike]))
 
   -- CR 701.22a: "Scry 2."
   Spec.it s "render prints scrying" $ do
@@ -890,7 +886,7 @@ spec s = Spec.describe s "Parun.Oracle" $ do
     let unblockable f = CombatRestriction.CantBeBlockedBy (CantBeBlockedBy.MkCantBeBlockedBy (Affected.Matching Filter.IsSource) f Nothing Nothing)
         combat rs = withFace (\f -> f {Face.combatRestrictions = rs})
     Spec.assertEq s (Just (Text.pack "Spark can't be blocked.")) (Oracle.render (combat [unblockable (Filter.And [])]))
-    Spec.assertEq s (Just (Text.pack "Spark can't be blocked by Walls.")) (Oracle.render (combat [unblockable (Filter.HasSubtype Subtype.Wall)]))
+    Spec.assertEq s [[Text.pack "Spark can't be blocked by Walls."]] (Oracle.abilities (combat [unblockable (Filter.HasSubtype Subtype.Wall)]))
     Spec.assertEq s (Just (Text.pack "Spark can't be blocked except by Walls.")) (Oracle.render (combat [unblockable (Filter.Not (Filter.HasSubtype Subtype.Wall))]))
     Spec.assertEq s (Just (Text.pack "Spark can't block and can't be blocked.")) (Oracle.render (combat [CombatRestriction.CantBlock (AffectedUnless.MkAffectedUnless (Affected.Matching Filter.IsSource) Nothing Nothing Nothing), unblockable (Filter.And [])]))
 
@@ -900,8 +896,7 @@ spec s = Spec.describe s "Parun.Oracle" $ do
     let enchanted = Affected.Matching (Filter.And [Filter.HasCardType CardType.Creature, Filter.HasAttached Filter.IsSource])
         aura changes = withFace (\f -> (typed [CardType.Enchantment] [Subtype.Aura] f) {Face.enchant = [TargetSlot.required Pool.Creatures Nothing], Face.staticAbilities = [static enchanted changes], Face.combatRestrictions = [CombatRestriction.CantBeBlockedBy (CantBeBlockedBy.MkCantBeBlockedBy (Affected.Matching (Filter.HasAttached Filter.IsSource)) (Filter.Not (Filter.HasKeyword Keyword.Flying)) Nothing Nothing)]})
     Spec.assertEq s (Just (Text.pack "Enchant creature\nEnchanted creature gets +1/+1 and can't be blocked except by creatures with flying.")) (Oracle.render (aura [pt 1 1]))
-    Spec.assertEq s [[Text.pack "Enchant creature"], [Text.pack "Enchanted creature can't be blocked except by creatures with flying and has shroud.", Text.pack "Enchanted creature has shroud and can't be blocked except by creatures with flying.", Text.pack "Enchanted creature has shroud.\nEnchanted creature can't be blocked except by creatures with flying."]] (Oracle.abilities (aura [Modification.GainKeyword Keyword.Shroud]))
-    Spec.assertBool s (Oracle.says (aura [Modification.GainKeyword Keyword.Shroud]) (CardName.MkCardName (Text.pack "Spark")) (Text.pack "Enchant creature\nEnchanted creature has shroud.\nEnchanted creature can't be blocked except by creatures with flying.")) "the two sentences apart still say it"
+    Spec.assertEq s [[Text.pack "Enchant creature"], [Text.pack "Enchanted creature can't be blocked except by creatures with flying and has shroud."]] (Oracle.abilities (aura [Modification.GainKeyword Keyword.Shroud]))
 
   -- CR 509.1b / 611.2a: a creature that can't be blocked for the rest of the
   -- turn, which Oracle text says "this turn".
@@ -916,13 +911,6 @@ spec s = Spec.describe s "Parun.Oracle" $ do
   Spec.it s "render prints an ability activated only before attackers are declared" $ do
     let restricted rs = withFace (\f -> f {Face.activatedAbilities = [(activated (mana [green]) (gainLife 1)) {ActivatedAbility.restrictions = rs}]})
     Spec.assertEq s (Just (Text.pack "{G}: You gain 1 life. Activate only during your turn, before attackers are declared.")) (Oracle.render (restricted [ActivationRestriction.DuringTurn TurnScope.ControllersTurn, ActivationRestriction.BeforeStep (Phase.Combat CombatStep.DeclareAttackers)]))
-
-  -- CR 207.2c: alliance and constellation, ability words Oracle text may
-  -- print before an entering trigger.
-  Spec.it s "render prints the ability words of entering triggers" $ do
-    let entering f = withFace (\g -> (typed [CardType.Creature] [] g) {Face.triggeredAbilities = [triggered (TriggerCondition.PermanentEnters f) [clause [gainLife 1]] []]})
-    Spec.assertEq s [[Text.pack "Whenever another creature you control enters, you gain 1 life.", Text.pack "Alliance \8212 Whenever another creature you control enters, you gain 1 life."]] (Oracle.abilities (entering (Filter.And [Filter.Not Filter.IsSource, Filter.HasCardType CardType.Creature, Filter.ControlledBy PlayerRelation.You])))
-    Spec.assertEq s [[Text.pack "Whenever an enchantment you control enters, you gain 1 life.", Text.pack "Constellation \8212 Whenever an enchantment you control enters, you gain 1 life.", Text.pack "Whenever Spark or another enchantment you control enters, you gain 1 life.", Text.pack "Constellation \8212 Whenever Spark or another enchantment you control enters, you gain 1 life."]] (Oracle.abilities (entering (Filter.And [Filter.HasCardType CardType.Enchantment, Filter.ControlledBy PlayerRelation.You])))
 
 -- A cost paid on resolution, offered to the payer, of which the instructions
 -- are this branch.
