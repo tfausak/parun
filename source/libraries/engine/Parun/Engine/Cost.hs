@@ -4242,7 +4242,7 @@ readsBoundSlot = any (\component -> targetComputed component || not (Set.null (S
 -- interchangeable-looking targets apart, so the answer is Nothing and the caller
 -- falls back to every subset. No cost in data/cards/ reads a slot otherwise
 -- (grep of IsBound under additional and activation costs, 2026-10-08).
-aimingSignature :: PlayerId -> ObjectId -> GameState -> Cost Keyword.Type.Keyword -> Maybe (Recipient.Recipient -> ([Integer], [(Activations.Activations, [(Bool, Maybe (Maybe Integer), Claim)], Mana.Type.Mana, ManaCost.ManaCost)]))
+aimingSignature :: PlayerId -> ObjectId -> GameState -> Cost Keyword.Type.Keyword -> Maybe (Recipient.Recipient -> ([Integer], [(Activations.Activations, [(Bool, Maybe (Maybe Integer), Claim)], Mana.Yield, ManaCost.ManaCost)]))
 aimingSignature pid oid gs cost
   | not (all onlyExcludesTargets criteria) = Nothing
   -- One excluded slot across the whole cost: aimingsBy fixes each class's
@@ -4291,7 +4291,7 @@ aimingSignature pid oid gs cost
 -- aimingSignature as the key Parun.Engine.Target.aimingsBy classes targets by:
 -- the target itself where no signature can be given, so the search falls back
 -- to every subset.
-aimingKey :: PlayerId -> ObjectId -> GameState -> Cost Keyword.Type.Keyword -> Recipient.Recipient -> Either Recipient.Recipient ([Integer], [(Activations.Activations, [(Bool, Maybe (Maybe Integer), Claim)], Mana.Type.Mana, ManaCost.ManaCost)])
+aimingKey :: PlayerId -> ObjectId -> GameState -> Cost Keyword.Type.Keyword -> Recipient.Recipient -> Either Recipient.Recipient ([Integer], [(Activations.Activations, [(Bool, Maybe (Maybe Integer), Claim)], Mana.Yield, ManaCost.ManaCost)])
 aimingKey pid oid gs cost = maybe Left (Right .) (aimingSignature pid oid gs cost)
 
 -- What a recipient IS, for aimingsBy: a creature, a planeswalker and a permanent

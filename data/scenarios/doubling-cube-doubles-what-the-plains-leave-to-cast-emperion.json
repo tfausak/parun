@@ -1,0 +1,15 @@
+{
+  "description": "CR 601.2g / 701.10f: four red, three Plains and a Doubling Cube cast an eight-mana spell",
+  "note": "The Plains pay the Cube's {3}, so it doubles the four red into eight. The offer has to count the Cube's yield as the pool its cost leaves.",
+  "board": {"active": "alice", "step": "PrecombatMain", "seats": [{"name": "alice", "manaPool": "RRRR", "battlefield": [{"card": "Doubling Cube", "label": "cube"}, {"card": "Plains", "label": "p1"}, {"card": "Plains", "label": "p2"}, {"card": "Plains", "label": "p3"}], "hand": [{"card": "Platinum Emperion", "label": "emperion"}], "library": [{"card": "Island"}, {"card": "Island"}, {"card": "Island"}]}, {"name": "bob", "library": [{"card": "Island"}, {"card": "Island"}, {"card": "Island"}]}]},
+  "timeline": [
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "check": {"View": {"of": "Offered", "player": "alice", "is": ["Pass", "Cast $emperion", "ActivateManaAbility $cube", "ActivateManaAbility $p1", "ActivateManaAbility $p2", "ActivateManaAbility $p3"]}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "do": {"Cast": {"object": "$emperion", "mana": ["$cube", "$p1", "$p2", "$p3"]}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "do": {"Answer": {"prompt": "ChooseManaToSpend", "with": {"manaType": {"type": "Colored", "value": {"type": "White"}}, "tags": [], "retention": {"type": "Ordinary"}, "restriction": null, "rider": null, "sourceChoices": null}}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "do": {"Answer": {"prompt": "ChooseManaToSpend", "with": {"manaType": {"type": "Colored", "value": {"type": "White"}}, "tags": [], "retention": {"type": "Ordinary"}, "restriction": null, "rider": null, "sourceChoices": null}}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "do": {"Answer": {"prompt": "ChooseManaToSpend", "with": {"manaType": {"type": "Colored", "value": {"type": "White"}}, "tags": [], "retention": {"type": "Ordinary"}, "restriction": null, "rider": null, "sourceChoices": null}}}}
+  ],
+  "final": [
+    {"Count": {"player": "alice", "zone": "Battlefield", "card": "Platinum Emperion", "count": 1}}
+  ]
+}
