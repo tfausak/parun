@@ -84,6 +84,7 @@ import qualified Parun.Types.ExiledPile as ExiledPile
 import qualified Parun.Types.Face as Face
 import qualified Parun.Types.Filter as Filter.Type
 import qualified Parun.Types.GrantedAbility as GrantedAbility
+import qualified Parun.Types.Holder as Holder
 import qualified Parun.Types.InZone as InZone
 import qualified Parun.Types.Keyword as Keyword
 import qualified Parun.Types.LibraryPlacement as LibraryPlacement
@@ -957,7 +958,7 @@ abilitySlotLintSpec s registry = Spec.describe s "Lint" $ do
         narrowed =
           Mode.MkMode
             (Seq.singleton (Mint.mandatory (Seq.singleton (Effect.Tap (Tap.plain (ObjectRef.InSlot target))))))
-            (Map.singleton target (TargetSlot.required Pool.Permanents (Just (Filter.Type.ControlledByBound Binding.triggerPlayer))))
+            (Map.singleton target (TargetSlot.required Pool.Permanents (Just (Filter.Type.HeldByBound Holder.Controller Binding.triggerPlayer))))
     Spec.assertBool
       s
       (triggeredAbilityOffends (modalTrigger TriggerCondition.SelfEnters [narrowed]))
@@ -1067,7 +1068,7 @@ abilitySlotLintSpec s registry = Spec.describe s "Lint" $ do
         throughCountFilter =
           atLeastOne
             ( Quantity.Type.Count
-                (Count.Type.MkCount (Scope.InZone (InZone.MkInZone Zone.Battlefield (PlayerRef.Relative PlayerRelation.AnyPlayer))) (Filter.Type.ControlledByBound Binding.triggerPlayer) Aggregation.Members)
+                (Count.Type.MkCount (Scope.InZone (InZone.MkInZone Zone.Battlefield (PlayerRef.Relative PlayerRelation.AnyPlayer))) (Filter.Type.HeldByBound Holder.Controller Binding.triggerPlayer) Aggregation.Members)
             )
         -- And the pair that differs in exactly one thing: the same condition
         -- reading CR 109.5's caster instead of a slot, which no trigger has to
@@ -1161,7 +1162,7 @@ abilitySlotLintSpec s registry = Spec.describe s "Lint" $ do
         throughScope = counting (Scope.InZone (InZone.MkInZone Zone.Battlefield (PlayerRef.InSlot Binding.triggerPlayer))) (Filter.Type.And [])
         -- The same read one carrier over: the slot is named by the Count's
         -- FILTER rather than by its scope's PlayerRef.
-        throughCountFilter = counting (Scope.InZone (InZone.MkInZone Zone.Battlefield (PlayerRef.Relative PlayerRelation.AnyPlayer))) (Filter.Type.ControlledByBound Binding.triggerPlayer)
+        throughCountFilter = counting (Scope.InZone (InZone.MkInZone Zone.Battlefield (PlayerRef.Relative PlayerRelation.AnyPlayer))) (Filter.Type.HeldByBound Holder.Controller Binding.triggerPlayer)
         -- And the board that differs in exactly one thing: the same fold naming
         -- no slot, so the lint reads the reference rather than rejecting every
         -- scaled gate.

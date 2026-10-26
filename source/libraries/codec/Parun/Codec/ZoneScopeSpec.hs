@@ -30,7 +30,7 @@ spec s = Spec.describe s "Parun.Codec.ZoneScope" $ do
       ZoneScope.codec
       (ZoneScope.ControllerOfBound (SlotName.MkSlotName (Text.pack "target")))
       " {\"type\":\"ControllerOfBound\",\"value\":\"target\"} "
-  -- Runtime-only for Filter.ControlledByPlayer's reason, and round-tripped for
+  -- Runtime-only for Filter.HeldByPlayer's reason, and round-tripped for
   -- its reason: the codec is total.
   Spec.it s "BoundPlayer" $
     Common.assertCodec

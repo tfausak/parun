@@ -498,13 +498,10 @@ filterNames asking criterion = case criterion of
   Filter.ManaValueIsEven -> mempty
   Filter.ControlledBy _relation -> mempty
   Filter.ControlledByRole _ -> mempty
-  Filter.ControlledByBound slot -> slotNames asking slot
-  Filter.ControlledByPlayer _player -> mempty
-  Filter.ControlledByRecipient -> mempty
+  Filter.HeldByBound _holder slot -> slotNames asking slot
+  Filter.HeldByPlayer _holder _player -> mempty
+  Filter.HeldByRecipient _holder -> mempty
   Filter.OwnedBy _relation -> mempty
-  Filter.OwnedByRecipient -> mempty
-  Filter.OwnedByBound slot -> slotNames asking slot
-  Filter.OwnedByPlayer _player -> mempty
   Filter.IsSource -> mempty
   Filter.IsObject oid -> names asking (== oid)
   Filter.TargetsSource -> mempty

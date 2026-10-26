@@ -86,7 +86,10 @@
                                         "value": "shuffled"
                                       },
                                       {
-                                        "type": "OwnedByRecipient"
+                                        "type": "HeldByRecipient",
+                                        "value": {
+                                          "type": "Owner"
+                                        }
                                       }
                                     ]
                                   },
@@ -125,7 +128,10 @@
                                         }
                                       },
                                       {
-                                        "type": "OwnedByRecipient"
+                                        "type": "HeldByRecipient",
+                                        "value": {
+                                          "type": "Owner"
+                                        }
                                       }
                                     ]
                                   },

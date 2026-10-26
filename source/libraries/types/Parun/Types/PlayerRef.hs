@@ -82,7 +82,7 @@ data PlayerRef
     -- CR 611.2b duration begins, so a "for as long as" condition naming the
     -- player a trigger's event bound (Garland, Royal Kidnapper's "for as long as
     -- they're the monarch") still answers once the resolution that stored it is
-    -- over and its bindings are unreachable. Filter.ControlledByPlayer is the same
+    -- over and its bindings are unreachable. Filter.HeldByPlayer is the same
     -- move one type over, and Modification.SetController's baked controller is the
     -- older precedent.
     --

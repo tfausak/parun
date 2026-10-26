@@ -604,7 +604,7 @@ decayedSpec s registry =
 -- CR 603.2's "that player" reaching a TARGET SLOT rather than an effect's
 -- operand: Trygon Predator's "whenever this creature deals combat damage to a
 -- player, you may destroy target artifact or enchantment THAT PLAYER controls".
--- The slot is narrowed by Filter.ControlledByBound, baked to the damaged player
+-- The slot is narrowed by Filter.HeldByBound, baked to the damaged player
 -- by Parun.Engine.Filter.bakeBound at both of CR 115's moments -- CR 603.3d's
 -- choosing and CR 608.2b's re-check.
 --
@@ -667,7 +667,7 @@ trygonPredatorSpec s registry =
 -- Beast deals combat damage to an opponent, it deals THAT MUCH damage to target
 -- planeswalker THAT PLAYER controls". The amount rides
 -- Parun.Engine.Binding.eventAmount and the player Binding.triggerPlayer, and the
--- target slot narrows by Filter.ControlledByBound off the second -- so the two
+-- target slot narrows by Filter.HeldByBound off the second -- so the two
 -- slots the condition stamps are read at once, one as a Quantity and one as a
 -- filter.
 --

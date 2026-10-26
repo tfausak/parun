@@ -61,7 +61,10 @@
                             "type": "Members"
                           },
                           "filter": {
-                            "type": "OwnedByRecipient"
+                            "type": "HeldByRecipient",
+                            "value": {
+                              "type": "Owner"
+                            }
                           },
                           "scope": {
                             "type": "OverBound",

@@ -2416,7 +2416,7 @@ freezeRiders viewOf context gs resolving source riders =
 -- recipientSeat is what says whose an object's amount is.
 --
 -- Two spellings, because a card asks two different questions: Filter.Context's
--- `recipient`, which Filter.ControlledByRecipient and OwnedByRecipient read
+-- `recipient`, which Filter.HeldByRecipient reads
 -- (see #161); and
 -- Quantity.forCandidate, which substitutes PlayerRef.Candidate. Both are no-ops
 -- for a quantity naming neither, so this is no departure from CR 608.2f's single
@@ -2962,7 +2962,7 @@ stackTargetSlots obj oid gs =
       -- CR 603.2's player slots baked in, off the object's OWN bindings -- the
       -- map Parun.Engine.Engine.placeBorne baked with as the ability went on the
       -- stack, and which CR 707.10 copied onto a copy verbatim. Not optional:
-      -- Filter.ControlledByBound answers False wherever `matches` reaches it
+      -- Filter.HeldByBound answers False wherever `matches` reaches it
       -- with no slotPlayers entry, so an unbaked slot admits nobody, and CR 707.10c's prompt would then be
       -- elided as "settled" while the copy silently kept the original's target
       -- (Questing Beast's "that player" under Lithoform Engine).

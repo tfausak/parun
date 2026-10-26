@@ -87,8 +87,13 @@
                       "type": "And",
                       "value": [
                         {
-                          "type": "ControlledByBound",
-                          "value": "chosen"
+                          "type": "HeldByBound",
+                          "value": {
+                            "holder": {
+                              "type": "Controller"
+                            },
+                            "slot": "chosen"
+                          }
                         },
                         {
                           "type": "Not",

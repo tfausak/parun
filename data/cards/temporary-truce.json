@@ -101,7 +101,10 @@
                                           "value": "drawn"
                                         },
                                         {
-                                          "type": "OwnedByRecipient"
+                                          "type": "HeldByRecipient",
+                                          "value": {
+                                            "type": "Owner"
+                                          }
                                         }
                                       ]
                                     },

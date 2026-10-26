@@ -25,6 +25,7 @@ import qualified Parun.Types.EnteredZone as EnteredZone
 import qualified Parun.Types.ExiledPile as ExiledPile
 import qualified Parun.Types.Expansion as Expansion
 import qualified Parun.Types.Filter as Filter
+import qualified Parun.Types.Holder as Holder
 import qualified Parun.Types.Keyword as Keyword
 import qualified Parun.Types.KeywordDesignator as KeywordDesignator
 import qualified Parun.Types.KeywordFamily as KeywordFamily
@@ -126,21 +127,21 @@ spec s = Spec.describe s "Parun.Codec.Filter" $ do
       codec
       (Filter.ControlledByRole TurnRole.Active)
       " {\"type\":\"ControlledByRole\",\"value\":{\"type\":\"Active\"}} "
-  Spec.it s "ControlledByBound" $
+  Spec.it s "HeldByBound" $
     Common.assertCodec
       s
       codec
-      (Filter.ControlledByBound (SlotName.MkSlotName (Text.pack "thatPlayer")))
-      " {\"type\":\"ControlledByBound\",\"value\":\"thatPlayer\"} "
+      (Filter.HeldByBound Holder.Controller (SlotName.MkSlotName (Text.pack "thatPlayer")))
+      " {\"type\":\"HeldByBound\",\"value\":{\"holder\":{\"type\":\"Controller\"},\"slot\":\"thatPlayer\"}} "
   -- Runtime-only (Parun.CardSpec lints it out of the pool), but round-tripped
   -- here for the reason its codec arm exists at all: the codec is total.
-  Spec.it s "ControlledByPlayer" $
+  Spec.it s "HeldByPlayer" $
     Common.assertCodec
       s
       codec
-      (Filter.ControlledByPlayer (PlayerId.MkPlayerId 1))
-      " {\"type\":\"ControlledByPlayer\",\"value\":1} "
-  -- Runtime-only for ControlledByPlayer's reason, and round-tripped here for
+      (Filter.HeldByPlayer Holder.Owner (PlayerId.MkPlayerId 1))
+      " {\"type\":\"HeldByPlayer\",\"value\":{\"holder\":{\"type\":\"Owner\"},\"player\":1}} "
+  -- Runtime-only for HeldByPlayer's reason, and round-tripped here for
   -- its reason.
   Spec.it s "IsObject" $
     Common.assertCodec
@@ -148,32 +149,12 @@ spec s = Spec.describe s "Parun.Codec.Filter" $ do
       codec
       (Filter.IsObject (ObjectId.MkObjectId 7))
       " {\"type\":\"IsObject\",\"value\":7} "
-  Spec.it s "ControlledByRecipient" $
+  Spec.it s "HeldByRecipient" $
     Common.assertCodec
       s
       codec
-      Filter.ControlledByRecipient
-      " {\"type\":\"ControlledByRecipient\"} "
-  Spec.it s "OwnedByRecipient" $
-    Common.assertCodec
-      s
-      codec
-      Filter.OwnedByRecipient
-      " {\"type\":\"OwnedByRecipient\"} "
-  Spec.it s "OwnedByBound" $
-    Common.assertCodec
-      s
-      codec
-      (Filter.OwnedByBound (SlotName.MkSlotName (Text.pack "target")))
-      " {\"type\":\"OwnedByBound\",\"value\":\"target\"} "
-  -- Runtime-only for ControlledByPlayer's reason, and round-tripped here for
-  -- its reason.
-  Spec.it s "OwnedByPlayer" $
-    Common.assertCodec
-      s
-      codec
-      (Filter.OwnedByPlayer (PlayerId.MkPlayerId 1))
-      " {\"type\":\"OwnedByPlayer\",\"value\":1} "
+      (Filter.HeldByRecipient Holder.Controller)
+      " {\"type\":\"HeldByRecipient\",\"value\":{\"type\":\"Controller\"}} "
   Spec.it s "ManaValueIsEven" $
     Common.assertCodec
       s
