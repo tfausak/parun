@@ -1,0 +1,8 @@
+{
+  "description": "CR 601.2g / 701.10f: four red, two Plains and a Doubling Cube cannot cast an eight-mana spell, so none is offered",
+  "note": "The Cube's {3} takes both white and a red, so it doubles three red into six. The three-Plains board beside this one casts it.",
+  "board": {"active": "alice", "step": "PrecombatMain", "seats": [{"name": "alice", "manaPool": "RRRR", "battlefield": [{"card": "Doubling Cube", "label": "cube"}, {"card": "Plains", "label": "p1"}, {"card": "Plains", "label": "p2"}], "hand": [{"card": "Platinum Emperion", "label": "emperion"}], "library": [{"card": "Island"}, {"card": "Island"}, {"card": "Island"}]}, {"name": "bob", "library": [{"card": "Island"}, {"card": "Island"}, {"card": "Island"}]}]},
+  "timeline": [
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "check": {"View": {"of": "Offered", "player": "alice", "is": ["Pass", "ActivateManaAbility $cube", "ActivateManaAbility $p1", "ActivateManaAbility $p2"]}}}
+  ]
+}
