@@ -1,0 +1,8 @@
+{
+  "description": "CR 609.4b / 701.10f: under Celestial Dawn, Doubling Cube's copies of white mana spend as any color but not as colorless, so a spell needing {C} is not offered",
+  "note": "The Plains pay the Cube's {3} and it doubles three white into six, which pay {W}{U}{B}{R}{G} but not {C}. A copy counted as whatever the white may be spent as would include red, which Celestial Dawn spends only as colorless, and offer Slivdrazi Monstrosity.",
+  "board": {"active": "alice", "step": "PrecombatMain", "seats": [{"name": "alice", "manaPool": "WWW", "battlefield": [{"card": "Doubling Cube", "label": "cube"}, {"card": "Plains", "label": "p1"}, {"card": "Plains", "label": "p2"}, {"card": "Plains", "label": "p3"}, {"card": "Celestial Dawn", "label": "dawn"}], "hand": [{"card": "Slivdrazi Monstrosity", "label": "slivdrazi"}], "library": [{"card": "Island"}, {"card": "Island"}, {"card": "Island"}]}, {"name": "bob", "library": [{"card": "Island"}, {"card": "Island"}, {"card": "Island"}]}]},
+  "timeline": [
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "check": {"View": {"of": "Offered", "player": "alice", "is": ["Pass", "ActivateManaAbility $cube", "ActivateManaAbility $p1", "ActivateManaAbility $p2", "ActivateManaAbility $p3"]}}}
+  ]
+}

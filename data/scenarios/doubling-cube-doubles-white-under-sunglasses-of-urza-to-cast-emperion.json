@@ -1,0 +1,12 @@
+{
+  "description": "CR 609.4b / 701.10f: under Sunglasses of Urza, four white, three Plains and a Doubling Cube cast an eight-mana spell",
+  "note": "The Plains pay the Cube's {3}, so it doubles the four white into eight. Sunglasses only widens what the white may be spent as, so the doubling still counts.",
+  "board": {"active": "alice", "step": "PrecombatMain", "seats": [{"name": "alice", "manaPool": "WWWW", "battlefield": [{"card": "Doubling Cube", "label": "cube"}, {"card": "Plains", "label": "p1"}, {"card": "Plains", "label": "p2"}, {"card": "Plains", "label": "p3"}, {"card": "Sunglasses of Urza", "label": "sunglasses"}], "hand": [{"card": "Platinum Emperion", "label": "emperion"}], "library": [{"card": "Island"}, {"card": "Island"}, {"card": "Island"}]}, {"name": "bob", "library": [{"card": "Island"}, {"card": "Island"}, {"card": "Island"}]}]},
+  "timeline": [
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "check": {"View": {"of": "Offered", "player": "alice", "is": ["Pass", "Cast $emperion", "ActivateManaAbility $cube", "ActivateManaAbility $p1", "ActivateManaAbility $p2", "ActivateManaAbility $p3"]}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "do": {"Cast": {"object": "$emperion", "mana": ["$cube", "$p1", "$p2", "$p3"]}}}
+  ],
+  "final": [
+    {"Count": {"player": "alice", "zone": "Battlefield", "card": "Platinum Emperion", "count": 1}}
+  ]
+}
