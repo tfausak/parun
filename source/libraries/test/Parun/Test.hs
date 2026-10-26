@@ -671,7 +671,6 @@ import qualified Parun.Codec.TapSpec
 import qualified Parun.Codec.TapStateSpec
 import qualified Parun.Codec.TappedForManaSpec
 import qualified Parun.Codec.TappedIsSpec
-import qualified Parun.Codec.TargetChooserSpec
 import qualified Parun.Codec.TargetCountSpec
 import qualified Parun.Codec.TargetRestrictionSpec
 import qualified Parun.Codec.TargetSlotSpec
@@ -1597,7 +1596,6 @@ spec s registry = do
   Parun.Codec.TappedIsSpec.spec s
   Parun.Codec.TapPermanentsSpec.spec s
   Parun.Codec.TapStateSpec.spec s
-  Parun.Codec.TargetChooserSpec.spec s
   Parun.Codec.TargetCountSpec.spec s
   Parun.Codec.TargetRestrictionSpec.spec s
   Parun.Codec.TargetSlotSpec.spec s

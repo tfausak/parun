@@ -15,6 +15,7 @@ data-dir: data
 data-files:
   cards/*.json
   decks/*.txt
+  oracle-unrendered.txt
   scenarios/**/*.json
   sticker-sheets/*.json
 
@@ -1417,8 +1418,6 @@ library codec
     Parun.Codec.TapSpec
     Parun.Codec.TapState
     Parun.Codec.TapStateSpec
-    Parun.Codec.TargetChooser
-    Parun.Codec.TargetChooserSpec
     Parun.Codec.TargetCount
     Parun.Codec.TargetCountSpec
     Parun.Codec.TargetRestriction
@@ -3039,7 +3038,6 @@ library types
     Parun.Types.TappedIs
     Parun.Types.TapPermanents
     Parun.Types.TapState
-    Parun.Types.TargetChooser
     Parun.Types.TargetCount
     Parun.Types.TargetRestriction
     Parun.Types.TargetSlot

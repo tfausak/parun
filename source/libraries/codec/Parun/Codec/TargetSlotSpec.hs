@@ -7,6 +7,7 @@ import qualified Parun.JsonCodec.Common as Common
 import qualified Parun.Spec as Spec
 import qualified Parun.Types.CardType as CardType
 import qualified Parun.Types.Filter as Filter
+import qualified Parun.Types.PlayerRef as PlayerRef
 import qualified Parun.Types.PlayerRelation as PlayerRelation
 import qualified Parun.Types.PlayerScope as PlayerScope
 import qualified Parun.Types.Pool as Pool
@@ -42,6 +43,13 @@ spec s = Spec.describe s "Parun.Codec.TargetSlot" $ do
       TargetSlot.codec
       (TargetSlot.required Pool.Permanents (Just (Filter.And [Filter.Not (Filter.HasCardType CardType.Land), Filter.Not Filter.IsSource])))
       " {\"pool\":{\"type\":\"Permanents\"},\"filter\":{\"type\":\"And\",\"value\":[{\"type\":\"Not\",\"value\":{\"type\":\"HasCardType\",\"value\":{\"type\":\"Land\"}}},{\"type\":\"Not\",\"value\":{\"type\":\"IsSource\"}}]}} "
+  -- CR 115.1: a slot another player announces, its chooser a PlayerRef.
+  Spec.it s "a required spec: chosen by an opponent" $
+    Common.assertCodec
+      s
+      TargetSlot.codec
+      (TargetSlot.chosenBy (PlayerRef.Relative PlayerRelation.Opponent) (TargetSlot.required Pool.AnyTarget Nothing))
+      " {\"pool\":{\"type\":\"AnyTarget\"},\"chooser\":{\"type\":\"Relative\",\"value\":{\"type\":\"Opponent\"}}} "
   -- CR 115.2 clause (a): a target slot over a graveyard, tagged with WHOSE.
   Spec.it s "a required spec: over a graveyard" $
     Common.assertCodec

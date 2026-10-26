@@ -393,7 +393,6 @@ import qualified Parun.Types.Tap as Tap
 import qualified Parun.Types.TapForMana as TapForMana
 import qualified Parun.Types.TapForTotalPower as TapForTotalPower
 import qualified Parun.Types.TapPermanents as TapPermanents
-import qualified Parun.Types.TargetChooser as TargetChooser
 import qualified Parun.Types.TargetRestriction as TargetRestriction
 import qualified Parun.Types.TargetSlot as TargetSlot
 import qualified Parun.Types.TheseDiscard as TheseDiscard
@@ -2866,15 +2865,9 @@ tapPermanentsNames :: (Monoid r) => Asking r -> TapPermanents.TapPermanents keyw
 tapPermanentsNames asking x = case x of
   TapPermanents.MkTapPermanents count whichPermanents _sharingACreatureType -> costAmountNames asking count <> filterNames asking whichPermanents
 
-targetChooserNames :: (Monoid r) => Asking r -> TargetChooser.TargetChooser -> r
-targetChooserNames asking x = case x of
-  TargetChooser.Relative _playerRelation -> mempty
-  TargetChooser.InSlot slotName -> slotNames asking slotName
-  TargetChooser.ControllerOfBound slotName -> slotNames asking slotName
-
 targetSlotNames :: (Monoid r) => Asking r -> TargetSlot.TargetSlot -> r
 targetSlotNames asking x = case x of
-  TargetSlot.MkTargetSlot pool filter_ count amount chooser perPlayer divided _together -> poolNames asking pool <> foldMap (filterNames asking) filter_ <> slotCountNames asking count <> foldMap (quantityNames asking) amount <> foldMap (targetChooserNames asking) chooser <> foldMap (slotPerPlayerNames asking) perPlayer <> foldMap (quantityNames asking) divided
+  TargetSlot.MkTargetSlot pool filter_ count amount chooser perPlayer divided _together -> poolNames asking pool <> foldMap (filterNames asking) filter_ <> slotCountNames asking count <> foldMap (quantityNames asking) amount <> foldMap (playerRefNames asking) chooser <> foldMap (slotPerPlayerNames asking) perPlayer <> foldMap (quantityNames asking) divided
 
 theseDiscardNames :: (Monoid r) => Asking r -> TheseDiscard.TheseDiscard -> r
 theseDiscardNames asking x = case x of
