@@ -282,7 +282,7 @@ spec s registry = Spec.describe s "Parun.Codec (integration)" $ do
 
 -- Sarcomancy's migrated intervening "if" (retired
 -- StateCondition.NoPermanentsOfSubtype Zombie -- CR 603.4): ANY player's
--- Zombies, unlike S.youControlNoSwamps's ControlledBy conjunct.
+-- Zombies, unlike S.youControlNoSwamps's HeldBy Controller conjunct.
 noZombiesOnBattlefield :: Condition.Type.Condition
 noZombiesOnBattlefield =
   Condition.Type.Compares

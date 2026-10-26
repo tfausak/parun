@@ -82,9 +82,14 @@
             "targetSlots": {
               "mine": {
                 "filter": {
-                  "type": "ControlledBy",
+                  "type": "HeldBy",
                   "value": {
-                    "type": "You"
+                    "holder": {
+                      "type": "Controller"
+                    },
+                    "relation": {
+                      "type": "You"
+                    }
                   }
                 },
                 "pool": {
@@ -95,9 +100,14 @@
                 "filter": {
                   "type": "Not",
                   "value": {
-                    "type": "ControlledBy",
+                    "type": "HeldBy",
                     "value": {
-                      "type": "You"
+                      "holder": {
+                        "type": "Controller"
+                      },
+                      "relation": {
+                        "type": "You"
+                      }
                     }
                   }
                 },

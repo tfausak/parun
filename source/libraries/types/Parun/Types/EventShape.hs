@@ -54,7 +54,7 @@ data EventShape
     -- NO PAYLOAD, unlike MovedBetween above, and that asymmetry is the point: a
     -- zone change is only a shape once its two zones are named, and no Filter atom
     -- can name a zone. Everything a cast count narrows by IS a Filter atom --
-    -- "you've cast" is Filter.ControlledBy against the caster CR 601.2a made the
+    -- "you've cast" is Filter.HeldBy Holder.Controller against the caster CR 601.2a made the
     -- spell's controller, "instant and sorcery spell" a disjunction of
     -- Filter.HasCardType -- so putting any of it here would be a second way to
     -- say what the Count's own filter already says.

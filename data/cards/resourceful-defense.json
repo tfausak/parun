@@ -48,9 +48,14 @@
                 "targetSlots": {
                   "from": {
                     "filter": {
-                      "type": "ControlledBy",
+                      "type": "HeldBy",
                       "value": {
-                        "type": "You"
+                        "holder": {
+                          "type": "Controller"
+                        },
+                        "relation": {
+                          "type": "You"
+                        }
                       }
                     },
                     "pool": {
@@ -62,9 +67,14 @@
                       "type": "And",
                       "value": [
                         {
-                          "type": "ControlledBy",
+                          "type": "HeldBy",
                           "value": {
-                            "type": "You"
+                            "holder": {
+                              "type": "Controller"
+                            },
+                            "relation": {
+                              "type": "You"
+                            }
                           }
                         },
                         {
@@ -108,9 +118,14 @@
           "condition": {
             "type": "PermanentLeavesTheBattlefield",
             "value": {
-              "type": "ControlledBy",
+              "type": "HeldBy",
               "value": {
-                "type": "You"
+                "holder": {
+                  "type": "Controller"
+                },
+                "relation": {
+                  "type": "You"
+                }
               }
             }
           },
@@ -157,9 +172,14 @@
                 "targetSlots": {
                   "taker": {
                     "filter": {
-                      "type": "ControlledBy",
+                      "type": "HeldBy",
                       "value": {
-                        "type": "You"
+                        "holder": {
+                          "type": "Controller"
+                        },
+                        "relation": {
+                          "type": "You"
+                        }
                       }
                     },
                     "pool": {

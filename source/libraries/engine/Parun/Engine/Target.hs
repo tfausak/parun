@@ -141,7 +141,7 @@ import qualified Parun.Types.ZoneScope as ZoneScope
 --     whichever tag the Pool produced and re-validation sees the same rule
 --     selection did.
 --   * `perspective` is CR 109.5's "you", supplied by the caller. "A creature an
---     opponent controls" is a ControlledBy Opponent filter, and a player
+--     opponent controls" is a HeldBy Controller Opponent filter, and a player
 --     candidate is narrowed by the same fold through the IsPlayer atom (#168).
 --     It is the ability's CONTROLLER even where somebody else announces the
 --     slot (TargetSlot.chooser, Cuombajj Witches): hexproof asks who controls
@@ -149,7 +149,7 @@ import qualified Parun.Types.ZoneScope as ZoneScope
 --     prompt moves.
 --
 -- Deriving the perspective here as `Projection.controllerOf source` instead
--- returns Nothing once the source leaves the battlefield, making ControlledBy
+-- returns Nothing once the source leaves the battlefield, making HeldBy Controller
 -- vacuously False and the whole set empty -- so CR 608.2b's re-check would fizzle
 -- an ability whose source was merely killed in response, when that rule says to
 -- use last known information. The controller is knowable when the source is not,

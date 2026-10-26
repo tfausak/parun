@@ -4,6 +4,7 @@ import qualified Parun.Codec.PermanentDealsCombatDamageToPlayer as PermanentDeal
 import qualified Parun.JsonCodec.Common as Common
 import qualified Parun.Spec as Spec
 import qualified Parun.Types.Filter as Filter
+import qualified Parun.Types.Holder as Holder
 import qualified Parun.Types.PermanentDealsCombatDamageToPlayer as PermanentDealsCombatDamageToPlayer
 import qualified Parun.Types.PlayerRelation as PlayerRelation
 
@@ -16,9 +17,9 @@ spec s = Spec.describe s "Parun.Codec.PermanentDealsCombatDamageToPlayer" $ do
       s
       PermanentDealsCombatDamageToPlayer.codec
       ( PermanentDealsCombatDamageToPlayer.MkPermanentDealsCombatDamageToPlayer
-          { PermanentDealsCombatDamageToPlayer.filter = Filter.ControlledBy PlayerRelation.Opponent,
+          { PermanentDealsCombatDamageToPlayer.filter = Filter.HeldBy Holder.Controller PlayerRelation.Opponent,
             PermanentDealsCombatDamageToPlayer.recipient = PlayerRelation.You
           }
       )
-      " {\"filter\":{\"type\":\"ControlledBy\",\"value\":{\"type\":\"Opponent\"}},\"recipient\":{\"type\":\"You\"}} "
+      " {\"filter\":{\"type\":\"HeldBy\",\"value\":{\"holder\":{\"type\":\"Controller\"},\"relation\":{\"type\":\"Opponent\"}}},\"recipient\":{\"type\":\"You\"}} "
   Spec.it s "has a schema" $ Common.assertHasSchema s PermanentDealsCombatDamageToPlayer.codec

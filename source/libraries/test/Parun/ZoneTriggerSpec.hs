@@ -99,6 +99,7 @@ import qualified Parun.Types.GameEvent as GameEvent
 import qualified Parun.Types.GameState as GameState
 import qualified Parun.Types.GrantedAbility as GrantedAbility
 import qualified Parun.Types.HalfUnlocked as HalfUnlocked
+import qualified Parun.Types.Holder as Holder
 import qualified Parun.Types.Keyword as Keyword.Type
 import qualified Parun.Types.LandPlayed as LandPlayed
 import qualified Parun.Types.LeftTheGame as LeftTheGame
@@ -882,7 +883,7 @@ diesTriggerSpec s registry =
 -- bearer IS the permanent that died. Here the bearer watches, so the three
 -- printed words that narrow the watching are three arms of the condition's own
 -- Filter, exactly as Soul Warden's "another" is (#163) -- "creature" is
--- HasCardType, "you control" is ControlledBy You read against CR 109.5's you
+-- HasCardType, "you control" is HeldBy Controller You read against CR 109.5's you
 -- (the ability's controller, CR 603.3a), and "another" is Not IsSource. Each
 -- gets a falsifier below, because a condition that ignored any one of them
 -- would still pass the whole-card case.
@@ -915,7 +916,7 @@ permanentDiesSpec s registry =
   let anotherCreatureYouControl =
         Filter.Type.And
           [ Filter.Type.HasCardType CardType.Creature,
-            Filter.Type.ControlledBy PlayerRelation.You,
+            Filter.Type.HeldBy Holder.Controller PlayerRelation.You,
             Filter.Type.Not Filter.Type.IsSource
           ]
       sourcesOf gs = fmap PendingTrigger.source (gathered gs)
@@ -977,7 +978,7 @@ permanentDiesSpec s registry =
           let anyCreatureYouControl =
                 Filter.Type.And
                   [ Filter.Type.HasCardType CardType.Creature,
-                    Filter.Type.ControlledBy PlayerRelation.You
+                    Filter.Type.HeldBy Holder.Controller PlayerRelation.You
                   ]
               (merenId, gs) = S.addPermanent meren S.alice (Setup.emptyGame S.bothPlayers)
               died = S.runPure S.identityAnswer gs (Event.changeZone merenId Zone.Graveyard)
@@ -987,7 +988,7 @@ permanentDiesSpec s registry =
               Spec.assertBool s (Event.matchesTrigger died merenId S.alice (TriggerCondition.PermanentDies anyCreatureYouControl) death) "a Filter without the exclusion admits Meren's own death"
               Spec.assertBool s (not (Event.matchesTrigger died merenId S.alice (TriggerCondition.PermanentDies anotherCreatureYouControl) death)) "so the printed \"another\" is the only thing declining it"
             other -> Spec.assertFailure s ("expected exactly one event, got " <> show (length other))
-        -- "YOU CONTROL", the ControlledBy arm, read through CR 109.5 against
+        -- "YOU CONTROL", the HeldBy Controller arm, read through CR 109.5 against
         -- the ability's controller (CR 603.3a). bob's creature dying in front
         -- of alice's Meren is not it.
         Spec.it s "CR 109.5 you control: an opponent's creature dying fires nothing" $ do
@@ -1284,7 +1285,7 @@ permanentsDieSpec s registry =
           Spec.assertEqWith s "both creatures left the battlefield" (fmap (\oid -> Game.lookupObject oid resolved) [goblin, undead]) [Nothing, Nothing]
           Spec.assertEqWith s "in two event groups, both inside one scan" (Set.size (deathGroups resolved)) 2
           Spec.assertEqWith s "so two triggers reached the stack" (length (GameState.stack settled)) 2
-        -- "YOU CONTROL", the ControlledBy arm (CR 109.5 against the ability's
+        -- "YOU CONTROL", the HeldBy Controller arm (CR 109.5 against the ability's
         -- controller, CR 603.3a). The pair to the first board, differing in exactly
         -- one thing: the same fixture, the same settle, and only bob's Piker
         -- damaged. Its own board cannot prove this and the first board cannot
@@ -1335,7 +1336,7 @@ permanentsDieSpec s registry =
             [ TriggerCondition.PermanentsDie
                 ( Filter.Type.And
                     [ Filter.Type.HasCardType CardType.Creature,
-                      Filter.Type.ControlledBy PlayerRelation.You,
+                      Filter.Type.HeldBy Holder.Controller PlayerRelation.You,
                       Filter.Type.Not Filter.Type.IsSource
                     ]
                 )

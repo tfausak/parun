@@ -7174,7 +7174,7 @@ matchesTriggerGiven bindings board gs bearer you cond event = case cond of
   -- instant or sorcery spell".
   --
   -- The CASTER comes from the event and is handed to the view as the spell's
-  -- controller, which is what makes Filter.ControlledBy You answer the printed
+  -- controller, which is what makes Filter.HeldBy Holder.Controller You answer the printed
   -- "you". Not read off the object: Event.changeZone stamps Object.enteredUnder
   -- only for a battlefield entry, so a stack object falls back to its OWNER
   -- (Projection.defaultControllerOf) -- the same player for every cast in the

@@ -13,6 +13,7 @@ import qualified Parun.Oracle.Prose as Prose
 import qualified Parun.Types.CardType as CardType
 import qualified Parun.Types.Color as Color
 import qualified Parun.Types.Filter as Filter
+import qualified Parun.Types.Holder as Holder
 import qualified Parun.Types.PlayerRelation as PlayerRelation
 import qualified Parun.Types.Subtype as Subtype
 import qualified Parun.Types.Supertype as Supertype
@@ -91,9 +92,9 @@ phrase f named = case f of
   Filter.Not Filter.IsTapped -> [adjective (Text.pack "untapped")]
   Filter.IsAttacking -> [adjective (Text.pack "attacking")]
   Filter.IsBlocking -> [adjective (Text.pack "blocking")]
-  Filter.ControlledBy PlayerRelation.You -> [qualifier (Text.pack "you control") (Text.pack "you control")]
-  Filter.ControlledBy PlayerRelation.Opponent -> [qualifier (Text.pack "an opponent controls") (Text.pack "your opponents control")]
-  Filter.Not (Filter.ControlledBy PlayerRelation.You) -> [qualifier (Text.pack "you don't control") (Text.pack "you don't control")]
+  Filter.HeldBy Holder.Controller PlayerRelation.You -> [qualifier (Text.pack "you control") (Text.pack "you control")]
+  Filter.HeldBy Holder.Controller PlayerRelation.Opponent -> [qualifier (Text.pack "an opponent controls") (Text.pack "your opponents control")]
+  Filter.Not (Filter.HeldBy Holder.Controller PlayerRelation.You) -> [qualifier (Text.pack "you don't control") (Text.pack "you don't control")]
   Filter.IsPlayer PlayerRelation.Opponent -> [noun (Text.pack "opponent") (Just (Text.pack "opponents"))]
   Filter.IsPlayer PlayerRelation.AnyPlayer -> [noun (Text.pack "player") (Just (Text.pack "players"))]
   _ -> []

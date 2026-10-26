@@ -55,6 +55,7 @@ import Parun.Types.Game (Game)
 import qualified Parun.Types.GameEvent as GameEvent
 import qualified Parun.Types.GameState as GameState
 import qualified Parun.Types.GrantedAbility as GrantedAbility
+import qualified Parun.Types.Holder as Holder
 import qualified Parun.Types.Keyword as Keyword
 import qualified Parun.Types.Layout as Layout
 import qualified Parun.Types.LifeLoss as LifeLoss
@@ -213,7 +214,7 @@ theRingEmblem temptations =
 -- | CR 701.54e's "is your Ring-bearer", as a Filter: the two conjuncts a Filter
 -- can carry, beside the battlefield one Affected.Matching and
 -- TriggerCondition.PermanentDealsCombatDamageToPlayer each supply themselves.
--- ControlledBy You is "under your control", whose "you" is CR 109.5's -- the
+-- HeldBy Controller You is "under your control", whose "you" is CR 109.5's -- the
 -- emblem's controller, which CR 114.2 makes the player it was minted for; and
 -- IsRingBearer is "has the Ring-bearer designation", asked of that same
 -- perspective. The control conjunct is the RULE and not belt-and-braces: CR
@@ -232,7 +233,7 @@ yourRingBearer :: Filter.Filter Keyword.Keyword
 yourRingBearer =
   Filter.And
     [ Filter.IsRingBearer,
-      Filter.ControlledBy PlayerRelation.You
+      Filter.HeldBy Holder.Controller PlayerRelation.You
     ]
 
 -- | CR 701.54c's two-temptation sentence: "Whenever your Ring-bearer attacks,
@@ -256,7 +257,7 @@ yourRingBearer =
 --
 -- The declaring player is PlayerRelation.You, CR 109.5's -- the emblem's
 -- controller, whom CR 114.2 makes the tempted player. That is the same seat
--- `yourRingBearer`'s ControlledBy conjunct names, and CR 508.1a lets only the
+-- `yourRingBearer`'s HeldBy Controller conjunct names, and CR 508.1a lets only the
 -- active player declare, so a Ring-bearer of ANOTHER player's cannot reach this
 -- through the wrong relation.
 --
@@ -660,7 +661,7 @@ endOnControlChange = do
 -- The IMPERATIVE spelling of the same three conjuncts `yourRingBearer` above
 -- spells as a Filter, for a caller with no Filter and no projection fold in hand.
 -- The two must not drift: this one reads Projection.controllerOf where the Filter's
--- ControlledBy reads the partial projection's controller, which is CR 613.1b's
+-- HeldBy Controller reads the partial projection's controller, which is CR 613.1b's
 -- layer 2 either way.
 --
 -- Still read by no RULE -- what reads CR 701.54e in anger is the emblem's own

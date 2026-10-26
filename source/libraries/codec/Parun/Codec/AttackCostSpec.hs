@@ -20,6 +20,7 @@ import qualified Parun.Types.CostAmount as CostAmount
 import qualified Parun.Types.CostComponent as CostComponent
 import qualified Parun.Types.Count as Count
 import qualified Parun.Types.Filter as Filter
+import qualified Parun.Types.Holder as Holder
 import qualified Parun.Types.InZone as InZone
 import qualified Parun.Types.ManaCost as ManaCost
 import qualified Parun.Types.ManaSymbol as ManaSymbol
@@ -58,14 +59,14 @@ spec s = Spec.describe s "Parun.Codec.AttackCost" $ do
               ( Quantity.Count
                   ( Count.MkCount
                       (Scope.InZone (InZone.MkInZone Zone.Battlefield (PlayerRef.Relative PlayerRelation.AnyPlayer)))
-                      (Filter.And [Filter.HasCardType CardType.Enchantment, Filter.ControlledBy PlayerRelation.You])
+                      (Filter.And [Filter.HasCardType CardType.Enchantment, Filter.HeldBy Holder.Controller PlayerRelation.You])
                       Aggregation.Members
                   )
               )
           )
           AttackCostScope.ControllerAndPlaneswalkers
       )
-      " {\"perAttacker\":{\"type\":\"Counted\",\"value\":{\"type\":\"Count\",\"value\":{\"aggregation\":{\"type\":\"Members\"},\"filter\":{\"type\":\"And\",\"value\":[{\"type\":\"HasCardType\",\"value\":{\"type\":\"Enchantment\"}},{\"type\":\"ControlledBy\",\"value\":{\"type\":\"You\"}}]},\"scope\":{\"type\":\"InZone\",\"value\":{\"player\":{\"type\":\"Relative\",\"value\":{\"type\":\"AnyPlayer\"}},\"zone\":{\"type\":\"Battlefield\"}}}}}},\"scope\":{\"type\":\"ControllerAndPlaneswalkers\"},\"subject\":{\"type\":\"Matching\",\"value\":{\"type\":\"HasCardType\",\"value\":{\"type\":\"Creature\"}}}} "
+      " {\"perAttacker\":{\"type\":\"Counted\",\"value\":{\"type\":\"Count\",\"value\":{\"aggregation\":{\"type\":\"Members\"},\"filter\":{\"type\":\"And\",\"value\":[{\"type\":\"HasCardType\",\"value\":{\"type\":\"Enchantment\"}},{\"type\":\"HeldBy\",\"value\":{\"holder\":{\"type\":\"Controller\"},\"relation\":{\"type\":\"You\"}}}]},\"scope\":{\"type\":\"InZone\",\"value\":{\"player\":{\"type\":\"Relative\",\"value\":{\"type\":\"AnyPlayer\"}},\"zone\":{\"type\":\"Battlefield\"}}}}}},\"scope\":{\"type\":\"ControllerAndPlaneswalkers\"},\"subject\":{\"type\":\"Matching\",\"value\":{\"type\":\"HasCardType\",\"value\":{\"type\":\"Creature\"}}}} "
   -- Exalted Dragon's half: a share with no mana and a component, which is CR
   -- 508.1h's list past "paying mana". The subject is the Dragon itself.
   Spec.it s "MkAttackCost with a non-mana share" $

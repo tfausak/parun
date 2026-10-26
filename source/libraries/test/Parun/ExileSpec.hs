@@ -1260,7 +1260,7 @@ orderedNames oids gs = Maybe.mapMaybe (\oid -> fmap S.nameOf (Game.cardOf oid gs
 --
 -- ONE THING APART: the second case exiles the same two cards for the same seat
 -- into the same zone FACE UP, so a pool that had simply lost its exile
--- candidates could not pass it. `OwnedBy You` is the slot's other conjunct and
+-- candidates could not pass it. `HeldBy Owner You` is the slot's other conjunct and
 -- is untouched either way -- CR 406.3a blanks CHARACTERISTICS, and CR 108.3's
 -- owner is not one.
 runicRepetition :: (Monad m) => Spec.Spec m n -> Registry.Registry m -> n ()

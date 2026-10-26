@@ -1944,7 +1944,7 @@ overRelations f re = case re of
   ReplacementEffect.AssembleR _ -> pure re
   ReplacementEffect.GameLossR r -> (\w -> ReplacementEffect.GameLossR r {GameLossR.whose = w}) <$> f (GameLossR.whose r)
   ReplacementEffect.PlaneswalkR r -> (\w -> ReplacementEffect.PlaneswalkR r {PlaneswalkR.whose = w}) <$> f (PlaneswalkR.whose r)
-  -- CR 109.5's relation rides EntryR's Filter (Filter.ControlledBy) and DamageR's
+  -- CR 109.5's relation rides EntryR's Filter (Filter.HeldBy Holder.Controller) and DamageR's
   -- PlayerRelation; the other four name no player at all.
   ReplacementEffect.EntryR _ -> pure re
   ReplacementEffect.DamageR _ -> pure re
@@ -2934,7 +2934,7 @@ chosenCandidates legal resolving controller source gs choice = case ChosenPerman
 -- for every candidate against an empty slot map, so a bare contextFor here would
 -- leave such a card silently sweeping in its own target. It is also what answers
 -- a CONTROLLER-relative conjunct -- Tovolar's "Human Werewolves you control" is
--- `ControlledBy You`, read against CR 109.5's perspective.
+-- `HeldBy Controller You`, read against CR 109.5's perspective.
 battlefieldMatching :: Map.Map SlotName (Set Recipient) -> ObjectId -> PlayerId -> ObjectId -> GameState -> Filter.Type.Filter Keyword.Type.Keyword -> [ObjectId]
 battlefieldMatching legal resolving controller source gs filter_ =
   let context = effectContext gs resolving controller source legal (slotBindings resolving gs)

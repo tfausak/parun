@@ -93,8 +93,8 @@ spec s = Spec.describe s "Parun.Codec.ObjectRef" $ do
     Common.assertCodec
       s
       ObjectRef.codec
-      (ObjectRef.EachAbility (Filter.ControlledBy PlayerRelation.Opponent))
-      " {\"type\":\"EachAbility\",\"value\":{\"type\":\"ControlledBy\",\"value\":{\"type\":\"Opponent\"}}} "
+      (ObjectRef.EachAbility (Filter.HeldBy Holder.Controller PlayerRelation.Opponent))
+      " {\"type\":\"EachAbility\",\"value\":{\"type\":\"HeldBy\",\"value\":{\"holder\":{\"type\":\"Controller\"},\"relation\":{\"type\":\"Opponent\"}}}} "
   -- CR 405.1: the same zone with no kind test, so both arms above are in. Glen
   -- Elendra's Answer's "all spells your opponents control and all abilities your
   -- opponents control" is the filter.
@@ -102,8 +102,8 @@ spec s = Spec.describe s "Parun.Codec.ObjectRef" $ do
     Common.assertCodec
       s
       ObjectRef.codec
-      (ObjectRef.EachOnStack (Filter.ControlledBy PlayerRelation.Opponent))
-      " {\"type\":\"EachOnStack\",\"value\":{\"type\":\"ControlledBy\",\"value\":{\"type\":\"Opponent\"}}} "
+      (ObjectRef.EachOnStack (Filter.HeldBy Holder.Controller PlayerRelation.Opponent))
+      " {\"type\":\"EachOnStack\",\"value\":{\"type\":\"HeldBy\",\"value\":{\"holder\":{\"type\":\"Controller\"},\"relation\":{\"type\":\"Opponent\"}}}} "
   Spec.it s "EachPlayer" $
     Common.assertCodec
       s

@@ -10,6 +10,7 @@ import qualified Parun.Types.Count as Count
 import qualified Parun.Types.DistinctOf as DistinctOf
 import qualified Parun.Types.EventShape as EventShape
 import qualified Parun.Types.Filter as Filter
+import qualified Parun.Types.Holder as Holder
 import qualified Parun.Types.InZone as InZone
 import qualified Parun.Types.MovedBetween as MovedBetween
 import qualified Parun.Types.PlayerRef as PlayerRef
@@ -30,10 +31,10 @@ spec s = Spec.describe s "Parun.Codec.Count" $ do
       (Count.codec Common.integer)
       ( Count.MkCount
           (Scope.InZone (InZone.MkInZone Zone.Battlefield (PlayerRef.Relative PlayerRelation.AnyPlayer)))
-          (Filter.And [Filter.HasSubtype Subtype.Swamp, Filter.ControlledBy PlayerRelation.You])
+          (Filter.And [Filter.HasSubtype Subtype.Swamp, Filter.HeldBy Holder.Controller PlayerRelation.You])
           Aggregation.Members
       )
-      " {\"scope\":{\"type\":\"InZone\",\"value\":{\"zone\":{\"type\":\"Battlefield\"},\"player\":{\"type\":\"Relative\",\"value\":{\"type\":\"AnyPlayer\"}}}},\"filter\":{\"type\":\"And\",\"value\":[{\"type\":\"HasSubtype\",\"value\":{\"type\":\"Swamp\"}},{\"type\":\"ControlledBy\",\"value\":{\"type\":\"You\"}}]},\"aggregation\":{\"type\":\"Members\"}} "
+      " {\"scope\":{\"type\":\"InZone\",\"value\":{\"zone\":{\"type\":\"Battlefield\"},\"player\":{\"type\":\"Relative\",\"value\":{\"type\":\"AnyPlayer\"}}}},\"filter\":{\"type\":\"And\",\"value\":[{\"type\":\"HasSubtype\",\"value\":{\"type\":\"Swamp\"}},{\"type\":\"HeldBy\",\"value\":{\"holder\":{\"type\":\"Controller\"},\"relation\":{\"type\":\"You\"}}}]},\"aggregation\":{\"type\":\"Members\"}} "
   -- CR 608.2i's look-back-in-time domain.
   Spec.it s "MkCount, scoped to the event history" $
     Common.assertCodec

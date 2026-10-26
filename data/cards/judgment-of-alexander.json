@@ -64,9 +64,14 @@
                                   }
                                 },
                                 {
-                                  "type": "ControlledBy",
+                                  "type": "HeldBy",
                                   "value": {
-                                    "type": "You"
+                                    "holder": {
+                                      "type": "Controller"
+                                    },
+                                    "relation": {
+                                      "type": "You"
+                                    }
                                   }
                                 }
                               ]
@@ -117,9 +122,14 @@
                         "value": "you"
                       },
                       "whatSource": {
-                        "type": "ControlledBy",
+                        "type": "HeldBy",
                         "value": {
-                          "type": "Opponent"
+                          "holder": {
+                            "type": "Controller"
+                          },
+                          "relation": {
+                            "type": "Opponent"
+                          }
                         }
                       }
                     }

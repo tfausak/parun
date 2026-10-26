@@ -81,6 +81,7 @@ import Parun.Types.Game (Game)
 import qualified Parun.Types.GameEvent as GameEvent
 import qualified Parun.Types.GameState as GameState
 import qualified Parun.Types.GrantedAbility as GrantedAbility
+import qualified Parun.Types.Holder as Holder
 import qualified Parun.Types.HowMany as HowMany
 import qualified Parun.Types.InZone as InZone
 import qualified Parun.Types.Keyword as Keyword
@@ -293,7 +294,7 @@ targetSpec s registry = Spec.describe s "Target" $ do
     let gs0 = Setup.emptyGame S.bothPlayers
         (mine, gs1) = S.addPermanent piker S.alice gs0
         (theirs, gs2) = S.addPermanent warMammoth S.bob gs1
-        legal = Target.legalRecipients StackObjectKind.Spell (Just S.alice) mine (TargetSlot.required Pool.Creatures (Just (Filter.Type.ControlledBy PlayerRelation.Opponent))) gs2
+        legal = Target.legalRecipients StackObjectKind.Spell (Just S.alice) mine (TargetSlot.required Pool.Creatures (Just (Filter.Type.HeldBy Holder.Controller PlayerRelation.Opponent))) gs2
     Spec.assertEqWith s "only the opponent's creature" legal (Set.singleton (Recipient.ToCreature theirs))
     Spec.assertBool s (not (Set.member (Recipient.ToCreature mine) legal)) "not the source's controller's own"
   -- CR 115.1 / 109.5: "target OPPONENT". Until Ravenous Rats there was no
@@ -346,7 +347,7 @@ targetSpec s registry = Spec.describe s "Target" $ do
     Spec.assertEqWith s "bob discarded one" (S.handSize S.bob settled) (bobBefore - 1)
     Spec.assertEqWith s "alice lost only the Rats she cast" (S.handSize S.alice settled) (aliceBefore - 1)
     Spec.assertEqWith s "the Rats resolved onto the battlefield" (S.countOnBattlefieldByName (CardName.MkCardName $ Text.pack "Ravenous Rats") S.alice settled) 1
-  Spec.it s "CR 806.1 at three seats a ControlledBy Opponent pool spans BOTH opponents' creatures" $ do
+  Spec.it s "CR 806.1 at three seats a HeldBy Controller Opponent pool spans BOTH opponents' creatures" $ do
     -- Palace Jailer's second trigger targets a creature an opponent controls.
     -- At three seats that is a choice across two boards, and the engine must
     -- offer all of it. DISCRIMINATING: a relation resolved as "the next seat"
@@ -359,7 +360,7 @@ targetSpec s registry = Spec.describe s "Target" $ do
         (mine, gs1) = S.addPermanent piker S.alice gs0
         (bobs, gs2) = S.addPermanent warMammoth S.bob gs1
         (carols, gs3) = S.addPermanent piker S.carol gs2
-        legal = Target.legalRecipients StackObjectKind.Spell (Just S.alice) mine (TargetSlot.required Pool.Creatures (Just (Filter.Type.ControlledBy PlayerRelation.Opponent))) gs3
+        legal = Target.legalRecipients StackObjectKind.Spell (Just S.alice) mine (TargetSlot.required Pool.Creatures (Just (Filter.Type.HeldBy Holder.Controller PlayerRelation.Opponent))) gs3
     Spec.assertEqWith
       s
       "exactly bob's and carol's, and nothing of alice's"
@@ -379,12 +380,12 @@ targetSpec s registry = Spec.describe s "Target" $ do
     Spec.assertEqWith
       s
       "for alice's source, only the creature still under bob's control"
-      (Target.legalRecipients StackObjectKind.Spell (Projection.controllerOf mine stolen) mine (TargetSlot.required Pool.Creatures (Just (Filter.Type.ControlledBy PlayerRelation.Opponent))) stolen)
+      (Target.legalRecipients StackObjectKind.Spell (Projection.controllerOf mine stolen) mine (TargetSlot.required Pool.Creatures (Just (Filter.Type.HeldBy Holder.Controller PlayerRelation.Opponent))) stolen)
       (Set.singleton (Recipient.ToCreature alsoTheirs))
     Spec.assertEqWith
       s
       "for bob's source, the two alice now controls"
-      (Target.legalRecipients StackObjectKind.Spell (Projection.controllerOf alsoTheirs stolen) alsoTheirs (TargetSlot.required Pool.Creatures (Just (Filter.Type.ControlledBy PlayerRelation.Opponent))) stolen)
+      (Target.legalRecipients StackObjectKind.Spell (Projection.controllerOf alsoTheirs stolen) alsoTheirs (TargetSlot.required Pool.Creatures (Just (Filter.Type.HeldBy Holder.Controller PlayerRelation.Opponent))) stolen)
       (Set.fromList [Recipient.ToCreature mine, Recipient.ToCreature theirs])
   -- P9 (#40): the reshaped TargetSlot = Pool + Maybe Filter reproduces the
   -- retired hand-carved constructors as data. A black creature

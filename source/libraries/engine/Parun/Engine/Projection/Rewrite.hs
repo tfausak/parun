@@ -885,7 +885,7 @@ rewriteEffect pairs effect = case effect of
   -- goes through rewriteQuantity, the shape PreventNextDamage's quantity takes
   -- above, and the recipient description `whatRecipient` through Filter.rewrite,
   -- which a subtype swap genuinely reaches -- a card covering "Goblins you
-  -- control" would be its producer; Harm's Way's ControlledBy names no word, so
+  -- control" would be its producer; Harm's Way's HeldBy Controller names no word, so
   -- both are regression fences too. `whoRecipient` is a PlayerRelation and
   -- holds no word.
   Effect.RedirectDamage (RedirectDamage.MkRedirectDamage duration kind amount from whatRecipient whoRecipient to chosenSource uses whatSource) ->

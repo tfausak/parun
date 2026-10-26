@@ -1756,7 +1756,7 @@ zameckGuildmageSpec s registry = Spec.describe s "Zameck Guildmage (CR 614.3)" $
         Spec.assertEqWith s "and the Guildmage, already on the battlefield, has none" (countersOn CounterKind.PlusOnePlusOne mageId after) 0
       _ -> Spec.assertFailure s "the Piker did not reach the battlefield"
   -- CR 109.5 on an ACTIVATED ability: "you" is the player who activated it, so
-  -- the row's Filter.ControlledBy passes over bob's creature. Without this case
+  -- the row's Filter.HeldBy Holder.Controller passes over bob's creature. Without this case
   -- a row matching every creature would look identical to the printed one.
   Spec.it s "CR 109.5 the opponent's creature is not one alice controls, so the row passes over it" $ do
     built@(_, _, _, bobsPiker, _) <- board

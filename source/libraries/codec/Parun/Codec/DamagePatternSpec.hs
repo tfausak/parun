@@ -7,6 +7,7 @@ import qualified Parun.Spec as Spec
 import qualified Parun.Types.DamageKind as DamageKind
 import qualified Parun.Types.DamagePattern as DamagePattern
 import qualified Parun.Types.Filter as Filter
+import qualified Parun.Types.Holder as Holder
 import qualified Parun.Types.ObjectId as ObjectId
 import qualified Parun.Types.PlayerRelation as PlayerRelation
 import qualified Parun.Types.Recipient as Recipient
@@ -60,8 +61,8 @@ spec s = Spec.describe s "Parun.Codec.DamagePattern" $ do
     Common.assertCodec
       s
       DamagePattern.codec
-      (DamagePattern.MkDamagePattern Nothing (Filter.And []) (Just (Filter.ControlledBy PlayerRelation.You)) (Just PlayerRelation.You) Nothing Nothing Nothing)
-      " {\"whatRecipient\":{\"type\":\"ControlledBy\",\"value\":{\"type\":\"You\"}},\"whoRecipient\":{\"type\":\"You\"}} "
+      (DamagePattern.MkDamagePattern Nothing (Filter.And []) (Just (Filter.HeldBy Holder.Controller PlayerRelation.You)) (Just PlayerRelation.You) Nothing Nothing Nothing)
+      " {\"whatRecipient\":{\"type\":\"HeldBy\",\"value\":{\"holder\":{\"type\":\"Controller\"},\"relation\":{\"type\":\"You\"}}},\"whoRecipient\":{\"type\":\"You\"}} "
   -- CR 609.7a's chosen source, baked as an id by Resolve's prevention arms and
   -- never authored either -- Healing Grace's "a source of your choice", whose
   -- printed properties are none, so the trivial filter rides beside the id.

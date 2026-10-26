@@ -1260,7 +1260,7 @@ spec s registry = Spec.describe s "Mutate" $ do
       Just (spellId, theirs, hers, board) -> do
         let aimedAt victim = merging MutateSide.Over victim board spellId
         -- THE gameplay assertion, ahead of every proxy: the creature the CASTER
-        -- owns is refused, which is exactly what `OwnedBy You` would have
+        -- owns is refused, which is exactly what `HeldBy Owner You` would have
         -- admitted.
         Spec.assertEqWith
           s

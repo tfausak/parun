@@ -1166,7 +1166,7 @@ ninjutsu (Ninjutsu.MkNinjutsu cost variant) =
             ReturnPermanents.whichPermanents =
               Filter.And
                 [ Filter.HasCardType CardType.Creature,
-                  Filter.ControlledBy PlayerRelation.You,
+                  Filter.HeldBy Holder.Controller PlayerRelation.You,
                   Filter.IsAttacking,
                   Filter.HasBlockStatus BlockStatus.Unblocked
                 ]
@@ -2121,7 +2121,7 @@ crew n =
         Filter.And
           [ Filter.HasCardType CardType.Creature,
             Filter.Not Filter.IsTapped,
-            Filter.ControlledBy PlayerRelation.You,
+            Filter.HeldBy Holder.Controller PlayerRelation.You,
             Filter.Not Filter.IsSource,
             Filter.Not Filter.CantCrewVehicles
           ]
@@ -2186,7 +2186,7 @@ saddle n =
         Filter.And
           [ Filter.HasCardType CardType.Creature,
             Filter.Not Filter.IsTapped,
-            Filter.ControlledBy PlayerRelation.You,
+            Filter.HeldBy Holder.Controller PlayerRelation.You,
             Filter.Not Filter.IsSource
           ]
    in ActivatedAbility.MkActivatedAbility
@@ -2248,7 +2248,7 @@ station =
         Filter.And
           [ Filter.HasCardType CardType.Creature,
             Filter.Not Filter.IsTapped,
-            Filter.ControlledBy PlayerRelation.You,
+            Filter.HeldBy Holder.Controller PlayerRelation.You,
             Filter.Not Filter.IsSource
           ]
       load =
@@ -2382,7 +2382,7 @@ outlast cost =
 -- Equipment may be attached to", so Parun.Engine.Attach.attachmentFor never sees
 -- it and a quality-equipped creature that stops having the quality keeps the
 -- Equipment. The rule's own "controlled by the player activating the ability"
--- is the ControlledBy conjunct rule 702.6a already carries; the quality is
+-- is the HeldBy Controller conjunct rule 702.6a already carries; the quality is
 -- appended to it rather than replacing it. Parun.AuraSpec's "CR 702.6c" case is
 -- what proves the narrowing bites.
 --
@@ -2396,7 +2396,7 @@ outlast cost =
 -- 704.5n leaves Luxior on him" proves both.
 equip :: Equip.Equip Keyword -> ActivatedAbility Card (GrantedAbility.GrantedAbility Card)
 equip payload =
-  let narrowed kinds = Just (Filter.And (kinds <> (Filter.ControlledBy PlayerRelation.You : Maybe.maybeToList (Equip.quality payload))))
+  let narrowed kinds = Just (Filter.And (kinds <> (Filter.HeldBy Holder.Controller PlayerRelation.You : Maybe.maybeToList (Equip.quality payload))))
       (slot, effect) = case Equip.target payload of
         EquipTarget.Creature -> (TargetSlot.required Pool.Creatures (narrowed []), Effect.Attach equipTarget)
         EquipTarget.Planeswalker -> (TargetSlot.required Pool.Permanents (narrowed [Filter.HasCardType CardType.Planeswalker]), Effect.AttachAsThoughCreature equipTarget)
@@ -2446,7 +2446,7 @@ fortify cost =
   let slot =
         TargetSlot.required
           Pool.Permanents
-          (Just (Filter.And [Filter.HasCardType CardType.Land, Filter.ControlledBy PlayerRelation.You]))
+          (Just (Filter.And [Filter.HasCardType CardType.Land, Filter.HeldBy Holder.Controller PlayerRelation.You]))
       effect = Effect.Attach fortifyTarget
    in ActivatedAbility.MkActivatedAbility
         { ActivatedAbility.cost = cost,
@@ -2491,7 +2491,7 @@ reconfigure cost =
   let slot =
         TargetSlot.required
           Pool.Creatures
-          (Just (Filter.And [Filter.ControlledBy PlayerRelation.You, Filter.Not Filter.IsSource]))
+          (Just (Filter.And [Filter.HeldBy Holder.Controller PlayerRelation.You, Filter.Not Filter.IsSource]))
       effect = Effect.Attach reconfigureTarget
    in ActivatedAbility.MkActivatedAbility
         { ActivatedAbility.cost = cost,
@@ -3220,7 +3220,7 @@ plainAlternativeCosts keywords =
               withReturn
                 ( Filter.And
                     [ Filter.HasCardType CardType.Creature,
-                      Filter.ControlledBy PlayerRelation.You,
+                      Filter.HeldBy Holder.Controller PlayerRelation.You,
                       Filter.IsTapped
                     ]
                 )
@@ -3237,7 +3237,7 @@ plainAlternativeCosts keywords =
               withReturn
                 ( Filter.And
                     [ Filter.HasCardType CardType.Creature,
-                      Filter.ControlledBy PlayerRelation.You,
+                      Filter.HeldBy Holder.Controller PlayerRelation.You,
                       Filter.IsAttacking,
                       Filter.HasBlockStatus BlockStatus.Unblocked
                     ]
@@ -3401,13 +3401,13 @@ selfCostReductionsFor keyword = case keyword of
   -- CR 702.41a's "for each [text] YOU CONTROL": the card carries the [text] and
   -- the rule carries the control clause and the battlefield, so the Filter the
   -- count runs is the conjunction. Relative AnyPlayer's battlefield and not yours,
-  -- because CR 403.1 makes the battlefield one shared zone -- Filter.ControlledBy
+  -- because CR 403.1 makes the battlefield one shared zone -- Filter.HeldBy Holder.Controller
   -- is the control question, and the scope's reference is not.
   Keyword.Affinity quality ->
     [ oneLessPerEach
         ( Count.MkCount
             (Scope.InZone (InZone.MkInZone Zone.Battlefield (PlayerRef.Relative PlayerRelation.AnyPlayer)))
-            (Filter.And [quality, Filter.ControlledBy PlayerRelation.You])
+            (Filter.And [quality, Filter.HeldBy Holder.Controller PlayerRelation.You])
             Aggregation.Members
         )
     ]
@@ -3534,7 +3534,7 @@ mutateCosts keywords =
 -- what makes CR 702.140b's "if its target is illegal" a question with an answer.
 --
 -- The owner conjunct is Filter.Shares Owner Source and NOT
--- Filter.OwnedBy You: rule 702.140a names the SPELL's owner, where CR 109.5's
+-- Filter.HeldBy Holder.Owner You: rule 702.140a names the SPELL's owner, where CR 109.5's
 -- "you" is the spell's controller at CR 601.2c and CR 608.2b. The two part for a
 -- spell cast off a card its caster does not own (Hostage Taker's permission). See Parun.MutateSpec's "CR
 -- 702.140a a stolen mutate spell may target the owner's creature and not the
@@ -3761,7 +3761,7 @@ teamworkCost n =
                 ( Filter.And
                     [ Filter.HasCardType CardType.Creature,
                       Filter.Not Filter.IsTapped,
-                      Filter.ControlledBy PlayerRelation.You
+                      Filter.HeldBy Holder.Controller PlayerRelation.You
                     ]
                 )
             )
@@ -3791,7 +3791,7 @@ conspireCost =
                 ( Filter.And
                     [ Filter.HasCardType CardType.Creature,
                       Filter.Not Filter.IsTapped,
-                      Filter.ControlledBy PlayerRelation.You,
+                      Filter.HeldBy Holder.Controller PlayerRelation.You,
                       Filter.Shares Trait.Color Anchor.Source
                     ]
                 )
@@ -3999,7 +3999,7 @@ manaSubstitutesFor symbol keywords =
         Filter.And
           ( [ Filter.HasCardType cardType,
               Filter.Not Filter.IsTapped,
-              Filter.ControlledBy PlayerRelation.You
+              Filter.HeldBy Holder.Controller PlayerRelation.You
             ]
               <> narrower
           )
@@ -5189,7 +5189,7 @@ grantedBy granter chosen you already keyword = case keyword of
   where
     spare filter_ = case filter_ of
       Filter.IsSource -> Filter.IsObject granter
-      Filter.ControlledBy PlayerRelation.You -> maybe (Filter.Or []) (Filter.HeldByPlayer Holder.Controller) you
+      Filter.HeldBy Holder.Controller PlayerRelation.You -> maybe (Filter.Or []) (Filter.HeldByPlayer Holder.Controller) you
       Filter.AttachedNoLaterThanSource -> Filter.Or (fmap Filter.IsObject already)
       Filter.And filters -> Filter.And (fmap spare filters)
       _ -> filter_
@@ -6431,13 +6431,13 @@ soulbond :: [TriggeredAbility Card (GrantedAbility.GrantedAbility Card)]
 soulbond = [soulbondSelfEnters, soulbondOtherEnters]
 
 -- CR 702.95a's "another unpaired creature you control": "another" is Not
--- IsSource, "you control" is ControlledBy You (CR 109.5), and "unpaired" is CR
+-- IsSource, "you control" is HeldBy Controller You (CR 109.5), and "unpaired" is CR
 -- 702.95b's Not IsPaired. The rule's words rather than any card's.
 unpairedOther :: Filter Keyword
 unpairedOther =
   Filter.And
     [ Filter.HasCardType CardType.Creature,
-      Filter.ControlledBy PlayerRelation.You,
+      Filter.HeldBy Holder.Controller PlayerRelation.You,
       Filter.Not Filter.IsSource,
       Filter.Not Filter.IsPaired
     ]
@@ -6448,7 +6448,7 @@ soulbondSelfEligible :: Condition.Condition
 soulbondSelfEligible =
   atLeastOneMatching
     (Scope.InZone (InZone.MkInZone Zone.Battlefield (PlayerRef.Relative PlayerRelation.AnyPlayer)))
-    (Filter.And [Filter.IsSource, Filter.HasCardType CardType.Creature, Filter.ControlledBy PlayerRelation.You, Filter.Not Filter.IsPaired])
+    (Filter.And [Filter.IsSource, Filter.HasCardType CardType.Creature, Filter.HeldBy Holder.Controller PlayerRelation.You, Filter.Not Filter.IsPaired])
 
 -- "At least one candidate", as CR 603.4 wants it: a Count of the scope's members
 -- the Filter keeps, against 1.
@@ -6514,7 +6514,7 @@ soulbondOtherEnters =
         ( TriggerCondition.PermanentEnters
             ( Filter.And
                 [ Filter.HasCardType CardType.Creature,
-                  Filter.ControlledBy PlayerRelation.You,
+                  Filter.HeldBy Holder.Controller PlayerRelation.You,
                   Filter.Not Filter.IsSource
                 ]
             )
@@ -6524,7 +6524,7 @@ soulbondOtherEnters =
                 [ soulbondSelfEligible,
                   atLeastOneMatching
                     (Scope.OverBound Binding.became)
-                    (Filter.And [Filter.HasCardType CardType.Creature, Filter.ControlledBy PlayerRelation.You, Filter.Not Filter.IsPaired])
+                    (Filter.And [Filter.HasCardType CardType.Creature, Filter.HeldBy Holder.Controller PlayerRelation.You, Filter.Not Filter.IsPaired])
                 ]
             )
         )
@@ -6542,7 +6542,7 @@ evolve =
           )
    in Mint.triggerIf
         ( TriggerCondition.PermanentEnters
-            (Filter.And [Filter.HasCardType CardType.Creature, Filter.ControlledBy PlayerRelation.You])
+            (Filter.And [Filter.HasCardType CardType.Creature, Filter.HeldBy Holder.Controller PlayerRelation.You])
         )
         (Condition.Any (fmap (entrantExceeds . Quantity.Measure) [Measure.Power, Measure.Toughness]))
         (Seq.singleton effect)
@@ -6552,7 +6552,7 @@ evolve =
 --
 -- The first minted trigger whose event is NOT its bearer's combat: CR 601.2i is
 -- the event, so the condition is TriggerCondition.SpellCast. "You cast" is
--- Filter.ControlledBy You against CR 109.5's "you", the ability's controller (CR
+-- Filter.HeldBy Holder.Controller You against CR 109.5's "you", the ability's controller (CR
 -- 603.3a); "a noncreature spell" is Filter.Not of the card type, the printed word
 -- rather than a disjunction of the other types. TurnScope.EachTurn because rule
 -- 702.108a names no turn.
@@ -6572,7 +6572,7 @@ prowess =
    in Mint.trigger
         -- CR 702.108a names no zone and no ordinal: every noncreature spell cast
         -- from anywhere fires it.
-        (Mint.spellCast (Filter.And [Filter.ControlledBy PlayerRelation.You, Filter.Not (Filter.HasCardType CardType.Creature)]))
+        (Mint.spellCast (Filter.And [Filter.HeldBy Holder.Controller PlayerRelation.You, Filter.Not (Filter.HasCardType CardType.Creature)]))
         (Seq.singleton effect)
 
 -- CR 702.101a: whenever you cast a spell, you may pay {W/B}; if you do, each
@@ -6606,7 +6606,7 @@ extort =
       gain = Effect.GainLife (PlayerQuantity.MkPlayerQuantity (PlayerRef.Relative PlayerRelation.You) (Quantity.InSlot drained))
       clause = Mint.mandatoryPaying gate (Seq.fromList [loss, gain])
    in Mint.triggerOf
-        (Mint.spellCast (Filter.ControlledBy PlayerRelation.You))
+        (Mint.spellCast (Filter.HeldBy Holder.Controller PlayerRelation.You))
         Nothing
         (Mint.oneModeOf Map.empty (Seq.singleton clause))
 
@@ -6653,7 +6653,7 @@ increment =
               (Quantity.Literal 1)
           )
    in Mint.triggerIf
-        (Mint.spellCast (Filter.ControlledBy PlayerRelation.You))
+        (Mint.spellCast (Filter.HeldBy Holder.Controller PlayerRelation.You))
         (Condition.All [isCreature, Condition.Any (fmap (spentExceeds . Quantity.Measure) [Measure.Power, Measure.Toughness])])
         (Seq.singleton grow)
 
@@ -6758,7 +6758,7 @@ exalted =
           )
    in Mint.trigger
         ( TriggerCondition.CreatureAttacksAlone
-            (Filter.And [Filter.HasCardType CardType.Creature, Filter.ControlledBy PlayerRelation.You])
+            (Filter.And [Filter.HasCardType CardType.Creature, Filter.HeldBy Holder.Controller PlayerRelation.You])
         )
         (Seq.singleton effect)
 
@@ -7125,7 +7125,7 @@ decayedSacrifice =
 -- REQUIREMENT rather than changing a characteristic.
 --
 -- The target slot is narrowed by Filter.ControlledByRole Defending (CR 508.5),
--- one atom rather than ControlledBy Opponent, which CR 506.2a makes too wide: at
+-- one atom rather than HeldBy Controller Opponent, which CR 506.2a makes too wide: at
 -- three seats only one opponent is the defending player (CR 508.5a).
 --
 -- ONE clause holding BOTH effects, under one Optionality.Optional -- rule 702.39a
@@ -8249,7 +8249,7 @@ isSpellCard types = Set.member CardType.Instant types || Set.member CardType.Sor
 -- THE CONDITION is the bystander reading (TriggerCondition.PermanentDies), not a
 -- self-scoped one: rule 702.59a watches A CREATURE, and the card with recover is
 -- a card in a graveyard rather than the permanent that died. "Your graveyard" is
--- the Filter.OwnedBy conjunct -- CR 404.1 puts a destroyed object in its OWNER's graveyard,
+-- the Filter.HeldBy Holder.Owner conjunct -- CR 404.1 puts a destroyed object in its OWNER's graveyard,
 -- and CR 108.4 leaves the recover card in a graveyard no controller, so CR
 -- 113.8's second clause makes its owner the "you" the filter is read against.
 -- Not narrowed by Not IsSource, which is rule 702.59a's own wording -- "a
@@ -8292,7 +8292,7 @@ recover cost =
       returned = Mint.mandatoryPaying (gate PayBranch.IfPaid Nothing) (Seq.singleton (moveTo Zone.Hand))
       exiled = Mint.mandatoryPaying (gate PayBranch.IfNotPaid (Just (ClauseIndex.MkClauseIndex 0))) (Seq.singleton (moveTo Zone.Exile))
    in Mint.triggerOf
-        (TriggerCondition.PermanentDies (Filter.And [Filter.HasCardType CardType.Creature, Filter.OwnedBy PlayerRelation.You]))
+        (TriggerCondition.PermanentDies (Filter.And [Filter.HasCardType CardType.Creature, Filter.HeldBy Holder.Owner PlayerRelation.You]))
         Nothing
         (Mint.oneModeOf Map.empty (Seq.fromList [returned, exiled]))
 
@@ -9130,7 +9130,7 @@ youControlSource =
         ( Quantity.Count
             ( Count.MkCount
                 (Scope.InZone (InZone.MkInZone Zone.Battlefield (PlayerRef.Relative PlayerRelation.AnyPlayer)))
-                (Filter.And [Filter.IsSource, Filter.ControlledBy PlayerRelation.You])
+                (Filter.And [Filter.IsSource, Filter.HeldBy Holder.Controller PlayerRelation.You])
                 Aggregation.Members
             )
         )
@@ -9394,14 +9394,14 @@ champion quality = [championEnters quality, championLeaves]
 -- Prophet is sacrificed".
 --
 -- The Filter is the printed [object]; "another" is Not IsSource and "you
--- control" is ControlledBy You (CR 109.5), both the rule's rather than the
+-- control" is HeldBy Controller You (CR 109.5), both the rule's rather than the
 -- card's.
 championEnters :: Filter Keyword -> TriggeredAbility Card (GrantedAbility.GrantedAbility Card)
 championEnters quality =
   let another =
         Filter.And
           [ quality,
-            Filter.ControlledBy PlayerRelation.You,
+            Filter.HeldBy Holder.Controller PlayerRelation.You,
             Filter.Not Filter.IsSource
           ]
       exile =

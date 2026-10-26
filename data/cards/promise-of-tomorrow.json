@@ -32,9 +32,14 @@
                   }
                 },
                 {
-                  "type": "ControlledBy",
+                  "type": "HeldBy",
                   "value": {
-                    "type": "You"
+                    "holder": {
+                      "type": "Controller"
+                    },
+                    "relation": {
+                      "type": "You"
+                    }
                   }
                 }
               ]
@@ -102,9 +107,14 @@
                         }
                       },
                       {
-                        "type": "ControlledBy",
+                        "type": "HeldBy",
                         "value": {
-                          "type": "You"
+                          "holder": {
+                            "type": "Controller"
+                          },
+                          "relation": {
+                            "type": "You"
+                          }
                         }
                       }
                     ]

@@ -1702,12 +1702,12 @@ soulImmolationSpec s registry = Spec.describe s "Soul Immolation" $ do
 -- prohibit half scoped to a ZONE, which PlayerEffect.CantCastMatching's Filter
 -- states through Filter.IsInZone.
 --
--- "From anywhere other than their hands" is `Not (And [IsInZone Hand, OwnedBy
+-- "From anywhere other than their hands" is `Not (And [IsInZone Hand, HeldBy Owner
 -- You])`, read at the cast gate against the card WHERE IT LIES: CR 601.2 casts a
 -- spell "from where it is", and Parun.Engine.Cast.castable runs before CR 601.2a
 -- moves the card to the stack.
 --
--- The POSSESSIVE is the OwnedBy conjunct, and CR 109.5's "you" under it is the
+-- The POSSESSIVE is the HeldBy Owner conjunct, and CR 109.5's "you" under it is the
 -- CASTER (Parun.Engine.PlayerEffect.matchesObjectFor) rather than the card's own
 -- controller, which a card in a hand has none of. Nothing on this board tells the
 -- two readings apart, every seat casting out of its own hand; the Sen Triplets
@@ -2151,7 +2151,7 @@ senTripletsSpec s registry =
         -- card existed: BOB controls it, so alice is his opponent, and "from
         -- anywhere other than THEIR hands" refuses her cast out of his hand while
         -- leaving her cast out of her own alone. A transcription reading `Not
-        -- (IsInZone Hand)` allows both, and one reading OwnedBy at the CARD's own
+        -- (IsInZone Hand)` allows both, and one reading HeldBy Owner at the CARD's own
         -- perspective allows both too -- a hand card's controller is its owner, so
         -- "owned by you" is vacuous there (CR 108.4 / 109.5).
         Spec.it s "CR 601.3a Drannith Magistrate stops the cross-hand cast and leaves the own-hand cast alone" $ do

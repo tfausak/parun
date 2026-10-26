@@ -4014,7 +4014,7 @@ installCastFromGraveyard caster keywords castFor spellId gs0 =
                   -- ControllerRelation.Related AnyPlayer, and neither consults the
                   -- perspective the row supplies -- but the row carries it as
                   -- every other row does, and a redirect that named a
-                  -- Filter.ControlledBy would.
+                  -- Filter.HeldBy Holder.Controller would.
                   ActiveReplacement.controller = caster,
                   ActiveReplacement.timestamp = ts,
                   ActiveReplacement.expiry = Expiry.Never,

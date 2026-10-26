@@ -987,9 +987,9 @@ geistBoard island thinkTwice n =
 --
 -- The third sentence is the point: it is the reduction half of the CR 601.2a
 -- cast-from-zone atom Aven Interrupter taxes with (Parun.CastSpec), spelled
--- `And [WasCastFrom Graveyard, OwnedBy You]`.
+-- `And [WasCastFrom Graveyard, HeldBy Owner You]`.
 --
--- The OwnedBy conjunct is a REGRESSION FENCE rather than a proven behaviour, and
+-- The HeldBy Owner conjunct is a REGRESSION FENCE rather than a proven behaviour, and
 -- CR 400.3 is what makes it exact: a card in a graveyard is in its owner's, so
 -- "your graveyard" is the spell's owner being the caster. A board that
 -- discriminates it now exists -- Tinybones, the Pickpocket casts a card out of

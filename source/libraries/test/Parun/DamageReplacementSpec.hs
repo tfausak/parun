@@ -1411,7 +1411,7 @@ questingBeastSpec s registry = Spec.describe s "Questing Beast (CR 615.12)" $ do
   -- THE whatSource CONTROL: the same shield, on the same board, with the Beast on
   -- the battlefield the whole time, prevents the combat damage of a creature
   -- ALICE controls whole. "Creatures you control" is bob's set, so a pattern that
-  -- dropped the ControlledBy atom would fail here.
+  -- dropped the HeldBy Controller atom would fail here.
   Spec.it s "CR 615.7 combat damage from a creature the Beast's controller does NOT control is prevented"
     . withBoard
     $ \victim hers _ shielded -> do

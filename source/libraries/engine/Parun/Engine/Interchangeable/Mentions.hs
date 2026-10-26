@@ -496,12 +496,11 @@ filterNames asking criterion = case criterion of
   Filter.HasKeywordFamily _family -> mempty
   Filter.Measures measures -> measuresNames asking measures
   Filter.ManaValueIsEven -> mempty
-  Filter.ControlledBy _relation -> mempty
+  Filter.HeldBy _holder _relation -> mempty
   Filter.ControlledByRole _ -> mempty
   Filter.HeldByBound _holder slot -> slotNames asking slot
   Filter.HeldByPlayer _holder _player -> mempty
   Filter.HeldByRecipient _holder -> mempty
-  Filter.OwnedBy _relation -> mempty
   Filter.IsSource -> mempty
   Filter.IsObject oid -> names asking (== oid)
   Filter.TargetsSource -> mempty

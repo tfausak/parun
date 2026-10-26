@@ -33,6 +33,7 @@ import qualified Parun.Types.Comparison as Comparison
 import qualified Parun.Types.CounterKind as CounterKind
 import qualified Parun.Types.Filter as Filter.Type
 import qualified Parun.Types.GameState as GameState
+import qualified Parun.Types.Holder as Holder
 import qualified Parun.Types.Keyword as Keyword.Type
 import qualified Parun.Types.Measure as Measure
 import qualified Parun.Types.Measures as Measures
@@ -250,7 +251,7 @@ exaltedSpec s registry =
           let abilities = Keyword.abilitiesFor Keyword.Type.Exalted 2
               expected =
                 TriggerCondition.CreatureAttacksAlone
-                  (Filter.Type.And [Filter.Type.HasCardType CardType.Creature, Filter.Type.ControlledBy PlayerRelation.You])
+                  (Filter.Type.And [Filter.Type.HasCardType CardType.Creature, Filter.Type.HeldBy Holder.Controller PlayerRelation.You])
           Spec.assertEqWith s "two abilities" (length abilities) 2
           Spec.assertEqWith s "each watching CR 506.5, filtered on the attacker's controller" (fmap TriggeredAbility.condition abilities) [expected, expected]
 
@@ -1014,7 +1015,7 @@ evolveSpec s registry =
           let abilities = Keyword.abilitiesFor Keyword.Type.Evolve 2
               expected =
                 TriggerCondition.PermanentEnters
-                  (Filter.Type.And [Filter.Type.HasCardType CardType.Creature, Filter.Type.ControlledBy PlayerRelation.You])
+                  (Filter.Type.And [Filter.Type.HasCardType CardType.Creature, Filter.Type.HeldBy Holder.Controller PlayerRelation.You])
           Spec.assertEqWith s "two abilities" (length abilities) 2
           Spec.assertEqWith
             s

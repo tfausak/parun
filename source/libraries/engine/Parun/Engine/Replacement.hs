@@ -1742,12 +1742,12 @@ graveyardCandidates pid scope filter_ gs =
 -- pool that reaches here reads it: CR 614.1c's `IsSource` asks whether the
 -- candidate IS the effect's source (Clone, Primal Plasma, CR 306.5b's loyalty,
 -- and CR 702.34a's "exile THIS card" on the zone-change side), and CR 614.1d's
--- `ControlledBy Opponent` asks who the candidate's controller is relative to CR
+-- `HeldBy Controller Opponent` asks who the candidate's controller is relative to CR
 -- 109.5's "you" (Gather Specimens as a floating row, Kismet as printed static
 -- text). The perspective is the CANDIDATE's controller, which for a floating row
 -- is the baked one -- deriving it from the
 -- source here would answer Nothing for every row whose spell has resolved, and a
--- Nothing perspective makes ControlledBy vacuously False.
+-- Nothing perspective makes HeldBy Controller vacuously False.
 --
 -- CR 614.12 is why the view is the LIVE projection of the materialized object
 -- rather than of the card it came from: a previous iteration's rewrite has to be
@@ -2843,7 +2843,7 @@ linkedCopyTrigger asCopy
 --
 -- No perspective and no source in the context (CR 109.5): the printed filter
 -- states a quality of the card ("a Kithkin card") and names no player, so
--- ControlledBy and IsSource are vacuously False. Whose hand is asked by the zone
+-- HeldBy Controller and IsSource are vacuously False. Whose hand is asked by the zone
 -- lookup instead, which is the whole of the "from your hand" in the sentence.
 revealableFromHand :: PlayerId -> Filter.Type.Filter Keyword.Type.Keyword -> GameState -> [ObjectId]
 revealableFromHand pid filter_ gs =

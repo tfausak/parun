@@ -3708,14 +3708,12 @@ filterReads f = case f of
       Operand.EnclosingAmount -> Set.empty
       -- Another object's projection, declared as the candidate's (Aspect's note).
       Operand.OfEachOtherCandidate measure -> measureReads measure
-  Filter.Type.ControlledBy _ -> Set.singleton Controller
+  Filter.Type.HeldBy holder _ -> holderReads holder
   -- The candidate's controller; who defends is a combat-record fact.
   Filter.Type.ControlledByRole _ -> Set.singleton Controller
   Filter.Type.HeldByBound holder _ -> holderReads holder
   Filter.Type.HeldByPlayer holder _ -> holderReads holder
   Filter.Type.HeldByRecipient holder -> holderReads holder
-  -- Reads nothing, where its sibling above reads Controller: holderReads' reason.
-  Filter.Type.OwnedBy _ -> Set.empty
   Filter.Type.IsSource -> Set.empty
   -- Reads an IDENTITY, IsBound's answer below.
   Filter.Type.IsObject _ -> Set.empty
@@ -4043,12 +4041,11 @@ filterReadsPeers f = case f of
     Operand.OfBound _ -> False
     Operand.AmountInSlot _ -> False
     Operand.EnclosingAmount -> False
-  Filter.Type.ControlledBy _ -> False
+  Filter.Type.HeldBy _ _ -> False
   Filter.Type.ControlledByRole _ -> False
   Filter.Type.HeldByBound _ _ -> False
   Filter.Type.HeldByPlayer _ _ -> False
   Filter.Type.HeldByRecipient _ -> False
-  Filter.Type.OwnedBy _ -> False
   Filter.Type.IsSource -> False
   Filter.Type.IsObject _ -> False
   Filter.Type.TargetsSource -> False

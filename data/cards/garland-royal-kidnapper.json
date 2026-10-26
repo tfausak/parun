@@ -45,17 +45,27 @@
                   }
                 },
                 {
-                  "type": "ControlledBy",
+                  "type": "HeldBy",
                   "value": {
-                    "type": "You"
+                    "holder": {
+                      "type": "Controller"
+                    },
+                    "relation": {
+                      "type": "You"
+                    }
                   }
                 },
                 {
                   "type": "Not",
                   "value": {
-                    "type": "OwnedBy",
+                    "type": "HeldBy",
                     "value": {
-                      "type": "You"
+                      "holder": {
+                        "type": "Owner"
+                      },
+                      "relation": {
+                        "type": "You"
+                      }
                     }
                   }
                 }
@@ -78,17 +88,27 @@
                   }
                 },
                 {
-                  "type": "ControlledBy",
+                  "type": "HeldBy",
                   "value": {
-                    "type": "You"
+                    "holder": {
+                      "type": "Controller"
+                    },
+                    "relation": {
+                      "type": "You"
+                    }
                   }
                 },
                 {
                   "type": "Not",
                   "value": {
-                    "type": "OwnedBy",
+                    "type": "HeldBy",
                     "value": {
-                      "type": "You"
+                      "holder": {
+                        "type": "Owner"
+                      },
+                      "relation": {
+                        "type": "You"
+                      }
                     }
                   }
                 }
