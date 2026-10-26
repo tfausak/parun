@@ -153,7 +153,7 @@ data EntryRewrite ability effect
     -- hand that share a creature type with it", and the creature types are the
     -- ENTERING object's, read off its projection where the row applies
     -- (Parun.Engine.Event) rather than baked into a Filter here --
-    -- Filter.SharesCreatureTypeWith names a resolution's slot, and an entry
+    -- Filter.Shares CreatureType Bound names a resolution's slot, and an entry
     -- replacement has none.
     Amplify Natural.Natural
   | -- | CR 702.104a via CR 614.1c: tribute N, minted from the projection --

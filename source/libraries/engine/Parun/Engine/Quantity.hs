@@ -393,11 +393,11 @@ evaluateAgainst viewOf context gs announcedOn mOid mView quantity =
         -- despite the mutual recursion -- a Greatest's payload is a strictly smaller
         -- subterm.
         --
-        -- The fold's filter is aimed at `mOid` too, for Filter.IsAttachedToEvaluated
+        -- The fold's filter is aimed at `mOid` too, for Filter.IsAttachedTo Evaluated
         -- and Filter.IsEvaluated: under CR 613.4c that is the affected object,
         -- Bruenor Battlehammer's "it". Its creature types come off `mView`, the
-        -- view this evaluation was handed, for SharesCreatureTypeWith's Evaluated
-        -- anchor (Coat of Arms).
+        -- view this evaluation was handed, for Shares CreatureType Evaluated
+        -- (Coat of Arms).
         Quantity.Count c -> Count.evaluate viewOf (\mOid2 view -> evaluateAgainst viewOf context gs announcedOn mOid2 (Just view)) context {Filter.evaluated = mOid, Filter.evaluatedCreatureTypes = fmap (Set.filter Subtype.Engine.isCreatureType . Filter.subtypes) mView} gs c
         -- CR 106.4: the mana-pool fold (Parun.Engine.ManaCount). Takes the ViewOf but
         -- not the second injection the Count arm above does: a mana unit has no

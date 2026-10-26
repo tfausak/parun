@@ -103,6 +103,7 @@ import qualified Parun.Support as S
 import qualified Parun.Types.Acquisition as Acquisition
 import qualified Parun.Types.Action as A
 import qualified Parun.Types.ActivatedAbility as ActivatedAbility
+import qualified Parun.Types.Anchor as Anchor
 import qualified Parun.Types.Card as Card.Type
 import qualified Parun.Types.CardName as CardName
 import qualified Parun.Types.Color as Color
@@ -145,6 +146,7 @@ import qualified Parun.Types.Subtype as Subtype
 import qualified Parun.Types.TapState as TapState
 import qualified Parun.Types.TargetCount as TargetCount
 import qualified Parun.Types.TargetSlot as TargetSlot
+import qualified Parun.Types.Trait as Trait
 import qualified Parun.Types.TriggeredAbility as TriggeredAbility
 import qualified Parun.Types.Zone as Zone
 
@@ -490,7 +492,7 @@ fromTheRubbleSpec s registry =
 
 -- CR 601.2c / 205.3m: Unbury's "return two target creature cards that share a
 -- creature type from your graveyard to your hand". Each slot names the other
--- with SharesCreatureTypeWith, since the condition binds both targets alike
+-- with Shares CreatureType Bound, since the condition binds both targets alike
 -- (CR 608.2b re-checks each), and `second` adds Not (IsBound "first"). alice's graveyard
 -- holds two Hill Giants, a Goblin Piker and a Woodland Changeling; every board
 -- is the same, and the cases differ only in which pair is named.
@@ -573,7 +575,7 @@ spec s registry = Spec.describe s "Parun.Engine.Target" $ do
         slot = SlotName.MkSlotName (Text.pack "each")
         legal = Map.singleton slot (Set.fromList [Recipient.ToObject pikerA, Recipient.ToObject giantA])
         context = Slots.effectContextNaming slot pikerA gs S.noSource S.alice S.noSource legal Map.empty
-        sharesName oid = Filter.matches context (Projection.viewOfObject oid gs) (Filter.Type.SameNameAsBound slot)
+        sharesName oid = Filter.matches context (Projection.viewOfObject oid gs) (Filter.Type.Shares Trait.Name (Anchor.Bound slot))
     Spec.assertEqWith
       s
       "bob's Piker shares the narrowed Piker's name and bob's Giant does not"

@@ -108,13 +108,12 @@ spec s = Spec.describe s "Parun.Codec.Filter" $ do
       s
       (Codec.encode codec (Filter.HasKeywordFamily KeywordFamily.Toxic) /= Codec.encode codec (Filter.HasKeyword (Keyword.Toxic 2)))
       "the toxic family filter is not the toxic 2 filter"
-  Spec.it s "SharesWithSource" $ do
+  Spec.it s "Shares Sector Source" $
     Common.assertCodec
       s
       codec
-      (Filter.SharesWithSource Trait.Sector)
-      " {\"type\":\"SharesWithSource\",\"value\":{\"type\":\"Sector\"}} "
-    Spec.assertNeWith s "CR 702.60a's source is not CR 709.4a's slot" (Codec.encode codec (Filter.SharesWithSource Trait.Name)) (Codec.encode codec (Filter.SameNameAsBound (SlotName.MkSlotName (Text.pack "castSpell"))))
+      (Filter.Shares Trait.Sector Anchor.Source)
+      " {\"type\":\"Shares\",\"value\":{\"trait\":{\"type\":\"Sector\"},\"anchor\":{\"type\":\"Source\"}}} "
   Spec.it s "ControlledByRole Defending" $
     Common.assertCodec
       s
@@ -250,12 +249,12 @@ spec s = Spec.describe s "Parun.Codec.Filter" $ do
       codec
       Filter.IsTarget
       " {\"type\":\"IsTarget\"} "
-  Spec.it s "SameNameAsBound" $
+  Spec.it s "Shares Name Bound" $
     Common.assertCodec
       s
       codec
-      (Filter.SameNameAsBound (SlotName.MkSlotName (Text.pack "castSpell")))
-      " {\"type\":\"SameNameAsBound\",\"value\":\"castSpell\"} "
+      (Filter.Shares Trait.Name (Anchor.Bound (SlotName.MkSlotName (Text.pack "castSpell"))))
+      " {\"type\":\"Shares\",\"value\":{\"trait\":{\"type\":\"Name\"},\"anchor\":{\"type\":\"Bound\",\"value\":\"castSpell\"}}} "
   Spec.it s "ControllerRelatesToBound" $
     Common.assertCodec
       s
@@ -269,12 +268,12 @@ spec s = Spec.describe s "Parun.Codec.Filter" $ do
       (Filter.SameControllerAsHostOfBound (SlotName.MkSlotName (Text.pack "target")))
       " {\"type\":\"SameControllerAsHostOfBound\",\"value\":\"target\"} "
     Spec.assertNeWith s "CR 303.4b's host is not the bound object itself" (Codec.encode codec (Filter.SameControllerAsHostOfBound (SlotName.MkSlotName (Text.pack "target")))) (Codec.encode codec (Filter.ControllerRelatesToBound PlayerRelation.You (SlotName.MkSlotName (Text.pack "target"))))
-  Spec.it s "SharesCreatureTypeWith" $
+  Spec.it s "Shares CreatureType Bound" $
     Common.assertCodec
       s
       codec
-      (Filter.SharesCreatureTypeWith (Anchor.Bound (SlotName.MkSlotName (Text.pack "thatDepartedPermanent"))))
-      " {\"type\":\"SharesCreatureTypeWith\",\"value\":{\"type\":\"Bound\",\"value\":\"thatDepartedPermanent\"}} "
+      (Filter.Shares Trait.CreatureType (Anchor.Bound (SlotName.MkSlotName (Text.pack "thatDepartedPermanent"))))
+      " {\"type\":\"Shares\",\"value\":{\"trait\":{\"type\":\"CreatureType\"},\"anchor\":{\"type\":\"Bound\",\"value\":\"thatDepartedPermanent\"}}} "
   Spec.it s "Measures" $
     Common.assertCodec
       s
@@ -473,30 +472,30 @@ spec s = Spec.describe s "Parun.Codec.Filter" $ do
       codec
       (Filter.HasAttached (Filter.And []))
       " {\"type\":\"HasAttached\",\"value\":{\"type\":\"And\",\"value\":[]}} "
-  Spec.it s "IsAttachedToSource" $
+  Spec.it s "IsAttachedTo Source" $
     Common.assertCodec
       s
       codec
-      Filter.IsAttachedToSource
-      " {\"type\":\"IsAttachedToSource\"} "
-  Spec.it s "IsAttachedToEvaluated" $
+      (Filter.IsAttachedTo Anchor.Source)
+      " {\"type\":\"IsAttachedTo\",\"value\":{\"type\":\"Source\"}} "
+  Spec.it s "IsAttachedTo Evaluated" $
     Common.assertCodec
       s
       codec
-      Filter.IsAttachedToEvaluated
-      " {\"type\":\"IsAttachedToEvaluated\"} "
+      (Filter.IsAttachedTo Anchor.Evaluated)
+      " {\"type\":\"IsAttachedTo\",\"value\":{\"type\":\"Evaluated\"}} "
   Spec.it s "IsEvaluated" $
     Common.assertCodec
       s
       codec
       Filter.IsEvaluated
       " {\"type\":\"IsEvaluated\"} "
-  Spec.it s "SharesCreatureTypeWith Evaluated" $
+  Spec.it s "Shares CreatureType Evaluated" $
     Common.assertCodec
       s
       codec
-      (Filter.SharesCreatureTypeWith Anchor.Evaluated)
-      " {\"type\":\"SharesCreatureTypeWith\",\"value\":{\"type\":\"Evaluated\"}} "
+      (Filter.Shares Trait.CreatureType Anchor.Evaluated)
+      " {\"type\":\"Shares\",\"value\":{\"trait\":{\"type\":\"CreatureType\"},\"anchor\":{\"type\":\"Evaluated\"}}} "
   Spec.it s "EnteredWithSource" $
     Common.assertCodec
       s

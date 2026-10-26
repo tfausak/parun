@@ -26,6 +26,7 @@ import qualified Parun.Types.AffectedUnless as AffectedUnless
 import qualified Parun.Types.AgainstExiledPile as AgainstExiledPile
 import qualified Parun.Types.AgainstSlot as AgainstSlot
 import qualified Parun.Types.Aggregation as Aggregation
+import qualified Parun.Types.Anchor as Anchor
 import qualified Parun.Types.Arithmetic as Arithmetic
 import qualified Parun.Types.ArmDelayedTrigger as ArmDelayedTrigger
 import qualified Parun.Types.AttachRestriction as AttachRestriction
@@ -3531,7 +3532,7 @@ mutateCosts keywords =
 -- prints no "up to", so the slot is required (TargetSlot.required), which is
 -- what makes CR 702.140b's "if its target is illegal" a question with an answer.
 --
--- The owner conjunct is Filter.SharesWithSource Trait.Owner and NOT
+-- The owner conjunct is Filter.Shares Owner Source and NOT
 -- Filter.OwnedBy You: rule 702.140a names the SPELL's owner, where CR 109.5's
 -- "you" is the spell's controller at CR 601.2c and CR 608.2b. The two part for a
 -- spell cast off a card its caster does not own (Hostage Taker's permission). See Parun.MutateSpec's "CR
@@ -3545,7 +3546,7 @@ mutateTarget :: TargetSlot.TargetSlot
 mutateTarget =
   TargetSlot.required
     Pool.Creatures
-    (Just (Filter.And [Filter.Not (Filter.HasSubtype Subtype.Human), Filter.SharesWithSource Trait.Owner]))
+    (Just (Filter.And [Filter.Not (Filter.HasSubtype Subtype.Human), Filter.Shares Trait.Owner Anchor.Source]))
 
 -- CR 702.37a / 702.37e: the MORPH costs -- what a face-down permanent's controller
 -- pays to turn it face up as CR 116.2b's special action -- empty when the
@@ -3772,7 +3773,7 @@ teamworkCost n =
 -- 702.78a counts creatures where rule 702.194a counts power.
 --
 -- "It" is the SPELL, which is the object the cost is being paid for, so the
--- colour comparison is Filter.SharesWithSource Trait.Color rather than an atom
+-- colour comparison is Filter.Shares Color Source rather than an atom
 -- naming a slot; Parun.Engine.Cost.tapCandidates is what supplies the source's
 -- colours. The untapped and control clauses are the rule's own, teamworkCost's
 -- reading exactly, and CR 302.6 does not reach the cost for that function's reason.
@@ -3790,7 +3791,7 @@ conspireCost =
                     [ Filter.HasCardType CardType.Creature,
                       Filter.Not Filter.IsTapped,
                       Filter.ControlledBy PlayerRelation.You,
-                      Filter.SharesWithSource Trait.Color
+                      Filter.Shares Trait.Color Anchor.Source
                     ]
                 )
                 False
@@ -8628,7 +8629,7 @@ cascadeExiled = SlotName.MkSlotName (Text.pack "cascaded")
 -- whole of what it asks is a property of the card, which the offer's own
 -- EachCardFromAmong filter already asks.
 --
--- Filter.SharesWithSource Trait.Name and not a slot comparison, because
+-- Filter.Shares Name Source and not a slot comparison, because
 -- TriggerCondition.SelfCast binds nothing: "this spell" is CR 113.7's source.
 -- Written ONCE where cascade writes its filter twice, since the reveal above is a
 -- COUNT: nothing here asks the filter to end a walk, so its only job is picking
@@ -8646,7 +8647,7 @@ ripple n =
       offer =
         Effect.OfferCast
           OfferCast.MkOfferCast
-            { OfferCast.ref = ObjectRef.EachCardFromAmong (EachCardFromAmong.MkEachCardFromAmong rippleRevealed (Filter.SharesWithSource Trait.Name)),
+            { OfferCast.ref = ObjectRef.EachCardFromAmong (EachCardFromAmong.MkEachCardFromAmong rippleRevealed (Filter.Shares Trait.Name Anchor.Source)),
               -- Rule 702.60a's "YOU may cast": the caster, who is the trigger's
               -- controller.
               OfferCast.caster = PlayerRef.Relative PlayerRelation.You,

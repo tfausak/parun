@@ -2755,7 +2755,7 @@ mirrorOfTheFallenSpec s registry = Spec.describe s "MirrorOfTheFallen" $ do
 -- Two axes at once, and they are the two the card needs that nothing else in the
 -- pool asks for: CR 601.2a's ZONE on the trigger condition
 -- (Parun.Types.SpellCast.zone) and CR 709.4a's name comparison against a bound
--- object on the target slot (Filter.SameNameAsBound over Binding.castSpell).
+-- object on the target slot (Filter.Shares Name Bound over Binding.castSpell).
 --
 -- ONE BOARD, TWO CASTS. Both cases below build exactly the same state -- six
 -- Mountains, the enchantment, two Firebolts and a Lightning Bolt in the

@@ -46,9 +46,14 @@
                           }
                         },
                         {
-                          "type": "SharesCreatureTypeWith",
+                          "type": "Shares",
                           "value": {
-                            "type": "Evaluated"
+                            "anchor": {
+                              "type": "Evaluated"
+                            },
+                            "trait": {
+                              "type": "CreatureType"
+                            }
                           }
                         }
                       ]
@@ -91,9 +96,14 @@
                           }
                         },
                         {
-                          "type": "SharesCreatureTypeWith",
+                          "type": "Shares",
                           "value": {
-                            "type": "Evaluated"
+                            "anchor": {
+                              "type": "Evaluated"
+                            },
+                            "trait": {
+                              "type": "CreatureType"
+                            }
                           }
                         }
                       ]

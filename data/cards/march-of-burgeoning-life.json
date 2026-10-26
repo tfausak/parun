@@ -70,8 +70,16 @@
                             }
                           },
                           {
-                            "type": "SameNameAsBound",
-                            "value": "target"
+                            "type": "Shares",
+                            "value": {
+                              "anchor": {
+                                "type": "Bound",
+                                "value": "target"
+                              },
+                              "trait": {
+                                "type": "Name"
+                              }
+                            }
                           }
                         ]
                       },

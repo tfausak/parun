@@ -5483,11 +5483,11 @@ blockPermissionFilters permission =
 --     Filter.Context.slotControllers and one of the callers that fill
 --     Filter.Context.slotNames. CR 110.2's Filter.ControllerRelatesToBound belongs
 --     here, in AttachDestination, the other, and in SourceHostFramed (Flame
---     Wave); CR 709.4a's Filter.SameNameAsBound belongs here and
+--     Wave); CR 709.4a's Filter.Shares Name Bound belongs here and
 --     in SearchFramed, HandSweepFramed and LifeLossAmountFramed below, the
 --     other positions slotNames is filled at and a card writes it in. Their
 --     vacuous directions differ: an unfilled slotNames answers False, an
---     unfilled slotControllers answers True. So a misplaced SameNameAsBound
+--     unfilled slotControllers answers True. So a misplaced Shares Name Bound
 --     admits nothing and a misplaced ControllerRelatesToBound admits everything,
 --     so this tag carries more for the second than for the first.
 --   * SourceHostFramed -- an EFFECT's Parun.Types.ObjectRef
@@ -5531,7 +5531,7 @@ blockPermissionFilters permission =
 --     Parun.Engine.Target.admittedGiven like InTargetSlot, with the bindings and
 --     the chosen player of SlotlessCostFramed, which is to say none.
 --   * HandSweepFramed -- ObjectRef.EachCardInHand's own filter, the third
---     position a card may write CR 709.4a's Filter.SameNameAsBound in (Hour of
+--     position a card may write CR 709.4a's Filter.Shares Name Bound in (Hour of
 --     Glory): Resolve.Slots.objectRefObjects matches it through
 --     Resolve.Slots.effectContext, which fills the names. Not SourceHostFramed,
 --     which the arm's siblings carry, for the ObjectRef twin lint's sake.
@@ -5543,12 +5543,12 @@ blockPermissionFilters permission =
 --     does not keep.
 --   * ClauseGateFramed -- a mode clause's own "if" (Clause.condition), read by
 --     Parun.Engine.Resolve.gateHolds through Resolve.Slots.effectContext, so
---     CR 205.3m's Filter.SharesCreatureTypeWith answers there (Mudbutton
+--     CR 205.3m's Filter.Shares CreatureType Bound answers there (Mudbutton
 --     Clanger).
 --   * LifeLossAmountFramed -- CR 119.3's amount, which the Effect.LoseLife arm
 --     reads per recipient through Resolve.Slots.effectContext, so
 --     Filter.Context.slotNames is filled and CR 709.4a's
---     Filter.SameNameAsBound answers in its Count filter (Grim Reminder).
+--     Filter.Shares Name Bound answers in its Count filter (Grim Reminder).
 --   * AffectedSetFramed -- a static ability's or a combat restriction's own
 --     affected set, matched by Parun.Engine.Projection.affectsWith through
 --     affectedContext, which fills Filter.Context.sourceChosenColors and
@@ -5584,7 +5584,7 @@ blockPermissionFilters permission =
 -- reach Target.admittedRecipients, which passes NO bindings, so slotNames and
 -- slotControllers are both empty there -- Parun.Engine.Attach.attachmentFor's CR
 -- 303.4j move and Parun.Engine.Sba.stillLegalEnchant's CR 303.4c check. A
--- SameNameAsBound written into an enchant ability would answer one way at CR
+-- Shares Name Bound written into an enchant ability would answer one way at CR
 -- 601.2c and another way at every later reading; a ControllerRelatesToBound would do
 -- the same in the widening direction, admitting every host at those later
 -- readings, so this tag is what refuses the atom rather than merely narrowing it.
@@ -5619,7 +5619,7 @@ data Framing
     --
     -- It is also the second position that fills Filter.Context.slotNames: that
     -- arm takes its context from the resolution (Resolve.effectContext), so CR
-    -- 709.4a's Filter.SameNameAsBound answers here as it does in a target slot
+    -- 709.4a's Filter.Shares Name Bound answers here as it does in a target slot
     -- (Bifurcate).
     --
     -- CR 702.29e's typecycling filter is deliberately NOT one, though
@@ -5724,7 +5724,7 @@ data Framing
     -- chosen name became answerable.
     MillTallyFramed
   | -- | CR 608.2c's hand SWEEP filter -- ObjectRef.EachCardInHand's, the third
-    -- position a card may write CR 709.4a's Filter.SameNameAsBound in (Hour of
+    -- position a card may write CR 709.4a's Filter.Shares Name Bound in (Hour of
     -- Glory): Parun.Engine.Resolve.Slots.objectRefObjects matches it in the
     -- resolution's own context (Resolve.Slots.effectContext), so
     -- Filter.Context.slotNames is filled.
@@ -6635,7 +6635,7 @@ activatedAbilityFilters ability =
     -- OnlyIf arm reads no announcement: slotAmount is Nothing there and
     -- sourceMeasures, slotObjects, slotNames and slotControllers are empty. The tag is
     -- what FENCES the atoms that would read those rather than leaving them
-    -- silent -- CR 709.4a's SameNameAsBound and CR 110.2's
+    -- silent -- CR 709.4a's Shares Name Bound and CR 110.2's
     -- ControllerRelatesToBound, which belong to InTargetSlot and whose vacuous
     -- directions differ (see the Framing haddock). The two source-power
     -- comparisons have no tag of their own and are fenced corpus-wide instead, by

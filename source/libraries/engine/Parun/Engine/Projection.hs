@@ -1239,7 +1239,7 @@ viewWithLastKnownAnywhere gs = Count.orLastKnown (fullView gs) gs
 -- A key for every slot the map names, so a slot holding only a player, one
 -- answered with no target (CR 601.2c's "up to"), or one CR 608.2b emptied
 -- answers an EMPTY set and ControllerRelatesToBound and
--- SharesCreatureTypeWith refuse there; only a slot nobody has answered yet
+-- Shares CreatureType Bound refuse there; only a slot nobody has answered yet
 -- is absent, where they widen. slotObjects keeps only the slots naming an
 -- object, its own doctrine. Measures only for a slot naming exactly ONE
 -- object: no printed comparison asks a group for one. All thunks: a filter
@@ -1312,7 +1312,7 @@ framedWith choices source gs = withCharacteristicsOf source gs . SourceContext.f
 -- names as the source's (CR 613), through its last known information once it
 -- has left (viewWithLastKnownAnywhere): CR 608.2b's re-check and CR 608.2h's
 -- effects alike: the fields the source-comparison atoms read (Filter.Measures'
--- OfSource operand and Filter.SharesWithSource's colours, names and sectors).
+-- OfSource operand and Filter.Shares Source's colours, names and sectors).
 -- Leaves every other field alone, so CR 509.1b's pairwise restrictions, framed
 -- by the creature being compared rather than by an ability's source, take these
 -- and not its choices.
@@ -3680,15 +3680,16 @@ filterReads f = case f of
   Filter.Type.HasCardType _ -> Set.singleton Types
   Filter.Type.HasSupertype _ -> Set.singleton Supertypes
   Filter.Type.HasColor _ -> Set.singleton Colors
-  Filter.Type.SharesWithSource trait -> case trait of
+  -- Reads the CANDIDATE's trait; the anchored object's arrive on the Context.
+  Filter.Type.Shares trait _ -> case trait of
     Trait.Color -> Set.singleton Colors
-    -- NAMES at both ends, which have no Aspect, HasName's reason; the source's
-    -- arrive on the Context.
+    -- NAMES, which have no Aspect, HasName's reason.
     Trait.Name -> Set.empty
-    -- An OWNER at both ends, which CR 108.3 fixes when the game starts and no
-    -- Modification writes.
+    -- An OWNER, which CR 108.3 fixes when the game starts and no Modification
+    -- writes.
     Trait.Owner -> Set.empty
     Trait.Sector -> Set.empty
+    Trait.CreatureType -> Set.singleton Subtypes
   Filter.Type.HasSubtype _ -> Set.singleton Subtypes
   -- Reads no aspect: CR 201.1's names have no Aspect, so CR 613.8a's dependency
   -- cannot turn on the layer-3 writes of them (AddNamesMatching, SetName,
@@ -3740,16 +3741,12 @@ filterReads f = case f of
   -- Reads an IDENTITY, which CR 109.3 does not count as a characteristic.
   Filter.Type.IsBound _ -> Set.empty
   Filter.Type.IsTarget -> Set.empty
-  -- Reads NAMES at both ends, which have no Aspect, HasName's reason.
-  Filter.Type.SameNameAsBound _ -> Set.empty
-  -- Reads the CANDIDATE's controller, where its sibling above reads names: the
-  -- bound object's controller arrives on the Context, already projected.
+  -- Reads the CANDIDATE's controller: the bound object's controller arrives on
+  -- the Context, already projected.
   Filter.Type.ControllerRelatesToBound _ _ -> Set.singleton Controller
   -- Reads the CANDIDATE's controller too, the atom above one link along: the
   -- bound object's HOST's controller arrives on the Context, already projected.
   Filter.Type.SameControllerAsHostOfBound _ -> Set.singleton Controller
-  -- Reads the CANDIDATE's subtypes; the bound object's arrive on the Context.
-  Filter.Type.SharesCreatureTypeWith _ -> Set.singleton Subtypes
   -- Reads NAMES at both ends too, HasName's answer one indirection along: the
   -- chosen half is not a projection at all, and the other has no Aspect.
   Filter.Type.HasChosenName {} -> Set.empty
@@ -3851,8 +3848,7 @@ filterReads f = case f of
   -- the atom above's reason. The attachment itself reads nothing, for that atom's
   -- reason too: no Modification writes Object.attachedTo.
   Filter.Type.HasAttached g -> filterReads g
-  Filter.Type.IsAttachedToSource -> Set.empty
-  Filter.Type.IsAttachedToEvaluated -> Set.empty
+  Filter.Type.IsAttachedTo _ -> Set.empty
   Filter.Type.IsEvaluated -> Set.empty
   Filter.Type.IsHostOfSource -> Set.empty
   Filter.Type.EnteredWithSource -> Set.empty
@@ -4034,10 +4030,10 @@ filterReadsPeers f = case f of
   Filter.Type.HasCardType _ -> False
   Filter.Type.HasSupertype _ -> False
   Filter.Type.HasColor _ -> False
-  -- The source's traits arrive on the Context -- an owner read off Object.owner
-  -- rather than off a projection -- and the candidate's own come from its
-  -- partial, so no PEER is projected.
-  Filter.Type.SharesWithSource _ -> False
+  -- The anchored object's traits arrive on the Context -- the source's owner
+  -- read off Object.owner rather than off a projection -- and the candidate's
+  -- own come from its partial, so no PEER is projected.
+  Filter.Type.Shares _ _ -> False
   Filter.Type.HasSubtype _ -> False
   Filter.Type.HasName _ -> False
   Filter.Type.NameWordsAtLeast _ -> False
@@ -4069,7 +4065,6 @@ filterReadsPeers f = case f of
   Filter.Type.TargetsPlayer _ -> False
   Filter.Type.IsBound _ -> False
   Filter.Type.IsTarget -> False
-  Filter.Type.SameNameAsBound _ -> False
   -- The bound object's controller arrives on the Context, filled by
   -- Parun.Engine.Target.slotContext -- no peer projection is read here.
   Filter.Type.ControllerRelatesToBound _ _ -> False
@@ -4077,7 +4072,6 @@ filterReadsPeers f = case f of
   -- Parun.Engine.Resolve.Slots.effectContext -- the host is reached there rather
   -- than through the candidate's `peers` view.
   Filter.Type.SameControllerAsHostOfBound _ -> False
-  Filter.Type.SharesCreatureTypeWith _ -> False
   Filter.Type.HasChosenName {} -> False
   -- The source's chosen colour arrives on the Context, read off Object.chosenColors
   -- rather than off a projection; the candidate's own colours come from its
@@ -4116,8 +4110,7 @@ filterReadsPeers f = case f of
   Filter.Type.ConvokedSourceThisTurn -> False
   Filter.Type.SaddledSourceThisTurn -> False
   Filter.Type.ControlledSinceTurnBegan -> False
-  Filter.Type.IsAttachedToSource -> False
-  Filter.Type.IsAttachedToEvaluated -> False
+  Filter.Type.IsAttachedTo _ -> False
   Filter.Type.IsEvaluated -> False
   Filter.Type.IsHostOfSource -> False
   Filter.Type.EnteredWithSource -> False

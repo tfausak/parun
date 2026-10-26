@@ -1272,7 +1272,7 @@ kinshipAnswer wanted p = case p of
   _ -> S.identityAnswer p
 
 -- Kinship, through Mudbutton Clanger: CR 205.3m's comparison against the
--- SOURCE, which Filter.SharesCreatureTypeWith reaches as
+-- SOURCE, which Filter.Shares CreatureType Bound reaches as
 -- Binding.triggerSource. The pair differs only in alice's top card, and each leg
 -- answers the other way if the source's types were read off the printed Clone.
 kinshipSpec :: (Monad m, Monad n) => Spec.Spec m n -> Registry.Registry m -> n ()
