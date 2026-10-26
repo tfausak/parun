@@ -2347,7 +2347,7 @@ bakeSlots players = fmap (bakeSlot players)
 -- today tells the two readings apart.
 --
 -- No object map: only the player half is baked here, as the Filter beside it
--- is, so an HolderOfBound stays a read of the slot.
+-- is, so a HolderOfBound stays a read of the slot.
 bakeSlot :: Map SlotName PlayerId -> TargetSlot -> TargetSlot
 bakeSlot players slot =
   slot

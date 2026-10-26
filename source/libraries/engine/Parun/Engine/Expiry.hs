@@ -141,7 +141,7 @@ arm acquisition targets controller source duration gs = case duration of
   -- reasons, and Nothing where the reference names nobody for that arm's reason
   -- too -- a window that cannot begin stores nothing.
   --
-  -- An HolderOfBound controller of an object still in the game is NOT sampled: its
+  -- The controller of a bound object still in the game is NOT sampled: its
   -- seat is read live and pinned once its controller's declare attackers step
   -- has passed (pinAfterDeclareAttackers), so a control change before then
   -- moves the window (CR 611.2a).

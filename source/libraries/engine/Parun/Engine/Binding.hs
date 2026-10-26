@@ -1568,7 +1568,7 @@ playersIn :: Map SlotName (Set Recipient) -> Map SlotName PlayerId
 playersIn = Map.mapMaybe Recipient.playerOf . oneBySlot
 
 -- oneBySlot's object half, playersIn's twin: what Parun.Engine.Quantity.bakeBound
--- bakes an HolderOfBound to as a CR 611.2b duration begins.
+-- bakes a HolderOfBound ... Itself to as a CR 611.2b duration begins.
 objectsIn :: Map SlotName (Set Recipient) -> Map SlotName ObjectId
 objectsIn = Map.mapMaybe Recipient.objectOf . oneBySlot
 
