@@ -183,9 +183,14 @@
                           }
                         },
                         {
-                          "type": "OwnedBy",
+                          "type": "HeldBy",
                           "value": {
-                            "type": "Opponent"
+                            "holder": {
+                              "type": "Owner"
+                            },
+                            "relation": {
+                              "type": "Opponent"
+                            }
                           }
                         }
                       ]

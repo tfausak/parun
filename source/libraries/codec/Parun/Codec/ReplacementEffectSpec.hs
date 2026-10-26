@@ -37,6 +37,7 @@ import qualified Parun.Types.EntryR as EntryR
 import qualified Parun.Types.EntryRewrite as EntryRewrite
 import qualified Parun.Types.ExiledPile as ExiledPile
 import qualified Parun.Types.Filter as Filter
+import qualified Parun.Types.Holder as Holder
 import qualified Parun.Types.InstructionR as InstructionR
 import qualified Parun.Types.InstructionRewrite as InstructionRewrite
 import qualified Parun.Types.Keyword as Keyword
@@ -153,8 +154,8 @@ spec s =
           Common.assertCodec
             s
             codec
-            (ReplacementEffect.EntryR (EntryR.MkEntryR (Filter.And [Filter.HasCardType CardType.Creature, Filter.ControlledBy PlayerRelation.Opponent]) EntryRewrite.UnderSourceControl))
-            " {\"type\":\"EntryR\",\"value\":{\"matching\":{\"type\":\"And\",\"value\":[{\"type\":\"HasCardType\",\"value\":{\"type\":\"Creature\"}},{\"type\":\"ControlledBy\",\"value\":{\"type\":\"Opponent\"}}]},\"rewrite\":{\"type\":\"UnderSourceControl\"}}} "
+            (ReplacementEffect.EntryR (EntryR.MkEntryR (Filter.And [Filter.HasCardType CardType.Creature, Filter.HeldBy Holder.Controller PlayerRelation.Opponent]) EntryRewrite.UnderSourceControl))
+            " {\"type\":\"EntryR\",\"value\":{\"matching\":{\"type\":\"And\",\"value\":[{\"type\":\"HasCardType\",\"value\":{\"type\":\"Creature\"}},{\"type\":\"HeldBy\",\"value\":{\"holder\":{\"type\":\"Controller\"},\"relation\":{\"type\":\"Opponent\"}}}]},\"rewrite\":{\"type\":\"UnderSourceControl\"}}} "
         -- Pattern and rewrite are both DATA, so both have to survive the trip.
         Spec.it s "DamageR (combat damage, prevented)" $
           Common.assertCodec

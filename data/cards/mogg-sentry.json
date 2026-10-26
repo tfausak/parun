@@ -28,9 +28,14 @@
             "type": "SpellCast",
             "value": {
               "filter": {
-                "type": "ControlledBy",
+                "type": "HeldBy",
                 "value": {
-                  "type": "Opponent"
+                  "holder": {
+                    "type": "Controller"
+                  },
+                  "relation": {
+                    "type": "Opponent"
+                  }
                 }
               },
               "scope": {

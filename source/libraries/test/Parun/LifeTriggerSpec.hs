@@ -824,7 +824,7 @@ lifelinkGainEventsSpec s registry =
 -- where a per-member gatherer stacks two.
 --
 -- "Creatures you control": on alice's own turn no creature she does not control
--- can deal combat damage to a player, so the ControlledBy half of the filter is
+-- can deal combat damage to a player, so the HeldBy Controller half of the filter is
 -- written as printed and unexercised here.
 forthEorlingasSpec :: (Monad m, Monad n) => Spec.Spec m n -> Registry.Registry m -> n ()
 forthEorlingasSpec s registry =

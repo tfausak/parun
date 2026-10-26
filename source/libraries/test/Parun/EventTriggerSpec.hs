@@ -497,7 +497,7 @@ auntieOolSpec s registry =
 -- Young Pyromancer, {1}{R} Creature -- Human Shaman 2/1: "Whenever you cast an
 -- instant or sorcery spell, create a 1/1 red Elemental creature token." Two
 -- narrowings in one printed sentence, and the Filter carries both -- "you cast"
--- is Filter.ControlledBy You against CR 109.5's "you" (CR 603.3a), "an instant
+-- is Filter.HeldBy Holder.Controller You against CR 109.5's "you" (CR 603.3a), "an instant
 -- or sorcery spell" a disjunction of Filter.HasCardType -- so a board that moved
 -- only one of them at a time could not tell a working Filter from one that
 -- always passes. Each case below moves exactly one.
@@ -1021,8 +1021,8 @@ desolationTwinSpec s registry =
 --
 -- THREE SEATS, and the printed subject is why: "a player casts" is not "you
 -- cast" and not "an opponent casts", and at two players those three readings all
--- coincide on any single cast. bob's cast rules out ControlledBy You, alice's own
--- cast rules out ControlledBy Opponent, and carol is the seat that makes
+-- coincide on any single cast. bob's cast rules out HeldBy Controller You, alice's own
+-- cast rules out HeldBy Controller Opponent, and carol is the seat that makes
 -- "opponent" more than a synonym for "the other player".
 presenceOfTheMasterSpec :: (Monad m, Monad n) => Spec.Spec m n -> Registry.Registry m -> n ()
 presenceOfTheMasterSpec s registry =
@@ -1086,7 +1086,7 @@ presenceOfTheMasterSpec s registry =
 --
 -- "An opponent casts" needs nothing bound: Event.matchesTrigger's SpellCast arm
 -- hands the event's caster to Projection.viewOfSpell as the spell's controller
--- (CR 601.2a), so Filter.ControlledBy Opponent answers the printed relation
+-- (CR 601.2a), so Filter.HeldBy Holder.Controller Opponent answers the printed relation
 -- against CR 109.5's "you" (CR 603.3a). It is the PAYLOAD's "that player" that
 -- needs the slot.
 --
@@ -1155,7 +1155,7 @@ kambalSpec s registry =
 -- Brineborn Cutthroat, {1}{U} Creature -- Merfolk Pirate 2/1: "Flash. Whenever
 -- you cast a spell during an opponent's turn, put a +1/+1 counter on this
 -- creature." Two narrowings again, on two different axes -- "you cast" is
--- Filter.ControlledBy You against CR 109.5's "you" (CR 603.3a), and "during an
+-- Filter.HeldBy Holder.Controller You against CR 109.5's "you" (CR 603.3a), and "during an
 -- opponent's turn" is TurnScope.OpponentsTurn read against the same player --
 -- and only the second is new here.
 --

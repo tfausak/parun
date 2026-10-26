@@ -462,7 +462,7 @@ anafenzaAttackSpec s registry =
         wallOfStone <- S.printingOf s registry "Wall of Stone"
         case S.combatBoardOf [anafenza, piker, wallOfStone] [piker] of
           (gs0, [anafenzaId, pikerId, wallId], [theirs]) -> do
-            -- bob's Piker is TAPPED, so `ControlledBy You` is the only conjunct
+            -- bob's Piker is TAPPED, so `HeldBy Controller You` is the only conjunct
             -- keeping it out of the offer. Left untapped it would be rejected by
             -- IsTapped instead, and the assertion would hold with the
             -- controller clause deleted.

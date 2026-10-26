@@ -343,7 +343,7 @@ absentKindSpec s registry = Spec.describe s "CR 122.5 moving a counter of each k
   -- The card's own targeting, which the answerer above cannot prove because it
   -- names the Piker rather than reading what was offered: "ANOTHER target
   -- permanent YOU control" is Filter.Not Filter.IsSource beside
-  -- Filter.ControlledBy Filter.You, so Goldberry herself and bob's Piker are both
+  -- Filter.HeldBy Holder.Controller Filter.You, so Goldberry herself and bob's Piker are both
   -- off the list while alice's two Islands -- permanents she controls that bear
   -- no counter -- stay on it.
   Spec.it s "CR 602.2b / 601.2c the ability offers every other permanent alice controls and neither Goldberry nor bob's" $ do

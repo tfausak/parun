@@ -46,7 +46,7 @@ import qualified Parun.Types.ZoneChangeR as ZoneChangeR
 -- 614.1c and CR 614.1d collapsing into one field: 614.1c's "as [this permanent]
 -- enters" is `Filter.IsSource`, an identity test the generic matcher already
 -- answers off its Context, and 614.1d's is an ordinary characteristic filter. CR
--- 109.5's relation rides that Filter too (Filter.ControlledBy), so EntryR needs no
+-- 109.5's relation rides that Filter too (Filter.HeldBy Holder.Controller), so EntryR needs no
 -- ControllerRelation field beside it.
 --
 -- One EntryR arm serves the printed row and the floating one alike, whatever the
@@ -58,7 +58,7 @@ import qualified Parun.Types.ZoneChangeR as ZoneChangeR
 --
 -- ZoneChangePattern spells its subject the same way (see that module) and yet
 -- KEEPS its relation field, which is not an inconsistency: a zone change is
--- scoped by the moving object's OWNER (CR 400.3), and Filter.ControlledBy asks
+-- scoped by the moving object's OWNER (CR 400.3), and Filter.HeldBy Holder.Controller asks
 -- who controls it -- a different player for anything stolen.
 --
 -- PhaseR carries a pattern but NO rewrite, which is the rule rather than an

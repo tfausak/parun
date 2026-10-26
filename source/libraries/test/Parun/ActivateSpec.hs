@@ -68,6 +68,7 @@ import qualified Parun.Types.Face as Face
 import qualified Parun.Types.Filter as Filter.Type
 import qualified Parun.Types.GameState as GameState
 import qualified Parun.Types.GrantedAbility as GrantedAbility
+import qualified Parun.Types.Holder as Holder
 import qualified Parun.Types.Keyword as Keyword
 import qualified Parun.Types.Label as Label
 import qualified Parun.Types.LastKnown as LastKnown
@@ -699,7 +700,7 @@ ninjutsuSpec s registry = Spec.describe s "Ninjutsu" $ do
                       1
                       ( Filter.Type.And
                           [ Filter.Type.HasCardType CardType.Creature,
-                            Filter.Type.ControlledBy PlayerRelation.You,
+                            Filter.Type.HeldBy Holder.Controller PlayerRelation.You,
                             Filter.Type.IsAttacking,
                             Filter.Type.HasBlockStatus BlockStatus.Unblocked
                           ]

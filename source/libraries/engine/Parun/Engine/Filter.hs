@@ -103,7 +103,7 @@ import qualified Parun.Types.Zone as Zone
 -- live in Parun.Engine.Projection), or by `playerView` below when the candidate is a
 -- player rather than an object. `controller` is Nothing off the
 -- battlefield -- a card in a library has none under the rules that matter here
--- -- so ControlledBy is vacuously False there, which no search
+-- -- so HeldBy Controller is vacuously False there, which no search
 -- filter uses. `owner` and `manaValue` are the two axes that do NOT go vacuous
 -- with the zone, since CR 108.3 and CR 202.3 both name facts a card carries
 -- everywhere; each field says so.
@@ -189,7 +189,7 @@ data View = MkView
     --
     -- Nothing only where there is no OBJECT to read it off: a player view, an
     -- event snapshot, or a printed card being matched by a search, which CR
-    -- 109.1 makes an object of nothing. OwnedBy is vacuously False there, the
+    -- 109.1 makes an object of nothing. HeldBy Owner is vacuously False there, the
     -- posture power and controller take.
     owner :: Maybe PlayerId.PlayerId,
     -- CR 400.1: which ZONE the candidate object is in -- what IsInZone reads.
@@ -1915,8 +1915,13 @@ matches context view predicate = case predicate of
   -- perspective is one nothing has framed, and answering it True off a relation
   -- that happens not to need one would make the atom mean something different
   -- depending on which relation it carries.
-  Filter.ControlledBy relation -> case (controller view, perspective context) of
-    (Just c, Just p) -> PlayerRelation.holds (teams context) relation p c
+  --
+  -- CR 108.3 / 108.4: the owner holder reads in every zone, the controller only
+  -- on the battlefield and the stack, so Garland's "creatures you control but
+  -- don't own" is the two holders conjoined. Vacuously False where `heldBy`
+  -- reads Nothing.
+  Filter.HeldBy holder relation -> case (heldBy holder view, perspective context) of
+    (Just h, Just p) -> PlayerRelation.holds (teams context) relation p h
     _ -> False
   -- CR 508.5 / 702.39a: the candidate's controller IS the defending player, which
   -- the Context supplies because it is a fact about the combat record rather than
@@ -1957,14 +1962,6 @@ matches context view predicate = case predicate of
   -- per-recipient effect's quantity.
   Filter.HeldByRecipient holder -> case (heldBy holder view, recipient context) of
     (Just c, Just r) -> c == r
-    _ -> False
-  -- CR 108.3 / 110.2: the same comparison ControlledBy makes, against the other
-  -- player -- so Garland's "creatures you control but don't own" is the two atoms
-  -- conjoined. An Opponent is CR 102.3's, for the reason the arm above gives.
-  -- Vacuously False where no object backs the view, or where no
-  -- perspective frames the match.
-  Filter.OwnedBy relation -> case (owner view, perspective context) of
-    (Just o, Just p) -> PlayerRelation.holds (teams context) relation p o
     _ -> False
   Filter.IsSource -> case (identity view, source context) of
     (Just oid, Just src) -> oid == src
@@ -2010,7 +2007,7 @@ matches context view predicate = case predicate of
   -- evaluating source's controller and never the candidate's. CR 115.9b ignores
   -- a target that left its zone, which targetViews' dropped key is.
   Filter.TargetsMatching f -> any (\target -> matches context target f) (targetViews view)
-  -- CR 115.1's player target, judged against the perspective the way ControlledBy
+  -- CR 115.1's player target, judged against the perspective the way HeldBy Controller
   -- judges a controller. ONLY a ToPlayer counts: CR 115.10a says an object is a
   -- target only where the word names it, and a spell aimed at a creature names
   -- the creature and not its controller.
@@ -2112,7 +2109,7 @@ matches context view predicate = case predicate of
   Filter.OfRelatedPlayer relation -> case perspective context of
     Nothing -> False
     Just you -> ofPlayer (maybe False (PlayerRelation.holds (teams context) relation you)) (aimingController context) view
-  -- CR 115.1's "target opponent". The same CR 102.3 reading the ControlledBy arm
+  -- CR 115.1's "target opponent". The same CR 102.3 reading the HeldBy Controller arm
   -- above argues for. Vacuously False for an object candidate,
   -- which has no playerIdentity, and for a match with no perspective.
   Filter.IsPlayer relation -> case (playerIdentity view, perspective context) of
@@ -2142,11 +2139,11 @@ matches context view predicate = case predicate of
   -- on the object.
   Filter.IsAttacking -> attacking view
   -- CR 508.1b: the same live read one field over, and the relation is answered
-  -- against the perspective here rather than baked, exactly as ControlledBy's is
+  -- against the perspective here rather than baked, exactly as HeldBy's is
   -- -- CR 109.5's "you" is what the match is framed by, not a fact about the
   -- candidate.
   --
-  -- Vacuously False where either half is unreadable, ControlledBy's posture: a
+  -- Vacuously False where either half is unreadable, HeldBy's posture: a
   -- candidate attacking nothing, or attacking a planeswalker or a battle, has no
   -- player to relate, and a match nothing framed has no "you" to relate it to.
   Filter.IsAttackingPlayer relation -> case (attackingPlayer view, perspective context) of
@@ -2289,7 +2286,7 @@ matches context view predicate = case predicate of
   --
   -- Each attacher's view is matched against the SAME context, for the reason
   -- AttachedTo's arm gives: CR 109.5's "you" stays the ability's controller, so
-  -- `HasAttached (ControlledBy You)` asks after Auras YOU control.
+  -- `HasAttached (HeldBy Controller You)` asks after Auras YOU control.
   Filter.HasAttached f -> any (\attacher -> matches context attacher f) (attachedViews view)
   -- CR 701.3a / 301.5a: IsSource's comparison in the other direction -- the
   -- candidate's HOST against the anchored object, rather than the candidate
@@ -2396,7 +2393,7 @@ matches context view predicate = case predicate of
   -- CR 701.54a ends the designation when another creature takes it, and the next
   -- projection stops matching with nothing to unwind.
   --
-  -- Vacuously False with no perspective, the posture ControlledBy and IsPlayer
+  -- Vacuously False with no perspective, the posture HeldBy and IsPlayer
   -- take: "your Ring-bearer" is unanswerable when there is no "you".
   Filter.IsRingBearer -> case (ringBearerFor view, perspective context) of
     (Just designated, Just you) -> designated == you
@@ -2524,18 +2521,17 @@ rewrite pairs predicate = case predicate of
   -- swap -- nor in a slot name it may carry.
   Filter.Measures _ -> predicate
   Filter.ManaValueIsEven -> predicate
-  Filter.ControlledBy _ -> predicate
-  -- Untouched for ControlledBy's reason.
+  -- Untouched: CR 612.1 swaps a WORD in the text, and this atom names a player
+  -- relation rather than a subtype.
+  Filter.HeldBy _ _ -> predicate
+  -- Untouched for HeldBy's reason.
   Filter.ControlledByRole _ -> predicate
   -- Untouched for the same reason twice over: neither a slot name nor a player id
   -- is a word CR 612.1's swap can find in the text.
   Filter.HeldByBound _ _ -> predicate
   Filter.HeldByPlayer _ _ -> predicate
-  -- Untouched for ControlledBy's reason.
+  -- Untouched for HeldBy's reason.
   Filter.HeldByRecipient _ -> predicate
-  -- Untouched for ControlledBy's reason: CR 612.1 swaps a WORD in the text, and
-  -- this atom names a player relation rather than a subtype.
-  Filter.OwnedBy _ -> predicate
   Filter.IsSource -> predicate
   Filter.IsObject _ -> predicate
   -- Untouched for IsSource's reason: a target relation is not a word CR 612.1
@@ -3236,7 +3232,7 @@ rewriteComponent pairs component = case component of
 -- The atom is LEFT STANDING when the slot names no one player, which is the
 -- honest answer rather than a defensive one: `matches` reads it as False, so a
 -- slot nothing bound admits no candidate, exactly as an absent perspective makes
--- ControlledBy vacuous.
+-- HeldBy Controller vacuous.
 --
 -- NO DESCENT INTO A KEYWORD, unlike `rewrite` above, and the difference is
 -- load-bearing: HasKeyword compares its keyword against the PROJECTION's keyword
@@ -3279,9 +3275,8 @@ bakeBound players objects controllers predicate = case predicate of
   -- making it.
   Filter.Measures _ -> predicate
   Filter.ManaValueIsEven -> predicate
-  Filter.ControlledBy _ -> predicate
+  Filter.HeldBy _ _ -> predicate
   Filter.ControlledByRole _ -> predicate
-  Filter.OwnedBy _ -> predicate
   Filter.IsSource -> predicate
   Filter.IsObject _ -> predicate
   -- Untouched for IsSource's reason: both read the Context, and neither names a
@@ -3461,12 +3456,11 @@ manaValueThresholds predicate = case predicate of
   Filter.HasNameOriginallyPrintedIn _ -> []
   Filter.HasKeyword _ -> []
   Filter.HasKeywordFamily _ -> []
-  Filter.ControlledBy _ -> []
+  Filter.HeldBy _ _ -> []
   Filter.ControlledByRole _ -> []
   Filter.HeldByBound _ _ -> []
   Filter.HeldByPlayer _ _ -> []
   Filter.HeldByRecipient _ -> []
-  Filter.OwnedBy _ -> []
   Filter.IsSource -> []
   Filter.IsObject _ -> []
   Filter.TargetsSource -> []
@@ -3618,12 +3612,11 @@ statesAQuality predicate = case predicate of
   Filter.HasNameOriginallyPrintedIn _ -> True
   Filter.HasKeyword _ -> True
   Filter.HasKeywordFamily _ -> True
-  Filter.ControlledBy _ -> True
+  Filter.HeldBy _ _ -> True
   Filter.ControlledByRole _ -> True
   Filter.HeldByBound _ _ -> True
   Filter.HeldByPlayer _ _ -> True
   Filter.HeldByRecipient _ -> True
-  Filter.OwnedBy _ -> True
   Filter.IsSource -> True
   Filter.IsObject _ -> True
   -- CR 701.23b for IsSource's reason, and unreachable from a search besides: a
@@ -3790,12 +3783,11 @@ readsSourceValues predicate = case predicate of
   -- HasKeyword arm), so nothing inside it reads the context.
   Filter.HasKeyword _ -> False
   Filter.HasKeywordFamily _ -> False
-  Filter.ControlledBy _ -> False
+  Filter.HeldBy _ _ -> False
   Filter.ControlledByRole _ -> False
   Filter.HeldByBound _ _ -> False
   Filter.HeldByPlayer _ _ -> False
   Filter.HeldByRecipient _ -> False
-  Filter.OwnedBy _ -> False
   Filter.IsSource -> False
   Filter.IsObject _ -> False
   Filter.TargetsSource -> False
@@ -3933,7 +3925,7 @@ overBoundSlotsWith f predicate = case predicate of
           Operand.EnclosingAmount -> pure predicate
           Operand.OfEachOtherCandidate _ -> pure predicate
   Filter.ManaValueIsEven -> pure predicate
-  Filter.ControlledBy _ -> pure predicate
+  Filter.HeldBy _ _ -> pure predicate
   Filter.ControlledByRole _ -> pure predicate
   -- A PLAYER slot, read singly all the same: `matches` answers it off a slot
   -- naming exactly one player, and bakeBound off Binding.playerSlots, which is
@@ -3941,7 +3933,6 @@ overBoundSlotsWith f predicate = case predicate of
   Filter.HeldByBound holder slot -> fmap (Filter.HeldByBound holder) (f SlotArity.One slot)
   Filter.HeldByPlayer _ _ -> pure predicate
   Filter.HeldByRecipient _ -> pure predicate
-  Filter.OwnedBy _ -> pure predicate
   Filter.IsSource -> pure predicate
   Filter.IsObject _ -> pure predicate
   Filter.TargetsSource -> pure predicate

@@ -95,6 +95,7 @@ import qualified Parun.Types.GameEvent as GameEvent
 import qualified Parun.Types.GameSettings as GameSettings
 import qualified Parun.Types.GameState as GameState
 import qualified Parun.Types.HandActionPerformer as HandActionPerformer
+import qualified Parun.Types.Holder as Holder
 import qualified Parun.Types.InZone as InZone
 import qualified Parun.Types.Keyword as Keyword
 import qualified Parun.Types.Label as Label
@@ -470,7 +471,7 @@ waxWaneJson = committedJson "wax-wane.json"
 
 -- The committed Nightmare file: "Nightmare's power and toughness are each equal
 -- to the number of Swamps you control", written as CR 400.1's shared
--- battlefield paired with PlayerRef.Relative AnyPlayer and a Filter.ControlledBy
+-- battlefield paired with PlayerRef.Relative AnyPlayer and a Filter.HeldBy Holder.Controller
 -- conjunct. Read for the same reason the two above are, and used where a case
 -- needs a card whose scope it can divide by hand.
 nightmareJson :: IO Text.Text
@@ -768,7 +769,7 @@ youControlSource =
         ( Quantity.Type.Count
             ( Count.Type.MkCount
                 (Scope.InZone (InZone.MkInZone Zone.Battlefield (PlayerRef.Relative PlayerRelation.AnyPlayer)))
-                (Filter.Type.And [Filter.Type.IsSource, Filter.Type.ControlledBy PlayerRelation.You])
+                (Filter.Type.And [Filter.Type.IsSource, Filter.Type.HeldBy Holder.Controller PlayerRelation.You])
                 Aggregation.Members
             )
         )
@@ -788,7 +789,7 @@ youControlNoSwamps =
         ( Quantity.Type.Count
             ( Count.Type.MkCount
                 (Scope.InZone (InZone.MkInZone Zone.Battlefield (PlayerRef.Relative PlayerRelation.AnyPlayer)))
-                (Filter.Type.And [Filter.Type.HasSubtype Subtype.Swamp, Filter.Type.ControlledBy PlayerRelation.You])
+                (Filter.Type.And [Filter.Type.HasSubtype Subtype.Swamp, Filter.Type.HeldBy Holder.Controller PlayerRelation.You])
                 Aggregation.Members
             )
         )
@@ -1903,7 +1904,7 @@ stubView table oid =
                 Filter.manaCost = Nothing,
                 Filter.controller = ctrl,
                 -- CR 108.3: the table registers no owner, so this stub answers
-                -- Nothing and OwnedBy is vacuously False against it. No case
+                -- Nothing and HeldBy Owner is vacuously False against it. No case
                 -- driving the stub filters by one; the pool's owner-filtering
                 -- counts (Dimir Strandcatcher, Synthetic Ownership Ledger) are
                 -- gameplay level in Parun.CountSpec.

@@ -1257,7 +1257,7 @@ matchesObjectFrom src filter_ oid gs =
 -- "you" for it is the player who would control the spell -- the caster. The two
 -- coincide wherever the caster owns the card, which is why nothing observed the
 -- difference until a permission could open somebody else's hand, see #2169: Drannith
--- Magistrate's "from anywhere other than their hand" is Filter.OwnedBy You, and
+-- Magistrate's "from anywhere other than their hand" is Filter.HeldBy Holder.Owner You, and
 -- read at the OWNER's perspective that conjunct is vacuously true of every card
 -- in every hand.
 matchesObjectFor :: PlayerId -> RowSource -> Filter Keyword -> ObjectId -> GameState -> Bool

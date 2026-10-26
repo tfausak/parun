@@ -36,9 +36,14 @@
                           "type": "IsBlocking"
                         },
                         {
-                          "type": "ControlledBy",
+                          "type": "HeldBy",
                           "value": {
-                            "type": "Opponent"
+                            "holder": {
+                              "type": "Controller"
+                            },
+                            "relation": {
+                              "type": "Opponent"
+                            }
                           }
                         }
                       ]
@@ -55,9 +60,14 @@
                           "type": "IsBlocking"
                         },
                         {
-                          "type": "ControlledBy",
+                          "type": "HeldBy",
                           "value": {
-                            "type": "Opponent"
+                            "holder": {
+                              "type": "Controller"
+                            },
+                            "relation": {
+                              "type": "Opponent"
+                            }
                           }
                         },
                         {
@@ -135,9 +145,14 @@
                                       }
                                     },
                                     {
-                                      "type": "ControlledBy",
+                                      "type": "HeldBy",
                                       "value": {
-                                        "type": "You"
+                                        "holder": {
+                                          "type": "Controller"
+                                        },
+                                        "relation": {
+                                          "type": "You"
+                                        }
                                       }
                                     }
                                   ]

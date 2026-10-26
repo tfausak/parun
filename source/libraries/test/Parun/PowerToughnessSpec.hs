@@ -979,7 +979,7 @@ removeFromBattlefield oid gs =
 -- The SAME shape as Kird Ape's clause above -- a CR 604.2 "as long as" gate on a
 -- printed static ability, counting a population over the battlefield -- with one
 -- difference that is the whole reason it earns a case of its own: "ANY player
--- controls" drops the ControlledBy conjunct. Kird Ape's clause is CR 109.5's
+-- controls" drops the HeldBy Controller conjunct. Kird Ape's clause is CR 109.5's
 -- "you" and Knight of Grace's names no player at all, so the Count's filter is
 -- bare and its InZone scope (CR 400.1's shared battlefield, with Relative AnyPlayer) does
 -- all the sweeping.
@@ -992,7 +992,7 @@ knightOfGraceSpec s registry = Spec.describe s "Knight of Grace" $ do
   --
   -- BOB's Bog Wraith ({3}{B} Creature -- Wraith), not alice's, and the Knight is
   -- alice's: that is what discriminates "any player controls" from a
-  -- ControlledBy You mis-authoring, which reads 2/2 here.
+  -- HeldBy Controller You mis-authoring, which reads 2/2 here.
   --
   -- Toughness is asserted too, so a ModifyPowerToughness 1 1 mis-authoring of the
   -- "+1/+0" fails rather than passing on the power alone.

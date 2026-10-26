@@ -31,6 +31,7 @@ import qualified Parun.Types.Designation as Designation
 import qualified Parun.Types.DieResult as DieResult
 import qualified Parun.Types.EndingStep as EndingStep
 import qualified Parun.Types.Filter as Filter
+import qualified Parun.Types.Holder as Holder
 import qualified Parun.Types.Keyword as Keyword
 import qualified Parun.Types.ManaSpecification as ManaSpecification
 import qualified Parun.Types.Measure as Measure
@@ -95,8 +96,8 @@ spec s = Spec.describe s "Parun.Codec.TriggerCondition" $ do
     Common.assertCodec
       s
       TriggerCondition.codec
-      (TriggerCondition.PermanentsEnter (Filter.And [Filter.HasCardType CardType.Creature, Filter.ControlledBy PlayerRelation.You]))
-      " {\"type\":\"PermanentsEnter\",\"value\":{\"type\":\"And\",\"value\":[{\"type\":\"HasCardType\",\"value\":{\"type\":\"Creature\"}},{\"type\":\"ControlledBy\",\"value\":{\"type\":\"You\"}}]}} "
+      (TriggerCondition.PermanentsEnter (Filter.And [Filter.HasCardType CardType.Creature, Filter.HeldBy Holder.Controller PlayerRelation.You]))
+      " {\"type\":\"PermanentsEnter\",\"value\":{\"type\":\"And\",\"value\":[{\"type\":\"HasCardType\",\"value\":{\"type\":\"Creature\"}},{\"type\":\"HeldBy\",\"value\":{\"holder\":{\"type\":\"Controller\"},\"relation\":{\"type\":\"You\"}}}]}} "
   -- CR 603.2b.
   Spec.it s "StepBegins round-trips" $
     Common.assertCodec
@@ -142,8 +143,8 @@ spec s = Spec.describe s "Parun.Codec.TriggerCondition" $ do
     Common.assertCodec
       s
       TriggerCondition.codec
-      (TriggerCondition.DealsCombatDamage (ActingPermanent.Matching (Filter.ControlledBy PlayerRelation.You)))
-      " {\"type\":\"DealsCombatDamage\",\"value\":{\"type\":\"Matching\",\"value\":{\"type\":\"ControlledBy\",\"value\":{\"type\":\"You\"}}}} "
+      (TriggerCondition.DealsCombatDamage (ActingPermanent.Matching (Filter.HeldBy Holder.Controller PlayerRelation.You)))
+      " {\"type\":\"DealsCombatDamage\",\"value\":{\"type\":\"Matching\",\"value\":{\"type\":\"HeldBy\",\"value\":{\"holder\":{\"type\":\"Controller\"},\"relation\":{\"type\":\"You\"}}}}} "
   -- CR 603.2 / 120.1: the player-recipient pair without the combat narrowing --
   -- Akki Lavarunner's own condition. A separate TAG and not a flag on
   -- SelfDealsCombatDamageToPlayer, so a card written for one can never decode as
@@ -210,8 +211,8 @@ spec s = Spec.describe s "Parun.Codec.TriggerCondition" $ do
     Common.assertCodec
       s
       TriggerCondition.codec
-      (TriggerCondition.PermanentDealsCombatDamageToPlayer (PermanentDealsCombatDamageToPlayer.MkPermanentDealsCombatDamageToPlayer (Filter.ControlledBy PlayerRelation.Opponent) PlayerRelation.You))
-      " {\"type\":\"PermanentDealsCombatDamageToPlayer\",\"value\":{\"filter\":{\"type\":\"ControlledBy\",\"value\":{\"type\":\"Opponent\"}},\"recipient\":{\"type\":\"You\"}}} "
+      (TriggerCondition.PermanentDealsCombatDamageToPlayer (PermanentDealsCombatDamageToPlayer.MkPermanentDealsCombatDamageToPlayer (Filter.HeldBy Holder.Controller PlayerRelation.Opponent) PlayerRelation.You))
+      " {\"type\":\"PermanentDealsCombatDamageToPlayer\",\"value\":{\"filter\":{\"type\":\"HeldBy\",\"value\":{\"holder\":{\"type\":\"Controller\"},\"relation\":{\"type\":\"Opponent\"}}},\"recipient\":{\"type\":\"You\"}}} "
   -- CR 603.2c's batch reading of that same form, carrying the same Filter -- so a
   -- separate tag is the only thing that keeps Pia Nalaar's once-per-step card and
   -- Tovolar's once-per-damager card apart on the wire.
@@ -219,8 +220,8 @@ spec s = Spec.describe s "Parun.Codec.TriggerCondition" $ do
     Common.assertCodec
       s
       TriggerCondition.codec
-      (TriggerCondition.PermanentsDealCombatDamageToPlayer (PermanentsDealCombatDamageToPlayer.MkPermanentsDealCombatDamageToPlayer (Filter.And [Filter.HasCardType CardType.Artifact, Filter.ControlledBy PlayerRelation.You]) PlayerRelation.AnyPlayer False))
-      " {\"type\":\"PermanentsDealCombatDamageToPlayer\",\"value\":{\"filter\":{\"type\":\"And\",\"value\":[{\"type\":\"HasCardType\",\"value\":{\"type\":\"Artifact\"}},{\"type\":\"ControlledBy\",\"value\":{\"type\":\"You\"}}]},\"recipient\":{\"type\":\"AnyPlayer\"}}} "
+      (TriggerCondition.PermanentsDealCombatDamageToPlayer (PermanentsDealCombatDamageToPlayer.MkPermanentsDealCombatDamageToPlayer (Filter.And [Filter.HasCardType CardType.Artifact, Filter.HeldBy Holder.Controller PlayerRelation.You]) PlayerRelation.AnyPlayer False))
+      " {\"type\":\"PermanentsDealCombatDamageToPlayer\",\"value\":{\"filter\":{\"type\":\"And\",\"value\":[{\"type\":\"HasCardType\",\"value\":{\"type\":\"Artifact\"}},{\"type\":\"HeldBy\",\"value\":{\"holder\":{\"type\":\"Controller\"},\"relation\":{\"type\":\"You\"}}}]},\"recipient\":{\"type\":\"AnyPlayer\"}}} "
   -- CR 725.2: a creature dealt combat damage to the monarch.
   Spec.it s "CreatureDealtCombatDamageToMonarch" $
     Common.assertCodec
@@ -369,8 +370,8 @@ spec s = Spec.describe s "Parun.Codec.TriggerCondition" $ do
     Common.assertCodec
       s
       TriggerCondition.codec
-      (TriggerCondition.CreatureAttacksAlone (Filter.ControlledBy PlayerRelation.You))
-      " {\"type\":\"CreatureAttacksAlone\",\"value\":{\"type\":\"ControlledBy\",\"value\":{\"type\":\"You\"}}} "
+      (TriggerCondition.CreatureAttacksAlone (Filter.HeldBy Holder.Controller PlayerRelation.You))
+      " {\"type\":\"CreatureAttacksAlone\",\"value\":{\"type\":\"HeldBy\",\"value\":{\"holder\":{\"type\":\"Controller\"},\"relation\":{\"type\":\"You\"}}}} "
   -- CR 508.3a's second sentence, nullary where the sibling above takes a Filter:
   -- CR 508.1a already makes every declared attacker a creature.
   Spec.it s "CreatureAttacksYou" $
@@ -384,8 +385,8 @@ spec s = Spec.describe s "Parun.Codec.TriggerCondition" $ do
     Common.assertCodec
       s
       TriggerCondition.codec
-      (TriggerCondition.CreatureAttacks (Filter.ControlledBy PlayerRelation.You))
-      " {\"type\":\"CreatureAttacks\",\"value\":{\"type\":\"ControlledBy\",\"value\":{\"type\":\"You\"}}} "
+      (TriggerCondition.CreatureAttacks (Filter.HeldBy Holder.Controller PlayerRelation.You))
+      " {\"type\":\"CreatureAttacks\",\"value\":{\"type\":\"HeldBy\",\"value\":{\"holder\":{\"type\":\"Controller\"},\"relation\":{\"type\":\"You\"}}}} "
   -- CR 508.3d. All THREE relations, unlike PlayerCycles' two: rule 508.3d's
   -- "[a player]" is printed as "you" (Boggart Prankster), as "a player" (Avatar
   -- Roku, Firebender) and as "an opponent" (Ever-Watching Threshold).
@@ -601,8 +602,8 @@ spec s = Spec.describe s "Parun.Codec.TriggerCondition" $ do
     Common.assertCodec
       s
       TriggerCondition.codec
-      (TriggerCondition.PermanentDies (Filter.And [Filter.HasCardType CardType.Creature, Filter.ControlledBy PlayerRelation.You, Filter.Not Filter.IsSource]))
-      " {\"type\":\"PermanentDies\",\"value\":{\"type\":\"And\",\"value\":[{\"type\":\"HasCardType\",\"value\":{\"type\":\"Creature\"}},{\"type\":\"ControlledBy\",\"value\":{\"type\":\"You\"}},{\"type\":\"Not\",\"value\":{\"type\":\"IsSource\"}}]}} "
+      (TriggerCondition.PermanentDies (Filter.And [Filter.HasCardType CardType.Creature, Filter.HeldBy Holder.Controller PlayerRelation.You, Filter.Not Filter.IsSource]))
+      " {\"type\":\"PermanentDies\",\"value\":{\"type\":\"And\",\"value\":[{\"type\":\"HasCardType\",\"value\":{\"type\":\"Creature\"}},{\"type\":\"HeldBy\",\"value\":{\"holder\":{\"type\":\"Controller\"},\"relation\":{\"type\":\"You\"}}},{\"type\":\"Not\",\"value\":{\"type\":\"IsSource\"}}]}} "
   -- CR 603.2c's batch reading of that same form, carrying the same Filter -- so a
   -- separate tag is the only thing that keeps the once-per-batch card and the
   -- once-per-death card apart on the wire.
@@ -610,8 +611,8 @@ spec s = Spec.describe s "Parun.Codec.TriggerCondition" $ do
     Common.assertCodec
       s
       TriggerCondition.codec
-      (TriggerCondition.PermanentsDie (Filter.And [Filter.HasCardType CardType.Creature, Filter.ControlledBy PlayerRelation.You, Filter.Not Filter.IsSource]))
-      " {\"type\":\"PermanentsDie\",\"value\":{\"type\":\"And\",\"value\":[{\"type\":\"HasCardType\",\"value\":{\"type\":\"Creature\"}},{\"type\":\"ControlledBy\",\"value\":{\"type\":\"You\"}},{\"type\":\"Not\",\"value\":{\"type\":\"IsSource\"}}]}} "
+      (TriggerCondition.PermanentsDie (Filter.And [Filter.HasCardType CardType.Creature, Filter.HeldBy Holder.Controller PlayerRelation.You, Filter.Not Filter.IsSource]))
+      " {\"type\":\"PermanentsDie\",\"value\":{\"type\":\"And\",\"value\":[{\"type\":\"HasCardType\",\"value\":{\"type\":\"Creature\"}},{\"type\":\"HeldBy\",\"value\":{\"holder\":{\"type\":\"Controller\"},\"relation\":{\"type\":\"You\"}}},{\"type\":\"Not\",\"value\":{\"type\":\"IsSource\"}}]}} "
   -- CR 603.6c's first written form, a separate tag from SelfDies above: the two
   -- must never decode to each other.
   Spec.it s "SelfLeavesTheBattlefield" $
@@ -642,8 +643,8 @@ spec s = Spec.describe s "Parun.Codec.TriggerCondition" $ do
     Common.assertCodec
       s
       TriggerCondition.codec
-      (TriggerCondition.PermanentReturnedToHand (Filter.And [Filter.Not Filter.IsSource, Filter.ControlledBy PlayerRelation.You]))
-      " {\"type\":\"PermanentReturnedToHand\",\"value\":{\"type\":\"And\",\"value\":[{\"type\":\"Not\",\"value\":{\"type\":\"IsSource\"}},{\"type\":\"ControlledBy\",\"value\":{\"type\":\"You\"}}]}} "
+      (TriggerCondition.PermanentReturnedToHand (Filter.And [Filter.Not Filter.IsSource, Filter.HeldBy Holder.Controller PlayerRelation.You]))
+      " {\"type\":\"PermanentReturnedToHand\",\"value\":{\"type\":\"And\",\"value\":[{\"type\":\"Not\",\"value\":{\"type\":\"IsSource\"}},{\"type\":\"HeldBy\",\"value\":{\"holder\":{\"type\":\"Controller\"},\"relation\":{\"type\":\"You\"}}}]}} "
   -- CR 603.2c's batch reading of that same form, carrying the same Filter -- so
   -- a separate tag is the only thing that keeps Tameshi, Reality Architect's
   -- once-per-batch card and Justice's once-per-permanent card apart on the wire.
@@ -920,16 +921,16 @@ spec s = Spec.describe s "Parun.Codec.TriggerCondition" $ do
     Common.assertCodec
       s
       TriggerCondition.codec
-      (TriggerCondition.SpellCast (SpellCast.MkSpellCast (Filter.And [Filter.ControlledBy PlayerRelation.You, Filter.Or [Filter.HasCardType CardType.Instant, Filter.HasCardType CardType.Sorcery]]) TurnScope.EachTurn Nothing Nothing Nothing False))
-      " {\"type\":\"SpellCast\",\"value\":{\"filter\":{\"type\":\"And\",\"value\":[{\"type\":\"ControlledBy\",\"value\":{\"type\":\"You\"}},{\"type\":\"Or\",\"value\":[{\"type\":\"HasCardType\",\"value\":{\"type\":\"Instant\"}},{\"type\":\"HasCardType\",\"value\":{\"type\":\"Sorcery\"}}]}]},\"scope\":{\"type\":\"EachTurn\"}}} "
+      (TriggerCondition.SpellCast (SpellCast.MkSpellCast (Filter.And [Filter.HeldBy Holder.Controller PlayerRelation.You, Filter.Or [Filter.HasCardType CardType.Instant, Filter.HasCardType CardType.Sorcery]]) TurnScope.EachTurn Nothing Nothing Nothing False))
+      " {\"type\":\"SpellCast\",\"value\":{\"filter\":{\"type\":\"And\",\"value\":[{\"type\":\"HeldBy\",\"value\":{\"holder\":{\"type\":\"Controller\"},\"relation\":{\"type\":\"You\"}}},{\"type\":\"Or\",\"value\":[{\"type\":\"HasCardType\",\"value\":{\"type\":\"Instant\"}},{\"type\":\"HasCardType\",\"value\":{\"type\":\"Sorcery\"}}]}]},\"scope\":{\"type\":\"EachTurn\"}}} "
   -- The other half moved on its own, over the plainest Filter there is: Brineborn
   -- Cutthroat's "during an opponent's turn", which no Filter could have said.
   Spec.it s "SpellCast round-trips an opponent's-turn scope" $
     Common.assertCodec
       s
       TriggerCondition.codec
-      (TriggerCondition.SpellCast (SpellCast.MkSpellCast (Filter.ControlledBy PlayerRelation.You) TurnScope.OpponentsTurn Nothing Nothing Nothing False))
-      " {\"type\":\"SpellCast\",\"value\":{\"filter\":{\"type\":\"ControlledBy\",\"value\":{\"type\":\"You\"}},\"scope\":{\"type\":\"OpponentsTurn\"}}} "
+      (TriggerCondition.SpellCast (SpellCast.MkSpellCast (Filter.HeldBy Holder.Controller PlayerRelation.You) TurnScope.OpponentsTurn Nothing Nothing Nothing False))
+      " {\"type\":\"SpellCast\",\"value\":{\"filter\":{\"type\":\"HeldBy\",\"value\":{\"holder\":{\"type\":\"Controller\"},\"relation\":{\"type\":\"You\"}}},\"scope\":{\"type\":\"OpponentsTurn\"}}} "
   -- CR 601.2i read off the spell itself, Desolation Twin's "when you cast this
   -- spell": nullary, since "this spell" needs neither Filter nor TurnScope.
   -- CR 702.21a's relation is on the TARGETING side -- the opponent whose spell
@@ -963,14 +964,14 @@ spec s = Spec.describe s "Parun.Codec.TriggerCondition" $ do
     Common.assertCodec
       s
       TriggerCondition.codec
-      (TriggerCondition.PermanentsBecomeTargeted (PermanentsBecomeTargeted.MkPermanentsBecomeTargeted {PermanentsBecomeTargeted.filter = Filter.ControlledBy PlayerRelation.You, PermanentsBecomeTargeted.kind = Just StackObjectKind.ActivatedAbility}))
-      " {\"type\":\"PermanentsBecomeTargeted\",\"value\":{\"filter\":{\"type\":\"ControlledBy\",\"value\":{\"type\":\"You\"}},\"kind\":{\"type\":\"ActivatedAbility\"}}} "
+      (TriggerCondition.PermanentsBecomeTargeted (PermanentsBecomeTargeted.MkPermanentsBecomeTargeted {PermanentsBecomeTargeted.filter = Filter.HeldBy Holder.Controller PlayerRelation.You, PermanentsBecomeTargeted.kind = Just StackObjectKind.ActivatedAbility}))
+      " {\"type\":\"PermanentsBecomeTargeted\",\"value\":{\"filter\":{\"type\":\"HeldBy\",\"value\":{\"holder\":{\"type\":\"Controller\"},\"relation\":{\"type\":\"You\"}}},\"kind\":{\"type\":\"ActivatedAbility\"}}} "
   Spec.it s "PermanentBecomesTargeted round-trips with its Filter and its kind" $
     Common.assertCodec
       s
       TriggerCondition.codec
-      (TriggerCondition.PermanentBecomesTargeted (PermanentsBecomeTargeted.MkPermanentsBecomeTargeted {PermanentsBecomeTargeted.filter = Filter.ControlledBy PlayerRelation.You, PermanentsBecomeTargeted.kind = Just StackObjectKind.Spell}))
-      " {\"type\":\"PermanentBecomesTargeted\",\"value\":{\"filter\":{\"type\":\"ControlledBy\",\"value\":{\"type\":\"You\"}},\"kind\":{\"type\":\"Spell\"}}} "
+      (TriggerCondition.PermanentBecomesTargeted (PermanentsBecomeTargeted.MkPermanentsBecomeTargeted {PermanentsBecomeTargeted.filter = Filter.HeldBy Holder.Controller PlayerRelation.You, PermanentsBecomeTargeted.kind = Just StackObjectKind.Spell}))
+      " {\"type\":\"PermanentBecomesTargeted\",\"value\":{\"filter\":{\"type\":\"HeldBy\",\"value\":{\"holder\":{\"type\":\"Controller\"},\"relation\":{\"type\":\"You\"}}},\"kind\":{\"type\":\"Spell\"}}} "
   Spec.it s "SelfCast" $
     Common.assertCodec
       s
@@ -1060,8 +1061,8 @@ spec s = Spec.describe s "Parun.Codec.TriggerCondition" $ do
     Common.assertCodec
       s
       TriggerCondition.codec
-      (TriggerCondition.PermanentTurnedFaceUp (Filter.ControlledBy PlayerRelation.You))
-      " {\"type\":\"PermanentTurnedFaceUp\",\"value\":{\"type\":\"ControlledBy\",\"value\":{\"type\":\"You\"}}} "
+      (TriggerCondition.PermanentTurnedFaceUp (Filter.HeldBy Holder.Controller PlayerRelation.You))
+      " {\"type\":\"PermanentTurnedFaceUp\",\"value\":{\"type\":\"HeldBy\",\"value\":{\"holder\":{\"type\":\"Controller\"},\"relation\":{\"type\":\"You\"}}}} "
   -- CR 603.2: both fields ride on the wire. Renegade Krasis' self-scoped
   -- "whenever this creature evolves", and Wildgrowth Walker's bystander "whenever
   -- a creature you control explores", whose Filter must survive the trip.
@@ -1074,8 +1075,8 @@ spec s = Spec.describe s "Parun.Codec.TriggerCondition" $ do
     Common.assertCodec
       s
       TriggerCondition.codec
-      (TriggerCondition.PermanentActs (PermanentActed.MkPermanentActed PermanentAction.Explore (ActingPermanent.Matching (Filter.ControlledBy PlayerRelation.You))))
-      " {\"type\":\"PermanentActs\",\"value\":{\"action\":{\"type\":\"Explore\"},\"permanent\":{\"type\":\"Matching\",\"value\":{\"type\":\"ControlledBy\",\"value\":{\"type\":\"You\"}}}}} "
+      (TriggerCondition.PermanentActs (PermanentActed.MkPermanentActed PermanentAction.Explore (ActingPermanent.Matching (Filter.HeldBy Holder.Controller PlayerRelation.You))))
+      " {\"type\":\"PermanentActs\",\"value\":{\"action\":{\"type\":\"Explore\"},\"permanent\":{\"type\":\"Matching\",\"value\":{\"type\":\"HeldBy\",\"value\":{\"holder\":{\"type\":\"Controller\"},\"relation\":{\"type\":\"You\"}}}}}} "
   -- CR 708.9: Synthetic Unmasking Witness's condition.
   Spec.it s "FaceDownPermanentLeavesRevealed round-trips" $
     Common.assertCodec
@@ -1091,8 +1092,8 @@ spec s = Spec.describe s "Parun.Codec.TriggerCondition" $ do
     Common.assertCodec
       s
       TriggerCondition.codec
-      (TriggerCondition.PermanentBecomesDesignated (PermanentBecomesDesignated.MkPermanentBecomesDesignated Designation.Renowned (Filter.ControlledBy PlayerRelation.You)))
-      " {\"type\":\"PermanentBecomesDesignated\",\"value\":{\"designation\":{\"type\":\"Renowned\"},\"filter\":{\"type\":\"ControlledBy\",\"value\":{\"type\":\"You\"}}}} "
+      (TriggerCondition.PermanentBecomesDesignated (PermanentBecomesDesignated.MkPermanentBecomesDesignated Designation.Renowned (Filter.HeldBy Holder.Controller PlayerRelation.You)))
+      " {\"type\":\"PermanentBecomesDesignated\",\"value\":{\"designation\":{\"type\":\"Renowned\"},\"filter\":{\"type\":\"HeldBy\",\"value\":{\"holder\":{\"type\":\"Controller\"},\"relation\":{\"type\":\"You\"}}}}} "
   -- CR 701.37b through the same constructor: Arbor Colossus' "when this creature
   -- becomes monstrous", which is Filter.IsSource beside the other designation.
   Spec.it s "PermanentBecomesDesignated carries Monstrous" $

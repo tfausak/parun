@@ -358,10 +358,10 @@ spec s = Spec.describe s "Parun.Oracle" $ do
   Spec.it s "render prints a trigger on another object entering or dying" $ do
     let on types event effects = withFace (\f -> (typed types [] f) {Face.triggeredAbilities = [triggered event [clause effects] []]})
         others = Filter.And [Filter.HasCardType CardType.Creature, Filter.Not Filter.IsSource]
-        mine = Filter.And [Filter.HasCardType CardType.Creature, Filter.ControlledBy PlayerRelation.You]
+        mine = Filter.And [Filter.HasCardType CardType.Creature, Filter.HeldBy Holder.Controller PlayerRelation.You]
     Spec.assertEq s (Just (Text.pack "Whenever another creature enters, you gain 1 life.")) (Oracle.render (on [CardType.Creature] (TriggerCondition.PermanentEnters others) [gainLife 1]))
     Spec.assertEq s [[Text.pack "Whenever a creature enters, Spark deals 2 damage to it.", Text.pack "Whenever a creature enters, Spark deals 2 damage to that creature."]] (Oracle.abilities (on [CardType.Enchantment] (TriggerCondition.PermanentEnters (Filter.HasCardType CardType.Creature)) [damageBy [(ObjectRef.InSlot became, Quantity.Literal 2)]]))
-    Spec.assertEq s (Just (Text.pack "Landfall \8212 Whenever a land you control enters, you gain 1 life.")) (Oracle.render (on [CardType.Creature] (TriggerCondition.PermanentEnters (Filter.And [Filter.HasCardType CardType.Land, Filter.ControlledBy PlayerRelation.You])) [gainLife 1]))
+    Spec.assertEq s (Just (Text.pack "Landfall \8212 Whenever a land you control enters, you gain 1 life.")) (Oracle.render (on [CardType.Creature] (TriggerCondition.PermanentEnters (Filter.And [Filter.HasCardType CardType.Land, Filter.HeldBy Holder.Controller PlayerRelation.You])) [gainLife 1]))
     Spec.assertEq s [[Text.pack "Whenever a creature you control dies, you gain 1 life.", Text.pack "Whenever Spark or another creature you control dies, you gain 1 life."]] (Oracle.abilities (on [CardType.Creature] (TriggerCondition.PermanentDies mine) [gainLife 1]))
     Spec.assertEq s [[Text.pack "Whenever a creature you control dies, you gain 1 life."]] (Oracle.abilities (on [CardType.Artifact] (TriggerCondition.PermanentDies mine) [gainLife 1]))
     let dragon = on [CardType.Creature] (TriggerCondition.SelfPutFromBattlefieldInto (OwnedZone.MkOwnedZone Zone.Graveyard PlayerRelation.You)) [Effect.MoveToZone (move (ObjectRef.InSlot became) Zone.Hand)]
@@ -388,7 +388,7 @@ spec s = Spec.describe s "Parun.Oracle" $ do
     Spec.assertEq s [[Text.pack "At the beginning of your end step, if you attacked this turn, draw a card.", Text.pack "At the beginning of your end step, if you attacked this turn, you draw a card.", Text.pack "Raid \8212 At the beginning of your end step, if you attacked this turn, draw a card.", Text.pack "Raid \8212 At the beginning of your end step, if you attacked this turn, you draw a card."]] (Oracle.abilities raided)
     Spec.assertEq s (Just (Text.pack "At the beginning of each opponent's upkeep, if that player has seven or more cards in hand, Spark deals 4 damage to that player.")) (Oracle.render (gated (upkeeps TurnScope.OpponentsTurn) (compares (hand (PlayerRef.InSlot thatPlayer)) Comparison.AtLeast 7) [damage [(thatPlayer, 4)]]))
     Spec.assertEq s [[Text.pack "At the beginning of your upkeep, if there are no Zombies on the battlefield, you gain 1 life.", Text.pack "At the beginning of your upkeep, if no Zombies are on the battlefield, you gain 1 life."]] (Oracle.abilities (gated (upkeeps TurnScope.ControllersTurn) (compares (countOf (Filter.HasSubtype Subtype.Zombie) (onBattlefield (PlayerRef.Relative PlayerRelation.AnyPlayer))) Comparison.Exactly 0) [gainLife 1]))
-    Spec.assertEq s (Just (Text.pack "At the beginning of your upkeep, if you control no other creatures, you gain 1 life.")) (Oracle.render (gated (upkeeps TurnScope.ControllersTurn) (compares (countOf (Filter.And [Filter.HasCardType CardType.Creature, Filter.ControlledBy PlayerRelation.You, Filter.Not Filter.IsSource]) (onBattlefield (PlayerRef.Relative PlayerRelation.AnyPlayer))) Comparison.Exactly 0) [gainLife 1]))
+    Spec.assertEq s (Just (Text.pack "At the beginning of your upkeep, if you control no other creatures, you gain 1 life.")) (Oracle.render (gated (upkeeps TurnScope.ControllersTurn) (compares (countOf (Filter.And [Filter.HasCardType CardType.Creature, Filter.HeldBy Holder.Controller PlayerRelation.You, Filter.Not Filter.IsSource]) (onBattlefield (PlayerRef.Relative PlayerRelation.AnyPlayer))) Comparison.Exactly 0) [gainLife 1]))
     Spec.assertEq s (Just (Text.pack "At the beginning of each player's upkeep, if Spark is untapped, that player draws a card.")) (Oracle.render (gated (upkeeps TurnScope.EachTurn) (compares (countOf (Filter.And [Filter.IsSource, Filter.Not Filter.IsTapped]) (onBattlefield (PlayerRef.Relative PlayerRelation.AnyPlayer))) Comparison.AtLeast 1) [draw (PlayerRef.InSlot thatPlayer) 1]))
     Spec.assertEq s (Just (Text.pack "At the beginning of your upkeep, if you have 40 or more life, you gain 1 life.")) (Oracle.render (gated (upkeeps TurnScope.ControllersTurn) (compares (Quantity.LifeTotal (PlayerRef.Relative PlayerRelation.You)) Comparison.AtLeast 40) [gainLife 1]))
 
@@ -397,9 +397,9 @@ spec s = Spec.describe s "Parun.Oracle" $ do
   -- together or one at a time (Zhang He, Wei General); a player a slot names
   -- owns "their" graveyard once named (Guiltfeeder).
   Spec.it s "render names creatures by type and counts in a named player's zone" $ do
-    let prankster = spell [clause [modify (ObjectRef.InSlot target) Duration.UntilEndOfTurn (pt 1 0)]] [(target, TargetSlot.required Pool.Creatures (Just (Filter.And [Filter.IsAttacking, Filter.HasSubtype Subtype.Goblin, Filter.ControlledBy PlayerRelation.You])))]
+    let prankster = spell [clause [modify (ObjectRef.InSlot target) Duration.UntilEndOfTurn (pt 1 0)]] [(target, TargetSlot.required Pool.Creatures (Just (Filter.And [Filter.IsAttacking, Filter.HasSubtype Subtype.Goblin, Filter.HeldBy Holder.Controller PlayerRelation.You])))]
     Spec.assertEq s (Just (Text.pack "Target attacking Goblin you control gets +1/+0 until end of turn.")) (Oracle.render prankster)
-    let he = spell [clause [modify (ObjectRef.EachMatching (Filter.And [Filter.HasCardType CardType.Creature, Filter.ControlledBy PlayerRelation.You, Filter.Not Filter.IsSource])) Duration.UntilEndOfTurn (pt 1 0)]] []
+    let he = spell [clause [modify (ObjectRef.EachMatching (Filter.And [Filter.HasCardType CardType.Creature, Filter.HeldBy Holder.Controller PlayerRelation.You, Filter.Not Filter.IsSource])) Duration.UntilEndOfTurn (pt 1 0)]] []
     Spec.assertEq s (Just (Text.pack "Other creatures you control get +1/+0 until end of turn.")) (Oracle.render he)
     Spec.assertBool s (Oracle.says he spark (Text.pack "Each other creature you control gets +1/+0 until end of turn.")) "each unsaid"
     let feeder = withFace (\f -> (typed [CardType.Creature] [] f) {Face.triggeredAbilities = [triggered TriggerCondition.SelfAttacksUnblocked [clause [Effect.LoseLife (LifeLoss.MkLifeLoss (PlayerRef.InSlot thatPlayer) (countOf (Filter.And []) (InZone.MkInZone Zone.Graveyard (PlayerRef.InSlot thatPlayer))) LifeLossCause.ByEffect Nothing)]] []]})
@@ -469,7 +469,7 @@ spec s = Spec.describe s "Parun.Oracle" $ do
   -- keyword; "all" only before a bare noun (Night of Souls' Betrayal), never
   -- before a described one (Glorious Anthem, Bad Moon).
   Spec.it s "render prints an anthem" $ do
-    let mine = Filter.And [Filter.HasCardType CardType.Creature, Filter.ControlledBy PlayerRelation.You]
+    let mine = Filter.And [Filter.HasCardType CardType.Creature, Filter.HeldBy Holder.Controller PlayerRelation.You]
     Spec.assertEq s (Just (Text.pack "Creatures you control get +1/+1.")) (Oracle.render (withFace (\f -> f {Face.staticAbilities = [static (Affected.Matching mine) [pt 1 1]]})))
     Spec.assertEq s (Just (Text.pack "All creatures get -1/-1.")) (Oracle.render (withFace (\f -> f {Face.staticAbilities = [static (Affected.Matching (Filter.HasCardType CardType.Creature)) [pt (-1) (-1)]]})))
     let black = Filter.And [Filter.HasColor Color.Black, Filter.HasCardType CardType.Creature]
@@ -578,7 +578,7 @@ spec s = Spec.describe s "Parun.Oracle" $ do
   -- CR 701.26a: tapping and untapping; "another target" for one other object.
   Spec.it s "render taps and untaps" $ do
     Spec.assertEq s (Just (Text.pack "Tap another target creature.")) (Oracle.render (spell [clause [Effect.Tap (Tap.plain (ObjectRef.InSlot target))]] [(target, TargetSlot.required Pool.Creatures (Just (Filter.Not Filter.IsSource)))]))
-    Spec.assertEq s (Just (Text.pack "Untap all creatures you control.")) (Oracle.render (spell [clause [Effect.Untap (ObjectRef.EachMatching (Filter.And [Filter.HasCardType CardType.Creature, Filter.ControlledBy PlayerRelation.You]))]] []))
+    Spec.assertEq s (Just (Text.pack "Untap all creatures you control.")) (Oracle.render (spell [clause [Effect.Untap (ObjectRef.EachMatching (Filter.And [Filter.HasCardType CardType.Creature, Filter.HeldBy Holder.Controller PlayerRelation.You]))]] []))
     let lands = ObjectRef.ChosenPermanents (ChosenPermanents.MkChosenPermanents (Filter.HasCardType CardType.Land) (PlayerRef.Relative PlayerRelation.You) (HowMany.UpTo (Just (Quantity.Literal 4))) Zone.Battlefield)
     Spec.assertEq s (Just (Text.pack "Untap up to four lands.")) (Oracle.render (spell [clause [Effect.Untap lands]] []))
 
@@ -611,7 +611,7 @@ spec s = Spec.describe s "Parun.Oracle" $ do
     let tapped = countOf (Filter.And [Filter.HasCardType CardType.Creature, Filter.IsTapped, Filter.HeldByBound Holder.Controller target]) (onBattlefield (PlayerRef.Relative PlayerRelation.AnyPlayer))
         opponent = [(target, TargetSlot.required Pool.Players (Just (Filter.IsPlayer PlayerRelation.Opponent)))]
     Spec.assertEq s [[Text.pack "Draw a card for each tapped creature target opponent controls.", Text.pack "Draw cards equal to the number of tapped creatures target opponent controls."]] (Oracle.abilities (spell [clause [Effect.Draw (Draw.MkDraw (PlayerRef.Relative PlayerRelation.You) tapped Nothing)]] opponent))
-    let swamps = countOf (Filter.And [Filter.HasSubtype Subtype.Swamp, Filter.ControlledBy PlayerRelation.You]) (onBattlefield (PlayerRef.Relative PlayerRelation.AnyPlayer))
+    let swamps = countOf (Filter.And [Filter.HasSubtype Subtype.Swamp, Filter.HeldBy Holder.Controller PlayerRelation.You]) (onBattlefield (PlayerRef.Relative PlayerRelation.AnyPlayer))
         coffers = activated (Cost.MkCost (Just (ManaCost.MkManaCost [ManaSymbol.Generic 2])) [CostComponent.TapThis]) (Effect.AddMana (ManaAddition.MkManaAddition (PlayerRef.Relative PlayerRelation.You) (ManaProduction.OfType (ManaType.Colored Color.Black)) swamps ManaRetention.Ordinary Nothing Nothing Nothing))
     Spec.assertEq s [[Text.pack "{2}, {T}: Add {B} for each Swamp you control."]] (Oracle.abilities (withFace (\f -> f {Face.activatedAbilities = [coffers]})))
     let theirs = countOf (Filter.HasCardType CardType.Creature) (InZone.MkInZone Zone.Graveyard PlayerRef.Candidate)
@@ -622,18 +622,18 @@ spec s = Spec.describe s "Parun.Oracle" $ do
   -- other way, as printings differ; a player's lands are the ones "they
   -- control" (Acidic Soil).
   Spec.it s "render deals damage equal to a number" $ do
-    let mountains = countOf (Filter.And [Filter.HasSubtype Subtype.Mountain, Filter.ControlledBy PlayerRelation.You]) (onBattlefield (PlayerRef.Relative PlayerRelation.AnyPlayer))
+    let mountains = countOf (Filter.And [Filter.HasSubtype Subtype.Mountain, Filter.HeldBy Holder.Controller PlayerRelation.You]) (onBattlefield (PlayerRef.Relative PlayerRelation.AnyPlayer))
         ambush = spell [clause [damageBy [(ObjectRef.InSlot target, mountains)]]] [(target, TargetSlot.required Pool.Creatures Nothing)]
     Spec.assertEq s [[Text.pack "Spark deals damage to target creature equal to the number of Mountains you control.", Text.pack "Spark deals damage equal to the number of Mountains you control to target creature."]] (Oracle.abilities ambush)
     let theirs = countOf (Filter.And [Filter.HasCardType CardType.Land, Filter.HeldByRecipient Holder.Controller]) (onBattlefield (PlayerRef.Relative PlayerRelation.AnyPlayer))
     Spec.assertEq s (Just (Text.pack "Spark deals damage to each player equal to the number of lands they control.")) (Oracle.render (spell [clause [damageBy [(ObjectRef.EachPlayer, theirs)]]] []))
     let dealer = SlotName.MkSlotName (Text.pack "dealer")
         fire = Effect.DealDamage (DealDamage.MkDealDamage (Seq.singleton (DamagePart.MkDamagePart (ObjectRef.InSlot target) (powerOf dealer))) (Just dealer) Nothing Nothing Nothing)
-        slots = [(dealer, TargetSlot.required Pool.Creatures (Just (Filter.ControlledBy PlayerRelation.You))), (target, TargetSlot.required Pool.AnyTarget Nothing)]
+        slots = [(dealer, TargetSlot.required Pool.Creatures (Just (Filter.HeldBy Holder.Controller PlayerRelation.You))), (target, TargetSlot.required Pool.AnyTarget Nothing)]
     Spec.assertEq s [[Text.pack "Target creature you control deals damage equal to its power to any target.", Text.pack "Target creature you control deals damage to any target equal to its power."]] (Oracle.abilities (spell [clause [fire]] slots))
-    let victim f = [(dealer, TargetSlot.required Pool.Creatures (Just (Filter.ControlledBy PlayerRelation.You))), (target, TargetSlot.required Pool.Creatures (Just f))]
+    let victim f = [(dealer, TargetSlot.required Pool.Creatures (Just (Filter.HeldBy Holder.Controller PlayerRelation.You))), (target, TargetSlot.required Pool.Creatures (Just f))]
     Spec.assertEq s (Just (Text.pack "Target creature you control deals damage equal to its power to another target creature.")) (Oracle.render (spell [clause [fire]] (victim (Filter.Not (Filter.IsBound dealer)))))
-    Spec.assertEq s (Just (Text.pack "Target creature you control deals damage equal to its power to target creature you don't control.")) (Oracle.render (spell [clause [fire]] (victim (Filter.Not (Filter.ControlledBy PlayerRelation.You)))))
+    Spec.assertEq s (Just (Text.pack "Target creature you control deals damage equal to its power to target creature you don't control.")) (Oracle.render (spell [clause [fire]] (victim (Filter.Not (Filter.HeldBy Holder.Controller PlayerRelation.You)))))
     let eater = activated (Cost.MkCost (Just (ManaCost.MkManaCost [])) [CostComponent.TapThis]) (damageBy [(ObjectRef.InSlot target, Quantity.Measure Measure.Power)])
     Spec.assertEq s (Just (Text.pack "{T}: Spark deals damage equal to its power to any target.")) (Oracle.render (withFace (\f -> f {Face.activatedAbilities = [eater {ActivatedAbility.modal = payload [clause [damageBy [(ObjectRef.InSlot target, Quantity.Measure Measure.Power)]]] [(target, TargetSlot.required Pool.AnyTarget Nothing)]}]})))
 
@@ -641,7 +641,7 @@ spec s = Spec.describe s "Parun.Oracle" $ do
   -- named (Swords to Plowshares), and names the target where nothing else
   -- does (Soul's Majesty).
   Spec.it s "render reads a target's characteristic as its own" $ do
-    let mine = [(target, TargetSlot.required Pool.Creatures (Just (Filter.ControlledBy PlayerRelation.You)))]
+    let mine = [(target, TargetSlot.required Pool.Creatures (Just (Filter.HeldBy Holder.Controller PlayerRelation.You)))]
         majesty = spell [clause [Effect.Draw (Draw.MkDraw (PlayerRef.Relative PlayerRelation.You) (powerOf target) Nothing)]] mine
     Spec.assertEq s [[Text.pack "Draw cards equal to the power of target creature you control."]] (Oracle.abilities majesty)
     let plowshares = spell [clause [Effect.MoveToZone (move (ObjectRef.InSlot target) Zone.Exile), Effect.GainLife (PlayerQuantity.MkPlayerQuantity (PlayerRef.HolderOfBound Holder.Controller Hop.Itself target) (powerOf target))]] [(target, TargetSlot.required Pool.Creatures Nothing)]
@@ -656,14 +656,14 @@ spec s = Spec.describe s "Parun.Oracle" $ do
         calm = spell [clause [modify (ObjectRef.InSlot target) Duration.UntilEndOfTurn (ptBy hand hand)]] creature
     Spec.assertEq s (Just (Text.pack "Target creature gets +1/+1 until end of turn for each card in your hand.")) (Oracle.render calm)
     Spec.assertBool s (Oracle.says calm (CardName.MkCardName (Text.pack "Spark")) (Text.pack "Target creature gets +X/+X until end of turn, where X is the number of cards in your hand.")) "no \"where X is\""
-    let artifacts = countOf (Filter.And [Filter.HasCardType CardType.Artifact, Filter.ControlledBy PlayerRelation.You]) (onBattlefield (PlayerRef.Relative PlayerRelation.AnyPlayer))
+    let artifacts = countOf (Filter.And [Filter.HasCardType CardType.Artifact, Filter.HeldBy Holder.Controller PlayerRelation.You]) (onBattlefield (PlayerRef.Relative PlayerRelation.AnyPlayer))
     Spec.assertEq s (Just (Text.pack "Spark gets +1/+0 for each artifact you control.")) (Oracle.render (withFace (\f -> f {Face.staticAbilities = [static (Affected.Matching Filter.IsSource) [ptBy artifacts (Quantity.Literal 0)]]})))
     Spec.assertEq s Nothing (Oracle.render (spell [clause [modify (ObjectRef.InSlot target) Duration.UntilEndOfTurn (ptBy (powerOf target) (Quantity.Literal 0))]] creature))
 
   -- CR 604.3 / 208.2: a characteristic-defining ability gives the stars a face
   -- prints, both "each" (Nightmare) or one (Sylvan Yeti).
   Spec.it s "render prints a characteristic-defining power and toughness" $ do
-    let swamps = countOf (Filter.And [Filter.HasSubtype Subtype.Swamp, Filter.ControlledBy PlayerRelation.You]) (onBattlefield (PlayerRef.Relative PlayerRelation.AnyPlayer))
+    let swamps = countOf (Filter.And [Filter.HasSubtype Subtype.Swamp, Filter.HeldBy Holder.Controller PlayerRelation.You]) (onBattlefield (PlayerRef.Relative PlayerRelation.AnyPlayer))
         starred p t = withFace (\f -> f {Face.power = Just (Power.MkPower p), Face.toughness = Just (Toughness.MkToughness t), Face.characteristicPT = Just (CharacteristicPT.MkCharacteristicPT swamps swamps)})
     Spec.assertEq s (Just (Text.pack "Spark's power and toughness are each equal to the number of Swamps you control.")) (Oracle.render (starred Quantity.Star Quantity.Star))
     Spec.assertEq s (Just (Text.pack "Spark's power is equal to the number of Swamps you control.")) (Oracle.render (starred Quantity.Star (Quantity.Literal 4)))
@@ -761,7 +761,7 @@ spec s = Spec.describe s "Parun.Oracle" $ do
     let silvar = activated (Cost.MkCost (Just (ManaCost.MkManaCost [])) [CostComponent.Sacrifice (Sacrifice.MkSacrifice (ObjectCount.Exactly (CostAmount.Fixed 1)) (Filter.HasSubtype Subtype.Human))]) (counters CounterKind.PlusOnePlusOne 1 (ObjectRef.InSlot self))
         indestructible = silvar {ActivatedAbility.modal = payload [clause [counters CounterKind.PlusOnePlusOne 1 (ObjectRef.InSlot self)], clause [modify (ObjectRef.InSlot self) Duration.UntilEndOfTurn (Modification.GainKeyword Keyword.Indestructible)]] []}
     Spec.assertEq s (Just (Text.pack "Sacrifice a Human: Put a +1/+1 counter on Spark. It gains indestructible until end of turn.")) (Oracle.render (withFace (\f -> f {Face.activatedAbilities = [indestructible]})))
-    let mine = ObjectRef.EachMatching (Filter.And [Filter.HasCardType CardType.Creature, Filter.ControlledBy PlayerRelation.You])
+    let mine = ObjectRef.EachMatching (Filter.And [Filter.HasCardType CardType.Creature, Filter.HeldBy Holder.Controller PlayerRelation.You])
         shield = spell [clause [modify mine Duration.UntilEndOfTurn (pt 0 1)], clause [modify mine Duration.UntilEndOfTurn (pt 0 2)]] []
     Spec.assertEq s (Just (Text.pack "Creatures you control get +0/+1 until end of turn. They get an additional +0/+2 until end of turn.")) (Oracle.render shield)
     let might = spell [clause [modify (ObjectRef.InSlot target) Duration.UntilEndOfTurn (pt 1 1)], clause [modify (ObjectRef.InSlot target) Duration.UntilEndOfTurn (pt 4 4)]] creature
@@ -793,10 +793,10 @@ spec s = Spec.describe s "Parun.Oracle" $ do
   Spec.it s "render prints a trigger on casting a spell" $ do
     let cast f = withFace (\g -> g {Face.triggeredAbilities = [triggered (TriggerCondition.SpellCast (SpellCast.MkSpellCast f TurnScope.EachTurn Nothing Nothing Nothing False)) [clause [gainLife 1]] []]})
     Spec.assertEq s (Just (Text.pack "Whenever a player casts a blue spell, you gain 1 life.")) (Oracle.render (cast (Filter.HasColor Color.Blue)))
-    Spec.assertEq s (Just (Text.pack "Whenever you cast an enchantment spell, you gain 1 life.")) (Oracle.render (cast (Filter.And [Filter.HasCardType CardType.Enchantment, Filter.ControlledBy PlayerRelation.You])))
-    Spec.assertEq s (Just (Text.pack "Whenever an opponent casts a spell, you gain 1 life.")) (Oracle.render (cast (Filter.And [Filter.ControlledBy PlayerRelation.Opponent])))
-    Spec.assertEq s (Just (Text.pack "Whenever you cast an instant or sorcery spell, you gain 1 life.")) (Oracle.render (cast (Filter.And [Filter.Or [Filter.HasCardType CardType.Instant, Filter.HasCardType CardType.Sorcery], Filter.ControlledBy PlayerRelation.You])))
-    Spec.assertEq s (Just (Text.pack "Whenever you cast a Zombie spell or creature spell with flying, you gain 1 life.")) (Oracle.render (cast (Filter.And [Filter.Or [Filter.HasSubtype Subtype.Zombie, Filter.And [Filter.HasCardType CardType.Creature, Filter.HasKeyword Keyword.Flying]], Filter.ControlledBy PlayerRelation.You])))
+    Spec.assertEq s (Just (Text.pack "Whenever you cast an enchantment spell, you gain 1 life.")) (Oracle.render (cast (Filter.And [Filter.HasCardType CardType.Enchantment, Filter.HeldBy Holder.Controller PlayerRelation.You])))
+    Spec.assertEq s (Just (Text.pack "Whenever an opponent casts a spell, you gain 1 life.")) (Oracle.render (cast (Filter.And [Filter.HeldBy Holder.Controller PlayerRelation.Opponent])))
+    Spec.assertEq s (Just (Text.pack "Whenever you cast an instant or sorcery spell, you gain 1 life.")) (Oracle.render (cast (Filter.And [Filter.Or [Filter.HasCardType CardType.Instant, Filter.HasCardType CardType.Sorcery], Filter.HeldBy Holder.Controller PlayerRelation.You])))
+    Spec.assertEq s (Just (Text.pack "Whenever you cast a Zombie spell or creature spell with flying, you gain 1 life.")) (Oracle.render (cast (Filter.And [Filter.Or [Filter.HasSubtype Subtype.Zombie, Filter.And [Filter.HasCardType CardType.Creature, Filter.HasKeyword Keyword.Flying]], Filter.HeldBy Holder.Controller PlayerRelation.You])))
 
   -- CR 701.19a: regeneration of the source, or of a target.
   Spec.it s "render prints regeneration" $ do
@@ -875,7 +875,7 @@ spec s = Spec.describe s "Parun.Oracle" $ do
   Spec.it s "render prints a static ability that applies as long as a condition holds" $ do
     let gated c changes = withFace (\f -> (typed [CardType.Creature] [] f) {Face.staticAbilities = [(static (Affected.Matching Filter.IsSource) changes) {StaticAbility.condition = Just c}]})
         atLeast q k = Condition.Compares (Compares.MkCompares q Comparison.AtLeast (Quantity.Literal k))
-        forest = atLeast (countOf (Filter.And [Filter.HasSubtype Subtype.Forest, Filter.ControlledBy PlayerRelation.You]) (onBattlefield (PlayerRef.Relative PlayerRelation.AnyPlayer))) 1
+        forest = atLeast (countOf (Filter.And [Filter.HasSubtype Subtype.Forest, Filter.HeldBy Holder.Controller PlayerRelation.You]) (onBattlefield (PlayerRef.Relative PlayerRelation.AnyPlayer))) 1
         attacking = atLeast (countOf (Filter.And [Filter.IsSource, Filter.IsAttacking]) (onBattlefield (PlayerRef.Relative PlayerRelation.AnyPlayer))) 1
         threshold = atLeast (countOf (Filter.And []) (InZone.MkInZone Zone.Graveyard (PlayerRef.Relative PlayerRelation.You))) 7
         turn = Condition.Compares (Compares.MkCompares (Quantity.IsActivePlayer (PlayerRef.Relative PlayerRelation.You)) Comparison.Exactly (Quantity.Literal 1))

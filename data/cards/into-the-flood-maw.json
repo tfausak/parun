@@ -104,9 +104,14 @@
             "targetSlots": {
               "creature": {
                 "filter": {
-                  "type": "ControlledBy",
+                  "type": "HeldBy",
                   "value": {
-                    "type": "Opponent"
+                    "holder": {
+                      "type": "Controller"
+                    },
+                    "relation": {
+                      "type": "Opponent"
+                    }
                   }
                 },
                 "pool": {
@@ -127,9 +132,14 @@
                       }
                     },
                     {
-                      "type": "ControlledBy",
+                      "type": "HeldBy",
                       "value": {
-                        "type": "Opponent"
+                        "holder": {
+                          "type": "Controller"
+                        },
+                        "relation": {
+                          "type": "Opponent"
+                        }
                       }
                     }
                   ]

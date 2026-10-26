@@ -758,16 +758,16 @@ gristLoyaltySpec s registry = Spec.describe s "GristLoyalty" $ do
 -- instead" -- is Parun.LifeReplacementSpec's, and stays there.
 --
 -- The -7's X is Aggregation.Total over Scope.InZone Exile: "cards you own" is
--- CR 108.3's ownership, so the filter carries Filter.OwnedBy You and the scope
+-- CR 108.3's ownership, so the filter carries Filter.HeldBy Holder.Owner You and the scope
 -- names the whole shared exile (CR 400.1), which is the only way an InZone scope
 -- may name it. The scenario
 -- data/scenarios/planeswalker/cr-107-3-202-3-the-7-s-x-is-the-total-mana-value-of-the-cards.json
 -- is what proves the SUM: its exile holds two cards of unequal mana value,
 -- so Members, Greatest and Total each answer a different number.
 --
--- CR 108.4a is why that case cannot tell OwnedBy from ControlledBy: an exiled
+-- CR 108.4a is why that case cannot tell HeldBy Owner from HeldBy Controller: an exiled
 -- card is no permanent and no spell, so anything asking its controller gets its
--- owner. OwnedBy is here because it is the printed word, and the pair the case
+-- owner. HeldBy Owner is here because it is the printed word, and the pair the case
 -- CAN tell apart is You against any player -- bob's exiled card is what that
 -- turns on. That same -7 filter's Not IsToken is the printed "cards" (CR 111.6) and
 -- no case can read it either: CR 111.7's state-based action takes a token out of

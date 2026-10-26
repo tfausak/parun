@@ -2387,7 +2387,7 @@ enterFaceDown printing pid gs =
 -- card's scope is the whole battlefield: with them all on one side "on the
 -- battlefield" and "you control" would agree, and Mutagen Connoisseur's
 -- neighbouring JSON -- the payload this card's static ability is spelled after --
--- writes the ControlledBy You conjunct this one must not have.
+-- writes the HeldBy Controller You conjunct this one must not have.
 --
 -- Two face-up creatures beside them, the Whisperer itself and bob's Hill Giant,
 -- because a filter that dropped the IsFaceDown conjunct would count every
@@ -2395,8 +2395,8 @@ enterFaceDown printing pid gs =
 -- trap: the two readings answer the same number.
 --
 -- Every misreading lands on a different power, and none coincides with 8: 3
--- face-down creatures doubled onto the printed 2 is 8, ControlledBy You answers
--- 4, ControlledBy Opponent 6, a dropped IsFaceDown conjunct 12 (five creatures),
+-- face-down creatures doubled onto the printed 2 is 8, HeldBy Controller You answers
+-- 4, HeldBy Controller Opponent 6, a dropped IsFaceDown conjunct 12 (five creatures),
 -- and a single Count where the card prints Plus 5.
 --
 -- Thragtusk, Ainok Tracker and Goblin Piker go face down, and none of the three

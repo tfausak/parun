@@ -6,6 +6,7 @@ import qualified Parun.JsonCodec.Common as Common
 import qualified Parun.Spec as Spec
 import qualified Parun.Types.CardPutIntoGraveyard as CardPutIntoGraveyard
 import qualified Parun.Types.Filter as Filter
+import qualified Parun.Types.Holder as Holder
 import qualified Parun.Types.PlayerRelation as PlayerRelation
 import qualified Parun.Types.Zone as Zone
 
@@ -23,6 +24,6 @@ spec s = Spec.describe s "Parun.Codec.CardPutIntoGraveyard" $ do
     Common.assertCodec
       s
       CardPutIntoGraveyard.codec
-      (CardPutIntoGraveyard.MkCardPutIntoGraveyard {CardPutIntoGraveyard.filter = Filter.OwnedBy PlayerRelation.You, CardPutIntoGraveyard.from = Set.fromList [Zone.Hand, Zone.Library]})
-      " {\"filter\":{\"type\":\"OwnedBy\",\"value\":{\"type\":\"You\"}},\"from\":[{\"type\":\"Library\"},{\"type\":\"Hand\"}]} "
+      (CardPutIntoGraveyard.MkCardPutIntoGraveyard {CardPutIntoGraveyard.filter = Filter.HeldBy Holder.Owner PlayerRelation.You, CardPutIntoGraveyard.from = Set.fromList [Zone.Hand, Zone.Library]})
+      " {\"filter\":{\"type\":\"HeldBy\",\"value\":{\"holder\":{\"type\":\"Owner\"},\"relation\":{\"type\":\"You\"}}},\"from\":[{\"type\":\"Library\"},{\"type\":\"Hand\"}]} "
   Spec.it s "has a schema" $ Common.assertHasSchema s CardPutIntoGraveyard.codec

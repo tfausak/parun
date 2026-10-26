@@ -367,12 +367,11 @@ bakePerspective viewOf context gs candidate predicate =
         Filter.Type.HasKeywordFamily _ -> predicate
         Filter.Type.Measures _ -> predicate
         Filter.Type.ManaValueIsEven -> predicate
-        Filter.Type.ControlledBy _ -> predicate
+        Filter.Type.HeldBy _ _ -> predicate
         Filter.Type.ControlledByRole _ -> predicate
         Filter.Type.HeldByBound _ _ -> predicate
         Filter.Type.HeldByPlayer _ _ -> predicate
         Filter.Type.HeldByRecipient _ -> predicate
-        Filter.Type.OwnedBy _ -> predicate
         Filter.Type.IsSource -> predicate
         Filter.Type.IsObject _ -> predicate
         Filter.Type.TargetsSource -> predicate
@@ -398,7 +397,7 @@ bakePerspective viewOf context gs candidate predicate =
         Filter.Type.OfRelatedPlayer _ -> predicate
         Filter.Type.IsPlayer _ -> predicate
         Filter.Type.IsAttacking -> predicate
-        -- Untouched for ControlledBy's reason: the relation is answered against the
+        -- Untouched for HeldBy's reason: the relation is answered against the
         -- perspective at Parun.Engine.Filter.matches, which holds one.
         Filter.Type.IsAttackingPlayer _ -> predicate
         -- Untouched for the atom above's reason.
@@ -497,7 +496,7 @@ truth b = if b then Filter.Type.And [] else Filter.Type.Not (Filter.Type.And [])
 -- The inner filter is matched under the UNCHANGED context, so what it says about
 -- CR 109.5's "you" or about the source is still said about the real ones. The
 -- candidate's own board is expressed by the controller test here rather than by a
--- ControlledBy conjunct, which could only ever name a relation.
+-- HeldBy Controller conjunct, which could only ever name a relation.
 controlledMatching :: ViewOf -> Filter.Context -> GameState -> Filter.Type.Filter Keyword.Type.Keyword -> PlayerId -> Integer
 controlledMatching viewOf context gs inner pid =
   let matching oid = case viewOf oid of
@@ -718,7 +717,7 @@ snapshotView viewOf gs shape event = case event of
   -- for the one field a snapshot cannot carry, wherever there still is one.
   GameEvent.SpellCast (SpellWasCast.MkSpellWasCast caster spell snapshot _ _ lapsed) -> case shape of
     -- CR 601.2a: "that player becomes its controller", so the caster the event
-    -- recorded IS the view's controller and Filter.ControlledBy You answers "a
+    -- recorded IS the view's controller and Filter.HeldBy Holder.Controller You answers "a
     -- spell you've cast". The spell's id is deliberately left out of the view
     -- for the reason the Moved arm leaves its own out: a look-back view is of a
     -- past event rather than of an object, and Filter.IsSource asking about one

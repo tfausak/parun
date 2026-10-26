@@ -83,6 +83,7 @@ import qualified Parun.Types.Game as Game.Type
 import qualified Parun.Types.GameEvent as GameEvent
 import qualified Parun.Types.GameState as GameState
 import qualified Parun.Types.GrantedAbility as GrantedAbility
+import qualified Parun.Types.Holder as Holder
 import qualified Parun.Types.Hybrid as Hybrid
 import qualified Parun.Types.Keyword as Keyword
 import qualified Parun.Types.Label as Label
@@ -3550,7 +3551,7 @@ springleafDrumSpec s registry = Spec.describe s "Springleaf Drum" $ do
         -- The ONE thing the pair varies: both creatures tapped, which leaves
         -- the criterion's `Not IsTapped` with nothing to offer.
         unpayable = S.tapObject spotId (S.tapObject giantId payable)
-        component = CostComponent.TapPermanents (TapPermanents.MkTapPermanents (CostAmount.Fixed 1) (Filter.Type.And [Filter.Type.HasCardType CardType.Creature, Filter.Type.ControlledBy PlayerRelation.You, Filter.Type.Not Filter.Type.IsTapped]) False)
+        component = CostComponent.TapPermanents (TapPermanents.MkTapPermanents (CostAmount.Fixed 1) (Filter.Type.And [Filter.Type.HasCardType CardType.Creature, Filter.Type.HeldBy Holder.Controller PlayerRelation.You, Filter.Type.Not Filter.Type.IsTapped]) False)
     Spec.assertBool s (Cost.canPayComponent Map.empty S.alice drumId component payable) "two untapped creatures pay"
     Spec.assertBool s (not (Cost.canPayComponent Map.empty S.alice drumId component unpayable)) "two tapped ones do not"
     Spec.assertEqWith s "and the ability adds no mana" (pooledFrom S.identityAnswer drumId unpayable) 0
@@ -3785,7 +3786,7 @@ melokuSpec s registry = Spec.describe s "Meloku the Clouded Mirror" $ do
     island <- S.printingOf s registry "Island"
     let (payableId, landIds, payable) = melokuBoard meloku elves [(island, S.alice)]
         unpayable = S.giveControl (firstOf landIds) S.bob payable
-        component = CostComponent.ReturnPermanents (ReturnPermanents.MkReturnPermanents 1 (Filter.Type.And [Filter.Type.HasCardType CardType.Land, Filter.Type.ControlledBy PlayerRelation.You]))
+        component = CostComponent.ReturnPermanents (ReturnPermanents.MkReturnPermanents 1 (Filter.Type.And [Filter.Type.HasCardType CardType.Land, Filter.Type.HeldBy Holder.Controller PlayerRelation.You]))
     Spec.assertBool s (Activatable.activatable S.alice payableId (theAbility meloku) payable) "a land alice controls: activatable"
     Spec.assertBool s (not (Activatable.activatable S.alice payableId (theAbility meloku) unpayable)) "the same land under bob: not"
     Spec.assertBool s (Cost.canPayComponent Map.empty S.alice payableId component payable) "and the component itself is payable on the one board"

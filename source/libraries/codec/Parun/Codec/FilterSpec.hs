@@ -160,21 +160,12 @@ spec s = Spec.describe s "Parun.Codec.Filter" $ do
       codec
       Filter.ManaValueIsEven
       " {\"type\":\"ManaValueIsEven\"} "
-  Spec.it s "ControlledBy" $
+  Spec.it s "HeldBy" $
     Common.assertCodec
       s
       codec
-      (Filter.ControlledBy PlayerRelation.Opponent)
-      " {\"type\":\"ControlledBy\",\"value\":{\"type\":\"Opponent\"}} "
-  -- CR 108.3, and the ONE arm this file must carry for: the decoder dispatches on
-  -- a Text tag, so a missing arm there compiles and fails only when a card file
-  -- is loaded.
-  Spec.it s "OwnedBy" $
-    Common.assertCodec
-      s
-      codec
-      (Filter.OwnedBy PlayerRelation.You)
-      " {\"type\":\"OwnedBy\",\"value\":{\"type\":\"You\"}} "
+      (Filter.HeldBy Holder.Owner PlayerRelation.Opponent)
+      " {\"type\":\"HeldBy\",\"value\":{\"holder\":{\"type\":\"Owner\"},\"relation\":{\"type\":\"Opponent\"}}} "
   Spec.it s "IsPlayer" $
     Common.assertCodec
       s
@@ -229,8 +220,8 @@ spec s = Spec.describe s "Parun.Codec.Filter" $ do
     Common.assertCodec
       s
       codec
-      (Filter.TargetsMatching (Filter.ControlledBy PlayerRelation.You))
-      " {\"type\":\"TargetsMatching\",\"value\":{\"type\":\"ControlledBy\",\"value\":{\"type\":\"You\"}}} "
+      (Filter.TargetsMatching (Filter.HeldBy Holder.Controller PlayerRelation.You))
+      " {\"type\":\"TargetsMatching\",\"value\":{\"type\":\"HeldBy\",\"value\":{\"holder\":{\"type\":\"Controller\"},\"relation\":{\"type\":\"You\"}}}} "
   Spec.it s "TargetsPlayer You" $
     Common.assertCodec
       s
@@ -758,7 +749,7 @@ spec s = Spec.describe s "Parun.Codec.Filter" $ do
         reprisal = Filter.Measures (Measures.MkMeasures Measure.Power Comparison.AtLeast (Operand.Literal 4))
         basicLand = Filter.And [Filter.HasCardType CardType.Land, Filter.HasSupertype Supertype.Basic]
         angelicEdict = Filter.Or [Filter.HasCardType CardType.Creature, Filter.HasCardType CardType.Enchantment]
-        controlled = Filter.ControlledBy PlayerRelation.Opponent
+        controlled = Filter.HeldBy Holder.Controller PlayerRelation.Opponent
         bySubtype = Filter.HasSubtype Subtype.Wall
         isSource = Filter.IsSource
         ravenousRats = Filter.IsPlayer PlayerRelation.Opponent
@@ -772,7 +763,7 @@ spec s = Spec.describe s "Parun.Codec.Filter" $ do
         relentlessAssault = Filter.AttackedThisTurn
         -- Break Open's whole target filter, the composite the new atom actually
         -- ships in.
-        breakOpen = Filter.And [Filter.IsFaceDown, Filter.ControlledBy PlayerRelation.Opponent]
+        breakOpen = Filter.And [Filter.IsFaceDown, Filter.HeldBy Holder.Controller PlayerRelation.Opponent]
         crownOfTheAges = Filter.And [Filter.HasSubtype Subtype.Aura, Filter.AttachedTo (Filter.HasCardType CardType.Creature)]
         labyrinthOfSkophos = Filter.Or [Filter.IsAttacking, Filter.IsBlocking]
         -- Hollow Warrior's toll criterion, the deepest nest of the two new
@@ -790,7 +781,7 @@ spec s = Spec.describe s "Parun.Codec.Filter" $ do
         miracleWorker =
           Filter.And
             [ Filter.HasSubtype Subtype.Aura,
-              Filter.AttachedTo (Filter.And [Filter.HasCardType CardType.Creature, Filter.ControlledBy PlayerRelation.You])
+              Filter.AttachedTo (Filter.And [Filter.HasCardType CardType.Creature, Filter.HeldBy Holder.Controller PlayerRelation.You])
             ]
         auraGraftDestination = Filter.CanHostSubject
         oreskosExplorer = Filter.Controls (ControlMargin.MoreThanYou 1) (Filter.HasCardType CardType.Land)

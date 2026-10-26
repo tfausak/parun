@@ -118,6 +118,7 @@ import qualified Parun.Types.GameEvent as GameEvent
 import Parun.Types.GameState (GameState)
 import qualified Parun.Types.GameState as GameState
 import qualified Parun.Types.Gift as Gift
+import qualified Parun.Types.Holder as Holder
 import qualified Parun.Types.Hybrid as Hybrid
 import qualified Parun.Types.HybridPhyrexian as HybridPhyrexian
 import qualified Parun.Types.Keyword as Keyword.Type
@@ -648,7 +649,7 @@ candidateCostsGiven permitted pid name oid gs =
               -- CR 601.2h. Rule 701.21a is also why the criterion states no
               -- control clause -- "a player can't sacrifice ... something that's a
               -- permanent they don't control", which that pool is already the
-              -- caster's, so a ControlledBy atom would only repeat it.
+              -- caster's, so a HeldBy Controller atom would only repeat it.
               emerged =
                 let victims criterion =
                       Maybe.mapMaybe
@@ -896,7 +897,7 @@ candidateCostsGiven permitted pid name oid gs =
                       -- payable; its perspective is the payer, which is what lets
                       -- rule 702.180a's "you control" be an atom here.
                       harmonized =
-                        let untappedYours = [Filter.Type.HasCardType CardType.Creature, Filter.Type.Not Filter.Type.IsTapped, Filter.Type.ControlledBy PlayerRelation.You]
+                        let untappedYours = [Filter.Type.HasCardType CardType.Creature, Filter.Type.Not Filter.Type.IsTapped, Filter.Type.HeldBy Holder.Controller PlayerRelation.You]
                             criterion vid = Filter.Type.And (untappedYours <> [Filter.Type.IsObject vid])
                             tappable =
                               Maybe.mapMaybe
@@ -1477,7 +1478,7 @@ waterbendCriterion =
   Filter.Type.And
     [ Filter.Type.Or [Filter.Type.HasCardType CardType.Artifact, Filter.Type.HasCardType CardType.Creature],
       Filter.Type.Not Filter.Type.IsTapped,
-      Filter.Type.ControlledBy PlayerRelation.You
+      Filter.Type.HeldBy Holder.Controller PlayerRelation.You
     ]
 
 -- The body both offers share: one entry per set of symbols the substitutes could
@@ -2574,7 +2575,7 @@ tapCandidates slots pid oid criterion gs =
 -- rule says the same of returning one -- CR 118.1 asks only that the payer carry
 -- out the instruction. Narrowing here would enforce a restriction the CR does
 -- not state, so the criterion carries it where a card wants it (Meloku the
--- Clouded Mirror's prints `ControlledBy You`). Scryfall
+-- Clouded Mirror's prints `HeldBy Controller You`). Scryfall
 -- `o:/[Rr]eturn (a|an|two|three|another) [^.:]+ to (its|their) owner.s hand:/
 -- -o:"you control"`, 2026-09-02, no hit, and the same query over "as an
 -- additional cost" none either: every printed return cost states it today, so
@@ -2592,7 +2593,7 @@ returnCandidates = tapCandidates
 -- NOT narrowed to what the payer controls, `returnCandidates`' reading and for
 -- its reason: CR 118.1 asks only that the payer carry out the instruction, so a
 -- card that wants the restriction prints it (Zameck Guildmage's criterion carries
--- `ControlledBy You`).
+-- `HeldBy Controller You`).
 counterRemovalCandidates :: Map.Map SlotName.SlotName (Set.Set Recipient.Recipient) -> PlayerId -> ObjectId -> Natural -> WhichCounters.WhichCounters Keyword.Type.Keyword -> Filter.Type.Filter Keyword.Type.Keyword -> GameState -> [ObjectId]
 counterRemovalCandidates slots pid oid n which criterion gs =
   filter (\candidate -> sum (removableCounters which candidate gs) >= n) (tapCandidates slots pid oid criterion gs)

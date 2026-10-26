@@ -281,9 +281,14 @@
                                         }
                                       },
                                       {
-                                        "type": "OwnedBy",
+                                        "type": "HeldBy",
                                         "value": {
-                                          "type": "You"
+                                          "holder": {
+                                            "type": "Owner"
+                                          },
+                                          "relation": {
+                                            "type": "You"
+                                          }
                                         }
                                       }
                                     ]

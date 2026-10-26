@@ -267,7 +267,7 @@ eliminateTheImpossibleSpec s registry = Spec.describe s "EliminateTheImpossible"
 -- resolution itself is CR 701.16a's plain Create, proved gameplay-level
 -- already by investigateSpec above; this group's subject is the trigger
 -- condition's two-part filter -- "another" (Filter.Not IsSource) and "you
--- control" (Filter.ControlledBy) -- and the intervening "if" gating it.
+-- control" (Filter.HeldBy Holder.Controller) -- and the intervening "if" gating it.
 --
 -- One board for every case: alice's Sleuth, one of alice's own Pikers as the
 -- bystander the positive and negative cases kill, and one of bob's as the
@@ -320,7 +320,7 @@ angelicSleuthSpec s registry = Spec.describe s "AngelicSleuth" $ do
     Spec.assertEqWith s "nothing reached the stack" (GameState.stack settled) []
     Spec.assertEqWith s "no Clue" (S.tokensOf after) []
   -- "You control": bob's Piker carries the same counters and dies the same
-  -- way, and Filter.ControlledBy You is what keeps an opponent's permanent
+  -- way, and Filter.HeldBy Holder.Controller You is what keeps an opponent's permanent
   -- from triggering it.
   Spec.it s "CR 603.6c an opponent's departing permanent does not trigger it" $ do
     (_, _, opponentId, built) <- board

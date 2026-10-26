@@ -19,7 +19,7 @@ import qualified Parun.Types.Zone as Zone
 -- Filter is read against the card that LEFT (CR 608.2h), while the turn is no
 -- characteristic of any object and comes from the game state instead. "Your
 -- graveyard" is `whose`, read off the pile the card left (LastKnown.pile, CR
--- 400.1); an OwnedBy in the filter is an arrival read ("into your hand").
+-- 400.1); a HeldBy Owner in the filter is an arrival read ("into your hand").
 data CardLeavesZone = MkCardLeavesZone
   { filter :: Filter.Filter Keyword.Keyword,
     scope :: TurnScope.TurnScope,

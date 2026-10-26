@@ -271,7 +271,10 @@ filterAtomsOf leaf predicate = case predicate of
   Filter.Type.HasNameOriginallyPrintedIn _ -> leaf predicate
   Filter.Type.Measures _ -> leaf predicate
   Filter.Type.ControlledByRole _ -> leaf predicate
-  -- A leaf for ControlledBy's reason: one carries a slot name and the other a
+  -- A leaf: a Holder and a PlayerRelation hold no Filter for a card author to
+  -- reach.
+  Filter.Type.HeldBy _ _ -> leaf predicate
+  -- A leaf for HeldBy's reason: one carries a slot name and the other a
   -- PlayerId, and neither holds a Filter for a card author to reach.
   Filter.Type.HeldByBound _ _ -> leaf predicate
   Filter.Type.HeldByPlayer _ _ -> leaf predicate
@@ -279,10 +282,6 @@ filterAtomsOf leaf predicate = case predicate of
   -- author to reach.
   Filter.Type.HeldByRecipient _ -> leaf predicate
   Filter.Type.ManaValueIsEven -> leaf predicate
-  Filter.Type.ControlledBy _ -> leaf predicate
-  -- A leaf for ControlledBy's reason: CR 108.3's owner atom carries a
-  -- PlayerRelation, which holds no Filter for a card author to reach.
-  Filter.Type.OwnedBy _ -> leaf predicate
   Filter.Type.IsSource -> leaf predicate
   Filter.Type.IsObject _ -> leaf predicate
   Filter.Type.TargetsSource -> leaf predicate
