@@ -2286,7 +2286,7 @@ replacementRewriteEffects replacement = case replacement of
   ReplacementEffect.TurnUpR (TurnUpR.MkTurnUpR _ _ _ (TurnUpRewrite.AsCopy asCopy)) -> Foldable.toList (AsCopy.whenYouDo asCopy)
   ReplacementEffect.TurnUpR {} -> []
   ReplacementEffect.AttachR (AttachR.MkAttachR _ (AttachRewrite.AsCopy asCopy)) -> Foldable.toList (AsCopy.whenYouDo asCopy)
-  ReplacementEffect.AttachR (AttachR.MkAttachR _ (AttachRewrite.ChooseColors _)) -> []
+  ReplacementEffect.AttachR (AttachR.MkAttachR _ (AttachRewrite.ChooseQuality _)) -> []
   ReplacementEffect.UntapR _ -> []
   ReplacementEffect.LifeLossR {} -> []
   ReplacementEffect.LifeGainR {} -> []
@@ -5194,9 +5194,7 @@ entryRewriteFilters entryRewrite = case entryRewrite of
   -- is what proves the descent.
   EntryRewrite.ChoiceOf options -> concatMap entryOptionFilters options
   EntryRewrite.ChoiceByCoinFlip f -> entryOptionFilters (EntryFlip.heads f) <> entryOptionFilters (EntryFlip.tails f)
-  EntryRewrite.ChooseColors {} -> []
-  EntryRewrite.ChooseBasicLandType -> []
-  EntryRewrite.ChooseCreatureType -> []
+  EntryRewrite.ChooseQuality _ -> []
   EntryRewrite.ChoosePlayer _ -> []
   EntryRewrite.ReadAhead -> []
   -- CR 614.1c's amount is a Quantity (Undergrowth Scavenger's "equal to the number
@@ -5321,7 +5319,7 @@ replacementEffectFilters replacementEffect = case replacementEffect of
   ReplacementEffect.TokenR (TokenR.MkTokenR tokenPattern _ _) -> unframed [TokenPattern.whatToken tokenPattern]
   ReplacementEffect.TurnUpR (TurnUpR.MkTurnUpR turnUpPattern _ _ turnUpRewrite) -> unframed [turnUpPattern] <> turnUpRewriteFilters turnUpRewrite
   ReplacementEffect.AttachR (AttachR.MkAttachR attachPattern (AttachRewrite.AsCopy asCopy)) -> unframed [attachPattern] <> asCopyFilters asCopy
-  ReplacementEffect.AttachR (AttachR.MkAttachR attachPattern (AttachRewrite.ChooseColors _)) -> unframed [attachPattern]
+  ReplacementEffect.AttachR (AttachR.MkAttachR attachPattern (AttachRewrite.ChooseQuality _)) -> unframed [attachPattern]
   ReplacementEffect.UntapR _ -> []
   ReplacementEffect.LifeLossR {} -> []
   ReplacementEffect.LifeGainR {} -> []

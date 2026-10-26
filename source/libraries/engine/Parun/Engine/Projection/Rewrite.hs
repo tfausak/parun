@@ -1663,7 +1663,7 @@ rewriteReplacementEffect pairs effect = case effect of
         { AttachR.matching = Filter.rewrite pairs (AttachR.matching r),
           AttachR.rewrite = case AttachR.rewrite r of
             AttachRewrite.AsCopy c -> AttachRewrite.AsCopy (rewriteAsCopy pairs c)
-            AttachRewrite.ChooseColors n -> AttachRewrite.ChooseColors n
+            AttachRewrite.ChooseQuality quality -> AttachRewrite.ChooseQuality quality
         }
   -- A PhasePattern is a PhaseSelector and a baked seat (CR 614.1b / 500.11), both
   -- rules categories rather than printed words.
@@ -1834,9 +1834,7 @@ rewriteEntryRewrite pairs rewrite = case rewrite of
   -- CR 105.1's five colours, CR 305.6's five basic land types, CR 205.3m's
   -- creature types and CR 102.1's seats are the offers themselves, so none of
   -- these four prints a word the card chose.
-  EntryRewrite.ChooseColors {} -> rewrite
-  EntryRewrite.ChooseBasicLandType -> rewrite
-  EntryRewrite.ChooseCreatureType -> rewrite
+  EntryRewrite.ChooseQuality _ -> rewrite
   EntryRewrite.ChoosePlayer _ -> rewrite
   -- CR 702.155b's offer is a range of NUMBERS, read off the entering Saga's own
   -- chapter symbols (CR 714.2d), so the rewrite prints no word either.

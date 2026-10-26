@@ -876,34 +876,45 @@ hasChosenSubtypeTag = Text.pack "HasChosenSubtype"
 -- admitted: the context reads the answer off the source, and a spell is never
 -- the object CR 614.1c's "as this enters" choice was made for, nor attached to
 -- anything, so the atom there would be a silent False. The exception is a
--- spell whose own resolution makes the `quality` choice (Effect.ChooseQuality,
+-- spell whose own resolution makes a choice `answers` admits (Effect.ChooseQuality,
 -- Persecute): the filters its mode reads AFTER the choice (CR 608.2c's "in the
 -- order written") read it, though its target slots, chosen before it resolves
 -- (CR 601.2c), still cannot, nor can a filter ahead of it or in another mode.
-chosenValueCounts :: (Framing -> Bool) -> Maybe ChosenQuality.ChosenQuality -> Text.Text -> Face.Face Card.Type.Card -> (Int, Int)
-chosenValueCounts admitted quality tag card =
+chosenValueCounts :: (Framing -> Bool) -> (ChosenQuality.ChosenQuality -> Bool) -> Text.Text -> Face.Face Card.Type.Card -> (Int, Int)
+chosenValueCounts admitted answers tag card =
   let total keep pairs = sum (fmap (\(_, f) -> filterAtoms tag f) (filter (keep . fst) pairs))
       spellPairs = modalFilters (Face.spell card)
-      answered = concatMap (\q -> afterChoice q (Face.spell card)) quality
+      answered = afterChoice answers (Face.spell card)
       inSpell = total admitted spellPairs - total admitted answered
    in (total admitted (cardFilters card) - inSpell, total (not . admitted) (cardFilters card) + inSpell)
 
--- The filters a spell's mode reads after its first `Effect.ChooseQuality q`:
+-- The filters a spell's mode reads after its first `Effect.ChooseQuality q`
+-- whose `q` answers the atom:
 -- modalFilters over what follows it -- the rest of the choosing clause, shorn
 -- of the gate asked before it, and every later clause -- with no target slot.
-afterChoice :: ChosenQuality.ChosenQuality -> Modal.Modal Card.Type.Card (GrantedAbility.GrantedAbility Card.Type.Card) -> [(Framing, Filter.Type.Filter Keyword.Keyword)]
-afterChoice q modal =
-  let chosen = Effect.ChooseQuality q
-      rest mode = case Seq.breakl (elem chosen . Clause.effects) (Mode.clauses mode) of
+afterChoice :: (ChosenQuality.ChosenQuality -> Bool) -> Modal.Modal Card.Type.Card (GrantedAbility.GrantedAbility Card.Type.Card) -> [(Framing, Filter.Type.Filter Keyword.Keyword)]
+afterChoice answers modal =
+  let chosen effect = case effect of
+        Effect.ChooseQuality q -> answers q
+        _ -> False
+      rest mode = case Seq.breakl (any chosen . Clause.effects) (Mode.clauses mode) of
         (_, after) -> case Seq.viewl after of
           Seq.EmptyL -> Nothing
           chooser Seq.:< later ->
             Just
               ( Mode.MkMode
-                  (chooser {Clause.condition = Nothing, Clause.payGate = Nothing, Clause.effects = Seq.drop 1 (Seq.dropWhileL (/= chosen) (Clause.effects chooser))} Seq.<| later)
+                  (chooser {Clause.condition = Nothing, Clause.payGate = Nothing, Clause.effects = Seq.drop 1 (Seq.dropWhileL (not . chosen) (Clause.effects chooser))} Seq.<| later)
                   Map.empty
               )
    in modalFilters modal {Modal.modes = Seq.fromList (Maybe.mapMaybe rest (Foldable.toList (Modal.modes modal)))}
+
+-- Whether a choice of this quality answers HasChosenColor rather than
+-- HasChosenSubtype: the field Parun.Engine.Event.chooseQuality writes.
+writesColors :: ChosenQuality.ChosenQuality -> Bool
+writesColors quality = case quality of
+  ChosenQuality.Colors _ -> True
+  ChosenQuality.BasicLandType -> False
+  ChosenQuality.CreatureType -> False
 
 -- CR 105.2's chosen colour is answerable only where Filter.Context.sourceChosenColors
 -- is filled: every source-framed position (sourceFramed), plus a static grant's
@@ -912,7 +923,7 @@ afterChoice q modal =
 -- (Throne of Eldraine). Everywhere else it is a silent False.
 hasChosenColorCounts :: Face.Face Card.Type.Card -> (Int, Int)
 hasChosenColorCounts card =
-  let (framed, elsewhere) = chosenValueCounts (\framing -> framing == ManaRestrictionFramed || sourceFramed framing) (Just ChosenQuality.Color) hasChosenColorTag card
+  let (framed, elsewhere) = chosenValueCounts (\framing -> framing == ManaRestrictionFramed || sourceFramed framing) writesColors hasChosenColorTag card
       granted = grantedChosenColors card
    in (framed + granted, elsewhere - granted)
 
@@ -934,7 +945,7 @@ grantedChosenColors card =
 -- which Parun.Engine.Mana.admitsUnder answers off the mana unit (Pillar of
 -- Origins). The colour has no such reading, so the two lists differ.
 hasChosenSubtypeCounts :: Face.Face Card.Type.Card -> (Int, Int)
-hasChosenSubtypeCounts = chosenValueCounts (\framing -> framing == ManaRestrictionFramed || sourceFramed framing) (Just ChosenQuality.BasicLandType) hasChosenSubtypeTag
+hasChosenSubtypeCounts = chosenValueCounts (\framing -> framing == ManaRestrictionFramed || sourceFramed framing) (not . writesColors) hasChosenSubtypeTag
 
 -- CR 607.2a's last-exiled atom, spelled once: IsLastExiledWithSource's tag.
 isLastExiledWithSourceTag :: Text.Text
@@ -944,7 +955,7 @@ isLastExiledWithSourceTag = Text.pack "IsLastExiledWithSource"
 -- Parun.Engine.Mana.admitsUnder fills Filter.Context.sourceLastExiled off the
 -- mana unit (Ice Cauldron); everywhere else it is a silent False.
 isLastExiledWithSourceCounts :: Face.Face Card.Type.Card -> (Int, Int)
-isLastExiledWithSourceCounts = chosenValueCounts (== ManaRestrictionFramed) Nothing isLastExiledWithSourceTag
+isLastExiledWithSourceCounts = chosenValueCounts (== ManaRestrictionFramed) (const False) isLastExiledWithSourceTag
 
 -- Two offences under one name, hasChosenNameOffends' two: an atom outside the
 -- admitted positions, or the traversal and the codec disagreeing about how many
@@ -1194,7 +1205,7 @@ hostOfSourceTag = Text.pack "IsHostOfSource"
 -- own positions count as elsewhere, chosenValueCounts' rule: a spell is attached
 -- to nothing.
 hostOfSourceCounts :: Face.Face Card.Type.Card -> (Int, Int)
-hostOfSourceCounts = chosenValueCounts hostFramed Nothing hostOfSourceTag
+hostOfSourceCounts = chosenValueCounts hostFramed (const False) hostOfSourceTag
 
 -- The source-framed positions the host atom is admitted in: narrower than
 -- `sourceFramed`, and the four a card in the pool writes it in. Not
@@ -3435,7 +3446,7 @@ filterPositionLintSpec s registry = Spec.describe s "Lint" $ do
           ]
         draw = Effect.Draw (Draw.MkDraw (PlayerRef.InSlot Binding.you) (Quantity.Type.Literal 1) Nothing)
     Monad.forM_
-      [ (Filter.Type.HasChosenColor, ChosenQuality.Color, hasChosenColorCounts, hasChosenColorTag),
+      [ (Filter.Type.HasChosenColor, ChosenQuality.Colors 1, hasChosenColorCounts, hasChosenColorTag),
         (Filter.Type.HasChosenSubtype, ChosenQuality.BasicLandType, hasChosenSubtypeCounts, hasChosenSubtypeTag)
       ]
       $ \(atom, quality, counts, tag) -> do

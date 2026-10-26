@@ -1741,7 +1741,7 @@ replacementRowReads re = case re of
   ReplacementEffect.TokenR (TokenR.MkTokenR pat _ _) -> ([TokenPattern.whatToken pat], [])
   ReplacementEffect.TurnUpR (TurnUpR.MkTurnUpR pat _ _ rewrite) -> addFilter pat (turnUpRewriteReads rewrite)
   ReplacementEffect.AttachR (AttachR.MkAttachR pat (AttachRewrite.AsCopy asCopy)) -> addFilter pat (asCopyReads asCopy)
-  ReplacementEffect.AttachR (AttachR.MkAttachR pat (AttachRewrite.ChooseColors _)) -> ([pat], [])
+  ReplacementEffect.AttachR (AttachR.MkAttachR pat (AttachRewrite.ChooseQuality _)) -> ([pat], [])
   ReplacementEffect.UntapR _ -> ([], [])
   -- A LifeLossPattern is one ControllerRelation and one LifeLossCause, and no arm
   -- of LifeLossRewrite carries a Filter or a Quantity: no read at all.
@@ -1791,9 +1791,7 @@ entryRewriteReads rewrite = case rewrite of
   EntryRewrite.AsCopy asCopy -> asCopyReads asCopy
   EntryRewrite.ChoiceOf _ -> ([], [])
   EntryRewrite.ChoiceByCoinFlip _ -> ([], [])
-  EntryRewrite.ChooseColors {} -> ([], [])
-  EntryRewrite.ChooseBasicLandType -> ([], [])
-  EntryRewrite.ChooseCreatureType -> ([], [])
+  EntryRewrite.ChooseQuality _ -> ([], [])
   EntryRewrite.ChoosePlayer _ -> ([], [])
   EntryRewrite.ChooseCardNames restriction -> ([restriction], [])
   EntryRewrite.ChooseCardName restriction -> ([restriction], [])
@@ -2015,9 +2013,7 @@ entryRewriteEffects rewrite = case rewrite of
   EntryRewrite.AsCopy _ -> []
   EntryRewrite.ChoiceOf _ -> []
   EntryRewrite.ChoiceByCoinFlip _ -> []
-  EntryRewrite.ChooseColors {} -> []
-  EntryRewrite.ChooseBasicLandType -> []
-  EntryRewrite.ChooseCreatureType -> []
+  EntryRewrite.ChooseQuality _ -> []
   EntryRewrite.ChoosePlayer _ -> []
   EntryRewrite.ChooseCardNames _ -> []
   EntryRewrite.ChooseCardName _ -> []
