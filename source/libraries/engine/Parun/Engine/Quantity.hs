@@ -34,6 +34,7 @@ import qualified Parun.Types.Combat as Combat
 import qualified Parun.Types.CompletedDungeon as CompletedDungeon
 import qualified Parun.Types.ControlClock as ControlClock
 import qualified Parun.Types.Count as Count.Type
+import qualified Parun.Types.DealtDamage as DealtDamage
 import qualified Parun.Types.Devotion as Devotion
 import qualified Parun.Types.ExiledPile as ExiledPile
 import qualified Parun.Types.Face as Face
@@ -60,7 +61,6 @@ import qualified Parun.Types.PlayerCounterTally as PlayerCounterTally
 import qualified Parun.Types.PlayerDesignationTally as PlayerDesignationTally
 import qualified Parun.Types.PlayerId as PlayerId
 import qualified Parun.Types.PlayerRef as PlayerRef
-import qualified Parun.Types.PlayersDealtDamage as PlayersDealtDamage
 import qualified Parun.Types.Plus as Plus
 import qualified Parun.Types.PowerToughnessSticker as PowerToughnessSticker
 import Parun.Types.Quantity (Quantity)
@@ -829,9 +829,9 @@ evaluateAgainst viewOf context gs announcedOn mOid mView quantity =
         --
         -- The kind narrows the log to CR 510.2's combat damage where a card says
         -- so -- Tymna the Weaver's "opponents that were dealt combat damage".
-        Quantity.PlayersDealtDamageThisTurn tally -> case playersOf (PlayersDealtDamage.player tally) of
+        Quantity.PlayersDealtDamageThisTurn tally -> case playersOf (DealtDamage.player tally) of
           Nothing -> Nothing
-          Just pids -> Just (toInteger (length (filter (wasDealtDamage (PlayersDealtDamage.kind tally)) pids)))
+          Just pids -> Just (toInteger (length (filter (wasDealtDamage (DealtDamage.kind tally)) pids)))
         -- CR 120.1 / 608.2i: how much damage in total the players this reference names
         -- were dealt this turn -- rule 702.54b's "the total damage your opponents have
         -- been dealt this turn", which Parun.Engine.Event's Bloodthirst arm asks with

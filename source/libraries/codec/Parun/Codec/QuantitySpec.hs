@@ -20,6 +20,7 @@ import qualified Parun.Types.Cost as Cost
 import qualified Parun.Types.Count as Count
 import qualified Parun.Types.CounterKind as CounterKind
 import qualified Parun.Types.DamageKind as DamageKind
+import qualified Parun.Types.DealtDamage as DealtDamage
 import qualified Parun.Types.Designation as Designation
 import qualified Parun.Types.Devotion as Devotion
 import qualified Parun.Types.DistinctOf as DistinctOf
@@ -38,7 +39,6 @@ import qualified Parun.Types.PlayerDesignation as PlayerDesignation
 import qualified Parun.Types.PlayerDesignationTally as PlayerDesignationTally
 import qualified Parun.Types.PlayerRef as PlayerRef
 import qualified Parun.Types.PlayerRelation as PlayerRelation
-import qualified Parun.Types.PlayersDealtDamage as PlayersDealtDamage
 import qualified Parun.Types.Plus as Plus
 import qualified Parun.Types.ProductionTag as ProductionTag
 import qualified Parun.Types.Quantity as Quantity
@@ -624,12 +624,12 @@ spec s = Spec.describe s "Parun.Codec.Quantity" $ do
     Common.assertCodec
       s
       Quantity.codec
-      (Quantity.PlayersDealtDamageThisTurn PlayersDealtDamage.MkPlayersDealtDamage {PlayersDealtDamage.player = PlayerRef.Relative PlayerRelation.Opponent, PlayersDealtDamage.kind = Nothing})
+      (Quantity.PlayersDealtDamageThisTurn DealtDamage.MkDealtDamage {DealtDamage.player = PlayerRef.Relative PlayerRelation.Opponent, DealtDamage.kind = Nothing})
       " {\"type\":\"PlayersDealtDamageThisTurn\",\"value\":{\"player\":{\"type\":\"Relative\",\"value\":{\"type\":\"Opponent\"}}}} "
     Common.assertCodec
       s
       Quantity.codec
-      (Quantity.PlayersDealtDamageThisTurn PlayersDealtDamage.MkPlayersDealtDamage {PlayersDealtDamage.player = PlayerRef.InSlot (SlotName.MkSlotName (Text.pack "target")), PlayersDealtDamage.kind = Just DamageKind.Combat})
+      (Quantity.PlayersDealtDamageThisTurn DealtDamage.MkDealtDamage {DealtDamage.player = PlayerRef.InSlot (SlotName.MkSlotName (Text.pack "target")), DealtDamage.kind = Just DamageKind.Combat})
       " {\"type\":\"PlayersDealtDamageThisTurn\",\"value\":{\"player\":{\"type\":\"InSlot\",\"value\":\"target\"},\"kind\":{\"type\":\"Combat\"}}} "
   -- CR 120.1 again, the same log read as a TOTAL: Petrified Wood-Kin's rule
   -- 702.54b X is the Relative arm over Opponent, and it must not share a tag with
