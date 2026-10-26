@@ -72,6 +72,7 @@ import qualified Parun.Types.SpellWasCast as SpellWasCast
 import qualified Parun.Types.SpellWasCopied as SpellWasCopied
 import qualified Parun.Types.StepBegan as StepBegan
 import qualified Parun.Types.StickerPut as StickerPut
+import qualified Parun.Types.TapState as TapState
 import qualified Parun.Types.TappedForMana as TappedForMana
 import Parun.Types.TriggerCondition (TriggerCondition)
 import qualified Parun.Types.TriggerCondition as TriggerCondition
@@ -945,13 +946,15 @@ eventBindingsOver board gs bearerBecame becameInGraveyard bearer you cond event 
   -- Blight's "destroy it" names the land that became tapped, which the Aura
   -- leaving the battlefield before its trigger resolves does not change.
   --
-  -- Unconditional given a match: matchesTrigger accepts only the event of the
-  -- watched direction, and each occurrence names one permanent. Mesmeric Orb's
-  -- "that permanent's controller" reads the untap direction's slot.
-  (TriggerCondition.BecomesTapState watched, GameEvent.BecameTapped tapped) ->
-    Binding.setTapStatePermanent (BecomesTapState.status watched) tapped Map.empty
-  (TriggerCondition.BecomesTapState watched, GameEvent.BecameUntapped untapped) ->
-    Binding.setTapStatePermanent (BecomesTapState.status watched) untapped Map.empty
+  -- Gated on the watched direction, so under CR 603.1b's AnyOf the other
+  -- direction's event falls through and stamps nothing. Mesmeric Orb's "that
+  -- permanent's controller" reads the untap direction's slot.
+  (TriggerCondition.BecomesTapState watched, GameEvent.BecameTapped tapped)
+    | BecomesTapState.status watched == TapState.Tapped ->
+        Binding.setTapStatePermanent TapState.Tapped tapped Map.empty
+  (TriggerCondition.BecomesTapState watched, GameEvent.BecameUntapped untapped)
+    | BecomesTapState.status watched == TapState.Untapped ->
+        Binding.setTapStatePermanent TapState.Untapped untapped Map.empty
   -- Nothing: Deeproot Pilgrimage's payload names no tapped permanent, and one
   -- slot could not name a batch of them.
   (TriggerCondition.PermanentsBecomeTapped _, _) -> Map.empty
