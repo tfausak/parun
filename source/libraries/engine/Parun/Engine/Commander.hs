@@ -209,7 +209,7 @@ creatureCard printing =
         [ cardType
         | ability <- Face.staticAbilities face,
           Set.member Zone.Command (StaticAbility.functionsFrom ability),
-          Modification.AddCardType cardType <- NonEmpty.toList (StaticAbility.modifications ability)
+          Modification.CardType _ cardType <- NonEmpty.toList (StaticAbility.modifications ability)
         ]
    in Set.member CardType.Creature (printedTypes printing)
         || elem CardType.Creature added

@@ -1111,7 +1111,7 @@ applyCopyException this own snapshot exception = case exception of
   -- CR 707.9b / 205.1a's set: the clause's card types replace the copied ones,
   -- instant and sorcery kept, and a subtype correlating with no card type the
   -- copy still has goes with the type that carried it -- Projection's
-  -- SetCardType arm over the copiable values.
+  -- CardType Replace arm over the copiable values.
   -- data/scenarios/dino-dna-copies-drop-the-copied-land-type-and-changeling.json
   -- proves the strip (Dryad Arbor's Forest).
   CopyException.SetCardTypes types ->

@@ -96,9 +96,14 @@
               }
             },
             {
-              "type": "AddCardType",
+              "type": "CardType",
               "value": {
-                "type": "Creature"
+                "cardType": {
+                  "type": "Creature"
+                },
+                "mode": {
+                  "type": "InAddition"
+                }
               }
             }
           ]

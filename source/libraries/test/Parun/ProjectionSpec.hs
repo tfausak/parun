@@ -1160,7 +1160,7 @@ spec s registry = Spec.describe s "Parun.Engine.Projection" $ do
 
   -- The same card one layer deeper: CR 613.6 fixes Titania's Song's set at layer
   -- 4, and CR 613.7/613.8 say that layer's EARLIER effects have already applied
-  -- when the question is asked. Liquimetal Coating's AddCardType is one of them,
+  -- when the question is asked. Liquimetal Coating's CardType InAddition is one of them,
   -- so a permanent it turned into an artifact is inside "each noncreature
   -- artifact" -- and the removal half has to agree with the animation half.
   --
@@ -1282,7 +1282,7 @@ spec s registry = Spec.describe s "Parun.Engine.Projection" $ do
     Spec.assertEqWith s "set land subtype" (Projection.layer (Modification.LandSubtype ChangeMode.Replace Subtype.Type.Mountain)) Layer.Type
     Spec.assertEqWith s "add land subtype" (Projection.layer (Modification.LandSubtype ChangeMode.InAddition Subtype.Type.Swamp)) Layer.Type
     Spec.assertEqWith s "set creature subtype" (Projection.layer (Modification.CreatureSubtype ChangeMode.Replace Subtype.Type.Frog)) Layer.Type
-    Spec.assertEqWith s "add card type" (Projection.layer (Modification.AddCardType CardType.Creature)) Layer.Type
+    Spec.assertEqWith s "add card type" (Projection.layer (Modification.CardType ChangeMode.InAddition CardType.Creature)) Layer.Type
 
   Spec.it s "CR 613.1c layer 3: ChangeWord is Text" $
     Spec.assertEqWith s "text layer" (Projection.layer (Modification.ChangeWord (ChangeWord.MkChangeWord (TextWord.SubtypeWord Subtype.Type.Mountain) (TextWord.SubtypeWord Subtype.Type.Island)))) Layer.Text
@@ -1673,13 +1673,13 @@ spec s registry = Spec.describe s "Parun.Engine.Projection" $ do
     Spec.assertBool s (Projection.hasKeyword (Keyword.Landwalk (Filter.Type.HasSubtype Subtype.Type.Swamp)) wraithId afterCleanup) "swampwalk again"
     Spec.assertEqWith s "3/3 again" (Projection.powerOf wraithId afterCleanup, Projection.toughnessOf wraithId afterCleanup) (Just 3, Just 3)
 
-  Spec.it s "CR 613.1d AddCardType makes a land a creature" $ do
+  Spec.it s "CR 613.1d CardType InAddition makes a land a creature" $ do
     forest <- S.printingOf s registry "Forest"
     let gs0 = S.landsInPlay forest 1
         landId = case Game.zoneMembers Zone.Battlefield S.alice gs0 of
           i : _ -> i
           [] -> ObjectId.MkObjectId 999
-        gs = S.withEffectAt landId (Timestamp.MkTimestamp 100) (Modification.AddCardType CardType.Creature) gs0
+        gs = S.withEffectAt landId (Timestamp.MkTimestamp 100) (Modification.CardType ChangeMode.InAddition CardType.Creature) gs0
     Spec.assertBool s (Projection.isCreatureOf landId gs) "now a creature"
 
   Spec.it s "CR 202.3 SetBasePowerToughness ManaValue sets a Piker to its mana value ({1}{R} = 2)" $ do
@@ -1699,7 +1699,7 @@ spec s registry = Spec.describe s "Parun.Engine.Projection" $ do
         -- Layer 4 makes the land a creature; layer 6 grants flying to all
         -- creatures. The grant reaches the land ONLY because the affected set
         -- is evaluated after layer 4.
-        gs1 = S.withEffectAt landId (Timestamp.MkTimestamp 100) (Modification.AddCardType CardType.Creature) gs0
+        gs1 = S.withEffectAt landId (Timestamp.MkTimestamp 100) (Modification.CardType ChangeMode.InAddition CardType.Creature) gs0
         gs = withDynamicEffect (Affected.Matching (Filter.Type.HasCardType CardType.Creature)) (Timestamp.MkTimestamp 200) (Modification.GainKeyword Keyword.Flying) gs1
     Spec.assertBool s (Projection.hasKeyword Keyword.Flying landId gs) "land gained flying because it became a creature"
 
@@ -2054,8 +2054,8 @@ spec s registry = Spec.describe s "Parun.Engine.Projection" $ do
     Spec.assertBool s (Projection.isCreatureOf pikerId gs) "and still a creature (CR 205.1b: adding a type keeps the others)"
 
   -- CR 205.1a's SET, and the board above is what it has to be read against:
-  -- Ashaya's AddCardType leaves the Piker a creature, and Song of the Dryads'
-  -- SetCardType must not. Land against Creature is the discriminator -- two
+  -- Ashaya's CardType InAddition leaves the Piker a creature, and Song of the Dryads'
+  -- CardType Replace must not. Land against Creature is the discriminator -- two
   -- different card types, so "added Land" and "became Land" cannot give the same
   -- answer about either one.
   --
@@ -2113,7 +2113,7 @@ spec s registry = Spec.describe s "Parun.Engine.Projection" $ do
   -- the Dryads' one static ability makes the enchanted permanent a Forest land,
   -- and CR 613.7 orders effects rather than the parts of one. The card is
   -- transcribed in printed order -- "a colorless Forest land", so the
-  -- LandSubtype Replace precedes the SetCardType -- and a check reading either the
+  -- LandSubtype Replace precedes the CardType Replace -- and a check reading either the
   -- object's base card types or the ones the fold had reached would refuse the
   -- Forest and leave a colourless land that taps for nothing.
   --
@@ -2157,7 +2157,7 @@ spec s registry = Spec.describe s "Parun.Engine.Projection" $ do
         (seerId, g1) = S.addPermanent seer S.alice base
         (lordId, g2) = S.addPermanent lord S.alice g1
         nonland = S.withEffectAt lordId (Timestamp.MkTimestamp 10) (Modification.LandSubtype ChangeMode.Replace Subtype.Type.Mountain) g2
-        land = S.withEffectAt lordId (Timestamp.MkTimestamp 5) (Modification.AddCardType CardType.Land) nonland
+        land = S.withEffectAt lordId (Timestamp.MkTimestamp 5) (Modification.CardType ChangeMode.InAddition CardType.Land) nonland
         red = ManaCost.MkManaCost [ManaSymbol.OfType (ManaType.Colored Color.Red)]
     Spec.assertBool s (not (Mana.canPay Cost.manaActivations S.alice red nonland)) "the Lord gained no Mountain, so nothing of alice's pays {R}"
     Spec.assertBool s (Mana.canPay Cost.manaActivations S.alice red land) "made a land first, the same set gives it CR 305.6's {T}: Add {R}"
@@ -2180,8 +2180,8 @@ spec s registry = Spec.describe s "Parun.Engine.Projection" $ do
     let base = S.landsInPlay forest 1
         (pikerId, board) = S.addPermanent piker S.alice base
         withBoth addAt setAt =
-          S.withEffectAt pikerId (Timestamp.MkTimestamp setAt) (Modification.SetCardType CardType.Land) $
-            S.withEffectAt pikerId (Timestamp.MkTimestamp addAt) (Modification.AddCardType CardType.Artifact) board
+          S.withEffectAt pikerId (Timestamp.MkTimestamp setAt) (Modification.CardType ChangeMode.Replace CardType.Land) $
+            S.withEffectAt pikerId (Timestamp.MkTimestamp addAt) (Modification.CardType ChangeMode.InAddition CardType.Artifact) board
     Spec.assertEqWith s "add older: the set replaces the artifact type too" (Projection.cardTypesOf pikerId (withBoth 10 20)) (Set.singleton CardType.Land)
     Spec.assertEqWith s "set older: the add lands on top of it (CR 205.1b)" (Projection.cardTypesOf pikerId (withBoth 20 10)) (Set.fromList [CardType.Artifact, CardType.Land])
 
@@ -2621,7 +2621,7 @@ spec s registry = Spec.describe s "Parun.Engine.Projection" $ do
   -- that licenses it (CR 205.3d) gets both. Life and Limb is printed "are 1/1
   -- green Saproling creatures and Forest lands in addition to their other types"
   -- (Scryfall) and is transcribed in that order, so both of its subtype parts
-  -- precede the AddCardType CR 205.3d asks them against.
+  -- precede the CardType InAddition CR 205.3d asks them against.
   --
   -- The OTHER road from the Song of the Dryads case above. Life and Limb's
   -- affected set is Affected.Matching, which CR 613.8 could reorder, so layer 4
@@ -2658,7 +2658,7 @@ spec s registry = Spec.describe s "Parun.Engine.Projection" $ do
   -- permanent: You gain 3 life.'", checked against Scryfall) is the card.
   --
   -- The Goblin Piker is the OTHER creature: a non-artifact, so CR 205.3d's
-  -- correspondence has to be established by Ygra's own AddCardType rather than
+  -- correspondence has to be established by Ygra's own CardType InAddition rather than
   -- found already there, and a creature printing no activated ability of its own,
   -- so the granted one cannot be mistaken for one it had. Ygra is the built-in
   -- negative control for the printed "Other" (Filter.Not Filter.IsSource).
@@ -3101,7 +3101,7 @@ spec s registry = Spec.describe s "Parun.Engine.Projection" $ do
   -- Living Plane is March of the Machines' green cousin: the same layer-4
   -- animation and layer-7b base P/T, but over LANDS and at a literal 1/1
   -- rather than a mana value. "That are still lands" is CR 205.1b, which
-  -- AddCardType satisfies without a clause of its own -- adding a card type
+  -- CardType InAddition satisfies without a clause of its own -- adding a card type
   -- never removes one.
   Spec.it s "Living Plane makes a land a 1/1 creature that is still a land" $ do
     livingPlane <- S.printingOf s registry "Living Plane"
@@ -3288,7 +3288,7 @@ spec s registry = Spec.describe s "Parun.Engine.Projection" $ do
   -- objects in each other applicable layer" and its layer-7 part stands.
   --
   -- Opalescence animates March of the Machines, so Humility's "each creature"
-  -- reaches March and strips it -- but March's layer-4 AddCardType already
+  -- reaches March and strips it -- but March's layer-4 CardType InAddition already
   -- made Mindslaver a creature, so March's layer-7b "with power and toughness
   -- each equal to its mana value" still applies. March enters last, so its 7b
   -- has the later timestamp (CR 613.7) and beats Humility's 1/1: Mindslaver is
@@ -3341,7 +3341,7 @@ spec s registry = Spec.describe s "Parun.Engine.Projection" $ do
     mountain <- S.printingOf s registry "Mountain"
     let (pikerId, gs0) = S.addPermanent piker S.bob (S.landsInPlay mountain 1)
         gsA = withDynamicEffect (Affected.Matching (Filter.Type.HasCardType CardType.Land)) (Timestamp.MkTimestamp 10) (Modification.LandSubtype ChangeMode.InAddition Subtype.Type.Swamp) gs0
-        gs = S.withEffectAt pikerId (Timestamp.MkTimestamp 20) (Modification.AddCardType CardType.Land) gsA
+        gs = S.withEffectAt pikerId (Timestamp.MkTimestamp 20) (Modification.CardType ChangeMode.InAddition CardType.Land) gsA
     Spec.assertBool s (Set.member Subtype.Type.Swamp (Projection.subtypesOf pikerId gs)) "the newer land-maker applied first, so the Swamp lands"
 
   -- The other direction, which is CR 613.7 surviving underneath CR 613.8: with
@@ -3363,7 +3363,7 @@ spec s registry = Spec.describe s "Parun.Engine.Projection" $ do
     piker <- S.printingOf s registry "Goblin Piker"
     mountain <- S.printingOf s registry "Mountain"
     let (pikerId, gs0) = S.addPermanent piker S.bob (S.landsInPlay mountain 1)
-        animated = S.withEffectAt pikerId (Timestamp.MkTimestamp 5) (Modification.AddCardType CardType.Land) gs0
+        animated = S.withEffectAt pikerId (Timestamp.MkTimestamp 5) (Modification.CardType ChangeMode.InAddition CardType.Land) gs0
         gsA = S.withEffectAt pikerId (Timestamp.MkTimestamp 10) (Modification.LandSubtype ChangeMode.Replace Subtype.Type.Swamp) animated
         gs = S.withEffectAt pikerId (Timestamp.MkTimestamp 20) (Modification.LandSubtype ChangeMode.Replace Subtype.Type.Forest) gsA
     Spec.assertEqWith s "the later LandSubtype Replace wins, and only the land types moved" (Projection.subtypesOf pikerId gs) (Set.fromList [Subtype.Type.Forest, Subtype.Type.Goblin, Subtype.Type.Warrior])
@@ -3394,7 +3394,7 @@ spec s registry = Spec.describe s "Parun.Engine.Projection" $ do
           [] -> ObjectId.MkObjectId 999
         withC = withDynamicEffect (Affected.Matching (Filter.Type.HasSubtype Subtype.Type.Swamp)) (Timestamp.MkTimestamp 10) (Modification.LandSubtype ChangeMode.InAddition Subtype.Type.Mountain) gs0
         withA = withDynamicEffect (Affected.Matching (Filter.Type.Not (Filter.Type.HasCardType CardType.Creature))) (Timestamp.MkTimestamp 20) (Modification.LandSubtype ChangeMode.InAddition Subtype.Type.Swamp) withC
-        gs = withDynamicEffect (Affected.Matching (Filter.Type.Not (Filter.Type.HasSubtype Subtype.Type.Swamp))) (Timestamp.MkTimestamp 30) (Modification.AddCardType CardType.Creature) withA
+        gs = withDynamicEffect (Affected.Matching (Filter.Type.Not (Filter.Type.HasSubtype Subtype.Type.Swamp))) (Timestamp.MkTimestamp 30) (Modification.CardType ChangeMode.InAddition CardType.Creature) withA
         subtypes = Projection.subtypesOf landId gs
     Spec.assertBool s (Set.member Subtype.Type.Swamp subtypes) "A applied: the Forest is a Swamp"
     Spec.assertBool s (Set.member Subtype.Type.Mountain subtypes) "and C, which was only waiting on the loop, still got its turn"
@@ -5029,7 +5029,7 @@ attachedHostSpec s registry = Spec.describe s "AttachedTo" $ do
   -- CR 613.1: the host is read through the layers BELOW the clause's own, the way
   -- a nested Count already is. Kormus Bell ("All Swamps are 1/1 black creatures
   -- that are still lands", checked against Scryfall 2026-08-17) is what makes the
-  -- two readings differ: its AddCardType is layer 4, so a Swamp host answers
+  -- two readings differ: its CardType InAddition is layer 4, so a Swamp host answers
   -- "creature" above that bound and not below it, where a host read through the
   -- FULL projection would answer "creature" at every bound.
   --
@@ -5255,7 +5255,7 @@ hiddenZoneStaticSpec s registry = Spec.describe s "HiddenZoneStatics" $ do
       (True, False)
     -- CR 205.1b/205.3d on the same ability, and the reason Grist is transcribed
     -- in printed order ("a 1/1 Insect creature"): the CreatureSubtype InAddition comes
-    -- before the AddCardType that licenses it, so the Insect sticks only because
+    -- before the CardType InAddition that licenses it, so the Insect sticks only because
     -- correspondsTo asks what the whole effect gives.
     Spec.assertEqWith
       s

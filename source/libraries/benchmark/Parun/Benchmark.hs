@@ -195,7 +195,7 @@ loadNoAuraDeck registry = do
 --
 -- Bell -> Ashaya is the dependency. Ashaya's affected set -- nontoken creatures
 -- you control -- reads card types, and Kormus Bell's layer-4 modification writes
--- one (AddCardType Creature onto every Swamp), so a Swamp the Bell animates
+-- one (CardType InAddition Creature onto every Swamp), so a Swamp the Bell animates
 -- joins Ashaya's set.
 --
 -- Ashaya -> Bell is NOT a dependency, and reaching that answer is the other half

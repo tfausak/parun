@@ -1106,7 +1106,7 @@ humilitySpec s registry =
         (Just (ManaCost.MkManaCost [ManaSymbol.Generic 1, blue]))
 
     -- The animated case: Rule of Law is an enchantment, so Humility alone
-    -- leaves it alone. Opalescence's CR 613.1d layer-4 AddCardType is what
+    -- leaves it alone. Opalescence's CR 613.1d layer-4 CardType InAddition is what
     -- brings it inside "each creature" -- and abilitiesRemovedBy judges the
     -- affected set at CR 613.6's decision point, which for Humility is layer 6,
     -- so the partial it reads already has that animation. Opalescence itself is

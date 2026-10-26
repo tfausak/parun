@@ -30,9 +30,14 @@
                         "type": "UntilEndOfTurn"
                       },
                       "modification": {
-                        "type": "AddCardType",
+                        "type": "CardType",
                         "value": {
-                          "type": "Battle"
+                          "cardType": {
+                            "type": "Battle"
+                          },
+                          "mode": {
+                            "type": "InAddition"
+                          }
                         }
                       },
                       "ref": {

@@ -49,9 +49,14 @@
           },
           "modifications": [
             {
-              "type": "SetCardType",
+              "type": "CardType",
               "value": {
-                "type": "Enchantment"
+                "cardType": {
+                  "type": "Enchantment"
+                },
+                "mode": {
+                  "type": "Replace"
+                }
               }
             }
           ]
