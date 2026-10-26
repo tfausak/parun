@@ -58,6 +58,11 @@ data Event = MkEvent
 -- creature enters or dies". Only the events below render yet.
 event :: Target.Context -> Bool -> TriggerCondition.TriggerCondition -> [Event]
 event context creature c = case c of
+  -- One description of the creature for both: "blocks or becomes blocked by
+  -- a creature" (Inferno Elemental).
+  TriggerCondition.AnyOf [TriggerCondition.SelfBlocksCreature f, TriggerCondition.SelfBecomesBlockedBy g] | f == g -> do
+    (one, that) <- described context f
+    itself recurring (Text.pack ("blocks or becomes blocked by " <> one)) [(thatAttacker, that), (thatBlocker, that)] []
   TriggerCondition.AnyOf cs@(_ : _ : _) -> do
     parts <- traverse (selfEvent context creature) cs
     let openings = if all ((== ["When"]) . fst3) parts then ["When"] else recurring
@@ -72,13 +77,9 @@ event context creature c = case c of
     word <- ["it", that]
     subject <- also one
     -- Landfall is the ability word (CR 207.2c) Oracle text prints before
-    -- this event and no other (Sporemound). Free for alliance: printed
-    -- (Rumor Gatherer) or not (Impassioned Orator). Free for constellation:
-    -- printed (Goldenhide Ox) or not (Rimefur Reindeer).
+    -- this event and no other (Sporemound).
     opening' <- case one of
       "a land you control" -> ["Landfall \8212 "]
-      "another creature you control" -> ["", "Alliance \8212 "]
-      "an enchantment you control" -> ["", "Constellation \8212 "]
       _ -> [""]
     [other (opening' <> "Whenever " <> subject <> " enters") [(becameSlot, word)]]
   TriggerCondition.PermanentDies f -> do
@@ -91,9 +92,8 @@ event context creature c = case c of
     (whom, player') <- player (PermanentDealsCombatDamageToPlayer.recipient p)
     [other ("Whenever " <> one <> " deals combat damage to " <> whom) [(thatPlayer, player'), (combatDamager, that)]]
   TriggerCondition.IsDealtDamage (ActingPermanent.Matching f) -> do
-    (one, that) <- described context f
-    word <- ["it", that]
-    [other ("Whenever " <> one <> " is dealt damage") [(becameSlot, word)]]
+    (one, _) <- described context f
+    [other ("Whenever " <> one <> " is dealt damage") [(becameSlot, "it")]]
   TriggerCondition.DealsCombatDamage (ActingPermanent.Matching f) -> do
     (one, that) <- described context f
     [other ("Whenever " <> one <> " deals combat damage") [(combatDamager, that)]]
@@ -312,7 +312,7 @@ condition context c = case c of
     (Quantity.IsMonarch who, Quantity.Literal 1) | comparison == Comparison.AtLeast -> do
       (subject, _) <- holder context who
       [subject <> (if subject == Text.pack "you" then Text.pack " are" else Text.pack " is") <> Text.pack " the monarch"]
-    -- CR 102.1, as the pool writes it (Forge Anew).
+    -- CR 102.1, as Oracle text writes it (Blood Burglar).
     (Quantity.IsActivePlayer (PlayerRef.Relative PlayerRelation.You), Quantity.Literal 1) | comparison == Comparison.Exactly -> [Text.pack "it's your turn"]
     (Quantity.AttackersDeclaredThisTurn who, Quantity.Literal 1) | comparison == Comparison.AtLeast -> do
       (subject, _) <- holder context who
@@ -324,7 +324,7 @@ condition context c = case c of
 -- whose condition this is. Free for hellbent: printed (Slaughterhouse
 -- Bouncer) or not (Academy at Tolaria West). Free for raid: printed (Mardu
 -- Skullhunter) or not (Trynn, Champion of Freedom). Free for threshold:
--- printed (Excavating Anurid) or not (Illuminate History).
+-- printed (Anurid Barkripper) or not (Illuminate History).
 abilityWord :: Text.Text -> [Text.Text]
 abilityWord words' = [Text.empty] <> [Text.pack "Hellbent \8212 " | words' == Text.pack "you have no cards in hand"] <> [Text.pack "Raid \8212 " | words' == Text.pack "you attacked this turn"] <> [Text.pack "Threshold \8212 " | words' == Text.pack "there are seven or more cards in your graveyard"]
 
