@@ -1748,8 +1748,8 @@ referenceQueries gs = Set.fromList (Maybe.mapMaybe (referenceQuery . gModificati
 -- must break this build rather than silently answer False.
 setsLandSubtype :: Modification.Modification ability -> Bool
 setsLandSubtype m = case m of
-  -- The OTHER direction of CR 305.7's last sentence: a land that GAINS a type in
-  -- addition to its own keeps its rules text.
+  -- CR 305.7: the set strips; its last sentence's add, a land that GAINS a type
+  -- in addition to its own, keeps its rules text.
   Modification.LandSubtype mode _ -> case mode of
     ChangeMode.Replace -> True
     ChangeMode.InAddition -> False
