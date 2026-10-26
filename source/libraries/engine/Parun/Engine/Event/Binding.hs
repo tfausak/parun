@@ -944,25 +944,20 @@ eventBindingsOver board gs bearerBecame becameInGraveyard bearer you cond event 
   -- Blight's "destroy it" names the land that became tapped, which the Aura
   -- leaving the battlefield before its trigger resolves does not change.
   --
-  -- Unconditional given a match, AttachedPermanentTappedForMana's claim and for
-  -- its reason: matchesTrigger accepts only a GameEvent.BecameTapped whose
-  -- permanent IS the bearer's host.
-  (TriggerCondition.AttachedCreatureBecomesTapped, GameEvent.BecameTapped tapped) ->
+  -- Unconditional given a match: matchesTrigger accepts only a
+  -- GameEvent.BecameTapped, and each occurrence names one permanent.
+  (TriggerCondition.BecomesTapped _, GameEvent.BecameTapped tapped) ->
     Binding.setTappedPermanent tapped Map.empty
   -- Nothing: Deeproot Pilgrimage's payload names no tapped permanent, and one
   -- slot could not name a batch of them.
   (TriggerCondition.PermanentsBecomeTapped _, _) -> Map.empty
-  -- The one permanent each occurrence names, the AttachedCreatureBecomesTapped
-  -- arm's slot.
-  (TriggerCondition.PermanentBecomesTapped _, GameEvent.BecameTapped tapped) ->
-    Binding.setTappedPermanent tapped Map.empty
   -- Nothing either, and for a plainer reason: the permanent that became
   -- untapped IS the bearer, whom Binding.triggerSource already names.
   (TriggerCondition.SelfBecomesUntapped, _) -> Map.empty
-  -- CR 106.12a's permanent, bound for the AttachedCreatureBecomesTapped arm's
-  -- reason: Wild Growth's "its controller" is the enchanted land's controller,
-  -- and PlayerRef.ControllerOfBound is how a card names it -- CR 109.5's "you"
-  -- would answer the Aura's controller instead, which an Aura on an opponent's
+  -- CR 106.12a's permanent, bound for the BecomesTapped arm's reason: Wild
+  -- Growth's "its controller" is the enchanted land's controller, and
+  -- PlayerRef.ControllerOfBound is how a card names it -- CR 109.5's "you" would
+  -- answer the Aura's controller instead, which an Aura on an opponent's
   -- land makes a different seat.
   --
   -- Unconditional given a match, AttachedCreatureDies' claim and for its
@@ -1960,10 +1955,9 @@ eventBindingSlots cond = case cond of
   TriggerCondition.AttachedCreatureDies -> Set.fromList [Binding.became, Binding.departedPermanent]
   -- The permanent that became tapped, which the arm above stamps for every
   -- match: Blight destroys it and Psychic Venom reads its controller.
-  TriggerCondition.AttachedCreatureBecomesTapped -> Set.singleton Binding.tappedPermanent
+  TriggerCondition.BecomesTapped _ -> Set.singleton Binding.tappedPermanent
   -- Empty, eventBindings' arm.
   TriggerCondition.PermanentsBecomeTapped _ -> Set.empty
-  TriggerCondition.PermanentBecomesTapped _ -> Set.singleton Binding.tappedPermanent
   -- Empty for the arm above's reason once more: nothing moved, and the
   -- permanent that untapped is the bearer.
   TriggerCondition.SelfBecomesUntapped -> Set.empty

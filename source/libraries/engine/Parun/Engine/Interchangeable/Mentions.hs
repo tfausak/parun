@@ -2970,9 +2970,8 @@ triggerConditionNames asking x = case x of
   TriggerCondition.CardsPutIntoZone cardsPutIntoZone -> cardsPutIntoZoneNames asking cardsPutIntoZone
   TriggerCondition.SelfLeavesGraveyard -> mempty
   TriggerCondition.AttachedCreatureDies -> mempty
-  TriggerCondition.AttachedCreatureBecomesTapped -> mempty
+  TriggerCondition.BecomesTapped actingPermanent -> actingPermanentNames asking actingPermanent
   TriggerCondition.PermanentsBecomeTapped filter_ -> filterNames asking filter_
-  TriggerCondition.PermanentBecomesTapped filter_ -> filterNames asking filter_
   TriggerCondition.SelfBecomesUntapped -> mempty
   TriggerCondition.AttachedPermanentTappedForMana -> mempty
   TriggerCondition.PermanentTappedForMana permanentTappedForMana -> permanentTappedForManaNames asking permanentTappedForMana
