@@ -154,7 +154,7 @@
                         "type": "CreatureSubtype",
                         "value": {
                           "mode": {
-                            "type": "Replace"
+                            "type": "InAddition"
                           },
                           "subtype": {
                             "type": "Elemental"
