@@ -84,6 +84,7 @@ import qualified Parun.Types.DamagePattern as DamagePattern
 import qualified Parun.Types.DamageR as DamageR
 import qualified Parun.Types.DamageRewrite as DamageRewrite
 import qualified Parun.Types.Daytime as Daytime
+import qualified Parun.Types.DealtDamage as DealtDamage
 import qualified Parun.Types.DestructionCause as DestructionCause
 import qualified Parun.Types.DestructionR as DestructionR
 import qualified Parun.Types.DestructionRewrite as DestructionRewrite
@@ -133,7 +134,6 @@ import qualified Parun.Types.PlayerInstruction as PlayerInstruction
 import qualified Parun.Types.PlayerRef as PlayerRef
 import qualified Parun.Types.PlayerRelation as PlayerRelation
 import Parun.Types.PlayerScope (PlayerScope)
-import qualified Parun.Types.PlayersDealtDamage as PlayersDealtDamage
 import Parun.Types.Prevention (Prevention)
 import qualified Parun.Types.Prevention as Prevention
 import qualified Parun.Types.PreventionRider as PreventionRider
@@ -1273,7 +1273,7 @@ admitsEntry gs oid rewrite = case rewrite of
   EntryRewrite.Bloodthirst Nothing -> True
   EntryRewrite.Bloodthirst (Just _) ->
     let context = Projection.sourceContext gs (Projection.controllerOf oid gs) oid
-     in maybe False (> 0) (Quantity.evaluate (Projection.fullView gs) context gs oid (Quantity.Type.PlayersDealtDamageThisTurn PlayersDealtDamage.MkPlayersDealtDamage {PlayersDealtDamage.player = PlayerRef.Relative PlayerRelation.Opponent, PlayersDealtDamage.kind = Nothing}))
+     in maybe False (> 0) (Quantity.evaluate (Projection.fullView gs) context gs oid (Quantity.Type.PlayersDealtDamageThisTurn DealtDamage.MkDealtDamage {DealtDamage.player = PlayerRef.Relative PlayerRelation.Opponent, DealtDamage.kind = Nothing}))
   -- CR 702.150a's own first condition, the ability's rather than the pattern's:
   -- "If this permanent WOULD ENTER WITH ONE OR MORE LOYALTY COUNTERS ON IT". The
   -- pending count is what that asks about (GameState.enteringCounters), so the

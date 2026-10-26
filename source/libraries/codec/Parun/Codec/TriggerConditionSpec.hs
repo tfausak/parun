@@ -26,6 +26,7 @@ import qualified Parun.Types.CreatureBecomesBlockedByAtLeast as CreatureBecomesB
 import qualified Parun.Types.CreatureExploits as CreatureExploits
 import qualified Parun.Types.DamageKind as DamageKind
 import qualified Parun.Types.DealsDamageToPlayer as DealsDamageToPlayer
+import qualified Parun.Types.DealtDamage as DealtDamage
 import qualified Parun.Types.Designation as Designation
 import qualified Parun.Types.DieResult as DieResult
 import qualified Parun.Types.EndingStep as EndingStep
@@ -51,7 +52,6 @@ import qualified Parun.Types.PlayerAction as PlayerAction
 import qualified Parun.Types.PlayerAttacksPlayer as PlayerAttacksPlayer
 import qualified Parun.Types.PlayerAttacksWith as PlayerAttacksWith
 import qualified Parun.Types.PlayerDrawsNthCard as PlayerDrawsNthCard
-import qualified Parun.Types.PlayerIsDealtDamage as PlayerIsDealtDamage
 import qualified Parun.Types.PlayerRelation as PlayerRelation
 import qualified Parun.Types.PlaysLand as PlaysLand
 import qualified Parun.Types.Quantity as Quantity
@@ -197,12 +197,12 @@ spec s = Spec.describe s "Parun.Codec.TriggerCondition" $ do
     Common.assertCodec
       s
       TriggerCondition.codec
-      (TriggerCondition.PlayerIsDealtDamage (PlayerIsDealtDamage.MkPlayerIsDealtDamage PlayerRelation.You Nothing))
+      (TriggerCondition.PlayerIsDealtDamage (DealtDamage.MkDealtDamage PlayerRelation.You Nothing))
       " {\"type\":\"PlayerIsDealtDamage\",\"value\":{\"player\":{\"type\":\"You\"}}} "
     Common.assertCodec
       s
       TriggerCondition.codec
-      (TriggerCondition.PlayerIsDealtDamage (PlayerIsDealtDamage.MkPlayerIsDealtDamage PlayerRelation.Opponent (Just DamageKind.Noncombat)))
+      (TriggerCondition.PlayerIsDealtDamage (DealtDamage.MkDealtDamage PlayerRelation.Opponent (Just DamageKind.Noncombat)))
       " {\"type\":\"PlayerIsDealtDamage\",\"value\":{\"player\":{\"type\":\"Opponent\"},\"kind\":{\"type\":\"Noncombat\"}}} "
   -- The same event read by a bystander, carrying Tovolar's "you control" and
   -- Teysa's "to you": two relations, so a crossed codec would not round-trip.
