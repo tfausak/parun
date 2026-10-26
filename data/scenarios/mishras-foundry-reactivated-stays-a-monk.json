@@ -1,0 +1,35 @@
+{
+  "description": "CR 205.1b Mishra's Foundry activated again keeps the Monk its Monk's Fist made it, since it's still a land",
+  "note": "\"It's still a land\" retains every prior subtype (CR 205.1b), creature types included, so the second activation adds Assembly-Worker beside Monk. The Fist, equipped between the two activations, is older than the second, so an Assembly-Worker that replaced creature types would leave no Monk.",
+  "board": {
+    "seats": [
+      {
+        "name": "alice",
+        "manaPool": "CCCCCC",
+        "battlefield": [
+          { "card": "Mishra's Foundry", "label": "foundry" },
+          { "card": "Monk's Fist", "label": "fist" }
+        ],
+        "library": [{ "card": "Island" }, { "card": "Island" }, { "card": "Island" }]
+      },
+      {
+        "name": "bob",
+        "library": [{ "card": "Island" }, { "card": "Island" }, { "card": "Island" }]
+      }
+    ],
+    "active": "alice",
+    "step": "PrecombatMain"
+  },
+  "timeline": [
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "do": { "Activate": { "object": "$foundry", "ability": 1, "mana": [null] } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "do": "Pass" },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "do": { "Activate": { "object": "$fist", "targets": ["$foundry"] } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "do": "Pass" },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "check": { "Subtypes": { "object": "$foundry", "subtypes": ["AssemblyWorker", "Monk"] } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "do": { "Activate": { "object": "$foundry", "ability": 1 } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "do": "Pass" },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "check": { "Subtypes": { "object": "$foundry", "subtypes": ["AssemblyWorker", "Monk"] } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "check": { "Types": { "object": "$foundry", "types": ["Artifact", "Creature", "Land"] } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "check": { "PowerToughness": { "object": "$foundry", "power": 3, "toughness": 2 } } }
+  ]
+}
