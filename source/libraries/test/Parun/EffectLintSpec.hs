@@ -1819,6 +1819,23 @@ viaFilters card =
         (cardResolutionEffects card)
     )
 
+-- Whether a target pool can hold a player (CR 115.1). Exhaustive with no `_`,
+-- so a new pool has to be classified.
+holdsPlayer :: Pool.Pool -> Bool
+holdsPlayer pool = case pool of
+  Pool.Players -> True
+  Pool.AnyTarget -> True
+  Pool.PlayersAndPlaneswalkers -> True
+  Pool.Creatures -> False
+  Pool.Permanents -> False
+  Pool.Spells -> False
+  Pool.Abilities -> False
+  Pool.SpellsAndPermanents -> False
+  Pool.CardsInGraveyard _ -> False
+  Pool.CardsInExile -> False
+  Pool.CardsInAnte -> False
+  Pool.CreaturesAndCardsInGraveyard _ -> False
+
 effectLintSpec :: (Monad n) => Spec.Spec IO n -> Registry.Registry IO -> n ()
 effectLintSpec s registry = Spec.describe s "Lint" $ do
   -- CR 208.1 / 208.2: a printed power or toughness box holds a number, or a value
@@ -2947,7 +2964,7 @@ effectLintSpec s registry = Spec.describe s "Lint" $ do
                 not
                   ( ref == ObjectRef.InSlot Binding.became
                       && Set.member Subtype.Type.Aura (TypeLine.subtypes (Face.typeLine face))
-                      && all ((/= Pool.Players) . TargetSlot.pool) (Face.enchant face)
+                      && not (any (holdsPlayer . TargetSlot.pool) (Face.enchant face))
                   )
           _ -> False
         offendsOn face = any (\effect -> offends effect || selfAuraMove face effect) (cardResolutionEffects face)
@@ -2960,6 +2977,15 @@ effectLintSpec s registry = Spec.describe s "Lint" $ do
     Spec.assertBool s (any (anyFace (any moves . cardResolutionEffects) . Printing.card) ps) "the pool has a card moving an Aura attached to a host it describes"
     Spec.assertBool s (any (anyFace (any (\effect -> case effect of Effect.MoveToZone m -> specified (MoveToZone.riders m); _ -> False) . cardResolutionEffects) . Printing.card) ps) "the pool has a card moving an Aura attached to a host a slot names"
     Spec.assertEqWith s "each attachment rider is on the opcode that reads it (CR 303.4f, 303.4i)" (fmap (S.nameOf . Printing.card) offenders) []
+    -- The rejecting side, Necrotic Plague's self-move differing in its enchant
+    -- pool alone: a mixed pool that can hold a player is refused too.
+    plague <- S.printingOf s registry "Necrotic Plague"
+    let enchanting pool = (S.combinedFace plague) {Face.enchant = fmap (\slot -> slot {TargetSlot.pool = pool}) (Face.enchant (S.combinedFace plague))}
+    Spec.assertEqWith
+      s
+      "a self-moving Aura is refused exactly where its enchant pool can hold a player"
+      (fmap (offendsOn . enchanting) [Pool.Creatures, Pool.PlayersAndPlaneswalkers, Pool.AnyTarget, Pool.Players])
+      [False, True, True, True]
   -- The sibling lint for the OTHER face-down rider, one field over and pointed
   -- at the opposite zone: CR 708.3 is a rule about entering the BATTLEFIELD, so
   -- on any other destination it is inert card data. Inert on a Create outright,

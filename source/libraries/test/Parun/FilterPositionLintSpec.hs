@@ -2573,16 +2573,24 @@ filterPositionLintSpec s registry = Spec.describe s "Lint" $ do
     let sameSector = atomJson (Filter.Type.SharesWithSource Trait.Sector)
     Spec.assertEqWith s "Space Beleren's is in a resolved evasion's blocker filter" (admitted sameSector (S.combinedFace beleren), outside sameSector (S.combinedFace beleren)) ((1, 0, 0, 0), 0)
     -- NOT vacuous the other way either: the same counter over a hand-built face
-    -- that DOES carry each atom -- buried under all three combinators, in an
-    -- untargeted instruction's ObjectRef, which nothing frames -- finds it.
+    -- that DOES carry each atom -- buried under all three combinators, in a
+    -- static ability's affected set, whose Projection.affectedContext fills no
+    -- characteristics -- finds it. An effect's ObjectRef would answer
+    -- (Resolve.Slots.effectContext frames it through Projection.framedWith), but
+    -- no card writes one there, so the lint refuses it in the safe direction.
     piker <- S.printingOf s registry "Goblin Piker"
     let atoms = [Filter.Type.Measures (Measures.MkMeasures Measure.Power Comparison.LessThan (Operand.OfSource Measure.Power)), Filter.Type.SharesWithSource Trait.Name, Filter.Type.SharesWithSource Trait.Color, Filter.Type.SharesWithSource Trait.Sector]
         planted atom =
           (S.combinedFace piker)
-            { Face.spell =
-                Mint.oneModeTargeting
-                  Map.empty
-                  (Seq.singleton (Effect.Untap (ObjectRef.EachMatching (Filter.Type.And [Filter.Type.Or [Filter.Type.HasCardType CardType.Creature, Filter.Type.Not atom]]))))
+            { Face.staticAbilities =
+                [ StaticAbility.MkStaticAbility
+                    (Affected.Matching (Filter.Type.And [Filter.Type.Or [Filter.Type.HasCardType CardType.Creature, Filter.Type.Not atom]]))
+                    Nothing
+                    Set.empty
+                    Nothing
+                    Nothing
+                    (NonEmpty.singleton Modification.LoseAllAbilities)
+                ]
             }
     Spec.assertEqWith s "a planted atom is seen" (zipWith (\needle atom -> outside needle (planted atom)) needles atoms) [1, 1, 1, 1]
   -- CR 702.140a's comparison is the source-comparison atom's owner trait, and
