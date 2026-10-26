@@ -30,13 +30,12 @@ import qualified Parun.Types.Power as Power
 import qualified Parun.Types.Quantity as Quantity
 import qualified Parun.Types.TypeLine as TypeLine
 
-spec :: (Monad n) => Spec.Spec IO n -> n ()
-spec s = Spec.describe s "Parun.Ingest" $ do
+spec :: (Monad n) => Spec.Spec IO n -> [(FilePath, Either Text.Text Card.Card)] -> n ()
+spec s corpus = Spec.describe s "Parun.Ingest" $ do
   -- The invariant the renderer exists for: a card it renders says what its
   -- Oracle text says, in one of the wordings Oracle uses for it.
   Spec.it s "each card that renders says what its Oracle text says" $ do
-    loaded <- Registry.defaultRoot >>= Registry.loadRoot
-    let rendered = [(card, canonical) | entry@(_, Right card) <- loaded, Maybe.isJust (Registry.referenceCard entry), Just canonical <- [Oracle.render card]]
+    let rendered = [(card, canonical) | entry@(_, Right card) <- corpus, Maybe.isJust (Registry.referenceCard entry), Just canonical <- [Oracle.render card]]
         disagreements =
           [ (Text.unpack (Slug.unwrap (Registry.filedAs card)), fmap (Normalise.normalise name) text, Normalise.normalise name canonical)
           | (card, canonical) <- rendered,
@@ -54,19 +53,17 @@ spec s = Spec.describe s "Parun.Ingest" $ do
   -- checking the abilities that do render on a listed card (#5488).
   Spec.it s "the cards that do not render are exactly those listed" $ do
     root <- Registry.defaultRoot
-    loaded <- Registry.loadRoot root
     listed <- fmap (Set.fromList . filter (not . null) . lines) (readFile (root <> "/../oracle-unrendered.txt"))
-    let unrendered = Set.fromList [Text.unpack (Slug.unwrap (Registry.filedAs card)) | entry@(_, Right card) <- loaded, Maybe.isJust (Registry.referenceCard entry), Maybe.isNothing (Oracle.render card)]
+    let unrendered = Set.fromList [Text.unpack (Slug.unwrap (Registry.filedAs card)) | entry@(_, Right card) <- corpus, Maybe.isJust (Registry.referenceCard entry), Maybe.isNothing (Oracle.render card)]
     Spec.assertEqWith s "listed, but renders or is no pool card" [] (Set.toList (Set.difference listed unrendered))
     Spec.assertEqWith s "does not render, but unlisted" [] (Set.toList (Set.difference unrendered listed))
 
   -- `parun ingest` stamps the text on every card MTGJSON has; a dungeon (CR
   -- 309) is not among them, since MTGJSON files dungeons with the tokens.
   Spec.it s "every face of the reference carries its Oracle text" $ do
-    loaded <- Registry.defaultRoot >>= Registry.loadRoot
     let missing =
           [ Text.unpack (CardName.unwrap (Face.name face))
-          | entry@(_, Right card) <- loaded,
+          | entry@(_, Right card) <- corpus,
             Maybe.isJust (Registry.referenceCard entry),
             face <- NonEmpty.toList (Card.faces card),
             Maybe.isNothing (Face.oracleText face),

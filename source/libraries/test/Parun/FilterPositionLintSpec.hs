@@ -1424,8 +1424,8 @@ assertAuthors s registry ps label counts authors = do
   Spec.assertEqWith s label counted (fmap (\(name, n) -> (name, (n, 0))) authors)
   Spec.assertEqWith s "and they are the pool's only ones" (sum (fmap (uncurry (+) . counts . S.combinedFace) ps)) (sum (fmap snd authors))
 
-filterPositionLintSpec :: (Monad n) => Spec.Spec IO n -> Registry.Registry IO -> n ()
-filterPositionLintSpec s registry = Spec.describe s "Lint" $ do
+filterPositionLintSpec :: (Monad n) => Spec.Spec IO n -> Registry.Registry IO -> [(FilePath, Either Text.Text Card.Type.Card)] -> n ()
+filterPositionLintSpec s registry corpus = Spec.describe s "Lint" $ do
   -- CR 603.2's event triggers and CR 603.8's state triggers are gathered by two
   -- different scans, so one ability may not be both. See anyOfOffends for the two
   -- shapes this rejects and why each would be incoherent rather than merely odd.
@@ -1435,7 +1435,7 @@ filterPositionLintSpec s registry = Spec.describe s "Lint" $ do
   -- The pool's AnyOf cards -- Balemurk Leech, Bartered Cow and their like -- are
   -- all ACCEPTED here.
   Spec.it s "CR 603.2 no AnyOf mixes in a state trigger or nests another AnyOf" $ do
-    ps <- S.allPrintings s
+    ps <- S.allPrintings s corpus
     let conditions c = fmap TriggeredAbility.condition (Face.triggeredAbilities c)
         isAnyOf c = case c of TriggerCondition.AnyOf _ -> True; _ -> False
         offenders = filter (anyFace (any anyOfOffends . conditions) . Printing.card) ps
@@ -1459,7 +1459,7 @@ filterPositionLintSpec s registry = Spec.describe s "Lint" $ do
     -- card in the pool is written, and this lint must not reject those.
     Spec.assertBool s (not (anyOfOffends (TriggerCondition.StateIs never))) "a bare state trigger is left alone"
   Spec.it s "no mode declares a slot named enchant" $ do
-    ps <- S.allPrintings s
+    ps <- S.allPrintings s corpus
     let offends c = any (Map.member Card.enchantSlot . Mode.targetSlots) (Modal.modes (Face.spell c))
         offenders = filter (anyFace offends . Printing.card) ps
     Spec.assertEqWith s "the enchant slot is never hand-declared" (fmap (S.nameOf . Printing.card) offenders) []
@@ -1472,7 +1472,7 @@ filterPositionLintSpec s registry = Spec.describe s "Lint" $ do
   -- creature" writes it (#3871). See canHostSubjectOffends for the
   -- two offences this one predicate covers.
   Spec.it s "CR 701.3a no card asks CanHostSubject outside a position an attach frames" $ do
-    ps <- S.allPrintings s
+    ps <- S.allPrintings s corpus
     let offenders = filter (anyFace canHostSubjectOffends . Printing.card) ps
     Spec.assertEqWith s "the atom sits only where an attach frames it" (fmap (S.nameOf . Printing.card) offenders) []
     -- NOT vacuous: the pool authors the atom, and the cards that do are ACCEPTED
@@ -1509,7 +1509,7 @@ filterPositionLintSpec s registry = Spec.describe s "Lint" $ do
   -- only where the evaluator supplies the fixed host, which is a search's filter
   -- and nothing else. See canAttachToSubjectOffends for the two offences.
   Spec.it s "CR 701.3a no card asks CanAttachToSubject outside a search's filter" $ do
-    ps <- S.allPrintings s
+    ps <- S.allPrintings s corpus
     let offenders = filter (anyFace canAttachToSubjectOffends . Printing.card) ps
     Spec.assertEqWith s "the atom sits only in a search's filter" (fmap (S.nameOf . Printing.card) offenders) []
     -- NOT vacuous: the pool authors the atom, and every card that does is
@@ -1536,7 +1536,7 @@ filterPositionLintSpec s registry = Spec.describe s "Lint" $ do
   -- (Parun.Engine.Resolve.Slots.effectContext), and a silent False everywhere
   -- else. See hasChosenNameOffends for the two offences.
   Spec.it s "CR 201.4 no card asks HasChosenName outside an admitted position" $ do
-    ps <- S.allPrintings s
+    ps <- S.allPrintings s corpus
     let offenders = filter (anyFace hasChosenNameOffends . Printing.card) ps
     Spec.assertEqWith s "the atom sits only where the resolution overlays the chosen names" (fmap (S.nameOf . Printing.card) offenders) []
     -- NOT vacuous: the pool authors the atom, and EVERY card that does is
@@ -1569,7 +1569,7 @@ filterPositionLintSpec s registry = Spec.describe s "Lint" $ do
   -- takes its filter off a keyword. See ofChosenPlayerOffends for the two
   -- offences.
   Spec.it s "CR 702.16k no card asks OfChosenPlayer outside a keyword's own filter" $ do
-    ps <- S.allPrintings s
+    ps <- S.allPrintings s corpus
     let offenders = filter (anyFace ofChosenPlayerOffends . Printing.card) ps
     Spec.assertEqWith s "the atom sits only in a keyword's filter" (fmap (S.nameOf . Printing.card) offenders) []
     -- NOT vacuous: the pool authors the atom, and the card that does is
@@ -1621,7 +1621,7 @@ filterPositionLintSpec s registry = Spec.describe s "Lint" $ do
   -- result decodes, resolves, finds nothing and shuffles nothing, which reads
   -- exactly like a search whose filter matched nothing.
   Spec.it s "CR 701.23a every search names at least one zone" $ do
-    ps <- S.allPrintings s
+    ps <- S.allPrintings s corpus
     let offenders = filter (anyFace (any Set.null . searchZoneSets) . Printing.card) ps
     Spec.assertEqWith s "no card's search names an empty zone set" (fmap (S.nameOf . Printing.card) offenders) []
     -- NOT vacuous: the pool authors searches, and the one naming two zones is
@@ -1645,7 +1645,7 @@ filterPositionLintSpec s registry = Spec.describe s "Lint" $ do
   -- for the two offences and Framing for why CR 303.4a's enchant slot is not one
   -- of the safe positions.
   Spec.it s "CR 709.4a no card asks a slot-anchored Shares Name outside a mode's target slot, a search filter, a hand sweep or a life loss amount" $ do
-    ps <- S.allPrintings s
+    ps <- S.allPrintings s corpus
     let offenders = filter (anyFace boundNameOffends . Printing.card) ps
     Spec.assertEqWith s "the atom sits only in a target slot's, a search's, a hand sweep's or a life loss amount's filter" (fmap (S.nameOf . Printing.card) offenders) []
     -- NOT vacuous, the way the sibling sweeps would be alone: the pool authors the
@@ -1678,7 +1678,7 @@ filterPositionLintSpec s registry = Spec.describe s "Lint" $ do
   -- Filter.Context.slotCreatureTypes. See boundCreatureTypeOffends for the two
   -- offences.
   Spec.it s "CR 205.3m no card asks a slot-anchored Shares CreatureType outside a resolution's own positions or a target slot" $ do
-    ps <- S.allPrintings s
+    ps <- S.allPrintings s corpus
     let offenders = filter (anyFace boundCreatureTypeOffends . Printing.card) ps
     Spec.assertEqWith s "the atom sits only where a resolution or a target slot fills the creature types" (fmap (S.nameOf . Printing.card) offenders) []
     -- NOT vacuous: one card per admitted position the pool uses is ACCEPTED.
@@ -1699,7 +1699,7 @@ filterPositionLintSpec s registry = Spec.describe s "Lint" $ do
   -- over: answerable only where effectContext fills Filter.Context.slotMeasures.
   -- See ofBoundOffends for the two offences.
   Spec.it s "CR 208.1 no card compares against a bound object outside a resolution's own positions" $ do
-    ps <- S.allPrintings s
+    ps <- S.allPrintings s corpus
     let offenders = filter (anyFace ofBoundOffends . Printing.card) ps
     Spec.assertEqWith s "the operand sits only where the resolution fills the bound measures" (fmap (S.nameOf . Printing.card) offenders) []
     -- NOT vacuous: the pool authors the atom, and the card that does is ACCEPTED.
@@ -1718,7 +1718,7 @@ filterPositionLintSpec s registry = Spec.describe s "Lint" $ do
   -- positions now that Parun.Engine.Attach.hostsFor takes its Context from the
   -- caller. See sameControllerAsHostOfBoundOffends for the two offences.
   Spec.it s "CR 110.2 no card asks SameControllerAsHostOfBound outside a resolution's own positions" $ do
-    ps <- S.allPrintings s
+    ps <- S.allPrintings s corpus
     let offenders = filter (anyFace sameControllerAsHostOfBoundOffends . Printing.card) ps
     Spec.assertEqWith s "the atom sits only where the resolution fills the hosts' controllers" (fmap (S.nameOf . Printing.card) offenders) []
     -- NOT vacuous: the pool authors the atom, and the card that does is ACCEPTED.
@@ -1737,7 +1737,7 @@ filterPositionLintSpec s registry = Spec.describe s "Lint" $ do
   -- and nothing else does, so an attach's destination is the only position that
   -- answers it. See hostOfSubjectCardTypeOffends for the two offences.
   Spec.it s "CR 205.2a no card asks HostOfSubjectHasCardType outside a position an attach frames" $ do
-    ps <- S.allPrintings s
+    ps <- S.allPrintings s corpus
     let offenders = filter (anyFace hostOfSubjectCardTypeOffends . Printing.card) ps
     Spec.assertEqWith s "the atom sits only where an attach fills the subject's host" (fmap (S.nameOf . Printing.card) offenders) []
     -- NOT vacuous: the pool authors the atom, and the card that does is
@@ -1757,7 +1757,7 @@ filterPositionLintSpec s registry = Spec.describe s "Lint" $ do
   -- outside the positions filling it admits every candidate the card meant to
   -- exclude rather than none. See controllerRelatesToBoundOffends.
   Spec.it s "CR 110.2 no card asks ControllerRelatesToBound outside a mode's target slot, an attach destination, a stored class or an effect's object" $ do
-    ps <- S.allPrintings s
+    ps <- S.allPrintings s corpus
     let offenders = filter (anyFace controllerRelatesToBoundOffends . Printing.card) ps
     Spec.assertEqWith s "the atom sits only in an admitted position" (fmap (S.nameOf . Printing.card) offenders) []
     -- NOT vacuous: the pool authors the atom, and the cards that do are ACCEPTED
@@ -1806,7 +1806,7 @@ filterPositionLintSpec s registry = Spec.describe s "Lint" $ do
   -- source, bound-object and enclosing-amount operands out of a player effect;
   -- this keeps the rest out too.
   Spec.it s "CR 601.3a no player effect compares a mana value against anything but a literal" $ do
-    ps <- S.allPrintings s
+    ps <- S.allPrintings s corpus
     let encode = Codec.encode (Filter.Codec.codec Keyword.Codec.codec)
         inPlayerEffects wanted c = sum [manaValueComparisons wanted (encode f) | (framing, f) <- cardFilters c, elem framing [PlayerEffectFramed, StoredPlayerEffectFramed]]
         nonLiteral = (/= Text.pack "Literal")
@@ -1827,7 +1827,7 @@ filterPositionLintSpec s registry = Spec.describe s "Lint" $ do
   -- a target slot, a conjure's reference pick or a combat restriction's affected
   -- set at all -- is a silent False. See enclosingAmountCounts.
   Spec.it s "CR 202.3 no card compares against an enclosing amount outside a slot that names one" $ do
-    ps <- S.allPrintings s
+    ps <- S.allPrintings s corpus
     let offenders = filter (anyFace enclosingAmountOffends . Printing.card) ps
     Spec.assertEqWith s "the operand sits only where the slot supplies the bound" (fmap (S.nameOf . Printing.card) offenders) []
     -- NOT vacuous: the pool authors the operand, and every card that does is
@@ -1922,7 +1922,7 @@ filterPositionLintSpec s registry = Spec.describe s "Lint" $ do
   -- CR 608.2d's other-candidates operand is answerable only in an edict's or a
   -- chosen permanent's own filter. See otherCandidateCounts.
   Spec.it s "CR 608.2d no card compares against other candidates outside an edict or a chosen permanent" $ do
-    ps <- S.allPrintings s
+    ps <- S.allPrintings s corpus
     let offenders = filter (anyFace ((/= 0) . snd . otherCandidateCounts) . Printing.card) ps
     Spec.assertEqWith s "the operand sits only in an edict's or a chosen permanent's filter" (fmap (S.nameOf . Printing.card) offenders) []
     -- NOT vacuous: these author it, and are accepted -- each with how many.
@@ -1972,7 +1972,7 @@ filterPositionLintSpec s registry = Spec.describe s "Lint" $ do
   -- CR 303.4b's Filter.IsHostOfSource is CR 709.4a's atom one axis over again:
   -- answerable only in the positions `hostFramed` admits. See hostOfSourceOffends for the two offences.
   Spec.it s "CR 303.4b no card asks IsHostOfSource where the source's host is unknown" $ do
-    ps <- S.allPrintings s
+    ps <- S.allPrintings s corpus
     let offenders = filter (anyFace hostOfSourceOffends . Printing.card) ps
     Spec.assertEqWith s "the atom sits only where the host is supplied" (fmap (S.nameOf . Printing.card) offenders) []
     -- NOT vacuous: the pool authors the atom, and the cards that do are ACCEPTED
@@ -2022,7 +2022,7 @@ filterPositionLintSpec s registry = Spec.describe s "Lint" $ do
   -- CR 613.4c's "it": the atoms aimed at a quantity's object are answerable only
   -- in a Count's filter. See evaluatedOffends.
   Spec.it s "CR 613.4c no card asks an evaluated-object atom outside a Count" $ do
-    ps <- S.allPrintings s
+    ps <- S.allPrintings s corpus
     let offenders = filter (anyFace evaluatedOffends . Printing.card) ps
     Spec.assertEqWith s "the atom sits only in a Count's filter" (fmap (S.nameOf . Printing.card) offenders) []
     -- NOT vacuous: Thran Power Suit writes it twice, once per half of its pump.
@@ -2051,7 +2051,7 @@ filterPositionLintSpec s registry = Spec.describe s "Lint" $ do
   -- A pair Filter.matches has no reading for answers False wherever it sits,
   -- so it is rejected outright rather than by position (#5636).
   Spec.it s "no card writes a Shares or IsAttachedTo anchor the filter context carries no values for" $ do
-    ps <- S.allPrintings s
+    ps <- S.allPrintings s corpus
     let encodedFace = Codec.encode (Face.Codec.codec Card.codec)
         offenders = filter (anyFace (\face -> fst (unreadAnchorCounts (encodedFace face)) /= 0) . Printing.card) ps
     Spec.assertEqWith s "every anchored atom has a reading" (fmap (S.nameOf . Printing.card) offenders) []
@@ -2074,7 +2074,7 @@ filterPositionLintSpec s registry = Spec.describe s "Lint" $ do
   -- joined to Parun.Engine.Cast's per-keyword map by structural equality. See
   -- timesPaidOffends for why this is read off the encoding.
   Spec.it s "CR 702.33d every kicker tally names a cost its face prints" $ do
-    ps <- S.allPrintings s
+    ps <- S.allPrintings s corpus
     let offenders = filter (anyFace timesPaidOffends . Printing.card) ps
     Spec.assertEqWith s "no card counts a kicker cost its face never prints" (fmap (S.nameOf . Printing.card) offenders) []
     -- NOT vacuous: the pool authors the arm, and the cards that do are ACCEPTED
@@ -2110,7 +2110,7 @@ filterPositionLintSpec s registry = Spec.describe s "Lint" $ do
   -- (data/cards/synthetic-crewed-battery.json). A card writing it would read as a
   -- crew prohibition in a position that gathers none.
   Spec.it s "CR 702.122d no card asks CantCrewVehicles" $ do
-    ps <- S.allPrintings s
+    ps <- S.allPrintings s corpus
     let atomsOf tag = jsonAtoms tag . Codec.encode (Face.Codec.codec Card.codec) . S.combinedFace
     Spec.assertEqWith s "the pool authors the atom nowhere" (fmap (S.nameOf . Printing.card) (filter ((/= 0) . atomsOf cantCrewVehiclesTag) ps)) []
     -- NOT vacuous in the way an unreachable sweep would be: the tag the sweep
@@ -2136,7 +2136,7 @@ filterPositionLintSpec s registry = Spec.describe s "Lint" $ do
   -- stamped, so it is answerable in the cost that announcement pays and a
   -- silent False elsewhere (isTargetStrays).
   Spec.it s "CR 601.2c no card asks IsTarget outside a cost an announcement pays" $ do
-    ps <- S.allPrintings s
+    ps <- S.allPrintings s corpus
     Spec.assertEqWith s "no card asks IsTarget where nothing stamps the targets" (fmap (S.nameOf . Printing.card) (filter (anyFace isTargetOffends . Printing.card) ps)) []
     edict <- S.printingOf s registry "Synthetic Spiteful Edict"
     rite <- S.printingOf s registry "Synthetic Spiteful Rite"
@@ -2147,7 +2147,7 @@ filterPositionLintSpec s registry = Spec.describe s "Lint" $ do
     let planted = (S.combinedFace piker) {Face.spell = Mint.oneMode (Seq.singleton (Effect.Destroy (Destroy.MkDestroy (ObjectRef.EachMatching (Filter.Type.Not Filter.Type.IsTarget)) Regenerability.Regenerable Nothing Nothing Nothing)))}
     Spec.assertBool s (isTargetOffends planted) "the same atom in an effect's filter is an offence"
   Spec.it s "CR 400.11c no card asks IsBound in a wish's filter" $ do
-    ps <- S.allPrintings s
+    ps <- S.allPrintings s corpus
     let offenders = filter (anyFace isBoundOffends . Printing.card) ps
     Spec.assertEqWith s "no card names a bound slot where the candidate is a card outside the game" (fmap (S.nameOf . Printing.card) offenders) []
     -- NOT vacuous: the pool authors the atom, and the cards that do are ACCEPTED
@@ -2598,7 +2598,7 @@ filterPositionLintSpec s registry = Spec.describe s "Lint" $ do
   -- Parun.Engine.Keyword's keywords and Parun.Engine.Ring's emblem write them, and
   -- this is what keeps that true.
   Spec.it s "CR 702.134a / 702.60a / 702.78a no card compares against the source outside the positions that fill it" $ do
-    ps <- S.allPrintings s
+    ps <- S.allPrintings s corpus
     let ofSource = Value.String (String.MkString (Text.pack "OfSource"))
         needles = ofSource : fmap (\trait -> atomJson (Filter.Type.Shares trait Anchor.Source)) [Trait.Name, Trait.Color, Trait.Sector]
         encoded = Codec.encode (Face.Codec.codec Card.codec)
@@ -2658,7 +2658,7 @@ filterPositionLintSpec s registry = Spec.describe s "Lint" $ do
   -- rather than one a card authors, so what is swept here is every card filter
   -- alike.
   Spec.it s "CR 702.140a no card writes a source-owner comparison" $ do
-    ps <- S.allPrintings s
+    ps <- S.allPrintings s corpus
     let atoms c = occurrences (atomJson (Filter.Type.Shares Trait.Owner Anchor.Source)) (Codec.encode (Face.Codec.codec Card.codec) c)
         offenders = filter (anyFace (\c -> atoms c /= 0) . Printing.card) ps
     Spec.assertEqWith s "the atom is the engine's alone" (fmap (S.nameOf . Printing.card) offenders) []
@@ -2683,7 +2683,7 @@ filterPositionLintSpec s registry = Spec.describe s "Lint" $ do
   -- restriction, by re-encoding each face with its restrictions dropped, and
   -- outside a mode's target slot, by subtracting what cardFilters finds there.
   Spec.it s "CR 508.5 no card writes ControlledByRole Defending outside a combat restriction or a target slot" $ do
-    ps <- S.allPrintings s
+    ps <- S.allPrintings s corpus
     let needle = atomJson (Filter.Type.ControlledByRole TurnRole.Defending)
         atoms c = occurrences needle (Codec.encode (Face.Codec.codec Card.codec) c)
         inSlots c = sum [occurrences needle (atomJson f) | (InTargetSlot, f) <- cardFilters c]
@@ -2723,7 +2723,7 @@ filterPositionLintSpec s registry = Spec.describe s "Lint" $ do
   -- Predator writes it, and Parun.Engine.Resolve.Slots.modeSlots is what checks the slot
   -- it names is one the ability's condition binds.
   Spec.it s "CR 603.2 no card writes HeldByPlayer" $ do
-    ps <- S.allPrintings s
+    ps <- S.allPrintings s corpus
     let atoms c = jsonAtoms (Text.pack "HeldByPlayer") (Codec.encode (Face.Codec.codec Card.codec) c)
         offenders = filter (anyFace ((/= 0) . atoms) . Printing.card) ps
     Spec.assertEqWith s "the baked atom is the engine's alone" (fmap (S.nameOf . Printing.card) offenders) []
@@ -2743,7 +2743,7 @@ filterPositionLintSpec s registry = Spec.describe s "Lint" $ do
   -- CR 601.2c's baked "that player's graveyard", for HeldByPlayer's reason:
   -- Parun.Engine.Target.bakePerPlayer writes it, and no card may name a seat.
   Spec.it s "CR 601.2c no card writes ZoneScope.BoundPlayer" $ do
-    ps <- S.allPrintings s
+    ps <- S.allPrintings s corpus
     let atoms c = jsonAtoms (Text.pack "BoundPlayer") (Codec.encode (Face.Codec.codec Card.codec) c)
         offenders = filter (anyFace ((/= 0) . atoms) . Printing.card) ps
     Spec.assertEqWith s "the baked scope is the engine's alone" (fmap (S.nameOf . Printing.card) offenders) []
@@ -2760,7 +2760,7 @@ filterPositionLintSpec s registry = Spec.describe s "Lint" $ do
   -- into an emerge candidate's sacrifice criterion and round-tripped by a total
   -- codec, so nothing but this keeps card JSON from naming an object.
   Spec.it s "CR 702.119c no card writes IsObject" $ do
-    ps <- S.allPrintings s
+    ps <- S.allPrintings s corpus
     let atoms c = jsonAtoms (Text.pack "IsObject") (Codec.encode (Face.Codec.codec Card.codec) c)
         offenders = filter (anyFace ((/= 0) . atoms) . Printing.card) ps
     Spec.assertEqWith s "the baked atom is the engine's alone" (fmap (S.nameOf . Printing.card) offenders) []
@@ -2782,7 +2782,7 @@ filterPositionLintSpec s registry = Spec.describe s "Lint" $ do
   -- card data -- Garland, Royal Kidnapper writes it -- and is not swept.
   -- HolderOfObject is the same baked half for an object slot, and swept beside it.
   Spec.it s "CR 611.2b no card writes a Specific PlayerRef" $ do
-    ps <- S.allPrintings s
+    ps <- S.allPrintings s corpus
     let atoms c = sum (fmap (\tag -> jsonAtoms (Text.pack tag) (Codec.encode (Face.Codec.codec Card.codec) c)) ["Specific", "HolderOfObject"])
         offenders = filter (anyFace ((/= 0) . atoms) . Printing.card) ps
     Spec.assertEqWith s "the baked reference is the engine's alone" (fmap (S.nameOf . Printing.card) offenders) []
@@ -3373,7 +3373,7 @@ filterPositionLintSpec s registry = Spec.describe s "Lint" $ do
   -- See chosenValueCounts for the positions and chosenValueOffends for the two
   -- offences.
   Spec.it s "CR 607.2d no card asks HasChosenColor or HasChosenSubtype outside an admitted position" $ do
-    ps <- S.allPrintings s
+    ps <- S.allPrintings s corpus
     let offends card =
           anyFace (chosenValueOffends hasChosenColorCounts hasChosenColorTag) card
             || anyFace (chosenValueOffends hasChosenSubtypeCounts hasChosenSubtypeTag) card
@@ -3471,7 +3471,7 @@ filterPositionLintSpec s registry = Spec.describe s "Lint" $ do
   -- Cauldron is accepted rather than skipped, and the same atom moved into an
   -- activated ability's target slot is rejected, so the lint is not vacuous.
   Spec.it s "CR 607.2a no card asks IsLastExiledWithSource outside a mana restriction" $ do
-    ps <- S.allPrintings s
+    ps <- S.allPrintings s corpus
     Spec.assertEqWith
       s
       "the atom sits only in a mana restriction"
@@ -3490,6 +3490,6 @@ filterPositionLintSpec s registry = Spec.describe s "Lint" $ do
       (chosenValueOffends isLastExiledWithSourceCounts isLastExiledWithSourceTag planted, isLastExiledWithSourceCounts planted)
       (True, (0, 1))
 
-spec :: (Monad n) => Spec.Spec IO n -> Registry.Registry IO -> n ()
-spec s registry = Spec.describe s "Parun.Engine.Card" $ do
-  filterPositionLintSpec s registry
+spec :: (Monad n) => Spec.Spec IO n -> Registry.Registry IO -> [(FilePath, Either Text.Text Card.Type.Card)] -> n ()
+spec s registry corpus = Spec.describe s "Parun.Engine.Card" $ do
+  filterPositionLintSpec s registry corpus

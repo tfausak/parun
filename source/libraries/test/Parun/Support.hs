@@ -1996,15 +1996,11 @@ stubView table oid =
               }
         [] -> Nothing
 
--- Every card parun ships, or a failure naming every file that would not load.
---
--- Takes no registry: the lint is about the BUNDLED corpus by definition, so
--- being handed a pool to inspect would let a caller point it somewhere else and
--- quietly stop checking what ships.
-allPrintings :: Spec.Spec IO n -> IO [Printing.Printing]
-allPrintings s = do
-  root <- Registry.defaultRoot
-  loaded <- Registry.loadRoot root
+-- Every card of a loaded corpus, or a failure naming every file that would not
+-- load. Parun.Test.main loads the corpus parun ships once and hands it to every
+-- lint, so the pool is parsed once rather than once per lint.
+allPrintings :: Spec.Spec IO n -> [(FilePath, Either Text.Text Card.Type.Card)] -> IO [Printing.Printing]
+allPrintings s loaded =
   case Maybe.mapMaybe (\(path, result) -> case result of Left reason -> Just (path <> ": " <> Text.unpack reason); Right _ -> Nothing) loaded of
     [] -> pure (Maybe.mapMaybe (\(_, result) -> case result of Right card -> Just (Printing.ofCard card); Left _ -> Nothing) loaded)
     errs -> Spec.assertFailure s (List.intercalate "\n" errs)
