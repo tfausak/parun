@@ -9,6 +9,7 @@ import qualified Parun.JsonCodec.Common as Common
 import qualified Parun.Spec as Spec
 import qualified Parun.Types.CardName as CardName
 import qualified Parun.Types.CardType as CardType
+import qualified Parun.Types.ChangeMode as ChangeMode
 import qualified Parun.Types.Color as Color
 import qualified Parun.Types.CopyException as CopyException
 import qualified Parun.Types.Keyword as Keyword
@@ -44,12 +45,12 @@ spec s = Spec.describe s "Parun.Codec.CopyException" $ do
       (CopyException.GainKeywords (Set.fromList [Keyword.Dethrone, Keyword.Haste]))
       " {\"type\":\"GainKeywords\",\"value\":[{\"type\":\"Haste\"},{\"type\":\"Dethrone\"}]} "
 
-  Spec.it s "AddCardTypes round-trips, ascending by card type" $
+  Spec.it s "CardTypes InAddition round-trips, ascending by card type" $
     Common.assertCodec
       s
       (CopyException.codec Common.text)
-      (CopyException.AddCardTypes (Set.fromList [CardType.Enchantment, CardType.Artifact]))
-      " {\"type\":\"AddCardTypes\",\"value\":[{\"type\":\"Artifact\"},{\"type\":\"Enchantment\"}]} "
+      (CopyException.CardTypes ChangeMode.InAddition (Set.fromList [CardType.Enchantment, CardType.Artifact]))
+      " {\"type\":\"CardTypes\",\"value\":{\"mode\":{\"type\":\"InAddition\"},\"cardTypes\":[{\"type\":\"Artifact\"},{\"type\":\"Enchantment\"}]}} "
 
   Spec.it s "AddSubtypes round-trips, ascending by subtype" $
     Common.assertCodec
@@ -65,12 +66,12 @@ spec s = Spec.describe s "Parun.Codec.CopyException" $ do
       (CopyException.AddSupertypes (Set.fromList [Supertype.Snow, Supertype.Legendary]))
       " {\"type\":\"AddSupertypes\",\"value\":[{\"type\":\"Legendary\"},{\"type\":\"Snow\"}]} "
 
-  Spec.it s "SetCardTypes round-trips, ascending by card type" $
+  Spec.it s "CardTypes Replace round-trips, ascending by card type" $
     Common.assertCodec
       s
       (CopyException.codec Common.text)
-      (CopyException.SetCardTypes (Set.fromList [CardType.Enchantment, CardType.Creature]))
-      " {\"type\":\"SetCardTypes\",\"value\":[{\"type\":\"Creature\"},{\"type\":\"Enchantment\"}]} "
+      (CopyException.CardTypes ChangeMode.Replace (Set.fromList [CardType.Enchantment, CardType.Creature]))
+      " {\"type\":\"CardTypes\",\"value\":{\"mode\":{\"type\":\"Replace\"},\"cardTypes\":[{\"type\":\"Creature\"},{\"type\":\"Enchantment\"}]}} "
 
   Spec.it s "SetCreatureSubtypes round-trips, ascending by subtype" $
     Common.assertCodec

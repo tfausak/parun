@@ -24,9 +24,14 @@
                             "type": "UntilEndOfCombat"
                           },
                           "modification": {
-                            "type": "AddCardType",
+                            "type": "CardType",
                             "value": {
-                              "type": "Creature"
+                              "cardType": {
+                                "type": "Creature"
+                              },
+                              "mode": {
+                                "type": "InAddition"
+                              }
                             }
                           },
                           "ref": {
@@ -45,7 +50,7 @@
                             "type": "CreatureSubtype",
                             "value": {
                               "mode": {
-                                "type": "Replace"
+                                "type": "InAddition"
                               },
                               "subtype": {
                                 "type": "Golem"

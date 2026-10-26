@@ -310,35 +310,32 @@ data Modification ability
     -- Parun.CardSpec holds the fence: no AddSubtype in the pool may carry a land
     -- type or a creature type, since those have their own arms and their own gate.
     AddSubtype Subtype.Subtype
-  | AddCardType CardType.CardType -- layer 4 (Opalescence -> Creature)
-  | -- | layer 4, CR 613.1d / 205.1a set (Song of the Dryads -> land). The SET
-    -- beside the add above, standing to it as LandSubtype's Replace mode stands
-    -- to its InAddition: the new card type REPLACES the ones the object had.
+  | -- | layer 4, CR 613.1d / 205.1a / 205.1b: this object's card types become
+    -- this one, or it gains it in addition to them, as the mode says (Song of the
+    -- Dryads -> Land, Opalescence -> Creature).
     --
-    -- CR 205.1a keeps instant and sorcery through the replacement by name, and
-    -- carries the consequence for subtypes: a subtype whose family correlates
-    -- only with a card type just removed goes with it (Parun.Engine.Subtype's
-    -- correlatedCardTypes). That is the one thing this arm does which the add
-    -- does not, and it is why Parun.Engine.Projection.modificationWrites gives it
-    -- Subtypes as well as Types.
+    -- The Replace mode alone carries CR 205.1a's consequences: instant and
+    -- sorcery survive it, and a subtype whose family correlates only with a card
+    -- type just removed goes with it (Parun.Engine.Subtype's
+    -- correlatedCardTypes), which is why
+    -- Parun.Engine.Projection.modificationWrites gives that mode Subtypes as well
+    -- as Types.
     --
-    -- Carries one CardType, the narrowing every layer-4 set here already takes.
-    -- A card that set two ("becomes an artifact creature") is CR 205.1b's
-    -- retaining phrase instead, which is the ADD twice over -- rule 702.122a's
-    -- crew is written that way in Parun.Engine.Keyword.
-    --
-    -- Gliding Licid stops being a Creature by becoming an Enchantment, which is
-    -- this arm and not the removal below.
-    SetCardType CardType.CardType
+    -- Carries one CardType. A card that adds two ("becomes an artifact
+    -- creature") is CR 205.1b's retaining phrase, so InAddition twice over --
+    -- rule 702.122a's crew is written that way in Parun.Engine.Keyword. Gliding
+    -- Licid stops being a Creature by becoming an Enchantment, which is the
+    -- Replace mode and not the removal below.
+    CardType ChangeMode.ChangeMode CardType.CardType
   | -- | layer 4, CR 613.1d / 205.1a removal: this card type is taken away and no
     -- other put in its place -- CR 702.151b's "attaching an Equipment with
     -- reconfigure to another creature causes the Equipment to stop being a
     -- creature". The third layer-4 card-type arm, and the only one that leaves
-    -- the object with FEWER types than it had: the set above replaces every
-    -- type, and the add above removes none.
+    -- the object with FEWER types than it had: CardType's Replace mode replaces
+    -- every type, and its InAddition mode removes none.
     --
     -- CR 205.1a's own consequence for subtypes rides along, exactly as it does
-    -- on the set: a subtype correlated only with the removed card type goes with
+    -- on CardType's Replace mode: a subtype correlated only with the removed card type goes with
     -- it (an attached Rabbit Battery is no longer a Rabbit), and one correlated
     -- with a card type the object still has stays (it is still an Equipment,
     -- Equipment being an artifact type). Parun.Engine.Projection.cardTypesAfter

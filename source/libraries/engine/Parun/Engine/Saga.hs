@@ -175,7 +175,7 @@ isSaga = Set.member Subtype.Saga . PC.subtypes
 -- The SUBTYPE alone, though CR 505.4 and CR 703.4f both say "Saga ENCHANTMENT"
 -- where CR 704.5s says "Saga permanent". The two readings cannot differ, and the
 -- reason is now CR 205.1a rather than a capability parun lacks: an effect that
--- takes the enchantment card type away (Modification.SetCardType) strips the
+-- takes the enchantment card type away (Modification.CardType Replace) strips the
 -- subtypes correlated with it in the same step, Saga among them (CR 205.3h,
 -- Parun.Engine.Subtype.correlatedCardTypes), and nothing grants an enchantment
 -- subtype to a permanent that is not one. So a Saga is an enchantment, and a

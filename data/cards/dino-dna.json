@@ -100,12 +100,17 @@
                               ]
                             },
                             {
-                              "type": "SetCardTypes",
-                              "value": [
-                                {
-                                  "type": "Creature"
+                              "type": "CardTypes",
+                              "value": {
+                                "cardTypes": [
+                                  {
+                                    "type": "Creature"
+                                  }
+                                ],
+                                "mode": {
+                                  "type": "Replace"
                                 }
-                              ]
+                              }
                             },
                             {
                               "type": "SetCreatureSubtypes",

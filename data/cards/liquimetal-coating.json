@@ -24,9 +24,14 @@
                             "type": "UntilEndOfTurn"
                           },
                           "modification": {
-                            "type": "AddCardType",
+                            "type": "CardType",
                             "value": {
-                              "type": "Artifact"
+                              "cardType": {
+                                "type": "Artifact"
+                              },
+                              "mode": {
+                                "type": "InAddition"
+                              }
                             }
                           },
                           "ref": {

@@ -583,7 +583,7 @@ evasionSpec s registry = Spec.describe s "Evasion" $ do
     forest <- S.printingOf s registry "Forest"
     let animate oid gs =
           let (ts, gs1) = Game.freshTimestamp gs
-              eff = ContinuousEffect.MkContinuousEffect oid ts Expiry.AtCleanup (Modification.AddCardType CardType.Creature) (Affected.TheseObjects (Set.singleton oid))
+              eff = ContinuousEffect.MkContinuousEffect oid ts Expiry.AtCleanup (Modification.CardType ChangeMode.InAddition CardType.Creature) (Affected.TheseObjects (Set.singleton oid))
            in gs1 {GameState.continuousEffects = eff : GameState.continuousEffects gs1}
     case attacking [graxiplon] [arbor, forest, forest] of
       (gs, a : _, [b, f1, f2]) ->

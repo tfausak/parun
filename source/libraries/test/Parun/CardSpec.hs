@@ -1001,8 +1001,7 @@ modificationCounts modification = case modification of
   Modification.LoseEveryCreatureSubtype -> []
   Modification.SetCreatureSubtypesOfLastCardExiledWith _ -> []
   Modification.AddSubtype _ -> []
-  Modification.AddCardType _ -> []
-  Modification.SetCardType _ -> []
+  Modification.CardType {} -> []
   Modification.LoseCardType _ -> []
   Modification.AddSupertype _ -> []
   Modification.RemoveSupertype _ -> []
@@ -4450,8 +4449,7 @@ modificationFilters modification = case modification of
   -- Its Filter picks the card it reads, which is card text like any other.
   Modification.SetCreatureSubtypesOfLastCardExiledWith f -> unframed [f]
   Modification.AddSubtype _ -> []
-  Modification.AddCardType _ -> []
-  Modification.SetCardType _ -> []
+  Modification.CardType {} -> []
   Modification.LoseCardType _ -> []
   Modification.AddSupertype _ -> []
   Modification.RemoveSupertype _ -> []
@@ -5119,9 +5117,8 @@ copyExceptionFilters :: CopyException.CopyException (GrantedAbility.GrantedAbili
 copyExceptionFilters exception = case exception of
   CopyException.SetPowerToughness _ -> []
   CopyException.GainKeywords keywords -> concatMap keywordFilters (Set.toList keywords)
-  CopyException.AddCardTypes _ -> []
+  CopyException.CardTypes {} -> []
   CopyException.AddSubtypes _ -> []
-  CopyException.SetCardTypes _ -> []
   CopyException.SetCreatureSubtypes _ -> []
   CopyException.AddSupertypes _ -> []
   CopyException.RemoveSupertypes _ -> []

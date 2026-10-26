@@ -32,6 +32,7 @@ import qualified Parun.Types.AbilityName as AbilityName
 import qualified Parun.Types.ArmDelayedTrigger as ArmDelayedTrigger
 import Parun.Types.Card (Card)
 import qualified Parun.Types.CardType as CardType
+import qualified Parun.Types.ChangeMode as ChangeMode
 import qualified Parun.Types.CounterKind as CounterKind
 import qualified Parun.Types.Duration as Duration
 import qualified Parun.Types.Earthbend as Earthbend
@@ -69,7 +70,7 @@ import qualified Parun.Types.Zone as Zone
 -- NO Land card type is added. Rule 701.66a says "0\/0 land creature", and the
 -- object is already a land -- rule 701.66a's own "target land you control" is
 -- what guarantees it, and CR 608.2b re-checks that at resolution. An
--- AddCardType Land would be a layer-4 no-op on every board that reaches here.
+-- InAddition CardType Land would be a layer-4 no-op on every board that reaches here.
 --
 -- Duration.Indefinite and not UntilEndOfTurn: rule 701.66a states no duration,
 -- so CR 611.2a leaves the effect running until the game ends -- which in
@@ -79,7 +80,7 @@ instructions :: Earthbend.Earthbend -> [Effect Card (GrantedAbility.GrantedAbili
 instructions earthbend =
   let ref = Earthbend.ref earthbend
       animate modification = Effect.ModifyTarget (ModifyTarget.MkModifyTarget Duration.Indefinite modification ref Nothing)
-   in [ animate (Modification.AddCardType CardType.Creature),
+   in [ animate (Modification.CardType ChangeMode.InAddition CardType.Creature),
         animate (Modification.SetBasePowerToughness (SetBasePowerToughness.MkSetBasePowerToughness (Just (Quantity.Literal 0)) (Just (Quantity.Literal 0)))),
         animate (Modification.GainKeyword Keyword.Haste),
         Effect.PutCounters

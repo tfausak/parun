@@ -980,10 +980,9 @@ copyExceptionNames asking onAbility x = case x of
   CopyException.SetPowerToughness _setPowerToughness -> mempty
   CopyException.GainKeywords keyword -> foldMap (keywordNames asking) keyword
   CopyException.GainThisAbility -> mempty
-  CopyException.AddCardTypes _cardType -> mempty
+  CopyException.CardTypes _mode _cardType -> mempty
   CopyException.AddSubtypes _subtype -> mempty
   CopyException.AddSupertypes _supertype -> mempty
-  CopyException.SetCardTypes _cardType -> mempty
   CopyException.SetCreatureSubtypes _subtype -> mempty
   CopyException.RemoveSupertypes _supertype -> mempty
   CopyException.SetName _cardName -> mempty
@@ -2119,8 +2118,7 @@ modificationNames asking onAbility x = case x of
   Modification.LoseEveryCreatureSubtype -> mempty
   Modification.SetCreatureSubtypesOfLastCardExiledWith filter_ -> filterNames asking filter_
   Modification.AddSubtype _subtype -> mempty
-  Modification.AddCardType _cardType -> mempty
-  Modification.SetCardType _cardType -> mempty
+  Modification.CardType {} -> mempty
   Modification.LoseCardType _cardType -> mempty
   Modification.AddSupertype _supertype -> mempty
   Modification.RemoveSupertype _supertype -> mempty
