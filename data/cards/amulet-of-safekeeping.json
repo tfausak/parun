@@ -84,8 +84,16 @@
                         ]
                       },
                       "payer": {
-                        "type": "ControllerOfBound",
-                        "value": "thatTargetingObject"
+                        "type": "HolderOfBound",
+                        "value": {
+                          "holder": {
+                            "type": "Controller"
+                          },
+                          "hop": {
+                            "type": "Itself"
+                          },
+                          "slot": "thatTargetingObject"
+                        }
                       }
                     }
                   }

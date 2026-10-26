@@ -27,8 +27,16 @@
                         "type": "ChooseNumber",
                         "value": {
                           "chooser": {
-                            "type": "ControllerOfBound",
-                            "value": "spell"
+                            "type": "HolderOfBound",
+                            "value": {
+                              "holder": {
+                                "type": "Controller"
+                              },
+                              "hop": {
+                                "type": "Itself"
+                              },
+                              "slot": "spell"
+                            }
                           },
                           "slot": "number",
                           "upTo": 2
@@ -38,8 +46,16 @@
                         "type": "Draw",
                         "value": {
                           "player": {
-                            "type": "ControllerOfBound",
-                            "value": "spell"
+                            "type": "HolderOfBound",
+                            "value": {
+                              "holder": {
+                                "type": "Controller"
+                              },
+                              "hop": {
+                                "type": "Itself"
+                              },
+                              "slot": "spell"
+                            }
                           },
                           "quantity": {
                             "type": "InSlot",

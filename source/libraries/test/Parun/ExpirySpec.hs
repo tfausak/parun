@@ -1559,7 +1559,7 @@ cannonadeSpec s registry = Spec.describe s "BrazenCannonade" $ do
 -- be the caster's, where this one is the exiled card's owner and so is bob's on
 -- the leg alice aims at him.
 --
--- "Its owner" is written as PlayerRef.ControllerOfBound: CR 108.4 leaves a card
+-- "Its owner" is written as PlayerRef.HolderOfBound Controller: CR 108.4 leaves a card
 -- in exile with no controller and CR 108.4a then answers with its owner, so the
 -- two readings cannot come apart for a card this spell has already moved.
 --

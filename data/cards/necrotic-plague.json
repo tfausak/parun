@@ -141,8 +141,16 @@
                 "targetSlots": {
                   "target": {
                     "chooser": {
-                      "type": "ControllerOfBound",
-                      "value": "thatDepartedPermanent"
+                      "type": "HolderOfBound",
+                      "value": {
+                        "holder": {
+                          "type": "Controller"
+                        },
+                        "hop": {
+                          "type": "Itself"
+                        },
+                        "slot": "thatDepartedPermanent"
+                      }
                     },
                     "filter": {
                       "type": "ControllerRelatesToBound",

@@ -73,8 +73,16 @@
                                         "type": "Players",
                                         "value": {
                                           "players": {
-                                            "type": "ControllerOfBound",
-                                            "value": "noncreatureSource"
+                                            "type": "HolderOfBound",
+                                            "value": {
+                                              "holder": {
+                                                "type": "Controller"
+                                              },
+                                              "hop": {
+                                                "type": "Itself"
+                                              },
+                                              "slot": "noncreatureSource"
+                                            }
                                           }
                                         }
                                       }

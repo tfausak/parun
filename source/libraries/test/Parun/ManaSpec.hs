@@ -3364,7 +3364,7 @@ gauntletOfPowerSpec s registry = Spec.describe s "Gauntlet of Power" $ do
     Spec.assertEqWith s "CR 106.12a alice's pool holds the Forest's {G} and the Gauntlet's additional one" (poolTypes S.alice forest) [ManaType.Colored Color.Green, ManaType.Colored Color.Green]
     Spec.assertEqWith s "the specification: her Mountain produced red and not the chosen colour, so its {R} stands alone" (poolTypes S.alice mountain) [ManaType.Colored Color.Red]
     Spec.assertEqWith s "the Filter: her Dryad Arbor produced the chosen colour but is no BASIC land, so its {G} stands alone" (poolTypes S.alice arbor) [ManaType.Colored Color.Green]
-    -- CR 106.4: "its controller", read through PlayerRef.ControllerOfBound off
+    -- CR 106.4: "its controller", read through PlayerRef.HolderOfBound Controller off
     -- the tapped land, is bob -- not alice, who controls the Gauntlet.
     Spec.assertEqWith s "the PlayerRelation: bob's basic Forest fires it too, and the additional mana is HIS" (poolTypes S.bob theirs) [ManaType.Colored Color.Green, ManaType.Colored Color.Green]
     Spec.assertEqWith s "and alice, whose Gauntlet watched it, is given none of it" (poolTypes S.alice theirs) []

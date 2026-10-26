@@ -940,15 +940,15 @@ nightShiftRun rolls rerolls shifts index spell board =
       ((_, after), (_, _, _, shown)) = State.runState (Engine.runGame (nightShiftAnswer index) board script) (rolls, rerolls, shifts, [])
    in (after, reverse shown)
 
--- CR 108.3, PlayerRef.OwnerOfBound's producer: The Deck of Many Things' 20
+-- CR 108.3, PlayerRef.HolderOfBound Owner's producer: The Deck of Many Things' 20
 -- band, "Put a creature card from any graveyard onto the battlefield under
 -- your control. When that creature dies, its owner loses the game." alice
 -- activates and so CONTROLS the reanimated creature; it is bob's own card, so
 -- he OWNS it. The two seats come apart, which is exactly what
--- PlayerRef.ControllerOfBound could not have named -- that reference would
+-- PlayerRef.HolderOfBound Controller could not have named -- that reference would
 -- have alice, the controller, lose instead of bob.
 deckOwnerSpec :: (Monad m) => Spec.Spec m n -> Registry.Registry m -> n ()
-deckOwnerSpec s registry = Spec.describe s "OwnerOfBound" $ do
+deckOwnerSpec s registry = Spec.describe s "HolderOfBound owner" $ do
   Spec.it s "CR 108.3 a creature reanimated under another player's control still makes its OWNER lose the game" $ do
     deck <- S.printingOf s registry "The Deck of Many Things"
     plains <- S.printingOf s registry "Plains"

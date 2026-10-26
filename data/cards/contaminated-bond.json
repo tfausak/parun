@@ -60,8 +60,16 @@
                         "type": "LoseLife",
                         "value": {
                           "player": {
-                            "type": "ControllerOfBound",
-                            "value": "thatAttackingCreature"
+                            "type": "HolderOfBound",
+                            "value": {
+                              "holder": {
+                                "type": "Controller"
+                              },
+                              "hop": {
+                                "type": "Itself"
+                              },
+                              "slot": "thatAttackingCreature"
+                            }
                           },
                           "quantity": {
                             "type": "Literal",
@@ -73,8 +81,16 @@
                         "type": "LoseLife",
                         "value": {
                           "player": {
-                            "type": "ControllerOfBound",
-                            "value": "thatBlocker"
+                            "type": "HolderOfBound",
+                            "value": {
+                              "holder": {
+                                "type": "Controller"
+                              },
+                              "hop": {
+                                "type": "Itself"
+                              },
+                              "slot": "thatBlocker"
+                            }
                           },
                           "quantity": {
                             "type": "Literal",

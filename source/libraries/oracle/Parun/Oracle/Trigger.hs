@@ -21,6 +21,7 @@ import qualified Parun.Types.DealsDamageToPlayer as DealsDamageToPlayer
 import qualified Parun.Types.EndingStep as EndingStep
 import qualified Parun.Types.Filter as Filter.Type
 import qualified Parun.Types.Holder as Holder
+import qualified Parun.Types.Hop as Hop
 import qualified Parun.Types.InZone as InZone
 import qualified Parun.Types.Keyword as Keyword
 import qualified Parun.Types.OwnedZone as OwnedZone
@@ -278,7 +279,7 @@ step s = case (StepBegins.phase s, StepBegins.ordinal s, StepBegins.scope s) of
 -- creature's controller", over the source slot.
 namedPlayers :: String -> PlayerRef.PlayerRef -> [String]
 namedPlayers name ref = case ref of
-  PlayerRef.ControllerOfHostOfBound slot | slot == Target.selfSlot -> ["the " <> name <> " of enchanted creature's controller"]
+  PlayerRef.HolderOfBound Holder.Controller Hop.Host slot | slot == Target.selfSlot -> ["the " <> name <> " of enchanted creature's controller"]
   _ -> []
 
 -- | The slots Parun.Engine.Binding binds a trigger event's objects and players

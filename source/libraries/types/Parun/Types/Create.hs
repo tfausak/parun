@@ -28,7 +28,7 @@ data Create card ability = MkCreate
     -- says otherwise when the creator is somebody the sentence identifies --
     -- Rampage of the Clans' "for each permanent destroyed this way, ITS
     -- CONTROLLER creates a 3/3 green Centaur creature token", where the
-    -- reference is a PlayerRef.ControllerOfBound over the loop's own member.
+    -- reference is a PlayerRef.HolderOfBound over the loop's own member.
     --
     -- A PlayerRef and not a PlayerId: only a resolution knows a seat. A
     -- reference naming SEVERAL players creates the tokens for each of them, in

@@ -135,6 +135,8 @@ import qualified Parun.Types.GainControl as GainControl
 import qualified Parun.Types.GrantLookAtExiled as GrantLookAtExiled
 import qualified Parun.Types.GrantPlayFromExile as GrantPlayFromExile
 import qualified Parun.Types.GrantedAbility as GrantedAbility
+import qualified Parun.Types.Holder as Holder
+import qualified Parun.Types.Hop as Hop
 import qualified Parun.Types.HowMany as HowMany
 import qualified Parun.Types.InstructionR as InstructionR
 import qualified Parun.Types.InstructionRewrite as InstructionRewrite
@@ -2181,16 +2183,12 @@ effectLintSpec s registry = Spec.describe s "Lint" $ do
           -- supplies a candidate, so this names nobody and moves nothing --
           -- which is at most one.
           PlayerRef.Candidate -> True
-          -- One seat -- InSlot's answer, one indirection out.
-          PlayerRef.ControllerOfBound _ -> True
-          -- One seat -- the arm above's answer, one attachment further out.
-          PlayerRef.ControllerOfHostOfBound _ -> True
-          -- One seat -- the ControllerOfBound answer, one word over.
-          PlayerRef.OwnerOfBound _ -> True
-          -- One seat each -- the two arms above, baked; unreachable from card
+          -- One seat -- InSlot's answer, one indirection out, whichever player
+          -- of the object or its host it reads.
+          PlayerRef.HolderOfBound {} -> True
+          -- One seat -- the arm above's answer, baked; unreachable from card
           -- data, Specific's answer.
-          PlayerRef.ControllerOfObject _ -> True
-          PlayerRef.OwnerOfObject _ -> True
+          PlayerRef.HolderOfObject _ _ -> True
           -- One seat -- the arm above's answer, one record over.
           PlayerRef.ChosenPlayerOfBound _ _ -> True
           -- A SET -- Relative Opponent's answer, and for its reason: CR 508.6 is
@@ -2285,7 +2283,7 @@ effectLintSpec s registry = Spec.describe s "Lint" $ do
         -- that funnel, is filterSlotsReadSingly's; Filter.IsBound reads the whole
         -- set, so it is no risk and no fence for the others either.
         --
-        -- A PlayerRef NESTED IN a quantity -- Quantity's own ControllerOfBound
+        -- A PlayerRef NESTED IN a quantity -- Quantity's own HolderOfBound
         -- arm -- is covered by the same leg: QuantitySlot.slots answers empty
         -- for it, but quantitySlots folds nestedRefs, so it arrives at
         -- Resolve.playerRefSlots' own arity like any other reference.
@@ -2356,7 +2354,7 @@ effectLintSpec s registry = Spec.describe s "Lint" $ do
         -- The reading side's fourth carrier: a PlayerRef, whose slot reads are
         -- Resolve.playerRefSlots' own classification rather than a second one
         -- kept here -- SlotArity.One is exactly the arm that hands its slot to
-        -- legalOne, and CR 608.2h's ControllerOfBound is the one such arm naming
+        -- legalOne, and CR 608.2h's HolderOfBound is the one such arm naming
         -- an OBJECT slot, which is the only kind boundPlurally mints. The
         -- traversals are Resolve's too, so an opcode gaining a PlayerRef field
         -- is fenced without an arm here.
@@ -2450,7 +2448,7 @@ effectLintSpec s registry = Spec.describe s "Lint" $ do
         -- CR 608.2h's arm anywhere a PlayerRef sits in an effect, which is the
         -- corpus half of this leg. A wildcard because it is a presence probe:
         -- every other arm is not this one, however many there come to be.
-        namesControllerOfBound ref = case ref of PlayerRef.ControllerOfBound _ -> True; _ -> False
+        namesControllerOfBound ref = case ref of PlayerRef.HolderOfBound Holder.Controller Hop.Itself _ -> True; _ -> False
         readsController effect =
           any
             namesControllerOfBound
@@ -2562,20 +2560,20 @@ effectLintSpec s registry = Spec.describe s "Lint" $ do
     -- bound, so the pair differs in the slot name alone.
     Spec.assertBool s (clashesIn [destruction] [TriggerCondition.PermanentDies (Filter.Type.IsControllerOfBound destroyedSlot)] []) "a singular read inside a delayed condition's filter is caught"
     Spec.assertBool s (not (clashesIn [destruction] [TriggerCondition.PermanentDies (Filter.Type.IsControllerOfBound elsewhereSlot)] [])) "a singular read inside a delayed condition's filter of another slot is left alone"
-    -- The PlayerRef carrier, where CR 608.2h's ControllerOfBound names an OBJECT
+    -- The PlayerRef carrier, where CR 608.2h's HolderOfBound names an OBJECT
     -- slot and reads it through Resolve.playerRefPlayers' legalOne. Three boards
     -- differing in one thing
     -- each -- the ARM against the group-tolerant PlayerRef.EachInSlot, which is
     -- what proves the walk reads Resolve.playerRefSlots' arity rather than
     -- reporting every slot a reference names, and the SLOT against a name the
     -- destruction never bound.
-    Spec.assertBool s (clashes [destruction, gaining (PlayerRef.ControllerOfBound destroyedSlot)]) "a singular read inside a player reference is caught"
+    Spec.assertBool s (clashes [destruction, gaining (PlayerRef.HolderOfBound Holder.Controller Hop.Itself destroyedSlot)]) "a singular read inside a player reference is caught"
     Spec.assertBool s (not (clashes [destruction, gaining (PlayerRef.EachInSlot destroyedSlot)])) "a group-tolerant read inside a player reference is left alone"
-    Spec.assertBool s (not (clashes [destruction, gaining (PlayerRef.ControllerOfBound elsewhereSlot)])) "a singular read inside a player reference of another slot is left alone"
+    Spec.assertBool s (not (clashes [destruction, gaining (PlayerRef.HolderOfBound Holder.Controller Hop.Itself elsewhereSlot)])) "a singular read inside a player reference of another slot is left alone"
     -- The same arm NESTED IN AN OBJECTREF, which is the half a top-level field
     -- cannot prove: an objectRefPlayerRefs answering [] for the library walk
     -- would pass all three assertions above.
-    Spec.assertBool s (clashes [destruction, revealing (PlayerRef.ControllerOfBound destroyedSlot)]) "a singular read inside an object reference's own player reference is caught"
+    Spec.assertBool s (clashes [destruction, revealing (PlayerRef.HolderOfBound Holder.Controller Hop.Itself destroyedSlot)]) "a singular read inside an object reference's own player reference is caught"
     -- And the guard that keeps the leg from fencing a shape no card writes:
     -- Rampage of the Clans' creator, Belltower Sphinx's miller, Marchesa's
     -- Decree's loser and Spikeshell Harrier's slowed player all print one.
@@ -2625,14 +2623,14 @@ effectLintSpec s registry = Spec.describe s "Lint" $ do
     -- boards differing in one thing each, the PlayerRef leg's own posture: the
     -- ARM against the group-tolerant PlayerRef.EachInSlot, and the SLOT against a
     -- name the destruction never bound.
-    Spec.assertBool s (faceClashes (payerFace (PlayerRef.ControllerOfBound destroyedSlot))) "a resolution cost's payer naming a plurally bound slot is caught"
+    Spec.assertBool s (faceClashes (payerFace (PlayerRef.HolderOfBound Holder.Controller Hop.Itself destroyedSlot))) "a resolution cost's payer naming a plurally bound slot is caught"
     Spec.assertBool s (not (faceClashes (payerFace (PlayerRef.EachInSlot destroyedSlot)))) "a group-tolerant payer is left alone"
-    Spec.assertBool s (not (faceClashes (payerFace (PlayerRef.ControllerOfBound elsewhereSlot)))) "a payer naming another slot is left alone"
+    Spec.assertBool s (not (faceClashes (payerFace (PlayerRef.HolderOfBound Holder.Controller Hop.Itself elsewhereSlot)))) "a payer naming another slot is left alone"
     -- The same arm at the OTHER clause position, which the payer's boards cannot
     -- prove: a clausePlayerRefs answering [] for Optionality.Optional would pass
     -- all three above.
-    Spec.assertBool s (faceClashes (askerFace (PlayerRef.ControllerOfBound destroyedSlot))) "a may's asker naming a plurally bound slot is caught"
-    Spec.assertBool s (not (faceClashes (askerFace (PlayerRef.ControllerOfBound elsewhereSlot)))) "an asker naming another slot is left alone"
+    Spec.assertBool s (faceClashes (askerFace (PlayerRef.HolderOfBound Holder.Controller Hop.Itself destroyedSlot))) "a may's asker naming a plurally bound slot is caught"
+    Spec.assertBool s (not (faceClashes (askerFace (PlayerRef.HolderOfBound Holder.Controller Hop.Itself elsewhereSlot)))) "an asker naming another slot is left alone"
     -- And the guard that keeps this leg from fencing a shape no card writes: Mana
     -- Leak, Clash of Wills, Mystic Confluence and Don't Make a Sound all offer
     -- their cost to the targeted spell's controller, and Amulet of Safekeeping to

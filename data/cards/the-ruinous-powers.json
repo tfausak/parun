@@ -36,8 +36,16 @@
                         "type": "LoseLife",
                         "value": {
                           "player": {
-                            "type": "OwnerOfBound",
-                            "value": "exiled"
+                            "type": "HolderOfBound",
+                            "value": {
+                              "holder": {
+                                "type": "Owner"
+                              },
+                              "hop": {
+                                "type": "Itself"
+                              },
+                              "slot": "exiled"
+                            }
                           },
                           "quantity": {
                             "type": "AgainstSlot",

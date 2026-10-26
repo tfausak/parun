@@ -113,6 +113,8 @@ import qualified Parun.Types.FromOutsideTheGame as FromOutsideTheGame
 import qualified Parun.Types.GainControl as GainControl
 import qualified Parun.Types.GrantLookAtExiled as GrantLookAtExiled
 import qualified Parun.Types.GrantPlayFromExile as GrantPlayFromExile
+import qualified Parun.Types.Holder as Holder
+import qualified Parun.Types.Hop as Hop
 import qualified Parun.Types.HowMany as HowMany
 import qualified Parun.Types.InZone as InZone
 import qualified Parun.Types.InitiativeTarget as InitiativeTarget
@@ -833,8 +835,8 @@ spec s = Spec.describe s "Parun.Codec.Effect" $ do
       s
       toJson
       fromJson
-      (Effect.DecreaseSpeed (SpeedDecrease.MkSpeedDecrease (PlayerRef.ControllerOfBound (SlotName.MkSlotName (Text.pack "permanent"))) (Quantity.Literal 1) 1))
-      " {\"type\":\"DecreaseSpeed\",\"value\":{\"player\":{\"type\":\"ControllerOfBound\",\"value\":\"permanent\"},\"quantity\":{\"type\":\"Literal\",\"value\":1},\"floor\":1}} "
+      (Effect.DecreaseSpeed (SpeedDecrease.MkSpeedDecrease (PlayerRef.HolderOfBound Holder.Controller Hop.Itself (SlotName.MkSlotName (Text.pack "permanent"))) (Quantity.Literal 1) 1))
+      " {\"type\":\"DecreaseSpeed\",\"value\":{\"player\":{\"type\":\"HolderOfBound\",\"value\":{\"holder\":{\"type\":\"Controller\"},\"hop\":{\"type\":\"Itself\"},\"slot\":\"permanent\"}},\"quantity\":{\"type\":\"Literal\",\"value\":1},\"floor\":1}} "
   -- Create's EntryRiders, bound slot and CR 111.2 creator are each ELIDED when
   -- they are the default, exactly like MoveToZone above; the riders and the slot
   -- were once the middle two of four emitted forms, told apart at decode by JSON
@@ -876,8 +878,8 @@ spec s = Spec.describe s "Parun.Codec.Effect" $ do
       s
       toJson
       fromJson
-      (Effect.Create (Create.MkCreate (Quantity.Literal 1) card plain Nothing (PlayerRef.ControllerOfBound (SlotName.MkSlotName (Text.pack "victim")))))
-      " {\"type\":\"Create\",\"value\":{\"quantity\":{\"type\":\"Literal\",\"value\":1},\"card\":\"Goblin Piker\",\"creator\":{\"type\":\"ControllerOfBound\",\"value\":\"victim\"}}} "
+      (Effect.Create (Create.MkCreate (Quantity.Literal 1) card plain Nothing (PlayerRef.HolderOfBound Holder.Controller Hop.Itself (SlotName.MkSlotName (Text.pack "victim")))))
+      " {\"type\":\"Create\",\"value\":{\"quantity\":{\"type\":\"Literal\",\"value\":1},\"card\":\"Goblin Piker\",\"creator\":{\"type\":\"HolderOfBound\",\"value\":{\"holder\":{\"type\":\"Controller\"},\"hop\":{\"type\":\"Itself\"},\"slot\":\"victim\"}}}} "
   -- The count elided at one and the destination stated, which is what "conjure a
   -- card named Ornithopter into your hand" prints.
   Spec.it s "Conjure" $

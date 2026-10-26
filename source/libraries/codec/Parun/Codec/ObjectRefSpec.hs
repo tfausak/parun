@@ -23,6 +23,8 @@ import qualified Parun.Types.EachCardInHand as EachCardInHand
 import qualified Parun.Types.ExiledPile as ExiledPile
 import qualified Parun.Types.Filter as Filter
 import qualified Parun.Types.FromAnywhere as FromAnywhere
+import qualified Parun.Types.Holder as Holder
+import qualified Parun.Types.Hop as Hop
 import qualified Parun.Types.HowMany as HowMany
 import qualified Parun.Types.ObjectRef as ObjectRef
 import qualified Parun.Types.PlayerRef as PlayerRef
@@ -131,8 +133,8 @@ spec s = Spec.describe s "Parun.Codec.ObjectRef" $ do
     Common.assertCodec
       s
       ObjectRef.codec
-      (ObjectRef.Players PlayersWho.MkPlayersWho {PlayersWho.players = PlayerRef.ControllerOfBound (SlotName.MkSlotName (Text.pack "thatDamageSource")), PlayersWho.who = Nothing})
-      " {\"type\":\"Players\",\"value\":{\"players\":{\"type\":\"ControllerOfBound\",\"value\":\"thatDamageSource\"}}} "
+      (ObjectRef.Players PlayersWho.MkPlayersWho {PlayersWho.players = PlayerRef.HolderOfBound Holder.Controller Hop.Itself (SlotName.MkSlotName (Text.pack "thatDamageSource")), PlayersWho.who = Nothing})
+      " {\"type\":\"Players\",\"value\":{\"players\":{\"type\":\"HolderOfBound\",\"value\":{\"holder\":{\"type\":\"Controller\"},\"hop\":{\"type\":\"Itself\"},\"slot\":\"thatDamageSource\"}}}} "
   -- Nullary like EachPlayer above, and for a rule rather than an economy: CR
   -- 400.2 makes a hand hidden, so this arm names only the resolving
   -- controller's own and carries neither a player nor a filter.

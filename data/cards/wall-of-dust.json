@@ -61,8 +61,16 @@
                           "duration": {
                             "type": "DuringNextTurnOf",
                             "value": {
-                              "type": "ControllerOfBound",
-                              "value": "thatAttacker"
+                              "type": "HolderOfBound",
+                              "value": {
+                                "holder": {
+                                  "type": "Controller"
+                                },
+                                "hop": {
+                                  "type": "Itself"
+                                },
+                                "slot": "thatAttacker"
+                              }
                             }
                           }
                         }

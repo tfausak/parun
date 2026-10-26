@@ -51,7 +51,7 @@ data PayGate = MkPayGate
     -- CR 101.4 puts them in APNAP order. Every single-payer card in the pool
     -- writes one of the two slot-reading arms -- Whipstitched Zombie's own
     -- controller is InSlot "you", Mana Leak's targeted spell's controller is
-    -- ControllerOfBound "spell" (CR 109.4, CR 405.4 for a spell).
+    -- HolderOfBound Controller Itself "spell" (CR 109.4, CR 405.4 for a spell).
     --
     -- Not the resolving controller, which is the question this card family
     -- forces: Mana Leak's payer is the TARGETED spell's controller, who controls

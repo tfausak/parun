@@ -78,8 +78,16 @@
               "scope": {
                 "type": "PlayersTurn",
                 "value": {
-                  "type": "ControllerOfHostOfBound",
-                  "value": "self"
+                  "type": "HolderOfBound",
+                  "value": {
+                    "holder": {
+                      "type": "Controller"
+                    },
+                    "hop": {
+                      "type": "Host"
+                    },
+                    "slot": "self"
+                  }
                 }
               }
             }

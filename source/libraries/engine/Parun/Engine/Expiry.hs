@@ -64,6 +64,8 @@ import qualified Parun.Types.ExtraTurn as ExtraTurn
 import Parun.Types.Game (Game)
 import Parun.Types.GameState (GameState)
 import qualified Parun.Types.GameState as GameState
+import qualified Parun.Types.Holder as Holder
+import qualified Parun.Types.Hop as Hop
 import qualified Parun.Types.IgnoredAbility as IgnoredAbility
 import qualified Parun.Types.Object as Object
 import Parun.Types.ObjectId (ObjectId)
@@ -139,12 +141,12 @@ arm acquisition targets controller source duration gs = case duration of
   -- reasons, and Nothing where the reference names nobody for that arm's reason
   -- too -- a window that cannot begin stores nothing.
   --
-  -- A ControllerOfBound naming an object still in the game is NOT sampled: its
+  -- The controller of a bound object still in the game is NOT sampled: its
   -- seat is read live and pinned once its controller's declare attackers step
   -- has passed (pinAfterDeclareAttackers), so a control change before then
   -- moves the window (CR 611.2a).
   Duration.DuringNextTurnOf ref -> case ref of
-    PlayerRef.ControllerOfBound slot
+    PlayerRef.HolderOfBound Holder.Controller Hop.Itself slot
       | Just oid <- Map.lookup slot (Binding.objectsIn targets),
         Maybe.isJust (Game.lookupObject oid gs) ->
           Just (Expiry.DuringTurnOfControllerOf (AfterObjectTurn.MkAfterObjectTurn oid (GameState.turnNumber gs)))

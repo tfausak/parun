@@ -35,7 +35,7 @@ data CopyStackObject ability = MkCopyStackObject
     -- | CR 707.10: who puts the copy onto the stack, and so owns and controls it
     -- -- Meletis Charlatan's "the controller of target instant or sorcery spell
     -- copies it", where the seat is the one that controls a targeted slot's
-    -- object (PlayerRef.ControllerOfBound).
+    -- object (PlayerRef.HolderOfBound).
     --
     -- A PlayerRef and not a PlayerId, since only a resolution knows a seat, and
     -- CR 109.5's "you" -- the resolving ability's own controller -- is the value
