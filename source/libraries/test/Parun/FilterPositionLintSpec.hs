@@ -274,7 +274,7 @@ filterAtomsOf leaf predicate = case predicate of
   -- PlayerId, and neither holds a Filter for a card author to reach.
   Filter.Type.HeldByBound _ _ -> leaf predicate
   Filter.Type.HeldByPlayer _ _ -> leaf predicate
-  -- A leaf for the two above's reason: a nullary atom holds no Filter for a card
+  -- A leaf for the two above's reason: a Holder holds no Filter for a card
   -- author to reach.
   Filter.Type.HeldByRecipient _ -> leaf predicate
   Filter.Type.ManaValueIsEven -> leaf predicate

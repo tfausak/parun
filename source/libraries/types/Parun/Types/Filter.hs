@@ -98,10 +98,11 @@ data Filter keyword
     -- source with no attack (CR 802.2a, Yare). Vacuously False where the Context
     -- holds no such player.
     ControlledByRole TurnRole.TurnRole
-  | -- | CR 603.2: the candidate's holder is the PLAYER BOUND at this slot --
-    -- Trygon Predator's "that player controls", Hurkyl's Recall's "artifacts
-    -- target player owns". Answered by rewriting (Parun.Engine.Filter.bakeBound),
-    -- and vacuously False if it survives to a match.
+  | -- | CR 603.2 / 115.1: the candidate's holder is the PLAYER BOUND at this
+    -- slot -- Trygon Predator's "that player controls", Hurkyl's Recall's
+    -- "artifacts target player owns". Answered by rewriting
+    -- (Parun.Engine.Filter.bakeBound), and vacuously False if it survives to a
+    -- match.
     HeldByBound Holder.Holder SlotName.SlotName
   | -- | The atom above with its player resolved: the candidate's holder IS this
     -- player. Runtime-only -- Parun.CardSpec lints the pool against a card
