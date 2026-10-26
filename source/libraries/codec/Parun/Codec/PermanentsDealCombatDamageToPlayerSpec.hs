@@ -4,6 +4,7 @@ import qualified Parun.Codec.PermanentsDealCombatDamageToPlayer as PermanentsDea
 import qualified Parun.JsonCodec.Common as Common
 import qualified Parun.Spec as Spec
 import qualified Parun.Types.Filter as Filter
+import qualified Parun.Types.Holder as Holder
 import qualified Parun.Types.PermanentsDealCombatDamageToPlayer as PermanentsDealCombatDamageToPlayer
 import qualified Parun.Types.PlayerRelation as PlayerRelation
 
@@ -17,22 +18,22 @@ spec s = Spec.describe s "Parun.Codec.PermanentsDealCombatDamageToPlayer" $ do
       s
       PermanentsDealCombatDamageToPlayer.codec
       ( PermanentsDealCombatDamageToPlayer.MkPermanentsDealCombatDamageToPlayer
-          { PermanentsDealCombatDamageToPlayer.filter = Filter.ControlledBy PlayerRelation.Opponent,
+          { PermanentsDealCombatDamageToPlayer.filter = Filter.HeldBy Holder.Controller PlayerRelation.Opponent,
             PermanentsDealCombatDamageToPlayer.recipient = PlayerRelation.You,
             PermanentsDealCombatDamageToPlayer.oneOrMorePlayers = False
           }
       )
-      " {\"filter\":{\"type\":\"ControlledBy\",\"value\":{\"type\":\"Opponent\"}},\"recipient\":{\"type\":\"You\"}} "
+      " {\"filter\":{\"type\":\"HeldBy\",\"value\":{\"holder\":{\"type\":\"Controller\"},\"relation\":{\"type\":\"Opponent\"}}},\"recipient\":{\"type\":\"You\"}} "
   -- Forth Eorlingas!'s "to one or more players": the key appears only when set.
   Spec.it s "MkPermanentsDealCombatDamageToPlayer, one or more players" $
     Common.assertCodec
       s
       PermanentsDealCombatDamageToPlayer.codec
       ( PermanentsDealCombatDamageToPlayer.MkPermanentsDealCombatDamageToPlayer
-          { PermanentsDealCombatDamageToPlayer.filter = Filter.ControlledBy PlayerRelation.You,
+          { PermanentsDealCombatDamageToPlayer.filter = Filter.HeldBy Holder.Controller PlayerRelation.You,
             PermanentsDealCombatDamageToPlayer.recipient = PlayerRelation.AnyPlayer,
             PermanentsDealCombatDamageToPlayer.oneOrMorePlayers = True
           }
       )
-      " {\"filter\":{\"type\":\"ControlledBy\",\"value\":{\"type\":\"You\"}},\"oneOrMorePlayers\":true,\"recipient\":{\"type\":\"AnyPlayer\"}} "
+      " {\"filter\":{\"type\":\"HeldBy\",\"value\":{\"holder\":{\"type\":\"Controller\"},\"relation\":{\"type\":\"You\"}}},\"oneOrMorePlayers\":true,\"recipient\":{\"type\":\"AnyPlayer\"}} "
   Spec.it s "has a schema" $ Common.assertHasSchema s PermanentsDealCombatDamageToPlayer.codec

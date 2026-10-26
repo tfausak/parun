@@ -1,6 +1,6 @@
 {-# LANGUAGE RankNTypes #-}
 
--- Covers: CR 108.3 / 110.2 / 111.2's OWNER, read as Parun.Types.Filter's OwnedBy
+-- Covers: CR 108.3 / 110.2 / 111.2's OWNER, read as Parun.Types.Filter's HeldBy Owner
 -- atom off Parun.Engine.Filter.View's `owner` field; and CR 701.21a / CR 101.2's
 -- SACRIFICE PROHIBITION -- Parun.Types.SacrificeRestriction, the set
 -- Parun.Engine.SacrificeRestriction answers, and the two places that set is
@@ -15,7 +15,7 @@
 -- THE BOARD SHAPE that makes every case here discriminating: two creatures that
 -- AGREE on controller and DISAGREE on owner. A board carrying only a stolen
 -- creature would pass under an implementation that read the controller for the
--- owner, since `Not (OwnedBy You)` and `Not (ControlledBy You)` both admit it;
+-- owner, since `Not (HeldBy Owner You)` and `Not (HeldBy Controller You)` both admit it;
 -- alice's own creature beside it is what makes the two readings answer
 -- oppositely. Goblin Piker is 2/1, so the anthem's +2/+2 reads 4/3 -- two numbers
 -- that differ from the printed pair in both coordinates, so no case passes on an

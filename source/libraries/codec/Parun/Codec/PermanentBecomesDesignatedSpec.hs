@@ -5,6 +5,7 @@ import qualified Parun.JsonCodec.Common as Common
 import qualified Parun.Spec as Spec
 import qualified Parun.Types.Designation as Designation
 import qualified Parun.Types.Filter as Filter
+import qualified Parun.Types.Holder as Holder
 import qualified Parun.Types.PermanentBecomesDesignated as PermanentBecomesDesignated
 import qualified Parun.Types.PlayerRelation as PlayerRelation
 
@@ -16,10 +17,10 @@ spec s = Spec.describe s "Parun.Codec.PermanentBecomesDesignated" $ do
       PermanentBecomesDesignated.codec
       ( PermanentBecomesDesignated.MkPermanentBecomesDesignated
           { PermanentBecomesDesignated.designation = Designation.Renowned,
-            PermanentBecomesDesignated.filter = Filter.ControlledBy PlayerRelation.You
+            PermanentBecomesDesignated.filter = Filter.HeldBy Holder.Controller PlayerRelation.You
           }
       )
-      " {\"designation\":{\"type\":\"Renowned\"},\"filter\":{\"type\":\"ControlledBy\",\"value\":{\"type\":\"You\"}}} "
+      " {\"designation\":{\"type\":\"Renowned\"},\"filter\":{\"type\":\"HeldBy\",\"value\":{\"holder\":{\"type\":\"Controller\"},\"relation\":{\"type\":\"You\"}}}} "
   -- The other designation, over the source itself.
   Spec.it s "MkPermanentBecomesDesignated, Monstrous over the source" $
     Common.assertCodec

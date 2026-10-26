@@ -725,7 +725,7 @@ trigger n = case Node.tag n of
     (who, what) <- pair n
     relation <- players who
     f <- spells what
-    let caster = [Filter.ControlledBy relation | relation /= PlayerRelation.AnyPlayer]
+    let caster = [Filter.HeldBy Holder.Controller relation | relation /= PlayerRelation.AnyPlayer]
         spellCast = SpellCast.MkSpellCast {SpellCast.filter = conjoined (foldMap conjuncts f <> caster), SpellCast.scope = TurnScope.EachTurn, SpellCast.zone = Nothing, SpellCast.ordinal = Nothing, SpellCast.phase = Nothing, SpellCast.copies = False}
     Right (TriggerCondition.SpellCast spellCast, bound [("Trigger_ThatPlayer", Oracle.Trigger.thatPlayer), ("Trigger_ThatSpell", Oracle.Trigger.castSpell)])
   "AtTheBeginningOfTheEndStep" -> Right (TriggerCondition.StepBegins (StepBegins.MkStepBegins (Phase.Ending EndingStep.EndStep) Nothing TurnScope.EachTurn), outermost)
@@ -796,7 +796,7 @@ intervening context n = case Node.tag n of
     case (relation, Node.tag t) of
       (PlayerRelation.Opponent, "ControlsA") -> do
         f <- Node.argument t >>= permanents context
-        Right (compares (battlefield (conjoined (conjuncts f <> [Filter.ControlledBy PlayerRelation.Opponent]))) Comparison.AtLeast 1)
+        Right (compares (battlefield (conjoined (conjuncts f <> [Filter.HeldBy Holder.Controller PlayerRelation.Opponent]))) Comparison.AtLeast 1)
       _ -> Node.untranslated t
   "PlayerPassesFilter" -> do
     (who, test) <- pair n
@@ -820,7 +820,7 @@ intervening context n = case Node.tag n of
   _ -> Node.untranslated n
   where
     battlefield f = Count.MkCount (Scope.InZone (InZone.MkInZone Zone.Battlefield (PlayerRef.Relative PlayerRelation.AnyPlayer))) f Aggregation.Members
-    yours f = conjoined (conjuncts f <> [Filter.ControlledBy PlayerRelation.You])
+    yours f = conjoined (conjuncts f <> [Filter.HeldBy Holder.Controller PlayerRelation.You])
     inZone zone t = do
       c <- Node.child t
       comparison <- comparisonOf c
@@ -1533,7 +1533,7 @@ atom context n = case Node.tag n of
     who <- Node.child n
     case (Node.tag who, fmap Node.node (Node.args who)) of
       ("SinglePlayer", Just (Right p)) | Just s <- Map.lookup (Node.tag p) (references context) -> Right (Filter.HeldByBound Holder.Controller s)
-      _ -> fmap Filter.ControlledBy (Node.argument n >>= players)
+      _ -> fmap (Filter.HeldBy Holder.Controller) (Node.argument n >>= players)
   -- "Another": other than the source, or than an object a slot names.
   "Other" -> do
     ref <- Node.argument n >>= permanent context

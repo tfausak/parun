@@ -11,6 +11,7 @@ import qualified Parun.Spec as Spec
 import qualified Parun.Types.Clause as Clause
 import qualified Parun.Types.Effect as Effect
 import qualified Parun.Types.Filter as Filter
+import qualified Parun.Types.Holder as Holder
 import qualified Parun.Types.Mode as Mode
 import qualified Parun.Types.Optionality as Optionality
 import qualified Parun.Types.PlayerRelation as PlayerRelation
@@ -50,9 +51,9 @@ spec s = Spec.describe s "Parun.Codec.Mode" $ do
       fromJson
       ( Mode.MkMode
           (Seq.singleton (Clause.MkClause Nothing Nothing Nothing Optionality.Mandatory Nothing (Seq.singleton (Effect.Attach (SlotName.MkSlotName (Text.pack "target"))))))
-          (Map.singleton (SlotName.MkSlotName (Text.pack "target")) (TargetSlot.required Pool.Creatures (Just (Filter.ControlledBy PlayerRelation.You))))
+          (Map.singleton (SlotName.MkSlotName (Text.pack "target")) (TargetSlot.required Pool.Creatures (Just (Filter.HeldBy Holder.Controller PlayerRelation.You))))
       )
-      " {\"clauses\":[{\"effects\":[{\"type\":\"Attach\",\"value\":\"target\"}]}],\"targetSlots\":{\"target\":{\"pool\":{\"type\":\"Creatures\"},\"filter\":{\"type\":\"ControlledBy\",\"value\":{\"type\":\"You\"}}}}} "
+      " {\"clauses\":[{\"effects\":[{\"type\":\"Attach\",\"value\":\"target\"}]}],\"targetSlots\":{\"target\":{\"pool\":{\"type\":\"Creatures\"},\"filter\":{\"type\":\"HeldBy\",\"value\":{\"holder\":{\"type\":\"Controller\"},\"relation\":{\"type\":\"You\"}}}}}} "
   -- A mode with no clauses or targetSlots is what a card that says nothing
   -- extra means, and it round-trips through the empty object.
   Spec.it s "omits every default field" $

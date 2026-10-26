@@ -1535,7 +1535,7 @@ spec s registry = Spec.describe s "Parun.Engine.Target" $ do
   --     bob's copy of the very same card is what proves the axis is real rather
   --     than decorative. It cannot be a Filter: CR 108.4 says "a card doesn't
   --     have a controller unless that card represents a permanent or spell", so
-  --     ControlledBy is vacuously False for every card in every graveyard.
+  --     HeldBy Controller is vacuously False for every card in every graveyard.
   --   * the Filter still narrows, so alice's Lightning Bolt is out.
   --   * the pool is DISJOINT from Pool.Creatures, the way Pool.Abilities is from
   --     Pool.Spells: the Piker on the battlefield is offered under neither tag.
@@ -2001,7 +2001,7 @@ spec s registry = Spec.describe s "Parun.Engine.Target" $ do
   -- Resourceful Defense {2}{W} Enchantment (data/cards/resourceful-defense.json):
   -- "{4}{W}: Move any number of counters from target permanent you control onto
   -- a second target permanent you control." Its `to` slot is
-  -- And [ControlledBy You, Not (IsBound "from")], so a controller whose only
+  -- And [HeldBy Controller You, Not (IsBound "from")], so a controller whose only
   -- permanent is the Defense itself fills each slot alone and no announcement at
   -- all, and CR 700.2a is what keeps the ability off the offer.
   --

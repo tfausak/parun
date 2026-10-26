@@ -21,7 +21,7 @@ import qualified Parun.Types.Zone as Zone
 -- The question a card means when it writes one is CONTROL or OWNERSHIP of the
 -- objects in the zone rather than a share of the zone itself -- Nightmare's
 -- "Swamps you control" is @PlayerRef.Relative AnyPlayer@ with a
--- @Filter.ControlledBy You@ conjunct -- and both have their own spelling in the
+-- @Filter.HeldBy Holder.Controller You@ conjunct -- and both have their own spelling in the
 -- Filter, which is where CR 110.2 and CR 108.3 can come apart. Without this the
 -- pairing decoded and Parun.Engine.Count answered it off Game.zoneMembers, which
 -- slices the shared battlefield by OWNER: a number, silently, for a question the

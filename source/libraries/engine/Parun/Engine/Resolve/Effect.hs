@@ -1156,7 +1156,7 @@ alreadyTurnedFor resolving victim gs =
 -- The cards in the named graveyards matching the filter, for
 -- ChosenCardInGraveyard's TheController chooser -- ObjectRef.EachCardInGraveyard
 -- is this same fold, spelled out at its own arm. A card in a
--- graveyard has no controller, so Filter.ControlledBy is vacuously False. APNAP
+-- graveyard has no controller, so Filter.HeldBy Holder.Controller is vacuously False. APNAP
 -- (CR 101.4) then ascending ObjectId, not the graveyard's own pile order (CR
 -- 404.2), which no rule makes a batch's processing order.
 graveyardCards :: Filter.Context -> Map.Map SlotName (Set Recipient) -> ObjectId -> PlayerId -> GameState -> ZoneScope.ZoneScope -> Filter.Type.Filter Keyword.Type.Keyword -> [ObjectId]
@@ -9015,7 +9015,7 @@ applyOneEffect runSubgame resolving source controller legal chosen effect = case
   -- The marker is recorded on the sacrifice and names the pair rule 702.110b
   -- does. Unconditional given a victim, Mentor's posture: a sacrifice is not a
   -- destruction and CR 701.21a can refuse this one only for a permanent this
-  -- controller does not control, which the sweep's Filter.ControlledBy has just
+  -- controller does not control, which the sweep's Filter.HeldBy Holder.Controller has just
   -- excluded.
   --
   -- The sacrifice and the marker are ONE event (Event.simultaneously): rule
@@ -9030,7 +9030,7 @@ applyOneEffect runSubgame resolving source controller legal chosen effect = case
             controller
             source
             gs
-            (Filter.Type.And [Filter.Type.HasCardType CardType.Creature, Filter.Type.ControlledBy PlayerRelation.You])
+            (Filter.Type.And [Filter.Type.HasCardType CardType.Creature, Filter.Type.HeldBy Holder.Controller PlayerRelation.You])
     victims <- Maybe.maybeToList <$> Game.chooseAmong (\decider who -> Prompt.ChoosePermanent decider who source) controller candidates
     Monad.forM_ victims $ \victim -> Event.simultaneously $ do
       Event.sacrifice controller victim

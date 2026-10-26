@@ -54,9 +54,14 @@
             "type": "SpellCast",
             "value": {
               "filter": {
-                "type": "ControlledBy",
+                "type": "HeldBy",
                 "value": {
-                  "type": "You"
+                  "holder": {
+                    "type": "Controller"
+                  },
+                  "relation": {
+                    "type": "You"
+                  }
                 }
               },
               "scope": {
@@ -95,9 +100,14 @@
                                   }
                                 },
                                 {
-                                  "type": "ControlledBy",
+                                  "type": "HeldBy",
                                   "value": {
-                                    "type": "You"
+                                    "holder": {
+                                      "type": "Controller"
+                                    },
+                                    "relation": {
+                                      "type": "You"
+                                    }
                                   }
                                 }
                               ]
@@ -116,9 +126,14 @@
           "condition": {
             "type": "PermanentEnters",
             "value": {
-              "type": "ControlledBy",
+              "type": "HeldBy",
               "value": {
-                "type": "You"
+                "holder": {
+                  "type": "Controller"
+                },
+                "relation": {
+                  "type": "You"
+                }
               }
             }
           },
@@ -182,9 +197,14 @@
                                   }
                                 },
                                 {
-                                  "type": "ControlledBy",
+                                  "type": "HeldBy",
                                   "value": {
-                                    "type": "You"
+                                    "holder": {
+                                      "type": "Controller"
+                                    },
+                                    "relation": {
+                                      "type": "You"
+                                    }
                                   }
                                 }
                               ]

@@ -1804,7 +1804,7 @@ auraGraftSpec s registry = Spec.describe s "AuraGraft" $ do
 -- Miracle Worker, "{T}: Destroy target Aura attached to a creature you control",
 -- which is the first card in the pool whose attachment narrowing COMPOSES with a
 -- quality: `And [HasSubtype Aura, AttachedTo (And [HasCardType Creature,
--- ControlledBy You])]`. No nullary atom expresses it, which is what the general
+-- HeldBy Controller You])]`. No nullary atom expresses it, which is what the general
 -- Filter.AttachedTo is for.
 --
 -- CR 109.5 is the rule the composition rests on: "you" inside the nest is the

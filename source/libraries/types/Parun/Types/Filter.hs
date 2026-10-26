@@ -95,7 +95,9 @@ data Filter keyword
     -- boundary case: "(Zero is even.)" CR 202.3e is what makes it interesting off
     -- the stack, where an {X} in a cost counts as zero.
     ManaValueIsEven
-  | ControlledBy PlayerRelation.PlayerRelation -- CR 109.5 / 102.2: controller relates thus to the perspective.
+  | -- | CR 108.3 / 108.4 / 110.2: the candidate's holder relates thus to the
+    -- perspective; False where it has none (CR 108.4, 109.1).
+    HeldBy Holder.Holder PlayerRelation.PlayerRelation
   | -- | CR 102.1 / 508.5: the candidate's controller holds this role -- an active
     -- player (Nettling Imp's "the active player has controlled"; every member of
     -- the active team under CR 805.4a) or the defending player for the object the
@@ -119,12 +121,6 @@ data Filter keyword
     -- CR 109.5's "you", which is the spell's controller, and vacuously False
     -- outside a per-recipient effect's quantity.
     HeldByRecipient Holder.Holder
-  | -- | CR 108.3 / 110.2: the candidate's OWNER relates thus to the perspective.
-    -- A sibling of ControlledBy above and never derivable from it, and answerable
-    -- in every zone where that atom is not: an owner changes only by CR 407.3's
-    -- ante cards, while CR 108.4 gives a card outside the battlefield and the
-    -- stack no controller. False off an object, a printed card being none (CR 109.1).
-    OwnedBy PlayerRelation.PlayerRelation
   | -- | The candidate IS the evaluation's source object. @Not IsSource@ is how CR
     -- 601.2c's "another" and a continuous effect's own "each other" card text are
     -- both written -- one relation, one spelling (#163).
@@ -238,7 +234,7 @@ data Filter keyword
     -- an aiming spell or ability such a player controls is aimed from.
     OfRelatedPlayer PlayerRelation.PlayerRelation
   | -- | CR 115.1: the candidate is a PLAYER who relates thus to the perspective
-    -- -- "target opponent". Separate from ControlledBy, which asks who controls
+    -- -- "target opponent". Separate from HeldBy, which asks who holds
     -- an object candidate rather than who the candidate is (CR 109.1, CR 108.4).
     IsPlayer PlayerRelation.PlayerRelation
   | -- | The candidate PLAYER is the controller of the object a slot names --
@@ -390,7 +386,7 @@ data Filter keyword
   | -- | CR 303.4b / 701.3a: the candidate is ATTACHED to something the nested
     -- Filter admits -- Crown of the Ages' "target Aura attached to a creature".
     -- The nest asks about the HOST's characteristics against the OUTER context,
-    -- so @AttachedTo (ControlledBy You)@ is "attached to something you control".
+    -- so @AttachedTo (HeldBy Controller You)@ is "attached to something you control".
     -- False for a candidate attached to a player, and for one whose host has left
     -- the battlefield (CR 704.5m).
     AttachedTo (Filter keyword)
@@ -590,7 +586,7 @@ data Filter keyword
     -- their hands" is @Not (IsInZone Hand)@ (#163). A cast gate reads it before
     -- CR 601.2a moves the card to the stack, which is what CR 601.2's "take it
     -- from where it is" asks for. Names a zone and not whose -- "in your
-    -- graveyard" is an OwnedBy conjunct beside this atom, exact except between an
+    -- graveyard" is a HeldBy Owner conjunct beside this atom, exact except between an
     -- ownership change and the move that follows it in one resolution (CR
     -- 407.3). Vacuously False where
     -- there is no OBJECT to ask (CR 109.1).

@@ -8,6 +8,7 @@ import qualified Parun.Types.BlockStatus as BlockStatus
 import qualified Parun.Types.DamageKind as DamageKind
 import qualified Parun.Types.Duration as Duration
 import qualified Parun.Types.Filter as Filter
+import qualified Parun.Types.Holder as Holder
 import qualified Parun.Types.ObjectRef as ObjectRef
 import qualified Parun.Types.PlayerRelation as PlayerRelation
 import qualified Parun.Types.Quantity as Quantity
@@ -90,7 +91,7 @@ spec s = Spec.describe s "Parun.Codec.RedirectDamage" $ do
             RedirectDamage.kind = Nothing,
             RedirectDamage.amount = Just (Quantity.Literal 2),
             RedirectDamage.from = Nothing,
-            RedirectDamage.whatRecipient = Just (Filter.ControlledBy PlayerRelation.You),
+            RedirectDamage.whatRecipient = Just (Filter.HeldBy Holder.Controller PlayerRelation.You),
             RedirectDamage.whoRecipient = Just PlayerRelation.You,
             RedirectDamage.to = ObjectRef.InSlot (SlotName.MkSlotName (Text.pack "target")),
             RedirectDamage.chosenSource = Just (Filter.And []),
@@ -98,7 +99,7 @@ spec s = Spec.describe s "Parun.Codec.RedirectDamage" $ do
             RedirectDamage.whatSource = Filter.And []
           }
       )
-      " {\"duration\":{\"type\":\"UntilEndOfTurn\"},\"amount\":{\"type\":\"Literal\",\"value\":2},\"whatRecipient\":{\"type\":\"ControlledBy\",\"value\":{\"type\":\"You\"}},\"whoRecipient\":{\"type\":\"You\"},\"to\":{\"type\":\"InSlot\",\"value\":\"target\"},\"chosenSource\":{\"type\":\"And\",\"value\":[]}} "
+      " {\"duration\":{\"type\":\"UntilEndOfTurn\"},\"amount\":{\"type\":\"Literal\",\"value\":2},\"whatRecipient\":{\"type\":\"HeldBy\",\"value\":{\"holder\":{\"type\":\"Controller\"},\"relation\":{\"type\":\"You\"}}},\"whoRecipient\":{\"type\":\"You\"},\"to\":{\"type\":\"InSlot\",\"value\":\"target\"},\"chosenSource\":{\"type\":\"And\",\"value\":[]}} "
   -- Jade Monolith's "the next time" and Kjeldoran Royal Guard's "by unblocked
   -- creatures": CR 614.3's use count and CR 609.7b's described source, both
   -- written only when not the default.

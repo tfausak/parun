@@ -1056,7 +1056,7 @@ subjectOf cr = case cr of
 -- "you" would instead be the SOURCE's controller, as it is for the gate in
 -- `inForce` and the affected set in `restricted`, and the two readings are
 -- indistinguishable on every one of the pool's producers: CR 701.54c's affected
--- set carries ControlledBy You, so the Ring-bearer's controller IS the emblem's,
+-- set carries HeldBy Controller You, so the Ring-bearer's controller IS the emblem's,
 -- and Questing Beast's and Relic Runner's carry IsSource, so the attacker IS the
 -- source. What is not
 -- a choice is the source POWER, which CR 701.54c compares the blocker against:

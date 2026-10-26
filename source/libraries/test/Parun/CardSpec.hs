@@ -237,6 +237,7 @@ import qualified Parun.Types.GrantLookAtExiled as GrantLookAtExiled
 import qualified Parun.Types.GrantPlayFromExile as GrantPlayFromExile
 import qualified Parun.Types.GrantedAbility as GrantedAbility
 import qualified Parun.Types.HandAction as HandAction
+import qualified Parun.Types.Holder as Holder
 import qualified Parun.Types.HowMany as HowMany
 import qualified Parun.Types.Impending as Impending
 import qualified Parun.Types.InZone as InZone
@@ -6326,7 +6327,7 @@ effectFilters effect = case effect of
       <> outsideTheGameFramed (Maybe.maybeToList (CastOffer.restriction (OfferCast.offer offer)))
       <> concatMap quantityFilters (Resolve.repetitionQuantities (OfferCast.repetition offer))
   -- Both, as GainControl's arm does: the Duration's Condition carries Victor
-  -- Mancha, Runaway's IsSource and ControlledBy, and an empty list here would
+  -- Mancha, Runaway's IsSource and HeldBy Controller, and an empty list here would
   -- take them out of the lint without failing anything.
   Effect.GrantPlayFromExile grant -> frame Unframed (durationFilters (GrantPlayFromExile.duration grant)) <> frame SourceHostFramed (objectRefFilters (GrantPlayFromExile.ref grant))
   -- The swept ref's Filters AND the body's, the rider's shape: a nested effect
@@ -7358,16 +7359,16 @@ lintSpec s registry = Spec.describe s "Lint" $ do
                       else Nothing
     Spec.assertEqWith s "every ante is an ante card's Effect.Ante" (Maybe.mapMaybe offends loaded) []
   -- CR 400.1: "your graveyard" in a card-leaves trigger is the pile the card
-  -- left (CardLeavesZone.whose), never an OwnedBy on the card -- an owner and
+  -- left (CardLeavesZone.whose), never a HeldBy Owner on the card -- an owner and
   -- the pile disagree between an ownership change and its move (CR 407.3).
-  -- An OwnedBy beside `whose` is an arrival read ("into your hand").
-  Spec.it s "CR 400.1 a card-leaves trigger names whose pile through whose, never OwnedBy alone" $ do
+  -- A HeldBy Owner beside `whose` is an arrival read ("into your hand").
+  Spec.it s "CR 400.1 a card-leaves trigger names whose pile through whose, never HeldBy Owner alone" $ do
     root <- Registry.defaultRoot
     loaded <- Registry.loadRoot root
     Spec.assertBool s (not (null loaded)) "the corpus is not empty"
     let piles = [Zone.Library, Zone.Hand, Zone.Graveyard]
         ownedByConjunct f = case f of
-          Filter.Type.OwnedBy _ -> True
+          Filter.Type.HeldBy Holder.Owner _ -> True
           Filter.Type.And fs -> any ownedByConjunct fs
           _ -> False
         oldStyle p = List.elem (CardLeavesZone.from p) piles && Maybe.isNothing (CardLeavesZone.whose p) && ownedByConjunct (CardLeavesZone.filter p)
@@ -7379,7 +7380,7 @@ lintSpec s registry = Spec.describe s "Lint" $ do
           Left reason -> Just (path <> ": " <> Text.unpack reason)
           Right card ->
             let conditions = concatMap (fmap TriggeredAbility.condition . Face.triggeredAbilities) (Card.Type.faces card)
-             in if any offendingCondition conditions then Just (path <> ": reads 'your' pile as OwnedBy; use whose") else Nothing
+             in if any offendingCondition conditions then Just (path <> ": reads 'your' pile as HeldBy Owner; use whose") else Nothing
     Spec.assertEqWith s "every card-leaves 'your' is whose" (Maybe.mapMaybe offends loaded) []
   -- The other direction: the sweep above SLUGIFIES the stem before comparing
   -- it to Registry.filedAs, so a committed Wax-Wane.json would still pass it --

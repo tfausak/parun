@@ -10,7 +10,7 @@ import qualified Parun.Types.Zone as Zone
 -- anywhere", Oglor, Devoted Assistant's "from your library or hand".
 --
 -- The Filter is read against the arriving card, so "your graveyard" is a
--- Filter.OwnedBy conjunct (CR 400.3). The zones it left are no characteristic
+-- Filter.HeldBy Holder.Owner conjunct (CR 400.3). The zones it left are no characteristic
 -- of the card, so they come from the event.
 data CardPutIntoGraveyard = MkCardPutIntoGraveyard
   { filter :: Filter.Filter Keyword.Keyword,

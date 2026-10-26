@@ -1962,7 +1962,7 @@ spec s registry = Spec.describe s "Parun.Engine.Projection" $ do
   -- The OWNERSHIP half of the same sentence (CR 105.2, CR 108.3), read in a
   -- graveyard rather than on the battlefield. Three answers off one board, so
   -- neither a set that reaches every object nor one that reaches none passes:
-  -- bob's copy of the same card is the OwnedBy conjunct and the Forest card is
+  -- bob's copy of the same card is the HeldBy Owner conjunct and the Forest card is
   -- the nonland one. The fourth is the same card on the same board with
   -- Celestial Dawn taken away, which is the one thing the two differ in.
   Spec.it s "CR 105.2 Celestial Dawn whitens the nonland cards its controller owns off the battlefield" $ do

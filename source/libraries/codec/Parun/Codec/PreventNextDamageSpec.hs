@@ -9,6 +9,7 @@ import qualified Parun.Spec as Spec
 import qualified Parun.Types.DamageKind as DamageKind
 import qualified Parun.Types.Duration as Duration
 import qualified Parun.Types.Filter as Filter
+import qualified Parun.Types.Holder as Holder
 import qualified Parun.Types.ObjectRef as ObjectRef
 import qualified Parun.Types.PlayerRelation as PlayerRelation
 import qualified Parun.Types.PreventNextDamage as PreventNextDamage
@@ -92,12 +93,12 @@ spec s = Spec.describe s "Parun.Codec.PreventNextDamage" $ do
           { PreventNextDamage.duration = Duration.UntilEndOfTurn,
             PreventNextDamage.kind = Nothing,
             PreventNextDamage.ref = Nothing,
-            PreventNextDamage.whatRecipient = Just (Filter.ControlledBy PlayerRelation.You),
+            PreventNextDamage.whatRecipient = Just (Filter.HeldBy Holder.Controller PlayerRelation.You),
             PreventNextDamage.whoRecipient = Just PlayerRelation.You,
             PreventNextDamage.chosenSource = Nothing,
             PreventNextDamage.quantity = Quantity.Literal 3,
             PreventNextDamage.riders = Seq.empty
           }
       )
-      " {\"duration\":{\"type\":\"UntilEndOfTurn\"},\"whatRecipient\":{\"type\":\"ControlledBy\",\"value\":{\"type\":\"You\"}},\"whoRecipient\":{\"type\":\"You\"},\"quantity\":{\"type\":\"Literal\",\"value\":3}} "
+      " {\"duration\":{\"type\":\"UntilEndOfTurn\"},\"whatRecipient\":{\"type\":\"HeldBy\",\"value\":{\"holder\":{\"type\":\"Controller\"},\"relation\":{\"type\":\"You\"}}},\"whoRecipient\":{\"type\":\"You\"},\"quantity\":{\"type\":\"Literal\",\"value\":3}} "
   Spec.it s "has a schema" $ Common.assertHasSchema s codec

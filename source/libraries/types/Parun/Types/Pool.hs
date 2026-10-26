@@ -67,7 +67,7 @@ data Pool
     -- "your graveyard" (Raise Dead), "an opponent's", "a graveyard" (Withered
     -- Wretch) and "their graveyard" (Dwell on the Past) are different candidate
     -- sets. It cannot be pushed down into the Filter, because CR 108.4 gives a
-    -- card in a graveyard no controller at all -- Filter.ControlledBy is
+    -- card in a graveyard no controller at all -- Filter.HeldBy Holder.Controller is
     -- vacuously False for every one of them.
     --
     -- No pool reaches a hand or a library, so a graveyard and exile below are

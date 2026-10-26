@@ -738,7 +738,7 @@ transformedBoard tovolar wolf connoisseur gargoyle =
 
 -- CR 701.27g, "transformed permanent", asked by a CARD rather than by the
 -- engine: Mutagen Connoisseur's "this creature gets +1/+0 for each transformed
--- permanent you control" is `Filter.Transformed` conjoined with `ControlledBy
+-- permanent you control" is `Filter.Transformed` conjoined with `HeldBy Controller
 -- You` under a Count over the battlefield, so its power IS the tally and every
 -- case here reads it.
 --

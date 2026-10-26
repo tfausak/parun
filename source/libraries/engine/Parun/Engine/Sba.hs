@@ -477,7 +477,7 @@ fallsOff pools gs oid = case Map.lookup oid pcs of
 -- reuses the SAME pool and Filter Cast/Resolve already judge, rather than
 -- assuming the Creatures-with-no-Filter shape holds regardless. Two producers
 -- need it: Setessan Training's "Enchant creature you control" carries a Filter
--- whose ControlledBy You conjunct the lookup above cannot answer -- CR 109.5
+-- whose HeldBy Controller You conjunct the lookup above cannot answer -- CR 109.5
 -- makes that "you" the AURA's controller (CR 702.5a), so the answer changes when
 -- an opponent steals the enchanted creature -- and CR 702.5d's enchant-player
 -- Auras carry a Pool.Players slot. A CR 702.5c conjunction of several instances

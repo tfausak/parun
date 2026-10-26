@@ -32,9 +32,14 @@
                           "ref": {
                             "type": "EachMatching",
                             "value": {
-                              "type": "ControlledBy",
+                              "type": "HeldBy",
                               "value": {
-                                "type": "Opponent"
+                                "holder": {
+                                  "type": "Controller"
+                                },
+                                "relation": {
+                                  "type": "Opponent"
+                                }
                               }
                             }
                           }
@@ -55,9 +60,14 @@
                           "ref": {
                             "type": "EachMatching",
                             "value": {
-                              "type": "ControlledBy",
+                              "type": "HeldBy",
                               "value": {
-                                "type": "Opponent"
+                                "holder": {
+                                  "type": "Controller"
+                                },
+                                "relation": {
+                                  "type": "Opponent"
+                                }
                               }
                             }
                           }

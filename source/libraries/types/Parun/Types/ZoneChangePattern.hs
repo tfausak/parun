@@ -20,7 +20,7 @@ import qualified Parun.Types.Zone as Zone
 -- characteristics -- Anafenza, the Foremost's "a nontoken creature", which is
 -- `And [HasCardType Creature, Not IsToken]`. `whoseObject` narrows by the
 -- object's OWNER. Orthogonal: the owner relation cannot ride the Filter, because
--- Filter.ControlledBy asks who CONTROLS a candidate, and CR 400.3 sends a stolen
+-- Filter.HeldBy Holder.Controller asks who CONTROLS a candidate, and CR 400.3 sends a stolen
 -- creature (Act of Treason) to its OWNER's graveyard rather than its
 -- controller's -- so the two answers differ on exactly the case a redirect
 -- scoped to "an opponent's graveyard" is about.

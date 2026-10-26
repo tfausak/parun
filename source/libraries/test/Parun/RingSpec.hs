@@ -164,7 +164,7 @@ spec s registry = Spec.describe s "Parun.Engine.Ring" $ do
     Spec.assertEqWith s "still one emblem after the second" (length (theRingsOf S.alice twice)) 1
     Spec.assertEqWith s "but two temptations" (temptationsOf S.alice twice) (Just 2)
   -- CR 701.54e's SECOND conjunct, "under your control", which
-  -- Ring.theRingIsLegendary spells as a ControlledBy You beside the designation
+  -- Ring.theRingIsLegendary spells as a HeldBy Controller You beside the designation
   -- atom. The only window in which that conjunct is observable at all: after the
   -- control change and BEFORE Ring.endOnControlChange's settle-loop sample lifts the
   -- mark. Once the sample has run there is no designation left for the conjunct to

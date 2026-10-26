@@ -8,6 +8,7 @@ import qualified Parun.Types.CardType as CardType
 import qualified Parun.Types.CounterKind as CounterKind
 import qualified Parun.Types.CounterRestriction as CounterRestriction
 import qualified Parun.Types.Filter as Filter
+import qualified Parun.Types.Holder as Holder
 import qualified Parun.Types.PlayerRelation as PlayerRelation
 
 spec :: (Monad m, Monad n) => Spec.Spec m n -> n ()
@@ -29,8 +30,8 @@ spec s = Spec.describe s "Parun.Codec.CounterRestriction" $ do
       s
       CounterRestriction.codec
       ( CounterRestriction.MkCounterRestriction
-          (Affected.Matching (Filter.ControlledBy PlayerRelation.You))
+          (Affected.Matching (Filter.HeldBy Holder.Controller PlayerRelation.You))
           (Just CounterKind.MinusOneMinusOne)
       )
-      " {\"affected\":{\"type\":\"Matching\",\"value\":{\"type\":\"ControlledBy\",\"value\":{\"type\":\"You\"}}},\"kind\":{\"type\":\"MinusOneMinusOne\"}} "
+      " {\"affected\":{\"type\":\"Matching\",\"value\":{\"type\":\"HeldBy\",\"value\":{\"holder\":{\"type\":\"Controller\"},\"relation\":{\"type\":\"You\"}}}},\"kind\":{\"type\":\"MinusOneMinusOne\"}} "
   Spec.it s "has a schema" $ Common.assertHasSchema s CounterRestriction.codec

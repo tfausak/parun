@@ -82,8 +82,7 @@ codec keywordCodec =
       Arm.payload "HeldByRecipient" Holder.codec Filter.HeldByRecipient (\x -> case x of Filter.HeldByRecipient y -> Just y; _ -> Nothing),
       Arm.payload "Shares" shares (uncurry Filter.Shares) (\x -> case x of Filter.Shares t a -> Just (t, a); _ -> Nothing),
       Arm.nullary "ManaValueIsEven" Filter.ManaValueIsEven,
-      Arm.payload "ControlledBy" PlayerRelation.codec Filter.ControlledBy (\x -> case x of Filter.ControlledBy y -> Just y; _ -> Nothing),
-      Arm.payload "OwnedBy" PlayerRelation.codec Filter.OwnedBy (\x -> case x of Filter.OwnedBy y -> Just y; _ -> Nothing),
+      Arm.payload "HeldBy" heldBy (uncurry Filter.HeldBy) (\x -> case x of Filter.HeldBy h r -> Just (h, r); _ -> Nothing),
       Arm.payload "IsPlayer" PlayerRelation.codec Filter.IsPlayer (\x -> case x of Filter.IsPlayer y -> Just y; _ -> Nothing),
       Arm.payload "IsControllerOfBound" SlotName.codec Filter.IsControllerOfBound (\x -> case x of Filter.IsControllerOfBound y -> Just y; _ -> Nothing),
       Arm.payload "Controls" (controls keywordCodec) (uncurry Filter.Controls) (\x -> case x of Filter.Controls n y -> Just (n, y); _ -> Nothing),
@@ -191,6 +190,14 @@ controls keywordCodec =
       <$> Fields.required "margin" ControlMargin.codec fst
       <*> Fields.required "filter" (codec keywordCodec) snd
 
+-- | Which of the candidate's players, and how it relates to the perspective.
+heldBy :: Codec.Codec (Holder.Holder, PlayerRelation.PlayerRelation)
+heldBy =
+  Fields.object $
+    (,)
+      <$> Fields.required "holder" Holder.codec fst
+      <*> Fields.required "relation" PlayerRelation.codec snd
+
 -- | CR 603.2's bound holder keyed by name: which of the candidate's players,
 -- and the slot binding the player it must be.
 heldByBound :: Codec.Codec (Holder.Holder, SlotName.SlotName)
@@ -244,8 +251,7 @@ tagOf x = case x of
   Filter.HeldByRecipient {} -> "HeldByRecipient"
   Filter.Shares {} -> "Shares"
   Filter.ManaValueIsEven {} -> "ManaValueIsEven"
-  Filter.ControlledBy {} -> "ControlledBy"
-  Filter.OwnedBy {} -> "OwnedBy"
+  Filter.HeldBy {} -> "HeldBy"
   Filter.IsPlayer {} -> "IsPlayer"
   Filter.IsControllerOfBound {} -> "IsControllerOfBound"
   Filter.Controls {} -> "Controls"

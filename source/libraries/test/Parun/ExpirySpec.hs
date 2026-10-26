@@ -566,7 +566,7 @@ masterThiefSpec s registry = Spec.describe s "MasterThief" $ do
   -- Ruling: "If Master Thief ceases to be under your control before its
   -- ability resolves, you won't gain control of the targeted artifact at
   -- all." Falsifies the CONTROL half of S.youControlSource's
-  -- ControlledBy conjunct (CR 611.2b/613.1b/400.7): Master Thief stays on the
+  -- HeldBy Controller conjunct (CR 611.2b/613.1b/400.7): Master Thief stays on the
   -- battlefield the whole time -- only its controller changes -- so this
   -- case cannot pass for the "left the battlefield" reason the sibling
   -- case above covers. End to end through the real pipeline (CR 113.8:

@@ -44,6 +44,7 @@ import qualified Parun.Types.Face as Face
 import qualified Parun.Types.Filter as Filter.Type
 import qualified Parun.Types.GameEvent as GameEvent
 import qualified Parun.Types.GameState as GameState
+import qualified Parun.Types.Holder as Holder
 import qualified Parun.Types.InZone as InZone
 import qualified Parun.Types.Measure as Measure
 import qualified Parun.Types.Moved as Moved
@@ -73,13 +74,13 @@ swampsYouControl :: Count.Type.Count Quantity.Type.Quantity
 swampsYouControl =
   Count.Type.MkCount
     (Scope.InZone (InZone.MkInZone Zone.Battlefield (PlayerRef.Relative PlayerRelation.AnyPlayer)))
-    (Filter.Type.And [Filter.Type.HasSubtype Subtype.Swamp, Filter.Type.ControlledBy PlayerRelation.You])
+    (Filter.Type.And [Filter.Type.HasSubtype Subtype.Swamp, Filter.Type.HeldBy Holder.Controller PlayerRelation.You])
     Aggregation.Members
 
 spec :: (Monad m, Monad n) => Spec.Spec m n -> Registry.Registry m -> n ()
 spec s registry = Spec.describe s "Parun.Engine.Count" $ do
   Spec.it s "Members counts the matching members of a zone" $ do
-    -- Two Swamps Alice controls, one Bob controls; ControlledBy You keeps
+    -- Two Swamps Alice controls, one Bob controls; HeldBy Controller You keeps
     -- Alice's two.
     swampPrinting <- S.printingOf s registry "Swamp"
     let gs0 = Setup.emptyGame S.bothPlayers
@@ -238,7 +239,7 @@ spec s registry = Spec.describe s "Parun.Engine.Count" $ do
     Spec.assertEqWith s "one death" (S.countOf (S.stubView []) (Filter.contextFor Teams.none Nothing Nothing) gs count) $ Just 1
 
   Spec.it s "Relative AnyPlayer folds every player's copy" $ do
-    -- The first case's board with the ControlledBy conjunct dropped: all
+    -- The first case's board with the HeldBy Controller conjunct dropped: all
     -- three Swamps across both players count.
     swampPrinting <- S.printingOf s registry "Swamp"
     let gs0 = Setup.emptyGame S.bothPlayers
@@ -320,7 +321,7 @@ spec s registry = Spec.describe s "Parun.Engine.Count" $ do
         count =
           Count.Type.MkCount
             (Scope.InZone (InZone.MkInZone Zone.Battlefield (PlayerRef.Relative PlayerRelation.AnyPlayer)))
-            (Filter.Type.And [Filter.Type.HasSubtype Subtype.Swamp, Filter.Type.ControlledBy PlayerRelation.You])
+            (Filter.Type.And [Filter.Type.HasSubtype Subtype.Swamp, Filter.Type.HeldBy Holder.Controller PlayerRelation.You])
             (Aggregation.Greatest (Quantity.Type.Measure Measure.ManaValue))
     -- Alice keeps none of Bob's one Swamp, so the fold has no members. The
     -- same count with Aggregation.Members is Just 0 -- a count of nothing IS
@@ -347,7 +348,7 @@ spec s registry = Spec.describe s "Parun.Engine.Count" $ do
         count =
           Count.Type.MkCount
             (Scope.InZone (InZone.MkInZone Zone.Battlefield (PlayerRef.Relative PlayerRelation.AnyPlayer)))
-            (Filter.Type.And [Filter.Type.HasCardType CardType.Creature, Filter.Type.ControlledBy PlayerRelation.You])
+            (Filter.Type.And [Filter.Type.HasCardType CardType.Creature, Filter.Type.HeldBy Holder.Controller PlayerRelation.You])
             (Aggregation.Greatest (Quantity.Type.Measure Measure.Power))
         greatestPower g =
           S.countOf (\oid -> Just (Projection.viewOfObject oid g)) (Filter.contextFor Teams.none (Just S.alice) Nothing) g count
@@ -366,7 +367,7 @@ spec s registry = Spec.describe s "Parun.Engine.Count" $ do
         count =
           Count.Type.MkCount
             (Scope.InZone (InZone.MkInZone Zone.Battlefield (PlayerRef.Relative PlayerRelation.AnyPlayer)))
-            (Filter.Type.ControlledBy PlayerRelation.You)
+            (Filter.Type.HeldBy Holder.Controller PlayerRelation.You)
             (Aggregation.Greatest (Quantity.Type.Measure Measure.Power))
         viewOf = S.stubView [(a1, Set.singleton CardType.Land, Set.singleton Subtype.Swamp, Just S.alice)]
     Spec.assertEqWith s "undeterminable" (S.countOf viewOf (Filter.contextFor Teams.none (Just S.alice) Nothing) gs count) Nothing
@@ -444,7 +445,7 @@ approachSpec s registry =
 -- with Flash: "When Tobias dies, for each nontoken creature you controlled that
 -- died this turn, create a 2/2 black Zombie creature token."
 --
--- BOTH halves of the filter are what this unit built: `ControlledBy You` needs
+-- BOTH halves of the filter are what this unit built: `HeldBy Controller You` needs
 -- the controller CR 109.3 keeps out of the characteristics, and `Not IsToken`
 -- needs the tokenhood CR 111.6 likewise does. Neither rides the snapshot; both
 -- come off the CR 608.2h record filed under the departing id.
@@ -997,7 +998,7 @@ ebonyOwlNetsukeSpec s registry =
 --
 --   owner, the rule            1   only the Faith is bob's
 --   controller instead         0   alice cast both
---   no owner at all            0   Filter.OwnedBy vacuously False, the bug
+--   no owner at all            0   Filter.HeldBy Holder.Owner vacuously False, the bug
 --   neither conjunct           2   every cast counted
 --
 -- The second case is Game.ownerWithLastKnown's live road, and the board it needs is the one

@@ -12,6 +12,7 @@ import qualified Parun.Types.Comparison as Comparison
 import qualified Parun.Types.Condition as Condition
 import qualified Parun.Types.Count as Count
 import qualified Parun.Types.Filter as Filter
+import qualified Parun.Types.Holder as Holder
 import qualified Parun.Types.InZone as InZone
 import qualified Parun.Types.PlayerRef as PlayerRef
 import qualified Parun.Types.PlayerRelation as PlayerRelation
@@ -80,10 +81,10 @@ spec s = Spec.describe s "Parun.Codec.AttackRequirement" $ do
       s
       AttackRequirement.codec
       ( AttackRequirement.MkAttackRequirement
-          (Affected.Matching (Filter.And [Filter.HasCardType CardType.Creature, Filter.ControlledBy PlayerRelation.Opponent]))
+          (Affected.Matching (Filter.And [Filter.HasCardType CardType.Creature, Filter.HeldBy Holder.Controller PlayerRelation.Opponent]))
           Nothing
           Nothing
           RequirementArity.AnySubject
       )
-      " {\"subject\":{\"type\":\"Matching\",\"value\":{\"type\":\"And\",\"value\":[{\"type\":\"HasCardType\",\"value\":{\"type\":\"Creature\"}},{\"type\":\"ControlledBy\",\"value\":{\"type\":\"Opponent\"}}]}},\"arity\":{\"type\":\"AnySubject\"}} "
+      " {\"subject\":{\"type\":\"Matching\",\"value\":{\"type\":\"And\",\"value\":[{\"type\":\"HasCardType\",\"value\":{\"type\":\"Creature\"}},{\"type\":\"HeldBy\",\"value\":{\"holder\":{\"type\":\"Controller\"},\"relation\":{\"type\":\"Opponent\"}}}]}},\"arity\":{\"type\":\"AnySubject\"}} "
   Spec.it s "has a schema" $ Common.assertHasSchema s AttackRequirement.codec

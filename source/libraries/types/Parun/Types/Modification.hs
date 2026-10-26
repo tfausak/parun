@@ -78,7 +78,7 @@ data Modification ability
     -- nothing. Which way an unfilled read answers is per ATOM rather than a
     -- property of that context: CR 110.2's ControllerRelatesToBound widens instead,
     -- and Parun.CardSpec's Framing keeps it out of this slot and the printed one
-    -- alike. A "ControlledBy You" conjunct, the shape
+    -- alike. A "HeldBy Controller You" conjunct, the shape
     -- Old-Growth Troll prints, is answered honestly.
     GainEnchant TargetSlot.TargetSlot
   | -- | layer 6, CR 613.1f / CR 702.5a: this object loses every enchant instance

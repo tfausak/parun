@@ -113,13 +113,13 @@ event context creature c = case c of
   -- filter names among the spell's other qualities.
   TriggerCondition.SpellCast (SpellCast.MkSpellCast f TurnScope.EachTurn Nothing Nothing Nothing False) -> do
     let caster g = case g of
-          Filter.Type.ControlledBy _ -> True
+          Filter.Type.HeldBy Holder.Controller _ -> True
           _ -> False
         (casters, rest) = List.partition caster (case f of Filter.Type.And fs -> fs; _ -> [f])
     who <- case casters of
       [] -> ["a player casts"]
-      [Filter.Type.ControlledBy PlayerRelation.You] -> ["you cast"]
-      [Filter.Type.ControlledBy PlayerRelation.Opponent] -> ["an opponent casts"]
+      [Filter.Type.HeldBy Holder.Controller PlayerRelation.You] -> ["you cast"]
+      [Filter.Type.HeldBy Holder.Controller PlayerRelation.Opponent] -> ["an opponent casts"]
       _ -> []
     let spell = Filter.noun (Text.pack "spell") (Just (Text.pack "spells"))
     -- A disjunction of kinds of spell shares the noun, "an instant or
@@ -394,8 +394,8 @@ counted context n comparison k = case Count.scope n of
             [Target.self context <> Text.pack " is " <> status]
       ([], _) -> do
         let controls f = case f of
-              Filter.Type.ControlledBy PlayerRelation.You -> True
-              Filter.Type.ControlledBy PlayerRelation.Opponent -> True
+              Filter.Type.HeldBy Holder.Controller PlayerRelation.You -> True
+              Filter.Type.HeldBy Holder.Controller PlayerRelation.Opponent -> True
               Filter.Type.HeldByBound Holder.Controller _ -> True
               _ -> False
             (controllers, rest) = (filter controls conjuncts, filter (not . controls) conjuncts)
@@ -404,8 +404,8 @@ counted context n comparison k = case Count.scope n of
         noun <- Filter.describe number Target.permanent p
         let some = maybe (before noun <> Text.pack " " <> noun) (Text.pack "another " <>) (Monad.guard (number == Filter.Singular) >> Text.stripPrefix (Text.pack "other ") noun)
         case controllers of
-          [Filter.Type.ControlledBy PlayerRelation.You] -> [Text.pack "you control " <> some]
-          [Filter.Type.ControlledBy PlayerRelation.Opponent] -> [Text.pack "an opponent controls " <> some]
+          [Filter.Type.HeldBy Holder.Controller PlayerRelation.You] -> [Text.pack "you control " <> some]
+          [Filter.Type.HeldBy Holder.Controller PlayerRelation.Opponent] -> [Text.pack "an opponent controls " <> some]
           [Filter.Type.HeldByBound Holder.Controller s] | Just word <- Map.lookup s (Target.bound context) -> [word <> Text.pack " controls " <> some]
           -- Free: "there are no Zombies on the battlefield" (Sarcomancy) or
           -- "no creatures are on the battlefield" (Pestilence, Sixth Edition),
