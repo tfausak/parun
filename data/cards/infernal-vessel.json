@@ -64,9 +64,14 @@
                           "riders": {
                             "characteristics": [
                               {
-                                "type": "AddCreatureSubtype",
+                                "type": "CreatureSubtype",
                                 "value": {
-                                  "type": "Demon"
+                                  "mode": {
+                                    "type": "InAddition"
+                                  },
+                                  "subtype": {
+                                    "type": "Demon"
+                                  }
                                 }
                               }
                             ],

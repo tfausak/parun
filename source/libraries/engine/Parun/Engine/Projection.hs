@@ -52,11 +52,11 @@ import qualified Parun.Types.Binding as Binding.Type
 import qualified Parun.Types.Card as Card.Type
 import qualified Parun.Types.CardName as CardName
 import qualified Parun.Types.CardType as CardType
+import qualified Parun.Types.ChangeMode as ChangeMode
 import qualified Parun.Types.ChangeWord as ChangeWord
 import qualified Parun.Types.CharacteristicPT as CharacteristicPT
 import qualified Parun.Types.Chosen as Chosen
 import qualified Parun.Types.Color as Color
-import qualified Parun.Types.ColorMode as ColorMode
 import qualified Parun.Types.CombatDamageOption as CombatDamageOption
 import qualified Parun.Types.Condition as Condition.Type
 import qualified Parun.Types.ContinuousEffect as ContinuousEffect
@@ -175,11 +175,9 @@ layer m = case m of
   Modification.LoseKeywordFamily _ -> Layer.Ability
   Modification.SetBasePowerToughness {} -> Layer.SetPT
   Modification.ModifyPowerToughness {} -> Layer.ModifyPT
-  Modification.SetLandSubtype _ -> Layer.Type
+  Modification.LandSubtype {} -> Layer.Type
   Modification.SetLandSubtypeToChosen -> Layer.Type
-  Modification.AddLandSubtype _ -> Layer.Type
-  Modification.SetCreatureSubtype _ -> Layer.Type
-  Modification.AddCreatureSubtype _ -> Layer.Type
+  Modification.CreatureSubtype {} -> Layer.Type
   Modification.AddEveryCreatureSubtype -> Layer.Type
   -- CR 613.1d, and a regression fence rather than a proved behaviour: no board
   -- in the pool orders Nameless Inversion's removal against an effect in
@@ -494,17 +492,17 @@ applyModification textBoxOf viewOf src stamp gs oid unitTypes affected m pc =
             { PC.power = addPT (PC.power pc) (Quantity.evaluate viewOf context gs oid p),
               PC.toughness = addPT (PC.toughness pc) (Quantity.evaluate viewOf context gs oid t)
             }
-        Modification.AddLandSubtype s -> gainSubtype unitTypes s pc
-        -- CR 205.1a/205.1b: setting a subtype replaces only the creature types
-        -- (CR 205.3m), strips no abilities and touches no card type. The strip
-        -- runs whether or not CR 205.3d then lets the new type in, which no board
-        -- can tell apart: a creature type is only ever present on an object one
-        -- of whose card types correlates with it, so an object this arm refuses
-        -- has none to strip.
-        Modification.SetCreatureSubtype s ->
-          gainSubtype unitTypes s pc {PC.subtypes = Set.filter (not . Subtype.isCreatureType) (PC.subtypes pc)}
-        -- CR 205.1b's add: every creature type already present is kept.
-        Modification.AddCreatureSubtype s -> gainSubtype unitTypes s pc
+        -- CR 205.1a/205.1b: the Replace mode replaces only the creature types
+        -- (CR 205.3m), strips no abilities and touches no card type; InAddition
+        -- keeps every creature type already present. The Replace runs whether or
+        -- not CR 205.3d then lets the new type in, which no board can tell
+        -- apart: a creature type is only ever present on an object one of whose
+        -- card types correlates with it, so an object this arm refuses has none
+        -- to replace.
+        Modification.CreatureSubtype mode s ->
+          gainSubtype unitTypes s $ case mode of
+            ChangeMode.Replace -> pc {PC.subtypes = Set.filter (not . Subtype.isCreatureType) (PC.subtypes pc)}
+            ChangeMode.InAddition -> pc
         -- The same add over CR 205.3m's whole list (CR 702.73a).
         -- applySubtypeDefining writes the same thing at the start of this layer
         -- (CR 613.3); this runs in timestamp order (CR 613.7).
@@ -563,8 +561,11 @@ applyModification textBoxOf viewOf src stamp gs oid unitTypes affected m pc =
         -- is the identity rather than an error.
         Modification.RemoveSupertype t ->
           pc {PC.supertypes = Set.delete t (PC.supertypes pc)}
-        -- CR 305.7's set, with the type written into card data.
-        Modification.SetLandSubtype s -> setLandSubtypeTo unitTypes s pc
+        -- CR 305.7's set, with the type written into card data, and its last
+        -- sentence's add, which keeps the land's types and rules text.
+        Modification.LandSubtype mode s -> case mode of
+          ChangeMode.Replace -> setLandSubtypeTo unitTypes s pc
+          ChangeMode.InAddition -> gainSubtype unitTypes s pc
         -- CR 305.7's set again, with the type read off the source's own entry
         -- choice (CR 614.1c). An unchosen source sets and strips nothing rather
         -- than guessing a type, the posture ChosenColor takes toward an
@@ -573,7 +574,7 @@ applyModification textBoxOf viewOf src stamp gs oid unitTypes affected m pc =
         -- abilities; unreachable, since the only static producer is an entry
         -- replacement whose rewrite writes the field before the permanent is on
         -- the battlefield to be projected, and a resolution stores this arm
-        -- already baked into SetLandSubtype (freezeQuantities).
+        -- already baked into LandSubtype Replace (freezeQuantities).
         Modification.SetLandSubtypeToChosen ->
           case Game.currentChoice Chosen.Subtype src gs of
             Nothing -> pc
@@ -776,11 +777,9 @@ cardTypesAfter m types = case m of
   Modification.MayAssignCombatDamage _ -> types
   Modification.GrantsStationToughness -> types
   Modification.Intensify _ -> types
-  Modification.SetLandSubtype _ -> types
+  Modification.LandSubtype {} -> types
   Modification.SetLandSubtypeToChosen -> types
-  Modification.AddLandSubtype _ -> types
-  Modification.SetCreatureSubtype _ -> types
-  Modification.AddCreatureSubtype _ -> types
+  Modification.CreatureSubtype {} -> types
   Modification.AddEveryCreatureSubtype -> types
   Modification.LoseEveryCreatureSubtype -> types
   Modification.SetCreatureSubtypesOfLastCardExiledWith _ -> types
@@ -1504,7 +1503,7 @@ applyColorDefining pc =
 -- changeling, at the start of layer 4 -- applyColorDefining one layer down, and
 -- every reason in its header carries over. A UNION, since CR 205.1b keeps the
 -- subtypes of the object's other families. Being at the START of layer 4 is what
--- makes Turn to Frog's SetCreatureSubtype win over it. CR 205.3d gates it like
+-- makes Turn to Frog's CreatureSubtype Replace win over it. CR 205.3d gates it like
 -- any other grant, which on a printed changeling object refuses nothing: CR
 -- 702.73b puts the ability on creature and Kindred cards, and both correlate
 -- with CR 205.3m's list. Judged against the object's OWN card types rather than
@@ -1590,17 +1589,15 @@ freezeQuantities viewOf gs announcedOn source context m =
         Modification.LoseNamedAbility _ -> Just m
         Modification.LoseKeyword _ -> Just m
         Modification.LoseKeywordFamily _ -> Just m
-        Modification.SetLandSubtype _ -> Just m
+        Modification.LandSubtype {} -> Just m
         -- CR 608.2h: the type the source holds as this resolves is locked in, so
         -- the source's next choice (Effect.ChooseQuality) reaches no
         -- effect already stored. Nothing for a source that chose none. Proved
         -- by data/scenarios/'s Mystic Compass scenario, which Disenchants the
         -- Compass after it resolves.
         Modification.SetLandSubtypeToChosen ->
-          Modification.SetLandSubtype <$> Game.choiceWithLastKnown Chosen.Subtype (Game.readingAcquisition announcedOn source gs source) source gs
-        Modification.AddLandSubtype _ -> Just m
-        Modification.SetCreatureSubtype _ -> Just m
-        Modification.AddCreatureSubtype _ -> Just m
+          Modification.LandSubtype ChangeMode.Replace <$> Game.choiceWithLastKnown Chosen.Subtype (Game.readingAcquisition announcedOn source gs source) source gs
+        Modification.CreatureSubtype {} -> Just m
         Modification.AddEveryCreatureSubtype -> Just m
         Modification.LoseEveryCreatureSubtype -> Just m
         -- Nothing frozen: no resolution stores this arm, and the card it reads is
@@ -1664,11 +1661,9 @@ quantitiesOf m = case m of
   Modification.LoseKeyword _ -> []
   -- Carries a KeywordFamily, which is payload-free and nests nothing at all.
   Modification.LoseKeywordFamily _ -> []
-  Modification.SetLandSubtype _ -> []
+  Modification.LandSubtype {} -> []
   Modification.SetLandSubtypeToChosen -> []
-  Modification.AddLandSubtype _ -> []
-  Modification.SetCreatureSubtype _ -> []
-  Modification.AddCreatureSubtype _ -> []
+  Modification.CreatureSubtype {} -> []
   Modification.AddEveryCreatureSubtype -> []
   Modification.LoseEveryCreatureSubtype -> []
   Modification.SetCreatureSubtypesOfLastCardExiledWith _ -> []
@@ -1719,11 +1714,9 @@ referenceQuery m = case m of
   Modification.LoseNamedAbility _ -> Nothing
   Modification.LoseKeyword _ -> Nothing
   Modification.LoseKeywordFamily _ -> Nothing
-  Modification.SetLandSubtype _ -> Nothing
+  Modification.LandSubtype {} -> Nothing
   Modification.SetLandSubtypeToChosen -> Nothing
-  Modification.AddLandSubtype _ -> Nothing
-  Modification.SetCreatureSubtype _ -> Nothing
-  Modification.AddCreatureSubtype _ -> Nothing
+  Modification.CreatureSubtype {} -> Nothing
   Modification.AddEveryCreatureSubtype -> Nothing
   Modification.LoseEveryCreatureSubtype -> Nothing
   Modification.SetCreatureSubtypesOfLastCardExiledWith _ -> Nothing
@@ -1755,13 +1748,14 @@ referenceQueries gs = Set.fromList (Maybe.mapMaybe (referenceQuery . gModificati
 -- must break this build rather than silently answer False.
 setsLandSubtype :: Modification.Modification ability -> Bool
 setsLandSubtype m = case m of
-  Modification.SetLandSubtype _ -> True
+  -- CR 305.7: the set strips; its last sentence's add, a land that GAINS a type
+  -- in addition to its own, keeps its rules text.
+  Modification.LandSubtype mode _ -> case mode of
+    ChangeMode.Replace -> True
+    ChangeMode.InAddition -> False
   -- CR 305.7 does not care where the type came from: a type chosen as the source
   -- entered (CR 614.1c) strips rules text as a printed one does.
   Modification.SetLandSubtypeToChosen -> True
-  -- The OTHER direction of CR 305.7's last sentence: a land that GAINS a type in
-  -- addition to its own keeps its rules text.
-  Modification.AddLandSubtype _ -> False
   -- An ability grant is layer 6 and sets no subtype at all.
   Modification.GainAbility _ -> False
   Modification.GainAbilitiesOfSource _ -> False
@@ -1777,13 +1771,12 @@ setsLandSubtype m = case m of
   Modification.SetControllerToSource -> False
   -- The OTHER subtype set: CR 305.7's strip is about a LAND whose subtype is set,
   -- and CR 205.1a/205.1b's creature-type set carries no such clause.
-  Modification.SetCreatureSubtype _ -> False
-  Modification.AddCreatureSubtype _ -> False
+  Modification.CreatureSubtype {} -> False
   Modification.AddEveryCreatureSubtype -> False
   Modification.LoseEveryCreatureSubtype -> False
   Modification.SetCreatureSubtypesOfLastCardExiledWith _ -> False
   -- Not a SET, so CR 305.7 does not fire whatever family the subtype belongs to
-  -- -- the same answer AddLandSubtype gives above, and Parun.CardSpec keeps CR
+  -- -- the same answer LandSubtype's InAddition gives above, and Parun.CardSpec keeps CR
   -- 205.3i's land types off this arm anyway.
   Modification.AddSubtype _ -> False
   -- The CARD-TYPE set: CR 305.7 fires on setting a land's SUBTYPE, so making an
@@ -1824,7 +1817,7 @@ setsLandSubtype m = case m of
 -- affected set.
 type SetEffect = (ObjectId, Maybe Natural, Affected.Affected)
 
--- Every SetLandSubtype and SetLandSubtypeToChosen effect in the game, for a
+-- Every LandSubtype Replace and SetLandSubtypeToChosen effect in the game, for a
 -- reader OUTSIDE the layer fold. A legitimate case-on-Modification --
 -- Projection is its sole home. CR 604.2's "as long as"
 -- gate is answered here against the same seed list gather feeds its own gates, so
@@ -3018,10 +3011,9 @@ removesAbilities m = case m of
   -- CR 305.7 strips a land's rules text, but as a layer-4 type change performed
   -- by setLandSubtypeTo and the two gates beside it, never a layer-6 removal.
   -- setsLandSubtype is the classification; this one answers CR 613.1f.
-  Modification.SetLandSubtype _ -> False
+  Modification.LandSubtype {} -> False
   Modification.SetLandSubtypeToChosen -> False
-  Modification.SetCreatureSubtype _ -> False
-  Modification.AddCreatureSubtype _ -> False
+  Modification.CreatureSubtype {} -> False
   Modification.AddEveryCreatureSubtype -> False
   Modification.LoseEveryCreatureSubtype -> False
   Modification.SetCreatureSubtypesOfLastCardExiledWith _ -> False
@@ -3046,11 +3038,10 @@ removesAbilities m = case m of
   -- A grant, GainKeyword's answer above: not a removal.
   Modification.GrantsStationToughness -> False
   Modification.Intensify _ -> False
-  Modification.AddLandSubtype _ -> False
   Modification.ChangeWord {} -> False
   Modification.AddCardType _ -> False
   -- CR 205.1a's card-type set has no ability clause: Song of the Dryads strips
-  -- rules text through the SetLandSubtype it carries beside this.
+  -- rules text through the LandSubtype Replace it carries beside this.
   Modification.SetCardType _ -> False
   -- CR 205.1a's removal has no ability clause either.
   Modification.LoseCardType _ -> False
@@ -3121,10 +3112,10 @@ abilitiesRemovedBy name keep cands gs oid =
 
 -- | CR 105.3: the colours an effect gives, replacing an object's colours or
 -- joining them under the parenthetical.
-withColors :: ColorMode.ColorMode -> Set.Set Color.Color -> Set.Set Color.Color -> Set.Set Color.Color
+withColors :: ChangeMode.ChangeMode -> Set.Set Color.Color -> Set.Set Color.Color -> Set.Set Color.Color
 withColors mode new old = case mode of
-  ColorMode.Replace -> new
-  ColorMode.InAddition -> Set.union new old
+  ChangeMode.Replace -> new
+  ChangeMode.InAddition -> Set.union new old
 
 -- The two keywords rule 702 states as a characteristic-defining ability,
 -- expanded for the case where CR 604.3a denies them that status: an instance
@@ -3149,7 +3140,7 @@ withColors mode new old = case mode of
 -- type line and enchant.
 grantedDefiningParts :: Modification -> NonEmpty.NonEmpty Modification
 grantedDefiningParts m = case m of
-  Modification.GainKeyword Keyword.Type.Devoid -> m NonEmpty.:| [Modification.Colors ColorMode.Replace Set.empty]
+  Modification.GainKeyword Keyword.Type.Devoid -> m NonEmpty.:| [Modification.Colors ChangeMode.Replace Set.empty]
   Modification.GainKeyword Keyword.Type.Changeling -> m NonEmpty.:| [Modification.AddEveryCreatureSubtype]
   _ -> m NonEmpty.:| []
 
@@ -3922,7 +3913,7 @@ filterReads f = case f of
   -- The kinds also hold CR 305.6's intrinsic "{T}: Add [mana symbol]", which
   -- Projection.View.viewOfCharacteristics adds off the projected card types and
   -- subtypes. Those are layer 4 (CR 613.1d), so a subtype write moves the
-  -- answer of every kind but NonManaAbility: Blood Moon's SetLandSubtype gives a
+  -- answer of every kind but NonManaAbility: Blood Moon's LandSubtype gives a
   -- nonbasic the Mountain ability it did not have. CR 613.1f's layer-6 wipe
   -- reaches the intrinsic ability too (ProjectedCharacteristics.lostAllAbilities)
   -- through Keywords, which this row already declares. The Subtypes read for
@@ -4213,11 +4204,12 @@ modificationWrites m = case m of
   Modification.SetBasePowerToughness {} -> Set.singleton PowerA
   Modification.ModifyPowerToughness {} -> Set.singleton PowerA
   Modification.SwitchPowerToughness -> Set.singleton PowerA
-  Modification.SetLandSubtype _ -> Set.fromList [Subtypes, Keywords]
+  -- CR 305.7's strip writes the rules text too, and only the Replace mode strips.
+  Modification.LandSubtype mode _ -> case mode of
+    ChangeMode.Replace -> Set.fromList [Subtypes, Keywords]
+    ChangeMode.InAddition -> Set.singleton Subtypes
   Modification.SetLandSubtypeToChosen -> Set.fromList [Subtypes, Keywords]
-  Modification.AddLandSubtype _ -> Set.singleton Subtypes
-  Modification.SetCreatureSubtype _ -> Set.singleton Subtypes
-  Modification.AddCreatureSubtype _ -> Set.singleton Subtypes
+  Modification.CreatureSubtype {} -> Set.singleton Subtypes
   Modification.AddEveryCreatureSubtype -> Set.singleton Subtypes
   -- The honest answer -- the arm writes PC.subtypes and nothing else, and CR
   -- 205.1a's last sentence is why it writes no card type -- but a regression
@@ -4332,11 +4324,9 @@ modificationReads m = case m of
   Modification.MayAssignCombatDamage _ -> Set.empty
   Modification.GrantsStationToughness -> Set.empty
   Modification.Intensify n -> quantityReads n
-  Modification.SetLandSubtype _ -> Set.empty
+  Modification.LandSubtype {} -> Set.empty
   Modification.SetLandSubtypeToChosen -> Set.empty
-  Modification.AddLandSubtype _ -> Set.empty
-  Modification.SetCreatureSubtype _ -> Set.empty
-  Modification.AddCreatureSubtype _ -> Set.empty
+  Modification.CreatureSubtype {} -> Set.empty
   Modification.AddEveryCreatureSubtype -> Set.empty
   Modification.LoseEveryCreatureSubtype -> Set.empty
   -- Reads the subtypes of a card in EXILE, and no modification this screen
@@ -6194,11 +6184,9 @@ grantsKeywordWhere p m = case m of
   Modification.LoseKeywordFamily _ -> False
   Modification.SetBasePowerToughness {} -> False
   Modification.ModifyPowerToughness {} -> False
-  Modification.SetLandSubtype _ -> False
+  Modification.LandSubtype {} -> False
   Modification.SetLandSubtypeToChosen -> False
-  Modification.AddLandSubtype _ -> False
-  Modification.SetCreatureSubtype _ -> False
-  Modification.AddCreatureSubtype _ -> False
+  Modification.CreatureSubtype {} -> False
   Modification.AddEveryCreatureSubtype -> False
   Modification.LoseEveryCreatureSubtype -> False
   Modification.SetCreatureSubtypesOfLastCardExiledWith _ -> False
@@ -6280,11 +6268,9 @@ grantsMintingType m = case m of
   Modification.LoseKeywordFamily _ -> False
   Modification.SetBasePowerToughness {} -> False
   Modification.ModifyPowerToughness {} -> False
-  Modification.SetLandSubtype _ -> False
+  Modification.LandSubtype {} -> False
   Modification.SetLandSubtypeToChosen -> False
-  Modification.AddLandSubtype _ -> False
-  Modification.SetCreatureSubtype _ -> False
-  Modification.AddCreatureSubtype _ -> False
+  Modification.CreatureSubtype {} -> False
   Modification.AddEveryCreatureSubtype -> False
   Modification.LoseEveryCreatureSubtype -> False
   Modification.SetCreatureSubtypesOfLastCardExiledWith _ -> False
@@ -6379,11 +6365,9 @@ grantsAbilityWhere p m = case m of
   Modification.LoseKeywordFamily _ -> False
   Modification.SetBasePowerToughness {} -> False
   Modification.ModifyPowerToughness {} -> False
-  Modification.SetLandSubtype _ -> False
+  Modification.LandSubtype {} -> False
   Modification.SetLandSubtypeToChosen -> False
-  Modification.AddLandSubtype _ -> False
-  Modification.SetCreatureSubtype _ -> False
-  Modification.AddCreatureSubtype _ -> False
+  Modification.CreatureSubtype {} -> False
   Modification.AddEveryCreatureSubtype -> False
   Modification.LoseEveryCreatureSubtype -> False
   Modification.SetCreatureSubtypesOfLastCardExiledWith _ -> False

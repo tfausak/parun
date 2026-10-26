@@ -1339,7 +1339,7 @@ moonmistShieldChain s registry swap = do
 -- a Demon in addition to its other types. It gains 'When this creature dies,
 -- draw a card and create a tapped 4/3 white and black Vampire Demon creature
 -- token with flying.'" (checked against Scryfall). The word Demon rides two
--- positions of that one ability -- a layer-4 Modification.AddCreatureSubtype,
+-- positions of that one ability -- a layer-4 Modification.CreatureSubtype InAddition,
 -- and the token defined INSIDE the quoted ability -- and only the token answers
 -- for the descent, the subtype add being a sibling arm of rewriteModification
 -- that the same walk reaches without ever entering the quoted ability.
@@ -1418,7 +1418,7 @@ aimAtCreature oid p = case p of
 -- new creature type can't be Wall." (checked against Scryfall) -- is the card
 -- that makes the difference observable, and Turn to Frog {1}{U} ("target
 -- creature ... becomes a blue Frog with base power and toughness 1/1") is the
--- spell it rewrites: its SetCreatureSubtype names the Frog, so an Evolution
+-- spell it rewrites: its CreatureSubtype Replace names the Frog, so an Evolution
 -- resolved at the spell on the stack has to make the target something else.
 artificialEvolutionSpec :: (Monad m, Monad n) => Spec.Spec m n -> Registry.Registry m -> n ()
 artificialEvolutionSpec s registry = Spec.describe s "ArtificialEvolution" $ do

@@ -53,9 +53,14 @@
               }
             },
             {
-              "type": "SetCreatureSubtype",
+              "type": "CreatureSubtype",
               "value": {
-                "type": "Citizen"
+                "mode": {
+                  "type": "Replace"
+                },
+                "subtype": {
+                  "type": "Citizen"
+                }
               }
             },
             {

@@ -57,9 +57,14 @@
                       "riders": {
                         "characteristics": [
                           {
-                            "type": "AddCreatureSubtype",
+                            "type": "CreatureSubtype",
                             "value": {
-                              "type": "Zombie"
+                              "mode": {
+                                "type": "InAddition"
+                              },
+                              "subtype": {
+                                "type": "Zombie"
+                              }
                             }
                           }
                         ]

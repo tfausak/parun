@@ -146,9 +146,14 @@
               }
             },
             {
-              "type": "AddLandSubtype",
+              "type": "LandSubtype",
               "value": {
-                "type": "Forest"
+                "mode": {
+                  "type": "InAddition"
+                },
+                "subtype": {
+                  "type": "Forest"
+                }
               }
             }
           ]

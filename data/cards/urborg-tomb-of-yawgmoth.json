@@ -16,9 +16,14 @@
           },
           "modifications": [
             {
-              "type": "AddLandSubtype",
+              "type": "LandSubtype",
               "value": {
-                "type": "Swamp"
+                "mode": {
+                  "type": "InAddition"
+                },
+                "subtype": {
+                  "type": "Swamp"
+                }
               }
             }
           ]

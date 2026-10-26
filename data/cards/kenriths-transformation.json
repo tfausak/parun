@@ -54,9 +54,14 @@
               }
             },
             {
-              "type": "SetCreatureSubtype",
+              "type": "CreatureSubtype",
               "value": {
-                "type": "Elk"
+                "mode": {
+                  "type": "Replace"
+                },
+                "subtype": {
+                  "type": "Elk"
+                }
               }
             },
             {

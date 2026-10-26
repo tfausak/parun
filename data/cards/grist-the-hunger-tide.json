@@ -389,9 +389,14 @@
               }
             },
             {
-              "type": "AddCreatureSubtype",
+              "type": "CreatureSubtype",
               "value": {
-                "type": "Insect"
+                "mode": {
+                  "type": "InAddition"
+                },
+                "subtype": {
+                  "type": "Insect"
+                }
               }
             },
             {
