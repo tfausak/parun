@@ -34,12 +34,17 @@
                     {
                       "exceptions": [
                         {
-                          "type": "AddCardTypes",
-                          "value": [
-                            {
-                              "type": "Artifact"
+                          "type": "CardTypes",
+                          "value": {
+                            "cardTypes": [
+                              {
+                                "type": "Artifact"
+                              }
+                            ],
+                            "mode": {
+                              "type": "InAddition"
                             }
-                          ]
+                          }
                         }
                       ]
                     }

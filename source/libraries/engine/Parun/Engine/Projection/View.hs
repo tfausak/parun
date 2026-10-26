@@ -44,6 +44,7 @@ import qualified Parun.Types.AttackTarget as AttackTarget
 import qualified Parun.Types.BlockStatus as BlockStatus
 import qualified Parun.Types.Card as Card.Type
 import qualified Parun.Types.CardType as CardType
+import qualified Parun.Types.ChangeMode as ChangeMode
 import qualified Parun.Types.CharacteristicPT as CharacteristicPT
 import qualified Parun.Types.Color as Color
 import qualified Parun.Types.Combat as Combat
@@ -958,10 +959,9 @@ settleCopyException this own exception = case exception of
     Nothing -> []
   CopyException.SetPowerToughness _ -> [exception]
   CopyException.GainKeywords _ -> [exception]
-  CopyException.AddCardTypes _ -> [exception]
+  CopyException.CardTypes {} -> [exception]
   CopyException.AddSubtypes _ -> [exception]
   CopyException.AddSupertypes _ -> [exception]
-  CopyException.SetCardTypes _ -> [exception]
   CopyException.SetCreatureSubtypes _ -> [exception]
   CopyException.RemoveSupertypes _ -> [exception]
   CopyException.SetName _ -> [exception]
@@ -1078,8 +1078,19 @@ applyCopyException this own snapshot exception = case exception of
   -- an artifact and still recomputes its P/T off the graveyards --
   -- Parun.CopySpec's "a type exception keeps the copied CDA where a value
   -- exception does not" is what proves it.
-  CopyException.AddCardTypes types ->
-    snapshot {PC.cardTypes = Set.union (PC.cardTypes snapshot) types}
+  --
+  -- CR 707.9b / 205.1a's set: the clause's card types replace the copied ones,
+  -- instant and sorcery kept, and a subtype correlating with no card type the
+  -- copy still has goes with the type that carried it -- Projection's
+  -- CardType Replace arm over the copiable values.
+  -- data/scenarios/dino-dna-copies-drop-the-copied-land-type-and-changeling.json
+  -- proves the strip (Dryad Arbor's Forest).
+  CopyException.CardTypes mode types -> case mode of
+    ChangeMode.InAddition ->
+      snapshot {PC.cardTypes = Set.union (PC.cardTypes snapshot) types}
+    ChangeMode.Replace ->
+      let kept = Set.union types (Set.filter retainedThroughCardTypeSet (PC.cardTypes snapshot))
+       in snapshot {PC.cardTypes = kept, PC.subtypes = Set.filter (correspondsTo kept) (PC.subtypes snapshot)}
   -- CR 707.9b / 205.3: "a Wall in addition to its other types" (Wall of Stolen
   -- Identity), the same union one part of the type line over. Into the snapshot
   -- for the arms above's reason, which is what makes the added subtype survive a
@@ -1088,7 +1099,7 @@ applyCopyException this own snapshot exception = case exception of
   -- layer-4 write over the Wall copy would be left behind on the token and no
   -- "destroy target Wall" would find it.
   --
-  -- Nothing else moves, for AddCardTypes' reason: CR 707.9d's carve-out names
+  -- Nothing else moves, for CardTypes InAddition's reason: CR 707.9d's carve-out names
   -- subtype alongside card type, so the copied characteristic-defining ability
   -- stays -- a copy of a creature with changeling still has every creature type
   -- (CR 707.9d's Glasspool Mimic example).
@@ -1104,19 +1115,10 @@ applyCopyException this own snapshot exception = case exception of
   -- legend rule apart" is what proves the supertype arrived, since two copies that
   -- did not gain it would both stand.
   --
-  -- Nothing else moves, for AddCardTypes' reason: CR 707.9d's carve-out names
+  -- Nothing else moves, for CardTypes InAddition's reason: CR 707.9d's carve-out names
   -- supertype, and no parun characteristic-defining ability defines one anyway.
   CopyException.AddSupertypes supertypes ->
     snapshot {PC.supertypes = Set.union (PC.supertypes snapshot) supertypes}
-  -- CR 707.9b / 205.1a's set: the clause's card types replace the copied ones,
-  -- instant and sorcery kept, and a subtype correlating with no card type the
-  -- copy still has goes with the type that carried it -- Projection's
-  -- CardType Replace arm over the copiable values.
-  -- data/scenarios/dino-dna-copies-drop-the-copied-land-type-and-changeling.json
-  -- proves the strip (Dryad Arbor's Forest).
-  CopyException.SetCardTypes types ->
-    let kept = Set.union types (Set.filter retainedThroughCardTypeSet (PC.cardTypes snapshot))
-     in snapshot {PC.cardTypes = kept, PC.subtypes = Set.filter (correspondsTo kept) (PC.subtypes snapshot)}
   -- CR 707.9b / 205.1a's set over CR 205.3m's creature types: every copied
   -- creature type goes and the clause's come in. CR 707.9d strips changeling
   -- (CR 702.73a), the ability that would define them; the same scenario
@@ -2574,7 +2576,7 @@ lastZoneOf = Game.liveOrLastKnown Object.zone LastKnown.zone
 
 -- CR 205.3d: an object can't gain a subtype that doesn't correspond to one of
 -- its types. CR 205.1a's removal clause is the same question in the other
--- direction, so Parun.Engine.Projection's SetCardType arm and the SetCardTypes
+-- direction, so Parun.Engine.Projection's CardType Replace arm and the CardTypes Replace
 -- copy exception above ask this too -- one predicate, so a subtype a card-type
 -- set would strip is one a later grant cannot put back.
 --
@@ -2599,7 +2601,7 @@ correspondsTo types subtype =
    in Set.null family || not (Set.disjoint family types)
 
 -- CR 205.1a's named exception to its own set: instant and sorcery are retained.
--- Read by Parun.Engine.Projection.cardTypesAfter and the SetCardTypes copy
+-- Read by Parun.Engine.Projection.cardTypesAfter and the CardTypes Replace copy
 -- exception above.
 retainedThroughCardTypeSet :: CardType.CardType -> Bool
 retainedThroughCardTypeSet t = t == CardType.Instant || t == CardType.Sorcery
