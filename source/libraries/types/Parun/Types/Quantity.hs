@@ -11,6 +11,7 @@ import qualified Parun.Types.CastFrom as CastFrom
 import qualified Parun.Types.CompletedDungeon as CompletedDungeon
 import qualified Parun.Types.Count as Count
 import qualified Parun.Types.CounterKind as CounterKind
+import qualified Parun.Types.DealtDamage as DealtDamage
 import qualified Parun.Types.Designation as Designation
 import qualified Parun.Types.Devotion as Devotion
 import qualified Parun.Types.InZone as InZone
@@ -22,7 +23,6 @@ import qualified Parun.Types.Measure as Measure
 import qualified Parun.Types.PlayerCounterTally as PlayerCounterTally
 import qualified Parun.Types.PlayerDesignationTally as PlayerDesignationTally
 import qualified Parun.Types.PlayerRef as PlayerRef
-import qualified Parun.Types.PlayersDealtDamage as PlayersDealtDamage
 import qualified Parun.Types.ProductionTag as ProductionTag
 import qualified Parun.Types.SlotName as SlotName
 import qualified Parun.Types.VotesReceived as VotesReceived
@@ -270,7 +270,7 @@ data Quantity
   | -- | CR 120.1 / 608.2i: how many of the players that reference names were
     -- dealt damage, or combat damage alone, this turn -- players, not events
     -- (rule 702.54a).
-    PlayersDealtDamageThisTurn PlayersDealtDamage.PlayersDealtDamage
+    PlayersDealtDamageThisTurn (DealtDamage.DealtDamage PlayerRef.PlayerRef)
   | -- | CR 120.1 / 608.2i: the total damage dealt this turn to the players that
     -- reference names (rule 702.54b).
     DamageDealtToPlayersThisTurn PlayerRef.PlayerRef

@@ -27,13 +27,13 @@ import qualified Parun.Types.AttackingPlayers as AttackingPlayers
 import qualified Parun.Types.CastFrom as CastFrom
 import qualified Parun.Types.CompletedDungeon as CompletedDungeon
 import qualified Parun.Types.Count as Count.Type
+import qualified Parun.Types.DealtDamage as DealtDamage
 import qualified Parun.Types.Devotion as Devotion
 import qualified Parun.Types.InZone as InZone
 import qualified Parun.Types.ManaCount as ManaCount.Type
 import qualified Parun.Types.PlayerCounterTally as PlayerCounterTally
 import qualified Parun.Types.PlayerDesignationTally as PlayerDesignationTally
 import qualified Parun.Types.PlayerRef as PlayerRef
-import qualified Parun.Types.PlayersDealtDamage as PlayersDealtDamage
 import Parun.Types.Quantity (Quantity)
 import qualified Parun.Types.Quantity as Quantity
 import qualified Parun.Types.Scope as Scope
@@ -369,7 +369,7 @@ nestedRefs quantity = case quantity of
   Quantity.CardsDrawnThisTurn ref -> Set.singleton (Left ref)
   Quantity.BendingsThisTurn ref -> Set.singleton (Left ref)
   Quantity.LifeGainedThisTurn ref -> Set.singleton (Left ref)
-  Quantity.PlayersDealtDamageThisTurn tally -> Set.singleton (Left (PlayersDealtDamage.player tally))
+  Quantity.PlayersDealtDamageThisTurn tally -> Set.singleton (Left (DealtDamage.player tally))
   Quantity.DamageDealtToPlayersThisTurn ref -> Set.singleton (Left ref)
   Quantity.SpellsCastLastTurn ref -> Set.singleton (Left ref)
   Quantity.SpellsCastThisTurn ref -> Set.singleton (Left ref)
@@ -647,7 +647,7 @@ mapPlayerRefs f intoCount quantity =
         Quantity.CardsDrawnThisTurn ref -> Quantity.CardsDrawnThisTurn (f ref)
         Quantity.BendingsThisTurn ref -> Quantity.BendingsThisTurn (f ref)
         Quantity.LifeGainedThisTurn ref -> Quantity.LifeGainedThisTurn (f ref)
-        Quantity.PlayersDealtDamageThisTurn tally -> Quantity.PlayersDealtDamageThisTurn tally {PlayersDealtDamage.player = f (PlayersDealtDamage.player tally)}
+        Quantity.PlayersDealtDamageThisTurn tally -> Quantity.PlayersDealtDamageThisTurn tally {DealtDamage.player = f (DealtDamage.player tally)}
         Quantity.DamageDealtToPlayersThisTurn ref -> Quantity.DamageDealtToPlayersThisTurn (f ref)
         Quantity.SpellsCastLastTurn ref -> Quantity.SpellsCastLastTurn (f ref)
         Quantity.SpellsCastThisTurn ref -> Quantity.SpellsCastThisTurn (f ref)

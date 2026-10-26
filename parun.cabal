@@ -548,6 +548,8 @@ library codec
     Parun.Codec.DealDamageSpec
     Parun.Codec.DealsDamageToPlayer
     Parun.Codec.DealsDamageToPlayerSpec
+    Parun.Codec.DealtDamage
+    Parun.Codec.DealtDamageSpec
     Parun.Codec.DealtDamageTo
     Parun.Codec.DealtDamageToSpec
     Parun.Codec.Decider
@@ -1128,7 +1130,6 @@ library codec
     Parun.Codec.PlayerIdSpec
     Parun.Codec.PlayerInstruction
     Parun.Codec.PlayerInstructionSpec
-    Parun.Codec.PlayerIsDealtDamage
     Parun.Codec.PlayerMeasure
     Parun.Codec.PlayerQuantity
     Parun.Codec.PlayerQuantitySpec
@@ -1140,8 +1141,6 @@ library codec
     Parun.Codec.PlayerSacrificesSpec
     Parun.Codec.PlayerScope
     Parun.Codec.PlayerScopeSpec
-    Parun.Codec.PlayersDealtDamage
-    Parun.Codec.PlayersDealtDamageSpec
     Parun.Codec.PlayerSpec
     Parun.Codec.PlayerStaticAbility
     Parun.Codec.PlayerStaticAbilitySpec
@@ -2531,6 +2530,7 @@ library types
     Parun.Types.Daytime
     Parun.Types.DealDamage
     Parun.Types.DealsDamageToPlayer
+    Parun.Types.DealtDamage
     Parun.Types.DealtDamageTo
     Parun.Types.Decider
     Parun.Types.DecisionLog
@@ -2868,14 +2868,12 @@ library types
     Parun.Types.PlayerEffect
     Parun.Types.PlayerId
     Parun.Types.PlayerInstruction
-    Parun.Types.PlayerIsDealtDamage
     Parun.Types.PlayerMeasure
     Parun.Types.PlayerQuantity
     Parun.Types.PlayerRef
     Parun.Types.PlayerRelation
     Parun.Types.PlayerSacrifices
     Parun.Types.PlayerScope
-    Parun.Types.PlayersDealtDamage
     Parun.Types.PlayerStaticAbility
     Parun.Types.PlayersWho
     Parun.Types.PlayerView
