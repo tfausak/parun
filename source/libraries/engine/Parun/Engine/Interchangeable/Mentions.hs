@@ -1563,9 +1563,7 @@ entryRewriteNames asking onAbility onEffect x = case x of
   EntryRewrite.AsCopy asCopy -> asCopyNames asking onAbility onEffect asCopy
   EntryRewrite.ChoiceOf items -> foldMap (entryOptionNames asking) items
   EntryRewrite.ChoiceByCoinFlip entryFlip -> entryFlipNames asking entryFlip
-  EntryRewrite.ChooseColors _natural -> mempty
-  EntryRewrite.ChooseBasicLandType -> mempty
-  EntryRewrite.ChooseCreatureType -> mempty
+  EntryRewrite.ChooseQuality _ -> mempty
   EntryRewrite.ChoosePlayer _relation -> mempty
   EntryRewrite.ChooseCardNames filter_ -> filterNames asking filter_
   EntryRewrite.ChooseCardName filter_ -> filterNames asking filter_
@@ -3075,7 +3073,7 @@ attachRNames asking onAbility onEffect x = case x of
 attachRewriteNames :: (Monoid r) => Asking r -> (ability -> r) -> (effect -> r) -> AttachRewrite.AttachRewrite ability effect -> r
 attachRewriteNames asking onAbility onEffect x = case x of
   AttachRewrite.AsCopy asCopy -> asCopyNames asking onAbility onEffect asCopy
-  AttachRewrite.ChooseColors _ -> mempty
+  AttachRewrite.ChooseQuality _ -> mempty
 
 untapRNames :: (Monoid r) => Asking r -> UntapR.UntapR -> r
 untapRNames asking x = case x of

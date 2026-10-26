@@ -2369,8 +2369,8 @@ spec s = Spec.describe s "Parun.Codec.Effect" $ do
       s
       toJson
       fromJson
-      (Effect.ChooseQuality ChosenQuality.Color)
-      " {\"type\":\"ChooseQuality\",\"value\":{\"type\":\"Color\"}} "
+      (Effect.ChooseQuality (ChosenQuality.Colors 1))
+      " {\"type\":\"ChooseQuality\",\"value\":{\"type\":\"Colors\",\"value\":1}} "
   -- CR 400.11c: the filter and CR 701.20a's reveal, Burning Wish's "reveal a
   -- sorcery card". Everything else about the sentence is the rule's -- the pool is
   -- the resolving controller's own (CR 108.3b) and the destination their hand.

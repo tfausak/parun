@@ -7,17 +7,22 @@ import qualified Parun.Types.ChosenQuality as ChosenQuality
 
 spec :: (Monad m, Monad n) => Spec.Spec m n -> n ()
 spec s = Spec.describe s "Parun.Codec.ChosenQuality" $ do
-  Spec.it s "Color" $
+  Spec.it s "Colors (Tablet of the Guilds)" $
     Common.assertCodec
       s
       ChosenQuality.codec
-      ChosenQuality.Color
-      " {\"type\":\"Color\"} "
-  Spec.it s "BasicLandType" $
+      (ChosenQuality.Colors 2)
+      " {\"type\":\"Colors\",\"value\":2} "
+  Spec.it s "BasicLandType (Convincing Mirage)" $
     Common.assertCodec
       s
       ChosenQuality.codec
       ChosenQuality.BasicLandType
       " {\"type\":\"BasicLandType\"} "
-  Spec.it s "round trips every constructor" $ Common.assertEnumCodec s ChosenQuality.codec
+  Spec.it s "CreatureType (Pillar of Origins)" $
+    Common.assertCodec
+      s
+      ChosenQuality.codec
+      ChosenQuality.CreatureType
+      " {\"type\":\"CreatureType\"} "
   Spec.it s "has a schema" $ Common.assertHasSchema s ChosenQuality.codec

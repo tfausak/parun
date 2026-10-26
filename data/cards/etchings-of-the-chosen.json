@@ -116,7 +116,10 @@
                 "type": "IsSource"
               },
               "rewrite": {
-                "type": "ChooseCreatureType"
+                "type": "ChooseQuality",
+                "value": {
+                  "type": "CreatureType"
+                }
               }
             }
           }

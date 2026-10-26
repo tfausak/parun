@@ -97,6 +97,7 @@ import qualified Parun.Types.CardType as CardType
 import qualified Parun.Types.CarryOver as CarryOver
 import qualified Parun.Types.CausedBy as CausedBy
 import qualified Parun.Types.Chosen as Chosen
+import qualified Parun.Types.ChosenQuality as ChosenQuality
 import qualified Parun.Types.CoinFace as CoinFace
 import qualified Parun.Types.CoinFlipped as CoinFlipped
 import qualified Parun.Types.Color as Color
@@ -2603,66 +2604,16 @@ apply batch candidate event =
         Replacement.consume (ReplacementCandidate.identity candidate)
         State.modify' (Replacement.applyEntryOption oid picked)
         pure (Just event)
-      -- CR 614.1c: Painter's Servant's and Tablet of the Guilds' as-enters
-      -- colour choices, one prompt per colour, each offering the CR 105.1
-      -- colours not yet chosen ("two colors" are two different ones). Unlike
-      -- ChoiceOf above, a prompt is raised whenever two or more remain; only a
-      -- fifth colour would be forced.
-      --
-      -- Written to Object.chosenColors, NOT to the copiable snapshot -- see
-      -- EntryRewrite.ChooseColors.
-      EntryRewrite.ChooseColors count -> do
-        chooseColors candidate count oid
-        pure (Just event)
-      -- CR 614.1c: Convincing Mirage's as-enters basic land type choice. Asked
-      -- every time the entering object has a controller to ask, for
-      -- ChooseColors' reason just above: CR 305.6's five basic land types are
-      -- always all legal and always distinguishable, so there is no one-option
-      -- case to elide.
-      --
-      -- Written to Object.chosenSubtype, NOT to the copiable snapshot -- see
-      -- EntryRewrite.ChooseBasicLandType.
-      EntryRewrite.ChooseBasicLandType -> do
-        gs <- State.get
-        picked <- case Projection.controllerOf oid gs of
-          -- Unreachable, and defensive for ChoiceOf's reason: the object is
-          -- materialized on the battlefield before this loop runs, so
-          -- controllerOf falls back to its owner. The same WEAKER fallback
-          -- ChooseColors' arm carries, and for the same reason: no type the card
-          -- named to default to, so Mountain is conjured.
-          Nothing -> pure Subtype.Mountain
-          Just controller -> do
-            let decider = Decide.deciderFor controller gs
-            Game.choose (Prompt.ChooseBasicLandType decider controller oid)
-        Replacement.consume (ReplacementCandidate.identity candidate)
-        State.modify' $ \g -> Game.recordChoice Chosen.Subtype (Game.acquisitionOf oid g) (const (Just picked)) oid g
-        pure (Just event)
-      -- CR 614.1c: Pillar of Origins' as-enters creature type choice, the arm
-      -- above one rule over. Asked unconditionally for that arm's reason: CR
-      -- 205.3m's creature types are all legal and all distinguishable, so there is
-      -- no one-option case to elide.
-      --
-      -- Written to Object.chosenSubtype, the same field the arm above writes --
-      -- no printing makes both choices, the two clauses being alternatives of one
-      -- sentence shape, and CR 607.2d links each to the ability that reads it.
-      EntryRewrite.ChooseCreatureType -> do
-        gs <- State.get
-        picked <- case Projection.controllerOf oid gs of
-          -- Unreachable and defensive, the arm above's fallback one rule over:
-          -- Goblin is conjured because the card names no type to default to.
-          Nothing -> pure Subtype.Goblin
-          Just controller -> do
-            let decider = Decide.deciderFor controller gs
-            Game.choose (Prompt.ChooseCreatureType decider controller oid)
-        Replacement.consume (ReplacementCandidate.identity candidate)
-        State.modify' $ \g -> Game.recordChoice Chosen.Subtype (Game.acquisitionOf oid g) (const (Just picked)) oid g
+      -- CR 614.1c: Painter's Servant's, Convincing Mirage's and Pillar of
+      -- Origins' as-enters choices, through chooseQuality.
+      EntryRewrite.ChooseQuality quality -> do
+        chooseQualityAs candidate quality oid
         pure (Just event)
       -- CR 614.1c: Stuffy Doll's and Booby Trap's as-enters player choice. The
-      -- three arms above ask unconditionally because rules 105.1, 305.6 and 205.3m
-      -- fix their offers; this one asks the BOARD who in the relation is
-      -- available, so it can be elided in the one case those three never reach --
-      -- an offer of one member, where nothing is left to decide (CR 102.2's lone
-      -- opponent).
+      -- arm above asks unconditionally because rules 105.1, 305.6 and 205.3m fix
+      -- its offers; this one asks the BOARD who in the relation is available, so
+      -- it can be elided in the one case those never reach -- an offer of one
+      -- member, where nothing is left to decide (CR 102.2's lone opponent).
       --
       -- Written to Object.chosenPlayers, NOT to the copiable snapshot -- see
       -- EntryRewrite.ChoosePlayer.
@@ -2671,10 +2622,9 @@ apply batch candidate event =
         picked <- case Projection.controllerOf oid gs of
           -- Unreachable, and defensive for ChoiceOf's reason: the object is
           -- materialized on the battlefield before this loop runs, so
-          -- controllerOf falls back to its owner. Chooses NOBODY rather than
-          -- conjuring a seat the way ChooseColors' arm conjures a colour, because a
-          -- player is a real board object where a colour is not -- and CR 101.3
-          -- already ignores the share of a later instruction that names nobody.
+          -- controllerOf falls back to its owner. Chooses NOBODY, as
+          -- chooseQualityAs does -- and CR 101.3 already ignores the share of a
+          -- later instruction that names nobody.
           Nothing -> pure Nothing
           -- CR 801.5a's offer, asked through Players.chooseOne. Nobody left to
           -- choose from is a board CR 104.2a has already ended the game on, and
@@ -3335,7 +3285,7 @@ apply batch candidate event =
       -- NEVER ELIDED. A +1/+1 counter and haste are two outcomes a player can
       -- tell apart on any board -- the whole reason the keyword exists -- so this
       -- prompt is raised every time the entering object has a controller to ask,
-      -- the posture ChooseColors' arm takes and not ChoiceOf's one-option
+      -- the posture chooseQuality takes and not ChoiceOf's one-option
       -- elision.
       --
       -- The counter goes into the pending map, exactly as the WithCounters arm
@@ -4767,9 +4717,9 @@ apply batch candidate event =
       AttachRewrite.AsCopy asCopy -> do
         Monad.void (becomeCopyAs Set.empty candidate asCopy oid)
         pure (Just event)
-      -- Sanctuary Blade's "choose a color", ChooseColors' entry arm's process.
-      AttachRewrite.ChooseColors count -> do
-        chooseColors candidate count oid
+      -- Sanctuary Blade's "choose a color", the entry arm's process.
+      AttachRewrite.ChooseQuality quality -> do
+        chooseQualityAs candidate quality oid
         pure (Just event)
     -- Unreachable: `applies` admits AttachR only against WouldBecomeAttached.
     (ReplacementEffect.AttachR {}, _) -> pure (Just event)
@@ -4796,32 +4746,44 @@ unlinkLostPayments oid gs = case Game.lookupObject oid gs of
         settled = obj {Object.paidCosts = paid, Object.chosenPlayers = promises}
      in gs {GameState.objects = Map.insert oid settled (GameState.objects gs)}
 
--- CR 614.1c / 607.2d: the colour choices an "as this enters" (Painter's
--- Servant) or "as this becomes attached" (Sanctuary Blade) ability makes, one
--- prompt per colour, each offering the CR 105.1 colours not yet chosen ("two
--- colors" are two different ones). A prompt is raised whenever two or more
--- remain. Written to Object.chosenColors, NOT to the copiable snapshot -- see
--- EntryRewrite.ChooseColors -- replacing any earlier choice, which is what "the
--- last chosen color" reads.
-chooseColors :: ReplacementCandidate -> Natural -> ObjectId -> Game ()
-chooseColors candidate count oid = do
-  let pick chosen _ = do
-        gs <- State.get
-        let remaining = filter (`Set.notMember` chosen) [minBound .. maxBound :: Color.Color]
-        picked <- case Projection.controllerOf oid gs of
-          -- Through Game.chooseAmong, the choice being mandatory.
-          Just controller -> Game.chooseAmong (\decider who -> Prompt.ChooseColor decider who oid) controller remaining
-          -- Unreachable, and defensive: the object is on the battlefield (an
-          -- entering one is materialized before the loop runs), so controllerOf
-          -- falls back to its owner. A WEAKER fallback than ChoiceOf's, and the
-          -- one place on this path the engine would decide something: there is
-          -- no colour the card named to default to, so the first offered is
-          -- conjured. It stands only because the branch cannot be reached.
-          Nothing -> pure (Maybe.listToMaybe remaining)
-        pure (maybe chosen (`Set.insert` chosen) picked)
-  picked <- Monad.foldM pick Set.empty [1 .. count]
+-- CR 614.1c / 607.2d: an "as this enters" (Painter's Servant) or "as this
+-- becomes attached" (Sanctuary Blade) choice, made by the object's controller
+-- and written under its acquisition now (Game.acquisitionOf).
+chooseQualityAs :: ReplacementCandidate -> ChosenQuality.ChosenQuality -> ObjectId -> Game ()
+chooseQualityAs candidate quality oid = do
+  gs <- State.get
+  -- Unreachable, and defensive: the object is on the battlefield (an entering
+  -- one is materialized before the loop runs), so controllerOf falls back to
+  -- its owner. Nothing is chosen rather than the engine choosing for nobody.
+  Foldable.for_ (Projection.controllerOf oid gs) $ \controller ->
+    chooseQuality quality controller (Game.acquisitionOf oid gs) oid
   Replacement.consume (ReplacementCandidate.identity candidate)
-  State.modify' $ \g -> Game.recordChoice Chosen.Colors (Game.acquisitionOf oid g) (const (Just picked)) oid g
+
+-- CR 614.1c / 607.2d / 608.2d: `chooser` chooses `quality` for `oid`, written
+-- to it under `acquisition` and NOT to the copiable snapshot, replacing any
+-- earlier choice, which is what "the last chosen color" reads.
+--
+-- Colours go one prompt per colour, each offering the CR 105.1 colours not yet
+-- chosen ("two colors" are two different ones), so only a fifth is forced. CR
+-- 305.6's basic land types and CR 205.3m's creature types are always all legal
+-- and distinguishable, so there is no one-option case to elide. Both types
+-- write Object.chosenSubtype: no printing makes both choices, and CR 607.2d
+-- links each to the ability that reads it.
+chooseQuality :: ChosenQuality.ChosenQuality -> PlayerId -> Acquisition.Acquisition -> ObjectId -> Game ()
+chooseQuality quality chooser acquisition oid = case quality of
+  ChosenQuality.Colors count -> do
+    let pick chosen _ = do
+          picked <- Game.chooseAmong (\decider who -> Prompt.ChooseColor decider who oid) chooser (filter (`Set.notMember` chosen) [minBound .. maxBound :: Color.Color])
+          pure (maybe chosen (`Set.insert` chosen) picked)
+    picked <- Monad.foldM pick Set.empty [1 .. count]
+    State.modify' (Game.recordChoice Chosen.Colors acquisition (const (Just picked)) oid)
+  ChosenQuality.BasicLandType -> subtype Prompt.ChooseBasicLandType
+  ChosenQuality.CreatureType -> subtype Prompt.ChooseCreatureType
+  where
+    subtype prompt = do
+      gs <- State.get
+      picked <- Game.choose (prompt (Decide.deciderFor chooser gs) chooser oid)
+      State.modify' (Game.recordChoice Chosen.Subtype acquisition (const (Just picked)) oid)
 
 -- CR 707.5 / 707.4: the copying process an AsCopy rewrite performs, on each
 -- event class it rides (CR 614.1c's entry, CR 614.1e's turning face up, CR

@@ -156,7 +156,6 @@ import qualified Parun.Types.ChosenCardFromAmong as ChosenCardFromAmong
 import qualified Parun.Types.ChosenCardInGraveyard as ChosenCardInGraveyard
 import qualified Parun.Types.ChosenCardInHand as ChosenCardInHand
 import qualified Parun.Types.ChosenPermanents as ChosenPermanents
-import qualified Parun.Types.ChosenQuality as ChosenQuality
 import qualified Parun.Types.ClassLevel as ClassLevel
 import qualified Parun.Types.ClassLevelChange as ClassLevelChange
 import qualified Parun.Types.Clause as Clause
@@ -164,7 +163,6 @@ import Parun.Types.ClauseIndex (ClauseIndex)
 import qualified Parun.Types.ClauseIndex as ClauseIndex
 import qualified Parun.Types.CoinFace as CoinFace
 import qualified Parun.Types.CoinReading as CoinReading
-import qualified Parun.Types.Color as Color
 import qualified Parun.Types.Comparison as Comparison
 import qualified Parun.Types.Conjure as Conjure
 import qualified Parun.Types.ConjureCards as ConjureCards
@@ -9453,34 +9451,19 @@ applyOneEffect runSubgame resolving source controller legal chosen effect = case
     -- still keeps a named card (its CR 608.2h scenario under data/scenarios).
     Monad.unless (Map.null picked) $
       State.modify' (Game.recordChoice Chosen.Names (Game.readingAcquisition resolving source gs source) (const (Just picked)) source)
-  -- CR 608.2d: Mystic Compass's "the basic land type of your choice", announced
-  -- by the resolving controller as the effect applies. Asked unconditionally,
-  -- EntryRewrite.ChooseBasicLandType's reason: CR 305.6's five are always all
-  -- legal and distinguishable.
-  --
-  -- Written to the SOURCE, ChooseCardName's road above, and read back by the
+  -- CR 608.2d: Mystic Compass's "the basic land type of your choice" and
+  -- Persecute's "choose a color", the resolving controller's, through
+  -- Event.chooseQuality. Written to the SOURCE, ChooseCardName's road above,
+  -- under the acquisition its reader asks for (CR 607.5), and read back by the
   -- next instruction's freeze (Projection.freezeQuantities' arm for
   -- Modification.SetLandSubtypeToChosen), so a later activation's choice
-  -- rewrites the field without reaching an effect already stored.
-  -- CR 608.2d: the choice is the resolving controller's, written to the source
-  -- under the acquisition its reader asks for (CR 607.5). On a spell the source
-  -- is the resolving object itself, so a later instruction of the same
-  -- resolution reads it through Parun.Engine.SourceContext -- Persecute's
-  -- "cards of that color", proved by the scenario
+  -- rewrites the field without reaching an effect already stored. On a spell
+  -- the source is the resolving object itself, so a later instruction of the
+  -- same resolution reads it through Parun.Engine.SourceContext -- the scenario
   -- cr-608-2d-persecute-discards-the-cards-of-the-color-chosen-as-it-resolves.
-  -- Every one of CR 105.1's colours and CR 305.6's types is always legal and
-  -- distinguishable, so there is no one-option case to elide.
   Effect.ChooseQuality quality -> do
     gs <- State.get
-    let acquisition = Game.readingAcquisition resolving source gs source
-    case quality of
-      ChosenQuality.BasicLandType -> do
-        picked <- Game.choose (Prompt.ChooseBasicLandType (Decide.deciderFor controller gs) controller source)
-        State.modify' (Game.recordChoice Chosen.Subtype acquisition (const (Just picked)) source)
-      ChosenQuality.Color -> do
-        picked <- Game.chooseAmong (\decider who -> Prompt.ChooseColor decider who source) controller [minBound .. maxBound :: Color.Color]
-        Foldable.for_ picked $ \color ->
-          State.modify' (Game.recordChoice Chosen.Colors acquisition (const (Just (Set.singleton color))) source)
+    Event.chooseQuality quality controller (Game.readingAcquisition resolving source gs source) source
   -- CR 400.11c: the resolving controller reveals a card they own from outside the
   -- game matching the filter and puts it into their hand -- Burning Wish.
   --

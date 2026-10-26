@@ -689,9 +689,7 @@ data Effect card ability
     -- Parun.Interpreter.policingCardNames is what judges the answer, the engine
     -- being unable to resolve a name at all.
     ChooseCardName ChooseCardName.ChooseCardName
-  | -- | CR 608.2d: the resolving controller chooses a colour or a basic land
-    -- type, written to the source's Object.chosenColors or Object.chosenSubtype
-    -- (Persecute, Mystic Compass).
+  | -- | CR 608.2d: the resolving controller chooses this quality for the source (Persecute, Mystic Compass).
     ChooseQuality ChosenQuality.ChosenQuality
   | -- | CR 701.39a: "bolster N" -- choose a creature the resolving controller
     -- controls with the least toughness, or tied for least, then put that many

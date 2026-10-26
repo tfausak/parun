@@ -1,10 +1,16 @@
 module Parun.Types.ChosenQuality where
 
--- | What Parun.Types.Effect's ChooseQuality has the resolving controller choose
--- (CR 608.2d), written to the source as its as-enters twin writes it.
+import Numeric.Natural (Natural)
+
+-- | What a choice of a quality has its chooser pick, written to the object it
+-- is made for: as it enters (CR 614.1c, EntryRewrite.ChooseQuality), as it
+-- becomes attached (CR 607.2d, AttachRewrite.ChooseQuality) or as it resolves
+-- (CR 608.2d, Effect.ChooseQuality).
 data ChosenQuality
-  = -- | CR 105.1: one of the five colours, read back by Filter.HasChosenColor (Persecute).
-    Color
-  | -- | CR 305.6: one of the five basic land types, read back by Modification.SetLandSubtypeToChosen (Mystic Compass).
+  = -- | CR 105.4: that many different colours, written to Object.chosenColors (Painter's Servant, Persecute).
+    Colors Natural
+  | -- | CR 305.6: one of the five basic land types, written to Object.chosenSubtype (Convincing Mirage, Mystic Compass).
     BasicLandType
-  deriving (Bounded, Enum, Eq, Ord, Show)
+  | -- | CR 205.3m: one creature type, written to Object.chosenSubtype (Pillar of Origins).
+    CreatureType
+  deriving (Eq, Ord, Show)
