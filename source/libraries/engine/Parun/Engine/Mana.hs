@@ -1368,6 +1368,9 @@ data Demand = MkDemand
 -- Parun.Types.ManaUnit.restriction.
 data Supply = MkSupply
   { supplyTypes :: Set.Set ManaType,
+    -- | The types the mana is, or could be made as: `supplyTypes` before CR
+    -- 609.4b rewrites it to what the mana may be spent as.
+    supplyMade :: Set.Set ManaType,
     supplyTags :: Set.Set ProductionTag.ProductionTag,
     supplyAdmits :: Set.Set PaymentSubject.PaymentSubject
   }
@@ -1499,6 +1502,7 @@ supplyOf :: (ManaUnit -> Set.Set PaymentSubject.PaymentSubject) -> ManaUnit -> S
 supplyOf admitting unit =
   MkSupply
     { supplyTypes = Set.singleton (ManaUnit.manaType unit),
+      supplyMade = Set.singleton (ManaUnit.manaType unit),
       supplyTags = ManaUnit.tags unit,
       supplyAdmits = admitting unit
     }
@@ -1557,11 +1561,13 @@ spendableAs clauses manaType =
 --
 -- The TAGS ride through untouched, CR 107.4h's reason and the same one `relax`
 -- gives: a clause about which types a mana may be spent as says nothing about
--- where it came from, so a snow demand still wants a snow supply.
+-- where it came from, so a snow demand still wants a snow supply. So does
+-- `supplyMade`, which is what the rewrite reads: what the mana is stays what it
+-- is (CR 609.4b), and a CR 701.10f copy is of that type.
 rewriteSupply :: [SpendManaAsThough.SpendManaAsThough] -> Supply -> Supply
 rewriteSupply clauses supply = case clauses of
   [] -> supply
-  _ -> supply {supplyTypes = Set.unions (fmap (spendableAs clauses) (Set.toList (supplyTypes supply)))}
+  _ -> supply {supplyTypes = Set.unions (fmap (spendableAs clauses) (Set.toList (supplyMade supply)))}
 
 -- A demand for one mana of one of these types, however it was produced -- every
 -- TYPED symbol but CR 107.4h's {S}. A symbol demanding no particular mana
@@ -2580,6 +2586,7 @@ sourceOptions clauses admitting contends demanded needs supplies =
                 clauses
                 MkSupply
                   { supplyTypes = Set.fromList (fmap ManaUnit.manaType units),
+                    supplyMade = Set.fromList (fmap ManaUnit.manaType units),
                     supplyTags = Set.unions (fmap ManaUnit.tags units),
                     supplyAdmits = admits
                   }
@@ -2945,28 +2952,26 @@ payableResolutionsGiven subject capacity spending sources pcs pid committed comm
             -- a Hall check against what is left, every supply sitting before
             -- them.
             --
-            -- A supply that could still be one of several types is settled
-            -- first, since its doubled copy is of the type it became: to each
-            -- type some demand on the board names, and to one other type.
-            --
-            -- Not implemented: doubling a board some spend-as-though clause
-            -- (CR 609.4b) reaches, whose supplies no longer say their own
-            -- type; such a board doubles nothing (#5658).
+            -- A supply that could still be made as one of several types is
+            -- settled first, since its doubled copy is of the type it became:
+            -- to each type whose mana may be spent as a type some demand on
+            -- the board names, and to one other type. Settled by what it is
+            -- made as rather than what it may be spent as (CR 609.4b), since
+            -- only the first is what CR 701.10f copies: under Celestial Dawn a
+            -- white mana's copy is white and spends as any colour, and never
+            -- as the colorless a red copy would.
             walked supplies eaten costPosition subjectAt doublings =
               let wanted_ = demands <> List.genericReplicate generic anyTypeDemand
                   named = Set.unions (fmap demandTypes (filter (/= anyTypeDemand) (wanted_ <> fmap snd eaten)))
                   admitsAt k supply = maybe False (`Set.member` supplyAdmits supply) (Map.lookup k subjectAt)
                   serve k pools demand = Set.fromList [List.delete supply pool | pool <- Set.toList pools, supply <- ListUtils.nubOrd pool, admitsAt k supply, serves supply demand]
                   settle doubling supply =
-                    let types = supplyTypes supply
-                        other = take 1 (List.sortOn (\manaType -> Map.notMember manaType doubling) (Set.toList (Set.difference types named)))
-                     in if Set.size types <= 1 then [supply] else [supply {supplyTypes = Set.singleton manaType} | manaType <- Set.toList (Set.intersection types named) <> other]
-                  double pool doubling =
-                    if null clauses
-                      then do
-                        settled <- traverse (settle doubling) pool
-                        pure (settled <> concatMap (concatMap (\manaType -> Map.findWithDefault [] manaType doubling) . Set.toList . supplyTypes) settled)
-                      else [pool]
+                    let (naming, unnamed) = List.partition (not . Set.disjoint named . spendableAs clauses) (Set.toList (supplyMade supply))
+                        other = take 1 (List.sortOn (`Map.notMember` doubling) unnamed)
+                     in if Set.size (supplyMade supply) <= 1 then [supply] else [supply {supplyTypes = spendableAs clauses manaType, supplyMade = Set.singleton manaType} | manaType <- naming <> other]
+                  double pool doubling = do
+                    settled <- traverse (settle doubling) pool
+                    pure (settled <> concatMap (concatMap (\manaType -> Map.findWithDefault [] manaType doubling) . Set.toList . supplyMade) settled)
                   step pools k =
                     let served = List.foldl' (serve k) pools [demand | (at, demand) <- eaten, at == k]
                      in Set.fromList
