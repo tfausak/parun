@@ -1,0 +1,31 @@
+{
+  "description": "CR 205.1b Nissa, Steward of Elements' -6 makes Dryad Arbor a 5/5 Elemental that is still a Forest Dryad",
+  "note": "\"They're still lands\" retains every prior subtype (CR 205.1b), so the Arbor keeps its Dryad creature type beside Elemental; setting the creature type instead would leave a Forest Elemental. The tapped Arbor shows the untap.",
+  "board": {
+    "seats": [
+      {
+        "name": "alice",
+        "battlefield": [
+          { "card": "Nissa, Steward of Elements", "label": "nissa", "counters": [{ "key": { "type": "Loyalty" }, "value": 7 }] },
+          { "card": "Dryad Arbor", "label": "arbor", "tapped": true }
+        ],
+        "library": [{ "card": "Island" }, { "card": "Island" }, { "card": "Island" }]
+      },
+      {
+        "name": "bob",
+        "library": [{ "card": "Island" }, { "card": "Island" }, { "card": "Island" }]
+      }
+    ],
+    "active": "alice",
+    "step": "PrecombatMain"
+  },
+  "timeline": [
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "do": { "Activate": { "object": "$nissa", "ability": 2, "targets": ["$arbor"] } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "do": "Pass" },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "check": { "Subtypes": { "object": "$arbor", "subtypes": ["Forest", "Dryad", "Elemental"] } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "check": { "Types": { "object": "$arbor", "types": ["Creature", "Land"] } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "check": { "PowerToughness": { "object": "$arbor", "power": 5, "toughness": 5 } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "check": { "Tapped": { "object": "$arbor", "tapped": false } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "check": { "Counters": { "object": "$nissa", "kind": { "type": "Loyalty" }, "count": 1 } } }
+  ]
+}

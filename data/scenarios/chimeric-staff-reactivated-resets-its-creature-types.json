@@ -1,0 +1,36 @@
+{
+  "description": "CR 205.1b Chimeric Staff activated again resets its creature types, so the Monk its Monk's Fist made it is gone",
+  "note": "\"Becomes an X/X Construct artifact creature\" retains prior card types but replaces creature types (CR 205.1b's last sentence; the card's ruling: \"the ability resets its creature types\"). The Fist, equipped between the two activations, is older than the second, so a Construct-in-addition would leave a Construct Monk.",
+  "board": {
+    "seats": [
+      {
+        "name": "alice",
+        "manaPool": "CCCCCC",
+        "battlefield": [
+          { "card": "Chimeric Staff", "label": "staff" },
+          { "card": "Monk's Fist", "label": "fist" }
+        ],
+        "library": [{ "card": "Island" }, { "card": "Island" }, { "card": "Island" }]
+      },
+      {
+        "name": "bob",
+        "library": [{ "card": "Island" }, { "card": "Island" }, { "card": "Island" }]
+      }
+    ],
+    "active": "alice",
+    "step": "PrecombatMain"
+  },
+  "timeline": [
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "do": { "Activate": { "object": "$staff", "ability": 0, "x": 1 } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "do": "Pass" },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "do": { "Activate": { "object": "$fist", "targets": ["$staff"] } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "do": "Pass" },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "check": { "Subtypes": { "object": "$staff", "subtypes": ["Construct", "Monk"] } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "do": { "Activate": { "object": "$staff", "ability": 0, "x": 3 } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "do": "Pass" },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "check": { "Subtypes": { "object": "$staff", "subtypes": ["Construct"] } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "check": { "Types": { "object": "$staff", "types": ["Artifact", "Creature"] } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "check": { "View": { "of": "AttachedTo", "object": "$fist", "is": "$staff" } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "check": { "PowerToughness": { "object": "$staff", "power": 4, "toughness": 3 } } }
+  ]
+}

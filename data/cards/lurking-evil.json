@@ -48,7 +48,7 @@
                             "type": "CreatureSubtype",
                             "value": {
                               "mode": {
-                                "type": "InAddition"
+                                "type": "Replace"
                               },
                               "subtype": {
                                 "type": "Phyrexian"
