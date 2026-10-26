@@ -57,7 +57,7 @@ spec s = Spec.describe s "Parun.Ingest" $ do
     loaded <- Registry.loadRoot root
     listed <- fmap (Set.fromList . filter (not . null) . lines) (readFile (root <> "/../oracle-unrendered.txt"))
     let unrendered = Set.fromList [Text.unpack (Slug.unwrap (Registry.filedAs card)) | entry@(_, Right card) <- loaded, Maybe.isJust (Registry.referenceCard entry), Maybe.isNothing (Oracle.render card)]
-    Spec.assertEqWith s "listed, but renders" [] (Set.toList (Set.difference listed unrendered))
+    Spec.assertEqWith s "listed, but renders or is no pool card" [] (Set.toList (Set.difference listed unrendered))
     Spec.assertEqWith s "does not render, but unlisted" [] (Set.toList (Set.difference unrendered listed))
 
   -- `parun ingest` stamps the text on every card MTGJSON has; a dungeon (CR

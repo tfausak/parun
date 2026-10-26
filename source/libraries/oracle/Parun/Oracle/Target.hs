@@ -321,7 +321,7 @@ object context determiner ref = case ref of
           HowMany.UpTo (Just (Quantity.Literal n)) | n > 1 -> [MkReference (Text.pack "up to " <> Prose.cardinal n <> Text.pack " " <> many) [] Filter.Plural]
           _ -> []
   -- Objects one wording names alike read as it: "that creature" for the
-  -- creature a blocker blocks or is blocked by (Inferno Elemental).
+  -- creature the source blocks or is blocked by (Inferno Elemental).
   ObjectRef.AllOf refs -> do
     r : rs <- traverse (object context determiner) (NonEmpty.toList refs)
     Monad.guard (all (== r) rs && null (mentions r) && number r == Filter.Singular)
