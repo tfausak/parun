@@ -38,9 +38,14 @@
       "triggeredAbilities": [
         {
           "condition": {
-            "type": "BecomesTapped",
+            "type": "BecomesTapState",
             "value": {
-              "type": "Self"
+              "actor": {
+                "type": "Self"
+              },
+              "status": {
+                "type": "Tapped"
+              }
             }
           },
           "modal": {

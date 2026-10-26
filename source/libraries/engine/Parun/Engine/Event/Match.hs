@@ -40,6 +40,7 @@ import qualified Parun.Types.BecameBlocking as BecameBlocking
 import qualified Parun.Types.BecameDesignated as BecameDesignated
 import qualified Parun.Types.BecameTarget as BecameTarget
 import qualified Parun.Types.BecameUnattached as BecameUnattached
+import qualified Parun.Types.BecomesTapState as BecomesTapState
 import Parun.Types.Binding (Binding)
 import qualified Parun.Types.BlockProducer as BlockProducer
 import qualified Parun.Types.BlocksDeclared as BlocksDeclared
@@ -131,6 +132,7 @@ import qualified Parun.Types.StepBegan as StepBegan
 import qualified Parun.Types.StepBegins as StepBegins
 import qualified Parun.Types.StickerPut as StickerPut
 import qualified Parun.Types.Subtype as Subtype
+import qualified Parun.Types.TapState as TapState
 import qualified Parun.Types.TappedForMana as TappedForMana
 import qualified Parun.Types.Teams as Teams
 import qualified Parun.Types.Transformed as Transformed
@@ -5204,181 +5206,98 @@ matchesTriggerGiven bindings board gs bearer you cond event = case cond of
   -- last known information, where AttachedCreatureDies has to look back because
   -- the SBA batch that kills the host takes the link away (CR 704.5m).
   --
-  -- CR 603.2e's exclusions are discharged where the event is MINTED, in `tap`
-  -- above, rather than here: a permanent that entered tapped never transitioned,
-  -- and rule 701.26a's "only untapped permanents can be tapped" makes a repeat tap
-  -- no event at all. So this arm asks only whose tap it was.
-  TriggerCondition.BecomesTapped watched -> case event of
-    GameEvent.BecameTapped tapped -> case watched of
-      ActingPermanent.Self -> tapped == bearer
-      ActingPermanent.Matching f -> case Map.lookup tapped board of
-        Nothing -> False
-        Just candidate -> Filter.matches bearerContext (Projection.sampledView tapped candidate gs) f
-    -- CR 701.26b's untap is the other transition of the same status, and no
-    -- "becomes tapped" condition reads it.
-    GameEvent.BecameUntapped _ -> False
-    -- CR 106.12a's event is a DIFFERENT one, and stated rather than folded
-    -- into the arm above: a mana activation writes both, and matching this
-    -- one here would fire Betrayal twice off one tap.
-    GameEvent.TappedForMana _ -> False
-    GameEvent.ManaAdded _ -> False
-    GameEvent.ManaAbilityResolved _ -> False
-    GameEvent.Moved {} -> False
-    GameEvent.DamageDealt _ -> False
-    GameEvent.StepBegan {} -> False
-    GameEvent.SpellCast {} -> False
-    GameEvent.SpellCopied _ -> False
-    GameEvent.DamagePrevented {} -> False
-    GameEvent.BecameMonarch _ -> False
-    GameEvent.TookInitiative _ -> False
-    GameEvent.Discarded {} -> False
-    GameEvent.Drew {} -> False
-    GameEvent.Revealed {} -> False
-    GameEvent.Looked {} -> False
-    GameEvent.Voted {} -> False
-    GameEvent.VotesRevealed {} -> False
-    GameEvent.AttackerDeclared {} -> False
-    GameEvent.BecameBlocking {} -> False
-    GameEvent.BlocksDeclared {} -> False
-    GameEvent.AttackerBlocked {} -> False
-    GameEvent.AttackerUnblocked _ -> False
-    GameEvent.SpellCountered _ -> False
-    GameEvent.AbilityCountered _ -> False
-    GameEvent.HalfUnlocked {} -> False
-    GameEvent.TurnedFaceUp _ -> False
-    GameEvent.PermanentActed _ -> False
-    GameEvent.Transformed {} -> False
-    GameEvent.BecameDesignated {} -> False
-    GameEvent.Mentored {} -> False
-    GameEvent.Exploited {} -> False
-    GameEvent.BecameCrewed _ -> False
-    GameEvent.Convoked _ -> False
-    GameEvent.Saddled _ -> False
-    GameEvent.Crewed _ -> False
-    GameEvent.PermanentSacrificed {} -> False
-    GameEvent.AbilityTriggered {} -> False
-    GameEvent.LoyaltyAbilityActivated _ -> False
-    GameEvent.LifeLost {} -> False
-    GameEvent.LifeGained {} -> False
-    GameEvent.CountersPut {} -> False
-    GameEvent.CountersRemoved {} -> False
-    GameEvent.ControlChanged {} -> False
-    GameEvent.VentureMarkerEntered {} -> False
-    GameEvent.BecameTarget {} -> False
-    GameEvent.BecameAttached {} -> False
-    GameEvent.BecameUnattached {} -> False
-    GameEvent.LeftTheGame _ -> False
-    GameEvent.Milled {} -> False
-    GameEvent.PlayerActed _ -> False
-    GameEvent.LandPlayed {} -> False
-    GameEvent.LostTheGame _ -> False
-    GameEvent.ManifestedDread {} -> False
-    GameEvent.DieResultSettled _ -> False
-    GameEvent.RolledToVisit _ -> False
-    GameEvent.PlanarDieRolled _ -> False
-    GameEvent.TurnedUpOffDeck _ -> False
-    GameEvent.ChaosEnsued -> False
-    GameEvent.ClassLevelSet _ -> False
-    GameEvent.Plotted _ -> False
-    GameEvent.BecameAttacked _ -> False
-    GameEvent.AttackersDeclared _ -> False
-    GameEvent.CoinFlipped {} -> False
-    GameEvent.StickerPut _ -> False
-    GameEvent.ActivatedAbilityResolved _ -> False
-    GameEvent.TriggeredAbilityResolved _ -> False
-    GameEvent.CardArrived _ -> False
-  -- CR 701.26a's batch reading by a bystander, the arm above's match; firing
-  -- once for a batch is `batchScoped` plus eventTriggers' dedup, never this arm.
-  TriggerCondition.PermanentsBecomeTapped f -> matchesTriggerGiven bindings board gs bearer you (TriggerCondition.BecomesTapped (ActingPermanent.Matching f)) event
-  -- CR 701.26b through CR 603.2: the bearer is the permanent that rotated
-  -- upright (Oreskos Sun Guide). SelfTurnedFaceUp's shape -- a bare comparison
-  -- of ids, with none of the permanent's characteristics read, so no CR 608.2h
-  -- fallback is reachable.
+  -- CR 701.26b's untap is the same arm in the other direction: the bearer
+  -- itself (Oreskos Sun Guide) or any permanent the Filter admits (Mesmeric
+  -- Orb), each permanent CR 502.3 untaps its own event.
   --
   -- CR 603.2e's exclusions are discharged where the event is MINTED, in
-  -- Parun.Engine.Event.untap and Parun.Engine.Engine.untapAll, rather than here: a
-  -- permanent that entered untapped never transitioned, and rule 701.26b's
-  -- "only tapped permanents can be untapped" makes a repeat untap no event at
-  -- all. So this arm asks only whose untap it was.
-  TriggerCondition.SelfBecomesUntapped -> case event of
-    GameEvent.BecameUntapped untapped -> untapped == bearer
-    -- CR 701.26a's tap is the other direction of the same status and a
-    -- different event; nothing folds the two together.
-    GameEvent.BecameTapped _ -> False
-    GameEvent.TurnedFaceUp _ -> False
-    GameEvent.PermanentActed _ -> False
-    GameEvent.Transformed {} -> False
-    GameEvent.BecameDesignated {} -> False
-    GameEvent.Mentored {} -> False
-    GameEvent.Exploited {} -> False
-    GameEvent.BecameCrewed _ -> False
-    GameEvent.Convoked _ -> False
-    GameEvent.Saddled _ -> False
-    GameEvent.Crewed _ -> False
-    GameEvent.PermanentSacrificed {} -> False
-    GameEvent.AbilityTriggered {} -> False
-    GameEvent.HalfUnlocked {} -> False
-    GameEvent.SpellCast {} -> False
-    GameEvent.SpellCopied _ -> False
-    GameEvent.CountersRemoved {} -> False
-    GameEvent.ControlChanged {} -> False
-    GameEvent.VentureMarkerEntered {} -> False
-    GameEvent.BecameTarget {} -> False
-    GameEvent.BecameAttached {} -> False
-    GameEvent.BecameUnattached {} -> False
-    GameEvent.LeftTheGame _ -> False
-    GameEvent.Milled {} -> False
-    GameEvent.PlayerActed _ -> False
-    GameEvent.LandPlayed {} -> False
-    GameEvent.LostTheGame _ -> False
-    GameEvent.ManifestedDread {} -> False
-    GameEvent.DieResultSettled _ -> False
-    GameEvent.RolledToVisit _ -> False
-    GameEvent.PlanarDieRolled _ -> False
-    GameEvent.TurnedUpOffDeck _ -> False
-    GameEvent.ChaosEnsued -> False
-    GameEvent.ClassLevelSet _ -> False
-    GameEvent.Plotted _ -> False
-    GameEvent.BecameAttacked _ -> False
-    GameEvent.AttackersDeclared _ -> False
-    GameEvent.TappedForMana _ -> False
-    GameEvent.ManaAdded _ -> False
-    GameEvent.ManaAbilityResolved _ -> False
-    GameEvent.CoinFlipped {} -> False
-    GameEvent.StickerPut _ -> False
-    GameEvent.ActivatedAbilityResolved _ -> False
-    GameEvent.TriggeredAbilityResolved _ -> False
-    GameEvent.CardArrived _ -> False
-    GameEvent.CountersPut {} -> False
-    GameEvent.Moved {} -> False
-    GameEvent.DamageDealt _ -> False
-    GameEvent.DamagePrevented {} -> False
-    GameEvent.StepBegan {} -> False
-    GameEvent.BecameMonarch _ -> False
-    GameEvent.TookInitiative _ -> False
-    GameEvent.Discarded {} -> False
-    GameEvent.Drew {} -> False
-    GameEvent.Revealed {} -> False
-    GameEvent.Looked {} -> False
-    GameEvent.Voted {} -> False
-    GameEvent.VotesRevealed {} -> False
-    GameEvent.AttackerDeclared {} -> False
-    GameEvent.BecameBlocking {} -> False
-    GameEvent.BlocksDeclared {} -> False
-    GameEvent.AttackerBlocked {} -> False
-    GameEvent.AttackerUnblocked _ -> False
-    GameEvent.SpellCountered _ -> False
-    GameEvent.AbilityCountered _ -> False
-    GameEvent.LoyaltyAbilityActivated _ -> False
-    GameEvent.LifeLost {} -> False
-    GameEvent.LifeGained {} -> False
-  -- CR 106.12a's "is tapped for mana" read off the same attachment link the
-  -- arm above watches, and its whole difference from that one: this fires only
-  -- where CR 106.12's activation produced mana, so Icy Manipulator's tap of the
-  -- enchanted land misses it and Wild Growth adds nothing.
-  --
-  -- LIVE and off the BEARER, the arm above's reason: nothing has moved, so the
-  -- attachment link is on the board to be read.
+  -- Parun.Engine.Event's `tap` and `untap` and Parun.Engine.Engine.untapAll,
+  -- rather than here: a
+  -- permanent that entered tapped or untapped never transitioned, and rules
+  -- 701.26a and 701.26b make a repeat tap or untap no event at all. So this arm
+  -- asks only whose transition it was.
+  TriggerCondition.BecomesTapState watched ->
+    let watches oid = case BecomesTapState.actor watched of
+          ActingPermanent.Self -> oid == bearer
+          ActingPermanent.Matching f -> case Map.lookup oid board of
+            Nothing -> False
+            Just candidate -> Filter.matches bearerContext (Projection.sampledView oid candidate gs) f
+     in case event of
+          GameEvent.BecameTapped tapped -> BecomesTapState.status watched == TapState.Tapped && watches tapped
+          GameEvent.BecameUntapped untapped -> BecomesTapState.status watched == TapState.Untapped && watches untapped
+          -- CR 106.12a's event is a DIFFERENT one, and stated rather than folded
+          -- into the arm above: a mana activation writes both, and matching this
+          -- one here would fire Betrayal twice off one tap.
+          GameEvent.TappedForMana _ -> False
+          GameEvent.ManaAdded _ -> False
+          GameEvent.ManaAbilityResolved _ -> False
+          GameEvent.Moved {} -> False
+          GameEvent.DamageDealt _ -> False
+          GameEvent.StepBegan {} -> False
+          GameEvent.SpellCast {} -> False
+          GameEvent.SpellCopied _ -> False
+          GameEvent.DamagePrevented {} -> False
+          GameEvent.BecameMonarch _ -> False
+          GameEvent.TookInitiative _ -> False
+          GameEvent.Discarded {} -> False
+          GameEvent.Drew {} -> False
+          GameEvent.Revealed {} -> False
+          GameEvent.Looked {} -> False
+          GameEvent.Voted {} -> False
+          GameEvent.VotesRevealed {} -> False
+          GameEvent.AttackerDeclared {} -> False
+          GameEvent.BecameBlocking {} -> False
+          GameEvent.BlocksDeclared {} -> False
+          GameEvent.AttackerBlocked {} -> False
+          GameEvent.AttackerUnblocked _ -> False
+          GameEvent.SpellCountered _ -> False
+          GameEvent.AbilityCountered _ -> False
+          GameEvent.HalfUnlocked {} -> False
+          GameEvent.TurnedFaceUp _ -> False
+          GameEvent.PermanentActed _ -> False
+          GameEvent.Transformed {} -> False
+          GameEvent.BecameDesignated {} -> False
+          GameEvent.Mentored {} -> False
+          GameEvent.Exploited {} -> False
+          GameEvent.BecameCrewed _ -> False
+          GameEvent.Convoked _ -> False
+          GameEvent.Saddled _ -> False
+          GameEvent.Crewed _ -> False
+          GameEvent.PermanentSacrificed {} -> False
+          GameEvent.AbilityTriggered {} -> False
+          GameEvent.LoyaltyAbilityActivated _ -> False
+          GameEvent.LifeLost {} -> False
+          GameEvent.LifeGained {} -> False
+          GameEvent.CountersPut {} -> False
+          GameEvent.CountersRemoved {} -> False
+          GameEvent.ControlChanged {} -> False
+          GameEvent.VentureMarkerEntered {} -> False
+          GameEvent.BecameTarget {} -> False
+          GameEvent.BecameAttached {} -> False
+          GameEvent.BecameUnattached {} -> False
+          GameEvent.LeftTheGame _ -> False
+          GameEvent.Milled {} -> False
+          GameEvent.PlayerActed _ -> False
+          GameEvent.LandPlayed {} -> False
+          GameEvent.LostTheGame _ -> False
+          GameEvent.ManifestedDread {} -> False
+          GameEvent.DieResultSettled _ -> False
+          GameEvent.RolledToVisit _ -> False
+          GameEvent.PlanarDieRolled _ -> False
+          GameEvent.TurnedUpOffDeck _ -> False
+          GameEvent.ChaosEnsued -> False
+          GameEvent.ClassLevelSet _ -> False
+          GameEvent.Plotted _ -> False
+          GameEvent.BecameAttacked _ -> False
+          GameEvent.AttackersDeclared _ -> False
+          GameEvent.CoinFlipped {} -> False
+          GameEvent.StickerPut _ -> False
+          GameEvent.ActivatedAbilityResolved _ -> False
+          GameEvent.TriggeredAbilityResolved _ -> False
+          GameEvent.CardArrived _ -> False
+  -- CR 701.26a's batch reading by a bystander, the arm above's match; firing
+  -- once for a batch is `batchScoped` plus eventTriggers' dedup, never this arm.
+  TriggerCondition.PermanentsBecomeTapped f -> matchesTriggerGiven bindings board gs bearer you (TriggerCondition.BecomesTapState (BecomesTapState.MkBecomesTapState TapState.Tapped (ActingPermanent.Matching f))) event
   TriggerCondition.AttachedPermanentTappedForMana -> case event of
     GameEvent.BecameTapped _ -> False
     GameEvent.BecameUntapped _ -> False

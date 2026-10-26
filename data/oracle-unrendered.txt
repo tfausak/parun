@@ -1237,6 +1237,7 @@ meren-of-clan-nel-toth
 merfolk-branchwalker
 merfolk-spy
 merias-outrider
+mesmeric-orb
 metamorphic-alteration
 meteor-shower
 miasma-demon
@@ -2163,6 +2164,7 @@ vorrac-battlehorns
 vow-of-flight
 vulshok-battlemaster
 wake-the-reflections
+wake-thrasher
 wall-of-dust
 wall-of-fortune
 wall-of-frost

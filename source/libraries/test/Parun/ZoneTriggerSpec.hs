@@ -47,6 +47,7 @@ import qualified Parun.Types.BecameBlocking as BecameBlocking
 import qualified Parun.Types.BecameDesignated as BecameDesignated
 import qualified Parun.Types.BecameTarget as BecameTarget
 import qualified Parun.Types.BecameUnattached as BecameUnattached
+import qualified Parun.Types.BecomesTapState as BecomesTapState
 import qualified Parun.Types.BeginningStep as BeginningStep
 import qualified Parun.Types.BlockProducer as BlockProducer
 import qualified Parun.Types.BlocksDeclared as BlocksDeclared
@@ -166,6 +167,7 @@ import qualified Parun.Types.StepBegan as StepBegan
 import qualified Parun.Types.StepBegins as StepBegins
 import qualified Parun.Types.StickerKind as StickerKind
 import qualified Parun.Types.StickerPut as StickerPut
+import qualified Parun.Types.TapState as TapState
 import qualified Parun.Types.TappedForMana as TappedForMana
 import qualified Parun.Types.Timestamp as Timestamp
 import qualified Parun.Types.Transformed as Transformed
@@ -2239,17 +2241,14 @@ representativeEvents cond =
         -- bearer's host does not matter, eventBindings reading the event rather
         -- than the attachment.
         TriggerCondition.AttachedCreatureDies -> one (GameEvent.Moved (Moved.moved (ZoneChange.MkZoneChange departed arrived Zone.Battlefield Zone.Graveyard) S.emptyCharacteristics))
-        -- CR 701.26a's own event, and the only one this condition admits. Whether
-        -- the tapped permanent is the bearer's host does not matter here:
-        -- eventBindings claims nothing either way, and the floor is what this
-        -- pins.
-        TriggerCondition.BecomesTapped _ -> one (GameEvent.BecameTapped departed)
+        -- CR 701.26's own event for the watched direction, and the only one
+        -- this condition admits. Whether the permanent is the bearer's host does
+        -- not matter here: eventBindings claims nothing either way, and the
+        -- floor is what this pins.
+        TriggerCondition.BecomesTapState watched -> case BecomesTapState.status watched of
+          TapState.Tapped -> one (GameEvent.BecameTapped departed)
+          TapState.Untapped -> one (GameEvent.BecameUntapped departed)
         TriggerCondition.PermanentsBecomeTapped _ -> one (GameEvent.BecameTapped departed)
-        -- CR 701.26b's own event, and the only one this condition admits, on
-        -- `departed`, which is not the bearer: the pair does not match, which
-        -- pins the floor for a matching pair too, this arm binding nothing
-        -- either way.
-        TriggerCondition.SelfBecomesUntapped -> one (GameEvent.BecameUntapped departed)
         TriggerCondition.AttachedPermanentTappedForMana -> one (GameEvent.TappedForMana (TappedForMana.MkTappedForMana {TappedForMana.permanent = departed, TappedForMana.mana = Set.singleton (ManaType.Colored Color.Green), TappedForMana.player = S.alice}))
         -- The same event for the bystander reading, on `departed` for the arm
         -- above's reason: the arm stamps the tapped permanent under every
@@ -2564,10 +2563,11 @@ everyTriggerCondition =
     TriggerCondition.PermanentBecomesDesignated (PermanentBecomesDesignated.MkPermanentBecomesDesignated Designation.Renowned (Filter.Type.And [])),
     TriggerCondition.AttachedCreatureMentors,
     TriggerCondition.AttachedCreatureDies,
-    TriggerCondition.BecomesTapped ActingPermanent.Self,
-    TriggerCondition.BecomesTapped (ActingPermanent.Matching (Filter.Type.HasAttached Filter.Type.IsSource)),
+    TriggerCondition.BecomesTapState (BecomesTapState.MkBecomesTapState TapState.Tapped ActingPermanent.Self),
+    TriggerCondition.BecomesTapState (BecomesTapState.MkBecomesTapState TapState.Tapped (ActingPermanent.Matching (Filter.Type.HasAttached Filter.Type.IsSource))),
+    TriggerCondition.BecomesTapState (BecomesTapState.MkBecomesTapState TapState.Untapped ActingPermanent.Self),
+    TriggerCondition.BecomesTapState (BecomesTapState.MkBecomesTapState TapState.Untapped (ActingPermanent.Matching (Filter.Type.And []))),
     TriggerCondition.PermanentsBecomeTapped (Filter.Type.And []),
-    TriggerCondition.SelfBecomesUntapped,
     TriggerCondition.AttachedPermanentTappedForMana,
     -- ALL THREE relations, on the PermanentSacrificed rows' reasoning below:
     -- an eventBindings arm that had cased on the relation and stamped nothing

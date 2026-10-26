@@ -105,6 +105,7 @@ import qualified Parun.Codec.BecameAttackedSpec
 import qualified Parun.Codec.BecameBlockingSpec
 import qualified Parun.Codec.BecameDesignatedSpec
 import qualified Parun.Codec.BecomeCopySpec
+import qualified Parun.Codec.BecomesTapStateSpec
 import qualified Parun.Codec.BeginningStepSpec
 import qualified Parun.Codec.BeholdSpec
 import qualified Parun.Codec.BidSpec
@@ -1025,6 +1026,7 @@ spec s registry = do
   Parun.Codec.BecameBlockingSpec.spec s
   Parun.Codec.BecameDesignatedSpec.spec s
   Parun.Codec.BecomeCopySpec.spec s
+  Parun.Codec.BecomesTapStateSpec.spec s
   Parun.Codec.BeginningStepSpec.spec s
   Parun.Codec.BeholdSpec.spec s
   Parun.Codec.BidSpec.spec s

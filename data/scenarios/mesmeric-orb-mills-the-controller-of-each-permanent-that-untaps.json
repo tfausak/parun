@@ -1,0 +1,34 @@
+{
+  "description": "CR 502.3 / 701.26b whole card: Mesmeric Orb triggers once for each permanent the untap step untaps, and that permanent's controller mills a card",
+  "note": "Bob controls the Orb. Alice's two tapped Islands untap in her untap step, so she mills two; bob's tapped Swamp stays tapped on alice's turn, so he mills none, and the Orb's controller is not the one milling.",
+  "board": {
+    "active": "bob",
+    "step": "EndStep",
+    "seats": [
+      {
+        "name": "alice",
+        "battlefield": [
+          {"card": "Island", "label": "i1", "tapped": true},
+          {"card": "Island", "label": "i2", "tapped": true}
+        ],
+        "library": [{"card": "Plains"}, {"card": "Plains"}, {"card": "Plains"}, {"card": "Plains"}]
+      },
+      {
+        "name": "bob",
+        "battlefield": [
+          {"card": "Mesmeric Orb", "label": "orb"},
+          {"card": "Swamp", "label": "s1", "tapped": true}
+        ],
+        "library": [{"card": "Mountain"}, {"card": "Mountain"}, {"card": "Mountain"}]
+      }
+    ]
+  },
+  "timeline": [
+    {"turn": 2, "step": "Upkeep", "player": "bob", "do": {"OrderTriggers": ["$orb", "$orb"]}},
+    {"turn": 2, "step": "Upkeep", "player": "alice", "do": "Pass"},
+    {"turn": 2, "step": "Upkeep", "player": "alice", "do": "Pass"},
+    {"turn": 2, "step": "Upkeep", "player": "alice", "check": {"Count": {"player": "alice", "zone": "Graveyard", "card": "Plains", "count": 2}}},
+    {"turn": 2, "step": "Upkeep", "player": "alice", "check": {"Count": {"player": "bob", "zone": "Graveyard", "card": "Mountain", "count": 0}}},
+    {"turn": 2, "step": "Upkeep", "player": "alice", "check": {"Tapped": {"object": "$s1", "tapped": true}}}
+  ]
+}

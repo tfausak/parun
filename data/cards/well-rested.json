@@ -54,7 +54,15 @@
                 "type": "Triggered",
                 "value": {
                   "condition": {
-                    "type": "SelfBecomesUntapped"
+                    "type": "BecomesTapState",
+                    "value": {
+                      "actor": {
+                        "type": "Self"
+                      },
+                      "status": {
+                        "type": "Untapped"
+                      }
+                    }
                   },
                   "limit": {
                     "type": "OncePerTurn"

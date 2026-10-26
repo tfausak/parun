@@ -28,6 +28,7 @@ import qualified Parun.Types.BecameAttacked as BecameAttacked
 import qualified Parun.Types.BecameBlocking as BecameBlocking
 import qualified Parun.Types.BecameTarget as BecameTarget
 import qualified Parun.Types.BecameUnattached as BecameUnattached
+import qualified Parun.Types.BecomesTapState as BecomesTapState
 import Parun.Types.Binding (Binding)
 import qualified Parun.Types.Binding as Binding.Type
 import qualified Parun.Types.BlocksDeclared as BlocksDeclared
@@ -944,17 +945,17 @@ eventBindingsOver board gs bearerBecame becameInGraveyard bearer you cond event 
   -- Blight's "destroy it" names the land that became tapped, which the Aura
   -- leaving the battlefield before its trigger resolves does not change.
   --
-  -- Unconditional given a match: matchesTrigger accepts only a
-  -- GameEvent.BecameTapped, and each occurrence names one permanent.
-  (TriggerCondition.BecomesTapped _, GameEvent.BecameTapped tapped) ->
-    Binding.setTappedPermanent tapped Map.empty
+  -- Unconditional given a match: matchesTrigger accepts only the event of the
+  -- watched direction, and each occurrence names one permanent. Mesmeric Orb's
+  -- "that permanent's controller" reads the untap direction's slot.
+  (TriggerCondition.BecomesTapState watched, GameEvent.BecameTapped tapped) ->
+    Binding.setTapStatePermanent (BecomesTapState.status watched) tapped Map.empty
+  (TriggerCondition.BecomesTapState watched, GameEvent.BecameUntapped untapped) ->
+    Binding.setTapStatePermanent (BecomesTapState.status watched) untapped Map.empty
   -- Nothing: Deeproot Pilgrimage's payload names no tapped permanent, and one
   -- slot could not name a batch of them.
   (TriggerCondition.PermanentsBecomeTapped _, _) -> Map.empty
-  -- Nothing either, and for a plainer reason: the permanent that became
-  -- untapped IS the bearer, whom Binding.triggerSource already names.
-  (TriggerCondition.SelfBecomesUntapped, _) -> Map.empty
-  -- CR 106.12a's permanent, bound for the BecomesTapped arm's reason: Wild
+  -- CR 106.12a's permanent, bound for the BecomesTapState arm's reason: Wild
   -- Growth's "its controller" is the enchanted land's controller, and
   -- PlayerRef.HolderOfBound is how a card names it -- CR 109.5's "you" would
   -- answer the Aura's controller instead, which an Aura on an opponent's
@@ -1953,14 +1954,11 @@ eventBindingSlots cond = case cond of
   -- the Aura's alone (data/cards/synthetic-widowed-blade.json, proved in
   -- Parun.ZoneTriggerSpec) (#3153).
   TriggerCondition.AttachedCreatureDies -> Set.fromList [Binding.became, Binding.departedPermanent]
-  -- The permanent that became tapped, which the arm above stamps for every
-  -- match: Blight destroys it and Psychic Venom reads its controller.
-  TriggerCondition.BecomesTapped _ -> Set.singleton Binding.tappedPermanent
+  -- The permanent that became tapped or untapped, which the arm above stamps
+  -- for every match: Blight destroys it and Mesmeric Orb reads its controller.
+  TriggerCondition.BecomesTapState watched -> Set.singleton (Binding.tapStatePermanent (BecomesTapState.status watched))
   -- Empty, eventBindings' arm.
   TriggerCondition.PermanentsBecomeTapped _ -> Set.empty
-  -- Empty for the arm above's reason once more: nothing moved, and the
-  -- permanent that untapped is the bearer.
-  TriggerCondition.SelfBecomesUntapped -> Set.empty
   -- The permanent tapped for mana, which the arm above stamps for every
   -- match: Wild Growth reads it through PlayerRef.HolderOfBound.
   TriggerCondition.AttachedPermanentTappedForMana -> Set.singleton Binding.manaSource

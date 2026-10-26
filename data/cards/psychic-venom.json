@@ -34,14 +34,19 @@
       "triggeredAbilities": [
         {
           "condition": {
-            "type": "BecomesTapped",
+            "type": "BecomesTapState",
             "value": {
-              "type": "Matching",
-              "value": {
-                "type": "HasAttached",
+              "actor": {
+                "type": "Matching",
                 "value": {
-                  "type": "IsSource"
+                  "type": "HasAttached",
+                  "value": {
+                    "type": "IsSource"
+                  }
                 }
+              },
+              "status": {
+                "type": "Tapped"
               }
             }
           },

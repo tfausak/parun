@@ -29,7 +29,15 @@
       "triggeredAbilities": [
         {
           "condition": {
-            "type": "SelfBecomesUntapped"
+            "type": "BecomesTapState",
+            "value": {
+              "actor": {
+                "type": "Self"
+              },
+              "status": {
+                "type": "Untapped"
+              }
+            }
           },
           "modal": {
             "modes": [

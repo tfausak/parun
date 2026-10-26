@@ -2,6 +2,7 @@ module Parun.Codec.TriggerCondition where
 
 import qualified Parun.Codec.AbilityAddsMana as AbilityAddsMana
 import qualified Parun.Codec.ActingPermanent as ActingPermanent
+import qualified Parun.Codec.BecomesTapState as BecomesTapState
 import qualified Parun.Codec.CardLeavesZone as CardLeavesZone
 import qualified Parun.Codec.CardName as CardName
 import qualified Parun.Codec.CardPutIntoGraveyard as CardPutIntoGraveyard
@@ -129,9 +130,8 @@ codec =
           Arm.payload "CardsLeaveZone" CardLeavesZone.codec TriggerCondition.CardsLeaveZone (\x -> case x of TriggerCondition.CardsLeaveZone y -> Just y; _ -> Nothing),
           Arm.payload "CardsPutIntoZone" CardsPutIntoZone.codec TriggerCondition.CardsPutIntoZone (\x -> case x of TriggerCondition.CardsPutIntoZone y -> Just y; _ -> Nothing),
           Arm.nullary "AttachedCreatureDies" TriggerCondition.AttachedCreatureDies,
-          Arm.payload "BecomesTapped" ActingPermanent.codec TriggerCondition.BecomesTapped (\x -> case x of TriggerCondition.BecomesTapped y -> Just y; _ -> Nothing),
+          Arm.payload "BecomesTapState" BecomesTapState.codec TriggerCondition.BecomesTapState (\x -> case x of TriggerCondition.BecomesTapState y -> Just y; _ -> Nothing),
           Arm.payload "PermanentsBecomeTapped" filterCodec TriggerCondition.PermanentsBecomeTapped (\x -> case x of TriggerCondition.PermanentsBecomeTapped y -> Just y; _ -> Nothing),
-          Arm.nullary "SelfBecomesUntapped" TriggerCondition.SelfBecomesUntapped,
           Arm.nullary "AttachedPermanentTappedForMana" TriggerCondition.AttachedPermanentTappedForMana,
           Arm.payload "PermanentTappedForMana" PermanentTappedForMana.codec TriggerCondition.PermanentTappedForMana (\x -> case x of TriggerCondition.PermanentTappedForMana y -> Just y; _ -> Nothing),
           Arm.payload "AbilityAddsMana" AbilityAddsMana.codec TriggerCondition.AbilityAddsMana (\x -> case x of TriggerCondition.AbilityAddsMana y -> Just y; _ -> Nothing),
@@ -276,9 +276,8 @@ tagOf x = case x of
   TriggerCondition.CardsLeaveZone {} -> "CardsLeaveZone"
   TriggerCondition.CardsPutIntoZone {} -> "CardsPutIntoZone"
   TriggerCondition.AttachedCreatureDies {} -> "AttachedCreatureDies"
-  TriggerCondition.BecomesTapped {} -> "BecomesTapped"
+  TriggerCondition.BecomesTapState {} -> "BecomesTapState"
   TriggerCondition.PermanentsBecomeTapped {} -> "PermanentsBecomeTapped"
-  TriggerCondition.SelfBecomesUntapped {} -> "SelfBecomesUntapped"
   TriggerCondition.AttachedPermanentTappedForMana {} -> "AttachedPermanentTappedForMana"
   TriggerCondition.PermanentTappedForMana {} -> "PermanentTappedForMana"
   TriggerCondition.AbilityAddsMana {} -> "AbilityAddsMana"

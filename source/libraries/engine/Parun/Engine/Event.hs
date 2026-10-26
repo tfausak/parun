@@ -10381,12 +10381,10 @@ controllerTurnScoped cond = case cond of
   TriggerCondition.AttachedCreatureDies -> False
   -- Nor does CR 701.26a: an enchanted creature can be tapped on anyone's turn,
   -- and Betrayal's whole point is that the Aura's controller is not the tapping
-  -- creature's.
-  TriggerCondition.BecomesTapped _ -> False
+  -- creature's. Nor CR 701.26b: CR 502.3's untap step is the active player's,
+  -- but an Effect.Untap and CR 107.6's untap symbol reach any turn.
+  TriggerCondition.BecomesTapState _ -> False
   TriggerCondition.PermanentsBecomeTapped _ -> False
-  -- Nor CR 701.26b: CR 502.3's untap step is the active player's, but an
-  -- Effect.Untap and CR 107.6's untap symbol reach any turn.
-  TriggerCondition.SelfBecomesUntapped -> False
   -- Nor does CR 106.12a: an enchanted land can be tapped for mana on anyone's
   -- turn, and Wild Growth's whole point is that the mana is its controller's.
   TriggerCondition.AttachedPermanentTappedForMana -> False

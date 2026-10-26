@@ -26,30 +26,35 @@
       "triggeredAbilities": [
         {
           "condition": {
-            "type": "BecomesTapped",
+            "type": "BecomesTapState",
             "value": {
-              "type": "Matching",
-              "value": {
-                "type": "And",
-                "value": [
-                  {
-                    "type": "HasSubtype",
-                    "value": {
-                      "type": "Island"
-                    }
-                  },
-                  {
-                    "type": "HeldBy",
-                    "value": {
-                      "holder": {
-                        "type": "Controller"
-                      },
-                      "relation": {
-                        "type": "Opponent"
+              "actor": {
+                "type": "Matching",
+                "value": {
+                  "type": "And",
+                  "value": [
+                    {
+                      "type": "HasSubtype",
+                      "value": {
+                        "type": "Island"
+                      }
+                    },
+                    {
+                      "type": "HeldBy",
+                      "value": {
+                        "holder": {
+                          "type": "Controller"
+                        },
+                        "relation": {
+                          "type": "Opponent"
+                        }
                       }
                     }
-                  }
-                ]
+                  ]
+                }
+              },
+              "status": {
+                "type": "Tapped"
               }
             }
           },

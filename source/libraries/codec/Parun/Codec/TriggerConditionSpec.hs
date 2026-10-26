@@ -8,6 +8,7 @@ import qualified Parun.Spec as Spec
 import qualified Parun.Types.AbilityAddsMana as AbilityAddsMana
 import qualified Parun.Types.ActingPermanent as ActingPermanent
 import qualified Parun.Types.AttackedPlayer as AttackedPlayer
+import qualified Parun.Types.BecomesTapState as BecomesTapState
 import qualified Parun.Types.CardLeavesZone as CardLeavesZone
 import qualified Parun.Types.CardName as CardName
 import qualified Parun.Types.CardPutIntoGraveyard as CardPutIntoGraveyard
@@ -66,6 +67,7 @@ import qualified Parun.Types.StackObjectKind as StackObjectKind
 import qualified Parun.Types.StepBegins as StepBegins
 import qualified Parun.Types.StickerKind as StickerKind
 import qualified Parun.Types.Subtype as Subtype
+import qualified Parun.Types.TapState as TapState
 import qualified Parun.Types.TriggerCondition as TriggerCondition
 import qualified Parun.Types.TriggerFrequency as TriggerFrequency
 import qualified Parun.Types.TurnScope as TurnScope
@@ -689,19 +691,19 @@ spec s = Spec.describe s "Parun.Codec.TriggerCondition" $ do
       TriggerCondition.AttachedCreatureDies
       " {\"type\":\"AttachedCreatureDies\"} "
   -- CR 701.26a's tap, once per permanent, read off the bearer by id.
-  Spec.it s "BecomesTapped round-trips the bearer itself" $
+  Spec.it s "BecomesTapState round-trips the bearer itself" $
     Common.assertCodec
       s
       TriggerCondition.codec
-      (TriggerCondition.BecomesTapped ActingPermanent.Self)
-      " {\"type\":\"BecomesTapped\",\"value\":{\"type\":\"Self\"}} "
-  -- The same tap of a permanent the Filter admits.
-  Spec.it s "BecomesTapped round-trips a Filter" $
+      (TriggerCondition.BecomesTapState (BecomesTapState.MkBecomesTapState TapState.Tapped ActingPermanent.Self))
+      " {\"type\":\"BecomesTapState\",\"value\":{\"actor\":{\"type\":\"Self\"},\"status\":{\"type\":\"Tapped\"}}} "
+  -- CR 701.26b's untap of a permanent the Filter admits.
+  Spec.it s "BecomesTapState round-trips a Filter" $
     Common.assertCodec
       s
       TriggerCondition.codec
-      (TriggerCondition.BecomesTapped (ActingPermanent.Matching (Filter.HasSubtype Subtype.Island)))
-      " {\"type\":\"BecomesTapped\",\"value\":{\"type\":\"Matching\",\"value\":{\"type\":\"HasSubtype\",\"value\":{\"type\":\"Island\"}}}} "
+      (TriggerCondition.BecomesTapState (BecomesTapState.MkBecomesTapState TapState.Untapped (ActingPermanent.Matching (Filter.HasSubtype Subtype.Island))))
+      " {\"type\":\"BecomesTapState\",\"value\":{\"actor\":{\"type\":\"Matching\",\"value\":{\"type\":\"HasSubtype\",\"value\":{\"type\":\"Island\"}}},\"status\":{\"type\":\"Untapped\"}}} "
   -- CR 701.26a's tap by a bystander, batch-read (CR 603.2c).
   Spec.it s "PermanentsBecomeTapped round-trips with its Filter" $
     Common.assertCodec
@@ -709,13 +711,6 @@ spec s = Spec.describe s "Parun.Codec.TriggerCondition" $ do
       TriggerCondition.codec
       (TriggerCondition.PermanentsBecomeTapped (Filter.Not Filter.IsToken))
       " {\"type\":\"PermanentsBecomeTapped\",\"value\":{\"type\":\"Not\",\"value\":{\"type\":\"IsToken\"}}} "
-  -- CR 701.26b's untap read off the BEARER, the other direction of one status.
-  Spec.it s "SelfBecomesUntapped" $
-    Common.assertCodec
-      s
-      TriggerCondition.codec
-      TriggerCondition.SelfBecomesUntapped
-      " {\"type\":\"SelfBecomesUntapped\"} "
   -- CR 106.12a's tap for mana read off the attachment link, nullary for
   -- AttachedCreatureDies' reason.
   Spec.it s "AttachedPermanentTappedForMana" $
