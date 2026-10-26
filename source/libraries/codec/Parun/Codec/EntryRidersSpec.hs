@@ -10,6 +10,7 @@ import qualified Parun.JsonCodec.Codec as Codec
 import qualified Parun.JsonCodec.Common as Common
 import qualified Parun.Spec as Spec
 import qualified Parun.Types.CardType as CardType
+import qualified Parun.Types.ChangeMode as ChangeMode
 import qualified Parun.Types.CounterKind as CounterKind
 import qualified Parun.Types.EntryAttack as EntryAttack
 import qualified Parun.Types.EntryBlock as EntryBlock
@@ -117,8 +118,8 @@ spec s = Spec.describe s "Parun.Codec.EntryRiders" $ do
     Common.assertCodec
       s
       (EntryRiders.codec Common.text)
-      EntryRiders.defaultValue {EntryRiders.characteristics = Seq.fromList [Modification.SetCardType CardType.Enchantment, Modification.AddSubtype Subtype.Aura]}
-      " {\"characteristics\":[{\"type\":\"SetCardType\",\"value\":{\"type\":\"Enchantment\"}},{\"type\":\"AddSubtype\",\"value\":{\"type\":\"Aura\"}}]} "
+      EntryRiders.defaultValue {EntryRiders.characteristics = Seq.fromList [Modification.CardType ChangeMode.Replace CardType.Enchantment, Modification.AddSubtype Subtype.Aura]}
+      " {\"characteristics\":[{\"type\":\"CardType\",\"value\":{\"mode\":{\"type\":\"Replace\"},\"cardType\":{\"type\":\"Enchantment\"}}},{\"type\":\"AddSubtype\",\"value\":{\"type\":\"Aura\"}}]} "
   -- CR 406.3's rider, which is the one rider about a zone that is not the
   -- battlefield: Ignorant Bliss exiles face down and says nothing else.
   Spec.it s "MkEntryRiders, exiledFaceDown alone" $

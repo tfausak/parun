@@ -1,0 +1,36 @@
+{
+  "description": "Jade Statue already animated with a creature type gains Golem in addition to it, per its ruling",
+  "note": "The card's 2013-09-20 ruling: activated after another effect animated it, it \"will become 3/6 and gain the creature type Golem in addition to those creature types\". Karn's Touch animates it, Monk's Fist makes it a Monk, and the Statue's activation in combat is newer than both, so a Golem that replaced creature types would leave no Monk.",
+  "board": {
+    "seats": [
+      {
+        "name": "alice",
+        "manaPool": "UUCC",
+        "hand": [{ "card": "Karn's Touch", "label": "touch" }],
+        "battlefield": [
+          { "card": "Jade Statue", "label": "statue" },
+          { "card": "Monk's Fist", "label": "fist" },
+          { "card": "Island", "label": "i1" }, { "card": "Island", "label": "i2" }
+        ],
+        "library": [{ "card": "Island" }, { "card": "Island" }, { "card": "Island" }]
+      },
+      {
+        "name": "bob",
+        "library": [{ "card": "Island" }, { "card": "Island" }, { "card": "Island" }]
+      }
+    ],
+    "active": "alice",
+    "step": "PrecombatMain"
+  },
+  "timeline": [
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "do": { "Cast": { "object": "$touch", "targets": ["$statue"], "mana": [null] } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "do": "Pass" },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "do": { "Activate": { "object": "$fist", "targets": ["$statue"], "mana": [null] } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "do": "Pass" },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "check": { "Subtypes": { "object": "$statue", "subtypes": ["Monk"] } } },
+    { "turn": 1, "step": "BeginningOfCombat", "player": "alice", "do": { "Activate": { "object": "$statue", "mana": ["$i1", "$i2"] } } },
+    { "turn": 1, "step": "BeginningOfCombat", "player": "alice", "do": "Pass" },
+    { "turn": 1, "step": "BeginningOfCombat", "player": "alice", "check": { "Subtypes": { "object": "$statue", "subtypes": ["Golem", "Monk"] } } },
+    { "turn": 1, "step": "BeginningOfCombat", "player": "alice", "check": { "PowerToughness": { "object": "$statue", "power": 4, "toughness": 6 } } }
+  ]
+}

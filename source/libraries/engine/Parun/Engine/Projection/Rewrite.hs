@@ -416,8 +416,7 @@ rewriteModification pairs m =
                     }
               -- CR 205.2a's card types are a different list from CR 205.3's subtypes, and
               -- CR 205.4a's supertypes a third, so these hold no word a pair could name.
-              Modification.AddCardType _ -> acc
-              Modification.SetCardType _ -> acc
+              Modification.CardType {} -> acc
               Modification.LoseCardType _ -> acc
               Modification.AddSupertype _ -> acc
               Modification.RemoveSupertype _ -> acc

@@ -48,6 +48,11 @@ codec abilityCodec =
           (,)
             <$> Fields.required "mode" ChangeMode.codec fst
             <*> Fields.required "subtype" Subtype.codec snd
+      cardType =
+        Fields.object $
+          (,)
+            <$> Fields.required "mode" ChangeMode.codec fst
+            <*> Fields.required "cardType" CardType.codec snd
    in Arm.tagged
         tagOf
         [ Arm.payload "GainAbility" abilityCodec Modification.GainAbility (\x -> case x of Modification.GainAbility y -> Just y; _ -> Nothing),
@@ -72,8 +77,7 @@ codec abilityCodec =
           Arm.nullary "LoseEveryCreatureSubtype" Modification.LoseEveryCreatureSubtype,
           Arm.payload "SetCreatureSubtypesOfLastCardExiledWith" (Filter.codec Keyword.codec) Modification.SetCreatureSubtypesOfLastCardExiledWith (\x -> case x of Modification.SetCreatureSubtypesOfLastCardExiledWith y -> Just y; _ -> Nothing),
           Arm.payload "AddSubtype" Subtype.codec Modification.AddSubtype (\x -> case x of Modification.AddSubtype y -> Just y; _ -> Nothing),
-          Arm.payload "AddCardType" CardType.codec Modification.AddCardType (\x -> case x of Modification.AddCardType y -> Just y; _ -> Nothing),
-          Arm.payload "SetCardType" CardType.codec Modification.SetCardType (\x -> case x of Modification.SetCardType y -> Just y; _ -> Nothing),
+          Arm.payload "CardType" cardType (uncurry Modification.CardType) (\x -> case x of Modification.CardType mode y -> Just (mode, y); _ -> Nothing),
           Arm.payload "LoseCardType" CardType.codec Modification.LoseCardType (\x -> case x of Modification.LoseCardType y -> Just y; _ -> Nothing),
           Arm.payload "AddSupertype" Supertype.codec Modification.AddSupertype (\x -> case x of Modification.AddSupertype y -> Just y; _ -> Nothing),
           Arm.payload "RemoveSupertype" Supertype.codec Modification.RemoveSupertype (\x -> case x of Modification.RemoveSupertype y -> Just y; _ -> Nothing),
@@ -118,8 +122,7 @@ tagOf x = case x of
   Modification.LoseEveryCreatureSubtype {} -> "LoseEveryCreatureSubtype"
   Modification.SetCreatureSubtypesOfLastCardExiledWith {} -> "SetCreatureSubtypesOfLastCardExiledWith"
   Modification.AddSubtype {} -> "AddSubtype"
-  Modification.AddCardType {} -> "AddCardType"
-  Modification.SetCardType {} -> "SetCardType"
+  Modification.CardType {} -> "CardType"
   Modification.LoseCardType {} -> "LoseCardType"
   Modification.AddSupertype {} -> "AddSupertype"
   Modification.RemoveSupertype {} -> "RemoveSupertype"

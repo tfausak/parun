@@ -213,21 +213,21 @@ spec s = Spec.describe s "Parun.Codec.Modification" $ do
       codec
       (Modification.AddSubtype Subtype.Food)
       " {\"type\":\"AddSubtype\",\"value\":{\"type\":\"Food\"}} "
-  -- layer 4 (Opalescence -> Creature).
-  Spec.it s "AddCardType" $
-    Common.assertCodec
-      s
-      codec
-      (Modification.AddCardType CardType.Creature)
-      " {\"type\":\"AddCardType\",\"value\":{\"type\":\"Creature\"}} "
   -- layer 4, CR 205.1a set (Song of the Dryads -> land). A different card type
-  -- from the add above, so a codec that crossed the two arms cannot pass both.
-  Spec.it s "SetCardType" $
+  -- from the add below, so a codec that crossed the two modes cannot pass both.
+  Spec.it s "CardType Replace" $
     Common.assertCodec
       s
       codec
-      (Modification.SetCardType CardType.Land)
-      " {\"type\":\"SetCardType\",\"value\":{\"type\":\"Land\"}} "
+      (Modification.CardType ChangeMode.Replace CardType.Land)
+      " {\"type\":\"CardType\",\"value\":{\"mode\":{\"type\":\"Replace\"},\"cardType\":{\"type\":\"Land\"}}} "
+  -- layer 4, CR 205.1b add (Opalescence -> Creature).
+  Spec.it s "CardType InAddition" $
+    Common.assertCodec
+      s
+      codec
+      (Modification.CardType ChangeMode.InAddition CardType.Creature)
+      " {\"type\":\"CardType\",\"value\":{\"mode\":{\"type\":\"InAddition\"},\"cardType\":{\"type\":\"Creature\"}}} "
   -- layer 4, CR 205.1a removal (CR 702.151b -> not a creature).
   Spec.it s "LoseCardType" $
     Common.assertCodec

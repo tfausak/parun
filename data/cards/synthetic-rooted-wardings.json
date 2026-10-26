@@ -44,9 +44,14 @@
           },
           "modifications": [
             {
-              "type": "AddCardType",
+              "type": "CardType",
               "value": {
-                "type": "Land"
+                "cardType": {
+                  "type": "Land"
+                },
+                "mode": {
+                  "type": "InAddition"
+                }
               }
             },
             {

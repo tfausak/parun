@@ -56,9 +56,14 @@
               }
             },
             {
-              "type": "SetCardType",
+              "type": "CardType",
               "value": {
-                "type": "Land"
+                "cardType": {
+                  "type": "Land"
+                },
+                "mode": {
+                  "type": "Replace"
+                }
               }
             }
           ]

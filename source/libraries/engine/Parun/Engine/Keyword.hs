@@ -44,6 +44,7 @@ import qualified Parun.Types.CastOffer as CastOffer
 import qualified Parun.Types.CastRepetition as CastRepetition
 import Parun.Types.CastingPermission (CastingPermission)
 import qualified Parun.Types.CastingPermission as CastingPermission
+import qualified Parun.Types.ChangeMode as ChangeMode
 import qualified Parun.Types.ChoosePlayer as ChoosePlayer
 import qualified Parun.Types.ChosenCardFromAmong as ChosenCardFromAmong
 import qualified Parun.Types.ChosenCardInHand as ChosenCardInHand
@@ -2098,7 +2099,7 @@ battlefieldAbilitiesFor keyword count = fmap (mintedBy keyword) $ case keyword o
 --
 -- THE EFFECT. "Becomes an artifact creature" ADDS two card types and sets nothing,
 -- which is CR 205.1b naming this exact phrase -- so the Vehicle stays a Vehicle,
--- and AddCardType is right where SetCardType's CR 205.1a replacement would take
+-- and CardType's InAddition mode is right where its CR 205.1a Replace would take
 -- the artifact type and the Vehicle subtype away. TWO of them (CR 300.1) in one
 -- mode, since CR 613.7b stamps both at once. Layer 4 either way (CR 613.1d), and
 -- CR 208.3 needs no clause: the Vehicle's printed power and toughness are already
@@ -2129,7 +2130,7 @@ crew n =
         Effect.ModifyTarget
           ( ModifyTarget.MkModifyTarget
               Duration.UntilEndOfTurn
-              (Modification.AddCardType cardType)
+              (Modification.CardType ChangeMode.InAddition cardType)
               (ObjectRef.InSlot Binding.triggerSource)
               Nothing
           )
@@ -3502,7 +3503,7 @@ bestowEnchant = TargetSlot.required Pool.Creatures Nothing
 -- Modification values, which is the one module licensed to.
 bestowModifications :: [Modification.Modification ability]
 bestowModifications =
-  [ Modification.SetCardType CardType.Enchantment,
+  [ Modification.CardType ChangeMode.Replace CardType.Enchantment,
     Modification.AddSubtype Subtype.Aura,
     Modification.GainEnchant bestowEnchant
   ]
@@ -4263,8 +4264,8 @@ livingMetal =
       StaticAbility.lingers = Nothing,
       StaticAbility.name = Nothing,
       StaticAbility.modifications =
-        Modification.AddCardType CardType.Artifact
-          NonEmpty.:| [Modification.AddCardType CardType.Creature]
+        Modification.CardType ChangeMode.InAddition CardType.Artifact
+          NonEmpty.:| [Modification.CardType ChangeMode.InAddition CardType.Creature]
     }
 
 -- CR 702.151b: "attaching an Equipment with reconfigure to another creature

@@ -189,8 +189,7 @@ layer m = case m of
   -- effect in another layer, so answering any other layer here leaves the suite
   -- green.
   Modification.AddSubtype _ -> Layer.Type
-  Modification.AddCardType _ -> Layer.Type
-  Modification.SetCardType _ -> Layer.Type
+  Modification.CardType {} -> Layer.Type
   Modification.LoseCardType _ -> Layer.Type
   Modification.AddSupertype _ -> Layer.Type
   Modification.RemoveSupertype _ -> Layer.Type
@@ -532,19 +531,20 @@ applyModification textBoxOf viewOf src stamp gs oid unitTypes affected m pc =
         -- deliberately so -- what differs is CR 612.2's gate, which lives on the
         -- constructor rather than here.
         Modification.AddSubtype s -> gainSubtype unitTypes s pc
-        Modification.AddCardType _ ->
-          pc {PC.cardTypes = cardTypesAfter m (PC.cardTypes pc)}
-        -- CR 205.1a's set, and the whole of it: the new card type replaces the
-        -- existing ones; instant and sorcery survive; and a subtype whose family
-        -- correlates with no card type the object now has goes with the type that
-        -- carried it. A subtype Parun.Engine.Subtype cannot classify answers with
-        -- the empty set and is kept. No ability clause: CR 205.1a says nothing
-        -- about abilities.
-        Modification.SetCardType _ ->
-          pc
-            { PC.cardTypes = cardTypesAfter m (PC.cardTypes pc),
-              PC.subtypes = Set.filter (correspondsTo unitTypes) (PC.subtypes pc)
-            }
+        -- CR 205.1b's add keeps every subtype. CR 205.1a's set, and the whole of
+        -- it: the new card type replaces the existing ones; instant and sorcery
+        -- survive; and a subtype whose family correlates with no card type the
+        -- object now has goes with the type that carried it. A subtype
+        -- Parun.Engine.Subtype cannot classify answers with the empty set and is
+        -- kept. No ability clause: CR 205.1a says nothing about abilities.
+        Modification.CardType mode _ -> case mode of
+          ChangeMode.InAddition ->
+            pc {PC.cardTypes = cardTypesAfter m (PC.cardTypes pc)}
+          ChangeMode.Replace ->
+            pc
+              { PC.cardTypes = cardTypesAfter m (PC.cardTypes pc),
+                PC.subtypes = Set.filter (correspondsTo unitTypes) (PC.subtypes pc)
+              }
         -- CR 205.1a's removal, which carries the SAME subtype consequence as the
         -- set above and so is written the same way: the type goes, and a subtype
         -- left correlating with no card type the object still has goes with it.
@@ -749,11 +749,11 @@ gainableSubtypes types = Set.filter (correspondsTo types)
 -- 205.3d, and -Werror names it only while the case is total.
 cardTypesAfter :: Modification -> Set CardType.CardType -> Set CardType.CardType
 cardTypesAfter m types = case m of
-  -- CR 205.1b's add: the object keeps the card types it had.
-  Modification.AddCardType t -> Set.insert t types
-  -- CR 205.1a's set: the new type replaces the existing ones bar the two named
-  -- exceptions.
-  Modification.SetCardType t -> Set.insert t (Set.filter retainedThroughCardTypeSet types)
+  -- CR 205.1b's add: the object keeps the card types it had. CR 205.1a's set:
+  -- the new type replaces the existing ones bar the two named exceptions.
+  Modification.CardType mode t -> case mode of
+    ChangeMode.InAddition -> Set.insert t types
+    ChangeMode.Replace -> Set.insert t (Set.filter retainedThroughCardTypeSet types)
   -- CR 205.1a's removal: this one type goes and the rest stay. No instant/sorcery
   -- exception, which rule 205.1a states of the SET alone.
   Modification.LoseCardType t -> Set.delete t types
@@ -1604,8 +1604,7 @@ freezeQuantities viewOf gs announcedOn source context m =
         -- re-picked at every projection (CR 604.2).
         Modification.SetCreatureSubtypesOfLastCardExiledWith _ -> Just m
         Modification.AddSubtype _ -> Just m
-        Modification.AddCardType _ -> Just m
-        Modification.SetCardType _ -> Just m
+        Modification.CardType {} -> Just m
         Modification.LoseCardType _ -> Just m
         Modification.AddSupertype _ -> Just m
         Modification.RemoveSupertype _ -> Just m
@@ -1668,8 +1667,7 @@ quantitiesOf m = case m of
   Modification.LoseEveryCreatureSubtype -> []
   Modification.SetCreatureSubtypesOfLastCardExiledWith _ -> []
   Modification.AddSubtype _ -> []
-  Modification.AddCardType _ -> []
-  Modification.SetCardType _ -> []
+  Modification.CardType {} -> []
   Modification.LoseCardType _ -> []
   Modification.AddSupertype _ -> []
   Modification.RemoveSupertype _ -> []
@@ -1721,8 +1719,7 @@ referenceQuery m = case m of
   Modification.LoseEveryCreatureSubtype -> Nothing
   Modification.SetCreatureSubtypesOfLastCardExiledWith _ -> Nothing
   Modification.AddSubtype _ -> Nothing
-  Modification.AddCardType _ -> Nothing
-  Modification.SetCardType _ -> Nothing
+  Modification.CardType {} -> Nothing
   Modification.LoseCardType _ -> Nothing
   Modification.AddSupertype _ -> Nothing
   Modification.RemoveSupertype _ -> Nothing
@@ -1779,13 +1776,12 @@ setsLandSubtype m = case m of
   -- -- the same answer LandSubtype's InAddition gives above, and Parun.CardSpec keeps CR
   -- 205.3i's land types off this arm anyway.
   Modification.AddSubtype _ -> False
-  -- The CARD-TYPE set: CR 305.7 fires on setting a land's SUBTYPE, so making an
-  -- object a land does not strip its rules text.
-  Modification.SetCardType _ -> False
+  -- The CARD-TYPE set or add: CR 305.7 fires on setting a land's SUBTYPE, so
+  -- making an object a land does not strip its rules text.
+  Modification.CardType {} -> False
   -- The card-type REMOVAL, for the set's reason: CR 305.7 fires on a land's
   -- SUBTYPE being set, and taking a card type away is not that.
   Modification.LoseCardType _ -> False
-  Modification.AddCardType _ -> False
   -- CR 205.4b changes a supertype and says nothing about subtypes.
   Modification.AddSupertype _ -> False
   Modification.RemoveSupertype _ -> False
@@ -3039,10 +3035,9 @@ removesAbilities m = case m of
   Modification.GrantsStationToughness -> False
   Modification.Intensify _ -> False
   Modification.ChangeWord {} -> False
-  Modification.AddCardType _ -> False
   -- CR 205.1a's card-type set has no ability clause: Song of the Dryads strips
   -- rules text through the LandSubtype Replace it carries beside this.
-  Modification.SetCardType _ -> False
+  Modification.CardType {} -> False
   -- CR 205.1a's removal has no ability clause either.
   Modification.LoseCardType _ -> False
   -- CR 205.4b changes a supertype and says nothing about abilities.
@@ -3486,7 +3481,7 @@ bestowGathered gs =
 -- it.
 --
 -- CR 205.3d is asked over the WHOLE unit before any part of it lands, which is
--- applyUnit's own reading and matters here: the AddSubtype and the SetCardType
+-- applyUnit's own reading and matters here: the AddSubtype and the CardType Replace
 -- are one effect, so Aura is admitted by the Enchantment its sibling gives.
 bestowedView :: ObjectId -> GameState -> Filter.View
 bestowedView oid gs =
@@ -3855,7 +3850,7 @@ filterReads f = case f of
   -- CR 205.2a: the card types of the SUBJECT's host, and nothing of the
   -- candidate at all. Narrower than the two atoms above because the read is
   -- exact -- one characteristic of one other object -- and declared even so,
-  -- since a layer-4 write (Song of the Dryads' SetCardType) moves this answer.
+  -- since a layer-4 write (Song of the Dryads' CardType Replace) moves this answer.
   Filter.Type.HostOfSubjectHasCardType _ -> Set.singleton Types
   -- Reads nothing: no Modification writes Object.source.
   Filter.Type.IsToken -> Set.empty
@@ -4233,10 +4228,11 @@ modificationWrites m = case m of
   -- CR 612.6 writes the whole card: its type line, colour, keywords and
   -- power. Not Controller, which is layer 2's.
   Modification.HasFullText _ -> Set.fromList [Types, Subtypes, Supertypes, Colors, Keywords, PowerA]
-  Modification.AddCardType _ -> Set.singleton Types
   -- CR 205.1a's set writes BOTH: the card types it replaces, and the subtypes it
   -- strips along with the types that carried them.
-  Modification.SetCardType _ -> Set.fromList [Types, Subtypes]
+  Modification.CardType mode _ -> case mode of
+    ChangeMode.InAddition -> Set.singleton Types
+    ChangeMode.Replace -> Set.fromList [Types, Subtypes]
   -- The removal writes both for the set's reason, CR 205.1a giving the two one
   -- subtype consequence.
   Modification.LoseCardType _ -> Set.fromList [Types, Subtypes]
@@ -4336,8 +4332,7 @@ modificationReads m = case m of
   -- Parun.ProjectionSpec's "CR 613.8b an earlier text change waits for the later
   -- one it depends on".
   Modification.ChangeWord {} -> Set.fromList [Subtypes, Keywords]
-  Modification.AddCardType _ -> Set.empty
-  Modification.SetCardType _ -> Set.empty
+  Modification.CardType {} -> Set.empty
   Modification.LoseCardType _ -> Set.empty
   Modification.AddSupertype _ -> Set.empty
   Modification.RemoveSupertype _ -> Set.empty
@@ -6188,8 +6183,7 @@ grantsKeywordWhere p m = case m of
   Modification.LoseEveryCreatureSubtype -> False
   Modification.SetCreatureSubtypesOfLastCardExiledWith _ -> False
   Modification.AddSubtype _ -> False
-  Modification.AddCardType _ -> False
-  Modification.SetCardType _ -> False
+  Modification.CardType {} -> False
   Modification.LoseCardType _ -> False
   Modification.AddSupertype _ -> False
   Modification.RemoveSupertype _ -> False
@@ -6229,13 +6223,12 @@ grantsKeywordWhere p m = case m of
 -- those two arms names its own family, rule 205.3i's and rule 205.3m's (see
 -- Parun.Types.Modification).
 --
--- The SETS answer beside the adds -- CR 205.1a's replacement leaves the object
+-- Either CardType mode answers -- CR 205.1a's replacement leaves the object
 -- holding the new card type exactly as CR 205.1b's addition does.
 --
 -- ONLY the AddSubtype arm is proved by a board (Parun.SagaSpec's granted-Saga
--- entry). The two card-type arms and the ChangeWord one are REGRESSION
--- FENCES: every AddCardType and SetCardType in `data/cards` writes artifact,
--- creature, enchantment or land, and every text changer in the pool swaps a
+-- entry). The card-type arm and the ChangeWord one are REGRESSION FENCES: every
+-- CardType in `data/cards` writes artifact, creature, enchantment or land, and every text changer in the pool swaps a
 -- colour word, a basic land type or a creature type -- the Scryfall query
 -- Parun.Types.Modification's AddSubtype records. All three are kept because this
 -- predicate only ever WIDENS what is gathered, so a wrong True costs a projection
@@ -6244,8 +6237,7 @@ grantsMintingType :: Modification -> Bool
 grantsMintingType m = case m of
   Modification.AddSubtype subtype -> subtype == Subtype.Type.Saga
   Modification.ChangeWord (ChangeWord.MkChangeWord _ to) -> to == TextWord.SubtypeWord Subtype.Type.Saga
-  Modification.AddCardType cardType -> mintingCardType cardType
-  Modification.SetCardType cardType -> mintingCardType cardType
+  Modification.CardType _ cardType -> mintingCardType cardType
   -- The REMOVAL grants nothing, so it mints no CR 614.1c row however minting the
   -- type it takes away is.
   Modification.LoseCardType _ -> False
@@ -6344,8 +6336,7 @@ grantsAbilityWhere p m = case m of
   Modification.GainAbility g -> p g || grantedStaticWrites (grantsAbilityWhere p) g
   Modification.AddSubtype _ -> False
   Modification.ChangeWord _ -> False
-  Modification.AddCardType _ -> False
-  Modification.SetCardType _ -> False
+  Modification.CardType {} -> False
   Modification.LoseCardType _ -> False
   Modification.GainKeyword _ -> False
   Modification.GainKeywordAtManaCost _ -> False
