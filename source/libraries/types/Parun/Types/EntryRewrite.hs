@@ -3,6 +3,7 @@ module Parun.Types.EntryRewrite where
 import qualified Data.Sequence as Seq
 import qualified Numeric.Natural as Natural
 import qualified Parun.Types.AsCopy as AsCopy
+import qualified Parun.Types.ChosenQuality as ChosenQuality
 import qualified Parun.Types.EntersWith as EntersWith
 import qualified Parun.Types.EntryFlip as EntryFlip
 import qualified Parun.Types.EntryOption as EntryOption
@@ -50,18 +51,8 @@ data EntryRewrite ability effect
   | -- | CR 614.1c decided by CR 705.2's winnerless flip / Molten Sentry: the arm
     -- above's options, picked by a coin rather than by the controller.
     ChoiceByCoinFlip EntryFlip.EntryFlip
-  | -- | CR 614.1c / Painter's Servant, Tablet of the Guilds: choose that many
-    -- different colours as this enters, written to Object.chosenColors.
-    ChooseColors Natural.Natural
-  | -- | CR 614.1c / Convincing Mirage: choose a basic land type as this enters,
-    -- written to Object.chosenSubtype. Nullary -- CR 305.6's five types are the
-    -- offer.
-    ChooseBasicLandType
-  | -- | CR 614.1c / Pillar of Origins: choose a creature type as this enters,
-    -- written to Object.chosenSubtype. Nullary, the arm above's shape -- CR
-    -- 205.3m's creature types are the offer, and the prompt enumerates none of
-    -- them.
-    ChooseCreatureType
+  | -- | CR 614.1c / Painter's Servant, Convincing Mirage: choose this quality as this enters.
+    ChooseQuality ChosenQuality.ChosenQuality
   | -- | CR 614.1c / Stuffy Doll, Booby Trap: choose a player in this relation to
     -- the controller as this enters, written to Object.chosenPlayers.
     ChoosePlayer PlayerRelation.PlayerRelation

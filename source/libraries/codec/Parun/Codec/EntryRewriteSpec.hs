@@ -11,6 +11,7 @@ import qualified Parun.JsonCodec.Common as Common
 import qualified Parun.Spec as Spec
 import qualified Parun.Types.AsCopy as AsCopy
 import qualified Parun.Types.CardType as CardType
+import qualified Parun.Types.ChosenQuality as ChosenQuality
 import qualified Parun.Types.CopyClause as CopyClause
 import qualified Parun.Types.CopyDomain as CopyDomain
 import qualified Parun.Types.CopyException as CopyException
@@ -89,25 +90,13 @@ spec s = Spec.describe s "Parun.Codec.EntryRewrite" $ do
             }
       )
       " {\"type\":\"ChoiceByCoinFlip\",\"value\":{\"heads\":{\"power\":5,\"toughness\":2,\"keywords\":[{\"type\":\"Haste\"}]},\"tails\":{\"power\":2,\"toughness\":5,\"keywords\":[{\"type\":\"Defender\"}]}}} "
-  -- CR 614.1c / 105.1: an as-enters choice of that many colours.
-  Spec.it s "ChooseColors (Tablet of the Guilds)" $
+  -- CR 614.1c: an as-enters choice of a quality.
+  Spec.it s "ChooseQuality (Tablet of the Guilds)" $
     Common.assertCodec
       s
       (EntryRewrite.codec (GrantedAbility.codec Card.codec) (Effect.codec Card.codec (GrantedAbility.codec Card.codec)))
-      (EntryRewrite.ChooseColors 2)
-      " {\"type\":\"ChooseColors\",\"value\":2} "
-  Spec.it s "ChooseBasicLandType (Convincing Mirage)" $
-    Common.assertCodec
-      s
-      (EntryRewrite.codec (GrantedAbility.codec Card.codec) (Effect.codec Card.codec (GrantedAbility.codec Card.codec)))
-      EntryRewrite.ChooseBasicLandType
-      " {\"type\":\"ChooseBasicLandType\"} "
-  Spec.it s "ChooseCreatureType (Pillar of Origins)" $
-    Common.assertCodec
-      s
-      (EntryRewrite.codec (GrantedAbility.codec Card.codec) (Effect.codec Card.codec (GrantedAbility.codec Card.codec)))
-      EntryRewrite.ChooseCreatureType
-      " {\"type\":\"ChooseCreatureType\"} "
+      (EntryRewrite.ChooseQuality (ChosenQuality.Colors 2))
+      " {\"type\":\"ChooseQuality\",\"value\":{\"type\":\"Colors\",\"value\":2}} "
   -- CR 702.155b / 714.3b: read ahead's pair of intrinsic abilities as one
   -- rewrite, payload-free because rule 714.2d reads the bound off the Saga.
   Spec.it s "ReadAhead (Love Song of Night and Day)" $

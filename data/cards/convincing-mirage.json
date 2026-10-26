@@ -40,7 +40,10 @@
                 "type": "IsSource"
               },
               "rewrite": {
-                "type": "ChooseBasicLandType"
+                "type": "ChooseQuality",
+                "value": {
+                  "type": "BasicLandType"
+                }
               }
             }
           }

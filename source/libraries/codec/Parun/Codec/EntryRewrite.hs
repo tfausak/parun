@@ -2,6 +2,7 @@ module Parun.Codec.EntryRewrite where
 
 import qualified Data.Typeable as Typeable
 import qualified Parun.Codec.AsCopy as AsCopy
+import qualified Parun.Codec.ChosenQuality as ChosenQuality
 import qualified Parun.Codec.EntersWith as EntersWith
 import qualified Parun.Codec.EntryFlip as EntryFlip
 import qualified Parun.Codec.EntryOption as EntryOption
@@ -37,9 +38,7 @@ codec abilityCodec effectCodec =
       Arm.payload "ChoiceOf" (Common.list EntryOption.codec) EntryRewrite.ChoiceOf (\x -> case x of EntryRewrite.ChoiceOf y -> Just y; _ -> Nothing),
       Arm.payload "ChoiceByCoinFlip" EntryFlip.codec EntryRewrite.ChoiceByCoinFlip (\x -> case x of EntryRewrite.ChoiceByCoinFlip y -> Just y; _ -> Nothing),
       Arm.payload "WithCounters" WithCounters.codec EntryRewrite.WithCounters (\x -> case x of EntryRewrite.WithCounters y -> Just y; _ -> Nothing),
-      Arm.payload "ChooseColors" Common.natural EntryRewrite.ChooseColors (\x -> case x of EntryRewrite.ChooseColors y -> Just y; _ -> Nothing),
-      Arm.nullary "ChooseBasicLandType" EntryRewrite.ChooseBasicLandType,
-      Arm.nullary "ChooseCreatureType" EntryRewrite.ChooseCreatureType,
+      Arm.payload "ChooseQuality" ChosenQuality.codec EntryRewrite.ChooseQuality (\x -> case x of EntryRewrite.ChooseQuality y -> Just y; _ -> Nothing),
       Arm.payload "ChoosePlayer" PlayerRelation.codec EntryRewrite.ChoosePlayer (\x -> case x of EntryRewrite.ChoosePlayer y -> Just y; _ -> Nothing),
       Arm.payload "ChooseCardNames" (Filter.codec Keyword.codec) EntryRewrite.ChooseCardNames (\x -> case x of EntryRewrite.ChooseCardNames y -> Just y; _ -> Nothing),
       Arm.payload "ChooseCardName" (Filter.codec Keyword.codec) EntryRewrite.ChooseCardName (\x -> case x of EntryRewrite.ChooseCardName y -> Just y; _ -> Nothing),
@@ -72,9 +71,7 @@ tagOf x = case x of
   EntryRewrite.ChoiceOf {} -> "ChoiceOf"
   EntryRewrite.ChoiceByCoinFlip {} -> "ChoiceByCoinFlip"
   EntryRewrite.WithCounters {} -> "WithCounters"
-  EntryRewrite.ChooseColors {} -> "ChooseColors"
-  EntryRewrite.ChooseBasicLandType {} -> "ChooseBasicLandType"
-  EntryRewrite.ChooseCreatureType {} -> "ChooseCreatureType"
+  EntryRewrite.ChooseQuality {} -> "ChooseQuality"
   EntryRewrite.ChoosePlayer {} -> "ChoosePlayer"
   EntryRewrite.ChooseCardNames {} -> "ChooseCardNames"
   EntryRewrite.ChooseCardName {} -> "ChooseCardName"

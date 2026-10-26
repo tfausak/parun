@@ -18,8 +18,11 @@
                 "type": "IsSource"
               },
               "rewrite": {
-                "type": "ChooseColors",
-                "value": 2
+                "type": "ChooseQuality",
+                "value": {
+                  "type": "Colors",
+                  "value": 2
+                }
               }
             }
           }

@@ -20,7 +20,8 @@
                       {
                         "type": "ChooseQuality",
                         "value": {
-                          "type": "Color"
+                          "type": "Colors",
+                          "value": 1
                         }
                       },
                       {

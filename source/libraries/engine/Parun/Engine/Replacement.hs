@@ -1171,9 +1171,7 @@ admitsEntry gs oid rewrite = case rewrite of
   EntryRewrite.AsCopy _ -> True
   EntryRewrite.ChoiceOf _ -> True
   EntryRewrite.ChoiceByCoinFlip _ -> True
-  EntryRewrite.ChooseColors {} -> True
-  EntryRewrite.ChooseBasicLandType -> True
-  EntryRewrite.ChooseCreatureType -> True
+  EntryRewrite.ChooseQuality _ -> True
   EntryRewrite.ChoosePlayer _ -> True
   EntryRewrite.ChooseCardNames _ -> True
   EntryRewrite.ChooseCardName _ -> True
@@ -1347,9 +1345,7 @@ entryCostOf rewrite = case rewrite of
   EntryRewrite.AsCopy _ -> Nothing
   EntryRewrite.ChoiceOf _ -> Nothing
   EntryRewrite.ChoiceByCoinFlip _ -> Nothing
-  EntryRewrite.ChooseColors {} -> Nothing
-  EntryRewrite.ChooseBasicLandType -> Nothing
-  EntryRewrite.ChooseCreatureType -> Nothing
+  EntryRewrite.ChooseQuality _ -> Nothing
   EntryRewrite.ChoosePlayer _ -> Nothing
   EntryRewrite.ChooseCardNames _ -> Nothing
   EntryRewrite.ChooseCardName _ -> Nothing
@@ -1915,13 +1911,11 @@ bucketOfEffect re = case re of
   -- object is entering as a copy, which an excepted copy still is.
   ReplacementEffect.EntryR (EntryR.MkEntryR _ (EntryRewrite.AsCopy _)) -> ReplacementBucket.CopyOnEntry
   -- CR 616.1a-d name self-replacement, entering under a control effect, entering
-  -- as a copy and entering with the back face up. None of the next five arms is
+  -- as a copy and entering with the back face up. None of the next seven arms is
   -- any of those, so CR 616.1e is what applies to each.
   ReplacementEffect.EntryR (EntryR.MkEntryR _ (EntryRewrite.ChoiceOf _)) -> ReplacementBucket.Other
   ReplacementEffect.EntryR (EntryR.MkEntryR _ (EntryRewrite.ChoiceByCoinFlip _)) -> ReplacementBucket.Other
-  ReplacementEffect.EntryR (EntryR.MkEntryR _ EntryRewrite.ChooseColors {}) -> ReplacementBucket.Other
-  ReplacementEffect.EntryR (EntryR.MkEntryR _ EntryRewrite.ChooseBasicLandType) -> ReplacementBucket.Other
-  ReplacementEffect.EntryR (EntryR.MkEntryR _ EntryRewrite.ChooseCreatureType) -> ReplacementBucket.Other
+  ReplacementEffect.EntryR (EntryR.MkEntryR _ (EntryRewrite.ChooseQuality _)) -> ReplacementBucket.Other
   ReplacementEffect.EntryR (EntryR.MkEntryR _ (EntryRewrite.ChoosePlayer _)) -> ReplacementBucket.Other
   ReplacementEffect.EntryR (EntryR.MkEntryR _ (EntryRewrite.ChooseCardNames _)) -> ReplacementBucket.Other
   ReplacementEffect.EntryR (EntryR.MkEntryR _ (EntryRewrite.ChooseCardName _)) -> ReplacementBucket.Other
@@ -2076,23 +2070,21 @@ readsApplier re = case re of
   -- first sentence makes the face nobody's to pick, so two such rows are the same
   -- offer whoever's is applying (Molten Sentry).
   ReplacementEffect.EntryR (EntryR.MkEntryR _ (EntryRewrite.ChoiceByCoinFlip _)) -> False
-  -- Same chooser again, with no payload at all: CR 105.1's five colours are the
-  -- whole offer whoever's row is applying (Painter's Servant).
-  ReplacementEffect.EntryR (EntryR.MkEntryR _ EntryRewrite.ChooseColors {}) -> False
-  ReplacementEffect.EntryR (EntryR.MkEntryR _ EntryRewrite.ChooseBasicLandType) -> False
-  ReplacementEffect.EntryR (EntryR.MkEntryR _ EntryRewrite.ChooseCreatureType) -> False
+  -- Same chooser again, and the offer is the quality's, which rides the effect:
+  -- CR 105.1's colours or CR 305.6's or 205.3m's types (Painter's Servant).
+  ReplacementEffect.EntryR (EntryR.MkEntryR _ (EntryRewrite.ChooseQuality _)) -> False
   -- Same chooser again, and the CANDIDATES are the board's rather than the
   -- applier's: the players in the game standing in the relation to the
   -- entering object's controller are the whole offer whoever's row is applying
   -- (Stuffy Doll, Booby Trap).
   ReplacementEffect.EntryR (EntryR.MkEntryR _ (EntryRewrite.ChoosePlayer _)) -> False
   -- Two choosers rather than one, and neither is the candidate's: the entering
-  -- object's controller is read live off the board for ChooseColors' reason, and
+  -- object's controller is read live off the board for ChooseQuality's reason, and
   -- CR 102.2's opponent is derived from that same player. The restriction rides
   -- the effect (CR 201.4a).
   ReplacementEffect.EntryR (EntryR.MkEntryR _ (EntryRewrite.ChooseCardNames _)) -> False
   -- ONE chooser, and still not the applier's: the entering object's controller
-  -- is read live off the board for ChooseColors' reason.
+  -- is read live off the board for ChooseQuality's reason.
   ReplacementEffect.EntryR (EntryR.MkEntryR _ (EntryRewrite.ChooseCardName _)) -> False
   -- CR 614.1c's "enters with": the counter kind and count are the effect's own
   -- fields, and they land on the entering object (CR 306.5b's loyalty included).
@@ -2226,9 +2218,9 @@ readsApplier re = case re of
   -- The same answer for an attaching permanent: the chooser is its controller,
   -- read off the event.
   ReplacementEffect.AttachR (AttachR.MkAttachR _ (AttachRewrite.AsCopy _)) -> False
-  -- CR 105.1's five colours are the whole offer whoever's row is applying, the
-  -- entry arm's answer.
-  ReplacementEffect.AttachR (AttachR.MkAttachR _ (AttachRewrite.ChooseColors _)) -> False
+  -- The quality's offer rides the effect whoever's row is applying, the entry
+  -- arm's answer.
+  ReplacementEffect.AttachR (AttachR.MkAttachR _ (AttachRewrite.ChooseQuality _)) -> False
   -- CR 122.1d acts on the permanent becoming untapped and names no player -- CR
   -- 701.19a's answer one event class over, and for its reason.
   ReplacementEffect.UntapR _ -> False
@@ -2542,9 +2534,7 @@ oneSentenceOfChoices candidates = case candidates of
 recordsAChoice :: ReplacementEffect Card (GrantedAbility.GrantedAbility Card) (Effect.Effect Card (GrantedAbility.GrantedAbility Card)) -> Bool
 recordsAChoice effect = case effect of
   ReplacementEffect.EntryR (EntryR.MkEntryR _ rewrite) -> case rewrite of
-    EntryRewrite.ChooseColors {} -> True
-    EntryRewrite.ChooseBasicLandType -> True
-    EntryRewrite.ChooseCreatureType -> True
+    EntryRewrite.ChooseQuality _ -> True
     EntryRewrite.ChoosePlayer _ -> True
     EntryRewrite.ChooseCardName _ -> True
     -- An opponent chooses too (Null Chamber).
