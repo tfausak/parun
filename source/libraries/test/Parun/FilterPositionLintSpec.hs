@@ -1349,6 +1349,22 @@ anyOfOffends condition =
         TriggerCondition.AnyOf conditions -> any inside conditions || any anyOfOffends conditions
         _ -> False
 
+-- | A position lint's accepting side: each author's atoms, as many as named,
+-- all sit in admitted positions, and they are the pool's only ones. The
+-- table is what a new author extends; no total is pinned beside it.
+assertAuthors ::
+  Spec.Spec IO n ->
+  Registry.Registry IO ->
+  [Printing.Printing] ->
+  String ->
+  (Face.Face Card.Type.Card -> (Int, Int)) ->
+  [(String, Int)] ->
+  IO ()
+assertAuthors s registry ps label counts authors = do
+  counted <- traverse (\(name, _) -> fmap (\p -> (name, counts (S.combinedFace p))) (S.printingOf s registry name)) authors
+  Spec.assertEqWith s label counted (fmap (\(name, n) -> (name, (n, 0))) authors)
+  Spec.assertEqWith s "and they are the pool's only ones" (sum (fmap (uncurry (+) . counts . S.combinedFace) ps)) (sum (fmap snd authors))
+
 filterPositionLintSpec :: (Monad n) => Spec.Spec IO n -> Registry.Registry IO -> n ()
 filterPositionLintSpec s registry = Spec.describe s "Lint" $ do
   -- CR 603.2's event triggers and CR 603.8's state triggers are gathered by two
@@ -1401,64 +1417,21 @@ filterPositionLintSpec s registry = Spec.describe s "Lint" $ do
     let offenders = filter (anyFace canHostSubjectOffends . Printing.card) ps
     Spec.assertEqWith s "the atom sits only where an attach frames it" (fmap (S.nameOf . Printing.card) offenders) []
     -- NOT vacuous: the pool authors the atom, and the cards that do are ACCEPTED
-    -- here rather than skipped. Aura Graft's "another permanent it can enchant"
-    -- is the legal use, so a lint that swept past it would be indistinguishable
-    -- from one that swept past everything.
-    graft <- S.printingOf s registry "Aura Graft"
-    Spec.assertEqWith
+    -- here rather than skipped -- at least one per framing opcode, so a
+    -- cardFilters arm that forgot one would count its atom as zero and redden.
+    assertAuthors
       s
-      "Aura Graft's one atom is framed by its own attach"
-      (canHostSubjectCounts (S.combinedFace graft))
-      (1, 0)
-    -- The same accepting read for the OTHER opcode that frames one, so a
-    -- cardFilters arm that forgot AttachTargetToEach would fail here rather than
-    -- silently counting its atom as zero.
-    diffusion <- S.printingOf s registry "Synthetic Aura Diffusion"
-    Spec.assertEqWith
-      s
-      "Synthetic Aura Diffusion's atom is framed by its CR 303.4d attach"
-      (canHostSubjectCounts (S.combinedFace diffusion))
-      (1, 0)
-    -- The third, and the one whose atom the CARD's own ruling asks for rather
-    -- than an engine rule: Simic Guildmage's destination "must be able to be
-    -- enchanted by the Aura" (CR 608.2d).
-    guildmage <- S.printingOf s registry "Simic Guildmage"
-    Spec.assertEqWith
-      s
-      "Simic Guildmage's atom is framed by its attach too"
-      (canHostSubjectCounts (S.combinedFace guildmage))
-      (1, 0)
-    -- The fourth, and the one whose atom sits in an ENTRY replacement rather
-    -- than in a resolving effect: Grifter's Blade's "a creature you control it
-    -- could be attached to" (CR 614.1c). A forgotten entryRewriteFilters arm
-    -- would report (0, 0) here rather than the (1, 0) below.
-    blade <- S.printingOf s registry "Grifter's Blade"
-    Spec.assertEqWith
-      s
-      "Grifter's Blade's atom is framed by its CR 614.1c entry choice"
-      (canHostSubjectCounts (S.combinedFace blade))
-      (1, 0)
-    -- The fifth, a GROUP attach's destination: Glamer Spinners' receiver "must
-    -- be able to be enchanted by all the Auras" (its 2008-05-01 ruling).
-    spinners <- S.printingOf s registry "Glamer Spinners"
-    Spec.assertEqWith
-      s
-      "Glamer Spinners' atom is framed by its group attach"
-      (canHostSubjectCounts (S.combinedFace spinners))
-      (1, 0)
-    -- The sixth, Fumble's: its 2018-06-08 ruling's "one creature that they can
-    -- all legally be attached to".
-    fumble <- S.printingOf s registry "Fumble"
-    Spec.assertEqWith
-      s
-      "Fumble's atom is framed by its group attach too"
-      (canHostSubjectCounts (S.combinedFace fumble))
-      (1, 0)
-    Spec.assertEqWith
-      s
-      "and those six cards are the whole of data/cards' authorship of it"
-      (sum (fmap (uncurry (+) . canHostSubjectCounts . S.combinedFace) ps))
-      6
+      registry
+      ps
+      "each author's atoms are framed by an attach"
+      canHostSubjectCounts
+      [ ("Aura Graft", 1), -- its own attach
+        ("Synthetic Aura Diffusion", 1), -- CR 303.4d's AttachTargetToEach
+        ("Simic Guildmage", 1), -- the card's own CR 608.2d ruling
+        ("Grifter's Blade", 1), -- a CR 614.1c entry replacement
+        ("Glamer Spinners", 1), -- a group attach's destination
+        ("Fumble", 1) -- a group attach, its 2018-06-08 ruling
+      ]
     -- The traversal reaches a Filter position no effect, target slot or affected
     -- set would have led it to: CR 702.29e's typecycling predicate, on a real
     -- card. Its absence would not show up in the sweep above, because Ash Barrens
@@ -1484,31 +1457,16 @@ filterPositionLintSpec s registry = Spec.describe s "Lint" $ do
     -- ACCEPTED here rather than skipped -- two saying "it" of their own source
     -- and one saying "that creature" of a slot its trigger bound, which is the
     -- axis Parun.Types.Search.subject carries and this lint is blind to.
-    mage <- S.printingOf s registry "Auratouched Mage"
-    Spec.assertEqWith
+    assertAuthors
       s
-      "Auratouched Mage's one atom is framed by its own search"
-      (canAttachToSubjectCounts (S.combinedFace mage))
-      (1, 0)
-    sovereigns <- S.printingOf s registry "Sovereigns of Lost Alara"
-    Spec.assertEqWith
-      s
-      "and so is Sovereigns of Lost Alara's"
-      (canAttachToSubjectCounts (S.combinedFace sovereigns))
-      (1, 0)
-    -- Bruna, Light of Alabaster's: a search of a graveyard and a hand rather
-    -- than a library, and the same frame.
-    bruna <- S.printingOf s registry "Bruna, Light of Alabaster"
-    Spec.assertEqWith
-      s
-      "and so is Bruna, Light of Alabaster's"
-      (canAttachToSubjectCounts (S.combinedFace bruna))
-      (1, 0)
-    Spec.assertEqWith
-      s
-      "and those are the pool's only three"
-      (sum (fmap (uncurry (+) . canAttachToSubjectCounts . S.combinedFace) ps))
-      3
+      registry
+      ps
+      "each author's atom is framed by its own search"
+      canAttachToSubjectCounts
+      [ ("Auratouched Mage", 1),
+        ("Sovereigns of Lost Alara", 1),
+        ("Bruna, Light of Alabaster", 1) -- a graveyard and a hand, not a library
+      ]
     -- The unframed side has room to spare, so a Framing that had stopped marking
     -- searches would fail here rather than pass the sweep above by iterating over
     -- nothing.
@@ -1525,101 +1483,28 @@ filterPositionLintSpec s registry = Spec.describe s "Lint" $ do
     -- NOT vacuous: the pool authors the atom, and EVERY card that does is
     -- ACCEPTED here rather than skipped -- at least one per admitted position,
     -- so a framing that stopped marking any would redden.
-    vendetta <- S.printingOf s registry "Ancient Vendetta"
-    Spec.assertEqWith
+    assertAuthors
       s
-      "Ancient Vendetta's one atom is framed by its own search"
-      (hasChosenNameCounts (S.combinedFace vendetta))
-      (1, 0)
-    predict <- S.printingOf s registry "Predict"
-    Spec.assertEqWith
-      s
-      "Predict's one atom is framed by its own mill tally"
-      (hasChosenNameCounts (S.combinedFace predict))
-      (1, 0)
-    sphinx <- S.printingOf s registry "Petra Sphinx"
-    Spec.assertEqWith
-      s
-      "Petra Sphinx's one atom is framed by the ObjectRef its move names"
-      (hasChosenNameCounts (S.combinedFace sphinx))
-      (1, 0)
-    conundrum <- S.printingOf s registry "Conundrum Sphinx"
-    Spec.assertEqWith
-      s
-      "Conundrum Sphinx's one atom is framed by the ObjectRef its move names"
-      (hasChosenNameCounts (S.combinedFace conundrum))
-      (1, 0)
-    naught <- S.printingOf s registry "Declaration of Naught"
-    Spec.assertEqWith
-      s
-      "Declaration of Naught's one atom is framed by its activated ability's target slot"
-      (hasChosenNameCounts (S.combinedFace naught))
-      (1, 0)
-    chamber <- S.printingOf s registry "Null Chamber"
-    Spec.assertEqWith
-      s
-      "Null Chamber's two atoms are framed by its printed player abilities"
-      (hasChosenNameCounts (S.combinedFace chamber))
-      (2, 0)
-    halo <- S.printingOf s registry "Runed Halo"
-    Spec.assertEqWith
-      s
-      "Runed Halo's one atom is framed by its printed player ability"
-      (hasChosenNameCounts (S.combinedFace halo))
-      (1, 0)
-    ban <- S.printingOf s registry "Conjurer's Ban"
-    Spec.assertEqWith
-      s
-      "Conjurer's Ban's two atoms are framed by its stored player effects"
-      (hasChosenNameCounts (S.combinedFace ban))
-      (2, 0)
-    fanatic <- S.printingOf s registry "Cheering Fanatic"
-    Spec.assertEqWith
-      s
-      "Cheering Fanatic's one atom is framed by its stored player effect"
-      (hasChosenNameCounts (S.combinedFace fanatic))
-      (1, 0)
-    ward <- S.printingOf s registry "Synthetic Name Ward"
-    Spec.assertEqWith
-      s
-      "Synthetic Name Ward's one atom is framed by its stored player effect"
-      (hasChosenNameCounts (S.combinedFace ward))
-      (1, 0)
-    action <- S.printingOf s registry "Immediate Action"
-    Spec.assertEqWith
-      s
-      "Immediate Action's one atom is framed by its static ability's affected set"
-      (hasChosenNameCounts (S.combinedFace action))
-      (1, 0)
-    arcanix <- S.printingOf s registry "Vexing Arcanix"
-    Spec.assertEqWith
-      s
-      "Vexing Arcanix's three atoms are framed by its two moves' ObjectRefs and its damage clause's gate"
-      (hasChosenNameCounts (S.combinedFace arcanix))
-      (3, 0)
-    trap <- S.printingOf s registry "Booby Trap"
-    Spec.assertEqWith
-      s
-      "Booby Trap's one atom is framed by its trigger condition"
-      (hasChosenNameCounts (S.combinedFace trap))
-      (1, 0)
-    needle <- S.printingOf s registry "Pithing Needle"
-    Spec.assertEqWith
-      s
-      "Pithing Needle's one atom is framed by its activation prohibition's affected set"
-      (hasChosenNameCounts (S.combinedFace needle))
-      (1, 0)
-    ambassador <- S.printingOf s registry "Sphinx Ambassador"
-    Spec.assertEqWith
-      s
-      "Sphinx Ambassador's one atom is framed by its move clause's gate"
-      (hasChosenNameCounts (S.combinedFace ambassador))
-      (1, 0)
-    Spec.assertEqWith
-      s
-      "and the fifteen cards' atoms are the pool's only ones"
-      (sum (fmap (uncurry (+) . hasChosenNameCounts . S.combinedFace) ps))
-      19
+      registry
+      ps
+      "each author's atoms are framed where the resolution overlays the chosen names"
+      hasChosenNameCounts
+      [ ("Ancient Vendetta", 1), -- its own search
+        ("Predict", 1), -- its own mill tally
+        ("Petra Sphinx", 1), -- the ObjectRef its move names
+        ("Conundrum Sphinx", 1), -- the ObjectRef its move names
+        ("Declaration of Naught", 1), -- its activated ability's target slot
+        ("Null Chamber", 2), -- its printed player abilities
+        ("Runed Halo", 1), -- its printed player ability
+        ("Conjurer's Ban", 2), -- its stored player effects
+        ("Cheering Fanatic", 1), -- its stored player effect
+        ("Synthetic Name Ward", 1), -- its stored player effect
+        ("Immediate Action", 1), -- its static ability's affected set
+        ("Vexing Arcanix", 3), -- its two moves' ObjectRefs and its damage clause's gate
+        ("Booby Trap", 1), -- its trigger condition
+        ("Pithing Needle", 1), -- its activation prohibition's affected set
+        ("Sphinx Ambassador", 1) -- its move clause's gate
+      ]
   -- CR 702.16k's chosen player in the same frame one atom over: answerable only
   -- where a protection quality is read, and every one of those four positions
   -- takes its filter off a keyword. See ofChosenPlayerOffends for the two
@@ -1628,19 +1513,9 @@ filterPositionLintSpec s registry = Spec.describe s "Lint" $ do
     ps <- S.allPrintings s
     let offenders = filter (anyFace ofChosenPlayerOffends . Printing.card) ps
     Spec.assertEqWith s "the atom sits only in a keyword's filter" (fmap (S.nameOf . Printing.card) offenders) []
-    -- NOT vacuous: the pool authors the atom, and the one card that does is
+    -- NOT vacuous: the pool authors the atom, and the card that does is
     -- ACCEPTED here rather than skipped.
-    nemesis <- S.printingOf s registry "True-Name Nemesis"
-    Spec.assertEqWith
-      s
-      "True-Name Nemesis's one atom is framed by its own keyword"
-      (ofChosenPlayerCounts (S.combinedFace nemesis))
-      (1, 0)
-    Spec.assertEqWith
-      s
-      "and it is the pool's only one"
-      (sum (fmap (uncurry (+) . ofChosenPlayerCounts . S.combinedFace) ps))
-      1
+    assertAuthors s registry ps "each author's atom is framed by its own keyword" ofChosenPlayerCounts [("True-Name Nemesis", 1)]
   -- The hole that bucket had while every keyword payload was KeywordFramed. CR
   -- 702.6c's equip quality is a payload that is NOT read as a keyword: rule
   -- 702.6a's minted ability carries it into a target slot, which
@@ -1717,47 +1592,19 @@ filterPositionLintSpec s registry = Spec.describe s "Lint" $ do
     -- NOT vacuous, the way the sibling sweeps would be alone: the pool authors the
     -- atom, and the cards that do are ACCEPTED here rather than skipped -- one in
     -- each admitted position, so no member of the set is unwitnessed.
-    harness <- S.printingOf s registry "Harness the Storm"
-    Spec.assertEqWith
+    assertAuthors
       s
-      "Harness the Storm's one atom is in its trigger's target slot"
-      (sameNameAsBoundCounts (S.combinedFace harness))
-      (1, 0)
-    bifurcate <- S.printingOf s registry "Bifurcate"
-    Spec.assertEqWith
-      s
-      "Bifurcate's one atom is in its search's filter"
-      (sameNameAsBoundCounts (S.combinedFace bifurcate))
-      (1, 0)
-    burgeoning <- S.printingOf s registry "March of Burgeoning Life"
-    Spec.assertEqWith
-      s
-      "March of Burgeoning Life's one atom is in its search's filter"
-      (sameNameAsBoundCounts (S.combinedFace burgeoning))
-      (1, 0)
-    glory <- S.printingOf s registry "Hour of Glory"
-    Spec.assertEqWith
-      s
-      "Hour of Glory's one atom is in its hand sweep's filter"
-      (sameNameAsBoundCounts (S.combinedFace glory))
-      (1, 0)
-    reminder <- S.printingOf s registry "Grim Reminder"
-    Spec.assertEqWith
-      s
-      "Grim Reminder's one atom is in its life loss amount's Count filter"
-      (sameNameAsBoundCounts (S.combinedFace reminder))
-      (1, 0)
-    echoes <- S.printingOf s registry "Haunting Echoes"
-    Spec.assertEqWith
-      s
-      "Haunting Echoes' one atom is in its search's filter"
-      (sameNameAsBoundCounts (S.combinedFace echoes))
-      (1, 0)
-    Spec.assertEqWith
-      s
-      "and they are the pool's only ones"
-      (sum (fmap (uncurry (+) . sameNameAsBoundCounts . S.combinedFace) ps))
-      6
+      registry
+      ps
+      "each author's atom is in an admitted position"
+      sameNameAsBoundCounts
+      [ ("Harness the Storm", 1), -- its trigger's target slot
+        ("Bifurcate", 1), -- its search's filter
+        ("March of Burgeoning Life", 1), -- its search's filter
+        ("Hour of Glory", 1), -- its hand sweep's filter
+        ("Grim Reminder", 1), -- its life loss amount's Count filter
+        ("Haunting Echoes", 1) -- its search's filter
+      ]
     -- Both sides of the split, with room to spare under the pool's real figures:
     -- a traversal that had stopped walking, or a Framing that had stopped marking
     -- target slots, would fail here rather than pass the sweep above by iterating
@@ -1853,75 +1700,24 @@ filterPositionLintSpec s registry = Spec.describe s "Lint" $ do
   Spec.it s "CR 110.2 no card asks ControllerRelatesToBound outside a mode's target slot, an attach destination, a stored class or an effect's object" $ do
     ps <- S.allPrintings s
     let offenders = filter (anyFace controllerRelatesToBoundOffends . Printing.card) ps
-    Spec.assertEqWith s "the atom sits only in a target slot's filter" (fmap (S.nameOf . Printing.card) offenders) []
-    -- NOT vacuous: the pool authors the atom, and the card that does is ACCEPTED
-    -- here rather than skipped.
-    bioshift <- S.printingOf s registry "Bioshift"
-    Spec.assertEqWith
+    Spec.assertEqWith s "the atom sits only in an admitted position" (fmap (S.nameOf . Printing.card) offenders) []
+    -- NOT vacuous: the pool authors the atom, and the cards that do are ACCEPTED
+    -- here rather than skipped -- one in each admitted position.
+    assertAuthors
       s
-      "Bioshift's one atom is in its second target slot"
-      (controllerRelatesToBoundCounts (S.combinedFace bioshift))
-      (1, 0)
-    -- Simic Guildmage's FIRST ability is the same sentence as Bioshift's, and
-    -- its atom sits in the same position.
-    guildmageAtom <- S.printingOf s registry "Simic Guildmage"
-    Spec.assertEqWith
-      s
-      "Simic Guildmage's is in its first ability's second target slot"
-      (controllerRelatesToBoundCounts (S.combinedFace guildmageAtom))
-      (1, 0)
-    -- The attach destination's accepting read: Glamer Spinners' "another
-    -- permanent with the same controller" as its target.
-    spinners <- S.printingOf s registry "Glamer Spinners"
-    Spec.assertEqWith
-      s
-      "Glamer Spinners' is in its attach destination"
-      (controllerRelatesToBoundCounts (S.combinedFace spinners))
-      (1, 0)
-    -- Sorrow's Path's "controlled by the same opponent", in its second
-    -- target slot.
-    path <- S.printingOf s registry "Sorrow's Path"
-    Spec.assertEqWith
-      s
-      "Sorrow's Path's is in its second target slot"
-      (controllerRelatesToBoundCounts (S.combinedFace path))
-      (1, 0)
-    -- The stored class's accepting read: Mark for Death's "other creatures that
-    -- player controls", baked by Parun.Engine.Resolve.Effect.storedClass.
-    mark <- S.printingOf s registry "Mark for Death"
-    Spec.assertEqWith
-      s
-      "Mark for Death's is in its stored class"
-      (controllerRelatesToBoundCounts (S.combinedFace mark))
-      (1, 0)
-    -- The effect ObjectRef's accepting read: Flame Wave's "each creature
-    -- that player or that planeswalker's controller controls".
-    wave <- S.printingOf s registry "Flame Wave"
-    Spec.assertEqWith
-      s
-      "Flame Wave's is in its damage's object"
-      (controllerRelatesToBoundCounts (S.combinedFace wave))
-      (1, 0)
-    -- Chandra Nalaar's -8 prints Flame Wave's sentence.
-    chandra <- S.printingOf s registry "Chandra Nalaar"
-    Spec.assertEqWith
-      s
-      "Chandra Nalaar's is in its -8's damage's object"
-      (controllerRelatesToBoundCounts (S.combinedFace chandra))
-      (1, 0)
-    -- Necrotic Plague's "one of their opponents controls", relative to the
-    -- dead creature's controller, in its trigger's target slot.
-    plague <- S.printingOf s registry "Necrotic Plague"
-    Spec.assertEqWith
-      s
-      "Necrotic Plague's is in its trigger's target slot"
-      (controllerRelatesToBoundCounts (S.combinedFace plague))
-      (1, 0)
-    Spec.assertEqWith
-      s
-      "and those eight are the pool's whole authorship of it"
-      (sum (fmap (uncurry (+) . controllerRelatesToBoundCounts . S.combinedFace) ps))
-      8
+      registry
+      ps
+      "each author's atom is in an admitted position"
+      controllerRelatesToBoundCounts
+      [ ("Bioshift", 1), -- its second target slot
+        ("Simic Guildmage", 1), -- its first ability, Bioshift's sentence
+        ("Glamer Spinners", 1), -- its attach destination
+        ("Sorrow's Path", 1), -- its second target slot
+        ("Mark for Death", 1), -- its stored class, baked by Parun.Engine.Resolve.Effect.storedClass
+        ("Flame Wave", 1), -- its damage's object
+        ("Chandra Nalaar", 1), -- its -8, Flame Wave's sentence
+        ("Necrotic Plague", 1) -- its trigger's target slot, relative to the dead creature's controller
+      ]
     -- The REJECTING direction, hand-built for the reason every sibling lint's is:
     -- a card that offends must not be loadable, so no file can carry one. Buried
     -- under all three combinators, so an implementation reading only the top of a
@@ -2003,34 +1799,32 @@ filterPositionLintSpec s registry = Spec.describe s "Lint" $ do
     --
     -- Greater than, against the power, in a combat restriction's affected set:
     -- Ensnaring Bridge.
-    let authors =
-          [ "Celestine, the Living Saint",
-            "Ratchet, Field Medic",
-            "Venerable Warsinger",
-            "Stir the Grave",
-            "Synthetic Borrowed Exhumation",
-            "Synthetic Measured Refrain",
-            "Blighted Nightmare",
-            "Tameshi, Reality Architect",
-            "Chthonian Nightmare",
-            "Tamiyo, Compleated Sage",
-            "Synthetic Counted Verdict",
-            "Spell Blast",
-            "Fear of Change",
-            "Ornate Imitations",
-            "Spawnbroker",
-            "Nihiloor",
-            "March of Otherworldly Light",
-            "March of Burgeoning Life",
-            "Ensnaring Bridge"
-          ]
-    counted <- traverse (\name -> fmap (\p -> (name, enclosingAmountCounts (S.combinedFace p))) (S.printingOf s registry name)) authors
-    Spec.assertEqWith s "each author's one operand is in the slot that names its bound" counted (fmap (\name -> (name, (1, 0))) authors)
-    Spec.assertEqWith
+    assertAuthors
       s
-      "and they are the pool's only ones"
-      (sum (fmap (uncurry (+) . enclosingAmountCounts . S.combinedFace) ps))
-      (length authors)
+      registry
+      ps
+      "each author's one operand is in the slot that names its bound"
+      enclosingAmountCounts
+      [ ("Celestine, the Living Saint", 1),
+        ("Ratchet, Field Medic", 1),
+        ("Venerable Warsinger", 1),
+        ("Stir the Grave", 1),
+        ("Synthetic Borrowed Exhumation", 1),
+        ("Synthetic Measured Refrain", 1),
+        ("Blighted Nightmare", 1),
+        ("Tameshi, Reality Architect", 1),
+        ("Chthonian Nightmare", 1),
+        ("Tamiyo, Compleated Sage", 1),
+        ("Synthetic Counted Verdict", 1),
+        ("Spell Blast", 1),
+        ("Fear of Change", 1),
+        ("Ornate Imitations", 1),
+        ("Spawnbroker", 1),
+        ("Nihiloor", 1),
+        ("March of Otherworldly Light", 1),
+        ("March of Burgeoning Life", 1),
+        ("Ensnaring Bridge", 1)
+      ]
     -- The rejected side, which the sweep above cannot show while the pool has no
     -- offender: the SAME atom, buried under all three combinators, in a target
     -- slot that names no amount -- the position a card author would most plausibly
@@ -2097,9 +1891,7 @@ filterPositionLintSpec s registry = Spec.describe s "Lint" $ do
             ("The Dining Car", 1),
             ("Witch-king, Bringer of Ruin", 1)
           ]
-    counted <- traverse (\(name, _) -> fmap (\p -> (name, otherCandidateCounts (S.combinedFace p))) (S.printingOf s registry name)) authors
-    Spec.assertEqWith s "each author's operands are in its edict or chosen permanents" counted (fmap (\(name, n) -> (name, (n, 0))) authors)
-    Spec.assertEqWith s "and they are the pool's only ones" (sum (fmap (uncurry (+) . otherCandidateCounts . S.combinedFace) ps)) (sum (fmap snd authors))
+    assertAuthors s registry ps "each author's operands are in its edict or chosen permanents" otherCandidateCounts authors
     -- The rejected side: the same atom in a target slot's filter.
     piker <- S.printingOf s registry "Goblin Piker"
     let atom = Filter.Type.And [Filter.Type.HasCardType CardType.Creature, Filter.Type.Measures (Measures.MkMeasures Measure.Power Comparison.AtLeast (Operand.OfEachOtherCandidate Measure.Power))]
@@ -2116,121 +1908,28 @@ filterPositionLintSpec s registry = Spec.describe s "Lint" $ do
     let offenders = filter (anyFace hostOfSourceOffends . Printing.card) ps
     Spec.assertEqWith s "the atom sits only where the host is supplied" (fmap (S.nameOf . Printing.card) offenders) []
     -- NOT vacuous: the pool authors the atom, and the cards that do are ACCEPTED
-    -- here rather than skipped. Ray of Frost writes it three times, once per
-    -- accepted position -- a CR 604.2 clause, a CR 603.4 clause and an
-    -- Effect.Tap's ObjectRef -- so three of the five legs of the tagging are
-    -- exercised there.
-    ray <- S.printingOf s registry "Ray of Frost"
-    Spec.assertEqWith
+    -- here rather than skipped, every leg of the tagging among them.
+    assertAuthors
       s
-      "Ray of Frost's three atoms are all framed"
-      (hostOfSourceCounts (S.combinedFace ray))
-      (3, 0)
-    -- The fourth leg: a printed PLAYER ability's own effect, which reads the
-    -- source off the row Parun.Engine.PlayerEffect.applying returns. Its own
-    -- behaviour is Parun.PlayerEffectSpec's Oppressive Rays group; this is the
-    -- position claim.
-    rays <- S.printingOf s registry "Oppressive Rays"
-    Spec.assertEqWith
-      s
-      "Oppressive Rays' one atom is framed too"
-      (hostOfSourceCounts (S.combinedFace rays))
-      (1, 0)
-    -- The fifth leg: a CR 614.1 replacement ROW's own Filter, read through
-    -- Parun.Engine.Replacement.candidateContext. Pariah writes it as CR 614.9's
-    -- printed destination -- "is dealt to enchanted creature instead" -- and its
-    -- behaviour is Parun.ReplacementSpec's Pariah group.
-    pariah <- S.printingOf s registry "Pariah"
-    Spec.assertEqWith
-      s
-      "Pariah's redirect destination is framed too"
-      (hostOfSourceCounts (S.combinedFace pariah))
-      (1, 0)
-    -- One more ObjectRef leg: Animate Dead's return of the card it enchants.
-    animate <- S.printingOf s registry "Animate Dead"
-    Spec.assertEqWith
-      s
-      "Animate Dead's return is framed too"
-      (hostOfSourceCounts (S.combinedFace animate))
-      (1, 0)
-    -- And Bewitching Leechcraft's CR 603.4 tap of the creature it enchants.
-    leechcraft <- S.printingOf s registry "Bewitching Leechcraft"
-    Spec.assertEqWith
-      s
-      "Bewitching Leechcraft's tap is framed too"
-      (hostOfSourceCounts (S.combinedFace leechcraft))
-      (1, 0)
-    -- And Abduction's untap of it, the same entering trigger.
-    abduction <- S.printingOf s registry "Abduction"
-    Spec.assertEqWith
-      s
-      "Abduction's untap is framed too"
-      (hostOfSourceCounts (S.combinedFace abduction))
-      (1, 0)
-    -- And the CR 603.4 Effect.Unattach of the Equipment an Aura enchants:
-    -- Carry Away's, and Tamiyo's Compleation's beside its tap.
-    carry <- S.printingOf s registry "Carry Away"
-    Spec.assertEqWith
-      s
-      "Carry Away's unattach is framed too"
-      (hostOfSourceCounts (S.combinedFace carry))
-      (1, 0)
-    compleation <- S.printingOf s registry "Tamiyo's Compleation"
-    Spec.assertEqWith
-      s
-      "Tamiyo's Compleation's tap and unattach are framed too"
-      (hostOfSourceCounts (S.combinedFace compleation))
-      (2, 0)
-    -- And the quoted ability Bronzehide Lion's CR 611.2e return grants it.
-    lion <- S.printingOf s registry "Bronzehide Lion"
-    Spec.assertEqWith
-      s
-      "Bronzehide Lion's granted indestructible is framed too"
-      (hostOfSourceCounts (S.combinedFace lion))
-      (1, 0)
-    -- And Freed from the Real's activated tap and untap of the creature it
-    -- enchants.
-    freed <- S.printingOf s registry "Freed from the Real"
-    Spec.assertEqWith
-      s
-      "Freed from the Real's tap and untap are framed too"
-      (hostOfSourceCounts (S.combinedFace freed))
-      (2, 0)
-    -- And Infinite Reflection's CR 707.5 "enter as a copy of enchanted
-    -- creature", read through candidateContext as Pariah's is.
-    reflection <- S.printingOf s registry "Infinite Reflection"
-    Spec.assertEqWith
-      s
-      "Infinite Reflection's copy entry is framed too"
-      (hostOfSourceCounts (S.combinedFace reflection))
-      (1, 0)
-    -- And Firebreathing's activated +1/+0 to the creature it enchants.
-    firebreathing <- S.printingOf s registry "Firebreathing"
-    Spec.assertEqWith
-      s
-      "Firebreathing's pump is framed too"
-      (hostOfSourceCounts (S.combinedFace firebreathing))
-      (1, 0)
-    -- And Shiv's Embrace's, the same wording.
-    embrace <- S.printingOf s registry "Shiv's Embrace"
-    Spec.assertEqWith
-      s
-      "Shiv's Embrace's pump is framed too"
-      (hostOfSourceCounts (S.combinedFace embrace))
-      (1, 0)
-    -- And Regeneration's loop over the creature it enchants, whose member its
-    -- shield names.
-    regeneration <- S.printingOf s registry "Regeneration"
-    Spec.assertEqWith
-      s
-      "Regeneration's regenerated creature is framed too"
-      (hostOfSourceCounts (S.combinedFace regeneration))
-      (1, 0)
-    Spec.assertEqWith
-      s
-      "and they are the pool's only ones"
-      (sum (fmap (uncurry (+) . hostOfSourceCounts . S.combinedFace) ps))
-      18
+      registry
+      ps
+      "each author's atoms are framed"
+      hostOfSourceCounts
+      [ ("Ray of Frost", 3), -- a CR 604.2 clause, a CR 603.4 clause and an Effect.Tap's ObjectRef
+        ("Oppressive Rays", 1), -- a printed player ability's own effect (Parun.PlayerEffectSpec)
+        ("Pariah", 1), -- a CR 614.1 replacement row's own Filter (Parun.ReplacementSpec)
+        ("Animate Dead", 1), -- the ObjectRef of its return
+        ("Bewitching Leechcraft", 1), -- a CR 603.4 tap
+        ("Abduction", 1), -- an untap in the same entering trigger
+        ("Carry Away", 1), -- a CR 603.4 Effect.Unattach
+        ("Tamiyo's Compleation", 2), -- its tap and its unattach
+        ("Bronzehide Lion", 1), -- the quoted ability its CR 611.2e return grants
+        ("Freed from the Real", 2), -- an activated tap and untap
+        ("Infinite Reflection", 1), -- a CR 707.5 copy entry, read as Pariah's is
+        ("Firebreathing", 1), -- an activated pump
+        ("Shiv's Embrace", 1), -- Firebreathing's wording
+        ("Regeneration", 1) -- a loop whose member its shield names
+      ]
     -- The rejected side, which the sweep above cannot show while the pool has no
     -- offender: the same atom planted in a SPELL's target slot -- the position a
     -- card author would most plausibly reach for -- IS counted as elsewhere.
