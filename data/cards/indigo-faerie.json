@@ -29,12 +29,17 @@
                             "type": "UntilEndOfTurn"
                           },
                           "modification": {
-                            "type": "AddColor",
-                            "value": [
-                              {
-                                "type": "Blue"
+                            "type": "Colors",
+                            "value": {
+                              "colors": [
+                                {
+                                  "type": "Blue"
+                                }
+                              ],
+                              "mode": {
+                                "type": "InAddition"
                               }
-                            ]
+                            }
                           },
                           "ref": {
                             "type": "InSlot",

@@ -36,8 +36,13 @@
           },
           "modifications": [
             {
-              "type": "SetColor",
-              "value": []
+              "type": "Colors",
+              "value": {
+                "colors": [],
+                "mode": {
+                  "type": "Replace"
+                }
+              }
             },
             {
               "type": "SetLandSubtype",

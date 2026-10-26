@@ -34,12 +34,17 @@
                       "riders": {
                         "characteristics": [
                           {
-                            "type": "AddColor",
-                            "value": [
-                              {
-                                "type": "Black"
+                            "type": "Colors",
+                            "value": {
+                              "colors": [
+                                {
+                                  "type": "Black"
+                                }
+                              ],
+                              "mode": {
+                                "type": "InAddition"
                               }
-                            ]
+                            }
                           },
                           {
                             "type": "AddCreatureSubtype",

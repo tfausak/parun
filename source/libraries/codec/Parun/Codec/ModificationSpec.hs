@@ -274,19 +274,19 @@ spec s = Spec.describe s "Parun.Codec.Modification" $ do
       Modification.SetControllerToSource
       " {\"type\":\"SetControllerToSource\"} "
   -- layer 5, CR 613.1e / 105.3: a SET, not an add.
-  Spec.it s "SetColor carries its colour set" $
+  Spec.it s "Colors Replace carries its colour set" $
     Common.assertCodec
       s
       codec
-      (Modification.SetColor (Set.singleton Color.Blue))
-      " {\"type\":\"SetColor\",\"value\":[{\"type\":\"Blue\"}]} "
+      (Modification.Colors ColorMode.Replace (Set.singleton Color.Blue))
+      " {\"type\":\"Colors\",\"value\":{\"mode\":{\"type\":\"Replace\"},\"colors\":[{\"type\":\"Blue\"}]}} "
   -- layer 5, CR 613.1e / 105.3: an ADD, not a set.
-  Spec.it s "AddColor" $
+  Spec.it s "Colors InAddition" $
     Common.assertCodec
       s
       codec
-      (Modification.AddColor (Set.singleton Color.Blue))
-      " {\"type\":\"AddColor\",\"value\":[{\"type\":\"Blue\"}]} "
+      (Modification.Colors ColorMode.InAddition (Set.singleton Color.Blue))
+      " {\"type\":\"Colors\",\"value\":{\"mode\":{\"type\":\"InAddition\"},\"colors\":[{\"type\":\"Blue\"}]}} "
   -- layer 5, CR 613.1e / 105.3: the colour is read at projection time off the
   -- effect's source, so the arm carries only whether it replaces or adds.
   Spec.it s "ChosenColor" $

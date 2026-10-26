@@ -206,8 +206,7 @@ layer m = case m of
   Modification.HasFullText _ -> Layer.Text
   Modification.SetController _ -> Layer.Control
   Modification.SetControllerToSource -> Layer.Control
-  Modification.SetColor _ -> Layer.Color
-  Modification.AddColor _ -> Layer.Color
+  Modification.Colors {} -> Layer.Color
   Modification.ChosenColor _ -> Layer.Color
   Modification.SwitchPowerToughness -> Layer.SwitchPT
   Modification.AssignCombatDamageWithToughness -> Layer.Rules
@@ -691,18 +690,14 @@ applyModification textBoxOf viewOf src stamp gs oid unitTypes affected m pc =
         -- directly. Identity here to keep gather/project's walk total.
         Modification.SetController _ -> pc
         Modification.SetControllerToSource -> pc
-        Modification.SetColor cs ->
-          -- CR 105.3: the new colours replace all previous ones.
-          pc {PC.colors = cs}
-        -- CR 105.3's parenthetical: an "in addition" colour adds.
-        Modification.AddColor cs ->
-          pc {PC.colors = Set.union cs (PC.colors pc)}
-        -- CR 105.3, the colour read off the source's choice: it replaces the
-        -- object's colours, or joins them under the parenthetical. An unchosen
-        -- source changes nothing rather than making the object colourless.
+        -- CR 105.3: the new colours replace all previous ones, or join them
+        -- under the parenthetical.
+        Modification.Colors mode cs -> pc {PC.colors = withColors mode cs (PC.colors pc)}
+        -- CR 105.3, the colour read off the source's choice. An unchosen source
+        -- changes nothing rather than making the object colourless.
         Modification.ChosenColor mode -> case Game.currentChoice Chosen.Colors src gs of
           Nothing -> pc
-          Just cs -> pc {PC.colors = case mode of ColorMode.Replace -> cs; ColorMode.InAddition -> Set.union cs (PC.colors pc)}
+          Just cs -> pc {PC.colors = withColors mode cs (PC.colors pc)}
         -- CR 613.4d.
         Modification.SwitchPowerToughness ->
           pc {PC.power = PC.toughness pc, PC.toughness = PC.power pc}
@@ -800,8 +795,7 @@ cardTypesAfter m types = case m of
   Modification.HasFullText _ -> types
   Modification.AddSupertype _ -> types
   Modification.RemoveSupertype _ -> types
-  Modification.SetColor _ -> types
-  Modification.AddColor _ -> types
+  Modification.Colors {} -> types
   Modification.ChosenColor _ -> types
   Modification.SetController _ -> types
   Modification.SetControllerToSource -> types
@@ -1620,15 +1614,14 @@ freezeQuantities viewOf gs announcedOn source context m =
         Modification.ChangeWord {} -> Just m
         Modification.SetController _ -> Just m
         Modification.SetControllerToSource -> Just m
-        Modification.SetColor _ -> Just m
-        Modification.AddColor _ -> Just m
+        Modification.Colors {} -> Just m
         -- CR 608.2h: the colour the source holds as this resolves is locked
         -- in, SetLandSubtypeToChosen's reason. Proved by data/scenarios/'s
         -- Distorting Lens scenario, whose second activation recolours another
         -- permanent; the InAddition arm is a regression fence, no resolution in
         -- data/cards/ storing it.
         Modification.ChosenColor mode ->
-          (case mode of ColorMode.Replace -> Modification.SetColor; ColorMode.InAddition -> Modification.AddColor)
+          Modification.Colors mode
             <$> Game.choiceWithLastKnown Chosen.Colors (Game.readingAcquisition announcedOn source gs source) source gs
         Modification.SwitchPowerToughness -> Just m
         -- Payload-free: the two sides are object ids, not quantities.
@@ -1687,8 +1680,7 @@ quantitiesOf m = case m of
   Modification.ChangeWord {} -> []
   Modification.SetController _ -> []
   Modification.SetControllerToSource -> []
-  Modification.SetColor _ -> []
-  Modification.AddColor _ -> []
+  Modification.Colors {} -> []
   Modification.ChosenColor _ -> []
   Modification.SwitchPowerToughness -> []
   Modification.ExchangeTextBoxes -> []
@@ -1743,8 +1735,7 @@ referenceQuery m = case m of
   Modification.ChangeWord {} -> Nothing
   Modification.SetController _ -> Nothing
   Modification.SetControllerToSource -> Nothing
-  Modification.SetColor _ -> Nothing
-  Modification.AddColor _ -> Nothing
+  Modification.Colors {} -> Nothing
   Modification.ChosenColor _ -> Nothing
   Modification.SwitchPowerToughness -> Nothing
   Modification.ExchangeTextBoxes -> Nothing
@@ -1820,8 +1811,7 @@ setsLandSubtype m = case m of
   Modification.HasFullText _ -> False
   Modification.AssignCombatDamageWithToughness -> False
   Modification.MayAssignCombatDamage _ -> False
-  Modification.SetColor _ -> False
-  Modification.AddColor _ -> False
+  Modification.Colors {} -> False
   Modification.ChosenColor _ -> False
   -- An ability-shaping grant, not a type change.
   Modification.GrantsStationToughness -> False
@@ -2399,9 +2389,9 @@ gatherGiven stripped functioning seed gs =
       -- one, whose parts frozenStaticParts split before handing them over. Its
       -- keyword half is split a second time here, which costs a duplicate part
       -- rather than a wrong answer -- same layer, same timestamp, same set, and
-      -- both SetColor Set.empty and AddEveryCreatureSubtype are idempotent. No
-      -- board reaches it: Titania's Song is the pool's only StaticAbility.lingers
-      -- and it grants neither keyword.
+      -- both Colors Replace Set.empty and AddEveryCreatureSubtype are
+      -- idempotent. No board reaches it: Titania's Song is the pool's only
+      -- StaticAbility.lingers and it grants neither keyword.
       fromStored eff =
         let one m =
               MkGathered
@@ -3066,8 +3056,7 @@ removesAbilities m = case m of
   -- CR 205.4b changes a supertype and says nothing about abilities.
   Modification.AddSupertype _ -> False
   Modification.RemoveSupertype _ -> False
-  Modification.SetColor _ -> False
-  Modification.AddColor _ -> False
+  Modification.Colors {} -> False
   Modification.ChosenColor _ -> False
   Modification.SetController _ -> False
   Modification.SetControllerToSource -> False
@@ -3129,12 +3118,19 @@ abilitiesRemovedBy name keep cands gs oid =
          in any removes cs
    in any removesAt (Map.toList byLowest)
 
+-- | CR 105.3: the colours an effect gives, replacing an object's colours or
+-- joining them under the parenthetical.
+withColors :: ColorMode.ColorMode -> Set.Set Color.Color -> Set.Set Color.Color -> Set.Set Color.Color
+withColors mode new old = case mode of
+  ColorMode.Replace -> new
+  ColorMode.InAddition -> Set.union new old
+
 -- The two keywords rule 702 states as a characteristic-defining ability,
 -- expanded for the case where CR 604.3a denies them that status: an instance
 -- another object's static ability GRANTS is an ordinary continuous effect,
 -- applied in timestamp order rather than at the start of its layer (CR 613.3).
 --
---   * CR 702.114a, devoid: SetColor with no colours (CR 105.3), layer 5.
+--   * CR 702.114a, devoid: Colors Replace with no colours (CR 105.3), layer 5.
 --   * CR 702.73a, changeling: AddEveryCreatureSubtype, layer 4.
 --
 -- Emitted as a second PART of the granting ability rather than an effect of its
@@ -3152,7 +3148,7 @@ abilitiesRemovedBy name keep cands gs oid =
 -- type line and enchant.
 grantedDefiningParts :: Modification -> NonEmpty.NonEmpty Modification
 grantedDefiningParts m = case m of
-  Modification.GainKeyword Keyword.Type.Devoid -> m NonEmpty.:| [Modification.SetColor Set.empty]
+  Modification.GainKeyword Keyword.Type.Devoid -> m NonEmpty.:| [Modification.Colors ColorMode.Replace Set.empty]
   Modification.GainKeyword Keyword.Type.Changeling -> m NonEmpty.:| [Modification.AddEveryCreatureSubtype]
   _ -> m NonEmpty.:| []
 
@@ -4263,8 +4259,7 @@ modificationWrites m = case m of
   Modification.LoseCardType _ -> Set.fromList [Types, Subtypes]
   Modification.AddSupertype _ -> Set.singleton Supertypes
   Modification.RemoveSupertype _ -> Set.singleton Supertypes
-  Modification.SetColor _ -> Set.singleton Colors
-  Modification.AddColor _ -> Set.singleton Colors
+  Modification.Colors {} -> Set.singleton Colors
   Modification.ChosenColor _ -> Set.singleton Colors
   Modification.SetController _ -> Set.singleton Controller
   Modification.SetControllerToSource -> Set.singleton Controller
@@ -4365,8 +4360,7 @@ modificationReads m = case m of
   Modification.LoseCardType _ -> Set.empty
   Modification.AddSupertype _ -> Set.empty
   Modification.RemoveSupertype _ -> Set.empty
-  Modification.SetColor _ -> Set.empty
-  Modification.AddColor _ -> Set.empty
+  Modification.Colors {} -> Set.empty
   Modification.ChosenColor _ -> Set.empty
   Modification.SetController _ -> Set.empty
   Modification.SetControllerToSource -> Set.empty
@@ -6223,8 +6217,7 @@ grantsKeywordWhere p m = case m of
   Modification.ChangeWord {} -> False
   Modification.SetController _ -> False
   Modification.SetControllerToSource -> False
-  Modification.SetColor _ -> False
-  Modification.AddColor _ -> False
+  Modification.Colors {} -> False
   Modification.ChosenColor _ -> False
   Modification.SwitchPowerToughness -> False
   -- CR 612.5 MOVES whatever keywords the other text box printed rather than
@@ -6305,8 +6298,7 @@ grantsMintingType m = case m of
   Modification.RemoveSupertype _ -> False
   Modification.SetController _ -> False
   Modification.SetControllerToSource -> False
-  Modification.SetColor _ -> False
-  Modification.AddColor _ -> False
+  Modification.Colors {} -> False
   Modification.ChosenColor _ -> False
   Modification.SwitchPowerToughness -> False
   -- CR 612.1: the exchange leaves the type line alone.
@@ -6405,8 +6397,7 @@ grantsAbilityWhere p m = case m of
   Modification.RemoveSupertype _ -> False
   Modification.SetController _ -> False
   Modification.SetControllerToSource -> False
-  Modification.SetColor _ -> False
-  Modification.AddColor _ -> False
+  Modification.Colors {} -> False
   Modification.ChosenColor _ -> False
   Modification.SwitchPowerToughness -> False
   Modification.ExchangeTextBoxes -> False

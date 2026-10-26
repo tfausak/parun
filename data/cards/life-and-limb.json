@@ -55,12 +55,17 @@
               }
             },
             {
-              "type": "SetColor",
-              "value": [
-                {
-                  "type": "Green"
+              "type": "Colors",
+              "value": {
+                "colors": [
+                  {
+                    "type": "Green"
+                  }
+                ],
+                "mode": {
+                  "type": "Replace"
                 }
-              ]
+              }
             },
             {
               "type": "AddCreatureSubtype",

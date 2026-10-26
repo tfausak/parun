@@ -31,15 +31,20 @@
               "type": "LoseAllAbilities"
             },
             {
-              "type": "SetColor",
-              "value": [
-                {
-                  "type": "White"
-                },
-                {
-                  "type": "Green"
+              "type": "Colors",
+              "value": {
+                "colors": [
+                  {
+                    "type": "White"
+                  },
+                  {
+                    "type": "Green"
+                  }
+                ],
+                "mode": {
+                  "type": "Replace"
                 }
-              ]
+              }
             },
             {
               "type": "SetCardType",

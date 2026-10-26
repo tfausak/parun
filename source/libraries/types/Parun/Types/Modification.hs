@@ -256,11 +256,10 @@ data Modification ability
     -- replaces the object's existing subtypes from that one family and leaves
     -- its card types alone. CR 205.3m is the list of what that reaches.
     --
-    -- AddCreatureSubtype sits beside it, the way AddColor sits beside SetColor
-    -- below. CR 205.1a allows several creature types and this carries exactly
-    -- one, the same narrowing SetLandSubtype takes. A card setting two
-    -- (Otherworldly Escort's "It's a Spirit Detective") lists this, then
-    -- AddCreatureSubtype, in one effect.
+    -- AddCreatureSubtype sits beside it, the in-addition twin. CR 205.1a allows
+    -- several creature types and this carries exactly one, the same narrowing
+    -- SetLandSubtype takes. A card setting two (Otherworldly Escort's "It's a
+    -- Spirit Detective") lists this, then AddCreatureSubtype, in one effect.
     SetCreatureSubtype Subtype.Subtype
   | -- | layer 4, CR 205.1b add (Life and Limb -> Saproling). The ADD beside the
     -- SET above, standing to it as AddLandSubtype stands to SetLandSubtype: the
@@ -430,15 +429,10 @@ data Modification ability
     -- gaining control of the creature does not gain control of the Aura, and
     -- gaining control of the Aura DOES move the creature.
     SetControllerToSource
-  | -- | layer 5, CR 613.1e / 105.3: this object becomes exactly these colours. A
-    -- SET, not an add: CR 105.3 says a new colour REPLACES all previous colours
-    -- unless the effect says "in addition". SetColor with an empty set is
-    -- "becomes colourless" (CR 105.2c).
-    SetColor (Set.Set Color.Color)
-  | -- | layer 5, CR 613.1e / 105.3: this object becomes these colours IN
-    -- ADDITION to the ones it already has -- CR 105.3's parenthetical, so this
-    -- unions where SetColor replaces. Indigo Faerie.
-    AddColor (Set.Set Color.Color)
+  | -- | layer 5, CR 613.1e / 105.3: this object becomes these colours, replacing
+    -- its colours or in addition to them as the mode says. An empty set under
+    -- Replace is "becomes colourless" (CR 105.2c).
+    Colors ColorMode.ColorMode (Set.Set Color.Color)
   | -- | layer 5, CR 613.1e / 105.3: this object becomes the colour chosen for
     -- THIS effect's SOURCE (Object.chosenColors), replacing its colours or in
     -- addition to them as the mode says. Shifting Sky's and Painter's Servant's
@@ -447,7 +441,7 @@ data Modification ability
     -- The colour is DERIVED at projection time from the source rather than
     -- baked into card data: a static ability's modification cannot name a
     -- colour a player will choose, which is why this is a constructor beside
-    -- SetColor and AddColor rather than a value they could carry.
+    -- Colors rather than a value it could carry.
     ChosenColor ColorMode.ColorMode
   | -- | layer 7d, CR 613.4d: switch this object's power and toughness. It acts
     -- on whatever 7a, 7b and 7c already produced, not on the printed box.

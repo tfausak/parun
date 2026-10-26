@@ -27,8 +27,13 @@
                         "type": "Indefinite"
                       },
                       "modification": {
-                        "type": "SetColor",
-                        "value": []
+                        "type": "Colors",
+                        "value": {
+                          "colors": [],
+                          "mode": {
+                            "type": "Replace"
+                          }
+                        }
                       },
                       "ref": {
                         "type": "InSlot",

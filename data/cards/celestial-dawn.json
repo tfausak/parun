@@ -163,12 +163,17 @@
           },
           "modifications": [
             {
-              "type": "SetColor",
-              "value": [
-                {
-                  "type": "White"
+              "type": "Colors",
+              "value": {
+                "colors": [
+                  {
+                    "type": "White"
+                  }
+                ],
+                "mode": {
+                  "type": "Replace"
                 }
-              ]
+              }
             }
           ]
         },
@@ -210,12 +215,17 @@
           },
           "modifications": [
             {
-              "type": "SetColor",
-              "value": [
-                {
-                  "type": "White"
+              "type": "Colors",
+              "value": {
+                "colors": [
+                  {
+                    "type": "White"
+                  }
+                ],
+                "mode": {
+                  "type": "Replace"
                 }
-              ]
+              }
             }
           ]
         },
@@ -259,12 +269,17 @@
           },
           "modifications": [
             {
-              "type": "SetColor",
-              "value": [
-                {
-                  "type": "White"
+              "type": "Colors",
+              "value": {
+                "colors": [
+                  {
+                    "type": "White"
+                  }
+                ],
+                "mode": {
+                  "type": "Replace"
                 }
-              ]
+              }
             }
           ]
         }

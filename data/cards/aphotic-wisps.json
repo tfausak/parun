@@ -27,12 +27,17 @@
                         "type": "UntilEndOfTurn"
                       },
                       "modification": {
-                        "type": "SetColor",
-                        "value": [
-                          {
-                            "type": "Black"
+                        "type": "Colors",
+                        "value": {
+                          "colors": [
+                            {
+                              "type": "Black"
+                            }
+                          ],
+                          "mode": {
+                            "type": "Replace"
                           }
-                        ]
+                        }
                       },
                       "ref": {
                         "type": "InSlot",
