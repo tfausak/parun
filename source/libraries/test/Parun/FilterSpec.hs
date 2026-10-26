@@ -23,6 +23,7 @@ import qualified Parun.Types.DealtDamageTo as DealtDamageTo
 import qualified Parun.Types.Designation as Designation
 import qualified Parun.Types.Expansion as Expansion
 import qualified Parun.Types.Filter as Filter.Type
+import qualified Parun.Types.Holder as Holder
 import qualified Parun.Types.Keyword as Keyword
 import qualified Parun.Types.KeywordDesignator as KeywordDesignator
 import qualified Parun.Types.KeywordFamily as KeywordFamily
@@ -512,18 +513,18 @@ spec s = Spec.describe s "Parun.Engine.Filter" $ do
   -- ControlledByRole's does -- Biorhythm asks it once per recipient.
   -- blackCreature is controlled by player 0 and OWNED by player 1, so a reading
   -- off the wrong field agrees with neither arm below.
-  Spec.describe s "ControlledByRecipient" $ do
+  Spec.describe s "HeldByRecipient Controller" $ do
     let reached n = self {Filter.recipient = Just (PlayerId.MkPlayerId n)}
     Spec.it s "holds only for the reached recipient's creature" $ do
-      Spec.assertBool s (Filter.matches (reached 0) blackCreature Filter.Type.ControlledByRecipient) "controller is the recipient"
-      Spec.assertBool s (not (Filter.matches (reached 1) blackCreature Filter.Type.ControlledByRecipient)) "owner is not the controller"
+      Spec.assertBool s (Filter.matches (reached 0) blackCreature (Filter.Type.HeldByRecipient Holder.Controller)) "controller is the recipient"
+      Spec.assertBool s (not (Filter.matches (reached 1) blackCreature (Filter.Type.HeldByRecipient Holder.Controller))) "owner is not the controller"
 
     -- Perspective-free, which is why the atom exists: `noPerspective` names no
     -- "you" at all and the answer is unchanged, where ControlledBy You is
     -- vacuously False there. That is the difference between "they control" and
     -- "you control" on one board.
     Spec.it s "is not ControlledBy You, and needs no perspective" $ do
-      Spec.assertBool s (Filter.matches (noPerspective {Filter.recipient = Just (PlayerId.MkPlayerId 0)}) blackCreature Filter.Type.ControlledByRecipient) "no perspective needed"
+      Spec.assertBool s (Filter.matches (noPerspective {Filter.recipient = Just (PlayerId.MkPlayerId 0)}) blackCreature (Filter.Type.HeldByRecipient Holder.Controller)) "no perspective needed"
       Spec.assertBool s (not (Filter.matches noPerspective blackCreature (Filter.Type.ControlledBy PlayerRelation.You))) "where ControlledBy You cannot answer"
       Spec.assertBool s (Filter.matches (reached 1) blackCreature (Filter.Type.ControlledBy PlayerRelation.You)) "and disagrees with it on the very same view: the perspective still controls this creature where the recipient does not"
 
@@ -531,35 +532,35 @@ spec s = Spec.describe s "Parun.Engine.Filter" $ do
     -- position but a per-recipient effect's quantity.
     Spec.it s "is False when either player is absent" $ do
       let noController = blackCreature {Filter.controller = Nothing}
-      Spec.assertBool s (not (Filter.matches (reached 0) noController Filter.Type.ControlledByRecipient)) "no candidate controller"
-      Spec.assertBool s (not (Filter.matches (reached 0) aPlayer Filter.Type.ControlledByRecipient)) "a player controls nothing"
-      Spec.assertBool s (not (Filter.matches self blackCreature Filter.Type.ControlledByRecipient)) "no recipient"
+      Spec.assertBool s (not (Filter.matches (reached 0) noController (Filter.Type.HeldByRecipient Holder.Controller))) "no candidate controller"
+      Spec.assertBool s (not (Filter.matches (reached 0) aPlayer (Filter.Type.HeldByRecipient Holder.Controller))) "a player controls nothing"
+      Spec.assertBool s (not (Filter.matches self blackCreature (Filter.Type.HeldByRecipient Holder.Controller))) "no recipient"
 
   -- CR 603.2's "that player controls", the pair a trigger's binding is baked
   -- through. blackCreature is controlled by player 0 and owned by player 1, so a
   -- reading off the wrong field disagrees with both arms below.
-  Spec.describe s "ControlledByBound and ControlledByPlayer" $ do
+  Spec.describe s "HeldByBound and HeldByPlayer, Controller" $ do
     let slot = SlotName.MkSlotName (Text.pack "thatPlayer")
         player = PlayerId.MkPlayerId
     Spec.it s "the baked atom compares the candidate's controller" $ do
-      Spec.assertBool s (Filter.matches self blackCreature (Filter.Type.ControlledByPlayer (player 0))) "controller is player 0"
-      Spec.assertBool s (not (Filter.matches self blackCreature (Filter.Type.ControlledByPlayer (player 1)))) "the owner is not the controller"
+      Spec.assertBool s (Filter.matches self blackCreature (Filter.Type.HeldByPlayer Holder.Controller (player 0))) "controller is player 0"
+      Spec.assertBool s (not (Filter.matches self blackCreature (Filter.Type.HeldByPlayer Holder.Controller (player 1)))) "the owner is not the controller"
 
     -- Perspective-free, which is the whole point of baking a player in: the same
     -- answer under a context that names nobody.
     Spec.it s "the baked atom needs no perspective" $
-      Spec.assertBool s (Filter.matches noPerspective blackCreature (Filter.Type.ControlledByPlayer (player 0))) "no perspective needed"
+      Spec.assertBool s (Filter.matches noPerspective blackCreature (Filter.Type.HeldByPlayer Holder.Controller (player 0))) "no perspective needed"
 
     Spec.it s "the baked atom is False for a player and for a candidate with no controller" $ do
       let noController = blackCreature {Filter.controller = Nothing}
-      Spec.assertBool s (not (Filter.matches self noController (Filter.Type.ControlledByPlayer (player 0)))) "no candidate controller"
-      Spec.assertBool s (not (Filter.matches self aPlayer (Filter.Type.ControlledByPlayer (player 0)))) "player"
+      Spec.assertBool s (not (Filter.matches self noController (Filter.Type.HeldByPlayer Holder.Controller (player 0)))) "no candidate controller"
+      Spec.assertBool s (not (Filter.matches self aPlayer (Filter.Type.HeldByPlayer Holder.Controller (player 0)))) "player"
 
     -- UNBAKED is False, always: the substitution happens where the bindings are,
     -- so an atom that survives to a match named a slot nothing bound.
     Spec.it s "the unbaked atom admits nothing" $ do
-      Spec.assertBool s (not (Filter.matches self blackCreature (Filter.Type.ControlledByBound slot))) "unbaked"
-      Spec.assertBool s (not (Filter.matches noPerspective blackCreature (Filter.Type.ControlledByBound slot))) "unbaked, no perspective"
+      Spec.assertBool s (not (Filter.matches self blackCreature (Filter.Type.HeldByBound Holder.Controller slot))) "unbaked"
+      Spec.assertBool s (not (Filter.matches noPerspective blackCreature (Filter.Type.HeldByBound Holder.Controller slot))) "unbaked, no perspective"
 
     -- bakeBound is what turns the first into the second, under every combinator
     -- -- an implementation that looked only at the top of a Filter would leave
@@ -571,16 +572,16 @@ spec s = Spec.describe s "Parun.Engine.Filter" $ do
       Spec.assertEqWith
         s
         "the atom is replaced in place"
-        (Filter.bakeBound bound Map.empty Map.empty (buried (Filter.Type.ControlledByBound slot)))
-        (buried (Filter.Type.ControlledByPlayer (player 0)))
+        (Filter.bakeBound bound Map.empty Map.empty (buried (Filter.Type.HeldByBound Holder.Controller slot)))
+        (buried (Filter.Type.HeldByPlayer Holder.Controller (player 0)))
       Spec.assertEqWith
         s
         "and left standing when the slot names nobody"
-        (Filter.bakeBound Map.empty Map.empty Map.empty (Filter.Type.ControlledByBound slot))
-        (Filter.Type.ControlledByBound slot)
+        (Filter.bakeBound Map.empty Map.empty Map.empty (Filter.Type.HeldByBound Holder.Controller slot))
+        (Filter.Type.HeldByBound Holder.Controller slot)
       Spec.assertBool
         s
-        (Filter.matches self blackCreature (Filter.bakeBound bound Map.empty Map.empty (Filter.Type.ControlledByBound slot)))
+        (Filter.matches self blackCreature (Filter.bakeBound bound Map.empty Map.empty (Filter.Type.HeldByBound Holder.Controller slot)))
         "so the baked filter matches where the unbaked one did not"
     -- CR 608.2h: a bound object's controller, baked to the player the
     -- resolution read, so a stored class says "that player controls" after the
@@ -589,38 +590,48 @@ spec s = Spec.describe s "Parun.Engine.Filter" $ do
       let object = SlotName.MkSlotName (Text.pack "target")
           atom = Filter.Type.ControllerRelatesToBound PlayerRelation.You object
           baked = Filter.bakeBound Map.empty Map.empty (Map.singleton object (const (Set.singleton (player 1)))) atom
-      Spec.assertEqWith s "the atom names the controller" baked (Filter.Type.Or [Filter.Type.ControlledByPlayer (player 1)])
+      Spec.assertEqWith s "the atom names the controller" baked (Filter.Type.Or [Filter.Type.HeldByPlayer Holder.Controller (player 1)])
       Spec.assertBool s (not (Filter.matches self blackCreature baked)) "player 0's creature is not that player's"
       Spec.assertBool s (Filter.matches self blackCreature atom) "where the unbaked atom admitted it"
       Spec.assertEqWith s "and left standing when the slot is unnamed" (Filter.bakeBound Map.empty Map.empty Map.empty atom) atom
-  -- CR 108.3's owner twin of the pair above: blackCreature is owned by player
+  -- CR 108.3's owner holder of the pair above: blackCreature is owned by player
   -- 1 and controlled by player 0, so reading the controller disagrees.
-  Spec.describe s "OwnedByBound and OwnedByPlayer" $ do
+  Spec.describe s "HeldByBound and HeldByPlayer, Owner" $ do
     let slot = SlotName.MkSlotName (Text.pack "target")
         player = PlayerId.MkPlayerId
     Spec.it s "the baked atom compares the candidate's owner" $ do
-      Spec.assertBool s (Filter.matches noPerspective blackCreature (Filter.Type.OwnedByPlayer (player 1))) "owner is player 1"
-      Spec.assertBool s (not (Filter.matches self blackCreature (Filter.Type.OwnedByPlayer (player 0)))) "the controller is not the owner"
-      Spec.assertBool s (not (Filter.matches self aPlayer (Filter.Type.OwnedByPlayer (player 0)))) "player"
+      Spec.assertBool s (Filter.matches noPerspective blackCreature (Filter.Type.HeldByPlayer Holder.Owner (player 1))) "owner is player 1"
+      Spec.assertBool s (not (Filter.matches self blackCreature (Filter.Type.HeldByPlayer Holder.Owner (player 0)))) "the controller is not the owner"
+      Spec.assertBool s (not (Filter.matches self aPlayer (Filter.Type.HeldByPlayer Holder.Owner (player 0)))) "player"
 
     Spec.it s "the unbaked atom reads the slot's one player" $ do
       let players pids = self {Filter.slotPlayers = Map.singleton slot (Set.fromList (fmap player pids))}
-      Spec.assertBool s (Filter.matches (players [1]) blackCreature (Filter.Type.OwnedByBound slot)) "the owner is bound"
-      Spec.assertBool s (not (Filter.matches (players [0]) blackCreature (Filter.Type.OwnedByBound slot))) "the controller is bound"
-      Spec.assertBool s (not (Filter.matches self blackCreature (Filter.Type.OwnedByBound slot))) "nothing bound"
+      Spec.assertBool s (Filter.matches (players [1]) blackCreature (Filter.Type.HeldByBound Holder.Owner slot)) "the owner is bound"
+      Spec.assertBool s (not (Filter.matches (players [0]) blackCreature (Filter.Type.HeldByBound Holder.Owner slot))) "the controller is bound"
+      Spec.assertBool s (not (Filter.matches self blackCreature (Filter.Type.HeldByBound Holder.Owner slot))) "nothing bound"
 
     Spec.it s "bakeBound substitutes the bound player" $ do
       let buried f = Filter.Type.And [Filter.Type.Or [Filter.Type.HasCardType CardType.Creature, Filter.Type.Not f]]
       Spec.assertEqWith
         s
         "the atom is replaced in place"
-        (Filter.bakeBound (Map.singleton slot (player 1)) Map.empty Map.empty (buried (Filter.Type.OwnedByBound slot)))
-        (buried (Filter.Type.OwnedByPlayer (player 1)))
+        (Filter.bakeBound (Map.singleton slot (player 1)) Map.empty Map.empty (buried (Filter.Type.HeldByBound Holder.Owner slot)))
+        (buried (Filter.Type.HeldByPlayer Holder.Owner (player 1)))
       Spec.assertEqWith
         s
         "and left standing when the slot names nobody"
-        (Filter.bakeBound Map.empty Map.empty Map.empty (Filter.Type.OwnedByBound slot))
-        (Filter.Type.OwnedByBound slot)
+        (Filter.bakeBound Map.empty Map.empty Map.empty (Filter.Type.HeldByBound Holder.Owner slot))
+        (Filter.Type.HeldByBound Holder.Owner slot)
+
+    -- CR 700.2d's per-occurrence rename (Parun.Engine.Modal) rewrites the slot
+    -- and must leave the holder alone.
+    Spec.it s "renameBound keeps the holder" $ do
+      let renamed = SlotName.MkSlotName (Text.pack "target#1")
+      Spec.assertEqWith
+        s
+        "the owner atom names the renamed slot"
+        (Filter.renameBound (const renamed) (Filter.Type.HeldByBound Holder.Owner slot))
+        (Filter.Type.HeldByBound Holder.Owner renamed)
   -- CR 702.60a's "with the same name as this spell", the Measures atom's OfSource
   -- shape over a SET of NAMES: CR 201.2 makes the comparison an intersection, so an
   -- object showing two names (CR 709.4a's split card) has the source's name if it
@@ -696,7 +707,7 @@ spec s = Spec.describe s "Parun.Engine.Filter" $ do
 
   -- CR 110.2's board comparison is answered by Parun.Engine.Count.bakePerspective,
   -- which holds the game state; this module holds none, so the atom is vacuously
-  -- False wherever it reaches a match unbaked. ControlledByBound's posture, pinned
+  -- False wherever it reaches a match unbaked. HeldByBound's posture, pinned
   -- here for the same reason it is pinned there -- Parun.CountSpec's Oreskos
   -- Explorer group is what proves the BAKED answer.
   Spec.it s "Controls is False unbaked, for a player and for an object alike" $ do
@@ -1913,11 +1924,11 @@ spec s = Spec.describe s "Parun.Engine.Filter" $ do
       Spec.assertBool s (not (Filter.matches self (onHost colorlessHost) (Filter.Type.AttachedTo (Filter.Type.HasColor Color.Black)))) "its host is not"
 
     -- Parun.Engine.Filter.boundSlots must pair with bakeBound, both of which descend
-    -- into the nest. Nothing in the pool nests a ControlledByBound under an
+    -- into the nest. Nothing in the pool nests a HeldByBound under an
     -- attachment, so this unit case is the only observer that arm has.
     Spec.it s "reports a bound slot nested under the attachment" $ do
       let slot = SlotName.MkSlotName (Text.pack "victim")
-      Spec.assertEqWith s "the slot the host's description names" (Filter.boundSlots (Filter.Type.AttachedTo (Filter.Type.ControlledByBound slot))) (Set.singleton slot)
+      Spec.assertEqWith s "the slot the host's description names" (Filter.boundSlots (Filter.Type.AttachedTo (Filter.Type.HeldByBound Holder.Controller slot))) (Set.singleton slot)
 
     -- CR 612.1's word swap reaches the host's description too, and nothing in
     -- data/cards/ observes it: grep the corpus for ChangeWord and it is
@@ -1997,10 +2008,10 @@ spec s = Spec.describe s "Parun.Engine.Filter" $ do
       Spec.assertBool s (not (Filter.matches self aPlayer byAnything)) "player, trivial nest"
 
     -- boundSlots pairs with bakeBound here for AttachedTo's reason, and nothing in
-    -- the pool nests a ControlledByBound under this atom either.
+    -- the pool nests a HeldByBound under this atom either.
     Spec.it s "reports a bound slot nested under the attachment" $ do
       let slot = SlotName.MkSlotName (Text.pack "victim")
-      Spec.assertEqWith s "the slot the attacher's description names" (Filter.boundSlots (Filter.Type.HasAttached (Filter.Type.ControlledByBound slot))) (Set.singleton slot)
+      Spec.assertEqWith s "the slot the attacher's description names" (Filter.boundSlots (Filter.Type.HasAttached (Filter.Type.HeldByBound Holder.Controller slot))) (Set.singleton slot)
 
     -- CR 612.1's word swap reaches the attacher's description, and A Tale for
     -- the Ages does narrow the atom by a subtype for one to reach -- but this

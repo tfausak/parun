@@ -60,8 +60,13 @@
                 "targetSlots": {
                   "victim": {
                     "filter": {
-                      "type": "ControlledByBound",
-                      "value": "thatPlayer"
+                      "type": "HeldByBound",
+                      "value": {
+                        "holder": {
+                          "type": "Controller"
+                        },
+                        "slot": "thatPlayer"
+                      }
                     },
                     "pool": {
                       "type": "Creatures"

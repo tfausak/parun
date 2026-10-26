@@ -128,8 +128,13 @@
                         }
                       },
                       {
-                        "type": "ControlledByBound",
-                        "value": "thatAttackingPlayer"
+                        "type": "HeldByBound",
+                        "value": {
+                          "holder": {
+                            "type": "Controller"
+                          },
+                          "slot": "thatAttackingPlayer"
+                        }
                       }
                     ]
                   },

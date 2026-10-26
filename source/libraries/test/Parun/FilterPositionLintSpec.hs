@@ -102,6 +102,7 @@ import qualified Parun.Types.FromOutsideTheGame as FromOutsideTheGame
 import qualified Parun.Types.FromReference as FromReference
 import qualified Parun.Types.GainControl as GainControl
 import qualified Parun.Types.HandAction as HandAction
+import qualified Parun.Types.Holder as Holder
 import qualified Parun.Types.InZone as InZone
 import qualified Parun.Types.Keyword as Keyword
 import qualified Parun.Types.KeywordDesignator as KeywordDesignator
@@ -268,19 +269,16 @@ filterAtomsOf leaf predicate = case predicate of
   Filter.Type.ControlledByRole _ -> leaf predicate
   -- A leaf for ControlledBy's reason: one carries a slot name and the other a
   -- PlayerId, and neither holds a Filter for a card author to reach.
-  Filter.Type.ControlledByBound _ -> leaf predicate
-  Filter.Type.ControlledByPlayer _ -> leaf predicate
+  Filter.Type.HeldByBound _ _ -> leaf predicate
+  Filter.Type.HeldByPlayer _ _ -> leaf predicate
   -- A leaf for the two above's reason: a nullary atom holds no Filter for a card
   -- author to reach.
-  Filter.Type.ControlledByRecipient -> leaf predicate
+  Filter.Type.HeldByRecipient _ -> leaf predicate
   Filter.Type.ManaValueIsEven -> leaf predicate
   Filter.Type.ControlledBy _ -> leaf predicate
   -- A leaf for ControlledBy's reason: CR 108.3's owner atom carries a
   -- PlayerRelation, which holds no Filter for a card author to reach.
   Filter.Type.OwnedBy _ -> leaf predicate
-  Filter.Type.OwnedByRecipient -> leaf predicate
-  Filter.Type.OwnedByBound _ -> leaf predicate
-  Filter.Type.OwnedByPlayer _ -> leaf predicate
   Filter.Type.IsSource -> leaf predicate
   Filter.Type.IsObject _ -> leaf predicate
   Filter.Type.TargetsSource -> leaf predicate
@@ -1251,7 +1249,7 @@ isBoundCounts card =
 --
 -- Only IsBound, of the atoms that read a Context's slots. SameNameAsBound is
 -- fenced to a mode's target slot by its own lint, so a wish's filter already
--- rejects it; IsControllerOfBound and ControlledByBound are False wherever
+-- rejects it; IsControllerOfBound and HeldByBound are False wherever
 -- Parun.Engine.Filter.matches reaches them -- a fact about every position but a
 -- Scope.OverPlayers count's, not about this one.
 isBoundOffends :: Face.Face Card.Type.Card -> Bool
@@ -2925,15 +2923,15 @@ filterPositionLintSpec s registry = Spec.describe s "Lint" $ do
   -- (#199). The UNBAKED atom beside it is card data and is not swept -- Trygon
   -- Predator writes it, and Parun.Engine.Resolve.Slots.modeSlots is what checks the slot
   -- it names is one the ability's condition binds.
-  Spec.it s "CR 603.2 no card writes ControlledByPlayer or OwnedByPlayer" $ do
+  Spec.it s "CR 603.2 no card writes HeldByPlayer" $ do
     ps <- S.allPrintings s
-    let atoms c = sum (fmap (\atom -> jsonAtoms (Text.pack atom) (Codec.encode (Face.Codec.codec Card.codec) c)) ["ControlledByPlayer", "OwnedByPlayer"])
+    let atoms c = jsonAtoms (Text.pack "HeldByPlayer") (Codec.encode (Face.Codec.codec Card.codec) c)
         offenders = filter (anyFace ((/= 0) . atoms) . Printing.card) ps
     Spec.assertEqWith s "the baked atom is the engine's alone" (fmap (S.nameOf . Printing.card) offenders) []
     -- Not vacuous, for the sibling sweep's reason: the same counter over a
     -- hand-built face carrying the atom in a target slot finds it.
     piker <- S.printingOf s registry "Goblin Piker"
-    let buried = Filter.Type.And [Filter.Type.Or [Filter.Type.HasCardType CardType.Creature, Filter.Type.Not (Filter.Type.ControlledByPlayer (PlayerId.MkPlayerId 1))]]
+    let buried = Filter.Type.And [Filter.Type.Or [Filter.Type.HasCardType CardType.Creature, Filter.Type.Not (Filter.Type.HeldByPlayer Holder.Controller (PlayerId.MkPlayerId 1))]]
         targetSlot = TargetSlot.required Pool.Creatures (Just buried)
         planted =
           (S.combinedFace piker)
@@ -2941,9 +2939,9 @@ filterPositionLintSpec s registry = Spec.describe s "Lint" $ do
                 Mint.oneModeTargeting (Map.singleton (SlotName.MkSlotName (Text.pack "target")) targetSlot) Seq.empty
             }
     Spec.assertEqWith s "a planted atom is seen" (atoms planted) 1
-    let owned = (S.combinedFace piker) {Face.spell = Mint.oneModeTargeting (Map.singleton (SlotName.MkSlotName (Text.pack "target")) (TargetSlot.required Pool.Creatures (Just (Filter.Type.OwnedByPlayer (PlayerId.MkPlayerId 1))))) Seq.empty}
-    Spec.assertEqWith s "and its owner twin" (atoms owned) 1
-  -- CR 601.2c's baked "that player's graveyard", for ControlledByPlayer's reason:
+    let owned = (S.combinedFace piker) {Face.spell = Mint.oneModeTargeting (Map.singleton (SlotName.MkSlotName (Text.pack "target")) (TargetSlot.required Pool.Creatures (Just (Filter.Type.HeldByPlayer Holder.Owner (PlayerId.MkPlayerId 1))))) Seq.empty}
+    Spec.assertEqWith s "and its owner holder" (atoms owned) 1
+  -- CR 601.2c's baked "that player's graveyard", for HeldByPlayer's reason:
   -- Parun.Engine.Target.bakePerPlayer writes it, and no card may name a seat.
   Spec.it s "CR 601.2c no card writes ZoneScope.BoundPlayer" $ do
     ps <- S.allPrintings s

@@ -86,6 +86,7 @@ import qualified Parun.Types.Face as Face
 import qualified Parun.Types.Filter as Filter
 import qualified Parun.Types.ForEach as ForEach
 import qualified Parun.Types.GrantedAbility as GrantedAbility
+import qualified Parun.Types.Holder as Holder
 import qualified Parun.Types.InZone as InZone
 import qualified Parun.Types.Keyword as Keyword
 import qualified Parun.Types.Layout as Layout
@@ -1530,7 +1531,7 @@ atom context n = case Node.tag n of
   "ControlledByAPlayer" -> do
     who <- Node.child n
     case (Node.tag who, fmap Node.node (Node.args who)) of
-      ("SinglePlayer", Just (Right p)) | Just s <- Map.lookup (Node.tag p) (references context) -> Right (Filter.ControlledByBound s)
+      ("SinglePlayer", Just (Right p)) | Just s <- Map.lookup (Node.tag p) (references context) -> Right (Filter.HeldByBound Holder.Controller s)
       _ -> fmap Filter.ControlledBy (Node.argument n >>= players)
   -- "Another": other than the source, or than an object a slot names.
   "Other" -> do

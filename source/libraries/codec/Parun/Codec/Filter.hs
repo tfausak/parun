@@ -15,6 +15,7 @@ import qualified Parun.Codec.Designation as Designation
 import qualified Parun.Codec.EnteredZone as EnteredZone
 import qualified Parun.Codec.ExiledPile as ExiledPile
 import qualified Parun.Codec.Expansion as Expansion
+import qualified Parun.Codec.Holder as Holder
 import qualified Parun.Codec.KeywordDesignator as KeywordDesignator
 import qualified Parun.Codec.KeywordFamily as KeywordFamily
 import qualified Parun.Codec.Measures as Measures
@@ -36,6 +37,8 @@ import qualified Parun.JsonCodec.Common as Common
 import qualified Parun.JsonCodec.Fields as Fields
 import qualified Parun.Types.ControlMargin as ControlMargin
 import qualified Parun.Types.Filter as Filter
+import qualified Parun.Types.Holder as Holder
+import qualified Parun.Types.PlayerId as PlayerId
 import qualified Parun.Types.PlayerRelation as PlayerRelation
 import qualified Parun.Types.SlotName as SlotName
 
@@ -69,19 +72,16 @@ codec keywordCodec =
       Arm.payload "HasKeywordFamily" KeywordFamily.codec Filter.HasKeywordFamily (\x -> case x of Filter.HasKeywordFamily y -> Just y; _ -> Nothing),
       Arm.payload "Measures" Measures.codec Filter.Measures (\x -> case x of Filter.Measures y -> Just y; _ -> Nothing),
       Arm.payload "ControlledByRole" TurnRole.codec Filter.ControlledByRole (\x -> case x of Filter.ControlledByRole y -> Just y; _ -> Nothing),
-      Arm.payload "ControlledByBound" SlotName.codec Filter.ControlledByBound (\x -> case x of Filter.ControlledByBound y -> Just y; _ -> Nothing),
+      Arm.payload "HeldByBound" heldByBound (uncurry Filter.HeldByBound) (\x -> case x of Filter.HeldByBound h y -> Just (h, y); _ -> Nothing),
       -- Runtime-only, and accepted here anyway: the codec must stay total, so a
       -- corpus lint keeps the pool honest instead (#199) -- the treatment
       -- Modification.SetController's baked PlayerId gets.
-      Arm.payload "ControlledByPlayer" PlayerId.codec Filter.ControlledByPlayer (\x -> case x of Filter.ControlledByPlayer y -> Just y; _ -> Nothing),
-      Arm.nullary "ControlledByRecipient" Filter.ControlledByRecipient,
+      Arm.payload "HeldByPlayer" heldByPlayer (uncurry Filter.HeldByPlayer) (\x -> case x of Filter.HeldByPlayer h y -> Just (h, y); _ -> Nothing),
+      Arm.payload "HeldByRecipient" Holder.codec Filter.HeldByRecipient (\x -> case x of Filter.HeldByRecipient y -> Just y; _ -> Nothing),
       Arm.payload "SharesWithSource" Trait.codec Filter.SharesWithSource (\x -> case x of Filter.SharesWithSource y -> Just y; _ -> Nothing),
       Arm.nullary "ManaValueIsEven" Filter.ManaValueIsEven,
       Arm.payload "ControlledBy" PlayerRelation.codec Filter.ControlledBy (\x -> case x of Filter.ControlledBy y -> Just y; _ -> Nothing),
       Arm.payload "OwnedBy" PlayerRelation.codec Filter.OwnedBy (\x -> case x of Filter.OwnedBy y -> Just y; _ -> Nothing),
-      Arm.nullary "OwnedByRecipient" Filter.OwnedByRecipient,
-      Arm.payload "OwnedByBound" SlotName.codec Filter.OwnedByBound (\x -> case x of Filter.OwnedByBound y -> Just y; _ -> Nothing),
-      Arm.payload "OwnedByPlayer" PlayerId.codec Filter.OwnedByPlayer (\x -> case x of Filter.OwnedByPlayer y -> Just y; _ -> Nothing),
       Arm.payload "IsPlayer" PlayerRelation.codec Filter.IsPlayer (\x -> case x of Filter.IsPlayer y -> Just y; _ -> Nothing),
       Arm.payload "IsControllerOfBound" SlotName.codec Filter.IsControllerOfBound (\x -> case x of Filter.IsControllerOfBound y -> Just y; _ -> Nothing),
       Arm.payload "Controls" (controls keywordCodec) (uncurry Filter.Controls) (\x -> case x of Filter.Controls n y -> Just (n, y); _ -> Nothing),
@@ -192,6 +192,24 @@ controls keywordCodec =
       <$> Fields.required "margin" ControlMargin.codec fst
       <*> Fields.required "filter" (codec keywordCodec) snd
 
+-- | CR 603.2's bound holder keyed by name: which of the candidate's players,
+-- and the slot binding the player it must be.
+heldByBound :: Codec.Codec (Holder.Holder, SlotName.SlotName)
+heldByBound =
+  Fields.object $
+    (,)
+      <$> Fields.required "holder" Holder.codec fst
+      <*> Fields.required "slot" SlotName.codec snd
+
+-- | The bound holder baked: which of the candidate's players, and the player it
+-- must be.
+heldByPlayer :: Codec.Codec (Holder.Holder, PlayerId.PlayerId)
+heldByPlayer =
+  Fields.object $
+    (,)
+      <$> Fields.required "holder" Holder.codec fst
+      <*> Fields.required "player" PlayerId.codec snd
+
 -- | CR 110.2's comparison across two objects keyed by name: the relation, and
 -- the slot holding the object whose controller it is relative to.
 relatesToBound :: Codec.Codec (PlayerRelation.PlayerRelation, SlotName.SlotName)
@@ -214,16 +232,13 @@ tagOf x = case x of
   Filter.HasKeywordFamily {} -> "HasKeywordFamily"
   Filter.Measures {} -> "Measures"
   Filter.ControlledByRole {} -> "ControlledByRole"
-  Filter.ControlledByBound {} -> "ControlledByBound"
-  Filter.ControlledByPlayer {} -> "ControlledByPlayer"
-  Filter.ControlledByRecipient {} -> "ControlledByRecipient"
+  Filter.HeldByBound {} -> "HeldByBound"
+  Filter.HeldByPlayer {} -> "HeldByPlayer"
+  Filter.HeldByRecipient {} -> "HeldByRecipient"
   Filter.SharesWithSource {} -> "SharesWithSource"
   Filter.ManaValueIsEven {} -> "ManaValueIsEven"
   Filter.ControlledBy {} -> "ControlledBy"
   Filter.OwnedBy {} -> "OwnedBy"
-  Filter.OwnedByRecipient {} -> "OwnedByRecipient"
-  Filter.OwnedByBound {} -> "OwnedByBound"
-  Filter.OwnedByPlayer {} -> "OwnedByPlayer"
   Filter.IsPlayer {} -> "IsPlayer"
   Filter.IsControllerOfBound {} -> "IsControllerOfBound"
   Filter.Controls {} -> "Controls"

@@ -73,6 +73,7 @@ import qualified Parun.Types.Facing as Facing
 import qualified Parun.Types.Filter as Filter
 import qualified Parun.Types.GameEvent as GameEvent
 import qualified Parun.Types.GameState as GameState
+import qualified Parun.Types.Holder as Holder
 import qualified Parun.Types.IgnoredAbility as IgnoredAbility
 import qualified Parun.Types.InZone as InZone
 import qualified Parun.Types.Keyword as Keyword
@@ -1713,7 +1714,7 @@ interchangeableSourcesSpec s registry = Spec.describe s "Interchangeable mana so
         (bear, withBears) = S.addPermanent bears S.bob plain
         board = S.withEffect bear nothingMore withBears
         lasting criterion = board {GameState.continuousEffects = fmap (\row -> row {ContinuousEffect.expiry = Expiry.While (While.MkWhile S.alice (onBattlefield criterion))}) (GameState.continuousEffects board)}
-        (offers, paid, after) = greenWindow (lasting (Filter.ControlledByPlayer S.bob))
+        (offers, paid, after) = greenWindow (lasting (Filter.HeldByPlayer Holder.Controller S.bob))
         (named, _, _) = greenWindow (lasting (Filter.IsObject (NonEmpty.head elves)))
     Spec.assertEqWith s "asked once, and the three Elves are one candidate" (fmap length offers) [1]
     Spec.assertEqWith s "and lasting while one Elf is on the battlefield, that Elf is a candidate of its own" (fmap length named) [2]

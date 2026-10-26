@@ -369,6 +369,7 @@ import qualified Parun.Codec.GrantedAbilitySpec
 import qualified Parun.Codec.GraveyardOrderSpec
 import qualified Parun.Codec.HalfUnlockedSpec
 import qualified Parun.Codec.HandActionSpec
+import qualified Parun.Codec.HolderSpec
 import qualified Parun.Codec.HybridSpec
 import qualified Parun.Codec.IfTakenSpec
 import qualified Parun.Codec.IgnoredAbilitySpec
@@ -1288,6 +1289,7 @@ spec s registry = do
   Parun.Codec.HalfUnlockedSpec.spec s
   Parun.Codec.QuotientSpec.spec s
   Parun.Codec.HandActionSpec.spec s
+  Parun.Codec.HolderSpec.spec s
   Parun.Codec.HybridSpec.spec s
   Parun.Codec.IfTakenSpec.spec s
   Parun.Codec.IgnoredAbilitySpec.spec s

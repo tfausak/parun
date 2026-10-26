@@ -115,6 +115,7 @@ import Parun.Types.ForetellCost (ForetellCost)
 import qualified Parun.Types.Gift as Gift
 import qualified Parun.Types.GrantLookAtExiled as GrantLookAtExiled
 import qualified Parun.Types.GrantedAbility as GrantedAbility
+import qualified Parun.Types.Holder as Holder
 import qualified Parun.Types.HowMany as HowMany
 import qualified Parun.Types.Hybrid as Hybrid
 import qualified Parun.Types.IfTaken as IfTaken
@@ -5186,7 +5187,7 @@ grantedBy granter chosen you already keyword = case keyword of
   where
     spare filter_ = case filter_ of
       Filter.IsSource -> Filter.IsObject granter
-      Filter.ControlledBy PlayerRelation.You -> maybe (Filter.Or []) Filter.ControlledByPlayer you
+      Filter.ControlledBy PlayerRelation.You -> maybe (Filter.Or []) (Filter.HeldByPlayer Holder.Controller) you
       Filter.AttachedNoLaterThanSource -> Filter.Or (fmap Filter.IsObject already)
       Filter.And filters -> Filter.And (fmap spare filters)
       _ -> filter_

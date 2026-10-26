@@ -500,7 +500,7 @@ objectRefSlots ref = joinTwo (joinSlots (fmap playerRefSlots (objectRefPlayerRef
   -- InSlot's read of the slot, never a target (CR 115.10a).
   ObjectRef.FromAnywhere (FromAnywhere.MkFromAnywhere slot among) -> Map.fromList [(named, SlotArity.Many) | named <- slot : Foldable.toList among]
   -- Rain of Daggers' "all creatures target opponent controls": the sweep's
-  -- ControlledByBound is the only read of its target slot.
+  -- HeldByBound is the only read of its target slot.
   ObjectRef.EachMatching filter_ -> filterSlotsOf filter_
   -- The per-player sweeps that name a slot are this one and EachCardInHand below:
   -- CR 400.1's per-player zones leave "whose" to be said, and Angel of Finality
@@ -2951,7 +2951,7 @@ battlefieldMatching legal resolving controller source gs filter_ =
       viewOf = Projection.viewsOf gs
       -- CR 603.2's player slots baked in, exactly as Parun.Engine.Target.bakeSlots
       -- does it for a MODE's target filter and off the same map: Filter.matches
-      -- answers Filter.ControlledByBound False wherever the Context binds its
+      -- answers Filter.HeldByBound False wherever the Context binds its
       -- slot to no one player, so an unbaked "that player controls" sweeps nobody rather than sweeping wrong.
       -- Total War's "destroy all untapped non-Wall creatures that player
       -- controls" is the phrase, and Parun.CardTriggerSpec's Total War group is

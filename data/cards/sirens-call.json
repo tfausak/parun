@@ -64,8 +64,13 @@
                                   }
                                 },
                                 {
-                                  "type": "ControlledByBound",
-                                  "value": "namedPlayer"
+                                  "type": "HeldByBound",
+                                  "value": {
+                                    "holder": {
+                                      "type": "Controller"
+                                    },
+                                    "slot": "namedPlayer"
+                                  }
                                 },
                                 {
                                   "type": "Not",
@@ -138,8 +143,13 @@
                               }
                             },
                             {
-                              "type": "ControlledByBound",
-                              "value": "namedPlayer"
+                              "type": "HeldByBound",
+                              "value": {
+                                "holder": {
+                                  "type": "Controller"
+                                },
+                                "slot": "namedPlayer"
+                              }
                             }
                           ]
                         }

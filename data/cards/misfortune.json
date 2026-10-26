@@ -122,8 +122,13 @@
                               }
                             },
                             {
-                              "type": "ControlledByBound",
-                              "value": "modeChooser"
+                              "type": "HeldByBound",
+                              "value": {
+                                "holder": {
+                                  "type": "Controller"
+                                },
+                                "slot": "modeChooser"
+                              }
                             }
                           ]
                         }
