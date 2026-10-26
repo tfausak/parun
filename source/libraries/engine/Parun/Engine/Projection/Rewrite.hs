@@ -1741,8 +1741,7 @@ rewriteCopyException pairs exception = case exception of
   CopyException.GainKeywords keywords -> CopyException.GainKeywords (Set.map (Filter.rewriteKeyword pairs) keywords)
   -- CR 707.9b's type clause names CARD types (CR 205.2a's list), and CR 612.2's
   -- swap reaches only subtypes, so there is nothing here for a pair to change.
-  CopyException.AddCardTypes _ -> exception
-  CopyException.SetCardTypes _ -> exception
+  CopyException.CardTypes {} -> exception
   -- CR 707.9b's subtype clause DOES name a word CR 612.2's swap reaches -- "a
   -- Wall in addition to its other types" is one of the "all instances of one
   -- creature type" Artificial Evolution changes -- so the pairs apply, exactly as
