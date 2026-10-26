@@ -2139,11 +2139,11 @@ matches context view predicate = case predicate of
   -- on the object.
   Filter.IsAttacking -> attacking view
   -- CR 508.1b: the same live read one field over, and the relation is answered
-  -- against the perspective here rather than baked, exactly as HeldBy Controller's is
+  -- against the perspective here rather than baked, exactly as HeldBy's is
   -- -- CR 109.5's "you" is what the match is framed by, not a fact about the
   -- candidate.
   --
-  -- Vacuously False where either half is unreadable, HeldBy Controller's posture: a
+  -- Vacuously False where either half is unreadable, HeldBy's posture: a
   -- candidate attacking nothing, or attacking a planeswalker or a battle, has no
   -- player to relate, and a match nothing framed has no "you" to relate it to.
   Filter.IsAttackingPlayer relation -> case (attackingPlayer view, perspective context) of
@@ -2393,7 +2393,7 @@ matches context view predicate = case predicate of
   -- CR 701.54a ends the designation when another creature takes it, and the next
   -- projection stops matching with nothing to unwind.
   --
-  -- Vacuously False with no perspective, the posture HeldBy Controller and IsPlayer
+  -- Vacuously False with no perspective, the posture HeldBy and IsPlayer
   -- take: "your Ring-bearer" is unanswerable when there is no "you".
   Filter.IsRingBearer -> case (ringBearerFor view, perspective context) of
     (Just designated, Just you) -> designated == you

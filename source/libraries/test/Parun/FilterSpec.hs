@@ -504,7 +504,7 @@ spec s = Spec.describe s "Parun.Engine.Filter" $ do
     Spec.it s "is not HeldBy Controller Opponent" $ do
       Spec.assertBool s (not (Filter.matches (defended 0) blackCreature (Filter.Type.HeldBy Holder.Controller PlayerRelation.Opponent))) "player 0 is the perspective"
 
-    -- HeldBy Controller's vacuity posture on both sides.
+    -- HeldBy's vacuity posture on both sides.
     Spec.it s "is False when either player is absent" $ do
       let noController = blackCreature {Filter.controller = Nothing}
       Spec.assertBool s (not (Filter.matches (defended 0) noController (Filter.Type.ControlledByRole TurnRole.Defending))) "no candidate controller"
@@ -529,7 +529,7 @@ spec s = Spec.describe s "Parun.Engine.Filter" $ do
       Spec.assertBool s (not (Filter.matches noPerspective blackCreature (Filter.Type.HeldBy Holder.Controller PlayerRelation.You))) "where HeldBy Controller You cannot answer"
       Spec.assertBool s (Filter.matches (reached 1) blackCreature (Filter.Type.HeldBy Holder.Controller PlayerRelation.You)) "and disagrees with it on the very same view: the perspective still controls this creature where the recipient does not"
 
-    -- HeldBy Controller's vacuity posture on both sides. No recipient at all is every
+    -- HeldBy's vacuity posture on both sides. No recipient at all is every
     -- position but a per-recipient effect's quantity.
     Spec.it s "is False when either player is absent" $ do
       let noController = blackCreature {Filter.controller = Nothing}
@@ -1484,7 +1484,7 @@ spec s = Spec.describe s "Parun.Engine.Filter" $ do
       Spec.assertBool s (not (Filter.matches self (attackingPlayer 1) (Filter.Type.IsAttackingPlayer PlayerRelation.You))) "attacking someone else is not attacking you"
       Spec.assertBool s (Filter.matches self (attackingPlayer 1) (Filter.Type.IsAttackingPlayer PlayerRelation.Opponent)) "it is attacking an opponent"
 
-    -- HeldBy Controller's posture, and demanded even of AnyPlayer for its reason: a
+    -- HeldBy's posture, and demanded even of AnyPlayer for its reason: a
     -- match nothing framed has no CR 109.5 "you" to relate the attacked player
     -- to, and answering off the one relation that does not read one would make
     -- the atom mean different things by relation.
@@ -2345,7 +2345,7 @@ spec s = Spec.describe s "Parun.Engine.Filter" $ do
     Spec.it s "does not match an undesignated permanent" $ do
       Spec.assertBool s (not (Filter.matches self blackCreature Filter.Type.IsRingBearer)) "no designation"
 
-    -- The posture HeldBy Controller and IsPlayer take: "your Ring-bearer" is
+    -- The posture HeldBy and IsPlayer take: "your Ring-bearer" is
     -- unanswerable where there is no "you" (an off-battlefield search).
     Spec.it s "is vacuously false with no perspective" $ do
       Spec.assertBool s (not (Filter.matches noPerspective ringBearer Filter.Type.IsRingBearer)) "no perspective"
