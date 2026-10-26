@@ -238,8 +238,11 @@ static context attached enchants a
               after <- if itself then fmap (\w -> maybe w (Text.pack "it's " <>) (Text.stripPrefix (Text.pack "it is ") w)) (Trigger.condition it c) else [words']
               let opened = if Text.isPrefixOf (Target.self context) stated then stated else Prose.decapitalise stated
               -- Free: the condition opens the sentence (Excavating Anurid) or
-              -- closes it (Kird Ape).
-              [word <> Text.pack "As long as " <> words' <> Text.pack ", " <> opened <> Text.pack ".", word <> Prose.sentence (full <> Text.pack " as long as " <> after)]
+              -- closes it (Kird Ape), and your turn opens it "During your
+              -- turn" (Blood Burglar) or "As long as it's your turn" (Faithful
+              -- Pikemaster).
+              let openings = [Text.pack "As long as " <> words' <> Text.pack ", "] <> [Text.pack "During your turn, " | words' == Text.pack "it's your turn"]
+              [word <> opening <> opened <> Text.pack "." | opening <- openings] <> [word <> Prose.sentence (full <> Text.pack " as long as " <> after)]
   | otherwise = []
 
 -- | A face's static abilities and combat restrictions, an unconditional

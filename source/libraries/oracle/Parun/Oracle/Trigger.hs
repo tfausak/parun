@@ -296,8 +296,8 @@ castSpell = SlotName.MkSlotName (Text.pack "thatSpell")
 -- | An intervening "if" clause's condition (CR 603.4): a count of cards in
 -- a hand ("you have no cards in hand"), of permanents ("you control no
 -- creatures", "there are no Zombies on the battlefield"), the source's own
--- status ("this artifact is untapped"), or a player's life, monarchy or
--- attack this turn. Any other condition is not spelled out here.
+-- status ("this artifact is untapped"), a player's life, monarchy or attack
+-- this turn, or whose turn it is. Any other condition is not spelled out here.
 condition :: Target.Context -> Condition.Condition -> [Text.Text]
 condition context c = case c of
   Condition.Compares (Compares.MkCompares measured comparison threshold) -> case (measured, threshold) of
@@ -312,6 +312,8 @@ condition context c = case c of
     (Quantity.IsMonarch who, Quantity.Literal 1) | comparison == Comparison.AtLeast -> do
       (subject, _) <- holder context who
       [subject <> (if subject == Text.pack "you" then Text.pack " are" else Text.pack " is") <> Text.pack " the monarch"]
+    -- CR 102.1, as Oracle text writes it (Blood Burglar).
+    (Quantity.IsActivePlayer (PlayerRef.Relative PlayerRelation.You), Quantity.Literal 1) | comparison == Comparison.Exactly -> [Text.pack "it's your turn"]
     (Quantity.AttackersDeclaredThisTurn who, Quantity.Literal 1) | comparison == Comparison.AtLeast -> do
       (subject, _) <- holder context who
       [subject <> Text.pack " attacked this turn"]
@@ -321,9 +323,10 @@ condition context c = case c of
 -- | The ability word (CR 207.2c) Oracle text may print before an ability
 -- whose condition this is. Free for hellbent: printed (Slaughterhouse
 -- Bouncer) or not (Academy at Tolaria West). Free for raid: printed (Mardu
--- Skullhunter) or not (Trynn, Champion of Freedom).
+-- Skullhunter) or not (Trynn, Champion of Freedom). Free for threshold:
+-- printed (Anurid Barkripper) or not (Illuminate History).
 abilityWord :: Text.Text -> [Text.Text]
-abilityWord words' = [Text.empty] <> [Text.pack "Hellbent \8212 " | words' == Text.pack "you have no cards in hand"] <> [Text.pack "Raid \8212 " | words' == Text.pack "you attacked this turn"]
+abilityWord words' = [Text.empty] <> [Text.pack "Hellbent \8212 " | words' == Text.pack "you have no cards in hand"] <> [Text.pack "Raid \8212 " | words' == Text.pack "you attacked this turn"] <> [Text.pack "Threshold \8212 " | words' == Text.pack "there are seven or more cards in your graveyard"]
 
 -- | Whether the condition is the source's own status ("this creature is
 -- attacking"), as 'counted' reads it, after which the source is "it".
@@ -354,11 +357,19 @@ quantifier comparison k = case comparison of
   Comparison.AtMost | k > 0 -> [(const (Prose.cardinal k <> Text.pack " or fewer"), Filter.Plural)]
   _ -> []
 
--- | A count of members of a zone compared with a number: cards in a hand,
--- permanents a player controls or on the battlefield, or the source alone,
--- whose status the condition is.
+-- | A count of members of a zone compared with a number: cards in a hand or
+-- in your graveyard, permanents a player controls or on the battlefield, or
+-- the source alone, whose status the condition is.
 counted :: Target.Context -> Count.Count Quantity.Quantity -> Comparison.Comparison -> Integer -> [Text.Text]
 counted context n comparison k = case Count.scope n of
+  -- "there are seven or more cards in your graveyard" (CR 404.1).
+  Scope.InZone (InZone.MkInZone Zone.Graveyard who@(PlayerRef.Relative PlayerRelation.You)) -> do
+    p <- Filter.phrase (Count.filter n) (Target.keyword context)
+    (before, number) <- quantifier comparison k
+    noun <- Filter.describe number Target.card (Filter.merge p (Filter.MkPhrase [] [Target.card] []))
+    place <- Target.zoneOf Zone.Graveyard who
+    let be = if number == Filter.Singular then Text.pack "is" else Text.pack "are"
+    [Text.pack "there " <> be <> Text.pack " " <> before noun <> Text.pack " " <> noun <> Text.pack " " <> place]
   Scope.InZone (InZone.MkInZone Zone.Hand who)
     | Count.filter n == Filter.Type.And [] -> do
         (subject, have) <- holder context who

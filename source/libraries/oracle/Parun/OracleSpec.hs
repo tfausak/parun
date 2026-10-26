@@ -875,8 +875,12 @@ spec s = Spec.describe s "Parun.Oracle" $ do
         atLeast q k = Condition.Compares (Compares.MkCompares q Comparison.AtLeast (Quantity.Literal k))
         forest = atLeast (countOf (Filter.And [Filter.HasSubtype Subtype.Forest, Filter.ControlledBy PlayerRelation.You]) (onBattlefield (PlayerRef.Relative PlayerRelation.AnyPlayer))) 1
         attacking = atLeast (countOf (Filter.And [Filter.IsSource, Filter.IsAttacking]) (onBattlefield (PlayerRef.Relative PlayerRelation.AnyPlayer))) 1
+        threshold = atLeast (countOf (Filter.And []) (InZone.MkInZone Zone.Graveyard (PlayerRef.Relative PlayerRelation.You))) 7
+        turn = Condition.Compares (Compares.MkCompares (Quantity.IsActivePlayer (PlayerRef.Relative PlayerRelation.You)) Comparison.Exactly (Quantity.Literal 1))
     Spec.assertEq s [[Text.pack "As long as you control a Forest, Spark gets +1/+2.", Text.pack "Spark gets +1/+2 as long as you control a Forest."]] (Oracle.abilities (gated forest [pt 1 2]))
     Spec.assertEq s [[Text.pack "As long as Spark is attacking, it has first strike.", Text.pack "Spark has first strike as long as it's attacking."]] (Oracle.abilities (gated attacking [Modification.GainKeyword Keyword.FirstStrike]))
+    Spec.assertEq s [[Text.pack "As long as there are seven or more cards in your graveyard, Spark gets +1/+1.", Text.pack "Spark gets +1/+1 as long as there are seven or more cards in your graveyard.", Text.pack "Threshold \8212 As long as there are seven or more cards in your graveyard, Spark gets +1/+1.", Text.pack "Threshold \8212 Spark gets +1/+1 as long as there are seven or more cards in your graveyard."]] (Oracle.abilities (gated threshold [pt 1 1]))
+    Spec.assertEq s [[Text.pack "As long as it's your turn, Spark has first strike.", Text.pack "During your turn, Spark has first strike.", Text.pack "Spark has first strike as long as it's your turn."]] (Oracle.abilities (gated turn [Modification.GainKeyword Keyword.FirstStrike]))
 
   -- CR 701.22a: "Scry 2."
   Spec.it s "render prints scrying" $ do
