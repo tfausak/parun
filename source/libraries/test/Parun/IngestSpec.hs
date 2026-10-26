@@ -48,6 +48,18 @@ spec s = Spec.describe s "Parun.Ingest" $ do
     Spec.assertBool s (not (null rendered)) "no card renders"
     Spec.assertEq s [] disagreements
 
+  -- The check above passes over a card that does not render, so the cards
+  -- that do not are listed, one slug a line: a card that stops rendering
+  -- fails here, and one that starts is struck off the list. Not implemented:
+  -- checking the abilities that do render on a listed card (#5488).
+  Spec.it s "the cards that do not render are exactly those listed" $ do
+    root <- Registry.defaultRoot
+    loaded <- Registry.loadRoot root
+    listed <- fmap (Set.fromList . filter (not . null) . lines) (readFile (root <> "/../oracle-unrendered.txt"))
+    let unrendered = Set.fromList [Text.unpack (Slug.unwrap (Registry.filedAs card)) | entry@(_, Right card) <- loaded, Maybe.isJust (Registry.referenceCard entry), Maybe.isNothing (Oracle.render card)]
+    Spec.assertEqWith s "listed, but renders" [] (Set.toList (Set.difference listed unrendered))
+    Spec.assertEqWith s "does not render, but unlisted" [] (Set.toList (Set.difference unrendered listed))
+
   -- `parun ingest` stamps the text on every card MTGJSON has; a dungeon (CR
   -- 309) is not among them, since MTGJSON files dungeons with the tokens.
   Spec.it s "every face of the reference carries its Oracle text" $ do
