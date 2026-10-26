@@ -2074,6 +2074,7 @@ library spec
 -- The test suite. The `parun-test-suite` target is a thin wrapper around it.
 library test
   import: library
+  ghc-options: -O0
   build-depends:
     bytestring ^>=0.12.2,
     containers ^>=0.7,
