@@ -94,6 +94,7 @@ import qualified Parun.Types.Phase as Phase
 import qualified Parun.Types.PlayerId as PlayerId
 import qualified Parun.Types.PlayerRef as PlayerRef
 import qualified Parun.Types.PlayerRelation as PlayerRelation
+import qualified Parun.Types.Pool as Pool
 import qualified Parun.Types.Printing as Printing
 import qualified Parun.Types.ProductionTag as ProductionTag
 import qualified Parun.Types.Prohibition as Prohibition
@@ -106,6 +107,7 @@ import qualified Parun.Types.RoomHalf as RoomHalf
 import qualified Parun.Types.Scope as Scope
 import qualified Parun.Types.StepBegan as StepBegan
 import qualified Parun.Types.TapState as TapState
+import qualified Parun.Types.TargetSlot as TargetSlot
 import qualified Parun.Types.TurnUpProcedure as TurnUpProcedure
 import qualified Parun.Types.While as While
 import qualified Parun.Types.Zone as Zone
@@ -1682,6 +1684,25 @@ interchangeableSourcesSpec s registry = Spec.describe s "Interchangeable mana so
         (offers, paid, after) = greenWindow board
     Spec.assertEqWith s "asked once, with the named Elf beside the two that are alike" (fmap length offers) [2]
     Spec.assertEqWith s "and the three Elves project identically" (fmap (`S.powerToughnessOf` board) (NonEmpty.toList elves)) (replicate 3 (Just (1, 1)))
+    Spec.assertBool s paid "the {G} was paid"
+    Spec.assertEqWith s "off exactly one Elf" (tappedCount (NonEmpty.toList elves) after) 1
+
+  -- CR 115.1: a target slot's chooser (TargetSlot.chooser) is searched too. The
+  -- row is planted: a printed chooser's slot read is masked by its Mode's
+  -- slot-key read, or is a granted ability's own and answers nothing, and
+  -- HolderOfObject, the chooser naming an object outright, is baked only into
+  -- quantities (Quantity.bakeBound). The row affects the Bonesplitter, so only
+  -- the chooser can name an Elf.
+  Spec.it s "CR 115.1 an Elf a stored target slot's chooser names is a candidate of its own" $ do
+    elf <- S.printingOf s registry "Llanowar Elves"
+    splitter <- S.printingOf s registry "Bonesplitter"
+    let (elves, plain) = elfBoard elf 3
+        (weapon, armed) = S.addPermanent splitter S.alice plain
+        chosenFor oid = Modification.GainEnchant (TargetSlot.chosenBy (PlayerRef.HolderOfObject Holder.Controller oid) (TargetSlot.required Pool.Creatures Nothing))
+        (offers, paid, after) = greenWindow (S.withEffect weapon (chosenFor (NonEmpty.head elves)) armed)
+        (unnamed, _, _) = greenWindow (S.withEffect weapon (chosenFor weapon) armed)
+    Spec.assertEqWith s "asked once, with the named Elf beside the two that are alike" (fmap length offers) [2]
+    Spec.assertEqWith s "and with the chooser naming the Bonesplitter, the three Elves are one candidate" (fmap length unnamed) [1]
     Spec.assertBool s paid "the {G} was paid"
     Spec.assertEqWith s "off exactly one Elf" (tappedCount (NonEmpty.toList elves) after) 1
 
