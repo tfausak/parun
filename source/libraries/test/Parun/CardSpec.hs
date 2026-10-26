@@ -1069,9 +1069,8 @@ triggerConditionCounts triggerCondition = case triggerCondition of
   TriggerCondition.AttachedCreatureMentors -> []
   -- CR 700.4's is nullary as well, for the same reason.
   TriggerCondition.AttachedCreatureDies -> []
-  TriggerCondition.AttachedCreatureBecomesTapped -> []
+  TriggerCondition.BecomesTapped _ -> []
   TriggerCondition.PermanentsBecomeTapped _ -> []
-  TriggerCondition.PermanentBecomesTapped _ -> []
   TriggerCondition.SelfBecomesUntapped -> []
   TriggerCondition.AttachedPermanentTappedForMana -> []
   -- CR 106.12a's bystander reading carries a PlayerRelation and a Filter,
@@ -4534,11 +4533,10 @@ triggerConditionFilters triggerCondition = case triggerCondition of
   -- CR 303.4b's "enchanted creature" is one permanent rather than a class of
   -- them too, so this condition carries no Filter either.
   TriggerCondition.AttachedCreatureDies -> []
-  TriggerCondition.AttachedCreatureBecomesTapped -> []
-  -- Deeproot Pilgrimage's "nontoken Merfolk you control" is card text, swept
-  -- like PermanentsDie's.
+  -- Thoughtleech's "an Island an opponent controls" and Deeproot Pilgrimage's
+  -- "nontoken Merfolk you control" are card text, swept like PermanentsDie's.
+  TriggerCondition.BecomesTapped watched -> actingFilters watched
   TriggerCondition.PermanentsBecomeTapped f -> unframed [f]
-  TriggerCondition.PermanentBecomesTapped f -> unframed [f]
   TriggerCondition.SelfBecomesUntapped -> []
   TriggerCondition.AttachedPermanentTappedForMana -> []
   TriggerCondition.SelfExploits -> []
@@ -4865,9 +4863,8 @@ triggerConditionSlots triggerCondition = case triggerCondition of
   TriggerCondition.CardsPutIntoZone {} -> []
   TriggerCondition.SelfLeavesGraveyard -> []
   TriggerCondition.AttachedCreatureDies -> []
-  TriggerCondition.AttachedCreatureBecomesTapped -> []
+  TriggerCondition.BecomesTapped _ -> []
   TriggerCondition.PermanentsBecomeTapped _ -> []
-  TriggerCondition.PermanentBecomesTapped _ -> []
   TriggerCondition.SelfBecomesUntapped -> []
   TriggerCondition.AttachedPermanentTappedForMana -> []
   TriggerCondition.PermanentTappedForMana {} -> []

@@ -93,9 +93,9 @@
       "triggeredAbilities": [
         {
           "condition": {
-            "type": "PermanentsBecomeTapped",
+            "type": "BecomesTapped",
             "value": {
-              "type": "IsSource"
+              "type": "Self"
             }
           },
           "modal": {

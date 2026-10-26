@@ -26,23 +26,26 @@
       "triggeredAbilities": [
         {
           "condition": {
-            "type": "PermanentBecomesTapped",
+            "type": "BecomesTapped",
             "value": {
-              "type": "And",
-              "value": [
-                {
-                  "type": "HasSubtype",
-                  "value": {
-                    "type": "Island"
+              "type": "Matching",
+              "value": {
+                "type": "And",
+                "value": [
+                  {
+                    "type": "HasSubtype",
+                    "value": {
+                      "type": "Island"
+                    }
+                  },
+                  {
+                    "type": "ControlledBy",
+                    "value": {
+                      "type": "Opponent"
+                    }
                   }
-                },
-                {
-                  "type": "ControlledBy",
-                  "value": {
-                    "type": "Opponent"
-                  }
-                }
-              ]
+                ]
+              }
             }
           },
           "modal": {

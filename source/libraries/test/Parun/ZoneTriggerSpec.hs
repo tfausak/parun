@@ -2242,9 +2242,8 @@ representativeEvents cond =
         -- the tapped permanent is the bearer's host does not matter here:
         -- eventBindings claims nothing either way, and the floor is what this
         -- pins.
-        TriggerCondition.AttachedCreatureBecomesTapped -> one (GameEvent.BecameTapped departed)
+        TriggerCondition.BecomesTapped _ -> one (GameEvent.BecameTapped departed)
         TriggerCondition.PermanentsBecomeTapped _ -> one (GameEvent.BecameTapped departed)
-        TriggerCondition.PermanentBecomesTapped _ -> one (GameEvent.BecameTapped departed)
         -- CR 701.26b's own event, and the only one this condition admits, on
         -- `departed`, which is not the bearer: the pair does not match, which
         -- pins the floor for a matching pair too, this arm binding nothing
@@ -2564,9 +2563,9 @@ everyTriggerCondition =
     TriggerCondition.PermanentBecomesDesignated (PermanentBecomesDesignated.MkPermanentBecomesDesignated Designation.Renowned (Filter.Type.And [])),
     TriggerCondition.AttachedCreatureMentors,
     TriggerCondition.AttachedCreatureDies,
-    TriggerCondition.AttachedCreatureBecomesTapped,
+    TriggerCondition.BecomesTapped ActingPermanent.Self,
+    TriggerCondition.BecomesTapped (ActingPermanent.Matching (Filter.Type.HasAttached Filter.Type.IsSource)),
     TriggerCondition.PermanentsBecomeTapped (Filter.Type.And []),
-    TriggerCondition.PermanentBecomesTapped (Filter.Type.And []),
     TriggerCondition.SelfBecomesUntapped,
     TriggerCondition.AttachedPermanentTappedForMana,
     -- ALL THREE relations, on the PermanentSacrificed rows' reasoning below:

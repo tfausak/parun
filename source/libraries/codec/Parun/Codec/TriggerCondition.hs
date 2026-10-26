@@ -129,9 +129,8 @@ codec =
           Arm.payload "CardsLeaveZone" CardLeavesZone.codec TriggerCondition.CardsLeaveZone (\x -> case x of TriggerCondition.CardsLeaveZone y -> Just y; _ -> Nothing),
           Arm.payload "CardsPutIntoZone" CardsPutIntoZone.codec TriggerCondition.CardsPutIntoZone (\x -> case x of TriggerCondition.CardsPutIntoZone y -> Just y; _ -> Nothing),
           Arm.nullary "AttachedCreatureDies" TriggerCondition.AttachedCreatureDies,
-          Arm.nullary "AttachedCreatureBecomesTapped" TriggerCondition.AttachedCreatureBecomesTapped,
+          Arm.payload "BecomesTapped" ActingPermanent.codec TriggerCondition.BecomesTapped (\x -> case x of TriggerCondition.BecomesTapped y -> Just y; _ -> Nothing),
           Arm.payload "PermanentsBecomeTapped" filterCodec TriggerCondition.PermanentsBecomeTapped (\x -> case x of TriggerCondition.PermanentsBecomeTapped y -> Just y; _ -> Nothing),
-          Arm.payload "PermanentBecomesTapped" filterCodec TriggerCondition.PermanentBecomesTapped (\x -> case x of TriggerCondition.PermanentBecomesTapped y -> Just y; _ -> Nothing),
           Arm.nullary "SelfBecomesUntapped" TriggerCondition.SelfBecomesUntapped,
           Arm.nullary "AttachedPermanentTappedForMana" TriggerCondition.AttachedPermanentTappedForMana,
           Arm.payload "PermanentTappedForMana" PermanentTappedForMana.codec TriggerCondition.PermanentTappedForMana (\x -> case x of TriggerCondition.PermanentTappedForMana y -> Just y; _ -> Nothing),
@@ -277,9 +276,8 @@ tagOf x = case x of
   TriggerCondition.CardsLeaveZone {} -> "CardsLeaveZone"
   TriggerCondition.CardsPutIntoZone {} -> "CardsPutIntoZone"
   TriggerCondition.AttachedCreatureDies {} -> "AttachedCreatureDies"
-  TriggerCondition.AttachedCreatureBecomesTapped {} -> "AttachedCreatureBecomesTapped"
+  TriggerCondition.BecomesTapped {} -> "BecomesTapped"
   TriggerCondition.PermanentsBecomeTapped {} -> "PermanentsBecomeTapped"
-  TriggerCondition.PermanentBecomesTapped {} -> "PermanentBecomesTapped"
   TriggerCondition.SelfBecomesUntapped {} -> "SelfBecomesUntapped"
   TriggerCondition.AttachedPermanentTappedForMana {} -> "AttachedPermanentTappedForMana"
   TriggerCondition.PermanentTappedForMana {} -> "PermanentTappedForMana"

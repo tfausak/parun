@@ -34,7 +34,16 @@
       "triggeredAbilities": [
         {
           "condition": {
-            "type": "AttachedCreatureBecomesTapped"
+            "type": "BecomesTapped",
+            "value": {
+              "type": "Matching",
+              "value": {
+                "type": "HasAttached",
+                "value": {
+                  "type": "IsSource"
+                }
+              }
+            }
           },
           "modal": {
             "modes": [

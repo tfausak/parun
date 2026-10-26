@@ -687,15 +687,20 @@ spec s = Spec.describe s "Parun.Codec.TriggerCondition" $ do
       TriggerCondition.codec
       TriggerCondition.AttachedCreatureDies
       " {\"type\":\"AttachedCreatureDies\"} "
-  -- CR 701.26a's tap read off the enchanted permanent. Nullary for
-  -- AttachedCreatureDies' reason, and the TAG is the whole difference between the
-  -- two -- both are the same attachment link watched for a different event.
-  Spec.it s "AttachedCreatureBecomesTapped" $
+  -- CR 701.26a's tap, once per permanent, read off the bearer by id.
+  Spec.it s "BecomesTapped round-trips the bearer itself" $
     Common.assertCodec
       s
       TriggerCondition.codec
-      TriggerCondition.AttachedCreatureBecomesTapped
-      " {\"type\":\"AttachedCreatureBecomesTapped\"} "
+      (TriggerCondition.BecomesTapped ActingPermanent.Self)
+      " {\"type\":\"BecomesTapped\",\"value\":{\"type\":\"Self\"}} "
+  -- The same tap of a permanent the Filter admits.
+  Spec.it s "BecomesTapped round-trips a Filter" $
+    Common.assertCodec
+      s
+      TriggerCondition.codec
+      (TriggerCondition.BecomesTapped (ActingPermanent.Matching (Filter.HasSubtype Subtype.Island)))
+      " {\"type\":\"BecomesTapped\",\"value\":{\"type\":\"Matching\",\"value\":{\"type\":\"HasSubtype\",\"value\":{\"type\":\"Island\"}}}} "
   -- CR 701.26a's tap by a bystander, batch-read (CR 603.2c).
   Spec.it s "PermanentsBecomeTapped round-trips with its Filter" $
     Common.assertCodec
@@ -703,24 +708,15 @@ spec s = Spec.describe s "Parun.Codec.TriggerCondition" $ do
       TriggerCondition.codec
       (TriggerCondition.PermanentsBecomeTapped (Filter.Not Filter.IsToken))
       " {\"type\":\"PermanentsBecomeTapped\",\"value\":{\"type\":\"Not\",\"value\":{\"type\":\"IsToken\"}}} "
-  -- The same tap read once per permanent; the tag is the whole difference.
-  Spec.it s "PermanentBecomesTapped round-trips with its Filter" $
-    Common.assertCodec
-      s
-      TriggerCondition.codec
-      (TriggerCondition.PermanentBecomesTapped (Filter.HasSubtype Subtype.Island))
-      " {\"type\":\"PermanentBecomesTapped\",\"value\":{\"type\":\"HasSubtype\",\"value\":{\"type\":\"Island\"}}} "
-  -- CR 701.26b's untap read off the BEARER. Nullary for the arm above's reason,
-  -- and the TAG is the whole difference between the two directions of one status.
+  -- CR 701.26b's untap read off the BEARER, the other direction of one status.
   Spec.it s "SelfBecomesUntapped" $
     Common.assertCodec
       s
       TriggerCondition.codec
       TriggerCondition.SelfBecomesUntapped
       " {\"type\":\"SelfBecomesUntapped\"} "
-  -- CR 106.12a's tap for mana read off the same attachment link. Nullary for the
-  -- arm above's reason, and the TAG is again the whole difference: the two watch
-  -- one link for a plain tap and for a tap that produced mana.
+  -- CR 106.12a's tap for mana read off the attachment link, nullary for
+  -- AttachedCreatureDies' reason.
   Spec.it s "AttachedPermanentTappedForMana" $
     Common.assertCodec
       s
