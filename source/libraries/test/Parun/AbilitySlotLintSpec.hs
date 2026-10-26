@@ -606,8 +606,8 @@ spendArmedAbilities card =
         _ -> Nothing
    in Set.fromList (Maybe.mapMaybe named (cardAuthoredEffects card))
 
-abilitySlotLintSpec :: (Monad n) => Spec.Spec IO n -> Registry.Registry IO -> n ()
-abilitySlotLintSpec s registry = Spec.describe s "Lint" $ do
+abilitySlotLintSpec :: (Monad n) => Spec.Spec IO n -> Registry.Registry IO -> [(FilePath, Either Text.Text Card.Type.Card)] -> n ()
+abilitySlotLintSpec s registry corpus = Spec.describe s "Lint" $ do
   -- The AbilityName half of the D4 dataflow lint (CR 603.7): an
   -- ArmDelayedTrigger naming an ability the card does not declare is a FAILING
   -- TEST, never a trigger that silently never fires. Equality, not subset: a
@@ -627,7 +627,7 @@ abilitySlotLintSpec s registry = Spec.describe s "Lint" $ do
   -- cardAuthoredEffects and not cardResolutionEffects, for the reason that
   -- function gives: a CR 103.6 opening-hand action can arm one.
   Spec.it s "every armed delayed ability is declared, and every declared one is armed" $ do
-    ps <- S.allPrintings s
+    ps <- S.allPrintings s corpus
     let cardOffends card =
           Resolve.armedAbilities (cardAuthoredEffects card) /= Map.keysSet (Face.delayedAbilities card)
         offenders = filter (anyFace cardOffends . Printing.card) ps
@@ -638,7 +638,7 @@ abilitySlotLintSpec s registry = Spec.describe s "Lint" $ do
   -- up on the wrong card. Splinter Twin and Sakashima the Impostor are the
   -- printings.
   Spec.it s "CR 603.7a every arm inside a quoted ability carries its delayed ability" $ do
-    ps <- S.allPrintings s
+    ps <- S.allPrintings s corpus
     let quotedEffects card =
           concatMap effectWithNested (concatMap (Modal.allEffects . ActivatedAbility.modal) (grantedActivatedAbilities card) <> concatMap (Modal.allEffects . TriggeredAbility.modal) (grantedTriggeredAbilities card))
         namesOnly effect = case effect of
@@ -650,7 +650,7 @@ abilitySlotLintSpec s registry = Spec.describe s "Lint" $ do
   -- CR 603.7: what an arm carries is a delayed TRIGGERED ability, the only kind
   -- Game.carriedDelayedAbility reads.
   Spec.it s "CR 603.7 every carried delayed ability is a triggered one" $ do
-    ps <- S.allPrintings s
+    ps <- S.allPrintings s corpus
     let notTriggered effect = case effect of
           Effect.ArmDelayedTrigger arm -> case ArmDelayedTrigger.ability arm of
             Just (GrantedAbility.Triggered _) -> False
@@ -665,7 +665,7 @@ abilitySlotLintSpec s registry = Spec.describe s "Lint" $ do
   -- names has to say so. Any other condition would wait for an event that never
   -- comes.
   Spec.it s "CR 603.7a every ability a spend trigger names is reflexive" $ do
-    ps <- S.allPrintings s
+    ps <- S.allPrintings s corpus
     let cardOffends card = any (\name -> fmap TriggeredAbility.condition (Map.lookup name (Face.delayedAbilities card)) /= Just TriggerCondition.Reflexive) (Set.toList (spendArmedAbilities card))
         offenders = filter (anyFace cardOffends . Printing.card) ps
     Spec.assertEqWith s "no spend trigger waiting on another event" (fmap (S.nameOf . Printing.card) offenders) []
@@ -676,7 +676,7 @@ abilitySlotLintSpec s registry = Spec.describe s "Lint" $ do
   -- the same name would shadow the rule for any of its permanents holding the
   -- keyword.
   Spec.it s "CR 603.7 no card declares a delayed ability rule 702 already names" $ do
-    ps <- S.allPrintings s
+    ps <- S.allPrintings s corpus
     let cardOffends card = not (Map.null (Map.restrictKeys (Face.delayedAbilities card) (Map.keysSet Keyword.Engine.mintedDelayedAbilities)))
         offenders = filter (anyFace cardOffends . Printing.card) ps
     Spec.assertEqWith s "no card shadows a minted delayed ability" (fmap (S.nameOf . Printing.card) offenders) []
@@ -699,7 +699,7 @@ abilitySlotLintSpec s registry = Spec.describe s "Lint" $ do
   -- so the "unused" half reads every reader: a named ability is used when a
   -- removal, an exile reference or an ignore reads it.
   Spec.it s "CR 613.1f/607.2a every named removal or exile reference names an ability its face declares, and every named ability is read" $ do
-    ps <- S.allPrintings s
+    ps <- S.allPrintings s corpus
     let offenders = filter (anyFace abilityNameOffends . Printing.card) ps
     Spec.assertEqWith s "no dangling or unused ability names" (fmap (S.nameOf . Printing.card) offenders) []
   -- The case above's exile half in every position a pile can be written --
@@ -732,7 +732,7 @@ abilitySlotLintSpec s registry = Spec.describe s "Lint" $ do
   -- Damping Engine names two player abilities, and Volrath's Curse names two
   -- combat restrictions and an activation prohibition, one sentence each.
   Spec.it s "CR 116.2d every ignore names an ignorable ability its face declares" $ do
-    ps <- S.allPrintings s
+    ps <- S.allPrintings s corpus
     let faceOffends face = not (Set.isSubsetOf (ignoredAbilityNames face) (declaredIgnorableAbilityNames face))
         offenders = filter (anyFace faceOffends . Printing.card) ps
     Spec.assertEqWith s "no dangling ignore names" (fmap (S.nameOf . Printing.card) offenders) []
@@ -766,7 +766,7 @@ abilitySlotLintSpec s registry = Spec.describe s "Lint" $ do
   -- own abilities and is minted with empty bindings (Resolve.Slots), so
   -- nothing the minting resolution bound is in scope.
   Spec.it s "every slot a delayed ability reads is bound by its card" $ do
-    ps <- S.allPrintings s
+    ps <- S.allPrintings s corpus
     let cardBound card = Set.insert Binding.triggerSource (Set.unions [armingTargetSlots card, armingEventSlots card, armingCostSlots card, armingSpendSlots card, Resolve.definedSlots (cardResolutionEffects card)])
         abilityOffends card ability =
           modalSlotsOffend
@@ -822,7 +822,7 @@ abilitySlotLintSpec s registry = Spec.describe s "Lint" $ do
   -- declared and defined) rather than deriving it from a dataflow count, and it
   -- names the offending card outright.
   Spec.it s "no delayed ability declares a target slot under a name its card defines" $ do
-    ps <- S.allPrintings s
+    ps <- S.allPrintings s corpus
     let offenders = filter (anyFace shadowsDefinedSlot . Printing.card) ps
     Spec.assertEqWith s "no delayed ability shadows a defined slot" (fmap (S.nameOf . Printing.card) offenders) []
   -- The sweep above is vacuous on its own -- no card offends, and none would
@@ -841,7 +841,7 @@ abilitySlotLintSpec s registry = Spec.describe s "Lint" $ do
   -- are two halves of one printed "your next turn", and what goes wrong when a
   -- card supplies only one of them.
   Spec.it s "every delayed ability armed for YOUR next turn is controller-scoped" $ do
-    ps <- S.allPrintings s
+    ps <- S.allPrintings s corpus
     let offenders = filter (anyFace onsetOffends . Printing.card) ps
     Spec.assertEqWith s "no onset over a condition that admits another player's turn" (fmap (S.nameOf . Printing.card) offenders) []
   -- The sweep above is NOT vacuous -- Meandering Towershell is a real card with
@@ -886,7 +886,7 @@ abilitySlotLintSpec s registry = Spec.describe s "Lint" $ do
   -- CR 702.70a's `thatPlayer`. See triggeredAbilityOffends for what answers a
   -- read there.
   Spec.it s "every slot a triggered ability reads is bound for its condition, and every slot it declares is read" $ do
-    ps <- S.allPrintings s
+    ps <- S.allPrintings s corpus
     let -- CR 400.7d: the permanent a spell becomes keeps the record its own
         -- cost bound (Binding.paidCostRecord), and every ability it triggers
         -- carries it -- so a face whose cost collects evidence may read the
@@ -1212,7 +1212,7 @@ abilitySlotLintSpec s registry = Spec.describe s "Lint" $ do
   -- A GRANTED ability is read too (CardSpec.grantedActivatedAbilities): the
   -- permanent it lands on activates it through the same Activate road.
   Spec.it s "every slot an activated ability reads is bound for its activation, and every slot it declares is read" $ do
-    ps <- S.allPrintings s
+    ps <- S.allPrintings s corpus
     let faceAbilities face = Face.activatedAbilities face <> grantedActivatedAbilities face
         -- Over withMinted, each ability against what its own activation binds:
         -- the Clue a card creates is activated as the Clue's.
@@ -1232,7 +1232,7 @@ abilitySlotLintSpec s registry = Spec.describe s "Lint" $ do
     Spec.assertEqWith s "no dangling activated-ability slot" (fmap fst (filter (activatedAbilityOffends . snd) abilities)) []
   -- CR 601.2c's count, over every carrier at once: see modalCountsOffend.
   Spec.it s "every slot that may take more than one target is read where a set fits" $ do
-    ps <- S.allPrintings s
+    ps <- S.allPrintings s corpus
     let carriers p =
           let face = S.combinedFace p
            in fmap ((,) (Face.name face)) $
@@ -1522,7 +1522,7 @@ abilitySlotLintSpec s registry = Spec.describe s "Lint" $ do
   -- whole corpus load before this sweep ran. Parun.RegistrySpec's "CR 400.1 a
   -- corpus dividing a shared zone between players" is where that is proved.
   Spec.it s "every InZone Count over a shared zone pairs with Relative AnyPlayer" $ do
-    ps <- S.allPrintings s
+    ps <- S.allPrintings s corpus
     let offenders =
           filter
             (anyFace cardOffendsSharedZoneScope . Printing.card)
@@ -1655,6 +1655,6 @@ declaredIgnorableAbilityNames face =
         <> Maybe.mapMaybe ActivationProhibition.name (Face.activationProhibitions face)
     )
 
-spec :: (Monad n) => Spec.Spec IO n -> Registry.Registry IO -> n ()
-spec s registry = Spec.describe s "Parun.Engine.Card" $ do
-  abilitySlotLintSpec s registry
+spec :: (Monad n) => Spec.Spec IO n -> Registry.Registry IO -> [(FilePath, Either Text.Text Card.Type.Card)] -> n ()
+spec s registry corpus = Spec.describe s "Parun.Engine.Card" $ do
+  abilitySlotLintSpec s registry corpus

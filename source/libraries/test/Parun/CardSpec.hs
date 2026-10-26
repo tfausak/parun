@@ -6808,8 +6808,8 @@ overFaces f = concatMap f . NonEmpty.toList . Card.Type.faces
 -- the whole corpus. A sweep alone proves nothing about the lint it runs -- a
 -- correctly authored pool passes a lint that never fires -- so most cases here
 -- pair their sweep with a hand-built offender proving the REJECTING direction.
-lintSpec :: (Monad n) => Spec.Spec IO n -> Registry.Registry IO -> n ()
-lintSpec s registry = Spec.describe s "Lint" $ do
+lintSpec :: (Monad n) => Spec.Spec IO n -> Registry.Registry IO -> [(FilePath, Either Text.Text Card.Type.Card)] -> n ()
+lintSpec s registry corpus = Spec.describe s "Lint" $ do
   -- The SPELL half of the D4 dataflow lint: every slot an effect reads is
   -- declared, and every declared slot is read. Equality, not subset: a slot no
   -- effect reads is a card announcing a target it ignores -- representable in
@@ -6821,7 +6821,7 @@ lintSpec s registry = Spec.describe s "Lint" $ do
   -- Over withMinted: a conjured card is cast like a printed one (CR 601.2), so
   -- its spell owes the same equality against its own costs.
   Spec.it s "every mode's slot reads equal its declared slots" $ do
-    ps <- S.allPrintings s
+    ps <- S.allPrintings s corpus
     let -- What CASTING binds rather than a target slot declaring it, subtracted
         -- from the READ side. It cannot be added to the declared side instead:
         -- the "no reserved binding slot is ever a declared target slot" sweep
@@ -6942,7 +6942,7 @@ lintSpec s registry = Spec.describe s "Lint" $ do
   -- in the granting mode would not rescue it, which is why this is a "reads
   -- nothing" claim rather than a fold into Resolve.slotsOf's ModifyTarget arm.
   Spec.it s "an enchant slot reads no slot, printed or granted" $ do
-    ps <- S.allPrintings s
+    ps <- S.allPrintings s corpus
     let reads_ face = Set.unions (fmap (Map.keysSet . Resolve.targetSlotSlots) (enchantSlots face))
         offenders = filter (anyFace (not . Set.null . reads_) . Printing.card) ps
         prints field = any (anyFace (not . null . field) . Printing.card) ps
@@ -6958,7 +6958,7 @@ lintSpec s registry = Spec.describe s "Lint" $ do
   -- refused on the wire (Parun.Codec.CostChoice), so one option stating no mana
   -- is the mistranscription left for a lint to catch.
   Spec.it s "a choice cost offers more than one payment or pays mana" $ do
-    ps <- S.allPrintings s
+    ps <- S.allPrintings s corpus
     let choicesOf = concatMap Face.additionalCostChoices . Card.Type.faces . Printing.card
         paysMana cost = not (null (foldMap ManaCost.unwrap (Cost.Type.mana cost)))
         misfiled choice = case CostChoice.unwrap choice of
@@ -6980,7 +6980,7 @@ lintSpec s registry = Spec.describe s "Lint" $ do
   -- each on its own (Celebr-8000) binds its second die there, so it owes the
   -- slot.
   Spec.it s "a roll binds the other result only where it rolls two dice" $ do
-    ps <- S.allPrintings s
+    ps <- S.allPrintings s corpus
     let binds effect = case effect of
           Effect.RollDie rollDie -> Maybe.isJust (RollDie.other rollDie)
           _ -> False
@@ -7010,7 +7010,7 @@ lintSpec s registry = Spec.describe s "Lint" $ do
   -- else -- no printing in the pool watches a batch of library exiles or of
   -- draws, so no gameplay board can yet tell one event from two there.
   Spec.it s "a ForEach whose body draws or reads a library top says it is not simultaneous" $ do
-    ps <- S.allPrintings s
+    ps <- S.allPrintings s corpus
     let loopsOf face = Maybe.mapMaybe (\effect -> case effect of Effect.ForEach loop -> Just loop; _ -> Nothing) (cardResolutionEffects face)
         sequentialAction effect = case effect of
           Effect.Draw {} -> True
@@ -7057,7 +7057,7 @@ lintSpec s registry = Spec.describe s "Lint" $ do
   -- actions hang off Parun.Types.Face beside it. See handActionSlotsOffend for why
   -- the declared side is empty and why only `self` comes off the read side.
   Spec.it s "every hand action reads only what performing it binds" $ do
-    ps <- S.allPrintings s
+    ps <- S.allPrintings s corpus
     let offenders = filter (anyFace handActionSlotsOffend . Printing.card) ps
         prints field = any (anyFace (not . null . field) . Printing.card) ps
     -- The guards, because a sweep over an empty traversal passes saying nothing.
@@ -7083,7 +7083,7 @@ lintSpec s registry = Spec.describe s "Lint" $ do
   -- card and relies on the other kind leaving the hand. An action that is
   -- neither would be re-offered for as long as the player took it.
   Spec.it s "CR 103.6 every opening-hand action reveals its card or puts it onto the battlefield" $ do
-    ps <- S.allPrintings s
+    ps <- S.allPrintings s corpus
     let entersItself =
           any
             ( \effect -> case effect of
@@ -7133,7 +7133,7 @@ lintSpec s registry = Spec.describe s "Lint" $ do
   -- comments as the thing that lets them union safely (#475). See
   -- cardSlotNamesCollide for what a shared name silently does.
   Spec.it s "no card's modes share a target slot name" $ do
-    ps <- S.allPrintings s
+    ps <- S.allPrintings s corpus
     let declaring modal =
           length (filter (not . Map.null . Mode.targetSlots) (Foldable.toList (Modal.modes modal)))
         -- Every modal cardSlotNamesCollide sweeps, so the guard below ranges over
@@ -7181,7 +7181,7 @@ lintSpec s registry = Spec.describe s "Lint" $ do
   -- CR 601.2d's division, which a card must read as the part each of the
   -- divided slot's own targets is dealt.
   Spec.it s "no card's division goes unread or is read elsewhere" $ do
-    ps <- S.allPrintings s
+    ps <- S.allPrintings s corpus
     let offenders = filter (anyFace cardDivisionsDangle . Printing.card) ps
     Spec.assertBool s (any (anyFace (any (any (any (Maybe.isJust . TargetSlot.divided) . Mode.targetSlots) . Modal.modes) . faceModals) . Printing.card) ps) "the pool has a divided slot"
     Spec.assertEqWith s "no dangling division" (fmap (S.nameOf . Printing.card) offenders) []
@@ -7199,7 +7199,7 @@ lintSpec s registry = Spec.describe s "Lint" $ do
   -- CR 608.2d's either-or, whose two branches must name each other: the corpus
   -- half, with the same shape the slot-name pair above has.
   Spec.it s "no card's either-or names a sibling that does not name it back" $ do
-    ps <- S.allPrintings s
+    ps <- S.allPrintings s corpus
     let branching = any (any (Maybe.isJust . Clause.orElse) . Mode.clauses) . Modal.modes
         offenders = filter (anyFace cardBranchesAreAsymmetric . Printing.card) ps
     -- Guards against passing vacuously: a pool where no clause branches at all
@@ -7241,7 +7241,7 @@ lintSpec s registry = Spec.describe s "Lint" $ do
   -- CR 118.6's described cost, whose mana part comes from the object its basis
   -- names: the corpus half.
   Spec.it s "no card states a mana part beside a cost described in terms of another object" $ do
-    ps <- S.allPrintings s
+    ps <- S.allPrintings s corpus
     let describes = any (any (any (maybe False (Maybe.isJust . PayGate.basis) . Clause.payGate) . Mode.clauses) . Modal.modes) . faceModals
         offenders = filter (anyFace cardCostBasisStatesMana . Printing.card) ps
     -- Guards against passing vacuously, the either-or sweep's reason: Flash is
@@ -7261,7 +7261,7 @@ lintSpec s registry = Spec.describe s "Lint" $ do
   -- CR 122.5's move onto a group: the corpus half. Synthetic Ancient
   -- Redistributor's group moves are the arms distributePair does ask about.
   Spec.it s "no card moves counters onto a group under a kinds arm the distribution cannot ask" $ do
-    ps <- S.allPrintings s
+    ps <- S.allPrintings s corpus
     let offenders = filter (anyFaceOrMinted cardMovesOntoGroupUnasked . Printing.card) ps
     Spec.assertEqWith s "no unasked group move" (fmap (S.nameOf . Printing.card) offenders) []
   -- And the rejecting direction: the unasked arm onto a group, against the same
@@ -7281,9 +7281,7 @@ lintSpec s registry = Spec.describe s "Lint" $ do
   -- happens to name all fail here. A hand-kept list is exactly what forgets
   -- the file nobody loads.
   Spec.it s "every file in data/cards is filed under its card's joined face names" $ do
-    root <- Registry.defaultRoot
-    loaded <- Registry.loadRoot root
-    Spec.assertBool s (not (null loaded)) "the corpus is not empty"
+    Spec.assertBool s (not (null corpus)) "the corpus is not empty"
     let offends (path, result) = case result of
           Left reason -> Just (path <> ": " <> Text.unpack reason)
           Right card ->
@@ -7291,7 +7289,7 @@ lintSpec s registry = Spec.describe s "Lint" $ do
              in if Registry.stemOf path == belongs
                   then Nothing
                   else Just (path <> ": belongs at " <> Text.unpack (Slug.unwrap belongs) <> ".json")
-    Spec.assertEqWith s "every file is filed under its own name" (Maybe.mapMaybe offends loaded) []
+    Spec.assertEqWith s "every file is filed under its own name" (Maybe.mapMaybe offends corpus) []
   -- CR 702.102: every card that prints fuse can actually BE fused.
   --
   -- Parun.Engine.Card.fusedFace answers Nothing for a fuse card whose halves name
@@ -7301,22 +7299,18 @@ lintSpec s registry = Spec.describe s "Lint" $ do
   -- is always the card file's to fix; the second is a capability nothing in the
   -- pool needs yet (gap #4777).
   Spec.it s "CR 702.102 every card with fuse has a fused face" $ do
-    root <- Registry.defaultRoot
-    loaded <- Registry.loadRoot root
-    Spec.assertBool s (not (null loaded)) "the corpus is not empty"
+    Spec.assertBool s (not (null corpus)) "the corpus is not empty"
     let offends (path, result) = case result of
           Left reason -> Just (path <> ": " <> Text.unpack reason)
           Right card ->
             if Set.member Keyword.Fuse (Face.keywordSet (Card.combined card)) && Maybe.isNothing (Card.fusedFace card)
               then Just (path <> ": prints fuse and cannot be fused")
               else Nothing
-    Spec.assertEqWith s "every card with fuse fuses" (Maybe.mapMaybe offends loaded) []
+    Spec.assertEqWith s "every card with fuse fuses" (Maybe.mapMaybe offends corpus) []
   -- CR 407.3: a card is ante-only exactly when it prints the ante reminder.
   -- The engine reads the flag and never the text; this pins the two together.
   Spec.it s "CR 407.3 a card is ante-only exactly when it prints the ante reminder" $ do
-    root <- Registry.defaultRoot
-    loaded <- Registry.loadRoot root
-    Spec.assertBool s (not (null loaded)) "the corpus is not empty"
+    Spec.assertBool s (not (null corpus)) "the corpus is not empty"
     let reminder = Text.pack "playing for ante"
         offends (path, result) = case result of
           Left reason -> Just (path <> ": " <> Text.unpack reason)
@@ -7325,14 +7319,12 @@ lintSpec s registry = Spec.describe s "Lint" $ do
                 prints = any (maybe False (Text.isInfixOf reminder) . Face.oracleText) faces
                 flagged = any Face.anteOnly faces
              in if prints == flagged then Nothing else Just (path <> ": prints the ante reminder " <> show prints <> " but anteOnly is " <> show flagged)
-    Spec.assertEqWith s "every ante card is flagged, and only those" (Maybe.mapMaybe offends loaded) []
+    Spec.assertEqWith s "every ante card is flagged, and only those" (Maybe.mapMaybe offends corpus) []
   -- CR 407.3: only an ante card adds a card to the ante or changes a card's
   -- owner, and CR 407.4 makes Effect.Ante the only road into the ante: a
   -- MoveToZone into the ante has no player to check ownership against.
   Spec.it s "CR 407.3/407.4 only an ante-only card antes or changes an owner, and antes only through Effect.Ante" $ do
-    root <- Registry.defaultRoot
-    loaded <- Registry.loadRoot root
-    Spec.assertBool s (not (null loaded)) "the corpus is not empty"
+    Spec.assertBool s (not (null corpus)) "the corpus is not empty"
     let antes effect = case effect of
           Effect.Ante {} -> True
           Effect.SetOwner {} -> True
@@ -7352,15 +7344,13 @@ lintSpec s registry = Spec.describe s "Lint" $ do
                     if any antes effects && not (any Face.anteOnly faces)
                       then Just (path <> ": antes or changes an owner without printing the CR 407.3 reminder")
                       else Nothing
-    Spec.assertEqWith s "every ante is an ante card's Effect.Ante" (Maybe.mapMaybe offends loaded) []
+    Spec.assertEqWith s "every ante is an ante card's Effect.Ante" (Maybe.mapMaybe offends corpus) []
   -- CR 400.1: "your graveyard" in a card-leaves trigger is the pile the card
   -- left (CardLeavesZone.whose), never a HeldBy Owner on the card -- an owner and
   -- the pile disagree between an ownership change and its move (CR 407.3).
   -- A HeldBy Owner beside `whose` is an arrival read ("into your hand").
   Spec.it s "CR 400.1 a card-leaves trigger names whose pile through whose, never HeldBy Owner alone" $ do
-    root <- Registry.defaultRoot
-    loaded <- Registry.loadRoot root
-    Spec.assertBool s (not (null loaded)) "the corpus is not empty"
+    Spec.assertBool s (not (null corpus)) "the corpus is not empty"
     let piles = [Zone.Library, Zone.Hand, Zone.Graveyard]
         ownedByConjunct f = case f of
           Filter.Type.HeldBy Holder.Owner _ -> True
@@ -7376,7 +7366,7 @@ lintSpec s registry = Spec.describe s "Lint" $ do
           Right card ->
             let conditions = concatMap (fmap TriggeredAbility.condition . Face.triggeredAbilities) (Card.Type.faces card)
              in if any offendingCondition conditions then Just (path <> ": reads 'your' pile as HeldBy Owner; use whose") else Nothing
-    Spec.assertEqWith s "every card-leaves 'your' is whose" (Maybe.mapMaybe offends loaded) []
+    Spec.assertEqWith s "every card-leaves 'your' is whose" (Maybe.mapMaybe offends corpus) []
   -- The other direction: the sweep above SLUGIFIES the stem before comparing
   -- it to Registry.filedAs, so a committed Wax-Wane.json would still pass it --
   -- Slug.fromText normalizes rather than validates, folding case away before
@@ -7489,7 +7479,7 @@ lintSpec s registry = Spec.describe s "Lint" $ do
   -- compares a candidate against are alike named at the announcement rather than
   -- by anything the modes do.
   Spec.it s "every printing that reads X declares X, and vice versa" $ do
-    ps <- S.allPrintings s
+    ps <- S.allPrintings s corpus
     let -- CR 107.3m's other reader, one CR 614.1c row over from the printed
         -- loyalty above: "this creature enters with X +1/+1 counters on it"
         -- (Protean Hydra). The amount is a Quantity on an
@@ -7586,7 +7576,7 @@ lintSpec s registry = Spec.describe s "Lint" $ do
   -- modes target is CR 601.2c's, not a count: Fireball's "for each target
   -- beyond the first".
   Spec.it s "CR 601.2b a count announced beside X is read by the spell's own reduction and declared nowhere else" $ do
-    ps <- S.allPrintings s
+    ps <- S.allPrintings s corpus
     let declared f = Set.fromList (concatMap Cost.announcedCounts (spellCostsOf f))
         targeted f = foldMap (Map.keysSet . Mode.targetSlots) (Modal.modes (Face.spell f))
         read_ f = Set.difference (Set.delete Binding.variableX (foldMap (QuantitySlot.slots . CostReduction.perEach) (Face.costReductions f))) (targeted f)
@@ -7625,7 +7615,7 @@ lintSpec s registry = Spec.describe s "Lint" $ do
   -- against two different fields for that reason, and neither can stand in for
   -- the other.
   Spec.it s "CR 101.1 every printing whose X the board cannot refuse states a maximum for it" $ do
-    ps <- S.allPrintings s
+    ps <- S.allPrintings s corpus
     let unrefusable c = declaresVariable c && not (Cost.demandGrowsWithX c)
         unrefusableX = any unrefusable . spellCostsOf
         unrefusableAbility ab = unrefusable (ActivatedAbility.cost ab)
@@ -7654,7 +7644,7 @@ lintSpec s registry = Spec.describe s "Lint" $ do
   -- an X in its cost owes a variable N, since rule 107.3i makes the two one
   -- number and Parun.Engine.Suspend reads the announcement into both.
   Spec.it s "CR 107.3d every suspend cost's X is one the board can refuse, and its N is the same X" $ do
-    ps <- S.allPrintings s
+    ps <- S.allPrintings s corpus
     let suspendsOf p = Maybe.maybeToList (KeywordEngine.suspend (Face.keywordSet (S.combinedFace p)))
         variableCounters ability = case Suspend.counters ability of
           SuspendCounters.Literal _ -> False
@@ -7674,7 +7664,7 @@ lintSpec s registry = Spec.describe s "Lint" $ do
   -- ability at once and asks for it with Prompt.RerollDie, so it announces no
   -- mode, target or X and does nothing but reroll.
   Spec.it s "every ability activated inside a die roll is one untargeted reroll" $ do
-    ps <- S.allPrintings s
+    ps <- S.allPrintings s corpus
     let abilitiesOf p = fmap ((,) (Face.name (S.combinedFace p))) (Face.activatedAbilities (S.combinedFace p))
         windowed = concatMap (filter (elem ActivationRestriction.DuringDieRoll . ActivatedAbility.restrictions . snd) . abilitiesOf) ps
         offends (_, ab) =
@@ -7686,7 +7676,7 @@ lintSpec s registry = Spec.describe s "Lint" $ do
     Spec.assertBool s (not (null windowed)) "the pool has such an ability"
     Spec.assertEqWith s "an untargeted reroll alone" (fmap fst (filter offends windowed)) []
   Spec.it s "CR 602.2b every activated ability that reads X declares {X} in its own cost" $ do
-    ps <- S.allPrintings s
+    ps <- S.allPrintings s corpus
     let abilitiesOf p = fmap ((,) (Face.name (S.combinedFace p))) (Face.activatedAbilities (S.combinedFace p))
         abilities = concatMap abilitiesOf ps
         -- CR 607.2e's note reads what the {X} was PAID with rather than X
@@ -7737,7 +7727,7 @@ lintSpec s registry = Spec.describe s "Lint" $ do
   -- it too: a turned-face-up ability reads the X chosen for the morph or disguise
   -- cost (Aurelia's Vindicator's "up to X other target creatures").
   Spec.it s "CR 603.3d only an enters-the-battlefield or turned-face-up triggered ability's target count reads an announced X" $ do
-    ps <- S.allPrintings s
+    ps <- S.allPrintings s corpus
     let inheritsX ability = TriggeredAbility.condition ability `elem` [TriggerCondition.SelfEnters, TriggerCondition.SelfTurnedFaceUp]
         triggers f = Face.triggeredAbilities f <> delayedDeclarations f <> grantedTriggeredAbilities f
         countsByX :: [Modal.Modal Card.Type.Card (GrantedAbility.GrantedAbility Card.Type.Card)] -> Bool
@@ -7777,7 +7767,7 @@ lintSpec s registry = Spec.describe s "Lint" $ do
   -- collects are the third channel, a layer-6 grant carrying text printed on the
   -- granter.
   Spec.it s "CR 702 no card claims a keyword minted an ability it printed" $ do
-    ps <- S.allPrintings s
+    ps <- S.allPrintings s corpus
     let claimed f = filter (not . all KeywordEngine.addsRulesToPrintedAbility . ActivatedAbility.keyword) (Face.activatedAbilities f <> grantedActivatedAbilities f)
         claims f = not (null (claimed f))
         printsAbilities f = not (null (Face.activatedAbilities f))
@@ -7820,7 +7810,7 @@ lintSpec s registry = Spec.describe s "Lint" $ do
     -- narrows back to the printing's own faces.
     Spec.assertBool s (any claims (everyFace (oneFaced minter))) "and a claim on a face only Effect.Create reaches is caught"
   Spec.it s "CR 111.4 every token a card creates is named its subtypes plus \"Token\"" $ do
-    ps <- S.allPrintings s
+    ps <- S.allPrintings s corpus
     -- Every FACE of every token, since CR 707.8a's double-faced token names two.
     let tokensOf face =
           concatMap
@@ -7886,7 +7876,7 @@ lintSpec s registry = Spec.describe s "Lint" $ do
         Spec.assertBool s (tokenNameOffends mundane) "and the same face without Legendary does not"
       other -> Spec.assertFailure s ("expected exactly one Create, got " <> show (length other))
   Spec.it s "CR 702.16h every protection from each domain names the whole domain" $ do
-    ps <- S.allPrintings s
+    ps <- S.allPrintings s corpus
     let faces = concatMap (overFaces withMinted . Printing.card) ps
         grouped = Set.fromList [Face.name face | face <- faces, not (all (null . protectionDomains) (protectionGroups face))]
     Spec.assertEqWith s "no protection group is misclassified" [(Face.name face, offence) | face <- faces, offence <- protectionOffences face] []
@@ -7961,7 +7951,7 @@ lintSpec s registry = Spec.describe s "Lint" $ do
   -- the sweep directly. See mintedFaces; the self-test below is what proves that
   -- half, since no card in the pool offends in either position.
   Spec.it s "no reserved binding slot is ever a declared target slot" $ do
-    ps <- S.allPrintings s
+    ps <- S.allPrintings s corpus
     let offends = not . Set.null . reservedDeclarations
         offenders = filter (anyFace offends . Printing.card) ps
     Spec.assertEqWith s "no card declares a reserved slot" (fmap (S.nameOf . Printing.card) offenders) []
@@ -7971,7 +7961,7 @@ lintSpec s registry = Spec.describe s "Lint" $ do
   -- than asserted -- the two sweeps above cover the names the ENGINE reserves,
   -- and this covers the shape it derives.
   Spec.it s "no declared or bound slot name contains the instance separator" $ do
-    ps <- S.allPrintings s
+    ps <- S.allPrintings s corpus
     let hash = Text.pack "#"
         offends face =
           any (Text.isInfixOf hash . SlotName.unwrap) (Set.union (declaredTargetSlots face) (boundSlots face))
@@ -7991,7 +7981,7 @@ lintSpec s registry = Spec.describe s "Lint" $ do
   -- SCOPE: the declaration sweep's, exactly -- every face the card prints, and
   -- every face it mints.
   Spec.it s "no reserved binding slot is ever bound by a card" $ do
-    ps <- S.allPrintings s
+    ps <- S.allPrintings s corpus
     let offends = not . Set.null . reservedBindings
         offenders = filter (anyFace offends . Printing.card) ps
     Spec.assertEqWith s "no card binds a reserved slot" (fmap (S.nameOf . Printing.card) offenders) []
@@ -8150,7 +8140,7 @@ lintSpec s registry = Spec.describe s "Lint" $ do
   -- slot named there reaches the same evaluator (Parun.Engine.Projection.View.seedCharacteristicPT
   -- substitutes only into a Star).
   Spec.it s "a printed or characteristic-defining P/T reads only reserved slots" $ do
-    ps <- S.allPrintings s
+    ps <- S.allPrintings s corpus
     let offends card = not (Set.isSubsetOf (powerToughnessSlots card) reservedSlots)
         offenders = filter (anyFace offends . Printing.card) ps
     Spec.assertEqWith s "no card's CDA names a slot nothing fills" (fmap (S.nameOf . Printing.card) offenders) []
@@ -8257,12 +8247,12 @@ basicLandSpec s = Spec.describe s "BasicLand" $ do
       (SubtypeEngine.subtypeMana Subtype.Forest)
       (Just (ManaType.Colored Color.Green))
 
-spec :: (Monad n) => Spec.Spec IO n -> Registry.Registry IO -> n ()
-spec s registry = Spec.describe s "Parun.Engine.Card" $ do
+spec :: (Monad n) => Spec.Spec IO n -> Registry.Registry IO -> [(FilePath, Either Text.Text Card.Type.Card)] -> n ()
+spec s registry corpus = Spec.describe s "Parun.Engine.Card" $ do
   cardSpec s
   realSplitCardSpec s registry
   splitBoxSpec s registry
-  lintSpec s registry
+  lintSpec s registry corpus
 
 -- CR 709.4 again, on a PRINTED split card rather than the invented `splitCard`
 -- fixture above.

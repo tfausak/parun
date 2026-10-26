@@ -4,6 +4,7 @@ import qualified Control.Monad.IO.Class as MonadIO
 import qualified Control.Monad.Trans.Class as Trans
 import qualified Control.Monad.Trans.Writer as Writer
 import qualified Data.List as List
+import qualified Data.Text as Text
 import qualified Parun.AbilitySlotLintSpec
 import qualified Parun.ActivateSpec
 import qualified Parun.ActivationProhibitionSpec
@@ -890,6 +891,7 @@ import qualified Parun.TeamSpec
 import qualified Parun.TransformSpec
 import qualified Parun.TriggerSpec
 import qualified Parun.TurnSpec
+import qualified Parun.Types.Card as Card
 import qualified Parun.UntapRestrictionSpec
 import qualified Parun.Uri.FragmentSpec
 import qualified Parun.VanguardSpec
@@ -906,7 +908,8 @@ main :: IO ()
 main = do
   root <- Registry.defaultRoot
   registry <- Registry.fileRegistry root
-  testTree <- buildTestTree registry
+  corpus <- Registry.loadRoot root
+  testTree <- buildTestTree registry corpus
   Tasty.defaultMain testTree
 
 tasty :: (Monad n) => Spec.Spec IO (Writer.WriterT [Tasty.TestTree] n)
@@ -919,19 +922,22 @@ tasty =
       Spec.it = \s -> Writer.tell . List.singleton . HU.testCase s
     }
 
-buildTestTree :: Registry.Registry IO -> IO Tasty.TestTree
-buildTestTree = fmap (Tasty.testGroup "parun") . Writer.execWriterT . spec tasty
+buildTestTree :: Registry.Registry IO -> [(FilePath, Either Text.Text Card.Card)] -> IO Tasty.TestTree
+buildTestTree registry = fmap (Tasty.testGroup "parun") . Writer.execWriterT . spec tasty registry
 
 -- Specs that reach for card data take a registry over the same monad they
--- assert in. The rest need none at all.
-spec :: (MonadIO.MonadIO n) => Spec.Spec IO n -> Registry.Registry IO -> n ()
-spec s registry = do
+-- assert in, and lints of the corpus parun ships take it loaded: every file's
+-- path and parse, read once and parsed only as a lint reaches it, so a run
+-- whose pattern skips the lints pays for the reads alone. The rest need none at
+-- all.
+spec :: (MonadIO.MonadIO n) => Spec.Spec IO n -> Registry.Registry IO -> [(FilePath, Either Text.Text Card.Card)] -> n ()
+spec s registry corpus = do
   -- Parun.EngineSpec comes first because tasty hands tests to its thread
   -- pool in tree order, and this group holds the suite's two longest cases
   -- by an order of magnitude. Started last they were the whole tail.
   Parun.EngineSpec.spec s registry
 
-  Parun.AbilitySlotLintSpec.spec s registry
+  Parun.AbilitySlotLintSpec.spec s registry corpus
   Parun.ActivateSpec.spec s registry
   Parun.ActivationProhibitionSpec.spec s registry
   Parun.AdventureSpec.spec s registry
@@ -945,7 +951,7 @@ spec s registry = do
   Parun.BattleSpec.spec s registry
   Parun.BindingSpec.spec s
   Parun.BoardEffectSpec.spec s registry
-  Parun.CardSpec.spec s registry
+  Parun.CardSpec.spec s registry corpus
   Parun.CardsSpec.spec s
   Parun.CardTriggerSpec.spec s registry
   Parun.CaseSpec.spec s registry
@@ -1658,7 +1664,7 @@ spec s registry = do
   Parun.Codec.ZonePairSpec.spec s
   Parun.Codec.ZoneScopeSpec.spec s
   Parun.Codec.ZoneSpec.spec s
-  Parun.CodecIntegrationSpec.spec s registry
+  Parun.CodecIntegrationSpec.spec s registry corpus
   Parun.CoinSpec.spec s registry
   Parun.ColorSpec.spec s registry
   Parun.CombatCostSpec.spec s registry
@@ -1705,7 +1711,7 @@ spec s registry = do
   Parun.DriverSpec.spec s registry
   Parun.DungeonSpec.spec s registry
   Parun.EarthbendSpec.spec s registry
-  Parun.EffectLintSpec.spec s registry
+  Parun.EffectLintSpec.spec s registry corpus
   Parun.EmperorSpec.spec s registry
   Parun.EntryReplacementSpec.spec s registry
   Parun.EntryRestrictionSpec.spec s registry
@@ -1726,7 +1732,7 @@ spec s registry = do
   Parun.Extra.SemigroupSpec.spec s
   Parun.Extra.Word8Spec.spec s
   Parun.FaceDownSpec.spec s registry
-  Parun.FilterPositionLintSpec.spec s registry
+  Parun.FilterPositionLintSpec.spec s registry corpus
   Parun.FilterSpec.spec s
   Parun.FlipSpec.spec s registry
   Parun.ForageSpec.spec s registry
@@ -1735,7 +1741,7 @@ spec s registry = do
   Parun.GoadSpec.spec s registry
   Parun.HarnessSpec.spec s registry
   Parun.HealSpec.spec s registry
-  Parun.IngestSpec.spec s
+  Parun.IngestSpec.spec s corpus
   Parun.InitiativeSpec.spec s registry
   Parun.InvestigateSpec.spec s registry
   Parun.Json.ArraySpec.spec s

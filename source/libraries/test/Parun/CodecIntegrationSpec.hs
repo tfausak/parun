@@ -78,9 +78,9 @@ import qualified Parun.Types.ZoneChange as ZoneChange
 roundTrip :: (Applicative m, Eq a, Show a) => Spec.Spec m n -> String -> (a -> Value.Value) -> (Value.Value -> Either Text a) -> a -> m ()
 roundTrip s label enc dec x = Spec.assertEqWith s label (dec (enc x)) (Right x)
 
-spec :: (Monad n) => Spec.Spec IO n -> Registry.Registry IO -> n ()
-spec s registry = Spec.describe s "Parun.Codec (integration)" $ do
-  gameStateRoundTripSpec s registry
+spec :: (Monad n) => Spec.Spec IO n -> Registry.Registry IO -> [(FilePath, Either Text.Text Card.Type.Card)] -> n ()
+spec s registry corpus = Spec.describe s "Parun.Codec (integration)" $ do
+  gameStateRoundTripSpec s registry corpus
   -- Keyword's own per-constructor coverage, including the payload-bearing
   -- Landwalk/Cycling/Flashback/Entwine/Poisonous/Toxic arms, lives in
   -- Parun.Codec.KeywordSpec now. CounterKind's own per-constructor coverage,
@@ -131,10 +131,10 @@ spec s registry = Spec.describe s "Parun.Codec (integration)" $ do
   -- Parun.Codec.ModalSpec.
   Spec.describe s "honesty round-trip over allPrintings" $ do
     Spec.it s "P1: Codec.decode Printing.Codec.codec . Codec.encode Printing.Codec.codec == Right" $ do
-      ps <- S.allPrintings s
+      ps <- S.allPrintings s corpus
       mapM_ (\p -> Spec.assertEqWith s (show (Face.name (S.combinedFace p))) (Codec.decode Printing.Codec.codec (Codec.encode Printing.Codec.codec p)) (Right p)) ps
     Spec.it s "P2: through text" $ do
-      ps <- S.allPrintings s
+      ps <- S.allPrintings s corpus
       mapM_
         (\p -> Spec.assertEqWith s (show (Face.name (S.combinedFace p))) (Common.parse (Common.render (Codec.encode Printing.Codec.codec p)) >>= Codec.decode Printing.Codec.codec) (Right p))
         ps
@@ -309,10 +309,10 @@ noZombiesOnBattlefield =
 -- The per-field shapes ARE pinned by literals, in the 110-odd Parun.Codec.XSpec
 -- modules. What these cases add is the one thing those cannot: that every field
 -- is carried, in a state the engine really built.
-gameStateRoundTripSpec :: (Monad n) => Spec.Spec IO n -> Registry.Registry IO -> n ()
-gameStateRoundTripSpec s registry = do
+gameStateRoundTripSpec :: (Monad n) => Spec.Spec IO n -> Registry.Registry IO -> [(FilePath, Either Text.Text Card.Type.Card)] -> n ()
+gameStateRoundTripSpec s registry corpus = do
   let roundTrips label gs = do
-        resolve <- corpusResolver s
+        resolve <- corpusResolver s corpus
         let c = GameState.Codec.codec resolve
         Common.assertMatchesSchema s c gs
         Spec.assertEqWith s label (Codec.decode c (Codec.encode c gs)) (Right gs)
@@ -403,7 +403,7 @@ gameStateRoundTripSpec s registry = do
   -- row in it is what reads that half of the codec at all.
   Spec.it s "a control row round trips, and is written only once there is one" $ do
     mountain <- S.printingOf s registry "Mountain"
-    resolve <- corpusResolver s
+    resolve <- corpusResolver s corpus
     let plain = S.oneMountainState mountain Phase.PrecombatMain
         controlled = plain {GameState.control = Map.singleton S.bob (pure (S.resolutionControl S.alice))}
         c = GameState.Codec.codec resolve
@@ -427,7 +427,7 @@ gameStateRoundTripSpec s registry = do
   -- given a default the record cannot hold, shows up here.
   Spec.it s "a defaulted field is omitted at its default and written once it differs" $ do
     mountain <- S.printingOf s registry "Mountain"
-    resolve <- corpusResolver s
+    resolve <- corpusResolver s corpus
     let plain = S.oneMountainState mountain Phase.PrecombatMain
         c = GameState.Codec.codec resolve
     Spec.assertEqWith
@@ -451,7 +451,7 @@ gameStateRoundTripSpec s registry = do
   -- pass with the whole record written out.
   Spec.it s "a printing the resolver knows is written as its name" $ do
     mountain <- S.printingOf s registry "Mountain"
-    resolve <- corpusResolver s
+    resolve <- corpusResolver s corpus
     let gs = S.oneMountainState mountain Phase.PrecombatMain
     Spec.assertEqWith
       s
@@ -464,7 +464,7 @@ gameStateRoundTripSpec s registry = do
   -- for exactly this, and this is the case that drives it.
   Spec.it s "an unnameable printing is written out in full" $ do
     mountain <- S.printingOf s registry "Mountain"
-    resolve <- corpusResolver s
+    resolve <- corpusResolver s corpus
     let emblem = Printing.Type.ofCard (Ring.theRingEmblem 1)
         (_, gs) = S.addToken (Ring.theRingEmblem 1) S.alice (S.oneMountainState mountain Phase.PrecombatMain)
         c = GameState.Codec.codec resolve
@@ -533,9 +533,9 @@ gameStateRoundTripSpec s registry = do
 -- hands the answer in instead; this is that caller. Keyed by every face name,
 -- which is what Parun.Registry.index keys too, so a split card resolves under
 -- either half.
-corpusResolver :: Spec.Spec IO n -> IO (CardName.Type.CardName -> Maybe Card.Type.Card)
-corpusResolver s = do
-  ps <- S.allPrintings s
+corpusResolver :: Spec.Spec IO n -> [(FilePath, Either Text.Text Card.Type.Card)] -> IO (CardName.Type.CardName -> Maybe Card.Type.Card)
+corpusResolver s corpus = do
+  ps <- S.allPrintings s corpus
   let cards =
         Map.fromList $ do
           p <- ps

@@ -1838,14 +1838,14 @@ holdsPlayer pool = case pool of
   Pool.CardsInAnte -> False
   Pool.CreaturesAndCardsInGraveyard _ -> False
 
-effectLintSpec :: (Monad n) => Spec.Spec IO n -> Registry.Registry IO -> n ()
-effectLintSpec s registry = Spec.describe s "Lint" $ do
+effectLintSpec :: (Monad n) => Spec.Spec IO n -> Registry.Registry IO -> [(FilePath, Either Text.Text Card.Type.Card)] -> n ()
+effectLintSpec s registry corpus = Spec.describe s "Lint" $ do
   -- CR 208.1 / 208.2: a printed power or toughness box holds a number, or a value
   -- including a star. The type permits any Quantity there, and a computed one
   -- would be evaluated at Projection.baseCharacteristics' seed against a board
   -- that has not been described yet -- see printedBoxOffends.
   Spec.it s "CR 208.1 / 208.2 every printed power and toughness box is a number or a star" $ do
-    ps <- S.allPrintings s
+    ps <- S.allPrintings s corpus
     let offenders = filter (anyFace printedBoxOffends . Printing.card) ps
     Spec.assertEqWith s "no printed box holds a computed quantity" (fmap (S.nameOf . Printing.card) offenders) []
     -- The sweep is vacuous on a predicate that accepts everything, so both
@@ -1885,7 +1885,7 @@ effectLintSpec s registry = Spec.describe s "Lint" $ do
   -- "AT LEAST one", since CR 702.5c lets an Aura have several -- the count is not
   -- what makes a card an Aura, only the presence.
   Spec.it s "a card is an Aura iff it declares an enchant ability" $ do
-    ps <- S.allPrintings s
+    ps <- S.allPrintings s corpus
     let offends c = Card.isAura c /= not (null (Face.enchant c))
         offenders = filter (anyFace offends . Printing.card) ps
     Spec.assertEqWith s "Aura iff enchant" (fmap (S.nameOf . Printing.card) offenders) []
@@ -1900,7 +1900,7 @@ effectLintSpec s registry = Spec.describe s "Lint" $ do
   -- any the card's own Modification.LoseEnchant takes away: Animate Dead's
   -- graveyard instance is gone by the time its Creatures one is gained.
   Spec.it s "every card's enchant pools nest" $ do
-    ps <- S.allPrintings s
+    ps <- S.allPrintings s corpus
     let lost c = [slot | Modification.LoseEnchant slot <- grantedModifications c]
         live c = filter (`notElem` lost c) (enchantSlots c)
         offends c = not (null (live c)) && Maybe.isNothing (Card.poolMeet (fmap TargetSlot.pool (live c)))
@@ -1931,7 +1931,7 @@ effectLintSpec s registry = Spec.describe s "Lint" $ do
   -- A codec-level rejection would be the wrong shape: (Codec.decode Modification.codec) is
   -- shared with staticAbilities, which Control Magic legitimately uses.
   Spec.it s "no card authors a control modification into a resolving effect (#199)" $ do
-    ps <- S.allPrintings s
+    ps <- S.allPrintings s corpus
     let offends effect = case effect of
           Effect.ModifyTarget (ModifyTarget.MkModifyTarget _ modification _ _) -> Projection.layer modification == Layer.Control
           _ -> False
@@ -1946,7 +1946,7 @@ effectLintSpec s registry = Spec.describe s "Lint" $ do
   -- lets Mishra's Workshop write one key, Omen Hawker another and Overgrown
   -- Zealot a third.
   Spec.it s "no card adds mana no payment could spend (CR 106.6)" $ do
-    ps <- S.allPrintings s
+    ps <- S.allPrintings s corpus
     let offends effect = case effect of
           Effect.AddMana addition -> case ManaAddition.restriction addition of
             Just restriction -> null (restrictionFilters restriction) && Maybe.isNothing (ManaRestriction.keywordActivations restriction)
@@ -1963,7 +1963,7 @@ effectLintSpec s registry = Spec.describe s "Lint" $ do
   -- in the pool holds a word a text changer could swap. This is the fence, and the
   -- reason the two family arms were not generalised into AddSubtype.
   Spec.it s "CR 612.2 no AddSubtype carries a land type or a creature type" $ do
-    ps <- S.allPrintings s
+    ps <- S.allPrintings s corpus
     let addedSubtypes modification = case modification of
           Modification.AddSubtype subtype -> [subtype]
           _ -> []
@@ -1985,7 +1985,7 @@ effectLintSpec s registry = Spec.describe s "Lint" $ do
   -- attacking genuinely are common to Create and MoveToZone, so splitting the
   -- record to keep one field off one opcode would duplicate the other two.
   Spec.it s "no Create carries CR 712.14a's transformed entry rider" $ do
-    ps <- S.allPrintings s
+    ps <- S.allPrintings s corpus
     let creates effect = case effect of
           Effect.Create (Create.MkCreate _ _ riders _ _) -> EntryRiders.transformed riders
           _ -> False
@@ -2017,7 +2017,7 @@ effectLintSpec s registry = Spec.describe s "Lint" $ do
   -- moves every member, which is Feral Lightning's "exile them" and Ignorant
   -- Bliss' "return those cards to your hand".
   Spec.it s "no card reads a slot a plural move bound with a singular reader" $ do
-    ps <- S.allPrintings s
+    ps <- S.allPrintings s corpus
     let -- The refs that move at most ONE object, and so bind the singular shape
         -- whatever the board holds. A TopOfLibrary is `depth` cards PER LIBRARY,
         -- so it qualifies only at a LITERAL depth of one over a PlayerRef naming a
@@ -2643,7 +2643,7 @@ effectLintSpec s registry = Spec.describe s "Lint" $ do
   -- non-library move is merely inert card data; this one is not, which is why it
   -- gets a lint of its own.
   Spec.it s "no MoveToZone leaves the end to an owner off a library" $ do
-    ps <- S.allPrintings s
+    ps <- S.allPrintings s corpus
     let offends effect = case effect of
           Effect.MoveToZone (MoveToZone.MkMoveToZone _ zone _ _ _ placement _) -> ownerPicks placement && zone /= Zone.Library
           _ -> False
@@ -2669,7 +2669,7 @@ effectLintSpec s registry = Spec.describe s "Lint" $ do
   -- opcodes that reach Resolve.askingObjects ask every question, and a card may
   -- write only the ones a gameplay test exercises there -- see effectObjectRefs.
   Spec.it s "no effect asks for a chosen card where nothing can ask" $ do
-    ps <- S.allPrintings s
+    ps <- S.allPrintings s corpus
     let offenders = filter (anyFace (not . all (null . inertChoosers) . cardAuthoredEffects) . Printing.card) ps
         asks = any (anyFace (any (any (chooserRef . snd) . effectObjectRefs) . cardAuthoredEffects) . Printing.card) ps
     -- Guards against a vacuous sweep in the ONE direction it can guard: with no
@@ -2678,7 +2678,7 @@ effectLintSpec s registry = Spec.describe s "Lint" $ do
     Spec.assertBool s asks "the pool has a card asking a player to pick a card"
     Spec.assertEqWith s "a chosen card under an opcode that cannot ask (CR 608.2d)" (fmap (S.nameOf . Printing.card) offenders) []
   Spec.it s "no AllOf outside a move, a play grant, a loop or a damage instruction" $ do
-    ps <- S.allPrintings s
+    ps <- S.allPrintings s corpus
     let offenders = filter (anyFace (any strayAllOf . cardAuthoredEffects) . Printing.card) ps
         moved = any (anyFace (any (any (isAllOf . snd) . effectObjectRefs) . cardAuthoredEffects) . Printing.card) ps
         isAllOf ref = case ref of
@@ -2841,7 +2841,7 @@ effectLintSpec s registry = Spec.describe s "Lint" $ do
   -- the Unframed, so it is no more an ObjectRef position here than a keyword
   -- written anywhere else is (#2740).
   Spec.it s "every ObjectRef position the Filter traversal reaches is one the asking traversal reaches" $ do
-    ps <- S.allPrintings s
+    ps <- S.allPrintings s corpus
     let viaRefs card = Set.fromList $ do
           (_, ref) <- concatMap effectObjectRefs (cardResolutionEffects card)
           (SourceHostFramed, f) <- frame SourceHostFramed (objectRefFilters ref)
@@ -2880,7 +2880,7 @@ effectLintSpec s registry = Spec.describe s "Lint" $ do
   -- gates on the destination, so this lints an authoring mistake rather than
   -- guarding the engine.
   Spec.it s "no effect exiles face down anywhere but exile" $ do
-    ps <- S.allPrintings s
+    ps <- S.allPrintings s corpus
     let offends effect = case effect of
           Effect.MoveToZone (MoveToZone.MkMoveToZone _ zone riders _ _ _ _) -> EntryRiders.exiledFaceDown riders && zone /= Zone.Exile
           Effect.Create (Create.MkCreate _ _ riders _ _) -> EntryRiders.exiledFaceDown riders
@@ -2906,7 +2906,7 @@ effectLintSpec s registry = Spec.describe s "Lint" $ do
   -- destination, minting onto the battlefield, and CR 111.7 would make a token
   -- anywhere else cease to exist anyway.
   Spec.it s "no effect enters blocking anywhere but the battlefield" $ do
-    ps <- S.allPrintings s
+    ps <- S.allPrintings s corpus
     let offends effect = case effect of
           Effect.MoveToZone (MoveToZone.MkMoveToZone _ zone riders _ _ _ _) -> Maybe.isJust (EntryRiders.blocking riders) && zone /= Zone.Battlefield
           _ -> False
@@ -2935,7 +2935,7 @@ effectLintSpec s registry = Spec.describe s "Lint" $ do
   -- The CreateCopy half is the "no CreateCopy carries an entry rider but ..." lint
   -- below, which fences every field this one does not.
   Spec.it s "each attachment rider is on the opcode that reads it" $ do
-    ps <- S.allPrintings s
+    ps <- S.allPrintings s corpus
     let specified riders = case EntryRiders.attachedTo riders of
           Just (EntryHost.Specified _) -> True
           _ -> False
@@ -2992,7 +2992,7 @@ effectLintSpec s registry = Spec.describe s "Lint" $ do
   -- Event.changeZoneEntering gates on the destination, so this lints an
   -- authoring mistake rather than guarding the engine.
   Spec.it s "no effect enters face down anywhere but the battlefield" $ do
-    ps <- S.allPrintings s
+    ps <- S.allPrintings s corpus
     let offends effect = case effect of
           Effect.MoveToZone (MoveToZone.MkMoveToZone _ zone riders _ _ _ _) -> Maybe.isJust (EntryRiders.faceDown riders) && zone /= Zone.Battlefield
           Effect.Create (Create.MkCreate _ _ riders _ _) -> Maybe.isJust (EntryRiders.faceDown riders)
@@ -3010,7 +3010,7 @@ effectLintSpec s registry = Spec.describe s "Lint" $ do
   -- CR 707.14's note rides the same record and is read on the MoveToZone road
   -- alone: the noted card is the one being moved, which a token is not.
   Spec.it s "only a move onto the battlefield notes a card" $ do
-    ps <- S.allPrintings s
+    ps <- S.allPrintings s corpus
     let offends effect = case effect of
           Effect.MoveToZone (MoveToZone.MkMoveToZone _ zone riders _ _ _ _) -> EntryRiders.noted riders && zone /= Zone.Battlefield
           Effect.Create (Create.MkCreate _ _ riders _ _) -> EntryRiders.noted riders
@@ -3026,7 +3026,7 @@ effectLintSpec s registry = Spec.describe s "Lint" $ do
   -- battlefield, so its effects ride the MoveToZone road alone and only to the
   -- battlefield; Event's Create arms do not read them.
   Spec.it s "only a move onto the battlefield enters under CR 611.2e effects" $ do
-    ps <- S.allPrintings s
+    ps <- S.allPrintings s corpus
     let carries riders = not (Seq.null (EntryRiders.characteristics riders))
         offends effect = case effect of
           Effect.MoveToZone (MoveToZone.MkMoveToZone _ zone riders _ _ _ _) -> carries riders && zone /= Zone.Battlefield
@@ -3058,7 +3058,7 @@ effectLintSpec s registry = Spec.describe s "Lint" $ do
   -- battlefield, and a copy token could be one -- and no printing writes it on a
   -- CreateCopy, which is what the lint above says of the MoveToZone road too.
   Spec.it s "no CreateCopy carries an entry rider but counters, tapped, attacking and blocking" $ do
-    ps <- S.allPrintings s
+    ps <- S.allPrintings s corpus
     let bare riders = riders == EntryRiders.defaultValue {EntryRiders.counters = EntryRiders.counters riders, EntryRiders.tapped = EntryRiders.tapped riders, EntryRiders.attacking = EntryRiders.attacking riders, EntryRiders.blocking = EntryRiders.blocking riders}
         offends effect = case effect of
           Effect.CreateCopy (CreateCopy.MkCreateCopy _ _ riders _ _) -> not (bare riders)
@@ -3076,7 +3076,7 @@ effectLintSpec s registry = Spec.describe s "Lint" $ do
   -- Effect.Create names in its own field, so its rider's instructed player is
   -- read by nothing; only the MoveToZone arm resolves one.
   Spec.it s "no Create names an instructed player in its entry rider" $ do
-    ps <- S.allPrintings s
+    ps <- S.allPrintings s corpus
     let offends effect = case effect of
           Effect.Create (Create.MkCreate _ _ riders _ _) -> EntryRiders.under riders /= EntryRiders.under EntryRiders.defaultValue && EntryRiders.under riders /= EntryController.Owner
           _ -> False
@@ -3099,7 +3099,7 @@ effectLintSpec s registry = Spec.describe s "Lint" $ do
   -- offender list is a fact about what those rows say rather than about the pool
   -- reaching TurnUpR at all.
   Spec.it s "no printing authors a turn-up procedure condition (CR 702.37b)" $ do
-    ps <- S.allPrintings s
+    ps <- S.allPrintings s corpus
     let writes p = anyFace (any p . cardReplacementEffects) . Printing.card
         offenders = filter (writes turnUpRequiringOffends) ps
         rows = filter (writes isTurnUpR) ps
@@ -3123,7 +3123,7 @@ effectLintSpec s registry = Spec.describe s "Lint" $ do
   -- Vesuvan Shapeshifter and Dinosaur Headdress with Vesuva's `tapped` baked
   -- into their rows, the pair above's shape.
   Spec.it s "no turn-up or attach copy states an entry rider (CR 614.1d, 707.9e)" $ do
-    ps <- S.allPrintings s
+    ps <- S.allPrintings s corpus
     vesuvan <- S.printingOf s registry "Vesuvan Shapeshifter"
     headdress <- S.printingOf s registry "Paleontologist's Pick-Axe"
     let writes p = anyFace (any p . cardReplacementEffects) . Printing.card
@@ -3144,7 +3144,7 @@ effectLintSpec s registry = Spec.describe s "Lint" $ do
   -- the codec accepts. See phasePatternOffends for why a card cannot name a
   -- player, and for why this is a lint rather than a type split (#437).
   Spec.it s "no card pairs an instruction with a rewrite the engine cannot carry out" $ do
-    ps <- S.allPrintings s
+    ps <- S.allPrintings s corpus
     let rowsOf = anyFace (any isInstructionR . cardReplacementEffects) . Printing.card
         offenders = filter (anyFace (any instructionRowOffends . cardReplacementEffects) . Printing.card) ps
     -- Guards against a vacuous sweep: these cards printing an InstructionR are
@@ -3176,7 +3176,7 @@ effectLintSpec s registry = Spec.describe s "Lint" $ do
     Spec.assertBool s (not (null (rowsOf pokey)) && not (any instructionRowOffends (rowsOf pokey))) "Pokey's d20 instead of a flip is accepted"
     Spec.assertBool s (all (instructionRowOffends . naming PlayerInstruction.Scry) (rowsOf pokey)) "while a d20 instead of a scry is rejected"
   Spec.it s "no card authors a player-scoped phase skip (#437)" $ do
-    ps <- S.allPrintings s
+    ps <- S.allPrintings s corpus
     let offenders = filter (anyFace (any phasePatternOffends . cardReplacementEffects) . Printing.card) ps
     -- Guards against a vacuous sweep: with no PhaseR in the pool at all this
     -- would pass whatever the classification said. Eon Hub is the card that
@@ -3200,7 +3200,7 @@ effectLintSpec s registry = Spec.describe s "Lint" $ do
   -- only the engine writes: CR 615.7's shielded recipient and its remaining amount,
   -- plus CR 122.1c's minted pair. See engineOnlyOffends.
   Spec.it s "no card authors a recipient-scoped damage pattern or an engine-minted shield" $ do
-    ps <- S.allPrintings s
+    ps <- S.allPrintings s corpus
     let offenders = filter (anyFace (any engineOnlyOffends . cardReplacementEffects) . Printing.card) ps
     -- Guards against a vacuous sweep: Fog is the card that prints a DamageR.
     Spec.assertBool s (any (anyFace (any isDamageR . cardReplacementEffects) . Printing.card) ps) "the pool has a card printing a damage replacement"
@@ -3259,7 +3259,7 @@ effectLintSpec s registry = Spec.describe s "Lint" $ do
   -- CR 615.5's rider is a PREVENTION effect's, which the type cannot say. See
   -- riderWithoutPreventionOffends.
   Spec.it s "no card hangs CR 615.5's additional effect off a rewrite that prevents nothing" $ do
-    ps <- S.allPrintings s
+    ps <- S.allPrintings s corpus
     let offenders = filter (anyFace (any riderWithoutPreventionOffends . cardReplacementEffects) . Printing.card) ps
     -- Guards against a vacuous sweep: Stormwild Capridor is the card that prints
     -- a rider at all.
@@ -3278,7 +3278,7 @@ effectLintSpec s registry = Spec.describe s "Lint" $ do
     Spec.assertBool s (any (riderWithoutPreventionOffends . unprevent) printed) "and the same rider on a doubling is rejected"
   -- CR 614.1a: a token row has to DO something. See idleTokenRowOffends.
   Spec.it s "no card prints a token replacement that neither scales nor appends" $ do
-    ps <- S.allPrintings s
+    ps <- S.allPrintings s corpus
     let offenders = filter (anyFace (any idleTokenRowOffends . cardReplacementEffects) . Printing.card) ps
     -- Guards against a vacuous sweep: Doubling Season, Queen Allenal of
     -- Ruadach, Quina, Qu Gourmet and Case of the Pilfered Proof print token
@@ -3299,7 +3299,7 @@ effectLintSpec s registry = Spec.describe s "Lint" $ do
   -- CR 701.24a: the shuffle rider randomizes a library, so the redirect carrying
   -- it has to name one. See shufflingOutsideLibraryOffends.
   Spec.it s "no card shuffles a redirect that does not send the card into a library" $ do
-    ps <- S.allPrintings s
+    ps <- S.allPrintings s corpus
     let offenders = filter (anyFace (any shufflingOutsideLibraryOffends . cardReplacementEffects) . Printing.card) ps
     -- Guards against a vacuous sweep: Nexus of Fate is the card that prints a
     -- zone-change rider at all.
@@ -3321,7 +3321,7 @@ effectLintSpec s registry = Spec.describe s "Lint" $ do
   -- one of them and only this rejects a shield saying nothing at all. See
   -- shieldNamingNothingOffends.
   Spec.it s "no card authors a prevention shield that names nothing to shield" $ do
-    ps <- S.allPrintings s
+    ps <- S.allPrintings s corpus
     let offenders = filter (anyFace (any shieldNamingNothingOffends . cardResolutionEffects) . Printing.card) ps
     -- Guards against a vacuous sweep: with no prevention shield in the pool at
     -- all this would pass whatever a card said. Mending Hands prints the counted
@@ -3394,7 +3394,7 @@ effectLintSpec s registry = Spec.describe s "Lint" $ do
   -- Parun.Engine.PlayerEffect.unpreventable's board fold EXACT rather than
   -- approximate. See unpreventableScopeOffends.
   Spec.it s "no card narrows CR 615.12's \"damage can't be prevented\" by player" $ do
-    ps <- S.allPrintings s
+    ps <- S.allPrintings s corpus
     let offenders = filter (anyFace (any (uncurry unpreventableScopeOffends) . cardPlayerScopes) . Printing.card) ps
     -- Guards against a vacuous sweep: with no such effect in the pool at all
     -- this would pass whatever the classification said. Spider-Punk is the card
@@ -3441,7 +3441,7 @@ effectLintSpec s registry = Spec.describe s "Lint" $ do
   -- may narrow CR 615.12 by kind or by source, and may not name the RECIPIENT,
   -- which only Resolve can bake. See unpreventablePatternOffends.
   Spec.it s "no card authors a recipient into CR 615.12's damage pattern" $ do
-    ps <- S.allPrintings s
+    ps <- S.allPrintings s corpus
     let patterns = concatMap (overFaces (fmap snd . cardPlayerScopes) . Printing.card) ps
         offenders = filter (anyFace (any (unpreventablePatternOffends . snd) . cardPlayerScopes) . Printing.card) ps
     -- The non-vacuity guard, and the guard that the AUTHORABLE axes really are
@@ -3487,7 +3487,7 @@ effectLintSpec s registry = Spec.describe s "Lint" $ do
   -- different lint and not restated here: Resolve.slotsOf reports the read, and
   -- the dataflow sweep over that report is what rejects a dangling name.
   Spec.it s "no printed static ability names a recipient slot on CR 615.12's damage pattern" $ do
-    ps <- S.allPrintings s
+    ps <- S.allPrintings s corpus
     let printedSlots = concatMap (overFaces (concatMap (PlayerEffect.Engine.boundRecipientSlots . PlayerStaticAbility.effect) . Face.playerAbilities) . Printing.card) ps
         storedSlots = concatMap (overFaces (concatMap (PlayerEffect.Engine.boundRecipientSlots . snd) . Maybe.mapMaybe storedPlayerScope . cardResolutionEffects) . Printing.card) ps
     -- The non-vacuity guard: Whippoorwill really does write one, on the carrier
@@ -3507,7 +3507,7 @@ effectLintSpec s registry = Spec.describe s "Lint" $ do
   -- emblem's sake, and this is what stops a card or a token quietly doing the
   -- same. Parun.Codec.TypeLine still rejects a type line that is PRESENT and empty.
   Spec.it s "CR 205.1 / 114.3 only an emblem's face has no card type" $ do
-    ps <- S.allPrintings s
+    ps <- S.allPrintings s corpus
     let typeless c = Set.null (TypeLine.types (Face.typeLine c))
         offends card =
           let printed = NonEmpty.toList (Card.Type.faces card)
@@ -3525,7 +3525,7 @@ effectLintSpec s registry = Spec.describe s "Lint" $ do
   -- Projection.intrinsicReplacementsOf's own comment leans on this in both
   -- directions, which is why it is a lint and not a per-card assertion.
   Spec.it s "a card is a planeswalker iff it has a printed loyalty" $ do
-    ps <- S.allPrintings s
+    ps <- S.allPrintings s corpus
     let isPlaneswalker c = Set.member CardType.Planeswalker (TypeLine.types (Face.typeLine c))
         offends c = isPlaneswalker c /= Maybe.isJust (Face.loyalty c)
         offenders = filter (anyFace offends . Printing.card) ps
@@ -3536,7 +3536,7 @@ effectLintSpec s registry = Spec.describe s "Lint" $ do
   -- read; a non-vanguard with them carries two numbers no rule reads, since only
   -- rule 902 consults them and only of a card in the command zone (CR 313.2).
   Spec.it s "a card is a vanguard iff it has printed modifiers" $ do
-    ps <- S.allPrintings s
+    ps <- S.allPrintings s corpus
     let isVanguard c = Set.member CardType.Vanguard (TypeLine.types (Face.typeLine c))
         offends c = isVanguard c /= Maybe.isJust (Face.vanguard c)
         offenders = filter (anyFace offends . Printing.card) ps
@@ -3550,7 +3550,7 @@ effectLintSpec s registry = Spec.describe s "Lint" $ do
   -- Projection.intrinsicReplacementsOf's own comment leans on this in both
   -- directions too, which is why it is a lint and not a per-card assertion.
   Spec.it s "a card is a battle iff it has a printed defense" $ do
-    ps <- S.allPrintings s
+    ps <- S.allPrintings s corpus
     let isBattle c = Set.member CardType.Battle (TypeLine.types (Face.typeLine c))
         offends c = isBattle c /= Maybe.isJust (Face.defense c)
         offenders = filter (anyFace offends . Printing.card) ps
@@ -3560,7 +3560,7 @@ effectLintSpec s registry = Spec.describe s "Lint" $ do
   -- with rooms carries a graph no rule reads, since CR 309.4's rooms are printed
   -- on dungeon cards and nowhere else.
   Spec.it s "a card is a dungeon iff it has rooms" $ do
-    ps <- S.allPrintings s
+    ps <- S.allPrintings s corpus
     let isDungeon c = Set.member CardType.Dungeon (TypeLine.types (Face.typeLine c))
         offends c = isDungeon c /= not (Seq.null (Face.rooms c))
         offenders = filter (anyFace offends . Printing.card) ps
@@ -3569,7 +3569,7 @@ effectLintSpec s registry = Spec.describe s "Lint" $ do
   -- out-of-range exit would be offered by Prompt.ChooseRoom and then move the
   -- marker onto a room that does not exist, which no rule describes.
   Spec.it s "CR 309.4 every room's arrows point at rooms of the same card" $ do
-    ps <- S.allPrintings s
+    ps <- S.allPrintings s corpus
     let offends c =
           let rooms = Face.rooms c
               inRange e = RoomIndex.unwrap e < Natural.length rooms
@@ -3582,7 +3582,7 @@ effectLintSpec s registry = Spec.describe s "Lint" $ do
   -- arrows out of it, and no earlier room is a dead end the marker could never
   -- leave.
   Spec.it s "CR 309.6 a dungeon's last room is its only one with no arrows" $ do
-    ps <- S.allPrintings s
+    ps <- S.allPrintings s corpus
     let offends c = case Seq.viewr (Face.rooms c) of
           Seq.EmptyR -> False
           earlier Seq.:> lastRoom ->
@@ -3603,7 +3603,7 @@ effectLintSpec s registry = Spec.describe s "Lint" $ do
   -- defense have no analogue of rule 208.3 -- no rule prints either number on a
   -- card of another type.
   Spec.it s "CR 208.1 a card has a printed power iff it has a printed toughness" $ do
-    ps <- S.allPrintings s
+    ps <- S.allPrintings s corpus
     let offends c = Maybe.isJust (Face.power c) /= Maybe.isJust (Face.toughness c)
         offenders = filter (anyFace offends . Printing.card) ps
     Spec.assertEqWith s "power iff toughness" (fmap (S.nameOf . Printing.card) offenders) []
@@ -3612,7 +3612,7 @@ effectLintSpec s registry = Spec.describe s "Lint" $ do
   -- pool rather than by construction, because a card file is data.
   --
   Spec.it s "a card's face names are pairwise distinct" $ do
-    ps <- S.allPrintings s
+    ps <- S.allPrintings s corpus
     let offenders = filter (distinctFaceNamesOffends . Printing.card) ps
     -- The guard the sibling lints carry: over a pool of one-face cards this
     -- sweep passes on every card without comparing two names, and so proves
@@ -3624,17 +3624,15 @@ effectLintSpec s registry = Spec.describe s "Lint" $ do
   -- lookup reaches and so cannot hold this for the whole corpus itself.
   -- Compared by slug, the key a lookup uses, over every face name.
   Spec.it s "no two cards claim one name" $ do
-    root <- Registry.defaultRoot
-    loaded <- Registry.loadRoot root
     let claims = Map.fromListWith Set.union $ do
-          (path, result) <- loaded
+          (path, result) <- corpus
           card <- case result of Right parsed -> [parsed]; Left _ -> []
           face <- NonEmpty.toList (Card.Type.faces card)
           pure (Registry.slugFor (Face.name face), Set.singleton path)
         offenders = Map.filter (\paths -> Set.size paths > 1) claims
     -- The sibling lints' guard: a sweep that never sees a name beyond a file's
     -- own proves nothing about the names a lookup reaches only by fallback.
-    Spec.assertBool s (Map.size claims > length loaded) "the pool has a card with more than one name"
+    Spec.assertBool s (Map.size claims > length corpus) "the pool has a card with more than one name"
     Spec.assertEqWith s "no name is claimed by two cards" (fmap (fmap Set.toAscList) (Map.toAscList offenders)) []
   -- CR 710.1a with CR 710.1b: a flip card's frame has a top half and a bottom
   -- half, so a Flip card prints exactly two faces. Held over the pool rather
@@ -3642,7 +3640,7 @@ effectLintSpec s registry = Spec.describe s "Lint" $ do
   -- is data -- and it is what makes Parun.Engine.Card.flippedFace's empty-tail
   -- arm unreachable, where a one-faced Flip card would silently never flip.
   Spec.it s "CR 710.1 a flip card prints exactly two faces" $ do
-    ps <- S.allPrintings s
+    ps <- S.allPrintings s corpus
     let offends card = Card.Type.layout card == Layout.Flip && length (Card.Type.faces card) /= 2
         offenders = filter (offends . Printing.card) ps
     Spec.assertBool s (any ((== Layout.Flip) . Card.Type.layout . Printing.card) ps) "the pool has a flip card to lint"
@@ -3653,7 +3651,7 @@ effectLintSpec s registry = Spec.describe s "Lint" $ do
   -- Parun.Engine.Card.prepareFace's empty-tail arm unreachable, where a one-faced
   -- preparation card would become prepared and mint nothing.
   Spec.it s "CR 722.1 a preparation card prints exactly two faces" $ do
-    ps <- S.allPrintings s
+    ps <- S.allPrintings s corpus
     let offends card = Card.Type.layout card == Layout.Preparation && length (Card.Type.faces card) /= 2
         offenders = filter (offends . Printing.card) ps
     Spec.assertBool s (any ((== Layout.Preparation) . Card.Type.layout . Printing.card) ps) "the pool has a preparation card to lint"
@@ -3675,7 +3673,7 @@ effectLintSpec s registry = Spec.describe s "Lint" $ do
   -- asserted the same way, since a pool with no such condition would pass this
   -- sweep without comparing anything.
   Spec.it s "an unlock trigger names one of its own card's faces" $ do
-    ps <- S.allPrintings s
+    ps <- S.allPrintings s corpus
     let doors c = Maybe.mapMaybe (\cond -> case TriggeredAbility.condition cond of TriggerCondition.SelfHalfUnlocked n -> Just n; _ -> Nothing) (Face.triggeredAbilities c)
         offends card = any (any (`notElem` fmap Face.name (NonEmpty.toList (Card.Type.faces card))) . doors) (Card.Type.faces card)
         offenders = filter (offends . Printing.card) ps
@@ -3687,7 +3685,7 @@ effectLintSpec s registry = Spec.describe s "Lint" $ do
   -- CR 709.5a, swept over the pool. See sharedTypeLineOffends for what the rule
   -- asks and why the check is full type-line equality.
   Spec.it s "CR 709.5a a Room's faces agree on their shared type line" $ do
-    ps <- S.allPrintings s
+    ps <- S.allPrintings s corpus
     let offenders = filter (sharedTypeLineOffends . Printing.card) ps
         rooms = filter (Card.hasSharedTypeLine . Printing.card) ps
     -- The guard the sibling lints carry, and it bites harder here than most: over
@@ -3736,7 +3734,7 @@ effectLintSpec s registry = Spec.describe s "Lint" $ do
   -- CR 712.4b, swept over the pool. See meldFaceCountOffends for what the rule
   -- asks and why the check is a face count.
   Spec.it s "CR 712.4b a meld card carries its front face alone" $ do
-    ps <- S.allPrintings s
+    ps <- S.allPrintings s corpus
     let melds = filter (isMeld . Printing.card) ps
         offenders = filter (meldFaceCountOffends . Printing.card) ps
     -- The guard the sibling lints carry: over a pool with no meld card this
@@ -3745,7 +3743,7 @@ effectLintSpec s registry = Spec.describe s "Lint" $ do
     Spec.assertEqWith s "no meld card prints a second face" (fmap (S.nameOf . Printing.card) offenders) []
   -- CR 712.5, swept over the pool. See unpairedMelds.
   Spec.it s "CR 712.5 every meld card's counterpart names it back" $ do
-    ps <- S.allPrintings s
+    ps <- S.allPrintings s corpus
     let cards = fmap Printing.card ps
     Spec.assertBool s (length (filter isMeld cards) >= 4) "the pool has two meld pairs to lint"
     Spec.assertEqWith s "no meld card is unpaired" (unpairedMelds cards) []
@@ -3771,7 +3769,7 @@ effectLintSpec s registry = Spec.describe s "Lint" $ do
     Spec.assertBool s (not (meldFaceCountOffends (Printing.card ranger))) "a Transforming card may print two faces"
   -- CR 611.2a, swept over the pool. See untilUsedOffends.
   Spec.it s "CR 611.2a no card writes UntilUsed where nothing uses it up" $ do
-    ps <- S.allPrintings s
+    ps <- S.allPrintings s corpus
     let offenders = filter (anyFace untilUsedOffends . Printing.card) ps
     Spec.assertBool s (any (anyFace ((/= 0) . spendableUntilUseds) . Printing.card) ps) "the pool has a card writing a spendable UntilUsed"
     Spec.assertEqWith s "UntilUsed sits only on a player effect a cast or a land play uses up" (fmap (S.nameOf . Printing.card) offenders) []
@@ -3791,7 +3789,7 @@ effectLintSpec s registry = Spec.describe s "Lint" $ do
     Spec.assertBool s (untilUsedOffends (planted pump)) "a continuous effect on an object is rejected"
   -- CR 611.2a, swept over the pool. See windowOffends.
   Spec.it s "CR 611.2a no card writes a next-turn window where nothing asks whether it began" $ do
-    ps <- S.allPrintings s
+    ps <- S.allPrintings s corpus
     let offenders = filter (anyFace windowOffends . Printing.card) ps
     Spec.assertBool s (any (anyFace ((/= 0) . begunWindows) . Printing.card) ps) "the pool has a card writing a window"
     Spec.assertEqWith s "a window sits only on a carrier that asks Expiry.begun" (fmap (S.nameOf . Printing.card) offenders) []
@@ -3809,9 +3807,9 @@ effectLintSpec s registry = Spec.describe s "Lint" $ do
     Spec.assertBool s (windowOffends (planted evasion)) "an evasion is rejected"
     Spec.assertBool s (windowOffends (planted pump)) "a continuous effect on an object is rejected"
 
-spec :: (Monad n) => Spec.Spec IO n -> Registry.Registry IO -> n ()
-spec s registry = Spec.describe s "Parun.Engine.Card" $ do
-  effectLintSpec s registry
+spec :: (Monad n) => Spec.Spec IO n -> Registry.Registry IO -> [(FilePath, Either Text.Text Card.Type.Card)] -> n ()
+spec s registry corpus = Spec.describe s "Parun.Engine.Card" $ do
+  effectLintSpec s registry corpus
 
 -- CR 611.2a: a "during X's next turn" duration arms a window that
 -- Parun.Engine.Expiry.begun alone holds back until that turn. Six carriers ask
