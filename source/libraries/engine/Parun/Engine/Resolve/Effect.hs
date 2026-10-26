@@ -3222,7 +3222,7 @@ chooseNewTargetsFor unannounced source chooser controller copyId = do
         -- for a copy that object IS the announcement's holder. So the behaviour
         -- Parun.CopySpec's stirCopySpec proves stands with this seed empty too,
         -- and what the seed adds is every OTHER slot atom -- Filter's
-        -- SameNameAsBound and IsBound, a ZoneScope.InSlot pool -- reading a
+        -- Shares Name Bound and IsBound, a ZoneScope.InSlot pool -- reading a
         -- binding of the copy's that is not one of the re-chosen slots. Nothing
         -- drives that half: stirCopySpec is the only case that copies a spell
         -- whose slot reads the announcement at all, and its slot reads the X.
@@ -4411,7 +4411,7 @@ applyOneEffect runSubgame resolving source controller legal chosen effect = case
     -- Through effectContext and NOT Filter.contextFor, so the resolution's own
     -- slots ride along and a search filter naming one is answerable: Bifurcate's
     -- "with the same name as target nontoken creature" is CR 201.2a's
-    -- Filter.SameNameAsBound over the slot the spell targeted, which a bare
+    -- Filter.Shares Name Bound over the slot the spell targeted, which a bare
     -- context would have answered False for on every card in the library.
     -- Parun.ResolveSpec's Bifurcate cases are what prove it.
     --
@@ -6569,7 +6569,7 @@ applyOneEffect runSubgame resolving source controller legal chosen effect = case
     -- anything with it. CR 400.7j is about a LATER part of the effect finding
     -- them, which the binding answers off the arrival ids. The tally's other
     -- slot reads are unaffected: an EARLIER clause's slot over a library card
-    -- matches the pre-move ids these views carry, and Filter.SameNameAsBound
+    -- matches the pre-move ids these views carry, and Filter.Shares Name Bound
     -- reads names off the arrival ids through CR 608.2h's last-known reader.
     --
     -- The chosen-name half is PROVED (Parun.ResolveSpec's "Predict's mill tally

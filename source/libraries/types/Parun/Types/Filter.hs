@@ -49,9 +49,14 @@ data Filter keyword
   = HasCardType CardType.CardType -- CR 205 / 300: the object's card types include this one.
   | HasSupertype Supertype.Supertype -- CR 205.4: the object's supertypes include this one.
   | HasColor Color.Color -- CR 105.2: the object's colours include this one.
-  | -- | The candidate shares this trait with the object the evaluation comes
-    -- from (CR 113.7), read off Parun.Engine.Filter.Context's source fields.
-    SharesWithSource Trait.Trait
+  | -- | The candidate shares this trait with the anchored object (CR 105.2 /
+    -- 205.3m / 709.4a), as Parun.Engine.Filter.sharesAnchored reads each pair.
+    --
+    -- Not implemented: a pair the Context carries no anchored values for (Color,
+    -- Owner or Sector at Bound, anything but CreatureType at Evaluated,
+    -- CreatureType at Source), which answers False and
+    -- Parun.FilterPositionLintSpec keeps out of card data (#5636).
+    Shares Trait.Trait Anchor.Anchor
   | HasSubtype Subtype.Subtype -- CR 205.3: the object's subtypes include this one.
   | -- | CR 201.2: the object's names include this LITERAL one. Membership, as CR
     -- 709.4a states the test -- a split card off the stack and a Room with both
@@ -172,12 +177,6 @@ data Filter keyword
     -- whose cost is being paid -- "a creature that isn't a target of that
     -- spell" (Synthetic Spiteful Edict), whatever its target slots are named.
     IsTarget
-  | -- | CR 201.2 / 709.4a asked of TWO objects: the candidate shares a name with
-    -- the object this slot holds -- Harness the Storm's "target card with the
-    -- same name as that spell". Set intersection, so an object showing two names
-    -- has the same name as one showing either; vacuously False where the slot
-    -- names no object or the bound object has no name (CR 708.2a).
-    SameNameAsBound SlotName.SlotName
   | -- | CR 110.2 asked of TWO objects: the candidate's controller stands in this
     -- relation (CR 102.2 / 102.3) to the controller of the object this slot
     -- holds, that controller taking the relation's "you" -- Bioshift's "another
@@ -204,8 +203,6 @@ data Filter keyword
     -- narrows afterwards, and no such check stands behind an attach
     -- destination.
     SameControllerAsHostOfBound SlotName.SlotName
-  | -- | CR 205.3m: the candidate shares a creature type with the anchored object.
-    SharesCreatureTypeWith Anchor.Anchor
   | -- | CR 201.4: the candidate has a name the SOURCE has chosen earlier in the
     -- same resolution (CR 608.2c) -- Ancient Vendetta's "cards with that name" --
     -- by the chooser the NameChooser names. Set intersection, for CR 201.4g's
@@ -408,21 +405,19 @@ data Filter keyword
     -- player View holds no board to find the attachers on. Answered by rewriting
     -- at Parun.Engine.Count.bakePerspective.
     HasAttached (Filter keyword)
-  | -- | CR 701.3a / 301.5a: the candidate is attached to the evaluation's SOURCE
-    -- -- Kemba's Legion's "for each Equipment attached to this creature". Host
-    -- IDENTITY and not a host quality, so it reads an ObjectId off the candidate's
-    -- own view; vacuously False where the candidate is attached to nothing or to
-    -- a player, and where no source frames the match.
-    IsAttachedToSource
-  | -- | CR 701.3a / 301.5a: the candidate is attached to the object the
-    -- surrounding QUANTITY is evaluated against -- Bruenor Battlehammer's "each
-    -- creature you control gets +2/+0 for each Equipment attached to it", the
-    -- affected creature under CR 613.4c. Vacuously False where no quantity aims
-    -- the match.
-    IsAttachedToEvaluated
+  | -- | CR 701.3a / 301.5a: the candidate is attached to the anchored object --
+    -- Kemba's Legion's "for each Equipment attached to this creature" at Source,
+    -- Bruenor Battlehammer's "for each Equipment attached to it" at Evaluated.
+    -- Host IDENTITY and not a host quality, so it reads an ObjectId off the
+    -- candidate's own view; vacuously False where the candidate is attached to
+    -- nothing or to a player, and where nothing fills the anchor.
+    --
+    -- Not implemented: the Bound anchor, which answers False and
+    -- Parun.FilterPositionLintSpec keeps out of card data (#5636).
+    IsAttachedTo Anchor.Anchor
   | -- | CR 613.4c: the candidate IS the object the surrounding QUANTITY is
     -- evaluated against -- Coat of Arms' "each other creature" is @Not
-    -- IsEvaluated@. IsSource's question about IsAttachedToEvaluated's object.
+    -- IsEvaluated@. IsSource's question about IsAttachedTo Evaluated's object.
     IsEvaluated
   | -- | CR 303.4b's "enchanted": the candidate is what the evaluation's SOURCE is
     -- attached to -- Ray of Frost's "enchanted creature", the third attachment
@@ -551,7 +546,7 @@ data Filter keyword
     -- record on the permanent rather than a copiable value.
     IsPaired
   | -- | CR 702.95b's "the creature another creature is paired with", asked of the
-    -- CANDIDATE against the evaluation's SOURCE: IsAttachedToSource's comparison
+    -- CANDIDATE against the evaluation's SOURCE: IsAttachedTo Source's comparison
     -- one relation over. Vacuously False where the candidate is unpaired or where
     -- no source frames the match.
     IsPairedWithSource

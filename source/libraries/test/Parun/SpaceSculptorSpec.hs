@@ -3,7 +3,7 @@
 -- Covers CR 702.158's space sculptor (Parun.Engine.SpaceSculptor and
 -- Parun.Engine.Sector): CR 704.5u's sector assignment and its choice order, CR
 -- 702.158b's ending, CR 702.158d's "choose a sector" (Effect.ChooseSector) and
--- CR 702.158e's "same sector" (Filter.SharesWithSource Trait.Sector), all
+-- CR 702.158e's "same sector" (Filter.Shares Sector Source), all
 -- through Space Beleren.
 --
 -- A test-local answerer rather than the scenario harness, because the subject

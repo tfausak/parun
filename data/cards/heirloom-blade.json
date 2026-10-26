@@ -95,10 +95,15 @@
                                     }
                                   },
                                   {
-                                    "type": "SharesCreatureTypeWith",
+                                    "type": "Shares",
                                     "value": {
-                                      "type": "Bound",
-                                      "value": "thatDepartedPermanent"
+                                      "anchor": {
+                                        "type": "Bound",
+                                        "value": "thatDepartedPermanent"
+                                      },
+                                      "trait": {
+                                        "type": "CreatureType"
+                                      }
                                     }
                                   }
                                 ]
@@ -137,10 +142,15 @@
                                     }
                                   },
                                   {
-                                    "type": "SharesCreatureTypeWith",
+                                    "type": "Shares",
                                     "value": {
-                                      "type": "Bound",
-                                      "value": "thatDepartedPermanent"
+                                      "anchor": {
+                                        "type": "Bound",
+                                        "value": "thatDepartedPermanent"
+                                      },
+                                      "trait": {
+                                        "type": "CreatureType"
+                                      }
                                     }
                                   }
                                 ]

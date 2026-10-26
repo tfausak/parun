@@ -99,10 +99,15 @@
                       }
                     },
                     {
-                      "type": "SharesCreatureTypeWith",
+                      "type": "Shares",
                       "value": {
-                        "type": "Bound",
-                        "value": "second"
+                        "anchor": {
+                          "type": "Bound",
+                          "value": "second"
+                        },
+                        "trait": {
+                          "type": "CreatureType"
+                        }
                       }
                     }
                   ]
@@ -135,10 +140,15 @@
                       }
                     },
                     {
-                      "type": "SharesCreatureTypeWith",
+                      "type": "Shares",
                       "value": {
-                        "type": "Bound",
-                        "value": "first"
+                        "anchor": {
+                          "type": "Bound",
+                          "value": "first"
+                        },
+                        "trait": {
+                          "type": "CreatureType"
+                        }
                       }
                     }
                   ]

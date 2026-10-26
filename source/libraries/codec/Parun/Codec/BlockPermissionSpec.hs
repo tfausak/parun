@@ -5,6 +5,7 @@ import qualified Parun.JsonCodec.Common as Common
 import qualified Parun.Spec as Spec
 import qualified Parun.Types.Affected as Affected
 import qualified Parun.Types.Aggregation as Aggregation
+import qualified Parun.Types.Anchor as Anchor
 import qualified Parun.Types.BlockPermission as BlockPermission
 import qualified Parun.Types.Compares as Compares
 import qualified Parun.Types.Comparison as Comparison
@@ -60,12 +61,12 @@ spec s = Spec.describe s "Parun.Codec.BlockPermission" $ do
               ( Quantity.Count
                   Count.MkCount
                     { Count.scope = Scope.InZone (InZone.MkInZone Zone.Battlefield (PlayerRef.Relative PlayerRelation.AnyPlayer)),
-                      Count.filter = Filter.And [Filter.HasSubtype Subtype.Equipment, Filter.IsAttachedToSource],
+                      Count.filter = Filter.And [Filter.HasSubtype Subtype.Equipment, Filter.IsAttachedTo Anchor.Source],
                       Count.aggregation = Aggregation.Members
                     }
               )
           )
           Nothing
       )
-      " {\"affected\":{\"type\":\"Matching\",\"value\":{\"type\":\"IsSource\"}},\"additional\":{\"type\":\"Count\",\"value\":{\"aggregation\":{\"type\":\"Members\"},\"filter\":{\"type\":\"And\",\"value\":[{\"type\":\"HasSubtype\",\"value\":{\"type\":\"Equipment\"}},{\"type\":\"IsAttachedToSource\"}]},\"scope\":{\"type\":\"InZone\",\"value\":{\"zone\":{\"type\":\"Battlefield\"},\"player\":{\"type\":\"Relative\",\"value\":{\"type\":\"AnyPlayer\"}}}}}}} "
+      " {\"affected\":{\"type\":\"Matching\",\"value\":{\"type\":\"IsSource\"}},\"additional\":{\"type\":\"Count\",\"value\":{\"aggregation\":{\"type\":\"Members\"},\"filter\":{\"type\":\"And\",\"value\":[{\"type\":\"HasSubtype\",\"value\":{\"type\":\"Equipment\"}},{\"type\":\"IsAttachedTo\",\"value\":{\"type\":\"Source\"}}]},\"scope\":{\"type\":\"InZone\",\"value\":{\"zone\":{\"type\":\"Battlefield\"},\"player\":{\"type\":\"Relative\",\"value\":{\"type\":\"AnyPlayer\"}}}}}}} "
   Spec.it s "has a schema" $ Common.assertHasSchema s BlockPermission.codec

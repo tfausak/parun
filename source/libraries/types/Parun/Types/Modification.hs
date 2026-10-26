@@ -73,7 +73,7 @@ data Modification ability
     -- Its Filter is matched by Parun.Engine.Target.admittedGiven, which fills
     -- `perspective` and `source`, and fills `slotObjects` and `slotNames` from
     -- whatever the announcement has already bound -- so a granted enchant naming
-    -- IsBound or SameNameAsBound is judged against exactly the context a PRINTED
+    -- IsBound or Shares Name Bound is judged against exactly the context a PRINTED
     -- one is, and each of those two answers False where the announcement bound
     -- nothing. Which way an unfilled read answers is per ATOM rather than a
     -- property of that context: CR 110.2's ControllerRelatesToBound widens instead,

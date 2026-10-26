@@ -10,10 +10,12 @@ codec =
   Arm.tagged
     tagOf
     [ Arm.payload "Bound" SlotName.codec Anchor.Bound (\x -> case x of Anchor.Bound y -> Just y; _ -> Nothing),
-      Arm.nullary "Evaluated" Anchor.Evaluated
+      Arm.nullary "Evaluated" Anchor.Evaluated,
+      Arm.nullary "Source" Anchor.Source
     ]
 
 tagOf :: Anchor.Anchor -> String
 tagOf x = case x of
   Anchor.Bound {} -> "Bound"
   Anchor.Evaluated {} -> "Evaluated"
+  Anchor.Source {} -> "Source"
