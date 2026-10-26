@@ -58,6 +58,11 @@ data Event = MkEvent
 -- creature enters or dies". Only the events below render yet.
 event :: Target.Context -> Bool -> TriggerCondition.TriggerCondition -> [Event]
 event context creature c = case c of
+  -- One description of the creature for both: "blocks or becomes blocked by
+  -- a creature" (Inferno Elemental).
+  TriggerCondition.AnyOf [TriggerCondition.SelfBlocksCreature f, TriggerCondition.SelfBecomesBlockedBy g] | f == g -> do
+    (one, that) <- described context f
+    itself recurring (Text.pack ("blocks or becomes blocked by " <> one)) [(thatAttacker, that), (thatBlocker, that)] []
   TriggerCondition.AnyOf cs@(_ : _ : _) -> do
     parts <- traverse (selfEvent context creature) cs
     let openings = if all ((== ["When"]) . fst3) parts then ["When"] else recurring

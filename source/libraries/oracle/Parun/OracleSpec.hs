@@ -342,6 +342,9 @@ spec s = Spec.describe s "Parun.Oracle" $ do
     Spec.assertEq s (Just (Text.pack "Whenever Spark blocks a creature without flying, it gets +1/+0 until end of turn.")) (Oracle.render roc)
     Spec.assertBool s (Oracle.says roc spark (Text.pack "Whenever this creature blocks a creature without flying, this creature gets +1/+0 until end of turn.")) "the name after the event unsaid"
     Spec.assertEq s (Just (Text.pack "Whenever Spark enters or attacks, you gain 1 life.")) (Oracle.render (on (TriggerCondition.AnyOf [TriggerCondition.SelfEnters, TriggerCondition.SelfAttacks TriggerFrequency.EveryTime]) [gainLife 1]))
+    let creature = Filter.HasCardType CardType.Creature
+        both = ObjectRef.AllOf (ObjectRef.InSlot thatAttacker NonEmpty.:| [ObjectRef.InSlot thatBlocker])
+    Spec.assertEq s (Just (Text.pack "Whenever Spark blocks or becomes blocked by a creature, it deals 3 damage to that creature.")) (Oracle.render (on (TriggerCondition.AnyOf [TriggerCondition.SelfBlocksCreature creature, TriggerCondition.SelfBecomesBlockedBy creature]) [damageBy [(both, Quantity.Literal 3)]]))
     let raptor = on (TriggerCondition.IsDealtDamage ActingPermanent.Self) [gainLifeBy (Quantity.InSlot (SlotName.MkSlotName (Text.pack "thatMuch")))]
     Spec.assertEq s (Just (Text.pack "Whenever Spark is dealt damage, you gain that much life.")) (Oracle.render raptor)
     Spec.assertBool s (Oracle.says raptor spark (Text.pack "Enrage \8212 Whenever this creature is dealt damage, you gain that much life.")) "enrage unsaid"
@@ -980,12 +983,15 @@ became :: SlotName.SlotName
 became = SlotName.MkSlotName (Text.pack "became")
 
 -- The slots the engine binds a trigger event's player, the creature its
--- source blocks, and the source itself to.
+-- source blocks, the creature blocking it, and the source itself to.
 thatPlayer :: SlotName.SlotName
 thatPlayer = SlotName.MkSlotName (Text.pack "thatPlayer")
 
 thatAttacker :: SlotName.SlotName
 thatAttacker = SlotName.MkSlotName (Text.pack "thatAttacker")
+
+thatBlocker :: SlotName.SlotName
+thatBlocker = SlotName.MkSlotName (Text.pack "thatBlocker")
 
 self :: SlotName.SlotName
 self = SlotName.MkSlotName (Text.pack "self")

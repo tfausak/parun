@@ -4,6 +4,7 @@ module Parun.Oracle.Target where
 
 import qualified Control.Monad as Monad
 import qualified Data.Bifunctor as Bifunctor
+import qualified Data.List.NonEmpty as NonEmpty
 import qualified Data.Map.Strict as Map
 import qualified Data.Maybe as Maybe
 import qualified Data.Text as Text
@@ -319,6 +320,12 @@ object context determiner ref = case ref of
           HowMany.UpTo (Just (Quantity.Literal 1)) -> [MkReference (Text.pack "up to one " <> one) [] Filter.Singular]
           HowMany.UpTo (Just (Quantity.Literal n)) | n > 1 -> [MkReference (Text.pack "up to " <> Prose.cardinal n <> Text.pack " " <> many) [] Filter.Plural]
           _ -> []
+  -- Objects one wording names alike read as it: "that creature" for the
+  -- creature a blocker blocks or is blocked by (Inferno Elemental).
+  ObjectRef.AllOf refs -> do
+    r : rs <- traverse (object context determiner) (NonEmpty.toList refs)
+    Monad.guard (all (== r) rs && null (mentions r) && number r == Filter.Singular)
+    [r]
   ObjectRef.EachPlayer -> [MkReference (Text.pack "each player") [] Filter.Plural]
   ObjectRef.EachOpponent -> [MkReference (Text.pack "each opponent") [] Filter.Plural]
   _ -> []
