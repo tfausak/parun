@@ -2947,8 +2947,8 @@ battlefieldMatching legal resolving controller source gs filter_ =
       -- answers Filter.HeldByBound False wherever the Context binds its
       -- slot to no one player, so an unbaked "that player controls" sweeps nobody rather than sweeping wrong.
       -- Total War's "destroy all untapped non-Wall creatures that player
-      -- controls" is the phrase, and Parun.CardTriggerSpec's Total War group is
-      -- what proves it.
+      -- controls" is the phrase, and Total War's scenarios under
+      -- data/scenarios/card-trigger/ are what prove it.
       baked = Filter.bakeBound (Binding.playerSlots (slotBindings resolving gs)) Map.empty Map.empty filter_
       grants = Projection.controlGrants gs
       -- CR 801.10 / 801.5a: only permanents in the controller's range, so the
@@ -3067,7 +3067,7 @@ objectRefObjects legal resolving controller source gs ref = case ref of
   -- effectContext and NOT Filter.contextFor, so the resolution's own slot
   -- bindings and their CR 201.2a names ride along and a filter reading a slot is
   -- not vacuously False here. PROVED by Parun.ResolveSpec's Hour of Glory cases:
-  -- its sweep is Filter.SameNameAsBound over the target the FIRST clause exiled,
+  -- its sweep is Filter.Shares Name Bound over the target the FIRST clause exiled,
   -- so swapping in a bare Filter.contextFor exiles nothing. The sibling sweeps
   -- are written the same way for the reason spelled out at EachMatching above.
   ObjectRef.EachCardInHand (EachCardInHand.MkEachCardInHand scope mFilter) ->

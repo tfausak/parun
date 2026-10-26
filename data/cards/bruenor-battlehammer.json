@@ -99,7 +99,10 @@
                               }
                             },
                             {
-                              "type": "IsAttachedToEvaluated"
+                              "type": "IsAttachedTo",
+                              "value": {
+                                "type": "Evaluated"
+                              }
                             }
                           ]
                         },

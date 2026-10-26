@@ -3,6 +3,7 @@ module Parun.Codec.ForbidBeingBlockedSpec where
 import qualified Parun.Codec.ForbidBeingBlocked as ForbidBeingBlocked
 import qualified Parun.JsonCodec.Common as Common
 import qualified Parun.Spec as Spec
+import qualified Parun.Types.Anchor as Anchor
 import qualified Parun.Types.CardType as CardType
 import qualified Parun.Types.Duration as Duration
 import qualified Parun.Types.Filter as Filter
@@ -19,8 +20,8 @@ spec s = Spec.describe s "Parun.Codec.ForbidBeingBlocked" $ do
       ( ForbidBeingBlocked.MkForbidBeingBlocked
           { ForbidBeingBlocked.duration = Duration.UntilEndOfTurn,
             ForbidBeingBlocked.affected = Filter.HasCardType CardType.Creature,
-            ForbidBeingBlocked.blockers = Filter.Not (Filter.SharesWithSource Trait.Sector)
+            ForbidBeingBlocked.blockers = Filter.Not (Filter.Shares Trait.Sector Anchor.Source)
           }
       )
-      " {\"duration\":{\"type\":\"UntilEndOfTurn\"},\"affected\":{\"type\":\"HasCardType\",\"value\":{\"type\":\"Creature\"}},\"blockers\":{\"type\":\"Not\",\"value\":{\"type\":\"SharesWithSource\",\"value\":{\"type\":\"Sector\"}}}} "
+      " {\"duration\":{\"type\":\"UntilEndOfTurn\"},\"affected\":{\"type\":\"HasCardType\",\"value\":{\"type\":\"Creature\"}},\"blockers\":{\"type\":\"Not\",\"value\":{\"type\":\"Shares\",\"value\":{\"trait\":{\"type\":\"Sector\"},\"anchor\":{\"type\":\"Source\"}}}}} "
   Spec.it s "has a schema" $ Common.assertHasSchema s ForbidBeingBlocked.codec

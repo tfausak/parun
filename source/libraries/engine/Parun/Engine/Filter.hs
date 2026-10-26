@@ -476,7 +476,7 @@ data View = MkView
     -- finite, so an attachment cycle terminates too.
     attachedViews :: [View],
     -- CR 701.3a / 301.5a: WHICH object this candidate is attached to, for
-    -- IsAttachedToSource to compare against Context.source -- the id and not a
+    -- IsAttachedTo Source to compare against Context.source -- the id and not a
     -- Bool, because the atom's answer depends on the match's source and this
     -- record is built once per candidate.
     --
@@ -965,7 +965,7 @@ playerView pid =
       -- field, and only the Scope.OverPlayers road travels through it.
       attachedViews = [],
       -- CR 303.4 again: a player is attached to nothing, so there is no host id
-      -- for IsAttachedToSource to compare either.
+      -- for IsAttachedTo Source to compare either.
       attachedTo = Nothing,
       -- CR 701.3a's question can be asked about a player (CR 702.5d), but not
       -- here: the only site that fills this field is Parun.Engine.Resolve's
@@ -1076,17 +1076,17 @@ data Context = MkContext
     -- operand then matches nothing, and Parun.FilterPositionLintSpec keeps a card
     -- out of those positions.
     sourceMeasures :: Map.Map Measure.Measure Integer,
-    -- CR 105.2: the SOURCE's colours, for SharesWithSource Trait.Color (CR
+    -- CR 105.2: the SOURCE's colours, for Shares Color Source (CR
     -- 702.78a's conspire). Filled with sourceMeasures. A SET rather than a Maybe:
     -- empty is the right answer both where it is unfilled and for a colourless
     -- source.
     sourceColors :: Set.Set Color.Color,
-    -- | CR 702.158e: the SOURCE's sector designations, for SharesWithSource
-    -- Trait.Sector. Filled with sourceMeasures; empty where unfilled and for a
+    -- | CR 702.158e: the SOURCE's sector designations, for Shares Sector
+    -- Source. Filled with sourceMeasures; empty where unfilled and for a
     -- source in no sector alike.
     sourceSectors :: Set.Set Designation.Designation,
-    -- CR 201.1 / 709.4a: the NAMES of the SOURCE, for SharesWithSource
-    -- Trait.Name (CR 702.60a's ripple); `slotNames` below asks the same of a
+    -- CR 201.1 / 709.4a: the NAMES of the SOURCE, for Shares Name Source
+    -- (CR 702.60a's ripple); `slotNames` below asks the same of a
     -- SLOT. Filled with sourceMeasures, and a SET for sourceColors' reason (CR
     -- 708.2a's nameless object).
     sourceNames :: Set.Set CardName.CardName,
@@ -1198,7 +1198,7 @@ data Context = MkContext
     -- Parun.Engine.Mana's priced count a payment's slots.
     --
     -- Outside those, contextFor leaves it empty, and every atom that reads it
-    -- (IsBound, SameNameAsBound, IsControllerOfBound, Quantity.AgainstSlot) is then vacuously False or Nothing rather than
+    -- (IsBound, Shares Name Bound, IsControllerOfBound, Quantity.AgainstSlot) is then vacuously False or Nothing rather than
     -- raising. That is honest wherever no announcement is in flight -- the layer
     -- fold, matching a trigger that captured nothing, a cost paid with nothing announced, combat
     -- declarations, duration expiry -- and it was not honest of every
@@ -1216,7 +1216,7 @@ data Context = MkContext
     -- can name one. Parun.Engine.Projection.View.viewOfCard fills no `identity` --
     -- nothing mints an object until Parun.Engine.Event.bringInto does --
     -- so IsBound is False for every candidate there whatever this map holds. The
-    -- other readers cannot reach it either: SameNameAsBound reads slotNames
+    -- other readers cannot reach it either: Shares Name Bound reads slotNames
     -- rather than this map and carries its own lint, ControllerRelatesToBound reads
     -- slotControllers and carries one that matters MORE, its vacuous direction
     -- being True, SameControllerAsHostOfBound reads slotHostControllers and
@@ -1245,7 +1245,7 @@ data Context = MkContext
     cantCrewVehicles :: Set.Set ObjectId.ObjectId,
     -- CR 201.1 / 709.4a: the NAMES of the objects the surrounding announcement's
     -- slots hold, for the one atom that compares a candidate's against them
-    -- (SameNameAsBound, Harness the Storm). Supplied by the caller for
+    -- (Shares Name Bound, Harness the Storm). Supplied by the caller for
     -- sourceMeasures' reason -- this module holds no game state and cannot read an
     -- object's names -- through Parun.Engine.Projection.framedBySlots, where a
     -- target slot's Filter is matched and where every one of a resolution's
@@ -1267,7 +1267,7 @@ data Context = MkContext
     -- False.
     --
     -- What keeps a card out of those positions is Parun.FilterPositionLintSpec's
-    -- "CR 709.4a no card asks SameNameAsBound outside a mode's target slot, a search filter, a hand sweep or a life loss amount",
+    -- "CR 709.4a no card asks a slot-anchored Shares Name outside a mode's target slot, a search filter, a hand sweep or a life loss amount",
     -- the sweep sourceMeasures' and defendingPlayer's siblings each have.
     slotNames :: Map.Map SlotName.SlotName (Set.Set CardName.CardName),
     -- CR 110.2: the CONTROLLERS of the objects the surrounding announcement's
@@ -1338,12 +1338,12 @@ data Context = MkContext
     -- are the type the rule asks about.
     subjectHostCardTypes :: Set.Set CardType.CardType,
     -- CR 205.3m: the CREATURE TYPES of the objects the slots hold, for
-    -- SharesCreatureTypeWith's Bound anchor -- Heirloom Blade's "shares a
+    -- Shares CreatureType Bound -- Heirloom Blade's "shares a
     -- creature type with it", through Binding.triggerSource a kinship card's
     -- "with this creature", and a sibling target slot's (Unbury). Filled by
     -- Parun.Engine.Projection.framedBySlots; empty elsewhere, where the atom
     -- widens, and Parun.FilterPositionLintSpec's "CR 205.3m no card asks a
-    -- slot-anchored SharesCreatureTypeWith outside a resolution's own positions
+    -- slot-anchored Shares CreatureType outside a resolution's own positions
     -- or a target slot" keeps a card out of those.
     slotCreatureTypes :: Map.Map SlotName.SlotName (Set.Set Subtype.Subtype),
     -- CR 608.2c: the MEASURES of the object a resolution's slot holds, for the
@@ -1444,14 +1444,14 @@ data Context = MkContext
     -- "CR 303.4b no card asks IsHostOfSource where the source's host is unknown".
     sourceAttachedTo :: Maybe ObjectId.ObjectId,
     -- The object the surrounding Quantity is evaluated against, which
-    -- IsAttachedToEvaluated compares a candidate's host with and IsEvaluated the
+    -- IsAttachedTo Evaluated compares a candidate's host with and IsEvaluated the
     -- candidate itself. Filled by Parun.Engine.Quantity's Count arm alone; Nothing
     -- everywhere else, where the atoms answer False. Parun.FilterPositionLintSpec's
     -- "CR 613.4c no card asks an evaluated-object atom outside a Count" keeps a
     -- card to the filled position.
     evaluated :: Maybe ObjectId.ObjectId,
-    -- CR 205.3m: the CREATURE TYPES of that object, for SharesCreatureTypeWith
-    -- Anchor.Evaluated (Coat of Arms' "shares at least one creature type with
+    -- CR 205.3m: the CREATURE TYPES of that object, for Shares CreatureType
+    -- Evaluated (Coat of Arms' "shares at least one creature type with
     -- it"). `evaluated` above's filler, position and lint; read off the view the
     -- Count arm was handed, so the CR 613 projection's types and not the printed
     -- ones. Nothing where unfilled, and the atom then answers False.
@@ -1462,7 +1462,7 @@ data Context = MkContext
     -- below, and the atom then matches nothing. LAZY: filling it scans the
     -- relation.
     sourceEntrants :: Set.Set ObjectId.ObjectId,
-    -- CR 108.3: the OWNER of the SOURCE, for SharesWithSource Trait.Owner (CR
+    -- CR 108.3: the OWNER of the SOURCE, for Shares Owner Source (CR
     -- 702.140a's "with the same owner as this spell"). Off Object.owner rather
     -- than off `perspective`:
     -- CR 109.5's "you" is the CONTROLLER, a different player for a spell cast off
@@ -1777,6 +1777,61 @@ heldBy holder view = case holder of
   Holder.Controller -> controller view
   Holder.Owner -> owner view
 
+-- CR 105.2 / 205.3m / 709.4a: Filter.Shares' reading of each pair, as the test
+-- of a candidate against the anchored object's values. One comparison for every
+-- trait: a non-empty INTERSECTION. CR 105.2 and CR 709.4a make colours and names
+-- sets, CR 702.158e asks for a shared sector designation, and an owner is a set
+-- of at most one. A side with no value -- a colourless object, a nameless one
+-- (CR 708.2a), a player, which has no owner, one in no sector, or an anchor the
+-- context did not fill -- leaves its set empty and answers False without a case
+-- of its own, but for one posture below.
+--
+-- Not implemented: a pair the Context carries no anchored values for, answered
+-- Nothing (#5636).
+sharesAnchored :: Trait.Trait -> Anchor.Anchor -> Maybe (Context -> View -> Bool)
+sharesAnchored trait anchor = case anchor of
+  Anchor.Source -> case trait of
+    Trait.Color -> Just (\context view -> meets (colors view) (sourceColors context))
+    Trait.Name -> Just (\context view -> meets (names view) (sourceNames context))
+    Trait.Owner -> Just (\context view -> meets (foldMap Set.singleton (owner view)) (foldMap Set.singleton (sourceOwner context)))
+    Trait.Sector -> Just (\context view -> meets (Sector.sectorsIn (designations view)) (sourceSectors context))
+    Trait.CreatureType -> Nothing
+  Anchor.Bound slot -> case trait of
+    -- A slot naming nothing leaves the bound side empty.
+    Trait.Name -> Just (\context view -> meets (names view) (Map.findWithDefault Set.empty slot (slotNames context)))
+    -- The context holds only the bound objects' creature types, so a shared land
+    -- type (Dryad Arbor's Forest) is not a match. VACUOUSLY TRUE where the slot is
+    -- unbound, ControllerRelatesToBound's posture and for its reason: CR 601.2c's
+    -- offer is made before the sibling target is chosen, and
+    -- Parun.Engine.Target.selectionLegal's joint check narrows it (Unbury's "two
+    -- target creature cards that share a creature type").
+    Trait.CreatureType -> Just (\context view -> maybe True (meets (subtypes view)) (Map.lookup slot (slotCreatureTypes context)))
+    Trait.Color -> Nothing
+    Trait.Owner -> Nothing
+    Trait.Sector -> Nothing
+  Anchor.Evaluated -> case trait of
+    -- The object the surrounding quantity is aimed at (CR 613.4c), and vacuously
+    -- FALSE where nothing aims one: no CR 601.2c offer stands behind a Count to
+    -- narrow a widened answer afterwards.
+    Trait.CreatureType -> Just (\context view -> maybe False (meets (subtypes view)) (evaluatedCreatureTypes context))
+    Trait.Color -> Nothing
+    Trait.Name -> Nothing
+    Trait.Owner -> Nothing
+    Trait.Sector -> Nothing
+  where
+    meets a b = not (Set.disjoint a b)
+
+-- CR 701.3a / 301.5a: the object Filter.IsAttachedTo compares a candidate's host
+-- with -- the match's source, or under CR 613.4c the object the surrounding
+-- quantity is aimed at, which need not be the source.
+--
+-- Not implemented: the Bound anchor, answered Nothing (#5636).
+attachedAnchored :: Anchor.Anchor -> Maybe (Context -> Maybe ObjectId.ObjectId)
+attachedAnchored anchor = case anchor of
+  Anchor.Source -> Just source
+  Anchor.Evaluated -> Just evaluated
+  Anchor.Bound _ -> Nothing
+
 -- The one generic matcher. A pure fold over the Filter tree; it never inspects
 -- which effect produced the Filter. Identity checks like IsSource consult the
 -- supplied Context, not information baked into the predicate.
@@ -1785,18 +1840,7 @@ matches context view predicate = case predicate of
   Filter.HasCardType t -> Set.member t (cardTypes view)
   Filter.HasSupertype s -> Set.member s (supertypes view)
   Filter.HasColor c -> Set.member c (colors view)
-  -- One comparison for every trait: a non-empty INTERSECTION of the
-  -- candidate's values with the source's. CR 105.2 and CR 709.4a make colours
-  -- and names sets, CR 702.158e asks for a shared sector designation, and an
-  -- owner is a set of at most one. A side with no value -- a colourless object,
-  -- a nameless one (CR 708.2a), a player, which has no owner, one in no sector,
-  -- or a source the context did not supply -- leaves its set empty and answers
-  -- False without a case of its own.
-  Filter.SharesWithSource trait -> case trait of
-    Trait.Color -> not (Set.disjoint (colors view) (sourceColors context))
-    Trait.Name -> not (Set.disjoint (names view) (sourceNames context))
-    Trait.Owner -> not (Set.disjoint (foldMap Set.singleton (owner view)) (foldMap Set.singleton (sourceOwner context)))
-    Trait.Sector -> not (Set.disjoint (Sector.sectorsIn (designations view)) (sourceSectors context))
+  Filter.Shares trait anchor -> maybe False (\shared -> shared context view) (sharesAnchored trait anchor)
   Filter.HasSubtype s -> Set.member s (subtypes view)
   -- CR 709.4a's own test, said the way that rule says it: membership, so an
   -- object showing several names matches on any one of them.
@@ -1991,11 +2035,6 @@ matches context view predicate = case predicate of
     (Nothing, Nothing) -> False
   -- IsBound over the announcement's every target at once (Binding.announcedTargets).
   Filter.IsTarget -> matches context view (Filter.IsBound Binding.announcedTargets)
-  -- CR 709.4a at both ends: the candidate has the bound object's name if one of
-  -- its names is one of that object's, which is a non-empty INTERSECTION. A slot
-  -- naming nothing, and a bound object with no name (CR 708.2a), each leave the
-  -- other side empty and answer False without a case of their own.
-  Filter.SameNameAsBound slot -> not (Set.disjoint (names view) (Map.findWithDefault Set.empty slot (slotNames context)))
   -- CR 110.2 compared across two of one announcement's targets, and the one atom
   -- here that is vacuously TRUE rather than False: a slot the context has no key
   -- for is one nothing has named yet, and a relation with only one party to it
@@ -2014,23 +2053,7 @@ matches context view predicate = case predicate of
   -- bound object attached to nothing, to a player, or to a host that has left
   -- the battlefield, and nothing shares a controller with any of those.
   Filter.SameControllerAsHostOfBound slot -> maybe False (`Set.member` Map.findWithDefault Set.empty slot (slotHostControllers context)) (controller view)
-  -- CR 205.3m at both ends, SameNameAsBound's intersection: the context holds
-  -- only the bound objects' creature types, so a shared land type (Dryad Arbor's
-  -- Forest) is not a match. VACUOUSLY TRUE where the slot is unbound,
-  -- ControllerRelatesToBound's posture and for its reason: CR 601.2c's offer is
-  -- made before the sibling target is chosen, and
-  -- Parun.Engine.Target.selectionLegal's joint check narrows it (Unbury's "two
-  -- target creature cards that share a creature type").
-  Filter.SharesCreatureTypeWith (Anchor.Bound slot) -> case Map.lookup slot (slotCreatureTypes context) of
-    Nothing -> True
-    Just types -> not (Set.disjoint (subtypes view) types)
-  -- The same intersection against the object the surrounding quantity is aimed
-  -- at (CR 613.4c), and vacuously FALSE where nothing aims one: no CR 601.2c
-  -- offer stands behind a Count to narrow a widened answer afterwards.
-  Filter.SharesCreatureTypeWith Anchor.Evaluated -> case evaluatedCreatureTypes context of
-    Nothing -> False
-    Just types -> not (Set.disjoint (subtypes view) types)
-  -- CR 201.4 at both ends, the arm above's INTERSECTION for CR 201.4g's reason as
+  -- CR 201.4 at both ends, Filter.Shares' INTERSECTION for CR 201.4g's reason as
   -- much as CR 709.4a's: choosing one of a set of interchangeable names chooses
   -- each of them, so a candidate showing either matches. A source that has chosen
   -- nothing, and a candidate with no name at all (CR 708.2a), each leave one side
@@ -2269,19 +2292,11 @@ matches context view predicate = case predicate of
   -- `HasAttached (ControlledBy You)` asks after Auras YOU control.
   Filter.HasAttached f -> any (\attacher -> matches context attacher f) (attachedViews view)
   -- CR 701.3a / 301.5a: IsSource's comparison in the other direction -- the
-  -- candidate's HOST against the match's source, rather than the candidate itself.
-  -- A live read of Object.attachedTo, so an Equipment unequipped by CR 704.5n
-  -- stops matching at once. Vacuously False where the candidate is attached to
-  -- nothing or to a player, and where no source frames the match.
-  Filter.IsAttachedToSource -> case (attachedTo view, source context) of
-    (Just host, Just src) -> host == src
-    _ -> False
-  -- CR 701.3a / 301.5a: the same live comparison against the object the
-  -- surrounding quantity is aimed at rather than the match's source -- under CR
-  -- 613.4c the affected object, which need not be the source. Vacuously False
-  -- where the candidate is attached to nothing or to a player, and where no
-  -- quantity aims the match.
-  Filter.IsAttachedToEvaluated -> case (attachedTo view, evaluated context) of
+  -- candidate's HOST against the anchored object, rather than the candidate
+  -- itself. A live read of Object.attachedTo, so an Equipment unequipped by CR
+  -- 704.5n stops matching at once. Vacuously False where the candidate is
+  -- attached to nothing or to a player, and where nothing fills the anchor.
+  Filter.IsAttachedTo anchor -> case (attachedTo view, attachedAnchored anchor >>= \anchored -> anchored context) of
     (Just host, Just aimed) -> host == aimed
     _ -> False
   -- CR 613.4c: IsSource's identity test against the object the surrounding
@@ -2387,7 +2402,7 @@ matches context view predicate = case predicate of
     (Just designated, Just you) -> designated == you
     _ -> False
   -- CR 702.95b's "whether a creature is paired", off Object.paired. A live read of
-  -- a STORED record, IsRingBearer's posture and not IsAttachedToSource's: what
+  -- a STORED record, IsRingBearer's posture and not IsAttachedTo Source's: what
   -- CR 702.95e ends the pairing for is swept by Parun.Engine.Soulbond.endWhenBroken
   -- before any player could receive priority, so no reader sees a lapsed row.
   Filter.IsPaired -> Maybe.isJust (paired view)
@@ -2479,7 +2494,7 @@ rewrite pairs predicate = case predicate of
   -- CR 612.2's colour word used as a colour word: "black creature", and the
   -- "black" in "nonblack" under a Not, as Mind Bend's reminder text says.
   Filter.HasColor c -> Filter.HasColor (TextWord.colorAfter pairs c)
-  Filter.SharesWithSource _ -> predicate
+  Filter.Shares _ _ -> predicate
   -- Untouched, and CR 612.2 says so outright: "an effect that changes a color
   -- word or a subtype can't change a card name, even if that name contains a
   -- word ... that is the same as a Magic color word, basic land type, or
@@ -2535,10 +2550,8 @@ rewrite pairs predicate = case predicate of
   Filter.TargetsPlayer _ -> predicate
   Filter.IsBound _ -> predicate
   Filter.IsTarget -> predicate
-  Filter.SameNameAsBound _ -> predicate
   Filter.ControllerRelatesToBound _ _ -> predicate
   Filter.SameControllerAsHostOfBound _ -> predicate
-  Filter.SharesCreatureTypeWith _ -> predicate
   Filter.HasChosenName {} -> predicate
   Filter.HasChosenColor -> predicate
   Filter.HasChosenSubtype -> predicate
@@ -2588,8 +2601,7 @@ rewrite pairs predicate = case predicate of
   -- the ATTACHER ("enchanted by an Aura"), so CR 612.1's word swap reaches it as
   -- it reaches the same description written at the top level.
   Filter.HasAttached f -> Filter.HasAttached (rewrite pairs f)
-  Filter.IsAttachedToSource -> predicate
-  Filter.IsAttachedToEvaluated -> predicate
+  Filter.IsAttachedTo _ -> predicate
   Filter.IsEvaluated -> predicate
   Filter.IsHostOfSource -> predicate
   Filter.EnteredWithSource -> predicate
@@ -3254,7 +3266,7 @@ bakeBound players objects controllers predicate = case predicate of
   Filter.HasCardType _ -> predicate
   Filter.HasSupertype _ -> predicate
   Filter.HasColor _ -> predicate
-  Filter.SharesWithSource _ -> predicate
+  Filter.Shares _ _ -> predicate
   Filter.HasSubtype _ -> predicate
   Filter.HasName _ -> predicate
   Filter.NameWordsAtLeast _ -> predicate
@@ -3287,7 +3299,6 @@ bakeBound players objects controllers predicate = case predicate of
   -- attack". Left standing where the map does not bind the slot.
   Filter.IsBound slot -> maybe predicate (Filter.Or . fmap Filter.IsObject . Set.toList) (Map.lookup slot objects)
   Filter.IsTarget -> predicate
-  Filter.SameNameAsBound _ -> predicate
   -- CR 608.2h: the players standing in the relation to the controllers the
   -- slot's objects had as the resolution read them, named outright for
   -- IsBound's reason -- Mark for Death's "other creatures that player
@@ -3295,7 +3306,6 @@ bakeBound players objects controllers predicate = case predicate of
   -- offer before the sibling target is chosen.
   Filter.ControllerRelatesToBound relation slot -> maybe predicate (\related -> Filter.Or (fmap (Filter.HeldByPlayer Holder.Controller) (Set.toList (related relation)))) (Map.lookup slot controllers)
   Filter.SameControllerAsHostOfBound _ -> predicate
-  Filter.SharesCreatureTypeWith _ -> predicate
   Filter.HasChosenName {} -> predicate
   Filter.HasChosenColor -> predicate
   Filter.HasChosenSubtype -> predicate
@@ -3345,8 +3355,7 @@ bakeBound players objects controllers predicate = case predicate of
   -- ATTACHER's description is baked exactly as the same atom at the top level
   -- would be, and Parun.Engine.Filter.boundSlots descends to match.
   Filter.HasAttached f -> Filter.HasAttached (bakeBound players objects controllers f)
-  Filter.IsAttachedToSource -> predicate
-  Filter.IsAttachedToEvaluated -> predicate
+  Filter.IsAttachedTo _ -> predicate
   Filter.IsEvaluated -> predicate
   Filter.IsHostOfSource -> predicate
   Filter.EnteredWithSource -> predicate
@@ -3445,7 +3454,7 @@ manaValueThresholds predicate = case predicate of
   Filter.HasCardType _ -> []
   Filter.HasSupertype _ -> []
   Filter.HasColor _ -> []
-  Filter.SharesWithSource _ -> []
+  Filter.Shares _ _ -> []
   Filter.HasSubtype _ -> []
   Filter.HasName _ -> []
   Filter.NameWordsAtLeast _ -> []
@@ -3469,10 +3478,8 @@ manaValueThresholds predicate = case predicate of
   Filter.TargetsPlayer _ -> []
   Filter.IsBound _ -> []
   Filter.IsTarget -> []
-  Filter.SameNameAsBound _ -> []
   Filter.ControllerRelatesToBound _ _ -> []
   Filter.SameControllerAsHostOfBound _ -> []
-  Filter.SharesCreatureTypeWith _ -> []
   Filter.HasChosenName {} -> []
   Filter.HasChosenColor -> []
   Filter.HasChosenSubtype -> []
@@ -3517,8 +3524,7 @@ manaValueThresholds predicate = case predicate of
   -- inside bound an ATTACHER's mana value and never the candidate's. Only
   -- widening CR 601.3a's sample is the safe direction.
   Filter.HasAttached f -> manaValueThresholds f
-  Filter.IsAttachedToSource -> []
-  Filter.IsAttachedToEvaluated -> []
+  Filter.IsAttachedTo _ -> []
   Filter.IsEvaluated -> []
   Filter.IsHostOfSource -> []
   Filter.EnteredWithSource -> []
@@ -3600,7 +3606,7 @@ statesAQuality predicate = case predicate of
   Filter.HasCardType _ -> True
   Filter.HasSupertype _ -> True
   Filter.HasColor _ -> True
-  Filter.SharesWithSource _ -> True
+  Filter.Shares _ _ -> True
   Filter.HasSubtype _ -> True
   -- CR 701.23b's "stated quality" at its sharpest -- a named card is the most
   -- specific description a search can give -- so the searcher may decline to
@@ -3629,10 +3635,8 @@ statesAQuality predicate = case predicate of
   Filter.TargetsPlayer _ -> True
   Filter.IsBound _ -> True
   Filter.IsTarget -> True
-  Filter.SameNameAsBound _ -> True
   Filter.ControllerRelatesToBound _ _ -> True
   Filter.SameControllerAsHostOfBound _ -> True
-  Filter.SharesCreatureTypeWith _ -> True
   -- CR 701.23b's "stated quality" for HasName's reason, one indirection along: the
   -- description is a card name whichever way the name was arrived at, so a search
   -- whose filter is this one may decline to find what it can see.
@@ -3684,8 +3688,7 @@ statesAQuality predicate = case predicate of
   -- "enchanted" is a stated quality under CR 701.23b, and the trivial nest states
   -- one too ("has something attached to it").
   Filter.HasAttached _ -> True
-  Filter.IsAttachedToSource -> True
-  Filter.IsAttachedToEvaluated -> True
+  Filter.IsAttachedTo _ -> True
   Filter.IsEvaluated -> True
   Filter.IsHostOfSource -> True
   Filter.EnteredWithSource -> True
@@ -3767,14 +3770,18 @@ readsSourceValues predicate = case predicate of
   Filter.HasCardType _ -> False
   Filter.HasSupertype _ -> False
   Filter.HasColor _ -> False
-  -- Colours and names, which a printed face carries; not an owner, which a card
-  -- outside the game lacks, nor a sector, which CR 702.158b gives only a
-  -- permanent.
-  Filter.SharesWithSource trait -> case trait of
-    Trait.Color -> True
-    Trait.Name -> True
-    Trait.Owner -> False
-    Trait.Sector -> False
+  -- The SOURCE's colours and names, which a printed face carries; not an owner,
+  -- which a card outside the game lacks, nor a sector, which CR 702.158b gives
+  -- only a permanent, nor anything another anchor names.
+  Filter.Shares trait anchor -> case anchor of
+    Anchor.Source -> case trait of
+      Trait.Color -> True
+      Trait.Name -> True
+      Trait.Owner -> False
+      Trait.Sector -> False
+      Trait.CreatureType -> False
+    Anchor.Bound _ -> False
+    Anchor.Evaluated -> False
   Filter.HasSubtype _ -> False
   Filter.HasName _ -> False
   Filter.NameWordsAtLeast _ -> False
@@ -3798,10 +3805,8 @@ readsSourceValues predicate = case predicate of
   Filter.TargetsPlayer _ -> False
   Filter.IsBound _ -> False
   Filter.IsTarget -> False
-  Filter.SameNameAsBound _ -> False
   Filter.ControllerRelatesToBound _ _ -> False
   Filter.SameControllerAsHostOfBound _ -> False
-  Filter.SharesCreatureTypeWith _ -> False
   Filter.HasChosenName {} -> True
   Filter.HasChosenColor -> True
   Filter.HasChosenSubtype -> True
@@ -3834,8 +3839,7 @@ readsSourceValues predicate = case predicate of
   Filter.ControlledSinceTurnBegan -> False
   Filter.AttachedTo f -> readsSourceValues f
   Filter.HasAttached f -> readsSourceValues f
-  Filter.IsAttachedToSource -> False
-  Filter.IsAttachedToEvaluated -> False
+  Filter.IsAttachedTo _ -> False
   Filter.IsEvaluated -> False
   Filter.IsHostOfSource -> False
   Filter.EnteredWithSource -> False
@@ -3890,7 +3894,7 @@ boundSlots = Const.getConst . overBoundSlots (Const.Const . Set.singleton)
 -- resolution's bindings a waiting replacement CAPTURES through here, and
 -- Parun.Engine.Target.jointlyJudged fires CR 601.2c's joint check on
 -- boundSlots, which is the whole of what enforces ControllerRelatesToBound and
--- SharesCreatureTypeWith (the offer widens for them).
+-- Shares CreatureType Bound (the offer widens for them).
 --
 -- The same descent `bakeBound` makes: a position that function does not bake is
 -- a position this one must not report as read. NOT descended into: the Filter a
@@ -3900,14 +3904,14 @@ boundSlots = Const.getConst . overBoundSlots (Const.Const . Set.singleton)
 -- ONE: the atom asks a single thing of the slot -- CR 208.1's toughness, CR
 -- 110.2's one controller or one player -- and answers nothing for a slot naming
 -- several (Binding.onlyOne's doctrine; Filter.slotOneObject). MANY: the atom
--- takes the whole set the slot names (IsBound, SameNameAsBound and the rest).
+-- takes the whole set the slot names (IsBound, Shares Name Bound and the rest).
 -- AMOUNT: the slot holds a number (Context's boundAmounts), never a recipient.
 overBoundSlotsWith :: (Applicative f) => (SlotArity.SlotArity -> SlotName.SlotName -> f SlotName.SlotName) -> Filter.Filter Keyword.Type.Keyword -> f (Filter.Filter Keyword.Type.Keyword)
 overBoundSlotsWith f predicate = case predicate of
   Filter.HasCardType _ -> pure predicate
   Filter.HasSupertype _ -> pure predicate
   Filter.HasColor _ -> pure predicate
-  Filter.SharesWithSource _ -> pure predicate
+  Filter.Shares trait anchor -> fmap (Filter.Shares trait) (overAnchorSlot f anchor)
   Filter.HasSubtype _ -> pure predicate
   Filter.HasName _ -> pure predicate
   Filter.HasNameOriginallyPrintedIn _ -> pure predicate
@@ -3952,7 +3956,6 @@ overBoundSlotsWith f predicate = case predicate of
   Filter.IsBound slot -> fmap Filter.IsBound (f SlotArity.Many slot)
   Filter.IsTarget -> fmap (const Filter.IsTarget) (f SlotArity.Many Binding.announcedTargets)
   -- Reads the whole set too, one field over.
-  Filter.SameNameAsBound slot -> fmap Filter.SameNameAsBound (f SlotArity.Many slot)
   -- Names no slot at all: CR 702.60a's comparison is against the SOURCE, whose
   -- names arrive on Filter.Context.
   -- Reads the whole set too, one field further over.
@@ -3961,8 +3964,6 @@ overBoundSlotsWith f predicate = case predicate of
   -- with every member's host's controller.
   Filter.SameControllerAsHostOfBound slot -> fmap Filter.SameControllerAsHostOfBound (f SlotArity.Many slot)
   -- Reads the whole set too, off its own field.
-  Filter.SharesCreatureTypeWith (Anchor.Bound slot) -> fmap (Filter.SharesCreatureTypeWith . Anchor.Bound) (f SlotArity.Many slot)
-  Filter.SharesCreatureTypeWith Anchor.Evaluated -> pure predicate
   Filter.HasChosenName {} -> pure predicate
   -- Reads no slot either: CR 105.2's colour arrives on Filter.Context.
   Filter.HasChosenColor -> pure predicate
@@ -4009,8 +4010,7 @@ overBoundSlotsWith f predicate = case predicate of
   Filter.AttachedTo g -> fmap Filter.AttachedTo (overBoundSlotsWith f g)
   -- DESCENT, for the atom above's reason.
   Filter.HasAttached g -> fmap Filter.HasAttached (overBoundSlotsWith f g)
-  Filter.IsAttachedToSource -> pure predicate
-  Filter.IsAttachedToEvaluated -> pure predicate
+  Filter.IsAttachedTo anchor -> fmap Filter.IsAttachedTo (overAnchorSlot f anchor)
   Filter.IsEvaluated -> pure predicate
   Filter.IsHostOfSource -> pure predicate
   Filter.EnteredWithSource -> pure predicate
@@ -4052,6 +4052,14 @@ overBoundSlotsWith f predicate = case predicate of
   Filter.Or fs -> fmap Filter.Or (traverse (overBoundSlotsWith f) fs)
   Filter.Not g -> fmap Filter.Not (overBoundSlotsWith f g)
   Filter.Unwritten g -> fmap Filter.Unwritten (overBoundSlotsWith f g)
+
+-- The slot an Anchor names, at MANY: an anchored atom takes the whole set the
+-- slot names.
+overAnchorSlot :: (Applicative f) => (SlotArity.SlotArity -> SlotName.SlotName -> f SlotName.SlotName) -> Anchor.Anchor -> f Anchor.Anchor
+overAnchorSlot f anchor = case anchor of
+  Anchor.Bound slot -> fmap Anchor.Bound (f SlotArity.Many slot)
+  Anchor.Evaluated -> pure anchor
+  Anchor.Source -> pure anchor
 
 -- overBoundSlotsWith without the arity: CR 700.2d's rename.
 overBoundSlots :: (Applicative f) => (SlotName.SlotName -> f SlotName.SlotName) -> Filter.Filter Keyword.Type.Keyword -> f (Filter.Filter Keyword.Type.Keyword)

@@ -58,9 +58,14 @@
                           "blockers": {
                             "type": "Not",
                             "value": {
-                              "type": "SharesWithSource",
+                              "type": "Shares",
                               "value": {
-                                "type": "Sector"
+                                "anchor": {
+                                  "type": "Source"
+                                },
+                                "trait": {
+                                  "type": "Sector"
+                                }
                               }
                             }
                           },

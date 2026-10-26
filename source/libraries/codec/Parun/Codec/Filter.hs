@@ -35,12 +35,14 @@ import qualified Parun.JsonCodec.Arm as Arm
 import qualified Parun.JsonCodec.Codec as Codec
 import qualified Parun.JsonCodec.Common as Common
 import qualified Parun.JsonCodec.Fields as Fields
+import qualified Parun.Types.Anchor as Anchor
 import qualified Parun.Types.ControlMargin as ControlMargin
 import qualified Parun.Types.Filter as Filter
 import qualified Parun.Types.Holder as Holder
 import qualified Parun.Types.PlayerId as PlayerId
 import qualified Parun.Types.PlayerRelation as PlayerRelation
 import qualified Parun.Types.SlotName as SlotName
+import qualified Parun.Types.Trait as Trait
 
 -- | Recursive, mirroring Quantity's toJson/fromJson: And/Or carry their
 -- operands as a JSON Array, Not as a single nested object, and each atom
@@ -78,7 +80,7 @@ codec keywordCodec =
       -- Modification.SetController's baked PlayerId gets.
       Arm.payload "HeldByPlayer" heldByPlayer (uncurry Filter.HeldByPlayer) (\x -> case x of Filter.HeldByPlayer h y -> Just (h, y); _ -> Nothing),
       Arm.payload "HeldByRecipient" Holder.codec Filter.HeldByRecipient (\x -> case x of Filter.HeldByRecipient y -> Just y; _ -> Nothing),
-      Arm.payload "SharesWithSource" Trait.codec Filter.SharesWithSource (\x -> case x of Filter.SharesWithSource y -> Just y; _ -> Nothing),
+      Arm.payload "Shares" shares (uncurry Filter.Shares) (\x -> case x of Filter.Shares t a -> Just (t, a); _ -> Nothing),
       Arm.nullary "ManaValueIsEven" Filter.ManaValueIsEven,
       Arm.payload "ControlledBy" PlayerRelation.codec Filter.ControlledBy (\x -> case x of Filter.ControlledBy y -> Just y; _ -> Nothing),
       Arm.payload "OwnedBy" PlayerRelation.codec Filter.OwnedBy (\x -> case x of Filter.OwnedBy y -> Just y; _ -> Nothing),
@@ -100,10 +102,8 @@ codec keywordCodec =
       Arm.payload "TargetsPlayer" PlayerRelation.codec Filter.TargetsPlayer (\x -> case x of Filter.TargetsPlayer y -> Just y; _ -> Nothing),
       Arm.payload "IsBound" SlotName.codec Filter.IsBound (\x -> case x of Filter.IsBound y -> Just y; _ -> Nothing),
       Arm.nullary "IsTarget" Filter.IsTarget,
-      Arm.payload "SameNameAsBound" SlotName.codec Filter.SameNameAsBound (\x -> case x of Filter.SameNameAsBound y -> Just y; _ -> Nothing),
       Arm.payload "ControllerRelatesToBound" relatesToBound (uncurry Filter.ControllerRelatesToBound) (\x -> case x of Filter.ControllerRelatesToBound r y -> Just (r, y); _ -> Nothing),
       Arm.payload "SameControllerAsHostOfBound" SlotName.codec Filter.SameControllerAsHostOfBound (\x -> case x of Filter.SameControllerAsHostOfBound y -> Just y; _ -> Nothing),
-      Arm.payload "SharesCreatureTypeWith" Anchor.codec Filter.SharesCreatureTypeWith (\x -> case x of Filter.SharesCreatureTypeWith y -> Just y; _ -> Nothing),
       Arm.payload "HasChosenName" NameChooser.codec Filter.HasChosenName (\x -> case x of Filter.HasChosenName y -> Just y; _ -> Nothing),
       Arm.nullary "HasChosenColor" Filter.HasChosenColor,
       Arm.nullary "HasChosenSubtype" Filter.HasChosenSubtype,
@@ -137,8 +137,7 @@ codec keywordCodec =
       -- Recursive for the arm above's reason, the payload describing the ATTACHER
       -- rather than the host.
       Arm.payload "HasAttached" (codec keywordCodec) Filter.HasAttached (\x -> case x of Filter.HasAttached y -> Just y; _ -> Nothing),
-      Arm.nullary "IsAttachedToSource" Filter.IsAttachedToSource,
-      Arm.nullary "IsAttachedToEvaluated" Filter.IsAttachedToEvaluated,
+      Arm.payload "IsAttachedTo" Anchor.codec Filter.IsAttachedTo (\x -> case x of Filter.IsAttachedTo y -> Just y; _ -> Nothing),
       Arm.nullary "IsEvaluated" Filter.IsEvaluated,
       Arm.nullary "IsHostOfSource" Filter.IsHostOfSource,
       Arm.nullary "EnteredWithSource" Filter.EnteredWithSource,
@@ -212,6 +211,14 @@ heldByPlayer =
 
 -- | CR 110.2's comparison across two objects keyed by name: the relation, and
 -- the slot holding the object whose controller it is relative to.
+-- | What is shared, and with which object.
+shares :: Codec.Codec (Trait.Trait, Anchor.Anchor)
+shares =
+  Fields.object $
+    (,)
+      <$> Fields.required "trait" Trait.codec fst
+      <*> Fields.required "anchor" Anchor.codec snd
+
 relatesToBound :: Codec.Codec (PlayerRelation.PlayerRelation, SlotName.SlotName)
 relatesToBound =
   Fields.object $
@@ -235,7 +242,7 @@ tagOf x = case x of
   Filter.HeldByBound {} -> "HeldByBound"
   Filter.HeldByPlayer {} -> "HeldByPlayer"
   Filter.HeldByRecipient {} -> "HeldByRecipient"
-  Filter.SharesWithSource {} -> "SharesWithSource"
+  Filter.Shares {} -> "Shares"
   Filter.ManaValueIsEven {} -> "ManaValueIsEven"
   Filter.ControlledBy {} -> "ControlledBy"
   Filter.OwnedBy {} -> "OwnedBy"
@@ -252,10 +259,8 @@ tagOf x = case x of
   Filter.TargetsPlayer {} -> "TargetsPlayer"
   Filter.IsBound {} -> "IsBound"
   Filter.IsTarget {} -> "IsTarget"
-  Filter.SameNameAsBound {} -> "SameNameAsBound"
   Filter.ControllerRelatesToBound {} -> "ControllerRelatesToBound"
   Filter.SameControllerAsHostOfBound {} -> "SameControllerAsHostOfBound"
-  Filter.SharesCreatureTypeWith {} -> "SharesCreatureTypeWith"
   Filter.HasChosenName {} -> "HasChosenName"
   Filter.HasChosenColor {} -> "HasChosenColor"
   Filter.HasChosenSubtype {} -> "HasChosenSubtype"
@@ -285,8 +290,7 @@ tagOf x = case x of
   Filter.ControlledSinceTurnBegan {} -> "ControlledSinceTurnBegan"
   Filter.AttachedTo {} -> "AttachedTo"
   Filter.HasAttached {} -> "HasAttached"
-  Filter.IsAttachedToSource {} -> "IsAttachedToSource"
-  Filter.IsAttachedToEvaluated {} -> "IsAttachedToEvaluated"
+  Filter.IsAttachedTo {} -> "IsAttachedTo"
   Filter.IsEvaluated {} -> "IsEvaluated"
   Filter.IsHostOfSource {} -> "IsHostOfSource"
   Filter.EnteredWithSource {} -> "EnteredWithSource"

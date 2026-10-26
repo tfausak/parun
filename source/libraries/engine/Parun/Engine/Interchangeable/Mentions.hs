@@ -487,7 +487,7 @@ filterNames asking criterion = case criterion of
   Filter.HasCardType _cardType -> mempty
   Filter.HasSupertype _supertype -> mempty
   Filter.HasColor _color -> mempty
-  Filter.SharesWithSource _trait -> mempty
+  Filter.Shares _trait anchor -> anchorNames asking anchor
   Filter.HasSubtype _subtype -> mempty
   Filter.HasName _name -> mempty
   Filter.NameWordsAtLeast _n -> mempty
@@ -511,11 +511,8 @@ filterNames asking criterion = case criterion of
   Filter.TargetsPlayer _relation -> mempty
   Filter.IsBound slot -> slotNames asking slot
   Filter.IsTarget -> slotNames asking Binding.Engine.announcedTargets
-  Filter.SameNameAsBound slot -> slotNames asking slot
   Filter.ControllerRelatesToBound _playerRelation slot -> slotNames asking slot
   Filter.SameControllerAsHostOfBound slot -> slotNames asking slot
-  Filter.SharesCreatureTypeWith (Anchor.Bound slot) -> slotNames asking slot
-  Filter.SharesCreatureTypeWith Anchor.Evaluated -> mempty
   Filter.HasChosenName {} -> mempty
   Filter.HasChosenColor -> mempty
   Filter.HasChosenSubtype -> mempty
@@ -549,8 +546,7 @@ filterNames asking criterion = case criterion of
   Filter.ControlledSinceTurnBegan -> mempty
   Filter.AttachedTo nested -> filterNames asking nested
   Filter.HasAttached nested -> filterNames asking nested
-  Filter.IsAttachedToSource -> mempty
-  Filter.IsAttachedToEvaluated -> mempty
+  Filter.IsAttachedTo anchor -> anchorNames asking anchor
   Filter.IsEvaluated -> mempty
   Filter.IsHostOfSource -> mempty
   Filter.EnteredWithSource -> keyed asking
@@ -3144,3 +3140,10 @@ zoneScopeNames asking x = case x of
   ZoneScope.InSlot slotName -> slotNames asking slotName
   ZoneScope.ControllerOfBound slotName -> slotNames asking slotName
   ZoneScope.BoundPlayer _playerId -> mempty
+
+-- The slot an Anchor names; the evaluated object and the source name none.
+anchorNames :: (Monoid r) => Asking r -> Anchor.Anchor -> r
+anchorNames asking anchor = case anchor of
+  Anchor.Bound slot -> slotNames asking slot
+  Anchor.Evaluated -> mempty
+  Anchor.Source -> mempty

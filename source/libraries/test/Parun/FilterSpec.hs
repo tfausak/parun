@@ -8,6 +8,7 @@ import qualified Data.Text as Text
 import qualified Parun.Engine.Filter as Filter
 import qualified Parun.Spec as Spec
 import qualified Parun.Types.AbilityKind as AbilityKind
+import qualified Parun.Types.Anchor as Anchor
 import qualified Parun.Types.BoundMeasure as BoundMeasure
 import qualified Parun.Types.CardName as CardName
 import qualified Parun.Types.CardType as CardType
@@ -636,40 +637,40 @@ spec s = Spec.describe s "Parun.Engine.Filter" $ do
   -- shape over a SET of NAMES: CR 201.2 makes the comparison an intersection, so an
   -- object showing two names (CR 709.4a's split card) has the source's name if it
   -- shows either.
-  Spec.describe s "SharesWithSource Name" $ do
+  Spec.describe s "Shares Name Source" $ do
     let sourced ns = self {Filter.sourceNames = Set.fromList (fmap (CardName.MkCardName . Text.pack) ns)}
         namedCreature ns = blackCreature {Filter.names = Set.fromList (fmap (CardName.MkCardName . Text.pack) ns)}
     Spec.it s "holds on any name in common and fails on none" $ do
-      Spec.assertBool s (Filter.matches (sourced ["Surging Dementia"]) (namedCreature ["Surging Dementia"]) (Filter.Type.SharesWithSource Trait.Name)) "the same name"
-      Spec.assertBool s (not (Filter.matches (sourced ["Surging Dementia"]) (namedCreature ["Surging Might"]) (Filter.Type.SharesWithSource Trait.Name))) "a different name"
-      Spec.assertBool s (Filter.matches (sourced ["Surging Dementia"]) (namedCreature ["Surging Might", "Surging Dementia"]) (Filter.Type.SharesWithSource Trait.Name)) "one of two names"
+      Spec.assertBool s (Filter.matches (sourced ["Surging Dementia"]) (namedCreature ["Surging Dementia"]) (Filter.Type.Shares Trait.Name Anchor.Source)) "the same name"
+      Spec.assertBool s (not (Filter.matches (sourced ["Surging Dementia"]) (namedCreature ["Surging Might"]) (Filter.Type.Shares Trait.Name Anchor.Source))) "a different name"
+      Spec.assertBool s (Filter.matches (sourced ["Surging Dementia"]) (namedCreature ["Surging Might", "Surging Dementia"]) (Filter.Type.Shares Trait.Name Anchor.Source)) "one of two names"
 
     -- CR 708.2a's no-name object on either side, the colour trait's vacuity
     -- posture one characteristic over: an empty set intersects nothing, including
     -- another empty set.
     Spec.it s "is False when either side has no name" $ do
-      Spec.assertBool s (not (Filter.matches (sourced ["Surging Dementia"]) blackCreature (Filter.Type.SharesWithSource Trait.Name))) "no candidate name"
-      Spec.assertBool s (not (Filter.matches self (namedCreature ["Surging Dementia"]) (Filter.Type.SharesWithSource Trait.Name))) "no source names"
-      Spec.assertBool s (not (Filter.matches self blackCreature (Filter.Type.SharesWithSource Trait.Name))) "neither"
+      Spec.assertBool s (not (Filter.matches (sourced ["Surging Dementia"]) blackCreature (Filter.Type.Shares Trait.Name Anchor.Source))) "no candidate name"
+      Spec.assertBool s (not (Filter.matches self (namedCreature ["Surging Dementia"]) (Filter.Type.Shares Trait.Name Anchor.Source))) "no source names"
+      Spec.assertBool s (not (Filter.matches self blackCreature (Filter.Type.Shares Trait.Name Anchor.Source))) "neither"
 
     Spec.it s "is False for a player" $
-      Spec.assertBool s (not (Filter.matches (sourced ["Surging Dementia"]) aPlayer (Filter.Type.SharesWithSource Trait.Name))) "player"
+      Spec.assertBool s (not (Filter.matches (sourced ["Surging Dementia"]) aPlayer (Filter.Type.Shares Trait.Name Anchor.Source))) "player"
 
   -- CR 702.78a's comparison, the two arms above's shape over a SET: colour is a
   -- set (CR 105.2), so "shares a color" is a non-empty intersection rather than
   -- an ordering. blackCreature is mono-black.
-  Spec.describe s "SharesWithSource Color" $ do
+  Spec.describe s "Shares Color Source" $ do
     let sourced cs = self {Filter.sourceColors = Set.fromList cs}
     Spec.it s "holds on any colour in common and fails on none" $ do
-      Spec.assertBool s (Filter.matches (sourced [Color.Black, Color.Red]) blackCreature (Filter.Type.SharesWithSource Trait.Color)) "black shares black"
-      Spec.assertBool s (not (Filter.matches (sourced [Color.Red]) blackCreature (Filter.Type.SharesWithSource Trait.Color))) "black shares nothing with red"
+      Spec.assertBool s (Filter.matches (sourced [Color.Black, Color.Red]) blackCreature (Filter.Type.Shares Trait.Color Anchor.Source)) "black shares black"
+      Spec.assertBool s (not (Filter.matches (sourced [Color.Red]) blackCreature (Filter.Type.Shares Trait.Color Anchor.Source))) "black shares nothing with red"
 
     -- CR 105.2's own reading rather than an absent-value convention: a colourless
     -- object shares no colour with anything, on either side.
     Spec.it s "is False when either side is colourless" $ do
       let colorless = blackCreature {Filter.colors = Set.empty}
-      Spec.assertBool s (not (Filter.matches (sourced [Color.Black]) colorless (Filter.Type.SharesWithSource Trait.Color))) "colourless candidate"
-      Spec.assertBool s (not (Filter.matches self blackCreature (Filter.Type.SharesWithSource Trait.Color))) "no source colours"
+      Spec.assertBool s (not (Filter.matches (sourced [Color.Black]) colorless (Filter.Type.Shares Trait.Color Anchor.Source))) "colourless candidate"
+      Spec.assertBool s (not (Filter.matches self blackCreature (Filter.Type.Shares Trait.Color Anchor.Source))) "no source colours"
 
   -- CR 202.3 read for parity: Void Winnower's "spells with even mana values",
   -- whose reminder text settles the boundary -- "(Zero is even.)"
@@ -767,24 +768,24 @@ spec s = Spec.describe s "Parun.Engine.Filter" $ do
   -- two can disagree on -- controlled by player 0, owned by player 1 -- and every
   -- context here carries player 0 as its perspective, so the pair below is what
   -- separates this atom from OwnedBy You above.
-  Spec.describe s "SharesWithSource Owner" $ do
+  Spec.describe s "Shares Owner Source" $ do
     let sourceOwnedBy n = self {Filter.sourceOwner = Just (PlayerId.MkPlayerId n)}
     Spec.it s "CR 702.140a holds when the source's owner owns the candidate" $
-      Spec.assertBool s (Filter.matches (sourceOwnedBy 1) blackCreature (Filter.Type.SharesWithSource Trait.Owner)) "player 1 owns both"
+      Spec.assertBool s (Filter.matches (sourceOwnedBy 1) blackCreature (Filter.Type.Shares Trait.Owner Anchor.Source)) "player 1 owns both"
 
     Spec.it s "CR 702.140a fails for the candidate's controller, whom OwnedBy You would take" $
-      Spec.assertBool s (not (Filter.matches (sourceOwnedBy 0) blackCreature (Filter.Type.SharesWithSource Trait.Owner))) "player 0 controls it but does not own it"
+      Spec.assertBool s (not (Filter.matches (sourceOwnedBy 0) blackCreature (Filter.Type.Shares Trait.Owner Anchor.Source))) "player 0 controls it but does not own it"
 
     -- The two vacuity postures, OwnedBy's above: no object behind the view, and
     -- no source owner for the comparison to be about.
     Spec.it s "CR 702.140a is False when the view has no owner" $
-      Spec.assertBool s (not (Filter.matches (sourceOwnedBy 1) devoidBigCreature (Filter.Type.SharesWithSource Trait.Owner))) "no owner"
+      Spec.assertBool s (not (Filter.matches (sourceOwnedBy 1) devoidBigCreature (Filter.Type.Shares Trait.Owner Anchor.Source))) "no owner"
 
     Spec.it s "CR 702.140a is False when no source owner was supplied" $
-      Spec.assertBool s (not (Filter.matches self blackCreature (Filter.Type.SharesWithSource Trait.Owner))) "contextFor leaves it Nothing"
+      Spec.assertBool s (not (Filter.matches self blackCreature (Filter.Type.Shares Trait.Owner Anchor.Source))) "contextFor leaves it Nothing"
 
     Spec.it s "CR 702.140a is False for a player" $
-      Spec.assertBool s (not (Filter.matches (sourceOwnedBy 1) aPlayer (Filter.Type.SharesWithSource Trait.Owner))) "player"
+      Spec.assertBool s (not (Filter.matches (sourceOwnedBy 1) aPlayer (Filter.Type.Shares Trait.Owner Anchor.Source))) "player"
 
   Spec.describe s "IsSource" $ do
     Spec.it s "matches the context's source" $ do
@@ -2021,13 +2022,13 @@ spec s = Spec.describe s "Parun.Engine.Filter" $ do
       let swapped = Filter.rewrite [(TextWord.SubtypeWord Subtype.Aura, TextWord.SubtypeWord Subtype.Equipment)] byAnAura
       Spec.assertEqWith s "the attacher's subtype word is swapped" swapped (Filter.Type.HasAttached (Filter.Type.HasSubtype Subtype.Equipment))
 
-  Spec.describe s "IsAttachedToSource" $ do
+  Spec.describe s "IsAttachedTo Source" $ do
     -- CR 701.3a / 301.5a: the candidate's HOST against the match's source. Object
     -- 7 is the source throughout, so the three cases below differ only in what the
     -- candidate is attached to.
     let framed = Filter.contextFor Teams.none (Just (PlayerId.MkPlayerId 0)) (Just (ObjectId.MkObjectId 7))
     Spec.it s "matches a candidate attached to the source" $ do
-      Spec.assertBool s (Filter.matches framed (blackCreature {Filter.attachedTo = Just (ObjectId.MkObjectId 7)}) Filter.Type.IsAttachedToSource) "on the source"
+      Spec.assertBool s (Filter.matches framed (blackCreature {Filter.attachedTo = Just (ObjectId.MkObjectId 7)}) (Filter.Type.IsAttachedTo Anchor.Source)) "on the source"
 
     -- The discriminating case, and the whole reason the field is an id rather than
     -- a Bool: an Equipment attached to SOME creature is not one attached to this
@@ -2035,20 +2036,20 @@ spec s = Spec.describe s "Parun.Engine.Filter" $ do
     -- creature.
     Spec.it s "does not match a candidate attached to another object" $ do
       let elsewhere = (onHost aHost) {Filter.attachedTo = Just (ObjectId.MkObjectId 8)}
-      Spec.assertBool s (not (Filter.matches framed elsewhere Filter.Type.IsAttachedToSource)) "on another creature"
+      Spec.assertBool s (not (Filter.matches framed elsewhere (Filter.Type.IsAttachedTo Anchor.Source))) "on another creature"
       Spec.assertBool s (Filter.matches framed elsewhere (Filter.Type.AttachedTo (Filter.Type.HasCardType CardType.Creature))) "still attached to a creature"
 
     Spec.it s "does not match a candidate attached to nothing" $ do
-      Spec.assertBool s (not (Filter.matches framed blackCreature Filter.Type.IsAttachedToSource)) "unattached"
+      Spec.assertBool s (not (Filter.matches framed blackCreature (Filter.Type.IsAttachedTo Anchor.Source))) "unattached"
 
     -- Vacuously False where nothing frames the match, IsSource's own posture.
     Spec.it s "no source in context is vacuously false" $ do
-      Spec.assertBool s (not (Filter.matches self (blackCreature {Filter.attachedTo = Just (ObjectId.MkObjectId 7)}) Filter.Type.IsAttachedToSource)) "no source"
+      Spec.assertBool s (not (Filter.matches self (blackCreature {Filter.attachedTo = Just (ObjectId.MkObjectId 7)}) (Filter.Type.IsAttachedTo Anchor.Source))) "no source"
 
     -- CR 303.4b: a player is enchanted BY an attachment and is attached to
     -- nothing itself, so there is no host id to compare.
     Spec.it s "a player candidate is vacuously false" $ do
-      Spec.assertBool s (not (Filter.matches framed aPlayer Filter.Type.IsAttachedToSource)) "player"
+      Spec.assertBool s (not (Filter.matches framed aPlayer (Filter.Type.IsAttachedTo Anchor.Source))) "player"
 
   Spec.describe s "IsHostOfSource" $ do
     -- CR 303.4b: the SOURCE's host against the candidate, the direction the two
@@ -2066,10 +2067,10 @@ spec s = Spec.describe s "Parun.Engine.Filter" $ do
       Spec.assertBool s (Filter.matches (enchanting 8) aHost Filter.Type.IsHostOfSource) "the host is"
 
     -- The direction it is NOT: object 7 is attached to nothing, and the source is
-    -- attached to object 7, so IsAttachedToSource and this atom disagree on the
+    -- attached to object 7, so IsAttachedTo Source and this atom disagree on the
     -- same board -- which is what makes the third direction a third atom.
-    Spec.it s "is not IsAttachedToSource in disguise" $ do
-      Spec.assertBool s (not (Filter.matches (enchanting 7) blackCreature Filter.Type.IsAttachedToSource)) "the candidate's own host is not the source"
+    Spec.it s "is not IsAttachedTo Source in disguise" $ do
+      Spec.assertBool s (not (Filter.matches (enchanting 7) blackCreature (Filter.Type.IsAttachedTo Anchor.Source))) "the candidate's own host is not the source"
 
     -- Vacuously False wherever the position does not supply the field, which is
     -- every context but the four -- contextFor's own posture.

@@ -1578,7 +1578,7 @@ unleashFurySpec s registry = Spec.describe s "Unleash Fury" $ do
     Spec.assertEqWith s "two Mountains paid {1}{R}" (S.tappedCount S.alice after) 2
     Spec.assertEqWith s "Unleash Fury resolved out of hand" (S.handSize S.alice after) 0
 
--- Filter.IsAttachedToEvaluated's producers: a CR 613.4c pump whose count is of
+-- Filter.IsAttachedTo Evaluated's producers: a CR 613.4c pump whose count is of
 -- what is attached to EACH creature it affects, not to its own source. Oracle
 -- text re-fetched from Scryfall 2026-09-29 for all four.
 attachedToEachSpec :: (Monad m, Monad n) => Spec.Spec m n -> Registry.Registry m -> n ()

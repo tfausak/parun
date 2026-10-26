@@ -80,8 +80,16 @@
                 "targetSlots": {
                   "twin": {
                     "filter": {
-                      "type": "SameNameAsBound",
-                      "value": "thatSpell"
+                      "type": "Shares",
+                      "value": {
+                        "anchor": {
+                          "type": "Bound",
+                          "value": "thatSpell"
+                        },
+                        "trait": {
+                          "type": "Name"
+                        }
+                      }
                     },
                     "pool": {
                       "type": "CardsInGraveyard",

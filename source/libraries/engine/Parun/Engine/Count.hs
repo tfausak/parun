@@ -358,7 +358,7 @@ bakePerspective viewOf context gs candidate predicate =
         Filter.Type.HasCardType _ -> predicate
         Filter.Type.HasSupertype _ -> predicate
         Filter.Type.HasColor _ -> predicate
-        Filter.Type.SharesWithSource _ -> predicate
+        Filter.Type.Shares _ _ -> predicate
         Filter.Type.HasSubtype _ -> predicate
         Filter.Type.HasName _ -> predicate
         Filter.Type.NameWordsAtLeast _ -> predicate
@@ -387,10 +387,8 @@ bakePerspective viewOf context gs candidate predicate =
         Filter.Type.TargetsPlayer _ -> predicate
         Filter.Type.IsBound _ -> predicate
         Filter.Type.IsTarget -> predicate
-        Filter.Type.SameNameAsBound _ -> predicate
         Filter.Type.ControllerRelatesToBound _ _ -> predicate
         Filter.Type.SameControllerAsHostOfBound _ -> predicate
-        Filter.Type.SharesCreatureTypeWith _ -> predicate
         Filter.Type.HasChosenName {} -> predicate
         Filter.Type.HasChosenColor -> predicate
         Filter.Type.HasChosenSubtype -> predicate
@@ -440,8 +438,7 @@ bakePerspective viewOf context gs candidate predicate =
         -- from this side.
         Filter.Type.HasAttached f ->
           truth (any (\view -> Filter.matches context view f) (Maybe.mapMaybe viewOf (attachersOfPlayer gs candidate)))
-        Filter.Type.IsAttachedToSource -> predicate
-        Filter.Type.IsAttachedToEvaluated -> predicate
+        Filter.Type.IsAttachedTo _ -> predicate
         Filter.Type.IsEvaluated -> predicate
         Filter.Type.IsHostOfSource -> predicate
         Filter.Type.EnteredWithSource -> predicate

@@ -91,10 +91,15 @@
                                   "value": "looked"
                                 },
                                 {
-                                  "type": "SharesCreatureTypeWith",
+                                  "type": "Shares",
                                   "value": {
-                                    "type": "Bound",
-                                    "value": "self"
+                                    "anchor": {
+                                      "type": "Bound",
+                                      "value": "self"
+                                    },
+                                    "trait": {
+                                      "type": "CreatureType"
+                                    }
                                   }
                                 }
                               ]

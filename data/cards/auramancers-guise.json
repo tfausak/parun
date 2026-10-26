@@ -80,7 +80,10 @@
                               }
                             },
                             {
-                              "type": "IsAttachedToEvaluated"
+                              "type": "IsAttachedTo",
+                              "value": {
+                                "type": "Evaluated"
+                              }
                             }
                           ]
                         },
@@ -122,7 +125,10 @@
                               }
                             },
                             {
-                              "type": "IsAttachedToEvaluated"
+                              "type": "IsAttachedTo",
+                              "value": {
+                                "type": "Evaluated"
+                              }
                             }
                           ]
                         },

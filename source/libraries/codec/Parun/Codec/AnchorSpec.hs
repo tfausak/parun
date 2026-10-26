@@ -21,3 +21,9 @@ spec s = Spec.describe s "Parun.Codec.Anchor" $ do
       Anchor.codec
       Anchor.Evaluated
       " {\"type\":\"Evaluated\"} "
+  Spec.it s "Source" $
+    Common.assertCodec
+      s
+      Anchor.codec
+      Anchor.Source
+      " {\"type\":\"Source\"} "

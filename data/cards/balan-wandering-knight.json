@@ -127,7 +127,10 @@
                         }
                       },
                       {
-                        "type": "IsAttachedToSource"
+                        "type": "IsAttachedTo",
+                        "value": {
+                          "type": "Source"
+                        }
                       }
                     ]
                   },

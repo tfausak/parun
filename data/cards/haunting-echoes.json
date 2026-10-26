@@ -78,8 +78,16 @@
                         "type": "Exile"
                       },
                       "filter": {
-                        "type": "SameNameAsBound",
-                        "value": "exiled"
+                        "type": "Shares",
+                        "value": {
+                          "anchor": {
+                            "type": "Bound",
+                            "value": "exiled"
+                          },
+                          "trait": {
+                            "type": "Name"
+                          }
+                        }
                       },
                       "owner": {
                         "type": "InSlot",

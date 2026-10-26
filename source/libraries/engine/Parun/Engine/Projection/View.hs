@@ -669,7 +669,7 @@ viewOfCharacteristics peers oid pc controller counters gs =
       -- The list must stay lazy in its spine: nothing forces the sweep unless a
       -- Filter names the atom.
       Filter.attachedViews = Maybe.mapMaybe peers (Set.toList (Game.attachments oid gs)),
-      -- CR 701.3a / 301.5a: the same attachment as the HOST'S ID -- IsAttachedToSource
+      -- CR 701.3a / 301.5a: the same attachment as the HOST'S ID -- IsAttachedTo Source
       -- compares it against the match's source, which this builder does not know.
       -- Not narrowed to the battlefield the way `attachedToView` is.
       Filter.attachedTo = Game.hostOf oid gs,

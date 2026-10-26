@@ -4,6 +4,7 @@ import qualified Parun.Codec.ActiveEvasion as ActiveEvasion
 import qualified Parun.JsonCodec.Common as Common
 import qualified Parun.Spec as Spec
 import qualified Parun.Types.ActiveEvasion as ActiveEvasion
+import qualified Parun.Types.Anchor as Anchor
 import qualified Parun.Types.CardType as CardType
 import qualified Parun.Types.Expiry as Expiry
 import qualified Parun.Types.Filter as Filter
@@ -25,8 +26,8 @@ spec s = Spec.describe s "Parun.Codec.ActiveEvasion" $ do
           ActiveEvasion.timestamp = Timestamp.MkTimestamp 2,
           ActiveEvasion.expiry = Expiry.AtCleanup,
           ActiveEvasion.affected = Filter.HasCardType CardType.Creature,
-          ActiveEvasion.blockers = Filter.Not (Filter.SharesWithSource Trait.Sector)
+          ActiveEvasion.blockers = Filter.Not (Filter.Shares Trait.Sector Anchor.Source)
         }
-      " {\"source\":1,\"controller\":4,\"timestamp\":2,\"expiry\":{\"type\":\"AtCleanup\"},\"affected\":{\"type\":\"HasCardType\",\"value\":{\"type\":\"Creature\"}},\"blockers\":{\"type\":\"Not\",\"value\":{\"type\":\"SharesWithSource\",\"value\":{\"type\":\"Sector\"}}}} "
+      " {\"source\":1,\"controller\":4,\"timestamp\":2,\"expiry\":{\"type\":\"AtCleanup\"},\"affected\":{\"type\":\"HasCardType\",\"value\":{\"type\":\"Creature\"}},\"blockers\":{\"type\":\"Not\",\"value\":{\"type\":\"Shares\",\"value\":{\"trait\":{\"type\":\"Sector\"},\"anchor\":{\"type\":\"Source\"}}}}} "
   Spec.it s "has a schema" $
     Common.assertHasSchema s ActiveEvasion.codec

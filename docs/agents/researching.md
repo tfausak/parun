@@ -249,7 +249,7 @@ For each opcode the producer needs:
   the context. `Filter.Context`'s context-relative fields are empty in
   `Filter.contextFor`; its header says which positions that is honest for.
 - Ask what the atom answers against an empty field, and ask it per ATOM ---
-  there is no rule the record imposes. `Filter.IsBound`, `SameNameAsBound`,
+  there is no rule the record imposes. `Filter.IsBound`, `Shares Name Bound`,
   `IsHostOfSource` and `HeldByRecipient` answer False rather than raising;
   `Quantity.AgainstSlot` answers unanswered. Neither is distinguishable from a
   rule that does not apply. `ControllerRelatesToBound` answers TRUE instead, so its
