@@ -30,7 +30,7 @@ import qualified Parun.Types.SlotName as SlotName
 -- resolving controller, which is what Relative You spells. Animal Magnetism's "an
 -- opponent chooses a creature card from among them" is Relative Opponent, the
 -- seat the controller names (CR 801.5c's hand-off included,
--- Parun.Engine.Resolve.Effect.askedChooser), and Intuition's "target opponent
+-- Parun.Engine.Resolve.Common.askedChooser), and Intuition's "target opponent
 -- chooses" a target slot. A PlayerRef rather than Parun.Types.Chooser: that type's arms fold
 -- over a PlayerScope of GRAVEYARDS, one per chooser, where a group is one pile
 -- however many seats are in play.

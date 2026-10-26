@@ -354,7 +354,7 @@ data GameState = MkGameState
     drewFromEmpty :: Set.Set PlayerId.PlayerId,
     -- | CR 603.12: how many draw or mill instructions have done fewer than the
     -- number they named. It only rises, so one instruction's shortfall is a
-    -- difference across it (Parun.Engine.Resolve.Effect.applyClauseEffects).
+    -- difference across it (Parun.Engine.Resolve.Common.applyClauseEffects).
     fellShort :: Natural.Natural,
     -- | CR 305.2a: how many lands each player has played this turn, a count
     -- because CR 305.2 lets an effect raise the allowance; cleared per player
@@ -500,12 +500,12 @@ data GameState = MkGameState
     exiledWith :: Map.Map ObjectId.ObjectId ExileLink.ExileLink,
     -- | CR 400.7: the object whose effect put each permanent onto the
     -- battlefield, keyed by the entered incarnation and written by
-    -- Parun.Engine.Resolve.Effect's Effect.MoveToZone arm. Read by
+    -- Parun.Engine.Resolve.Arms.Zones's Effect.MoveToZone arm. Read by
     -- Filter.EnteredWithSource. Cleaned up by key only.
     enteredWith :: Map.Map ObjectId.ObjectId ObjectId.ObjectId,
     -- | CR 406.4: which pile each face-down exiled card is in, a name drawn from
     -- nextTimestamp and shared by every card one execution of one instruction
-    -- exiled (Parun.Engine.Resolve.Effect.recordExilePile). Cleaned up by key only.
+    -- exiled (Parun.Engine.Resolve.Common.recordExilePile). Cleaned up by key only.
     exilePiles :: Map.Map ObjectId.ObjectId Timestamp.Timestamp,
     -- | CR 500.7: the extra turns created and not yet taken, most recently
     -- created first, each carrying the steps that turn skips (CR 500.11).

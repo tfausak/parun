@@ -2277,7 +2277,7 @@ handNames pid gs = Maybe.mapMaybe (fmap S.nameOf . flip Game.cardOf gs) (Game.zo
 -- the recording.
 --
 -- `other` is a creature the Aura could equally well enchant. Nothing should ever
--- ask: Parun.Engine.Resolve.Effect.putFound seeds the entry with the host the effect
+-- ask: Parun.Engine.Resolve.Common.putFound seeds the entry with the host the effect
 -- named, so CR 303.4f's choice is not this move's. An answer of `other` is how a
 -- seed that went missing shows up as a wrong board rather than as a silence.
 mageAnswer :: ObjectId.ObjectId -> Prompt.Prompt r -> State.State [[ObjectId.ObjectId]] r

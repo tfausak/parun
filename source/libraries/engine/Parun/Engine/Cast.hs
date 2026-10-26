@@ -3469,7 +3469,7 @@ castProposed perform spending pid oid sid printedFace castFrom preparedFor keywo
                   -- targets", so CR 601.2c announces none -- read off the tag
                   -- stamped one step up rather than off the face, which prints
                   -- the word "target" either way (Parun.Types.Keyword's
-                  -- Overload). Parun.Engine.Resolve.Effect.targetSlotsOf drops
+                  -- Overload). Parun.Engine.Resolve.Common.targetSlotsOf drops
                   -- the same slots at CR 608.2b.
                   slots =
                     if Keyword.castOverloaded castFor
@@ -3825,7 +3825,7 @@ castProposed perform spending pid oid sid printedFace castFrom preparedFor keywo
                           -- whose effects read it, Parun.Engine.Activate's route
                           -- one carrier over. CR 118.12's payment during a
                           -- resolution is folded the same way
-                          -- (Parun.Engine.Resolve.Effect.foldPaid).
+                          -- (Parun.Engine.Resolve.Common.foldPaid).
                           State.modify' (\g -> g {GameState.objects = Map.adjust (\o -> o {Object.bindings = Binding.setPaid bound (Object.bindings o)}) sid (GameState.objects g)})
                           -- CR 702.51c: the creatures tapped to pay for mana in
                           -- this spell's total cost convoked it, so the relation
@@ -3997,7 +3997,7 @@ armCastFromGraveyard :: PlayerId -> Set Keyword -> Maybe Keyword -> ObjectId -> 
 armCastFromGraveyard caster keywords castFor spellId = State.modify' (installCastFromGraveyard caster keywords castFor spellId)
 
 -- `armCastFromGraveyard`'s rows, as a pure step: also what
--- Parun.Engine.Resolve.Effect.acquireChoices re-arms when a spell on the stack
+-- Parun.Engine.Resolve.Common.acquireChoices re-arms when a spell on the stack
 -- becomes a copy and so takes on another keyword set and cast record (CR 707.2).
 installCastFromGraveyard :: PlayerId -> Set Keyword -> Maybe Keyword -> ObjectId -> GameState -> GameState
 installCastFromGraveyard caster keywords castFor spellId gs0 =

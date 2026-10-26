@@ -725,7 +725,7 @@ pricedOptionsVisiting visited paid poolBoard pcs oid gs =
       -- CR 106.3's count, read off the BOARD rather than off the card: Cabal
       -- Coffers' "Add {B} for each Swamp you control" is ONE instruction whose
       -- size the board settles as it is carried out, so the yield this option
-      -- offers has to measure it here. Parun.Engine.Resolve.Effect's AddMana arm
+      -- offers has to measure it here. Parun.Engine.Resolve.Arms.Damage's AddMana arm
       -- evaluates the same quantity for an addition that resolves off the stack,
       -- and manaSuppliesGiven measures CR 605.3a's offer off this very yield, so
       -- all three read one number and no board can tell them apart -- save a

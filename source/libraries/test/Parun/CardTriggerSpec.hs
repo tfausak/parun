@@ -2491,7 +2491,7 @@ betrayalSpec s registry = Spec.describe s "CR 701.26a a becomes-tapped trigger" 
   -- CR 603.2e: "An ability that triggers when a permanent 'becomes tapped' ...
   -- doesn't trigger if the permanent enters the battlefield in that state." The
   -- pair is the same board under the two writes -- Event.enterTapped, which
-  -- Parun.Engine.Resolve.Effect.putOntoBattlefield mirrors, against Event.tap -- so the only thing
+  -- Parun.Engine.Resolve.Common.putOntoBattlefield mirrors, against Event.tap -- so the only thing
   -- that differs is which one the engine used.
   Spec.it s "CR 603.2e a permanent stamped tapped as it enters fires nothing" $ do
     board <- betrayalBoard s registry True

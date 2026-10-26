@@ -620,7 +620,7 @@ costsFor pid ability gs =
 -- too compiler-specific to keep (gap #578).
 --
 -- `activatable` takes Snapshot.onDemand deliberately. Its one engine caller is
--- Parun.Engine.Resolve.Effect's die-roll window, which asks about a handful of
+-- Parun.Engine.Resolve.Arms.Damage's die-roll window, which asks about a handful of
 -- abilities once per roll, so the slower per-object Projection.projectGiven
 -- fallback costs little, and it makes the plain path a genuinely independent computation a
 -- differential test could hold the threaded one against -- its `sources` is

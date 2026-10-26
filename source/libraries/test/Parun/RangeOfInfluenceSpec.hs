@@ -14,10 +14,10 @@
 -- 801.7), Parun.Engine.Replacement's reaches, preventsInRange and
 -- redirectDestination (CR 801.13), Parun.Engine.Resolve.Slots'
 -- playerRefPlayers and battlefieldMatching, Parun.Engine.Target.zoneScopePlayers,
--- Parun.Engine.Resolve.Effect's objectRefRecipients, Parun.Engine.Count's
+-- Parun.Engine.Resolve.Common's objectRefRecipients, Parun.Engine.Count's
 -- playersFor and the choice offers Parun.Engine.Players.offer and
 -- Game.inRangeOf feed (CR 801.5a, 801.10, 801.11), and
--- Parun.Engine.Resolve.Effect's WinGame and DrawGame (CR 801.14,
+-- Parun.Engine.Resolve.Arms.Zones's WinGame and DrawGame (CR 801.14,
 -- 801.15), and Parun.Engine.Departure's checkMandatoryLoop (CR 801.16); CR
 -- 801.5a's chooser cut in Resolve.Effect's Vote arm, changeTargetsFor and
 -- chooseNewTargetsFor (Target.inChooserRange), Parun.Engine.Cost's offerAssist

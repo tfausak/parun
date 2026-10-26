@@ -20,7 +20,7 @@ import qualified Parun.Types.Quantity as Quantity
 -- The COUNT is a Quantity for Parun.Types.TopOfLibrary's reason, and it is
 -- a count of DISTINCT cards: the printed "two cards at random" (Fall) names two
 -- cards rather than making two picks that may coincide, so
--- Parun.Engine.Resolve.Effect's reveal arm drops each card it names from the
+-- Parun.Engine.Resolve.Arms.Zones's reveal arm drops each card it names from the
 -- candidates before asking again. CR 609.3 covers the shortfall -- a hand holding
 -- fewer matches than the count gives what it has, and an empty one nothing.
 --

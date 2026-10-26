@@ -22,11 +22,11 @@ import qualified Parun.Types.Zone as Zone
 -- controller, which is what @Relative You@ spells; Wormfang Crab's "an opponent
 -- chooses a permanent you control" is @Relative Opponent@, the seat the
 -- controller names (CR 801.5c's hand-off included,
--- Parun.Engine.Resolve.Effect.askedChooser). A slot a TRIGGER filled is the
+-- Parun.Engine.Resolve.Common.askedChooser). A slot a TRIGGER filled is the
 -- other road, and the one that outlives the resolution:
 -- Parun.Engine.Binding.triggerPlayer holds a seat named a priority window ago, so
 -- CR 800.4g's departed chooser is reachable from here
--- (Parun.Engine.Resolve.Effect.askedChooser).
+-- (Parun.Engine.Resolve.Common.askedChooser).
 --
 -- A ref naming NO seat -- an unfilled slot, or one holding something that is not
 -- a player -- names no permanent either, and that share of the instruction is

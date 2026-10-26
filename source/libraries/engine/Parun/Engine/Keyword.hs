@@ -1722,7 +1722,7 @@ scavengeTarget = SlotName.MkSlotName (Text.pack "scavenged onto")
 -- CR 508.1d's object axis (Alluring Siren's shape). It sits INSIDE the loop
 -- body, which is what pairs each token with its own opponent: a body-defined
 -- name is rescoped per member and only accumulates into the union once the loop
--- is over (Parun.Engine.Resolve.Effect's ForEach arm), so the ref reads this
+-- is over (Parun.Engine.Resolve.Arms.Zones's ForEach arm), so the ref reads this
 -- iteration's token alone.
 --
 -- THE HASTE and THE SACRIFICE sit AFTER the loop and read that union, myriadExile's
@@ -3163,7 +3163,7 @@ copiedCastUsing castUsing = case castUsing of
 -- The BARE tag, Parun.Engine.Cast's castBestowed shape: the two sites that drop
 -- the slots are CR 601.2c's announcement (Parun.Engine.Cast.targetable and
 -- castProposed) and CR 608.2b's re-read
--- (Parun.Engine.Resolve.Effect.targetSlotsOf), so a cast that announced no target
+-- (Parun.Engine.Resolve.Common.targetSlotsOf), so a cast that announced no target
 -- and a resolution that expects none cannot disagree. CR 707.10 carries the tag
 -- onto a copy (copiedCastUsing above), so a copy of an overloaded spell is
 -- targetless too.
@@ -7618,7 +7618,7 @@ backupTarget = SlotName.MkSlotName (Text.pack "backupRecipient")
 -- Optionality.Optional on the clause rather than a PayGate -- nothing in rule
 -- 702.110 is conditional on the sacrifice, which is what CR 118.12's branches
 -- exist to express. Rule 702.110b's marker is the effect's other half; see
--- Parun.Engine.Resolve.Effect's Effect.Exploit arm for why the two are one opcode.
+-- Parun.Engine.Resolve.Arms.Objects's Effect.Exploit arm for why the two are one opcode.
 exploit :: TriggeredAbility Card (GrantedAbility.GrantedAbility Card)
 exploit =
   let clause =
@@ -8965,7 +8965,7 @@ hasParadigm = Set.member Keyword.Paradigm
 
 -- The slot rule 702.192a's "this object" is bound into as the spell resolves,
 -- epicSlot's reading: the id has ceased before the ability first triggers (CR
--- 400.7), and Parun.Engine.Resolve.Effect's castableCopy finds it in
+-- 400.7), and Parun.Engine.Resolve.Common's castableCopy finds it in
 -- GameState.stackArchive, where the zone-change funnel filed it as it left the
 -- stack. So the copy is still made once the card has left exile (rulings,
 -- 2026-03-20).
@@ -9110,7 +9110,7 @@ castUsingHaste castUsing = case castUsing of
 -- Effect.MoveToZone instead.
 --
 -- EntryRiders rather than a Bool pair, so the two roads apply one value through
--- one reader (Parun.Engine.Resolve.Effect.entryAttack), and Natural rather than
+-- one reader (Parun.Engine.Resolve.Common.entryAttack), and Natural rather than
 -- Quantity because nothing here is counted: the riders reaching a funnel are
 -- already settled (see Parun.Types.EntryRiders).
 castUsingEntry :: Maybe Keyword -> Maybe (EntryRiders.EntryRiders Natural ability)

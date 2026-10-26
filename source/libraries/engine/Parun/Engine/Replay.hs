@@ -56,7 +56,7 @@ import qualified Parun.Types.WordFamily as WordFamily
 
 -- | Run `game`, also handing back every answer it was given, in the order it
 -- asked. What lets a caller tell an identical repeated answer from a different
--- one (Parun.Engine.Resolve.Effect.payAgain) without seeing the prompts.
+-- one (Parun.Engine.Resolve.Common.payAgain) without seeing the prompts.
 recording :: Game a -> Game (a, [Response])
 recording game = State.StateT (go . State.runStateT game)
   where
@@ -1065,7 +1065,7 @@ defaultAnswer p = case p of
   -- every "up to N" card's effect unexercised by the specs that take this answer.
   Prompt.AnnounceTargets _ _ _ offers -> fmap (\(count, rs) -> TargetCount.ceilingOn (Natural.length rs) count) offers
   -- CR 612.2: the swap the engine itself falls back to on an unswappable
-  -- answer (Parun.Engine.Resolve.Effect's ChangeText arm), so the two agree.
+  -- answer (Parun.Engine.Resolve.Arms.Damage's ChangeText arm), so the two agree.
   Prompt.ChooseWordSwap _ _ _ _ families forbidden -> swapDefault families forbidden
   -- Every zone the card named. Always legal -- "and/or" permits all of them --
   -- and deliberately the MAXIMAL answer rather than a least-eventful one: it is

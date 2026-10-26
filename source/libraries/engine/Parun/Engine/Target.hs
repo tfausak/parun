@@ -2090,7 +2090,7 @@ selectionLegal kind reader perspective seed source x slots sets chosen gs =
 -- between them the moments an announcement over declared slots is accepted --
 -- selectionLegal above -- CR 601.2e's cast, CR 602.2's activation and CR
 -- 603.3d's trigger placement alike -- and
--- Parun.Engine.Resolve.Effect.chooseNewTargetsFor (the CR 707.10c / 115.7d re-target,
+-- Parun.Engine.Resolve.Common.chooseNewTargetsFor (the CR 707.10c / 115.7d re-target,
 -- through jointlyIllegal). The
 -- re-derivation is exactly the one CR 608.2b will make at resolution, so a
 -- selection this admits cannot be one resolution then drops.

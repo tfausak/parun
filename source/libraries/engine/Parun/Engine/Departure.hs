@@ -592,7 +592,7 @@ nonCardStackObjectsCease pid gs =
 -- 616.1 loop asks the affected object's controller, who here is the player
 -- leaving, and rule 616.1 is a RULE requiring a choice rather than an object
 -- requiring one -- CR 800.4g is the other rule, and its answer is the controller
--- picking a substitute (Parun.Engine.Resolve.Effect.askedChooser). It fires
+-- picking a substitute (Parun.Engine.Resolve.Common.askedChooser). It fires
 -- because `depart` marks the player departed before this runs.
 --
 -- IN BATCH and in ONE event group, against that same board, for the reason the
@@ -677,7 +677,7 @@ exileOrphanedByEndedControl = do
 -- CR 104.2c: survivors all on one team are that team winning, however many
 -- they are. CR 104.4d's draw is the empty case. CR 809.5a is this too: an
 -- emperor wins only when every opponent has left, CR 104.2b's effect being the
--- opponents losing (Parun.Engine.Resolve.Effect's WinGame arm).
+-- opponents losing (Parun.Engine.Resolve.Arms.Zones's WinGame arm).
 outcomeAfterLeaving :: [PlayerId] -> GameState -> Maybe Result
 outcomeAfterLeaving leaving gs = case Game.stillPlaying gs of
   [] -> if null leaving then Nothing else Just Result.Drawn

@@ -529,7 +529,7 @@ data Prompt r where
   --
   -- Asked of each clashing player in APNAP order (CR 101.4), and elided only
   -- where the revealed card is that player's whole library: both ends are then
-  -- the same position (Parun.Engine.Resolve.Effect's clash).
+  -- the same position (Parun.Engine.Resolve.Common's clash).
   ChooseClash :: Decider.Decider -> PlayerId.PlayerId -> ObjectId.ObjectId -> ObjectId.ObjectId -> NonEmpty.NonEmpty (PlayerId.PlayerId, ObjectId.ObjectId) -> Seq.Seq (PlayerId.PlayerId, LibraryPosition.LibraryPosition) -> Prompt LibraryPosition.LibraryPosition
   -- | CR 601.2b: how many times the optional additional cost of that keyword --
   -- kicker, multikicker, squad, offspring, replicate or casualty (CR 702.33a/c,
@@ -838,7 +838,7 @@ data Prompt r where
   -- | Which of several costs the named player pays. Asked at five moments, all
   -- of them "which cost", which is why one constructor serves all: CR 118.12\'s
   -- choice among a resolution-time cost\'s options, ahead of Prompt.ChooseToPay
-  -- (Parun.Engine.Resolve.Effect.payGateAgreed); CR 601.2b\'s payable alternative and additional costs, after modes and
+  -- (Parun.Engine.Resolve.Common.payGateAgreed); CR 601.2b\'s payable alternative and additional costs, after modes and
   -- before X and targets (CR 118.9b makes an alternative cost optional); CR
   -- 702.51b\'s, CR 702.66b\'s, CR 702.126b\'s and CR 701.67a\'s substitutes once the
   -- total cost is locked in and CR 601.2g\'s mana window has closed
@@ -895,7 +895,7 @@ data Prompt r where
   OrderTimestamps :: Decider.Decider -> PlayerId.PlayerId -> [ObjectId.ObjectId] -> Prompt [Natural.Natural]
   -- | CR 605.3a: the order one player activates a batch of mana abilities in
   -- when an effect has them activate several at once (Drain Power), first named
-  -- activated first; asked by Parun.Engine.Resolve.Effect's ActivateManaAbilities
+  -- activated first; asked by Parun.Engine.Resolve.Arms.Damage's ActivateManaAbilities
   -- arm, per seat in APNAP order (CR 101.4), for two or more permanents.
   OrderManaActivations :: Decider.Decider -> PlayerId.PlayerId -> [ObjectId.ObjectId] -> Prompt [Natural.Natural]
   -- | CR 103.5: whether the player takes a mulligan, once per round in turn
@@ -918,7 +918,7 @@ data Prompt r where
   -- each player it covers in APNAP order. Elided where the clause is inert
   -- (Parun.Engine.Resolve.clauseIsInert) and where CR 608.2d leaves nothing to
   -- choose because its instructions cannot be carried out at all
-  -- (Parun.Engine.Resolve.Effect.clauseIsImpossible), both off the effects'
+  -- (Parun.Engine.Resolve.Common.clauseIsImpossible), both off the effects'
   -- classification. The Seq is the answers the players before this one already
   -- gave (CR 101.4b).
   ChooseOptional :: Decider.Decider -> PlayerId.PlayerId -> ObjectId.ObjectId -> ModeIndex.ModeIndex -> ClauseIndex.ClauseIndex -> Seq.Seq (PlayerId.PlayerId, OptionalDecision.OptionalDecision) -> Prompt OptionalDecision.OptionalDecision

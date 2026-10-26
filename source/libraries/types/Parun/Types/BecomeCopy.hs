@@ -28,7 +28,7 @@ import qualified Parun.Types.ObjectRef as ObjectRef
 --
 -- A SPELL on the stack is the third noun in CR 707.1's list: it resolves the
 -- copied text (Parun.Engine.Projection.View.spellFaceOf) with the original's
--- choices (CR 707.2, Parun.Engine.Resolve.Effect.acquireChoices), which Synthetic
+-- choices (CR 707.2, Parun.Engine.Resolve.Common.acquireChoices), which Synthetic
 -- Mimicry and Parun.CopySpec's "CR 707.2 a spell that becomes a copy of a Bolt"
 -- prove. Transcantation's original is a card NAME (Parun.Types.CopyOriginal),
 -- and its subject acquires no choices -- "it stops having any targets".

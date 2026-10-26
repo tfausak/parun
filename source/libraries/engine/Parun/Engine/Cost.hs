@@ -421,7 +421,7 @@ choiceVariants face =
 -- | CR 702.48a: offering, an optional ADDITIONAL cost, so a candidate is offered
 -- as it stands and once more per sacrificeable [quality] permanent, which
 -- carries the widened window. CR 118.9d applies it to an alternative cost too,
--- so an effect's applied cost (Parun.Engine.Resolve.Effect's OfferCast) goes
+-- so an effect's applied cost (Parun.Engine.Resolve.Arms.Zones's OfferCast) goes
 -- through this as the board's candidates do. The victim is named outright for
 -- `emerged`'s reason (CR 702.48b), and its mana cost is read off the
 -- projection, so a Clone reduces by what it copied; CR 702.48c sends that

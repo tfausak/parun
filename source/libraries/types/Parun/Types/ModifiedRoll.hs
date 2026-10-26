@@ -53,7 +53,7 @@ import qualified Parun.Types.RollModifier as RollModifier
 --
 -- A STOP is what it would need before it needs a producer, and rule 706 states
 -- none. The offer is re-read against each new natural result, so the decline is
--- what ends Parun.Engine.Resolve.Effect's `rerolling`; take it away from a
+-- what ends Parun.Engine.Resolve.Arms.Damage's `rerolling`; take it away from a
 -- modifier stating neither `sides` nor `natural` and the reroll matches its own
 -- output forever, with real randomness as much as with a fixed answerer. The one
 -- printed mandatory reroll is bounded by the card's own words and belongs to the

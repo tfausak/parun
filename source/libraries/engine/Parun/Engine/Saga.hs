@@ -269,7 +269,7 @@ awaitingChapter pcs events gs oid =
   let chapters = foldMap chaptersOf (Map.lookup oid pcs)
       -- On the stack: an ability object whose source is this permanent and whose
       -- condition is a chapter symbol. Read off Object.source, the same shape
-      -- Parun.Engine.Resolve.Effect.alreadyTurnedFor uses for CR 113.7a.
+      -- Parun.Engine.Resolve.Common.alreadyTurnedFor uses for CR 113.7a.
       --
       -- The `chapterOf` conjunct is CR 704.5s's own word -- it exempts a Saga
       -- owed a CHAPTER ability, not one owed any ability at all -- and has NO

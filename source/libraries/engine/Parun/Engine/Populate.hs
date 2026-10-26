@@ -6,7 +6,7 @@
 -- keyword-action rule exactly as rule 702 is a keyword rule, so the procedure
 -- lives in the engine rather than in card data. The closed\/open invariant
 -- forbids the rules core casing on an EFFECT's identity, and nothing here does
--- -- Parun.Engine.Resolve.Effect's Effect.Populate arm calls in without saying
+-- -- Parun.Engine.Resolve.Arms.Counters's Effect.Populate arm calls in without saying
 -- which effect it is.
 --
 -- Rule 701.36 has no "whenever a player populates", so there is no GameEvent
@@ -60,7 +60,7 @@ candidates pid gs =
 --
 -- The copy is minted through Event.createTokens with the chosen token's COPIABLE
 -- values (CR 707.2), which is the same funnel and the same snapshot
--- Parun.Engine.Resolve.Effect's Effect.CreateCopy arm uses -- so CR 614.12's
+-- Parun.Engine.Resolve.Arms.Objects's Effect.CreateCopy arm uses -- so CR 614.12's
 -- entry loop and CR 111.5's rollback point are the ones every token gets. CR
 -- 707.2 copies no counters and rule 701.36a states no riders, so the copy enters
 -- untapped and bare.

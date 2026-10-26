@@ -5,7 +5,7 @@
 -- ground: rule 701 is a keyword-action rule exactly as rule 702 is a keyword
 -- rule, so the procedure lives in the engine rather than in card data. The
 -- closed\/open invariant forbids the rules core casing on an EFFECT's identity,
--- and nothing here does -- Parun.Engine.Resolve.Effect's Effect.Earthbend arm
+-- and nothing here does -- Parun.Engine.Resolve.Arms.Counters's Effect.Earthbend arm
 -- calls in without saying which effect it is.
 --
 -- What is DIFFERENT from those two is that rule 701.66a's three instructions are
@@ -17,7 +17,7 @@
 -- Parun.Engine.Keyword's minted roster.
 --
 -- CR 701.66b's "whenever a player earthbends" is written from
--- Parun.Engine.Resolve.Effect's Effect.Earthbend arm rather than from here, since
+-- Parun.Engine.Resolve.Arms.Counters's Effect.Earthbend arm rather than from here, since
 -- rule 701.66b puts the moment at the CREATION of the delayed ability 'arm'
 -- mints and this module only describes it. GameEvent.PlayerActed is the entry and
 -- TriggerCondition.PlayerActs reads it.
@@ -55,7 +55,7 @@ import Parun.Types.TriggeredAbility (TriggeredAbility)
 import qualified Parun.Types.Zone as Zone
 
 -- | CR 701.66a's first two sentences, in written order (CR 608.2c): the
--- animation, then the counters. Handed to Parun.Engine.Resolve.Effect's executor
+-- animation, then the counters. Handed to Parun.Engine.Resolve.Arms.Counters's executor
 -- one at a time, so each runs exactly as the same instruction printed on a card
 -- would.
 --

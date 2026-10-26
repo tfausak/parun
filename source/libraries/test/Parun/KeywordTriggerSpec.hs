@@ -2413,7 +2413,7 @@ graftSpec s registry =
 -- producer, and it is the one that makes BOTH halves of the grant observable:
 -- what it prints below its backup line is a KEYWORD (deathtouch) and a
 -- TRIGGERED ABILITY (its combat-damage reanimation), which travel through two
--- different arms of Parun.Engine.Resolve.Effect's expandGrant. (Name, cost, type
+-- different arms of Parun.Engine.Resolve.Common's expandGrant. (Name, cost, type
 -- line, P/T and Oracle text checked against api.scryfall.com 2026-09-20.)
 --
 -- Goblin Piker ({1}{R} Creature -- Goblin 2/1, no abilities) is the recipient,

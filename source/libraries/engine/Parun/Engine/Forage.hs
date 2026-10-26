@@ -5,7 +5,7 @@
 -- keyword-action rule exactly as rule 702 is a keyword rule, so the procedure
 -- lives in the engine rather than in card data. The closed\/open invariant forbids
 -- the rules core casing on an EFFECT's identity, and nothing here does --
--- Parun.Engine.Resolve.Effect's Effect.Forage arm calls in without saying which
+-- Parun.Engine.Resolve.Arms.Counters's Effect.Forage arm calls in without saying which
 -- it is.
 --
 -- ONE module and not two procedures, for Parun.Engine.Blight's reason: rule
@@ -63,7 +63,7 @@ foodCandidates pid gs =
 -- be carried out by a player holding fewer than three cards in their graveyard
 -- and controlling no Food, so "you may forage" is not offered to them.
 --
--- The CLASSIFICATION Parun.Engine.Resolve.Effect.effectIsImpossible reads. Rule
+-- The CLASSIFICATION Parun.Engine.Resolve.Common.effectIsImpossible reads. Rule
 -- 701.61a states no gate of its own the way CR 701.59b does for collecting
 -- evidence; what refuses the offer is CR 608.2d's "the player can't choose an
 -- option that's illegal or impossible".

@@ -529,7 +529,7 @@ data GameEvent
     -- fizzled ability never resolved and writes none.
     --
     -- A copy of the ability keeps the original's Source
-    -- (Parun.Engine.Resolve.Effect.copyOnStackOf), so the two are one key here,
+    -- (Parun.Engine.Resolve.Common.copyOnStackOf), so the two are one key here,
     -- which is rule 707.10b's third sentence holding by construction.
     --
     -- CR 605.3b's mana ability never reaches this loop at all.

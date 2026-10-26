@@ -80,7 +80,7 @@
 -- Golem's "other" is not its source (all data/scenarios/copy).
 --
 -- And CR 707.12's copy of a CARD, made in the zone that card is in and then cast
--- (Parun.Engine.Resolve.Effect's castableCopy, under Parun.Types.OfferCast's
+-- (Parun.Engine.Resolve.Common's castableCopy, under Parun.Types.OfferCast's
 -- `copied`): Mizzix's Mastery, whose exiled instant stays in exile while the copy
 -- goes on the stack, and whose declined copy is swept by CR 704.5e
 -- (data/scenarios/copy).
@@ -888,7 +888,7 @@ spec s registry = Spec.describe s "Parun.Engine.Copy" $ do
 
   -- CR 707.9c on the OTHER road: the same clause is written inside the ability
   -- the entry exception quotes, so the copy the CR 707.4 BecomeCopy opcode makes
-  -- must retain the colour too (Parun.Engine.Resolve.Effect's BecomeCopy arm,
+  -- must retain the colour too (Parun.Engine.Resolve.Arms.Objects's BecomeCopy arm,
   -- which reads the subject's own copiable values per subject).
   --
   -- The Doppelganger enters as the black Cabal Evangel (2/2), then its upkeep
@@ -1956,7 +1956,7 @@ ivySpec s registry =
             (growthId, g3) = S.addHandCard growth S.bob g2
         pure (ivyId, spiderId, growthId, g3)
       -- What each object on the stack targets, top first, read live off its
-      -- bindings the way Parun.Engine.Resolve.Effect.targetsOnStack does, less CR
+      -- bindings the way Parun.Engine.Resolve.Common.targetsOnStack does, less CR
       -- 201.5's reserved self slot, the sibling helper's reason.
       stackTargets gs = fmap (\oid -> Set.toList (Foldable.fold (Map.elems (Map.delete Binding.triggerSource (Binding.targetsOf (maybe Map.empty Object.bindings (Game.lookupObject oid gs))))))) (GameState.stack gs)
    in Spec.describe s "Parun.Engine.Copy" $ do

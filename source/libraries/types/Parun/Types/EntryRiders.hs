@@ -121,7 +121,7 @@ import qualified Parun.Types.TapState as TapState
 -- token enters with X +1/+1 counters on it, where X is the number of other
 -- creatures you control", whose X is defined by the ability's own text (CR
 -- 107.3c) -- while the funnel takes EntryRiders Natural, a settled number.
--- Parun.Engine.Resolve.Effect.freezeRiders is the one bridge: it evaluates each count
+-- Parun.Engine.Resolve.Common.freezeRiders is the one bridge: it evaluates each count
 -- once, when the effect is applied, which is the rule the parameter exists to
 -- state. A Quantity reaching the funnel unevaluated is then a type error rather
 -- than a context built where there is none to build.
@@ -209,14 +209,14 @@ import qualified Parun.Types.TapState as TapState
 -- several is Dunbarrow Revivalist's "attached to one of them", where the effect
 -- names the group and CR 608.2d has its controller pick one. Read by the CREATE
 -- (Parun.Engine.Resolve's Create arm and Event.createTokens) and by a MOVETOZONE
--- onto the battlefield (Parun.Engine.Resolve.Effect's moveOne, Necrotic Plague's
+-- onto the battlefield (Parun.Engine.Resolve.Arms.Zones's moveOne, Necrotic Plague's
 -- "attached to that creature").
 --
 -- EntryHost.Chosen is CR 303.4f's choice still made by the controller, but among
 -- the hosts the effect's filter admits as well as the Aura's enchant ability --
 -- the rule's "and any other applicable effects": Nomad Mythmaker's "attached to
 -- a creature you control". Read by the MOVETOZONE alone
--- (Parun.Engine.Resolve.Effect's moveOne). Parun.EffectLintSpec fences both
+-- (Parun.Engine.Resolve.Arms.Zones's moveOne). Parun.EffectLintSpec fences both
 -- arms; putFound carries CR 303.4a's fixed host down its own road instead.
 --
 -- NOT the road CR 701.58a's cloak takes, though the pairing it needs -- the 2/2

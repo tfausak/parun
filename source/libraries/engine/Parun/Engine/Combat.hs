@@ -2521,7 +2521,7 @@ payTolls perform before = go []
 
 -- What an effect leaves open about CR 508.4's choice, which is a question about
 -- the EFFECT rather than about the board, so it is settled by
--- Parun.Engine.Resolve.Effect's read of Parun.Types.EntryAttack and passed down.
+-- Parun.Engine.Resolve.Common's read of Parun.Types.EntryAttack and passed down.
 -- Engine-local rather than a Parun.Types module: no card writes it, the arms
 -- naming a PlayerId the way Parun.Types.AttackTarget's do.
 data AttackChoice
@@ -2653,7 +2653,7 @@ putOntoBattlefieldAttacking choice oid = do
     _ -> pure ()
 
 -- What an effect leaves open about CR 509.4's choice, AttackChoice's twin:
--- settled by Parun.Engine.Resolve.Effect's read of Parun.Types.EntryBlock.
+-- settled by Parun.Engine.Resolve.Common's read of Parun.Types.EntryBlock.
 data BlockChoice
   = -- | CR 509.4's main clause: the controller chooses the attacker.
     AnyAttacker

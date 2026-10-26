@@ -73,13 +73,13 @@ data PayGate = MkPayGate
     --
     -- An {X} in it IS resolved, which is a different rule: CR 118.4 sends X to
     -- CR 107.3a, whose value is the one the object's controller announced at
-    -- CR 601.2b. Clash of Wills' is {X}; Parun.Engine.Resolve.Effect.announcedXOn is
+    -- CR 601.2b. Clash of Wills' is {X}; Parun.Engine.Resolve.Common.announcedXOn is
     -- where it is substituted in.
     --
     -- A CHOICE of whole costs, in printed order, because the "something else"
     -- may be a disjunction: Torment of Venom's "unless they sacrifice another
     -- nonland permanent of their choice or discard a card". The payer picks one
-    -- payable option or declines (Parun.Engine.Resolve.Effect.payGateAgreed);
+    -- payable option or declines (Parun.Engine.Resolve.Common.payGateAgreed);
     -- every other gate has one option.
     cost :: CostChoice.CostChoice,
     -- | CR 118.6's other kind of cost: one the card DESCRIBES in terms of

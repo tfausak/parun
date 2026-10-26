@@ -1179,7 +1179,7 @@ controllerRelatesToBoundCounts card =
 -- one site that matches a MODE's target slot Filter, and
 -- Parun.Engine.Resolve.Slots.effectContext, which an attach effect's destination
 -- and an effect's ObjectRef are matched against and which
--- Parun.Engine.Resolve.Effect.storedClass bakes a stored class's atom from. EntryAttachDestination's bare Context is not one. This is boundNameOffends' sweep one characteristic over, and
+-- Parun.Engine.Resolve.Common.storedClass bakes a stored class's atom from. EntryAttachDestination's bare Context is not one. This is boundNameOffends' sweep one characteristic over, and
 -- the one place the two differ is what makes it load-bearing rather than tidy:
 -- that atom is a silent False outside its position and this one is a silent TRUE,
 -- so an atom in a Count filter, an affected set or a search filter would ADMIT
@@ -1772,7 +1772,7 @@ filterPositionLintSpec s registry corpus = Spec.describe s "Lint" $ do
         ("Simic Guildmage", 1), -- its first ability, Bioshift's sentence
         ("Glamer Spinners", 1), -- its attach destination
         ("Sorrow's Path", 1), -- its second target slot
-        ("Mark for Death", 1), -- its stored class, baked by Parun.Engine.Resolve.Effect.storedClass
+        ("Mark for Death", 1), -- its stored class, baked by Parun.Engine.Resolve.Common.storedClass
         ("Flame Wave", 1), -- its damage's object
         ("Chandra Nalaar", 1), -- its -8, Flame Wave's sentence
         ("Necrotic Plague", 1) -- its trigger's target slot, relative to the dead creature's controller

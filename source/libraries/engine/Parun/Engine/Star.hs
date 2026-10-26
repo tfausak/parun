@@ -112,7 +112,7 @@ substituteStar star quantity = case quantity of
 -- a characteristic-defining ability fills in later -- proved by the scenario
 -- consuming-blob-ooze-token-keeps-its-star-plus-one-box.
 --
--- Asked by Parun.Engine.Resolve.Effect.bakeTokenCharacteristics, which must tell a star
+-- Asked by Parun.Engine.Resolve.Common.bakeTokenCharacteristics, which must tell a star
 -- (keep it -- CR 208.2's value arrives at layer 7a, so there is nothing to settle
 -- at creation) from a computed box (settle it -- CR 111.3 defines the token's
 -- values once, as the effect resolves), and by Parun.Engine.Card's CR 709.4c

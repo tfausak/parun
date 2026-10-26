@@ -63,7 +63,7 @@ hasPrepareSpell oid gs = case Game.prepareSpellOf oid gs of
 
 -- CR 722.3a's FIRST gate: "a permanent can't gain this designation unless it has a
 -- prepare spell". The rule's second gate -- it may not gain one it already has --
--- is the transition guard Parun.Engine.Resolve.Effect's Designate arm already
+-- is the transition guard Parun.Engine.Resolve.Arms.Objects's Designate arm already
 -- applies to every designation, so it is not restated here.
 --
 -- A case on WHICH designation, which is the same closed-half act as a case on a

@@ -9,7 +9,7 @@ module Parun.Types.DamageDirection where
 -- parun's shields already have, one row per relation, rather than a third
 -- constructor meaning "both".
 --
--- Cashed by Parun.Engine.Resolve.Effect.installDamageRow into
+-- Cashed by Parun.Engine.Resolve.Common.installDamageRow into
 -- Parun.Types.DamagePattern's two baked halves: 'DealtTo' writes the recipient
 -- into @whichRecipient@, 'DealtBy' writes the object into @whichSource@ and
 -- names no recipient, so a by-direction shield describing none covers a player

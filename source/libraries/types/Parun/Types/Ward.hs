@@ -24,7 +24,7 @@ data Ward keyword = MkWard
     -- is what rule 702.21b asks for -- "this value is determined at the time the
     -- ability resolves, not locked in as the ability triggers" -- and it is why
     -- the value cannot ride Cost's own {X}, whose value CR 107.3a fixes at what
-    -- CR 601.2b announced (Parun.Engine.Resolve.Effect.announcedXOn).
+    -- CR 601.2b announced (Parun.Engine.Resolve.Common.announcedXOn).
     --
     -- A Parun.Types.PlayerCounterTally and NOT the Parun.Types.Quantity that
     -- Parun.Engine.Keyword.ward widens it into: Quantity names Keyword in its

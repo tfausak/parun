@@ -1,7 +1,7 @@
 {-# LANGUAGE GADTs #-}
 {-# LANGUAGE RankNTypes #-}
 
--- CR 701.38's vote: Parun.Engine.Resolve.Effect's Effect.Vote arm, the
+-- CR 701.38's vote: Parun.Engine.Resolve.Arms.Zones's Effect.Vote arm, the
 -- Parun.Types.Vote payload it reads, Prompt.ChooseVote over each kind of listed
 -- choice, Quantity.VotesReceived, Parun.Engine.PlayerEffect's
 -- votesAllowed, and Parun.Engine.Game's turnOrderFrom,

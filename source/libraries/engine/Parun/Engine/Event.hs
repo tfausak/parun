@@ -972,7 +972,7 @@ damageEvent gs kind source target amount =
 -- exactly what a second record would break.
 --
 -- What does NOT come through here is a permanent entering the battlefield tapped
--- (`enterTapped` above, and Parun.Engine.Resolve.Effect.putOntoBattlefield) -- CR 603.2e's other
+-- (`enterTapped` above, and Parun.Engine.Resolve.Common.putOntoBattlefield) -- CR 603.2e's other
 -- sentence, and the reason neither comes through here.
 --
 -- CR 110.5 makes tapped a PERMANENT's status, which every caller above already
@@ -5446,7 +5446,7 @@ strengthen gs oid regenerability =
 -- ANSWERS how many counters actually landed, which is not what was asked for: CR
 -- 614.16 may have grown or erased the placement, and an object that is no longer
 -- there takes none. CR 702.100b's and CR 702.149c's "one or more +1/+1 counters"
--- read it at Parun.Engine.Resolve.Effect's Effect.CounterAndMark arm, and a move of
+-- read it at Parun.Engine.Resolve.Arms.Objects's Effect.CounterAndMark arm, and a move of
 -- counters reads it to count what crossed.
 putCounters :: CounterCause.CounterCause -> ObjectId -> CounterKind.CounterKind Keyword.Type.Keyword -> Natural -> Game Natural
 putCounters cause oid kind n = do
@@ -7629,7 +7629,7 @@ changeZoneWithCause discarded asOf batch oid requestedDest requestedPosition see
               -- CR 401.4: a redirect INTO a library at a stated end, for the
               -- scope's owner to arrange (arrangeArrivals). A move headed for
               -- a library already had its order settled by its instruction
-              -- (Parun.Engine.Resolve.Effect.settleArrivals), and a shuffle
+              -- (Parun.Engine.Resolve.Common.settleArrivals), and a shuffle
               -- leaves no position to arrange. CR 404.3: every move into a
               -- graveyard, whatever sent it there.
               Monad.when (dest == Zone.Library && requestedDest /= Zone.Library && not shuffling) $

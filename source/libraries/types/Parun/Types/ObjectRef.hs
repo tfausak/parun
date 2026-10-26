@@ -125,7 +125,7 @@ data ObjectRef
     -- DISTINCT land cards from their own graveyard" is what proves it.
     --
     -- A QUESTION rather than a read, asked by
-    -- Parun.Engine.Resolve.Effect.askingObjects; Parun.EffectLintSpec's
+    -- Parun.Engine.Resolve.Common.askingObjects; Parun.EffectLintSpec's
     -- inertChoosers states which opcodes may carry it.
     ChosenCardInGraveyard ChosenCardInGraveyard.ChosenCardInGraveyard
   | -- | CR 608.2d / 402.3 / Karn Liberated: cards in a hand matching the Filter,
@@ -137,7 +137,7 @@ data ObjectRef
     ChosenCardInHand ChosenCardInHand.ChosenCardInHand
   | -- | CR 608.2d / Commune with the Gods: a card chosen out of the group a slot
     -- holds -- the printed "from among them" -- read through
-    -- Parun.Engine.Resolve.Effect.fromAmongMembers.
+    -- Parun.Engine.Resolve.Common.fromAmongMembers.
     ChosenCardFromAmong ChosenCardFromAmong.ChosenCardFromAmong
   | -- | CR 608.2c / Mulch: every card in the group a slot holds that the Filter
     -- matches -- the printed "all land cards revealed this way", the arm above's
@@ -165,7 +165,7 @@ data ObjectRef
     -- in another shared zone, Mirror of Fate's exile -- matching the payload's
     -- Filter that its chooser picks as the effect runs, one or up to a ceiling
     -- (Hanweir Battlements, Wormfang Crab; Tovolar, Dire Overlord, Teferi, Hero
-    -- of Dominaria). Parun.Engine.Resolve.Effect.chosenPermanents asks it.
+    -- of Dominaria). Parun.Engine.Resolve.Common.chosenPermanents asks it.
     ChosenPermanents ChosenPermanents.ChosenPermanents
   | -- | CR 303.4b / 301.5a / 608.2h: the permanents attached to the object a slot holds,
     -- or attached as it left (Rhuk, Hexgold Nabber; Fumble).

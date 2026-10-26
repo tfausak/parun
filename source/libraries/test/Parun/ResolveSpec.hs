@@ -34,6 +34,7 @@ import qualified Parun.Engine.Projection as Projection
 import qualified Parun.Engine.Projection.View as Projection
 import qualified Parun.Engine.Replay as Replay
 import qualified Parun.Engine.Resolve as Resolve
+import qualified Parun.Engine.Resolve.Common as Resolve
 import qualified Parun.Engine.Resolve.Effect as Resolve
 import qualified Parun.Engine.Resolve.Slots as Resolve
 import qualified Parun.Engine.Setup as Setup
