@@ -3,6 +3,7 @@ module Parun.Types.CopyException where
 import qualified Data.Set as Set
 import qualified Parun.Types.CardName as CardName
 import qualified Parun.Types.CardType as CardType
+import qualified Parun.Types.ChangeMode as ChangeMode
 import qualified Parun.Types.Color as Color
 import qualified Parun.Types.Keyword as Keyword
 import qualified Parun.Types.SetPowerToughness as SetPowerToughness
@@ -87,13 +88,14 @@ data CopyException ability
     -- copy's triggeredAbilities and an activated one its activatedAbilities
     -- (Dimir Doppelganger's "{1}{U}{B}: ... except it has this ability").
     GainThisAbility
-  | -- | CR 707.9b: the copy is these card types "in addition to its other types"
-    -- (Phyrexian Metamorph's "except it's an artifact"), so they JOIN the copied
-    -- type line rather than replacing it (CR 205.1b).
+  | -- | CR 707.9b / 205.1a / 205.1b: the copy is these card types instead of its
+    -- own, or in addition to them, as the mode says (Dino DNA's "it's a ...
+    -- creature"; Phyrexian Metamorph's "except it's an artifact"). The Replace
+    -- mode alone keeps instant and sorcery and drops uncorrelated subtypes (CR
+    -- 205.1a).
     --
     -- A Set for GainKeywords' reason: one printed clause names as many as it
     -- likes at once (Dollhouse of Horrors' "a 0/0 Construct artifact creature").
-    -- CR 205.1a's replacement is a different sentence, SetCardTypes below.
     --
     -- NOTHING ELSE MOVES, and that is CR 707.9d's last two sentences rather than
     -- an omission: its strip of the copied object's characteristic-defining
@@ -102,19 +104,19 @@ data CopyException ability
     -- its other types'". So this arm must NOT clear characteristicPT the way
     -- SetPowerToughness above does, and it must not touch the keywords a CDA is
     -- written as -- a Metamorph copying a Tarmogoyf keeps the Goyf's CDA.
-    AddCardTypes (Set.Set CardType.CardType)
+    CardTypes ChangeMode.ChangeMode (Set.Set CardType.CardType)
   | -- | CR 707.9b over CR 205.3's part of the type line: the copy is these
     -- subtypes "in addition to its other types" (Wall of Stolen Identity's "a
     -- Wall"), so they JOIN the copied subtypes.
     --
-    -- A separate arm from AddCardTypes and not one Set over the whole type line,
+    -- A separate arm from CardTypes and not one Set over the whole type line,
     -- because CR 205.1 makes card types, supertypes and subtypes three different
     -- parts of it and Parun.Types.ProjectedCharacteristics keeps three fields; one
     -- printed clause naming two of them at once (Synth Infiltrator's "a Synth
     -- artifact creature") is two exceptions in the same list, which is what the
     -- list is for.
     --
-    -- NOTHING ELSE MOVES, for AddCardTypes' reason: CR 707.9d's last two
+    -- NOTHING ELSE MOVES, for CardTypes' reason: CR 707.9d's last two
     -- sentences name subtype alongside card type in the carve-out, and its
     -- Glasspool Mimic example is explicit that a copied changeling survives the
     -- exception. So this arm must not clear characteristicPT and must not touch
@@ -135,14 +137,11 @@ data CopyException ability
     -- and snow in addition to its other types" names two supertypes in one
     -- clause.
     --
-    -- NOTHING ELSE MOVES, for AddCardTypes' reason: CR 707.9d's last two
+    -- NOTHING ELSE MOVES, for CardTypes' reason: CR 707.9d's last two
     -- sentences name supertype in the carve-out, so the copied
     -- characteristic-defining ability stays -- and there would be nothing to
     -- strip in any case, RemoveSupertypes' reason below.
     AddSupertypes (Set.Set Supertype.Supertype)
-  | -- | CR 707.9b / 205.1a: the copy is these card types instead of its own
-    -- (Dino DNA's "it's a ... creature").
-    SetCardTypes (Set.Set CardType.CardType)
   | -- | CR 707.9b / 205.1a: the copy's creature types are these instead of its
     -- own (Dino DNA's "a ... Dinosaur creature").
     SetCreatureSubtypes (Set.Set Subtype.Subtype)
@@ -154,7 +153,7 @@ data CopyException ability
     -- had", so a copy of a snow legendary permanent is still snow. The arm is the
     -- subtractive counterpart of AddSupertypes rather than a SetSupertypes.
     --
-    -- A Set for AddCardTypes' reason, though every printing names Legendary
+    -- A Set for CardTypes' reason, though every printing names Legendary
     -- alone; CR 205.4a lists five supertypes and none of the sentence's shape
     -- says only one may appear.
     --

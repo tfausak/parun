@@ -5117,9 +5117,8 @@ copyExceptionFilters :: CopyException.CopyException (GrantedAbility.GrantedAbili
 copyExceptionFilters exception = case exception of
   CopyException.SetPowerToughness _ -> []
   CopyException.GainKeywords keywords -> concatMap keywordFilters (Set.toList keywords)
-  CopyException.AddCardTypes _ -> []
+  CopyException.CardTypes {} -> []
   CopyException.AddSubtypes _ -> []
-  CopyException.SetCardTypes _ -> []
   CopyException.SetCreatureSubtypes _ -> []
   CopyException.AddSupertypes _ -> []
   CopyException.RemoveSupertypes _ -> []

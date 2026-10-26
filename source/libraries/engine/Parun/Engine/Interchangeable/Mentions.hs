@@ -980,10 +980,9 @@ copyExceptionNames asking onAbility x = case x of
   CopyException.SetPowerToughness _setPowerToughness -> mempty
   CopyException.GainKeywords keyword -> foldMap (keywordNames asking) keyword
   CopyException.GainThisAbility -> mempty
-  CopyException.AddCardTypes _cardType -> mempty
+  CopyException.CardTypes _mode _cardType -> mempty
   CopyException.AddSubtypes _subtype -> mempty
   CopyException.AddSupertypes _supertype -> mempty
-  CopyException.SetCardTypes _cardType -> mempty
   CopyException.SetCreatureSubtypes _subtype -> mempty
   CopyException.RemoveSupertypes _supertype -> mempty
   CopyException.SetName _cardName -> mempty
