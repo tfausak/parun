@@ -156,9 +156,9 @@ data PlayerRef
     -- slot naming no object, naming several, or naming one the projection cannot
     -- describe leaves the count unanswered rather than aimed at some other seat.
     HolderOfBound Holder.Holder Hop.Hop SlotName.SlotName
-  | -- | HolderOfBound's BAKED half, and runtime-only: the controller or owner of one
-    -- particular object, read at each check (CR 611.2b, 108.3, 108.4). Written by
-    -- Parun.Engine.Quantity.bakePlayerRef; no card may write it.
+  | -- | HolderOfBound's BAKED half, and runtime-only: the controller or owner of
+    -- one particular object, read at each check (CR 611.2b, 108.3, 108.4).
+    -- Written by Parun.Engine.Quantity.bakePlayerRef; no card may write it.
     HolderOfObject Holder.Holder ObjectId.ObjectId
   | -- | CR 614.1c / CR 702.174b: the player the object a slot names CHOSE, by
     -- which choice -- "the chosen player" of the gift ability Parun.Engine.Keyword

@@ -418,9 +418,10 @@ riderSlots riders =
         Nothing -> Map.empty
    in joinSlots [attacked, blocked, hosted]
 
--- The slots a PlayerRef reads. InSlot, HolderOfBound, ChosenPlayerOfBound and Attacking name one at arity One, and EachInSlot,
--- EachPlayerExcept and EachOpponentExcept one at arity Many; the rest name none, and
--- the arms below carry the reason for each arity that is not self-evident.
+-- The slots a PlayerRef reads. InSlot, HolderOfBound, ChosenPlayerOfBound and
+-- Attacking name one at arity One, and EachInSlot, EachPlayerExcept and
+-- EachOpponentExcept one at arity Many; the rest name none, and the arms below
+-- carry the reason for each arity that is not self-evident.
 playerRefSlots :: PlayerRef -> Map.Map SlotName SlotArity
 playerRefSlots ref = case ref of
   -- Every player the slot names is excluded -- CR 104.2c's winning team is
