@@ -248,7 +248,6 @@ import qualified Parun.Types.SpeedDecrease as SpeedDecrease
 import qualified Parun.Types.StackObjectKind as StackObjectKind
 import qualified Parun.Types.TakeExtraTurn as TakeExtraTurn
 import qualified Parun.Types.Tap as Tap
-import qualified Parun.Types.TargetChooser as TargetChooser
 import qualified Parun.Types.TargetSlot as TargetSlot
 import qualified Parun.Types.TheseDiscard as TheseDiscard
 import qualified Parun.Types.TokenPattern as TokenPattern
@@ -3557,11 +3556,7 @@ targetSlotSlots slot =
         -- And the seat a CR 115.1 chooser names through a binding -- Curse of
         -- Inertia's "that attacking player", Necrotic Plague's "its controller"
         -- -- which its condition must supply.
-        case TargetSlot.chooser slot of
-          Just (TargetChooser.InSlot named) -> oneSlot named
-          Just (TargetChooser.ControllerOfBound named) -> oneSlot named
-          Just (TargetChooser.Relative _) -> Map.empty
-          Nothing -> Map.empty
+        maybe Map.empty playerRefSlots (TargetSlot.chooser slot)
       ]
 
 -- Every slot a whole MODE reads: its effects', every payer CR 118.12a's "unless
