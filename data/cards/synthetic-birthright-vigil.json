@@ -37,8 +37,16 @@
                             "measured": {
                               "type": "LifeTotal",
                               "value": {
-                                "type": "OwnerOfBound",
-                                "value": "target"
+                                "type": "HolderOfBound",
+                                "value": {
+                                  "holder": {
+                                    "type": "Owner"
+                                  },
+                                  "hop": {
+                                    "type": "Itself"
+                                  },
+                                  "slot": "target"
+                                }
                               }
                             },
                             "threshold": {

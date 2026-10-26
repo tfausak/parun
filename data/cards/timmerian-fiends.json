@@ -49,8 +49,16 @@
                         "type": "Ante",
                         "value": {
                           "player": {
-                            "type": "OwnerOfBound",
-                            "value": "target"
+                            "type": "HolderOfBound",
+                            "value": {
+                              "holder": {
+                                "type": "Owner"
+                              },
+                              "hop": {
+                                "type": "Itself"
+                              },
+                              "slot": "target"
+                            }
                           },
                           "ref": {
                             "type": "TopOfLibrary",
@@ -60,8 +68,16 @@
                                 "value": 1
                               },
                               "player": {
-                                "type": "OwnerOfBound",
-                                "value": "target"
+                                "type": "HolderOfBound",
+                                "value": {
+                                  "holder": {
+                                    "type": "Owner"
+                                  },
+                                  "hop": {
+                                    "type": "Itself"
+                                  },
+                                  "slot": "target"
+                                }
                               }
                             }
                           }
@@ -71,8 +87,16 @@
                     "optionality": {
                       "type": "Optional",
                       "value": {
-                        "type": "OwnerOfBound",
-                        "value": "target"
+                        "type": "HolderOfBound",
+                        "value": {
+                          "holder": {
+                            "type": "Owner"
+                          },
+                          "hop": {
+                            "type": "Itself"
+                          },
+                          "slot": "target"
+                        }
                       }
                     }
                   },

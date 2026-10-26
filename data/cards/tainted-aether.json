@@ -65,8 +65,16 @@
                             ]
                           },
                           "players": {
-                            "type": "ControllerOfBound",
-                            "value": "became"
+                            "type": "HolderOfBound",
+                            "value": {
+                              "holder": {
+                                "type": "Controller"
+                              },
+                              "hop": {
+                                "type": "Itself"
+                              },
+                              "slot": "became"
+                            }
                           },
                           "quantity": {
                             "type": "Literal",

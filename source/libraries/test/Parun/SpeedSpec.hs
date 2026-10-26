@@ -9,7 +9,7 @@
 -- by Parun.Engine.Activatable.zoneAbilitiesOf. Also Parun.Types.Effect's
 -- DecreaseSpeed arm and its Parun.Types.SpeedDecrease payload, and the two
 -- references Spikeshell Harrier reaches "that opponent" through --
--- Parun.Types.PlayerRef's ControllerOfBound and Parun.Types.Filter's
+-- Parun.Types.PlayerRef's HolderOfBound and Parun.Types.Filter's
 -- IsControllerOfBound.
 --
 -- Gameplay-level throughout. Muraganda Raceway is the fixture for everything on

@@ -579,11 +579,7 @@ overPlayerRefSlots f ref = case ref of
   -- CR 702.116a's exclusion, the arm above narrowed to opponents and read the
   -- same way.
   PlayerRef.EachOpponentExcept slot -> fmap PlayerRef.EachOpponentExcept (f slot)
-  PlayerRef.ControllerOfBound slot -> fmap PlayerRef.ControllerOfBound (f slot)
-  -- The arm above's namespace, one attachment over.
-  PlayerRef.ControllerOfHostOfBound slot -> fmap PlayerRef.ControllerOfHostOfBound (f slot)
-  -- The arm above's namespace, one word over.
-  PlayerRef.OwnerOfBound slot -> fmap PlayerRef.OwnerOfBound (f slot)
+  PlayerRef.HolderOfBound holder hop slot -> fmap (PlayerRef.HolderOfBound holder hop) (f slot)
   -- The arm above's namespace, one record over.
   PlayerRef.ChosenPlayerOfBound slot choice -> fmap (`PlayerRef.ChosenPlayerOfBound` choice) (f slot)
   PlayerRef.Attacking attacking -> fmap (\slot -> PlayerRef.Attacking attacking {AttackingPlayers.attacked = slot}) (f (AttackingPlayers.attacked attacking))
@@ -591,8 +587,7 @@ overPlayerRefSlots f ref = case ref of
   -- seat or object, and the candidate whichever fold is running supplies.
   PlayerRef.Relative _ -> pure ref
   PlayerRef.Specific _ -> pure ref
-  PlayerRef.ControllerOfObject _ -> pure ref
-  PlayerRef.OwnerOfObject _ -> pure ref
+  PlayerRef.HolderOfObject _ _ -> pure ref
   PlayerRef.Candidate -> pure ref
   PlayerRef.Superlative _ -> pure ref
   PlayerRef.InRole _ -> pure ref

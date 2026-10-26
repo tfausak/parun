@@ -304,8 +304,16 @@
                         "type": "LoseLife",
                         "value": {
                           "player": {
-                            "type": "OwnerOfBound",
-                            "value": "thatAttackingCreature"
+                            "type": "HolderOfBound",
+                            "value": {
+                              "holder": {
+                                "type": "Owner"
+                              },
+                              "hop": {
+                                "type": "Itself"
+                              },
+                              "slot": "thatAttackingCreature"
+                            }
                           },
                           "quantity": {
                             "type": "Literal",

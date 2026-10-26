@@ -57,8 +57,16 @@
                     "type": "LoseLife",
                     "value": {
                       "player": {
-                        "type": "ControllerOfBound",
-                        "value": "target"
+                        "type": "HolderOfBound",
+                        "value": {
+                          "holder": {
+                            "type": "Controller"
+                          },
+                          "hop": {
+                            "type": "Itself"
+                          },
+                          "slot": "target"
+                        }
                       },
                       "quantity": {
                         "type": "Literal",
@@ -127,8 +135,16 @@
                     }
                   ],
                   "payer": {
-                    "type": "ControllerOfBound",
-                    "value": "target"
+                    "type": "HolderOfBound",
+                    "value": {
+                      "holder": {
+                        "type": "Controller"
+                      },
+                      "hop": {
+                        "type": "Itself"
+                      },
+                      "slot": "target"
+                    }
                   }
                 }
               }

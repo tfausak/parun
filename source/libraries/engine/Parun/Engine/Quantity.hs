@@ -42,6 +42,7 @@ import qualified Parun.Types.Filter as Filter.Type
 import qualified Parun.Types.GameEvent as GameEvent
 import Parun.Types.GameState (GameState)
 import qualified Parun.Types.GameState as GameState
+import qualified Parun.Types.Hop as Hop
 import qualified Parun.Types.Hybrid as Hybrid
 import qualified Parun.Types.HybridPhyrexian as HybridPhyrexian
 import qualified Parun.Types.InZone as InZone
@@ -1440,13 +1441,9 @@ playerRefIsSlotless ref = case ref of
   PlayerRef.Candidate -> True
   -- InSlot's answer, and for its reason: the slot is a TARGET slot, which
   -- Resolve.Slots.quantitySlots reports by folding nestedRefs.
-  PlayerRef.ControllerOfBound _ -> False
-  PlayerRef.ControllerOfHostOfBound _ -> False
-  -- The arm above's answer, one field over: the object is named by a slot.
-  PlayerRef.OwnerOfBound _ -> False
-  -- Specific's answer: the baked halves name their object outright.
-  PlayerRef.ControllerOfObject _ -> True
-  PlayerRef.OwnerOfObject _ -> True
+  PlayerRef.HolderOfBound {} -> False
+  -- Specific's answer: the baked half names its object outright.
+  PlayerRef.HolderOfObject _ _ -> True
   -- The arm above's answer: the object is named by a slot.
   PlayerRef.ChosenPlayerOfBound _ _ -> False
   -- InSlot's answer again: the player attacked is named by a slot.
@@ -1457,7 +1454,7 @@ playerRefIsSlotless ref = case ref of
 
 -- CR 611.2b: replace every PlayerRef.InSlot this quantity names with the baked
 -- PlayerRef.Specific arm, off the players the resolution's bindings name, and
--- every ControllerOfBound or OwnerOfBound with its baked object arm, off the
+-- every HolderOfBound reading the slot's own object with the baked HolderOfObject, off the
 -- objects they name. What
 -- makes a "for as long as" condition that says "that player" answerable AFTER
 -- its resolution: Parun.Engine.Expiry.arm bakes as the duration begins, so the
@@ -1524,11 +1521,8 @@ forCandidate pid =
         PlayerRef.InSlot _ -> ref
         PlayerRef.EachInSlot _ -> ref
         PlayerRef.Specific _ -> ref
-        PlayerRef.ControllerOfBound _ -> ref
-        PlayerRef.ControllerOfHostOfBound _ -> ref
-        PlayerRef.OwnerOfBound _ -> ref
-        PlayerRef.ControllerOfObject _ -> ref
-        PlayerRef.OwnerOfObject _ -> ref
+        PlayerRef.HolderOfBound {} -> ref
+        PlayerRef.HolderOfObject _ _ -> ref
         PlayerRef.ChosenPlayerOfBound _ _ -> ref
         PlayerRef.Attacking _ -> ref
         PlayerRef.Superlative _ -> ref
@@ -1560,19 +1554,16 @@ bakePlayerRef players objects ref = case ref of
   -- it the same way. What baking fixes is a reference to the RESOLUTION's
   -- bindings, which this is not.
   PlayerRef.Candidate -> ref
-  -- CR 611.2b / 108.4: baked to the OBJECT the slot names rather than to a seat,
-  -- since control can change while the stored condition is checked: the
-  -- reference keeps asking who controls that object now. LEFT STANDING where the
-  -- slot names no one object, InSlot's posture above.
-  PlayerRef.ControllerOfBound slot -> maybe ref PlayerRef.ControllerOfObject (Map.lookup slot objects)
-  -- CR 108.3's owner, the arm above's bake one word over.
-  PlayerRef.OwnerOfBound slot -> maybe ref PlayerRef.OwnerOfObject (Map.lookup slot objects)
+  -- CR 611.2b / 108.3 / 108.4: baked to the OBJECT the slot names rather than
+  -- to a seat, since control can change while the stored condition is checked:
+  -- the reference keeps asking who controls or owns that object now. LEFT
+  -- STANDING where the slot names no one object, InSlot's posture above.
+  PlayerRef.HolderOfBound holder Hop.Itself slot -> maybe ref (PlayerRef.HolderOfObject holder) (Map.lookup slot objects)
   -- LEFT STANDING: the host is a board read, and this bake has no board, so a
   -- stored reference names nobody. Scryfall o:"enchanted creature's
   -- controller's", 2026-10-25, no hit: no printing yet counts through it.
-  PlayerRef.ControllerOfHostOfBound _ -> ref
-  PlayerRef.ControllerOfObject _ -> ref
-  PlayerRef.OwnerOfObject _ -> ref
+  PlayerRef.HolderOfBound _ Hop.Host _ -> ref
+  PlayerRef.HolderOfObject _ _ -> ref
   -- LEFT STANDING: not implemented, a stored condition reading the player an
   -- object chose, which goes unanswered and ends (#4833).
   PlayerRef.ChosenPlayerOfBound _ _ -> ref

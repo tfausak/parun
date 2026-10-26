@@ -795,6 +795,8 @@ library codec
     Parun.Codec.HandActionSpec
     Parun.Codec.Holder
     Parun.Codec.HolderSpec
+    Parun.Codec.Hop
+    Parun.Codec.HopSpec
     Parun.Codec.HowMany
     Parun.Codec.Hybrid
     Parun.Codec.HybridPhyrexian
@@ -2673,6 +2675,7 @@ library types
     Parun.Types.HandWindowCap
     Parun.Types.HistoryRead
     Parun.Types.Holder
+    Parun.Types.Hop
     Parun.Types.Hotseat
     Parun.Types.HowMany
     Parun.Types.Hybrid

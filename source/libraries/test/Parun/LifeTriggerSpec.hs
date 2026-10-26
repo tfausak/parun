@@ -1127,7 +1127,7 @@ enrageSpec s registry =
 -- CR 120.1's SOURCE of the damage, the half of the same event enrage above does
 -- not read: Belltower Sphinx, {4}{U} Creature -- Sphinx 2/5, "Flying. Whenever a
 -- source deals damage to this creature, that source's controller mills that many
--- cards." Its payload is PlayerRef.ControllerOfBound over the slot
+-- cards." Its payload is PlayerRef.HolderOfBound Controller over the slot
 -- Parun.Engine.Event.Binding.eventBindings stamps from DamageEvent.source.
 --
 -- NONCOMBAT events throughout, which is the point: the slot is spelled

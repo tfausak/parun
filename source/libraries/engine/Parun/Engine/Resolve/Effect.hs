@@ -269,6 +269,8 @@ import qualified Parun.Types.GrantLookAtExiled as GrantLookAtExiled
 import qualified Parun.Types.GrantPlayFromExile as GrantPlayFromExile
 import qualified Parun.Types.GrantedAbility as GrantedAbility
 import qualified Parun.Types.HandActionPerformer as HandActionPerformer
+import qualified Parun.Types.Holder as Holder
+import qualified Parun.Types.Hop as Hop
 import qualified Parun.Types.HowMany as HowMany
 import qualified Parun.Types.InherentTriggerSource as InherentTriggerSource
 import qualified Parun.Types.InitiativeTarget as InitiativeTarget
@@ -1327,7 +1329,7 @@ objectRefRecipients legal resolving controller source gs ref = case ref of
   -- damage" proves it.
   ObjectRef.ChosenPlayer -> fmap Recipient.ToPlayer (apnapPlayersOf (PlayerRef.ChosenPlayerOfBound Binding.triggerSource PlayerChoice.AsEnters) legal resolving source controller gs)
   -- CR 120.3a, at whatever width the reference has: the seats a PlayerRef names,
-  -- which for Deflecting Palm's ControllerOfBound is CR 108.4's controller of the
+  -- which for Deflecting Palm's HolderOfBound is CR 108.4's controller of the
   -- object a slot holds, read through CR 608.2h's last known information. The
   -- player Filter narrows them as the sweep beside it is read, as the effect
   -- executes (CR 608.2c): Disorder's "each player who controls a white
@@ -8554,9 +8556,7 @@ applyOneEffect runSubgame resolving source controller legal chosen effect = case
           -- re-checked later. A regression fence: no card in data/cards/ puts
           -- any of these references in a player effect.
           atResolution ref = case ref of
-            PlayerRef.ControllerOfBound _ -> seatNow ref
-            PlayerRef.ControllerOfHostOfBound _ -> seatNow ref
-            PlayerRef.OwnerOfBound _ -> seatNow ref
+            PlayerRef.HolderOfBound {} -> seatNow ref
             _ -> Quantity.bakePlayerRef (Binding.playersIn legal) Map.empty ref
           seatNow ref = case playerRefPlayers legal resolving source controller gs ref of
             [pid] -> PlayerRef.Specific pid
@@ -8807,7 +8807,7 @@ applyOneEffect runSubgame resolving source controller legal chosen effect = case
           -- routinely dead by the time this resolves -- it traded with its
           -- blocker in the same damage step. Same reading as
           -- Event.Binding.combatDamagerOn, which admitted the damager.
-          MonarchTarget.ControllerOfSource -> PlayerRef.ControllerOfBound Binding.triggerSource
+          MonarchTarget.ControllerOfSource -> PlayerRef.HolderOfBound Holder.Controller Hop.Itself Binding.triggerSource
           -- CR 601.2c's chosen player, re-checked under CR 608.2b: the slot is a
           -- TARGET, so an illegal one crowns nobody while the rest of the ability
           -- still resolves.
@@ -8828,7 +8828,7 @@ applyOneEffect runSubgame resolving source controller legal chosen effect = case
           InitiativeTarget.TheController -> PlayerRef.Relative PlayerRelation.You
           -- CR 726.2: the controller of the ability's bound source, for
           -- Effect.BecomeMonarch ControllerOfSource's reason one rule over.
-          InitiativeTarget.ControllerOfSource -> PlayerRef.ControllerOfBound Binding.triggerSource
+          InitiativeTarget.ControllerOfSource -> PlayerRef.HolderOfBound Holder.Controller Hop.Itself Binding.triggerSource
     case taker of
       Nothing -> pure ()
       -- CR 726.3's hand-off, CR 726.5's re-take and the CR 603.2 event are all
@@ -12774,7 +12774,7 @@ loopOffers runSubgame resolving source controller slot legal members gate = do
 -- last known board can still answer yes. Ward is the reachable case: rule
 -- 702.21a targets nothing, so CR 608.2b never empties Binding.targetingObject
 -- and the trigger resolves after the targeter has gone, with
--- PlayerRef.ControllerOfBound naming them through CR 608.2h.
+-- PlayerRef.HolderOfBound naming them through CR 608.2h.
 -- Parun.DepartureSpec's "CR 800.4f a departed player is not offered a ward cost,
 -- and does not pay it" proves this arm.
 --

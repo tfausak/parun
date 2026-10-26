@@ -40,8 +40,16 @@
                         "type": "LoseLife",
                         "value": {
                           "player": {
-                            "type": "ControllerOfBound",
-                            "value": "thatDepartedPermanent"
+                            "type": "HolderOfBound",
+                            "value": {
+                              "holder": {
+                                "type": "Controller"
+                              },
+                              "hop": {
+                                "type": "Itself"
+                              },
+                              "slot": "thatDepartedPermanent"
+                            }
                           },
                           "quantity": {
                             "type": "AgainstSlot",

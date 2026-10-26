@@ -876,7 +876,7 @@ spec s registry = Spec.describe s "Parun.Engine.Departure" $ do
   -- Ward is what reaches the gate at all. Rule 702.21a targets nothing, so CR
   -- 608.2b never empties Binding.targetingObject, the trigger does not fizzle
   -- when bob's Giant Growth leaves the game with him, and
-  -- PlayerRef.ControllerOfBound still names bob through CR 608.2h. Mana Leak's
+  -- PlayerRef.HolderOfBound Controller still names bob through CR 608.2h. Mana Leak's
   -- gate reads the same reference over a slot that IS targeted, and fizzles.
   --
   -- THREE SEATS: CR 800.1 makes a game that begins with two players not a

@@ -17,6 +17,8 @@ import qualified Parun.Types.Combat as Combat
 import Parun.Types.Game (Game)
 import Parun.Types.GameState (GameState)
 import qualified Parun.Types.GameState as GameState
+import qualified Parun.Types.Holder as Holder
+import qualified Parun.Types.Hop as Hop
 import Parun.Types.ObjectId (ObjectId)
 import qualified Parun.Types.Player as Player
 import qualified Parun.Types.PlayerChoice as PlayerChoice
@@ -182,6 +184,9 @@ namedUncut given gs ref =
       -- A slot naming nobody excludes nobody; with no bindings at all, nothing
       -- was there to exclude anybody.
       excluding name = if bound given then Just (Maybe.fromMaybe [] (slotPlayers given name)) else Nothing
+      holderOf holder = case holder of
+        Holder.Controller -> controllerOf given
+        Holder.Owner -> ownerOf given
    in case ref of
         PlayerRef.Relative relation -> related' relation
         -- Every player minus every player the slot names (CR 104.2c's winning
@@ -219,29 +224,29 @@ namedUncut given gs ref =
         -- Effect.Search arm's ownersFor substitutes the searcher; what reaches
         -- here has no candidate of either kind.
         PlayerRef.Candidate -> Nothing
-        -- CR 613.1b / CR 608.2h: the controller of the object a slot names, as
-        -- the position sees it -- layer 2 decides who controls a permanent, and
-        -- the clause naming the player generally moved it first.
-        -- Parun.ResolveSpec's "bob, who controlled the bounced creature, went 20
-        -- -> 19" (Vapor Snag) proves the resolution's last-known road, and
-        -- Flunk's "that creature's controller's hand" (Parun.CountSpec) a count's.
-        PlayerRef.ControllerOfBound slot -> fmap pure (slotObject given slot >>= controllerOf given)
-        -- CR 303.4b: the same read of the permanent that object is attached
-        -- to, its host as it stood if the object has left (CR 608.2h).
-        PlayerRef.ControllerOfHostOfBound slot -> fmap pure (slotObject given slot >>= (`Game.hostWithLastKnown` gs) >>= controllerOf given)
-        -- CR 108.3's owner, one field over. The Deck of Many Things' 20 band is
-        -- the producer (Parun.CardSpec): reanimating an opponent's creature and
-        -- having that opponent lose the game is where owner and controller part.
-        PlayerRef.OwnerOfBound slot -> fmap pure (slotObject given slot >>= ownerOf given)
-        -- CR 611.2b: the two arms above, BAKED -- the object named outright, so a
+        -- CR 613.1b / CR 608.2h: the controller or owner of the object a slot
+        -- names, or of its host (CR 303.4b), as the position sees it -- layer 2
+        -- decides who controls a permanent, and the clause naming the player
+        -- generally moved it first, so a departed object's host is the one it
+        -- had. Parun.ResolveSpec's "bob, who controlled the bounced creature,
+        -- went 20 -> 19" (Vapor Snag) proves the resolution's last-known road,
+        -- Flunk's "that creature's controller's hand" (Parun.CountSpec) a
+        -- count's, and The Deck of Many Things' 20 band (Parun.DiceSpec) the
+        -- owner, which reanimating an opponent's creature parts from the
+        -- controller.
+        PlayerRef.HolderOfBound holder hop slot ->
+          let hopped = case hop of
+                Hop.Itself -> Just
+                Hop.Host -> (`Game.hostWithLastKnown` gs)
+           in fmap pure (slotObject given slot >>= hopped >>= holderOf holder)
+        -- CR 611.2b: the arm above, BAKED -- the object named outright, so a
         -- stored duration asks who controls or owns it NOW. Unanswered while the
         -- object is phased out, which CR 702.26b treats as not existing. Proved
         -- by
         -- data/scenarios/cr-611-2b-a-stored-duration-reads-its-target-s-controller-and-owner-after-resolution.json
         -- and, for phasing,
         -- data/scenarios/phasing/cr-702-26f-a-duration-reading-its-permanent-s-controller-ends-when-it-phases-out.json.
-        PlayerRef.ControllerOfObject oid -> fmap pure (unlessPhasedOut oid >>= controllerOf given)
-        PlayerRef.OwnerOfObject oid -> fmap pure (unlessPhasedOut oid >>= ownerOf given)
+        PlayerRef.HolderOfObject holder oid -> fmap pure (unlessPhasedOut oid >>= holderOf holder)
         -- CR 614.1c / CR 702.174b: the player the object a slot names chose,
         -- read off Object.chosenPlayers rather than any view -- a choice is a
         -- record, not a characteristic (CR 707.2) -- through CR 608.2h's

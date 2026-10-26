@@ -45,8 +45,16 @@
                     ]
                   },
                   "payer": {
-                    "type": "ControllerOfBound",
-                    "value": "spell"
+                    "type": "HolderOfBound",
+                    "value": {
+                      "holder": {
+                        "type": "Controller"
+                      },
+                      "hop": {
+                        "type": "Itself"
+                      },
+                      "slot": "spell"
+                    }
                   }
                 }
               },
@@ -104,8 +112,16 @@
                         "type": "Players",
                         "value": {
                           "players": {
-                            "type": "ControllerOfBound",
-                            "value": "spell"
+                            "type": "HolderOfBound",
+                            "value": {
+                              "holder": {
+                                "type": "Controller"
+                              },
+                              "hop": {
+                                "type": "Itself"
+                              },
+                              "slot": "spell"
+                            }
                           }
                         }
                       },
@@ -126,8 +142,16 @@
                   },
                   "offeredAt": 0,
                   "payer": {
-                    "type": "ControllerOfBound",
-                    "value": "spell"
+                    "type": "HolderOfBound",
+                    "value": {
+                      "holder": {
+                        "type": "Controller"
+                      },
+                      "hop": {
+                        "type": "Itself"
+                      },
+                      "slot": "spell"
+                    }
                   }
                 }
               }

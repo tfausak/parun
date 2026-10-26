@@ -39,8 +39,16 @@
                                 "type": "Players",
                                 "value": {
                                   "players": {
-                                    "type": "ControllerOfBound",
-                                    "value": "thatDepartedPermanent"
+                                    "type": "HolderOfBound",
+                                    "value": {
+                                      "holder": {
+                                        "type": "Controller"
+                                      },
+                                      "hop": {
+                                        "type": "Itself"
+                                      },
+                                      "slot": "thatDepartedPermanent"
+                                    }
                                   }
                                 }
                               }

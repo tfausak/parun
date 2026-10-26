@@ -18,6 +18,7 @@ import qualified Parun.Types.Count as Count
 import qualified Parun.Types.EachCardInGraveyard as EachCardInGraveyard
 import qualified Parun.Types.Filter as Filter.Type
 import qualified Parun.Types.Holder as Holder
+import qualified Parun.Types.Hop as Hop
 import qualified Parun.Types.HowMany as HowMany
 import qualified Parun.Types.InZone as InZone
 import qualified Parun.Types.Keyword as Keyword
@@ -348,8 +349,8 @@ player context ref = case ref of
     | s == youSlot -> [(MkReference (Text.pack "you") [] Filter.Singular, Second)]
     | Just word <- Map.lookup s (bound context) -> [(MkReference word [] Filter.Singular, Third)]
     | otherwise -> fmap (\r -> (r, Third)) (target context s)
-  PlayerRef.OwnerOfBound _ -> [(MkReference (Text.pack "its owner") [] Filter.Singular, Third)]
-  PlayerRef.ControllerOfBound _ -> [(MkReference (Text.pack "its controller") [] Filter.Singular, Third)]
+  PlayerRef.HolderOfBound Holder.Owner Hop.Itself _ -> [(MkReference (Text.pack "its owner") [] Filter.Singular, Third)]
+  PlayerRef.HolderOfBound Holder.Controller Hop.Itself _ -> [(MkReference (Text.pack "its controller") [] Filter.Singular, Third)]
   _ -> []
 
 -- | A target slot as its announcement reads: "target creature", "any

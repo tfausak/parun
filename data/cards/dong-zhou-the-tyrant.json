@@ -59,8 +59,16 @@
                                 "type": "Players",
                                 "value": {
                                   "players": {
-                                    "type": "ControllerOfBound",
-                                    "value": "target"
+                                    "type": "HolderOfBound",
+                                    "value": {
+                                      "holder": {
+                                        "type": "Controller"
+                                      },
+                                      "hop": {
+                                        "type": "Itself"
+                                      },
+                                      "slot": "target"
+                                    }
                                   }
                                 }
                               }

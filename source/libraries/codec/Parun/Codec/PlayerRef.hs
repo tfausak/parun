@@ -1,6 +1,8 @@
 module Parun.Codec.PlayerRef where
 
 import qualified Parun.Codec.AttackingPlayers as AttackingPlayers
+import qualified Parun.Codec.Holder as Holder
+import qualified Parun.Codec.Hop as Hop
 import qualified Parun.Codec.ObjectId as ObjectId
 import qualified Parun.Codec.PlayerChoice as PlayerChoice
 import qualified Parun.Codec.PlayerId as PlayerId
@@ -11,11 +13,16 @@ import qualified Parun.Codec.TurnRole as TurnRole
 import qualified Parun.JsonCodec.Arm as Arm
 import qualified Parun.JsonCodec.Codec as Codec
 import qualified Parun.JsonCodec.Common as Common
+import qualified Parun.JsonCodec.Fields as Fields
+import qualified Parun.Types.Holder as Holder
+import qualified Parun.Types.Hop as Hop
+import qualified Parun.Types.ObjectId as ObjectId
 import qualified Parun.Types.PlayerRef as PlayerRef
+import qualified Parun.Types.SlotName as SlotName
 
 -- | The wire format is the hand-written pair's, which 'Arm.tagged' emits
 -- identically; what the conversion added is the schema. "Candidate",
--- "ControllerOfBound" and "EachPlayerExcept" are the tags written since.
+-- "HolderOfBound" and "EachPlayerExcept" are the tags written since.
 codec :: Codec.Codec PlayerRef.PlayerRef
 codec =
   Arm.tagged
@@ -37,19 +44,13 @@ codec =
       -- inside an Aggregation.Greatest over Scope.OverPlayers.
       Arm.nullary "Candidate" PlayerRef.Candidate,
       -- CR 608.2h's reference, which a card writes: Spikeshell Harrier names the
-      -- controller of the permanent its trigger targeted.
-      Arm.payload "ControllerOfBound" SlotName.codec PlayerRef.ControllerOfBound (\x -> case x of PlayerRef.ControllerOfBound y -> Just y; _ -> Nothing),
-      -- CR 303.4b's host's controller, which a card writes: Soul Bleed names
-      -- "enchanted creature's controller" over the source slot.
-      Arm.payload "ControllerOfHostOfBound" SlotName.codec PlayerRef.ControllerOfHostOfBound (\x -> case x of PlayerRef.ControllerOfHostOfBound y -> Just y; _ -> Nothing),
-      -- CR 108.3's owner, ControllerOfBound's twin, which a card writes: The
-      -- Deck of Many Things names the owner of a creature its 20 band
-      -- reanimated.
-      Arm.payload "OwnerOfBound" SlotName.codec PlayerRef.OwnerOfBound (\x -> case x of PlayerRef.OwnerOfBound y -> Just y; _ -> Nothing),
-      -- The two arms above, baked: decodable for Specific's reason, and swept
-      -- out of card data beside it.
-      Arm.payload "ControllerOfObject" ObjectId.codec PlayerRef.ControllerOfObject (\x -> case x of PlayerRef.ControllerOfObject y -> Just y; _ -> Nothing),
-      Arm.payload "OwnerOfObject" ObjectId.codec PlayerRef.OwnerOfObject (\x -> case x of PlayerRef.OwnerOfObject y -> Just y; _ -> Nothing),
+      -- controller of the permanent its trigger targeted, The Deck of Many
+      -- Things the owner of a creature it reanimated, Soul Bleed the controller
+      -- of the creature it enchants.
+      Arm.payload "HolderOfBound" holderOfBound (\(h, o, y) -> PlayerRef.HolderOfBound h o y) (\x -> case x of PlayerRef.HolderOfBound h o y -> Just (h, o, y); _ -> Nothing),
+      -- The arm above, baked: decodable for Specific's reason, and swept out of
+      -- card data beside it.
+      Arm.payload "HolderOfObject" holderOfObject (uncurry PlayerRef.HolderOfObject) (\x -> case x of PlayerRef.HolderOfObject h y -> Just (h, y); _ -> Nothing),
       Arm.payload "ChosenPlayerOfBound" (Common.tuple SlotName.codec PlayerChoice.codec) (uncurry PlayerRef.ChosenPlayerOfBound) (\x -> case x of PlayerRef.ChosenPlayerOfBound y z -> Just (y, z); _ -> Nothing),
       -- CR 508.6's set, which a card writes: Curse of Vitality names "each
       -- opponent attacking that player".
@@ -71,12 +72,27 @@ tagOf x = case x of
   PlayerRef.EachInSlot {} -> "EachInSlot"
   PlayerRef.Specific {} -> "Specific"
   PlayerRef.Candidate {} -> "Candidate"
-  PlayerRef.ControllerOfBound {} -> "ControllerOfBound"
-  PlayerRef.ControllerOfHostOfBound {} -> "ControllerOfHostOfBound"
-  PlayerRef.OwnerOfBound {} -> "OwnerOfBound"
-  PlayerRef.ControllerOfObject {} -> "ControllerOfObject"
-  PlayerRef.OwnerOfObject {} -> "OwnerOfObject"
+  PlayerRef.HolderOfBound {} -> "HolderOfBound"
+  PlayerRef.HolderOfObject {} -> "HolderOfObject"
   PlayerRef.ChosenPlayerOfBound {} -> "ChosenPlayerOfBound"
   PlayerRef.Attacking {} -> "Attacking"
   PlayerRef.Superlative {} -> "Superlative"
   PlayerRef.InRole {} -> "InRole"
+
+-- | The object-player read keyed by name: which of its players, which object,
+-- and the slot naming the object it starts from.
+holderOfBound :: Codec.Codec (Holder.Holder, Hop.Hop, SlotName.SlotName)
+holderOfBound =
+  Fields.object $
+    (,,)
+      <$> Fields.required "holder" Holder.codec (\(h, _, _) -> h)
+      <*> Fields.required "hop" Hop.codec (\(_, o, _) -> o)
+      <*> Fields.required "slot" SlotName.codec (\(_, _, y) -> y)
+
+-- | The object-player read baked: which of its players, and the object.
+holderOfObject :: Codec.Codec (Holder.Holder, ObjectId.ObjectId)
+holderOfObject =
+  Fields.object $
+    (,)
+      <$> Fields.required "holder" Holder.codec fst
+      <*> Fields.required "object" ObjectId.codec snd

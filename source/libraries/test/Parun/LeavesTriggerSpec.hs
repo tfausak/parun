@@ -1000,7 +1000,7 @@ handArrivalSpec s registry =
 --
 -- The discrimination is WHOSE graveyard grows. bob's Piker under alice's
 -- control goes back to bob's hand and bob discards; a controller reading
--- (PlayerRef.ControllerOfBound) would have alice discard, and the board that
+-- (PlayerRef.HolderOfBound Controller) would have alice discard, and the board that
 -- differs in the Piker's owner alone shows alice discarding for her own.
 warpedDevotionSpec :: (Monad m, Monad n) => Spec.Spec m n -> Registry.Registry m -> n ()
 warpedDevotionSpec s registry =

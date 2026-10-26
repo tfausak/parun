@@ -406,7 +406,7 @@ eventAmount = SlotName.MkSlotName (Text.pack "thatMuch")
 -- CR 615.5 / 615.13 / 120.1: the reserved slot under which a prevention's
 -- SOURCE is bound -- the object that would have dealt the damage, which
 -- Deflecting Palm's and New Way Forward's "that source's controller" reads
--- through PlayerRef.ControllerOfBound. Two writers, one per carrier, both off
+-- through PlayerRef.HolderOfBound. Two writers, one per carrier, both off
 -- the sources keying the prevention's `amounts`: a CR 615.13 trigger's is
 -- Parun.Engine.Event.Binding.eventBindings, alongside `eventAmount`, binding
 -- every source its Filter admits at once (Judgment of Alexander's "that
@@ -416,14 +416,14 @@ eventAmount = SlotName.MkSlotName (Text.pack "thatMuch")
 -- Distinct from `triggerSource` (CR 113.7a), which names the ability's own
 -- source: the bearer here is the card that shielded, and the object that would
 -- have dealt the damage is somebody else's. Distinct from `triggerPlayer` for
--- the reason Parun.Types.PlayerRef.ControllerOfBound gives: the printed sentence
+-- the reason Parun.Types.PlayerRef.HolderOfBound gives: the printed sentence
 -- names a player through an OBJECT, and CR 108.4's controller is read as the
 -- payload runs rather than snapshotted as the damage was stopped.
 --
 -- ROUTINELY DEAD by the time a trigger's payload runs -- the source may have
 -- been a spell that has since resolved (CR 609.7a admits one) -- which is
 -- `blockingCreature`'s posture and the payload's problem: every read of it goes
--- through last known information, ControllerOfBound's own
+-- through last known information, HolderOfBound's own
 -- Projection.controllerWithLastKnown among them.
 --
 -- A CHARACTERISTIC of it reads its last known information through
@@ -840,7 +840,7 @@ crewers = SlotName.MkSlotName (Text.pack "thoseThatCrewedIt")
 -- CR 106.12a: the reserved slot under which the permanent that was TAPPED FOR
 -- MANA is bound -- the "its" in Wild Growth's "whenever enchanted land is tapped
 -- for mana, its controller adds an additional {G}", read through
--- PlayerRef.ControllerOfBound. Stamped by
+-- PlayerRef.HolderOfBound. Stamped by
 -- Parun.Engine.Event.Binding.eventBindings as the trigger is gathered.
 --
 -- Distinct from `tappedPermanent` above, which is a COST slot Parun.Engine.Activate
@@ -1568,7 +1568,7 @@ playersIn :: Map SlotName (Set Recipient) -> Map SlotName PlayerId
 playersIn = Map.mapMaybe Recipient.playerOf . oneBySlot
 
 -- oneBySlot's object half, playersIn's twin: what Parun.Engine.Quantity.bakeBound
--- bakes a ControllerOfBound or OwnerOfBound to as a CR 611.2b duration begins.
+-- bakes a HolderOfBound ... Itself to as a CR 611.2b duration begins.
 objectsIn :: Map SlotName (Set Recipient) -> Map SlotName ObjectId
 objectsIn = Map.mapMaybe Recipient.objectOf . oneBySlot
 

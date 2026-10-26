@@ -388,8 +388,16 @@
                                                   ]
                                                 },
                                                 "payer": {
-                                                  "type": "ControllerOfBound",
-                                                  "value": "spell"
+                                                  "type": "HolderOfBound",
+                                                  "value": {
+                                                    "holder": {
+                                                      "type": "Controller"
+                                                    },
+                                                    "hop": {
+                                                      "type": "Itself"
+                                                    },
+                                                    "slot": "spell"
+                                                  }
                                                 }
                                               }
                                             }
@@ -799,8 +807,16 @@
                                                   "type": "GainLife",
                                                   "value": {
                                                     "player": {
-                                                      "type": "ControllerOfBound",
-                                                      "value": "creature"
+                                                      "type": "HolderOfBound",
+                                                      "value": {
+                                                        "holder": {
+                                                          "type": "Controller"
+                                                        },
+                                                        "hop": {
+                                                          "type": "Itself"
+                                                        },
+                                                        "slot": "creature"
+                                                      }
                                                     },
                                                     "quantity": {
                                                       "type": "AgainstSlot",

@@ -9,6 +9,8 @@ import qualified Parun.Spec as Spec
 import qualified Parun.Types.AttackingPlayers as AttackingPlayers
 import qualified Parun.Types.Comparison as Comparison
 import qualified Parun.Types.Gift as Gift
+import qualified Parun.Types.Holder as Holder
+import qualified Parun.Types.Hop as Hop
 import qualified Parun.Types.KeywordInstance as KeywordInstance
 import qualified Parun.Types.ObjectId as ObjectId
 import qualified Parun.Types.PlayerChoice as PlayerChoice
@@ -60,37 +62,37 @@ spec s = Spec.describe s "Parun.Codec.PlayerRef" $ do
       PlayerRef.codec
       PlayerRef.Candidate
       " {\"type\":\"Candidate\"} "
-  Spec.it s "ControllerOfHostOfBound" $
+  Spec.it s "HolderOfBound host controller" $
     Common.assertCodec
       s
       PlayerRef.codec
-      (PlayerRef.ControllerOfHostOfBound (SlotName.MkSlotName (Text.pack "self")))
-      " {\"type\":\"ControllerOfHostOfBound\",\"value\":\"self\"} "
-  Spec.it s "ControllerOfBound" $
+      (PlayerRef.HolderOfBound Holder.Controller Hop.Host (SlotName.MkSlotName (Text.pack "self")))
+      " {\"type\":\"HolderOfBound\",\"value\":{\"holder\":{\"type\":\"Controller\"},\"hop\":{\"type\":\"Host\"},\"slot\":\"self\"}} "
+  Spec.it s "HolderOfBound controller" $
     Common.assertCodec
       s
       PlayerRef.codec
-      (PlayerRef.ControllerOfBound (SlotName.MkSlotName (Text.pack "permanent")))
-      " {\"type\":\"ControllerOfBound\",\"value\":\"permanent\"} "
-  Spec.it s "OwnerOfBound" $
+      (PlayerRef.HolderOfBound Holder.Controller Hop.Itself (SlotName.MkSlotName (Text.pack "permanent")))
+      " {\"type\":\"HolderOfBound\",\"value\":{\"holder\":{\"type\":\"Controller\"},\"hop\":{\"type\":\"Itself\"},\"slot\":\"permanent\"}} "
+  Spec.it s "HolderOfBound owner" $
     Common.assertCodec
       s
       PlayerRef.codec
-      (PlayerRef.OwnerOfBound (SlotName.MkSlotName (Text.pack "permanent")))
-      " {\"type\":\"OwnerOfBound\",\"value\":\"permanent\"} "
-  Spec.it s "ControllerOfObject" $
+      (PlayerRef.HolderOfBound Holder.Owner Hop.Itself (SlotName.MkSlotName (Text.pack "permanent")))
+      " {\"type\":\"HolderOfBound\",\"value\":{\"holder\":{\"type\":\"Owner\"},\"hop\":{\"type\":\"Itself\"},\"slot\":\"permanent\"}} "
+  Spec.it s "HolderOfObject controller" $
     Common.assertCodec
       s
       PlayerRef.codec
-      (PlayerRef.ControllerOfObject (ObjectId.MkObjectId 7))
-      " {\"type\":\"ControllerOfObject\",\"value\":7} "
-  Spec.it s "OwnerOfObject" $
+      (PlayerRef.HolderOfObject Holder.Controller (ObjectId.MkObjectId 7))
+      " {\"type\":\"HolderOfObject\",\"value\":{\"holder\":{\"type\":\"Controller\"},\"object\":7}} "
+  Spec.it s "HolderOfObject owner" $
     Common.assertCodec
       s
       PlayerRef.codec
-      (PlayerRef.OwnerOfObject (ObjectId.MkObjectId 7))
-      " {\"type\":\"OwnerOfObject\",\"value\":7} "
-  -- CR 614.1c / CR 702.174b: ControllerOfBound's shape one record over.
+      (PlayerRef.HolderOfObject Holder.Owner (ObjectId.MkObjectId 7))
+      " {\"type\":\"HolderOfObject\",\"value\":{\"holder\":{\"type\":\"Owner\"},\"object\":7}} "
+  -- CR 614.1c / CR 702.174b: HolderOfBound's shape one record over.
   Spec.it s "ChosenPlayerOfBound" $
     Common.assertCodec
       s

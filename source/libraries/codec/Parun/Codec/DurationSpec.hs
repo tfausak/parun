@@ -13,6 +13,8 @@ import qualified Parun.Types.Cost as Cost
 import qualified Parun.Types.Duration as Duration
 import qualified Parun.Types.DurationEvent as DurationEvent
 import qualified Parun.Types.EndingStep as EndingStep
+import qualified Parun.Types.Holder as Holder
+import qualified Parun.Types.Hop as Hop
 import qualified Parun.Types.ManaCost as ManaCost
 import qualified Parun.Types.ManaSymbol as ManaSymbol
 import qualified Parun.Types.ManaType as ManaType
@@ -78,16 +80,16 @@ spec s = Spec.describe s "Parun.Codec.Duration" $ do
     Common.assertCodec
       s
       Duration.codec
-      (Duration.UntilEndOfNextTurnOf (PlayerRef.ControllerOfBound (SlotName.MkSlotName (Text.pack "exiled"))))
-      " {\"type\":\"UntilEndOfNextTurnOf\",\"value\":{\"type\":\"ControllerOfBound\",\"value\":\"exiled\"}} "
+      (Duration.UntilEndOfNextTurnOf (PlayerRef.HolderOfBound Holder.Controller Hop.Itself (SlotName.MkSlotName (Text.pack "exiled"))))
+      " {\"type\":\"UntilEndOfNextTurnOf\",\"value\":{\"type\":\"HolderOfBound\",\"value\":{\"holder\":{\"type\":\"Controller\"},\"hop\":{\"type\":\"Itself\"},\"slot\":\"exiled\"}}} "
   -- CR 611.2a: the WINDOW, carrying the reference its seat is sampled from (Wall
   -- of Dust's "its controller's next turn").
   Spec.it s "DuringNextTurnOf carries its reference" $
     Common.assertCodec
       s
       Duration.codec
-      (Duration.DuringNextTurnOf (PlayerRef.ControllerOfBound (SlotName.MkSlotName (Text.pack "thatAttacker"))))
-      " {\"type\":\"DuringNextTurnOf\",\"value\":{\"type\":\"ControllerOfBound\",\"value\":\"thatAttacker\"}} "
+      (Duration.DuringNextTurnOf (PlayerRef.HolderOfBound Holder.Controller Hop.Itself (SlotName.MkSlotName (Text.pack "thatAttacker"))))
+      " {\"type\":\"DuringNextTurnOf\",\"value\":{\"type\":\"HolderOfBound\",\"value\":{\"holder\":{\"type\":\"Controller\"},\"hop\":{\"type\":\"Itself\"},\"slot\":\"thatAttacker\"}}} "
   -- CR 611.2a / 502.3: the untap step's window (Exhaustion's "their next untap
   -- step").
   Spec.it s "DuringNextUntapStepOf carries its reference" $

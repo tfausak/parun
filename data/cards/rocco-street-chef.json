@@ -103,8 +103,16 @@
                                   }
                                 },
                                 "player": {
-                                  "type": "ControllerOfBound",
-                                  "value": "exiledCard"
+                                  "type": "HolderOfBound",
+                                  "value": {
+                                    "holder": {
+                                      "type": "Controller"
+                                    },
+                                    "hop": {
+                                      "type": "Itself"
+                                    },
+                                    "slot": "exiledCard"
+                                  }
                                 },
                                 "ref": {
                                   "type": "InSlot",
