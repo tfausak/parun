@@ -53,6 +53,7 @@ import qualified Parun.Types.CardName as CardName
 import qualified Parun.Types.CardType as CardType
 import qualified Parun.Types.Choices as Choices
 import qualified Parun.Types.Color as Color
+import qualified Parun.Types.ColorMode as ColorMode
 import qualified Parun.Types.Combat as Combat.Type
 import qualified Parun.Types.CombatStep as CombatStep
 import qualified Parun.Types.ContinuousEffect as ContinuousEffect
@@ -634,7 +635,7 @@ evasionSpec s registry = Spec.describe s "Evasion" $ do
   Spec.it s "CR 702.13b a COLOURLESS creature with intimidate may be blocked only by artifact creatures" $ do
     -- THE FALSIFIER that separates intimidate from fear, and the only assertion
     -- here a hard-coded Color.Black fails. CR 105.3's "effects may also make a
-    -- colored object become colorless" is SetColor with no colours, so the
+    -- colored object become colorless" is Colors Replace with no colours, so the
     -- attacker is the printed Ghoul with its colour taken away at CR 613 layer
     -- 5. CR 105.2c: it now has no colour, so it shares one with nobody -- the
     -- black Typhoid Rats that blocks the printed Ghoul legally
@@ -646,7 +647,7 @@ evasionSpec s registry = Spec.describe s "Evasion" $ do
     let (gs0, mine, theirs) = attacking [highbornGhoul] [typhoidRats, darksteelMyr]
     case (mine, theirs) of
       (a : _, black : artifact : _) ->
-        let gs = S.withEffect a (Modification.SetColor Set.empty) gs0
+        let gs = S.withEffect a (Modification.Colors ColorMode.Replace Set.empty) gs0
          in do
               Spec.assertBool s (Set.null (Projection.colorsOf a gs)) "the attacker is colourless"
               Spec.assertBool s (not (Combat.legalBlockDeclaration S.bob (Map.singleton black (Set.singleton a)) gs)) "the black creature may not block"
