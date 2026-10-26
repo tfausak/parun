@@ -1,7 +1,8 @@
 -- applyOneEffect's arms from create to exileHaunting, one function per
 -- Effect constructor, cut from Parun.Engine.Resolve.Effect along its order so the
--- arms compile in parallel. Each takes the resolution parameters its body reads,
--- then the constructor's fields.
+-- arms compile in parallel. Each takes the recursion of Parun.Engine.Resolve.Effect
+-- it calls back into, then the resolution parameters its body reads, then the
+-- constructor's fields.
 module Parun.Engine.Resolve.Arms.Objects where
 
 import Control.Applicative ((<|>))
@@ -36,7 +37,7 @@ import qualified Parun.Engine.Projection as Projection
 import qualified Parun.Engine.Projection.View as Projection
 import qualified Parun.Engine.Quantity as Quantity
 import qualified Parun.Engine.Replacement as Replacement
-import Parun.Engine.Resolve.Common (acquireChoices, apnapPlayersOf, askingObjects, attachTogether, bakeDamagePatternRecipient, bakeRelation, bakeTokenCharacteristics, bindObjects, changeTargetsFor, chooseDamageSource, chooseNewTargetsFor, conjuredName, copyForEachTargets, copyOnStackOf, copyStackSubjects, copyStatedTargets, entryAttack, evaluateForRecipient, freezeRiders, fromAmongMembers, installDamageRow, objectRefRecipients, oneSeat, preventionRider, reaimDivisions, rearmStackExile, resolvingMarks, retargetEach, slotBoundObjects, storedClass, targetsOnStack, thisAbilitySource)
+import qualified Parun.Engine.Resolve.Common as Common
 import Parun.Engine.Resolve.Slots (battlefieldMatching, conditionSlots, effectContext, effectViewOf, legalOne, objectRefObjects, overRelations, playerRefPlayers, replacementRowSlots, resolvingAbilityName, slotBindings, slotGroup)
 import qualified Parun.Engine.Room as Room
 import qualified Parun.Engine.SourceContext as SourceContext
@@ -153,13 +154,13 @@ create resolving source controller legal chosen (Create.MkCreate quantity card e
       -- CR 608.2h: the counts the tokens enter with, settled ONCE off the
       -- pre-effect board and outside the per-creator loop below, so every seat's
       -- tokens carry the same answer (CR 608.2f).
-      frozen = freezeRiders viewOf context gs resolving source entry
+      frozen = Common.freezeRiders viewOf context gs resolving source entry
       -- CR 111.2: WHOSE tokens. CR 109.5's "you" is the default reference, and
       -- every other one is somebody the sentence identified -- Rampage of the
       -- Clans' "its controller", read off the loop's member through CR 608.2h.
       -- APNAP (CR 608.2f) for a reference naming several, apnapPlayersOf's own
       -- intersection so a reference naming a departed seat mints nothing.
-      creators = apnapPlayersOf creator legal resolving source controller gs
+      creators = Common.apnapPlayersOf creator legal resolving source controller gs
   -- CR 509.4's parenthetical: the attacking creature the effect SPECIFIED,
   -- named by slot. Read ONCE, ahead of the minting loop, so CR 608.2f's single
   -- event cannot see it move; through fromAmongMembers, the reader every "the
@@ -173,7 +174,7 @@ create resolving source controller legal chosen (Create.MkCreate quantity card e
     -- CR 509.4's main clause: Combat asks the controller.
     Just EntryBlock.Chosen -> pure (Just Combat.AnyAttacker)
     Just (EntryBlock.Specified slot) -> do
-      named <- fromAmongMembers legal resolving chosen slot
+      named <- Common.fromAmongMembers legal resolving chosen slot
       pure $ case named of
         [attacker] -> Just (Combat.SpecifiedAttacker attacker)
         _ -> Nothing
@@ -189,10 +190,10 @@ create resolving source controller legal chosen (Create.MkCreate quantity card e
   mAttached <- case EntryRiders.attachedTo entry of
     Nothing -> pure Nothing
     Just (EntryHost.Chosen _) -> pure Nothing
-    Just (EntryHost.Specified slot) -> Just . fmap Recipient.ToObject <$> fromAmongMembers legal resolving chosen slot
+    Just (EntryHost.Specified slot) -> Just . fmap Recipient.ToObject <$> Common.fromAmongMembers legal resolving chosen slot
   -- CR 508.4's rider, read ONCE ahead of the minting loop for mBlocked's
   -- reason.
-  let mAttack = entryAttack legal resolving entry gs
+  let mAttack = Common.entryAttack legal resolving entry gs
   -- PER CREATOR, every amount off the same pre-effect `gs` (CR 608.2f), so one
   -- seat's tokens cannot change how many the next seat gets.
   --
@@ -201,7 +202,7 @@ create resolving source controller legal chosen (Create.MkCreate quantity card e
   -- batch-scoped "one or more creatures enter" fires once for the lot:
   -- data/scenarios/card-trigger/cr-603-7b-two-goblins-entering-at-once-spend-the-boon-once.json.
   minted <- Event.simultaneously . fmap concat . Monad.forM creators $ \creating ->
-    case evaluateForRecipient viewOf context gs resolving source creating quantity of
+    case Common.evaluateForRecipient viewOf context gs resolving source creating quantity of
       Just n
         | n > 0 -> do
             -- CR 111: create n tokens under that player's control (CR 111.2)
@@ -210,7 +211,7 @@ create resolving source controller legal chosen (Create.MkCreate quantity card e
             -- CR 122.6's counters ride along through that rule's own door, so a
             -- counter replacement reaches them, in the counts freezeRiders
             -- settled above.
-            made <- Event.createTokens creating (bakeTokenCharacteristics (Quantity.evaluateFor viewOf context gs resolving source) card) Nothing (Integer.toNaturalSaturating n) (EntryRiders.tapped entry) (EntryRiders.counters frozen) mAttached (resolvingMarks resolving gs)
+            made <- Event.createTokens creating (Common.bakeTokenCharacteristics (Quantity.evaluateFor viewOf context gs resolving source) card) Nothing (Integer.toNaturalSaturating n) (EntryRiders.tapped entry) (EntryRiders.counters frozen) mAttached (Common.resolvingMarks resolving gs)
             -- CR 508.4: a creature put onto the battlefield attacking has its
             -- defending player chosen in Parun.Engine.Combat, and CR 508.3a's
             -- attack triggers see nothing. After the entry loops rather than
@@ -223,7 +224,7 @@ create resolving source controller legal chosen (Create.MkCreate quantity card e
             Monad.forM_ mBlocked (\blocked -> Monad.mapM_ (Combat.putOntoBattlefieldBlocking blocked) made)
             pure made
       _ -> pure []
-  bindObjects resolving mSlot minted
+  Common.bindObjects resolving mSlot minted
 
 -- Alchemy's conjure keyword action. Digital-only, so there is no rule to cite;
 -- what the CR settles is that the result is a CARD and not CR 111.1's token,
@@ -310,14 +311,14 @@ conjure resolving source controller legal (Conjure.MkConjure quantity cards sele
       -- (Object.duplicate); Parun.ConjureSpec's "a duplicate of a Clone cast
       -- and resolved is the Piker" proves it.
       duplicatesOf ref = Maybe.mapMaybe (\oid -> fmap (\card -> (card, Just (Event.copiedSnapshotWithLastKnown oid gs))) (Game.cardOfWithLastKnown oid gs)) (objectRefObjects legal resolving controller source gs ref)
-      answered written answer = Maybe.fromMaybe (NonEmpty.head written) (List.find (\candidate -> conjuredName candidate == answer) (NonEmpty.toList written))
+      answered written answer = Maybe.fromMaybe (NonEmpty.head written) (List.find (\candidate -> Common.conjuredName candidate == answer) (NonEmpty.toList written))
       -- The question `selection` names, put over a list of NAMES of two or
       -- more; a one-name list is taken outright.
       pickName names =
         Maybe.fromMaybe (NonEmpty.head names) <$> case selection of
           ConjureSelection.AtRandom -> Game.drawAmong Prompt.RandomCard (NonEmpty.toList names)
           ConjureSelection.ByChoice -> Game.chooseAmong Prompt.ChooseConjuredCard controller (NonEmpty.toList names)
-      pickWritten written = fmap (\answer -> (answered written answer, Nothing)) (pickName (fmap conjuredName written))
+      pickWritten written = fmap (\answer -> (answered written answer, Nothing)) (pickName (fmap Common.conjuredName written))
       -- A REFERENCE pick (CR 108.1) asks the interpreter which of the
       -- reference's cards the filter admits -- ONCE, off the pre-effect board
       -- like the count -- then puts the written road's question over their
@@ -325,7 +326,7 @@ conjure resolving source controller legal (Conjure.MkConjure quantity cards sele
       -- outside the names takes the head, and a card the lookup hands back
       -- that the filter does not admit is not conjured. A reference admitting
       -- nothing conjures nothing.
-      referenceAmount from = FromReference.amount from >>= evaluateForRecipient viewOf context gs resolving source controller
+      referenceAmount from = FromReference.amount from >>= Common.evaluateForRecipient viewOf context gs resolving source controller
       pickReference predicate amount names = do
         answer <- pickName names
         found <- Game.lookUpCard answer
@@ -370,7 +371,7 @@ conjure resolving source controller legal (Conjure.MkConjure quantity cards sele
         pure made
   -- The cards conjured, bound for a later clause to name (CR 603.7c's "that
   -- card"), Create's bindObjects.
-  conjured <- case evaluateForRecipient viewOf context gs resolving source controller quantity of
+  conjured <- case Common.evaluateForRecipient viewOf context gs resolving source controller quantity of
     Just n
       | n > 0 -> case destination of
           ConjureDestination.Hand -> intoZone Zone.Hand (const (pure ())) n
@@ -401,7 +402,7 @@ conjure resolving source controller legal (Conjure.MkConjure quantity cards sele
             ConjureCards.Duplicate ref -> concat <$> Monad.mapM (onto entry n) (duplicatesOf ref)
             ConjureCards.Reference from -> referencePickers from 1 >>= fmap concat . Monad.mapM (\p -> p >>= fmap concat . Monad.mapM (onto entry n) . Maybe.maybeToList)
     _ -> pure []
-  bindObjects resolving mSlot conjured
+  Common.bindObjects resolving mSlot conjured
 
 createCopy :: ObjectId -> ObjectId -> PlayerId -> Map.Map SlotName (Set Recipient) -> Map.Map SlotName (Set Recipient) -> CreateCopy.CreateCopy (GrantedAbility.GrantedAbility Card.Type.Card) -> Game ()
 createCopy resolving source controller legal chosen (CreateCopy.MkCreateCopy quantity ref entry mSlot exceptions) = do
@@ -420,10 +421,10 @@ createCopy resolving source controller legal chosen (CreateCopy.MkCreateCopy qua
       sources = objectRefObjects legal resolving controller source gs ref
       -- CR 608.2h: the counters the copies enter with, settled ONCE off the
       -- pre-effect board, outside the loop over named permanents below.
-      frozen = freezeRiders viewOf context gs resolving source entry
+      frozen = Common.freezeRiders viewOf context gs resolving source entry
       -- CR 508.4's rider, read ONCE off the pre-effect board for Create's
       -- reason.
-      mAttack = entryAttack legal resolving entry gs
+      mAttack = Common.entryAttack legal resolving entry gs
   -- CR 509.4's parenthetical, read the way Create's arm reads it and for the
   -- same reasons: the attacking creature the effect SPECIFIED, named by slot,
   -- once and ahead of the minting loop, through fromAmongMembers. Mirror
@@ -435,7 +436,7 @@ createCopy resolving source controller legal chosen (CreateCopy.MkCreateCopy qua
     -- CR 509.4's main clause: Combat asks the controller.
     Just EntryBlock.Chosen -> pure (Just Combat.AnyAttacker)
     Just (EntryBlock.Specified blockedSlot) -> do
-      named <- fromAmongMembers legal resolving chosen blockedSlot
+      named <- Common.fromAmongMembers legal resolving chosen blockedSlot
       pure $ case named of
         [attacker] -> Just (Combat.SpecifiedAttacker attacker)
         _ -> Nothing
@@ -471,7 +472,7 @@ createCopy resolving source controller legal chosen (CreateCopy.MkCreateCopy qua
               -- Nothing for the subject's own copiable values: CR 707.9c's
               -- retained original belongs to an object that already existed,
               -- and a token minted by CR 707.1 did not.
-              made <- Event.createTokens controller card (Just (Replacement.applyCopyExceptions (thisAbilitySource resolving gs) Nothing exceptions (Event.copiedSnapshotWithLastKnown src gs))) (Integer.toNaturalSaturating n) (EntryRiders.tapped entry) (EntryRiders.counters frozen) Nothing (resolvingMarks resolving gs)
+              made <- Event.createTokens controller card (Just (Replacement.applyCopyExceptions (Common.thisAbilitySource resolving gs) Nothing exceptions (Event.copiedSnapshotWithLastKnown src gs))) (Integer.toNaturalSaturating n) (EntryRiders.tapped entry) (EntryRiders.counters frozen) Nothing (Common.resolvingMarks resolving gs)
               -- CR 508.4, after the entry loop for Create's reason.
               Monad.forM_ mAttack (\specified -> Monad.mapM_ (Combat.putOntoBattlefieldAttacking specified) made)
               -- CR 509.4, the blocking twin one rule over, in the same place
@@ -479,7 +480,7 @@ createCopy resolving source controller legal chosen (CreateCopy.MkCreateCopy qua
               Monad.forM_ mBlocked (\blocked -> Monad.mapM_ (Combat.putOntoBattlefieldBlocking blocked) made)
               pure made
     _ -> pure []
-  bindObjects resolving mSlot minted
+  Common.bindObjects resolving mSlot minted
 
 becomeCopy :: ObjectId -> ObjectId -> PlayerId -> Map.Map SlotName (Set Recipient) -> BecomeCopy.BecomeCopy (GrantedAbility.GrantedAbility Card.Type.Card) -> Game ()
 becomeCopy resolving source controller legal (BecomeCopy.MkBecomeCopy original subjectRef duration exceptions newTargets) = do
@@ -531,7 +532,7 @@ becomeCopy resolving source controller legal (BecomeCopy.MkBecomeCopy original s
             -- the pre-effect `gs` like everything else here (CR 608.2f), so a
             -- subject written earlier in the fold does not change what a later
             -- one retains.
-            snapshotFor subject = Replacement.applyCopyExceptions (thisAbilitySource resolving gs) (Just (Event.copiedSnapshot subject gs)) exceptions copied
+            snapshotFor subject = Replacement.applyCopyExceptions (Common.thisAbilitySource resolving gs) (Just (Event.copiedSnapshot subject gs)) exceptions copied
             write subject = Map.adjust (\o -> o {Object.bindings = Binding.setCopy (snapshotFor subject) (Object.bindings o)}) subject
             subjects = objectRefObjects legal resolving controller source gs subjectRef
             -- CR 707.2's second half, for a subject on the STACK: it acquires
@@ -540,8 +541,8 @@ becomeCopy resolving source controller legal (BecomeCopy.MkBecomeCopy original s
             -- `gs` for the reason above.
             acquire g = foldr acquireOne g (filter (Maybe.isJust . onStackIn gs) subjects)
             acquireOne subject g =
-              let g1 = g {GameState.objects = Map.adjust (acquireChoices (PC.spell (snapshotFor subject)) (Game.acquisitionOf subject g) mOriginal) subject (GameState.objects g)}
-               in maybe g1 (\o -> rearmStackExile subject (snapshotFor subject) o g1) (Game.lookupObject subject g1)
+              let g1 = g {GameState.objects = Map.adjust (Common.acquireChoices (PC.spell (snapshotFor subject)) (Game.acquisitionOf subject g) mOriginal) subject (GameState.objects g)}
+               in maybe g1 (\o -> Common.rearmStackExile subject (snapshotFor subject) o g1) (Game.lookupObject subject g1)
          in case duration of
               -- CR 707.3: the card states no ending, so the copiable values go
               -- onto the subject itself (Binding.setCopy) and nothing has to
@@ -587,7 +588,7 @@ becomeCopy resolving source controller legal (BecomeCopy.MkBecomeCopy original s
       g <- State.get
       Monad.forM_ (Game.lookupObject spell g) $ \obj ->
         let spellController = Maybe.fromMaybe (Projection.defaultControllerOf obj) (Projection.controllerOf spell g)
-         in chooseNewTargetsFor (Maybe.isNothing mOriginalOf) source spellController spellController spell
+         in Common.chooseNewTargetsFor (Maybe.isNothing mOriginalOf) source spellController spellController spell
 
 copyStackObject :: ObjectId -> ObjectId -> PlayerId -> Map.Map SlotName (Set Recipient) -> CopyStackObject.CopyStackObject (GrantedAbility.GrantedAbility Card.Type.Card) -> Game ()
 copyStackObject resolving source controller legal (CopyStackObject.MkCopyStackObject ref targets quantity copierRef exceptions) = do
@@ -599,7 +600,7 @@ copyStackObject resolving source controller legal (CopyStackObject.MkCopyStackOb
   -- counters the previous mint moved.
   -- Parun.KeywordTriggerSpec's Storm group proves the count.
   let copies = maybe 0 Integer.toIntSaturating (Quantity.evaluateFor (effectViewOf source legal gs) (effectContext gs resolving controller source legal (slotBindings resolving gs)) gs resolving source quantity)
-  Monad.forM_ (copyStackSubjects legal resolving controller source gs ref) $ \original ->
+  Monad.forM_ (Common.copyStackSubjects legal resolving controller source gs ref) $ \original ->
     -- CR 707.10's three nouns: a spell (Game.isSpell) and an activated or
     -- triggered ability (Game.isAbility), each classifying off the object's
     -- ZONE and its Source and never off which card it is. Every other LIVE
@@ -627,7 +628,7 @@ copyStackObject resolving source controller legal (CopyStackObject.MkCopyStackOb
       -- Read off the same pre-effect `gs` as the objects (CR 608.2f), and
       -- PLURAL, one copy per seat the reference names; every producer names one,
       -- and the elided default names the resolving controller.
-      Monad.forM_ (playerRefPlayers legal resolving source controller gs copierRef) $ \copier -> Monad.forM_ (copyOnStackOf (Object.source obj)) $ \(copySource, kind) -> Monad.replicateM_ copies $ do
+      Monad.forM_ (playerRefPlayers legal resolving source controller gs copierRef) $ \copier -> Monad.forM_ (Common.copyOnStackOf (Object.source obj)) $ \(copySource, kind) -> Monad.replicateM_ copies $ do
         -- CR 707.10's answers, as the target maps to write: one EMPTY map
         -- where the copy keeps the decisions rule 707.10 copied (rule 707.10c
         -- included, its offer below being a separate act), CR 707.10d's one
@@ -637,8 +638,8 @@ copyStackObject resolving source controller legal (CopyStackObject.MkCopyStackOb
         plan <- case targets of
           CopyTargets.Copied -> pure [Map.empty]
           CopyTargets.ChosenByController -> pure [Map.empty]
-          CopyTargets.ForEach candidateRefs -> copyForEachTargets controller copier resolving source legal original candidateRefs
-          CopyTargets.Stated newRef -> copyStatedTargets controller copier resolving source legal original newRef
+          CopyTargets.ForEach candidateRefs -> Common.copyForEachTargets controller copier resolving source legal original candidateRefs
+          CopyTargets.Stated newRef -> Common.copyStatedTargets controller copier resolving source legal original newRef
         Monad.forM_ plan $ \retarget -> do
           -- CR 707.10d / 707.10e with CR 115.7f: a target the effect re-aims
           -- takes the replaced target's part of the division, reaimDivisions'
@@ -646,7 +647,7 @@ copyStackObject resolving source controller legal (CopyStackObject.MkCopyStackOb
           -- alone, a regression fence: every pool copier re-aims one target,
           -- which asks nothing. data/scenarios/divide's Precursor Golem case
           -- proves the part carried.
-          rebound <- reaimDivisions copier original (Object.bindings obj) retarget
+          rebound <- Common.reaimDivisions copier original (Object.bindings obj) retarget
           gsNow <- State.get
           let (copyId, gs1) = Game.freshObjectId gsNow
               (ts, gs2) = Game.freshTimestamp gs1
@@ -698,7 +699,7 @@ copyStackObject resolving source controller legal (CopyStackObject.MkCopyStackOb
               -- copiable values (CR 707.9b) and survives CR 707.10f's token.
               -- `own` is Nothing for CreateCopy's reason: a copy put onto the
               -- stack has no previous copiable values for CR 707.9c to retain.
-              except = Replacement.applyCopyExceptions (thisAbilitySource resolving gs) Nothing exceptions
+              except = Replacement.applyCopyExceptions (Common.thisAbilitySource resolving gs) Nothing exceptions
               stampCopiable = case kind of
                 StackObjectKind.Spell | Maybe.isJust (Game.lookupObject original gs) -> Binding.setOwnCopy (except (Event.copiedSnapshot original gs))
                 -- An ARCHIVED spell's exceptions are re-folded over the snapshot
@@ -812,7 +813,7 @@ copyStackObject resolving source controller legal (CopyStackObject.MkCopyStackOb
           -- CR 707.10c's chooser is the COPY's controller and not the copying
           -- effect's: Meletis Charlatan's "that player may choose new targets
           -- for the copy". Proved by Parun.CopySpec's Charlatan group.
-          Monad.when (targets == CopyTargets.ChosenByController) (chooseNewTargetsFor False source copier copier copyId)
+          Monad.when (targets == CopyTargets.ChosenByController) (Common.chooseNewTargetsFor False source copier copier copyId)
           -- CR 115.1: "these targets are declared as part of the process of
           -- putting the spell or ability on the stack", and CR 707.10c puts the
           -- copy on the stack once its controller has decided what its targets
@@ -829,18 +830,18 @@ copyStackObject resolving source controller legal (CopyStackObject.MkCopyStackOb
           -- 707.10's "a copy of a spell is itself a spell" and "a copy of an
           -- ability is itself an ability".
           gsCopied <- State.get
-          Event.becameTarget gsCopied copyId kind copier (targetsOnStack copyId gsCopied)
+          Event.becameTarget gsCopied copyId kind copier (Common.targetsOnStack copyId gsCopied)
           -- CR 707.10: a copy of a SPELL put onto the stack, which is not a
           -- cast, is the event magecraft's "or copy" watches (SpellCast.copies).
           Monad.when (kind == StackObjectKind.Spell) (State.modify' (Event.recordEvent (GameEvent.SpellCopied (SpellWasCopied.MkSpellWasCopied copier copyId))))
 
 -- CR 115.7d over each named spell or ability still on the stack.
 chooseNewTargets :: ObjectId -> ObjectId -> PlayerId -> Map.Map SlotName (Set Recipient) -> ObjectRef -> Game ()
-chooseNewTargets resolving source controller legal = retargetEach (chooseNewTargetsFor False source controller) legal resolving controller source
+chooseNewTargets resolving source controller legal = Common.retargetEach (Common.chooseNewTargetsFor False source controller) legal resolving controller source
 
 -- CR 115.7a, the same walk with the stricter re-aim.
 changeTargets :: ObjectId -> ObjectId -> PlayerId -> Map.Map SlotName (Set Recipient) -> ObjectRef -> Game ()
-changeTargets resolving source controller legal = retargetEach (changeTargetsFor source controller) legal resolving controller source
+changeTargets resolving source controller legal = Common.retargetEach (Common.changeTargetsFor source controller) legal resolving controller source
 
 armDelayedTrigger :: ObjectId -> ObjectId -> PlayerId -> Map.Map SlotName (Set Recipient) -> ArmDelayedTrigger.ArmDelayedTrigger (GrantedAbility.GrantedAbility Card.Type.Card) -> Game ()
 armDelayedTrigger resolving source controller legal arm@(ArmDelayedTrigger.MkArmDelayedTrigger name onset duration _) = do
@@ -888,7 +889,7 @@ armDelayedTrigger resolving source controller legal arm@(ArmDelayedTrigger.MkArm
           -- the OUTER Maybe is the card printing no duration; the inner one is
           -- Expiry.arm reporting that a printed duration never STARTED (CR
           -- 611.2b).
-          State.put (Event.armDelayed ability source controller captured (Event.armOnset (oneSeat legal resolving source controller gs) source controller gs onset) (duration >>= \d -> Expiry.arm (Game.readingAcquisition resolving source) legal controller source d gs) gs)
+          State.put (Event.armDelayed ability source controller captured (Event.armOnset (Common.oneSeat legal resolving source controller gs) source controller gs onset) (duration >>= \d -> Expiry.arm (Game.readingAcquisition resolving source) legal controller source d gs) gs)
 
 replace :: ObjectId -> ObjectId -> PlayerId -> Map.Map SlotName (Set Recipient) -> Replace.Replace Card.Type.Card (GrantedAbility.GrantedAbility Card.Type.Card) (Effect Card.Type.Card (GrantedAbility.GrantedAbility Card.Type.Card)) -> Game ()
 replace resolving source controller legal (Replace.MkReplace duration uses origin condition re) =
@@ -908,7 +909,7 @@ replace resolving source controller legal (Replace.MkReplace duration uses origi
                     { -- CR 601.2c / 608.2b: "target player" is the player this
                       -- resolution's slot names now, BAKED for `controller`'s
                       -- reason below.
-                      ActiveReplacement.effect = Functor.runIdentity (overRelations (pure . bakeRelation (Filter.slotPlayers context)) re),
+                      ActiveReplacement.effect = Functor.runIdentity (overRelations (pure . Common.bakeRelation (Filter.slotPlayers context)) re),
                       ActiveReplacement.source = source,
                       -- CR 109.5: the resolution's controller, BAKED now --
                       -- the source is a spell CR 608.2n is about to put in a
@@ -972,13 +973,13 @@ preventNextDamage resolving source controller legal chosen (PreventNextDamage.Mk
       context = effectContext gs resolving controller source legal (slotBindings resolving gs)
       describedRecipient = (whatRecipient, whoRecipient)
       described = Maybe.isJust whatRecipient || Maybe.isJust whoRecipient
-      recipients = Maybe.mapMaybe (Damage.damageRecipient gs) (foldMap (objectRefRecipients legal resolving controller source gs) ref)
+      recipients = Maybe.mapMaybe (Damage.damageRecipient gs) (foldMap (Common.objectRefRecipients legal resolving controller source gs) ref)
       -- The recipient each row this resolution installs bakes: one row naming
       -- nobody for a described shield, and one per named recipient otherwise.
       rows = if described then [Nothing] else fmap Just recipients
       -- CR 615.5: the additional effect, BAKED onto the row with this
       -- resolution's chosen targets and CR 109.5's "you".
-      rider = preventionRider chosen controller source riderEffects
+      rider = Common.preventionRider chosen controller source riderEffects
       -- HOW MUCH, read once per row, so a named row is handed its recipient's
       -- part of CR 601.2d's division (Quantity.Share), DealDamage's posture. A
       -- target CR 608.2b found illegal has no row, so its part shields nobody:
@@ -996,7 +997,7 @@ preventNextDamage resolving source controller legal chosen (PreventNextDamage.Mk
     -- CR 609.7a: "the source is chosen when the effect is created", so the
     -- choice is made ONCE here and every shield this resolution installs
     -- watches the object it landed on.
-    sourceChoice <- chooseDamageSource controller resolving context gs sourceFilter
+    sourceChoice <- Common.chooseDamageSource controller resolving context gs sourceFilter
     case (sourceFilter, sourceChoice) of
       -- The card asked for a source and CR 609.7a's pool was empty, so
       -- there is nothing to shield against and no row is installed --
@@ -1005,7 +1006,7 @@ preventNextDamage resolving source controller legal chosen (PreventNextDamage.Mk
       (Just _, Nothing) -> pure ()
       _ ->
         State.modify' $ \g0 ->
-          List.foldl' (\g (row, amount) -> installDamageRow resolving legal (Filter.slotObjects context) controller source duration kind (DamageRewrite.PreventNext amount) Uses.Unlimited rider (Filter.Type.And []) describedRecipient g (row, sourceChoice)) g0 shields
+          List.foldl' (\g (row, amount) -> Common.installDamageRow resolving legal (Filter.slotObjects context) controller source duration kind (DamageRewrite.PreventNext amount) Uses.Unlimited rider (Filter.Type.And []) describedRecipient g (row, sourceChoice)) g0 shields
 
 preventAllDamage :: ObjectId -> ObjectId -> PlayerId -> Map.Map SlotName (Set Recipient) -> Map.Map SlotName (Set Recipient) -> PreventAllDamage.PreventAllDamage (Effect Card.Type.Card (GrantedAbility.GrantedAbility Card.Type.Card)) -> Game ()
 preventAllDamage resolving source controller legal chosen (PreventAllDamage.MkPreventAllDamage duration kind ref whatRecipient whoRecipient direction sourceFilter printedSource riderEffects) = do
@@ -1025,7 +1026,7 @@ preventAllDamage resolving source controller legal chosen (PreventAllDamage.MkPr
   -- beside DealtBy the two are not alternatives at all, the ref naming the
   -- SOURCE there and the description the recipients, so both ride the row.
   gs <- State.get
-  let named = foldMap (objectRefRecipients legal resolving controller source gs) ref
+  let named = foldMap (Common.objectRefRecipients legal resolving controller source gs) ref
       -- Through effectContext rather than Filter.contextFor, so CR 609.7a's
       -- candidates are narrowed against this resolution's own slot bindings
       -- and CR 109.5's "you" rather than against an empty slot map.
@@ -1043,7 +1044,7 @@ preventAllDamage resolving source controller legal chosen (PreventAllDamage.MkPr
       rows = if Maybe.isJust whatRecipient || Maybe.isJust whoRecipient || Maybe.isNothing ref then [Nothing] else fmap Just recipients
       -- CR 615.5's additional effect. With no amount to count down, "this way"
       -- is what THIS application prevented, which Prevention.amounts carries.
-      rider = preventionRider chosen controller source riderEffects
+      rider = Common.preventionRider chosen controller source riderEffects
   -- Which SIDE of the damage event the ref's objects sit on, and which
   -- question the source half of the row answers.
   case direction of
@@ -1073,7 +1074,7 @@ preventAllDamage resolving source controller legal chosen (PreventAllDamage.MkPr
     -- over the ids the ref named, and each row bakes CR 601.2c's source beside
     -- the live predicate.
     DamageDirection.DealtBy ->
-      State.modify' $ \g0 -> List.foldl' (installDamageRow resolving legal (Filter.slotObjects context) controller source duration kind DamageRewrite.PreventAll Uses.Unlimited rider printedSource (whatRecipient, Nothing)) g0 (fmap (\oid -> (Nothing, Just (Filter.Type.And [], oid))) (Maybe.mapMaybe Recipient.objectOf named))
+      State.modify' $ \g0 -> List.foldl' (Common.installDamageRow resolving legal (Filter.slotObjects context) controller source duration kind DamageRewrite.PreventAll Uses.Unlimited rider printedSource (whatRecipient, Nothing)) g0 (fmap (\oid -> (Nothing, Just (Filter.Type.And [], oid))) (Maybe.mapMaybe Recipient.objectOf named))
     DamageDirection.DealtTo ->
       -- No row is CR 608.2b's gone target -- a named recipient that left -- so
       -- there is nothing to shield and CR 609.7a's choice, a choice existing
@@ -1085,14 +1086,14 @@ preventAllDamage resolving source controller legal chosen (PreventAllDamage.MkPr
         -- CR 609.7a: "the source is chosen when the effect is created", so the
         -- choice is made ONCE here and every shield this resolution installs
         -- watches the object it landed on.
-        sourceChoice <- chooseDamageSource controller resolving context gs sourceFilter
+        sourceChoice <- Common.chooseDamageSource controller resolving context gs sourceFilter
         case (sourceFilter, sourceChoice) of
           -- The card asked for a source and CR 609.7a's pool was empty, so
           -- there is nothing to shield against and no row is installed --
           -- stricter than printed rather than weaker, which a row watching
           -- every source would be.
           (Just _, Nothing) -> pure ()
-          _ -> State.modify' $ \g0 -> List.foldl' (installDamageRow resolving legal (Filter.slotObjects context) controller source duration kind DamageRewrite.PreventAll Uses.Unlimited rider printedSource (whatRecipient, whoRecipient)) g0 (fmap (\recipient -> (recipient, sourceChoice)) rows)
+          _ -> State.modify' $ \g0 -> List.foldl' (Common.installDamageRow resolving legal (Filter.slotObjects context) controller source duration kind DamageRewrite.PreventAll Uses.Unlimited rider printedSource (whatRecipient, whoRecipient)) g0 (fmap (\recipient -> (recipient, sourceChoice)) rows)
 
 preventNextDamageInstance :: ObjectId -> ObjectId -> PlayerId -> Map.Map SlotName (Set Recipient) -> Map.Map SlotName (Set Recipient) -> PreventNextDamageInstance.PreventNextDamageInstance (Effect Card.Type.Card (GrantedAbility.GrantedAbility Card.Type.Card)) -> Game ()
 preventNextDamageInstance resolving source controller legal chosen (PreventNextDamageInstance.MkPreventNextDamageInstance duration ref sourceFilter riderEffects) = do
@@ -1114,24 +1115,24 @@ preventNextDamageInstance resolving source controller legal chosen (PreventNextD
   -- Passage's "to any target" -- so one row is what is installed today.
   gs <- State.get
   let context = effectContext gs resolving controller source legal (slotBindings resolving gs)
-      recipients = Maybe.mapMaybe (Damage.damageRecipient gs) (objectRefRecipients legal resolving controller source gs ref)
+      recipients = Maybe.mapMaybe (Damage.damageRecipient gs) (Common.objectRefRecipients legal resolving controller source gs ref)
       -- CR 615.5's additional effect, run as part of the prevention rather
       -- than put on the stack: Reverse Damage's life, Deflecting Palm's damage
       -- back.
-      rider = preventionRider chosen controller source riderEffects
+      rider = Common.preventionRider chosen controller source riderEffects
   -- No recipient is CR 608.2b's gone target, so there is nothing to shield and
   -- CR 609.7a's choice -- a choice existing only to be baked into a row -- is
   -- not raised either. The sibling shields' posture.
   Monad.unless (null recipients) $ do
     -- CR 609.7a: "the source is chosen when the effect is created", so the
     -- choice is made ONCE here.
-    sourceChoice <- chooseDamageSource controller resolving context gs (Just sourceFilter)
+    sourceChoice <- Common.chooseDamageSource controller resolving context gs (Just sourceFilter)
     case sourceChoice of
       -- CR 609.7a's pool was empty, so there is nothing to shield and no row is
       -- installed -- stricter than printed rather than weaker, which a row
       -- watching every source would be.
       Nothing -> pure ()
-      Just _ -> State.modify' $ \g0 -> List.foldl' (installDamageRow resolving legal (Filter.slotObjects context) controller source duration Nothing DamageRewrite.PreventAll Uses.Once rider (Filter.Type.And []) (Nothing, Nothing)) g0 (fmap (\recipient -> (Just recipient, sourceChoice)) recipients)
+      Just _ -> State.modify' $ \g0 -> List.foldl' (Common.installDamageRow resolving legal (Filter.slotObjects context) controller source duration Nothing DamageRewrite.PreventAll Uses.Once rider (Filter.Type.And []) (Nothing, Nothing)) g0 (fmap (\recipient -> (Just recipient, sourceChoice)) recipients)
 
 redirectDamage :: ObjectId -> ObjectId -> PlayerId -> Map.Map SlotName (Set Recipient) -> RedirectDamage.RedirectDamage -> Game ()
 redirectDamage resolving source controller legal (RedirectDamage.MkRedirectDamage duration kind amount srcRef whatRecipient whoRecipient destRef sourceFilter uses whatSource) = do
@@ -1150,7 +1151,7 @@ redirectDamage resolving source controller legal (RedirectDamage.MkRedirectDamag
   -- description alone.
   gs <- State.get
   let viewOf = effectViewOf source legal gs
-      recipientsOf ref = Maybe.mapMaybe (Damage.damageRecipient gs) (objectRefRecipients legal resolving controller source gs ref)
+      recipientsOf ref = Maybe.mapMaybe (Damage.damageRecipient gs) (Common.objectRefRecipients legal resolving controller source gs ref)
       -- Through effectContext rather than Filter.contextFor, for
       -- PreventAllDamage's reason: CR 609.7a's candidates are narrowed against
       -- this resolution's own slot bindings and CR 109.5's "you".
@@ -1185,14 +1186,14 @@ redirectDamage resolving source controller legal (RedirectDamage.MkRedirectDamag
         -- CR 609.7a: "the source is chosen when the effect is created", so the
         -- choice is made ONCE here and every row this resolution installs
         -- watches the object it landed on.
-        sourceChoice <- chooseDamageSource controller resolving context gs sourceFilter
+        sourceChoice <- Common.chooseDamageSource controller resolving context gs sourceFilter
         case (sourceFilter, sourceChoice) of
           -- The card asked for a source and CR 609.7a's pool was empty, so
           -- there is nothing to redirect and no row is installed -- stricter
           -- than printed rather than weaker, which a row watching every source
           -- would be.
           (Just _, Nothing) -> pure ()
-          _ -> State.modify' $ \g0 -> List.foldl' (installDamageRow resolving legal (Filter.slotObjects context) controller source duration kind rewrite uses Nothing whatSource describedRecipient) g0 (fmap (\recipient -> (recipient, sourceChoice)) rows)
+          _ -> State.modify' $ \g0 -> List.foldl' (Common.installDamageRow resolving legal (Filter.slotObjects context) controller source duration kind rewrite uses Nothing whatSource describedRecipient) g0 (fmap (\recipient -> (recipient, sourceChoice)) rows)
     _ -> pure ()
 
 skipPhase :: ObjectId -> ObjectId -> PlayerId -> Map.Map SlotName (Set Recipient) -> SkipPhase.SkipPhase -> Game ()
@@ -1295,7 +1296,7 @@ affectPlayers resolving source controller legal (AffectPlayers.MkAffectPlayers d
         -- stores one effect apiece and a slot naming none stores nothing at
         -- all, which is rule 608.2b's answer for an illegal target. A
         -- pattern naming no slot yields exactly one effect, unchanged.
-        bakedEffects = PlayerEffect.overDamagePatterns (bakeDamagePatternRecipient legal resolving controller source gs) withPlayers
+        bakedEffects = PlayerEffect.overDamagePatterns (Common.bakeDamagePatternRecipient legal resolving controller source gs) withPlayers
         -- CR 611.2b: a duration that never started stores nothing. A window
         -- naming "that player" (Expiry.perSeat) is one window per affected
         -- player, each its own row over that one seat: Sphinx's Decree's
@@ -1343,7 +1344,7 @@ requireBlock resolving source controller legal (RequireBlock.MkRequireBlock dura
     Just expiry ->
       let restricted side = case side of
             RestrictedCreatures.Named ref -> fmap RestrictedCreatures.Named (objectRefObjects legal resolving controller source gs ref)
-            RestrictedCreatures.Matching f -> [RestrictedCreatures.Matching (storedClass legal resolving controller source gs f)]
+            RestrictedCreatures.Matching f -> [RestrictedCreatures.Matching (Common.storedClass legal resolving controller source gs f)]
           blockers = restricted blockerRef
           attackers = maybe [Nothing] (fmap Just . restricted) attackerRef
           (ts, gs1) = Game.freshTimestamp gs
@@ -1386,7 +1387,7 @@ prohibit resolving source controller legal (Prohibit.MkProhibit what duration af
     Just expiry ->
       let subjects = case affected of
             RestrictedCreatures.Named ref -> fmap RestrictedCreatures.Named (objectRefObjects legal resolving controller source gs ref)
-            RestrictedCreatures.Matching f -> [RestrictedCreatures.Matching (storedClass legal resolving controller source gs f)]
+            RestrictedCreatures.Matching f -> [RestrictedCreatures.Matching (Common.storedClass legal resolving controller source gs f)]
           (ts, gs1) = Game.freshTimestamp gs
           stored =
             fmap
@@ -1431,7 +1432,7 @@ forbidAttack resolving source controller legal (ForbidAttack.MkForbidAttack dura
     Just expiry ->
       let subjects = case affected of
             RestrictedCreatures.Named ref -> fmap RestrictedCreatures.Named (objectRefObjects legal resolving controller source gs ref)
-            RestrictedCreatures.Matching f -> [RestrictedCreatures.Matching (storedClass legal resolving controller source gs f)]
+            RestrictedCreatures.Matching f -> [RestrictedCreatures.Matching (Common.storedClass legal resolving controller source gs f)]
           -- A slot's players baked now, one row each, for the class's reason:
           -- the binding is gone once this resolution is over. A slot naming
           -- nobody stores nothing (Chaos Dragon's "those players").
@@ -1472,8 +1473,8 @@ forbidBeingBlocked resolving source controller legal (ForbidBeingBlocked.MkForbi
                 ActiveEvasion.controller = controller,
                 ActiveEvasion.timestamp = ts,
                 ActiveEvasion.expiry = expiry,
-                ActiveEvasion.affected = storedClass legal resolving controller source gs f,
-                ActiveEvasion.blockers = storedClass legal resolving controller source gs barred
+                ActiveEvasion.affected = Common.storedClass legal resolving controller source gs f,
+                ActiveEvasion.blockers = Common.storedClass legal resolving controller source gs barred
               }
        in gs1 {GameState.evasions = stored : GameState.evasions gs1}
 
@@ -1491,7 +1492,7 @@ requireAttack resolving source controller legal (RequireAttack.MkRequireAttack d
     Just expiry ->
       let attackers = case attackerRef of
             RestrictedCreatures.Named ref -> fmap RestrictedCreatures.Named (objectRefObjects legal resolving controller source gs ref)
-            RestrictedCreatures.Matching f -> [RestrictedCreatures.Matching (storedClass legal resolving controller source gs f)]
+            RestrictedCreatures.Matching f -> [RestrictedCreatures.Matching (Common.storedClass legal resolving controller source gs f)]
           -- Through playerRefPlayers and objectRefObjects so a ref is read
           -- exactly as every other opcode reads one, CR 608.2b's empty answer
           -- included. A permanent becomes the announcement CR 508.1b names it
@@ -1534,7 +1535,7 @@ createEmblem controller card = do
 becomeMonarch :: ObjectId -> ObjectId -> PlayerId -> Map.Map SlotName (Set Recipient) -> MonarchTarget.MonarchTarget -> Game ()
 becomeMonarch resolving source controller legal target = do
   gs <- State.get
-  let newMonarch = oneSeat legal resolving source controller gs $ case target of
+  let newMonarch = Common.oneSeat legal resolving source controller gs $ case target of
         MonarchTarget.TheController -> PlayerRef.Relative PlayerRelation.You
         -- CR 725.2: the controller of the ability's bound source, read from the
         -- reserved trigger-source slot through CR 608.2h's last known
@@ -1561,7 +1562,7 @@ becomeMonarch resolving source controller legal target = do
 takeTheInitiative :: ObjectId -> ObjectId -> PlayerId -> Map.Map SlotName (Set Recipient) -> InitiativeTarget.InitiativeTarget -> Game ()
 takeTheInitiative resolving source controller legal target = do
   gs <- State.get
-  let taker = oneSeat legal resolving source controller gs $ case target of
+  let taker = Common.oneSeat legal resolving source controller gs $ case target of
         InitiativeTarget.TheController -> PlayerRef.Relative PlayerRelation.You
         -- CR 726.2: the controller of the ability's bound source, for
         -- Effect.BecomeMonarch ControllerOfSource's reason one rule over.
@@ -1896,7 +1897,7 @@ attachBound resolving source controller legal (AttachBound.MkAttachBound subject
   case legalOne destination legal of
     Just recipient -> do
       gs <- State.get
-      attachTogether (objectRefObjects legal resolving controller source gs (ObjectRef.InSlot subject)) recipient
+      Common.attachTogether (objectRefObjects legal resolving controller source gs (ObjectRef.InSlot subject)) recipient
     -- An unfilled slot, or one CR 608.2b has since made illegal: no-op.
     Nothing -> pure ()
 
@@ -1916,14 +1917,14 @@ attachBound resolving source controller legal (AttachBound.MkAttachBound subject
 -- "another creature".
 attachAll :: ObjectId -> ObjectId -> PlayerId -> Map.Map SlotName (Set Recipient) -> Map.Map SlotName (Set Recipient) -> AttachAll.AttachAll -> Game ()
 attachAll resolving source controller legal chosen (AttachAll.MkAttachAll ref filter_) = do
-  movers <- askingObjects resolving source controller legal chosen ref
+  movers <- Common.askingObjects resolving source controller legal chosen ref
   gs <- State.get
   let grants = Projection.controlGrants gs
       inReach oid = all (\you -> Projection.objectInRangeGiven grants you oid gs) (Plane.rangePerspective source controller gs)
   destination <- Game.chooseAmong (\decider who -> Prompt.ChoosePermanent decider who source) controller (filter inReach (Attach.groupHostsFor (effectContext gs resolving controller source legal (slotBindings resolving gs)) movers filter_ gs))
   -- Proposed as a bare ToObject; Event.attach re-tags it per mover, as
   -- AttachTarget's arm says.
-  Foldable.for_ destination (attachTogether movers . Recipient.ToObject)
+  Foldable.for_ destination (Common.attachTogether movers . Recipient.ToObject)
 
 -- CR 701.3d: move each named permanent off its host, leaving it on the
 -- battlefield, through Event.detach so each is a becomes-unattached event. The
@@ -1933,7 +1934,7 @@ attachAll resolving source controller legal chosen (AttachAll.MkAttachAll ref fi
 -- re-asking Object.attachedTo.
 unattach :: ObjectId -> ObjectId -> PlayerId -> Map.Map SlotName (Set Recipient) -> Map.Map SlotName (Set Recipient) -> ObjectRef -> Game ()
 unattach resolving source controller legal chosen ref = do
-  movers <- askingObjects resolving source controller legal chosen ref
+  movers <- Common.askingObjects resolving source controller legal chosen ref
   Event.simultaneously (Monad.forM_ movers Event.detach)
 
 exileHaunting :: ObjectId -> Map.Map SlotName (Set Recipient) -> ExileHaunting.ExileHaunting -> Game ()
@@ -1952,7 +1953,7 @@ exileHaunting resolving legal (ExileHaunting.MkExileHaunting card slot) =
         -- target (CR 702.55b's "cards"). Parun.MutateSpec's "CR 730.3c/702.55b
         -- a mutated creature with haunt exiles both cards haunting its target"
         -- proves it.
-        cards <- slotBoundObjects resolving Map.empty card
+        cards <- Common.slotBoundObjects resolving Map.empty card
         Monad.forM_ (Maybe.fromMaybe [] cards) $ \oid -> do
           -- CR 400.7 mints the exiled incarnation; CR 702.55b's link is filed
           -- against THAT id, which puts the ability in exile for CR 113.6k. A

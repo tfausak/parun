@@ -1,7 +1,8 @@
 -- applyOneEffect's arms from counter to takeExtraTurnArm, one function per
 -- Effect constructor, cut from Parun.Engine.Resolve.Effect along its order so the
--- arms compile in parallel. Each takes the resolution parameters its body reads,
--- then the constructor's fields.
+-- arms compile in parallel. Each takes the recursion of Parun.Engine.Resolve.Effect
+-- it calls back into, then the resolution parameters its body reads, then the
+-- constructor's fields.
 module Parun.Engine.Resolve.Arms.Counters where
 
 import Control.Applicative ((<|>))
@@ -49,8 +50,7 @@ import qualified Parun.Engine.Projection.View as Projection
 import qualified Parun.Engine.Quantity as Quantity
 import qualified Parun.Engine.Recruit as Recruit
 import qualified Parun.Engine.Replacement as Replacement
-import Parun.Engine.Resolve.Common (apnapDecidersOf, askedChooser, askingObjects, bindAmountSlot, bindEarthbentLand, bindObjects, bindObjectsSlot, bindSlot, carrying, distributes, evaluateForRecipient, exileOrCease, installControl, movableCounters, movablePair, objectRefRecipients, overHolderBindings, proliferateOnce, removableAmong, turnPermanentsOver)
-import {-# SOURCE #-} Parun.Engine.Resolve.Effect (applyEffectWith, runDamageRewriteEffect, runReplacementEffects)
+import qualified Parun.Engine.Resolve.Common as Common
 import Parun.Engine.Resolve.Slots (battlefieldMatching, effectContext, effectViewOf, legalOne, objectRefObjects, playerRefPlayers, slotBindings)
 import qualified Parun.Engine.Ring as Ring
 import qualified Parun.Engine.Sba as Sba
@@ -81,6 +81,7 @@ import qualified Parun.Types.CounteredEnd as CounteredEnd
 import qualified Parun.Types.Divide as Divide
 import qualified Parun.Types.DoesNotUntapNext as DoesNotUntapNext
 import qualified Parun.Types.Earthbend as Earthbend.Type
+import Parun.Types.Effect (Effect)
 import qualified Parun.Types.Effect as Effect
 import qualified Parun.Types.EndTurnSignal as EndTurnSignal
 import qualified Parun.Types.EndingStep as EndingStep
@@ -93,6 +94,7 @@ import qualified Parun.Types.GainControl as GainControl
 import Parun.Types.Game (Game)
 import qualified Parun.Types.GameEvent as GameEvent
 import qualified Parun.Types.GameState as GameState
+import qualified Parun.Types.GrantedAbility as GrantedAbility
 import qualified Parun.Types.LibraryPosition as LibraryPosition
 import qualified Parun.Types.ManaAddition as ManaAddition
 import qualified Parun.Types.Meld as Meld
@@ -103,6 +105,7 @@ import qualified Parun.Types.MovedKinds as MovedKinds
 import qualified Parun.Types.Object as Object
 import Parun.Types.ObjectId (ObjectId)
 import Parun.Types.ObjectRef (ObjectRef)
+import qualified Parun.Types.PendingReplacementEffect as PendingReplacementEffect
 import qualified Parun.Types.Phase as Phase
 import qualified Parun.Types.PhaseSelector as PhaseSelector
 import qualified Parun.Types.PlaneswalkCause as PlaneswalkCause
@@ -188,7 +191,7 @@ counter resolving source controller legal (Counter.MkCounter ref mSlot mSources 
   -- CR 701.6a's "countered this way" is what the funnel COUNTERED, never what
   -- the sweep named. Bound onto this effect's SOURCE, and bound even at zero.
   Monad.forM_ mSlot $ \slot ->
-    State.modify' (bindAmountSlot resolving source slot (Natural.length countered))
+    State.modify' (Common.bindAmountSlot resolving source slot (Natural.length countered))
   -- Delay's "exile it with three time counters on it": the cards the
   -- countering put into the destination, bound onto `resolving` as a GROUP,
   -- Destroy's `buried` shape and for its reason. Read off the board after the
@@ -198,7 +201,7 @@ counter resolving source controller legal (Counter.MkCounter ref mSlot mSources 
     after <- State.get
     let landed oid = fmap Object.zone (Game.lookupObject oid after) == Just (CounterDestination.zone destination)
         arrived = concatMap (filter landed . Foldable.toList . snd) moved
-    Monad.unless (null arrived) (State.modify' (bindObjectsSlot resolving slot (Seq.fromList arrived)))
+    Monad.unless (null arrived) (State.modify' (Common.bindObjectsSlot resolving slot (Seq.fromList arrived)))
   -- CR 113.7: the PERMANENTS whose abilities the funnel countered, for Green
   -- Slime's "if a permanent's ability is countered this way, destroy that
   -- permanent". The funnel's answer walked to its sources, never the sweep's;
@@ -215,7 +218,7 @@ counter resolving source controller legal (Counter.MkCounter ref mSlot mSources 
   Monad.forM_ mSources $ \slot -> do
     after <- State.get
     let permanents = Set.toList (Set.fromList (filter (\src -> Set.member src (GameState.battlefield after)) (Maybe.mapMaybe (\oid -> Map.lookup oid sourceOf) countered)))
-    Monad.unless (null permanents) (State.modify' (bindObjectsSlot resolving slot (Seq.fromList permanents)))
+    Monad.unless (null permanents) (State.modify' (Common.bindObjectsSlot resolving slot (Seq.fromList permanents)))
 
 putCounters :: ObjectId -> ObjectId -> PlayerId -> Map.Map SlotName (Set Recipient) -> Map.Map SlotName (Set Recipient) -> PutCounters.PutCounters -> Game ()
 putCounters resolving source controller legal chosen (PutCounters.MkPutCounters kind quantity ref) = do
@@ -223,7 +226,7 @@ putCounters resolving source controller legal chosen (PutCounters.MkPutCounters 
   -- illegal slot (CR 608.2b) or a player recipient answers with nobody. A
   -- CR 608.2d choice is asked through askingObjects, ModifyTarget's reason:
   -- Phylactery Lich's "put a phylactery counter on an artifact you control".
-  targets <- askingObjects resolving source controller legal chosen ref
+  targets <- Common.askingObjects resolving source controller legal chosen ref
   gs <- State.get
   let viewOf = effectViewOf source legal gs
       context = effectContext gs resolving controller source legal (slotBindings resolving gs)
@@ -276,7 +279,7 @@ divide resolving source controller legal (Divide.MkDivide quantity among chooser
       candidates = ListUtils.nubOrd (objectRefObjects legal resolving controller source gs among)
   case (Quantity.evaluateFor viewOf context gs resolving source quantity, NonEmpty.nonEmpty candidates) of
     (Just n, Just offered) | n > 0 -> do
-      asked <- askedChooser resolving source controller legal chooser
+      asked <- Common.askedChooser resolving source controller legal chooser
       Monad.forM_ asked $ \pid -> do
         let total = Integer.toNaturalSaturating n
             fallback = Map.singleton (NonEmpty.head offered) total
@@ -289,10 +292,10 @@ divide resolving source controller legal (Divide.MkDivide quantity among chooser
             -- objects takes the replay default rather than a repair. A
             -- regression fence, not a proved behaviour: the scenario runner
             -- refuses an unoffered answer before it reaches here.
-            pure (if distributes total offered answer then answer else fallback)
+            pure (if Common.distributes total offered answer then answer else fallback)
         let members = filter (`Map.member` division) candidates
             binding = (Binding.toObjects (Seq.fromList members)) {Binding.Type.division = Just (Map.mapKeys Recipient.ToObject division)}
-        State.modify' (overHolderBindings resolving (Map.insert slot binding))
+        State.modify' (Common.overHolderBindings resolving (Map.insert slot binding))
     _ -> pure ()
 
 putCountersFrom :: ObjectId -> ObjectId -> PlayerId -> Map.Map SlotName (Set Recipient) -> PutCountersFrom.PutCountersFrom -> Game ()
@@ -392,7 +395,7 @@ chooseCardName resolving source controller legal (ChooseCardName.MkChooseCardNam
         g <- State.get
         name <- Game.choose (Prompt.ChooseCardName (Decide.deciderFor chooser g) chooser source restriction made) >>= Game.lookUpChosenName
         pure (made Seq.|> (chooser, name))
-  picked <- fmap (Map.fromList . Foldable.toList) (Monad.foldM ask Seq.empty (apnapDecidersOf ref legal resolving source controller gs))
+  picked <- fmap (Map.fromList . Foldable.toList) (Monad.foldM ask Seq.empty (Common.apnapDecidersOf ref legal resolving source controller gs))
   -- CR 101.3: a reference naming NOBODY leaves nothing to do, so the write is
   -- skipped rather than assigning the empty set -- which would clear a name an
   -- earlier instruction chose, and the assignment above is the whole reason
@@ -471,7 +474,7 @@ removeCounters resolving source controller legal (RemoveCounters.MkRemoveCounter
           -- Bound even where nothing came off, which is the answer "that much"
           -- wants: Ashling the Pilgrim with no counters deals 0 damage rather
           -- than leaving the clause unanswered.
-          Monad.forM_ mTally $ \tally -> State.modify' (bindAmountSlot resolving source tally (min before (Integer.toNaturalSaturating n)))
+          Monad.forM_ mTally $ \tally -> State.modify' (Common.bindAmountSlot resolving source tally (min before (Integer.toNaturalSaturating n)))
     _ -> pure () -- illegal slot at resolution (CR 608.2b): no-op
 
 removeCountersAmong :: ObjectId -> ObjectId -> PlayerId -> Map.Map SlotName (Set Recipient) -> RemoveCountersAmong.RemoveCountersAmong -> Game ()
@@ -491,7 +494,7 @@ removeCountersAmong resolving source controller legal (RemoveCountersAmong.MkRem
         _ -> 0
   removed <- case which of
     WhichCounters.OfKind kind -> do
-      let offered = carrying gs kind permanents
+      let offered = Common.carrying gs kind permanents
       division <- case count of
         RemovalCount.Exactly quantity
           -- CR 609.3 where fewer are there than the card names, which a "may"
@@ -519,7 +522,7 @@ removeCountersAmong resolving source controller legal (RemoveCountersAmong.MkRem
     -- rejects any kind at a stated count, which no printing writes.
     WhichCounters.OfAnyKind -> case count of
       RemovalCount.AnyNumber -> do
-        let offered = removableAmong gs which permanents
+        let offered = Common.removableAmong gs which permanents
         division <- case Cost.onlyMixedDivision CounterSpread.FromAmongAtLeast 0 offered of
           Just only -> pure only
           Nothing -> do
@@ -531,7 +534,7 @@ removeCountersAmong resolving source controller legal (RemoveCountersAmong.MkRem
       RemovalCount.Exactly _ -> pure 0
       RemovalCount.UpTo _ -> pure 0
   -- Bound even where nothing came off, Effect.RemoveCounters' posture.
-  Monad.forM_ mTally $ \tally -> State.modify' (bindAmountSlot resolving source tally removed)
+  Monad.forM_ mTally $ \tally -> State.modify' (Common.bindAmountSlot resolving source tally removed)
 
 moveCounters :: ObjectId -> ObjectId -> PlayerId -> Map.Map SlotName (Set Recipient) -> MoveCounters.MoveCounters -> Game ()
 moveCounters resolving source controller legal (MoveCounters.MkMoveCounters fromRef kinds mSlot toRef) = do
@@ -615,7 +618,7 @@ moveCounters resolving source controller legal (MoveCounters.MkMoveCounters from
       movePair to from = case from of
         _
           -- "This may occur if the first and second objects are the same object".
-          | movablePair gs from to ->
+          | Common.movablePair gs from to ->
               -- "... or if either object is no longer in the correct zone". CR 122.1
               -- puts a counter on "an object or player", and CR 122.1a/122.1b
               -- contemplate counters on a card in a zone other than the battlefield,
@@ -659,7 +662,7 @@ moveCounters resolving source controller legal (MoveCounters.MkMoveCounters from
               -- own tally settled it. Rule 122.5's atomicity is why it is dropped
               -- here rather than half-performed -- "no counter is removed from or
               -- put onto anything".
-              let onFrom = movableCounters gs from to
+              let onFrom = Common.movableCounters gs from to
                   -- CR 609.3 for a count larger than the object has: "it does only
                   -- as much as possible". The clamp is load-bearing --
                   -- Event.removeCounters saturates where Event.putCounters does not,
@@ -1094,7 +1097,7 @@ moveCounters resolving source controller legal (MoveCounters.MkMoveCounters from
   -- as Quantity.InSlot -- Destroy's `slot` above in every respect, bound onto
   -- this effect's SOURCE and bound even when nothing moved, since zero is an
   -- answer where an unbound slot would leave the rider's gate unevaluable.
-  Monad.forM_ mSlot $ \slot -> State.modify' (bindAmountSlot resolving source slot moved)
+  Monad.forM_ mSlot $ \slot -> State.modify' (Common.bindAmountSlot resolving source slot moved)
 
 -- CR 701.34a: choose any number of permanents and/or players that have a
 -- counter, then give each one more of every kind it already has. "That have
@@ -1116,7 +1119,7 @@ proliferate :: ObjectId -> PlayerId -> Game ()
 proliferate source controller = do
   outcome <- Event.applyReplacements (ProposedEvent.WouldPerform PlayerInstruction.Proliferate Nothing controller 1)
   Monad.forM_ (outcome >>= Replacement.asPerformed PlayerInstruction.Proliferate) $ \(_, times) ->
-    Monad.replicateM_ (Natural.toIntSaturating times) (proliferateOnce source controller)
+    Monad.replicateM_ (Natural.toIntSaturating times) (Common.proliferateOnce source controller)
 
 -- CR 701.39a: "bolster N" -- put N +1/+1 counters on a creature you control
 -- with the least toughness, or tied for least. The prompt is raised only for a
@@ -1172,13 +1175,13 @@ bolster resolving source controller legal quantity = do
 -- after the counters, which is CR 608.2c's written order plus CR 603.7c: the
 -- delayed ability captures the resolving object's whole environment, and this
 -- is the slot its condition names.
-earthbendArm :: Game Result -> ObjectId -> ObjectId -> PlayerId -> Map.Map SlotName (Set Recipient) -> Map.Map SlotName (Set Recipient) -> Earthbend.Type.Earthbend -> Game ()
-earthbendArm runSubgame resolving source controller legal chosen earthbend = do
+earthbendArm :: (Game Result -> ObjectId -> ObjectId -> PlayerId -> Map.Map SlotName (Set Recipient) -> Map.Map SlotName (Set Recipient) -> Effect Card.Type.Card (GrantedAbility.GrantedAbility Card.Type.Card) -> Game ()) -> Game Result -> ObjectId -> ObjectId -> PlayerId -> Map.Map SlotName (Set Recipient) -> Map.Map SlotName (Set Recipient) -> Earthbend.Type.Earthbend -> Game ()
+earthbendArm applyEffectWith runSubgame resolving source controller legal chosen earthbend = do
   gs <- State.get
   let lands = objectRefObjects legal resolving controller source gs (Earthbend.Type.ref earthbend)
   Monad.forM_ (Earthbend.instructions earthbend) (applyEffectWith runSubgame resolving source controller legal chosen)
   Monad.forM_ lands $ \land -> do
-    State.modify' (bindEarthbentLand resolving land)
+    State.modify' (Common.bindEarthbentLand resolving land)
     applyEffectWith runSubgame resolving source controller legal chosen Earthbend.arm
     -- CR 701.66b: the earthbend as a game event, written where the rule puts
     -- it -- AFTER the arming opcode above, so the moment recorded is the
@@ -1213,8 +1216,8 @@ earthbendArm runSubgame resolving source controller legal chosen earthbend = do
 -- exile. Read through Binding.slotObjects and not through ObjectRef.InSlot,
 -- since the move binds ONE arrival as a target and several as a group, and only
 -- that reader answers both shapes.
-airbend :: Game Result -> ObjectId -> ObjectId -> PlayerId -> Map.Map SlotName (Set Recipient) -> Map.Map SlotName (Set Recipient) -> ObjectRef -> Game ()
-airbend runSubgame resolving source controller legal chosen ref = do
+airbend :: (Game Result -> ObjectId -> ObjectId -> PlayerId -> Map.Map SlotName (Set Recipient) -> Map.Map SlotName (Set Recipient) -> Effect Card.Type.Card (GrantedAbility.GrantedAbility Card.Type.Card) -> Game ()) -> Game Result -> ObjectId -> ObjectId -> PlayerId -> Map.Map SlotName (Set Recipient) -> Map.Map SlotName (Set Recipient) -> ObjectRef -> Game ()
+airbend applyEffectWith runSubgame resolving source controller legal chosen ref = do
   let airbent g = Map.findWithDefault Set.empty Binding.airbentObjects (Binding.slotObjects (slotBindings resolving g))
   before <- State.gets airbent
   applyEffectWith runSubgame resolving source controller legal chosen (Airbend.exile ref)
@@ -1228,8 +1231,8 @@ airbend runSubgame resolving source controller legal chosen ref = do
 
 -- CR 702.189a's mana through AddMana's own arm, then CR 702.189b's marker:
 -- this is a firebending ability resolving, and `controller` is who controls it.
-firebend :: Game Result -> ObjectId -> ObjectId -> PlayerId -> Map.Map SlotName (Set Recipient) -> Map.Map SlotName (Set Recipient) -> ManaAddition.ManaAddition -> Game ()
-firebend runSubgame resolving source controller legal chosen addition = do
+firebend :: (Game Result -> ObjectId -> ObjectId -> PlayerId -> Map.Map SlotName (Set Recipient) -> Map.Map SlotName (Set Recipient) -> Effect Card.Type.Card (GrantedAbility.GrantedAbility Card.Type.Card) -> Game ()) -> Game Result -> ObjectId -> ObjectId -> PlayerId -> Map.Map SlotName (Set Recipient) -> Map.Map SlotName (Set Recipient) -> ManaAddition.ManaAddition -> Game ()
+firebend applyEffectWith runSubgame resolving source controller legal chosen addition = do
   applyEffectWith runSubgame resolving source controller legal chosen (Effect.AddMana addition)
   State.modify' (Event.recordEvent (GameEvent.PlayerActed (PlayerActed.MkPlayerActed PlayerAction.Firebend controller)))
 
@@ -1252,7 +1255,7 @@ amass resolving source controller legal (Amass.Type.MkAmass quantity subtype mSl
       -- Onto `resolving`, which is bindSlot's contract: both resolution loops
       -- re-read the stack object's bindings before each effect (CR 608.2c), so
       -- the next clause sees it.
-      Monad.forM_ ((,) <$> mSlot <*> chose) $ \(slot, army) -> State.modify' (bindSlot resolving slot army)
+      Monad.forM_ ((,) <$> mSlot <*> chose) $ \(slot, army) -> State.modify' (Common.bindSlot resolving slot army)
 
 -- CR 701.68a: each player the PlayerRef names puts N -1/-1 counters on a
 -- creature they control; the keyword action is Parun.Engine.Blight.blight's, and
@@ -1289,7 +1292,7 @@ blight resolving source controller legal (Blight.Type.MkBlight ref quantity mSlo
       named = playerRefPlayers legal resolving source controller gs ref
       blighters = filter (\pid -> List.elem pid named) (Game.apnapOrder gs)
   blightedCreatures <- Event.simultaneously . fmap Maybe.catMaybes . Monad.forM blighters $ \pid ->
-    case evaluateForRecipient viewOf context gs resolving source pid quantity of
+    case Common.evaluateForRecipient viewOf context gs resolving source pid quantity of
       Nothing -> pure Nothing -- unevaluable quantity: no-op (the powerOf posture)
       Just n -> Blight.blight (CounterCause.ByEffect pid) resolving (Integer.toNaturalSaturating n)
   -- CR 701.68c: "the blighted creature" is the object the blighting player chose
@@ -1302,7 +1305,7 @@ blight resolving source controller legal (Blight.Type.MkBlight ref quantity mSlo
   -- ACROSS blighters, the Effect.Mill slot's one/many split: one chosen creature
   -- takes the single binding every singular reader can see, several take the
   -- group. A seat that could not blight (rule 701.68b) contributes nothing.
-  bindObjects resolving mSlot blightedCreatures
+  Common.bindObjects resolving mSlot blightedCreatures
 
 -- CR 701.54a: the Ring tempts the resolving controller; the keyword action is
 -- Parun.Engine.Ring.tempt's.
@@ -1318,7 +1321,7 @@ openAttraction = Attraction.open
 assemble :: ObjectId -> ObjectId -> PlayerId -> Map.Map SlotName (Set Recipient) -> Maybe ObjectRef -> Game ()
 assemble resolving source controller legal ref = do
   gs <- State.get
-  let assembler = ref >>= \r -> Maybe.listToMaybe (Maybe.mapMaybe Recipient.objectOf (objectRefRecipients legal resolving controller source gs r))
+  let assembler = ref >>= \r -> Maybe.listToMaybe (Maybe.mapMaybe Recipient.objectOf (Common.objectRefRecipients legal resolving controller source gs r))
   Contraption.assemble assembler controller
 
 -- CR 701.31c: the cause is the planar die's exactly when this is CR 901.8's
@@ -1398,7 +1401,7 @@ gainPlayerCounters resolving source controller legal (PlayerCounters.MkPlayerCou
   -- `gs`, then CR 122.6's funnel per recipient, so a counter-scaling
   -- replacement gets its CR 614 opportunity against each player's gain.
   Monad.forM_ recipients $ \pid ->
-    case evaluateForRecipient viewOf context gs resolving source pid quantity of
+    case Common.evaluateForRecipient viewOf context gs resolving source pid quantity of
       Just n
         | n > 0 -> Monad.void (Event.putPlayerCounters (CounterCause.ByEffect controller) pid kind (Integer.toNaturalSaturating n))
       _ -> pure ()
@@ -1410,7 +1413,7 @@ removePlayerCounters resolving source controller legal (RemovePlayerCounters.MkR
       context = effectContext gs resolving controller source legal (slotBindings resolving gs)
       recipients = playerRefPlayers legal resolving source controller gs ref
   Monad.forM_ recipients $ \pid ->
-    case evaluateForRecipient viewOf context gs resolving source pid quantity of
+    case Common.evaluateForRecipient viewOf context gs resolving source pid quantity of
       Just n
         | n > 0 ->
             -- CR 122: GainPlayerCounters' mirror, through no funnel for
@@ -1418,7 +1421,7 @@ removePlayerCounters resolving source controller legal (RemovePlayerCounters.MkR
             -- lost, Leeches' "that much".
             do
               lost <- State.state (Game.removePlayerCounters kind pid (Integer.toNaturalSaturating n))
-              Monad.forM_ mTally $ \slot -> State.modify' (bindAmountSlot resolving source slot lost)
+              Monad.forM_ mTally $ \slot -> State.modify' (Common.bindAmountSlot resolving source slot lost)
       _ -> pure ()
 
 -- CR 107.14: "you may pay any amount of {E}". The payer is the resolving
@@ -1448,7 +1451,7 @@ payAnyEnergy resolving source controller slot = do
   -- Bound onto this effect's SOURCE even when nothing was paid, Effect.Destroy's
   -- count for its reason: zero is an answer, where an unbound slot would leave a
   -- later clause's quantity unevaluable instead.
-  State.modify' (bindAmountSlot resolving source slot paid)
+  State.modify' (Common.bindAmountSlot resolving source slot paid)
 
 -- CR 107.1c: "any number" is any natural, so the answer is taken as given. A
 -- number past what a later instruction can act on is that instruction's CR
@@ -1461,11 +1464,11 @@ payAnyEnergy resolving source controller slot = do
 -- naming none binds nothing (CR 101.3).
 chooseNumber :: ObjectId -> ObjectId -> PlayerId -> Map.Map SlotName (Set Recipient) -> ChooseNumber.ChooseNumber -> Game ()
 chooseNumber resolving source controller legal (ChooseNumber.MkChooseNumber slot upTo chooser) = do
-  asked <- askedChooser resolving source controller legal chooser
+  asked <- Common.askedChooser resolving source controller legal chooser
   Monad.forM_ asked $ \pid -> do
     gs <- State.get
     answer <- Game.choose (Prompt.ChooseNumber (Decide.deciderFor pid gs) pid resolving 0 upTo)
-    State.modify' (bindAmountSlot resolving source slot (maybe answer (min answer) upTo))
+    State.modify' (Common.bindAmountSlot resolving source slot (maybe answer (min answer) upTo))
 
 -- CR 701.26a: turn each named permanent sideways. The victims are enumerated
 -- ONCE (CR 608.2f) and off the board as it stands before any of them is tapped,
@@ -1491,7 +1494,7 @@ tap resolving source controller legal (Tap.MkTap ref mTapped) = do
   after <- State.get
   Monad.forM_ mTapped $ \slot -> do
     let turned = filter (\oid -> not (tappedIn gs oid) && tappedIn after oid) victims
-    Monad.unless (null turned) (State.modify' (bindObjectsSlot resolving slot (Seq.fromList turned)))
+    Monad.unless (null turned) (State.modify' (Common.bindObjectsSlot resolving slot (Seq.fromList turned)))
 
 -- CR 701.26b: rotate each named permanent back upright. The victims are
 -- enumerated ONCE (CR 608.2f) and off the board as it stands before any of them
@@ -1507,7 +1510,7 @@ tap resolving source controller legal (Tap.MkTap ref mTapped) = do
 -- Hero of Dominaria) is asked rather than read.
 untap :: ObjectId -> ObjectId -> PlayerId -> Map.Map SlotName (Set Recipient) -> Map.Map SlotName (Set Recipient) -> ObjectRef -> Game ()
 untap resolving source controller legal chosen ref = do
-  victims <- askingObjects resolving source controller legal chosen ref
+  victims <- Common.askingObjects resolving source controller legal chosen ref
   Monad.forM_ victims Event.untap
 
 detain :: ObjectId -> ObjectId -> PlayerId -> Map.Map SlotName (Set Recipient) -> ObjectRef -> Game ()
@@ -1542,7 +1545,7 @@ pair resolving source controller legal chosen ref = do
   --
   -- The CHOSEN ref goes through askingObjects and not the pure sweep: CR
   -- 608.2d's choice is an ask, which objectRefObjects cannot make.
-  partners <- askingObjects resolving source controller legal chosen ref
+  partners <- Common.askingObjects resolving source controller legal chosen ref
   State.modify' $ \gs -> case partners of
     [partner] -> Soulbond.pair controller source partner gs
     _ -> gs
@@ -1564,13 +1567,13 @@ doesNotUntapNext resolving source controller legal payload =
           }
 
 transform :: ObjectId -> ObjectId -> PlayerId -> Map.Map SlotName (Set Recipient) -> Map.Map SlotName (Set Recipient) -> ObjectRef -> Game ()
-transform resolving source controller legal chosen = turnPermanentsOver legal chosen resolving controller source
+transform resolving source controller legal chosen = Common.turnPermanentsOver legal chosen resolving controller source
 
 -- CR 701.28a routes a convert through rules 701.27a-f unchanged, so it is the
 -- SAME call and not a similar one. The two opcodes stay distinct in the card
 -- data (Parun.Types.Effect.Convert) and identical in behaviour here.
 convert :: ObjectId -> ObjectId -> PlayerId -> Map.Map SlotName (Set Recipient) -> Map.Map SlotName (Set Recipient) -> ObjectRef -> Game ()
-convert resolving source controller legal chosen = turnPermanentsOver legal chosen resolving controller source
+convert resolving source controller legal chosen = Common.turnPermanentsOver legal chosen resolving controller source
 
 flipArm :: ObjectId -> ObjectId -> PlayerId -> Map.Map SlotName (Set Recipient) -> ObjectRef -> Game ()
 flipArm resolving source controller legal ref =
@@ -1633,8 +1636,8 @@ addPhases extras =
 
 -- CR 724.1: end the turn (Time Stop). Rule 724.1's six steps, in its own order,
 -- and deliberately NOT the CR 608 process the fold around this is running.
-endTurn :: Game Result -> Game ()
-endTurn runSubgame = do
+endTurn :: (Game Result -> PendingReplacementEffect.PendingReplacementEffect -> Game ()) -> (Game Result -> Game ()) -> Game Result -> Game ()
+endTurn runDamageRewriteEffect runReplacementEffects runSubgame = do
   -- CR 724.1a: an ability that triggered before this process began but is not
   -- yet on the stack ceases to exist. There is no pending queue to flush -- a
   -- pending trigger is DERIVED from GameState.events behind the CR 117.5
@@ -1669,7 +1672,7 @@ endTurn runSubgame = do
   -- old id finds nothing and the spell stays exiled rather than reaching a
   -- graveyard.
   onStack <- State.gets GameState.stack
-  Foldable.traverse_ exileOrCease onStack
+  Foldable.traverse_ Common.exileOrCease onStack
   -- CR 724.1c: check state-based actions, granting no priority and putting no
   -- triggered ability on the stack -- so Parun.Engine.Sba's own pass and not
   -- Engine.performSettle, which places triggers. (Engine is unreachable from
@@ -1738,8 +1741,8 @@ endTurn runSubgame = do
 -- in its own order, and deliberately NOT the CR 608 process around it. The arm
 -- above is its sibling and not its implementation: the two agree on 724.2a-c
 -- and differ on what 724.2d leaves at the head of the schedule.
-endCombatPhase :: Game Result -> Game ()
-endCombatPhase runSubgame = do
+endCombatPhase :: (Game Result -> PendingReplacementEffect.PendingReplacementEffect -> Game ()) -> (Game Result -> Game ()) -> Game Result -> Game ()
+endCombatPhase runDamageRewriteEffect runReplacementEffects runSubgame = do
   phase <- State.gets GameState.phase
   case phase of
     -- CR 724.2g: attempted at a time that is not a combat phase, nothing
@@ -1766,7 +1769,7 @@ endCombatPhase runSubgame = do
       -- Shared with the arm above down to the CR 400.7 detail that leaves
       -- finishSpell a no-op afterwards.
       onStack <- State.gets GameState.stack
-      Foldable.traverse_ exileOrCease onStack
+      Foldable.traverse_ Common.exileOrCease onStack
       -- CR 724.2c: check state-based actions, granting no priority and putting
       -- no triggered ability on the stack. To a fixpoint on CR 704.3's
       -- authority, as above.
@@ -1817,7 +1820,7 @@ endCombatPhase runSubgame = do
 gainControl :: ObjectId -> ObjectId -> PlayerId -> Map.Map SlotName (Set Recipient) -> GainControl.GainControl -> Game ()
 gainControl resolving source controller legal (GainControl.MkGainControl duration ref to) =
   State.modify' $ \gs -> case playerRefPlayers legal resolving source controller gs to of
-    [recipient] -> installControl legal resolving controller source recipient duration ref gs
+    [recipient] -> Common.installControl legal resolving controller source recipient duration ref gs
     _ -> gs
 
 -- CR 701.12b: each of the two permanents goes to the other's controller,

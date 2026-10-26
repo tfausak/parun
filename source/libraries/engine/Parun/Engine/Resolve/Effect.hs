@@ -3,9 +3,9 @@
 -- abilities that share its recursion. Split out of Parun.Engine.Resolve for
 -- size; the spell and ability resolution that drives it stays there, and both
 -- are imported by callers under the same Resolve alias. Each arm's body is a
--- function in Parun.Engine.Resolve.Arms, the helpers that never recurse into
--- resolving an effect are Parun.Engine.Resolve.Common, and the arms reach back
--- into this module's recursion through Effect.hs-boot.
+-- function in Parun.Engine.Resolve.Arms, handed the recursion below that it
+-- calls back into; the helpers that never recurse into resolving an effect are
+-- Parun.Engine.Resolve.Common.
 module Parun.Engine.Resolve.Effect where
 
 import qualified Control.Monad as Monad
@@ -41,7 +41,7 @@ import qualified Parun.Engine.Resolve.Arms.Counters as Counters
 import qualified Parun.Engine.Resolve.Arms.Damage as Damage
 import qualified Parun.Engine.Resolve.Arms.Objects as Objects
 import qualified Parun.Engine.Resolve.Arms.Zones as Zones
-import Parun.Engine.Resolve.Common (announcedOnly, apnapDecidersOf, applyClauseEffects, branchSelects, castableCopy, enteredBeside, foldPaid, gateCostOf, noSubgame, overHolderBindings, payAgain, payGateAgreed, paymentDecisionOf, pushControl, recordExilePile, recordExiledWith, recordRoll, withRollingDie)
+import qualified Parun.Engine.Resolve.Common as Common
 import Parun.Engine.Resolve.Slots (boundSlots, resolvingAbilityName, slotBindings)
 import qualified Parun.Extra.Integer as Integer
 import qualified Parun.Types.AbilityKind as AbilityKind
@@ -163,7 +163,7 @@ import qualified Parun.Types.Zone as Zone
 -- OfferCast.slot.
 offerCast :: Game Result -> Filter.Context -> (Quantity.Type.Quantity -> Maybe Integer) -> [ObjectId] -> PlayerId -> CastObligation.CastObligation -> PermissionVerb.PermissionVerb -> Maybe PlayerId -> CastRepetition.CastRepetition -> Bool -> CastOffer.CastOffer -> Game [ObjectId]
 offerCast runSubgame context evaluate named caster optionality verb retake repetition copied offer = do
-  subjects <- if copied then Maybe.catMaybes <$> traverse (castableCopy caster) named else pure named
+  subjects <- if copied then Maybe.catMaybes <$> traverse (Common.castableCopy caster) named else pure named
   case repetition of
     CastRepetition.Once -> foldMap (Maybe.maybeToList . snd) <$> offerCastOnce runSubgame context subjects caster optionality verb retake offer
     CastRepetition.AnyNumber -> again Nothing subjects
@@ -442,7 +442,7 @@ offerCastOnce runSubgame context named caster optionality verb retake offer = do
               (Just controller, Just sid) -> do
                 stamp <- State.state Game.freshTimestamp
                 State.modify' $
-                  pushControl
+                  Common.pushControl
                     caster
                     PlayerControl.MkPlayerControl
                       { PlayerControl.decider = Decider.MkDecider controller,
@@ -473,8 +473,8 @@ applyEffectWith runSubgame resolving source controller legal chosen effect = Eve
   -- object to read.
   ability <- State.gets (resolvingAbilityName resolving)
   applyOneEffect runSubgame resolving source controller legal chosen effect
-  State.modify' (recordExiledWith ExileLink.MkExileLink {ExileLink.source = source, ExileLink.ability = ability} before)
-  State.modify' (recordExilePile before)
+  State.modify' (Common.recordExiledWith ExileLink.MkExileLink {ExileLink.source = source, ExileLink.ability = ability} before)
+  State.modify' (Common.recordExilePile before)
   -- CR 614.1c: the as-enters effects of what this instruction put onto the
   -- battlefield, before the next instruction reads the board. After the window
   -- above, so what they exile is filed by their own windows, not this one's.
@@ -504,27 +504,27 @@ applyEffectWith runSubgame resolving source controller legal chosen effect = Eve
 -- gone before a later effect of the same list runs.
 applyOneEffect :: Game Result -> ObjectId -> ObjectId -> PlayerId -> Map.Map SlotName (Set Recipient) -> Map.Map SlotName (Set Recipient) -> Effect Card.Type.Card (GrantedAbility.GrantedAbility Card.Type.Card) -> Game ()
 applyOneEffect runSubgame resolving source controller legal chosen effect = case effect of
-  Effect.DealDamage payload -> Damage.dealDamage runSubgame resolving source controller legal payload
-  Effect.Fight payload -> Damage.fight runSubgame legal payload
+  Effect.DealDamage payload -> Damage.dealDamage runPreventionRiders runReplacementEffects runSubgame resolving source controller legal payload
+  Effect.Fight payload -> Damage.fight runPreventionRiders runReplacementEffects runSubgame legal payload
   Effect.ModifyTarget payload -> Damage.modifyTarget resolving source controller legal chosen payload
   Effect.ChangeText payload -> Damage.changeText resolving source controller legal payload
   Effect.AddMana payload -> Damage.addMana resolving source controller legal payload
-  Effect.ActivateManaAbilities payload -> Damage.activateManaAbilities runSubgame resolving source controller legal payload
+  Effect.ActivateManaAbilities payload -> Damage.activateManaAbilities performManaAbility runSubgame resolving source controller legal payload
   Effect.MoveMana payload -> Damage.moveMana resolving source controller legal payload
-  Effect.Search payload -> Damage.search runSubgame resolving source controller legal payload
+  Effect.Search payload -> Damage.search performManaAbility runSubgame resolving source controller legal payload
   Effect.ExileAllGraveyards -> Damage.exileAllGraveyards source controller
   Effect.ExileHandThenDraw -> Damage.exileHandThenDraw controller
   Effect.NoteManaSpent -> Damage.noteManaSpent resolving source
-  Effect.RestartGame payload -> Damage.restartGame runSubgame resolving source controller legal payload
+  Effect.RestartGame payload -> Damage.restartGame performHandAction runSubgame resolving source controller legal payload
   Effect.PlaySubgame payload -> Damage.playSubgame runSubgame resolving payload
   Effect.ChoosePlayer payload -> Damage.choosePlayer resolving source controller payload
   Effect.ChoosePlayerAtRandom payload -> Damage.choosePlayerAtRandom resolving source controller payload
   Effect.ChoosePermanents payload -> Damage.choosePermanents resolving source controller legal payload
   Effect.ChooseSector payload -> Damage.chooseSector resolving source controller payload
-  Effect.RollDie payload -> Damage.rollDieArm runSubgame resolving source controller legal payload
+  Effect.RollDie payload -> Damage.rollDieArm throwDice runSubgame resolving source controller legal payload
   Effect.Reroll -> Damage.reroll
-  Effect.RerollStoredResults payload -> Damage.rerollStoredResults runSubgame resolving source controller legal payload
-  Effect.FlipCoin payload -> Damage.flipCoinArm runSubgame resolving source controller legal payload
+  Effect.RerollStoredResults payload -> Damage.rerollStoredResults throwDice runSubgame resolving source controller legal payload
+  Effect.FlipCoin payload -> Damage.flipCoinArm throwForCoin runSubgame resolving source controller legal payload
   Effect.ControlPlayerNextTurn payload -> Damage.controlPlayerNextTurn controller legal payload
   Effect.ControlPlayerThisResolution payload -> Damage.controlPlayerThisResolution controller legal payload
   Effect.Destroy payload -> Damage.destroy resolving source controller legal chosen payload
@@ -544,29 +544,29 @@ applyOneEffect runSubgame resolving source controller legal chosen effect = case
   Effect.Ante payload -> Zones.ante resolving source controller legal payload
   Effect.PutSticker payload -> Zones.putSticker resolving source controller legal chosen payload
   Effect.Shuffle payload -> Zones.shuffle resolving source controller legal payload
-  Effect.OfferCast payload -> Zones.offerCastArm runSubgame resolving source controller legal chosen payload
-  Effect.OfferNamedCopy payload -> Zones.offerNamedCopy runSubgame resolving source controller legal payload
-  Effect.OfferNotedCopy payload -> Zones.offerNotedCopy runSubgame resolving source controller legal payload
+  Effect.OfferCast payload -> Zones.offerCastArm offerCast runSubgame resolving source controller legal chosen payload
+  Effect.OfferNamedCopy payload -> Zones.offerNamedCopy offerOutsideCopy runSubgame resolving source controller legal payload
+  Effect.OfferNotedCopy payload -> Zones.offerNotedCopy offerOutsideCopy runSubgame resolving source controller legal payload
   Effect.GrantPlayFromExile payload -> Zones.grantPlayFromExile resolving source controller legal payload
   Effect.GrantLookAtExiled payload -> Zones.grantLookAtExiled resolving source controller legal payload
   Effect.MakePlotted payload -> Zones.makePlotted resolving source controller legal payload
   Effect.MakeForetold payload -> Zones.makeForetold resolving source controller legal payload
   Effect.MakeWarped payload -> Zones.makeWarped resolving source controller legal payload
   Effect.Heal payload -> Zones.healArm resolving source controller legal payload
-  Effect.ForEach payload -> Zones.forEach runSubgame resolving source controller legal chosen payload
-  Effect.ForEachNumber payload -> Zones.forEachNumber runSubgame resolving source controller legal chosen payload
-  Effect.Repeat payload -> Zones.repeatArm runSubgame resolving source controller legal chosen payload
-  Effect.RepeatIf payload -> Zones.repeatIf runSubgame resolving source controller legal chosen payload
+  Effect.ForEach payload -> Zones.forEach applyEffectWith loopOffers runSubgame resolving source controller legal chosen payload
+  Effect.ForEachNumber payload -> Zones.forEachNumber applyLoopBody runSubgame resolving source controller legal chosen payload
+  Effect.Repeat payload -> Zones.repeatArm applyLoopBody runSubgame resolving source controller legal chosen payload
+  Effect.RepeatIf payload -> Zones.repeatIf applyLoopBody runSubgame resolving source controller legal chosen payload
   Effect.Draw payload -> Zones.draw resolving source controller legal payload
   Effect.Mill payload -> Zones.mill resolving source controller legal payload
   Effect.Reveal payload -> Zones.reveal resolving source controller legal chosen payload
   Effect.LookAt payload -> Zones.lookAt resolving source controller legal payload
-  Effect.ArrangeInLibrary payload -> Zones.arrangeInLibraryArm resolving source controller legal payload
+  Effect.ArrangeInLibrary payload -> Zones.arrangeInLibrary resolving source controller legal payload
   Effect.Scry payload -> Zones.scry resolving source controller legal payload
   Effect.Surveil payload -> Zones.surveil resolving source controller legal payload
   Effect.Fateseal payload -> Zones.fateseal resolving source controller legal payload
-  Effect.Clash payload -> Zones.clashArm resolving source controller payload
-  Effect.AsYouCascade payload -> Zones.asYouCascade runSubgame resolving source controller legal chosen payload
+  Effect.Clash payload -> Zones.clash resolving source controller payload
+  Effect.AsYouCascade payload -> Zones.asYouCascade applyOneEffect runSubgame resolving source controller legal chosen payload
   Effect.Explore payload -> Zones.explore resolving source controller legal payload
   Effect.Connive payload -> Zones.connive resolving source controller legal payload
   Effect.Discard payload -> Zones.discard resolving source controller legal chosen payload
@@ -638,9 +638,9 @@ applyOneEffect runSubgame resolving source controller legal chosen effect = case
   Effect.MoveCounters payload -> Counters.moveCounters resolving source controller legal payload
   Effect.Proliferate -> Counters.proliferate source controller
   Effect.Bolster payload -> Counters.bolster resolving source controller legal payload
-  Effect.Earthbend payload -> Counters.earthbendArm runSubgame resolving source controller legal chosen payload
-  Effect.Airbend payload -> Counters.airbend runSubgame resolving source controller legal chosen payload
-  Effect.Firebend payload -> Counters.firebend runSubgame resolving source controller legal chosen payload
+  Effect.Earthbend payload -> Counters.earthbendArm applyEffectWith runSubgame resolving source controller legal chosen payload
+  Effect.Airbend payload -> Counters.airbend applyEffectWith runSubgame resolving source controller legal chosen payload
+  Effect.Firebend payload -> Counters.firebend applyEffectWith runSubgame resolving source controller legal chosen payload
   Effect.Amass payload -> Counters.amass resolving source controller legal payload
   Effect.Blight payload -> Counters.blight resolving source controller legal payload
   Effect.TemptWithTheRing -> Counters.temptWithTheRing controller
@@ -674,8 +674,8 @@ applyOneEffect runSubgame resolving source controller legal chosen effect = case
   Effect.Meld payload -> Counters.meld resolving source controller legal payload
   Effect.PhaseOut payload -> Counters.phaseOut resolving source controller legal payload
   Effect.AddPhases payload -> Counters.addPhases payload
-  Effect.EndTurn -> Counters.endTurn runSubgame
-  Effect.EndCombatPhase -> Counters.endCombatPhase runSubgame
+  Effect.EndTurn -> Counters.endTurn runDamageRewriteEffect runReplacementEffects runSubgame
+  Effect.EndCombatPhase -> Counters.endCombatPhase runDamageRewriteEffect runReplacementEffects runSubgame
   Effect.GainControl payload -> Counters.gainControl resolving source controller legal payload
   Effect.ExchangeControl payload -> Counters.exchangeControl resolving source controller legal payload
   Effect.TakeExtraTurn payload -> Counters.takeExtraTurnArm resolving source controller legal payload
@@ -683,7 +683,7 @@ applyOneEffect runSubgame resolving source controller legal chosen effect = case
 -- The no-subgame executor, for a test that drives one effect directly: a
 -- PlaySubgame resolves as a draw here (see noSubgame).
 applyEffect :: ObjectId -> ObjectId -> PlayerId -> Map.Map SlotName (Set Recipient) -> Map.Map SlotName (Set Recipient) -> Effect Card.Type.Card (GrantedAbility.GrantedAbility Card.Type.Card) -> Game ()
-applyEffect = applyEffectWith noSubgame
+applyEffect = applyEffectWith Common.noSubgame
 
 -- CR 615.5: run the additional effect of every prevention that has just been
 -- applied. Drains GameState.pendingPreventionRiders, which Parun.Engine.Damage
@@ -770,7 +770,7 @@ runEntryEffect runSubgame pending = do
   -- CR 614.12: what entered in the same event is held off the battlefield while
   -- the effects run, as it was when the rewrite applied (enteredBeside).
   outer <- State.gets GameState.enteringBeside
-  beside <- State.gets (enteredBeside oid)
+  beside <- State.gets (Common.enteredBeside oid)
   State.modify' (\gs -> gs {GameState.enteringBeside = Set.union outer beside})
   Monad.void (runCarrying runSubgame oid (PendingEntryEffect.controller pending) Map.empty Map.empty (PendingEntryEffect.effects pending))
   State.modify' (\gs -> gs {GameState.enteringBeside = outer})
@@ -836,7 +836,7 @@ performHandAction runSubgame source player =
 rollToVisit :: Game Result -> PlayerId -> Game ()
 rollToVisit runSubgame pid = do
   (results, throwers, rolled) <- throwDice runSubgame pid 6 1 (pure 0)
-  Monad.unless (null rolled) (recordRoll pid throwers rolled)
+  Monad.unless (null rolled) (Common.recordRoll pid throwers rolled)
   -- CR 706.6 can throw a second die and ignore the lower; one is left.
   Foldable.for_ (Maybe.listToMaybe results) $ \result ->
     State.modify' (Event.recordEvent (GameEvent.RolledToVisit DieResult.MkDieResult {DieResult.roller = pid, DieResult.result = result}))
@@ -875,7 +875,7 @@ throwDice runSubgame controller sides named perDie = do
 throwForCoin :: Game Result -> Throw.Throw -> Game [Natural]
 throwForCoin runSubgame roll = do
   (results, throwers) <- throwSettled runSubgame roll (pure 0)
-  Monad.unless (null results) (recordRoll (Throw.thrower roll) throwers results)
+  Monad.unless (null results) (Common.recordRoll (Throw.thrower roll) throwers results)
   pure results
 
 -- | `throwDice` once CR 614.1a's loop has settled the roll: how many dice to
@@ -1126,7 +1126,7 @@ throwSettled runSubgame roll perDie = do
           ability <- Activatable.abilitiesFor oid opened,
           elem ActivationRestriction.Type.DuringDieRoll (ActivatedAbility.restrictions ability)
         ]
-      duringRoll = withRollingDie sides
+      duringRoll = Common.withRollingDie sides
       rollOne by modifierOf = do
         rolled <- Game.ask (Prompt.RollDie sides)
         (thrower, natural) <- rerolling by (faceOf rolled)
@@ -1211,7 +1211,7 @@ performManaPayGate :: Game Result -> ObjectId -> PlayerId -> ClauseIndex.ClauseI
 performManaPayGate runSubgame source controller cIdx gate answers = do
   let offerAt = Maybe.fromMaybe cIdx (PayGate.offeredAt gate)
   asked <- maybe (payGatePaid runSubgame source source controller (ModeIndex.MkModeIndex 0) cIdx Map.empty Nothing Set.empty gate) pure (Map.lookup offerAt answers)
-  pure (not (Set.null (branchSelects (PayGate.branch gate) asked)), Map.insert offerAt asked answers)
+  pure (not (Set.null (Common.branchSelects (PayGate.branch gate) asked)), Map.insert offerAt asked answers)
 
 -- CR 605.4a: apply one triggered mana ability where it stands. CR 605.1b's
 -- classification and CR 603.4's intervening "if" are already spent by
@@ -1307,7 +1307,7 @@ runCarrying runSubgame holder controller fixed =
         let defined = boundSlots effect
             env = Map.union bound fixed
         State.modify' $ \gs ->
-          (overHolderBindings holder (`Map.withoutKeys` defined) gs)
+          (Common.overHolderBindings holder (`Map.withoutKeys` defined) gs)
             { GameState.detachedBindings = Map.adjust (`Map.withoutKeys` defined) holder (GameState.detachedBindings gs)
             }
         applyEffectWith runSubgame holder holder controller env env effect
@@ -1364,7 +1364,7 @@ applyLoopBody runSubgame resolving source controller legal chosen bodyDefined bo
   let applyOne effect = do
         defined <- State.gets (\gs -> Map.restrictKeys (Binding.targetsOf (slotBindings resolving gs)) bodyDefined)
         applyEffectWith runSubgame resolving source controller (Map.union legal defined) (Map.union chosen defined) effect
-   in applyClauseEffects resolving source applyOne (Foldable.toList body)
+   in Common.applyClauseEffects resolving source applyOne (Foldable.toList body)
 
 -- The offer itself: who was offered this gate's cost, and which of them paid?
 -- CR 118.12's MANDATORY limb is not offered, and that is the rule rather than an
@@ -1397,12 +1397,12 @@ payGatePaid runSubgame resolving source controller idx cIdx legal announced comm
   answered <-
     Monad.foldM
       ( \earlier payer -> do
-          paid <- payGatePaidBy runSubgame resolving source controller (PayOffer.AtClause idx cIdx) (fmap (fmap paymentDecisionOf) earlier) legal payer (offerTo payer)
+          paid <- payGatePaidBy runSubgame resolving source controller (PayOffer.AtClause idx cIdx) (fmap (fmap Common.paymentDecisionOf) earlier) legal payer (offerTo payer)
           pure (earlier Seq.|> (payer, paid))
       )
       Seq.empty
-      (announcedOnly announced (apnapDecidersOf (PayGate.payer gate) legal resolving source controller gs))
-  State.modify' (foldPaid resolving (foldr Binding.mergePaid Map.empty (Maybe.mapMaybe snd (Foldable.toList answered))))
+      (Common.announcedOnly announced (Common.apnapDecidersOf (PayGate.payer gate) legal resolving source controller gs))
+  State.modify' (Common.foldPaid resolving (foldr Binding.mergePaid Map.empty (Maybe.mapMaybe snd (Foldable.toList answered))))
   pure (Map.fromList [(payer, Maybe.isJust paid) | (payer, paid) <- Foldable.toList answered])
 
 -- CR 118.12a over CR 608.2f's loop: the members whose ForEach.payGate branch
@@ -1428,15 +1428,15 @@ loopOffers :: Game Result -> ObjectId -> ObjectId -> PlayerId -> SlotName -> Map
 loopOffers runSubgame resolving source controller slot legal members gate = do
   gs <- State.get
   let legalFor member = Map.insert slot (Set.singleton member) legal
-      payersOf member = apnapDecidersOf (PayGate.payer gate) (legalFor member) resolving source controller gs
+      payersOf member = Common.apnapDecidersOf (PayGate.payer gate) (legalFor member) resolving source controller gs
       order = Game.apnapOrder gs
       offers = [(payer, member) | payer <- order, member <- members, elem payer (payersOf member)]
       agreedBy payer answers = [taken | (p, _, Just taken) <- Foldable.toList answers, p == payer]
       agreeOne acc payer member = do
-        (slots, options) <- State.gets (gateCostOf resolving source controller (legalFor member) gate)
+        (slots, options) <- State.gets (Common.gateCostOf resolving source controller (legalFor member) gate)
         let earlier = Seq.fromList [(p, maybe PaymentDecision.Declines (const PaymentDecision.Pays) taken) | (p, m, taken) <- Foldable.toList acc, m == member]
             owed = fmap (Cost.together . fmap snd) (NonEmpty.nonEmpty (agreedBy payer acc))
-        agreed <- payGateAgreed resolving source (PayOffer.ForMember member) earlier payer gate slots owed options
+        agreed <- Common.payGateAgreed resolving source (PayOffer.ForMember member) earlier payer gate slots owed options
         pure (payer, member, fmap ((,) slots) agreed)
       -- One payer's offers answered again, in place, each against what was
       -- answered before it; later payers' answers stand, CR 733.1 reversing
@@ -1456,13 +1456,13 @@ loopOffers runSubgame resolving source controller slot legal members gate = do
               Nothing -> pure (Just (done, current))
               Just taken -> do
                 (bound, answered) <- payGateCost runSubgame (fst (NonEmpty.head taken)) payer source (Cost.together (fmap snd taken))
-                payAgain failed (fst (NonEmpty.head taken), NonEmpty.toList (fmap snd taken), answered) (fmap (\b -> (Map.insert payer b done, current)) bound) (\failed' -> reagree payer current >>= attempt failed')
+                Common.payAgain failed (fst (NonEmpty.head taken), NonEmpty.toList (fmap snd taken), answered) (fmap (\b -> (Map.insert payer b done, current)) bound) (\failed' -> reagree payer current >>= attempt failed')
          in fmap (Maybe.fromMaybe (done, answers)) (attempt Set.empty answers)
   asked <- Monad.foldM (\acc (payer, member) -> fmap (acc Seq.|>) (agreeOne acc payer member)) Seq.empty offers
   (paid, answered) <- Monad.foldM payFor (Map.empty, asked) order
-  State.modify' (foldPaid resolving (foldr Binding.mergePaid Map.empty paid))
+  State.modify' (Common.foldPaid resolving (foldr Binding.mergePaid Map.empty paid))
   let askedAbout member = Map.fromList [(p, Maybe.isJust taken && Map.member p paid) | (p, m, taken) <- Foldable.toList answered, m == member]
-  pure (filter (not . Set.null . branchSelects (PayGate.branch gate) . askedAbout) members)
+  pure (filter (not . Set.null . Common.branchSelects (PayGate.branch gate) . askedAbout) members)
 
 -- One player's answer to one gate. The cost is the PRINTED one with CR 107.3's X
 -- resolved (`announcedXOn`) and then multiplied by the gate's "for each"
@@ -1513,13 +1513,13 @@ payGatePaidBy runSubgame resolving source controller offer earlier legal payer g
     -- CR 733.1 / 118.12a: a payment that fails is reversed, which returns the
     -- payer to the choice, so they are asked again (payAgain).
     attempt failed = do
-      (slots, options) <- State.gets (gateCostOf resolving source controller legal gate)
-      agreed <- payGateAgreed resolving source offer earlier payer gate slots Nothing options
+      (slots, options) <- State.gets (Common.gateCostOf resolving source controller legal gate)
+      agreed <- Common.payGateAgreed resolving source offer earlier payer gate slots Nothing options
       case agreed of
         Nothing -> pure Nothing
         Just cost -> do
           (paid, answered) <- payGateCost runSubgame slots payer source cost
-          payAgain failed (cost, answered) paid attempt
+          Common.payAgain failed (cost, answered) paid attempt
 
 -- The payment of a cost the payer agreed to, against `source` (CR 113.7a): the
 -- slots it bound when it was paid (foldPaid), Nothing when it was not, and the

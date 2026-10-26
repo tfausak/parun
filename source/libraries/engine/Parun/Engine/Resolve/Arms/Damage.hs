@@ -1,7 +1,8 @@
 -- applyOneEffect's arms from dealDamage to exchangeBlocks, one function per
 -- Effect constructor, cut from Parun.Engine.Resolve.Effect along its order so the
--- arms compile in parallel. Each takes the resolution parameters its body reads,
--- then the constructor's fields.
+-- arms compile in parallel. Each takes the recursion of Parun.Engine.Resolve.Effect
+-- it calls back into, then the resolution parameters its body reads, then the
+-- constructor's fields.
 module Parun.Engine.Resolve.Arms.Damage where
 
 import qualified Control.Monad as Monad
@@ -36,8 +37,7 @@ import qualified Parun.Engine.Projection as Projection
 import qualified Parun.Engine.Projection.View as Projection
 import qualified Parun.Engine.Quantity as Quantity
 import qualified Parun.Engine.Replacement as Replacement
-import Parun.Engine.Resolve.Common (apnapPlayersOf, arrangeInLibrary, askedChooser, askingObjects, bindAmountSlot, bindObjects, bindObjectsSlot, bindPlayerSlot, chosenPermanents, controlledTeam, differing, evaluateForRecipient, exileFoundFor, expandGrant, fallShort, frozenAffected, isCardInAGraveyard, mostDiffering, objectRefRecipients, outsideArrival, popControl, pushControl, putFound, putsOnTop, recipientSeat, recordRoll, sacrificerFor, shufflesAfter, storeOn)
-import {-# SOURCE #-} Parun.Engine.Resolve.Effect (performHandAction, performManaAbility, runPreventionRiders, runReplacementEffects, throwDice, throwForCoin)
+import qualified Parun.Engine.Resolve.Common as Common
 import Parun.Engine.Resolve.Slots (battlefieldMatching, chosenCandidates, effectContext, effectContextNaming, effectViewOf, legalMany, legalOne, objectRefObjects, playerRefPlayers, resolvingAbilityName, slotBindings)
 import qualified Parun.Engine.Restamp as Restamp
 import qualified Parun.Engine.Sector as Sector
@@ -77,9 +77,11 @@ import Parun.Types.Game (Game)
 import qualified Parun.Types.GameEvent as GameEvent
 import qualified Parun.Types.GameState as GameState
 import qualified Parun.Types.GrantedAbility as GrantedAbility
+import qualified Parun.Types.HandActionPerformer as HandActionPerformer
 import qualified Parun.Types.LibraryPosition as LibraryPosition
 import qualified Parun.Types.LoggedEvent as LoggedEvent
 import qualified Parun.Types.Mana as Mana.Type
+import qualified Parun.Types.ManaAbilityPerformer as ManaAbilityPerformer
 import qualified Parun.Types.ManaAdded as ManaAdded
 import qualified Parun.Types.ManaAddedCause as ManaAddedCause
 import qualified Parun.Types.ManaAddition as ManaAddition
@@ -110,18 +112,19 @@ import Parun.Types.SlotName (SlotName)
 import qualified Parun.Types.StoredResult as StoredResult
 import qualified Parun.Types.TapState as TapState
 import qualified Parun.Types.Teams as Teams
+import qualified Parun.Types.Throw as Throw
 import qualified Parun.Types.TurnFaceDown as TurnFaceDown
 import qualified Parun.Types.Zone as Zone
 
-dealDamage :: Game Result -> ObjectId -> ObjectId -> PlayerId -> Map.Map SlotName (Set Recipient) -> DealDamage.DealDamage -> Game ()
-dealDamage runSubgame resolving source controller legal (DealDamage.MkDealDamage parts dealer excess mTally mDamaged) = do
+dealDamage :: (Game Result -> Game ()) -> (Game Result -> Game ()) -> Game Result -> ObjectId -> ObjectId -> PlayerId -> Map.Map SlotName (Set Recipient) -> DealDamage.DealDamage -> Game ()
+dealDamage runPreventionRiders runReplacementEffects runSubgame resolving source controller legal (DealDamage.MkDealDamage parts dealer excess mTally mDamaged) = do
   gs <- State.get
   let viewOf = effectViewOf source legal gs
       context = effectContext gs resolving controller source legal (slotBindings resolving gs)
       -- CR 120.1a: damage only to a battle, creature, or planeswalker, so every
       -- object an ObjectRef names goes through Damage.damageRecipient and none
       -- is trusted. A player recipient survives untouched (CR 115.4, CR 120.3a).
-      recipientsOf ref = Maybe.mapMaybe (Damage.damageRecipient gs) (objectRefRecipients legal resolving controller source gs ref)
+      recipientsOf ref = Maybe.mapMaybe (Damage.damageRecipient gs) (Common.objectRefRecipients legal resolving controller source gs ref)
       -- WHO DEALS IT (CR 120.1): `source` is CR 113.7's default, and a `dealer`
       -- slot is CR 120.2b's exception. Resolved here and carried on the
       -- DamageEvent, so every later reader of "what dealt this" sees the
@@ -148,9 +151,9 @@ dealDamage runSubgame resolving source controller legal (DealDamage.MkDealDamage
       -- data/scenarios/divide's Forked Lightning case proves it.
       let amountFor quantity recipient =
             let sharing = context {Filter.shares = Binding.sharesOf recipient (slotBindings resolving gs)}
-             in case recipientSeat gs recipient of
+             in case Common.recipientSeat gs recipient of
                   Nothing -> Quantity.evaluateFor viewOf sharing gs resolving source quantity
-                  Just pid -> evaluateForRecipient viewOf sharing gs resolving source pid quantity
+                  Just pid -> Common.evaluateForRecipient viewOf sharing gs resolving source pid quantity
           -- ONE event list from EVERY clause the instruction names, so a
           -- sentence naming objects and players at once -- Molten Disaster's
           -- "each creature without flying and each player" -- reaches
@@ -192,20 +195,20 @@ dealDamage runSubgame resolving source controller legal (DealDamage.MkDealDamage
   -- Syphon Soul's "the damage dealt this way": the SETTLED total, after CR
   -- 615's prevention had its say, so a shielded player contributes only what
   -- got through. Bound even at 0, LoseLife's tally's posture.
-  Monad.forM_ mTally $ \slot -> State.modify' (bindAmountSlot resolving source slot (sum (fmap DamageEvent.amount dealtEvents)))
+  Monad.forM_ mTally $ \slot -> State.modify' (Common.bindAmountSlot resolving source slot (sum (fmap DamageEvent.amount dealtEvents)))
   -- Incinerate's "a creature dealt damage this way": the OBJECTS the settled
   -- events reached (CR 120.3), so one whose damage was all prevented (CR
   -- 615.6) is not among them. Bound onto `resolving` as a group, Destroy's
   -- `permanents` shape; nothing is bound when nothing was damaged.
   Monad.forM_ mDamaged $ \slot -> do
     let hit = ListUtils.nubOrd (Maybe.mapMaybe (Recipient.objectOf . DamageEvent.target) dealtEvents)
-    Monad.unless (null hit) (State.modify' (bindObjectsSlot resolving slot (Seq.fromList hit)))
+    Monad.unless (null hit) (State.modify' (Common.bindObjectsSlot resolving slot (Seq.fromList hit)))
 
 -- CR 701.14. Every clause of the rule is one line here, and none of them is a
 -- read of what the effect IS: the amounts come off the projection, the kind is
 -- data, and the pair guard is arithmetic on two Maybes.
-fight :: Game Result -> Map.Map SlotName (Set Recipient) -> Fight.Fight -> Game ()
-fight runSubgame legal (Fight.MkFight firstSlot secondSlot) = do
+fight :: (Game Result -> Game ()) -> (Game Result -> Game ()) -> Game Result -> Map.Map SlotName (Set Recipient) -> Fight.Fight -> Game ()
+fight runPreventionRiders runReplacementEffects runSubgame legal (Fight.MkFight firstSlot secondSlot) = do
   gs <- State.get
   -- CR 701.14b, and it is a guard on the PAIR: "if one or both creatures
   -- instructed to fight are no longer on the battlefield or are no longer
@@ -274,9 +277,9 @@ modifyTarget resolving source controller legal chosen (ModifyTarget.MkModifyTarg
   -- reason: CR 608.2d's choice is an ask, which the pure sweep cannot make.
   -- Mirkwood Trapper's "that player chooses an attacking creature. It gets
   -- +2/+0" is the reader.
-  affected <- askingObjects resolving source controller legal chosen ref
+  affected <- Common.askingObjects resolving source controller legal chosen ref
   State.modify' $ \gs ->
-    case frozenAffected gs affected of
+    case Common.frozenAffected gs affected of
       [] -> gs
       targets -> case Expiry.arm (Game.readingAcquisition resolving source) legal controller source duration gs of
         -- CR 611.2b: the duration never started, so nothing is stored.
@@ -329,7 +332,7 @@ modifyTarget resolving source controller legal chosen (ModifyTarget.MkModifyTarg
                  in g1 {GameState.continuousEffects = eff : GameState.continuousEffects g1}
               storeSet g (objs, frozen) = case frozen of
                 Nothing -> g
-                Just m -> List.foldl' (store objs) g (expandGrant resolving source gs m)
+                Just m -> List.foldl' (store objs) g (Common.expandGrant resolving source gs m)
            in List.foldl' storeSet gs frozenSets
 
 -- CR 608.2d: a word swap is not among CR 601.2b-d's announcements, so the
@@ -516,14 +519,14 @@ addMana resolving source controller legal (ManaAddition.MkManaAddition ref produ
 -- not made yet -- which mana ability of each permanent (Prompt.ChooseManaYield)
 -- and what its cost then leaves in the pool -- so no gate here can tell. A
 -- batch of one is one order.
-activateManaAbilities :: Game Result -> ObjectId -> ObjectId -> PlayerId -> Map.Map SlotName (Set Recipient) -> ActivateManaAbilities.ActivateManaAbilities -> Game ()
-activateManaAbilities runSubgame resolving source controller legal (ActivateManaAbilities.MkActivateManaAbilities ref filter_) = do
+activateManaAbilities :: (Game Result -> ManaAbilityPerformer.ManaAbilityPerformer) -> Game Result -> ObjectId -> ObjectId -> PlayerId -> Map.Map SlotName (Set Recipient) -> ActivateManaAbilities.ActivateManaAbilities -> Game ()
+activateManaAbilities performManaAbility runSubgame resolving source controller legal (ActivateManaAbilities.MkActivateManaAbilities ref filter_) = do
   gs0 <- State.get
   let matching = battlefieldMatching legal resolving controller source gs0 filter_
       theirs pid = filter (\oid -> Projection.controllerOf oid gs0 == Just pid) matching
   -- CR 101.4's APNAP order over several actors, apnapPlayersOf's own
   -- intersection; Drain Power names one.
-  Monad.forM_ (apnapPlayersOf ref legal resolving source controller gs0) $ \pid -> do
+  Monad.forM_ (Common.apnapPlayersOf ref legal resolving source controller gs0) $ \pid -> do
     let batch = theirs pid
     ordered <- case batch of
       _ : _ : _ -> do
@@ -547,10 +550,10 @@ activateManaAbilities runSubgame resolving source controller legal (ActivateMana
 moveMana :: ObjectId -> ObjectId -> PlayerId -> Map.Map SlotName (Set Recipient) -> MoveMana.MoveMana -> Game ()
 moveMana resolving source controller legal (MoveMana.MkMoveMana fromRef toRef) = do
   gs <- State.get
-  Mana.moveMana (apnapPlayersOf fromRef legal resolving source controller gs) (foldMap (\ref -> apnapPlayersOf ref legal resolving source controller gs) toRef)
+  Mana.moveMana (Common.apnapPlayersOf fromRef legal resolving source controller gs) (foldMap (\ref -> Common.apnapPlayersOf ref legal resolving source controller gs) toRef)
 
-search :: Game Result -> ObjectId -> ObjectId -> PlayerId -> Map.Map SlotName (Set Recipient) -> Search.Search -> Game ()
-search runSubgame resolving source controller legal (Search.MkSearch searcherRef ownerRef zones outside quantity filter_ upTo destination subject foundSlot differentIn exactly andOr) =
+search :: (Game Result -> ManaAbilityPerformer.ManaAbilityPerformer) -> Game Result -> ObjectId -> ObjectId -> PlayerId -> Map.Map SlotName (Set Recipient) -> Search.Search -> Game ()
+search performManaAbility runSubgame resolving source controller legal (Search.MkSearch searcherRef ownerRef zones outside quantity filter_ upTo destination subject foundSlot differentIn exactly andOr) =
   -- CR 701.23a: match each candidate through its own CR 613 projection --
   -- rule 613.1 names no zone, so a card in any of the searched zones is folded
   -- exactly as a permanent is, and CR 208.2a's characteristic-defining power
@@ -618,7 +621,7 @@ search runSubgame resolving source controller legal (Search.MkSearch searcherRef
       -- a card from there -- see outsideArrival.
       places =
         Set.map SearchPlace.InZone zones
-          <> (if outside && Maybe.isJust (outsideArrival destination) then Set.singleton SearchPlace.OutsideTheGame else Set.empty)
+          <> (if outside && Maybe.isJust (Common.outsideArrival destination) then Set.singleton SearchPlace.OutsideTheGame else Set.empty)
    in do
         gs0 <- State.get
         -- Search.searcher names who searches; Search.owner names whose zones
@@ -730,7 +733,7 @@ search runSubgame resolving source controller legal (Search.MkSearch searcherRef
               then State.gets (PlayerEffect.searchingController searcher)
               else pure Nothing
           let searchControl (you, stamp) = PlayerControl.MkPlayerControl {PlayerControl.decider = Decider.MkDecider you, PlayerControl.duration = ControlDuration.WhileSearching, PlayerControl.manaFromLandsOnly = False, PlayerControl.timestamp = stamp}
-          Foldable.for_ searchController (State.modify' . pushControl searcher . searchControl)
+          Foldable.for_ searchController (State.modify' . Common.pushControl searcher . searchControl)
           -- CR 616.1: which Opposition Agent's exile replaces where the finds
           -- go, chosen by the searcher -- under the control row just pushed,
           -- whoever decides for them -- and elided at one.
@@ -793,8 +796,8 @@ search runSubgame resolving source controller legal (Search.MkSearch searcherRef
                     -- cards as the zones can give, up to the count (CR 101.1,
                     -- 609.3). Validated, not filled: which cards make up the
                     -- group is the searcher's choice.
-                    required = mostDiffering differentIn gs capHere matches
-                    fills given = differing differentIn gs given == given && List.genericLength given == required
+                    required = Common.mostDiffering differentIn gs capHere matches
+                    fills given = Common.differing differentIn gs given == given && List.genericLength given == required
                     -- RE-ASKED when short, Parun.Engine.Engine's CR 603.3d
                     -- shape: a repeat of an answer already refused is taken
                     -- as it stands, since a pure decider repeats itself and
@@ -851,7 +854,7 @@ search runSubgame resolving source controller legal (Search.MkSearch searcherRef
                     -- below is not held to it, which no card reaches: every
                     -- card in data/cards/ printing one says "up to" or
                     -- "exactly".
-                    picked = List.genericTake capHere . differing differentIn gs . ListUtils.nubOrd $ filter (\oid -> List.elem oid matches) answer
+                    picked = List.genericTake capHere . Common.differing differentIn gs . ListUtils.nubOrd $ filter (\oid -> List.elem oid matches) answer
                     forced = concatMap snd (filter (not . mayDecline . fst) byZone)
                     filler = filter (\oid -> List.notElem oid picked) forced
                     -- CR 701.23j: the searcher "MAY choose" a card out there,
@@ -870,7 +873,7 @@ search runSubgame resolving source controller legal (Search.MkSearch searcherRef
                   _ -> pure []
                 let room = capHere - min capHere (List.genericLength picked + List.genericLength outsidePicked)
                 pure (picked <> List.genericTake room filler, outsidePicked)
-          Foldable.for_ searchController (State.modify' . popControl searcher . searchControl)
+          Foldable.for_ searchController (State.modify' . Common.popControl searcher . searchControl)
           pure (searcher, owner, chosenZones, found, foundOutside, exiler)
         -- Where the cards go is the CARD's instruction, not rule 701.23's;
         -- CR 701.23e says the same of the reveal. The searcher is the
@@ -905,14 +908,14 @@ search runSubgame resolving source controller legal (Search.MkSearch searcherRef
             present <- State.gets (`stillThere` oid)
             case (present, exiler) of
               (False, _) -> pure []
-              (True, Nothing) -> putFound resolving before searcher host destination oid
-              (True, Just agent) -> [] <$ (exileFoundFor agent =<< Event.changeZoneInBatchReturning before oid Zone.Exile)
+              (True, Nothing) -> Common.putFound resolving before searcher host destination oid
+              (True, Just agent) -> [] <$ (Common.exileFoundFor agent =<< Event.changeZoneInBatchReturning before oid Zone.Exile)
           -- CR 400.11b: a card found outside the game is brought in rather
           -- than moved, the reveal riding along as it arrives (#2450).
-          fromOutside <- case (outsideArrival destination, exiler) of
+          fromOutside <- case (Common.outsideArrival destination, exiler) of
             (Nothing, _) -> pure []
             (Just (arrival, revealIt), Nothing) -> Event.bringChosen arrival revealIt searcher foundOutside
-            (Just _, Just agent) -> [] <$ (exileFoundFor agent . Seq.fromList =<< Event.bringChosen OutsideDestination.Exile False searcher foundOutside)
+            (Just _, Just agent) -> [] <$ (Common.exileFoundFor agent . Seq.fromList =<< Event.bringChosen OutsideDestination.Exile False searcher foundOutside)
           pure (fromZones <> fromOutside)
         -- The shuffle is the CARD's instruction too (CR 701.23h, CR 701.24b).
         -- The library shuffled is the one that was READ, so the seat is the
@@ -951,23 +954,23 @@ search runSubgame resolving source controller legal (Search.MkSearch searcherRef
         -- cr-701-24b-scheming-symmetry-puts-each-searcher-s-find-on-top-of-their-own-library
         -- are the proof.
         let shuffled
-              | not (shufflesAfter destination) = []
+              | not (Common.shufflesAfter destination) = []
               | otherwise = ListUtils.nubOrd [owner | (_, owner, chosenZones, _, _, _) <- decisions, Set.member Zone.Library chosenZones]
             leftOut
-              | putsOnTop destination = Set.fromList arrivals
+              | Common.putsOnTop destination = Set.fromList arrivals
               | otherwise = Set.empty
         Monad.forM_ shuffled (Event.shuffleLibraryExcept leftOut)
         placed <-
-          if putsOnTop destination
+          if Common.putsOnTop destination
             then do
               onTop <- concat <$> traverse (\oid -> Foldable.toList <$> Event.changeZoneAttaching Nothing Set.empty oid Zone.Library LibraryPosition.Top Nothing TapState.Untapped Map.empty Nothing Nothing Facing.FaceUp False CarryOver.NotCarried False Seq.empty) (reverse arrivals)
               owners <- State.gets (\gs -> ListUtils.nubOrd (Maybe.mapMaybe (\oid -> fmap Object.owner (Game.lookupObject oid gs)) onTop))
-              Monad.forM_ owners (\owner -> arrangeInLibrary owner onTop owner)
+              Monad.forM_ owners (\owner -> Common.arrangeInLibrary owner onTop owner)
               pure onTop
             else pure arrivals
         -- CR 608.2c: "that card" in a later clause, or in a delayed ability
         -- this resolution arms (CR 603.7c), is what arrived.
-        bindObjects resolving foundSlot placed
+        Common.bindObjects resolving foundSlot placed
 
 -- Exile every card in every graveyard as ONE event (CR 608.2f), so "one or
 -- more cards leave your graveyard" fires once (CR 603.2c). "Every graveyard"
@@ -993,7 +996,7 @@ exileHandThenDraw controller = do
   got <- Maybe.catMaybes <$> Monad.replicateM (length handIds) (Event.drawCardReturning controller)
   -- CR 603.12: the Draw arm's shortfall. A REGRESSION FENCE: nothing arms a
   -- reflexive after it.
-  Monad.when (length got < length handIds) fallShort
+  Monad.when (length got < length handIds) Common.fallShort
 
 -- CR 607.2e: the note is the ACTIVATION's CR 602.2b payment -- recorded on
 -- the ability object as Object.manaSpent -- filed against the SOURCE, whose linked
@@ -1016,8 +1019,8 @@ noteManaSpent resolving source = do
 -- (Parun.Engine.Engine.playSubgame), which a restart inside it cannot reach
 -- out of, and the game loop exits the instant GameState.result is Just, so a
 -- main-game effect can only ever read the restarted subgame's winner.
-restartGame :: Game Result -> ObjectId -> ObjectId -> PlayerId -> Map.Map SlotName (Set Recipient) -> Maybe ObjectRef -> Game ()
-restartGame runSubgame resolving source controller legal exempt = do
+restartGame :: (Game Result -> HandActionPerformer.HandActionPerformer) -> Game Result -> ObjectId -> ObjectId -> PlayerId -> Map.Map SlotName (Set Recipient) -> Maybe ObjectRef -> Game ()
+restartGame performHandAction runSubgame resolving source controller legal exempt = do
   gs <- State.get
   let exempted = case exempt of
         Nothing -> Set.empty
@@ -1050,11 +1053,11 @@ playSubgame :: Game Result -> ObjectId -> SlotName -> Game ()
 playSubgame runSubgame resolving slot = do
   result <- runSubgame
   case result of
-    Result.Won winner -> State.modify' (bindPlayerSlot resolving slot (Set.singleton winner))
+    Result.Won winner -> State.modify' (Common.bindPlayerSlot resolving slot (Set.singleton winner))
     -- CR 104.2c: each player on the winning team wins.
     Result.TeamWon team -> do
       gs <- State.get
-      State.modify' (bindPlayerSlot resolving slot (Map.keysSet (Map.filter (== team) (Teams.unwrap (Game.teams gs)))))
+      State.modify' (Common.bindPlayerSlot resolving slot (Map.keysSet (Map.filter (== team) (Teams.unwrap (Game.teams gs)))))
     Result.Drawn -> pure ()
 
 -- CR 608.2d: "choose an opponent" (Skullwinder) or "choose a player" (Stadium
@@ -1076,7 +1079,7 @@ choosePlayer resolving source controller choice = do
   gs <- State.get
   let slot = ChoosePlayer.slot choice
   chosenPlayer <- Players.chooseOne controller source Nothing (Maybe.fromMaybe [] (PlayerEffect.playersInScope (Plane.rangePerspective source controller gs) (Just controller) gs (ChoosePlayer.scope choice)))
-  Monad.forM_ chosenPlayer $ \pid -> State.modify' (bindPlayerSlot resolving slot (Set.singleton pid))
+  Monad.forM_ chosenPlayer $ \pid -> State.modify' (Common.bindPlayerSlot resolving slot (Set.singleton pid))
 
 -- ChoosePlayer's twin with the decision replaced by randomness (Ruhan of the
 -- Fomori's "choose an opponent at random", Strax, Sontaran Nurse's "choose a
@@ -1104,7 +1107,7 @@ choosePlayerAtRandom resolving source controller choice = do
   let slot = ChoosePlayerAtRandom.slot choice
       candidates = Maybe.fromMaybe [] (PlayerEffect.playersInScope (Plane.rangePerspective source controller gs) (Just controller) gs (ChoosePlayerAtRandom.scope choice))
   chosenPlayer <- Game.drawAmong Prompt.RandomPlayer candidates
-  Monad.forM_ chosenPlayer $ \pid -> State.modify' (bindPlayerSlot resolving slot (Set.singleton pid))
+  Monad.forM_ chosenPlayer $ \pid -> State.modify' (Common.bindPlayerSlot resolving slot (Set.singleton pid))
 
 -- CR 608.2d: the seat the payload names picks any number of the matching
 -- permanents -- Archfiend of Depravity's "that player chooses up to two
@@ -1124,22 +1127,22 @@ choosePlayerAtRandom resolving source controller choice = do
 choosePermanents :: ObjectId -> ObjectId -> PlayerId -> Map.Map SlotName (Set Recipient) -> ChoosePermanents.ChoosePermanents -> Game ()
 choosePermanents resolving source controller legal (ChoosePermanents.MkChoosePermanents choice slot pileChooser) = do
   picked <- case pileChooser of
-    Nothing -> chosenPermanents AnyNumberOf.Permanents legal resolving controller source choice
+    Nothing -> Common.chosenPermanents AnyNumberOf.Permanents legal resolving controller source choice
     Just chooserRef -> do
       gs <- State.get
       let matching = chosenCandidates legal resolving controller source gs choice
       split <- case matching of
         [_] -> pure matching
-        _ -> chosenPermanents AnyNumberOf.IntoPile legal resolving controller source choice
+        _ -> Common.chosenPermanents AnyNumberOf.IntoPile legal resolving controller source choice
       let first = Set.fromList split
           rest = Set.difference (Set.fromList matching) first
           piles = if rest == first then [first] else [first, rest]
-      seat <- askedChooser resolving source controller legal chooserRef
+      seat <- Common.askedChooser resolving source controller legal chooserRef
       taken <- case seat of
         Nothing -> pure Nothing
         Just who -> Game.chooseAmong (\decider asked -> Prompt.ChoosePile decider asked source) who piles
       pure (foldMap Set.toList taken)
-  Monad.unless (null picked) (State.modify' (bindObjectsSlot resolving slot (Seq.fromList picked)))
+  Monad.unless (null picked) (State.modify' (Common.bindObjectsSlot resolving slot (Seq.fromList picked)))
 
 -- CR 702.158d: "choose one of the three sector designations, then perform
 -- that action on each creature with that designation". The resolving
@@ -1154,7 +1157,7 @@ chooseSector resolving source controller slot = do
     gs <- State.get
     let inSector oid = maybe False (Set.member sector . Object.designations) (Game.lookupObject oid gs)
         members = filter inSector (Set.toList (GameState.battlefield gs))
-    Monad.unless (null members) (State.modify' (bindObjectsSlot resolving slot (Seq.fromList members)))
+    Monad.unless (null members) (State.modify' (Common.bindObjectsSlot resolving slot (Seq.fromList members)))
 
 -- CR 706.1: roll a die of the stated kind, and bind CR 706.4's result at the
 -- slot for a later effect of this same resolution to read (Ancient Copper
@@ -1208,8 +1211,8 @@ chooseSector resolving source controller slot = do
 -- words scope to the instruction rather than to the die. An instruction that
 -- rolls no dice at all records nothing, having rolled none; a reroll is a
 -- roll of its own and records its own.
-rollDieArm :: Game Result -> ObjectId -> ObjectId -> PlayerId -> Map.Map SlotName (Set Recipient) -> RollDie.RollDie -> Game ()
-rollDieArm runSubgame resolving source controller legal rollDie = do
+rollDieArm :: (Game Result -> PlayerId -> Natural -> Natural -> Game Integer -> Game ([Natural], [PlayerId], [Natural])) -> Game Result -> ObjectId -> ObjectId -> PlayerId -> Map.Map SlotName (Set Recipient) -> RollDie.RollDie -> Game ()
+rollDieArm throwDice runSubgame resolving source controller legal rollDie = do
   before <- State.get
   let sides = RollDie.sides rollDie
       -- How many dice the instruction NAMES -- what a CR 614.1a row is then
@@ -1263,7 +1266,7 @@ rollDieArm runSubgame resolving source controller legal rollDie = do
       -- leaves both unbound, `other`'s posture below.
       (Nothing, DiceReading.Both) -> case results of
         [first, second] -> do
-          Foldable.for_ (RollDie.other rollDie) $ \other -> State.modify' (bindAmountSlot resolving source other second)
+          Foldable.for_ (RollDie.other rollDie) $ \other -> State.modify' (Common.bindAmountSlot resolving source other second)
           pure (Just first)
         _ -> pure Nothing
       (Nothing, DiceReading.ChooseOne) -> Monad.forM (NonEmpty.nonEmpty results) $ \offered -> do
@@ -1291,22 +1294,22 @@ rollDieArm runSubgame resolving source controller legal rollDie = do
         -- roller.
         Foldable.for_ (RollDie.other rollDie) $ \other ->
           case fmap snd (filter (\(i, _) -> i /= index) (zip [0 ..] results)) of
-            [rest] -> State.modify' (bindAmountSlot resolving source other rest)
+            [rest] -> State.modify' (Common.bindAmountSlot resolving source other rest)
             _ -> pure ()
         pure (Replacement.at results index (NonEmpty.head offered))
     pure (roller, used, (throwers, thrown), results)
   let top = fmap maximum (NonEmpty.nonEmpty [n | (_, Just n, _, _) <- rolled])
   Foldable.for_ top $ \n -> do
-    State.modify' (bindAmountSlot resolving source (RollDie.slot rollDie) n)
+    State.modify' (Common.bindAmountSlot resolving source (RollDie.slot rollDie) n)
     Foldable.for_ (RollDie.highest rollDie) $ \slot ->
-      State.modify' (bindPlayerSlot resolving slot (Set.fromList [roller | (roller, Just m, _, _) <- rolled, m == n]))
+      State.modify' (Common.bindPlayerSlot resolving slot (Set.fromList [roller | (roller, Just m, _, _) <- rolled, m == n]))
   Foldable.for_ rolled $ \(roller, _, (throwers, thrown), _) ->
-    Monad.unless (null thrown) (recordRoll roller throwers thrown)
+    Monad.unless (null thrown) (Common.recordRoll roller throwers thrown)
   -- CR 706.8a: every kept result, noted with its kind of die, on the slot's
   -- permanent.
   Foldable.for_ (RollDie.store rollDie >>= \slot -> legalOne slot legal >>= Recipient.objectOf) $ \target -> do
     acquisition <- State.gets (\g -> Game.readingAcquisition resolving source g target)
-    State.modify' (storeOn acquisition target sides (foldMap (\(_, _, _, results) -> results) rolled))
+    State.modify' (Common.storeOn acquisition target sides (foldMap (\(_, _, _, results) -> results) rolled))
 
 -- CR 706.2b's reroll, asked for by the ability Goblin Bookie activates inside
 -- throwDice's window, through GameState.rerollRequested. The die is thrown
@@ -1324,8 +1327,8 @@ reroll = State.modify' (\g -> if Maybe.isJust (GameState.rollingDie g) then g {G
 --
 -- CR 607.5 / 706.8c: only the results the resolving ability's own pair
 -- stored, so a copy's reroll finds none its printed pair stored.
-rerollStoredResults :: Game Result -> ObjectId -> ObjectId -> PlayerId -> Map.Map SlotName (Set Recipient) -> SlotName -> Game ()
-rerollStoredResults runSubgame resolving source controller legal slot = Foldable.for_ (legalOne slot legal >>= Recipient.objectOf) $ \target -> do
+rerollStoredResults :: (Game Result -> PlayerId -> Natural -> Natural -> Game Integer -> Game ([Natural], [PlayerId], [Natural])) -> Game Result -> ObjectId -> ObjectId -> PlayerId -> Map.Map SlotName (Set Recipient) -> SlotName -> Game ()
+rerollStoredResults throwDice runSubgame resolving source controller legal slot = Foldable.for_ (legalOne slot legal >>= Recipient.objectOf) $ \target -> do
   gs <- State.get
   let acquisition = Game.readingAcquisition resolving source gs target
       stored = foldMap (Game.storedResultsUnder acquisition) (Game.lookupObject target gs)
@@ -1336,12 +1339,12 @@ rerollStoredResults runSubgame resolving source controller legal slot = Foldable
         kinds = Map.fromListWith (+) [(StoredResult.sides result, n) | (result, n) <- Map.toList rerolled]
     thrown <- Monad.forM (Map.toList kinds) $ \(dieSides, n) -> do
       (results, throwers, rolled) <- throwDice runSubgame controller dieSides n (pure 0)
-      Monad.unless (null rolled) (recordRoll controller throwers rolled)
+      Monad.unless (null rolled) (Common.recordRoll controller throwers rolled)
       pure (dieSides, results)
     -- Swapped only once every die is up, in the rule's order.
     let unstore o = o {Object.storedResults = Map.filter (not . Map.null) (Map.adjust (\held -> Map.differenceWith (\have gone -> if have > gone then Just (have - gone) else Nothing) held rerolled) acquisition (Object.storedResults o))}
     State.modify' (\g -> g {GameState.objects = Map.adjust unstore target (GameState.objects g)})
-    Foldable.for_ thrown $ \(dieSides, results) -> State.modify' (storeOn acquisition target dieSides results)
+    Foldable.for_ thrown $ \(dieSides, results) -> State.modify' (Common.storeOn acquisition target dieSides results)
 
 -- CR 705.1's flip, in RollDie's holder and for its reason: bindAmountSlot's
 -- `source` is the resolving object, and on a SPELL -- which Winter Sky is --
@@ -1390,8 +1393,8 @@ rerollStoredResults runSubgame resolving source controller legal slot = Foldable
 -- Parun.Engine.Event.flipOneCoin, before the comparison here sees the face at
 -- all, which is why a statement of heads alone still loses this flip against a
 -- call of tails.
-flipCoinArm :: Game Result -> ObjectId -> ObjectId -> PlayerId -> Map.Map SlotName (Set Recipient) -> FlipCoin.FlipCoin -> Game ()
-flipCoinArm runSubgame resolving source controller legal flipCoin = do
+flipCoinArm :: (Game Result -> Throw.Throw -> Game [Natural]) -> Game Result -> ObjectId -> ObjectId -> PlayerId -> Map.Map SlotName (Set Recipient) -> FlipCoin.FlipCoin -> Game ()
+flipCoinArm throwForCoin runSubgame resolving source controller legal flipCoin = do
   gs <- State.get
   let viewOf = effectViewOf source legal gs
       context = effectContext gs resolving controller source legal (slotBindings resolving gs)
@@ -1401,7 +1404,7 @@ flipCoinArm runSubgame resolving source controller legal flipCoin = do
       -- instruction named. CR 107.2's posture for a quantity that cannot be
       -- evaluated: no coins at all.
       coins = Integer.toNaturalSaturating (Maybe.fromMaybe 0 (Quantity.evaluateFor viewOf context gs resolving source (FlipCoin.count flipCoin)))
-      flippers = apnapPlayersOf (FlipCoin.flipper flipCoin) legal resolving source controller gs
+      flippers = Common.apnapPlayersOf (FlipCoin.flipper flipCoin) legal resolving source controller gs
   -- CR 705.3's statements, read once per flipper for the whole instruction
   -- rather than per coin -- Parun.Engine.Coin.statementsFor says why Edgar's
   -- "the first time you flip one or more coins each turn" makes that the
@@ -1441,7 +1444,7 @@ flipCoinArm runSubgame resolving source controller legal flipCoin = do
   -- Bound AFTER every coin, since CR 705.2 asks how many of the flips matched
   -- and one instruction's flips are all of them.
   tally <- sum <$> traverse flipsOf flippers
-  State.modify' (bindAmountSlot resolving source (FlipCoin.slot flipCoin) tally)
+  State.modify' (Common.bindAmountSlot resolving source (FlipCoin.slot flipCoin) tally)
   -- The flips that did NOT match, off the same coins. WHICH sentence of CR
   -- 705.2 that is depends on the reading: for a win/lose flip it is
   -- "otherwise, the player loses the flip", and for one that cares only about
@@ -1451,7 +1454,7 @@ flipCoinArm runSubgame resolving source controller legal flipCoin = do
   -- count. Parun.CoinSpec's Mutalith Vortex Beast group proves a lost flip
   -- reaches the loser and a won one does not.
   Foldable.for_ (FlipCoin.misses flipCoin) $ \misses ->
-    State.modify' (bindAmountSlot resolving source misses (coins * List.genericLength flippers - tally))
+    State.modify' (Common.bindAmountSlot resolving source misses (coins * List.genericLength flippers - tally))
 
 controlPlayerNextTurn :: PlayerId -> Map.Map SlotName (Set Recipient) -> SlotName -> Game ()
 controlPlayerNextTurn controller legal slot =
@@ -1471,7 +1474,7 @@ controlPlayerNextTurn controller legal slot =
                   PlayerControl.timestamp = stamp
                 }
             schedule g pid = g {GameState.pendingControl = Map.insert pid row (GameState.pendingControl g)}
-         in List.foldl' schedule stamped (controlledTeam controller target stamped)
+         in List.foldl' schedule stamped (Common.controlledTeam controller target stamped)
       -- Not a player recipient or an illegal slot (CR 608.2b): no-op.
       _ -> gs
 
@@ -1497,7 +1500,7 @@ controlPlayerThisResolution controller legal (ControlPlayer.MkControlPlayer slot
                   PlayerControl.manaFromLandsOnly = landsOnly,
                   PlayerControl.timestamp = stamp
                 }
-         in List.foldl' (\g pid -> pushControl pid row g) stamped (controlledTeam controller target stamped)
+         in List.foldl' (\g pid -> Common.pushControl pid row g) stamped (Common.controlledTeam controller target stamped)
       -- Not a player recipient or an illegal slot (CR 608.2b): no-op.
       _ -> gs
 
@@ -1509,7 +1512,7 @@ destroy resolving source controller legal chosen (Destroy.MkDestroy ref regenera
   -- victim (CR 608.2f). An illegal slot (CR 608.2b), a non-object recipient, or
   -- a set that matched nothing all arrive here as the empty list. Through
   -- askingObjects, so Capricious Efreet's "one of them at random" is drawn.
-  victims <- askingObjects resolving source controller legal chosen ref
+  victims <- Common.askingObjects resolving source controller legal chosen ref
   destroyed <- Event.destroyReturning regenerability victims
   -- CR 701.8b: "destroyed this way" is what the funnel DESTROYED, never what
   -- the sweep named. Bound onto this effect's SOURCE so a later effect of the
@@ -1518,7 +1521,7 @@ destroy resolving source controller legal chosen (Destroy.MkDestroy ref regenera
   -- even when nothing was destroyed: zero is an answer, where an unbound slot
   -- would make the rider's quantity unevaluable instead.
   Monad.forM_ mSlot $ \slot ->
-    State.modify' (bindAmountSlot resolving source slot (Natural.length destroyed))
+    State.modify' (Common.bindAmountSlot resolving source slot (Natural.length destroyed))
   -- The other reading of the same printed phrase: the CARDS "put into a
   -- graveyard this way", for Come Back Wrong's "return it to the battlefield"
   -- to name. Bound onto `resolving` and as a GROUP, which is where and how
@@ -1553,8 +1556,8 @@ destroy resolving source controller legal chosen (Destroy.MkDestroy ref regenera
   -- the amount slot above counts it as one OBJECT destroyed.
   Monad.forM_ mBuried $ \slot -> do
     after <- State.get
-    let buriedCards = concatMap (filter (\oid -> isCardInAGraveyard oid after) . Foldable.toList . snd) destroyed
-    Monad.unless (null buriedCards) (State.modify' (bindObjectsSlot resolving slot (Seq.fromList buriedCards)))
+    let buriedCards = concatMap (filter (\oid -> Common.isCardInAGraveyard oid after) . Foldable.toList . snd) destroyed
+    Monad.unless (null buriedCards) (State.modify' (Common.bindObjectsSlot resolving slot (Seq.fromList buriedCards)))
   -- The THIRD reading, and the only one that keeps a controller: the PERMANENTS
   -- CR 701.8 destroyed, under the ids they held on the battlefield, for
   -- Effect.ForEach to walk one at a time -- Rampage of the Clans' "for each
@@ -1576,7 +1579,7 @@ destroy resolving source controller legal chosen (Destroy.MkDestroy ref regenera
   -- nothing was destroyed, so the loop finds an unbound slot and runs no
   -- iterations (CR 101.3).
   Monad.forM_ mPermanents $ \slot ->
-    Monad.unless (null destroyed) (State.modify' (bindObjectsSlot resolving slot (Seq.fromList (fmap fst destroyed))))
+    Monad.unless (null destroyed) (State.modify' (Common.bindObjectsSlot resolving slot (Seq.fromList (fmap fst destroyed))))
 
 sacrifice :: ObjectId -> ObjectId -> PlayerId -> Map.Map SlotName (Set Recipient) -> Map.Map SlotName (Set Recipient) -> SacrificeEffect.SacrificeEffect -> Game ()
 sacrifice resolving source controller legal chosen (SacrificeEffect.MkSacrificeEffect ref sacrificer mSacrificed) = do
@@ -1599,9 +1602,9 @@ sacrifice resolving source controller legal chosen (SacrificeEffect.MkSacrificeE
   -- member's CR 616.1 loop reads the board the batch began on -- All Is Dust
   -- sacrificing Rest in Peace beside another coloured permanent exiles both.
   -- Parun.EventSpec's All Is Dust case is the proof.
-  victims <- askingObjects resolving source controller legal chosen ref
+  victims <- Common.askingObjects resolving source controller legal chosen ref
   gs <- State.get
-  Event.sacrificeAll (Maybe.mapMaybe (sacrificerFor sacrificer controller gs) victims)
+  Event.sacrificeAll (Maybe.mapMaybe (Common.sacrificerFor sacrificer controller gs) victims)
   -- "That many" is what the funnel SACRIFICED, never what the sweep named: a
   -- permanent it refused (CR 701.21a's control clause, CR 101.2's "can't") is
   -- not counted. Read off the GameEvent.PermanentSacrificed entries the batch
@@ -1614,7 +1617,7 @@ sacrifice resolving source controller legal chosen (SacrificeEffect.MkSacrificeE
           GameEvent.PermanentSacrificed _ -> True
           _ -> False
         count = Natural.length (Seq.filter isSacrifice (Seq.drop (Seq.length (GameState.events gs)) (GameState.events after)))
-    State.modify' (bindAmountSlot resolving source slot count)
+    State.modify' (Common.bindAmountSlot resolving source slot count)
 
 turnFaceDown :: ObjectId -> ObjectId -> PlayerId -> Map.Map SlotName (Set Recipient) -> TurnFaceDown.TurnFaceDown (GrantedAbility.GrantedAbility Card.Type.Card) -> Game ()
 turnFaceDown resolving source controller legal (TurnFaceDown.MkTurnFaceDown ref listed) = do

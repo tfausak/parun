@@ -28,7 +28,7 @@ import qualified Parun.Engine.Projection as Projection
 import qualified Parun.Engine.Projection.Rewrite as Projection
 import qualified Parun.Engine.Projection.View as Projection
 import qualified Parun.Engine.Replacement as Replacement
-import Parun.Engine.Resolve.Common (announcedOnly, apnapDecidersOf, applyClauseEffects, branchSelects, clauseIsImpossible, gateAffordable, happenedBetween, noSubgame, targetSlotsOf)
+import qualified Parun.Engine.Resolve.Common as Common
 import Parun.Engine.Resolve.Effect (applyEffectWith, payGatePaid)
 import Parun.Engine.Resolve.Slots (boundSlots, effectContext, resolvingAbilityName, resolvingKind, slotsAreExhaustive, slotsOf)
 import qualified Parun.Engine.SourceContext as SourceContext
@@ -265,7 +265,7 @@ targetsAllIllegal oid gs = case Game.lookupObject oid gs of
   Just obj -> case Projection.spellFaceOf oid gs of
     Nothing -> False
     Just face ->
-      let slots = targetSlotsOf obj oid gs face
+      let slots = Common.targetSlotsOf obj oid gs face
           chosen = Binding.targetsOf (Object.bindings obj)
           legalSlot slot recipients = case Map.lookup slot slots of
             Nothing -> recipients
@@ -296,7 +296,7 @@ resolveSpellWith runSubgame oid = do
       Just face ->
         -- CR 608.2b/700.2c: re-validate only the CHOSEN modes' slots.
         let chosenSelection = Binding.modesOf (Object.bindings obj)
-            slots = targetSlotsOf obj oid gs face
+            slots = Common.targetSlotsOf obj oid gs face
             -- CR 700.2d: the slots the MODES own, the spliced text's among them
             -- (CR 702.47d) -- `slots` minus CR 303.4a's enchant slot. The spliced
             -- half is a REGRESSION FENCE: no effect names a slot under its
@@ -364,7 +364,7 @@ resolveSpellWith runSubgame oid = do
                             if taken
                               then payGateAdmits runSubgame oid oid effectController idx limbIdx (instanceView (Map.mapWithKey legalSlot (Binding.targetsOf (Object.bindings obj)))) (Just facing) Set.empty answers limb
                               else pure (False, answers)
-                          Monad.when admitted (asCostWhenNamed indexedClauses limbIdx (applyClauseEffects oid oid applyOne (Foldable.toList (Clause.effects limb))))
+                          Monad.when admitted (asCostWhenNamed indexedClauses limbIdx (Common.applyClauseEffects oid oid applyOne (Foldable.toList (Clause.effects limb))))
                           after <- State.get
                           pure (answers2, recordTaken limb admitted before after limbIdx ran)
                   -- CR 608.2e's clause is the unit all four gates cover, so each
@@ -403,7 +403,7 @@ resolveSpellWith runSubgame oid = do
                               Nothing -> pure False
                               Just sibling -> do
                                 held <- gateHolds effectController oid oid (Modal.instanceView modeOwnedSlots mi (Mode.targetSlots mode) (Binding.targetsOf gateBindings)) gateBindings sibling
-                                State.gets (\gsNow -> held && not (clauseIsImpossible oid oid effectController legalNowForMay gsNow sibling))
+                                State.gets (\gsNow -> held && not (Common.clauseIsImpossible oid oid effectController legalNowForMay gsNow sibling))
                         -- CR 701.55d's exception to rule 608.2e, ahead of the
                         -- ordinary either-or: a villainous pair is chosen AND
                         -- performed for one player before the next player is
@@ -440,7 +440,7 @@ resolveSpellWith runSubgame oid = do
                                         answers
                                         clause
                                 else pure (False, answers)
-                            Monad.when admitted (asCostWhenNamed indexedClauses cIdx (applyClauseEffects oid oid applyOne (Foldable.toList (Clause.effects clause))))
+                            Monad.when admitted (asCostWhenNamed indexedClauses cIdx (Common.applyClauseEffects oid oid applyOne (Foldable.toList (Clause.effects clause))))
                             after <- State.get
                             pure (answers2, picked2, recordTaken clause admitted before after cIdx ran)
                     )
@@ -754,7 +754,7 @@ finishSpell oid face controller = do
 
 -- The no-subgame spell resolver (Stack's default path and every direct caller).
 resolveSpell :: ObjectId -> Game ()
-resolveSpell = resolveSpellWith noSubgame
+resolveSpell = resolveSpellWith Common.noSubgame
 
 -- CR 608.2: the executor shared by an activated and a triggered ability on the
 -- stack. Re-validates filled slots (CR 608.2b), walks the CHOSEN modes in order
@@ -847,7 +847,7 @@ resolveModesWith runSubgame stackId srcId modes = do
                       taken <- if gated then exercises stackId srcId effectController idx limbIdx boundHere legalHere (Just facing) Set.empty limb else pure False
                       before <- State.get
                       (admitted, answers2) <- if taken then payGateAdmits runSubgame stackId srcId effectController idx limbIdx (instanceView legal) (Just facing) Set.empty answers limb else pure (False, answers)
-                      Monad.when admitted (asCostWhenNamed indexedClauses limbIdx (applyClauseEffects stackId srcId applyOne (Foldable.toList (Clause.effects limb))))
+                      Monad.when admitted (asCostWhenNamed indexedClauses limbIdx (Common.applyClauseEffects stackId srcId applyOne (Foldable.toList (Clause.effects limb))))
                       after <- State.get
                       pure (answers2, recordTaken limb admitted before after limbIdx ran)
                in -- CR 608.2e's clause is what each gate covers. Run only when
@@ -891,7 +891,7 @@ resolveModesWith runSubgame stackId srcId modes = do
                               Nothing -> pure False
                               Just sibling -> do
                                 held <- gateHolds effectController stackId srcId (instanceView (Binding.targetsOf gateBindings)) gateBindings sibling
-                                State.gets (\gsNow -> held && not (clauseIsImpossible stackId srcId effectController legalNowForMay gsNow sibling))
+                                State.gets (\gsNow -> held && not (Common.clauseIsImpossible stackId srcId effectController legalNowForMay gsNow sibling))
                         -- CR 701.55d's exception to rule 608.2e, ahead of the
                         -- ordinary either-or and off the same helper the spell
                         -- loop uses: the pair is chosen AND performed one player
@@ -909,7 +909,7 @@ resolveModesWith runSubgame stackId srcId modes = do
                             -- START-of-resolution slots.
                             before <- State.get
                             (admitted, answers2) <- if taken then payGateAdmits runSubgame stackId srcId effectController idx cIdx (instanceView legal) announced committed answers clause else pure (False, answers)
-                            Monad.when admitted (asCostWhenNamed indexedClauses cIdx (applyClauseEffects stackId srcId applyOne (Foldable.toList (Clause.effects clause))))
+                            Monad.when admitted (asCostWhenNamed indexedClauses cIdx (Common.applyClauseEffects stackId srcId applyOne (Foldable.toList (Clause.effects clause))))
                             after <- State.get
                             pure (answers2, picked2, recordTaken clause admitted before after cIdx ran)
                     )
@@ -1005,7 +1005,7 @@ asCostWhenNamed indexed cIdx body =
 recordTaken :: Clause.Clause Card.Type.Card (GrantedAbility.GrantedAbility Card.Type.Card) -> Bool -> GameState -> GameState -> ClauseIndex -> Map.Map ClauseIndex Bool -> Map.Map ClauseIndex Bool
 recordTaken clause admitted before after cIdx ran =
   let happened = case Clause.optionality clause of
-        Optionality.Mandatory -> happenedBetween before after
+        Optionality.Mandatory -> Common.happenedBetween before after
         Optionality.Optional _ -> True
       inFull = GameState.fellShort after == GameState.fellShort before
    in if admitted && happened then Map.insert cIdx inFull ran else ran
@@ -1110,7 +1110,7 @@ chosenBranch resolving source controller idx cIdx legal eligible limbOf picked c
         settled (committing, answers) = (Just (won answers), if committing then won answers else Set.empty)
         neither = all (maybe False (declinesAlone (OrElse.chooser orElse)) . limbOf) branches
         seatCanTake seat branch gsNow = case limbOf branch >>= Clause.payGate of
-          Just gate | gatesOnPayment (OrElse.chooser orElse) gate -> gateAffordable resolving source controller legal seat gate gsNow
+          Just gate | gatesOnPayment (OrElse.chooser orElse) gate -> Common.gateAffordable resolving source controller legal seat gate gsNow
           _ -> True
      in case Map.lookup key picked of
           Just memo -> let (announced, committed) = settled memo in pure (announced, committed, picked)
@@ -1119,7 +1119,7 @@ chosenBranch resolving source controller idx cIdx legal eligible limbOf picked c
             offered <- Monad.filterM eligible (NonEmpty.toList branches)
             memo <- case offered of
               [] -> pure (False, Map.empty)
-              [forced] -> pure (False, Map.fromList (fmap (\chooser -> (chooser, forced)) (apnapDecidersOf (OrElse.chooser orElse) legal resolving source controller gs)))
+              [forced] -> pure (False, Map.fromList (fmap (\chooser -> (chooser, forced)) (Common.apnapDecidersOf (OrElse.chooser orElse) legal resolving source controller gs)))
               _ ->
                 -- CR 101.4b: each chooser is told the branches the choosers
                 -- before them announced.
@@ -1141,7 +1141,7 @@ chosenBranch resolving source controller idx cIdx legal eligible limbOf picked c
                         pure (made Seq.|> (chooser, announcedHere))
                     )
                     Seq.empty
-                    (apnapDecidersOf (OrElse.chooser orElse) legal resolving source controller gs)
+                    (Common.apnapDecidersOf (OrElse.chooser orElse) legal resolving source controller gs)
             let (announced, committed) = settled memo
             pure (announced, committed, Map.insert key memo picked)
 
@@ -1248,7 +1248,7 @@ villainousPass resolving source controller idx legal orElse limbs performLimb ac
           Monad.foldM (\faced _ -> face chooser faced) seat (List.replicate times ())
       )
       (acc0, Seq.empty)
-      (apnapDecidersOf (OrElse.chooser orElse) legal resolving source controller gs)
+      (Common.apnapDecidersOf (OrElse.chooser orElse) legal resolving source controller gs)
   where
     face chooser (acc, made) = do
       gs1 <- State.get
@@ -1314,7 +1314,7 @@ villainousPass resolving source controller idx legal orElse limbs performLimb ac
 -- Parun.AnteSpec's Rebirth case proves it.
 exercises :: ObjectId -> ObjectId -> PlayerId -> ModeIndex -> ClauseIndex -> Set SlotName -> Map.Map SlotName (Set Recipient) -> Maybe (Set PlayerId) -> Set PlayerId -> Clause.Clause Card.Type.Card (GrantedAbility.GrantedAbility Card.Type.Card) -> Game Bool
 exercises resolving source controller idx cIdx bound legal announced committed clause = do
-  impossible <- State.gets (\gs -> clauseIsImpossible resolving source controller legal gs clause)
+  impossible <- State.gets (\gs -> Common.clauseIsImpossible resolving source controller legal gs clause)
   case Clause.optionality clause of
     Optionality.Mandatory -> pure True
     Optionality.Optional asker
@@ -1326,7 +1326,7 @@ exercises resolving source controller idx cIdx bound legal announced committed c
               -- committed seat has already answered.
               able pid =
                 Set.member pid committed
-                  || not (clauseIsImpossible resolving source controller (Map.insert Binding.mayPlayers (Set.singleton (Recipient.ToPlayer pid)) legal) gs clause)
+                  || not (Common.clauseIsImpossible resolving source controller (Map.insert Binding.mayPlayers (Set.singleton (Recipient.ToPlayer pid)) legal) gs clause)
           -- CR 101.4b: each seat is told the answers the seats before it gave.
           answers <-
             Monad.foldM
@@ -1339,7 +1339,7 @@ exercises resolving source controller idx cIdx bound legal announced committed c
                   pure (made Seq.|> (pid, decision))
               )
               Seq.empty
-              (filter able (announcedOnly announced (apnapDecidersOf asker legal resolving source controller gs)))
+              (filter able (Common.announcedOnly announced (Common.apnapDecidersOf asker legal resolving source controller gs)))
           let accepted = Set.fromList [pid | (pid, OptionalDecision.Exercises) <- Foldable.toList answers]
           State.modify' (bindPlayersSlot resolving Binding.mayPlayers accepted)
           pure (not (Set.null accepted))
@@ -1444,14 +1444,14 @@ payGateAdmits runSubgame resolving source controller idx cIdx legal announced co
       Nothing -> do
         recorded <- payGatePaid runSubgame resolving source controller idx cIdx legal announced committed gate
         pure (recorded, Map.insert offerAt recorded answers)
-    let selected = branchSelects (PayGate.branch gate) asked
+    let selected = Common.branchSelects (PayGate.branch gate) asked
     State.modify' (bindPlayersSlot resolving Binding.gatePlayers selected)
     pure (not (Set.null selected), answers2)
 
 -- The no-subgame mode executor: every direct caller, and any path that cannot
 -- reach a PlaySubgame.
 resolveModes :: ObjectId -> ObjectId -> [(ModeInstance, Mode.Mode Card.Type.Card (GrantedAbility.GrantedAbility Card.Type.Card))] -> Game ()
-resolveModes = resolveModesWith noSubgame
+resolveModes = resolveModesWith Common.noSubgame
 
 -- CR 608: resolve an activated ability. The effect SOURCE is the source permanent
 -- (CR 113.7a), not the ability object, and only the CHOSEN modes are read (CR
@@ -1517,7 +1517,7 @@ crewersOf obj =
 
 -- The no-subgame activated-ability resolver.
 resolveAbility :: ObjectId -> ObjectId -> ActivatedAbility.ActivatedAbility Card.Type.Card (GrantedAbility.GrantedAbility Card.Type.Card) -> Game ()
-resolveAbility = resolveAbilityWith noSubgame
+resolveAbility = resolveAbilityWith Common.noSubgame
 
 -- CR 608.2c: the bindings a resolution reads before each of its own effects --
 -- the LIVE ones off the stack object, so a slot an earlier effect DEFINED is

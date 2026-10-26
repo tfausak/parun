@@ -405,8 +405,8 @@ project-specific rules it doesn't cover:
   `Parun.Engine.Resolve.Arms.*`, one function per `Effect` constructor in the
   group its neighbours sit in. A helper that never reaches `applyOneEffect`
   goes in `Parun.Engine.Resolve.Common`; one that does stays in
-  `Parun.Engine.Resolve.Effect`, and an arm calling it needs its signature in
-  `Effect.hs-boot`.
+  `Parun.Engine.Resolve.Effect`, and an arm calling it takes it as a parameter
+  that the dispatcher passes.
 
 - A new `Parun.Types.Keyword` constructor that CARRIES A PAYLOAD owes a matching
   `Parun.Types.KeywordFamily` constructor in the same change --- that type is how
