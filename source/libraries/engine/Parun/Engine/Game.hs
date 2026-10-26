@@ -1106,7 +1106,7 @@ cardOfPrinting pid gs = fmap Printing.card (printingOf pid gs)
 -- `cardOfSource` above as an ID rather than as the card it interns, for the one
 -- caller that has to hand the same printing to a NEW object rather than read a
 -- field off it: CR 707.12's copy of a card, which
--- Parun.Engine.Resolve.Effect.castableCopy mints. Naming the copied object's own
+-- Parun.Engine.Resolve.Common.castableCopy mints. Naming the copied object's own
 -- printing is what makes the copy's card the copied card.
 --
 -- The same arms and the same answers as `cardOfSource`, so a source with no card
@@ -2538,7 +2538,7 @@ isActivatedAbility oid gs = case lookupObject oid gs of
 -- CR 112.1 / 113.3b / 113.3c: which of CR 115.1's three kinds a spell or ability
 -- is, off its KIND (its Source) alone, isSpell's and isAbility's reading
 -- without their zone conjunct: CR 608.2h's last-known original
--- (Parun.Engine.Resolve.Effect.lastKnownOriginal) is asked too. Nothing for an
+-- (Parun.Engine.Resolve.Common.lastKnownOriginal) is asked too. Nothing for an
 -- object that is neither, and for an unknown id.
 stackObjectKind :: ObjectId -> GameState -> Maybe StackObjectKind.StackObjectKind
 stackObjectKind oid gs = case fmap Object.source (lookupObject oid gs) of
@@ -3013,7 +3013,7 @@ turnOrderFrom start gs =
 --
 -- NOT CR 800.4g, which reassigns the choice an OBJECT requires: that one goes to
 -- the object's controller, who names a substitute
--- (Parun.Engine.Resolve.Effect.askedChooser). Not CR 800.4a's priority walk
+-- (Parun.Engine.Resolve.Common.askedChooser). Not CR 800.4a's priority walk
 -- either (Parun.Engine.Engine.nextStillPlaying), which always leaves the seat it
 -- counts from and is total.
 ruleChooser :: GameState -> PlayerId -> Maybe PlayerId
@@ -3971,7 +3971,7 @@ declaredBy pid event = case event of
 
 -- | CR 608.2d's choice of objects out of candidates, at a count read through
 -- `amount`: the one place a HowMany is asked, shared by
--- Parun.Engine.Resolve.Effect's chosenPermanents and chooseCardFromAmong and by
+-- Parun.Engine.Resolve.Common's chosenPermanents and chooseCardFromAmong and by
 -- Parun.Engine.Event's as-enters exile (CR 614.1c). A chooser ref naming no
 -- seat, or several, picks nothing (CR 101.3) whatever the count; one naming a
 -- seat is asked through `chooser` only where a real choice remains, so CR

@@ -1432,7 +1432,7 @@ tokenGroupMoveSpec s registry =
          in resolveAll (snd (Engine.runGamePure S.identityAnswer gs (S.cast S.alice oid)))
    in Spec.describe s "Group move through InSlot" $ do
         -- THE PROVING CASE. Before Effect.MoveToZone's InSlot arm read a group
-        -- binding, the slot held no single object (Parun.Engine.Resolve.Effect.slotOne
+        -- binding, the slot held no single object (Parun.Engine.Resolve.Common.slotOne
         -- answers Nothing for a group) and "exile them" moved NOBODY, while the
         -- three tokens were still minted and the ability was still spent -- so
         -- only the after-count discriminates.
@@ -1458,7 +1458,7 @@ tokenGroupMoveSpec s registry =
 --
 -- tokenGroupReadSpec's SINGULAR, and the whole reason it is a separate group: a
 -- Create binds one token into the binding's target field and several into its
--- objects group (Parun.Engine.Resolve.Effect.bindSlot and bindObjectsSlot), and the two
+-- objects group (Parun.Engine.Resolve.Common.bindSlot and bindObjectsSlot), and the two
 -- are read back by different routes. Salt Road Skirmish's "they" reads the group,
 -- which has always been live; this card's "it" reads the single target, which the
 -- ability path once fixed before its effect fold began -- so CR 608.2c's "in the

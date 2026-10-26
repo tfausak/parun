@@ -35,7 +35,7 @@ import qualified Parun.Types.TapState as TapState
 -- already in exile with its owner, so PlayerRef.HolderOfBound says it.
 --
 -- ONE seat, since Parun.Types.ExilePlayPermission holds one (CR 715.3d: "that
--- card ... that player"). So Parun.Engine.Resolve.Effect's arm grants nothing for
+-- card ... that player"). So Parun.Engine.Resolve.Arms.Zones's arm grants nothing for
 -- a reference naming nobody, and nothing for one naming several --
 -- PlayerRef.InSlot's own collapse. A holder per card is Parun.Types.ForEach's
 -- job: Suspend Aggression loops over its one exile's slot.

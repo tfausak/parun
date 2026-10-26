@@ -116,14 +116,14 @@ import qualified Parun.Types.SlotName as SlotName
 -- `boundRecipient` is the AUTHORED half of `whichRecipient`, and the two never
 -- stand together: a card cannot name an ObjectId, but it can name the SLOT its
 -- own resolution filled (CR 601.2c), which is Whippoorwill's "that creature".
--- Parun.Engine.Resolve.Effect's Effect.AffectPlayers arm reads the slot, writes
+-- Parun.Engine.Resolve.Arms.Objects's Effect.AffectPlayers arm reads the slot, writes
 -- the recipient it named into `whichRecipient` and clears this field, exactly as
 -- AffectedPlayers.Named beside it turns a slot into a seat -- so nothing
 -- downstream of that arm ever reads a slot, and CR 608.2b's unfilled or illegal
 -- slot stores no effect at all.
 --
 -- Only the CR 615.12 / 614.9 prohibitions can carry it. A prevention shield's
--- pattern is built by Parun.Engine.Resolve.Effect.installDamageRow, which has
+-- pattern is built by Parun.Engine.Resolve.Common.installDamageRow, which has
 -- already baked its recipient and writes Nothing here.
 data DamagePattern = MkDamagePattern
   { whichKind :: Maybe DamageKind.DamageKind,

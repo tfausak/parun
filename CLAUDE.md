@@ -322,7 +322,7 @@ to agents as written. What it doesn't say:
     `Parun.Engine.Projection.Rewrite`'s `rewriteEffect`, CR 612.1's text-change
     walk. Grep `{ SomeRecord.field = ` over the tree beside the construction
     sites, and say in the PR which you checked. The one update that keeps a
-    new field ON PURPOSE is `Parun.Engine.Resolve.Effect.happenedBetween`, CR
+    new field ON PURPOSE is `Parun.Engine.Resolve.Common.happenedBetween`, CR
     603.12's "did it happen": any write an instruction makes whether or not it
     happened --- a prune, a cache, a stamp, a zero tally, in a new field OR an
     existing one --- owes a copy-across there, or an ignored instruction arms
@@ -400,6 +400,13 @@ project-specific rules it doesn't cover:
 - An exhaustive list --- of constructors, of fields, of the `GameState` rows
   something walks --- exists once. A second hand-kept copy goes stale exactly
   as item 4's traps do; derive it from the first or add to the first.
+
+- `applyOneEffect` stays one exhaustive `case`, each arm a call into
+  `Parun.Engine.Resolve.Arms.*`, one function per `Effect` constructor in the
+  group its neighbours sit in. A helper that never reaches `applyOneEffect`
+  goes in `Parun.Engine.Resolve.Common`; one that does stays in
+  `Parun.Engine.Resolve.Effect`, and an arm calling it needs its signature in
+  `Effect.hs-boot`.
 
 - A new `Parun.Types.Keyword` constructor that CARRIES A PAYLOAD owes a matching
   `Parun.Types.KeywordFamily` constructor in the same change --- that type is how

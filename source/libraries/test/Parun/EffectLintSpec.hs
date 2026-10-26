@@ -1318,7 +1318,7 @@ storedPlayerScope effect = case effect of
   _ -> Nothing
 
 -- The resolution-time QUESTIONS an ObjectRef can put: the arms
--- Parun.Engine.Resolve.Effect.askingObjects asks, and exactly the ones
+-- Parun.Engine.Resolve.Common.askingObjects asks, and exactly the ones
 -- Parun.Engine.Resolve.Slots.objectRefObjects answers [] for. ChosenPermanents
 -- splits on its count, since Effect.Pair takes one partner (CR 702.95a), and an
 -- exact count other than one is allowed nowhere: no gameplay test reaches it.
@@ -1685,7 +1685,7 @@ inertChoosers effect =
 
 -- An ObjectRef.AllOf written anywhere but a move's ref, a play grant's, a
 -- loop's or a damage instruction's. MoveToZone gathers it member by member
--- (Parun.Engine.Resolve.Effect's gather), and GrantPlayFromExile reads its ref
+-- (Parun.Engine.Resolve.Arms.Zones's gather), and GrantPlayFromExile reads its ref
 -- through
 -- Resolve.Slots.objectRefObjects, whose AllOf arm is the union -- the scenario
 -- cr-601-3-flameskull-played-land-closes-flameskull-s-own-cast proves it.
@@ -2802,7 +2802,7 @@ effectLintSpec s registry corpus = Spec.describe s "Lint" $ do
       (inert [moves sought, reveals sought, discardsThese sought, Effect.Tap (Tap.plain sought)])
       [False, True, True, True]
     -- CR 701.28a's convert, classified with Transform because it IS Transform
-    -- (Parun.Engine.Resolve.Effect.turnPermanentsOver).
+    -- (Parun.Engine.Resolve.Common.turnPermanentsOver).
     Spec.assertEqWith
       s
       "a convert answers exactly as a transform does"

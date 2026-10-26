@@ -29,7 +29,7 @@ data TriggeredAbilitySource = MkTriggeredAbilitySource
     -- is, and it is the only thing on the stack that tells the two kinds apart:
     -- CR 701.27f and CR 701.28e measure a delayed ability's transform or
     -- convert from its creation and every other ability's from CR 613.7d's
-    -- placement stamp (Parun.Engine.Resolve.Effect.alreadyTurnedFor).
+    -- placement stamp (Parun.Engine.Resolve.Common.alreadyTurnedFor).
     --
     -- Carried on the object rather than looked up, the entry it came from being
     -- gone by resolution: an entry with no stated duration is retired as it

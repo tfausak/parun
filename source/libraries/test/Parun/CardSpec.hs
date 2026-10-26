@@ -1710,7 +1710,7 @@ turnedUpTriggers = filter ((== TriggerCondition.SelfTurnedFaceUp) . TriggeredAbi
 -- every clause, and every CR 608.2f loop's per-member offer. A READER of X
 -- rather than a declarer: Clash of Wills' "unless its controller pays {X}" and
 -- Killing Wave's "unless they pay X life" spend the value their own {X}
--- announced (CR 107.3a), which is what Parun.Engine.Resolve.Effect.announcedXOn
+-- announced (CR 107.3a), which is what Parun.Engine.Resolve.Common.announcedXOn
 -- substitutes in.
 payGateCostsOf :: Modal.Modal Card.Type.Card (GrantedAbility.GrantedAbility Card.Type.Card) -> [Cost.Type.Cost Keyword.Keyword]
 payGateCostsOf modal =
@@ -1725,7 +1725,7 @@ payGateCostsOf modal =
       _ -> []
 
 -- The reserved slot a CR 118.12 cost this payload offers binds onto the
--- resolving object as it is paid (Parun.Engine.Resolve.Effect.foldPaid), so
+-- resolving object as it is paid (Parun.Engine.Resolve.Common.foldPaid), so
 -- Feed the Pack's "the sacrificed creature's toughness" is an ordinary slot
 -- read. Every carrier's lint grants it: spells, activations and triggers all
 -- resolve through that fold.
@@ -2634,7 +2634,7 @@ modeDivisionDangles mode =
 -- mana cost (Parun.Types.CostBasis) and a mana part of its own beside it?
 --
 -- The two are one field's worth of answer at the payment
--- (Parun.Engine.Resolve.Effect.describedCosts overwrites Cost.mana with the derived
+-- (Parun.Engine.Resolve.Common.describedCosts overwrites Cost.mana with the derived
 -- amount), so a card writing both states mana nothing pays -- silently, which is
 -- why this is a lint. A card whose cost really is described states
 -- `mana: null`, which is the unpayable cost CR 118.6's first sentence describes
@@ -2650,7 +2650,7 @@ modeGateStatesMana mode =
    in any (maybe False offends . Clause.payGate) (Mode.clauses mode)
 
 -- CR 122.5 onto a GROUP of permanents under a `kinds` arm that
--- Parun.Engine.Resolve.Effect's distributePair does not ask about, which would
+-- Parun.Engine.Resolve.Arms.Counters's distributePair does not ask about, which would
 -- move nothing (#4774). A destination other than a slot is taken as a group;
 -- a slot is taken as one object.
 cardMovesOntoGroupUnasked :: Face.Face Card.Type.Card -> Bool
@@ -5561,12 +5561,12 @@ blockPermissionFilters permission =
 --     (Kindred Discovery). Unframed's answer for every other atom.
 --   * StoredClassFramed -- a combat restriction's class a resolution stores
 --     (RestrictedCreatures.Matching, ForbidBeingBlocked's pair), baked by
---     Parun.Engine.Resolve.Effect.storedClass and then matched through a bare
+--     Parun.Engine.Resolve.Common.storedClass and then matched through a bare
 --     Filter.contextFor. Unframed's answer for every atom but CR 110.2's
 --     Filter.ControllerRelatesToBound, which the bake writes in (Mark for Death).
 --   * ChosenSourceFramed -- CR 609.7a's chosen source on a prevention or
 --     redirection effect, matched against each candidate by
---     Parun.Engine.Resolve.Effect.damageSourceCandidates through
+--     Parun.Engine.Resolve.Common.damageSourceCandidates through
 --     Resolve.Slots.effectContext and rechecked at the damage event (CR 615.9)
 --     by Parun.Engine.Replacement.matchesDamageSource in the row's
 --     candidateContext; both fill the source's CR 607.2d choices (Story
@@ -5708,7 +5708,7 @@ data Framing
   | -- | CR 701.17's mill TALLY filter -- the one position whose evaluator counts
     -- CARDS a resolution has just moved rather than candidates it is choosing
     -- among, and one of the positions a CARD may write CR 201.4's chosen name in:
-    -- Parun.Engine.Resolve.Effect's Effect.Mill arm builds its context through
+    -- Parun.Engine.Resolve.Arms.Zones's Effect.Mill arm builds its context through
     -- Resolve.Slots.effectContext, which fills Filter.Context.sourceChosenNames,
     -- exactly as the Effect.Search arm does (Predict).
     --
@@ -7471,7 +7471,7 @@ lintSpec s registry corpus = Spec.describe s "Lint" $ do
   -- A CR 118.12 COST reads X the same way and by the same rule, and it is not an
   -- effect, so Card.allEffects cannot see it: Clash of Wills' only reader of the
   -- X it announces is the "pays {X}" its clause offers at resolution
-  -- (`payGateCostsOf`, substituted in by Parun.Engine.Resolve.Effect.announcedXOn).
+  -- (`payGateCostsOf`, substituted in by Parun.Engine.Resolve.Common.announcedXOn).
   --
   -- A TARGET SLOT counting the announced X is the fourth such reader, and a
   -- slot whose CR 202.3 computed bound names it the fifth (both
@@ -7660,7 +7660,7 @@ lintSpec s registry corpus = Spec.describe s "Lint" $ do
       (any (any variableCounters . suspendsOf) ps)
       "the pool has a suspend whose N is CR 107.3d's chosen X"
     Spec.assertEqWith s "and every suspend cost agrees with its own N" (fmap (S.nameOf . Printing.card) offenders) []
-  -- Parun.Engine.Resolve.Effect's die-roll window resolves a DuringDieRoll
+  -- Parun.Engine.Resolve.Arms.Damage's die-roll window resolves a DuringDieRoll
   -- ability at once and asks for it with Prompt.RerollDie, so it announces no
   -- mode, target or X and does nothing but reroll.
   Spec.it s "every ability activated inside a die roll is one untargeted reroll" $ do

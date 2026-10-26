@@ -679,7 +679,7 @@ data Object = MkObject
     -- the stack, so it announced no targets. Each slot whose text fixes a count
     -- and that is still empty is then an instance of "target" with no legal
     -- target (CR 608.2b), per Transcantation's ruling. Written by
-    -- Parun.Engine.Resolve.Effect.acquireChoices; nothing carries it across a
+    -- Parun.Engine.Resolve.Common.acquireChoices; nothing carries it across a
     -- zone change.
     unannounced :: Bool,
     -- | CR 702.47a: the cards spliced onto this SPELL, in the order CR 702.47b

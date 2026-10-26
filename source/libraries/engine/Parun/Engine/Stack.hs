@@ -26,7 +26,7 @@ import qualified Parun.Engine.Modal as Modal
 import qualified Parun.Engine.Projection as Projection
 import qualified Parun.Engine.Projection.View as Projection
 import qualified Parun.Engine.Resolve as Resolve
-import qualified Parun.Engine.Resolve.Effect as Resolve
+import qualified Parun.Engine.Resolve.Common as Resolve
 import qualified Parun.Engine.SourceContext as SourceContext
 import qualified Parun.Types.ActivatedAbilitySource as ActivatedAbilitySource
 import qualified Parun.Types.Affected as Affected
@@ -460,7 +460,7 @@ resolveCardBacked runSubgame oid rest printingId = do
             -- After the move, against the instances the permanent has.
             State.modify' (\g -> foldr settlePromises g arrivals)
             -- AFTER the move, ninjutsu's ordering one opcode over
-            -- (Parun.Engine.Resolve.Effect's MoveToZone arm): the permanent has
+            -- (Parun.Engine.Resolve.Arms.Zones's MoveToZone arm): the permanent has
             -- to be on the battlefield before CR 508.4 can put it in combat, and
             -- CR 506.3a-c are guards inside that function rather than here.
             Monad.forM_ sneakAttack (\choice -> Monad.mapM_ (Combat.putOntoBattlefieldAttacking choice) arrivals)

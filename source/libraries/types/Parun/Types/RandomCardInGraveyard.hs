@@ -24,7 +24,7 @@ import qualified Parun.Types.ZoneScope as ZoneScope
 -- The COUNT is a Quantity for Parun.Types.TopOfLibrary's reason, is per
 -- graveyard, and counts DISTINCT cards: Make a Wish's "two cards at random" names
 -- two cards rather than making two picks that may coincide, so
--- Parun.Engine.Resolve.Effect.randomCardsInGraveyard drops each card it names from
+-- Parun.Engine.Resolve.Common.randomCardsInGraveyard drops each card it names from
 -- the candidates before asking again. CR 609.3 covers the shortfall -- a graveyard
 -- holding fewer matches than the count gives what it has, and an empty one
 -- nothing.

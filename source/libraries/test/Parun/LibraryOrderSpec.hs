@@ -795,7 +795,7 @@ surveilPromptSpec s registry = Spec.describe s "SurveilPrompt" $ do
     (_, sourceId, board) <- surveilOpcodeBoard s registry 0
     Spec.assertEqWith s "not asked" (asks surveilTwo sourceId board) 0
   -- The case that separates surveil from scry, and the reason this pair exists:
-  -- with ONE card that is the whole library, Parun.Engine.Resolve.Effect.decideScry asks
+  -- with ONE card that is the whole library, Parun.Engine.Resolve.Common.decideScry asks
   -- nothing because top and bottom are the same position -- but a graveyard is
   -- somewhere else, so the player IS asked, and the answer is honoured.
   Spec.it s "CR 701.25a one card that is the whole library is still a real choice" $ do

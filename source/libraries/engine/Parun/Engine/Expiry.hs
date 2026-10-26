@@ -212,7 +212,7 @@ arm acquisition targets controller source duration gs = case duration of
   -- CR 611.2a: the seat CR 109.5 reads a cast's criterion from is baked, as
   -- UntilPaid's is, and so is any seat the criterion names by slot
   -- (Parun.Engine.Filter.bakeBound), since the sweep has no resolution to read
-  -- one off. Parun.Engine.Resolve.Effect's TurnFaceDown arm and
+  -- one off. Parun.Engine.Resolve.Arms.Damage's TurnFaceDown arm and
   -- Parun.Engine.Cast's CR 601.2i event sweep the moments that end it.
   Duration.UntilEvent event ->
     Just

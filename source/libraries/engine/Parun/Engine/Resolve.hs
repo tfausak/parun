@@ -28,7 +28,8 @@ import qualified Parun.Engine.Projection as Projection
 import qualified Parun.Engine.Projection.Rewrite as Projection
 import qualified Parun.Engine.Projection.View as Projection
 import qualified Parun.Engine.Replacement as Replacement
-import Parun.Engine.Resolve.Effect (announcedOnly, apnapDecidersOf, applyClauseEffects, applyEffectWith, branchSelects, clauseIsImpossible, gateAffordable, happenedBetween, noSubgame, payGatePaid, targetSlotsOf)
+import Parun.Engine.Resolve.Common (announcedOnly, apnapDecidersOf, applyClauseEffects, branchSelects, clauseIsImpossible, gateAffordable, happenedBetween, noSubgame, targetSlotsOf)
+import Parun.Engine.Resolve.Effect (applyEffectWith, payGatePaid)
 import Parun.Engine.Resolve.Slots (boundSlots, effectContext, resolvingAbilityName, resolvingKind, slotsAreExhaustive, slotsOf)
 import qualified Parun.Engine.SourceContext as SourceContext
 import qualified Parun.Engine.Target as Target
@@ -1349,7 +1350,7 @@ exercises resolving source controller idx cIdx bound legal announced committed c
 -- way. Deliberately conservative: an effect reading NO slot, or reading one
 -- surviving recipient among several, keeps the prompt. The other elision the
 -- prompt admits is CR 608.2d's, which asks what the instruction would DO to what
--- the slots name -- see Parun.Engine.Resolve.Effect.clauseIsImpossible.
+-- the slots name -- see Parun.Engine.Resolve.Common.clauseIsImpossible.
 --
 -- A CLASSIFICATION and never an identity check: what an effect reads comes from
 -- slotsOf, and slotsAreExhaustive is what says slotsOf is the WHOLE of it -- an

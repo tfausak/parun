@@ -30,7 +30,7 @@ data PlayerInstruction
     -- (DieRollRewrite.FlipCoinInstead).
     FlipCoin
   | -- | CR 701.34a: proliferate this many times. Raised once per instruction by
-    -- Parun.Engine.Resolve.Effect's Proliferate arm.
+    -- Parun.Engine.Resolve.Arms.Counters's Proliferate arm.
     Proliferate
   | -- | CR 701.22a: scry this many cards. Raised by Parun.Engine.Resolve.Effect's
     -- Scry arm for a positive count only, CR 701.22b's scry 0 being no scry.

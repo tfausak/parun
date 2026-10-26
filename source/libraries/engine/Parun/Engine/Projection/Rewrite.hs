@@ -1517,7 +1517,7 @@ rewriteGrantedAbility pairs granted = case granted of
   -- Left as written: a printed rule ability is rewritten where its gatherer
   -- reads it, off its source's text changes, and no card in data/cards quotes
   -- one in a grant this walk reaches. Backup's is expanded at resolution
-  -- (Parun.Engine.Resolve.Effect.expandGrant) and stored, where no rewrite runs.
+  -- (Parun.Engine.Resolve.Common.expandGrant) and stored, where no rewrite runs.
   GrantedAbility.Rules rules -> GrantedAbility.Rules rules
   GrantedAbility.Replacement r -> GrantedAbility.Replacement (rewritePrintedReplacement pairs r)
   GrantedAbility.Player p -> GrantedAbility.Player (rewritePlayerStaticAbility pairs p)

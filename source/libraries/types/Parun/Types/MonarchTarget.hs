@@ -9,7 +9,7 @@ import qualified Parun.Types.SlotName as SlotName
 -- Its own sum rather than a Parun.Types.PlayerRef, which would widen this
 -- opcode to references naming several players -- meaningless for a designation
 -- CR 725.3 gives to exactly one player at a time. Each arm is resolved as the
--- PlayerRef it means (Parun.Engine.Resolve.Effect's oneSeat), so the seat is
+-- PlayerRef it means (Parun.Engine.Resolve.Common's oneSeat), so the seat is
 -- read the way every other reference reads it.
 data MonarchTarget
   = -- | "you become the monarch" (Palace Jailer's ETB): the resolving controller.

@@ -10,6 +10,6 @@ data ManaAddedCause
     -- takes (CR 605.3b).
     ManaAbility
   | -- | A spell or an ability resolving in the ordinary way, which is the road
-    -- Parun.Engine.Resolve.Effect's AddMana arm takes (CR 608.2).
+    -- Parun.Engine.Resolve.Arms.Damage's AddMana arm takes (CR 608.2).
     Resolution
   deriving (Bounded, Enum, Eq, Ord, Show)

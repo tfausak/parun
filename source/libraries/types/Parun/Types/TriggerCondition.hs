@@ -621,7 +621,7 @@ data TriggerCondition
   | -- | CR 603.12's reflexive triggered ability: "when you do" (The Fugitive
     -- Doctor). Nullary, and it matches no GameEvent -- the arm runs only when
     -- the action it hangs off actually happened, CR 701.28e's ignored convert
-    -- being the one that does not (Parun.Engine.Resolve.Effect.applyClauseEffects), so
+    -- being the one that does not (Parun.Engine.Resolve.Common.applyClauseEffects), so
     -- Parun.Engine.Event.Trigger.delayedPending fires it once at the next gather.
     --
     -- Not implemented: CR 603.12a's first sentence, "once for each of those

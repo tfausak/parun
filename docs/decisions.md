@@ -60,7 +60,7 @@ Entries are ordered by the first rule each cites.
 - **Rejected**: Pairing by some engine order, which makes the changer's choice
   for them; re-dividing the replaced total freely, which changes the division
   CR 115.7f forbids.
-- **Site**: Parun.Engine.Resolve.Effect's reaimDivisions;
+- **Site**: Parun.Engine.Resolve.Common's reaimDivisions;
   data/scenarios/divide's Redirect case.
 - **Issue**: #5235.
 
@@ -347,7 +347,7 @@ Entries are ordered by the first rule each cites.
 - **Rejected**: A zone change, which needs a `from` zone a creation lacks and
   would announce a departure from a zone the card was never in.
 - **Site**: `Parun.Engine.Event.mintCard`, reached from
-  `Parun.Engine.Resolve.Effect`'s `Effect.Conjure` arm, proved by
+  `Parun.Engine.Resolve.Arms.Objects`'s `Effect.Conjure` arm, proved by
   `Parun.ConjureSpec`'s "CR 603.6 a conjure into a graveyard is no zone change,
   so a graveyard trigger does not see it".
 - **Issue**: #2809.
@@ -367,7 +367,7 @@ Entries are ordered by the first rule each cites.
 - **Rejected**: An allow-list of state that counts, the earlier event-log
   reading, which misses every state-only instruction writing a field it does
   not name.
-- **Site**: `Parun.Engine.Resolve.Effect.happenedBetween`, with the two ruled
+- **Site**: `Parun.Engine.Resolve.Common.happenedBetween`, with the two ruled
   shapes in `applyClauseEffects`'s `instructionDone`. The state half is
   proved by the scenario "CR 603.12 a choice that records no event still arms
   its when you do". Copies proved: `exiledWith` by "CR 603.12 an empty mill
@@ -498,7 +498,7 @@ Entries are ordered by the first rule each cites.
   to pay" test: "that many" is the instruction, and CR 609.3's "as much as
   possible" is not all of it.
 - **Site**: `Parun.Engine.Resolve.ifTakenHolds` and `recordTaken`, fed by
-  `Parun.Engine.Resolve.Effect`'s PlayerSacrifices arm. Proved by the
+  `Parun.Engine.Resolve.Arms.Zones`'s PlayerSacrifices arm. Proved by the
   scenarios "CR 609.3 Lich sacrificing two of three loses alice the game" and
   "CR 609.3 Lich sacrificing three of three keeps alice in".
 - **Issue**: #5442.

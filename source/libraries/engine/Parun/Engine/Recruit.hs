@@ -151,7 +151,7 @@ soldierToken =
 --
 -- CR 609.3 rather than CR 608.2d: an empty library or an empty hand makes a
 -- step do as much as possible rather than stopping the action, so
--- Parun.Engine.Resolve.Effect.effectIsImpossible never refuses this arm.
+-- Parun.Engine.Resolve.Common.effectIsImpossible never refuses this arm.
 recruit :: PlayerId -> Game ()
 recruit pid = do
   -- CR 121.2a: the one-card draw is one replaceable instruction, Effect.Draw's

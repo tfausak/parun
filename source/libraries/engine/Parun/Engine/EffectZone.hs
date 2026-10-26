@@ -90,7 +90,7 @@ conjoin named
 -- declaredDelayedAbility resolves the name at run time. Rule
 -- 702's own roster
 -- (Parun.Engine.Keyword.mintedDelayedAbilities) is unioned in BEHIND that map, the
--- order Parun.Engine.Resolve.Effect's arm resolves a name in, so the two cannot
+-- order Parun.Engine.Resolve.Arms.Objects's ArmDelayedTrigger arm resolves a name in, so the two cannot
 -- disagree about what a minted name stands for. A regression fence rather than a
 -- proof: every move on that roster states no origin, so the walk answers empty
 -- for each with or without it.

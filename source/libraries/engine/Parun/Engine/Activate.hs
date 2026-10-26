@@ -17,6 +17,7 @@ import qualified Parun.Engine.Game as Game
 import qualified Parun.Engine.Keyword as Keyword
 import qualified Parun.Engine.Modal as Modal
 import qualified Parun.Engine.Projection as Projection
+import qualified Parun.Engine.Resolve.Common as Resolve
 import qualified Parun.Engine.Resolve.Effect as Resolve
 import qualified Parun.Engine.Target as Target
 import qualified Parun.Types.AbilityKind as AbilityKind

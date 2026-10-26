@@ -359,7 +359,7 @@ placementQuantities placement = case placement of
 -- The Quantities an Effect.Create's TOKEN CARD carries that the CREATING effect
 -- evaluates rather than the token: the printed power and toughness of every
 -- face, and nothing else. CR 111.3 makes the value the effect defines part of
--- the token's text, and Parun.Engine.Resolve.Effect.bakeTokenCharacteristics is
+-- the token's text, and Parun.Engine.Resolve.Common.bakeTokenCharacteristics is
 -- where that happens -- against the RESOLUTION's own object, context and slots,
 -- so a box naming a slot is this effect speaking and all three walkers below
 -- (slotsOf, ownSlotsAreExhaustive, readsX) have to report it -- Phyrexian
@@ -1901,7 +1901,7 @@ replacementRowSlots re =
    in joinSlots (fmap filterSlotsOf filters <> fmap quantitySlots quantities <> fmap slotsOf (replacementRowEffects re) <> fmap relationSlots (relationsOf re))
 
 -- The slot a ControllerRelation.InSlot names, at arity Many: the install bakes
--- every player the slot holds (Parun.Engine.Resolve.Effect's Effect.Replace arm).
+-- every player the slot holds (Parun.Engine.Resolve.Arms.Objects's Effect.Replace arm).
 relationSlots :: ControllerRelation.ControllerRelation -> Map.Map SlotName SlotArity
 relationSlots rel = case rel of
   ControllerRelation.InSlot slot -> Map.singleton slot SlotArity.Many
@@ -2864,7 +2864,7 @@ boundSlots effect = case effect of
   Effect.GrantPlayFromExile {} -> Set.empty
   -- The loop's member slot, plus every name the BODY authors -- which the loop
   -- really does leave bound once it is over, to the union across its members
-  -- (Parun.Engine.Resolve.Effect's arm).
+  -- (Parun.Engine.Resolve.Arms.Zones's arm).
   Effect.ForEach (ForEach.MkForEach _ _ slot body _ _ _) -> Set.insert slot (foldMap boundSlots body)
   Effect.ForEachNumber (ForEachNumber.MkForEachNumber _ slot body) -> Set.insert slot (foldMap boundSlots body)
   Effect.Repeat (Repeat.MkRepeat _ body _) -> foldMap boundSlots body
@@ -3344,7 +3344,7 @@ slotGroup slot resolving gs = Binding.objectsOf slot (resolvingBindings resolvin
 -- stack, which is that object's bindings as of the move.
 --
 -- Map.adjust over BOTH maps is the writer's side of the same fact
--- (Parun.Engine.Resolve.Effect's overHolderBindings), so the two cannot drift; the
+-- (Parun.Engine.Resolve.Common's overHolderBindings), so the two cannot drift; the
 -- READ prefers the live board, since rule 702.50a's epic files its archive entry
 -- while the spell is still on the stack and that entry must not answer for it.
 resolvingBindings :: ObjectId -> GameState -> Map.Map SlotName Binding.Type.Binding

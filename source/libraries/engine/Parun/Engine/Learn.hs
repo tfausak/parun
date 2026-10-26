@@ -6,7 +6,7 @@
 -- keyword-action rule exactly as rule 702 is a keyword rule, so the procedure
 -- lives in the engine rather than in card data. The closed\/open invariant
 -- forbids the rules core casing on an EFFECT's identity, and nothing here does
--- -- Parun.Engine.Resolve.Effect's Effect.Learn arm calls in without saying which
+-- -- Parun.Engine.Resolve.Arms.Counters's Effect.Learn arm calls in without saying which
 -- effect it is.
 --
 -- Rule 701.48 has no "whenever a player learns", so there is no GameEvent here.

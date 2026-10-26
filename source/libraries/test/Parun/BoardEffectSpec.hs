@@ -2537,7 +2537,7 @@ phyrexianRebirthSpec s registry = Spec.describe s "PhyrexianRebirth" $ do
     Spec.assertBool s (S.onBattlefield carolMyr resolved) "CR 702.12b carol's indestructible Myr was swept and stands"
     Spec.assertEqWith s "stack empty: the spell resolved" (length (GameState.stack resolved)) 0
   -- The STATIC-ANALYSIS half. The gameplay cases above pass whatever the walkers
-  -- answer, because Parun.Engine.Resolve.Effect.bakeTokenCharacteristics evaluates
+  -- answer, because Parun.Engine.Resolve.Common.bakeTokenCharacteristics evaluates
   -- the box whether or not anything reported it -- so only this case says that
   -- CR 603.3b's dataflow lint can SEE the read, which is what stops a token box
   -- from naming a slot nothing binds.

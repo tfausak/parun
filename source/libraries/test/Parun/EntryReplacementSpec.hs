@@ -1627,7 +1627,7 @@ magneticLockdownSpec s registry = Spec.describe s "Synthetic Magnetic Lockdown (
 -- is why the 0/0 survives in between.
 --
 -- X is defined by the ability's own text (CR 107.3c) and answered once, when the
--- effect is applied (CR 608.2h) -- Parun.Engine.Resolve.Effect.freezeRiders, against the
+-- effect is applied (CR 608.2h) -- Parun.Engine.Resolve.Common.freezeRiders, against the
 -- resolution's own context, which is what makes Filter.IsSource and CR 109.5's
 -- "you" live on this path.
 --

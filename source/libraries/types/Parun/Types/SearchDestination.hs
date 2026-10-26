@@ -48,7 +48,7 @@ data SearchDestination
     -- controller to choose a host. A search whose filter
     -- does not name Filter.CanAttachToSubject can still reach this arm and find a
     -- card the fixed host can't legally hold; CR 303.4i then leaves it in the
-    -- library, which is what Parun.Engine.Resolve.Effect.putFound does.
+    -- library, which is what Parun.Engine.Resolve.Common.putFound does.
     --
     -- The WHOLE of the card's two sentences, not just the first. One arm rather
     -- than two, because a search has one destination and the card prints one

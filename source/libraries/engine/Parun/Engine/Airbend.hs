@@ -5,7 +5,7 @@
 -- rule 701 is a keyword-action rule exactly as rule 702 is a keyword rule, so the
 -- procedure lives in the engine rather than in card data. The closed\/open
 -- invariant forbids the rules core casing on an EFFECT's identity, and nothing
--- here does -- Parun.Engine.Resolve.Effect's Effect.Airbend arm calls in without
+-- here does -- Parun.Engine.Resolve.Arms.Counters's Effect.Airbend arm calls in without
 -- saying which effect it is.
 --
 -- The FIRST instruction, the exile, is already in the effect vocabulary, so it is
@@ -46,7 +46,7 @@ import qualified Parun.Types.Source as Source
 import qualified Parun.Types.Zone as Zone
 
 -- | CR 701.65a's first sentence: "that player exiles those objects". Handed to
--- Parun.Engine.Resolve.Effect's executor, so the exile runs exactly as the same
+-- Parun.Engine.Resolve.Arms.Counters's executor, so the exile runs exactly as the same
 -- instruction printed on a card would -- ONE batch, which is CR 608.2f.
 --
 -- Every rider is the default: rule 701.65a states nothing about how the objects

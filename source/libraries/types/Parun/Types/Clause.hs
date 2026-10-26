@@ -65,7 +65,7 @@ data Clause card ability = MkClause
     -- sacrifice with nothing to sacrifice is not (Parun.Engine.Resolve.recordTaken).
     --
     -- An option the named clause could not take at all is not offered (CR
-    -- 608.2d, Parun.Engine.Resolve.Effect.clauseIsImpossible), so "you may
+    -- 608.2d, Parun.Engine.Resolve.Common.clauseIsImpossible), so "you may
     -- discard a card" on an empty hand never admits this clause -- Tweeze is
     -- Parun.ResolveSpec's "CR 608.2d Tweeze's discard is not offered with an
     -- empty hand".

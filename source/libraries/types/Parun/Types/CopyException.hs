@@ -76,7 +76,7 @@ data CopyException ability
     -- NULLARY, and self-referential by construction. The printed words are a
     -- reference and not a quotation, so there is nothing to carry: the ability is
     -- read off the resolving object at CR 608.2's execution
-    -- (Parun.Engine.Resolve.Effect's BecomeCopy arm), and what is written into the
+    -- (Parun.Engine.Resolve.Arms.Objects's BecomeCopy arm), and what is written into the
     -- snapshot is that whole ability -- this exception included. So the copy's
     -- own instance is what "this ability" names the next time it resolves, which
     -- is what lets a Shapeshifter copy a second creature and a third. A payload

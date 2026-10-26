@@ -100,7 +100,7 @@ placedSourceCopy = SlotName.MkSlotName (Text.pack "placedSourceCopy")
 -- "exile Chronomantic Escape with three time counters on it" is the read a
 -- kinship card's "this creature" is. A COPY of a spell re-stamps it with the
 -- copy's own id, where a copy of an ABILITY keeps the original's under CR
--- 707.10b -- Parun.Engine.Resolve.Effect's CopyStackObject arm draws that line,
+-- 707.10b -- Parun.Engine.Resolve.Arms.Objects's CopyStackObject arm draws that line,
 -- and Parun.ResolveSpec's "CR 201.5 a resolving spell naming itself" proves both.
 --
 -- Hazard this comment used to only predict, and which #1043 then resolved.
@@ -471,7 +471,7 @@ sacrificedCount = SlotName.MkSlotName (Text.pack "thatMany")
 -- reads it off its own additional cost -- proved by Parun.CostSpec's "CR 601.2h a
 -- creature sacrificed to pay a cast's additional cost is still readable when the
 -- spell resolves". A CR 118.12 cost paid AS a spell or ability resolves is
--- folded onto the resolving object (Parun.Engine.Resolve.Effect.foldPaid), which
+-- folded onto the resolving object (Parun.Engine.Resolve.Common.foldPaid), which
 -- is Feed the Pack's "the sacrificed creature's toughness".
 --
 -- The permanent is in a graveyard by the time the ability resolves, so every
@@ -535,7 +535,7 @@ exiledCard = SlotName.MkSlotName (Text.pack "thatExiledCard")
 -- CR 702.167c: the reserved slot under which a CostComponent.ExileMaterials
 -- payment binds the materials' EXILE incarnations, exiledCard's reason. Folded
 -- onto the craft ability by Parun.Engine.Activate, and read by
--- Parun.Engine.Resolve.Effect's MoveToZone arm, which links each card still in
+-- Parun.Engine.Resolve.Arms.Zones's MoveToZone arm, which links each card still in
 -- exile to the permanent that ability returns (GameState.exiledWith).
 --
 -- Not a target, so the same CR 608.2b posture and the same "no card's
@@ -584,7 +584,7 @@ isAcquiredFrom oid name = pairOf (Just name) == Just (exiledCardAbility oid Noth
 -- as acquired beside it (exiledCardAbility); any other reader the name as
 -- written. Synthetic Split Reliquary's "the cards exiled with warden" and
 -- Gliding Licid's "loses this ability" are the readers, the second only for
--- its own object (Parun.Engine.Resolve.Effect's ModifyTarget).
+-- its own object (Parun.Engine.Resolve.Arms.Damage's ModifyTarget).
 -- data/scenarios/myr-welder-ignores-what-its-acquired-warden-exiled.json is
 -- the proof.
 nameAsRead :: Maybe AbilityName.AbilityName -> AbilityName.AbilityName -> AbilityName.AbilityName
@@ -733,7 +733,7 @@ tappedForTotalPower = SlotName.MkSlotName (Text.pack "thatTappedForTotalPower")
 -- Also bound by Parun.Engine.Event.Binding.eventBindings for CR 607.2h's "that
 -- card" -- the card a TriggerCondition.RevealedThisWay trigger's linked static
 -- revealed (God-Eternal Kefnet). That card CAN leave the hand before the trigger
--- resolves, and Parun.Engine.Resolve.Effect.castableCopy then reads its last
+-- resolves, and Parun.Engine.Resolve.Common.castableCopy then reads its last
 -- known information (CR 608.2h).
 --
 -- Not a target (CR 115.10a), so the same CR 608.2b posture and the same "no card's
@@ -769,7 +769,7 @@ beheldObject = SlotName.MkSlotName (Text.pack "thatBeheldObject")
 --
 -- Not a target (CR 115.10a), so the same CR 608.2b posture and the same "no
 -- card's targetSlots may name it" sweep as the slots above. Nor a CR 609.7a
--- referent: Parun.Engine.Resolve.Effect.referentsOfBindings drops it.
+-- referent: Parun.Engine.Resolve.Common.referentsOfBindings drops it.
 collectedEvidence :: SlotName
 collectedEvidence = SlotName.MkSlotName (Text.pack "thatCollectedEvidence")
 
@@ -921,7 +921,7 @@ departedPermanent = SlotName.MkSlotName (Text.pack "thatDepartedPermanent")
 
 -- CR 701.66a: the reserved slot under which the land an earthbend animated is
 -- bound -- "that land", the subject of the delayed ability rule 701.66a creates.
--- Stamped by Parun.Engine.Resolve.Effect's Earthbend arm onto the resolving
+-- Stamped by Parun.Engine.Resolve.Arms.Counters's Earthbend arm onto the resolving
 -- object, so CR 603.7c's captured environment carries it and the delayed
 -- ability's TriggerCondition.BoundDiesOrIsExiled can name it.
 --
@@ -936,7 +936,7 @@ earthbentLand = SlotName.MkSlotName (Text.pack "thatEarthbentLand")
 -- CR 701.65a: the reserved slot under which the objects an airbend exiled are
 -- bound -- "those objects", the subject of rule 701.65a's second sentence.
 -- Written by the MoveToZone Parun.Engine.Airbend mints and read back by
--- Parun.Engine.Resolve.Effect's Airbend arm, which is the only reader: the
+-- Parun.Engine.Resolve.Arms.Counters's Airbend arm, which is the only reader: the
 -- permission that sentence states is stamped onto what the CR 400.7 funnel
 -- actually minted in exile, and nothing else can name those ids.
 --
@@ -1010,7 +1010,7 @@ castSpell = SlotName.MkSlotName (Text.pack "thatSpell")
 -- Bound for an activated or object-borne triggered ability. CR 605.3b's mana
 -- ability never reaches the stack.
 --
--- NOT a CR 609.7a referent, and Parun.Engine.Resolve.Effect.referentsOfBindings drops it
+-- NOT a CR 609.7a referent, and Parun.Engine.Resolve.Common.referentsOfBindings drops it
 -- by name for every carrier that reads a binding environment: this slot exists so
 -- a card can read the activation's own record -- what paid for it, and how many
 -- times it has resolved this turn -- not because printed text names the ability as

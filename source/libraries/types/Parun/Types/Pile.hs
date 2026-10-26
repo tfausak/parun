@@ -11,6 +11,6 @@ data Pile
     -- timestamp its exile stamped on it (CR 613.7d).
     OfForetold Timestamp.Timestamp
   | -- | Every other face-down exiled card, named by the stamp
-    -- Parun.Engine.Resolve.Effect.recordExilePile gave the instruction that exiled it.
+    -- Parun.Engine.Resolve.Common.recordExilePile gave the instruction that exiled it.
     OfFaceDown Timestamp.Timestamp
   deriving (Eq, Ord, Show)

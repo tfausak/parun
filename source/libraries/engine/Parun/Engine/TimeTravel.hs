@@ -6,7 +6,7 @@
 -- keyword-action rule exactly as rule 702 is a keyword rule, so the procedure
 -- lives in the engine rather than in card data. The closed\/open invariant
 -- forbids the rules core casing on an EFFECT's identity, and nothing here does
--- -- Parun.Engine.Resolve.Effect's Effect.TimeTravel arm calls in without saying
+-- -- Parun.Engine.Resolve.Arms.Counters's Effect.TimeTravel arm calls in without saying
 -- which effect it is.
 --
 -- Rule 701.56a has no "whenever a player time travels", so there is no GameEvent

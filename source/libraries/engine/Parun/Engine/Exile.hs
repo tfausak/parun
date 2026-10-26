@@ -171,7 +171,7 @@ mayChoose perspective oid gs = case perspective of
 -- random draw over it names the one card in it.
 --
 -- Every OTHER face-down exiled card is sorted by the stamp
--- Parun.Engine.Resolve.Effect.recordExilePile gave the instruction that exiled it, which
+-- Parun.Engine.Resolve.Common.recordExilePile gave the instruction that exiled it, which
 -- is the rule's two criteria together: one execution of one instruction is one
 -- moment, and its being that instruction is the how. Two effects that each exile
 -- a hand face down therefore make two piles, and a chooser who may not look picks

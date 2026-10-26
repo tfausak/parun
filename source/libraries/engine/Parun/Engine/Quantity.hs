@@ -1256,7 +1256,7 @@ determine viewOf context gs oid = determineWith (evaluate viewOf context gs oid)
 
 -- determine with the evaluator INJECTED, which is the whole of what determine
 -- does with its four board arguments. The second caller is
--- Parun.Engine.Resolve.Effect.bakeTokenCharacteristics, which has to evaluate a created
+-- Parun.Engine.Resolve.Common.bakeTokenCharacteristics, which has to evaluate a created
 -- token's box against the CREATING object (Quantity.evaluateFor's two ids) and so
 -- cannot reach the one-id evaluate above.
 determineWith :: (Quantity -> Maybe Integer) -> Quantity -> Integer
@@ -1510,7 +1510,7 @@ bakeBound players objects =
 -- Control is the question this reference cannot ask: the battlefield is shared
 -- (CR 400.1) and Game.zoneMembers slices it by OWNER (see #161), so "each creature
 -- THEY CONTROL" is Filter.HeldByRecipient off Filter.Context's recipient
--- instead. Parun.Engine.Resolve.Effect.evaluateForRecipient supplies both.
+-- instead. Parun.Engine.Resolve.Common.evaluateForRecipient supplies both.
 forCandidate :: PlayerId.PlayerId -> Quantity -> Quantity
 forCandidate pid =
   let substitute ref = case ref of

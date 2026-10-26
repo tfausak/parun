@@ -1163,7 +1163,7 @@ data Context = MkContext
     -- CR 601.2d / 608.2d: what each divided slot's division gave the
     -- recipient the surrounding effect is CURRENTLY BEING APPLIED TO, for
     -- Quantity.Share -- Forked Lightning's part of its 4 damage for each target.
-    -- Filled by Parun.Engine.Resolve.Effect's DealDamage and PreventNextDamage
+    -- Filled by Parun.Engine.Resolve.Arms.Damage's DealDamage and PreventNextDamage
     -- arms, once per recipient;
     -- empty everywhere else, where Share answers Nothing.
     shares :: Map.Map SlotName.SlotName Natural.Natural,
@@ -1392,7 +1392,7 @@ data Context = MkContext
     -- keyed by slot -- "that much" as the trigger's own event stamped it
     -- (Parun.Engine.Binding.eventAmount), the X a caster just named
     -- (Parun.Engine.Binding.variableX), and the amount an effect of the resolution
-    -- itself stamped on a slot (Parun.Engine.Resolve.Effect.bindAmountSlot).
+    -- itself stamped on a slot (Parun.Engine.Resolve.Common.bindAmountSlot).
     --
     -- TWO readers. It is a channel THROUGH the context to Parun.Engine.Quantity's
     -- InSlot arm, which Parun.Engine.Target.slotContext evaluates a target slot's

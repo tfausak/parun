@@ -1681,6 +1681,11 @@ library engine
     Parun.Engine.Replay
     Parun.Engine.Requirement
     Parun.Engine.Resolve
+    Parun.Engine.Resolve.Arms.Counters
+    Parun.Engine.Resolve.Arms.Damage
+    Parun.Engine.Resolve.Arms.Objects
+    Parun.Engine.Resolve.Arms.Zones
+    Parun.Engine.Resolve.Common
     Parun.Engine.Resolve.Effect
     Parun.Engine.Resolve.Slots
     Parun.Engine.Restamp

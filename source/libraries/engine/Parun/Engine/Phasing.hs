@@ -21,7 +21,7 @@
 -- the new field (Parun.Types.GameState.phasedOut), and they are: this module,
 -- CR 702.26k's leaves-the-game clause in
 -- Parun.Engine.Game.removeFromZones, CR 702.26e's resolution-time freeze in
--- Parun.Engine.Resolve.Effect.frozenAffected, CR 702.26n's reschedule below,
+-- Parun.Engine.Resolve.Common.frozenAffected, CR 702.26n's reschedule below,
 -- CR 702.26f's baked-object read in Parun.Engine.Count.playersFor, and CR
 -- 514.2's damage sweep -- which is on that list by rule and not by code, since
 -- Parun.Engine.Damage.removeAllDamage clears every object rather than every
@@ -77,7 +77,7 @@
 --
 -- CR 702.26e, the other: a resolving effect's frozen set (CR 611.2c) names an
 -- object by id, which a group slot like `self` reaches whether or not it is
--- phased out, so Parun.Engine.Resolve.Effect.frozenAffected drops it there. A
+-- phased out, so Parun.Engine.Resolve.Common.frozenAffected drops it there. A
 -- static ability's set needs nothing: it is re-derived every projection (CR
 -- 611.3a), which walks only GameState.battlefield.
 module Parun.Engine.Phasing where

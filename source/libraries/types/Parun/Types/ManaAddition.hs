@@ -60,7 +60,7 @@ data ManaAddition = MkManaAddition
     -- board as printed: Cabal Coffers' "Add {B} for each Swamp you control" is
     -- one instruction whose size CR 106.3 settles as it is carried out. Both
     -- readers evaluate it -- Parun.Engine.Mana.manaOptionsOfGiven for CR 605.3b's
-    -- inline payment and Parun.Engine.Resolve.Effect's AddMana arm for one that
+    -- inline payment and Parun.Engine.Resolve.Arms.Damage's AddMana arm for one that
     -- resolves off the stack -- so the offered yield and the mana actually added
     -- measure the same board.
     count :: Quantity.Quantity,
