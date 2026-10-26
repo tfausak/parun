@@ -598,7 +598,7 @@ isPlayerAttacks condition = case condition of
 -- The payload is what makes the condition's second subject observable at all.
 -- "That player" is the ATTACKED player, bound under
 -- Parun.Engine.Binding.triggerPlayer, and the target slot's
--- Filter.ControlledByBound reads it -- so an arm that bound the attacking player
+-- Filter.HeldByBound reads it -- so an arm that bound the attacking player
 -- instead offers alice's own creatures, and one that bound nothing offers
 -- nobody and CR 603.3d removes the trigger. Both are visible below, because the
 -- goaded creature is asserted by IDENTITY: bob controls two Giants, the

@@ -52,8 +52,13 @@
                                 "type": "IsTapped"
                               },
                               {
-                                "type": "ControlledByBound",
-                                "value": "target"
+                                "type": "HeldByBound",
+                                "value": {
+                                  "holder": {
+                                    "type": "Controller"
+                                  },
+                                  "slot": "target"
+                                }
                               }
                             ]
                           },

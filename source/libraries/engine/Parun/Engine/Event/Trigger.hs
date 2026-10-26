@@ -607,9 +607,8 @@ looksBack condition = case condition of
   -- or library, and a permanent becoming tapped is none of them. It stays on the
   -- battlefield, so the ordinary CR 603.10 reading -- the board as it is now --
   -- is the right one.
-  TriggerCondition.AttachedCreatureBecomesTapped -> False
+  TriggerCondition.BecomesTapped _ -> False
   TriggerCondition.PermanentsBecomeTapped _ -> False
-  TriggerCondition.PermanentBecomesTapped _ -> False
   -- Nor is becoming untapped: CR 701.26b leaves the permanent standing on
   -- the battlefield too, so the same live read is the right one.
   TriggerCondition.SelfBecomesUntapped -> False
@@ -887,17 +886,14 @@ batchScoped condition = case condition of
   -- One card, one departure.
   TriggerCondition.SelfLeavesGraveyard -> False
   TriggerCondition.AttachedCreatureDies -> False
-  -- CR 603.2e names the MOMENT the one enchanted permanent becomes tapped, so a
-  -- batch holds at most one occurrence of it.
-  TriggerCondition.AttachedCreatureBecomesTapped -> False
+  -- Thoughtleech's "whenever an Island ... becomes tapped" has no "one or
+  -- more", so each permanent a tapping event taps is its own occurrence.
+  TriggerCondition.BecomesTapped _ -> False
   -- A True beside PermanentsDie: "one or more nontoken Merfolk
   -- you control become tapped" (Deeproot Pilgrimage) is one trigger event per
   -- tapping, however many it tapped -- a cost's taps, CR 508.1f's attackers, or
   -- one Effect.Tap -- so long as each of those sites brackets its loop.
   TriggerCondition.PermanentsBecomeTapped _ -> True
-  -- Thoughtleech's "whenever an Island ... becomes tapped" has no "one or
-  -- more", so each permanent a tapping event taps is its own occurrence.
-  TriggerCondition.PermanentBecomesTapped _ -> False
   -- The untap direction the same way, CR 502.3's simultaneous batch
   -- included: the condition is about the BEARER, so a batch that untaps a
   -- whole board still holds one occurrence of it.
@@ -2632,7 +2628,7 @@ enchantedObjectLeaves condition = case condition of
   -- False, stated rather than left to the wildcard: this watches the SAME
   -- attachment link, but for an event that leaves the enchanted permanent right
   -- where it was, so CR 113.6m's Aura clause has nothing to exempt.
-  TriggerCondition.AttachedCreatureBecomesTapped -> False
+  TriggerCondition.BecomesTapped _ -> False
   -- Not an attachment condition at all -- it reads the bearer -- so the
   -- Aura clause is not in question.
   TriggerCondition.SelfBecomesUntapped -> False
@@ -2905,9 +2901,8 @@ zonesTriggeredFrom cond =
         -- The same default for the same reason, and more plainly: an Aura enchanting a
         -- permanent is itself a permanent on the battlefield, and CR 113.6k's exception
         -- is for a condition that cannot trigger from there at all.
-        TriggerCondition.AttachedCreatureBecomesTapped -> battlefield
+        TriggerCondition.BecomesTapped _ -> battlefield
         TriggerCondition.PermanentsBecomeTapped _ -> battlefield
-        TriggerCondition.PermanentBecomesTapped _ -> battlefield
         -- CR 110.5 makes tapped a permanent's status, so only a permanent can
         -- become untapped and only the battlefield can hold one.
         TriggerCondition.SelfBecomesUntapped -> battlefield
@@ -3446,9 +3441,8 @@ stateTriggersOn gs
             -- a state the board can read, which is exactly why this must be
             -- False: CR 603.2e says a "becomes" condition does not retrigger
             -- while the state persists, and a state trigger would do nothing but.
-            TriggerCondition.AttachedCreatureBecomesTapped -> False
+            TriggerCondition.BecomesTapped _ -> False
             TriggerCondition.PermanentsBecomeTapped _ -> False
-            TriggerCondition.PermanentBecomesTapped _ -> False
             -- CR 701.26b's untap is an EVENT for the identical reason,
             -- read off the bearer instead of its host.
             TriggerCondition.SelfBecomesUntapped -> False

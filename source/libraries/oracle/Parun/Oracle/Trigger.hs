@@ -20,6 +20,7 @@ import qualified Parun.Types.Count as Count
 import qualified Parun.Types.DealsDamageToPlayer as DealsDamageToPlayer
 import qualified Parun.Types.EndingStep as EndingStep
 import qualified Parun.Types.Filter as Filter.Type
+import qualified Parun.Types.Holder as Holder
 import qualified Parun.Types.InZone as InZone
 import qualified Parun.Types.Keyword as Keyword
 import qualified Parun.Types.OwnedZone as OwnedZone
@@ -394,7 +395,7 @@ counted context n comparison k = case Count.scope n of
         let controls f = case f of
               Filter.Type.ControlledBy PlayerRelation.You -> True
               Filter.Type.ControlledBy PlayerRelation.Opponent -> True
-              Filter.Type.ControlledByBound _ -> True
+              Filter.Type.HeldByBound Holder.Controller _ -> True
               _ -> False
             (controllers, rest) = (filter controls conjuncts, filter (not . controls) conjuncts)
         p <- Filter.phrase (Filter.Type.And rest) (Target.keyword context)
@@ -404,7 +405,7 @@ counted context n comparison k = case Count.scope n of
         case controllers of
           [Filter.Type.ControlledBy PlayerRelation.You] -> [Text.pack "you control " <> some]
           [Filter.Type.ControlledBy PlayerRelation.Opponent] -> [Text.pack "an opponent controls " <> some]
-          [Filter.Type.ControlledByBound s] | Just word <- Map.lookup s (Target.bound context) -> [word <> Text.pack " controls " <> some]
+          [Filter.Type.HeldByBound Holder.Controller s] | Just word <- Map.lookup s (Target.bound context) -> [word <> Text.pack " controls " <> some]
           -- Free: "there are no Zombies on the battlefield" (Sarcomancy) or
           -- "no creatures are on the battlefield" (Pestilence, Sixth Edition),
           -- and for one or more "any player controls a black permanent"

@@ -350,22 +350,19 @@ data TriggerCondition
   | -- | CR 700.4's "dies" read off the permanent the bearer is attached to
     -- (Screams from Within); the one condition CR 113.6m's Aura clause names.
     AttachedCreatureDies
-  | -- | CR 701.26a's "became tapped" read off the permanent the bearer is
-    -- attached to (Betrayal), live rather than through last known information.
-    AttachedCreatureBecomesTapped
+  | -- | CR 701.26a: a permanent became tapped, once per permanent (City of
+    -- Brass, Betrayal, Thoughtleech).
+    BecomesTapped ActingPermanent.ActingPermanent
   | -- | CR 701.26a's batch reading, by a bystander: "whenever one or more
     -- nontoken Merfolk you control become tapped" (Deeproot Pilgrimage), once
     -- per tapping event (CR 603.2c).
     PermanentsBecomeTapped (Filter.Filter Keyword.Keyword)
-  | -- | CR 701.26a by a bystander, once per permanent: "whenever an Island an
-    -- opponent controls becomes tapped" (Thoughtleech).
-    PermanentBecomesTapped (Filter.Filter Keyword.Keyword)
   | -- | CR 701.26b's "becomes untapped" read off the bearer itself (Oreskos Sun
-    -- Guide), the other direction of the status the arm above watches.
+    -- Guide), the other direction of the status BecomesTapped watches.
     SelfBecomesUntapped
   | -- | CR 106.12a's "is tapped for mana" read off the permanent the bearer is
     -- attached to (Wild Growth), live rather than through last known
-    -- information, as for the arm above.
+    -- information.
     AttachedPermanentTappedForMana
   | -- | CR 106.12a read by a bystander: "whenever you tap a land creature for
     -- mana" (Autumn Willow, Harmony), the arm above's event under a relation and

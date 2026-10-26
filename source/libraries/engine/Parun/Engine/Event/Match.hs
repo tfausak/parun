@@ -5196,28 +5196,24 @@ matchesTriggerGiven bindings board gs bearer you cond event = case cond of
   TriggerCondition.AttachedCreatureDies -> case Game.diedChange event of
     Nothing -> False
     Just zc -> maybe False (Set.member bearer . LastKnown.attached) (Game.lastKnownOf (ZoneChange.departed zc) gs)
-  -- CR 701.26a's tap, asked of the permanent the bearer is attached to
-  -- (Betrayal's "whenever enchanted creature becomes tapped"). The event names
-  -- whichever permanent turned sideways; Object.attachedTo says whether that is
-  -- this bearer's host.
+  -- CR 701.26a's tap, once per permanent: the bearer by id (City of Brass), or
+  -- a permanent the Filter admits, judged off CR 603.10's board just after the
+  -- event (Thoughtleech). Betrayal's "enchanted creature" is
+  -- `Matching (HasAttached IsSource)`: the tapped host is still standing, so
+  -- Projection.sampledView reads the attachment link live rather than through
+  -- last known information, where AttachedCreatureDies has to look back because
+  -- the SBA batch that kills the host takes the link away (CR 704.5m).
   --
   -- CR 603.2e's exclusions are discharged where the event is MINTED, in `tap`
   -- above, rather than here: a permanent that entered tapped never transitioned,
   -- and rule 701.26a's "only untapped permanents can be tapped" makes a repeat tap
   -- no event at all. So this arm asks only whose tap it was.
-  --
-  -- The host is read through Recipient.objectOf, AttachedCreatureMentors' route
-  -- for CR 303.4's other destination: an Aura enchanting a PLAYER has no host id
-  -- to compare and answers False, as does one attached to nothing.
-  --
-  -- LIVE and off the BEARER, where AttachedCreatureDies reads CR 608.2h's record
-  -- of the deceased instead. That look-back is load-bearing there because the
-  -- same SBA batch that kills the host takes the link away (CR 704.5m, CR
-  -- 704.5n); here the host is still standing -- it has just become tapped -- so
-  -- the link is on the board to be read.
-  TriggerCondition.AttachedCreatureBecomesTapped -> case event of
-    GameEvent.BecameTapped tapped ->
-      Game.hostOf bearer gs == Just tapped
+  TriggerCondition.BecomesTapped watched -> case event of
+    GameEvent.BecameTapped tapped -> case watched of
+      ActingPermanent.Self -> tapped == bearer
+      ActingPermanent.Matching f -> case Map.lookup tapped board of
+        Nothing -> False
+        Just candidate -> Filter.matches bearerContext (Projection.sampledView tapped candidate gs) f
     -- CR 701.26b's untap is the other transition of the same status, and no
     -- "becomes tapped" condition reads it.
     GameEvent.BecameUntapped _ -> False
@@ -5291,83 +5287,9 @@ matchesTriggerGiven bindings board gs bearer you cond event = case cond of
     GameEvent.ActivatedAbilityResolved _ -> False
     GameEvent.TriggeredAbilityResolved _ -> False
     GameEvent.CardArrived _ -> False
-  -- The arm below's match; only `batchScoped` tells the two apart.
-  TriggerCondition.PermanentBecomesTapped f -> matchesTriggerGiven bindings board gs bearer you (TriggerCondition.PermanentsBecomeTapped f) event
-  -- CR 701.26a by a bystander: a permanent the filter admits became tapped,
-  -- judged off CR 603.10's board just after the event. Firing once for a
-  -- batch is `batchScoped` plus eventTriggers' dedup, never this arm.
-  TriggerCondition.PermanentsBecomeTapped f -> case event of
-    GameEvent.BecameTapped tapped -> case Map.lookup tapped board of
-      Nothing -> False
-      Just candidate -> Filter.matches bearerContext (Projection.sampledView tapped candidate gs) f
-    GameEvent.BecameUntapped _ -> False
-    GameEvent.TappedForMana _ -> False
-    GameEvent.ManaAdded _ -> False
-    GameEvent.ManaAbilityResolved _ -> False
-    GameEvent.Moved {} -> False
-    GameEvent.DamageDealt _ -> False
-    GameEvent.StepBegan {} -> False
-    GameEvent.SpellCast {} -> False
-    GameEvent.SpellCopied _ -> False
-    GameEvent.DamagePrevented {} -> False
-    GameEvent.BecameMonarch _ -> False
-    GameEvent.TookInitiative _ -> False
-    GameEvent.Discarded {} -> False
-    GameEvent.Drew {} -> False
-    GameEvent.Revealed {} -> False
-    GameEvent.Looked {} -> False
-    GameEvent.Voted {} -> False
-    GameEvent.VotesRevealed {} -> False
-    GameEvent.AttackerDeclared {} -> False
-    GameEvent.BecameBlocking {} -> False
-    GameEvent.BlocksDeclared {} -> False
-    GameEvent.AttackerBlocked {} -> False
-    GameEvent.AttackerUnblocked _ -> False
-    GameEvent.SpellCountered _ -> False
-    GameEvent.AbilityCountered _ -> False
-    GameEvent.HalfUnlocked {} -> False
-    GameEvent.TurnedFaceUp _ -> False
-    GameEvent.PermanentActed _ -> False
-    GameEvent.Transformed {} -> False
-    GameEvent.BecameDesignated {} -> False
-    GameEvent.Mentored {} -> False
-    GameEvent.Exploited {} -> False
-    GameEvent.BecameCrewed _ -> False
-    GameEvent.Convoked _ -> False
-    GameEvent.Saddled _ -> False
-    GameEvent.Crewed _ -> False
-    GameEvent.PermanentSacrificed {} -> False
-    GameEvent.AbilityTriggered {} -> False
-    GameEvent.LoyaltyAbilityActivated _ -> False
-    GameEvent.LifeLost {} -> False
-    GameEvent.LifeGained {} -> False
-    GameEvent.CountersPut {} -> False
-    GameEvent.CountersRemoved {} -> False
-    GameEvent.ControlChanged {} -> False
-    GameEvent.VentureMarkerEntered {} -> False
-    GameEvent.BecameTarget {} -> False
-    GameEvent.BecameAttached {} -> False
-    GameEvent.BecameUnattached {} -> False
-    GameEvent.LeftTheGame _ -> False
-    GameEvent.Milled {} -> False
-    GameEvent.PlayerActed _ -> False
-    GameEvent.LandPlayed {} -> False
-    GameEvent.LostTheGame _ -> False
-    GameEvent.ManifestedDread {} -> False
-    GameEvent.DieResultSettled _ -> False
-    GameEvent.RolledToVisit _ -> False
-    GameEvent.PlanarDieRolled _ -> False
-    GameEvent.TurnedUpOffDeck _ -> False
-    GameEvent.ChaosEnsued -> False
-    GameEvent.ClassLevelSet _ -> False
-    GameEvent.Plotted _ -> False
-    GameEvent.BecameAttacked _ -> False
-    GameEvent.AttackersDeclared _ -> False
-    GameEvent.CoinFlipped {} -> False
-    GameEvent.StickerPut _ -> False
-    GameEvent.ActivatedAbilityResolved _ -> False
-    GameEvent.TriggeredAbilityResolved _ -> False
-    GameEvent.CardArrived _ -> False
+  -- CR 701.26a's batch reading by a bystander, the arm above's match; firing
+  -- once for a batch is `batchScoped` plus eventTriggers' dedup, never this arm.
+  TriggerCondition.PermanentsBecomeTapped f -> matchesTriggerGiven bindings board gs bearer you (TriggerCondition.BecomesTapped (ActingPermanent.Matching f)) event
   -- CR 701.26b through CR 603.2: the bearer is the permanent that rotated
   -- upright (Oreskos Sun Guide). SelfTurnedFaceUp's shape -- a bare comparison
   -- of ids, with none of the permanent's characteristics read, so no CR 608.2h

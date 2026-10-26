@@ -46,6 +46,6 @@ data ZoneScope
     ControllerOfBound SlotName.SlotName
   | -- | CR 601.2c: InSlot with its player resolved -- one copy of a "for each
     -- opponent" slot's "that player's graveyard" (Parun.Engine.Target.announcedSlots).
-    -- Runtime-only, Parun.Types.Filter.ControlledByPlayer's posture.
+    -- Runtime-only, Parun.Types.Filter.HeldByPlayer's posture.
     BoundPlayer PlayerId.PlayerId
   deriving (Eq, Ord, Show)

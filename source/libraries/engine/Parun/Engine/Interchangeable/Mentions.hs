@@ -498,13 +498,10 @@ filterNames asking criterion = case criterion of
   Filter.ManaValueIsEven -> mempty
   Filter.ControlledBy _relation -> mempty
   Filter.ControlledByRole _ -> mempty
-  Filter.ControlledByBound slot -> slotNames asking slot
-  Filter.ControlledByPlayer _player -> mempty
-  Filter.ControlledByRecipient -> mempty
+  Filter.HeldByBound _holder slot -> slotNames asking slot
+  Filter.HeldByPlayer _holder _player -> mempty
+  Filter.HeldByRecipient _holder -> mempty
   Filter.OwnedBy _relation -> mempty
-  Filter.OwnedByRecipient -> mempty
-  Filter.OwnedByBound slot -> slotNames asking slot
-  Filter.OwnedByPlayer _player -> mempty
   Filter.IsSource -> mempty
   Filter.IsObject oid -> names asking (== oid)
   Filter.TargetsSource -> mempty
@@ -2972,9 +2969,8 @@ triggerConditionNames asking x = case x of
   TriggerCondition.CardsPutIntoZone cardsPutIntoZone -> cardsPutIntoZoneNames asking cardsPutIntoZone
   TriggerCondition.SelfLeavesGraveyard -> mempty
   TriggerCondition.AttachedCreatureDies -> mempty
-  TriggerCondition.AttachedCreatureBecomesTapped -> mempty
+  TriggerCondition.BecomesTapped actingPermanent -> actingPermanentNames asking actingPermanent
   TriggerCondition.PermanentsBecomeTapped filter_ -> filterNames asking filter_
-  TriggerCondition.PermanentBecomesTapped filter_ -> filterNames asking filter_
   TriggerCondition.SelfBecomesUntapped -> mempty
   TriggerCondition.AttachedPermanentTappedForMana -> mempty
   TriggerCondition.PermanentTappedForMana permanentTappedForMana -> permanentTappedForManaNames asking permanentTappedForMana
