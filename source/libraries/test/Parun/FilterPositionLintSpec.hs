@@ -54,6 +54,7 @@ import qualified Parun.Types.CantBlockCreatures as CantBlockCreatures
 import qualified Parun.Types.Card as Card.Type
 import qualified Parun.Types.CardType as CardType
 import qualified Parun.Types.ChooseCardName as ChooseCardName
+import qualified Parun.Types.ChosenPermanents as ChosenPermanents
 import qualified Parun.Types.ChosenQuality as ChosenQuality
 import qualified Parun.Types.Clause as Clause
 import qualified Parun.Types.CombatRestriction as CombatRestriction
@@ -101,7 +102,9 @@ import qualified Parun.Types.Filter as Filter.Type
 import qualified Parun.Types.FromOutsideTheGame as FromOutsideTheGame
 import qualified Parun.Types.FromReference as FromReference
 import qualified Parun.Types.GainControl as GainControl
+import qualified Parun.Types.GrantedAbility as GrantedAbility
 import qualified Parun.Types.HandAction as HandAction
+import qualified Parun.Types.HowMany as HowMany
 import qualified Parun.Types.InZone as InZone
 import qualified Parun.Types.Keyword as Keyword
 import qualified Parun.Types.KeywordDesignator as KeywordDesignator
@@ -669,10 +672,11 @@ otherCandidateTag = Text.pack "OfEachOtherCandidate"
 -- How many of those operands sit in an edict's or a chosen permanent's own
 -- filter, and how many anywhere else. Filter.amongCandidates is the one filler
 -- of Filter.Context.candidateMeasures, called for an edict's pool and the
--- battlefield's, so the operand anywhere else is a silent False. Counted off
--- the encoding for amountedSlotAtoms' reason: the position is the enclosing
--- PlayerSacrifices, ChoosePermanents or ChosenPermanents, which no Framing
--- names.
+-- battlefield's -- Parun.Engine.Resolve.Slots.chosenCandidates' other zones
+-- never call it -- so the operand anywhere else, a choice out of exile
+-- included, is a silent False. Counted off the encoding for
+-- amountedSlotAtoms' reason: the position is the enclosing PlayerSacrifices,
+-- ChoosePermanents or ChosenPermanents, which no Framing names.
 otherCandidateCounts :: Face.Face Card.Type.Card -> (Int, Int)
 otherCandidateCounts card =
   let encoded = Codec.encode (Face.Codec.codec Card.codec) card
@@ -685,9 +689,12 @@ otherCandidateCounts card =
               field name v = case v of
                 Value.Object x -> [Pair.value pair | pair <- Object.unwrap x, String.unwrap (Pair.name pair) == Text.pack name]
                 _ -> []
+              -- A choice's zone is defaulted, so only the battlefield's omits it.
+              onBattlefield = filter (null . field "zone")
               positioned
-                | typed "PlayerSacrifices" || typed "ChosenPermanents" = Just (concatMap (field "filter") (keyed "value"))
-                | typed "ChoosePermanents" = Just (concatMap (field "filter") (concatMap (field "permanents") (keyed "value")))
+                | typed "PlayerSacrifices" = Just (concatMap (field "filter") (keyed "value"))
+                | typed "ChosenPermanents" = Just (concatMap (field "filter") (onBattlefield (keyed "value")))
+                | typed "ChoosePermanents" = Just (concatMap (field "filter") (onBattlefield (concatMap (field "permanents") (keyed "value"))))
                 | otherwise = Nothing
            in case positioned of
                 Just filters -> sum (fmap (jsonAtoms otherCandidateTag) filters)
@@ -874,16 +881,33 @@ hasChosenSubtypeTag = Text.pack "HasChosenSubtype"
 -- the object CR 614.1c's "as this enters" choice was made for, nor attached to
 -- anything, so the atom there would be a silent False. The exception is a
 -- spell whose own resolution makes the `quality` choice (Effect.ChooseQuality,
--- Persecute): its resolution's filters read it, though its target slots,
--- chosen before it resolves (CR 601.2c), still cannot.
+-- Persecute): the filters its mode reads AFTER the choice (CR 608.2c's "in the
+-- order written") read it, though its target slots, chosen before it resolves
+-- (CR 601.2c), still cannot, nor can a filter ahead of it or in another mode.
 chosenValueCounts :: (Framing -> Bool) -> Maybe ChosenQuality.ChosenQuality -> Text.Text -> Face.Face Card.Type.Card -> (Int, Int)
 chosenValueCounts admitted quality tag card =
   let total keep pairs = sum (fmap (\(_, f) -> filterAtoms tag f) (filter (keep . fst) pairs))
       spellPairs = modalFilters (Face.spell card)
-      chooses = any (\q -> any (elem (Effect.ChooseQuality q) . Mode.allEffects) (Modal.modes (Face.spell card))) quality
-      answered framing = chooses && admitted framing && framing /= InTargetSlot
-      inSpell = total admitted spellPairs - total answered spellPairs
+      answered = concatMap (\q -> afterChoice q (Face.spell card)) quality
+      inSpell = total admitted spellPairs - total admitted answered
    in (total admitted (cardFilters card) - inSpell, total (not . admitted) (cardFilters card) + inSpell)
+
+-- The filters a spell's mode reads after its first `Effect.ChooseQuality q`:
+-- modalFilters over what follows it -- the rest of the choosing clause, shorn
+-- of the gate asked before it, and every later clause -- with no target slot.
+afterChoice :: ChosenQuality.ChosenQuality -> Modal.Modal Card.Type.Card (GrantedAbility.GrantedAbility Card.Type.Card) -> [(Framing, Filter.Type.Filter Keyword.Keyword)]
+afterChoice q modal =
+  let chosen = Effect.ChooseQuality q
+      rest mode = case Seq.breakl (elem chosen . Clause.effects) (Mode.clauses mode) of
+        (_, after) -> case Seq.viewl after of
+          Seq.EmptyL -> Nothing
+          chooser Seq.:< later ->
+            Just
+              ( Mode.MkMode
+                  (chooser {Clause.condition = Nothing, Clause.payGate = Nothing, Clause.effects = Seq.drop 1 (Seq.dropWhileL (/= chosen) (Clause.effects chooser))} Seq.<| later)
+                  Map.empty
+              )
+   in modalFilters modal {Modal.modes = Seq.fromList (Maybe.mapMaybe rest (Foldable.toList (Modal.modes modal)))}
 
 -- CR 105.2's chosen colour is answerable only where Filter.Context.sourceChosenColors
 -- is filled: every source-framed position (sourceFramed), plus a static grant's
@@ -1901,6 +1925,15 @@ filterPositionLintSpec s registry = Spec.describe s "Lint" $ do
                 Mint.oneModeTargeting (Map.singleton (SlotName.MkSlotName (Text.pack "target")) (TargetSlot.required Pool.Creatures (Just atom))) Seq.empty
             }
     Spec.assertEqWith s "a planted atom in a target slot is an offence" (otherCandidateCounts planted) (0, 1)
+    -- And in a chosen permanent's own filter, the pair differing in the zone
+    -- alone: chosenCandidates' exile arm never calls Filter.amongCandidates.
+    let choosing zone =
+          (S.combinedFace piker)
+            { Face.spell =
+                Mint.oneMode (Seq.singleton (Effect.Destroy (Destroy.MkDestroy (ObjectRef.ChosenPermanents (ChosenPermanents.MkChosenPermanents atom (PlayerRef.InSlot Binding.you) HowMany.one zone)) Regenerability.Regenerable Nothing Nothing Nothing)))
+            }
+    Spec.assertEqWith s "the atom in a battlefield choice's filter is accepted" (otherCandidateCounts (choosing Zone.Battlefield)) (1, 0)
+    Spec.assertEqWith s "and in an exile choice's filter is an offence" (otherCandidateCounts (choosing Zone.Exile)) (0, 1)
   -- CR 303.4b's Filter.IsHostOfSource is CR 709.4a's atom one axis over again:
   -- answerable only in the positions `hostFramed` admits. See hostOfSourceOffends for the two offences.
   Spec.it s "CR 303.4b no card asks IsHostOfSource where the source's host is unknown" $ do
@@ -3326,13 +3359,18 @@ filterPositionLintSpec s registry = Spec.describe s "Lint" $ do
                     (NonEmpty.singleton (Modification.ModifyPowerToughness (ModifyPowerToughness.MkModifyPowerToughness (Quantity.Type.Literal 1) (Quantity.Type.Literal 1))))
                 ]
             }
-        rejected f =
+        destroying f = Effect.Destroy (Destroy.MkDestroy (ObjectRef.EachMatching f) Regenerability.Regenerable Nothing Nothing Nothing)
+        rejected quality f =
           [ ("a spell's target slot", base {Face.spell = spellOf [] (aimed f)}),
-            ("a spell's own filter", base {Face.spell = spellOf [Effect.Destroy (Destroy.MkDestroy (ObjectRef.EachMatching f) Regenerability.Regenerable Nothing Nothing Nothing)] Map.empty})
+            ("a spell's own filter", base {Face.spell = spellOf [destroying f] Map.empty}),
+            ("a spell's own filter before its own choice", base {Face.spell = spellOf [destroying f, Effect.ChooseQuality quality] Map.empty}),
+            ( "a spell's own filter in another mode than its choice",
+              base {Face.spell = (spellOf [Effect.ChooseQuality quality] Map.empty) {Modal.modes = Modal.modes (spellOf [Effect.ChooseQuality quality] Map.empty) <> Modal.modes (spellOf [destroying f] Map.empty)}}
+            )
           ]
         accepted quality f =
           [ ("a static ability's affected set", affecting f),
-            ("a spell's own filter after its own choice", base {Face.spell = spellOf [Effect.ChooseQuality quality, Effect.Destroy (Destroy.MkDestroy (ObjectRef.EachMatching f) Regenerability.Regenerable Nothing Nothing Nothing)] Map.empty}),
+            ("a spell's own filter after its own choice", base {Face.spell = spellOf [Effect.ChooseQuality quality, destroying f] Map.empty}),
             ("an activated ability's target slot", withAbility (\a -> a {ActivatedAbility.modal = spellOf [] (aimed f)})),
             ("an activated ability's sacrifice cost", withAbility (\a -> a {ActivatedAbility.cost = (ActivatedAbility.cost a) {Cost.Type.components = [CostComponent.Sacrifice (Sacrifice.MkSacrifice (ObjectCount.Exactly (CostAmount.Fixed 1)) f)]}})),
             ("CR 603.6a's trigger condition", base {Face.triggeredAbilities = [oneEffectTrigger (TriggerCondition.PermanentEnters f) draw]}),
@@ -3352,8 +3390,8 @@ filterPositionLintSpec s registry = Spec.describe s "Lint" $ do
         Spec.assertEqWith
           s
           "every position that cannot answer is rejected"
-          (fmap report (rejected buried))
-          (fmap (\(label, _) -> (label, True, (0, 1))) (rejected buried))
+          (fmap report (rejected quality buried))
+          (fmap (\(label, _) -> (label, True, (0, 1))) (rejected quality buried))
         Spec.assertEqWith
           s
           "and every position that can is accepted"
@@ -3362,8 +3400,8 @@ filterPositionLintSpec s registry = Spec.describe s "Lint" $ do
         Spec.assertEqWith
           s
           "and the codec counts exactly the atoms the traversal does"
-          (fmap (\(_, card) -> jsonAtoms tag (Codec.encode (Face.Codec.codec Card.codec) card)) (rejected buried <> accepted quality buried))
-          (fmap (const 1) (rejected buried <> accepted quality buried))
+          (fmap (\(_, card) -> jsonAtoms tag (Codec.encode (Face.Codec.codec Card.codec) card)) (rejected quality buried <> accepted quality buried))
+          (fmap (const 1) (rejected quality buried <> accepted quality buried))
 
   -- CR 607.2a's last exiled card: answerable in a mana restriction alone. Ice
   -- Cauldron is accepted rather than skipped, and the same atom moved into an
