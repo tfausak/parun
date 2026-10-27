@@ -1,0 +1,372 @@
+{
+  "description": "CR 606.4 / 120.3c / 608.2h: Nicol Bolas, Planeswalker's -9 at a planeswalker makes that planeswalker's controller discard seven cards, then sacrifice seven permanents",
+  "note": "Bob's Liliana of the Dark Realms takes the 7 and keeps 1 loyalty; bob, not carol, discards and sacrifices, keeping one Island and one Plains, and his life is untouched.",
+  "board": {
+    "active": "alice",
+    "step": "PrecombatMain",
+    "seats": [
+      {
+        "name": "alice",
+        "battlefield": [
+          {
+            "card": "Nicol Bolas, Planeswalker",
+            "label": "bolas",
+            "counters": [
+              {
+                "key": {
+                  "type": "Loyalty"
+                },
+                "value": 10
+              }
+            ]
+          }
+        ],
+        "library": [
+          {
+            "card": "Island",
+            "label": "a1"
+          },
+          {
+            "card": "Island",
+            "label": "a2"
+          },
+          {
+            "card": "Island",
+            "label": "a3"
+          },
+          {
+            "card": "Island",
+            "label": "a4"
+          }
+        ]
+      },
+      {
+        "name": "bob",
+        "battlefield": [
+          {
+            "card": "Plains",
+            "label": "p1"
+          },
+          {
+            "card": "Plains",
+            "label": "p2"
+          },
+          {
+            "card": "Plains",
+            "label": "p3"
+          },
+          {
+            "card": "Plains",
+            "label": "p4"
+          },
+          {
+            "card": "Plains",
+            "label": "p5"
+          },
+          {
+            "card": "Plains",
+            "label": "p6"
+          },
+          {
+            "card": "Plains",
+            "label": "p7"
+          },
+          {
+            "card": "Plains",
+            "label": "p8"
+          },
+          {
+            "card": "Liliana of the Dark Realms",
+            "label": "lili",
+            "counters": [
+              {
+                "key": {
+                  "type": "Loyalty"
+                },
+                "value": 8
+              }
+            ]
+          }
+        ],
+        "hand": [
+          {
+            "card": "Island",
+            "label": "h1"
+          },
+          {
+            "card": "Island",
+            "label": "h2"
+          },
+          {
+            "card": "Island",
+            "label": "h3"
+          },
+          {
+            "card": "Island",
+            "label": "h4"
+          },
+          {
+            "card": "Island",
+            "label": "h5"
+          },
+          {
+            "card": "Island",
+            "label": "h6"
+          },
+          {
+            "card": "Island",
+            "label": "h7"
+          },
+          {
+            "card": "Island",
+            "label": "h8"
+          }
+        ],
+        "library": [
+          {
+            "card": "Island",
+            "label": "b1"
+          },
+          {
+            "card": "Island",
+            "label": "b2"
+          },
+          {
+            "card": "Island",
+            "label": "b3"
+          },
+          {
+            "card": "Island",
+            "label": "b4"
+          }
+        ]
+      },
+      {
+        "name": "carol",
+        "battlefield": [
+          {
+            "card": "Plains",
+            "label": "q1"
+          },
+          {
+            "card": "Plains",
+            "label": "q2"
+          },
+          {
+            "card": "Plains",
+            "label": "q3"
+          },
+          {
+            "card": "Plains",
+            "label": "q4"
+          },
+          {
+            "card": "Plains",
+            "label": "q5"
+          },
+          {
+            "card": "Plains",
+            "label": "q6"
+          },
+          {
+            "card": "Plains",
+            "label": "q7"
+          },
+          {
+            "card": "Plains",
+            "label": "q8"
+          }
+        ],
+        "hand": [
+          {
+            "card": "Island",
+            "label": "ch1"
+          },
+          {
+            "card": "Island",
+            "label": "ch2"
+          },
+          {
+            "card": "Island",
+            "label": "ch3"
+          },
+          {
+            "card": "Island",
+            "label": "ch4"
+          },
+          {
+            "card": "Island",
+            "label": "ch5"
+          },
+          {
+            "card": "Island",
+            "label": "ch6"
+          },
+          {
+            "card": "Island",
+            "label": "ch7"
+          },
+          {
+            "card": "Island",
+            "label": "ch8"
+          }
+        ],
+        "library": [
+          {
+            "card": "Island",
+            "label": "c1"
+          },
+          {
+            "card": "Island",
+            "label": "c2"
+          },
+          {
+            "card": "Island",
+            "label": "c3"
+          },
+          {
+            "card": "Island",
+            "label": "c4"
+          }
+        ]
+      }
+    ]
+  },
+  "timeline": [
+    {
+      "turn": 1,
+      "step": "PrecombatMain",
+      "player": "alice",
+      "do": {
+        "Activate": {
+          "object": "$bolas",
+          "ability": 2,
+          "targets": [
+            "$lili"
+          ]
+        }
+      }
+    },
+    {
+      "turn": 1,
+      "step": "PrecombatMain",
+      "player": "alice",
+      "do": "Pass"
+    },
+    {
+      "turn": 1,
+      "step": "PrecombatMain",
+      "player": "bob",
+      "do": {
+        "Answer": {
+          "prompt": "ChooseDiscard",
+          "with": [
+            "$h1",
+            "$h2",
+            "$h3",
+            "$h4",
+            "$h5",
+            "$h6",
+            "$h7"
+          ]
+        }
+      }
+    },
+    {
+      "turn": 1,
+      "step": "PrecombatMain",
+      "player": "bob",
+      "do": {
+        "Answer": {
+          "prompt": "ChooseSacrifices",
+          "with": [
+            "$p1",
+            "$p2",
+            "$p3",
+            "$p4",
+            "$p5",
+            "$p6",
+            "$p7"
+          ]
+        }
+      }
+    },
+    {
+      "turn": 1,
+      "step": "PrecombatMain",
+      "player": "alice",
+      "check": {
+        "Counters": {
+          "object": "$lili",
+          "kind": {
+            "type": "Loyalty"
+          },
+          "count": 1
+        }
+      }
+    },
+    {
+      "turn": 1,
+      "step": "PrecombatMain",
+      "player": "alice",
+      "check": {
+        "Life": {
+          "player": "bob",
+          "life": 20
+        }
+      }
+    },
+    {
+      "turn": 1,
+      "step": "PrecombatMain",
+      "player": "alice",
+      "check": {
+        "Count": {
+          "player": "bob",
+          "zone": "Hand",
+          "card": "Island",
+          "count": 1
+        }
+      }
+    },
+    {
+      "turn": 1,
+      "step": "PrecombatMain",
+      "player": "alice",
+      "check": {
+        "Count": {
+          "player": "bob",
+          "zone": "Battlefield",
+          "card": "Plains",
+          "count": 1
+        }
+      }
+    },
+    {
+      "turn": 1,
+      "step": "PrecombatMain",
+      "player": "alice",
+      "check": {
+        "Count": {
+          "player": "carol",
+          "zone": "Hand",
+          "card": "Island",
+          "count": 8
+        }
+      }
+    },
+    {
+      "turn": 1,
+      "step": "PrecombatMain",
+      "player": "alice",
+      "check": {
+        "Count": {
+          "player": "carol",
+          "zone": "Battlefield",
+          "card": "Plains",
+          "count": 8
+        }
+      }
+    }
+  ]
+}

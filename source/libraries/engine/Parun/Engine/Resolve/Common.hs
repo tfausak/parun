@@ -763,6 +763,17 @@ askingObjects resolving source controller legal chosen ref = case ref of
     swept :: Game [ObjectId]
     swept = State.gets (\gs -> objectRefObjects legal resolving controller source gs ref)
 
+-- CR 608.2f: the members Effect.ForEach runs its body over, swept once. A card
+-- the controller chooses from among revealed ones is asked here (Shimian
+-- Specter's "You choose a nonland card from it", proved by the scenario
+-- shimian-specter-exiles-every-card-named-like-the-one-it-picks); every other
+-- ref is objectRefRecipients' read, and Parun.EffectLintSpec's inertChoosers
+-- keeps a card from writing any other chooser here.
+loopMembers :: ObjectId -> ObjectId -> PlayerId -> Map.Map SlotName (Set Recipient) -> Map.Map SlotName (Set Recipient) -> ObjectRef.ObjectRef -> Game [Recipient]
+loopMembers resolving source controller legal chosen ref = case ref of
+  ObjectRef.ChosenCardFromAmong _ -> fmap Recipient.ToObject <$> askingObjects resolving source controller legal chosen ref
+  _ -> State.gets (\gs -> objectRefRecipients legal resolving controller source gs ref)
+
 -- CR 701.9a's move for every Effect.Discard arm, once the cards are named:
 -- each seat's cards through the shared discard funnel, so the discard is
 -- recorded for a trigger to read. The funnel's own answers come back for the

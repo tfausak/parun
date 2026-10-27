@@ -1,0 +1,244 @@
+{
+  "faces": [
+    {
+      "keywords": [
+        {
+          "type": "Flying"
+        }
+      ],
+      "manaCost": [
+        {
+          "type": "Generic",
+          "value": 2
+        },
+        {
+          "type": "OfType",
+          "value": {
+            "type": "Colored",
+            "value": {
+              "type": "Black"
+            }
+          }
+        },
+        {
+          "type": "OfType",
+          "value": {
+            "type": "Colored",
+            "value": {
+              "type": "Black"
+            }
+          }
+        }
+      ],
+      "name": "Shimian Specter",
+      "oracleText": "Flying\nWhenever this creature deals combat damage to a player, that player reveals their hand. You choose a nonland card from it. Search that player's graveyard, hand, and library for all cards with the same name as that card and exile them. Then that player shuffles.",
+      "power": {
+        "type": "Literal",
+        "value": 2
+      },
+      "toughness": {
+        "type": "Literal",
+        "value": 2
+      },
+      "triggeredAbilities": [
+        {
+          "condition": {
+            "type": "SelfDealsCombatDamageToPlayer",
+            "value": {
+              "type": "AnyPlayer"
+            }
+          },
+          "modal": {
+            "modes": [
+              {
+                "clauses": [
+                  {
+                    "effects": [
+                      {
+                        "type": "Reveal",
+                        "value": {
+                          "ref": {
+                            "type": "EachCardInHand",
+                            "value": {
+                              "hands": {
+                                "type": "InSlot",
+                                "value": "thatPlayer"
+                              }
+                            }
+                          },
+                          "slot": "revealed"
+                        }
+                      }
+                    ]
+                  },
+                  {
+                    "effects": [
+                      {
+                        "type": "ForEach",
+                        "value": {
+                          "body": [
+                            {
+                              "type": "Search",
+                              "value": {
+                                "destination": {
+                                  "type": "Exile"
+                                },
+                                "filter": {
+                                  "type": "Shares",
+                                  "value": {
+                                    "anchor": {
+                                      "type": "Bound",
+                                      "value": "chosen"
+                                    },
+                                    "trait": {
+                                      "type": "Name"
+                                    }
+                                  }
+                                },
+                                "owner": {
+                                  "type": "InSlot",
+                                  "value": "thatPlayer"
+                                },
+                                "quantity": {
+                                  "type": "Plus",
+                                  "value": {
+                                    "left": {
+                                      "type": "Count",
+                                      "value": {
+                                        "aggregation": {
+                                          "type": "Members"
+                                        },
+                                        "filter": {
+                                          "type": "And",
+                                          "value": []
+                                        },
+                                        "scope": {
+                                          "type": "InZone",
+                                          "value": {
+                                            "player": {
+                                              "type": "InSlot",
+                                              "value": "thatPlayer"
+                                            },
+                                            "zone": {
+                                              "type": "Graveyard"
+                                            }
+                                          }
+                                        }
+                                      }
+                                    },
+                                    "right": {
+                                      "type": "Plus",
+                                      "value": {
+                                        "left": {
+                                          "type": "Count",
+                                          "value": {
+                                            "aggregation": {
+                                              "type": "Members"
+                                            },
+                                            "filter": {
+                                              "type": "And",
+                                              "value": []
+                                            },
+                                            "scope": {
+                                              "type": "InZone",
+                                              "value": {
+                                                "player": {
+                                                  "type": "InSlot",
+                                                  "value": "thatPlayer"
+                                                },
+                                                "zone": {
+                                                  "type": "Hand"
+                                                }
+                                              }
+                                            }
+                                          }
+                                        },
+                                        "right": {
+                                          "type": "Count",
+                                          "value": {
+                                            "aggregation": {
+                                              "type": "Members"
+                                            },
+                                            "filter": {
+                                              "type": "And",
+                                              "value": []
+                                            },
+                                            "scope": {
+                                              "type": "InZone",
+                                              "value": {
+                                                "player": {
+                                                  "type": "InSlot",
+                                                  "value": "thatPlayer"
+                                                },
+                                                "zone": {
+                                                  "type": "Library"
+                                                }
+                                              }
+                                            }
+                                          }
+                                        }
+                                      }
+                                    }
+                                  }
+                                },
+                                "searcher": {
+                                  "type": "Relative",
+                                  "value": {
+                                    "type": "You"
+                                  }
+                                },
+                                "zones": [
+                                  {
+                                    "type": "Library"
+                                  },
+                                  {
+                                    "type": "Hand"
+                                  },
+                                  {
+                                    "type": "Graveyard"
+                                  }
+                                ]
+                              }
+                            }
+                          ],
+                          "ref": {
+                            "type": "ChosenCardFromAmong",
+                            "value": {
+                              "filter": {
+                                "type": "Not",
+                                "value": {
+                                  "type": "HasCardType",
+                                  "value": {
+                                    "type": "Land"
+                                  }
+                                }
+                              },
+                              "slot": "revealed"
+                            }
+                          },
+                          "slot": "chosen"
+                        }
+                      }
+                    ]
+                  }
+                ]
+              }
+            ]
+          }
+        }
+      ],
+      "typeLine": {
+        "subtypes": [
+          {
+            "type": "Specter"
+          }
+        ],
+        "types": [
+          {
+            "type": "Creature"
+          }
+        ]
+      }
+    }
+  ]
+}
