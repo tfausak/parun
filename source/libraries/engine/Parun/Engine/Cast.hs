@@ -2848,11 +2848,9 @@ followIntoSpell :: Maybe ExilePlayPermission.ExilePlayPermission -> ObjectId -> 
 followIntoSpell permission old new gs = case permission of
   Nothing -> gs
   Just granted ->
-    let rename oid = if oid == old then new else oid
-        grantedBy = (== ExilePlayPermission.source granted)
+    let grantedBy = (== ExilePlayPermission.source granted)
         follow row
-          | grantedBy (ActiveReplacement.source row) =
-              row {ActiveReplacement.slots = fmap (Set.map rename) (ActiveReplacement.slots row)}
+          | grantedBy (ActiveReplacement.source row) = Event.renameSlots old new row
           | otherwise = row
         followDelayed entry
           | grantedBy (DelayedTrigger.source entry) =
