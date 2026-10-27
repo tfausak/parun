@@ -186,10 +186,13 @@ layer m = case m of
   Modification.LoseEveryCreatureSubtype -> Layer.Type
   Modification.SetCreatureSubtypesOfLastCardExiledWith _ -> Layer.Type
   -- CR 613.1d, and a regression fence rather than a proved behaviour: no board
-  -- in the pool orders the one AddSubtype (Ygra, Eater of All's Food) against an
-  -- effect in another layer, so answering any other layer here leaves the suite
-  -- green.
+  -- orders an AddSubtype against an effect in another layer, so answering
+  -- Layer.Ability here leaves the scenarios and the projection specs green
+  -- (mutated 2026-10-27).
   Modification.AddSubtype _ -> Layer.Type
+  -- CR 613.1d, the same fence: no board orders Haunted Plate Mail's removal
+  -- against an effect in another layer.
+  Modification.RemoveSubtype _ -> Layer.Type
   Modification.CardType {} -> Layer.Type
   Modification.LoseCardType _ -> Layer.Type
   Modification.AddSupertype _ -> Layer.Type
@@ -532,6 +535,11 @@ applyModification textBoxOf viewOf src stamp gs oid unitTypes affected m pc =
         -- deliberately so -- what differs is CR 612.2's gate, which lives on the
         -- constructor rather than here.
         Modification.AddSubtype s -> gainSubtype unitTypes s pc
+        -- CR 205.1a's last sentence: the removal touches no card type, and CR
+        -- 205.3d gates only a gain, so the delete is unconditional. Proved by
+        -- the haunted-plate-mail scenarios' Subtypes checks and Magnetic Theft's
+        -- refused target.
+        Modification.RemoveSubtype s -> pc {PC.subtypes = Set.delete s (PC.subtypes pc)}
         -- CR 205.1b's add keeps every subtype. CR 205.1a's set, and the whole of
         -- it: the new card type replaces the existing ones; instant and sorcery
         -- survive; and a subtype whose family correlates with no card type the
@@ -785,6 +793,7 @@ cardTypesAfter m types = case m of
   Modification.LoseEveryCreatureSubtype -> types
   Modification.SetCreatureSubtypesOfLastCardExiledWith _ -> types
   Modification.AddSubtype _ -> types
+  Modification.RemoveSubtype _ -> types
   Modification.ChangeWord {} -> types
   -- CR 612.1 / 612.5: the text box moves and the type line does not.
   Modification.ExchangeTextBoxes -> types
@@ -1609,6 +1618,7 @@ freezeQuantities viewOf gs announcedOn source context m =
         -- re-picked at every projection (CR 604.2).
         Modification.SetCreatureSubtypesOfLastCardExiledWith _ -> Just m
         Modification.AddSubtype _ -> Just m
+        Modification.RemoveSubtype _ -> Just m
         Modification.CardType {} -> Just m
         Modification.LoseCardType _ -> Just m
         Modification.AddSupertype _ -> Just m
@@ -1672,6 +1682,7 @@ quantitiesOf m = case m of
   Modification.LoseEveryCreatureSubtype -> []
   Modification.SetCreatureSubtypesOfLastCardExiledWith _ -> []
   Modification.AddSubtype _ -> []
+  Modification.RemoveSubtype _ -> []
   Modification.CardType {} -> []
   Modification.LoseCardType _ -> []
   Modification.AddSupertype _ -> []
@@ -1724,6 +1735,7 @@ referenceQuery m = case m of
   Modification.LoseEveryCreatureSubtype -> Nothing
   Modification.SetCreatureSubtypesOfLastCardExiledWith _ -> Nothing
   Modification.AddSubtype _ -> Nothing
+  Modification.RemoveSubtype _ -> Nothing
   Modification.CardType {} -> Nothing
   Modification.LoseCardType _ -> Nothing
   Modification.AddSupertype _ -> Nothing
@@ -1788,9 +1800,10 @@ setsLandSubtype m = case m of
   Modification.LoseEveryCreatureSubtype -> False
   Modification.SetCreatureSubtypesOfLastCardExiledWith _ -> False
   -- Not a SET, so CR 305.7 does not fire whatever family the subtype belongs to
-  -- -- the same answer LandSubtype's InAddition gives above, and Parun.CardSpec keeps CR
-  -- 205.3i's land types off this arm anyway.
+  -- -- the same answer LandSubtype's InAddition gives above, and
+  -- Parun.EffectLintSpec keeps CR 205.3i's land types off both arms anyway.
   Modification.AddSubtype _ -> False
+  Modification.RemoveSubtype _ -> False
   -- The CARD-TYPE set or add: CR 305.7 fires on setting a land's SUBTYPE, so
   -- making an object a land does not strip its rules text.
   Modification.CardType {} -> False
@@ -3029,6 +3042,7 @@ removesAbilities m = case m of
   Modification.LoseEveryCreatureSubtype -> False
   Modification.SetCreatureSubtypesOfLastCardExiledWith _ -> False
   Modification.AddSubtype _ -> False
+  Modification.RemoveSubtype _ -> False
   Modification.SetBasePowerToughness {} -> False
   Modification.ModifyPowerToughness {} -> False
   Modification.SwitchPowerToughness -> False
@@ -4225,11 +4239,14 @@ modificationWrites m = case m of
   -- Set.empty here leaves the suite green too.
   Modification.LoseEveryCreatureSubtype -> Set.singleton Subtypes
   Modification.SetCreatureSubtypesOfLastCardExiledWith _ -> Set.singleton Subtypes
-  -- The honest answer -- the arm writes PC.subtypes and nothing else -- but a
-  -- regression fence rather than a proved behaviour: no board in the pool makes
-  -- another effect depend on the one AddSubtype, so Set.empty here leaves the
-  -- suite green too.
+  -- CR 613.8a: the arm writes PC.subtypes and nothing else. Proved by the
+  -- dan-lewis-skips-clues-armed-with-proof-already-made-equipment scenario: Dan
+  -- Lewis's "non-Equipment artifacts" depends on Armed with Proof's Equipment.
   Modification.AddSubtype _ -> Set.singleton Subtypes
+  -- The same answer, and a regression fence rather than a proved behaviour: no
+  -- board makes an affected set depend on Haunted Plate Mail's removal, which
+  -- comes with its becoming a creature, so Dan Lewis's set already excludes it.
+  Modification.RemoveSubtype _ -> Set.singleton Subtypes
   Modification.ChangeWord {} -> Set.fromList [Subtypes, Keywords]
   -- CR 612.5 writes the ability lists and PC.keywords with them, which Aspect
   -- has no finer grain for than Keywords. Not Subtypes: the type line stays
@@ -4341,6 +4358,7 @@ modificationReads m = case m of
   -- guards writes one there.
   Modification.SetCreatureSubtypesOfLastCardExiledWith _ -> Set.empty
   Modification.AddSubtype _ -> Set.empty
+  Modification.RemoveSubtype _ -> Set.empty
   -- Carries no Quantity, but CR 612.1's rewrite reads the object's own text:
   -- the words it replaces are in the very aspects it writes, so an earlier
   -- layer-3 effect can put the word there or take it away. Proved by
@@ -6198,6 +6216,7 @@ grantsKeywordWhere p m = case m of
   Modification.LoseEveryCreatureSubtype -> False
   Modification.SetCreatureSubtypesOfLastCardExiledWith _ -> False
   Modification.AddSubtype _ -> False
+  Modification.RemoveSubtype _ -> False
   Modification.CardType {} -> False
   Modification.LoseCardType _ -> False
   Modification.AddSupertype _ -> False
@@ -6251,6 +6270,8 @@ grantsKeywordWhere p m = case m of
 grantsMintingType :: Modification -> Bool
 grantsMintingType m = case m of
   Modification.AddSubtype subtype -> subtype == Subtype.Type.Saga
+  -- The removal grants nothing, LoseCardType's reason below.
+  Modification.RemoveSubtype _ -> False
   Modification.ChangeWord (ChangeWord.MkChangeWord _ to) -> to == TextWord.SubtypeWord Subtype.Type.Saga
   Modification.CardType _ cardType -> mintingCardType cardType
   -- The REMOVAL grants nothing, so it mints no CR 614.1c row however minting the
@@ -6350,6 +6371,7 @@ grantsAbilityWhere p m = case m of
   -- reason.
   Modification.GainAbility g -> p g || grantedStaticWrites (grantsAbilityWhere p) g
   Modification.AddSubtype _ -> False
+  Modification.RemoveSubtype _ -> False
   Modification.ChangeWord _ -> False
   Modification.CardType {} -> False
   Modification.LoseCardType _ -> False

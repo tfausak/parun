@@ -317,8 +317,10 @@ rewriteModification pairs m =
               -- Deliberately unrewritten. CR 612.2 changes only a word used in the
               -- correct way, and this arm carries no family to check the word against;
               -- the two family-tagged arms above are where a land-type or creature-type
-              -- word rides, and Parun.CardSpec keeps those words out of this one.
+              -- word rides, and Parun.EffectLintSpec keeps those words out of this one.
               Modification.AddSubtype _ -> acc
+              -- The removal's word, unrewritten for the same reason.
+              Modification.RemoveSubtype _ -> acc
               -- CR 702.14a: "[type]walk" holds a land-type word, so a hacked Lord of
               -- Atlantis grants swampwalk. The GRANTER's text is what this reads, which
               -- is CR 612.3. Filter.rewriteKeyword since the word is inside a Filter; no

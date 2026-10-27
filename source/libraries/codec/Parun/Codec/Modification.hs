@@ -83,6 +83,7 @@ codec abilityCodec =
           Arm.nullary "LoseEveryCreatureSubtype" Modification.LoseEveryCreatureSubtype,
           Arm.payload "SetCreatureSubtypesOfLastCardExiledWith" (Filter.codec Keyword.codec) Modification.SetCreatureSubtypesOfLastCardExiledWith (\x -> case x of Modification.SetCreatureSubtypesOfLastCardExiledWith y -> Just y; _ -> Nothing),
           Arm.payload "AddSubtype" Subtype.codec Modification.AddSubtype (\x -> case x of Modification.AddSubtype y -> Just y; _ -> Nothing),
+          Arm.payload "RemoveSubtype" Subtype.codec Modification.RemoveSubtype (\x -> case x of Modification.RemoveSubtype y -> Just y; _ -> Nothing),
           Arm.payload "CardType" cardType (uncurry Modification.CardType) (\x -> case x of Modification.CardType mode y -> Just (mode, y); _ -> Nothing),
           Arm.payload "LoseCardType" CardType.codec Modification.LoseCardType (\x -> case x of Modification.LoseCardType y -> Just y; _ -> Nothing),
           Arm.payload "AddSupertype" Supertype.codec Modification.AddSupertype (\x -> case x of Modification.AddSupertype y -> Just y; _ -> Nothing),
@@ -128,6 +129,7 @@ tagOf x = case x of
   Modification.LoseEveryCreatureSubtype {} -> "LoseEveryCreatureSubtype"
   Modification.SetCreatureSubtypesOfLastCardExiledWith {} -> "SetCreatureSubtypesOfLastCardExiledWith"
   Modification.AddSubtype {} -> "AddSubtype"
+  Modification.RemoveSubtype {} -> "RemoveSubtype"
   Modification.CardType {} -> "CardType"
   Modification.LoseCardType {} -> "LoseCardType"
   Modification.AddSupertype {} -> "AddSupertype"

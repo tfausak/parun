@@ -214,6 +214,14 @@ spec s = Spec.describe s "Parun.Codec.Modification" $ do
       codec
       (Modification.AddSubtype Subtype.Food)
       " {\"type\":\"AddSubtype\",\"value\":{\"type\":\"Food\"}} "
+  -- layer 4, CR 205.1a removal (Haunted Plate Mail). A different subtype from
+  -- the add above, so a codec that crossed the two cannot pass both.
+  Spec.it s "RemoveSubtype" $
+    Common.assertCodec
+      s
+      codec
+      (Modification.RemoveSubtype Subtype.Equipment)
+      " {\"type\":\"RemoveSubtype\",\"value\":{\"type\":\"Equipment\"}} "
   -- layer 4, CR 205.1a set (Song of the Dryads -> land). A different card type
   -- from the add below, so a codec that crossed the two modes cannot pass both.
   Spec.it s "CardType Replace" $

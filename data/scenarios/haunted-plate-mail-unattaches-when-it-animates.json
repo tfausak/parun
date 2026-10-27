@@ -1,0 +1,23 @@
+{
+  "description": "CR 704.5p: Haunted Plate Mail attached to a creature becomes unattached when its {0} makes it a creature, and the creature loses +4/+4",
+  "note": "Magnetic Theft attaches the Plate Mail to bob's Grizzly Bears, which alice does not control, so she still controls no creatures and may animate it. The animated Plate Mail is a creature attached to a permanent, and no longer an Equipment, so CR 704.5p and not CR 704.5n unattaches it.",
+  "board": {
+    "seats": [
+      {"name": "alice", "manaPool": "R", "hand": [{"card": "Magnetic Theft", "label": "theft"}], "battlefield": [{"card": "Haunted Plate Mail", "label": "plate"}], "library": [{"card": "Island"}, {"card": "Island"}, {"card": "Island"}]},
+      {"name": "bob", "battlefield": [{"card": "Grizzly Bears", "label": "bear"}], "library": [{"card": "Island"}, {"card": "Island"}, {"card": "Island"}]}
+    ],
+    "active": "alice",
+    "step": "PrecombatMain"
+  },
+  "timeline": [
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "do": {"Cast": {"object": "$theft", "targetsBySlot": {"equipment": ["$plate"], "creature": ["$bear"]}}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "do": "Pass"},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "check": {"View": {"of": "AttachedTo", "object": "$plate", "is": "$bear"}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "check": {"PowerToughness": {"object": "$bear", "power": 6, "toughness": 6}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "do": {"Activate": {"object": "$plate", "ability": 0}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "do": "Pass"},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "check": {"View": {"of": "AttachedTo", "object": "$plate", "is": null}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "check": {"PowerToughness": {"object": "$bear", "power": 2, "toughness": 2}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "check": {"PowerToughness": {"object": "$plate", "power": 4, "toughness": 4}}}
+  ]
+}
