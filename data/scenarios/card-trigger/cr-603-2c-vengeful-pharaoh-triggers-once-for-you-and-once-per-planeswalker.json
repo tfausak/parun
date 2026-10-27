@@ -1,0 +1,47 @@
+{
+  "description": "CR 603.2c Vengeful Pharaoh triggers once for combat damage to bob and once for each of his planeswalkers, and only the first trigger resolves",
+  "note": "Two Grizzly Bears hit bob, a Craw Wurm his Ajani Goldmane and a Hill Giant his Garruk Wildspeaker in one combat damage step: one trigger for bob however many creatures hit him, and one for each planeswalker, which the damage also kills. The first to resolve destroys the Hill Giant and puts Pharaoh on top of bob's library; the other two fail CR 603.4's intervening if and destroy nothing, so both Bears survive.",
+  "board": {
+    "seats": [
+      {
+        "name": "alice",
+        "battlefield": [
+          { "card": "Grizzly Bears", "label": "bear", "ready": true },
+          { "card": "Grizzly Bears", "label": "cub", "ready": true },
+          { "card": "Craw Wurm", "label": "wurm", "ready": true },
+          { "card": "Hill Giant", "label": "giant", "ready": true }
+        ]
+      },
+      {
+        "name": "bob",
+        "battlefield": [
+          { "card": "Ajani Goldmane", "label": "ajani", "counters": [{ "key": { "type": "Loyalty" }, "value": 4 }] },
+          { "card": "Garruk Wildspeaker", "label": "garruk", "counters": [{ "key": { "type": "Loyalty" }, "value": 3 }] }
+        ],
+        "graveyard": [{ "card": "Vengeful Pharaoh", "label": "pharaoh" }],
+        "library": [{ "card": "Island" }, { "card": "Swamp" }]
+      }
+    ],
+    "active": "alice",
+    "step": "BeginningOfCombat"
+  },
+  "timeline": [
+    { "turn": 1, "step": "DeclareAttackers", "player": "alice", "do": { "Attack": ["$bear", "$cub", "$wurm", "$giant"] } },
+    { "turn": 1, "step": "DeclareAttackers", "player": "alice", "source": "$bear", "do": { "ChooseAttackTarget": "$bob" } },
+    { "turn": 1, "step": "DeclareAttackers", "player": "alice", "source": "$cub", "do": { "ChooseAttackTarget": "$bob" } },
+    { "turn": 1, "step": "DeclareAttackers", "player": "alice", "source": "$wurm", "do": { "ChooseAttackTarget": "$ajani" } },
+    { "turn": 1, "step": "DeclareAttackers", "player": "alice", "source": "$giant", "do": { "ChooseAttackTarget": "$garruk" } },
+    { "turn": 1, "step": "CombatDamage", "player": "bob", "do": { "OrderTriggers": ["$pharaoh", "$pharaoh", "$pharaoh"] } },
+    { "turn": 1, "step": "CombatDamage", "player": "bob", "do": { "ChooseTargets": { "target": ["$bear"] } } },
+    { "turn": 1, "step": "CombatDamage", "player": "bob", "do": { "ChooseTargets": { "target": ["$cub"] } } },
+    { "turn": 1, "step": "CombatDamage", "player": "bob", "do": { "ChooseTargets": { "target": ["$giant"] } } },
+    { "turn": 1, "step": "CombatDamage", "player": "alice", "check": { "View": { "of": "Stack", "is": ["trigger of $pharaoh", "trigger of $pharaoh", "trigger of $pharaoh"] } } },
+    { "turn": 1, "step": "EndOfCombat", "player": "alice", "check": { "Count": { "player": "alice", "zone": "Graveyard", "card": "Hill Giant", "count": 1 } } },
+    { "turn": 1, "step": "EndOfCombat", "player": "alice", "check": { "Count": { "player": "alice", "zone": "Battlefield", "card": "Grizzly Bears", "count": 2 } } },
+    { "turn": 1, "step": "EndOfCombat", "player": "alice", "check": { "Count": { "player": "bob", "zone": "Graveyard", "card": "Vengeful Pharaoh", "count": 0 } } },
+    { "turn": 1, "step": "EndOfCombat", "player": "alice", "check": { "View": { "of": "Zone", "player": "bob", "zone": "Library", "is": ["Vengeful Pharaoh", "Island", "Swamp"] } } },
+    { "turn": 1, "step": "EndOfCombat", "player": "alice", "check": { "Count": { "player": "bob", "zone": "Graveyard", "card": "Ajani Goldmane", "count": 1 } } },
+    { "turn": 1, "step": "EndOfCombat", "player": "alice", "check": { "Count": { "player": "bob", "zone": "Graveyard", "card": "Garruk Wildspeaker", "count": 1 } } },
+    { "turn": 1, "step": "EndOfCombat", "player": "alice", "check": { "Life": { "player": "bob", "life": 16 } } }
+  ]
+}

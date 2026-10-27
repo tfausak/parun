@@ -54,6 +54,7 @@ import qualified Parun.Types.PlayerAction as PlayerAction
 import qualified Parun.Types.PlayerAttacksPlayer as PlayerAttacksPlayer
 import qualified Parun.Types.PlayerAttacksWith as PlayerAttacksWith
 import qualified Parun.Types.PlayerDrawsNthCard as PlayerDrawsNthCard
+import qualified Parun.Types.PlayerIsDealtDamage as PlayerIsDealtDamage
 import qualified Parun.Types.PlayerRelation as PlayerRelation
 import qualified Parun.Types.PlaysLand as PlaysLand
 import qualified Parun.Types.Quantity as Quantity
@@ -200,13 +201,13 @@ spec s = Spec.describe s "Parun.Codec.TriggerCondition" $ do
     Common.assertCodec
       s
       TriggerCondition.codec
-      (TriggerCondition.PlayerIsDealtDamage (DealtDamage.MkDealtDamage PlayerRelation.You Nothing))
-      " {\"type\":\"PlayerIsDealtDamage\",\"value\":{\"player\":{\"type\":\"You\"}}} "
+      (TriggerCondition.PlayerIsDealtDamage (PlayerIsDealtDamage.MkPlayerIsDealtDamage (DealtDamage.MkDealtDamage PlayerRelation.You Nothing) False))
+      " {\"type\":\"PlayerIsDealtDamage\",\"value\":{\"dealt\":{\"player\":{\"type\":\"You\"}}}} "
     Common.assertCodec
       s
       TriggerCondition.codec
-      (TriggerCondition.PlayerIsDealtDamage (DealtDamage.MkDealtDamage PlayerRelation.Opponent (Just DamageKind.Noncombat)))
-      " {\"type\":\"PlayerIsDealtDamage\",\"value\":{\"player\":{\"type\":\"Opponent\"},\"kind\":{\"type\":\"Noncombat\"}}} "
+      (TriggerCondition.PlayerIsDealtDamage (PlayerIsDealtDamage.MkPlayerIsDealtDamage (DealtDamage.MkDealtDamage PlayerRelation.Opponent (Just DamageKind.Noncombat)) False))
+      " {\"type\":\"PlayerIsDealtDamage\",\"value\":{\"dealt\":{\"player\":{\"type\":\"Opponent\"},\"kind\":{\"type\":\"Noncombat\"}}}} "
   -- The same event read by a bystander, carrying Tovolar's "you control" and
   -- Teysa's "to you": two relations, so a crossed codec would not round-trip.
   Spec.it s "PermanentDealsCombatDamageToPlayer round-trips with its Filter and recipient" $
