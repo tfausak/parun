@@ -1433,7 +1433,7 @@ asYouCascade applyOneEffect runSubgame resolving source controller legal chosen 
       chosen
       ( Effect.MoveToZone
           ( MoveToZone.MkMoveToZone
-              (ObjectRef.ChosenCardFromAmong (ChosenCardFromAmong.MkChosenCardFromAmong slot criterion (HowMany.UpTo (Just (Quantity.Type.Literal 1))) (PlayerRef.Relative PlayerRelation.You)))
+              (ObjectRef.ChosenCardFromAmong (ChosenCardFromAmong.MkChosenCardFromAmong slot criterion (HowMany.UpTo (Just (Quantity.Type.Literal 1))) (PlayerRef.Relative PlayerRelation.You) Nothing))
               Zone.Battlefield
               EntryRiders.defaultValue {EntryRiders.tapped = TapState.Tapped}
               Nothing

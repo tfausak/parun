@@ -22,7 +22,7 @@ data AnyNumberOf
   | -- | The Unstable FAQ: the Contraptions on the sprocket the CRANK! counter
     -- reached that their controller cranks.
     ToCrank
-  | -- | CR 700.3: the permanents a player puts into one of two piles, the rest
+  | -- | CR 700.3: the permanents or cards a player puts into one of two piles, the rest
     -- of the offer forming the other.
     IntoPile
   | -- | CR 502.3: the permanents the active player may leave tapped, or a cap

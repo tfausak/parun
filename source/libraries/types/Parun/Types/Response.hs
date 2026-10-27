@@ -681,7 +681,7 @@ data Response
   | -- | The Unstable FAQ: the Contraptions a player cranked. A separate
     -- constructor from ChoseAnyNumberOfPermanents above, for ChoseTaps' reason.
     ChoseCranks (Set.Set ObjectId.ObjectId)
-  | -- | CR 700.3: the permanents a player put into one of two piles. A separate
+  | -- | CR 700.3: the permanents or cards a player put into one of two piles. A separate
     -- constructor from ChoseAnyNumberOfPermanents above, for ChoseTaps' reason.
     ChosePileSplit (Set.Set ObjectId.ObjectId)
   | -- | CR 502.3: the permanents a player chose to untap of the ones they may
