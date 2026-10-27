@@ -1,0 +1,121 @@
+{
+  "description": "CR 700.3d / 305.6 Sphinx of Clear Skies reveals one card per basic land type, and alice takes the full pile when bob leaves his own empty",
+  "note": "Three lands of two basic land types, so X is two and neither the land count nor the library's size; the third library card stays. Bob separates both cards away from his empty pick, and alice takes the full pile, which is not ChoosePile's fallback answer, so an engine ignoring her answer would bury both.",
+  "board": {
+    "seats": [
+      {
+        "name": "alice",
+        "battlefield": [
+          {
+            "card": "Sphinx of Clear Skies",
+            "label": "sphinx",
+            "ready": true
+          },
+          {
+            "card": "Island",
+            "label": "island-1"
+          },
+          {
+            "card": "Island",
+            "label": "island-2"
+          },
+          {
+            "card": "Plains",
+            "label": "plains"
+          }
+        ],
+        "library": [
+          {
+            "card": "Goblin Piker",
+            "label": "piker"
+          },
+          {
+            "card": "Murder",
+            "label": "murder"
+          },
+          {
+            "card": "Bad Moon",
+            "label": "bad-moon"
+          }
+        ]
+      },
+      {
+        "name": "bob"
+      }
+    ],
+    "active": "alice",
+    "step": "BeginningOfCombat"
+  },
+  "timeline": [
+    {
+      "turn": 1,
+      "step": "DeclareAttackers",
+      "player": "alice",
+      "do": {
+        "Attack": [
+          "$sphinx"
+        ]
+      }
+    },
+    {
+      "turn": 1,
+      "step": "CombatDamage",
+      "player": "bob",
+      "do": {
+        "Answer": {
+          "prompt": "ChooseAnyNumberIntoPile",
+          "with": []
+        }
+      }
+    },
+    {
+      "turn": 1,
+      "step": "CombatDamage",
+      "player": "alice",
+      "do": {
+        "Answer": {
+          "prompt": "ChoosePile",
+          "with": [
+            "$piker",
+            "$murder"
+          ]
+        }
+      }
+    }
+  ],
+  "final": [
+    {
+      "View": {
+        "of": "Zone",
+        "player": "alice",
+        "zone": "Hand",
+        "is": [
+          "Goblin Piker",
+          "Murder"
+        ]
+      }
+    },
+    {
+      "Count": {
+        "player": "alice",
+        "zone": "Library",
+        "card": "Bad Moon",
+        "count": 1
+      }
+    },
+    {
+      "Count": {
+        "player": "alice",
+        "zone": "Graveyard",
+        "card": "Goblin Piker",
+        "count": 0
+      }
+    },
+    {
+      "Life": {
+        "player": "bob",
+        "life": 15
+      }
+    }
+  ]
+}

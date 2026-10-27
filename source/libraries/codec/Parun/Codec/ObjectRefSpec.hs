@@ -323,7 +323,7 @@ spec s = Spec.describe s "Parun.Codec.ObjectRef" $ do
     Common.assertCodec
       s
       ObjectRef.codec
-      (ObjectRef.ChosenCardFromAmong (ChosenCardFromAmong.MkChosenCardFromAmong (SlotName.MkSlotName (Text.pack "revealed")) (Filter.HasCardType CardType.Creature) HowMany.one (PlayerRef.Relative PlayerRelation.You)))
+      (ObjectRef.ChosenCardFromAmong (ChosenCardFromAmong.MkChosenCardFromAmong (SlotName.MkSlotName (Text.pack "revealed")) (Filter.HasCardType CardType.Creature) HowMany.one (PlayerRef.Relative PlayerRelation.You) Nothing))
       " {\"type\":\"ChosenCardFromAmong\",\"value\":{\"slot\":\"revealed\",\"filter\":{\"type\":\"HasCardType\",\"value\":{\"type\":\"Creature\"}}}} "
   -- The bare slot name an InSlot takes is not a whole payload here: dropping the
   -- filter would make the two arms tell one story on the wire.
@@ -487,7 +487,7 @@ spec s = Spec.describe s "Parun.Codec.ObjectRef" $ do
                 Codec.encode ObjectRef.codec (ObjectRef.TopOfGraveyard (PlayerRef.Relative PlayerRelation.You)),
                 Codec.encode ObjectRef.codec (ObjectRef.ChosenCardInGraveyard (ChosenCardInGraveyard.MkChosenCardInGraveyard Chooser.TheController (ZoneScope.Scoped (PlayerScope.Related PlayerRelation.AnyPlayer)) (Filter.HasCardType CardType.Creature) (Quantity.Literal 1))),
                 Codec.encode ObjectRef.codec (ObjectRef.ChosenCardInHand (ChosenCardInHand.MkChosenCardInHand (PlayerRef.Relative PlayerRelation.You) (Filter.HasCardType CardType.Creature) (Quantity.Literal 1))),
-                Codec.encode ObjectRef.codec (ObjectRef.ChosenCardFromAmong (ChosenCardFromAmong.MkChosenCardFromAmong (SlotName.MkSlotName (Text.pack "revealed")) (Filter.HasCardType CardType.Creature) HowMany.one (PlayerRef.Relative PlayerRelation.You))),
+                Codec.encode ObjectRef.codec (ObjectRef.ChosenCardFromAmong (ChosenCardFromAmong.MkChosenCardFromAmong (SlotName.MkSlotName (Text.pack "revealed")) (Filter.HasCardType CardType.Creature) HowMany.one (PlayerRef.Relative PlayerRelation.You) Nothing)),
                 Codec.encode ObjectRef.codec (ObjectRef.EachCardFromAmong (EachCardFromAmong.MkEachCardFromAmong (SlotName.MkSlotName (Text.pack "revealed")) (Filter.HasCardType CardType.Land))),
                 Codec.encode ObjectRef.codec (ObjectRef.RandomCardInHand (RandomCardInHand.MkRandomCardInHand (PlayerRef.Relative PlayerRelation.You) (Filter.And []) (Quantity.Literal 1))),
                 Codec.encode ObjectRef.codec (ObjectRef.RandomCardInGraveyard (RandomCardInGraveyard.MkRandomCardInGraveyard (ZoneScope.Scoped (PlayerScope.Related PlayerRelation.You)) (Filter.And []) (Quantity.Literal 1))),

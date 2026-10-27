@@ -2038,23 +2038,50 @@ chooseCardFromAmong ::
   Map.Map SlotName (Set Recipient) ->
   ChosenCardFromAmong.ChosenCardFromAmong ->
   Game [ObjectId]
-chooseCardFromAmong resolving source controller legal chosen (ChosenCardFromAmong.MkChosenCardFromAmong slot filter_ count chooser) = do
+chooseCardFromAmong resolving source controller legal chosen (ChosenCardFromAmong.MkChosenCardFromAmong slot filter_ count chooser pileChooser) = do
   members <- fromAmongMembers legal resolving chosen slot
   gs <- State.get
   let viewOf = effectViewOf source legal gs
       context = effectContext gs resolving controller source legal (slotBindings resolving gs)
       amount = maybe 0 Integer.toNaturalSaturating . Quantity.evaluateFor viewOf context gs resolving source
-  pickByChooser
-    resolving
-    source
-    controller
-    legal
-    chooser
-    (\decider who -> Prompt.ChooseCardFromAmong decider who source)
-    (\decider who pool ceiling_ -> Prompt.ChooseAnyNumber decider who source AnyNumberOf.CardsFromAmong pool ceiling_)
-    amount
-    count
-    (matchingFromAmong legal resolving controller source gs filter_ members)
+      matching = matchingFromAmong legal resolving controller source gs filter_ members
+      pick purpose =
+        pickByChooser
+          resolving
+          source
+          controller
+          legal
+          chooser
+          (\decider who -> Prompt.ChooseCardFromAmong decider who source)
+          (\decider who pool ceiling_ -> Prompt.ChooseAnyNumber decider who source purpose pool ceiling_)
+          amount
+          count
+  case pileChooser of
+    Nothing -> pick AnyNumberOf.CardsFromAmong matching
+    -- CR 700.3: the chooser separates and the pile chooser takes a pile --
+    -- Fact or Fiction. Proved by the scenario "CR 700.3 Sphinx of Uthuun".
+    Just pileRef -> do
+      split <- case matching of
+        [_] -> pure matching
+        _ -> pick AnyNumberOf.IntoPile matching
+      takePile resolving source controller legal pileRef matching split
+
+-- CR 700.3: the separating player's pick is one pile and the rest of the
+-- matching objects the other (CR 700.3a), either possibly empty (CR 700.3d),
+-- and the seat the ref names takes one, which is what this answers. A single
+-- object splits only one way, so callers do not ask its separation; piles alike
+-- (none matched) are not offered either. A ref naming nobody takes nothing (CR
+-- 101.3).
+takePile :: ObjectId -> ObjectId -> PlayerId -> Map.Map SlotName (Set Recipient) -> PlayerRef -> [ObjectId] -> [ObjectId] -> Game [ObjectId]
+takePile resolving source controller legal pileRef matching split = do
+  let first = Set.fromList split
+      rest = Set.difference (Set.fromList matching) first
+      piles = if rest == first then [first] else [first, rest]
+  seat <- askedChooser resolving source controller legal pileRef
+  taken <- case seat of
+    Nothing -> pure Nothing
+    Just who -> Game.chooseAmong (\decider asked -> Prompt.ChoosePile decider asked source) who piles
+  pure (foldMap Set.toList taken)
 
 -- CR 701.20a / 701.9b: the cards randomness names out of each hand the ref
 -- reaches -- askingObjects' RandomCardInHand arm (Fall, Hymn to Tourach, Elkin
@@ -3302,7 +3329,7 @@ effectIsImpossible resolving source controller legal gs effect = case effect of
             let scoped = Target.zoneScopePlayers (Plane.rangePerspective source controller gs) (Just controller) legal scope gs
              in not (null scoped) && all (\pid -> null (graveyardCardsOf context gs pid filter_)) scoped
           Chooser.BoundInSlot _ -> False
-      ObjectRef.ChosenCardFromAmong (ChosenCardFromAmong.MkChosenCardFromAmong slot filter_ count _) ->
+      ObjectRef.ChosenCardFromAmong (ChosenCardFromAmong.MkChosenCardFromAmong slot filter_ count _ _) ->
         mustPick count && maybe False (null . matchingFromAmong legal resolving controller source gs filter_) (fromAmongBound slot)
       ObjectRef.ChosenPermanents choice -> mustPick (ChosenPermanents.count choice) && null (chosenCandidates legal resolving controller source gs choice)
       -- Only when no member names anything: a read always might.
