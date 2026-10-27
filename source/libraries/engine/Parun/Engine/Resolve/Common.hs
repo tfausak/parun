@@ -4463,13 +4463,14 @@ payAgain failed agreed paid again = case paid of
 -- CR 107.3 X, CR 118.6 description and "for each" multiplier, applied to each.
 gateCostOf :: ObjectId -> ObjectId -> PlayerId -> Map.Map SlotName (Set Recipient) -> PayGate.PayGate -> GameState -> (Map.Map SlotName (Set Recipient), NonEmpty.NonEmpty (Cost.Type.Cost Keyword.Type.Keyword))
 gateCostOf resolving source controller legal gate gs =
-  let multiplier = case PayGate.perEach gate of
-        Nothing -> 1
-        Just quantity ->
-          let viewOf = effectViewOf source legal gs
-              context = effectContext gs resolving controller source legal (slotBindings resolving gs)
-           in maybe 0 Integer.toNaturalSaturating (Quantity.evaluateFor viewOf context gs resolving source quantity)
-      costs = fmap (Cost.repeated multiplier . Cost.substituteX (announcedXOn resolving gs)) (describedCosts resolving controller source legal gs gate)
+  let evaluated quantity =
+        let viewOf = effectViewOf source legal gs
+            context = effectContext gs resolving controller source legal (slotBindings resolving gs)
+         in maybe 0 Integer.toNaturalSaturating (Quantity.evaluateFor viewOf context gs resolving source quantity)
+      multiplier = maybe 1 evaluated (PayGate.perEach gate)
+      -- CR 107.3f's X, chosen during resolution, or else CR 107.3a's announced one.
+      chosenX = maybe (announcedXOn resolving gs) evaluated (PayGate.x gate)
+      costs = fmap (Cost.repeated multiplier . Cost.substituteX chosenX) (describedCosts resolving controller source legal gs gate)
       -- effectContext's slot map, so a component's criterion reads what every
       -- other filter of this resolution reads -- CR 608.2b's legal targets, the
       -- reserved cost slots among them (Binding.discardedCard), and the groups.

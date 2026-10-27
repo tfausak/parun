@@ -1031,6 +1031,7 @@ payGate price =
       PayGate.branch = PayBranch.IfPaid,
       PayGate.obligation = PayObligation.Optional,
       PayGate.perEach = Nothing,
+      PayGate.x = Nothing,
       PayGate.offeredAt = Nothing
     }
 

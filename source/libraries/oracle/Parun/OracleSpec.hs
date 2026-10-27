@@ -924,7 +924,7 @@ spec s = Spec.describe s "Parun.Oracle" $ do
 -- A cost paid on resolution, offered to the payer, of which the instructions
 -- are this branch.
 gate :: PayBranch.PayBranch -> PlayerRef.PlayerRef -> Cost.Cost Keyword.Keyword -> PayGate.PayGate
-gate branch payer cost = PayGate.MkPayGate payer (CostChoice.MkCostChoice (NonEmpty.singleton cost)) Nothing branch PayObligation.Optional Nothing Nothing
+gate branch payer cost = PayGate.MkPayGate payer (CostChoice.MkCostChoice (NonEmpty.singleton cost)) Nothing branch PayObligation.Optional Nothing Nothing Nothing
 
 -- A cost of these mana symbols alone.
 mana :: [ManaSymbol.ManaSymbol] -> Cost.Cost Keyword.Keyword

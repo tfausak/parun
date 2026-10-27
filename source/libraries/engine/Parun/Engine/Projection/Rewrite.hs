@@ -1995,6 +1995,7 @@ rewritePayGate pairs gate =
       PayGate.branch = PayGate.branch gate,
       PayGate.obligation = PayGate.obligation gate,
       PayGate.perEach = fmap (rewriteQuantity pairs) (PayGate.perEach gate),
+      PayGate.x = fmap (rewriteQuantity pairs) (PayGate.x gate),
       PayGate.offeredAt = PayGate.offeredAt gate
     }
 

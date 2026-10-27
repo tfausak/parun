@@ -6602,6 +6602,7 @@ extort =
             PayGate.branch = PayBranch.IfPaid,
             PayGate.obligation = PayObligation.Optional,
             PayGate.perEach = Nothing,
+            PayGate.x = Nothing,
             PayGate.offeredAt = Nothing
           }
       loss = Effect.LoseLife (LifeLoss.MkLifeLoss (PlayerRef.Relative PlayerRelation.Opponent) (Quantity.Literal 1) LifeLossCause.ByEffect (Just drained))
@@ -6946,6 +6947,7 @@ ward w =
             PayGate.branch = PayBranch.IfNotPaid,
             PayGate.obligation = PayObligation.Optional,
             PayGate.perEach = fmap Quantity.PlayerCounters (Ward.perEach w),
+            PayGate.x = Nothing,
             PayGate.offeredAt = Nothing
           }
       effect = Effect.Counter (Counter.MkCounter (ObjectRef.InSlot Binding.targetingObject) Nothing Nothing Nothing)
@@ -7552,6 +7554,7 @@ fabricate n =
             -- one clause making its own offer.
             PayGate.obligation = PayObligation.Optional,
             PayGate.perEach = Nothing,
+            PayGate.x = Nothing,
             PayGate.offeredAt = Nothing
           }
       spawn =
@@ -8298,6 +8301,7 @@ recover cost =
             PayGate.branch = branch,
             PayGate.obligation = PayObligation.Optional,
             PayGate.perEach = Nothing,
+            PayGate.x = Nothing,
             PayGate.offeredAt = offeredAt
           }
       moveTo zone =
@@ -9301,6 +9305,7 @@ cumulativeUpkeep cost =
             PayGate.branch = PayBranch.IfNotPaid,
             PayGate.obligation = PayObligation.Optional,
             PayGate.perEach = Just (Quantity.ObjectCounters CounterKind.Age),
+            PayGate.x = Nothing,
             PayGate.offeredAt = Nothing
           }
    in Mint.triggerOf
@@ -9350,6 +9355,7 @@ echo cost =
             PayGate.branch = PayBranch.IfNotPaid,
             PayGate.obligation = PayObligation.Optional,
             PayGate.perEach = Nothing,
+            PayGate.x = Nothing,
             PayGate.offeredAt = Nothing
           }
       sacrifice =

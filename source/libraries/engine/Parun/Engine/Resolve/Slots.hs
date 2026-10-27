@@ -2347,7 +2347,7 @@ ownSlotsAreExhaustive effect = case effect of
   Effect.GrantPlayFromExile grant -> durationSlotsAreExhaustive (GrantPlayFromExile.duration grant) && all conditionSlotsAreExhaustive (GrantPlayFromExile.condition grant)
   -- PreventNextDamage's answer for the body, plus its own ref's: a PlayerRef
   -- nested in the DEPTH is one slotsOf cannot see.
-  Effect.ForEach (ForEach.MkForEach _ _ _ body _ gate _) -> all slotsAreExhaustive body && all (all Quantity.slotsAreExhaustive . PayGate.perEach) gate
+  Effect.ForEach (ForEach.MkForEach _ _ _ body _ gate _) -> all slotsAreExhaustive body && all (\g -> all Quantity.slotsAreExhaustive (PayGate.perEach g) && all Quantity.slotsAreExhaustive (PayGate.x g)) gate
   Effect.ForEachNumber (ForEachNumber.MkForEachNumber upTo _ body) -> Quantity.slotsAreExhaustive upTo && all slotsAreExhaustive body
   Effect.Repeat (Repeat.MkRepeat _ body gate) -> all conditionSlotsAreExhaustive gate && all slotsAreExhaustive body
   Effect.RepeatIf (RepeatIf.MkRepeatIf process condition ifHolds) -> conditionSlotsAreExhaustive condition && all slotsAreExhaustive (process <> ifHolds)
@@ -3592,8 +3592,8 @@ modeSlots mode =
 
 -- Every slot a CR 118.12 gate reads, wherever it rides (a clause, or a CR
 -- 608.2f loop's ForEach.payGate). Its payer; its "for each" multiplier
--- (Parun.Types.PayGate.perEach), which payGatePaidBy evaluates against the
--- resolution's own context, reported whole for targetSlotSlots' computed
+-- (Parun.Types.PayGate.perEach) and its chosen X (PayGate.x), which payGatePaidBy
+-- evaluates against the resolution's own context, reported whole for targetSlotSlots' computed
 -- bound's reason; and the slot a DESCRIBED cost reads its mana part off
 -- (Parun.Types.CostBasis, Flash's "its mana cost reduced by {2}"), at arity ONE
 -- since a slot naming several names no one mana cost and `describedCosts`
@@ -3603,6 +3603,7 @@ payGateSlots gate =
   joinSlots
     [ playerRefSlots (PayGate.payer gate),
       maybe Map.empty quantitySlots (PayGate.perEach gate),
+      maybe Map.empty quantitySlots (PayGate.x gate),
       maybe Map.empty (oneSlot . CostBasis.slot) (PayGate.basis gate)
     ]
 

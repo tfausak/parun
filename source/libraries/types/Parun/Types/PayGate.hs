@@ -74,7 +74,7 @@ data PayGate = MkPayGate
     -- An {X} in it IS resolved, which is a different rule: CR 118.4 sends X to
     -- CR 107.3a, whose value is the one the object's controller announced at
     -- CR 601.2b. Clash of Wills' is {X}; Parun.Engine.Resolve.Common.announcedXOn is
-    -- where it is substituted in.
+    -- where it is substituted in, unless `x` below says otherwise.
     --
     -- A CHOICE of whole costs, in printed order, because the "something else"
     -- may be a disjunction: Torment of Venom's "unless they sacrifice another
@@ -141,6 +141,11 @@ data PayGate = MkPayGate
     -- "your graveyard" the countering spell's controller's, while its payer is
     -- the targeted spell's controller.
     perEach :: Maybe Quantity.Quantity,
+    -- | The value of an {X} in `cost` when it was not announced but chosen as
+    -- the ability resolves (CR 107.3f) -- Flameblast Dragon's "you may pay
+    -- {X}{R}", whose X an earlier Effect.ChooseNumber binds. Nothing reads CR
+    -- 107.3a's announcement instead. Unlike `perEach`, it scales the {X} alone.
+    x :: Maybe Quantity.Quantity,
     -- | Which clause of this mode MAKES the offer, when it is not this one --
     -- CR 118.12 offers a resolution cost once and reads the one answer, so
     -- Don't Make a Sound's second clause names its first rather than asking

@@ -18,7 +18,6 @@ module Parun.CardSpec where
 -- triggered ability's effects (Card.allEffects only reaches the spell).
 -- whole card written by somebody else and so an independent witness to the
 
-import qualified Control.Monad as Monad
 import qualified Data.Foldable as Foldable
 import qualified Data.List as List
 import qualified Data.List.NonEmpty as NonEmpty
@@ -906,14 +905,17 @@ modeClauseConditions = Maybe.mapMaybe Clause.condition . Foldable.toList . Mode.
 modalClauseConditions :: Modal.Modal Card.Type.Card (GrantedAbility.GrantedAbility Card.Type.Card) -> [Condition.Type.Condition]
 modalClauseConditions = concatMap modeClauseConditions . Modal.modes
 
--- CR 118.12's gate multiplier, the OTHER Quantity a clause carries outside its
--- effects -- Rakshasa's Disdain's "for each card in your graveyard".
+-- CR 118.12's gate multiplier and chosen X, the OTHER Quantities a clause carries
+-- outside its effects -- Rakshasa's Disdain's "for each card in your graveyard",
+-- Flameblast Dragon's {X}.
 -- modalClauseConditions' sibling one field over, and swept at the same three
 -- carriers, so a Count written into a gate is not invisible to cardCounts.
 modalPayGateQuantities :: Modal.Modal Card.Type.Card (GrantedAbility.GrantedAbility Card.Type.Card) -> [Quantity.Type.Quantity]
 modalPayGateQuantities =
-  concatMap (Maybe.mapMaybe (Clause.payGate Monad.>=> PayGate.perEach) . Foldable.toList . Mode.clauses)
+  concatMap (concatMap gateQuantities . Maybe.mapMaybe Clause.payGate . Foldable.toList . Mode.clauses)
     . Modal.modes
+  where
+    gateQuantities gate = Maybe.maybeToList (PayGate.perEach gate) <> Maybe.maybeToList (PayGate.x gate)
 
 -- Every Condition a Duration holds: only ForAsLongAs (CR 611.2b) carries one.
 -- Resolve.conditionQuantities' role one type up -- durationCounts below and
@@ -3410,7 +3412,7 @@ withCountersFilters w =
 payGateFilters :: PayGate.PayGate -> [(Framing, Filter.Type.Filter Keyword.Keyword)]
 payGateFilters gate =
   fmap ((,) Unframed) (concatMap costFilters (CostChoice.unwrap (PayGate.cost gate)))
-    <> concatMap quantityFilters (Maybe.maybeToList (PayGate.perEach gate))
+    <> concatMap quantityFilters (Maybe.maybeToList (PayGate.perEach gate) <> Maybe.maybeToList (PayGate.x gate))
 
 -- CR 122.1b: the one counter kind with a Filter under it, since it carries a
 -- whole Keyword. Exhaustive so a new kind with a payload breaks this build.
