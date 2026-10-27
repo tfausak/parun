@@ -896,7 +896,7 @@ chooserNames asking x = case x of
 
 chosenCardFromAmongNames :: (Monoid r) => Asking r -> ChosenCardFromAmong.ChosenCardFromAmong -> r
 chosenCardFromAmongNames asking x = case x of
-  ChosenCardFromAmong.MkChosenCardFromAmong slot filter_ count chooser -> slotNames asking slot <> filterNames asking filter_ <> foldMap (quantityNames asking) (HowMany.quantity count) <> playerRefNames asking chooser
+  ChosenCardFromAmong.MkChosenCardFromAmong slot filter_ count chooser pileChooser -> slotNames asking slot <> filterNames asking filter_ <> foldMap (quantityNames asking) (HowMany.quantity count) <> playerRefNames asking chooser <> foldMap (playerRefNames asking) pileChooser
 
 chosenCardInGraveyardNames :: (Monoid r) => Asking r -> ChosenCardInGraveyard.ChosenCardInGraveyard -> r
 chosenCardInGraveyardNames asking x = case x of
