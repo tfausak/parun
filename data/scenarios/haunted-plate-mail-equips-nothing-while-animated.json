@@ -1,0 +1,23 @@
+{
+  "description": "CR 301.5c: Haunted Plate Mail's equip ability can be activated while it isn't an Equipment, but attaches it to nothing",
+  "note": "Per the card's 2014-07-18 ruling. alice animates the Plate Mail, then casts Grizzly Bears and activates equip targeting it: the ability resolves and the Plate Mail stays unattached.",
+  "board": {
+    "seats": [
+      {"name": "alice", "manaPool": "GCCCCC", "hand": [{"card": "Grizzly Bears", "label": "mine"}], "battlefield": [{"card": "Haunted Plate Mail", "label": "plate"}], "library": [{"card": "Island"}, {"card": "Island"}, {"card": "Island"}]},
+      {"name": "bob", "library": [{"card": "Island"}, {"card": "Island"}, {"card": "Island"}]}
+    ],
+    "active": "alice",
+    "step": "PrecombatMain"
+  },
+  "timeline": [
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "do": {"Activate": {"object": "$plate", "ability": 0}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "do": "Pass"},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "do": {"Cast": {"object": "$mine"}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "do": "Pass"},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "do": {"Activate": {"object": "$plate", "ability": 1, "targets": ["Grizzly Bears"]}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "check": {"View": {"of": "Stack", "is": ["ability of $plate"]}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "do": "Pass"},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "check": {"View": {"of": "AttachedTo", "object": "$plate", "is": null}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "check": {"PowerToughness": {"object": "Grizzly Bears", "power": 2, "toughness": 2}}}
+  ]
+}

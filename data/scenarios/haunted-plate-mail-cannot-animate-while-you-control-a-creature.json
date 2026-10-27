@@ -1,0 +1,16 @@
+{
+  "description": "CR 602.5: Haunted Plate Mail's {0} can't be activated while its controller controls a creature",
+  "note": "The board of haunted-plate-mail-becomes-a-four-four-spirit-that-is-no-longer-an-equipment-until-end-of-turn with one Grizzly Bears added on alice's side, where that scenario's activation succeeds.",
+  "board": {
+    "seats": [
+      {"name": "alice", "manaPool": "R", "hand": [{"card": "Magnetic Theft", "label": "theft"}], "battlefield": [{"card": "Haunted Plate Mail", "label": "plate"}, {"card": "Grizzly Bears", "label": "mine"}], "library": [{"card": "Island"}, {"card": "Island"}, {"card": "Island"}]},
+      {"name": "bob", "battlefield": [{"card": "Grizzly Bears", "label": "bear"}], "library": [{"card": "Island"}, {"card": "Island"}, {"card": "Island"}]}
+    ],
+    "active": "alice",
+    "step": "PrecombatMain"
+  },
+  "timeline": [
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "refuse": {"Activate": {"object": "$plate", "ability": 0}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "check": {"Types": {"object": "$plate", "types": ["Artifact"]}}}
+  ]
+}

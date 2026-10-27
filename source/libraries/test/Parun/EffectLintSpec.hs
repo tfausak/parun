@@ -1972,15 +1972,17 @@ effectLintSpec s registry corpus = Spec.describe s "Lint" $ do
   -- CR 612.2's family gate lives on a modification's CONSTRUCTOR:
   -- Parun.Engine.Projection.rewriteModificationWith swaps a land-type word only
   -- inside the two land arms and a creature-type word only inside the two creature
-  -- arms. AddSubtype carries no family -- it exists for CR 205.3g's artifact types
-  -- and CR 205.3h's enchantment types, which no printed text changer reaches -- and
-  -- is deliberately left unrewritten there. That is sound only while no AddSubtype
-  -- in the pool holds a word a text changer could swap. This is the fence, and the
-  -- reason the two family arms were not generalised into AddSubtype.
-  Spec.it s "CR 612.2 no AddSubtype carries a land type or a creature type" $ do
+  -- arms. AddSubtype and RemoveSubtype carry no family -- they exist for CR
+  -- 205.3g's artifact types and CR 205.3h's enchantment types, which no printed
+  -- text changer reaches -- and are deliberately left unrewritten there. That is
+  -- sound only while neither holds, anywhere in the pool, a word a text changer
+  -- could swap. This is the fence, and the reason the two family arms were not
+  -- generalised into AddSubtype.
+  Spec.it s "CR 612.2 no AddSubtype or RemoveSubtype carries a land type or a creature type" $ do
     ps <- S.allPrintings s corpus
     let addedSubtypes modification = case modification of
           Modification.AddSubtype subtype -> [subtype]
+          Modification.RemoveSubtype subtype -> [subtype]
           _ -> []
         stored effect = case effect of
           Effect.ModifyTarget (ModifyTarget.MkModifyTarget _ modification _ _) -> addedSubtypes modification
@@ -1988,8 +1990,8 @@ effectLintSpec s registry corpus = Spec.describe s "Lint" $ do
         added card = concatMap addedSubtypes (grantedModifications card) <> concatMap stored (cardResolutionEffects card)
         misfiled subtype = Subtype.Engine.isLandType subtype || Subtype.Engine.isCreatureType subtype
         offenders = filter (anyFace (any misfiled . added) . Printing.card) ps
-    -- Guards against a vacuous sweep: with no AddSubtype in the pool this would
-    -- pass whatever the arm carried. Ygra, Eater of All prints the pool's one.
+    -- Guards against a vacuous sweep: with neither arm in the pool this would
+    -- pass whatever the arms carried. Ygra, Eater of All prints an AddSubtype.
     Spec.assertBool s (any (anyFace (not . null . added) . Printing.card) ps) "the pool has a card adding a subtype outside both families"
     Spec.assertEqWith s "a land type or a creature type belongs on its own family's arm" (fmap (S.nameOf . Printing.card) offenders) []
   -- CR 712.14a's rider is about a double-faced CARD, and CR 111.1 makes a token

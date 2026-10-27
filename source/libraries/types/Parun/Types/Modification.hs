@@ -308,6 +308,9 @@ data Modification ability
     -- Parun.CardSpec holds the fence: no AddSubtype in the pool may carry a land
     -- type or a creature type, since those have their own arms and their own gate.
     AddSubtype Subtype.Subtype
+  | -- | layer 4, CR 613.1d / 205.1a: this object loses this subtype, AddSubtype's
+    -- families only (Haunted Plate Mail's "no longer an Equipment").
+    RemoveSubtype Subtype.Subtype
   | -- | layer 4, CR 613.1d / 205.1a / 205.1b: this object's card types become
     -- this one, or it gains it in addition to them, as the mode says (Song of the
     -- Dryads -> Land, Opalescence -> Creature).

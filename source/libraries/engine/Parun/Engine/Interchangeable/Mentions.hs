@@ -2120,6 +2120,7 @@ modificationNames asking onAbility x = case x of
   Modification.LoseEveryCreatureSubtype -> mempty
   Modification.SetCreatureSubtypesOfLastCardExiledWith filter_ -> filterNames asking filter_
   Modification.AddSubtype _subtype -> mempty
+  Modification.RemoveSubtype _subtype -> mempty
   Modification.CardType {} -> mempty
   Modification.LoseCardType _cardType -> mempty
   Modification.AddSupertype _supertype -> mempty

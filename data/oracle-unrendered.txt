@@ -996,6 +996,7 @@ harried-dronesmith
 harsh-justice
 haste-magic
 hatred
+haunted-plate-mail
 haunting-echoes
 hauntwoods-shrieker
 hawkeye-avenging-archer

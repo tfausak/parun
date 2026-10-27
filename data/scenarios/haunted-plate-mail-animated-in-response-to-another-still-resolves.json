@@ -1,0 +1,21 @@
+{
+  "description": "CR 602.5, per the card's rulings: Haunted Plate Mail's restriction is checked only on activation, so a second Plate Mail animated in response leaves the first ability resolving",
+  "note": "Per the card's 2014-07-18 rulings: alice activates both Plate Mails before either resolves. The second resolves first and makes her control a creature, and the first still resolves.",
+  "board": {
+    "seats": [
+      {"name": "alice", "battlefield": [{"card": "Haunted Plate Mail", "label": "plate"}, {"card": "Haunted Plate Mail", "label": "other"}], "library": [{"card": "Island"}, {"card": "Island"}, {"card": "Island"}]},
+      {"name": "bob", "library": [{"card": "Island"}, {"card": "Island"}, {"card": "Island"}]}
+    ],
+    "active": "alice",
+    "step": "PrecombatMain"
+  },
+  "timeline": [
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "do": {"Activate": {"object": "$plate", "ability": 0}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "do": {"Activate": {"object": "$other", "ability": 0}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "do": "Pass"},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "check": {"Types": {"object": "$other", "types": ["Artifact", "Creature"]}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "check": {"Types": {"object": "$plate", "types": ["Artifact"]}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "do": "Pass"},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "check": {"Types": {"object": "$plate", "types": ["Artifact", "Creature"]}}}
+  ]
+}

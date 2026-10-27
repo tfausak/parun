@@ -1,0 +1,23 @@
+{
+  "description": "CR 205.1a / 205.1b / 613.1d / 514.2: Haunted Plate Mail's {0} makes it a 4/4 Spirit artifact creature that's no longer an Equipment, until end of turn",
+  "note": "bob's Grizzly Bears is a creature alice does not control, so it leaves the activation legal. Magnetic Theft targets an Equipment: refused on the animated Plate Mail, where haunted-plate-mail-unattaches-when-it-animates casts it on the same Plate Mail unanimated. On bob's turn it is an Equipment again and no creature.",
+  "board": {
+    "seats": [
+      {"name": "alice", "manaPool": "R", "hand": [{"card": "Magnetic Theft", "label": "theft"}], "battlefield": [{"card": "Haunted Plate Mail", "label": "plate"}], "library": [{"card": "Island"}, {"card": "Island"}, {"card": "Island"}]},
+      {"name": "bob", "battlefield": [{"card": "Grizzly Bears", "label": "bear"}], "library": [{"card": "Island"}, {"card": "Island"}, {"card": "Island"}]}
+    ],
+    "active": "alice",
+    "step": "PrecombatMain"
+  },
+  "timeline": [
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "check": {"Subtypes": {"object": "$plate", "subtypes": ["Equipment"]}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "do": {"Activate": {"object": "$plate", "ability": 0}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "do": "Pass"},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "refuse": {"Cast": {"object": "$theft", "targetsBySlot": {"equipment": ["$plate"], "creature": ["$bear"]}}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "check": {"Types": {"object": "$plate", "types": ["Artifact", "Creature"]}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "check": {"Subtypes": {"object": "$plate", "subtypes": ["Spirit"]}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "check": {"PowerToughness": {"object": "$plate", "power": 4, "toughness": 4}}},
+    {"turn": 2, "step": "Upkeep", "player": "bob", "check": {"Types": {"object": "$plate", "types": ["Artifact"]}}},
+    {"turn": 2, "step": "Upkeep", "player": "bob", "check": {"Subtypes": {"object": "$plate", "subtypes": ["Equipment"]}}}
+  ]
+}
