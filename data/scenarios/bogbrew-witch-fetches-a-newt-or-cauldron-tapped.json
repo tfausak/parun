@@ -1,0 +1,21 @@
+{
+  "description": "CR 701.23a / 201.2: Bogbrew Witch searches for a card named Festering Newt or Bubbling Cauldron and puts it onto the battlefield tapped",
+  "note": "The Hill Giant is not on offer; the Newt is fetched and enters tapped.",
+  "board": {
+    "active": "alice",
+    "step": "PrecombatMain",
+    "seats": [
+      {"name": "alice", "manaPool": "CC", "battlefield": [{"card": "Bogbrew Witch", "label": "witch", "ready": true}], "library": [{"card": "Hill Giant", "label": "giant"}, {"card": "Festering Newt", "label": "newt"}, {"card": "Bubbling Cauldron", "label": "cauldron"}, {"card": "Island", "label": "i1"}]},
+      {"name": "bob", "library": [{"card": "Island"}, {"card": "Island"}, {"card": "Island"}, {"card": "Island"}]}
+    ]
+  },
+  "timeline": [
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "do": {"Activate": {"object": "$witch"}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "do": "Pass"},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "refuse": {"Answer": {"prompt": "Search", "with": ["$giant"]}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "do": {"Answer": {"prompt": "Search", "with": ["$newt"]}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "do": {"Answer": {"prompt": "Shuffle", "with": ["$giant", "$cauldron", "$i1"]}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "check": {"Tapped": {"object": "Festering Newt", "tapped": true}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "check": {"Count": {"player": "alice", "zone": "Library", "card": "Bubbling Cauldron", "count": 1}}}
+  ]
+}

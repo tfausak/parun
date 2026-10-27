@@ -1,0 +1,20 @@
+{
+  "description": "CR 205.1b / 613.1d: Awaken the Ancient makes its Mountain a 7/7 red Giant creature with haste that is still a land",
+  "note": "The Mountain was never ready and attacks anyway: haste.",
+  "board": {
+    "active": "alice",
+    "step": "PrecombatMain",
+    "seats": [
+      {"name": "alice", "battlefield": [{"card": "Mountain", "label": "mountain"}, {"card": "Awaken the Ancient", "label": "awaken", "attached": "mountain"}], "library": [{"card": "Island"}, {"card": "Island"}, {"card": "Island"}, {"card": "Island"}]},
+      {"name": "bob", "library": [{"card": "Island"}, {"card": "Island"}, {"card": "Island"}, {"card": "Island"}]}
+    ]
+  },
+  "timeline": [
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "check": {"PowerToughness": {"object": "$mountain", "power": 7, "toughness": 7}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "check": {"Types": {"object": "$mountain", "types": ["Creature", "Land"]}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "check": {"Subtypes": {"object": "$mountain", "subtypes": ["Giant", "Mountain"]}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "check": {"View": {"of": "Colors", "object": "$mountain", "is": ["Red"]}}},
+    {"turn": 1, "step": "DeclareAttackers", "player": "alice", "do": {"Attack": ["$mountain"]}},
+    {"turn": 1, "step": "EndOfCombat", "player": "alice", "check": {"Life": {"player": "bob", "life": 13}}}
+  ]
+}

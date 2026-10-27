@@ -1,0 +1,20 @@
+{
+  "description": "CR 614.1c / 614.12: creatures Imposing Sovereign's controller's opponents control enter tapped",
+  "note": "alice's own Gray Ogre enters untapped; bob's Grizzly Bears, on his turn, enter tapped.",
+  "board": {
+    "active": "alice",
+    "step": "PrecombatMain",
+    "seats": [
+      {"name": "alice", "manaPool": "RRR", "battlefield": [{"card": "Imposing Sovereign", "label": "sovereign"}], "hand": [{"card": "Gray Ogre", "label": "ogre"}], "library": [{"card": "Island"}, {"card": "Island"}, {"card": "Island"}, {"card": "Island"}]},
+      {"name": "bob", "battlefield": [{"card": "Forest", "label": "f1"}, {"card": "Forest", "label": "f2"}], "hand": [{"card": "Grizzly Bears", "label": "bears"}], "library": [{"card": "Island"}, {"card": "Island"}, {"card": "Island"}, {"card": "Island"}]}
+    ]
+  },
+  "timeline": [
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "do": {"Cast": {"object": "$ogre"}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "do": "Pass"},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "check": {"Tapped": {"object": "Gray Ogre", "tapped": false}}},
+    {"turn": 2, "step": "PrecombatMain", "player": "bob", "do": {"Cast": {"object": "$bears", "mana": ["$f1", "$f2"]}}},
+    {"turn": 2, "step": "PrecombatMain", "player": "bob", "do": "Pass"},
+    {"turn": 2, "step": "PrecombatMain", "player": "bob", "check": {"Tapped": {"object": "Grizzly Bears", "tapped": true}}}
+  ]
+}

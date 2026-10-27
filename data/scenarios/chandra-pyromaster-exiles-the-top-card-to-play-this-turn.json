@@ -1,0 +1,20 @@
+{
+  "description": "CR 406.3 / 305.1: Chandra, Pyromaster's 0 exiles the top card of its controller's library, which that player may play this turn",
+  "note": "The exiled card is a Mountain, played as alice's land for the turn.",
+  "board": {
+    "active": "alice",
+    "step": "PrecombatMain",
+    "seats": [
+      {"name": "alice", "battlefield": [{"card": "Chandra, Pyromaster", "label": "chandra", "counters": [{"key": {"type": "Loyalty"}, "value": 4}]}], "library": [{"card": "Mountain", "label": "mountain"}, {"card": "Island"}, {"card": "Island"}, {"card": "Island"}, {"card": "Island"}]},
+      {"name": "bob", "library": [{"card": "Island"}, {"card": "Island"}, {"card": "Island"}, {"card": "Island"}]}
+    ]
+  },
+  "timeline": [
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "do": {"Activate": {"object": "$chandra", "ability": 1}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "do": "Pass"},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "check": {"Count": {"player": "alice", "zone": "Exile", "card": "Mountain", "count": 1}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "do": {"PlayLand": "Mountain"}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "check": {"Count": {"player": "alice", "zone": "Battlefield", "card": "Mountain", "count": 1}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "check": {"Counters": {"object": "$chandra", "kind": {"type": "Loyalty"}, "count": 4}}}
+  ]
+}

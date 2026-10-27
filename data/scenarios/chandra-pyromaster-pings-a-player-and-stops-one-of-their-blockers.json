@@ -1,0 +1,26 @@
+{
+  "description": "CR 115.1 / 509.1b: Chandra, Pyromaster's +1 deals 1 damage to target player or planeswalker and 1 to up to one target creature that player or that planeswalker's controller controls, which can't block this turn",
+  "note": "Three seats: carol's Gray Ogre is not bob's and can't be the second target. bob takes 1, his Grizzly Bears take 1 and can't block alice's Hill Giant; his Savannah Lions still may.",
+  "board": {
+    "active": "alice",
+    "step": "PrecombatMain",
+    "seats": [
+      {"name": "alice", "battlefield": [{"card": "Chandra, Pyromaster", "label": "chandra", "counters": [{"key": {"type": "Loyalty"}, "value": 4}]}, {"card": "Hill Giant", "label": "giant", "ready": true}], "library": [{"card": "Island"}, {"card": "Island"}, {"card": "Island"}, {"card": "Island"}]},
+      {"name": "bob", "battlefield": [{"card": "Grizzly Bears", "label": "bears"}, {"card": "Savannah Lions", "label": "lions"}], "library": [{"card": "Island"}, {"card": "Island"}, {"card": "Island"}, {"card": "Island"}]},
+      {"name": "carol", "battlefield": [{"card": "Gray Ogre", "label": "ogre"}], "library": [{"card": "Island"}, {"card": "Island"}, {"card": "Island"}, {"card": "Island"}]}
+    ]
+  },
+  "timeline": [
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "refuse": {"Activate": {"object": "$chandra", "ability": 0, "targetsBySlot": {"target": ["$bob"], "creature": ["$ogre"]}}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "do": {"Activate": {"object": "$chandra", "ability": 0, "targetsBySlot": {"target": ["$bob"], "creature": ["$bears"]}}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "do": "Pass"},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "check": {"Life": {"player": "bob", "life": 19}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "check": {"Damage": {"object": "$bears", "damage": 1}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "check": {"Counters": {"object": "$chandra", "kind": {"type": "Loyalty"}, "count": 5}}},
+    {"turn": 1, "step": "DeclareAttackers", "player": "alice", "do": {"Attack": ["$giant"]}},
+    {"turn": 1, "step": "DeclareAttackers", "player": "alice", "do": {"ChooseAttackTarget": "$bob"}},
+    {"turn": 1, "step": "DeclareBlockers", "player": "bob", "refuse": {"Block": {"$bears": ["$giant"]}}},
+    {"turn": 1, "step": "DeclareBlockers", "player": "bob", "do": {"Block": {"$lions": ["$giant"]}}},
+    {"turn": 1, "step": "DeclareBlockers", "player": "bob", "check": {"Blockers": {"attacker": "$giant", "blockers": ["$lions"]}}}
+  ]
+}

@@ -1,0 +1,22 @@
+{
+  "description": "CR 701.26a / 111.1: Devout Invocation taps any number of its controller's untapped creatures and makes a 4/4 flying Angel for each",
+  "note": "alice taps two of her three untapped creatures; her tapped Hill Giant is not on offer. Two Angels.",
+  "board": {
+    "active": "alice",
+    "step": "PrecombatMain",
+    "seats": [
+      {"name": "alice", "manaPool": "WWWWWWW", "battlefield": [{"card": "Grizzly Bears", "label": "bears"}, {"card": "Savannah Lions", "label": "lions"}, {"card": "Gray Ogre", "label": "ogre"}, {"card": "Hill Giant", "label": "giant", "tapped": true}], "hand": [{"card": "Devout Invocation", "label": "invocation"}], "library": [{"card": "Island"}, {"card": "Island"}, {"card": "Island"}, {"card": "Island"}]},
+      {"name": "bob", "library": [{"card": "Island"}, {"card": "Island"}, {"card": "Island"}, {"card": "Island"}]}
+    ]
+  },
+  "timeline": [
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "do": {"Cast": {"object": "$invocation"}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "do": "Pass"},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "refuse": {"Answer": {"prompt": "ChooseAnyNumberOfPermanents", "with": ["$bears", "$giant"]}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "do": {"Answer": {"prompt": "ChooseAnyNumberOfPermanents", "with": ["$bears", "$lions"]}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "do": {"OrderTimestamps": ["Angel Token", "Angel Token#2"]}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "check": {"Count": {"player": "alice", "zone": "Battlefield", "card": "Angel Token", "count": 2}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "check": {"Tapped": {"object": "$ogre", "tapped": false}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "check": {"Tapped": {"object": "$lions", "tapped": true}}}
+  ]
+}

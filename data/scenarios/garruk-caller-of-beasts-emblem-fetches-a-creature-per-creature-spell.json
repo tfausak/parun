@@ -1,0 +1,24 @@
+{
+  "description": "CR 114.1 / 701.23a: Garruk, Caller of Beasts's -7 emblem lets its owner search for a creature card and put it onto the battlefield whenever they cast a creature spell",
+  "note": "Casting Grizzly Bears fetches the Hill Giant; the Forest in the library is not on offer.",
+  "board": {
+    "active": "alice",
+    "step": "PrecombatMain",
+    "seats": [
+      {"name": "alice", "battlefield": [{"card": "Garruk, Caller of Beasts", "label": "garruk", "counters": [{"key": {"type": "Loyalty"}, "value": 7}]}, {"card": "Forest", "label": "f1"}, {"card": "Forest", "label": "f2"}], "hand": [{"card": "Grizzly Bears", "label": "bears"}], "library": [{"card": "Forest", "label": "lib-forest"}, {"card": "Hill Giant", "label": "lib-giant"}, {"card": "Island", "label": "lib-island"}]},
+      {"name": "bob", "library": [{"card": "Island"}, {"card": "Island"}, {"card": "Island"}, {"card": "Island"}]}
+    ]
+  },
+  "timeline": [
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "do": {"Activate": {"object": "$garruk", "ability": 2, "mana": [null]}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "do": "Pass"},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "do": {"Cast": {"object": "$bears", "mana": ["$f1", "$f2"]}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "do": "Pass"},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "do": {"ChooseOptional": {"type": "Exercises"}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "refuse": {"Answer": {"prompt": "Search", "with": ["$lib-forest"]}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "do": {"Answer": {"prompt": "Search", "with": ["$lib-giant"]}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "do": {"Answer": {"prompt": "Shuffle", "with": ["$lib-forest", "$lib-island"]}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "check": {"Count": {"player": "alice", "zone": "Battlefield", "card": "Hill Giant", "count": 1}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "check": {"View": {"of": "Stack", "is": ["Grizzly Bears"]}}}
+  ]
+}
