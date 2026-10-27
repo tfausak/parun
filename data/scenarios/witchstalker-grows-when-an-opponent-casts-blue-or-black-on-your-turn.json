@@ -16,7 +16,7 @@
     {"turn": 1, "step": "BeginningOfCombat", "player": "alice", "check": {"Life": {"player": "alice", "life": 18}}},
     {"turn": 2, "step": "PrecombatMain", "player": "bob", "do": {"Cast": {"object": "$divination", "mana": ["$i1", "$i2", "$i3", null]}}},
     {"turn": 2, "step": "PrecombatMain", "player": "bob", "do": "Pass"},
-    {"turn": 2, "step": "PrecombatMain", "player": "bob", "check": {"Count": {"player": "bob", "zone": "Graveyard", "card": "Divination", "count": 1}}},
-    {"turn": 2, "step": "PrecombatMain", "player": "bob", "check": {"Counters": {"object": "$stalker", "kind": {"type": "PlusOnePlusOne"}, "count": 1}}}
+    {"turn": 2, "step": "PrecombatMain", "player": "bob", "check": {"Counters": {"object": "$stalker", "kind": {"type": "PlusOnePlusOne"}, "count": 1}}},
+    {"turn": 2, "step": "PrecombatMain", "player": "bob", "check": {"Count": {"player": "bob", "zone": "Graveyard", "card": "Divination", "count": 1}}}
   ]
 }
