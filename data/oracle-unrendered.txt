@@ -42,6 +42,7 @@ agonizing-memories
 agyrem
 airbending-lesson
 ajani-adversary-of-tyrants
+ajani-caller-of-the-pride
 ajani-goldmane
 ajani-steadfast
 ajanis-pridemate
@@ -79,6 +80,7 @@ angel-of-finality
 angel-of-fury
 angel-of-salvation
 angelic-arbiter
+angelic-benediction
 angelic-chorus
 angelic-destiny
 angelic-harold
@@ -135,6 +137,7 @@ aspect-of-wolf
 assassins-blade
 assassins-strike
 astral-arena
+augur-of-bolas
 auntie-ool-cursewretch
 aura-graft
 aura-of-silence
@@ -234,6 +237,7 @@ blinding-angel
 blood-for-bones
 blood-frenzy
 blood-moon
+blood-reckoning
 blood-seeker
 blood-tithe
 bloodbraid-challenger
@@ -260,6 +264,7 @@ boros-battleshaper
 boseiju-who-shelters-all
 bottle-of-suleiman
 bottomless-vault
+boundless-realms
 brace-for-impact
 bragos-representative
 bramble-elemental
@@ -341,6 +346,7 @@ chancellor-of-the-forge
 chandra-fire-artisan
 chandra-nalaar
 chandra-the-firebrand
+chandras-fury
 chandras-outrage
 chandras-phoenix
 chandras-spitfire
@@ -377,6 +383,7 @@ clearwater-goblet
 cleopatra-exiled-pharaoh
 clever-concealment
 clever-impersonator
+clock-of-omens
 clone
 cloud-dragon
 cloud-elemental
@@ -536,6 +543,7 @@ destined-lead
 destructive-force
 detritivore
 diabolic-edict
+diabolic-revelation
 diaochan-artful-beauty
 dig-up
 digsite-conservator
@@ -622,6 +630,7 @@ edgewalker
 eightfold-maze
 elbrus-the-binding-blade-withengar-unbound
 elder-deep-fiend
+elderscale-wurm
 elemental-augury
 elemental-mastery
 elemental-teachings
@@ -646,6 +655,7 @@ emporium-thopterist
 empty-city-ruse
 enchantment-alteration
 encouraging-aviator-jump
+encrust
 endless-whispers
 endurance
 enduring-courage
@@ -705,6 +715,7 @@ fae-of-wishes-granted
 faerie-conclave
 faerie-macabre
 faerie-squadron
+faiths-reward
 falkenrath-gorger
 fall-of-the-impostor
 fall-of-the-thran
@@ -770,6 +781,7 @@ fluctuator
 flunk
 flux
 fog
+fog-bank
 fog-elemental
 foggy-swamp-spirit-keeper
 foggy-swamp-visions
@@ -803,6 +815,7 @@ full-steam-ahead
 full-throttle
 fumble
 fungal-behemoth
+fungal-sprouting
 furgul-quag-nurturer
 furious-spinesplitter
 furnace-of-rath
@@ -849,6 +862,7 @@ gideons-avenger
 gift-of-doom
 gift-of-estates
 gifts-ungiven
+gilded-lotus
 gilder-bairn
 giltspire-avenger
 glacial-crasher
@@ -868,6 +882,7 @@ gnat-miser
 goblin-arsonist
 goblin-artillery
 goblin-bangchuckers
+goblin-battle-jester
 goblin-bookie
 goblin-brawler
 goblin-brigand
@@ -913,6 +928,7 @@ grinning-ignus
 grinning-totem
 grist-the-hunger-tide
 grooms-finery
+ground-seal
 grounded-for-life
 grub-storied-matriarch-grub-notorious-auntie
 guan-yu-sainted-warrior
@@ -926,6 +942,7 @@ hag-of-inner-weakness
 hakbal-of-the-surging-soul
 hallar-the-firefletcher
 hama-the-bloodbender
+hamletback-goliath
 hand-of-the-praetors
 hanged-executioner
 hanweir-battlements
@@ -961,6 +978,7 @@ heavy-fog
 hecatomb
 hei-bai-forest-guardian
 heirloom-blade
+hellion-crucible
 henry-wu-ingen-geneticist
 henzie-toolbox-torre
 herald-of-war
@@ -1070,6 +1088,7 @@ jace-beleren
 jace-memory-adept
 jaces-archivist
 jaces-erasure
+jaces-phantasm
 jackal-familiar
 jade-monolith
 jade-statue
@@ -1168,6 +1187,7 @@ life-and-limb
 lightmine-field
 lightstall-inquisitor
 lightwielder-paladin
+liliana-of-the-dark-realms
 liliana-of-the-veil
 liliana-untouched-by-death
 liliana-vess
@@ -1251,6 +1271,7 @@ march-of-the-machines
 march-of-wretched-sorrow
 marchesas-decree
 mark-for-death
+mark-of-mutiny
 marshaling-the-troops
 mask-of-intolerance
 maskwood-nexus
@@ -1296,6 +1317,7 @@ mind-slash
 mind-sludge
 mind-unbound
 mind-warp
+mindclaw-shaman
 mindcrank
 mindslaver
 mindslicer
@@ -1346,6 +1368,7 @@ mutagen-connoisseur
 mutalith-vortex-beast
 mutavault
 mutual-epiphany
+mwonvuli-beast-tracker
 mycosynth-golem
 myr-welder
 myrkuls-edict
@@ -1369,6 +1392,7 @@ necrologia
 necrosynthesis
 necrotic-plague
 needle-drop
+nefarox-overlord-of-grixis
 neglected-heirloom-ashmouth-blade
 nerd-rage
 nessian-asp

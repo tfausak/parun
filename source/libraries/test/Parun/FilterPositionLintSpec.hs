@@ -1779,6 +1779,7 @@ filterPositionLintSpec s registry corpus = Spec.describe s "Lint" $ do
         ("Mark for Death", 1), -- its stored class, baked by Parun.Engine.Resolve.Common.storedClass
         ("Flame Wave", 1), -- its damage's object
         ("Chandra Nalaar", 1), -- its -8, Flame Wave's sentence
+        ("Chandra's Fury", 1), -- its damage's object, Flame Wave's sentence
         ("Necrotic Plague", 1) -- its trigger's target slot, relative to the dead creature's controller
       ]
     -- The REJECTING direction, hand-built for the reason every sibling lint's is:

@@ -1,0 +1,70 @@
+{
+  "faces": [
+    {
+      "manaCost": [
+        {
+          "type": "Generic",
+          "value": 3
+        },
+        {
+          "type": "OfType",
+          "value": {
+            "type": "Colored",
+            "value": {
+              "type": "Black"
+            }
+          }
+        }
+      ],
+      "name": "Blood Reckoning",
+      "oracleText": "Whenever a creature attacks you or a planeswalker you control, that creature's controller loses 1 life.",
+      "triggeredAbilities": [
+        {
+          "condition": {
+            "type": "CreatureAttacksYou"
+          },
+          "modal": {
+            "modes": [
+              {
+                "clauses": [
+                  {
+                    "effects": [
+                      {
+                        "type": "LoseLife",
+                        "value": {
+                          "player": {
+                            "type": "HolderOfBound",
+                            "value": {
+                              "holder": {
+                                "type": "Controller"
+                              },
+                              "hop": {
+                                "type": "Itself"
+                              },
+                              "slot": "thatAttackingCreature"
+                            }
+                          },
+                          "quantity": {
+                            "type": "Literal",
+                            "value": 1
+                          }
+                        }
+                      }
+                    ]
+                  }
+                ]
+              }
+            ]
+          }
+        }
+      ],
+      "typeLine": {
+        "types": [
+          {
+            "type": "Enchantment"
+          }
+        ]
+      }
+    }
+  ]
+}

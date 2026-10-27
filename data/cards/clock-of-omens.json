@@ -1,0 +1,99 @@
+{
+  "faces": [
+    {
+      "activatedAbilities": [
+        {
+          "cost": {
+            "components": [
+              {
+                "type": "TapPermanents",
+                "value": {
+                  "count": {
+                    "type": "Fixed",
+                    "value": 2
+                  },
+                  "whichPermanents": {
+                    "type": "And",
+                    "value": [
+                      {
+                        "type": "HasCardType",
+                        "value": {
+                          "type": "Artifact"
+                        }
+                      },
+                      {
+                        "type": "HeldBy",
+                        "value": {
+                          "holder": {
+                            "type": "Controller"
+                          },
+                          "relation": {
+                            "type": "You"
+                          }
+                        }
+                      },
+                      {
+                        "type": "Not",
+                        "value": {
+                          "type": "IsTapped"
+                        }
+                      }
+                    ]
+                  }
+                }
+              }
+            ],
+            "mana": []
+          },
+          "modal": {
+            "modes": [
+              {
+                "clauses": [
+                  {
+                    "effects": [
+                      {
+                        "type": "Untap",
+                        "value": {
+                          "type": "InSlot",
+                          "value": "target"
+                        }
+                      }
+                    ]
+                  }
+                ],
+                "targetSlots": {
+                  "target": {
+                    "filter": {
+                      "type": "HasCardType",
+                      "value": {
+                        "type": "Artifact"
+                      }
+                    },
+                    "pool": {
+                      "type": "Permanents"
+                    }
+                  }
+                }
+              }
+            ]
+          }
+        }
+      ],
+      "manaCost": [
+        {
+          "type": "Generic",
+          "value": 4
+        }
+      ],
+      "name": "Clock of Omens",
+      "oracleText": "Tap two untapped artifacts you control: Untap target artifact.",
+      "typeLine": {
+        "types": [
+          {
+            "type": "Artifact"
+          }
+        ]
+      }
+    }
+  ]
+}

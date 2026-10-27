@@ -1,0 +1,163 @@
+{
+  "faces": [
+    {
+      "keywords": [
+        {
+          "type": "Trample"
+        }
+      ],
+      "manaCost": [
+        {
+          "type": "Generic",
+          "value": 4
+        },
+        {
+          "type": "OfType",
+          "value": {
+            "type": "Colored",
+            "value": {
+              "type": "Green"
+            }
+          }
+        },
+        {
+          "type": "OfType",
+          "value": {
+            "type": "Colored",
+            "value": {
+              "type": "Green"
+            }
+          }
+        },
+        {
+          "type": "OfType",
+          "value": {
+            "type": "Colored",
+            "value": {
+              "type": "Green"
+            }
+          }
+        }
+      ],
+      "name": "Elderscale Wurm",
+      "oracleText": "Trample\nWhen this creature enters, if your life total is less than 7, your life total becomes 7.\nAs long as you have 7 or more life, damage that would reduce your life total to less than 7 reduces it to 7 instead.",
+      "power": {
+        "type": "Literal",
+        "value": 7
+      },
+      "replacementEffects": [
+        {
+          "condition": {
+            "type": "Compares",
+            "value": {
+              "comparison": {
+                "type": "AtLeast"
+              },
+              "measured": {
+                "type": "LifeTotal",
+                "value": {
+                  "type": "Relative",
+                  "value": {
+                    "type": "You"
+                  }
+                }
+              },
+              "threshold": {
+                "type": "Literal",
+                "value": 7
+              }
+            }
+          },
+          "effect": {
+            "type": "LifeLossR",
+            "value": {
+              "matching": {
+                "whichCause": {
+                  "type": "ByDamage"
+                },
+                "whose": {
+                  "type": "You"
+                }
+              },
+              "rewrite": {
+                "type": "LeaveAtLeast",
+                "value": 7
+              }
+            }
+          }
+        }
+      ],
+      "toughness": {
+        "type": "Literal",
+        "value": 7
+      },
+      "triggeredAbilities": [
+        {
+          "condition": {
+            "type": "SelfEnters"
+          },
+          "intervening": {
+            "type": "Compares",
+            "value": {
+              "comparison": {
+                "type": "LessThan"
+              },
+              "measured": {
+                "type": "LifeTotal",
+                "value": {
+                  "type": "Relative",
+                  "value": {
+                    "type": "You"
+                  }
+                }
+              },
+              "threshold": {
+                "type": "Literal",
+                "value": 7
+              }
+            }
+          },
+          "modal": {
+            "modes": [
+              {
+                "clauses": [
+                  {
+                    "effects": [
+                      {
+                        "type": "SetLifeTotal",
+                        "value": {
+                          "player": {
+                            "type": "Relative",
+                            "value": {
+                              "type": "You"
+                            }
+                          },
+                          "quantity": {
+                            "type": "Literal",
+                            "value": 7
+                          }
+                        }
+                      }
+                    ]
+                  }
+                ]
+              }
+            ]
+          }
+        }
+      ],
+      "typeLine": {
+        "subtypes": [
+          {
+            "type": "Wurm"
+          }
+        ],
+        "types": [
+          {
+            "type": "Creature"
+          }
+        ]
+      }
+    }
+  ]
+}

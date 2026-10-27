@@ -1,0 +1,196 @@
+{
+  "description": "CR 613.4c: Jace's Phantasm gets +4/+4 as long as an opponent has ten or more cards in their graveyard",
+  "note": "Alice's own ten cards and bob's nine leave it a 1/1; bolting bob's Grizzly Bears makes his ten and it a 5/5.",
+  "board": {
+    "active": "alice",
+    "step": "PrecombatMain",
+    "seats": [
+      {
+        "name": "alice",
+        "manaPool": "R",
+        "battlefield": [
+          {
+            "card": "Jace's Phantasm",
+            "label": "phantasm"
+          }
+        ],
+        "hand": [
+          {
+            "card": "Lightning Bolt",
+            "label": "bolt"
+          }
+        ],
+        "graveyard": [
+          {
+            "card": "Island",
+            "label": "ag1"
+          },
+          {
+            "card": "Island",
+            "label": "ag2"
+          },
+          {
+            "card": "Island",
+            "label": "ag3"
+          },
+          {
+            "card": "Island",
+            "label": "ag4"
+          },
+          {
+            "card": "Island",
+            "label": "ag5"
+          },
+          {
+            "card": "Island",
+            "label": "ag6"
+          },
+          {
+            "card": "Island",
+            "label": "ag7"
+          },
+          {
+            "card": "Island",
+            "label": "ag8"
+          },
+          {
+            "card": "Island",
+            "label": "ag9"
+          },
+          {
+            "card": "Island",
+            "label": "ag10"
+          }
+        ],
+        "library": [
+          {
+            "card": "Island",
+            "label": "a1"
+          },
+          {
+            "card": "Island",
+            "label": "a2"
+          },
+          {
+            "card": "Island",
+            "label": "a3"
+          },
+          {
+            "card": "Island",
+            "label": "a4"
+          }
+        ]
+      },
+      {
+        "name": "bob",
+        "battlefield": [
+          {
+            "card": "Grizzly Bears",
+            "label": "bears"
+          }
+        ],
+        "graveyard": [
+          {
+            "card": "Island",
+            "label": "bg1"
+          },
+          {
+            "card": "Island",
+            "label": "bg2"
+          },
+          {
+            "card": "Island",
+            "label": "bg3"
+          },
+          {
+            "card": "Island",
+            "label": "bg4"
+          },
+          {
+            "card": "Island",
+            "label": "bg5"
+          },
+          {
+            "card": "Island",
+            "label": "bg6"
+          },
+          {
+            "card": "Island",
+            "label": "bg7"
+          },
+          {
+            "card": "Island",
+            "label": "bg8"
+          },
+          {
+            "card": "Island",
+            "label": "bg9"
+          }
+        ],
+        "library": [
+          {
+            "card": "Island",
+            "label": "b1"
+          },
+          {
+            "card": "Island",
+            "label": "b2"
+          },
+          {
+            "card": "Island",
+            "label": "b3"
+          },
+          {
+            "card": "Island",
+            "label": "b4"
+          }
+        ]
+      }
+    ]
+  },
+  "timeline": [
+    {
+      "turn": 1,
+      "step": "PrecombatMain",
+      "player": "alice",
+      "check": {
+        "PowerToughness": {
+          "object": "$phantasm",
+          "power": 1,
+          "toughness": 1
+        }
+      }
+    },
+    {
+      "turn": 1,
+      "step": "PrecombatMain",
+      "player": "alice",
+      "do": {
+        "Cast": {
+          "object": "$bolt",
+          "targets": [
+            "$bears"
+          ]
+        }
+      }
+    },
+    {
+      "turn": 1,
+      "step": "PrecombatMain",
+      "player": "alice",
+      "do": "Pass"
+    },
+    {
+      "turn": 1,
+      "step": "PrecombatMain",
+      "player": "alice",
+      "check": {
+        "PowerToughness": {
+          "object": "$phantasm",
+          "power": 5,
+          "toughness": 5
+        }
+      }
+    }
+  ]
+}

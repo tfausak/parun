@@ -1,0 +1,129 @@
+{
+  "faces": [
+    {
+      "manaCost": [
+        {
+          "type": "Generic",
+          "value": 3
+        },
+        {
+          "type": "OfType",
+          "value": {
+            "type": "Colored",
+            "value": {
+              "type": "Green"
+            }
+          }
+        }
+      ],
+      "name": "Fungal Sprouting",
+      "oracleText": "Create X 1/1 green Saproling creature tokens, where X is the greatest power among creatures you control.",
+      "spell": {
+        "modes": [
+          {
+            "clauses": [
+              {
+                "effects": [
+                  {
+                    "type": "Create",
+                    "value": {
+                      "card": {
+                        "faces": [
+                          {
+                            "colorIndicator": [
+                              {
+                                "type": "Green"
+                              }
+                            ],
+                            "name": "Saproling Token",
+                            "power": {
+                              "type": "Literal",
+                              "value": 1
+                            },
+                            "toughness": {
+                              "type": "Literal",
+                              "value": 1
+                            },
+                            "typeLine": {
+                              "subtypes": [
+                                {
+                                  "type": "Saproling"
+                                }
+                              ],
+                              "types": [
+                                {
+                                  "type": "Creature"
+                                }
+                              ]
+                            }
+                          }
+                        ]
+                      },
+                      "quantity": {
+                        "type": "Count",
+                        "value": {
+                          "aggregation": {
+                            "type": "Greatest",
+                            "value": {
+                              "type": "Measure",
+                              "value": {
+                                "type": "Power"
+                              }
+                            }
+                          },
+                          "filter": {
+                            "type": "And",
+                            "value": [
+                              {
+                                "type": "HasCardType",
+                                "value": {
+                                  "type": "Creature"
+                                }
+                              },
+                              {
+                                "type": "HeldBy",
+                                "value": {
+                                  "holder": {
+                                    "type": "Controller"
+                                  },
+                                  "relation": {
+                                    "type": "You"
+                                  }
+                                }
+                              }
+                            ]
+                          },
+                          "scope": {
+                            "type": "InZone",
+                            "value": {
+                              "player": {
+                                "type": "Relative",
+                                "value": {
+                                  "type": "AnyPlayer"
+                                }
+                              },
+                              "zone": {
+                                "type": "Battlefield"
+                              }
+                            }
+                          }
+                        }
+                      }
+                    }
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      },
+      "typeLine": {
+        "types": [
+          {
+            "type": "Sorcery"
+          }
+        ]
+      }
+    }
+  ]
+}

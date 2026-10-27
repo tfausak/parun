@@ -1,0 +1,117 @@
+{
+  "faces": [
+    {
+      "manaCost": [
+        {
+          "type": "Generic",
+          "value": 7
+        }
+      ],
+      "name": "Akroma's Memorial",
+      "oracleText": "Creatures you control have flying, first strike, vigilance, trample, haste, and protection from black and from red.",
+      "staticAbilities": [
+        {
+          "affected": {
+            "type": "Matching",
+            "value": {
+              "type": "And",
+              "value": [
+                {
+                  "type": "HasCardType",
+                  "value": {
+                    "type": "Creature"
+                  }
+                },
+                {
+                  "type": "HeldBy",
+                  "value": {
+                    "holder": {
+                      "type": "Controller"
+                    },
+                    "relation": {
+                      "type": "You"
+                    }
+                  }
+                }
+              ]
+            }
+          },
+          "modifications": [
+            {
+              "type": "GainKeyword",
+              "value": {
+                "type": "Flying"
+              }
+            },
+            {
+              "type": "GainKeyword",
+              "value": {
+                "type": "FirstStrike"
+              }
+            },
+            {
+              "type": "GainKeyword",
+              "value": {
+                "type": "Vigilance"
+              }
+            },
+            {
+              "type": "GainKeyword",
+              "value": {
+                "type": "Trample"
+              }
+            },
+            {
+              "type": "GainKeyword",
+              "value": {
+                "type": "Haste"
+              }
+            },
+            {
+              "type": "GainKeyword",
+              "value": {
+                "type": "Protection",
+                "value": {
+                  "quality": {
+                    "type": "HasColor",
+                    "value": {
+                      "type": "Black"
+                    }
+                  },
+                  "spares": null
+                }
+              }
+            },
+            {
+              "type": "GainKeyword",
+              "value": {
+                "type": "Protection",
+                "value": {
+                  "quality": {
+                    "type": "HasColor",
+                    "value": {
+                      "type": "Red"
+                    }
+                  },
+                  "spares": null
+                }
+              }
+            }
+          ]
+        }
+      ],
+      "typeLine": {
+        "supertypes": [
+          {
+            "type": "Legendary"
+          }
+        ],
+        "types": [
+          {
+            "type": "Artifact"
+          }
+        ]
+      }
+    }
+  ]
+}

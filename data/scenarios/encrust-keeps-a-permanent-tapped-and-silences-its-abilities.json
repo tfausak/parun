@@ -1,0 +1,143 @@
+{
+  "description": "CR 502.3 / 602.5: the permanent Encrust enchants doesn't untap during its controller's untap step and its activated abilities can't be activated",
+  "note": "Bob's tapped Shivan Dragon stays tapped through his untap step and its firebreathing is refused; his Grizzly Bears untaps.",
+  "board": {
+    "active": "alice",
+    "step": "PrecombatMain",
+    "seats": [
+      {
+        "name": "alice",
+        "manaPool": "UUU",
+        "hand": [
+          {
+            "card": "Encrust",
+            "label": "encrust"
+          }
+        ],
+        "library": [
+          {
+            "card": "Island",
+            "label": "a1"
+          },
+          {
+            "card": "Island",
+            "label": "a2"
+          },
+          {
+            "card": "Island",
+            "label": "a3"
+          },
+          {
+            "card": "Island",
+            "label": "a4"
+          }
+        ]
+      },
+      {
+        "name": "bob",
+        "battlefield": [
+          {
+            "card": "Shivan Dragon",
+            "label": "dragon",
+            "tapped": true
+          },
+          {
+            "card": "Grizzly Bears",
+            "label": "bears",
+            "tapped": true
+          },
+          {
+            "card": "Mountain",
+            "label": "mountain"
+          }
+        ],
+        "library": [
+          {
+            "card": "Island",
+            "label": "b1"
+          },
+          {
+            "card": "Island",
+            "label": "b2"
+          },
+          {
+            "card": "Island",
+            "label": "b3"
+          },
+          {
+            "card": "Island",
+            "label": "b4"
+          }
+        ]
+      }
+    ]
+  },
+  "timeline": [
+    {
+      "turn": 1,
+      "step": "PrecombatMain",
+      "player": "alice",
+      "do": {
+        "Cast": {
+          "object": "$encrust",
+          "targets": [
+            "$dragon"
+          ]
+        }
+      }
+    },
+    {
+      "turn": 1,
+      "step": "PrecombatMain",
+      "player": "alice",
+      "do": "Pass"
+    },
+    {
+      "turn": 2,
+      "step": "Upkeep",
+      "player": "bob",
+      "check": {
+        "Tapped": {
+          "object": "$dragon",
+          "tapped": true
+        }
+      }
+    },
+    {
+      "turn": 2,
+      "step": "Upkeep",
+      "player": "bob",
+      "check": {
+        "Tapped": {
+          "object": "$bears",
+          "tapped": false
+        }
+      }
+    },
+    {
+      "turn": 2,
+      "step": "PrecombatMain",
+      "player": "bob",
+      "refuse": {
+        "Activate": {
+          "object": "$dragon",
+          "mana": [
+            "$mountain"
+          ]
+        }
+      }
+    },
+    {
+      "turn": 2,
+      "step": "PrecombatMain",
+      "player": "bob",
+      "check": {
+        "PowerToughness": {
+          "object": "$dragon",
+          "power": 5,
+          "toughness": 5
+        }
+      }
+    }
+  ]
+}

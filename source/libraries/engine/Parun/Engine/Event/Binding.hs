@@ -546,10 +546,11 @@ eventBindingsOver board gs bearerBecame becameInGraveyard bearer you cond event 
     Binding.setTriggerPlayer defending Map.empty
   -- CR 702.83a's "that creature": the creature that attacked alone, which is the
   -- id the same event names -- and NOT the bearer, since rule 702.83a's condition
-  -- watches every creature its controller has. The defending player the event
-  -- also carries is not bound, because rule 702.83a names no player.
-  (TriggerCondition.CreatureAttacksAlone _, GameEvent.AttackerDeclared (AttackerDeclared.MkAttackerDeclared attacker _ _ _ _)) ->
-    Binding.setAttackingCreature attacker Map.empty
+  -- watches every creature its controller has. And CR 508.5's defending player
+  -- the event also carries, for Nefarox, Overlord of Grixis's "defending player
+  -- sacrifices a creature".
+  (TriggerCondition.CreatureAttacksAlone _, GameEvent.AttackerDeclared (AttackerDeclared.MkAttackerDeclared attacker defending _ _ _)) ->
+    Binding.setAttackingCreature attacker (Binding.setTriggerPlayer defending Map.empty)
   -- The same slot off the same event, for Marchesa's Decree's "that creature's
   -- controller" -- again not the bearer, which is a bystanding enchantment. CR
   -- 508.5's defending player goes unbound here where the SelfAttacks arm above
@@ -1588,14 +1589,13 @@ eventBindingSlots cond = case cond of
   -- 508.5's defending player is pointed at afterwards.
   TriggerCondition.SelfAttacksPermanent _ -> Set.empty
   -- CR 506.5's lone attacker, which the same event names -- rule 702.83a's
-  -- exalted is the reader. Where SelfAttacks above needs a slot for the PLAYER
-  -- and gets the creature free (it is the bearer), this one needs a slot for the
-  -- CREATURE and wants no player: the bearer is a bystander.
+  -- exalted is the reader -- and CR 508.5's defending player, Nefarox,
+  -- Overlord of Grixis's.
   --
   -- Unconditional, as this classification has to be: every AttackerDeclared event
-  -- carries an ObjectId, and matchesTrigger has already required the count to be
-  -- one.
-  TriggerCondition.CreatureAttacksAlone _ -> Set.singleton Binding.attackingCreature
+  -- carries an ObjectId and a PlayerId, and matchesTrigger has already required
+  -- the count to be one.
+  TriggerCondition.CreatureAttacksAlone _ -> Set.fromList [Binding.attackingCreature, Binding.triggerPlayer]
   -- The attacker, CreatureAttacksAlone's slot above -- Marchesa's Decree's "that
   -- creature's controller". CR 508.5's defending player is NOT bound alongside it:
   -- the match has already pinned that player to be CR 109.5's "you".
