@@ -3466,9 +3466,9 @@ slotBindings = resolvingBindings
 -- 122.8 tally through here.
 --
 -- A member of a GROUP the resolution has bound so far is one too, read live off
--- `resolving`: a group is a definition, never a target (CR 115.10a), so CR
--- 608.2b never drops it, and a member that is gone was moved by an earlier
--- instruction -- Consume's "its power", read off the permanent its edict
+-- `resolving`: a group names no target (CR 115.10a), so CR 608.2b never drops
+-- it, and CR 608.2h answers a member that has left off its last known
+-- information -- Consume's "its power", read off the permanent its edict
 -- sacrificed (PlayerSacrifices.permanents).
 --
 -- Any other id keeps viewWithLastKnown's blank for a gone object.

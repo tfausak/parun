@@ -2045,7 +2045,11 @@ chooseCardFromAmong resolving source controller legal chosen (ChosenCardFromAmon
   let viewOf = effectViewOf resolving source legal gs
       context = effectContext gs resolving controller source legal (slotBindings resolving gs)
       amount = maybe 0 Integer.toNaturalSaturating . Quantity.evaluateFor viewOf context gs resolving source
-      matching = matchingFromAmong legal resolving controller source gs filter_ members
+      -- CR 400.7: a member that has left is a new object, so it is no card
+      -- "from among them" to choose, though CR 608.2h still answers a read of it
+      -- (effectViewOf). A REGRESSION FENCE: nothing in the suite chooses from a
+      -- group after one of its members has left.
+      matching = matchingFromAmong legal resolving controller source gs filter_ (filter (\oid -> Maybe.isJust (Game.lookupObject oid gs)) members)
       pick purpose =
         pickByChooser
           resolving
