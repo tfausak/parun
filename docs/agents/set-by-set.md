@@ -51,7 +51,9 @@ Per set, in this order; steps 2 and 3 run in parallel lanes.
    - "Needs a capability": grouped under its issue, hardest first, a
      one-line note each on why.
 
-   Write `docs/sets/<set>.md` shaped like the previous set's. File one
+   Write `docs/sets/<set>.md` shaped like the previous set's census as its
+   census PR first wrote it (`git log --diff-filter=A --format=%h --
+   docs/sets/<prev>.md`, then `git show`), not the finished file. File one
    capability issue per missing capability (`gap`, an `area:*`,
    `expires:card-driven`, no priority; the issue-body conventions are
    below), or comment on an existing issue naming the card. Classify
