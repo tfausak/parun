@@ -264,21 +264,22 @@ static context attached enchants a
 -- them after the restriction (Whispersilk Cloak).
 evasive :: Target.Context -> Maybe Text.Text -> [TargetSlot.TargetSlot] -> [StaticAbility.StaticAbility Ability] -> [CombatRestriction.CombatRestriction] -> ([StaticAbility.StaticAbility Ability], [CombatRestriction.CombatRestriction], [[Text.Text]])
 evasive context attached enchants statics rs =
-  case [(s, r, ws) | s <- statics, r <- rs, (a, restriction) <- restricts r, let ws = together s a restriction, not (null ws)] of
+  case [(s, r, ws) | s <- statics, r <- rs, (a, restrictions) <- restricts r, let ws = together s a restrictions, not (null ws)] of
     (s, r, ws) : _ -> (List.delete s statics, List.delete r rs, [ws])
     [] -> (statics, rs, [])
   where
     restricts r = case r of
-      CombatRestriction.CantBeBlockedBy (CantBeBlockedBy.MkCantBeBlockedBy a b Nothing Nothing) -> fmap (\by -> (a, Text.pack "can't be blocked" <> by)) (blockedBy context b)
-      CombatRestriction.CantBlock (AffectedUnless.MkAffectedUnless a Nothing Nothing Nothing) -> [(a, Text.pack "can't block")]
+      CombatRestriction.CantBeBlockedBy (CantBeBlockedBy.MkCantBeBlockedBy a b Nothing Nothing) -> [(a, fmap (Text.pack "can't be blocked" <>) (blockedBy context b))]
+      CombatRestriction.CantBlock (AffectedUnless.MkAffectedUnless a Nothing Nothing Nothing) -> [(a, [Text.pack "can't block"])]
       _ -> []
-    together s a restriction = do
+    together s a restrictions = do
       Monad.guard (s == s {StaticAbility.condition = Nothing, StaticAbility.functionsFrom = Set.empty, StaticAbility.lingers = Nothing, StaticAbility.name = Nothing})
       subject <- affected context attached enchants (StaticAbility.affected s)
       other <- ruled context attached enchants a
       Monad.guard (Target.wording subject == Target.wording other)
       (verb, defined) <- modifications Static (Target.number subject) False context (Foldable.toList (StaticAbility.modifications s))
       Monad.guard (Text.null defined)
+      restriction <- restrictions
       let before = Prose.sentence (Target.wording subject <> Text.pack " " <> verb <> Text.pack " and " <> restriction)
           after = Prose.sentence (Target.wording subject <> Text.pack " " <> restriction <> Text.pack " and " <> verb)
       if any (Maybe.isJust . keywordOf) (StaticAbility.modifications s) then [after] else [before]
