@@ -1,0 +1,145 @@
+{
+  "faces": [
+    {
+      "activatedAbilities": [
+        {
+          "cost": {
+            "components": [
+              {
+                "type": "TapThis"
+              }
+            ],
+            "mana": [
+              {
+                "type": "Generic",
+                "value": 2
+              },
+              {
+                "type": "OfType",
+                "value": {
+                  "type": "Colored",
+                  "value": {
+                    "type": "Blue"
+                  }
+                }
+              }
+            ]
+          },
+          "modal": {
+            "modes": [
+              {
+                "clauses": [
+                  {
+                    "effects": [
+                      {
+                        "type": "MoveToZone",
+                        "value": {
+                          "placement": {
+                            "type": "Stated",
+                            "value": {
+                              "type": "Top"
+                            }
+                          },
+                          "ref": {
+                            "type": "AllOf",
+                            "value": [
+                              {
+                                "type": "InSlot",
+                                "value": "self"
+                              },
+                              {
+                                "type": "InSlot",
+                                "value": "target"
+                              }
+                            ]
+                          },
+                          "zone": {
+                            "type": "Library"
+                          }
+                        }
+                      },
+                      {
+                        "type": "Shuffle",
+                        "value": {
+                          "type": "HolderOfBound",
+                          "value": {
+                            "holder": {
+                              "type": "Owner"
+                            },
+                            "hop": {
+                              "type": "Itself"
+                            },
+                            "slot": "self"
+                          }
+                        }
+                      },
+                      {
+                        "type": "Shuffle",
+                        "value": {
+                          "type": "HolderOfBound",
+                          "value": {
+                            "holder": {
+                              "type": "Owner"
+                            },
+                            "hop": {
+                              "type": "Itself"
+                            },
+                            "slot": "target"
+                          }
+                        }
+                      }
+                    ]
+                  }
+                ],
+                "targetSlots": {
+                  "target": {
+                    "pool": {
+                      "type": "Creatures"
+                    }
+                  }
+                }
+              }
+            ]
+          }
+        }
+      ],
+      "manaCost": [
+        {
+          "type": "Generic",
+          "value": 1
+        },
+        {
+          "type": "OfType",
+          "value": {
+            "type": "Colored",
+            "value": {
+              "type": "Blue"
+            }
+          }
+        }
+      ],
+      "name": "Void Stalker",
+      "oracleText": "{2}{U}, {T}: Put this creature and target creature on top of their owners' libraries, then those players shuffle their libraries.",
+      "power": {
+        "type": "Literal",
+        "value": 2
+      },
+      "toughness": {
+        "type": "Literal",
+        "value": 1
+      },
+      "typeLine": {
+        "subtypes": [
+          {
+            "type": "Elemental"
+          }
+        ],
+        "types": [
+          {
+            "type": "Creature"
+          }
+        ]
+      }
+    }
+  ]
+}

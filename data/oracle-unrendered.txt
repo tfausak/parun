@@ -1404,6 +1404,7 @@ neverending-torment
 neverwinter-hydra
 new-way-forward
 nexus-of-fate
+nicol-bolas-planeswalker
 night-shift-of-the-living-dead
 nihiloor
 nimbus-maze
@@ -1598,6 +1599,7 @@ psychic-theft
 psychic-transfer
 psychic-venom
 public-enemy
+public-execution
 pull-from-eternity
 pulling-teeth
 pulmonic-sliver
@@ -1634,6 +1636,7 @@ rally-the-troops
 rambling-possum
 rampage-of-the-clans
 rampaging-ceratops
+rangers-path
 ransack
 ransom-note
 raphael-fiendish-savior
@@ -1657,6 +1660,7 @@ rebirth
 rebuff-the-wicked
 recall
 reciprocate
+reckless-brute
 red-cliffs-armada
 red-mana-battery
 red-priest-of-yawgmoth
@@ -1696,6 +1700,7 @@ reverse-the-sands
 revoke-privileges
 rhovanion-rampager
 rhox
+rhox-faithmender
 rhuk-hexgold-nabber
 rhystic-cave
 rhystic-circle
@@ -1705,7 +1710,12 @@ riftmarked-knight
 riftsweeper
 righteous-fury
 riling-dawnbreaker-signaling-roar
+ring-of-evos-isle
+ring-of-kalonia
 ring-of-maruf
+ring-of-thune
+ring-of-valkas
+ring-of-xathrid
 riptide-gearhulk
 rise-fall
 rise-from-the-grave
@@ -1843,6 +1853,7 @@ shellfish-scholar
 shessra-deaths-whisper
 shifting-sky
 shimatsu-the-bloodcloaked
+shimian-specter
 shizuko-caller-of-autumn
 showstopping-surprise
 shroofus-sproutsire
@@ -1877,6 +1888,7 @@ slimefoots-survey
 slimy-dualleech
 slivdrazi-monstrosity
 slobad-iron-goblin
+slumbering-dragon
 smallpox
 smog-smasher
 smoke-teller
@@ -1919,6 +1931,7 @@ spectral-searchlight
 spectral-shift
 spell-blast
 spellbook
+spelltwine
 sphere-of-safety
 sphinx-ambassador
 sphinx-of-clear-skies
@@ -2120,12 +2133,14 @@ throne-of-empires
 thrull-surgeon
 thunderbond-vanguard
 thundermane-dragon
+thundermaw-hellkite
 thunderous-debut
 ticket-turbotubes
 ticketomaton
 tidal-warrior
 tidal-wave
 tidewalker
+timberpack-wolf
 time-reversal
 time-stop
 time-stretch
@@ -2147,8 +2162,10 @@ too-greedily-too-deep
 toralfs-disciple
 torgaar-famine-incarnate
 torment-of-venom
+tormods-crypt
 tornado-elemental
 total-war
+touch-of-the-eternal
 tovolar-dire-overlord-tovolar-the-midnight-scourge
 toxic-deluge
 trade-secrets
@@ -2178,6 +2195,7 @@ trygon-predator
 tsabos-web
 turn-the-tables
 turn-to-frog
+turn-to-slag
 tusk-and-whiskers
 twincast
 twisted-fealty
@@ -2250,6 +2268,7 @@ vizier-of-many-faces
 vizier-of-remedies
 voda-sea-scavenger
 voice-of-all
+void-stalker
 void-winnower
 voidpouncer
 volatile-rift
@@ -2272,6 +2291,7 @@ wan-shi-tong-all-knowing
 wand-of-denial
 wanderguard-sentry
 wanderwine-prophets
+war-falcon
 warbreak-trumpeter
 warp-world
 warped-devotion
@@ -2293,6 +2313,7 @@ wee-champion
 wei-assassins
 weight-of-conscience
 weird-harvest
+welkin-tern
 well-rested
 wheel-of-sun-and-moon
 whim-of-volrath
@@ -2313,6 +2334,7 @@ wickersmiths-tools
 wicks-patrol
 wild-evocation
 wild-growth
+wild-guess
 wild-ricochet
 wildfire
 wildgrowth-walker
@@ -2333,6 +2355,7 @@ witchs-mark
 witherbloom-the-balancer
 withering-gaze
 witness-protection
+wits-end
 wizards-of-the-_
 wolf-in-_-clothing
 wolf-pack
@@ -2343,6 +2366,7 @@ word-of-command
 word-of-seizing
 words-of-worship
 workhorse
+worldfire
 worldly-counsel
 worldslayer
 wormfang-crab
@@ -2354,6 +2378,7 @@ wu-scout
 wu-spy
 wu-warship
 xathrid-demon
+xathrid-gorgon
 yare
 yasmin-khan
 yawgmoth-demon

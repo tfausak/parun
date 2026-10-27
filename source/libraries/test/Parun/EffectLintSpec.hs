@@ -1680,7 +1680,9 @@ effectObjectRefs effect =
         -- Word of Command's "choose a card from it", out of the hand it looked at.
         Effect.OfferCast offer -> [([CardFromAmong], OfferCast.ref offer)]
         Effect.GrantPlayFromExile grant -> read_ [GrantPlayFromExile.ref grant]
-        Effect.ForEach (ForEach.MkForEach ref _ _ _ _ _ _) -> read_ [ref]
+        -- Shimian Specter's "You choose a nonland card from it", asked by
+        -- Resolve.Common.loopMembers.
+        Effect.ForEach (ForEach.MkForEach ref _ _ _ _ _ _) -> [([CardFromAmong], ref)]
         Effect.ForEachNumber {} -> []
         Effect.Repeat {} -> []
         Effect.RepeatIf {} -> []
@@ -1702,8 +1704,8 @@ inertChoosers effect =
 -- through
 -- Resolve.Slots.objectRefObjects, whose AllOf arm is the union -- the scenario
 -- cr-601-3-flameskull-played-land-closes-flameskull-s-own-cast proves it.
--- ForEach sweeps its members through Resolve.Effect.objectRefRecipients, whose
--- AllOf arm is the union too -- Juxtapose's "you and target player", proved by
+-- ForEach sweeps an AllOf's members through Resolve.Common.loopMembers'
+-- objectRefRecipients read, whose AllOf arm is the union too -- Juxtapose's "you and target player", proved by
 -- the board-effect scenario cr-608-2d-juxtapose-exchanges-each-player-s-greatest-mana-value-creature-then-artifact.
 -- DealDamage reads each part's recipients through objectRefRecipients too --
 -- Inferno Elemental's "that creature", whichever of its two block slots is
