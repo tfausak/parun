@@ -1,6 +1,6 @@
 {
   "description": "CR 117.1a / 702.8a: Quicken draws a card and lets its controller cast the next sorcery spell this turn as though it had flash, once",
-  "note": "In bob's upkeep alice casts Quicken, then Divination at instant speed. A second Divination isn't castable, though she has the mana: the permission was spent.",
+  "note": "In bob's upkeep Divination isn't castable until alice casts Quicken; then it is. A second Divination isn't castable, though she has the mana: the permission was spent.",
   "board": {
     "active": "bob",
     "step": "Upkeep",
