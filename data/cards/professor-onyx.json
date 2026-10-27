@@ -546,7 +546,7 @@
         }
       ],
       "name": "Professor Onyx",
-      "oracleText": "Magecraft — Whenever you cast or copy an instant or sorcery spell, each opponent loses 2 life and you gain 2 life.\n+1: You lose 1 life. Look at the top three cards of your library. Put one of them into your hand and the rest into your graveyard.\n−3: Each opponent sacrifices a creature with the greatest power among creatures that player controls.\n−8: Each opponent may discard a card. If they don't, they lose 3 life. Repeat this process six more times.",
+      "oracleText": "Magecraft — Whenever you cast or copy an instant or sorcery spell, each opponent loses 2 life and you gain 2 life.\n[+1]: You lose 1 life. Look at the top three cards of your library. Put one of them into your hand and the rest into your graveyard.\n[−3]: Each opponent sacrifices a creature with the greatest power among creatures that player controls.\n[−8]: Each opponent may discard a card. If they don't, they lose 3 life. Repeat this process six more times.",
       "triggeredAbilities": [
         {
           "condition": {

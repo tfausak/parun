@@ -78,7 +78,7 @@
         }
       ],
       "name": "Vampire Bats",
-      "oracleText": "Flying\n{B}: This creature gets +1/+0 until end of turn. Activate no more than twice each turn.",
+      "oracleText": "Flying (This creature can't be blocked except by creatures with flying or reach.)\n{B}: This creature gets +1/+0 until end of turn. Activate no more than twice each turn.",
       "power": {
         "type": "Literal",
         "value": 0
