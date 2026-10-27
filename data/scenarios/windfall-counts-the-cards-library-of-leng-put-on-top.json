@@ -1,0 +1,40 @@
+{
+  "description": "CR 701.9c Windfall counts the cards Library of Leng put on top of a library as discarded",
+  "note": "Alice discards three cards and Library of Leng puts each on top of her library unrevealed; bob discards one. The three are still discarded and their owner is no characteristic, so each player draws three: alice draws her three back, and bob draws his three Islands, leaving the Forest. Refusing the hidden cards would make it one each.",
+  "board": {
+    "seats": [
+      {
+        "name": "alice",
+        "manaPool": "UUU",
+        "battlefield": [{ "card": "Library of Leng" }],
+        "hand": [
+          { "card": "Windfall", "label": "windfall" },
+          { "card": "Hill Giant" },
+          { "card": "Hill Giant" },
+          { "card": "Hill Giant" }
+        ],
+        "library": [{ "card": "Forest" }]
+      },
+      {
+        "name": "bob",
+        "hand": [{ "card": "Llanowar Elves" }],
+        "library": [{ "card": "Island" }, { "card": "Island" }, { "card": "Island" }, { "card": "Forest" }]
+      }
+    ],
+    "active": "alice",
+    "step": "PrecombatMain"
+  },
+  "timeline": [
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "do": { "Cast": { "object": "$windfall" } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "do": "Pass" },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "do": { "Answer": { "prompt": "ChooseRedirect", "with": { "type": "Exercises" } } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "do": { "Answer": { "prompt": "ChooseRedirect", "with": { "type": "Exercises" } } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "do": { "Answer": { "prompt": "ChooseRedirect", "with": { "type": "Exercises" } } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "do": { "Answer": { "prompt": "ArrangeLibraryArrivals", "with": [0, 1, 2] } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "check": { "Count": { "player": "bob", "zone": "Hand", "card": "Island", "count": 3 } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "check": { "Count": { "player": "alice", "zone": "Hand", "card": "Hill Giant", "count": 3 } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "check": { "Count": { "player": "bob", "zone": "Library", "card": "Forest", "count": 1 } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "check": { "Count": { "player": "alice", "zone": "Library", "card": "Forest", "count": 1 } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "check": { "Count": { "player": "bob", "zone": "Graveyard", "card": "Llanowar Elves", "count": 1 } } }
+  ]
+}

@@ -530,7 +530,8 @@ spec s = Spec.describe s "Parun.Engine.Filter" $ do
       Spec.assertBool s (Filter.matches (reached 1) blackCreature (Filter.Type.HeldBy Holder.Controller PlayerRelation.You)) "and disagrees with it on the very same view: the perspective still controls this creature where the recipient does not"
 
     -- HeldBy's vacuity posture on both sides. No recipient at all is every
-    -- position but a per-recipient effect's quantity.
+    -- position but a per-recipient effect's quantity and a fold over players'
+    -- member quantity.
     Spec.it s "is False when either player is absent" $ do
       let noController = blackCreature {Filter.controller = Nothing}
       Spec.assertBool s (not (Filter.matches (reached 0) noController (Filter.Type.HeldByRecipient Holder.Controller))) "no candidate controller"

@@ -65,7 +65,9 @@ data Scope
     -- grants the find "to a public zone" (CR 400.2's list, which
     -- Parun.Engine.Game.isHiddenZone encodes), and CR 701.9c leaves a card
     -- discarded into a hidden zone with every characteristic undefined only when
-    -- it got there without being revealed.
+    -- it got there without being revealed. Such a discard still counts toward a
+    -- tally asking nothing of characteristics (Flux's "that many";
+    -- Parun.Engine.Count.countsWithoutCharacteristics).
     --
     -- The slot is read through Parun.Engine.Filter's slot map exactly as
     -- Filter.IsBound is, and may be either a CR 115.10a group binding whose ids
