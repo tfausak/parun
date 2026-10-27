@@ -73,7 +73,15 @@
           },
           "modifications": [
             {
-              "type": "SetLandSubtypeToChosen"
+              "type": "ChosenSubtype",
+              "value": {
+                "family": {
+                  "type": "BasicLandType"
+                },
+                "mode": {
+                  "type": "Replace"
+                }
+              }
             }
           ]
         }

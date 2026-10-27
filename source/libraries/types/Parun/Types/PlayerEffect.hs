@@ -53,8 +53,10 @@ data PlayerEffect
     --
     -- Nothing is every ability; Just a designator narrows it to the abilities
     -- under that rule-702 keyword (Parun.Types.ActivatedAbility.keyword), Kang the
-    -- Conqueror's "power-up abilities can't be activated".
-    CantActivateAbilities (Maybe (KeywordDesignator.KeywordDesignator Keyword.Keyword))
+    -- Conqueror's "power-up abilities can't be activated". The Filter names
+    -- the abilities' SOURCES, Grand Abolisher's "abilities of artifacts,
+    -- creatures, or enchantments"; the empty And is every source.
+    CantActivateAbilities (Maybe (KeywordDesignator.KeywordDesignator Keyword.Keyword)) (Filter.Filter Keyword.Keyword)
   | -- | CR 601.3 / Rule of Law: this player can't cast more than this many spells
     -- each turn.
     CantCastMoreThan Natural.Natural

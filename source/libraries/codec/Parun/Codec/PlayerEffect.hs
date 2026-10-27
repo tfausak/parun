@@ -27,6 +27,8 @@ import qualified Parun.Codec.TargetRestriction as TargetRestriction
 import qualified Parun.JsonCodec.Arm as Arm
 import qualified Parun.JsonCodec.Codec as Codec
 import qualified Parun.JsonCodec.Common as Common
+import qualified Parun.JsonCodec.Fields as Fields
+import qualified Parun.Types.Filter as Filter.Type
 import qualified Parun.Types.PlayerEffect as PlayerEffect
 
 -- | The wire format is unchanged by the conversion to a bundle; what it adds is
@@ -34,10 +36,17 @@ import qualified Parun.Types.PlayerEffect as PlayerEffect
 codec :: Codec.Codec PlayerEffect.PlayerEffect
 codec =
   let filterCodec = Filter.codec Keyword.codec
+      -- The designator absent is every ability; the source Filter absent, the
+      -- empty And, every source.
+      activationBan =
+        Fields.object $
+          (,)
+            <$> Fields.defaulted "designator" Nothing (Common.maybe (KeywordDesignator.codec Keyword.codec)) fst
+            <*> Fields.defaulted "sources" (Filter.Type.And []) filterCodec snd
    in Arm.tagged
         tagOf
         [ Arm.nullary "CantCastSpells" PlayerEffect.CantCastSpells,
-          Arm.payload "CantActivateAbilities" (Common.maybe (KeywordDesignator.codec Keyword.codec)) PlayerEffect.CantActivateAbilities (\x -> case x of PlayerEffect.CantActivateAbilities y -> Just y; _ -> Nothing),
+          Arm.payload "CantActivateAbilities" activationBan (uncurry PlayerEffect.CantActivateAbilities) (\x -> case x of PlayerEffect.CantActivateAbilities y z -> Just (y, z); _ -> Nothing),
           Arm.payload "CantCastMoreThan" Common.natural PlayerEffect.CantCastMoreThan (\x -> case x of PlayerEffect.CantCastMoreThan y -> Just y; _ -> Nothing),
           Arm.payload "ModifyCost" CostModifier.codec PlayerEffect.ModifyCost (\x -> case x of PlayerEffect.ModifyCost y -> Just y; _ -> Nothing),
           Arm.payload "AlternativeActivationCost" AlternativeActivationCost.codec PlayerEffect.AlternativeActivationCost (\x -> case x of PlayerEffect.AlternativeActivationCost y -> Just y; _ -> Nothing),

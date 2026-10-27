@@ -59,6 +59,7 @@ import qualified Parun.Types.CostReduction as CostReduction
 import qualified Parun.Types.CounterCause as CounterCause
 import qualified Parun.Types.DelayedTrigger as DelayedTrigger
 import qualified Parun.Types.DuringPhase as DuringPhase
+import qualified Parun.Types.Effect as Effect
 import qualified Parun.Types.EntwineDecision as EntwineDecision
 import qualified Parun.Types.ExilePlayPermission as ExilePlayPermission
 import qualified Parun.Types.Expiry as Expiry
@@ -3050,10 +3051,11 @@ closeTargetSlotNames declared have =
 -- (Rule 702.33g states the general case, "kicked" for "chose to pay the
 -- awaken cost".)
 --
--- A slot read by NO clause and named by no sibling cannot occur here: the
--- CardSpec D4 lint (`modalSlotsOffend`) holds every declared slot of a mode to
--- being read by SOME clause of that mode or SOME sibling slot's pool/filter/
--- bound, union over the whole mode rather than any one clause.
+-- A slot read by NO clause and named by no sibling is read by a delayed ability
+-- the mode arms, or not at all: the CardSpec D4 lint (`modalSlotsOffend`) holds
+-- every declared slot of a mode to being read by SOME clause of that mode, SOME
+-- sibling slot's pool/filter/bound, or the Filters of a delayed ability it arms,
+-- union over the whole mode rather than any one clause.
 --
 -- Parametric in HOW a clause's applicability is judged, so this one fold
 -- serves both readers: Cast.castProposed's CR 601.2c step passes
@@ -3062,8 +3064,18 @@ closeTargetSlotNames declared have =
 -- only which alternative-cost candidate is being asked about).
 trimModeTargetSlotsBy :: (Clause.Clause Card.Type.Card (GrantedAbility.GrantedAbility Card.Type.Card) -> Bool) -> Mode.Mode Card.Type.Card (GrantedAbility.GrantedAbility Card.Type.Card) -> Mode.Mode Card.Type.Card (GrantedAbility.GrantedAbility Card.Type.Card)
 trimModeTargetSlotsBy applies mode =
-  let applying = filter applies (Foldable.toList (Mode.clauses mode))
-      direct = Set.unions (fmap clauseTargetSlotNames applying)
+  let clauses = Foldable.toList (Mode.clauses mode)
+      applying = filter applies clauses
+      -- CR 603.7a / 603.7c: a delayed ability this creates may refer to an
+      -- object the spell targeted, so a declared slot no clause reads is the
+      -- armed ability's (Hunter's Insight's "that creature"), filled when an
+      -- applying clause arms one.
+      arms = any (any isArm . Clause.effects) applying
+      isArm effect = case effect of
+        Effect.ArmDelayedTrigger {} -> True
+        _ -> False
+      unread = Set.difference (Map.keysSet (Mode.targetSlots mode)) (Set.unions (fmap clauseTargetSlotNames clauses))
+      direct = Set.unions (fmap clauseTargetSlotNames applying) <> (if arms then unread else Set.empty)
       needed = closeTargetSlotNames (Mode.targetSlots mode) direct
    in mode {Mode.targetSlots = Map.restrictKeys (Mode.targetSlots mode) needed}
 

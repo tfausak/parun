@@ -662,6 +662,7 @@ import qualified Parun.Codec.StepBeginsSpec
 import qualified Parun.Codec.StickerKindSpec
 import qualified Parun.Codec.StickerSheetSpec
 import qualified Parun.Codec.StoredResultSpec
+import qualified Parun.Codec.SubtypeFamilySpec
 import qualified Parun.Codec.SubtypeSpec
 import qualified Parun.Codec.SubtypesAreSpec
 import qualified Parun.Codec.SuperlativeSpec
@@ -1597,6 +1598,7 @@ spec s registry corpus = do
   Parun.Codec.StickerSheetSpec.spec s
   Parun.Codec.StoredResultSpec.spec s
   Parun.Codec.TextWordSpec.spec s
+  Parun.Codec.SubtypeFamilySpec.spec s
   Parun.Codec.WordFamilySpec.spec s
   Parun.Codec.SubtypesAreSpec.spec s
   Parun.Codec.SubtypeSpec.spec s

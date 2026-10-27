@@ -5176,18 +5176,10 @@ mintedRemovalRestrictionsFor keyword =
 -- 613.7e restamps each attach, so that is "already attached when the effect
 -- started to apply").
 grantedBy :: ObjectId -> Set.Set Color.Color -> Maybe PlayerId -> [ObjectId] -> Keyword -> Keyword
-grantedBy granter chosen you already keyword = case keyword of
+grantedBy granter chosen you already keyword = case withChosenColors chosen keyword of
   Keyword.Protection protection ->
-    Keyword.Protection
-      protection
-        { Protection.quality = case Protection.quality protection of
-            Filter.HasChosenColor -> case Set.toList chosen of
-              [color] -> Filter.HasColor color
-              colors -> Filter.Or (fmap Filter.HasColor colors)
-            quality -> quality,
-          Protection.spares = fmap spare (Protection.spares protection)
-        }
-  _ -> keyword
+    Keyword.Protection protection {Protection.spares = fmap spare (Protection.spares protection)}
+  baked -> baked
   where
     spare filter_ = case filter_ of
       Filter.IsSource -> Filter.IsObject granter
@@ -5195,6 +5187,24 @@ grantedBy granter chosen you already keyword = case keyword of
       Filter.AttachedNoLaterThanSource -> Filter.Or (fmap Filter.IsObject already)
       Filter.And filters -> Filter.And (fmap spare filters)
       _ -> filter_
+
+-- CR 607.2d / 608.2h: a bare Filter.HasChosenColor protection quality with
+-- the chosen colours written in -- Filter.HasColor, an Or of them where several
+-- were chosen, and the empty Or, protection from nothing, where none was.
+-- grantedBy's first half, and Parun.Engine.Projection.freezeQuantities' whole
+-- answer for a resolution's grant (Stave Off), whose source has left the stack
+-- by the time the grant is projected.
+withChosenColors :: Set.Set Color.Color -> Keyword -> Keyword
+withChosenColors chosen keyword = case keyword of
+  Keyword.Protection protection
+    | Protection.quality protection == Filter.HasChosenColor ->
+        Keyword.Protection
+          protection
+            { Protection.quality = case Set.toList chosen of
+                [color] -> Filter.HasColor color
+                colors -> Filter.Or (fmap Filter.HasColor colors)
+            }
+  _ -> keyword
 
 -- Exhaustive for `abilitiesFor`'s reason: the next keyword that forbids an
 -- attachment must break this build rather than silently forbid nothing.

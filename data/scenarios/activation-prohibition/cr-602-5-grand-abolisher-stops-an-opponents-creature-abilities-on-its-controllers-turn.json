@@ -1,0 +1,34 @@
+{
+  "description": "CR 602.5 / 605.1a Grand Abolisher stops an opponent activating his creatures' abilities, mana abilities among them, and casting spells during its controller's turn, but not tapping a land",
+  "note": "On alice's turn bob is offered only his Forest's mana ability: not his Llanowar Elves' (a mana ability is an activated ability), not his Prodigal Sorcerer's, and no Giant Growth. Alice's own Elves stays offered to her. On bob's own turn all four are back.",
+  "board": {
+    "seats": [
+      {
+        "name": "alice",
+        "battlefield": [
+          { "card": "Grand Abolisher", "label": "abolisher", "ready": true },
+          { "card": "Llanowar Elves", "label": "aliceelves", "ready": true }
+        ],
+        "library": [{ "card": "Island" }, { "card": "Island" }, { "card": "Island" }]
+      },
+      {
+        "name": "bob",
+        "battlefield": [
+          { "card": "Forest", "label": "forest", "ready": true },
+          { "card": "Llanowar Elves", "label": "elves", "ready": true },
+          { "card": "Prodigal Sorcerer", "label": "sorcerer", "ready": true }
+        ],
+        "hand": [{ "card": "Giant Growth", "label": "growth" }],
+        "library": [{ "card": "Swamp" }, { "card": "Swamp" }, { "card": "Swamp" }]
+      }
+    ],
+    "active": "alice",
+    "step": "PrecombatMain"
+  },
+  "timeline": [
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "check": { "View": { "of": "Offered", "player": "alice", "is": ["Pass", "ActivateManaAbility $aliceelves"] } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "bob", "check": { "View": { "of": "Offered", "player": "bob", "is": ["Pass", "ActivateManaAbility $forest"] } } },
+    { "turn": 1, "step": "DeclareAttackers", "player": "alice", "do": { "Attack": [] } },
+    { "turn": 2, "step": "PrecombatMain", "player": "bob", "check": { "View": { "of": "Offered", "player": "bob", "is": ["Pass", "PlayLand Swamp#3", "Cast $growth", "Activate $sorcerer", "ActivateManaAbility $forest", "ActivateManaAbility $elves"] } } }
+  ]
+}

@@ -406,7 +406,7 @@ theRingDrainsOnCombatDamage =
       -- or does not, and an ability that exists and declines to trigger is a
       -- different thing.
       Mint.trigger
-        (TriggerCondition.PermanentDealsCombatDamageToPlayer (PermanentDealsCombatDamageToPlayer.MkPermanentDealsCombatDamageToPlayer yourRingBearer PlayerRelation.AnyPlayer))
+        (TriggerCondition.PermanentDealsCombatDamageToPlayer (PermanentDealsCombatDamageToPlayer.MkPermanentDealsCombatDamageToPlayer yourRingBearer PlayerRelation.AnyPlayer False))
         (Seq.singleton effect)
 
 -- | CR 701.54c's first clause, "Your Ring-bearer is legendary", as the emblem's one

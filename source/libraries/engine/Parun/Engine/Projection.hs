@@ -126,6 +126,7 @@ import qualified Parun.Types.StaticAbility as StaticAbility
 import qualified Parun.Types.StickerContent as StickerContent
 import qualified Parun.Types.StickerPlacement as StickerPlacement
 import qualified Parun.Types.Subtype as Subtype.Type
+import qualified Parun.Types.SubtypeFamily as SubtypeFamily
 import qualified Parun.Types.Supertype as Supertype
 import qualified Parun.Types.TargetSlot as TargetSlot
 import qualified Parun.Types.TextWord as TextWord
@@ -176,7 +177,7 @@ layer m = case m of
   Modification.SetBasePowerToughness {} -> Layer.SetPT
   Modification.ModifyPowerToughness {} -> Layer.ModifyPT
   Modification.LandSubtype {} -> Layer.Type
-  Modification.SetLandSubtypeToChosen -> Layer.Type
+  Modification.ChosenSubtype {} -> Layer.Type
   Modification.CreatureSubtype {} -> Layer.Type
   Modification.AddEveryCreatureSubtype -> Layer.Type
   -- CR 613.1d, and a regression fence rather than a proved behaviour: no board
@@ -566,7 +567,7 @@ applyModification textBoxOf viewOf src stamp gs oid unitTypes affected m pc =
         Modification.LandSubtype mode s -> case mode of
           ChangeMode.Replace -> setLandSubtypeTo unitTypes s pc
           ChangeMode.InAddition -> gainSubtype unitTypes s pc
-        -- CR 305.7's set again, with the type read off the source's own entry
+        -- The two arms above, with the type read off the source's own entry
         -- choice (CR 614.1c). An unchosen source sets and strips nothing rather
         -- than guessing a type, the posture ChosenColor takes toward an
         -- unchosen colour. That leaves this arm disagreeing with setsLandSubtype,
@@ -574,11 +575,11 @@ applyModification textBoxOf viewOf src stamp gs oid unitTypes affected m pc =
         -- abilities; unreachable, since the only static producer is an entry
         -- replacement whose rewrite writes the field before the permanent is on
         -- the battlefield to be projected, and a resolution stores this arm
-        -- already baked into LandSubtype Replace (freezeQuantities).
-        Modification.SetLandSubtypeToChosen ->
+        -- already baked (freezeQuantities).
+        Modification.ChosenSubtype mode family ->
           case Game.currentChoice Chosen.Subtype src gs of
             Nothing -> pc
-            Just s -> setLandSubtypeTo unitTypes s pc
+            Just s -> applyModification textBoxOf viewOf src stamp gs oid unitTypes affected (chosenSubtypeAs mode family s) pc
         -- CR 612.1/612.2: a text-changing effect swaps a subtype word in the type
         -- line, the rules text, the keywords (CR 702.14a) and the CDA (CR 208.2a /
         -- 604.3), and a colour word in the rules text and keywords. Layer 3, so
@@ -778,7 +779,7 @@ cardTypesAfter m types = case m of
   Modification.GrantsStationToughness -> types
   Modification.Intensify _ -> types
   Modification.LandSubtype {} -> types
-  Modification.SetLandSubtypeToChosen -> types
+  Modification.ChosenSubtype {} -> types
   Modification.CreatureSubtype {} -> types
   Modification.AddEveryCreatureSubtype -> types
   Modification.LoseEveryCreatureSubtype -> types
@@ -1571,8 +1572,12 @@ freezeQuantities viewOf gs announcedOn source context m =
    in case m of
         Modification.SetBasePowerToughness (SetBasePowerToughness.MkSetBasePowerToughness p t) -> fmap Modification.SetBasePowerToughness (SetBasePowerToughness.MkSetBasePowerToughness <$> traverse freeze p <*> traverse freeze t)
         Modification.ModifyPowerToughness (ModifyPowerToughness.MkModifyPowerToughness p t) -> fmap Modification.ModifyPowerToughness (ModifyPowerToughness.MkModifyPowerToughness <$> freeze p <*> freeze t)
-        -- No quantity to freeze; named explicitly per the exhaustiveness discipline.
-        Modification.GainKeyword _ -> Just m
+        -- CR 608.2h: the colour the source chose as this resolves is locked
+        -- into a "protection from the chosen color" grant, ChosenColor's reason
+        -- below -- the spell is in a graveyard by the time the grant is
+        -- projected (Stave Off). data/scenarios/'s Stave Off scenario proves it.
+        Modification.GainKeyword k ->
+          Just (Modification.GainKeyword (Keyword.withChosenColors (Maybe.fromMaybe Set.empty (Game.choiceWithLastKnown Chosen.Colors (Game.readingAcquisition announcedOn source gs source) source gs)) k))
         -- Its cost is derived at projection time, not evaluated from a Quantity,
         -- so there is nothing here to freeze.
         Modification.GainKeywordAtManaCost _ -> Just m
@@ -1595,8 +1600,8 @@ freezeQuantities viewOf gs announcedOn source context m =
         -- effect already stored. Nothing for a source that chose none. Proved
         -- by data/scenarios/'s Mystic Compass scenario, which Disenchants the
         -- Compass after it resolves.
-        Modification.SetLandSubtypeToChosen ->
-          Modification.LandSubtype ChangeMode.Replace <$> Game.choiceWithLastKnown Chosen.Subtype (Game.readingAcquisition announcedOn source gs source) source gs
+        Modification.ChosenSubtype mode family ->
+          chosenSubtypeAs mode family <$> Game.choiceWithLastKnown Chosen.Subtype (Game.readingAcquisition announcedOn source gs source) source gs
         Modification.CreatureSubtype {} -> Just m
         Modification.AddEveryCreatureSubtype -> Just m
         Modification.LoseEveryCreatureSubtype -> Just m
@@ -1613,7 +1618,7 @@ freezeQuantities viewOf gs announcedOn source context m =
         Modification.SetControllerToSource -> Just m
         Modification.Colors {} -> Just m
         -- CR 608.2h: the colour the source holds as this resolves is locked
-        -- in, SetLandSubtypeToChosen's reason. Proved by data/scenarios/'s
+        -- in, ChosenSubtype's reason. Proved by data/scenarios/'s
         -- Distorting Lens scenario, whose second activation recolours another
         -- permanent; the InAddition arm is a regression fence, no resolution in
         -- data/cards/ storing it.
@@ -1661,7 +1666,7 @@ quantitiesOf m = case m of
   -- Carries a KeywordFamily, which is payload-free and nests nothing at all.
   Modification.LoseKeywordFamily _ -> []
   Modification.LandSubtype {} -> []
-  Modification.SetLandSubtypeToChosen -> []
+  Modification.ChosenSubtype {} -> []
   Modification.CreatureSubtype {} -> []
   Modification.AddEveryCreatureSubtype -> []
   Modification.LoseEveryCreatureSubtype -> []
@@ -1713,7 +1718,7 @@ referenceQuery m = case m of
   Modification.LoseKeyword _ -> Nothing
   Modification.LoseKeywordFamily _ -> Nothing
   Modification.LandSubtype {} -> Nothing
-  Modification.SetLandSubtypeToChosen -> Nothing
+  Modification.ChosenSubtype {} -> Nothing
   Modification.CreatureSubtype {} -> Nothing
   Modification.AddEveryCreatureSubtype -> Nothing
   Modification.LoseEveryCreatureSubtype -> Nothing
@@ -1740,6 +1745,13 @@ referenceQuery m = case m of
 referenceQueries :: GameState -> Set (Filter.Type.Filter Keyword)
 referenceQueries gs = Set.fromList (Maybe.mapMaybe (referenceQuery . gModification) (gather gs))
 
+-- CR 613.1d: a ChosenSubtype with its source's choice written in, as the
+-- family says.
+chosenSubtypeAs :: ChangeMode.ChangeMode -> SubtypeFamily.SubtypeFamily -> Subtype.Type.Subtype -> Modification.Modification ability
+chosenSubtypeAs mode family s = case family of
+  SubtypeFamily.BasicLandType -> Modification.LandSubtype mode s
+  SubtypeFamily.CreatureType -> Modification.CreatureSubtype mode s
+
 -- CR 305.7: does this modification SET a land's subtype, and so strip the land's
 -- rules text? Total, like removesAbilities: a new subtype-setting Modification
 -- must break this build rather than silently answer False.
@@ -1751,8 +1763,11 @@ setsLandSubtype m = case m of
     ChangeMode.Replace -> True
     ChangeMode.InAddition -> False
   -- CR 305.7 does not care where the type came from: a type chosen as the source
-  -- entered (CR 614.1c) strips rules text as a printed one does.
-  Modification.SetLandSubtypeToChosen -> True
+  -- entered (CR 614.1c) strips rules text as a printed one does. A chosen
+  -- creature type is CreatureSubtype's answer below.
+  Modification.ChosenSubtype mode family -> case family of
+    SubtypeFamily.BasicLandType -> setsLandSubtype (Modification.LandSubtype mode Subtype.Type.Forest)
+    SubtypeFamily.CreatureType -> False
   -- An ability grant is layer 6 and sets no subtype at all.
   Modification.GainAbility _ -> False
   Modification.GainAbilitiesOfSource _ -> False
@@ -1813,7 +1828,7 @@ setsLandSubtype m = case m of
 -- affected set.
 type SetEffect = (ObjectId, Maybe Natural, Affected.Affected)
 
--- Every LandSubtype Replace and SetLandSubtypeToChosen effect in the game, for a
+-- Every LandSubtype Replace and basic-land ChosenSubtype Replace effect in the game, for a
 -- reader OUTSIDE the layer fold. A legitimate case-on-Modification --
 -- Projection is its sole home. CR 604.2's "as long as"
 -- gate is answered here against the same seed list gather feeds its own gates, so
@@ -3008,7 +3023,7 @@ removesAbilities m = case m of
   -- by setLandSubtypeTo and the two gates beside it, never a layer-6 removal.
   -- setsLandSubtype is the classification; this one answers CR 613.1f.
   Modification.LandSubtype {} -> False
-  Modification.SetLandSubtypeToChosen -> False
+  Modification.ChosenSubtype {} -> False
   Modification.CreatureSubtype {} -> False
   Modification.AddEveryCreatureSubtype -> False
   Modification.LoseEveryCreatureSubtype -> False
@@ -4200,7 +4215,7 @@ modificationWrites m = case m of
   Modification.LandSubtype mode _ -> case mode of
     ChangeMode.Replace -> Set.fromList [Subtypes, Keywords]
     ChangeMode.InAddition -> Set.singleton Subtypes
-  Modification.SetLandSubtypeToChosen -> Set.fromList [Subtypes, Keywords]
+  Modification.ChosenSubtype mode family -> modificationWrites (chosenSubtypeAs mode family Subtype.Type.Forest)
   Modification.CreatureSubtype {} -> Set.singleton Subtypes
   Modification.AddEveryCreatureSubtype -> Set.singleton Subtypes
   -- The honest answer -- the arm writes PC.subtypes and nothing else, and CR
@@ -4318,7 +4333,7 @@ modificationReads m = case m of
   Modification.GrantsStationToughness -> Set.empty
   Modification.Intensify n -> quantityReads n
   Modification.LandSubtype {} -> Set.empty
-  Modification.SetLandSubtypeToChosen -> Set.empty
+  Modification.ChosenSubtype {} -> Set.empty
   Modification.CreatureSubtype {} -> Set.empty
   Modification.AddEveryCreatureSubtype -> Set.empty
   Modification.LoseEveryCreatureSubtype -> Set.empty
@@ -6177,7 +6192,7 @@ grantsKeywordWhere p m = case m of
   Modification.SetBasePowerToughness {} -> False
   Modification.ModifyPowerToughness {} -> False
   Modification.LandSubtype {} -> False
-  Modification.SetLandSubtypeToChosen -> False
+  Modification.ChosenSubtype {} -> False
   Modification.CreatureSubtype {} -> False
   Modification.AddEveryCreatureSubtype -> False
   Modification.LoseEveryCreatureSubtype -> False
@@ -6258,7 +6273,7 @@ grantsMintingType m = case m of
   Modification.SetBasePowerToughness {} -> False
   Modification.ModifyPowerToughness {} -> False
   Modification.LandSubtype {} -> False
-  Modification.SetLandSubtypeToChosen -> False
+  Modification.ChosenSubtype {} -> False
   Modification.CreatureSubtype {} -> False
   Modification.AddEveryCreatureSubtype -> False
   Modification.LoseEveryCreatureSubtype -> False
@@ -6354,7 +6369,7 @@ grantsAbilityWhere p m = case m of
   Modification.SetBasePowerToughness {} -> False
   Modification.ModifyPowerToughness {} -> False
   Modification.LandSubtype {} -> False
-  Modification.SetLandSubtypeToChosen -> False
+  Modification.ChosenSubtype {} -> False
   Modification.CreatureSubtype {} -> False
   Modification.AddEveryCreatureSubtype -> False
   Modification.LoseEveryCreatureSubtype -> False

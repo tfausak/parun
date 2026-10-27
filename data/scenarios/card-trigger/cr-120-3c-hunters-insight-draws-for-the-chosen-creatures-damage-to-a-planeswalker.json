@@ -1,0 +1,43 @@
+{
+  "description": "CR 120.3c / 603.7 Hunter's Insight draws for the chosen creature's combat damage to a planeswalker, and not for another attacker's damage to the player",
+  "note": "Alice's Insight chooses her Craw Wurm, which kills bob's Ajani Goldmane with six damage while her unchosen Grizzly Bears hit bob for two: she draws six, the Wurm's damage to the planeswalker the dead Ajani took, and nothing for the Bears.",
+  "board": {
+    "seats": [
+      {
+        "name": "alice",
+        "battlefield": [
+          { "card": "Forest", "label": "f1", "ready": true },
+          { "card": "Forest", "label": "f2", "ready": true },
+          { "card": "Forest", "label": "f3", "ready": true },
+          { "card": "Craw Wurm", "label": "wurm", "ready": true },
+          { "card": "Grizzly Bears", "label": "bear", "ready": true }
+        ],
+        "hand": [{ "card": "Hunter's Insight", "label": "insight" }],
+        "library": [
+          { "card": "Island" }, { "card": "Island" }, { "card": "Island" }, { "card": "Island" },
+          { "card": "Island" }, { "card": "Island" }, { "card": "Island" }, { "card": "Island" },
+          { "card": "Island" }, { "card": "Island" }
+        ]
+      },
+      {
+        "name": "bob",
+        "battlefield": [
+          { "card": "Ajani Goldmane", "label": "ajani", "counters": [{ "key": { "type": "Loyalty" }, "value": 4 }] }
+        ],
+        "library": [{ "card": "Swamp" }, { "card": "Swamp" }]
+      }
+    ],
+    "active": "alice",
+    "step": "PrecombatMain"
+  },
+  "timeline": [
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "do": { "Cast": { "object": "$insight", "targets": ["$wurm"], "mana": ["$f1", "$f2", "$f3"] } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "do": "Pass" },
+    { "turn": 1, "step": "DeclareAttackers", "player": "alice", "do": { "Attack": ["$wurm", "$bear"] } },
+    { "turn": 1, "step": "DeclareAttackers", "player": "alice", "source": "$wurm", "do": { "ChooseAttackTarget": "$ajani" } },
+    { "turn": 1, "step": "DeclareAttackers", "player": "alice", "source": "$bear", "do": { "ChooseAttackTarget": "$bob" } },
+    { "turn": 1, "step": "EndOfCombat", "player": "alice", "check": { "Count": { "player": "alice", "zone": "Hand", "card": "Island", "count": 6 } } },
+    { "turn": 1, "step": "EndOfCombat", "player": "alice", "check": { "Count": { "player": "bob", "zone": "Graveyard", "card": "Ajani Goldmane", "count": 1 } } },
+    { "turn": 1, "step": "EndOfCombat", "player": "alice", "check": { "Life": { "player": "bob", "life": 18 } } }
+  ]
+}

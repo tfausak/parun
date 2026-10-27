@@ -2425,7 +2425,7 @@ everyTriggerCondition =
     TriggerCondition.PlayerIsDealtDamage (PlayerIsDealtDamage.MkPlayerIsDealtDamage (DealtDamage.MkDealtDamage PlayerRelation.You Nothing) False),
     TriggerCondition.PlayerIsDealtDamage (PlayerIsDealtDamage.MkPlayerIsDealtDamage (DealtDamage.MkDealtDamage PlayerRelation.You (Just DamageKind.Noncombat)) False),
     TriggerCondition.PlayerIsDealtDamage (PlayerIsDealtDamage.MkPlayerIsDealtDamage (DealtDamage.MkDealtDamage PlayerRelation.You (Just DamageKind.Combat)) True),
-    TriggerCondition.PermanentDealsCombatDamageToPlayer (PermanentDealsCombatDamageToPlayer.MkPermanentDealsCombatDamageToPlayer (Filter.Type.And []) PlayerRelation.AnyPlayer),
+    TriggerCondition.PermanentDealsCombatDamageToPlayer (PermanentDealsCombatDamageToPlayer.MkPermanentDealsCombatDamageToPlayer (Filter.Type.And []) PlayerRelation.AnyPlayer False),
     TriggerCondition.PermanentsDealCombatDamageToPlayer (PermanentsDealCombatDamageToPlayer.MkPermanentsDealCombatDamageToPlayer (Filter.Type.And []) PlayerRelation.AnyPlayer False),
     TriggerCondition.CreatureDealtCombatDamageToMonarch,
     TriggerCondition.CreaturesDealtCombatDamageToInitiative,

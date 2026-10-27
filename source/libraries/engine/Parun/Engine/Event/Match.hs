@@ -435,6 +435,21 @@ boundDeparts bindings destinations slot event = case event of
   GameEvent.TriggeredAbilityResolved _ -> False
   GameEvent.CardArrived _ -> False
 
+-- CR 120.3: was this damage dealt to a player `related` admits, or, with
+-- `orTheirPlaneswalkers`, to a planeswalker such a player controls (CR 120.3c)?
+-- The planeswalker is judged through `board` as damageBy's Filter is: the
+-- damage that empties it of loyalty buries it (CR 704.5i) before the log is
+-- scanned, and it was a planeswalker that player controlled when it was dealt.
+dealtToRelated :: Map.Map ObjectId (BattlefieldCandidate.BattlefieldCandidate PC.ProjectedCharacteristics) -> GameState -> (PlayerId -> Bool) -> Bool -> Recipient.Recipient -> Bool
+dealtToRelated board gs related orTheirPlaneswalkers target
+  | Just pid <- Recipient.playerOf target = related pid
+  | orTheirPlaneswalkers,
+    Just oid <- Recipient.objectOf target =
+      maybe False theirPlaneswalker (postEventView board gs oid)
+  | otherwise = False
+  where
+    theirPlaneswalker view = Set.member CardType.Planeswalker (Filter.cardTypes view) && maybe False related (Filter.controller view)
+
 -- The same question against a slot environment, for the conditions whose subject
 -- is an object named EARLIER rather than the bearer or a class of objects
 -- (TriggerCondition.LoseControlOfBound, BoundDies and BoundDiesOrIsExiled).
@@ -1117,23 +1132,13 @@ matchesTriggerGiven bindings board gs bearer you cond event = case cond of
   -- than the bearer. CR 120.2b's noncombat damage is every damage event that is
   -- not CR 510.2's, which DamageEvent.kind already records.
   --
-  -- With orTheirPlaneswalkers, CR 120.3c's planeswalker recipient too, judged
-  -- through `board` as damageBy's Filter is: the damage that empties a
-  -- planeswalker of loyalty buries it (CR 704.5i) before the log is scanned,
-  -- and it was a planeswalker that player controlled when it was dealt.
+  -- With orTheirPlaneswalkers, CR 120.3c's planeswalker recipient too
+  -- (dealtToRelated).
   TriggerCondition.PlayerIsDealtDamage watched -> case event of
     GameEvent.DamageDealt ev ->
       let dealt = PlayerIsDealtDamage.dealt watched
-          related = PlayerRelation.holds (Game.teams gs) (DealtDamage.player dealt) you
-          theirPlaneswalker view = Set.member CardType.Planeswalker (Filter.cardTypes view) && maybe False related (Filter.controller view)
        in all (== DamageEvent.kind ev) (DealtDamage.kind dealt)
-            && case DamageEvent.target ev of
-              target
-                | Just pid <- Recipient.playerOf target -> related pid
-                | PlayerIsDealtDamage.orTheirPlaneswalkers watched,
-                  Just oid <- Recipient.objectOf target ->
-                    maybe False theirPlaneswalker (postEventView board gs oid)
-                | otherwise -> False
+            && dealtToRelated board gs (PlayerRelation.holds (Game.teams gs) (DealtDamage.player dealt) you) (PlayerIsDealtDamage.orTheirPlaneswalkers watched) (DamageEvent.target ev)
     GameEvent.Moved {} -> False
     GameEvent.StepBegan {} -> False
     GameEvent.SpellCast {} -> False
@@ -1220,7 +1225,7 @@ matchesTriggerGiven bindings board gs bearer you cond event = case cond of
   TriggerCondition.PermanentDealsCombatDamageToPlayer p -> case event of
     GameEvent.DamageDealt ev ->
       DamageEvent.kind ev == DamageKind.Combat
-        && maybe False (PlayerRelation.holds (Game.teams gs) (PermanentDealsCombatDamageToPlayer.recipient p) you) (Recipient.playerOf (DamageEvent.target ev))
+        && dealtToRelated board gs (PlayerRelation.holds (Game.teams gs) (PermanentDealsCombatDamageToPlayer.recipient p) you) (PermanentDealsCombatDamageToPlayer.orTheirPlaneswalkers p) (DamageEvent.target ev)
         && ( let damager = DamageEvent.source ev
               in case postEventView board gs damager of
                    Nothing -> False
@@ -5186,7 +5191,8 @@ matchesTriggerGiven bindings board gs bearer you cond event = case cond of
       ( TriggerCondition.PermanentDealsCombatDamageToPlayer
           PermanentDealsCombatDamageToPlayer.MkPermanentDealsCombatDamageToPlayer
             { PermanentDealsCombatDamageToPlayer.filter = PermanentsDealCombatDamageToPlayer.filter p,
-              PermanentDealsCombatDamageToPlayer.recipient = PermanentsDealCombatDamageToPlayer.recipient p
+              PermanentDealsCombatDamageToPlayer.recipient = PermanentsDealCombatDamageToPlayer.recipient p,
+              PermanentDealsCombatDamageToPlayer.orTheirPlaneswalkers = False
             }
       )
       event

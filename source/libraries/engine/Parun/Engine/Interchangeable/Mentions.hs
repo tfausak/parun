@@ -2113,7 +2113,7 @@ modificationNames asking onAbility x = case x of
   Modification.SetBasePowerToughness setBasePowerToughness -> setBasePowerToughnessNames asking setBasePowerToughness
   Modification.ModifyPowerToughness modifyPowerToughness -> modifyPowerToughnessNames asking modifyPowerToughness
   Modification.LandSubtype _changeMode _subtype -> mempty
-  Modification.SetLandSubtypeToChosen -> mempty
+  Modification.ChosenSubtype {} -> mempty
   Modification.CreatureSubtype _changeMode _subtype -> mempty
   Modification.AddEveryCreatureSubtype -> mempty
   Modification.LoseEveryCreatureSubtype -> mempty
@@ -2284,7 +2284,7 @@ dealsDamageToPlayerNames asking x = case x of
 
 permanentDealsCombatDamageToPlayerNames :: (Monoid r) => Asking r -> PermanentDealsCombatDamageToPlayer.PermanentDealsCombatDamageToPlayer -> r
 permanentDealsCombatDamageToPlayerNames asking x = case x of
-  PermanentDealsCombatDamageToPlayer.MkPermanentDealsCombatDamageToPlayer filter_ _recipient -> filterNames asking filter_
+  PermanentDealsCombatDamageToPlayer.MkPermanentDealsCombatDamageToPlayer filter_ _recipient _orTheirPlaneswalkers -> filterNames asking filter_
 
 permanentSacrificedNames :: (Monoid r) => Asking r -> PermanentSacrificed.PermanentSacrificed -> r
 permanentSacrificedNames asking x = case x of
@@ -2344,7 +2344,7 @@ costSubjectNames asking x = case x of
 playerEffectNames :: (Monoid r) => Asking r -> PlayerEffect.PlayerEffect -> r
 playerEffectNames asking x = case x of
   PlayerEffect.CantCastSpells -> mempty
-  PlayerEffect.CantActivateAbilities keywordDesignator -> foldMap (keywordDesignatorNames asking) keywordDesignator
+  PlayerEffect.CantActivateAbilities keywordDesignator filter_ -> foldMap (keywordDesignatorNames asking) keywordDesignator <> filterNames asking filter_
   PlayerEffect.CantCastMoreThan _natural -> history asking HistoryRead.Casts
   PlayerEffect.ModifyCost costModifier -> costModifierNames asking costModifier
   PlayerEffect.AlternativeActivationCost alternativeActivationCost -> alternativeActivationCostNames asking alternativeActivationCost

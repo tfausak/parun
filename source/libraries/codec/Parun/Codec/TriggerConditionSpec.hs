@@ -214,7 +214,7 @@ spec s = Spec.describe s "Parun.Codec.TriggerCondition" $ do
     Common.assertCodec
       s
       TriggerCondition.codec
-      (TriggerCondition.PermanentDealsCombatDamageToPlayer (PermanentDealsCombatDamageToPlayer.MkPermanentDealsCombatDamageToPlayer (Filter.HeldBy Holder.Controller PlayerRelation.Opponent) PlayerRelation.You))
+      (TriggerCondition.PermanentDealsCombatDamageToPlayer (PermanentDealsCombatDamageToPlayer.MkPermanentDealsCombatDamageToPlayer (Filter.HeldBy Holder.Controller PlayerRelation.Opponent) PlayerRelation.You False))
       " {\"type\":\"PermanentDealsCombatDamageToPlayer\",\"value\":{\"filter\":{\"type\":\"HeldBy\",\"value\":{\"holder\":{\"type\":\"Controller\"},\"relation\":{\"type\":\"Opponent\"}}},\"recipient\":{\"type\":\"You\"}}} "
   -- CR 603.2c's batch reading of that same form, carrying the same Filter -- so a
   -- separate tag is the only thing that keeps Pia Nalaar's once-per-step card and

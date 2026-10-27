@@ -35,7 +35,15 @@
                             "type": "UntilEndOfTurn"
                           },
                           "modification": {
-                            "type": "SetLandSubtypeToChosen"
+                            "type": "ChosenSubtype",
+                            "value": {
+                              "family": {
+                                "type": "BasicLandType"
+                              },
+                              "mode": {
+                                "type": "Replace"
+                              }
+                            }
                           },
                           "ref": {
                             "type": "InSlot",

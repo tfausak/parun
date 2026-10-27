@@ -3127,7 +3127,7 @@ manaActivationsGiven effects measure pcs pid oid printedCost restrictions abilit
         -- a row naming a keyword (Kang the Conqueror's power-up) compares; no
         -- mana ability in data/cards/ is under power-up, so on this road that
         -- is a regression fence rather than a proof.
-        && not (PlayerEffect.prohibitsActivatingGiven (ActivatedAbility.keyword =<< ability) effects)
+        && not (PlayerEffect.prohibitsActivatingGiven (ActivatedAbility.keyword =<< ability) oid gs effects)
         -- CR 602.5's printed "activate only ..." rider, which CR 605.1's own sentence
         -- keeps on a mana ability -- a timing restriction does not stop an ability
         -- being one. Here for sickness's and detain's reason, and it is the reason

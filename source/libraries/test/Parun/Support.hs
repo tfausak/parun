@@ -835,7 +835,7 @@ withEffectAt oid ts m gs =
 
 -- withEffectAt, but naming a REAL source instead of the 998 stand-in. Needed
 -- because a modification can read its own source's state: Modification's
--- SetLandSubtypeToChosen reads Object.chosenSubtype off the effect's source, and
+-- ChosenSubtype reads Object.chosenSubtype off the effect's source, and
 -- a source that names no object answers Nothing for every board. Pair it with
 -- withChosenSubtype below.
 withEffectFromAt :: ObjectId.ObjectId -> ObjectId.ObjectId -> Timestamp.Timestamp -> Projection.Modification -> GameState.GameState -> GameState.GameState

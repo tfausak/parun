@@ -21,6 +21,7 @@ import qualified Parun.Codec.PlayerId as PlayerId
 import qualified Parun.Codec.Quantity as Quantity
 import qualified Parun.Codec.SetBasePowerToughness as SetBasePowerToughness
 import qualified Parun.Codec.Subtype as Subtype
+import qualified Parun.Codec.SubtypeFamily as SubtypeFamily
 import qualified Parun.Codec.Supertype as Supertype
 import qualified Parun.Codec.TargetSlot as TargetSlot
 import qualified Parun.JsonCodec.Arm as Arm
@@ -48,6 +49,11 @@ codec abilityCodec =
           (,)
             <$> Fields.required "mode" ChangeMode.codec fst
             <*> Fields.required "subtype" Subtype.codec snd
+      chosenSubtype =
+        Fields.object $
+          (,)
+            <$> Fields.required "mode" ChangeMode.codec fst
+            <*> Fields.required "family" SubtypeFamily.codec snd
       cardType =
         Fields.object $
           (,)
@@ -71,7 +77,7 @@ codec abilityCodec =
           Arm.payload "SetBasePowerToughness" SetBasePowerToughness.codec Modification.SetBasePowerToughness (\x -> case x of Modification.SetBasePowerToughness y -> Just y; _ -> Nothing),
           Arm.payload "ModifyPowerToughness" ModifyPowerToughness.codec Modification.ModifyPowerToughness (\x -> case x of Modification.ModifyPowerToughness y -> Just y; _ -> Nothing),
           Arm.payload "LandSubtype" subtype (uncurry Modification.LandSubtype) (\x -> case x of Modification.LandSubtype mode y -> Just (mode, y); _ -> Nothing),
-          Arm.nullary "SetLandSubtypeToChosen" Modification.SetLandSubtypeToChosen,
+          Arm.payload "ChosenSubtype" chosenSubtype (uncurry Modification.ChosenSubtype) (\x -> case x of Modification.ChosenSubtype mode y -> Just (mode, y); _ -> Nothing),
           Arm.payload "CreatureSubtype" subtype (uncurry Modification.CreatureSubtype) (\x -> case x of Modification.CreatureSubtype mode y -> Just (mode, y); _ -> Nothing),
           Arm.nullary "AddEveryCreatureSubtype" Modification.AddEveryCreatureSubtype,
           Arm.nullary "LoseEveryCreatureSubtype" Modification.LoseEveryCreatureSubtype,
@@ -116,7 +122,7 @@ tagOf x = case x of
   Modification.SetBasePowerToughness {} -> "SetBasePowerToughness"
   Modification.ModifyPowerToughness {} -> "ModifyPowerToughness"
   Modification.LandSubtype {} -> "LandSubtype"
-  Modification.SetLandSubtypeToChosen {} -> "SetLandSubtypeToChosen"
+  Modification.ChosenSubtype {} -> "ChosenSubtype"
   Modification.CreatureSubtype {} -> "CreatureSubtype"
   Modification.AddEveryCreatureSubtype {} -> "AddEveryCreatureSubtype"
   Modification.LoseEveryCreatureSubtype {} -> "LoseEveryCreatureSubtype"

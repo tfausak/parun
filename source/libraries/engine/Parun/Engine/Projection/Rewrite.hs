@@ -326,7 +326,7 @@ rewriteModification pairs m =
               Modification.GainKeyword k -> Modification.GainKeyword (Filter.rewriteKeyword [(from, to)] k)
               -- Carries no word: the keyword is rule 702's and the cost is the
               -- RECEIVER's mana cost, so neither half is text a pair could name --
-              -- SetLandSubtypeToChosen's answer for the same reason.
+              -- ChosenSubtype's answer for the same reason.
               Modification.GainKeywordAtManaCost _ -> acc
               -- CR 612.1 through the granted enchant's own Filter, which is text
               -- printed on the GRANTER (CR 612.3) exactly as the keyword above is.
@@ -367,7 +367,7 @@ rewriteModification pairs m =
               -- time.
               Modification.GainAbilitiesOfStickers -> acc
               -- Carries no word: the type is read off the source at projection time.
-              Modification.SetLandSubtypeToChosen -> acc
+              Modification.ChosenSubtype {} -> acc
               -- A control op carries no subtype word either.
               Modification.SetController _ -> acc
               Modification.SetControllerToSource -> acc
@@ -546,7 +546,8 @@ rewritePlayerEffect pairs effect = case effect of
   -- not touch a card name even if they did. A count and a player scope are not
   -- words either.
   PlayerEffect.CantCastSpells -> effect
-  PlayerEffect.CantActivateAbilities _ -> effect
+  -- The designator is no word CR 612.1 swaps; the source Filter descends.
+  PlayerEffect.CantActivateAbilities designator f -> PlayerEffect.CantActivateAbilities designator (Filter.rewrite pairs f)
   PlayerEffect.CantCastMoreThan _ -> effect
   PlayerEffect.PlayAdditionalLands _ -> effect
   PlayerEffect.NoMaximumHandSize -> effect

@@ -259,6 +259,7 @@ triggeredAbilityOffends = triggeredAbilityOffendsGiven Set.empty
 triggeredAbilityOffendsGiven :: Set.Set SlotName.SlotName -> TriggeredAbility.TriggeredAbility Card.Type.Card (GrantedAbility.GrantedAbility Card.Type.Card) -> Bool
 triggeredAbilityOffendsGiven inherited ability =
   modalSlotsOffend
+    (const Set.empty)
     ( Set.unions
         [ inherited,
           Set.fromList [Binding.triggerSource, Binding.you, Binding.thisAbility],
@@ -371,7 +372,7 @@ activatedAbilityOffends ability =
         if removesCountersAsCost (ActivatedAbility.cost ability)
           then Set.singleton Binding.removedCounters
           else Set.empty
-   in modalSlotsOffend (Set.unions [Set.fromList [Binding.triggerSource, Binding.you, Binding.thisAbility], announcedX, sacrificed, tapped, tappedForTotal, exiled, exiledPermanents, discarded, removed, payGateBound (ActivatedAbility.modal ability)]) (ActivatedAbility.modal ability)
+   in modalSlotsOffend (const Set.empty) (Set.unions [Set.fromList [Binding.triggerSource, Binding.you, Binding.thisAbility], announcedX, sacrificed, tapped, tappedForTotal, exiled, exiledPermanents, discarded, removed, payGateBound (ActivatedAbility.modal ability)]) (ActivatedAbility.modal ability)
 
 -- Does this cost tap permanents the payer CHOOSES? sacrificesAsCost's shape, and
 -- the same reason: CR 601.2h's payment binds Binding.tappedPermanent
@@ -770,6 +771,7 @@ abilitySlotLintSpec s registry corpus = Spec.describe s "Lint" $ do
     let cardBound card = Set.insert Binding.triggerSource (Set.unions [armingTargetSlots card, armingEventSlots card, armingCostSlots card, armingSpendSlots card, Resolve.definedSlots (cardResolutionEffects card)])
         abilityOffends card ability =
           modalSlotsOffend
+            (const Set.empty)
             (Set.unions [cardBound card, Event.eventBindingSlots (TriggeredAbility.condition ability), Event.eventBindingSlotsSometimes (TriggeredAbility.condition ability)])
             (TriggeredAbility.modal ability)
         -- The CONDITION's own slot, which modalSlotsOffend never sees: it walks
@@ -1481,7 +1483,7 @@ abilitySlotLintSpec s registry corpus = Spec.describe s "Lint" $ do
         -- The delayed lint calls modalSlotsOffend itself, with the whole card's
         -- minted slots on the bound side; nothing here mints, so the bound side
         -- is CR 113.7's source alone.
-        delayed modes = modalSlotsOffend (Set.singleton Binding.triggerSource) (TriggeredAbility.modal (modalTrigger TriggerCondition.SelfDies modes))
+        delayed modes = modalSlotsOffend (const Set.empty) (Set.singleton Binding.triggerSource) (TriggeredAbility.modal (modalTrigger TriggerCondition.SelfDies modes))
         -- The chosen graveyard card's SCOPE as the SOLE reader of a declared
         -- slot, which is Grasping Tentacles' second clause with its mill set
         -- aside. The pair differs in the scope alone, so it proves

@@ -1,0 +1,40 @@
+{
+  "description": "CR 510.2 / 603.7 Hunter's Insight draws nothing when the chosen creature deals its combat damage to a blocking creature",
+  "note": "The twin of the planeswalker board with the chosen Craw Wurm attacking bob and blocked by his Hill Giant: its six damage goes to a creature, so alice draws nothing, while the unchosen Bears' two to bob draw nothing either.",
+  "board": {
+    "seats": [
+      {
+        "name": "alice",
+        "battlefield": [
+          { "card": "Forest", "label": "f1", "ready": true },
+          { "card": "Forest", "label": "f2", "ready": true },
+          { "card": "Forest", "label": "f3", "ready": true },
+          { "card": "Craw Wurm", "label": "wurm", "ready": true },
+          { "card": "Grizzly Bears", "label": "bear", "ready": true }
+        ],
+        "hand": [{ "card": "Hunter's Insight", "label": "insight" }],
+        "library": [
+          { "card": "Island" }, { "card": "Island" }, { "card": "Island" }, { "card": "Island" },
+          { "card": "Island" }, { "card": "Island" }, { "card": "Island" }, { "card": "Island" },
+          { "card": "Island" }, { "card": "Island" }
+        ]
+      },
+      {
+        "name": "bob",
+        "battlefield": [{ "card": "Hill Giant", "label": "giant", "ready": true }],
+        "library": [{ "card": "Swamp" }, { "card": "Swamp" }]
+      }
+    ],
+    "active": "alice",
+    "step": "PrecombatMain"
+  },
+  "timeline": [
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "do": { "Cast": { "object": "$insight", "targets": ["$wurm"], "mana": ["$f1", "$f2", "$f3"] } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "do": "Pass" },
+    { "turn": 1, "step": "DeclareAttackers", "player": "alice", "do": { "Attack": ["$wurm", "$bear"] } },
+    { "turn": 1, "step": "DeclareBlockers", "player": "bob", "do": { "Block": { "$giant": ["$wurm"] } } },
+    { "turn": 1, "step": "EndOfCombat", "player": "alice", "check": { "Count": { "player": "bob", "zone": "Graveyard", "card": "Hill Giant", "count": 1 } } },
+    { "turn": 1, "step": "EndOfCombat", "player": "alice", "check": { "Life": { "player": "bob", "life": 18 } } },
+    { "turn": 1, "step": "EndOfCombat", "player": "alice", "check": { "Count": { "player": "alice", "zone": "Hand", "card": "Island", "count": 0 } } }
+  ]
+}

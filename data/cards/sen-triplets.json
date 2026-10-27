@@ -89,7 +89,7 @@
                           },
                           "effect": {
                             "type": "CantActivateAbilities",
-                            "value": null
+                            "value": {}
                           },
                           "players": {
                             "type": "Named",

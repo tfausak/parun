@@ -238,7 +238,7 @@ data Object = MkObject
     -- | CR 614.1c: a subtype this object's controller chose as it entered -- a
     -- basic land type (Convincing Mirage) or a creature type (Pillar of Origins),
     -- ONE field because no printing makes both choices. Read by
-    -- Modification.SetLandSubtypeToChosen and by Filter.HasChosenSubtype off the
+    -- Modification.ChosenSubtype and by Filter.HasChosenSubtype off the
     -- effect's SOURCE -- in a CR 106.6 restriction through the value
     -- Parun.Engine.Mana.sourceChoicesOf bakes onto a mana unit at production.
     -- A sibling of chosenColors rather than one generalized
