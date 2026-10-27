@@ -23,6 +23,7 @@ ad-nauseam
 adaptive-gemguard
 adric-mathematical-genius
 advancing-the-spirit
+aegis-angel
 aegis-of-the-legion
 aeon-chronicler
 aether-hub
@@ -78,6 +79,7 @@ angel-of-fury
 angel-of-salvation
 angelic-arbiter
 angelic-chorus
+angelic-destiny
 angelic-harold
 angelic-sleuth
 anger
@@ -94,7 +96,10 @@ apocalypse-chime
 approach-of-the-second-sun
 april-oneil-live-on-the-scene
 aquatic-subtlety
+arachnus-spinner
+arachnus-web
 aragorn-hornburg-hero
+arbalest-elite
 arbiter-of-knollridge
 arbor-colossus
 arcane-denial
@@ -228,6 +233,7 @@ blinding-angel
 blood-for-bones
 blood-frenzy
 blood-moon
+blood-seeker
 blood-tithe
 bloodbraid-challenger
 bloodcrazed-goblin
@@ -271,6 +277,7 @@ brine-elemental
 brine-hag
 brineborn-cutthroat
 bringer-of-the-black-dawn
+brink-of-disaster
 bristling-boar
 brittle-effigy
 bronze-tablet
@@ -299,6 +306,7 @@ caged-sun
 caldera-breaker
 calim-djinn-emperor
 call-of-the-wild
+call-to-the-grave
 caltrops
 cant-stay-away
 capricious-efreet
@@ -332,6 +340,7 @@ chancellor-of-the-forge
 chandra-fire-artisan
 chandra-nalaar
 chandras-outrage
+chandras-phoenix
 chandras-spitfire
 chaos-dragon
 charging-rhino
@@ -348,6 +357,7 @@ chronomantic-escape
 chthonian-nightmare
 cid-timeless-artificer
 cinder-wall
+circle-of-flame
 circle-of-protection-black
 circle-of-protection-blue
 circle-of-protection-green
@@ -431,12 +441,14 @@ crime-punishment
 crimson-hellkite
 crimson-wisps
 croakid-amphibonaut
+crown-of-empires
 crown-of-the-ages
 crucible-of-worlds
 cruel-bargain
 cruel-edict
 cruel-fate
 crumb-and-get-it
+crumbling-colossus
 cry-of-contrition
 cryoclasm
 crypt-cobra
@@ -557,6 +569,7 @@ doomsday
 door-to-nothingness
 dormant-gomazoa
 double-major
+doubling-chant
 doubling-cube
 doubling-season
 dovin-hand-of-control
@@ -581,6 +594,7 @@ drop-of-honey
 drought
 drowned-catacomb
 drownyard-behemoth
+druidic-satchel
 duct-crawler
 dunbarrow-revivalist
 dunedain-blade
@@ -778,6 +792,7 @@ frenetic-sliver
 freyalise-llanowars-fury
 from-the-rubble
 frontier-mastodon
+frost-breath
 frost-titan
 fulgent-distraction
 full-steam-ahead
@@ -800,6 +815,7 @@ galvanic-relay
 gang-of-elk
 garland-royal-kidnapper
 garna-bloodfist-of-keld
+garruk-primal-hunter
 garruk-wildspeaker
 garruks-horde
 garruks-packleader
@@ -825,6 +841,7 @@ giant-opportunity
 giant-turtle
 gibbering-hyenas
 gideon-jura
+gideons-avenger
 gift-of-doom
 gift-of-estates
 gifts-ungiven
@@ -844,10 +861,13 @@ glorious-protector
 glory-bound-initiate
 gnarlid-pack
 gnat-miser
+goblin-arsonist
 goblin-artillery
+goblin-bangchuckers
 goblin-bookie
 goblin-brawler
 goblin-brigand
+goblin-grenade
 goblin-mutant
 goblin-recruiter
 goblin-tunneler
@@ -881,6 +901,7 @@ green-ward
 greenbelt-guardian
 grifters-blade
 grim-hireling
+grim-lavamancer
 grim-poppet
 grim-reminder
 grinning-ignus
@@ -1040,6 +1061,7 @@ ivy-gleeful-spellthief
 ixidron
 izoni-center-of-the-web
 jace-beleren
+jace-memory-adept
 jaces-erasure
 jackal-familiar
 jade-monolith
@@ -1265,6 +1287,7 @@ mind-grind
 mind-maggots
 mind-slash
 mind-sludge
+mind-unbound
 mind-warp
 mindcrank
 mindslaver
@@ -1718,6 +1741,7 @@ scampire
 scarecrow
 scarred-puma
 scavenger-grounds
+scepter-of-empires
 scheming-aspirant
 scheming-symmetry
 scorching-winds
@@ -2037,6 +2061,7 @@ threats-undetected
 threefold-signal
 thromok-the-insatiable
 throne-of-eldraine
+throne-of-empires
 thrull-surgeon
 thunderbond-vanguard
 thundermane-dragon
