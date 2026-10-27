@@ -6345,6 +6345,7 @@ annihilator n =
               (PlayerRef.EachInSlot Binding.triggerPlayer)
               (Filter.And [])
               (Quantity.Literal (toInteger n))
+              Nothing
           )
    in Mint.trigger (TriggerCondition.SelfAttacks TriggerFrequency.EveryTime) (Seq.singleton effect)
 

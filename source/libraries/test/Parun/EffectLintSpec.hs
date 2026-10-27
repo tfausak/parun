@@ -314,7 +314,7 @@ ownQuantities effect = case effect of
   Effect.Venture {} -> []
   Effect.ExileHandThenDraw -> []
   Effect.NoteManaSpent -> []
-  Effect.PlayerSacrifices (PlayerSacrifices.MkPlayerSacrifices _ _ quantity) -> [quantity]
+  Effect.PlayerSacrifices (PlayerSacrifices.MkPlayerSacrifices _ _ quantity _) -> [quantity]
   Effect.Vote {} -> []
   Effect.Bid bid -> [Bid.opening bid]
   Effect.RestartGame _ -> []

@@ -152,6 +152,7 @@ import qualified Parun.Types.PaymentDecision as PaymentDecision
 import qualified Parun.Types.PaymentSubject as PaymentSubject
 import qualified Parun.Types.PermanentActed as PermanentActed
 import qualified Parun.Types.PermanentAction as PermanentAction
+import qualified Parun.Types.PermanentWasSacrificed as PermanentWasSacrificed
 import qualified Parun.Types.Player as Player
 import qualified Parun.Types.PlayerActed as PlayerActed
 import qualified Parun.Types.PlayerAction as PlayerAction
@@ -607,7 +608,7 @@ chosenPermanents purpose legal resolving controller source choice = do
       chooser = ChosenPermanents.chooser choice
       count = ChosenPermanents.count choice
       context = effectContext gs resolving controller source legal (slotBindings resolving gs)
-      amount = maybe 0 Integer.toNaturalSaturating . Quantity.evaluateFor (effectViewOf source legal gs) context gs resolving source
+      amount = maybe 0 Integer.toNaturalSaturating . Quantity.evaluateFor (effectViewOf resolving source legal gs) context gs resolving source
   pickByChooser
     resolving
     source
@@ -936,7 +937,7 @@ graveyardCards context bindings source controller gs scope filter_ =
 chosenCardsInGraveyard :: Map.Map SlotName (Set Recipient) -> ObjectId -> PlayerId -> ObjectId -> ChosenCardInGraveyard.ChosenCardInGraveyard -> Game [ObjectId]
 chosenCardsInGraveyard legal resolving controller source (ChosenCardInGraveyard.MkChosenCardInGraveyard chooser scope filter_ count) = do
   gs <- State.get
-  let viewOf = effectViewOf source legal gs
+  let viewOf = effectViewOf resolving source legal gs
       context = effectContext gs resolving controller source legal (slotBindings resolving gs)
       wanted = maybe 0 Integer.toNaturalSaturating (Quantity.evaluateFor viewOf context gs resolving source count)
       -- `made` is every card this pass has taken so far, beside
@@ -1104,7 +1105,7 @@ objectRefRecipients legal resolving controller source gs ref = case ref of
   -- cr-608-2c-disorder-deals-damage-to-each-player-who-controls-a-white-creature.
   ObjectRef.Players (PlayersWho.MkPlayersWho playerRef who) ->
     let context = effectContext gs resolving controller source legal (slotBindings resolving gs)
-        kept pid = all (\f -> Count.playerMatches (effectViewOf source legal gs) context gs f pid) who
+        kept pid = all (\f -> Count.playerMatches (effectViewOf resolving source legal gs) context gs f pid) who
      in fmap Recipient.ToPlayer (filter kept (apnapPlayersOf playerRef legal resolving source controller gs))
   -- No recipients: the answer needs the chooser asked, which askingObjects does.
   ObjectRef.ChosenCardInGraveyard {} -> []
@@ -1986,7 +1987,7 @@ chooseCardsInHand ::
   Game [ObjectId]
 chooseCardsInHand resolving source controller legal (ChosenCardInHand.MkChosenCardInHand player filter_ count) = do
   gs <- State.get
-  let viewOf = effectViewOf source legal gs
+  let viewOf = effectViewOf resolving source legal gs
       context = effectContext gs resolving controller source legal (slotBindings resolving gs)
       wanted = maybe 0 Integer.toNaturalSaturating (Quantity.evaluateFor viewOf context gs resolving source count)
       pick asked n candidates
@@ -2041,7 +2042,7 @@ chooseCardFromAmong ::
 chooseCardFromAmong resolving source controller legal chosen (ChosenCardFromAmong.MkChosenCardFromAmong slot filter_ count chooser pileChooser) = do
   members <- fromAmongMembers legal resolving chosen slot
   gs <- State.get
-  let viewOf = effectViewOf source legal gs
+  let viewOf = effectViewOf resolving source legal gs
       context = effectContext gs resolving controller source legal (slotBindings resolving gs)
       amount = maybe 0 Integer.toNaturalSaturating . Quantity.evaluateFor viewOf context gs resolving source
       matching = matchingFromAmong legal resolving controller source gs filter_ members
@@ -2110,7 +2111,7 @@ randomCardsInHand ::
   Game [ObjectId]
 randomCardsInHand resolving source controller legal (RandomCardInHand.MkRandomCardInHand player filter_ count) = do
   gs <- State.get
-  let viewOf = effectViewOf source legal gs
+  let viewOf = effectViewOf resolving source legal gs
       context = effectContext gs resolving controller source legal (slotBindings resolving gs)
       wanted = maybe 0 Integer.toNaturalSaturating (Quantity.evaluateFor viewOf context gs resolving source count)
   fmap concat . Monad.mapM (\pid -> Game.drawDistinct Prompt.RandomObject wanted (handCardsOf context gs pid filter_)) $
@@ -2139,7 +2140,7 @@ randomCardsInGraveyard ::
   Game [ObjectId]
 randomCardsInGraveyard resolving source controller legal (RandomCardInGraveyard.MkRandomCardInGraveyard scope filter_ count) = do
   gs <- State.get
-  let viewOf = effectViewOf source legal gs
+  let viewOf = effectViewOf resolving source legal gs
       context = effectContext gs resolving controller source legal (slotBindings resolving gs)
       wanted = maybe 0 Integer.toNaturalSaturating (Quantity.evaluateFor viewOf context gs resolving source count)
   fmap concat . Monad.mapM (\pid -> Game.drawDistinct Prompt.RandomObject wanted (graveyardCardsOf context gs pid filter_)) $
@@ -2161,7 +2162,7 @@ randomCardsInLibrary ::
   Game [ObjectId]
 randomCardsInLibrary resolving source controller legal (RandomCardInLibrary.MkRandomCardInLibrary player filter_ count) = do
   gs <- State.get
-  let viewOf = effectViewOf source legal gs
+  let viewOf = effectViewOf resolving source legal gs
       context = effectContext gs resolving controller source legal (slotBindings resolving gs)
       wanted = maybe 0 Integer.toNaturalSaturating (Quantity.evaluateFor viewOf context gs resolving source count)
   fmap concat . Monad.mapM (\pid -> Game.drawDistinct Prompt.RandomObject wanted (libraryCardsOf context gs pid filter_)) $
@@ -3233,7 +3234,7 @@ effectIsImpossible resolving source controller legal gs effect = case effect of
   -- the pool here exactly as it does in the executing arm, and the amount is read
   -- per victim there too. Parun.ResolveSpec's "CR 608.2d Giant Opportunity's
   -- sacrifice of two Foods is not offered with one Food" proves the count.
-  Effect.PlayerSacrifices (PlayerSacrifices.MkPlayerSacrifices players filter_ quantity) ->
+  Effect.PlayerSacrifices (PlayerSacrifices.MkPlayerSacrifices players filter_ quantity _) ->
     let victims = playerRefPlayers legal resolving source controller gs players
         tooFewToGive victim = case evaluateForRecipient viewOf context gs resolving source victim quantity of
           Just n | n > 0 -> n > List.genericLength (Replacement.sacrificeCandidates (Filter.perspective context) (Binding.recipientsBySlot legal (slotBindings resolving gs)) victim (Just source) filter_ gs)
@@ -3294,7 +3295,7 @@ effectIsImpossible resolving source controller legal gs effect = case effect of
     let named = objectRefObjects legal resolving controller source gs ref
      in not (null named) && all ((== Just 0) . fmap Object.damage . flip Game.lookupObject gs) named
   where
-    viewOf = effectViewOf source legal gs
+    viewOf = effectViewOf resolving source legal gs
     context = effectContext gs resolving controller source legal (slotBindings resolving gs)
     -- The tap-state half of Effect.Tap's and Effect.Untap's arms: the sweep
     -- names at least one permanent and none of them is in the state the
@@ -3593,7 +3594,7 @@ bindStickerSlot holder slot ref = overHolderBindings holder (Map.insert slot (Bi
 -- cap is zero, so nothing above it is offered.
 ticketCapOf :: ObjectId -> ObjectId -> PlayerId -> Map.Map SlotName (Set Recipient) -> GameState -> Maybe Quantity.Type.Quantity -> Maybe Natural
 ticketCapOf resolving source controller legal gs =
-  fmap (maybe 0 Integer.toNaturalSaturating . Quantity.evaluateFor (effectViewOf source legal gs) (effectContext gs resolving controller source legal (slotBindings resolving gs)) gs resolving source)
+  fmap (maybe 0 Integer.toNaturalSaturating . Quantity.evaluateFor (effectViewOf resolving source legal gs) (effectContext gs resolving controller source legal (slotBindings resolving gs)) gs resolving source)
 
 -- CR 603.7c: bind `target` into `slot` of `holder`'s binding environment, so a
 -- delayed ability armed later in the SAME resolution can name the object.
@@ -3616,6 +3617,19 @@ bindSlot holder slot target = overHolderBindings holder (Map.insert slot (Bindin
 -- `target`, where bindSlot's SINGLE object lands.
 bindObjectsSlot :: ObjectId -> SlotName -> Seq.Seq ObjectId -> GameState -> GameState
 bindObjectsSlot holder slot targets = overHolderBindings holder (Map.insert slot (Binding.toObjects targets))
+
+-- CR 701.21a: the permanents the sacrifice funnel SACRIFICED between two states
+-- of one resolution, under their battlefield ids, in log order -- never what an
+-- instruction named, since a permanent it refused (CR 701.21a's control clause,
+-- CR 101.2's "can't") was not sacrificed. Read off the
+-- GameEvent.PermanentSacrificed entries, which the funnel records before any CR
+-- 614 redirection, so a permanent Rest in Peace exiles instead still counts.
+sacrificedBetween :: GameState -> GameState -> [ObjectId]
+sacrificedBetween before after =
+  [ PermanentWasSacrificed.permanent sacrificed
+  | logged <- Foldable.toList (Seq.drop (Seq.length (GameState.events before)) (GameState.events after)),
+    GameEvent.PermanentSacrificed sacrificed <- [LoggedEvent.event logged]
+  ]
 
 -- The one writer both binders above go through: rewrite the holder's bindings
 -- wherever the holder now is. GameState.objects while it is on the stack, and
@@ -4470,7 +4484,7 @@ payAgain failed agreed paid again = case paid of
 gateCostOf :: ObjectId -> ObjectId -> PlayerId -> Map.Map SlotName (Set Recipient) -> PayGate.PayGate -> GameState -> (Map.Map SlotName (Set Recipient), NonEmpty.NonEmpty (Cost.Type.Cost Keyword.Type.Keyword))
 gateCostOf resolving source controller legal gate gs =
   let evaluated quantity =
-        let viewOf = effectViewOf source legal gs
+        let viewOf = effectViewOf resolving source legal gs
             context = effectContext gs resolving controller source legal (slotBindings resolving gs)
          in maybe 0 Integer.toNaturalSaturating (Quantity.evaluateFor viewOf context gs resolving source quantity)
       multiplier = maybe 1 evaluated (PayGate.perEach gate)
@@ -4597,7 +4611,7 @@ describedCosts resolving controller source legal gs gate = case PayGate.basis ga
         -- the validated targets winning where a card names a slot that is both.
         bound = Map.union legal (Binding.targetsOf (slotBindings resolving gs))
         described = case objectRefObjects bound resolving controller source gs (ObjectRef.InSlot (CostBasis.slot basis)) of
-          [oid] -> Filter.manaCost =<< effectViewOf source bound gs oid
+          [oid] -> Filter.manaCost =<< effectViewOf resolving source bound gs oid
           _ -> Nothing
      in fmap (\option -> option {Cost.Type.mana = fmap (Cost.reducedManaCost (CostBasis.reducedBy basis)) described}) (CostChoice.unwrap (PayGate.cost gate))
 

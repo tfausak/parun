@@ -1149,7 +1149,7 @@ effectPlayerRefs effect = case effect of
   -- CR 701.62a's: whose library the two cards come off.
   Effect.ManifestDread ref -> [ref]
   Effect.Venture {} -> []
-  Effect.PlayerSacrifices (PlayerSacrifices.MkPlayerSacrifices players _ _) -> [players]
+  Effect.PlayerSacrifices (PlayerSacrifices.MkPlayerSacrifices players _ _ _) -> [players]
   -- CR 701.38a's specified player, the seat the vote starts with.
   Effect.Vote (Vote.MkVote starter _ _) -> [starter]
   -- The bidders are every player, CR 109.5's "you" opening.
@@ -1316,7 +1316,7 @@ slotsOf effect = joinTwo (joinTwo (joinSlots (fmap objectRefSlots (effectObjectR
   Effect.ExileHandThenDraw -> Map.empty
   Effect.NoteManaSpent -> Map.empty
   -- The players are effectPlayerRefs' half, joined at the head above.
-  Effect.PlayerSacrifices (PlayerSacrifices.MkPlayerSacrifices _ _ quantity) -> quantitySlots quantity
+  Effect.PlayerSacrifices (PlayerSacrifices.MkPlayerSacrifices _ _ quantity _) -> quantitySlots quantity
   -- The object vote's listed choices are a Filter and nothing else: the starter
   -- is effectPlayerRefs' half, joined at the head above, and the slot this
   -- WRITES is boundSlots' half. A word vote reads no slot at all -- its words
@@ -2162,7 +2162,7 @@ ownSlotsAreExhaustive effect = case effect of
   Effect.Venture {} -> True
   Effect.ExileHandThenDraw -> True
   Effect.NoteManaSpent -> True
-  Effect.PlayerSacrifices (PlayerSacrifices.MkPlayerSacrifices _ _ quantity) -> Quantity.slotsAreExhaustive quantity
+  Effect.PlayerSacrifices (PlayerSacrifices.MkPlayerSacrifices _ _ quantity _) -> Quantity.slotsAreExhaustive quantity
   Effect.Vote {} -> True
   Effect.Bid bid -> Quantity.slotsAreExhaustive (Bid.opening bid)
   Effect.RestartGame _ -> True
@@ -2453,7 +2453,7 @@ readsX =
         Effect.Venture {} -> False
         Effect.ExileHandThenDraw -> False
         Effect.NoteManaSpent -> False
-        Effect.PlayerSacrifices (PlayerSacrifices.MkPlayerSacrifices _ _ quantity) -> Quantity.readsX quantity
+        Effect.PlayerSacrifices (PlayerSacrifices.MkPlayerSacrifices _ _ quantity _) -> Quantity.readsX quantity
         Effect.Vote {} -> False
         Effect.Bid bid -> Quantity.readsX (Bid.opening bid)
         Effect.RestartGame _ -> False
@@ -2665,6 +2665,8 @@ boundSlots effect = case effect of
   Effect.Destroy (Destroy.MkDestroy _ _ mSlot mBuried mPermanents) -> foldMap Set.singleton mSlot <> foldMap Set.singleton mBuried <> foldMap Set.singleton mPermanents
   -- How many permanents CR 701.21a actually sacrificed, Destroy's `slot`.
   Effect.Sacrifice (SacrificeEffect.MkSacrificeEffect _ _ mSacrificed) -> foldMap Set.singleton mSacrificed
+  -- The PERMANENTS an edict sacrificed, Destroy's `permanents`.
+  Effect.PlayerSacrifices playerSacrifices -> foldMap Set.singleton (PlayerSacrifices.permanents playerSacrifices)
   -- How many milled cards matched the tally's filter (CR 728.1), and WHICH cards
   -- the mill put in the graveyard, for a later clause that names them (CR
   -- 701.17c). Two slots and not one: a card may write either without the other.
@@ -2735,7 +2737,6 @@ boundSlots effect = case effect of
   Effect.Venture {} -> Set.empty
   Effect.ExileHandThenDraw -> Set.empty
   Effect.NoteManaSpent -> Set.empty
-  Effect.PlayerSacrifices {} -> Set.empty
   -- CR 701.38a: the objects tied for most votes, for the later effect that
   -- acts on them (Council's Judgment's exile). For a word vote it is one slot
   -- per word, each holding that word's tally for the clause connected to it
@@ -3206,7 +3207,7 @@ objectRefObjects legal resolving controller source gs ref = case ref of
   -- Proved by data/scenarios/warp-world-counts-a-token-but-reveals-only-cards.json.
   ObjectRef.TopOfLibrary (TopOfLibrary.MkTopOfLibrary player count) ->
     let named = playerRefPlayers legal resolving source controller gs player
-        viewOf = effectViewOf source legal gs
+        viewOf = effectViewOf resolving source legal gs
         context = effectContext gs resolving controller source legal (slotBindings resolving gs)
         depth pid = maybe 0 Integer.toNaturalSaturating (Quantity.evaluateFor viewOf (context {Filter.recipient = Just pid}) gs resolving source (Quantity.forCandidate pid count))
      in concatMap
@@ -3232,7 +3233,7 @@ objectRefObjects legal resolving controller source gs ref = case ref of
   -- this resolution bound sees it. Cards only, the arm above's reason.
   ObjectRef.TopOfLibraryUntil (TopOfLibraryUntil.MkTopOfLibraryUntil player filter_ count) ->
     let named = playerRefPlayers legal resolving source controller gs player
-        viewOf = effectViewOf source legal gs
+        viewOf = effectViewOf resolving source legal gs
         context = effectContext gs resolving controller source legal (slotBindings resolving gs)
         wanted = maybe 0 Integer.toNaturalSaturating (Quantity.evaluateFor viewOf context gs resolving source count)
         viewOfCard = Projection.viewsOf gs
@@ -3464,12 +3465,20 @@ slotBindings = resolvingBindings
 -- ability resolves. Resourceful Defense's "put those counters" reads its whole CR
 -- 122.8 tally through here.
 --
+-- A member of a GROUP the resolution has bound so far is one too, read live off
+-- `resolving`: a group is a definition, never a target (CR 115.10a), so CR
+-- 608.2b never drops it, and a member that is gone was moved by an earlier
+-- instruction -- Consume's "its power", read off the permanent its edict
+-- sacrificed (PlayerSacrifices.permanents).
+--
 -- Any other id keeps viewWithLastKnown's blank for a gone object.
-effectViewOf :: ObjectId -> Map.Map SlotName (Set Recipient) -> GameState -> ObjectId -> Maybe Filter.View
-effectViewOf source legal gs oid =
-  if Set.member oid (effectTargetObjects legal)
-    then Projection.viewWithLastKnownAnywhere gs oid
-    else Projection.viewWithLastKnown source gs oid
+effectViewOf :: ObjectId -> ObjectId -> Map.Map SlotName (Set Recipient) -> GameState -> ObjectId -> Maybe Filter.View
+effectViewOf resolving source legal gs =
+  let named = effectTargetObjects (Binding.recipientsBySlot legal (slotBindings resolving gs))
+   in \oid ->
+        if Set.member oid named
+          then Projection.viewWithLastKnownAnywhere gs oid
+          else Projection.viewWithLastKnown source gs oid
 
 -- The members of a group that a ref's own Filter matches: the shared half of "a
 -- card from among them" and "all cards from among them", so the choice one makes
@@ -3489,7 +3498,7 @@ effectViewOf source legal gs oid =
 matchingFromAmong :: Map.Map SlotName (Set Recipient) -> ObjectId -> PlayerId -> ObjectId -> GameState -> Filter.Type.Filter Keyword.Type.Keyword -> [ObjectId] -> [ObjectId]
 matchingFromAmong legal resolving controller source gs filter_ members =
   let context = effectContext gs resolving controller source legal (slotBindings resolving gs)
-      viewOf = effectViewOf source legal gs
+      viewOf = effectViewOf resolving source legal gs
    in filter (maybe False (\view -> Filter.matches context view filter_) . viewOf) members
 
 -- Every slot ONE target slot reads: its pool's, its filter's, and its CR 202.3

@@ -2424,7 +2424,7 @@ playerRefNames asking x = case x of
 
 playerSacrificesNames :: (Monoid r) => Asking r -> PlayerSacrifices.PlayerSacrifices -> r
 playerSacrificesNames asking x = case x of
-  PlayerSacrifices.MkPlayerSacrifices players filter_ quantity -> playerRefNames asking players <> filterNames asking filter_ <> quantityNames asking quantity
+  PlayerSacrifices.MkPlayerSacrifices players filter_ quantity permanents -> playerRefNames asking players <> filterNames asking filter_ <> quantityNames asking quantity <> foldMap (slotNames asking) permanents
 
 playerStaticAbilityNames :: (Monoid r) => Asking r -> PlayerStaticAbility.PlayerStaticAbility -> r
 playerStaticAbilityNames asking x = case x of
