@@ -21,7 +21,8 @@ data PastActivation = MkPastActivation
     source :: ObjectSnapshot.ObjectSnapshot,
     -- | The ability activated, as announced; Nothing only for CR 305.6's
     -- intrinsic mana route, which is no printed ability. Its rule 702 keyword
-    -- answers ActivationCriteria.grantedBy, and the ability itself
+    -- answers ActivationCriteria.grantedBy, its printed cost CR 606.2's
+    -- ActivationCriteria.whichLoyalty (The Chain Veil), and the ability itself
     -- Quantity.TimesThisTurn's Activated count (Dragon Whelp).
     ability :: Maybe (ActivatedAbility.ActivatedAbility Card.Card (GrantedAbility.GrantedAbility Card.Card)),
     -- | CR 605.1a's side of the ability, for ActivationCriteria.whichKind.

@@ -300,8 +300,9 @@ recordActivation srcId ability gs =
         ((if prints ActivationRestriction.OnlyOnce then perGame else id) gs)
 
 -- CR 602.2: log that `pid` began activating an ability of `srcId` aimed at
--- `targets`, for Parun.Types.CostModifier.onlyFirst and
--- Parun.Types.Quantity.TimesThisTurn to count. The source and targets are
+-- `targets`, for Parun.Types.CostModifier.onlyFirst,
+-- Parun.Types.Quantity.TimesThisTurn and Parun.Types.Quantity.ActivationsThisTurn
+-- to count. The source and targets are
 -- snapshotted off `asOf`, the board the activation began on, so
 -- a cost that sacrificed the source still leaves it recorded as it was.
 --

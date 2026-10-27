@@ -1,6 +1,6 @@
 {
-  "description": "CR 606.3 The Chain Veil resolved twice lets Ajani Goldmane activate three times this turn, and not a fourth",
-  "note": "The Veil's fifth ruling: Voltaic Key untaps it between activations, and each resolution adds one more activation rather than merely lifting the limit.",
+  "description": "CR 606.3 The Chain Veil resolved twice lets Ajani Goldmane activate three times this turn, each in a main phase, and not a fourth",
+  "note": "The Veil's fifth ruling: Voltaic Key untaps it between activations, and each resolution adds one more activation rather than merely lifting the limit. Its third ruling: the one left over is refused at beginning of combat, the window standing, and taken in the second main phase.",
   "board": {"active": "alice", "step": "PrecombatMain", "seats": [
     {"name": "alice", "battlefield": [
       {"card": "The Chain Veil", "label": "veil"},
@@ -22,10 +22,12 @@
     {"turn": 1, "step": "PrecombatMain", "player": "alice", "do": "Pass"},
     {"turn": 1, "step": "PrecombatMain", "player": "alice", "do": {"Activate": {"object": "$ajani", "ability": 0}}},
     {"turn": 1, "step": "PrecombatMain", "player": "alice", "do": "Pass"},
-    {"turn": 1, "step": "PrecombatMain", "player": "alice", "do": {"Activate": {"object": "$ajani", "ability": 0}}},
-    {"turn": 1, "step": "PrecombatMain", "player": "alice", "do": "Pass"},
-    {"turn": 1, "step": "PrecombatMain", "player": "alice", "check": {"Counters": {"object": "$ajani", "kind": {"type": "Loyalty"}, "count": 7}}},
-    {"turn": 1, "step": "PrecombatMain", "player": "alice", "check": {"Life": {"player": "alice", "life": 26}}},
-    {"turn": 1, "step": "PrecombatMain", "player": "alice", "refuse": {"Activate": {"object": "$ajani", "ability": 0}}}
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "check": {"Counters": {"object": "$ajani", "kind": {"type": "Loyalty"}, "count": 6}}},
+    {"turn": 1, "step": "BeginningOfCombat", "player": "alice", "refuse": {"Activate": {"object": "$ajani", "ability": 0}}},
+    {"turn": 1, "step": "PostcombatMain", "player": "alice", "do": {"Activate": {"object": "$ajani", "ability": 0}}},
+    {"turn": 1, "step": "PostcombatMain", "player": "alice", "do": "Pass"},
+    {"turn": 1, "step": "PostcombatMain", "player": "alice", "check": {"Counters": {"object": "$ajani", "kind": {"type": "Loyalty"}, "count": 7}}},
+    {"turn": 1, "step": "PostcombatMain", "player": "alice", "check": {"Life": {"player": "alice", "life": 26}}},
+    {"turn": 1, "step": "PostcombatMain", "player": "alice", "refuse": {"Activate": {"object": "$ajani", "ability": 0}}}
   ]
 }

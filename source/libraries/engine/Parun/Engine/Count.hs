@@ -1189,6 +1189,11 @@ pastView snapshot =
 -- CR 606.2's loyalty, the last off the printed cost as
 -- Parun.Engine.Loyalty.loyaltyKindOf reads it for the activation in progress.
 -- CR 305.6's intrinsic mana route records no ability, and is no loyalty ability.
+--
+-- The loyalty conjunct is a regression fence for The Chain Veil's "loyalty
+-- ability of a planeswalker": no card in data/cards/ gives a planeswalker a
+-- non-loyalty activated ability. Kaito, Bane of Nightmares' ninjutsu would
+-- (AtomicCards.json, 2026-10-27, planeswalkers whose text has such a line).
 activationMeets :: ActivationCriteria.ActivationCriteria -> PastActivation.PastActivation -> Bool
 activationMeets criteria past =
   maybe True (\g -> any (Keyword.designates g) (ActivatedAbility.keyword =<< PastActivation.ability past)) (ActivationCriteria.grantedBy criteria)
