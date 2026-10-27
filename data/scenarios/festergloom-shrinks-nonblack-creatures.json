@@ -1,0 +1,122 @@
+{
+  "description": "CR 611.2c / 105.2: Festergloom gives nonblack creatures -1/-1 until end of turn",
+  "note": "Walking Corpse is black and keeps 2/2; Grizzly Bears is a 1/1 and Bob's Savannah Lions dies.",
+  "board": {
+    "active": "alice",
+    "step": "PrecombatMain",
+    "seats": [
+      {
+        "name": "alice",
+        "manaPool": "BCC",
+        "battlefield": [
+          {
+            "card": "Walking Corpse",
+            "label": "corpse"
+          },
+          {
+            "card": "Grizzly Bears",
+            "label": "bears"
+          }
+        ],
+        "hand": [
+          {
+            "card": "Festergloom",
+            "label": "gloom"
+          }
+        ],
+        "library": [
+          {
+            "card": "Island",
+            "label": "a1"
+          },
+          {
+            "card": "Island",
+            "label": "a2"
+          },
+          {
+            "card": "Island",
+            "label": "a3"
+          }
+        ]
+      },
+      {
+        "name": "bob",
+        "battlefield": [
+          {
+            "card": "Savannah Lions",
+            "label": "lions"
+          }
+        ],
+        "library": [
+          {
+            "card": "Island",
+            "label": "b1"
+          },
+          {
+            "card": "Island",
+            "label": "b2"
+          },
+          {
+            "card": "Island",
+            "label": "b3"
+          }
+        ]
+      }
+    ]
+  },
+  "timeline": [
+    {
+      "turn": 1,
+      "step": "PrecombatMain",
+      "player": "alice",
+      "do": {
+        "Cast": {
+          "object": "$gloom"
+        }
+      }
+    },
+    {
+      "turn": 1,
+      "step": "PrecombatMain",
+      "player": "alice",
+      "do": "Pass"
+    },
+    {
+      "turn": 1,
+      "step": "PrecombatMain",
+      "player": "alice",
+      "check": {
+        "PowerToughness": {
+          "object": "$corpse",
+          "power": 2,
+          "toughness": 2
+        }
+      }
+    },
+    {
+      "turn": 1,
+      "step": "PrecombatMain",
+      "player": "alice",
+      "check": {
+        "PowerToughness": {
+          "object": "$bears",
+          "power": 1,
+          "toughness": 1
+        }
+      }
+    },
+    {
+      "turn": 1,
+      "step": "PrecombatMain",
+      "player": "alice",
+      "check": {
+        "Count": {
+          "player": "bob",
+          "zone": "Graveyard",
+          "card": "Savannah Lions",
+          "count": 1
+        }
+      }
+    }
+  ]
+}

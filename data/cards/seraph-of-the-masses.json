@@ -1,0 +1,148 @@
+{
+  "faces": [
+    {
+      "characteristicPT": {
+        "power": {
+          "type": "Count",
+          "value": {
+            "aggregation": {
+              "type": "Members"
+            },
+            "filter": {
+              "type": "And",
+              "value": [
+                {
+                  "type": "HasCardType",
+                  "value": {
+                    "type": "Creature"
+                  }
+                },
+                {
+                  "type": "HeldBy",
+                  "value": {
+                    "holder": {
+                      "type": "Controller"
+                    },
+                    "relation": {
+                      "type": "You"
+                    }
+                  }
+                }
+              ]
+            },
+            "scope": {
+              "type": "InZone",
+              "value": {
+                "player": {
+                  "type": "Relative",
+                  "value": {
+                    "type": "AnyPlayer"
+                  }
+                },
+                "zone": {
+                  "type": "Battlefield"
+                }
+              }
+            }
+          }
+        },
+        "toughness": {
+          "type": "Count",
+          "value": {
+            "aggregation": {
+              "type": "Members"
+            },
+            "filter": {
+              "type": "And",
+              "value": [
+                {
+                  "type": "HasCardType",
+                  "value": {
+                    "type": "Creature"
+                  }
+                },
+                {
+                  "type": "HeldBy",
+                  "value": {
+                    "holder": {
+                      "type": "Controller"
+                    },
+                    "relation": {
+                      "type": "You"
+                    }
+                  }
+                }
+              ]
+            },
+            "scope": {
+              "type": "InZone",
+              "value": {
+                "player": {
+                  "type": "Relative",
+                  "value": {
+                    "type": "AnyPlayer"
+                  }
+                },
+                "zone": {
+                  "type": "Battlefield"
+                }
+              }
+            }
+          }
+        }
+      },
+      "keywords": [
+        {
+          "type": "Flying"
+        },
+        {
+          "type": "Convoke"
+        }
+      ],
+      "manaCost": [
+        {
+          "type": "Generic",
+          "value": 5
+        },
+        {
+          "type": "OfType",
+          "value": {
+            "type": "Colored",
+            "value": {
+              "type": "White"
+            }
+          }
+        },
+        {
+          "type": "OfType",
+          "value": {
+            "type": "Colored",
+            "value": {
+              "type": "White"
+            }
+          }
+        }
+      ],
+      "name": "Seraph of the Masses",
+      "oracleText": "Convoke (Your creatures can help cast this spell. Each creature you tap while casting this spell pays for {1} or one mana of that creature's color.)\nFlying\nSeraph of the Masses's power and toughness are each equal to the number of creatures you control.",
+      "power": {
+        "type": "Star"
+      },
+      "toughness": {
+        "type": "Star"
+      },
+      "typeLine": {
+        "subtypes": [
+          {
+            "type": "Angel"
+          }
+        ],
+        "types": [
+          {
+            "type": "Creature"
+          }
+        ]
+      }
+    }
+  ]
+}

@@ -1,0 +1,88 @@
+{
+  "faces": [
+    {
+      "keywords": [
+        {
+          "type": "Convoke"
+        }
+      ],
+      "manaCost": [
+        {
+          "type": "Generic",
+          "value": 8
+        },
+        {
+          "type": "OfType",
+          "value": {
+            "type": "Colored",
+            "value": {
+              "type": "Green"
+            }
+          }
+        }
+      ],
+      "name": "Feral Incarnation",
+      "oracleText": "Convoke (Your creatures can help cast this spell. Each creature you tap while casting this spell pays for {1} or one mana of that creature's color.)\nCreate three 3/3 green Beast creature tokens.",
+      "spell": {
+        "modes": [
+          {
+            "clauses": [
+              {
+                "effects": [
+                  {
+                    "type": "Create",
+                    "value": {
+                      "card": {
+                        "faces": [
+                          {
+                            "colorIndicator": [
+                              {
+                                "type": "Green"
+                              }
+                            ],
+                            "name": "Beast Token",
+                            "power": {
+                              "type": "Literal",
+                              "value": 3
+                            },
+                            "toughness": {
+                              "type": "Literal",
+                              "value": 3
+                            },
+                            "typeLine": {
+                              "subtypes": [
+                                {
+                                  "type": "Beast"
+                                }
+                              ],
+                              "types": [
+                                {
+                                  "type": "Creature"
+                                }
+                              ]
+                            }
+                          }
+                        ]
+                      },
+                      "quantity": {
+                        "type": "Literal",
+                        "value": 3
+                      }
+                    }
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      },
+      "typeLine": {
+        "types": [
+          {
+            "type": "Sorcery"
+          }
+        ]
+      }
+    }
+  ]
+}

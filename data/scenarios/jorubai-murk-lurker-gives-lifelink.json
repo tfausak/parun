@@ -1,0 +1,145 @@
+{
+  "description": "CR 702.15b / 611.2a: Jorubai Murk Lurker's {1}{B} gives target creature lifelink until end of turn",
+  "note": "With a Swamp it is a 2/4; Grizzly Bears gains lifelink and Hill Giant does not.",
+  "board": {
+    "active": "alice",
+    "step": "PrecombatMain",
+    "seats": [
+      {
+        "name": "alice",
+        "battlefield": [
+          {
+            "card": "Jorubai Murk Lurker",
+            "label": "lurker"
+          },
+          {
+            "card": "Swamp",
+            "label": "swamp"
+          },
+          {
+            "card": "Swamp",
+            "label": "swamp2"
+          },
+          {
+            "card": "Grizzly Bears",
+            "label": "bears"
+          },
+          {
+            "card": "Hill Giant",
+            "label": "giant"
+          }
+        ],
+        "library": [
+          {
+            "card": "Island",
+            "label": "a1"
+          },
+          {
+            "card": "Island",
+            "label": "a2"
+          },
+          {
+            "card": "Island",
+            "label": "a3"
+          }
+        ]
+      },
+      {
+        "name": "bob",
+        "library": [
+          {
+            "card": "Island",
+            "label": "b1"
+          },
+          {
+            "card": "Island",
+            "label": "b2"
+          },
+          {
+            "card": "Island",
+            "label": "b3"
+          }
+        ]
+      }
+    ]
+  },
+  "timeline": [
+    {
+      "turn": 1,
+      "step": "PrecombatMain",
+      "player": "alice",
+      "check": {
+        "PowerToughness": {
+          "object": "$lurker",
+          "power": 2,
+          "toughness": 4
+        }
+      }
+    },
+    {
+      "turn": 1,
+      "step": "PrecombatMain",
+      "player": "alice",
+      "do": {
+        "Activate": {
+          "object": "$lurker",
+          "targets": [
+            "$bears"
+          ],
+          "mana": [
+            "$swamp",
+            "$swamp2"
+          ]
+        }
+      }
+    },
+    {
+      "turn": 1,
+      "step": "PrecombatMain",
+      "player": "alice",
+      "do": "Pass"
+    },
+    {
+      "turn": 1,
+      "step": "PrecombatMain",
+      "player": "alice",
+      "check": {
+        "Keywords": {
+          "object": "$bears",
+          "keyword": {
+            "type": "Lifelink"
+          },
+          "count": 1
+        }
+      }
+    },
+    {
+      "turn": 1,
+      "step": "PrecombatMain",
+      "player": "alice",
+      "check": {
+        "Keywords": {
+          "object": "$giant",
+          "keyword": {
+            "type": "Lifelink"
+          },
+          "count": 0
+        }
+      }
+    },
+    {
+      "turn": 2,
+      "step": "Upkeep",
+      "player": "bob",
+      "check": {
+        "Keywords": {
+          "object": "Grizzly Bears",
+          "keyword": {
+            "type": "Lifelink"
+          },
+          "count": 0
+        }
+      }
+    }
+  ]
+}
