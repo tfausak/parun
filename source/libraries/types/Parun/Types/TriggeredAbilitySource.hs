@@ -32,7 +32,7 @@ data TriggeredAbilitySource = MkTriggeredAbilitySource
     -- placement stamp (Parun.Engine.Resolve.Common.alreadyTurnedFor).
     --
     -- Carried on the object rather than looked up, the entry it came from being
-    -- gone by resolution: an entry with no stated duration is retired as it
+    -- gone by resolution: a one-shot entry is retired as it
     -- fires (Parun.Engine.Event.Trigger.delayedPending).
     createdAt :: Maybe Timestamp.Timestamp,
     -- | CR 113.7a / 603.7: the delayed abilities the source's rules text

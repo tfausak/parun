@@ -31,6 +31,9 @@ import qualified Parun.Types.TurnWindow as TurnWindow
 -- armed through firing, and one of Parun.Engine.Expiry's sweeps is what eventually
 -- ends it (CR 514.2's cleanup, for Full Throttle's "this turn") -- or, for an
 -- Expiry.WhenPaid duration, CR 116.2c's payment (Synthetic Standing Bounty).
+-- Expiry.WhenUsed is the exception: firing uses it, so the entry keeps the one
+-- shot and is swept at cleanup unfired (Chandra, the Firebrand's "when you next
+-- cast ... this turn").
 -- Firing and the clock are not the only two ways an entry ends: an entry whose
 -- `window` names a turn now behind us can no longer fire at all, and
 -- settleOnsets retires it whatever its duration says.

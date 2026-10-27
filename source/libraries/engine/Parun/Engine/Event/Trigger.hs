@@ -23,6 +23,7 @@ import qualified Parun.Engine.Decide as Decide
 import qualified Parun.Engine.EffectZone as EffectZone
 import Parun.Engine.Event.Binding (batchBindings, batchPartition, eventBindingsOver)
 import Parun.Engine.Event.Match (matchesTriggerGiven, stepPlayers)
+import qualified Parun.Engine.Expiry as Expiry
 import qualified Parun.Engine.Filter as Filter
 import qualified Parun.Engine.Game as Game
 import qualified Parun.Engine.Keyword as Keyword
@@ -3602,7 +3603,8 @@ copiesIn abilities ability = List.genericLength (filter (== ability) abilities)
 -- CR 603.7: delayed abilities whose trigger event is among these events. An entry
 -- that TRIGGERS is REMOVED from the store (CR 603.7b) unless it carries a stated
 -- duration, which is that rule's own exception -- one of Expiry's sweeps ends
--- those instead. The survivors are returned so the caller can store them back. CR
+-- those instead. Expiry.firesOnce says which entries are one-shot: also those
+-- whose duration ends as it is used, "the next ... this turn". The survivors are returned so the caller can store them back. CR
 -- 603.7d-f: the controller travels with the entry, so a delayed ability resolves
 -- under whoever controlled the spell that created it even once that spell's source
 -- is gone.
@@ -3675,12 +3677,12 @@ delayedPending grouped gs =
       -- Which entries CR 603.7b's second sentence actually ASKS, answered without
       -- asking: the CR 101.4c ordering below has to know before the first
       -- question is raised. The three gates are firedBy's own, read through this
-      -- one predicate rather than restated -- a stated duration lifts the rule
-      -- entirely, a isReflexive entry never reaches firedBy, and one candidate is
-      -- no choice.
+      -- one predicate rather than restated -- a duration other than a one-shot
+      -- one lifts the rule entirely, a isReflexive entry never reaches firedBy,
+      -- and one candidate is no choice.
       asks entry =
         not (isReflexive entry)
-          && Maybe.isNothing (DelayedTrigger.expiry entry)
+          && once entry
           && case eventGroups (occurrences entry) of
             block : _ -> not (null (NonEmpty.tail block))
             [] -> False
@@ -3718,7 +3720,7 @@ delayedPending grouped gs =
       -- board but a PER-OCCURRENCE condition's batch. A batch-scoped one is never
       -- a choice, `occurrences` having left the block a singleton.
       firedBy entry
-        | Maybe.isJust (DelayedTrigger.expiry entry) = pure (occurrences entry)
+        | not (once entry) = pure (occurrences entry)
         | otherwise = case eventGroups (occurrences entry) of
             [] -> pure []
             block : _ ->
@@ -3783,8 +3785,9 @@ delayedPending grouped gs =
       triggered entry
         | isReflexive entry = pure (filter (interveningHolds gs) (if delayedArmed gs entry then [reflexiveFiring gs entry] else []))
         | otherwise = fmap (filter (interveningHolds gs) . fmap (pend entry)) (firedBy entry)
-      -- Triggering spends the one shot only for an entry with no stated duration.
-      spent (entry, fired) = not (null fired) && Maybe.isNothing (DelayedTrigger.expiry entry)
+      -- Triggering spends the one shot only for a one-shot entry.
+      spent (entry, fired) = not (null fired) && once entry
+      once entry = Expiry.firesOnce gs (DelayedTrigger.source entry) (DelayedTrigger.expiry entry)
    in do
         -- One pass, because `triggered` can ASK: the prompt must be raised once
         -- per entry, and `spent` reads the answer rather than recomputing it.

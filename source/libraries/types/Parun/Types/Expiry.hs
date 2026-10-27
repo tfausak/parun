@@ -133,8 +133,8 @@ data Expiry
   | -- | CR 611.2a / Quicken, Scout's Warning: ends the moment the effect it
     -- carries is exercised, not at a moment the clock could name. Also ends at
     -- cleanup like AtCleanup, since every printed producer also says "this
-    -- turn"; Parun.Engine.PlayerEffect.spentByCast/spentByLandPlay are the only
-    -- readers that end it early.
+    -- turn"; Parun.Engine.PlayerEffect.spentByCast/spentByLandPlay and a
+    -- delayed trigger's firing (Parun.Engine.Expiry.firesOnce) end it early.
     WhenUsed
   | -- | CR 611.2a: Duration.UntilEvent, stored. Ends when its event happens,
     -- and never resumes: a Vesuvan Shapeshifter turned face up again by other
