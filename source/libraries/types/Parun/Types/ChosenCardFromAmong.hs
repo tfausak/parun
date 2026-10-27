@@ -46,6 +46,12 @@ data ChosenCardFromAmong = MkChosenCardFromAmong
   { slot :: SlotName.SlotName,
     filter :: Filter.Filter Keyword.Keyword,
     count :: HowMany.HowMany,
-    chooser :: PlayerRef.PlayerRef
+    chooser :: PlayerRef.PlayerRef,
+    -- | CR 700.3: Nothing names the pick itself. Just names the player who then
+    -- takes one of two piles -- the chooser's pick and the rest of the matching
+    -- cards -- and that pile is what the ref names: Fact or Fiction's "an
+    -- opponent separates those cards into two piles. Put one pile into your
+    -- hand". Parun.Types.ChoosePermanents' pileChooser over a bound group.
+    pileChooser :: Maybe PlayerRef.PlayerRef
   }
   deriving (Eq, Ord, Show)

@@ -84,8 +84,8 @@ data TriggerCondition
   | -- | CR 510.2 / 603.2c: a permanent dealt combat damage to any recipient,
     -- once per combat damage step and damager (Leyline Phantom, Noble Purpose).
     DealsCombatDamage ActingPermanent.ActingPermanent
-  | -- | CR 603.2 / 120.1: a permanent dealt damage of any kind to a player the
-    -- relation admits (Akki Lavarunner, Curiosity).
+  | -- | CR 603.2 / 120.1: a permanent or spell dealt damage of any kind to a
+    -- player the relation admits (Akki Lavarunner, Curiosity, Chandra's Phoenix).
     DealsDamageToPlayer DealsDamageToPlayer.DealsDamageToPlayer
   | -- | CR 603.2 / 120.3: the bearer dealt damage to a CREATURE -- the arm
     -- above with rule 120.3's other recipient -- of this kind, or of any kind

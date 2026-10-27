@@ -784,8 +784,8 @@ matchesTriggerGiven bindings board gs bearer you cond event = case cond of
     GameEvent.ActivatedAbilityResolved _ -> False
     GameEvent.TriggeredAbilityResolved _ -> False
     GameEvent.CardArrived _ -> False
-  -- CR 603.2 / 120.1: the watched permanent dealt damage of ANY kind to a
-  -- PLAYER the relation admits -- SelfDealsCombatDamageToPlayer's arm with CR
+  -- CR 603.2 / 120.1: the watched permanent or spell dealt damage of ANY kind to
+  -- a PLAYER the relation admits -- SelfDealsCombatDamageToPlayer's arm with CR
   -- 510.1's combat test dropped, so a Soul's Fire pointed at a player fires it
   -- exactly as an unblocked attack does.
   --
@@ -10539,7 +10539,9 @@ matchesTriggerGiven bindings board gs bearer you cond event = case cond of
     -- through `board`, CR 603.10's battlefield immediately after the damage, as
     -- PermanentDealsCombatDamageToPlayer does: damage that kills Spirit Link's
     -- host also buries the Aura (CR 704.5m) before the log is scanned, and the
-    -- link has to be read as it stood.
+    -- link has to be read as it stood. A spell source is on no such board and is
+    -- read from its last known information (CR 608.2h), Chandra's Phoenix's "red
+    -- instant or sorcery spell".
     damageBy watched oid = case watched of
       ActingPermanent.Self -> oid == bearer
       ActingPermanent.Matching f -> maybe False (\view -> Filter.matches bearerContext view f) (postEventView board gs oid)
