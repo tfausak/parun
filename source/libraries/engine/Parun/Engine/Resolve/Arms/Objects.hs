@@ -1325,7 +1325,9 @@ affectPlayers resolving source controller legal (AffectPlayers.MkAffectPlayers d
                     ActivePlayerEffect.effect = bakedEffect,
                     ActivePlayerEffect.ability = resolvingAbilityName resolving gs,
                     -- Filled after this resolution, by the cast that uses a
-                    -- grant beside it (Parun.Engine.Cast.bindUser).
+                    -- grant beside it (Parun.Engine.Cast.bindUser). Not
+                    -- implemented: capturing a slot this resolution bound
+                    -- (#5706).
                     ActivePlayerEffect.slots = Map.empty
                   }
            in g1 {GameState.playerEffects = active : GameState.playerEffects g1}

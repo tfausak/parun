@@ -2861,9 +2861,9 @@ followIntoSpell permission old new gs = case permission of
             GameState.delayedTriggers = fmap followDelayed (GameState.delayedTriggers gs)
           }
 
--- CR 611.2a: Savage Summoning's "the next creature spell you cast this turn
--- ... That spell can't be countered. That creature enters with an additional
--- +1/+1 counter on it." One resolution installs three rows: the flash grant,
+-- CR 611.2a / 611.2c: Savage Summoning's "the next creature spell you cast
+-- this turn ... That spell can't be countered. That creature enters with an
+-- additional +1/+1 counter on it." One resolution installs three rows: the flash grant,
 -- whose Duration.UntilUsed names the slot, and two that read the slot through
 -- Filter.IsBound. The cast that spends the grant (`spent`, consumed beside this)
 -- binds `spell` into every row the grant's source installed that has not
@@ -3953,7 +3953,7 @@ castProposed perform spending pid oid sid printedFace castFrom preparedFor keywo
                           -- CR 611.2a: the rows this cast spends, for the
                           -- event's own reason -- nothing past this line rejects.
                           State.modify' (PlayerEffect.consume spent)
-                          -- CR 611.2a: and the spell that used them is "that
+                          -- CR 611.2c: and the spell that used them is "that
                           -- spell" to the rows their sources installed beside
                           -- them (Savage Summoning), for the same reason.
                           State.modify' (bindUser spent sid)
