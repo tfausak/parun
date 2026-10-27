@@ -7963,6 +7963,9 @@ arrangeComponents pid dest components =
 --
 -- CR 607.2q rides it as well: `relink` below.
 --
+-- So does a floating entry replacement naming the spell by slot, though no CR
+-- 400.7 exception is involved: `reenter` below.
+--
 -- So does a static ability's grant to the spell (The Caldaia's blitz):
 -- Parun.Engine.Stack.carryGrants stores it against the spell just before the
 -- move, and this re-keys it. Parun.PlanechaseSpec's "CR 400.7b" group proves it.
@@ -7977,7 +7980,7 @@ carryOver carrying oldId newId = case carrying of
     State.modify' $ \gs ->
       gs
         { GameState.continuousEffects = fmap (reanchor oldId (Set.singleton newId)) (GameState.continuousEffects gs),
-          GameState.replacements = fmap (rewatch oldId newId) (GameState.replacements gs),
+          GameState.replacements = fmap (rewatch oldId newId . reenter oldId newId) (GameState.replacements gs),
           GameState.exiledWith = fmap (relink oldId newId) (GameState.exiledWith gs)
         }
 
@@ -7989,7 +7992,37 @@ relink :: ObjectId -> ObjectId -> ExileLink.ExileLink -> ExileLink.ExileLink
 relink oldId newId link =
   if ExileLink.source link == oldId then link {ExileLink.source = newId} else link
 
--- carryOver's per-ROW half, and CR 400.7c's whole of it: a floating damage row
+-- carryOver's CR 614.1c half: "that creature enters with an additional +1/+1
+-- counter on it" (Boreal Outrider) is a replacement from another source (CR
+-- 614.12) watching ONE event, the spell becoming a permanent and entering (CR
+-- 608.3a). CR 614.1 applies it as that event would happen, while its slot still
+-- names the spell, so re-keying the slot onto the arrival before the entry loop
+-- reads it is that reading -- not a CR 400.7 exception. Parun.ManaSymbolSpec's
+-- BorealOutrider group proves it. A spell that leaves the stack any other way
+-- is never found again: the scenario
+-- cr-614-1-a-countered-spell-s-boreal-outrider-counter-never-finds-the-card-again
+-- proves that no other move re-keys the row.
+--
+-- Only an EntryR row: a row of any other class watches an event about the spell
+-- itself (a ZoneChangeR's "if that spell would be put into a graveyard"), which
+-- the permanent, a new object (CR 400.7), never is. A regression fence: the
+-- floating rows in data/cards/ naming a spell by slot outside an EntryR (Dire
+-- Fleet Daredevil, Storm of Memories, Rod of Absorption; 2026-10-27) all name
+-- an instant or sorcery spell.
+reenter :: ObjectId -> ObjectId -> ActiveReplacement.ActiveReplacement -> ActiveReplacement.ActiveReplacement
+reenter oldId newId row = case ActiveReplacement.effect row of
+  ReplacementEffect.EntryR _ -> renameSlots oldId newId row
+  _ -> row
+
+-- A floating row's captured slots with every naming of `old` renamed to `new`:
+-- the one rewrite behind `reenter` above and CR 400.7h's
+-- Parun.Engine.Cast.followIntoSpell, which differ only in which rows they pick.
+renameSlots :: ObjectId -> ObjectId -> ActiveReplacement.ActiveReplacement -> ActiveReplacement.ActiveReplacement
+renameSlots old new row =
+  let rename oid = if oid == old then new else oid
+   in row {ActiveReplacement.slots = fmap (Set.map rename) (ActiveReplacement.slots row)}
+
+-- carryOver's damage-row half, and CR 400.7c's whole of it: a floating damage row
 -- watching the spell watches the permanent instead. DamagePattern.whichSource is
 -- the one field that can name a permanent spell -- CR 609.7a's chosen source is
 -- baked into it, and the rule's own last sentence is what follows the choice

@@ -1,0 +1,131 @@
+{
+  "description": "CR 614.12 two Boreal Outriders each give the creature their spell became a counter",
+  "note": "Boreal Outrider's ruling of 2021-02-05: each Outrider's ability triggers separately, so one snow mana of the spell's color puts two counters on it. The Snow-Covered Forest pays the green spell's {G}. Each trigger installs its own row naming the spell; both find the permanent the spell becomes as it resolves (CR 608.3a), and each applies once.",
+  "board": {
+    "seats": [
+      {
+        "name": "alice",
+        "battlefield": [
+          {
+            "card": "Snow-Covered Forest",
+            "label": "forest",
+            "ready": true
+          },
+          {
+            "card": "Mountain",
+            "label": "mountain",
+            "ready": true
+          },
+          {
+            "card": "Boreal Outrider",
+            "ready": true,
+            "label": "first"
+          },
+          {
+            "card": "Boreal Outrider",
+            "ready": true,
+            "label": "second"
+          }
+        ],
+        "hand": [
+          {
+            "card": "Tomakul Honor Guard",
+            "label": "guard"
+          }
+        ],
+        "library": [
+          {
+            "card": "Plains"
+          },
+          {
+            "card": "Plains"
+          },
+          {
+            "card": "Plains"
+          },
+          {
+            "card": "Plains"
+          }
+        ]
+      },
+      {
+        "name": "bob",
+        "battlefield": [
+          {
+            "card": "Plains",
+            "ready": true
+          }
+        ],
+        "library": [
+          {
+            "card": "Plains"
+          },
+          {
+            "card": "Plains"
+          },
+          {
+            "card": "Plains"
+          },
+          {
+            "card": "Plains"
+          }
+        ]
+      }
+    ],
+    "active": "alice",
+    "step": "PrecombatMain"
+  },
+  "timeline": [
+    {
+      "turn": 1,
+      "step": "PrecombatMain",
+      "player": "alice",
+      "do": {
+        "Cast": {
+          "object": "$guard",
+          "mana": [
+            "$forest",
+            "$mountain"
+          ]
+        }
+      }
+    },
+    {
+      "turn": 1,
+      "step": "PrecombatMain",
+      "player": "alice",
+      "do": {
+        "OrderTriggers": [
+          "$first",
+          "$second"
+        ]
+      }
+    }
+  ],
+  "final": [
+    {
+      "Count": {
+        "player": "alice",
+        "zone": "Battlefield",
+        "card": "Tomakul Honor Guard",
+        "count": 1
+      }
+    },
+    {
+      "Counters": {
+        "object": "Tomakul Honor Guard",
+        "kind": {
+          "type": "PlusOnePlusOne"
+        },
+        "count": 2
+      }
+    },
+    {
+      "PowerToughness": {
+        "object": "Tomakul Honor Guard",
+        "power": 5,
+        "toughness": 3
+      }
+    }
+  ]
+}

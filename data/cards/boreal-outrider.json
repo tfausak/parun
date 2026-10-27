@@ -16,10 +16,11 @@
           }
         }
       ],
-      "name": "Synthetic Rimewood Herald",
+      "name": "Boreal Outrider",
+      "oracleText": "Whenever you cast a creature spell, if {S} of any of that spell's colors was spent to cast it, that creature enters with an additional +1/+1 counter on it. ({S} is mana from a snow source.)",
       "power": {
         "type": "Literal",
-        "value": 2
+        "value": 3
       },
       "toughness": {
         "type": "Literal",
@@ -88,18 +89,39 @@
                   {
                     "effects": [
                       {
-                        "type": "PutCounters",
+                        "type": "Replace",
                         "value": {
-                          "kind": {
-                            "type": "PlusOnePlusOne"
+                          "duration": {
+                            "type": "Indefinite"
                           },
-                          "quantity": {
-                            "type": "Literal",
-                            "value": 1
+                          "effect": {
+                            "type": "EntryR",
+                            "value": {
+                              "matching": {
+                                "type": "IsBound",
+                                "value": "thatSpell"
+                              },
+                              "rewrite": {
+                                "type": "WithCounters",
+                                "value": [
+                                  {
+                                    "count": {
+                                      "type": "Literal",
+                                      "value": 1
+                                    },
+                                    "kind": {
+                                      "type": "PlusOnePlusOne"
+                                    }
+                                  }
+                                ]
+                              }
+                            }
                           },
-                          "ref": {
-                            "type": "InSlot",
-                            "value": "self"
+                          "origin": {
+                            "type": "Other"
+                          },
+                          "uses": {
+                            "type": "Once"
                           }
                         }
                       }
@@ -117,7 +139,7 @@
             "type": "Elf"
           },
           {
-            "type": "Scout"
+            "type": "Warrior"
           }
         ],
         "supertypes": [
