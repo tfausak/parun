@@ -299,7 +299,7 @@ assignDamage :: [(Reference.Reference, Natural)] -> Move.Move
 assignDamage = Move.AssignDamage . Map.fromList
 
 castAction :: Reference.Reference -> Choices.Choices -> Move.Move
-castAction ref choices = Move.Cast (Casting.MkCasting ref choices Nothing)
+castAction ref choices = Move.Cast (Casting.MkCasting ref choices Nothing Nothing)
 
 playLand :: Reference.Reference -> Move.Move
 playLand = Move.PlayLand

@@ -1,0 +1,46 @@
+{
+  "description": "CR 608.2h Consume gains its caster the power of the creature the target player sacrificed",
+  "note": "carol, the target, must sacrifice her Craw Wurm (6/4), the greatest power among her creatures, and keeps the Hill Giant; bob's Colossal Dreadmaw is no target's. The Wurm is gone by the time \"its power\" is read, so CR 608.2h answers off its last known information and alice goes from 13 to 19. Read live, the gone Wurm has no power and she would stay at 13. bob's graveyard holds a card so that Consecrate is castable too and the cast has a half to name.",
+  "board": {
+    "active": "alice",
+    "step": "PrecombatMain",
+    "seats": [
+      {
+        "name": "alice",
+        "life": 13,
+        "battlefield": [
+          { "card": "Plains", "label": "p0" },
+          { "card": "Plains", "label": "p1" },
+          { "card": "Swamp", "label": "s0" },
+          { "card": "Swamp", "label": "s1" }
+        ],
+        "hand": [{ "card": "Consume", "label": "consume" }]
+      },
+      {
+        "name": "bob",
+        "battlefield": [{ "card": "Colossal Dreadmaw", "label": "dreadmaw" }],
+        "graveyard": [{ "card": "Grizzly Bears", "label": "dead" }]
+      },
+      {
+        "name": "carol",
+        "life": 17,
+        "battlefield": [
+          { "card": "Hill Giant", "label": "giant" },
+          { "card": "Craw Wurm", "label": "wurm" }
+        ]
+      }
+    ]
+  },
+  "timeline": [
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "do": { "Cast": { "object": "$consume", "face": "Consume", "targets": ["$carol"], "mana": ["$p0", "$p1", "$s0", "$s1"] } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "do": "Pass" },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "check": { "Life": { "player": "alice", "life": 19 } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "check": { "View": { "of": "Zone", "player": "carol", "zone": "Graveyard", "is": ["Craw Wurm"] } } }
+  ],
+  "final": [
+    { "View": { "of": "Zone", "player": "carol", "zone": "Battlefield", "is": ["$giant"] } },
+    { "View": { "of": "Zone", "player": "bob", "zone": "Battlefield", "is": ["$dreadmaw"] } },
+    { "Life": { "player": "carol", "life": 17 } },
+    { "Life": { "player": "bob", "life": 20 } }
+  ]
+}

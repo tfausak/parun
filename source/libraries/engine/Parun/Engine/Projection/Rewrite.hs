@@ -700,7 +700,7 @@ rewriteEffect pairs effect = case effect of
   Effect.Venture {} -> effect
   Effect.ExileHandThenDraw -> effect
   Effect.NoteManaSpent -> effect
-  Effect.PlayerSacrifices (PlayerSacrifices.MkPlayerSacrifices players filter_ quantity) -> Effect.PlayerSacrifices (PlayerSacrifices.MkPlayerSacrifices players (Filter.rewrite pairs filter_) (rewriteQuantity pairs quantity))
+  Effect.PlayerSacrifices (PlayerSacrifices.MkPlayerSacrifices players filter_ quantity permanents) -> Effect.PlayerSacrifices (PlayerSacrifices.MkPlayerSacrifices players (Filter.rewrite pairs filter_) (rewriteQuantity pairs quantity) permanents)
   Effect.Bid bid -> Effect.Bid bid {Bid.opening = rewriteQuantity pairs (Bid.opening bid)}
   Effect.Vote vote ->
     Effect.Vote $ case Vote.choices vote of

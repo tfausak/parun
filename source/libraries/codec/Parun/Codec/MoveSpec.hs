@@ -27,7 +27,7 @@ import qualified Parun.Types.TextWord as TextWord.Type
 spec :: (Monad m, Monad n) => Spec.Spec m n -> n ()
 spec s = Spec.describe s "Parun.Codec.Move" $ do
   Spec.it s "Cast" $
-    Common.assertCodec s Move.codec (Move.Type.Cast (Casting.Type.MkCasting (ref "bolt") Choices.Type.none Nothing)) " {\"Cast\":{\"object\":\"$bolt\"}} "
+    Common.assertCodec s Move.codec (Move.Type.Cast (Casting.Type.MkCasting (ref "bolt") Choices.Type.none Nothing Nothing)) " {\"Cast\":{\"object\":\"$bolt\"}} "
   Spec.it s "PlayLand" $
     Common.assertCodec s Move.codec (Move.Type.PlayLand (ref "land")) " {\"PlayLand\":\"$land\"} "
   Spec.it s "Activate" $

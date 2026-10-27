@@ -1414,6 +1414,9 @@ anyOfOffends condition =
 -- | A position lint's accepting side: each author's atoms, as many as named,
 -- all sit in admitted positions, and they are the pool's only ones. The
 -- table is what a new author extends; no total is pinned beside it.
+--
+-- Summed over every face rather than read off the combined one, whose spell is
+-- a split card's left half's alone: Consume's edict is the right half's.
 assertAuthors ::
   Spec.Spec IO n ->
   Registry.Registry IO ->
@@ -1423,9 +1426,10 @@ assertAuthors ::
   [(String, Int)] ->
   IO ()
 assertAuthors s registry ps label counts authors = do
-  counted <- traverse (\(name, _) -> fmap (\p -> (name, counts (S.combinedFace p))) (S.printingOf s registry name)) authors
+  let facesCount = Foldable.foldl' (\(a, b) (c, d) -> (a + c, b + d)) (0, 0) . fmap counts . Card.Type.faces . Printing.card
+  counted <- traverse (\(name, _) -> fmap (\p -> (name, facesCount p)) (S.printingOf s registry name)) authors
   Spec.assertEqWith s label counted (fmap (\(name, n) -> (name, (n, 0))) authors)
-  Spec.assertEqWith s "and they are the pool's only ones" (sum (fmap (uncurry (+) . counts . S.combinedFace) ps)) (sum (fmap snd authors))
+  Spec.assertEqWith s "and they are the pool's only ones" (sum (fmap (uncurry (+) . facesCount) ps)) (sum (fmap snd authors))
 
 filterPositionLintSpec :: (Monad n) => Spec.Spec IO n -> Registry.Registry IO -> [(FilePath, Either Text.Text Card.Type.Card)] -> n ()
 filterPositionLintSpec s registry corpus = Spec.describe s "Lint" $ do
@@ -1666,7 +1670,8 @@ filterPositionLintSpec s registry corpus = Spec.describe s "Lint" $ do
         ("Hour of Glory", 1), -- its hand sweep's filter
         ("Grim Reminder", 1), -- its life loss amount's Count filter
         ("Haunting Echoes", 1), -- its search's filter
-        ("Doubling Chant", 1) -- its search's filter, against its loop's member
+        ("Doubling Chant", 1), -- its search's filter, against its loop's member
+        ("Shimian Specter", 1) -- its search's filter, against its loop's member
       ]
     -- Both sides of the split, with room to spare under the pool's real figures:
     -- a traversal that had stopped walking, or a Framing that had stopped marking
@@ -1935,6 +1940,7 @@ filterPositionLintSpec s registry corpus = Spec.describe s "Lint" $ do
     let authors :: [(String, Int)]
         authors =
           [ ("Break Under Pressure", 1),
+            ("Consume", 1),
             ("Consumed by Greed", 1),
             ("Crackling Doom", 1),
             ("Drop of Honey", 1),
@@ -1949,6 +1955,7 @@ filterPositionLintSpec s registry corpus = Spec.describe s "Lint" $ do
             ("Professor Onyx", 1),
             ("Purging Scythe", 1),
             ("Riveteers Charm", 1),
+            ("Shadowgrange Archfiend", 1),
             ("Soul Shatter", 1),
             ("Tariff", 1),
             ("Summon: Valefor", 1),
@@ -2001,7 +2008,8 @@ filterPositionLintSpec s registry corpus = Spec.describe s "Lint" $ do
         ("Infinite Reflection", 1), -- a CR 707.5 copy entry, read as Pariah's is
         ("Firebreathing", 1), -- an activated pump
         ("Shiv's Embrace", 1), -- Firebreathing's wording
-        ("Regeneration", 1) -- a loop whose member its shield names
+        ("Regeneration", 1), -- a loop whose member its shield names
+        ("Ring of Xathrid", 1) -- Regeneration's wording, through an Equipment
       ]
     -- The rejected side, which the sweep above cannot show while the pool has no
     -- offender: the same atom planted in a SPELL's target slot -- the position a

@@ -1,0 +1,51 @@
+{
+  "description": "CR 608.2h Disciple of Bolas gains life and draws cards equal to the power the sacrificed Aeon Chronicler last had",
+  "note": "alice holds four Islands once the Disciple is cast, so her Aeon Chronicler is 4/4. She sacrifices it rather than the Grizzly Bears (the prompt's other candidate), so CR 400.7 has replaced it by the time \"that creature's power\" is read, and CR 608.2h answers off its last known information: 4. Read live, the gone Chronicler has no power and alice would gain and draw nothing. She ends at 24 life holding four of her five Forests.",
+  "board": {
+    "active": "alice",
+    "step": "PrecombatMain",
+    "seats": [
+      {
+        "name": "alice",
+        "battlefield": [
+          { "card": "Swamp", "label": "s0" },
+          { "card": "Swamp", "label": "s1" },
+          { "card": "Swamp", "label": "s2" },
+          { "card": "Swamp", "label": "s3" },
+          { "card": "Grizzly Bears", "label": "bears" },
+          { "card": "Aeon Chronicler", "label": "chronicler" }
+        ],
+        "hand": [
+          { "card": "Disciple of Bolas", "label": "disciple" },
+          { "card": "Island" },
+          { "card": "Island" },
+          { "card": "Island" },
+          { "card": "Island" }
+        ],
+        "library": [
+          { "card": "Forest" },
+          { "card": "Forest" },
+          { "card": "Forest" },
+          { "card": "Forest" },
+          { "card": "Forest" }
+        ]
+      },
+      { "name": "bob" }
+    ]
+  },
+  "timeline": [
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "do": { "Cast": { "object": "$disciple", "mana": ["$s0", "$s1", "$s2", "$s3"] } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "do": "Pass" },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "check": { "View": { "of": "Stack", "is": ["trigger of Disciple of Bolas"] } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "check": { "PowerToughness": { "object": "$chronicler", "power": 4, "toughness": 4 } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "do": "Pass" },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "do": { "Answer": { "prompt": "ChooseSacrifices", "with": ["$chronicler"] } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "check": { "Life": { "player": "alice", "life": 24 } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "check": { "Count": { "player": "alice", "zone": "Hand", "card": "Forest", "count": 4 } } }
+  ],
+  "final": [
+    { "View": { "of": "Zone", "player": "alice", "zone": "Graveyard", "is": ["Aeon Chronicler"] } },
+    { "Count": { "player": "alice", "zone": "Battlefield", "card": "Grizzly Bears", "count": 1 } },
+    { "Count": { "player": "alice", "zone": "Battlefield", "card": "Disciple of Bolas", "count": 1 } }
+  ]
+}

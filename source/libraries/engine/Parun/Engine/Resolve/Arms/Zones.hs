@@ -361,7 +361,7 @@ moveToZone resolving source controller legal chosen (MoveToZone.MkMoveToZone ref
           -- CR 608.2h: a depth's amount is read once, off the pre-move board.
           depthBoard <- State.get
           let depthOf quantity =
-                maybe 0 Integer.toNaturalSaturating (Quantity.evaluateFor (effectViewOf source legal depthBoard) (chooseContext depthBoard) depthBoard resolving source quantity)
+                maybe 0 Integer.toNaturalSaturating (Quantity.evaluateFor (effectViewOf resolving source legal depthBoard) (chooseContext depthBoard) depthBoard resolving source quantity)
           arrivals <- Common.settleArrivals (Common.askedChooser resolving source controller legal) depthOf zone placement targets
           -- The batch's own board, read after CR 401.4's arrangement asks (which
           -- move nothing) and before any member does.
@@ -381,7 +381,7 @@ moveToZone resolving source controller legal chosen (MoveToZone.MkMoveToZone ref
           -- CR 608.2h: the counts the riders carry, settled ONCE off that same
           -- board and before the fold, so no member of the batch can see how many
           -- counters an earlier member arrived with (CR 608.2f).
-          let frozen = Common.freezeRiders (effectViewOf source legal before) (chooseContext before) before resolving source entry
+          let frozen = Common.freezeRiders (effectViewOf resolving source legal before) (chooseContext before) before resolving source entry
           -- CR 509.4's parenthetical: the attacking creature the effect
           -- SPECIFIED, named by slot. Read ONCE, ahead of the fold and off the
           -- same pre-move board the riders' counts were settled on, so CR 608.2f's
@@ -456,7 +456,7 @@ moveToZone resolving source controller legal chosen (MoveToZone.MkMoveToZone ref
             Just mover
               | oneAtATime -> fmap concat . Monad.forM arrivals $ \arrival -> do
                   now <- State.get
-                  let riders = Common.freezeRiders (effectViewOf source legal now) (chooseContext now) now resolving source entry
+                  let riders = Common.freezeRiders (effectViewOf resolving source legal now) (chooseContext now) now resolving source entry
                   fmap (reverse . snd) (Event.simultaneously (moveOne mover mAttack mBlocked riders now (Set.empty, []) arrival))
               | otherwise -> do
                   batch <- fmap (reverse . snd) (Event.simultaneously (Event.amongPending (if EntryRiders.under frozen == EntryController.Owner then Nothing else Just mover) (fmap fst arrivals) (Monad.foldM (moveOne mover mAttack mBlocked frozen before) (Set.empty, []) arrivals)))
@@ -697,7 +697,7 @@ offerCastArm offerCast runSubgame resolving source controller legal chosen (Offe
       -- whose restriction reads the source (CR 702.85a) answers what the walk
       -- that named these cards answered.
       context = effectContext gs resolving controller source legal (slotBindings resolving gs)
-      evaluate = Quantity.evaluateFor (effectViewOf source legal gs) context gs resolving source
+      evaluate = Quantity.evaluateFor (effectViewOf resolving source legal gs) context gs resolving source
       -- CastOffer.payableFromSpent: only a card whose mana cost the mana spent
       -- on this ability's {X} could pay stays on offer. That mana is
       -- Object.manaSpent less what paid the rest of the total
@@ -892,12 +892,12 @@ healArm resolving source controller legal ref =
 
 forEach :: (Game Result -> ObjectId -> ObjectId -> PlayerId -> Map.Map SlotName (Set Recipient) -> Map.Map SlotName (Set Recipient) -> Effect Card.Type.Card (GrantedAbility.GrantedAbility Card.Type.Card) -> Game ()) -> (Game Result -> ObjectId -> ObjectId -> PlayerId -> SlotName -> Map.Map SlotName (Set Recipient) -> [Recipient] -> PayGate.PayGate -> Game [Recipient]) -> Game Result -> ObjectId -> ObjectId -> PlayerId -> Map.Map SlotName (Set Recipient) -> Map.Map SlotName (Set Recipient) -> ForEach.ForEach (Effect Card.Type.Card (GrantedAbility.GrantedAbility Card.Type.Card)) -> Game ()
 forEach applyEffectWith loopOffers runSubgame resolving source controller legal chosen (ForEach.MkForEach ref membership slot body individually gate startingWith) = do
-  gs0 <- State.get
   -- CR 608.2f: WHICH members, swept ONCE from the pre-loop board and then fixed,
   -- so the body can neither shorten the batch nor add to it. Recipients rather
   -- than objects, since rule 608.2f is about "players and/or objects" and
   -- Soulfire Eruption's targets are both.
-  let swept = Common.objectRefRecipients legal resolving controller source gs0 ref
+  swept <- Common.loopMembers resolving source controller legal chosen ref
+  gs0 <- State.get
   -- CR 608.2d: a "you may" per member is ONE announcement of which members,
   -- made before the first iteration, since the loop is one action (CR 608.2f)
   -- and every choice it offers is announced while it is applied. Asked of the
@@ -1034,7 +1034,7 @@ forEach applyEffectWith loopOffers runSubgame resolving source controller legal 
 forEachNumber :: (Game Result -> ObjectId -> ObjectId -> PlayerId -> Map.Map SlotName (Set Recipient) -> Map.Map SlotName (Set Recipient) -> Set SlotName -> Seq.Seq (Effect Card.Type.Card (GrantedAbility.GrantedAbility Card.Type.Card)) -> Game ()) -> Game Result -> ObjectId -> ObjectId -> PlayerId -> Map.Map SlotName (Set Recipient) -> Map.Map SlotName (Set Recipient) -> ForEachNumber.ForEachNumber (Effect Card.Type.Card (GrantedAbility.GrantedAbility Card.Type.Card)) -> Game ()
 forEachNumber applyLoopBody runSubgame resolving source controller legal chosen (ForEachNumber.MkForEachNumber upTo slot body) = do
   gs0 <- State.get
-  let viewOf = effectViewOf source legal gs0
+  let viewOf = effectViewOf resolving source legal gs0
       context = effectContext gs0 resolving controller source legal (slotBindings resolving gs0)
       count = maybe 0 Integer.toNaturalSaturating (Common.evaluateForRecipient viewOf context gs0 resolving source controller upTo)
   Event.simultaneously . Event.together . Monad.forM_ [1 .. count] $ \n -> do
@@ -1068,7 +1068,7 @@ repeatArm applyLoopBody runSubgame resolving source controller legal chosen (Rep
         applyLoopBody runSubgame resolving source controller legal chosen (foldMap boundSlots body) body
         gs0 <- State.get
         let context = effectContext gs0 resolving controller source legal (slotBindings resolving gs0)
-            open = all (Condition.holds (effectViewOf source legal gs0) context gs0 source) gate
+            open = all (Condition.holds (effectViewOf resolving source legal gs0) context gs0 source) gate
         asked <- if open then Common.askedChooser resolving source controller legal chooser else pure Nothing
         Monad.forM_ asked $ \who -> do
           gs <- State.get
@@ -1098,7 +1098,7 @@ repeatIf applyLoopBody runSubgame resolving source controller legal chosen (Repe
         -- `defined` does for its body: Thieves' Auction's "chosen".
         let seen = Map.union legal (Map.restrictKeys (Binding.targetsOf (slotBindings resolving gs)) bound)
             context = effectContext gs resolving controller source seen (slotBindings resolving gs)
-        Monad.when (Condition.holds (effectViewOf source seen gs) context gs source condition) $ do
+        Monad.when (Condition.holds (effectViewOf resolving source seen gs) context gs source condition) $ do
           apply ifHolds
           run
   run
@@ -1106,7 +1106,7 @@ repeatIf applyLoopBody runSubgame resolving source controller legal chosen (Repe
 draw :: ObjectId -> ObjectId -> PlayerId -> Map.Map SlotName (Set Recipient) -> Draw.Draw -> Game ()
 draw resolving source controller legal (Draw.MkDraw ref quantity mSlot) = do
   gs <- State.get
-  let viewOf = effectViewOf source legal gs
+  let viewOf = effectViewOf resolving source legal gs
       context = effectContext gs resolving controller source legal (slotBindings resolving gs)
       named = playerRefPlayers legal resolving source controller gs ref
       -- CR 121.2c: the active player draws first, then each other player in turn
@@ -1159,7 +1159,7 @@ draw resolving source controller legal (Draw.MkDraw ref quantity mSlot) = do
 mill :: ObjectId -> ObjectId -> PlayerId -> Map.Map SlotName (Set Recipient) -> Mill.Mill -> Game ()
 mill resolving source controller legal (Mill.MkMill ref quantity mTally mSlot) = do
   gs <- State.get
-  let viewOf = effectViewOf source legal gs
+  let viewOf = effectViewOf resolving source legal gs
       context = effectContext gs resolving controller source legal (slotBindings resolving gs)
       -- An illegal slot (CR 608.2b) or a reference naming nobody mills nothing.
       millers = playerRefPlayers legal resolving source controller gs ref
@@ -1327,7 +1327,7 @@ arrangeInLibrary resolving source controller legal (ArrangeInLibrary.MkArrangeIn
 scry :: ObjectId -> ObjectId -> PlayerId -> Map.Map SlotName (Set Recipient) -> PlayerQuantity.PlayerQuantity -> Game ()
 scry resolving source controller legal (PlayerQuantity.MkPlayerQuantity ref quantity) = do
   gs <- State.get
-  let viewOf = effectViewOf source legal gs
+  let viewOf = effectViewOf resolving source legal gs
       context = effectContext gs resolving controller source legal (slotBindings resolving gs)
       -- An illegal slot (CR 608.2b) or a reference naming nobody scries nothing.
       named = playerRefPlayers legal resolving source controller gs ref
@@ -1357,7 +1357,7 @@ scry resolving source controller legal (PlayerQuantity.MkPlayerQuantity ref quan
 surveil :: ObjectId -> ObjectId -> PlayerId -> Map.Map SlotName (Set Recipient) -> PlayerQuantity.PlayerQuantity -> Game ()
 surveil resolving source controller legal (PlayerQuantity.MkPlayerQuantity ref quantity) = do
   gs <- State.get
-  let viewOf = effectViewOf source legal gs
+  let viewOf = effectViewOf resolving source legal gs
       context = effectContext gs resolving controller source legal (slotBindings resolving gs)
       -- Scry's arm in every respect, APNAP and both phases included (CR
       -- 101.4, rule 701.25 stating no order of its own).
@@ -1388,7 +1388,7 @@ surveil resolving source controller legal (PlayerQuantity.MkPlayerQuantity ref q
 fateseal :: ObjectId -> ObjectId -> PlayerId -> Map.Map SlotName (Set Recipient) -> PlayerQuantity.PlayerQuantity -> Game ()
 fateseal resolving source controller legal (PlayerQuantity.MkPlayerQuantity ref quantity) = do
   gs <- State.get
-  let viewOf = effectViewOf source legal gs
+  let viewOf = effectViewOf resolving source legal gs
       context = effectContext gs resolving controller source legal (slotBindings resolving gs)
       -- The players who FATESEAL, not the ones fatesealed (CR 701.29a); whose
       -- library is looked at is fatesealOne's separate choice.
@@ -1462,7 +1462,7 @@ explore resolving source controller legal ref = do
 connive :: ObjectId -> ObjectId -> PlayerId -> Map.Map SlotName (Set Recipient) -> Connive.Type.Connive -> Game ()
 connive resolving source controller legal (Connive.Type.MkConnive quantity ref) = do
   gs <- State.get
-  let viewOf = effectViewOf source legal gs
+  let viewOf = effectViewOf resolving source legal gs
       context = effectContext gs resolving controller source legal (slotBindings resolving gs)
   -- Explore's sweep and order, CR 701.50c stating CR 701.44d's rule over again,
   -- its seats read through last known information by CR 701.50b.
@@ -1501,7 +1501,7 @@ discard resolving source controller legal chosen (Discard.These (TheseDiscard.Mk
   Common.buryDiscards resolving mDiscarded (Maybe.mapMaybe owned named)
 discard resolving source controller legal _ (Discard.Counted (CountedDiscard.MkCountedDiscard ref quantity mDiscarded)) = do
   gs <- State.get
-  let viewOf = effectViewOf source legal gs
+  let viewOf = effectViewOf resolving source legal gs
       context = effectContext gs resolving controller source legal (slotBindings resolving gs)
   let -- Every player the reference names, in APNAP order (CR 101.4): a slot
       -- that is unfilled, illegal (CR 608.2b) or names an object contributes
@@ -1562,7 +1562,7 @@ discard resolving source controller legal _ (Discard.Counted (CountedDiscard.MkC
 -- capped at the ceiling.
 discard resolving source controller legal _ (Discard.AnyNumber (AnyNumberDiscard.MkAnyNumberDiscard ref (AnyNumberMatching.MkAnyNumberMatching filter_ atMost) mDiscarded)) = do
   gs <- State.get
-  let viewOf = effectViewOf source legal gs
+  let viewOf = effectViewOf resolving source legal gs
       context = effectContext gs resolving controller source legal (slotBindings resolving gs)
       named = playerRefPlayers legal resolving source controller gs ref
       victims = filter (\pid -> List.elem pid named) (Game.apnapOrder gs)
@@ -1583,7 +1583,7 @@ discard resolving source controller legal _ (Discard.AnyNumber (AnyNumberDiscard
 loseLife :: ObjectId -> ObjectId -> PlayerId -> Map.Map SlotName (Set Recipient) -> LifeLoss.LifeLoss -> Game ()
 loseLife resolving source controller legal (LifeLoss.MkLifeLoss ref quantity cause mTally) = do
   gs <- State.get
-  let viewOf = effectViewOf source legal gs
+  let viewOf = effectViewOf resolving source legal gs
       context = effectContext gs resolving controller source legal (slotBindings resolving gs)
       -- Whoever the PlayerRef names loses the life. Unordered: there is no CR
       -- 121.2c for life, and CR 704.3 checks state-based actions only as a player
@@ -1641,7 +1641,7 @@ loseLife resolving source controller legal (LifeLoss.MkLifeLoss ref quantity cau
 gainLife :: ObjectId -> ObjectId -> PlayerId -> Map.Map SlotName (Set Recipient) -> PlayerQuantity.PlayerQuantity -> Game ()
 gainLife resolving source controller legal (PlayerQuantity.MkPlayerQuantity ref quantity) = do
   gs <- State.get
-  let viewOf = effectViewOf source legal gs
+  let viewOf = effectViewOf resolving source legal gs
       context = effectContext gs resolving controller source legal (slotBindings resolving gs)
       gainers = playerRefPlayers legal resolving source controller gs ref
   Event.simultaneously . Monad.forM_ gainers $ \pid ->
@@ -1784,7 +1784,7 @@ exchangeValues resolving source controller legal (ExchangeValues.MkExchangeValue
 setLifeTotal :: ObjectId -> ObjectId -> PlayerId -> Map.Map SlotName (Set Recipient) -> PlayerQuantity.PlayerQuantity -> Game ()
 setLifeTotal resolving source controller legal (PlayerQuantity.MkPlayerQuantity ref quantity) = do
   gs <- State.get
-  let viewOf = effectViewOf source legal gs
+  let viewOf = effectViewOf resolving source legal gs
       context = effectContext gs resolving controller source legal (slotBindings resolving gs)
       recipients = playerRefPlayers legal resolving source controller gs ref
   -- CR 608.2f's bracket, the GainLife arm's: one instruction setting several
@@ -1911,7 +1911,7 @@ redistributeLifeTotals source controller = do
 increaseSpeed :: ObjectId -> ObjectId -> PlayerId -> Map.Map SlotName (Set Recipient) -> PlayerQuantity.PlayerQuantity -> Game ()
 increaseSpeed resolving source controller legal (PlayerQuantity.MkPlayerQuantity ref quantity) = do
   gs <- State.get
-  let viewOf = effectViewOf source legal gs
+  let viewOf = effectViewOf resolving source legal gs
       context = effectContext gs resolving controller source legal (slotBindings resolving gs)
       revving = playerRefPlayers legal resolving source controller gs ref
   Monad.forM_ revving $ \pid ->
@@ -1941,7 +1941,7 @@ increaseSpeed resolving source controller legal (PlayerQuantity.MkPlayerQuantity
 decreaseSpeed :: ObjectId -> ObjectId -> PlayerId -> Map.Map SlotName (Set Recipient) -> SpeedDecrease.SpeedDecrease -> Game ()
 decreaseSpeed resolving source controller legal d = do
   gs <- State.get
-  let viewOf = effectViewOf source legal gs
+  let viewOf = effectViewOf resolving source legal gs
       context = effectContext gs resolving controller source legal (slotBindings resolving gs)
       slowing = playerRefPlayers legal resolving source controller gs (SpeedDecrease.player d)
       atLeast = toInteger (SpeedDecrease.floor d)
@@ -1964,9 +1964,9 @@ decreaseSpeed resolving source controller legal d = do
 -- first, in APNAP order, and only then does anything leave the battlefield.
 -- The candidate lists are read off ONE `gs` for the same reason.
 playerSacrifices :: ObjectId -> ObjectId -> PlayerId -> Map.Map SlotName (Set Recipient) -> PlayerSacrifices.PlayerSacrifices -> Game ()
-playerSacrifices resolving source controller legal (PlayerSacrifices.MkPlayerSacrifices players filter_ quantity) = do
+playerSacrifices resolving source controller legal (PlayerSacrifices.MkPlayerSacrifices players filter_ quantity mPermanents) = do
   gs <- State.get
-  let viewOf = effectViewOf source legal gs
+  let viewOf = effectViewOf resolving source legal gs
       context = effectContext gs resolving controller source legal (slotBindings resolving gs)
       -- Every player the reference names, in APNAP order.
       named = playerRefPlayers legal resolving source controller gs players
@@ -2008,12 +2008,21 @@ playerSacrifices resolving source controller legal (PlayerSacrifices.MkPlayerSac
                 pure (victim, List.genericTake wanted (valid <> filler))
           _ -> pure (victim, [])
   doomed <- fmap Foldable.toList (Monad.foldM pickFor Seq.empty victims)
+  picked <- State.get
   -- CR 101.4's "then the actions happen simultaneously", which its own Example
   -- writes out for this very instruction, so the picks from every seat go to the
   -- funnel as ONE batch against one board. Parun.EventSpec's Rishadan Cutpurse
   -- case is the proof, on three seats: a Rest in Peace sacrificed by one
   -- opponent still exiles what the other's pick would otherwise bury.
   Event.sacrificeAll (concatMap (\(victim, oids) -> fmap (\oid -> (victim, oid)) oids) doomed)
+  -- The PERMANENTS the funnel sacrificed, under their battlefield ids, for a
+  -- later clause to read through CR 608.2h's last known information --
+  -- Consume's "its power". Destroy's `permanents` shape and for its reason;
+  -- nothing is bound when nothing was sacrificed.
+  Monad.forM_ mPermanents $ \slot -> do
+    after <- State.get
+    let sacrificed = Common.sacrificedBetween picked after
+    Monad.unless (null sacrificed) (State.modify' (Common.bindObjectsSlot resolving slot (Seq.fromList sacrificed)))
 
 -- CR 701.38a: each player, starting with the seat the payload specifies and
 -- proceeding in turn order, votes for one of the listed choices. What the
@@ -2147,7 +2156,7 @@ vote resolving source controller legal (Vote.MkVote starter choices secret) = do
 bid :: ObjectId -> ObjectId -> PlayerId -> Map.Map SlotName (Set Recipient) -> Bid.Bid -> Game ()
 bid resolving source controller legal (Bid.MkBid opening highBidSlot highBidderSlot) = do
   gs <- State.get
-  let viewOf = effectViewOf source legal gs
+  let viewOf = effectViewOf resolving source legal gs
       context = effectContext gs resolving controller source legal (slotBindings resolving gs)
       start = maybe 0 Integer.toNaturalSaturating (Quantity.evaluateFor viewOf context gs resolving source opening)
       bidders = filter (\pid -> List.elem pid (Players.table (Plane.rangePerspective source controller gs) gs)) (Game.turnOrderFrom controller gs)
