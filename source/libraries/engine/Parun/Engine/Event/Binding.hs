@@ -1204,6 +1204,8 @@ batchPartition cond bindings = case cond of
   -- CR 603.2c: one occurrence per damaged player, and per damaged planeswalker
   -- beside it -- Vengeful Pharaoh's ruling (2011-09-22) that damage to you and
   -- a planeswalker you control at once triggers it twice.
+  -- data/scenarios/card-trigger/cr-603-2c-vengeful-pharaoh-triggers-once-for-you-and-once-per-planeswalker.json
+  -- proves the split.
   TriggerCondition.PlayerIsDealtDamage _ -> seat Binding.triggerPlayer <> object Binding.became
   -- The branch that matched is the one that stamped, eventBindings' AnyOf arm's
   -- reading.
@@ -2157,6 +2159,11 @@ eventBindingSlotsSometimes cond = case cond of
   -- and delayedPending scans no batch at all. data/cards/prowling-geistcatcher.json
   -- is the reader.
   TriggerCondition.PermanentSacrificed {} -> Set.singleton Binding.became
+  -- The damaged player for damage to them, the damaged planeswalker for damage
+  -- to one: eventBindings' arm binds whichever the event's recipient is. Nothing
+  -- in data/cards/ names either under it.
+  TriggerCondition.PlayerIsDealtDamage watched
+    | PlayerIsDealtDamage.orTheirPlaneswalkers watched -> Set.fromList [Binding.became, Binding.triggerPlayer]
   -- Binding.handArrival, bound when the move a destination-free condition
   -- matched reached a hand. Nothing in data/cards/ names it under one.
   TriggerCondition.CardLeavesZone p

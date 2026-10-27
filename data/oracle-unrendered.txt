@@ -2173,6 +2173,7 @@ venerated-loxodon
 venerated-rotpriest
 vengeant-earth
 vengeful-archon
+vengeful-pharaoh
 vengeful-townsfolk
 vengeful-tracker
 vernal-bloom
