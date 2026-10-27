@@ -24,7 +24,7 @@ import qualified Parun.Types.PayObligation as PayObligation
 -- the branch, where a default would let a card written a word short play as the
 -- opposite card.
 --
--- The other five are elided when unmarked, which is what every card but
+-- The other six are elided when unmarked, which is what every card but
 -- Standstill and Don't Make a Sound writes: CR 118.12a's rewriting makes an
 -- "unless" cost optional, a clause that names no other clause makes its own
 -- offer, and a cost is offered once rather than once per counted thing.
@@ -32,7 +32,8 @@ import qualified Parun.Types.PayObligation as PayObligation
 -- 702.24a's mint writes one too, but a minted ability never goes on the wire.
 -- `basis` is Flash's alone: CR 118.6 lets a cost be described in terms of
 -- another object's mana cost rather than printed, and every other gate prints
--- one.
+-- one. `x` is Flameblast Dragon's: an {X} chosen as the ability resolves (CR
+-- 107.3f) rather than announced.
 --
 -- `cost` is the gate's first option and `orCosts` the rest, in printed order
 -- (Parun.Types.PayGate.cost), so a one-option gate writes no list.
@@ -45,6 +46,7 @@ codec = Fields.object $ do
   branch <- Fields.required "branch" PayBranch.codec PayGate.branch
   obligation <- Fields.defaulted "obligation" PayObligation.Optional PayObligation.codec PayGate.obligation
   perEach <- Fields.defaulted "perEach" Nothing (Common.maybe Quantity.codec) PayGate.perEach
+  x <- Fields.defaulted "x" Nothing (Common.maybe Quantity.codec) PayGate.x
   offeredAt <- Fields.defaulted "offeredAt" Nothing (Common.maybe ClauseIndex.codec) PayGate.offeredAt
   pure
     PayGate.MkPayGate
@@ -54,5 +56,6 @@ codec = Fields.object $ do
         PayGate.branch = branch,
         PayGate.obligation = obligation,
         PayGate.perEach = perEach,
+        PayGate.x = x,
         PayGate.offeredAt = offeredAt
       }

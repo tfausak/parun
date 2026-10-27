@@ -1,0 +1,30 @@
+{
+  "description": "CR 107.3f Flameblast Dragon pays an X chosen as its attack trigger resolves",
+  "note": "The trigger announces no X (CR 107.3f), so alice names 3 as it resolves and pays {3}{R} with all four Mountains: bob takes 3 from the trigger and 5 in combat. Read as an announced X, the cost would be {R} alone and three red mana would float.",
+  "board": {
+    "seats": [
+      {
+        "name": "alice",
+        "battlefield": [
+          { "card": "Flameblast Dragon", "label": "dragon", "ready": true },
+          { "card": "Mountain", "label": "m1" },
+          { "card": "Mountain", "label": "m2" },
+          { "card": "Mountain", "label": "m3" },
+          { "card": "Mountain", "label": "m4" }
+        ]
+      },
+      { "name": "bob" }
+    ],
+    "active": "alice",
+    "step": "PrecombatMain"
+  },
+  "timeline": [
+    { "turn": 1, "step": "DeclareAttackers", "player": "alice", "do": { "Attack": ["$dragon"] } },
+    { "turn": 1, "step": "DeclareAttackers", "player": "alice", "do": { "ChooseTargets": { "target": ["$bob"] } }, "source": "$dragon" },
+    { "turn": 1, "step": "DeclareAttackers", "player": "alice", "do": { "Answer": { "prompt": "ChooseNumber", "with": 3 } }, "source": "$dragon" },
+    { "turn": 1, "step": "DeclareAttackers", "player": "alice", "do": { "ChooseToPay": { "decision": { "type": "Pays" }, "mana": ["$m1", "$m2", "$m3", "$m4"] } }, "source": "$dragon" },
+    { "turn": 1, "step": "DeclareAttackers", "player": "alice", "check": { "Life": { "player": "bob", "life": 17 } } },
+    { "turn": 1, "step": "DeclareAttackers", "player": "alice", "check": { "View": { "of": "ManaPool", "player": "alice", "is": [] } } },
+    { "turn": 1, "step": "EndOfCombat", "player": "alice", "check": { "Life": { "player": "bob", "life": 12 } } }
+  ]
+}

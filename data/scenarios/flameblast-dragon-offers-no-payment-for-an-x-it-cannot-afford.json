@@ -1,0 +1,26 @@
+{
+  "description": "CR 118.3 Flameblast Dragon offers no payment for an X it cannot afford",
+  "note": "alice names 3 for X with one Mountain: {3}{R} is unpayable, so she is never asked to pay (an unscheduled ChooseToPay would fail the scenario) and bob takes only the 5 combat damage. Read as an announced X of 0, the cost would be a payable {R}.",
+  "board": {
+    "seats": [
+      {
+        "name": "alice",
+        "battlefield": [
+          { "card": "Flameblast Dragon", "label": "dragon", "ready": true },
+          { "card": "Mountain", "label": "m1" }
+        ]
+      },
+      { "name": "bob" }
+    ],
+    "active": "alice",
+    "step": "PrecombatMain"
+  },
+  "timeline": [
+    { "turn": 1, "step": "DeclareAttackers", "player": "alice", "do": { "Attack": ["$dragon"] } },
+    { "turn": 1, "step": "DeclareAttackers", "player": "alice", "do": { "ChooseTargets": { "target": ["$bob"] } }, "source": "$dragon" },
+    { "turn": 1, "step": "DeclareAttackers", "player": "alice", "do": { "Answer": { "prompt": "ChooseNumber", "with": 3 } }, "source": "$dragon" },
+    { "turn": 1, "step": "DeclareAttackers", "player": "alice", "check": { "Life": { "player": "bob", "life": 20 } } },
+    { "turn": 1, "step": "DeclareAttackers", "player": "alice", "check": { "Tapped": { "object": "$m1", "tapped": false } } },
+    { "turn": 1, "step": "EndOfCombat", "player": "alice", "check": { "Life": { "player": "bob", "life": 15 } } }
+  ]
+}

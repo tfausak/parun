@@ -1,0 +1,30 @@
+{
+  "description": "CR 603.5 Flameblast Dragon deals nothing when its payment is declined",
+  "note": "alice names 3 for X and then declines to pay {3}{R}: the trigger deals no damage and taps no Mountain, so bob takes only the 5 combat damage.",
+  "board": {
+    "seats": [
+      {
+        "name": "alice",
+        "battlefield": [
+          { "card": "Flameblast Dragon", "label": "dragon", "ready": true },
+          { "card": "Mountain", "label": "m1" },
+          { "card": "Mountain", "label": "m2" },
+          { "card": "Mountain", "label": "m3" },
+          { "card": "Mountain", "label": "m4" }
+        ]
+      },
+      { "name": "bob" }
+    ],
+    "active": "alice",
+    "step": "PrecombatMain"
+  },
+  "timeline": [
+    { "turn": 1, "step": "DeclareAttackers", "player": "alice", "do": { "Attack": ["$dragon"] } },
+    { "turn": 1, "step": "DeclareAttackers", "player": "alice", "do": { "ChooseTargets": { "target": ["$bob"] } }, "source": "$dragon" },
+    { "turn": 1, "step": "DeclareAttackers", "player": "alice", "do": { "Answer": { "prompt": "ChooseNumber", "with": 3 } }, "source": "$dragon" },
+    { "turn": 1, "step": "DeclareAttackers", "player": "alice", "do": { "ChooseToPay": { "decision": { "type": "Declines" } } }, "source": "$dragon" },
+    { "turn": 1, "step": "DeclareAttackers", "player": "alice", "check": { "Life": { "player": "bob", "life": 20 } } },
+    { "turn": 1, "step": "DeclareAttackers", "player": "alice", "check": { "Tapped": { "object": "$m1", "tapped": false } } },
+    { "turn": 1, "step": "EndOfCombat", "player": "alice", "check": { "Life": { "player": "bob", "life": 15 } } }
+  ]
+}

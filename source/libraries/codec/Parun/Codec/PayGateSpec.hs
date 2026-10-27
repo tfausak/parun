@@ -35,6 +35,7 @@ manaLeak =
       PayGate.branch = PayBranch.IfNotPaid,
       PayGate.obligation = PayObligation.Optional,
       PayGate.perEach = Nothing,
+      PayGate.x = Nothing,
       PayGate.offeredAt = Nothing
     }
 
@@ -74,6 +75,13 @@ spec s = Spec.describe s "Parun.Codec.PayGate" $ do
       PayGate.codec
       manaLeak {PayGate.perEach = Just (Quantity.Literal 2)}
       " {\"payer\":{\"type\":\"HolderOfBound\",\"value\":{\"holder\":{\"type\":\"Controller\"},\"hop\":{\"type\":\"Itself\"},\"slot\":\"spell\"}},\"cost\":{\"mana\":[{\"type\":\"Generic\",\"value\":3}]},\"branch\":{\"type\":\"IfNotPaid\"},\"perEach\":{\"type\":\"Literal\",\"value\":2}} "
+  -- CR 107.3f's X, chosen as the ability resolves: Flameblast Dragon's.
+  Spec.it s "MkPayGate, an X chosen during resolution" $
+    Common.assertCodec
+      s
+      PayGate.codec
+      manaLeak {PayGate.x = Just (Quantity.Literal 2)}
+      " {\"payer\":{\"type\":\"HolderOfBound\",\"value\":{\"holder\":{\"type\":\"Controller\"},\"hop\":{\"type\":\"Itself\"},\"slot\":\"spell\"}},\"cost\":{\"mana\":[{\"type\":\"Generic\",\"value\":3}]},\"branch\":{\"type\":\"IfNotPaid\"},\"x\":{\"type\":\"Literal\",\"value\":2}} "
   -- CR 118.6's described cost, Flash's: no mana part of its own, and a basis
   -- naming the slot whose object's mana cost it is.
   Spec.it s "MkPayGate, a cost described in terms of another object's mana cost" $

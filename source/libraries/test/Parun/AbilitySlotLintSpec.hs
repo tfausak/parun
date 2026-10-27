@@ -1149,6 +1149,7 @@ abilitySlotLintSpec s registry corpus = Spec.describe s "Lint" $ do
                             PayGate.branch = PayBranch.IfNotPaid,
                             PayGate.obligation = PayObligation.Optional,
                             PayGate.perEach = Just quantity,
+                            PayGate.x = Nothing,
                             PayGate.offeredAt = Nothing
                           }
                     )
