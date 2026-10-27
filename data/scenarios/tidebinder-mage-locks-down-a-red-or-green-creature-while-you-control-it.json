@@ -1,0 +1,26 @@
+{
+  "description": "CR 502.3 / 611.2b: Tidebinder Mage taps target red or green creature an opponent controls, which doesn't untap during its controller's untap step for as long as the Mage's controller controls the Mage",
+  "note": "bob's blue Coral Merfolk is no legal target, so the Mage taps his Gray Ogre. It stays tapped through bob's turn 2; once alice Shocks her Mage on turn 3, it untaps on turn 4.",
+  "board": {
+    "active": "alice",
+    "step": "PrecombatMain",
+    "seats": [
+      {"name": "alice", "battlefield": [{"card": "Island", "label": "i1"}, {"card": "Island", "label": "i2"}, {"card": "Mountain", "label": "m"}], "hand": [{"card": "Tidebinder Mage", "label": "mage"}, {"card": "Shock", "label": "shock"}], "library": [{"card": "Island"}, {"card": "Island"}, {"card": "Island"}, {"card": "Island"}]},
+      {"name": "bob", "battlefield": [{"card": "Gray Ogre", "label": "ogre"}, {"card": "Coral Merfolk", "label": "merfolk"}], "library": [{"card": "Island"}, {"card": "Island"}, {"card": "Island"}, {"card": "Island"}]}
+    ]
+  },
+  "timeline": [
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "do": {"Cast": {"object": "$mage", "mana": ["$i1", "$i2", null]}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "do": "Pass"},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "refuse": {"ChooseTargets": {"target": ["$merfolk"]}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "do": {"ChooseTargets": {"target": ["$ogre"]}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "do": "Pass"},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "check": {"Tapped": {"object": "$ogre", "tapped": true}}},
+    {"turn": 2, "step": "Upkeep", "player": "bob", "check": {"Tapped": {"object": "$ogre", "tapped": true}}},
+    {"turn": 2, "step": "DeclareAttackers", "player": "bob", "do": {"Attack": []}},
+    {"turn": 3, "step": "PrecombatMain", "player": "alice", "do": {"Cast": {"object": "$shock", "targets": ["Tidebinder Mage"], "mana": ["$m", null]}}},
+    {"turn": 3, "step": "PrecombatMain", "player": "alice", "do": "Pass"},
+    {"turn": 3, "step": "PrecombatMain", "player": "alice", "check": {"Count": {"player": "alice", "zone": "Graveyard", "card": "Tidebinder Mage", "count": 1}}},
+    {"turn": 4, "step": "Upkeep", "player": "bob", "check": {"Tapped": {"object": "$ogre", "tapped": false}}}
+  ]
+}

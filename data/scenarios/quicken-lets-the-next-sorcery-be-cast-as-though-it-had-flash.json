@@ -1,0 +1,23 @@
+{
+  "description": "CR 117.1a / 702.8a: Quicken draws a card and lets its controller cast the next sorcery spell this turn as though it had flash, once",
+  "note": "In bob's upkeep alice casts Quicken, then Divination at instant speed. A second Divination isn't castable, though she has the mana: the permission was spent.",
+  "board": {
+    "active": "bob",
+    "step": "Upkeep",
+    "seats": [
+      {"name": "alice", "battlefield": [{"card": "Island", "label": "i1"}, {"card": "Island", "label": "i2"}, {"card": "Island", "label": "i3"}, {"card": "Island", "label": "i4"}, {"card": "Island", "label": "i5"}, {"card": "Island", "label": "i6"}, {"card": "Island", "label": "i7"}], "hand": [{"card": "Quicken", "label": "quicken"}, {"card": "Divination", "label": "div1"}, {"card": "Divination", "label": "div2"}], "library": [{"card": "Island"}, {"card": "Island"}, {"card": "Island"}, {"card": "Island"}, {"card": "Island"}, {"card": "Island"}]},
+      {"name": "bob", "library": [{"card": "Island"}, {"card": "Island"}, {"card": "Island"}, {"card": "Island"}]}
+    ]
+  },
+  "timeline": [
+    {"turn": 1, "step": "Upkeep", "player": "alice", "refuse": {"Cast": {"object": "$div1", "mana": ["$i2", "$i3", "$i4", null]}}},
+    {"turn": 1, "step": "Upkeep", "player": "alice", "do": {"Cast": {"object": "$quicken", "mana": ["$i1", null]}}},
+    {"turn": 1, "step": "Upkeep", "player": "alice", "do": "Pass"},
+    {"turn": 1, "step": "Upkeep", "player": "alice", "check": {"Count": {"player": "alice", "zone": "Hand", "card": "Island", "count": 1}}},
+    {"turn": 1, "step": "Upkeep", "player": "alice", "do": {"Cast": {"object": "$div1", "mana": ["$i2", "$i3", "$i4", null]}}},
+    {"turn": 1, "step": "Upkeep", "player": "alice", "do": "Pass"},
+    {"turn": 1, "step": "Upkeep", "player": "alice", "check": {"Count": {"player": "alice", "zone": "Hand", "card": "Island", "count": 3}}},
+    {"turn": 1, "step": "Upkeep", "player": "alice", "refuse": {"Cast": {"object": "$div2", "mana": ["$i5", "$i6", "$i7", null]}}},
+    {"turn": 1, "step": "Upkeep", "player": "alice", "check": {"Count": {"player": "alice", "zone": "Hand", "card": "Divination", "count": 1}}}
+  ]
+}

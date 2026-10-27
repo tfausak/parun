@@ -1,0 +1,19 @@
+{
+  "description": "CR 601.2f: Warden of Evos Isle makes creature spells with flying its controller casts cost {1} less",
+  "note": "Two Islands pay for Wind Drake ({2}{U}). One Forest can't pay for Grizzly Bears, which has no flying and gets no discount.",
+  "board": {
+    "active": "alice",
+    "step": "PrecombatMain",
+    "seats": [
+      {"name": "alice", "battlefield": [{"card": "Warden of Evos Isle", "label": "warden"}, {"card": "Island", "label": "i1"}, {"card": "Island", "label": "i2"}, {"card": "Forest", "label": "f"}], "hand": [{"card": "Wind Drake", "label": "drake"}, {"card": "Grizzly Bears", "label": "bears"}], "library": [{"card": "Island"}, {"card": "Island"}, {"card": "Island"}, {"card": "Island"}]},
+      {"name": "bob", "library": [{"card": "Island"}, {"card": "Island"}, {"card": "Island"}, {"card": "Island"}]}
+    ]
+  },
+  "timeline": [
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "do": {"Cast": {"object": "$drake", "mana": ["$i1", "$i2", null]}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "do": "Pass"},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "check": {"Count": {"player": "alice", "zone": "Battlefield", "card": "Wind Drake", "count": 1}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "refuse": {"Cast": {"object": "$bears", "mana": ["$f", null]}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "check": {"Count": {"player": "alice", "zone": "Hand", "card": "Grizzly Bears", "count": 1}}}
+  ]
+}

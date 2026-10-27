@@ -1,0 +1,20 @@
+{
+  "description": "CR 604.2 / 508.1m: Path of Bravery gives its controller's creatures +1/+1 while their life total is at least their starting life total, and gains them life equal to the number of attacking creatures whenever they attack",
+  "note": "alice starts at 19, below her starting 20, so her creatures are unpumped. Attacking with two gains 2, taking her to 21, and the bonus switches on before damage: bob takes 3 + 4.",
+  "board": {
+    "active": "alice",
+    "step": "PrecombatMain",
+    "seats": [
+      {"name": "alice", "life": 19, "battlefield": [{"card": "Path of Bravery", "label": "path"}, {"card": "Grizzly Bears", "label": "bears", "ready": true}, {"card": "Hill Giant", "label": "giant", "ready": true}], "library": [{"card": "Island"}, {"card": "Island"}, {"card": "Island"}, {"card": "Island"}]},
+      {"name": "bob", "library": [{"card": "Island"}, {"card": "Island"}, {"card": "Island"}, {"card": "Island"}]}
+    ]
+  },
+  "timeline": [
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "check": {"PowerToughness": {"object": "$bears", "power": 2, "toughness": 2}}},
+    {"turn": 1, "step": "DeclareAttackers", "player": "alice", "do": {"Attack": ["$bears", "$giant"]}},
+    {"turn": 1, "step": "DeclareAttackers", "player": "alice", "do": "Pass"},
+    {"turn": 1, "step": "DeclareAttackers", "player": "alice", "check": {"Life": {"player": "alice", "life": 21}}},
+    {"turn": 1, "step": "DeclareAttackers", "player": "alice", "check": {"PowerToughness": {"object": "$bears", "power": 3, "toughness": 3}}},
+    {"turn": 1, "step": "CombatDamage", "player": "alice", "check": {"Life": {"player": "bob", "life": 13}}}
+  ]
+}

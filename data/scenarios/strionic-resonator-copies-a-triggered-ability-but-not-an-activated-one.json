@@ -1,0 +1,25 @@
+{
+  "description": "CR 707.10 / 113.3c: Strionic Resonator copies target triggered ability its controller controls, and can't target an activated ability",
+  "note": "With Dragon Hatchling's activation on the stack the Resonator has no legal target. It copies Elvish Visionary's enters trigger instead, so alice draws two cards.",
+  "board": {
+    "active": "alice",
+    "step": "PrecombatMain",
+    "seats": [
+      {"name": "alice", "battlefield": [{"card": "Strionic Resonator", "label": "resonator"}, {"card": "Dragon Hatchling", "label": "hatchling"}, {"card": "Mountain", "label": "m"}, {"card": "Forest", "label": "f1"}, {"card": "Forest", "label": "f2"}, {"card": "Plains", "label": "p1"}, {"card": "Plains", "label": "p2"}], "hand": [{"card": "Elvish Visionary", "label": "visionary"}], "library": [{"card": "Island"}, {"card": "Island"}, {"card": "Island"}, {"card": "Island"}]},
+      {"name": "bob", "library": [{"card": "Island"}, {"card": "Island"}, {"card": "Island"}, {"card": "Island"}]}
+    ]
+  },
+  "timeline": [
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "do": {"Activate": {"object": "$hatchling", "mana": ["$m", null]}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "refuse": {"Activate": {"object": "$resonator", "targets": ["ability of $hatchling"], "mana": ["$p1", "$p2", null]}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "do": "Pass"},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "do": {"Cast": {"object": "$visionary", "mana": ["$f1", "$f2", null]}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "do": "Pass"},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "do": {"Activate": {"object": "$resonator", "targets": ["trigger of Elvish Visionary"], "mana": ["$p1", "$p2"]}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "do": "Pass"},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "check": {"View": {"of": "Stack", "is": ["trigger of Elvish Visionary", "trigger of Elvish Visionary"]}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "do": "Pass"},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "do": "Pass"},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "check": {"Count": {"player": "alice", "zone": "Hand", "card": "Island", "count": 2}}}
+  ]
+}

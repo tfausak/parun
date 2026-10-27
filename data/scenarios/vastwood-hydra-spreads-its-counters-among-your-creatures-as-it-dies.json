@@ -1,0 +1,26 @@
+{
+  "description": "CR 107.3m / 608.2d: Vastwood Hydra enters with X +1/+1 counters, and when it dies its controller may distribute that many +1/+1 counters among any number of creatures they control",
+  "note": "Cast for X = 3, the Hydra is a 3/3. When alice Lightning Bolts it, she splits its three counters two to the Grizzly Bears and one to the Gray Ogre; bob's Hill Giant can't get any.",
+  "board": {
+    "active": "alice",
+    "step": "PrecombatMain",
+    "seats": [
+      {"name": "alice", "battlefield": [{"card": "Forest", "label": "f1"}, {"card": "Forest", "label": "f2"}, {"card": "Forest", "label": "f3"}, {"card": "Forest", "label": "f4"}, {"card": "Forest", "label": "f5"}, {"card": "Mountain", "label": "m"}, {"card": "Grizzly Bears", "label": "bears"}, {"card": "Gray Ogre", "label": "ogre"}], "hand": [{"card": "Vastwood Hydra", "label": "hydra"}, {"card": "Lightning Bolt", "label": "bolt"}], "library": [{"card": "Island"}, {"card": "Island"}, {"card": "Island"}, {"card": "Island"}]},
+      {"name": "bob", "battlefield": [{"card": "Hill Giant", "label": "giant"}], "library": [{"card": "Island"}, {"card": "Island"}, {"card": "Island"}, {"card": "Island"}]}
+    ]
+  },
+  "timeline": [
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "do": {"Cast": {"object": "$hydra", "x": 3, "mana": ["$f1", "$f2", "$f3", "$f4", "$f5", null]}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "do": "Pass"},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "check": {"PowerToughness": {"object": "Vastwood Hydra", "power": 3, "toughness": 3}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "do": {"Cast": {"object": "$bolt", "targets": ["Vastwood Hydra"], "mana": ["$m"]}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "do": "Pass"},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "do": "Pass"},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "do": {"ChooseOptional": {"type": "Exercises"}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "refuse": {"Answer": {"prompt": "ChooseDistribution", "with": [["$bears", 2], ["$giant", 1]]}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "do": {"Answer": {"prompt": "ChooseDistribution", "with": [["$bears", 2], ["$ogre", 1]]}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "check": {"Counters": {"object": "$bears", "kind": {"type": "PlusOnePlusOne"}, "count": 2}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "check": {"Counters": {"object": "$ogre", "kind": {"type": "PlusOnePlusOne"}, "count": 1}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "check": {"Counters": {"object": "$giant", "kind": {"type": "PlusOnePlusOne"}, "count": 0}}}
+  ]
+}

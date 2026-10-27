@@ -1,0 +1,40 @@
+{
+  "description": "CR 603.2 / 603.1b: each Magus staff gains its controller 1 life whenever they cast a spell of its color or a land of its basic type they control enters, one ability with two trigger events",
+  "note": "alice controls all five staffs. Her Swamp gains 1 (Death Magus) and each one-color creature spell gains 1 (one staff each): 26. bob's red spell and bob's Swamp gain alice nothing.",
+  "board": {
+    "active": "alice",
+    "step": "PrecombatMain",
+    "seats": [
+      {"name": "alice", "battlefield": [{"card": "Staff of the Death Magus"}, {"card": "Staff of the Flame Magus"}, {"card": "Staff of the Mind Magus"}, {"card": "Staff of the Sun Magus"}, {"card": "Staff of the Wild Magus"}, {"card": "Mountain", "label": "m"}, {"card": "Island", "label": "i1"}, {"card": "Island", "label": "i2"}, {"card": "Plains", "label": "p"}, {"card": "Forest", "label": "f"}, {"card": "Swamp", "label": "sw0"}], "hand": [{"card": "Swamp", "label": "swamp"}, {"card": "Raging Goblin", "label": "goblin"}, {"card": "Coral Merfolk", "label": "merfolk"}, {"card": "Savannah Lions", "label": "lions"}, {"card": "Llanowar Elves", "label": "elves"}, {"card": "Typhoid Rats", "label": "rats"}], "library": [{"card": "Island"}, {"card": "Island"}, {"card": "Island"}, {"card": "Island"}]},
+      {"name": "bob", "battlefield": [{"card": "Mountain", "label": "bm"}], "hand": [{"card": "Raging Goblin", "label": "bgoblin"}, {"card": "Swamp", "label": "bswamp"}], "library": [{"card": "Island"}, {"card": "Island"}, {"card": "Island"}, {"card": "Island"}]}
+    ]
+  },
+  "timeline": [
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "do": {"PlayLand": "$swamp"}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "do": "Pass"},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "check": {"Life": {"player": "alice", "life": 21}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "do": {"Cast": {"object": "$goblin", "mana": ["$m", null]}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "do": "Pass"},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "do": "Pass"},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "check": {"Life": {"player": "alice", "life": 22}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "do": {"Cast": {"object": "$merfolk", "mana": ["$i1", "$i2", null]}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "do": "Pass"},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "do": "Pass"},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "do": {"Cast": {"object": "$lions", "mana": ["$p", null]}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "do": "Pass"},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "do": "Pass"},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "do": {"Cast": {"object": "$elves", "mana": ["$f", null]}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "do": "Pass"},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "do": "Pass"},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "do": {"Cast": {"object": "$rats", "mana": ["$sw0", null]}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "do": "Pass"},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "do": "Pass"},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "check": {"Life": {"player": "alice", "life": 26}}},
+    {"turn": 1, "step": "DeclareAttackers", "player": "alice", "do": {"Attack": []}},
+    {"turn": 2, "step": "PrecombatMain", "player": "bob", "do": {"PlayLand": "$bswamp"}},
+    {"turn": 2, "step": "PrecombatMain", "player": "bob", "do": {"Cast": {"object": "$bgoblin", "mana": ["$bm", null]}}},
+    {"turn": 2, "step": "PrecombatMain", "player": "bob", "do": "Pass"},
+    {"turn": 2, "step": "PrecombatMain", "player": "bob", "check": {"Count": {"player": "bob", "zone": "Battlefield", "card": "Raging Goblin", "count": 1}}},
+    {"turn": 2, "step": "PrecombatMain", "player": "bob", "check": {"Life": {"player": "alice", "life": 26}}}
+  ]
+}

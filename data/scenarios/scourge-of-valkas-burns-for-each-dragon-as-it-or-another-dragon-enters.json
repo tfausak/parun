@@ -1,0 +1,25 @@
+{
+  "description": "CR 603.2 / 120.2b: whenever Scourge of Valkas or another Dragon its controller controls enters, the entering Dragon deals X damage to any target, X the number of Dragons they control",
+  "note": "The Scourge's own entry deals 1 (one Dragon). Adult Gold Dragon entering next makes two, so it deals 2, and since the Gold Dragon deals it, its lifelink gains alice 2.",
+  "board": {
+    "active": "alice",
+    "step": "PrecombatMain",
+    "seats": [
+      {"name": "alice", "battlefield": [{"card": "Mountain", "label": "m1"}, {"card": "Mountain", "label": "m2"}, {"card": "Mountain", "label": "m3"}, {"card": "Mountain", "label": "m4"}, {"card": "Mountain", "label": "m5"}, {"card": "Mountain", "label": "m6"}, {"card": "Mountain", "label": "m7"}, {"card": "Mountain", "label": "m8"}, {"card": "Mountain", "label": "m9"}, {"card": "Plains", "label": "p"}], "hand": [{"card": "Scourge of Valkas", "label": "scourge"}, {"card": "Adult Gold Dragon", "label": "gold"}], "library": [{"card": "Island"}, {"card": "Island"}, {"card": "Island"}, {"card": "Island"}]},
+      {"name": "bob", "library": [{"card": "Island"}, {"card": "Island"}, {"card": "Island"}, {"card": "Island"}]}
+    ]
+  },
+  "timeline": [
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "do": {"Cast": {"object": "$scourge", "mana": ["$m1", "$m2", "$m3", "$m4", "$m5", null]}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "do": "Pass"},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "do": {"ChooseTargets": {"target": ["$bob"]}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "do": "Pass"},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "check": {"Life": {"player": "bob", "life": 19}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "do": {"Cast": {"object": "$gold", "mana": ["$m6", "$m7", "$m8", "$m9", "$p"]}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "do": "Pass"},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "do": {"ChooseTargets": {"target": ["$bob"]}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "do": "Pass"},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "check": {"Life": {"player": "bob", "life": 17}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "check": {"Life": {"player": "alice", "life": 22}}}
+  ]
+}

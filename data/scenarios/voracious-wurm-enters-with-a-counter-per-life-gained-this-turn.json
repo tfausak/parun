@@ -1,0 +1,21 @@
+{
+  "description": "CR 614.1c / 119.3: Voracious Wurm enters with X +1/+1 counters on it, X the life its controller gained this turn",
+  "note": "Sacred Nectar gains alice 4, so the 2/2 Wurm enters as a 6/6.",
+  "board": {
+    "active": "alice",
+    "step": "PrecombatMain",
+    "seats": [
+      {"name": "alice", "battlefield": [{"card": "Plains", "label": "p1"}, {"card": "Plains", "label": "p2"}, {"card": "Forest", "label": "f1"}, {"card": "Forest", "label": "f2"}], "hand": [{"card": "Sacred Nectar", "label": "nectar"}, {"card": "Voracious Wurm", "label": "wurm"}], "library": [{"card": "Island"}, {"card": "Island"}, {"card": "Island"}, {"card": "Island"}]},
+      {"name": "bob", "library": [{"card": "Island"}, {"card": "Island"}, {"card": "Island"}, {"card": "Island"}]}
+    ]
+  },
+  "timeline": [
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "do": {"Cast": {"object": "$nectar", "mana": ["$p1", "$p2", null]}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "do": "Pass"},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "check": {"Life": {"player": "alice", "life": 24}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "do": {"Cast": {"object": "$wurm", "mana": ["$f1", "$f2"]}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "do": "Pass"},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "check": {"Counters": {"object": "Voracious Wurm", "kind": {"type": "PlusOnePlusOne"}, "count": 4}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "check": {"PowerToughness": {"object": "Voracious Wurm", "power": 6, "toughness": 6}}}
+  ]
+}
