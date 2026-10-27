@@ -1,0 +1,34 @@
+{
+  "description": "Consecrate exiles target card from a graveyard and draws a card",
+  "note": "The target is in bob's graveyard, not the caster's, and is the second of his two cards, so a default pick would exile the Bears instead. The {W/B} is paid with black.",
+  "board": {
+    "active": "alice",
+    "step": "PrecombatMain",
+    "seats": [
+      {
+        "name": "alice",
+        "battlefield": [
+          { "card": "Plains", "label": "p0" },
+          { "card": "Swamp", "label": "s0" }
+        ],
+        "hand": [{ "card": "Consecrate", "label": "consecrate" }],
+        "library": [{ "card": "Island" }, { "card": "Forest" }]
+      },
+      {
+        "name": "bob",
+        "graveyard": [
+          { "card": "Grizzly Bears", "label": "bears" },
+          { "card": "Hill Giant", "label": "giant" }
+        ]
+      }
+    ]
+  },
+  "timeline": [
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "do": { "Cast": { "object": "$consecrate", "face": "Consecrate", "targets": ["$giant"], "mana": ["$p0", "$s0"] } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "do": { "Answer": { "prompt": "AnnounceHybridHalf", "with": { "type": "Colored", "value": { "type": "Black" } } } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "do": "Pass" },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "check": { "View": { "of": "Zone", "player": "bob", "zone": "Exile", "is": ["Hill Giant"] } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "check": { "View": { "of": "Zone", "player": "bob", "zone": "Graveyard", "is": ["$bears"] } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "check": { "View": { "of": "Zone", "player": "alice", "zone": "Hand", "is": ["Island"] } } }
+  ]
+}

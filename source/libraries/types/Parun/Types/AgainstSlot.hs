@@ -9,7 +9,7 @@ import qualified Parun.Types.SlotName as SlotName
 -- whole Quantity and Quantity names this record.
 --
 -- Distinct from Quantity's InSlot, which reads an AMOUNT an earlier effect bound
--- at a slot: this names a TARGET slot and reads a characteristic off whatever it
+-- at a slot: this names an OBJECT slot and reads a characteristic off whatever it
 -- points at, which is why it carries a quantity where InSlot carries nothing.
 data AgainstSlot quantity = MkAgainstSlot
   { slot :: SlotName.SlotName,

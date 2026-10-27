@@ -334,7 +334,7 @@ boundTally holder gs = Game.lookupObject holder gs >>= Map.lookup votesSlot . Ob
 received :: ObjectId.ObjectId -> ObjectId.ObjectId -> GameState.GameState -> PlayerId.PlayerId -> Maybe Integer
 received resolving source gs pid =
   Quantity.evaluate
-    (Slots.effectViewOf source Map.empty gs)
+    (Slots.effectViewOf resolving source Map.empty gs)
     (Slots.effectContext gs resolving S.alice source Map.empty (Slots.slotBindings resolving gs))
     gs
     source

@@ -23,8 +23,22 @@ spec s = Spec.describe s "Parun.Codec.PlayerSacrifices" $ do
       ( PlayerSacrifices.MkPlayerSacrifices
           { PlayerSacrifices.players = PlayerRef.EachInSlot (SlotName.MkSlotName (Text.pack "player")),
             PlayerSacrifices.filter = Filter.HasCardType CardType.Creature,
-            PlayerSacrifices.quantity = Quantity.Literal 1
+            PlayerSacrifices.quantity = Quantity.Literal 1,
+            PlayerSacrifices.permanents = Nothing
           }
       )
       " {\"players\":{\"type\":\"EachInSlot\",\"value\":\"player\"},\"filter\":{\"type\":\"HasCardType\",\"value\":{\"type\":\"Creature\"}},\"quantity\":{\"type\":\"Literal\",\"value\":1}} "
+  -- CR 608.2h: the permanents sacrificed, bound for a later read (Consume).
+  Spec.it s "MkPlayerSacrifices, with permanents" $
+    Common.assertCodec
+      s
+      PlayerSacrifices.codec
+      ( PlayerSacrifices.MkPlayerSacrifices
+          { PlayerSacrifices.players = PlayerRef.EachInSlot (SlotName.MkSlotName (Text.pack "player")),
+            PlayerSacrifices.filter = Filter.HasCardType CardType.Creature,
+            PlayerSacrifices.quantity = Quantity.Literal 1,
+            PlayerSacrifices.permanents = Just (SlotName.MkSlotName (Text.pack "sacrificed"))
+          }
+      )
+      " {\"players\":{\"type\":\"EachInSlot\",\"value\":\"player\"},\"filter\":{\"type\":\"HasCardType\",\"value\":{\"type\":\"Creature\"}},\"quantity\":{\"type\":\"Literal\",\"value\":1},\"permanents\":\"sacrificed\"} "
   Spec.it s "has a schema" $ Common.assertHasSchema s PlayerSacrifices.codec

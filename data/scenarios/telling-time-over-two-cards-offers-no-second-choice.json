@@ -1,0 +1,27 @@
+{
+  "description": "CR 400.7 Telling Time over a two-card library offers no second choice once the first card is in hand",
+  "note": "Only Forest and Mountain are looked at. Alice puts the Mountain into her hand; it is a new object there, so the second pick (\"one on top\") has the Forest alone to choose and asks nothing. Offering the departed Mountain again would raise a second prompt, which no entry answers.",
+  "board": {
+    "active": "alice",
+    "step": "PrecombatMain",
+    "seats": [
+      {
+        "name": "alice",
+        "manaPool": "UU",
+        "hand": [{ "card": "Telling Time", "label": "time" }],
+        "library": [
+          { "card": "Forest", "label": "forest" },
+          { "card": "Mountain", "label": "mountain" }
+        ]
+      },
+      { "name": "bob", "library": [{ "card": "Island" }] }
+    ]
+  },
+  "timeline": [
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "do": { "Cast": { "object": "$time" } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "do": "Pass" },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "do": { "Answer": { "prompt": "ChooseCardFromAmong", "with": "$mountain" } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "check": { "Count": { "player": "alice", "zone": "Hand", "card": "Mountain", "count": 1 } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "check": { "Count": { "player": "alice", "zone": "Library", "card": "Forest", "count": 1 } } }
+  ]
+}

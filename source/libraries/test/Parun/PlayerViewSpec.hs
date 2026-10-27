@@ -353,7 +353,7 @@ spec s registry = Spec.describe s "PlayerView" $ do
             }
         setup = S.board (mine NonEmpty.:| [S.playerSetup S.bob]) S.alice S.precombatMain
         choices = Choices.none {Choices.manaSources = Seq.fromList (fmap (Just . S.aliasRef) ["m1", "m2", "m3"])}
-        script = S.turn 1 [S.on S.precombatMain S.alice (Move.Cast (Casting.MkCasting (S.aliasRef "tracker") choices (Just True)))]
+        script = S.turn 1 [S.on S.precombatMain S.alice (Move.Cast (Casting.MkCasting (S.aliasRef "tracker") choices (Just True) Nothing))]
     gs <- S.play s registry setup script S.priorityGame
     Monad.forM_ [S.alice, S.bob] $ \pid ->
       Spec.assertEqWith s (Text.unpack (Render.player pid) <> ": CR 708.2a a nameless cast") [ProjectedCharacteristics.names (SpellWasCast.characteristics c) | GameEvent.SpellCast c <- witnessedBy pid gs] [Set.empty]

@@ -149,7 +149,7 @@ import qualified Parun.Types.Zone as Zone
 create :: ObjectId -> ObjectId -> PlayerId -> Map.Map SlotName (Set Recipient) -> Map.Map SlotName (Set Recipient) -> Create.Create Card.Type.Card (GrantedAbility.GrantedAbility Card.Type.Card) -> Game ()
 create resolving source controller legal chosen (Create.MkCreate quantity card entry mSlot creator) = do
   gs <- State.get
-  let viewOf = effectViewOf source legal gs
+  let viewOf = effectViewOf resolving source legal gs
       context = effectContext gs resolving controller source legal (slotBindings resolving gs)
       -- CR 608.2h: the counts the tokens enter with, settled ONCE off the
       -- pre-effect board and outside the per-creator loop below, so every seat's
@@ -242,7 +242,7 @@ create resolving source controller legal chosen (Create.MkCreate quantity card e
 conjure :: ObjectId -> ObjectId -> PlayerId -> Map.Map SlotName (Set Recipient) -> Conjure.Conjure Card.Type.Card -> Game ()
 conjure resolving source controller legal (Conjure.MkConjure quantity cards selection destination mSlot) = do
   gs <- State.get
-  let viewOf = effectViewOf source legal gs
+  let viewOf = effectViewOf resolving source legal gs
       context = effectContext gs resolving controller source legal (slotBindings resolving gs)
       -- Four of the five arrivals are no zone change -- the card was in no
       -- zone to leave -- so nothing triggers and nothing is revealed. The rule
@@ -416,7 +416,7 @@ createCopy resolving source controller legal chosen (CreateCopy.MkCreateCopy qua
   -- where the characteristics come FROM, the snapshot being layer 1 (CR
   -- 613.1a). CR 608.2h: both reads take the last known branch for a permanent
   -- already gone, and the pair has to move together.
-  let viewOf = effectViewOf source legal gs
+  let viewOf = effectViewOf resolving source legal gs
       context = effectContext gs resolving controller source legal (slotBindings resolving gs)
       sources = objectRefObjects legal resolving controller source gs ref
       -- CR 608.2h: the counters the copies enter with, settled ONCE off the
@@ -599,7 +599,7 @@ copyStackObject resolving source controller legal (CopyStackObject.MkCopyStackOb
   -- against the live state, since a fresh id and a fresh timestamp are both
   -- counters the previous mint moved.
   -- Parun.KeywordTriggerSpec's Storm group proves the count.
-  let copies = maybe 0 Integer.toIntSaturating (Quantity.evaluateFor (effectViewOf source legal gs) (effectContext gs resolving controller source legal (slotBindings resolving gs)) gs resolving source quantity)
+  let copies = maybe 0 Integer.toIntSaturating (Quantity.evaluateFor (effectViewOf resolving source legal gs) (effectContext gs resolving controller source legal (slotBindings resolving gs)) gs resolving source quantity)
   Monad.forM_ (Common.copyStackSubjects legal resolving controller source gs ref) $ \original ->
     -- CR 707.10's three nouns: a spell (Game.isSpell) and an activated or
     -- triggered ability (Game.isAbility), each classifying off the object's
@@ -969,7 +969,7 @@ preventNextDamage resolving source controller legal chosen (PreventNextDamage.Mk
   -- described row already covers whatever it admits and a second row would be a
   -- second shield the card never printed.
   gs <- State.get
-  let viewOf = effectViewOf source legal gs
+  let viewOf = effectViewOf resolving source legal gs
       context = effectContext gs resolving controller source legal (slotBindings resolving gs)
       describedRecipient = (whatRecipient, whoRecipient)
       described = Maybe.isJust whatRecipient || Maybe.isJust whoRecipient
@@ -1150,7 +1150,7 @@ redirectDamage resolving source controller legal (RedirectDamage.MkRedirectDamag
   -- fixed (CR 601.2c). A card writing both spellings is read as the
   -- description alone.
   gs <- State.get
-  let viewOf = effectViewOf source legal gs
+  let viewOf = effectViewOf resolving source legal gs
       recipientsOf ref = Maybe.mapMaybe (Damage.damageRecipient gs) (Common.objectRefRecipients legal resolving controller source gs ref)
       -- Through effectContext rather than Filter.contextFor, for
       -- PreventAllDamage's reason: CR 609.7a's candidates are narrowed against
@@ -1602,7 +1602,7 @@ designate resolving source controller legal (Designate.MkDesignate designation s
         -- not a live board. Written on the TRANSITION alone, with the mark, so
         -- CR 701.37a's second monstrosity leaves the first value standing.
         let value =
-              Quantity.evaluateFor (effectViewOf source legal gs) (effectContext gs resolving controller source legal (slotBindings resolving gs)) gs resolving source
+              Quantity.evaluateFor (effectViewOf resolving source legal gs) (effectContext gs resolving controller source legal (slotBindings resolving gs)) gs resolving source
                 =<< mValue
             mark o = o {Object.designations = Set.insert designation (Object.designations o)}
             recordValue o = maybe o (\n -> o {Object.designationValues = Map.insert designation (Integer.toNaturalSaturating n) (Object.designationValues o)}) value
