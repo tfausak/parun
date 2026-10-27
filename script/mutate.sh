@@ -62,7 +62,7 @@ is the gameplay-level one. A cheap proxy ordered ahead of the behavioural
 assertion -- a prompt count, a zone size, a list length -- absorbs the mutation
 and reports itself, and reading its label as confirmation is the mistake this
 script exists to make visible, not to make for you. Deciding is still yours;
-see docs/agents/implementing.md, "Mutation testing".
+see docs/agents/set-by-set.md, "Mutation testing".
 
 Exit status is the outcome, not the test run's:
 
@@ -179,7 +179,7 @@ case $summary in
     echo "NOTHING WENT RED ($summary)"
     echo 'The mutated line has no observer IN THIS SUBTREE -- which is a finding'
     echo 'either way: either the case proves nothing, or the pattern is pointed'
-    echo 'at the wrong one. Per docs/agents/implementing.md, do not read it as'
+    echo 'at the wrong one. Per docs/agents/set-by-set.md, do not read it as'
     echo 'coverage and do not close the issue on it.'
     exit 1
     ;;
