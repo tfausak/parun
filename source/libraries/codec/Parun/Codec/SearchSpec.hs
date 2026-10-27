@@ -1,5 +1,6 @@
 module Parun.Codec.SearchSpec where
 
+import qualified Data.Sequence as Seq
 import qualified Data.Set as Set
 import qualified Data.Text as Text
 import qualified Parun.Codec.Search as Search
@@ -33,6 +34,7 @@ spec s = Spec.describe s "Parun.Codec.Search" $ do
             Search.outsideTheGame = True,
             Search.quantity = Just (Quantity.Literal 1),
             Search.filter = Filter.HasCardType CardType.Land,
+            Search.descriptions = Seq.fromList [Filter.HasCardType CardType.Creature, Filter.HasCardType CardType.Artifact],
             Search.upTo = True,
             Search.destination = SearchDestination.BattlefieldTapped,
             Search.subject = Nothing,
@@ -42,13 +44,13 @@ spec s = Spec.describe s "Parun.Codec.Search" $ do
             Search.andOr = True
           }
       )
-      " {\"searcher\":{\"type\":\"Relative\",\"value\":{\"type\":\"You\"}},\"owner\":{\"type\":\"InSlot\",\"value\":\"player\"},\"zones\":[{\"type\":\"Library\"},{\"type\":\"Graveyard\"}],\"outsideTheGame\":true,\"andOr\":true,\"quantity\":{\"type\":\"Literal\",\"value\":1},\"filter\":{\"type\":\"HasCardType\",\"value\":{\"type\":\"Land\"}},\"upTo\":true,\"destination\":{\"type\":\"BattlefieldTapped\"},\"slot\":\"found\",\"differentIn\":[{\"type\":\"Names\"},{\"type\":\"Powers\"}],\"exactly\":true} "
+      " {\"searcher\":{\"type\":\"Relative\",\"value\":{\"type\":\"You\"}},\"owner\":{\"type\":\"InSlot\",\"value\":\"player\"},\"zones\":[{\"type\":\"Library\"},{\"type\":\"Graveyard\"}],\"outsideTheGame\":true,\"andOr\":true,\"quantity\":{\"type\":\"Literal\",\"value\":1},\"filter\":{\"type\":\"HasCardType\",\"value\":{\"type\":\"Land\"}},\"descriptions\":[{\"type\":\"HasCardType\",\"value\":{\"type\":\"Creature\"}},{\"type\":\"HasCardType\",\"value\":{\"type\":\"Artifact\"}}],\"upTo\":true,\"destination\":{\"type\":\"BattlefieldTapped\"},\"slot\":\"found\",\"differentIn\":[{\"type\":\"Names\"},{\"type\":\"Powers\"}],\"exactly\":true} "
   -- The other reading of the same count: no "upTo" key means the quantity is a
   -- quota. Paired with the case above so each key's absence is asserted, not
   -- just its presence -- a required key would have made every card file
   -- rewrite. "zones" is the same shape: absent means the library alone, which is
   -- what every card file written before Delivery Moogle says.
-  Spec.it s "an absent upTo, zones, outsideTheGame, andOr, differentIn and exactly take their defaults and are not written back" $
+  Spec.it s "an absent upTo, zones, outsideTheGame, andOr, descriptions, differentIn and exactly take their defaults and are not written back" $
     Common.assertCodec
       s
       Search.codec
@@ -59,6 +61,7 @@ spec s = Spec.describe s "Parun.Codec.Search" $ do
             Search.outsideTheGame = False,
             Search.quantity = Just (Quantity.Literal 1),
             Search.filter = Filter.HasCardType CardType.Land,
+            Search.descriptions = Seq.empty,
             Search.upTo = False,
             Search.destination = SearchDestination.BattlefieldTapped,
             Search.subject = Nothing,
@@ -84,6 +87,7 @@ spec s = Spec.describe s "Parun.Codec.Search" $ do
             Search.outsideTheGame = False,
             Search.quantity = Nothing,
             Search.filter = Filter.HasCardType CardType.Land,
+            Search.descriptions = Seq.empty,
             Search.upTo = False,
             Search.destination = SearchDestination.Exile,
             Search.subject = Nothing,

@@ -349,6 +349,7 @@ spec s = Spec.describe s "Parun.Codec.Effect" $ do
               Search.outsideTheGame = False,
               Search.quantity = Just (Quantity.Literal 2),
               Search.filter = Filter.HasCardType CardType.Land,
+              Search.descriptions = Seq.empty,
               Search.upTo = False,
               Search.destination = SearchDestination.BattlefieldTapped,
               Search.subject = Nothing,

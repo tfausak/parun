@@ -3,6 +3,7 @@ module Parun.Codec.PlayerEffect where
 import qualified Parun.Codec.AlternativeActivationCost as AlternativeActivationCost
 import qualified Parun.Codec.CantSearchLibraries as CantSearchLibraries
 import qualified Parun.Codec.CastFromZone as CastFromZone
+import qualified Parun.Codec.CombatDeclaration as CombatDeclaration
 import qualified Parun.Codec.CostModifier as CostModifier
 import qualified Parun.Codec.CounterProhibition as CounterProhibition
 import qualified Parun.Codec.DamagePattern as DamagePattern
@@ -73,6 +74,7 @@ codec =
           Arm.nullary "CantBecomeMonarch" PlayerEffect.CantBecomeMonarch,
           Arm.nullary "CantSetSchemesInMotion" PlayerEffect.CantSetSchemesInMotion,
           Arm.nullary "ControlledWhileSearching" PlayerEffect.ControlledWhileSearching,
+          Arm.payload "YouChoose" CombatDeclaration.codec PlayerEffect.YouChoose (\x -> case x of PlayerEffect.YouChoose y -> Just y; _ -> Nothing),
           Arm.nullary "ExilesFoundWhileSearching" PlayerEffect.ExilesFoundWhileSearching,
           Arm.nullary "CantAttackWithCreatures" PlayerEffect.CantAttackWithCreatures,
           Arm.payload "CantCastMatching" filterCodec PlayerEffect.CantCastMatching (\x -> case x of PlayerEffect.CantCastMatching y -> Just y; _ -> Nothing),
@@ -125,6 +127,7 @@ tagOf x = case x of
   PlayerEffect.CantBecomeMonarch {} -> "CantBecomeMonarch"
   PlayerEffect.CantSetSchemesInMotion {} -> "CantSetSchemesInMotion"
   PlayerEffect.ControlledWhileSearching {} -> "ControlledWhileSearching"
+  PlayerEffect.YouChoose {} -> "YouChoose"
   PlayerEffect.ExilesFoundWhileSearching {} -> "ExilesFoundWhileSearching"
   PlayerEffect.CantAttackWithCreatures {} -> "CantAttackWithCreatures"
   PlayerEffect.CantCastMatching {} -> "CantCastMatching"

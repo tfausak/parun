@@ -1,0 +1,48 @@
+{
+  "description": "CR 508.5/509.1a Brutal Hordechief drains the controller of the planeswalker a creature attacks, and its ability hands every opponent's blocks to its controller",
+  "note": "Three seats. Alice activates, then sends Grizzly Bears at bob's Ajani Goldmane and Hordechief at carol. The Bears' trigger takes 1 from bob, the planeswalker's controller (CR 508.5), not carol; Hordechief's takes 1 from carol. Both opponents' DeclareBlockers prompts are keyed by alice, the ability's 'your opponents' reaching each.",
+  "board": {
+    "active": "alice",
+    "step": "PrecombatMain",
+    "seats": [
+      {
+        "name": "alice",
+        "battlefield": [
+          {"card": "Brutal Hordechief", "label": "chief", "ready": true},
+          {"card": "Grizzly Bears", "label": "bears", "ready": true},
+          {"card": "Plains", "label": "p1"},
+          {"card": "Plains", "label": "p2"},
+          {"card": "Plains", "label": "p3"},
+          {"card": "Plains", "label": "p4"},
+          {"card": "Plains", "label": "p5"}
+        ]
+      },
+      {
+        "name": "bob",
+        "battlefield": [
+          {"card": "Ajani Goldmane", "label": "ajani", "counters": [{"key": {"type": "Loyalty"}, "value": 4}]},
+          {"card": "Hill Giant", "label": "giant", "ready": true}
+        ]
+      },
+      {
+        "name": "carol",
+        "battlefield": [
+          {"card": "Grizzly Bears", "label": "cbears", "ready": true}
+        ]
+      }
+    ]
+  },
+  "timeline": [
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "do": {"Activate": {"object": "$chief", "mana": ["$p1", "$p2", "$p3", "$p4", "$p5"]}}},
+    {"turn": 1, "step": "DeclareAttackers", "player": "alice", "do": {"Attack": ["$chief", "$bears"]}},
+    {"turn": 1, "step": "DeclareAttackers", "player": "alice", "source": "$chief", "do": {"ChooseAttackTarget": "$carol"}},
+    {"turn": 1, "step": "DeclareAttackers", "player": "alice", "source": "$bears", "do": {"ChooseAttackTarget": "$ajani"}},
+    {"turn": 1, "step": "DeclareAttackers", "player": "alice", "do": {"OrderTriggers": ["$chief", "$chief"]}},
+    {"turn": 1, "step": "DeclareBlockers", "player": "alice", "do": {"Block": {"$giant": ["$bears"]}}},
+    {"turn": 1, "step": "DeclareBlockers", "player": "alice", "do": {"Block": {"$cbears": ["$chief"]}}},
+    {"turn": 1, "step": "DeclareBlockers", "player": "alice", "check": {"Life": {"player": "bob", "life": 19}}},
+    {"turn": 1, "step": "DeclareBlockers", "player": "alice", "check": {"Life": {"player": "carol", "life": 19}}},
+    {"turn": 1, "step": "DeclareBlockers", "player": "alice", "check": {"Blockers": {"attacker": "$bears", "blockers": ["$giant"]}}},
+    {"turn": 1, "step": "DeclareBlockers", "player": "alice", "check": {"Blockers": {"attacker": "$chief", "blockers": ["$cbears"]}}}
+  ]
+}

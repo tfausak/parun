@@ -60,6 +60,13 @@ spec s = Spec.describe s "Parun.Codec.CastingRestriction" $ do
       CastingRestriction.codec
       (CastingRestriction.DuringTurn TurnScope.OpponentsTurn)
       " {\"type\":\"DuringTurn\",\"value\":{\"type\":\"OpponentsTurn\"}} "
+  -- Serra Avenger's "your first, second, or third turns of the game" (CR 500.7).
+  Spec.it s "NotDuringFirstTurns" $
+    Common.assertCodec
+      s
+      CastingRestriction.codec
+      (CastingRestriction.NotDuringFirstTurns 3)
+      " {\"type\":\"NotDuringFirstTurns\",\"value\":3} "
   Spec.it s "AttackedThisStep" $
     Common.assertCodec
       s

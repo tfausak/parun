@@ -2,9 +2,11 @@ module Parun.Engine.Turn where
 
 import qualified Data.Foldable as Foldable
 import qualified Data.List as List
+import qualified Data.Map.Strict as Map
 import Data.Sequence (Seq)
 import qualified Data.Sequence as Seq
 import qualified Data.Set as Set
+import Numeric.Natural (Natural)
 import qualified Parun.Types.AttackTarget as AttackTarget
 import qualified Parun.Types.BeginningStep as BeginningStep
 import qualified Parun.Types.Combat as Combat
@@ -50,10 +52,14 @@ allPhases =
 -- | CR 805.4: do these two players take their turns together -- the same
 -- player, or teammates in a game using the shared team turns option?
 sharesTurn :: GameState -> PlayerId -> PlayerId -> Bool
-sharesTurn gs one other =
-  let settings = GameState.settings gs
-   in one == other
-        || (GameSettings.sharedTeamTurns settings && Teams.sameTeam (GameSettings.teams settings) one other)
+sharesTurn gs = sharesTurnUnder (GameState.settings gs)
+
+-- | sharesTurn, read off the game's options alone, for a state still being
+-- built.
+sharesTurnUnder :: GameSettings.GameSettings -> PlayerId -> PlayerId -> Bool
+sharesTurnUnder settings one other =
+  one == other
+    || (GameSettings.sharedTeamTurns settings && Teams.sameTeam (GameSettings.teams settings) one other)
 
 -- CR 102.1: does this turn belong to the scope? `active` is "the player whose
 -- turn it is", and `own` is the seat the relational arms are read against --
@@ -83,6 +89,21 @@ turnScopeAdmits named gs scope active own = case scope of
 -- under the shared team turns option a member of the active team?
 isActive :: GameState -> PlayerId -> Bool
 isActive gs = sharesTurn gs (GameState.activePlayer gs)
+
+-- | CR 500.7: how many turns this player has begun this game, extra turns
+-- included.
+turnsBegun :: PlayerId -> GameState -> Natural
+turnsBegun pid gs = Map.findWithDefault 0 pid (GameState.turnsBegun gs)
+
+-- | CR 500.7 / 805.4: GameState.turnsBegun once a turn begins, counted for
+-- every player who takes it.
+countTurnBegun :: [PlayerId] -> Map.Map PlayerId Natural -> Map.Map PlayerId Natural
+countTurnBegun takers tally = List.foldl' (\counted p -> Map.insertWith (+) p 1 counted) tally takers
+
+-- | CR 103.1 / 805.4: GameState.turnsBegun as a game begins with `starter`'s
+-- turn, each of its takers' first.
+firstTurnBegun :: GameSettings.GameSettings -> [PlayerId] -> PlayerId -> Map.Map PlayerId Natural
+firstTurnBegun settings order starter = countTurnBegun (filter (sharesTurnUnder settings starter) order) Map.empty
 
 -- | CR 500.7: "that turn", the extra turn `source`'s resolution just created
 -- for `controller` -- the most recently created pending entry from that source

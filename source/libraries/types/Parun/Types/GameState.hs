@@ -299,6 +299,11 @@ data GameState = MkGameState
     -- last action, the stack's resolution or the step's first grant.
     passed :: Set.Set PlayerId.PlayerId,
     turnNumber :: Natural.Natural,
+    -- | CR 500.7 / 805.4: how many turns each player has begun this game, extra
+    -- turns included; under the shared team turns option a team's turn is each
+    -- member's. Kept across turns; a restart (CR 727.1) and a subgame (CR
+    -- 729.2) begin it again. Turn.turnsBegun reads it.
+    turnsBegun :: Map.Map PlayerId.PlayerId Natural.Natural,
     result :: Maybe Result.Result,
     -- | CR 727.4: raised while a restart has replaced this game underneath the
     -- frames still running it; Engine.runStep lowers it as turn 1's untap step
