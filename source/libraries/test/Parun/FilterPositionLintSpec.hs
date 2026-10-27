@@ -2008,6 +2008,7 @@ filterPositionLintSpec s registry corpus = Spec.describe s "Lint" $ do
         ("Infinite Reflection", 1), -- a CR 707.5 copy entry, read as Pariah's is
         ("Firebreathing", 1), -- an activated pump
         ("Shiv's Embrace", 1), -- Firebreathing's wording
+        ("Blessing", 1), -- Firebreathing's shape, its pump +1/+1
         ("Regeneration", 1), -- a loop whose member its shield names
         ("Ring of Xathrid", 1) -- Regeneration's wording, through an Equipment
       ]

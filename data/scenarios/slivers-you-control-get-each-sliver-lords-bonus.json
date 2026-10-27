@@ -1,0 +1,138 @@
+{
+  "description": "CR 613.4c: Battle, Megantic, Predatory and Steelform Sliver give Sliver creatures you control +2/+0, +3/+3, +1/+1 and +0/+1",
+  "note": "The four bonuses sum to +6/+5 and each is visible in the sum (+2/+0, +3/+3, +1/+1, +0/+1 leave different totals when any one is missing); Alice's Venser's Sliver is 9/8, each lord gets all four bonuses including its own, Bob's Venser's Sliver and Alice's Grizzly Bears get none.",
+  "board": {
+    "active": "alice",
+    "step": "PrecombatMain",
+    "seats": [
+      {
+        "name": "alice",
+        "battlefield": [
+          {
+            "card": "Battle Sliver",
+            "label": "battle"
+          },
+          {
+            "card": "Megantic Sliver",
+            "label": "megantic"
+          },
+          {
+            "card": "Predatory Sliver",
+            "label": "predatory"
+          },
+          {
+            "card": "Steelform Sliver",
+            "label": "steelform"
+          },
+          {
+            "card": "Venser's Sliver",
+            "label": "venser"
+          },
+          {
+            "card": "Grizzly Bears",
+            "label": "bears"
+          }
+        ],
+        "library": [
+          {
+            "card": "Island",
+            "label": "a1"
+          },
+          {
+            "card": "Island",
+            "label": "a2"
+          },
+          {
+            "card": "Island",
+            "label": "a3"
+          }
+        ]
+      },
+      {
+        "name": "bob",
+        "battlefield": [
+          {
+            "card": "Venser's Sliver",
+            "label": "bobvenser"
+          }
+        ],
+        "library": [
+          {
+            "card": "Island",
+            "label": "b1"
+          },
+          {
+            "card": "Island",
+            "label": "b2"
+          },
+          {
+            "card": "Island",
+            "label": "b3"
+          }
+        ]
+      }
+    ]
+  },
+  "timeline": [
+    {
+      "turn": 1,
+      "step": "PrecombatMain",
+      "player": "alice",
+      "check": {
+        "PowerToughness": {
+          "object": "$venser",
+          "power": 9,
+          "toughness": 8
+        }
+      }
+    },
+    {
+      "turn": 1,
+      "step": "PrecombatMain",
+      "player": "alice",
+      "check": {
+        "PowerToughness": {
+          "object": "$bobvenser",
+          "power": 3,
+          "toughness": 3
+        }
+      }
+    },
+    {
+      "turn": 1,
+      "step": "PrecombatMain",
+      "player": "alice",
+      "check": {
+        "PowerToughness": {
+          "object": "$bears",
+          "power": 2,
+          "toughness": 2
+        }
+      }
+    },
+    {
+      "turn": 1,
+      "step": "PrecombatMain",
+      "player": "alice",
+      "check": {
+        "PowerToughness": {
+          "object": "$battle",
+          "power": 9,
+          "toughness": 8
+        }
+      }
+    },
+    {
+      "turn": 1,
+      "step": "PrecombatMain",
+      "player": "alice",
+      "check": {
+        "PowerToughness": {
+          "object": "$steelform",
+          "power": 8,
+          "toughness": 7
+        }
+      }
+    }
+  ]
+}
