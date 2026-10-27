@@ -1,0 +1,234 @@
+1 Academy Raider
+1 Accorder's Shield
+1 Accursed Spirit
+1 Act of Treason
+1 Advocate of the Beast
+1 Air Servant
+1 Ajani's Chosen
+1 Ajani, Caller of the Pride
+1 Altar's Reap
+1 Angelic Accord
+1 Angelic Wall
+1 Archaeomancer
+1 Archangel of Thune
+1 Armored Cancrix
+1 Artificer's Hex
+1 Auramancer
+1 Awaken the Ancient
+1 Banisher Priest
+1 Barrage of Expendables
+1 Battle Sliver
+1 Blessing
+1 Blightcaster
+1 Blood Bairn
+1 Blur Sliver
+1 Bogbrew Witch
+1 Bonescythe Sliver
+1 Bramblecrush
+1 Brave the Elements
+1 Briarpack Alpha
+1 Brindle Boar
+1 Bubbling Cauldron
+1 Burning Earth
+1 Cancel
+1 Canyon Minotaur
+1 Capashen Knight
+1 Celestial Flare
+1 Chandra's Outrage
+1 Chandra's Phoenix
+1 Chandra, Pyromaster
+1 Charging Griffin
+1 Child of Night
+1 Claustrophobia
+1 Clone
+1 Colossal Whale
+1 Congregate
+1 Coral Merfolk
+1 Corpse Hauler
+1 Corrupt
+1 Cyclops Tyrant
+1 Dark Favor
+1 Dark Prophecy
+1 Darksteel Forge
+1 Darksteel Ingot
+1 Dawnstrike Paladin
+1 Deadly Recluse
+1 Deathgaze Cockatrice
+1 Demolish
+1 Devout Invocation
+1 Diabolic Tutor
+1 Dismiss into Dream
+1 Disperse
+1 Divination
+1 Divine Favor
+1 Domestication
+1 Doom Blade
+1 Door of Destinies
+1 Dragon Egg
+1 Dragon Hatchling
+1 Duress
+1 Elite Arcanist
+1 Elixir of Immortality
+1 Elvish Mystic
+1 Encroaching Wastes
+1 Enlarge
+1 Essence Scatter
+1 Festering Newt
+1 Fiendslayer Paladin
+1 Fireshrieker
+1 Flames of the Firebrand
+1 Fleshpulper Giant
+1 Fog
+1 Forest
+1 Fortify
+1 Frost Breath
+1 Galerider Sliver
+1 Garruk's Horde
+1 Garruk, Caller of Beasts
+1 Giant Growth
+1 Giant Spider
+1 Gladecover Scout
+1 Glimpse the Future
+1 Gnawing Zombie
+1 Goblin Diplomats
+1 Goblin Shortcutter
+1 Griffin Sentinel
+1 Grim Return
+1 Groundshaker Sliver
+1 Guardian of the Ages
+1 Haunted Plate Mail
+1 Hive Stirrings
+1 Howl of the Night Pack
+1 Hunt the Weak
+1 Illusionary Armor
+1 Imposing Sovereign
+1 Indestructibility
+1 Into the Wilds
+1 Island
+1 Jace's Mindseeker
+1 Jace, Memory Adept
+1 Kalonian Hydra
+1 Kalonian Tusker
+1 Lava Axe
+1 Lay of the Land
+1 Lifebane Zombie
+1 Lightning Talons
+1 Liliana of the Dark Realms
+1 Liliana's Reaver
+1 Liturgy of Blood
+1 Manaweft Sliver
+1 Marauding Maulhorn
+1 Mark of the Vampire
+1 Master of Diversion
+1 Megantic Sliver
+1 Merfolk Spy
+1 Messenger Drake
+1 Millstone
+1 Mind Rot
+1 Mindsparker
+1 Minotaur Abomination
+1 Molten Birth
+1 Mountain
+1 Mutavault
+1 Naturalize
+1 Negate
+1 Nephalia Seakite
+1 Nightmare
+1 Nightwing Shade
+1 Oath of the Ancient Wood
+1 Ogre Battledriver
+1 Opportunity
+1 Pacifism
+1 Path of Bravery
+1 Pay No Heed
+1 Phantom Warrior
+1 Pillarfield Ox
+1 Pitchburn Devils
+1 Plains
+1 Planar Cleansing
+1 Plummet
+1 Predatory Sliver
+1 Primeval Bounty
+1 Pyromancer's Gauntlet
+1 Quag Sickness
+1 Quicken
+1 Ranger's Guile
+1 Ratchet Bomb
+1 Regathan Firecat
+1 Ring of Three Wishes
+1 Rise of the Dark Realms
+1 Rod of Ruin
+1 Rootwalla
+1 Rumbling Baloth
+1 Sanguine Bond
+1 Savage Summoning
+1 Scavenging Ooze
+1 Scourge of Valkas
+1 Scroll Thief
+1 Seacoast Drake
+1 Seismic Stomp
+1 Sengir Vampire
+1 Sensory Deprivation
+1 Sentinel Sliver
+1 Seraph of the Sword
+1 Serra Angel
+1 Shadowborn Apostle
+1 Shadowborn Demon
+1 Shimmering Grotto
+1 Shiv's Embrace
+1 Shivan Dragon
+1 Shock
+1 Show of Valor
+1 Shrivel
+1 Siege Mastodon
+1 Silence
+1 Sliver Construct
+1 Smelt
+1 Solemn Offering
+1 Soulmender
+1 Spell Blast
+1 Sporemound
+1 Staff of the Death Magus
+1 Staff of the Flame Magus
+1 Staff of the Mind Magus
+1 Staff of the Sun Magus
+1 Staff of the Wild Magus
+1 Steelform Sliver
+1 Stonehorn Chanter
+1 Striking Sliver
+1 Strionic Resonator
+1 Suntail Hawk
+1 Swamp
+1 Syphon Sliver
+1 Tenacious Dead
+1 Thorncaster Sliver
+1 Thunder Strike
+1 Tidebinder Mage
+1 Time Ebb
+1 Tome Scour
+1 Trading Post
+1 Trained Condor
+1 Traumatize
+1 Trollhide
+1 Undead Minotaur
+1 Vampire Warlord
+1 Vastwood Hydra
+1 Verdant Haven
+1 Vial of Poison
+1 Vile Rebirth
+1 Volcanic Geyser
+1 Voracious Wurm
+1 Wall of Frost
+1 Wall of Swords
+1 Warden of Evos Isle
+1 Water Servant
+1 Wild Guess
+1 Wild Ricochet
+1 Windreader Sphinx
+1 Windstorm
+1 Witchstalker
+1 Woodborn Behemoth
+1 Wring Flesh
+1 Xathrid Necromancer
+1 Young Pyromancer
+1 Zephyr Charge

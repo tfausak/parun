@@ -662,6 +662,7 @@ applyOneEffect runSubgame resolving source controller legal chosen effect = case
   Effect.RemovePlayerCounters payload -> Counters.removePlayerCounters resolving source controller legal payload
   Effect.PayAnyEnergy payload -> Counters.payAnyEnergy resolving source controller payload
   Effect.ChooseNumber payload -> Counters.chooseNumber resolving source controller legal payload
+  Effect.BindAmount payload -> Counters.bindAmount resolving source controller legal payload
   Effect.Tap payload -> Counters.tap resolving source controller legal payload
   Effect.Untap payload -> Counters.untap resolving source controller legal chosen payload
   Effect.Detain payload -> Counters.detain resolving source controller legal payload

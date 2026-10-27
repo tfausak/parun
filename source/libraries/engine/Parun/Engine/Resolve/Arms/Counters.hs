@@ -61,6 +61,7 @@ import qualified Parun.Extra.Integer as Integer
 import qualified Parun.Extra.Natural as Natural
 import qualified Parun.Types.Affected as Affected
 import qualified Parun.Types.Amass as Amass.Type
+import qualified Parun.Types.BindAmount as BindAmount
 import qualified Parun.Types.Binding as Binding.Type
 import qualified Parun.Types.Blight as Blight.Type
 import qualified Parun.Types.Card as Card.Type
@@ -1469,6 +1470,21 @@ chooseNumber resolving source controller legal (ChooseNumber.MkChooseNumber slot
     gs <- State.get
     answer <- Game.choose (Prompt.ChooseNumber (Decide.deciderFor pid gs) pid resolving 0 upTo)
     State.modify' (Common.bindAmountSlot resolving source slot (maybe answer (min answer) upTo))
+
+-- CR 608.2h: the quantity is read once, here, against the source -- its last
+-- known information when it has left, as Ratchet Bomb has after CR 601.2h's
+-- sacrifice -- and a later instruction reads the number off the slot. Bound
+-- even at zero, PayAnyEnergy's reason; a quantity that cannot be evaluated
+-- binds nothing, Bolster's posture. The scenario
+-- ratchet-bomb-destroys-each-nonland-permanent-with-mana-value-equal-to-its-charge-counters
+-- proves the last known read.
+bindAmount :: ObjectId -> ObjectId -> PlayerId -> Map.Map SlotName (Set Recipient) -> BindAmount.BindAmount -> Game ()
+bindAmount resolving source controller legal (BindAmount.MkBindAmount quantity slot) = do
+  gs <- State.get
+  let viewOf = effectViewOf resolving source legal gs
+      context = effectContext gs resolving controller source legal (slotBindings resolving gs)
+  Monad.forM_ (Quantity.evaluateFor viewOf context gs resolving source quantity) $ \n ->
+    State.modify' (Common.bindAmountSlot resolving source slot (Integer.toNaturalSaturating n))
 
 -- CR 701.26a: turn each named permanent sideways. The victims are enumerated
 -- ONCE (CR 608.2f) and off the board as it stands before any of them is tapped,

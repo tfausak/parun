@@ -1,0 +1,18 @@
+{
+  "description": "CR 608.2h / 122.1 / 202.3: The Filigree Sylex, sacrificed with two oil counters and three charge counters, destroys each nonland permanent with mana value 2 and nothing else",
+  "note": "The Sylex starts with one oil counter and its first ability adds the second. It also carries three charge counters, which the count must ignore: counting them would destroy Centaur Courser and spare the Bears. Reading the Sylex in the graveyard would answer 0 and destroy Ornithopter. Both survive, and so do the lands.",
+  "board": {"active": "alice", "step": "PrecombatMain", "seats": [{"name": "alice", "battlefield": [{"card": "The Filigree Sylex", "label": "sylex", "counters": [{"key": {"type": "Named", "value": "oil"}, "value": 1}, {"key": {"type": "Named", "value": "charge"}, "value": 3}]}, {"card": "Ornithopter", "label": "thopter"}, {"card": "Plains", "label": "plains"}], "library": [{"card": "Island"}, {"card": "Island"}, {"card": "Island"}, {"card": "Island"}]}, {"name": "bob", "battlefield": [{"card": "Grizzly Bears", "label": "bears"}, {"card": "Centaur Courser", "label": "courser"}, {"card": "Forest", "label": "forest"}], "library": [{"card": "Island"}, {"card": "Island"}, {"card": "Island"}, {"card": "Island"}]}]},
+  "timeline": [
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "do": {"Activate": {"object": "$sylex", "ability": 0, "mana": [null]}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "do": "Pass"},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "check": {"Counters": {"object": "$sylex", "kind": {"type": "Named", "value": "oil"}, "count": 2}}},
+    {"turn": 2, "step": "DeclareAttackers", "player": "bob", "do": {"Attack": []}},
+    {"turn": 3, "step": "PrecombatMain", "player": "alice", "do": {"Activate": {"object": "$sylex", "ability": 1, "mana": [null], "costOrder": [0, 1]}}},
+    {"turn": 3, "step": "PrecombatMain", "player": "alice", "do": "Pass"},
+    {"turn": 3, "step": "PrecombatMain", "player": "alice", "check": {"Count": {"player": "bob", "zone": "Battlefield", "card": "Grizzly Bears", "count": 0}}},
+    {"turn": 3, "step": "PrecombatMain", "player": "alice", "check": {"Count": {"player": "bob", "zone": "Battlefield", "card": "Centaur Courser", "count": 1}}},
+    {"turn": 3, "step": "PrecombatMain", "player": "alice", "check": {"Count": {"player": "alice", "zone": "Battlefield", "card": "Ornithopter", "count": 1}}},
+    {"turn": 3, "step": "PrecombatMain", "player": "alice", "check": {"Count": {"player": "alice", "zone": "Battlefield", "card": "Plains", "count": 1}}},
+    {"turn": 3, "step": "PrecombatMain", "player": "alice", "check": {"Count": {"player": "bob", "zone": "Battlefield", "card": "Forest", "count": 1}}}
+  ]
+}

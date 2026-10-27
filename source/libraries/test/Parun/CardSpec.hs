@@ -95,6 +95,7 @@ import qualified Parun.Types.BecomeCopy as BecomeCopy
 import qualified Parun.Types.BecomesTapState as BecomesTapState
 import qualified Parun.Types.Behold as Behold
 import qualified Parun.Types.Bid as Bid
+import qualified Parun.Types.BindAmount as BindAmount
 import qualified Parun.Types.Blight as Blight
 import qualified Parun.Types.BlockCost as BlockCost
 import qualified Parun.Types.BlockPermission as BlockPermission
@@ -1428,6 +1429,7 @@ ownCounts effect = case effect of
   Effect.RemovePlayerCounters removal -> quantityCounts (RemovePlayerCounters.quantity removal)
   Effect.PayAnyEnergy _ -> []
   Effect.ChooseNumber _ -> []
+  Effect.BindAmount payload -> quantityCounts (BindAmount.quantity payload)
   Effect.Tap _ -> []
   Effect.Untap _ -> []
   Effect.Unattach _ -> []
@@ -1939,6 +1941,7 @@ effectNestedEffects effect = case effect of
   Effect.RemovePlayerCounters {} -> []
   Effect.PayAnyEnergy _ -> []
   Effect.ChooseNumber _ -> []
+  Effect.BindAmount _ -> []
   Effect.Tap {} -> []
   Effect.Untap {} -> []
   Effect.Unattach {} -> []
@@ -2502,6 +2505,7 @@ effectReplacements effect = case effect of
   Effect.RemovePlayerCounters {} -> []
   Effect.PayAnyEnergy _ -> []
   Effect.ChooseNumber _ -> []
+  Effect.BindAmount _ -> []
   Effect.Tap _ -> []
   Effect.Untap _ -> []
   Effect.Unattach _ -> []
@@ -3065,6 +3069,7 @@ effectMintedFaces effect = case effect of
   Effect.RemovePlayerCounters {} -> []
   Effect.PayAnyEnergy _ -> []
   Effect.ChooseNumber _ -> []
+  Effect.BindAmount _ -> []
   Effect.Tap _ -> []
   Effect.Untap _ -> []
   Effect.Unattach _ -> []
@@ -6230,6 +6235,7 @@ effectFilters effect = case effect of
   Effect.RemovePlayerCounters removal -> frame Unframed (quantityFilters (RemovePlayerCounters.quantity removal))
   Effect.PayAnyEnergy _ -> []
   Effect.ChooseNumber _ -> []
+  Effect.BindAmount payload -> frame Unframed (quantityFilters (BindAmount.quantity payload))
   Effect.Tap tap -> frame SourceHostFramed (objectRefFilters (Tap.ref tap))
   Effect.Untap ref -> frame SourceHostFramed (objectRefFilters ref)
   Effect.Unattach ref -> frame SourceHostFramed (objectRefFilters ref)

@@ -66,6 +66,7 @@ import qualified Parun.Types.AttachTarget as AttachTarget
 import qualified Parun.Types.AttackTargetRef as AttackTargetRef
 import qualified Parun.Types.BecomeCopy as BecomeCopy
 import qualified Parun.Types.Bid as Bid
+import qualified Parun.Types.BindAmount as BindAmount
 import qualified Parun.Types.Blight as Blight
 import qualified Parun.Types.Card as Card.Type
 import qualified Parun.Types.CardName as CardName
@@ -390,6 +391,7 @@ ownQuantities effect = case effect of
   Effect.RemovePlayerCounters removal -> [RemovePlayerCounters.quantity removal]
   Effect.PayAnyEnergy _ -> []
   Effect.ChooseNumber _ -> []
+  Effect.BindAmount payload -> [BindAmount.quantity payload]
   Effect.Tap _ -> []
   Effect.Untap _ -> []
   Effect.Unattach _ -> []
@@ -1602,6 +1604,7 @@ effectObjectRefs effect =
         Effect.RemovePlayerCounters {} -> []
         Effect.PayAnyEnergy {} -> []
         Effect.ChooseNumber {} -> []
+        Effect.BindAmount {} -> []
         Effect.Tap tap -> read_ [Tap.ref tap]
         Effect.Untap ref -> [(permanentQuestions, ref)]
         Effect.Unattach ref -> [(permanentQuestions, ref)]

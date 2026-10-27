@@ -3119,6 +3119,7 @@ effectIsImpossible resolving source controller legal gs effect = case effect of
   Effect.RemovePlayerCounters {} -> False
   Effect.PayAnyEnergy {} -> False
   Effect.ChooseNumber {} -> False
+  Effect.BindAmount {} -> False
   -- CR 701.26a: "only untapped permanents can be tapped", which is what
   -- Parun.Engine.Event.tap enforces, so a sweep whose every permanent is already
   -- tapped taps nothing.
