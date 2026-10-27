@@ -1321,6 +1321,7 @@ molten-psyche
 molten-sentry
 moment-of-silence
 monks-fist
+monomania
 monstrous-war-leech
 moonlace
 moonmist
@@ -1390,6 +1391,7 @@ novijen-sages
 null-chamber
 obelisk-of-urd
 obliterate
+oblivion-ring
 obsidian-battle-axe
 obstinate-baloth
 octomancer
@@ -1471,15 +1473,20 @@ peema-aether-seer
 penregon-besieged
 pentagram-of-the-ages
 pentarch-paladin
+pentavus
 perennation
 persecute
 person-of-interest
+personal-sanctuary
 persuasion
 pest-infestation
 pestilent-cauldron-restorative-burst
 petra-sphinx
 petrified-wood-kin
 phage-the-untouchable
+phantasmal-bear
+phantasmal-dragon
+phantasmal-image
 phantasmal-terrain
 phantom-beast
 phantom-tiger
@@ -1535,6 +1542,7 @@ primal-whisperer
 prime-ministers-cabinet-room
 primeval-titan
 primitive-etchings
+primordial-hydra
 printlifter-ooze
 prison-barricade
 prized-amalgam
@@ -1571,6 +1579,7 @@ queen-marchesa
 queens-bay-paladin
 questing-beast
 questing-druid-seek-the-beast
+quicksilver-amulet
 quicksilver-gargantuan
 quillspike
 quina-qu-gourmet
@@ -1671,6 +1680,7 @@ rise-from-the-grave
 rise-of-the-dark-realms
 rishadan-cutpurse
 rite-of-replication
+rites-of-flourishing
 rites-of-initiation
 rites-of-refusal
 rites-of-spring
@@ -1749,6 +1759,7 @@ scheming-symmetry
 scorching-winds
 scoria-wurm
 scouts-warning
+scrambleverse
 scrapshooter
 screaming-swarm
 screams-from-within
@@ -1816,12 +1827,14 @@ sinister-reflections
 sirens-call
 sixth-sense
 skilled-animator
+skinshifter
 skirk-marauder
 skull-skaab
 skullclamp
 skullwinder
 skymarcher-aspirant
 skyshroud-ranger
+skywinder-drake
 slaughter-pact
 sleep
 sleeper-agent
@@ -1831,6 +1844,7 @@ slimefoots-survey
 slimy-dualleech
 slivdrazi-monstrosity
 slobad-iron-goblin
+smallpox
 smog-smasher
 smoke-teller
 snake-basket
@@ -1846,6 +1860,7 @@ sonorous-howlbonder
 sorcerer-class
 sorcerers-strongbox
 sorcerous-sight
+sorin-markov
 sorrows-path
 soul-conduit
 soul-diviner
@@ -1945,6 +1960,7 @@ summoners-pact
 sun-titan
 sun-warriors
 sunder-shaman
+sundial-of-the-infinite
 sunglasses-of-urza
 sunken-hope
 sunpetal-grove
@@ -1993,6 +2009,7 @@ tazeem
 tazri-beacon-of-unity
 team-tactics
 tectonic-reformation
+tectonic-rift
 teferi-hero-of-dominaria
 teferi-mage-of-zhalfir
 teferis-moat
@@ -2080,6 +2097,7 @@ time-stop
 time-stretch
 time-warp
 timely-interference
+timely-reinforcements
 timetwister
 timmerian-fiends
 tinybones-joins-up
@@ -2115,6 +2133,7 @@ tribal-flames
 tricksters-stratagem
 triskelion
 troll-of-khazad-dum
+trollhide
 trove-of-temptation
 truce
 true-believer
@@ -2174,6 +2193,7 @@ venerated-loxodon
 venerated-rotpriest
 vengeant-earth
 vengeful-archon
+vengeful-pharaoh
 vengeful-townsfolk
 vengeful-tracker
 vernal-bloom
@@ -2188,6 +2208,7 @@ vigorspore-wurm
 village-rites
 villainous-ogre
 viral-spawning
+visions-of-beyond
 vitalizing-cascade
 vitu-ghazi-inspector
 viviens-stampede
@@ -2222,6 +2243,7 @@ warp-world
 warped-devotion
 warriors-oath
 warriors-stand
+warstorm-surge
 wash-away
 waste-management
 watchful-radstag
@@ -2288,6 +2310,7 @@ word-of-seizing
 words-of-worship
 workhorse
 worldly-counsel
+worldslayer
 wormfang-crab
 worms-of-the-earth
 worship

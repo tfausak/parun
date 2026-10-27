@@ -883,8 +883,8 @@ acted context word r = do
 -- shuffle" (CR 701.23a): your search of your own library for one card of a
 -- description, and where the card goes, after which the search shuffles
 -- unless the card stays (Parun.Types.SearchDestination). Free: "that card"
--- or "it" for the card put onto the battlefield (Nature's Lore, Three
--- Visits), "it" or "that card" for the card revealed (Summoner's Pact,
+-- or "it" for the card put into your hand (Diabolic Tutor, Rune-Scarred
+-- Demon) or onto the battlefield (Nature's Lore, Three Visits), "it" or "that card" for the card revealed (Summoner's Pact,
 -- Goblin Matron), and "that card" or "the card" for the card put on top
 -- (Sylvan Tutor, Worldly Tutor). Any other search is not spelled out here.
 searched :: Target.Context -> Search.Search -> [Predicate]
@@ -906,7 +906,7 @@ searched context s
           revealed = [Text.pack "reveal it", Text.pack "reveal that card"]
           onTop = [Text.pack "that card", Text.pack "the card"]
       gone <- case Search.destination s of
-        SearchDestination.Hand -> [Text.pack ", put that card into your hand, then shuffle"]
+        SearchDestination.Hand -> [Text.pack ", put that card into your hand, then shuffle", Text.pack ", put it into your hand, then shuffle"]
         SearchDestination.RevealThenHand -> fmap (\r -> Text.pack ", " <> r <> Text.pack ", put it into your hand, then shuffle") revealed
         -- Free besides: "and" and a sentence of its own for the shuffle
         -- (Spoils of Victory) or commas (Nature's Lore).

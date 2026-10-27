@@ -1,0 +1,35 @@
+{
+  "description": "CR 120.3 Vengeful Pharaoh ignores combat damage to a planeswalker an opponent controls and to a creature its owner controls",
+  "note": "Bob attacks alice's Ajani Goldmane with one Grizzly Bears and alice with another, which alice's Bears block. The step damages alice's planeswalker and bob's blocked creature but neither bob nor a planeswalker he controls, so Pharaoh in bob's graveyard stays put and nothing goes on the stack.",
+  "board": {
+    "seats": [
+      {
+        "name": "alice",
+        "battlefield": [
+          { "card": "Ajani Goldmane", "label": "ajani", "counters": [{ "key": { "type": "Loyalty" }, "value": 4 }] },
+          { "card": "Grizzly Bears", "label": "guard", "ready": true }
+        ]
+      },
+      {
+        "name": "bob",
+        "battlefield": [
+          { "card": "Grizzly Bears", "label": "bear", "ready": true },
+          { "card": "Grizzly Bears", "label": "cub", "ready": true }
+        ],
+        "graveyard": [{ "card": "Vengeful Pharaoh", "label": "pharaoh" }]
+      }
+    ],
+    "active": "bob",
+    "step": "BeginningOfCombat"
+  },
+  "timeline": [
+    { "turn": 1, "step": "DeclareAttackers", "player": "bob", "do": { "Attack": ["$bear", "$cub"] } },
+    { "turn": 1, "step": "DeclareAttackers", "player": "bob", "source": "$bear", "do": { "ChooseAttackTarget": "$ajani" } },
+    { "turn": 1, "step": "DeclareAttackers", "player": "bob", "source": "$cub", "do": { "ChooseAttackTarget": "$alice" } },
+    { "turn": 1, "step": "DeclareBlockers", "player": "alice", "do": { "Block": { "$guard": ["$cub"] } } },
+    { "turn": 1, "step": "CombatDamage", "player": "bob", "check": { "View": { "of": "Stack", "is": [] } } },
+    { "turn": 1, "step": "EndOfCombat", "player": "bob", "check": { "Counters": { "object": "$ajani", "kind": { "type": "Loyalty" }, "count": 2 } } },
+    { "turn": 1, "step": "EndOfCombat", "player": "bob", "check": { "Count": { "player": "bob", "zone": "Graveyard", "card": "Grizzly Bears", "count": 1 } } },
+    { "turn": 1, "step": "EndOfCombat", "player": "bob", "check": { "Count": { "player": "bob", "zone": "Graveyard", "card": "Vengeful Pharaoh", "count": 1 } } }
+  ]
+}

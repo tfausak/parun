@@ -1,0 +1,103 @@
+{
+  "faces": [
+    {
+      "manaCost": [
+        {
+          "type": "Generic",
+          "value": 6
+        },
+        {
+          "type": "OfType",
+          "value": {
+            "type": "Colored",
+            "value": {
+              "type": "Red"
+            }
+          }
+        },
+        {
+          "type": "OfType",
+          "value": {
+            "type": "Colored",
+            "value": {
+              "type": "Red"
+            }
+          }
+        }
+      ],
+      "name": "Scrambleverse",
+      "oracleText": "For each nonland permanent, choose a player at random. Then each player gains control of each permanent for which they were chosen. Untap those permanents.",
+      "spell": {
+        "modes": [
+          {
+            "clauses": [
+              {
+                "effects": [
+                  {
+                    "type": "ForEach",
+                    "value": {
+                      "body": [
+                        {
+                          "type": "ChoosePlayerAtRandom",
+                          "value": {
+                            "scope": {
+                              "type": "AnyPlayer"
+                            },
+                            "slot": "chosen"
+                          }
+                        },
+                        {
+                          "type": "GainControl",
+                          "value": {
+                            "duration": {
+                              "type": "Indefinite"
+                            },
+                            "ref": {
+                              "type": "InSlot",
+                              "value": "permanent"
+                            },
+                            "to": {
+                              "type": "InSlot",
+                              "value": "chosen"
+                            }
+                          }
+                        },
+                        {
+                          "type": "Untap",
+                          "value": {
+                            "type": "InSlot",
+                            "value": "permanent"
+                          }
+                        }
+                      ],
+                      "ref": {
+                        "type": "EachMatching",
+                        "value": {
+                          "type": "Not",
+                          "value": {
+                            "type": "HasCardType",
+                            "value": {
+                              "type": "Land"
+                            }
+                          }
+                        }
+                      },
+                      "slot": "permanent"
+                    }
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      },
+      "typeLine": {
+        "types": [
+          {
+            "type": "Sorcery"
+          }
+        ]
+      }
+    }
+  ]
+}

@@ -540,6 +540,7 @@ import qualified Parun.Codec.PlayerDrawsNthCardSpec
 import qualified Parun.Codec.PlayerEffectSpec
 import qualified Parun.Codec.PlayerIdSpec
 import qualified Parun.Codec.PlayerInstructionSpec
+import qualified Parun.Codec.PlayerIsDealtDamageSpec
 import qualified Parun.Codec.PlayerQuantitySpec
 import qualified Parun.Codec.PlayerRefSpec
 import qualified Parun.Codec.PlayerRelationSpec
@@ -1464,6 +1465,7 @@ spec s registry corpus = do
   Parun.Codec.PlayerCountersSpec.spec s
   Parun.Codec.PlayerCounterTallySpec.spec s
   Parun.Codec.DealtDamageSpec.spec s
+  Parun.Codec.PlayerIsDealtDamageSpec.spec s
   Parun.Codec.PlayersWhoSpec.spec s
   Parun.Codec.SuperlativeSpec.spec s
   Parun.Codec.PlayerDesignationSpec.spec s
