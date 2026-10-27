@@ -45,6 +45,7 @@ ajani-adversary-of-tyrants
 ajani-caller-of-the-pride
 ajani-goldmane
 ajani-steadfast
+ajanis-chosen
 ajanis-pridemate
 ajanis-response
 akawalli-the-seething-tower
@@ -79,6 +80,7 @@ ancient-vendetta
 angel-of-finality
 angel-of-fury
 angel-of-salvation
+angelic-accord
 angelic-arbiter
 angelic-benediction
 angelic-chorus
@@ -110,6 +112,7 @@ arcane-laboratory
 arcane-teachings
 arcbound-overseer
 arcbound-wanderer
+archangel-of-thune
 archfiend-of-depravity
 archfiends-vessel
 architects-of-will
@@ -124,6 +127,7 @@ armored-galleon
 armory-automaton
 arms-depot
 arrest
+artificers-hex
 artificial-evolution
 artillery-blast
 ash-barrens
@@ -163,6 +167,7 @@ aven-windreader
 avenge
 avenger-of-the-fallen
 averna-the-chaos-bloom
+awaken-the-ancient
 awakener-druid
 azorius-arrester
 azusa-lost-but-seeking
@@ -229,6 +234,7 @@ blatant-thievery
 blazing-archon
 blessed-reversal
 blight
+blightcaster
 blighted-nightmare
 blightreaper-thallid-blightsower-thallid
 blind-hunter
@@ -253,6 +259,7 @@ blossoming-tortoise
 blue-mana-battery
 blue-ward
 blurred-mongoose
+bogbrew-witch
 bonded-construct
 bone-mask
 booby-trap
@@ -270,6 +277,7 @@ bragos-representative
 bramble-elemental
 brass-herald
 brassclaw-orcs
+brave-the-elements
 brazen-cannonade
 break-open
 break-under-pressure
@@ -297,8 +305,10 @@ brutal-nightstalker
 brutal-suppression
 bruvac-the-grandiloquent
 bubble-smuggler
+bubbling-cauldron
 bumper-cars
 bureau-headmaster
+burning-earth
 burning-eye-zubera
 burning-of-xinye
 burning-rune-demon
@@ -334,6 +344,7 @@ cease-desist
 cease-fire
 celebr-8000
 celestial-dawn
+celestial-flare
 celestine-reef
 celestine-the-living-saint
 centaur-of-attention
@@ -346,6 +357,7 @@ chance-for-glory
 chancellor-of-the-forge
 chandra-fire-artisan
 chandra-nalaar
+chandra-pyromaster
 chandra-the-firebrand
 chandras-fury
 chandras-outrage
@@ -378,6 +390,7 @@ city-in-a-bottle
 city-of-brass
 clam-i-am
 clarion-spirit
+claustrophobia
 clavileno-first-of-the-blessed
 cleansing
 clearwater-goblet
@@ -398,6 +411,7 @@ coercion
 coldsteel-heart
 collective-restraint
 colonel-autumn
+colossal-whale
 colossus-of-sardia
 colossus-of-the-blood-age
 combust
@@ -544,6 +558,7 @@ desolation-twin
 destined-lead
 destructive-force
 detritivore
+devout-invocation
 diabolic-edict
 diabolic-revelation
 diaochan-artful-beauty
@@ -562,6 +577,7 @@ disciple-of-bolas
 discombobulate
 disguise-agent
 dismantling-wave
+dismiss-into-dream
 disorder
 distant-memories
 distorting-lens
@@ -574,11 +590,13 @@ djinn-of-wishes
 djinni-windseer
 do-or-die
 dog-walker
+domestication
 domineering-will
 dong-zhou-the-tyrant
 dont-make-a-sound
 doom-cannon
 doomsday
+door-of-destinies
 door-to-nothingness
 dormant-gomazoa
 double-major
@@ -588,6 +606,7 @@ doubling-season
 dovin-hand-of-control
 drafnas-restoration
 drag-to-the-bottom
+dragon-egg
 dragon-mask
 dragon-whelp
 dragonhawk-fates-tempest
@@ -640,6 +659,7 @@ elemental-teachings
 elemental-uprising
 eligeth-crossroads-augur
 eliminate-the-impossible
+elite-arcanist
 elixir-of-immortality
 elkin-bottle
 elkin-lair
@@ -743,9 +763,11 @@ feral-lightning
 fertile-ground
 fertilids-favor
 fervent-charge
+festering-newt
 fevered-suspicion
 feywild-trickster
 fields-of-summer
+fiendslayer-paladin
 fierce-retribution
 fiery-encore
 fight-or-flight
@@ -774,6 +796,7 @@ flaxen-intruder-welcome-home
 fleet-footed-monk
 flensing-raptor
 fleshbag-marauder
+fleshpulper-giant
 flicker-of-fate
 fling
 flock-of-rabid-sheep
@@ -835,6 +858,7 @@ galvanic-relay
 gang-of-elk
 garland-royal-kidnapper
 garna-bloodfist-of-keld
+garruk-caller-of-beasts
 garruk-primal-hunter
 garruk-wildspeaker
 garruks-horde
@@ -875,6 +899,7 @@ glamerdye
 glasses-of-urza
 glen-elendras-answer
 gliding-licid
+glimpse-the-future
 glittering-lion
 gloom-stalker
 glorfindel-dauntless-rescuer
@@ -889,9 +914,11 @@ goblin-battle-jester
 goblin-bookie
 goblin-brawler
 goblin-brigand
+goblin-diplomats
 goblin-grenade
 goblin-mutant
 goblin-recruiter
+goblin-shortcutter
 goblin-tunneler
 goblin-war-cry
 god-eternal-bontu
@@ -927,6 +954,7 @@ grim-hireling
 grim-lavamancer
 grim-poppet
 grim-reminder
+grim-return
 grinning-ignus
 grinning-totem
 grist-the-hunger-tide
@@ -935,6 +963,7 @@ ground-seal
 grounded-for-life
 grub-storied-matriarch-grub-notorious-auntie
 guan-yu-sainted-warrior
+guardian-of-the-ages
 guardian-seraph
 guerrilla-tactics
 guiding-spirit
@@ -1011,6 +1040,7 @@ huang-zhong-shu-general
 hulk-gamma-goliath
 humility
 hungering-hydra
+hunt-the-weak
 hunted-wumpus
 hunters-feast
 hunters-insight
@@ -1029,6 +1059,7 @@ ignorant-bliss
 illicit-auction
 illuminate-history
 illuminor-szeras
+illusionary-armor
 illusionary-mask
 illusionary-servant
 imaryll-elfhame-elite
@@ -1037,6 +1068,7 @@ imoti-celebrant-of-bounty
 impatience
 imperial-edict
 imperial-recruiter
+imposing-sovereign
 impulsive-pilferer
 incarnation-technique
 incinerate
@@ -1091,6 +1123,7 @@ jace-beleren
 jace-memory-adept
 jaces-archivist
 jaces-erasure
+jaces-mindseeker
 jaces-phantasm
 jackal-familiar
 jade-monolith
@@ -1113,6 +1146,7 @@ just-fate
 justice-vance-astrovik
 juxtapose
 kadenas-silencer
+kalonian-hydra
 kami-of-mourning
 kang-the-conqueror
 kari-zev-crew-of-two
@@ -1187,6 +1221,7 @@ lich
 lichs-mirror
 lier-disciple-of-the-drowned
 life-and-limb
+lifebane-zombie
 lightmine-field
 lightstall-inquisitor
 lightwielder-paladin

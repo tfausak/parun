@@ -1785,7 +1785,8 @@ filterPositionLintSpec s registry corpus = Spec.describe s "Lint" $ do
         ("Flame Wave", 1), -- its damage's object
         ("Chandra Nalaar", 1), -- its -8, Flame Wave's sentence
         ("Chandra's Fury", 1), -- its damage's object, Flame Wave's sentence
-        ("Necrotic Plague", 1) -- its trigger's target slot, relative to the dead creature's controller
+        ("Necrotic Plague", 1), -- its trigger's target slot, relative to the dead creature's controller
+        ("Chandra, Pyromaster", 1) -- its +1's second target slot, Flame Wave's sentence
       ]
     -- The REJECTING direction, hand-built for the reason every sibling lint's is:
     -- a card that offends must not be loadable, so no file can carry one. Buried
@@ -2010,7 +2011,9 @@ filterPositionLintSpec s registry corpus = Spec.describe s "Lint" $ do
         ("Shiv's Embrace", 1), -- Firebreathing's wording
         ("Blessing", 1), -- Firebreathing's shape, its pump +1/+1
         ("Regeneration", 1), -- a loop whose member its shield names
-        ("Ring of Xathrid", 1) -- Regeneration's wording, through an Equipment
+        ("Ring of Xathrid", 1), -- Regeneration's wording, through an Equipment
+        ("Claustrophobia", 1), -- Bewitching Leechcraft's CR 603.4 tap
+        ("Artificer's Hex", 2) -- its intervening "if" and the destruction it gates
       ]
     -- The rejected side, which the sweep above cannot show while the pool has no
     -- offender: the same atom planted in a SPELL's target slot -- the position a

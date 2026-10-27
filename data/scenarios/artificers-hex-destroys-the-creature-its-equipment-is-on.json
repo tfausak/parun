@@ -1,0 +1,17 @@
+{
+  "description": "CR 603.4 / 701.8: at the beginning of its controller's upkeep, Artificer's Hex destroys the creature its enchanted Equipment is attached to",
+  "note": "bob's Bonesplitter is on his Grizzly Bears; at alice's upkeep the Bears die and bob's unequipped Hill Giant stays.",
+  "board": {
+    "active": "bob",
+    "step": "PrecombatMain",
+    "seats": [
+      {"name": "alice", "battlefield": [{"card": "Artificer's Hex", "label": "hex", "attached": "split"}], "library": [{"card": "Island"}, {"card": "Island"}, {"card": "Island"}, {"card": "Island"}]},
+      {"name": "bob", "battlefield": [{"card": "Grizzly Bears", "label": "bears"}, {"card": "Bonesplitter", "label": "split", "attached": "bears"}, {"card": "Hill Giant", "label": "giant"}], "library": [{"card": "Island"}, {"card": "Island"}, {"card": "Island"}, {"card": "Island"}]}
+    ]
+  },
+  "timeline": [
+    {"turn": 2, "step": "Upkeep", "player": "alice", "do": "Pass"},
+    {"turn": 2, "step": "Upkeep", "player": "alice", "check": {"Count": {"player": "bob", "zone": "Graveyard", "card": "Grizzly Bears", "count": 1}}},
+    {"turn": 2, "step": "Upkeep", "player": "alice", "check": {"Count": {"player": "bob", "zone": "Battlefield", "card": "Hill Giant", "count": 1}}}
+  ]
+}

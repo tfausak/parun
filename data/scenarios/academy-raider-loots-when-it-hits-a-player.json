@@ -1,0 +1,21 @@
+{
+  "description": "CR 510.2 / 603.5: when Academy Raider deals combat damage to a player, its controller may discard a card and, having done so, draws one",
+  "note": "alice discards the Gray Ogre and keeps the Hill Giant, and draws the top Island; bob takes 1.",
+  "board": {
+    "active": "alice",
+    "step": "PrecombatMain",
+    "seats": [
+      {"name": "alice", "battlefield": [{"card": "Academy Raider", "label": "raider", "ready": true}], "hand": [{"card": "Gray Ogre", "label": "ogre"}, {"card": "Hill Giant", "label": "giant"}], "library": [{"card": "Island"}, {"card": "Island"}, {"card": "Island"}, {"card": "Island"}]},
+      {"name": "bob", "library": [{"card": "Island"}, {"card": "Island"}, {"card": "Island"}, {"card": "Island"}]}
+    ]
+  },
+  "timeline": [
+    {"turn": 1, "step": "DeclareAttackers", "player": "alice", "do": {"Attack": ["$raider"]}},
+    {"turn": 1, "step": "CombatDamage", "player": "alice", "do": {"ChooseOptional": {"type": "Exercises"}}},
+    {"turn": 1, "step": "CombatDamage", "player": "alice", "do": {"Answer": {"prompt": "ChooseDiscard", "with": ["$ogre"]}}},
+    {"turn": 1, "step": "CombatDamage", "player": "alice", "check": {"Count": {"player": "alice", "zone": "Graveyard", "card": "Gray Ogre", "count": 1}}},
+    {"turn": 1, "step": "CombatDamage", "player": "alice", "check": {"Count": {"player": "alice", "zone": "Hand", "card": "Island", "count": 1}}},
+    {"turn": 1, "step": "CombatDamage", "player": "alice", "check": {"Count": {"player": "alice", "zone": "Hand", "card": "Hill Giant", "count": 1}}},
+    {"turn": 1, "step": "CombatDamage", "player": "alice", "check": {"Life": {"player": "bob", "life": 19}}}
+  ]
+}

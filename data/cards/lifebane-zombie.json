@@ -1,0 +1,153 @@
+{
+  "faces": [
+    {
+      "keywords": [
+        {
+          "type": "Intimidate"
+        }
+      ],
+      "manaCost": [
+        {
+          "type": "Generic",
+          "value": 1
+        },
+        {
+          "type": "OfType",
+          "value": {
+            "type": "Colored",
+            "value": {
+              "type": "Black"
+            }
+          }
+        },
+        {
+          "type": "OfType",
+          "value": {
+            "type": "Colored",
+            "value": {
+              "type": "Black"
+            }
+          }
+        }
+      ],
+      "name": "Lifebane Zombie",
+      "oracleText": "Intimidate (This creature can't be blocked except by artifact creatures and/or creatures that share a color with it.)\nWhen this creature enters, target opponent reveals their hand. You choose a green or white creature card from it and exile that card.",
+      "power": {
+        "type": "Literal",
+        "value": 3
+      },
+      "toughness": {
+        "type": "Literal",
+        "value": 1
+      },
+      "triggeredAbilities": [
+        {
+          "condition": {
+            "type": "SelfEnters"
+          },
+          "modal": {
+            "modes": [
+              {
+                "clauses": [
+                  {
+                    "effects": [
+                      {
+                        "type": "Reveal",
+                        "value": {
+                          "ref": {
+                            "type": "EachCardInHand",
+                            "value": {
+                              "hands": {
+                                "type": "InSlot",
+                                "value": "target"
+                              }
+                            }
+                          },
+                          "slot": "revealed"
+                        }
+                      }
+                    ]
+                  },
+                  {
+                    "effects": [
+                      {
+                        "type": "MoveToZone",
+                        "value": {
+                          "ref": {
+                            "type": "ChosenCardFromAmong",
+                            "value": {
+                              "filter": {
+                                "type": "And",
+                                "value": [
+                                  {
+                                    "type": "Or",
+                                    "value": [
+                                      {
+                                        "type": "HasColor",
+                                        "value": {
+                                          "type": "Green"
+                                        }
+                                      },
+                                      {
+                                        "type": "HasColor",
+                                        "value": {
+                                          "type": "White"
+                                        }
+                                      }
+                                    ]
+                                  },
+                                  {
+                                    "type": "HasCardType",
+                                    "value": {
+                                      "type": "Creature"
+                                    }
+                                  }
+                                ]
+                              },
+                              "slot": "revealed"
+                            }
+                          },
+                          "zone": {
+                            "type": "Exile"
+                          }
+                        }
+                      }
+                    ]
+                  }
+                ],
+                "targetSlots": {
+                  "target": {
+                    "filter": {
+                      "type": "IsPlayer",
+                      "value": {
+                        "type": "Opponent"
+                      }
+                    },
+                    "pool": {
+                      "type": "Players"
+                    }
+                  }
+                }
+              }
+            ]
+          }
+        }
+      ],
+      "typeLine": {
+        "subtypes": [
+          {
+            "type": "Warrior"
+          },
+          {
+            "type": "Zombie"
+          }
+        ],
+        "types": [
+          {
+            "type": "Creature"
+          }
+        ]
+      }
+    }
+  ]
+}

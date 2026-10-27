@@ -1,0 +1,19 @@
+{
+  "description": "CR 205.1b / 603.2: Dismiss into Dream makes each creature its controller's opponents control an Illusion that is sacrificed when it becomes the target of a spell or ability",
+  "note": "bob's Grizzly Bears become a Bear Illusion and are sacrificed when alice's Giant Growth targets them; alice's own Gray Ogre is untouched.",
+  "board": {
+    "active": "alice",
+    "step": "PrecombatMain",
+    "seats": [
+      {"name": "alice", "manaPool": "G", "battlefield": [{"card": "Dismiss into Dream", "label": "dismiss"}, {"card": "Gray Ogre", "label": "ogre"}], "hand": [{"card": "Giant Growth", "label": "growth"}], "library": [{"card": "Island"}, {"card": "Island"}, {"card": "Island"}, {"card": "Island"}]},
+      {"name": "bob", "battlefield": [{"card": "Grizzly Bears", "label": "bears"}], "library": [{"card": "Island"}, {"card": "Island"}, {"card": "Island"}, {"card": "Island"}]}
+    ]
+  },
+  "timeline": [
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "check": {"Subtypes": {"object": "$bears", "subtypes": ["Bear", "Illusion"]}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "check": {"Subtypes": {"object": "$ogre", "subtypes": ["Ogre"]}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "do": {"Cast": {"object": "$growth", "targets": ["$bears"]}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "do": "Pass"},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "check": {"Count": {"player": "bob", "zone": "Graveyard", "card": "Grizzly Bears", "count": 1}}}
+  ]
+}

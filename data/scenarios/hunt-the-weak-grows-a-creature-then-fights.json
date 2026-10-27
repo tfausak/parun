@@ -1,0 +1,19 @@
+{
+  "description": "CR 701.14a / 608.2c: Hunt the Weak puts a +1/+1 counter on target creature its caster controls, then that creature fights target creature they don't control",
+  "note": "alice's Gray Ogre, 3/3 with the counter, kills bob's Grizzly Bears and survives their 2 damage.",
+  "board": {
+    "active": "alice",
+    "step": "PrecombatMain",
+    "seats": [
+      {"name": "alice", "manaPool": "GGGG", "battlefield": [{"card": "Gray Ogre", "label": "ogre"}], "hand": [{"card": "Hunt the Weak", "label": "hunt"}], "library": [{"card": "Island"}, {"card": "Island"}, {"card": "Island"}, {"card": "Island"}]},
+      {"name": "bob", "battlefield": [{"card": "Grizzly Bears", "label": "bears"}], "library": [{"card": "Island"}, {"card": "Island"}, {"card": "Island"}, {"card": "Island"}]}
+    ]
+  },
+  "timeline": [
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "do": {"Cast": {"object": "$hunt", "targetsBySlot": {"mine": ["$ogre"], "theirs": ["$bears"]}}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "do": "Pass"},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "check": {"Count": {"player": "bob", "zone": "Graveyard", "card": "Grizzly Bears", "count": 1}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "check": {"PowerToughness": {"object": "$ogre", "power": 3, "toughness": 3}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "check": {"Damage": {"object": "$ogre", "damage": 2}}}
+  ]
+}

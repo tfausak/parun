@@ -1,0 +1,136 @@
+{
+  "faces": [
+    {
+      "manaCost": [
+        {
+          "type": "Generic",
+          "value": 6
+        },
+        {
+          "type": "OfType",
+          "value": {
+            "type": "Colored",
+            "value": {
+              "type": "White"
+            }
+          }
+        }
+      ],
+      "name": "Devout Invocation",
+      "oracleText": "Tap any number of untapped creatures you control. Create a 4/4 white Angel creature token with flying for each creature tapped this way.",
+      "spell": {
+        "modes": [
+          {
+            "clauses": [
+              {
+                "effects": [
+                  {
+                    "type": "ChoosePermanents",
+                    "value": {
+                      "permanents": {
+                        "count": {
+                          "type": "UpTo"
+                        },
+                        "filter": {
+                          "type": "And",
+                          "value": [
+                            {
+                              "type": "HasCardType",
+                              "value": {
+                                "type": "Creature"
+                              }
+                            },
+                            {
+                              "type": "HeldBy",
+                              "value": {
+                                "holder": {
+                                  "type": "Controller"
+                                },
+                                "relation": {
+                                  "type": "You"
+                                }
+                              }
+                            },
+                            {
+                              "type": "Not",
+                              "value": {
+                                "type": "IsTapped"
+                              }
+                            }
+                          ]
+                        }
+                      },
+                      "slot": "chosen"
+                    }
+                  },
+                  {
+                    "type": "Tap",
+                    "value": {
+                      "ref": {
+                        "type": "InSlot",
+                        "value": "chosen"
+                      }
+                    }
+                  },
+                  {
+                    "type": "Create",
+                    "value": {
+                      "card": {
+                        "faces": [
+                          {
+                            "colorIndicator": [
+                              {
+                                "type": "White"
+                              }
+                            ],
+                            "keywords": [
+                              {
+                                "type": "Flying"
+                              }
+                            ],
+                            "name": "Angel Token",
+                            "power": {
+                              "type": "Literal",
+                              "value": 4
+                            },
+                            "toughness": {
+                              "type": "Literal",
+                              "value": 4
+                            },
+                            "typeLine": {
+                              "subtypes": [
+                                {
+                                  "type": "Angel"
+                                }
+                              ],
+                              "types": [
+                                {
+                                  "type": "Creature"
+                                }
+                              ]
+                            }
+                          }
+                        ]
+                      },
+                      "quantity": {
+                        "type": "BoundCount",
+                        "value": "chosen"
+                      }
+                    }
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      },
+      "typeLine": {
+        "types": [
+          {
+            "type": "Sorcery"
+          }
+        ]
+      }
+    }
+  ]
+}

@@ -1,0 +1,109 @@
+{
+  "faces": [
+    {
+      "manaCost": [
+        {
+          "type": "Generic",
+          "value": 6
+        },
+        {
+          "type": "OfType",
+          "value": {
+            "type": "Colored",
+            "value": {
+              "type": "Blue"
+            }
+          }
+        }
+      ],
+      "name": "Dismiss into Dream",
+      "oracleText": "Each creature your opponents control is an Illusion in addition to its other types and has \"When this creature becomes the target of a spell or ability, sacrifice it.\"",
+      "staticAbilities": [
+        {
+          "affected": {
+            "type": "Matching",
+            "value": {
+              "type": "And",
+              "value": [
+                {
+                  "type": "HasCardType",
+                  "value": {
+                    "type": "Creature"
+                  }
+                },
+                {
+                  "type": "HeldBy",
+                  "value": {
+                    "holder": {
+                      "type": "Controller"
+                    },
+                    "relation": {
+                      "type": "Opponent"
+                    }
+                  }
+                }
+              ]
+            }
+          },
+          "modifications": [
+            {
+              "type": "CreatureSubtype",
+              "value": {
+                "mode": {
+                  "type": "InAddition"
+                },
+                "subtype": {
+                  "type": "Illusion"
+                }
+              }
+            },
+            {
+              "type": "GainAbility",
+              "value": {
+                "type": "Triggered",
+                "value": {
+                  "condition": {
+                    "type": "PermanentBecomesTargeted",
+                    "value": {
+                      "filter": {
+                        "type": "IsSource"
+                      }
+                    }
+                  },
+                  "modal": {
+                    "modes": [
+                      {
+                        "clauses": [
+                          {
+                            "effects": [
+                              {
+                                "type": "Sacrifice",
+                                "value": {
+                                  "ref": {
+                                    "type": "InSlot",
+                                    "value": "self"
+                                  }
+                                }
+                              }
+                            ]
+                          }
+                        ]
+                      }
+                    ]
+                  }
+                }
+              }
+            }
+          ]
+        }
+      ],
+      "typeLine": {
+        "types": [
+          {
+            "type": "Enchantment"
+          }
+        ]
+      }
+    }
+  ]
+}

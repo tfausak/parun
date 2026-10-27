@@ -1,0 +1,26 @@
+{
+  "description": "CR 118.3 / 119.3: Bubbling Cauldron's first ability sacrifices any creature for 4 life; its second sacrifices a Festering Newt to make each opponent lose 4 and gains what they lost",
+  "note": "Three seats so each opponent counts: alice gains 4, then 8 from bob and carol losing 4 each. The first ability takes the Gray Ogre; the second takes a Newt and not the Grizzly Bears.",
+  "board": {
+    "active": "alice",
+    "step": "PrecombatMain",
+    "seats": [
+      {"name": "alice", "manaPool": "CC", "battlefield": [{"card": "Bubbling Cauldron", "label": "c1"}, {"card": "Bubbling Cauldron", "label": "c2"}, {"card": "Grizzly Bears", "label": "bears"}, {"card": "Gray Ogre", "label": "ogre"}, {"card": "Festering Newt", "label": "n1"}, {"card": "Festering Newt", "label": "n2"}], "library": [{"card": "Island"}, {"card": "Island"}, {"card": "Island"}, {"card": "Island"}]},
+      {"name": "bob", "library": [{"card": "Island"}, {"card": "Island"}, {"card": "Island"}, {"card": "Island"}]},
+      {"name": "carol", "library": [{"card": "Island"}, {"card": "Island"}, {"card": "Island"}, {"card": "Island"}]}
+    ]
+  },
+  "timeline": [
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "do": {"Activate": {"object": "$c1", "ability": 0, "costOrder": [0, 1]}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "do": {"Answer": {"prompt": "ChooseSacrifices", "with": ["$ogre"]}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "do": "Pass"},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "check": {"Life": {"player": "alice", "life": 24}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "do": {"Activate": {"object": "$c2", "ability": 1, "costOrder": [0, 1]}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "refuse": {"Answer": {"prompt": "ChooseSacrifices", "with": ["$bears"]}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "do": {"Answer": {"prompt": "ChooseSacrifices", "with": ["$n1"]}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "do": "Pass"},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "check": {"Life": {"player": "bob", "life": 16}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "check": {"Life": {"player": "carol", "life": 16}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "check": {"Life": {"player": "alice", "life": 32}}}
+  ]
+}

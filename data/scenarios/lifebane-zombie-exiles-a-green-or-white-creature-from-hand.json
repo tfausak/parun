@@ -1,0 +1,23 @@
+{
+  "description": "CR 701.20a / 406.1: when Lifebane Zombie enters, target opponent reveals their hand and its controller exiles a green or white creature card from it",
+  "note": "bob's red Hill Giant and green instant Giant Growth are not on offer; alice exiles his white Savannah Lions over his green Grizzly Bears.",
+  "board": {
+    "active": "alice",
+    "step": "PrecombatMain",
+    "seats": [
+      {"name": "alice", "manaPool": "BBB", "hand": [{"card": "Lifebane Zombie", "label": "zombie"}], "library": [{"card": "Island"}, {"card": "Island"}, {"card": "Island"}, {"card": "Island"}]},
+      {"name": "bob", "hand": [{"card": "Grizzly Bears", "label": "bears"}, {"card": "Savannah Lions", "label": "lions"}, {"card": "Hill Giant", "label": "giant"}, {"card": "Giant Growth", "label": "growth"}], "library": [{"card": "Island"}, {"card": "Island"}, {"card": "Island"}, {"card": "Island"}]}
+    ]
+  },
+  "timeline": [
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "do": {"Cast": {"object": "$zombie"}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "do": "Pass"},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "do": {"ChooseTargets": {"target": ["$bob"]}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "do": "Pass"},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "refuse": {"Answer": {"prompt": "ChooseCardFromAmong", "with": "$giant"}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "refuse": {"Answer": {"prompt": "ChooseCardFromAmong", "with": "$growth"}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "do": {"Answer": {"prompt": "ChooseCardFromAmong", "with": "$lions"}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "check": {"Count": {"player": "bob", "zone": "Exile", "card": "Savannah Lions", "count": 1}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "check": {"Count": {"player": "bob", "zone": "Hand", "card": "Grizzly Bears", "count": 1}}}
+  ]
+}

@@ -1,0 +1,25 @@
+{
+  "description": "CR 603.4 / 613.1b: Domestication gains control of the enchanted creature and is sacrificed at its controller's end step if that creature's power is 4 or greater",
+  "note": "Two Domestications: the one on the Giant Growth-pumped Grizzly Bears is sacrificed and the Bears go back to bob; the one on the 2-power Gray Ogre stays.",
+  "board": {
+    "active": "alice",
+    "step": "PrecombatMain",
+    "seats": [
+      {"name": "alice", "manaPool": "UUUUUUUU", "battlefield": [{"card": "Forest", "label": "forest"}], "hand": [{"card": "Domestication", "label": "d1"}, {"card": "Domestication", "label": "d2"}, {"card": "Giant Growth", "label": "growth"}], "library": [{"card": "Island"}, {"card": "Island"}, {"card": "Island"}, {"card": "Island"}]},
+      {"name": "bob", "battlefield": [{"card": "Grizzly Bears", "label": "bears"}, {"card": "Gray Ogre", "label": "ogre"}], "library": [{"card": "Island"}, {"card": "Island"}, {"card": "Island"}, {"card": "Island"}]}
+    ]
+  },
+  "timeline": [
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "do": {"Cast": {"object": "$d1", "targets": ["$bears"], "mana": [null]}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "do": "Pass"},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "do": {"Cast": {"object": "$d2", "targets": ["$ogre"], "mana": [null]}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "do": "Pass"},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "check": {"View": {"of": "Controller", "object": "$bears", "is": "alice"}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "do": {"Cast": {"object": "$growth", "targets": ["$bears"], "mana": ["$forest"]}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "do": "Pass"},
+    {"turn": 1, "step": "EndStep", "player": "alice", "do": "Pass"},
+    {"turn": 1, "step": "EndStep", "player": "alice", "check": {"View": {"of": "Controller", "object": "$bears", "is": "bob"}}},
+    {"turn": 1, "step": "EndStep", "player": "alice", "check": {"View": {"of": "Controller", "object": "$ogre", "is": "alice"}}},
+    {"turn": 1, "step": "EndStep", "player": "alice", "check": {"Count": {"player": "alice", "zone": "Graveyard", "card": "Domestication", "count": 1}}}
+  ]
+}

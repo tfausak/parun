@@ -1,0 +1,102 @@
+{
+  "faces": [
+    {
+      "manaCost": [
+        {
+          "type": "Generic",
+          "value": 3
+        },
+        {
+          "type": "OfType",
+          "value": {
+            "type": "Colored",
+            "value": {
+              "type": "Green"
+            }
+          }
+        }
+      ],
+      "name": "Hunt the Weak",
+      "oracleText": "Put a +1/+1 counter on target creature you control. Then that creature fights target creature you don't control. (Each deals damage equal to its power to the other.)",
+      "spell": {
+        "modes": [
+          {
+            "clauses": [
+              {
+                "effects": [
+                  {
+                    "type": "PutCounters",
+                    "value": {
+                      "kind": {
+                        "type": "PlusOnePlusOne"
+                      },
+                      "quantity": {
+                        "type": "Literal",
+                        "value": 1
+                      },
+                      "ref": {
+                        "type": "InSlot",
+                        "value": "mine"
+                      }
+                    }
+                  },
+                  {
+                    "type": "Fight",
+                    "value": {
+                      "first": "mine",
+                      "second": "theirs"
+                    }
+                  }
+                ]
+              }
+            ],
+            "targetSlots": {
+              "mine": {
+                "filter": {
+                  "type": "HeldBy",
+                  "value": {
+                    "holder": {
+                      "type": "Controller"
+                    },
+                    "relation": {
+                      "type": "You"
+                    }
+                  }
+                },
+                "pool": {
+                  "type": "Creatures"
+                }
+              },
+              "theirs": {
+                "filter": {
+                  "type": "Not",
+                  "value": {
+                    "type": "HeldBy",
+                    "value": {
+                      "holder": {
+                        "type": "Controller"
+                      },
+                      "relation": {
+                        "type": "You"
+                      }
+                    }
+                  }
+                },
+                "pool": {
+                  "type": "Creatures"
+                }
+              }
+            }
+          }
+        ]
+      },
+      "typeLine": {
+        "types": [
+          {
+            "type": "Sorcery"
+          }
+        ]
+      }
+    }
+  ]
+}

@@ -297,8 +297,12 @@ clause context c
       case (Clause.payGate c, Clause.optionality c, List.foldr addedTogether [] predicates) of
         (Just g, Optionality.Mandatory, together) -> paid context g together
         (Nothing, Optionality.Mandatory, together) -> joined context together
+        -- A continuous change names its objects, never "you", so its
+        -- duration-first reading is no imperative to follow "you may"
+        -- (Blightcaster's "you may have target creature get -2/-2").
         (Nothing, Optionality.Optional (PlayerRef.Relative PlayerRelation.You), [p])
-          | maybe True ((== Text.pack "you") . Target.wording) (subject p) ->
+          | maybe True ((== Text.pack "you") . Target.wording) (subject p),
+            not (any (Maybe.isJust . modifyTarget) (Clause.effects c)) ->
               [(Prose.sentence (Text.pack "you may " <> verb p) <> trailing p, mentions p)]
         _ -> []
 

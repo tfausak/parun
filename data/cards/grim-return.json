@@ -1,0 +1,91 @@
+{
+  "faces": [
+    {
+      "manaCost": [
+        {
+          "type": "Generic",
+          "value": 2
+        },
+        {
+          "type": "OfType",
+          "value": {
+            "type": "Colored",
+            "value": {
+              "type": "Black"
+            }
+          }
+        }
+      ],
+      "name": "Grim Return",
+      "oracleText": "Choose target creature card in a graveyard that was put there from the battlefield this turn. Put that card onto the battlefield under your control.",
+      "spell": {
+        "modes": [
+          {
+            "clauses": [
+              {
+                "effects": [
+                  {
+                    "type": "MoveToZone",
+                    "value": {
+                      "ref": {
+                        "type": "InSlot",
+                        "value": "target"
+                      },
+                      "zone": {
+                        "type": "Battlefield"
+                      }
+                    }
+                  }
+                ]
+              }
+            ],
+            "targetSlots": {
+              "target": {
+                "filter": {
+                  "type": "And",
+                  "value": [
+                    {
+                      "type": "HasCardType",
+                      "value": {
+                        "type": "Creature"
+                      }
+                    },
+                    {
+                      "type": "EnteredThisTurn",
+                      "value": {
+                        "from": [
+                          {
+                            "type": "Battlefield"
+                          }
+                        ],
+                        "to": {
+                          "type": "Graveyard"
+                        }
+                      }
+                    }
+                  ]
+                },
+                "pool": {
+                  "type": "CardsInGraveyard",
+                  "value": {
+                    "type": "Scoped",
+                    "value": {
+                      "type": "AnyPlayer"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        ]
+      },
+      "typeLine": {
+        "types": [
+          {
+            "type": "Instant"
+          }
+        ]
+      }
+    }
+  ]
+}

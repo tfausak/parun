@@ -1,0 +1,21 @@
+{
+  "description": "CR 701.21a / 506.4: Celestial Flare makes its target player sacrifice an attacking or blocking creature of their choice",
+  "note": "alice attacks with Grizzly Bears and Hill Giant and keeps Gray Ogre home; the Ogre is not hers to sacrifice, the Bears are.",
+  "board": {
+    "active": "alice",
+    "step": "PrecombatMain",
+    "seats": [
+      {"name": "alice", "battlefield": [{"card": "Grizzly Bears", "label": "bears", "ready": true}, {"card": "Hill Giant", "label": "giant", "ready": true}, {"card": "Gray Ogre", "label": "ogre", "ready": true}], "library": [{"card": "Island"}, {"card": "Island"}, {"card": "Island"}, {"card": "Island"}]},
+      {"name": "bob", "battlefield": [{"card": "Plains", "label": "p1"}, {"card": "Plains", "label": "p2"}], "hand": [{"card": "Celestial Flare", "label": "flare"}], "library": [{"card": "Island"}, {"card": "Island"}, {"card": "Island"}, {"card": "Island"}]}
+    ]
+  },
+  "timeline": [
+    {"turn": 1, "step": "DeclareAttackers", "player": "alice", "do": {"Attack": ["$bears", "$giant"]}},
+    {"turn": 1, "step": "DeclareAttackers", "player": "bob", "do": {"Cast": {"object": "$flare", "targets": ["$alice"], "mana": ["$p1", "$p2"]}}},
+    {"turn": 1, "step": "DeclareAttackers", "player": "alice", "refuse": {"Answer": {"prompt": "ChooseSacrifices", "with": ["$ogre"]}}},
+    {"turn": 1, "step": "DeclareAttackers", "player": "alice", "do": {"Answer": {"prompt": "ChooseSacrifices", "with": ["$bears"]}}},
+    {"turn": 1, "step": "DeclareAttackers", "player": "alice", "check": {"Count": {"player": "alice", "zone": "Graveyard", "card": "Grizzly Bears", "count": 1}}},
+    {"turn": 1, "step": "DeclareAttackers", "player": "alice", "check": {"Count": {"player": "alice", "zone": "Battlefield", "card": "Gray Ogre", "count": 1}}},
+    {"turn": 1, "step": "DeclareAttackers", "player": "alice", "check": {"Count": {"player": "alice", "zone": "Battlefield", "card": "Hill Giant", "count": 1}}}
+  ]
+}

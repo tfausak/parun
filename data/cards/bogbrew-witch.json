@@ -1,0 +1,112 @@
+{
+  "faces": [
+    {
+      "activatedAbilities": [
+        {
+          "cost": {
+            "components": [
+              {
+                "type": "TapThis"
+              }
+            ],
+            "mana": [
+              {
+                "type": "Generic",
+                "value": 2
+              }
+            ]
+          },
+          "modal": {
+            "modes": [
+              {
+                "clauses": [
+                  {
+                    "effects": [
+                      {
+                        "type": "Search",
+                        "value": {
+                          "destination": {
+                            "type": "BattlefieldTapped"
+                          },
+                          "filter": {
+                            "type": "Or",
+                            "value": [
+                              {
+                                "type": "HasName",
+                                "value": "Festering Newt"
+                              },
+                              {
+                                "type": "HasName",
+                                "value": "Bubbling Cauldron"
+                              }
+                            ]
+                          },
+                          "owner": {
+                            "type": "Relative",
+                            "value": {
+                              "type": "You"
+                            }
+                          },
+                          "quantity": {
+                            "type": "Literal",
+                            "value": 1
+                          },
+                          "searcher": {
+                            "type": "Relative",
+                            "value": {
+                              "type": "You"
+                            }
+                          }
+                        }
+                      }
+                    ]
+                  }
+                ]
+              }
+            ]
+          }
+        }
+      ],
+      "manaCost": [
+        {
+          "type": "Generic",
+          "value": 3
+        },
+        {
+          "type": "OfType",
+          "value": {
+            "type": "Colored",
+            "value": {
+              "type": "Black"
+            }
+          }
+        }
+      ],
+      "name": "Bogbrew Witch",
+      "oracleText": "{2}, {T}: Search your library for a card named Festering Newt or Bubbling Cauldron, put it onto the battlefield tapped, then shuffle.",
+      "power": {
+        "type": "Literal",
+        "value": 1
+      },
+      "toughness": {
+        "type": "Literal",
+        "value": 3
+      },
+      "typeLine": {
+        "subtypes": [
+          {
+            "type": "Human"
+          },
+          {
+            "type": "Wizard"
+          }
+        ],
+        "types": [
+          {
+            "type": "Creature"
+          }
+        ]
+      }
+    }
+  ]
+}

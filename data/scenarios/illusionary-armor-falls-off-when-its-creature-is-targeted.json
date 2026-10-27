@@ -1,0 +1,24 @@
+{
+  "description": "CR 603.2 / 115.1: Illusionary Armor gives +4/+4 and is sacrificed when the enchanted creature becomes the target of a spell or ability",
+  "note": "alice's Grizzly Bears are 6/6; bob's Shock targets them, the Armor is sacrificed before the Shock resolves, and the 2/2 Bears die.",
+  "board": {
+    "active": "alice",
+    "step": "PrecombatMain",
+    "seats": [
+      {"name": "alice", "manaPool": "UUUUU", "battlefield": [{"card": "Grizzly Bears", "label": "bears"}], "hand": [{"card": "Illusionary Armor", "label": "armor"}], "library": [{"card": "Island"}, {"card": "Island"}, {"card": "Island"}, {"card": "Island"}]},
+      {"name": "bob", "manaPool": "R", "hand": [{"card": "Shock", "label": "shock"}], "library": [{"card": "Island"}, {"card": "Island"}, {"card": "Island"}, {"card": "Island"}]}
+    ]
+  },
+  "timeline": [
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "do": {"Cast": {"object": "$armor", "targets": ["$bears"]}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "do": "Pass"},
+    {"turn": 1, "step": "PrecombatMain", "player": "bob", "do": "Pass"},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "check": {"PowerToughness": {"object": "$bears", "power": 6, "toughness": 6}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "do": "Pass"},
+    {"turn": 1, "step": "PrecombatMain", "player": "bob", "do": {"Cast": {"object": "$shock", "targets": ["$bears"]}}}
+  ],
+  "final": [
+    {"Count": {"player": "alice", "zone": "Graveyard", "card": "Illusionary Armor", "count": 1}},
+    {"Count": {"player": "alice", "zone": "Graveyard", "card": "Grizzly Bears", "count": 1}}
+  ]
+}

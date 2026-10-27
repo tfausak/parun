@@ -1,0 +1,20 @@
+{
+  "description": "CR 508.1d: Goblin Diplomats's {T} makes each creature attack this turn if able",
+  "note": "alice may not attack with the Bears alone, nor with nothing: both her untapped Bears and Ogre must attack.",
+  "board": {
+    "active": "alice",
+    "step": "PrecombatMain",
+    "seats": [
+      {"name": "alice", "battlefield": [{"card": "Goblin Diplomats", "label": "diplomats", "ready": true}, {"card": "Grizzly Bears", "label": "bears", "ready": true}, {"card": "Gray Ogre", "label": "ogre", "ready": true}], "library": [{"card": "Island"}, {"card": "Island"}, {"card": "Island"}, {"card": "Island"}]},
+      {"name": "bob", "library": [{"card": "Island"}, {"card": "Island"}, {"card": "Island"}, {"card": "Island"}]}
+    ]
+  },
+  "timeline": [
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "do": {"Activate": {"object": "$diplomats"}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "do": "Pass"},
+    {"turn": 1, "step": "DeclareAttackers", "player": "alice", "refuse": {"Attack": []}},
+    {"turn": 1, "step": "DeclareAttackers", "player": "alice", "refuse": {"Attack": ["$bears"]}},
+    {"turn": 1, "step": "DeclareAttackers", "player": "alice", "do": {"Attack": ["$bears", "$ogre"]}},
+    {"turn": 1, "step": "EndOfCombat", "player": "alice", "check": {"Life": {"player": "bob", "life": 16}}}
+  ]
+}

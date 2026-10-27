@@ -1,0 +1,119 @@
+{
+  "faces": [
+    {
+      "keywords": [
+        {
+          "type": "Intimidate"
+        }
+      ],
+      "manaCost": [
+        {
+          "type": "Generic",
+          "value": 2
+        },
+        {
+          "type": "OfType",
+          "value": {
+            "type": "Colored",
+            "value": {
+              "type": "Red"
+            }
+          }
+        }
+      ],
+      "name": "Academy Raider",
+      "oracleText": "Intimidate (This creature can't be blocked except by artifact creatures and/or creatures that share a color with it.)\nWhenever this creature deals combat damage to a player, you may discard a card. If you do, draw a card.",
+      "power": {
+        "type": "Literal",
+        "value": 1
+      },
+      "toughness": {
+        "type": "Literal",
+        "value": 1
+      },
+      "triggeredAbilities": [
+        {
+          "condition": {
+            "type": "SelfDealsCombatDamageToPlayer",
+            "value": {
+              "type": "AnyPlayer"
+            }
+          },
+          "modal": {
+            "modes": [
+              {
+                "clauses": [
+                  {
+                    "effects": [
+                      {
+                        "type": "Discard",
+                        "value": {
+                          "type": "Counted",
+                          "value": {
+                            "player": {
+                              "type": "Relative",
+                              "value": {
+                                "type": "You"
+                              }
+                            },
+                            "quantity": {
+                              "type": "Literal",
+                              "value": 1
+                            }
+                          }
+                        }
+                      }
+                    ],
+                    "optionality": {
+                      "type": "Optional"
+                    }
+                  },
+                  {
+                    "effects": [
+                      {
+                        "type": "Draw",
+                        "value": {
+                          "player": {
+                            "type": "Relative",
+                            "value": {
+                              "type": "You"
+                            }
+                          },
+                          "quantity": {
+                            "type": "Literal",
+                            "value": 1
+                          }
+                        }
+                      }
+                    ],
+                    "ifTaken": {
+                      "type": "AnyTaken",
+                      "value": [
+                        0
+                      ]
+                    }
+                  }
+                ]
+              }
+            ]
+          }
+        }
+      ],
+      "typeLine": {
+        "subtypes": [
+          {
+            "type": "Human"
+          },
+          {
+            "type": "Warrior"
+          }
+        ],
+        "types": [
+          {
+            "type": "Creature"
+          }
+        ]
+      }
+    }
+  ]
+}

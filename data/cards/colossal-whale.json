@@ -1,0 +1,116 @@
+{
+  "faces": [
+    {
+      "keywords": [
+        {
+          "type": "Landwalk",
+          "value": {
+            "type": "HasSubtype",
+            "value": {
+              "type": "Island"
+            }
+          }
+        }
+      ],
+      "manaCost": [
+        {
+          "type": "Generic",
+          "value": 5
+        },
+        {
+          "type": "OfType",
+          "value": {
+            "type": "Colored",
+            "value": {
+              "type": "Blue"
+            }
+          }
+        },
+        {
+          "type": "OfType",
+          "value": {
+            "type": "Colored",
+            "value": {
+              "type": "Blue"
+            }
+          }
+        }
+      ],
+      "name": "Colossal Whale",
+      "oracleText": "Islandwalk (This creature can't be blocked as long as defending player controls an Island.)\nWhenever this creature attacks, you may exile target creature defending player controls until this creature leaves the battlefield. (That creature returns under its owner's control.)",
+      "power": {
+        "type": "Literal",
+        "value": 5
+      },
+      "toughness": {
+        "type": "Literal",
+        "value": 5
+      },
+      "triggeredAbilities": [
+        {
+          "condition": {
+            "type": "SelfAttacks",
+            "value": {
+              "type": "EveryTime"
+            }
+          },
+          "modal": {
+            "modes": [
+              {
+                "clauses": [
+                  {
+                    "effects": [
+                      {
+                        "type": "MoveToZone",
+                        "value": {
+                          "duration": {
+                            "type": "UntilSourceLeavesTheBattlefield"
+                          },
+                          "ref": {
+                            "type": "InSlot",
+                            "value": "target"
+                          },
+                          "zone": {
+                            "type": "Exile"
+                          }
+                        }
+                      }
+                    ],
+                    "optionality": {
+                      "type": "Optional"
+                    }
+                  }
+                ],
+                "targetSlots": {
+                  "target": {
+                    "filter": {
+                      "type": "ControlledByRole",
+                      "value": {
+                        "type": "Defending"
+                      }
+                    },
+                    "pool": {
+                      "type": "Creatures"
+                    }
+                  }
+                }
+              }
+            ]
+          }
+        }
+      ],
+      "typeLine": {
+        "subtypes": [
+          {
+            "type": "Whale"
+          }
+        ],
+        "types": [
+          {
+            "type": "Creature"
+          }
+        ]
+      }
+    }
+  ]
+}

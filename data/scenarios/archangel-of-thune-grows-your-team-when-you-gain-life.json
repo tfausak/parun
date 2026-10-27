@@ -1,0 +1,20 @@
+{
+  "description": "CR 603.2 / 122.1: whenever its controller gains life, Archangel of Thune puts a +1/+1 counter on each creature that player controls",
+  "note": "alice's Healing Salve gains her 3 life once: her Archangel and Bears each get one counter, bob's Hill Giant none.",
+  "board": {
+    "active": "alice",
+    "step": "PrecombatMain",
+    "seats": [
+      {"name": "alice", "manaPool": "W", "battlefield": [{"card": "Archangel of Thune", "label": "thune"}, {"card": "Grizzly Bears", "label": "bears"}], "hand": [{"card": "Healing Salve", "label": "salve"}], "library": [{"card": "Island"}, {"card": "Island"}, {"card": "Island"}, {"card": "Island"}]},
+      {"name": "bob", "battlefield": [{"card": "Hill Giant", "label": "giant"}], "library": [{"card": "Island"}, {"card": "Island"}, {"card": "Island"}, {"card": "Island"}]}
+    ]
+  },
+  "timeline": [
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "do": {"Cast": {"object": "$salve", "modes": [0], "targets": ["$alice"]}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "do": "Pass"},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "do": "Pass"},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "check": {"PowerToughness": {"object": "$thune", "power": 4, "toughness": 5}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "check": {"PowerToughness": {"object": "$bears", "power": 3, "toughness": 3}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "check": {"PowerToughness": {"object": "$giant", "power": 3, "toughness": 3}}}
+  ]
+}

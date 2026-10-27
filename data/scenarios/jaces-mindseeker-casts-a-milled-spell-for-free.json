@@ -1,0 +1,25 @@
+{
+  "description": "CR 701.13a / 608.2g: when Jace's Mindseeker enters, target opponent mills five cards, and its controller may cast an instant or sorcery spell from among them without paying its mana cost",
+  "note": "bob mills Lightning Bolt, Hill Giant, Divination and two Islands; alice casts the Bolt at him. The Shock, sixth from the top, is not on offer.",
+  "board": {
+    "active": "alice",
+    "step": "PrecombatMain",
+    "seats": [
+      {"name": "alice", "manaPool": "UUUUUU", "hand": [{"card": "Jace's Mindseeker", "label": "seeker"}], "library": [{"card": "Island"}, {"card": "Island"}, {"card": "Island"}, {"card": "Island"}]},
+      {"name": "bob", "library": [{"card": "Lightning Bolt", "label": "bolt"}, {"card": "Hill Giant", "label": "giant"}, {"card": "Island", "label": "i1"}, {"card": "Divination", "label": "divination"}, {"card": "Island", "label": "i2"}, {"card": "Shock", "label": "shock"}, {"card": "Island"}, {"card": "Island"}, {"card": "Island"}, {"card": "Island"}]}
+    ]
+  },
+  "timeline": [
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "do": {"Cast": {"object": "$seeker"}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "do": "Pass"},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "do": {"ChooseTargets": {"target": ["$bob"]}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "do": "Pass"},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "do": {"Answer": {"prompt": "OfferedCast", "with": {"type": "Exercises"}}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "do": {"Answer": {"prompt": "ChooseOfferedCastSpell", "with": ["Lightning Bolt", "Lightning Bolt"]}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "do": {"ChooseTargets": {"target": ["$bob"]}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "do": "Pass"},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "check": {"Life": {"player": "bob", "life": 17}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "check": {"Count": {"player": "bob", "zone": "Graveyard", "card": "Divination", "count": 1}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "check": {"Count": {"player": "bob", "zone": "Library", "card": "Shock", "count": 1}}}
+  ]
+}

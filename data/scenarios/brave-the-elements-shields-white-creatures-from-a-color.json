@@ -1,0 +1,24 @@
+{
+  "description": "CR 702.16b / 608.2d: Brave the Elements gives the white creatures its controller controls protection from the color chosen as it resolves",
+  "note": "alice chooses red: bob's Shock can't target her white Savannah Lions but kills her green Grizzly Bears.",
+  "board": {
+    "active": "alice",
+    "step": "PrecombatMain",
+    "seats": [
+      {"name": "alice", "manaPool": "W", "battlefield": [{"card": "Savannah Lions", "label": "lions"}, {"card": "Grizzly Bears", "label": "bears"}], "hand": [{"card": "Brave the Elements", "label": "brave"}], "library": [{"card": "Island"}, {"card": "Island"}, {"card": "Island"}, {"card": "Island"}]},
+      {"name": "bob", "manaPool": "R", "hand": [{"card": "Shock", "label": "shock"}], "library": [{"card": "Island"}, {"card": "Island"}, {"card": "Island"}, {"card": "Island"}]}
+    ]
+  },
+  "timeline": [
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "do": {"Cast": {"object": "$brave"}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "do": "Pass"},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "do": {"Answer": {"prompt": "ChooseColor", "with": {"type": "Red"}}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "do": "Pass"},
+    {"turn": 1, "step": "PrecombatMain", "player": "bob", "do": "Pass"},
+    {"turn": 1, "step": "PrecombatMain", "player": "bob", "refuse": {"Cast": {"object": "$shock", "targets": ["$lions"]}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "bob", "do": {"Cast": {"object": "$shock", "targets": ["$bears"]}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "do": "Pass"},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "check": {"Count": {"player": "alice", "zone": "Graveyard", "card": "Grizzly Bears", "count": 1}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "check": {"Count": {"player": "alice", "zone": "Battlefield", "card": "Savannah Lions", "count": 1}}}
+  ]
+}

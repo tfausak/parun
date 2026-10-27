@@ -1,0 +1,26 @@
+{
+  "description": "CR 608.2c: when Festering Newt dies, target creature an opponent controls gets -1/-1 until end of turn, or -4/-4 if its controller controls a creature named Bogbrew Witch",
+  "note": "The first Newt dies with no Witch out and bob's Craw Wurm ends 5/3; the second dies beside a Bogbrew Witch and the Wurm, at 1/-1, dies.",
+  "board": {
+    "active": "alice",
+    "step": "PrecombatMain",
+    "seats": [
+      {"name": "alice", "battlefield": [{"card": "Festering Newt", "label": "n1"}, {"card": "Festering Newt", "label": "n2"}, {"card": "Mountain", "label": "m1"}, {"card": "Mountain", "label": "m2"}, {"card": "Swamp", "label": "s1"}, {"card": "Swamp", "label": "s2"}, {"card": "Swamp", "label": "s3"}, {"card": "Swamp", "label": "s4"}], "hand": [{"card": "Shock", "label": "shock1"}, {"card": "Shock", "label": "shock2"}, {"card": "Bogbrew Witch", "label": "witch"}], "library": [{"card": "Island"}, {"card": "Island"}, {"card": "Island"}, {"card": "Island"}]},
+      {"name": "bob", "battlefield": [{"card": "Craw Wurm", "label": "wurm"}, {"card": "Gray Ogre", "label": "ogre"}], "library": [{"card": "Island"}, {"card": "Island"}, {"card": "Island"}, {"card": "Island"}]}
+    ]
+  },
+  "timeline": [
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "do": {"Cast": {"object": "$shock1", "targets": ["$n1"], "mana": ["$m1", null]}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "do": "Pass"},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "do": {"ChooseTargets": {"target": ["$wurm"]}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "do": "Pass"},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "check": {"PowerToughness": {"object": "$wurm", "power": 5, "toughness": 3}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "do": {"Cast": {"object": "$witch", "mana": ["$s1", "$s2", "$s3", "$s4", null]}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "do": "Pass"},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "do": {"Cast": {"object": "$shock2", "targets": ["$n2"], "mana": ["$m2"]}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "do": "Pass"},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "do": {"ChooseTargets": {"target": ["$wurm"]}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "do": "Pass"},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "check": {"Count": {"player": "bob", "zone": "Graveyard", "card": "Craw Wurm", "count": 1}}}
+  ]
+}
