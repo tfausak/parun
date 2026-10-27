@@ -85,7 +85,35 @@ Per set, in this order; steps 2 and 3 run in parallel lanes.
    `data/decks/sets/<set>.txt` (`1 Name` a line, one per card name in the
    set; `DecksSpec` then proves every name resolves), and tick the set on
    #5468. The set's last unit does this; until then, check the list with
-   `parun deck` from a scratch file.
+   `parun deck` from a scratch file. Then the orchestrator writes `## How
+   it went` as the census's last section, from the costs and outcomes it
+   recorded as each unit reported. It is a frozen record, written once and
+   never updated, so the no-tallies rule for trackers does not apply. A
+   figure nobody recorded is "not recorded", never an estimate. The shape:
+
+   ```markdown
+   ## How it went
+
+   Finished YYYY-MM-DD.
+
+   | Route | Cards | PRs |
+   | --- | --- | --- |
+   | Translated (census) | N | #census |
+   | Hand-written | N | #hand1, #hand2 |
+   | Behind a capability | N, plus M from other sets | below |
+
+   - Census trend: the first dry run translated T of the N missing; C
+     needed a capability.
+   - Capability issues, hardest first: #issue Card (#PR), ...
+   - Filed along the way: #N (one phrase), ...
+   - Audits: A of K capability PRs; D found rules defects.
+     - #PR: the defect, in a line.
+   - Subagent tokens: census Xk; hand Xk, Xk; capability Xk (#PR), ...;
+     audits Xk (#PR), .... Total X.XXM, Xk per card. Wall clock ~Nh, N
+     lanes.
+   - Owner review:
+     - #PR: a decisions.md entry, wire-format change or contested reading.
+   ```
 
 Preconstructed and theme decks are optional: add them when convenient for
 testing the client, never as a unit's goal. Add no cards from other sets
