@@ -1662,7 +1662,8 @@ filterPositionLintSpec s registry corpus = Spec.describe s "Lint" $ do
         ("March of Burgeoning Life", 1), -- its search's filter
         ("Hour of Glory", 1), -- its hand sweep's filter
         ("Grim Reminder", 1), -- its life loss amount's Count filter
-        ("Haunting Echoes", 1) -- its search's filter
+        ("Haunting Echoes", 1), -- its search's filter
+        ("Doubling Chant", 1) -- its search's filter, against its loop's member
       ]
     -- Both sides of the split, with room to spare under the pool's real figures:
     -- a traversal that had stopped walking, or a Framing that had stopped marking
