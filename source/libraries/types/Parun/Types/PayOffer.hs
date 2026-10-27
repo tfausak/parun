@@ -15,4 +15,8 @@ data PayOffer
   | -- | A draw replacement's offer (CR 614.6), Zur's Weirding's "any other player
     -- may pay 2 life"; the offering object is the replacement's source.
     InsteadOfDraw
+  | -- | CR 508.1j / 509.1f: the combat toll the offering object imposes, asked of
+    -- the payer only where another player chose the creature owing it (Odric,
+    -- Master Tactician's ruling).
+    CombatToll
   deriving (Eq, Ord, Show)

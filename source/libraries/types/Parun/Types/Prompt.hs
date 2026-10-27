@@ -961,7 +961,8 @@ data Prompt r where
   -- | CR 118.12 / 118.12a: whether the named player -- the one the effects are
   -- aimed at, not the resolving controller -- pays the cost a resolving object
   -- offers, once per payment in APNAP order; also a draw replacement's offer
-  -- (PayOffer.InsteadOfDraw, CR 614.6). Not asked where CR 118.3 leaves
+  -- (PayOffer.InsteadOfDraw, CR 614.6) and a combat toll's
+  -- (PayOffer.CombatToll, per charge). Not asked where CR 118.3 leaves
   -- only declining, nor for CR 118.12's mandatory limb
   -- (Parun.Types.PayObligation). Parun.ResolveSpec's PayGate group fails if this
   -- prompt is raised there. The Seq is what the payers before this one answered

@@ -2371,6 +2371,7 @@ playerEffectNames asking x = case x of
   PlayerEffect.CantBecomeMonarch -> mempty
   PlayerEffect.CantSetSchemesInMotion -> mempty
   PlayerEffect.ControlledWhileSearching -> mempty
+  PlayerEffect.YouChoose _declaration -> mempty
   PlayerEffect.ExilesFoundWhileSearching -> mempty
   PlayerEffect.CantAttackWithCreatures -> mempty
   PlayerEffect.CantCastMatching filter_ -> filterNames asking filter_
