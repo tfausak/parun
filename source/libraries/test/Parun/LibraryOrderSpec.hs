@@ -1413,7 +1413,7 @@ playerSacrificesSpec s registry = Spec.describe s "PlayerSacrifices" $ do
     let (src, g0) = S.addPermanent piker S.alice (Setup.emptyGame S.bothPlayers)
         (hisPiker, g1) = S.addPermanent piker S.bob g0
         (hisRats, gs) = S.addPermanent rats S.bob g1
-        edict = Resolve.applyEffect src src S.alice (Map.singleton slotTarget (Set.singleton (Recipient.ToPlayer S.bob))) (Map.singleton slotTarget (Set.singleton (Recipient.ToPlayer S.bob))) (Effect.PlayerSacrifices (PlayerSacrifices.MkPlayerSacrifices (PlayerRef.EachInSlot slotTarget) creatureFilter (Quantity.Literal 1)))
+        edict = Resolve.applyEffect src src S.alice (Map.singleton slotTarget (Set.singleton (Recipient.ToPlayer S.bob))) (Map.singleton slotTarget (Set.singleton (Recipient.ToPlayer S.bob))) (Effect.PlayerSacrifices (PlayerSacrifices.MkPlayerSacrifices (PlayerRef.EachInSlot slotTarget) creatureFilter (Quantity.Literal 1) Nothing))
         keptRats = S.runPure (sacrifices hisPiker) gs edict
         keptPiker = S.runPure (sacrifices hisRats) gs edict
     Spec.assertBool s (S.onBattlefield hisRats keptRats) "choosing the Piker leaves the Rats"
@@ -1437,7 +1437,7 @@ playerSacrificesSpec s registry = Spec.describe s "PlayerSacrifices" $ do
         (hers, g1) = S.addPermanent piker S.alice g0
         (hisPiker, g2) = S.addPermanent piker S.bob g1
         (hisRats, gs) = S.addPermanent rats S.bob g2
-        after = S.runPure (namesInstead hers) gs (Resolve.applyEffect src src S.alice (Map.singleton slotTarget (Set.singleton (Recipient.ToPlayer S.bob))) (Map.singleton slotTarget (Set.singleton (Recipient.ToPlayer S.bob))) (Effect.PlayerSacrifices (PlayerSacrifices.MkPlayerSacrifices (PlayerRef.EachInSlot slotTarget) creatureFilter (Quantity.Literal 1))))
+        after = S.runPure (namesInstead hers) gs (Resolve.applyEffect src src S.alice (Map.singleton slotTarget (Set.singleton (Recipient.ToPlayer S.bob))) (Map.singleton slotTarget (Set.singleton (Recipient.ToPlayer S.bob))) (Effect.PlayerSacrifices (PlayerSacrifices.MkPlayerSacrifices (PlayerRef.EachInSlot slotTarget) creatureFilter (Quantity.Literal 1) Nothing)))
         bobsLeft = length (filter (`S.onBattlefield` after) [hisPiker, hisRats])
     Spec.assertBool s (S.onBattlefield hers after) "alice's creature is untouched"
     -- The edict still takes exactly one: an answer the engine refuses does not
@@ -1456,7 +1456,7 @@ playerSacrificesSpec s registry = Spec.describe s "PlayerSacrifices" $ do
             State.modify (+ 1)
             pure (S.identityAnswer p)
           _ -> pure (S.identityAnswer p)
-        act = Resolve.applyEffect src src S.alice (Map.singleton slotTarget (Set.singleton (Recipient.ToPlayer S.bob))) (Map.singleton slotTarget (Set.singleton (Recipient.ToPlayer S.bob))) (Effect.PlayerSacrifices (PlayerSacrifices.MkPlayerSacrifices (PlayerRef.EachInSlot slotTarget) creatureFilter (Quantity.Literal 1)))
+        act = Resolve.applyEffect src src S.alice (Map.singleton slotTarget (Set.singleton (Recipient.ToPlayer S.bob))) (Map.singleton slotTarget (Set.singleton (Recipient.ToPlayer S.bob))) (Effect.PlayerSacrifices (PlayerSacrifices.MkPlayerSacrifices (PlayerRef.EachInSlot slotTarget) creatureFilter (Quantity.Literal 1) Nothing))
         asked = State.execState (Engine.runGame countingAnswer gs act) 0
         after = S.runPure S.identityAnswer gs act
     Spec.assertEqWith s "nothing to choose" asked 0

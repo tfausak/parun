@@ -82,7 +82,8 @@ subdirectory named for that spec; `docs/scenario-burndown.md` lists the ones sti
   spell or ability with more than one target slot names them with
   `targetsBySlot`, `{ "victim": ["$bear"], "gauge": ["$wall"] }`, in place
   of `targets`. A `Cast` of a card offering both a face-up and a face-down
-  cast (CR 702.37c) says which with `"faceDown": false` or `true`.
+  cast (CR 702.37c) says which with `"faceDown": false` or `true`, and a
+  `Cast` of a split card names the half it casts (CR 709.3), `"face": "Consume"`.
   `Take` takes any other action offered at priority (CR 116.2, 605.3a), named
   as the `Offered` view renders it, with a cast's choices such as `mana`:
   `{ "action": "TurnFaceUp $piker Manifest", "mana": ["$mountain"] }`.

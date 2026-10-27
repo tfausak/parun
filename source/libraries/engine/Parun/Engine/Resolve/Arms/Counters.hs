@@ -167,7 +167,7 @@ counter resolving source controller legal (Counter.MkCounter ref mSlot mSources 
   -- 701.6a's ending, where CR 704.5e ends it; for the other destinations the
   -- copy ceases wherever it lands, so the reading is the same.
   let context = effectContext gs resolving controller source legal (slotBindings resolving gs)
-      viewOf = effectViewOf source legal gs
+      viewOf = effectViewOf resolving source legal gs
       isCard oid = case fmap Object.source (Game.lookupObject oid gs) of
         Just (Source.OfCard _) -> True
         _ -> False
@@ -228,7 +228,7 @@ putCounters resolving source controller legal chosen (PutCounters.MkPutCounters 
   -- Phylactery Lich's "put a phylactery counter on an artifact you control".
   targets <- Common.askingObjects resolving source controller legal chosen ref
   gs <- State.get
-  let viewOf = effectViewOf source legal gs
+  let viewOf = effectViewOf resolving source legal gs
       context = effectContext gs resolving controller source legal (slotBindings resolving gs)
       -- HOW MANY, read per recipient against the one pre-effect state, so a
       -- division's part (Quantity.Share, Effect.Divide's) is each member's
@@ -274,7 +274,7 @@ putCounters resolving source controller legal chosen (PutCounters.MkPutCounters 
 divide :: ObjectId -> ObjectId -> PlayerId -> Map.Map SlotName (Set Recipient) -> Divide.Divide -> Game ()
 divide resolving source controller legal (Divide.MkDivide quantity among chooser slot) = do
   gs <- State.get
-  let viewOf = effectViewOf source legal gs
+  let viewOf = effectViewOf resolving source legal gs
       context = effectContext gs resolving controller source legal (slotBindings resolving gs)
       candidates = ListUtils.nubOrd (objectRefObjects legal resolving controller source gs among)
   case (Quantity.evaluateFor viewOf context gs resolving source quantity, NonEmpty.nonEmpty candidates) of
@@ -319,7 +319,7 @@ putCountersFrom resolving source controller legal (PutCountersFrom.MkPutCounters
   -- Binding.departedPermanent, which effectViewOf looks back for too --
   -- Resourceful Defense's "whenever a permanent you control leaves the
   -- battlefield", proved in Parun.PutCounterSpec.
-  let viewOf = effectViewOf source legal gs
+  let viewOf = effectViewOf resolving source legal gs
       -- CR 608.2c: the set is swept as this instruction is reached, and an
       -- illegal slot (CR 608.2b) or a player recipient answers with nobody.
       targets = objectRefObjects legal resolving controller source gs ref
@@ -455,7 +455,7 @@ exileThisSpell resolving = do
 removeCounters :: ObjectId -> ObjectId -> PlayerId -> Map.Map SlotName (Set Recipient) -> RemoveCounters.RemoveCounters -> Game ()
 removeCounters resolving source controller legal (RemoveCounters.MkRemoveCounters kind quantity slot mTally) = do
   gs <- State.get
-  let viewOf = effectViewOf source legal gs
+  let viewOf = effectViewOf resolving source legal gs
       context = effectContext gs resolving controller source legal (slotBindings resolving gs)
   case legalOne slot legal of
     Just recipient -> case Recipient.objectOf recipient of
@@ -485,7 +485,7 @@ removeCountersAmong resolving source controller legal (RemoveCountersAmong.MkRem
   -- answer that does not add up is not repaired into another choice: it takes
   -- the least the card allows.
   gs <- State.get
-  let viewOf = effectViewOf source legal gs
+  let viewOf = effectViewOf resolving source legal gs
       context = effectContext gs resolving controller source legal (slotBindings resolving gs)
       permanents = objectRefObjects legal resolving controller source gs fromRef
       decider = Decide.deciderFor controller gs
@@ -596,7 +596,7 @@ moveCounters resolving source controller legal (MoveCounters.MkMoveCounters from
   -- sweep gathered from; where it names a group the placements are one per
   -- recipient per kind and batch no further, an arrival being on one object.
   gs <- State.get
-  let viewOf = effectViewOf source legal gs
+  let viewOf = effectViewOf resolving source legal gs
       context = effectContext gs resolving controller source legal (slotBindings resolving gs)
       -- CR 122.5's SECOND side, swept exactly as the first is and by the same
       -- reader: an ObjectRef, so a slot naming one target is one destination
@@ -1132,7 +1132,7 @@ proliferate source controller = do
 bolster :: ObjectId -> ObjectId -> PlayerId -> Map.Map SlotName (Set Recipient) -> Quantity.Type.Quantity -> Game ()
 bolster resolving source controller legal quantity = do
   gs <- State.get
-  let viewOf = effectViewOf source legal gs
+  let viewOf = effectViewOf resolving source legal gs
       context = effectContext gs resolving controller source legal (slotBindings resolving gs)
       -- Ascending, so the single-candidate shortcut and a transcript are
       -- deterministic.
@@ -1243,7 +1243,7 @@ firebend applyEffectWith runSubgame resolving source controller legal chosen add
 amass :: ObjectId -> ObjectId -> PlayerId -> Map.Map SlotName (Set Recipient) -> Amass.Type.Amass -> Game ()
 amass resolving source controller legal (Amass.Type.MkAmass quantity subtype mSlot) = do
   gs <- State.get
-  let viewOf = effectViewOf source legal gs
+  let viewOf = effectViewOf resolving source legal gs
       context = effectContext gs resolving controller source legal (slotBindings resolving gs)
   case Quantity.evaluateFor viewOf context gs resolving source quantity of
     Nothing -> pure () -- unevaluable quantity: no-op (the powerOf posture)
@@ -1287,7 +1287,7 @@ amass resolving source controller legal (Amass.Type.MkAmass quantity subtype mSl
 blight :: ObjectId -> ObjectId -> PlayerId -> Map.Map SlotName (Set Recipient) -> Blight.Type.Blight -> Game ()
 blight resolving source controller legal (Blight.Type.MkBlight ref quantity mSlot) = do
   gs <- State.get
-  let viewOf = effectViewOf source legal gs
+  let viewOf = effectViewOf resolving source legal gs
       context = effectContext gs resolving controller source legal (slotBindings resolving gs)
       named = playerRefPlayers legal resolving source controller gs ref
       blighters = filter (\pid -> List.elem pid named) (Game.apnapOrder gs)
@@ -1394,7 +1394,7 @@ venture = Dungeon.venture
 gainPlayerCounters :: ObjectId -> ObjectId -> PlayerId -> Map.Map SlotName (Set Recipient) -> PlayerCounters.PlayerCounters -> Game ()
 gainPlayerCounters resolving source controller legal (PlayerCounters.MkPlayerCounters ref kind quantity) = do
   gs <- State.get
-  let viewOf = effectViewOf source legal gs
+  let viewOf = effectViewOf resolving source legal gs
       context = effectContext gs resolving controller source legal (slotBindings resolving gs)
       recipients = playerRefPlayers legal resolving source controller gs ref
   -- CR 122 / 107.14: the amount is read per recipient off the one pre-effect
@@ -1409,7 +1409,7 @@ gainPlayerCounters resolving source controller legal (PlayerCounters.MkPlayerCou
 removePlayerCounters :: ObjectId -> ObjectId -> PlayerId -> Map.Map SlotName (Set Recipient) -> RemovePlayerCounters.RemovePlayerCounters -> Game ()
 removePlayerCounters resolving source controller legal (RemovePlayerCounters.MkRemovePlayerCounters ref kind quantity mTally) = do
   gs <- State.get
-  let viewOf = effectViewOf source legal gs
+  let viewOf = effectViewOf resolving source legal gs
       context = effectContext gs resolving controller source legal (slotBindings resolving gs)
       recipients = playerRefPlayers legal resolving source controller gs ref
   Monad.forM_ recipients $ \pid ->
@@ -1896,7 +1896,7 @@ exchangeControl resolving source controller legal sides =
 takeExtraTurnArm :: ObjectId -> ObjectId -> PlayerId -> Map.Map SlotName (Set Recipient) -> TakeExtraTurn.TakeExtraTurn -> Game ()
 takeExtraTurnArm resolving source controller legal takeExtraTurn = do
   gs <- State.get
-  let viewOf = effectViewOf source legal gs
+  let viewOf = effectViewOf resolving source legal gs
       context = effectContext gs resolving controller source legal (slotBindings resolving gs)
       -- How many extra turns each named player is given, read ONCE: Ral
       -- Zarek's "for each coin that comes up heads" is the tally the flip

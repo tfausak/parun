@@ -80,7 +80,6 @@ import qualified Parun.Types.GameState as GameState
 import qualified Parun.Types.GrantedAbility as GrantedAbility
 import qualified Parun.Types.HandActionPerformer as HandActionPerformer
 import qualified Parun.Types.LibraryPosition as LibraryPosition
-import qualified Parun.Types.LoggedEvent as LoggedEvent
 import qualified Parun.Types.Mana as Mana.Type
 import qualified Parun.Types.ManaAbilityPerformer as ManaAbilityPerformer
 import qualified Parun.Types.ManaAdded as ManaAdded
@@ -120,7 +119,7 @@ import qualified Parun.Types.Zone as Zone
 dealDamage :: (Game Result -> Game ()) -> (Game Result -> Game ()) -> Game Result -> ObjectId -> ObjectId -> PlayerId -> Map.Map SlotName (Set Recipient) -> DealDamage.DealDamage -> Game ()
 dealDamage runPreventionRiders runReplacementEffects runSubgame resolving source controller legal (DealDamage.MkDealDamage parts dealer excess mTally mDamaged) = do
   gs <- State.get
-  let viewOf = effectViewOf source legal gs
+  let viewOf = effectViewOf resolving source legal gs
       context = effectContext gs resolving controller source legal (slotBindings resolving gs)
       -- CR 120.1a: damage only to a battle, creature, or planeswalker, so every
       -- object an ObjectRef names goes through Damage.damageRecipient and none
@@ -316,7 +315,7 @@ modifyTarget resolving source controller legal chosen (ModifyTarget.MkModifyTarg
               asRead = case modification of
                 Modification.LoseNamedAbility name | targets == [source] -> Modification.LoseNamedAbility (Binding.nameAsRead (resolvingAbilityName resolving gs) name)
                 _ -> modification
-              freezeFor objs ctx = (objs, Projection.freezeQuantities (effectViewOf source legal gs) gs resolving source ctx asRead)
+              freezeFor objs ctx = (objs, Projection.freezeQuantities (effectViewOf resolving source legal gs) gs resolving source ctx asRead)
               frozenSets = case each of
                 Nothing -> [freezeFor targets context]
                 Just slot -> [freezeFor [t] (effectContextNaming slot t gs resolving controller source legal (slotBindings resolving gs)) | t <- targets]
@@ -420,7 +419,7 @@ addMana resolving source controller legal (ManaAddition.MkManaAddition ref produ
   -- control". Parun.Engine.Mana.manaOptionsOfGiven evaluates the same quantity
   -- for CR 605.3b's inline road, so the offer and the addition measure one
   -- board. A negative count adds nothing, and an undeterminable one reads 0.
-  let howMany = max 0 (Integer.toIntSaturating (Maybe.fromMaybe 0 (Quantity.evaluateFor (effectViewOf source legal gs0) (effectContext gs0 resolving controller source legal (slotBindings resolving gs0)) gs0 resolving source count)))
+  let howMany = max 0 (Integer.toIntSaturating (Maybe.fromMaybe 0 (Quantity.evaluateFor (effectViewOf resolving source legal gs0) (effectContext gs0 resolving controller source legal (slotBindings resolving gs0)) gs0 resolving source count)))
       unitOf manaType =
         ManaUnit.MkManaUnit
           { ManaUnit.manaType = manaType,
@@ -674,7 +673,7 @@ search performManaAbility runSubgame resolving source controller legal (Search.M
             -- by what the searched zones hold, which is CR 701.23a's "all cards
             -- in that zone".
             cap = fmap evaluateCap quantity
-            evaluateCap q = case Quantity.evaluateFor (effectViewOf source legal gs0) (effectContext gs0 resolving controller source legal (slotBindings resolving gs0)) gs0 resolving source q of
+            evaluateCap q = case Quantity.evaluateFor (effectViewOf resolving source legal gs0) (effectContext gs0 resolving controller source legal (slotBindings resolving gs0)) gs0 resolving source q of
               Just n | n > 0 -> Integer.toNaturalSaturating n
               _ -> 0
         decisions <- fmap concat . Monad.forM searchers $ \searcher -> Monad.forM (ownersFor searcher) $ \owner -> do
@@ -1240,7 +1239,7 @@ rollDieArm throwDice runSubgame resolving source controller legal rollDie = do
           ( Maybe.fromMaybe
               0
               ( Quantity.evaluateFor
-                  (effectViewOf source legal before)
+                  (effectViewOf resolving source legal before)
                   (effectContext before resolving controller source legal (slotBindings resolving before))
                   before
                   resolving
@@ -1251,7 +1250,7 @@ rollDieArm throwDice runSubgame resolving source controller legal rollDie = do
   let perDie :: Game Integer
       perDie = do
         gs <- State.get
-        let viewOf = effectViewOf source legal gs
+        let viewOf = effectViewOf resolving source legal gs
             context = effectContext gs resolving controller source legal (slotBindings resolving gs)
         -- CR 706.2, read AFTER the roll as the rule words it, and per die:
         -- the rule adds the modifier to the natural result of a roll, so a
@@ -1409,7 +1408,7 @@ rerollStoredResults throwDice runSubgame resolving source controller legal slot 
 flipCoinArm :: (Game Result -> Throw.Throw -> Game [Natural]) -> Game Result -> ObjectId -> ObjectId -> PlayerId -> Map.Map SlotName (Set Recipient) -> FlipCoin.FlipCoin -> Game ()
 flipCoinArm throwForCoin runSubgame resolving source controller legal flipCoin = do
   gs <- State.get
-  let viewOf = effectViewOf source legal gs
+  let viewOf = effectViewOf resolving source legal gs
       context = effectContext gs resolving controller source legal (slotBindings resolving gs)
       -- How many coins the instruction flips, read ONCE before the first of
       -- them: the number is part of the instruction, and re-reading it per coin
@@ -1618,19 +1617,12 @@ sacrifice resolving source controller legal chosen (SacrificeEffect.MkSacrificeE
   victims <- Common.askingObjects resolving source controller legal chosen ref
   gs <- State.get
   Event.sacrificeAll (Maybe.mapMaybe (Common.sacrificerFor sacrificer controller gs) victims)
-  -- "That many" is what the funnel SACRIFICED, never what the sweep named: a
-  -- permanent it refused (CR 701.21a's control clause, CR 101.2's "can't") is
-  -- not counted. Read off the GameEvent.PermanentSacrificed entries the batch
-  -- appended, which the funnel records before any CR 614 redirection, so a
-  -- permanent Rest in Peace exiles instead still counts. Bound even at zero,
-  -- the Destroy arm's `slot` and for its reason.
+  -- "That many" is what the funnel SACRIFICED, never what the sweep named
+  -- (Common.sacrificedBetween). Bound even at zero, the Destroy arm's `slot` and
+  -- for its reason.
   Monad.forM_ mSacrificed $ \slot -> do
     after <- State.get
-    let isSacrifice logged = case LoggedEvent.event logged of
-          GameEvent.PermanentSacrificed _ -> True
-          _ -> False
-        count = Natural.length (Seq.filter isSacrifice (Seq.drop (Seq.length (GameState.events gs)) (GameState.events after)))
-    State.modify' (Common.bindAmountSlot resolving source slot count)
+    State.modify' (Common.bindAmountSlot resolving source slot (Natural.length (Common.sacrificedBetween gs after)))
 
 turnFaceDown :: ObjectId -> ObjectId -> PlayerId -> Map.Map SlotName (Set Recipient) -> TurnFaceDown.TurnFaceDown (GrantedAbility.GrantedAbility Card.Type.Card) -> Game ()
 turnFaceDown resolving source controller legal (TurnFaceDown.MkTurnFaceDown ref listed) = do

@@ -416,6 +416,7 @@ confiscate
 conjurers-ban
 conjurers-mantle
 conquer
+consecrate-consume
 consecrate-land
 consume-spirit
 consumed-by-greed
@@ -557,6 +558,7 @@ dino-dna
 dinosaurs-on-a-spaceship
 dire-fleet-daredevil
 disarm
+disciple-of-bolas
 discombobulate
 disguise-agent
 dismantling-wave
@@ -1844,6 +1846,7 @@ setons-desire
 shadow-prophecy
 shadow-the-hedgehog
 shadow-urchin
+shadowgrange-archfiend
 shahrazad
 shahrazad-and-sindbad
 shattered-ego

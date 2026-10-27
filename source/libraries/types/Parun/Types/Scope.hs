@@ -60,7 +60,7 @@ data Scope
     -- the redirected card wrong, because the card is no longer in the zone the
     -- fold reads.
     --
-    -- PUBLIC destinations, or a REVEALED arrival in a hidden one, and
+    -- An ARRIVAL in a PUBLIC destination, or a REVEALED one in a hidden zone, and
     -- Parun.Engine.Count.findableAfterMove is where that is enforced. CR 400.7j
     -- grants the find "to a public zone" (CR 400.2's list, which
     -- Parun.Engine.Game.isHiddenZone encodes), and CR 701.9c leaves a card
@@ -73,9 +73,11 @@ data Scope
     -- Filter.IsBound is, and may be either a CR 115.10a group binding whose ids
     -- are the ARRIVALS a move wrote (Psychic Miasma) or a TARGET slot bound
     -- before this resolution moved it, whose id is the DEPARTURE (Hour of
-    -- Glory's "if that creature was a God"). findableAfterMove asks CR 400.7j of
-    -- where the object landed either way; what the fold then reads for a
-    -- departure is CR 608.2h's last known information.
+    -- Glory's "if that creature was a God"), or a group of departures
+    -- (Shadowgrange Archfiend's creatures "sacrificed this way").
+    -- findableAfterMove asks CR 400.7j of where an ARRIVAL landed; a DEPARTURE
+    -- is found by nothing, and the fold reads its CR 608.2h last known
+    -- information wherever it went.
     OverBound SlotName.SlotName
   | -- | CR 401.2 / 404.1: the top card of each library or graveyard the InZone
     -- names (Vampire Nocturnus, Guiding Spirit); no candidate in an unordered zone.
