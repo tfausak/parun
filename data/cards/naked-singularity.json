@@ -1,0 +1,131 @@
+{
+  "faces": [
+    {
+      "keywords": [
+        {
+          "type": "CumulativeUpkeep",
+          "value": {
+            "mana": [
+              {
+                "type": "Generic",
+                "value": 3
+              }
+            ]
+          }
+        }
+      ],
+      "manaCost": [
+        {
+          "type": "Generic",
+          "value": 5
+        }
+      ],
+      "name": "Naked Singularity",
+      "oracleText": "Cumulative upkeep {3} (At the beginning of your upkeep, put an age counter on this permanent, then sacrifice it unless you pay its upkeep cost for each age counter on it.)\nIf tapped for mana, Plains produce {R}, Islands produce {G}, Swamps produce {W}, Mountains produce {U}, and Forests produce {B} instead of any other type.",
+      "replacementEffects": [
+        {
+          "effect": {
+            "type": "ManaR",
+            "value": {
+              "matching": {
+                "type": "HasSubtype",
+                "value": {
+                  "type": "Plains"
+                }
+              },
+              "produces": {
+                "type": "Colored",
+                "value": {
+                  "type": "Red"
+                }
+              }
+            }
+          }
+        },
+        {
+          "effect": {
+            "type": "ManaR",
+            "value": {
+              "matching": {
+                "type": "HasSubtype",
+                "value": {
+                  "type": "Island"
+                }
+              },
+              "produces": {
+                "type": "Colored",
+                "value": {
+                  "type": "Green"
+                }
+              }
+            }
+          }
+        },
+        {
+          "effect": {
+            "type": "ManaR",
+            "value": {
+              "matching": {
+                "type": "HasSubtype",
+                "value": {
+                  "type": "Swamp"
+                }
+              },
+              "produces": {
+                "type": "Colored",
+                "value": {
+                  "type": "White"
+                }
+              }
+            }
+          }
+        },
+        {
+          "effect": {
+            "type": "ManaR",
+            "value": {
+              "matching": {
+                "type": "HasSubtype",
+                "value": {
+                  "type": "Mountain"
+                }
+              },
+              "produces": {
+                "type": "Colored",
+                "value": {
+                  "type": "Blue"
+                }
+              }
+            }
+          }
+        },
+        {
+          "effect": {
+            "type": "ManaR",
+            "value": {
+              "matching": {
+                "type": "HasSubtype",
+                "value": {
+                  "type": "Forest"
+                }
+              },
+              "produces": {
+                "type": "Colored",
+                "value": {
+                  "type": "Black"
+                }
+              }
+            }
+          }
+        }
+      ],
+      "typeLine": {
+        "types": [
+          {
+            "type": "Artifact"
+          }
+        ]
+      }
+    }
+  ]
+}

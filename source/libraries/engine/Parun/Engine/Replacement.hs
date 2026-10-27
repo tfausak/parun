@@ -119,6 +119,8 @@ import qualified Parun.Types.LifeGainRewrite as LifeGainRewrite
 import qualified Parun.Types.LifeLossPattern as LifeLossPattern
 import qualified Parun.Types.LifeLossR as LifeLossR
 import qualified Parun.Types.LifeLossRewrite as LifeLossRewrite
+import qualified Parun.Types.ManaR as ManaR
+import qualified Parun.Types.ManaType as ManaType
 import qualified Parun.Types.Object as Object
 import Parun.Types.ObjectId (ObjectId)
 import qualified Parun.Types.PermanentCandidate as PermanentCandidate
@@ -543,6 +545,24 @@ applicable asOf gs event =
       viewOf = Projection.viewsOf sources
       grants = Projection.controlGrants sources
    in filter (applies viewOf grants sources event) (collect sources (GameState.replacements gs))
+
+-- CR 106.12b: the type each ManaR row applying to this permanent being tapped
+-- for mana makes it produce, one entry per row. CR 616.1 lets the player order
+-- the rows, and as every one replaces the whole type, the row applied last
+-- decides it; so the outcomes are exactly these types, which
+-- Parun.Engine.Mana offers as a choice. The player tapping it chooses, per
+-- Naked Singularity's ruling of 2013-04-15.
+--
+-- A floating row is never spent here: Pale Moon's lasts the turn, and no
+-- printing spends one per use.
+manaRewrites :: GameState -> ObjectId -> [ManaType.ManaType]
+manaRewrites gs oid =
+  let viewOf = Projection.viewsOf gs
+   in [ ManaR.produces row
+      | candidate <- collect gs (GameState.replacements gs),
+        ReplacementEffect.ManaR row <- [ReplacementCandidate.effect candidate],
+        matchesFiltered viewOf gs candidate (ManaR.matching row) oid
+      ]
 
 -- CR 614.1: does this instance apply to this proposed event? The arms must agree
 -- on the EVENT CLASS -- which the type already rules out for the impossible
@@ -1045,6 +1065,8 @@ matchesPrinted viewOf gs event candidate =
         (ReplacementEffect.InstructionR {}, _) -> False
         (ReplacementEffect.DieRollR {}, _) -> False
         (ReplacementEffect.AssembleR {}, _) -> False
+        -- No ProposedEvent carries a mana production: manaRewrites reads ManaR.
+        (ReplacementEffect.ManaR {}, _) -> False
         (ReplacementEffect.GameLossR {}, _) -> False
         (ReplacementEffect.PlaneswalkR {}, _) -> False
         (ReplacementEffect.PhaseR _, _) -> False
@@ -2025,6 +2047,8 @@ bucketOfEffect re = case re of
   -- CR 616.1a-d are all about entries and copies; assembling is none of them, so
   -- CR 616.1e.
   ReplacementEffect.AssembleR {} -> ReplacementBucket.Other
+  -- CR 616.1e: producing mana is neither an entry nor a copy.
+  ReplacementEffect.ManaR {} -> ReplacementBucket.Other
   -- CR 616.1a-d are all about entering the battlefield and copying; losing
   -- the game is neither, so CR 616.1e.
   ReplacementEffect.GameLossR {} -> ReplacementBucket.Other
@@ -2321,6 +2345,7 @@ readsApplier re = case re of
   -- InstructionR's RollD20Instead answer, and for its reason.
   ReplacementEffect.DieRollR (DieRollR.MkDieRollR _ DieRollRewrite.FlipCoinInstead) -> False
   ReplacementEffect.AssembleR {} -> False
+  ReplacementEffect.ManaR {} -> False
   -- CR 109.5: the effects run as the row's own controller, the reset's "you".
   ReplacementEffect.GameLossR {} -> True
   -- Susan Foreman's arrangement is of the planar deck of the player the EVENT
@@ -2361,6 +2386,7 @@ substitutesAction effect = case effect of
   ReplacementEffect.LifeGainR {} -> False
   ReplacementEffect.DrawCountR {} -> False
   ReplacementEffect.AssembleR {} -> False
+  ReplacementEffect.ManaR {} -> False
   ReplacementEffect.GameLossR {} -> False
   ReplacementEffect.PlaneswalkR {} -> False
   ReplacementEffect.PhaseR _ -> False
@@ -2430,6 +2456,7 @@ readsSource effect = case effect of
   ReplacementEffect.InstructionR {} -> False
   ReplacementEffect.DieRollR {} -> False
   ReplacementEffect.AssembleR {} -> False
+  ReplacementEffect.ManaR {} -> False
   -- CR 113.7: the effects run with the candidate's source as theirs, so one
   -- naming its source reaches a different object under each.
   ReplacementEffect.GameLossR {} -> True
@@ -2578,6 +2605,7 @@ recordsAChoice effect = case effect of
   ReplacementEffect.InstructionR {} -> False
   ReplacementEffect.DieRollR {} -> False
   ReplacementEffect.AssembleR {} -> False
+  ReplacementEffect.ManaR {} -> False
   ReplacementEffect.GameLossR {} -> False
   ReplacementEffect.PlaneswalkR {} -> False
   ReplacementEffect.PhaseR {} -> False
@@ -3970,6 +3998,7 @@ contestedResource gs candidate = case ReplacementCandidate.effect candidate of
   -- Doubling a count of Contraptions is arithmetic on whatever arrives.
   -- InstructionR's answer.
   ReplacementEffect.AssembleR {} -> Nothing
+  ReplacementEffect.ManaR {} -> Nothing
   -- `contested` asks only about a damage batch.
   ReplacementEffect.GameLossR {} -> Nothing
   ReplacementEffect.PlaneswalkR {} -> Nothing

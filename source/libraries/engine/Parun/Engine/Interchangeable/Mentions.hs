@@ -267,6 +267,7 @@ import qualified Parun.Types.MakeForetold as MakeForetold
 import qualified Parun.Types.ManaAddition as ManaAddition
 import qualified Parun.Types.ManaCount as ManaCount
 import qualified Parun.Types.ManaProduction as ManaProduction
+import qualified Parun.Types.ManaR as ManaR
 import qualified Parun.Types.ManaRestriction as ManaRestriction
 import qualified Parun.Types.ManaRider as ManaRider
 import qualified Parun.Types.Measures as Measures
@@ -2664,6 +2665,7 @@ replacementEffectNames asking onCard onAbility onEffect x = case x of
   ReplacementEffect.InstructionR instructionR -> instructionRNames asking instructionR
   ReplacementEffect.DieRollR dieRollR -> dieRollRNames asking dieRollR
   ReplacementEffect.AssembleR matching -> filterNames asking matching
+  ReplacementEffect.ManaR (ManaR.MkManaR matching _) -> filterNames asking matching
   ReplacementEffect.GameLossR (GameLossR.MkGameLossR whose effects) -> controllerRelationNames asking whose <> foldMap onEffect effects
   ReplacementEffect.PlaneswalkR (PlaneswalkR.MkPlaneswalkR whose _cause rewrite) ->
     controllerRelationNames asking whose <> case rewrite of

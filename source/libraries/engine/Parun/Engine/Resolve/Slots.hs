@@ -170,6 +170,7 @@ import qualified Parun.Types.MakeForetold as MakeForetold
 import qualified Parun.Types.ManaAddition as ManaAddition
 import qualified Parun.Types.ManaCount as ManaCount
 import qualified Parun.Types.ManaProduction as ManaProduction
+import qualified Parun.Types.ManaR as ManaR
 import qualified Parun.Types.Meld as Meld
 import qualified Parun.Types.Mill as Mill
 import qualified Parun.Types.MillTally as MillTally
@@ -1761,6 +1762,7 @@ replacementRowReads re = case re of
   -- answer and for its reason.
   ReplacementEffect.DieRollR {} -> ([], [])
   ReplacementEffect.AssembleR matching -> ([matching], [])
+  ReplacementEffect.ManaR r -> ([ManaR.matching r], [])
   -- One ControllerRelation; the effects run instead are replacementRowEffects'.
   ReplacementEffect.GameLossR {} -> ([], [])
   ReplacementEffect.PlaneswalkR {} -> ([], [])
@@ -1942,6 +1944,7 @@ overRelations f re = case re of
   ReplacementEffect.InstructionR r -> (\w -> ReplacementEffect.InstructionR r {InstructionR.whose = w}) <$> f (InstructionR.whose r)
   ReplacementEffect.DieRollR r -> (\w -> ReplacementEffect.DieRollR r {DieRollR.whose = w}) <$> f (DieRollR.whose r)
   ReplacementEffect.AssembleR _ -> pure re
+  ReplacementEffect.ManaR _ -> pure re
   ReplacementEffect.GameLossR r -> (\w -> ReplacementEffect.GameLossR r {GameLossR.whose = w}) <$> f (GameLossR.whose r)
   ReplacementEffect.PlaneswalkR r -> (\w -> ReplacementEffect.PlaneswalkR r {PlaneswalkR.whose = w}) <$> f (PlaneswalkR.whose r)
   -- CR 109.5's relation rides EntryR's Filter (Filter.HeldBy Holder.Controller) and DamageR's
@@ -1997,6 +2000,7 @@ replacementRowEffects re = case re of
   ReplacementEffect.InstructionR _ -> []
   ReplacementEffect.DieRollR _ -> []
   ReplacementEffect.AssembleR _ -> []
+  ReplacementEffect.ManaR _ -> []
   -- CR 614.1a's "instead [do something]" for a loss of the game (Lich's Mirror).
   ReplacementEffect.GameLossR (GameLossR.MkGameLossR _ effects) -> Foldable.toList effects
   ReplacementEffect.PlaneswalkR r -> (case PlaneswalkR.rewrite r of PlaneswalkRewrite.ArrangeTopTwo -> []; PlaneswalkRewrite.RunEffects effects -> Foldable.toList effects)

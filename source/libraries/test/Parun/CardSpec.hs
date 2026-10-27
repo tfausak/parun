@@ -261,6 +261,7 @@ import qualified Parun.Types.ManaCost as ManaCost
 import qualified Parun.Types.ManaCount as ManaCount
 import qualified Parun.Types.ManaFilter as ManaFilter
 import qualified Parun.Types.ManaProduction as ManaProduction
+import qualified Parun.Types.ManaR as ManaR
 import qualified Parun.Types.ManaRestriction as ManaRestriction
 import qualified Parun.Types.ManaRetention as ManaRetention
 import qualified Parun.Types.ManaRider as ManaRider
@@ -2293,6 +2294,7 @@ replacementRewriteEffects replacement = case replacement of
   ReplacementEffect.InstructionR {} -> []
   ReplacementEffect.DieRollR {} -> []
   ReplacementEffect.AssembleR {} -> []
+  ReplacementEffect.ManaR {} -> []
   -- CR 614.1a's instead for a loss of the game (Lich's Mirror's reset).
   ReplacementEffect.GameLossR (GameLossR.MkGameLossR _ effects) -> Foldable.toList effects
   ReplacementEffect.PlaneswalkR r -> (case PlaneswalkR.rewrite r of PlaneswalkRewrite.ArrangeTopTwo -> []; PlaneswalkRewrite.RunEffects effects -> Foldable.toList effects)
@@ -2324,6 +2326,7 @@ replacementEffectRiders replacement = case replacement of
   ReplacementEffect.InstructionR {} -> []
   ReplacementEffect.DieRollR {} -> []
   ReplacementEffect.AssembleR {} -> []
+  ReplacementEffect.ManaR {} -> []
   ReplacementEffect.GameLossR {} -> []
   ReplacementEffect.PlaneswalkR {} -> []
   ReplacementEffect.PhaseR _ -> []
@@ -2352,6 +2355,7 @@ replacementMintedCards replacement = case replacement of
   ReplacementEffect.InstructionR {} -> []
   ReplacementEffect.DieRollR {} -> []
   ReplacementEffect.AssembleR {} -> []
+  ReplacementEffect.ManaR {} -> []
   ReplacementEffect.GameLossR {} -> []
   ReplacementEffect.PlaneswalkR {} -> []
   ReplacementEffect.PhaseR _ -> []
@@ -5331,6 +5335,7 @@ replacementEffectFilters replacementEffect = case replacementEffect of
   ReplacementEffect.InstructionR {} -> []
   ReplacementEffect.DieRollR {} -> []
   ReplacementEffect.AssembleR {} -> []
+  ReplacementEffect.ManaR r -> unframed [ManaR.matching r]
   ReplacementEffect.GameLossR {} -> []
   ReplacementEffect.PlaneswalkR {} -> []
   ReplacementEffect.PhaseR _ -> []

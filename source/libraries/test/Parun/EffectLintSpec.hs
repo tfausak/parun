@@ -614,6 +614,7 @@ idleTokenRowOffends replacement = case replacement of
   ReplacementEffect.InstructionR {} -> False
   ReplacementEffect.DieRollR {} -> False
   ReplacementEffect.AssembleR {} -> False
+  ReplacementEffect.ManaR {} -> False
   ReplacementEffect.GameLossR {} -> False
   ReplacementEffect.PlaneswalkR {} -> False
   ReplacementEffect.PhaseR _ -> False
@@ -675,6 +676,7 @@ phasePatternOffends replacement = case replacement of
   ReplacementEffect.InstructionR {} -> False
   ReplacementEffect.DieRollR {} -> False
   ReplacementEffect.AssembleR {} -> False
+  ReplacementEffect.ManaR {} -> False
   ReplacementEffect.GameLossR {} -> False
   ReplacementEffect.PlaneswalkR {} -> False
 
@@ -722,6 +724,7 @@ instructionRowOffends replacement = case replacement of
   ReplacementEffect.DrawCountR {} -> False
   ReplacementEffect.DieRollR {} -> False
   ReplacementEffect.AssembleR {} -> False
+  ReplacementEffect.ManaR {} -> False
   ReplacementEffect.GameLossR {} -> False
   ReplacementEffect.PlaneswalkR {} -> False
 
@@ -795,6 +798,7 @@ engineOnlyArmOffends replacement = case replacement of
   ReplacementEffect.InstructionR {} -> False
   ReplacementEffect.DieRollR {} -> False
   ReplacementEffect.AssembleR {} -> False
+  ReplacementEffect.ManaR {} -> False
   ReplacementEffect.GameLossR {} -> False
   ReplacementEffect.PlaneswalkR {} -> False
   ReplacementEffect.TurnUpR {} -> False
@@ -888,6 +892,7 @@ turnUpRequiringOffends replacement = case replacement of
   ReplacementEffect.InstructionR {} -> False
   ReplacementEffect.DieRollR {} -> False
   ReplacementEffect.AssembleR {} -> False
+  ReplacementEffect.ManaR {} -> False
   ReplacementEffect.GameLossR {} -> False
   ReplacementEffect.PlaneswalkR {} -> False
   ReplacementEffect.PhaseR _ -> False
@@ -939,6 +944,7 @@ riderWithoutPreventionOffends replacement = case replacement of
   ReplacementEffect.InstructionR {} -> False
   ReplacementEffect.DieRollR {} -> False
   ReplacementEffect.AssembleR {} -> False
+  ReplacementEffect.ManaR {} -> False
   ReplacementEffect.GameLossR {} -> False
   ReplacementEffect.PlaneswalkR {} -> False
   ReplacementEffect.PhaseR _ -> False
@@ -990,6 +996,7 @@ shufflingOutsideLibraryOffends replacement = case replacement of
   ReplacementEffect.InstructionR {} -> False
   ReplacementEffect.DieRollR {} -> False
   ReplacementEffect.AssembleR {} -> False
+  ReplacementEffect.ManaR {} -> False
   ReplacementEffect.GameLossR {} -> False
   ReplacementEffect.PlaneswalkR {} -> False
   ReplacementEffect.PhaseR _ -> False

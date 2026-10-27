@@ -13,6 +13,7 @@ import qualified Parun.Types.AttachR as AttachR
 import qualified Parun.Types.AttachRewrite as AttachRewrite
 import qualified Parun.Types.BeginningStep as BeginningStep
 import qualified Parun.Types.CardType as CardType
+import qualified Parun.Types.Color as Color
 import qualified Parun.Types.ControllerRelation as ControllerRelation
 import qualified Parun.Types.CopyDomain as CopyDomain
 import qualified Parun.Types.CopyRecipient as CopyRecipient
@@ -48,6 +49,8 @@ import qualified Parun.Types.LifeLossCause as LifeLossCause
 import qualified Parun.Types.LifeLossPattern as LifeLossPattern
 import qualified Parun.Types.LifeLossR as LifeLossR
 import qualified Parun.Types.LifeLossRewrite as LifeLossRewrite
+import qualified Parun.Types.ManaR as ManaR
+import qualified Parun.Types.ManaType as ManaType
 import qualified Parun.Types.Phase as Phase
 import qualified Parun.Types.PhasePattern as PhasePattern
 import qualified Parun.Types.PhaseSelector as PhaseSelector
@@ -258,6 +261,13 @@ spec s =
             codec
             (ReplacementEffect.AssembleR (Filter.HasSubtype Subtype.Rigger))
             " {\"type\":\"AssembleR\",\"value\":{\"type\":\"HasSubtype\",\"value\":{\"type\":\"Rigger\"}}} "
+        -- CR 106.12b: Naked Singularity's Plains.
+        Spec.it s "ManaR (Naked Singularity)" $
+          Common.assertCodec
+            s
+            codec
+            (ReplacementEffect.ManaR (ManaR.MkManaR (Filter.HasSubtype Subtype.Plains) (ManaType.Colored Color.Red)))
+            " {\"type\":\"ManaR\",\"value\":{\"matching\":{\"type\":\"HasSubtype\",\"value\":{\"type\":\"Plains\"}},\"produces\":{\"type\":\"Colored\",\"value\":{\"type\":\"Red\"}}}} "
         -- CR 701.31 / 614.1a: Susan Foreman.
         Spec.it s "PlaneswalkR (Susan Foreman)" $
           Common.assertCodec

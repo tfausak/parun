@@ -168,6 +168,7 @@ import qualified Parun.Types.ManaAddition as ManaAddition
 import qualified Parun.Types.ManaCount as ManaCount
 import qualified Parun.Types.ManaFilter as ManaFilter
 import qualified Parun.Types.ManaProduction as ManaProduction
+import qualified Parun.Types.ManaR as ManaR
 import qualified Parun.Types.ManaRestriction as ManaRestriction
 import qualified Parun.Types.ManaRider as ManaRider
 import qualified Parun.Types.ManaSpecification as ManaSpecification
@@ -1616,6 +1617,9 @@ rewriteReplacementEffect pairs effect = case effect of
   -- The Unstable FAQ: an AssembleR's Filter names a subtype (Steamflogger Boss's
   -- Rigger), which CR 612.1's text change reaches.
   ReplacementEffect.AssembleR matching -> ReplacementEffect.AssembleR (Filter.rewrite pairs matching)
+  -- Naked Singularity's ruling of 2004-10-04: a text change reaches the land
+  -- type a ManaR's Filter names.
+  ReplacementEffect.ManaR r -> ReplacementEffect.ManaR r {ManaR.matching = Filter.rewrite pairs (ManaR.matching r)}
   -- CR 104.3: the pattern is one CR 109.5 relation; the effects run instead are
   -- the resolution road's, so they are swapped here too.
   ReplacementEffect.GameLossR r -> ReplacementEffect.GameLossR r {GameLossR.instead = fmap (rewriteEffect pairs) (GameLossR.instead r)}

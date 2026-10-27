@@ -1315,6 +1315,7 @@ mystic-compass
 mystifying-maze
 nacatl-hunt-pride
 nael-avizoa-aeronaut
+naked-singularity
 nameless-inversion
 nantuko-cultivator
 narcomoeba
@@ -1414,6 +1415,7 @@ painters-servant
 palace-guard
 palace-jailer
 paladin-class
+pale-moon
 paleontologists-pick-axe-dinosaur-headdress
 panglacial-wurm
 panic-attack
@@ -1573,6 +1575,7 @@ razorgrass-screen
 razormane-masticore
 reality-heist
 reality-ripple
+reality-twist
 realm-of-koh
 realmbreakers-grasp
 realms-uncharted
@@ -1638,6 +1641,7 @@ rite-of-replication
 rites-of-initiation
 rites-of-refusal
 rites-of-spring
+ritual-of-subdual
 riveteers-charm
 riveteers-requisitioner
 roaring-furnace-steaming-sauna

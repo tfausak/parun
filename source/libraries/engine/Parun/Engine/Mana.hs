@@ -31,6 +31,7 @@ import qualified Parun.Engine.PlayerEffect as PlayerEffect
 import qualified Parun.Engine.Projection as Projection
 import qualified Parun.Engine.Projection.View as Projection
 import qualified Parun.Engine.Quantity as Quantity
+import qualified Parun.Engine.Replacement as Replacement
 import qualified Parun.Engine.SourceContext as SourceContext
 import qualified Parun.Engine.Subtype as Subtype.Engine
 import qualified Parun.Extra.Integer as Integer
@@ -807,9 +808,32 @@ pricedOptionsVisiting visited paid poolBoard pcs oid gs =
                       ManaOption.yield = pooled (fmap snd parts),
                       ManaOption.steps = fmap (\(i, (clause, _)) -> (clause, pooled [part | (j, part) <- parts, j == i])) indexed
                     }
-         in fmap
-              (\picks -> (build (howManyIn countContext) fst picks, build (howManyIn pricedContext) snd picks))
+         in concatMap
+              (\picks -> retyped cost (build (howManyIn countContext) fst picks, build (howManyIn pricedContext) snd picks))
               (traverse (\(i, addition) -> fmap ((,) i . (,) addition) (additionRuns (ActivatedAbility.name =<< ability) addition)) [(i, addition) | (i, (_, additions)) <- indexed, addition <- additions])
+      -- CR 106.12b: a route tapping the permanent (CR 106.12) produces the
+      -- type each ManaR row applying to it names instead of any other, one
+      -- option per type (Replacement.manaRewrites), both halves alike. Every
+      -- unit is retyped and nothing else, so the amount and every stamp stand.
+      -- Read here, so CR 106.7's "could produce", the offer and the payment
+      -- all see it.
+      --
+      -- The {T} gate is CR 106.12's and a regression fence: Scryfall t:land
+      -- o:": add" -o:"{T}", 2026-10-27, finds no land, and every ManaR in
+      -- data/cards/ names lands. A land printing a mana ability without {T}
+      -- would observe it.
+      --
+      -- CR 305.6's intrinsic clause is minted again for the new type, so a
+      -- Tundra's {W} route and {U} route retyped alike are one option and not
+      -- two the player could not tell apart.
+      rewrites = ListUtils.nubOrd (Replacement.manaRewrites gs oid)
+      retyped cost (offered, priced)
+        | notElem CostComponent.TapThis (Cost.components cost) || null rewrites = [(offered, priced)]
+        | otherwise = fmap (\manaType -> (retype manaType offered, retype manaType priced)) rewrites
+      retype manaType option =
+        let retypeMana = Mana.MkMana . fmap (\unit -> unit {ManaUnit.manaType = manaType}) . unitsOf
+            reclause clause = maybe (intrinsicManaClause manaType) (const clause) (ManaOption.ability option)
+         in option {ManaOption.yield = fmap retypeMana (ManaOption.yield option), ManaOption.steps = fmap (Bifunctor.bimap reclause (fmap retypeMana)) (ManaOption.steps option)}
       -- CR 106.5: an addition of an undefined type -- CR 607.2d's chosen colour
       -- with none chosen -- adds no mana, and the activation is still one the
       -- player may make. Resolve.Effect's AddMana arm answers the same. A
