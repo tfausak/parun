@@ -1,0 +1,342 @@
+1 Abyssal Specter
+1 Air Elemental
+1 Aladdin's Ring
+1 Ambition's Cost
+1 Anaba Shaman
+1 Angel of Mercy
+1 Angelic Page
+1 Archivist
+1 Ardent Militia
+1 Avatar of Hope
+1 Aven Cloudchaser
+1 Aven Fisher
+1 Aven Flock
+1 Balance of Power
+1 Balduvian Barbarians
+1 Beast of Burden
+1 Birds of Paradise
+1 Blanchwood Armor
+1 Blaze
+1 Blessed Reversal
+1 Blinding Angel
+1 Blood Moon
+1 Bloodshot Cyclops
+1 Bog Imp
+1 Bog Wraith
+1 Boil
+1 Boomerang
+1 Brass Herald
+1 Bribery
+1 Call of the Wild
+1 Canopy Spider
+1 Canyon Wildcat
+1 Carrion Wall
+1 Catalog
+1 Chastise
+1 Choke
+1 Cinder Wall
+1 Circle of Protection: Black
+1 Circle of Protection: Blue
+1 Circle of Protection: Green
+1 Circle of Protection: Red
+1 Circle of Protection: White
+1 City of Brass
+1 Coastal Hornclaw
+1 Coastal Piracy
+1 Coastal Tower
+1 Coat of Arms
+1 Coercion
+1 Collective Unconscious
+1 Concentrate
+1 Confiscate
+1 Coral Eel
+1 Cowardice
+1 Craw Wurm
+1 Creeping Mold
+1 Crossbow Infantry
+1 Crystal Rod
+1 Curiosity
+1 Daring Apprentice
+1 Dark Banishing
+1 Death Pit Offering
+1 Death Pits of Rath
+1 Deathgazer
+1 Deepwood Ghoul
+1 Defense Grid
+1 Deflection
+1 Dehydration
+1 Demolish
+1 Demystify
+1 Diabolic Tutor
+1 Dingus Egg
+1 Disrupting Scepter
+1 Distorting Lens
+1 Diving Griffin
+1 Drudge Skeletons
+1 Dusk Imp
+1 Dwarven Demolition Team
+1 Eager Cadet
+1 Eastern Paladin
+1 Elfhame Palace
+1 Elite Archers
+1 Elite Javelineer
+1 Elvish Champion
+1 Elvish Lyrist
+1 Elvish Pioneer
+1 Elvish Piper
+1 Elvish Scrapper
+1 Emperor Crocodile
+1 Enormous Baloth
+1 Enrage
+1 Ensnaring Bridge
+1 Evacuation
+1 Execute
+1 Fallen Angel
+1 Fear
+1 Fecundity
+1 Fertile Ground
+1 Fighting Drake
+1 Flash Counter
+1 Flashfires
+1 Fleeting Image
+1 Flight
+1 Flying Carpet
+1 Fodder Cannon
+1 Foratog
+1 Forest
+1 Fugitive Wizard
+1 Fungusaur
+1 Furnace of Rath
+1 Fyndhorn Elder
+1 Gaea's Herald
+1 Giant Badger
+1 Giant Cockroach
+1 Giant Growth
+1 Giant Octopus
+1 Giant Spider
+1 Glorious Anthem
+1 Glory Seeker
+1 Gluttonous Zombie
+1 Goblin Chariot
+1 Goblin Glider
+1 Goblin King
+1 Goblin Raider
+1 Grave Pact
+1 Gravedigger
+1 Grizzly Bears
+1 Guerrilla Tactics
+1 Hammer of Bogardan
+1 Healing Salve
+1 Hibernation
+1 Hill Giant
+1 Holy Day
+1 Holy Strength
+1 Honor Guard
+1 Horned Troll
+1 Horned Turtle
+1 Howling Mine
+1 Hulking Cyclops
+1 Hunted Wumpus
+1 Index
+1 Inferno
+1 Inspiration
+1 Intrepid Hero
+1 Intruder Alarm
+1 Invisibility
+1 Iron Star
+1 Island
+1 Ivory Cup
+1 Ivory Mask
+1 Jayemdae Tome
+1 Karma
+1 Larceny
+1 Lava Axe
+1 Lava Hounds
+1 Lesser Gargadon
+1 Lhurgoyf
+1 Lightning Blast
+1 Lightning Elemental
+1 Living Terrain
+1 Llanowar Behemoth
+1 Lone Wolf
+1 Looming Shade
+1 Lord of the Undead
+1 Lure
+1 Maggot Carrier
+1 Mahamoti Djinn
+1 Mana Clash
+1 Mana Leak
+1 Maro
+1 Master Decoy
+1 Master Healer
+1 Megrim
+1 Merchant Scroll
+1 Merchant of Secrets
+1 Might of Oaks
+1 Millstone
+1 Mind Bend
+1 Mind Rot
+1 Mind Slash
+1 Mind Sludge
+1 Mogg Sentry
+1 Monstrous Growth
+1 Moss Monster
+1 Mountain
+1 Murderous Betrayal
+1 Nantuko Disciple
+1 Natural Affinity
+1 Naturalize
+1 Nausea
+1 Nekrataal
+1 Nightmare
+1 Noble Purpose
+1 Norwood Ranger
+1 Obliterate
+1 Ogre Taskmaster
+1 Okk
+1 Oracle's Attendants
+1 Orcish Artillery
+1 Orcish Spy
+1 Pacifism
+1 Panic Attack
+1 Patagia Golem
+1 Peach Garden Oath
+1 Persecute
+1 Phantom Warrior
+1 Phyrexian Arena
+1 Phyrexian Colossus
+1 Phyrexian Hulk
+1 Phyrexian Plaguelord
+1 Plague Beetle
+1 Plague Wind
+1 Plains
+1 Planar Portal
+1 Plow Under
+1 Primeval Force
+1 Primeval Shambler
+1 Puppeteer
+1 Pyroclasm
+1 Pyrotechnics
+1 Raging Goblin
+1 Rain of Blades
+1 Raise Dead
+1 Rampant Growth
+1 Ravenous Rats
+1 Razorfoot Griffin
+1 Redeem
+1 Reflexes
+1 Regeneration
+1 Relentless Assault
+1 Remove Soul
+1 Revive
+1 Rewind
+1 Rhox
+1 Ridgeline Rager
+1 Rod of Ruin
+1 Rolling Stones
+1 Royal Assassin
+1 Rukh Egg
+1 Rushwood Dryad
+1 Sabretooth Tiger
+1 Sacred Ground
+1 Sacred Nectar
+1 Sage Owl
+1 Sage of Lat-Nam
+1 Salt Marsh
+1 Samite Healer
+1 Sanctimony
+1 Savannah Lions
+1 Scathe Zombies
+1 Sea Eagle
+1 Sea Monster
+1 Searing Wind
+1 Seasoned Marshal
+1 Seismic Assault
+1 Serpent Warrior
+1 Serra Angel
+1 Sever Soul
+1 Severed Legion
+1 Shatter
+1 Shifting Sky
+1 Shivan Dragon
+1 Shivan Oasis
+1 Shock
+1 Shock Troops
+1 Silverback Ape
+1 Sizzle
+1 Skull of Orm
+1 Slay
+1 Sneaky Homunculus
+1 Solidarity
+1 Soul Feast
+1 Spellbook
+1 Spiketail Hatchling
+1 Spined Wurm
+1 Spineless Thug
+1 Spirit Link
+1 Spitting Spider
+1 Spreading Algae
+1 Standing Troops
+1 Star Compass
+1 Staunch Defenders
+1 Steal Artifact
+1 Stone Rain
+1 Storm Crow
+1 Story Circle
+1 Stream of Life
+1 Sudden Impact
+1 Suntail Hawk
+1 Sunweb
+1 Swamp
+1 Swarm of Rats
+1 Sword Dancer
+1 Teferi's Puzzle Box
+1 Telepathy
+1 Temporal Adept
+1 Thieves' Auction
+1 Thieving Magpie
+1 Thorn Elemental
+1 Throne of Bone
+1 Tidal Kraken
+1 Trade Routes
+1 Trained Armodon
+1 Treasure Trove
+1 Tremor
+1 Tundra Wolves
+1 Twiddle
+1 Two-Headed Dragon
+1 Underworld Dreams
+1 Unholy Strength
+1 Unsummon
+1 Urborg Volcano
+1 Urza's Armor
+1 Urza's Mine
+1 Urza's Power Plant
+1 Urza's Tower
+1 Vampiric Spirit
+1 Venerable Monk
+1 Vengeance
+1 Verduran Enchantress
+1 Vernal Bloom
+1 Vexing Arcanix
+1 Viashino Sandstalker
+1 Vicious Hunger
+1 Vine Trellis
+1 Vizzerdrix
+1 Volcanic Hammer
+1 Wall of Air
+1 Wall of Spears
+1 Wall of Stone
+1 Wall of Swords
+1 Warped Devotion
+1 Western Paladin
+1 Wind Drake
+1 Wing Snare
+1 Wood Elves
+1 Wooden Sphere
+1 Worship
+1 Wrath of God
+1 Wrath of Marit Lage
+1 Yavimaya Enchantress
+1 Zombify
+1 Zur's Weirding

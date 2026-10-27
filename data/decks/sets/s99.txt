@@ -1,0 +1,158 @@
+1 Abyssal Horror
+1 Air Elemental
+1 Alluring Scent
+1 Ancient Craving
+1 Angel of Light
+1 Angel of Mercy
+1 Angelic Blessing
+1 Archangel
+1 Ardent Militia
+1 Armageddon
+1 Barbtooth Wurm
+1 Bargain
+1 Blinding Light
+1 Bog Imp
+1 Bog Raiders
+1 Bog Wraith
+1 Border Guard
+1 Breath of Life
+1 Bull Hippo
+1 Champion Lancer
+1 Charging Paladin
+1 Chorus of Woe
+1 Cinder Storm
+1 Coercion
+1 Coral Eel
+1 Counterspell
+1 Dakmor Ghoul
+1 Dakmor Lancer
+1 Dakmor Plague
+1 Dakmor Scorpion
+1 Dakmor Sorceress
+1 Dark Offering
+1 Denizen of the Deep
+1 Devastation
+1 Devoted Hero
+1 Devout Monk
+1 Dread Reaper
+1 Durkwood Boars
+1 Eager Cadet
+1 Earth Elemental
+1 Exhaustion
+1 Extinguish
+1 Eye Spy
+1 False Peace
+1 Feral Shadow
+1 Fire Elemental
+1 Fire Tempest
+1 Foot Soldiers
+1 Forest
+1 Gerrard's Wisdom
+1 Giant Octopus
+1 Goblin Cavaliers
+1 Goblin Chariot
+1 Goblin Commando
+1 Goblin General
+1 Goblin Glider
+1 Goblin Hero
+1 Goblin Lore
+1 Goblin Mountaineer
+1 Goblin Settler
+1 Gorilla Warrior
+1 Gravedigger
+1 Grim Tutor
+1 Grizzly Bears
+1 Hand of Death
+1 Hollow Dogs
+1 Howling Fury
+1 Hulking Goblin
+1 Hulking Ogre
+1 Ingenious Thief
+1 Island
+1 Jagged Lightning
+1 Knight Errant
+1 Last Chance
+1 Lava Axe
+1 Lone Wolf
+1 Loyal Sentry
+1 Lynx
+1 Man-o'-War
+1 Merfolk of the Pearl Trident
+1 Mind Rot
+1 Mons's Goblin Raiders
+1 Monstrous Growth
+1 Moon Sprite
+1 Mountain
+1 Muck Rats
+1 Natural Spring
+1 Nature's Cloak
+1 Nature's Lore
+1 Norwood Archers
+1 Norwood Ranger
+1 Ogre Warrior
+1 Owl Familiar
+1 Path of Peace
+1 Phantom Warrior
+1 Piracy
+1 Plains
+1 Pride of Lions
+1 Psychic Transfer
+1 Raging Goblin
+1 Raise Dead
+1 Ransack
+1 Ravenous Rats
+1 Relearn
+1 Relentless Assault
+1 Remove Soul
+1 Renewing Touch
+1 Righteous Charge
+1 Righteous Fury
+1 Royal Falcon
+1 Royal Trooper
+1 Sacred Nectar
+1 Scathe Zombies
+1 Scorching Spear
+1 Sea Eagle
+1 Serpent Warrior
+1 Shrieking Specter
+1 Silverback Ape
+1 Sleight of Hand
+1 Snapping Drake
+1 Soul Feast
+1 Southern Elephant
+1 Spitting Earth
+1 Squall
+1 Steadfastness
+1 Stone Rain
+1 Storm Crow
+1 Stream of Acid
+1 Summer Bloom
+1 Swamp
+1 Sylvan Basilisk
+1 Sylvan Yeti
+1 Thorn Elemental
+1 Thunder Dragon
+1 Tidings
+1 Time Ebb
+1 Time Warp
+1 Touch of Brilliance
+1 Trained Orgg
+1 Tremor
+1 Undo
+1 Untamed Wilds
+1 Venerable Monk
+1 Vengeance
+1 Veteran Cavalier
+1 Vizzerdrix
+1 Volcanic Dragon
+1 Volcanic Hammer
+1 Water Elemental
+1 Whiptail Wurm
+1 Whirlwind
+1 Wicked Pact
+1 Wild Griffin
+1 Wild Ox
+1 Willow Elf
+1 Wind Drake
+1 Wind Sail
+1 Wood Elves

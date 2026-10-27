@@ -1,0 +1,200 @@
+1 Alabaster Dragon
+1 Alluring Scent
+1 Anaconda
+1 Ancestral Memories
+1 Angelic Blessing
+1 Archangel
+1 Ardent Militia
+1 Armageddon
+1 Armored Pegasus
+1 Arrogant Vampire
+1 Assassin's Blade
+1 Balance of Power
+1 Baleful Stare
+1 Bee Sting
+1 Blaze
+1 Blessed Reversal
+1 Blinding Light
+1 Bog Imp
+1 Bog Raiders
+1 Bog Wraith
+1 Boiling Seas
+1 Border Guard
+1 Breath of Life
+1 Bull Hippo
+1 Burning Cloak
+1 Capricious Sorcerer
+1 Charging Bandits
+1 Charging Paladin
+1 Charging Rhino
+1 Cloak of Feathers
+1 Cloud Dragon
+1 Cloud Pirates
+1 Cloud Spirit
+1 Command of Unsummoning
+1 Coral Eel
+1 Craven Giant
+1 Craven Knight
+1 Cruel Bargain
+1 Cruel Fate
+1 Cruel Tutor
+1 Deep Wood
+1 Deep-Sea Serpent
+1 Defiant Stand
+1 Desert Drake
+1 Devastation
+1 Devoted Hero
+1 Djinn of the Lamp
+1 Dread Charge
+1 Dread Reaper
+1 Dry Spell
+1 Déjà Vu
+1 Earthquake
+1 Ebon Dragon
+1 Elite Cat Warrior
+1 Elven Cache
+1 Elvish Ranger
+1 Endless Cockroaches
+1 Exhaustion
+1 False Peace
+1 Feral Shadow
+1 Final Strike
+1 Fire Dragon
+1 Fire Imp
+1 Fire Snake
+1 Fire Tempest
+1 Flashfires
+1 Fleet-Footed Monk
+1 Flux
+1 Foot Soldiers
+1 Forest
+1 Forked Lightning
+1 Fruition
+1 Giant Octopus
+1 Giant Spider
+1 Gift of Estates
+1 Goblin Bully
+1 Gorilla Warrior
+1 Gravedigger
+1 Grizzly Bears
+1 Hand of Death
+1 Harsh Justice
+1 Highland Giant
+1 Hill Giant
+1 Horned Turtle
+1 Howling Fury
+1 Hulking Cyclops
+1 Hulking Goblin
+1 Hurricane
+1 Ingenious Thief
+1 Island
+1 Jungle Lion
+1 Keen-Eyed Archers
+1 King's Assassin
+1 Knight Errant
+1 Last Chance
+1 Lava Axe
+1 Lava Flow
+1 Lizard Warrior
+1 Man-o'-War
+1 Mercenary Knight
+1 Merfolk of the Pearl Trident
+1 Mind Knives
+1 Mind Rot
+1 Minotaur Warrior
+1 Mobilize
+1 Monstrous Growth
+1 Moon Sprite
+1 Mountain
+1 Mountain Goat
+1 Muck Rats
+1 Mystic Denial
+1 Natural Order
+1 Natural Spring
+1 Nature's Cloak
+1 Nature's Lore
+1 Nature's Ruin
+1 Needle Storm
+1 Noxious Toad
+1 Omen
+1 Owl Familiar
+1 Panther Warriors
+1 Path of Peace
+1 Personal Tutor
+1 Phantom Warrior
+1 Pillaging Horde
+1 Plains
+1 Plant Elemental
+1 Primeval Force
+1 Prosperity
+1 Pyroclasm
+1 Python
+1 Raging Cougar
+1 Raging Goblin
+1 Raging Minotaur
+1 Rain of Salt
+1 Rain of Tears
+1 Raise Dead
+1 Redwood Treefolk
+1 Regal Unicorn
+1 Renewing Dawn
+1 Rowan Treefolk
+1 Sacred Knight
+1 Sacred Nectar
+1 Scorching Spear
+1 Scorching Winds
+1 Seasoned Marshal
+1 Serpent Assassin
+1 Serpent Warrior
+1 Skeletal Crocodile
+1 Skeletal Snake
+1 Snapping Drake
+1 Sorcerous Sight
+1 Soul Shred
+1 Spined Wurm
+1 Spiritual Guardian
+1 Spitting Earth
+1 Spotted Griffin
+1 Stalking Tiger
+1 Starlight
+1 Starlit Angel
+1 Steadfastness
+1 Stern Marshal
+1 Stone Rain
+1 Storm Crow
+1 Summer Bloom
+1 Swamp
+1 Sylvan Tutor
+1 Symbol of Unsummoning
+1 Taunt
+1 Temporary Truce
+1 Theft of Dreams
+1 Thing from the Deep
+1 Thundering Wurm
+1 Thundermare
+1 Tidal Surge
+1 Time Ebb
+1 Touch of Brilliance
+1 Treetop Defense
+1 Undying Beast
+1 Untamed Wilds
+1 Valorous Charge
+1 Vampiric Feast
+1 Vampiric Touch
+1 Venerable Monk
+1 Vengeance
+1 Virtue's Ruin
+1 Volcanic Dragon
+1 Volcanic Hammer
+1 Wall of Granite
+1 Wall of Swords
+1 Warrior's Charge
+1 Whiptail Wurm
+1 Wicked Pact
+1 Willow Dryad
+1 Wind Drake
+1 Winds of Change
+1 Winter's Grasp
+1 Withering Gaze
+1 Wood Elves
+1 Wrath of God

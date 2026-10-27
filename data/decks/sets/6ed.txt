@@ -1,0 +1,335 @@
+1 Abduction
+1 Abyssal Hunter
+1 Abyssal Specter
+1 Adarkar Wastes
+1 Aether Flash
+1 Agonizing Memories
+1 Air Elemental
+1 Aladdin's Ring
+1 Amber Prison
+1 Anaba Bodyguard
+1 Anaba Shaman
+1 Ancestral Memories
+1 Animate Wall
+1 Ankh of Mishra
+1 Archangel
+1 Ardent Militia
+1 Armageddon
+1 Armored Pegasus
+1 Ashen Powder
+1 Ashnod's Altar
+1 Balduvian Barbarians
+1 Balduvian Horde
+1 Birds of Paradise
+1 Blaze
+1 Blight
+1 Blighted Shaman
+1 Blood Pet
+1 Bog Imp
+1 Bog Rats
+1 Bog Wraith
+1 Boil
+1 Boomerang
+1 Bottle of Suleiman
+1 Browse
+1 Brushland
+1 Burrowing
+1 Call of the Wild
+1 Castle
+1 Cat Warriors
+1 Celestial Dawn
+1 Charcoal Diamond
+1 Chill
+1 Circle of Protection: Black
+1 Circle of Protection: Blue
+1 Circle of Protection: Green
+1 Circle of Protection: Red
+1 Circle of Protection: White
+1 City of Brass
+1 Coercion
+1 Conquer
+1 Counterspell
+1 Creeping Mold
+1 Crimson Hellkite
+1 Crusade
+1 Crystal Rod
+1 Crystal Vein
+1 Cursed Totem
+1 D'Avenant Archer
+1 Dancing Scimitar
+1 Daraja Griffin
+1 Daring Apprentice
+1 Deflection
+1 Dense Foliage
+1 Derelor
+1 Desertion
+1 Diminishing Returns
+1 Dingus Egg
+1 Disenchant
+1 Disrupting Scepter
+1 Divine Transformation
+1 Doomsday
+1 Dragon Engine
+1 Dragon Mask
+1 Dread of Night
+1 Dream Cache
+1 Drudge Skeletons
+1 Dry Spell
+1 Dwarven Ruins
+1 Early Harvest
+1 Earthquake
+1 Ebon Stronghold
+1 Ekundu Griffin
+1 Elder Druid
+1 Elven Cache
+1 Elven Riders
+1 Elvish Archers
+1 Enfeeblement
+1 Enlightened Tutor
+1 Ethereal Champion
+1 Evil Eye of Orms-by-Gore
+1 Exile
+1 Fallen Angel
+1 Fallow Earth
+1 Familiar Ground
+1 Fatal Blow
+1 Fear
+1 Feast of the Unicorn
+1 Femeref Archers
+1 Feral Shadow
+1 Fervor
+1 Final Fortune
+1 Fire Diamond
+1 Fire Elemental
+1 Firebreathing
+1 Fit of Rage
+1 Flame Spirit
+1 Flash
+1 Flashfires
+1 Flight
+1 Flying Carpet
+1 Fog
+1 Fog Elemental
+1 Forbidden Crypt
+1 Forest
+1 Forget
+1 Fountain of Youth
+1 Fyndhorn Brownie
+1 Fyndhorn Elder
+1 Gaseous Form
+1 Giant Growth
+1 Giant Spider
+1 Giant Strength
+1 Glacial Wall
+1 Glasses of Urza
+1 Goblin Digging Team
+1 Goblin Elite Infantry
+1 Goblin Hero
+1 Goblin King
+1 Goblin Recruiter
+1 Goblin Warrens
+1 Gorilla Chieftain
+1 Gravebane Zombie
+1 Gravedigger
+1 Greed
+1 Grinning Totem
+1 Grizzly Bears
+1 Hammer of Bogardan
+1 Harmattan Efreet
+1 Havenwood Battleground
+1 Healing Salve
+1 Heavy Ballista
+1 Hecatomb
+1 Hero's Resolve
+1 Hidden Horror
+1 Horned Turtle
+1 Howl from Beyond
+1 Howling Mine
+1 Hulking Cyclops
+1 Hurricane
+1 Icatian Town
+1 Illicit Auction
+1 Infantry Veteran
+1 Infernal Contract
+1 Inferno
+1 Insight
+1 Inspiration
+1 Iron Star
+1 Island
+1 Ivory Cup
+1 Jade Monolith
+1 Jalum Tome
+1 Jayemdae Tome
+1 Jokulhaups
+1 Juxtapose
+1 Karplusan Forest
+1 Kismet
+1 Kjeldoran Dead
+1 Kjeldoran Royal Guard
+1 Lead Golem
+1 Leshrac's Rite
+1 Library of Lat-Nam
+1 Light of Day
+1 Lightning Blast
+1 Living Lands
+1 Llanowar Elves
+1 Longbow Archer
+1 Lord of Atlantis
+1 Lost Soul
+1 Lure
+1 Mana Prism
+1 Mana Short
+1 Manabarbs
+1 Marble Diamond
+1 Maro
+1 Meekstone
+1 Memory Lapse
+1 Merfolk of the Pearl Trident
+1 Mesa Falcon
+1 Millstone
+1 Mind Warp
+1 Mischievous Poltergeist
+1 Moss Diamond
+1 Mountain
+1 Mountain Goat
+1 Mystic Compass
+1 Mystical Tutor
+1 Nature's Resurgence
+1 Necrosavant
+1 Nightmare
+1 Obsianus Golem
+1 Orcish Artillery
+1 Orcish Oriflamme
+1 Order of the Sacred Torch
+1 Ornithopter
+1 Pacifism
+1 Painful Memories
+1 Panther Warriors
+1 Patagia Golem
+1 Pearl Dragon
+1 Pentagram of the Ages
+1 Perish
+1 Pestilence
+1 Phantasmal Terrain
+1 Phantom Warrior
+1 Phyrexian Vault
+1 Pillage
+1 Plains
+1 Polymorph
+1 Power Sink
+1 Pradesh Gypsies
+1 Primal Clay
+1 Prodigal Sorcerer
+1 Prosperity
+1 Psychic Transfer
+1 Psychic Venom
+1 Pyrotechnics
+1 Python
+1 Radjan Spirit
+1 Rag Man
+1 Raging Goblin
+1 Raise Dead
+1 Rampant Growth
+1 Razortooth Rats
+1 Recall
+1 Reckless Embermage
+1 Redwood Treefolk
+1 Regal Unicorn
+1 Regeneration
+1 Relearn
+1 Relentless Assault
+1 Remedy
+1 Remove Soul
+1 Reprisal
+1 Resistance Fighter
+1 Reverse Damage
+1 River Boa
+1 Rod of Ruin
+1 Rowen
+1 Ruins of Trokair
+1 Sabretooth Tiger
+1 Sage Owl
+1 Samite Healer
+1 Scaled Wurm
+1 Scathe Zombies
+1 Sea Monster
+1 Segovian Leviathan
+1 Sengir Autocrat
+1 Serenity
+1 Serra's Blessing
+1 Shanodin Dryads
+1 Shatter
+1 Shatterstorm
+1 Shock
+1 Sibilant Spirit
+1 Skull Catapult
+1 Sky Diamond
+1 Snake Basket
+1 Soldevi Sage
+1 Soul Net
+1 Spell Blast
+1 Spirit Link
+1 Spitting Drake
+1 Spitting Earth
+1 Stalking Tiger
+1 Standing Troops
+1 Staunch Defenders
+1 Stone Rain
+1 Storm Cauldron
+1 Storm Crow
+1 Strands of Night
+1 Stream of Life
+1 Stromgald Cabal
+1 Stupor
+1 Sulfurous Springs
+1 Summer Bloom
+1 Sunweb
+1 Svyelunite Temple
+1 Swamp
+1 Syphon Soul
+1 Talruum Minotaur
+1 Tariff
+1 Teferi's Puzzle Box
+1 Terror
+1 The Hive
+1 Thicket Basilisk
+1 Throne of Bone
+1 Tidal Surge
+1 Trained Armodon
+1 Tranquil Grove
+1 Tranquility
+1 Tremor
+1 Tundra Wolves
+1 Uktabi Orangutan
+1 Uktabi Wildcats
+1 Underground River
+1 Unseen Walker
+1 Unsummon
+1 Untamed Wilds
+1 Unyaro Griffin
+1 Vampiric Tutor
+1 Venerable Monk
+1 Verduran Enchantress
+1 Vertigo
+1 Viashino Warrior
+1 Vitalize
+1 Vodalian Soldiers
+1 Volcanic Dragon
+1 Volcanic Geyser
+1 Waiting in the Weeds
+1 Wall of Air
+1 Wall of Fire
+1 Wall of Swords
+1 Wand of Denial
+1 Warmth
+1 Warrior's Honor
+1 Warthog
+1 Wild Growth
+1 Wind Drake
+1 Wind Spirit
+1 Wooden Sphere
+1 Worldly Tutor
+1 Wrath of God
+1 Wyluli Wolf
+1 Zombie Master
+1 Zur's Weirding

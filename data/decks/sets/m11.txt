@@ -1,0 +1,234 @@
+1 Acidic Slime
+1 Act of Treason
+1 Aether Adept
+1 Air Servant
+1 Ajani Goldmane
+1 Ajani's Mantra
+1 Ajani's Pridemate
+1 Alluring Siren
+1 Ancient Hellkite
+1 Angel's Feather
+1 Angelic Arbiter
+1 Arc Runner
+1 Armored Ascension
+1 Armored Cancrix
+1 Assassinate
+1 Assault Griffin
+1 Augury Owl
+1 Autumn's Veil
+1 Awakener Druid
+1 Azure Drake
+1 Back to Nature
+1 Baneslayer Angel
+1 Barony Vampire
+1 Berserkers of Blood Ridge
+1 Birds of Paradise
+1 Black Knight
+1 Blinding Mage
+1 Blood Tithe
+1 Bloodcrazed Goblin
+1 Bloodthrone Vampire
+1 Bog Raiders
+1 Brindle Boar
+1 Brittle Effigy
+1 Call to Mind
+1 Cancel
+1 Canyon Minotaur
+1 Captivating Vampire
+1 Celestial Purge
+1 Chandra Nalaar
+1 Chandra's Outrage
+1 Chandra's Spitfire
+1 Child of Night
+1 Clone
+1 Cloud Crusader
+1 Cloud Elemental
+1 Combust
+1 Condemn
+1 Conundrum Sphinx
+1 Corrupt
+1 Crystal Ball
+1 Cudgel Troll
+1 Cultivate
+1 Cyclops Gladiator
+1 Dark Tutelage
+1 Day of Judgment
+1 Deathmark
+1 Demolish
+1 Demon of Death's Gate
+1 Demon's Horn
+1 Destructive Force
+1 Diabolic Tutor
+1 Diminish
+1 Disentomb
+1 Doom Blade
+1 Dragon's Claw
+1 Dragonskull Summit
+1 Drowned Catacomb
+1 Dryad's Favor
+1 Duress
+1 Duskdale Wurm
+1 Earth Servant
+1 Elite Vanguard
+1 Elixir of Immortality
+1 Elvish Archdruid
+1 Ember Hauler
+1 Excommunicate
+1 Fauna Shaman
+1 Fiery Hellhound
+1 Fire Servant
+1 Fireball
+1 Flashfreeze
+1 Fling
+1 Fog
+1 Foresee
+1 Forest
+1 Frost Titan
+1 Gaea's Revenge
+1 Gargoyle Sentinel
+1 Garruk Wildspeaker
+1 Garruk's Companion
+1 Garruk's Packleader
+1 Giant Growth
+1 Giant Spider
+1 Glacial Fortress
+1 Goblin Balloon Brigade
+1 Goblin Chieftain
+1 Goblin Piker
+1 Goblin Tunneler
+1 Goldenglow Moth
+1 Grave Titan
+1 Gravedigger
+1 Greater Basilisk
+1 Harbor Serpent
+1 Haunting Echoes
+1 Hoarding Dragon
+1 Holy Strength
+1 Honor of the Pure
+1 Hornet Sting
+1 Howling Banshee
+1 Hunters' Feast
+1 Ice Cage
+1 Incite
+1 Infantry Veteran
+1 Inferno Titan
+1 Inspired Charge
+1 Island
+1 Jace Beleren
+1 Jace's Erasure
+1 Jace's Ingenuity
+1 Jinxed Idol
+1 Juggernaut
+1 Knight Exemplar
+1 Kraken's Eye
+1 Lava Axe
+1 Leyline of Anticipation
+1 Leyline of Punishment
+1 Leyline of Sanctity
+1 Leyline of Vitality
+1 Leyline of the Void
+1 Lightning Bolt
+1 Liliana Vess
+1 Liliana's Caress
+1 Liliana's Specter
+1 Llanowar Elves
+1 Magma Phoenix
+1 Mana Leak
+1 Manic Vandal
+1 Maritime Guard
+1 Mass Polymorph
+1 Merfolk Sovereign
+1 Merfolk Spy
+1 Mighty Leap
+1 Mind Control
+1 Mind Rot
+1 Mitotic Slime
+1 Mountain
+1 Mystifying Maze
+1 Nantuko Shade
+1 Naturalize
+1 Nature's Spiral
+1 Necrotic Plague
+1 Negate
+1 Nether Horror
+1 Nightwing Shade
+1 Obstinate Baloth
+1 Ornithopter
+1 Overwhelming Stampede
+1 Pacifism
+1 Palace Guard
+1 Phantom Beast
+1 Phylactery Lich
+1 Plains
+1 Platinum Angel
+1 Plummet
+1 Preordain
+1 Primal Cocoon
+1 Primeval Titan
+1 Prized Unicorn
+1 Prodigal Pyromancer
+1 Protean Hydra
+1 Pyretic Ritual
+1 Pyroclasm
+1 Quag Sickness
+1 Reassembling Skeleton
+1 Redirect
+1 Relentless Rats
+1 Reverberate
+1 Rise from the Grave
+1 Roc Egg
+1 Rootbound Crag
+1 Rotting Legion
+1 Royal Assassin
+1 Runeclaw Bear
+1 Sacred Wolf
+1 Safe Passage
+1 Scroll Thief
+1 Serra Angel
+1 Serra Ascendant
+1 Shiv's Embrace
+1 Siege Mastodon
+1 Sign in Blood
+1 Silence
+1 Silvercoat Lion
+1 Sleep
+1 Solemn Offering
+1 Sorcerer's Strongbox
+1 Spined Wurm
+1 Squadron Hawk
+1 Stabbing Pain
+1 Steel Overseer
+1 Stone Golem
+1 Stormfront Pegasus
+1 Stormtide Leviathan
+1 Sun Titan
+1 Sunpetal Grove
+1 Swamp
+1 Sword of Vengeance
+1 Sylvan Ranger
+1 Temple Bell
+1 Terramorphic Expanse
+1 Thunder Strike
+1 Time Reversal
+1 Tireless Missionaries
+1 Tome Scour
+1 Traumatize
+1 Triskelion
+1 Unholy Strength
+1 Unsummon
+1 Vengeful Archon
+1 Viscera Seer
+1 Volcanic Strength
+1 Voltaic Key
+1 Vulshok Berserker
+1 Wall of Frost
+1 Wall of Vines
+1 War Priest of Thune
+1 Warlord's Axe
+1 Water Servant
+1 Whispersilk Cloak
+1 White Knight
+1 Wild Evocation
+1 Wild Griffin
+1 Wurm's Tooth
+1 Yavimaya Wurm

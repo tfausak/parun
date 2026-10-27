@@ -1,0 +1,234 @@
+1 Acidic Slime
+1 Acolyte of Xathrid
+1 Act of Treason
+1 Air Elemental
+1 Ajani Goldmane
+1 Alluring Siren
+1 Angel's Feather
+1 Angel's Mercy
+1 Ant Queen
+1 Armored Ascension
+1 Assassinate
+1 Awakener Druid
+1 Ball Lightning
+1 Baneslayer Angel
+1 Berserkers of Blood Ridge
+1 Birds of Paradise
+1 Black Knight
+1 Blinding Mage
+1 Bog Wraith
+1 Bogardan Hellkite
+1 Borderland Ranger
+1 Bountiful Harvest
+1 Bramble Creeper
+1 Burning Inquiry
+1 Burst of Speed
+1 Cancel
+1 Canyon Minotaur
+1 Capricious Efreet
+1 Captain of the Watch
+1 Celestial Purge
+1 Cemetery Reaper
+1 Centaur Courser
+1 Chandra Nalaar
+1 Child of Night
+1 Clone
+1 Coat of Arms
+1 Consume Spirit
+1 Convincing Mirage
+1 Coral Merfolk
+1 Craw Wurm
+1 Cudgel Troll
+1 Darksteel Colossus
+1 Deadly Recluse
+1 Deathmark
+1 Demon's Horn
+1 Diabolic Tutor
+1 Disentomb
+1 Disorient
+1 Divination
+1 Divine Verdict
+1 Djinn of Wishes
+1 Doom Blade
+1 Dragon Whelp
+1 Dragon's Claw
+1 Dragonskull Summit
+1 Dread Warlock
+1 Drowned Catacomb
+1 Drudge Skeletons
+1 Duress
+1 Earthquake
+1 Elite Vanguard
+1 Elvish Archdruid
+1 Elvish Piper
+1 Elvish Visionary
+1 Emerald Oryx
+1 Enormous Baloth
+1 Entangling Vines
+1 Essence Scatter
+1 Excommunicate
+1 Fabricate
+1 Fiery Hellhound
+1 Fireball
+1 Firebreathing
+1 Flashfreeze
+1 Fog
+1 Forest
+1 Gargoyle Castle
+1 Garruk Wildspeaker
+1 Giant Growth
+1 Giant Spider
+1 Glacial Fortress
+1 Glorious Charge
+1 Goblin Artillery
+1 Goblin Chieftain
+1 Goblin Piker
+1 Gorgon Flail
+1 Gravedigger
+1 Great Sable Stag
+1 Griffin Sentinel
+1 Guardian Seraph
+1 Harm's Way
+1 Haunting Echoes
+1 Hive Mind
+1 Holy Strength
+1 Honor of the Pure
+1 Horned Turtle
+1 Howl of the Night Pack
+1 Howling Banshee
+1 Howling Mine
+1 Hypnotic Specter
+1 Ice Cage
+1 Ignite Disorder
+1 Illusionary Servant
+1 Indestructibility
+1 Inferno Elemental
+1 Island
+1 Jace Beleren
+1 Jackal Familiar
+1 Jump
+1 Kalonian Behemoth
+1 Kelinore Bat
+1 Kindled Fury
+1 Kraken's Eye
+1 Lava Axe
+1 Levitation
+1 Lifelink
+1 Lightning Bolt
+1 Lightning Elemental
+1 Lightwielder Paladin
+1 Liliana Vess
+1 Llanowar Elves
+1 Looming Shade
+1 Lurking Predators
+1 Magebane Armor
+1 Magma Phoenix
+1 Manabarbs
+1 Master of the Wild Hunt
+1 Megrim
+1 Merfolk Looter
+1 Merfolk Sovereign
+1 Mesa Enchantress
+1 Might of Oaks
+1 Mind Control
+1 Mind Rot
+1 Mind Shatter
+1 Mind Spring
+1 Mirror of Fate
+1 Mist Leopard
+1 Mold Adder
+1 Mountain
+1 Naturalize
+1 Nature's Spiral
+1 Negate
+1 Nightmare
+1 Oakenform
+1 Open the Vaults
+1 Ornithopter
+1 Overrun
+1 Pacifism
+1 Palace Guard
+1 Panic Attack
+1 Phantom Warrior
+1 Pithing Needle
+1 Plains
+1 Planar Cleansing
+1 Platinum Angel
+1 Polymorph
+1 Ponder
+1 Prized Unicorn
+1 Prodigal Pyromancer
+1 Protean Hydra
+1 Pyroclasm
+1 Raging Goblin
+1 Rampant Growth
+1 Razorfoot Griffin
+1 Regenerate
+1 Relentless Rats
+1 Rhox Pikemaster
+1 Righteousness
+1 Rise from the Grave
+1 Rod of Ruin
+1 Rootbound Crag
+1 Royal Assassin
+1 Runeclaw Bear
+1 Safe Passage
+1 Sage Owl
+1 Sanguine Bond
+1 Seismic Strike
+1 Serpent of the Endless Sea
+1 Serra Angel
+1 Shatter
+1 Shivan Dragon
+1 Siege Mastodon
+1 Siege-Gang Commander
+1 Sign in Blood
+1 Silence
+1 Silvercoat Lion
+1 Sleep
+1 Snapping Drake
+1 Solemn Offering
+1 Soul Bleed
+1 Soul Warden
+1 Sparkmage Apprentice
+1 Spellbook
+1 Sphinx Ambassador
+1 Stampeding Rhino
+1 Stone Giant
+1 Stormfront Pegasus
+1 Sunpetal Grove
+1 Swamp
+1 Telepathy
+1 Tempest of Light
+1 Tendrils of Corruption
+1 Terramorphic Expanse
+1 Time Warp
+1 Tome Scour
+1 Traumatize
+1 Trumpet Blast
+1 Twincast
+1 Undead Slayer
+1 Underworld Dreams
+1 Unholy Strength
+1 Unsummon
+1 Vampire Aristocrat
+1 Vampire Nocturnus
+1 Veteran Armorsmith
+1 Veteran Swordsmith
+1 Viashino Spearhunter
+1 Wall of Bone
+1 Wall of Faith
+1 Wall of Fire
+1 Wall of Frost
+1 Warp World
+1 Warpath Ghoul
+1 Weakness
+1 Whispersilk Cloak
+1 White Knight
+1 Wind Drake
+1 Windstorm
+1 Wurm's Tooth
+1 Xathrid Demon
+1 Yawning Fissure
+1 Zephyr Sprite
+1 Zombie Goliath
