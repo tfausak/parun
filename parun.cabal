@@ -119,6 +119,8 @@ library codec
     Parun.Codec.ActivationRestriction
     Parun.Codec.ActivationRestrictionSpec
     Parun.Codec.ActivationSpec
+    Parun.Codec.ActivationsThisTurn
+    Parun.Codec.ActivationsThisTurnSpec
     Parun.Codec.Activator
     Parun.Codec.ActivatorSpec
     Parun.Codec.ActiveAttackProhibition
@@ -886,6 +888,10 @@ library codec
     Parun.Codec.LoopMembers
     Parun.Codec.LoopMembersSpec
     Parun.Codec.Loyalty
+    Parun.Codec.LoyaltyClause
+    Parun.Codec.LoyaltyClauseSpec
+    Parun.Codec.LoyaltyGrant
+    Parun.Codec.LoyaltyGrantSpec
     Parun.Codec.LoyaltyKind
     Parun.Codec.LoyaltyKindSpec
     Parun.Codec.LoyaltySpec
@@ -1659,6 +1665,7 @@ library engine
     Parun.Engine.Interchangeable.Mentions
     Parun.Engine.Keyword
     Parun.Engine.Learn
+    Parun.Engine.Loyalty
     Parun.Engine.Mana
     Parun.Engine.ManaAbility
     Parun.Engine.ManaCount
@@ -2313,6 +2320,7 @@ library types
     Parun.Types.ActivationProhibition
     Parun.Types.ActivationRestriction
     Parun.Types.Activations
+    Parun.Types.ActivationsThisTurn
     Parun.Types.Activator
     Parun.Types.ActiveAttackProhibition
     Parun.Types.ActiveAttackRequirement
@@ -2750,6 +2758,8 @@ library types
     Parun.Types.LoopMembers
     Parun.Types.LoopTrail
     Parun.Types.Loyalty
+    Parun.Types.LoyaltyClause
+    Parun.Types.LoyaltyGrant
     Parun.Types.LoyaltyKind
     Parun.Types.MadnessCost
     Parun.Types.MakeForetold

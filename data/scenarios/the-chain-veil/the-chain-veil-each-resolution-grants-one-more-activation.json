@@ -1,0 +1,31 @@
+{
+  "description": "CR 606.3 The Chain Veil resolved twice lets Ajani Goldmane activate three times this turn, and not a fourth",
+  "note": "The Veil's fifth ruling: Voltaic Key untaps it between activations, and each resolution adds one more activation rather than merely lifting the limit.",
+  "board": {"active": "alice", "step": "PrecombatMain", "seats": [
+    {"name": "alice", "battlefield": [
+      {"card": "The Chain Veil", "label": "veil"},
+      {"card": "Voltaic Key", "label": "key"},
+      {"card": "Ajani Goldmane", "label": "ajani", "counters": [{"key": {"type": "Loyalty"}, "value": 4}]},
+      {"card": "Plains", "label": "p1"}, {"card": "Plains", "label": "p2"}, {"card": "Plains", "label": "p3"}, {"card": "Plains", "label": "p4"},
+      {"card": "Plains", "label": "p5"},
+      {"card": "Plains", "label": "p6"}, {"card": "Plains", "label": "p7"}, {"card": "Plains", "label": "p8"}, {"card": "Plains", "label": "p9"}],
+     "library": [{"card": "Island"}, {"card": "Island"}]},
+    {"name": "bob", "library": [{"card": "Island"}, {"card": "Island"}]}]},
+  "timeline": [
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "do": {"Activate": {"object": "$veil", "ability": 0, "mana": ["$p1", "$p2", "$p3", "$p4", null]}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "do": "Pass"},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "do": {"Activate": {"object": "$key", "ability": 0, "targets": ["$veil"], "mana": ["$p5", null]}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "do": "Pass"},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "do": {"Activate": {"object": "$veil", "ability": 0, "mana": ["$p6", "$p7", "$p8", "$p9"]}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "do": "Pass"},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "do": {"Activate": {"object": "$ajani", "ability": 0}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "do": "Pass"},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "do": {"Activate": {"object": "$ajani", "ability": 0}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "do": "Pass"},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "do": {"Activate": {"object": "$ajani", "ability": 0}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "do": "Pass"},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "check": {"Counters": {"object": "$ajani", "kind": {"type": "Loyalty"}, "count": 7}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "check": {"Life": {"player": "alice", "life": 26}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "refuse": {"Activate": {"object": "$ajani", "ability": 0}}}
+  ]
+}

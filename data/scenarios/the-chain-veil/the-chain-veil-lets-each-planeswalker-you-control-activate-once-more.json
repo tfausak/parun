@@ -1,0 +1,33 @@
+{
+  "description": "CR 606.3 The Chain Veil lets each planeswalker alice controls, one entering after it resolved included, activate one more loyalty ability this turn, and no more",
+  "note": "Ajani is activated before the Veil and Jace is cast after it (the Veil's second ruling), so each goes twice and the third try is refused. Activating them also keeps the Veil's own trigger away.",
+  "board": {"active": "alice", "step": "PrecombatMain", "seats": [
+    {"name": "alice", "hand": [{"card": "Jace Beleren", "label": "jace"}],
+     "battlefield": [
+      {"card": "The Chain Veil", "label": "veil"},
+      {"card": "Ajani Goldmane", "label": "ajani", "counters": [{"key": {"type": "Loyalty"}, "value": 4}]},
+      {"card": "Plains", "label": "p1"}, {"card": "Plains", "label": "p2"}, {"card": "Plains", "label": "p3"}, {"card": "Plains", "label": "p4"},
+      {"card": "Island", "label": "i1"}, {"card": "Island", "label": "i2"}, {"card": "Island", "label": "i3"}],
+     "library": [{"card": "Island"}, {"card": "Island"}, {"card": "Island"}, {"card": "Island"}, {"card": "Island"}, {"card": "Island"}]},
+    {"name": "bob", "library": [{"card": "Island"}, {"card": "Island"}, {"card": "Island"}, {"card": "Island"}, {"card": "Island"}, {"card": "Island"}]}]},
+  "timeline": [
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "do": {"Activate": {"object": "$ajani", "ability": 0, "mana": [null]}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "do": "Pass"},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "do": {"Activate": {"object": "$veil", "ability": 0, "mana": ["$p1", "$p2", "$p3", "$p4", null]}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "do": "Pass"},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "do": {"Cast": {"object": "$jace", "mana": ["$i1", "$i2", "$i3"]}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "do": "Pass"},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "do": {"Activate": {"object": "$ajani", "ability": 0}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "do": "Pass"},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "do": {"Activate": {"object": "Jace Beleren", "ability": 0}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "do": "Pass"},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "do": {"Activate": {"object": "Jace Beleren", "ability": 0}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "do": "Pass"},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "check": {"Counters": {"object": "$ajani", "kind": {"type": "Loyalty"}, "count": 6}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "check": {"Counters": {"object": "Jace Beleren", "kind": {"type": "Loyalty"}, "count": 7}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "check": {"Life": {"player": "alice", "life": 24}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "refuse": {"Activate": {"object": "$ajani", "ability": 0}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "refuse": {"Activate": {"object": "Jace Beleren", "ability": 0}}},
+    {"turn": 2, "step": "Upkeep", "player": "bob", "check": {"Life": {"player": "alice", "life": 24}}}
+  ]
+}

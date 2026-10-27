@@ -1,0 +1,184 @@
+{
+  "faces": [
+    {
+      "activatedAbilities": [
+        {
+          "cost": {
+            "components": [
+              {
+                "type": "TapThis"
+              }
+            ],
+            "mana": [
+              {
+                "type": "Generic",
+                "value": 4
+              }
+            ]
+          },
+          "modal": {
+            "modes": [
+              {
+                "clauses": [
+                  {
+                    "effects": [
+                      {
+                        "type": "AffectPlayers",
+                        "value": {
+                          "duration": {
+                            "type": "UntilEndOfTurn"
+                          },
+                          "effect": {
+                            "type": "LoyaltyGrant",
+                            "value": {
+                              "permanents": {
+                                "type": "And",
+                                "value": [
+                                  {
+                                    "type": "HasCardType",
+                                    "value": {
+                                      "type": "Planeswalker"
+                                    }
+                                  },
+                                  {
+                                    "type": "HeldBy",
+                                    "value": {
+                                      "holder": {
+                                        "type": "Controller"
+                                      },
+                                      "relation": {
+                                        "type": "You"
+                                      }
+                                    }
+                                  },
+                                  {
+                                    "type": "IsInZone",
+                                    "value": {
+                                      "type": "Battlefield"
+                                    }
+                                  }
+                                ]
+                              },
+                              "relaxes": {
+                                "type": "OncePerTurn"
+                              }
+                            }
+                          },
+                          "players": {
+                            "type": "Scoped",
+                            "value": {
+                              "type": "You"
+                            }
+                          }
+                        }
+                      }
+                    ]
+                  }
+                ]
+              }
+            ]
+          }
+        }
+      ],
+      "manaCost": [
+        {
+          "type": "Generic",
+          "value": 4
+        }
+      ],
+      "name": "The Chain Veil",
+      "oracleText": "At the beginning of your end step, if you didn't activate a loyalty ability of a planeswalker this turn, you lose 2 life.\n{4}, {T}: For each planeswalker you control, you may activate one of its loyalty abilities once this turn as though none of its loyalty abilities have been activated this turn.",
+      "triggeredAbilities": [
+        {
+          "condition": {
+            "type": "StepBegins",
+            "value": {
+              "phase": {
+                "type": "Ending",
+                "value": {
+                  "type": "EndStep"
+                }
+              },
+              "scope": {
+                "type": "ControllersTurn"
+              }
+            }
+          },
+          "intervening": {
+            "type": "Compares",
+            "value": {
+              "comparison": {
+                "type": "Exactly"
+              },
+              "measured": {
+                "type": "ActivationsThisTurn",
+                "value": {
+                  "activator": {
+                    "type": "Relative",
+                    "value": {
+                      "type": "You"
+                    }
+                  },
+                  "criteria": {
+                    "whichLoyalty": {
+                      "type": "LoyaltyAbility"
+                    }
+                  },
+                  "source": {
+                    "type": "HasCardType",
+                    "value": {
+                      "type": "Planeswalker"
+                    }
+                  }
+                }
+              },
+              "threshold": {
+                "type": "Literal",
+                "value": 0
+              }
+            }
+          },
+          "modal": {
+            "modes": [
+              {
+                "clauses": [
+                  {
+                    "effects": [
+                      {
+                        "type": "LoseLife",
+                        "value": {
+                          "player": {
+                            "type": "Relative",
+                            "value": {
+                              "type": "You"
+                            }
+                          },
+                          "quantity": {
+                            "type": "Literal",
+                            "value": 2
+                          }
+                        }
+                      }
+                    ]
+                  }
+                ]
+              }
+            ]
+          }
+        }
+      ],
+      "typeLine": {
+        "supertypes": [
+          {
+            "type": "Legendary"
+          }
+        ],
+        "types": [
+          {
+            "type": "Artifact"
+          }
+        ]
+      }
+    }
+  ]
+}

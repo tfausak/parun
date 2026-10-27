@@ -16,6 +16,7 @@ import qualified Parun.Types.InZone as InZone
 import qualified Parun.Types.Keyword as Keyword
 import qualified Parun.Types.KeywordDesignator as KeywordDesignator
 import qualified Parun.Types.LandAllowance as LandAllowance
+import qualified Parun.Types.LoyaltyGrant as LoyaltyGrant
 import qualified Parun.Types.ManaFilter as ManaFilter
 import qualified Parun.Types.ModifiedRoll as ModifiedRoll
 import qualified Parun.Types.PlayerCounterKind as PlayerCounterKind
@@ -113,9 +114,10 @@ data PlayerEffect
   | -- | CR 602.5d / 602.5e / Leonin Shikari: this player may activate abilities
     -- under this rule-702 keyword any time they could cast an instant.
     ActivateKeywordAtInstantSpeed (KeywordDesignator.KeywordDesignator Keyword.Keyword)
-  | -- | CR 606.3 / The Wandering Emperor: this player may activate the loyalty
-    -- abilities of a matching permanent any time they could cast an instant.
-    ActivateLoyaltyAtInstantSpeed (Filter.Filter Keyword.Keyword)
+  | -- | CR 606.3 / The Wandering Emperor, The Chain Veil: this player may
+    -- activate the loyalty abilities of a matching permanent past one clause of
+    -- that rule.
+    LoyaltyGrant LoyaltyGrant.LoyaltyGrant
   | -- | CR 602.2 / 106.12 / Piracy: this player may tap matching permanents
     -- they don't control for mana.
     MayTapForMana TapForMana.TapForMana

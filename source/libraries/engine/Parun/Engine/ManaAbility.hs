@@ -67,7 +67,7 @@ import qualified Parun.Types.ZonePair as ZonePair
 
 -- CR 605.1a: an activated ability is a mana ability if it could add mana AND
 -- doesn't target AND moves no card to or from a library AND is not itself a
--- loyalty ability (CR 606.2, which Parun.Engine.Cost.isLoyaltyCost answers; no
+-- loyalty ability (CR 606.2, which Parun.Engine.Loyalty.isLoyaltyCost answers; no
 -- loyalty ability in the pool adds mana, so the clause is inert rather than
 -- checked here). Read at three sites:
 -- Mana.manaRoutesOfGiven includes a mana ability as a source,

@@ -20,6 +20,7 @@ import qualified Parun.Engine.Subtype as Subtype.Engine
 import qualified Parun.Engine.Turn as Turn
 import qualified Parun.Types.AbilityAct as AbilityAct
 import qualified Parun.Types.ActivatedAbilitySource as ActivatedAbilitySource
+import qualified Parun.Types.ActivationsThisTurn as ActivationsThisTurn
 import qualified Parun.Types.AgainstExiledPile as AgainstExiledPile
 import qualified Parun.Types.AgainstLastCardExiledWith as AgainstLastCardExiledWith
 import qualified Parun.Types.AgainstSlot as AgainstSlot
@@ -929,6 +930,21 @@ evaluateAgainst viewOf context gs announcedOn mOid mView quantity =
                         && PastActivation.ability past == Just (ActivatedAbilitySource.ability activated)
                  in length (filter this (Foldable.toList (GameState.activationsThisTurn gs)))
               _ -> 0
+        -- CR 602.2 / 608.2i: the turn's activations by that player, off the same
+        -- log, each asked of its source as the activation began (Count.pastView)
+        -- and of the ability (Count.activationMeets). The snapshot is what answers
+        -- The Chain Veil's ruling that a planeswalker gone from the battlefield
+        -- still counts. Absent activations are 0, an answered question; only the
+        -- reference can go unanswered, SpellsCastThisTurn's posture.
+        -- data/scenarios/the-chain-veil proves the count.
+        Quantity.ActivationsThisTurn tally -> case playersOf (ActivationsThisTurn.activator tally) of
+          Just [pid] ->
+            let counts past =
+                  PastActivation.activator past == pid
+                    && Filter.matches context (Count.pastView (PastActivation.source past)) (ActivationsThisTurn.source tally)
+                    && Count.activationMeets (ActivationsThisTurn.criteria tally) past
+             in Just (toInteger (length (filter counts (Foldable.toList (GameState.activationsThisTurn gs)))))
+          _ -> Nothing
         -- CR 702.40a: how many spells were cast this turn before the object this
         -- evaluation is aimed at. Keyed on that object's OWN cast in the log, so a
         -- spell cast after it -- in response to the storm trigger -- is not
@@ -1394,6 +1410,7 @@ objectSlots quantity = case quantity of
   Quantity.SpellsCastLastTurn _ -> Set.empty
   Quantity.SpellsCastThisTurn _ -> Set.empty
   Quantity.TimesThisTurn _ -> Set.empty
+  Quantity.ActivationsThisTurn _ -> Set.empty
   Quantity.SpellsCastBefore -> Set.empty
   Quantity.PermanentsDiedThisTurn -> Set.empty
   Quantity.SpellsCastUsingThisTurn _ -> Set.empty
@@ -1675,6 +1692,7 @@ readsX quantity = case quantity of
   Quantity.SpellsCastLastTurn _ -> False
   Quantity.SpellsCastThisTurn _ -> False
   Quantity.TimesThisTurn _ -> False
+  Quantity.ActivationsThisTurn _ -> False
   Quantity.SpellsCastBefore -> False
   Quantity.PermanentsDiedThisTurn -> False
   Quantity.SpellsCastUsingThisTurn _ -> False
