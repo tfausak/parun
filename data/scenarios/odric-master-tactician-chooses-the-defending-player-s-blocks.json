@@ -1,0 +1,33 @@
+{
+  "description": "CR 509.1a Odric, Master Tactician attacking with three other creatures has its controller choose which creatures block and how",
+  "note": "The DeclareBlockers prompt is keyed by its decider, so alice's entry is taken only if the declaration is hers; bob is never asked. She sends bob's Grizzly Bears into Odric's first strike and leaves the Hill Giant home. The control is the same board with one Grizzly Bears fewer attacking.",
+  "board": {
+    "active": "alice",
+    "step": "BeginningOfCombat",
+    "seats": [
+      {
+        "name": "alice",
+        "battlefield": [
+          {"card": "Odric, Master Tactician", "label": "odric", "ready": true},
+          {"card": "Grizzly Bears", "label": "b1", "ready": true},
+          {"card": "Grizzly Bears", "label": "b2", "ready": true},
+          {"card": "Grizzly Bears", "label": "b3", "ready": true}
+        ]
+      },
+      {
+        "name": "bob",
+        "battlefield": [
+          {"card": "Grizzly Bears", "label": "bears", "ready": true},
+          {"card": "Hill Giant", "label": "giant", "ready": true}
+        ]
+      }
+    ]
+  },
+  "timeline": [
+    {"turn": 1, "step": "DeclareAttackers", "player": "alice", "do": {"Attack": ["$odric", "$b1", "$b2", "$b3"]}},
+    {"turn": 1, "step": "DeclareBlockers", "player": "alice", "do": {"Block": {"$bears": ["$odric"]}}},
+    {"turn": 1, "step": "DeclareBlockers", "player": "alice", "check": {"Blockers": {"attacker": "$odric", "blockers": ["$bears"]}}},
+    {"turn": 1, "step": "DeclareBlockers", "player": "alice", "check": {"Blockers": {"attacker": "$b1", "blockers": null}}},
+    {"turn": 1, "step": "EndOfCombat", "player": "alice", "check": {"Life": {"player": "bob", "life": 14}}}
+  ]
+}

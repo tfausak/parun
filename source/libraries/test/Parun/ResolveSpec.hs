@@ -2774,6 +2774,7 @@ cleansingSpec s registry =
                 PayOffer.ForMember member -> Recipient.objectOf member
                 PayOffer.AtClause {} -> Nothing
                 PayOffer.InsteadOfDraw -> Nothing
+                PayOffer.CombatToll -> Nothing
           State.modify' (<> [(player, land, Foldable.toList earlier)])
           pure (policy player land earlier)
         _ -> pure (S.identityAnswer p)

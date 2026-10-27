@@ -167,6 +167,7 @@ import qualified Parun.Codec.CoinFlippedSpec
 import qualified Parun.Codec.CoinReadingSpec
 import qualified Parun.Codec.ColorSpec
 import qualified Parun.Codec.CombatDamageOptionSpec
+import qualified Parun.Codec.CombatDeclarationSpec
 import qualified Parun.Codec.CombatRestrictionSpec
 import qualified Parun.Codec.CombatSpec
 import qualified Parun.Codec.CombatStepSpec
@@ -1047,6 +1048,7 @@ spec s registry corpus = do
   Parun.Codec.BlockRequirementSpec.spec s
   Parun.Codec.BlocksDeclaredSpec.spec s
   Parun.Codec.BlockRoleSpec.spec s
+  Parun.Codec.CombatDeclarationSpec.spec s
   Parun.Codec.BlockStatusSpec.spec s
   Parun.Codec.BoardSpec.spec s
   Parun.Codec.BoundMeasureSpec.spec s

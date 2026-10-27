@@ -1,0 +1,33 @@
+{
+  "description": "CR 509.1f Under Odric, Master Tactician the blocker's controller may pay the toll its chooser's block owes, and the block stands",
+  "note": "The paired board for the declined toll: bob pays Hipparion's {1} with his Plains, so alice's block of Odric stands.",
+  "board": {
+    "active": "alice",
+    "step": "BeginningOfCombat",
+    "seats": [
+      {
+        "name": "alice",
+        "battlefield": [
+          {"card": "Odric, Master Tactician", "label": "odric", "ready": true},
+          {"card": "Grizzly Bears", "label": "b1", "ready": true},
+          {"card": "Grizzly Bears", "label": "b2", "ready": true},
+          {"card": "Grizzly Bears", "label": "b3", "ready": true}
+        ]
+      },
+      {
+        "name": "bob",
+        "battlefield": [
+          {"card": "Hipparion", "label": "hipparion", "ready": true},
+          {"card": "Plains", "label": "plains"}
+        ]
+      }
+    ]
+  },
+  "timeline": [
+    {"turn": 1, "step": "DeclareAttackers", "player": "alice", "do": {"Attack": ["$odric", "$b1", "$b2", "$b3"]}},
+    {"turn": 1, "step": "DeclareBlockers", "player": "alice", "do": {"Block": {"$hipparion": ["$odric"]}}},
+    {"turn": 1, "step": "DeclareBlockers", "player": "bob", "source": "$hipparion", "do": {"ChooseToPay": {"decision": {"type": "Pays"}, "mana": ["$plains"]}}},
+    {"turn": 1, "step": "DeclareBlockers", "player": "alice", "check": {"Blockers": {"attacker": "$odric", "blockers": ["$hipparion"]}}},
+    {"turn": 1, "step": "DeclareBlockers", "player": "alice", "check": {"Tapped": {"object": "$plains", "tapped": true}}}
+  ]
+}

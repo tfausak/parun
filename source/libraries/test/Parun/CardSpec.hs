@@ -5079,6 +5079,7 @@ playerEffectFilters playerEffect = case playerEffect of
   PlayerEffect.CantBecomeMonarch -> []
   PlayerEffect.CantSetSchemesInMotion -> []
   PlayerEffect.ControlledWhileSearching -> []
+  PlayerEffect.YouChoose _ -> []
   PlayerEffect.ExilesFoundWhileSearching -> []
   PlayerEffect.CantAttackWithCreatures -> []
   -- CR 601.3a's Filter half, which is exactly a quality of the spell (Damping
