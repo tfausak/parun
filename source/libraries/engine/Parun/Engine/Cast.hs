@@ -1786,6 +1786,9 @@ restrictionMet pid oid gs restriction = case restriction of
   CastingRestriction.BeforeStep target -> Turn.beforeStep target gs
   -- CR 102.1 alone: DuringPhase's second conjunct with no window.
   CastingRestriction.DuringTurn scope -> Turn.turnScopeAdmits named gs scope (GameState.activePlayer gs) pid
+  -- CR 500.7: the caster's own turns, extra ones included; another player's
+  -- turn is never one of them (Serra Avenger's rulings).
+  CastingRestriction.NotDuringFirstTurns n -> not (Turn.isActive gs pid && Turn.turnsBegun pid gs <= n)
   -- A payment rule, not a gate: `xConfinement` hands it to Cost.confineX.
   CastingRestriction.SpendOnlyOnX _ -> True
   where

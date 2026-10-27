@@ -323,17 +323,6 @@ landState s registry = do
   matchup <- S.shortRedRed (S.printingOf s registry)
   pure (snd (Engine.runGamePure S.playLandAnswer (Setup.emptyGame S.bothPlayers) (Engine.playFrom matchup)))
 
--- Alice is active on turns 1, 3, 5, …; bob on 2, 4, 6, …. With CR 305.2's normal
--- one land play per turn a player can never have more lands out than turns
--- taken. NORMAL is load-bearing now that a continuous effect can raise the
--- number (CR 305.2): this bound holds for the red-red matchup because no card in
--- it grants an extra land play, and Parun.PlayerEffectSpec is where the raised
--- number is measured.
-turnsTaken :: PlayerId.PlayerId -> GameState.GameState -> Natural
-turnsTaken pid gs =
-  let total = GameState.turnNumber gs
-   in if pid == S.alice then (total + 1) `div` 2 else total `div` 2
-
 engineSpec :: (Monad m, Monad n) => Spec.Spec m n -> Registry.Registry m -> n ()
 engineSpec s registry = Spec.describe s "Engine" $ do
   -- One game per case rather than one per assertion: each is a whole game, and
@@ -347,10 +336,15 @@ engineSpec s registry = Spec.describe s "Engine" $ do
     gs <- landState s registry
     Spec.assertBool s (not (null (Game.zoneMembers Zone.Battlefield S.alice gs))) "non-empty"
     Spec.assertEqWith s "objects" (Game.objectCount gs) 60
+    -- With CR 305.2's normal one land play per turn a player can never have
+    -- more lands out than turns begun (Turn.turnsBegun). NORMAL is load-bearing
+    -- now that a continuous effect can raise the number: this bound holds for
+    -- the red-red matchup because no card in it grants an extra land play, and
+    -- Parun.PlayerEffectSpec is where the raised number is measured.
     Spec.assertBool
       s
-      ( Natural.length (Game.zoneMembers Zone.Battlefield S.alice gs) <= turnsTaken S.alice gs
-          && Natural.length (Game.zoneMembers Zone.Battlefield S.bob gs) <= turnsTaken S.bob gs
+      ( Natural.length (Game.zoneMembers Zone.Battlefield S.alice gs) <= Turn.turnsBegun S.alice gs
+          && Natural.length (Game.zoneMembers Zone.Battlefield S.bob gs) <= Turn.turnsBegun S.bob gs
       )
       "no double land plays"
 

@@ -546,9 +546,9 @@ corpusResolver s corpus = do
 -- | Every key Parun.Codec.GameState writes for S.oneMountainState. Spelled out so
 -- that the ABSENCE of every other field is asserted rather than assumed: the
 -- record has some seventy fields and this board writes these, in the record's
--- own order. `hand` and `priority` are here because the fixture moved them off
--- their defaults; `library`, `battlefield` and the rest of the zones are not,
--- because it did not.
+-- own order. `hand`, `priority` and `turnsBegun` are here because the fixture
+-- moved them off their defaults; `library`, `battlefield` and the rest of the
+-- zones are not, because it did not.
 plainBoardKeys :: [String]
 plainBoardKeys =
   [ "settings",
@@ -563,6 +563,7 @@ plainBoardKeys =
     "remaining",
     "priority",
     "turnNumber",
+    "turnsBegun",
     "nextObjectId",
     "printings",
     "nextPrintingId",

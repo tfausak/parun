@@ -280,6 +280,7 @@ gameWith settings order =
           GameState.priority = Nothing,
           GameState.passed = Set.empty,
           GameState.turnNumber = 1,
+          GameState.turnsBegun = Turn.firstTurnBegun settings order_ (NonEmpty.head order),
           GameState.result = Nothing,
           GameState.restartSignal = RestartSignal.Playing,
           GameState.endTurnSignal = EndTurnSignal.Running,
@@ -1046,6 +1047,8 @@ restartGame perform exempt starter = do
             GameState.priority = Nothing,
             GameState.passed = Set.empty,
             GameState.turnNumber = 1,
+            -- Serra Avenger's ruling: the restarted game's turns are counted afresh.
+            GameState.turnsBegun = Turn.firstTurnBegun (GameState.settings gs) order (Maybe.fromMaybe starter (Maybe.listToMaybe order)),
             GameState.result = Nothing,
             -- CR 727.4: the game the caller was running has been replaced.
             -- Engine.priorityLoop and Engine.runStep read this and unwind to
@@ -1328,6 +1331,8 @@ subgameStateFrom starter parent =
           GameState.priority = Nothing,
           GameState.passed = Set.empty,
           GameState.turnNumber = 1,
+          -- CR 729.2: the subgame is a game of its own, its turns counted afresh.
+          GameState.turnsBegun = Turn.firstTurnBegun (GameState.settings parent) order firstPlayer,
           GameState.result = Nothing,
           GameState.restartSignal = RestartSignal.Playing,
           -- CR 724.1: the subgame is its own game, so it starts running its own turn.

@@ -1,0 +1,42 @@
+{
+  "description": "CR 500.7 / 805.4: under shared team turns each of a team's turns is one of every teammate's turns of the game, so bob casts Serra Avenger on his team's fourth turn and not its third",
+  "note": "Alice heads the turn order and takes the team's turns; bob, her teammate, is the caster, so a count kept for the active player alone would leave bob on one turn. The same two Plains pay for every attempt.",
+  "board": {
+    "active": "alice",
+    "step": "PrecombatMain",
+    "sharedTeamTurns": true,
+    "seats": [
+      {
+        "name": "alice",
+        "team": 1,
+        "library": [{ "card": "Island" }, { "card": "Island" }, { "card": "Island" }, { "card": "Island" }, { "card": "Island" }]
+      },
+      {
+        "name": "bob",
+        "team": 1,
+        "battlefield": [
+          { "card": "Plains", "label": "plains", "ready": true },
+          { "card": "Plains", "label": "plains-2", "ready": true }
+        ],
+        "hand": [{ "card": "Serra Avenger", "label": "avenger" }],
+        "library": [{ "card": "Island" }, { "card": "Island" }, { "card": "Island" }, { "card": "Island" }, { "card": "Island" }]
+      },
+      {
+        "name": "carol",
+        "team": 2,
+        "library": [{ "card": "Island" }, { "card": "Island" }, { "card": "Island" }, { "card": "Island" }, { "card": "Island" }]
+      },
+      {
+        "name": "dave",
+        "team": 2,
+        "library": [{ "card": "Island" }, { "card": "Island" }, { "card": "Island" }, { "card": "Island" }, { "card": "Island" }]
+      }
+    ]
+  },
+  "timeline": [
+    { "turn": 5, "step": "PrecombatMain", "player": "bob", "refuse": { "Cast": { "object": "$avenger", "mana": ["$plains", "$plains-2"] } } },
+    { "turn": 7, "step": "PrecombatMain", "player": "bob", "do": { "Cast": { "object": "$avenger", "mana": ["$plains", "$plains-2"] } } },
+    { "turn": 7, "step": "PrecombatMain", "player": "bob", "do": "Pass" },
+    { "turn": 7, "step": "PostcombatMain", "player": "bob", "check": { "Count": { "player": "bob", "zone": "Battlefield", "card": "Serra Avenger", "count": 1 } } }
+  ]
+}
