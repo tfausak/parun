@@ -1,0 +1,23 @@
+{
+  "description": "CR 604.2 / 603.2: Thorncaster Sliver gives each Sliver creature its controller controls \"Whenever this creature attacks, it deals 1 damage to any target\"",
+  "note": "Thorncaster Sliver, Syphon Sliver and Grizzly Bears attack; only the two Slivers trigger, so bob takes 2 before combat damage.",
+  "board": {
+    "active": "alice",
+    "step": "PrecombatMain",
+    "seats": [
+      {"name": "alice", "battlefield": [{"card": "Thorncaster Sliver", "label": "thorn", "ready": true}, {"card": "Syphon Sliver", "label": "syphon", "ready": true}, {"card": "Grizzly Bears", "label": "bears", "ready": true}], "library": [{"card": "Island"}, {"card": "Island"}, {"card": "Island"}, {"card": "Island"}]},
+      {"name": "bob", "library": [{"card": "Island"}, {"card": "Island"}, {"card": "Island"}, {"card": "Island"}]}
+    ]
+  },
+  "timeline": [
+    {"turn": 1, "step": "DeclareAttackers", "player": "alice", "do": {"Attack": ["$thorn", "$syphon", "$bears"]}},
+    {"turn": 1, "step": "DeclareAttackers", "player": "alice", "do": {"OrderTriggers": ["$thorn", "$syphon"]}},
+    {"turn": 1, "step": "DeclareAttackers", "player": "alice", "do": {"ChooseTargets": {"target": ["$bob"]}}},
+    {"turn": 1, "step": "DeclareAttackers", "player": "alice", "do": {"ChooseTargets": {"target": ["$bob"]}}},
+    {"turn": 1, "step": "DeclareAttackers", "player": "alice", "check": {"View": {"of": "Stack", "is": ["trigger of $syphon", "trigger of $thorn"]}}},
+    {"turn": 1, "step": "DeclareAttackers", "player": "alice", "do": "Pass"},
+    {"turn": 1, "step": "DeclareAttackers", "player": "alice", "do": "Pass"},
+    {"turn": 1, "step": "DeclareAttackers", "player": "alice", "check": {"Life": {"player": "bob", "life": 18}}},
+    {"turn": 1, "step": "CombatDamage", "player": "alice", "check": {"Life": {"player": "bob", "life": 12}}}
+  ]
+}

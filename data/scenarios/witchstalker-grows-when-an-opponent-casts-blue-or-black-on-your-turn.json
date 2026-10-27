@@ -1,0 +1,22 @@
+{
+  "description": "CR 601.2i / 603.2: whenever an opponent casts a blue or black spell during its controller's turn, Witchstalker gets a +1/+1 counter",
+  "note": "On alice's turn bob's blue Think Twice grows it and his red Shock doesn't; on bob's own turn his blue Divination doesn't either.",
+  "board": {
+    "active": "alice",
+    "step": "PrecombatMain",
+    "seats": [
+      {"name": "alice", "battlefield": [{"card": "Witchstalker", "label": "stalker"}], "library": [{"card": "Island"}, {"card": "Island"}, {"card": "Island"}, {"card": "Island"}]},
+      {"name": "bob", "battlefield": [{"card": "Island", "label": "i1"}, {"card": "Island", "label": "i2"}, {"card": "Island", "label": "i3"}, {"card": "Mountain", "label": "m"}], "hand": [{"card": "Think Twice", "label": "twice"}, {"card": "Shock", "label": "shock"}, {"card": "Divination", "label": "divination"}], "library": [{"card": "Island"}, {"card": "Island"}, {"card": "Island"}, {"card": "Island"}]}
+    ]
+  },
+  "timeline": [
+    {"turn": 1, "step": "PrecombatMain", "player": "bob", "do": {"Cast": {"object": "$twice", "mana": ["$i1", "$i2", null]}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "bob", "do": {"Cast": {"object": "$shock", "targets": ["$alice"], "mana": ["$m", null]}}},
+    {"turn": 1, "step": "BeginningOfCombat", "player": "alice", "check": {"Counters": {"object": "$stalker", "kind": {"type": "PlusOnePlusOne"}, "count": 1}}},
+    {"turn": 1, "step": "BeginningOfCombat", "player": "alice", "check": {"Life": {"player": "alice", "life": 18}}},
+    {"turn": 2, "step": "PrecombatMain", "player": "bob", "do": {"Cast": {"object": "$divination", "mana": ["$i1", "$i2", "$i3", null]}}},
+    {"turn": 2, "step": "PrecombatMain", "player": "bob", "do": "Pass"},
+    {"turn": 2, "step": "PrecombatMain", "player": "bob", "check": {"Counters": {"object": "$stalker", "kind": {"type": "PlusOnePlusOne"}, "count": 1}}},
+    {"turn": 2, "step": "PrecombatMain", "player": "bob", "check": {"Count": {"player": "bob", "zone": "Graveyard", "card": "Divination", "count": 1}}}
+  ]
+}

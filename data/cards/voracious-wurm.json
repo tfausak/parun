@@ -1,0 +1,74 @@
+{
+  "faces": [
+    {
+      "manaCost": [
+        {
+          "type": "Generic",
+          "value": 1
+        },
+        {
+          "type": "OfType",
+          "value": {
+            "type": "Colored",
+            "value": {
+              "type": "Green"
+            }
+          }
+        }
+      ],
+      "name": "Voracious Wurm",
+      "oracleText": "This creature enters with X +1/+1 counters on it, where X is the amount of life you've gained this turn.",
+      "power": {
+        "type": "Literal",
+        "value": 2
+      },
+      "replacementEffects": [
+        {
+          "effect": {
+            "type": "EntryR",
+            "value": {
+              "matching": {
+                "type": "IsSource"
+              },
+              "rewrite": {
+                "type": "WithCounters",
+                "value": [
+                  {
+                    "count": {
+                      "type": "LifeGainedThisTurn",
+                      "value": {
+                        "type": "Relative",
+                        "value": {
+                          "type": "You"
+                        }
+                      }
+                    },
+                    "kind": {
+                      "type": "PlusOnePlusOne"
+                    }
+                  }
+                ]
+              }
+            }
+          }
+        }
+      ],
+      "toughness": {
+        "type": "Literal",
+        "value": 2
+      },
+      "typeLine": {
+        "subtypes": [
+          {
+            "type": "Wurm"
+          }
+        ],
+        "types": [
+          {
+            "type": "Creature"
+          }
+        ]
+      }
+    }
+  ]
+}

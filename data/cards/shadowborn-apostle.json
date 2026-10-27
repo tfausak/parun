@@ -1,0 +1,138 @@
+{
+  "faces": [
+    {
+      "activatedAbilities": [
+        {
+          "cost": {
+            "components": [
+              {
+                "type": "Sacrifice",
+                "value": {
+                  "count": {
+                    "type": "Fixed",
+                    "value": 6
+                  },
+                  "whichPermanents": {
+                    "type": "And",
+                    "value": [
+                      {
+                        "type": "HasCardType",
+                        "value": {
+                          "type": "Creature"
+                        }
+                      },
+                      {
+                        "type": "HasName",
+                        "value": "Shadowborn Apostle"
+                      }
+                    ]
+                  }
+                }
+              }
+            ],
+            "mana": [
+              {
+                "type": "OfType",
+                "value": {
+                  "type": "Colored",
+                  "value": {
+                    "type": "Black"
+                  }
+                }
+              }
+            ]
+          },
+          "modal": {
+            "modes": [
+              {
+                "clauses": [
+                  {
+                    "effects": [
+                      {
+                        "type": "Search",
+                        "value": {
+                          "destination": {
+                            "type": "Battlefield"
+                          },
+                          "filter": {
+                            "type": "And",
+                            "value": [
+                              {
+                                "type": "HasSubtype",
+                                "value": {
+                                  "type": "Demon"
+                                }
+                              },
+                              {
+                                "type": "HasCardType",
+                                "value": {
+                                  "type": "Creature"
+                                }
+                              }
+                            ]
+                          },
+                          "owner": {
+                            "type": "Relative",
+                            "value": {
+                              "type": "You"
+                            }
+                          },
+                          "quantity": {
+                            "type": "Literal",
+                            "value": 1
+                          },
+                          "searcher": {
+                            "type": "Relative",
+                            "value": {
+                              "type": "You"
+                            }
+                          }
+                        }
+                      }
+                    ]
+                  }
+                ]
+              }
+            ]
+          }
+        }
+      ],
+      "manaCost": [
+        {
+          "type": "OfType",
+          "value": {
+            "type": "Colored",
+            "value": {
+              "type": "Black"
+            }
+          }
+        }
+      ],
+      "name": "Shadowborn Apostle",
+      "oracleText": "A deck can have any number of cards named Shadowborn Apostle.\n{B}, Sacrifice six creatures named Shadowborn Apostle: Search your library for a Demon creature card, put it onto the battlefield, then shuffle.",
+      "power": {
+        "type": "Literal",
+        "value": 1
+      },
+      "toughness": {
+        "type": "Literal",
+        "value": 1
+      },
+      "typeLine": {
+        "subtypes": [
+          {
+            "type": "Cleric"
+          },
+          {
+            "type": "Human"
+          }
+        ],
+        "types": [
+          {
+            "type": "Creature"
+          }
+        ]
+      }
+    }
+  ]
+}

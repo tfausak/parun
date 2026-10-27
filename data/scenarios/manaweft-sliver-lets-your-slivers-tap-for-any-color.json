@@ -1,0 +1,19 @@
+{
+  "description": "CR 604.2 / 605.1a: Manaweft Sliver gives each Sliver creature you control \"{T}: Add one mana of any color\"",
+  "note": "Syphon Sliver and Manaweft Sliver itself each tap for blue, paying for Coral Merfolk; neither has a mana ability of its own.",
+  "board": {
+    "active": "alice",
+    "step": "PrecombatMain",
+    "seats": [
+      {"name": "alice", "battlefield": [{"card": "Manaweft Sliver", "label": "manaweft", "ready": true}, {"card": "Syphon Sliver", "label": "syphon", "ready": true}], "hand": [{"card": "Coral Merfolk", "label": "merfolk"}], "library": [{"card": "Island"}, {"card": "Island"}, {"card": "Island"}, {"card": "Island"}]},
+      {"name": "bob", "library": [{"card": "Island"}, {"card": "Island"}, {"card": "Island"}, {"card": "Island"}]}
+    ]
+  },
+  "timeline": [
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "do": {"Cast": {"object": "$merfolk", "mana": ["$syphon", "$manaweft"], "yields": [[{"manaType": {"type": "Colored", "value": {"type": "Blue"}}, "tags": [], "retention": {"type": "Ordinary"}, "restriction": null, "rider": null, "sourceChoices": null}], [{"manaType": {"type": "Colored", "value": {"type": "Blue"}}, "tags": [], "retention": {"type": "Ordinary"}, "restriction": null, "rider": null, "sourceChoices": null}]]}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "do": "Pass"},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "check": {"Count": {"player": "alice", "zone": "Battlefield", "card": "Coral Merfolk", "count": 1}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "check": {"Tapped": {"object": "$syphon", "tapped": true}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "check": {"Tapped": {"object": "$manaweft", "tapped": true}}}
+  ]
+}

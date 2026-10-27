@@ -1,0 +1,22 @@
+{
+  "description": "CR 508.1d: Marauding Maulhorn attacks each combat if able unless its controller controls a creature named Advocate of the Beast",
+  "note": "On turn 1 alice can't decline to attack with the Maulhorn. She casts Advocate of the Beast afterwards, and on turn 3 she may leave the Maulhorn home.",
+  "board": {
+    "active": "alice",
+    "step": "PrecombatMain",
+    "seats": [
+      {"name": "alice", "battlefield": [{"card": "Marauding Maulhorn", "label": "maulhorn", "ready": true}, {"card": "Forest", "label": "f1"}, {"card": "Forest", "label": "f2"}, {"card": "Forest", "label": "f3"}], "hand": [{"card": "Advocate of the Beast", "label": "advocate"}], "library": [{"card": "Island"}, {"card": "Island"}, {"card": "Island"}, {"card": "Island"}]},
+      {"name": "bob", "library": [{"card": "Island"}, {"card": "Island"}, {"card": "Island"}, {"card": "Island"}]}
+    ]
+  },
+  "timeline": [
+    {"turn": 1, "step": "DeclareAttackers", "player": "alice", "refuse": {"Attack": []}},
+    {"turn": 1, "step": "DeclareAttackers", "player": "alice", "do": {"Attack": ["$maulhorn"]}},
+    {"turn": 1, "step": "CombatDamage", "player": "alice", "check": {"Life": {"player": "bob", "life": 15}}},
+    {"turn": 1, "step": "PostcombatMain", "player": "alice", "do": {"Cast": {"object": "$advocate", "mana": ["$f1", "$f2", "$f3"]}}},
+    {"turn": 1, "step": "PostcombatMain", "player": "alice", "do": "Pass"},
+    {"turn": 1, "step": "EndStep", "player": "alice", "do": {"ChooseTargets": {"target": ["$maulhorn"]}}},
+    {"turn": 3, "step": "DeclareAttackers", "player": "alice", "do": {"Attack": []}},
+    {"turn": 3, "step": "EndOfCombat", "player": "alice", "check": {"Life": {"player": "bob", "life": 15}}}
+  ]
+}

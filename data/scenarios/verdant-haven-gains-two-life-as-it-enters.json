@@ -1,0 +1,19 @@
+{
+  "description": "CR 603.6a / 303.4: when Verdant Haven enters, its controller gains 2 life",
+  "note": "alice enchants her untapped Forest; the extra mana when the land is tapped is Fertile Ground's wording and scenario.",
+  "board": {
+    "active": "alice",
+    "step": "PrecombatMain",
+    "seats": [
+      {"name": "alice", "battlefield": [{"card": "Forest", "label": "forest"}, {"card": "Forest", "label": "f1"}, {"card": "Forest", "label": "f2"}, {"card": "Forest", "label": "f3"}], "hand": [{"card": "Verdant Haven", "label": "haven"}], "library": [{"card": "Island"}, {"card": "Island"}, {"card": "Island"}, {"card": "Island"}]},
+      {"name": "bob", "library": [{"card": "Island"}, {"card": "Island"}, {"card": "Island"}, {"card": "Island"}]}
+    ]
+  },
+  "timeline": [
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "do": {"Cast": {"object": "$haven", "targets": ["$forest"], "mana": ["$f1", "$f2", "$f3", null]}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "do": "Pass"},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "check": {"View": {"of": "AttachedTo", "object": "Verdant Haven", "is": "$forest"}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "do": "Pass"},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "check": {"Life": {"player": "alice", "life": 22}}}
+  ]
+}

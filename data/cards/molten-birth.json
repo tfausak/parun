@@ -1,0 +1,132 @@
+{
+  "faces": [
+    {
+      "manaCost": [
+        {
+          "type": "Generic",
+          "value": 1
+        },
+        {
+          "type": "OfType",
+          "value": {
+            "type": "Colored",
+            "value": {
+              "type": "Red"
+            }
+          }
+        },
+        {
+          "type": "OfType",
+          "value": {
+            "type": "Colored",
+            "value": {
+              "type": "Red"
+            }
+          }
+        }
+      ],
+      "name": "Molten Birth",
+      "oracleText": "Create two 1/1 red Elemental creature tokens, then flip a coin. If you win the flip, return Molten Birth to its owner's hand.",
+      "spell": {
+        "modes": [
+          {
+            "clauses": [
+              {
+                "effects": [
+                  {
+                    "type": "Create",
+                    "value": {
+                      "card": {
+                        "faces": [
+                          {
+                            "colorIndicator": [
+                              {
+                                "type": "Red"
+                              }
+                            ],
+                            "name": "Elemental Token",
+                            "power": {
+                              "type": "Literal",
+                              "value": 1
+                            },
+                            "toughness": {
+                              "type": "Literal",
+                              "value": 1
+                            },
+                            "typeLine": {
+                              "subtypes": [
+                                {
+                                  "type": "Elemental"
+                                }
+                              ],
+                              "types": [
+                                {
+                                  "type": "Creature"
+                                }
+                              ]
+                            }
+                          }
+                        ]
+                      },
+                      "quantity": {
+                        "type": "Literal",
+                        "value": 2
+                      }
+                    }
+                  },
+                  {
+                    "type": "FlipCoin",
+                    "value": {
+                      "slot": "flip"
+                    }
+                  }
+                ]
+              },
+              {
+                "condition": {
+                  "type": "Compares",
+                  "value": {
+                    "comparison": {
+                      "type": "Exactly"
+                    },
+                    "measured": {
+                      "type": "InSlot",
+                      "value": "flip"
+                    },
+                    "threshold": {
+                      "type": "Literal",
+                      "value": 1
+                    }
+                  }
+                },
+                "effects": [
+                  {
+                    "type": "MoveToZone",
+                    "value": {
+                      "ref": {
+                        "type": "EachSpell",
+                        "value": {
+                          "type": "IsSource"
+                        }
+                      },
+                      "zone": {
+                        "type": "Hand"
+                      }
+                    }
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      },
+      "typeLine": {
+        "types": [
+          {
+            "type": "Sorcery"
+          }
+        ]
+      }
+    }
+  ]
+}

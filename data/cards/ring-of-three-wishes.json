@@ -1,0 +1,115 @@
+{
+  "faces": [
+    {
+      "activatedAbilities": [
+        {
+          "cost": {
+            "components": [
+              {
+                "type": "TapThis"
+              },
+              {
+                "type": "RemoveCountersFromThis",
+                "value": {
+                  "count": 1,
+                  "kind": {
+                    "type": "Named",
+                    "value": "wish"
+                  }
+                }
+              }
+            ],
+            "mana": [
+              {
+                "type": "Generic",
+                "value": 5
+              }
+            ]
+          },
+          "modal": {
+            "modes": [
+              {
+                "clauses": [
+                  {
+                    "effects": [
+                      {
+                        "type": "Search",
+                        "value": {
+                          "destination": {
+                            "type": "Hand"
+                          },
+                          "filter": {
+                            "type": "And",
+                            "value": []
+                          },
+                          "owner": {
+                            "type": "Relative",
+                            "value": {
+                              "type": "You"
+                            }
+                          },
+                          "quantity": {
+                            "type": "Literal",
+                            "value": 1
+                          },
+                          "searcher": {
+                            "type": "Relative",
+                            "value": {
+                              "type": "You"
+                            }
+                          }
+                        }
+                      }
+                    ]
+                  }
+                ]
+              }
+            ]
+          }
+        }
+      ],
+      "manaCost": [
+        {
+          "type": "Generic",
+          "value": 5
+        }
+      ],
+      "name": "Ring of Three Wishes",
+      "oracleText": "This artifact enters with three wish counters on it.\n{5}, {T}, Remove a wish counter from this artifact: Search your library for a card, put that card into your hand, then shuffle.",
+      "replacementEffects": [
+        {
+          "effect": {
+            "type": "EntryR",
+            "value": {
+              "matching": {
+                "type": "IsSource"
+              },
+              "rewrite": {
+                "type": "WithCounters",
+                "value": [
+                  {
+                    "count": {
+                      "type": "Literal",
+                      "value": 3
+                    },
+                    "kind": {
+                      "type": "Named",
+                      "value": "wish"
+                    }
+                  }
+                ]
+              }
+            }
+          }
+        }
+      ],
+      "typeLine": {
+        "types": [
+          {
+            "type": "Artifact"
+          }
+        ]
+      }
+    }
+  ]
+}

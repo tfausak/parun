@@ -1,0 +1,25 @@
+{
+  "description": "CR 508.1m / 603.5: whenever a creature with flying attacks, whoever's it is, Windreader Sphinx's controller may draw a card",
+  "note": "alice's Wind Drake attacking draws her a card and her Grizzly Bears attacking beside it doesn't; bob's Wind Drake attacking on turn 2 draws her another.",
+  "board": {
+    "active": "alice",
+    "step": "PrecombatMain",
+    "seats": [
+      {"name": "alice", "battlefield": [{"card": "Windreader Sphinx", "label": "sphinx"}, {"card": "Wind Drake", "label": "drake", "ready": true}, {"card": "Grizzly Bears", "label": "bears", "ready": true}], "library": [{"card": "Plains"}, {"card": "Plains"}, {"card": "Plains"}, {"card": "Plains"}]},
+      {"name": "bob", "battlefield": [{"card": "Wind Drake", "label": "bdrake", "ready": true}], "library": [{"card": "Island"}, {"card": "Island"}, {"card": "Island"}, {"card": "Island"}]}
+    ]
+  },
+  "timeline": [
+    {"turn": 1, "step": "DeclareAttackers", "player": "alice", "do": {"Attack": ["$drake", "$bears"]}},
+    {"turn": 1, "step": "DeclareAttackers", "player": "alice", "check": {"View": {"of": "Stack", "is": ["trigger of $sphinx"]}}},
+    {"turn": 1, "step": "DeclareAttackers", "player": "alice", "do": "Pass"},
+    {"turn": 1, "step": "DeclareAttackers", "player": "alice", "do": {"ChooseOptional": {"type": "Exercises"}}},
+    {"turn": 1, "step": "DeclareAttackers", "player": "alice", "check": {"Count": {"player": "alice", "zone": "Hand", "card": "Plains", "count": 1}}},
+    {"turn": 1, "step": "DeclareBlockers", "player": "bob", "do": {"Block": {}}},
+    {"turn": 2, "step": "DeclareAttackers", "player": "bob", "do": {"Attack": ["$bdrake"]}},
+    {"turn": 2, "step": "DeclareAttackers", "player": "bob", "do": "Pass"},
+    {"turn": 2, "step": "DeclareAttackers", "player": "alice", "do": {"ChooseOptional": {"type": "Exercises"}}},
+    {"turn": 2, "step": "DeclareBlockers", "player": "alice", "do": {"Block": {}}},
+    {"turn": 2, "step": "DeclareBlockers", "player": "alice", "check": {"Count": {"player": "alice", "zone": "Hand", "card": "Plains", "count": 2}}}
+  ]
+}

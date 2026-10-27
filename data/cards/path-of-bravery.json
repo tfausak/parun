@@ -1,0 +1,167 @@
+{
+  "faces": [
+    {
+      "manaCost": [
+        {
+          "type": "Generic",
+          "value": 2
+        },
+        {
+          "type": "OfType",
+          "value": {
+            "type": "Colored",
+            "value": {
+              "type": "White"
+            }
+          }
+        }
+      ],
+      "name": "Path of Bravery",
+      "oracleText": "As long as your life total is greater than or equal to your starting life total, creatures you control get +1/+1.\nWhenever one or more creatures you control attack, you gain life equal to the number of attacking creatures.",
+      "staticAbilities": [
+        {
+          "affected": {
+            "type": "Matching",
+            "value": {
+              "type": "And",
+              "value": [
+                {
+                  "type": "HasCardType",
+                  "value": {
+                    "type": "Creature"
+                  }
+                },
+                {
+                  "type": "HeldBy",
+                  "value": {
+                    "holder": {
+                      "type": "Controller"
+                    },
+                    "relation": {
+                      "type": "You"
+                    }
+                  }
+                }
+              ]
+            }
+          },
+          "condition": {
+            "type": "Compares",
+            "value": {
+              "comparison": {
+                "type": "AtLeast"
+              },
+              "measured": {
+                "type": "LifeTotal",
+                "value": {
+                  "type": "Relative",
+                  "value": {
+                    "type": "You"
+                  }
+                }
+              },
+              "threshold": {
+                "type": "StartingLifeTotal",
+                "value": {
+                  "type": "Relative",
+                  "value": {
+                    "type": "You"
+                  }
+                }
+              }
+            }
+          },
+          "modifications": [
+            {
+              "type": "ModifyPowerToughness",
+              "value": {
+                "power": {
+                  "type": "Literal",
+                  "value": 1
+                },
+                "toughness": {
+                  "type": "Literal",
+                  "value": 1
+                }
+              }
+            }
+          ]
+        }
+      ],
+      "triggeredAbilities": [
+        {
+          "condition": {
+            "type": "PlayerAttacksWith",
+            "value": {
+              "attackers": 1,
+              "filter": {
+                "type": "HasCardType",
+                "value": {
+                  "type": "Creature"
+                }
+              },
+              "player": {
+                "type": "You"
+              }
+            }
+          },
+          "modal": {
+            "modes": [
+              {
+                "clauses": [
+                  {
+                    "effects": [
+                      {
+                        "type": "GainLife",
+                        "value": {
+                          "player": {
+                            "type": "Relative",
+                            "value": {
+                              "type": "You"
+                            }
+                          },
+                          "quantity": {
+                            "type": "Count",
+                            "value": {
+                              "aggregation": {
+                                "type": "Members"
+                              },
+                              "filter": {
+                                "type": "IsAttacking"
+                              },
+                              "scope": {
+                                "type": "InZone",
+                                "value": {
+                                  "player": {
+                                    "type": "Relative",
+                                    "value": {
+                                      "type": "AnyPlayer"
+                                    }
+                                  },
+                                  "zone": {
+                                    "type": "Battlefield"
+                                  }
+                                }
+                              }
+                            }
+                          }
+                        }
+                      }
+                    ]
+                  }
+                ]
+              }
+            ]
+          }
+        }
+      ],
+      "typeLine": {
+        "types": [
+          {
+            "type": "Enchantment"
+          }
+        ]
+      }
+    }
+  ]
+}
