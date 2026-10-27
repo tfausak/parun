@@ -1,0 +1,58 @@
+{
+  "faces": [
+    {
+      "activatedAbilities": [
+        {
+          "cost": {
+            "components": [
+              {
+                "type": "TapThis"
+              }
+            ],
+            "mana": []
+          },
+          "modal": {
+            "modes": [
+              {
+                "clauses": [
+                  {
+                    "effects": [
+                      {
+                        "type": "AddMana",
+                        "value": {
+                          "production": {
+                            "type": "OfType",
+                            "value": {
+                              "type": "Colorless"
+                            }
+                          }
+                        }
+                      }
+                    ]
+                  }
+                ]
+              }
+            ]
+          }
+        }
+      ],
+      "keywords": [
+        {
+          "type": "Indestructible"
+        }
+      ],
+      "name": "Darksteel Citadel",
+      "oracleText": "Indestructible\n{T}: Add {C}.",
+      "typeLine": {
+        "types": [
+          {
+            "type": "Artifact"
+          },
+          {
+            "type": "Land"
+          }
+        ]
+      }
+    }
+  ]
+}

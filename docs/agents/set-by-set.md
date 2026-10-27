@@ -35,6 +35,8 @@ it; never copy one between machines. A missing file is a fetch, not a blocker.
   Only the orchestrator runs it: once before the first dispatch, then in the
   background after every merge. Implementers seed from it (`CLAUDE.md`). It is
   never reaped, renamed or dispatched into.
+- A built binary run outside `cabal run` (`cabal list-bin parun`) needs
+  `parun_datadir` pointing at the checkout's `data/`.
 
 ## The procedure
 
@@ -162,26 +164,8 @@ no CR numbers.
   when several PRs sit green and `BEHIND`, update only the oldest and wait for
   it. On a conflict, send the agent back to merge `origin/main`, take both
   sides, and re-run its mutations. Agents never force-push.
-- **Shepherd** each PR with a background poll that updates a `BEHIND` branch
-  and exits on merge, conflict or a failed check:
-
-  ```sh
-  pr=$1; dirty=0
-  while :; do
-    s=$(gh pr view "$pr" -R tfausak/parun --json state,mergeStateStatus \
-      --jq '.state+" "+.mergeStateStatus')
-    case "$s" in
-      "OPEN BEHIND") gh pr update-branch "$pr" -R tfausak/parun >/dev/null 2>&1 ;;
-      "OPEN DIRTY") dirty=$((dirty+1)); [ "$dirty" -ge 3 ] && { echo "$pr CONFLICT"; exit 1; } ;;
-      OPEN*|"") f=$(gh pr checks "$pr" -R tfausak/parun --json name,bucket \
-          --jq '[.[]|select(.bucket=="fail")|.name]|join(",")' 2>/dev/null)
-        [ -n "$f" ] && { echo "$pr FAILED $f"; exit 2; } ;;
-      *) echo "$pr $s"; exit 0 ;;
-    esac
-    sleep 120
-  done
-  ```
-
+- **Shepherd** each PR with `script/shepherd.sh PR` in the background: it
+  updates a `BEHIND` branch and exits on merge, conflict or a failed check.
   Before acting on a failed check, read the job log: a job that died in `Set
   up job` is not a real failure.
 - **Reap after every merge**, from the primary checkout: `git worktree remove
