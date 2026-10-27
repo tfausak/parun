@@ -292,19 +292,30 @@ object context determiner ref = case ref of
           (Each, Filter.Plural) -> [named {wording = Text.pack "each of " <> wording named}]
           _ -> [named]
   ObjectRef.EachMatching Filter.Type.IsHostOfSource -> fmap (\h -> MkReference h [] Filter.Singular) (host context)
-  ObjectRef.EachMatching f -> do
-    p <- Filter.phrase f (keyword context)
-    case determiner of
-      Each -> do
-        text <- Filter.describe Filter.Singular permanent p
-        [MkReference (Text.pack "each " <> text) [] Filter.Plural]
-      All -> do
-        text <- Filter.describe Filter.Plural permanent p
-        [MkReference (Text.pack "all " <> text) [] Filter.Plural]
-      Affected -> do
-        text <- Filter.describe Filter.Plural permanent p
-        let bare = null (Filter.adjectives p) && null (Filter.qualifiers p)
-        [MkReference w [] Filter.Plural | w <- if bare then [Text.pack "all " <> text, text] else [text]]
+  ObjectRef.EachMatching f -> case determiner of
+    -- Free for a disjunction: one description (Magmaquake's "each creature
+    -- without flying or planeswalker") or one per disjunct ("each creature
+    -- without flying and each planeswalker").
+    Each ->
+      let whole = do
+            p <- Filter.phrase f (keyword context)
+            text <- Filter.describe Filter.Singular permanent p
+            [MkReference (Text.pack "each " <> text) [] Filter.Plural]
+          apart = case f of
+            Filter.Type.Or fs@(_ : _ : _) -> do
+              texts <- traverse (\g -> Filter.phrase g (keyword context) >>= Filter.describe Filter.Singular permanent) fs
+              [MkReference (Prose.listing "and" (fmap (Text.pack "each " <>) texts)) [] Filter.Plural]
+            _ -> []
+       in whole <> apart
+    All -> do
+      p <- Filter.phrase f (keyword context)
+      text <- Filter.describe Filter.Plural permanent p
+      [MkReference (Text.pack "all " <> text) [] Filter.Plural]
+    Affected -> do
+      p <- Filter.phrase f (keyword context)
+      text <- Filter.describe Filter.Plural permanent p
+      let bare = null (Filter.adjectives p) && null (Filter.qualifiers p)
+      [MkReference w [] Filter.Plural | w <- if bare then [Text.pack "all " <> text, text] else [text]]
   ObjectRef.EachCardInGraveyard e
     | determiner == All -> do
         p <- Filter.phrase (EachCardInGraveyard.filter e) (keyword context)

@@ -89,13 +89,23 @@ modifications origin number each context ms = do
         by <- blockedBy context blockers
         [(Text.pack "can't be blocked" <> by, MkTrailing Text.empty Text.empty)]
       m : _ | Just (gained, _) <- keywordOf m -> do
-        keywords <- traverse (foldMap (either (Target.keyword context) Keyword.Oracle.family . snd) . keywordOf) group
+        keywords <- fmap protectionsJoined (traverse (foldMap (either (Target.keyword context) Keyword.Oracle.family . snd) . keywordOf) group)
         let change = case (gained, origin) of
               (False, _) -> verb "loses " "lose "
               (True, Created) -> verb "gains " "gain "
               (True, Static) -> verb "has " "have "
         [(change <> Prose.listing "and" keywords, MkTrailing Text.empty Text.empty)]
       _ -> []
+
+-- | Protections granted together on one phrase, last, as Oracle text prints
+-- them: "and protection from black and from red" (Akroma's Memorial).
+protectionsJoined :: [Text.Text] -> [Text.Text]
+protectionsJoined ws =
+  let prefix = Text.pack "protection "
+      (protections, others) = List.partition (Text.isPrefixOf (prefix <> Text.pack "from ")) ws
+   in case protections of
+        _ : _ : _ -> others <> [prefix <> Prose.listing "and" (fmap (Text.drop (Text.length prefix)) protections)]
+        _ -> ws
 
 -- | What follows a change past its duration: what it is "for each", which
 -- stands beside the change when another change follows it ("gets +2/+2 for
@@ -246,27 +256,32 @@ static context attached enchants a
   | otherwise = []
 
 -- | A face's static abilities and combat restrictions, an unconditional
--- change to power and toughness and a "can't be blocked" of the objects it
--- affects read as one ability: "Enchanted creature gets +1/+1 and can't be
--- blocked except by creatures with flying." (Treetop Bracers). The rest, and
--- the wordings of the one read together. One granting keywords puts them
--- after the restriction (Whispersilk Cloak).
+-- change to power and toughness and a "can't be blocked" or "can't block" of
+-- the objects it affects read as one ability: "Enchanted creature gets +1/+1
+-- and can't be blocked except by creatures with flying." (Treetop Bracers),
+-- "Enchanted creature gets -1/-1 and can't block." (Crippling Blight). The
+-- rest, and the wordings of the one read together. One granting keywords puts
+-- them after the restriction (Whispersilk Cloak).
 evasive :: Target.Context -> Maybe Text.Text -> [TargetSlot.TargetSlot] -> [StaticAbility.StaticAbility Ability] -> [CombatRestriction.CombatRestriction] -> ([StaticAbility.StaticAbility Ability], [CombatRestriction.CombatRestriction], [[Text.Text]])
 evasive context attached enchants statics rs =
-  case [(s, r, ws) | s <- statics, r@(CombatRestriction.CantBeBlockedBy (CantBeBlockedBy.MkCantBeBlockedBy a b Nothing Nothing)) <- rs, let ws = together s a b, not (null ws)] of
+  case [(s, r, ws) | s <- statics, r <- rs, (a, restrictions) <- restricts r, let ws = together s a restrictions, not (null ws)] of
     (s, r, ws) : _ -> (List.delete s statics, List.delete r rs, [ws])
     [] -> (statics, rs, [])
   where
-    together s a b = do
+    restricts r = case r of
+      CombatRestriction.CantBeBlockedBy (CantBeBlockedBy.MkCantBeBlockedBy a b Nothing Nothing) -> [(a, fmap (Text.pack "can't be blocked" <>) (blockedBy context b))]
+      CombatRestriction.CantBlock (AffectedUnless.MkAffectedUnless a Nothing Nothing Nothing) -> [(a, [Text.pack "can't block"])]
+      _ -> []
+    together s a restrictions = do
       Monad.guard (s == s {StaticAbility.condition = Nothing, StaticAbility.functionsFrom = Set.empty, StaticAbility.lingers = Nothing, StaticAbility.name = Nothing})
       subject <- affected context attached enchants (StaticAbility.affected s)
       other <- ruled context attached enchants a
       Monad.guard (Target.wording subject == Target.wording other)
       (verb, defined) <- modifications Static (Target.number subject) False context (Foldable.toList (StaticAbility.modifications s))
       Monad.guard (Text.null defined)
-      by <- blockedBy context b
-      let before = Prose.sentence (Target.wording subject <> Text.pack " " <> verb <> Text.pack " and can't be blocked" <> by)
-          after = Prose.sentence (Target.wording subject <> Text.pack " can't be blocked" <> by <> Text.pack " and " <> verb)
+      restriction <- restrictions
+      let before = Prose.sentence (Target.wording subject <> Text.pack " " <> verb <> Text.pack " and " <> restriction)
+          after = Prose.sentence (Target.wording subject <> Text.pack " " <> restriction <> Text.pack " and " <> verb)
       if any (Maybe.isJust . keywordOf) (StaticAbility.modifications s) then [after] else [before]
 
 -- | A characteristic-defining ability (CR 604.3) giving the power or

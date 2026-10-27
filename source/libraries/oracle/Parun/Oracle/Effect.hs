@@ -676,10 +676,10 @@ effect context e = case e of
               _ -> []
         tokens <- case Target.reading a of
           Target.Stated q -> some q
-          -- Free for a count: "for each" (Endless Swarm) or "a number of"
-          -- (Tyranid Invasion).
+          -- Free for a count: "for each" (Endless Swarm), "a number of"
+          -- (Tyranid Invasion) or "X ..., where X is" (Krenko, Mob Boss).
           Target.ForEach n each' -> fmap (<> Text.pack " for each " <> each') (some (Quantity.Literal n))
-          Target.EqualTo equal -> [Text.pack "a number of " <> many <> Text.pack " equal to " <> equal]
+          Target.EqualTo equal -> [Text.pack "a number of " <> many <> Text.pack " equal to " <> equal, Text.pack "X " <> many <> Text.pack ", where X is " <> equal]
         naming (Target.names a) (imperative context (Create.creator c) (Text.pack "create " <> tokens) (Text.pack "creates " <> tokens))
   Effect.PutCounters p -> do
     ref <- Target.object context Target.Each (PutCounters.ref p)

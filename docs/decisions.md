@@ -109,6 +109,23 @@ Entries are ordered by the first rule each cites.
   deals her ONE event, of 6".
 - **Issue**: #2586.
 
+## Whether "each creature and each planeswalker" reaches a permanent twice
+
+- **Question**: Magmaquake deals X damage "to each creature without flying
+  and each planeswalker". A creature planeswalker without flying is in both
+  sets: is it dealt X, or 2X as Char's caster is dealt both amounts?
+- **Rules**: CR 120.1, 120.4, 608.2f; CR of 2026-08-07.
+- **Decision**: X. The two descriptions name one set of recipients, each
+  dealt the amount once.
+- **Rejected**: 2X, two clauses summed per recipient as above: Char names
+  its recipients by two different amounts, where one amount over a union
+  names each member once.
+- **Site**: `data/cards/magmaquake.json`, one damage part over an `Or`
+  filter. The scenario "CR 120.3: Magmaquake deals X damage to each creature
+  without flying and each planeswalker" proves each half; no board in it is
+  both.
+- **Issue**: none.
+
 ## Where a name sticker's word goes beside a blank
 
 - **Question**: A name with a blank line (Wolf in _____ Clothing). The blank

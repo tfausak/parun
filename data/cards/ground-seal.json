@@ -1,0 +1,108 @@
+{
+  "faces": [
+    {
+      "manaCost": [
+        {
+          "type": "Generic",
+          "value": 1
+        },
+        {
+          "type": "OfType",
+          "value": {
+            "type": "Colored",
+            "value": {
+              "type": "Green"
+            }
+          }
+        }
+      ],
+      "name": "Ground Seal",
+      "oracleText": "When this enchantment enters, draw a card.\nCards in graveyards can't be the targets of spells or abilities.",
+      "targetRestrictions": [
+        {
+          "affected": {
+            "type": "MatchingOffBattlefield",
+            "value": {
+              "type": "IsInZone",
+              "value": {
+                "type": "Graveyard"
+              }
+            }
+          },
+          "kind": {
+            "type": "Spell"
+          }
+        },
+        {
+          "affected": {
+            "type": "MatchingOffBattlefield",
+            "value": {
+              "type": "IsInZone",
+              "value": {
+                "type": "Graveyard"
+              }
+            }
+          },
+          "kind": {
+            "type": "ActivatedAbility"
+          }
+        },
+        {
+          "affected": {
+            "type": "MatchingOffBattlefield",
+            "value": {
+              "type": "IsInZone",
+              "value": {
+                "type": "Graveyard"
+              }
+            }
+          },
+          "kind": {
+            "type": "TriggeredAbility"
+          }
+        }
+      ],
+      "triggeredAbilities": [
+        {
+          "condition": {
+            "type": "SelfEnters"
+          },
+          "modal": {
+            "modes": [
+              {
+                "clauses": [
+                  {
+                    "effects": [
+                      {
+                        "type": "Draw",
+                        "value": {
+                          "player": {
+                            "type": "Relative",
+                            "value": {
+                              "type": "You"
+                            }
+                          },
+                          "quantity": {
+                            "type": "Literal",
+                            "value": 1
+                          }
+                        }
+                      }
+                    ]
+                  }
+                ]
+              }
+            ]
+          }
+        }
+      ],
+      "typeLine": {
+        "types": [
+          {
+            "type": "Enchantment"
+          }
+        ]
+      }
+    }
+  ]
+}
