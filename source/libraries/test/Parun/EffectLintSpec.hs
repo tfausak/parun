@@ -3797,8 +3797,8 @@ effectLintSpec s registry corpus = Spec.describe s "Lint" $ do
             { Face.spell =
                 Mint.oneMode (Seq.singleton effect)
             }
-        prohibition = Effect.AffectPlayers (AffectPlayers.MkAffectPlayers Duration.UntilUsed (AffectedPlayers.Scoped (PlayerScope.Related PlayerRelation.You)) PlayerEffect.CantCastSpells)
-        pump = Effect.ModifyTarget (ModifyTarget.MkModifyTarget Duration.UntilUsed (Modification.GainKeyword Keyword.Flying) (ObjectRef.EachMatching (Filter.Type.HasCardType CardType.Creature)) Nothing)
+        prohibition = Effect.AffectPlayers (AffectPlayers.MkAffectPlayers (Duration.UntilUsed Nothing) (AffectedPlayers.Scoped (PlayerScope.Related PlayerRelation.You)) PlayerEffect.CantCastSpells)
+        pump = Effect.ModifyTarget (ModifyTarget.MkModifyTarget (Duration.UntilUsed Nothing) (Modification.GainKeyword Keyword.Flying) (ObjectRef.EachMatching (Filter.Type.HasCardType CardType.Creature)) Nothing)
     Spec.assertBool s (not (anyFace untilUsedOffends (Printing.card berserker))) "the real Hardened Berserker is accepted"
     Spec.assertBool s (untilUsedOffends (planted prohibition)) "a prohibition no cast uses up is rejected"
     Spec.assertBool s (untilUsedOffends (planted pump)) "a continuous effect on an object is rejected"
@@ -3876,7 +3876,9 @@ untilUsedOffends card = jsonAtoms (Text.pack "UntilUsed") (Codec.encode (Face.Co
 spendableUntilUseds :: Face.Face Card.Type.Card -> Int
 spendableUntilUseds card =
   let spendable effect = case effect of
-        Effect.AffectPlayers (AffectPlayers.MkAffectPlayers Duration.UntilUsed _ playerEffect) -> Maybe.isJust (PlayerEffect.Engine.castUse playerEffect)
-        Effect.ArmDelayedTrigger arm -> ArmDelayedTrigger.duration arm == Just Duration.UntilUsed
+        Effect.AffectPlayers (AffectPlayers.MkAffectPlayers (Duration.UntilUsed _) _ playerEffect) -> Maybe.isJust (PlayerEffect.Engine.castUse playerEffect)
+        -- A delayed trigger binds its own "that spell" off the event it
+        -- watches, so a slot here would bind nothing.
+        Effect.ArmDelayedTrigger arm -> ArmDelayedTrigger.duration arm == Just (Duration.UntilUsed Nothing)
         _ -> False
    in length (filter spendable (cardAuthoredEffects card))

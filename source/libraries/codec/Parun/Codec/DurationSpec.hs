@@ -146,8 +146,15 @@ spec s = Spec.describe s "Parun.Codec.Duration" $ do
     Common.assertCodec
       s
       Duration.codec
-      Duration.UntilUsed
+      (Duration.UntilUsed Nothing)
       " {\"type\":\"UntilUsed\"} "
+  -- CR 611.2a / Savage Summoning: "the next ... That spell", binding its user.
+  Spec.it s "UntilUsed, binding a slot" $
+    Common.assertCodec
+      s
+      Duration.codec
+      (Duration.UntilUsed (Just (SlotName.MkSlotName (Text.pack "nextSpell"))))
+      " {\"type\":\"UntilUsed\",\"value\":\"nextSpell\"} "
   -- CR 611.2a / Vesuvan Shapeshifter: "until this creature is turned face down".
   Spec.it s "UntilEvent" $
     Common.assertCodec

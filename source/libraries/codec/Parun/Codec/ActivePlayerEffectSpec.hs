@@ -16,6 +16,7 @@ import qualified Parun.Types.PlayerEffect as PlayerEffect
 import qualified Parun.Types.PlayerId as PlayerId
 import qualified Parun.Types.PlayerRelation as PlayerRelation
 import qualified Parun.Types.PlayerScope as PlayerScope
+import qualified Parun.Types.SlotName as SlotName
 import qualified Parun.Types.SourceChoices as SourceChoices
 import qualified Parun.Types.Timestamp as Timestamp
 
@@ -37,7 +38,8 @@ spec s = Spec.describe s "Parun.Codec.ActivePlayerEffect" $ do
           ActivePlayerEffect.expiry = Expiry.AtCleanup,
           ActivePlayerEffect.scope = AffectedPlayers.Scoped (PlayerScope.Related PlayerRelation.Opponent),
           ActivePlayerEffect.effect = PlayerEffect.CantCastSpells,
-          ActivePlayerEffect.ability = Nothing
+          ActivePlayerEffect.ability = Nothing,
+          ActivePlayerEffect.slots = Map.empty
         }
       " {\"source\":1,\"controller\":2,\"choices\":{},\"timestamp\":3,\"expiry\":{\"type\":\"AtCleanup\"},\"scope\":{\"type\":\"Scoped\",\"value\":{\"type\":\"Opponent\"}},\"effect\":{\"type\":\"CantCastSpells\"}} "
   -- The Named arm, which is the half no printed carrier has: the seat CR 601.2c
@@ -55,7 +57,8 @@ spec s = Spec.describe s "Parun.Codec.ActivePlayerEffect" $ do
           ActivePlayerEffect.expiry = Expiry.Never,
           ActivePlayerEffect.scope = AffectedPlayers.Named (PlayerId.MkPlayerId 8),
           ActivePlayerEffect.effect = PlayerEffect.NoMaximumHandSize,
-          ActivePlayerEffect.ability = Nothing
+          ActivePlayerEffect.ability = Nothing,
+          ActivePlayerEffect.slots = Map.empty
         }
       " {\"source\":5,\"controller\":6,\"choices\":{},\"timestamp\":7,\"expiry\":{\"type\":\"Never\"},\"scope\":{\"type\":\"Named\",\"value\":8},\"effect\":{\"type\":\"NoMaximumHandSize\"}} "
   -- CR 608.2h: the names baked as the effect began, Cheering Fanatic's row,
@@ -72,8 +75,27 @@ spec s = Spec.describe s "Parun.Codec.ActivePlayerEffect" $ do
           ActivePlayerEffect.expiry = Expiry.AtCleanup,
           ActivePlayerEffect.scope = AffectedPlayers.Scoped (PlayerScope.Related PlayerRelation.AnyPlayer),
           ActivePlayerEffect.effect = PlayerEffect.CantCastSpells,
-          ActivePlayerEffect.ability = Just (AbilityName.MkAbilityName (Text.pack "thatExiledCard13"))
+          ActivePlayerEffect.ability = Just (AbilityName.MkAbilityName (Text.pack "thatExiledCard13")),
+          ActivePlayerEffect.slots = Map.empty
         }
       " {\"source\":9,\"controller\":10,\"choices\":{\"names\":{\"12\":\"Shock\"}},\"timestamp\":11,\"expiry\":{\"type\":\"AtCleanup\"},\"scope\":{\"type\":\"Scoped\",\"value\":{\"type\":\"AnyPlayer\"}},\"effect\":{\"type\":\"CantCastSpells\"},\"ability\":\"thatExiledCard13\"} "
+  -- CR 611.2a: the slot Parun.Engine.Cast.bindUser bound, Savage Summoning's
+  -- "that spell can't be countered".
+  Spec.it s "an effect carrying the spell its slot was bound to" $
+    Common.assertCodec
+      s
+      ActivePlayerEffect.codec
+      ActivePlayerEffect.MkActivePlayerEffect
+        { ActivePlayerEffect.source = ObjectId.MkObjectId 14,
+          ActivePlayerEffect.controller = PlayerId.MkPlayerId 15,
+          ActivePlayerEffect.choices = SourceChoices.MkSourceChoices {SourceChoices.names = Map.empty, SourceChoices.colors = Set.empty, SourceChoices.subtype = Nothing},
+          ActivePlayerEffect.timestamp = Timestamp.MkTimestamp 16,
+          ActivePlayerEffect.expiry = Expiry.AtCleanup,
+          ActivePlayerEffect.scope = AffectedPlayers.Scoped (PlayerScope.Related PlayerRelation.AnyPlayer),
+          ActivePlayerEffect.effect = PlayerEffect.CantCastSpells,
+          ActivePlayerEffect.ability = Nothing,
+          ActivePlayerEffect.slots = Map.singleton (SlotName.MkSlotName (Text.pack "nextSpell")) (Set.singleton (ObjectId.MkObjectId 17))
+        }
+      " {\"source\":14,\"controller\":15,\"choices\":{},\"timestamp\":16,\"expiry\":{\"type\":\"AtCleanup\"},\"scope\":{\"type\":\"Scoped\",\"value\":{\"type\":\"AnyPlayer\"}},\"effect\":{\"type\":\"CantCastSpells\"},\"slots\":{\"nextSpell\":[17]}} "
   Spec.it s "has a schema" $
     Common.assertHasSchema s ActivePlayerEffect.codec

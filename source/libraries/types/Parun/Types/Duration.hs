@@ -6,6 +6,7 @@ import qualified Parun.Types.DurationEvent as DurationEvent
 import qualified Parun.Types.Keyword as Keyword
 import qualified Parun.Types.Phase as Phase
 import qualified Parun.Types.PlayerRef as PlayerRef
+import qualified Parun.Types.SlotName as SlotName
 
 -- | How long a stored continuous effect lasts, as the CARD says it (CR 611.2).
 -- PRINTED data: this is what appears in card JSON. The game stores
@@ -113,10 +114,10 @@ data Duration
     -- keyed on, so the performer could not find the effects the payment ends.
     UntilPaid (Cost.Cost Keyword.Keyword)
   | -- | CR 611.2a / Quicken: "the next ... you ... this turn", stored as
-    -- Expiry.WhenUsed. Nullary: no printed sentence in the pool narrows WHICH
-    -- use ends it beyond the effect's own Filter, or a delayed trigger's own
-    -- condition.
-    UntilUsed
+    -- Expiry.WhenUsed. The slot, when present, is Savage Summoning's "that
+    -- spell": the spell whose cast uses the effect up, bound into the other rows
+    -- the same source installed (Parun.Engine.Cast.bindUser).
+    UntilUsed (Maybe SlotName.SlotName)
   | -- | CR 611.2a: "until" an event -- "this creature is turned face down"
     -- (Vesuvan Shapeshifter), "a player casts a creature spell" (Soul
     -- Sculptor) -- stored as Expiry.OnEvent.

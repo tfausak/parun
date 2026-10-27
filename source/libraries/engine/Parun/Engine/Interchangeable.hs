@@ -398,8 +398,8 @@ copyNames oid row = case row of
 
 playerEffectRowNames :: ObjectId -> ActivePlayerEffect.ActivePlayerEffect -> Bool
 playerEffectRowNames oid row = case row of
-  ActivePlayerEffect.MkActivePlayerEffect source _controller _choices _timestamp expiry _scope effect ability ->
-    source == oid || Monoid.getAny (Mentions.expiryNames (unread oid) expiry) || Monoid.getAny (Mentions.playerEffectNames (unread oid) effect) || any (Binding.isAcquiredFrom oid) ability
+  ActivePlayerEffect.MkActivePlayerEffect source _controller _choices _timestamp expiry _scope effect ability slots ->
+    source == oid || Monoid.getAny (Mentions.expiryNames (unread oid) expiry) || Monoid.getAny (Mentions.playerEffectNames (unread oid) effect) || any (Binding.isAcquiredFrom oid) ability || any (Set.member oid) slots
 
 blockRequirementNames :: ObjectId -> ActiveBlockRequirement.ActiveBlockRequirement -> Bool
 blockRequirementNames oid row = case row of

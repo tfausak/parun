@@ -1307,7 +1307,7 @@ durationNames asking x = case x of
   Duration.UntilEndOfCombat -> mempty
   Duration.UntilEndOfCombatOnYourNextTurn -> mempty
   Duration.UntilPaid cost -> costNames asking (keywordNames asking) cost
-  Duration.UntilUsed -> mempty
+  Duration.UntilUsed slot -> foldMap (slotNames asking) slot
   Duration.UntilEvent durationEvent -> durationEventNames asking durationEvent
 
 durationEventNames :: (Monoid r) => Asking r -> DurationEvent.DurationEvent -> r
@@ -1657,7 +1657,7 @@ expiryNames asking x = case x of
   Expiry.AtEndOf _phaseSelector -> mempty
   Expiry.AtEndOfCombatOn _afterTurn -> mempty
   Expiry.WhenPaid paidExpiry -> paidExpiryNames asking paidExpiry
-  Expiry.WhenUsed -> mempty
+  Expiry.WhenUsed slot -> foldMap (slotNames asking) slot
   Expiry.OnEvent eventExpiry -> eventExpiryNames asking eventExpiry
 
 eventShapeNames :: Asking r -> EventShape.EventShape -> r

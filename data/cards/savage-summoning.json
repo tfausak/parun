@@ -1,0 +1,125 @@
+{
+  "faces": [
+    {
+      "counterability": {
+        "type": "CantBeCountered"
+      },
+      "manaCost": [
+        {
+          "type": "OfType",
+          "value": {
+            "type": "Colored",
+            "value": {
+              "type": "Green"
+            }
+          }
+        }
+      ],
+      "name": "Savage Summoning",
+      "oracleText": "This spell can't be countered.\nThe next creature spell you cast this turn can be cast as though it had flash. That spell can't be countered. That creature enters with an additional +1/+1 counter on it.",
+      "spell": {
+        "modes": [
+          {
+            "clauses": [
+              {
+                "effects": [
+                  {
+                    "type": "AffectPlayers",
+                    "value": {
+                      "duration": {
+                        "type": "UntilUsed",
+                        "value": "nextSpell"
+                      },
+                      "effect": {
+                        "type": "CastAsThoughItHadFlash",
+                        "value": {
+                          "type": "HasCardType",
+                          "value": {
+                            "type": "Creature"
+                          }
+                        }
+                      },
+                      "players": {
+                        "type": "Scoped",
+                        "value": {
+                          "type": "You"
+                        }
+                      }
+                    }
+                  },
+                  {
+                    "type": "AffectPlayers",
+                    "value": {
+                      "duration": {
+                        "type": "UntilEndOfTurn"
+                      },
+                      "effect": {
+                        "type": "CantBeCountered",
+                        "value": {
+                          "countered": {
+                            "type": "IsBound",
+                            "value": "nextSpell"
+                          }
+                        }
+                      },
+                      "players": {
+                        "type": "Scoped",
+                        "value": {
+                          "type": "AnyPlayer"
+                        }
+                      }
+                    }
+                  },
+                  {
+                    "type": "Replace",
+                    "value": {
+                      "duration": {
+                        "type": "UntilEndOfTurn"
+                      },
+                      "effect": {
+                        "type": "EntryR",
+                        "value": {
+                          "matching": {
+                            "type": "IsBound",
+                            "value": "nextSpell"
+                          },
+                          "rewrite": {
+                            "type": "WithCounters",
+                            "value": [
+                              {
+                                "count": {
+                                  "type": "Literal",
+                                  "value": 1
+                                },
+                                "kind": {
+                                  "type": "PlusOnePlusOne"
+                                }
+                              }
+                            ]
+                          }
+                        }
+                      },
+                      "origin": {
+                        "type": "Other"
+                      },
+                      "uses": {
+                        "type": "Once"
+                      }
+                    }
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      },
+      "typeLine": {
+        "types": [
+          {
+            "type": "Instant"
+          }
+        ]
+      }
+    }
+  ]
+}

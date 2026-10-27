@@ -1,5 +1,6 @@
 module Parun.Codec.ExpirySpec where
 
+import qualified Data.Text as Text
 import qualified Parun.Codec.Expiry as Expiry
 import qualified Parun.JsonCodec.Codec as Codec
 import qualified Parun.JsonCodec.Common as Common
@@ -25,6 +26,7 @@ import qualified Parun.Types.Phase as Phase
 import qualified Parun.Types.PhaseSelector as PhaseSelector
 import qualified Parun.Types.PlayerId as PlayerId
 import qualified Parun.Types.Quantity as Quantity
+import qualified Parun.Types.SlotName as SlotName
 import qualified Parun.Types.StepBegan as StepBegan
 import qualified Parun.Types.Timestamp as Timestamp
 import qualified Parun.Types.While as While
@@ -177,14 +179,20 @@ spec s = Spec.describe s "Parun.Codec.Expiry" $ do
       Expiry.codec
       (Expiry.WhenPaid (PaidExpiry.MkPaidExpiry (PlayerId.MkPlayerId 2) (Cost.MkCost (Just (ManaCost.MkManaCost [ManaSymbol.OfType (ManaType.Colored Color.Blue)])) [])))
       " {\"type\":\"WhenPaid\",\"value\":{\"player\":2,\"cost\":{\"mana\":[{\"type\":\"OfType\",\"value\":{\"type\":\"Colored\",\"value\":{\"type\":\"Blue\"}}}]}}} "
-  -- CR 611.2a: the one-shot Duration.UntilUsed arms into. Nullary, and
-  -- distinct from AtCleanup, which it also honours.
+  -- CR 611.2a: the one-shot Duration.UntilUsed arms into, distinct from
+  -- AtCleanup, which it also honours.
   Spec.it s "WhenUsed" $
     Common.assertCodec
       s
       Expiry.codec
-      Expiry.WhenUsed
+      (Expiry.WhenUsed Nothing)
       " {\"type\":\"WhenUsed\"} "
+  Spec.it s "WhenUsed, binding a slot" $
+    Common.assertCodec
+      s
+      Expiry.codec
+      (Expiry.WhenUsed (Just (SlotName.MkSlotName (Text.pack "nextSpell"))))
+      " {\"type\":\"WhenUsed\",\"value\":\"nextSpell\"} "
   -- CR 611.2a: what Duration.UntilEvent arms into.
   Spec.it s "OnEvent" $
     Common.assertCodec

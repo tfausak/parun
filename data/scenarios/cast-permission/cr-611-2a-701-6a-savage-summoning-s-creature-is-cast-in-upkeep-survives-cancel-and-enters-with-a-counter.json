@@ -1,0 +1,288 @@
+{
+  "description": "CR 611.2a / 701.6a Savage Summoning's creature is cast in upkeep, survives Cancel and enters with a counter",
+  "note": "Savage Summoning's own Cancel is refused by its printed \"This spell can't be countered\" (CR 101.2). Once it resolves, the next creature spell alice casts may be cast as though it had flash, so Grizzly Bears is cast in her upkeep. That cast spends the grant and binds the spell to the Summoning's other two effects: bob's second Cancel does not counter it (the card's ruling: the counterspell can still be cast), and it enters with an additional +1/+1 counter (CR 614.1c, 614.12).",
+  "board": {
+    "seats": [
+      {
+        "name": "alice",
+        "battlefield": [
+          {
+            "card": "Forest",
+            "label": "f1",
+            "ready": true
+          },
+          {
+            "card": "Forest",
+            "label": "f2",
+            "ready": true
+          },
+          {
+            "card": "Forest",
+            "label": "f3",
+            "ready": true
+          }
+        ],
+        "hand": [
+          {
+            "card": "Savage Summoning",
+            "label": "summoning"
+          },
+          {
+            "card": "Grizzly Bears",
+            "label": "bears"
+          }
+        ],
+        "library": [
+          {
+            "card": "Plains"
+          },
+          {
+            "card": "Plains"
+          },
+          {
+            "card": "Plains"
+          },
+          {
+            "card": "Plains"
+          }
+        ]
+      },
+      {
+        "name": "bob",
+        "battlefield": [
+          {
+            "card": "Island",
+            "label": "i1",
+            "ready": true
+          },
+          {
+            "card": "Island",
+            "label": "i2",
+            "ready": true
+          },
+          {
+            "card": "Island",
+            "label": "i3",
+            "ready": true
+          },
+          {
+            "card": "Island",
+            "label": "i4",
+            "ready": true
+          },
+          {
+            "card": "Island",
+            "label": "i5",
+            "ready": true
+          },
+          {
+            "card": "Island",
+            "label": "i6",
+            "ready": true
+          }
+        ],
+        "hand": [
+          {
+            "card": "Cancel",
+            "label": "c1"
+          },
+          {
+            "card": "Cancel",
+            "label": "c2"
+          }
+        ],
+        "library": [
+          {
+            "card": "Plains"
+          },
+          {
+            "card": "Plains"
+          },
+          {
+            "card": "Plains"
+          },
+          {
+            "card": "Plains"
+          }
+        ]
+      }
+    ],
+    "active": "alice",
+    "step": "Upkeep"
+  },
+  "timeline": [
+    {
+      "turn": 1,
+      "step": "Upkeep",
+      "player": "alice",
+      "do": {
+        "Cast": {
+          "object": "$summoning",
+          "mana": [
+            "$f1",
+            null
+          ]
+        }
+      }
+    },
+    {
+      "turn": 1,
+      "step": "Upkeep",
+      "player": "alice",
+      "do": "Pass"
+    },
+    {
+      "turn": 1,
+      "step": "Upkeep",
+      "player": "bob",
+      "do": {
+        "Cast": {
+          "object": "$c1",
+          "targets": [
+            "Savage Summoning"
+          ],
+          "mana": [
+            "$i1",
+            "$i2",
+            "$i3",
+            null
+          ]
+        }
+      }
+    },
+    {
+      "turn": 1,
+      "step": "Upkeep",
+      "player": "alice",
+      "do": "Pass"
+    },
+    {
+      "turn": 1,
+      "step": "Upkeep",
+      "player": "bob",
+      "do": "Pass"
+    },
+    {
+      "turn": 1,
+      "step": "Upkeep",
+      "player": "alice",
+      "check": {
+        "Count": {
+          "player": "alice",
+          "zone": "Stack",
+          "card": "Savage Summoning",
+          "count": 1
+        }
+      }
+    },
+    {
+      "turn": 1,
+      "step": "Upkeep",
+      "player": "alice",
+      "do": "Pass"
+    },
+    {
+      "turn": 1,
+      "step": "Upkeep",
+      "player": "bob",
+      "do": "Pass"
+    },
+    {
+      "turn": 1,
+      "step": "Upkeep",
+      "player": "alice",
+      "do": {
+        "Cast": {
+          "object": "$bears",
+          "mana": [
+            "$f2",
+            "$f3"
+          ]
+        }
+      }
+    },
+    {
+      "turn": 1,
+      "step": "Upkeep",
+      "player": "alice",
+      "do": "Pass"
+    },
+    {
+      "turn": 1,
+      "step": "Upkeep",
+      "player": "bob",
+      "do": {
+        "Cast": {
+          "object": "$c2",
+          "targets": [
+            "Grizzly Bears"
+          ],
+          "mana": [
+            "$i4",
+            "$i5",
+            "$i6"
+          ]
+        }
+      }
+    },
+    {
+      "turn": 1,
+      "step": "Upkeep",
+      "player": "alice",
+      "do": "Pass"
+    },
+    {
+      "turn": 1,
+      "step": "Upkeep",
+      "player": "bob",
+      "do": "Pass"
+    },
+    {
+      "turn": 1,
+      "step": "Upkeep",
+      "player": "alice",
+      "check": {
+        "Count": {
+          "player": "alice",
+          "zone": "Stack",
+          "card": "Grizzly Bears",
+          "count": 1
+        }
+      }
+    }
+  ],
+  "final": [
+    {
+      "Count": {
+        "player": "bob",
+        "zone": "Graveyard",
+        "card": "Cancel",
+        "count": 2
+      }
+    },
+    {
+      "Count": {
+        "player": "alice",
+        "zone": "Battlefield",
+        "card": "Grizzly Bears",
+        "count": 1
+      }
+    },
+    {
+      "Counters": {
+        "object": "Grizzly Bears",
+        "kind": {
+          "type": "PlusOnePlusOne"
+        },
+        "count": 1
+      }
+    },
+    {
+      "PowerToughness": {
+        "object": "Grizzly Bears",
+        "power": 3,
+        "toughness": 3
+      }
+    }
+  ]
+}
