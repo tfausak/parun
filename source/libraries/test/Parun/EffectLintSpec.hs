@@ -1331,12 +1331,14 @@ storedPlayerScope effect = case effect of
 -- exact count other than one is allowed nowhere: no gameplay test reaches it.
 -- A choice out of another zone is its own question, whatever its count.
 -- ChosenCardFromAmong splits off its uncapped "any number", which only a
--- reveal's test (Lead the Stampede) and a move's (Ransack) reach.
+-- reveal's test (Lead the Stampede) and a move's (Ransack) reach, and its pile
+-- split (CR 700.3), which only a move's test (Sphinx of Uthuun) reaches.
 data Question
   = CardInGraveyard
   | CardInHand
   | CardFromAmong
   | AnyCardsFromAmong
+  | PileFromAmong
   | RandomInHand
   | RandomInGraveyard
   | RandomInLibrary
@@ -1382,6 +1384,7 @@ questionOf ref = case ref of
   ObjectRef.ChosenCardInGraveyard {} -> Just CardInGraveyard
   ObjectRef.ChosenCardInHand {} -> Just CardInHand
   ObjectRef.ChosenCardFromAmong choice -> case ChosenCardFromAmong.count choice of
+    _ | Maybe.isJust (ChosenCardFromAmong.pileChooser choice) -> Just PileFromAmong
     HowMany.UpTo Nothing -> Just AnyCardsFromAmong
     _ -> Just CardFromAmong
   ObjectRef.RandomCardInHand {} -> Just RandomInHand
@@ -2098,7 +2101,7 @@ effectLintSpec s registry corpus = Spec.describe s "Lint" $ do
           -- PlayerRef above may name several hands. A COMPUTED count is plural
           -- here whatever the board would make it, TopOfLibrary's reading above
           -- and for its reason.
-          ObjectRef.ChosenCardFromAmong (ChosenCardFromAmong.MkChosenCardFromAmong _ _ count _) -> atMostOne count
+          ObjectRef.ChosenCardFromAmong (ChosenCardFromAmong.MkChosenCardFromAmong _ _ count _ _) -> atMostOne count
           -- FALSE where the arm above is True, which is the whole difference
           -- between them: "all" takes every member that matches, and nothing
           -- about the ref bounds how many a group holds.
@@ -2712,7 +2715,7 @@ effectLintSpec s registry corpus = Spec.describe s "Lint" $ do
         group = SlotName.MkSlotName (Text.pack "revealed")
         inGraveyard = ObjectRef.ChosenCardInGraveyard (ChosenCardInGraveyard.MkChosenCardInGraveyard Chooser.TheController (ZoneScope.Scoped (PlayerScope.Related PlayerRelation.You)) anyCard (Quantity.Type.Literal 1))
         inHand = ObjectRef.ChosenCardInHand (ChosenCardInHand.MkChosenCardInHand (PlayerRef.Relative PlayerRelation.You) anyCard (Quantity.Type.Literal 1))
-        fromAmong = ObjectRef.ChosenCardFromAmong (ChosenCardFromAmong.MkChosenCardFromAmong group anyCard HowMany.one (PlayerRef.Relative PlayerRelation.You))
+        fromAmong = ObjectRef.ChosenCardFromAmong (ChosenCardFromAmong.MkChosenCardFromAmong group anyCard HowMany.one (PlayerRef.Relative PlayerRelation.You) Nothing)
         atRandom = ObjectRef.RandomCardInHand (RandomCardInHand.MkRandomCardInHand (PlayerRef.Relative PlayerRelation.You) anyCard (Quantity.Type.Literal 1))
         atRandomInGraveyard = ObjectRef.RandomCardInGraveyard (RandomCardInGraveyard.MkRandomCardInGraveyard (ZoneScope.Scoped (PlayerScope.Related PlayerRelation.You)) anyCard (Quantity.Type.Literal 1))
         sought = ObjectRef.RandomCardInLibrary (RandomCardInLibrary.MkRandomCardInLibrary (PlayerRef.Relative PlayerRelation.You) anyCard (Quantity.Type.Literal 1))
@@ -2765,7 +2768,7 @@ effectLintSpec s registry corpus = Spec.describe s "Lint" $ do
       [False, False, False, True, True]
     Spec.assertBool s (not (null (inertChoosers (Effect.Pair anyNumber)))) "a pair allows no plural choice"
     -- "Any number from among them" is tested under a reveal and a move.
-    let anyFromAmong = ObjectRef.ChosenCardFromAmong (ChosenCardFromAmong.MkChosenCardFromAmong group anyCard (HowMany.UpTo Nothing) (PlayerRef.Relative PlayerRelation.You))
+    let anyFromAmong = ObjectRef.ChosenCardFromAmong (ChosenCardFromAmong.MkChosenCardFromAmong group anyCard (HowMany.UpTo Nothing) (PlayerRef.Relative PlayerRelation.You) Nothing)
     Spec.assertEqWith s "any number from among them is allowed by a reveal and a move alone" (inert [reveals anyFromAmong, moves anyFromAmong, discardsThese anyFromAmong]) [False, False, True]
     -- An exact count other than one has no gameplay test, so no site allows it.
     let exactlyTwo = ObjectRef.ChosenPermanents (ChosenPermanents.MkChosenPermanents anyCard (PlayerRef.Relative PlayerRelation.You) (HowMany.Exactly (Quantity.Type.Literal 2)) Zone.Battlefield)

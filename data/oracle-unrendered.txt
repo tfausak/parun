@@ -698,6 +698,7 @@ eye-spy
 eyes-of-gitaxias
 ezuri-claw-of-progress
 ezuri-stalker-of-spheres
+fact-or-fiction
 fae-of-wishes-granted
 faerie-conclave
 faerie-macabre
@@ -1886,7 +1887,9 @@ spell-blast
 spellbook
 sphere-of-safety
 sphinx-ambassador
+sphinx-of-clear-skies
 sphinx-of-the-revelation
+sphinx-of-uthuun
 sphinxs-decree
 spider-punk
 spike-cannibal
@@ -2159,6 +2162,7 @@ undergrowth-scavenger
 underworld-dreams
 undying-flames
 unerring-sling
+unesh-criosphinx-sovereign
 unexpectedly-absent
 unleash-fury
 unlicensed-hearse

@@ -1,0 +1,100 @@
+{
+  "description": "CR 700.3 / 700.3d Fact or Fiction over a one-card library: bob is not asked to split, and alice takes the empty pile",
+  "note": "One card splits only one way, so bob has no question; an ask would be an unscheduled prompt. Alice takes the empty pile, which is not ChoosePile's fallback answer (the pile holding the card), so the Murder goes to the graveyard rather than her hand.",
+  "board": {
+    "seats": [
+      {
+        "name": "alice",
+        "battlefield": [
+          {
+            "card": "Island",
+            "label": "island-1",
+            "ready": true
+          },
+          {
+            "card": "Island",
+            "label": "island-2",
+            "ready": true
+          },
+          {
+            "card": "Island",
+            "label": "island-3",
+            "ready": true
+          },
+          {
+            "card": "Island",
+            "label": "island-4",
+            "ready": true
+          }
+        ],
+        "hand": [
+          {
+            "card": "Fact or Fiction",
+            "label": "fact-or-fiction"
+          }
+        ],
+        "library": [
+          {
+            "card": "Murder",
+            "label": "murder"
+          }
+        ]
+      },
+      {
+        "name": "bob"
+      }
+    ],
+    "active": "alice",
+    "step": "PrecombatMain"
+  },
+  "timeline": [
+    {
+      "turn": 1,
+      "step": "PrecombatMain",
+      "player": "alice",
+      "do": {
+        "Answer": {
+          "prompt": "ChoosePile",
+          "with": []
+        }
+      }
+    },
+    {
+      "turn": 1,
+      "step": "PrecombatMain",
+      "player": "alice",
+      "do": {
+        "Cast": {
+          "object": "$fact-or-fiction",
+          "mana": [
+            "$island-1",
+            "$island-2",
+            "$island-3",
+            "$island-4"
+          ]
+        }
+      }
+    }
+  ],
+  "final": [
+    {
+      "View": {
+        "of": "Zone",
+        "player": "alice",
+        "zone": "Graveyard",
+        "is": [
+          "Murder",
+          "Fact or Fiction"
+        ]
+      }
+    },
+    {
+      "Count": {
+        "player": "alice",
+        "zone": "Hand",
+        "card": "Murder",
+        "count": 0
+      }
+    }
+  ]
+}

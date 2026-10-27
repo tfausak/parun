@@ -26,13 +26,14 @@ spec s = Spec.describe s "Parun.Codec.ChosenCardFromAmong" $ do
           { ChosenCardFromAmong.slot = SlotName.MkSlotName (Text.pack "revealed"),
             ChosenCardFromAmong.filter = Filter.HasCardType CardType.Creature,
             ChosenCardFromAmong.count = HowMany.one,
-            ChosenCardFromAmong.chooser = PlayerRef.Relative PlayerRelation.You
+            ChosenCardFromAmong.chooser = PlayerRef.Relative PlayerRelation.You,
+            ChosenCardFromAmong.pileChooser = Nothing
           }
       )
       " {\"slot\":\"revealed\",\"filter\":{\"type\":\"HasCardType\",\"value\":{\"type\":\"Creature\"}}} "
   -- Uncovered Clues' "up to two" and Animal Magnetism's opponent: the two keys
   -- the defaults above leave off the wire entirely.
-  Spec.it s "MkChosenCardFromAmong, all four keys" $
+  Spec.it s "MkChosenCardFromAmong, count and chooser" $
     Common.assertCodec
       s
       ChosenCardFromAmong.codec
@@ -40,8 +41,23 @@ spec s = Spec.describe s "Parun.Codec.ChosenCardFromAmong" $ do
           { ChosenCardFromAmong.slot = SlotName.MkSlotName (Text.pack "revealed"),
             ChosenCardFromAmong.filter = Filter.HasCardType CardType.Creature,
             ChosenCardFromAmong.count = HowMany.UpTo (Just (Quantity.Literal 2)),
-            ChosenCardFromAmong.chooser = PlayerRef.InSlot (SlotName.MkSlotName (Text.pack "opponent"))
+            ChosenCardFromAmong.chooser = PlayerRef.InSlot (SlotName.MkSlotName (Text.pack "opponent")),
+            ChosenCardFromAmong.pileChooser = Nothing
           }
       )
       " {\"slot\":\"revealed\",\"filter\":{\"type\":\"HasCardType\",\"value\":{\"type\":\"Creature\"}},\"count\":{\"type\":\"UpTo\",\"value\":{\"type\":\"Literal\",\"value\":2}},\"chooser\":{\"type\":\"InSlot\",\"value\":\"opponent\"}} "
+  -- Fact or Fiction: an opponent separates, and you take a pile (CR 700.3).
+  Spec.it s "MkChosenCardFromAmong, a pile chooser" $
+    Common.assertCodec
+      s
+      ChosenCardFromAmong.codec
+      ( ChosenCardFromAmong.MkChosenCardFromAmong
+          { ChosenCardFromAmong.slot = SlotName.MkSlotName (Text.pack "revealed"),
+            ChosenCardFromAmong.filter = Filter.And [],
+            ChosenCardFromAmong.count = HowMany.UpTo Nothing,
+            ChosenCardFromAmong.chooser = PlayerRef.Relative PlayerRelation.Opponent,
+            ChosenCardFromAmong.pileChooser = Just (PlayerRef.Relative PlayerRelation.You)
+          }
+      )
+      " {\"slot\":\"revealed\",\"filter\":{\"type\":\"And\",\"value\":[]},\"count\":{\"type\":\"UpTo\"},\"chooser\":{\"type\":\"Relative\",\"value\":{\"type\":\"Opponent\"}},\"pileChooser\":{\"type\":\"Relative\",\"value\":{\"type\":\"You\"}}} "
   Spec.it s "has a schema" $ Common.assertHasSchema s ChosenCardFromAmong.codec

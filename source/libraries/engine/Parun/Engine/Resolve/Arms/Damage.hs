@@ -1120,10 +1120,9 @@ choosePlayerAtRandom resolving source controller choice = do
 --
 -- CR 700.3 where a pile chooser is named: the pick is one pile and the rest of
 -- the matching permanents the other, and the pile chooser's pile is what is
--- bound -- Stand or Fall. A single permanent splits only one way, so its
--- separation is not asked; piles alike (none matched) are not offered either.
--- Proved by the combat-effect scenarios "CR 700.3 / 509.1b Stand or Fall" and
--- "CR 700.3 / 802.2 Stand or Fall at three seats".
+-- bound -- Stand or Fall, through Common.takePile. Proved by the combat-effect
+-- scenarios "CR 700.3 / 509.1b Stand or Fall" and "CR 700.3 / 802.2 Stand or
+-- Fall at three seats".
 choosePermanents :: ObjectId -> ObjectId -> PlayerId -> Map.Map SlotName (Set Recipient) -> ChoosePermanents.ChoosePermanents -> Game ()
 choosePermanents resolving source controller legal (ChoosePermanents.MkChoosePermanents choice slot pileChooser) = do
   picked <- case pileChooser of
@@ -1134,14 +1133,7 @@ choosePermanents resolving source controller legal (ChoosePermanents.MkChoosePer
       split <- case matching of
         [_] -> pure matching
         _ -> Common.chosenPermanents AnyNumberOf.IntoPile legal resolving controller source choice
-      let first = Set.fromList split
-          rest = Set.difference (Set.fromList matching) first
-          piles = if rest == first then [first] else [first, rest]
-      seat <- Common.askedChooser resolving source controller legal chooserRef
-      taken <- case seat of
-        Nothing -> pure Nothing
-        Just who -> Game.chooseAmong (\decider asked -> Prompt.ChoosePile decider asked source) who piles
-      pure (foldMap Set.toList taken)
+      Common.takePile resolving source controller legal chooserRef matching split
   Monad.unless (null picked) (State.modify' (Common.bindObjectsSlot resolving slot (Seq.fromList picked)))
 
 -- CR 702.158d: "choose one of the three sector designations, then perform
