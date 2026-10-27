@@ -127,7 +127,10 @@ data ActiveReplacement = MkActiveReplacement
     -- REWRITTEN by CR 400.7h: a card cast under a permission this row's source
     -- granted becomes a new object (CR 400.7), and Parun.Engine.Cast.followIntoSpell
     -- moves the name onto it, which is what makes "that spell" a claim about the
-    -- spell rather than about the card that is no longer there.
+    -- spell rather than about the card that is no longer there. An EntryR
+    -- row's is rewritten again as a spell it names resolves into a permanent
+    -- (Parun.Engine.Event.reenter, CR 614.1 / 608.3a): Boreal Outrider's "that
+    -- creature enters with".
     slots :: Map.Map SlotName.SlotName (Set.Set ObjectId.ObjectId)
   }
   deriving (Eq, Ord, Show)
