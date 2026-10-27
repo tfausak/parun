@@ -16,7 +16,6 @@ import qualified Parun.Codec.CreatureBecomesBlockedByAtLeast as CreatureBecomesB
 import qualified Parun.Codec.CreatureExploits as CreatureExploits
 import qualified Parun.Codec.DamageKind as DamageKind
 import qualified Parun.Codec.DealsDamageToPlayer as DealsDamageToPlayer
-import qualified Parun.Codec.DealtDamage as DealtDamage
 import qualified Parun.Codec.DieResult as DieResult
 import qualified Parun.Codec.Filter as Filter
 import qualified Parun.Codec.Keyword as Keyword
@@ -33,6 +32,7 @@ import qualified Parun.Codec.PlayerActed as PlayerActed
 import qualified Parun.Codec.PlayerAttacksPlayer as PlayerAttacksPlayer
 import qualified Parun.Codec.PlayerAttacksWith as PlayerAttacksWith
 import qualified Parun.Codec.PlayerDrawsNthCard as PlayerDrawsNthCard
+import qualified Parun.Codec.PlayerIsDealtDamage as PlayerIsDealtDamage
 import qualified Parun.Codec.PlayerRelation as PlayerRelation
 import qualified Parun.Codec.PlaysLand as PlaysLand
 import qualified Parun.Codec.RevealedThisWay as RevealedThisWay
@@ -73,7 +73,7 @@ codec =
           Arm.optionalPayload "SelfDealsDamageToCreature" DamageKind.codec TriggerCondition.SelfDealsDamageToCreature (\x -> case x of TriggerCondition.SelfDealsDamageToCreature y -> Just y; _ -> Nothing),
           Arm.payload "DealsDamage" ActingPermanent.codec TriggerCondition.DealsDamage (\x -> case x of TriggerCondition.DealsDamage y -> Just y; _ -> Nothing),
           Arm.payload "IsDealtDamage" ActingPermanent.codec TriggerCondition.IsDealtDamage (\x -> case x of TriggerCondition.IsDealtDamage y -> Just y; _ -> Nothing),
-          Arm.payload "PlayerIsDealtDamage" (DealtDamage.codec PlayerRelation.codec) TriggerCondition.PlayerIsDealtDamage (\x -> case x of TriggerCondition.PlayerIsDealtDamage y -> Just y; _ -> Nothing),
+          Arm.payload "PlayerIsDealtDamage" PlayerIsDealtDamage.codec TriggerCondition.PlayerIsDealtDamage (\x -> case x of TriggerCondition.PlayerIsDealtDamage y -> Just y; _ -> Nothing),
           Arm.payload "PermanentDealsCombatDamageToPlayer" PermanentDealsCombatDamageToPlayer.codec TriggerCondition.PermanentDealsCombatDamageToPlayer (\x -> case x of TriggerCondition.PermanentDealsCombatDamageToPlayer y -> Just y; _ -> Nothing),
           Arm.payload "PermanentsDealCombatDamageToPlayer" PermanentsDealCombatDamageToPlayer.codec TriggerCondition.PermanentsDealCombatDamageToPlayer (\x -> case x of TriggerCondition.PermanentsDealCombatDamageToPlayer y -> Just y; _ -> Nothing),
           Arm.nullary "CreatureDealtCombatDamageToMonarch" TriggerCondition.CreatureDealtCombatDamageToMonarch,

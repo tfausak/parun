@@ -4,7 +4,7 @@ import qualified Parun.Types.DamageKind as DamageKind
 
 -- | Which player was dealt damage, and which damage counts (CR 120.1).
 -- PARAMETRIC in how the player is named: a Parun.Types.PlayerRelation in
--- Parun.Types.TriggerCondition's PlayerIsDealtDamage, a Parun.Types.PlayerRef
+-- Parun.Types.PlayerIsDealtDamage's dealt, a Parun.Types.PlayerRef
 -- in Parun.Types.Quantity's PlayersDealtDamageThisTurn.
 data DealtDamage player = MkDealtDamage
   { player :: player,

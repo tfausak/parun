@@ -115,6 +115,7 @@ import qualified Parun.Types.PlayerAttacksPlayer as PlayerAttacksPlayer
 import qualified Parun.Types.PlayerAttacksWith as PlayerAttacksWith
 import qualified Parun.Types.PlayerDrawsNthCard as PlayerDrawsNthCard
 import Parun.Types.PlayerId (PlayerId)
+import qualified Parun.Types.PlayerIsDealtDamage as PlayerIsDealtDamage
 import qualified Parun.Types.PlayerRelation as PlayerRelation
 import qualified Parun.Types.PlaysLand as PlaysLand
 import qualified Parun.Types.ProjectedCharacteristics as PC
@@ -1115,10 +1116,24 @@ matchesTriggerGiven bindings board gs bearer you cond event = case cond of
   -- of the kind asked for -- the arm above with the recipient a player rather
   -- than the bearer. CR 120.2b's noncombat damage is every damage event that is
   -- not CR 510.2's, which DamageEvent.kind already records.
-  TriggerCondition.PlayerIsDealtDamage dealt -> case event of
+  --
+  -- With orTheirPlaneswalkers, CR 120.3c's planeswalker recipient too, judged
+  -- through `board` as damageBy's Filter is: the damage that empties a
+  -- planeswalker of loyalty buries it (CR 704.5i) before the log is scanned,
+  -- and it was a planeswalker that player controlled when it was dealt.
+  TriggerCondition.PlayerIsDealtDamage watched -> case event of
     GameEvent.DamageDealt ev ->
-      all (== DamageEvent.kind ev) (DealtDamage.kind dealt)
-        && maybe False (PlayerRelation.holds (Game.teams gs) (DealtDamage.player dealt) you) (Recipient.playerOf (DamageEvent.target ev))
+      let dealt = PlayerIsDealtDamage.dealt watched
+          related = PlayerRelation.holds (Game.teams gs) (DealtDamage.player dealt) you
+          theirPlaneswalker view = Set.member CardType.Planeswalker (Filter.cardTypes view) && maybe False related (Filter.controller view)
+       in all (== DamageEvent.kind ev) (DealtDamage.kind dealt)
+            && case DamageEvent.target ev of
+              target
+                | Just pid <- Recipient.playerOf target -> related pid
+                | PlayerIsDealtDamage.orTheirPlaneswalkers watched,
+                  Just oid <- Recipient.objectOf target ->
+                    maybe False theirPlaneswalker (postEventView board gs oid)
+                | otherwise -> False
     GameEvent.Moved {} -> False
     GameEvent.StepBegan {} -> False
     GameEvent.SpellCast {} -> False
