@@ -36,11 +36,13 @@
           "condition": {
             "type": "PlayerIsDealtDamage",
             "value": {
-              "kind": {
-                "type": "Noncombat"
-              },
-              "player": {
-                "type": "Opponent"
+              "dealt": {
+                "kind": {
+                  "type": "Noncombat"
+                },
+                "player": {
+                  "type": "Opponent"
+                }
               }
             }
           },

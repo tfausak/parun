@@ -955,7 +955,7 @@ batchScoped condition = case condition of
   TriggerCondition.IsDealtDamage _ -> False
   -- CR 603.2c: simultaneous damage to the player is one event of their being
   -- dealt damage -- Lich's ruling sacrifices "for that damage simultaneously".
-  -- Split per damaged player by batchPartition.
+  -- Split per damaged player, and per damaged planeswalker, by batchPartition.
   TriggerCondition.PlayerIsDealtDamage _ -> True
   TriggerCondition.PermanentDealsCombatDamageToPlayer _ -> False
   -- A True beside PermanentsDie: CR 510.2 deals every combat damage of a step

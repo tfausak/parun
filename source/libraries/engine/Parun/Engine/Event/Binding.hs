@@ -63,6 +63,7 @@ import qualified Parun.Types.PermanentWasSacrificed as PermanentWasSacrificed
 import qualified Parun.Types.PermanentsDealCombatDamageToPlayer as PermanentsDealCombatDamageToPlayer
 import qualified Parun.Types.PlayerAttacksWith as PlayerAttacksWith
 import Parun.Types.PlayerId (PlayerId)
+import qualified Parun.Types.PlayerIsDealtDamage as PlayerIsDealtDamage
 import qualified Parun.Types.PlayerRelation as PlayerRelation
 import qualified Parun.Types.ProjectedCharacteristics as PC
 import qualified Parun.Types.Recipient as Recipient
@@ -1103,10 +1104,11 @@ eventBindingsOver board gs bearerBecame becameInGraveyard bearer you cond event 
     maybe id Binding.setBecame (Recipient.objectOf (DamageEvent.target ev)) (Binding.setCombatDamager (DamageEvent.source ev) (Binding.setEventAmount (DamageEvent.amount ev) Map.empty))
   -- CR 120.3's "that many" for a damaged player (Lich), summed across the
   -- batch by batchBindings, and the damaged player under `triggerPlayer`, which
-  -- batchPartition splits the batch by. Unconditional given a match, which
-  -- admits only damage to a player.
+  -- batchPartition splits the batch by. A damaged planeswalker (Vengeful
+  -- Pharaoh's) goes under `became` instead, the key batchPartition splits it
+  -- off by: it names no player for "that player" to read.
   (TriggerCondition.PlayerIsDealtDamage _, GameEvent.DamageDealt ev) ->
-    maybe id Binding.setTriggerPlayer (Recipient.playerOf (DamageEvent.target ev)) (Binding.setEventAmount (DamageEvent.amount ev) Map.empty)
+    maybe id Binding.setTriggerPlayer (Recipient.playerOf (DamageEvent.target ev)) (maybe id Binding.setBecame (Recipient.objectOf (DamageEvent.target ev)) (Binding.setEventAmount (DamageEvent.amount ev) Map.empty))
   -- CR 603.2c's "that many" (Rakshasa Vizier): THIS event's contribution to the
   -- batch, the number of cards it moved that the condition admits. A meld's entry
   -- is one event moving two (CR 701.42a); every other move, one. batchBindings
@@ -1199,8 +1201,12 @@ batchPartition cond bindings = case cond of
   -- CR 726.2's "one or more creatures A PLAYER controls": one occurrence per
   -- damagers' controller. The damaged player is the holder, one seat already.
   TriggerCondition.CreaturesDealtCombatDamageToInitiative -> seat Binding.damagersController
-  -- CR 603.2c: one occurrence per damaged player.
-  TriggerCondition.PlayerIsDealtDamage _ -> seat Binding.triggerPlayer
+  -- CR 603.2c: one occurrence per damaged player, and per damaged planeswalker
+  -- beside it -- Vengeful Pharaoh's ruling (2011-09-22) that damage to you and
+  -- a planeswalker you control at once triggers it twice.
+  -- data/scenarios/card-trigger/cr-603-2c-vengeful-pharaoh-triggers-once-for-you-and-once-per-planeswalker.json
+  -- proves the split.
+  TriggerCondition.PlayerIsDealtDamage _ -> seat Binding.triggerPlayer <> object Binding.became
   -- The branch that matched is the one that stamped, eventBindings' AnyOf arm's
   -- reading.
   TriggerCondition.AnyOf conditions -> Maybe.fromMaybe Seq.empty (List.find (not . Seq.null) (fmap (`batchPartition` bindings) conditions))
@@ -1490,7 +1496,10 @@ eventBindingSlots cond = case cond of
   -- And the recipient under `became`, which Death Pits of Rath's "destroy it"
   -- reads. See the eventBindings arm above.
   TriggerCondition.IsDealtDamage _ -> Set.fromList [Binding.became, Binding.combatDamager, Binding.eventAmount]
-  TriggerCondition.PlayerIsDealtDamage _ -> Set.fromList [Binding.eventAmount, Binding.triggerPlayer]
+  -- The damaged player only where no planeswalker can stand in for one.
+  TriggerCondition.PlayerIsDealtDamage watched
+    | PlayerIsDealtDamage.orTheirPlaneswalkers watched -> Set.singleton Binding.eventAmount
+    | otherwise -> Set.fromList [Binding.eventAmount, Binding.triggerPlayer]
   -- CR 510.2's damager, which the bystander's form needs and the self-scoped one
   -- above does not: there the damager IS the bearer, already bound as CR 113.7a's
   -- source. Aragorn, Hornburg Hero's "double the number of +1/+1 counters on it"
@@ -2150,6 +2159,11 @@ eventBindingSlotsSometimes cond = case cond of
   -- and delayedPending scans no batch at all. data/cards/prowling-geistcatcher.json
   -- is the reader.
   TriggerCondition.PermanentSacrificed {} -> Set.singleton Binding.became
+  -- The damaged player for damage to them, the damaged planeswalker for damage
+  -- to one: eventBindings' arm binds whichever the event's recipient is. Nothing
+  -- in data/cards/ names either under it.
+  TriggerCondition.PlayerIsDealtDamage watched
+    | PlayerIsDealtDamage.orTheirPlaneswalkers watched -> Set.fromList [Binding.became, Binding.triggerPlayer]
   -- Binding.handArrival, bound when the move a destination-free condition
   -- matched reached a hand. Nothing in data/cards/ names it under one.
   TriggerCondition.CardLeavesZone p
