@@ -87,8 +87,9 @@ data Search = MkSearch
     -- them. Empty for an instruction of one description, which `filter` alone
     -- states.
     --
-    -- A constraint on the found SET, like `differentIn`: Underground Sea may be
-    -- found as the Swamp, but not as the Island and the Swamp both.
+    -- A constraint on the found SET, like `differentIn`: Underground Sea may
+    -- answer for the Island or the Swamp, and a second Island card for
+    -- neither once the first has taken the Island.
     --
     -- Not implemented: a find outside the game (CR 701.23j) is not held to it
     -- (#4295).
