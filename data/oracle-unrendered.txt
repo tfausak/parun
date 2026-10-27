@@ -339,6 +339,7 @@ chance-for-glory
 chancellor-of-the-forge
 chandra-fire-artisan
 chandra-nalaar
+chandra-the-firebrand
 chandras-outrage
 chandras-phoenix
 chandras-spitfire
