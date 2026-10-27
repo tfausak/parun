@@ -157,8 +157,8 @@ data Effect card ability
     MoveMana MoveMana.MoveMana
   | -- | CR 701.23: the players Search.searcher names each search the
     -- Search.zones of each player Search.owner names for cards matching
-    -- Search.filter, put them where Search.destination says, then shuffle any
-    -- library searched.
+    -- Search.filter and Search.descriptions, put them where
+    -- Search.destination says, then shuffle any library searched.
     Search Search.Search
   | -- | CR 701.13 / Rest in Peace: exile every card in every graveyard.
     -- Targetless and bulk; a general exile-from-zone is future.

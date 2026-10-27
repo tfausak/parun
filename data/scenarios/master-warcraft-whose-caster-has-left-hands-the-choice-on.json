@@ -1,0 +1,48 @@
+{
+  "description": "CR 800.4g/800.4h Master Warcraft's caster has left the game, so the next player in turn order names who makes each declaration it hands over",
+  "note": "Bob casts Master Warcraft in alice's main phase, then carol's Lightning Bolt takes his last 3 life, before combat so he is no defending player. CR 800.4g would have the spell's controller name a substitute chooser, but that is bob, so CR 800.4h gives that choice to carol, next after him. She names herself for alice's attack and alice for her own blocks. Each prompt is keyed by its decider, so no entry is taken if a departed bob is asked.",
+  "board": {
+    "active": "alice",
+    "step": "PrecombatMain",
+    "seats": [
+      {
+        "name": "alice",
+        "battlefield": [
+          {"card": "Grizzly Bears", "label": "bears", "ready": true},
+          {"card": "Hill Giant", "label": "giant", "ready": true}
+        ]
+      },
+      {
+        "name": "bob",
+        "life": 3,
+        "hand": [{"card": "Master Warcraft", "label": "warcraft"}],
+        "battlefield": [
+          {"card": "Plains", "label": "p1"},
+          {"card": "Plains", "label": "p2"},
+          {"card": "Plains", "label": "p3"},
+          {"card": "Plains", "label": "p4"}
+        ]
+      },
+      {
+        "name": "carol",
+        "hand": [{"card": "Lightning Bolt", "label": "bolt"}],
+        "battlefield": [
+          {"card": "Mountain", "label": "mountain"},
+          {"card": "Grizzly Bears", "label": "cbears", "ready": true},
+          {"card": "Hill Giant", "label": "cgiant", "ready": true}
+        ]
+      }
+    ]
+  },
+  "timeline": [
+    {"turn": 1, "step": "PrecombatMain", "player": "bob", "do": {"Cast": {"object": "$warcraft", "mana": ["$p1", "$p2", "$p3", "$p4"]}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "carol", "do": "Pass"},
+    {"turn": 1, "step": "PrecombatMain", "player": "carol", "do": {"Cast": {"object": "$bolt", "targets": ["$bob"], "mana": ["$mountain"]}}},
+    {"turn": 1, "step": "DeclareAttackers", "player": "carol", "do": {"Answer": {"prompt": "ChoosePlayer", "with": "carol"}}},
+    {"turn": 1, "step": "DeclareAttackers", "player": "carol", "do": {"Attack": ["$bears"]}},
+    {"turn": 1, "step": "DeclareBlockers", "player": "carol", "do": {"Answer": {"prompt": "ChoosePlayer", "with": "alice"}}},
+    {"turn": 1, "step": "DeclareBlockers", "player": "alice", "do": {"Block": {"$cgiant": ["$bears"]}}},
+    {"turn": 1, "step": "DeclareBlockers", "player": "alice", "check": {"Blockers": {"attacker": "$bears", "blockers": ["$cgiant"]}}},
+    {"turn": 1, "step": "DeclareBlockers", "player": "alice", "check": {"Tapped": {"object": "$giant", "tapped": false}}}
+  ]
+}

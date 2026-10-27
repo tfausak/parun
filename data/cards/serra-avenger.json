@@ -1,0 +1,62 @@
+{
+  "faces": [
+    {
+      "castingRestrictions": [
+        {
+          "type": "NotDuringFirstTurns",
+          "value": 3
+        }
+      ],
+      "keywords": [
+        {
+          "type": "Flying"
+        },
+        {
+          "type": "Vigilance"
+        }
+      ],
+      "manaCost": [
+        {
+          "type": "OfType",
+          "value": {
+            "type": "Colored",
+            "value": {
+              "type": "White"
+            }
+          }
+        },
+        {
+          "type": "OfType",
+          "value": {
+            "type": "Colored",
+            "value": {
+              "type": "White"
+            }
+          }
+        }
+      ],
+      "name": "Serra Avenger",
+      "oracleText": "You can't cast Serra Avenger during your first, second, or third turns of the game.\nFlying, vigilance",
+      "power": {
+        "type": "Literal",
+        "value": 3
+      },
+      "toughness": {
+        "type": "Literal",
+        "value": 3
+      },
+      "typeLine": {
+        "subtypes": [
+          {
+            "type": "Angel"
+          }
+        ],
+        "types": [
+          {
+            "type": "Creature"
+          }
+        ]
+      }
+    }
+  ]
+}

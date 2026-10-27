@@ -1797,6 +1797,8 @@ beginTurn extra pid gs =
         gs
           { GameState.activePlayer = pid,
             GameState.turnNumber = GameState.turnNumber gs + 1,
+            -- CR 500.7: the turn is one of each taker's turns of the game.
+            GameState.turnsBegun = Turn.countTurnBegun takers (GameState.turnsBegun gs),
             -- CR 500.7: which extra turn this is, for a duration naming it
             -- (Expiry.DuringExtraTurn); Nothing on an ordinary turn.
             GameState.extraTurnUnderWay = extra,

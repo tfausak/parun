@@ -165,7 +165,7 @@ you = SlotName.MkSlotName (Text.pack "you")
 -- conditions that stamp it -- CR 400.3's owner under the returned-to-hand
 -- condition among them. Reading it under any other is a failing test.
 --
--- The two attack conditions name DIFFERENT players under the one slot, and the
+-- The attack conditions name two DIFFERENT players under the one slot, and the
 -- slot is the printed PHRASE rather than the fact: CR 508.3a's is the defending
 -- player CR 508.5 resolves, and rule 508.3b's is the player attacked, which CR
 -- 508.1b announced. Each is what "that player" means on the card that reads it.

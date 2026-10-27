@@ -12,6 +12,7 @@ import qualified Parun.Types.CardType as CardType
 import qualified Parun.Types.CastFromZone as CastFromZone
 import qualified Parun.Types.CoinFace as CoinFace
 import qualified Parun.Types.Color as Color
+import qualified Parun.Types.CombatDeclaration as CombatDeclaration
 import qualified Parun.Types.CostChange as CostChange
 import qualified Parun.Types.CostModifier as CostModifier
 import qualified Parun.Types.CostSubject as CostSubject
@@ -351,6 +352,13 @@ spec s = Spec.describe s "Parun.Codec.PlayerEffect" $ do
       PlayerEffect.codec
       PlayerEffect.ControlledWhileSearching
       " {\"type\":\"ControlledWhileSearching\"} "
+  -- CR 509.1a / Odric, Master Tactician.
+  Spec.it s "YouChoose" $
+    Common.assertCodec
+      s
+      PlayerEffect.codec
+      (PlayerEffect.YouChoose CombatDeclaration.Blockers)
+      " {\"type\":\"YouChoose\",\"value\":{\"type\":\"Blockers\"}} "
   -- CR 701.23 / Opposition Agent.
   Spec.it s "ExilesFoundWhileSearching" $
     Common.assertCodec

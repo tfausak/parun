@@ -1,0 +1,41 @@
+{
+  "description": "CR 508.1a/509.1a Master Warcraft's caster chooses which creatures attack and which block and how, while the active player still announces what each attacker attacks",
+  "note": "Three seats so CR 508.1b's announcement is a real question. Bob casts Master Warcraft at alice's beginning of combat, then chooses that only her Hill Giant attacks; alice, asked as the active player (the 2008-04-01 ruling), sends it at carol; bob then chooses carol's Grizzly Bears to block it. Each prompt is keyed by its decider, so the entries are taken only if bob decides the two declarations and alice the announcement.",
+  "board": {
+    "active": "alice",
+    "step": "BeginningOfCombat",
+    "seats": [
+      {
+        "name": "alice",
+        "battlefield": [
+          {"card": "Grizzly Bears", "label": "bears", "ready": true},
+          {"card": "Hill Giant", "label": "giant", "ready": true}
+        ]
+      },
+      {
+        "name": "bob",
+        "hand": [{"card": "Master Warcraft", "label": "warcraft"}],
+        "battlefield": [
+          {"card": "Plains", "label": "p1"},
+          {"card": "Plains", "label": "p2"},
+          {"card": "Plains", "label": "p3"},
+          {"card": "Plains", "label": "p4"}
+        ]
+      },
+      {
+        "name": "carol",
+        "battlefield": [
+          {"card": "Grizzly Bears", "label": "cbears", "ready": true}
+        ]
+      }
+    ]
+  },
+  "timeline": [
+    {"turn": 1, "step": "BeginningOfCombat", "player": "bob", "do": {"Cast": {"object": "$warcraft", "mana": ["$p1", "$p2", "$p3", "$p4"]}}},
+    {"turn": 1, "step": "DeclareAttackers", "player": "bob", "do": {"Attack": ["$giant"]}},
+    {"turn": 1, "step": "DeclareAttackers", "player": "alice", "source": "$giant", "do": {"ChooseAttackTarget": "$carol"}},
+    {"turn": 1, "step": "DeclareAttackers", "player": "alice", "check": {"Tapped": {"object": "$bears", "tapped": false}}},
+    {"turn": 1, "step": "DeclareBlockers", "player": "bob", "do": {"Block": {"$cbears": ["$giant"]}}},
+    {"turn": 1, "step": "DeclareBlockers", "player": "alice", "check": {"Blockers": {"attacker": "$giant", "blockers": ["$cbears"]}}}
+  ]
+}

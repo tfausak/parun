@@ -3862,6 +3862,26 @@ differing axes gs = go Set.empty
       Just values | Set.disjoint values seen -> oid : go (values <> seen) rest
       _ -> go seen rest
 
+-- Search.descriptions (CR 701.23h): the cards, in order, that can each answer
+-- for a distinct description together with every card kept ahead of them. No
+-- descriptions is no constraint. Greedy over the searcher's order is exact,
+-- since the cards matchable to distinct descriptions form a transversal
+-- matroid: every maximal such set is a largest one. Each check is exhaustive,
+-- which the printed descriptions keep small.
+matchDescriptions :: (ObjectId -> Filter.Type.Filter Keyword.Type.Keyword -> Bool) -> Seq.Seq (Filter.Type.Filter Keyword.Type.Keyword) -> [ObjectId] -> [ObjectId]
+matchDescriptions fits descriptions
+  | Seq.null descriptions = id
+  | otherwise = go []
+  where
+    indexed = zip [0 :: Int ..] (Foldable.toList descriptions)
+    fitting oid = [i | (i, d) <- indexed, fits oid d]
+    go kept [] = reverse kept
+    go kept (oid : rest)
+      | assign (fmap fitting (oid : kept)) Set.empty = go (oid : kept) rest
+      | otherwise = go kept rest
+    assign [] _ = True
+    assign (options : more) used = any (\i -> not (Set.member i used) && assign more (Set.insert i used)) options
+
 -- CR 609.3 for Search.exactly: the most cards, up to `cap`, that `differing`
 -- could keep together from `candidates` -- searched exhaustively rather than
 -- greedily, since a split card's two names (CR 201.2a) can block two cards a
