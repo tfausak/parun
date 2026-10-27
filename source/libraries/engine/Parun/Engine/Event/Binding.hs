@@ -59,6 +59,7 @@ import qualified Parun.Types.Mentored as Mentored
 import qualified Parun.Types.Moved as Moved
 import Parun.Types.ObjectId (ObjectId)
 import qualified Parun.Types.OwnedZone as OwnedZone
+import qualified Parun.Types.PermanentDealsCombatDamageToPlayer as PermanentDealsCombatDamageToPlayer
 import qualified Parun.Types.PermanentWasSacrificed as PermanentWasSacrificed
 import qualified Parun.Types.PermanentsDealCombatDamageToPlayer as PermanentsDealCombatDamageToPlayer
 import qualified Parun.Types.PlayerAttacksWith as PlayerAttacksWith
@@ -232,8 +233,8 @@ eventBindingsOver board gs bearerBecame becameInGraveyard bearer you cond event 
   -- All three unconditional given a match, which is what eventBindingSlots'
   -- per-condition promise needs: every GameEvent.DamageDealt carries a
   -- DamageEvent.source and a DamageEvent.amount, and matchesTrigger has already
-  -- required a player target -- so Recipient.playerOf's Nothing is
-  -- unreachable for an event this condition admitted.
+  -- required a player target unless orTheirPlaneswalkers admitted a
+  -- planeswalker, whose case binds no player.
   (TriggerCondition.PermanentDealsCombatDamageToPlayer _, GameEvent.DamageDealt ev) ->
     maybe id Binding.setTriggerPlayer (Recipient.playerOf (DamageEvent.target ev)) (Binding.setCombatDamager (DamageEvent.source ev) (Binding.setEventAmount (DamageEvent.amount ev) Map.empty))
   -- CR 603.2c's batch reading: the damagers' CONTROLLER, Norn's Decree's "that
@@ -1513,8 +1514,11 @@ eventBindingSlots cond = case cond of
   --
   -- CR 603.2's "that player" beside them, which Larceny's "that player discards a
   -- card" reads -- the same slot the self-scoped arm above stamps. Guaranteed
-  -- given a match: matchesTrigger admits only a player recipient here.
-  TriggerCondition.PermanentDealsCombatDamageToPlayer _ -> Set.fromList [Binding.combatDamager, Binding.eventAmount, Binding.triggerPlayer]
+  -- given a match where matchesTrigger admits only a player recipient, which
+  -- orTheirPlaneswalkers lifts (Hunter's Insight).
+  TriggerCondition.PermanentDealsCombatDamageToPlayer p
+    | PermanentDealsCombatDamageToPlayer.orTheirPlaneswalkers p -> Set.fromList [Binding.combatDamager, Binding.eventAmount]
+    | otherwise -> Set.fromList [Binding.combatDamager, Binding.eventAmount, Binding.triggerPlayer]
   -- The damagers' CONTROLLER and the damaged player where the arm above binds
   -- three: the trigger event is a whole CR 510.2 step split by both (CR
   -- 603.2c), so they are the seats every member of an occurrence shares. Norn's
@@ -2164,6 +2168,10 @@ eventBindingSlotsSometimes cond = case cond of
   -- in data/cards/ names either under it.
   TriggerCondition.PlayerIsDealtDamage watched
     | PlayerIsDealtDamage.orTheirPlaneswalkers watched -> Set.fromList [Binding.became, Binding.triggerPlayer]
+  -- The damaged player, bound for damage to them and not to a planeswalker.
+  -- Hunter's Insight admits both and reads neither.
+  TriggerCondition.PermanentDealsCombatDamageToPlayer p
+    | PermanentDealsCombatDamageToPlayer.orTheirPlaneswalkers p -> Set.singleton Binding.triggerPlayer
   -- Binding.handArrival, bound when the move a destination-free condition
   -- matched reached a hand. Nothing in data/cards/ names it under one.
   TriggerCondition.CardLeavesZone p

@@ -413,7 +413,7 @@ chooseCardName resolving source controller legal (ChooseCardName.MkChooseCardNam
 -- Event.chooseQuality. Written to the SOURCE, ChooseCardName's road above,
 -- under the acquisition its reader asks for (CR 607.5), and read back by the
 -- next instruction's freeze (Projection.freezeQuantities' arm for
--- Modification.SetLandSubtypeToChosen), so a later activation's choice
+-- Modification.ChosenSubtype), so a later activation's choice
 -- rewrites the field without reaching an effect already stored. On a spell
 -- the source is the resolving object itself, so a later instruction of the
 -- same resolution reads it through Parun.Engine.SourceContext -- the scenario

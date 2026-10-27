@@ -678,7 +678,7 @@ activatableGiven pools sources pid srcId ability gs =
         -- neither carves a mana ability out -- so Cost.manaActivationsGiven
         -- carries this conjunct too, for the CR 605.3a windows that never reach
         -- this function.
-        && not (PlayerEffect.prohibitsActivating (ActivatedAbility.keyword ability) pid gs)
+        && not (PlayerEffect.prohibitsActivating (ActivatedAbility.keyword ability) srcId pid gs)
         && sicknessOkGiven pcs pid srcId ability gs
         && riderOk pid srcId ability gs
         && loyaltyOk pid srcId ability gs

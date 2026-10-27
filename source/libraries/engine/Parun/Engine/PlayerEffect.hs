@@ -605,7 +605,7 @@ prohibitsCasting pid oid variable gs =
   let cast = castsThisTurn pid gs
       prohibits (source, effect) = case effect of
         PlayerEffect.CantCastSpells -> True
-        PlayerEffect.CantActivateAbilities _ -> False
+        PlayerEffect.CantActivateAbilities {} -> False
         PlayerEffect.CantCastMoreThan limit -> cast >= limit
         PlayerEffect.ModifyCost {} -> False
         PlayerEffect.AlternativeActivationCost {} -> False
@@ -726,15 +726,22 @@ prohibitsCasting pid oid variable gs =
 -- Given the rows the caller has already gathered, which is what lets
 -- Parun.Engine.Cost.manaActivationsGiven ask it inside its own hoisted sweep
 -- (#1073); `prohibitsActivating` is the wrapper for a caller holding no list.
-prohibitsActivatingGiven :: Maybe Keyword -> [(RowSource, PlayerEffect)] -> Bool
-prohibitsActivatingGiven stamp effects =
-  let bars effect = case effect of
-        PlayerEffect.CantActivateAbilities designator -> maybe True (\d -> any (Keyword.designates d) stamp) designator
+--
+-- A row's source Filter narrows by the ability's SOURCE, read as the zone
+-- shows it (Grand Abolisher's "abilities of artifacts, creatures, or
+-- enchantments", whose ruling of 2011-09-22 leaves a cycling card in hand
+-- alone -- the card's Filter names the battlefield).
+prohibitsActivatingGiven :: Maybe Keyword -> ObjectId -> GameState -> [(RowSource, PlayerEffect)] -> Bool
+prohibitsActivatingGiven stamp srcId gs effects =
+  let bars (row, effect) = case effect of
+        PlayerEffect.CantActivateAbilities designator sources ->
+          maybe True (\d -> any (Keyword.designates d) stamp) designator
+            && matchesObjectFrom row sources srcId gs
         _ -> False
-   in any (bars . snd) effects
+   in any bars effects
 
-prohibitsActivating :: Maybe Keyword -> PlayerId -> GameState -> Bool
-prohibitsActivating stamp pid gs = prohibitsActivatingGiven stamp (applying pid gs)
+prohibitsActivating :: Maybe Keyword -> ObjectId -> PlayerId -> GameState -> Bool
+prohibitsActivating stamp srcId pid gs = prohibitsActivatingGiven stamp srcId gs (applying pid gs)
 
 -- CR 305.1: does any effect prohibit `pid` from PLAYING this land?
 -- The play-side twin of prohibitsCasting above, and a separate question rather
@@ -786,7 +793,7 @@ prohibitsPlayingLand pid oid gs =
         -- part of Turn.sorcerySpeedWindow. Neither is a question about WHICH
         -- land, which is all this one asks.
         PlayerEffect.CantCastSpells -> False
-        PlayerEffect.CantActivateAbilities _ -> False
+        PlayerEffect.CantActivateAbilities {} -> False
         PlayerEffect.CantCastMoreThan _ -> False
         PlayerEffect.ModifyCost {} -> False
         PlayerEffect.AlternativeActivationCost {} -> False
@@ -879,7 +886,7 @@ prohibitsSearching pid owner causeController gs =
         -- them reaches it -- Silence stops the spell, never the search a
         -- resolved one performs.
         PlayerEffect.CantCastSpells -> False
-        PlayerEffect.CantActivateAbilities _ -> False
+        PlayerEffect.CantActivateAbilities {} -> False
         PlayerEffect.CantCastMoreThan _ -> False
         PlayerEffect.ModifyCost {} -> False
         PlayerEffect.AlternativeActivationCost {} -> False
@@ -966,7 +973,7 @@ prohibitsCounters pid kind gs =
         PlayerEffect.CantSearchLibraries _ -> False
         PlayerEffect.HasProtectionFrom _ -> False
         PlayerEffect.CantCastSpells -> False
-        PlayerEffect.CantActivateAbilities _ -> False
+        PlayerEffect.CantActivateAbilities {} -> False
         PlayerEffect.CantCastMoreThan _ -> False
         PlayerEffect.ModifyCost {} -> False
         PlayerEffect.AlternativeActivationCost {} -> False
@@ -1041,7 +1048,7 @@ prohibitsBecomingMonarch pid gs =
         -- and no prohibition on casting reaches an effect that has already
         -- resolved.
         PlayerEffect.CantCastSpells -> False
-        PlayerEffect.CantActivateAbilities _ -> False
+        PlayerEffect.CantActivateAbilities {} -> False
         PlayerEffect.CantCastMoreThan _ -> False
         PlayerEffect.ModifyCost {} -> False
         PlayerEffect.AlternativeActivationCost {} -> False
@@ -1103,7 +1110,7 @@ schemesCantBeSetInMotion gs =
         PlayerEffect.CantBecomeMonarch -> False
         PlayerEffect.CantAttackWithCreatures -> False
         PlayerEffect.CantCastSpells -> False
-        PlayerEffect.CantActivateAbilities _ -> False
+        PlayerEffect.CantActivateAbilities {} -> False
         PlayerEffect.CantCastMoreThan _ -> False
         PlayerEffect.ModifyCost {} -> False
         PlayerEffect.AlternativeActivationCost {} -> False
@@ -1160,7 +1167,7 @@ prohibitsAttackingWithCreatures pid gs =
         PlayerEffect.ControlledWhileSearching -> False
         PlayerEffect.ExilesFoundWhileSearching -> False
         PlayerEffect.CantCastSpells -> False
-        PlayerEffect.CantActivateAbilities _ -> False
+        PlayerEffect.CantActivateAbilities {} -> False
         PlayerEffect.CantCastMoreThan _ -> False
         PlayerEffect.ModifyCost {} -> False
         PlayerEffect.AlternativeActivationCost {} -> False
@@ -1790,7 +1797,7 @@ landPlayFlashGrant effect = case effect of
   PlayerEffect.MayTapForMana _ -> Nothing
   PlayerEffect.CastAsThoughItHadFlash _ -> Nothing
   PlayerEffect.CantCastSpells -> Nothing
-  PlayerEffect.CantActivateAbilities _ -> Nothing
+  PlayerEffect.CantActivateAbilities {} -> Nothing
   PlayerEffect.CantCastMoreThan _ -> Nothing
   PlayerEffect.ModifyCost {} -> Nothing
   PlayerEffect.AlternativeActivationCost {} -> Nothing
@@ -2039,7 +2046,7 @@ castPermissionsFrom pid zone oid gs =
         PlayerEffect.MayTapForMana _ -> False
         PlayerEffect.PlayAdditionalLands _ -> False
         PlayerEffect.CantCastSpells -> False
-        PlayerEffect.CantActivateAbilities _ -> False
+        PlayerEffect.CantActivateAbilities {} -> False
         PlayerEffect.CantCastMoreThan _ -> False
         PlayerEffect.ModifyCost {} -> False
         PlayerEffect.AlternativeActivationCost {} -> False
@@ -2331,7 +2338,7 @@ mayCastFromHandWithoutPayingManaCost pid oid gs =
         PlayerEffect.PlotFrom _ -> False
         PlayerEffect.PlayAdditionalLands _ -> False
         PlayerEffect.CantCastSpells -> False
-        PlayerEffect.CantActivateAbilities _ -> False
+        PlayerEffect.CantActivateAbilities {} -> False
         PlayerEffect.CantCastMoreThan _ -> False
         -- CR 118.7's increases and reductions, which change what a cost COMES
         -- TO; this arm supplies a different cost to start from (CR 118.9c). The
@@ -2410,7 +2417,7 @@ playLandPiles pid gs =
         PlayerEffect.ActivateLoyaltyAtInstantSpeed _ -> []
         PlayerEffect.MayTapForMana _ -> []
         PlayerEffect.CantCastSpells -> []
-        PlayerEffect.CantActivateAbilities _ -> []
+        PlayerEffect.CantActivateAbilities {} -> []
         PlayerEffect.CantCastMoreThan _ -> []
         PlayerEffect.ModifyCost {} -> []
         PlayerEffect.AlternativeActivationCost {} -> []
@@ -2501,7 +2508,7 @@ protectedFromTargeting rows caster pid gs =
             -- Nobody chose a sourceless caster.
             PlayerScope.ChosenPlayer -> False
         PlayerEffect.CantCastSpells -> False
-        PlayerEffect.CantActivateAbilities _ -> False
+        PlayerEffect.CantActivateAbilities {} -> False
         PlayerEffect.CantCastMoreThan _ -> False
         PlayerEffect.ModifyCost {} -> False
         PlayerEffect.AlternativeActivationCost {} -> False
@@ -2609,7 +2616,7 @@ protectedFromGiven rows aimer oid gs =
         -- anything about which objects may reach this player.
         PlayerEffect.CantSearchLibraries _ -> False
         PlayerEffect.CantCastSpells -> False
-        PlayerEffect.CantActivateAbilities _ -> False
+        PlayerEffect.CantActivateAbilities {} -> False
         PlayerEffect.CantCastMoreThan _ -> False
         PlayerEffect.ModifyCost {} -> False
         PlayerEffect.AlternativeActivationCost {} -> False
@@ -2698,7 +2705,7 @@ protectionCarriers gs =
         PlayerEffect.CantBeTargetedBy _ -> Nothing
         PlayerEffect.CantSearchLibraries _ -> Nothing
         PlayerEffect.CantCastSpells -> Nothing
-        PlayerEffect.CantActivateAbilities _ -> Nothing
+        PlayerEffect.CantActivateAbilities {} -> Nothing
         PlayerEffect.CantCastMoreThan _ -> Nothing
         PlayerEffect.ModifyCost {} -> Nothing
         PlayerEffect.AlternativeActivationCost {} -> Nothing
@@ -2783,7 +2790,7 @@ landPlaysAllowed pid gs =
         PlayerEffect.ActivateLoyaltyAtInstantSpeed _ -> Nothing
         PlayerEffect.MayTapForMana _ -> Nothing
         PlayerEffect.CantCastSpells -> Nothing
-        PlayerEffect.CantActivateAbilities _ -> Nothing
+        PlayerEffect.CantActivateAbilities {} -> Nothing
         PlayerEffect.CantCastMoreThan _ -> Nothing
         PlayerEffect.ModifyCost {} -> Nothing
         PlayerEffect.AlternativeActivationCost {} -> Nothing
@@ -2851,7 +2858,7 @@ votesAllowed :: PlayerId -> GameState -> Natural
 votesAllowed pid gs =
   let grantOf effect = case effect of
         PlayerEffect.CantCastSpells -> Nothing
-        PlayerEffect.CantActivateAbilities _ -> Nothing
+        PlayerEffect.CantActivateAbilities {} -> Nothing
         PlayerEffect.CantCastMoreThan {} -> Nothing
         PlayerEffect.ModifyCost {} -> Nothing
         PlayerEffect.AlternativeActivationCost {} -> Nothing
@@ -2911,7 +2918,7 @@ offeredExtras :: PlayerId -> GameState -> [(ObjectId, PlayerEffect.PlayerEffect)
 offeredExtras pid gs =
   let offered effect = case effect of
         PlayerEffect.CantCastSpells -> False
-        PlayerEffect.CantActivateAbilities _ -> False
+        PlayerEffect.CantActivateAbilities {} -> False
         PlayerEffect.CantCastMoreThan {} -> False
         PlayerEffect.ModifyCost {} -> False
         PlayerEffect.AlternativeActivationCost {} -> False
@@ -2972,7 +2979,7 @@ cascadeActions :: PlayerId -> GameState -> [(Maybe ObjectId, Filter Keyword)]
 cascadeActions pid gs =
   let grantOf effect = case effect of
         PlayerEffect.CantCastSpells -> Nothing
-        PlayerEffect.CantActivateAbilities _ -> Nothing
+        PlayerEffect.CantActivateAbilities {} -> Nothing
         PlayerEffect.CantCastMoreThan {} -> Nothing
         PlayerEffect.ModifyCost {} -> Nothing
         PlayerEffect.AlternativeActivationCost {} -> Nothing
@@ -3032,7 +3039,7 @@ drawReveals :: PlayerId -> Natural -> GameState -> [(ObjectId, DrawReveal.DrawRe
 drawReveals pid nth gs =
   let revealOf effect = case effect of
         PlayerEffect.CantCastSpells -> Nothing
-        PlayerEffect.CantActivateAbilities _ -> Nothing
+        PlayerEffect.CantActivateAbilities {} -> Nothing
         PlayerEffect.CantCastMoreThan {} -> Nothing
         PlayerEffect.ModifyCost {} -> Nothing
         PlayerEffect.AlternativeActivationCost {} -> Nothing
@@ -3091,7 +3098,7 @@ shownGrants :: PlayerId -> GameState -> [Shows.Shows]
 shownGrants pid gs =
   let grantOf effect = case effect of
         PlayerEffect.CantCastSpells -> Nothing
-        PlayerEffect.CantActivateAbilities _ -> Nothing
+        PlayerEffect.CantActivateAbilities {} -> Nothing
         PlayerEffect.CantCastMoreThan {} -> Nothing
         PlayerEffect.ModifyCost {} -> Nothing
         PlayerEffect.AlternativeActivationCost {} -> Nothing
@@ -3189,7 +3196,7 @@ maximumHandSize pid gs =
         PlayerEffect.IncreaseMaximumHandSize extra -> fmap (extra +) current
         PlayerEffect.ReduceMaximumHandSize fewer -> fmap (\limit -> if fewer >= limit then 0 else limit - fewer) current
         PlayerEffect.CantCastSpells -> current
-        PlayerEffect.CantActivateAbilities _ -> current
+        PlayerEffect.CantActivateAbilities {} -> current
         PlayerEffect.CantCastMoreThan _ -> current
         PlayerEffect.ModifyCost {} -> current
         PlayerEffect.AlternativeActivationCost {} -> current
@@ -3267,7 +3274,7 @@ keepsUnspentMana pid gs =
         PlayerEffect.LoseLifeForUnspentMana -> Nothing
         PlayerEffect.SpendManaAsThough _ -> Nothing
         PlayerEffect.CantCastSpells -> Nothing
-        PlayerEffect.CantActivateAbilities _ -> Nothing
+        PlayerEffect.CantActivateAbilities {} -> Nothing
         PlayerEffect.CantCastMoreThan _ -> Nothing
         PlayerEffect.ModifyCost {} -> Nothing
         PlayerEffect.AlternativeActivationCost {} -> Nothing
@@ -3335,7 +3342,7 @@ losesLifeForUnspentMana :: PlayerId -> GameState -> Bool
 losesLifeForUnspentMana pid gs =
   let charges effect = case effect of
         PlayerEffect.CantCastSpells -> False
-        PlayerEffect.CantActivateAbilities _ -> False
+        PlayerEffect.CantActivateAbilities {} -> False
         PlayerEffect.CantCastMoreThan _ -> False
         PlayerEffect.ModifyCost {} -> False
         PlayerEffect.AlternativeActivationCost _ -> False
@@ -3410,7 +3417,7 @@ prohibitsGainingLife pid gs =
         -- searching, paying, keeping mana, rule 702 protection, how a coin flip
         -- came out or losing life. CR 119.7's restriction is none of those.
         PlayerEffect.CantCastSpells -> False
-        PlayerEffect.CantActivateAbilities _ -> False
+        PlayerEffect.CantActivateAbilities {} -> False
         PlayerEffect.CantCastMoreThan _ -> False
         PlayerEffect.ModifyCost {} -> False
         PlayerEffect.AlternativeActivationCost _ -> False
@@ -3481,7 +3488,7 @@ prohibitsLosingLife pid gs =
         -- of those -- LoseLifeForUnspentMana included, which CHARGES life rather
         -- than saying anything about whether a charge may land.
         PlayerEffect.CantCastSpells -> False
-        PlayerEffect.CantActivateAbilities _ -> False
+        PlayerEffect.CantActivateAbilities {} -> False
         PlayerEffect.CantCastMoreThan _ -> False
         PlayerEffect.ModifyCost {} -> False
         PlayerEffect.AlternativeActivationCost _ -> False
@@ -3551,7 +3558,7 @@ precludes outcome pid gs =
         PlayerEffect.CantLoseLife -> False
         PlayerEffect.RevealsDraw _ -> False
         PlayerEffect.CantCastSpells -> False
-        PlayerEffect.CantActivateAbilities _ -> False
+        PlayerEffect.CantActivateAbilities {} -> False
         PlayerEffect.CantCastMoreThan _ -> False
         PlayerEffect.ModifyCost {} -> False
         PlayerEffect.AlternativeActivationCost _ -> False
@@ -3622,7 +3629,7 @@ spendManaAsThough pid gs =
         PlayerEffect.DontLoseUnspentMana _ -> Nothing
         PlayerEffect.LoseLifeForUnspentMana -> Nothing
         PlayerEffect.CantCastSpells -> Nothing
-        PlayerEffect.CantActivateAbilities _ -> Nothing
+        PlayerEffect.CantActivateAbilities {} -> Nothing
         PlayerEffect.CantCastMoreThan _ -> Nothing
         PlayerEffect.ModifyCost {} -> Nothing
         PlayerEffect.AlternativeActivationCost {} -> Nothing
@@ -3729,7 +3736,7 @@ cantBeCountered pid counterer oid gs =
           matchesObjectFrom source (CounterProhibition.countered prohibition) oid gs
             && matchesObjectFor pid source (CounterProhibition.counterers prohibition) counterer gs
         PlayerEffect.CantCastSpells -> False
-        PlayerEffect.CantActivateAbilities _ -> False
+        PlayerEffect.CantActivateAbilities {} -> False
         PlayerEffect.CantCastMoreThan _ -> False
         PlayerEffect.ModifyCost {} -> False
         PlayerEffect.AlternativeActivationCost {} -> False
@@ -3791,7 +3798,7 @@ targetingRestrictions =
   let restriction (source, effect) = fmap ((,) source) $ case effect of
         PlayerEffect.RestrictTargeting r -> Just r
         PlayerEffect.CantCastSpells -> Nothing
-        PlayerEffect.CantActivateAbilities _ -> Nothing
+        PlayerEffect.CantActivateAbilities {} -> Nothing
         PlayerEffect.CantCastMoreThan _ -> Nothing
         PlayerEffect.ModifyCost {} -> Nothing
         PlayerEffect.AlternativeActivationCost {} -> Nothing
@@ -3933,7 +3940,7 @@ unpreventable gs =
         PlayerEffect.CantBeCountered _ -> Nothing
         PlayerEffect.RestrictTargeting _ -> Nothing
         PlayerEffect.CantCastSpells -> Nothing
-        PlayerEffect.CantActivateAbilities _ -> Nothing
+        PlayerEffect.CantActivateAbilities {} -> Nothing
         PlayerEffect.CantCastMoreThan _ -> Nothing
         PlayerEffect.ModifyCost {} -> Nothing
         PlayerEffect.AlternativeActivationCost {} -> Nothing
@@ -4010,7 +4017,7 @@ unredirectable gs =
         PlayerEffect.CantBeCountered _ -> Nothing
         PlayerEffect.RestrictTargeting _ -> Nothing
         PlayerEffect.CantCastSpells -> Nothing
-        PlayerEffect.CantActivateAbilities _ -> Nothing
+        PlayerEffect.CantActivateAbilities {} -> Nothing
         PlayerEffect.CantCastMoreThan _ -> Nothing
         PlayerEffect.ModifyCost {} -> Nothing
         PlayerEffect.AlternativeActivationCost {} -> Nothing
@@ -4064,7 +4071,7 @@ statedFlips pid gs =
         -- it happens while an instruction that already resolved is being
         -- followed, or inside an entry replacement.
         PlayerEffect.CantCastSpells -> Nothing
-        PlayerEffect.CantActivateAbilities _ -> Nothing
+        PlayerEffect.CantActivateAbilities {} -> Nothing
         PlayerEffect.CantCastMoreThan _ -> Nothing
         PlayerEffect.ModifyCost {} -> Nothing
         PlayerEffect.AlternativeActivationCost {} -> Nothing
@@ -4137,7 +4144,7 @@ rollModifiers pid gs =
         PlayerEffect.Precluded _ -> Nothing
         PlayerEffect.Shows _ -> Nothing
         PlayerEffect.CantCastSpells -> Nothing
-        PlayerEffect.CantActivateAbilities _ -> Nothing
+        PlayerEffect.CantActivateAbilities {} -> Nothing
         PlayerEffect.CantCastMoreThan _ -> Nothing
         PlayerEffect.ModifyCost {} -> Nothing
         PlayerEffect.AlternativeActivationCost {} -> Nothing
@@ -4245,7 +4252,7 @@ consume rows gs = gs {GameState.playerEffects = filter (`notElem` rows) (GameSta
 overPlayerRefs :: (Applicative f) => (PlayerRef.PlayerRef -> f PlayerRef.PlayerRef) -> PlayerEffect -> f PlayerEffect
 overPlayerRefs f effect = case effect of
   PlayerEffect.CantCastSpells -> pure effect
-  PlayerEffect.CantActivateAbilities _ -> pure effect
+  PlayerEffect.CantActivateAbilities {} -> pure effect
   PlayerEffect.CantCastMoreThan _ -> pure effect
   -- Not implemented: the references inside a `perEach` count (#5153).
   PlayerEffect.ModifyCost {} -> pure effect
@@ -4321,7 +4328,7 @@ mapPlayerRefs f = Functor.runIdentity . overPlayerRefs (Functor.Identity . f)
 overDamagePatterns :: (Applicative f) => (DamagePattern.DamagePattern -> f DamagePattern.DamagePattern) -> PlayerEffect -> f PlayerEffect
 overDamagePatterns f effect = case effect of
   PlayerEffect.CantCastSpells -> pure effect
-  PlayerEffect.CantActivateAbilities _ -> pure effect
+  PlayerEffect.CantActivateAbilities {} -> pure effect
   PlayerEffect.CantCastMoreThan _ -> pure effect
   PlayerEffect.ModifyCost {} -> pure effect
   PlayerEffect.AlternativeActivationCost _ -> pure effect

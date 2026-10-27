@@ -12,6 +12,11 @@ import qualified Parun.Types.PlayerRelation as PlayerRelation
 -- `oneOrMorePlayers` has no singular reading.
 data PermanentDealsCombatDamageToPlayer = MkPermanentDealsCombatDamageToPlayer
   { filter :: Filter.Filter Keyword.Keyword,
-    recipient :: PlayerRelation.PlayerRelation
+    recipient :: PlayerRelation.PlayerRelation,
+    -- | "Or planeswalker": combat damage to a planeswalker a player the
+    -- recipient relation admits controls (CR 120.3c) matches too, Hunter's
+    -- Insight's "a player or planeswalker". Parun.Types.PlayerIsDealtDamage's
+    -- field of the same name, with the damager filtered.
+    orTheirPlaneswalkers :: Bool
   }
   deriving (Eq, Ord, Show)

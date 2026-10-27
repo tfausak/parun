@@ -1869,6 +1869,10 @@ representativeEvents cond =
             NonEmpty.:| [noTable (GameEvent.DamageDealt (DamageEvent.MkDamageEvent arrived (Recipient.ToPlayer S.alice) 3 False False False 0 Nothing Nothing mempty False DamageKind.Combat))]
         -- The same event read by a bystander, and the only one this condition
         -- admits.
+        TriggerCondition.PermanentDealsCombatDamageToPlayer p
+          | PermanentDealsCombatDamageToPlayer.orTheirPlaneswalkers p ->
+              noTable combatDamage
+                NonEmpty.:| [noTable (GameEvent.DamageDealt (DamageEvent.MkDamageEvent departed (Recipient.ToPlaneswalker arrived) 3 False False False 0 Nothing Nothing mempty False DamageKind.Combat))]
         TriggerCondition.PermanentDealsCombatDamageToPlayer _ -> one combatDamage
         -- The same one event, and NOT because the batch reading matches nothing:
         -- Event.matchesTrigger answers alike for both (its batch arm delegates to
@@ -2425,7 +2429,8 @@ everyTriggerCondition =
     TriggerCondition.PlayerIsDealtDamage (PlayerIsDealtDamage.MkPlayerIsDealtDamage (DealtDamage.MkDealtDamage PlayerRelation.You Nothing) False),
     TriggerCondition.PlayerIsDealtDamage (PlayerIsDealtDamage.MkPlayerIsDealtDamage (DealtDamage.MkDealtDamage PlayerRelation.You (Just DamageKind.Noncombat)) False),
     TriggerCondition.PlayerIsDealtDamage (PlayerIsDealtDamage.MkPlayerIsDealtDamage (DealtDamage.MkDealtDamage PlayerRelation.You (Just DamageKind.Combat)) True),
-    TriggerCondition.PermanentDealsCombatDamageToPlayer (PermanentDealsCombatDamageToPlayer.MkPermanentDealsCombatDamageToPlayer (Filter.Type.And []) PlayerRelation.AnyPlayer),
+    TriggerCondition.PermanentDealsCombatDamageToPlayer (PermanentDealsCombatDamageToPlayer.MkPermanentDealsCombatDamageToPlayer (Filter.Type.And []) PlayerRelation.AnyPlayer False),
+    TriggerCondition.PermanentDealsCombatDamageToPlayer (PermanentDealsCombatDamageToPlayer.MkPermanentDealsCombatDamageToPlayer (Filter.Type.And []) PlayerRelation.AnyPlayer True),
     TriggerCondition.PermanentsDealCombatDamageToPlayer (PermanentsDealCombatDamageToPlayer.MkPermanentsDealCombatDamageToPlayer (Filter.Type.And []) PlayerRelation.AnyPlayer False),
     TriggerCondition.CreatureDealtCombatDamageToMonarch,
     TriggerCondition.CreaturesDealtCombatDamageToInitiative,

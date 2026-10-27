@@ -1398,6 +1398,8 @@ library codec
     Parun.Codec.StoredResult
     Parun.Codec.StoredResultSpec
     Parun.Codec.Subtype
+    Parun.Codec.SubtypeFamily
+    Parun.Codec.SubtypeFamilySpec
     Parun.Codec.SubtypesAre
     Parun.Codec.SubtypesAreSpec
     Parun.Codec.SubtypeSpec
@@ -3045,6 +3047,7 @@ library types
     Parun.Types.StickerSheet
     Parun.Types.StoredResult
     Parun.Types.Subtype
+    Parun.Types.SubtypeFamily
     Parun.Types.SubtypesAre
     Parun.Types.Superlative
     Parun.Types.Supertype

@@ -384,15 +384,23 @@ spec s = Spec.describe s "Parun.Codec.PlayerEffect" $ do
     Common.assertCodec
       s
       PlayerEffect.codec
-      (PlayerEffect.CantActivateAbilities Nothing)
-      " {\"type\":\"CantActivateAbilities\",\"value\":null} "
+      (PlayerEffect.CantActivateAbilities Nothing (Filter.And []))
+      " {\"type\":\"CantActivateAbilities\",\"value\":{}} "
   -- CR 702.193a / Kang the Conqueror's "power-up abilities can't be activated".
   Spec.it s "CantActivateAbilities naming a keyword" $
     Common.assertCodec
       s
       PlayerEffect.codec
-      (PlayerEffect.CantActivateAbilities (Just (KeywordDesignator.OfKeyword Keyword.PowerUp)))
-      " {\"type\":\"CantActivateAbilities\",\"value\":{\"type\":\"OfKeyword\",\"value\":{\"type\":\"PowerUp\"}}} "
+      (PlayerEffect.CantActivateAbilities (Just (KeywordDesignator.OfKeyword Keyword.PowerUp)) (Filter.And []))
+      " {\"type\":\"CantActivateAbilities\",\"value\":{\"designator\":{\"type\":\"OfKeyword\",\"value\":{\"type\":\"PowerUp\"}}}} "
+  -- CR 602.5 / Grand Abolisher's "abilities of artifacts, creatures, or
+  -- enchantments", which names the sources.
+  Spec.it s "CantActivateAbilities naming the sources" $
+    Common.assertCodec
+      s
+      PlayerEffect.codec
+      (PlayerEffect.CantActivateAbilities Nothing (Filter.HasCardType CardType.Artifact))
+      " {\"type\":\"CantActivateAbilities\",\"value\":{\"sources\":{\"type\":\"HasCardType\",\"value\":{\"type\":\"Artifact\"}}}} "
   -- CR 305.1 / City in a Bottle's land half, whose Filter names the land
   -- (Damping Engine's writes the empty And instead).
   Spec.it s "CantPlayLands" $

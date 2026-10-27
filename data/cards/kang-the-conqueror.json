@@ -84,9 +84,11 @@
                           "effect": {
                             "type": "CantActivateAbilities",
                             "value": {
-                              "type": "OfKeyword",
-                              "value": {
-                                "type": "PowerUp"
+                              "designator": {
+                                "type": "OfKeyword",
+                                "value": {
+                                  "type": "PowerUp"
+                                }
                               }
                             }
                           },

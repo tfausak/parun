@@ -20,6 +20,7 @@ acrobatic-cheerleader
 act-of-treason
 act-on-impulse
 ad-nauseam
+adaptive-automaton
 adaptive-gemguard
 adric-mathematical-genius
 advancing-the-spirit
@@ -889,6 +890,7 @@ graf-rats
 grafdiggers-cage
 grafted-skullcap
 grafted-wargear
+grand-abolisher
 grasping-tentacles
 grave-endeavor
 grave-pact
@@ -990,6 +992,7 @@ humility
 hungering-hydra
 hunted-wumpus
 hunters-feast
+hunters-insight
 hunting-velociraptor
 hurkyls-recall
 hurr-jackal
@@ -1922,6 +1925,7 @@ star-compass
 starforged-sword
 static-discharge
 static-orb
+stave-off
 steady-progress
 steal-artifact
 steal-the-show

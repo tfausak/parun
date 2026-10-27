@@ -1,0 +1,48 @@
+{
+  "description": "CR 205.1b / 614.12 Adaptive Automaton is the creature type chosen as it entered in addition to its own, and pumps the other creatures of that type its controller controls",
+  "note": "Alice's first Automaton names Elf: it is a Construct Elf, her Llanowar Elves is 2/2 and her Grizzly Bears, no Elf, stays 2/2. A second Automaton naming Elf is an Elf, so each Automaton pumps the other to 3/3 and the Elves to 3/3; the first sees the second as an Elf only through the type it gains. While the second is still in hand it is the first Automaton by creation order, so the first checks name the cast one #2.",
+  "board": {
+    "seats": [
+      {
+        "name": "alice",
+        "battlefield": [
+          { "card": "Island", "label": "i1", "ready": true },
+          { "card": "Island", "label": "i2", "ready": true },
+          { "card": "Island", "label": "i3", "ready": true },
+          { "card": "Island", "label": "i4", "ready": true },
+          { "card": "Island", "label": "i5", "ready": true },
+          { "card": "Island", "label": "i6", "ready": true },
+          { "card": "Llanowar Elves", "label": "elves", "ready": true },
+          { "card": "Grizzly Bears", "label": "bears", "ready": true }
+        ],
+        "hand": [
+          { "card": "Adaptive Automaton", "label": "first" },
+          { "card": "Adaptive Automaton", "label": "second" }
+        ],
+        "library": [{ "card": "Island" }, { "card": "Island" }]
+      },
+      {
+        "name": "bob",
+        "library": [{ "card": "Swamp" }, { "card": "Swamp" }]
+      }
+    ],
+    "active": "alice",
+    "step": "PrecombatMain"
+  },
+  "timeline": [
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "do": { "Cast": { "object": "$first", "mana": ["$i1", "$i2", "$i3", null] } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "do": "Pass" },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "do": { "Answer": { "prompt": "ChooseCreatureType", "with": { "type": "Elf" } } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "check": { "Subtypes": { "object": "Adaptive Automaton#2", "subtypes": ["Construct", "Elf"] } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "check": { "PowerToughness": { "object": "$elves", "power": 2, "toughness": 2 } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "check": { "PowerToughness": { "object": "Adaptive Automaton#2", "power": 2, "toughness": 2 } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "check": { "PowerToughness": { "object": "$bears", "power": 2, "toughness": 2 } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "do": { "Cast": { "object": "$second", "mana": ["$i4", "$i5", "$i6", null] } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "do": "Pass" },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "do": { "Answer": { "prompt": "ChooseCreatureType", "with": { "type": "Elf" } } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "check": { "PowerToughness": { "object": "Adaptive Automaton", "power": 3, "toughness": 3 } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "check": { "PowerToughness": { "object": "Adaptive Automaton#2", "power": 3, "toughness": 3 } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "check": { "PowerToughness": { "object": "$elves", "power": 3, "toughness": 3 } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "check": { "PowerToughness": { "object": "$bears", "power": 2, "toughness": 2 } } }
+  ]
+}

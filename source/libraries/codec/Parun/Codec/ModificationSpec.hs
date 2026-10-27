@@ -43,6 +43,7 @@ import qualified Parun.Types.Pool as Pool
 import qualified Parun.Types.Quantity as Quantity
 import qualified Parun.Types.SetBasePowerToughness as SetBasePowerToughness
 import qualified Parun.Types.Subtype as Subtype
+import qualified Parun.Types.SubtypeFamily as SubtypeFamily
 import qualified Parun.Types.Supertype as Supertype
 import qualified Parun.Types.TargetSlot as TargetSlot
 import qualified Parun.Types.TextWord as TextWord
@@ -154,14 +155,14 @@ spec s = Spec.describe s "Parun.Codec.Modification" $ do
       codec
       (Modification.LandSubtype ChangeMode.Replace Subtype.Mountain)
       " {\"type\":\"LandSubtype\",\"value\":{\"mode\":{\"type\":\"Replace\"},\"subtype\":{\"type\":\"Mountain\"}}} "
-  -- Nullary: the subtype is read from the effect's source at projection time,
-  -- so there is nothing on the wire.
-  Spec.it s "SetLandSubtypeToChosen" $
+  -- The mode and family only: the subtype is read from the effect's source at
+  -- projection time, so it is not on the wire.
+  Spec.it s "ChosenSubtype" $
     Common.assertCodec
       s
       codec
-      Modification.SetLandSubtypeToChosen
-      " {\"type\":\"SetLandSubtypeToChosen\"} "
+      (Modification.ChosenSubtype ChangeMode.InAddition SubtypeFamily.CreatureType)
+      " {\"type\":\"ChosenSubtype\",\"value\":{\"family\":{\"type\":\"CreatureType\"},\"mode\":{\"type\":\"InAddition\"}}} "
   -- layer 4, CR 305.7 add (Urborg -> Swamp).
   Spec.it s "LandSubtype InAddition" $
     Common.assertCodec

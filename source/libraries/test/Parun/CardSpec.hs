@@ -1000,7 +1000,7 @@ modificationCounts modification = case modification of
   Modification.ModifyPowerToughness (ModifyPowerToughness.MkModifyPowerToughness p t) -> quantityCounts p <> quantityCounts t
   Modification.Intensify n -> quantityCounts n
   Modification.LandSubtype {} -> []
-  Modification.SetLandSubtypeToChosen -> []
+  Modification.ChosenSubtype {} -> []
   Modification.CreatureSubtype {} -> []
   Modification.AddEveryCreatureSubtype -> []
   Modification.LoseEveryCreatureSubtype -> []
@@ -2179,8 +2179,8 @@ ruleAbilitiesCounts rules =
 -- Resolve.definedSlots is per mode for the mirror reason: under a ChooseExactly
 -- 1 selection mode B is never resolved alongside mode A, so a token mode A mints
 -- is not there for mode B to read.
-modalSlotsOffend :: Set.Set SlotName.SlotName -> Modal.Modal Card.Type.Card (GrantedAbility.GrantedAbility Card.Type.Card) -> Bool
-modalSlotsOffend abilityBound modal =
+modalSlotsOffend :: (Mode.Mode Card.Type.Card (GrantedAbility.GrantedAbility Card.Type.Card) -> Set.Set SlotName.SlotName) -> Set.Set SlotName.SlotName -> Modal.Modal Card.Type.Card (GrantedAbility.GrantedAbility Card.Type.Card) -> Bool
+modalSlotsOffend armedReads abilityBound modal =
   let modeOffends mode =
         let effects = Foldable.toList (Mode.allEffects mode)
             -- A slot DEFINED in this mode (a Create's minted token, or a
@@ -2198,8 +2198,10 @@ modalSlotsOffend abilityBound modal =
             -- (Binding.facingPlayers).
             defined = Set.unions [Resolve.definedSlots effects, Resolve.gateDefinedSlots mode, Resolve.mayDefinedSlots mode, Resolve.orElseDefinedSlots mode]
             -- The whole MODE's reads, not just its effect list's: CR 118.12a's
-            -- "unless [a player] pays" names its payer by slot too.
-            wanted = Map.keysSet (Resolve.modeSlots mode)
+            -- "unless [a player] pays" names its payer by slot too. Plus what a
+            -- delayed ability the mode arms reads of the objects it refers to
+            -- (CR 603.7c), Hunter's Insight's "that creature".
+            wanted = Set.union (Map.keysSet (Resolve.modeSlots mode)) (armedReads mode)
          in Set.difference (Set.difference wanted defined) abilityBound /= Map.keysSet (Mode.targetSlots mode)
    in any modeOffends (Modal.modes modal)
 
@@ -4461,7 +4463,7 @@ modificationFilters modification = case modification of
   -- land type for this sweep to reach.
   Modification.LoseKeywordFamily _ -> []
   Modification.LandSubtype {} -> []
-  Modification.SetLandSubtypeToChosen -> []
+  Modification.ChosenSubtype {} -> []
   Modification.CreatureSubtype {} -> []
   Modification.AddEveryCreatureSubtype -> []
   Modification.LoseEveryCreatureSubtype -> []
@@ -5014,7 +5016,7 @@ playerEffectFilters playerEffect = case playerEffect of
         CostChange.Reduce _ -> []
   PlayerEffect.AlternativeActivationCost _ -> []
   PlayerEffect.CantCastSpells -> []
-  PlayerEffect.CantActivateAbilities _ -> []
+  PlayerEffect.CantActivateAbilities _ f -> [f]
   PlayerEffect.CantCastMoreThan _ -> []
   -- CR 305.2 carries a bare count of extra land plays, not a Filter: it names
   -- how many lands, never which spells.
@@ -6927,7 +6929,16 @@ lintSpec s registry corpus = Spec.describe s "Lint" $ do
                 if Face.modeChooser card /= PlayerRelation.You
                   then Set.singleton Binding.modeChooser
                   else Set.empty
-           in modalSlotsOffend (Set.unions [Set.fromList [Binding.you, Binding.triggerSource], announcedX, revealed, sacrificed, beheld, collected, waterbent, chooser, payGateBound (Face.spell card)]) (Face.spell card)
+              -- The slots the Filters of a delayed ability this mode arms read
+              -- (CR 603.7c), which the spell must declare or define.
+              armedReads mode =
+                Set.unions
+                  [ Filter.boundSlots f
+                  | Effect.ArmDelayedTrigger arm <- Foldable.toList (Mode.allEffects mode),
+                    Just delayed <- [Map.lookup (ArmDelayedTrigger.name arm) (Face.delayedAbilities card)],
+                    (_, f) <- triggeredAbilityFilters delayed
+                  ]
+           in modalSlotsOffend armedReads (Set.unions [Set.fromList [Binding.you, Binding.triggerSource], announcedX, revealed, sacrificed, beheld, collected, waterbent, chooser, payGateBound (Face.spell card)]) (Face.spell card)
         sweeps = anyFaceOrMinted cardOffends
         offenders = filter (sweeps . Printing.card) ps
         slot = SlotName.MkSlotName (Text.pack "creature")

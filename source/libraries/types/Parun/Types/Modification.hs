@@ -21,6 +21,7 @@ import qualified Parun.Types.PlayerId as PlayerId
 import qualified Parun.Types.Quantity as Quantity
 import qualified Parun.Types.SetBasePowerToughness as SetBasePowerToughness
 import qualified Parun.Types.Subtype as Subtype
+import qualified Parun.Types.SubtypeFamily as SubtypeFamily
 import qualified Parun.Types.Supertype as Supertype
 import qualified Parun.Types.TargetSlot as TargetSlot
 
@@ -237,22 +238,19 @@ data Modification ability
     -- it in addition to its others, as the mode says (Blood Moon -> Mountain,
     -- Urborg -> Swamp). CR 305.7's ability strip is the Replace mode's alone.
     LandSubtype ChangeMode.ChangeMode Subtype.Subtype
-  | -- | layer 4, CR 613.1d / 305.7: set this object's land subtype to the basic
-    -- land type chosen for THIS effect's SOURCE (Object.chosenSubtype), as it
-    -- entered or by Effect.ChooseQuality. Convincing Mirage's "enchanted
-    -- land is the chosen type"; Mystic Compass's, which a resolution bakes.
+  | -- | layer 4, CR 613.1d / 205.1a / 205.1b: LandSubtype or CreatureSubtype, as
+    -- the family says, with the subtype chosen for THIS effect's SOURCE
+    -- (Object.chosenSubtype), as it entered or by Effect.ChooseQuality.
+    -- Convincing Mirage's "enchanted land is the chosen type"; Mystic Compass's,
+    -- which a resolution bakes; Adaptive Automaton's "is the chosen type in
+    -- addition to its other types".
     --
-    -- Payload-free because the subtype is DERIVED at projection time from the
-    -- source rather than baked into card data, the posture ChosenColor takes
-    -- toward Object.chosenColors: a static ability's modification is card data
-    -- and cannot name a type a player will choose, which is why this is a second
-    -- constructor rather than a field on LandSubtype above.
-    --
-    -- Carries CR 305.7's ability strip in full, exactly as LandSubtype Replace does:
-    -- Parun.Engine.Projection routes both through setLandSubtypeTo, and its
-    -- setLandSubtypeEffects answers True for both, so the fold half and the
-    -- candidate-list-gate half of that rule cannot drift apart.
-    SetLandSubtypeToChosen
+    -- A constructor rather than a value LandSubtype could carry, for ChosenColor's
+    -- reason: a static ability's modification is card data and cannot name a type
+    -- a player will choose. The family is written rather than read off the
+    -- choice so that Parun.Engine.Projection.setsLandSubtype, CR 305.7's strip,
+    -- classifies by constructor as it does LandSubtype's.
+    ChosenSubtype ChangeMode.ChangeMode SubtypeFamily.SubtypeFamily
   | -- | layer 4, CR 205.1a / 205.1b: this object's creature types become this
     -- one, or it gains it in addition to them, as the mode says (Turn to Frog ->
     -- Frog, Life and Limb -> Saproling). Strips no ability and touches no card

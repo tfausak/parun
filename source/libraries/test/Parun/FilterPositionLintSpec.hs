@@ -120,6 +120,7 @@ import qualified Parun.Types.Modal as Modal
 import qualified Parun.Types.Mode as Mode
 import qualified Parun.Types.Modification as Modification
 import qualified Parun.Types.ModifyPowerToughness as ModifyPowerToughness
+import qualified Parun.Types.ModifyTarget as ModifyTarget
 import qualified Parun.Types.MoveCounters as MoveCounters
 import qualified Parun.Types.MovedKinds as MovedKinds
 import qualified Parun.Types.NameChooser as NameChooser
@@ -926,19 +927,21 @@ hasChosenColorCounts card =
       granted = grantedChosenColors card
    in (framed + granted, elsewhere - granted)
 
--- CR 607.2d's "protection from the chosen color" granted by a STATIC ability:
--- the one keyword position the colour is answered at, since
--- Parun.Engine.Keyword.grantedBy bakes the granter's choice into a BARE quality
--- as Parun.Engine.Projection applies the grant (Cho-Manno's Blessing). The atom
--- buried in a quality, or granted by a resolution, stays an offence.
+-- CR 607.2d's "protection from the chosen color" granted by a STATIC ability
+-- or by a resolution's ModifyTarget: the keyword positions the colour is
+-- answered at, since Parun.Engine.Keyword.withChosenColors bakes the choice
+-- into a BARE quality -- as Parun.Engine.Projection applies a static grant
+-- (Cho-Manno's Blessing), and as freezeQuantities stores a resolution's (CR
+-- 608.2h, Stave Off). The atom buried in a quality stays an offence.
 grantedChosenColors :: Face.Face Card.Type.Card -> Int
 grantedChosenColors card =
-  length
-    [ ()
-    | ability <- Face.staticAbilities card,
-      Modification.GainKeyword (Keyword.Protection protection) <- NonEmpty.toList (StaticAbility.modifications ability),
-      Protection.quality protection == Filter.Type.HasChosenColor
-    ]
+  let bare m = case m of
+        Modification.GainKeyword (Keyword.Protection protection) -> Protection.quality protection == Filter.Type.HasChosenColor
+        _ -> False
+   in length
+        ( [() | ability <- Face.staticAbilities card, m <- NonEmpty.toList (StaticAbility.modifications ability), bare m]
+            <> [() | Effect.ModifyTarget modify <- cardResolutionEffects card, bare (ModifyTarget.modification modify)]
+        )
 
 -- CR 205.3's chosen subtype in the same positions, plus CR 106.6's restriction,
 -- which Parun.Engine.Mana.admitsUnder answers off the mana unit (Pillar of

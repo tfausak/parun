@@ -1573,9 +1573,10 @@ data Context = MkContext
     -- Discovery's trigger condition, Tablet of the Guilds' intervening "if",
     -- Brass Herald's resolution, Doom Cannon's cost). CR 106.6's mana restriction reads it off the
     -- MANA UNIT instead (Parun.Engine.Mana.admitsUnder, Throne of Eldraine), for
-    -- sourceChosenSubtype's reason below. A static grant's bare protection quality
-    -- (Cho-Manno's Blessing) never reaches it: Parun.Engine.Keyword.grantedBy
-    -- bakes the granter's choice out.
+    -- sourceChosenSubtype's reason below. A granted bare protection quality
+    -- never reaches it: Parun.Engine.Keyword.withChosenColors bakes the choice
+    -- out, a static grant's as it applies (Cho-Manno's Blessing) and a
+    -- resolution's as it is stored (Stave Off).
     --
     -- The SOURCE's, sourceChosenNames' direction rather than carrierChosenPlayer's:
     -- the permanent whose ability asks is the permanent that made the choice, and

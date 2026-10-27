@@ -1,0 +1,30 @@
+{
+  "description": "CR 602.5 / 605.1a Grand Abolisher stops an opponent's artifact mana ability during its controller's turn, but not cycling a creature card from his hand",
+  "note": "On alice's turn bob is offered his Forest's and Plains' mana abilities and the cycling of the Barkhide Mauler in his hand -- Grand Abolisher's 2011-09-22 ruling: an ability of a creature card off the battlefield is not stopped -- but not his Sol Ring's mana ability, an artifact's, which is back on his own turn.",
+  "board": {
+    "seats": [
+      {
+        "name": "alice",
+        "battlefield": [{ "card": "Grand Abolisher", "label": "abolisher", "ready": true }],
+        "library": [{ "card": "Island" }, { "card": "Island" }, { "card": "Island" }]
+      },
+      {
+        "name": "bob",
+        "battlefield": [
+          { "card": "Forest", "label": "forest", "ready": true },
+          { "card": "Plains", "label": "plains", "ready": true },
+          { "card": "Sol Ring", "label": "ring", "ready": true }
+        ],
+        "hand": [{ "card": "Barkhide Mauler", "label": "mauler" }],
+        "library": [{ "card": "Swamp" }, { "card": "Swamp" }, { "card": "Swamp" }]
+      }
+    ],
+    "active": "alice",
+    "step": "PrecombatMain"
+  },
+  "timeline": [
+    { "turn": 1, "step": "PrecombatMain", "player": "bob", "check": { "View": { "of": "Offered", "player": "bob", "is": ["Pass", "Activate $mauler", "ActivateManaAbility $forest", "ActivateManaAbility $plains"] } } },
+    { "turn": 1, "step": "DeclareAttackers", "player": "alice", "do": { "Attack": [] } },
+    { "turn": 2, "step": "PrecombatMain", "player": "bob", "check": { "View": { "of": "Offered", "player": "bob", "is": ["Pass", "PlayLand Swamp#3", "Activate $mauler", "ActivateManaAbility $forest", "ActivateManaAbility $plains", "ActivateManaAbility $ring"] } } }
+  ]
+}

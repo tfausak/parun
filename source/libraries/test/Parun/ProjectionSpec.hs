@@ -110,6 +110,7 @@ import qualified Parun.Types.SetBasePowerToughness as SetBasePowerToughness
 import qualified Parun.Types.Sickness as Sickness
 import qualified Parun.Types.Source as Source
 import qualified Parun.Types.Subtype as Subtype.Type
+import qualified Parun.Types.SubtypeFamily as SubtypeFamily
 import qualified Parun.Types.Supertype as Supertype
 import qualified Parun.Types.TapState as TapState
 import qualified Parun.Types.Teams as Teams
@@ -1595,7 +1596,7 @@ spec s registry = Spec.describe s "Parun.Engine.Projection" $ do
   -- as-enters choice is written. Two sources with different choices, on one
   -- board, so a constructor that ignored the source and conjured one type could
   -- not pass both halves.
-  Spec.it s "CR 305.7 SetLandSubtypeToChosen reads the SOURCE's entry choice" $ do
+  Spec.it s "CR 305.7 ChosenSubtype reads the SOURCE's entry choice" $ do
     forest <- S.printingOf s registry "Forest"
     piker <- S.printingOf s registry "Goblin Piker"
     let gs0 = S.landsInPlay forest 2
@@ -1608,8 +1609,8 @@ spec s registry = Spec.describe s "Parun.Engine.Projection" $ do
         (srcB, g2) = S.addPermanent piker S.alice g1
         withChoices = S.withChosenSubtype Subtype.Type.Swamp srcB (S.withChosenSubtype Subtype.Type.Island srcA g2)
         gs =
-          S.withEffectFromAt srcB landB (Timestamp.MkTimestamp 101) Modification.SetLandSubtypeToChosen $
-            S.withEffectFromAt srcA landA (Timestamp.MkTimestamp 100) Modification.SetLandSubtypeToChosen withChoices
+          S.withEffectFromAt srcB landB (Timestamp.MkTimestamp 101) (Modification.ChosenSubtype ChangeMode.Replace SubtypeFamily.BasicLandType) $
+            S.withEffectFromAt srcA landA (Timestamp.MkTimestamp 100) (Modification.ChosenSubtype ChangeMode.Replace SubtypeFamily.BasicLandType) withChoices
     Spec.assertEqWith s "the Island source's land is only an Island" (Projection.subtypesOf landA gs) (Set.singleton Subtype.Type.Island)
     Spec.assertEqWith s "the Swamp source's land is only a Swamp" (Projection.subtypesOf landB gs) (Set.singleton Subtype.Type.Swamp)
 

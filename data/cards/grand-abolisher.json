@@ -1,0 +1,147 @@
+{
+  "faces": [
+    {
+      "manaCost": [
+        {
+          "type": "OfType",
+          "value": {
+            "type": "Colored",
+            "value": {
+              "type": "White"
+            }
+          }
+        },
+        {
+          "type": "OfType",
+          "value": {
+            "type": "Colored",
+            "value": {
+              "type": "White"
+            }
+          }
+        }
+      ],
+      "name": "Grand Abolisher",
+      "oracleText": "During your turn, your opponents can't cast spells or activate abilities of artifacts, creatures, or enchantments.",
+      "playerAbilities": [
+        {
+          "condition": {
+            "type": "Compares",
+            "value": {
+              "comparison": {
+                "type": "Exactly"
+              },
+              "measured": {
+                "type": "IsActivePlayer",
+                "value": {
+                  "type": "Relative",
+                  "value": {
+                    "type": "You"
+                  }
+                }
+              },
+              "threshold": {
+                "type": "Literal",
+                "value": 1
+              }
+            }
+          },
+          "effect": {
+            "type": "CantCastSpells"
+          },
+          "scope": {
+            "type": "Opponent"
+          }
+        },
+        {
+          "condition": {
+            "type": "Compares",
+            "value": {
+              "comparison": {
+                "type": "Exactly"
+              },
+              "measured": {
+                "type": "IsActivePlayer",
+                "value": {
+                  "type": "Relative",
+                  "value": {
+                    "type": "You"
+                  }
+                }
+              },
+              "threshold": {
+                "type": "Literal",
+                "value": 1
+              }
+            }
+          },
+          "effect": {
+            "type": "CantActivateAbilities",
+            "value": {
+              "sources": {
+                "type": "And",
+                "value": [
+                  {
+                    "type": "IsInZone",
+                    "value": {
+                      "type": "Battlefield"
+                    }
+                  },
+                  {
+                    "type": "Or",
+                    "value": [
+                      {
+                        "type": "HasCardType",
+                        "value": {
+                          "type": "Artifact"
+                        }
+                      },
+                      {
+                        "type": "HasCardType",
+                        "value": {
+                          "type": "Creature"
+                        }
+                      },
+                      {
+                        "type": "HasCardType",
+                        "value": {
+                          "type": "Enchantment"
+                        }
+                      }
+                    ]
+                  }
+                ]
+              }
+            }
+          },
+          "scope": {
+            "type": "Opponent"
+          }
+        }
+      ],
+      "power": {
+        "type": "Literal",
+        "value": 2
+      },
+      "toughness": {
+        "type": "Literal",
+        "value": 2
+      },
+      "typeLine": {
+        "subtypes": [
+          {
+            "type": "Cleric"
+          },
+          {
+            "type": "Human"
+          }
+        ],
+        "types": [
+          {
+            "type": "Creature"
+          }
+        ]
+      }
+    }
+  ]
+}
