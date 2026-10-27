@@ -119,7 +119,9 @@ data Filter keyword
     -- CURRENTLY BEING APPLIED TO -- Biorhythm's "the number of creatures THEY
     -- control", Flux's "discards any number of cards, then draws THAT MANY". Not
     -- CR 109.5's "you", which is the spell's controller, and vacuously False
-    -- outside a per-recipient effect's quantity.
+    -- outside a per-recipient effect's quantity. Inside a per-member quantity
+    -- of a fold over players it is that member, PlayerRef.Candidate's reading
+    -- (Jace's Archivist's "a player discarded this way").
     HeldByRecipient Holder.Holder
   | -- | The candidate IS the evaluation's source object. @Not IsSource@ is how CR
     -- 601.2c's "another" and a continuous effect's own "each other" card text are

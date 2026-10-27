@@ -1063,6 +1063,7 @@ ixidron
 izoni-center-of-the-web
 jace-beleren
 jace-memory-adept
+jaces-archivist
 jaces-erasure
 jackal-familiar
 jade-monolith
@@ -2244,6 +2245,7 @@ whirling-dervish
 whirlpool-drake
 whirlpool-rider
 whirlpool-warrior
+whispering-madness
 whispering-wizard
 white-mana-battery
 white-tiger-ava-ayala
@@ -2262,6 +2264,7 @@ wilson-refined-grizzly
 windborn-muse
 windbrisk-heights
 windcaller-aven
+windfall
 winds-of-change
 winged-portent
 wings-of-velis-vel

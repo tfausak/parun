@@ -1,0 +1,116 @@
+{
+  "faces": [
+    {
+      "manaCost": [
+        {
+          "type": "Generic",
+          "value": 2
+        },
+        {
+          "type": "OfType",
+          "value": {
+            "type": "Colored",
+            "value": {
+              "type": "Blue"
+            }
+          }
+        }
+      ],
+      "name": "Windfall",
+      "oracleText": "Each player discards their hand, then draws cards equal to the greatest number of cards a player discarded this way.",
+      "spell": {
+        "modes": [
+          {
+            "clauses": [
+              {
+                "effects": [
+                  {
+                    "type": "Discard",
+                    "value": {
+                      "type": "These",
+                      "value": {
+                        "cards": {
+                          "type": "EachCardInHand",
+                          "value": {
+                            "hands": {
+                              "type": "Scoped",
+                              "value": {
+                                "type": "AnyPlayer"
+                              }
+                            }
+                          }
+                        },
+                        "discarded": "discarded"
+                      }
+                    }
+                  }
+                ]
+              },
+              {
+                "effects": [
+                  {
+                    "type": "Draw",
+                    "value": {
+                      "player": {
+                        "type": "Relative",
+                        "value": {
+                          "type": "AnyPlayer"
+                        }
+                      },
+                      "quantity": {
+                        "type": "Count",
+                        "value": {
+                          "aggregation": {
+                            "type": "Greatest",
+                            "value": {
+                              "type": "Count",
+                              "value": {
+                                "aggregation": {
+                                  "type": "Members"
+                                },
+                                "filter": {
+                                  "type": "HeldByRecipient",
+                                  "value": {
+                                    "type": "Owner"
+                                  }
+                                },
+                                "scope": {
+                                  "type": "OverBound",
+                                  "value": "discarded"
+                                }
+                              }
+                            }
+                          },
+                          "filter": {
+                            "type": "And",
+                            "value": []
+                          },
+                          "scope": {
+                            "type": "OverPlayers",
+                            "value": {
+                              "type": "Relative",
+                              "value": {
+                                "type": "AnyPlayer"
+                              }
+                            }
+                          }
+                        }
+                      }
+                    }
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      },
+      "typeLine": {
+        "types": [
+          {
+            "type": "Sorcery"
+          }
+        ]
+      }
+    }
+  ]
+}

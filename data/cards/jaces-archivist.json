@@ -1,0 +1,163 @@
+{
+  "faces": [
+    {
+      "activatedAbilities": [
+        {
+          "cost": {
+            "components": [
+              {
+                "type": "TapThis"
+              }
+            ],
+            "mana": [
+              {
+                "type": "OfType",
+                "value": {
+                  "type": "Colored",
+                  "value": {
+                    "type": "Blue"
+                  }
+                }
+              }
+            ]
+          },
+          "modal": {
+            "modes": [
+              {
+                "clauses": [
+                  {
+                    "effects": [
+                      {
+                        "type": "Discard",
+                        "value": {
+                          "type": "These",
+                          "value": {
+                            "cards": {
+                              "type": "EachCardInHand",
+                              "value": {
+                                "hands": {
+                                  "type": "Scoped",
+                                  "value": {
+                                    "type": "AnyPlayer"
+                                  }
+                                }
+                              }
+                            },
+                            "discarded": "discarded"
+                          }
+                        }
+                      }
+                    ]
+                  },
+                  {
+                    "effects": [
+                      {
+                        "type": "Draw",
+                        "value": {
+                          "player": {
+                            "type": "Relative",
+                            "value": {
+                              "type": "AnyPlayer"
+                            }
+                          },
+                          "quantity": {
+                            "type": "Count",
+                            "value": {
+                              "aggregation": {
+                                "type": "Greatest",
+                                "value": {
+                                  "type": "Count",
+                                  "value": {
+                                    "aggregation": {
+                                      "type": "Members"
+                                    },
+                                    "filter": {
+                                      "type": "HeldByRecipient",
+                                      "value": {
+                                        "type": "Owner"
+                                      }
+                                    },
+                                    "scope": {
+                                      "type": "OverBound",
+                                      "value": "discarded"
+                                    }
+                                  }
+                                }
+                              },
+                              "filter": {
+                                "type": "And",
+                                "value": []
+                              },
+                              "scope": {
+                                "type": "OverPlayers",
+                                "value": {
+                                  "type": "Relative",
+                                  "value": {
+                                    "type": "AnyPlayer"
+                                  }
+                                }
+                              }
+                            }
+                          }
+                        }
+                      }
+                    ]
+                  }
+                ]
+              }
+            ]
+          }
+        }
+      ],
+      "manaCost": [
+        {
+          "type": "Generic",
+          "value": 1
+        },
+        {
+          "type": "OfType",
+          "value": {
+            "type": "Colored",
+            "value": {
+              "type": "Blue"
+            }
+          }
+        },
+        {
+          "type": "OfType",
+          "value": {
+            "type": "Colored",
+            "value": {
+              "type": "Blue"
+            }
+          }
+        }
+      ],
+      "name": "Jace's Archivist",
+      "oracleText": "{U}, {T}: Each player discards their hand, then draws cards equal to the greatest number of cards a player discarded this way.",
+      "power": {
+        "type": "Literal",
+        "value": 2
+      },
+      "toughness": {
+        "type": "Literal",
+        "value": 2
+      },
+      "typeLine": {
+        "subtypes": [
+          {
+            "type": "Vedalken"
+          },
+          {
+            "type": "Wizard"
+          }
+        ],
+        "types": [
+          {
+            "type": "Creature"
+          }
+        ]
+      }
+    }
+  ]
+}
