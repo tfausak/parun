@@ -1980,19 +1980,23 @@ effectLintSpec s registry corpus = Spec.describe s "Lint" $ do
   -- generalised into AddSubtype.
   Spec.it s "CR 612.2 no AddSubtype or RemoveSubtype carries a land type or a creature type" $ do
     ps <- S.allPrintings s corpus
-    let addedSubtypes modification = case modification of
-          Modification.AddSubtype subtype -> [subtype]
-          Modification.RemoveSubtype subtype -> [subtype]
+    -- Each subtype is paired with whether its arm adds (True) or removes it.
+    let untaggedSubtypes modification = case modification of
+          Modification.AddSubtype subtype -> [(True, subtype)]
+          Modification.RemoveSubtype subtype -> [(False, subtype)]
           _ -> []
         stored effect = case effect of
-          Effect.ModifyTarget (ModifyTarget.MkModifyTarget _ modification _ _) -> addedSubtypes modification
+          Effect.ModifyTarget (ModifyTarget.MkModifyTarget _ modification _ _) -> untaggedSubtypes modification
           _ -> []
-        added card = concatMap addedSubtypes (grantedModifications card) <> concatMap stored (cardResolutionEffects card)
+        untagged card = concatMap untaggedSubtypes (grantedModifications card) <> concatMap stored (cardResolutionEffects card)
         misfiled subtype = Subtype.Engine.isLandType subtype || Subtype.Engine.isCreatureType subtype
-        offenders = filter (anyFace (any misfiled . added) . Printing.card) ps
-    -- Guards against a vacuous sweep: with neither arm in the pool this would
-    -- pass whatever the arms carried. Ygra, Eater of All prints an AddSubtype.
-    Spec.assertBool s (any (anyFace (not . null . added) . Printing.card) ps) "the pool has a card adding a subtype outside both families"
+        offenders = filter (anyFace (any (misfiled . snd) . untagged) . Printing.card) ps
+        printsArm adds = any (anyFace (any ((==) adds . fst) . untagged) . Printing.card) ps
+    -- Guards against a vacuous sweep, one arm at a time: with either arm absent
+    -- from the pool this would pass whatever that arm carried. Ygra, Eater of All
+    -- prints an AddSubtype; Haunted Plate Mail prints a RemoveSubtype.
+    Spec.assertBool s (printsArm True) "the pool has a card adding a subtype outside both families"
+    Spec.assertBool s (printsArm False) "the pool has a card removing a subtype outside both families"
     Spec.assertEqWith s "a land type or a creature type belongs on its own family's arm" (fmap (S.nameOf . Printing.card) offenders) []
   -- CR 712.14a's rider is about a double-faced CARD, and CR 111.1 makes a token
   -- no card at all -- so an Effect.Create that carried it would be asking for a

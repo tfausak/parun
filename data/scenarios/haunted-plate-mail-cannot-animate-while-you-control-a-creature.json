@@ -1,5 +1,5 @@
 {
-  "description": "CR 602.5: Haunted Plate Mail's {0} can't be activated while its controller controls a creature",
+  "description": "CR 602.1b: Haunted Plate Mail's {0} can't be activated while its controller controls a creature",
   "note": "The board of haunted-plate-mail-becomes-a-four-four-spirit-that-is-no-longer-an-equipment-until-end-of-turn with one Grizzly Bears added on alice's side, where that scenario's activation succeeds.",
   "board": {
     "seats": [

@@ -305,8 +305,9 @@ data Modification ability
     -- changer swaps a colour word, a basic land type or a creature type, and none
     -- reaches an artifact or enchantment type -- Scryfall
     -- o:"replacing all instances of one", 2026-08-22, twelve cards, all read.
-    -- Parun.CardSpec holds the fence: no AddSubtype in the pool may carry a land
-    -- type or a creature type, since those have their own arms and their own gate.
+    -- Parun.EffectLintSpec holds the fence: no AddSubtype or RemoveSubtype in the
+    -- pool may carry a land type or a creature type, since those have their own
+    -- arms and their own gate.
     AddSubtype Subtype.Subtype
   | -- | layer 4, CR 613.1d / 205.1a: this object loses this subtype, AddSubtype's
     -- families only (Haunted Plate Mail's "no longer an Equipment").

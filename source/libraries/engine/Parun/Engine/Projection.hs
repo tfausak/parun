@@ -186,9 +186,9 @@ layer m = case m of
   Modification.LoseEveryCreatureSubtype -> Layer.Type
   Modification.SetCreatureSubtypesOfLastCardExiledWith _ -> Layer.Type
   -- CR 613.1d, and a regression fence rather than a proved behaviour: no board
-  -- in the pool orders the one AddSubtype (Ygra, Eater of All's Food) against an
-  -- effect in another layer, so answering any other layer here leaves the suite
-  -- green.
+  -- orders an AddSubtype against an effect in another layer, so answering
+  -- Layer.Ability here leaves the scenarios and the projection specs green
+  -- (mutated 2026-10-27).
   Modification.AddSubtype _ -> Layer.Type
   -- CR 613.1d, the same fence: no board orders Haunted Plate Mail's removal
   -- against an effect in another layer.
@@ -1800,8 +1800,8 @@ setsLandSubtype m = case m of
   Modification.LoseEveryCreatureSubtype -> False
   Modification.SetCreatureSubtypesOfLastCardExiledWith _ -> False
   -- Not a SET, so CR 305.7 does not fire whatever family the subtype belongs to
-  -- -- the same answer LandSubtype's InAddition gives above, and Parun.CardSpec keeps CR
-  -- 205.3i's land types off this arm anyway.
+  -- -- the same answer LandSubtype's InAddition gives above, and
+  -- Parun.EffectLintSpec keeps CR 205.3i's land types off both arms anyway.
   Modification.AddSubtype _ -> False
   Modification.RemoveSubtype _ -> False
   -- The CARD-TYPE set or add: CR 305.7 fires on setting a land's SUBTYPE, so
@@ -4239,12 +4239,13 @@ modificationWrites m = case m of
   -- Set.empty here leaves the suite green too.
   Modification.LoseEveryCreatureSubtype -> Set.singleton Subtypes
   Modification.SetCreatureSubtypesOfLastCardExiledWith _ -> Set.singleton Subtypes
-  -- The honest answer -- the arm writes PC.subtypes and nothing else -- but a
-  -- regression fence rather than a proved behaviour: no board in the pool makes
-  -- another effect depend on the one AddSubtype, so Set.empty here leaves the
-  -- suite green too.
+  -- CR 613.8a: the arm writes PC.subtypes and nothing else. Proved by the
+  -- dan-lewis-skips-clues-armed-with-proof-already-made-equipment scenario: Dan
+  -- Lewis's "non-Equipment artifacts" depends on Armed with Proof's Equipment.
   Modification.AddSubtype _ -> Set.singleton Subtypes
-  -- The same honest answer and the same fence, for Haunted Plate Mail's removal.
+  -- The same answer, and a regression fence rather than a proved behaviour: no
+  -- board makes an affected set depend on Haunted Plate Mail's removal, which
+  -- comes with its becoming a creature, so Dan Lewis's set already excludes it.
   Modification.RemoveSubtype _ -> Set.singleton Subtypes
   Modification.ChangeWord {} -> Set.fromList [Subtypes, Keywords]
   -- CR 612.5 writes the ability lists and PC.keywords with them, which Aspect

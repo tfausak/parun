@@ -1,5 +1,5 @@
 {
-  "description": "CR 602.5, per the card's rulings: Haunted Plate Mail's restriction is checked only on activation, so a second Plate Mail animated in response leaves the first ability resolving",
+  "description": "CR 602.1b, per the card's rulings: Haunted Plate Mail's restriction is checked only on activation, so a second Plate Mail animated in response leaves the first ability resolving",
   "note": "Per the card's 2014-07-18 rulings: alice activates both Plate Mails before either resolves. The second resolves first and makes her control a creature, and the first still resolves.",
   "board": {
     "seats": [

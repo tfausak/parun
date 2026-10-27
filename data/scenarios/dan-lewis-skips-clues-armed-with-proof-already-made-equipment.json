@@ -1,0 +1,24 @@
+{
+  "description": "CR 613.8a / 613.8b: Dan Lewis's Equipment grant depends on Armed with Proof's, so a Clue gets only Armed with Proof's equip {2} and +2/+0",
+  "note": "Dan Lewis is on the battlefield first, so by timestamp alone his effect would apply to the Clues before Armed with Proof made them Equipment and they would also gain his equip {1} and \"Equipped creature gets +1/+0\". Armed with Proof's AddSubtype changes what Dan Lewis's effect applies to (a non-Equipment artifact), so his waits (CR 613.8b) and the Clues are Equipment before he looks. Equipped with a Clue, the 2/2 Dan Lewis is 4/2, where the timestamp order would make him 5/2.",
+  "board": {
+    "seats": [
+      {"name": "alice", "manaPool": "WCCCC", "hand": [{"card": "Armed with Proof", "label": "armed"}], "battlefield": [{"card": "Dan Lewis", "label": "dan"}], "library": [{"card": "Island"}, {"card": "Island"}, {"card": "Island"}]},
+      {"name": "bob", "library": [{"card": "Island"}, {"card": "Island"}, {"card": "Island"}]}
+    ],
+    "active": "alice",
+    "step": "PrecombatMain"
+  },
+  "timeline": [
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "do": {"Cast": {"object": "$armed"}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "do": "Pass"},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "do": "Pass"},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "do": {"Activate": {"object": "Clue Token", "ability": 1, "targets": ["$dan"]}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "do": "Pass"},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "check": {"PowerToughness": {"object": "$dan", "power": 4, "toughness": 2}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "check": {"View": {"of": "AttachedTo", "object": "Clue Token", "is": "$dan"}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "check": {"Subtypes": {"object": "Clue Token", "subtypes": ["Clue", "Equipment"]}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "check": {"Keywords": {"object": "Clue Token", "keyword": {"type": "Equip", "value": {"cost": {"mana": [{"type": "Generic", "value": 1}]}, "quality": null}}, "count": 0}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "check": {"Keywords": {"object": "Clue Token", "keyword": {"type": "Equip", "value": {"cost": {"mana": [{"type": "Generic", "value": 2}]}, "quality": null}}, "count": 1}}}
+  ]
+}
