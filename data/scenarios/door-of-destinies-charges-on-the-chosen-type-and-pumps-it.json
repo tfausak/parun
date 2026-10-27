@@ -15,6 +15,7 @@
     {"turn": 1, "step": "PrecombatMain", "player": "alice", "do": {"Answer": {"prompt": "ChooseCreatureType", "with": {"type": "Goblin"}}}},
     {"turn": 1, "step": "PrecombatMain", "player": "alice", "do": {"Cast": {"object": "$piker", "mana": ["$m5", "$m6", null]}}},
     {"turn": 1, "step": "PrecombatMain", "player": "alice", "do": "Pass"},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "check": {"Counters": {"object": "Door of Destinies", "kind": {"type": "Named", "value": "charge"}, "count": 1}}},
     {"turn": 1, "step": "PrecombatMain", "player": "alice", "do": "Pass"},
     {"turn": 1, "step": "PrecombatMain", "player": "alice", "do": {"Cast": {"object": "$bears", "mana": ["$f1", "$f2"]}}},
     {"turn": 1, "step": "PrecombatMain", "player": "alice", "do": "Pass"},
