@@ -1,5 +1,5 @@
 {
-  "description": "CR 301.5c / 702.20b: Avarice Amulet's creature gets +2/+0, attacks without tapping, and draws a card at its controller's upkeep",
+  "description": "CR 613.1f / 702.20b: Avarice Amulet's creature gets +2/+0, attacks without tapping, and draws a card at its controller's upkeep",
   "note": "Grizzly Bears is 4/2 under it; the upkeep trigger draws alice's first Island before her draw step, and the Bears stay untapped as they attack.",
   "board": {"active": "bob", "step": "EndStep", "seats": [{"name": "bob", "library": [{"card": "Island"}, {"card": "Island"}, {"card": "Island"}, {"card": "Island"}, {"card": "Island"}, {"card": "Island"}]}, {"name": "alice", "battlefield": [{"card": "Grizzly Bears", "label": "bears"}, {"card": "Avarice Amulet", "label": "amulet", "attached": "bears"}], "library": [{"card": "Island"}, {"card": "Island"}, {"card": "Island"}, {"card": "Island"}, {"card": "Island"}, {"card": "Island"}]}]},
   "timeline": [

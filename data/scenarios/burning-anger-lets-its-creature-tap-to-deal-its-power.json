@@ -1,5 +1,5 @@
 {
-  "description": "CR 113.6 / 602.2: Burning Anger's creature has \"{T}: This creature deals damage equal to its power to any target\"",
+  "description": "CR 613.1f / 602.2: Burning Anger's creature has \"{T}: This creature deals damage equal to its power to any target\"",
   "note": "The enchanted creature is a 3/3 Hill Giant, so bob takes 3; the Aura's controller pays nothing.",
   "board": {"active": "alice", "step": "PrecombatMain", "seats": [{"name": "alice", "battlefield": [{"card": "Hill Giant", "label": "giant", "ready": true}, {"card": "Burning Anger", "label": "anger", "attached": "giant"}], "library": [{"card": "Island"}, {"card": "Island"}, {"card": "Island"}, {"card": "Island"}, {"card": "Island"}, {"card": "Island"}]}, {"name": "bob", "library": [{"card": "Island"}, {"card": "Island"}, {"card": "Island"}, {"card": "Island"}, {"card": "Island"}, {"card": "Island"}]}]},
   "timeline": [

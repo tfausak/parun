@@ -1,5 +1,5 @@
 {
-  "description": "CR 120.3 / 603.10a: whenever Hornet Nest is dealt damage, its controller creates that many 1/1 green flying deathtouch Insects",
+  "description": "CR 120.3 / 603.2: whenever Hornet Nest is dealt damage, its controller creates that many 1/1 green flying deathtouch Insects",
   "note": "bob's 3/3 Hill Giant deals 3 to the 0/2 Nest: three Insects, not two, though the Nest dies.",
   "board": {"active": "bob", "step": "PrecombatMain", "seats": [{"name": "bob", "battlefield": [{"card": "Hill Giant", "label": "giant", "ready": true}], "library": [{"card": "Island"}, {"card": "Island"}, {"card": "Island"}, {"card": "Island"}, {"card": "Island"}, {"card": "Island"}]}, {"name": "alice", "battlefield": [{"card": "Hornet Nest", "label": "nest"}], "library": [{"card": "Island"}, {"card": "Island"}, {"card": "Island"}, {"card": "Island"}, {"card": "Island"}, {"card": "Island"}]}]},
   "timeline": [

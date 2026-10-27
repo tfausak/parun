@@ -977,7 +977,7 @@ placeBorne srcId pending = do
       -- which is what lets Mogis's Marauder's devotion count a trigger's
       -- targets.
       --
-      -- CR 702.37f and CR 702.168e are the other: a permanent's turned-face-up
+      -- CR 702.37f and CR 702.168e are another: a permanent's turned-face-up
       -- ability reads the X chosen as the morph or disguise special action was
       -- taken, which Parun.Engine.Event.Binding.eventBindings binds off the event
       -- itself. The same binding reaches the ability object below, so its

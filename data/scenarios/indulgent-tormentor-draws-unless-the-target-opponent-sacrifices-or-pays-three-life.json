@@ -1,5 +1,5 @@
 {
-  "description": "CR 118.12 / 603.3d: at the beginning of its controller's upkeep, Indulgent Tormentor draws them a card unless target opponent sacrifices a creature of their choice or pays 3 life",
+  "description": "CR 118.12 / 115.1: at the beginning of its controller's upkeep, Indulgent Tormentor draws them a card unless target opponent sacrifices a creature of their choice or pays 3 life",
   "note": "carol, with no creature, pays 3 life and alice draws nothing. bob, at 2 life, can only sacrifice: declining once lets alice draw, and paying later takes his Gray Ogre with no draw.",
   "board": {"active": "alice", "step": "Untap", "seats": [{"name": "alice", "battlefield": [{"card": "Indulgent Tormentor", "label": "tormentor"}], "library": [{"card": "Island"}, {"card": "Island"}, {"card": "Island"}, {"card": "Island"}, {"card": "Island"}, {"card": "Island"}]}, {"name": "bob", "life": 2, "battlefield": [{"card": "Gray Ogre", "label": "ogre"}], "library": [{"card": "Island"}, {"card": "Island"}, {"card": "Island"}, {"card": "Island"}, {"card": "Island"}, {"card": "Island"}]}, {"name": "carol", "library": [{"card": "Island"}, {"card": "Island"}, {"card": "Island"}, {"card": "Island"}, {"card": "Island"}, {"card": "Island"}]}]},
   "timeline": [

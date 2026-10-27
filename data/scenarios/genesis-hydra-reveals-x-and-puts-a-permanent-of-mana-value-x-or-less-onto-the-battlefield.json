@@ -1,5 +1,5 @@
 {
-  "description": "CR 603.2 / 107.3: when Genesis Hydra is cast, its controller reveals the top X cards and may put a nonland permanent card with mana value X or less among them onto the battlefield, shuffling the rest in; it enters with X +1/+1 counters",
+  "description": "CR 603.2 / 107.3i: when Genesis Hydra is cast, its controller reveals the top X cards and may put a nonland permanent card with mana value X or less among them onto the battlefield, shuffling the rest in; it enters with X +1/+1 counters",
   "note": "X is 3: of Hill Giant (4), Gray Ogre (3) and Grizzly Bears (2), the Giant is refused and the Ogre chosen; the Forest below the top three is never revealed, and the Hydra enters with three counters.",
   "board": {"active": "alice", "step": "PrecombatMain", "seats": [{"name": "alice", "manaPool": "GGGGG", "hand": [{"card": "Genesis Hydra", "label": "hydra"}], "library": [{"card": "Hill Giant", "label": "giant"}, {"card": "Gray Ogre", "label": "ogre"}, {"card": "Grizzly Bears", "label": "bears"}, {"card": "Forest", "label": "forest"}]}, {"name": "bob", "library": [{"card": "Island"}, {"card": "Island"}, {"card": "Island"}, {"card": "Island"}, {"card": "Island"}, {"card": "Island"}]}]},
   "timeline": [

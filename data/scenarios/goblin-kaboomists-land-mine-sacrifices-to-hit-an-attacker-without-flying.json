@@ -1,5 +1,5 @@
 {
-  "description": "CR 111.4 / 506.3: Goblin Kaboomist's Land Mine token, after a won flip spares the Kaboomist, sacrifices itself to deal 2 damage to target attacking creature without flying",
+  "description": "CR 111.4 / 115.1: Goblin Kaboomist's Land Mine token, after a won flip spares the Kaboomist, sacrifices itself to deal 2 damage to target attacking creature without flying",
   "note": "bob wins his upkeep flip, so the Kaboomist is undamaged; on alice's turn his mine can't target her attacking Ornithopter, which flies, and kills her attacking Grizzly Bears.",
   "board": {"active": "bob", "step": "Untap", "seats": [{"name": "bob", "battlefield": [{"card": "Goblin Kaboomist", "label": "kaboomist"}, {"card": "Mountain", "label": "mtn"}], "library": [{"card": "Island"}, {"card": "Island"}, {"card": "Island"}, {"card": "Island"}, {"card": "Island"}, {"card": "Island"}]}, {"name": "alice", "battlefield": [{"card": "Grizzly Bears", "label": "bears"}, {"card": "Ornithopter", "label": "bird"}], "library": [{"card": "Island"}, {"card": "Island"}, {"card": "Island"}, {"card": "Island"}, {"card": "Island"}, {"card": "Island"}]}]},
   "timeline": [

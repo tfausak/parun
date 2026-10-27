@@ -1,5 +1,5 @@
 {
-  "description": "CR 606.4 / 701.20: Jace, the Living Guildpact's +1 looks at the top two cards and puts one into the graveyard; its -3 returns another target nonland permanent to its owner's hand",
+  "description": "CR 606.4 / 115.1: Jace, the Living Guildpact's +1 looks at the top two cards and puts one into the graveyard; its -3 returns another target nonland permanent to its owner's hand",
   "note": "+1 bins Hill Giant and leaves Gray Ogre on top; two turns later -3 can't target bob's Forest and returns his White Knight.",
   "board": {"active": "alice", "step": "PrecombatMain", "seats": [{"name": "alice", "battlefield": [{"card": "Jace, the Living Guildpact", "label": "jace", "counters": [{"key": {"type": "Loyalty"}, "value": 5}]}], "library": [{"card": "Hill Giant", "label": "giant"}, {"card": "Gray Ogre", "label": "ogre"}, {"card": "Island", "label": "i1"}]}, {"name": "bob", "battlefield": [{"card": "Forest", "label": "forest"}, {"card": "White Knight", "label": "knight"}], "library": [{"card": "Island"}, {"card": "Island"}, {"card": "Island"}, {"card": "Island"}, {"card": "Island"}, {"card": "Island"}]}]},
   "timeline": [
