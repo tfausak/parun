@@ -886,22 +886,16 @@ acted context word r = do
 -- or "it" for the card put into your hand (Diabolic Tutor, Rune-Scarred
 -- Demon) or onto the battlefield (Nature's Lore, Three Visits), "it" or "that card" for the card revealed (Summoner's Pact,
 -- Goblin Matron), and "that card" or "the card" for the card put on top
--- (Sylvan Tutor, Worldly Tutor). Any other search is not spelled out here.
+-- (Sylvan Tutor, Worldly Tutor). Several descriptions searched for at once
+-- (CR 701.23h) are listed, one card each, and "them" put into your hand or
+-- onto the battlefield tapped: Gem of Becoming, Krosan Verge. Any other search
+-- is not spelled out here.
 searched :: Target.Context -> Search.Search -> [Predicate]
 searched context s
-  | Search.searcher s == you,
-    Search.owner s == you,
-    Search.zones s == Set.singleton Zone.Library,
-    not (Search.outsideTheGame s),
+  | plain,
     Search.quantity s == Just (Quantity.Literal 1),
-    not (Search.upTo s),
-    Maybe.isNothing (Search.subject s),
-    Maybe.isNothing (Search.slot s),
-    Set.null (Search.differentIn s),
-    not (Search.exactly s),
-    not (Search.andOr s) = do
-      p <- Filter.phrase (Search.filter s) (Target.keyword context)
-      one <- Filter.describe Filter.Singular Target.card (Filter.merge p (Filter.MkPhrase [] [Target.card] []))
+    Seq.null (Search.descriptions s) = do
+      one <- card (Search.filter s)
       let onto = [Text.pack "put that card onto the battlefield", Text.pack "put it onto the battlefield"]
           revealed = [Text.pack "reveal it", Text.pack "reveal that card"]
           onTop = [Text.pack "that card", Text.pack "the card"]
@@ -916,9 +910,33 @@ searched context s
         SearchDestination.RevealThenTop -> fmap (\c -> Text.pack ", reveal it, then shuffle and put " <> c <> Text.pack " on top") onTop
         _ -> []
       [MkPredicate Nothing (Text.pack "search your library for " <> Prose.article one <> Text.pack " " <> one <> gone) [] [] Nothing False]
+  | plain,
+    Search.filter s == Filter.Type.And [],
+    descriptions@(_ : _ : _) <- Foldable.toList (Search.descriptions s),
+    Search.quantity s == Just (Quantity.Literal (List.genericLength descriptions)) = do
+      ones <- traverse card descriptions
+      gone <- case Search.destination s of
+        SearchDestination.RevealThenHand -> [Text.pack ". Reveal those cards, put them into your hand, then shuffle"]
+        SearchDestination.BattlefieldTapped -> [Text.pack ", put them onto the battlefield tapped, then shuffle"]
+        _ -> []
+      [MkPredicate Nothing (Text.pack "search your library for " <> Prose.listing "and" [Prose.article one <> Text.pack " " <> one | one <- ones] <> gone) [] [] Nothing False]
   | otherwise = []
   where
     you = PlayerRef.Relative PlayerRelation.You
+    plain =
+      Search.searcher s == you
+        && Search.owner s == you
+        && Search.zones s == Set.singleton Zone.Library
+        && not (Search.outsideTheGame s)
+        && not (Search.upTo s)
+        && Maybe.isNothing (Search.subject s)
+        && Maybe.isNothing (Search.slot s)
+        && Set.null (Search.differentIn s)
+        && not (Search.exactly s)
+        && not (Search.andOr s)
+    card f = do
+      p <- Filter.phrase f (Target.keyword context)
+      Filter.describe Filter.Singular Target.card (Filter.merge p (Filter.MkPhrase [] [Target.card] []))
 
 -- | "[Player] discards [cards]", of the player's choice or at random (CR
 -- 701.9). Cards another player chooses, or a set the instruction names, are

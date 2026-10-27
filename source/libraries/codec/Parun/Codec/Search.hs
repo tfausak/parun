@@ -2,6 +2,7 @@
 
 module Parun.Codec.Search where
 
+import qualified Data.Sequence as Seq
 import qualified Data.Set as Set
 import qualified Parun.Codec.DifferentIn as DifferentIn
 import qualified Parun.Codec.Filter as Filter
@@ -39,6 +40,9 @@ codec = Fields.object $ do
   -- count. Defaulting would read the second as the first.
   quantity <- Fields.required "quantity" (Common.maybe Quantity.codec) Search.quantity
   filter_ <- Fields.required "filter" (Filter.codec Keyword.codec) Search.filter
+  -- Defaulted: an absent key is an instruction of one description, which is
+  -- nearly every card file.
+  descriptions <- Fields.defaulted "descriptions" Seq.empty (Common.seq (Filter.codec Keyword.codec)) Search.descriptions
   -- Defaulted rather than required: an absent key is a card that does not print
   -- "up to", which is the ordinary case, and the reading every card file already
   -- written gets.
@@ -64,6 +68,7 @@ codec = Fields.object $ do
         Search.outsideTheGame = outsideTheGame,
         Search.quantity = quantity,
         Search.filter = filter_,
+        Search.descriptions = descriptions,
         Search.upTo = upTo,
         Search.destination = destination,
         Search.subject = subject,

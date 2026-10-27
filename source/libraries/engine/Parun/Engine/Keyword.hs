@@ -902,6 +902,7 @@ cycling cost searchFor =
                 Search.outsideTheGame = False,
                 Search.quantity = Just (Quantity.Literal 1),
                 Search.filter = filter_,
+                Search.descriptions = Seq.empty,
                 -- CR 702.29e prints no "up to", and its quality-stating filter puts
                 -- the search under CR 701.23b anyway, so this value is unobservable.
                 Search.upTo = False,
@@ -1083,6 +1084,7 @@ searchForSameManaValue cost filter_ destination =
               -- instruction's count.
               Search.quantity = Just (Quantity.Literal 1),
               Search.filter = filter_,
+              Search.descriptions = Seq.empty,
               -- Neither rule prints "up to", and both filters state a quality, so
               -- the search is under CR 701.23b and this value is unobservable --
               -- cycling's reading.
@@ -8079,6 +8081,7 @@ partnerWith name =
               Search.outsideTheGame = False,
               Search.quantity = Just (Quantity.Literal 1),
               Search.filter = Filter.HasName name,
+              Search.descriptions = Seq.empty,
               -- Rule 702.124j prints no "up to", and the filter states a quality,
               -- so CR 701.23b governs and this value is unobservable --
               -- searchForSameManaValue's reading.

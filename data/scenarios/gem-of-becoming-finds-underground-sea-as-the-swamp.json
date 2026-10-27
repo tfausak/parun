@@ -1,0 +1,16 @@
+{
+  "description": "CR 701.23h whole card: Gem of Becoming's one search finds Underground Sea as the Swamp beside an Island and a Mountain",
+  "note": "Underground Sea fits the Island description first, so a search giving each card the first description it fits would leave none for the Island card. One search matches the three cards to the three descriptions as a set.",
+  "board": {"active": "alice", "step": "PrecombatMain", "seats": [{"name": "alice", "battlefield": [{"card": "Gem of Becoming", "label": "gem"}, {"card": "Plains", "label": "p1"}, {"card": "Plains", "label": "p2"}, {"card": "Plains", "label": "p3"}], "library": [{"card": "Underground Sea", "label": "sea"}, {"card": "Island", "label": "isl"}, {"card": "Mountain", "label": "mtn"}, {"card": "Forest", "label": "forest"}]}, {"name": "bob", "library": [{"card": "Island"}, {"card": "Island"}, {"card": "Island"}]}]},
+  "timeline": [
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "do": {"Activate": {"object": "$gem", "mana": ["$p1", "$p2", "$p3"], "costOrder": [0, 1]}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "do": "Pass"},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "do": {"Answer": {"prompt": "Search", "with": ["$isl", "$sea", "$mtn"]}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "do": {"Answer": {"prompt": "Shuffle", "with": ["$forest"]}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "check": {"Count": {"player": "alice", "zone": "Hand", "card": "Underground Sea", "count": 1}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "check": {"Count": {"player": "alice", "zone": "Hand", "card": "Island", "count": 1}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "check": {"Count": {"player": "alice", "zone": "Hand", "card": "Mountain", "count": 1}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "check": {"View": {"of": "Witnessed", "player": "bob", "is": ["Island", "Underground Sea", "Mountain"]}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "check": {"Count": {"player": "alice", "zone": "Graveyard", "card": "Gem of Becoming", "count": 1}}}
+  ]
+}

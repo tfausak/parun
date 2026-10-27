@@ -72,6 +72,7 @@ import qualified Parun.Types.FaceDownReason as FaceDownReason
 import qualified Parun.Types.FaceDownState as FaceDownState
 import qualified Parun.Types.Facing as Facing
 import qualified Parun.Types.Fight as Fight
+import qualified Parun.Types.Filter as Filter.Type
 import qualified Parun.Types.FlipCoin as FlipCoin
 import Parun.Types.Game (Game)
 import qualified Parun.Types.GameEvent as GameEvent
@@ -553,7 +554,7 @@ moveMana resolving source controller legal (MoveMana.MkMoveMana fromRef toRef) =
   Mana.moveMana (Common.apnapPlayersOf fromRef legal resolving source controller gs) (foldMap (\ref -> Common.apnapPlayersOf ref legal resolving source controller gs) toRef)
 
 search :: (Game Result -> ManaAbilityPerformer.ManaAbilityPerformer) -> Game Result -> ObjectId -> ObjectId -> PlayerId -> Map.Map SlotName (Set Recipient) -> Search.Search -> Game ()
-search performManaAbility runSubgame resolving source controller legal (Search.MkSearch searcherRef ownerRef zones outside quantity filter_ upTo destination subject foundSlot differentIn exactly andOr) =
+search performManaAbility runSubgame resolving source controller legal (Search.MkSearch searcherRef ownerRef zones outside quantity filter_ descriptions upTo destination subject foundSlot differentIn exactly andOr) =
   -- CR 701.23a: match each candidate through its own CR 613 projection --
   -- rule 613.1 names no zone, so a card in any of the searched zones is folded
   -- exactly as a permanent is, and CR 208.2a's characteristic-defining power
@@ -611,7 +612,19 @@ search performManaAbility runSubgame resolving source controller legal (Search.M
         (Projection.viewOfObject oid g)
           { Filter.canAttachToSubject = Maybe.maybe False (\host -> Attach.attachableWithLastKnown searcher oid host g) (subjectOf g)
           }
-      matches1 searcher g oid = Filter.matches (searchContext g) (viewOfCandidate searcher g oid) filter_
+      -- Search.descriptions: a candidate is a card some description admits,
+      -- and which description each found card answers for is settled over
+      -- the found set (Common.matchDescriptions). The scenarios
+      -- gem-of-becoming-finds-underground-sea-as-the-swamp and
+      -- gem-of-becoming-finds-one-card-per-description are the proof, and
+      -- gem-of-becoming-may-leave-a-description-unfound that the descriptions
+      -- state a quality (CR 701.23b).
+      admits
+        | Seq.null descriptions = filter_
+        | otherwise = Filter.Type.And [filter_, Filter.Type.Or (Foldable.toList descriptions)]
+      fits searcher g oid = Filter.matches (searchContext g) (viewOfCandidate searcher g oid)
+      matches1 searcher g oid = fits searcher g oid admits
+      described searcher g = Common.matchDescriptions (fits searcher g) descriptions
       -- CR 400.2: the library and the hand are the hidden zones. CR 701.23b,
       -- CR 701.23c and CR 701.23d are each scoped to a hidden zone, so this is
       -- what decides, PER ZONE, whether a find may be declined.
@@ -743,7 +756,7 @@ search performManaAbility runSubgame resolving source controller legal (Search.M
               else pure Nothing
           outsideAvailable <-
             if lookOutside
-              then State.gets (Event.outsideOffer filter_ source searcher)
+              then State.gets (Event.outsideOffer admits source searcher)
               else pure Map.empty
           -- CR 601.3 (Panglacial Wurm): the chance to cast is offered AT THE
           -- SEARCH, not when the resolution began, so earlier effects of the
@@ -795,9 +808,12 @@ search performManaAbility runSubgame resolving source controller legal (Search.M
                     -- Search.exactly: the answer must be a group of as many
                     -- cards as the zones can give, up to the count (CR 101.1,
                     -- 609.3). Validated, not filled: which cards make up the
-                    -- group is the searcher's choice.
-                    required = Common.mostDiffering differentIn gs capHere matches
-                    fills given = Common.differing differentIn gs given == given && List.genericLength given == required
+                    -- group is the searcher's choice. Search.descriptions'
+                    -- half bounds the count by each constraint alone, not by
+                    -- both together; a REGRESSION FENCE, no card printing
+                    -- "exactly" beside several descriptions.
+                    required = min (Common.mostDiffering differentIn gs capHere matches) (List.genericLength (described searcher gs matches))
+                    fills given = Common.differing differentIn gs given == given && described searcher gs given == given && List.genericLength given == required
                     -- RE-ASKED when short, Parun.Engine.Engine's CR 603.3d
                     -- shape: a repeat of an answer already refused is taken
                     -- as it stands, since a pure decider repeats itself and
@@ -846,7 +862,7 @@ search performManaAbility runSubgame resolving source controller legal (Search.M
                 --
                 -- Search.exactly validated its answer above, which is then the
                 -- whole find: nothing completes it.
-                let mayDecline zone = exactly || upTo || Maybe.isNothing cap || (isHidden zone && Filter.statesAQuality filter_)
+                let mayDecline zone = exactly || upTo || Maybe.isNothing cap || (isHidden zone && Filter.statesAQuality admits)
                     -- Search.differentIn: "with different names" (CR
                     -- 201.2b), "with different powers", "don't share a mana
                     -- value". Filtered, not trusted: a card sharing a value
@@ -854,7 +870,7 @@ search performManaAbility runSubgame resolving source controller legal (Search.M
                     -- below is not held to it, which no card reaches: every
                     -- card in data/cards/ printing one says "up to" or
                     -- "exactly".
-                    picked = List.genericTake capHere . Common.differing differentIn gs . ListUtils.nubOrd $ filter (\oid -> List.elem oid matches) answer
+                    picked = List.genericTake capHere . described searcher gs . Common.differing differentIn gs . ListUtils.nubOrd $ filter (\oid -> List.elem oid matches) answer
                     forced = concatMap snd (filter (not . mayDecline . fst) byZone)
                     filler = filter (\oid -> List.notElem oid picked) forced
                     -- CR 701.23j: the searcher "MAY choose" a card out there,
@@ -872,7 +888,12 @@ search performManaAbility runSubgame resolving source controller legal (Search.M
                         pure (Event.settleOutside outsideAvailable 0 outsideRoom outsideAnswer)
                   _ -> pure []
                 let room = capHere - min capHere (List.genericLength picked + List.genericLength outsidePicked)
-                pure (picked <> List.genericTake room filler, outsidePicked)
+                -- The completion keeps every description to one card: picked
+                -- already answers for its own, so what described adds after
+                -- them is filler that still leaves a matching. A REGRESSION
+                -- FENCE: every printed description states a quality and every
+                -- such card searches a library, so nothing is completed.
+                pure (picked <> List.genericTake room (drop (length picked) (described searcher gs (picked <> filler))), outsidePicked)
           Foldable.for_ searchController (State.modify' . Common.popControl searcher . searchControl)
           pure (searcher, owner, chosenZones, found, foundOutside, exiler)
         -- Where the cards go is the CARD's instruction, not rule 701.23's;
