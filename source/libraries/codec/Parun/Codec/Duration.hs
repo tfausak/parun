@@ -6,6 +6,7 @@ import qualified Parun.Codec.DurationEvent as DurationEvent
 import qualified Parun.Codec.Keyword as Keyword
 import qualified Parun.Codec.Phase as Phase
 import qualified Parun.Codec.PlayerRef as PlayerRef
+import qualified Parun.Codec.SlotName as SlotName
 import qualified Parun.JsonCodec.Arm as Arm
 import qualified Parun.JsonCodec.Codec as Codec
 import qualified Parun.Types.Duration as Duration
@@ -31,7 +32,7 @@ codec =
       Arm.nullary "UntilEndOfCombat" Duration.UntilEndOfCombat,
       Arm.nullary "UntilEndOfCombatOnYourNextTurn" Duration.UntilEndOfCombatOnYourNextTurn,
       Arm.payload "UntilPaid" (Cost.codec Keyword.codec) Duration.UntilPaid (\x -> case x of Duration.UntilPaid y -> Just y; _ -> Nothing),
-      Arm.nullary "UntilUsed" Duration.UntilUsed,
+      Arm.optionalPayload "UntilUsed" SlotName.codec Duration.UntilUsed (\x -> case x of Duration.UntilUsed y -> Just y; _ -> Nothing),
       Arm.payload "UntilEvent" DurationEvent.codec Duration.UntilEvent (\x -> case x of Duration.UntilEvent y -> Just y; _ -> Nothing)
     ]
 

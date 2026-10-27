@@ -2,6 +2,7 @@
 
 module Parun.Codec.ActivePlayerEffect where
 
+import qualified Data.Map.Strict as Map
 import qualified Parun.Codec.AbilityName as AbilityName
 import qualified Parun.Codec.AffectedPlayers as AffectedPlayers
 import qualified Parun.Codec.Expiry as Expiry
@@ -14,6 +15,7 @@ import qualified Parun.JsonCodec.Codec as Codec
 import qualified Parun.JsonCodec.Common as Common
 import qualified Parun.JsonCodec.Fields as Fields
 import qualified Parun.Types.ActivePlayerEffect as ActivePlayerEffect
+import qualified Parun.Types.SlotName as SlotName
 
 -- | `scope` is the PLAYER instantiation of Parun.Types.AffectedPlayers: a stored
 -- row's Named arm holds the seat CR 601.2c's slot was answered with, where a card
@@ -29,6 +31,12 @@ codec = Fields.object $ do
   scope <- Fields.required "scope" (AffectedPlayers.codec PlayerId.codec) ActivePlayerEffect.scope
   effect <- Fields.required "effect" PlayerEffect.codec ActivePlayerEffect.effect
   ability <- Fields.defaulted "ability" Nothing (Common.maybe AbilityName.codec) ActivePlayerEffect.ability
+  slots <-
+    Fields.defaulted
+      "slots"
+      Map.empty
+      (Common.textMap SlotName.unwrap (Right . SlotName.MkSlotName) (Common.set ObjectId.codec))
+      ActivePlayerEffect.slots
   pure
     ActivePlayerEffect.MkActivePlayerEffect
       { ActivePlayerEffect.source = source,
@@ -38,5 +46,6 @@ codec = Fields.object $ do
         ActivePlayerEffect.expiry = expiry,
         ActivePlayerEffect.scope = scope,
         ActivePlayerEffect.effect = effect,
-        ActivePlayerEffect.ability = ability
+        ActivePlayerEffect.ability = ability,
+        ActivePlayerEffect.slots = slots
       }

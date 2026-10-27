@@ -943,7 +943,7 @@ durationConditions duration = case duration of
   -- below and never through a Condition -- an activated ability's own cost takes
   -- exactly that split (activatedAbilityCounts against activatedAbilityFilters).
   Duration.UntilPaid _ -> []
-  Duration.UntilUsed -> []
+  Duration.UntilUsed _ -> []
   Duration.UntilEvent _ -> []
 
 -- Every Count reachable from a Duration, off the enumeration above.
@@ -4413,7 +4413,7 @@ durationFilters duration =
           Duration.ForAsLongAs _ -> []
           Duration.UntilEndOfCombat -> []
           Duration.UntilEndOfCombatOnYourNextTurn -> []
-          Duration.UntilUsed -> []
+          Duration.UntilUsed _ -> []
           Duration.UntilEvent _ -> []
       )
     <> case duration of

@@ -552,7 +552,8 @@ applyEpic oid controller = do
                 ActivePlayerEffect.expiry = Expiry.Type.Never,
                 ActivePlayerEffect.scope = AffectedPlayers.Scoped (PlayerScope.Related PlayerRelation.You),
                 ActivePlayerEffect.effect = PlayerEffect.CantCastSpells,
-                ActivePlayerEffect.ability = Nothing
+                ActivePlayerEffect.ability = Nothing,
+                ActivePlayerEffect.slots = Map.empty
               }
        in g1 {GameState.playerEffects = active : GameState.playerEffects g1}
     -- Rule 702.50a's SECOND ability. The spell is still on the stack here, so the

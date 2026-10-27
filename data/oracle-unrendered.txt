@@ -1824,6 +1824,7 @@ sanguine-bond
 sapphire-medallion
 satyr-piper
 sauroform-hybrid
+savage-summoning
 savanti-romero-times-exile
 save-point
 savior-of-ollenbock

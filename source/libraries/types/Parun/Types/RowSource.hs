@@ -1,7 +1,10 @@
 module Parun.Types.RowSource where
 
+import qualified Data.Map.Strict as Map
+import qualified Data.Set as Set
 import qualified Parun.Types.AbilityName as AbilityName
 import qualified Parun.Types.ObjectId as ObjectId
+import qualified Parun.Types.SlotName as SlotName
 import qualified Parun.Types.SourceChoices as SourceChoices
 
 -- | CR 113.7: the source of a player-effect row, as
@@ -19,6 +22,9 @@ data RowSource = MkRowSource
     -- (Parun.Types.ActivePlayerEffect.ability), which pairs its references to
     -- exiled cards. Nothing for a printed row, a static ability no object
     -- acquires from an exiled card.
-    ability :: Maybe AbilityName.AbilityName
+    ability :: Maybe AbilityName.AbilityName,
+    -- | A stored row's bound slots (Parun.Types.ActivePlayerEffect.slots),
+    -- which a Filter.IsBound in the row reads. Empty for a printed row.
+    slots :: Map.Map SlotName.SlotName (Set.Set ObjectId.ObjectId)
   }
   deriving (Eq, Ord, Show)

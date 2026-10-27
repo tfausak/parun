@@ -6,6 +6,7 @@ import qualified Parun.Codec.EventExpiry as EventExpiry
 import qualified Parun.Codec.PaidExpiry as PaidExpiry
 import qualified Parun.Codec.PhaseSelector as PhaseSelector
 import qualified Parun.Codec.PlayerId as PlayerId
+import qualified Parun.Codec.SlotName as SlotName
 import qualified Parun.Codec.StepBegan as StepBegan
 import qualified Parun.Codec.Timestamp as Timestamp
 import qualified Parun.Codec.While as While
@@ -35,7 +36,7 @@ codec =
       Arm.payload "AtEndOf" PhaseSelector.codec Expiry.AtEndOf (\x -> case x of Expiry.AtEndOf y -> Just y; _ -> Nothing),
       Arm.payload "AtEndOfCombatOn" AfterTurn.codec Expiry.AtEndOfCombatOn (\x -> case x of Expiry.AtEndOfCombatOn y -> Just y; _ -> Nothing),
       Arm.payload "WhenPaid" PaidExpiry.codec Expiry.WhenPaid (\x -> case x of Expiry.WhenPaid y -> Just y; _ -> Nothing),
-      Arm.nullary "WhenUsed" Expiry.WhenUsed,
+      Arm.optionalPayload "WhenUsed" SlotName.codec Expiry.WhenUsed (\x -> case x of Expiry.WhenUsed y -> Just y; _ -> Nothing),
       Arm.payload "OnEvent" EventExpiry.codec Expiry.OnEvent (\x -> case x of Expiry.OnEvent y -> Just y; _ -> Nothing)
     ]
 

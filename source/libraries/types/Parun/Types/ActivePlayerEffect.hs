@@ -1,11 +1,14 @@
 module Parun.Types.ActivePlayerEffect where
 
+import qualified Data.Map.Strict as Map
+import qualified Data.Set as Set
 import qualified Parun.Types.AbilityName as AbilityName
 import qualified Parun.Types.AffectedPlayers as AffectedPlayers
 import qualified Parun.Types.Expiry as Expiry
 import qualified Parun.Types.ObjectId as ObjectId
 import qualified Parun.Types.PlayerEffect as PlayerEffect
 import qualified Parun.Types.PlayerId as PlayerId
+import qualified Parun.Types.SlotName as SlotName
 import qualified Parun.Types.SourceChoices as SourceChoices
 import qualified Parun.Types.Timestamp as Timestamp
 
@@ -74,6 +77,12 @@ data ActivePlayerEffect = MkActivePlayerEffect
     -- effect (Parun.Engine.Resolve.Slots.resolvingAbilityName), so a reference
     -- to cards exiled with `source` reads that ability's pair. Nothing for an
     -- unnamed one, a trigger or a spell.
-    ability :: Maybe AbilityName.AbilityName
+    ability :: Maybe AbilityName.AbilityName,
+    -- | CR 611.2a's "that spell" for a row installed beside a
+    -- Duration.UntilUsed grant naming a slot: the spell whose cast used the
+    -- grant, bound by Parun.Engine.Cast.bindUser and read by a Filter.IsBound
+    -- in `effect` (Savage Summoning's "that spell can't be countered").
+    -- ActiveReplacement.slots' shape. Empty as the row begins.
+    slots :: Map.Map SlotName.SlotName (Set.Set ObjectId.ObjectId)
   }
   deriving (Eq, Ord, Show)

@@ -534,11 +534,11 @@ applying pid gs =
 
 -- A printed row's source: its choices are read off the object live (CR 604.2).
 liveSource :: Maybe ObjectId -> RowSource
-liveSource source = RowSource.MkRowSource source Nothing Nothing
+liveSource source = RowSource.MkRowSource source Nothing Nothing Map.empty
 
 -- A stored row's source, carrying the choices baked as it began (CR 608.2h).
 storedSource :: ActivePlayerEffect.ActivePlayerEffect -> RowSource
-storedSource active = RowSource.MkRowSource (Just (ActivePlayerEffect.source active)) (Just (ActivePlayerEffect.choices active)) (ActivePlayerEffect.ability active)
+storedSource active = RowSource.MkRowSource (Just (ActivePlayerEffect.source active)) (Just (ActivePlayerEffect.choices active)) (ActivePlayerEffect.ability active) (ActivePlayerEffect.slots active)
 
 -- CR 601.2i: how many spells this player has cast this turn. A fold over the
 -- whole event log, which is exactly "this turn" because Engine.handoffTurn clears
@@ -1316,11 +1316,17 @@ contextFrom src oid gs = contextFor (Projection.controllerOf oid gs) src gs
 -- The baked colour and subtype are a fence, not a proven behaviour: CR 614.1c's
 -- as-enters choice (Parun.Engine.Event's EntryRewrite arms) is the only writer of
 -- either, so no source changes them under a stored row today.
+--
+-- A stored row's bound slots frame it as an ActiveReplacement's do
+-- (Parun.Engine.Replacement), so a Filter.IsBound in the row names what
+-- Parun.Engine.Cast.bindUser bound.
 contextFor :: Maybe PlayerId -> RowSource -> GameState -> Filter.Context
 contextFor you row gs =
   let src = RowSource.object row
       frame s = Projection.framedWith (Maybe.fromMaybe (SourceContext.choicesOf (Game.acquisitionOf s gs) s gs) (RowSource.choices row)) s gs
-   in maybe id frame src (Filter.contextIn gs you src)
+      bound = RowSource.slots row
+      slotted = if Map.null bound then id else Projection.framedBySlots gs (fmap (Set.map Recipient.ToObject) bound)
+   in slotted (maybe id frame src (Filter.contextIn gs you src))
 
 -- CR 601.3a's LOOKAHEAD, asked of a prohibition that matches the spell as it
 -- stands: could a choice still to be made during this spell's proposal cause the
