@@ -1231,6 +1231,7 @@ liliana-of-the-veil
 liliana-untouched-by-death
 liliana-vess
 lilianas-caress
+lilianas-reaver
 lineprancers
 liquimetal-coating
 lithoform-engine
@@ -1299,8 +1300,10 @@ mana-severance
 mana-short
 mana-vapors
 manabarbs
+manaweft-sliver
 mandate-of-peace
 manifest-dread
+marauding-maulhorn
 marble-titan
 march-of-burgeoning-life
 march-of-otherworldly-light
@@ -1316,6 +1319,7 @@ mask-of-intolerance
 maskwood-nexus
 mass-polymorph
 master-chef
+master-of-diversion
 master-of-the-wild-hunt
 master-thief
 master-warcraft
@@ -1383,6 +1387,7 @@ mobilizer-mech
 mogg-flunkies
 mogiss-marauder
 molecule-man
+molten-birth
 molten-disaster
 molten-psyche
 molten-sentry
@@ -1459,6 +1464,7 @@ norwood-priestess
 norwood-riders
 novijen-sages
 null-chamber
+oath-of-the-ancient-wood
 obelisk-of-urd
 obliterate
 oblivion-ring
@@ -1530,6 +1536,7 @@ parasitic-grasp
 pariah
 part-the-waterveil
 patchwork-crawler
+path-of-bravery
 path-of-peril
 path-of-the-enigma
 path-to-the-festival
@@ -1643,6 +1650,7 @@ pulling-teeth
 pulmonic-sliver
 purging-scythe
 pyramids
+pyromancers-gauntlet
 pyromancers-goggles
 qarsi-sadist
 quarry-colossus
@@ -1651,6 +1659,7 @@ queen-marchesa
 queens-bay-paladin
 questing-beast
 questing-druid-seek-the-beast
+quicken
 quicksilver-amulet
 quicksilver-gargantuan
 quillspike
@@ -1751,6 +1760,7 @@ riling-dawnbreaker-signaling-roar
 ring-of-evos-isle
 ring-of-kalonia
 ring-of-maruf
+ring-of-three-wishes
 ring-of-thune
 ring-of-valkas
 ring-of-xathrid
@@ -1834,11 +1844,13 @@ scampire
 scarecrow
 scarred-puma
 scavenger-grounds
+scavenging-ooze
 scepter-of-empires
 scheming-aspirant
 scheming-symmetry
 scorching-winds
 scoria-wurm
+scourge-of-valkas
 scouts-warning
 scrambleverse
 scrapshooter
@@ -1859,6 +1871,7 @@ sedge-sliver
 seedborn-muse
 seeker-of-slaanesh
 seifer-balamb-rival
+seismic-stomp
 seized-from-slumber
 selenia
 selfless-police-captain
@@ -1869,6 +1882,7 @@ sengir-vampire
 sensational-spider-man
 sentinel-dispatch
 sepulchral-primordial
+seraph-of-the-sword
 serene-master
 serene-remembrance
 serpent-of-the-endless-sea
@@ -1883,6 +1897,8 @@ setons-desire
 shadow-prophecy
 shadow-the-hedgehog
 shadow-urchin
+shadowborn-apostle
+shadowborn-demon
 shadowgrange-archfiend
 shahrazad
 shahrazad-and-sindbad
@@ -1999,6 +2015,11 @@ squad-captain
 squadron-hawk
 squelch
 stadium-vendors
+staff-of-the-death-magus
+staff-of-the-flame-magus
+staff-of-the-mind-magus
+staff-of-the-sun-magus
+staff-of-the-wild-magus
 stalking-tiger
 stand-or-fall
 standstill
@@ -2032,6 +2053,7 @@ strategic-planning
 strax-sontaran-nurse
 stream-of-acid
 streetwise-negotiator
+strionic-resonator
 strixhaven
 strong-the-brutish-thespian
 student-of-warfare
@@ -2112,6 +2134,7 @@ temporal-cleansing
 temporal-extortion
 temporal-manipulation
 temporary-truce
+tenacious-dead
 tenacious-underdog
 territorial-kavu
 territorial-maro
@@ -2156,6 +2179,7 @@ thicket-basilisk
 thieves-auction
 thorin-mountain-king
 thorn-elemental
+thorncaster-sliver
 thornvault-forager
 thoughtleech
 thraben-gargoyle-stonewing-antagonizer
@@ -2179,6 +2203,7 @@ ticket-turbotubes
 ticketomaton
 tidal-warrior
 tidal-wave
+tidebinder-mage
 tidewalker
 timberpack-wolf
 time-reversal
@@ -2277,6 +2302,7 @@ vampire-nocturnus
 vanish-into-eternity
 varolz-the-scar-striped
 varragoth-bloodsky-sire
+vastwood-hydra
 vault-112-sadistic-simulation
 vedalken-orrery
 veiling-oddity
@@ -2288,6 +2314,7 @@ vengeful-archon
 vengeful-pharaoh
 vengeful-townsfolk
 vengeful-tracker
+verdant-haven
 vernal-bloom
 vesuva
 vesuvan-doppelganger
@@ -2315,6 +2342,7 @@ volatile-rift
 volraths-curse
 volraths-shapeshifter
 volt-charge
+voracious-wurm
 vorel-of-the-hull-clade
 vorinclex-monstrous-raider
 vorrac-battlehorns
@@ -2333,6 +2361,7 @@ wanderguard-sentry
 wanderwine-prophets
 war-falcon
 warbreak-trumpeter
+warden-of-evos-isle
 warp-world
 warped-devotion
 warriors-oath
@@ -2383,6 +2412,7 @@ windborn-muse
 windbrisk-heights
 windcaller-aven
 windfall
+windreader-sphinx
 winds-of-change
 winged-portent
 wings-of-velis-vel
@@ -2392,6 +2422,7 @@ wire-surgeons
 witch-king-bringer-of-ruin
 witch-king-of-angmar
 witchs-mark
+witchstalker
 witherbloom-the-balancer
 withering-gaze
 witness-protection
@@ -2419,6 +2450,7 @@ wu-spy
 wu-warship
 xathrid-demon
 xathrid-gorgon
+xathrid-necromancer
 yare
 yasmin-khan
 yawgmoth-demon

@@ -1,0 +1,28 @@
+{
+  "description": "CR 602.2 / 701.23a: Shadowborn Apostle's {B}, sacrifice six creatures named Shadowborn Apostle searches for a Demon creature card and puts it onto the battlefield; Shadowborn Demon entering destroys target non-Demon creature",
+  "note": "Seven Apostles make the sacrifice a choice; the Grizzly Bears can't stand in for one. The search can't take the Hill Giant. Shadowborn Demon can't target bob's Abyssal Persecutor, so it destroys his Bears.",
+  "board": {
+    "active": "alice",
+    "step": "PrecombatMain",
+    "seats": [
+      {"name": "alice", "manaPool": "B", "battlefield": [{"card": "Shadowborn Apostle", "label": "a1"}, {"card": "Shadowborn Apostle", "label": "a2"}, {"card": "Shadowborn Apostle", "label": "a3"}, {"card": "Shadowborn Apostle", "label": "a4"}, {"card": "Shadowborn Apostle", "label": "a5"}, {"card": "Shadowborn Apostle", "label": "a6"}, {"card": "Shadowborn Apostle", "label": "a7"}, {"card": "Grizzly Bears", "label": "mine"}], "library": [{"card": "Hill Giant", "label": "giant"}, {"card": "Shadowborn Demon", "label": "demon"}, {"card": "Island", "label": "i1"}]},
+      {"name": "bob", "battlefield": [{"card": "Grizzly Bears", "label": "bears"}, {"card": "Abyssal Persecutor", "label": "persecutor"}], "library": [{"card": "Island"}, {"card": "Island"}, {"card": "Island"}, {"card": "Island"}]}
+    ]
+  },
+  "timeline": [
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "refuse": {"Answer": {"prompt": "ChooseSacrifices", "with": ["$a1", "$a2", "$a3", "$a4", "$a5", "$mine"]}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "do": {"Answer": {"prompt": "ChooseSacrifices", "with": ["$a1", "$a2", "$a3", "$a4", "$a5", "$a6"]}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "do": {"Activate": {"object": "$a7"}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "check": {"Count": {"player": "alice", "zone": "Graveyard", "card": "Shadowborn Apostle", "count": 6}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "do": "Pass"},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "refuse": {"Answer": {"prompt": "Search", "with": ["$giant"]}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "do": {"Answer": {"prompt": "Search", "with": ["$demon"]}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "do": {"Answer": {"prompt": "Shuffle", "with": ["$giant", "$i1"]}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "refuse": {"ChooseTargets": {"target": ["$persecutor"]}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "do": {"ChooseTargets": {"target": ["$bears"]}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "check": {"Count": {"player": "alice", "zone": "Battlefield", "card": "Shadowborn Demon", "count": 1}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "do": "Pass"},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "check": {"Count": {"player": "bob", "zone": "Graveyard", "card": "Grizzly Bears", "count": 1}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "check": {"Count": {"player": "bob", "zone": "Battlefield", "card": "Abyssal Persecutor", "count": 1}}}
+  ]
+}

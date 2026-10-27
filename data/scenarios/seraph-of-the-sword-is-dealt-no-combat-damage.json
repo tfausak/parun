@@ -1,0 +1,21 @@
+{
+  "description": "CR 615.1 / 510.2: Seraph of the Sword prevents all combat damage that would be dealt to it, but not noncombat damage",
+  "note": "Blocking bob's Hill Giant, the 3/3 Seraph takes nothing and kills the Giant. Afterwards a Shock still marks 2 damage on it.",
+  "board": {
+    "active": "bob",
+    "step": "PrecombatMain",
+    "seats": [
+      {"name": "alice", "battlefield": [{"card": "Seraph of the Sword", "label": "seraph"}, {"card": "Mountain", "label": "m"}], "hand": [{"card": "Shock", "label": "shock"}], "library": [{"card": "Island"}, {"card": "Island"}, {"card": "Island"}, {"card": "Island"}]},
+      {"name": "bob", "battlefield": [{"card": "Hill Giant", "label": "giant", "ready": true}], "library": [{"card": "Island"}, {"card": "Island"}, {"card": "Island"}, {"card": "Island"}]}
+    ]
+  },
+  "timeline": [
+    {"turn": 1, "step": "DeclareAttackers", "player": "bob", "do": {"Attack": ["$giant"]}},
+    {"turn": 1, "step": "DeclareBlockers", "player": "alice", "do": {"Block": {"$seraph": ["$giant"]}}},
+    {"turn": 1, "step": "CombatDamage", "player": "bob", "check": {"Damage": {"object": "$seraph", "damage": 0}}},
+    {"turn": 1, "step": "CombatDamage", "player": "bob", "check": {"Count": {"player": "bob", "zone": "Graveyard", "card": "Hill Giant", "count": 1}}},
+    {"turn": 1, "step": "PostcombatMain", "player": "alice", "do": {"Cast": {"object": "$shock", "targets": ["$seraph"], "mana": ["$m"]}}},
+    {"turn": 1, "step": "PostcombatMain", "player": "alice", "do": "Pass"},
+    {"turn": 1, "step": "PostcombatMain", "player": "alice", "check": {"Damage": {"object": "$seraph", "damage": 2}}}
+  ]
+}

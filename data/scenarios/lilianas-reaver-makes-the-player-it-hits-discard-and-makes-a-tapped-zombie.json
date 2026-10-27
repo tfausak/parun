@@ -1,0 +1,23 @@
+{
+  "description": "CR 510.2 / 603.2: when Liliana's Reaver deals combat damage to a player, that player discards a card and its controller creates a tapped 2/2 black Zombie",
+  "note": "bob holds two cards so the discard is his choice; he keeps the Hill Giant. The Zombie enters tapped.",
+  "board": {
+    "active": "alice",
+    "step": "PrecombatMain",
+    "seats": [
+      {"name": "alice", "battlefield": [{"card": "Liliana's Reaver", "label": "reaver", "ready": true}], "library": [{"card": "Island"}, {"card": "Island"}, {"card": "Island"}, {"card": "Island"}]},
+      {"name": "bob", "hand": [{"card": "Gray Ogre", "label": "ogre"}, {"card": "Hill Giant", "label": "giant"}], "library": [{"card": "Island"}, {"card": "Island"}, {"card": "Island"}, {"card": "Island"}]}
+    ]
+  },
+  "timeline": [
+    {"turn": 1, "step": "DeclareAttackers", "player": "alice", "do": {"Attack": ["$reaver"]}},
+    {"turn": 1, "step": "CombatDamage", "player": "alice", "do": "Pass"},
+    {"turn": 1, "step": "CombatDamage", "player": "bob", "do": {"Answer": {"prompt": "ChooseDiscard", "with": ["$ogre"]}}},
+    {"turn": 1, "step": "CombatDamage", "player": "alice", "check": {"Life": {"player": "bob", "life": 16}}},
+    {"turn": 1, "step": "CombatDamage", "player": "alice", "check": {"Count": {"player": "bob", "zone": "Graveyard", "card": "Gray Ogre", "count": 1}}},
+    {"turn": 1, "step": "CombatDamage", "player": "alice", "check": {"Count": {"player": "bob", "zone": "Hand", "card": "Hill Giant", "count": 1}}},
+    {"turn": 1, "step": "CombatDamage", "player": "alice", "check": {"Count": {"player": "alice", "zone": "Battlefield", "card": "Zombie Token", "count": 1}}},
+    {"turn": 1, "step": "CombatDamage", "player": "alice", "check": {"Tapped": {"object": "Zombie Token", "tapped": true}}},
+    {"turn": 1, "step": "CombatDamage", "player": "alice", "check": {"PowerToughness": {"object": "Zombie Token", "power": 2, "toughness": 2}}}
+  ]
+}

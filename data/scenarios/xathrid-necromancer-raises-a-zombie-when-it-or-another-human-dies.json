@@ -1,0 +1,27 @@
+{
+  "description": "CR 603.6c / 603.10a: whenever Xathrid Necromancer or another Human creature its controller controls dies, they create a tapped 2/2 black Zombie",
+  "note": "alice Shocks her Human Master of Diversion (a Zombie), her Grizzly Bears (none) and the Necromancer itself (a second Zombie).",
+  "board": {
+    "active": "alice",
+    "step": "PrecombatMain",
+    "seats": [
+      {"name": "alice", "battlefield": [{"card": "Xathrid Necromancer", "label": "necromancer"}, {"card": "Master of Diversion", "label": "master"}, {"card": "Grizzly Bears", "label": "bears"}, {"card": "Mountain", "label": "m1"}, {"card": "Mountain", "label": "m2"}, {"card": "Mountain", "label": "m3"}], "hand": [{"card": "Shock", "label": "s1"}, {"card": "Shock", "label": "s2"}, {"card": "Shock", "label": "s3"}], "library": [{"card": "Island"}, {"card": "Island"}, {"card": "Island"}, {"card": "Island"}]},
+      {"name": "bob", "library": [{"card": "Island"}, {"card": "Island"}, {"card": "Island"}, {"card": "Island"}]}
+    ]
+  },
+  "timeline": [
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "do": {"Cast": {"object": "$s1", "targets": ["$master"], "mana": ["$m1", null]}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "do": "Pass"},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "do": "Pass"},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "check": {"Count": {"player": "alice", "zone": "Battlefield", "card": "Zombie Token", "count": 1}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "check": {"Tapped": {"object": "Zombie Token", "tapped": true}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "do": {"Cast": {"object": "$s2", "targets": ["$bears"], "mana": ["$m2", null]}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "do": "Pass"},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "check": {"Count": {"player": "alice", "zone": "Graveyard", "card": "Grizzly Bears", "count": 1}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "check": {"View": {"of": "Stack", "is": []}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "do": {"Cast": {"object": "$s3", "targets": ["$necromancer"], "mana": ["$m3"]}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "do": "Pass"},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "do": "Pass"},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "check": {"Count": {"player": "alice", "zone": "Battlefield", "card": "Zombie Token", "count": 2}}}
+  ]
+}

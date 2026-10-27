@@ -1,0 +1,24 @@
+{
+  "description": "CR 614.1c / 701.23a: Ring of Three Wishes enters with three wish counters, and removing one with {5}, {T} searches its controller's library for any card",
+  "note": "alice fetches the Hill Giant from among Islands; the Ring keeps two wish counters.",
+  "board": {
+    "active": "alice",
+    "step": "PrecombatMain",
+    "seats": [
+      {"name": "alice", "manaPool": "CCCCCCCCCC", "hand": [{"card": "Ring of Three Wishes", "label": "ring"}], "library": [{"card": "Island", "label": "i1"}, {"card": "Hill Giant", "label": "giant"}, {"card": "Island", "label": "i2"}, {"card": "Island", "label": "i3"}]},
+      {"name": "bob", "library": [{"card": "Island"}, {"card": "Island"}, {"card": "Island"}, {"card": "Island"}]}
+    ]
+  },
+  "timeline": [
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "do": {"Cast": {"object": "$ring"}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "do": "Pass"},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "check": {"Counters": {"object": "Ring of Three Wishes", "kind": {"type": "Named", "value": "wish"}, "count": 3}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "do": {"Activate": {"object": "Ring of Three Wishes", "costOrder": [0, 1]}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "check": {"Counters": {"object": "Ring of Three Wishes", "kind": {"type": "Named", "value": "wish"}, "count": 2}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "do": "Pass"},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "do": {"Answer": {"prompt": "Search", "with": ["$giant"]}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "do": {"Answer": {"prompt": "Shuffle", "with": ["$i1", "$i2", "$i3"]}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "check": {"Count": {"player": "alice", "zone": "Hand", "card": "Hill Giant", "count": 1}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "check": {"Tapped": {"object": "Ring of Three Wishes", "tapped": true}}}
+  ]
+}

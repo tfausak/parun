@@ -1,0 +1,76 @@
+{
+  "faces": [
+    {
+      "manaCost": [
+        {
+          "type": "Generic",
+          "value": 1
+        },
+        {
+          "type": "OfType",
+          "value": {
+            "type": "Colored",
+            "value": {
+              "type": "Red"
+            }
+          }
+        }
+      ],
+      "name": "Seismic Stomp",
+      "oracleText": "Creatures without flying can't block this turn.",
+      "spell": {
+        "modes": [
+          {
+            "clauses": [
+              {
+                "effects": [
+                  {
+                    "type": "Prohibit",
+                    "value": {
+                      "affected": {
+                        "type": "Matching",
+                        "value": {
+                          "type": "And",
+                          "value": [
+                            {
+                              "type": "HasCardType",
+                              "value": {
+                                "type": "Creature"
+                              }
+                            },
+                            {
+                              "type": "Not",
+                              "value": {
+                                "type": "HasKeyword",
+                                "value": {
+                                  "type": "Flying"
+                                }
+                              }
+                            }
+                          ]
+                        }
+                      },
+                      "duration": {
+                        "type": "UntilEndOfTurn"
+                      },
+                      "what": {
+                        "type": "Block"
+                      }
+                    }
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      },
+      "typeLine": {
+        "types": [
+          {
+            "type": "Sorcery"
+          }
+        ]
+      }
+    }
+  ]
+}

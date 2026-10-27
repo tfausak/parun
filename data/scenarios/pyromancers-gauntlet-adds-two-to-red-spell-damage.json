@@ -1,0 +1,23 @@
+{
+  "description": "CR 614.1a / 120.3: Pyromancer's Gauntlet makes a red instant or sorcery spell its controller controls deal that much damage plus 2 to a permanent or player",
+  "note": "alice's Shock deals 4 to bob and 4 to bob's Hill Giant, killing it; bob's own Shock at alice deals only 2, since bob doesn't control the Gauntlet.",
+  "board": {
+    "active": "alice",
+    "step": "PrecombatMain",
+    "seats": [
+      {"name": "alice", "manaPool": "RR", "battlefield": [{"card": "Pyromancer's Gauntlet", "label": "gauntlet"}], "hand": [{"card": "Shock", "label": "shock1"}, {"card": "Shock", "label": "shock2"}], "library": [{"card": "Island"}, {"card": "Island"}, {"card": "Island"}, {"card": "Island"}]},
+      {"name": "bob", "battlefield": [{"card": "Hill Giant", "label": "giant"}, {"card": "Mountain", "label": "bm"}], "hand": [{"card": "Shock", "label": "shock3"}], "library": [{"card": "Island"}, {"card": "Island"}, {"card": "Island"}, {"card": "Island"}]}
+    ]
+  },
+  "timeline": [
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "do": {"Cast": {"object": "$shock1", "targets": ["$bob"]}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "do": "Pass"},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "check": {"Life": {"player": "bob", "life": 16}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "do": {"Cast": {"object": "$shock2", "targets": ["$giant"]}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "do": "Pass"},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "check": {"Count": {"player": "bob", "zone": "Graveyard", "card": "Hill Giant", "count": 1}}},
+    {"turn": 2, "step": "PrecombatMain", "player": "bob", "do": {"Cast": {"object": "$shock3", "targets": ["$alice"], "mana": ["$bm"]}}},
+    {"turn": 2, "step": "PrecombatMain", "player": "bob", "do": "Pass"},
+    {"turn": 2, "step": "PrecombatMain", "player": "bob", "check": {"Life": {"player": "alice", "life": 18}}}
+  ]
+}
