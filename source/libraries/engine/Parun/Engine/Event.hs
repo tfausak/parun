@@ -7998,7 +7998,10 @@ relink oldId newId link =
 -- 608.3a). CR 614.1 applies it as that event would happen, while its slot still
 -- names the spell, so re-keying the slot onto the arrival before the entry loop
 -- reads it is that reading -- not a CR 400.7 exception. Parun.ManaSymbolSpec's
--- BorealOutrider group proves it.
+-- BorealOutrider group proves it. A spell that leaves the stack any other way
+-- is never found again: the scenario
+-- cr-614-1-a-countered-spell-s-boreal-outrider-counter-never-finds-the-card-again
+-- proves that no other move re-keys the row.
 --
 -- Only an EntryR row: a row of any other class watches an event about the spell
 -- itself (a ZoneChangeR's "if that spell would be put into a graveyard"), which
@@ -8008,10 +8011,16 @@ relink oldId newId link =
 -- an instant or sorcery spell.
 reenter :: ObjectId -> ObjectId -> ActiveReplacement.ActiveReplacement -> ActiveReplacement.ActiveReplacement
 reenter oldId newId row = case ActiveReplacement.effect row of
-  ReplacementEffect.EntryR _ ->
-    let rename oid = if oid == oldId then newId else oid
-     in row {ActiveReplacement.slots = fmap (Set.map rename) (ActiveReplacement.slots row)}
+  ReplacementEffect.EntryR _ -> renameSlots oldId newId row
   _ -> row
+
+-- A floating row's captured slots with every naming of `old` renamed to `new`:
+-- the one rewrite behind `reenter` above and CR 400.7h's
+-- Parun.Engine.Cast.followIntoSpell, which differ only in which rows they pick.
+renameSlots :: ObjectId -> ObjectId -> ActiveReplacement.ActiveReplacement -> ActiveReplacement.ActiveReplacement
+renameSlots old new row =
+  let rename oid = if oid == old then new else oid
+   in row {ActiveReplacement.slots = fmap (Set.map rename) (ActiveReplacement.slots row)}
 
 -- carryOver's damage-row half, and CR 400.7c's whole of it: a floating damage row
 -- watching the spell watches the permanent instead. DamagePattern.whichSource is
