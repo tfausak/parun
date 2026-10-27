@@ -79,11 +79,15 @@ Per set, in this order; steps 2 and 3 run in parallel lanes.
    claims to verify; it pushes back with evidence where the audit is wrong.
    The PR stays a draft until the fixes land.
 5. **Finish.** When every capability card is in the pool, set "Needs a
-   capability" to "Nothing", confirm `parun deck` over the set list (`1 Name`
-   a line) resolves every name, and tick the set on #5468.
+   capability" to "Nothing", commit the set list as
+   `data/decks/sets/<set>.txt` (`1 Name` a line, one per card name in the
+   set; `DecksSpec` then proves every name resolves), and tick the set on
+   #5468. The set's last unit does this; until then, check the list with
+   `parun deck` from a scratch file.
 
-Skip deck work (`data/decks/`); the owner has deprioritised it. Add no cards
-from other sets unless a scenario needs one.
+Preconstructed and theme decks are optional: add them when convenient for
+testing the client, never as a unit's goal. Add no cards from other sets
+unless a scenario needs one.
 
 Widen the translator itself only when the census dry run's top blocking
 construct unlocks enough remaining-ladder cards to beat hand-writing them;
