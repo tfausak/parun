@@ -1,5 +1,6 @@
 module Parun.Types.CastingRestriction where
 
+import Numeric.Natural (Natural)
 import qualified Parun.Types.Color as Color
 import qualified Parun.Types.DuringPhase as DuringPhase
 import qualified Parun.Types.Phase as Phase
@@ -104,6 +105,9 @@ data CastingRestriction
     -- step of it -- Siren's Call's "during an opponent's turn". The mirror of
     -- Parun.Types.ActivationRestriction's arm of this name.
     DuringTurn TurnScope.TurnScope
+  | -- | CR 500.7: not castable during the caster's first this-many turns of the
+    -- game -- Serra Avenger's "your first, second, or third turns" is 3.
+    NotDuringFirstTurns Natural
   | -- | CR 601.2h: only mana of this colour may pay for the spell's X -- Consume
     -- Spirit's "Spend only black mana on X". A payment rule, not a gate:
     -- Parun.Engine.Cost.confineX reads it.

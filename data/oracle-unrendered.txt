@@ -1800,6 +1800,7 @@ serene-master
 serene-remembrance
 serpent-of-the-endless-sea
 serra-avatar
+serra-avenger
 serra-inquisitors
 serra-paragon
 serra-the-benevolent

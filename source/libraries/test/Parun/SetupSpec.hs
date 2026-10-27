@@ -320,6 +320,19 @@ setupSpec s registry = Spec.describe s "Setup" $ do
         startingOf gs = fmap Player.startingLife (Map.lookup S.alice (GameState.players gs))
     Spec.assertEqWith s "CR 103.4d two-player Brawl's 25, each time" (startingOf built, startingOf restarted, startingOf subgame) (Just 25, Just 25, Just 25)
 
+  -- CR 500.7: each player's turns of the game, which Serra Avenger reads; its
+  -- ruling has a restart start them again, and CR 729.2's subgame is a new game
+  -- too. The rebuilds start from a board whose counts were raised, and each
+  -- names a starting player the board's first turn did not.
+  Spec.it s "CR 500.7 setup, a restart and a subgame each count only the new game's first turn" $ do
+    let built = Setup.gameWith GameSettings.plain S.bothPlayers
+        raised = built {GameState.turnsBegun = Map.fromList [(S.alice, 4), (S.bob, 3)]}
+        restarted = S.runPure S.identityAnswer raised (Setup.restartGame S.performer Set.empty S.bob)
+        subgame = Setup.subgameStateFrom S.bob raised
+    Spec.assertEqWith s "setup counts the starting player's first turn" (GameState.turnsBegun built) (Map.singleton S.alice 1)
+    Spec.assertEqWith s "a restart counts its controller's first turn and nothing before it" (GameState.turnsBegun restarted) (Map.singleton S.bob 1)
+    Spec.assertEqWith s "a subgame counts its starting player's first turn and nothing of the main game's" (GameState.turnsBegun subgame) (Map.singleton S.bob 1)
+
 -- CR 800.2: the options this game starts with. The seat count is the caller's,
 -- so the Brawl legs above differ from their controls in exactly one thing.
 settingsOf :: Bool -> GameSettings.GameSettings

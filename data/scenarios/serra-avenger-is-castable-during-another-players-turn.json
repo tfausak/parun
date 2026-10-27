@@ -1,0 +1,102 @@
+{
+  "description": "CR 500.7 / 601.3: Serra Avenger's first three turns are its caster's own, so with flash it can be cast during an opponent's turn of those",
+  "note": "Serra Avenger's rulings name Vedalken Orrery. Alice can't cast it on her first turn, then casts it with the same two Plains on bob's first turn, before her second.",
+  "board": {
+    "active": "alice",
+    "step": "PrecombatMain",
+    "seats": [
+      {
+        "name": "alice",
+        "battlefield": [
+          {
+            "card": "Vedalken Orrery"
+          },
+          {
+            "card": "Plains",
+            "label": "plains",
+            "ready": true
+          },
+          {
+            "card": "Plains",
+            "label": "plains-2",
+            "ready": true
+          }
+        ],
+        "hand": [
+          {
+            "card": "Serra Avenger",
+            "label": "avenger"
+          }
+        ],
+        "library": [
+          {
+            "card": "Island"
+          },
+          {
+            "card": "Island"
+          }
+        ]
+      },
+      {
+        "name": "bob",
+        "library": [
+          {
+            "card": "Island"
+          },
+          {
+            "card": "Island"
+          }
+        ]
+      }
+    ]
+  },
+  "timeline": [
+    {
+      "turn": 1,
+      "step": "PrecombatMain",
+      "player": "alice",
+      "refuse": {
+        "Cast": {
+          "object": "$avenger",
+          "mana": [
+            "$plains",
+            "$plains-2"
+          ]
+        }
+      }
+    },
+    {
+      "turn": 2,
+      "step": "PrecombatMain",
+      "player": "alice",
+      "do": {
+        "Cast": {
+          "object": "$avenger",
+          "mana": [
+            "$plains",
+            "$plains-2"
+          ]
+        }
+      }
+    },
+    {
+      "turn": 2,
+      "step": "PrecombatMain",
+      "player": "alice",
+      "do": "Pass"
+    },
+    {
+      "turn": 2,
+      "step": "PostcombatMain",
+      "player": "alice",
+      "check": {
+        "Count": {
+          "player": "alice",
+          "zone": "Battlefield",
+          "card": "Serra Avenger",
+          "count": 1
+        }
+      }
+    }
+  ]
+}

@@ -280,6 +280,7 @@ gameWith settings order =
           GameState.priority = Nothing,
           GameState.passed = Set.empty,
           GameState.turnNumber = 1,
+          GameState.turnsBegun = Turn.firstTurnBegun settings order_ (NonEmpty.head order),
           GameState.result = Nothing,
           GameState.restartSignal = RestartSignal.Playing,
           GameState.endTurnSignal = EndTurnSignal.Running,
@@ -507,6 +508,7 @@ newGame perform matchup = do
   randomTeamFirst
   -- CR 103.1c, once every conspiracy is in its command zone (CR 315.2).
   claimStartingPlayer
+  countFirstTurn
   seated <- State.gets GameState.turnOrder
   -- CR 103.2b: the companion reveal round, after every starting deck is recorded
   -- (CR 103.2a, createDeck above) and before CR 103.5's opening hands -- rule
@@ -741,6 +743,7 @@ startGameFromCards perform exemptions = do
   -- CR 103.1c after CR 727.1a's determination: a conspiracy stays in the
   -- command zone through a restart (CR 315.3), so it claims again.
   claimStartingPlayer
+  countFirstTurn
   seated <- State.gets Game.stillPlayingInOrder
   -- CR 103.2b, newGame's reveal round: CR 727.1 and CR 729.2 each start a new
   -- game following rule 103, so the reveal is put to every player again.
@@ -792,6 +795,13 @@ drawStickerSheets seated = Monad.forM_ seated $ \pid -> do
       slots = zipWith const [0 :: Natural ..] (Foldable.toList brought)
   chosen <- if length slots <= 3 then pure (Set.fromList slots) else Set.fromList <$> Game.drawDistinct Prompt.RandomStickerSheet 3 slots
   State.modify' (\g -> g {GameState.players = Map.adjust (\p -> p {Player.chosenStickerSheets = chosen}) pid (GameState.players g)})
+
+-- CR 500.7: the first turn is its takers' first turn of the game, counted
+-- once the starting player and the options (Archenemy's shared team turns,
+-- CR 904.2) are final.
+countFirstTurn :: Game ()
+countFirstTurn =
+  State.modify' (\g -> g {GameState.turnsBegun = Turn.firstTurnBegun (GameState.settings g) (GameState.turnOrder g) (GameState.activePlayer g)})
 
 -- CR 103.1c: rotate the turn order to begin with the player whose command zone
 -- holds a card naming them the starting player, superseding CR 103.1's
@@ -1046,6 +1056,8 @@ restartGame perform exempt starter = do
             GameState.priority = Nothing,
             GameState.passed = Set.empty,
             GameState.turnNumber = 1,
+            -- Serra Avenger's ruling: the restarted game's turns are counted afresh.
+            GameState.turnsBegun = Turn.firstTurnBegun (GameState.settings gs) order (Maybe.fromMaybe starter (Maybe.listToMaybe order)),
             GameState.result = Nothing,
             -- CR 727.4: the game the caller was running has been replaced.
             -- Engine.priorityLoop and Engine.runStep read this and unwind to
@@ -1328,6 +1340,8 @@ subgameStateFrom starter parent =
           GameState.priority = Nothing,
           GameState.passed = Set.empty,
           GameState.turnNumber = 1,
+          -- CR 729.2: the subgame is a game of its own, its turns counted afresh.
+          GameState.turnsBegun = Turn.firstTurnBegun (GameState.settings parent) order firstPlayer,
           GameState.result = Nothing,
           GameState.restartSignal = RestartSignal.Playing,
           -- CR 724.1: the subgame is its own game, so it starts running its own turn.

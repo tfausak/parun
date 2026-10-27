@@ -360,6 +360,7 @@ stage registry board =
                 base
                   { GameState.activePlayer = active,
                     GameState.turnNumber = Board.turn board,
+                    GameState.turnsBegun = turnsBegunBy base active (Board.turn board),
                     GameState.manaPool = Map.fromList [(pid, Mana.Type.MkMana (fmap plainUnit (Seat.manaPool seat))) | (seat, pid) <- NonEmpty.toList seated, not (null (Seat.manaPool seat))],
                     GameState.phase = Board.phase board,
                     GameState.remaining = Seq.drop 1 (Seq.dropWhileL (/= Board.phase board) (Seq.fromList Turn.allPhases)),
@@ -368,6 +369,23 @@ stage registry board =
                   }
           placed <- placeSeats registry (NonEmpty.toList seated) (Staged.MkStaged positioned ids Map.empty)
           pure (fmap (designateDefenders . settleStartingLife) (placed >>= attachAll (placementsOf board)))
+
+-- | CR 500.7: each seat's turns of the game on a board that starts at `turn`
+-- with `active`'s turn, as an ordinary rotation with no extra turn taken would
+-- have counted them -- one turn per team under CR 805.4's option.
+turnsBegunBy :: GameState.GameState -> PlayerId.PlayerId -> Natural -> Map.Map PlayerId.PlayerId Natural
+turnsBegunBy gs active turn =
+  let order = GameState.turnOrder gs
+      -- One seat per turn of the rotation: the first of each sharing group.
+      takers = [p | p <- order, List.find (Turn.sharesTurn gs p) order == Just p]
+      rotation = Natural.length takers
+      indexOf p = fmap Int.toNaturalSaturating (List.findIndex (Turn.sharesTurn gs p) takers)
+      position = Maybe.fromMaybe 0 (indexOf active)
+      -- The turns, counting back from `turn`, that fall to the taker at `index`.
+      count index =
+        let back = (position + rotation - index) `mod` rotation
+         in if back < turn then (turn - 1 - back) `div` rotation + 1 else 0
+   in Map.fromList [(p, count index) | p <- order, Just index <- [indexOf p]]
 
 -- | CR 103.4 / 119.1: each seat's starting life total, as setup would have
 -- recorded it from the board's settings, seat count and command zone.
