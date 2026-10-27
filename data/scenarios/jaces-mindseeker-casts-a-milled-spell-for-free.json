@@ -1,5 +1,5 @@
 {
-  "description": "CR 701.13a / 608.2g: when Jace's Mindseeker enters, target opponent mills five cards, and its controller may cast an instant or sorcery spell from among them without paying its mana cost",
+  "description": "CR 701.17a / 608.2g: when Jace's Mindseeker enters, target opponent mills five cards, and its controller may cast an instant or sorcery spell from among them without paying its mana cost",
   "note": "bob mills Lightning Bolt, Hill Giant, Divination and two Islands; alice casts the Bolt at him. The Shock, sixth from the top, is not on offer.",
   "board": {
     "active": "alice",

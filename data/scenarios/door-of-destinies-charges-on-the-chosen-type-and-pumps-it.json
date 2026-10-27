@@ -1,5 +1,5 @@
 {
-  "description": "CR 614.12 / 607.2a: Door of Destinies charges whenever its controller casts a spell of the type chosen as it entered, and pumps that type per charge counter",
+  "description": "CR 614.12 / 607.2d: Door of Destinies charges whenever its controller casts a spell of the type chosen as it entered, and pumps that type per charge counter",
   "note": "alice names Goblin: Goblin Piker charges the Door and ends 3/2; Grizzly Bears neither charge it nor grow.",
   "board": {
     "active": "alice",

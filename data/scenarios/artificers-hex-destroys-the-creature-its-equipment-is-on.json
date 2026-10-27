@@ -10,8 +10,7 @@
     ]
   },
   "timeline": [
-    {"turn": 2, "step": "Upkeep", "player": "alice", "do": "Pass"},
-    {"turn": 2, "step": "Upkeep", "player": "alice", "check": {"Count": {"player": "bob", "zone": "Graveyard", "card": "Grizzly Bears", "count": 1}}},
-    {"turn": 2, "step": "Upkeep", "player": "alice", "check": {"Count": {"player": "bob", "zone": "Battlefield", "card": "Hill Giant", "count": 1}}}
+    {"turn": 2, "step": "PrecombatMain", "player": "alice", "check": {"Count": {"player": "bob", "zone": "Graveyard", "card": "Grizzly Bears", "count": 1}}},
+    {"turn": 2, "step": "PrecombatMain", "player": "alice", "check": {"Count": {"player": "bob", "zone": "Battlefield", "card": "Hill Giant", "count": 1}}}
   ]
 }

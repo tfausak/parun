@@ -1,5 +1,5 @@
 {
-  "description": "CR 701.20a / 406.1: when Lifebane Zombie enters, target opponent reveals their hand and its controller exiles a green or white creature card from it",
+  "description": "CR 701.20a / 701.13a: when Lifebane Zombie enters, target opponent reveals their hand and its controller exiles a green or white creature card from it",
   "note": "bob's red Hill Giant and green instant Giant Growth are not on offer; alice exiles his white Savannah Lions over his green Grizzly Bears.",
   "board": {
     "active": "alice",
