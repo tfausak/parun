@@ -24,6 +24,7 @@ import qualified Parun.Codec.AttachBound as AttachBound
 import qualified Parun.Codec.AttachTarget as AttachTarget
 import qualified Parun.Codec.BecomeCopy as BecomeCopy
 import qualified Parun.Codec.Bid as Bid
+import qualified Parun.Codec.BindAmount as BindAmount
 import qualified Parun.Codec.Blight as Blight
 import qualified Parun.Codec.CardName as CardName
 import qualified Parun.Codec.CastOffer as CastOffer
@@ -240,6 +241,7 @@ codec cardCodec abilityCodec =
           Arm.payload "RemovePlayerCounters" RemovePlayerCounters.codec Effect.RemovePlayerCounters (\x -> case x of Effect.RemovePlayerCounters y -> Just y; _ -> Nothing),
           Arm.payload "PayAnyEnergy" SlotName.codec Effect.PayAnyEnergy (\x -> case x of Effect.PayAnyEnergy y -> Just y; _ -> Nothing),
           Arm.payload "ChooseNumber" ChooseNumber.codec Effect.ChooseNumber (\x -> case x of Effect.ChooseNumber y -> Just y; _ -> Nothing),
+          Arm.payload "BindAmount" BindAmount.codec Effect.BindAmount (\x -> case x of Effect.BindAmount y -> Just y; _ -> Nothing),
           Arm.payload "Tap" Tap.codec Effect.Tap (\x -> case x of Effect.Tap y -> Just y; _ -> Nothing),
           Arm.payload "Untap" ObjectRef.codec Effect.Untap (\x -> case x of Effect.Untap y -> Just y; _ -> Nothing),
           Arm.payload "Unattach" ObjectRef.codec Effect.Unattach (\x -> case x of Effect.Unattach y -> Just y; _ -> Nothing),
@@ -419,6 +421,7 @@ tagOf x = case x of
   Effect.RemovePlayerCounters {} -> "RemovePlayerCounters"
   Effect.PayAnyEnergy {} -> "PayAnyEnergy"
   Effect.ChooseNumber {} -> "ChooseNumber"
+  Effect.BindAmount {} -> "BindAmount"
   Effect.Tap {} -> "Tap"
   Effect.Untap {} -> "Untap"
   Effect.Unattach {} -> "Unattach"

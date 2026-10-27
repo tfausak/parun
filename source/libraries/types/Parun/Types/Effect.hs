@@ -12,6 +12,7 @@ import qualified Parun.Types.AttachBound as AttachBound
 import qualified Parun.Types.AttachTarget as AttachTarget
 import qualified Parun.Types.BecomeCopy as BecomeCopy
 import qualified Parun.Types.Bid as Bid
+import qualified Parun.Types.BindAmount as BindAmount
 import qualified Parun.Types.Blight as Blight
 import qualified Parun.Types.CardName as CardName
 import qualified Parun.Types.CastOffer as CastOffer
@@ -443,6 +444,9 @@ data Effect card ability
   | -- | CR 107.1c / 608.2d: the resolving controller chooses a number, zero
     -- included and at most the payload's bound, bound for a later effect to read.
     ChooseNumber ChooseNumber.ChooseNumber
+  | -- | CR 608.2h: bind the quantity's value, determined once, under the slot
+    -- for a later effect to read.
+    BindAmount BindAmount.BindAmount
   | -- | CR 701.26a: tap the permanents the ObjectRef names, leaving an already
     -- tapped one alone.
     Tap Tap.Tap

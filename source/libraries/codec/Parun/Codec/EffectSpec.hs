@@ -30,6 +30,7 @@ import qualified Parun.Types.AttackTargetRef as AttackTargetRef
 import qualified Parun.Types.BecomeCopy as BecomeCopy
 import qualified Parun.Types.BeginningStep as BeginningStep
 import qualified Parun.Types.Bid as Bid
+import qualified Parun.Types.BindAmount as BindAmount
 import qualified Parun.Types.Blight as Blight
 import qualified Parun.Types.CardName as CardName
 import qualified Parun.Types.CardType as CardType
@@ -444,6 +445,13 @@ spec s = Spec.describe s "Parun.Codec.Effect" $ do
       fromJson
       (Effect.ChooseNumber (ChooseNumber.MkChooseNumber (SlotName.MkSlotName (Text.pack "number")) Nothing (PlayerRef.Relative PlayerRelation.You)))
       " {\"type\":\"ChooseNumber\",\"value\":{\"slot\":\"number\"}} "
+  Spec.it s "BindAmount" $
+    Common.assertJsonCodec
+      s
+      toJson
+      fromJson
+      (Effect.BindAmount (BindAmount.MkBindAmount (Quantity.ObjectCounters CounterKind.PlusOnePlusOne) (SlotName.MkSlotName (Text.pack "counted"))))
+      " {\"type\":\"BindAmount\",\"value\":{\"quantity\":{\"type\":\"ObjectCounters\",\"value\":{\"type\":\"PlusOnePlusOne\"}},\"slot\":\"counted\"}} "
   Spec.it s "Bid" $
     Common.assertJsonCodec
       s

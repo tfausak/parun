@@ -258,6 +258,8 @@ library codec
     Parun.Codec.BeholdSpec
     Parun.Codec.Bid
     Parun.Codec.BidSpec
+    Parun.Codec.BindAmount
+    Parun.Codec.BindAmountSpec
     Parun.Codec.Binding
     Parun.Codec.BindingSpec
     Parun.Codec.Blight
@@ -2391,6 +2393,7 @@ library types
     Parun.Types.BeginningStep
     Parun.Types.Behold
     Parun.Types.Bid
+    Parun.Types.BindAmount
     Parun.Types.Binding
     Parun.Types.Blight
     Parun.Types.BlockCost

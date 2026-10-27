@@ -1,0 +1,12 @@
+{
+  "description": "CR 118.3 / 608.2h: The Filigree Sylex's third ability takes ten oil counters from among permanents alice controls, the Sylex sacrificed beside them, and deals 10 damage as it last existed",
+  "note": "Seven oil counters sit on the Sylex and three on the Grizzly Bears, so the cost can be paid only by taking from both. The Sylex is in the graveyard when the ability resolves, and it still deals the damage.",
+  "board": {"active": "alice", "step": "PrecombatMain", "seats": [{"name": "alice", "battlefield": [{"card": "The Filigree Sylex", "label": "sylex", "counters": [{"key": {"type": "Named", "value": "oil"}, "value": 7}]}, {"card": "Grizzly Bears", "label": "bears", "counters": [{"key": {"type": "Named", "value": "oil"}, "value": 3}]}], "library": [{"card": "Island"}, {"card": "Island"}, {"card": "Island"}]}, {"name": "bob", "library": [{"card": "Island"}, {"card": "Island"}, {"card": "Island"}]}]},
+  "timeline": [
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "do": {"Activate": {"object": "$sylex", "ability": 2, "targets": ["$bob"], "costOrder": [0, 1, 2]}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "check": {"Counters": {"object": "$bears", "kind": {"type": "Named", "value": "oil"}, "count": 0}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "check": {"Count": {"player": "alice", "zone": "Graveyard", "card": "The Filigree Sylex", "count": 1}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "do": "Pass"},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "check": {"Life": {"player": "bob", "life": 10}}}
+  ]
+}

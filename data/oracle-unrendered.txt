@@ -1690,6 +1690,7 @@ ransom-note
 raphael-fiendish-savior
 rapid-fire
 rat-out
+ratchet-bomb
 ratchet-field-medic-ratchet-rescue-racer
 ray-of-command
 ray-of-frost
@@ -2150,6 +2151,7 @@ the-dining-car
 the-eighth-doctor
 the-elder-dragon-war
 the-enigma-jewel-locus-of-enlightenment
+the-filigree-sylex
 the-foretold-soldier
 the-fugitive-doctor
 the-hive

@@ -55,6 +55,7 @@ import qualified Parun.Types.AttackTargetRef as AttackTargetRef
 import qualified Parun.Types.AttackingPlayers as AttackingPlayers
 import qualified Parun.Types.BecomeCopy as BecomeCopy
 import qualified Parun.Types.Bid as Bid
+import qualified Parun.Types.BindAmount as BindAmount
 import qualified Parun.Types.Binding as Binding.Type
 import qualified Parun.Types.Blight as Blight.Type
 import qualified Parun.Types.Card as Card.Type
@@ -824,6 +825,7 @@ effectObjectRefs effect = case effect of
   Effect.RemovePlayerCounters {} -> []
   Effect.PayAnyEnergy {} -> []
   Effect.ChooseNumber {} -> []
+  Effect.BindAmount {} -> []
   Effect.Tap tap -> [Tap.ref tap]
   Effect.Untap ref -> [ref]
   Effect.Unattach ref -> [ref]
@@ -1051,6 +1053,7 @@ effectPlayerRefs effect = case effect of
   Effect.RemovePlayerCounters removal -> [RemovePlayerCounters.player removal]
   Effect.PayAnyEnergy {} -> []
   Effect.ChooseNumber number -> [ChooseNumber.chooser number]
+  Effect.BindAmount {} -> []
   Effect.Tap {} -> []
   Effect.Untap {} -> []
   Effect.Unattach {} -> []
@@ -1481,6 +1484,7 @@ slotsOf effect = joinTwo (joinTwo (joinSlots (fmap objectRefSlots (effectObjectR
   -- The SlotName is a DEFINITION, not a read; it belongs to boundSlots below.
   Effect.PayAnyEnergy _ -> Map.empty
   Effect.ChooseNumber _ -> Map.empty
+  Effect.BindAmount payload -> quantitySlots (BindAmount.quantity payload)
   Effect.Tap _ -> Map.empty
   Effect.Untap _ -> Map.empty
   Effect.Unattach _ -> Map.empty
@@ -2259,6 +2263,7 @@ ownSlotsAreExhaustive effect = case effect of
   Effect.RemovePlayerCounters removal -> Quantity.slotsAreExhaustive (RemovePlayerCounters.quantity removal)
   Effect.PayAnyEnergy _ -> True
   Effect.ChooseNumber _ -> True
+  Effect.BindAmount payload -> Quantity.slotsAreExhaustive (BindAmount.quantity payload)
   Effect.Tap _ -> True
   Effect.Untap _ -> True
   Effect.Unattach _ -> True
@@ -2529,6 +2534,7 @@ readsX =
         -- 601.2b's announced X.
         Effect.PayAnyEnergy _ -> False
         Effect.ChooseNumber _ -> False
+        Effect.BindAmount payload -> Quantity.readsX (BindAmount.quantity payload)
         Effect.Tap _ -> False
         Effect.Untap _ -> False
         Effect.Unattach _ -> False
@@ -2813,6 +2819,7 @@ boundSlots effect = case effect of
   -- resolution to read as Quantity.InSlot.
   Effect.PayAnyEnergy slot -> Set.singleton slot
   Effect.ChooseNumber (ChooseNumber.MkChooseNumber slot _ _) -> Set.singleton slot
+  Effect.BindAmount payload -> Set.singleton (BindAmount.slot payload)
   Effect.Tap tap -> foldMap Set.singleton (Tap.tapped tap)
   Effect.Untap _ -> Set.empty
   Effect.Unattach _ -> Set.empty

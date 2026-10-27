@@ -1,0 +1,18 @@
+{
+  "description": "CR 202.1b / 202.3a: Ratchet Bomb sacrificed with no charge counters destroys each nonland permanent with mana value 0 -- tokens and Ornithopter -- and no land",
+  "note": "Krenko's Command makes two Goblin tokens, which have no mana cost and so mana value 0, as Ornithopter's {0} does. The lands' mana value is 0 too, but the Bomb's filter is nonland, so the Mountains and bob's Forest survive, as does bob's mana value 1 Elite Vanguard.",
+  "board": {"active": "alice", "step": "PrecombatMain", "seats": [{"name": "alice", "manaPool": "RR", "battlefield": [{"card": "Ratchet Bomb", "label": "bomb"}, {"card": "Ornithopter", "label": "thopter"}, {"card": "Mountain", "label": "mountain"}], "hand": [{"card": "Krenko's Command", "label": "command"}], "library": [{"card": "Island"}, {"card": "Island"}, {"card": "Island"}]}, {"name": "bob", "battlefield": [{"card": "Elite Vanguard", "label": "vanguard"}, {"card": "Forest", "label": "forest"}], "library": [{"card": "Island"}, {"card": "Island"}, {"card": "Island"}]}]},
+  "timeline": [
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "do": {"Cast": {"object": "$command", "mana": [null]}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "do": "Pass"},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "do": {"OrderTimestamps": ["Goblin Token", "Goblin Token#2"]}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "check": {"Count": {"player": "alice", "zone": "Battlefield", "card": "Goblin Token", "count": 2}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "do": {"Activate": {"object": "$bomb", "ability": 1, "mana": [null], "costOrder": [0, 1]}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "do": "Pass"},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "check": {"Count": {"player": "alice", "zone": "Battlefield", "card": "Goblin Token", "count": 0}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "check": {"Count": {"player": "alice", "zone": "Battlefield", "card": "Ornithopter", "count": 0}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "check": {"Count": {"player": "alice", "zone": "Battlefield", "card": "Mountain", "count": 1}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "check": {"Count": {"player": "bob", "zone": "Battlefield", "card": "Forest", "count": 1}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "check": {"Count": {"player": "bob", "zone": "Battlefield", "card": "Elite Vanguard", "count": 1}}}
+  ]
+}

@@ -79,6 +79,7 @@ import qualified Parun.Types.BecomeCopy as BecomeCopy
 import qualified Parun.Types.BecomesTapState as BecomesTapState
 import qualified Parun.Types.Behold as Behold
 import qualified Parun.Types.Bid as Bid
+import qualified Parun.Types.BindAmount as BindAmount
 import qualified Parun.Types.Binding as Binding
 import qualified Parun.Types.Blight as Blight
 import qualified Parun.Types.BlockCost as BlockCost
@@ -873,6 +874,10 @@ chooseCardNameNames :: (Monoid r) => Asking r -> ChooseCardName.ChooseCardName -
 chooseCardNameNames asking x = case x of
   ChooseCardName.MkChooseCardName player restriction -> playerRefNames asking player <> filterNames asking restriction
 
+bindAmountNames :: (Monoid r) => Asking r -> BindAmount.BindAmount -> r
+bindAmountNames asking x = case x of
+  BindAmount.MkBindAmount quantity slot -> quantityNames asking quantity <> slotNames asking slot
+
 chooseNumberNames :: (Monoid r) => Asking r -> ChooseNumber.ChooseNumber -> r
 chooseNumberNames asking x = case x of
   ChooseNumber.MkChooseNumber slot _upTo chooser -> slotNames asking slot <> playerRefNames asking chooser
@@ -1411,6 +1416,7 @@ effectNames asking onCard onAbility x = case x of
   Effect.RemovePlayerCounters removal -> removePlayerCountersNames asking removal
   Effect.PayAnyEnergy slotName -> slotNames asking slotName
   Effect.ChooseNumber chooseNumber -> chooseNumberNames asking chooseNumber
+  Effect.BindAmount bindAmount -> bindAmountNames asking bindAmount
   Effect.Tap tap -> tapNames asking tap
   Effect.Untap objectRef -> objectRefNames asking objectRef
   Effect.Detain objectRef -> objectRefNames asking objectRef

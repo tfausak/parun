@@ -48,6 +48,7 @@ import qualified Parun.Types.AttackTargetRef as AttackTargetRef
 import qualified Parun.Types.BecomeCopy as BecomeCopy
 import qualified Parun.Types.BecomesTapState as BecomesTapState
 import qualified Parun.Types.Bid as Bid
+import qualified Parun.Types.BindAmount as BindAmount
 import qualified Parun.Types.Blight as Blight
 import qualified Parun.Types.BlockPermission as BlockPermission
 import qualified Parun.Types.BlockRequirement as BlockRequirement
@@ -939,6 +940,7 @@ rewriteEffect pairs effect = case effect of
   Effect.RemovePlayerCounters x -> Effect.RemovePlayerCounters x {RemovePlayerCounters.quantity = rewriteQuantity pairs (RemovePlayerCounters.quantity x)}
   Effect.PayAnyEnergy _ -> effect
   Effect.ChooseNumber _ -> effect
+  Effect.BindAmount payload -> Effect.BindAmount payload {BindAmount.quantity = rewriteQuantity pairs (BindAmount.quantity payload)}
   Effect.Tap (Tap.MkTap ref tapped) -> Effect.Tap (Tap.MkTap (rewriteObjectRef pairs ref) tapped)
   Effect.Untap ref -> Effect.Untap (rewriteObjectRef pairs ref)
   Effect.Unattach ref -> Effect.Unattach (rewriteObjectRef pairs ref)

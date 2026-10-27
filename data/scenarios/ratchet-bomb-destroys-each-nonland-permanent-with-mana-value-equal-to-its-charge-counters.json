@@ -1,0 +1,21 @@
+{
+  "description": "CR 608.2h / 202.3: Ratchet Bomb, sacrificed with two charge counters, destroys each nonland permanent with mana value 2 and nothing else",
+  "note": "The Bomb starts with one charge counter and its first ability adds the second. Sacrificed as a cost, it is in the graveyard with no counters when the ability resolves, so the count is its last known information: reading the card there would answer 0 and spare both mana value 2 creatures. Alice's own Grizzly Bears dies beside bob's Coral Merfolk; mana values 1, 3 and 4 and both lands survive.",
+  "board": {"active": "alice", "step": "PrecombatMain", "seats": [{"name": "alice", "battlefield": [{"card": "Ratchet Bomb", "label": "bomb", "counters": [{"key": {"type": "Named", "value": "charge"}, "value": 1}]}, {"card": "Grizzly Bears", "label": "bears"}, {"card": "Plains", "label": "plains"}], "library": [{"card": "Island"}, {"card": "Island"}, {"card": "Island"}, {"card": "Island"}]}, {"name": "bob", "battlefield": [{"card": "Coral Merfolk", "label": "merfolk"}, {"card": "Elite Vanguard", "label": "vanguard"}, {"card": "Centaur Courser", "label": "courser"}, {"card": "Hill Giant", "label": "giant"}, {"card": "Forest", "label": "forest"}], "library": [{"card": "Island"}, {"card": "Island"}, {"card": "Island"}, {"card": "Island"}]}]},
+  "timeline": [
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "do": {"Activate": {"object": "$bomb", "ability": 0, "mana": [null]}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "do": "Pass"},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "check": {"Counters": {"object": "$bomb", "kind": {"type": "Named", "value": "charge"}, "count": 2}}},
+    {"turn": 2, "step": "DeclareAttackers", "player": "bob", "do": {"Attack": []}},
+    {"turn": 3, "step": "PrecombatMain", "player": "alice", "do": {"Activate": {"object": "$bomb", "ability": 1, "mana": [null], "costOrder": [0, 1]}}},
+    {"turn": 3, "step": "PrecombatMain", "player": "alice", "check": {"Count": {"player": "alice", "zone": "Graveyard", "card": "Ratchet Bomb", "count": 1}}},
+    {"turn": 3, "step": "PrecombatMain", "player": "alice", "do": "Pass"},
+    {"turn": 3, "step": "PrecombatMain", "player": "alice", "check": {"Count": {"player": "bob", "zone": "Battlefield", "card": "Coral Merfolk", "count": 0}}},
+    {"turn": 3, "step": "PrecombatMain", "player": "alice", "check": {"Count": {"player": "alice", "zone": "Battlefield", "card": "Grizzly Bears", "count": 0}}},
+    {"turn": 3, "step": "PrecombatMain", "player": "alice", "check": {"Count": {"player": "bob", "zone": "Battlefield", "card": "Elite Vanguard", "count": 1}}},
+    {"turn": 3, "step": "PrecombatMain", "player": "alice", "check": {"Count": {"player": "bob", "zone": "Battlefield", "card": "Centaur Courser", "count": 1}}},
+    {"turn": 3, "step": "PrecombatMain", "player": "alice", "check": {"Count": {"player": "bob", "zone": "Battlefield", "card": "Hill Giant", "count": 1}}},
+    {"turn": 3, "step": "PrecombatMain", "player": "alice", "check": {"Count": {"player": "bob", "zone": "Battlefield", "card": "Forest", "count": 1}}},
+    {"turn": 3, "step": "PrecombatMain", "player": "alice", "check": {"Count": {"player": "alice", "zone": "Battlefield", "card": "Plains", "count": 1}}}
+  ]
+}
