@@ -55,6 +55,7 @@ import qualified Parun.Types.Ante as Ante
 import qualified Parun.Types.AnyNumberDiscard as AnyNumberDiscard
 import qualified Parun.Types.AnyNumberMatching as AnyNumberMatching
 import qualified Parun.Types.Arithmetic as Arithmetic
+import qualified Parun.Types.ArmDelayedTrigger as ArmDelayedTrigger
 import qualified Parun.Types.ArrangeInLibrary as ArrangeInLibrary
 import qualified Parun.Types.AsCopy as AsCopy
 import qualified Parun.Types.AttachAll as AttachAll
@@ -2484,7 +2485,7 @@ effectLintSpec s registry corpus = Spec.describe s "Lint" $ do
             { Face.spell =
                 Mint.oneModeOf Map.empty (Seq.fromList [Mint.mandatory (Seq.singleton destruction), Clause.MkClause Nothing Nothing Nothing optionality gate Seq.empty])
             }
-        payerFace ref = clauseFace (Just (PayGate.MkPayGate ref (CostChoice.MkCostChoice (Cost.Type.MkCost Nothing [] NonEmpty.:| [])) Nothing PayBranch.IfNotPaid PayObligation.Optional Nothing Nothing)) Optionality.Mandatory
+        payerFace ref = clauseFace (Just (PayGate.MkPayGate ref (CostChoice.MkCostChoice (Cost.Type.MkCost Nothing [] NonEmpty.:| [])) Nothing PayBranch.IfNotPaid PayObligation.Optional Nothing Nothing Nothing)) Optionality.Mandatory
         askerFace ref = clauseFace Nothing (Optionality.Optional ref)
         -- CR 111.1's token, whose OWN printed text carries that same predicate:
         -- Face.enchant is a Filter position cardFilters walks, so effectFilters
@@ -3782,7 +3783,7 @@ effectLintSpec s registry corpus = Spec.describe s "Lint" $ do
     ps <- S.allPrintings s corpus
     let offenders = filter (anyFace untilUsedOffends . Printing.card) ps
     Spec.assertBool s (any (anyFace ((/= 0) . spendableUntilUseds) . Printing.card) ps) "the pool has a card writing a spendable UntilUsed"
-    Spec.assertEqWith s "UntilUsed sits only on a player effect a cast or a land play uses up" (fmap (S.nameOf . Printing.card) offenders) []
+    Spec.assertEqWith s "UntilUsed sits only on a player effect a cast or a land play uses up, or a delayed trigger" (fmap (S.nameOf . Printing.card) offenders) []
   -- The REJECTING direction, against planted faces rather than card files: one
   -- on a player-effect axis no cast uses up, one on another carrier altogether.
   Spec.it s "the lint itself catches UntilUsed where nothing uses it up" $ do
@@ -3858,18 +3859,20 @@ discardsThese ref = Effect.Discard (Discard.These (TheseDiscard.MkTheseDiscard r
 
 -- CR 611.2a: Duration.UntilUsed arms Expiry.WhenUsed, which only
 -- Parun.Engine.PlayerEffect.spentByCast and spentByLandPlay end early, and only
--- on a stored player effect PlayerEffect.castUse answers for. Anywhere else it
+-- on a stored player effect PlayerEffect.castUse answers for, and a delayed
+-- trigger's firing (CR 603.7b, Parun.Engine.Expiry.firesOnce). Anywhere else it
 -- would last until cleanup, so it offends. Counted against the ENCODED face for
 -- jsonAtoms' reason: a carrier cardAuthoredEffects misses is an offence rather
 -- than a blind spot.
 untilUsedOffends :: Face.Face Card.Type.Card -> Bool
 untilUsedOffends card = jsonAtoms (Text.pack "UntilUsed") (Codec.encode (Face.Codec.codec Card.Codec.codec) card) /= spendableUntilUseds card
 
--- How many UntilUsed durations this face writes where a cast or a land play
--- uses them up.
+-- How many UntilUsed durations this face writes where a cast, a land play or
+-- a delayed trigger's firing uses them up.
 spendableUntilUseds :: Face.Face Card.Type.Card -> Int
 spendableUntilUseds card =
   let spendable effect = case effect of
         Effect.AffectPlayers (AffectPlayers.MkAffectPlayers Duration.UntilUsed _ playerEffect) -> Maybe.isJust (PlayerEffect.Engine.castUse playerEffect)
+        Effect.ArmDelayedTrigger arm -> ArmDelayedTrigger.duration arm == Just Duration.UntilUsed
         _ -> False
    in length (filter spendable (cardAuthoredEffects card))

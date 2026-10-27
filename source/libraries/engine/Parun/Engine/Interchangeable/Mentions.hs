@@ -2255,7 +2255,7 @@ paidExpiryNames asking x = case x of
 
 payGateNames :: (Monoid r) => Asking r -> PayGate.PayGate -> r
 payGateNames asking x = case x of
-  PayGate.MkPayGate payer cost basis _branch _obligation perEach _offeredAt -> playerRefNames asking payer <> costChoiceNames asking cost <> foldMap (costBasisNames asking) basis <> foldMap (quantityNames asking) perEach
+  PayGate.MkPayGate payer cost basis _branch _obligation perEach chosenX _offeredAt -> playerRefNames asking payer <> costChoiceNames asking cost <> foldMap (costBasisNames asking) basis <> foldMap (quantityNames asking) perEach <> foldMap (quantityNames asking) chosenX
 
 pendingDamageEffectNames :: (Monoid r) => Asking r -> PendingReplacementEffect.PendingReplacementEffect -> r
 pendingDamageEffectNames asking x = case x of

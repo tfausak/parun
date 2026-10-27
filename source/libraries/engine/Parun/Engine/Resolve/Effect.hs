@@ -1465,7 +1465,7 @@ loopOffers runSubgame resolving source controller slot legal members gate = do
   pure (filter (not . Set.null . Common.branchSelects (PayGate.branch gate) . askedAbout) members)
 
 -- One player's answer to one gate. The cost is the PRINTED one with CR 107.3's X
--- resolved (`announcedXOn`) and then multiplied by the gate's "for each"
+-- resolved (`announcedXOn`, or PayGate.x's chosen value) and then multiplied by the gate's "for each"
 -- (PayGate.perEach), and that pair of rewrites is what every reader below
 -- sees -- CR 118.3's affordability test, the prompt the payer is shown, and the
 -- payment itself -- so none of them can disagree about what is owed.

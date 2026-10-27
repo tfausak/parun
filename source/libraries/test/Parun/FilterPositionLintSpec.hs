@@ -2210,6 +2210,7 @@ filterPositionLintSpec s registry corpus = Spec.describe s "Lint" $ do
                                   PayGate.branch = PayBranch.IfNotPaid,
                                   PayGate.obligation = PayObligation.Optional,
                                   PayGate.perEach = Nothing,
+                                  PayGate.x = Nothing,
                                   PayGate.offeredAt = Nothing
                                 }
                           )
@@ -2404,6 +2405,7 @@ filterPositionLintSpec s registry corpus = Spec.describe s "Lint" $ do
               PayGate.branch = PayBranch.IfNotPaid,
               PayGate.obligation = PayObligation.Optional,
               PayGate.perEach = Just (Quantity.Type.ObjectCounters kind),
+              PayGate.x = Nothing,
               PayGate.offeredAt = Nothing
             }
         -- The PAIR, not just the Filter: PR #2739's reader's test says a keyword's

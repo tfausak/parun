@@ -340,6 +340,7 @@ chance-for-glory
 chancellor-of-the-forge
 chandra-fire-artisan
 chandra-nalaar
+chandra-the-firebrand
 chandras-outrage
 chandras-phoenix
 chandras-spitfire
@@ -749,6 +750,7 @@ first-pick
 fixed-point-in-time
 flame-spill
 flame-wave
+flameblast-dragon
 flamerush-rider
 flameskull
 flare-of-malice
@@ -1066,6 +1068,7 @@ ixidron
 izoni-center-of-the-web
 jace-beleren
 jace-memory-adept
+jaces-archivist
 jaces-erasure
 jackal-familiar
 jade-monolith
@@ -2270,6 +2273,7 @@ whirling-dervish
 whirlpool-drake
 whirlpool-rider
 whirlpool-warrior
+whispering-madness
 whispering-wizard
 white-mana-battery
 white-tiger-ava-ayala
@@ -2288,6 +2292,7 @@ wilson-refined-grizzly
 windborn-muse
 windbrisk-heights
 windcaller-aven
+windfall
 winds-of-change
 winged-portent
 wings-of-velis-vel

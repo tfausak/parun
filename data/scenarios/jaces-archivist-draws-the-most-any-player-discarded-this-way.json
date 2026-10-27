@@ -1,0 +1,53 @@
+{
+  "description": "CR 701.9a / 121.1 Jace's Archivist has each player discard their hand, then each draws the most cards any one player discarded this way",
+  "note": "Alice, bob and carol discard one, three and two cards to the Archivist, so each draws three. Bob discarded a fourth card to Mind Bomb earlier in the turn: a count of his discards this turn would make it four, and a count of each drawer's own discards would give one, three and two. Each library is three Islands over a Forest, so a fourth draw shows.",
+  "board": {
+    "seats": [
+      {
+        "name": "alice",
+        "manaPool": "UU",
+        "battlefield": [{ "card": "Jace's Archivist", "label": "archivist", "ready": true }],
+        "hand": [
+          { "card": "Mind Bomb", "label": "bomb" },
+          { "card": "Hill Giant" }
+        ],
+        "library": [{ "card": "Island" }, { "card": "Island" }, { "card": "Island" }, { "card": "Forest" }]
+      },
+      {
+        "name": "bob",
+        "hand": [
+          { "card": "Llanowar Elves", "label": "bob-1" },
+          { "card": "Llanowar Elves" },
+          { "card": "Llanowar Elves" },
+          { "card": "Llanowar Elves" }
+        ],
+        "library": [{ "card": "Island" }, { "card": "Island" }, { "card": "Island" }, { "card": "Forest" }]
+      },
+      {
+        "name": "carol",
+        "hand": [{ "card": "Goblin Piker" }, { "card": "Goblin Piker" }],
+        "library": [{ "card": "Island" }, { "card": "Island" }, { "card": "Island" }, { "card": "Forest" }]
+      }
+    ],
+    "active": "alice",
+    "step": "PrecombatMain"
+  },
+  "timeline": [
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "do": { "Cast": { "object": "$bomb" } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "do": "Pass" },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "do": { "Answer": { "prompt": "ChooseAnyNumberToDiscard", "with": [] } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "bob", "do": { "Answer": { "prompt": "ChooseAnyNumberToDiscard", "with": ["$bob-1"] } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "carol", "do": { "Answer": { "prompt": "ChooseAnyNumberToDiscard", "with": [] } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "check": { "Count": { "player": "bob", "zone": "Hand", "card": "Llanowar Elves", "count": 3 } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "do": { "Activate": { "object": "$archivist" } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "do": "Pass" },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "check": { "Count": { "player": "alice", "zone": "Hand", "card": "Island", "count": 3 } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "check": { "Count": { "player": "alice", "zone": "Library", "card": "Forest", "count": 1 } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "check": { "Count": { "player": "bob", "zone": "Hand", "card": "Island", "count": 3 } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "check": { "Count": { "player": "bob", "zone": "Library", "card": "Forest", "count": 1 } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "check": { "Count": { "player": "carol", "zone": "Hand", "card": "Island", "count": 3 } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "check": { "Count": { "player": "carol", "zone": "Library", "card": "Forest", "count": 1 } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "check": { "Count": { "player": "bob", "zone": "Graveyard", "card": "Llanowar Elves", "count": 4 } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "check": { "Count": { "player": "carol", "zone": "Graveyard", "card": "Goblin Piker", "count": 2 } } }
+  ]
+}

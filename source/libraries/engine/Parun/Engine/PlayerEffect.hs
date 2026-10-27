@@ -4209,7 +4209,8 @@ spentByCast = spentGrants castUse
 -- cast this turn costs {1} less"), spent by the next spell its own Filter names
 -- whatever that spell's cost leaves it to take off. The fallthrough is to
 -- castFlashGrant, whose own is exhaustive. Parun.EffectLintSpec reads it too: a
--- card may write Duration.UntilUsed only on an axis this answers for.
+-- card may write Duration.UntilUsed on a player effect only on an axis this
+-- answers for.
 -- data/scenarios/expiry's "the Berserker's {1} off is used up by the first
 -- spell" is the proof.
 castUse :: PlayerEffect -> Maybe (Filter Keyword)

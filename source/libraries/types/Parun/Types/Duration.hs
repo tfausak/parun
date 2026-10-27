@@ -114,7 +114,8 @@ data Duration
     UntilPaid (Cost.Cost Keyword.Keyword)
   | -- | CR 611.2a / Quicken: "the next ... you ... this turn", stored as
     -- Expiry.WhenUsed. Nullary: no printed sentence in the pool narrows WHICH
-    -- use ends it beyond the effect's own Filter.
+    -- use ends it beyond the effect's own Filter, or a delayed trigger's own
+    -- condition.
     UntilUsed
   | -- | CR 611.2a: "until" an event -- "this creature is turned face down"
     -- (Vesuvan Shapeshifter), "a player casts a creature spell" (Soul

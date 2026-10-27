@@ -128,6 +128,7 @@ spec s = Spec.describe s "Parun.Codec.Clause" $ do
                   PayGate.branch = PayBranch.IfNotPaid,
                   PayGate.obligation = PayObligation.Optional,
                   PayGate.perEach = Nothing,
+                  PayGate.x = Nothing,
                   PayGate.offeredAt = Nothing
                 }
           )
