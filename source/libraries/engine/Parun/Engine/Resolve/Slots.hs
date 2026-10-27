@@ -1642,7 +1642,7 @@ durationPlayerRefs duration = case duration of
   Duration.UntilPaid _ -> []
   Duration.UntilEndOfCombat -> []
   Duration.UntilEndOfCombatOnYourNextTurn -> []
-  Duration.UntilUsed -> []
+  Duration.UntilUsed _ -> []
   -- A criterion's seats are Filter atoms, reached through durationSlots.
   Duration.UntilEvent _ -> []
 
@@ -1671,8 +1671,8 @@ durationSlots duration = case duration of
   Duration.UntilEndOfCombatOnYourNextTurn -> Map.empty
   -- No slot either: Expiry.WhenUsed reads the effect's own Filter, which is
   -- walked wherever that effect's payload is (Parun.Engine.PlayerEffect), not
-  -- here.
-  Duration.UntilUsed -> Map.empty
+  -- here. The slot it may name is WRITTEN, after the resolution (boundSlots).
+  Duration.UntilUsed _ -> Map.empty
   -- CR 611.2a: a cast's criterion may name a seat by slot, which
   -- Parun.Engine.Expiry.arm bakes.
   Duration.UntilEvent DurationEvent.SourceTurnedFaceDown -> Map.empty
@@ -2376,7 +2376,7 @@ durationSlotsAreExhaustive duration = case duration of
   Duration.UntilPaid _ -> True
   Duration.UntilEndOfCombat -> True
   Duration.UntilEndOfCombatOnYourNextTurn -> True
-  Duration.UntilUsed -> True
+  Duration.UntilUsed _ -> True
   Duration.UntilEvent _ -> True
 
 -- conditionSlots' mirror: both sides are a Quantity.
@@ -2837,6 +2837,9 @@ boundSlots effect = case effect of
   Effect.GainControl (GainControl.MkGainControl {}) -> Set.empty
   Effect.ExchangeControl _ -> Set.empty
   Effect.ArmDelayedTrigger {} -> Set.empty
+  -- CR 611.2a: Savage Summoning's "that spell", the spell whose cast uses the
+  -- grant up, bound after this resolution by Parun.Engine.Cast.bindUser.
+  Effect.AffectPlayers (AffectPlayers.MkAffectPlayers (Duration.UntilUsed slot) _ _) -> foldMap Set.singleton slot
   Effect.AffectPlayers {} -> Set.empty
   Effect.RequireBlock {} -> Set.empty
   Effect.Prohibit {} -> Set.empty

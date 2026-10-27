@@ -209,7 +209,7 @@ arm acquisition targets controller source duration gs = case duration of
   -- Those read only a player effect on PlayerEffect.castUse's axes or a
   -- delayed trigger, so Parun.EffectLintSpec refuses the duration on every
   -- other carrier and axis.
-  Duration.UntilUsed -> Just Expiry.WhenUsed
+  Duration.UntilUsed slot -> Just (Expiry.WhenUsed slot)
   -- CR 611.2a: the seat CR 109.5 reads a cast's criterion from is baked, as
   -- UntilPaid's is, and so is any seat the criterion names by slot
   -- (Parun.Engine.Filter.bakeBound), since the sweep has no resolution to read
@@ -276,7 +276,7 @@ perSeat duration = case duration of
   Duration.UntilEndOfCombat -> Nothing
   Duration.UntilEndOfCombatOnYourNextTurn -> Nothing
   Duration.UntilPaid _ -> Nothing
-  Duration.UntilUsed -> Nothing
+  Duration.UntilUsed _ -> Nothing
   Duration.UntilEvent _ -> Nothing
 
 -- Does a stored effect under this duration FOLLOW its objects across a zone
@@ -329,7 +329,7 @@ begun gs expiry = case expiry of
   Expiry.AtEndOf _ -> True
   Expiry.AtEndOfCombatOn _ -> True
   Expiry.WhenPaid _ -> True
-  Expiry.WhenUsed -> True
+  Expiry.WhenUsed _ -> True
   Expiry.OnEvent _ -> True
 
 -- CR 601.3: may this player use this object's exile permission right now? It
@@ -435,7 +435,7 @@ endsAt gs moment source expiry = case expiry of
   -- CR 611.2a: ended by its use (Parun.Engine.PlayerEffect.spentGrants, or a
   -- delayed trigger's firing, `firesOnce`), and at cleanup, since every printed
   -- producer also says "this turn".
-  Expiry.WhenUsed -> moment == Used || moment == Cleanup
+  Expiry.WhenUsed _ -> moment == Used || moment == Cleanup
   -- CR 611.2a / 701.27b: ended by its source turning face down. A source that
   -- has left the game's objects (CR 400.7) can never turn face down, so the row
   -- is dropped at the next settle instead: it covers only that old id, but

@@ -1391,7 +1391,7 @@ scoutsWarningSpec s registry =
         s
         "one stored grant, expiring on use"
         (fmap (\a -> (ActivePlayerEffect.effect a, ActivePlayerEffect.expiry a)) (GameState.playerEffects after))
-        [(PlayerEffect.Type.MayPlayAsThoughItHadFlash (Filter.Type.HasCardType CardType.Creature), Expiry.Type.WhenUsed)]
+        [(PlayerEffect.Type.MayPlayAsThoughItHadFlash (Filter.Type.HasCardType CardType.Creature), Expiry.Type.WhenUsed Nothing)]
 
     -- WotC's own Scout's Warning / Quicken ruling: "until the turn ends or
     -- until you cast [play] a creature card ... even if you [cast/play] it at

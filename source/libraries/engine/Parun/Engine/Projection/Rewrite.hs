@@ -2276,7 +2276,7 @@ rewriteDuration pairs duration = case duration of
   -- Cost arm carries a subtype word outside a Filter, and the Filters a cost's
   -- non-mana components hold are matched where the cost is paid.
   Duration.UntilPaid _ -> duration
-  Duration.UntilUsed -> duration
+  Duration.UntilUsed _ -> duration
   Duration.UntilEvent DurationEvent.SourceTurnedFaceDown -> duration
   Duration.UntilEvent DurationEvent.Planeswalked -> duration
   Duration.UntilEvent (DurationEvent.SpellCast criterion) -> Duration.UntilEvent (DurationEvent.SpellCast (Filter.rewrite pairs criterion))
