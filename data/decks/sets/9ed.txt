@@ -1,0 +1,344 @@
+1 Adarkar Wastes
+1 Air Elemental
+1 Aladdin's Ring
+1 Anaba Shaman
+1 Anaconda
+1 Anarchist
+1 Ancient Silverback
+1 Angel of Mercy
+1 Angel's Feather
+1 Angelic Blessing
+1 Annex
+1 Archivist
+1 Aven Cloudchaser
+1 Aven Fisher
+1 Aven Flock
+1 Aven Windreader
+1 Azure Drake
+1 Balduvian Barbarians
+1 Baleful Stare
+1 Ballista Squad
+1 Battle of Wits
+1 Battlefield Forge
+1 Beast of Burden
+1 Biorhythm
+1 Blackmail
+1 Blanchwood Armor
+1 Blaze
+1 Blessed Orator
+1 Blinding Angel
+1 Blinking Spirit
+1 Blood Moon
+1 Bloodfire Colossus
+1 Bog Imp
+1 Bog Wraith
+1 Boiling Seas
+1 Booby Trap
+1 Boomerang
+1 Bottle Gnomes
+1 Brushland
+1 Caves of Koilos
+1 Chastise
+1 Circle of Protection: Black
+1 Circle of Protection: Red
+1 Clone
+1 Coat of Arms
+1 Coercion
+1 Confiscate
+1 Consume Spirit
+1 Contaminated Bond
+1 Coral Eel
+1 Counsel of the Soratami
+1 Cowardice
+1 Crafty Pathmage
+1 Craw Wurm
+1 Creeping Mold
+1 Crossbow Infantry
+1 Cruel Edict
+1 Dancing Scimitar
+1 Daring Apprentice
+1 Dark Banishing
+1 Death Pits of Rath
+1 Deathgazer
+1 Defense Grid
+1 Dehydration
+1 Demolish
+1 Demon's Horn
+1 Demystify
+1 Diabolic Tutor
+1 Disrupting Scepter
+1 Dragon's Claw
+1 Dream Prowler
+1 Drudge Skeletons
+1 Eager Cadet
+1 Early Harvest
+1 Elvish Bard
+1 Elvish Berserker
+1 Elvish Champion
+1 Elvish Piper
+1 Elvish Warrior
+1 Emperor Crocodile
+1 Enfeeblement
+1 Enormous Baloth
+1 Enrage
+1 Evacuation
+1 Execute
+1 Exhaustion
+1 Fear
+1 Fellwar Stone
+1 Festering Goblin
+1 Final Punishment
+1 Firebreathing
+1 Fishliver Oil
+1 Flame Wave
+1 Flashfires
+1 Fleeting Image
+1 Flight
+1 Flowstone Crusher
+1 Flowstone Shambler
+1 Flowstone Slide
+1 Foot Soldiers
+1 Force of Nature
+1 Forest
+1 Form of the Dragon
+1 Foul Imp
+1 Fugitive Wizard
+1 Furnace of Rath
+1 Giant Cockroach
+1 Giant Growth
+1 Giant Octopus
+1 Giant Spider
+1 Gift of Estates
+1 Glorious Anthem
+1 Glory Seeker
+1 Gluttonous Zombie
+1 Goblin Balloon Brigade
+1 Goblin Brigand
+1 Goblin Chariot
+1 Goblin King
+1 Goblin Mountaineer
+1 Goblin Piker
+1 Goblin Raider
+1 Goblin Sky Raider
+1 Grave Pact
+1 Gravedigger
+1 Greater Good
+1 Grizzly Bears
+1 Groundskeeper
+1 Guerrilla Tactics
+1 Hell's Caretaker
+1 Highway Robber
+1 Hill Giant
+1 Hollow Dogs
+1 Holy Day
+1 Holy Strength
+1 Honor Guard
+1 Horned Turtle
+1 Horror of Horrors
+1 Howling Mine
+1 Hunted Wumpus
+1 Hypnotic Specter
+1 Icy Manipulator
+1 Imaginary Pet
+1 Index
+1 Infantry Veteran
+1 Inspirit
+1 Island
+1 Ivory Mask
+1 Jade Statue
+1 Jester's Cap
+1 Kami of Old Stone
+1 Karplusan Forest
+1 Karplusan Yeti
+1 Kavu Climber
+1 King Cheetah
+1 Kird Ape
+1 Kraken's Eye
+1 Lava Axe
+1 Leonin Skyhunter
+1 Levitation
+1 Ley Druid
+1 Lightning Elemental
+1 Llanowar Behemoth
+1 Llanowar Elves
+1 Llanowar Wastes
+1 Looming Shade
+1 Lord of the Undead
+1 Loxodon Warhammer
+1 Lumengrid Warden
+1 Magnivore
+1 Mahamoti Djinn
+1 Mana Clash
+1 Mana Leak
+1 Marble Titan
+1 Maro
+1 Master Decoy
+1 Master Healer
+1 Megrim
+1 Mending Hands
+1 Might of Oaks
+1 Millstone
+1 Mind Bend
+1 Mind Rot
+1 Mindslicer
+1 Mogg Sentry
+1 Mortivore
+1 Mountain
+1 Nantuko Husk
+1 Natural Affinity
+1 Natural Spring
+1 Naturalize
+1 Needle Storm
+1 Nekrataal
+1 Nightmare
+1 Norwood Ranger
+1 Ogre Taskmaster
+1 Oracle's Attendants
+1 Orcish Artillery
+1 Order of the Sacred Bell
+1 Ornithopter
+1 Overgrowth
+1 Pacifism
+1 Paladin en-Vec
+1 Panic Attack
+1 Peace of Mind
+1 Pegasus Charger
+1 Persecute
+1 Phantom Warrior
+1 Phyrexian Arena
+1 Phyrexian Gargantua
+1 Phyrexian Hulk
+1 Plagiarize
+1 Plague Beetle
+1 Plague Wind
+1 Plains
+1 Polymorph
+1 Puppeteer
+1 Pyroclasm
+1 Quicksand
+1 Raging Goblin
+1 Raise Dead
+1 Rampant Growth
+1 Rathi Dragon
+1 Ravenous Rats
+1 Razortooth Rats
+1 Reclaim
+1 Reflexes
+1 Regeneration
+1 Relentless Assault
+1 Reminisce
+1 Remove Soul
+1 Reverse Damage
+1 Rewind
+1 Righteousness
+1 River Bear
+1 Rod of Ruin
+1 Rogue Kavu
+1 Rootbreaker Wurm
+1 Rootwalla
+1 Royal Assassin
+1 Rukh Egg
+1 Sacred Ground
+1 Sacred Nectar
+1 Sage Aven
+1 Samite Healer
+1 Sanctum Guardian
+1 Sandstone Warrior
+1 Savannah Lions
+1 Scaled Wurm
+1 Scathe Zombies
+1 Sea Monster
+1 Sea's Claim
+1 Seasoned Marshal
+1 Seedborn Muse
+1 Seething Song
+1 Sengir Vampire
+1 Serpent Warrior
+1 Serra Angel
+1 Serra's Blessing
+1 Shard Phoenix
+1 Shatter
+1 Shivan Dragon
+1 Shivan Reef
+1 Shock
+1 Sift
+1 Silklash Spider
+1 Skyhunter Prowler
+1 Slate of Ancestry
+1 Slay
+1 Sleight of Hand
+1 Soul Feast
+1 Soul Warden
+1 Spellbook
+1 Spined Wurm
+1 Spineless Thug
+1 Spirit Link
+1 Stone Rain
+1 Storage Matrix
+1 Storm Crow
+1 Story Circle
+1 Stream of Life
+1 Sudden Impact
+1 Sulfurous Springs
+1 Summer Bloom
+1 Suntail Hawk
+1 Swamp
+1 Swarm of Rats
+1 Tanglebloom
+1 Teferi's Puzzle Box
+1 Telepathy
+1 Tempest of Light
+1 Temporal Adept
+1 Thieving Magpie
+1 Thought Courier
+1 Thran Golem
+1 Threaten
+1 Thundermare
+1 Tidal Kraken
+1 Tidings
+1 Time Ebb
+1 Trade Routes
+1 Trained Armodon
+1 Traumatize
+1 Treasure Trove
+1 Tree Monkey
+1 Treetop Bracers
+1 Underground River
+1 Underworld Dreams
+1 Unholy Strength
+1 Ur-Golem's Eye
+1 Urza's Mine
+1 Urza's Power Plant
+1 Urza's Tower
+1 Utopia Tree
+1 Venerable Monk
+1 Vengeance
+1 Verdant Force
+1 Verduran Enchantress
+1 Veteran Cavalier
+1 Viashino Sandstalker
+1 Viridian Shaman
+1 Vizzerdrix
+1 Volcanic Hammer
+1 Vulshok Morningstar
+1 Wanderguard Sentry
+1 Warrior's Honor
+1 Weathered Wayfarer
+1 Web
+1 Weird Harvest
+1 Whip Sergeant
+1 Wildfire
+1 Will-o'-the-Wisp
+1 Wind Drake
+1 Withering Gaze
+1 Wood Elves
+1 Worship
+1 Wrath of God
+1 Wurm's Tooth
+1 Yavimaya Coast
+1 Yavimaya Enchantress
+1 Yawgmoth Demon
+1 Zealous Inquisitor
+1 Zodiac Monkey
+1 Zombify
+1 Zur's Weirding

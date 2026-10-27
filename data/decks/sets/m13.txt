@@ -1,0 +1,234 @@
+1 Acidic Slime
+1 Ajani's Sunstriker
+1 Ajani, Caller of the Pride
+1 Akroma's Memorial
+1 Angel's Mercy
+1 Angelic Benediction
+1 Arbor Elf
+1 Archaeomancer
+1 Arctic Aven
+1 Arms Dealer
+1 Attended Knight
+1 Augur of Bolas
+1 Aven Squire
+1 Battle of Wits
+1 Battleflight Eagle
+1 Bladetusk Boar
+1 Blood Reckoning
+1 Bloodhunter Bat
+1 Bloodthrone Vampire
+1 Bond Beetle
+1 Boundless Realms
+1 Bountiful Harvest
+1 Canyon Minotaur
+1 Captain of the Watch
+1 Captain's Call
+1 Cathedral of War
+1 Centaur Courser
+1 Chandra's Fury
+1 Chandra, the Firebrand
+1 Chronomaton
+1 Cleaver Riot
+1 Clock of Omens
+1 Clone
+1 Courtly Provocateur
+1 Cower in Fear
+1 Craterize
+1 Crimson Muckwader
+1 Crippling Blight
+1 Crusader of Odric
+1 Dark Favor
+1 Deadly Recluse
+1 Diabolic Revelation
+1 Disciple of Bolas
+1 Disentomb
+1 Divination
+1 Divine Favor
+1 Divine Verdict
+1 Door to Nothingness
+1 Downpour
+1 Dragon Hatchling
+1 Dragonskull Summit
+1 Drowned Catacomb
+1 Duress
+1 Duskdale Wurm
+1 Duskmantle Prowler
+1 Duty-Bound Dead
+1 Elderscale Wurm
+1 Elixir of Immortality
+1 Elvish Archdruid
+1 Elvish Visionary
+1 Encrust
+1 Erase
+1 Essence Drain
+1 Essence Scatter
+1 Evolving Wilds
+1 Faerie Invaders
+1 Faith's Reward
+1 Farseek
+1 Fervor
+1 Fire Elemental
+1 Firewing Phoenix
+1 Flames of the Firebrand
+1 Flinthoof Boar
+1 Fog
+1 Fog Bank
+1 Forest
+1 Fungal Sprouting
+1 Furnace Whelp
+1 Garruk's Packleader
+1 Garruk, Primal Hunter
+1 Gem of Becoming
+1 Giant Scorpion
+1 Gilded Lotus
+1 Glacial Fortress
+1 Glorious Charge
+1 Goblin Arsonist
+1 Goblin Battle Jester
+1 Griffin Protector
+1 Ground Seal
+1 Guardian Lions
+1 Guardians of Akrasa
+1 Hamletback Goliath
+1 Harbor Bandit
+1 Harbor Serpent
+1 Healer of the Pride
+1 Hellion Crucible
+1 Hydrosurge
+1 Index
+1 Intrepid Hero
+1 Island
+1 Jace's Phantasm
+1 Jace, Memory Adept
+1 Jayemdae Tome
+1 Kindled Fury
+1 Kitesail
+1 Knight of Glory
+1 Knight of Infamy
+1 Kraken Hatchling
+1 Krenko's Command
+1 Krenko, Mob Boss
+1 Liliana of the Dark Realms
+1 Liliana's Shade
+1 Magmaquake
+1 Mark of Mutiny
+1 Mark of the Vampire
+1 Master of the Pearl Trident
+1 Merfolk of the Pearl Trident
+1 Mind Rot
+1 Mind Sculpt
+1 Mindclaw Shaman
+1 Mogg Flunkies
+1 Mountain
+1 Murder
+1 Mutilate
+1 Mwonvuli Beast Tracker
+1 Naturalize
+1 Nefarox, Overlord of Grixis
+1 Negate
+1 Nicol Bolas, Planeswalker
+1 Oblivion Ring
+1 Odric, Master Tactician
+1 Omniscience
+1 Pacifism
+1 Phylactery Lich
+1 Phyrexian Hulk
+1 Pillarfield Ox
+1 Plains
+1 Planar Cleansing
+1 Plummet
+1 Predatory Rampage
+1 Prey Upon
+1 Primal Clay
+1 Primal Huntbeast
+1 Primordial Hydra
+1 Prized Elephant
+1 Public Execution
+1 Quirion Dryad
+1 Rain of Blades
+1 Rancor
+1 Ranger's Path
+1 Ravenous Rats
+1 Reckless Brute
+1 Redirect
+1 Reliquary Tower
+1 Reverberate
+1 Revive
+1 Rewind
+1 Rhox Faithmender
+1 Ring of Evos Isle
+1 Ring of Kalonia
+1 Ring of Thune
+1 Ring of Valkas
+1 Ring of Xathrid
+1 Rise from the Grave
+1 Roaring Primadox
+1 Rootbound Crag
+1 Rummaging Goblin
+1 Safe Passage
+1 Sands of Delirium
+1 Scroll Thief
+1 Searing Spear
+1 Sentinel Spider
+1 Serpent's Gift
+1 Serra Angel
+1 Serra Avatar
+1 Serra Avenger
+1 Servant of Nefarox
+1 Shimian Specter
+1 Show of Valor
+1 Sign in Blood
+1 Silklash Spider
+1 Silvercoat Lion
+1 Sleep
+1 Slumbering Dragon
+1 Smelt
+1 Spelltwine
+1 Sphinx of Uthuun
+1 Spiked Baloth
+1 Staff of Nin
+1 Stormtide Leviathan
+1 Stuffy Doll
+1 Sublime Archangel
+1 Sunpetal Grove
+1 Swamp
+1 Switcheroo
+1 Talrand's Invocation
+1 Talrand, Sky Summoner
+1 Thragtusk
+1 Thundermaw Hellkite
+1 Timberpack Wolf
+1 Titanic Growth
+1 Torch Fiend
+1 Tormented Soul
+1 Tormod's Crypt
+1 Touch of the Eternal
+1 Trading Post
+1 Tricks of the Trade
+1 Trumpet Blast
+1 Turn to Slag
+1 Unsummon
+1 Vampire Nighthawk
+1 Vampire Nocturnus
+1 Vastwood Gorger
+1 Vedalken Entrancer
+1 Veilborn Ghoul
+1 Vile Rebirth
+1 Void Stalker
+1 Volcanic Geyser
+1 Volcanic Strength
+1 Walking Corpse
+1 Wall of Fire
+1 War Falcon
+1 War Priest of Thune
+1 Warclamp Mastiff
+1 Watercourser
+1 Welkin Tern
+1 Wild Guess
+1 Wind Drake
+1 Wit's End
+1 Worldfire
+1 Xathrid Gorgon
+1 Yeva's Forcemage
+1 Yeva, Nature's Herald
+1 Zombie Goliath
