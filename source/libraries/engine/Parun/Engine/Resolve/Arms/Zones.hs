@@ -892,12 +892,12 @@ healArm resolving source controller legal ref =
 
 forEach :: (Game Result -> ObjectId -> ObjectId -> PlayerId -> Map.Map SlotName (Set Recipient) -> Map.Map SlotName (Set Recipient) -> Effect Card.Type.Card (GrantedAbility.GrantedAbility Card.Type.Card) -> Game ()) -> (Game Result -> ObjectId -> ObjectId -> PlayerId -> SlotName -> Map.Map SlotName (Set Recipient) -> [Recipient] -> PayGate.PayGate -> Game [Recipient]) -> Game Result -> ObjectId -> ObjectId -> PlayerId -> Map.Map SlotName (Set Recipient) -> Map.Map SlotName (Set Recipient) -> ForEach.ForEach (Effect Card.Type.Card (GrantedAbility.GrantedAbility Card.Type.Card)) -> Game ()
 forEach applyEffectWith loopOffers runSubgame resolving source controller legal chosen (ForEach.MkForEach ref membership slot body individually gate startingWith) = do
-  gs0 <- State.get
   -- CR 608.2f: WHICH members, swept ONCE from the pre-loop board and then fixed,
   -- so the body can neither shorten the batch nor add to it. Recipients rather
   -- than objects, since rule 608.2f is about "players and/or objects" and
   -- Soulfire Eruption's targets are both.
-  let swept = Common.objectRefRecipients legal resolving controller source gs0 ref
+  swept <- Common.loopMembers resolving source controller legal chosen ref
+  gs0 <- State.get
   -- CR 608.2d: a "you may" per member is ONE announcement of which members,
   -- made before the first iteration, since the loop is one action (CR 608.2f)
   -- and every choice it offers is announced while it is applied. Asked of the

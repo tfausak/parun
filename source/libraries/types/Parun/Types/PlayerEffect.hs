@@ -4,6 +4,7 @@ import qualified Numeric.Natural as Natural
 import qualified Parun.Types.AlternativeActivationCost as AlternativeActivationCost
 import qualified Parun.Types.CantSearchLibraries as CantSearchLibraries
 import qualified Parun.Types.CastFromZone as CastFromZone
+import qualified Parun.Types.CombatDeclaration as CombatDeclaration
 import qualified Parun.Types.CostModifier as CostModifier
 import qualified Parun.Types.CounterProhibition as CounterProhibition
 import qualified Parun.Types.DamagePattern as DamagePattern
@@ -149,6 +150,10 @@ data PlayerEffect
   | -- | CR 723.2 / Opposition Agent: while this player searches their library,
     -- CR 109.5's "you" of the row controls them.
     ControlledWhileSearching
+  | -- | CR 508.1a / 509.1a / 613.11 / Master Warcraft, Odric, Master Tactician:
+    -- CR 109.5's "you" of the row chooses which of this player's creatures
+    -- attack, or which block and how; announcements and payments stay theirs.
+    YouChoose CombatDeclaration.CombatDeclaration
   | -- | CR 701.23 / 601.3 / 609.4b / Opposition Agent: while this player
     -- searches their library, they exile each card they find instead, and the
     -- row's "you" may play those cards, spending mana as though it were mana of

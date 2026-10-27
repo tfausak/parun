@@ -1,0 +1,43 @@
+{
+  "description": "CR 508.1d/508.1j Under Master Warcraft the attacker's controller may refuse an attack toll, and a repeated refused declaration still makes the required attack",
+  "note": "Bob chooses that alice's Juggernaut attacks and alice aims it at bob, behind his Ghostly Prison. Alice can pay the {2} and is asked; she refuses, the declaration is reversed (CR 733.1), and bob repeats it. Refused again, it degrades to the declaration CR 508.1d requires without a cost: Juggernaut attacks carol, whom nothing taxes.",
+  "board": {
+    "active": "alice",
+    "step": "BeginningOfCombat",
+    "seats": [
+      {
+        "name": "alice",
+        "battlefield": [
+          {"card": "Juggernaut", "label": "jugg", "ready": true},
+          {"card": "Plains", "label": "a1"},
+          {"card": "Plains", "label": "a2"}
+        ]
+      },
+      {
+        "name": "bob",
+        "hand": [{"card": "Master Warcraft", "label": "warcraft"}],
+        "battlefield": [
+          {"card": "Ghostly Prison", "label": "prison"},
+          {"card": "Plains", "label": "p1"},
+          {"card": "Plains", "label": "p2"},
+          {"card": "Plains", "label": "p3"},
+          {"card": "Plains", "label": "p4"}
+        ]
+      },
+      {
+        "name": "carol"
+      }
+    ]
+  },
+  "timeline": [
+    {"turn": 1, "step": "BeginningOfCombat", "player": "bob", "do": {"Cast": {"object": "$warcraft", "mana": ["$p1", "$p2", "$p3", "$p4"]}}},
+    {"turn": 1, "step": "DeclareAttackers", "player": "bob", "do": {"Attack": ["$jugg"]}},
+    {"turn": 1, "step": "DeclareAttackers", "player": "alice", "source": "$jugg", "do": {"ChooseAttackTarget": "$bob"}},
+    {"turn": 1, "step": "DeclareAttackers", "player": "alice", "source": "$prison", "do": {"ChooseToPay": {"decision": {"type": "Declines"}}}},
+    {"turn": 1, "step": "DeclareAttackers", "player": "bob", "do": {"Attack": ["$jugg"]}},
+    {"turn": 1, "step": "DeclareAttackers", "player": "alice", "source": "$jugg", "do": {"ChooseAttackTarget": "$bob"}},
+    {"turn": 1, "step": "DeclareAttackers", "player": "alice", "source": "$prison", "do": {"ChooseToPay": {"decision": {"type": "Declines"}}}},
+    {"turn": 1, "step": "DeclareAttackers", "player": "alice", "check": {"Attackers": {"attackers": {"$jugg": "$carol"}}}},
+    {"turn": 1, "step": "DeclareAttackers", "player": "alice", "check": {"Tapped": {"object": "$a1", "tapped": false}}}
+  ]
+}

@@ -979,7 +979,7 @@ effectPlayerRefs effect = case effect of
   Effect.Firebend (ManaAddition.MkManaAddition ref production _ _ _ _ _) -> ref : productionPlayerRefs production
   Effect.ActivateManaAbilities (ActivateManaAbilities.MkActivateManaAbilities ref _) -> [ref]
   Effect.MoveMana (MoveMana.MkMoveMana from to) -> from : Maybe.maybeToList to
-  Effect.Search (Search.MkSearch searcher owner _ _ _ _ _ _ _ _ _ _ _) -> [searcher, owner]
+  Effect.Search (Search.MkSearch searcher owner _ _ _ _ _ _ _ _ _ _ _ _) -> [searcher, owner]
   Effect.ExileAllGraveyards -> []
   Effect.RestartGame {} -> []
   Effect.ControlPlayerNextTurn {} -> []
@@ -1269,9 +1269,9 @@ slotsOf effect = joinTwo (joinTwo (joinSlots (fmap objectRefSlots (effectObjectR
   -- matches it in the resolution's own context -- Bifurcate's "with the same
   -- name as target nontoken creature" is the whole of what its target slot is
   -- for, so without this the D4 dataflow lint would call that slot unread.
-  Effect.Search (Search.MkSearch _ _ _ _ quantity filter_ _ _ subject _ _ _ _) ->
+  Effect.Search (Search.MkSearch _ _ _ _ quantity filter_ descriptions _ _ subject _ _ _ _) ->
     joinTwo
-      (joinTwo (joinSlots (fmap quantitySlots (Maybe.maybeToList quantity))) (filterSlotsOf filter_))
+      (joinTwo (joinSlots (fmap quantitySlots (Maybe.maybeToList quantity))) (joinSlots (fmap filterSlotsOf (filter_ : Foldable.toList descriptions))))
       -- CR 701.3a's fixed host, read at arity ONE: a slot naming several objects
       -- names no one host for "an Aura card that could enchant that creature" to
       -- be about, which is what Parun.Engine.Filter.slotOneObject already reports.
@@ -2132,7 +2132,7 @@ ownSlotsAreExhaustive effect = case effect of
   -- slotsOf reports them through Filter.boundSlots, the one walk that enumerates
   -- what a Filter reads, and no Filter atom carries a Quantity for
   -- Quantity.slotsAreExhaustive to be about.
-  Effect.Search (Search.MkSearch _ _ _ _ quantity _ _ _ _ _ _ _ _) -> all Quantity.slotsAreExhaustive quantity
+  Effect.Search (Search.MkSearch _ _ _ _ quantity _ _ _ _ _ _ _ _ _) -> all Quantity.slotsAreExhaustive quantity
   Effect.ExileAllGraveyards -> True
   Effect.Proliferate -> True
   Effect.Reroll -> True
@@ -2422,7 +2422,7 @@ readsX =
         Effect.MoveMana _ -> False
         -- The filter too: Citanul Flute's "mana value X or less" compares against
         -- X itself (Operand.AmountInSlot), which no Quantity holds.
-        Effect.Search (Search.MkSearch _ _ _ _ quantity filter_ _ _ _ _ _ _ _) -> any Quantity.readsX quantity || Set.member Binding.variableX (Filter.boundSlots filter_)
+        Effect.Search (Search.MkSearch _ _ _ _ quantity filter_ descriptions _ _ _ _ _ _ _) -> any Quantity.readsX quantity || any (Set.member Binding.variableX . Filter.boundSlots) (filter_ : Foldable.toList descriptions)
         Effect.ExileAllGraveyards -> False
         Effect.Proliferate -> False
         Effect.Reroll -> False

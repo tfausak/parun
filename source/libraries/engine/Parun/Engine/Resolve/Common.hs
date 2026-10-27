@@ -764,6 +764,17 @@ askingObjects resolving source controller legal chosen ref = case ref of
     swept :: Game [ObjectId]
     swept = State.gets (\gs -> objectRefObjects legal resolving controller source gs ref)
 
+-- CR 608.2f: the members Effect.ForEach runs its body over, swept once. A card
+-- the controller chooses from among revealed ones is asked here (Shimian
+-- Specter's "You choose a nonland card from it", proved by the scenario
+-- shimian-specter-exiles-every-card-named-like-the-one-it-picks); every other
+-- ref is objectRefRecipients' read, and Parun.EffectLintSpec's inertChoosers
+-- keeps a card from writing any other chooser here.
+loopMembers :: ObjectId -> ObjectId -> PlayerId -> Map.Map SlotName (Set Recipient) -> Map.Map SlotName (Set Recipient) -> ObjectRef.ObjectRef -> Game [Recipient]
+loopMembers resolving source controller legal chosen ref = case ref of
+  ObjectRef.ChosenCardFromAmong _ -> fmap Recipient.ToObject <$> askingObjects resolving source controller legal chosen ref
+  _ -> State.gets (\gs -> objectRefRecipients legal resolving controller source gs ref)
+
 -- CR 701.9a's move for every Effect.Discard arm, once the cards are named:
 -- each seat's cards through the shared discard funnel, so the discard is
 -- recorded for a trigger to read. The funnel's own answers come back for the
@@ -3876,6 +3887,26 @@ differing axes gs = go Set.empty
     go seen (oid : rest) = case differingValues axes gs oid of
       Just values | Set.disjoint values seen -> oid : go (values <> seen) rest
       _ -> go seen rest
+
+-- Search.descriptions (CR 701.23h): the cards, in order, that can each answer
+-- for a distinct description together with every card kept ahead of them. No
+-- descriptions is no constraint. Greedy over the searcher's order is exact,
+-- since the cards matchable to distinct descriptions form a transversal
+-- matroid: every maximal such set is a largest one. Each check is exhaustive,
+-- which the printed descriptions keep small.
+matchDescriptions :: (ObjectId -> Filter.Type.Filter Keyword.Type.Keyword -> Bool) -> Seq.Seq (Filter.Type.Filter Keyword.Type.Keyword) -> [ObjectId] -> [ObjectId]
+matchDescriptions fits descriptions
+  | Seq.null descriptions = id
+  | otherwise = go []
+  where
+    indexed = zip [0 :: Int ..] (Foldable.toList descriptions)
+    fitting oid = [i | (i, d) <- indexed, fits oid d]
+    go kept [] = reverse kept
+    go kept (oid : rest)
+      | assign (fmap fitting (oid : kept)) Set.empty = go (oid : kept) rest
+      | otherwise = go kept rest
+    assign [] _ = True
+    assign (options : more) used = any (\i -> not (Set.member i used) && assign more (Set.insert i used)) options
 
 -- CR 609.3 for Search.exactly: the most cards, up to `cap`, that `differing`
 -- could keep together from `candidates` -- searched exhaustively rather than

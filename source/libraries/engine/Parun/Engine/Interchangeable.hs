@@ -217,7 +217,7 @@ representatives pcs gs candidates =
 --     names a Decider, a lifetime and rule 723.7's restriction -- no object),
 --     GameState.monarch, GameState.initiative, GameState.drewFromEmpty,
 --     GameState.loopInvolvement, GameState.extraTurns and the per-player
---     counters (landsPlayed, drawsThisTurn, departedThisTurn,
+--     counters (landsPlayed, drawsThisTurn, departedThisTurn, turnsBegun,
 --     spellsCastLastTurn, castsLastTurn, resolvedNames) are keyed by or valued
 --     at a PLAYER and name no object.
 --   * GameState.lastKnown is about objects that have LEFT, bar the host each

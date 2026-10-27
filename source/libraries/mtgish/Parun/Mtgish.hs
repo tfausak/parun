@@ -1263,6 +1263,7 @@ searchLibrary who steps = case steps of
               Search.outsideTheGame = False,
               Search.quantity = Just (Quantity.Literal 1),
               Search.filter = f,
+              Search.descriptions = Seq.empty,
               Search.upTo = False,
               Search.destination = destination,
               Search.subject = Nothing,

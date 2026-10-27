@@ -1,0 +1,47 @@
+{
+  "description": "CR 613.11 Of two Master Warcrafts, the later one's caster chooses the attackers and the blocks",
+  "note": "Bob's resolves first, carol's after it, so carol's effect has the later timestamp and applies last. The prompts are keyed by carol; bob is never asked.",
+  "board": {
+    "active": "alice",
+    "step": "BeginningOfCombat",
+    "seats": [
+      {
+        "name": "alice",
+        "battlefield": [
+          {"card": "Grizzly Bears", "label": "bears", "ready": true},
+          {"card": "Hill Giant", "label": "giant", "ready": true}
+        ]
+      },
+      {
+        "name": "bob",
+        "hand": [{"card": "Master Warcraft", "label": "w1"}],
+        "battlefield": [
+          {"card": "Plains", "label": "p1"},
+          {"card": "Plains", "label": "p2"},
+          {"card": "Plains", "label": "p3"},
+          {"card": "Plains", "label": "p4"},
+          {"card": "Grizzly Bears", "label": "bbears", "ready": true}
+        ]
+      },
+      {
+        "name": "carol",
+        "hand": [{"card": "Master Warcraft", "label": "w2"}],
+        "battlefield": [
+          {"card": "Plains", "label": "q1"},
+          {"card": "Plains", "label": "q2"},
+          {"card": "Plains", "label": "q3"},
+          {"card": "Plains", "label": "q4"}
+        ]
+      }
+    ]
+  },
+  "timeline": [
+    {"turn": 1, "step": "BeginningOfCombat", "player": "bob", "do": {"Cast": {"object": "$w1", "mana": ["$p1", "$p2", "$p3", "$p4"]}}},
+    {"turn": 1, "step": "BeginningOfCombat", "player": "carol", "do": "Pass"},
+    {"turn": 1, "step": "BeginningOfCombat", "player": "carol", "do": {"Cast": {"object": "$w2", "mana": ["$q1", "$q2", "$q3", "$q4"]}}},
+    {"turn": 1, "step": "DeclareAttackers", "player": "carol", "do": {"Attack": ["$giant"]}},
+    {"turn": 1, "step": "DeclareAttackers", "player": "alice", "source": "$giant", "do": {"ChooseAttackTarget": "$bob"}},
+    {"turn": 1, "step": "DeclareBlockers", "player": "carol", "do": {"Block": {"$bbears": ["$giant"]}}},
+    {"turn": 1, "step": "DeclareBlockers", "player": "alice", "check": {"Blockers": {"attacker": "$giant", "blockers": ["$bbears"]}}}
+  ]
+}
