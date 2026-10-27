@@ -56,9 +56,9 @@ Design notes live in `docs/`. Read them by section, on demand --- a whole doc
 - A landed unit's authoritative detail:
   `docs/superpowers/`
 
-- Dispatched as a subagent?
-  `docs/agents/` --- `implementing.md` if you hold the build and will open a PR,
-  `researching.md` if you are read-only, `drain-loop.md` if you orchestrate.
+- Dispatched as a subagent, or running a set?
+  `docs/agents/set-by-set.md` --- "Implementing a unit" if you hold the build,
+  "Auditing a unit" if you are read-only, all of it if you orchestrate.
 
 ## Workflow
 
@@ -132,8 +132,9 @@ to agents as written. What it doesn't say:
 
 - Mark the PR ready once the self-review's findings are pushed and the suite is
   green, report it, and stop. Don't wait for CI. Don't start the next unit ---
-  one unit at a time per checkout. A drain-loop implementer leaves it a draft
-  instead (`docs/agents/implementing.md`).
+  one unit at a time per checkout. An orchestrated unit leaves it a draft
+  instead: the orchestrator marks it ready once its audit's fixes land
+  (`docs/agents/set-by-set.md`).
 
 - STAGE, then `hooky fix`. It acts on staged files only, runs every check
   `.hooky.kdl` wires up, and rewrites in place, so `git add` again afterwards.
@@ -184,7 +185,8 @@ to agents as written. What it doesn't say:
   name is usually ruling boilerplate.
 
 - `_scratch/` also holds permissively licensed prior art --- `phase`, `mtgish`,
-  `argentum-engine`; `docs/agents/implementing.md` says what each is good for.
+  `argentum-engine`; `docs/agents/set-by-set.md`, "Prior art", says what each
+  is good for.
   Consult them AFTER deriving the rule from `docs/rules.txt`; the CR wins every
   disagreement. Everything under `_scratch/` is gitignored and may be absent
   --- a skipped step, not a blocked one.
@@ -246,7 +248,8 @@ to agents as written. What it doesn't say:
   A filed follow-up names the card that exercises it: a printing, or a
   synthetic draft when no printing reaches the rule (below). A known problem is
   folded in or filed, never dropped for want of a card in the pool; only a rules
-  reason closes it unfiled. `docs/agents/implementing.md` has the rule.
+  reason closes it unfiled. `docs/agents/set-by-set.md`, "Follow-ups: fold in
+  or file", has the rule.
 
   A BLOCKED issue records its blocker as a GitHub dependency, not as prose:
 
@@ -284,7 +287,8 @@ to agents as written. What it doesn't say:
     gameplay-level one, an assertion ahead of it absorbed the mutation and the
     behaviour is unproven. If nothing fails, say so in the PR rather than
     implying coverage. `script/mutate.sh` runs one mutation and prints the
-    assertion; `docs/agents/implementing.md` lists the traps.
+    assertion; `docs/agents/set-by-set.md`, "Mutation testing", lists the
+    traps.
 
 4.  Find the sites `-Werror` won't. A `{}` or `_` pattern absorbs a new
     constructor or field silently; the recurring ones are
@@ -395,7 +399,7 @@ project-specific rules it doesn't cover:
   parameter --- a number, a comparison, a measure, which object it reads, which
   action it reports --- IS that parameter on the existing one. Find the
   sibling before adding, extend it, and name it in the PR body.
-  `docs/agents/implementing.md`, "Parameters, not siblings", has the rule.
+  `docs/agents/set-by-set.md`, "Parameters, not siblings", has the rule.
 
 - An exhaustive list --- of constructors, of fields, of the `GameState` rows
   something walks --- exists once. A second hand-kept copy goes stale exactly
