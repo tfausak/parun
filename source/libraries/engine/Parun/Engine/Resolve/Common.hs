@@ -3739,6 +3739,12 @@ rescopeRun resolving bodyDefined gs0 =
 -- Quantity.InSlot falls back to, since CR 113.7a resolves the ability anyway.
 -- Parun.RemoveCounterSpec's bounced Spider-Man proves it.
 --
+-- A copy goes on `resolving` as well when the source is written, so a source
+-- that leaves LATER in the same resolution does not take the amount with it
+-- (CR 113.7a): Flameblast Dragon sacrificed to Ashnod's Altar while paying for
+-- the X it just chose. The scenario
+-- flameblast-dragon-keeps-its-x-when-sacrificed-to-pay-for-it proves it.
+--
 -- Where neither exists -- CR 729.5's resumed resolution, a wish inside the
 -- subgame having taken the spell's own card -- the amount goes to
 -- GameState.detachedBindings under `resolving`, bindPlayerSlot's fallback, which
@@ -3750,7 +3756,7 @@ bindAmountSlot resolving source slot n gs =
       put obj = obj {Object.bindings = Map.insert slot binding (Object.bindings obj)}
       holder = if Map.member source (GameState.objects gs) then source else resolving
    in if Map.member holder (GameState.objects gs)
-        then gs {GameState.objects = Map.adjust put holder (GameState.objects gs)}
+        then gs {GameState.objects = Map.adjust put resolving (Map.adjust put holder (GameState.objects gs))}
         else gs {GameState.detachedBindings = Map.insertWith Map.union resolving (Map.singleton slot binding) (GameState.detachedBindings gs)}
 
 -- CR 119.5 / 701.12c: move a player's life total by a delta. A DOWNWARD delta is
@@ -4606,9 +4612,11 @@ describedCosts resolving controller source legal gs gate = case PayGate.basis ga
 -- ability object), which is `resolving` in both cases and never `source` --
 -- Quantity.evaluateFor's InSlot arm says the same about the same binding.
 --
--- Zero when nothing was announced. A face whose gate prints {X} always declares
--- an {X} of its own (Parun.CardSpec's "every printing that reads X declares X"),
--- so this is a totality guard for a CARD-authored gate. A gate MINTED by a
+-- Zero when nothing was announced. A card-authored gate printing {X} either
+-- reads an {X} its spell or activation declares, or an X inherited under CR
+-- 107.3m, or names its own (PayGate.x, CR 107.3f) and never reaches here --
+-- Parun.CardSpec's "reads X declares X" lints and its "CR 107.3f" trigger
+-- sweep hold card data to that, so this is a totality guard for a card. A gate MINTED by a
 -- keyword resolves on a triggered ability that announced nothing, and reads 0
 -- here.
 --

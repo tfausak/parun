@@ -1715,14 +1715,25 @@ turnedUpTriggers = filter ((== TriggerCondition.SelfTurnedFaceUp) . TriggeredAbi
 -- rather than a declarer: Clash of Wills' "unless its controller pays {X}" and
 -- Killing Wave's "unless they pay X life" spend the value their own {X}
 -- announced (CR 107.3a), which is what Parun.Engine.Resolve.Common.announcedXOn
--- substitutes in.
+-- substitutes in -- unless the gate names its X itself (PayGate.x, CR 107.3f),
+-- which `announcedGateCostsOf` leaves out.
 payGateCostsOf :: Modal.Modal Card.Type.Card (GrantedAbility.GrantedAbility Card.Type.Card) -> [Cost.Type.Cost Keyword.Keyword]
-payGateCostsOf modal =
-  concatMap
-    (NonEmpty.toList . CostChoice.unwrap . PayGate.cost)
-    ( concatMap (Maybe.mapMaybe Clause.payGate . Foldable.toList . Mode.clauses) (Modal.modes modal)
-        <> concatMap loopGates (Modal.allEffects modal)
-    )
+payGateCostsOf = concatMap gateCosts . payGatesOf
+
+-- The CR 118.12 costs whose {X} reads the announcement (CR 107.3a): every gate
+-- but one naming its own X (PayGate.x).
+announcedGateCostsOf :: Modal.Modal Card.Type.Card (GrantedAbility.GrantedAbility Card.Type.Card) -> [Cost.Type.Cost Keyword.Keyword]
+announcedGateCostsOf = concatMap gateCosts . filter (Maybe.isNothing . PayGate.x) . payGatesOf
+
+gateCosts :: PayGate.PayGate -> [Cost.Type.Cost Keyword.Keyword]
+gateCosts = NonEmpty.toList . CostChoice.unwrap . PayGate.cost
+
+-- Every CR 118.12 gate this payload offers, over every mode and clause and every
+-- CR 608.2f loop's per-member offer.
+payGatesOf :: Modal.Modal Card.Type.Card (GrantedAbility.GrantedAbility Card.Type.Card) -> [PayGate.PayGate]
+payGatesOf modal =
+  concatMap (Maybe.mapMaybe Clause.payGate . Foldable.toList . Mode.clauses) (Modal.modes modal)
+    <> concatMap loopGates (Modal.allEffects modal)
   where
     loopGates effect = case effect of
       Effect.ForEach loop -> Maybe.maybeToList (ForEach.payGate loop) <> concatMap loopGates (ForEach.body loop)
@@ -7545,7 +7556,7 @@ lintSpec s registry corpus = Spec.describe s "Lint" $ do
             || entryEffectsReadX (fmap PrintedReplacement.effect (Face.replacementEffects c))
             || entryExileReadsX (fmap PrintedReplacement.effect (Face.replacementEffects c))
             || mintedCountersReadX c
-            || any declaresVariable (payGateCostsOf (Face.spell c))
+            || any declaresVariable (announcedGateCostsOf (Face.spell c))
             || modalReadsAnnouncedX (Face.spell c)
             || entersTriggerReadsX c
             || turnedUpReadsX c
@@ -7601,12 +7612,10 @@ lintSpec s registry corpus = Spec.describe s "Lint" $ do
   -- CARD's {3}{R} does not declare, which the sweep above would have called an
   -- offender and this one calls correct (#544).
   --
-  -- No `payGateCostsOf` disjunct here, unlike the spell half: no ability in the
-  -- pool offers a CR 118.12 cost containing {X} (Martyr of Frost, "{2}, Reveal X
-  -- blue cards from your hand, Sacrifice this creature: Counter target spell
-  -- unless its controller pays {X}", is the printing that would). Adding the
-  -- disjunct unexercised would weaken the sweep silently; without it the first
-  -- such card reddens this lint, which is where its author wants to be.
+  -- A CR 118.12 cost printing {X} reads the activation's announcement as the
+  -- spell half's does (`announcedGateCostsOf`), unless the gate names its own X
+  -- (PayGate.x); Martyr of Frost's "unless its controller pays {X}" would be
+  -- the producer.
   -- CR 101.1's ceiling, as a TOTALITY guard on Parun.Engine.Cost.greatestPayableX:
   -- that ascending search stops either because the demand eventually outruns the
   -- board (Toxic Deluge's "pay X life", CR 119.4) or because the card states a
@@ -7700,7 +7709,7 @@ lintSpec s registry corpus = Spec.describe s "Lint" $ do
         -- rule lets happen while the ability is on the stack, so none may.
         defined ab = Maybe.isJust (ActivatedAbility.definedX ab)
         offends (_, ab) =
-          let effectsReadIt = Resolve.readsX (Modal.allEffects (ActivatedAbility.modal ab)) || modalReadsAnnouncedX (ActivatedAbility.modal ab)
+          let effectsReadIt = Resolve.readsX (Modal.allEffects (ActivatedAbility.modal ab)) || modalReadsAnnouncedX (ActivatedAbility.modal ab) || any declaresVariable (announcedGateCostsOf (ActivatedAbility.modal ab))
               readsIt = effectsReadIt || defined ab
               declared = declaresVariable (ActivatedAbility.cost ab)
            in (readsIt /= declared && not (declared && notesSpent ab)) || (defined ab && effectsReadIt)
@@ -7710,6 +7719,23 @@ lintSpec s registry corpus = Spec.describe s "Lint" $ do
     Spec.assertBool s (not (null abilities)) "the pool has activated abilities"
     Spec.assertBool s (any (declaresVariable . ActivatedAbility.cost . snd) abilities) "and one of them declares an X"
     Spec.assertEqWith s "X read iff X declared" (fmap fst (filter offends abilities)) []
+  -- CR 107.3f's triggered half: a trigger announces no X, so a CR 118.12 cost
+  -- printing {X} on one must name the value it is chosen as during resolution
+  -- (PayGate.x, Flameblast Dragon) -- unless CR 107.3m hands the trigger the
+  -- X of the spell it came from, the sweep below's two conditions. Otherwise
+  -- Parun.Engine.Resolve.Common.announcedXOn reads 0 there. And a gate naming
+  -- an X its cost does not print is naming nothing.
+  Spec.it s "CR 107.3f every triggered ability's resolution-time {X} is chosen, or inherited" $ do
+    ps <- S.allPrintings s corpus
+    let inheritsX ability = TriggeredAbility.condition ability `elem` [TriggerCondition.SelfEnters, TriggerCondition.SelfTurnedFaceUp]
+        triggers f = Face.triggeredAbilities f <> delayedDeclarations f <> grantedTriggeredAbilities f
+        unchosen ability = not (inheritsX ability) && any declaresVariable (announcedGateCostsOf (TriggeredAbility.modal ability))
+        idle gate = Maybe.isJust (PayGate.x gate) && not (any declaresVariable (gateCosts gate))
+        abilityGates f = concatMap (payGatesOf . TriggeredAbility.modal) (triggers f) <> concatMap (payGatesOf . ActivatedAbility.modal) (Face.activatedAbilities f) <> payGatesOf (Face.spell f)
+        offends f = any unchosen (triggers f) || any idle (abilityGates f)
+        chooses f = any (any (Maybe.isJust . PayGate.x) . payGatesOf . TriggeredAbility.modal) (triggers f)
+    Spec.assertEqWith s "no offenders" (fmap (S.nameOf . Printing.card) (filter (anyFace offends . Printing.card) ps)) []
+    Spec.assertBool s (any (anyFace chooses . Printing.card) ps) "the pool has a trigger choosing its gate's X"
   -- CR 107.3m gives one triggered ability a value of X to read -- an
   -- object's enters-the-battlefield ability, whose X is the one announced for the
   -- spell that became that object -- and Parun.Engine.Engine.placeBorne inherits it
