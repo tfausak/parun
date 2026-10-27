@@ -31,6 +31,7 @@ import qualified Parun.Engine.PlayerEffect as PlayerEffect
 import qualified Parun.Engine.Projection as Projection
 import qualified Parun.Engine.Projection.View as Projection
 import qualified Parun.Engine.Quantity as Quantity
+import qualified Parun.Engine.QuantitySlot as QuantitySlot
 import qualified Parun.Engine.SourceContext as SourceContext
 import qualified Parun.Engine.Subtype as Subtype.Engine
 import qualified Parun.Extra.Integer as Integer
@@ -55,6 +56,8 @@ import qualified Parun.Types.Cost as Cost
 import qualified Parun.Types.CostAmount as CostAmount
 import qualified Parun.Types.CostComponent as CostComponent
 import qualified Parun.Types.CouldProduce as CouldProduce
+import qualified Parun.Types.CounterSpread as CounterSpread
+import qualified Parun.Types.CountersFromPermanents as CountersFromPermanents
 import qualified Parun.Types.Decider as Decider
 import qualified Parun.Types.Effect as Effect
 import qualified Parun.Types.ExilePermanents as ExilePermanents
@@ -88,6 +91,7 @@ import Parun.Types.ManaType (ManaType)
 import qualified Parun.Types.ManaType as ManaType
 import Parun.Types.ManaUnit (ManaUnit)
 import qualified Parun.Types.ManaUnit as ManaUnit
+import qualified Parun.Types.Object as Object
 import qualified Parun.Types.ObjectCount as ObjectCount
 import Parun.Types.ObjectId (ObjectId)
 import qualified Parun.Types.Optionality as Optionality
@@ -112,6 +116,7 @@ import qualified Parun.Types.SpendTrigger as SpendTrigger
 import qualified Parun.Types.Subtype as Subtype
 import qualified Parun.Types.Supertype as Supertype
 import qualified Parun.Types.WhenSpent as WhenSpent
+import qualified Parun.Types.WhichCounters as WhichCounters
 import qualified Parun.Types.Zone as Zone
 
 -- | Asked of a mana ability's OWN activation cost: HOW MANY TIMES may this
@@ -594,8 +599,12 @@ manaSuppliesGiven capacity pcs pid borrowed oid gs =
       -- it reads none, which would supply nothing at all. Parun.ManaSpec's
       -- Priest of Yawgmoth group casts off this supply.
       --
-      -- Not implemented: a yield reading any other slot its cost binds, which
-      -- is supplied as the offer prices it (#4855).
+      -- A yield reading how many counters its cost removed is `removable`'s,
+      -- below.
+      --
+      -- Not implemented: a yield reading any other slot its cost binds --
+      -- CR 601.2b's X among them -- which is supplied as the offer prices it
+      -- (#4852).
       perCandidate option =
         let (activations, share, manaCost) = measured option
             readsSlot slot = any (\(clause, _) -> any (Set.member slot . Quantity.objectSlots . ManaAddition.count) (Maybe.mapMaybe ManaAbility.manaProduced (Foldable.toList (Clause.effects clause)))) (ManaOption.steps option)
@@ -613,7 +622,40 @@ manaSuppliesGiven capacity pcs pid borrowed oid gs =
                         byYield = Map.fromListWith Set.union [(yield, Set.singleton candidate) | candidate <- Set.toList (Claim.Type.pool claim), yield <- pricedFor candidate]
                         narrowed candidates = activations {Activations.claims = fmap (\other -> if other == claim then other {Claim.Type.pool = candidates} else other) (Activations.claims activations)}
                      in [(activations, MkYield {yieldMana = yield, yieldDoubling = Map.empty}, manaCost, narrowed candidates) | (yield, candidates) <- Map.toList byYield, not (null (unitsOf yield))]
-              _ -> [(activations, share, manaCost, activations)]
+              _ -> case removable option of
+                Just amounts ->
+                  [ (activations, MkYield {yieldMana = yield, yieldDoubling = Map.empty}, manaCost, activations)
+                  | yield <- ListUtils.nubOrd (concatMap (pricedRemoving option) amounts),
+                    not (null (unitsOf yield))
+                  ]
+                Nothing -> [(activations, share, manaCost, activations)]
+      -- CR 601.2h / 118.1 on the supply side: a yield reading how many counters
+      -- its cost removed -- Mana Battery's "an additional {R} for each charge
+      -- counter removed this way" -- is one supply per number the cost could
+      -- remove, each priced with that number bound, since the payer settles it
+      -- as they pay. One activation takes one of them, the walk's choice among
+      -- a group's alternatives, so none is counted twice.
+      --
+      -- How many: the floor alone where the cost removes exactly that many, and
+      -- every number from the floor to the counters the permanents it names
+      -- carry where the floor is all it fixes (CounterSpread.FromAmongAtLeast).
+      --
+      -- Not implemented: a floor not yet announced (CR 601.2b's X), which is
+      -- supplied as the offer prices it (#4852).
+      removable option = case [removal | CostComponent.RemoveCounters removal <- Cost.components (ManaOption.cost option)] of
+        [CountersFromPermanents.MkCountersFromPermanents (CostAmount.Fixed floor_) which criterion spread]
+          | any (any (Set.member Binding.removedCounters . QuantitySlot.slots . ManaAddition.count) . Maybe.mapMaybe ManaAbility.manaProduced . Foldable.toList . Clause.effects . fst) (ManaOption.steps option) ->
+              let context = Projection.sourceContext gs (Just pid) oid
+                  carried candidate = case which of
+                    WhichCounters.OfKind kind -> Map.findWithDefault 0 kind (foldMap Object.counters (Game.lookupObject candidate gs))
+                    WhichCounters.OfAnyKind -> sum (foldMap Object.counters (Game.lookupObject candidate gs))
+                  carriers = [carried candidate | candidate <- Set.toList (GameState.battlefield gs), maybe False (\view -> Filter.matches context view criterion) (Projection.fullView gs candidate)]
+               in Just $ case spread of
+                    CounterSpread.FromAmongAtLeast -> [floor_ .. sum carriers]
+                    CounterSpread.FromAmong -> [floor_]
+                    CounterSpread.FromOne -> [floor_]
+        _ -> Nothing
+      pricedRemoving option n = [shareOf priced | (offered, priced) <- manaRepricingsGiven (Map.singleton Binding.removedCounters (Binding.toAmount n)) gs pcs oid gs, offered == option]
       choosable option =
         Map.fromList
           [ (ChoosePlayer.slot choice, Set.singleton pid)
