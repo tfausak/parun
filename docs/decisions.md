@@ -114,16 +114,26 @@ Entries are ordered by the first rule each cites.
 - **Question**: Magmaquake deals X damage "to each creature without flying
   and each planeswalker". A creature planeswalker without flying is in both
   sets: is it dealt X, or 2X as Char's caster is dealt both amounts?
-- **Rules**: CR 120.1, 120.4, 608.2f; CR of 2026-08-07.
-- **Decision**: X. The two descriptions name one set of recipients, each
-  dealt the amount once.
-- **Rejected**: 2X, two clauses summed per recipient as above: Char names
-  its recipients by two different amounts, where one amount over a union
-  names each member once.
+- **Rules**: CR 120.1, 120.3c, 120.3e, 120.4, 608.2f; CR of 2026-08-07.
+- **Decision**: X. One damage instruction over a union of descriptions
+  ("each Y and each Z") deals its amount once to each object matching either
+  or both; two instructions ("Deal X to each Y. Deal X to each Z.") deal it
+  twice. This governs every "damage to each creature and each planeswalker"
+  card (Hour of Devastation, Storm's Wrath, Star of Extinction). No ruling
+  forces it; the counting rulings read a union the same way: Asari Captain ("A
+  creature that is both a Samurai and a Warrior is only counted once"), Aysen
+  Crusader ("A permanent with both creature types is counted only once"),
+  Chaotic Backlash and Kithkin Zealot ("Each permanent is counted only once"),
+  Royal Decree (once per permanent "even if that permanent meets multiple
+  criteria").
+- **Rejected**: 2X, one amount per description summed per recipient: Char
+  names its recipients by two different amounts, where one amount over a
+  union names each member once. War Report's "Each artifact creature on the
+  battlefield is counted twice" is the contrast: there two counts are added.
 - **Site**: `data/cards/magmaquake.json`, one damage part over an `Or`
-  filter. The scenario "CR 120.3: Magmaquake deals X damage to each creature
-  without flying and each planeswalker" proves each half; no board in it is
-  both.
+  filter. The scenario "CR 120.3c/120.3e: Magmaquake deals a creature
+  planeswalker without flying X once, not once per description" proves it on
+  a Chandra Nalaar that Liquimetal Coating and March of the Machines animate.
 - **Issue**: none.
 
 ## Where a name sticker's word goes beside a blank
