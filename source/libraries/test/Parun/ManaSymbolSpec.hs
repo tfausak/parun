@@ -1926,75 +1926,68 @@ bergSpentCount = length . bergSpent
 -- separately are a different and wider question: a colorless snow mana beside a
 -- green nonsnow one passes both and this clause neither.
 --
--- Boreal Outrider prints the clause -- "Whenever you cast a creature spell, if
--- {S} of any of that spell's colors was spent to cast it, that creature enters
--- with an additional +1/+1 counter on it" -- and is not in data/cards/: its
--- EFFECT names the permanent the triggering spell becomes, and CR 400.7 mints
--- that permanent a fresh id no slot the trigger bound can reach (gap #3798). So the
--- producer here is synthetic, carrying the printed clause verbatim over an effect
--- that stays on the source.
---
--- Synthetic Rimewood Herald: "Whenever you cast a creature spell, if {S} of any
--- of that spell's colors was spent to cast it, put a +1/+1 counter on this
--- creature." The clause is an intervening "if" (CR 603.4) aimed by
+-- Boreal Outrider: "Whenever you cast a creature spell, if {S} of any of that
+-- spell's colors was spent to cast it, that creature enters with an additional
+-- +1/+1 counter on it." The clause is an intervening "if" (CR 603.4) aimed by
 -- Quantity.AgainstSlot at Binding.castSpell, since it asks about the spell that
--- triggered the ability and not about the Herald.
+-- triggered the ability and not about the Outrider. The effect is a floating
+-- CR 614.1c row naming that spell by the same slot, which finds the permanent
+-- the spell becomes because Parun.Engine.Event.carryOver re-keys it as the
+-- spell resolves (CR 614.1, 614.12, 608.3a).
 --
 -- FOUR boards, differing in nothing but which of the two lands paying the spell
 -- is snow. Green snow mana pays a green spell's {G} on the first; RED snow mana
 -- pays the same spell's generic on the second, which satisfies TagWasSpent Snow
 -- and this clause not at all; neither land is snow on the third; both are on the
--- fourth. Same seats, same Herald, same spell, two mana spent every time.
-rimewoodHeraldSpec :: (Monad m, Monad n) => Spec.Spec m n -> Registry.Registry m -> n ()
-rimewoodHeraldSpec s registry = Spec.describe s "RimewoodHerald" $ do
+-- fourth. Same seats, same Outrider, same spell, two mana spent every time.
+borealOutriderSpec :: (Monad m, Monad n) => Spec.Spec m n -> Registry.Registry m -> n ()
+borealOutriderSpec s registry = Spec.describe s "BorealOutrider" $ do
   -- The behavioural assertions first, and each can differ: an implementation that
-  -- never reads the colors leaves the first Herald a 2/2, and one that reads only
-  -- the tag makes the second a 3/3.
-  Spec.it s "CR 202.2 whole card: the clause fires only when the snow mana was one of the spell's own colors" $ do
-    (matching, matchingBoard) <- heraldBoard s registry "Snow-Covered Forest" "Mountain"
-    (offColor, offColorBoard) <- heraldBoard s registry "Forest" "Snow-Covered Mountain"
-    (noSnow, noSnowBoard) <- heraldBoard s registry "Forest" "Mountain"
-    Spec.assertEqWith s "green snow mana paid the green spell's {G}, so the 2/2 Herald takes a counter" (S.powerToughnessOf matching matchingBoard) (Just (3, 3))
-    Spec.assertEqWith s "red snow mana paid the same spell's generic, which is no color of it, so the Herald is unchanged" (S.powerToughnessOf offColor offColorBoard) (Just (2, 2))
-    Spec.assertEqWith s "and with no snow mana spent at all the Herald is unchanged too" (S.powerToughnessOf noSnow noSnowBoard) (Just (2, 2))
+  -- never reads the colors leaves the first Honor Guard a 3/1, one that reads
+  -- only the tag makes the second a 4/2, and one whose row cannot find the
+  -- permanent the spell became leaves the first a 3/1 too.
+  Spec.it s "CR 202.2 / 614.12 whole card: the creature enters with the counter only when the snow mana was one of its own colors" $ do
+    matchingBoard <- outriderBoard s registry "Snow-Covered Forest" "Mountain"
+    offColorBoard <- outriderBoard s registry "Forest" "Snow-Covered Mountain"
+    noSnowBoard <- outriderBoard s registry "Forest" "Mountain"
+    Spec.assertEqWith s "green snow mana paid the green spell's {G}, so the 3/1 Honor Guard enters with a counter" (S.powerToughnessOf (honorGuardOn matchingBoard) matchingBoard) (Just (4, 2))
+    Spec.assertEqWith s "red snow mana paid the same spell's generic, which is no color of it, so the Honor Guard enters without one" (S.powerToughnessOf (honorGuardOn offColorBoard) offColorBoard) (Just (3, 1))
+    Spec.assertEqWith s "and with no snow mana spent at all it enters without one too" (S.powerToughnessOf (honorGuardOn noSnowBoard) noSnowBoard) (Just (3, 1))
     -- The fourth board spends TWO snow mana of two colors, one of them the
     -- spell's, which is what makes the record's per-tag color set a UNION rather
     -- than whichever unit was recorded first.
-    (bothSnow, bothSnowBoard) <- heraldBoard s registry "Snow-Covered Forest" "Snow-Covered Mountain"
-    Spec.assertEqWith s "and one snow mana of the spell's color beside one of another color still fires it" (S.powerToughnessOf bothSnow bothSnowBoard) (Just (3, 3))
+    bothSnowBoard <- outriderBoard s registry "Snow-Covered Forest" "Snow-Covered Mountain"
+    Spec.assertEqWith s "and one snow mana of the spell's color beside one of another color still fires it" (S.powerToughnessOf (honorGuardOn bothSnowBoard) bothSnowBoard) (Just (4, 2))
     -- The supporting check, insensitive to the clause by construction: the spell
-    -- resolves on all three boards whatever the "if" said, so this cannot be what
+    -- resolves on all four boards whatever the "if" said, so this cannot be what
     -- the assertions above are reading.
     Spec.assertEqWith s "and every spell resolved" (fmap (S.countOnBattlefieldByName (CardName.MkCardName $ Text.pack "Tomakul Honor Guard") S.alice) [matchingBoard, offColorBoard, noSnowBoard, bothSnowBoard]) [1, 1, 1, 1]
 
   -- The control on the discriminator: both snow boards record the SAME tag on the
   -- spell, so what tells them apart is the color beside it and nothing else.
   Spec.it s "CR 107.4h both snow boards spend one snow mana, and the clause parts them on color" $ do
-    (_, matchingBoard) <- heraldBoard s registry "Snow-Covered Forest" "Mountain"
-    (_, offColorBoard) <- heraldBoard s registry "Forest" "Snow-Covered Mountain"
-    Spec.assertEqWith s "the matching board's spell remembers a snow tag" (heraldSpentTags matchingBoard) (Set.singleton ProductionTag.Snow)
-    Spec.assertEqWith s "and so does the off-color board's" (heraldSpentTags offColorBoard) (Set.singleton ProductionTag.Snow)
-    Spec.assertEqWith s "and both spent two mana" (heraldSpentCount matchingBoard, heraldSpentCount offColorBoard) (2, 2)
+    matchingBoard <- outriderBoard s registry "Snow-Covered Forest" "Mountain"
+    offColorBoard <- outriderBoard s registry "Forest" "Snow-Covered Mountain"
+    Spec.assertEqWith s "the matching board's spell remembers a snow tag" (guardSpentTags matchingBoard) (Set.singleton ProductionTag.Snow)
+    Spec.assertEqWith s "and so does the off-color board's" (guardSpentTags offColorBoard) (Set.singleton ProductionTag.Snow)
+    Spec.assertEqWith s "and both spent two mana" (guardSpentCount matchingBoard, guardSpentCount offColorBoard) (2, 2)
 
 -- Alice casts Tomakul Honor Guard, a green 3/1 costing {1}{G}, off exactly two
--- lands while her Synthetic Rimewood Herald watches. `greenLand` pays the {G} and
+-- lands while her Boreal Outrider watches. `greenLand` pays the {G} and
 -- `genericLand` the {1}; those two names decide NOTHING else about the board.
 --
 -- The cast trigger goes on the stack above the spell that fired it (CR 603.3)
 -- and so resolves first (CR 608.1), which is the order the two resolveTops run
 -- in.
---
--- Returns the Herald and the board its clause did or did not fire on.
-heraldBoard :: (Monad m) => Spec.Spec m n -> Registry.Registry m -> String -> String -> m (ObjectId.ObjectId, GameState.GameState)
-heraldBoard s registry greenLand genericLand = do
+outriderBoard :: (Monad m) => Spec.Spec m n -> Registry.Registry m -> String -> String -> m GameState.GameState
+outriderBoard s registry greenLand genericLand = do
   green <- S.printingOf s registry greenLand
   other <- S.printingOf s registry genericLand
-  herald <- S.printingOf s registry "Synthetic Rimewood Herald"
+  outrider <- S.printingOf s registry "Boreal Outrider"
   entrant <- S.printingOf s registry "Tomakul Honor Guard"
-  let (heraldId, board) = S.addPermanent herald S.alice (S.landsFor other S.alice 1 (S.landsInPlay green 1))
+  let (_, board) = S.addPermanent outrider S.alice (S.landsFor other S.alice 1 (S.landsInPlay green 1))
       (gs, spellId) = S.handOne entrant board
-      resolved = S.runPure S.identityAnswer gs (S.cast S.alice spellId *> Engine.placePendingTriggers [] *> Stack.resolveTop *> Stack.resolveTop)
-  pure (heraldId, resolved)
+  pure (S.runPure S.identityAnswer gs (S.cast S.alice spellId *> Engine.placePendingTriggers [] *> Stack.resolveTop *> Stack.resolveTop))
 
 -- Alice's Tomakul Honor Guard on the battlefield, or a placeholder id that reads
 -- as nothing -- `bergStriderOn` above's posture, so a board where the spell never
@@ -2007,14 +2000,14 @@ honorGuardOn gs =
         oid : _ -> oid
         [] -> ObjectId.MkObjectId 0
 
-heraldSpent :: GameState.GameState -> [ManaUnit.ManaUnit]
-heraldSpent gs = foldMap (Mana.Type.unwrap . Object.manaSpent) (Game.lookupObject (honorGuardOn gs) gs)
+guardSpent :: GameState.GameState -> [ManaUnit.ManaUnit]
+guardSpent gs = foldMap (Mana.Type.unwrap . Object.manaSpent) (Game.lookupObject (honorGuardOn gs) gs)
 
-heraldSpentTags :: GameState.GameState -> Set.Set ProductionTag.ProductionTag
-heraldSpentTags = foldMap ManaUnit.tags . heraldSpent
+guardSpentTags :: GameState.GameState -> Set.Set ProductionTag.ProductionTag
+guardSpentTags = foldMap ManaUnit.tags . guardSpent
 
-heraldSpentCount :: GameState.GameState -> Int
-heraldSpentCount = length . heraldSpent
+guardSpentCount :: GameState.GameState -> Int
+guardSpentCount = length . guardSpent
 
 -- CR 602.2a's ability object as CR 400.7d's other record-keeper: "That ability is
 -- created on the stack as an object that's not a card." An ACTIVATION's mana is
@@ -2102,5 +2095,5 @@ spec s registry = Spec.describe s "Parun.Engine.Mana" $ do
   sunglassesOfUrzaSpec s registry
   spendChoiceSpec s registry
   bergStriderSpec s registry
-  rimewoodHeraldSpec s registry
+  borealOutriderSpec s registry
   forswornPaladinSpec s registry
