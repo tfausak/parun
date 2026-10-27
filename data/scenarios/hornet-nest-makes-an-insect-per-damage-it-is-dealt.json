@@ -1,0 +1,14 @@
+{
+  "description": "CR 120.3 / 603.10a: whenever Hornet Nest is dealt damage, its controller creates that many 1/1 green flying deathtouch Insects",
+  "note": "bob's 3/3 Hill Giant deals 3 to the 0/2 Nest: three Insects, not two, though the Nest dies.",
+  "board": {"active": "bob", "step": "PrecombatMain", "seats": [{"name": "bob", "battlefield": [{"card": "Hill Giant", "label": "giant", "ready": true}], "library": [{"card": "Island"}, {"card": "Island"}, {"card": "Island"}, {"card": "Island"}, {"card": "Island"}, {"card": "Island"}]}, {"name": "alice", "battlefield": [{"card": "Hornet Nest", "label": "nest"}], "library": [{"card": "Island"}, {"card": "Island"}, {"card": "Island"}, {"card": "Island"}, {"card": "Island"}, {"card": "Island"}]}]},
+  "timeline": [
+    {"turn": 1, "step": "DeclareAttackers", "player": "bob", "do": {"Attack": ["$giant"]}},
+    {"turn": 1, "step": "DeclareBlockers", "player": "alice", "do": {"Block": {"$nest": ["$giant"]}}},
+    {"turn": 1, "step": "CombatDamage", "player": "bob", "do": "Pass"},
+    {"turn": 1, "step": "CombatDamage", "player": "alice", "do": {"OrderTimestamps": ["Insect Token", "Insect Token#2", "Insect Token#3"]}},
+    {"turn": 1, "step": "CombatDamage", "player": "bob", "check": {"Count": {"player": "alice", "zone": "Battlefield", "card": "Insect Token", "count": 3}}},
+    {"turn": 1, "step": "CombatDamage", "player": "bob", "check": {"Keywords": {"object": "Insect Token", "keyword": {"type": "Deathtouch"}, "count": 1}}},
+    {"turn": 1, "step": "CombatDamage", "player": "bob", "check": {"Keywords": {"object": "Insect Token", "keyword": {"type": "Flying"}, "count": 1}}}
+  ]
+}

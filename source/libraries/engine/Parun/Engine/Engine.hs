@@ -983,17 +983,26 @@ placeBorne srcId pending = do
       -- itself. The same binding reaches the ability object below, so its
       -- effects read the number too. Parun.FaceDownSpec's Aurelia's Vindicator
       -- case is the proof.
+      --
+      -- CR 107.3i is the third: a "when you cast this spell" ability is an
+      -- instance of X on the spell itself, so it reads the X the spell
+      -- announced (Genesis Hydra), off the spell's own bindings since the
+      -- spell is still on the stack as the ability triggers.
       inheritedX = case TriggeredAbility.condition ability of
         TriggerCondition.SelfEnters -> Game.announcedXOf srcId gs
         TriggerCondition.SelfTurnedFaceUp -> Maybe.fromMaybe 0 (Binding.amountOf Binding.variableX bound)
+        TriggerCondition.SelfCast -> Maybe.fromMaybe 0 (Game.lookupObject srcId gs >>= Binding.amountOf Binding.variableX . Object.bindings)
         _ -> 0
       -- CR 107.3m: an enters-the-battlefield triggered ability's effects read
       -- the X announced for the spell that became its source, as its target
       -- count does (inheritedX), and 0 where no cast X stands behind the
-      -- permanent. Nothing for every other trigger, so a delayed ability's
-      -- captured X (CR 107.3n) is not overwritten.
+      -- permanent; CR 107.3i's cast trigger reads the spell's. Nothing for
+      -- every other trigger, so a delayed ability's captured X (CR 107.3n) is
+      -- not overwritten. data/scenarios' Genesis Hydra case proves the cast
+      -- trigger's.
       enteredX = case TriggeredAbility.condition ability of
         TriggerCondition.SelfEnters -> Just inheritedX
+        TriggerCondition.SelfCast -> Just inheritedX
         _ -> Nothing
       legal = Target.fillableModes StackObjectKind.TriggeredAbility Nothing (Just controller) bound srcId Map.empty modal gs
       selection = Modal.Type.selection modal

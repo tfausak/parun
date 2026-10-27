@@ -1,0 +1,28 @@
+{
+  "description": "CR 118.12 / 603.3d: at the beginning of its controller's upkeep, Indulgent Tormentor draws them a card unless target opponent sacrifices a creature of their choice or pays 3 life",
+  "note": "carol, with no creature, pays 3 life and alice draws nothing. bob, at 2 life, can only sacrifice: declining once lets alice draw, and paying later takes his Gray Ogre with no draw.",
+  "board": {"active": "alice", "step": "Untap", "seats": [{"name": "alice", "battlefield": [{"card": "Indulgent Tormentor", "label": "tormentor"}], "library": [{"card": "Island"}, {"card": "Island"}, {"card": "Island"}, {"card": "Island"}, {"card": "Island"}, {"card": "Island"}]}, {"name": "bob", "life": 2, "battlefield": [{"card": "Gray Ogre", "label": "ogre"}], "library": [{"card": "Island"}, {"card": "Island"}, {"card": "Island"}, {"card": "Island"}, {"card": "Island"}, {"card": "Island"}]}, {"name": "carol", "library": [{"card": "Island"}, {"card": "Island"}, {"card": "Island"}, {"card": "Island"}, {"card": "Island"}, {"card": "Island"}]}]},
+  "timeline": [
+    {"turn": 1, "step": "Upkeep", "player": "alice", "do": {"ChooseTargets": {"target": ["$carol"]}}},
+    {"turn": 1, "step": "Upkeep", "player": "alice", "check": {"Count": {"player": "alice", "zone": "Hand", "card": "Island", "count": 0}}},
+    {"turn": 1, "step": "Upkeep", "player": "alice", "do": "Pass"},
+    {"turn": 1, "step": "Upkeep", "player": "carol", "do": {"ChooseToPay": {"decision": {"type": "Pays"}}}},
+    {"turn": 1, "step": "Upkeep", "player": "alice", "check": {"Life": {"player": "carol", "life": 17}}},
+    {"turn": 1, "step": "Upkeep", "player": "alice", "check": {"Count": {"player": "alice", "zone": "Hand", "card": "Island", "count": 0}}},
+    {"turn": 1, "step": "DeclareAttackers", "player": "alice", "do": {"Attack": []}},
+    {"turn": 2, "step": "DeclareAttackers", "player": "bob", "do": {"Attack": []}},
+    {"turn": 4, "step": "Upkeep", "player": "alice", "do": {"ChooseTargets": {"target": ["$bob"]}}},
+    {"turn": 4, "step": "Upkeep", "player": "alice", "do": "Pass"},
+    {"turn": 4, "step": "Upkeep", "player": "bob", "do": {"ChooseToPay": {"decision": {"type": "Declines"}}}},
+    {"turn": 4, "step": "Upkeep", "player": "alice", "check": {"Count": {"player": "alice", "zone": "Hand", "card": "Island", "count": 2}}},
+    {"turn": 4, "step": "Upkeep", "player": "alice", "check": {"Count": {"player": "bob", "zone": "Battlefield", "card": "Gray Ogre", "count": 1}}},
+    {"turn": 4, "step": "DeclareAttackers", "player": "alice", "do": {"Attack": []}},
+    {"turn": 5, "step": "DeclareAttackers", "player": "bob", "do": {"Attack": []}},
+    {"turn": 7, "step": "Upkeep", "player": "alice", "do": {"ChooseTargets": {"target": ["$bob"]}}},
+    {"turn": 7, "step": "Upkeep", "player": "alice", "do": "Pass"},
+    {"turn": 7, "step": "Upkeep", "player": "bob", "do": {"ChooseToPay": {"decision": {"type": "Pays"}}}},
+    {"turn": 7, "step": "Upkeep", "player": "alice", "check": {"Count": {"player": "bob", "zone": "Graveyard", "card": "Gray Ogre", "count": 1}}},
+    {"turn": 7, "step": "Upkeep", "player": "alice", "check": {"Count": {"player": "alice", "zone": "Hand", "card": "Island", "count": 3}}},
+    {"turn": 7, "step": "DeclareAttackers", "player": "alice", "do": {"Attack": []}}
+  ]
+}
