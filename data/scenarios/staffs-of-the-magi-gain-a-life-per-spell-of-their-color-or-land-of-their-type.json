@@ -34,7 +34,7 @@
     {"turn": 2, "step": "PrecombatMain", "player": "bob", "do": {"PlayLand": "$bswamp"}},
     {"turn": 2, "step": "PrecombatMain", "player": "bob", "do": {"Cast": {"object": "$bgoblin", "mana": ["$bm", null]}}},
     {"turn": 2, "step": "PrecombatMain", "player": "bob", "do": "Pass"},
-    {"turn": 2, "step": "PrecombatMain", "player": "bob", "check": {"Count": {"player": "bob", "zone": "Battlefield", "card": "Raging Goblin", "count": 1}}},
-    {"turn": 2, "step": "PrecombatMain", "player": "bob", "check": {"Life": {"player": "alice", "life": 26}}}
+    {"turn": 2, "step": "PrecombatMain", "player": "bob", "check": {"Life": {"player": "alice", "life": 26}}},
+    {"turn": 2, "step": "PrecombatMain", "player": "bob", "check": {"Count": {"player": "bob", "zone": "Battlefield", "card": "Raging Goblin", "count": 1}}}
   ]
 }
