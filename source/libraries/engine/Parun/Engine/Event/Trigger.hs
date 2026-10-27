@@ -3606,9 +3606,8 @@ copiesIn abilities ability = List.genericLength (filter (== ability) abilities)
 -- those instead. Expiry.firesOnce says which entries are one-shot: also those
 -- whose duration ends as it is used, "the next ... this turn". The survivors
 -- are returned so the caller can store them back. CR 603.7d-f: the controller
--- travels with the entry, so a delayed ability resolves
--- under whoever controlled the spell that created it even once that spell's source
--- is gone.
+-- travels with the entry, so a delayed ability resolves under whoever controlled
+-- the spell that created it even once that spell's source is gone.
 --
 -- `matching` matches its condition only against EVENTS, never live game state -- the
 -- turn number `delayedArmed` reads is CR 603.7a's arming gate, which can only withhold a
@@ -3696,7 +3695,7 @@ delayedPending grouped gs =
       -- False Cure's per-seat condition on that batch, one for Forth Eorlingas!'s
       -- batch condition on a combat damage step where two of its tokens connect.
       --
-      -- Without a duration, CR 603.7b's two sentences read as two steps over the
+      -- For a one-shot entry, CR 603.7b's two sentences read as two steps over the
       -- GROUPED batch. The first sentence -- "the next time its trigger event
       -- occurs" -- commits the entry to the EARLIEST Parun.Types.EventGroup that
       -- holds an occurrence, so taking the first block stays right. The second
@@ -3776,7 +3775,7 @@ delayedPending grouped gs =
       -- CR 603.2 plus CR 603.4: the event matched AND the intervening "if" held,
       -- which together are what "triggered" means. Per occurrence, since CR 603.4
       -- asks about the moment the event occurs. AFTER firedBy rather than inside
-      -- it, so an entry with no stated duration still commits -- to the earliest
+      -- it, so a one-shot entry still commits -- to the earliest
       -- group, and within it to the occurrence CR 603.7b's chooser named -- and
       -- then triggers or does not: this docstring's CR 603.4 paragraph has the
       -- entry survive an occurrence whose "if" was false, not skip past it to a
