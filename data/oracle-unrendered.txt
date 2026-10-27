@@ -749,6 +749,7 @@ first-pick
 fixed-point-in-time
 flame-spill
 flame-wave
+flameblast-dragon
 flamerush-rider
 flameskull
 flare-of-malice

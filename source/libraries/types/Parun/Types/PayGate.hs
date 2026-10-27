@@ -144,7 +144,7 @@ data PayGate = MkPayGate
     -- | The value of an {X} in `cost` when it was not announced but chosen as
     -- the ability resolves (CR 107.3f) -- Flameblast Dragon's "you may pay
     -- {X}{R}", whose X an earlier Effect.ChooseNumber binds. Nothing reads CR
-    -- 107.3a's announcement instead. Unlike `perEach`, it scales the {X} alone.
+    -- 107.3a's announcement instead. Unlike `perEach`, it leaves the {R} single.
     x :: Maybe Quantity.Quantity,
     -- | Which clause of this mode MAKES the offer, when it is not this one --
     -- CR 118.12 offers a resolution cost once and reads the one answer, so
