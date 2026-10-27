@@ -15,6 +15,7 @@ data-dir: data
 data-files:
   cards/*.json
   decks/*.txt
+  decks/sets/*.txt
   oracle-unrendered.txt
   scenarios/**/*.json
   sticker-sheets/*.json

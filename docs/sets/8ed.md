@@ -2,8 +2,8 @@
 
 The Eighth Edition (8ED) cards not yet in the pool, and which wait on a
 capability. Derived 2026-10-24 from MTGJSON's set list against `data/cards/`.
-Re-derive the missing list by writing the set list as a deck (`1 Name` per
-line) and running `parun deck` on it: every unresolved name is reported.
+The set list is `data/decks/sets/8ed.txt`, which the suite reads, so every card
+of the set stays in the pool.
 
 ## Expressible today
 

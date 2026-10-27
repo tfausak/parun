@@ -1,5 +1,7 @@
 -- | The deck lists parun ships, one per file under data/decks, each a deck list
 -- as Parun.DeckList reads it: preconstructed decks to play with `parun play`.
+-- Under data/decks/sets, one more per finished set, naming each of its cards
+-- once: not a deck to play, but the proof that every card of the set loads.
 module Parun.Decks where
 
 import qualified Data.ByteString as ByteString

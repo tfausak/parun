@@ -1,5 +1,5 @@
--- Covers Parun.Decks and data/decks: every shipped deck list reads, and each
--- set's starter pair plays a whole game that replays.
+-- Covers Parun.Decks and data/decks: every shipped deck list and set list
+-- reads, and each set's starter pair plays a whole game that replays.
 module Parun.DecksSpec where
 
 import qualified Control.Exception as Exception
@@ -21,9 +21,10 @@ spec :: (MonadIO.MonadIO n) => Spec.Spec IO n -> Registry.Registry IO -> n ()
 spec s registry = do
   -- Listed, not read: each case reads its own file.
   root <- MonadIO.liftIO Decks.defaultRoot
-  paths <- MonadIO.liftIO (Decks.listRoot root)
+  decks <- MonadIO.liftIO (Decks.listRoot root)
+  sets <- MonadIO.liftIO (Decks.listRoot (root <> "/sets"))
   Spec.describe s "Decks" $ do
-    Monad.forM_ paths $ \path -> Spec.it s (reverse (takeWhile (/= '/') (reverse path)) <> " reads") $ do
+    Monad.forM_ (decks <> sets) $ \path -> Spec.it s (drop (length root + 1) path <> " reads") $ do
       contents <- Decks.loadFile path
       parsed <- either (pure . Left . (: []) . Text.unpack) (fmap (either (Left . (: []) . Exception.displayException) (either (Left . fmap (Text.unpack . DeckList.explain)) Right)) . DeckList.parse registry) contents
       Spec.assertEqWith s (path <> ": problems") (Either.fromLeft [] parsed) []

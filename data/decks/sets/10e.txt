@@ -1,0 +1,368 @@
+1 Abundance
+1 Academy Researchers
+1 Adarkar Wastes
+1 Afflict
+1 Aggressive Urge
+1 Agonizing Memories
+1 Air Elemental
+1 Ambassador Laquatus
+1 Anaba Bodyguard
+1 Ancestor's Chosen
+1 Angel of Mercy
+1 Angel's Feather
+1 Angelic Blessing
+1 Angelic Chorus
+1 Angelic Wall
+1 Arcane Teachings
+1 Arcanis the Omnipotent
+1 Ascendant Evincar
+1 Assassinate
+1 Aura Graft
+1 Aura of Silence
+1 Avatar of Might
+1 Aven Cloudchaser
+1 Aven Fisher
+1 Aven Windreader
+1 Ballista Squad
+1 Bandage
+1 Battlefield Forge
+1 Beacon of Destruction
+1 Beacon of Immortality
+1 Beacon of Unrest
+1 Benalish Knight
+1 Birds of Paradise
+1 Blanchwood Armor
+1 Blaze
+1 Bloodfire Colossus
+1 Bloodrock Cyclops
+1 Bog Wraith
+1 Bogardan Firefiend
+1 Boomerang
+1 Bottle Gnomes
+1 Brushland
+1 Cancel
+1 Canopy Spider
+1 Caves of Koilos
+1 Cephalid Constable
+1 Chimeric Staff
+1 Cho-Manno, Revolutionary
+1 Chromatic Star
+1 Citanul Flute
+1 Civic Wayfinder
+1 Clone
+1 Cloud Elemental
+1 Cloud Sprite
+1 Coat of Arms
+1 Colossus of Sardia
+1 Commune with Nature
+1 Composite Golem
+1 Condemn
+1 Cone of Flame
+1 Consume Spirit
+1 Contaminated Bond
+1 Counsel of the Soratami
+1 Crafty Pathmage
+1 Craw Wurm
+1 Creeping Mold
+1 Crucible of Worlds
+1 Cruel Edict
+1 Cryoclasm
+1 Deathmark
+1 Dehydration
+1 Deluge
+1 Demolish
+1 Demon's Horn
+1 Demystify
+1 Denizen of the Deep
+1 Diabolic Tutor
+1 Discombobulate
+1 Distress
+1 Doomed Necromancer
+1 Doubling Cube
+1 Dragon Roost
+1 Dragon's Claw
+1 Dreamborn Muse
+1 Dross Crocodile
+1 Drudge Skeletons
+1 Duct Crawler
+1 Dusk Imp
+1 Earth Elemental
+1 Elven Riders
+1 Elvish Berserker
+1 Elvish Champion
+1 Elvish Piper
+1 Enormous Baloth
+1 Essence Drain
+1 Evacuation
+1 Faerie Conclave
+1 Fear
+1 Femeref Archers
+1 Festering Goblin
+1 Field Marshal
+1 Firebreathing
+1 Fists of the Anvil
+1 Flamewave Invoker
+1 Flashfreeze
+1 Flowstone Slide
+1 Fog Elemental
+1 Forbidding Watchtower
+1 Forest
+1 Fountain of Youth
+1 Fugitive Wizard
+1 Furnace Whelp
+1 Furnace of Rath
+1 Gaea's Herald
+1 Ghitu Encampment
+1 Ghost Warden
+1 Giant Growth
+1 Giant Spider
+1 Glorious Anthem
+1 Goblin Elite Infantry
+1 Goblin King
+1 Goblin Lore
+1 Goblin Piker
+1 Goblin Sky Raider
+1 Grave Pact
+1 Graveborn Muse
+1 Gravedigger
+1 Grizzly Bears
+1 Guerrilla Tactics
+1 Hail of Arrows
+1 Hate Weaver
+1 Head Games
+1 Heart of Light
+1 Hidden Horror
+1 High Ground
+1 Highway Robber
+1 Hill Giant
+1 Holy Day
+1 Holy Strength
+1 Honor Guard
+1 Horseshoe Crab
+1 Howling Mine
+1 Hunted Wumpus
+1 Hurkyl's Recall
+1 Hurricane
+1 Hypnotic Specter
+1 Icatian Priest
+1 Icy Manipulator
+1 Incinerate
+1 Island
+1 Jayemdae Tome
+1 Joiner Adept
+1 Juggernaut
+1 Kamahl, Pit Fighter
+1 Karplusan Forest
+1 Karplusan Strider
+1 Kavu Climber
+1 Kjeldoran Royal Guard
+1 Knight of Dusk
+1 Kraken's Eye
+1 Lava Axe
+1 Lavaborn Muse
+1 Legacy Weapon
+1 Leonin Scimitar
+1 Lightning Elemental
+1 Llanowar Elves
+1 Llanowar Sentinel
+1 Llanowar Wastes
+1 Looming Shade
+1 Lord of the Pit
+1 Lord of the Undead
+1 Loxodon Mystic
+1 Loxodon Warhammer
+1 Loyal Sentry
+1 Lumengrid Warden
+1 Luminesce
+1 Lure
+1 Mahamoti Djinn
+1 Manabarbs
+1 Mantis Engine
+1 March of the Machines
+1 Mass of Ghouls
+1 Megrim
+1 Merfolk Looter
+1 Midnight Ritual
+1 Might Weaver
+1 Might of Oaks
+1 Millstone
+1 Mind Bend
+1 Mind Rot
+1 Mind Stone
+1 Mirri, Cat Warrior
+1 Mobilization
+1 Mogg Fanatic
+1 Molimo, Maro-Sorcerer
+1 Mortal Combat
+1 Mortivore
+1 Mountain
+1 Nantuko Husk
+1 Natural Spring
+1 Naturalize
+1 Nekrataal
+1 Nightmare
+1 No Rest for the Wicked
+1 Nomad Mythmaker
+1 Orcish Artillery
+1 Ornithopter
+1 Overgrowth
+1 Overrun
+1 Pacifism
+1 Paladin en-Vec
+1 Pariah
+1 Peek
+1 Persuasion
+1 Phage the Untouchable
+1 Phantom Warrior
+1 Phyrexian Rager
+1 Phyrexian Vault
+1 Pincher Beetles
+1 Pithing Needle
+1 Plagiarize
+1 Plague Beetle
+1 Plague Wind
+1 Plains
+1 Platinum Angel
+1 Primal Rage
+1 Prodigal Pyromancer
+1 Puppeteer
+1 Pyroclasm
+1 Quicksand
+1 Quirion Dryad
+1 Rage Weaver
+1 Raging Goblin
+1 Rain of Tears
+1 Rampant Growth
+1 Ravenous Rats
+1 Razormane Masticore
+1 Recollect
+1 Recover
+1 Regeneration
+1 Relentless Assault
+1 Relentless Rats
+1 Reminisce
+1 Remove Soul
+1 Reviving Dose
+1 Reya Dawnbringer
+1 Rhox
+1 Righteousness
+1 Robe of Mirrors
+1 Rock Badger
+1 Rod of Ruin
+1 Root Maze
+1 Rootwalla
+1 Rootwater Commando
+1 Rootwater Matriarch
+1 Royal Assassin
+1 Rule of Law
+1 Rushwood Dryad
+1 Sage Owl
+1 Samite Healer
+1 Scalpelexis
+1 Scathe Zombies
+1 Scion of the Wild
+1 Scoria Wurm
+1 Sculpting Steel
+1 Sea Monster
+1 Seedborn Muse
+1 Seismic Assault
+1 Sengir Vampire
+1 Serra Angel
+1 Serra's Embrace
+1 Severed Legion
+1 Shatterstorm
+1 Shimmering Wings
+1 Shivan Dragon
+1 Shivan Hellkite
+1 Shivan Reef
+1 Shock
+1 Shunt
+1 Siege-Gang Commander
+1 Sift
+1 Sky Weaver
+1 Skyhunter Patrol
+1 Skyhunter Prowler
+1 Skyhunter Skirmisher
+1 Skyshroud Ranger
+1 Sleeper Agent
+1 Smash
+1 Snapping Drake
+1 Soul Feast
+1 Soul Warden
+1 Soulblast
+1 Spark Elemental
+1 Spawning Pool
+1 Spellbook
+1 Spiketail Hatchling
+1 Spined Wurm
+1 Spineless Thug
+1 Spirit Link
+1 Spirit Weaver
+1 Spitting Earth
+1 Squee, Goblin Nabob
+1 Stalking Tiger
+1 Stampeding Wildebeests
+1 Starlight Invoker
+1 Steadfast Guard
+1 Steel Golem
+1 Story Circle
+1 Stronghold Discipline
+1 Stun
+1 Sudden Impact
+1 Sulfurous Springs
+1 Sunken Hope
+1 Suntail Hawk
+1 Swamp
+1 Sylvan Basilisk
+1 Sylvan Scrying
+1 Tangle Spider
+1 Telepathy
+1 Telling Time
+1 Tempest of Light
+1 Terramorphic Expanse
+1 Terror
+1 The Hive
+1 Thieving Magpie
+1 Threaten
+1 Thrull Surgeon
+1 Thundering Giant
+1 Tidings
+1 Time Stop
+1 Time Stretch
+1 Traumatize
+1 Treasure Hunter
+1 Treetop Bracers
+1 Treetop Village
+1 Troll Ascetic
+1 True Believer
+1 Tundra Wolves
+1 Twincast
+1 Twitch
+1 Uncontrollable Anger
+1 Underground River
+1 Underworld Dreams
+1 Unholy Strength
+1 Unsummon
+1 Upwelling
+1 Vampire Bats
+1 Vedalken Mastermind
+1 Venerable Monk
+1 Verdant Force
+1 Viashino Runner
+1 Viashino Sandscout
+1 Viridian Shaman
+1 Voice of All
+1 Wall of Air
+1 Wall of Fire
+1 Wall of Swords
+1 Wall of Wood
+1 Warp World
+1 Warrior's Honor
+1 Whispersilk Cloak
+1 Wild Griffin
+1 Windborn Muse
+1 Wrath of God
+1 Wurm's Tooth
+1 Yavimaya Coast
+1 Yavimaya Enchantress
+1 Youthful Knight
