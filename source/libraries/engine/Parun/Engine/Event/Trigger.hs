@@ -3604,8 +3604,9 @@ copiesIn abilities ability = List.genericLength (filter (== ability) abilities)
 -- that TRIGGERS is REMOVED from the store (CR 603.7b) unless it carries a stated
 -- duration, which is that rule's own exception -- one of Expiry's sweeps ends
 -- those instead. Expiry.firesOnce says which entries are one-shot: also those
--- whose duration ends as it is used, "the next ... this turn". The survivors are returned so the caller can store them back. CR
--- 603.7d-f: the controller travels with the entry, so a delayed ability resolves
+-- whose duration ends as it is used, "the next ... this turn". The survivors
+-- are returned so the caller can store them back. CR 603.7d-f: the controller
+-- travels with the entry, so a delayed ability resolves
 -- under whoever controlled the spell that created it even once that spell's source
 -- is gone.
 --
