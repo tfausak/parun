@@ -1323,7 +1323,10 @@ affectPlayers resolving source controller legal (AffectPlayers.MkAffectPlayers d
                     ActivePlayerEffect.expiry = expiry,
                     ActivePlayerEffect.scope = scope,
                     ActivePlayerEffect.effect = bakedEffect,
-                    ActivePlayerEffect.ability = resolvingAbilityName resolving gs
+                    ActivePlayerEffect.ability = resolvingAbilityName resolving gs,
+                    -- Filled after this resolution, by the cast that uses a
+                    -- grant beside it (Parun.Engine.Cast.bindUser).
+                    ActivePlayerEffect.slots = Map.empty
                   }
            in g1 {GameState.playerEffects = active : GameState.playerEffects g1}
      in List.foldl' install gs ((,) <$> armed <*> bakedEffects)

@@ -2863,6 +2863,34 @@ followIntoSpell permission old new gs = case permission of
             GameState.delayedTriggers = fmap followDelayed (GameState.delayedTriggers gs)
           }
 
+-- CR 611.2a: Savage Summoning's "the next creature spell you cast this turn
+-- ... That spell can't be countered. That creature enters with an additional
+-- +1/+1 counter on it." One resolution installs three rows: the flash grant,
+-- whose Duration.UntilUsed names the slot, and two that read the slot through
+-- Filter.IsBound. The cast that spends the grant (`spent`, consumed beside this)
+-- binds `spell` into every row the grant's source installed that has not
+-- bound the slot yet, so two Summonings each bind their own rows to the same
+-- spell (its ruling) and a row already bound keeps its spell. The replacement
+-- row then follows the spell onto the permanent it becomes
+-- (Parun.Engine.Event.reenter). data/scenarios/cast-permission's Savage
+-- Summoning scenarios prove both riders.
+--
+-- The cast road only: a land play spends a grant (spentByLandPlay) but is no
+-- spell for "that spell" to name.
+bindUser :: [ActivePlayerEffect.ActivePlayerEffect] -> ObjectId -> GameState -> GameState
+bindUser spent spell gs =
+  let binds = [(ActivePlayerEffect.source row, slot) | row <- spent, Expiry.WhenUsed (Just slot) <- [ActivePlayerEffect.expiry row]]
+      bindIn source slots = foldr (\(from, slot) -> if from == source then Map.insertWith (\_ old -> old) slot (Set.singleton spell) else id) slots binds
+      bindPlayer row = row {ActivePlayerEffect.slots = bindIn (ActivePlayerEffect.source row) (ActivePlayerEffect.slots row)}
+      bindReplacement row = row {ActiveReplacement.slots = bindIn (ActiveReplacement.source row) (ActiveReplacement.slots row)}
+   in if null binds
+        then gs
+        else
+          gs
+            { GameState.playerEffects = fmap bindPlayer (GameState.playerEffects gs),
+              GameState.replacements = fmap bindReplacement (GameState.replacements gs)
+            }
+
 -- CR 601.2a / 106.6: the pooled units baked with this card as their source's
 -- last exiled card (Parun.Types.ManaUnit.sourceLastExiled) now name the spell the
 -- card became. Ice Cauldron's "spend this mana only to cast the last card exiled
@@ -3927,6 +3955,10 @@ castProposed perform spending pid oid sid printedFace castFrom preparedFor keywo
                           -- CR 611.2a: the rows this cast spends, for the
                           -- event's own reason -- nothing past this line rejects.
                           State.modify' (PlayerEffect.consume spent)
+                          -- CR 611.2a: and the spell that used them is "that
+                          -- spell" to the rows their sources installed beside
+                          -- them (Savage Summoning), for the same reason.
+                          State.modify' (bindUser spent sid)
                           -- CR 601.3: the once-each-turn permission this cast
                           -- spends, for the line above's reason -- nothing past
                           -- here rejects, and CR 733.1's reversal restores the

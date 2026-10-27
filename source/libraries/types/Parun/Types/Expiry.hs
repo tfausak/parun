@@ -6,6 +6,7 @@ import qualified Parun.Types.EventExpiry as EventExpiry
 import qualified Parun.Types.PaidExpiry as PaidExpiry
 import qualified Parun.Types.PhaseSelector as PhaseSelector
 import qualified Parun.Types.PlayerId as PlayerId
+import qualified Parun.Types.SlotName as SlotName
 import qualified Parun.Types.StepBegan as StepBegan
 import qualified Parun.Types.Timestamp as Timestamp
 import qualified Parun.Types.While as While
@@ -135,7 +136,8 @@ data Expiry
     -- cleanup like AtCleanup, since every printed producer also says "this
     -- turn"; Parun.Engine.PlayerEffect.spentByCast/spentByLandPlay and a
     -- delayed trigger's firing (Parun.Engine.Expiry.firesOnce) end it early.
-    WhenUsed
+    -- The slot is Duration.UntilUsed's, carried to the use that binds it.
+    WhenUsed (Maybe SlotName.SlotName)
   | -- | CR 611.2a: Duration.UntilEvent, stored. Ends when its event happens,
     -- and never resumes: a Vesuvan Shapeshifter turned face up again by other
     -- means does not bring its effect back.
