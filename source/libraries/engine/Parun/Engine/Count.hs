@@ -41,6 +41,7 @@ import qualified Parun.Types.CounterKind as CounterKind
 import qualified Parun.Types.Crewing as Crewing
 import qualified Parun.Types.DamageEvent as DamageEvent
 import qualified Parun.Types.DamageKind as DamageKind
+import qualified Parun.Types.Discarded as Discarded
 import qualified Parun.Types.DistinctOf as DistinctOf
 import qualified Parun.Types.EventShape as EventShape
 import qualified Parun.Types.Filter as Filter.Type
@@ -49,6 +50,7 @@ import qualified Parun.Types.GameSettings as GameSettings
 import Parun.Types.GameState (GameState)
 import qualified Parun.Types.GameState as GameState
 import qualified Parun.Types.GrantedAbility as GrantedAbility
+import qualified Parun.Types.Holder as Holder
 import qualified Parun.Types.InZone as InZone
 import qualified Parun.Types.Keyword as Keyword.Type
 import qualified Parun.Types.LastKnown as LastKnown
@@ -165,9 +167,19 @@ evaluate viewOf quantityOf context gs count =
         -- Candidates are LIVE objects, so the injected ViewOf answers them exactly as
         -- it answers the zone arm's -- and the two agree on any candidate they share,
         -- since Filter.IsBound over a zone fold reaches the same ids.
+        --
+        -- A card discarded unrevealed into a hidden zone is still discarded (CR
+        -- 701.9c; Library of Leng's 2004-10-04 rulings), and only its
+        -- characteristics are undefined, so a plain count asking nothing of them
+        -- (countsWithoutCharacteristics) keeps it: Flux's and Jace's Archivist's
+        -- "discarded this way" under Library of Leng (data/scenarios'
+        -- windfall-counts-the-cards-library-of-leng-put-on-top).
         Scope.OverBound slot ->
           let ids = Set.toList (Map.findWithDefault Set.empty slot (Filter.slotObjects context))
-              kept = Maybe.mapMaybe (\oid -> if findableAfterMove gs oid then fmap ((,) (Just oid)) (keep predicate context (viewOf oid)) else Nothing) ids
+              member oid
+                | findableAfterMove gs oid = True
+                | otherwise = countsWithoutCharacteristics aggregation predicate && wasDiscarded gs oid
+              kept = Maybe.mapMaybe (\oid -> if member oid then fmap ((,) (Just oid)) (keep predicate context (viewOf oid)) else Nothing) ids
            in aggregate quantityOf aggregation kept
         -- CR 401.2 / 404.1: one card per named library or graveyard, narrowed by
         -- POSITION before the Filter is asked -- the zone arm above answers "any
@@ -224,6 +236,37 @@ findableAfterMove gs oid = case Game.lookupObject oid gs of
   -- zone the move named answers instead.
   Nothing -> any (arrivedFindable gs) (Game.arrivalsOf oid gs) || ceasedInPublic gs oid
   Just _ -> arrivedFindable gs oid
+
+-- CR 701.9a: did a discard put this incarnation where it is? Event.discard
+-- records the id its move minted, which is the id a discard's slot binds.
+wasDiscarded :: GameState -> ObjectId -> Bool
+wasDiscarded gs oid =
+  let discarded event = case event of
+        GameEvent.Discarded d -> Discarded.card d == oid
+        _ -> False
+   in any (discarded . LoggedEvent.event) (GameState.events gs)
+
+-- CR 701.9c / 109.3: does this count ask nothing of its members' characteristics,
+-- so that a member whose characteristics are undefined still answers it? A tally
+-- of members narrowed by identity and ownership alone (CR 108.3: an owner is not
+-- a characteristic). Any other atom answers False, keeping CR 400.7j's gate --
+-- Psychic Miasma's "a land card" among them.
+countsWithoutCharacteristics :: Aggregation.Aggregation quantity -> Filter.Type.Filter keyword -> Bool
+countsWithoutCharacteristics aggregation predicate =
+  let identityOnly f = case f of
+        Filter.Type.And fs -> all identityOnly fs
+        Filter.Type.Or fs -> all identityOnly fs
+        Filter.Type.Not g -> identityOnly g
+        Filter.Type.HeldByRecipient Holder.Owner -> True
+        Filter.Type.HeldByBound Holder.Owner _ -> True
+        Filter.Type.HeldByPlayer Holder.Owner _ -> True
+        Filter.Type.HeldBy Holder.Owner _ -> True
+        Filter.Type.IsBound _ -> True
+        Filter.Type.IsObject _ -> True
+        _ -> False
+   in case aggregation of
+        Aggregation.Members -> identityOnly predicate
+        _ -> False
 
 -- CR 111.7: did this departed object move into a public zone and every
 -- incarnation it arrived as cease to exist there?
