@@ -1,0 +1,21 @@
+{
+  "description": "CR 603.4 / 508.1: when a creature attacks its controller or a planeswalker they control, Guardian of the Ages, if it has defender, loses defender and gains trample for good",
+  "note": "bob's Grizzly Bears attack alice; her Guardian loses defender and gains trample, and in alice's next upkeep still has trample and no defender.",
+  "board": {
+    "active": "bob",
+    "step": "PrecombatMain",
+    "seats": [
+      {"name": "alice", "battlefield": [{"card": "Guardian of the Ages", "label": "guardian"}], "library": [{"card": "Island"}, {"card": "Island"}, {"card": "Island"}, {"card": "Island"}]},
+      {"name": "bob", "battlefield": [{"card": "Grizzly Bears", "label": "bears", "ready": true}], "library": [{"card": "Island"}, {"card": "Island"}, {"card": "Island"}, {"card": "Island"}]}
+    ]
+  },
+  "timeline": [
+    {"turn": 1, "step": "DeclareAttackers", "player": "bob", "do": {"Attack": ["$bears"]}},
+    {"turn": 1, "step": "DeclareAttackers", "player": "bob", "do": "Pass"},
+    {"turn": 1, "step": "DeclareAttackers", "player": "bob", "check": {"Keywords": {"object": "$guardian", "keyword": {"type": "Defender"}, "count": 0}}},
+    {"turn": 1, "step": "DeclareAttackers", "player": "bob", "check": {"Keywords": {"object": "$guardian", "keyword": {"type": "Trample"}, "count": 1}}},
+    {"turn": 1, "step": "DeclareBlockers", "player": "alice", "do": {"Block": {}}},
+    {"turn": 2, "step": "Upkeep", "player": "alice", "check": {"Keywords": {"object": "$guardian", "keyword": {"type": "Trample"}, "count": 1}}},
+    {"turn": 2, "step": "Upkeep", "player": "alice", "check": {"Keywords": {"object": "$guardian", "keyword": {"type": "Defender"}, "count": 0}}}
+  ]
+}

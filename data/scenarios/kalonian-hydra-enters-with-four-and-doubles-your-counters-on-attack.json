@@ -1,0 +1,25 @@
+{
+  "description": "CR 614.1c / 122.1: Kalonian Hydra enters with four +1/+1 counters, and whenever it attacks doubles the +1/+1 counters on each creature its controller controls",
+  "note": "The cast Hydra enters with 4; the ready one attacks with 4 and goes to 8, the cast one to 8, the Bears with 1 to 2. bob's Hill Giant keeps its 3.",
+  "board": {
+    "active": "alice",
+    "step": "PrecombatMain",
+    "seats": [
+      {"name": "alice", "manaPool": "GGGGG", "battlefield": [{"card": "Kalonian Hydra", "label": "hydra", "ready": true, "counters": [{"key": {"type": "PlusOnePlusOne"}, "value": 4}]}, {"card": "Grizzly Bears", "label": "bears", "counters": [{"key": {"type": "PlusOnePlusOne"}, "value": 1}]}], "hand": [{"card": "Kalonian Hydra", "label": "cast"}], "library": [{"card": "Island"}, {"card": "Island"}, {"card": "Island"}, {"card": "Island"}]},
+      {"name": "bob", "battlefield": [{"card": "Hill Giant", "label": "giant", "counters": [{"key": {"type": "PlusOnePlusOne"}, "value": 3}]}], "library": [{"card": "Island"}, {"card": "Island"}, {"card": "Island"}, {"card": "Island"}]}
+    ]
+  },
+  "timeline": [
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "do": {"Cast": {"object": "$cast"}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "do": "Pass"},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "check": {"Counters": {"object": "Kalonian Hydra#2", "kind": {"type": "PlusOnePlusOne"}, "count": 4}}},
+    {"turn": 1, "step": "DeclareAttackers", "player": "alice", "do": {"Attack": ["$hydra"]}},
+    {"turn": 1, "step": "DeclareAttackers", "player": "alice", "do": "Pass"},
+    {"turn": 1, "step": "DeclareAttackers", "player": "alice", "do": {"Answer": {"prompt": "OrderForEach", "with": [0, 1, 2]}}},
+    {"turn": 1, "step": "DeclareAttackers", "player": "alice", "check": {"Counters": {"object": "$hydra", "kind": {"type": "PlusOnePlusOne"}, "count": 8}}},
+    {"turn": 1, "step": "DeclareAttackers", "player": "alice", "check": {"Counters": {"object": "Kalonian Hydra#2", "kind": {"type": "PlusOnePlusOne"}, "count": 8}}},
+    {"turn": 1, "step": "DeclareAttackers", "player": "alice", "check": {"Counters": {"object": "$bears", "kind": {"type": "PlusOnePlusOne"}, "count": 2}}},
+    {"turn": 1, "step": "DeclareAttackers", "player": "alice", "check": {"Counters": {"object": "$giant", "kind": {"type": "PlusOnePlusOne"}, "count": 3}}},
+    {"turn": 1, "step": "DeclareBlockers", "player": "bob", "do": {"Block": {}}}
+  ]
+}

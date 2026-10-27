@@ -1,0 +1,24 @@
+{
+  "description": "CR 601.2c: Fiendslayer Paladin can't be the target of black or red spells its controller's opponents control",
+  "note": "bob can't aim his red Shock or his black Terror at it; alice's own Shock can, and kills it.",
+  "board": {
+    "active": "alice",
+    "step": "PrecombatMain",
+    "seats": [
+      {"name": "alice", "manaPool": "R", "battlefield": [{"card": "Fiendslayer Paladin", "label": "paladin"}], "hand": [{"card": "Shock", "label": "mine"}], "library": [{"card": "Island"}, {"card": "Island"}, {"card": "Island"}, {"card": "Island"}]},
+      {"name": "bob", "manaPool": "RBB", "hand": [{"card": "Shock", "label": "theirs"}, {"card": "Terror", "label": "terror"}], "library": [{"card": "Island"}, {"card": "Island"}, {"card": "Island"}, {"card": "Island"}]}
+    ]
+  },
+  "timeline": [
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "do": {"Cast": {"object": "$mine", "targets": ["$paladin"]}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "do": "Pass"},
+    {"turn": 1, "step": "PrecombatMain", "player": "bob", "refuse": {"Cast": {"object": "$theirs", "targets": ["$paladin"]}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "bob", "refuse": {"Cast": {"object": "$terror", "targets": ["$paladin"]}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "bob", "do": "Pass"}
+  ],
+  "final": [
+    {"Count": {"player": "alice", "zone": "Graveyard", "card": "Fiendslayer Paladin", "count": 1}},
+    {"Count": {"player": "bob", "zone": "Hand", "card": "Shock", "count": 1}},
+    {"Count": {"player": "bob", "zone": "Hand", "card": "Terror", "count": 1}}
+  ]
+}

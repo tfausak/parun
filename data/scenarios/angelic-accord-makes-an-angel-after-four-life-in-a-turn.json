@@ -1,0 +1,22 @@
+{
+  "description": "CR 603.4 / 513.1: at the beginning of each end step, Angelic Accord makes a 4/4 flying Angel if its controller gained 4 or more life that turn",
+  "note": "alice gains 3 on her own turn and gets no Angel; she gains 7 on bob's turn and has one by her next upkeep.",
+  "board": {
+    "active": "alice",
+    "step": "PrecombatMain",
+    "seats": [
+      {"name": "alice", "manaPool": "W", "battlefield": [{"card": "Angelic Accord", "label": "accord"}, {"card": "Plains", "label": "p1"}, {"card": "Plains", "label": "p2"}, {"card": "Plains", "label": "p3"}, {"card": "Plains", "label": "p4"}], "hand": [{"card": "Healing Salve", "label": "salve"}, {"card": "Angel's Mercy", "label": "mercy"}], "library": [{"card": "Island"}, {"card": "Island"}, {"card": "Island"}, {"card": "Island"}]},
+      {"name": "bob", "library": [{"card": "Island"}, {"card": "Island"}, {"card": "Island"}, {"card": "Island"}]}
+    ]
+  },
+  "timeline": [
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "do": {"Cast": {"object": "$salve", "modes": [0], "targets": ["$alice"], "mana": [null]}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "do": "Pass"},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "check": {"Life": {"player": "alice", "life": 23}}},
+    {"turn": 2, "step": "Upkeep", "player": "bob", "check": {"Count": {"player": "alice", "zone": "Battlefield", "card": "Angel Token", "count": 0}}},
+    {"turn": 2, "step": "PrecombatMain", "player": "alice", "do": {"Cast": {"object": "$mercy", "mana": ["$p1", "$p2", "$p3", "$p4"]}}},
+    {"turn": 3, "step": "Upkeep", "player": "alice", "check": {"Count": {"player": "alice", "zone": "Battlefield", "card": "Angel Token", "count": 1}}},
+    {"turn": 3, "step": "Upkeep", "player": "alice", "check": {"Keywords": {"object": "Angel Token", "keyword": {"type": "Flying"}, "count": 1}}},
+    {"turn": 3, "step": "Upkeep", "player": "alice", "check": {"PowerToughness": {"object": "Angel Token", "power": 4, "toughness": 4}}}
+  ]
+}
