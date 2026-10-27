@@ -1,0 +1,40 @@
+{
+  "description": "CR 115.1c Chandra, the Firebrand's -6 deals 6 damage to each of its targets and nothing else",
+  "note": "Alice names three of the six targets the -6 allows: bob, his Craw Wurm and his Hill Giant. Both creatures die and bob loses six; the untargeted Grizzly Bears survives.",
+  "board": {
+    "seats": [
+      {
+        "name": "alice",
+        "battlefield": [
+          {
+            "card": "Chandra, the Firebrand",
+            "label": "chandra",
+            "counters": [{"key": {"type": "Loyalty"}, "value": 7}]
+          }
+        ],
+        "library": [{"card": "Island"}, {"card": "Island"}]
+      },
+      {
+        "name": "bob",
+        "battlefield": [
+          {"card": "Craw Wurm", "label": "wurm"},
+          {"card": "Hill Giant", "label": "giant"},
+          {"card": "Grizzly Bears", "label": "bears"}
+        ],
+        "library": [{"card": "Island"}, {"card": "Island"}]
+      }
+    ],
+    "active": "alice",
+    "step": "PrecombatMain"
+  },
+  "timeline": [
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "do": {"Activate": {"object": "$chandra", "ability": 2, "targets": ["$bob", "$wurm", "$giant"]}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "check": {"Counters": {"object": "$chandra", "kind": {"type": "Loyalty"}, "count": 1}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "do": "Pass"},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "check": {"Life": {"player": "bob", "life": 14}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "check": {"Count": {"player": "bob", "zone": "Graveyard", "card": "Craw Wurm", "count": 1}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "check": {"Count": {"player": "bob", "zone": "Graveyard", "card": "Hill Giant", "count": 1}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "check": {"Count": {"player": "bob", "zone": "Battlefield", "card": "Grizzly Bears", "count": 1}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "check": {"Life": {"player": "alice", "life": 20}}}
+  ]
+}

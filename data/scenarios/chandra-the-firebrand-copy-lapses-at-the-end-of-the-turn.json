@@ -1,0 +1,36 @@
+{
+  "description": "CR 603.7b / 514.2 Chandra, the Firebrand's -2 lapses unfired at the end of the turn it was activated",
+  "note": "Alice activates the -2 and casts nothing that turn. On bob's turn she Shocks bob: the stack holds only the Shock, since 'this turn' ended at the cleanup step. Bob loses only 2.",
+  "board": {
+    "seats": [
+      {
+        "name": "alice",
+        "battlefield": [
+          {
+            "card": "Chandra, the Firebrand",
+            "label": "chandra",
+            "counters": [{"key": {"type": "Loyalty"}, "value": 5}]
+          },
+          {"card": "Mountain", "label": "m", "ready": true}
+        ],
+        "hand": [{"card": "Shock", "label": "shock"}],
+        "library": [{"card": "Island"}, {"card": "Island"}]
+      },
+      {
+        "name": "bob",
+        "library": [{"card": "Island"}, {"card": "Island"}]
+      }
+    ],
+    "active": "alice",
+    "step": "PrecombatMain"
+  },
+  "timeline": [
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "do": {"Activate": {"object": "$chandra", "ability": 1, "mana": [null]}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "do": "Pass"},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "check": {"Counters": {"object": "$chandra", "kind": {"type": "Loyalty"}, "count": 3}}},
+    {"turn": 2, "step": "PrecombatMain", "player": "alice", "do": {"Cast": {"object": "$shock", "targets": ["$bob"], "mana": ["$m"]}}},
+    {"turn": 2, "step": "PrecombatMain", "player": "alice", "check": {"View": {"of": "Stack", "is": ["Shock"]}}},
+    {"turn": 2, "step": "PrecombatMain", "player": "alice", "do": "Pass"},
+    {"turn": 2, "step": "PrecombatMain", "player": "alice", "check": {"Life": {"player": "bob", "life": 18}}}
+  ]
+}

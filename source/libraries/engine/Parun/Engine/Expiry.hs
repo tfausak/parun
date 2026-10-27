@@ -205,9 +205,10 @@ arm acquisition targets controller source duration gs = case duration of
   -- CR 611.2a: nothing about the game's clock or a payment is baked in --
   -- Parun.Engine.PlayerEffect.spentByCast/spentByLandPlay are what end this
   -- early, matching the stored effect's own Filter against whatever was just
-  -- cast or played. Those read only a player effect on PlayerEffect.castUse's
-  -- axes, so Parun.EffectLintSpec refuses the duration on every other carrier
-  -- and axis.
+  -- cast or played, and a delayed trigger's own firing ends it (`firesOnce`).
+  -- Those read only a player effect on PlayerEffect.castUse's axes or a
+  -- delayed trigger, so Parun.EffectLintSpec refuses the duration on every
+  -- other carrier and axis.
   Duration.UntilUsed -> Just Expiry.WhenUsed
   -- CR 611.2a: the seat CR 109.5 reads a cast's criterion from is baked, as
   -- UntilPaid's is, and so is any seat the criterion names by slot
@@ -431,8 +432,9 @@ endsAt gs moment source expiry = case expiry of
   -- CR 116.2c: only a payment ends this, and CR 800.4m does not reach it -- the
   -- offer goes with the departed player's objects.
   Expiry.WhenPaid _ -> moment == PaidFor source
-  -- CR 611.2a: ended by its use (Parun.Engine.PlayerEffect.spentGrants), and at
-  -- cleanup, since every printed producer also says "this turn".
+  -- CR 611.2a: ended by its use (Parun.Engine.PlayerEffect.spentGrants, or a
+  -- delayed trigger's firing, `firesOnce`), and at cleanup, since every printed
+  -- producer also says "this turn".
   Expiry.WhenUsed -> moment == Used || moment == Cleanup
   -- CR 611.2a / 701.27b: ended by its source turning face down. A source that
   -- has left the game's objects (CR 400.7) can never turn face down, so the row
@@ -459,6 +461,14 @@ endsAt gs moment source expiry = case expiry of
           && GameState.turnNumber gs > AfterTurn.turn afterTurn
       )
         || departedTurnOf (AfterTurn.player afterTurn)
+
+-- CR 603.7b: does a delayed trigger from `source` under this stated duration
+-- trigger only once? With none it does, and firing is the use a Used expiry
+-- waits for, so Chandra, the Firebrand's "when you next cast ... this turn"
+-- fires once (its 2011-09-22 ruling: "the next instant or sorcery spell you
+-- cast that turn") and lapses at cleanup unfired.
+firesOnce :: GameState -> ObjectId -> Maybe Expiry -> Bool
+firesOnce gs source = maybe True (endsAt gs Used source)
 
 -- CR 611.2a: end every stored row whose expiry ends at this moment.
 -- Delete-and-recompute (design.md 2.5): dropping the stored entry makes the next

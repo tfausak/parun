@@ -342,8 +342,8 @@ data Prompt r where
   -- installed.
   ChooseDamageSource :: Decider.Decider -> PlayerId.PlayerId -> ObjectId.ObjectId -> NonEmpty.NonEmpty ObjectId.ObjectId -> Prompt ObjectId.ObjectId
   -- | CR 603.7b: which of several simultaneous occurrences triggers a delayed
-  -- triggered ability with no stated duration; the answer indexes the events,
-  -- which are in log order and may compare equal.
+  -- triggered ability that fires once (Parun.Engine.Expiry.firesOnce); the
+  -- answer indexes the events, which are in log order and may compare equal.
   ChooseDelayedTriggerEvent :: Decider.Decider -> PlayerId.PlayerId -> ObjectId.ObjectId -> NonEmpty.NonEmpty GameEvent.GameEvent -> Prompt Natural.Natural
   -- | CR 608.2d: which graveyard card a Parun.Types.ObjectRef.ChosenCardInGraveyard
   -- takes; the PlayerId is the chooser, who need not own the graveyard, asked
