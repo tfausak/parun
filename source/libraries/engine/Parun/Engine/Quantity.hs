@@ -399,7 +399,13 @@ evaluateAgainst viewOf context gs announcedOn mOid mView quantity =
         -- Bruenor Battlehammer's "it". Its creature types come off `mView`, the
         -- view this evaluation was handed, for Shares CreatureType Evaluated
         -- (Coat of Arms).
-        Quantity.Count c -> Count.evaluate viewOf (\mOid2 view -> evaluateAgainst viewOf context gs announcedOn mOid2 (Just view)) context {Filter.evaluated = mOid, Filter.evaluatedCreatureTypes = fmap (Set.filter Subtype.Engine.isCreatureType . Filter.subtypes) mView} gs c
+        --
+        -- Aimed at a PLAYER, this count is a per-member quantity of a fold over
+        -- players, and its Filter.HeldByRecipient reads that member, as
+        -- PlayerRef.Candidate does there: Jace's Archivist's "the greatest number
+        -- of cards a player discarded this way" (data/scenarios'
+        -- jaces-archivist-draws-the-most-any-player-discarded-this-way).
+        Quantity.Count c -> Count.evaluate viewOf (\mOid2 view -> evaluateAgainst viewOf context gs announcedOn mOid2 (Just view)) context {Filter.evaluated = mOid, Filter.evaluatedCreatureTypes = fmap (Set.filter Subtype.Engine.isCreatureType . Filter.subtypes) mView, Filter.recipient = (mView >>= Filter.playerIdentity) <|> Filter.recipient context} gs c
         -- CR 106.4: the mana-pool fold (Parun.Engine.ManaCount). Takes the ViewOf but
         -- not the second injection the Count arm above does: a mana unit has no
         -- characteristics for a projection to describe, so the view is there only to

@@ -1153,6 +1153,8 @@ data Context = MkContext
     -- field pointed at each in turn; and Parun.Engine.PlayerEffect.printedRows,
     -- which asks a player static ability's condition once per affected player
     -- (Ethersworn Canonist's "each player who has cast a nonartifact spell").
+    -- Parun.Engine.Quantity's Count arm re-points it at the member of a fold
+    -- over players whose quantity it is reading (Jace's Archivist).
     --
     -- NOT `perspective` re-pointed, which would be the cheap version of the same
     -- thing and a wrong one: CR 109.5's "you" is the resolving spell's controller
@@ -1960,7 +1962,7 @@ matches context view predicate = case predicate of
   -- effect has got rather than about the candidate. False unless both are
   -- readable, ControlledByRole's posture: a candidate with no such player has
   -- nothing to compare, and no recipient at all is every position but a
-  -- per-recipient effect's quantity.
+  -- per-recipient effect's quantity and a fold over players' member quantity.
   Filter.HeldByRecipient holder -> case (heldBy holder view, recipient context) of
     (Just c, Just r) -> c == r
     _ -> False
