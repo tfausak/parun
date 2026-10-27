@@ -1,0 +1,14 @@
+{
+  "description": "CR 601.2g / 118.3: Red Mana Battery with two charge counters pays {R}{R}{R}, so Ball Lightning is offered and cast",
+  "note": "Removing both counters makes three red. The battery with one counter beside this one offers nothing.",
+  "board": {"active": "alice", "step": "PrecombatMain", "seats": [{"name": "alice", "battlefield": [{"card": "Red Mana Battery", "label": "battery", "counters": [{"key": {"type": "Named", "value": "charge"}, "value": 2}]}], "library": [{"card": "Island"}, {"card": "Island"}, {"card": "Island"}, {"card": "Island"}], "hand": [{"card": "Ball Lightning", "label": "bolt"}]}, {"name": "bob", "library": [{"card": "Island"}, {"card": "Island"}, {"card": "Island"}, {"card": "Island"}]}]},
+  "timeline": [
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "check": {"View": {"of": "Offered", "player": "alice", "is": ["Pass", "Cast $bolt", "ActivateManaAbility $battery"]}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "do": {"Cast": {"object": "$bolt", "mana": ["$battery"], "costOrder": [0, 1]}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "do": {"Answer": {"prompt": "ChooseCounterRemovalAtLeast", "with": [["$battery", 2]]}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "check": {"Counters": {"object": "$battery", "kind": {"type": "Named", "value": "charge"}, "count": 0}}}
+  ],
+  "final": [
+    {"Count": {"player": "alice", "zone": "Battlefield", "card": "Ball Lightning", "count": 1}}
+  ]
+}
