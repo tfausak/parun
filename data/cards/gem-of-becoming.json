@@ -1,0 +1,101 @@
+{
+  "faces": [
+    {
+      "activatedAbilities": [
+        {
+          "cost": {
+            "components": [
+              {
+                "type": "TapThis"
+              },
+              {
+                "type": "SacrificeThis"
+              }
+            ],
+            "mana": [
+              {
+                "type": "Generic",
+                "value": 3
+              }
+            ]
+          },
+          "modal": {
+            "modes": [
+              {
+                "clauses": [
+                  {
+                    "effects": [
+                      {
+                        "type": "Search",
+                        "value": {
+                          "descriptions": [
+                            {
+                              "type": "HasSubtype",
+                              "value": {
+                                "type": "Island"
+                              }
+                            },
+                            {
+                              "type": "HasSubtype",
+                              "value": {
+                                "type": "Swamp"
+                              }
+                            },
+                            {
+                              "type": "HasSubtype",
+                              "value": {
+                                "type": "Mountain"
+                              }
+                            }
+                          ],
+                          "destination": {
+                            "type": "RevealThenHand"
+                          },
+                          "filter": {
+                            "type": "And",
+                            "value": []
+                          },
+                          "owner": {
+                            "type": "Relative",
+                            "value": {
+                              "type": "You"
+                            }
+                          },
+                          "quantity": {
+                            "type": "Literal",
+                            "value": 3
+                          },
+                          "searcher": {
+                            "type": "Relative",
+                            "value": {
+                              "type": "You"
+                            }
+                          }
+                        }
+                      }
+                    ]
+                  }
+                ]
+              }
+            ]
+          }
+        }
+      ],
+      "manaCost": [
+        {
+          "type": "Generic",
+          "value": 3
+        }
+      ],
+      "name": "Gem of Becoming",
+      "oracleText": "{3}, {T}, Sacrifice this artifact: Search your library for an Island card, a Swamp card, and a Mountain card. Reveal those cards, put them into your hand, then shuffle.",
+      "typeLine": {
+        "types": [
+          {
+            "type": "Artifact"
+          }
+        ]
+      }
+    }
+  ]
+}

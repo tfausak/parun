@@ -1,0 +1,18 @@
+{
+  "description": "CR 612.1 whole card: a Gem of Becoming hacked from Swamp to Forest searches for an Island card, a Forest card and a Mountain card",
+  "note": "Magical Hack rewrites the Gem's second description, so the Forest alice names is found beside the Island and the Mountain, and her Swamp is no longer a card the search can find.",
+  "board": {"active": "alice", "step": "PrecombatMain", "seats": [{"name": "alice", "battlefield": [{"card": "Gem of Becoming", "label": "gem"}, {"card": "Island", "label": "u"}, {"card": "Plains", "label": "p1"}, {"card": "Plains", "label": "p2"}, {"card": "Plains", "label": "p3"}], "hand": [{"card": "Magical Hack", "label": "hack"}], "library": [{"card": "Island", "label": "isl"}, {"card": "Swamp", "label": "swp"}, {"card": "Forest", "label": "forest"}, {"card": "Mountain", "label": "mtn"}, {"card": "Plains", "label": "spare"}]}, {"name": "bob", "library": [{"card": "Island"}, {"card": "Island"}, {"card": "Island"}]}]},
+  "timeline": [
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "do": {"Cast": {"object": "$hack", "targets": ["$gem"], "mana": ["$u", null]}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "do": "Pass"},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "source": "Magical Hack", "do": {"ChooseWordSwap": {"from": {"type": "Swamp"}, "to": {"type": "Forest"}}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "do": {"Activate": {"object": "$gem", "mana": ["$p1", "$p2", "$p3"], "costOrder": [0, 1]}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "do": "Pass"},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "do": {"Answer": {"prompt": "Search", "with": ["$isl", "$forest", "$mtn"]}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "do": {"Answer": {"prompt": "Shuffle", "with": ["$swp", "$spare"]}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "check": {"Count": {"player": "alice", "zone": "Hand", "card": "Forest", "count": 1}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "check": {"Count": {"player": "alice", "zone": "Hand", "card": "Island", "count": 1}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "check": {"Count": {"player": "alice", "zone": "Hand", "card": "Mountain", "count": 1}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "check": {"Count": {"player": "alice", "zone": "Library", "card": "Swamp", "count": 1}}}
+  ]
+}

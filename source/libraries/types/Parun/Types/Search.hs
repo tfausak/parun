@@ -1,5 +1,6 @@
 module Parun.Types.Search where
 
+import qualified Data.Sequence as Seq
 import qualified Data.Set as Set
 import qualified Parun.Types.DifferentIn as DifferentIn
 import qualified Parun.Types.Filter as Filter
@@ -79,6 +80,20 @@ data Search = MkSearch
     -- the cards it passed over.
     quantity :: Maybe Quantity.Quantity,
     filter :: Filter.Filter Keyword.Keyword,
+    -- | CR 701.23h: the descriptions of several search instructions before one
+    -- shuffle, looked for in ONE search, each found card matched to a distinct
+    -- one -- Gem of Becoming's "an Island card, a Swamp card, and a Mountain
+    -- card". Every found card also matches `filter`, and `quantity` still counts
+    -- them. Empty for an instruction of one description, which `filter` alone
+    -- states.
+    --
+    -- A constraint on the found SET, like `differentIn`: Underground Sea may
+    -- answer for the Island or the Swamp, and a second Island card for
+    -- neither once the first has taken the Island.
+    --
+    -- Not implemented: a find outside the game (CR 701.23j) is not held to it
+    -- (#4295).
+    descriptions :: Seq.Seq (Filter.Filter Keyword.Keyword),
     -- | Whether the printed instruction says "up to", making the quantity a
     -- ceiling the searcher chooses within rather than one they must fill.
     --

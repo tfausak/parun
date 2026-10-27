@@ -1,0 +1,35 @@
+{
+  "description": "CR 509.1f Under Odric, Master Tactician the blocker's controller may decline the toll its chooser's block owes, and the chooser declares again",
+  "note": "Odric's ruling: alice chooses Hipparion to block Odric, power 3, which costs bob {1}; bob declines, the declaration is reversed (CR 733.1) and alice must propose another. Bob's Plains stays untapped. The paired board has bob pay.",
+  "board": {
+    "active": "alice",
+    "step": "BeginningOfCombat",
+    "seats": [
+      {
+        "name": "alice",
+        "battlefield": [
+          {"card": "Odric, Master Tactician", "label": "odric", "ready": true},
+          {"card": "Grizzly Bears", "label": "b1", "ready": true},
+          {"card": "Grizzly Bears", "label": "b2", "ready": true},
+          {"card": "Grizzly Bears", "label": "b3", "ready": true}
+        ]
+      },
+      {
+        "name": "bob",
+        "battlefield": [
+          {"card": "Hipparion", "label": "hipparion", "ready": true},
+          {"card": "Plains", "label": "plains"}
+        ]
+      }
+    ]
+  },
+  "timeline": [
+    {"turn": 1, "step": "DeclareAttackers", "player": "alice", "do": {"Attack": ["$odric", "$b1", "$b2", "$b3"]}},
+    {"turn": 1, "step": "DeclareBlockers", "player": "alice", "do": {"Block": {"$hipparion": ["$odric"]}}},
+    {"turn": 1, "step": "DeclareBlockers", "player": "bob", "source": "$hipparion", "do": {"ChooseToPay": {"decision": {"type": "Declines"}}}},
+    {"turn": 1, "step": "DeclareBlockers", "player": "alice", "do": {"Block": {"$hipparion": ["$b1"]}}},
+    {"turn": 1, "step": "DeclareBlockers", "player": "alice", "check": {"Blockers": {"attacker": "$odric", "blockers": null}}},
+    {"turn": 1, "step": "DeclareBlockers", "player": "alice", "check": {"Blockers": {"attacker": "$b1", "blockers": ["$hipparion"]}}},
+    {"turn": 1, "step": "DeclareBlockers", "player": "alice", "check": {"Tapped": {"object": "$plains", "tapped": false}}}
+  ]
+}

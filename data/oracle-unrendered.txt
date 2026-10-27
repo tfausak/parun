@@ -287,6 +287,7 @@ browbeat
 browse
 bruenor-battlehammer
 bruna-light-of-alabaster
+brutal-hordechief
 brutal-nightstalker
 brutal-suppression
 bruvac-the-grandiloquent
@@ -1258,6 +1259,7 @@ mass-polymorph
 master-chef
 master-of-the-wild-hunt
 master-thief
+master-warcraft
 matca-rioters
 matoya-archon-elder
 mayhem-devil
@@ -1401,6 +1403,7 @@ obsidian-battle-axe
 obstinate-baloth
 octomancer
 odds-ends
+odric-master-tactician
 oglor-devoted-assistant
 ojutais-command
 okk

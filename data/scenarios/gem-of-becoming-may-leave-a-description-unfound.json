@@ -1,0 +1,13 @@
+{
+  "description": "CR 701.23b whole card: Gem of Becoming's descriptions state a quality, so alice may leave her Swamp unfound",
+  "note": "Alice names only her Island. Each description states a quality, so nothing makes her find the Swamp; a search simply for three cards (CR 701.23d) would have.",
+  "board": {"active": "alice", "step": "PrecombatMain", "seats": [{"name": "alice", "battlefield": [{"card": "Gem of Becoming", "label": "gem"}, {"card": "Plains", "label": "p1"}, {"card": "Plains", "label": "p2"}, {"card": "Plains", "label": "p3"}], "library": [{"card": "Island", "label": "isl"}, {"card": "Swamp", "label": "swp"}]}, {"name": "bob", "library": [{"card": "Island"}, {"card": "Island"}, {"card": "Island"}]}]},
+  "timeline": [
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "do": {"Activate": {"object": "$gem", "mana": ["$p1", "$p2", "$p3"], "costOrder": [0, 1]}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "do": "Pass"},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "do": {"Answer": {"prompt": "Search", "with": ["$isl"]}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "do": {"Answer": {"prompt": "Shuffle", "with": ["$swp"]}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "check": {"Count": {"player": "alice", "zone": "Library", "card": "Swamp", "count": 1}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "check": {"Count": {"player": "alice", "zone": "Hand", "card": "Island", "count": 1}}}
+  ]
+}
