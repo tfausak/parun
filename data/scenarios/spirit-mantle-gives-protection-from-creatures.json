@@ -1,5 +1,5 @@
 {
-  "description": "CR 702.16b / 702.16e / 613.4c: Spirit Mantle gives the enchanted creature +1/+1 and protection from creatures",
+  "description": "CR 702.16b / 702.16f / 613.4c: Spirit Mantle gives the enchanted creature +1/+1 and protection from creatures",
   "note": "Bob's Prodigal Pyromancer cannot target the enchanted Bears and his Hill Giant cannot block it.",
   "board": {
     "active": "alice",
