@@ -1,6 +1,6 @@
 {
   "description": "CR 603.2 / 701.26a: Gideon's Avenger gets a +1/+1 counter whenever a creature an opponent controls becomes tapped",
-  "note": "Alice's Gideon's Lawkeeper tapping itself adds nothing; Bob's Hill Giant tapped by it adds one, and Bob's Bears tapping to attack adds another.",
+  "note": "Alice's Gideon's Lawkeeper tapping itself and her Grizzly Bears tapping to attack add nothing; Bob's Hill Giant tapped by the Lawkeeper adds one, and Bob's Bears tapping to attack adds another.",
   "board": {
     "active": "alice",
     "step": "PrecombatMain",
@@ -16,6 +16,11 @@
           {
             "card": "Gideon's Lawkeeper",
             "label": "lawkeeper",
+            "ready": true
+          },
+          {
+            "card": "Grizzly Bears",
+            "label": "mybears",
             "ready": true
           }
         ],
@@ -107,6 +112,38 @@
           "object": "$avenger",
           "power": 3,
           "toughness": 3
+        }
+      }
+    },
+    {
+      "turn": 1,
+      "step": "DeclareAttackers",
+      "player": "alice",
+      "do": {
+        "Attack": [
+          "$mybears"
+        ]
+      }
+    },
+    {
+      "turn": 1,
+      "step": "DeclareBlockers",
+      "player": "bob",
+      "do": {
+        "Block": {}
+      }
+    },
+    {
+      "turn": 1,
+      "step": "EndOfCombat",
+      "player": "alice",
+      "check": {
+        "Counters": {
+          "object": "$avenger",
+          "kind": {
+            "type": "PlusOnePlusOne"
+          },
+          "count": 1
         }
       }
     },
