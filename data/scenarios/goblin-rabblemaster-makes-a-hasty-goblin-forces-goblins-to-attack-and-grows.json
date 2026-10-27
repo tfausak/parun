@@ -1,12 +1,12 @@
 {
   "description": "CR 508.1d / 603.2: Goblin Rabblemaster makes a 1/1 haste Goblin at the beginning of combat on its controller's turn, makes other Goblins attack, and gets +1/+0 for each other attacking Goblin",
-  "note": "Attacking with the Rabblemaster alone is refused while Goblin Piker and the new token can attack; with both beside it, it is 4/2. Grizzly Bears, not a Goblin, may stay home.",
+  "note": "Attacking with the Rabblemaster alone is refused while Goblin Piker and the new token can attack; with both and the Grizzly Bears beside it, it is 4/2, the Bears not being a Goblin.",
   "board": {"active": "alice", "step": "PrecombatMain", "seats": [{"name": "alice", "battlefield": [{"card": "Goblin Rabblemaster", "label": "rabble", "ready": true}, {"card": "Goblin Piker", "label": "piker", "ready": true}, {"card": "Grizzly Bears", "label": "bears", "ready": true}], "library": [{"card": "Island"}, {"card": "Island"}, {"card": "Island"}, {"card": "Island"}, {"card": "Island"}, {"card": "Island"}]}, {"name": "bob", "library": [{"card": "Island"}, {"card": "Island"}, {"card": "Island"}, {"card": "Island"}, {"card": "Island"}, {"card": "Island"}]}]},
   "timeline": [
     {"turn": 1, "step": "BeginningOfCombat", "player": "alice", "do": "Pass"},
     {"turn": 1, "step": "BeginningOfCombat", "player": "alice", "check": {"Count": {"player": "alice", "zone": "Battlefield", "card": "Goblin Token", "count": 1}}},
     {"turn": 1, "step": "DeclareAttackers", "player": "alice", "refuse": {"Attack": ["$rabble"]}},
-    {"turn": 1, "step": "DeclareAttackers", "player": "alice", "do": {"Attack": ["$rabble", "$piker", "Goblin Token"]}},
+    {"turn": 1, "step": "DeclareAttackers", "player": "alice", "do": {"Attack": ["$rabble", "$piker", "Goblin Token", "$bears"]}},
     {"turn": 1, "step": "DeclareAttackers", "player": "alice", "do": "Pass"},
     {"turn": 1, "step": "DeclareAttackers", "player": "alice", "check": {"PowerToughness": {"object": "$rabble", "power": 4, "toughness": 2}}},
     {"turn": 1, "step": "DeclareAttackers", "player": "alice", "check": {"PowerToughness": {"object": "$piker", "power": 2, "toughness": 1}}}

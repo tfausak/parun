@@ -1,13 +1,16 @@
 {
   "description": "CR 506.2 / 508.3a: whenever a Sliver its controller controls attacks, Leeching Sliver makes the defending player lose 1 life",
-  "note": "Leeching Sliver and Constricting Sliver attack beside Grizzly Bears: two triggers, two life, none for the Bears, and alice gains nothing.",
+  "note": "Leeching Sliver attacking beside Grizzly Bears costs bob 1 life and gains alice none; two turns later, with Constricting Sliver too, it costs him 2, after 3 combat damage on turn 1. The Bears never trigger it.",
   "board": {"active": "alice", "step": "PrecombatMain", "seats": [{"name": "alice", "battlefield": [{"card": "Leeching Sliver", "label": "leech", "ready": true}, {"card": "Constricting Sliver", "label": "constrictor", "ready": true}, {"card": "Grizzly Bears", "label": "bears", "ready": true}], "library": [{"card": "Island"}, {"card": "Island"}, {"card": "Island"}, {"card": "Island"}, {"card": "Island"}, {"card": "Island"}]}, {"name": "bob", "library": [{"card": "Island"}, {"card": "Island"}, {"card": "Island"}, {"card": "Island"}, {"card": "Island"}, {"card": "Island"}]}]},
   "timeline": [
-    {"turn": 1, "step": "DeclareAttackers", "player": "alice", "do": {"Attack": ["$leech", "$constrictor", "$bears"]}},
-    {"turn": 1, "step": "DeclareAttackers", "player": "alice", "do": {"OrderTriggers": ["$leech", "$leech"]}},
+    {"turn": 1, "step": "DeclareAttackers", "player": "alice", "do": {"Attack": ["$leech", "$bears"]}},
     {"turn": 1, "step": "DeclareAttackers", "player": "alice", "do": "Pass"},
-    {"turn": 1, "step": "DeclareAttackers", "player": "alice", "do": "Pass"},
-    {"turn": 1, "step": "DeclareAttackers", "player": "alice", "check": {"Life": {"player": "bob", "life": 18}}},
-    {"turn": 1, "step": "DeclareAttackers", "player": "alice", "check": {"Life": {"player": "alice", "life": 20}}}
+    {"turn": 1, "step": "DeclareAttackers", "player": "alice", "check": {"Life": {"player": "bob", "life": 19}}},
+    {"turn": 1, "step": "DeclareAttackers", "player": "alice", "check": {"Life": {"player": "alice", "life": 20}}},
+    {"turn": 3, "step": "DeclareAttackers", "player": "alice", "do": {"Attack": ["$leech", "$constrictor", "$bears"]}},
+    {"turn": 3, "step": "DeclareAttackers", "player": "alice", "do": {"OrderTriggers": ["$leech", "$leech"]}},
+    {"turn": 3, "step": "DeclareAttackers", "player": "alice", "do": "Pass"},
+    {"turn": 3, "step": "DeclareAttackers", "player": "alice", "do": "Pass"},
+    {"turn": 3, "step": "DeclareAttackers", "player": "alice", "check": {"Life": {"player": "bob", "life": 14}}}
   ]
 }
