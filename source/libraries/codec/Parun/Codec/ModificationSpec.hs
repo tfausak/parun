@@ -155,8 +155,8 @@ spec s = Spec.describe s "Parun.Codec.Modification" $ do
       codec
       (Modification.LandSubtype ChangeMode.Replace Subtype.Mountain)
       " {\"type\":\"LandSubtype\",\"value\":{\"mode\":{\"type\":\"Replace\"},\"subtype\":{\"type\":\"Mountain\"}}} "
-  -- Nullary: the subtype is read from the effect's source at projection time,
-  -- so there is nothing on the wire.
+  -- The mode and family only: the subtype is read from the effect's source at
+  -- projection time, so it is not on the wire.
   Spec.it s "ChosenSubtype" $
     Common.assertCodec
       s

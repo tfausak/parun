@@ -2168,6 +2168,10 @@ eventBindingSlotsSometimes cond = case cond of
   -- in data/cards/ names either under it.
   TriggerCondition.PlayerIsDealtDamage watched
     | PlayerIsDealtDamage.orTheirPlaneswalkers watched -> Set.fromList [Binding.became, Binding.triggerPlayer]
+  -- The damaged player, bound for damage to them and not to a planeswalker.
+  -- Hunter's Insight admits both and reads neither.
+  TriggerCondition.PermanentDealsCombatDamageToPlayer p
+    | PermanentDealsCombatDamageToPlayer.orTheirPlaneswalkers p -> Set.singleton Binding.triggerPlayer
   -- Binding.handArrival, bound when the move a destination-free condition
   -- matched reached a hand. Nothing in data/cards/ names it under one.
   TriggerCondition.CardLeavesZone p
