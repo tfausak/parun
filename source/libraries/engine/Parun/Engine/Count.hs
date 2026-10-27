@@ -210,31 +210,17 @@ evaluate viewOf quantityOf context gs count =
 -- player's library, so the spell returns in both; under Library of Leng it goes
 -- to the top of that library unrevealed, and the spell does not.
 --
--- A departed token that went to a public zone and then ceased to exist there
--- (CR 111.7) is findable too, CR 608.2h answering from its last known
--- information: Soulblast's sacrificed token still counts towards "the total
--- power of the sacrificed creatures", data/scenarios'
--- soulblast-sacrifices-every-creature-and-deals-their-total-power the proof.
 findableAfterMove :: GameState -> ObjectId -> Bool
 findableAfterMove gs oid = case Game.lookupObject oid gs of
   -- The id is the one that DEPARTED, which is the shape a slot bound before the
   -- move has -- Hour of Glory's "if that creature was a God", read off the
-  -- target slot after the first clause exiled it, where Psychic Miasma's slot
-  -- was bound by the move itself and so holds the arrival. CR 400.7j is the same
-  -- gate either way, asked of where the object LANDED; what the caller then
-  -- reads is CR 608.2h's last known information, since the departed id has no
-  -- object left to read.
-  --
-  -- A departure into a hidden zone is refused here, which is narrower than CR
-  -- 608.2h alone would be: that rule answers with last known information
-  -- wherever the object went, while CR 400.7j grants the find only into a public
-  -- one. The arrival arm below takes the same posture, and the one printing in
-  -- the pool reading a slot whose object this resolution put into a hand, Ad
-  -- Nauseam, reveals it first (CR 701.20a).
-  --
-  -- A token that has ceased since it landed leaves no arrival to ask, so the
-  -- zone the move named answers instead.
-  Nothing -> any (arrivedFindable gs) (Game.arrivalsOf oid gs) || ceasedInPublic gs oid
+  -- target slot after the first clause exiled it, and Soulblast's and
+  -- Shadowgrange Archfiend's sacrificed creatures. Nothing is FOUND here, so CR
+  -- 400.7j has no say: the caller reads the departed object's last known
+  -- information, which CR 608.2h gives wherever it went, a hidden zone included.
+  -- data/scenarios' Gravebane Zombie cases, which a CR 614 replacement puts on
+  -- top of its owner's library, are the proof.
+  Nothing -> True
   Just _ -> arrivedFindable gs oid
 
 -- CR 701.9a: did a discard put this incarnation where it is? Event.discard
@@ -268,21 +254,8 @@ countsWithoutCharacteristics aggregation predicate =
         Aggregation.Members -> identityOnly predicate
         _ -> False
 
--- CR 111.7: did this departed object move into a public zone and every
--- incarnation it arrived as cease to exist there?
-ceasedInPublic :: GameState -> ObjectId -> Bool
-ceasedInPublic gs oid =
-  let ceased event = case event of
-        GameEvent.Moved m ->
-          ZoneChange.departed (Moved.change m) == oid
-            && not (Game.isHiddenZone (ZoneChange.to (Moved.change m)))
-            && all (Maybe.isNothing . (`Game.lookupObject` gs)) (Moved.arrivals m)
-        _ -> False
-   in any (ceased . LoggedEvent.event) (GameState.events gs)
-
--- The arm above's public-zone question about an id that IS live, asked directly
--- of a binding that holds the arrival and through Game.arrivalsOf of one that holds
--- the departure, so the two roads cannot answer differently.
+-- The arm above's public-zone question about an id that IS live: a binding that
+-- holds the arrival.
 arrivedFindable :: GameState -> ObjectId -> Bool
 arrivedFindable gs oid = case Game.lookupObject oid gs of
   Nothing -> False

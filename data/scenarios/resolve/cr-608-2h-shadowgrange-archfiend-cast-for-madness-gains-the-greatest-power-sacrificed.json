@@ -1,6 +1,6 @@
 {
   "description": "CR 608.2h / 702.35a Shadowgrange Archfiend, cast for its madness cost, gains the greatest power among the creatures its edict sacrificed",
-  "note": "alice discards the Archfiend to Cathartic Reunion and casts it from exile for {2}{B} and 8 life (CR 702.35a), going from 20 to 12. As it enters, bob sacrifices his Hill Giant (3) over his Grizzly Bears and carol her Craw Wurm (6); both are gone when the gain is read, so CR 608.2h answers off their last known information and alice gains 6, ending at 18. Read live she would gain nothing (12); a sum would be 21, the least 15.",
+  "note": "alice discards the Archfiend to Cathartic Reunion and casts it from exile for {2}{B} and 8 life (CR 702.35a), going from 20 to 12. As it enters, bob sacrifices his Craw Wurm (6) over his Grizzly Bears, then carol her Hill Giant (3), so the greatest is the first member bound and not the last. Both are gone when the gain is read, so CR 608.2h answers off their last known information and alice gains 6, ending at 18. Read live she would gain nothing (12); a sum would be 21, the least or the last member 15.",
   "board": {
     "active": "alice",
     "step": "PrecombatMain",
@@ -8,55 +8,265 @@
       {
         "name": "alice",
         "battlefield": [
-          { "card": "Mountain", "label": "m0", "ready": true },
-          { "card": "Mountain", "label": "m1", "ready": true },
-          { "card": "Swamp", "label": "s0", "ready": true },
-          { "card": "Swamp", "label": "s1", "ready": true },
-          { "card": "Swamp", "label": "s2", "ready": true }
+          {
+            "card": "Mountain",
+            "label": "m0",
+            "ready": true
+          },
+          {
+            "card": "Mountain",
+            "label": "m1",
+            "ready": true
+          },
+          {
+            "card": "Swamp",
+            "label": "s0",
+            "ready": true
+          },
+          {
+            "card": "Swamp",
+            "label": "s1",
+            "ready": true
+          },
+          {
+            "card": "Swamp",
+            "label": "s2",
+            "ready": true
+          }
         ],
         "hand": [
-          { "card": "Shadowgrange Archfiend", "label": "archfiend" },
-          { "card": "Mountain", "label": "hm" },
-          { "card": "Cathartic Reunion", "label": "reunion" }
+          {
+            "card": "Shadowgrange Archfiend",
+            "label": "archfiend"
+          },
+          {
+            "card": "Mountain",
+            "label": "hm"
+          },
+          {
+            "card": "Cathartic Reunion",
+            "label": "reunion"
+          }
         ],
         "library": [
-          { "card": "Island" },
-          { "card": "Island" },
-          { "card": "Island" },
-          { "card": "Island" }
+          {
+            "card": "Island"
+          },
+          {
+            "card": "Island"
+          },
+          {
+            "card": "Island"
+          },
+          {
+            "card": "Island"
+          }
         ]
       },
       {
         "name": "bob",
         "battlefield": [
-          { "card": "Grizzly Bears", "label": "bears" },
-          { "card": "Hill Giant", "label": "giant" }
+          {
+            "card": "Grizzly Bears",
+            "label": "bears"
+          },
+          {
+            "card": "Craw Wurm",
+            "label": "wurm"
+          }
         ]
       },
       {
         "name": "carol",
-        "battlefield": [{ "card": "Craw Wurm", "label": "wurm" }]
+        "battlefield": [
+          {
+            "card": "Hill Giant",
+            "label": "giant"
+          }
+        ]
       }
     ]
   },
   "timeline": [
-    { "turn": 1, "step": "PrecombatMain", "player": "alice", "do": { "Cast": { "object": "$reunion", "mana": ["$m0", "$m1", null] } } },
-    { "turn": 1, "step": "PrecombatMain", "player": "alice", "check": { "View": { "of": "Zone", "player": "alice", "zone": "Exile", "is": ["Shadowgrange Archfiend"] } } },
-    { "turn": 1, "step": "PrecombatMain", "player": "alice", "do": "Pass" },
-    { "turn": 1, "step": "PrecombatMain", "player": "alice", "do": { "Answer": { "prompt": "OfferedCast", "with": { "type": "Exercises" } } } },
-    { "turn": 1, "step": "PrecombatMain", "player": "alice", "do": { "Answer": { "prompt": "ChooseManaSource", "with": "$s0" } } },
-    { "turn": 1, "step": "PrecombatMain", "player": "alice", "do": { "Answer": { "prompt": "ChooseManaSource", "with": "$s1" } } },
-    { "turn": 1, "step": "PrecombatMain", "player": "alice", "do": { "Answer": { "prompt": "ChooseManaSource", "with": "$s2" } } },
-    { "turn": 1, "step": "PrecombatMain", "player": "alice", "check": { "Life": { "player": "alice", "life": 12 } } },
-    { "turn": 1, "step": "PrecombatMain", "player": "alice", "do": "Pass" },
-    { "turn": 1, "step": "PrecombatMain", "player": "alice", "check": { "View": { "of": "Stack", "is": ["trigger of Shadowgrange Archfiend", "Cathartic Reunion"] } } },
-    { "turn": 1, "step": "PrecombatMain", "player": "alice", "do": "Pass" },
-    { "turn": 1, "step": "PrecombatMain", "player": "alice", "check": { "Life": { "player": "alice", "life": 18 } } },
-    { "turn": 1, "step": "PrecombatMain", "player": "alice", "check": { "View": { "of": "Zone", "player": "bob", "zone": "Graveyard", "is": ["Hill Giant"] } } },
-    { "turn": 1, "step": "PrecombatMain", "player": "alice", "check": { "View": { "of": "Zone", "player": "carol", "zone": "Graveyard", "is": ["Craw Wurm"] } } }
+    {
+      "turn": 1,
+      "step": "PrecombatMain",
+      "player": "alice",
+      "do": {
+        "Cast": {
+          "object": "$reunion",
+          "mana": [
+            "$m0",
+            "$m1",
+            null
+          ]
+        }
+      }
+    },
+    {
+      "turn": 1,
+      "step": "PrecombatMain",
+      "player": "alice",
+      "check": {
+        "View": {
+          "of": "Zone",
+          "player": "alice",
+          "zone": "Exile",
+          "is": [
+            "Shadowgrange Archfiend"
+          ]
+        }
+      }
+    },
+    {
+      "turn": 1,
+      "step": "PrecombatMain",
+      "player": "alice",
+      "do": "Pass"
+    },
+    {
+      "turn": 1,
+      "step": "PrecombatMain",
+      "player": "alice",
+      "do": {
+        "Answer": {
+          "prompt": "OfferedCast",
+          "with": {
+            "type": "Exercises"
+          }
+        }
+      }
+    },
+    {
+      "turn": 1,
+      "step": "PrecombatMain",
+      "player": "alice",
+      "do": {
+        "Answer": {
+          "prompt": "ChooseManaSource",
+          "with": "$s0"
+        }
+      }
+    },
+    {
+      "turn": 1,
+      "step": "PrecombatMain",
+      "player": "alice",
+      "do": {
+        "Answer": {
+          "prompt": "ChooseManaSource",
+          "with": "$s1"
+        }
+      }
+    },
+    {
+      "turn": 1,
+      "step": "PrecombatMain",
+      "player": "alice",
+      "do": {
+        "Answer": {
+          "prompt": "ChooseManaSource",
+          "with": "$s2"
+        }
+      }
+    },
+    {
+      "turn": 1,
+      "step": "PrecombatMain",
+      "player": "alice",
+      "check": {
+        "Life": {
+          "player": "alice",
+          "life": 12
+        }
+      }
+    },
+    {
+      "turn": 1,
+      "step": "PrecombatMain",
+      "player": "alice",
+      "do": "Pass"
+    },
+    {
+      "turn": 1,
+      "step": "PrecombatMain",
+      "player": "alice",
+      "check": {
+        "View": {
+          "of": "Stack",
+          "is": [
+            "trigger of Shadowgrange Archfiend",
+            "Cathartic Reunion"
+          ]
+        }
+      }
+    },
+    {
+      "turn": 1,
+      "step": "PrecombatMain",
+      "player": "alice",
+      "do": "Pass"
+    },
+    {
+      "turn": 1,
+      "step": "PrecombatMain",
+      "player": "alice",
+      "check": {
+        "Life": {
+          "player": "alice",
+          "life": 18
+        }
+      }
+    },
+    {
+      "turn": 1,
+      "step": "PrecombatMain",
+      "player": "alice",
+      "check": {
+        "View": {
+          "of": "Zone",
+          "player": "bob",
+          "zone": "Graveyard",
+          "is": [
+            "Craw Wurm"
+          ]
+        }
+      }
+    },
+    {
+      "turn": 1,
+      "step": "PrecombatMain",
+      "player": "alice",
+      "check": {
+        "View": {
+          "of": "Zone",
+          "player": "carol",
+          "zone": "Graveyard",
+          "is": [
+            "Hill Giant"
+          ]
+        }
+      }
+    }
   ],
   "final": [
-    { "View": { "of": "Zone", "player": "bob", "zone": "Battlefield", "is": ["$bears"] } },
-    { "Count": { "player": "alice", "zone": "Battlefield", "card": "Shadowgrange Archfiend", "count": 1 } }
+    {
+      "View": {
+        "of": "Zone",
+        "player": "bob",
+        "zone": "Battlefield",
+        "is": [
+          "$bears"
+        ]
+      }
+    },
+    {
+      "Count": {
+        "player": "alice",
+        "zone": "Battlefield",
+        "card": "Shadowgrange Archfiend",
+        "count": 1
+      }
+    }
   ]
 }

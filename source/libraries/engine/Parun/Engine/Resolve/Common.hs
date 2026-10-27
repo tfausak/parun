@@ -2045,11 +2045,7 @@ chooseCardFromAmong resolving source controller legal chosen (ChosenCardFromAmon
   let viewOf = effectViewOf resolving source legal gs
       context = effectContext gs resolving controller source legal (slotBindings resolving gs)
       amount = maybe 0 Integer.toNaturalSaturating . Quantity.evaluateFor viewOf context gs resolving source
-      -- CR 400.7: a member that has left is a new object, so it is no card
-      -- "from among them" to choose, though CR 608.2h still answers a read of it
-      -- (effectViewOf). A REGRESSION FENCE: nothing in the suite chooses from a
-      -- group after one of its members has left.
-      matching = matchingFromAmong legal resolving controller source gs filter_ (filter (\oid -> Maybe.isJust (Game.lookupObject oid gs)) members)
+      matching = matchingFromAmong legal resolving controller source gs filter_ (stillPresent gs members)
       pick purpose =
         pickByChooser
           resolving
@@ -3335,7 +3331,7 @@ effectIsImpossible resolving source controller legal gs effect = case effect of
              in not (null scoped) && all (\pid -> null (graveyardCardsOf context gs pid filter_)) scoped
           Chooser.BoundInSlot _ -> False
       ObjectRef.ChosenCardFromAmong (ChosenCardFromAmong.MkChosenCardFromAmong slot filter_ count _ _) ->
-        mustPick count && maybe False (null . matchingFromAmong legal resolving controller source gs filter_) (fromAmongBound slot)
+        mustPick count && maybe False (null . matchingFromAmong legal resolving controller source gs filter_ . stillPresent gs) (fromAmongBound slot)
       ObjectRef.ChosenPermanents choice -> mustPick (ChosenPermanents.count choice) && null (chosenCandidates legal resolving controller source gs choice)
       -- Only when no member names anything: a read always might.
       ObjectRef.AllOf refs -> all choosesFromNothing refs
@@ -3356,6 +3352,18 @@ effectIsImpossible resolving source controller legal gs effect = case effect of
       Nothing
         | Map.member slot legal -> Just (Maybe.mapMaybe Recipient.objectOf (legalMany slot legal))
         | otherwise -> fmap (: []) (slotOne slot resolving gs)
+
+-- CR 400.7: the members of a group that are still in the game. One that has
+-- left is a new object, so it is no card "from among them" to choose, though CR
+-- 608.2h still answers a read of it (effectViewOf). Shared by the choice and
+-- effectIsImpossible's check of it, so a "may" (CR 608.2d) and the choice cannot
+-- disagree. Telling Time's second pick, made after the first moved a card to
+-- hand, is the case: the scenario "telling-time-over-two-cards-offers-no-second-
+-- choice" proves the choice. The check's use is a REGRESSION FENCE: no card in
+-- data/cards/ (2026-10-27) has a "may" clause choosing an exact number from a
+-- group an earlier clause of its mode acted on.
+stillPresent :: GameState -> [ObjectId] -> [ObjectId]
+stillPresent gs = filter (\oid -> Maybe.isJust (Game.lookupObject oid gs))
 
 -- Whether an exchange of zones (CR 701.12d) can take this object: it is still
 -- in the game (CR 400.7) and not phased out, which CR 702.26b treats as though
