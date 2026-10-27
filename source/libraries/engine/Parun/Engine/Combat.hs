@@ -10,6 +10,7 @@ import qualified Data.List.NonEmpty as NonEmpty
 import Data.Map.Strict (Map)
 import qualified Data.Map.Strict as Map
 import qualified Data.Maybe as Maybe
+import qualified Data.Sequence as Seq
 import Data.Set (Set)
 import qualified Data.Set as Set
 import Numeric.Natural (Natural)
@@ -29,6 +30,7 @@ import qualified Parun.Engine.Event as Event
 import qualified Parun.Engine.Filter as Filter
 import qualified Parun.Engine.Game as Game
 import qualified Parun.Engine.Keyword as Keyword.Engine
+import qualified Parun.Engine.PlayerEffect as PlayerEffect
 import qualified Parun.Engine.Projection as Projection
 import qualified Parun.Engine.Projection.View as Projection
 import qualified Parun.Engine.Requirement as Requirement
@@ -51,6 +53,7 @@ import qualified Parun.Types.CardType as CardType
 import qualified Parun.Types.Color as Color
 import Parun.Types.Combat (Combat)
 import qualified Parun.Types.Combat as Combat
+import qualified Parun.Types.CombatDeclaration as CombatDeclaration
 import Parun.Types.Cost (Cost)
 import Parun.Types.Game (Game)
 import qualified Parun.Types.GameEvent as GameEvent
@@ -62,6 +65,8 @@ import qualified Parun.Types.ManaAbilityPerformer as ManaAbilityPerformer
 import qualified Parun.Types.Object as Object
 import Parun.Types.ObjectId (ObjectId)
 import qualified Parun.Types.OptionalDecision as OptionalDecision
+import qualified Parun.Types.PayOffer as PayOffer
+import qualified Parun.Types.PaymentDecision as PaymentDecision
 import qualified Parun.Types.PermanentActed as PermanentActed
 import qualified Parun.Types.PermanentAction as PermanentAction
 import Parun.Types.PlayerId (PlayerId)
@@ -2167,7 +2172,12 @@ attemptAttackDeclaration perform pid rejected = do
   -- is judged against. Empty is a combat with no defending player, which
   -- declareAttackers has already excluded on the engine's path.
   Monad.unless (null candidates) . Monad.forM_ (NonEmpty.nonEmpty (declarableTargets gs)) $ \targets -> do
-    let decider = Decide.deciderFor pid gs
+    -- CR 613.11: an effect can hand CR 508.1a's choice to another player
+    -- (Master Warcraft); CR 508.1b's announcements below stay `pid`'s, the
+    -- 2008-04-01 ruling's "the active player chooses who or what it's going to
+    -- attack".
+    let chooser = PlayerEffect.declarationChooser CombatDeclaration.Attackers pid gs
+        decider = Decide.deciderFor chooser gs
     chosen <- Game.choose (Prompt.DeclareAttackers decider pid candidates)
     -- Filtered, not trusted: an interpreter cannot attack with a creature
     -- that is not legally an attacker.
@@ -2404,11 +2414,12 @@ attemptAttackDeclaration perform pid rejected = do
         -- `before` rather than spending half of it. Skipped outright when nothing
         -- is owed.
         --
-        -- NO "will you pay?" prompt, and that is a rules reading rather than an
-        -- elision: CR 508.1j is unconditional once the creatures are chosen, and CR
-        -- 508.1d's excuse from paying is exercised one step earlier, by NOT
-        -- DECLARING the creature.
-        paid <- payTolls perform before owed
+        -- NO "will you pay?" prompt for the player who chose, and that is a rules
+        -- reading rather than an elision: CR 508.1j is unconditional once the
+        -- creatures are chosen, and CR 508.1d's excuse from paying is exercised
+        -- one step earlier, by NOT DECLARING the creature. A payer who did not
+        -- choose is asked (payTolls).
+        paid <- payTolls perform (handedTo chooser pid) before owed
         if not paid
           then do
             -- CR 508.1's preamble: the declaration is illegal and CR 733.1
@@ -2510,14 +2521,33 @@ attemptAttackDeclaration perform pid rejected = do
 -- along to it. Each player pays for the creatures they control, which only a
 -- shared team's declaration can split (CR 805.10b / 805.10d). A player owing
 -- nothing is not asked.
-payTolls :: ManaAbilityPerformer.ManaAbilityPerformer -> GameState -> [(PlayerId, [(ObjectId, Cost Keyword.Keyword)])] -> Game Bool
-payTolls perform before = go []
+--
+-- `handed` is the player another's declaration was handed to (Master
+-- Warcraft, Odric, Master Tactician). Each payer other than them is first asked
+-- whether they pay each charge, and a refusal reverses the declaration like an
+-- unpayable toll: the Odric ruling "its controller can choose to pay that cost
+-- or not", the chooser then proposing again. Asked before anyone pays, so a
+-- refusal undoes no payment.
+payTolls :: ManaAbilityPerformer.ManaAbilityPerformer -> Maybe PlayerId -> GameState -> [(PlayerId, [(ObjectId, Cost Keyword.Keyword)])] -> Game Bool
+payTolls perform handed before charged = do
+  agreed <- consents [(payer, charge) | Just chooser <- [handed], (payer, charges) <- charged, payer /= chooser, charge <- charges]
+  if agreed then go [] charged else False <$ Cost.restoreKeepingLibraryActions before
   where
+    consents asks = case asks of
+      [] -> pure True
+      (payer, (source, cost)) : rest -> do
+        gs <- State.get
+        answer <- Game.choose (Prompt.ChooseToPay (Decide.deciderFor payer gs) payer source PayOffer.CombatToll cost Seq.empty)
+        if answer == PaymentDecision.Pays then consents rest else pure False
     go earlier owed = case owed of
       [] -> pure True
       (payer, charges) : rest
         | null charges -> go earlier rest
         | otherwise -> Cost.payToll perform before earlier payer charges >>= maybe (pure False) (`go` rest)
+
+-- The player a declaration was handed to, when it is not the declarer's own.
+handedTo :: PlayerId -> PlayerId -> Maybe PlayerId
+handedTo chooser pid = if chooser == pid then Nothing else Just chooser
 
 -- What an effect leaves open about CR 508.4's choice, which is a question about
 -- the EFFECT rather than about the board, so it is settled by
@@ -2912,7 +2942,10 @@ attemptBlockDeclaration perform pid attacking rejected = do
       -- controlling it, which blockScopeGiven made one of `pid`'s side.
       blockerOf oid = Maybe.fromMaybe pid (Projection.controllerOf oid gs)
   Monad.unless (null candidates) $ do
-    let decider = Decide.deciderFor pid gs
+    -- CR 613.11: an effect can hand CR 509.1a's choice to another player
+    -- (Odric, Master Tactician), legality and payment staying `pid`'s.
+    let chooser = PlayerEffect.declarationChooser CombatDeclaration.Blockers pid gs
+        decider = Decide.deciderFor chooser gs
     chosen <- Game.choose (Prompt.DeclareBlockers decider pid candidates attacking)
     -- CR 509.1b: an illegal declaration is illegal AS A WHOLE. NOT filtered
     -- down to its legal entries, which is unsound rather than merely inelegant
@@ -2959,10 +2992,11 @@ attemptBlockDeclaration perform pid attacking rejected = do
         -- `before` rather than spending half of it. Skipped outright when
         -- nothing is owed, which is every board with no cost to block on it.
         --
-        -- NO "will you pay?" prompt, declareAttackers' reading of the same pair of
-        -- sentences: CR 509.1f is unconditional once the creatures are chosen, and
-        -- CR 509.1c's excuse from paying is exercised one step earlier, at the
-        -- Prompt.DeclareBlockers above, by NOT DECLARING the creature.
+        -- NO "will you pay?" prompt for the player who chose, declareAttackers'
+        -- reading of the same pair of sentences: CR 509.1f is unconditional once
+        -- the creatures are chosen, and CR 509.1c's excuse from paying is
+        -- exercised one step earlier, at the Prompt.DeclareBlockers above, by NOT
+        -- DECLARING the creature. A payer who did not choose is asked (payTolls).
         --
         -- BEFORE the blocks are recorded, which is the rules' own order and the
         -- reverse of declareAttackers': CR 508.1f taps the chosen creatures before
@@ -2970,7 +3004,7 @@ attemptBlockDeclaration perform pid attacking rejected = do
         -- blocking only after CR 509.1f's payment. Combat.declaredBlockers above
         -- is the one thing written earlier, and CR 509.1a rather than CR 509.1g is
         -- why it may be.
-        paid <- payTolls perform before owed
+        paid <- payTolls perform (handedTo chooser pid) before owed
         -- CR 509.1's preamble: a declaration the defending player cannot pay for
         -- is illegal and CR 733.1 reverses it, which Cost.payToll has done back
         -- to `before`, less what CR 733.1 keeps. The blocks themselves are recorded below, so the only

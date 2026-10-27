@@ -1,0 +1,31 @@
+{
+  "description": "CR 509.1a Odric, Master Tactician attacking with only two other creatures does not trigger, so the defending player declares blockers",
+  "note": "The control for the three-other-attackers board: one Grizzly Bears fewer attacks, so the DeclareBlockers prompt is bob's, keyed by him.",
+  "board": {
+    "active": "alice",
+    "step": "BeginningOfCombat",
+    "seats": [
+      {
+        "name": "alice",
+        "battlefield": [
+          {"card": "Odric, Master Tactician", "label": "odric", "ready": true},
+          {"card": "Grizzly Bears", "label": "b1", "ready": true},
+          {"card": "Grizzly Bears", "label": "b2", "ready": true},
+          {"card": "Grizzly Bears", "label": "b3", "ready": true}
+        ]
+      },
+      {
+        "name": "bob",
+        "battlefield": [
+          {"card": "Grizzly Bears", "label": "bears", "ready": true},
+          {"card": "Hill Giant", "label": "giant", "ready": true}
+        ]
+      }
+    ]
+  },
+  "timeline": [
+    {"turn": 1, "step": "DeclareAttackers", "player": "alice", "do": {"Attack": ["$odric", "$b1", "$b2"]}},
+    {"turn": 1, "step": "DeclareBlockers", "player": "bob", "do": {"Block": {"$giant": ["$b1"]}}},
+    {"turn": 1, "step": "DeclareBlockers", "player": "alice", "check": {"Blockers": {"attacker": "$b1", "blockers": ["$giant"]}}}
+  ]
+}

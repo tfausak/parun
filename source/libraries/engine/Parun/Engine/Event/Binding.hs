@@ -558,9 +558,11 @@ eventBindingsOver board gs bearerBecame becameInGraveyard bearer you cond event 
   (TriggerCondition.CreatureAttacksYou, GameEvent.AttackerDeclared (AttackerDeclared.MkAttackerDeclared attacker _ _ _ _)) ->
     Binding.setAttackingCreature attacker Map.empty
   -- The same slot once more: Fervent Charge's "it" and Conjurer's Mantle's "that
-  -- creature" are the attacker, never the bearer.
-  (TriggerCondition.CreatureAttacks _, GameEvent.AttackerDeclared (AttackerDeclared.MkAttackerDeclared attacker _ _ _ _)) ->
-    Binding.setAttackingCreature attacker Map.empty
+  -- creature" are the attacker, never the bearer. CR 508.5's defending player
+  -- rides along under the reserved "that player" slot, the SelfAttacks arm's
+  -- binding, for Brutal Hordechief's "defending player loses 1 life".
+  (TriggerCondition.CreatureAttacks _, GameEvent.AttackerDeclared (AttackerDeclared.MkAttackerDeclared attacker defending _ _ _)) ->
+    Binding.setTriggerPlayer defending (Binding.setAttackingCreature attacker Map.empty)
   -- CR 508.3b's subject, under the same reserved slot every other "that player"
   -- takes: whom the Curse enchants, which matchesTrigger has already required the
   -- event to name. Bound rather than left to the ability's own attachment because
@@ -1603,8 +1605,9 @@ eventBindingSlots cond = case cond of
   -- Unconditional, as this classification has to be: every AttackerDeclared event
   -- carries an ObjectId.
   TriggerCondition.CreatureAttacksYou -> Set.singleton Binding.attackingCreature
-  -- The attacker again, unconditionally for the arm above's reason.
-  TriggerCondition.CreatureAttacks _ -> Set.singleton Binding.attackingCreature
+  -- The attacker again, unconditionally for the arm above's reason, and CR
+  -- 508.5's defending player, which every AttackerDeclared event carries too.
+  TriggerCondition.CreatureAttacks _ -> Set.fromList [Binding.attackingCreature, Binding.triggerPlayer]
   -- The PLAYER instead, where the arm above binds the attacker: rule 508.3b names
   -- a set of creatures rather than one, and Curse of Vitality's payload says
   -- "that player" and nothing about them.
