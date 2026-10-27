@@ -212,6 +212,7 @@ birgi-god-of-storytelling-harnfel-horn-of-bounty
 birthday-escape
 bjorna-nightfall-alchemist
 black-lotus
+black-mana-battery
 black-panther-wakandan-king
 black-ward
 blackmail
@@ -238,6 +239,7 @@ blooming-blast
 blorbian-buddy
 blossoming-calm
 blossoming-tortoise
+blue-mana-battery
 blue-ward
 blurred-mongoose
 bonded-construct
@@ -250,6 +252,7 @@ borborygmos-and-fblthp
 boros-battleshaper
 boseiju-who-shelters-all
 bottle-of-suleiman
+bottomless-vault
 brace-for-impact
 bragos-representative
 bramble-elemental
@@ -589,6 +592,7 @@ duskwielder
 dust-animus
 dutiful-knowledge-seeker
 dwarven-catapult
+dwarven-hold
 dwarven-mauler
 dwell-on-the-past
 eager-construct
@@ -871,6 +875,7 @@ graxiplon
 great-intelligences-plan
 great-sable-stag
 greater-good
+green-mana-battery
 green-slime
 green-ward
 greenbelt-guardian
@@ -948,6 +953,7 @@ historians-boon
 history-of-benalia
 hive-mind
 hoarding-dragon
+hollow-trees
 hollow-warrior
 holy-day
 hopeful-initiate
@@ -966,6 +972,7 @@ hurr-jackal
 hustle-bustle
 hydra-broodmaster
 hydraulic-helper
+icatian-store
 ice-cage
 ice-cauldron
 ichor-rats
@@ -1585,6 +1592,7 @@ rebuff-the-wicked
 recall
 reciprocate
 red-cliffs-armada
+red-mana-battery
 red-priest-of-yawgmoth
 red-ward
 redeem
@@ -1695,6 +1703,7 @@ sanctimony
 sanctuary-blade
 sanctum-guardian
 sanctum-of-serra
+sand-silos
 sandman-shifting-scoundrel
 sanguine-bond
 sapphire-medallion
@@ -2207,6 +2216,7 @@ whirlpool-drake
 whirlpool-rider
 whirlpool-warrior
 whispering-wizard
+white-mana-battery
 white-tiger-ava-ayala
 white-ward
 wibbly-wobbly-timey-wimey

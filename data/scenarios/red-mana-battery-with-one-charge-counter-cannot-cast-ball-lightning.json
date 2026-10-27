@@ -1,0 +1,8 @@
+{
+  "description": "CR 118.3: Red Mana Battery with one charge counter makes at most {R}{R}, so Ball Lightning is not offered",
+  "note": "The board beside this one, with two counters, casts it.",
+  "board": {"active": "alice", "step": "PrecombatMain", "seats": [{"name": "alice", "battlefield": [{"card": "Red Mana Battery", "label": "battery", "counters": [{"key": {"type": "Named", "value": "charge"}, "value": 1}]}], "library": [{"card": "Island"}, {"card": "Island"}, {"card": "Island"}, {"card": "Island"}], "hand": [{"card": "Ball Lightning", "label": "bolt"}]}, {"name": "bob", "library": [{"card": "Island"}, {"card": "Island"}, {"card": "Island"}, {"card": "Island"}]}]},
+  "timeline": [
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "check": {"View": {"of": "Offered", "player": "alice", "is": ["Pass", "ActivateManaAbility $battery"]}}}
+  ]
+}

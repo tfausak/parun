@@ -1,0 +1,11 @@
+{
+  "description": "CR 502.3 / 603.4: Bottomless Vault left tapped gains a storage counter in its controller's upkeep, and untapped it gains none",
+  "note": "Alice keeps it tapped on turn 1 and it goes to two counters; she untaps it on turn 3 and the intervening if stops the trigger.",
+  "board": {"active": "alice", "step": "Untap", "seats": [{"name": "alice", "battlefield": [{"card": "Bottomless Vault", "label": "vault", "tapped": true, "counters": [{"key": {"type": "Named", "value": "storage"}, "value": 1}]}], "library": [{"card": "Island"}, {"card": "Island"}, {"card": "Island"}, {"card": "Island"}]}, {"name": "bob", "library": [{"card": "Island"}, {"card": "Island"}, {"card": "Island"}, {"card": "Island"}]}]},
+  "timeline": [
+    {"turn": 1, "step": "Untap", "player": "alice", "do": {"Answer": {"prompt": "ChooseAnyNumberToUntap", "with": []}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "check": {"Counters": {"object": "$vault", "kind": {"type": "Named", "value": "storage"}, "count": 2}}},
+    {"turn": 3, "step": "Untap", "player": "alice", "do": {"Answer": {"prompt": "ChooseAnyNumberToUntap", "with": ["$vault"]}}},
+    {"turn": 3, "step": "PrecombatMain", "player": "alice", "check": {"Counters": {"object": "$vault", "kind": {"type": "Named", "value": "storage"}, "count": 2}}}
+  ]
+}
