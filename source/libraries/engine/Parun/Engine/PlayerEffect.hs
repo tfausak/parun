@@ -33,6 +33,7 @@ import qualified Data.Functor.Identity as Functor
 import qualified Data.List as List
 import qualified Data.Map.Strict as Map
 import qualified Data.Maybe as Maybe
+import qualified Data.Ord as Ord
 import qualified Data.Set as Set
 import Numeric.Natural (Natural)
 import qualified Parun.Engine.Binding as Binding
@@ -944,24 +945,24 @@ searchingController :: PlayerId -> GameState -> Maybe (PlayerId, Timestamp)
 searchingController pid gs =
   Maybe.listToMaybe (reverse [(you, Object.timestamp o) | (source, PlayerEffect.ControlledWhileSearching) <- applying pid gs, Just oid <- [RowSource.object source], Just you <- [Projection.controllerOf oid gs], Just o <- [Game.lookupObject oid gs]])
 
--- CR 508.1a / 509.1a / 613.11: who chooses `pid`'s declaration of attackers or
--- blockers -- CR 109.5's "you" of the latest stored row handing it over (Master
--- Warcraft, Odric, Master Tactician), CR 613.11's timestamp order making the
--- last one created the one that applies; `pid` where none does.
+-- CR 508.1a / 509.1a / 613.11: the stored row handing `pid`'s declaration of
+-- attackers or blockers to its controller, CR 109.5's "you" (Master Warcraft,
+-- Odric, Master Tactician) -- the latest, CR 613.11's timestamp order making
+-- the last one created the one that applies. Nothing where none does.
+-- Parun.Engine.Combat.declarationChooser asks who that leaves choosing.
 --
 -- Stored rows only, read off the record's controller, which a resolved
 -- instant's dead source cannot answer. Scryfall o:"you choose which creatures"
 -- or o:"you choose how those creatures block", 2026-10-27, finds five cards,
 -- every one a resolving spell or ability; a static ability printing it would
 -- be the card to refute this.
-declarationChooser :: CombatDeclaration.CombatDeclaration -> PlayerId -> GameState -> PlayerId
-declarationChooser declaration pid gs =
+declarationRow :: CombatDeclaration.CombatDeclaration -> PlayerId -> GameState -> Maybe ActivePlayerEffect.ActivePlayerEffect
+declarationRow declaration pid gs =
   let hands active =
         ActivePlayerEffect.effect active == PlayerEffect.YouChoose declaration
           && Expiry.begun gs (ActivePlayerEffect.expiry active)
           && applies pid (ActivePlayerEffect.controller active) gs (ActivePlayerEffect.scope active)
-      latest = List.sortOn ActivePlayerEffect.timestamp (filter hands (GameState.playerEffects gs))
-   in maybe pid ActivePlayerEffect.controller (Maybe.listToMaybe (reverse latest))
+   in Maybe.listToMaybe (List.sortOn (Ord.Down . ActivePlayerEffect.timestamp) (filter hands (GameState.playerEffects gs)))
 
 -- CR 701.23 / Opposition Agent: the objects whose rows have `pid` exile each
 -- card they find while searching their own library, in timestamp order. Each is

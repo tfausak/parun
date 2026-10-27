@@ -31,6 +31,7 @@ import qualified Parun.Engine.Filter as Filter
 import qualified Parun.Engine.Game as Game
 import qualified Parun.Engine.Keyword as Keyword.Engine
 import qualified Parun.Engine.PlayerEffect as PlayerEffect
+import qualified Parun.Engine.Players as Players
 import qualified Parun.Engine.Projection as Projection
 import qualified Parun.Engine.Projection.View as Projection
 import qualified Parun.Engine.Requirement as Requirement
@@ -39,6 +40,7 @@ import qualified Parun.Engine.Summoning as Summoning
 import qualified Parun.Engine.Turn as Turn
 import qualified Parun.Extra.Integer as Integer
 import qualified Parun.Extra.Natural as Natural
+import qualified Parun.Types.ActivePlayerEffect as ActivePlayerEffect
 import qualified Parun.Types.AttackOption as AttackOption
 import qualified Parun.Types.AttackTarget as AttackTarget
 import qualified Parun.Types.AttackTargetKind as AttackTargetKind
@@ -67,9 +69,11 @@ import Parun.Types.ObjectId (ObjectId)
 import qualified Parun.Types.OptionalDecision as OptionalDecision
 import qualified Parun.Types.PayOffer as PayOffer
 import qualified Parun.Types.PaymentDecision as PaymentDecision
+import qualified Parun.Types.PaymentSubject as PaymentSubject
 import qualified Parun.Types.PermanentActed as PermanentActed
 import qualified Parun.Types.PermanentAction as PermanentAction
 import Parun.Types.PlayerId (PlayerId)
+import qualified Parun.Types.PlayerRelation as PlayerRelation
 import qualified Parun.Types.ProjectedCharacteristics as PC
 import qualified Parun.Types.Prompt as Prompt
 import qualified Parun.Types.TapState as TapState
@@ -2090,7 +2094,7 @@ declareAttackers perform pid = do
     -- CR 508.1a-d: who could be declared, recorded as the declaration begins,
     -- before anything it does changes the board.
     State.modify' (\g -> g {GameState.couldAttackThisTurn = Set.union (couldAttack pid g) (GameState.couldAttackThisTurn g)})
-    attemptAttackDeclaration perform pid Set.empty
+    attemptAttackDeclaration perform pid Nothing False Set.empty
 
 -- CR 508.1a / 805.10b: the creatures a declaration by `pid`'s side chooses
 -- from, and CR 508.1c's aimed-at restriction as the set of barred
@@ -2154,8 +2158,13 @@ couldAttack pid gs =
 --
 -- No legal attackers means no prompt: declining is then the only legal answer, CR
 -- 508.1d's instances being minted from the candidate list.
-attemptAttackDeclaration :: ManaAbilityPerformer.ManaAbilityPerformer -> PlayerId -> Set (Map ObjectId AttackTarget.AttackTarget) -> Game ()
-attemptAttackDeclaration perform pid rejected = do
+--
+-- `asked` is who chooses, settled by declarationChooser at the first attempt and
+-- carried through the retries so a rewind does not ask it again. `forced` is the
+-- degradation below standing in for a declaration: forcedAttackDeclaration's,
+-- unprompted.
+attemptAttackDeclaration :: ManaAbilityPerformer.ManaAbilityPerformer -> PlayerId -> Maybe PlayerId -> Bool -> Set (Map ObjectId AttackTarget.AttackTarget) -> Game ()
+attemptAttackDeclaration perform pid asked forced rejected = do
   gs <- State.get
   -- CR 805.10b: the active team has one combined attack, so the candidates are
   -- every attacking player's. `pid` is who declares it, the team's primary
@@ -2172,42 +2181,46 @@ attemptAttackDeclaration perform pid rejected = do
   -- is judged against. Empty is a combat with no defending player, which
   -- declareAttackers has already excluded on the engine's path.
   Monad.unless (null candidates) . Monad.forM_ (NonEmpty.nonEmpty (declarableTargets gs)) $ \targets -> do
+    -- CR 508.1c's set-shaped restrictions and CR 508.1d's maximization,
+    -- taken ONCE for all three questions below, so the ceiling and the check
+    -- beside it cannot judge different boards.
+    let alone = aloneAnnouncements candidates gs
+        limits = CombatRestriction.attackLimit gs
+        bound = attackCeilingGiven limits alone barred candidates gs
     -- CR 613.11: an effect can hand CR 508.1a's choice to another player
     -- (Master Warcraft); CR 508.1b's announcements below stay `pid`'s, the
     -- 2008-04-01 ruling's "the active player chooses who or what it's going to
     -- attack".
-    let chooser = PlayerEffect.declarationChooser CombatDeclaration.Attackers pid gs
-        decider = Decide.deciderFor chooser gs
-    chosen <- Game.choose (Prompt.DeclareAttackers decider pid candidates)
-    -- Filtered, not trusted: an interpreter cannot attack with a creature
-    -- that is not legally an attacker.
-    let isCandidate oid = List.elem oid candidates
-        -- Deduplicated too: CR 508.1a's declaration is a SET, and the event
-        -- fold below would otherwise record a creature's declaration twice and
-        -- make CR 506.5's count disagree with it.
-        offered = ListUtils.nubOrd (filter isCandidate chosen)
-    -- CR 508.1b: the announcement, one question per chosen creature, in the
-    -- rule's own order -- BEFORE CR 508.1c's restrictions and CR 508.1d's
-    -- requirements, which is what a requirement naming its object (Alluring
-    -- Siren) forces: whether a declaration obeys the maximum is a question
-    -- about the announcements, so they have to exist before it can be asked.
-    -- The price is that a creature the CR 508.1d degradation below then drops
-    -- was asked about; only an interpreter that repeats a rewound declaration
-    -- reaches that path.
-    --
-    -- The options are this creature's own, not the whole list: CR 508.1c's
-    -- aimed-at restriction is asked BEFORE the announcement, so a forbidden
-    -- player is never offered. `targets` is the fallback the list cannot need --
-    -- `offered` is filtered to `candidates`, each of which has at least one
-    -- announcement -- and is what keeps this total.
-    announced <- Monad.mapM (\oid -> fmap ((,) oid) (announceAttackTarget pid oid (Maybe.fromMaybe targets (NonEmpty.nonEmpty (announceableFor oid))))) offered
-    let -- CR 508.1c's set-shaped restrictions and CR 508.1d's maximization,
-        -- taken ONCE for all three questions below, so the ceiling and the
-        -- check beside it cannot judge different boards.
-        alone = aloneAnnouncements candidates gs
-        limits = CombatRestriction.attackLimit gs
-        bound = attackCeilingGiven limits alone barred candidates gs
-        -- CR 508.1a-d's declaration, announcements included, as a map -- the
+    chooser <- maybe (declarationChooser CombatDeclaration.Attackers pid) pure asked
+    announced <-
+      if forced
+        then pure (forcedAttackDeclaration bound candidates)
+        else do
+          now <- State.get
+          chosen <- Game.choose (Prompt.DeclareAttackers (Decide.deciderFor chooser now) pid candidates)
+          -- Filtered, not trusted: an interpreter cannot attack with a creature
+          -- that is not legally an attacker.
+          let isCandidate oid = List.elem oid candidates
+              -- Deduplicated too: CR 508.1a's declaration is a SET, and the
+              -- event fold below would otherwise record a creature's
+              -- declaration twice and make CR 506.5's count disagree with it.
+              offered = ListUtils.nubOrd (filter isCandidate chosen)
+          -- CR 508.1b: the announcement, one question per chosen creature, in the
+          -- rule's own order -- BEFORE CR 508.1c's restrictions and CR 508.1d's
+          -- requirements, which is what a requirement naming its object (Alluring
+          -- Siren) forces: whether a declaration obeys the maximum is a question
+          -- about the announcements, so they have to exist before it can be asked.
+          -- The price is that a creature the CR 508.1d degradation below then drops
+          -- was asked about; only an interpreter that repeats a rewound declaration
+          -- reaches that path.
+          --
+          -- The options are this creature's own, not the whole list: CR 508.1c's
+          -- aimed-at restriction is asked BEFORE the announcement, so a forbidden
+          -- player is never offered. `targets` is the fallback the list cannot need --
+          -- `offered` is filtered to `candidates`, each of which has at least one
+          -- announcement -- and is what keeps this total.
+          Monad.mapM (\oid -> fmap ((,) oid) (announceAttackTarget pid oid (Maybe.fromMaybe targets (NonEmpty.nonEmpty (announceableFor oid))))) offered
+    let -- CR 508.1a-d's declaration, announcements included, as a map -- the
         -- key `rejected` is taken on, since it is the declaration the preamble
         -- rewinds rather than the interpreter's raw answer.
         proposal = Map.fromList announced
@@ -2222,7 +2235,7 @@ attemptAttackDeclaration perform pid rejected = do
     -- CombatEffectSpec's "CR 508.1d an illegal declaration is rewound and asked
     -- again, not replaced by the ceiling's" is the proof.
     if not allowed && again
-      then attemptAttackDeclaration perform pid (Set.insert proposal rejected)
+      then attemptAttackDeclaration perform pid (Just chooser) False (Set.insert proposal rejected)
       else do
         -- A declaration already rewound once and offered again degrades to
         -- forcedAttackDeclaration. The whole answer is replaced rather than
@@ -2433,7 +2446,13 @@ attemptAttackDeclaration perform pid rejected = do
             -- declaration is made again: two Pikers under a Ghostly Prison
             -- become one" is the proof; the case beside it is what a repeated
             -- answer does instead.
-            Monad.when again (attemptAttackDeclaration perform pid (Set.insert proposal rejected))
+            --
+            -- A REPEATED declaration that is not paid for, its payer refusing
+            -- again (payTolls), degrades to forcedAttackDeclaration as an
+            -- illegal repeat does, so CR 508.1d's requirements still hold. That
+            -- declaration owes no toll, the ceiling ranging over free
+            -- announcements only, so `forced` cannot come back here.
+            Monad.unless forced (attemptAttackDeclaration perform pid (Just chooser) (not again) (if again then Set.insert proposal rejected else rejected))
           else
             -- CR 508.1k: each chosen creature becomes an attacking creature. After
             -- the payment, which is the rules' own order.
@@ -2530,20 +2549,47 @@ attemptAttackDeclaration perform pid rejected = do
 -- refusal undoes no payment.
 payTolls :: ManaAbilityPerformer.ManaAbilityPerformer -> Maybe PlayerId -> GameState -> [(PlayerId, [(ObjectId, Cost Keyword.Keyword)])] -> Game Bool
 payTolls perform handed before charged = do
-  agreed <- consents [(payer, charge) | Just chooser <- [handed], (payer, charges) <- charged, payer /= chooser, charge <- charges]
+  gs <- State.get
+  -- CR 118.3: only a payer who CAN pay the whole toll is asked; one who can't
+  -- has nothing to decide, and the payment below fails for them.
+  let affords payer charges = case charges of
+        [] -> False
+        (source, first) : rest -> Cost.canPay PaymentSubject.ForNeither payer source (List.foldl' Cost.plus first (fmap snd rest)) gs
+  agreed <- consents [(payer, charge) | Just chooser <- [handed], (payer, charges) <- charged, payer /= chooser, affords payer charges, charge <- charges]
   if agreed then go [] charged else False <$ Cost.restoreKeepingLibraryActions before
   where
     consents asks = case asks of
       [] -> pure True
       (payer, (source, cost)) : rest -> do
-        gs <- State.get
-        answer <- Game.choose (Prompt.ChooseToPay (Decide.deciderFor payer gs) payer source PayOffer.CombatToll cost Seq.empty)
+        now <- State.get
+        answer <- Game.choose (Prompt.ChooseToPay (Decide.deciderFor payer now) payer source PayOffer.CombatToll cost Seq.empty)
         if answer == PaymentDecision.Pays then consents rest else pure False
     go earlier owed = case owed of
       [] -> pure True
       (payer, charges) : rest
         | null charges -> go earlier rest
         | otherwise -> Cost.payToll perform before earlier payer charges >>= maybe (pure False) (`go` rest)
+
+-- CR 508.1a / 509.1a: who makes `pid`'s declaration -- the controller of the
+-- row handing it over (PlayerEffect.declarationRow), else `pid`.
+--
+-- A row whose controller has left the game is CR 800.4g's object requiring a
+-- departed player to choose, and that rule's reassigner is the object's
+-- controller, the same departed player. So CR 800.4h hands THAT choice -- who
+-- makes the declaration -- to the next player in turn order, who names any
+-- player still in the game. Nobody left to ask leaves `pid` choosing.
+declarationChooser :: CombatDeclaration.CombatDeclaration -> PlayerId -> Game PlayerId
+declarationChooser declaration pid = do
+  gs <- State.get
+  case PlayerEffect.declarationRow declaration pid gs of
+    Nothing -> pure pid
+    Just row ->
+      let you = ActivePlayerEffect.controller row
+       in if List.elem you (Game.stillPlaying gs)
+            then pure you
+            else case Game.ruleChooser gs you of
+              Nothing -> pure pid
+              Just next -> Maybe.fromMaybe pid <$> Players.chooseOne next (ActivePlayerEffect.source row) Nothing (Players.offer next gs PlayerRelation.AnyPlayer)
 
 -- The player a declaration was handed to, when it is not the declarer's own.
 handedTo :: PlayerId -> PlayerId -> Maybe PlayerId
@@ -2880,7 +2926,7 @@ declareBlockers perform = do
       -- an attacker on them.
       case concatMap (`attackersOn` start) (sideOf pid start) of
         [] -> pure ()
-        theirs -> attemptBlockDeclaration perform pid theirs Set.empty
+        theirs -> attemptBlockDeclaration perform pid Nothing theirs Set.empty
     -- CR 509.1h's other half, performed once CR 509.1g has assigned the blockers:
     -- every attacking creature the declaration named no blockers for became an
     -- UNBLOCKED creature. TriggerCondition.SelfAttacksUnblocked is the reader.
@@ -2934,8 +2980,10 @@ recordDeclaredBlockers oids g =
 -- step here, so the interpreter's own map IS the declaration -- and bounds the
 -- recursion exactly as it does for attackers: a repeat degrades to
 -- forcedBlockDeclaration rather than being rewound a second time.
-attemptBlockDeclaration :: ManaAbilityPerformer.ManaAbilityPerformer -> PlayerId -> [ObjectId] -> Set (Map ObjectId (Set ObjectId)) -> Game ()
-attemptBlockDeclaration perform pid attacking rejected = do
+--
+-- `asked` is who chooses, attemptAttackDeclaration's.
+attemptBlockDeclaration :: ManaAbilityPerformer.ManaAbilityPerformer -> PlayerId -> Maybe PlayerId -> [ObjectId] -> Set (Map ObjectId (Set ObjectId)) -> Game ()
+attemptBlockDeclaration perform pid asked attacking rejected = do
   gs <- State.get
   let (candidates, _, _, _) = blockScopeGiven (Snapshot.whole gs) pid gs
       -- CR 805.10d: the defending player a blocker is declared by is the one
@@ -2944,9 +2992,9 @@ attemptBlockDeclaration perform pid attacking rejected = do
   Monad.unless (null candidates) $ do
     -- CR 613.11: an effect can hand CR 509.1a's choice to another player
     -- (Odric, Master Tactician), legality and payment staying `pid`'s.
-    let chooser = PlayerEffect.declarationChooser CombatDeclaration.Blockers pid gs
-        decider = Decide.deciderFor chooser gs
-    chosen <- Game.choose (Prompt.DeclareBlockers decider pid candidates attacking)
+    chooser <- maybe (declarationChooser CombatDeclaration.Blockers pid) pure asked
+    now <- State.get
+    chosen <- Game.choose (Prompt.DeclareBlockers (Decide.deciderFor chooser now) pid candidates attacking)
     -- CR 509.1b: an illegal declaration is illegal AS A WHOLE. NOT filtered
     -- down to its legal entries, which is unsound rather than merely inelegant
     -- -- under menace, dropping one blocker from a pair leaves an illegal
@@ -2962,7 +3010,7 @@ attemptBlockDeclaration perform pid attacking rejected = do
     -- CombatEffectSpec's "CR 509.1c an illegal declaration is rewound and asked
     -- again, not replaced by the ceiling's" is the proof.
     if not allowed && again
-      then attemptBlockDeclaration perform pid attacking (Set.insert chosen rejected)
+      then attemptBlockDeclaration perform pid (Just chooser) attacking (Set.insert chosen rejected)
       else do
         -- A declaration already rewound once and offered again degrades to
         -- forcedBlockDeclaration -- always legal, and equal to "no blocks"
@@ -3017,7 +3065,7 @@ attemptBlockDeclaration perform pid attacking rejected = do
         -- case beside it is what a repeated answer does instead.
         gs2 <- State.get
         if not paid && again
-          then attemptBlockDeclaration perform pid attacking (Set.insert chosen rejected)
+          then attemptBlockDeclaration perform pid (Just chooser) attacking (Set.insert chosen rejected)
           else do
             let declaration = if paid then legal else forcedBlockDeclaration pid gs2
             -- The pairs the declaration states, blocker-major, which is the order
