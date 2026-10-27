@@ -143,6 +143,7 @@ import qualified Parun.Types.PlayerAttacksWith as PlayerAttacksWith
 import qualified Parun.Types.PlayerCounterKind as PlayerCounterKind
 import qualified Parun.Types.PlayerDrawsNthCard as PlayerDrawsNthCard
 import qualified Parun.Types.PlayerId as PlayerId
+import qualified Parun.Types.PlayerIsDealtDamage as PlayerIsDealtDamage
 import qualified Parun.Types.PlayerRelation as PlayerRelation
 import qualified Parun.Types.PlaysLand as PlaysLand
 import qualified Parun.Types.ProjectedCharacteristics as PC
@@ -1857,7 +1858,12 @@ representativeEvents cond =
           noTable (GameEvent.DamageDealt (DamageEvent.MkDamageEvent arrived (Recipient.ToCreature departed) 2 False False False 0 Nothing Nothing mempty False DamageKind.Noncombat))
             NonEmpty.:| [noTable (GameEvent.DamageDealt (DamageEvent.MkDamageEvent arrived (Recipient.ToCreature departed) 3 False False False 0 Nothing Nothing mempty False DamageKind.Combat))]
         -- CR 120.3's event pointed at a player, alice being the "you", in both
-        -- kinds for the arm above's reason.
+        -- kinds for the arm above's reason. A reading that admits the player's
+        -- planeswalkers admits damage to one too, so its second event names one.
+        TriggerCondition.PlayerIsDealtDamage watched
+          | PlayerIsDealtDamage.orTheirPlaneswalkers watched ->
+              noTable (GameEvent.DamageDealt (DamageEvent.MkDamageEvent arrived (Recipient.ToPlayer S.alice) 2 False False False 0 Nothing Nothing mempty False DamageKind.Combat))
+                NonEmpty.:| [noTable (GameEvent.DamageDealt (DamageEvent.MkDamageEvent arrived (Recipient.ToPlaneswalker departed) 3 False False False 0 Nothing Nothing mempty False DamageKind.Combat))]
         TriggerCondition.PlayerIsDealtDamage _ ->
           noTable (GameEvent.DamageDealt (DamageEvent.MkDamageEvent arrived (Recipient.ToPlayer S.alice) 2 False False False 0 Nothing Nothing mempty False DamageKind.Noncombat))
             NonEmpty.:| [noTable (GameEvent.DamageDealt (DamageEvent.MkDamageEvent arrived (Recipient.ToPlayer S.alice) 3 False False False 0 Nothing Nothing mempty False DamageKind.Combat))]
@@ -2416,8 +2422,9 @@ everyTriggerCondition =
     TriggerCondition.DealsDamage (ActingPermanent.Matching (Filter.Type.HasAttached Filter.Type.IsSource)),
     TriggerCondition.IsDealtDamage ActingPermanent.Self,
     TriggerCondition.IsDealtDamage (ActingPermanent.Matching (Filter.Type.And [])),
-    TriggerCondition.PlayerIsDealtDamage (DealtDamage.MkDealtDamage PlayerRelation.You Nothing),
-    TriggerCondition.PlayerIsDealtDamage (DealtDamage.MkDealtDamage PlayerRelation.You (Just DamageKind.Noncombat)),
+    TriggerCondition.PlayerIsDealtDamage (PlayerIsDealtDamage.MkPlayerIsDealtDamage (DealtDamage.MkDealtDamage PlayerRelation.You Nothing) False),
+    TriggerCondition.PlayerIsDealtDamage (PlayerIsDealtDamage.MkPlayerIsDealtDamage (DealtDamage.MkDealtDamage PlayerRelation.You (Just DamageKind.Noncombat)) False),
+    TriggerCondition.PlayerIsDealtDamage (PlayerIsDealtDamage.MkPlayerIsDealtDamage (DealtDamage.MkDealtDamage PlayerRelation.You (Just DamageKind.Combat)) True),
     TriggerCondition.PermanentDealsCombatDamageToPlayer (PermanentDealsCombatDamageToPlayer.MkPermanentDealsCombatDamageToPlayer (Filter.Type.And []) PlayerRelation.AnyPlayer),
     TriggerCondition.PermanentsDealCombatDamageToPlayer (PermanentsDealCombatDamageToPlayer.MkPermanentsDealCombatDamageToPlayer (Filter.Type.And []) PlayerRelation.AnyPlayer False),
     TriggerCondition.CreatureDealtCombatDamageToMonarch,

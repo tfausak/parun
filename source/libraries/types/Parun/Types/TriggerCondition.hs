@@ -17,7 +17,6 @@ import qualified Parun.Types.CreatureBecomesBlockedByAtLeast as CreatureBecomesB
 import qualified Parun.Types.CreatureExploits as CreatureExploits
 import qualified Parun.Types.DamageKind as DamageKind
 import qualified Parun.Types.DealsDamageToPlayer as DealsDamageToPlayer
-import qualified Parun.Types.DealtDamage as DealtDamage
 import qualified Parun.Types.DieResult as DieResult
 import qualified Parun.Types.Filter as Filter
 import qualified Parun.Types.Keyword as Keyword
@@ -34,6 +33,7 @@ import qualified Parun.Types.PlayerActed as PlayerActed
 import qualified Parun.Types.PlayerAttacksPlayer as PlayerAttacksPlayer
 import qualified Parun.Types.PlayerAttacksWith as PlayerAttacksWith
 import qualified Parun.Types.PlayerDrawsNthCard as PlayerDrawsNthCard
+import qualified Parun.Types.PlayerIsDealtDamage as PlayerIsDealtDamage
 import qualified Parun.Types.PlayerRelation as PlayerRelation
 import qualified Parun.Types.PlaysLand as PlaysLand
 import qualified Parun.Types.RevealedThisWay as RevealedThisWay
@@ -102,10 +102,10 @@ data TriggerCondition
   | -- | CR 120.3: a permanent was dealt damage (Ripjaw Raptor, Death Pits of
     -- Rath).
     IsDealtDamage ActingPermanent.ActingPermanent
-  | -- | CR 120.3 / 603.2c: a player the relation admits was dealt damage of
-    -- the kind, once per simultaneous batch and damaged player (Lich, Chandra's
-    -- Spitfire).
-    PlayerIsDealtDamage (DealtDamage.DealtDamage PlayerRelation.PlayerRelation)
+  | -- | CR 120.3 / 603.2c: a player the relation admits, or one of their
+    -- planeswalkers, was dealt damage of the kind, once per simultaneous batch
+    -- and damaged recipient (Lich, Chandra's Spitfire, Vengeful Pharaoh).
+    PlayerIsDealtDamage PlayerIsDealtDamage.PlayerIsDealtDamage
   | -- | CR 603.2 / 509-510 read by a bystander: a permanent the Filter admits
     -- dealt combat damage to a player the relation admits (Tovolar, Dire
     -- Overlord; Teysa, Envoy of Ghosts).

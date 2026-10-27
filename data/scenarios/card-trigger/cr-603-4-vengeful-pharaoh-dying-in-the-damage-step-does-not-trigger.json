@@ -1,0 +1,30 @@
+{
+  "description": "CR 603.4 Vengeful Pharaoh dying in the combat damage step that damages bob does not trigger from his graveyard",
+  "note": "Pharaoh blocks a Craw Wurm while a Grizzly Bears hits bob, and the Wurm's damage kills it in the same step. It was on the battlefield, not in bob's graveyard, when the damage was dealt (the 2011-09-22 ruling), so no trigger goes on the stack and the Bear survives.",
+  "board": {
+    "seats": [
+      {
+        "name": "alice",
+        "battlefield": [
+          { "card": "Grizzly Bears", "label": "bear", "ready": true },
+          { "card": "Craw Wurm", "label": "wurm", "ready": true }
+        ]
+      },
+      {
+        "name": "bob",
+        "battlefield": [{ "card": "Vengeful Pharaoh", "label": "pharaoh", "ready": true }]
+      }
+    ],
+    "active": "alice",
+    "step": "BeginningOfCombat"
+  },
+  "timeline": [
+    { "turn": 1, "step": "DeclareAttackers", "player": "alice", "do": { "Attack": ["$bear", "$wurm"] } },
+    { "turn": 1, "step": "DeclareBlockers", "player": "bob", "do": { "Block": { "$pharaoh": ["$wurm"] } } },
+    { "turn": 1, "step": "CombatDamage", "player": "alice", "check": { "View": { "of": "Stack", "is": [] } } },
+    { "turn": 1, "step": "EndOfCombat", "player": "alice", "check": { "Count": { "player": "bob", "zone": "Graveyard", "card": "Vengeful Pharaoh", "count": 1 } } },
+    { "turn": 1, "step": "EndOfCombat", "player": "alice", "check": { "Count": { "player": "alice", "zone": "Battlefield", "card": "Grizzly Bears", "count": 1 } } },
+    { "turn": 1, "step": "EndOfCombat", "player": "alice", "check": { "Count": { "player": "alice", "zone": "Graveyard", "card": "Craw Wurm", "count": 1 } } },
+    { "turn": 1, "step": "EndOfCombat", "player": "alice", "check": { "Life": { "player": "bob", "life": 18 } } }
+  ]
+}
