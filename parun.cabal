@@ -905,6 +905,7 @@ library codec
     Parun.Codec.ManaFilterSpec
     Parun.Codec.ManaProduction
     Parun.Codec.ManaProductionSpec
+    Parun.Codec.ManaR
     Parun.Codec.ManaRestriction
     Parun.Codec.ManaRestrictionSpec
     Parun.Codec.ManaRetention
@@ -913,6 +914,7 @@ library codec
     Parun.Codec.ManaRiderEffect
     Parun.Codec.ManaRiderEffectSpec
     Parun.Codec.ManaRiderSpec
+    Parun.Codec.ManaRSpec
     Parun.Codec.ManaSpec
     Parun.Codec.ManaSpecification
     Parun.Codec.ManaSpecificationSpec
@@ -2752,6 +2754,7 @@ library types
     Parun.Types.ManaFilter
     Parun.Types.ManaOption
     Parun.Types.ManaProduction
+    Parun.Types.ManaR
     Parun.Types.ManaRestriction
     Parun.Types.ManaRetention
     Parun.Types.ManaRider

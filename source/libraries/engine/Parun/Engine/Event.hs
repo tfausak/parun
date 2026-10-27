@@ -2318,6 +2318,7 @@ shufflesAfter candidate = case ReplacementCandidate.effect candidate of
   ReplacementEffect.InstructionR {} -> False
   ReplacementEffect.DieRollR {} -> False
   ReplacementEffect.AssembleR {} -> False
+  ReplacementEffect.ManaR {} -> False
   ReplacementEffect.GameLossR {} -> False
   ReplacementEffect.PlaneswalkR {} -> False
   ReplacementEffect.PhaseR _ -> False
@@ -4462,6 +4463,8 @@ apply batch candidate event =
       pure (Just (ProposedEvent.WouldPerform PlayerInstruction.Assemble performer pid (n * 2)))
     -- Unreachable: `applies` admits AssembleR only against an assembly.
     (ReplacementEffect.AssembleR {}, _) -> pure (Just event)
+    -- Unreachable: `applies` admits ManaR against no event (Replacement.manaRewrites).
+    (ReplacementEffect.ManaR {}, _) -> pure (Just event)
     -- CR 104.3 / 614.1a: Lich's Mirror's "if you would lose the game, instead
     -- ...". The loss does not happen, and the effects run in its place --
     -- QUEUED, the DamageRewrite.RunEffects arm's reason, and drained before the

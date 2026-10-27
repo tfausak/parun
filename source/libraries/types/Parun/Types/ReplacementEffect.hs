@@ -14,6 +14,7 @@ import qualified Parun.Types.InstructionR as InstructionR
 import qualified Parun.Types.Keyword as Keyword
 import qualified Parun.Types.LifeGainR as LifeGainR
 import qualified Parun.Types.LifeLossR as LifeLossR
+import qualified Parun.Types.ManaR as ManaR
 import qualified Parun.Types.PhasePattern as PhasePattern
 import qualified Parun.Types.PlaneswalkR as PlaneswalkR
 import qualified Parun.Types.TokenR as TokenR
@@ -197,5 +198,11 @@ data ReplacementEffect card ability effect
     GameLossR (GameLossR.GameLossR effect)
   | -- | CR 701.31 / 614.1a: "if you would planeswalk, instead" (Susan Foreman).
     PlaneswalkR (PlaneswalkR.PlaneswalkR effect)
+  | -- | CR 106.12b / 614.1a: "if tapped for mana, Plains produce {R} ...
+    -- instead of any other type" (Naked Singularity). Its own arm because
+    -- producing mana is its own event class, and one no ProposedEvent carries:
+    -- CR 605.3b resolves the ability inline, so Parun.Engine.Mana reads the rows
+    -- into the mana a route offers (Parun.Engine.Replacement.manaRewrites).
+    ManaR ManaR.ManaR
   | PhaseR PhasePattern.PhasePattern
   deriving (Eq, Ord, Show)

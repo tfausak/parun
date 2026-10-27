@@ -1719,6 +1719,7 @@ referentsOfReplacement re = case re of
   ReplacementEffect.InstructionR _ -> []
   ReplacementEffect.DieRollR _ -> []
   ReplacementEffect.AssembleR _ -> []
+  ReplacementEffect.ManaR _ -> []
   ReplacementEffect.GameLossR _ -> []
   ReplacementEffect.PlaneswalkR _ -> []
   ReplacementEffect.PhaseR _ -> []

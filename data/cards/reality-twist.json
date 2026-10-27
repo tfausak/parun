@@ -1,0 +1,153 @@
+{
+  "faces": [
+    {
+      "keywords": [
+        {
+          "type": "CumulativeUpkeep",
+          "value": {
+            "mana": [
+              {
+                "type": "Generic",
+                "value": 1
+              },
+              {
+                "type": "OfType",
+                "value": {
+                  "type": "Colored",
+                  "value": {
+                    "type": "Blue"
+                  }
+                }
+              },
+              {
+                "type": "OfType",
+                "value": {
+                  "type": "Colored",
+                  "value": {
+                    "type": "Blue"
+                  }
+                }
+              }
+            ]
+          }
+        }
+      ],
+      "manaCost": [
+        {
+          "type": "OfType",
+          "value": {
+            "type": "Colored",
+            "value": {
+              "type": "Blue"
+            }
+          }
+        },
+        {
+          "type": "OfType",
+          "value": {
+            "type": "Colored",
+            "value": {
+              "type": "Blue"
+            }
+          }
+        },
+        {
+          "type": "OfType",
+          "value": {
+            "type": "Colored",
+            "value": {
+              "type": "Blue"
+            }
+          }
+        }
+      ],
+      "name": "Reality Twist",
+      "oracleText": "Cumulative upkeep {1}{U}{U} (At the beginning of your upkeep, put an age counter on this permanent, then sacrifice it unless you pay its upkeep cost for each age counter on it.)\nIf tapped for mana, Plains produce {R}, Swamps produce {G}, Mountains produce {W}, and Forests produce {B} instead of any other type.",
+      "replacementEffects": [
+        {
+          "effect": {
+            "type": "ManaR",
+            "value": {
+              "matching": {
+                "type": "HasSubtype",
+                "value": {
+                  "type": "Plains"
+                }
+              },
+              "produces": {
+                "type": "Colored",
+                "value": {
+                  "type": "Red"
+                }
+              }
+            }
+          }
+        },
+        {
+          "effect": {
+            "type": "ManaR",
+            "value": {
+              "matching": {
+                "type": "HasSubtype",
+                "value": {
+                  "type": "Swamp"
+                }
+              },
+              "produces": {
+                "type": "Colored",
+                "value": {
+                  "type": "Green"
+                }
+              }
+            }
+          }
+        },
+        {
+          "effect": {
+            "type": "ManaR",
+            "value": {
+              "matching": {
+                "type": "HasSubtype",
+                "value": {
+                  "type": "Mountain"
+                }
+              },
+              "produces": {
+                "type": "Colored",
+                "value": {
+                  "type": "White"
+                }
+              }
+            }
+          }
+        },
+        {
+          "effect": {
+            "type": "ManaR",
+            "value": {
+              "matching": {
+                "type": "HasSubtype",
+                "value": {
+                  "type": "Forest"
+                }
+              },
+              "produces": {
+                "type": "Colored",
+                "value": {
+                  "type": "Black"
+                }
+              }
+            }
+          }
+        }
+      ],
+      "typeLine": {
+        "types": [
+          {
+            "type": "Enchantment"
+          }
+        ]
+      }
+    }
+  ]
+}
