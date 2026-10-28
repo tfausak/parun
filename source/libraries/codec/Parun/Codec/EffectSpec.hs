@@ -66,6 +66,7 @@ import qualified Parun.Types.Counter as Counter
 import qualified Parun.Types.CounterKind as CounterKind
 import qualified Parun.Types.Create as Create
 import qualified Parun.Types.CreateCopy as CreateCopy
+import qualified Parun.Types.CreateEmblem as CreateEmblem
 import qualified Parun.Types.DamageDirection as DamageDirection
 import qualified Parun.Types.DamageKind as DamageKind
 import qualified Parun.Types.DamagePart as DamagePart
@@ -2143,8 +2144,8 @@ spec s = Spec.describe s "Parun.Codec.Effect" $ do
       s
       toJson
       fromJson
-      (Effect.CreateEmblem (Text.pack "Goblin Piker"))
-      " {\"type\":\"CreateEmblem\",\"value\":\"Goblin Piker\"} "
+      (Effect.CreateEmblem (CreateEmblem.MkCreateEmblem (Text.pack "Goblin Piker") (PlayerRef.Relative PlayerRelation.You)))
+      " {\"type\":\"CreateEmblem\",\"value\":{\"card\":\"Goblin Piker\"}} "
   -- Two different `card` values through the SAME constant codec, so a leak
   -- straight to the constructor (bypassing the codec argument) fails this
   -- rather than merely coincides.
@@ -2152,8 +2153,8 @@ spec s = Spec.describe s "Parun.Codec.Effect" $ do
     Spec.assertEqWith
       s
       "the emblem payload comes from the argument, not the card"
-      (Codec.encode (Effect.codec (constCodec sentinel) abilityCodec) (Effect.CreateEmblem (Text.pack "a wholly different card type")))
-      (Codec.encode (Effect.codec (constCodec sentinel) abilityCodec) (Effect.CreateEmblem (0 :: Int)))
+      (Codec.encode (Effect.codec (constCodec sentinel) abilityCodec) (Effect.CreateEmblem (CreateEmblem.MkCreateEmblem (Text.pack "a wholly different card type") (PlayerRef.Relative PlayerRelation.You))))
+      (Codec.encode (Effect.codec (constCodec sentinel) abilityCodec) (Effect.CreateEmblem (CreateEmblem.MkCreateEmblem (0 :: Int) (PlayerRef.Relative PlayerRelation.You))))
   Spec.it s "BecomeMonarch" $
     Common.assertJsonCodec
       s

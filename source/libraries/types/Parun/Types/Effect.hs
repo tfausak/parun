@@ -31,6 +31,7 @@ import qualified Parun.Types.CopyStackObject as CopyStackObject
 import qualified Parun.Types.Counter as Counter
 import qualified Parun.Types.Create as Create
 import qualified Parun.Types.CreateCopy as CreateCopy
+import qualified Parun.Types.CreateEmblem as CreateEmblem
 import qualified Parun.Types.Daytime as Daytime
 import qualified Parun.Types.DealDamage as DealDamage
 import qualified Parun.Types.Designate as Designate
@@ -570,10 +571,10 @@ data Effect card ability
   | -- | CR 509.1b / 611.2c: install a stored restriction that a class of
     -- attackers can't be blocked, for a duration (Veiling Oddity).
     ForbidBeingBlocked ForbidBeingBlocked.ForbidBeingBlocked
-  | -- | CR 114.2: the resolving controller gets an emblem with the given
-    -- abilities, put into the command zone. Targetless; the abilities ride a
-    -- Card so the emblem reuses the whole ability pipeline.
-    CreateEmblem card
+  | -- | CR 114.2: the players the PlayerRef names each get an emblem with the
+    -- given abilities, put into the command zone. The abilities ride a Card so
+    -- the emblem reuses the whole ability pipeline.
+    CreateEmblem (CreateEmblem.CreateEmblem card)
   | -- | CR 725: a player the MonarchTarget names becomes the monarch.
     BecomeMonarch MonarchTarget.MonarchTarget
   | -- | CR 726.1: a player the InitiativeTarget names takes the initiative.

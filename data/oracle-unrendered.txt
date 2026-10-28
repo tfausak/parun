@@ -876,6 +876,7 @@ galvanic-relay
 gang-of-elk
 garland-royal-kidnapper
 garna-bloodfist-of-keld
+garruk-apex-predator
 garruk-caller-of-beasts
 garruk-primal-hunter
 garruk-wildspeaker

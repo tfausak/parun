@@ -246,51 +246,53 @@
                       {
                         "type": "CreateEmblem",
                         "value": {
-                          "faces": [
-                            {
-                              "name": "Ajani Steadfast Emblem",
-                              "replacementEffects": [
-                                {
-                                  "effect": {
-                                    "type": "DamageR",
-                                    "value": {
-                                      "matching": {
-                                        "whatRecipient": {
-                                          "type": "And",
-                                          "value": [
-                                            {
-                                              "type": "HasCardType",
-                                              "value": {
-                                                "type": "Planeswalker"
-                                              }
-                                            },
-                                            {
-                                              "type": "HeldBy",
-                                              "value": {
-                                                "holder": {
-                                                  "type": "Controller"
-                                                },
-                                                "relation": {
-                                                  "type": "You"
+                          "card": {
+                            "faces": [
+                              {
+                                "name": "Ajani Steadfast Emblem",
+                                "replacementEffects": [
+                                  {
+                                    "effect": {
+                                      "type": "DamageR",
+                                      "value": {
+                                        "matching": {
+                                          "whatRecipient": {
+                                            "type": "And",
+                                            "value": [
+                                              {
+                                                "type": "HasCardType",
+                                                "value": {
+                                                  "type": "Planeswalker"
+                                                }
+                                              },
+                                              {
+                                                "type": "HeldBy",
+                                                "value": {
+                                                  "holder": {
+                                                    "type": "Controller"
+                                                  },
+                                                  "relation": {
+                                                    "type": "You"
+                                                  }
                                                 }
                                               }
-                                            }
-                                          ]
+                                            ]
+                                          },
+                                          "whoRecipient": {
+                                            "type": "You"
+                                          }
                                         },
-                                        "whoRecipient": {
-                                          "type": "You"
+                                        "rewrite": {
+                                          "type": "PreventAllBut",
+                                          "value": 1
                                         }
-                                      },
-                                      "rewrite": {
-                                        "type": "PreventAllBut",
-                                        "value": 1
                                       }
                                     }
                                   }
-                                }
-                              ]
-                            }
-                          ]
+                                ]
+                              }
+                            ]
+                          }
                         }
                       }
                     ]

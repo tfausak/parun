@@ -255,9 +255,8 @@ spec s registry = Spec.describe s "Parun.Engine.Event" $ do
   -- player who gets it its owner. Not CR 800.4b, whose third sentence names the
   -- battlefield and the stack: an emblem goes to the command zone.
   --
-  -- Driven at the funnel, as the two cases above are: both roads into
-  -- Event.createEmblem hand it the resolving controller, who by CR 800.4a
-  -- controls no resolving spell or ability once they have left.
+  -- Driven at the funnel, as the two cases above are: no road into
+  -- Event.createEmblem hands it a departed player (see its comment).
   Spec.it s "CR 800.4d no emblem is created for a player who has left the game" $ do
     piker <- S.printingOf s registry "Goblin Piker"
     let emblemCard = Printing.card piker

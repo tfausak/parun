@@ -83,6 +83,7 @@ import qualified Parun.Types.CounterCause as CounterCause
 import qualified Parun.Types.CounterKind as CounterKind
 import qualified Parun.Types.Create as Create
 import qualified Parun.Types.CreateCopy as CreateCopy
+import qualified Parun.Types.CreateEmblem as CreateEmblem
 import qualified Parun.Types.DamageDirection as DamageDirection
 import qualified Parun.Types.DamageRewrite as DamageRewrite
 import qualified Parun.Types.Daytime as Daytime
@@ -1531,12 +1532,14 @@ requireAttack resolving source controller legal (RequireAttack.MkRequireAttack d
                 }
        in gs1 {GameState.attackRequirements = stored <> GameState.attackRequirements gs1}
 
-createEmblem :: PlayerId -> Card.Type.Card -> Game ()
-createEmblem controller card = do
-  -- CR 114.2: the resolving controller gets the emblem, minted by
-  -- Event.createEmblem.
-  _ <- Event.createEmblem controller card
-  pure ()
+createEmblem :: ObjectId -> ObjectId -> PlayerId -> Map.Map SlotName (Set Recipient) -> CreateEmblem.CreateEmblem Card.Type.Card -> Game ()
+createEmblem resolving source controller legal (CreateEmblem.MkCreateEmblem card player) = do
+  gs <- State.get
+  -- CR 114.2: each player the reference names gets an emblem, minted by
+  -- Event.createEmblem, in APNAP order as Effect.Create's creators are (CR
+  -- 608.2f). A target slot CR 608.2b found illegal names nobody.
+  Monad.forM_ (Common.apnapPlayersOf player legal resolving source controller gs) $ \getter ->
+    Event.createEmblem getter card
 
 becomeMonarch :: ObjectId -> ObjectId -> PlayerId -> Map.Map SlotName (Set Recipient) -> MonarchTarget.MonarchTarget -> Game ()
 becomeMonarch resolving source controller legal target = do

@@ -163,6 +163,7 @@ import qualified Parun.Types.CountersFromPermanents as CountersFromPermanents
 import qualified Parun.Types.Craft as Craft
 import qualified Parun.Types.Create as Create
 import qualified Parun.Types.CreateCopy as CreateCopy
+import qualified Parun.Types.CreateEmblem as CreateEmblem
 import qualified Parun.Types.CreatureExploits as CreatureExploits
 import qualified Parun.Types.CrewRestriction as CrewRestriction
 import qualified Parun.Types.Cycling as Cycling
@@ -787,6 +788,7 @@ playerRefPositions =
         ("increase-speed", Effect.IncreaseSpeed (playerQuantity "is"), [plantedPlayer "is"]),
         ("decrease-speed", Effect.DecreaseSpeed (SpeedDecrease.MkSpeedDecrease (plantedPlayer "ds") one 0), [plantedPlayer "ds"]),
         ("create", Effect.Create (Create.MkCreate one () EntryRiders.defaultValue Nothing (plantedPlayer "cr")), [plantedPlayer "cr"]),
+        ("create-emblem", Effect.CreateEmblem (CreateEmblem.MkCreateEmblem () (plantedPlayer "ce")), [plantedPlayer "ce"]),
         ("skip-phase", Effect.SkipPhase (SkipPhase.MkSkipPhase (plantedPlayer "sn") PhaseSelector.CombatPhase Uses.Once Duration.Indefinite), [plantedPlayer "sn"]),
         ("gain-player-counters", Effect.GainPlayerCounters (PlayerCounters.MkPlayerCounters (plantedPlayer "gp") PlayerCounterKind.Rad one), [plantedPlayer "gp"]),
         ("remove-player-counters", Effect.RemovePlayerCounters (RemovePlayerCounters.MkRemovePlayerCounters (plantedPlayer "rp") PlayerCounterKind.Rad one Nothing), [plantedPlayer "rp"]),
@@ -1468,7 +1470,7 @@ ownCounts effect = case effect of
   Effect.ForbidAttack (ForbidAttack.MkForbidAttack duration _ _) -> durationCounts duration
   Effect.ForbidBeingBlocked (ForbidBeingBlocked.MkForbidBeingBlocked duration _ _) -> durationCounts duration
   Effect.RequireAttack (RequireAttack.MkRequireAttack duration _ _) -> durationCounts duration
-  Effect.CreateEmblem card -> overFaces cardCounts card
+  Effect.CreateEmblem emblem -> overFaces cardCounts (CreateEmblem.card emblem)
   Effect.BecomeMonarch _ -> []
   Effect.TakeTheInitiative _ -> []
   -- CR 701.37c's X is a Quantity like any other -- Search's count above, same
@@ -2407,7 +2409,7 @@ effectReplacements effect = case effect of
   Effect.CreateCopy {} -> []
   Effect.BecomeCopy {} -> []
   Effect.CopyStackObject {} -> []
-  Effect.CreateEmblem emblem -> overFaces cardReplacementEffects emblem
+  Effect.CreateEmblem emblem -> overFaces cardReplacementEffects (CreateEmblem.card emblem)
   Effect.DealDamage (DealDamage.MkDealDamage {}) -> []
   Effect.ModifyTarget {} -> []
   Effect.AddMana _ -> []
@@ -2969,7 +2971,7 @@ effectMintedFaces effect = case effect of
   Effect.BecomeCopy {} -> []
   -- Mints no face either: the copy's text is the copied spell's.
   Effect.CopyStackObject {} -> []
-  Effect.CreateEmblem emblem -> fmap ((,) MintedEmblem) (NonEmpty.toList (Card.Type.faces emblem))
+  Effect.CreateEmblem emblem -> fmap ((,) MintedEmblem) (NonEmpty.toList (Card.Type.faces (CreateEmblem.card emblem)))
   Effect.Replace (Replace.MkReplace _ _ _ _ replacement) -> concatMap effectMintedFaces (replacementEffectRiders replacement) <> replacementMintedFaces replacement
   Effect.DealDamage (DealDamage.MkDealDamage {}) -> []
   Effect.ModifyTarget {} -> []
@@ -6299,7 +6301,7 @@ effectFilters effect = case effect of
         Just (AttackTargetRef.Players _) -> []
         Just (AttackTargetRef.Permanents ref) -> frame SourceHostFramed (objectRefFilters ref)
   -- CR 114.2's emblem is a whole card too.
-  Effect.CreateEmblem card -> overFaces cardFilters card
+  Effect.CreateEmblem emblem -> overFaces cardFilters (CreateEmblem.card emblem)
   Effect.BecomeMonarch _ -> []
   Effect.TakeTheInitiative _ -> []
   -- CR 701.37c's X is a Quantity like any other, so its Filters are reachable
@@ -8174,7 +8176,7 @@ lintSpec s registry corpus = Spec.describe s "Lint" $ do
           other -> other
         -- The same, on a minted EMBLEM in place of the token.
         armEmblem effect = case effect of
-          Effect.Create {} -> Effect.CreateEmblem (onEveryFace arm (Printing.card piker))
+          Effect.Create {} -> Effect.CreateEmblem (CreateEmblem.MkCreateEmblem (onEveryFace arm (Printing.card piker)) (PlayerRef.Relative PlayerRelation.You))
           other -> other
     Spec.assertEqWith
       s
@@ -8193,8 +8195,8 @@ lintSpec s registry corpus = Spec.describe s "Lint" $ do
       "a reserved slot on a two-faced token's back face is caught"
       (caught (overMint armBackFace traveler))
       offended
-    -- The emblem arm, which neither printed CreateEmblem exercises -- their
-    -- emblems name no slot at all: the minting effect is swapped for a
+    -- The emblem arm, which no printed CreateEmblem exercises -- their
+    -- emblems name no reserved slot: the minting effect is swapped for a
     -- CreateEmblem carrying the same graft, over a card's faces.
     Spec.assertEqWith
       s
