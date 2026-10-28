@@ -1569,6 +1569,8 @@ filterPositionLintSpec s registry corpus = Spec.describe s "Lint" $ do
         ("Vexing Arcanix", 3), -- its two moves' ObjectRefs and its damage clause's gate
         ("Booby Trap", 1), -- its trigger condition
         ("Pithing Needle", 1), -- its activation prohibition's affected set
+        ("Phyrexian Revoker", 1), -- its activation prohibition's affected set
+        ("Stain the Mind", 1), -- its own search
         ("Sphinx Ambassador", 1) -- its move clause's gate
       ]
   -- CR 702.16k's chosen player in the same frame one atom over: answerable only
@@ -1786,7 +1788,8 @@ filterPositionLintSpec s registry corpus = Spec.describe s "Lint" $ do
         ("Chandra Nalaar", 1), -- its -8, Flame Wave's sentence
         ("Chandra's Fury", 1), -- its damage's object, Flame Wave's sentence
         ("Necrotic Plague", 1), -- its trigger's target slot, relative to the dead creature's controller
-        ("Chandra, Pyromaster", 1) -- its +1's second target slot, Flame Wave's sentence
+        ("Chandra, Pyromaster", 1), -- its +1's second target slot, Flame Wave's sentence
+        ("Soul of Shandalar", 2) -- both abilities' second target slots, Flame Wave's sentence
       ]
     -- The REJECTING direction, hand-built for the reason every sibling lint's is:
     -- a card that offends must not be loadable, so no file can carry one. Buried

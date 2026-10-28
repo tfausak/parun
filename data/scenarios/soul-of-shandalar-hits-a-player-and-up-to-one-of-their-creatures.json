@@ -1,0 +1,16 @@
+{
+  "description": "CR 115.1 / 601.2c: Soul of Shandalar deals 3 damage to target player or planeswalker and 3 to up to one target creature that player or that planeswalker's controller controls, from the battlefield and, exiling itself, from the graveyard",
+  "note": "Alice's own Grizzly Bears is refused beside bob; the battlefield Soul hits bob and his Hill Giant, and the graveyard Soul hits bob alone.",
+  "board": {"active": "alice", "step": "PrecombatMain", "seats": [{"name": "alice", "manaPool": "RRRRRRRRRR", "battlefield": [{"card": "Soul of Shandalar", "label": "soul"}, {"card": "Grizzly Bears", "label": "mine"}], "graveyard": [{"card": "Soul of Shandalar", "label": "soul-yard"}], "hand": [], "library": [{"card": "Hill Giant"}, {"card": "Hill Giant"}, {"card": "Hill Giant"}, {"card": "Hill Giant"}, {"card": "Hill Giant"}, {"card": "Hill Giant"}, {"card": "Hill Giant"}, {"card": "Hill Giant"}, {"card": "Hill Giant"}, {"card": "Hill Giant"}]}, {"name": "bob", "battlefield": [{"card": "Hill Giant", "label": "giant"}], "library": [{"card": "Island"}, {"card": "Island"}, {"card": "Island"}, {"card": "Island"}, {"card": "Island"}, {"card": "Island"}, {"card": "Island"}, {"card": "Island"}]}]},
+  "timeline": [
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "refuse": {"Activate": {"object": "$soul", "ability": 0, "targetsBySlot": {"target": ["$bob"], "creature": ["$mine"]}}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "do": {"Activate": {"object": "$soul", "ability": 0, "targetsBySlot": {"target": ["$bob"], "creature": ["$giant"]}}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "do": "Pass"},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "check": {"Life": {"player": "bob", "life": 17}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "check": {"Count": {"player": "bob", "zone": "Graveyard", "card": "Hill Giant", "count": 1}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "do": {"Activate": {"object": "$soul-yard", "ability": 1, "targetsBySlot": {"target": ["$bob"], "creature": []}}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "do": "Pass"},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "check": {"Life": {"player": "bob", "life": 14}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "check": {"Count": {"player": "alice", "zone": "Battlefield", "card": "Grizzly Bears", "count": 1}}}
+  ]
+}

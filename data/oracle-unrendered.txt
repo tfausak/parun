@@ -1381,6 +1381,7 @@ michelangelo-mutant-bff
 midnight-ritual
 midnight-scavengers
 midnight-tilling
+might-makes-right
 mighty-servant-of-leuk-o
 military-intelligence
 millikin
@@ -1469,6 +1470,7 @@ nazgul
 necravolver
 necrite
 necrologia
+necromancers-stockpile
 necrosynthesis
 necrotic-plague
 needle-drop
@@ -1489,6 +1491,8 @@ nimbus-maze
 ninja-of-the-deep-hours
 nishoba-brawler
 nissa-steward-of-elements
+nissa-worldwaker
+nissas-expedition
 no-regrets-egret
 no-rest-for-the-wicked
 nomad-mythmaker
@@ -1588,6 +1592,7 @@ pentagram-of-the-ages
 pentarch-paladin
 pentavus
 perennation
+perilous-vault
 persecute
 person-of-interest
 personal-sanctuary
@@ -1608,12 +1613,15 @@ phyrexian-colossus
 phyrexian-ingester
 phyrexian-metamorph
 phyrexian-rebirth
+phyrexian-revoker
 phyrexian-tribute
 phyrexian-vindicator
+phytotitan
 pia-nalaar-chief-mechanic
 pick-a-beeble
 pictures-of-spider-man
 piety-charm
+pillar-of-light
 pillar-of-origins
 pin-collection
 pine-walker
@@ -1631,6 +1639,7 @@ poison-the-cup
 pokey-the-scallywagg
 pollen-remedy
 polymorph
+polymorphists-jest
 ponder
 porphyry-nodes
 port-of-karfell
@@ -1641,6 +1650,7 @@ precursor-golem
 predatory-nightstalker
 predatory-rampage
 predict
+preeminent-captain
 presence-of-gond
 preston-garvey-minuteman
 prey-upon
@@ -1660,6 +1670,7 @@ printlifter-ooze
 prison-barricade
 prized-amalgam
 prized-unicorn
+profane-memento
 profaner-of-the-dead
 professional-wrestler
 professor-hojo
@@ -1695,6 +1706,7 @@ queens-bay-paladin
 questing-beast
 questing-druid-seek-the-beast
 quicken
+quickling
 quicksilver-amulet
 quicksilver-gargantuan
 quillspike
@@ -1772,10 +1784,12 @@ resistance-fighter
 resolute-archangel
 resourceful-defense
 rest-in-peace
+restock
 retaliate
 retraction-helix
 retribution-of-the-ancients
 return-from-extinction
+return-to-the-ranks
 reverberate
 revered-unicorn
 reverse-damage
@@ -1817,6 +1831,7 @@ roaring-furnace-steaming-sauna
 rocco-street-chef
 rocksteady-crash-courser
 rod-of-absorption
+rogues-gloves
 roiling-horror
 rolling-stones
 rooftop-nuisance
@@ -1869,6 +1884,7 @@ sandman-shifting-scoundrel
 sanguine-bond
 sapphire-medallion
 satyr-piper
+satyr-wayfinder
 sauroform-hybrid
 savage-summoning
 savanti-romero-times-exile
@@ -1894,6 +1910,7 @@ screaming-swarm
 screams-from-within
 scrounging-bandar
 sculpting-steel
+scuttling-doom-engine
 sea-gate-restoration-sea-gate-reborn
 sea-monster
 sealed-fate
@@ -1948,11 +1965,13 @@ shimatsu-the-bloodcloaked
 shimian-specter
 shizuko-caller-of-autumn
 showstopping-surprise
+shrapnel-blast
 shroofus-sproutsire
 shunt
 sibilant-spirit
 sidar-kondo-of-jamuraa
 siege-behemoth
+siege-dragon
 sigardas-aid
 silence
 silent-arbiter
@@ -1979,6 +1998,7 @@ sleight-of-mind
 slimefoots-survey
 slimy-dualleech
 slivdrazi-monstrosity
+sliver-hive
 slobad-iron-goblin
 slumbering-dragon
 smallpox
@@ -2003,6 +2023,12 @@ soul-conduit
 soul-diviner
 soul-foundry
 soul-immolation
+soul-of-innistrad
+soul-of-new-phyrexia
+soul-of-ravnica
+soul-of-shandalar
+soul-of-theros
+soul-of-zendikar
 soul-sculptor
 soul-shackled-zombie
 soul-shatter
@@ -2056,6 +2082,7 @@ staff-of-the-flame-magus
 staff-of-the-mind-magus
 staff-of-the-sun-magus
 staff-of-the-wild-magus
+stain-the-mind
 stalking-tiger
 stand-or-fall
 standstill
@@ -2172,6 +2199,7 @@ temporal-manipulation
 temporary-truce
 tenacious-dead
 tenacious-underdog
+terra-stomper
 territorial-kavu
 territorial-maro
 terror-of-the-peaks
@@ -2393,6 +2421,7 @@ wake-thrasher
 wall-of-dust
 wall-of-fortune
 wall-of-frost
+wall-of-limbs
 wall-of-stolen-identity
 wall-of-wonder
 wan-shi-tong-all-knowing
@@ -2402,6 +2431,7 @@ wanderwine-prophets
 war-falcon
 warbreak-trumpeter
 warden-of-evos-isle
+warden-of-the-beyond
 warp-world
 warped-devotion
 warriors-oath

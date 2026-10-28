@@ -1,0 +1,16 @@
+{
+  "description": "CR 605.1a / 201.4: Phyrexian Revoker names a nonland card, and sources with that name can't activate their abilities, mana abilities included",
+  "note": "A land name is refused. Alice names Llanowar Elves, so bob is offered his Forests' mana abilities but not his Elves', and his Forests pay for Grizzly Bears.",
+  "board": {"active": "alice", "step": "PrecombatMain", "seats": [{"name": "alice", "manaPool": "CC", "hand": [{"card": "Phyrexian Revoker", "label": "revoker"}], "library": [{"card": "Island"}, {"card": "Island"}, {"card": "Island"}, {"card": "Island"}, {"card": "Island"}, {"card": "Island"}, {"card": "Island"}, {"card": "Island"}]}, {"name": "bob", "battlefield": [{"card": "Llanowar Elves", "label": "elves", "ready": true}, {"card": "Forest", "label": "forest1"}, {"card": "Forest", "label": "forest2"}], "hand": [{"card": "Grizzly Bears", "label": "bears"}], "library": [{"card": "Hill Giant"}, {"card": "Hill Giant"}, {"card": "Hill Giant"}, {"card": "Hill Giant"}, {"card": "Hill Giant"}, {"card": "Hill Giant"}, {"card": "Hill Giant"}, {"card": "Hill Giant"}]}]},
+  "timeline": [
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "do": {"Cast": {"object": "$revoker"}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "do": "Pass"},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "refuse": {"Answer": {"prompt": "ChooseCardName", "with": "Forest"}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "do": {"Answer": {"prompt": "ChooseCardName", "with": "Llanowar Elves"}}},
+    {"turn": 2, "step": "PrecombatMain", "player": "bob", "check": {"View": {"of": "Offered", "player": "bob", "is": ["Pass", "Cast $bears", "ActivateManaAbility $forest1", "ActivateManaAbility $forest2"]}}},
+    {"turn": 2, "step": "PrecombatMain", "player": "bob", "do": {"Cast": {"object": "$bears", "mana": ["$forest1", "$forest2"]}}},
+    {"turn": 2, "step": "PrecombatMain", "player": "bob", "do": "Pass"},
+    {"turn": 2, "step": "PrecombatMain", "player": "bob", "check": {"Count": {"player": "bob", "zone": "Battlefield", "card": "Grizzly Bears", "count": 1}}},
+    {"turn": 2, "step": "PrecombatMain", "player": "bob", "check": {"Tapped": {"object": "$elves", "tapped": false}}}
+  ]
+}
