@@ -2526,10 +2526,10 @@ copyStatedTargets controller copier resolving source legal original newRef = do
 --
 -- The ref's own Filter decides, read off the last known view, so a ref naming
 -- anything but the source (Swift Silence's `Not IsSource`) still names nothing.
--- EachSpell needs no CR 112.1 narrowing of its own: GameState.stackArchive holds
--- spells only, an ability leaving the stack going through Parun.Engine.Game.cease,
--- which files nothing. That same archive is why EachAbility takes the wildcard
--- below rather than an arm: nothing it could name is ever filed there.
+-- EachSpell needs no CR 112.1 narrowing of its own, nor EachAbility an arm: the
+-- one id asked of GameState.stackArchive is the effect's own source, which is
+-- never an ability (CR 113.7), though Parun.Engine.Game.cease files abilities
+-- there too.
 copyStackSubjects :: Map.Map SlotName (Set Recipient) -> ObjectId -> PlayerId -> ObjectId -> GameState -> ObjectRef -> [ObjectId]
 copyStackSubjects legal resolving controller source gs ref =
   let live = objectRefObjects legal resolving controller source gs ref

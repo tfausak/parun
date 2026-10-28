@@ -1082,8 +1082,9 @@ targetingObject = SlotName.MkSlotName (Text.pack "thatTargetingObject")
 
 -- CR 602.2b / 601.2i: the reserved slot under which the ABILITY whose
 -- activation fired the trigger is bound -- Kurkesh, Onakke Ancient's "copy that
--- ability". `castSpell`'s posture: not a target, and a dead id is the payload's
--- problem.
+-- ability". `castSpell`'s posture: not a target. An ability countered while the
+-- trigger waits is still copied, from what Parun.Engine.Game.cease filed in
+-- GameState.stackArchive (CR 608.2h).
 activatedAbility :: SlotName
 activatedAbility = SlotName.MkSlotName (Text.pack "thatAbility")
 
