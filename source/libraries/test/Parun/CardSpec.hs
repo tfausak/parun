@@ -60,6 +60,7 @@ import qualified Parun.Types.ActivateManaAbilities as ActivateManaAbilities
 import qualified Parun.Types.ActivatedAbility as ActivatedAbility
 import qualified Parun.Types.ActivationProhibition as ActivationProhibition
 import qualified Parun.Types.ActivationRestriction as ActivationRestriction
+import qualified Parun.Types.ActivationsThisTurn as ActivationsThisTurn
 import qualified Parun.Types.Activator as Activator
 import qualified Parun.Types.AffectPlayers as AffectPlayers
 import qualified Parun.Types.Affected as Affected
@@ -254,6 +255,7 @@ import qualified Parun.Types.LimitUnless as LimitUnless
 import qualified Parun.Types.LookAt as LookAt
 import qualified Parun.Types.LoopMembers as LoopMembers
 import qualified Parun.Types.Loyalty as Loyalty
+import qualified Parun.Types.LoyaltyGrant as LoyaltyGrant
 import qualified Parun.Types.MadnessCost as MadnessCost
 import qualified Parun.Types.MakeForetold as MakeForetold
 import qualified Parun.Types.ManaAddition as ManaAddition
@@ -4337,6 +4339,8 @@ quantityKindFilters quantity = case quantity of
   Quantity.Type.SpellsCastLastTurn _ -> []
   Quantity.Type.SpellsCastThisTurn _ -> []
   Quantity.Type.TimesThisTurn _ -> []
+  -- Its own Filter, which no Count holds and countFilters cannot see.
+  Quantity.Type.ActivationsThisTurn tally -> [(Unframed, ActivationsThisTurn.source tally)]
   Quantity.Type.SpellsCastBefore -> []
   Quantity.Type.PermanentsDiedThisTurn -> []
   Quantity.Type.SpellsCastUsingThisTurn {} -> []
@@ -5057,7 +5061,7 @@ playerEffectFilters playerEffect = case playerEffect of
   PlayerEffect.ActivateKeywordAtInstantSpeed _ -> []
   -- CR 606.3's names the permanent whose loyalty abilities it reaches (The
   -- Wandering Emperor's is `IsSource`).
-  PlayerEffect.ActivateLoyaltyAtInstantSpeed f -> [f]
+  PlayerEffect.LoyaltyGrant grant -> [LoyaltyGrant.permanents grant]
   -- CR 602.2's names the permanents it reaches (Piracy's are lands), and CR
   -- 106.6's restriction on the mana names what it may pay for.
   PlayerEffect.MayTapForMana grant -> TapForMana.permanents grant : concatMap restrictionFilters (Maybe.maybeToList (TapForMana.restriction grant))

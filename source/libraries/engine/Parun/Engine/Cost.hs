@@ -9,11 +9,12 @@
 --
 -- The casing home for Parun.Types.CostComponent; every other module reads the
 -- classifications derived here instead -- requiresSicknessCheck (CR 302.6),
--- isLoyaltyCost (CR 606.2/606.3), statesHiddenQuality (CR 118.8c). The two
--- classifications that are NOT here are CR 605.1a's library clause
--- (Parun.Engine.ManaAbility.costMovesLibraryCard) and CR 113.6m's cost half
--- (Parun.Engine.AbilityZone.costZones), this module being unreachable
--- from either (Cost -> Mana -> Projection -> ManaAbility, AbilityZone).
+-- statesHiddenQuality (CR 118.8c). The three classifications that are NOT here
+-- are CR 605.1a's library clause (Parun.Engine.ManaAbility.costMovesLibraryCard),
+-- CR 113.6m's cost half (Parun.Engine.AbilityZone.costZones) and CR 606.2's
+-- loyalty ability (Parun.Engine.Loyalty), this module being unreachable from
+-- each (Cost -> Mana -> Projection -> ManaAbility, AbilityZone; Cost -> Quantity
+-- -> Count -> Loyalty).
 module Parun.Engine.Cost where
 
 import qualified Control.Monad as Monad
@@ -50,6 +51,7 @@ import qualified Parun.Engine.Forage as Forage
 import qualified Parun.Engine.Game as Game
 import qualified Parun.Engine.Interchangeable as Interchangeable
 import qualified Parun.Engine.Keyword as Keyword
+import qualified Parun.Engine.Loyalty as Loyalty
 import qualified Parun.Engine.Mana as Mana
 import qualified Parun.Engine.ManaAbility as ManaAbility
 import qualified Parun.Engine.ManaRider as ManaRider
@@ -2107,91 +2109,6 @@ sicknessOkGiven pcs pid oid cost gs =
     || not (Set.member CardType.Creature (Projection.cardTypesGiven pcs oid gs))
     || Summoning.settledOrHastyGiven pcs (Maybe.fromMaybe pid (Projection.controllerOf oid gs)) oid gs
 
--- CR 606.2: an activated ability with a loyalty symbol in its cost is a loyalty
--- ability. The CLASSIFICATION Parun.Engine.Activate reads for CR 606.3's window
--- and once-per-turn limit. Derived from the cost rather than stored on the
--- ability -- CR 606.2 is a rule about what a cost CONTAINS and not a rider a
--- card prints, which is why Jace Beleren's abilities carry no
--- ActivationRestriction.SorcerySpeed.
-isLoyaltyCost :: Cost Keyword.Type.Keyword -> Bool
-isLoyaltyCost cost = any isLoyaltyComponent (Cost.components cost)
-
--- The same question in the shape a cost adjustment asks it
--- (Parun.Types.ActivationCriteria.whichLoyalty, Parun.Types.LoyaltyKind).
---
--- Asked of the PRINTED cost, never of the total: Carth the Lion's own addition
--- is a loyalty component, so a reading taken after CR 601.2f folded the
--- adjustments in would make every ability it touched a loyalty ability and tax
--- itself into applying. Parun.Engine.Activatable.loyaltyOk reads CR 606.3 off the
--- printed cost for that reason too.
-loyaltyKindOf :: Cost Keyword.Type.Keyword -> LoyaltyKind.LoyaltyKind
-loyaltyKindOf cost = if isLoyaltyCost cost then LoyaltyKind.LoyaltyAbility else LoyaltyKind.NonLoyaltyAbility
-
--- CR 606.2 reads the symbol, not its number, so an unannounced [-X] is one too.
-isLoyaltyComponent :: CostComponent.CostComponent Keyword.Type.Keyword -> Bool
-isLoyaltyComponent component = component == CostComponent.RemoveLoyaltyFromThis (CostAmount.Announced Binding.variableX) || Maybe.isJust (loyaltyAmountOf component)
-
--- The SIGNED amount of loyalty a component moves, positive for CR 606.4's adding
--- half and negative for the removing one. `isLoyaltyComponent` above is this
--- without the number, plus the unannounced [-X], so the two cannot drift
--- apart. An Integer and not a Natural: CR 606.5's combining sums the two halves
--- against each other.
---
--- EXHAUSTIVE with no wildcard, `orderSensitive`'s posture and for its reason.
-loyaltyAmountOf :: CostComponent.CostComponent Keyword.Type.Keyword -> Maybe Integer
-loyaltyAmountOf component = case component of
-  CostComponent.AddLoyaltyToThis n -> Just (toInteger n)
-  CostComponent.RemoveLoyaltyFromThis (CostAmount.Fixed n) -> Just (negate (toInteger n))
-  -- Nothing until CR 601.2b substitutes it; `isLoyaltyComponent` classifies it
-  -- all the same.
-  CostComponent.RemoveLoyaltyFromThis (CostAmount.Announced _) -> Nothing
-  CostComponent.TapThis -> Nothing
-  CostComponent.UntapThis -> Nothing
-  CostComponent.SacrificeThis -> Nothing
-  CostComponent.ReturnThis -> Nothing
-  CostComponent.PayLife _ -> Nothing
-  CostComponent.PayHalfLife _ -> Nothing
-  CostComponent.Sacrifice {} -> Nothing
-  CostComponent.TapForTotalPower {} -> Nothing
-  CostComponent.TapPermanents {} -> Nothing
-  CostComponent.ReturnPermanents {} -> Nothing
-  CostComponent.ExilePermanents {} -> Nothing
-  CostComponent.DiscardCards {} -> Nothing
-  CostComponent.DiscardThis _ -> Nothing
-  CostComponent.PutCardFromHandOntoBattlefield _ -> Nothing
-  CostComponent.PayEnergy _ -> Nothing
-  -- Nothing, and this is the LOAD-BEARING arm of the component: CR 606.4's
-  -- loyalty symbol is what CR 606.2 reads to call an ability a loyalty ability,
-  -- and a Just here would ration Barkhide Troll's ability to once a turn (CR
-  -- 606.3), gate it on the sorcery window and feed it to `combineLoyalty` (CR
-  -- 606.5). Removing a +1\/+1 counter is none of that. Proven, not a fence:
-  -- Parun.CostSpec's Barkhide Troll cases both redden on a Just here.
-  CostComponent.RemoveCountersFromThis _ -> Nothing
-  -- Nothing, the arm above's reason unchanged by the counters coming off
-  -- another permanent: CR 606.4's loyalty symbol is what makes a loyalty
-  -- ability, and this is a +1\/+1 counter.
-  CostComponent.RemoveCounters {} -> Nothing
-  CostComponent.PutPlusOneCountersOnThis _ -> Nothing
-  CostComponent.Blight _ -> Nothing
-  CostComponent.Forage -> Nothing
-  CostComponent.FlipCoin -> Nothing
-  CostComponent.ChooseOpponent _ -> Nothing
-  CostComponent.Waterbend _ -> Nothing
-  CostComponent.WaterbendInstead _ -> Nothing
-  CostComponent.ExileThisFromGraveyard -> Nothing
-  CostComponent.ExileThis -> Nothing
-  CostComponent.ExileCardsFromGraveyard {} -> Nothing
-  CostComponent.ExileMaterials {} -> Nothing
-  CostComponent.ExileTopFromGraveyard _ -> Nothing
-  CostComponent.CollectEvidence _ -> Nothing
-  CostComponent.CollectEvidenceOfTargets -> Nothing
-  CostComponent.ExileCardsFromHand {} -> Nothing
-  CostComponent.RevealCardFromHand _ -> Nothing
-  CostComponent.Behold _ -> Nothing
-  CostComponent.BeholdAndExile _ -> Nothing
-  CostComponent.MillCards _ -> Nothing
-  CostComponent.RevealTopOfLibrary _ -> Nothing
-
 -- CR 606.5: multiple costs to add or remove loyalty counters are combined into a
 -- single one. Carth the Lion's added [+1] on Jace Beleren's printed [-10] is one
 -- cost of -9, which 9 loyalty pays -- where the pair asked separately is
@@ -2199,7 +2116,7 @@ loyaltyAmountOf component = case component of
 -- present before any of the cost is paid.
 --
 -- ONE component whenever the cost had any, even at a net of zero, so that CR
--- 606.4's battlefield-and-control floor is still asked and `isLoyaltyCost` stays
+-- 606.4's battlefield-and-control floor is still asked and `Loyalty.isLoyaltyCost` stays
 -- true of the totalled cost. It takes the FIRST loyalty component's position, so
 -- the printed order survives and CR 601.2h's prompt sees the list it saw before.
 --
@@ -2210,14 +2127,14 @@ combineLoyalty :: [CostComponent.CostComponent Keyword.Type.Keyword] -> [CostCom
 combineLoyalty components = case break numbered components of
   (_, []) -> components
   (before, _ : after) ->
-    let net = sum (Maybe.mapMaybe loyaltyAmountOf components)
+    let net = sum (Maybe.mapMaybe Loyalty.loyaltyAmountOf components)
         combined =
           if net < 0
             then CostComponent.RemoveLoyaltyFromThis (CostAmount.Fixed (Integer.toNaturalSaturating (negate net)))
             else CostComponent.AddLoyaltyToThis (Integer.toNaturalSaturating net)
      in before <> (combined : filter (not . numbered) after)
   where
-    numbered = Maybe.isJust . loyaltyAmountOf
+    numbered = Maybe.isJust . Loyalty.loyaltyAmountOf
 
 -- CR 118.8c: does this cost include "actions involving cards with a stated
 -- quality in a hidden zone"? What Resolve.offerCast reads to decide whether a
@@ -2227,7 +2144,7 @@ combineLoyalty components = case break numbered components of
 -- Filter.statesAQuality, written for CR 701.23b/701.23d's identical phrase. NOT
 -- zoneOfComponent, which answers CR 113.6m's different question.
 --
--- EXHAUSTIVE with no wildcard, loyaltyAmountOf's posture.
+-- EXHAUSTIVE with no wildcard, Loyalty.loyaltyAmountOf's posture.
 statesHiddenQuality :: Cost Keyword.Type.Keyword -> Bool
 statesHiddenQuality cost = any componentStatesHiddenQuality (Cost.components cost)
 

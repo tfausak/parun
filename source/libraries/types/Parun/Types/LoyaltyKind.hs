@@ -7,7 +7,7 @@ module Parun.Types.LoyaltyKind where
 -- The rulebook's own division and not an effect, the standing
 -- Parun.Types.AbilityKind has for CR 605.1a: what the closed half compares here
 -- is whether the ability being activated has a loyalty symbol in its cost
--- (Parun.Engine.Cost.isLoyaltyCost), never what that ability does.
+-- (Parun.Engine.Loyalty.isLoyaltyCost), never what that ability does.
 --
 -- BESIDE AbilityKind rather than a third arm of it, because the two rules cut
 -- across each other: CR 605.1a divides mana from non-mana, CR 606.2 divides

@@ -1,0 +1,23 @@
+{
+  "description": "CR 606.3 The Chain Veil's grant does not reach Ajani Goldmane while Luxior makes him not a planeswalker",
+  "note": "Luxior, Giada's Gift: equipped Ajani keeps his loyalty abilities, so CR 606.3 still limits him, but the Veil's \"each planeswalker you control\" no longer names him; his second +1 is refused.",
+  "board": {"active": "alice", "step": "PrecombatMain", "seats": [
+    {"name": "alice", "battlefield": [
+      {"card": "The Chain Veil", "label": "veil"},
+      {"card": "Ajani Goldmane", "label": "ajani", "counters": [{"key": {"type": "Loyalty"}, "value": 4}]},
+      {"card": "Luxior, Giada's Gift", "label": "luxior"}, {"card": "Plains", "label": "e1"},
+      {"card": "Plains", "label": "p1"}, {"card": "Plains", "label": "p2"}, {"card": "Plains", "label": "p3"}, {"card": "Plains", "label": "p4"}],
+     "library": [{"card": "Island"}, {"card": "Island"}]},
+    {"name": "bob", "library": [{"card": "Island"}, {"card": "Island"}]}]},
+  "timeline": [
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "do": {"Activate": {"object": "$luxior", "ability": 0, "targets": ["$ajani"], "mana": ["$e1", null]}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "do": "Pass"},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "check": {"View": {"of": "AttachedTo", "object": "$luxior", "is": "$ajani"}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "do": {"Activate": {"object": "$veil", "ability": 0, "mana": ["$p1", "$p2", "$p3", "$p4"]}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "do": "Pass"},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "do": {"Activate": {"object": "$ajani", "ability": 0}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "do": "Pass"},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "check": {"Counters": {"object": "$ajani", "kind": {"type": "Loyalty"}, "count": 5}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "refuse": {"Activate": {"object": "$ajani", "ability": 0}}}
+  ]
+}

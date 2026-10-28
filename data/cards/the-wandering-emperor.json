@@ -262,9 +262,14 @@
             }
           },
           "effect": {
-            "type": "ActivateLoyaltyAtInstantSpeed",
+            "type": "LoyaltyGrant",
             "value": {
-              "type": "IsSource"
+              "permanents": {
+                "type": "IsSource"
+              },
+              "relaxes": {
+                "type": "Window"
+              }
             }
           },
           "scope": {

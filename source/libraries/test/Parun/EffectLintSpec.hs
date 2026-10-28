@@ -546,6 +546,7 @@ printedBoxQuantity quantity = case quantity of
   Quantity.Type.SpellsCastLastTurn {} -> False
   Quantity.Type.SpellsCastThisTurn {} -> False
   Quantity.Type.TimesThisTurn _ -> False
+  Quantity.Type.ActivationsThisTurn _ -> False
   Quantity.Type.SpellsCastBefore -> False
   Quantity.Type.PermanentsDiedThisTurn -> False
   Quantity.Type.SpellsCastUsingThisTurn {} -> False
@@ -1181,7 +1182,7 @@ unpreventableScopeOffends scope playerEffect = case playerEffect of
   PlayerEffect.CastAsThoughItHadFlash _ -> False
   PlayerEffect.MayPlayAsThoughItHadFlash _ -> False
   PlayerEffect.ActivateKeywordAtInstantSpeed _ -> False
-  PlayerEffect.ActivateLoyaltyAtInstantSpeed _ -> False
+  PlayerEffect.LoyaltyGrant _ -> False
   PlayerEffect.MayTapForMana _ -> False
   PlayerEffect.CantBeCountered _ -> False
   PlayerEffect.RestrictTargeting _ -> False
@@ -1256,7 +1257,7 @@ unpreventablePatternOffends playerEffect = case playerEffect of
   PlayerEffect.CastAsThoughItHadFlash _ -> False
   PlayerEffect.MayPlayAsThoughItHadFlash _ -> False
   PlayerEffect.ActivateKeywordAtInstantSpeed _ -> False
-  PlayerEffect.ActivateLoyaltyAtInstantSpeed _ -> False
+  PlayerEffect.LoyaltyGrant _ -> False
   PlayerEffect.MayTapForMana _ -> False
   PlayerEffect.CantBeCountered _ -> False
   PlayerEffect.RestrictTargeting _ -> False

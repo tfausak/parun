@@ -23,10 +23,9 @@ import qualified Parun.Types.CostSubject as CostSubject.Type
 -- and no "first", so a card file writes only the ones it prints.
 --
 -- Refused ('Fields.objectWith''s check): `onlyFirst` on spells, which is not
--- implemented (#4924); `onlyFirst` beside `whichLoyalty`, since
--- Parun.Types.PastActivation keeps no CR 606.2 classification to ask the turn's
--- earlier activations -- Scryfall o:"first" o:"loyalty abilit" o:"cost",
--- 2026-10-10, finds no printing combining them; and a target criterion on an
+-- implemented (#4924); `onlyFirst` beside `whichLoyalty`, which no card
+-- exercises -- Scryfall o:"first" o:"loyalty abilit" o:"cost", 2026-10-10,
+-- finds no printing combining them; and a target criterion on an
 -- addition to an activation, whose components Parun.Engine.Activate measures
 -- before CR 601.2c announces the targets -- Scryfall o:"abilities"
 -- o:"activate that target" o:"additional", 2026-10-10, no printing.
@@ -54,7 +53,7 @@ codec = Fields.objectWith check $ do
       (_, Nothing) -> additionCheck modifier
       (CostSubject.Type.Spells, Just _) -> Left (Text.pack "CostModifier: onlyFirst on spells is not implemented (#4924)")
       (CostSubject.Type.Activations criteria, Just _)
-        | Just _ <- ActivationCriteria.whichLoyalty criteria -> Left (Text.pack "CostModifier: onlyFirst cannot ask whichLoyalty of the turn's earlier activations")
+        | Just _ <- ActivationCriteria.whichLoyalty criteria -> Left (Text.pack "CostModifier: onlyFirst beside whichLoyalty has no printing")
         | otherwise -> additionCheck modifier
     additionCheck modifier = case (CostModifier.subject modifier, CostModifier.change modifier) of
       (CostSubject.Type.Activations _, CostChange.Type.Add _)

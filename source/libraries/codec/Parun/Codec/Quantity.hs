@@ -1,6 +1,7 @@
 module Parun.Codec.Quantity where
 
 import qualified Parun.Codec.AbilityAct as AbilityAct
+import qualified Parun.Codec.ActivationsThisTurn as ActivationsThisTurn
 import qualified Parun.Codec.AgainstExiledPile as AgainstExiledPile
 import qualified Parun.Codec.AgainstLastCardExiledWith as AgainstLastCardExiledWith
 import qualified Parun.Codec.AgainstSlot as AgainstSlot
@@ -190,6 +191,7 @@ codec =
       -- log's own extent. The threshold that turns the count into "the third
       -- time" is the Comparison's.
       Arm.payload "TimesThisTurn" AbilityAct.codec Quantity.TimesThisTurn (\x -> case x of Quantity.TimesThisTurn y -> Just y; _ -> Nothing),
+      Arm.payload "ActivationsThisTurn" ActivationsThisTurn.codec Quantity.ActivationsThisTurn (\x -> case x of Quantity.ActivationsThisTurn y -> Just y; _ -> Nothing),
       Arm.nullary "SpellsCastBefore" Quantity.SpellsCastBefore,
       Arm.nullary "PermanentsDiedThisTurn" Quantity.PermanentsDiedThisTurn,
       Arm.payload "SpellsCastUsingThisTurn" KeywordFamily.codec Quantity.SpellsCastUsingThisTurn (\x -> case x of Quantity.SpellsCastUsingThisTurn y -> Just y; _ -> Nothing),
@@ -301,6 +303,7 @@ tagOf x = case x of
   Quantity.SpellsCastLastTurn {} -> "SpellsCastLastTurn"
   Quantity.SpellsCastThisTurn {} -> "SpellsCastThisTurn"
   Quantity.TimesThisTurn {} -> "TimesThisTurn"
+  Quantity.ActivationsThisTurn {} -> "ActivationsThisTurn"
   Quantity.SpellsCastBefore {} -> "SpellsCastBefore"
   Quantity.PermanentsDiedThisTurn {} -> "PermanentsDiedThisTurn"
   Quantity.SpellsCastUsingThisTurn {} -> "SpellsCastUsingThisTurn"

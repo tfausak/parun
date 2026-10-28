@@ -1,6 +1,7 @@
 module Parun.Engine.Activatable where
 
 import qualified Data.Containers.ListUtils as ListUtils
+import qualified Data.Foldable as Foldable
 import qualified Data.Map.Strict as Map
 import qualified Data.Maybe as Maybe
 import qualified Data.Set as Set
@@ -14,6 +15,7 @@ import qualified Parun.Engine.Cost as Cost
 import qualified Parun.Engine.Detain as Detain
 import qualified Parun.Engine.Game as Game
 import qualified Parun.Engine.Keyword as Keyword
+import qualified Parun.Engine.Loyalty as Loyalty
 import qualified Parun.Engine.ManaAbility as ManaAbility
 import qualified Parun.Engine.Modal as Modal
 import qualified Parun.Engine.Plane as Plane
@@ -39,6 +41,7 @@ import qualified Parun.Types.GameState as GameState
 import qualified Parun.Types.GrantedAbility as GrantedAbility
 import Parun.Types.Keyword (Keyword)
 import qualified Parun.Types.LoggedEvent as LoggedEvent
+import qualified Parun.Types.LoyaltyClause as LoyaltyClause
 import qualified Parun.Types.LoyaltyKind as LoyaltyKind
 import qualified Parun.Types.ManaSpending as ManaSpending
 import qualified Parun.Types.ManaType as ManaType
@@ -46,6 +49,8 @@ import qualified Parun.Types.Modal as Modal.Type
 import qualified Parun.Types.ModeIndex as ModeIndex
 import qualified Parun.Types.Object as Object
 import Parun.Types.ObjectId (ObjectId)
+import qualified Parun.Types.ObjectSnapshot as ObjectSnapshot
+import qualified Parun.Types.PastActivation as PastActivation
 import qualified Parun.Types.PaymentSubject as PaymentSubject
 import Parun.Types.PlayerId (PlayerId)
 import qualified Parun.Types.ProjectedCharacteristics as PC
@@ -339,7 +344,7 @@ activationSourcesGiven grants pcs pid gs =
 -- makes this a conjunct rather than an arm of
 -- ActivationRestriction.restrictionsOk: CR 606.3 is a rule about what a COST
 -- contains (CR 606.2), not a clause a card prints, so it is
--- derived through Parun.Engine.Cost.isLoyaltyCost and never read off
+-- derived through Parun.Engine.Loyalty.isLoyaltyCost and never read off
 -- Parun.Types.ActivationRestriction, whose arms are all printed text.
 --
 -- The window is Turn.sorcerySpeedWindow verbatim, not a near-copy: CR 606.3's
@@ -355,11 +360,23 @@ activationSourcesGiven grants pcs pid gs =
 -- alone with CR 117.1a's priority, on any player's turn; the once-per-turn
 -- clause stands, per her ruling. Parun.PlaneswalkerSpec's WanderingEmperor
 -- group proves the window.
+--
+-- An effect letting the player activate one "as though none of its loyalty
+-- abilities have been activated this turn" (The Chain Veil) is one more
+-- activation per grant, each resolution counting, per the Veil's rulings; the
+-- window stands. The grant is its holder's: it ignores every earlier
+-- activation, whoever made it, and only its holder's own activations beyond the
+-- turn's first spend it (graceUsed). data/scenarios/the-chain-veil proves the
+-- count, and its each-players-grant-is-spent-by-their-own-activations scenario
+-- the per-player spending.
 loyaltyOk :: PlayerId -> ObjectId -> ActivatedAbility.ActivatedAbility Card.Card (GrantedAbility.GrantedAbility Card.Card) -> GameState -> Bool
 loyaltyOk pid srcId ability gs =
-  not (Cost.isLoyaltyCost (ActivatedAbility.cost ability))
-    || ( (Turn.sorcerySpeedWindow pid gs || PlayerEffect.activatesLoyaltyAtInstantSpeed pid srcId gs)
-           && not (loyaltyActivatedThisTurn srcId gs)
+  not (Loyalty.isLoyaltyCost (ActivatedAbility.cost ability))
+    || ( (Turn.sorcerySpeedWindow pid gs || PlayerEffect.loyaltyGrants LoyaltyClause.Window pid srcId gs > 0)
+           && ( not (loyaltyActivatedThisTurn srcId gs)
+                  || let grants = PlayerEffect.loyaltyGrants LoyaltyClause.OncePerTurn pid srcId gs
+                      in grants > 0 && graceUsed pid srcId gs < grants
+              )
        )
 
 -- CR 602.5: the ability's printed rider holds, or holds once an effect letting
@@ -377,6 +394,23 @@ riderOk pid srcId ability gs =
 
 loyaltyActivatedThisTurn :: ObjectId -> GameState -> Bool
 loyaltyActivatedThisTurn srcId gs = elem (GameEvent.LoyaltyAbilityActivated srcId) (fmap LoggedEvent.event (GameState.events gs))
+
+-- How many of `pid`'s loyalty activations of `srcId` this turn went past CR
+-- 606.3's one, so spent a grant: all of theirs, less the turn's first
+-- activation of it when that was theirs. Off CR 602.2's log, the event log
+-- recording no activator.
+graceUsed :: PlayerId -> ObjectId -> GameState -> Int
+graceUsed pid srcId gs =
+  let activators =
+        [ PastActivation.activator past
+        | past <- Foldable.toList (GameState.activationsThisTurn gs),
+          ObjectSnapshot.object (PastActivation.source past) == srcId,
+          any (Loyalty.isLoyaltyCost . ActivatedAbility.cost) (PastActivation.ability past)
+        ]
+      theirs = length (filter (== pid) activators)
+   in case activators of
+        first : _ | first == pid -> theirs - 1
+        _ -> theirs
 
 -- CR 602.2b's routing of an activation cost through CR 601.2b, at X=0. An
 -- ability is affordable when its activation cost is payable at the least X its
@@ -422,7 +456,7 @@ payableCostAt aimable x stamp spendable pid srcId gs =
 -- Cost.canPaySomeCompletionGiven.
 payableCostAtGiven :: [(Map.Map SlotName (Natural, Natural), Map.Map SlotName (Set.Set ObjectId))] -> [ObjectId] -> Map.Map ObjectId PC.ProjectedCharacteristics -> Natural -> Maybe Keyword -> Maybe (Set.Set ManaType.ManaType) -> PlayerId -> ObjectId -> GameState -> Cost Keyword -> Bool
 payableCostAtGiven aimable sources pcs x stamp spendable pid srcId gs cost =
-  aimingSomewhere (\adjustments -> Cost.plusComponents adjustments (Cost.substituteX x cost)) aimable stamp (Cost.loyaltyKindOf cost) pid srcId gs (\slots adjustments -> let totalled = Cost.plusComponents adjustments (Cost.substituteX x cost) in Cost.canPaySomeCompletionGiven slots (PaymentSubject.Activating srcId stamp spendable) ManaSpending.AsProduced sources pcs pid srcId (Cost.totalManas adjustments) (Cost.waterbendSubstitutions (Cost.Type.components totalled) slots pid srcId gs) totalled gs)
+  aimingSomewhere (\adjustments -> Cost.plusComponents adjustments (Cost.substituteX x cost)) aimable stamp (Loyalty.loyaltyKindOf cost) pid srcId gs (\slots adjustments -> let totalled = Cost.plusComponents adjustments (Cost.substituteX x cost) in Cost.canPaySomeCompletionGiven slots (PaymentSubject.Activating srcId stamp spendable) ManaSpending.AsProduced sources pcs pid srcId (Cost.totalManas adjustments) (Cost.waterbendSubstitutions (Cost.Type.components totalled) slots pid srcId gs) totalled gs)
 
 -- CR 601.2f's totalling asked where CR 601.2c's targets do not exist yet: the
 -- predicate holds if SOME aiming this activation could still take leaves the
@@ -490,7 +524,7 @@ aimingSomewhere costWith aimable stamp loyalty pid srcId gs payable =
   -- (Cost.manaActivationAdjustments).
   --
   -- CR 606.2's kind is the CALLER's, because this gate is handed a cost rather
-  -- than an ability: Cost.loyaltyKindOf reads it off the same printed cost the
+  -- than an ability: Loyalty.loyaltyKindOf reads it off the same printed cost the
   -- caller is measuring, so Carth the Lion's addition is totalled in here only
   -- for an ability whose own cost carries a loyalty symbol.
   let gather aimedAt = Cost.activationAdjustments aimedAt stamp AbilityKind.NonManaAbility loyalty pid srcId gs

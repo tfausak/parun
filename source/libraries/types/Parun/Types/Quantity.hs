@@ -3,6 +3,7 @@ module Parun.Types.Quantity where
 import qualified Data.Text as Text
 import qualified Numeric.Natural as Natural
 import qualified Parun.Types.AbilityAct as AbilityAct
+import qualified Parun.Types.ActivationsThisTurn as ActivationsThisTurn
 import qualified Parun.Types.AgainstExiledPile as AgainstExiledPile
 import qualified Parun.Types.AgainstLastCardExiledWith as AgainstLastCardExiledWith
 import qualified Parun.Types.AgainstSlot as AgainstSlot
@@ -301,6 +302,10 @@ data Quantity
     -- sentence here: a copy of the ability counts toward the same total, the copy
     -- keeping the original's Source.
     TimesThisTurn AbilityAct.AbilityAct
+  | -- | CR 602.2 / 608.2i: how many of the turn's activations by that player
+    -- match, read off GameState.activationsThisTurn -- The Chain Veil's "if you
+    -- didn't activate a loyalty ability of a planeswalker this turn".
+    ActivationsThisTurn ActivationsThisTurn.ActivationsThisTurn
   | -- | CR 702.40a: how many spells, by any player, were cast this turn before the
     -- object this quantity is evaluated against -- storm's count.
     SpellsCastBefore
