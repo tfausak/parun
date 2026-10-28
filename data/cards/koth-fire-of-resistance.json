@@ -178,76 +178,78 @@
                       {
                         "type": "CreateEmblem",
                         "value": {
-                          "faces": [
-                            {
-                              "name": "Koth Fire of Resistance Emblem",
-                              "triggeredAbilities": [
-                                {
-                                  "condition": {
-                                    "type": "PermanentEnters",
-                                    "value": {
-                                      "type": "And",
-                                      "value": [
-                                        {
-                                          "type": "HasSubtype",
-                                          "value": {
-                                            "type": "Mountain"
+                          "card": {
+                            "faces": [
+                              {
+                                "name": "Koth Fire of Resistance Emblem",
+                                "triggeredAbilities": [
+                                  {
+                                    "condition": {
+                                      "type": "PermanentEnters",
+                                      "value": {
+                                        "type": "And",
+                                        "value": [
+                                          {
+                                            "type": "HasSubtype",
+                                            "value": {
+                                              "type": "Mountain"
+                                            }
+                                          },
+                                          {
+                                            "type": "HeldBy",
+                                            "value": {
+                                              "holder": {
+                                                "type": "Controller"
+                                              },
+                                              "relation": {
+                                                "type": "You"
+                                              }
+                                            }
                                           }
-                                        },
+                                        ]
+                                      }
+                                    },
+                                    "modal": {
+                                      "modes": [
                                         {
-                                          "type": "HeldBy",
-                                          "value": {
-                                            "holder": {
-                                              "type": "Controller"
-                                            },
-                                            "relation": {
-                                              "type": "You"
+                                          "clauses": [
+                                            {
+                                              "effects": [
+                                                {
+                                                  "type": "DealDamage",
+                                                  "value": {
+                                                    "parts": [
+                                                      {
+                                                        "quantity": {
+                                                          "type": "Literal",
+                                                          "value": 4
+                                                        },
+                                                        "ref": {
+                                                          "type": "InSlot",
+                                                          "value": "target"
+                                                        }
+                                                      }
+                                                    ]
+                                                  }
+                                                }
+                                              ]
+                                            }
+                                          ],
+                                          "targetSlots": {
+                                            "target": {
+                                              "pool": {
+                                                "type": "AnyTarget"
+                                              }
                                             }
                                           }
                                         }
                                       ]
                                     }
-                                  },
-                                  "modal": {
-                                    "modes": [
-                                      {
-                                        "clauses": [
-                                          {
-                                            "effects": [
-                                              {
-                                                "type": "DealDamage",
-                                                "value": {
-                                                  "parts": [
-                                                    {
-                                                      "quantity": {
-                                                        "type": "Literal",
-                                                        "value": 4
-                                                      },
-                                                      "ref": {
-                                                        "type": "InSlot",
-                                                        "value": "target"
-                                                      }
-                                                    }
-                                                  ]
-                                                }
-                                              }
-                                            ]
-                                          }
-                                        ],
-                                        "targetSlots": {
-                                          "target": {
-                                            "pool": {
-                                              "type": "AnyTarget"
-                                            }
-                                          }
-                                        }
-                                      }
-                                    ]
                                   }
-                                }
-                              ]
-                            }
-                          ]
+                                ]
+                              }
+                            ]
+                          }
                         }
                       }
                     ]

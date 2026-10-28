@@ -520,6 +520,8 @@ library codec
     Parun.Codec.Create
     Parun.Codec.CreateCopy
     Parun.Codec.CreateCopySpec
+    Parun.Codec.CreateEmblem
+    Parun.Codec.CreateEmblemSpec
     Parun.Codec.CreateSpec
     Parun.Codec.CreatureBecomesBlockedByAtLeast
     Parun.Codec.CreatureBecomesBlockedByAtLeastSpec
@@ -2550,6 +2552,7 @@ library types
     Parun.Types.Craft
     Parun.Types.Create
     Parun.Types.CreateCopy
+    Parun.Types.CreateEmblem
     Parun.Types.CreatureBecomesBlockedByAtLeast
     Parun.Types.CreatureExploits
     Parun.Types.Crewing

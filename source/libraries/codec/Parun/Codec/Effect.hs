@@ -43,6 +43,7 @@ import qualified Parun.Codec.CopyStackObject as CopyStackObject
 import qualified Parun.Codec.Counter as Counter
 import qualified Parun.Codec.Create as Create
 import qualified Parun.Codec.CreateCopy as CreateCopy
+import qualified Parun.Codec.CreateEmblem as CreateEmblem
 import qualified Parun.Codec.Daytime as Daytime
 import qualified Parun.Codec.DealDamage as DealDamage
 import qualified Parun.Codec.Designate as Designate
@@ -269,7 +270,7 @@ codec cardCodec abilityCodec =
           Arm.payload "Prohibit" Prohibit.codec Effect.Prohibit (\x -> case x of Effect.Prohibit y -> Just y; _ -> Nothing),
           Arm.payload "ForbidAttack" ForbidAttack.codec Effect.ForbidAttack (\x -> case x of Effect.ForbidAttack y -> Just y; _ -> Nothing),
           Arm.payload "ForbidBeingBlocked" ForbidBeingBlocked.codec Effect.ForbidBeingBlocked (\x -> case x of Effect.ForbidBeingBlocked y -> Just y; _ -> Nothing),
-          Arm.payload "CreateEmblem" cardCodec Effect.CreateEmblem (\x -> case x of Effect.CreateEmblem y -> Just y; _ -> Nothing),
+          Arm.payload "CreateEmblem" (CreateEmblem.codec cardCodec) Effect.CreateEmblem (\x -> case x of Effect.CreateEmblem y -> Just y; _ -> Nothing),
           Arm.payload "BecomeMonarch" MonarchTarget.codec Effect.BecomeMonarch (\x -> case x of Effect.BecomeMonarch y -> Just y; _ -> Nothing),
           Arm.payload "TakeTheInitiative" InitiativeTarget.codec Effect.TakeTheInitiative (\x -> case x of Effect.TakeTheInitiative y -> Just y; _ -> Nothing),
           Arm.payload "Designate" Designate.codec Effect.Designate (\x -> case x of Effect.Designate y -> Just y; _ -> Nothing),
