@@ -1080,6 +1080,14 @@ withAnnouncedTargets aiming =
 targetingObject :: SlotName
 targetingObject = SlotName.MkSlotName (Text.pack "thatTargetingObject")
 
+-- CR 602.2b / 601.2i: the reserved slot under which the ABILITY whose
+-- activation fired the trigger is bound -- Kurkesh, Onakke Ancient's "copy that
+-- ability". `castSpell`'s posture: not a target. An ability countered while the
+-- trigger waits is still copied, from what Parun.Engine.Game.cease filed in
+-- GameState.stackArchive (CR 608.2h).
+activatedAbility :: SlotName
+activatedAbility = SlotName.MkSlotName (Text.pack "thatAbility")
+
 -- CR 509.3d: the reserved slot under which the CREATURE THAT BLOCKED the bearer
 -- is bound -- rule 702.25a's "the blocking creature". Stamped by
 -- Parun.Engine.Event.Binding.eventBindings as the trigger is gathered, alongside
@@ -1423,6 +1431,10 @@ setThisAbility oid = Map.insert thisAbility (toObject oid)
 -- Bind an object under the reserved targetingObject slot (CR 601.2c).
 setTargetingObject :: ObjectId -> Map SlotName Binding -> Map SlotName Binding
 setTargetingObject oid = Map.insert targetingObject (toObject oid)
+
+-- Bind an object under the reserved activatedAbility slot (CR 602.2b).
+setActivatedAbility :: ObjectId -> Map SlotName Binding -> Map SlotName Binding
+setActivatedAbility oid = Map.insert activatedAbility (toObject oid)
 
 -- Bind an object under the reserved blockingCreature slot (CR 509.3d).
 setBlockingCreature :: ObjectId -> Map SlotName Binding -> Map SlotName Binding

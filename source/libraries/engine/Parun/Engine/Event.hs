@@ -1090,7 +1090,7 @@ damageOf event = case event of
   GameEvent.Crewed _ -> Nothing
   GameEvent.PermanentSacrificed {} -> Nothing
   GameEvent.AbilityTriggered {} -> Nothing
-  GameEvent.LoyaltyAbilityActivated _ -> Nothing
+  GameEvent.AbilityActivated _ -> Nothing
   GameEvent.LifeLost {} -> Nothing
   GameEvent.LifeGained {} -> Nothing
   GameEvent.CountersPut {} -> Nothing
@@ -1163,7 +1163,7 @@ revealOf event = case event of
   GameEvent.Crewed _ -> Nothing
   GameEvent.PermanentSacrificed {} -> Nothing
   GameEvent.AbilityTriggered {} -> Nothing
-  GameEvent.LoyaltyAbilityActivated _ -> Nothing
+  GameEvent.AbilityActivated _ -> Nothing
   GameEvent.LifeLost {} -> Nothing
   GameEvent.LifeGained {} -> Nothing
   GameEvent.CountersPut {} -> Nothing
@@ -10591,6 +10591,8 @@ controllerTurnScoped cond = case cond of
   -- The same rule with no TurnScope to read: a spell can be cast on anybody's
   -- turn, so its own cast trigger is not the controller's-turn kind either.
   TriggerCondition.SelfCast -> False
+  -- Nor an activation, which CR 602.2 allows on anybody's turn.
+  TriggerCondition.AbilityActivated _ -> False
   -- The condition carries no TurnScope, and an opponent can target the bearer on
   -- anybody's turn.
   TriggerCondition.SelfBecomesTargeted _ -> False
@@ -10904,7 +10906,7 @@ abilityTriggeredOf event = case event of
   GameEvent.AttackerUnblocked _ -> Nothing
   GameEvent.SpellCountered _ -> Nothing
   GameEvent.AbilityCountered _ -> Nothing
-  GameEvent.LoyaltyAbilityActivated _ -> Nothing
+  GameEvent.AbilityActivated _ -> Nothing
   GameEvent.LifeLost {} -> Nothing
   GameEvent.LifeGained {} -> Nothing
   GameEvent.CountersPut {} -> Nothing

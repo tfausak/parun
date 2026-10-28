@@ -29,6 +29,7 @@ import qualified Parun.Engine.Turn as Turn
 import qualified Parun.Engine.Vanguard as Vanguard
 import qualified Parun.Types.AbilityKind as AbilityKind
 import qualified Parun.Types.AbilityName as AbilityName
+import qualified Parun.Types.AbilityWasActivated as AbilityWasActivated
 import qualified Parun.Types.ActivatedAbility as ActivatedAbility
 import qualified Parun.Types.Activator as Activator
 import qualified Parun.Types.Card as Card
@@ -393,7 +394,11 @@ riderOk pid srcId ability gs =
            )
 
 loyaltyActivatedThisTurn :: ObjectId -> GameState -> Bool
-loyaltyActivatedThisTurn srcId gs = elem (GameEvent.LoyaltyAbilityActivated srcId) (fmap LoggedEvent.event (GameState.events gs))
+loyaltyActivatedThisTurn srcId gs = any (loyaltyOf . LoggedEvent.event) (GameState.events gs)
+  where
+    loyaltyOf event = case event of
+      GameEvent.AbilityActivated a -> AbilityWasActivated.loyalty a && AbilityWasActivated.source a == srcId
+      _ -> False
 
 -- How many of `pid`'s loyalty activations of `srcId` this turn went past CR
 -- 606.3's one, so spent a grant: all of theirs, less the turn's first

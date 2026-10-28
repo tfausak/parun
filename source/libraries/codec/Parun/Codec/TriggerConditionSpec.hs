@@ -974,6 +974,12 @@ spec s = Spec.describe s "Parun.Codec.TriggerCondition" $ do
       TriggerCondition.codec
       TriggerCondition.SelfCast
       " {\"type\":\"SelfCast\"} "
+  Spec.it s "AbilityActivated round-trips its Filter" $
+    Common.assertCodec
+      s
+      TriggerCondition.codec
+      (TriggerCondition.AbilityActivated (Filter.HeldBy Holder.Controller PlayerRelation.You))
+      " {\"type\":\"AbilityActivated\",\"value\":{\"type\":\"HeldBy\",\"value\":{\"holder\":{\"type\":\"Controller\"},\"relation\":{\"type\":\"You\"}}}} "
   -- CR 709.5h. The payload is the DOOR's own name (CR 709.4a), which is what
   -- separates two unlock triggers printed on one Room.
   Spec.it s "SelfHalfUnlocked round-trips its door" $

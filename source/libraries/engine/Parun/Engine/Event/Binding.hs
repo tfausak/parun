@@ -18,6 +18,7 @@ import qualified Parun.Engine.Game as Game
 import qualified Parun.Engine.Projection as Projection
 import qualified Parun.Extra.Natural as Natural
 import qualified Parun.Types.AbilityTriggered as AbilityTriggered
+import qualified Parun.Types.AbilityWasActivated as AbilityWasActivated
 import qualified Parun.Types.AttackTarget as AttackTarget
 import qualified Parun.Types.AttackerBlocked as AttackerBlocked
 import qualified Parun.Types.AttackerDeclared as AttackerDeclared
@@ -62,6 +63,7 @@ import qualified Parun.Types.OwnedZone as OwnedZone
 import qualified Parun.Types.PermanentDealsCombatDamageToPlayer as PermanentDealsCombatDamageToPlayer
 import qualified Parun.Types.PermanentWasSacrificed as PermanentWasSacrificed
 import qualified Parun.Types.PermanentsDealCombatDamageToPlayer as PermanentsDealCombatDamageToPlayer
+import qualified Parun.Types.PlayerActed as PlayerActed
 import qualified Parun.Types.PlayerAttacksWith as PlayerAttacksWith
 import Parun.Types.PlayerId (PlayerId)
 import qualified Parun.Types.PlayerIsDealtDamage as PlayerIsDealtDamage
@@ -774,6 +776,14 @@ eventBindingsOver board gs bearerBecame becameInGraveyard bearer you cond event 
   -- the copy, and the player who copied it.
   (TriggerCondition.SpellCast {}, GameEvent.SpellCopied (SpellWasCopied.MkSpellWasCopied copier copy)) ->
     Binding.setTriggerPlayer copier (Binding.setCastSpell copy Map.empty)
+  -- CR 602.2b's "that ability" and "that player": the ability on the stack and
+  -- its activator (CR 602.2a). Unconditional given a match.
+  (TriggerCondition.AbilityActivated _, GameEvent.AbilityActivated activated) ->
+    Binding.setTriggerPlayer (AbilityWasActivated.player activated) (Binding.setActivatedAbility (AbilityWasActivated.ability activated) Map.empty)
+  -- CR 603.2's "that player": the player who acted, Ob Nixilis, Unshackled's
+  -- searcher. Unconditional given a match.
+  (TriggerCondition.PlayerActs _, GameEvent.PlayerActed acted) ->
+    Binding.setTriggerPlayer (PlayerActed.player acted) Map.empty
   -- CR 702.21a's "that spell or ability": the object whose announcement fired
   -- this, which ward counters and whose controller ward offers the cost to.
   -- Unconditional given a match, which is what eventBindingSlots' per-condition
@@ -1398,13 +1408,11 @@ eventBindingSlots cond = case cond of
   -- than in the event's bindings. The dungeon card itself arrives under CR 113.7a's
   -- reserved source slot, which every borne trigger gets at placement.
   TriggerCondition.RoomEntered _ -> Set.empty
-  -- Nothing either: the event names the acting player, and no printed payload
-  -- points at them -- Matoya, Archon Elder draws, Dungeon Crawler returns itself,
-  -- Synthetic Blight Chronicler drains for its own controller. A card printing
-  -- "that player" is what would earn a slot. CR 701.68c's "blighted creature"
-  -- and CR 706.2's result are not this condition's to bind: the INSTRUCTING
-  -- effect binds each at its own slot (Parun.Types.Blight, Parun.Types.RollDie).
-  TriggerCondition.PlayerActs _ -> Set.empty
+  -- The acting player, Ob Nixilis, Unshackled's "that player". CR 701.68c's
+  -- "blighted creature" and CR 706.2's result are not this condition's to bind:
+  -- the INSTRUCTING effect binds each at its own slot (Parun.Types.Blight,
+  -- Parun.Types.RollDie).
+  TriggerCondition.PlayerActs _ -> Set.singleton Binding.triggerPlayer
   -- Nothing: Withengar Unbound's payload points at no one -- it grows itself.
   TriggerCondition.PlayerLosesGame _ -> Set.empty
   -- Nothing: CR 305.1's land play binds nothing.
@@ -2034,6 +2042,9 @@ eventBindingSlots cond = case cond of
   -- PlayerId unconditionally -- so the promise holds for every cast the Filter
   -- can admit.
   TriggerCondition.SpellCast {} -> Set.fromList [Binding.castSpell, Binding.triggerPlayer]
+  -- The activated ability and its activator, both on every event the condition
+  -- admits.
+  TriggerCondition.AbilityActivated _ -> Set.fromList [Binding.activatedAbility, Binding.triggerPlayer]
   -- Nothing, a deliberate empty rather than a default: the spell the event names
   -- is the BEARER, which every ability already reaches as its own source, and the
   -- caster is CR 109.5's "you", whom Binding.setYou already names. A slot would

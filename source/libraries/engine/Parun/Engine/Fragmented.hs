@@ -23,6 +23,7 @@ import qualified Parun.Engine.Interchangeable.Mentions as Mentions
 import qualified Parun.Engine.Keyword as Keyword
 import qualified Parun.Engine.Planechase as Planechase
 import qualified Parun.Extra.Int as Int
+import qualified Parun.Types.AbilityWasActivated as AbilityWasActivated
 import qualified Parun.Types.Acquisition as Acquisition
 import Parun.Types.Action (Action)
 import qualified Parun.Types.Action as Action
@@ -290,7 +291,8 @@ historyReads =
 
 -- | Does this logged event record part of what `reading` reads? Through the read
 -- site's own projection wherever it has one. GameState.activationsThisTurn
--- records the activations, so no event does.
+-- records the activations that read reads, mana abilities included, so
+-- GameEvent.AbilityActivated does not.
 records :: HistoryRead.HistoryRead -> GameEvent -> Bool
 records reading event = case reading of
   HistoryRead.Activations -> False
@@ -375,7 +377,7 @@ lifeLost event = case event of
 
 loyaltyActivated :: GameEvent -> Bool
 loyaltyActivated event = case event of
-  GameEvent.LoyaltyAbilityActivated {} -> True
+  GameEvent.AbilityActivated a -> AbilityWasActivated.loyalty a
   _ -> False
 
 stepBegan :: GameEvent -> Bool
