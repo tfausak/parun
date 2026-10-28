@@ -655,10 +655,9 @@ data Prompt r where
   -- Parun.Interpreter.policingCardNames, which resolves the name and matches the
   -- Filter against it.
   ChooseCardName :: Decider.Decider -> PlayerId.PlayerId -> ObjectId.ObjectId -> Filter.Filter Keyword.Keyword -> Seq.Seq (PlayerId.PlayerId, CardName.CardName) -> Prompt CardName.CardName
-  -- | CR 608.2c: whether a Parun.Types.Guess's proposition, the Filter, holds
-  -- of a card hidden from the guesser (CR 400.2); the ObjectId is the guess's
-  -- source. The card is not carried, so the question cannot show it. Never
-  -- elided: neither answer is forced.
+  -- | CR 608.2c: whether a Guess's proposition, the Filter, holds of a card
+  -- hidden from the guesser (CR 400.2), the ObjectId being the guess's source
+  -- and never the card; never elided.
   ChooseGuess :: Decider.Decider -> PlayerId.PlayerId -> ObjectId.ObjectId -> Filter.Filter Keyword.Keyword -> Prompt GuessAnswer.GuessAnswer
   -- | Which opponent a card's text names, as a permanent enters (CR 614.12a),
   -- which opponent an entering Aura enchants (CR 303.4f; Archnemesis), at
