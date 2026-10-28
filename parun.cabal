@@ -2,7 +2,7 @@ cabal-version: 3.0
 -- cabal-gild: version
 -- Generated with cabal-gild version 1.8.4.2
 name: parun
-version: 0.2026.10.24
+version: 0.2026.10.28
 synopsis: Magic: The Gathering rules engine
 description:
   Parun is a Magic: The Gathering rules engine.
