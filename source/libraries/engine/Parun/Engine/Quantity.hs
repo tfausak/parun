@@ -894,9 +894,9 @@ evaluateAgainst viewOf context gs announcedOn mOid mView quantity =
         -- The LIVE object first, which is the ordinary read: rule 608.2n ceases the
         -- ability at the END of its resolution, so it is still on the stack while its own
         -- clauses run. GameState.stackArchive behind it is a REGRESSION FENCE rather than
-        -- a proved line -- Game.cease deletes an ability outright and files nothing, so
-        -- only an archived SPELL can answer there, and a spell's Source is never a key in
-        -- this log.
+        -- a proved line: the object asked is the one resolving, still live, and an
+        -- ability Game.cease filed there would answer under its own Source, the same
+        -- key.
         --
         -- Always a number where the aim has a source, never Nothing: an ability that has
         -- resolved no times is 0, which is an answered question. Nothing only where the

@@ -103,6 +103,7 @@ import qualified Parun.Types.CounterR as CounterR
 import qualified Parun.Types.CounterRestriction as CounterRestriction
 import qualified Parun.Types.Create as Create
 import qualified Parun.Types.CreateCopy as CreateCopy
+import qualified Parun.Types.CreateEmblem as CreateEmblem
 import qualified Parun.Types.CreatureExploits as CreatureExploits
 import qualified Parun.Types.CrewRestriction as CrewRestriction
 import qualified Parun.Types.DamagePart as DamagePart
@@ -1032,7 +1033,7 @@ rewriteEffect pairs effect = case effect of
      in Effect.RequireAttack (RequireAttack.MkRequireAttack (rewriteDuration pairs duration) (rewriteRestricted pairs attacker) rewrittenDefender)
   -- CR 114.3 leaves an emblem no type line and no name, so its ABILITIES are the
   -- whole of what CR 612.1 can reach.
-  Effect.CreateEmblem card -> Effect.CreateEmblem (rewriteCard pairs card)
+  Effect.CreateEmblem (CreateEmblem.MkCreateEmblem card player) -> Effect.CreateEmblem (CreateEmblem.MkCreateEmblem (rewriteCard pairs card) player)
   Effect.BecomeMonarch {} -> effect
   Effect.TakeTheInitiative {} -> effect
   Effect.Designate (Designate.MkDesignate d slot value) -> Effect.Designate (Designate.MkDesignate d slot (fmap (rewriteQuantity pairs) value))

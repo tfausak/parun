@@ -1464,12 +1464,13 @@ conjureOntoBattlefield controller card copied count tapped = do
 -- the project writes no export lists, so that name would be a public door past
 -- the check.
 --
--- Both roads into this funnel hand it the resolving controller, who by CR 800.4a
--- controls no resolving spell or ability once they have left, so the guard is
--- reachable only by driving the funnel -- which is what Parun.EventSpec's "CR
--- 800.4d no emblem is created for a player who has left the game" does, as the
--- conjure and token cases beside it do. Gameplay reaches it the day an effect
--- names a recipient other than the resolving controller.
+-- Neither road into this funnel hands it a departed player: Ring.tempt's is a
+-- resolving controller, who by CR 800.4a controls nothing once they have left,
+-- and Effect.CreateEmblem's players are read through Players.resolution, whose
+-- roster is the players still in the game. So the guard is reachable only by
+-- driving the funnel -- which is what Parun.EventSpec's "CR 800.4d no emblem is
+-- created for a player who has left the game" does, as the conjure and token
+-- cases beside it do.
 createEmblem :: PlayerId -> Card -> Game (Maybe ObjectId)
 createEmblem pid card = do
   gs <- State.get

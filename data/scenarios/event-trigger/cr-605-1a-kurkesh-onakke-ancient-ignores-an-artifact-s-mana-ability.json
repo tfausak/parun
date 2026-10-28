@@ -1,6 +1,6 @@
 {
-  "description": "CR 605.1a Kurkesh, Onakke Ancient ignores an artifact's mana ability",
-  "note": "Mind Stone's {T}: Add {C} pays part of Rod of Ruin's {3}. Mind Stone is an artifact, but its mana ability is no activation Kurkesh watches: the Rod alone puts one trigger on the stack.",
+  "description": "CR 605.1a a mana ability paying for Rod of Ruin adds no second Kurkesh trigger",
+  "note": "A guard, not a proof of Kurkesh's 'if it isn't a mana ability': mana abilities record no activation at all (#5733), so Mind Stone's {T}: Add {C}, paying part of the Rod's {3}, cannot fire Kurkesh, and the Rod alone puts one trigger on the stack. No card here encodes the exclusion; it holds because nothing is recorded.",
   "board": {
     "active": "alice",
     "step": "PrecombatMain",
