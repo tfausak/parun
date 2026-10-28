@@ -118,6 +118,7 @@ import qualified Parun.Types.GameSettings as GameSettings
 import Parun.Types.GameState (GameState)
 import qualified Parun.Types.GameState as GameState
 import qualified Parun.Types.GrantedAbility as GrantedAbility
+import qualified Parun.Types.Guess as Guess
 import qualified Parun.Types.HowMany as HowMany
 import qualified Parun.Types.InherentTriggerSource as InherentTriggerSource
 import qualified Parun.Types.Keyword as Keyword.Type
@@ -3195,6 +3196,7 @@ effectIsImpossible resolving source controller legal gs effect = case effect of
   Effect.ChoosePermanents (ChoosePermanents.MkChoosePermanents choice _ _) -> choosesFromNothing (ObjectRef.ChosenPermanents choice)
   Effect.RollDie {} -> False
   Effect.FlipCoin {} -> False
+  Effect.Guess guess -> choosesFromNothing (Guess.subject guess)
   Effect.ExileHandThenDraw {} -> False
   Effect.NoteManaSpent {} -> False
   Effect.Proliferate {} -> False

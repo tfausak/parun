@@ -137,6 +137,7 @@ import qualified Parun.Types.GainControl as GainControl
 import qualified Parun.Types.GrantLookAtExiled as GrantLookAtExiled
 import qualified Parun.Types.GrantPlayFromExile as GrantPlayFromExile
 import qualified Parun.Types.GrantedAbility as GrantedAbility
+import qualified Parun.Types.Guess as Guess
 import qualified Parun.Types.Holder as Holder
 import qualified Parun.Types.Hop as Hop
 import qualified Parun.Types.HowMany as HowMany
@@ -330,6 +331,7 @@ ownQuantities effect = case effect of
   Effect.Mill (Mill.MkMill _ quantity _ _) -> [quantity]
   Effect.Reveal {} -> []
   Effect.LookAt {} -> []
+  Effect.Guess {} -> []
   Effect.Scry (PlayerQuantity.MkPlayerQuantity _ quantity) -> [quantity]
   Effect.Surveil (PlayerQuantity.MkPlayerQuantity _ quantity) -> [quantity]
   Effect.Fateseal (PlayerQuantity.MkPlayerQuantity _ quantity) -> [quantity]
@@ -1526,6 +1528,8 @@ effectObjectRefs effect =
         -- the hand's owner.
         Effect.Reveal (Reveal.MkReveal ref _) -> [(AnyCardsFromAmong : CardInHand : shownQuestions, ref)]
         Effect.LookAt (LookAt.MkLookAt ref _ _) -> read_ [ref]
+        -- Master of Predicaments' "choose a card in your hand" asks here.
+        Effect.Guess (Guess.MkGuess subject _ _ _ _) -> [([CardInHand], subject)]
         Effect.Scry {} -> []
         Effect.Surveil {} -> []
         Effect.Fateseal {} -> []

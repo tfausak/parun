@@ -114,6 +114,7 @@ import qualified Parun.Types.FromOutsideTheGame as FromOutsideTheGame
 import qualified Parun.Types.GainControl as GainControl
 import qualified Parun.Types.GrantLookAtExiled as GrantLookAtExiled
 import qualified Parun.Types.GrantPlayFromExile as GrantPlayFromExile
+import qualified Parun.Types.Guess as Guess
 import qualified Parun.Types.Holder as Holder
 import qualified Parun.Types.Hop as Hop
 import qualified Parun.Types.HowMany as HowMany
@@ -690,6 +691,22 @@ spec s = Spec.describe s "Parun.Codec.Effect" $ do
   -- Pulling Teeth's "Clash with an opponent". The payload is the slot the outcome
   -- is bound at and nothing else: rule 701.30b fixes who clashes, and which
   -- opponent is chosen as the effect applies.
+  -- Master of Predicaments' guess, its payload Parun.Codec.GuessSpec's.
+  Spec.it s "Guess" $
+    Common.assertJsonCodec
+      s
+      toJson
+      fromJson
+      ( Effect.Guess
+          Guess.MkGuess
+            { Guess.subject = ObjectRef.InSlot (SlotName.MkSlotName (Text.pack "card")),
+              Guess.slot = SlotName.MkSlotName (Text.pack "chosen"),
+              Guess.guesser = PlayerRef.Relative PlayerRelation.You,
+              Guess.proposition = Filter.And [],
+              Guess.right = SlotName.MkSlotName (Text.pack "right")
+            }
+      )
+      " {\"type\":\"Guess\",\"value\":{\"guesser\":{\"type\":\"Relative\",\"value\":{\"type\":\"You\"}},\"proposition\":{\"type\":\"And\",\"value\":[]},\"right\":\"right\",\"slot\":\"chosen\",\"subject\":{\"type\":\"InSlot\",\"value\":\"card\"}}} "
   Spec.it s "Clash" $
     Common.assertJsonCodec
       s

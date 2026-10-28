@@ -373,6 +373,7 @@ import qualified Parun.Codec.GrantLookAtExiledSpec
 import qualified Parun.Codec.GrantPlayFromExileSpec
 import qualified Parun.Codec.GrantedAbilitySpec
 import qualified Parun.Codec.GraveyardOrderSpec
+import qualified Parun.Codec.GuessSpec
 import qualified Parun.Codec.HalfUnlockedSpec
 import qualified Parun.Codec.HandActionSpec
 import qualified Parun.Codec.HolderSpec
@@ -1349,6 +1350,7 @@ spec s registry corpus = do
   Parun.Codec.LimitUnlessSpec.spec s
   Parun.Codec.LoggedEventSpec.spec s
   Parun.Codec.LookAtSpec.spec s
+  Parun.Codec.GuessSpec.spec s
   Parun.Codec.ArrangeInLibrarySpec.spec s
   Parun.Codec.LookedSpec.spec s
   Parun.Codec.PlayerInstructionSpec.spec s

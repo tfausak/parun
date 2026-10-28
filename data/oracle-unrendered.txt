@@ -1353,6 +1353,7 @@ maskwood-nexus
 mass-polymorph
 master-chef
 master-of-diversion
+master-of-predicaments
 master-of-the-wild-hunt
 master-thief
 master-warcraft

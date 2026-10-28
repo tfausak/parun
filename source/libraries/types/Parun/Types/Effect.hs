@@ -58,6 +58,7 @@ import qualified Parun.Types.FromOutsideTheGame as FromOutsideTheGame
 import qualified Parun.Types.GainControl as GainControl
 import qualified Parun.Types.GrantLookAtExiled as GrantLookAtExiled
 import qualified Parun.Types.GrantPlayFromExile as GrantPlayFromExile
+import qualified Parun.Types.Guess as Guess
 import qualified Parun.Types.InitiativeTarget as InitiativeTarget
 import qualified Parun.Types.LifeLoss as LifeLoss
 import qualified Parun.Types.LookAt as LookAt
@@ -675,6 +676,10 @@ data Effect card ability
     -- call is a choice and the outcome is not, so the two prompts differ in
     -- whether they carry a Decider.
     FlipCoin FlipCoin.FlipCoin
+  | -- | CR 608.2c: a player guesses whether a proposition holds of a card
+    -- hidden from them, the outcome bound for a later clause to gate on
+    -- (Master of Predicaments).
+    Guess Guess.Guess
   | -- | CR 103.5b (Serum Powder): exile every card in the resolving controller's
     -- hand, then draw that many -- "that many" being the hand size before the
     -- exile, which is why it is one opcode.

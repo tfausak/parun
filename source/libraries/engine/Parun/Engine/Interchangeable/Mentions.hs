@@ -246,6 +246,7 @@ import qualified Parun.Types.GameLossR as GameLossR
 import qualified Parun.Types.GrantLookAtExiled as GrantLookAtExiled
 import qualified Parun.Types.GrantPlayFromExile as GrantPlayFromExile
 import qualified Parun.Types.GrantedAbility as GrantedAbility
+import qualified Parun.Types.Guess as Guess
 import qualified Parun.Types.HandAction as HandAction
 import qualified Parun.Types.HistoryRead as HistoryRead
 import qualified Parun.Types.HowMany as HowMany
@@ -1473,6 +1474,7 @@ effectNames asking onCard onAbility x = case x of
   Effect.Reroll -> mempty
   Effect.RerollStoredResults slotName -> slotNames asking slotName
   Effect.FlipCoin flipCoin -> flipCoinNames asking flipCoin
+  Effect.Guess guess -> guessNames asking guess
   Effect.ExileHandThenDraw -> mempty
   Effect.NoteManaSpent -> mempty
   Effect.Proliferate -> mempty
@@ -1700,6 +1702,10 @@ fightNames asking x = case x of
 flipCoinNames :: (Monoid r) => Asking r -> FlipCoin.FlipCoin -> r
 flipCoinNames asking x = case x of
   FlipCoin.MkFlipCoin count _reading slot misses flipper -> quantityNames asking count <> slotNames asking slot <> foldMap (slotNames asking) misses <> playerRefNames asking flipper
+
+guessNames :: (Monoid r) => Asking r -> Guess.Guess -> r
+guessNames asking x = case x of
+  Guess.MkGuess subject slot guesser proposition right -> objectRefNames asking subject <> slotNames asking slot <> playerRefNames asking guesser <> filterNames asking proposition <> slotNames asking right
 
 floatingCandidateNames :: Asking r -> FloatingCandidate.FloatingCandidate -> r
 floatingCandidateNames asking x = case x of

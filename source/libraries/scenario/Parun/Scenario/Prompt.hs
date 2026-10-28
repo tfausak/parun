@@ -148,6 +148,7 @@ kindOf prompt = Text.pack $ case prompt of
   Prompt.ChooseManaType {} -> "ChooseManaType"
   Prompt.ChooseCardType {} -> "ChooseCardType"
   Prompt.ChooseCardName {} -> "ChooseCardName"
+  Prompt.ChooseGuess {} -> "ChooseGuess"
   Prompt.ChooseOpponent {} -> "ChooseOpponent"
   Prompt.ChooseProtector {} -> "ChooseProtector"
   Prompt.ChoosePlayer {} -> "ChoosePlayer"

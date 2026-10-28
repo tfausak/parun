@@ -798,6 +798,8 @@ library codec
     Parun.Codec.GrantPlayFromExileSpec
     Parun.Codec.GraveyardOrder
     Parun.Codec.GraveyardOrderSpec
+    Parun.Codec.Guess
+    Parun.Codec.GuessSpec
     Parun.Codec.HalfUnlocked
     Parun.Codec.HalfUnlockedSpec
     Parun.Codec.HandAction
@@ -2700,6 +2702,8 @@ library types
     Parun.Types.GrantPlayFromExile
     Parun.Types.GraveyardArrangement
     Parun.Types.GraveyardOrder
+    Parun.Types.Guess
+    Parun.Types.GuessAnswer
     Parun.Types.HalfUnlocked
     Parun.Types.HandAction
     Parun.Types.HandActionIndex

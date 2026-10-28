@@ -53,6 +53,7 @@ import qualified Parun.Types.ForageMode as ForageMode
 import qualified Parun.Types.Game as Game.Type
 import qualified Parun.Types.GameEvent as GameEvent
 import qualified Parun.Types.GameState as GameState
+import qualified Parun.Types.GuessAnswer as GuessAnswer
 import qualified Parun.Types.HandActionIndex as HandActionIndex
 import qualified Parun.Types.Hybrid as Hybrid
 import qualified Parun.Types.HybridPayment as HybridPayment
@@ -1835,6 +1836,13 @@ combatReplaySpec s =
           -- kind would pass one leg by accident.
           Spec.assertEqWith s "choosing nonland round trips" (Replay.decode p (Replay.encode p (Just LandOrNonland.Nonland))) (Just (Just LandOrNonland.Nonland))
           Spec.assertEqWith s "and so does declining" (Replay.decode p (Replay.encode p Nothing)) (Just Nothing)
+        -- CR 608.2c: so is a guess (Master of Predicaments).
+        Spec.it s "ChooseGuess round-trips through the transcript" $ do
+          let p = Prompt.ChooseGuess decider S.bob oid (Filter.Type.And [])
+          Spec.assertEqWith s "guessing it does not hold round trips" (Replay.decode p (Replay.encode p GuessAnswer.DoesNotHold)) (Just GuessAnswer.DoesNotHold)
+          -- Discriminating: a decode that ignored the response and answered the
+          -- short transcript's Holds would pass one leg by accident.
+          Spec.assertEqWith s "and so does guessing it holds" (Replay.decode p (Replay.encode p GuessAnswer.Holds)) (Just GuessAnswer.Holds)
         -- CR 701.30c: so is which end of their library a clashing player put the
         -- card they revealed on.
         Spec.it s "ChooseClash round-trips through the transcript" $ do
