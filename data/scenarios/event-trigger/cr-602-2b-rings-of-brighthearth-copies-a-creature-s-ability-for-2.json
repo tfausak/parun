@@ -1,0 +1,126 @@
+{
+  "description": "CR 602.2b Rings of Brighthearth copies a creature's ability for {2}",
+  "note": "Kurkesh's creature case with Rings of Brighthearth in its place: the Rings watch any ability alice activates, Prodigal Pyromancer's included, and the {2} copy is aimed at carol.",
+  "board": {
+    "active": "alice",
+    "step": "PrecombatMain",
+    "seats": [
+      {
+        "name": "alice",
+        "battlefield": [
+          {
+            "card": "Prodigal Pyromancer",
+            "label": "pyro",
+            "ready": true
+          },
+          {
+            "card": "Mountain",
+            "label": "m1"
+          },
+          {
+            "card": "Mountain",
+            "label": "m2"
+          },
+          {
+            "card": "Rings of Brighthearth",
+            "label": "rings"
+          }
+        ]
+      },
+      {
+        "name": "bob"
+      },
+      {
+        "name": "carol"
+      }
+    ]
+  },
+  "timeline": [
+    {
+      "turn": 1,
+      "step": "PrecombatMain",
+      "player": "alice",
+      "do": {
+        "Activate": {
+          "object": "$pyro",
+          "ability": 0,
+          "targets": [
+            "$bob"
+          ],
+          "mana": [
+            null
+          ]
+        }
+      }
+    },
+    {
+      "turn": 1,
+      "step": "PrecombatMain",
+      "player": "alice",
+      "check": {
+        "View": {
+          "of": "Stack",
+          "is": [
+            "trigger of $rings",
+            "ability of $pyro"
+          ]
+        }
+      }
+    },
+    {
+      "turn": 1,
+      "step": "PrecombatMain",
+      "player": "alice",
+      "do": "Pass"
+    },
+    {
+      "turn": 1,
+      "step": "PrecombatMain",
+      "player": "alice",
+      "do": {
+        "ChooseToPay": {
+          "decision": {
+            "type": "Pays"
+          },
+          "mana": [
+            "$m1",
+            "$m2"
+          ]
+        }
+      },
+      "source": "$rings"
+    },
+    {
+      "turn": 1,
+      "step": "PrecombatMain",
+      "player": "alice",
+      "do": {
+        "ChooseTargets": {
+          "target": [
+            "$carol"
+          ]
+        }
+      }
+    }
+  ],
+  "final": [
+    {
+      "View": {
+        "of": "Stack",
+        "is": []
+      }
+    },
+    {
+      "Life": {
+        "player": "bob",
+        "life": 19
+      }
+    },
+    {
+      "Life": {
+        "player": "carol",
+        "life": 19
+      }
+    }
+  ]
+}

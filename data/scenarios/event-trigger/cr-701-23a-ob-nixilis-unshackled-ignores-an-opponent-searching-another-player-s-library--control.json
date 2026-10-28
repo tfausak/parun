@@ -1,0 +1,161 @@
+{
+  "description": "CR 701.23a control: the same Extract aimed at alice's own library fires Ob Nixilis",
+  "note": "The board of the case without --control, with Extract targeting alice: now she searches her own library, and her only creature goes and she loses 10 life.",
+  "board": {
+    "active": "alice",
+    "step": "PrecombatMain",
+    "seats": [
+      {
+        "name": "alice",
+        "battlefield": [
+          {
+            "card": "Island",
+            "label": "i1"
+          },
+          {
+            "card": "Grizzly Bears",
+            "label": "bear"
+          }
+        ],
+        "hand": [
+          {
+            "card": "Extract",
+            "label": "extract"
+          }
+        ],
+        "library": [
+          {
+            "card": "Forest",
+            "label": "af"
+          },
+          {
+            "card": "Mountain",
+            "label": "am"
+          }
+        ]
+      },
+      {
+        "name": "bob",
+        "battlefield": [
+          {
+            "card": "Ob Nixilis, Unshackled",
+            "label": "ob"
+          }
+        ]
+      },
+      {
+        "name": "carol",
+        "battlefield": [
+          {
+            "card": "Grizzly Bears",
+            "label": "cbear"
+          }
+        ],
+        "library": [
+          {
+            "card": "Forest",
+            "label": "cf"
+          },
+          {
+            "card": "Mountain",
+            "label": "cm"
+          }
+        ]
+      }
+    ]
+  },
+  "timeline": [
+    {
+      "turn": 1,
+      "step": "PrecombatMain",
+      "player": "alice",
+      "do": {
+        "Cast": {
+          "object": "$extract",
+          "targets": [
+            "$alice"
+          ],
+          "mana": [
+            "$i1"
+          ]
+        }
+      }
+    },
+    {
+      "turn": 1,
+      "step": "PrecombatMain",
+      "player": "alice",
+      "do": "Pass"
+    },
+    {
+      "turn": 1,
+      "step": "PrecombatMain",
+      "player": "alice",
+      "do": {
+        "Answer": {
+          "prompt": "Search",
+          "with": [
+            "$af"
+          ]
+        }
+      }
+    },
+    {
+      "turn": 1,
+      "step": "PrecombatMain",
+      "player": "alice",
+      "do": {
+        "Answer": {
+          "prompt": "Shuffle",
+          "with": [
+            "$am"
+          ]
+        }
+      }
+    }
+  ],
+  "final": [
+    {
+      "View": {
+        "of": "Stack",
+        "is": []
+      }
+    },
+    {
+      "Life": {
+        "player": "alice",
+        "life": 10
+      }
+    },
+    {
+      "Life": {
+        "player": "carol",
+        "life": 20
+      }
+    },
+    {
+      "Count": {
+        "player": "alice",
+        "zone": "Battlefield",
+        "card": "Grizzly Bears",
+        "count": 0
+      }
+    },
+    {
+      "Count": {
+        "player": "carol",
+        "zone": "Battlefield",
+        "card": "Grizzly Bears",
+        "count": 1
+      }
+    },
+    {
+      "Count": {
+        "player": "alice",
+        "zone": "Exile",
+        "card": "Forest",
+        "count": 1
+      }
+    }
+  ]
+}

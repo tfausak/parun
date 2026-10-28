@@ -2085,6 +2085,7 @@ rewriteTriggerCondition pairs condition = case condition of
   TriggerCondition.SelfDiscarded -> condition
   TriggerCondition.SelfExiledForMadness -> condition
   TriggerCondition.SelfCast -> condition
+  TriggerCondition.AbilityActivated f -> TriggerCondition.AbilityActivated (Filter.rewrite pairs f)
   TriggerCondition.SelfBecomesTargeted _ -> condition
   TriggerCondition.ControllerBecomesTarget {} -> condition
   TriggerCondition.PermanentsBecomeTargeted (PermanentsBecomeTargeted.MkPermanentsBecomeTargeted f kind) -> TriggerCondition.PermanentsBecomeTargeted (PermanentsBecomeTargeted.MkPermanentsBecomeTargeted (Filter.rewrite pairs f) kind)

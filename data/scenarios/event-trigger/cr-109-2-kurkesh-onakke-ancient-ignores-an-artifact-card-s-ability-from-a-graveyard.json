@@ -1,0 +1,100 @@
+{
+  "description": "CR 109.2 Kurkesh, Onakke Ancient ignores an artifact card's ability activated from a graveyard",
+  "note": "Soul of New Phyrexia's {5}, Exile this card from your graveyard is an ability of an artifact CARD, and CR 109.2 makes Kurkesh's 'an artifact' a permanent: nothing triggers. The sacrificed Mind Stone case is the permanent read through its last known information.",
+  "board": {
+    "active": "alice",
+    "step": "PrecombatMain",
+    "seats": [
+      {
+        "name": "alice",
+        "battlefield": [
+          {
+            "card": "Kurkesh, Onakke Ancient",
+            "label": "kurkesh"
+          },
+          {
+            "card": "Mountain",
+            "label": "m1"
+          },
+          {
+            "card": "Mountain",
+            "label": "m2"
+          },
+          {
+            "card": "Mountain",
+            "label": "m3"
+          },
+          {
+            "card": "Mountain",
+            "label": "m4"
+          },
+          {
+            "card": "Mountain",
+            "label": "m5"
+          }
+        ],
+        "graveyard": [
+          {
+            "card": "Soul of New Phyrexia",
+            "label": "soul"
+          }
+        ]
+      },
+      {
+        "name": "bob"
+      },
+      {
+        "name": "carol"
+      }
+    ]
+  },
+  "timeline": [
+    {
+      "turn": 1,
+      "step": "PrecombatMain",
+      "player": "alice",
+      "do": {
+        "Activate": {
+          "object": "$soul",
+          "ability": 1,
+          "mana": [
+            "$m1",
+            "$m2",
+            "$m3",
+            "$m4",
+            "$m5"
+          ]
+        }
+      }
+    },
+    {
+      "turn": 1,
+      "step": "PrecombatMain",
+      "player": "alice",
+      "check": {
+        "View": {
+          "of": "Stack",
+          "is": [
+            "ability of $soul"
+          ]
+        }
+      }
+    }
+  ],
+  "final": [
+    {
+      "View": {
+        "of": "Stack",
+        "is": []
+      }
+    },
+    {
+      "Count": {
+        "player": "alice",
+        "zone": "Exile",
+        "card": "Soul of New Phyrexia",
+        "count": 1
+      }
+    }
+  ]
+}

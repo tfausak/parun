@@ -1037,8 +1037,18 @@ sinkInLibrary depth pid oid gs = gs {GameState.library = Map.adjust (Seq.insertA
 -- (Parun.Engine.Event.counter), which cannot import Parun.Engine.Resolve, CR
 -- 800.4a's third clause (Parun.Engine.Departure) and CR 901.10a
 -- (Parun.Engine.Planechase).
+--
+-- An ability is filed in GameState.stackArchive as it ceases, CR 608.2h's last
+-- known information for an effect that names it afterwards: Rings of
+-- Brighthearth's ruling has its trigger copy an ability countered while the
+-- trigger waited. data/scenarios/event-trigger's "CR 608.2h Rings of
+-- Brighthearth copies an ability countered while its trigger waits" proves it.
 cease :: ObjectId -> GameState -> GameState
-cease = deleteObject
+cease oid gs =
+  let archived = case lookupObject oid gs of
+        Just obj | isAbility oid gs -> gs {GameState.stackArchive = Map.insertWith (\_ old -> old) oid obj (GameState.stackArchive gs)}
+        _ -> gs
+   in deleteObject oid archived
 
 -- The card an object is a copy of. Nothing when the id is unknown.
 cardOf :: ObjectId -> GameState -> Maybe Card
@@ -3087,7 +3097,7 @@ castOf event = case event of
   GameEvent.AttackerUnblocked _ -> Nothing
   GameEvent.SpellCountered _ -> Nothing
   GameEvent.AbilityCountered _ -> Nothing
-  GameEvent.LoyaltyAbilityActivated _ -> Nothing
+  GameEvent.AbilityActivated _ -> Nothing
   GameEvent.LifeLost {} -> Nothing
   GameEvent.LifeGained {} -> Nothing
   GameEvent.CountersPut {} -> Nothing
@@ -3196,7 +3206,7 @@ abilityResolved event = case event of
   GameEvent.AttackerUnblocked _ -> Nothing
   GameEvent.SpellCountered _ -> Nothing
   GameEvent.AbilityCountered _ -> Nothing
-  GameEvent.LoyaltyAbilityActivated _ -> Nothing
+  GameEvent.AbilityActivated _ -> Nothing
   GameEvent.LifeLost {} -> Nothing
   GameEvent.LifeGained {} -> Nothing
   GameEvent.CountersPut {} -> Nothing
@@ -3283,7 +3293,7 @@ discardOf event = case event of
   GameEvent.AttackerUnblocked _ -> Nothing
   GameEvent.SpellCountered _ -> Nothing
   GameEvent.AbilityCountered _ -> Nothing
-  GameEvent.LoyaltyAbilityActivated _ -> Nothing
+  GameEvent.AbilityActivated _ -> Nothing
   GameEvent.LifeLost {} -> Nothing
   GameEvent.LifeGained {} -> Nothing
   GameEvent.CountersPut {} -> Nothing
@@ -3455,7 +3465,7 @@ movedChange event = case event of
   GameEvent.AttackerUnblocked _ -> Nothing
   GameEvent.SpellCountered _ -> Nothing
   GameEvent.AbilityCountered _ -> Nothing
-  GameEvent.LoyaltyAbilityActivated _ -> Nothing
+  GameEvent.AbilityActivated _ -> Nothing
   GameEvent.LifeLost {} -> Nothing
   GameEvent.LifeGained {} -> Nothing
   GameEvent.CountersPut {} -> Nothing
@@ -3563,7 +3573,7 @@ damageDealt event = case event of
   GameEvent.AttackerUnblocked _ -> Nothing
   GameEvent.SpellCountered _ -> Nothing
   GameEvent.AbilityCountered _ -> Nothing
-  GameEvent.LoyaltyAbilityActivated _ -> Nothing
+  GameEvent.AbilityActivated _ -> Nothing
   GameEvent.CountersPut {} -> Nothing
   GameEvent.CountersRemoved {} -> Nothing
   GameEvent.ControlChanged {} -> Nothing
@@ -3840,7 +3850,7 @@ lifeGainOf event = case event of
   GameEvent.AttackerUnblocked _ -> Nothing
   GameEvent.SpellCountered _ -> Nothing
   GameEvent.AbilityCountered _ -> Nothing
-  GameEvent.LoyaltyAbilityActivated _ -> Nothing
+  GameEvent.AbilityActivated _ -> Nothing
   GameEvent.CountersPut {} -> Nothing
   GameEvent.CountersRemoved {} -> Nothing
   GameEvent.ControlChanged {} -> Nothing

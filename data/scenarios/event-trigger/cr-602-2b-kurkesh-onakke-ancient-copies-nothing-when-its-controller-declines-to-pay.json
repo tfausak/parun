@@ -1,0 +1,113 @@
+{
+  "description": "CR 602.2b Kurkesh, Onakke Ancient copies nothing when alice declines to pay",
+  "note": "The board of the copying case: alice declines Kurkesh's {R}, so only the original reaches bob and the fourth Mountain stays untapped.",
+  "board": {
+    "active": "alice",
+    "step": "PrecombatMain",
+    "seats": [
+      {
+        "name": "alice",
+        "battlefield": [
+          {
+            "card": "Kurkesh, Onakke Ancient",
+            "label": "kurkesh"
+          },
+          {
+            "card": "Mountain",
+            "label": "m1"
+          },
+          {
+            "card": "Mountain",
+            "label": "m2"
+          },
+          {
+            "card": "Mountain",
+            "label": "m3"
+          },
+          {
+            "card": "Mountain",
+            "label": "m4"
+          },
+          {
+            "card": "Rod of Ruin",
+            "label": "rod",
+            "ready": true
+          }
+        ]
+      },
+      {
+        "name": "bob"
+      },
+      {
+        "name": "carol"
+      }
+    ]
+  },
+  "timeline": [
+    {
+      "turn": 1,
+      "step": "PrecombatMain",
+      "player": "alice",
+      "do": {
+        "Activate": {
+          "object": "$rod",
+          "ability": 0,
+          "targets": [
+            "$bob"
+          ],
+          "mana": [
+            "$m1",
+            "$m2",
+            "$m3",
+            null
+          ]
+        }
+      }
+    },
+    {
+      "turn": 1,
+      "step": "PrecombatMain",
+      "player": "alice",
+      "do": "Pass"
+    },
+    {
+      "turn": 1,
+      "step": "PrecombatMain",
+      "player": "alice",
+      "do": {
+        "ChooseToPay": {
+          "decision": {
+            "type": "Declines"
+          }
+        }
+      },
+      "source": "$kurkesh"
+    }
+  ],
+  "final": [
+    {
+      "View": {
+        "of": "Stack",
+        "is": []
+      }
+    },
+    {
+      "Life": {
+        "player": "bob",
+        "life": 19
+      }
+    },
+    {
+      "Life": {
+        "player": "carol",
+        "life": 20
+      }
+    },
+    {
+      "Tapped": {
+        "object": "$m4",
+        "tapped": false
+      }
+    }
+  ]
+}

@@ -22,6 +22,7 @@ import qualified Parun.Engine.Resolve.Common as Resolve
 import qualified Parun.Engine.Resolve.Effect as Resolve
 import qualified Parun.Engine.Target as Target
 import qualified Parun.Types.AbilityKind as AbilityKind
+import qualified Parun.Types.AbilityWasActivated as AbilityWasActivated
 import qualified Parun.Types.ActivatedAbility as ActivatedAbility
 import qualified Parun.Types.ActivatedAbilitySource as ActivatedAbilitySource
 import qualified Parun.Types.Announcement as Announcement
@@ -453,12 +454,15 @@ activateAbilityWith refused runSubgame pid srcId ability = Event.announcing $ do
               (payment, _) <- Cost.paySubstituting (refused . completedBy) (Resolve.performManaAbility runSubgame) before [] PaymentMoment.OutsideResolution (PaymentSubject.Activating srcId stamp spendable) (Just abilId) ManaSpending.AsProduced pid srcId (Cost.announceSubstitutions Cost.waterbendSubstitutions pid srcId) paidCost
               completed <- State.gets completedBy
               case payment of
-                -- CR 606.3: record that a loyalty ability of THIS PERMANENT was
-                -- activated, which is the whole of the once-per-turn limit's storage
-                -- (see loyaltyOk above). Every path that rejects the activation
-                -- restores `before`, and the log lives in that state, so no rejected
-                -- activation can leave a record behind.
+                -- CR 602.2b / 601.2i: record that the ability has become
+                -- activated, what "whenever you activate" watches (Kurkesh,
+                -- Onakke Ancient) and the whole of CR 606.3's once-per-turn
+                -- limit's storage (Activatable.loyaltyActivatedThisTurn).
+                -- Every path that rejects the activation restores `before`,
+                -- and the log lives in that state, so no rejected activation
+                -- can leave a record behind.
                 Payment.Paid bound -> do
+                  State.modify' (Event.recordEvent (GameEvent.AbilityActivated AbilityWasActivated.MkAbilityWasActivated {AbilityWasActivated.player = pid, AbilityWasActivated.ability = abilId, AbilityWasActivated.source = srcId, AbilityWasActivated.loyalty = Loyalty.isLoyaltyCost (ActivatedAbility.cost ability)}))
                   -- CR 608.2h: the slots the PAYMENT bound -- the permanent a
                   -- Sacrifice component put in a graveyard -- folded onto the
                   -- ability object, so "the sacrificed creature's power" has a
@@ -470,9 +474,6 @@ activateAbilityWith refused runSubgame pid srcId ability = Event.announcing $ do
                   -- CR 601.2f's total the mana was spent against, beside CR
                   -- 400.7d's record of the mana itself (Object.manaCostPaid).
                   State.modify' (\g -> g {GameState.objects = Map.adjust (\o -> o {Object.manaCostPaid = Cost.Type.mana paidCost}) abilId (GameState.objects g)})
-                  Monad.when
-                    (Loyalty.isLoyaltyCost (ActivatedAbility.cost ability))
-                    (State.modify' (Event.recordEvent (GameEvent.LoyaltyAbilityActivated srcId)))
                   -- CR 602.5b: record that THIS ability of this permanent has now
                   -- been activated, which is the whole of both counted riders'
                   -- storage -- see ActivationRestriction.recordActivation, the

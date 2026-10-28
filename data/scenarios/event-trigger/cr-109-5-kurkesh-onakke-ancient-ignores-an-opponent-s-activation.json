@@ -1,0 +1,120 @@
+{
+  "description": "CR 109.5 Kurkesh, Onakke Ancient ignores an artifact ability its opponent activates",
+  "note": "Bob activates his own Rod of Ruin at carol with alice's Kurkesh on the battlefield. The activation is bob's, not alice's, so nothing triggers.",
+  "board": {
+    "active": "alice",
+    "step": "PrecombatMain",
+    "seats": [
+      {
+        "name": "alice",
+        "battlefield": [
+          {
+            "card": "Kurkesh, Onakke Ancient",
+            "label": "kurkesh"
+          },
+          {
+            "card": "Mountain",
+            "label": "m1"
+          },
+          {
+            "card": "Mountain",
+            "label": "m2"
+          },
+          {
+            "card": "Mountain",
+            "label": "m3"
+          },
+          {
+            "card": "Mountain",
+            "label": "m4"
+          }
+        ]
+      },
+      {
+        "name": "bob",
+        "battlefield": [
+          {
+            "card": "Rod of Ruin",
+            "label": "brod",
+            "ready": true
+          },
+          {
+            "card": "Mountain",
+            "label": "b1"
+          },
+          {
+            "card": "Mountain",
+            "label": "b2"
+          },
+          {
+            "card": "Mountain",
+            "label": "b3"
+          }
+        ]
+      },
+      {
+        "name": "carol"
+      }
+    ]
+  },
+  "timeline": [
+    {
+      "turn": 1,
+      "step": "PrecombatMain",
+      "player": "alice",
+      "do": "Pass"
+    },
+    {
+      "turn": 1,
+      "step": "PrecombatMain",
+      "player": "bob",
+      "do": {
+        "Activate": {
+          "object": "$brod",
+          "ability": 0,
+          "targets": [
+            "$carol"
+          ],
+          "mana": [
+            "$b1",
+            "$b2",
+            "$b3"
+          ]
+        }
+      }
+    },
+    {
+      "turn": 1,
+      "step": "PrecombatMain",
+      "player": "bob",
+      "check": {
+        "View": {
+          "of": "Stack",
+          "is": [
+            "ability of $brod"
+          ]
+        }
+      }
+    }
+  ],
+  "final": [
+    {
+      "View": {
+        "of": "Stack",
+        "is": []
+      }
+    },
+    {
+      "Life": {
+        "player": "carol",
+        "life": 19
+      }
+    },
+    {
+      "Tapped": {
+        "object": "$m1",
+        "tapped": false
+      }
+    }
+  ]
+}

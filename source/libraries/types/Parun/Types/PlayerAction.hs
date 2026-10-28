@@ -51,4 +51,7 @@ data PlayerAction
   | -- | CR 701.24a: a library was shuffled, under its owner; CR 701.24e's
     -- library of zero or one cards too.
     Shuffle
+  | -- | CR 701.23a: the player searched their OWN library (Ob Nixilis,
+    -- Unshackled's ruling), whatever the search found.
+    SearchLibrary
   deriving (Bounded, Enum, Eq, Ord, Show)
