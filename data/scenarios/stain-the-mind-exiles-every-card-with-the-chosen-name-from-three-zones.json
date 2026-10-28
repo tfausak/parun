@@ -1,0 +1,17 @@
+{
+  "description": "CR 701.23a / 201.4: Stain the Mind names a nonland card and exiles any number of cards with that name from target player's graveyard, hand and library",
+  "note": "Alice names Grizzly Bears and takes all three of bob's, one from each zone; his Hill Giant stays.",
+  "board": {"active": "alice", "step": "PrecombatMain", "seats": [{"name": "alice", "manaPool": "BBBBB", "hand": [{"card": "Stain the Mind", "label": "stain"}], "library": [{"card": "Island"}, {"card": "Island"}, {"card": "Island"}, {"card": "Island"}, {"card": "Island"}, {"card": "Island"}, {"card": "Island"}, {"card": "Island"}]}, {"name": "bob", "hand": [{"card": "Grizzly Bears", "label": "hand-bears"}, {"card": "Hill Giant", "label": "giant"}], "graveyard": [{"card": "Grizzly Bears", "label": "yard-bears"}], "library": [{"card": "Grizzly Bears", "label": "lib-bears"}, {"card": "Island", "label": "lib-island"}]}]},
+  "timeline": [
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "do": {"Cast": {"object": "$stain", "targets": ["$bob"]}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "do": "Pass"},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "refuse": {"Answer": {"prompt": "ChooseCardName", "with": "Island"}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "do": {"Answer": {"prompt": "ChooseCardName", "with": "Grizzly Bears"}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "do": {"Answer": {"prompt": "Search", "with": ["$lib-bears", "$hand-bears", "$yard-bears"]}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "do": {"Answer": {"prompt": "Shuffle", "with": ["$lib-island"]}}}
+  ],
+  "final": [
+    {"Count": {"player": "bob", "zone": "Exile", "card": "Grizzly Bears", "count": 3}},
+    {"Count": {"player": "bob", "zone": "Hand", "card": "Hill Giant", "count": 1}}
+  ]
+}

@@ -1,0 +1,20 @@
+{
+  "description": "CR 702.12a / 611.2c: Soul of New Phyrexia gives permanents its controller controls indestructible until end of turn, from the battlefield and, exiling itself, from the graveyard",
+  "note": "On turn 1 the graveyard Soul makes alice's Sol Ring, Grizzly Bears and the battlefield Soul indestructible, not bob's Hill Giant; it ends with the turn, and on turn 3 the battlefield Soul does it again.",
+  "board": {"active": "alice", "step": "PrecombatMain", "seats": [{"name": "alice", "manaPool": "CCCCC", "battlefield": [{"card": "Soul of New Phyrexia", "label": "soul"}, {"card": "Sol Ring", "label": "ring", "tapped": true}, {"card": "Grizzly Bears", "label": "bears"}, {"card": "Island", "label": "w0"}, {"card": "Island", "label": "w1"}, {"card": "Island", "label": "w2"}, {"card": "Island", "label": "w3"}, {"card": "Island", "label": "w4"}], "graveyard": [{"card": "Soul of New Phyrexia", "label": "soul-yard"}], "hand": [], "library": [{"card": "Hill Giant"}, {"card": "Hill Giant"}, {"card": "Hill Giant"}, {"card": "Hill Giant"}, {"card": "Hill Giant"}, {"card": "Hill Giant"}, {"card": "Hill Giant"}, {"card": "Hill Giant"}, {"card": "Hill Giant"}, {"card": "Hill Giant"}]}, {"name": "bob", "battlefield": [{"card": "Hill Giant", "label": "giant"}], "library": [{"card": "Island"}, {"card": "Island"}, {"card": "Island"}, {"card": "Island"}, {"card": "Island"}, {"card": "Island"}, {"card": "Island"}, {"card": "Island"}]}]},
+  "timeline": [
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "do": {"Activate": {"object": "$soul-yard", "ability": 1, "mana": [null]}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "do": "Pass"},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "check": {"Count": {"player": "alice", "zone": "Exile", "card": "Soul of New Phyrexia", "count": 1}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "check": {"Keywords": {"object": "$ring", "keyword": {"type": "Indestructible"}, "count": 1}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "check": {"Keywords": {"object": "$bears", "keyword": {"type": "Indestructible"}, "count": 1}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "check": {"Keywords": {"object": "$soul", "keyword": {"type": "Indestructible"}, "count": 1}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "check": {"Keywords": {"object": "$giant", "keyword": {"type": "Indestructible"}, "count": 0}}},
+    {"turn": 2, "step": "PrecombatMain", "player": "bob", "check": {"Keywords": {"object": "$bears", "keyword": {"type": "Indestructible"}, "count": 0}}},
+    {"turn": 2, "step": "DeclareAttackers", "player": "bob", "do": {"Attack": []}},
+    {"turn": 3, "step": "PrecombatMain", "player": "alice", "do": {"Activate": {"object": "$soul", "ability": 0, "mana": ["$w0", "$w1", "$w2", "$w3", "$w4", null]}}},
+    {"turn": 3, "step": "PrecombatMain", "player": "alice", "do": "Pass"},
+    {"turn": 3, "step": "PrecombatMain", "player": "alice", "check": {"Keywords": {"object": "$bears", "keyword": {"type": "Indestructible"}, "count": 1}}},
+    {"turn": 3, "step": "PrecombatMain", "player": "alice", "check": {"Keywords": {"object": "$ring", "keyword": {"type": "Indestructible"}, "count": 1}}}
+  ]
+}

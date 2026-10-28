@@ -2324,6 +2324,17 @@ countersOn :: CounterKind.CounterKind Keyword.Type.Keyword -> ObjectId -> GameSt
 countersOn kind oid gs =
   maybe 0 (Map.findWithDefault 0 kind . Object.counters) (Game.lookupObject oid gs)
 
+-- CR 701.9a's discards of a DiscardCards cost, as ONE event group, binding
+-- Binding.discardedCard off what ARRIVED in a public zone (CR 400.7j),
+-- DiscardThis's posture: Necromancer's Stockpile's "the discarded card".
+discardsBound :: PlayerId -> [ObjectId] -> Game Payment.Payment
+discardsBound pid cards = do
+  arrived <- Event.simultaneously (fmap Foldable.fold (Monad.mapM (Event.discardReturning DiscardCause.Ordinary pid) cards))
+  after <- State.get
+  pure $ case filter (\a -> maybe False (not . Game.isHiddenZone . Object.zone) (Game.lookupObject a after)) (Foldable.toList arrived) of
+    [] -> bindsNothing
+    ids -> Payment.Paid (Binding.paidObjects Binding.discardedCard (Set.fromList (fmap Recipient.ToObject ids)))
+
 -- The cards this player may discard to pay a cost on `oid`: their hand, in its
 -- own order, narrowed by the criterion and minus `oid` itself -- see
 -- canPayComponent's DiscardCards arm for why that exclusion is CR 601.2a.
@@ -6676,7 +6687,7 @@ payPayable perform moment paidFor slots pid oid component = case component of
   --
   -- The discards are ONE event group, Sacrifice's reason; Parun.CostSpec's "CR
   -- 601.2h Cathartic Reunion's two discards fire Magmakin Artillerist once, for 2"
-  -- proves it.
+  -- proves it. discardsBound binds what arrived.
   CostComponent.DiscardCards (DiscardCards.MkDiscardCards (ObjectCount.Exactly amount) criterion) -> paidAnnounced amount $ \n -> do
     gs <- State.get
     let held = discardCandidates slots pid oid criterion gs
@@ -6688,16 +6699,14 @@ payPayable perform moment paidFor slots pid oid component = case component of
     let distinct = ListUtils.nubOrd chosen
     if all (\c -> List.elem c held) distinct && Natural.length distinct == n
       then do
-        Event.simultaneously (Monad.mapM_ (Event.discard DiscardCause.Ordinary pid) distinct)
-        pure bindsNothing
+        discardsBound pid distinct
       else pure Payment.Unpaid
   -- Every matching card, Slate of Ancestry's "Discard your hand": nothing is
   -- chosen, so nothing is asked (CR 701.9b's choice has one answer), and the
-  -- cards go as ONE event group, the arm above's reason.
+  -- cards go as ONE event group and are bound, the arm above's reasons.
   CostComponent.DiscardCards (DiscardCards.MkDiscardCards ObjectCount.Every criterion) -> do
     gs <- State.get
-    Event.simultaneously (Monad.mapM_ (Event.discard DiscardCause.Ordinary pid) (discardCandidates slots pid oid criterion gs))
-    pure bindsNothing
+    discardsBound pid (discardCandidates slots pid oid criterion gs)
   -- CR 701.9a's move, through the funnel DiscardCards uses above. No prompt: the
   -- cost names this card.
   --

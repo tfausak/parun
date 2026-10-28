@@ -627,10 +627,11 @@ qualified card name = AbilityName.MkAbilityName (AbilityName.unwrap card <> Text
 exiledCardPrefix :: Text.Text
 exiledCardPrefix = Text.pack "thatExiledCard"
 
--- CR 400.7j: the reserved slot under which the card a DiscardThis COST payment
--- discarded is bound, as the object it became in the graveyard -- Calim, Djinn
--- Emperor's "return Calim from your graveyard to the battlefield tapped" after
--- "Discard Calim". exiledCard's route and posture: the new incarnation, so every
+-- CR 400.7j: the reserved slot under which the cards a DiscardThis or
+-- DiscardCards COST payment discarded are bound, as the objects they became in
+-- the graveyard -- Calim, Djinn Emperor's "return Calim from your graveyard to
+-- the battlefield tapped" after "Discard Calim", Necromancer's Stockpile's "the
+-- discarded card". exiledCard's route and posture: the new incarnation, so every
 -- read is CURRENT information, and unbound where the card did not arrive in a
 -- public zone.
 --
