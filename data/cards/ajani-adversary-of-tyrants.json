@@ -154,87 +154,89 @@
                       {
                         "type": "CreateEmblem",
                         "value": {
-                          "faces": [
-                            {
-                              "name": "Ajani, Adversary of Tyrants Emblem",
-                              "triggeredAbilities": [
-                                {
-                                  "condition": {
-                                    "type": "StepBegins",
-                                    "value": {
-                                      "phase": {
-                                        "type": "Ending",
-                                        "value": {
-                                          "type": "EndStep"
+                          "card": {
+                            "faces": [
+                              {
+                                "name": "Ajani, Adversary of Tyrants Emblem",
+                                "triggeredAbilities": [
+                                  {
+                                    "condition": {
+                                      "type": "StepBegins",
+                                      "value": {
+                                        "phase": {
+                                          "type": "Ending",
+                                          "value": {
+                                            "type": "EndStep"
+                                          }
+                                        },
+                                        "scope": {
+                                          "type": "ControllersTurn"
                                         }
-                                      },
-                                      "scope": {
-                                        "type": "ControllersTurn"
                                       }
-                                    }
-                                  },
-                                  "modal": {
-                                    "modes": [
-                                      {
-                                        "clauses": [
-                                          {
-                                            "effects": [
-                                              {
-                                                "type": "Create",
-                                                "value": {
-                                                  "card": {
-                                                    "faces": [
-                                                      {
-                                                        "colorIndicator": [
-                                                          {
-                                                            "type": "White"
-                                                          }
-                                                        ],
-                                                        "keywords": [
-                                                          {
-                                                            "type": "Lifelink"
-                                                          }
-                                                        ],
-                                                        "name": "Cat Token",
-                                                        "power": {
-                                                          "type": "Literal",
-                                                          "value": 1
-                                                        },
-                                                        "toughness": {
-                                                          "type": "Literal",
-                                                          "value": 1
-                                                        },
-                                                        "typeLine": {
-                                                          "subtypes": [
+                                    },
+                                    "modal": {
+                                      "modes": [
+                                        {
+                                          "clauses": [
+                                            {
+                                              "effects": [
+                                                {
+                                                  "type": "Create",
+                                                  "value": {
+                                                    "card": {
+                                                      "faces": [
+                                                        {
+                                                          "colorIndicator": [
                                                             {
-                                                              "type": "Cat"
+                                                              "type": "White"
                                                             }
                                                           ],
-                                                          "types": [
+                                                          "keywords": [
                                                             {
-                                                              "type": "Creature"
+                                                              "type": "Lifelink"
                                                             }
-                                                          ]
+                                                          ],
+                                                          "name": "Cat Token",
+                                                          "power": {
+                                                            "type": "Literal",
+                                                            "value": 1
+                                                          },
+                                                          "toughness": {
+                                                            "type": "Literal",
+                                                            "value": 1
+                                                          },
+                                                          "typeLine": {
+                                                            "subtypes": [
+                                                              {
+                                                                "type": "Cat"
+                                                              }
+                                                            ],
+                                                            "types": [
+                                                              {
+                                                                "type": "Creature"
+                                                              }
+                                                            ]
+                                                          }
                                                         }
-                                                      }
-                                                    ]
-                                                  },
-                                                  "quantity": {
-                                                    "type": "Literal",
-                                                    "value": 3
+                                                      ]
+                                                    },
+                                                    "quantity": {
+                                                      "type": "Literal",
+                                                      "value": 3
+                                                    }
                                                   }
                                                 }
-                                              }
-                                            ]
-                                          }
-                                        ]
-                                      }
-                                    ]
+                                              ]
+                                            }
+                                          ]
+                                        }
+                                      ]
+                                    }
                                   }
-                                }
-                              ]
-                            }
-                          ]
+                                ]
+                              }
+                            ]
+                          }
                         }
                       }
                     ]

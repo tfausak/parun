@@ -1,0 +1,35 @@
+{
+  "description": "CR 114.2 / 508.3a: Garruk, Apex Predator's -8 gives the target opponent the emblem, and it pumps a creature attacking that player alone",
+  "note": "Three seats so the target opponent is not the only one: carol gets the emblem, neither alice nor bob does. On bob's turn the Bears attack carol and gain +5/+5 and trample; the Hill Giant attacking alice and the Gray Ogre attacking carol's planeswalker do not (the emblem says 'you', and a ruling says attacking a planeswalker does not trigger it).",
+  "board": {
+    "active": "alice",
+    "step": "PrecombatMain",
+    "seats": [
+      {"name": "alice", "battlefield": [{"card": "Garruk, Apex Predator", "label": "apex", "counters": [{"key": {"type": "Loyalty"}, "value": 8}]}], "library": [{"card": "Island"}, {"card": "Island"}, {"card": "Island"}, {"card": "Island"}]},
+      {"name": "bob", "battlefield": [{"card": "Grizzly Bears", "label": "bears", "ready": true}, {"card": "Hill Giant", "label": "giant", "ready": true}, {"card": "Gray Ogre", "label": "ogre", "ready": true}], "library": [{"card": "Island"}, {"card": "Island"}, {"card": "Island"}, {"card": "Island"}]},
+      {"name": "carol", "battlefield": [{"card": "Garruk, Caller of Beasts", "label": "walker", "counters": [{"key": {"type": "Loyalty"}, "value": 4}]}], "library": [{"card": "Island"}, {"card": "Island"}, {"card": "Island"}, {"card": "Island"}]}
+    ]
+  },
+  "timeline": [
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "do": {"Activate": {"object": "$apex", "ability": 3, "targets": ["$carol"]}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "do": "Pass"},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "check": {"Count": {"player": "carol", "zone": "Command", "card": "Garruk, Apex Predator Emblem", "count": 1}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "check": {"Count": {"player": "alice", "zone": "Command", "card": "Garruk, Apex Predator Emblem", "count": 0}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "check": {"Count": {"player": "bob", "zone": "Command", "card": "Garruk, Apex Predator Emblem", "count": 0}}},
+    {"turn": 2, "step": "DeclareAttackers", "player": "bob", "do": {"Attack": ["$bears", "$giant", "$ogre"]}},
+    {"turn": 2, "step": "DeclareAttackers", "player": "bob", "source": "$bears", "do": {"ChooseAttackTarget": "$carol"}},
+    {"turn": 2, "step": "DeclareAttackers", "player": "bob", "source": "$giant", "do": {"ChooseAttackTarget": "$alice"}},
+    {"turn": 2, "step": "DeclareAttackers", "player": "bob", "source": "$ogre", "do": {"ChooseAttackTarget": "$walker"}},
+    {"turn": 2, "step": "DeclareAttackers", "player": "bob", "check": {"View": {"of": "Stack", "is": ["trigger of Garruk, Apex Predator Emblem"]}}},
+    {"turn": 2, "step": "DeclareAttackers", "player": "bob", "do": "Pass"},
+    {"turn": 2, "step": "DeclareAttackers", "player": "bob", "check": {"PowerToughness": {"object": "$bears", "power": 7, "toughness": 7}}},
+    {"turn": 2, "step": "DeclareAttackers", "player": "bob", "check": {"Keywords": {"object": "$bears", "keyword": {"type": "Trample"}, "count": 1}}},
+    {"turn": 2, "step": "DeclareAttackers", "player": "bob", "check": {"PowerToughness": {"object": "$giant", "power": 3, "toughness": 3}}},
+    {"turn": 2, "step": "DeclareAttackers", "player": "bob", "check": {"Keywords": {"object": "$giant", "keyword": {"type": "Trample"}, "count": 0}}},
+    {"turn": 2, "step": "DeclareAttackers", "player": "bob", "check": {"PowerToughness": {"object": "$ogre", "power": 2, "toughness": 2}}},
+    {"turn": 2, "step": "DeclareAttackers", "player": "bob", "check": {"Keywords": {"object": "$ogre", "keyword": {"type": "Trample"}, "count": 0}}},
+    {"turn": 2, "step": "EndOfCombat", "player": "bob", "check": {"Life": {"player": "carol", "life": 13}}},
+    {"turn": 2, "step": "EndOfCombat", "player": "bob", "check": {"Life": {"player": "alice", "life": 17}}},
+    {"turn": 2, "step": "EndOfCombat", "player": "bob", "check": {"Counters": {"object": "$walker", "kind": {"type": "Loyalty"}, "count": 2}}}
+  ]
+}

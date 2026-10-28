@@ -237,6 +237,7 @@ import qualified Parun.Codec.CountersFromPermanentsSpec
 import qualified Parun.Codec.CountersFromThisSpec
 import qualified Parun.Codec.CraftSpec
 import qualified Parun.Codec.CreateCopySpec
+import qualified Parun.Codec.CreateEmblemSpec
 import qualified Parun.Codec.CreateSpec
 import qualified Parun.Codec.CreatureBecomesBlockedByAtLeastSpec
 import qualified Parun.Codec.CreatureExploitsSpec
@@ -1173,6 +1174,7 @@ spec s registry corpus = do
   Parun.Codec.CountSpec.spec s
   Parun.Codec.CraftSpec.spec s
   Parun.Codec.CreateCopySpec.spec s
+  Parun.Codec.CreateEmblemSpec.spec s
   Parun.Codec.CreateSpec.spec s
   Parun.Codec.CreatureBecomesBlockedByAtLeastSpec.spec s
   Parun.Codec.CreatureExploitsSpec.spec s

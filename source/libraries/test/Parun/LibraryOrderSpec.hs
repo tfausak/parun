@@ -48,6 +48,7 @@ import qualified Parun.Types.ClauseIndex as ClauseIndex
 import qualified Parun.Types.CombatStep as CombatStep
 import qualified Parun.Types.Cost as Cost.Type
 import qualified Parun.Types.CounterKind as CounterKind
+import qualified Parun.Types.CreateEmblem as CreateEmblem
 import qualified Parun.Types.Decider as Decider
 import qualified Parun.Types.Departure as Departure.Type
 import qualified Parun.Types.Designation as Designation
@@ -1467,7 +1468,7 @@ createEmblemSpec s registry = Spec.describe s "CreateEmblem" $ do
   Spec.it s "CR 114.2 CreateEmblem puts an emblem in the command zone under the resolver" $ do
     piker <- S.printingOf s registry "Goblin Piker"
     let (src, gs0) = S.addPermanent piker S.alice (Setup.emptyGame S.bothPlayers)
-        act = Resolve.applyEffect src src S.alice Map.empty Map.empty (Effect.CreateEmblem (Printing.card piker))
+        act = Resolve.applyEffect src src S.alice Map.empty Map.empty (Effect.CreateEmblem (CreateEmblem.MkCreateEmblem (Printing.card piker) (PlayerRef.Relative PlayerRelation.You)))
         after = S.runPure S.identityAnswer gs0 act
         emblems = filter (\oid -> fmap Object.zone (Game.lookupObject oid after) == Just Zone.Command) (Set.toList (GameState.command after))
     Spec.assertEqWith s "one emblem in command" (Set.size (GameState.command after)) 1

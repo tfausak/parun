@@ -605,7 +605,7 @@ applyOneEffect runSubgame resolving source controller legal chosen effect = case
   Effect.ForbidAttack payload -> Objects.forbidAttack resolving source controller legal payload
   Effect.ForbidBeingBlocked payload -> Objects.forbidBeingBlocked resolving source controller legal payload
   Effect.RequireAttack payload -> Objects.requireAttack resolving source controller legal payload
-  Effect.CreateEmblem payload -> Objects.createEmblem controller payload
+  Effect.CreateEmblem payload -> Objects.createEmblem resolving source controller legal payload
   Effect.BecomeMonarch payload -> Objects.becomeMonarch resolving source controller legal payload
   Effect.TakeTheInitiative payload -> Objects.takeTheInitiative resolving source controller legal payload
   Effect.Designate payload -> Objects.designate resolving source controller legal payload

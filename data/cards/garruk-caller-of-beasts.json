@@ -173,90 +173,92 @@
                       {
                         "type": "CreateEmblem",
                         "value": {
-                          "faces": [
-                            {
-                              "name": "Garruk, Caller of Beasts Emblem",
-                              "triggeredAbilities": [
-                                {
-                                  "condition": {
-                                    "type": "SpellCast",
-                                    "value": {
-                                      "filter": {
-                                        "type": "And",
-                                        "value": [
-                                          {
-                                            "type": "HasCardType",
-                                            "value": {
-                                              "type": "Creature"
-                                            }
-                                          },
-                                          {
-                                            "type": "HeldBy",
-                                            "value": {
-                                              "holder": {
-                                                "type": "Controller"
-                                              },
-                                              "relation": {
-                                                "type": "You"
+                          "card": {
+                            "faces": [
+                              {
+                                "name": "Garruk, Caller of Beasts Emblem",
+                                "triggeredAbilities": [
+                                  {
+                                    "condition": {
+                                      "type": "SpellCast",
+                                      "value": {
+                                        "filter": {
+                                          "type": "And",
+                                          "value": [
+                                            {
+                                              "type": "HasCardType",
+                                              "value": {
+                                                "type": "Creature"
+                                              }
+                                            },
+                                            {
+                                              "type": "HeldBy",
+                                              "value": {
+                                                "holder": {
+                                                  "type": "Controller"
+                                                },
+                                                "relation": {
+                                                  "type": "You"
+                                                }
                                               }
                                             }
-                                          }
-                                        ]
-                                      },
-                                      "scope": {
-                                        "type": "EachTurn"
+                                          ]
+                                        },
+                                        "scope": {
+                                          "type": "EachTurn"
+                                        }
                                       }
-                                    }
-                                  },
-                                  "modal": {
-                                    "modes": [
-                                      {
-                                        "clauses": [
-                                          {
-                                            "effects": [
-                                              {
-                                                "type": "Search",
-                                                "value": {
-                                                  "destination": {
-                                                    "type": "Battlefield"
-                                                  },
-                                                  "filter": {
-                                                    "type": "HasCardType",
-                                                    "value": {
-                                                      "type": "Creature"
-                                                    }
-                                                  },
-                                                  "owner": {
-                                                    "type": "Relative",
-                                                    "value": {
-                                                      "type": "You"
-                                                    }
-                                                  },
-                                                  "quantity": {
-                                                    "type": "Literal",
-                                                    "value": 1
-                                                  },
-                                                  "searcher": {
-                                                    "type": "Relative",
-                                                    "value": {
-                                                      "type": "You"
+                                    },
+                                    "modal": {
+                                      "modes": [
+                                        {
+                                          "clauses": [
+                                            {
+                                              "effects": [
+                                                {
+                                                  "type": "Search",
+                                                  "value": {
+                                                    "destination": {
+                                                      "type": "Battlefield"
+                                                    },
+                                                    "filter": {
+                                                      "type": "HasCardType",
+                                                      "value": {
+                                                        "type": "Creature"
+                                                      }
+                                                    },
+                                                    "owner": {
+                                                      "type": "Relative",
+                                                      "value": {
+                                                        "type": "You"
+                                                      }
+                                                    },
+                                                    "quantity": {
+                                                      "type": "Literal",
+                                                      "value": 1
+                                                    },
+                                                    "searcher": {
+                                                      "type": "Relative",
+                                                      "value": {
+                                                        "type": "You"
+                                                      }
                                                     }
                                                   }
                                                 }
+                                              ],
+                                              "optionality": {
+                                                "type": "Optional"
                                               }
-                                            ],
-                                            "optionality": {
-                                              "type": "Optional"
                                             }
-                                          }
-                                        ]
-                                      }
-                                    ]
+                                          ]
+                                        }
+                                      ]
+                                    }
                                   }
-                                }
-                              ]
-                            }
-                          ]
+                                ]
+                              }
+                            ]
+                          }
                         }
                       }
                     ]

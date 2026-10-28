@@ -95,6 +95,7 @@ import qualified Parun.Types.CounterR as CounterR
 import qualified Parun.Types.CounterSubject as CounterSubject
 import qualified Parun.Types.Create as Create
 import qualified Parun.Types.CreateCopy as CreateCopy
+import qualified Parun.Types.CreateEmblem as CreateEmblem
 import qualified Parun.Types.DamagePart as DamagePart
 import qualified Parun.Types.DamagePattern as DamagePattern
 import qualified Parun.Types.DamageR as DamageR
@@ -1098,7 +1099,7 @@ effectPlayerRefs effect = case effect of
     Just (AimedPlayers.EachInSlot slot) -> [PlayerRef.EachInSlot slot]
     _ -> []
   Effect.ForbidBeingBlocked {} -> []
-  Effect.CreateEmblem {} -> []
+  Effect.CreateEmblem (CreateEmblem.MkCreateEmblem _ player) -> [player]
   Effect.BecomeMonarch {} -> []
   Effect.TakeTheInitiative {} -> []
   Effect.Designate {} -> []

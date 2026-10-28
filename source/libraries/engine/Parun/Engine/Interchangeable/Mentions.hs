@@ -157,6 +157,7 @@ import qualified Parun.Types.CountersFromThis as CountersFromThis
 import qualified Parun.Types.Craft as Craft
 import qualified Parun.Types.Create as Create
 import qualified Parun.Types.CreateCopy as CreateCopy
+import qualified Parun.Types.CreateEmblem as CreateEmblem
 import qualified Parun.Types.CreatureExploits as CreatureExploits
 import qualified Parun.Types.CrewRestriction as CrewRestriction
 import qualified Parun.Types.Cycling as Cycling
@@ -1449,7 +1450,7 @@ effectNames asking onCard onAbility x = case x of
   Effect.Prohibit prohibit -> prohibitNames asking prohibit
   Effect.ForbidAttack forbidAttack -> forbidAttackNames asking forbidAttack
   Effect.ForbidBeingBlocked forbidBeingBlocked -> forbidBeingBlockedNames asking forbidBeingBlocked
-  Effect.CreateEmblem card -> onCard card
+  Effect.CreateEmblem (CreateEmblem.MkCreateEmblem card player) -> playerRefNames asking player <> onCard card
   Effect.BecomeMonarch monarchTarget -> monarchTargetNames asking monarchTarget
   Effect.TakeTheInitiative _initiativeTarget -> mempty
   Effect.Designate designate -> designateNames asking designate
