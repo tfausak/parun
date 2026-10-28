@@ -19,6 +19,7 @@ import qualified Data.Functor.Identity as Identity
 import qualified Data.Monoid as Monoid
 import Data.Set (Set)
 import qualified Data.Set as Set
+import qualified Parun.Types.ActivationsThisTurn as ActivationsThisTurn
 import qualified Parun.Types.AgainstExiledPile as AgainstExiledPile
 import qualified Parun.Types.AgainstLastCardExiledWith as AgainstLastCardExiledWith
 import qualified Parun.Types.AgainstSlot as AgainstSlot
@@ -197,6 +198,9 @@ overSlots f quantity =
         Quantity.SpellsCastLastTurn _ -> pure quantity
         Quantity.SpellsCastThisTurn _ -> pure quantity
         Quantity.TimesThisTurn _ -> pure quantity
+        -- And another: the tally's PlayerRef is nestedRefs' half, and its Filter
+        -- names no amount.
+        Quantity.ActivationsThisTurn _ -> pure quantity
         Quantity.SpellsCastBefore -> pure quantity
         Quantity.PermanentsDiedThisTurn -> pure quantity
         Quantity.SpellsCastUsingThisTurn _ -> pure quantity
@@ -374,6 +378,7 @@ nestedRefs quantity = case quantity of
   Quantity.SpellsCastLastTurn ref -> Set.singleton (Left ref)
   Quantity.SpellsCastThisTurn ref -> Set.singleton (Left ref)
   Quantity.TimesThisTurn _ -> Set.empty
+  Quantity.ActivationsThisTurn tally -> Set.singleton (Left (ActivationsThisTurn.activator tally))
   Quantity.SpellsCastBefore -> Set.empty
   Quantity.PermanentsDiedThisTurn -> Set.empty
   Quantity.SpellsCastUsingThisTurn _ -> Set.empty
@@ -497,6 +502,7 @@ nestedCounts quantity = case quantity of
   Quantity.SpellsCastLastTurn _ -> []
   Quantity.SpellsCastThisTurn _ -> []
   Quantity.TimesThisTurn _ -> []
+  Quantity.ActivationsThisTurn _ -> []
   Quantity.SpellsCastBefore -> []
   Quantity.PermanentsDiedThisTurn -> []
   Quantity.SpellsCastUsingThisTurn {} -> []
@@ -647,6 +653,7 @@ mapPlayerRefs f intoCount quantity =
         Quantity.SpellsCastLastTurn ref -> Quantity.SpellsCastLastTurn (f ref)
         Quantity.SpellsCastThisTurn ref -> Quantity.SpellsCastThisTurn (f ref)
         Quantity.TimesThisTurn _ -> quantity
+        Quantity.ActivationsThisTurn tally -> Quantity.ActivationsThisTurn tally {ActivationsThisTurn.activator = f (ActivationsThisTurn.activator tally)}
         Quantity.SpellsCastBefore -> quantity
         Quantity.PermanentsDiedThisTurn -> quantity
         Quantity.SpellsCastUsingThisTurn _ -> quantity

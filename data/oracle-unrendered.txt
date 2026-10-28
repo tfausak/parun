@@ -2177,6 +2177,7 @@ test-of-faith
 tezzerets-reckoning
 thatcher-revolt
 the-caldaia
+the-chain-veil
 the-dalek-emperor
 the-deck-of-many-things
 the-dining-car

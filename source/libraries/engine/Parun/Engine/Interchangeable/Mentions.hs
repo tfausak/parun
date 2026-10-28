@@ -36,6 +36,7 @@ import qualified Parun.Types.ActivatedAbility as ActivatedAbility
 import qualified Parun.Types.ActivationCriteria as ActivationCriteria
 import qualified Parun.Types.ActivationProhibition as ActivationProhibition
 import qualified Parun.Types.ActivationRestriction as ActivationRestriction
+import qualified Parun.Types.ActivationsThisTurn as ActivationsThisTurn
 import qualified Parun.Types.ActiveReplacement as ActiveReplacement
 import qualified Parun.Types.AffectPlayers as AffectPlayers
 import qualified Parun.Types.Affected as Affected
@@ -263,6 +264,8 @@ import qualified Parun.Types.LifeLossPattern as LifeLossPattern
 import qualified Parun.Types.LifeLossR as LifeLossR
 import qualified Parun.Types.LimitUnless as LimitUnless
 import qualified Parun.Types.LookAt as LookAt
+import qualified Parun.Types.LoyaltyClause as LoyaltyClause
+import qualified Parun.Types.LoyaltyGrant as LoyaltyGrant
 import qualified Parun.Types.MadnessCost as MadnessCost
 import qualified Parun.Types.MakeForetold as MakeForetold
 import qualified Parun.Types.ManaAddition as ManaAddition
@@ -2369,7 +2372,12 @@ playerEffectNames asking x = case x of
   PlayerEffect.CastAsThoughItHadFlash filter_ -> filterNames asking filter_
   PlayerEffect.MayPlayAsThoughItHadFlash filter_ -> filterNames asking filter_
   PlayerEffect.ActivateKeywordAtInstantSpeed keywordDesignator -> keywordDesignatorNames asking keywordDesignator
-  PlayerEffect.ActivateLoyaltyAtInstantSpeed filter_ -> filterNames asking filter_
+  -- A once-per-turn grant is spent off CR 602.2's log, by activator
+  -- (Activatable.graceUsed).
+  PlayerEffect.LoyaltyGrant grant ->
+    filterNames asking (LoyaltyGrant.permanents grant) <> case LoyaltyGrant.relaxes grant of
+      LoyaltyClause.Window -> mempty
+      LoyaltyClause.OncePerTurn -> history asking HistoryRead.Activations
   PlayerEffect.MayTapForMana tapForMana -> tapForManaNames asking tapForMana
   PlayerEffect.CantBeCountered counterProhibition -> counterProhibitionNames asking counterProhibition
   PlayerEffect.RestrictTargeting targetRestriction -> targetRestrictionNames asking (filterNames asking) targetRestriction
@@ -2581,6 +2589,7 @@ quantityNames asking x = case x of
   Quantity.TimesThisTurn act -> history asking $ case act of
     AbilityAct.Activated -> HistoryRead.Activations
     AbilityAct.Resolved -> HistoryRead.Resolutions
+  Quantity.ActivationsThisTurn tally -> history asking HistoryRead.Activations <> playerRefNames asking (ActivationsThisTurn.activator tally) <> filterNames asking (ActivationsThisTurn.source tally) <> activationCriteriaNames asking (ActivationsThisTurn.criteria tally)
   Quantity.SpellsCastBefore -> history asking HistoryRead.Casts
   Quantity.PermanentsDiedThisTurn -> history asking HistoryRead.Deaths
   Quantity.SpellsCastUsingThisTurn _keywordFamily -> history asking HistoryRead.Casts

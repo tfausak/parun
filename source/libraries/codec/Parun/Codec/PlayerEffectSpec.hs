@@ -27,6 +27,8 @@ import qualified Parun.Types.Keyword as Keyword
 import qualified Parun.Types.KeywordDesignator as KeywordDesignator
 import qualified Parun.Types.KeywordFamily as KeywordFamily
 import qualified Parun.Types.LandAllowance as LandAllowance
+import qualified Parun.Types.LoyaltyClause as LoyaltyClause
+import qualified Parun.Types.LoyaltyGrant as LoyaltyGrant
 import qualified Parun.Types.ManaCost as ManaCost
 import qualified Parun.Types.ManaFilter as ManaFilter
 import qualified Parun.Types.ManaSymbol as ManaSymbol
@@ -236,12 +238,12 @@ spec s = Spec.describe s "Parun.Codec.PlayerEffect" $ do
       (PlayerEffect.ActivateKeywordAtInstantSpeed (KeywordDesignator.OfFamily KeywordFamily.Equip))
       " {\"type\":\"ActivateKeywordAtInstantSpeed\",\"value\":{\"type\":\"OfFamily\",\"value\":{\"type\":\"Equip\"}}} "
   -- CR 606.3 / The Wandering Emperor: "her loyalty abilities", the source itself.
-  Spec.it s "ActivateLoyaltyAtInstantSpeed, The Wandering Emperor's own" $
+  Spec.it s "LoyaltyGrant, The Wandering Emperor's own" $
     Common.assertCodec
       s
       PlayerEffect.codec
-      (PlayerEffect.ActivateLoyaltyAtInstantSpeed Filter.IsSource)
-      " {\"type\":\"ActivateLoyaltyAtInstantSpeed\",\"value\":{\"type\":\"IsSource\"}} "
+      (PlayerEffect.LoyaltyGrant (LoyaltyGrant.MkLoyaltyGrant LoyaltyClause.Window Filter.IsSource))
+      " {\"type\":\"LoyaltyGrant\",\"value\":{\"relaxes\":{\"type\":\"Window\"},\"permanents\":{\"type\":\"IsSource\"}}} "
   -- CR 602.2 / Piracy: "you may tap lands you don't control for mana".
   Spec.it s "MayTapForMana, Piracy's" $
     Common.assertCodec

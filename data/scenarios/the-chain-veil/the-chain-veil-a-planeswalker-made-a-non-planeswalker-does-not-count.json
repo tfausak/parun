@@ -1,0 +1,20 @@
+{
+  "description": "CR 603.4 The Chain Veil still makes alice lose 2 life when the only loyalty ability she activated was Ajani Goldmane's while Luxior made him not a planeswalker",
+  "note": "Luxior, Giada's Gift: equipped Ajani isn't a planeswalker and keeps his loyalty abilities, so his +1 is a loyalty ability but not one of a planeswalker.",
+  "board": {"active": "alice", "step": "PrecombatMain", "seats": [
+    {"name": "alice", "battlefield": [
+      {"card": "The Chain Veil", "label": "veil"},
+      {"card": "Ajani Goldmane", "label": "ajani", "counters": [{"key": {"type": "Loyalty"}, "value": 4}]},
+      {"card": "Luxior, Giada's Gift", "label": "luxior"}, {"card": "Plains", "label": "e1"}],
+     "library": [{"card": "Island"}, {"card": "Island"}]},
+    {"name": "bob", "library": [{"card": "Island"}, {"card": "Island"}]}]},
+  "timeline": [
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "do": {"Activate": {"object": "$luxior", "ability": 0, "targets": ["$ajani"], "mana": ["$e1"]}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "do": "Pass"},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "check": {"View": {"of": "AttachedTo", "object": "$luxior", "is": "$ajani"}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "do": {"Activate": {"object": "$ajani", "ability": 0}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "do": "Pass"},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "check": {"Life": {"player": "alice", "life": 22}}},
+    {"turn": 2, "step": "Upkeep", "player": "bob", "check": {"Life": {"player": "alice", "life": 20}}}
+  ]
+}

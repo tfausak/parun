@@ -18,6 +18,7 @@ import qualified Parun.Types.ActivateManaAbilities as ActivateManaAbilities
 import qualified Parun.Types.ActivatedAbility as ActivatedAbility
 import qualified Parun.Types.ActivationProhibition as ActivationProhibition
 import qualified Parun.Types.ActivationRestriction as ActivationRestriction
+import qualified Parun.Types.ActivationsThisTurn as ActivationsThisTurn
 import qualified Parun.Types.AffectPlayers as AffectPlayers
 import qualified Parun.Types.Affected as Affected
 import qualified Parun.Types.AffectedUnless as AffectedUnless
@@ -164,6 +165,7 @@ import qualified Parun.Types.LibraryPlacement as LibraryPlacement
 import qualified Parun.Types.LifeLoss as LifeLoss
 import qualified Parun.Types.LimitUnless as LimitUnless
 import qualified Parun.Types.LookAt as LookAt
+import qualified Parun.Types.LoyaltyGrant as LoyaltyGrant
 import qualified Parun.Types.MakeForetold as MakeForetold
 import qualified Parun.Types.ManaAddition as ManaAddition
 import qualified Parun.Types.ManaCount as ManaCount
@@ -517,7 +519,7 @@ rewritePlayerEffect pairs effect = case effect of
   -- A rule-702 designator is no word CR 612.1 swaps; the loyalty arm's Filter
   -- names the permanent, so it descends as CastAsThoughItHadFlash's does.
   PlayerEffect.ActivateKeywordAtInstantSpeed _ -> effect
-  PlayerEffect.ActivateLoyaltyAtInstantSpeed f -> PlayerEffect.ActivateLoyaltyAtInstantSpeed (Filter.rewrite pairs f)
+  PlayerEffect.LoyaltyGrant grant -> PlayerEffect.LoyaltyGrant grant {LoyaltyGrant.permanents = Filter.rewrite pairs (LoyaltyGrant.permanents grant)}
   PlayerEffect.MayTapForMana grant -> PlayerEffect.MayTapForMana (TapForMana.MkTapForMana (Filter.rewrite pairs (TapForMana.permanents grant)) (fmap (rewriteManaRestriction pairs) (TapForMana.restriction grant)))
   PlayerEffect.CantBeCountered (CounterProhibition.MkCounterProhibition countered counterers) -> PlayerEffect.CantBeCountered (CounterProhibition.MkCounterProhibition (Filter.rewrite pairs countered) (Filter.rewrite pairs counterers))
   -- CR 612.2's colour word in Autumn's Veil's "blue or black spells", and the
@@ -2402,6 +2404,7 @@ rewriteQuantity pairs quantity = case quantity of
   Quantity.Type.SpellsCastLastTurn _ -> quantity
   Quantity.Type.SpellsCastThisTurn _ -> quantity
   Quantity.Type.TimesThisTurn _ -> quantity
+  Quantity.Type.ActivationsThisTurn tally -> Quantity.Type.ActivationsThisTurn tally {ActivationsThisTurn.source = Filter.rewrite pairs (ActivationsThisTurn.source tally)}
   Quantity.Type.SpellsCastBefore -> quantity
   Quantity.Type.PermanentsDiedThisTurn -> quantity
   Quantity.Type.SpellsCastUsingThisTurn _ -> quantity

@@ -15,6 +15,7 @@ import qualified Parun.Engine.Event as Event
 import qualified Parun.Engine.Fragmented as Fragmented
 import qualified Parun.Engine.Game as Game
 import qualified Parun.Engine.Keyword as Keyword
+import qualified Parun.Engine.Loyalty as Loyalty
 import qualified Parun.Engine.Modal as Modal
 import qualified Parun.Engine.Projection as Projection
 import qualified Parun.Engine.Resolve.Common as Resolve
@@ -341,7 +342,7 @@ activateAbilityWith refused runSubgame pid srcId ability = Event.announcing $ do
           -- than this one -- and that is CR 601.2b's own order: the halves are
           -- announced before the targets exist. Both are gathered again below,
           -- once they do.
-          let gathered = Cost.activationAdjustments Set.empty stamp AbilityKind.NonManaAbility (Cost.loyaltyKindOf (ActivatedAbility.cost ability)) pid srcId gs
+          let gathered = Cost.activationAdjustments Set.empty stamp AbilityKind.NonManaAbility (Loyalty.loyaltyKindOf (ActivatedAbility.cost ability)) pid srcId gs
           -- The Phyrexian life record is DISCARDED here: CR 702.150a reads what
           -- the player who CAST a spell announced, and no rule asks the same of
           -- an activation cost.
@@ -411,7 +412,7 @@ activateAbilityWith refused runSubgame pid srcId ability = Event.announcing $ do
               -- to an activation, so the ones the announcement above measured are
               -- the ones charged below.
               let aimedAt = Set.unions (fmap Activatable.recipientObjects (Map.elems chosen))
-                  targeted = Cost.activationAdjustments aimedAt stamp AbilityKind.NonManaAbility (Cost.loyaltyKindOf (ActivatedAbility.cost ability)) pid srcId gs
+                  targeted = Cost.activationAdjustments aimedAt stamp AbilityKind.NonManaAbility (Loyalty.loyaltyKindOf (ActivatedAbility.cost ability)) pid srcId gs
               adjustments <- Cost.announceReductions pid srcId gs announcedCost targeted
               -- Cast.castProposed's lock of a computed amount, one road over.
               boundGs <- State.get
@@ -470,7 +471,7 @@ activateAbilityWith refused runSubgame pid srcId ability = Event.announcing $ do
                   -- 400.7d's record of the mana itself (Object.manaCostPaid).
                   State.modify' (\g -> g {GameState.objects = Map.adjust (\o -> o {Object.manaCostPaid = Cost.Type.mana paidCost}) abilId (GameState.objects g)})
                   Monad.when
-                    (Cost.isLoyaltyCost (ActivatedAbility.cost ability))
+                    (Loyalty.isLoyaltyCost (ActivatedAbility.cost ability))
                     (State.modify' (Event.recordEvent (GameEvent.LoyaltyAbilityActivated srcId)))
                   -- CR 602.5b: record that THIS ability of this permanent has now
                   -- been activated, which is the whole of both counted riders'

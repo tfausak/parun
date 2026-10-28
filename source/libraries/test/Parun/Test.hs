@@ -46,6 +46,7 @@ import qualified Parun.Codec.ActivatedAbilitySpec
 import qualified Parun.Codec.ActivationProhibitionSpec
 import qualified Parun.Codec.ActivationRestrictionSpec
 import qualified Parun.Codec.ActivationSpec
+import qualified Parun.Codec.ActivationsThisTurnSpec
 import qualified Parun.Codec.ActivatorSpec
 import qualified Parun.Codec.ActiveAttackProhibitionSpec
 import qualified Parun.Codec.ActiveAttackRequirementSpec
@@ -415,6 +416,8 @@ import qualified Parun.Codec.LoggedEventSpec
 import qualified Parun.Codec.LookAtSpec
 import qualified Parun.Codec.LookedSpec
 import qualified Parun.Codec.LoopMembersSpec
+import qualified Parun.Codec.LoyaltyClauseSpec
+import qualified Parun.Codec.LoyaltyGrantSpec
 import qualified Parun.Codec.LoyaltyKindSpec
 import qualified Parun.Codec.LoyaltySpec
 import qualified Parun.Codec.MadnessCostSpec
@@ -980,6 +983,7 @@ spec s registry corpus = do
   Parun.Codec.ActivationProhibitionSpec.spec s
   Parun.Codec.ActivationRestrictionSpec.spec s
   Parun.Codec.ActivationSpec.spec s
+  Parun.Codec.ActivationsThisTurnSpec.spec s
   Parun.Codec.ActivatorSpec.spec s
   Parun.Codec.ActiveAttackProhibitionSpec.spec s
   Parun.Codec.ActiveAttackRequirementSpec.spec s
@@ -1355,6 +1359,8 @@ spec s registry corpus = do
   Parun.Codec.ObjectViewSpec.spec s
   Parun.Codec.AbilityViewSpec.spec s
   Parun.Codec.LoopMembersSpec.spec s
+  Parun.Codec.LoyaltyClauseSpec.spec s
+  Parun.Codec.LoyaltyGrantSpec.spec s
   Parun.Codec.LoyaltyKindSpec.spec s
   Parun.Codec.LoyaltySpec.spec s
   Parun.Codec.MadnessCostSpec.spec s

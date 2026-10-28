@@ -4465,6 +4465,8 @@ quantityReads q = case q of
   Quantity.Type.SpellsCastLastTurn _ -> Set.empty
   Quantity.Type.SpellsCastThisTurn _ -> Set.empty
   Quantity.Type.TimesThisTurn _ -> Set.empty
+  -- Its Filter asks a past activation's snapshot, never a projection.
+  Quantity.Type.ActivationsThisTurn _ -> Set.empty
   Quantity.Type.SpellsCastBefore -> Set.empty
   Quantity.Type.PermanentsDiedThisTurn -> Set.empty
   Quantity.Type.SpellsCastUsingThisTurn _ -> Set.empty
