@@ -7616,8 +7616,9 @@ matchesTriggerGiven bindings board gs bearer you cond event = case cond of
   -- CR 603.2c's batch reading of the same rule from a BYSTANDER's side, and the
   -- one of the three arms with a Filter: Professor Hojo asks nothing of the
   -- targeting object's controller and everything of the permanents it named.
-  -- Diffusion Sliver asks both; the relation is read off the event's controller
-  -- field for SelfBecomesTargeted's CR 405.4 reason.
+  -- Diffusion Sliver, through the per-permanent arm below, asks both; the
+  -- relation is read off the event's controller field for SelfBecomesTargeted's
+  -- CR 405.4 reason.
   --
   -- The KIND conjunct is the sibling's one limb narrower. "An ACTIVATED
   -- ability" is CR 113.3b alone, where CR 603.3d brings CR 113.3c's to the same
