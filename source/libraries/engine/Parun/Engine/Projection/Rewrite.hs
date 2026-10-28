@@ -565,6 +565,7 @@ rewritePlayerEffect pairs effect = case effect of
   PlayerEffect.CantSearchLibraries _ -> effect
   PlayerEffect.CantBecomeMonarch -> effect
   PlayerEffect.CantSetSchemesInMotion -> effect
+  PlayerEffect.EntriesDontTrigger f -> PlayerEffect.EntriesDontTrigger (Filter.rewrite pairs f)
   PlayerEffect.ControlledWhileSearching -> effect
   PlayerEffect.YouChoose _ -> effect
   PlayerEffect.ExilesFoundWhileSearching -> effect

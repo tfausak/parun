@@ -149,6 +149,10 @@ data PlayerEffect
     CantBecomeMonarch
   | -- | CR 701.32 / 904.9 / All in Good Time: schemes can't be set in motion.
     CantSetSchemesInMotion
+  | -- | CR 603.6a / 613.11 / Hushwing Gryff: an object the Filter admits entering
+    -- the battlefield doesn't cause this player's enters abilities to trigger.
+    -- Not implemented: the same for a creature dying (Hushbringer) (#5725).
+    EntriesDontTrigger (Filter.Filter Keyword.Keyword)
   | -- | CR 723.2 / Opposition Agent: while this player searches their library,
     -- CR 109.5's "you" of the row controls them.
     ControlledWhileSearching

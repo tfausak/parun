@@ -1,0 +1,98 @@
+{
+  "description": "CR 603.6a / 702.8a Hushwing Gryff flashed in response to a creature spell keeps the creature's enters ability from triggering",
+  "note": "bob flashes the Gryff in with Venerable Monk on the stack, so the Gryff is on the battlefield when the Monk enters and alice gains nothing. The paired board flashes it in one priority pass later.",
+  "board": {
+    "active": "alice",
+    "step": "PrecombatMain",
+    "seats": [
+      {
+        "name": "alice",
+        "manaPool": "WWW",
+        "hand": [
+          {
+            "card": "Venerable Monk",
+            "label": "monk"
+          }
+        ],
+        "library": [
+          {
+            "card": "Island"
+          },
+          {
+            "card": "Island"
+          },
+          {
+            "card": "Island"
+          }
+        ]
+      },
+      {
+        "name": "bob",
+        "manaPool": "WWW",
+        "hand": [
+          {
+            "card": "Hushwing Gryff",
+            "label": "gryff"
+          }
+        ],
+        "library": [
+          {
+            "card": "Island"
+          },
+          {
+            "card": "Island"
+          },
+          {
+            "card": "Island"
+          }
+        ]
+      }
+    ]
+  },
+  "timeline": [
+    {
+      "turn": 1,
+      "step": "PrecombatMain",
+      "player": "alice",
+      "do": {
+        "Cast": {
+          "object": "$monk"
+        }
+      }
+    },
+    {
+      "turn": 1,
+      "step": "PrecombatMain",
+      "player": "bob",
+      "do": {
+        "Cast": {
+          "object": "$gryff"
+        }
+      }
+    }
+  ],
+  "final": [
+    {
+      "Life": {
+        "player": "alice",
+        "life": 20
+      }
+    },
+    {
+      "Count": {
+        "player": "alice",
+        "zone": "Battlefield",
+        "card": "Venerable Monk",
+        "count": 1
+      }
+    },
+    {
+      "Count": {
+        "player": "bob",
+        "zone": "Battlefield",
+        "card": "Hushwing Gryff",
+        "count": 1
+      }
+    }
+  ]
+}

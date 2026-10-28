@@ -1,0 +1,105 @@
+{
+  "description": "CR 603.6a / 613.1d Hushwing Gryff silences a noncreature artifact that March of the Machines makes a creature as it enters",
+  "note": "The card's March of the Machines ruling: Golden Egg enters as a 2/2 artifact creature, so its own enters ability does not trigger and alice draws nothing. The control swaps the Gryff for Dawn Gryff, and the Egg draws.",
+  "board": {
+    "active": "alice",
+    "step": "PrecombatMain",
+    "seats": [
+      {
+        "name": "alice",
+        "manaPool": "WW",
+        "battlefield": [
+          {
+            "card": "March of the Machines"
+          }
+        ],
+        "hand": [
+          {
+            "card": "Golden Egg",
+            "label": "egg"
+          }
+        ],
+        "library": [
+          {
+            "card": "Island"
+          },
+          {
+            "card": "Island"
+          },
+          {
+            "card": "Island"
+          }
+        ]
+      },
+      {
+        "name": "bob",
+        "battlefield": [
+          {
+            "card": "Hushwing Gryff"
+          }
+        ],
+        "library": [
+          {
+            "card": "Island"
+          },
+          {
+            "card": "Island"
+          },
+          {
+            "card": "Island"
+          }
+        ]
+      }
+    ]
+  },
+  "timeline": [
+    {
+      "turn": 1,
+      "step": "PrecombatMain",
+      "player": "alice",
+      "do": {
+        "Cast": {
+          "object": "$egg"
+        }
+      }
+    },
+    {
+      "turn": 1,
+      "step": "PrecombatMain",
+      "player": "alice",
+      "do": "Pass"
+    },
+    {
+      "turn": 1,
+      "step": "PrecombatMain",
+      "player": "alice",
+      "check": {
+        "Types": {
+          "object": "Golden Egg",
+          "types": [
+            "Artifact",
+            "Creature"
+          ]
+        }
+      }
+    }
+  ],
+  "final": [
+    {
+      "Count": {
+        "player": "alice",
+        "zone": "Hand",
+        "card": "Island",
+        "count": 0
+      }
+    },
+    {
+      "Count": {
+        "player": "alice",
+        "zone": "Battlefield",
+        "card": "Golden Egg",
+        "count": 1
+      }
+    }
+  ]
+}
