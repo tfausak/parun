@@ -1,0 +1,12 @@
+{
+  "description": "CR 111.4 / 705.2: at the beginning of its controller's upkeep, Goblin Kaboomist creates a Land Mine artifact token, then flips a coin and deals 2 damage to itself if its controller loses",
+  "note": "alice calls heads and the coin lands tails: she has a Land Mine and the 1/2 Kaboomist has died to its own 2 damage.",
+  "board": {"active": "alice", "step": "Untap", "seats": [{"name": "alice", "battlefield": [{"card": "Goblin Kaboomist", "label": "kaboomist"}], "library": [{"card": "Island"}, {"card": "Island"}, {"card": "Island"}, {"card": "Island"}, {"card": "Island"}, {"card": "Island"}]}, {"name": "bob", "library": [{"card": "Island"}, {"card": "Island"}, {"card": "Island"}, {"card": "Island"}, {"card": "Island"}, {"card": "Island"}]}]},
+  "timeline": [
+    {"turn": 1, "step": "Upkeep", "player": "alice", "do": "Pass"},
+    {"turn": 1, "step": "Upkeep", "player": "alice", "do": {"Answer": {"prompt": "CallCoin", "with": {"type": "Heads"}}}},
+    {"turn": 1, "step": "Upkeep", "player": "alice", "do": {"Answer": {"prompt": "FlipCoin", "with": {"type": "Tails"}}}},
+    {"turn": 1, "step": "Upkeep", "player": "alice", "check": {"Count": {"player": "alice", "zone": "Battlefield", "card": "Land Mine", "count": 1}}},
+    {"turn": 1, "step": "Upkeep", "player": "alice", "check": {"Count": {"player": "alice", "zone": "Graveyard", "card": "Goblin Kaboomist", "count": 1}}}
+  ]
+}

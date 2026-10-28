@@ -1,0 +1,13 @@
+{
+  "description": "CR 701.8a: In Garruk's Wake destroys every creature and planeswalker its caster doesn't control",
+  "note": "bob's Hill Giant and Jace go; his Sol Ring, neither, stays, and so do alice's own Grizzly Bears.",
+  "board": {"active": "alice", "step": "PrecombatMain", "seats": [{"name": "alice", "manaPool": "BBBBBBBBB", "battlefield": [{"card": "Grizzly Bears", "label": "bears"}], "hand": [{"card": "In Garruk's Wake", "label": "wake"}], "library": [{"card": "Island"}, {"card": "Island"}, {"card": "Island"}, {"card": "Island"}, {"card": "Island"}, {"card": "Island"}]}, {"name": "bob", "battlefield": [{"card": "Hill Giant", "label": "giant"}, {"card": "Jace, the Living Guildpact", "label": "jace", "counters": [{"key": {"type": "Loyalty"}, "value": 5}]}, {"card": "Sol Ring", "label": "ring"}], "library": [{"card": "Island"}, {"card": "Island"}, {"card": "Island"}, {"card": "Island"}, {"card": "Island"}, {"card": "Island"}]}]},
+  "timeline": [
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "do": {"Cast": {"object": "$wake"}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "do": "Pass"},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "check": {"Count": {"player": "bob", "zone": "Graveyard", "card": "Hill Giant", "count": 1}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "check": {"Count": {"player": "bob", "zone": "Graveyard", "card": "Jace, the Living Guildpact", "count": 1}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "check": {"Count": {"player": "bob", "zone": "Battlefield", "card": "Sol Ring", "count": 1}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "check": {"Count": {"player": "alice", "zone": "Battlefield", "card": "Grizzly Bears", "count": 1}}}
+  ]
+}

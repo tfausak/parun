@@ -1,0 +1,15 @@
+{
+  "description": "CR 111.1 / 603.6a: when Hornet Queen enters, its controller creates four 1/1 green Insect tokens with flying and deathtouch",
+  "note": "Exactly four, each 1/1 with both keywords.",
+  "board": {"active": "alice", "step": "PrecombatMain", "seats": [{"name": "alice", "manaPool": "GGGGGGG", "hand": [{"card": "Hornet Queen", "label": "queen"}], "library": [{"card": "Island"}, {"card": "Island"}, {"card": "Island"}, {"card": "Island"}, {"card": "Island"}, {"card": "Island"}]}, {"name": "bob", "library": [{"card": "Island"}, {"card": "Island"}, {"card": "Island"}, {"card": "Island"}, {"card": "Island"}, {"card": "Island"}]}]},
+  "timeline": [
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "do": {"Cast": {"object": "$queen"}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "do": "Pass"},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "do": "Pass"},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "do": {"OrderTimestamps": ["Insect Token", "Insect Token#2", "Insect Token#3", "Insect Token#4"]}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "check": {"Count": {"player": "alice", "zone": "Battlefield", "card": "Insect Token", "count": 4}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "check": {"Keywords": {"object": "Insect Token#4", "keyword": {"type": "Deathtouch"}, "count": 1}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "check": {"Keywords": {"object": "Insect Token#4", "keyword": {"type": "Flying"}, "count": 1}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "check": {"PowerToughness": {"object": "Insect Token#4", "power": 1, "toughness": 1}}}
+  ]
+}

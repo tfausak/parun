@@ -1,0 +1,17 @@
+{
+  "description": "CR 603.2 / 107.3i: when Genesis Hydra is cast, its controller reveals the top X cards and may put a nonland permanent card with mana value X or less among them onto the battlefield, shuffling the rest in; it enters with X +1/+1 counters",
+  "note": "X is 3: of Hill Giant (4), Gray Ogre (3) and Grizzly Bears (2), the Giant is refused and the Ogre chosen; the Forest below the top three is never revealed, and the Hydra enters with three counters.",
+  "board": {"active": "alice", "step": "PrecombatMain", "seats": [{"name": "alice", "manaPool": "GGGGG", "hand": [{"card": "Genesis Hydra", "label": "hydra"}], "library": [{"card": "Hill Giant", "label": "giant"}, {"card": "Gray Ogre", "label": "ogre"}, {"card": "Grizzly Bears", "label": "bears"}, {"card": "Forest", "label": "forest"}]}, {"name": "bob", "library": [{"card": "Island"}, {"card": "Island"}, {"card": "Island"}, {"card": "Island"}, {"card": "Island"}, {"card": "Island"}]}]},
+  "timeline": [
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "do": {"Cast": {"object": "$hydra", "x": 3}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "do": "Pass"},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "do": {"ChooseOptional": {"type": "Exercises"}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "refuse": {"Answer": {"prompt": "ChooseCardFromAmong", "with": "$giant"}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "do": {"Answer": {"prompt": "ChooseCardFromAmong", "with": "$ogre"}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "do": {"Answer": {"prompt": "Shuffle", "with": ["$giant", "$bears", "$forest"]}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "check": {"Count": {"player": "alice", "zone": "Battlefield", "card": "Gray Ogre", "count": 1}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "check": {"View": {"of": "Witnessed", "player": "bob", "is": ["Hill Giant", "Gray Ogre", "Grizzly Bears"]}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "do": "Pass"},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "check": {"Counters": {"object": "Genesis Hydra", "kind": {"type": "PlusOnePlusOne"}, "count": 3}}}
+  ]
+}

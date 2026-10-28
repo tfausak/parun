@@ -1,0 +1,14 @@
+{
+  "description": "CR 118.12 / 509.1b: whenever Frenzied Goblin attacks, its controller may pay {R}; if they do, target creature can't block this turn",
+  "note": "alice pays with her Mountain: bob's Hill Giant can't block, his Gray Ogre still may.",
+  "board": {"active": "alice", "step": "PrecombatMain", "seats": [{"name": "alice", "battlefield": [{"card": "Frenzied Goblin", "label": "goblin", "ready": true}, {"card": "Mountain", "label": "mtn"}], "library": [{"card": "Island"}, {"card": "Island"}, {"card": "Island"}, {"card": "Island"}, {"card": "Island"}, {"card": "Island"}]}, {"name": "bob", "battlefield": [{"card": "Hill Giant", "label": "giant"}, {"card": "Gray Ogre", "label": "ogre"}], "library": [{"card": "Island"}, {"card": "Island"}, {"card": "Island"}, {"card": "Island"}, {"card": "Island"}, {"card": "Island"}]}]},
+  "timeline": [
+    {"turn": 1, "step": "DeclareAttackers", "player": "alice", "do": {"Attack": ["$goblin"]}},
+    {"turn": 1, "step": "DeclareAttackers", "player": "alice", "do": {"ChooseTargets": {"target": ["$giant"]}}},
+    {"turn": 1, "step": "DeclareAttackers", "player": "alice", "do": "Pass"},
+    {"turn": 1, "step": "DeclareAttackers", "player": "alice", "do": {"ChooseToPay": {"decision": {"type": "Pays"}, "mana": ["$mtn"]}}},
+    {"turn": 1, "step": "DeclareBlockers", "player": "bob", "refuse": {"Block": {"$giant": ["$goblin"]}}},
+    {"turn": 1, "step": "DeclareBlockers", "player": "bob", "do": {"Block": {"$ogre": ["$goblin"]}}},
+    {"turn": 1, "step": "DeclareBlockers", "player": "bob", "check": {"Blockers": {"attacker": "$goblin", "blockers": ["$ogre"]}}}
+  ]
+}

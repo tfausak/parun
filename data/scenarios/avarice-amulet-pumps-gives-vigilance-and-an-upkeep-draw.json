@@ -1,0 +1,12 @@
+{
+  "description": "CR 613.1f / 702.20b: Avarice Amulet's creature gets +2/+0, attacks without tapping, and draws a card at its controller's upkeep",
+  "note": "Grizzly Bears is 4/2 under it; the upkeep trigger draws alice's first Island before her draw step, and the Bears stay untapped as they attack.",
+  "board": {"active": "bob", "step": "EndStep", "seats": [{"name": "bob", "library": [{"card": "Island"}, {"card": "Island"}, {"card": "Island"}, {"card": "Island"}, {"card": "Island"}, {"card": "Island"}]}, {"name": "alice", "battlefield": [{"card": "Grizzly Bears", "label": "bears"}, {"card": "Avarice Amulet", "label": "amulet", "attached": "bears"}], "library": [{"card": "Island"}, {"card": "Island"}, {"card": "Island"}, {"card": "Island"}, {"card": "Island"}, {"card": "Island"}]}]},
+  "timeline": [
+    {"turn": 2, "step": "Upkeep", "player": "alice", "check": {"PowerToughness": {"object": "$bears", "power": 4, "toughness": 2}}},
+    {"turn": 2, "step": "Upkeep", "player": "alice", "do": "Pass"},
+    {"turn": 2, "step": "Upkeep", "player": "alice", "check": {"Count": {"player": "alice", "zone": "Hand", "card": "Island", "count": 1}}},
+    {"turn": 2, "step": "DeclareAttackers", "player": "alice", "do": {"Attack": ["$bears"]}},
+    {"turn": 2, "step": "DeclareAttackers", "player": "alice", "check": {"Tapped": {"object": "$bears", "tapped": false}}}
+  ]
+}

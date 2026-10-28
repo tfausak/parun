@@ -1,0 +1,17 @@
+{
+  "description": "CR 701.23a / 303.4f: when Boonweaver Giant enters, its controller may search graveyard, hand and/or library for an Aura card and put it onto the battlefield attached to the Giant",
+  "note": "alice searches only her graveyard: the Gray Ogre there is not an Aura, Holy Strength is, and Pacifism stays in her hand.",
+  "board": {"active": "alice", "step": "PrecombatMain", "seats": [{"name": "alice", "manaPool": "WWWWWWW", "hand": [{"card": "Boonweaver Giant", "label": "giant"}, {"card": "Pacifism"}], "graveyard": [{"card": "Gray Ogre", "label": "ogre"}, {"card": "Holy Strength", "label": "strength"}], "library": [{"card": "Island"}, {"card": "Island"}, {"card": "Island"}, {"card": "Island"}, {"card": "Island"}, {"card": "Island"}]}, {"name": "bob", "library": [{"card": "Island"}, {"card": "Island"}, {"card": "Island"}, {"card": "Island"}, {"card": "Island"}, {"card": "Island"}]}]},
+  "timeline": [
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "do": {"Cast": {"object": "$giant"}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "do": "Pass"},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "do": "Pass"},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "do": {"ChooseOptional": {"type": "Exercises"}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "do": {"Answer": {"prompt": "ChooseSearchZones", "with": [{"type": "Graveyard"}]}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "refuse": {"Answer": {"prompt": "Search", "with": ["$ogre"]}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "do": {"Answer": {"prompt": "Search", "with": ["$strength"]}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "check": {"View": {"of": "AttachedTo", "object": "Holy Strength", "is": "Boonweaver Giant"}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "check": {"PowerToughness": {"object": "Boonweaver Giant", "power": 5, "toughness": 6}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "check": {"Count": {"player": "alice", "zone": "Hand", "card": "Pacifism", "count": 1}}}
+  ]
+}

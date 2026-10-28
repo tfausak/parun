@@ -1,0 +1,13 @@
+{
+  "description": "CR 701.20a / 401.4: Jalira, Master Polymorphist reveals cards from the top of its controller's library until a nonlegendary creature card, puts it onto the battlefield and the rest on the bottom in a random order",
+  "note": "The reveal passes an Island and Isamaru, Hound of Konda (legendary) and stops at Hill Giant; the Island beneath the Giant is never revealed.",
+  "board": {"active": "alice", "step": "PrecombatMain", "seats": [{"name": "alice", "battlefield": [{"card": "Jalira, Master Polymorphist", "label": "jalira", "ready": true}, {"card": "Grizzly Bears", "label": "bears"}, {"card": "Island", "label": "i1"}, {"card": "Island", "label": "i2"}, {"card": "Island", "label": "i3"}], "library": [{"card": "Island", "label": "top"}, {"card": "Isamaru, Hound of Konda", "label": "isamaru"}, {"card": "Hill Giant", "label": "giant"}, {"card": "Island", "label": "under"}]}, {"name": "bob", "library": [{"card": "Island"}, {"card": "Island"}, {"card": "Island"}, {"card": "Island"}, {"card": "Island"}, {"card": "Island"}]}]},
+  "timeline": [
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "do": {"Activate": {"object": "$jalira", "mana": ["$i1", "$i2", "$i3"], "costOrder": [0, 1]}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "do": "Pass"},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "do": {"Answer": {"prompt": "Shuffle", "with": ["$top", "$isamaru"]}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "check": {"Count": {"player": "alice", "zone": "Battlefield", "card": "Hill Giant", "count": 1}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "check": {"View": {"of": "Zone", "player": "alice", "zone": "Library", "is": ["$under", "Isamaru, Hound of Konda", "Island#11"]}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "check": {"Count": {"player": "alice", "zone": "Graveyard", "card": "Grizzly Bears", "count": 1}}}
+  ]
+}

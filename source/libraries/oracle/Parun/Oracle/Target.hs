@@ -328,7 +328,8 @@ object context determiner ref = case ref of
         one <- Filter.describe Filter.Singular permanent p
         many <- Filter.describe Filter.Plural permanent p
         case ChosenPermanents.count c of
-          HowMany.Exactly (Quantity.Literal 1) -> [MkReference (Prose.article one <> Text.pack " " <> one) [] Filter.Singular]
+          -- "another permanent", as Parun.Oracle.Cost.some reads "other" (Invasive Species).
+          HowMany.Exactly (Quantity.Literal 1) -> [MkReference (maybe (Prose.article one <> Text.pack " " <> one) (Text.pack "another " <>) (Text.stripPrefix (Text.pack "other ") one)) [] Filter.Singular]
           HowMany.Exactly (Quantity.Literal n) | n > 1 -> [MkReference (Prose.cardinal n <> Text.pack " " <> many) [] Filter.Plural]
           HowMany.UpTo (Just (Quantity.Literal 1)) -> [MkReference (Text.pack "up to one " <> one) [] Filter.Singular]
           HowMany.UpTo (Just (Quantity.Literal n)) | n > 1 -> [MkReference (Text.pack "up to " <> Prose.cardinal n <> Text.pack " " <> many) [] Filter.Plural]
