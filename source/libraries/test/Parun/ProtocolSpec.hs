@@ -13,6 +13,7 @@ import qualified Data.Text as Text
 import Numeric.Natural (Natural)
 import qualified Parun.Cards as Cards
 import qualified Parun.Codec.Cost as Codec.Cost
+import qualified Parun.Codec.Filter as Codec.Filter
 import qualified Parun.Codec.Keyword as Codec.Keyword
 import qualified Parun.Codec.Reply as Codec.Reply
 import qualified Parun.Codec.Request as Codec.Request
@@ -36,13 +37,18 @@ import qualified Parun.Types.Answerer as Answerer
 import qualified Parun.Types.Asked as Asked
 import qualified Parun.Types.CardName as CardName
 import qualified Parun.Types.ClauseIndex as ClauseIndex
+import qualified Parun.Types.Comparison as Comparison
 import qualified Parun.Types.Decider as Decider
 import qualified Parun.Types.Deck as Deck
+import qualified Parun.Types.Filter as Filter.Type
 import qualified Parun.Types.GameSettings as GameSettings
 import qualified Parun.Types.GameState as GameState
+import qualified Parun.Types.Measure as Measure
+import qualified Parun.Types.Measures as Measures
 import qualified Parun.Types.ModeIndex as ModeIndex
 import qualified Parun.Types.ObjectId as ObjectId
 import qualified Parun.Types.Observer as Observer
+import qualified Parun.Types.Operand as Operand
 import qualified Parun.Types.PayOffer as PayOffer
 import qualified Parun.Types.PlayerId as PlayerId
 import qualified Parun.Types.Prompt as Prompt
@@ -105,6 +111,17 @@ spec s registry = Spec.describe s "Protocol" $ do
     Spec.assertEqWith s "lethal" (fmap (Protocol.decodeAnswer prompt) (field "lethal" offer)) (Just (Right lethal))
     Spec.assertEqWith s "total" (field "total" offer) (Just (R.Number 5))
     Spec.assertEqWith s "source" (field "source" offer) (Just (Protocol.object o7))
+
+  Spec.it s "CR 400.2 a guess offers its source and proposition and never the card" $ do
+    let o7 = ObjectId.MkObjectId 7
+        proposition = Filter.Type.Measures (Measures.MkMeasures Measure.ManaValue Comparison.GreaterThan (Operand.Literal 4))
+        offer = Protocol.offerOf (Setup.emptyGame S.bothPlayers) (Prompt.ChooseGuess (Decider.MkDecider S.bob) S.bob o7 proposition)
+        keys = case offer of
+          R.Object pairs -> fmap fst pairs
+          _ -> []
+    Spec.assertEqWith s "keys" keys [Text.pack "source", Text.pack "proposition"]
+    Spec.assertEqWith s "source" (field "source" offer) (Just (Protocol.object o7))
+    Spec.assertEqWith s "proposition" (fmap Codec.Reply.toValue (field "proposition" offer)) (Just (Codec.encode (Codec.Filter.codec Codec.Keyword.codec) proposition))
 
   Spec.it s "CR 118.12 an offer to pay names the cost and what offers it" $ do
     vane <- S.printingOf s registry "Arcum's Weathervane"

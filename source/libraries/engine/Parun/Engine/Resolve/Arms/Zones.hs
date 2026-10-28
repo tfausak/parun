@@ -101,6 +101,8 @@ import qualified Parun.Types.GameState as GameState
 import qualified Parun.Types.GrantLookAtExiled as GrantLookAtExiled
 import qualified Parun.Types.GrantPlayFromExile as GrantPlayFromExile
 import qualified Parun.Types.GrantedAbility as GrantedAbility
+import qualified Parun.Types.Guess as Guess
+import qualified Parun.Types.GuessAnswer as GuessAnswer
 import qualified Parun.Types.HowMany as HowMany
 import qualified Parun.Types.LibraryPlacement as LibraryPlacement
 import qualified Parun.Types.LibraryPosition as LibraryPosition
@@ -1305,6 +1307,35 @@ lookAt resolving source controller legal (LookAt.MkLookAt ref slot looker) = do
   -- Several cards take the group, which Filter.IsBound reads as CR 701.20e's
   -- "among them".
   Common.bindObjects resolving (Just slot) named
+
+-- CR 608.2c: Parun.Types.Guess. The card is named first and bound -- Master of
+-- Predicaments' "choose a card in your hand" is the subject's CR 608.2d
+-- question, asked through askingObjects like Reveal's -- then the guesser is
+-- asked with the proposition alone, CR 400.2 keeping the card from them, and the
+-- truth is read off the card once the answer is in. No card, or several, is no
+-- guess (CR 609.3), so `right` is cleared and neither "guessed right" nor
+-- "guessed wrong" holds: bindAmountSlot writes the source too, where an earlier
+-- resolution's outcome (a double striker's first trigger) would otherwise be
+-- read. A fence: Master of Predicaments' cast reads `slot`, empty then, so no
+-- board in the pool observes the clear.
+guess :: ObjectId -> ObjectId -> PlayerId -> Map.Map SlotName (Set Recipient) -> Map.Map SlotName (Set Recipient) -> Guess.Guess -> Game ()
+guess resolving source controller legal chosen (Guess.MkGuess subject slot guesser proposition right) = do
+  named <- Common.askingObjects resolving source controller legal chosen subject
+  Common.bindObjects resolving (Just slot) named
+  case named of
+    [card] -> do
+      asked <- Common.askedChooser resolving source controller legal guesser
+      Foldable.for_ asked $ \pid -> do
+        before <- State.get
+        answer <- Game.choose (Prompt.ChooseGuess (Decide.deciderFor pid before) pid source proposition)
+        gs <- State.get
+        let context = effectContext gs resolving controller source legal (slotBindings resolving gs)
+            holds = any (\view -> Filter.matches context view proposition) (effectViewOf resolving source legal gs card)
+            guessed = answer == GuessAnswer.Holds
+        State.modify' (Common.bindAmountSlot resolving source right (if guessed == holds then 1 else 0))
+    _ ->
+      let clear obj = obj {Object.bindings = Map.delete right (Object.bindings obj)}
+       in State.modify' (\gs -> gs {GameState.objects = Map.adjust clear resolving (Map.adjust clear source (GameState.objects gs))})
 
 arrangeInLibrary :: ObjectId -> ObjectId -> PlayerId -> Map.Map SlotName (Set Recipient) -> ArrangeInLibrary.ArrangeInLibrary -> Game ()
 arrangeInLibrary resolving source controller legal (ArrangeInLibrary.MkArrangeInLibrary ref chooser) = do
