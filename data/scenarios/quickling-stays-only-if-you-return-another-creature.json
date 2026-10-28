@@ -1,5 +1,5 @@
 {
-  "description": "CR 118.12 / 603.3: Quickling's enter trigger sacrifices it unless its controller returns another creature they control to its owner's hand",
+  "description": "CR 118.12a / 603.3: Quickling's enter trigger sacrifices it unless its controller returns another creature they control to its owner's hand",
   "note": "The first Quickling can't return itself, and alice returns her Grizzly Bears over her Hill Giant to keep it; she declines for the second, which is sacrificed.",
   "board": {"active": "alice", "step": "PrecombatMain", "seats": [{"name": "alice", "manaPool": "UUUU", "battlefield": [{"card": "Grizzly Bears", "label": "bears"}, {"card": "Hill Giant", "label": "giant"}], "hand": [{"card": "Quickling", "label": "q1"}, {"card": "Quickling", "label": "q2"}], "library": [{"card": "Island"}, {"card": "Island"}, {"card": "Island"}, {"card": "Island"}, {"card": "Island"}, {"card": "Island"}, {"card": "Island"}, {"card": "Island"}]}, {"name": "bob", "library": [{"card": "Island"}, {"card": "Island"}, {"card": "Island"}, {"card": "Island"}, {"card": "Island"}, {"card": "Island"}, {"card": "Island"}, {"card": "Island"}]}]},
   "timeline": [
