@@ -49,6 +49,8 @@ import qualified Parun.Types.Modal as Modal.Type
 import qualified Parun.Types.ModeIndex as ModeIndex
 import qualified Parun.Types.Object as Object
 import Parun.Types.ObjectId (ObjectId)
+import qualified Parun.Types.ObjectSnapshot as ObjectSnapshot
+import qualified Parun.Types.PastActivation as PastActivation
 import qualified Parun.Types.PaymentSubject as PaymentSubject
 import Parun.Types.PlayerId (PlayerId)
 import qualified Parun.Types.ProjectedCharacteristics as PC
@@ -362,13 +364,18 @@ activationSourcesGiven grants pcs pid gs =
 -- An effect letting the player activate one "as though none of its loyalty
 -- abilities have been activated this turn" (The Chain Veil) is one more
 -- activation per grant, each resolution counting, per the Veil's rulings; the
--- window stands. data/scenarios/the-chain-veil proves the count.
+-- window stands. The grant is its holder's: it ignores every earlier
+-- activation, whoever made it, and only its holder's own activations beyond the
+-- turn's first spend it (graceUsed). data/scenarios/the-chain-veil proves the
+-- count, and its trade-back scenario the per-player spending.
 loyaltyOk :: PlayerId -> ObjectId -> ActivatedAbility.ActivatedAbility Card.Card (GrantedAbility.GrantedAbility Card.Card) -> GameState -> Bool
 loyaltyOk pid srcId ability gs =
   not (Loyalty.isLoyaltyCost (ActivatedAbility.cost ability))
     || ( (Turn.sorcerySpeedWindow pid gs || PlayerEffect.loyaltyGrants LoyaltyClause.Window pid srcId gs > 0)
-           && let used = loyaltyActivationsThisTurn srcId gs
-               in used == 0 || used <= PlayerEffect.loyaltyGrants LoyaltyClause.OncePerTurn pid srcId gs
+           && ( not (loyaltyActivatedThisTurn srcId gs)
+                  || let grants = PlayerEffect.loyaltyGrants LoyaltyClause.OncePerTurn pid srcId gs
+                      in grants > 0 && graceUsed pid srcId gs < grants
+              )
        )
 
 -- CR 602.5: the ability's printed rider holds, or holds once an effect letting
@@ -384,8 +391,25 @@ riderOk pid srcId ability gs =
                && ActivationRestriction.restrictionsOk pid srcId (Just ability) (fmap ActivationRestriction.atInstantSpeed printed) gs
            )
 
-loyaltyActivationsThisTurn :: ObjectId -> GameState -> Int
-loyaltyActivationsThisTurn srcId gs = length (filter (== GameEvent.LoyaltyAbilityActivated srcId) (fmap LoggedEvent.event (Foldable.toList (GameState.events gs))))
+loyaltyActivatedThisTurn :: ObjectId -> GameState -> Bool
+loyaltyActivatedThisTurn srcId gs = elem (GameEvent.LoyaltyAbilityActivated srcId) (fmap LoggedEvent.event (GameState.events gs))
+
+-- How many of `pid`'s loyalty activations of `srcId` this turn went past CR
+-- 606.3's one, so spent a grant: all of theirs, less the turn's first
+-- activation of it when that was theirs. Off CR 602.2's log, the event log
+-- recording no activator.
+graceUsed :: PlayerId -> ObjectId -> GameState -> Int
+graceUsed pid srcId gs =
+  let activators =
+        [ PastActivation.activator past
+        | past <- Foldable.toList (GameState.activationsThisTurn gs),
+          ObjectSnapshot.object (PastActivation.source past) == srcId,
+          any (Loyalty.isLoyaltyCost . ActivatedAbility.cost) (PastActivation.ability past)
+        ]
+      theirs = length (filter (== pid) activators)
+   in case activators of
+        first : _ | first == pid -> theirs - 1
+        _ -> theirs
 
 -- CR 602.2b's routing of an activation cost through CR 601.2b, at X=0. An
 -- ability is affordable when its activation cost is payable at the least X its

@@ -11,7 +11,7 @@ import qualified Parun.Types.PlayerRef as PlayerRef
 data ActivationsThisTurn = MkActivationsThisTurn
   { -- | CR 602.2a: the player who activated it.
     activator :: PlayerRef.PlayerRef,
-    -- | Asked of the ability's source as the activation began (CR 608.2h).
+    -- | Asked of the ability's source as the activation began (CR 608.2i).
     source :: Filter.Filter Keyword.Keyword,
     -- | What only the ability, not its source, can answer.
     criteria :: ActivationCriteria.ActivationCriteria

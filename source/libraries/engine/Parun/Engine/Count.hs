@@ -1170,7 +1170,7 @@ abilitiesOf deploys pc =
     (Map.keysSet (PC.keywords pc))
     (PC.activatedAbilities pc <> Keyword.battlefieldAbilitiesOf (PC.keywords pc))
 
--- CR 602.2 / 608.2h: an object one of the turn's past activations recorded
+-- CR 602.2 / 608.2i: an object one of the turn's past activations recorded
 -- (Parun.Types.PastActivation), seen as it was when the activation began rather
 -- than as it is now. The zone as recorded, so CR 109.2's "a creature you
 -- control" passes over an earlier activation that targeted a creature SPELL.
@@ -1194,6 +1194,8 @@ pastView snapshot =
 -- ability of a planeswalker": no card in data/cards/ gives a planeswalker a
 -- non-loyalty activated ability. Kaito, Bane of Nightmares' ninjutsu would
 -- (AtomicCards.json, 2026-10-27, planeswalkers whose text has such a line).
+-- The planeswalker half of that phrase is the source filter's, which Luxior,
+-- Giada's Gift observes (data/scenarios/the-chain-veil).
 activationMeets :: ActivationCriteria.ActivationCriteria -> PastActivation.PastActivation -> Bool
 activationMeets criteria past =
   maybe True (\g -> any (Keyword.designates g) (ActivatedAbility.keyword =<< PastActivation.ability past)) (ActivationCriteria.grantedBy criteria)

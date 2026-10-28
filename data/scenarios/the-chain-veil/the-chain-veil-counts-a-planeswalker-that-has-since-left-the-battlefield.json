@@ -1,5 +1,5 @@
 {
-  "description": "CR 603.4 / 608.2h The Chain Veil counts Ajani Goldmane's loyalty activation after its cost left Ajani at 0 loyalty and it died",
+  "description": "CR 603.4 / 608.2i The Chain Veil counts Ajani Goldmane's loyalty activation after its cost left Ajani at 0 loyalty and it died",
   "note": "Per the Veil's first ruling it does not matter whether the planeswalker is still on the battlefield, so the count reads the activation's snapshot, not the board.",
   "board": {"active": "alice", "step": "PrecombatMain", "seats": [
     {"name": "alice", "battlefield": [
